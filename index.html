@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+				<script src="http://mbostock.github.com/d3/d3.v2.js"></script>
+				<script src="http://metrics.getrockerbox.com:8080/static/bar.js"></script>
+				<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+				<script src="http://getbootstrap.com/dist/js/bootstrap.min.js"></script>
+
+				<link href="http://getrockerbox.com/css/bootstrap.css" rel="stylesheet">
+				<link href="http://getbootstrap.com/examples/dashboard/dashboard.css" rel="stylesheet">
+				<style>
+						td {max-width:200px;max-height:40px;overflow:hidden}
+						path { stroke: steelblue; stroke-width: 1; fill: none; }
+						.axis {font-size:8px}
+						.bar { fill: steelblue; }
+						.bar:hover { fill: brown; }
+						.axis { font: 10px sans-serif; }
+						.axis path,
+						.axis line { fill: none; stroke: #000; shape-rendering: crispEdges; }
+						.x.axis path { display: none; }
+				</style>
+		</head>
+   <body data-spy="scroll" data-target=".navbar" data-offset="150"> 
+   <div class="navbar-wrapper">
+	 	 <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+					<div class="navbar-header">
+						<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+	            <span class="sr-only">Toggle navigation</span>
+	            <span class="icon-bar"></span>
+	            <span class="icon-bar"></span>
+	          </button>
+	          <a class="navbar-brand" href="#">
+				      <img src="http://getrockerbox.com/img/logo.png" width="150px" style="margin-top:-5px">
+	          </a>
+	        </div>
+	        <div class="navbar-collapse collapse">
+	          <ul class="nav navbar-nav">
+	            <li><a href="#about">About</a></li>
+ 							<li><a href="#technology">Tech</a></li>
+	            <li><a href="#team">Team</a></li>
+							 <li><a href="#contact">Contact</a></li>
+	           
+	            <!-- <li><a href="demo.html">Demo</a></li> -->
+	          </ul>
+	        </div><!--/.nav-collapse -->
+	    </nav>
+		</div>
+ 		<div class="container-fluid">
+			<div class="row">
+				<div class="col-sm-4 col-md-2 sidebar">
+          <ul class="nav nav-sidebar">
+            <li class="active"><a href="#">Overview</a></li>
+            <li><a href="#">Reports</a></li>
+            <li><a href="#">Analytics</a></li>
+            <li><a href="#">Export</a></li>
+          </ul>
+        </div>
+				<div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+          <h3 class="page-header">Streaming Dashboard</h3>
+					
+					<div id="graph" style="width:300px; height:100px;"></div>
+					
+					<form>
+						<div class="input-group">
+							<input type="text" class="form-control" name="creatives" value="12372292,12372285,12372284,12372277">
+							<div class="input-group-btn">
+								<button id="filter" type="button" class="btn btn-default" tabindex="-1">Filter</button>
+								<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" tabindex="-1">
+									<span class="caret"></span>
+									<span class="sr-only">Toggle Dropdown</span>
+								</button>
+								<ul class="dropdown-menu pull-right" role="menu">
+									<li><a href="#">Action</a></li>
+									<li><a href="#">Another action</a></li>
+									<li><a href="#">Something else here</a></li>
+									<li class="divider"></li>
+									<li><a href="#">Separated link</a></li>
+								</ul>
+							</div>
+						</div>
+					</form>
+					<div class="col-sm-7" id="domains"></div>
+					<div class="col-sm-5" id="users"></div>
+
+					<div id="messages" style=""></div>
+				</div>
+			</div>
+		</div>
+    </body>
+		<script>
+		Element.prototype.prependChild = function(child) { this.insertBefore(child, this.firstChild); };
+
+		var socketWrapper = function(params) {
+			var self = this;
+			this.id = Math.round(Math.random() * 10000000);
+
+			this.createSocket = function(params){
+				var socket = new WebSocket("ws://metrics.getrockerbox.com:9999/websocket?id=" + this.id);
+
+				socket.onopen = function() {
+					self.sendMessage("initialize")
+				}
+
+				socket.onmessage = function(event) {
+					var parsed = JSON.parse(event.data)
+					self.onMessage(parsed,event)
+				}
+				this.socket = socket;
+			}
+
+			this.sendMessage = function(message){
+				if (!this.socket) this.createSocket()
+				this.socket.send(message)
+			}
+
+			this.onMessage = function(json,event) { }
+			this.createSocket(params)
+
+		}
+
+		var streamingBarWrapper = function(id,steps,width,height){
+			var self = this;
+			this.t = 0
+			this.data = d3.range(steps).map(function(){
+				self.t++;
+				return {"time":self.t,"value":0}
+			})
+			
+			this.graph = dynamicBar(id,this.data,width,height)
+
+			this.add = function(json) {
+				this.t++;
+				this.data.shift()
+				this.data.push({"time":this.t,"value":json.length})
+				this.graph(this.data)
+			}
+		}
+
+		var rawDataWrapper = function(steps){
+			this.data = d3.range(steps)
+			this.add = function(json) {
+				this.data.shift()
+				this.data.push(json)
+				this.onAdd.bind(this)(json)
+			}
+			this.group_user = function() {
+				var m = [], n = {}
+				this.data.map(function(x){
+					var r = []
+					for (var y in x) {
+						var q = []
+						for (var z in x[y]) {
+							q.push(x[y][z])
+						}
+						m.push(q)
+					}
+				})
+				m.map(function(x){
+					if (n[x[1]] === undefined) {
+						n[x[1]] = []
+					}
+					n[x[1]].push(x)
+				})
+				return n
+			}
+			this.group_domain = function() {
+				var m = [], n = {}
+				this.data.map(function(x){
+					var r = []
+					for (var y in x) {
+						var q = []
+						for (var z in x[y]) {
+							q.push(x[y][z])
+						}
+						m.push(q)
+					}
+				})
+				m.map(function(x){
+					if (n[x[0]] === undefined) {
+						n[x[0]] = []
+					}
+					n[x[0]].push(x)
+				})
+				return n
+			}
+			this.onAdd = function(){}
+			
+		}
+		
+
+		var messageProcessor = function() {
+
+			var messageContainer = document.getElementById("messages"),
+					bar = new streamingBarWrapper('#graph',60,5,80),
+					self = this;
+
+			this.raw_data = new rawDataWrapper(60);
+			this.raw_data.onAdd = function(json){
+				var table = messageContainer.getElementsByTagName("table"),
+						keys = Object.keys(json[0]);
+
+				if (table.length == 0) 
+					self.createHeaders(keys);
+
+				var header = messageContainer.getElementsByTagName("thead")[0];
+				self.insertRows(json,keys,header);
+				self.domainTable(this.group_domain());
+				self.userTable(this.group_user());
+			}
+
+			this.userTable = function(data) {
+				var table = "<table class='table table-condensed'><thead><tr>" + 
+					"<th>user</th>"+
+					"<th>count</th>"+
+					"<th>approved</th>"+
+					"<th>price</th>"+
+					"</tr></thead>"
+				var sorted = []
+
+				for (var key in data) {
+					sorted.push([
+						key, 
+						data[key].length, 
+						data[key].map(function(r){return r[12]}).reduce(function(pv, cv) { return pv + cv; }, 0),
+						(data[key].map(function(r){return parseFloat(r[3])}).reduce(function(pv, cv) { return pv + cv; }, 0)/data[key].length).toFixed(2)
+					])
+				}
+				sorted = sorted.sort(function(x,y){return y[1]-x[1]})
+				for (var key in sorted) {
+					table += "<tr><td>" + 
+						sorted[key][0] + "</td><td>" + 
+						sorted[key][1] + "</td><td>" + 
+						sorted[key][2] + "</td><td>" + 
+						sorted[key][3] + "</td><td>" 
+				}
+				
+
+				table += "</table>"
+				document.getElementById("users").innerHTML = table
+
+			}
+
+
+			
+			this.domainTable = function(data) {
+				var table = "<table class='table table-condensed'><thead><tr>" + 
+					"<th>domain</th>"+
+					"<th>count</th>"+
+					"<th>uniques</th>"+
+					"<th>approved</th>"+
+					"<th>advertisers</th>"+
+					"<th>price</th>"+
+					"</tr></thead>"
+				var sorted = []
+
+				for (var key in data) {
+					sorted.push([
+						key, 
+						data[key].length, 
+						data[key].map(function(r){return r[1]}).filter(function (e, i, arr) { return arr.indexOf(e, i+1) === -1; }).length,
+            data[key].map(function(r){return r[12]}).reduce(function(pv, cv) { return pv + cv; }, 0),
+						data[key].map(function(r){return r[7]}).filter(function (e, i, arr) { return arr.indexOf(e, i+1) === -1; }).length,
+						(data[key].map(function(r){return parseFloat(r[3])}).reduce(function(pv, cv) { return pv + cv; }, 0)/data[key].length).toFixed(2)
+					])
+				}
+				sorted = sorted.sort(function(x,y){return y[1]-x[1]})
+				for (var key in sorted) {
+					table += "<tr><td>" + 
+						sorted[key][0] + "</td><td>" + 
+						sorted[key][1] + "</td><td>" + 
+						sorted[key][2] + "</td><td>" + 
+						sorted[key][3] + "</td><td>" + 
+						sorted[key][4] + "</td><td>" + 
+						sorted[key][5] + "</td></tr>"		
+				}
+				
+
+				table += "</table>"
+				document.getElementById("domains").innerHTML = table
+
+			}
+
+			this.createHeaders = function(keys) {
+				headers = "<table class='table'><thead><tr id='msgHeader'>"
+				for (var key in keys) {
+					headers += "<th>"+keys[key]+"</th>"
+				}
+				headers += "</tr></thead></table>"
+				messageContainer.innerHTML = headers
+			}
+			this.insertRows = function(values,keys,loc) {
+				for (var row in values) {
+					var html_row = document.createElement("tr"),
+							content = "";
+
+					for (var key in keys) {
+							content += "<td>"+values[row][keys[key]]+"</td>"
+					}
+					html_row.innerHTML = content
+					loc.parentNode.insertBefore(html_row,loc.nextSibling)
+				}	
+			}
+			this.onMessage = function(json,event) {
+				
+				bar.add(json);
+				self.raw_data.add(json);
+				
+			}
+		}
+		
+		var socket = new socketWrapper();
+		var processor = new messageProcessor()
+		socket.onMessage = processor.onMessage
+
+		$('#filter').click(socket.sendMessage)
+		</script>
+</html>
