@@ -96,7 +96,7 @@
 			this.id = Math.round(Math.random() * 10000000);
 
 			this.createSocket = function(params){
-				var socket = new WebSocket("ws://metrics.getrockerbox.com:9999/websocket?id=" + this.id);
+				var socket = new WebSocket("ws://107.170.18.93:9999/websocket?id=" + this.id);
 
 				socket.onopen = function() {
 					self.sendMessage("initialize")
@@ -222,8 +222,8 @@
 					sorted.push([
 						key, 
 						data[key].length, 
-						data[key].map(function(r){return r[12]}).reduce(function(pv, cv) { return pv + cv; }, 0),
-						(data[key].map(function(r){return parseFloat(r[3])}).reduce(function(pv, cv) { return pv + cv; }, 0)/data[key].length).toFixed(2)
+						data[key].map(function(r){return r[3]}).reduce(function(pv, cv) { return pv + cv; }, 0),
+						(data[key].map(function(r){return parseFloat(r[4])}).reduce(function(pv, cv) { return pv + cv; }, 0)/data[key].length).toFixed(2)
 					])
 				}
 				sorted = sorted.sort(function(x,y){return y[1]-x[1]})
@@ -259,9 +259,9 @@
 						key, 
 						data[key].length, 
 						data[key].map(function(r){return r[1]}).filter(function (e, i, arr) { return arr.indexOf(e, i+1) === -1; }).length,
-            data[key].map(function(r){return r[12]}).reduce(function(pv, cv) { return pv + cv; }, 0),
-						data[key].map(function(r){return r[7]}).filter(function (e, i, arr) { return arr.indexOf(e, i+1) === -1; }).length,
-						(data[key].map(function(r){return parseFloat(r[3])}).reduce(function(pv, cv) { return pv + cv; }, 0)/data[key].length).toFixed(2)
+            data[key].map(function(r){return r[3]}).reduce(function(pv, cv) { return pv + cv; }, 0),
+						data[key].map(function(r){return r[2]}).filter(function (e, i, arr) { return arr.indexOf(e, i+1) === -1; }).length,
+						(data[key].map(function(r){return parseFloat(r[4])}).reduce(function(pv, cv) { return pv + cv; }, 0)/data[key].length).toFixed(2)
 					])
 				}
 				sorted = sorted.sort(function(x,y){return y[1]-x[1]})

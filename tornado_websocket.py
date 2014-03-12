@@ -14,6 +14,7 @@ from functools import partial
 import stream
 import requests
 import generator_subscription as sub
+import debug_parse
 import ujson
 import pandas
 import redis
@@ -88,22 +89,24 @@ class BufferedSocketFactory(protocol.Factory):
 BRAND_QUERY = "select id, advertiser_id, brand_id from creative"
 socket_buffer = []
 buffered_socket = reactor.listenTCP(1234,BufferedSocketFactory(socket_buffer))
+import debug_multiprocess as dmp
+multi = dmp.DebugMultiprocess()
 
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
   
     def initialize(self):
 
-        self.time_interval = 2
+        self.time_interval = 5
         #self.timed = stream.genr_time_batch('/var/log/nginx/metric.log',self.time_interval)
         self.do = lnk.dbs.digital_ocean
         self.creatives = self.do.select_dataframe(BRAND_QUERY)
         self.creatives['id'] = self.creatives.id.map(str)
         self.redis = redis.StrictRedis(host='162.243.121.234', port=6379, db=0)
-        self.generator_loop()
+        
+        
 
     def generator_loop(self):
-        import copy
-        import time
+        import copy, time
         #value = self.timed.next()
         value = copy.deepcopy(socket_buffer)
         socket_buffer[:] = []
@@ -115,14 +118,28 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
                     v['domain'] = parse_domain(v['referrer'])
                 except:
                     pass
-
                 if v.get('uid',False):
                     v['approved_user'] = int(self.redis.get(v['uid']) == 'test')
+
             to_remove = [] 
             for i,client in clients.iteritems():
-                
+                print len(value)     
                 df = pandas.DataFrame(value)
+                rows = [
+                    (row['tag'],row['uid'],row['domain'],row['seller'],300,250,row['ip_address'],row['auction_id']) 
+                        for index,row in df.fillna('0').iterrows()
+                ]
+                auction_debugs = pandas.DataFrame(multi.run_pool(rows))
+                """
+                debug = debug_parse.Debug(
+                    row['tag'],row['uid'],row['domain'],row['seller'],300,250,row['ip_address']
+                )
+                debug.post()
+                print dict(debug.auction_result)
+                print debug.bid_density()
+                """
                 df = df.merge(self.creatives,how="left",left_on="creative",right_on="id")
+                df = df.merge(auction_debugs,how="left",left_on="auction_id",right_on="auction_id")
                 masks = client.get('masks',False)
                 if masks:
                     df = df[mask_from_dict(df,masks)]
@@ -136,17 +153,30 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
                     client['object'].write_message( ujson.dumps(m).decode('ascii','ignore') )
                 except:
                     to_remove += [client['id']]
-
+                
             for client in to_remove:
                 del clients[client]
+
         end = time.time()
 
-        tornado.ioloop.IOLoop.instance().add_timeout(datetime.timedelta(seconds=self.time_interval - (end - start)),self.generator_loop)
+        # we could stop this loop if we dont have any clients
+        # just need a way of restarting it on register
+        if len(clients.keys()) > 0:
+            tornado.ioloop.IOLoop.instance().add_timeout(
+                datetime.timedelta(seconds=self.time_interval - (end - start)),
+                self.generator_loop
+            )
         #tornado.ioloop.IOLoop.instance().add_callback(self.generator_loop)
 
     def open(self, *args):
         self.id = self.get_argument("id")
         clients[self.id] = {"id": self.id, "object": self}
+        print clients
+        print len(clients.keys())
+        if len(clients.keys()) == 1:
+            print "runned"
+            socket_buffer[:] = []
+            self.generator_loop()
 
     def on_message(self, message):        
         """
