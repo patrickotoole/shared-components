@@ -103,8 +103,6 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         self.creatives['id'] = self.creatives.id.map(str)
         self.redis = redis.StrictRedis(host='162.243.121.234', port=6379, db=0)
         
-        
-
     def generator_loop(self):
         import copy, time
         #value = self.timed.next()
@@ -130,16 +128,12 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
                         for index,row in df.fillna('0').iterrows()
                 ]
                 auction_debugs = pandas.DataFrame(multi.run_pool(rows))
-                """
-                debug = debug_parse.Debug(
-                    row['tag'],row['uid'],row['domain'],row['seller'],300,250,row['ip_address']
-                )
-                debug.post()
-                print dict(debug.auction_result)
-                print debug.bid_density()
-                """
+
+                cols = df.columns
                 df = df.merge(self.creatives,how="left",left_on="creative",right_on="id")
                 df = df.merge(auction_debugs,how="left",left_on="auction_id",right_on="auction_id")
+                df = df[cols + self.creatives.columns + auction_debugs.columns]
+
                 masks = client.get('masks',False)
                 if masks:
                     df = df[mask_from_dict(df,masks)]
