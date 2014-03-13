@@ -96,7 +96,7 @@
 			this.id = Math.round(Math.random() * 10000000);
 
 			this.createSocket = function(params){
-				var socket = new WebSocket("ws://107.170.18.93:9999/websocket?id=" + this.id);
+				var socket = new WebSocket("ws://107.170.18.93/websocket?id=" + this.id);
 
 				socket.onopen = function() {
 					self.sendMessage("initialize")
@@ -150,8 +150,8 @@
 					var r = []
 					for (var y in x) {
 						var q = []
-						for (var z in x[y]) {
-							q.push(x[y][z])
+						for (var z in x[y]['result']) {
+							q.push(x[y]['result'][z])
 						}
 						m.push(q)
 					}
@@ -170,8 +170,8 @@
 					var r = []
 					for (var y in x) {
 						var q = []
-						for (var z in x[y]) {
-							q.push(x[y][z])
+						for (var z in x[y]['result']) {
+							q.push(x[y]['result'][z])
 						}
 						m.push(q)
 					}
@@ -198,13 +198,13 @@
 			this.raw_data = new rawDataWrapper(60);
 			this.raw_data.onAdd = function(json){
 				var table = messageContainer.getElementsByTagName("table"),
-						keys = Object.keys(json[0]);
+						keys = Object.keys(json[0]['result']);
 
 				if (table.length == 0) 
 					self.createHeaders(keys);
 
 				var header = messageContainer.getElementsByTagName("thead")[0];
-				self.insertRows(json,keys,header);
+				self.insertRows(json.map(function(x){return x['result']}),keys,header);
 				self.domainTable(this.group_domain());
 				self.userTable(this.group_user());
 			}
@@ -222,8 +222,8 @@
 					sorted.push([
 						key, 
 						data[key].length, 
-						data[key].map(function(r){return r[3]}).reduce(function(pv, cv) { return pv + cv; }, 0),
-						(data[key].map(function(r){return parseFloat(r[4])}).reduce(function(pv, cv) { return pv + cv; }, 0)/data[key].length).toFixed(2)
+						data[key].map(function(r){return r[7]}).reduce(function(pv, cv) { return pv + cv; }, 0),
+						(data[key].map(function(r){return parseFloat(r[2])}).reduce(function(pv, cv) { return pv + cv; }, 0)/data[key].length).toFixed(2)
 					])
 				}
 				sorted = sorted.sort(function(x,y){return y[1]-x[1]})
@@ -259,9 +259,9 @@
 						key, 
 						data[key].length, 
 						data[key].map(function(r){return r[1]}).filter(function (e, i, arr) { return arr.indexOf(e, i+1) === -1; }).length,
-            data[key].map(function(r){return r[3]}).reduce(function(pv, cv) { return pv + cv; }, 0),
-						data[key].map(function(r){return r[2]}).filter(function (e, i, arr) { return arr.indexOf(e, i+1) === -1; }).length,
-						(data[key].map(function(r){return parseFloat(r[4])}).reduce(function(pv, cv) { return pv + cv; }, 0)/data[key].length).toFixed(2)
+            data[key].map(function(r){return r[7]}).reduce(function(pv, cv) { return pv + cv; }, 0),
+						data[key].map(function(r){return r[4]}).filter(function (e, i, arr) { return arr.indexOf(e, i+1) === -1; }).length,
+						(data[key].map(function(r){return parseFloat(r[2])}).reduce(function(pv, cv) { return pv + cv; }, 0)/data[key].length).toFixed(2)
 					])
 				}
 				sorted = sorted.sort(function(x,y){return y[1]-x[1]})

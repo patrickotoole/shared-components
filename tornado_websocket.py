@@ -4,7 +4,7 @@ import tornado.websocket
 import datetime
 import tornado.platform.twisted
 tornado.platform.twisted.install()
-from twisted.internet import reactor, protocol
+from twisted.internet import reactor, protocol, defer, threads
 from twisted.protocols import basic
 
 from tornado.options import define, options, parse_command_line
@@ -19,7 +19,7 @@ import ujson
 import pandas
 import redis
 
-define("port", default=9999, help="run on the given port", type=int)
+define("port", default=80, help="run on the given port", type=int)
 
 # we gonna store clients in dictionary..
 clients = dict()
@@ -65,16 +65,63 @@ def mask_from_dict(df,masks):
         mask = mask & df[column].isin(values)
         
     return mask
+import debug_parse
 
 class BufferedSocket(basic.LineReceiver):
     def __init__(self,buf):
         self.buf = buf
 
+    def get_user(self,fline):
+        fline['approved_user'] = int(redis_server.get(fline['uid']) == 'test')
+        return fline
+
+    def async_get_user(self,fline):
+        d = threads.deferToThread(self.get_user,fline)
+        return d
+
+    def get_debug(self,fline):
+        args = (
+            fline.get('tag','0'),fline['uid'],fline.get('domain',''),
+            fline['seller'],300,250,fline['ip_address'],
+            fline['auction_id']
+        )
+        try:
+            debug = debug_parse.Debug(*args)
+            debug.post()
+            series = pandas.Series(
+                dict(debug.auction_result)).append(
+                debug.bid_density()).append(
+                pandas.Series({"auction_id":str(debug.original_auction)})
+            )
+
+            return dict(fline.items() + series.to_dict().items())
+        except:
+            return fline
+
+    def async_get_debug(self,fline):
+        d = threads.deferToThread(self.get_debug,fline)
+        d.addCallback(self.set_buffer)
+        return d
+
+    def set_buffer(self,fline):
+        self.buf += [fline]
+
+
+    #@defer.inlineCallbacks
     def lineReceived(self, line):
         sline = line.split(" ")
         aline = stream.AuctionLine(sline)
         fline = aline.get_qs()
-        self.buf += [fline]
+
+        if fline.get("referrer",False):
+            fline['domain'] = parse_domain(fline['referrer'])
+
+        if fline.get('uid',False):
+            d = self.async_get_user(fline)
+            d.addCallback(self.async_get_debug)
+        else:
+            self.async_get_debug(fline)
+
 
 class BufferedSocketFactory(protocol.Factory):
     def __init__(self,buf):
@@ -86,23 +133,26 @@ class BufferedSocketFactory(protocol.Factory):
     def set_buffer(self,buf):
         self.buf = buf
 
+redis_server = redis.StrictRedis(host='162.243.121.234', port=6379, db=0)
+
 BRAND_QUERY = "select id, advertiser_id, brand_id from creative"
 socket_buffer = []
 buffered_socket = reactor.listenTCP(1234,BufferedSocketFactory(socket_buffer))
+
 import debug_multiprocess as dmp
 multi = dmp.DebugMultiprocess()
+
+
 
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
   
     def initialize(self):
 
         self.time_interval = 5
-        #self.timed = stream.genr_time_batch('/var/log/nginx/metric.log',self.time_interval)
         self.do = lnk.dbs.digital_ocean
         self.creatives = self.do.select_dataframe(BRAND_QUERY)
         self.creatives['id'] = self.creatives.id.map(str)
-        self.redis = redis.StrictRedis(host='162.243.121.234', port=6379, db=0)
-        
+                
     def generator_loop(self):
         import copy, time
         #value = self.timed.next()
@@ -110,30 +160,40 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         socket_buffer[:] = []
         start = time.time()
         if value:
-            
-            for v in value:
-                try:
-                    v['domain'] = parse_domain(v['referrer'])
-                except:
-                    pass
-                if v.get('uid',False):
-                    v['approved_user'] = int(self.redis.get(v['uid']) == 'test')
-
             to_remove = [] 
+
+            df = pandas.DataFrame(value)
+            #rows = [
+            #    (row['tag'],row['uid'],row['domain'],row['seller'],300,250,row['ip_address'],row['auction_id']) 
+            #        for index,row in df.fillna('0').iterrows()
+            #]
+            #auction_debugs = pandas.DataFrame(multi.run_pool(rows)).fillna(0)
+            #auction_series = pandas.Series(auction_debugs.set_index("auction_id").T.to_dict())
+            #auction_series = auction_series[~pandas.Series(auction_series.index,index=auction_series.index).isnull()]
+
+            df = df.merge(self.creatives,how="left",left_on="creative",right_on="id").set_index("auction_id")
+
+            result_columns = ["domain","uid","seller","tag","uid","approved_user","creative","advertiser_id","price"]
+            debug_columns = ["second_price", "count", "50%", "$mod", "gross_bid", "biased_bid", "min", "max", "%mod2", "winning_bid", "win_price", "25%", "std", "total", "soft_floor", "75%", "$mod2", "mean", "%mod", "gross_win_price", "second_price_calc"]
+            info_columns = ["brand_id", "result", "pub", "ecp", "ip_address", "referrer", "venue", "debug"]
+
+            #df['debug'] = auction_series
+            
+            
+            df = df.fillna(0)
+            df['debug'] = pandas.Series(
+                df[debug_columns].T.to_dict()
+            )
+            df['result'] = pandas.Series(
+                df[result_columns].T.to_dict()
+            )
+            df['info'] = pandas.Series(
+                df[info_columns].T.to_dict()
+            )
+            
+
+            print len(df)
             for i,client in clients.iteritems():
-                print len(value)     
-                df = pandas.DataFrame(value)
-                rows = [
-                    (row['tag'],row['uid'],row['domain'],row['seller'],300,250,row['ip_address'],row['auction_id']) 
-                        for index,row in df.fillna('0').iterrows()
-                ]
-                auction_debugs = pandas.DataFrame(multi.run_pool(rows))
-
-                cols = df.columns
-                df = df.merge(self.creatives,how="left",left_on="creative",right_on="id")
-                df = df.merge(auction_debugs,how="left",left_on="auction_id",right_on="auction_id")
-                df = df[cols + self.creatives.columns + auction_debugs.columns]
-
                 masks = client.get('masks',False)
                 if masks:
                     df = df[mask_from_dict(df,masks)]
@@ -142,13 +202,17 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
                     del df['referrer']
                 except:
                     pass
+
+                df = df[['debug','info','result']]
                 m = df.fillna(0).T.to_dict().values()
+                json = ujson.dumps(m).decode('ascii','ignore')
                 try:
-                    client['object'].write_message( ujson.dumps(m).decode('ascii','ignore') )
+                    client['object'].write_message( json )
                 except:
                     to_remove += [client['id']]
                 
             for client in to_remove:
+                print "remove: %s" % client
                 del clients[client]
 
         end = time.time()
@@ -165,10 +229,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
     def open(self, *args):
         self.id = self.get_argument("id")
         clients[self.id] = {"id": self.id, "object": self}
-        print clients
-        print len(clients.keys())
         if len(clients.keys()) == 1:
-            print "runned"
             socket_buffer[:] = []
             self.generator_loop()
 
