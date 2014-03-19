@@ -16,8 +16,7 @@
 						.bar { fill: steelblue; }
 						.bar:hover { fill: brown; }
 						.axis { font: 10px sans-serif; }
-						.axis path,
-						.axis line { fill: none; stroke: #000; shape-rendering: crispEdges; }
+						.axis path, .axis line { fill: none; stroke: #000; shape-rendering: crispEdges; }
 						.x.axis path { display: none; }
 				</style>
 		</head>
@@ -50,41 +49,30 @@
 			<div class="row">
 				<div class="col-sm-4 col-md-2 sidebar">
           <ul class="nav nav-sidebar">
-            <li class="active"><a href="/streaming">Streaming</a></li>
-            <li><a href="/debug">Arbitrage</a></li>
+            <li class=""><a href="/streaming">Streaming</a></li>
+            <li class="active"><a href="/debug">Arbitrage</a></li>
             <li><a href="/lookback">Lookback</a></li>
             <li><a href="#">Export</a></li>
           </ul>
         </div>
 				<div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
-          <h3 class="page-header">Streaming Dashboard</h3>
-				  <h5>Impressions</h5>	
-					<div id="graph" style="width:300px; height:100px;"></div>
-          <!-- 
-					<form>
-						<div class="input-group">
-							<input type="text" class="form-control" name="creatives" value="12372292,12372285,12372284,12372277">
-							<div class="input-group-btn">
-								<button id="filter" type="button" class="btn btn-default" tabindex="-1">Filter</button>
-								<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" tabindex="-1">
-									<span class="caret"></span>
-									<span class="sr-only">Toggle Dropdown</span>
-								</button>
-								<ul class="dropdown-menu pull-right" role="menu">
-									<li><a href="#">Action</a></li>
-									<li><a href="#">Another action</a></li>
-									<li><a href="#">Something else here</a></li>
-									<li class="divider"></li>
-									<li><a href="#">Separated link</a></li>
-								</ul>
-							</div>
-						</div>
-					</form>
-          -->
-					<div class="col-sm-7" id="domains"></div>
-					<div class="col-sm-5" id="users"></div>
+          <div class="col-sm-5">
+            <h3 class="page-header">Arbitrage Dashboard</h3>
+            <h5>Impressions</h5>
+            <div id="imps" style="width:300px; height:100px"></div>
+            <h5>Price</h5>
+            <div id="price" style="width:300px; height:100px"></div>
+            <h5>Potential Price</h5>
+            <div id="potential" style="width:300px; height:100px"></div>
+            <h5>Differential</h5>
+            <div id="differential" style="width:300px; height:100px"></div>
+          </div>
+					
+					<div class="col-sm-7">
+            <h3 class="page-header">Arbitrage Opportunities</h3>        
+            <div id="messages" style=""></div>
 
-					<div id="messages" style=""></div>
+          </div>
 				</div>
 			</div>
 		</div>
@@ -120,7 +108,7 @@
 
 		}
 
-		var streamingBarWrapper = function(id,steps,width,height){
+		var streamingBarWrapper = function(id,steps,width,height,formatter){
 			var self = this;
 			this.t = 0
 			this.data = d3.range(steps).map(function(){
@@ -129,11 +117,15 @@
 			})
 			
 			this.graph = dynamicBar(id,this.data,width,height)
+      this.defaultFormatter = function(time,json) {
+        return {"time":time,"value":json.length}
+      }
+      this.formatter = formatter || this.defaultFormatter
 
 			this.add = function(json) {
 				this.t++;
 				this.data.shift()
-				this.data.push({"time":this.t,"value":json.length})
+				this.data.push(this.formatter(this.t,json))
 				this.graph(this.data)
 			}
 		}
@@ -145,6 +137,33 @@
 				this.data.push(json)
 				this.onAdd.bind(this)(json)
 			}
+      this.spread = function(){
+        var m = [], a = [];
+        this.data.map(function(x){
+          var n = [];
+          for (var y in x) {
+            var w = parseFloat(x[y]['debug']['winning_bid']) - parseFloat(x[y]['result']['price'])
+            x[y]['result']['differential'] = w
+            
+            if (w > 0) {
+              n.push(w)
+              x[y]['arbitrage'] = {
+                "domain": x[y]['result']['domain'],
+                "uid" : x[y]['result']['uid'],
+                "seller" : x[y]['result']['seller'],
+                "tag" : x[y]['result']['tag'],
+                "price": x[y]['result']['price'],
+                "potential_price": x[y]['debug']['winning_bid']
+              }
+              a.push(x[y])
+            }
+          }
+          if (n.length > 0) {
+            m.push(n)
+          }
+        })
+        return a
+      }
 			this.group_user = function() {
 				var m = [], n = {}
 				this.data.map(function(x){
@@ -193,21 +212,57 @@
 		var messageProcessor = function() {
 
 			var messageContainer = document.getElementById("messages"),
-					bar = new streamingBarWrapper('#graph',60,5,80),
+					imps = new streamingBarWrapper('#imps',60,5,80,
+            function(t,json){
+              return {"time":t,"value":json.length}
+            }
+          ),
+          spent = new streamingBarWrapper('#price',60,5,80,
+            function(t,json){
+              var m = json.
+                map(function(x){return parseFloat(x['result']['price'])}).
+                reduce(function(pv, cv) { return pv + cv; });
+
+              return {"time":t,"value":m > 0 ? m : 0 }
+            }
+          ),
+          potential = new streamingBarWrapper('#potential',60,5,80,
+            function(t,json){
+              var m = json.
+                map(function(x){return parseFloat(x['debug']['winning_bid'])}).
+                reduce(function(pv, cv) { return pv + cv; })
+
+              return {"time":t,"value":m > 0 ? m : 0 }
+            }
+          ),
+          differential = new streamingBarWrapper('#differential',60,5,80,
+            function(t,json){
+              var m = json.
+                map(function(x){return x['result']['differential']}).
+                reduce(function(pv, cv) { return pv + cv; })
+
+              return {"time":t,"value":m > 0 ? m : 0 }
+            }
+          ),
+
+
 					self = this;
 
 			this.raw_data = new rawDataWrapper(60);
 			this.raw_data.onAdd = function(json){
+        var j = this.spread()
+
 				var table = messageContainer.getElementsByTagName("table"),
-						keys = Object.keys(json[0]['result']);
+						keys = Object.keys(j[0]['arbitrage']);
 
 				if (table.length == 0) 
 					self.createHeaders(keys);
 
 				var header = messageContainer.getElementsByTagName("thead")[0];
-				self.insertRows(json.map(function(x){return x['result']}),keys,header);
-				self.domainTable(this.group_domain());
-				self.userTable(this.group_user());
+				self.insertRows(j.map(function(x){return x['arbitrage']}),keys,header);
+        
+				//self.domainTable(this.group_domain());
+				//self.userTable(this.group_user());
 			}
 
 			this.userTable = function(data) {
@@ -303,9 +358,11 @@
 				}	
 			}
 			this.onMessage = function(json,event) {
-				
-				bar.add(json);
 				self.raw_data.add(json);
+				imps.add(json);
+        spent.add(json);
+        potential.add(json);
+        differential.add(json);
 				
 			}
 		}

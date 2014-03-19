@@ -1,6 +1,8 @@
 import tornado.ioloop
 import tornado.web
 import tornado.websocket
+import tornado.httpserver
+
 import datetime
 import tornado.platform.twisted
 tornado.platform.twisted.install()
@@ -11,6 +13,7 @@ from tornado.options import define, options, parse_command_line
 from link import lnk
 from functools import partial
 
+import signal
 import stream
 import requests
 import generator_subscription as sub
@@ -18,6 +21,12 @@ import debug_parse
 import ujson
 import pandas
 import redis
+import logging
+import time
+requests_log = logging.getLogger("requests")
+requests_log.setLevel(logging.WARNING)
+
+MAX_WAIT_SECONDS_BEFORE_SHUTDOWN = 1
 
 define("port", default=80, help="run on the given port", type=int)
 
@@ -35,6 +44,17 @@ class IndexHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self):
         self.render("index.html")
+
+class DebugHandler(tornado.web.RequestHandler):
+    @tornado.web.asynchronous
+    def get(self):
+        self.render("debug.html")
+
+class LookbackHandler(tornado.web.RequestHandler):
+    @tornado.web.asynchronous
+    def get(self):
+        self.render("lookback.html")
+
 
 
 def parse_domain(referrer):
@@ -65,7 +85,6 @@ def mask_from_dict(df,masks):
         mask = mask & df[column].isin(values)
         
     return mask
-import debug_parse
 
 class BufferedSocket(basic.LineReceiver):
     def __init__(self,buf):
@@ -81,8 +100,8 @@ class BufferedSocket(basic.LineReceiver):
 
     def get_debug(self,fline):
         args = (
-            fline.get('tag','0'),fline['uid'],fline.get('domain',''),
-            fline['seller'],300,250,fline['ip_address'],
+            fline.get('tag','0'),fline.get('uid','0'),fline.get('domain',''),
+            fline['seller'],300,250,fline.get('ip_address','0.0.0.0'),
             fline['auction_id']
         )
         try:
@@ -106,8 +125,6 @@ class BufferedSocket(basic.LineReceiver):
     def set_buffer(self,fline):
         self.buf += [fline]
 
-
-    #@defer.inlineCallbacks
     def lineReceived(self, line):
         sline = line.split(" ")
         aline = stream.AuctionLine(sline)
@@ -134,115 +151,100 @@ class BufferedSocketFactory(protocol.Factory):
         self.buf = buf
 
 redis_server = redis.StrictRedis(host='162.243.121.234', port=6379, db=0)
-
-BRAND_QUERY = "select id, advertiser_id, brand_id from creative"
 socket_buffer = []
 buffered_socket = reactor.listenTCP(1234,BufferedSocketFactory(socket_buffer))
 
-import debug_multiprocess as dmp
-multi = dmp.DebugMultiprocess()
+BRAND_QUERY = "select id, advertiser_id, brand_id from creative"
 
+RESULT = ["domain","uid","seller","tag","uid","approved_user","creative","advertiser_id","price"]
+DEBUG = ["second_price", "count", "50%", "$mod", "gross_bid", "biased_bid", "min", "max", "%mod2", "winning_bid", "win_price", "25%", "std", "total", "soft_floor", "75%", "$mod2", "mean", "%mod", "gross_win_price", "second_price_calc"]
+INFO = ["brand_id", "result", "pub", "ecp", "ip_address", "referrer", "venue", "debug"]
 
 
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
   
     def initialize(self):
 
-        self.time_interval = 5
+        self.time_interval = 1
         self.do = lnk.dbs.digital_ocean
         self.creatives = self.do.select_dataframe(BRAND_QUERY)
         self.creatives['id'] = self.creatives.id.map(str)
+
+    def build_data(self,value):
+        df = pandas.DataFrame(value)
+        df = df.merge(
+            self.creatives,how="left",left_on="creative",right_on="id"
+        ).set_index("auction_id")
+
+        df = df.fillna(0)
+        debug_columns = [i for i in DEBUG if i in df.columns]
+        result_columns = [i for i in RESULT if i in df.columns]
+        info_columns = [i for i in INFO if i in df.columns]
+
+        df['debug'] = pandas.Series( df[debug_columns].T.to_dict())
+        df['result'] = pandas.Series( df[result_columns].T.to_dict())
+        df['info'] = pandas.Series( df[info_columns].T.to_dict())
+
+        return df
+
+    def mask_data(self,df,masks):
+        if masks:
+            return df[mask_from_dict(df,masks)]
+        else:
+            return df
+
                 
     def generator_loop(self):
         import copy, time
-        #value = self.timed.next()
+
         value = copy.deepcopy(socket_buffer)
         socket_buffer[:] = []
         start = time.time()
         if value:
-            to_remove = [] 
-
-            df = pandas.DataFrame(value)
-            #rows = [
-            #    (row['tag'],row['uid'],row['domain'],row['seller'],300,250,row['ip_address'],row['auction_id']) 
-            #        for index,row in df.fillna('0').iterrows()
-            #]
-            #auction_debugs = pandas.DataFrame(multi.run_pool(rows)).fillna(0)
-            #auction_series = pandas.Series(auction_debugs.set_index("auction_id").T.to_dict())
-            #auction_series = auction_series[~pandas.Series(auction_series.index,index=auction_series.index).isnull()]
-
-            df = df.merge(self.creatives,how="left",left_on="creative",right_on="id").set_index("auction_id")
-
-            result_columns = ["domain","uid","seller","tag","uid","approved_user","creative","advertiser_id","price"]
-            debug_columns = ["second_price", "count", "50%", "$mod", "gross_bid", "biased_bid", "min", "max", "%mod2", "winning_bid", "win_price", "25%", "std", "total", "soft_floor", "75%", "$mod2", "mean", "%mod", "gross_win_price", "second_price_calc"]
-            info_columns = ["brand_id", "result", "pub", "ecp", "ip_address", "referrer", "venue", "debug"]
-
-            #df['debug'] = auction_series
-            
-            
-            df = df.fillna(0)
-            df['debug'] = pandas.Series(
-                df[debug_columns].T.to_dict()
-            )
-            df['result'] = pandas.Series(
-                df[result_columns].T.to_dict()
-            )
-            df['info'] = pandas.Series(
-                df[info_columns].T.to_dict()
-            )
-            
-
-            print len(df)
+            df = self.build_data(value)
+                        
             for i,client in clients.iteritems():
-                masks = client.get('masks',False)
-                if masks:
-                    df = df[mask_from_dict(df,masks)]
+                if client['enabled'] == False:
+                    continue
                 
-                try:
-                    del df['referrer']
-                except:
-                    pass
+                masks = client.get('masks',False)
 
-                df = df[['debug','info','result']]
-                m = df.fillna(0).T.to_dict().values()
+                masked = self.mask_data(df,masks)
+                _df = masked[['debug','info','result']]
+
+                m = _df.fillna(0).T.to_dict().values()
                 json = ujson.dumps(m).decode('ascii','ignore')
                 try:
                     client['object'].write_message( json )
                 except:
-                    to_remove += [client['id']]
+                    client['object'].on_close()
                 
-            for client in to_remove:
-                print "remove: %s" % client
-                del clients[client]
 
         end = time.time()
 
-        # we could stop this loop if we dont have any clients
-        # just need a way of restarting it on register
         if len(clients.keys()) > 0:
             tornado.ioloop.IOLoop.instance().add_timeout(
                 datetime.timedelta(seconds=self.time_interval - (end - start)),
                 self.generator_loop
             )
-        #tornado.ioloop.IOLoop.instance().add_callback(self.generator_loop)
 
     def open(self, *args):
         self.id = self.get_argument("id")
-        clients[self.id] = {"id": self.id, "object": self}
+        clients[self.id] = {"id": self.id, "object": self, "enabled":False}
         if len(clients.keys()) == 1:
             socket_buffer[:] = []
             self.generator_loop()
 
     def on_message(self, message):        
-        """
-        when we receive some message we want some message handler..
-        for this example i will just print message to console
-        """
         try:
             masks = ujson.loads(message)
             clients[self.id]['masks'] = masks
         except:
             pass
+
+        if message == "start":
+            clients[self.id]['enabled'] = True
+
         print "Client %s received a message : %s" % (self.id, message)
         
     def on_close(self):
@@ -250,16 +252,48 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             del clients[self.id]
 
     def on_connection_close(self):
-    # The client has given up and gone home.
+        if self.id in clients:
+            del clients[self.id]
+
         self.connection_closed = True
 
+def sig_handler(sig, frame):
+    logging.warning('Caught signal: %s', sig)
+    tornado.ioloop.IOLoop.instance().add_callback_from_signal(shutdown)
+ 
+def shutdown():
+    logging.info('Stopping http server')
+    reactor.stop()
+    server.stop()
+ 
+    logging.info('Will shutdown in %s seconds ...', MAX_WAIT_SECONDS_BEFORE_SHUTDOWN)
+    io_loop = tornado.ioloop.IOLoop.instance()
+ 
+    deadline = time.time() + MAX_WAIT_SECONDS_BEFORE_SHUTDOWN
+ 
+    def stop_loop():
+        now = time.time()
+        if now < deadline and (io_loop._callbacks or io_loop._timeouts):
+            io_loop.add_timeout(now + 1, stop_loop)
+        else:
+            io_loop.stop()
+            logging.info('Shutdown')
+    stop_loop()
+
 app = tornado.web.Application([
-    (r'/', IndexHandler),
+    (r'/streaming', IndexHandler),
+    (r'/debug', DebugHandler), 
+    (r'/lookback', LookbackHandler), 
     (r'/websocket', WebSocketHandler),
 ],debug=True)
 
 if __name__ == '__main__':
     parse_command_line()
-    app.listen(options.port)
+
+    server = tornado.httpserver.HTTPServer(app)
+    server.listen(options.port)
+
+    signal.signal(signal.SIGTERM, sig_handler)
+    signal.signal(signal.SIGINT, sig_handler)
+
     tornado.ioloop.IOLoop.instance().start()
-    reactor.listenTCP(1234,TestFactory())
