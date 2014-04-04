@@ -1,7 +1,7 @@
 import requests, re, pandas
 from StringIO import StringIO
 URL = "http://ib.adnxs.com/tt?id=%s&size=300x250&debug=1&debug_member=2024&dongle=QWERTY&referrer=%s"
-ASI_URL = "http://ib.adnxs.com/asi?member_id=%s&debug=1&dongle=QWERTY&debug_member=2024"
+ASI_URL = "http://ib.adnxs.com/asi?member_id=%s&debug=1&debug_member=2024&dongle=QWERTY"
 
 def formattable(fn,*args,**kwargs):
     """
@@ -80,7 +80,6 @@ class Debug(DebugBase):
         self.result = auction.content
         self.auction_diagnostics()
 
-
     def run(self):
         headers = {
             "Accept":"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
@@ -106,8 +105,12 @@ class Debug(DebugBase):
             result = s.findall(self.result)[0][1]
 
             self.auction_result = zip(
-                ["gross_bid","winning_bid","biased_bid","soft_floor","%mod","$mod","%mod2",
-                  "$mod2","second_price_calc","second_price","win_price","gross_win_price"],
+                [ 
+                  "gross_bid","winning_bid","biased_bid",
+                  "soft_floor","%mod","$mod","%mod2",
+                  "$mod2","second_price_calc","second_price",
+                  "win_price","gross_win_price"
+                ],
                 p.findall(s.findall(self.result)[0][2])
             )
         except:

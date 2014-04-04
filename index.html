@@ -81,8 +81,8 @@
 						</div>
 					</form>
           -->
-					<div class="col-sm-7" id="domains"></div>
-					<div class="col-sm-5" id="users"></div>
+					<div class="col-sm-6" id="domains"></div>
+					<div class="col-sm-6" id="users"></div>
 
 					<div id="messages" style=""></div>
 				</div>
@@ -215,15 +215,17 @@
 					"<th>user</th>"+
 					"<th>count</th>"+
 					"<th>approved</th>"+
+          "<th>domains</th>"+
 					"<th>price</th>"+
 					"</tr></thead>"
 				var sorted = []
 
 				for (var key in data) {
 					sorted.push([
-						key, 
+						"<a href='/lookback?uid="+key+"' target='_blank'>"+key+"</a>", 
 						data[key].length, 
 						data[key].map(function(r){return r[7]}).reduce(function(pv, cv) { return pv + cv; }, 0),
+            data[key].map(function(r){return r[0]}).filter(function (e, i, arr) { return arr.indexOf(e, i+1) === -1; }).length,
 						(data[key].map(function(r){return parseFloat(r[2])}).reduce(function(pv, cv) { return pv + cv; }, 0)/data[key].length).toFixed(2)
 					])
 				}
@@ -233,7 +235,9 @@
 						sorted[key][0] + "</td><td>" + 
 						sorted[key][1] + "</td><td>" + 
 						sorted[key][2] + "</td><td>" + 
-						sorted[key][3] + "</td><td>" 
+						sorted[key][3] + "</td><td>" +
+            sorted[key][4] + "</td><td>" 
+
 				}
 				
 
@@ -315,5 +319,7 @@
 		socket.onMessage = processor.onMessage
 
 		$('#filter').click(socket.sendMessage)
+    setTimeout(function(){
+    socket.sendMessage("start")},1000)
 		</script>
 </html>

@@ -17,8 +17,35 @@
 						.bar:hover { fill: brown; }
 						.axis { font: 10px sans-serif; }
 						.axis path,
-						.axis line { fill: none; stroke: #000; shape-rendering: crispEdges; }
+						.axis line { fill: none; stroke: #ddd; shape-rendering: crispEdges; }
 						.x.axis path { display: none; }
+            .x.axis text { }
+            body {
+              shape-rendering: crispEdges;
+            }
+
+            .day {
+              fill: #fff;
+              stroke: #ccc;
+            }
+
+            .month {
+              fill: none;
+              stroke: #000;
+              stroke-width: 2px;
+            }
+
+            .RdYlGn .q0-11{fill:rgb(165,0,38)}
+            .RdYlGn .q1-11{fill:rgb(215,48,39)}
+            .RdYlGn .q2-11{fill:rgb(244,109,67)}
+            .RdYlGn .q3-11{fill:rgb(253,174,97)}
+            .RdYlGn .q4-11{fill:rgb(254,224,139)}
+            .RdYlGn .q5-11{fill:rgb(255,255,191)}
+            .RdYlGn .q6-11{fill:rgb(217,239,139)}
+            .RdYlGn .q7-11{fill:rgb(166,217,106)}
+            .RdYlGn .q8-11{fill:rgb(102,189,99)}
+            .RdYlGn .q9-11{fill:rgb(26,152,80)}
+            .RdYlGn .q10-11{fill:rgb(0,104,55)}
 				</style>
 		</head>
    <body data-spy="scroll" data-target=".navbar" data-offset="150"> 
@@ -58,71 +85,207 @@
         </div>
 				<div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
           <h3 class="page-header">Lookback Dashboard</h3>
-          <h5>Placeholder for lookback tool</h5>
-					
-          <!-- 
-          <div id="graph" style="width:300px; height:100px;"></div>
-					<form>
-						<div class="input-group">
-							<input type="text" class="form-control" name="creatives" value="12372292,12372285,12372284,12372277">
-							<div class="input-group-btn">
-								<button id="filter" type="button" class="btn btn-default" tabindex="-1">Filter</button>
-								<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" tabindex="-1">
-									<span class="caret"></span>
-									<span class="sr-only">Toggle Dropdown</span>
-								</button>
-								<ul class="dropdown-menu pull-right" role="menu">
-									<li><a href="#">Action</a></li>
-									<li><a href="#">Another action</a></li>
-									<li><a href="#">Something else here</a></li>
-									<li class="divider"></li>
-									<li><a href="#">Separated link</a></li>
-								</ul>
-							</div>
-						</div>
-					</form>
-          <div class="col-sm-7" id="domains"></div>
-					<div class="col-sm-5" id="users"></div>
-
-					<div id="messages" style=""></div>
-          -->
-					
+          <h5>Categorization of Impressions Seen over time</h5>
+          <br/>
+					<div  id="timeline"></div>
+          <br/>
+          <h5 id="summary"></h5>
+          <div id="verbose"></div>
 				</div>
 			</div>
 		</div>
     </body>
+  <style>
+
+  svg {
+    font: 8px sans-serif;
+  }
+
+  .background {
+    fill: #fff;
+  }
+
+  line {
+    stroke: none;
+  }
+
+  text.active {
+    fill: red;
+  }
+  svg {
+    font-size:10px
+  }
+
+  </style>
+<script>
+
+</script>
+    <script>
+    var generateLookback = function(lookback_data) {
+        window.lookback_data = lookback_data;
+        var width = 1095,
+            height = lookback_data['columns'].length * 16 + 30,
+            div = d3.select('#timeline'),
+            svg = div.append('svg')
+                .attr('width', width)
+                .attr('height', height) ,
+            rw = 15,
+            rh = 15;   
+           
+        var offset = 15;
+
+        var x = d3.scale.linear()
+            .domain([0,60])
+            .range([0,960])
+
+        var q = d3.svg.axis()
+            .scale(x)
+            .ticks(10)
+            .tickSize(lookback_data['columns'].length*16+13)
+            .orient('bottom')
+
+
+        var headers = svg.append("g")
+            .attr("transform",function(d,i){return 'translate(105,10)'})
+            .attr("class","time_header")
+
+        var impressions = svg.append("g")
+            .attr("transform",function(d,i){return 'translate(105,15)'})
+
+        var served = impressions.selectAll('g')
+            .data(lookback_data["served"])
+            .enter()
+            .append('rect')
+                .attr('fill',function(d,i) {return d == 1 ? 'yellow' : 'none'})
+                .attr('fill-opacity',0.5)
+                .attr('x', function(d, i) { return (rw + 1) * i ; })
+                .attr('width', rw)
+                .attr('height',(rh+1)*(lookback_data['columns'].length))
+        
+
+        var conversions = svg.append("g")
+            .attr("transform",function(d,i){return 'translate(105,15)'})
+
+        var events = conversions.selectAll('g')
+            .data(
+                d3.range(0,lookback_data['served'].length).map(function(d){return ((d % 61 == 0) && (d > 0)) ? 1: 0})
+            )
+            .enter()
+            .append('g')
+            .attr("class",'asdf')
+
+        events
+            .append('rect')
+                .attr('fill',function(d,i) {return d == 1 ? 'red' : 'none'})
+                .attr('fill-opacity',0.5)
+                .attr('x', function(d, i) { return (rw + 1) * i ; })
+                .attr('width', rw)
+                .attr('height',(rh+1)*lookback_data['columns'].length)
+
+
+        var text = svg.selectAll('text')
+            .data(lookback_data['columns'])
+            .enter()
+            .append('text')
+            .text(function(d){return d})
+            .attr('transform', function(d, i) {
+                return 'translate(0, ' + ((rh + 1) * (i+.8) + 15) + ')';
+            });
+
+        // Create a group for each row in the data matrix and translate the 
+        // group vertically
+
+        var grp = svg.selectAll('g')
+            .data(lookback_data['data'],function(d){return d+1})
+            .enter()
+            .append('g')
+            .attr('transform', function(d, i) {
+                return 'translate(105, ' + ((rh + 1) * i + 15) + ')';
+            });
+
+        // For each group, create a set of rectangles and them to the inner array
+        // (the inner array is binded to the group)
+        var color = d3.scale.linear()
+            .domain([0, 4])
+            .range(["white", "green"]);
+
+        grp.selectAll('rect')
+            .data(function(d) { return d; })
+            .enter()
+            .append('rect')
+                .attr('fill',function(d){ return d > 0 ? color(Math.log(d)+.3) : "#fefefe"})
+                .attr('fill-opacity',function(d){ return d > 0 ? 0.9 : 0.7})
+                .attr('x', function(d, i) { return (rw + 1) * i; })
+                .attr('width', rw)
+                .attr('height', rh)
+                .on('mouseover',function(imps,x,y){
+                    $('#summary').text(imps + ' Imps')
+                    var domains = lookback_data['domains']
+                    if (domains[x][y].length > 0) {
+                        $('#verbose').text("")
+                        domains[x][y].map(function(domain){
+                            $('#verbose').append("<div>"+domain.replace(/\\\//g,"/")+"</div>")
+                        })
+                    }
+                })
+         
+        svg.append("g")
+            .attr("class", "x axis")
+            .attr("height",20)
+            .attr("transform", "translate(104," + 0 + ")")
+            .attr("width",100)
+            .call(q)
+          .selectAll("text")
+            .attr("y", -0)
+            .attr("x", -17)
+            .attr("height",20)
+            .text(function(x){return "t - " + x })
+            .style("text-anchor", "beginning");
+
+    }
+    $.get( window.location.origin + 
+        window.location.pathname + 
+        '.json' + 
+        window.location.search,
+      generateLookback
+    )
+    
+     
+    </script>
+
+
 		<script>
-		Element.prototype.prependChild = function(child) { this.insertBefore(child, this.firstChild); };
+		element.prototype.prependchild = function(child) { this.insertbefore(child, this.firstchild); };
 
-		var socketWrapper = function(params) {
+		var socketwrapper = function(params) {
 			var self = this;
-			this.id = Math.round(Math.random() * 10000000);
+			this.id = math.round(math.random() * 10000000);
 
-			this.createSocket = function(params){
-				var socket = new WebSocket("ws://107.170.18.93/websocket?id=" + this.id);
+			this.createsocket = function(params){
+				var socket = new websocket("ws://107.170.18.93/websocket?id=" + this.id);
 
 				socket.onopen = function() {
-					self.sendMessage("initialize")
+					self.sendmessage("initialize")
 				}
 
 				socket.onmessage = function(event) {
-					var parsed = JSON.parse(event.data)
-					self.onMessage(parsed,event)
+					var parsed = json.parse(event.data)
+					self.onmessage(parsed,event)
 				}
 				this.socket = socket;
 			}
 
-			this.sendMessage = function(message){
-				if (!this.socket) this.createSocket()
+			this.sendmessage = function(message){
+				if (!this.socket) this.createsocket()
 				this.socket.send(message)
 			}
 
-			this.onMessage = function(json,event) { }
-			this.createSocket(params)
+			this.onmessage = function(json,event) { }
+			this.createsocket(params)
 
 		}
 
-		var streamingBarWrapper = function(id,steps,width,height){
+		var streamingbarwrapper = function(id,steps,width,height){
 			var self = this;
 			this.t = 0
 			this.data = d3.range(steps).map(function(){
@@ -130,7 +293,7 @@
 				return {"time":self.t,"value":0}
 			})
 			
-			this.graph = dynamicBar(id,this.data,width,height)
+			this.graph = dynamicbar(id,this.data,width,height)
 
 			this.add = function(json) {
 				this.t++;
@@ -140,12 +303,12 @@
 			}
 		}
 
-		var rawDataWrapper = function(steps){
+		var rawdatawrapper = function(steps){
 			this.data = d3.range(steps)
 			this.add = function(json) {
 				this.data.shift()
 				this.data.push(json)
-				this.onAdd.bind(this)(json)
+				this.onadd.bind(this)(json)
 			}
 			this.group_user = function() {
 				var m = [], n = {}
@@ -187,32 +350,32 @@
 				})
 				return n
 			}
-			this.onAdd = function(){}
+			this.onadd = function(){}
 			
 		}
 		
 
-		var messageProcessor = function() {
+		var messageprocessor = function() {
 
-			var messageContainer = document.getElementById("messages"),
-					bar = new streamingBarWrapper('#graph',60,5,80),
+			var messagecontainer = document.getelementbyid("messages"),
+					bar = new streamingbarwrapper('#graph',60,5,80),
 					self = this;
 
-			this.raw_data = new rawDataWrapper(60);
-			this.raw_data.onAdd = function(json){
-				var table = messageContainer.getElementsByTagName("table"),
-						keys = Object.keys(json[0]['result']);
+			this.raw_data = new rawdatawrapper(60);
+			this.raw_data.onadd = function(json){
+				var table = messagecontainer.getelementsbytagname("table"),
+						keys = object.keys(json[0]['result']);
 
 				if (table.length == 0) 
-					self.createHeaders(keys);
+					self.createheaders(keys);
 
-				var header = messageContainer.getElementsByTagName("thead")[0];
-				self.insertRows(json.map(function(x){return x['result']}),keys,header);
-				self.domainTable(this.group_domain());
-				self.userTable(this.group_user());
+				var header = messagecontainer.getelementsbytagname("thead")[0];
+				self.insertrows(json.map(function(x){return x['result']}),keys,header);
+				self.domaintable(this.group_domain());
+				self.usertable(this.group_user());
 			}
 
-			this.userTable = function(data) {
+			this.usertable = function(data) {
 				var table = "<table class='table table-condensed'><thead><tr>" + 
 					"<th>user</th>"+
 					"<th>count</th>"+
@@ -226,7 +389,7 @@
 						key, 
 						data[key].length, 
 						data[key].map(function(r){return r[7]}).reduce(function(pv, cv) { return pv + cv; }, 0),
-						(data[key].map(function(r){return parseFloat(r[2])}).reduce(function(pv, cv) { return pv + cv; }, 0)/data[key].length).toFixed(2)
+						(data[key].map(function(r){return parsefloat(r[2])}).reduce(function(pv, cv) { return pv + cv; }, 0)/data[key].length).tofixed(2)
 					])
 				}
 				sorted = sorted.sort(function(x,y){return y[1]-x[1]})
@@ -240,13 +403,13 @@
 				
 
 				table += "</table>"
-				document.getElementById("users").innerHTML = table
+				document.getelementbyid("users").innerhtml = table
 
 			}
 
 
 			
-			this.domainTable = function(data) {
+			this.domaintable = function(data) {
 				var table = "<table class='table table-condensed'><thead><tr>" + 
 					"<th>domain</th>"+
 					"<th>count</th>"+
@@ -261,10 +424,10 @@
 					sorted.push([
 						key, 
 						data[key].length, 
-						data[key].map(function(r){return r[1]}).filter(function (e, i, arr) { return arr.indexOf(e, i+1) === -1; }).length,
+						data[key].map(function(r){return r[1]}).filter(function (e, i, arr) { return arr.indexof(e, i+1) === -1; }).length,
             data[key].map(function(r){return r[7]}).reduce(function(pv, cv) { return pv + cv; }, 0),
-						data[key].map(function(r){return r[4]}).filter(function (e, i, arr) { return arr.indexOf(e, i+1) === -1; }).length,
-						(data[key].map(function(r){return parseFloat(r[2])}).reduce(function(pv, cv) { return pv + cv; }, 0)/data[key].length).toFixed(2)
+						data[key].map(function(r){return r[4]}).filter(function (e, i, arr) { return arr.indexof(e, i+1) === -1; }).length,
+						(data[key].map(function(r){return parsefloat(r[2])}).reduce(function(pv, cv) { return pv + cv; }, 0)/data[key].length).tofixed(2)
 					])
 				}
 				sorted = sorted.sort(function(x,y){return y[1]-x[1]})
@@ -280,31 +443,31 @@
 				
 
 				table += "</table>"
-				document.getElementById("domains").innerHTML = table
+				document.getelementbyid("domains").innerhtml = table
 
 			}
 
-			this.createHeaders = function(keys) {
-				headers = "<table class='table'><thead><tr id='msgHeader'>"
+			this.createheaders = function(keys) {
+				headers = "<table class='table'><thead><tr id='msgheader'>"
 				for (var key in keys) {
 					headers += "<th>"+keys[key]+"</th>"
 				}
 				headers += "</tr></thead></table>"
-				messageContainer.innerHTML = headers
+				messagecontainer.innerhtml = headers
 			}
-			this.insertRows = function(values,keys,loc) {
+			this.insertrows = function(values,keys,loc) {
 				for (var row in values) {
-					var html_row = document.createElement("tr"),
+					var html_row = document.createelement("tr"),
 							content = "";
 
 					for (var key in keys) {
 							content += "<td>"+values[row][keys[key]]+"</td>"
 					}
-					html_row.innerHTML = content
-					loc.parentNode.insertBefore(html_row,loc.nextSibling)
+					html_row.innerhtml = content
+					loc.parentnode.insertbefore(html_row,loc.nextsibling)
 				}	
 			}
-			this.onMessage = function(json,event) {
+			this.onmessage = function(json,event) {
 				
 				bar.add(json);
 				self.raw_data.add(json);
@@ -312,10 +475,10 @@
 			}
 		}
 		
-		var socket = new socketWrapper();
-		var processor = new messageProcessor()
-		socket.onMessage = processor.onMessage
+		var socket = new socketwrapper();
+		var processor = new messageprocessor()
+		socket.onmessage = processor.onmessage
 
-		$('#filter').click(socket.sendMessage)
+		$('#filter').click(socket.sendmessage)
 		</script>
 </html>

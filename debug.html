@@ -78,6 +78,7 @@
 		</div>
     </body>
 		<script>
+    window.running_total = 0
 		Element.prototype.prependChild = function(child) { this.insertBefore(child, this.firstChild); };
 
 		var socketWrapper = function(params) {
@@ -142,8 +143,11 @@
         this.data.map(function(x){
           var n = [];
           for (var y in x) {
-            var w = parseFloat(x[y]['debug']['winning_bid']) - parseFloat(x[y]['result']['price'])
+            var w = parseFloat(x[y]['debug']['second_price']) - parseFloat(x[y]['result']['price'])
             x[y]['result']['differential'] = w
+            window.running_total += (x[y]['result']['differential'] > 0.20) ? 
+              x[y]['result']['differential'] : 
+              0
             
             if (w > 0) {
               n.push(w)
@@ -153,7 +157,7 @@
                 "seller" : x[y]['result']['seller'],
                 "tag" : x[y]['result']['tag'],
                 "price": x[y]['result']['price'],
-                "potential_price": x[y]['debug']['winning_bid']
+                "potential_price": x[y]['debug']['second_price']
               }
               a.push(x[y])
             }
@@ -249,6 +253,7 @@
 					self = this;
 
 			this.raw_data = new rawDataWrapper(60);
+      window.raw_data = this.raw_data;
 			this.raw_data.onAdd = function(json){
         var j = this.spread()
 
@@ -372,5 +377,6 @@
 		socket.onMessage = processor.onMessage
 
 		$('#filter').click(socket.sendMessage)
+    setTimeout(function(){socket.sendMessage('start')},1000)
 		</script>
 </html>

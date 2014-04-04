@@ -17,18 +17,21 @@ import signal
 import stream
 import requests
 import generator_subscription as sub
-import debug_parse
+import debug_parse, asi_parse
 import ujson
 import pandas
 import redis
 import logging
 import time
+import lookback
+import os
+
 requests_log = logging.getLogger("requests")
 requests_log.setLevel(logging.WARNING)
 
 MAX_WAIT_SECONDS_BEFORE_SHUTDOWN = 1
 
-define("port", default=80, help="run on the given port", type=int)
+define("port", default=8080, help="run on the given port", type=int)
 
 # we gonna store clients in dictionary..
 clients = dict()
@@ -45,16 +48,44 @@ class IndexHandler(tornado.web.RequestHandler):
     def get(self):
         self.render("index.html")
 
+    def post(self):
+        print self.request.body
+        self.write("hello")
+
 class DebugHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self):
         self.render("debug.html")
 
+def get_content(uid):
+    content = os.popen("ssh root@107.170.16.15 'tail -n 2000000 /var/log/nginx/qs.log | grep %s'" % uid).read()
+    content += os.popen("ssh root@107.170.2.67 'tail -n 2000000 /var/log/nginx/qs.log | grep %s'" % uid).read() 
+    #content += os.popen("ssh root@107.170.31.214 'grep %s /root/qs.log'" % uid).read() 
+    return content
+
+def async_get_content(uid):
+    d = threads.deferToThread(get_content,uid)
+    return d
+  
+
 class LookbackHandler(tornado.web.RequestHandler):
+
+    @defer.inlineCallbacks
+    def get_content(self,uid):
+        content = yield async_get_content(uid)
+        lb = lookback.Lookback(uid,content)
+        data = lb.get_all()
+        self.write(data)
+        self.finish()
+        
     @tornado.web.asynchronous
     def get(self):
-        self.render("lookback.html")
-
+        is_json = 'json' in self.request.uri
+        uid = self.get_argument("uid",False)
+        if is_json and uid:
+            self.get_content(uid)
+        else:
+            self.render("lookback.html")
 
 
 def parse_domain(referrer):
@@ -99,14 +130,26 @@ class BufferedSocket(basic.LineReceiver):
         return d
 
     def get_debug(self,fline):
+        """
         args = (
             fline.get('tag','0'),fline.get('uid','0'),fline.get('domain',''),
             fline['seller'],300,250,fline.get('ip_address','0.0.0.0'),
             fline['auction_id']
         )
+        """
+        args = (
+            2261194,fline.get('uid','0'),fline.get('domain',''),
+            2024,fline.get('width',300),fline.get('height',250),fline.get('ip_address','0.0.0.0'),
+            fline.get('auction_id','0')
+        )
         try:
+            #print args
+            #asi = asi_parse.ASI(*args)
+            #asi.post()
+            #print asi.result
             debug = debug_parse.Debug(*args)
             debug.post()
+            #print debug.result
             series = pandas.Series(
                 dict(debug.auction_result)).append(
                 debug.bid_density()).append(
@@ -150,7 +193,7 @@ class BufferedSocketFactory(protocol.Factory):
     def set_buffer(self,buf):
         self.buf = buf
 
-redis_server = redis.StrictRedis(host='162.243.121.234', port=6379, db=0)
+redis_server = redis.StrictRedis(host='162.243.123.240', port=6379, db=0)
 socket_buffer = []
 buffered_socket = reactor.listenTCP(1234,BufferedSocketFactory(socket_buffer))
 
@@ -282,8 +325,10 @@ def shutdown():
 
 app = tornado.web.Application([
     (r'/streaming', IndexHandler),
+    (r'/asi', IndexHandler),
+
     (r'/debug', DebugHandler), 
-    (r'/lookback', LookbackHandler), 
+    (r'/lookback.*', LookbackHandler), 
     (r'/websocket', WebSocketHandler),
 ],debug=True)
 
