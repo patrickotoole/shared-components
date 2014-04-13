@@ -1,0 +1,26 @@
+From d7a36338157236406f893199359283c368d72cf3 Mon Sep 17 00:00:00 2001
+From: Mike Percy <mpercy@apache.org>
+Date: Mon, 15 Jul 2013 15:00:39 -0700
+Subject: [PATCH 16/56] FLUME-2121. Upgrade Flume to log4j 1.2.17 to be in sync with HDFS/HBase.
+
+(Hari Shreedharan via Mike Percy)
+---
+ pom.xml |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/pom.xml b/pom.xml
+index 80e4ee9..1f84e8d 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -755,7 +755,7 @@ limitations under the License.
+       <dependency>
+         <groupId>log4j</groupId>
+         <artifactId>log4j</artifactId>
+-        <version>1.2.16</version>
++        <version>1.2.17</version>
+         <exclusions>
+           <exclusion>
+             <groupId>com.sun.jdmk</groupId>
+-- 
+1.7.0.4
+

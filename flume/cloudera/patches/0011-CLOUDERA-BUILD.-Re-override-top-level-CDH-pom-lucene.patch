@@ -1,0 +1,36 @@
+From b8c8fcf89c5d9ac2d6cec15086fdf85c43b5c450 Mon Sep 17 00:00:00 2001
+From: Mike Percy <mpercy@apache.org>
+Date: Tue, 2 Jul 2013 14:35:56 -0700
+Subject: [PATCH 11/56] CLOUDERA-BUILD. Re-override top-level CDH pom lucene-core dependency for ElasticSearch sink.
+
+---
+ flume-ng-sinks/flume-ng-elasticsearch-sink/pom.xml |   13 +++++++++++++
+ 1 files changed, 13 insertions(+), 0 deletions(-)
+
+diff --git a/flume-ng-sinks/flume-ng-elasticsearch-sink/pom.xml b/flume-ng-sinks/flume-ng-elasticsearch-sink/pom.xml
+index e7a6c6b..1516cb2 100644
+--- a/flume-ng-sinks/flume-ng-elasticsearch-sink/pom.xml
++++ b/flume-ng-sinks/flume-ng-elasticsearch-sink/pom.xml
+@@ -33,6 +33,19 @@
+     </plugins>
+   </build>
+ 
++  <dependencyManagement>
++    <dependencies>
++
++      <!-- override top-level CDH pom lucene-core-3.6.1 dep for Hadoop unit tests -->
++      <dependency>
++        <groupId>org.apache.lucene</groupId>
++        <artifactId>lucene-core</artifactId>
++        <version>4.3.0</version>
++      </dependency>
++
++    </dependencies>
++  </dependencyManagement>
++
+   <dependencies>
+ 
+     <dependency>
+-- 
+1.7.0.4
+

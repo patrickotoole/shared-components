@@ -1,0 +1,25 @@
+From c52922013244cc94d7a1d831fb18e172bade2cc3 Mon Sep 17 00:00:00 2001
+From: Roman Shaposhnik <rvs@cloudera.com>
+Date: Mon, 28 Oct 2013 15:46:56 -0700
+Subject: [PATCH 52/56] KITCHEN-BUILD. Correcting a typo from backport of FLUME-2190
+
+---
+ pom.xml |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/pom.xml b/pom.xml
+index ecf35ef..183c003 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -1073,7 +1073,7 @@ limitations under the License.
+       <dependency>
+         <groupId>org.apache.flume.flume-ng-sources</groupId>
+         <artifactId>flume-twitter-source</artifactId>
+-        <version>1.5.0-SNAPSHOT</version>
++        <version>1.4.0-cdh4.5.0-SNAPSHOT</version>
+       </dependency>
+ 
+       <dependency>
+-- 
+1.7.0.4
+

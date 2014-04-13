@@ -1,7 +1,6 @@
 lua_package_path    "/etc/nginx/?.lua";
 lua_shared_dict     log_dict    1M;
 
-
 server {
   
   listen 80;

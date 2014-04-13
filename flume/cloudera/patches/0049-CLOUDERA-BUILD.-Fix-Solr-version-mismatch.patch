@@ -1,0 +1,29 @@
+From 3bc9eb33fc5b0d77dde674081bf26ad32baaf949 Mon Sep 17 00:00:00 2001
+From: Wolfgang Hoschek <whoschek@cloudera.com>
+Date: Thu, 24 Oct 2013 22:36:47 -0700
+Subject: [PATCH 49/56] CLOUDERA-BUILD. Fix Solr version mismatch
+
+---
+ .../flume-ng-morphline-solr-sink/pom.xml           |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/flume-ng-sinks/flume-ng-morphline-solr-sink/pom.xml b/flume-ng-sinks/flume-ng-morphline-solr-sink/pom.xml
+index 4968c5d..a8a7392 100644
+--- a/flume-ng-sinks/flume-ng-morphline-solr-sink/pom.xml
++++ b/flume-ng-sinks/flume-ng-morphline-solr-sink/pom.xml
+@@ -31,9 +31,9 @@ limitations under the License.
+ 
+   <properties>
+     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+-    <solr.version>4.3.0</solr.version>
+-    <solr.expected.version>4.3.0</solr.expected.version> <!-- sanity check to verify we actually run against the expected version rather than some outdated version -->
+-    <cdk.version>0.8.0</cdk.version>
++    <solr.version>4.4.0</solr.version>
++    <solr.expected.version>4.4.0</solr.expected.version> <!-- sanity check to verify we actually run against the expected version rather than some outdated version -->
++    <cdk.version>0.8.1</cdk.version>
+     <slf4j.version>1.6.1</slf4j.version>
+     <surefire.version>2.12.4</surefire.version>
+   </properties>
+-- 
+1.7.0.4
+

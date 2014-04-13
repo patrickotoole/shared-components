@@ -1,0 +1,30 @@
+From 5b39dd8a84eb54427c5b4541e3c18828cc32b15d Mon Sep 17 00:00:00 2001
+From: Mike Percy <mpercy@apache.org>
+Date: Fri, 28 Jun 2013 13:59:33 -0700
+Subject: [PATCH 14/56] FLUME-2110. Scribe Source must check if category is null before inserting the headers.
+
+(Hari Shreedharan via Mike Percy)
+---
+ .../apache/flume/source/scribe/ScribeSource.java   |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
+
+diff --git a/flume-ng-sources/flume-scribe-source/src/main/java/org/apache/flume/source/scribe/ScribeSource.java b/flume-ng-sources/flume-scribe-source/src/main/java/org/apache/flume/source/scribe/ScribeSource.java
+index b3a8de3..f9a14c1 100644
+--- a/flume-ng-sources/flume-scribe-source/src/main/java/org/apache/flume/source/scribe/ScribeSource.java
++++ b/flume-ng-sources/flume-scribe-source/src/main/java/org/apache/flume/source/scribe/ScribeSource.java
+@@ -149,7 +149,11 @@ public class ScribeSource extends AbstractSource implements
+ 
+           for (LogEntry entry : list) {
+             Map<String, String> headers = new HashMap<String, String>(1, 1);
+-            headers.put(SCRIBE_CATEGORY, entry.getCategory());
++            String category = entry.getCategory();
++
++            if (category != null) {
++              headers.put(SCRIBE_CATEGORY, category);
++            }
+ 
+             Event event = EventBuilder.withBody(entry.getMessage().getBytes(), headers);
+             events.add(event);
+-- 
+1.7.0.4
+

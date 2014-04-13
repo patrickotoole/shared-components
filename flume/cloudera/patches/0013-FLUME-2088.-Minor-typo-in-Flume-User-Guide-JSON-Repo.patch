@@ -1,0 +1,26 @@
+From ef70d1f59073e8fe962695f1e966b1e7e1515493 Mon Sep 17 00:00:00 2001
+From: Mike Percy <mpercy@apache.org>
+Date: Thu, 27 Jun 2013 22:32:04 -0700
+Subject: [PATCH 13/56] FLUME-2088. Minor typo in Flume User Guide JSON Reporting section.
+
+(Ashish Paliwal via Mike Percy)
+---
+ flume-ng-doc/sphinx/FlumeUserGuide.rst |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/flume-ng-doc/sphinx/FlumeUserGuide.rst b/flume-ng-doc/sphinx/FlumeUserGuide.rst
+index f84cda5..ca4e6f2 100644
+--- a/flume-ng-doc/sphinx/FlumeUserGuide.rst
++++ b/flume-ng-doc/sphinx/FlumeUserGuide.rst
+@@ -2936,7 +2936,7 @@ Property Name            Default  Description
+ port                     41414    The port to start the server on.
+ =======================  =======  =====================================================================================
+ 
+-We can start Flume with Ganglia support as follows::
++We can start Flume with JSON Reporting support as follows::
+ 
+   $ bin/flume-ng agent --conf-file example.conf --name a1 -Dflume.monitoring.type=http -Dflume.monitoring.port=34545
+ 
+-- 
+1.7.0.4
+

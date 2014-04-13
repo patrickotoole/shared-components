@@ -1,0 +1,32 @@
+From 7797d1cc8c3d57591af34aed5086f2834219f16c Mon Sep 17 00:00:00 2001
+From: Hari Shreedharan <hshreedharan@cloudera.com>
+Date: Mon, 16 Sep 2013 22:43:35 -0700
+Subject: [PATCH 31/56] CDH-14258. Flume dist.xml issue causes all dependency artifacts to have same version as Flume.
+
+---
+ flume-ng-dist/src/main/assembly/bin.xml |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
+
+diff --git a/flume-ng-dist/src/main/assembly/bin.xml b/flume-ng-dist/src/main/assembly/bin.xml
+index 9d27338..c098d85 100644
+--- a/flume-ng-dist/src/main/assembly/bin.xml
++++ b/flume-ng-dist/src/main/assembly/bin.xml
+@@ -34,7 +34,6 @@
+   <dependencySets>
+     <dependencySet>
+       <outputDirectory>lib</outputDirectory>
+-      <outputFileNameMapping>${artifact.artifactId}-${project.version}${dashClassifier?}.${artifact.extension}</outputFileNameMapping>
+       <unpack>false</unpack>
+       <useProjectArtifact>false</useProjectArtifact>
+       <excludes>
+@@ -43,7 +42,6 @@
+     </dependencySet>
+     <dependencySet>
+       <outputDirectory>tools</outputDirectory>
+-      <outputFileNameMapping>${artifact.artifactId}-${project.version}${dashClassifier?}.${artifact.extension}</outputFileNameMapping>
+       <unpack>false</unpack>
+       <useProjectArtifact>false</useProjectArtifact>
+       <includes>
+-- 
+1.7.0.4
+

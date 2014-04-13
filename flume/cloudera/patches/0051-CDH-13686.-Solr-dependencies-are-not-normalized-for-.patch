@@ -1,0 +1,36 @@
+From 53f50ba71a7469bf7fa26fd4fec9e36bd5f9fa1a Mon Sep 17 00:00:00 2001
+From: Roman Shaposhnik <rvs@cloudera.com>
+Date: Mon, 23 Sep 2013 12:03:04 -0700
+Subject: [PATCH 51/56] CDH-13686. Solr dependencies are not normalized for CDH build
+ (cherry picked from commit 206de45fc383603358c8a41b518d6f74e13e0bcc)
+
+---
+ pom.xml |   12 ------------
+ 1 files changed, 0 insertions(+), 12 deletions(-)
+
+diff --git a/pom.xml b/pom.xml
+index a8af8ea..ecf35ef 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -851,18 +851,6 @@ limitations under the License.
+         <version>6.1.26</version>
+       </dependency>
+ 
+-      <dependency>
+-        <groupId>org.apache.httpcomponents</groupId>
+-        <artifactId>httpclient</artifactId>
+-        <version>4.2.2</version>
+-      </dependency>
+-
+-      <dependency>
+-        <groupId>org.apache.httpcomponents</groupId>
+-        <artifactId>httpcore</artifactId>
+-        <version>4.2.2</version>
+-      </dependency>
+-
+       <!--  Gson: Java to Json conversion -->
+       <dependency>
+         <groupId>com.google.code.gson</groupId>
+-- 
+1.7.0.4
+

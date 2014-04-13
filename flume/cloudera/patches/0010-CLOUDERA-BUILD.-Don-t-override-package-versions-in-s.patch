@@ -1,0 +1,65 @@
+From 074667edbe9fa2ccbf72bc94790b680f416adef1 Mon Sep 17 00:00:00 2001
+From: Mike Percy <mpercy@apache.org>
+Date: Mon, 1 Jul 2013 19:09:16 -0700
+Subject: [PATCH 10/56] CLOUDERA-BUILD. Don't override package versions in sub-modules.
+
+---
+ flume-ng-sinks/flume-hdfs-sink/pom.xml |    8 --------
+ flume-tools/pom.xml                    |    8 --------
+ 2 files changed, 0 insertions(+), 16 deletions(-)
+
+diff --git a/flume-ng-sinks/flume-hdfs-sink/pom.xml b/flume-ng-sinks/flume-hdfs-sink/pom.xml
+index 43cf8a1..e3ad2b2 100644
+--- a/flume-ng-sinks/flume-hdfs-sink/pom.xml
++++ b/flume-ng-sinks/flume-hdfs-sink/pom.xml
+@@ -111,10 +111,6 @@ limitations under the License.
+           <name>!hadoop.profile</name>
+         </property>
+       </activation>
+-      <properties>
+-        <hadoop.version>1.0.1</hadoop.version>
+-        <hadoop.common.artifact.id>hadoop-core</hadoop.common.artifact.id>
+-      </properties>
+       <dependencies>
+ 
+         <dependency>
+@@ -142,10 +138,6 @@ limitations under the License.
+           <value>2</value>
+         </property>
+       </activation>
+-      <properties>
+-        <hadoop.version>2.0.0-alpha</hadoop.version>
+-        <hadoop.common.artifact.id>hadoop-common</hadoop.common.artifact.id>
+-      </properties>
+       <dependencies>
+ 
+         <dependency>
+diff --git a/flume-tools/pom.xml b/flume-tools/pom.xml
+index f6dc5a8..64548f9 100644
+--- a/flume-tools/pom.xml
++++ b/flume-tools/pom.xml
+@@ -80,10 +80,6 @@ limitations under the License.
+           <name>!hadoop.profile</name>
+         </property>
+       </activation>
+-      <properties>
+-        <hadoop.version>1.0.1</hadoop.version>
+-        <hadoop.common.artifact.id>hadoop-core</hadoop.common.artifact.id>
+-      </properties>
+       <dependencies>
+ 
+         <dependency>
+@@ -111,10 +107,6 @@ limitations under the License.
+           <value>2</value>
+         </property>
+       </activation>
+-      <properties>
+-        <hadoop.version>2.0.0-alpha</hadoop.version>
+-        <hadoop.common.artifact.id>hadoop-common</hadoop.common.artifact.id>
+-      </properties>
+       <dependencies>
+ 
+         <dependency>
+-- 
+1.7.0.4
+

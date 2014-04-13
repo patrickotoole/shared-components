@@ -1,0 +1,30 @@
+From 00479e4114afc928ec532db0ed3c9d7cc13a66d9 Mon Sep 17 00:00:00 2001
+From: Hari Shreedharan <hshreedharan@apache.org>
+Date: Wed, 11 Sep 2013 17:18:22 -0700
+Subject: [PATCH 32/56] FLUME-2184. flume-ng-morphline-solr-sink build failing due to incorrect hadoop-common dependency declaration
+
+(Jagat Singh via Hari Shreedharan)
+---
+ .../flume-ng-morphline-solr-sink/pom.xml           |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
+
+diff --git a/flume-ng-sinks/flume-ng-morphline-solr-sink/pom.xml b/flume-ng-sinks/flume-ng-morphline-solr-sink/pom.xml
+index 8e6ccce..dcc44a2 100644
+--- a/flume-ng-sinks/flume-ng-morphline-solr-sink/pom.xml
++++ b/flume-ng-sinks/flume-ng-morphline-solr-sink/pom.xml
+@@ -91,6 +91,12 @@ limitations under the License.
+       <groupId>com.cloudera.cdk</groupId>
+       <artifactId>cdk-morphlines-all</artifactId>
+       <version>${cdk.version}</version>
++      <exclusions>
++        <exclusion>
++            <groupId>org.apache.hadoop</groupId>
++           <artifactId>hadoop-common</artifactId>
++        </exclusion>
++      </exclusions>
+       <type>pom</type>
+       <optional>true</optional>
+     </dependency>
+-- 
+1.7.0.4
+
