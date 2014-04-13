@@ -1,56 +1,259 @@
 lua_package_path    "/etc/nginx/?.lua";
 lua_shared_dict     log_dict    1M;
 
+server {
+  
+  listen 80;
+  #server_name getrockerbox.com;
+
+  root /home/ubuntu/rockerbox/;
+	try_files $uri /index.html;
+}
+
+server {
+  listen   8888; ## listen for ipv4; this line is default and implied
+  #listen   [::]:80 default ipv6only=on; ## listen for ipv6
+
+
+  # Make site accessible from http://localhost/
+  root /home/ubuntu/bidder/;
+
+  location /bid {
+		proxy_pass $scheme://127.0.0.1:$server_port/success;
+
+    set $bid_user_id '-';
+    set $bid_url '-';
+    set $bid_request '-';
+    set $category '-';
+
+    content_by_lua '
+			cjson = require "cjson"
+			ngx.req.read_body()
+			body_table = cjson.decode(ngx.var.request_body)
+      ngx.var.bid_user_id = string.match(ngx.var.request_body,"user_id_64\\\":%s?(%d+),")
+			ngx.var.bid_url = body_table["bid_request"]["bid_info"]["url"]
+      if body_table["bid_request"]["bid_info"]["inventory_audits"] then
+        ngx.var.category = cjson.encode(body_table["bid_request"]["bid_info"]["inventory_audits"][1]["content_categories"][1])
+      end
+      ngx.var.bid_request = ngx.var.request_body
+    ';
+
+    log_by_lua '
+      local logging = require("logging")
+
+      local request_time = ngx.now() - ngx.req.start_time()
+      logging.add_plot(ngx.shared.log_dict, "request_time", request_time)
+    ';
+
+    #log_format my_tracking '$bid_user_id $bid_url $category';
+    log_format my_tracking '$bid_user_id $category';
+		access_log  /var/log/nginx/qs.log my_tracking;
+	}
+
+  location /ready {
+    default_type text/html;
+    content_by_lua '
+      ngx.say("1")
+    ';
+  }
+
+	location /success { 
+    return 200;
+  } 
+
+  location /notify { 
+    proxy_pass $scheme://127.0.0.1:$server_port/success;
+
+    set $bid_user_id '-';
+    set $bid_url '-';
+    set $bid_request '-';
+    set $category '-';
+
+    content_by_lua '
+			cjson = require "cjson"
+			ngx.req.read_body()
+    ';
+
+    log_format notify_tracking '$bid_request';
+		access_log  /var/log/nginx/notify.log notify_tracking;
+  }
+
+  
+  location /to_target {
+    lua_need_request_body on;
+		client_max_body_size 10m;
+		client_body_buffer_size 10m;
+
+    proxy_pass $scheme://127.0.0.1:$server_port/success;
+
+    set $bid_request '-';
+
+    content_by_lua '
+      ngx.var.bid_request = ngx.var.request_body
+    ';
+
+    log_format target_tracking '$request_body';
+		access_log  /var/log/nginx/to_target.log target_tracking;
+
+  }
+
+  location /users {
+    lua_need_request_body on;
+		client_max_body_size 10m;
+		client_body_buffer_size 10m;
+
+    proxy_pass $scheme://127.0.0.1:$server_port/success;
+
+    set $bid_request '-';
+    set $ref '-';
+
+    content_by_lua '
+      ngx.var.bid_request = ngx.var.request_body
+			ngx.var.ref = "asdf"
+    ';
+
+    log_format user_tracking '$request_body $ref';
+		access_log  /var/log/nginx/user.log user_tracking;
+
+  }
+
+	location /memcached {
+    set $memcached_key $arg_key;
+ 
+		memcached_pass     localhost:11211;
+    default_type   text/html;
+    error_page     404 = /fallback;
+  }
+
+  location /stats {
+    default_type text/html;
+	  content_by_lua '
+			local logging = require("logging")
+			
+			local count, avg, elapsed_time = 
+					logging.get_plot(ngx.shared.log_dict, "request_time")
+
+			local qps = 0
+
+			ngx.say("Since last measure:\t", elapsed_time, " secs")
+			ngx.say("Request Count:\t\t", count)
+			ngx.say("Average req time:\t", avg, " secs")
+			if elapsed_time > 0 then
+					qps = count / elapsed_time
+			end
+			ngx.say("Requests per Secs:\t", qps)
+	';
+  }
+}
+
+
+
+server {
+  listen 8080;
+
+	location /static {
+		alias  /home/ubuntu/bidder/;
+  }
+
+  
+}
+
+server {
+  
+  listen 8081;
+  server_name metrics.getrockerbox.com;
+
+  root /home/ubuntu/bidder/;
+
+  location ~ /render {
+	  proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_pass http://tornado_server;
+  }
+  
+  location ~ /{
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_pass http://quick_dashboard;
+  }
+}
 
 server {
   
   listen 80;
-  server_name assets.getrockerbox.com;
+  server_name metrics.getrockerbox.com;
 
   root /home/ubuntu/bidder/;
 
   log_format main '$request $time_local $arg_auction_id';
   log_format track_formatted '$arg_price $arg_ecp $arg_creative $arg_height $arg_width $arg_uid $arg_auction_id $arg_seller $arg_tag $arg_venue $arg_auction_id $arg_ip_address "$ref"';
-	log_format arb_result '$ref $arg_auction_id $arg_uid $arg_creative $arg_price $new_auction_id $buyer_id $creative_id $brand_id $bid_price $alpha $time_local $is_arb $is_user';
-
-	log_format ab '$arg_auction_id $new_auction_id $buyer_id $bid $clear $creative_id "$ref" $is_arb';
-	log_format viewability '$request $time_local $arg_auction_id $is_arb';
 
   location ~ /track {
     default_type text/html;
-    set $new_auction_id '-';
+    set $ref '-';
+
+    resolver 8.8.8.8;
+
+    content_by_lua '
+			
+     	ngx.say("") 
+    ';
+    access_log  /var/log/nginx/raw.log main;
+    access_log  /var/log/nginx/formatted.log track_formatted;
+
+  }
+
+  location ~ /assets/ {
+    access_log  /var/log/nginx/asset.log main;
+  }
+
+
+	log_format ab '$arg_auction_id $new_auction_id $buyer_id $arg_price $bid $clear $creative_id "$ref" "$ab" $is_arb';
+
+  location ~ /getviewability {
+		set $new_auction_id '-';
+		set $bid '-';
+		set $clear '-';
+
     set $buyer_id '-';
     set $creative_id '-';
-    set $bid_price '-';
     set $brand_id '-';
     set $alpha '-';
     set $ref '-';
+		set $ab '-';
 		set $is_arb 'false';
-		set $is_user 'true';
-    
-    resolver 8.8.8.8;
+		set $is_user 'false';
+
+    log_format arb_result '$ref $arg_auction_id $arg_uid $arg_creative $arg_price $new_auction_id $buyer_id $creative_id $brand_id $bid $alpha $time_local $is_user $is_arb';
+		log_format main2 '$request $time_local $arg_auction_id $is_arb';
+
+		resolver 8.8.8.8;
+
     content_by_lua '
-      ngx.var.ref = ngx.unescape_uri(ngx.var.arg_referrer)
+			ngx.var.ref = ngx.unescape_uri(ngx.var.arg_referrer)
+			local args = ngx.req.get_uri_args()
 
-      local args = ngx.req.get_uri_args()
-      local http = require "resty.http"
-      local cjson = require "cjson"
-      local redis = require "resty.redis"
+			local http = require "resty.http"
+			local redis = require "resty.redis"
+			local cjson = require "cjson"
+			local red = redis:new()
+			local red2 = redis:new()
 
-      if string.len(args["uid"]) > 0 and tonumber(args["uid"]) > 0 then
+			local ok, err = red2:connect("162.243.123.240", 6379)
+			red2:set_timeout(100)
 
-				local red2 = redis:new()
-				red2:set_timeout(100)
-				local ok, err = red2:connect("162.243.123.240", 6379)
+			if (string.len(args["uid"]) > 0 and tonumber(args["uid"]) > 0 and string.find(ngx.var.uri,"js") ) then
+
 				local user, err = red2:get(args["uid"])
 				if (user ~= ngx.null) then 
 					ngx.var.is_user = "true"
 					
 					local hc = http:new()
+					
 					local foobar = {
 						an_placement_id = 2261194,
 						an_user_id = "user_id",
-						page_url = args["referrer"],
+						page_url = ngx.var.ref,
 						ad_format = "iframe",
 						width = tonumber(args["width"]),
 						ext_auction_id = "db" .. args["auction_id"],
@@ -65,99 +268,86 @@ server {
 						method = "POST",
 						body = json_text
 					}
-					local response = cjson.decode(body)
+					
+					local auction = cjson.decode(body)
 					local old_price = tonumber(args["price"])
-					if response["bid"]  then
-						ngx.var.alpha = response["bid"] - old_price
+					if auction["bid"] then
+						ngx.var.alpha = auction["bid"] - old_price
+						if (auction["bid"] - old_price > 0 ) then
+							ngx.var.is_arb = "true"
+						end
 						
 						ngx.var.new_auction_id = string.match(body,"appnexus_auction_id\\\":%s?(%d+),") 
-						ngx.var.buyer_id = response["buyer_member_id"]
-						ngx.var.creative_id = response["creative_id"]
-						ngx.var.brand_id = response["brand_id"]
-						ngx.var.bid_price = response["bid"]
+						ngx.var.buyer_id = auction["buyer_member_id"]
+						ngx.var.creative_id = auction["creative_id"]
+						ngx.var.brand_id = auction["brand_id"]
+						ngx.var.bid = auction["bid"]
 
-						if response["bid"]*0.7 > old_price then
-							ngx.var.is_arb = "true"
-							local red = redis:new()
-							red:set_timeout(20)
-							local ok, err = red:connect("162.243.121.234", 6379)
-							ok, err = red:setex("db" .. args["auction_id"],60,body)  
+						local tag = auction["ad_tag"]
+						
+						tag = string.gsub(tag,"%%%%pricepaid%%%%",auction["bid"]*0.8)
+						ngx.var.ab = string.match(tag,"SRC=\'(.*)\' FR")
+						ngx.var.buyer_id = auction["buyer_member_id"]
+						ngx.var.creative_id = auction["creative_id"]
+						ngx.var.clear = auction["bid"]*0.8
+
+						if (false and auction["bid"]*0.7 > old_price) then
 							
-							ngx.say("db" .. args["auction_id"])  
+							ngx.var.is_arb = "true"
+
+							local creative = args["creative"]
+							local id_str = "\\\"cr_" .. creative .. "_" ..  args["auction_id"] .. "\\\""
+							ngx.say("var ecalper = document.getElementById(" .. id_str .. ")")
+							ngx.say("var tnemecalper = document.createElement(\\\"div\\\")")
+							ngx.say("tnemecalper.innerHTML = \\\"" .. tag .. "\\\"")
+							ngx.say("ecalper.parentNode.replaceChild(tnemecalper,ecalper)")
+						else
+							local response = ngx.location.capture("/assets" .. ngx.var.request_uri)
+							ngx.status = response.status
+							ngx.say(response.body)
 						end
+					else
+						local response = ngx.location.capture("/assets" .. ngx.var.request_uri)
+						ngx.status = response.status
+						ngx.say(response.body)
 					end
+				else
+					local response = ngx.location.capture("/assets" .. ngx.var.request_uri)
+					ngx.status = response.status
+					ngx.say(response.body)
 				end
+			else
+				local response = ngx.location.capture("/assets" .. ngx.var.request_uri)
+				ngx.status = response.status
+				ngx.say(response.body)
       end
-      
-    ';
-    access_log  /var/log/nginx/raw.log main;
-    access_log  /var/log/nginx/formatted.log track_formatted;
-		access_log  /var/log/nginx/arb.log arb_result;
-
-  }
-
-  location ~ /assets/ {
-    access_log  /var/log/nginx/asset.log main;
-  }
 
 
-  location ~ /getviewability {
-		set $ref '-';
-		set $is_arb 'false';
-		set $new_auction_id '-';
-		set $buyer_id '-';
-		set $bid '-';
-		set $clear '-';
-		set $creative_id '-';
-
-		
-
-    content_by_lua '
-			local args = ngx.req.get_uri_args()
-
-			local redis = require "resty.redis"
-			local cjson = require "cjson"
-			local red = redis:new()
-			local red2 = redis:new()
-
-			red:set_timeout(100)
- 			red2:set_timeout(100)
-
-      local ok, err = red:connect("162.243.121.234", 6379)
-			local ok, err = red2:connect("162.243.123.240", 6379)
-
-      local auction, err = red:get("db" .. args["auction_id"])
-      local user, err = red2:get(args["uid"])
-
-			if (auction ~= ngx.null and user ~= ngx.null) then
-				ngx.var.new_auction_id = string.match(auction,"appnexus_auction_id\\\":%s?(%d+),")
-        auction = cjson.decode(auction)
-        local tag = auction["ad_tag"]
-				
-        tag = string.gsub(tag,"%%%%pricepaid%%%%",auction["bid"]*0.8)
-				ngx.var.ref = string.match(tag,"SRC=\'(.*)\' FR")
-				ngx.var.buyer_id = auction["buyer_member_id"]
-				ngx.var.bid = auction["bid"]
-				ngx.var.creative_id = auction["creative_id"]
-				ngx.var.clear = auction["bid"]*0.8
-				ngx.var.is_arb = "true"
-
-        local creative = args["creative"]
-        ngx.say("var ecalper = document.getElementById(\\\"cr_" .. creative .. "\\\")")
-        ngx.say("var tnemecalper = document.createElement(\\\"div\\\")")
-        ngx.say("tnemecalper.innerHTML = \\\"" .. tag .. "\\\"")
-        ngx.say("ecalper.parentNode.replaceChild(tnemecalper,ecalper)")
-      else
-        local response = ngx.location.capture("/assets" .. ngx.var.request_uri)
-        ngx.status = response.status
-        ngx.say(response.body)
-      end
     ';
 
     access_log  /var/log/nginx/getviewability.log main2;
 		access_log  /var/log/nginx/ab.log ab;	
+		access_log  /var/log/nginx/arb.log arb_result;
 		
   }
+
+	
+	log_format a "$request_body";
+		
+  location ~ /ab {
+		lua_need_request_body on;
+		client_max_body_size 10m;
+		client_body_buffer_size 10m;
+
+    set $bid_request '-';
+    set $ref '-';
+		content_by_lua '
+			ngx.say("hello")
+		';
+
+		access_log  /var/log/nginx/test.log a;
+
+	}
 
   location ~ /viewability { 
     default_type image/gif; 
@@ -179,6 +369,21 @@ server {
       access_log /var/log/nginx/view_formatted.log view_formatted;
     } 
   }
+
+	location ~ /pixel {
+		default_type text/javascript;
+		lua_need_request_body on;
+		client_max_body_size 10m;
+		client_body_buffer_size 10m;
+
+    set $bid_request '-';
+    set $ref '-';
+		content_by_lua 'ngx.say("")';
+		access_log  /var/log/nginx/pixel.log main;
+
+	}
+
+  
 
   location ~ /{
     proxy_set_header Host $host;
