@@ -44,6 +44,27 @@ def write(client_id):
         WebSocketHandler.send_to_websocket(client_id,message)
     return send
 
+
+class CreativeHandler(tornado.web.RequestHandler):
+    def get(self):
+        crid = self.get_argument("id",False)
+        ty = self.get_argument("type",False)
+        if crid:
+            db = lnk.dbs.mysql
+            q = db.select_dataframe("select * from appnexus_reporting.advertiser where id = %s" % crid)
+            q.to_html()
+            #v = q.fillna(0).T.to_dict().values()
+
+            #json = ujson.dumps(v).decode('ascii','ignore')
+            self.render("creative.html")
+
+
+    def post(self):
+        print self.request.body
+        self.write("hello")
+
+
+
 class IndexHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self):
@@ -352,7 +373,8 @@ app = tornado.web.Application([
     (r'/debug', DebugHandler), 
     (r'/lookback.*', LookbackHandler), 
     (r'/websocket', WebSocketHandler),
-    (r'/uid.*',UIDHandler)
+    (r'/uid.*',UIDHandler),
+    (r'/creative.*', CreativeHandler)
 ],debug=True)
 
 if __name__ == '__main__':
