@@ -1,0 +1,1 @@
+$FLUME_PATH/bin/flume-ng agent --conf $FLUME_PATH/conf/ -f $FLUME_PATH/conf/flume.conf -Dflume.monitoring.type=http -Dflume.monitoring.port=34545 -Xms100m -Xmx200m -Dflume.root.logger=DEBUG,console -n tail3 
