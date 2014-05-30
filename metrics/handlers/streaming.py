@@ -32,11 +32,12 @@ def mask_from_dict(df,masks):
 
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
   
-    def initialize(self,db,socket_buffer):
+    def initialize(self,db,socket_buffer,view_buffer):
 
         self.time_interval = 1
         self.do = db
         self.socket_buffer = socket_buffer
+        self.view_buffer = view_buffer
         self.creatives = self.do.select_dataframe(BRAND_QUERY)
         self.creatives['id'] = self.creatives.id.map(str)
 
@@ -67,11 +68,14 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
     def generator_loop(self):
         import copy, time
 
-        value = copy.deepcopy(self.socket_buffer)
+        track_values = copy.deepcopy(self.socket_buffer)
         self.socket_buffer[:] = []
+        view_values = copy.deepcopy(self.view_buffer)
+        self.view_buffer[:]
+
         start = time.time()
-        if value:
-            df = self.build_data(value)
+        if track_values:
+            df = self.build_data(track_values)
                         
             for i,client in clients.iteritems():
                 if client['enabled'] == False:
@@ -83,6 +87,8 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
                 _df = masked[['debug','info','result']]
 
                 m = _df.fillna(0).T.to_dict().values()
+                m["view"] = view_values
+
                 json = ujson.dumps(m).decode('ascii','ignore')
                 try:
                     client['object'].write_message( json )

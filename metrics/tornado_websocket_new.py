@@ -116,11 +116,14 @@ db = lnk.dbs.mysql
 socket_buffer = []
 buffered_socket = reactor.listenTCP(1234,BufferedSocketFactory(socket_buffer))
 
+view_buffer = []
+view_socket = reactor.listenTCP(1234,ViewabilityBufferedFactory(view_buffer))
+
 app = tornado.web.Application([
     (r'/streaming', IndexHandler),
     (r'/debug', DebugHandler), 
     (r'/lookback.*', LookbackHandler), 
-    (r'/websocket', WebSocketHandler, dict(db=db,socket_buffer = socket_buffer)),
+    (r'/websocket', WebSocketHandler, dict(db=db,socket_buffer = socket_buffer, view_buffer = view_buffer)),
     (r'/uid.*',UIDHandler),
     (r'/api.*', APIHandler, dict(db=db)),
     (r'/advertiser.*',AdvertiserHandler, dict(db=db))

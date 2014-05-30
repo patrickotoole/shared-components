@@ -2,7 +2,6 @@ import datetime
 import redis
 import stream
 import maxminddb
-#import tornado.platform.twisted
 from twisted.internet import  protocol, defer, threads
 from twisted.protocols import basic
 reader = maxminddb.Reader('/root/GeoLite2-City.mmdb')
@@ -47,6 +46,7 @@ class BufferedSocket(basic.LineReceiver):
         return fline
 
     def async_get_user(self,fline):
+        # check if this starts with numbers
         d = threads.deferToThread(self.get_user,fline)
         return d
 
@@ -109,6 +109,8 @@ class BufferedSocket(basic.LineReceiver):
         self.buf += [fline]
 
     def lineReceived(self, line):
+        # has the following callback chain 
+        # get_user -> get_debug -> set_buffer
         sline = line.split(" ")
         aline = stream.AuctionLine(sline)
         fline = aline.get_qs()

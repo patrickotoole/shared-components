@@ -4,54 +4,54 @@
         <meta charset="utf-8">
         <script src="http://d3js.org/d3.v3.min.js"></script>
         <script src="http://d3js.org/topojson.v1.min.js"></script>
-				<script src="http://metrics.getrockerbox.com/assets/bar.js"></script>
-				<script src="http://metrics.getrockerbox.com/assets/map.js"></script>
-				<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
-				<script src="http://getbootstrap.com/dist/js/bootstrap.min.js"></script>
+        <script src="http://metrics.getrockerbox.com/assets/bar.js"></script>
+        <script src="http://metrics.getrockerbox.com/assets/map.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+        <script src="http://getbootstrap.com/dist/js/bootstrap.min.js"></script>
 
-				<link href="http://rockerbox.com/css/bootstrap.css" rel="stylesheet">
-				<link href="http://getbootstrap.com/examples/dashboard/dashboard.css" rel="stylesheet">
-				<style>
-						td {max-width:200px;max-height:40px;overflow:hidden}
-						path { stroke: steelblue; stroke-width: 1; fill: none; }
-						.axis {font-size:8px}
-						.bar { fill: steelblue; }
-						.bar:hover { fill: brown; }
-						.axis { font: 10px sans-serif; }
-						.axis path,
-						.axis line { fill: none; stroke: #000; shape-rendering: crispEdges; }
-						.x.axis path { display: none; }
+        <link href="http://rockerbox.com/css/bootstrap.css" rel="stylesheet">
+        <link href="http://getbootstrap.com/examples/dashboard/dashboard.css" rel="stylesheet">
+        <style>
+            td {max-width:200px;max-height:40px;overflow:hidden}
+            path { stroke: steelblue; stroke-width: 1; fill: none; }
+            .axis {font-size:8px}
+            .bar { fill: steelblue; }
+            .bar:hover { fill: brown; }
+            .axis { font: 10px sans-serif; }
+            .axis path,
+            .axis line { fill: none; stroke: #000; shape-rendering: crispEdges; }
+            .x.axis path { display: none; }
             #graph-approved rect {fill:#428bca}
-				</style>
-		</head>
+        </style>
+    </head>
    <body data-spy="scroll" data-target=".navbar" data-offset="150"> 
    <div class="navbar-wrapper">
-	 	 <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
-					<div class="navbar-header">
-						<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-	            <span class="sr-only">Toggle navigation</span>
-	            <span class="icon-bar"></span>
-	            <span class="icon-bar"></span>
-	          </button>
-	          <a class="navbar-brand" href="#">
-				      <img src="http://rockerbox.com/img/logo.png" width="150px" style="margin-top:-5px">
-	          </a>
-	        </div>
-	        <div class="navbar-collapse collapse">
-	          <ul class="nav navbar-nav">
-	            <li><a href="#about">About</a></li>
- 							<li><a href="#technology">Tech</a></li>
-	            <li><a href="#team">Team</a></li>
-							 <li><a href="#contact">Contact</a></li>
-	           
-	            <!-- <li><a href="demo.html">Demo</a></li> -->
-	          </ul>
-	        </div><!--/.nav-collapse -->
-	    </nav>
-		</div>
- 		<div class="container-fluid">
-			<div class="row">
-				<div class="col-sm-4 col-md-2 sidebar">
+      <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">
+              <img src="http://rockerbox.com/img/logo.png" width="150px" style="margin-top:-5px">
+            </a>
+          </div>
+          <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+              <li><a href="#about">About</a></li>
+               <li><a href="#technology">Tech</a></li>
+              <li><a href="#team">Team</a></li>
+               <li><a href="#contact">Contact</a></li>
+             
+              <!-- <li><a href="demo.html">Demo</a></li> -->
+            </ul>
+          </div><!--/.nav-collapse -->
+      </nav>
+    </div>
+     <div class="container-fluid">
+      <div class="row">
+        <div class="col-sm-4 col-md-2 sidebar">
           <ul class="nav nav-sidebar">
             <li class="active"><a href="/streaming">Streaming</a></li>
             <li><a href="/debug">Arbitrage</a></li>
@@ -59,9 +59,9 @@
             <li><a href="#">Export</a></li>
           </ul>
         </div>
-				<div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
           <h3 class="page-header">Streaming Dashboard</h3>
-				  
+          
           <div class="input-group">
             
             <div class="input-group-btn">
@@ -123,8 +123,8 @@
 
             </div>
           </div>
-          	
-					<div class="col-sm-4" >
+            
+          <div class="col-sm-4" >
             <div style="text-align:center;height:100px;margin-top:20px;margin-bottom:20px">
               <div style="width:33%;display:inline-block">
                 <h1 id="imps-count"></h1>
@@ -147,45 +147,45 @@
           </div>
 
           <div id="maps" class="col-sm-8" style="max-height: 450px;"></div>
-					<div class="col-sm-6" id="domains"></div>
-					<div class="col-sm-6" id="users"></div>
+          <div class="col-sm-6" id="domains"></div>
+          <div class="col-sm-6" id="users"></div>
 
-					<div id="messages" style=""></div>
+          <div id="messages" style=""></div>
           <div id="geo" style=""></div>
 
           
 
-				</div>
-			</div>
-		</div>
+        </div>
+      </div>
+    </div>
     </body>
-		<script>
-		Element.prototype.prependChild = function(child) { this.insertBefore(child, this.firstChild); };
+    <script>
+    Element.prototype.prependChild = function(child) { this.insertBefore(child, this.firstChild); };
 
-		var socketWrapper = function(params,on_init) {
-			var self = this;
-			this.id = Math.round(Math.random() * 10000000);
+    var socketWrapper = function(params,on_init) {
+      var self = this;
+      this.id = Math.round(Math.random() * 10000000);
 
-			this.createSocket = function(params){
-				this.socket = new WebSocket("ws://107.170.18.93/websocket?id=" + this.id);
+      this.createSocket = function(params){
+        this.socket = new WebSocket("ws://107.170.18.93/websocket?id=" + this.id);
 
-				this.socket.onopen = function() {
-					self.sendMessage("initialize")
+        this.socket.onopen = function() {
+          self.sendMessage("initialize")
           self.sendJSON(sharedJson)
 
           if (on_init) on_init.bind(self)()
-				}
+        }
 
-				this.socket.onmessage = function(event) {
-					var parsed = JSON.parse(event.data)
-					self.onMessage(parsed,event)
-				}
-			}
+        this.socket.onmessage = function(event) {
+          var parsed = JSON.parse(event.data)
+          self.onMessage(parsed,event)
+        }
+      }
 
-			this.sendMessage = function(message){
-				if (!this.socket) this.createSocket()
-				this.socket.send(message)
-			}
+      this.sendMessage = function(message){
+        if (!this.socket) this.createSocket()
+        this.socket.send(message)
+      }
 
       this.sendJSON = function(object) {
         console.log(window.location.pathname + "?" + $.param(object,true))
@@ -193,40 +193,40 @@
         this.sendMessage(JSON.stringify(object))
       }
 
-			this.onMessage = function(json,event) { }
-			this.createSocket(params)
+      this.onMessage = function(json,event) { }
+      this.createSocket(params)
 
-		}
+    }
 
-		var streamingBarWrapper = function(id,steps,width,height,formatter){
-			var self = this;
-			this.t = 0
-			this.data = d3.range(steps).map(function(){
-				self.t++;
-				return {"time":self.t,"value":0}
-			})
-			
-			this.graph = dynamicBar(id,this.data,width,height)
+    var streamingBarWrapper = function(id,steps,width,height,formatter){
+      var self = this;
+      this.t = 0
+      this.data = d3.range(steps).map(function(){
+        self.t++;
+        return {"time":self.t,"value":0}
+      })
+      
+      this.graph = dynamicBar(id,this.data,width,height)
       this.defaultFormatter = function(time,json) {
         return {"time":time,"value":json.length}
       }
       this.formatter = formatter || this.defaultFormatter
 
-			this.add = function(json) {
-				this.t++;
-				this.data.shift()
-				this.data.push(this.formatter(this.t,json))
-				this.graph(this.data)
-			}
-		}
+      this.add = function(json) {
+        this.t++;
+        this.data.shift()
+        this.data.push(this.formatter(this.t,json))
+        this.graph(this.data)
+      }
+    }
 
-		var rawDataWrapper = function(steps){
-			this.data = d3.range(steps)
-			this.add = function(json) {
-				this.data.shift()
-				this.data.push(json)
-				this.onAdd.bind(this)(json)
-			}
+    var rawDataWrapper = function(steps){
+      this.data = d3.range(steps)
+      this.add = function(json) {
+        this.data.shift()
+        this.data.push(json)
+        this.onAdd.bind(this)(json)
+      }
       this.group_generic = function(group) {
         var fn = function() {
           var m = [], n = {}, schema = []
@@ -256,21 +256,21 @@
         }
         return fn.bind(this)
       }
-			this.group_user = function() {
-				return this.group_generic(["uid","approved_user","domain","price"])()
-			}
-			this.group_domain = function() {
-				return this.group_generic(["domain","uid","approved_user","advertiser_id","price"])()
-			}
-			this.onAdd = function(){}
-			
-		}
-		
+      this.group_user = function() {
+        return this.group_generic(["uid","approved_user","domain","price"])()
+      }
+      this.group_domain = function() {
+        return this.group_generic(["domain","uid","approved_user","advertiser_id","price"])()
+      }
+      this.onAdd = function(){}
+      
+    }
+    
 
-		var messageProcessor = function() {
+    var messageProcessor = function() {
 
-			var messageContainer = document.getElementById("messages"),
-					bar = new streamingBarWrapper('#graph',60,8,100),
+      var messageContainer = document.getElementById("messages"),
+          bar = new streamingBarWrapper('#graph',60,8,100),
           approved = new streamingBarWrapper('#graph-approved',60,8,100,
             function(t,json) {
               try {
@@ -286,32 +286,32 @@
 
             }
           )
-					self = this;
+          self = this;
 
-			this.raw_data = new rawDataWrapper(60);
-			this.raw_data.onAdd = function(json){
-				var table = messageContainer.getElementsByTagName("table"),
-						keys = Object.keys(json[0]['result']);
+      this.raw_data = new rawDataWrapper(60);
+      this.raw_data.onAdd = function(json){
+        var table = messageContainer.getElementsByTagName("table"),
+            keys = Object.keys(json[0]['result']);
 
-				if (table.length == 0) 
-					self.createHeaders(keys);
+        if (table.length == 0) 
+          self.createHeaders(keys);
 
-				var header = messageContainer.getElementsByTagName("thead")[0];
-				//self.insertRows(json.map(function(x){return x['result']}),keys,header);
-				self.domainTable(this.group_domain(),"domains");
-				self.userTable(this.group_user(),"users");
+        var header = messageContainer.getElementsByTagName("thead")[0];
+        //self.insertRows(json.map(function(x){return x['result']}),keys,header);
+        self.domainTable(this.group_domain(),"domains");
+        self.userTable(this.group_user(),"users");
         self.geoTable(this.group_generic(["state","country","approved_user","domain","advertiser_id"])(),"geo");
         self.geoMap(this.group_generic(["city_state","latitude","longitude","domain","advertiser_id","approved_user"])());
         var data = this.group_user(),
           total = 0
         for (var key in data) {
-				  total += data[key].length
-				}
+          total += data[key].length
+        }
         $('#imps-count').text(total)
         $('#uniques-count').text(Object.keys(data).length)
         $('#domains-count').text(Object.keys(this.group_domain()).length)
         
-			}
+      }
 
       this.geoMap = function(data) {
         var sorted = []
@@ -344,155 +344,155 @@
       this.geoTable = function(data,div) {
         var div = div || "messages"
         //console.log(data)
-				var table = "<table class='table table-condensed'><thead><tr>" + 
+        var table = "<table class='table table-condensed'><thead><tr>" + 
           "<th>state</th>"+
-					"<th>country</th>"+
+          "<th>country</th>"+
           "<th>count</th>"+
-					"<th>approved</th>"+
-					"<th>domains</th>"+
-					"<th>advertisers</th>"+ 
-					"</tr></thead>"
-				var sorted = []
-				for (var key in data) {
-					sorted.push([
-						"<a href='/lookback?uid="+key+"' target='_blank'>"+key+"</a>", 
-						data[key][0][1],
+          "<th>approved</th>"+
+          "<th>domains</th>"+
+          "<th>advertisers</th>"+ 
+          "</tr></thead>"
+        var sorted = []
+        for (var key in data) {
+          sorted.push([
+            "<a href='/lookback?uid="+key+"' target='_blank'>"+key+"</a>", 
+            data[key][0][1],
             data[key].length, 
             data[key].map(function(r){return r[2]}).reduce(function(pv, cv) { return pv + cv; }, 0),
             data[key].map(function(r){return r[3]}).filter(function (e, i, arr) { return arr.indexOf(e, i+1) === -1; }).length,
             data[key].map(function(r){return r[4]}).filter(function (e, i, arr) { return arr.indexOf(e, i+1) === -1; }).length
-					])
-				}
-				sorted = sorted.sort(function(x,y){return y[2]-x[2]})
-				for (var key in sorted) {
-					table += "<tr><td>" + 
-						sorted[key][0] + "</td><td>" + 
-						sorted[key][1] + "</td><td>" + 
-						sorted[key][2] + "</td><td>" + 
-						sorted[key][3] + "</td><td>" +
+          ])
+        }
+        sorted = sorted.sort(function(x,y){return y[2]-x[2]})
+        for (var key in sorted) {
+          table += "<tr><td>" + 
+            sorted[key][0] + "</td><td>" + 
+            sorted[key][1] + "</td><td>" + 
+            sorted[key][2] + "</td><td>" + 
+            sorted[key][3] + "</td><td>" +
             sorted[key][4] + "</td><td>" +
             sorted[key][5] + "</td><td>"
-				}
-				
+        }
+        
 
-				table += "</table>"
-				document.getElementById(div).innerHTML = table
+        table += "</table>"
+        document.getElementById(div).innerHTML = table
        
       }
       
 
-			this.userTable = function(data,div) {
+      this.userTable = function(data,div) {
         var div = div || "messages"
-				var table = "<table class='table table-condensed'><thead><tr>" + 
-					"<th>user</th>"+
-					"<th>count</th>"+
-					"<th>approved</th>"+
+        var table = "<table class='table table-condensed'><thead><tr>" + 
+          "<th>user</th>"+
+          "<th>count</th>"+
+          "<th>approved</th>"+
           "<th>domains</th>"+
-					"<th>price</th>"+
-					"</tr></thead>"
-				var sorted = []
-				for (var key in data) {
-					sorted.push([
-						"<a href='/lookback?uid="+key+"' target='_blank'>"+key+"</a>", 
-						data[key].length, 
-						data[key].map(function(r){return r[1]}).reduce(function(pv, cv) { return pv + cv; }, 0),
+          "<th>price</th>"+
+          "</tr></thead>"
+        var sorted = []
+        for (var key in data) {
+          sorted.push([
+            "<a href='/lookback?uid="+key+"' target='_blank'>"+key+"</a>", 
+            data[key].length, 
+            data[key].map(function(r){return r[1]}).reduce(function(pv, cv) { return pv + cv; }, 0),
             data[key].map(function(r){return r[2]}).filter(function (e, i, arr) { return arr.indexOf(e, i+1) === -1; }).length,
-						(data[key].map(function(r){return parseFloat(r[3])}).reduce(function(pv, cv) { return pv + cv; }, 0)/data[key].length).toFixed(2)
-					])
-				}
-				sorted = sorted.sort(function(x,y){return y[1]-x[1]})
-				for (var key in sorted) {
-					table += "<tr><td>" + 
-						sorted[key][0] + "</td><td>" + 
-						sorted[key][1] + "</td><td>" + 
-						sorted[key][2] + "</td><td>" + 
-						sorted[key][3] + "</td><td>" +
+            (data[key].map(function(r){return parseFloat(r[3])}).reduce(function(pv, cv) { return pv + cv; }, 0)/data[key].length).toFixed(2)
+          ])
+        }
+        sorted = sorted.sort(function(x,y){return y[1]-x[1]})
+        for (var key in sorted) {
+          table += "<tr><td>" + 
+            sorted[key][0] + "</td><td>" + 
+            sorted[key][1] + "</td><td>" + 
+            sorted[key][2] + "</td><td>" + 
+            sorted[key][3] + "</td><td>" +
             sorted[key][4] + "</td><td>" 
-				}
-				
+        }
+        
 
-				table += "</table>"
-				document.getElementById(div).innerHTML = table
+        table += "</table>"
+        document.getElementById(div).innerHTML = table
 
-			}
+      }
 
 
-			
-			this.domainTable = function(data,div) {
-				var table = "<table class='table table-condensed'><thead><tr>" + 
-					"<th>domain</th>"+
-					"<th>count</th>"+
-					"<th>uniques</th>"+
-					"<th>approved</th>"+
-					"<th>advertisers</th>"+
-					"<th>price</th>"+
-					"</tr></thead>"
-				var sorted = []
+      
+      this.domainTable = function(data,div) {
+        var table = "<table class='table table-condensed'><thead><tr>" + 
+          "<th>domain</th>"+
+          "<th>count</th>"+
+          "<th>uniques</th>"+
+          "<th>approved</th>"+
+          "<th>advertisers</th>"+
+          "<th>price</th>"+
+          "</tr></thead>"
+        var sorted = []
 
-				for (var key in data) {
-					sorted.push([
-						key, 
-						data[key].length, 
-						data[key].map(function(r){return r[1]}).filter(function (e, i, arr) { return arr.indexOf(e, i+1) === -1; }).length,
+        for (var key in data) {
+          sorted.push([
+            key, 
+            data[key].length, 
+            data[key].map(function(r){return r[1]}).filter(function (e, i, arr) { return arr.indexOf(e, i+1) === -1; }).length,
             data[key].map(function(r){return r[2]}).reduce(function(pv, cv) { return pv + cv; }, 0),
-						data[key].map(function(r){return r[3]}).filter(function (e, i, arr) { return arr.indexOf(e, i+1) === -1; }).length,
-						(data[key].map(function(r){return parseFloat(r[4])}).reduce(function(pv, cv) { return pv + cv; }, 0)/data[key].length).toFixed(2)
-					])
-				}
-				sorted = sorted.sort(function(x,y){return y[1]-x[1]})
-				for (var key in sorted) {
-					table += "<tr><td>" + 
-						sorted[key][0] + "</td><td>" + 
-						sorted[key][1] + "</td><td>" + 
-						sorted[key][2] + "</td><td>" + 
-						sorted[key][3] + "</td><td>" + 
-						sorted[key][4] + "</td><td>" + 
-						sorted[key][5] + "</td></tr>"		
-				}
+            data[key].map(function(r){return r[3]}).filter(function (e, i, arr) { return arr.indexOf(e, i+1) === -1; }).length,
+            (data[key].map(function(r){return parseFloat(r[4])}).reduce(function(pv, cv) { return pv + cv; }, 0)/data[key].length).toFixed(2)
+          ])
+        }
+        sorted = sorted.sort(function(x,y){return y[1]-x[1]})
+        for (var key in sorted) {
+          table += "<tr><td>" + 
+            sorted[key][0] + "</td><td>" + 
+            sorted[key][1] + "</td><td>" + 
+            sorted[key][2] + "</td><td>" + 
+            sorted[key][3] + "</td><td>" + 
+            sorted[key][4] + "</td><td>" + 
+            sorted[key][5] + "</td></tr>"    
+        }
 
-				table += "</table>"
-				document.getElementById(div).innerHTML = table
+        table += "</table>"
+        document.getElementById(div).innerHTML = table
 
-			}
+      }
 
-			this.createHeaders = function(keys) {
-				headers = "<table class='table'><thead><tr id='msgHeader'>"
-				for (var key in keys) {
-					headers += "<th>"+keys[key]+"</th>"
-				}
-				headers += "</tr></thead></table>"
-				messageContainer.innerHTML = headers
-			}
-			this.insertRows = function(values,keys,loc) {
-				for (var row in values) {
-					var html_row = document.createElement("tr"),
-							content = "";
+      this.createHeaders = function(keys) {
+        headers = "<table class='table'><thead><tr id='msgHeader'>"
+        for (var key in keys) {
+          headers += "<th>"+keys[key]+"</th>"
+        }
+        headers += "</tr></thead></table>"
+        messageContainer.innerHTML = headers
+      }
+      this.insertRows = function(values,keys,loc) {
+        for (var row in values) {
+          var html_row = document.createElement("tr"),
+              content = "";
 
-					for (var key in keys) {
-							content += "<td>"+values[row][keys[key]]+"</td>"
-					}
-					html_row.innerHTML = content
-					loc.parentNode.insertBefore(html_row,loc.nextSibling)
-				}	
-			}
+          for (var key in keys) {
+              content += "<td>"+values[row][keys[key]]+"</td>"
+          }
+          html_row.innerHTML = content
+          loc.parentNode.insertBefore(html_row,loc.nextSibling)
+        }  
+      }
       this.clear_data = function(steps) {
         this.raw_data.data = d3.range(steps)
 
       }
-			this.onMessage = function(json,event) {
-				
-				bar.add(json);
+      this.onMessage = function(json,event) {
+        console.log(json['view']) 
+        bar.add(json);
         approved.add(json);
-				self.raw_data.add(json);
-				
-			}
-		}
-		
-		var socket = new socketWrapper();
-		var processor = new messageProcessor()
-		socket.onMessage = processor.onMessage
+        self.raw_data.add(json);
+        
+      }
+    }
+    
+    var socket = new socketWrapper();
+    var processor = new messageProcessor()
+    socket.onMessage = processor.onMessage
 
-		$('#start').click(
+    $('#start').click(
       function(){
         if (socket.socket.CLOSED == socket.socket.readyState) {
           socket = new socketWrapper(
@@ -627,5 +627,5 @@
     })
  
     
-		</script>
+    </script>
 </html>
