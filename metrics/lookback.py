@@ -1,7 +1,5 @@
 import pandas, re, ujson
-from link import lnk
 from lookback_default import DATA
-console = lnk.api.console
 
 def parse_domain(referrer):
     try:

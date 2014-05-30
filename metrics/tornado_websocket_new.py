@@ -112,6 +112,7 @@ def shutdown():
     stop_loop()
 
 db = lnk.dbs.mysql
+api = lnk.api.console
 
 socket_buffer = []
 buffered_socket = reactor.listenTCP(1234,BufferedSocketFactory(socket_buffer))
@@ -123,7 +124,7 @@ app = tornado.web.Application([
     (r'/websocket', WebSocketHandler, dict(db=db,socket_buffer = socket_buffer)),
     (r'/uid.*',UIDHandler),
     (r'/api.*', APIHandler, dict(db=db)),
-    (r'/advertiser.*',AdvertiserHandler, dict(db=db))
+    (r'/advertiser.*',AdvertiserHandler, dict(db=db,api=api))
 
 ],debug=True,db=lnk.dbs.mysql)
 
