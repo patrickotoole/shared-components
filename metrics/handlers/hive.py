@@ -10,7 +10,7 @@ from twisted.internet import defer, threads
 
 API_QUERY = "select * from appnexus_reporting.%s where %s "
 
-hive = hive_utils.HiveClient(server="slave4",port="7425")
+hive = hive_utils.HiveClient(server="slave3",port="7425")
 
 @contextlib.contextmanager
 def openclose(transport):
