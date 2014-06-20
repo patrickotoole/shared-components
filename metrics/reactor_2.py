@@ -42,13 +42,13 @@ class ViewBufferedSocket(basic.LineReceiver):
         return d
 
     def set_buffer(self,passed):
-        self.buf += passed
+        self.buf += [passed]
 
     def is_viewable(self,params):
         if self.track.get(params["auction_id"],False):
             if params["visible"] == "true":
-            	self.set_buffer(params)
-            	del self.track[params["auction_id"]]
+                self.set_buffer(params)
+                del self.track[params["auction_id"]] 
 
     def check_expired(self):
         now = int(datetime.datetime.now().strftime("%s"))
@@ -57,7 +57,6 @@ class ViewBufferedSocket(basic.LineReceiver):
             try:
                 del self.track[i]
             except:
-                print(len(self.track))
                 pass
         self.timers = self.timers[len(ids):]
 
@@ -80,7 +79,6 @@ class ViewBufferedSocket(basic.LineReceiver):
 
             d = self.async_initiate(params)
             d.addCallback(self.async_check)
-
 
 class ViewabilityBufferedFactory(protocol.Factory):
     def __init__(self,buf):

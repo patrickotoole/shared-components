@@ -2,6 +2,10 @@ import tornado.web
 import ujson
 import pandas
 import StringIO
+from handlers.profile import ProfileHandler
+from handlers.money import MoneyHandler
+from handlers.pixel import PixelHandler
+from handlers.reporting import ReportingHandler
 
 API_QUERY = "select * from appnexus_reporting.%s where %s "
 
@@ -54,9 +58,10 @@ class AdvertiserHandler(tornado.web.RequestHandler):
         all_pages_pixel = self.get_argument('all_pages_pixel_checkbox')
         post_data = { "advertiser": { "name":advertiser_name, "state":"active" }}
         advertiser_post_response = self.api.post('/advertiser',data=ujson.dumps(post_data)).json
+        print advertiser_post_response
         advertiser_id = advertiser_post_response["response"]["advertiser"]["id"]
 
-        insert_advertiser_query = "insert into appnexus_reporting.advertiser (contact_name,external_advertiser_id,email,advertiser_name) values ('"+contact_name+"',"+str(advertiser_id)+",'"+contact_email+"','"+advertiser_name+"');"
+        insert_advertiser_query = "insert into appnexus_reporting.advertiser (contact_name,external_advertiser_id,email,advertiser_name) values ('%s', %s, '%s', '%s')" % (contact_name,str(advertiser_id),contact_email,advertiser_name)
         #Insert New Advertiser
         self.write(insert_advertiser_query)
         self.db.execute(insert_advertiser_query)            
@@ -83,7 +88,7 @@ class AdvertiserHandler(tornado.web.RequestHandler):
             signup_conversion_checkbox_pc = int(self.get_argument('signup_conversion_checkbox_pc'))
             signup_conversion_checkbox_pv = int(self.get_argument('signup_conversion_checkbox_pv'))
  
-            post_data = { "pixel": { "name": advertiser_name+" - Signup Conversion Pixel", "post_view_expire_mins": signup_conversion_checkbox_pc*60, "post_click_expire_mins": signup_conversion_checkbox_pv*60, "post_view_value": 1, "state": "active", "trigger_type": "hybrid" } } 
+            post_data = { "pixel": { "name": advertiser_name+" - Signup Conversion Pixel", "post_view_expire_mins": signup_conversion_checkbox_pv*60, "post_click_expire_mins": signup_conversion_checkbox_pc*60, "post_view_value": 1, "state": "active", "trigger_type": "hybrid" } } 
             pixel_post_response = self.api.post('/pixel?advertiser_id='+str(advertiser_id),data=ujson.dumps(post_data)).json
             pixel_id = pixel_post_response["response"]["pixel"]["id"]
             signup_pixel_query = "insert into appnexus_reporting.advertiser_pixel (external_advertiser_id,pixel_id,pixel_display_name,pc_window_hours,pv_window_hours) values ("+str(advertiser_id)+","+str(pixel_id)+",'Signup',"+str(signup_conversion_checkbox_pc)+","+str(signup_conversion_checkbox_pv)+");"
@@ -101,7 +106,7 @@ class AdvertiserHandler(tornado.web.RequestHandler):
             purchase_conversion_checkbox_pc = int(self.get_argument('purchase_conversion_checkbox_pc'))
             purchase_conversion_checkbox_pv = int(self.get_argument('purchase_conversion_checkbox_pv'))
  
-            post_data = { "pixel": { "name": advertiser_name+" - Purchase Conversion Pixel", "post_view_expire_mins": purchase_conversion_checkbox_pc*60, "post_click_expire_mins": purchase_conversion_checkbox_pv*60, "post_view_value": 1, "state": "active", "trigger_type": "hybrid" } } 
+            post_data = { "pixel": { "name": advertiser_name+" - Purchase Conversion Pixel", "post_view_expire_mins": purchase_conversion_checkbox_pv*60, "post_click_expire_mins": purchase_conversion_checkbox_pc*60, "post_view_value": 1, "state": "active", "trigger_type": "hybrid" } } 
             pixel_post_response = self.api.post('/pixel?advertiser_id='+str(advertiser_id),data=ujson.dumps(post_data)).json
             pixel_id = pixel_post_response["response"]["pixel"]["id"]
             purchase_pixel_query = "insert into appnexus_reporting.advertiser_pixel (external_advertiser_id,pixel_id,pixel_display_name,pc_window_hours,pv_window_hours) values ("+str(advertiser_id)+","+str(pixel_id)+",'Purchase',"+str(purchase_conversion_checkbox_pc)+","+str(purchase_conversion_checkbox_pv)+");"

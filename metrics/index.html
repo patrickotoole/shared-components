@@ -54,9 +54,10 @@
         <div class="col-sm-4 col-md-2 sidebar">
           <ul class="nav nav-sidebar">
             <li class="active"><a href="/streaming">Streaming</a></li>
-            <li><a href="/debug">Arbitrage</a></li>
-            <li><a href="/lookback">Lookback</a></li>
-            <li><a href="#">Export</a></li>
+<!--            <li><a href="/debug">Arbitrage</a></li> -->
+<!--            <li><a href="/lookback">Lookback</a></li> -->
+            <li><a href="/advertiser">Add Advertiser</a></li>
+            <li><a href="/money">Money</a></li>
           </ul>
         </div>
         <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
@@ -124,37 +125,40 @@
             </div>
           </div>
             
-          <div class="col-sm-4" >
+          <div class="col-sm-5" >
             <div style="text-align:center;height:100px;margin-top:20px;margin-bottom:20px">
-              <div style="width:33%;display:inline-block">
+              <div style="width:24%;display:inline-block">
                 <h1 id="imps-count"></h1>
                 Impressions
               </div>
-              <div style="width:33%;display:inline-block">
+              <div style="width:24%;display:inline-block">
                 <h1 id="uniques-count"></h1>
                 Uniques
               </div>
-              <div style="width:32%;display:inline-block">
+              <div style="width:24%;display:inline-block">
                 <h1 id="domains-count"></h1>
                 Domains
+              </div>
+              <div style="width:24%;display:inline-block">
+                <h1 id="views-count"></h1>
+                Views
               </div>
             </div>
             <h5>Impressions</h5>
             <div id="graph"></div>
             <h5>Approved</h5>
             <div id="graph-approved"></div>
+            <h5>Viewed</h5>
+            <div id="graph-view"></div>
             
           </div>
 
-          <div id="maps" class="col-sm-8" style="max-height: 450px;"></div>
+          <div id="maps" class="col-sm-7" style="max-height: 600px;"></div>
           <div class="col-sm-6" id="domains"></div>
           <div class="col-sm-6" id="users"></div>
 
           <div id="messages" style=""></div>
           <div id="geo" style=""></div>
-
-          
-
         </div>
       </div>
     </div>
@@ -228,9 +232,10 @@
         this.onAdd.bind(this)(json)
       }
       this.group_generic = function(group) {
-        var fn = function() {
-          var m = [], n = {}, schema = []
-          this.data.map(function(x){
+        var fn = function(data) {
+          var m = [], n = {}, schema = [],
+            data = data ? data : this.data
+          data.map(function(x){
             for (var y in x) {
               if (schema.length == 0) {
                 schema = Object.keys(x[y]['result'])
@@ -252,7 +257,6 @@
             n[x[0]].push(x)
           })
           return n
- 
         }
         return fn.bind(this)
       }
@@ -271,6 +275,7 @@
 
       var messageContainer = document.getElementById("messages"),
           bar = new streamingBarWrapper('#graph',60,8,100),
+          view = new streamingBarWrapper('#graph-view',60,8,100),
           approved = new streamingBarWrapper('#graph-approved',60,8,100,
             function(t,json) {
               try {
@@ -289,28 +294,35 @@
           self = this;
 
       this.raw_data = new rawDataWrapper(60);
+      this.view_data = new rawDataWrapper(60);
+      this.view_data.onAdd = function(json) {
+        
+      }
       this.raw_data.onAdd = function(json){
-        var table = messageContainer.getElementsByTagName("table"),
-            keys = Object.keys(json[0]['result']);
-
+        
+        var table = messageContainer.getElementsByTagName("table")
+           
         if (table.length == 0) 
-          self.createHeaders(keys);
+          try {
+            var keys = Object.keys(json[0]['result']);
+            self.createHeaders(keys);
+          } catch(e) {}
 
         var header = messageContainer.getElementsByTagName("thead")[0];
         //self.insertRows(json.map(function(x){return x['result']}),keys,header);
-        self.domainTable(this.group_domain(),"domains");
-        self.userTable(this.group_user(),"users");
+        var domain_group = this.group_domain(),
+          user_group = this.group_user(),
+          total = this.data.map(function(x){return x.length > 0 ? x.length : 0}).reduce(function(pv, cv) { return pv + cv; }, 0);
+
+        self.domainTable(domain_group,"domains");
+        self.userTable(user_group,"users");
         self.geoTable(this.group_generic(["state","country","approved_user","domain","advertiser_id"])(),"geo");
         self.geoMap(this.group_generic(["city_state","latitude","longitude","domain","advertiser_id","approved_user"])());
-        var data = this.group_user(),
-          total = 0
-        for (var key in data) {
-          total += data[key].length
-        }
+
         $('#imps-count').text(total)
-        $('#uniques-count').text(Object.keys(data).length)
-        $('#domains-count').text(Object.keys(this.group_domain()).length)
-        
+        $('#uniques-count').text(Object.keys(user_group).length)
+        $('#domains-count').text(Object.keys(domain_group).length)
+        $('#views-count').text(self.viewable_count)
       }
 
       this.geoMap = function(data) {
@@ -335,15 +347,19 @@
           }
         }
         map.bubbles(sorted,{
-                popupTemplate: function(geo, data) {
-                  return "<div class='hoverinfo'><b>" + data.name + "</b> ("+ data.approved+"/"+data.imps+")<br/>" + data.domains + "</div>";
-                }
-              })
+          popupTemplate: function(geo, data) {
+            return "<div class='hoverinfo'><b>" + data.name + "</b> ("+ data.approved+"/"+data.imps+")<br/>" + data.domains + "</div>";
+          }
+        })
+      }
+
+      
+      this.userData = function(data) {
+        
       }
 
       this.geoTable = function(data,div) {
         var div = div || "messages"
-        //console.log(data)
         var table = "<table class='table table-condensed'><thead><tr>" + 
           "<th>state</th>"+
           "<th>country</th>"+
@@ -355,7 +371,7 @@
         var sorted = []
         for (var key in data) {
           sorted.push([
-            "<a href='/lookback?uid="+key+"' target='_blank'>"+key+"</a>", 
+            key,
             data[key][0][1],
             data[key].length, 
             data[key].map(function(r){return r[2]}).reduce(function(pv, cv) { return pv + cv; }, 0),
@@ -409,11 +425,9 @@
             sorted[key][3] + "</td><td>" +
             sorted[key][4] + "</td><td>" 
         }
-        
 
         table += "</table>"
         document.getElementById(div).innerHTML = table
-
       }
 
 
@@ -480,10 +494,19 @@
 
       }
       this.onMessage = function(json,event) {
-        console.log(json['view']) 
-        bar.add(json);
-        approved.add(json);
-        self.raw_data.add(json);
+        bar.add(json["track"]);
+        view.add(json["view"]);
+
+        approved.add(json["track"]);
+        self.view_data.add(json["view"]);
+
+        var view_auctions =self.view_data.group_generic(["auction_id"])() 
+        self.viewable_count = 0
+        for (var auction in self.raw_data.group_generic(["auction_id"])()) {
+          if (view_auctions[auction]) self.viewable_count += 1
+        }
+
+        self.raw_data.add(json["track"]);
         
       }
     }
@@ -535,7 +558,7 @@
 
     var sharedJson = parseQueryString(window.location.search.substring(1))
 
-    $.getJSON("http://107.170.18.93/api?table=advertiser",function(e){
+    $.getJSON("http://107.170.18.93/api?table=advertiser&active=1&deleted=0",function(e){
       var advertiser_list = $('#advertiser-list')
       $(e).each(function(i,advertiser){
         advertiser_list.prepend('<li><a href="#' + advertiser.external_advertiser_id + '">' + advertiser.advertiser_name + '</a></li>')

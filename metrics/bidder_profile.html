@@ -76,19 +76,18 @@
 			<div class="row">
 				<div class="col-sm-4 col-md-2 sidebar">
           <ul class="nav nav-sidebar">
-            <li><a href="/streaming">Streaming</a></li>
-<!--            <li><a href="/debug">Arbitrage</a></li> -->
-<!--            <li><a href="/lookback">Lookback</a></li> -->
-            <li class="active"><a href="/advertiser">Add Advertiser</a></li>
-            <li><a href="/money">Money</a></li>
+            <li class=""><a href="/streaming">Streaming</a></li>
+            <li><a href="/debug">Arbitrage</a></li>
+            <li class="active"><a href="/lookback">Lookback</a></li>
+            <li><a href="#">Export</a></li>
           </ul>
         </div>
         <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
           <div class="col-md-6">
-            <h3 class="page-header" >Advertiser Creator</h3>
+            <h3 class="page-header" >Bidder Profile</h3>
             <form role="form" id="main_form">
               <div class="form-group">
-                Advertiser Name
+                Advertiser Nam222e
                 <input  class="form-control" id="advertiser_name" placeholder="(e.g. Baublebar)">
 <br>                Main Contact Name
                 <input  class="form-control" id="advertiser_contact" placeholder="(e.g. Tyler)">
@@ -151,53 +150,14 @@
 </style>
 <script>
   $(document).ready(function () {
-    $("#create_advertiser_button" ).click(function() {
-      event.preventDefault();
-      a = $("#main_form")
-      advertiser_name = $("#advertiser_name").val();
-      contact_name = $("#advertiser_contact").val();
-      contact_email = $("#advertiser_contact_email").val();
-      all_pages_pixel_checkbox = false;
-      logged_in_pixel_checkbox = false;
-      signup_conversion_checkbox = false;
-      purchase_conversion_checkbox = false;       
-      signup_conversion_checkbox_pc = 0;
-      signup_conversion_checkbox_pv = 0;
-      purchase_conversion_checkbox_pc = 0;
-      purchase_conversion_checkbox_pv = 0;
-
-      if ($("#all_pages_pixel_checkbox").is(':checked') == true)
-      {
-         all_pages_pixel_checkbox = true;
-      }
-      if ($("#logged_in_pixel_checkbox").is(':checked') == true)                        
-      {         
-         logged_in_pixel_checkbox = true;                                               
-      } 
-      if ($("#signup_conversion_checkbox").is(':checked') == true)                        
-      {         
-         signup_conversion_checkbox = true;                                               
-         signup_conversion_checkbox_pc = $("#signup_post_click_input").val();
-         signup_conversion_checkbox_pv = $("#signup_post_view_input").val();
-      } 
-      if ($("#purchase_conversion_checkbox").is(':checked') == true)                        
-      {         
-         purchase_conversion_checkbox = true;                                               
-         purchase_conversion_checkbox_pc = $("#purchase_post_click_input").val();
-         purchase_conversion_checkbox_pv = $("#purchase_post_view_input").val();
- 
-      }       
             $.ajax({ 
-              type: "POST",
-              url: 'http://107.170.18.93/advertiser.html?', 
-              data: { advertiser_name: advertiser_name,contact_name:contact_name,contact_email:contact_email,all_pages_pixel_checkbox:all_pages_pixel_checkbox,logged_in_pixel_checkbox:logged_in_pixel_checkbox,signup_conversion_checkbox:signup_conversion_checkbox,purchase_conversion_checkbox:purchase_conversion_checkbox,signup_conversion_checkbox_pc:signup_conversion_checkbox_pc,signup_conversion_checkbox_pv:signup_conversion_checkbox_pv,purchase_conversion_checkbox_pc:purchase_conversion_checkbox_pc,purchase_conversion_checkbox_pc:purchase_conversion_checkbox_pc,purchase_conversion_checkbox_pv:purchase_conversion_checkbox_pv }, 
+              type: "GET",
+              url: 'http://107.170.18.93/bidder_profile.html?', 
               success: function (data) { 
+                alert(data)
               }, 
               cache: false 
             });
-
-    });
-
   });
 </script>
 </html>

@@ -16,9 +16,9 @@ def write(client_id):
     return send
 
 
-BRAND_QUERY = "select external_id id, advertiser_id from creative"
+BRAND_QUERY = "select external_id id, external_advertiser_id advertiser_id from creative"
 
-RESULT = ["domain","uid","seller","tag","uid","approved_user","creative","advertiser_id","price","city","state","city_state","country","latitude","longitude"]
+RESULT = ["domain","uid","seller","tag","uid","approved_user","creative","advertiser_id","price","city","state","city_state","country","latitude","longitude","auction_id"]
 DEBUG = ["second_price", "count", "50%", "$mod", "gross_bid", "biased_bid", "min", "max", "%mod2", "winning_bid", "win_price", "25%", "std", "total", "soft_floor", "75%", "$mod2", "mean", "%mod", "gross_win_price", "second_price_calc"]
 INFO = ["brand_id", "result", "pub", "ecp", "ip_address", "referrer", "venue", "debug"]
 
@@ -45,7 +45,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         df = pandas.DataFrame(value)
         df = df.merge(
             self.creatives,how="left",left_on="creative",right_on="id"
-        ).set_index("auction_id")
+        ).set_index("auction_id",drop=False)
 
         df = df.fillna(0)
         debug_columns = [i for i in DEBUG if i in df.columns]
@@ -70,31 +70,47 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
         track_values = copy.deepcopy(self.socket_buffer)
         self.socket_buffer[:] = []
+
         view_values = copy.deepcopy(self.view_buffer)
-        self.view_buffer[:]
+        self.view_buffer[:] = []
+
+        cols = ["debug","info","result"]
 
         start = time.time()
-        if track_values:
-            df = self.build_data(track_values)
-                        
-            for i,client in clients.iteritems():
-                if client['enabled'] == False:
-                    continue
-                
-                masks = client.get('masks',False)
 
-                masked = self.mask_data(df,masks)
-                _df = masked[['debug','info','result']]
+        track_df_base = self.build_data(track_values) if track_values else pandas.DataFrame(columns=cols)
+        view_df_base = pandas.DataFrame(view_values)
+        if len(view_df_base) > 0:
+            view_df_base = view_df_base.merge(
+                self.creatives,how="left",left_on="creative",right_on="id"
+            ).set_index("auction_id",drop=False)                        
 
-                m = _df.fillna(0).T.to_dict().values()
-                m["view"] = view_values
+        for i,client in clients.iteritems():
+            if client['enabled'] == False:
+                continue
 
-                json = ujson.dumps(m).decode('ascii','ignore')
-                try:
-                    client['object'].write_message( json )
-                except:
-                    client['object'].on_close()
-                
+            track_df = track_df_base
+            view_df = view_df_base
+            masks = client.get('masks',False)
+
+            if len(track_df) > 0:
+                track_df = self.mask_data(track_df,masks)
+
+            if len(view_df) > 0:
+                view_df = self.mask_data(view_df,masks)
+
+            _df = track_df[cols]
+
+            obj = {}
+            obj['track'] = _df.fillna(0).T.to_dict().values()
+            obj['view'] = [{"result": v} for v in view_df.fillna(0).T.to_dict().values()]
+
+            json = ujson.dumps(obj).decode('ascii','ignore')
+            try:
+                client['object'].write_message( json )
+            except:
+                client['object'].on_close()
+            
 
         end = time.time()
 
