@@ -45,10 +45,10 @@ class AdvertiserHandler(tornado.web.RequestHandler):
 
             self.write(response)
         else:
-            j = self.api.get('/member').json
+            #j = self.api.get('/member').json
 
             self.render("../advertiser.html")
-            self.write(ujson.dumps(j))
+            #self.write(ujson.dumps(j))
 
 
     def post(self):

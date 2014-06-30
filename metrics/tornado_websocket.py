@@ -6,11 +6,10 @@ import redis
 from handlers.creative import APIHandler
 from handlers.streaming import WebSocketHandler
 from handlers.scripts import AdvertiserHandler, ProfileHandler, MoneyHandler, PixelHandler, ReportingHandler
-from handlers.hive import ViewabilityHandler
+from handlers.hive import ViewabilityHandler, TargetListHandler 
 from handlers.target import TargetingHandler
 
-
-import hive_utils
+from lib.hive import Hive
 
 
 from tornado.httpclient import AsyncHTTPClient
@@ -119,10 +118,13 @@ def shutdown():
             logging.info('Shutdown')
     stop_loop()
 
+       
+
+
 db = lnk.dbs.mysql
 api = None#lnk.api.console
 bidder = None#lnk.api.console
-hive = None#hive_utils.HiveClient(server="10.128.248.207",port="7425")
+hive = Hive().hive
 _redis = redis.StrictRedis(host='162.243.123.240', port=6379, db=1)
 
 socket_buffer = []
@@ -143,10 +145,12 @@ app = tornado.web.Application([
     (r'/money.*',MoneyHandler, dict(db=db,api=api)),
     (r'/viewable.*',ViewabilityHandler, dict(db=db,api=api,hive=hive)),
     (r'/pixel.*',MoneyHandler, dict(db=db,api=api)),
-    (r'/targeting.*',TargetingHandler, dict(redis=_redis)),
+    (r'/targeting.*',TargetingHandler, dict(redis=_redis,api=api,db=db)),
+    (r'/target_list.*',TargetListHandler),
     (r'/reporting.*',ReportingHandler, dict(db=db,api=api))
 
 ],debug=True,db=lnk.dbs.mysql)
+
 
 if __name__ == '__main__':
     parse_command_line()

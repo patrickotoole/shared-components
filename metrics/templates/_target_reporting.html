@@ -1,0 +1,151 @@
+{% autoescape None %}
+{% extends "../templates/base.html" %}
+
+{% block stuff %}
+<link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/dc.css">
+<script type="text/javascript" src="http://rockerbox.com/js/d3.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/crossfilter.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/dc.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/colorbrewer.js"></script>
+
+<script>
+
+d3.json(window.location.href+"&format=json",function(data){
+
+  var dateFormat = d3.time.format("%y-%m-%d %H:%M");
+  var moveChart = dc.lineChart('#line-chart')
+  var barChart = dc.rowChart('#bar-chart')
+
+  data.forEach(function(d) {
+    d.dd = dateFormat.parse(d.date + " " + d.hour + ":" + d.minute)
+    d.imps = +d.imps
+  })
+
+  var crs = crossfilter(data);
+
+  window.data = data;
+  crs.groupAll();
+
+  var locationDimension = crs.dimension(function(d){
+    return d.state 
+  })
+
+  var locationImps = locationDimension.group().reduce(
+    function(p,v) {return p + v.imps},
+    function(p,v) {return p - v.imps},
+    function() {return 0}
+  ).order(function(p){
+    return p.total
+  })
+
+  var dateDimension = crs.dimension(function(d){
+    return d.dd
+  })
+
+  window.dim = dateDimension
+
+  var dateImps = dateDimension.group().reduce(
+    function(p,v) {return p + v.imps},
+    function(p,v) {return p - v.imps},
+    function() {return 0}
+  )
+
+  barChart.width(180)
+    .height(800)
+    .margins({top: 1, left: 10, right: 10, bottom: 1})
+    .dimension(locationDimension)
+    .group(locationImps,"Impressions")
+    .ordinalColors(['#3182bd', '#6baed6', '#9ecae1', '#c6dbef', '#dadaeb'])
+    .label(function (d) {
+      return d.key;
+    })
+    .title(function (d) {
+      return d.value;
+    })
+    .elasticX(true)
+    .xAxis().ticks(4);
+    
+ 
+
+  moveChart
+    .renderArea(true)
+    .width(990)
+    .height(200)
+    .transitionDuration(1000)
+    .margins({top: 30, right: 50, bottom: 25, left: 40})
+    .dimension(dateDimension)
+    .mouseZoomable(true)
+    .x(d3.time.scale().domain([new Date(2014, 5, 29, 14), new Date(2014, 5, 29, 15)]))
+    // Specify a range chart to link the brush extent of the range with the zoom focue of the current chart.
+    .elasticY(true)
+    .group(dateImps,"Impressions")
+    
+      
+  var pseudoDimension = {
+    top: function (x) {
+      console.log(x)
+      return dateImps.top(x)
+              .map(function (grp) { return {"date":grp.key, "imps":grp.value}; });
+      }
+  };
+
+  dc.dataTable(".dc-data-table")
+    .dimension(dateDimension)
+    // data table does not use crossfilter group but rather a closure
+    // as a grouping function
+    .group(function (d) {
+      return d.date
+    })
+    //.group(dateImps)
+    .size(10) // (optional) max number of records to be shown, :default = 25
+    // dynamic columns creation using an array of closures
+    .columns([
+      function (d) {
+          return d.date;
+      },
+      function (d) {
+        return d.dd
+      },
+      function (d) {
+          return d.imps;
+      },
+      function (d) {
+      },
+      function (d) {
+      },
+      function (d) {
+      }
+    ])
+    // (optional) sort using the given field, :default = function(d){return d;}
+    .sortBy(function (d) {
+      return d.dd;
+    })
+    // (optional) sort order, :default ascending
+    .order(d3.ascending)
+    // (optional) custom renderlet to post-process chart using D3
+    .renderlet(function (table) {
+      table.selectAll(".dc-table-group").classed("info", true);
+    }); 
+
+  window.dateImps = dateImps
+  window.locationImps = locationImps
+
+  dc.renderAll()  
+
+})
+</script>
+<div id="line-chart"></div>
+<div id="bar-chart"></div>
+<br/>
+<table class="table table-hover dc-data-table">
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th>Time</th>
+      <th>Impressions</th>
+    </tr>
+  </thead>
+</table>
+{{ stuff }}
+{% end %}
+

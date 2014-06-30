@@ -1,0 +1,69 @@
+{% autoescape None %}
+{% extends "../templates/base.html" %}
+{% block stuff %}
+
+<h4>Domain Targeting Settings</h4>
+<form role="form">
+  {{ df_html }}
+</form>
+<script>
+
+$(".remove").click(function(e){
+  e.preventDefault()
+  $.ajax({
+    url: "targeting?"+e.target.id,
+    type: "DELETE"
+  }).done(function(){
+    if (e.target.id.match("delete")) {
+      $(e.target).parents("tr").remove()
+    } else {
+      $(e.target).parent().find("button").toggleClass("hidden")
+    }
+  })
+  
+})
+
+$(".enable").click(function(e){
+  e.preventDefault()
+  $.ajax({
+    url: "targeting?"+e.target.id,
+    type: "POST"
+  }).done(function(){
+    $(e.target).parent().find("button").toggleClass("hidden")
+  })
+
+})
+
+
+
+$('#add-target').click(function(e){
+  e.preventDefault()
+  $.ajax({
+    url:"targeting?format=json",
+    dataType:"json"
+  }).done(function(original){
+    original.push($(e.target).parents("form").serializeObject())
+    var target_to_add = JSON.stringify(original)
+    $.ajax({
+      type: "POST",
+      dataType: "json",
+      url: "targeting", 
+      data: target_to_add, 
+      success: function(last){
+        $(e.target).parents("tr").before(
+          "<tr><th>"+
+          (original.length-1)+"</th><td>"+
+          last["log"]+"</td><td>"+
+          last["pattern"]+"</td><td>"+
+          last["segment"]+"</td><td>"+
+          last["Remove?"]+"</td></tr>"
+        )
+      }
+    })
+  })
+  return false;
+})
+</script>
+<script src="http://rockerbox.com/js/jquery.serialize-object.js"></script>
+
+{% end %}

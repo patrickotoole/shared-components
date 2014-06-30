@@ -18,14 +18,20 @@ def write(client_id):
 
 BRAND_QUERY = "select external_id id, external_advertiser_id advertiser_id from creative"
 
-RESULT = ["domain","uid","seller","tag","uid","approved_user","creative","advertiser_id","price","city","state","city_state","country","latitude","longitude","auction_id"]
+RESULT = ["domain","uid","seller","tag","uid","approved_user","creative","advertiser_id","price","city","state","city_state","country","latitude","longitude","auction_id","campaign_id"]
 DEBUG = ["second_price", "count", "50%", "$mod", "gross_bid", "biased_bid", "min", "max", "%mod2", "winning_bid", "win_price", "25%", "std", "total", "soft_floor", "75%", "$mod2", "mean", "%mod", "gross_win_price", "second_price_calc"]
 INFO = ["brand_id", "result", "pub", "ecp", "ip_address", "referrer", "venue", "debug"]
 
 def mask_from_dict(df,masks):
+    if len([ (column,values) for column, values in masks.iteritems()  if column in df.columns]) < len(masks):
+        return df.index != df.index
+
     mask = df.index == df.index
     for column,values in masks.iteritems():
-        values_int = map(int,values)
+        try:
+            values_int = map(int,values)
+        except:
+            values_int = ["---"]
         mask = mask & (df[column].isin(values) | df[column].isin(values_int))
         
     return mask

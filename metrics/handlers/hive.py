@@ -5,12 +5,16 @@ import ujson
 import pandas
 import StringIO
 import hive_utils
+import tornado.template as template
 from urlparse import urlparse
 from twisted.internet import defer, threads
+from handlers.hive_domain_list import TargetListHandler
+from lib.hive import Hive
 
 API_QUERY = "select * from appnexus_reporting.%s where %s "
 
-hive = hive_utils.HiveClient(server="slave3",port="7425")
+#hive = None#hive_utils.HiveClient(server="slave4",port="7425")
+hive = Hive().hive
 
 @contextlib.contextmanager
 def openclose(transport):
@@ -25,8 +29,6 @@ def run_hive(q):
         hive._HiveClient__client.execute('set shark.map.tasks=1; set mapred.reduce.tasks = 1;')
 
     return list(hive.execute('select * from agg_visible_cached where %s limit 1000000' % q))
-
-
 
 def async_run_hive(q):
     d = threads.deferToThread(run_hive,q)
@@ -58,8 +60,12 @@ class ViewabilityHandler(tornado.web.RequestHandler):
         u = u.reset_index()
         u['domain'] = u['referrer'].map(lambda x: urlparse(x).netloc.replace("www.","") if urlparse(x).netloc else x )
         
-        v = u.groupby(groups).sum()
+        if groups:
+            v = u.groupby(groups).sum()
+        else:
+            v = u
 
+        print v.head(1).T
         if sort_by:
             v = v.sort_index(by=sort_by, ascending=False)
 
@@ -67,16 +73,18 @@ class ViewabilityHandler(tornado.web.RequestHandler):
         if format_type == "csv":
             output = StringIO.StringIO()
             v[v.served > 10][["served","served_visibility","visible"]].to_csv(output)
-            self.write(output.getvalue())
+            o = output.getvalue()
             output.close()
         else:
-            self.write(v[v.served > 10][["served","served_visibility","visible"]].to_html())
+            o = v[v.served > 10][["served","served_visibility","visible"]].to_html(classes="table table-condensed")
 
+        self.render("../templates/base.html",stuff=o)
         self.finish()
 
     @tornado.web.asynchronous
     def get(self):
         member = self.get_argument("member",False)
+        domain = self.get_argument("domain",False)
         groups = self.get_argument("group_by","domain").split(",")
         sort_by = self.get_argument("sort_by",False)
         format_type = self.get_argument("type",False)
@@ -84,6 +92,12 @@ class ViewabilityHandler(tornado.web.RequestHandler):
         q = "1=1 "
         if member:
             q += "and seller = '%s' " % member
+        if domain:
+            domains = domain.split(",")
+            q += " and (referrer like '%%%s%%'" % domains[0]
+            for d in domains[1:]:
+                q += " or referrer like '%%%s%%' " % d
+            q += ")"
         
         self.get_content(q,groups,sort_by,format_type)
 

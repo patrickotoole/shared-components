@@ -75,8 +75,9 @@ class BufferedSocket(basic.LineReceiver):
         args = (
             2261194,fline.get('uid','0'),fline.get('domain',''),
             2024,fline.get('width',300),fline.get('height',250),fline.get('ip_address','0.0.0.0'),
-            fline.get('auction_id','0')
+            fline.get('auction_id','0'),fline.get('campaign_id','0')
         )
+        #print args
         if False:
             try:
                 #print args
