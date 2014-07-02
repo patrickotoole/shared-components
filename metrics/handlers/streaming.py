@@ -1,7 +1,7 @@
 import tornado.websocket
 import redis
 import datetime
-import stream
+import lib.stream
 import pandas
 import ujson
 import tornado.platform.twisted
@@ -9,6 +9,12 @@ from twisted.internet import  protocol, defer, threads
 from twisted.protocols import basic
 
 clients = dict()
+
+class IndexHandler(tornado.web.RequestHandler):
+    @tornado.web.asynchronous
+    def get(self):
+        self.render("../templates/admin/index.html")
+ 
 
 def write(client_id):
     def send(message):

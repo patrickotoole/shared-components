@@ -2,10 +2,6 @@ import tornado.web
 import ujson
 import pandas
 import StringIO
-from handlers.profile import ProfileHandler
-from handlers.money import MoneyHandler
-from handlers.pixel import PixelHandler
-from handlers.reporting import ReportingHandler
 
 API_QUERY = "select * from appnexus_reporting.%s where %s "
 
@@ -47,7 +43,7 @@ class AdvertiserHandler(tornado.web.RequestHandler):
         else:
             #j = self.api.get('/member').json
 
-            self.render("../advertiser.html")
+            self.render("../templates/admin/advertiser.html")
             #self.write(ujson.dumps(j))
 
 

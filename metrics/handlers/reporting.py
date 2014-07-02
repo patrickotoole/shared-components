@@ -34,11 +34,12 @@ class ReportingHandler(tornado.web.RequestHandler):
     def get(self):
 
         campaign_id = self.get_argument("campaign",False)
+        data = self.pull_campaign(campaign_id)
 
         def default(self,data):
             self.render("../templates/_campaign_reporting.html",stuff=data)
 
-        data = self.pull_campaign(campaign_id)
+        
 
         yield default, (data,)
 

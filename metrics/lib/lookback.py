@@ -1,5 +1,4 @@
 import pandas, re, ujson
-from lookback_default import DATA
 
 def parse_domain(referrer):
     try:

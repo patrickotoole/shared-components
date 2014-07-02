@@ -9,7 +9,6 @@ import hive_utils
 import tornado.template as template
 from urlparse import urlparse
 from twisted.internet import defer, threads
-from handlers.hive_domain_list import TargetListHandler
 from lib.hive import Hive
 
 API_QUERY = "select * from appnexus_reporting.%s where %s "

@@ -11,7 +11,6 @@ class MoneyHandler(tornado.web.RequestHandler):
         self.db = db 
         self.api = api
 
-
     def get(self):
         response = ""
         table = self.get_argument("table",False)
@@ -45,7 +44,7 @@ class MoneyHandler(tornado.web.RequestHandler):
         else:
             #j = self.api.get('/member').json
 
-            self.render("../money.html")
+            self.render("../templates/admin/money.html")
             #self.write(ujson.dumps(j))
 
 

@@ -45,7 +45,7 @@ class PixelHandler(tornado.web.RequestHandler):
         else:
             j = self.api.get('/member').json
 
-            self.render("../pixel_generator.html")
+            self.render("../templates/admin/pixel_generator.html")
             self.write(ujson.dumps(j))
 
 
