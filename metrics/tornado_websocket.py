@@ -122,8 +122,8 @@ def shutdown():
 
 
 db = lnk.dbs.mysql
-api = None#lnk.api.console
-bidder = None#lnk.api.console
+api = lnk.api.console
+bidder = lnk.api.console
 hive = Hive().hive
 _redis = redis.StrictRedis(host='162.243.123.240', port=6379, db=1)
 
@@ -147,7 +147,7 @@ app = tornado.web.Application([
     (r'/pixel.*',MoneyHandler, dict(db=db,api=api)),
     (r'/targeting.*',TargetingHandler, dict(redis=_redis,api=api,db=db)),
     (r'/target_list.*',TargetListHandler),
-    (r'/reporting.*',ReportingHandler, dict(db=db,api=api))
+    (r'/reporting.*',ReportingHandler, dict(db=db,api=api,hive=hive))
 
 ],debug=True,db=lnk.dbs.mysql)
 

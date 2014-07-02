@@ -1,0 +1,338 @@
+{% autoescape None %}
+{% extends "../templates/base.html" %}
+
+{% block stuff %}
+<link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/dc.css">
+<script type="text/javascript" src="http://rockerbox.com/js/d3.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/crossfilter.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/dc.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/colorbrewer.js"></script>
+<style>
+.table tbody tr.info td {
+  background-color: #d9edf7;
+}
+</style>
+<script>
+
+d3.json(window.location.href+"&format=json",function(data){
+
+  var dateFormat = d3.time.format("%y-%m-%d %H:%M");
+  var dateFormatPretty = d3.time.format("%b %d, %Y at %_I %p");
+
+  //var compositeChart = dc.compositeChart('#imps-chart');
+  var moveChart = dc.lineChart('#imps-chart');
+
+  var spendChart = dc.barChart('#spend-chart');
+  var clicksChart = dc.lineChart('#clicks-chart');
+  var conversionsChart = dc.barChart('#conversion-chart');
+
+  window.data = data
+
+  data.forEach(function(d) {
+    d.campaign_id = d.campaign_id || d.campaign 
+    d.dd = new Date(d.date*1000)
+    d.imps = +d.imps
+    d.clicks = +d.clicks
+    d.conversions = +d.is_valid
+    d.cost = 0 //d.media_cost*d.cpm_multiplier
+  })
+
+  var crs = crossfilter(data);
+  crs.groupAll();
+  console.log("where")
+
+  var dateDimension = crs.dimension(function(d){
+    return d.dd
+  })
+  console.log("does")
+
+  var dateImps = dateDimension.group().reduce(
+    function(p,v) {return p + v.imps},
+    function(p,v) {return p - v.imps},
+    function() {return 0}
+  )
+
+  var dailyDimension = crs.dimension(function(d){
+    return d3.time.day(d.dd)
+  })
+  console.log("this")
+
+  var dailyConversions = dailyDimension.group().reduce(
+    function(p,v) {return p + v.conversions},
+    function(p,v) {return p - v.conversions},
+    function() {return 0}
+  )
+
+  var dailySpend = dailyDimension.group().reduce(
+    function(p,v) {return p + v.cost},
+    function(p,v) {return p - v.cost},
+    function() {return 0}
+  )
+
+  var dateClicks = dateDimension.group().reduce(
+    function(p,v) {return p + v.clicks},
+    function(p,v) {return p - v.clicks},
+    function() {return 0}
+  )
+  console.log("fail")
+
+  var campaignDimension = crs.dimension(function(d){
+    return d.campaign_id
+  })
+
+  var campaignImps = campaignDimension.group().reduce(
+    function(p,v) {
+      p.cost += v.cost
+      p.conversions += v.conversions
+      p.imps += v.imps 
+      p.clicks += v.clicks
+      p.dd = "1"
+      return p 
+    },
+    function(p,v) {
+      p.cost -= v.cost
+      p.conversions -= v.conversions
+      p.imps -= v.imps
+      p.clicks -= v.clicks
+      p.dd = "1"
+      return p
+    },
+    function() {
+      return {
+        cost: 0,
+        conversions: 0,
+        clicks: 0,
+        imps: 0,
+        dd: ""
+      }
+    }
+  )
+  console.log("after")
+
+  var pseudoDimension = {
+    top: function (x) {
+      var min_date = dateFormatPretty(dateDimension.bottom(1)[0].dd)
+      var max_date = dateFormatPretty(dateDimension.top(1)[0].dd)
+      return campaignImps.top(x).map(function (grp) { 
+        return {
+          "campaign_id":grp.key, 
+          "imps":grp.value.imps, 
+          "clicks": grp.value.clicks,
+          "conversions": grp.value.conversions,
+          "cost": grp.value.cost,
+          "dd": min_date + " until " + max_date
+        } 
+      });
+    }
+  };
+
+  console.log("or")
+  /*
+  compositeChart
+    .width(990)
+    .height(200)
+    .margins({top: 30, right: 50, bottom: 25, left: 40})
+    .legend(dc.legend().x(60).y(20).itemHeight(13).gap(5))
+    .compose([
+      dc.lineChart(compositeChart)
+        .dimension(dateDimension)
+        .group(dateImps, "Delivered Impressions"),
+      dc.lineChart(compositeChart)
+        .renderArea(true)
+        .dimension(dateDimension)
+        .colors("red")
+        .group(dateClicks, "Clicks")
+        .useRightYAxis(true)
+    ])
+    .elasticY(true)
+    .mouseZoomable(false)
+    .x(d3.time.scale().domain([
+      dateDimension.bottom(1)[0].dd,
+      dateDimension.top(1)[0].dd
+    ]))
+    .xUnits(d3.time.days)
+    .elasticX(true)
+    .rangeChart(spendChart)
+    .brushOn(false)
+  */ 
+    
+
+  moveChart
+    .renderArea(true)
+    .width(990)
+    .height(200)
+    .transitionDuration(500)
+    .margins({top: 30, right: 50, bottom: 8, left: 60})
+    .dimension(dateDimension)
+    .mouseZoomable(false)
+    .x(d3.time.scale().domain([
+      dateDimension.bottom(1)[0].dd,
+      dateDimension.top(1)[0].dd
+    ]))
+    .elasticY(true)
+    .rangeChart(spendChart)
+    .brushOn(false)
+    .group(dateImps,"Impressions")
+    .yAxisLabel("Ads Served")
+    .xAxis().tickFormat(function(v) { return ""; });
+
+  clicksChart.width(990)
+    .renderArea(true)
+    .height(80)
+    .margins({top: 17, right: 50, bottom: 20, left: 60})
+    .dimension(dateDimension)
+    .group(dateClicks)
+    .colors("orange")
+    .valueAccessor(function(d){return -d.value})
+    //.centerBar(false)
+    //.gap(0)
+    .x(d3.time.scale().domain([
+      dateDimension.bottom(1)[0].dd,
+      dateDimension.top(1)[0].dd
+    ]))
+    .elasticY(true)
+    .brushOn(false)
+    .y(d3.scale.log())
+    //.round(d3.time.day.round)
+    //.alwaysUseRounding(true)
+    .rangeChart(moveChart) 
+    .yAxisLabel("Clicks")
+    //.xUnits(d3.time.hours)
+    .xAxis().orient("top")
+  clicksChart
+    .yAxis().ticks(1)
+
+
+  conversionsChart.width(990)
+    .height(50)
+    .margins({top: 17, right: 50, bottom: 0, left: 60})
+    .dimension(dailyDimension)
+    .group(dailyConversions)
+    .valueAccessor(function(d){return -d.value})
+
+    .centerBar(true)
+    .colors("green")
+    .gap(1)
+    .x(d3.time.scale().domain([
+      dateDimension.bottom(1)[0].dd,
+      dateDimension.top(1)[0].dd
+    ]))
+    .elasticY(true)
+    .round(d3.time.day.round)
+    .brushOn(false)
+    .alwaysUseRounding(true)
+    .xUnits(d3.time.days)
+    .yAxisLabel("Conv")
+    .yAxis().ticks(1);
+  conversionsChart
+    .xAxis().orient("top")
+  
+  spendChart.width(990)
+    .height(70)
+    .margins({top: 15, right: 50, bottom: 8, left: 60})
+    .dimension(dailyDimension)
+    .group(dailySpend)
+    .centerBar(true)
+    .colors("gray")
+    .gap(1)
+    .x(d3.time.scale().domain([
+      dateDimension.bottom(1)[0].dd,
+      dateDimension.top(1)[0].dd
+    ]))
+    .round(d3.time.day.round)
+    .alwaysUseRounding(true)
+    .xUnits(d3.time.days)
+    .yAxisLabel("Cost")
+    .xAxis().tickFormat(function(v) { return ""; });
+  spendChart
+    .yAxis().ticks(4);
+
+
+   
+  var numberFormat = d3.format("0,000.00")
+      
+  dc.dataTable(".dc-data-table")
+    .dimension(pseudoDimension)
+    .group(function (d) {
+      return d.dd
+    })
+    .size(50) 
+    .columns([
+      function (d) {
+         return d.campaign_id;
+      },
+      function (d) {
+        return numberFormat(d.imps);
+      },
+      function (d) {
+        return numberFormat(d.clicks);
+      },
+      function (d) {
+        return d.conversions;
+      },
+      function (d) {
+        return "$" + numberFormat(d3.round(d.cost,2));
+      }
+    ])
+    .sortBy(function (d) {
+      return d.dd;
+    })
+    .order(d3.ascending)
+    .renderlet(function (table) {
+      table.selectAll(".dc-table-group").classed("info", true);
+    }); 
+
+  window.dateImps = dateImps
+
+  dc.renderAll()  
+
+  var transform = d3.select("#clicks-chart").select(".x.axis").attr("transform")
+  var val = transform.split(",")[0].split("(")[1]
+  d3.select("#clicks-chart").select(".x.axis").attr("transform","translate("+val+",17)")
+
+  var transform = d3.select("#conversion-chart").select(".x.axis").attr("transform")
+  var val = transform.split(",")[0].split("(")[1]
+
+  d3.select("#conversion-chart").select(".x.axis").attr("transform","translate("+val+",17)")
+
+})
+</script>
+<h4>Advertiser Delivery</h4>
+
+<div class="row">
+  <div id="imps-chart"></div>
+</div>
+
+<div class="row">
+  <div id="clicks-chart"></div>
+</div>
+
+<h4>Advertiser Performance</h4>
+
+<div class="row">
+  <div id="spend-chart"></div>
+</div>
+
+<div class="row">
+  <div id="conversion-chart"></div>
+</div>
+
+
+
+<div id="bar-chart"></div>
+<br/>
+<table class="table table-hover dc-data-table">
+  <thead>
+    <tr>
+      <th>Campaign</th>
+      <th>Impressions</th>
+      <th>Clicks</th>
+      <th>Conversions</th>
+      <th>Cost</th>
+
+    </tr>
+  </thead>
+</table>
+<div class="hidden">{{ stuff }}</div>
+{% end %}
+

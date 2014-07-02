@@ -2,56 +2,46 @@ import tornado.web
 import ujson
 import pandas
 import StringIO
+from lib.helpers import *
 
-API_QUERY = "select * from appnexus_reporting.%s where %s "
+IMPS_QUERY = """select 0 is_valid, v3.* from v3_reporting v3 where v3.external_advertiser_id= %(advertiser_id)s and v3.active = 1 and v3.deleted = 0"""
+
+CONVERSION_QUERY = """select is_valid, 0 id, 0 imps, 0 clicks, campaign_id, creative_id, 0 media_cost, external_advertiser_id, timestamp(DATE_FORMAT(conversion_time, "%%Y-%%m-%%d %%H:00:00")) date, last_activity, deleted, 0 cpm_multiplier, active, NULL notes from conversion_reporting cr where cr.external_advertiser_id = %(advertiser_id)s and cr.active = 1 and cr.deleted = 0"""
+
+UNION_QUERY = IMPS_QUERY + " UNION ALL (" + CONVERSION_QUERY + ")"
 
 class ReportingHandler(tornado.web.RequestHandler):
-    def initialize(self, db, api):
+    def initialize(self, db, api, hive):
         self.db = db 
         self.api = api
+        self.hive = hive
 
+    def load_df(self):
+        return pandas.DataFrame().load("/root/v3.pnds")
 
+    def pull_advertiser(self,advertiser_id):
+        return self.db.select_dataframe(
+                    UNION_QUERY % {"advertiser_id":advertiser_id}
+                )
+
+    def pull_campaign(self,campaign_id):
+        g = self.hive.execute("select * from campaign_domain_cached where campaign = %s" % campaign_id)
+        l = list(g)
+        return pandas.DataFrame(l)
+                
+
+    @decorators.formattable
     def get(self):
-        response = ""
-        table = self.get_argument("table",False)
-        if table:
-            response_format = self.get_argument("format","json")
-            args = self.request.arguments
-            args_list = ["1=1"]  
-            args_list += [i + "=" + "".join(j) 
-                for i,j in args.iteritems() 
-                if i not in ["table","format"]
-            ]
 
-            where = " and ".join(args_list)
+        campaign_id = self.get_argument("campaign",False)
 
-            table_query = API_QUERY % (table, where)
-            data = self.db.select_dataframe(table_query)
-            
+        def default(self,data):
+            self.render("../templates/_campaign_reporting.html",stuff=data)
 
-            if response_format == "json":
-                l = data.fillna(0).T.to_dict().values()
-                response = ujson.dumps(l)
-            elif response_format == "html":
-                response = data.to_html()
-            elif response_format == "csv":
-                io = StringIO.StringIO()
-                data.to_csv(io)
-                response = io.getvalue()
-                io.close()
+        data = self.pull_campaign(campaign_id)
 
-            self.write(response)
-        else:
-            j = self.api.get('/member').json
-
-            self.render("../reporting.html")
-            self.write(ujson.dumps(j))
-
+        yield default, (data,)
 
     def post(self):
-        table = self.db.select_dataframe("select a.advertiser_name as 'Client', concat('$',round(sum(case when month(r.date)=1 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end),2)) as 'January', concat('$',round(sum(case when month(r.date)=2 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end),2)) as 'February', concat('$',round(sum(case when month(r.date)=3 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end),2)) as 'March', concat('$',round(sum(case when month(r.date)=4 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end),2)) as 'April', concat('$',round(sum(case when month(r.date)=5 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end),2)) as 'May', concat('$',round(sum(case when month(r.date)=6 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end),2)) as 'June', concat('$',round(sum(case when month(r.date)=7 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end),2)) as 'July', concat('$',round(sum(case when month(r.date)=8 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end),2)) as 'August', concat('$',round(sum(case when month(r.date)=9 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end),2)) as 'September', concat('$',round(sum(case when month(r.date)=10 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end),2)) as 'October', concat('$',round(sum(case when month(r.date)=11 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end),2)) as 'November', concat('$',round(sum(case when month(r.date)=12 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end),2)) as 'December', concat('$',round(sum(media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end),2)) as 'Total' from v3_reporting r join advertiser a on r.external_advertiser_id=a.external_advertiser_id where r.deleted=0 and r.active=1 and r.date>='2014-01-01 00:00:00' group by 1 union select 'Total', concat('$',round(sum(case when month(r.date)=1 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end),2)) as 'January', concat('$',round(sum(case when month(r.date)=2 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end),2)) as 'February', concat('$',round(sum(case when month(r.date)=3 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end),2)) as 'March', concat('$',round(sum(case when month(r.date)=4 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end),2)) as 'April', concat('$',round(sum(case when month(r.date)=5 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end),2)) as 'May', concat('$',round(sum(case when month(r.date)=6 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end),2)) as 'June', concat('$',round(sum(case when month(r.date)=7 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end),2)) as 'July', concat('$',round(sum(case when month(r.date)=8 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end),2)) as 'August', concat('$',round(sum(case when month(r.date)=9 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end),2)) as 'September', concat('$',round(sum(case when month(r.date)=10 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end),2)) as 'October', concat('$',round(sum(case when month(r.date)=11 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end),2)) as 'November', concat('$',round(sum(case when month(r.date)=12 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end),2)) as 'December', concat('$',round(sum(media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end),2)) as 'Total' from v3_reporting r join advertiser a on r.external_advertiser_id=a.external_advertiser_id where r.deleted=0 and r.active=1 and r.date>='2014-01-01 00:00:00';").to_html()
-        self.write('<h3 class="page-header" >Rockerbox Revenue</h3>')
-        self.write(table)
-        self.write('<br><h3 class="page-header" >Rockerbox Profit</h3>')
-        table = self.db.select_dataframe("select a.advertiser_name as 'Client', concat('$',round(sum(case when month(r.date)=1 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end)-sum(case when month(r.date)=1 then media_cost else 0 end),2)) as 'January', concat('$',round(sum(case when month(r.date)=2 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end)-sum(case when month(r.date)=2 then media_cost else 0 end),2)) as 'February', concat('$',round(sum(case when month(r.date)=3 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end)-sum(case when month(r.date)=3 then media_cost else 0 end),2)) as 'March', concat('$',round(sum(case when month(r.date)=4 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end)-sum(case when month(r.date)=4 then media_cost else 0 end),2)) as 'April', concat('$',round(sum(case when month(r.date)=5 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end)-sum(case when month(r.date)=5 then media_cost else 0 end),2)) as 'May', concat('$',round(sum(case when month(r.date)=6 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end)-sum(case when month(r.date)=6 then media_cost else 0 end),2)) as 'June', concat('$',round(sum(case when month(r.date)=7 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end)-sum(case when month(r.date)=7 then media_cost else 0 end),2)) as 'July', concat('$',round(sum(case when month(r.date)=8 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end)-sum(case when month(r.date)=8 then media_cost else 0 end),2)) as 'August', concat('$',round(sum(case when month(r.date)=9 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end)-sum(case when month(r.date)=9 then media_cost else 0 end),2)) as 'September', concat('$',round(sum(case when month(r.date)=10 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end)-sum(case when month(r.date)=10 then media_cost else 0 end),2)) as 'October', concat('$',round(sum(case when month(r.date)=11 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end)-sum(case when month(r.date)=11 then media_cost else 0 end),2)) as 'November', concat('$',round(sum(case when month(r.date)=12 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end)-sum(case when month(r.date)=12 then media_cost else 0 end),2)) as 'December', concat('$',round(sum(media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end)-sum(media_cost),2)) as 'Total' from v3_reporting r join advertiser a on r.external_advertiser_id=a.external_advertiser_id where r.deleted=0 and r.active=1 and r.date>='2014-01-01 00:00:00' group by 1 union select 'Total', concat('$',round(sum(case when month(r.date)=1 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end)-sum(case when month(r.date)=1 then media_cost else 0 end),2)) as 'January', concat('$',round(sum(case when month(r.date)=2 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end)-sum(case when month(r.date)=2 then media_cost else 0 end),2)) as 'February', concat('$',round(sum(case when month(r.date)=3 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end)-sum(case when month(r.date)=3 then media_cost else 0 end),2)) as 'March', concat('$',round(sum(case when month(r.date)=4 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end)-sum(case when month(r.date)=4 then media_cost else 0 end),2)) as 'April', concat('$',round(sum(case when month(r.date)=5 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end)-sum(case when month(r.date)=5 then media_cost else 0 end),2)) as 'May', concat('$',round(sum(case when month(r.date)=6 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end)-sum(case when month(r.date)=6 then media_cost else 0 end),2)) as 'June', concat('$',round(sum(case when month(r.date)=7 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end)-sum(case when month(r.date)=7 then media_cost else 0 end),2)) as 'July', concat('$',round(sum(case when month(r.date)=8 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end)-sum(case when month(r.date)=8 then media_cost else 0 end),2)) as 'August', concat('$',round(sum(case when month(r.date)=9 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end)-sum(case when month(r.date)=9 then media_cost else 0 end),2)) as 'September', concat('$',round(sum(case when month(r.date)=10 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end)-sum(case when month(r.date)=10 then media_cost else 0 end),2)) as 'October', concat('$',round(sum(case when month(r.date)=11 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end)-sum(case when month(r.date)=11 then media_cost else 0 end),2)) as 'November', concat('$',round(sum(case when month(r.date)=12 then media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end else 0 end)-sum(case when month(r.date)=12 then media_cost else 0 end),2)) as 'December', concat('$',round(sum(media_cost*case when cpm_multiplier is null then 1 else cpm_multiplier end)-sum(media_cost),2)) as 'Total' from v3_reporting r join advertiser a on r.external_advertiser_id=a.external_advertiser_id where r.deleted=0 and r.active=1 and r.date>='2014-01-01 00:00:00';").to_html()
-        self.write(table)
+        pass
+    

@@ -84,9 +84,8 @@ d3.json(window.location.href+"&format=json",function(data){
   var pseudoDimension = {
     top: function (x) {
       console.log(x)
-      return dateImps.top(x)
-              .map(function (grp) { return {"date":grp.key, "imps":grp.value}; });
-      }
+      return dateImps.top(x).map(function (grp) { return {"date":grp.key, "imps":grp.value}; });
+    }
   };
 
   dc.dataTable(".dc-data-table")
@@ -94,17 +93,17 @@ d3.json(window.location.href+"&format=json",function(data){
     // data table does not use crossfilter group but rather a closure
     // as a grouping function
     .group(function (d) {
-      return d.date
+      return d.dd
     })
     //.group(dateImps)
     .size(10) // (optional) max number of records to be shown, :default = 25
     // dynamic columns creation using an array of closures
     .columns([
       function (d) {
-          return d.date;
+          return d.dd;
       },
       function (d) {
-        return d.dd
+          return d.state;
       },
       function (d) {
           return d.imps;
@@ -146,6 +145,6 @@ d3.json(window.location.href+"&format=json",function(data){
     </tr>
   </thead>
 </table>
-{{ stuff }}
+<div class="hidden">{{ stuff }}</div>
 {% end %}
 

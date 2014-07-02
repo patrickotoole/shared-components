@@ -80,7 +80,10 @@ class TargetingBase(tornado.web.RequestHandler):
     def update_boxes(self,boxes=BOXES):
         http_client = HTTPClient() 
         for ip in boxes:
-            response = http_client.fetch("http://%s:8888/load_profile" % ip)
+            try:
+                response = http_client.fetch("http://%s:8888/load_profile" % ip)
+            except:
+                pass
         http_client.close()
 
     def update_profile(self):
