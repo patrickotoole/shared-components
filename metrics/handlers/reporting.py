@@ -34,12 +34,20 @@ class ReportingHandler(tornado.web.RequestHandler):
     def get(self):
 
         campaign_id = self.get_argument("campaign",False)
-        data = self.pull_campaign(campaign_id)
+        advertiser_id = self.get_argument("advertiser",False)
+        if self.get_argument("format",False):
+            if campaign_id:
+                data = self.pull_campaign(campaign_id)
+            elif advertiser_id:
+                data = self.pull_advertiser(advertiser_id)
+        else:
+            data = ""
 
         def default(self,data):
-            self.render("../templates/_campaign_reporting.html",stuff=data)
-
-        
+            if campaign_id:
+                self.render("../templates/_campaign_reporting.html",stuff=data)
+            elif advertiser_id:
+                self.render("../templates/_reporting.html",stuff=data)
 
         yield default, (data,)
 

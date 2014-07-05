@@ -83,7 +83,7 @@ class TargetingBase(tornado.web.RequestHandler):
             try:
                 response = http_client.fetch("http://%s:8888/load_profile" % ip)
             except:
-                pass
+                print ip
         http_client.close()
 
     def update_profile(self):

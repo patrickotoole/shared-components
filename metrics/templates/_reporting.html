@@ -108,12 +108,13 @@ d3.json(window.location.href+"&format=json",function(data){
     }
   )
   console.log("after")
+  window.campaignImps = campaignImps
 
   var pseudoDimension = {
     top: function (x) {
       var min_date = dateFormatPretty(dateDimension.bottom(1)[0].dd)
       var max_date = dateFormatPretty(dateDimension.top(1)[0].dd)
-      return campaignImps.top(x).map(function (grp) { 
+      return campaignImps.top(x).filter(function(x){return x.value.imps}).map(function (grp) { 
         return {
           "campaign_id":grp.key, 
           "imps":grp.value.imps, 
@@ -259,7 +260,7 @@ d3.json(window.location.href+"&format=json",function(data){
     .size(50) 
     .columns([
       function (d) {
-         return d.campaign_id;
+         return "<a href='" + window.location + "&campaign=" + d.campaign_id + "'>"+ d.campaign_id +"</a>"
       },
       function (d) {
         return numberFormat(d.imps);

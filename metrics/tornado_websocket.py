@@ -4,12 +4,13 @@ import tornado.websocket
 import tornado.httpserver
 
 import tornado.platform.twisted
+tornado.platform.twisted.install()
 
 from twisted.internet import reactor, protocol, defer, threads
 from twisted.protocols import basic
 from tornado.options import define, options, parse_command_line
 
-#tornado.platform.twisted.install()
+
 
 from handlers import *
 import handlers.admin as admin
@@ -43,7 +44,10 @@ def sig_handler(sig, frame):
  
 def shutdown():
     logging.info('Stopping http server')
-    reactor.stop()
+    try:
+        reactor.stop()
+    except:
+        pass
     server.stop()
  
     logging.info('Will shutdown in %s seconds ...', MAX_WAIT_SECONDS_BEFORE_SHUTDOWN)
