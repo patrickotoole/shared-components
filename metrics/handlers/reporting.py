@@ -10,6 +10,8 @@ CONVERSION_QUERY = """select is_valid, 0 id, 0 imps, 0 clicks, campaign_id, crea
 
 UNION_QUERY = IMPS_QUERY + " UNION ALL (" + CONVERSION_QUERY + ")"
 
+BUCKET_QUERY = "select campaign_id from campaign_bucket where bucket_name like '%%%(bucket)s%%' and external_advertiser_id = %(advertiser)s"
+
 class ReportingHandler(tornado.web.RequestHandler):
     def initialize(self, db, api, hive):
         self.db = db 
@@ -20,15 +22,10 @@ class ReportingHandler(tornado.web.RequestHandler):
         return pandas.DataFrame().load("/root/v3.pnds")
 
     def pull_advertiser(self,advertiser_id):
-        return self.db.select_dataframe(
-                    UNION_QUERY % {"advertiser_id":advertiser_id}
-                )
+        return self.db.select_dataframe(UNION_QUERY % {"advertiser_id":advertiser_id})
 
     def pull_bucket(self,bucket,advertiser):
-        campaigns = self.db.select_dataframe(
-            "select campaign_id from campaign_bucket where bucket_name like '%%%(bucket)s%%' and external_advertiser_id = %(advertiser)s" %
-            {"bucket": bucket, "advertiser": "302568"}
-        )
+        campaigns = self.db.select_dataframe(BUCKET_QUERY % {"bucket": bucket, "advertiser": "302568"})
         campaign_where = "(" + " or ".join(["campaign = %s" % i for i in campaigns.campaign_id.values]) + ")"
         print campaign_where
 
@@ -59,10 +56,11 @@ class ReportingHandler(tornado.web.RequestHandler):
         campaign_id = self.get_argument("campaign",False)
         campaign_bucket = self.get_argument("group",False)
         advertiser_id = self.get_argument("advertiser",False)
+        strategy = self.get_argument("strategy",False)
+
         if self.get_argument("format",False):
             if campaign_id:
                 data = self.pull_campaign(campaign_id)
-            
             elif advertiser_id and campaign_bucket:
                 data = self.pull_bucket(campaign_bucket,advertiser_id)
             elif advertiser_id:
@@ -73,6 +71,8 @@ class ReportingHandler(tornado.web.RequestHandler):
         def default(self,data):
             if campaign_id or campaign_bucket:
                 self.render("reporting/_campaign.html",stuff=data)
+            elif strategy:
+                self.render("reporting/_advertiser.html",stuff=data)
             elif advertiser_id:
                 self.render("reporting/_advertiser_bucket.html",stuff=data)
 
