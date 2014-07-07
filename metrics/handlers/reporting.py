@@ -24,30 +24,57 @@ class ReportingHandler(tornado.web.RequestHandler):
                     UNION_QUERY % {"advertiser_id":advertiser_id}
                 )
 
+    def pull_bucket(self,bucket,advertiser):
+        campaigns = self.db.select_dataframe(
+            "select campaign_id from campaign_bucket where bucket_name like '%%%(bucket)s%%' and external_advertiser_id = %(advertiser)s" %
+            {"bucket": bucket, "advertiser": "302568"}
+        )
+        campaign_where = "(" + " or ".join(["campaign = %s" % i for i in campaigns.campaign_id.values]) + ")"
+        print campaign_where
+
+        l = list(self.hive.execute("select * from campaign_domain_cached where %s" % campaign_where))
+
+        return pandas.DataFrame(l)
+
     def pull_campaign(self,campaign_id):
+        """
+        try:
+            p = pandas.DataFrame().load("/root/saved.pnds")
+        except:
+            g = self.hive.execute("select * from campaign_domain_cached where campaign = %s" % campaign_id)
+            l = list(g)
+            p = pandas.DataFrame(l)
+            p.save("/root/saved.pnds")
+        """
         g = self.hive.execute("select * from campaign_domain_cached where campaign = %s" % campaign_id)
         l = list(g)
-        return pandas.DataFrame(l)
+        p = pandas.DataFrame(l)
+
+        return p
                 
 
     @decorators.formattable
     def get(self):
 
         campaign_id = self.get_argument("campaign",False)
+        campaign_bucket = self.get_argument("group",False)
         advertiser_id = self.get_argument("advertiser",False)
         if self.get_argument("format",False):
             if campaign_id:
                 data = self.pull_campaign(campaign_id)
+            
+            elif advertiser_id and campaign_bucket:
+                data = self.pull_bucket(campaign_bucket,advertiser_id)
             elif advertiser_id:
                 data = self.pull_advertiser(advertiser_id)
         else:
             data = ""
 
         def default(self,data):
-            if campaign_id:
-                self.render("../templates/_campaign_reporting.html",stuff=data)
+            if campaign_id or campaign_bucket:
+                self.render("reporting/_campaign.html",stuff=data)
             elif advertiser_id:
-                self.render("../templates/_reporting.html",stuff=data)
+                self.render("reporting/_advertiser_bucket.html",stuff=data)
 
         yield default, (data,)
 

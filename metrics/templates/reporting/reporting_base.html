@@ -25,15 +25,33 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
               </button>
-              
               <a class="navbar-brand" href="#">
-                <img src="http://rockerbox.com/img/logo.png" width="150px" style="margin-top:-5px">
+                <img src="http://rockerbox.com/img/logo.png" width="150px" style="margin-top:-5px;padding-right:20px">
               </a>
+            </div>
+            <div class="navbar-collapse collapse"> 
+              <ol class="breadcrumb"></ol>
             </div>
           </div>
         </nav>
       </div>
       <div class="container">
+        <div class="row">
+          <div class="col-md-6">
+            <h2 class="advertiser">[[Advertiser Name]]</h2>
+          </div>
+          <div class="col-md-6 range text-right muted">
+            <p style="margin-top:10px">
+              <span class="date-range"></span>
+            </p>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6">
+            <h4 style="margin-top:20px"><span class="campaign">[[Campaign Name]]</span> Delivery</h4>
+          </div>
+          
+        </div>
           {% block stuff %}default{% end %}  
       </div> 
     </body>

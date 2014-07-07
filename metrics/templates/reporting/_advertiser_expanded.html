@@ -1,5 +1,5 @@
 {% autoescape None %}
-{% extends "../templates/base.html" %}
+{% extends "reporting_base.html" %}
 
 {% block stuff %}
 <link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/dc.css">
@@ -13,6 +13,29 @@
 }
 </style>
 <script>
+
+  var qs = window.location.search.slice(1,window.location.search.length).split('&');
+  var qs_params = {};
+  for(var i = 0; i < qs.length; i++) {
+      var bits = qs[i].split('=');
+      qs_params[bits[0]] = bits[1];
+  }
+
+  var advertiser_id = qs_params['advertiser']
+
+  $.getJSON("/api?table=advertiser&external_advertiser_id=" + advertiser_id).done(function(e){
+    var name = e[0]["advertiser_name"];
+    $(".advertiser").text(name);
+    $(".campaign").text("Advertiser")
+    $(".breadcrumb").append("<li><a href='" + 
+      window.location.origin + 
+      window.location.pathname + 
+      "?advertiser=" + 
+      advertiser_id + "'>" + name + "</a></li>"
+    );
+  })
+
+
 
 d3.json(window.location.href+"&format=json",function(data){
 
@@ -29,12 +52,14 @@ d3.json(window.location.href+"&format=json",function(data){
   window.data = data
 
   data.forEach(function(d) {
+     
     d.campaign_id = d.campaign_id || d.campaign 
     d.dd = new Date(d.date*1000)
     d.imps = +d.imps
     d.clicks = +d.clicks
     d.conversions = +d.is_valid
     d.cost = 0 //d.media_cost*d.cpm_multiplier
+    d.campaign_bucket = d.campaign_id 
   })
 
   var crs = crossfilter(data);
@@ -298,8 +323,6 @@ d3.json(window.location.href+"&format=json",function(data){
 
 })
 </script>
-<h4>Advertiser Delivery</h4>
-
 <div class="row">
   <div id="imps-chart"></div>
 </div>
