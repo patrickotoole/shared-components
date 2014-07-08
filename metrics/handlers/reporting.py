@@ -2,6 +2,7 @@ import tornado.web
 import ujson
 import pandas
 import StringIO
+from base import BaseHandler
 from lib.helpers import *
 
 IMPS_QUERY = """select 0 is_valid, v3.* from v3_reporting v3 where v3.external_advertiser_id= %(advertiser_id)s and v3.active = 1 and v3.deleted = 0"""
@@ -12,7 +13,7 @@ UNION_QUERY = IMPS_QUERY + " UNION ALL (" + CONVERSION_QUERY + ")"
 
 BUCKET_QUERY = "select campaign_id from campaign_bucket where bucket_name like '%%%(bucket)s%%' and external_advertiser_id = %(advertiser)s"
 
-class ReportingHandler(tornado.web.RequestHandler):
+class ReportingHandler(BaseHandler):
     def initialize(self, db, api, hive):
         self.db = db 
         self.api = api
@@ -49,13 +50,14 @@ class ReportingHandler(tornado.web.RequestHandler):
 
         return p
                 
-
+    @tornado.web.authenticated
     @decorators.formattable
     def get(self):
 
+        advertiser_id = self.get_secure_cookie("advertiser")
+
         campaign_id = self.get_argument("campaign",False)
         campaign_bucket = self.get_argument("group",False)
-        advertiser_id = self.get_argument("advertiser",False)
         strategy = self.get_argument("strategy",False)
 
         if self.get_argument("format",False):
@@ -70,11 +72,11 @@ class ReportingHandler(tornado.web.RequestHandler):
 
         def default(self,data):
             if campaign_id or campaign_bucket:
-                self.render("reporting/_campaign.html",stuff=data)
+                self.render("reporting/_campaign.html",stuff=data, advertiser_id=advertiser_id)
             elif strategy:
-                self.render("reporting/_advertiser.html",stuff=data)
+                self.render("reporting/_advertiser.html",stuff=data, advertiser_id=advertiser_id)
             elif advertiser_id:
-                self.render("reporting/_advertiser_bucket.html",stuff=data)
+                self.render("reporting/_advertiser_bucket.html",stuff=data, advertiser_id=advertiser_id)
 
         yield default, (data,)
 

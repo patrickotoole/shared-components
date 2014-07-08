@@ -23,7 +23,7 @@ for(var i = 0; i < qs.length; i++) {
     qs_params[bits[0]] = bits[1];
 }
 
-var advertiser_id = qs_params['advertiser']
+var advertiser_id = qs_params['advertiser'] || {{ advertiser_id }}
 
 $.getJSON("/api?table=advertiser&external_advertiser_id=" + advertiser_id).done(function(e){
   var name = e[0]["advertiser_name"];
@@ -43,8 +43,11 @@ $.getJSON("/api?table=campaign_bucket&external_advertiser_id=" + advertiser_id).
   e.forEach(function(bucket){
     buckets[bucket.campaign_id] = bucket
   })
-  
-  d3.json(window.location.href+"&format=json",function(data){
+
+  var data_link = window.location.origin + window.location.pathname 
+  data_link += window.location.search.length ? window.location.search : "?"
+  console.log(data_link)
+  d3.json(data_link+"&format=json",function(data){
 
     data.forEach(function(d) {
       var name = "Default Campaign"
@@ -105,7 +108,7 @@ $.getJSON("/api?table=campaign_bucket&external_advertiser_id=" + advertiser_id).
       .size(50) 
       .columns([
         function (d) {
-           return "<a href='" + window.location + 
+           return "<a href='" + data_link + 
             "&group=" + d.campaign_bucket + 
             "'>"+ d.campaign_bucket +"</a>"
         },

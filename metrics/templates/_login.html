@@ -1,0 +1,27 @@
+{% autoescape None %}
+{% extends "clean_base.html" %}
+
+{% block content %}
+<script src="http://rockerbox.com/js/jquery.serialize-object.js"></script>
+<link href="http://rockerbox.com/css/signin.css" rel="stylesheet">
+
+<div class="container">
+<form class="form-signin" role="form">
+  <h2 class="form-signin-heading">Please sign in</h2>
+  <input name="username" type="email" class="form-control" placeholder="Username" required="" autofocus="">
+  <input name="password" type="password" class="form-control" placeholder="Password" required="">
+  <div id="signin" class="btn btn-lg btn-primary btn-block" type="submit">Sign in</div>
+</form>
+<script>
+$('#signin').click(function(e){
+  var obj = JSON.stringify($(e.target).parents("form").serializeObject())
+  $.post("/login",obj).done(function(e){
+    if (parseInt(e) > 0) location.reload()
+  })
+  e.preventDefault()
+  return false;
+})
+</script>
+
+</div>
+{% end %}

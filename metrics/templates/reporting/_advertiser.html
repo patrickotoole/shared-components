@@ -22,8 +22,7 @@
       var bits = qs[i].split('=');
       qs_params[bits[0]] = bits[1];
   }
-
-  var advertiser_id = qs_params['advertiser']
+  var advertiser_id = qs_params['advertiser'] || {{ advertiser_id }}
 
   $.getJSON("/api?table=advertiser&external_advertiser_id=" + advertiser_id).done(function(e){
     var name = e[0]["advertiser_name"];
@@ -38,8 +37,10 @@
   })
 
 
+var data_link = window.location.origin + window.location.pathname 
+data_link += window.location.search.length ? window.location.search : "?"
 
-d3.json(window.location.href+"&format=json",function(data){
+d3.json(data_link+"&format=json",function(data){
 
   data.forEach(function(d) {
     d.campaign_id = d.campaign_id || d.campaign 
@@ -96,7 +97,7 @@ d3.json(window.location.href+"&format=json",function(data){
     .size(50) 
     .columns([
       function (d) {
-         return "<a href='" + window.location + "&campaign=" + d.campaign_id + "'>"+ d.campaign_id +"</a>"
+         return "<a href='" + data_link + "&campaign=" + d.campaign_id + "'>"+ d.campaign_id +"</a>"
       },
       function (d) {
         return numberFormat(d.imps);

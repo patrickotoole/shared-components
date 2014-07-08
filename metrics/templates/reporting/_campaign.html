@@ -42,7 +42,7 @@ $(document).ready(function(){
       qs_params[bits[0]] = bits[1];
   }
 
-  var advertiser_id = qs_params['advertiser'],
+  var advertiser_id = qs_params['advertiser'] || {{ advertiser_id }},
     campaign_id = qs_params['campaign'],
     bucket = qs_params['group'] ? unescape(qs_params['group']) : false
 
@@ -69,9 +69,10 @@ $(document).ready(function(){
     })
   }
 
+  var data_link = window.location.origin + window.location.pathname 
+  data_link += window.location.search.length ? window.location.search : "?"
 
-
-  d3.json(window.location.href+"&format=json",function(data){
+  d3.json(data_link+"&format=json",function(data){
 
     // Clear loading dialog...
     $('#imps-chart').html("")

@@ -1,7 +1,7 @@
 import tornado.web
 from twisted.internet import defer, threads
 
-import lib.lookback as lookback
+#import lib.lookback as lookback
 
    
 class DebugHandler(tornado.web.RequestHandler):

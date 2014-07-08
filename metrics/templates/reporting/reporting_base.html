@@ -1,59 +1,24 @@
 {% autoescape None %}
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <script src="http://d3js.org/d3.v3.min.js"></script>
-        <script src="http://d3js.org/topojson.v1.min.js"></script>
-        <script src="http://metrics.getrockerbox.com/assets/bar.js"></script>
-        <script src="http://metrics.getrockerbox.com/assets/map.js"></script>
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
-        <script src="http://getbootstrap.com/dist/js/bootstrap.min.js"></script>
+{% extends "../clean_base.html" %}
 
-        <link href="http://rockerbox.com/css/bootstrap.css" rel="stylesheet">
-        <style>
-        body {padding-top:70px}
-        </style>
-    </head>
-   <body data-spy="scroll" data-target=".navbar" data-offset="150"> 
-     <div class="navbar-wrapper">
-        <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
-          <div class="container">
-            <div class="navbar-header">
-              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-              </button>
-              <a class="navbar-brand" href="#">
-                <img src="http://rockerbox.com/img/logo.png" width="150px" style="margin-top:-5px;padding-right:20px">
-              </a>
-            </div>
-            <div class="navbar-collapse collapse"> 
-              <ol class="breadcrumb"></ol>
-            </div>
-          </div>
-        </nav>
-      </div>
-      <div class="container">
-        <div class="row">
-          <div class="col-md-6">
-            <h2 class="advertiser">[[Advertiser Name]]</h2>
-          </div>
-          <div class="col-md-6 range text-right muted">
-            <p style="margin-top:10px">
-              <span class="date-range"></span>
-            </p>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-md-6">
-            <h4 style="margin-top:20px"><span class="campaign">[[Campaign Name]]</span> Delivery</h4>
-          </div>
-          
-        </div>
-          {% block stuff %}default{% end %}  
-      </div> 
-    </body>
+{% block content %}
+<div class="container">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="advertiser">[[Advertiser Name]]</h2>
+    </div>
+    <div class="col-md-6 range text-right muted">
+      <p style="margin-top:10px">
+        <span class="date-range"></span>
+      </p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h4 style="margin-top:20px"><span class="campaign">[[Campaign Name]]</span> Delivery</h4>
+    </div>
     
-</html>
+  </div>
+    {% block stuff %}default{% end %}  
+</div> 
+{% end %}
