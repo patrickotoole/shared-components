@@ -26,7 +26,7 @@ class ReportingHandler(BaseHandler):
         return self.db.select_dataframe(UNION_QUERY % {"advertiser_id":advertiser_id})
 
     def pull_bucket(self,bucket,advertiser):
-        campaigns = self.db.select_dataframe(BUCKET_QUERY % {"bucket": bucket, "advertiser": "302568"})
+        campaigns = self.db.select_dataframe(BUCKET_QUERY % {"bucket": bucket, "advertiser": advertiser})
         campaign_where = "(" + " or ".join(["campaign = %s" % i for i in campaigns.campaign_id.values]) + ")"
         print campaign_where
 
