@@ -46,7 +46,7 @@ $.getJSON("/api?table=campaign_bucket&external_advertiser_id=" + advertiser_id).
 
   var data_link = window.location.origin + window.location.pathname 
   data_link += window.location.search.length ? window.location.search : "?"
-  console.log(data_link)
+
   d3.json(data_link+"&format=json",function(data){
 
     data.forEach(function(d) {
