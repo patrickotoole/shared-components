@@ -80,6 +80,8 @@ class ReportingHandler(BaseHandler):
 
         yield default, (data,)
 
+
+
     def post(self):
         pass
     
