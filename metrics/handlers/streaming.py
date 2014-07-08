@@ -1,7 +1,7 @@
 import tornado.websocket
 import redis
 import datetime
-import lib.stream
+import lib.buffers.stream
 import pandas
 import ujson
 import tornado.platform.twisted
