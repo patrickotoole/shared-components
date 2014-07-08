@@ -14,7 +14,11 @@ import metrics.handlers.user as user
 class LoginTest(AsyncHTTPTestCase):
 
     def get_app(self):
-        db = lnk.dbs.mysql
+        db = lnk.dbs.test
+
+        db.execute("insert into user (username, password, advertiser_id) values ('vanguard','$2a$08$CWAt/.lo3zsUo0cQld7lK.RzFvVJ6SKT6GfowBOrbGUjuQzwPEdAW',1)")
+        db.commit()
+
         dirname = os.path.dirname(os.path.realpath(__file__)) + "../../../templates"
 
         self.app = Application([('/', user.LoginHandler, dict(db=db))],
@@ -36,7 +40,7 @@ class LoginTest(AsyncHTTPTestCase):
         #self.assertTrue("logged in" in to_unicode(response.body))
 
     def test_login_success(self):
-        logged_in = self.fetch('/',method="POST",body="""{"username":"bauble@baublebar.com"}""")
+        logged_in = self.fetch('/',method="POST",body="""{"username":"vanguard","password":"vanguard"}""")
         headers = {}
         headers['Cookie'] = logged_in.headers['Set-Cookie']
         response = self.fetch('/',headers=headers)

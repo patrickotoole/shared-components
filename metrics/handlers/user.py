@@ -28,9 +28,10 @@ class LoginHandler(tornado.web.RequestHandler):
     def post(self):
         body = ujson.loads(self.request.body)
         username = body["username"]
+        password = body.get("password","")
         lookup = self.db.select(USER_QUERY % username).fetchall() 
 
-        if len(lookup) > 0 and self._check_password(body["password"],lookup[0][3]):
+        if len(lookup) > 0 and self._check_password(password,lookup[0][3]):
             self.set_secure_cookie("advertiser",str(lookup[0][2]))
             self.set_secure_cookie("user",username)
             self.write("1")
@@ -54,9 +55,10 @@ class SignupHandler(tornado.web.RequestHandler):
 
     def create(self,to_create):
         validate = to_create.get("username",False) and to_create.get("password",False)
-        to_create["password"] = pw_hash.hash_password(to_create["password"])
-
+        
         if validate:
+            to_create["password"] = pw_hash.hash_password(to_create["password"])
+
             self.db.execute(self.INSERT_QUERY % to_create)
             self.db.commit()
             return to_create["username"]
@@ -68,10 +70,12 @@ class SignupHandler(tornado.web.RequestHandler):
         
 
     def post(self):
+        try:
             body = ujson.loads(self.request.body)
             created = self.create(body)
             self.login(created)
             self.write("success")
+        except:
             self.write("failure")
 
 
