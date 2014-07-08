@@ -2,15 +2,21 @@ import tornado.web
 import logging
 import sys
 import ujson
+import lib.password_hash as password_hash
 
 logger = logging.getLogger('tcpserver')
 
-USER_QUERY = "SELECT id, username, advertiser_id from user where username = '%s'"
+USER_QUERY = "SELECT id, username, advertiser_id, password from user where username = '%s'"
+
+pw_hash = password_hash.PasswordHash()
 
 class LoginHandler(tornado.web.RequestHandler):
 
     def initialize(self,db=None):
         self.db = db
+
+    def _check_password(self,submitted,stored):
+        return pw_hash.check_password(submitted,stored)
 
     def get(self):
 
@@ -20,11 +26,11 @@ class LoginHandler(tornado.web.RequestHandler):
             self.render("_login.html",message = "sign in")
 
     def post(self):
-        username = ujson.loads(self.request.body)["username"]
+        body = ujson.loads(self.request.body)
+        username = body["username"]
         lookup = self.db.select(USER_QUERY % username).fetchall() 
-        print lookup
 
-        if len(lookup) > 0:
+        if len(lookup) > 0 and self._check_password(body["password"],lookup[0][3]):
             self.set_secure_cookie("advertiser",str(lookup[0][2]))
             self.set_secure_cookie("user",username)
             self.write("1")
@@ -48,6 +54,7 @@ class SignupHandler(tornado.web.RequestHandler):
 
     def create(self,to_create):
         validate = to_create.get("username",False) and to_create.get("password",False)
+        to_create["password"] = pw_hash.hash_password(to_create["password"])
 
         if validate:
             self.db.execute(self.INSERT_QUERY % to_create)
@@ -61,12 +68,10 @@ class SignupHandler(tornado.web.RequestHandler):
         
 
     def post(self):
-        try:
             body = ujson.loads(self.request.body)
             created = self.create(body)
             self.login(created)
             self.write("success")
-        except:
             self.write("failure")
 
 
