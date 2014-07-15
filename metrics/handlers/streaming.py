@@ -46,7 +46,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
   
     def initialize(self,db,socket_buffer,view_buffer):
 
-        self.time_interval = 1
+        self.time_interval = 2
         self.do = db
         self.socket_buffer = socket_buffer
         self.view_buffer = view_buffer

@@ -9,12 +9,12 @@ import hive_utils
 import tornado.template as template
 from urlparse import urlparse
 from twisted.internet import defer, threads
-from lib.hive import Hive
+#from lib.hive import Hive
 
 API_QUERY = "select * from appnexus_reporting.%s where %s "
 
 #hive = None#hive_utils.HiveClient(server="slave4",port="7425")
-hive = Hive().hive
+#hive = Hive().hive
 
 @contextlib.contextmanager
 def openclose(transport):

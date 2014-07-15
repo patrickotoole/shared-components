@@ -73,6 +73,7 @@ $(document).ready(function(){
   data_link += window.location.search.length ? window.location.search : "?"
 
   d3.json(data_link+"&format=json",function(data){
+    window.data = data;
 
     // Clear loading dialog...
     $('#imps-chart').html("")
