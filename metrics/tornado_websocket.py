@@ -71,7 +71,7 @@ def shutdown():
 
 
 db = lnk.dbs.mysql
-api = None#lnk.api.console
+api = lnk.api.console
 bidder = None#lnk.api.console
 hive = h.Hive(n_map=3,n_reduce=3).hive
 _redis = redis.StrictRedis(host='162.243.123.240', port=6379, db=1)

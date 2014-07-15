@@ -31,7 +31,11 @@ class ReportingHandler(BaseHandler):
         campaign_where = "(" + " or ".join(["campaign = %s" % i for i in campaigns.campaign_id.values]) + ")"
         print campaign_where
 
-        l = list(self.hive.session_execute(["set shark.map.tasks=3","set mapred.reduce.tasks = 3","select campaign, seller, referrer, datetime date, imps, clicks, cost, is_valid from campaign_domain_partitioned_new where %s" % campaign_where]))
+        l = list(self.hive.session_execute([
+            "set shark.map.tasks=3",
+            "set mapred.reduce.tasks = 3",
+            "select campaign, seller, referrer, datetime date, imps, clicks, cost, is_valid from campaign_domain_partitioned_new where %s" % campaign_where
+        ]))
 
         return pandas.DataFrame(l)
 
@@ -45,7 +49,11 @@ class ReportingHandler(BaseHandler):
             p = pandas.DataFrame(l)
             p.save("/root/saved.pnds")
         """
-        g = self.hive.session_execute(["set shark.map.tasks=3","set mapred.reduce.tasks = 3","select campaign, seller, referrer, datetime date, imps, clicks, cost, is_valid from campaign_domain_partitioned_new where campaign = %s" % campaign_id])
+        g = self.hive.session_execute([
+            "set shark.map.tasks=3",
+            "set mapred.reduce.tasks = 3",
+            "select campaign, seller, referrer, datetime date, imps, clicks, cost, is_valid from campaign_domain_partitioned_new where campaign = %s" % campaign_id
+        ])
         l = list(g)
         p = pandas.DataFrame(l)
 

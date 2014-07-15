@@ -102,9 +102,9 @@ $.getJSON("/api?table=campaign_bucket&external_advertiser_id=" + advertiser_id).
     var numberFormat = d3.format("0,000.00")
         
     dc.dataTable(".dc-data-table")
-      .dimension(CRS.aggregateDimensions.campaign_bucket)
+      .dimension(CRS.aggregateDimensions.daily_campaign_bucket)
       .group(function (d) {
-        return dateFormatPretty(d.date_min) + " until " + dateFormatPretty(d.date_max)
+        return dateFormatPretty(d.date)
       })
       .size(50) 
       .columns([
