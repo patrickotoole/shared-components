@@ -92,7 +92,9 @@ admin_scripts = [
     (r'/targeting.*',admin.scripts.TargetingHandler, dict(redis=_redis,api=api,db=db)),
     (r'/bidder_profile.*',admin.scripts.ProfileHandler, dict(db=db,api=api,bidder=bidder)),
     (r'/advertiser.*',admin.scripts.AdvertiserHandler, dict(db=db,api=api)),
-    (r'/money.*',admin.scripts.MoneyHandler, dict(db=db,api=api))
+    (r'/money.*',admin.scripts.MoneyHandler, dict(db=db,api=api)),
+    (r'/intraweek.*',admin.scripts.IntraWeekHandler, dict(db=db,api=api))
+
 ]
 
 streaming = [

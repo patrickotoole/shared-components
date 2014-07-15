@@ -1,0 +1,20 @@
+{% autoescape None %}
+{% extends "../templates/base.html" %}
+{% block stuff %}
+
+<h4>Intraweek Reporting</h4>
+<form role="form">
+  {{ df_html }}
+</form>
+<script>
+$.get("/intraweek?advertiser_id=234532&format=json").done(function(e){
+  console.log(e)
+})
+
+$.get("/intraweek?advertiser_id=234532&format=json").done(function(e){
+  console.log(e)
+})
+</script>
+<script src="http://rockerbox.com/js/jquery.serialize-object.js"></script>
+
+{% end %}
