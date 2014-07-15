@@ -10,7 +10,7 @@ from twisted.internet import reactor, protocol, defer, threads
 from twisted.protocols import basic
 from tornado.options import define, options, parse_command_line
 
-from handlers import streaming, reporting, user
+from handlers import streaming, reporting, user, analysis
 
 import handlers.admin as admin
 
@@ -36,10 +36,6 @@ MAX_WAIT_SECONDS_BEFORE_SHUTDOWN = 1
 define("port", default=8080, help="run on the given port", type=int)
 define("listen_port", default=1234, help="run on the given port", type=int)
 define("view_port", default=1235, help="run on the given port", type=int)
-
-
-
-
 
 def sig_handler(sig, frame):
     logging.warning('Caught signal: %s', sig)
@@ -110,22 +106,22 @@ admin_reporting = [
 reporting = [
     (r'/reporting.*',reporting.ReportingHandler, dict(db=db,api=api,hive=hive)),
     (r'/login.*', user.LoginHandler, dict(db=db))
+]
 
+pixel_analysis = [
+    (r'/analysis.*', analysis.PixelAnalysisHandler, dict(db=db,api=api,hive=hive))
 ]
 
 
 dirname = os.path.dirname(os.path.realpath(__file__))
 app = tornado.web.Application(
-    streaming + admin_scripts + admin_reporting + reporting,
+    streaming + admin_scripts + admin_reporting + reporting + pixel_analysis,
     template_path= dirname + "/templates",
     debug=True,
     db=lnk.dbs.mysql,
     cookie_secret="rickotoole",
     login_url="/login"
-
-
 )
-
 
 if __name__ == '__main__':
     parse_command_line()
