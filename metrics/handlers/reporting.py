@@ -13,6 +13,8 @@ UNION_QUERY = IMPS_QUERY + " UNION ALL (" + CONVERSION_QUERY + ")"
 
 BUCKET_QUERY = "select campaign_id from campaign_bucket where bucket_name like '%%%(bucket)s%%' and external_advertiser_id = %(advertiser)s"
 
+PARTITIONED_QUERY = "select campaign, seller, referrer, datetime date, imps, clicks, cost, is_valid from campaign_domain_partitioned_new where %s"
+
 class ReportingHandler(BaseHandler):
     def initialize(self, db, api, hive):
         self.db = db 
@@ -25,39 +27,25 @@ class ReportingHandler(BaseHandler):
     def pull_advertiser(self,advertiser_id):
         return self.db.select_dataframe(UNION_QUERY % {"advertiser_id":advertiser_id})
 
-
-    def pull_bucket(self,bucket,advertiser):
-        campaigns = self.db.select_dataframe(BUCKET_QUERY % {"bucket": bucket, "advertiser": advertiser})
-        campaign_where = "(" + " or ".join(["campaign = %s" % i for i in campaigns.campaign_id.values]) + ")"
-        print campaign_where
+    def pull_campaigns(self,campaign_ids):
+        campaign_where = "(" + " or ".join(["campaign = %s" % i for i in campaign_ids]) + ")"
 
         l = list(self.hive.session_execute([
             "set shark.map.tasks=3",
             "set mapred.reduce.tasks = 3",
-            "select campaign, seller, referrer, datetime date, imps, clicks, cost, is_valid from campaign_domain_partitioned_new where %s" % campaign_where
+             PARTITIONED_QUERY % campaign_where
         ]))
 
         return pandas.DataFrame(l)
 
-    def pull_campaign(self,campaign_id):
-        """
-        try:
-            p = pandas.DataFrame().load("/root/saved.pnds")
-        except:
-            g = self.hive.execute("select * from default.campaign_domain_partitioned_new where campaign = %s" % campaign_id)
-            l = list(g)
-            p = pandas.DataFrame(l)
-            p.save("/root/saved.pnds")
-        """
-        g = self.hive.session_execute([
-            "set shark.map.tasks=3",
-            "set mapred.reduce.tasks = 3",
-            "select campaign, seller, referrer, datetime date, imps, clicks, cost, is_valid from campaign_domain_partitioned_new where campaign = %s" % campaign_id
-        ])
-        l = list(g)
-        p = pandas.DataFrame(l)
+    def pull_bucket(self,bucket,advertiser):
+        campaign_ids = self.db.select_dataframe( 
+            BUCKET_QUERY % {"bucket": bucket, "advertiser": advertiser}
+        ).campaign_id.values
+        return self.pull_campaigns(campaign_ids)
 
-        return p
+    def pull_campaign(self,campaign_id):
+        return self.pull_campaigns([campaign_id])
                 
     @tornado.web.authenticated
     @decorators.formattable
