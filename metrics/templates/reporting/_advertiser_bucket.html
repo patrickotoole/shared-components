@@ -48,6 +48,7 @@ $.getJSON("/api?table=campaign_bucket&external_advertiser_id=" + advertiser_id).
   data_link += window.location.search.length ? window.location.search : "?"
 
   d3.json(data_link+"&format=json",function(data){
+    window.data = data
 
     data.forEach(function(d) {
       var name = "Default Campaign"
@@ -90,9 +91,9 @@ $.getJSON("/api?table=campaign_bucket&external_advertiser_id=" + advertiser_id).
       .centerBar(true)
       .colors("gray")
       .gap(1)
-      .round(d3.time.day.round)
+      .round(d3.time.hour.round)
       .alwaysUseRounding(true)
-      .xUnits(d3.time.days)
+      .xUnits(d3.time.hours)
       .yAxisLabel("Cost")
       .valueAccessor(function(d){return d.value.cost})
     spendChart

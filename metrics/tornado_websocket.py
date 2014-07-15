@@ -18,7 +18,7 @@ from lib.buffers.pixel_buffer import BufferedSocketFactory
 from lib.buffers.view_buffer import ViewabilityBufferedFactory 
 
 import redis
-from lib.hive import Hive
+import lib.hive as h
 from lib.link_sql_connector import DBCursorWrapper
 from link import lnk
 
@@ -73,7 +73,7 @@ def shutdown():
 db = lnk.dbs.mysql
 api = None#lnk.api.console
 bidder = None#lnk.api.console
-hive = Hive().hive
+hive = h.Hive(n_map=3,n_reduce=3).hive
 _redis = redis.StrictRedis(host='162.243.123.240', port=6379, db=1)
 
 socket_buffer = []
@@ -110,6 +110,7 @@ admin_reporting = [
 reporting = [
     (r'/reporting.*',reporting.ReportingHandler, dict(db=db,api=api,hive=hive)),
     (r'/login.*', user.LoginHandler, dict(db=db)),
+    (r'/', user.LoginHandler, dict(db=db)),
     (r'/signup.*', user.SignupHandler, dict(db=db))
 ]
 
@@ -118,12 +119,10 @@ dirname = os.path.dirname(os.path.realpath(__file__))
 app = tornado.web.Application(
     streaming + admin_scripts + admin_reporting + reporting,
     template_path= dirname + "/templates",
-    debug=True,
     db=lnk.dbs.mysql,
+    debug=True,
     cookie_secret="rickotoole",
     login_url="/login"
-
-
 )
 
 
