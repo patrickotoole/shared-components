@@ -201,6 +201,63 @@ class Intraweek:
         self.transform_columns()
         return self.display_advinfo(advertiser_id)
 
+    # (spend, budget, computations)
+    def get_alt_advertiser_info(self, advertiser_id):
+ 
+        advertiser_name = self.get_advertiser_name(advertiser_id)
+        if (advertiser_name == -1):
+          return pandas.DataFrame(["Advertiser DNE"])
+        money_spent = self.get_cumulative_clientcharge(advertiser_id)
+        budget_tuple = self.get_budget(advertiser_id, money_spent)
+        current_budget = budget_tuple[1]
+        current_remaining = budget_tuple[0] - money_spent
+        current_spent = current_budget - current_remaining
+        dollars_remaining = self.get_dollars_remaining(advertiser_id)
+        days_into_campaign = self.get_days_into_campaign(advertiser_id)
+        dollars_per_day = current_spent / days_into_campaign
+        expected_campaign_length = current_budget / dollars_per_day
+        proposed_campaign_length = self.get_proposed_campaign_length(advertiser_id)
+        current_start_date = self.get_current_start_date(advertiser_id) 
+        end_date_proposed = self.get_end_date_proposed(advertiser_id)
+        shouldve_spent = current_budget / proposed_campaign_length * days_into_campaign
+        to_spend_per_day = current_remaining / (proposed_campaign_length - days_into_campaign) 
+
+        map = { 'advertiser': [advertiser_name],
+                'id': [advertiser_id],
+                'start_date': [current_start_date],
+                'end_date': [end_date_proposed],
+                'current_budget': [current_budget], 
+                'spent': [current_spent], 
+                'remaining': [current_remaining], 
+                # 'days_into_campaign': [days_into_campaign], 
+                'days_left': [int(expected_campaign_length) - days_into_campaign],
+                '$_per_day': [dollars_per_day], 
+                'monthly_pacing': [30 * dollars_per_day],
+                'expected_length': [expected_campaign_length],
+                'expected_end_date': [DateOffset(days=int(expected_campaign_length)) + current_start_date], 
+                'proposed_end_date_length': [proposed_campaign_length],
+                'shouldve_spent_by_now': [shouldve_spent],
+                'to_spend_per_day': [to_spend_per_day]
+                }
+        advertiser_df = DataFrame(map)
+        advertiser_df['pacing'] = advertiser_df.apply(self.determine_pacing, axis=1)
+        return advertiser_df[['advertiser',
+                              'id', 
+                             'start_date',
+                             'end_date', 
+                             'proposed_end_date_length',
+                             'expected_end_date',
+                             'expected_length',
+                             'days_left',
+                             'current_budget',
+                             'spent',
+                             'remaining',
+                             '$_per_day',
+                             'monthly_pacing',
+                             'pacing',
+                             'shouldve_spent_by_now', 
+                             'to_spend_per_day']]
+
     #########################
   
     def update_advertiser_targets(self,advertiser_id):
