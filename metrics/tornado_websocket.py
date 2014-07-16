@@ -10,7 +10,7 @@ from twisted.internet import reactor, protocol, defer, threads
 from twisted.protocols import basic
 from tornado.options import define, options, parse_command_line
 
-from handlers import streaming, reporting, user
+from handlers import streaming, reporting, user, client_streaming
 
 import handlers.admin as admin
 
