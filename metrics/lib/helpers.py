@@ -2,6 +2,60 @@ import StringIO
 import pandas
 import ujson
 
+class Cast:
+    @staticmethod
+    def try_cast_list(cast,l,default="---"):
+        def _cast(v):
+            try:
+                return cast(v)
+            except:
+                return default
+
+        return map(_cast,l)
+
+class Mask:
+
+    @staticmethod
+    def masks_in_df(df,masks):
+        return { column: values 
+            for column, values in masks.iteritems() 
+                if column in df.columns 
+        }
+
+    @staticmethod
+    def isin_mask_dict(df,masks={}):
+        """
+        # Takes a data frame and dictionary of values to make masks
+        """
+        
+        mask = df.index == df.index
+        in_df = Mask.masks_in_df(df,masks)
+        len_masks_in_df = len(in_df.keys())
+
+        
+        if len(masks.keys()) == 0:
+            # if nothing to mask
+            return mask
+
+        if len_masks_in_df < len(masks):
+            # if we dont have the columns    
+            return mask == False
+
+        
+        for column,values in masks.iteritems():
+
+            # check for both integer and string values in columns
+            values_int = Cast.try_cast_list(int,values)
+            _mask = df[column].isin(values) | df[column].isin(values_int)
+
+            mask = mask & _mask
+            
+        return mask
+
+
+
+
+
 class Convert:
 
     @staticmethod
