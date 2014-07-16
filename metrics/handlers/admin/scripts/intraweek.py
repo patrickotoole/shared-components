@@ -5,6 +5,7 @@ from lib.helpers import *
 from tornado.httpclient import AsyncHTTPClient
 from tornado.httpclient import HTTPClient
 from lib.intraweek.intraweek_update import *
+from link import lnk
 
 pandas.options.display.max_colwidth = 1000
 
@@ -27,18 +28,28 @@ class IntraWeekHandler(tornado.web.RequestHandler):
     def initialize(self, api=None, redis=None,db=None):
         self.redis = redis
         self.db = db
+        self.iw = Intraweek(lnk.dbs.vluu_local)
 
     def get_data(self):
         advertiser = self.get_argument("advertiser",False)
+        rows=self.get_argument("rows",False)
+        
+        if rows: # try the get the int number of advertisers
+          try:
+            rows = int(rows)
+          except ValueError:
+            rows = 4
+        else:
+          rows = 4
 
         # execute the logic for which df to display
         if advertiser: # try to get the table for that advertiser
             try:
-              return get_advertiser_table(int(advertiser))
+              return self.iw.get_advertiser_table(int(advertiser), rows)
             except ValueError:
-              return get_compiled_pacing_reports()
+              return self.iw.get_compiled_pacing_reports()
         else:
-            return get_compiled_pacing_reports()
+            return self.iw.get_compiled_pacing_reports()
  
         # blank dataframe, should not reach this point! 
         return pandas.DataFrame([1]) #df

@@ -5,13 +5,16 @@
 # - cpa_target should stay constant throughout the week, cpm_multiplier changes with media_cost
 # ----------------------------
 
-import intraweek_update as iu
+from intraweek_update import *
+from link import lnk
 
 if __name__ == "__main__":
 
   ids = [225133, 250058, 274802, 302568, 306383, 338003, 312933]
 
+  iw = Intraweek(lnk.dbs.vluu_local)
+
   for id in ids:
       
-      print "Updating",iu.get_advertiser_name(id), "---------------------------"
-      iu.update_advertiser_targets(id)
+      print "Updating",iw.get_advertiser_name(id), "---------------------------"
+      iw.update_advertiser_targets(id)
