@@ -5,80 +5,95 @@ import StringIO
 from base import BaseHandler
 from lib.helpers import *
 
-IMPS_QUERY = """select 0 is_valid, v3.* from v3_reporting v3 where v3.external_advertiser_id= %(advertiser_id)s and v3.active = 1 and v3.deleted = 0"""
+from lib.query.MYSQL import *
+from lib.query.HIVE import *
+import lib.query.helpers as query_helpers
 
-CONVERSION_QUERY = """select is_valid, 0 id, 0 imps, 0 clicks, campaign_id, creative_id, 0 media_cost, external_advertiser_id, timestamp(DATE_FORMAT(conversion_time, "%%Y-%%m-%%d %%H:00:00")) date, last_activity, deleted, 0 cpm_multiplier, active, NULL notes from conversion_reporting cr where cr.external_advertiser_id = %(advertiser_id)s and cr.active = 1 and cr.deleted = 0"""
+class ReportingBase(BaseHandler):
 
-UNION_QUERY = IMPS_QUERY + " UNION ALL (" + CONVERSION_QUERY + ")"
-
-BUCKET_QUERY = "select campaign_id from campaign_bucket where bucket_name like '%%%(bucket)s%%' and external_advertiser_id = %(advertiser)s"
-
-PARTITIONED_QUERY = "select campaign, seller, referrer, datetime date, imps, clicks, cost, is_valid from campaign_domain_partitioned_new where %s"
-
-class ReportingHandler(BaseHandler):
     def initialize(self, db, api, hive):
         self.db = db 
         self.api = api
         self.hive = hive
 
-    def load_df(self):
-        return pandas.DataFrame().load("/root/v3.pnds")
-
     def pull_advertiser(self,advertiser_id):
-        return self.db.select_dataframe(UNION_QUERY % {"advertiser_id":advertiser_id})
+        params = {"advertiser_id": advertiser_id}
+        q = UNION_QUERY % params
+        return self.db.select_dataframe(q)
+
+    def pull_advertiser_bucket(self,advertiser,bucket):
+        params = {"bucket": bucket, "advertiser": advertiser}
+        q = BUCKET_QUERY % params
+        return self.db.select_dataframe(q)
 
     def pull_campaigns(self,campaign_ids):
-        campaign_where = "(" + " or ".join(["campaign = %s" % i for i in campaign_ids]) + ")"
+        """
+        # Pull reporting data by campaign_ids
+        """
+        params = query_helpers.__whereor__("campaign",campaign_ids)
+        q = PARTITIONED_QUERY % params 
 
         l = list(self.hive.session_execute([
             "set shark.map.tasks=3",
             "set mapred.reduce.tasks = 3",
-             PARTITIONED_QUERY % campaign_where
+            q 
         ]))
 
         return pandas.DataFrame(l)
 
     def pull_bucket(self,bucket,advertiser):
-        campaign_ids = self.db.select_dataframe( 
-            BUCKET_QUERY % {"bucket": bucket, "advertiser": advertiser}
-        ).campaign_id.values
+        """
+        # Pull reporting data by bucket_name, advertiser id
+        """
+        campaign_buckets = self.pull_advertiser_bucket(advertiser,bucket)
+        campaign_ids = campaign_buckets.campaign_id.values
         return self.pull_campaigns(campaign_ids)
 
     def pull_campaign(self,campaign_id):
-        return self.pull_campaigns([campaign_id])
-                
+        """
+        # Pull a specific campaign
+        """
+        ids = [campaign_id]
+        return self.pull_campaigns(ids)
+ 
+    
+class ReportingHandler(ReportingBase):
+
+    def initialize(self, db, api, hive):
+        self.db = db 
+        self.api = api
+        self.hive = hive
+
     @tornado.web.authenticated
     @decorators.formattable
     def get(self):
 
-        advertiser_id = self.get_secure_cookie("advertiser")
+        advertiser = current_advertiser
+        _format  = self.get_argument("format",False)
 
-        campaign_id = self.get_argument("campaign",False)
-        campaign_bucket = self.get_argument("group",False)
+        campaign = self.get_argument("campaign",False)
+        bucket   = self.get_argument("group",False)
         strategy = self.get_argument("strategy",False)
 
-        if self.get_argument("format",False):
-            if campaign_id:
-                data = self.pull_campaign(campaign_id)
-            elif advertiser_id and campaign_bucket:
-                data = self.pull_bucket(campaign_bucket,advertiser_id)
-            elif advertiser_id:
-                data = self.pull_advertiser(advertiser_id)
+        if _format:
+            if campaign:
+                data = self.pull_campaign(campaign)
+            elif bucket:
+                data = self.pull_bucket(bucket,advertiser)
+            else:
+                data = self.pull_advertiser(advertiser)
         else:
-            data = ""
+            data =""
 
         def default(self,data):
-            if campaign_id or campaign_bucket:
-                self.render("reporting/_campaign.html",stuff=data, advertiser_id=advertiser_id)
+            if campaign or bucket:
+                template = "campaign.html"
             elif strategy:
-                self.render("reporting/_advertiser.html",stuff=data, advertiser_id=advertiser_id)
-            elif advertiser_id:
-                self.render("reporting/_advertiser_bucket.html",stuff=data, advertiser_id=advertiser_id)
+                template = "advertiser.html"
+            else:
+                template = "advertiser_bucket.html"
+
+            self.render("reporting/_" + template, stuff=data, advertiser_id=advertiser)
 
         yield default, (data,)
 
-
-
-    def post(self):
-        pass
-    
