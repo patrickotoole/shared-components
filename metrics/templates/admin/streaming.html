@@ -171,7 +171,7 @@
       this.id = Math.round(Math.random() * 10000000);
 
       this.createSocket = function(params){
-        this.socket = new WebSocket("ws://"+ window.location.host +"/websocket?id=" + this.id);
+        this.socket = new WebSocket("ws://"+ window.location.host +"/admin/websocket?id=" + this.id);
 
         this.socket.onopen = function() {
           self.sendMessage("initialize")
