@@ -83,7 +83,6 @@
         }
 
         this.socket.onmessage = function(event) {
-          console.log(event.data)
           var parsed = JSON.parse(event.data)
           self.onMessage(parsed,event)
         }
