@@ -1,168 +1,62 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <script src="http://d3js.org/d3.v3.min.js"></script>
-        <script src="http://d3js.org/topojson.v1.min.js"></script>
-        <script src="http://metrics.getrockerbox.com/assets/bar.js"></script>
-        <script src="http://metrics.getrockerbox.com/assets/map.js"></script>
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
-        <script src="http://getbootstrap.com/dist/js/bootstrap.min.js"></script>
+{% autoescape None %}
+{% extends "../clean_base.html" %}
 
-        <link href="http://rockerbox.com/css/bootstrap.css" rel="stylesheet">
-        <link href="http://getbootstrap.com/examples/dashboard/dashboard.css" rel="stylesheet">
-        <style>
-            td {max-width:200px;max-height:40px;overflow:hidden}
-            path { stroke: steelblue; stroke-width: 1; fill: none; }
-            .axis {font-size:8px}
-            .bar { fill: steelblue; }
-            .bar:hover { fill: brown; }
-            .axis { font: 10px sans-serif; }
-            .axis path,
-            .axis line { fill: none; stroke: #000; shape-rendering: crispEdges; }
-            .x.axis path { display: none; }
-            #graph-approved rect {fill:#428bca}
-        </style>
-    </head>
-   <body data-spy="scroll" data-target=".navbar" data-offset="150"> 
-   <div class="navbar-wrapper">
-      <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
-          <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-              <span class="sr-only">Toggle navigation</span>
-              <span class="icon-bar"></span>
-              <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="#">
-              <img src="http://rockerbox.com/img/logo.png" width="150px" style="margin-top:-5px">
-            </a>
-          </div>
-          <div class="navbar-collapse collapse">
-            <ul class="nav navbar-nav">
-              <li><a href="#about">About</a></li>
-               <li><a href="#technology">Tech</a></li>
-              <li><a href="#team">Team</a></li>
-               <li><a href="#contact">Contact</a></li>
-             
-              <!-- <li><a href="demo.html">Demo</a></li> -->
-            </ul>
-          </div><!--/.nav-collapse -->
-      </nav>
-    </div>
-     <div class="container-fluid">
-      <div class="row">
-        <div class="col-sm-4 col-md-2 sidebar">
-          <ul class="nav nav-sidebar">
-            <li class="active"><a href="/streaming">Streaming</a></li>
-<!--            <li><a href="/debug">Arbitrage</a></li> -->
-<!--            <li><a href="/lookback">Lookback</a></li> -->
-            <li><a href="/advertiser">Add Advertiser</a></li>
-            <li><a href="/money">Money</a></li>
-          </ul>
-        </div>
-        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
-          <h3 class="page-header">Streaming Dashboard</h3>
-          
-          <div class="input-group">
-            
-            <div class="input-group-btn">
-              <button id="advertiser-filter" type="button" class="btn btn-default" tabindex="-1">All Advertisers</button>
-              <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" tabindex="-1">
-                <span class="caret"></span>
-                <span class="sr-only">Toggle Dropdown</span>
-              </button>
-              <ul class="dropdown-menu " role="menu" id="advertiser-list">
-                
-                <li class="divider"></li>
-                <li><a href="#">All Advertisers</a></li>
-              </ul>
-            </div>
+{% block content %}
 
-            <div class="input-group-btn">
-              <button type="button" class="btn btn-default" tabindex="-1">All Sellers</button>
-              <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" tabindex="-1">
-                <span class="caret"></span>
-                <span class="sr-only">Toggle Dropdown</span>
-              </button>
-              <ul class="dropdown-menu " role="menu" id="seller-list">
-                
-                <li class="divider"></li>
-                <li><a href="#">All Sellers</a></li>
-              </ul>
-            </div>
-
-            <div class="input-group-btn">
-              <button type="button" class="btn btn-default" tabindex="-1">All Creatives</button>
-              <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" tabindex="-1">
-                <span class="caret"></span>
-                <span class="sr-only">Toggle Dropdown</span>
-              </button>
-              <ul class="dropdown-menu " role="menu" id="creative-list">
-                
-                <li class="divider"></li>
-                <li><a href="#">All Creative</a></li>
-              </ul>
-            </div>
-
-            <div class="input-group-btn">
-              <button type="button" class="btn btn-default" tabindex="-1">All Users</button>
-              <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" tabindex="-1">
-                <span class="caret"></span>
-                <span class="sr-only">Toggle Dropdown</span>
-              </button>
-              <ul class="dropdown-menu " role="menu" id="user-list">
-                <li><a href="#1">Approved</a></li> 
-                <li class="divider"></li>
-                <li><a href="#">All Users</a></li>
-              </ul>
-            </div>
-
-            <div class="input-group-btn">
-              <button id="start" type="button" class="btn btn-default btn-success" tabindex="-1">Start</button>
-              <button id="pause" type="button" class="btn btn-default btn-danger" tabindex="-1">Pause</button>
-              <button id="clear" type="button" class="btn btn-default btn-warning" tabindex="-1">Clear</button>
-
-            </div>
-          </div>
-            
-          <div class="col-sm-5" >
-            <div style="text-align:center;height:100px;margin-top:20px;margin-bottom:20px">
-              <div style="width:24%;display:inline-block">
-                <h1 id="imps-count"></h1>
-                Impressions
-              </div>
-              <div style="width:24%;display:inline-block">
-                <h1 id="uniques-count"></h1>
-                Uniques
-              </div>
-              <div style="width:24%;display:inline-block">
-                <h1 id="domains-count"></h1>
-                Domains
-              </div>
-              <div style="width:24%;display:inline-block">
-                <h1 id="views-count"></h1>
-                Views
-              </div>
-            </div>
-            <h5>Impressions</h5>
-            <div id="graph"></div>
-            <h5>Approved</h5>
-            <div id="graph-approved"></div>
-            <h5>Viewed</h5>
-            <div id="graph-view"></div>
-            
-          </div>
-
-          <div id="maps" class="col-sm-7" style="max-height: 600px;"></div>
-          <div class="col-sm-6" id="domains"></div>
-          <div class="col-sm-6" id="users"></div>
-
-          <div id="messages" style=""></div>
-          <div id="geo" style=""></div>
-        </div>
+<div class="container">
+  <h2>Streaming Dashboard</h2>
+  <br/>
+  <div class="row summary-wrapper" style="background-color:white">
+    <div class="col-md-2"></div>
+    <div class="col-md-8 col-sm-12">
+      <div class="col-md-1"></div>
+      <div class="col-md-3 col-sm-4 summary-stat selected blue chart-selector" data-series="imps" data-color="#1f77b4">
+        <p class="text-uppercase"><strong>Impressions</strong></p>
+        <h2 class="imps-count">0</h2>
       </div>
+      <div class="col-md-1"></div>
+      <div class="col-md-3 col-sm-4 summary-stat orange chart-selector" data-series="clicks" data-color="#ff7f0e">
+        <p class="text-uppercase"><strong>Domains</strong></p>
+        <h2 class="domains-count">0</h2>
+      </div>
+      <div class="col-md-1"></div>
+      <div class="col-md-3 col-sm-4 summary-stat green chart-selector" data-series="conversions" data-color="#2ca02c">
+        <p class="text-uppercase"><strong>Uniques</strong></p>
+        <h2 class="uniques-count">0</h2>
+      </div>
+    </div> 
+  </div>
+
+  <br/>
+
+  <div class="row">
+    <div class="col-sm-5" >
+      <button id="start" type="button" class="hidden btn btn-default btn-success" tabindex="-1">Start</button> 
+      <button id="pause" type="button" class="hidden btn btn-default btn-success" tabindex="-1">Start</button> 
+
+      <br/>
+      <h5>Impressions</h5>
+      <div id="graph"></div>
     </div>
-    </body>
+    <div class="col-sm-7" style="overflow: hidden;">
+      <div id="maps" style="margin-top:-40px;max-height: 400px;"></div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-sm-5" >
+      <div id="domains"></div>
+    </div>
+    <div class="col-sm-7">
+      <div id="geo" style=""></div>
+    </div>
+  </div>
+  <div class="hidden col-sm-6" id="domains"></div>
+  <div class="hidden col-sm-6" id="users"></div>
+
+  <div id="messages" class="hidden" style=""></div>
+  
+</div>
+
     <script>
     Element.prototype.prependChild = function(child) { this.insertBefore(child, this.firstChild); };
 
@@ -176,12 +70,12 @@
         this.socket.onopen = function() {
           self.sendMessage("initialize")
           self.sendJSON(sharedJson)
+          $("#start").trigger("click")
 
           if (on_init) on_init.bind(self)()
         }
 
         this.socket.onmessage = function(event) {
-          console.log(event.data)
           var parsed = JSON.parse(event.data)
           self.onMessage(parsed,event)
         }
@@ -275,9 +169,9 @@
     var messageProcessor = function() {
 
       var messageContainer = document.getElementById("messages"),
-          bar = new streamingBarWrapper('#graph',60,8,100),
-          view = new streamingBarWrapper('#graph-view',60,8,100),
-          approved = new streamingBarWrapper('#graph-approved',60,8,100,
+          bar = new streamingBarWrapper('#graph',60,6,80),
+          view = new streamingBarWrapper('#graph-view',60,6,100),
+          approved = new streamingBarWrapper('#graph-approved',60,6,80,
             function(t,json) {
               try {
                 var m = json.
@@ -320,10 +214,10 @@
         self.geoTable(this.group_generic(["state","country","approved_user","domain","advertiser_id"])(),"geo");
         self.geoMap(this.group_generic(["city_state","latitude","longitude","domain","advertiser_id","approved_user"])());
 
-        $('#imps-count').text(total)
-        $('#uniques-count').text(Object.keys(user_group).length)
-        $('#domains-count').text(Object.keys(domain_group).length)
-        $('#views-count').text(self.viewable_count)
+        $('.imps-count').text(total)
+        $('.uniques-count').text(Object.keys(user_group).length)
+        $('.domains-count').text(Object.keys(domain_group).length)
+        $('.views-count').text(self.viewable_count)
       }
 
       this.geoMap = function(data) {
@@ -362,22 +256,19 @@
       this.geoTable = function(data,div) {
         var div = div || "messages"
         var table = "<table class='table table-condensed'><thead><tr>" + 
-          "<th>state</th>"+
-          "<th>country</th>"+
-          "<th>count</th>"+
-          "<th>approved</th>"+
-          "<th>domains</th>"+
-          "<th>advertisers</th>"+ 
+          "<th>State</th>"+
+          "<th>Imps</th>"+
+          "<th>Domains</th>"+
           "</tr></thead>"
         var sorted = []
         for (var key in data) {
           sorted.push([
-            key,
-            data[key][0][1],
+            key == 0 ? "Unknown" : key,
+            //data[key][0][1],
             data[key].length, 
-            data[key].map(function(r){return r[2]}).reduce(function(pv, cv) { return pv + cv; }, 0),
+            //data[key].map(function(r){return r[2]}).reduce(function(pv, cv) { return pv + cv; }, 0),
             data[key].map(function(r){return r[3]}).filter(function (e, i, arr) { return arr.indexOf(e, i+1) === -1; }).length,
-            data[key].map(function(r){return r[4]}).filter(function (e, i, arr) { return arr.indexOf(e, i+1) === -1; }).length
+            //data[key].map(function(r){return r[4]}).filter(function (e, i, arr) { return arr.indexOf(e, i+1) === -1; }).length
           ])
         }
         sorted = sorted.sort(function(x,y){return y[2]-x[2]})
@@ -385,10 +276,7 @@
           table += "<tr><td>" + 
             sorted[key][0] + "</td><td>" + 
             sorted[key][1] + "</td><td>" + 
-            sorted[key][2] + "</td><td>" + 
-            sorted[key][3] + "</td><td>" +
-            sorted[key][4] + "</td><td>" +
-            sorted[key][5] + "</td><td>"
+            sorted[key][2] + "</td><td>"
         }
         
 
@@ -435,12 +323,9 @@
       
       this.domainTable = function(data,div) {
         var table = "<table class='table table-condensed'><thead><tr>" + 
-          "<th>domain</th>"+
-          "<th>count</th>"+
-          "<th>uniques</th>"+
-          "<th>approved</th>"+
-          "<th>advertisers</th>"+
-          "<th>price</th>"+
+          "<th>Domain</th>"+
+          "<th>Imps</th>"+
+          "<th>Uniques</th>"+
           "</tr></thead>"
         var sorted = []
 
@@ -448,10 +333,7 @@
           sorted.push([
             key, 
             data[key].length, 
-            data[key].map(function(r){return r[1]}).filter(function (e, i, arr) { return arr.indexOf(e, i+1) === -1; }).length,
-            data[key].map(function(r){return r[2]}).reduce(function(pv, cv) { return pv + cv; }, 0),
-            data[key].map(function(r){return r[3]}).filter(function (e, i, arr) { return arr.indexOf(e, i+1) === -1; }).length,
-            (data[key].map(function(r){return parseFloat(r[4])}).reduce(function(pv, cv) { return pv + cv; }, 0)/data[key].length).toFixed(2)
+            data[key].map(function(r){return r[1]}).filter(function (e, i, arr) { return arr.indexOf(e, i+1) === -1; }).length
           ])
         }
         sorted = sorted.sort(function(x,y){return y[1]-x[1]})
@@ -459,10 +341,7 @@
           table += "<tr><td>" + 
             sorted[key][0] + "</td><td>" + 
             sorted[key][1] + "</td><td>" + 
-            sorted[key][2] + "</td><td>" + 
-            sorted[key][3] + "</td><td>" + 
-            sorted[key][4] + "</td><td>" + 
-            sorted[key][5] + "</td></tr>"    
+            sorted[key][2] + "</td></tr>"    
         }
 
         table += "</table>"
@@ -652,4 +531,4 @@
  
     
     </script>
-</html>
+{% end %}

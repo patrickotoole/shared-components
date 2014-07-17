@@ -68,7 +68,7 @@ class ReportingHandler(ReportingBase):
     @decorators.formattable
     def get(self):
 
-        advertiser = current_advertiser
+        advertiser = self.current_advertiser
         _format  = self.get_argument("format",False)
 
         campaign = self.get_argument("campaign",False)
