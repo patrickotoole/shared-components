@@ -103,6 +103,10 @@ streaming = [
 ]
 
 admin_reporting = [
+    (r'/admin/streaming',admin.streaming.IndexHandler),
+    (r'/admin/websocket', admin.streaming.StreamingHandler, 
+      dict(db=db,buffers={"track":socket_buffer, "view":view_buffer})
+    ),
     (r'/viewable.*',admin.reporting.ViewabilityHandler, dict(db=db,api=api,hive=hive)),
     (r'/target_list.*',admin.reporting.TargetListHandler)
 ]
