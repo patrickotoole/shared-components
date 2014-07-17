@@ -10,7 +10,7 @@ from twisted.internet import reactor, protocol, defer, threads
 from twisted.protocols import basic
 from tornado.options import define, options, parse_command_line
 
-from handlers import streaming, reporting, user, client_streaming
+from handlers import streaming, reporting, user
 
 import handlers.admin as admin
 
@@ -96,9 +96,9 @@ admin_scripts = [
 ]
 
 streaming = [
-    (r'/streaming', streaming.IndexHandler),
-    (r'/websocket', client_streaming.StreamingHandler, 
-      dict(db=db,socket_buffer = socket_buffer, view_buffer = view_buffer)
+    (r'/streaming', streaming.streaming.IndexHandler),
+    (r'/websocket', streaming.streaming.StreamingHandler, 
+      dict(db=db,buffers={"track":socket_buffer, "view":view_buffer})
     )
 ]
 
