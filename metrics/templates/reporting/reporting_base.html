@@ -1,6 +1,12 @@
 {% autoescape None %}
 {% extends "../clean_base.html" %}
 
+{% block right_toolbar %}
+  <a class="btn btn-default btn-success" href="/streaming">
+    Streaming
+  </a>
+{% end %}
+
 {% block content %}
 <div class="container">
   <div class="row">
