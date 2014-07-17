@@ -96,13 +96,17 @@ admin_scripts = [
 ]
 
 streaming = [
-    (r'/streaming', streaming.IndexHandler),
-    (r'/websocket', streaming.WebSocketHandler, 
-      dict(db=db,socket_buffer = socket_buffer, view_buffer = view_buffer)
+    (r'/streaming', streaming.streaming.IndexHandler),
+    (r'/websocket', streaming.streaming.StreamingHandler, 
+      dict(db=db,buffers={"track":socket_buffer, "view":view_buffer})
     )
 ]
 
 admin_reporting = [
+    (r'/admin/streaming',admin.streaming.IndexHandler),
+    (r'/admin/websocket', admin.streaming.StreamingHandler, 
+      dict(db=db,buffers={"track":socket_buffer, "view":view_buffer})
+    ),
     (r'/viewable.*',admin.reporting.ViewabilityHandler, dict(db=db,api=api,hive=hive)),
     (r'/target_list.*',admin.reporting.TargetListHandler)
 ]
