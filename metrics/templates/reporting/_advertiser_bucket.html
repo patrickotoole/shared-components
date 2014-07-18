@@ -1,5 +1,8 @@
+
+
 {% autoescape None %}
 {% extends "reporting_base.html" %}
+
 
 {% block stuff %}
 <link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/dc.css">
@@ -48,6 +51,7 @@ $.getJSON("/api?table=campaign_bucket&external_advertiser_id=" + advertiser_id).
   data_link += window.location.search.length ? window.location.search : "?"
 
   d3.json(data_link+"&format=json",function(data){
+    window.data = data
 
     data.forEach(function(d) {
       var name = "Default Campaign"
@@ -90,9 +94,9 @@ $.getJSON("/api?table=campaign_bucket&external_advertiser_id=" + advertiser_id).
       .centerBar(true)
       .colors("gray")
       .gap(1)
-      .round(d3.time.day.round)
+      .round(d3.time.hour.round)
       .alwaysUseRounding(true)
-      .xUnits(d3.time.days)
+      .xUnits(d3.time.hours)
       .yAxisLabel("Cost")
       .valueAccessor(function(d){return d.value.cost})
     spendChart
@@ -101,9 +105,9 @@ $.getJSON("/api?table=campaign_bucket&external_advertiser_id=" + advertiser_id).
     var numberFormat = d3.format("0,000.00")
         
     dc.dataTable(".dc-data-table")
-      .dimension(CRS.aggregateDimensions.campaign_bucket)
+      .dimension(CRS.aggregateDimensions.daily_campaign_bucket)
       .group(function (d) {
-        return dateFormatPretty(d.date_min) + " until " + dateFormatPretty(d.date_max)
+        return dateFormatPretty(d.date)
       })
       .size(50) 
       .columns([

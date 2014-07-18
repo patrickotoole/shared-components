@@ -69,6 +69,7 @@ var crossfilterNS = function(crs,dc) {
 		domain: crs.dimension(function(d){ return d.domain }),
 		campaign: crs.dimension(function(d){ return d.campaign_id }),
 		campaign_bucket: crs.dimension(function(d){ return d.campaign_bucket}),
+		daily_campaign_bucket: crs.dimension(function(d){ return [d3.time.day(d.dd), d.campaign_bucket]})
 	}
 
 	var groups = {
@@ -200,6 +201,33 @@ var crossfilterNS = function(crs,dc) {
 			}
 		),
 		campaign_bucket: dimensions.campaign_bucket.group().reduce(
+		  function(p,v) {
+				p.cost += v.cost
+				p.conversions += v.conversions                                                                     
+				p.imps += v.imps                                                                                   
+				p.clicks += v.clicks                                                                               
+				p.dd = "1"
+				return p 
+			},
+			function(p,v) {
+				p.cost -= v.cost
+				p.conversions -= v.conversions                                                                     
+				p.imps -= v.imps
+				p.clicks -= v.clicks                                                                               
+				p.dd = "1"
+				return p                                                                                           
+			},
+			function() {
+				return {
+					cost: 0,
+					conversions: 0,                                                                                  
+					clicks: 0,
+					imps: 0,
+					dd: ""                                                                                           
+				}
+			}
+		),
+		daily_campaign_bucket: dimensions.daily_campaign_bucket.group().reduce(
 		  function(p,v) {
 				p.cost += v.cost
 				p.conversions += v.conversions                                                                     
@@ -363,6 +391,24 @@ var crossfilterNS = function(crs,dc) {
 						"date_max": groups.all.summary().date_max
 
 						
+					} 
+				});
+			}
+		},
+		daily_campaign_bucket: {
+			top: function(x) {
+				var min_date = groups.all.summary().date_min
+				var max_date = groups.all.summary().date_max//dateFormatPretty(dateDimension.top(1)[0].dd)
+				return groups.daily_campaign_bucket.top(x).filter(function(x){return x.value.imps}).map(function (grp) { 
+					return {
+						"date":grp.key[0],
+						"campaign_bucket":grp.key[1], 
+						"imps":grp.value.imps, 
+						"clicks": grp.value.clicks,
+						"conversions": grp.value.conversions,
+						"cost": grp.value.cost,
+						"date_min": groups.all.summary().date_min,
+						"date_max": groups.all.summary().date_max
 					} 
 				});
 			}
