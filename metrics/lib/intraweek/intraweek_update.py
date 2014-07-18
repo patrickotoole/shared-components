@@ -16,15 +16,6 @@ class Intraweek:
         self.my_db = db_wrapper 
         # assign db_wrapper to my_db
     
-    def pull_1(self):
-        ## Anytime we access the database, have a wrapper function for the request
-        ## use the mysql wrapper here
-        ## Lets add methods that make use the wrapper to pull back data
-
-        # self.data = db.select()
-        # return self.data
-        pass
-    
     def get_date_from_yearweek(self, yearweek):
         sunday = '%d Sunday' % yearweek
         format = r'%X%V %W'
@@ -528,54 +519,7 @@ class Intraweek:
         # df_full = df_full.set_index('week_starting')
         df_full = df_full.reindex(df_full.index.rename('week_starting'))
         return df_full
-
-####################
     
-    def maniputlate(self,df):
-        transformed_Df = stuff(df)
-        return transformed_df
-
-        """
-        ## Lets add the manipulation to another method
-        df = df or self.data
-        self.data = self.add_column(self.data)
-        
-
-        # directly modifies self.data
-        # instance methods
-        self.multi()
-        # self.data has changed
-
-        # indirectly modifies a dataframe
-        # classmethods
-        self.multi_2(self.data)
-        # self.data has not changed
-
-        pass
-        """
-
-    def multi(self):
-        # this can operate directly on the data
-        # self.multi()
-        self.data = does_stuff(self.data)
-        return self.data
-
-    def multi_2(self,df):
-        # depends on the result of multi 
-        # self.multi_2(self.multi())
-        return df
-        
-    
-    def add_column(self,df):
-        ## Lets break out the individual manipulation methods
-        ## lets add tests for all these things
-        return df
-        pass
-
-    def mutliplier_calcs(self):
-        ## modify the dataframe to have the appropriate multiplier code
-        pass
-
 if __name__ == "__main__":
     iw = Intraweek(lnk.dbs.mysql)
     print iw.get_compiled_pacing_reports()    
