@@ -194,19 +194,17 @@ class IntraWeekTestCase(unittest.TestCase):
         before_tuple = (self.before_charges, self.expect_conversions_1, self.expect_conversions_2)
         after_df_full = self.iw.add_num_conversions(before_tuple, (0.05, 1))
 
-        print after_df_full
-
         expect_charges = DataFrame(data={'impressions':[79, 207, 727],
                                       'clicks':[1, 2, 3],
                                       'media_cost':[1000, 1500, 500],
                                       'charged_client':[2000.0, 1500, 500],
                                       'cpm_multiplier':[2.0, 1, 1],
-                                      'Signup conversions':[652, 851, 338],
-                                      'Purchase conversions':[15, 59, 34],
+                                      'Signup_conversions':[652, 851, 338],
+                                      'Purchase_conversions':[15, 59, 34],
                                       'num_conversions':[47.6, 101.55, 50.90]},
                                       index=[201425, 201426, 201427])
 
-        expect_charges = expect_charges[['charged_client', 'clicks', 'cpm_multiplier','impressions','media_cost','Signup conversions','Purchase conversions','num_conversions']] 
+        expect_charges = expect_charges[['charged_client', 'clicks', 'cpm_multiplier','impressions','media_cost','Signup_conversions','Purchase_conversions','num_conversions']] 
         assert_frame_equal(after_df_full, expect_charges)
 
     def test_add_cpm_columns_twoaverage(self):
@@ -222,7 +220,7 @@ class IntraWeekTestCase(unittest.TestCase):
                                       'Signup conversions':[652, 851, 338],
                                       'Purchase conversions':[15, 59, 34],
                                       'num_conversions':[47.6, 101.55, 50.90]},
-                                      index=[201425, 201426, 201427])
+                                      index=[datetime.date(2014, 6, 22), datetime.date(2014, 6, 29), datetime.date(2014, 7, 6)])
 
         after_df_full = self.iw.add_cpm_columns(before_df_full, -1)
 
@@ -239,7 +237,7 @@ class IntraWeekTestCase(unittest.TestCase):
                                       'cpm':[0.833688, 0.753215, 0.733815],
                                       'cpm_charged':[0.933730, 0.798408, 1.290655],
                                       'multiplier':[1.12, 1.06, 1.721184]},
-                                      index=[201425, 201426, 201427])
+                                      index=[datetime.date(2014, 6, 22), datetime.date(2014, 6, 29), datetime.date(2014, 7, 6)])
 
         expect_df_full = expect_df_full[['Purchase conversions', 'Signup conversions', 'charged_client', 'clicks', 'cpm_multiplier','impressions','media_cost','num_conversions','cpa', 'cpa_charged', 'cpm', 'cpm_charged']] 
         
@@ -261,7 +259,7 @@ class IntraWeekTestCase(unittest.TestCase):
                                       'Signup conversions':[522, 652, 851, 338],
                                       'Purchase conversions':[26, 15, 59, 34],
                                       'num_conversions':[52.10, 47.6, 101.55, 50.90]},
-                                      index=[201424, 201425, 201426, 201427])
+                                      index=[datetime.date(2014, 6, 15), datetime.date(2014, 6, 22), datetime.date(2014, 6, 29), datetime.date(2014, 7, 6)])
 
         after_df_full = self.iw.add_cpm_columns(before_df_full, -1)
 
@@ -277,7 +275,7 @@ class IntraWeekTestCase(unittest.TestCase):
                                       'cpa_charged':[39.097321, 53.746043, 29.813792, 40.885719],
                                       'cpm':[0.629606, 0.833688, 0.753215, 0.733815],
                                       'cpm_charged':[0.831080, 0.933730, 0.798408, 1.263031]},
-                                      index=[201424,201425, 201426, 201427])
+                                      index=[datetime.date(2014, 6, 15), datetime.date(2014, 6, 22), datetime.date(2014, 6, 29), datetime.date(2014, 7, 6)])
 
         expect_df_full = expect_df_full[['Purchase conversions', 'Signup conversions', 'charged_client', 'clicks', 'cpm_multiplier','impressions','media_cost','num_conversions','cpa', 'cpa_charged', 'cpm', 'cpm_charged']] 
 
@@ -429,7 +427,7 @@ class IntraWeekTestCase(unittest.TestCase):
                                       'cpm':[0.5, 0.6, 0.7],
                                       'cpm_charged':[0.55, 0.65, 0.75],
                                       'multiplier':[1.1, 1.15, 1.2],
-                                      'wk_no':[201425, 201426, 201427]})
+                                      'wk_no':['2014-06-22', '2014-06-29', '2014-07-06']})
         before_df_full = before_df_full.set_index('wk_no')
 
         after_df_full = self.iw.finishing_formats(before_df_full)

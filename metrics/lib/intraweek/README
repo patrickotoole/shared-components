@@ -1,11 +1,26 @@
 directory author: victor
 
-- intraweek_update.get_compiled_pacing_reports() = returns a PANDAS dataframe with pacing 
-reports for all active (hard-coded) advertisers
-- intraweek_update.get_advertiser_table(advertiser_id) = returns a PANDAS dataframe with
+- Intraweek.get_compiled_pacing_reports() = returns a PANDAS dataframe with pacing 
+reports for all active (hard-coded) advertisers. There's an optional parameter to specify
+an iterable set/list of external_advertiser_ids to go through
+
+    Intraweek.get_compiled_pacing_reports() -> Intraweek.get_advertiser_info() -> Intraweek.get_table(), other SQL calls
+
+- Intraweek.get_advertiser_table(advertiser_id) = returns a PANDAS dataframe with
 the past three weeks of advertiser activity, and this week's projected multiplier/charge
+
+    Intraweek.get_advertiser_table(advertiser_id) -> Intraweek.get_table()
+
 - cron_update_advertisers.py = python script to write multipler/cpa_target values into 
 'intraweek' database
+
+    cronjob -> python cron_update_advertisers.py -> Intraweek.update_avertiser_targets(id) -> Intraweek.get_table()
+
+- handlers/admin/scripts/intraweek.py = webhandler to display parameter-specified advertiser
+tables and IO pacing reports
+
+    intraweek.py -> Intraweek.get_compiled_pacing_reports(), Intraweek.get_advertiser_table()
+
 
 HANDLERS are found in: ~/streaming-python/metrics/handlers/admin/scripts
 TEMPLATES found in: ~/streaming-python/metrics/templates
