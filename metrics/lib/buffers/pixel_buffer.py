@@ -4,36 +4,10 @@ import lib.buffers.stream as stream
 import maxminddb
 from twisted.internet import  protocol, defer, threads
 from twisted.protocols import basic
+from lib.helpers import URL
 reader = maxminddb.Reader('/root/GeoLite2-City.mmdb')
 
-def parse_domain(referrer):
-    try:
-        if referrer[:len(referrer)/2]*2 == referrer:
-            referrer = referrer[:len(referrer)/2]
-        t = referrer.split("//")
-    except:
-        t = [""]
-
-    if len(t) > 1:
-        t = [t[1]]
-
-    d = t[0].split("/")[0].split("?")[0].split("&")[0].split(" ")[0].split(".")
-
-    if len(d) < 3:
-        domain = ".".join(d)
-    elif len(d[-2]) < 4:
-        domain = ".".join(d[-3:])
-    else:
-        domain = ".".join(d[-2:])
-    
-    return domain.lower()
-
-def mask_from_dict(df,masks):
-    mask = df.index == df.index
-    for column,values in masks.iteritems():
-        mask = mask & df[column].isin(values)
-        
-    return mask
+parse_domain = URL.parse_domain
 
 class BufferedSocket(basic.LineReceiver):
     def __init__(self,buf):
@@ -138,7 +112,6 @@ class BufferedSocketFactory(protocol.Factory):
 
 
 socket_buffer = []
-#buffered_socket = reactor.listenTCP(1234,BufferedSocketFactory(socket_buffer))
 redis_server = redis.StrictRedis(host='162.243.123.240', port=6379, db=0)
 redis_server_2 = redis.StrictRedis(host='108.60.150.34', port=6379, db=0)
  
