@@ -120,7 +120,6 @@ dirname = os.path.dirname(os.path.realpath(__file__))
 app = tornado.web.Application(
     streaming + admin_scripts + admin_reporting + reporting,
     template_path= dirname + "/templates",
-    debug=True,
     db=lnk.dbs.mysql,
     cookie_secret="rickotoole",
     login_url="/login"

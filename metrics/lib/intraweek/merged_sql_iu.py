@@ -6,7 +6,7 @@ import pandas as pd
 import sys
 from link import lnk
 import math
-import datetime
+import timeit
 
 ## Lets define a class that takes in the database wrapper
 
@@ -32,9 +32,11 @@ class Intraweek:
         return str(date_info.ix[0][0])
 
     def get_pixel_name(self, pixel_id):
+        # pixel_info = self.my_db.select('select pixel_display_name from advertiser_pixel where pixel_id = (%d)' % pixel_id).as_dataframe()
         if not hasattr(self, "pixel_info"):
           self.pixel_info = self.my_db.select('select pixel_display_name, pixel_id from advertiser_pixel').as_dataframe()
 
+        # return pixel_info.ix[0][0]
         return self.pixel_info[self.pixel_info['pixel_id'] == pixel_id]['pixel_display_name'].iloc[0]
   
     def property_checker_twoargs(func):
@@ -77,17 +79,10 @@ class Intraweek:
       week_df = self.get_table(advertiser_id, -1)
       return sum(week_df['charged_client'])
 
-    # get average amount spent in past weeks
-    @property_checker_twoargs
-    def get_average_spent_twoweeks(self, advertiser_id):
-      week_df = self.get_table(advertiser_id, -1)
-      spent = sum(week_df['charged_client'].iloc[-2:])
-      days = 7 + ((1 + datetime.datetime.today().weekday()) % 7) # one full week, then number of days this week
-      return spent / days
-
     # get the "most reasonable-looking budget" -> next budget cap to consider
     def get_budget(self, advertiser_id, money_spent):
       if not hasattr(self, 'budget_df'):
+        # budget_df = self.my_db.select('select budget from insertion_order where external_advertiser_id = (%d);' % advertiser_id).as_dataframe()
         self.budget_df = self.my_db.select('select external_advertiser_id, budget from insertion_order').as_dataframe()
       cum_budget_df = self.budget_df[self.budget_df['external_advertiser_id'] == advertiser_id].cumsum()
       for idx in range(len(cum_budget_df)):
@@ -95,38 +90,33 @@ class Intraweek:
         if (current_budget > money_spent):
           return (current_budget, self.budget_df['budget'][cum_budget_df.index[idx]])
 
-    def get_recent_spent(self, advertiser_id):
-      if not hasattr(self, 'recent_spent'):
-         self.recent_spent = self.my_db.select('select date(date) as wk_no,external_advertiser_id,sum(media_cost) as Media_Cost from v3_reporting where date(date_add(date,interval -4 hour)) = subdate(current_date,1) group by 1,2 order by 1 asc;').as_dataframe()
-     
-      try: 
-        recent_media_cost = self.recent_spent[self.recent_spent['external_advertiser_id'] == advertiser_id]['media_cost'].iloc[0] 
-        recent_charged_client = recent_media_cost * self.get_current_multiplier(advertiser_id, -1)
-      except IndexError:
-        recent_media_cost = 0
-        recent_charged_client = 0
-     
-      return recent_charged_client
-
     # get days into campaign
     @property_checker_threeargs
     def get_days_into_campaign(self, dates, advertiser_id):
+      # diff_df = self.my_db.select('select timestampdiff(DAY,actual_start_date,NOW()) as diff from insertion_order where external_advertiser_id = (%d) and actual_end_date IS NULL;' % advertiser_id).as_dataframe()
+      # return diff_df.ix[0][0]
       return dates['days_into_campaign'][advertiser_id]
 
 
     # get current start date
     @property_checker_threeargs
     def get_current_start_date(self, dates, advertiser_id):
+      # diff_df = self.my_db.select('select actual_start_date from insertion_order where external_advertiser_id = (%d) and actual_end_date IS NULL;' % advertiser_id).as_dataframe()
+      # return diff_df.ix[0][0]
       return dates['actual_start_date'][advertiser_id]
 
     # get end_date_proposed
     @property_checker_threeargs
     def get_end_date_proposed(self, dates, advertiser_id):
+      # diff_df = self.my_db.select('select end_date_proposed from insertion_order where external_advertiser_id = (%d) and actual_end_date IS NULL;' % advertiser_id).as_dataframe()
+      # return diff_df.ix[0][0]
       return dates['end_date_proposed'][advertiser_id]
 
     # get proposed campaign length
     @property_checker_threeargs
     def get_proposed_campaign_length(self, dates, advertiser_id):
+      # length_df = self.my_db.select('select timestampdiff(DAY,start_date_proposed, end_date_proposed) as diff from insertion_order where external_advertiser_id = (%d) and actual_end_date IS NULL' % advertiser_id).as_dataframe()
+      # return length_df.ix[0][0]
       return dates['proposed_campaign_length'][advertiser_id]
 
 
@@ -136,7 +126,12 @@ class Intraweek:
       if not hasattr(self, 'names_df'):
         self.names_df = self.my_db.select('select external_advertiser_id, advertiser_name from advertiser').as_dataframe()
       
+      # advertiser_row = self.my_db.select('select advertiser_name from advertiser where external_advertiser_id=(%d)' % advertiser_id).as_dataframe()
+      # advertiser_name = advertiser_row.ix[0][0]
+      # return advertiser_name
+      
       return self.names_df[self.names_df['external_advertiser_id'] == advertiser_id]['advertiser_name'].iloc[0]
+
 
     def determine_pacing(self, row):
       ratio = row['expected_length'] / row['proposed_end_date_length']
@@ -153,19 +148,11 @@ class Intraweek:
         self.advertiser_name = self.get_advertiser_name(advertiser_id)
         if (self.advertiser_name == -1):
           return pandas.DataFrame(["Advertiser DNE"])
-        
-        # getting budget information
         self.money_spent = self.get_cumulative_clientcharge(advertiser_id) # 2.34s
         budget_tuple = self.get_budget(advertiser_id, self.money_spent)
         self.current_budget = budget_tuple[1]
         self.current_remaining = budget_tuple[0] - self.money_spent
         self.current_spent = self.current_budget - self.current_remaining      
-       
-        # getting most recent day's spent information
-        self.yesterday_spent = self.get_recent_spent(advertiser_id)
-        # self.yesterday_spent = 0 
-
-        # getting date/calendar information
         if not hasattr(self, 'dates'):
           self.dates = self.my_db.select('select external_advertiser_id,actual_start_date, end_date_proposed, timestampdiff(DAY,actual_start_date,NOW()) as days_into_campaign, timestampdiff(DAY,start_date_proposed, end_date_proposed) as proposed_campaign_length from insertion_order where actual_start_date is not NULL and actual_end_date is NULL').as_dataframe()
           self.dates = self.dates.set_index('external_advertiser_id')
@@ -173,15 +160,12 @@ class Intraweek:
         self.proposed_campaign_length = self.get_proposed_campaign_length(self.dates, advertiser_id)
         self.current_start_date = self.get_current_start_date(self.dates, advertiser_id)
         self.end_date_proposed = self.get_end_date_proposed(self.dates, advertiser_id)
-        self.dollars_per_day_last_sunday = self.get_average_spent_twoweeks(advertiser_id)    
- 
+       
     def transform_columns(self):
 
         self.dollars_per_day = self.current_spent / self.days_into_campaign
         self.expected_campaign_length = self.current_budget / self.dollars_per_day
         self.shouldve_spent = self.current_budget / self.proposed_campaign_length * self.days_into_campaign
-        if (self.shouldve_spent > self.current_budget):
-          self.shouldve_spent = self.current_budget
         self.to_spend_per_day = self.current_remaining / (self.proposed_campaign_length - self.days_into_campaign)
         if (self.to_spend_per_day < 0): # expired campaign
           self.to_spend_per_day = 0
@@ -198,15 +182,13 @@ class Intraweek:
                 # 'days_into_campaign': [days_into_campaign],
                 'expected_days_left': [int(self.expected_campaign_length) - self.days_into_campaign],
                 'dollars_per_day': [self.dollars_per_day],
-                'dollars_per_day_last_sunday': [self.dollars_per_day_last_sunday],
-                'monthly_pacing': [30 * self.dollars_per_day_last_sunday],
+                'monthly_pacing': [30 * self.dollars_per_day],
                 'expected_length': [self.expected_campaign_length],
                 'expected_end_date': [DateOffset(days=int(self.expected_campaign_length)) + self.current_start_date],
                 'proposed_end_date_length': [self.proposed_campaign_length],
                 'shouldve_spent_by_now': [self.shouldve_spent],
                 'to_spend_per_day': [self.to_spend_per_day],
-                'actual_days_left': [self.actual_days_left],
-                'yesterday_spent': [self.yesterday_spent]
+                'actual_days_left': [self.actual_days_left]
                 }
         advertiser_df = DataFrame(map)
         advertiser_df['pacing'] = advertiser_df.apply(self.determine_pacing, axis=1)
@@ -223,12 +205,10 @@ class Intraweek:
                              'spent',
                              'remaining',
                              'dollars_per_day',
-                             'dollars_per_day_last_sunday',
                              'monthly_pacing',
                              'pacing',
                              'shouldve_spent_by_now',
-                             'to_spend_per_day',
-                             'yesterday_spent']]
+                             'to_spend_per_day']]
 
     def get_advertiser_info(self, advertiser_id):
         self.read_advinfo_from_db(advertiser_id)
@@ -288,27 +268,9 @@ class Intraweek:
 
         Note:
           Advertiser list is currently hard-coded, with an optional parameter
-          yesterday_spent: yesterday's media_cost multiplied by this week's multiplier
-          to_spend_per_day: expense per day in order to reach budget, given current spent
-          shouldve_spent_by_now: how much of budget shouldve been spent, given days into campaign
-          pacing: more exclamation marks/alerts when current spending is outpaced
-          monthly_pacing: 30 times dollars_per_day_last_sunday (TODO - swap with dollars_per_day?)
-          dollars_per_day_last_sunday: average amount spent since two Sundays ago (7-14 history)
-          dollars_per_day: average amount spent on current campaign
-          remaining: amount remaining in this campaign's budget
-          spent: amount spent, going towards this campaign
-          current_budget: budget of this current campaign
-          actual_days_left: today's date compared to proposed end date
-          expected_days_left: today's date compared to expected end date
-          expected_length: expected length of campaign, given (dollars_per_day) spent
-          expected_end_date: expected end date of campaign, given (dollars_per_day) spent
-          proposed_end_date_length: proposed_end_date minus proposed_start_date, length of campaign
-          end_date: end_date_proposed field of the campaign
-          start_date: start_date_proposed field of the campaign
-          id: external_advertiser_id of the advertiser
-
+    
         Args:
-          ids: Optional list of advertiser ids
+          List of advertiser ids
 
         Returns:
           DataFrame containing pacing information for set of "active" ids corresponding to advertisers
@@ -316,7 +278,7 @@ class Intraweek:
         """
 
         if ids == None:
-          ids = [225133, 250058, 274802, 302568, 306383, 338003, 312933]
+          ids = [225133, 250058, 274802, 302568, 306383, 338003, 312933, 225133]
         pacing_reports = []
         for id in ids:
           pacing_reports.append(self.get_advertiser_info(id))
@@ -368,12 +330,18 @@ class Intraweek:
         return self.df_full
 
     def pull_charges(self, num_advertiser):
+        # df_charges = self.my_db.select('select yearweek(date_add(date,interval -4 hour)) as wk_no,sum(imps) as Impressions,sum(clicks) as Clicks,sum(media_cost) as Media_Cost,sum(media_cost*cpm_multiplier) as Charged_Client,cpm_multiplier from v3_reporting where external_advertiser_id =(%d) and active=1 and deleted=0 group by 1 order by 1 asc;' % num_advertiser).as_dataframe()
        
+        format = r'%X%V%W'
         if not hasattr(self, 'charges'):
             self.charges =  self.my_db.select("select STR_TO_DATE(CONCAT(yearweek(date_add(date,interval -4 hour)),'Sunday'), '%X%V%W') as wk_no,external_advertiser_id,sum(imps) as Impressions,sum(clicks) as Clicks,sum(media_cost) as Media_Cost,sum(media_cost*cpm_multiplier) as Charged_Client,cpm_multiplier from v3_reporting where active=1 and deleted=0 group by 1,2 order by 1 asc;").as_dataframe()
             self.charges = self.charges.set_index('wk_no')
         
         df_charges = self.charges[self.charges['external_advertiser_id'] == num_advertiser] 
+
+        #df_charges = self.my_db.select("select STR_TO_DATE(CONCAT(yearweek(date_add(date,interval -4 hour)),'Sunday'), '%s') as wk_no,sum(imps) as Impressions,sum(clicks) as Clicks,sum(media_cost) as Media_Cost,sum(media_cost*cpm_multiplier) as Charged_Client,cpm_multiplier from v3_reporting where external_advertiser_id =(%d) and active=1 and deleted=0 group by 1 order by 1 asc;" % (format, num_advertiser)).as_dataframe()
+        # df_charges = self.my_db.select("select STR_TO_DATE(CONCAT(yearweek(date_add(date,interval -4 hour)),'Sunday'), '%s') as wk_no,sum(imps) as Impressions,sum(clicks) as Clicks,sum(media_cost) as Media_Cost,sum(media_cost*cpm_multiplier) as Charged_Client,cpm_multiplier from v3_reporting_advertiser where external_advertiser_id =(%d) group by 1 order by 1 asc;" % (format, num_advertiser)).as_dataframe()
+        # df_charges = df_charges.set_index('wk_no')
 
         return df_charges.drop('external_advertiser_id', axis=1)
 
@@ -399,8 +367,10 @@ class Intraweek:
         format = r'%X%V%W'
         if not hasattr(self, 'conversions'):
             self.conversions = df_conversions = self.my_db.select("select STR_TO_DATE(CONCAT(yearweek(date_add(conversion_time,interval -4 hour)),'Sunday'), '%X%V%W') as wk_no,pixel_id,external_advertiser_id, sum(case when is_valid=1 then 1 else 0 end) as num_conversions from conversion_reporting where active=1 and deleted=0 group by 1,2,3 order by 1 asc;").as_dataframe()
-        
+        # df_conversions = self.my_db.select("select STR_TO_DATE(CONCAT(yearweek(date_add(conversion_time,interval -4 hour)),'Sunday'), '%s') as wk_no,pixel_id,sum(case when is_valid=1 then 1 else 0 end) as num_conversions from conversion_reporting where external_advertiser_id =(%d) and active=1 and deleted=0 group by 1,2 order by 1 asc;" % (format, num_advertiser) ).as_dataframe()
+        # return df_conversions  
         return self.conversions[self.conversions['external_advertiser_id'] == num_advertiser].drop('external_advertiser_id', axis=1)
+
 
     # Testing inputs:
     # vary the number of conversion types that you have - 1, 2, 3 distinct conversions

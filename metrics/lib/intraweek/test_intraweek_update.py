@@ -23,10 +23,10 @@ class IntraWeekTestCase(unittest.TestCase):
                                       index=[201425, 201426, 201427])
 
         self.expect_conversions_1 = DataFrame(data={
-                                      'Signup conversions':[652, 851, 338],
+                                      'Signup_conversions':[652, 851, 338],
                                       'wk_no':[201425, 201426, 201427] })
         self.expect_conversions_2 = DataFrame(data={
-                                      'Purchase conversions':[15, 59, 34],
+                                      'Purchase_conversions':[15, 59, 34],
                                       'wk_no':[201425, 201426, 201427] })
         self.expect_conversions_1 = self.expect_conversions_1.set_index('wk_no')
         self.expect_conversions_2 = self.expect_conversions_2.set_index('wk_no')
@@ -161,7 +161,7 @@ class IntraWeekTestCase(unittest.TestCase):
         after_tuple = self.iw.make_weight_lists(before_charges, before_conversions)
 
         expect_conversions = DataFrame(data={
-                                      'Purchase conversions':[44, 59, 13],
+                                      'Purchase_conversions':[44, 59, 13],
                                       'wk_no':[201425, 201426, 201427] })
         expect_conversions = expect_conversions.set_index('wk_no')       
 
@@ -468,6 +468,7 @@ class IntraWeekTestCase(unittest.TestCase):
         self.assertTrue(self.iw.dollars_per_day == 1200.0)
         self.assertTrue(self.iw.expected_campaign_length == 12.5)
         self.assertTrue(self.iw.shouldve_spent == 3000)
-        self.assertTrue(self.iw.to_spend_per_day == 75) 
+        self.assertTrue(self.iw.to_spend_per_day == 75)
+        self.assertTrue(self.iw.actual_days_left == 40) 
 
 

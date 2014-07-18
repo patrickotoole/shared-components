@@ -28,7 +28,7 @@ class IntraWeekHandler(tornado.web.RequestHandler):
     def initialize(self, api=None, redis=None,db=None):
         self.redis = redis
         self.db = db
-        self.iw = Intraweek(lnk.dbs.vluu_local)
+        self.iw = Intraweek(self.db)
 
     def get_data(self):
         advertiser = self.get_argument("advertiser",False)
