@@ -4,3 +4,4 @@ from profile import ProfileHandler
 from advertiser import AdvertiserHandler
 from api import APIHandler
 from pixel import PixelHandler
+from intraweek import IntraWeekHandler
