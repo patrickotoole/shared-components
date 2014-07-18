@@ -1,19 +1,19 @@
+import sys
+import mock
+import os
+sys.path.append("../")
+
 import mock
 import unittest
 import pandas
-from intraweek_update import *
+from metrics.lib.intraweek.intraweek_update import *
 from link import lnk
 from pandas.util.testing import assert_frame_equal
-
-class NewObject(object):
-    def df_charges(self):
-        return 0
 
 class IntraWeekTestCase(unittest.TestCase):
 
     def setUp(self):
         # some standard data/object to be used
-        self.intraweek = NewObject()
         self.iw = Intraweek(lnk.dbs.vluu_local)
         self.before_charges = DataFrame(data={'impressions':[79, 207, 727],
                                       'clicks':[1, 2, 3],
@@ -31,19 +31,6 @@ class IntraWeekTestCase(unittest.TestCase):
         self.expect_conversions_1 = self.expect_conversions_1.set_index('wk_no')
         self.expect_conversions_2 = self.expect_conversions_2.set_index('wk_no')
 
-
-    def test_manipulate_success(self):
-        """
-        Describe what were testing
-        """
-        v = pandas.DataFrame()
-        with mock.patch.object(self.intraweek, "df_charges") as m:
-            # force the return value
-            m.return_value = v
-            result = self.intraweek.df_charges()
-
-        self.assertTrue(result is v)
-        
     def test_bad_pull_charges(self):
         """
         Make sure that pulling from an invalid advertiser_id -> small table
