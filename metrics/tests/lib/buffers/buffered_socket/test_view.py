@@ -1,12 +1,17 @@
-from pixel import PixelBufferedSocketFactory
+import sys
+import mock
+import os
+sys.path.append("../../../../")
+
+from lib.buffers.buffered_socket.view import ViewBufferedSocketFactory
 from twisted.trial import unittest
 from twisted.test import proto_helpers
 
-class PixelBufferSocketTestCase(unittest.TestCase):
+class ViewBufferSocketTestCase(unittest.TestCase):
     def setUp(self):
         self.tr = proto_helpers.StringTransport()
         self.buf = []
-        factory = PixelBufferedSocketFactory(self.buf)
+        factory = ViewBufferedSocketFactory(self.buf)
         self.proto = factory.buildProtocol(('127.0.0.1', 0))
         self.proto.makeConnection(self.tr)
 

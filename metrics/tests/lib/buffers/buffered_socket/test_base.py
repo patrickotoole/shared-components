@@ -1,12 +1,17 @@
-from view import ViewBufferedSocketFactory
+import sys
+import mock
+import os
+sys.path.append("../../../../")
+
+from lib.buffers.buffered_socket.base import BufferedSocketBaseFactory
 from twisted.trial import unittest
 from twisted.test import proto_helpers
 
-class ViewBufferSocketTestCase(unittest.TestCase):
+class BufferSocketBaseTestCase(unittest.TestCase):
     def setUp(self):
         self.tr = proto_helpers.StringTransport()
         self.buf = []
-        factory = ViewBufferedSocketFactory(self.buf)
+        factory = BufferedSocketBaseFactory(self.buf)
         self.proto = factory.buildProtocol(('127.0.0.1', 0))
         self.proto.makeConnection(self.tr)
 
