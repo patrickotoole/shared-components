@@ -96,7 +96,8 @@ class Parse:
             return p.split("?")[1] if "?" in p else p
 
         return {param_helper(i):j[0] for i,j in urlparse.parse_qs(line).iteritems()}
-        
+
+    
 
 
 
@@ -117,3 +118,17 @@ class decorators:
 
         return wrapped
      
+class validators:
+    @staticmethod
+    def pixel(fn):
+
+        def wrapped(self, line, *args, **kwargs):
+            split = line.split(" ")
+            if len(split) < 2:
+                return False
+
+            return fn(self,split)
+
+        return wrapped
+
+

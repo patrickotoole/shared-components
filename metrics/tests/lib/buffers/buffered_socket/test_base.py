@@ -3,11 +3,13 @@ import mock
 import os
 sys.path.append("../../../../")
 
+import base
+
 from lib.buffers.buffered_socket.base import BufferedSocketBaseFactory
 from twisted.trial import unittest
 from twisted.test import proto_helpers
 
-class BufferSocketBaseTestCase(unittest.TestCase):
+class BufferSocketBaseTestCase(base.SocketTestCase):
     def setUp(self):
         self.tr = proto_helpers.StringTransport()
         self.buf = []
@@ -15,22 +17,35 @@ class BufferSocketBaseTestCase(unittest.TestCase):
         self.proto = factory.buildProtocol(('127.0.0.1', 0))
         self.proto.makeConnection(self.tr)
 
-    def _test_buffer(self,line,expected):
-        self.assertEqual(len(self.buf),len(expected))
-        if len(self.buf):
-            self.assertEqual(self.buf[0],expected[0])
-
-    def _clear_buffer(self,line):
-        self.buf[:] = []
-        return line
-
     def test_append(self):
+        """
+        # should append to buffer and return value
+        """
+        value = "hello"
+        v = self.proto.append(value)
+        self.assertEqual(v, value)
+        self._test_buffer(v,[value])
+
+    def test_append_false(self):
+        """
+        # should not append to buffer and return False
+        """
+        v = self.proto.append(False)
+        self.assertEqual(v,False)
+        self.assertEqual(len(self.buf),0)
+
+    def test_append_async(self):
+        """
+        # should modify buffer async
+        """
         init = "hello"
         expected = 'hello'
         d =  self.proto.dataReceived("%s\r\n" % (init,))
         d.addCallback(self.assertEqual, expected)
         d.addCallback(self._test_buffer,[expected])
         return d
+
+    
 
     def test_append_multiple(self):
         init = "hello"
