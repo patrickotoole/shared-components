@@ -4,7 +4,7 @@ import os
 sys.path.append("../../../../")
 
 import unittest
-from lib.buffers.buffered_socket.pixel import PixelDeserializer
+from lib.buffers.buffered_socket.deserializer import PixelDeserializer
 
 
 class PixelDeserializerTestCase(unittest.TestCase):
