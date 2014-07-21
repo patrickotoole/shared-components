@@ -1,6 +1,7 @@
 import StringIO
 import pandas
 import ujson
+import urlparse
 
 class Cast:
     @staticmethod
@@ -116,6 +117,44 @@ renderers = {
     "json": Render.df_to_json
 }
 
+class URL:
+
+    @staticmethod
+    def parse_domain(referrer):
+        try:
+            if referrer[:len(referrer)/2]*2 == referrer:
+                referrer = referrer[:len(referrer)/2]
+            t = referrer.split("//")
+        except:
+            t = [""]
+
+        if len(t) > 1:
+            t = [t[1]]
+
+        d = t[0].split("/")[0].split("?")[0].split("&")[0].split(" ")[0].split(".")
+
+        if len(d) < 3:
+            domain = ".".join(d)
+        elif len(d[-2]) < 4:
+            domain = ".".join(d[-3:])
+        else:
+            domain = ".".join(d[-2:])
+        
+        return domain.lower()
+
+class Parse:
+    
+    @staticmethod
+    def qs(line):
+        def param_helper(p):
+            return p.split("?")[1] if "?" in p else p
+
+        return {param_helper(i):j[0] for i,j in urlparse.parse_qs(line).iteritems()}
+
+    
+
+
+
 class decorators:
     @staticmethod
     def formattable(fn):
@@ -133,3 +172,17 @@ class decorators:
 
         return wrapped
      
+class validators:
+    @staticmethod
+    def pixel(fn):
+
+        def wrapped(self, line, *args, **kwargs):
+            split = line.split(" ")
+            if len(split) < 2:
+                return False
+
+            return fn(self,split)
+
+        return wrapped
+
+

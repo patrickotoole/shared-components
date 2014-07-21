@@ -17,6 +17,13 @@ import handlers.admin as admin
 from lib.buffers.pixel_buffer import BufferedSocketFactory
 from lib.buffers.view_buffer import ViewabilityBufferedFactory 
 
+from lib.buffered_socket.qs import QSBufferedSocketFactory
+from lib.buffered_socket.schema import SchemaBufferedSocketFactory
+
+from lib.buffered_socket.maxmind import MaxmindLookup
+from lib.buffered_socket.redis import RedisApprovedUID
+from lib.buffered_socket.domain import DomainLookup
+
 import redis
 import lib.hive as h
 from lib.link_sql_connector import DBCursorWrapper
@@ -27,6 +34,7 @@ import requests
 import logging
 import time
 import os
+import maxminddb
 
 requests_log = logging.getLogger("requests")
 requests_log.setLevel(logging.WARNING)
@@ -38,6 +46,30 @@ define("listen_port", default=1234, help="run on the given port", type=int)
 define("view_port", default=1235, help="run on the given port", type=int)
 
 
+db = lnk.dbs.mysql
+api = lnk.api.console
+bidder = None#lnk.api.console
+hive = h.Hive(n_map=3,n_reduce=3).hive
+_redis = redis.StrictRedis(host='162.243.123.240', port=6379, db=1)
+reader = maxminddb.Reader('/root/GeoLite2-City.mmdb')
+
+track_buffer = []
+view_buffer = []
+
+pixel_parsers = {
+    "ip_address":MaxmindLookup(reader),
+    "uid":RedisApprovedUID([_redis]),
+    "referrer": DomainLookup()
+}
+
+view_schema = ["auction_id", "uid", 
+            "seller", "tag", "pub", "venue", "ecp", 
+            "price", "creative", "visible", "elapsed", 
+            "action", "ref", "parent"
+        ]
+
+track_factory = QSBufferedSocketFactory(track_buffer,pixel_parsers)
+view_factory = SchemaBufferedSocketFactory(view_buffer,view_schema,pixel_parsers)
 
 
 
@@ -67,17 +99,6 @@ def shutdown():
             logging.info('Shutdown')
     stop_loop()
 
-       
-
-
-db = lnk.dbs.mysql
-api = lnk.api.console
-bidder = None#lnk.api.console
-hive = h.Hive(n_map=3,n_reduce=3).hive
-_redis = redis.StrictRedis(host='162.243.123.240', port=6379, db=1)
-
-socket_buffer = []
-view_buffer = []
 
 
 old_handlers = [
@@ -92,22 +113,20 @@ admin_scripts = [
     (r'/targeting.*',admin.scripts.TargetingHandler, dict(redis=_redis,api=api,db=db)),
     (r'/bidder_profile.*',admin.scripts.ProfileHandler, dict(db=db,api=api,bidder=bidder)),
     (r'/advertiser.*',admin.scripts.AdvertiserHandler, dict(db=db,api=api)),
-    (r'/money.*',admin.scripts.MoneyHandler, dict(db=db,api=api)),
-    (r'/intraweek.*',admin.scripts.IntraWeekHandler, dict(db=db,api=api))
-
+    (r'/money.*',admin.scripts.MoneyHandler, dict(db=db,api=api))
 ]
 
 streaming = [
     (r'/streaming', streaming.streaming.IndexHandler),
     (r'/websocket', streaming.streaming.StreamingHandler, 
-      dict(db=db,buffers={"track":socket_buffer, "view":view_buffer})
+      dict(db=db,buffers={"track":track_buffer, "view":view_buffer})
     )
 ]
 
 admin_reporting = [
     (r'/admin/streaming',admin.streaming.IndexHandler),
     (r'/admin/websocket', admin.streaming.AdminStreamingHandler, 
-      dict(db=db,buffers={"track":socket_buffer, "view":view_buffer})
+      dict(db=db,buffers={"track":track_buffer, "view":view_buffer})
     ),
     (r'/viewable.*',admin.reporting.ViewabilityHandler, dict(db=db,api=api,hive=hive)),
     (r'/target_list.*',admin.reporting.TargetListHandler)
@@ -135,8 +154,8 @@ app = tornado.web.Application(
 if __name__ == '__main__':
     parse_command_line()
 
-    buffered_socket = reactor.listenTCP(options.listen_port,BufferedSocketFactory(socket_buffer))
-    view_socket = reactor.listenTCP(options.view_port,ViewabilityBufferedFactory(view_buffer))
+    reactor.listenTCP(options.listen_port, track_factory)
+    reactor.listenTCP(options.view_port, view_factory)
 
     server = tornado.httpserver.HTTPServer(app)
     server.listen(options.port)
