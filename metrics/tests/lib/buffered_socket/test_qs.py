@@ -5,16 +5,16 @@ sys.path.append("../../../")
 
 import base
 
-from lib.buffered_socket.pixel import PixelBufferedSocketFactory
+from lib.buffered_socket.qs import QSBufferedSocketFactory
 from twisted.trial import unittest
 from twisted.test import proto_helpers
 
 
-class PixelBufferSocketTestCase(base.SocketTestCase):
+class QSBufferSocketTestCase(base.SocketTestCase):
     def setUp(self):
         self.tr = proto_helpers.StringTransport()
         self.buf = []
-        factory = PixelBufferedSocketFactory(self.buf)
+        factory = QSBufferedSocketFactory(self.buf)
         self.proto = factory.buildProtocol(('127.0.0.1', 0),{})
         self.proto.makeConnection(self.tr)
 

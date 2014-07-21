@@ -1,16 +1,16 @@
-from base import BufferedSocketBaseFactory, BufferedSocketBase
-from deserializer import PixelDeserializer
+from qs import QSBufferedSocket, QSBufferedSocketFactory
 from lib.helpers import validators
 
-class PixelBufferedSocket(BufferedSocketBase):
+class SchemaBufferedSocket(QSBufferedSocket):
     """
-    PixelBufferSocket processes pixel data by:
+    SchemaBufferSocket processes pixel data by:
       1. deserializing the query string
       2. converting IP to geo location information
       3. pulling additional user information from redis KV store
 
     Args:
       buf (array): the buffer that our pixel receiver will append to
+      schema (array): the schema for the columns passed in
       processors (dict of KeyProcessor): additionaly processors to be 
         executed, based on the value of the key, to add addition meta data
         from the qs params of the line being processed
@@ -20,35 +20,30 @@ class PixelBufferedSocket(BufferedSocketBase):
       processors (dict): from args
     """
 
-    def __init__(self, buf, processors):
+    def __init__(self, buf, schema, processors):
         
         self.buf = buf
+        self.schema = schema
         self.set_processors(processors)
-
-    def set_processors(self,value):
-        """
-        helper method (makes unit testing easier)
-        """
-        self._processors = value
-        self.deserializer = PixelDeserializer(value)
 
     @validators.pixel
     def process(self,split):
-        formatted = self.deserializer.deserialize(split[1])
+        formatted = dict(zip(self.schema,split))
         return formatted
 
-class PixelBufferedSocketFactory(BufferedSocketBaseFactory):
+class SchemaBufferedSocketFactory(QSBufferedSocketFactory):
     """
-    PixelBufferedSocketFactor builds a PixelBufferedSocket to process pixel data
+    SchemaBufferedSocketFactor builds a SchemaBufferedSocket to process pixel data
     """
 
-    def __init__(self,buf, processors={}):
+    def __init__(self,buf, schema, processors={}):
         self.buf = buf
         self.processors = processors
+        self.schema = schema
 
     def buildProtocol(self, addr, processors=False):
         """
-        Builds the PixelBufferSocket bound to the appropriate port
+        Builds the SchemaBufferedSocket bound to the appropriate port
 
         Args:
           addr ((ip_address,port)): ip_address and port to bind to to read data
@@ -56,8 +51,8 @@ class PixelBufferedSocketFactory(BufferedSocketBaseFactory):
             leverage specific keys from the qs params of the line being processed
         
         Returns:
-          PixelBufferedSocket: to recurringly parse URI information
+          SchemaBufferedSocket: to recurringly parse URI information
         """
 
         self.processors = processors or self.processors
-        return PixelBufferedSocket(self.buf, self.processors)
+        return SchemaBufferedSocket(self.buf, self.schema, self.processors)

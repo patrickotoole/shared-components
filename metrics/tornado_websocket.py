@@ -16,12 +16,13 @@ import handlers.admin as admin
 
 from lib.buffers.pixel_buffer import BufferedSocketFactory
 from lib.buffers.view_buffer import ViewabilityBufferedFactory 
-from lib.buffered_socket.pixel import PixelBufferedSocketFactory
+
+from lib.buffered_socket.qs import QSBufferedSocketFactory
+from lib.buffered_socket.schema import SchemaBufferedSocketFactory
+
 from lib.buffered_socket.maxmind import MaxmindLookup
 from lib.buffered_socket.redis import RedisApprovedUID
 from lib.buffered_socket.domain import DomainLookup
-
-
 
 import redis
 import lib.hive as h
@@ -54,6 +55,21 @@ reader = maxminddb.Reader('/root/GeoLite2-City.mmdb')
 
 track_buffer = []
 view_buffer = []
+
+pixel_parsers = {
+    "ip_address":MaxmindLookup(reader),
+    "uid":RedisApprovedUID([_redis]),
+    "referrer": DomainLookup()
+}
+
+view_schema = ["auction_id", "uid", 
+            "seller", "tag", "pub", "venue", "ecp", 
+            "price", "creative", "visible", "elapsed", 
+            "action", "ref", "parent"
+        ]
+
+track_factory = QSBufferedSocketFactory(track_buffer,pixel_parsers)
+view_factory = SchemaBufferedSocketFactory(view_buffer,view_schema,pixel_parsers)
 
 
 
@@ -138,17 +154,8 @@ app = tornado.web.Application(
 if __name__ == '__main__':
     parse_command_line()
 
-    
-    pixel_parsers = {
-        "ip_address":MaxmindLookup(reader),
-        "uid":RedisApprovedUID([_redis]),
-        "referrer": DomainLookup()
-    }
-    
-    reactor.listenTCP(options.listen_port,PixelBufferedSocketFactory(track_buffer,pixel_parsers))
-
-    #buffered_socket = reactor.listenTCP(options.listen_port,BufferedSocketFactory(track_buffer))
-    #view_socket = reactor.listenTCP(options.view_port,ViewabilityBufferedFactory(view_buffer))
+    reactor.listenTCP(options.listen_port, track_factory)
+    reactor.listenTCP(options.view_port, view_factory)
 
     server = tornado.httpserver.HTTPServer(app)
     server.listen(options.port)

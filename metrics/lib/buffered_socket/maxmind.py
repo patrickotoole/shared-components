@@ -20,8 +20,9 @@ class MaxmindLookup(object):
         Returns:
           dict: describes whether the user is approved or not
         """
-        ip_lookup = self.db.get(value)
+        
         try:
+            ip_lookup = self.db.get(value)
             return {                                                                             
                 "city": ip_lookup.get('city',{}).get('names',{}).get('en',""),
                 "state": ip_lookup.get('subdivisions',[{}])[0].get('names',{}).get('en',""),
