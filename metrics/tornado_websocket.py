@@ -16,6 +16,7 @@ import handlers.admin as admin
 
 from lib.buffers.pixel_buffer import BufferedSocketFactory
 from lib.buffers.view_buffer import ViewabilityBufferedFactory 
+from lib.buffered_socket.pixel import PixelBufferedSocketFactory
 
 import redis
 import lib.hive as h
@@ -38,6 +39,14 @@ define("listen_port", default=1234, help="run on the given port", type=int)
 define("view_port", default=1235, help="run on the given port", type=int)
 
 
+db = lnk.dbs.mysql
+api = lnk.api.console
+bidder = None#lnk.api.console
+hive = h.Hive(n_map=3,n_reduce=3).hive
+_redis = redis.StrictRedis(host='162.243.123.240', port=6379, db=1)
+
+track_buffer = []
+view_buffer = []
 
 
 
@@ -67,17 +76,6 @@ def shutdown():
             logging.info('Shutdown')
     stop_loop()
 
-       
-
-
-db = lnk.dbs.mysql
-api = lnk.api.console
-bidder = None#lnk.api.console
-hive = h.Hive(n_map=3,n_reduce=3).hive
-_redis = redis.StrictRedis(host='162.243.123.240', port=6379, db=1)
-
-socket_buffer = []
-view_buffer = []
 
 
 old_handlers = [
@@ -98,14 +96,14 @@ admin_scripts = [
 streaming = [
     (r'/streaming', streaming.streaming.IndexHandler),
     (r'/websocket', streaming.streaming.StreamingHandler, 
-      dict(db=db,buffers={"track":socket_buffer, "view":view_buffer})
+      dict(db=db,buffers={"track":track_buffer, "view":view_buffer})
     )
 ]
 
 admin_reporting = [
     (r'/admin/streaming',admin.streaming.IndexHandler),
     (r'/admin/websocket', admin.streaming.AdminStreamingHandler, 
-      dict(db=db,buffers={"track":socket_buffer, "view":view_buffer})
+      dict(db=db,buffers={"track":track_buffer, "view":view_buffer})
     ),
     (r'/viewable.*',admin.reporting.ViewabilityHandler, dict(db=db,api=api,hive=hive)),
     (r'/target_list.*',admin.reporting.TargetListHandler)
@@ -133,8 +131,12 @@ app = tornado.web.Application(
 if __name__ == '__main__':
     parse_command_line()
 
-    buffered_socket = reactor.listenTCP(options.listen_port,BufferedSocketFactory(socket_buffer))
-    view_socket = reactor.listenTCP(options.view_port,ViewabilityBufferedFactory(view_buffer))
+    
+
+    reactor.listenTCP(options.listen_port,PixelBufferedSocketFactory(track_buffer))
+
+    #buffered_socket = reactor.listenTCP(options.listen_port,BufferedSocketFactory(track_buffer))
+    #view_socket = reactor.listenTCP(options.view_port,ViewabilityBufferedFactory(view_buffer))
 
     server = tornado.httpserver.HTTPServer(app)
     server.listen(options.port)

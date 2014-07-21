@@ -42,7 +42,11 @@ class PixelBufferedSocketFactory(BufferedSocketBaseFactory):
     PixelBufferedSocketFactor builds a PixelBufferedSocket to process pixel data
     """
 
-    def buildProtocol(self, addr, processors):
+    def __init__(self,buf, processors={}):
+        self.buf = buf
+        self.processors = processors
+
+    def buildProtocol(self, addr, processors=False):
         """
         Builds the PixelBufferSocket bound to the appropriate port
 
@@ -55,4 +59,5 @@ class PixelBufferedSocketFactory(BufferedSocketBaseFactory):
           PixelBufferedSocket: to recurringly parse URI information
         """
 
-        return PixelBufferedSocket(self.buf, processors)
+        self.processors = processors or self.processors
+        return PixelBufferedSocket(self.buf, self.processors)
