@@ -53,10 +53,8 @@ class BufferedSocketBase(basic.LineReceiver):
           deferred: A deferred object whose argument will be the value added to
             to the buffer.
         """
-        #print line
-        d = threads.deferToThread(self.process,line)
-        d.addCallback(self.append)
-        return 
+        self.deferred = threads.deferToThread(self.process,line)
+        self.deferred.addCallback(self.append)
 
 class BufferedSocketBaseFactory(protocol.Factory):
     """
