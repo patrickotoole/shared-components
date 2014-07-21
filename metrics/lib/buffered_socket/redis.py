@@ -23,6 +23,6 @@ class RedisApprovedUID(object):
         """
         result = {}
         for redis_server in self.redis_list:
-            result["approved_user"] = result.get("approved_user",False) or redis_server.get(value,False)
+            result["approved_user"] = result.get("approved_user",False) or redis_server.get(value)
         return result
  

@@ -17,6 +17,11 @@ import handlers.admin as admin
 from lib.buffers.pixel_buffer import BufferedSocketFactory
 from lib.buffers.view_buffer import ViewabilityBufferedFactory 
 from lib.buffered_socket.pixel import PixelBufferedSocketFactory
+from lib.buffered_socket.maxmind import MaxmindLookup
+from lib.buffered_socket.redis import RedisApprovedUID
+from lib.buffered_socket.domain import DomainLookup
+
+
 
 import redis
 import lib.hive as h
@@ -28,6 +33,7 @@ import requests
 import logging
 import time
 import os
+import maxminddb
 
 requests_log = logging.getLogger("requests")
 requests_log.setLevel(logging.WARNING)
@@ -44,6 +50,7 @@ api = lnk.api.console
 bidder = None#lnk.api.console
 hive = h.Hive(n_map=3,n_reduce=3).hive
 _redis = redis.StrictRedis(host='162.243.123.240', port=6379, db=1)
+reader = maxminddb.Reader('/root/GeoLite2-City.mmdb')
 
 track_buffer = []
 view_buffer = []
@@ -132,8 +139,13 @@ if __name__ == '__main__':
     parse_command_line()
 
     
-
-    reactor.listenTCP(options.listen_port,PixelBufferedSocketFactory(track_buffer))
+    pixel_parsers = {
+        "ip_address":MaxmindLookup(reader),
+        "uid":RedisApprovedUID([_redis]),
+        "referrer": DomainLookup()
+    }
+    
+    reactor.listenTCP(options.listen_port,PixelBufferedSocketFactory(track_buffer,pixel_parsers))
 
     #buffered_socket = reactor.listenTCP(options.listen_port,BufferedSocketFactory(track_buffer))
     #view_socket = reactor.listenTCP(options.view_port,ViewabilityBufferedFactory(view_buffer))
