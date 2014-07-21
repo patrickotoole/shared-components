@@ -1,1 +1,68 @@
+<link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/dc.css">
+<script type="text/javascript" src="http://rockerbox.com/js/d3.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/crossfilter.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/dc.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/colorbrewer.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/reporting.js"></script>
+<!-- DataTables CSS -->
+<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.0/css/jquery.dataTables.css">
+  
+<!-- jQuery -->
+<script type="text/javascript" charset="utf8" src="//code.jquery.com/jquery-1.10.2.min.js"></script>
+  
+<!-- DataTables -->
+<script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.0/js/jquery.dataTables.js"></script>
 
+<script>
+$( document ).ready()
+</script>
+
+<style>
+/*.dataTables_wrapper{margin-left: 200; margin-right: 200;}*/
+.content{
+  margin-left: 200;
+  margin-right: 200;
+}
+
+.sidebar{
+  float:left;
+  margin-top: 100px;
+  margin-right: 40px;
+}
+
+.sidebar ul{
+  list-style-type:none;
+}
+
+.table_wrapper{
+  float:left;
+  width: 70%;
+}
+</style>
+
+<div class="content">
+
+  <div class="sidebar">
+    <h3>Pixel Data</h3>
+      <ul>
+        <li> <a href="/analysis?type=pixel_per_browser">pixel_per_browser</a></li>
+        <li> <a href="/analysis?type=pixel_per_date">pixel_per_date</a></li>
+        <li> <a href="/analysis?type=pixel_per_hour">pixel_per_hour</a></li>
+        <li> <a href="/analysis?type=pixel_per_os">pixel_per_os</a></li>
+        <li> <a href="/analysis?type=pixel_per_user">pixel_per_user</a></li>
+        <li> <a href="/analysis?type=pixel_per_weekday">pixel_per_weekday</a></li>
+        <li><a href="/analysis?type=pixel_"></a></li>
+        <li></li>
+      </ul>
+    <h3>Imps Data</h3>
+      <ul>
+        <li><a href="/analysis?type=imps_by_domain">By Domain</a></li>
+        <li><a href="/analysis?type=imps_by_datetime">By Date/Time</a></li>
+        <li><a href="/analysis?type=segment_domains">By Segments</a></li>
+      </ul>
+  </div>
+
+{% block stuff %}default{% end %}
+
+</div>
+</div>

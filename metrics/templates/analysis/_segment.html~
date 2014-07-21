@@ -1,0 +1,17 @@
+{% extends "analysis_base.html" %}
+
+{% block stuff %}
+<div class="table_wrapper">
+<a href="/analysis">Back to Index</a>
+
+<script>
+  $(document).ready( function () {
+      $('.dataframe').DataTable();
+  } );
+</script>
+
+<h1>{{ name }}</h1>
+
+{% raw stuff %}
+
+{% end %}

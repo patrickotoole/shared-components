@@ -1,0 +1,29 @@
+{% extends "analysis_base.html" %}
+
+
+
+{% block stuff %}
+<script type="text/javascript" language="javascript" src="http://cdn.datatables.net/tabletools/2.2.2/js/dataTables.tableTools.js"></script>
+<link rel="stylesheet"  type="text/css" href="http://cdn.datatables.net/tabletools/2.2.2/css/dataTables.tableTools.css"></script>
+<div class="table_wrapper">
+<a href="/analysis">Back to Index</a>
+
+<script>
+$(document).ready( function () {
+$('#example').dataTable( {
+        "dom": 'T<"clear">lfrtip',
+        "tableTools": {
+            "sSwfPath": "/static/copy_csv_xls_pdf.swf"
+        }       
+});
+} );
+      
+    $( tableTools.fnContainer() ).insertAfter('.dataframe');
+} );
+</script>
+
+<h1>{{ name }}</h1>
+
+{% raw stuff %}
+
+{% end %}

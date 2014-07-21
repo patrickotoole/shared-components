@@ -112,10 +112,14 @@ pixel_analysis = [
     (r'/analysis.*', analysis.PixelAnalysisHandler, dict(db=db,api=api,hive=hive))
 ]
 
+static = [
+    (r'/static/(.*)', tornado.web.StaticFileHandler, {'path': "static"})
+]
+
 
 dirname = os.path.dirname(os.path.realpath(__file__))
 app = tornado.web.Application(
-    streaming + admin_scripts + admin_reporting + reporting + pixel_analysis,
+    streaming + admin_scripts + admin_reporting + reporting + pixel_analysis + static,
     template_path= dirname + "/templates",
     db=lnk.dbs.mysql,
     debug=True,
