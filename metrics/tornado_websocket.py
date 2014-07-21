@@ -67,7 +67,7 @@ def shutdown():
 
 
 db = lnk.dbs.mysql
-api = None#lnk.api.console
+api = lnk.api.console
 bidder = None#lnk.api.console
 hive = h.Hive(n_map=3,n_reduce=3).hive
 _redis = redis.StrictRedis(host='162.243.123.240', port=6379, db=1)
@@ -88,17 +88,23 @@ admin_scripts = [
     (r'/targeting.*',admin.scripts.TargetingHandler, dict(redis=_redis,api=api,db=db)),
     (r'/bidder_profile.*',admin.scripts.ProfileHandler, dict(db=db,api=api,bidder=bidder)),
     (r'/advertiser.*',admin.scripts.AdvertiserHandler, dict(db=db,api=api)),
-    (r'/money.*',admin.scripts.MoneyHandler, dict(db=db,api=api))
+    (r'/money.*',admin.scripts.MoneyHandler, dict(db=db,api=api)),
+    (r'/intraweek.*',admin.scripts.IntraWeekHandler, dict(db=db,api=api))
+
 ]
 
 streaming = [
-    (r'/streaming', streaming.IndexHandler),
-    (r'/websocket', streaming.WebSocketHandler, 
-      dict(db=db,socket_buffer = socket_buffer, view_buffer = view_buffer)
+    (r'/streaming', streaming.streaming.IndexHandler),
+    (r'/websocket', streaming.streaming.StreamingHandler, 
+      dict(db=db,buffers={"track":socket_buffer, "view":view_buffer})
     )
 ]
 
 admin_reporting = [
+    (r'/admin/streaming',admin.streaming.IndexHandler),
+    (r'/admin/websocket', admin.streaming.AdminStreamingHandler, 
+      dict(db=db,buffers={"track":socket_buffer, "view":view_buffer})
+    ),
     (r'/viewable.*',admin.reporting.ViewabilityHandler, dict(db=db,api=api,hive=hive)),
     (r'/target_list.*',admin.reporting.TargetListHandler)
 ]
