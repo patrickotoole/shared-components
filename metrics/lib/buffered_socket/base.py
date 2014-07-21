@@ -37,6 +37,7 @@ class BufferedSocketBase(basic.LineReceiver):
         """
         if line is not False:
             self.buf += [line]
+
         return line
 
     def lineReceived(self, line):
@@ -52,9 +53,10 @@ class BufferedSocketBase(basic.LineReceiver):
           deferred: A deferred object whose argument will be the value added to
             to the buffer.
         """
-        d = threads.deferToThread(self.process,line)
-        d.addCallback(self.append)
-        return d
+
+        # assign this to self.deferred for testing... not sure how to do this better
+        self.deferred = threads.deferToThread(self.process,line)
+        self.deferred.addCallback(self.append)
 
 class BufferedSocketBaseFactory(protocol.Factory):
     """
