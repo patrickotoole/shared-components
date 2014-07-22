@@ -1,7 +1,9 @@
 import sys
 import mock
 import os
-sys.path.append("../../")
+from os.path import dirname, realpath
+sys.path.append(dirname(realpath(__file__)) + "/../../..")
+
 
 import unittest
 import metrics.handlers.streaming.buffer_base as buffer
