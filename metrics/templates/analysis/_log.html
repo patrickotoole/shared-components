@@ -10,15 +10,12 @@
 
 <script>
 $(document).ready( function () {
-$('#example').dataTable( {
+    $('.dataframe').dataTable( {
         "dom": 'T<"clear">lfrtip',
         "tableTools": {
             "sSwfPath": "/static/copy_csv_xls_pdf.swf"
         }       
-});
-} );
-      
-    $( tableTools.fnContainer() ).insertAfter('.dataframe');
+    });   
 } );
 </script>
 
