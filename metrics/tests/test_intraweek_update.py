@@ -1,12 +1,12 @@
 import sys
 import mock
 import os
-sys.path.append("../")
+sys.path.append("../../")
 
 import mock
 import unittest
 import pandas
-from metrics.lib.intraweek.intraweek_update import *
+from lib.intraweek.intraweek_update import *
 from link import lnk
 from pandas.util.testing import assert_frame_equal
 

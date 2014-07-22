@@ -71,8 +71,6 @@ view_schema = ["auction_id", "uid",
 track_factory = QSBufferedSocketFactory(track_buffer,pixel_parsers)
 view_factory = SchemaBufferedSocketFactory(view_buffer,view_schema,pixel_parsers)
 
-
-
 def sig_handler(sig, frame):
     logging.warning('Caught signal: %s', sig)
     tornado.ioloop.IOLoop.instance().add_callback_from_signal(shutdown)
@@ -99,6 +97,17 @@ def shutdown():
             logging.info('Shutdown')
     stop_loop()
 
+       
+
+
+db = lnk.dbs.mysql
+api = None#lnk.api.console
+bidder = None#lnk.api.console
+hive = h.Hive(n_map=3,n_reduce=3).hive
+_redis = redis.StrictRedis(host='162.243.123.240', port=6379, db=1)
+
+socket_buffer = []
+view_buffer = []
 
 
 old_handlers = [

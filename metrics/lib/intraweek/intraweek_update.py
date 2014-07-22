@@ -1,5 +1,4 @@
 #! /usr/bin/python
-#
 
 from pandas import *
 import pandas as pd
@@ -8,49 +7,14 @@ from link import lnk
 import math
 import datetime
 
-## Lets define a class that takes in the database wrapper
+from queries import *
+from decorators import *
+from intraweek_base import IntraWeekBase
+    
 
-# class Intraweek(object):
-class Intraweek:
+class Intraweek(IntraWeekBase):
     def __init__(self,db_wrapper):
         self.my_db = db_wrapper 
-        # assign db_wrapper to my_db
-    
-    def get_date_from_yearweek(self, yearweek):
-        sunday = '%d Sunday' % yearweek
-        format = r'%X%V %W'
-        date_info = self.my_db.select("select STR_TO_DATE('%s', '%s')" % (sunday, format)).as_dataframe()
-        return str(date_info.ix[0][0])
-
-    def get_pixel_name(self, pixel_id):
-        if not hasattr(self, "pixel_info"):
-          self.pixel_info = self.my_db.select('select pixel_display_name, pixel_id from advertiser_pixel where deleted = 0').as_dataframe()
-
-        return self.pixel_info[self.pixel_info['pixel_id'] == pixel_id]['pixel_display_name'].iloc[0]
-  
-    def property_checker_twoargs(func):
-        def wrapper(arg1, arg2):
-          try:
-            return func(arg1, arg2)
-          except (KeyError, IndexError):
-            return -1
-        return wrapper
-
-    def property_checker_threeargs(func):
-        def wrapper(arg1, arg2, arg3):
-          try:
-            return func(arg1, arg2, arg3)
-          except (KeyError, IndexError):
-            return -1
-        return wrapper
-
-    def property_checker_onearg(func):
-        def wrapper(arg1):
-          try:
-            return func(arg1)
-          except (KeyError, IndexError):
-            return -1
-        return wrapper
 
     @property_checker_threeargs
     def get_current_multiplier(self, advertiser_id, target_cpa):
@@ -76,32 +40,6 @@ class Intraweek:
       days = 7 + ((1 + datetime.datetime.today().weekday()) % 7) # one full week, then number of days this week
       return spent / days
 
-    # get the "most reasonable-looking budget" -> next budget cap to consider
-    def get_budget(self, advertiser_id, money_spent):
-      if not hasattr(self, 'budget_df'):
-        self.budget_df = self.my_db.select('select external_advertiser_id, budget, id from insertion_order where deleted = 0').as_dataframe()
-      cum_budget_df = self.budget_df[self.budget_df['external_advertiser_id'] == advertiser_id].cumsum()
-      for idx in range(len(cum_budget_df)):
-        current_budget = cum_budget_df['budget'][cum_budget_df.index[idx]]
-        if (current_budget >= money_spent):
-          return (current_budget, self.budget_df['budget'][cum_budget_df.index[idx]], self.budget_df['id'][cum_budget_df.index[idx]])
-      
-      # else, there are no campaigns remaining, just return money_spent
-      return (-1, -1, -1)
-
-    def get_recent_spent(self, advertiser_id):
-      if not hasattr(self, 'recent_spent'):
-         self.recent_spent = self.my_db.select('select date(date) as wk_no,external_advertiser_id,sum(media_cost) as Media_Cost from v3_reporting where date(date_add(date,interval -4 hour)) = subdate(current_date,1) and deleted = 0 and active = 1 group by 1,2 order by 1 asc;').as_dataframe()
-     
-      try: 
-        recent_media_cost = self.recent_spent[self.recent_spent['external_advertiser_id'] == advertiser_id]['media_cost'].iloc[0] 
-        recent_charged_client = recent_media_cost * self.get_current_multiplier(advertiser_id, -1)
-      except IndexError:
-        recent_media_cost = 0
-        recent_charged_client = 0
-     
-      return recent_charged_client
-
     # get days into campaign
     @property_checker_threeargs
     def get_days_into_campaign(self, dates, advertiser_id):
@@ -124,13 +62,7 @@ class Intraweek:
       return dates['proposed_campaign_length'][advertiser_id]
 
 
-    # get advertiser name
-    @property_checker_twoargs
-    def get_advertiser_name(self, advertiser_id):
-      if not hasattr(self, 'names_df'):
-        self.names_df = self.my_db.select('select external_advertiser_id, advertiser_name from advertiser where deleted = 0').as_dataframe()
-      
-      return self.names_df[self.names_df['external_advertiser_id'] == advertiser_id]['advertiser_name'].iloc[0]
+
 
     def determine_pacing(self, row):
       try:
@@ -171,7 +103,7 @@ class Intraweek:
 
         # getting date/calendar information
         if not hasattr(self, 'dates'):
-          self.dates = self.my_db.select('select id, external_advertiser_id,actual_start_date, end_date_proposed, timestampdiff(DAY,actual_start_date,NOW()) as days_into_campaign, timestampdiff(DAY,start_date_proposed, end_date_proposed) as proposed_campaign_length from insertion_order where actual_start_date is not NULL and actual_end_date is NULL and deleted = 0').as_dataframe()
+          self.dates = self.my_db.select(IO_DATES).as_dataframe()
           self.dates = self.dates.set_index('external_advertiser_id')
         
         self.perceived_campaign_id = self.dates['id'][advertiser_id]
@@ -197,6 +129,9 @@ class Intraweek:
         self.actual_days_left = (self.proposed_campaign_length - self.days_into_campaign)
     
     def display_advinfo(self, advertiser_id):
+        ## RICK: clean this up with two tuples
+        ## dict(zip(columns,values))
+
         if self.campaign_id == self.perceived_campaign_id:
           map = { 'advertiser': [self.advertiser_name],
                   'id': [advertiser_id],
@@ -285,7 +220,7 @@ class Intraweek:
         """
 
         # get the cpa target of the advertiser currently
-        cpa_target = self.my_db.select('select target_cpa from intraweek where external_advertiser_id = (%d) and deleted = 0' % advertiser_id).as_dataframe()
+        cpa_target = self.my_db.select(CPA_TARGET % advertiser_id).as_dataframe()
         try:
           target = cpa_target.ix[0][0]
           if target == None:
@@ -308,7 +243,7 @@ class Intraweek:
         # update table accordingly
         # self.my_db.execute('update intraweek set deleted=0, cpm_multiplier=%f,target_cpa=%f where external_advertiser_id=%d;' % (multiplier, cpa_charged, advertiser_id))
         
-        self.my_db.execute('insert into intraweek (external_advertiser_id, cpm_multiplier, target_cpa, deleted) values (%d, %f, %f, 0) on duplicate key update cpm_multiplier = %f, target_cpa = %f' % (advertiser_id, multiplier, cpa_charged, multiplier, cpa_charged))
+        self.my_db.execute(UPDATE_CPA_TARGET % (advertiser_id, multiplier, cpa_charged, multiplier, cpa_charged))
         self.my_db.commit()
 
     def get_compiled_pacing_reports(self, ids=None):
@@ -400,7 +335,7 @@ class Intraweek:
     def pull_charges(self, num_advertiser):
        
         if not hasattr(self, 'charges'):
-            self.charges =  self.my_db.select("select STR_TO_DATE(CONCAT(yearweek(date_add(date,interval -4 hour)),'Sunday'), '%X%V%W') as wk_no,external_advertiser_id,sum(imps) as Impressions,sum(clicks) as Clicks,sum(media_cost) as Media_Cost,sum(media_cost*cpm_multiplier) as Charged_Client,cpm_multiplier from v3_reporting where active=1 and deleted=0 group by 1,2 order by 1 asc;").as_dataframe()
+            self.charges =  self.my_db.select(CHARGES).as_dataframe()
             self.charges = self.charges.set_index('wk_no')
         
         df_charges = self.charges[self.charges['external_advertiser_id'] == num_advertiser] 
@@ -428,7 +363,7 @@ class Intraweek:
         
         format = r'%X%V%W'
         if not hasattr(self, 'conversions'):
-            self.conversions = df_conversions = self.my_db.select("select STR_TO_DATE(CONCAT(yearweek(date_add(conversion_time,interval -4 hour)),'Sunday'), '%X%V%W') as wk_no,pixel_id,external_advertiser_id, sum(case when is_valid=1 then 1 else 0 end) as num_conversions from conversion_reporting where active=1 and deleted=0 and is_valid=1 group by 1,2,3 order by 1 asc;").as_dataframe()
+            self.conversions = df_conversions = self.my_db.select(CONVERSIONS).as_dataframe()
         
         return self.conversions[self.conversions['external_advertiser_id'] == num_advertiser].drop('external_advertiser_id', axis=1)
 
@@ -550,15 +485,13 @@ class Intraweek:
         # arrange column order
         df_full = df_full.drop(['num_conversions', 'cpm_multiplier'], axis=1)
         cols = df_full.columns.tolist()
-        new_cols = cols[0:4] + cols[-3:] + cols[4:-3]
-        df_full = df_full[new_cols]
-        # print df_full
-        # print "multiplier:", df_full['multiplier'][df_full.index[-1]]
         
-        # convert wk_no back to something to work with
-        # df_full['week_starting'] = df_full.index.map(self.get_date_from_yearweek)
-        # df_full = df_full.set_index('week_starting')
+        # this is unclear what the order will be -- not clear at all what the order will be
+        new_cols = cols[0:4] + cols[-3:] + cols[4:-3]
+
+        df_full = df_full[new_cols]
         df_full = df_full.reindex(df_full.index.rename('week_starting'))
+
         return df_full
     
 if __name__ == "__main__":
