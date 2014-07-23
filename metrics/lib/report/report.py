@@ -14,10 +14,13 @@ from link import lnk
 from tornado.options import define
 from tornado.options import options
 from tornado.options import parse_command_line
+import tornado.web
 
 from utils import retry
 from utils import local_now
 from utils import convert_datetime
+from handlers.reporting import ReportingBase
+from lib.helpers import decorators
 
 from request_json_forms import DOMAIN_JSON_FORM
 from request_json_forms import ADVERTISER_JSON_FORM
@@ -214,6 +217,19 @@ def _get_forms(group,
             ADVERTISER_DOMAIN_CAMPAIGN_JSON_FORM)
     form = form % ( (start_date, end_date) )
     return form
+
+class ReportDomain(ReportingBase):
+
+    @tornado.web.authenticated
+    @decorators.formattable
+    def get(self):
+
+        pass
+
+        def default(self, data):
+            pass
+
+        yield default, (data,)
 
 
 def main():
