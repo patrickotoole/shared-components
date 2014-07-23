@@ -131,9 +131,6 @@ def _sort_df_by_cpa(df):
     return df
 
 def _create_csv(text, path):
-    """
-    convert text to csv
-    """
     with open(path, 'w') as f:
         f.write(text)
     return path
@@ -217,15 +214,18 @@ def get_report(group=DOMAIN,
 
     if path:
         df = pd.read_csv(path)
+
     else:
         dates = _get_start_and_end_date(end_date, days)
-        start_date, end_date = dates.get('start_date'), dates.get('end_date')
+        start_date, end_date = dates.get('start'), dates.get('end')
+        logging.info("getting data from date: %s -- %s." % (start_date, end_date))
 
         request_form = _get_forms(group=group, start_date=start_date, end_date=end_date)
         _id = _get_report_id(request_form)
         url = _get_report_url(_id)
         resp = _get_report_resp(url)
         df = _create_df_from_resp(resp)
+
         if act:
             path = _get_path(group)
             _create_csv(resp, path)
@@ -327,8 +327,6 @@ def main():
     act = options.act
     days = options.days
     end_date = options.end
-
-    logging.info("getting data from %s -- %s." % (start_date, end_date))
     path = options.path
 
     if options.runserver:
