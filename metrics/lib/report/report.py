@@ -10,7 +10,6 @@ import StringIO
 
 from pprint import pprint
 import pandas as pd
-
 from link import lnk
 from tornado.options import define
 from tornado.options import options
@@ -25,6 +24,7 @@ from request_json_forms import ADVERTISER_JSON_FORM
 from request_json_forms import CAMPAIGN_JSON_FORM
 from request_json_forms import ADVERTISER_DOMAIN_JSON_FORM
 from request_json_forms import ADVERTISER_DOMAIN_CAMPAIGN_JSON_FORM
+
 
 THRESHOLD = 7 #dollar
 NUM_TRIES = 10
@@ -159,7 +159,7 @@ def _to_list(df, group):
     results = zip(*results)
     return [tuple(headers)] + results
 
-def get_report(form, group,
+def get_report(form=DOMAIN_JSON_FORM, group=DOMAIN,
         campaign=None,
         advertiser=None,
         limit=LIMIT,
@@ -269,7 +269,7 @@ def main():
             end_date=end_date,
             )
     path = options.path
-    result = get_report(form, group,
+    result = get_report(form=form, group=group,
             campaign=options.campaign,
             advertiser=options.advertiser,
             limit=options.limit,
