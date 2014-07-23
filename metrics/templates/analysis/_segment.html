@@ -10,6 +10,8 @@
 <script>
 $(document).ready( function () {
     $('.dataframe').dataTable( {
+        "pageLength": 20,
+        "order": [ 1, 'asc' ],
         "dom": 'T<"clear">lfrtip',
         "tableTools": {
             "sSwfPath": "/static/copy_csv_xls_pdf.swf"

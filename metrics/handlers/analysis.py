@@ -62,6 +62,8 @@ class AnalysisHandler(BaseHandler):
                                                                          num_imps, 
                                                                          num_users 
                                                                      FROM agg_pop_domains''']))
+
+            print segment_query
             population_df['percent_imps'] = population_df.num_users.astype(float) / sum(population_df.num_users.astype(float))
             population_domains = population_df.set_index("domain")
 
@@ -69,11 +71,12 @@ class AnalysisHandler(BaseHandler):
             segment_domains = segment_df.set_index("domain")
             segment_domains.insert(0, 'weighted_imps',(segment_domains.percent_imps - population_domains.percent_imps).order(ascending=False))
             segment_domains = pd.DataFrame(segment_domains).dropna()
-            segment_domains.insert(0, 'weighted_rank', range(1, len(segment_domains) + 1))
+            segment_domains.insert(0, 'weighted_rank (by user count)', range(1, len(segment_domains) + 1))
             segment_domains.insert(0, "domain", segment_domains.index.tolist())
             segment_domains.reset_index(drop=True, inplace=True)
+            del segment_domains['weighted_imps']
+            del segment_domains['percent_imps']
             result_data = segment_domains
-
         else:
             result_data = segment_df
         
