@@ -35,6 +35,10 @@ from request_json_forms import ADVERTISER_DOMAIN_CAMPAIGN_JSON_FORM
 "media cost under this amount is truncated"
 THRESHOLD = 7
 
+"metrics"
+WORST = 'worst'
+BEST = 'best'
+
 NUM_TRIES = 10
 LIMIT = 10
 SLEEP = 1
@@ -55,6 +59,7 @@ CUR_DIR = os.path.dirname(__file__)
 TYPE = 'network_analytics'
 CONSOLE = None
 
+COST_EFFICIENCY = 'cost_efficiency'
 DOMAIN = 'site_domain'
 BOOKED_REV = 'booked_revenue'
 PC_CONVS = 'post_click_convs'
@@ -83,23 +88,20 @@ def _get_or_create_console():
     global CONSOLE
     if CONSOLE:
         return CONSOLE
+    console = lnk.api.console
     logging.info("created a api console")
-    c = lnk.api.console
-    CONSOLE = c
-    return c
+    CONSOLE = console
+    return console
 
 @retry(num_retries=NUM_TRIES,
        sleep_interval=SLEEP,
-       retry_log_prefix='retying to connect to api')
+       retry_log_prefix='reconnecting and get refresh response')
 def _get_resp(url, method='get', forms=None):
     c = _get_or_create_console()
     if method == 'get':
         resp = c.get(url)
     else:
         resp = c.post(url, forms)
-    error = resp.get('response').get('error')
-    if error:
-        raise(ValueError(error))
     return resp
 
 def _truncate(df, threshold):
@@ -116,7 +118,7 @@ def _convert_inf_cpa(df):
     df = pd.concat([inf_cpas, non_inf_cpas])
     return df
 
-def _sort_df_by_cpa(df):
+def _sort_df_by_cpa(df, metrics=WORST):
     """
     given pandas frame, sort them by cpa or media cost if there is no convertions.
     """
@@ -124,10 +126,17 @@ def _sort_df_by_cpa(df):
     df['cpa'] = df[MEDIA_COST] / (df['convs'] + DAMPING_POINT)
     df_no_convs = df[df['convs'] == 0]
     df_have_convs = df[df['convs'] != 0]
-    df_no_convs = df_no_convs.sort('media_cost', ascending=False)
-    df_have_convs = df_have_convs.sort('cpa', ascending=False)
-    df = pd.concat([df_no_convs, df_have_convs])
-    df = df.reset_index(drop=True)
+
+    if metrics == WORST:
+        df_no_convs = df_no_convs.sort('media_cost', ascending=False)
+        df_have_convs = df_have_convs.sort('cpa', ascending=False)
+        df = pd.concat([df_no_convs, df_have_convs])
+        df = df.reset_index(drop=True)
+    else:
+        #sort by cost/revenue for now
+        df[COST_EFFICIENCY] = df[MEDIA_COST] / df[BOOKED_REV]
+        df = df[df[BOOKED_REV] > 0]
+        df = df.sort(COST_EFFICIENCY)
     return df
 
 def _create_csv(text, path):
@@ -141,7 +150,8 @@ def _create_df_from_resp(resp):
 
 @retry(num_retries=NUM_TRIES,
        sleep_interval=SLEEP,
-       retry_log_prefix='no report id detected, reconnecting')
+       retry_log_prefix='no report id detected, reconnecting',
+       )
 def _get_report_id(request_json_form):
     url = '/report?'
     resp = _get_resp(url, method='post', forms=request_json_form)
@@ -151,6 +161,10 @@ def _get_report_id(request_json_form):
     assert report_id
     return report_id
 
+@retry(num_retries=NUM_TRIES,
+       sleep_interval=SLEEP,
+       retry_log_prefix='retrying getting url',
+       )
 def _get_report_url(report_id):
     #have to get the reponse for other function to work
     url = '/report?id={report_id}'.format(report_id=report_id)
@@ -160,6 +174,10 @@ def _get_report_url(report_id):
     logging.info("report url is: %s" % url)
     return url
 
+@retry(num_retries=NUM_TRIES,
+       sleep_interval=SLEEP,
+       retry_log_prefix='retrying getting resp',
+       )
 def _get_report_resp(url):
     """
     Given a url, return csv fmt file?
@@ -201,6 +219,7 @@ def get_report(group=DOMAIN,
         end_date=None,
         cache=False,
         days=1,
+        metrics=WORST,
         ):
     """
     form: json request form
@@ -235,7 +254,7 @@ def get_report(group=DOMAIN,
     if advertiser:
         df = _specify_field(df, 'advertiser', advertiser)
 
-    df = _sort_df_by_cpa(df)
+    df = _sort_df_by_cpa(df, metrics=metrics)
     df = _convert_inf_cpa(df)
     truncated_df = _truncate(df, threshold=threshold)
     return truncated_df[:limit]
@@ -315,12 +334,12 @@ def main():
             default=1,
             )
     define('end',
-            help='end date, examples: 2014-07-15 00:00:00',
+            help='end date, examples: 2014-07-15',
             )
     define("runserver", type=bool, default=False)
     define("port", default=8081, help="run on the given port", type=int)
     define("cache", type=bool, default=False, help="use cached csv file or api data")
-
+    define("metrics", type=str, default=WORST)
 
     parse_command_line()
     group = options.group
@@ -348,6 +367,7 @@ def main():
                 cache=options.cache,
                 end_date=end_date,
                 days=days,
+                metrics=options.metrics,
                 )
         pprint(result)
 
