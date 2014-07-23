@@ -126,9 +126,6 @@ def _create_df_from_resp(text):
     return df
 
 def _get_report_id(json_form):
-    """
-    json_form sample: u'{"report":{"special_pixel_reporting":false,"report_type":"attributed_conversions","timezone":"UTC","report_interval":"yesterday","filters":[{"pixel_id":["203037"]},{"buyer_member_id":"2024"},{"advertiser_id":"250058"},{"imp_type_id":{"operator":"!=","value":6}}],"columns":["pixel_id","pixel_name","line_item_id","line_item_name","campaign_id","campaign_name","creative_id","creative_name","post_click_or_post_view_conv","order_id","user_id","auction_id","external_data","imp_time","datetime"],"row_per":["pixel_id","pixel_name","line_item_id","campaign_id","creative_id","post_click_or_post_view_conv","order_id","user_id"],"pivot_report":false,"fixed_columns":[],"show_usd_currency":false,"orders":["pixel_id","pixel_name","line_item_id","line_item_name","campaign_id","campaign_name","creative_id","creative_name","post_click_or_post_view_conv","order_id","user_id","auction_id","external_data","imp_time","datetime"],"ui_columns":["pixel_id","pixel_name","line_item_id","line_item_name","campaign_id","campaign_name","creative_id","creative_name","post_click_or_post_view_conv","order_id","user_id","auction_id","external_data","imp_time","datetime"],"filter_objects":{"pixels":[{"id":203037}]}}}'
-    """
     url = '/report?'
     resp = _get_resp(url, method='post', forms=json_form)
     json_ = resp.json
@@ -280,7 +277,7 @@ def main():
             start_date=start_date,
             end_date=end_date,
             )
-    path = options.path or _get_path(group)
+    path = options.path
     result = get_report(form, group,
             campaign=options.campaign,
             advertiser=options.advertiser,
