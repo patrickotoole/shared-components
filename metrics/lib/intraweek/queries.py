@@ -12,6 +12,18 @@ RECENT_SPEND = """
     group by 1,2 order by 1 asc;
 """
 
+DAILY_SPEND = """
+    select
+         date(date_add(date,interval -4 hour)) as date,
+         external_advertiser_id,
+         sum(media_cost) as Media_Cost,
+         sum(media_cost * cpm_multiplier) as charged_client
+    from v3_reporting
+    where
+         active=1 and deleted=0     
+    group by 1,2 order by 1 asc;
+    """
+
 BUDGET = "select external_advertiser_id, budget, id from insertion_order where deleted = 0"
 ADVERTISER_NAME = "select external_advertiser_id, advertiser_name from advertiser where deleted = 0"
 IO_DATES = """

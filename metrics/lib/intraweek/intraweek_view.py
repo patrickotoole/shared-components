@@ -102,9 +102,42 @@ class IntraWeekView(IntraWeekTable):
 
         self.days_into_campaign = self.get_days_into_campaign(self.dates, advertiser_id)
         self.proposed_campaign_length = self.get_proposed_campaign_length(self.dates, advertiser_id)
-        self.current_start_date = self.get_current_start_date(self.dates, advertiser_id)
+        # self.current_start_date = self.get_current_start_date(self.dates, advertiser_id)
         self.end_date_proposed = self.get_end_date_proposed(self.dates, advertiser_id)
         self.dollars_per_day_last_sunday = self.get_average_spent_twoweeks(advertiser_id)    
+ 
+        start_io = budget_tuple[0] - budget_tuple[1]
+        self.current_start_date = self.get_actual_start_date(advertiser_id, start_io)
+
+    def set_dollars_per_day(self):
+        # assign dollars_per_day spent, as long as days_into_campaign is valid
+        if self.days_into_campaign != 0:
+          self.dollars_per_day = self.current_spent / self.days_into_campaign
+        else:
+          self.dollars_per_day = 0
+
+    def set_expected_campaign_length(self):
+        # use dollars_per_day (if valid) to determine expected_campaign_length
+        if self.dollars_per_day != 0:
+          self.expected_campaign_length = self.current_budget / self.dollars_per_day
+        else:
+          self.expected_campaign_length = 0
+ 
+    def set_shouldve_spent(self):
+        if self.shouldve_spent > self.current_budget:
+          self.shouldve_spent = self.current_budget
+        elif self.proposed_campaign_length != 0 and self.days_into_campaign != 0:
+          self.shouldve_spent = float(self.current_budget) / self.proposed_campaign_length * self.days_into_campaign
+        else:
+          self.shouldve_spent = float(0)
+
+    def set_to_spend_per_day(self):
+        if (self.proposed_campaign_length - self.days_into_campaign) != 0:
+          self.to_spend_per_day = self.current_remaining / (self.proposed_campaign_length - self.days_into_campaign)
+          if (self.to_spend_per_day < 0): # expired campaign
+            self.to_spend_per_day = 0
+        else:
+          self.to_spend_per_day = 0
  
     def transform_columns(self):
 
@@ -112,7 +145,7 @@ class IntraWeekView(IntraWeekTable):
         ## RICK: lets define local variables for things what we will reuse
         ## alot within the function
         ## ex. spend = self.current_spent
-        ##
+        ## VL - nothing seems to be heavily overused right now
 
         self.dollars_per_day = self.current_spent / self.days_into_campaign
         self.expected_campaign_length = self.current_budget / self.dollars_per_day
@@ -125,86 +158,40 @@ class IntraWeekView(IntraWeekTable):
         ## what the value is.
         ##
         ## Note: that the functions don't necessarily need to be part of the class
-        ##
+        ## VL - something like set_date_info? seems like this is just "inlining" 
 
-        if self.days_into_campaign != 0:
-          self.dollars_per_day = self.current_spent / self.days_into_campaign
-        else:
-          self.dollars_per_day = 0
-
-        if self.dollars_per_day != 0:
-          self.expected_campaign_length = self.current_budget / self.dollars_per_day
-        else:
-          self.expected_campaign_length = 0
-
-        if self.proposed_campaign_length != 0 and self.days_into_campaign != 0:
-          self.shouldve_spent = float(self.current_budget) / self.proposed_campaign_length * self.days_into_campaign
-        else:
-          self.shouldve_spent = float(0)        
-
-
-        if (self.shouldve_spent > self.current_budget):
-          self.shouldve_spent = self.current_budget
-
-        if (self.proposed_campaign_length - self.days_into_campaign) != 0:
-          self.to_spend_per_day = self.current_remaining / (self.proposed_campaign_length - self.days_into_campaign)
-          if (self.to_spend_per_day < 0): # expired campaign
-            self.to_spend_per_day = 0
-        else:
-          self.to_spend_per_day = 0
-        if (self.to_spend_per_day == float('inf')):
-          self.to_spend_per_day = 0
+        self.set_dollars_per_day()
+        self.set_expected_campaign_length()
+        self.set_shouldve_spent()
+        self.set_to_spend_per_day()
+        
         self.actual_days_left = (self.proposed_campaign_length - self.days_into_campaign)
     
     def display_advinfo(self, advertiser_id):
-        ##
-        ## RICK: clean this up with two tuples and the dict(zip())
-        ## probably want to define the columns as a variable ADV_INFO_COLUMNS
-        ## and reuse this columns list multiple times
-        ## ex. dict(zip(columns,values))
-        ##
+       
+        # populate dataframe based on whether there is a valid IO current going on 
+        columns = ['advertiser', 'id', 'start_date', 'end_date', 'current_budget',
+                    'spent', 'remaining', 'expected_days_left', 'dollars_per_day', 
+                    'dollars_per_day_last_sunday', 'monthly_pacing', 'expected_length',
+                    'expected_end_date', 'proposed_end_date_length', 'shouldve_spent_by_now',
+                    'to_spend_per_day', 'actual_days_left', 'yesterday_spent']
+        valid_data = [[self.advertiser_name], [advertiser_id], [self.current_start_date],
+                      [self.end_date_proposed], [self.current_budget], [self.current_spent],
+                      [self.current_remaining], [int(self.expected_campaign_length) - self.days_into_campaign],
+                      [self.dollars_per_day], [self.dollars_per_day_last_sunday], 
+                      [30 * self.dollars_per_day_last_sunday], [self.expected_campaign_length],
+                      [DateOffset(days=int(self.expected_campaign_length)) + self.current_start_date],
+                      [self.proposed_campaign_length], [self.shouldve_spent], [self.to_spend_per_day],
+                      [self.actual_days_left], [self.yesterday_spent]]
+        invalid_data = [[self.advertiser_name], [advertiser_id], [self.current_start_date],
+                      [self.end_date_proposed], [self.current_budget], [self.current_spent],
+                      [self.current_remaining], [0],[0], [0], [0], [0], [self.current_start_date], 
+                      [0], [0], [0], [0], [self.yesterday_spent]]
 
         if self.campaign_id == self.perceived_campaign_id:
-          map = { 'advertiser': [self.advertiser_name],
-                  'id': [advertiser_id],
-                  'start_date': [self.current_start_date],
-                  'end_date': [self.end_date_proposed],
-                  'current_budget': [self.current_budget],
-                  'spent': [self.current_spent],
-                  'remaining': [self.current_remaining],
-                  # 'days_into_campaign': [days_into_campaign],
-                  'expected_days_left': [int(self.expected_campaign_length) - self.days_into_campaign],
-                  'dollars_per_day': [self.dollars_per_day],
-                  'dollars_per_day_last_sunday': [self.dollars_per_day_last_sunday],
-                  'monthly_pacing': [30 * self.dollars_per_day_last_sunday],
-                  'expected_length': [self.expected_campaign_length],
-                  'expected_end_date': [DateOffset(days=int(self.expected_campaign_length)) + self.current_start_date],
-                  'proposed_end_date_length': [self.proposed_campaign_length],
-                  'shouldve_spent_by_now': [self.shouldve_spent],
-                  'to_spend_per_day': [self.to_spend_per_day],
-                  'actual_days_left': [self.actual_days_left],
-                  'yesterday_spent': [self.yesterday_spent]
-                  }
+          map = dict(zip(columns, valid_data)) 
         else:
-          map = { 'advertiser': [self.advertiser_name],
-                  'id': [advertiser_id],
-                  'start_date': [self.current_start_date],
-                  'end_date': [self.current_start_date],
-                  'current_budget': [self.current_budget],
-                  'spent': [self.current_spent],
-                  'remaining': [self.current_remaining],
-                  'expected_days_left': [0],
-                  'dollars_per_day': [0],
-                  'dollars_per_day_last_sunday': [0],
-                  'monthly_pacing': [0],
-                  'expected_length': [0],
-                  'expected_end_date': [self.current_start_date],
-                  'proposed_end_date_length': [0],
-                  'shouldve_spent_by_now': [0],
-                  'to_spend_per_day': [0],
-                  'actual_days_left': [0],
-                  'yesterday_spent': [self.yesterday_spent]
-                  }
+          map = dict(zip(columns, invalid_data))
         advertiser_df = DataFrame(map)
         advertiser_df['pacing'] = advertiser_df.apply(self.determine_pacing, axis=1)
         return advertiser_df[['advertiser',
