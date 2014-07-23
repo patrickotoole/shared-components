@@ -18,8 +18,8 @@ class ReportTestCase(unittest.TestCase):
         self.assertEqual(expected_url, url)
 
     def test_get_report_resp(self):
-        start_date='2014-07-14 00:00:00',
-        end_date='2014-07-15 00:00:00',
+        start_date='2014-07-14 00:00:00'
+        end_date='2014-07-15 00:00:00'
         result_from_cached_csv_file = get_report(cache=True)
         result_from_api = get_report(start_date=start_date, end_date=end_date)
         self.assertEqual(result_from_api, result_from_cached_csv_file)
