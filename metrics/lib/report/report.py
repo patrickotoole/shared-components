@@ -15,12 +15,13 @@ from tornado.options import define
 from tornado.options import options
 from tornado.options import parse_command_line
 import tornado.web
+import tornado.httpserver
 
 from utils import retry
 from utils import local_now
 from utils import convert_datetime
-from utils import kwargs_from_url
-from handlers.reporting import ReportingBase
+from utils import parse_params
+from handlers.reporting import ReportingHandler
 from lib.helpers import decorators
 
 from request_json_forms import DOMAIN_JSON_FORM
@@ -30,11 +31,23 @@ from request_json_forms import ADVERTISER_DOMAIN_JSON_FORM
 from request_json_forms import ADVERTISER_DOMAIN_CAMPAIGN_JSON_FORM
 
 
-THRESHOLD = 7 #dollar
+"media cost under this amount is truncated"
+THRESHOLD = 7
+
 NUM_TRIES = 10
 LIMIT = 10
 SLEEP = 1
-NDIGITS = 2  #ndigit to round
+
+"ndigit to round"
+NDIGITS = 2
+
+"set it to avoid, no division error or Inf values"
+DAMPING_POINT = 0.
+
+"value of inf cpas should be"
+CPA_INF = 0
+
+MILLION = 1000000
 NO_CONVS = None
 CUR_DIR = os.path.dirname(__file__)
 
@@ -89,7 +102,14 @@ def _truncate(df, threshold):
     """
     cut out certain data there is less relevant.
     """
-    df = df[df[MEDIA_COST] > threshold]
+    df = df[df[MEDIA_COST] > int(threshold)]
+    return df
+
+def _convert_inf_cpa(df):
+    inf_cpas = df[df['cpa'] > MILLION]
+    non_inf_cpas = df[df['cpa'] < MILLION]
+    inf_cpas['cpa'] = CPA_INF
+    df = pd.concat([inf_cpas, non_inf_cpas])
     return df
 
 def _sort_df_by_cpa(df):
@@ -97,7 +117,7 @@ def _sort_df_by_cpa(df):
     given pandas frame, sort them by cpa or media cost if there is no convertions.
     """
     df['convs'] = df[PC_CONVS] + df[PV_CONVS]
-    df['cpa'] = df[MEDIA_COST].astype(float) / df['convs'].astype(float)
+    df['cpa'] = df[MEDIA_COST] / (df['convs'] + DAMPING_POINT)
     df_no_convs = df[df['convs'] == 0]
     df_have_convs = df[df['convs'] != 0]
     df_no_convs = df_no_convs.sort('media_cost', ascending=False)
@@ -120,6 +140,9 @@ def _create_df_from_resp(text):
     df = pd.read_csv(io.getvalue())
     return df
 
+@retry(num_retries=NUM_TRIES,
+       sleep_interval=SLEEP,
+       retry_log_prefix='no report id detected, reconnecting')
 def _get_report_id(json_form):
     url = '/report?'
     resp = _get_resp(url, method='post', forms=json_form)
@@ -193,6 +216,7 @@ def get_report(form=DOMAIN_JSON_FORM, group=DOMAIN,
         df = _specify_field(df, 'advertiser', advertiser)
 
     sorted_df = _sort_df_by_cpa(df)
+    sorted_df = _convert_inf_cpa(sorted_df)
     truncated_df = _truncate(sorted_df, threshold=threshold)
     return truncated_df[:limit]
 
@@ -218,16 +242,28 @@ def _get_forms(group,
     form = form % ( (start_date, end_date) )
     return form
 
-class ReportDomain(ReportingBase):
+class ReportDomain(ReportingHandler):
 
-    @tornado.web.authenticated
+    #@tornado.web.authenticated
     @decorators.formattable
-    def get(self, args):
-        kwargs = kwargs_from_url(args)
+    def get(self):
+        url = self.request.uri
+        kwargs = parse_params(url)
+        logging.info("kwargs: %s" % kwargs)
+
+        if 'format' in kwargs:
+            kwargs.pop('format')
+
+        #get local csv file for testing
+        if 'path' in kwargs:
+            kwargs['path'] = _get_path(kwargs['path'])
+
+        kwargs = dict((k, int(v) if v.isdigit() else v)
+                      for k, v in kwargs.items())
         data = get_report(**kwargs)
 
         def default(self, data):
-            self.render("reporting/_report_domain.html", data=data)
+            self.render("reporting_domain/_report_domain.html", data=data)
 
         yield default, (data,)
 
@@ -265,6 +301,8 @@ def main():
     define('end',
             help='end date, examples: 2014-07-15 00:00:00',
             )
+    define("runserver", type=bool, default=False)
+    define("port", default=8081, help="run on the given port", type=int)
 
 
     parse_command_line()
@@ -276,7 +314,6 @@ def main():
     if not end_date:
         end_date = str(local_now())
     days = options.days
-    #FIX ugly range to cut 2014-07-22 18:57:16.278066-04:00 to 2014-07-22 18:57:16
     start_date = str(convert_datetime(end_date[:19]) - timedelta(days=days))
 
     logging.info("getting data from %s -- %s." % (start_date, end_date))
@@ -285,18 +322,25 @@ def main():
             end_date=end_date,
             )
     path = options.path
-    result = get_report(form=form, group=group,
-            campaign=options.campaign,
-            advertiser=options.advertiser,
-            limit=options.limit,
-            threshold=options.threshold,
-            path=path,
-            act=act,
-            )
 
-    pprint(result)
+    if options.runserver:
+        app = tornado.web.Application([
+            (r'/reportdomain/*', ReportDomain, dict(db="",api="",hive="")),
+        ],debug=True)
 
-    #send_email(result)
+        server = tornado.httpserver.HTTPServer(app)
+        server.listen(options.port)
+        tornado.ioloop.IOLoop.instance().start()
+    else:
+        result = get_report(form=form, group=group,
+                campaign=options.campaign,
+                advertiser=options.advertiser,
+                limit=options.limit,
+                threshold=options.threshold,
+                path=path,
+                act=act,
+                )
+        pprint(result)
 
 if __name__ == '__main__':
     exit(main())
