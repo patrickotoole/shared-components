@@ -1,7 +1,7 @@
 import os
 from twisted.trial import unittest
 from twisted.test import proto_helpers
-from lib.report.report import _get_report_id, _get_report_url, get_report
+from lib.report.report import _get_report_id, _get_report_url, get_report, _to_list
 from lib.report.utils import local_now
 
 CUR_DIR = os.path.realpath(__file__)
@@ -13,13 +13,23 @@ class ReportTestCase(unittest.TestCase):
 
     def test_get_report_url(self):
         id_ = _get_report_id(TEST_JSON_REQUEST_FORM)
-        expected_url = '/report?id=' + id_
+        expected_url = 'report-download?id=' + id_
         url = _get_report_url(id_)
         self.assertEqual(expected_url, url)
 
     def test_get_report_resp(self):
-        start_date='2014-07-14 00:00:00'
-        end_date='2014-07-15 00:00:00'
-        result_from_cached_csv_file = get_report(cache=True)
-        result_from_api = get_report(start_date=start_date, end_date=end_date)
-        self.assertEqual(result_from_api, result_from_cached_csv_file)
+        """
+        python report.py --group=advertiser,site_domain --metrics=best --end=2014-07-01 --days=2 --act
+        """
+        end_date = '2014-07-01'
+        days = 2
+        metrics = 'best'
+        csv_path = os.path.join(CUR_DIR, 'test_csv_files/advertiser,site_domain.csv')
+        result_from_cached_csv_file = get_report(csv_path, metrics=metrics)
+        result_from_api = get_report(
+                group='advertiser,site_domain',
+                end_date=end_date,
+                days=days,
+                metrics=metrics,
+                )
+        self.assertEqual(result_from_api.to_dict(), result_from_cached_csv_file.to_dict())
