@@ -19,6 +19,7 @@ import tornado.web
 from utils import retry
 from utils import local_now
 from utils import convert_datetime
+from utils import kwargs_from_url
 from handlers.reporting import ReportingBase
 from lib.helpers import decorators
 
@@ -193,8 +194,7 @@ def get_report(form=DOMAIN_JSON_FORM, group=DOMAIN,
 
     sorted_df = _sort_df_by_cpa(df)
     truncated_df = _truncate(sorted_df, threshold=threshold)
-    results = _to_list(truncated_df, group)
-    return results[:limit]
+    return truncated_df[:limit]
 
 def _specify_field(df, field, value):
     """
@@ -222,12 +222,12 @@ class ReportDomain(ReportingBase):
 
     @tornado.web.authenticated
     @decorators.formattable
-    def get(self):
-
-        pass
+    def get(self, args):
+        kwargs = kwargs_from_url(args)
+        data = get_report(**kwargs)
 
         def default(self, data):
-            pass
+            self.render("reporting/_report_domain.html", data=data)
 
         yield default, (data,)
 
