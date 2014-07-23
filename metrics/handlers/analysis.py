@@ -59,11 +59,9 @@ class AnalysisHandler(BaseHandler):
                                                                     "set mapred.reduce.tasks=3",
                                                                     '''select 
                                                                          domain, 
-                                                                         sum(num_imps) AS num_imps, 
-                                                                         sum(num_unique_users) AS num_users 
-                                                                     FROM agg_domain_imps 
-                                                                     GROUP BY domain 
-                                                                     ORDER BY num_users DESC''']))
+                                                                         num_imps, 
+                                                                         num_users 
+                                                                     FROM agg_pop_domains''']))
             population_df['percent_imps'] = population_df.num_users.astype(float) / sum(population_df.num_users.astype(float))
             population_domains = population_df.set_index("domain")
 
