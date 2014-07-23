@@ -1,8 +1,8 @@
 import os
 from twisted.trial import unittest
 from twisted.test import proto_helpers
-from lib.report.report import *
-from lib.report.report.utils import local_now
+from lib.report.report import _get_report_id, _get_report_url, get_report
+from lib.report.utils import local_now
 
 CUR_DIR = os.path.realpath(__file__)
 
@@ -11,13 +11,13 @@ TEST_JSON_REQUEST_FORM = '{"report":{"special_pixel_reporting":false,"report_typ
 
 class ReportTestCase(unittest.TestCase):
 
-    def _test_get_report_url(self):
+    def test_get_report_url(self):
         id_ = _get_report_id(TEST_JSON_REQUEST_FORM)
         expected_url = '/report?id=' + id_
         url = _get_report_url(id_)
         self.assertEqual(expected_url, url)
 
-    def _test_get_report_resp(self):
+    def test_get_report_resp(self):
         start_date='2014-07-14 00:00:00',
         end_date='2014-07-15 00:00:00',
         result_from_cached_csv_file = get_report(cache=True)
