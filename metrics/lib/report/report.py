@@ -186,6 +186,14 @@ def _to_list(df, group):
     results = zip(*results)
     return [tuple(headers)] + results
 
+def _get_start_and_end_date(end, days=1):
+    if not end:
+        end = local_now()
+    if isinstance(end, str):
+        end = convert_datetime(end)
+    start = end - timedelta(days=days)
+    return dict(start=str(start), end=str(end))
+
 def get_report(group=DOMAIN,
         campaign=None,
         advertiser=None,
@@ -193,9 +201,9 @@ def get_report(group=DOMAIN,
         threshold=THRESHOLD,
         path=None,
         act=False,
-        start_date=None,
         end_date=None,
         cache=False,
+        days=1,
         ):
     """
     form: json request form
@@ -210,6 +218,9 @@ def get_report(group=DOMAIN,
     if path:
         df = pd.read_csv(path)
     else:
+        dates = _get_start_and_end_date(end_date, days)
+        start_date, end_date = dates.get('start_date'), dates.get('end_date')
+
         request_form = _get_forms(group=group, start_date=start_date, end_date=end_date)
         _id = _get_report_id(request_form)
         url = _get_report_url(_id)
@@ -317,11 +328,6 @@ def main():
     days = options.days
     end_date = options.end
 
-    if not end_date:
-        end_date = str(local_now())
-    days = options.days
-    start_date = str(convert_datetime(end_date[:19]) - timedelta(days=days))
-
     logging.info("getting data from %s -- %s." % (start_date, end_date))
     path = options.path
 
@@ -342,8 +348,8 @@ def main():
                 path=path,
                 act=act,
                 cache=options.cache,
-                start_date=start_date,
                 end_date=end_date,
+                days=days,
                 )
         pprint(result)
 
