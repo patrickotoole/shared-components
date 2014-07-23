@@ -1,14 +1,5 @@
 """
 report the least effective campins/advertiser/domain etc.
-
- Two of the most import element
- -- post_view/click_convs
- -- media_cost
-
- 1. Create the JSON-formatted report request
- 2. POST the request to the Reporting Service
- 3. Use the Report ID to retrieve the report data
- 4. If necessary, use the Lookup Service to map objects IDs to other relevant data, such as names, codes, and statuses
 """
 
 import logging
