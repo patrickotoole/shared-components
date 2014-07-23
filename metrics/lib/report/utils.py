@@ -12,21 +12,6 @@ TIME_FMTS = [
     DATE_FORMAT,
     ]
 
-def convert_datetime(date_str):
-    for f in TIME_FMTS:
-        try:
-            val = datetime.strptime(date_str, f)
-            return val
-        except Exception:
-            pass
-    raise ValueError("wrong time format")
-
-def local_now():
-    utc = pytz.timezone('UTC')
-    now = utc.localize(datetime.utcnow())
-    ny = pytz.timezone('America/New_York')
-    return now.astimezone(ny)
-
 class retry(object):
     """
     Converts with_retry into a decorator.
@@ -109,3 +94,20 @@ def with_retry(func, num_retries=1, validator=None,
                 time.sleep(interval)
             pass
     return None
+
+
+
+def convert_datetime(date_str):
+    for f in TIME_FMTS:
+        try:
+            val = datetime.strptime(date_str, f)
+            return val
+        except Exception:
+            pass
+    raise ValueError("wrong time format")
+
+def local_now():
+    utc = pytz.timezone('UTC')
+    now = utc.localize(datetime.utcnow())
+    ny = pytz.timezone('America/New_York')
+    return now.astimezone(ny)
