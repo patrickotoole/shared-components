@@ -6,7 +6,8 @@ import logging
 import os
 import re
 from datetime import timedelta
-import StringIO
+import io
+import urllib
 
 from pprint import pprint
 import pandas as pd
@@ -75,7 +76,7 @@ GROUPS = [
 REGEX = re.compile(r'\(.*?\)')
 
 def _get_path(name):
-    path = ('csv_file/%s_temp.csv' % name).lower()
+    path = ('csv_file/%s.csv' % name).lower()
     return os.path.join(CUR_DIR, path)
 
 def _get_or_create_console():
@@ -96,6 +97,9 @@ def _get_resp(url, method='get', forms=None):
         resp = c.get(url)
     else:
         resp = c.post(url, forms)
+    error = resp.get('response').get('error')
+    if error:
+        raise(ValueError(error))
     return resp
 
 def _truncate(df, threshold):
@@ -107,8 +111,8 @@ def _truncate(df, threshold):
 
 def _convert_inf_cpa(df):
     inf_cpas = df[df['cpa'] > MILLION]
-    non_inf_cpas = df[df['cpa'] < MILLION]
     inf_cpas['cpa'] = CPA_INF
+    non_inf_cpas = df[df['cpa'] < MILLION]
     df = pd.concat([inf_cpas, non_inf_cpas])
     return df
 
@@ -134,32 +138,28 @@ def _create_csv(text, path):
         f.write(text)
     return path
 
-def _create_df_from_resp(text):
-    io = StringIO.StringIO()
-    io.write(text)
-    df = pd.read_csv(io.getvalue())
+def _create_df_from_resp(resp):
+    df = pd.read_csv(io.StringIO(unicode(resp)))
     return df
 
 @retry(num_retries=NUM_TRIES,
        sleep_interval=SLEEP,
        retry_log_prefix='no report id detected, reconnecting')
-def _get_report_id(json_form):
+def _get_report_id(request_json_form):
     url = '/report?'
-    resp = _get_resp(url, method='post', forms=json_form)
+    resp = _get_resp(url, method='post', forms=request_json_form)
     json_ = resp.json
     report_id = json_.get('response').get('report_id')
     logging.info("Got report id: %s" % report_id)
+    assert report_id
     return report_id
 
-@retry(num_retries=NUM_TRIES,
-       sleep_interval=SLEEP,
-       retry_log_prefix='no url detected, reconnecting')
 def _get_report_url(report_id):
     #have to get the reponse for other function to work
     url = '/report?id={report_id}'.format(report_id=report_id)
     resp = _get_resp(url)
     url = resp.json.get('response').get('report').get('url')
-    assert(url)
+    assert url
     logging.info("report url is: %s" % url)
     return url
 
@@ -186,13 +186,16 @@ def _to_list(df, group):
     results = zip(*results)
     return [tuple(headers)] + results
 
-def get_report(form=DOMAIN_JSON_FORM, group=DOMAIN,
+def get_report(group=DOMAIN,
         campaign=None,
         advertiser=None,
         limit=LIMIT,
         threshold=THRESHOLD,
         path=None,
         act=False,
+        start_date=None,
+        end_date=None,
+        cache=False,
         ):
     """
     form: json request form
@@ -200,14 +203,20 @@ def get_report(form=DOMAIN_JSON_FORM, group=DOMAIN,
     path: path to csv file, for test.
     """
     logging.info("getting report for group: %s" % group)
+
+    if cache:
+        path = _get_path(group)
+
     if path:
         df = pd.read_csv(path)
     else:
-        _id = _get_report_id(form)
+        request_form = _get_forms(group=group, start_date=start_date, end_date=end_date)
+        _id = _get_report_id(request_form)
         url = _get_report_url(_id)
         resp = _get_report_resp(url)
         df = _create_df_from_resp(resp)
         if act:
+            path = _get_path(group)
             _create_csv(resp, path)
 
     if campaign:
@@ -215,9 +224,9 @@ def get_report(form=DOMAIN_JSON_FORM, group=DOMAIN,
     if advertiser:
         df = _specify_field(df, 'advertiser', advertiser)
 
-    sorted_df = _sort_df_by_cpa(df)
-    sorted_df = _convert_inf_cpa(sorted_df)
-    truncated_df = _truncate(sorted_df, threshold=threshold)
+    df = _sort_df_by_cpa(df)
+    df = _convert_inf_cpa(df)
+    truncated_df = _truncate(df, threshold=threshold)
     return truncated_df[:limit]
 
 def _specify_field(df, field, value):
@@ -230,7 +239,7 @@ def _specify_field(df, field, value):
 def send_email():
     pass
 
-def _get_forms(group,
+def _get_forms(group=None,
         start_date=None,
         end_date=None,
         ):
@@ -244,7 +253,7 @@ def _get_forms(group,
 
 class ReportDomain(ReportingHandler):
 
-    #@tornado.web.authenticated
+    @tornado.web.authenticated
     @decorators.formattable
     def get(self):
         url = self.request.uri
@@ -254,11 +263,7 @@ class ReportDomain(ReportingHandler):
         if 'format' in kwargs:
             kwargs.pop('format')
 
-        #get local csv file for testing
-        if 'path' in kwargs:
-            kwargs['path'] = _get_path(kwargs['path'])
-
-        kwargs = dict((k, int(v) if v.isdigit() else v)
+        kwargs = dict((k, int(v) if v.isdigit() else urllib.unquote(v))
                       for k, v in kwargs.items())
         data = get_report(**kwargs)
 
@@ -303,6 +308,7 @@ def main():
             )
     define("runserver", type=bool, default=False)
     define("port", default=8081, help="run on the given port", type=int)
+    define("cache", type=bool, default=False, help="use cached csv file or api data")
 
 
     parse_command_line()
@@ -317,10 +323,6 @@ def main():
     start_date = str(convert_datetime(end_date[:19]) - timedelta(days=days))
 
     logging.info("getting data from %s -- %s." % (start_date, end_date))
-    form = _get_forms(group,
-            start_date=start_date,
-            end_date=end_date,
-            )
     path = options.path
 
     if options.runserver:
@@ -332,13 +334,16 @@ def main():
         server.listen(options.port)
         tornado.ioloop.IOLoop.instance().start()
     else:
-        result = get_report(form=form, group=group,
+        result = get_report(group=group,
                 campaign=options.campaign,
                 advertiser=options.advertiser,
                 limit=options.limit,
                 threshold=options.threshold,
                 path=path,
                 act=act,
+                cache=options.cache,
+                start_date=start_date,
+                end_date=end_date,
                 )
         pprint(result)
 
