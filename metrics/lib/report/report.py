@@ -15,6 +15,7 @@ import logging
 import os
 import re
 from datetime import timedelta
+import StringIO
 
 from pprint import pprint
 import pandas as pd
@@ -118,6 +119,12 @@ def _create_csv(text, path):
         f.write(text)
     return path
 
+def _create_df_from_resp(text):
+    io = StringIO.StringIO()
+    io.write(text)
+    df = pd.read_csv(io.getvalue())
+    return df
+
 def _get_report_id(json_form):
     """
     json_form sample: u'{"report":{"special_pixel_reporting":false,"report_type":"attributed_conversions","timezone":"UTC","report_interval":"yesterday","filters":[{"pixel_id":["203037"]},{"buyer_member_id":"2024"},{"advertiser_id":"250058"},{"imp_type_id":{"operator":"!=","value":6}}],"columns":["pixel_id","pixel_name","line_item_id","line_item_name","campaign_id","campaign_name","creative_id","creative_name","post_click_or_post_view_conv","order_id","user_id","auction_id","external_data","imp_time","datetime"],"row_per":["pixel_id","pixel_name","line_item_id","campaign_id","creative_id","post_click_or_post_view_conv","order_id","user_id"],"pivot_report":false,"fixed_columns":[],"show_usd_currency":false,"orders":["pixel_id","pixel_name","line_item_id","line_item_name","campaign_id","campaign_name","creative_id","creative_name","post_click_or_post_view_conv","order_id","user_id","auction_id","external_data","imp_time","datetime"],"ui_columns":["pixel_id","pixel_name","line_item_id","line_item_name","campaign_id","campaign_name","creative_id","creative_name","post_click_or_post_view_conv","order_id","user_id","auction_id","external_data","imp_time","datetime"],"filter_objects":{"pixels":[{"id":203037}]}}}'
@@ -133,6 +140,7 @@ def _get_report_id(json_form):
        sleep_interval=SLEEP,
        retry_log_prefix='no url detected, reconnecting')
 def _get_report_url(report_id):
+    #have to get the reponse for other function to work
     url = '/report?id={report_id}'.format(report_id=report_id)
     resp = _get_resp(url)
     url = resp.json.get('response').get('report').get('url')
@@ -140,7 +148,7 @@ def _get_report_url(report_id):
     logging.info("report url is: %s" % url)
     return url
 
-def _download_report(url):
+def _get_report_resp(url):
     """
     Given a url, return csv fmt file?
     """
@@ -163,25 +171,29 @@ def _to_list(df, group):
     results = zip(*results)
     return [tuple(headers)] + results
 
-def get_report(form, path, group,
+def get_report(form, group,
         campaign=None,
         advertiser=None,
-        act=False,
         limit=LIMIT,
         threshold=THRESHOLD,
+        path=None,
+        act=False,
         ):
     """
     form: json request form
     group: domain | campaign | advertiser
+    path: path to csv file, for test.
     """
     logging.info("getting report for group: %s" % group)
-    if act:
+    if path:
+        df = pd.read_csv(path)
+    else:
         _id = _get_report_id(form)
         url = _get_report_url(_id)
-        text = _download_report(url)
-        _create_csv(text, path)
-
-    df = pd.read_csv(path)
+        resp = _get_report_resp(url)
+        df = _create_df_from_resp(resp)
+        if act:
+            _create_csv(resp, path)
 
     if campaign:
         df = _specify_field(df, 'campaign', campaign)
@@ -269,12 +281,13 @@ def main():
             end_date=end_date,
             )
     path = options.path or _get_path(group)
-    result = get_report(form, path, group,
+    result = get_report(form, group,
             campaign=options.campaign,
             advertiser=options.advertiser,
-            act=act,
             limit=options.limit,
             threshold=options.threshold,
+            path=path,
+            act=act,
             )
 
     pprint(result)
