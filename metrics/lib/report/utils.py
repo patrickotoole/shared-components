@@ -4,6 +4,7 @@ import logging
 import random
 from datetime import datetime
 import pytz
+import urlparse
 
 DATE_TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 DATE_FORMAT = '%Y-%m-%d'
@@ -111,3 +112,24 @@ def local_now():
     now = utc.localize(datetime.utcnow())
     ny = pytz.timezone('America/New_York')
     return now.astimezone(ny)
+
+def parse_params(url):
+    """
+    Given a url, return params as dict
+
+    @param url: str
+    @return dict(str,str)
+    """
+    if not url:
+        return {}
+    url_parts = list(urlparse.urlparse(url))
+
+    def _get_key_val(segment):
+        key_val = segment.split('=')
+        if len(key_val) == 1:
+            return (key_val[0], '')
+        return key_val
+
+    params = (dict([_get_key_val(part) for part in url_parts[4].split('&')]) if
+             url_parts[4] else {})
+    return params
