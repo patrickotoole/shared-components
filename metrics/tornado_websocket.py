@@ -10,7 +10,7 @@ from twisted.internet import reactor, protocol, defer, threads
 from twisted.protocols import basic
 from tornado.options import define, options, parse_command_line
 
-from handlers import streaming, reporting, user
+from handlers import streaming, reporting, user, analysis
 
 import handlers.admin as admin
 
@@ -71,8 +71,6 @@ view_schema = ["auction_id", "uid",
 track_factory = QSBufferedSocketFactory(track_buffer,pixel_parsers)
 view_factory = SchemaBufferedSocketFactory(view_buffer,view_schema,pixel_parsers)
 
-
-
 def sig_handler(sig, frame):
     logging.warning('Caught signal: %s', sig)
     tornado.ioloop.IOLoop.instance().add_callback_from_signal(shutdown)
@@ -98,8 +96,6 @@ def shutdown():
             io_loop.stop()
             logging.info('Shutdown')
     stop_loop()
-
-
 
 old_handlers = [
     (r'/debug', admin.lookback.DebugHandler), 
@@ -134,22 +130,27 @@ admin_reporting = [
 
 reporting = [
     (r'/reporting.*',reporting.ReportingHandler, dict(db=db,api=api,hive=hive)),
-    (r'/login.*', user.LoginHandler, dict(db=db)),
-    (r'/', user.LoginHandler, dict(db=db)),
-    (r'/signup.*', user.SignupHandler, dict(db=db))
+    (r'/login.*', user.LoginHandler, dict(db=db))
+]
+
+pixel_analysis = [
+    (r'/analysis.*', analysis.AnalysisHandler, dict(db=db,api=api,hive=hive))
+]
+
+static = [
+    (r'/static/(.*)', tornado.web.StaticFileHandler, {'path': "static"})
 ]
 
 
 dirname = os.path.dirname(os.path.realpath(__file__))
 app = tornado.web.Application(
-    streaming + admin_scripts + admin_reporting + reporting,
+    streaming + admin_scripts + admin_reporting + reporting + pixel_analysis + static,
     template_path= dirname + "/templates",
     db=lnk.dbs.mysql,
     debug=True,
     cookie_secret="rickotoole",
     login_url="/login"
 )
-
 
 if __name__ == '__main__':
     parse_command_line()
