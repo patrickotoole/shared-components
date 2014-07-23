@@ -1,7 +1,10 @@
 DATE_INFO = "select STR_TO_DATE('%s', '%s')"
 PIXEL_INFO = "select pixel_display_name, pixel_id from advertiser_pixel where deleted = 0"
-RECENT_SPEND = """select date(date) as wk_no,external_advertiser_id,
-    sum(media_cost) as Media_Cost 
+RECENT_SPEND = """
+    select 
+        date(date) as wk_no,
+        external_advertiser_id,
+        sum(media_cost) as Media_Cost
     from v3_reporting 
     where 
         date(date_add(date,interval -4 hour)) = subdate(current_date,1) 

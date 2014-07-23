@@ -137,8 +137,9 @@ admin_reporting = [
     (r'/admin/websocket', admin.streaming.AdminStreamingHandler, 
       dict(db=db,buffers={"track":track_buffer, "view":view_buffer})
     ),
-    (r'/viewable.*',admin.reporting.ViewabilityHandler, dict(db=db,api=api,hive=hive))
-    #(r'/target_list.*',admin.reporting.TargetListHandler)
+    (r'/viewable.*',admin.reporting.ViewabilityHandler, dict(db=db,api=api,hive=hive)),
+    #(r'/target_list.*',admin.reporting.TargetListHandler),
+    (r'/intraweek.*',admin.scripts.IntraWeekHandler, dict(db=db))
 ]
 
 reporting = [
