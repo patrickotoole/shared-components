@@ -238,8 +238,8 @@ def get_report_helper(group=DOMAIN,
         metrics=WORST,
         ):
     _timedelta = timedelta(days=days)
-    dates = get_start_and_end_date(end_date, _timedelta)
-    start_date, end_date = dates.get('start'), dates.get('end')
+    dates = get_start_and_end_date(end_date=end_date, _timedelta=_timedelta)
+    start_date, end_date = dates.get('start_date'), dates.get('end_date')
     df = _get_report_helper(group=DOMAIN,
         path=path,
         act=act,

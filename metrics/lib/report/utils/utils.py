@@ -112,13 +112,13 @@ def local_now():
     ny = pytz.timezone('America/New_York')
     return now.astimezone(ny)
 
-def get_start_and_end_date(end, _timedelta):
-    if not end:
-        end = local_now()
-    if isinstance(end, str):
-        end = convert_datetime(end)
-    start = end - _timedelta
-    return dict(start=str(start), end=str(end))
+def get_start_and_end_date(end_date=None, _timedelta=None):
+    if not end_date:
+        end_date = local_now()
+    if isinstance(end_date, str):
+        end_date = convert_datetime(end_date)
+    start_date = end_date - _timedelta
+    return dict(start_date=str(start_date), end_date=str(end_date))
 
 
 def parse_params(url):
