@@ -1,12 +1,15 @@
 import sys
 import mock
 import os
-sys.path.append("../")
+from os.path import dirname, realpath
+sys.path.append(dirname(realpath(__file__)) + "/../../..")
+
+
 
 import mock
 import unittest
 import pandas
-from metrics.lib.intraweek.intraweek_update import *
+from lib.intraweek.intraweek_update import *
 from link import lnk
 from pandas.util.testing import assert_frame_equal
 
