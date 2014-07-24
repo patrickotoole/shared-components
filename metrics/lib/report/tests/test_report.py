@@ -1,7 +1,7 @@
 import os
 from twisted.trial import unittest
 from twisted.test import proto_helpers
-from lib.report.report import _get_report_id, _get_report_url, get_report, _to_list
+from lib.report.report import _get_report_id, _get_report_url, get_report
 from lib.report.utils import local_now
 
 CUR_DIR = os.path.realpath(__file__)
@@ -18,18 +18,19 @@ class ReportTestCase(unittest.TestCase):
         self.assertEqual(expected_url, url)
 
     def test_get_report_resp(self):
-        """
-        python report.py --group=advertiser,site_domain --metrics=best --end=2014-07-01 --days=2 --act
-        """
-        end_date = '2014-07-01'
-        days = 2
         metrics = 'best'
-        csv_path = os.path.join(CUR_DIR, 'test_csv_files/advertiser,site_domain.csv')
-        result_from_cached_csv_file = get_report(csv_path, metrics=metrics)
-        result_from_api = get_report(
-                group='advertiser,site_domain',
-                end_date=end_date,
-                days=days,
-                metrics=metrics,
-                )
-        self.assertEqual(result_from_api.to_dict(), result_from_cached_csv_file.to_dict())
+        csv_path = os.path.realpath(__file__ + '../../test_csv_files/advertiser,site_domain.csv')
+        result = get_report(path=csv_path, metrics=metrics)
+        data = {'advertiser': {15168: 'Bigstock (225133)',
+                               34242: 'BaubleBar (302568)',
+                               34546: 'BaubleBar (302568)',
+                               37145: 'Dot & bo (306383)',
+                               37146: 'Dot & bo (306383)',
+                               37160: 'Dot & bo (306383)',
+                               37174: 'Dot & bo (306383)',
+                               37245: 'Dot & bo (306383)',
+                               37247: 'Dot & bo (306383)',
+                               37279: 'Bonobos (312933)'}}
+        expected_ad = data.get('advertiser')
+        response_ad = result.to_dict().get('advertiser')
+        self.assertEqual(expected_ad, response_ad)
