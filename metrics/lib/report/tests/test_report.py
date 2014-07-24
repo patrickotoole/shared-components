@@ -2,7 +2,7 @@ import os
 from twisted.trial import unittest
 from twisted.test import proto_helpers
 from lib.report.report import _get_report_id, _get_report_url, get_report
-from lib.report.utils import local_now
+from lib.report.utils.utils import local_now
 
 CUR_DIR = os.path.realpath(__file__)
 

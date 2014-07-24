@@ -18,10 +18,10 @@ from tornado.options import parse_command_line
 import tornado.web
 import tornado.httpserver
 
-from utils import retry
-from utils import local_now
-from utils import convert_datetime
-from utils import parse_params
+from lib.report.utils.utils import retry
+from lib.report.utils.utils import local_now
+from lib.report.utils.utils import convert_datetime
+from lib.report.utils.utils import parse_params
 from handlers.reporting import ReportingHandler
 from lib.helpers import decorators
 
