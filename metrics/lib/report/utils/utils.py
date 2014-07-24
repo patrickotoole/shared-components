@@ -3,6 +3,7 @@ import time
 import logging
 import random
 from datetime import datetime
+from datetime import timedelta
 import pytz
 import urlparse
 
@@ -96,8 +97,6 @@ def with_retry(func, num_retries=1, validator=None,
             pass
     return None
 
-
-
 def convert_datetime(date_str):
     for f in TIME_FMTS:
         try:
@@ -112,6 +111,15 @@ def local_now():
     now = utc.localize(datetime.utcnow())
     ny = pytz.timezone('America/New_York')
     return now.astimezone(ny)
+
+def get_start_and_end_date(end, _timedelta):
+    if not end:
+        end = local_now()
+    if isinstance(end, str):
+        end = convert_datetime(end)
+    start = end - _timedelta
+    return dict(start=str(start), end=str(end))
+
 
 def parse_params(url):
     """

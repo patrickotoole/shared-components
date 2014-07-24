@@ -19,8 +19,7 @@ import tornado.web
 import tornado.httpserver
 
 from lib.report.utils.utils import retry
-from lib.report.utils.utils import local_now
-from lib.report.utils.utils import convert_datetime
+from lib.report.utils.utils import get_start_and_end_date
 from lib.report.utils.utils import parse_params
 from handlers.reporting import ReportingHandler
 from lib.helpers import decorators
@@ -161,14 +160,6 @@ def _get_forms(group=None,
     form = form % ( (start_date, end_date) )
     return form
 
-def _get_start_and_end_date(end, days=1):
-    if not end:
-        end = local_now()
-    if isinstance(end, str):
-        end = convert_datetime(end)
-    start = end - timedelta(days=days)
-    return dict(start=str(start), end=str(end))
-
 def get_resp(group=DOMAIN,
         start_date=None,
         end_date=None,
@@ -246,7 +237,8 @@ def get_report_helper(group=DOMAIN,
         pred=None,
         metrics=WORST,
         ):
-    dates = _get_start_and_end_date(end_date, days)
+    _timedelta = timedelta(days=days)
+    dates = get_start_and_end_date(end_date, _timedelta)
     start_date, end_date = dates.get('start'), dates.get('end')
     df = _get_report_helper(group=DOMAIN,
         path=path,
