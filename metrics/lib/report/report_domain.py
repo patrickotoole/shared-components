@@ -158,6 +158,7 @@ def _get_forms(group=None,
             ADVERTISER_DOMAIN_CAMPAIGN_JSON_FORM if group == 'advertiser,domain,campaign' else
             DATA_PULLING_FORMS)
     form = form % ( (start_date, end_date) )
+    logging.info("Got forms: %s" % form)
     return form
 
 def get_resp(group=DOMAIN,
