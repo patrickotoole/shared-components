@@ -230,7 +230,7 @@ def _truncate(df, pred=None):
     return df
 
 def _apply_mask(df, k, _cmp, v):
-    v = float(v) if v.isdigit() else v
+    v = float(v) if _cmp in '><' else v
     mask = (df[k] > v if _cmp == '>' else
             df[k] < v if _cmp == '<' else
             df[k] == v)
