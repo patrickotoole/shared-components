@@ -238,8 +238,8 @@ class IntraWeekTable(IntraWeekDB):
             # df_full['charged_client'].iloc[idx] = multiplier * df_full['media_cost'].iloc[idx]
             multiplier = df_full['multiplier'].iloc[idx]
             df_full['charged_client'].iloc[idx] = df_full['charged_client'].iloc[idx] + multiplier * df_full['base_cost'].iloc[idx]
-
-        return df_full
+        
+      return df_full
 
     def finishing_formats(self, df):
 
