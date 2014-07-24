@@ -26,8 +26,6 @@ from handlers.reporting import ReportingHandler
 from lib.helpers import decorators
 
 from request_json_forms import DOMAIN_JSON_FORM
-from request_json_forms import ADVERTISER_JSON_FORM
-from request_json_forms import CAMPAIGN_JSON_FORM
 from request_json_forms import ADVERTISER_DOMAIN_JSON_FORM
 from request_json_forms import ADVERTISER_DOMAIN_CAMPAIGN_JSON_FORM
 
@@ -156,8 +154,6 @@ def _get_forms(group=None,
         end_date=None,
         ):
     form = (DOMAIN_JSON_FORM if group == 'site_domain' else
-            CAMPAIGN_JSON_FORM if group == 'campaign' else
-            ADVERTISER_JSON_FORM if group == 'advertiser' else
             ADVERTISER_DOMAIN_JSON_FORM if group == 'advertiser,domain' else
             ADVERTISER_DOMAIN_CAMPAIGN_JSON_FORM)
     form = form % ( (start_date, end_date) )
