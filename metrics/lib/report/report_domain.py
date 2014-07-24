@@ -180,39 +180,11 @@ def get_resp(group=DOMAIN,
     resp = _get_report_resp(url)
     return resp
 
-def get_report(group=DOMAIN,
-        limit=LIMIT,
-        path=None,
-        act=False,
-        end_date=None,
-        cache=False,
-        days=1,
-        pred=None,
-        metrics=WORST,
-        ):
-    df = None
-    _should_create_csv = False
-    if cache:
-        path = _get_path(group)
-
-    if path:
-        logging.info("Getting csv file from: %s" % path)
-        try:
-            df = pd.read_csv(path)
-        except OSError:
-            logging.warn("csv file don't exist: %" % path)
-            _should_create_csv = True
-
-    if df is None:
-        resp = get_resp(group=group, end_date=end_date, days=days)
-        df = _resp_to_df(resp)
-        if _should_create_csv and act:
-            _create_csv(resp.text, path)
-
-    df = _truncate(df, pred)
-    df = _sort_df(df, metrics)
+def _filter(df, pred=None, metrics=None):
+    df = _truncate(df, pred=pred)
+    df = _sort_df(df, metrics=metrics)
     df = _convert_inf_cpa(df)
-    return df[:limit]
+    return df
 
 def _truncate(df, pred=None):
     """
@@ -264,6 +236,54 @@ def _sort_df(df, metrics=WORST):
         df = df.sort(COST_EFFICIENCY)
     return df
 
+def get_report_helper(group=DOMAIN,
+        limit=LIMIT,
+        path=None,
+        act=False,
+        end_date=None,
+        cache=False,
+        days=1,
+        pred=None,
+        metrics=WORST,
+        ):
+    df = _get_report_helper(group=DOMAIN,
+        path=path,
+        act=act,
+        end_date=end_date,
+        days=days,
+        cache=cache,
+        )
+    df = _filter(df, pred=None, metrics=None)
+    return df[:limit]
+
+def _get_report_helper(group=DOMAIN,
+        path=None,
+        act=False,
+        end_date=None,
+        cache=False,
+        days=1,
+        ):
+    df = None
+    _should_create_csv = False
+    if cache:
+        path = _get_path(group)
+
+    if path:
+        logging.info("Getting csv file from: %s" % path)
+        try:
+            df = pd.read_csv(path)
+        except OSError:
+            logging.warn("csv file don't exist: %" % path)
+            _should_create_csv = True
+
+    if df is None:
+        resp = get_resp(group=group, end_date=end_date, days=days)
+        df = _resp_to_df(resp)
+        if _should_create_csv and act:
+            _create_csv(resp.text, path)
+
+    return df
+
 class ReportDomain(ReportingHandler):
 
     #@tornado.web.authenticated
@@ -279,7 +299,7 @@ class ReportDomain(ReportingHandler):
                       for k, v in kwargs.items())
         logging.info("kwargs: %s" % kwargs)
 
-        data = get_report(**kwargs)
+        data = get_report_helper(**kwargs)
 
         def default(self, data):
             self.render("reporting_domain/_report_domain.html", data=data)
@@ -336,7 +356,7 @@ def main():
         server.listen(options.port)
         tornado.ioloop.IOLoop.instance().start()
     else:
-        result = get_report(group=group,
+        result = get_report_helper(group=group,
                 limit=options.limit,
                 path=path,
                 act=act,
