@@ -166,14 +166,7 @@ class IntraWeekTable(IntraWeekDB):
         return df_full
 
     def adjust_charge_client(self, df):
-        """
-        ##
-        ## RICK: code is a bit confusing
-        ## see comment below for how to clean this up
-        ##
-        """
         
-        # TODO = df.copy() elsewhere  
         df_full = df.copy()
 
         # add a multiplier column (charged / cost)
@@ -182,54 +175,35 @@ class IntraWeekTable(IntraWeekDB):
         # if number of conversions is 0, project charge_client according to specified 
         # rules
 
-        
+        our_multiplier = df_full['cpm_multiplier'].ix[-1]
+        multiplier = df_full['multiplier'].ix[-1]
 
-        # TODO - save final df_full.index[-1] as variable
-        last_idx = df_full.index[-1]
-        ##
-        ## RICK: use the index selector instead df_full.ix[-1,column]
-        ##
-        our_multiplier = df_full['cpm_multiplier'][last_idx]
-        multiplier = df_full['multiplier'][last_idx]
-
-        
-        ##
-        ## RICK: repeated code
-        ## lets use pandas series scalar multiplication here
-        ## set our multiplier, multiply values
-        ##
-
-        if our_multiplier == 0: # then this week's charge will just equal the media cost
-          df_full['charged_client'][last_idx] = df_full['media_cost'][last_idx]
-          df_full['cpm_charged'][last_idx] = df_full['cpm'][last_idx]
-          df_full['multiplier'][last_idx] = df_full['cpm_charged'][last_idx] / df_full['cpm'][last_idx]
-        elif df_full['num_conversions'][last_idx] == 0:
-          df_full['charged_client'][last_idx] = our_multiplier * df_full['media_cost'][last_idx]
-          df_full['cpm_charged'][last_idx] = our_multiplier * df_full['cpm'][last_idx] 
-          df_full['multiplier'][last_idx] = df_full['cpm_charged'][last_idx] / df_full['cpm'][last_idx]
+        if df_full['num_conversions'].ix[-1] == 0 or our_multiplier == 0:
+          if our_multiplier == 0:
+            our_multiplier = 1
+          df_full['charged_client'].ix[-1] = our_multiplier * df_full['media_cost'].ix[-1]
+          df_full['cpm_charged'].ix[-1] = our_multiplier * df_full['cpm'].ix[-1]
+          df_full['multiplier'].ix[-1] = df_full['cpm_charged'].ix[-1] / df_full['cpm'].ix[-1]
         else:
-          df_full['charged_client'][last_idx] = multiplier * df_full['media_cost'][last_idx]
-       
+          df_full['charged_client'].ix[-1] = multiplier * df_full['media_cost'].ix[-1]
+
         return df_full
 
     def finishing_formats(self, df):
-        """
-        ## RICK: Lets make the column ordering specific
-        ## Don't use the relative order of the data frame
-        ## define variable up top DF_FINAL_ORDER = [ordered columns]
-        ## use that to select / set column order
-        """
 
         df_full = df.copy()
-        
+       
         # arrange column order
         df_full = df_full.drop(['num_conversions', 'cpm_multiplier'], axis=1)
         cols = df_full.columns.tolist()
+
+        reorder_cols = ['impressions', 'clicks', 'media_cost', 'charged_client', 'cpm','cpm_charged','multiplier']        
+        reorder_cols = reorder_cols + cols[4:-3] # contains the conversion columns (unknown number), cpa, cpa_charged
         
         # this is unclear what the order will be -- not clear at all what the order will be
-        new_cols = cols[0:4] + cols[-3:] + cols[4:-3]
+        # new_cols = cols[0:4] + cols[-3:] + cols[4:-3]
 
-        df_full = df_full[new_cols]
+        df_full = df_full[reorder_cols]
         df_full = df_full.reindex(df_full.index.rename('week_starting'))
 
         return df_full

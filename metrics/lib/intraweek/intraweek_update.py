@@ -45,11 +45,14 @@ class Intraweek(IntraWeekView):
         multiplier = ad_table['multiplier'][ad_table.index[-1]]
         cpa_charged = ad_table['cpa_charged'][ad_table.index[-1]]
 
-        # TODO - manage nan
+        # manage nan entries
         print multiplier, cpa_charged
-        if math.isnan(multiplier):
+        if math.isnan(multiplier) or math.isinf(multiplier):
             multiplier = 1  
  
+        if math.isnan(cpa_charged) or math.isinf(cpa_charged):
+            cpa_charged = 0
+
         # update table accordingly
         
         self.my_db.execute(

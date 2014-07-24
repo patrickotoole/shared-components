@@ -7,6 +7,8 @@ class IntraWeekBase(object):
     the IntraWeek. 
 
     This will be the base for other operations for the intraweek analysis.
+
+    dates - pandas DataFrame containing date information for current IO
     """
 
     @classmethod
@@ -18,31 +20,28 @@ class IntraWeekBase(object):
     @property_checker_threeargs
     def get_days_into_campaign(cls, dates, advertiser_id):
         # get days into campaign
-        # what datatype is dates
         return dates['days_into_campaign'][advertiser_id]
 
     @classmethod
     @property_checker_threeargs
     def get_current_start_date(cls, dates, advertiser_id):
         # get current start date
-        # what datatype is dates
+        # NOTE - this reads directly from insertion_order
+        # there is an alternate method "get_actual_start_date" that gets the exact day
+        # that charges from this current IO begin
         return dates['actual_start_date'][advertiser_id]
 
     @classmethod
     @property_checker_threeargs
     def get_end_date_proposed(cls, dates, advertiser_id):
         # get end_date_proposed
-        # what is dates
         return dates['end_date_proposed'][advertiser_id]
 
     @classmethod
     @property_checker_threeargs
     def get_proposed_campaign_length(cls, dates, advertiser_id):
         # get proposed campaign length
-        # what is dates
         return dates['proposed_campaign_length'][advertiser_id]
-
-
 
 class IntraWeekDB(IntraWeekBase):
     """
@@ -60,11 +59,21 @@ class IntraWeekDB(IntraWeekBase):
     def __init__(self,db_wrapper):
         self.my_db = db_wrapper
 
-    def get_date_from_yearweek(self, yearweek):
-        sunday = '%d Sunday' % yearweek
-        _format = r'%X%V %W'
-        date_info = self.my_db.select_dataframe(DATE_INFO % (sunday, _format))
-        return str(date_info.ix[0][0])
+    def get_actual_start_date(self, advertiser_id, limit):
+        # get first date where we charged over "limit" on "advertiser_id"
+        if not hasattr(self, "daily_spend"):
+            self.daily_spend = self.my_db.select_dataframe(DAILY_SPEND)
+
+        mask = self.daily_spend['external_advertiser_id'] == advertiser_id  
+        cum_charges = self.daily_spend[mask]['charged_client'].cumsum()
+        
+        # go through cumulative sums to find first date, else, return -1
+        for idx in range(len(cum_charges)):
+          current_charge = cum_charges[cum_charges.index[idx]]
+          if (current_charge > limit):
+            return self.daily_spend['date'].ix[cum_charges.index[idx]]
+
+        return -1
 
     def get_pixel_name(self, pixel_id):
         if not hasattr(self, "pixel_info"):
@@ -92,8 +101,9 @@ class IntraWeekDB(IntraWeekBase):
           )
       
       # else, there are no campaigns remaining, just return money_spent
-      return (-1, -1, -1)
+      return (-1, -1, -2)
 
+    # get the recent media cost from yesterday - to be used to populate "yesterday_spent" field
     def get_recent_spent(self, advertiser_id):
       if not hasattr(self, 'recent_spent'):
          self.recent_spent = self.my_db.select(RECENT_SPEND).as_dataframe()
@@ -115,6 +125,7 @@ class IntraWeekDB(IntraWeekBase):
       mask = self.names_df['external_advertiser_id'] == advertiser_id
       return self.names_df[mask]['advertiser_name'].iloc[0]
 
+    # pulls and caches basic information on charges - impressions, clicks, cost, charges
     def pull_charges(self, num_advertiser):
        
         if not hasattr(self, 'charges'):
@@ -126,6 +137,8 @@ class IntraWeekDB(IntraWeekBase):
 
         return df_charges.drop('external_advertiser_id', axis=1)
 
+    # pulls the list of active advertisers from "advertiser" DB
+    # input list for the compiled IO reports
     def active_advertisers(self):
         id_df = self.my_db.select('select external_advertiser_id from advertiser where active=1 and deleted=0;').as_dataframe()
         return id_df['external_advertiser_id'].tolist()
