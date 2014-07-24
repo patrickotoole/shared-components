@@ -111,7 +111,7 @@ old_handlers = [
 admin_scripts = [
     (r'/api.*', admin.scripts.APIHandler, dict(db=db)),
     (r'/pixel.*',admin.scripts.PixelHandler, dict(db=db,api=api,bidder=bidder)),
-    (r'/targeting.*',admin.scripts.TargetingHandler, dict(redis=_redis,api=api,db=db)),
+    (r'/admin/targeting.*',admin.scripts.TargetingHandler, dict(redis=_redis,api=api,db=db)),
     (r'/bidder_profile.*',admin.scripts.ProfileHandler, dict(db=db,api=api,bidder=bidder)),
     (r'/advertiser.*',admin.scripts.AdvertiserHandler, dict(db=db,api=api)),
     (r'/money.*',admin.scripts.MoneyHandler, dict(db=db,api=api)),

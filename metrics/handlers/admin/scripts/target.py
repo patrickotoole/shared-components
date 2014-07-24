@@ -50,33 +50,26 @@ def x(y):
 
 def default_renderer(self,data,*args):
     profile_df = data.copy()
-    profile_df['Actions'] = profile_df.T.apply(lambda row: buttons(row.name, row.active))
+    profile_df['actions'] = profile_df.T.apply(lambda row: buttons(row.name, row.active))
 
-    profile_df = profile_df.append(pandas.DataFrame([{
-        "log":LOG,
-        "pattern":PATTERN,
-        "segment": SEGMENT,
-        "Actions": """<button type="submit" id="add-target" class="submit btn btn-success">Add</button>"""
-
-    }]))
-
-    formatted = profile_df[["log","pattern","segment","Actions"]].to_html(
+    formatted = profile_df[["log","pattern","segment","actions"]].to_html(
         escape=False,
         classes="table table-condensed\" id=\"targets"
     )
 
     self.render(
         "../templates/_targeting.html",
-        df_html=formatted,
-        profile=Convert.df_to_json(data)
+        df=formatted,
+        profile=Convert.df_to_json(profile_df)
     )
 
 class TargetingBase(tornado.web.RequestHandler):
 
     def initialize(self, api=None, redis=None,db=None):
         self.redis = redis
-        self.db = db
-    
+        self.db = db 
+        http_client = HTTPClient() 
+
     def update_boxes(self,boxes=BOXES):
         http_client = HTTPClient() 
         for ip in boxes:

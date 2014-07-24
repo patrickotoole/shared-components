@@ -1,12 +1,136 @@
 {% autoescape None %}
-{% extends "../templates/base.html" %}
-{% block stuff %}
+{% extends "../templates/clean_base.html" %}
+{% block content %}
 
-<h4>Domain Targeting Settings</h4>
+<link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/dc.css">
+<link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/chosen.css">
+
+<script type="text/javascript" src="http://rockerbox.com/js/d3.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/crossfilter.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/dc.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/colorbrewer.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/reporting.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/chosen.js"></script>
+
+<div class='container'>
+
+<h4>Add Targeting Settings</h4>
 <form role="form">
-  {{ df_html }}
+  <br/>
+  <div class="row"> 
+    <div class="col-sm-4 new-item">
+      <h5>Create</h5>
+      
+    </div>
+    <div class="col-sm-4">
+      <h5>Batch</h5>
+      <div id="batches"></div>
+      
+    </div>
+  </div>
+  <br/>
+  <h4>Existing</h4>
+  
+  <table class="table table-hover dc-data-table">
+    <thead>
+      <tr>
+        <th>Log</th>
+        <th>Pattern</th>
+        <th>Segment</th>
+        <th>Stats</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+  </table>
 </form>
+
+</div>
 <script>
+var data = {{ profile }},
+  crs = crossfilter(data);
+
+log = crs.dimension(function(d){ return d.log })
+group = log.group().all()
+
+var LOG = '<select class="lists form-control" id="log" name="log" placeholder="domain list logging name"></select>',
+  PATTERN = '<input class="form-control" id="pattern" name="pattern" placeholder="pattern to match">',
+  INPUT = '<select class="segs form-control" id="segment" name="segment" placeholder="segment code"></select>',
+  ACTION = '<button type="submit" id="add-target" class="submit btn btn-success">Submit</button>'
+  DUPLICATE = '<button type="submit" id="batch" class="submit btn ">Batch</button>'
+  BATCH  = '<button type="submit" id="add-batch" class="submit btn btn-success">Add Batch</button>'
+  
+var NEW = "<div>" + LOG + INPUT + PATTERN + DUPLICATE + ACTION + "</div>"
+
+$(".new-item").append(NEW)
+
+$.each(group, function(i,v){
+  var vv = '<option value="' + v.key + '">' + v.key + "</option>"
+  $(".lists").append(vv)
+})
+$('.lists').chosen()
+
+seg = crs.dimension(function(d){ return d.segment})
+seg_group = seg.group().all()
+
+$.each(seg_group, function(i,v){
+  var vv = '<option value="' + v.key + '">' + v.key + "</option>"
+  $(".segs").append(vv)
+})
+$('.segs').chosen()
+
+
+
+
+
+
+console.log(crs)
+
+dc.dataTable(".dc-data-table")
+  .dimension(log)
+  .group(function (d) {
+    return d.log
+  })
+  .size(10000)
+  .columns([
+  function (d) {
+    return d.log
+  },
+  function (d) {
+    return d.pattern
+  },
+  function (d) {
+    return d.segment
+  },
+  function (d) {
+    return '<div id="domains-'+d.pattern+'-stats">coming soon...</div>'
+  },
+  function (d) {
+    return d.actions
+  }
+  ])
+  .sortBy(function (d) {
+    return d.log;
+  })
+  .order(d3.ascending)
+  .renderlet(function (table) {
+    table.selectAll(".dc-table-group").classed("info", true).on("click", function(e){
+      d3.select(this.parentNode)
+        .selectAll(".dc-table-row")
+        .classed("hidden" ,function(e){
+          return d3.select(this).classed("hidden") ?
+            false : true;
+        })
+        .transition().duration(500)
+      })
+    table.selectAll(".dc-table-row").classed("hidden",true)
+  });
+
+dc.renderAll()
+
+
+
+
+
 
 $(".remove").click(function(e){
   e.preventDefault()
@@ -35,6 +159,38 @@ $(".enable").click(function(e){
 })
 
 
+$('form').on('click','#add-batch',function(e){
+  e.preventDefault()
+  $.ajax({
+    url:"targeting?format=json",
+    dataType:"json"
+  }).done(function(original){
+    var target_to_add = JSON.stringify(original.concat(batch))
+
+    $.ajax({
+      type: "POST",
+      dataType: "json",
+      url: "targeting", 
+      data: target_to_add, 
+      success: function(last){
+        $(e.target).parents("tr").before(
+          "<tr><th>"+
+          (original.length-1)+"</th><td>"+
+          last["log"]+"</td><td>"+
+          last["pattern"]+"</td><td>"+
+          last["segment"]+"</td><td>"+
+          last["Remove?"]+"</td></tr>"
+        )
+        batch = []
+        draw_batch()
+      }
+    })
+  })
+  return false;
+})
+
+
+
 
 $('#add-target').click(function(e){
   e.preventDefault()
@@ -42,8 +198,11 @@ $('#add-target').click(function(e){
     url:"targeting?format=json",
     dataType:"json"
   }).done(function(original){
-    original.push($(e.target).parents("form").serializeObject())
+    _new = $(e.target).parents("form").serializeObject()
+    original.push(_new)
     var target_to_add = JSON.stringify(original)
+
+
     $.ajax({
       type: "POST",
       dataType: "json",
@@ -62,6 +221,36 @@ $('#add-target').click(function(e){
     })
   })
   return false;
+})
+
+var batch = []
+
+function draw_batch() {
+  vv = ""
+  $.each(batch,function(i,v){
+    vv += "<div>" + v.log + " : " + v.segment + " : " + v.pattern + "<a class='remove-batch' id="+i+">X</a></div>"
+  })
+  console.log(batch)
+  if (vv != "") {
+    vv = vv + BATCH
+  }
+  $('#batches').html(vv)
+}
+
+$('#batch').click(function(e){
+  e.preventDefault()
+  batch.push($(e.target).parents("form").serializeObject())
+  draw_batch()
+  
+  return false;
+})
+
+$('#batches').on('click','.remove-batch',function(e){
+  console.log("Eg")
+  
+  batch.splice(e.id,1)
+  draw_batch()
+  
 })
 </script>
 <script src="http://rockerbox.com/js/jquery.serialize-object.js"></script>
