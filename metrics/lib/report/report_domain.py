@@ -28,6 +28,7 @@ from request_json_forms import DOMAIN_JSON_FORM
 from request_json_forms import ADVERTISER_DOMAIN_JSON_FORM
 from request_json_forms import ADVERTISER_DOMAIN_CAMPAIGN_JSON_FORM
 from request_json_forms import DATA_PULLING_FORMS
+from request_json_forms import CONVERSION_FORM
 
 
 "media cost under this amount is truncated"
@@ -158,7 +159,8 @@ def _get_forms(group=None,
     form = (DOMAIN_JSON_FORM if group == 'site_domain' else
             ADVERTISER_DOMAIN_JSON_FORM if group == 'advertiser,domain' else
             ADVERTISER_DOMAIN_CAMPAIGN_JSON_FORM if group == 'advertiser,domain,campaign' else
-            DATA_PULLING_FORMS)
+            DATA_PULLING_FORMS if group == 'datapulling' else
+            CONVERSION_FORM)
     form = form % ( (start_date, end_date) )
     return form
 
