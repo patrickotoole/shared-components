@@ -104,40 +104,6 @@ def _get_resp(url, method='get', forms=None):
         resp = c.post(url, forms)
     return resp
 
-def _truncate(df, threshold):
-    """
-    cut out certain data there is less relevant.
-    """
-    df = df[df[MEDIA_COST] > int(threshold)]
-    return df
-
-def _convert_inf_cpa(df):
-    inf_cpas = df[df['cpa'] > MILLION]
-    inf_cpas['cpa'] = CPA_INF
-    non_inf_cpas = df[df['cpa'] < MILLION]
-    df = pd.concat([inf_cpas, non_inf_cpas])
-    return df
-
-def _sort_df_by_cpa(df, metrics=WORST):
-    """
-    given pandas frame, sort them by cpa or media cost if there is no convertions.
-    """
-    df['convs'] = df[PC_CONVS] + df[PV_CONVS]
-    df['cpa'] = df[MEDIA_COST] / (df['convs'] + DAMPING_POINT)
-    df_no_convs = df[df['convs'] == 0]
-    df_have_convs = df[df['convs'] != 0]
-
-    if metrics == WORST:
-        df_no_convs = df_no_convs.sort('media_cost', ascending=False)
-        df_have_convs = df_have_convs.sort('cpa', ascending=False)
-        df = pd.concat([df_no_convs, df_have_convs])
-        df = df.reset_index(drop=True)
-    else:
-        #sort by cost/revenue for now
-        df[COST_EFFICIENCY] = df[MEDIA_COST] / df[BOOKED_REV]
-        df = df[df[BOOKED_REV] > 0]
-        df = df.sort(COST_EFFICIENCY)
-    return df
 
 def _create_csv(text, path):
     with open(path, 'w') as f:
@@ -185,74 +151,6 @@ def _get_report_resp(url):
     resp = _get_resp(url)
     return resp.text
 
-def _get_start_and_end_date(end, days=1):
-    if not end:
-        end = local_now()
-    if isinstance(end, str):
-        end = convert_datetime(end)
-    start = end - timedelta(days=days)
-    return dict(start=str(start), end=str(end))
-
-def get_report(group=DOMAIN,
-        campaign=None,
-        advertiser=None,
-        limit=LIMIT,
-        threshold=THRESHOLD,
-        path=None,
-        act=False,
-        end_date=None,
-        cache=False,
-        days=1,
-        metrics=WORST,
-        ):
-    """
-    form: json request form
-    group: domain | campaign | advertiser
-    path: path to csv file, for test.
-    """
-    logging.info("getting report for group: %s" % group)
-
-    if cache:
-        path = _get_path(group)
-
-    if path:
-        df = pd.read_csv(path)
-
-    else:
-        dates = _get_start_and_end_date(end_date, days)
-        start_date, end_date = dates.get('start'), dates.get('end')
-        logging.info("getting data from date: %s -- %s." % (start_date, end_date))
-
-        request_form = _get_forms(group=group, start_date=start_date, end_date=end_date)
-        _id = _get_report_id(request_form)
-        url = _get_report_url(_id)
-        resp = _get_report_resp(url)
-        df = _resp_to_df(resp)
-
-        if act:
-            path = _get_path(group)
-            _create_csv(resp, path)
-
-    if campaign:
-        df = _specify_field(df, 'campaign', campaign)
-    if advertiser:
-        df = _specify_field(df, 'advertiser', advertiser)
-
-    df = _sort_df_by_cpa(df, metrics=metrics)
-    df = _convert_inf_cpa(df)
-    truncated_df = _truncate(df, threshold=threshold)
-    return truncated_df[:limit]
-
-def _specify_field(df, field, value):
-    """
-    select only specified campaign or advertiser
-    """
-    is_specified = df[field] == value
-    return df[is_specified]
-
-def send_email():
-    pass
-
 def _get_forms(group=None,
         start_date=None,
         end_date=None,
@@ -265,9 +163,111 @@ def _get_forms(group=None,
     form = form % ( (start_date, end_date) )
     return form
 
+def _get_start_and_end_date(end, days=1):
+    if not end:
+        end = local_now()
+    if isinstance(end, str):
+        end = convert_datetime(end)
+    start = end - timedelta(days=days)
+    return dict(start=str(start), end=str(end))
+
+def get_resp(group=DOMAIN,
+        end_date=None,
+        days=1,
+        ):
+    dates = _get_start_and_end_date(end_date, days)
+    start_date, end_date = dates.get('start'), dates.get('end')
+    logging.info("getting data from date: %s -- %s." % (start_date, end_date))
+    request_form = _get_forms(group=group, start_date=start_date, end_date=end_date)
+    _id = _get_report_id(request_form)
+    url = _get_report_url(_id)
+    resp = _get_report_resp(url)
+    return resp
+
+def get_report(group=DOMAIN,
+        limit=LIMIT,
+        path=None,
+        act=False,
+        end_date=None,
+        cache=False,
+        days=1,
+        pred=None,
+        metrics=WORST,
+        ):
+    _should_create_csv = False
+    if cache:
+        path = _get_path(group)
+
+    if path:
+        try:
+            df = pd.read_csv(path)
+        except OSError:
+            logging.warn("csv file don't exist: %" % path)
+            _should_create_csv = True
+
+    if _should_create_csv:
+        resp = get_resp(group=group, end_date=end_date, days=days)
+        df = _resp_to_df(resp)
+        _create_csv(resp.text, path)
+
+    df = _truncate(df, pred)
+    df = _sort_df(df, metrics)
+    df = _convert_inf_cpa(df)
+    return df[:limit]
+
+def _truncate(df, pred=None):
+    """
+    pred eg: &pred=campaign#b,advertiser#c,media_cost>10
+    """
+    if not pred:
+        return df
+    regex= re.compile(r'([><|#])')
+    params = [p for p in pred.split(',')]
+    params = [regex.split(p) for p in params]
+    for param in params:
+        k, _cmp, v = param
+        df = _apply_mask(df, k, _cmp, v)
+    return df
+
+def _apply_mask(df, k, _cmp, v):
+    v = float(v) if v.isdigit() else v
+    mask = (df[k] > v if _cmp == '>' else
+            df[k] < v if _cmp == '<' else
+            df[k] == v)
+    df = df[mask]
+    return df
+
+def _convert_inf_cpa(df):
+    inf_cpas = df[df['cpa'] > MILLION]
+    inf_cpas['cpa'] = CPA_INF
+    non_inf_cpas = df[df['cpa'] < MILLION]
+    df = pd.concat([inf_cpas, non_inf_cpas])
+    return df
+
+def _sort_df(df, metrics=WORST):
+    """
+    given pandas frame, sort them by cpa or media cost if there is no convertions.
+    """
+    df['convs'] = df[PC_CONVS] + df[PV_CONVS]
+    df['cpa'] = df[MEDIA_COST] / (df['convs'] + DAMPING_POINT)
+    df_no_convs = df[df['convs'] == 0]
+    df_have_convs = df[df['convs'] != 0]
+
+    if metrics == WORST:
+        df_no_convs = df_no_convs.sort('media_cost', ascending=False)
+        df_have_convs = df_have_convs.sort('cpa', ascending=False)
+        df = pd.concat([df_no_convs, df_have_convs])
+        df = df.reset_index(drop=True)
+    else:
+        #sort by cost/revenue for now
+        df[COST_EFFICIENCY] = df[MEDIA_COST] / df[BOOKED_REV]
+        df = df[df[BOOKED_REV] > 0]
+        df = df.sort(COST_EFFICIENCY)
+    return df
+
 class ReportDomain(ReportingHandler):
 
-    @tornado.web.authenticated
+    #@tornado.web.authenticated
     @decorators.formattable
     def get(self):
         url = self.request.uri
@@ -299,19 +299,14 @@ def main():
             default=False)
     define('path',
             help='where to put tmp csv file')
-    define('campaign',
-            help='specify campaign')
-    define('advertiser',
-            help='specify advertiser')
+    define('pred',
+            type=str,
+            help='predicats, campaign#bob,media_cost>10',
+            )
     define('limit',
             help='lines of result',
             type=int,
             default=LIMIT,
-            )
-    define('threshold',
-            help='threshold of media cost',
-            type=int,
-            default=THRESHOLD,
             )
     define('days',
             help='how many days between the start date',
@@ -343,16 +338,14 @@ def main():
         tornado.ioloop.IOLoop.instance().start()
     else:
         result = get_report(group=group,
-                campaign=options.campaign,
-                advertiser=options.advertiser,
                 limit=options.limit,
-                threshold=options.threshold,
                 path=path,
                 act=act,
                 cache=options.cache,
                 end_date=end_date,
                 days=days,
                 metrics=options.metrics,
+                pred=options.pred,
                 )
         pprint(result)
 
