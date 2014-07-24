@@ -1,0 +1,14 @@
+paramiko
+tornado
+mock
+vincent
+bcrypt
+pandas
+link
+ujson
+redis
+maxminddb
+hive_utils
+twisted
+mysql-python
+matplotlib
