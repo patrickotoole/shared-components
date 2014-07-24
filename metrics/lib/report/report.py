@@ -144,7 +144,7 @@ def _create_csv(text, path):
         f.write(text)
     return path
 
-def _create_df_from_resp(resp):
+def _resp_to_df(resp):
     df = pd.read_csv(io.StringIO(unicode(resp)))
     return df
 
@@ -179,9 +179,6 @@ def _get_report_url(report_id):
        retry_log_prefix='retrying getting resp',
        )
 def _get_report_resp(url):
-    """
-    Given a url, return csv fmt file?
-    """
     logging.info("getting url: %s" % url)
     if not url.startswith('/'):
         url = '/' + url
@@ -230,7 +227,7 @@ def get_report(group=DOMAIN,
         _id = _get_report_id(request_form)
         url = _get_report_url(_id)
         resp = _get_report_resp(url)
-        df = _create_df_from_resp(resp)
+        df = _resp_to_df(resp)
 
         if act:
             path = _get_path(group)
@@ -275,13 +272,14 @@ class ReportDomain(ReportingHandler):
     def get(self):
         url = self.request.uri
         kwargs = parse_params(url)
-        logging.info("kwargs: %s" % kwargs)
 
         if 'format' in kwargs:
             kwargs.pop('format')
 
         kwargs = dict((k, int(v) if v.isdigit() else urllib.unquote(v))
                       for k, v in kwargs.items())
+        logging.info("kwargs: %s" % kwargs)
+
         data = get_report(**kwargs)
 
         def default(self, data):
