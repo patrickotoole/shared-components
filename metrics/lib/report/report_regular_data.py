@@ -1,3 +1,16 @@
+"""
+cron script runs hourly to pull following data
+    hour
+    line_item
+    campaign
+    creative
+    advertiser
+    - Clicks
+    - Imps
+    - Media Cost
+    adx_spend
+"""
+
 import pandas as pd
 from pprint import pprint
 
@@ -11,17 +24,21 @@ import tornado.httpserver
 
 DATA_PULL = 'datapulling'
 LIMIT = 1
+GOOGLE_ADX = 'Google AdExchange (181)'
 
-def report(path=None, act=False, cache=False,
-           start_date=None, end_date=None, limit=None):
+def _report(path=None,
+        act=False,
+        cache=False,
+        start_date=None,
+        end_date=None,
+        limit=None,
+        ):
     if not (start_date and end_date):
-        dates = get_start_and_end_date(
-                end_date=end_date,
-                _timedelta=timedelta(hours=1),
-                )
+        dates = get_start_and_end_date(end_date=end_date,
+                                       _timedelta=timedelta(hours=1))
         start_date, end_date = dates.get('start_date'), dates.get('end_date')
     ids = ADVERTISER_IDS
-    to_return = []
+    dfs = []
     for _id in ids:
         df = _get_report_helper(
                 group=DATA_PULL,
@@ -32,11 +49,39 @@ def report(path=None, act=False, cache=False,
                 end_date=end_date,
                 advertiser_id=_id,
                 )
-        to_return.append(df)
-        if limit and len(to_return) >= limit:
+        dfs.append(df)
+        if limit and len(dfs) >= limit:
             break
-    to_return = pd.concat(to_return)
-    return to_return
+    dfs = pd.concat(dfs)
+    return dfs
+
+def _analyze(df):
+    grouped = df.groupby(['hour',
+                          'advertiser_id',
+                          'line_item_id',
+                          'campaign_id',
+                          'creative_id',
+                          'seller_member',
+                          ])
+    res = grouped[['imps', 'clicks', 'media_cost']].sum()
+    res = res.xs(GOOGLE_ADX, level="seller_member").reset_index()
+    return res
+
+def report(path=None, act=False, cache=False,
+        start_date=None,
+        end_date=None,
+        limit=None,
+        ):
+
+    dfs = _report(path=path,
+                 act=act,
+                 cache=cache,
+                 start_date=start_date,
+                 end_date=end_date,
+                 limit=limit,
+                 )
+    result = _analyze(dfs)
+    return result
 
 def main():
     from tornado.options import define
