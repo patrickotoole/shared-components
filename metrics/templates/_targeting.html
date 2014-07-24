@@ -59,7 +59,7 @@ var LOG = '<select class="lists form-control" id="log" name="log" placeholder="d
   DUPLICATE = '<button type="submit" id="batch" class="submit btn ">Batch</button>'
   BATCH  = '<button type="submit" id="add-batch" class="submit btn btn-success">Add Batch</button>'
   
-var NEW = "<div>" + LOG + INPUT + PATTERN + DUPLICATE + ACTION + "</div>"
+var NEW = "<div>" + LOG + INPUT + PATTERN + DUPLICATE + "</div>"
 
 $(".new-item").append(NEW)
 
@@ -80,10 +80,6 @@ $('.segs').chosen()
 
 
 
-
-
-
-console.log(crs)
 
 dc.dataTable(".dc-data-table")
   .dimension(log)
@@ -228,7 +224,7 @@ var batch = []
 function draw_batch() {
   vv = ""
   $.each(batch,function(i,v){
-    vv += "<div>" + v.log + " : " + v.segment + " : " + v.pattern + "<a class='remove-batch' id="+i+">X</a></div>"
+    vv += "<div>" + v.log + " : " + v.segment + " : " + v.pattern + "<a class='remove-batch btn btn-danger' id="+i+">X</a></div>"
   })
   console.log(batch)
   if (vv != "") {
