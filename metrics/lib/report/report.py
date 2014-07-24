@@ -188,19 +188,6 @@ def _get_report_resp(url):
     resp = _get_resp(url)
     return resp.text
 
-def _to_list(df, group):
-    """
-    df: pandas
-    """
-    group = group.split(',')
-    headers = group + HEADERS
-    dict_ = df.to_dict()
-    results = [ dict_.get(h).values()
-                for h in headers
-              ]
-    results = zip(*results)
-    return [tuple(headers)] + results
-
 def _get_start_and_end_date(end, days=1):
     if not end:
         end = local_now()
