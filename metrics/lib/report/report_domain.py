@@ -170,11 +170,9 @@ def _get_start_and_end_date(end, days=1):
     return dict(start=str(start), end=str(end))
 
 def get_resp(group=DOMAIN,
+        start_date=None,
         end_date=None,
-        days=1,
         ):
-    dates = _get_start_and_end_date(end_date, days)
-    start_date, end_date = dates.get('start'), dates.get('end')
     logging.info("getting data from date: %s -- %s." % (start_date, end_date))
     request_form = _get_forms(group=group, start_date=start_date, end_date=end_date)
     _id = _get_report_id(request_form)
@@ -248,11 +246,13 @@ def get_report_helper(group=DOMAIN,
         pred=None,
         metrics=WORST,
         ):
+    dates = _get_start_and_end_date(end_date, days)
+    start_date, end_date = dates.get('start'), dates.get('end')
     df = _get_report_helper(group=DOMAIN,
         path=path,
         act=act,
         end_date=end_date,
-        days=days,
+        start_date=start_date,
         cache=cache,
         )
     df = _filter(df, pred=None, metrics=None)
@@ -261,9 +261,9 @@ def get_report_helper(group=DOMAIN,
 def _get_report_helper(group=DOMAIN,
         path=None,
         act=False,
+        start_date=None,
         end_date=None,
         cache=False,
-        days=1,
         ):
     df = None
     _should_create_csv = False
@@ -279,7 +279,7 @@ def _get_report_helper(group=DOMAIN,
             _should_create_csv = True
 
     if df is None:
-        resp = get_resp(group=group, end_date=end_date, days=days)
+        resp = get_resp(group=group, end_date=end_date, start_date=start_date)
         df = _resp_to_df(resp)
         if _should_create_csv and act:
             _create_csv(resp.text, path)
