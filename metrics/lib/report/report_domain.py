@@ -80,7 +80,7 @@ REGEX = re.compile(r'\(.*?\)')
 
 def _get_path(name):
     path = ('csv_file/%s.csv' % name).lower()
-    return os.path.join(CUR_DIR, path)
+    return os.path.realpath(__file__ + path)
 
 def _get_or_create_console():
     global CONSOLE
