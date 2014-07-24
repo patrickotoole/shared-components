@@ -190,6 +190,7 @@ def get_report(group=DOMAIN,
         pred=None,
         metrics=WORST,
         ):
+    df = None
     _should_create_csv = False
     if cache:
         path = _get_path(group)
@@ -201,10 +202,11 @@ def get_report(group=DOMAIN,
             logging.warn("csv file don't exist: %" % path)
             _should_create_csv = True
 
-    if _should_create_csv:
+    if df is None:
         resp = get_resp(group=group, end_date=end_date, days=days)
         df = _resp_to_df(resp)
-        _create_csv(resp.text, path)
+        if _should_create_csv and act:
+            _create_csv(resp.text, path)
 
     df = _truncate(df, pred)
     df = _sort_df(df, metrics)
