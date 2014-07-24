@@ -80,7 +80,7 @@ REGEX = re.compile(r'\(.*?\)')
 
 def _get_path(name):
     path = ('csv_file/%s.csv' % name).lower()
-    return os.path.realpath(__file__ + path)
+    return os.path.join(CUR_DIR, path)
 
 def _get_or_create_console():
     global CONSOLE
@@ -196,6 +196,7 @@ def get_report(group=DOMAIN,
         path = _get_path(group)
 
     if path:
+        logging.info("Getting csv file from: %s" % path)
         try:
             df = pd.read_csv(path)
         except OSError:
