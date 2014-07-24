@@ -78,8 +78,11 @@ GROUPS = [
 
 REGEX = re.compile(r'\(.*?\)')
 
-def _get_path(name):
-    path = ('csv_file/%s.csv' % name).lower()
+def _get_path(name, advertiser_id):
+    path = ('csv_file/{name}{advertiser_id}.csv'.format(
+            name=name,
+            advertiser_id=advertiser_id,
+            )).lower()
     return os.path.join(CUR_DIR, path)
 
 def _get_or_create_console():
@@ -269,14 +272,14 @@ def _get_report_helper(group=DOMAIN,
     df = None
     _should_create_csv = False
     if cache:
-        path = _get_path(group)
+        path = _get_path(group, advertiser_id)
 
     if path:
         logging.info("Getting csv file from: %s" % path)
         try:
             df = pd.read_csv(path)
-        except OSError:
-            logging.warn("csv file don't exist: %" % path)
+        except IOError:
+            logging.warn("csv file don't exist: %s" % path)
             _should_create_csv = True
 
     if df is None:
@@ -287,7 +290,8 @@ def _get_report_helper(group=DOMAIN,
                 )
         df = _resp_to_df(resp)
         if _should_create_csv and act:
-            _create_csv(resp.text, path)
+            logging.info("creating csv file: %s" % path)
+            _create_csv(resp, path)
 
     return df
 
