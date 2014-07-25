@@ -30,11 +30,10 @@ def get_report_obj(report):
                     return obj(report)
     raise ValueError("Can't for related report file")
 
-def run_server(port, report_obj, name):
-    _ReportDomainHandler = ReportDomainHandler(name, dict(db="",api="",hive="") )
-    _ReportDomainHandler._get_report = report_obj
+def run_server(port, report_obj=None, name=None):
+    _ReportDomainHandler = ReportDomainHandler(name, report_obj)
     app = tornado.web.Application([
-        (r'/reportdomain/*', _ReportDomainHandler,  dict(db="",api="",hive="")),
+        (r'/reportdomain/*', _ReportDomainHandler),
     ],debug=True)
 
     server = tornado.httpserver.HTTPServer(app)
@@ -85,7 +84,7 @@ def main():
     report_obj = get_report_obj(report)
 
     if runserver:
-        run_server(port, report_obj, report)
+        run_server(port, report_obj=report_obj, name=report)
         return
 
     result = report_obj.get_report(group=group,

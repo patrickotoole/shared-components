@@ -231,9 +231,10 @@ class ReportBase(object):
         return None
 
 class ReportDomainHandler(ReportingHandler):
-    def __init__(self, name, *args, **kwargs):
+    def __init__(self, name, report_obj, *args, **kwargs):
         self._name = name
-        super(ReportDomainHandler, self).__init__(*args, **kwargs)
+        self._report_obj = report_obj
+        #super(ReportingHandler, self).__init__(*args, **kwargs)
 
     #@tornado.web.authenticated
     @decorators.formattable
@@ -248,13 +249,10 @@ class ReportDomainHandler(ReportingHandler):
                       for k, v in kwargs.items())
         logging.info("kwargs: %s" % kwargs)
 
-        data = self.get_report(**kwargs)
+        data = self._report_obj.get_report(**kwargs)
 
         def default(self, data):
             url = "reporting_domain/_report_%s.html" % self._name
             self.render(url, data=data)
 
         yield default, (data,)
-
-    def _get_report(self, *args, **kwargs):
-        raise NotImplementedError
