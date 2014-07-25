@@ -143,7 +143,7 @@ class ReportBase(object):
 
     def get_report(self,
             group=None,
-            limit=LIMIT,
+            limit=None,
             path=None,
             act=False,
             end_date=None,
