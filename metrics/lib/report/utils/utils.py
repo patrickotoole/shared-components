@@ -120,7 +120,6 @@ def get_start_and_end_date(end_date=None, _timedelta=None):
     start_date = end_date - _timedelta
     return dict(start_date=str(start_date), end_date=str(end_date))
 
-
 def parse_params(url):
     """
     Given a url, return params as dict
