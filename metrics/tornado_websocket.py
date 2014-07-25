@@ -97,6 +97,7 @@ def shutdown():
             logging.info('Shutdown')
     stop_loop()
 
+
 old_handlers = [
     (r'/debug', admin.lookback.DebugHandler), 
     (r'/uid.*', admin.lookback.UIDHandler),
@@ -124,13 +125,15 @@ admin_reporting = [
     (r'/admin/websocket', admin.streaming.AdminStreamingHandler, 
       dict(db=db,buffers={"track":track_buffer, "view":view_buffer})
     ),
-    (r'/viewable.*',admin.reporting.ViewabilityHandler, dict(db=db,api=api,hive=hive))
-    #(r'/target_list.*',admin.reporting.TargetListHandler)
+    (r'/viewable.*',admin.reporting.ViewabilityHandler, dict(db=db,api=api,hive=hive)),
+    #(r'/target_list.*',admin.reporting.TargetListHandler),
+    (r'/intraweek.*',admin.scripts.IntraWeekHandler, dict(db=db))
 ]
 
 reporting = [
     (r'/reporting.*',reporting.ReportingHandler, dict(db=db,api=api,hive=hive)),
-    (r'/login.*', user.LoginHandler, dict(db=db))
+    (r'/login.*', user.LoginHandler, dict(db=db)),
+    (r'/signup*', user.SignupHandler, dict(db=db))
 ]
 
 pixel_analysis = [
