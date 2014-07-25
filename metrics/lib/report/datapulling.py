@@ -15,7 +15,7 @@ from lib.report.utils.constants import *
 from lib.report.base import ReportBase
 
 
-class Report(ReportBase):
+class ReportDatapulling(ReportBase):
     def get_report(self, *args, **kwargs):
         kwargs['group'] = DATA_PULL
         return super(Report, self).get_report(*args, **kwargs)

@@ -69,7 +69,7 @@ def _sort_df(df, metrics=WORST):
     return df
 
 
-class Report(ReportBase):
+class ReportDomain(ReportBase):
     def _filter(self, df, *args, **kwargs):
         return _filter(df, *args, **kwargs)
 
