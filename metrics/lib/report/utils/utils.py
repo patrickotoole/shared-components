@@ -6,6 +6,7 @@ from datetime import datetime
 from datetime import timedelta
 import pytz
 import urlparse
+from functools import update_wrapper
 
 DATE_TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 DATE_FORMAT = '%Y-%m-%d'
@@ -13,6 +14,26 @@ TIME_FMTS = [
     DATE_TIME_FORMAT,
     DATE_FORMAT,
     ]
+
+def decorator(d):
+    "Make function d a decorator: d wraps a function fn."
+    def _d(fn):
+        return update_wrapper(d(fn), fn)
+    update_wrapper(_d, d)
+    return _d
+
+@decorator
+def memo(f):
+    cache = {}
+    def _f(*args):
+        try:
+            return cache[args]
+        except KeyError:
+            cache[args] = result = f(*args)
+            return result
+        except TypeError:
+            return f(args)
+    return _f
 
 class retry(object):
     """
