@@ -24,8 +24,10 @@ def get_report_obj(report):
         f = os.path.splitext(f)[0]
         if name == f:
             _module = __import__(f)
-            obj = _module.Report(report)
-            return obj
+            for member_name, obj in inspect.getmembers(_module):
+                name = ('report' + report).lower()
+                if inspect.isclass(obj) and member_name.lower() == name:
+                    return obj(report)
     raise ValueError("Can't for related report file")
 
 def run_server(port, report_obj, name):
