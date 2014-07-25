@@ -169,6 +169,8 @@ class ReportBase(object):
                         pixel_id=pixel_id,
                         )
                 df.append(result)
+                if limit and len(dfs) >= limit:
+                    break
         df = pd.concat(df)
         df = self._filter(df, pred=pred, metrics=metrics)
         return df[:limit]
@@ -210,21 +212,21 @@ class ReportBase(object):
 
         return df
 
-    def _filter(self, *args, **kwargs):
-        raise NotImplementedError
-
     def _get_start_and_end(self, end_date, lookback):
         _timedelta = self._get_timedelta(lookback)
         return get_start_and_end_date(end_date,  _timedelta=_timedelta)
 
-    def _get_timedelta(self, *args, **kwargs):
+    def _filter(self, df, *args, **kwargs):
+        raise NotImplementedError
+
+    def _get_timedelta(self, lookback):
         raise NotImplementedError
 
     def _get_advertiser_ids(self):
-        raise NotImplementedError
+        return None
 
     def _get_pixel_ids(self):
-        raise NotImplementedError
+        return None
 
 class ReportDomainHandler(ReportingHandler):
     def __init__(self, name, *args, **kwargs):
