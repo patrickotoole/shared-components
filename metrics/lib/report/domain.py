@@ -75,9 +75,3 @@ class ReportDomain(ReportBase):
 
     def _get_timedelta(self, lookback):
         return timedelta(days=lookback)
-
-    def _get_advertiser_ids(self):
-        return None
-
-    def _get_pixel_ids(self):
-        return None
