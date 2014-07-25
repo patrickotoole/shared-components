@@ -152,7 +152,7 @@ class ReportBase(object):
             pred=None,
             metrics=WORST,
             ):
-        df = []
+        dfs = []
         start_date, end_date = self._get_start_and_end(end_date, lookback)
         advertiser_ids = self._get_advertiser_ids() or ['']
         for advertiser_id in advertiser_ids:
@@ -168,12 +168,12 @@ class ReportBase(object):
                         advertiser_id=advertiser_id,
                         pixel_id=pixel_id,
                         )
-                df.append(result)
+                dfs.append(result)
                 if limit and len(dfs) >= limit:
                     break
-        df = pd.concat(df)
-        df = self._filter(df, pred=pred, metrics=metrics)
-        return df[:limit]
+        dfs = pd.concat(dfs)
+        dfs = self._filter(dfs, pred=pred, metrics=metrics)
+        return dfs[:limit]
 
     def _get_report_helper(self,
             group=None,
