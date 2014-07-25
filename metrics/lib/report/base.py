@@ -153,10 +153,11 @@ class ReportBase(object):
             metrics=WORST,
             ):
         dfs = []
-        start_date, end_date = self._get_start_and_end(end_date, lookback)
+        start_date, end_date = self._get_dates(end_date=end_date, lookback=lookback)
+        logging.info("Getting start date: %s, end date: %s" % (start_date, end_date))
         advertiser_ids = self._get_advertiser_ids() or ['']
         for advertiser_id in advertiser_ids:
-            pixel_ids = self._get_pixel_ids() or ['']
+            pixel_ids = self._get_pixel_ids(advertiser_id) or ['']
             for pixel_id in pixel_ids:
                 result = self._get_report_helper(
                         group=group,
@@ -212,9 +213,10 @@ class ReportBase(object):
 
         return df
 
-    def _get_start_and_end(self, end_date, lookback):
+    def _get_dates(self, end_date=None, lookback=None):
         _timedelta = self._get_timedelta(lookback)
-        return get_start_and_end_date(end_date,  _timedelta=_timedelta)
+        dates =  get_start_and_end_date(end_date,  _timedelta=_timedelta)
+        return dates.get('start_date'), dates.get('end_date')
 
     def _filter(self, df, *args, **kwargs):
         raise NotImplementedError
@@ -225,7 +227,7 @@ class ReportBase(object):
     def _get_advertiser_ids(self):
         return None
 
-    def _get_pixel_ids(self):
+    def _get_pixel_ids(self, advertiser_id):
         return None
 
 class ReportDomainHandler(ReportingHandler):
