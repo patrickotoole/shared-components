@@ -27,6 +27,7 @@ CONSOLE = None
 COST_EFFICIENCY = 'cost_efficiency'
 DOMAIN = 'site_domain'
 DATA_PULL = 'datapulling'
+CONVERSTION = 'converstion'
 GOOGLE_ADX = 'Google AdExchange (181)'
 BOOKED_REV = 'booked_revenue'
 PC_CONVS = 'post_click_convs'
