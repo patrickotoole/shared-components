@@ -28,7 +28,7 @@ from request_json_forms import DOMAIN_JSON_FORM
 from request_json_forms import ADVERTISER_DOMAIN_JSON_FORM
 from request_json_forms import ADVERTISER_DOMAIN_CAMPAIGN_JSON_FORM
 from request_json_forms import DATA_PULLING_FORMS
-from request_json_forms import CONVERSION_FORM
+from request_json_forms import CONVERSIONS_FORM
 
 
 "media cost under this amount is truncated"
@@ -123,6 +123,9 @@ def _resp_to_df(resp):
 def _get_report_id(request_url, request_json_form):
     resp = _get_resp(request_url, method='post', forms=request_json_form)
     json_ = resp.json
+    error = json_.get('response').get('error')
+    if error:
+        logging.warn(error)
     report_id = json_.get('response').get('report_id')
     logging.info("Got report id: %s" % report_id)
     assert report_id
@@ -155,22 +158,31 @@ def _get_report_resp(url):
 def _get_forms(group=None,
         start_date=None,
         end_date=None,
+        pixel_id=None,
         ):
     form = (DOMAIN_JSON_FORM if group == 'site_domain' else
             ADVERTISER_DOMAIN_JSON_FORM if group == 'advertiser,domain' else
             ADVERTISER_DOMAIN_CAMPAIGN_JSON_FORM if group == 'advertiser,domain,campaign' else
             DATA_PULLING_FORMS if group == 'datapulling' else
-            CONVERSION_FORM)
-    form = form % ( (start_date, end_date) )
+            CONVERSIONS_FORM)
+    if pixel_id:
+        form = form % ( (start_date, end_date, pixel_id, pixel_id) )
+    else:
+        form = form % ( (start_date, end_date) )
     return form
 
 def get_resp(group=DOMAIN,
         start_date=None,
         end_date=None,
         advertiser_id=None,
+        pixel_id=None,
         ):
     logging.info("getting data from date: %s -- %s." % (start_date, end_date))
-    request_form = _get_forms(group=group, start_date=start_date, end_date=end_date)
+    request_form = _get_forms(group=group,
+            start_date=start_date,
+            end_date=end_date,
+            pixel_id=pixel_id,
+            )
     request_url = _get_request_url(group, advertiser_id)
     logging.info("requesting data from url: %s" % request_url)
     _id = _get_report_id(request_url, request_form)
@@ -270,6 +282,7 @@ def _get_report_helper(group=DOMAIN,
         end_date=None,
         cache=False,
         advertiser_id=None,
+        pixel_id=None,
         ):
     df = None
     _should_create_csv = False
@@ -289,6 +302,7 @@ def _get_report_helper(group=DOMAIN,
                 end_date=end_date,
                 start_date=start_date,
                 advertiser_id=advertiser_id,
+                pixel_id=pixel_id,
                 )
         df = _resp_to_df(resp)
         if _should_create_csv and act:
