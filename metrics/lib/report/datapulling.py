@@ -18,7 +18,7 @@ from lib.report.base import ReportBase
 class ReportDatapulling(ReportBase):
     def get_report(self, *args, **kwargs):
         kwargs['group'] = DATA_PULL
-        return super(Report, self).get_report(*args, **kwargs)
+        return super(ReportDatapulling, self).get_report(*args, **kwargs)
 
     def _filter(self, df, *args, **kwargs):
         return _analyze(df)
