@@ -32,6 +32,7 @@ GOOGLE_ADX = 'Google AdExchange (181)'
 BOOKED_REV = 'booked_revenue'
 PC_CONVS = 'post_click_convs'
 PV_CONVS = 'post_view_convs'
+POST_CLICK = 'Post Click'
 MEDIA_COST = 'media_cost'
 CPA = 'cpa'
 HEADERS = [

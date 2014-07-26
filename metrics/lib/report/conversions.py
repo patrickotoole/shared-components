@@ -32,6 +32,7 @@ from lib.report.base import ReportBase
 from lib.report.base import _get_or_create_console
 
 from lib.report.utils.constants import CONVERSIONS
+from lib.report.utils.constants import POST_CLICK
 from lib.report.utils.utils import convert_datetime
 from lib.report.utils.utils import memo
 from lib.report.request_json_forms import CONVERSIONS_FORM
@@ -85,7 +86,7 @@ class ReportConversions(ReportBase):
         return super(ReportConversions, self).get_report(*args, **kwargs)
 
     def _filter(self, df, *args, **kwargs):
-        df['pc'] = df['post_click_or_post_view_conv'] == 'Post Click'
+        df['pc'] = df['post_click_or_post_view_conv'] == POST_CLICK
         df['is_valid'] = 0
         df.apply(_is_valid, axis=1)
         return df
