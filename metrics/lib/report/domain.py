@@ -21,6 +21,7 @@ def _filter(df, pred=None, metrics=None):
 def _truncate(df, pred=None):
     """
     pred eg: &pred=campaign#b,advertiser#c,media_cost>10
+    treating '#' as '=', not conflicting with func parse_params(url)
     """
     if not pred:
         return df
