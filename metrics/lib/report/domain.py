@@ -21,12 +21,13 @@ def _filter(df, pred=None, metrics=None):
 
 def _truncate(df, pred=None):
     """
-    pred eg: &pred=campaign#b,advertiser#c,media_cost>10
+    command_line eg: --pred=campaign=boboba,advertiser=googleadx,media_cost>10
+    url eg: &pred=campaign#b,advertiser#c,media_cost>10
     treating '#' as '=', not conflicting with func parse_params(url)
     """
     if not pred:
         return df
-    regex= re.compile(r'([><|#])')
+    regex= re.compile(r'([><|#=])')
     params = [p for p in pred.split(',')]
     params = [regex.split(p) for p in params]
     for param in params:
@@ -35,7 +36,7 @@ def _truncate(df, pred=None):
     return df
 
 def _apply_mask(df, k, _cmp, v):
-    v = float(v) if _cmp in '><' else v
+    v = eval(v) if v.isdigit() else v
     mask = (df[k] > v if _cmp == '>' else
             df[k] < v if _cmp == '<' else
             df[k] == v)
