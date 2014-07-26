@@ -8,6 +8,7 @@ from datetime import timedelta
 
 from lib.report.base import ReportBase
 from lib.report.utils.constants import *
+from lib.report.request_json_forms import *
 
 import os
 CUR_DIR = os.path.dirname(__file__)
@@ -82,7 +83,7 @@ class ReportDomain(ReportBase):
     def _get_timedelta(self, lookback):
         return timedelta(days=lookback)
 
-    def _get_form_helper(group):
+    def _get_form_helper(self, group):
         return (DOMAIN_JSON_FORM if group == 'site_domain' else
                 ADVERTISER_DOMAIN_JSON_FORM if group == 'advertiser,domain' else
                 ADVERTISER_DOMAIN_CAMPAIGN_JSON_FORM)
