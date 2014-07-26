@@ -13,13 +13,6 @@ from lib.report.utils.constants import *
 from handlers.reporting import ReportingHandler
 from lib.helpers import decorators
 
-from request_json_forms import DOMAIN_JSON_FORM
-from request_json_forms import ADVERTISER_DOMAIN_JSON_FORM
-from request_json_forms import ADVERTISER_DOMAIN_CAMPAIGN_JSON_FORM
-from request_json_forms import DATA_PULLING_FORMS
-from request_json_forms import CONVERSIONS_FORM
-
-
 CUR_DIR = os.path.dirname(__file__)
 
 def _create_csv(text, path):
