@@ -37,6 +37,7 @@ from lib.report.utils.utils import memo
 
 LIMIT = 1
 
+@memo
 def _advertiser_to_pixels_mapping():
     console = _get_or_create_console()
     logging.info("getting pixel ids")
@@ -47,14 +48,6 @@ def _advertiser_to_pixels_mapping():
         if p.get('state') == 'active':
             d[str(p.get('advertiser_id'))].append(str(p.get('id')))
     return dict(d)
-
-PIXELS_D = None
-def _get_pixel_d():
-    global PIXELS_D
-    pixels_d = PIXELS_D or _advertiser_to_pixels_mapping()
-    if not PIXELS_D:
-        PIXELS_D = pixels_d
-    return pixels_d
 
 def _is_valid(row):
     pid = row['pixel_id']
@@ -100,15 +93,12 @@ class ReportConversions(ReportBase):
         return timedelta(hours=lookback)
 
     def _get_advertiser_ids(self):
-        pixel_d = _get_pixel_d()
-        return pixel_d.keys()
+        d_ = _advertiser_to_pixels_mapping()
+        return d_.keys()
 
     def _get_pixel_ids(self, advertiser_id):
-        global PIXELS_D
-        pixels_d = PIXELS_D or _advertiser_to_pixels_mapping()
-        if not PIXELS_D:
-            PIXELS_D = pixels_d
-        return pixels_d.get(advertiser_id)
+        d_ = _advertiser_to_pixels_mapping()
+        return d_.get(advertiser_id)
 
 def _groupby(df):
     grouped = df.groupby(["pixel_id",
