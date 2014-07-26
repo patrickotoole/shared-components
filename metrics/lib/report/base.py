@@ -139,7 +139,7 @@ def _get_or_create_console():
 
 class ReportBase(object):
     def __init__(self, name):
-        self.name = name
+        self._name = name
 
     def get_report(self,
             group=None,
