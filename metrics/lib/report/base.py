@@ -38,24 +38,6 @@ def _get_path(name, advertiser_id):
             )).lower()
     return os.path.join(CUR_DIR, path)
 
-def get_resp(group=None,
-        start_date=None,
-        end_date=None,
-        advertiser_id=None,
-        pixel_id=None,
-        ):
-    logging.info("getting data from date: %s -- %s." % (start_date, end_date))
-    request_form = _get_forms(group=group,
-            start_date=start_date,
-            end_date=end_date,
-            pixel_id=pixel_id,
-            )
-    request_url = _get_request_url(group, advertiser_id)
-    logging.info("requesting data from url: %s" % request_url)
-    _id = _get_report_id(request_url, request_form)
-    url = _get_report_url(_id)
-    resp = _get_report_resp(url)
-    return resp
 
 def _get_request_url(group, advertiser_id=None):
     if advertiser_id:
@@ -111,22 +93,6 @@ def _get_resp(url, method='get', forms=None):
     else:
         resp = c.post(url, forms)
     return resp
-
-def _get_forms(group=None,
-        start_date=None,
-        end_date=None,
-        pixel_id=None,
-        ):
-    form = (DOMAIN_JSON_FORM if group == 'site_domain' else
-            ADVERTISER_DOMAIN_JSON_FORM if group == 'advertiser,domain' else
-            ADVERTISER_DOMAIN_CAMPAIGN_JSON_FORM if group == 'advertiser,domain,campaign' else
-            DATA_PULLING_FORMS if group == 'datapulling' else
-            CONVERSIONS_FORM)
-    if pixel_id:
-        form = form % ( (start_date, end_date, pixel_id, pixel_id) )
-    else:
-        form = form % ( (start_date, end_date) )
-    return form
 
 def _get_or_create_console():
     global CONSOLE
@@ -200,7 +166,7 @@ class ReportBase(object):
                 _should_create_csv = True
 
         if df is None:
-            resp = get_resp(group=group,
+            resp = self._get_resp_helper(group=group,
                     end_date=end_date,
                     start_date=start_date,
                     advertiser_id=advertiser_id,
@@ -212,6 +178,40 @@ class ReportBase(object):
                 _create_csv(resp, path)
 
         return df
+
+    def _get_resp_helper(self,
+            group=None,
+            start_date=None,
+            end_date=None,
+            advertiser_id=None,
+            pixel_id=None,
+            ):
+        logging.info("getting data from date: %s -- %s." % (start_date, end_date))
+        request_form = self._get_form(group=group,
+                start_date=start_date,
+                end_date=end_date,
+                pixel_id=pixel_id,
+                )
+        request_url = _get_request_url(group, advertiser_id)
+        logging.info("requesting data from url: %s" % request_url)
+        _id = _get_report_id(request_url, request_form)
+        url = _get_report_url(_id)
+        resp = _get_report_resp(url)
+        return resp
+
+    def _get_form(group=None,
+            start_date=None,
+            end_date=None,
+            pixel_id=None,
+            ):
+        _d = dict(start_date=start_date, end_date=end_date)
+        if pixel_id:
+            _d.update(dict(pixel_id=pixel_id))
+        _form = _get_form_helper(group)
+        return _form % _d
+
+    def _get_form_helper(*args, **kwargs):
+        raise NotImplementedError
 
     def _get_dates(self, end_date=None, lookback=None):
         _timedelta = self._get_timedelta(lookback)
