@@ -2,7 +2,7 @@ import os
 from twisted.trial import unittest
 from twisted.test import proto_helpers
 from lib.report.domain import ReportDomain
-from lib.report.datapulling import ReportDatapulling
+from lib.report.datapulling import ReportDataPulling
 from lib.report.common import get_report_obj
 from lib.report.utils.utils import local_now
 
