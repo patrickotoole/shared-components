@@ -16,7 +16,7 @@ class ReportTestCase(unittest.TestCase):
         expected = obj._name
         self.assertEqual(expected, 'domain')
 
-    def test_get_report_domain(self):
+    def test_report_domain(self):
         obj = get_report_obj('domain')
         metrics = 'best'
         csv_path = os.path.realpath(__file__ + '../../test_csv_files/advertiser,site_domain.csv')
@@ -34,7 +34,7 @@ class ReportTestCase(unittest.TestCase):
         response = result.to_dict().get('advertiser')
         self.assertEqual(expected, response)
 
-    def test_get_report_datapulling(self):
+    def test_report_datapulling(self):
         csv_path = os.path.realpath(__file__ + '../../test_csv_files/datapulling349923.csv')
         obj = get_report_obj('datapulling')
         resp = obj.get_report(
