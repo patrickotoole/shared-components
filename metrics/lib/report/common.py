@@ -1,3 +1,9 @@
+"""
+python common.py --report=domain --group=advertiser,site_domain --limit=10 --metrics=best --pred='media_cost<20,booked_revenue>100'
+python common.py --report=datapulling --cache --act
+python common.py --report=converstions --cache --act --end_date=2014-07-14 --lookback=1
+"""
+
 import glob
 import os
 from pprint import pprint
@@ -51,7 +57,7 @@ def main():
             type=str,
             default='site_domain',
             )
-    define('act', type=bool, default=False)
+    define('act', type=bool, default=False, help='if read from cache, act will create csv file if file not exist')
     define('path', help='where to put tmp csv file')
     define('pred', type=str, help='predicats, campaign#bob,media_cost>10')
     define('limit', type=int, default=LIMIT)
@@ -87,7 +93,8 @@ def main():
         run_server(port, report_obj=report_obj, name=report)
         return
 
-    result = report_obj.get_report(group=group,
+    result = report_obj.get_report(
+            group=group,
             limit=limit,
             path=path,
             act=act,
