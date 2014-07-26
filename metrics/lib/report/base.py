@@ -103,6 +103,9 @@ def _get_or_create_console():
     CONSOLE = console
     return console
 
+class LimitError(ValueError):
+    pass
+
 class ReportBase(object):
     def __init__(self, name):
         self._name = name
@@ -123,21 +126,24 @@ class ReportBase(object):
         logging.info("Getting start date: %s, end date: %s" % (start_date, end_date))
         advertiser_ids = self._get_advertiser_ids() or ['']
         for advertiser_id in advertiser_ids:
-            pixel_ids = self._get_pixel_ids(advertiser_id) or ['']
-            for pixel_id in pixel_ids:
-                result = self._get_report_helper(
-                        group=group,
-                        path=path,
-                        act=act,
-                        cache=cache,
-                        start_date=start_date,
-                        end_date=end_date,
-                        advertiser_id=advertiser_id,
-                        pixel_id=pixel_id,
-                        )
-                dfs.append(result)
-                if limit and len(dfs) >= limit:
-                    break
+            try:
+                pixel_ids = self._get_pixel_ids(advertiser_id) or ['']
+                for pixel_id in pixel_ids:
+                    result = self._get_report_helper(
+                            group=group,
+                            path=path,
+                            act=act,
+                            cache=cache,
+                            start_date=start_date,
+                            end_date=end_date,
+                            advertiser_id=advertiser_id,
+                            pixel_id=pixel_id,
+                            )
+                    dfs.append(result)
+                    if limit and len(dfs) >= limit:
+                        raise(LimitError)
+            except LimitError:
+                break
         dfs = pd.concat(dfs)
         dfs = self._filter(dfs, pred=pred, metrics=metrics)
         return dfs[:limit]
