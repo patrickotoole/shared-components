@@ -142,6 +142,7 @@ class ReportBase(object):
                     dfs.append(result)
                     if limit and len(dfs) >= limit:
                         raise(LimitError)
+            #hacky to break out of 2 loop
             except LimitError:
                 break
         dfs = pd.concat(dfs)
