@@ -29,6 +29,9 @@ class ReportDataPulling(ReportBase):
     def _get_advertiser_ids(self):
         return ADVERTISER_IDS
 
+    def _get_form_helper(self, *args, **kwargs):
+        return DATA_PULLING_FORMS
+
 def _analyze(df):
     grouped = df.groupby(['hour',
                           'advertiser_id',

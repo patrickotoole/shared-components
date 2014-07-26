@@ -34,6 +34,7 @@ from lib.report.base import _get_or_create_console
 from lib.report.utils.constants import CONVERSIONS
 from lib.report.utils.utils import convert_datetime
 from lib.report.utils.utils import memo
+from lib.report.request_json_forms import CONVERSIONS_FORM
 
 LIMIT = 1
 
@@ -99,6 +100,9 @@ class ReportConversions(ReportBase):
     def _get_pixel_ids(self, advertiser_id):
         d_ = _advertiser_to_pixels_mapping()
         return d_.get(advertiser_id)
+
+    def _get_form_helper(self, *args, **kwargs):
+        return CONVERSIONS_FORM
 
 def _groupby(df):
     grouped = df.groupby(["pixel_id",
