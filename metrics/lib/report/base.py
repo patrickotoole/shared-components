@@ -241,10 +241,9 @@ class ReportBase(object):
         return None
 
 class ReportDomainHandler(ReportingHandler):
-    def __init__(self, name, report_obj, *args, **kwargs):
+    def initialize(self, name, report_obj, **kwargs):
         self._name = name
         self._report_obj = report_obj
-        #super(ReportingHandler, self).__init__(*args, **kwargs)
 
     #@tornado.web.authenticated
     @decorators.formattable
