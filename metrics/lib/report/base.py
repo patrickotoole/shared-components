@@ -166,7 +166,8 @@ class ReportBase(object):
                 _should_create_csv = True
 
         if df is None:
-            resp = self._get_resp_helper(group=group,
+            resp = self._get_resp_helper(
+                    group=group,
                     end_date=end_date,
                     start_date=start_date,
                     advertiser_id=advertiser_id,
@@ -187,7 +188,8 @@ class ReportBase(object):
             pixel_id=None,
             ):
         logging.info("getting data from date: %s -- %s." % (start_date, end_date))
-        request_form = self._get_form(group=group,
+        request_form = self._get_form(
+                group=group,
                 start_date=start_date,
                 end_date=end_date,
                 pixel_id=pixel_id,
@@ -199,7 +201,8 @@ class ReportBase(object):
         resp = _get_report_resp(url)
         return resp
 
-    def _get_form(group=None,
+    def _get_form(self,
+            group=None,
             start_date=None,
             end_date=None,
             pixel_id=None,
@@ -207,10 +210,10 @@ class ReportBase(object):
         _d = dict(start_date=start_date, end_date=end_date)
         if pixel_id:
             _d.update(dict(pixel_id=pixel_id))
-        _form = _get_form_helper(group)
+        _form = self._get_form_helper(group)
         return _form % _d
 
-    def _get_form_helper(*args, **kwargs):
+    def _get_form_helper(self, *args, **kwargs):
         raise NotImplementedError
 
     def _get_dates(self, end_date=None, lookback=None):
