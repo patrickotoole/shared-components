@@ -71,8 +71,18 @@ def _sort_df(df, metrics=WORST):
 
 
 class ReportDomain(ReportBase):
+    def get_report(self, *args, **kwargs):
+        if not kwargs.get('group'):
+            kwargs['group'] = DOMAIN
+        return super(ReportDomain, self).get_report(*args, **kwargs)
+
     def _filter(self, df, *args, **kwargs):
         return _filter(df, *args, **kwargs)
 
     def _get_timedelta(self, lookback):
         return timedelta(days=lookback)
+
+    def _get_form_helper(group):
+        return (DOMAIN_JSON_FORM if group == 'site_domain' else
+                ADVERTISER_DOMAIN_JSON_FORM if group == 'advertiser,domain' else
+                ADVERTISER_DOMAIN_CAMPAIGN_JSON_FORM)
