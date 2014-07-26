@@ -41,6 +41,6 @@ class ReportTestCase(unittest.TestCase):
                 path=csv_path,
                 limit=10,
                 )
-        expected = {0: 799,1: 2346, 2: 2635, 3: 10115, 4: 4811, 5: 714, 6: 1700, 7: 1122, 8: 17, 9: 204}
+        expected = {0: 470, 1: 1380, 2: 1550, 3: 5950, 4: 2830, 5: 420, 6: 1000, 7: 660, 8: 10, 9: 120}
         response = resp.to_dict().get('imps')
         self.assertEqual(expected, response)
