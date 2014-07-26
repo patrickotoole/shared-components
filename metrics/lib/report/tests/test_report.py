@@ -13,7 +13,7 @@ DOMAIN = 'domain'
 class ReportTestCase(unittest.TestCase):
     def test_get_report_obj(self):
         obj = get_report_obj('domain')
-        expected = obj.name
+        expected = obj._name
         self.assertEqual(expected, 'domain')
 
     def test_get_report_domain(self):
