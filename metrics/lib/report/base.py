@@ -2,6 +2,7 @@ import logging
 import os
 import io
 import urllib
+from datetime import timedelta
 
 import pandas as pd
 from link import lnk
@@ -14,25 +15,34 @@ from handlers.reporting import ReportingHandler
 from lib.helpers import decorators
 
 CUR_DIR = os.path.dirname(__file__)
+TMP_DIR = os.path.abspath('/tmp')
+FILE_FMT = '{name}_{group}{start_date}_{end_date}.csv'
 
-def _create_csv(text, path):
-    with open(path, 'w') as f:
-        f.write(text)
-    return path
+def _create_csv(df, path):
+    logging.info("creating csv file to path: %s" % path)
+    df.to_csv(path)
 
 def _resp_to_df(resp):
     df = pd.read_csv(io.StringIO(unicode(resp)))
     return df
 
-def _get_path(name, advertiser_id):
-    path = ('csv_file/{name}{advertiser_id}.csv'.format(
-            name=name,
-            advertiser_id=advertiser_id,
-            )).lower()
-    return os.path.join(CUR_DIR, path)
+def _get_path(
+        name=None,
+        group=None,
+        start_date=None,
+        end_date=None,
+        ):
+    _len = len("yyyy-mm-dd")
+    start_date, end_date = start_date[:_len], end_date[:_len]
+    file_name = FILE_FMT.format(name=name,
+            group=group or "",
+            start_date=start_date,
+            end_date=end_date,
+            ).lower()
+    path = os.path.join(TMP_DIR, file_name)
+    return path
 
-
-def _get_request_url(group, advertiser_id=None):
+def _get_request_url(advertiser_id=None):
     if advertiser_id:
         return '/report?advertiser_id=' + advertiser_id
     return '/report?'
@@ -120,70 +130,52 @@ class ReportBase(object):
         dfs = []
         start_date, end_date = self._get_dates(end_date=end_date, lookback=lookback)
         logging.info("Getting start date: %s, end date: %s" % (start_date, end_date))
-        advertiser_ids = self._get_advertiser_ids() or ['']
-        try:
-            for advertiser_id in advertiser_ids:
-                    pixel_ids = self._get_pixel_ids(advertiser_id) or ['']
-                    for pixel_id in pixel_ids:
-                        result = self._get_report_helper(
-                                group=group,
-                                path=path,
-                                act=act,
-                                cache=cache,
-                                start_date=start_date,
-                                end_date=end_date,
-                                advertiser_id=advertiser_id,
-                                pixel_id=pixel_id,
-                                )
-                        dfs.append(result)
-                        if limit and len(dfs) >= limit:
-                            raise(LimitError)
-        #hacky to break out of 2 loop
-        except LimitError:
-                pass
-        dfs = pd.concat(dfs)
-        if _is_empty(dfs):
-            return dfs
-        dfs = self._filter(dfs, pred=pred, metrics=metrics)
-        return dfs[:limit]
 
-    def _get_report_helper(self,
-            group=None,
-            path=None,
-            act=False,
-            start_date=None,
-            end_date=None,
-            cache=False,
-            advertiser_id=None,
-            pixel_id=None,
-            ):
-        df = None
         _should_create_csv = False
         if cache:
-            path = _get_path(group, advertiser_id)
-
-        if path:
-            logging.info("Getting csv file from: %s" % path)
+            path = _get_path(
+                    name=self._name,
+                    group=group,
+                    start_date=start_date,
+                    end_date=end_date,
+                    )
             try:
-                df = pd.read_csv(path)
+                logging.info("Getting csv from path: %s" % path)
+                dfs = [pd.read_csv(path)]
             except IOError:
-                logging.warn("csv file don't exist: %s" % path)
                 _should_create_csv = True
 
-        if df is None:
-            resp = self._get_resp_helper(
-                    group=group,
-                    end_date=end_date,
-                    start_date=start_date,
-                    advertiser_id=advertiser_id,
-                    pixel_id=pixel_id,
-                    )
-            df = _resp_to_df(resp)
-            if _should_create_csv and act:
-                logging.info("creating csv file: %s" % path)
-                _create_csv(resp, path)
+        if not dfs:
+            advertiser_ids = self._get_advertiser_ids() or ['']
+            try:
+                for advertiser_id in advertiser_ids:
+                        pixel_ids = self._get_pixel_ids(advertiser_id) or ['']
+                        for pixel_id in pixel_ids:
+                            resp = self._get_resp_helper(
+                                    group=group,
+                                    end_date=end_date,
+                                    start_date=start_date,
+                                    advertiser_id=advertiser_id,
+                                    pixel_id=pixel_id,
+                                    )
+                            df = _resp_to_df(resp)
+                            dfs.append(df)
+                            if limit and len(dfs) >= limit:
+                                raise(LimitError)
+            #hacky to break out of 2 loop
+            except LimitError:
+                    pass
+        dfs = pd.concat(dfs)
 
-        return df
+        if _is_empty(dfs):
+            return dfs
+
+        if act:
+            if _should_create_csv:
+                _create_csv(dfs, path)
+
+        dfs = self._filter(dfs, pred=pred, metrics=metrics)
+        return dfs[:limit]
 
     def _get_resp_helper(self,
             group=None,
@@ -199,7 +191,7 @@ class ReportBase(object):
                 end_date=end_date,
                 pixel_id=pixel_id,
                 )
-        request_url = _get_request_url(group, advertiser_id)
+        request_url = _get_request_url(advertiser_id)
         logging.info("requesting data from url: %s" % request_url)
         _id = _get_report_id(request_url, request_form)
         url = _get_report_url(_id)
@@ -230,7 +222,7 @@ class ReportBase(object):
         raise NotImplementedError
 
     def _get_timedelta(self, lookback):
-        raise NotImplementedError
+        return timedelta(hours=lookback)
 
     def _get_advertiser_ids(self):
         return None
