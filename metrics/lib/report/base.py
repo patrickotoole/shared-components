@@ -21,7 +21,7 @@ FILE_FMT = '{name}_{group}{start_date}_{end_date}.csv'
 
 def _create_csv(df, path):
     logging.info("creating csv file to path: %s" % path)
-    df.to_csv(path)
+    df.to_csv(path, index=False)
 
 def _resp_to_df(resp):
     df = pd.read_csv(io.StringIO(unicode(resp)))
@@ -120,7 +120,7 @@ def _get_db():
 
 class ReportBase(object):
     def __init__(self, *args, **kwargs):
-        self._db_wrapper = kwargs.get('db_wrapper') or my_db
+        self._db_wrapper = kwargs.get('db_wrapper') or _get_db()
 
     def get_report(self,
             group=None,
@@ -149,8 +149,8 @@ class ReportBase(object):
                 logging.info("Getting csv from path: %s" % path)
                 dfs = [pd.read_csv(path)]
             except IOError:
+                logging.warn("CSV file not exists in path: %s" % path)
                 _should_create_csv = True
-
         if not dfs:
             advertiser_ids = self._get_advertiser_ids() or ['']
             try:
