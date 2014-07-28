@@ -30,7 +30,7 @@ class Buffer(object):
         return self._buffer
 
     def copy(self):
-        return copy.deepcopy(self._buffer)
+        return copy.copy(self._buffer)
 
     def clear_and_copy(self):
         _copy = self.copy()

@@ -17,9 +17,9 @@ PATTERN  = """<input class="form-control" id="pattern" name="pattern" placeholde
 LOG      = """<input class="form-control" id="log" name="log" placeholder="domain list logging name">"""
 
 button_classes = {
-    "enable" :"btn-success",
-    "delete" :"btn-danger remove",
-    "disable":"btn-warning remove"
+    "enable" :"btn-success btn-xs",
+    "delete" :"btn-danger remove btn-xs",
+    "disable":"btn-warning remove btn-xs"
 }
 
 def button_builder(_id, name, toggle):
@@ -83,20 +83,45 @@ class TargetingBase(tornado.web.RequestHandler):
         return df
 
     def add_target(self,target):
-        self.db.execute("INSERT INTO domain_list (`log`, `pattern`, `segment`, `active`) VALUES (\"%(log)s\", \"%(pattern)s\", \"%(segment)s\", 1) " % target)
+        self.db.execute("INSERT INTO domain_list (`log`, `pattern`, `segment`, `active`,`test`) VALUES (\"%(log)s\", \"%(pattern)s\", \"%(segment)s\", 1, 1) " % target)
         self.db.commit()
+
+    def add_targets(self,targets):
+        for target in targets:
+            self.add_target(target)
+
+    def confirm_target(self,_id):
+        self.db.execute("UPDATE domain_list SET `test` = 0 WHERE id = %s " % _id)
+        self.db.commit()
+
+    def confirm_targets(self,targets):
+        for target in targets:
+            self.confirm_target(target)
 
     def disable_target(self,_id):
         self.db.execute("UPDATE domain_list SET `active` = 0 WHERE id = %s " % _id)
         self.db.commit()
 
+    def disable_targets(self,ids):
+        for _id in ids:
+            self.disable_target(_id)
+
     def delete_target(self,_id):
         self.db.execute("DELETE from domain_list WHERE id = %s " % _id)
         self.db.commit()
 
+    def delete_targets(self,ids):
+        for _id in ids:
+            self.delete_target(_id)
+
+
     def enable_target(self,_id):
         self.db.execute("UPDATE domain_list SET `active` = 1 WHERE id = %s " % _id)
         self.db.commit()
+    
+    def enable_targets(self,ids):
+        for _id in ids:
+            self.enable_target(_id)
 
 
 
@@ -127,12 +152,50 @@ class TargetingHandler(TargetingBase):
             self.enable_target(enable)
             last = []
         else:
+            db_targets_df = self.get_targets().reset_index()
+            db_targets_df['stored'] = 1
+
             targets = ujson.loads(self.request.body)
-            last = targets[-1]
-            self.add_target(last)
+            client_targets_df = pandas.DataFrame(targets)
+            client_targets_df['client'] = 1
+
+            merged = client_targets_df.merge(
+                db_targets_df,
+                "outer",
+                on=["log","pattern","segment"]
+            )
+
+            to_remove = merged[merged.client != 1].id
+            self.delete_targets(to_remove)
+
+            to_enable = merged[merged.active_x > merged.active_y].id
+            self.enable_targets(to_enable)
+
+            to_disable = merged[merged.active_x < merged.active_y].id
+            self.disable_targets(to_disable)
+            
+            try:
+                to_confirm = merged[merged.test_x.map(int) < merged.test_y].id
+                self.confirm_targets(to_confirm)
+            except:
+                pass
+
+            try:
+                to_test = merged[merged.test_x.map(int) > merged.test_y].id
+                #self.confirm_targets(to_test)
+            except:
+                pass
+
+            try:
+                to_add = merged[(merged.client == 1) & (merged.stored != 1)]
+                to_add = to_add[["log","pattern","segment"]].T.fillna(0).to_dict().values()
+
+                self.add_targets(to_add)
+            except:
+                to_add = {}
 
         self.update_profile()
         self.update_boxes()
 
-        json = ujson.dumps(last)
+        json = ujson.dumps(to_add)
         self.write(json)

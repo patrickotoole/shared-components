@@ -18,15 +18,46 @@
 <form role="form">
   <br/>
   <div class="row"> 
-    <div class="col-sm-4 new-item">
-      <h5>Create</h5>
-      
+    <div class="col-md-12">
+      <h4>Create</h4>
     </div>
-    <div class="col-sm-4">
-      <h5>Batch</h5>
-      <div id="batches"></div>
-      
+  </div>
+  <div class="row new-item">
+  </div>
+  <br/>
+  <div class="row">
+    <div class="col-md-12 col-sm-4">
+      <h4>Batch Testing</h4>
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Log</th>
+            <th>Segment</th>
+            <th>Pattern</th>
+            <th>Imps</th>
+            <th>Price</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="batches">
+        </tbody>
+      </table>
     </div>
+    <div class="col-md-12">
+      <button type="submit" id="add-batch" class="submit btn btn-success">
+        Start 
+      </button>
+      <button type="submit" id="disable-batch" class="submit btn btn-warning">
+        Disable 
+      </button>
+      <button type="submit" id="delete-batch" class="submit btn btn-danger">
+        Delete 
+      </button>
+      <button type="submit" id="confirm-batch" class="submit btn btn-info">
+        Confirm (and Clear) 
+      </button>
+    </div>
+      
   </div>
   <br/>
   <h4>Existing</h4>
@@ -35,9 +66,10 @@
     <thead>
       <tr>
         <th>Log</th>
-        <th>Pattern</th>
         <th>Segment</th>
-        <th>Stats</th>
+        <th>Pattern</th>
+        <th>Imps</th>
+        <th>Price</th>
         <th>Actions</th>
       </tr>
     </thead>
@@ -46,28 +78,188 @@
 
 </div>
 <script>
+var socketWrapper = function(params,on_init) {
+  var self = this;
+  this.id = Math.round(Math.random() * 10000000);
+
+  this.createSocket = function(params){
+    this.socket = new WebSocket("ws://" + 
+      window.location.host + 
+      "/admin/websocket?id=" + 
+      this.id
+    );
+
+    this.socket.onopen = function() {
+      self.sendMessage("initialize")
+      self.sendJSON(sharedJson)
+      $("#start").trigger("click")
+
+      if (on_init) on_init.bind(self)()
+    }
+
+    this.socket.onmessage = function(event) {
+      var parsed = JSON.parse(event.data)
+      self.onMessage(parsed,event)
+    }
+  }
+
+  this.sendMessage = function(message){
+    if (!this.socket) this.createSocket()
+    this.socket.send(message)
+  }
+
+  this.sendJSON = function(object) {
+    console.log(window.location.pathname + "?" + $.param(object,true))
+    window.history.pushState({},"",window.location.pathname + "?" + $.param(object,true))
+    this.sendMessage(JSON.stringify(object))
+  }
+
+  this.onMessage = function(json,event) { }
+  this.createSocket(params)
+
+}
+var sharedJson = {}
+
+var socket = new socketWrapper({},function(){this.sendMessage("start")});
+socket.onMessage = function(x){
+  dataWrapper.add(x)
+  dataWrapper.tracker ++;
+}
+
+var rawDataWrapper = function(steps) {
+  var THRESHOLD = 60
+  var self = this
+  this.tracker = 0
+  this.crs = crossfilter([{"position":0,"result":{}}])
+  this.dim = this.crs.dimension(function(x){return x.position})
+  this.domain_dim = this.crs.dimension(function(x){
+    if (x.result) {
+      return x.result.domain
+    } else {
+      return 0
+    }
+  })
+
+  this.domain_group = this.domain_dim.group().reduce(
+    function(p,v) { 
+      p.imps++; 
+      p.price += parseFloat(v.result.price)
+      p.cpm = d3.round(p.price/p.imps,2)
+      return p 
+    },
+    function(p,v) { 
+      p.imps--; 
+      p.price -= parseFloat(v.result.price)
+      p.cpm = d3.round(p.price/p.imps,2)
+      return p 
+    },
+    function() {
+      return {"imps":0,"price":0,"cpm":0}
+    }
+  )
+
+  this.check = function() {
+    this.new_tracker = self.tracker
+    var bool = (this.old_tracker != this.new_tracker) 
+    this.old_tracker = this.new_tracker
+
+    return bool
+  }
+
+  mixinMemoizedWithCheck(this.domain_group,{"toHash":toHash},this.check)
+  this.domains = self.domain_group.toHash
+
+  
+  this.add = function(json) {
+    var results = json['track']
+    results = results.map(function(x) {
+      x['position'] = self.tracker
+      return x
+    })
+    this.dim.filter(function(x,y){
+      return x < self.tracker - THRESHOLD 
+    })
+    this.crs.remove()
+    this.dim.filterAll()
+    this.crs.add(results)
+
+    var d = self.domain_group.toHash()
+    update_data(self.domain_group.toHash)
+    
+  }
+
+}
+
+
+
+function update_data(fn) {
+  var imps_objects = $('.imps'),
+    price_objects = $('.price'),
+    domain_data = fn();
+    //console.log(domain_data)
+
+    imps_objects.each(function(x,e){
+      var domain_name = imps_objects[x].id.split("imps-")[1]
+      var imps = document.getElementById('imps-' + domain_name)
+
+      try {
+        var _data = domain_data[domain_name]
+        imps.innerHTML = _data.imps
+        document.getElementById('price-' + domain_name).innerHTML = _data.cpm
+        imps.parentNode.parentNode.classList.remove("hide")
+        imps.parentNode.parentNode.classList.remove("warning")
+
+      } catch(e) {
+        imps.innerHTML = ""
+        //parent.removeClass("success")
+        //console.log(domain_name)
+      }
+    })
+}
+
+dataWrapper = new rawDataWrapper(60)
+
+
+
+
+
 var data = {{ profile }},
   crs = crossfilter(data);
 
 log = crs.dimension(function(d){ return d.log })
 group = log.group().all()
 
-var LOG = '<select class="lists form-control" id="log" name="log" placeholder="domain list logging name"></select>',
-  PATTERN = '<input class="form-control" id="pattern" name="pattern" placeholder="pattern to match">',
-  INPUT = '<select class="segs form-control" id="segment" name="segment" placeholder="segment code"></select>',
-  ACTION = '<button type="submit" id="add-target" class="submit btn btn-success">Submit</button>'
-  DUPLICATE = '<button type="submit" id="batch" class="submit btn ">Batch</button>'
-  BATCH  = '<button type="submit" id="add-batch" class="submit btn btn-success">Add Batch</button>'
+var LOG = '<div class="col-sm-4"><select class="lists form-control" id="log" name="log" data-placeholder="domain list logging name"></select></div>',
+  PATTERN = '<div class="col-sm-4"><input class="form-control" id="pattern" name="pattern" placeholder="pattern to match"></div>',
+  INPUT = '<div class="col-sm-4"><select class="segs form-control" id="segment" name="segment" placeholder="segment code"></select></div>',
+  HIDDEN = '<div class="col-sm-4 hidden"><input class="form-control" id="test" name="test" value="1"></input></div>',
+  ACTION = '<button type="submit" id="add-target" class="submit btn btn-success">Start Targeting</button>'
+  DUPLICATE = '<div class="col-md-1"><button type="submit" id="batch" class="submit btn ">Add to Batch</button></div>'
+  BATCH  = '<div class="col-md-1"><button type="submit" id="add-batch" class="submit btn btn-success">Add Batch</button></div>'
   
-var NEW = "<div>" + LOG + INPUT + PATTERN + DUPLICATE + "</div>"
+var NEW = "<div>" + LOG + INPUT + PATTERN + HIDDEN + DUPLICATE + "</div>"
 
 $(".new-item").append(NEW)
+
+
+
 
 $.each(group, function(i,v){
   var vv = '<option value="' + v.key + '">' + v.key + "</option>"
   $(".lists").append(vv)
 })
-$('.lists').chosen()
+
+$('.lists').chosen({
+  create_option: function(term){
+    var chosen = this;
+    chosen.append_option({
+      value: term,
+      text: "Custom: " + term
+    });
+    $j(".lists").trigger("change")
+  },
+  persistent_create_option: false
+})
 
 seg = crs.dimension(function(d){ return d.segment})
 seg_group = seg.group().all()
@@ -76,15 +268,23 @@ $.each(seg_group, function(i,v){
   var vv = '<option value="' + v.key + '">' + v.key + "</option>"
   $(".segs").append(vv)
 })
-$('.segs').chosen()
-
-
+$('.segs').chosen({
+  create_option: function(term){
+    var chosen = this;
+    chosen.append_option({
+      value: term,
+      text: "Custom: " + term
+    });
+    $j(".segs").trigger("change")
+  },
+  persistent_create_option: false
+})
 
 
 dc.dataTable(".dc-data-table")
   .dimension(log)
   .group(function (d) {
-    return d.log
+    return d.log + "<div style='float:right' class='lock right btn-xs'>Served</div>"
   })
   .size(10000)
   .columns([
@@ -92,13 +292,16 @@ dc.dataTable(".dc-data-table")
     return d.log
   },
   function (d) {
-    return d.pattern
-  },
-  function (d) {
     return d.segment
   },
   function (d) {
-    return '<div id="domains-'+d.pattern+'-stats">coming soon...</div>'
+    return d.pattern
+  },
+  function (d) {
+    return "<span class='imps' id='imps-"+d.pattern+"'></span>"
+  },
+  function (d) {
+    return "<span class='price' id='price-"+d.pattern+"'></span>"
   },
   function (d) {
     return d.actions
@@ -109,16 +312,49 @@ dc.dataTable(".dc-data-table")
   })
   .order(d3.ascending)
   .renderlet(function (table) {
+
     table.selectAll(".dc-table-group").classed("info", true).on("click", function(e){
-      d3.select(this.parentNode)
-        .selectAll(".dc-table-row")
-        .classed("hidden" ,function(e){
-          return d3.select(this).classed("hidden") ?
-            false : true;
-        })
-        .transition().duration(500)
-      })
-    table.selectAll(".dc-table-row").classed("hidden",true)
+      var lock = d3.select(this.parentNode).selectAll(".lock");
+      var text = lock.text();
+      if (text == "Served") {
+        lock.text("All")
+        d3.select(this.parentNode)
+          .selectAll(".dc-table-row")
+          .classed("soft-hide" , false)
+          .classed("hide" , false)
+          .transition().duration(500)
+
+      } else if (text == "Hidden") {
+                
+        lock.text("Served")
+        d3.select(this.parentNode)
+          .selectAll(".dc-table-row")
+          .classed("hide",true)
+          .classed("soft-hide" ,function(e){
+            return d3.select(this).classed("soft-hide") ?
+              false : true;
+          })
+          .transition().duration(500)
+
+      } else if (text == "All") {
+
+        lock.text("Hidden")
+        d3.select(this.parentNode)
+          .selectAll(".dc-table-row")
+          .classed("soft-hide" ,function(e){
+            return d3.select(this).classed("soft-hide") ?
+              false : true;
+          })
+          .transition().duration(500)
+        
+      }
+
+    })
+
+    table.selectAll(".dc-table-row").classed("hide",true)
+    $(document.getElementsByClassName('dc-table-row')).each(function(x,y){
+      y.classList.add("warning")
+    })
   });
 
 dc.renderAll()
@@ -154,6 +390,18 @@ $(".enable").click(function(e){
 
 })
 
+var send_data = function(json_string,cb) {
+  $.ajax({
+    type: "POST",
+    dataType: "json",
+    url: "targeting", 
+    data: json_string, 
+    success: function(last){ 
+      if (cb) cb()
+    }
+  })
+}
+
 
 $('form').on('click','#add-batch',function(e){
   e.preventDefault()
@@ -161,25 +409,101 @@ $('form').on('click','#add-batch',function(e){
     url:"targeting?format=json",
     dataType:"json"
   }).done(function(original){
-    var target_to_add = JSON.stringify(original.concat(batch))
+    batch = batch.map(function(x){x.active = 1; return x})
+    original = original.concat(batch)
+    var target_to_add = JSON.stringify(original)
+    send_data(target_to_add)
+  })
+  return false;
+})
 
-    $.ajax({
-      type: "POST",
-      dataType: "json",
-      url: "targeting", 
-      data: target_to_add, 
-      success: function(last){
-        $(e.target).parents("tr").before(
-          "<tr><th>"+
-          (original.length-1)+"</th><td>"+
-          last["log"]+"</td><td>"+
-          last["pattern"]+"</td><td>"+
-          last["segment"]+"</td><td>"+
-          last["Remove?"]+"</td></tr>"
-        )
-        batch = []
-        draw_batch()
+
+$('form').on('click','#disable-batch',function(e){
+  e.preventDefault()
+  $.ajax({
+    url:"targeting?format=json",
+    dataType:"json"
+  }).done(function(original){
+    batch = batch.map(function(x){x.active = 0; return x})
+    original = original.concat(batch)
+    var target_to_add = JSON.stringify(original)
+    send_data(target_to_add)
+  })
+  return false;
+})
+
+$('form').on('click','#delete-batch',function(e){
+  e.preventDefault()
+  $.ajax({
+    url:"targeting?format=json",
+    dataType:"json"
+  }).done(function(original){
+    var logs = [],
+      segments = [],
+      patterns = [];
+    batch = batch.map(function(x){
+      logs.push(x.log)
+      segments.push(x.segment)
+      patterns.push(x.pattern)
+      return x
+    })
+    original = original.filter(function(x){
+      console.log(logs.indexOf(x.log),
+        segments.indexOf(x.segment),
+        patterns.indexOf(x.pattern)
+      )
+      if ((logs.indexOf(x.log) > -1) &&
+          (segments.indexOf(x.segment) > -1) &&
+          (patterns.indexOf(x.pattern) > -1)) {
+        return false 
       }
+      return true
+    })
+    var target_to_add = JSON.stringify(original)
+    send_data(target_to_add,function(){
+      batch = []
+      draw_batch()
+    })
+  })
+  return false;
+})
+
+
+
+$('form').on('click','#confirm-batch',function(e){
+  e.preventDefault()
+  $.ajax({
+    url:"targeting?format=json",
+    dataType:"json"
+  }).done(function(original){
+    var logs = [],
+      segments = [],
+      patterns = [];
+    console.log(batch);
+    batch = batch.map(function(x){
+      logs.push(x.log)
+      segments.push(x.segment)
+      patterns.push(x.pattern)
+      return x
+    })
+    console.log(logs,segments,patterns)
+    original = original.map(function(x){
+      console.log(logs.indexOf(x.log),
+        segments.indexOf(x.segment),
+        patterns.indexOf(x.pattern)
+      )
+      if ((logs.indexOf(x.log) > -1) &&
+          (segments.indexOf(x.segment) > -1) &&
+          (patterns.indexOf(x.pattern) > -1)) {
+        console.log(x)
+        x.test = 0;
+      }
+      return x
+    })
+    var target_to_add = JSON.stringify(original)
+    send_data(target_to_add,function(){
+      batch = []
+      draw_batch()
     })
   })
   return false;
@@ -197,39 +521,33 @@ $('#add-target').click(function(e){
     _new = $(e.target).parents("form").serializeObject()
     original.push(_new)
     var target_to_add = JSON.stringify(original)
-
-
-    $.ajax({
-      type: "POST",
-      dataType: "json",
-      url: "targeting", 
-      data: target_to_add, 
-      success: function(last){
-        $(e.target).parents("tr").before(
-          "<tr><th>"+
-          (original.length-1)+"</th><td>"+
-          last["log"]+"</td><td>"+
-          last["pattern"]+"</td><td>"+
-          last["segment"]+"</td><td>"+
-          last["Remove?"]+"</td></tr>"
-        )
-      }
-    })
+    send_data(target_to_add)
   })
   return false;
 })
+
 
 var batch = []
 
 function draw_batch() {
   vv = ""
   $.each(batch,function(i,v){
-    vv += "<div>" + v.log + " : " + v.segment + " : " + v.pattern + "<a class='remove-batch btn btn-danger' id="+i+">X</a></div>"
+    vv += "<tr><td>" + v.log + 
+      "</td><td>" + v.segment + 
+      "</td><td>" + v.pattern + 
+      "</td><td>" + "<div class='imps' id='imps-" + v.pattern  + "'></div>" +
+      "</td><td>" + "<div id='price-" + v.pattern + "'></div>" +
+      "</td><td>" +
+        "<a class='remove-batch btn btn-danger btn-xs' id=remove-" + 
+          v.log + "|" + 
+          v.pattern + "|" +
+          v.segment +
+      ">X</a></td></tr>"
   })
   console.log(batch)
-  if (vv != "") {
-    vv = vv + BATCH
-  }
+  //if (vv != "") {
+  //  vv = vv + BATCH
+  //}
   $('#batches').html(vv)
 }
 
@@ -242,12 +560,41 @@ $('#batch').click(function(e){
 })
 
 $('#batches').on('click','.remove-batch',function(e){
-  console.log("Eg")
   
-  batch.splice(e.id,1)
-  draw_batch()
+  if (batch.length) {  
+    batch.splice(e.id,1)
+  } else {
+    var log = e.target.id.split("remove-")[1].split("|")[0],
+      pattern = e.target.id.split("remove-")[1].split("|")[1],
+      segment = e.target.id.split("remove-")[1].split("|")[2]
+    console.log(log,pattern)
+    $.ajax({
+      url:"targeting?format=json",
+      dataType:"json"
+    }).done(function(original){
+      var remove = function() {
+        $(e.target).parents("tr").remove()
+      }
+      var ids = []
+      $(original).each(function(i,o){
+        if ((o.log == log) && 
+            (o.pattern == pattern) && 
+            (o.segment == segment)){
+          ids.unshift(i)
+        }
+      })
+      $(ids).each(function(o,i){
+        console.log(o,i)
+        original.splice(i,1)
+      })
+      send_data(JSON.stringify(original),remove)
+    })
+  }
+  //draw_batch()
   
 })
+
+
 </script>
 <script src="http://rockerbox.com/js/jquery.serialize-object.js"></script>
 

@@ -25,7 +25,7 @@ class PixelDeserializer(object):
 
     def update_line(self,line):
         self.qs = Parse.qs(line)
-        self.formatted = copy.copy(self.qs)
+        self.formatted = self.qs
         
     def run_processors(self):
         """

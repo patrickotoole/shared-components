@@ -1,10 +1,10 @@
 import tornado.websocket
-import copy
 import time
 import redis
 import datetime
 import pandas
 import ujson
+import logging
 import tornado.platform.twisted
 from twisted.internet import  protocol, defer, threads
 from twisted.protocols import basic
@@ -24,7 +24,7 @@ class IndexHandler(tornado.web.RequestHandler):
 class StreamingHandler(StreamingBase,tornado.websocket.WebSocketHandler):
   
     def initialize(self,db,buffers={}):
-        self.time_interval = 1
+        self.time_interval = 2
         super(StreamingHandler,self).initialize(db=db,buffers=buffers)
 
     def generator_loop(self):
@@ -38,7 +38,7 @@ class StreamingHandler(StreamingBase,tornado.websocket.WebSocketHandler):
 
             masks = client.get('masks',False)
             dicts = { key: self.mask_select_convert(df,masks) for key, df in base.iteritems() }
-            json = ujson.dumps(dicts)
+            json = ujson.dumps(dicts,ensure_ascii=True)
 
             try:
                 client['object'].write_message(json)
@@ -47,6 +47,7 @@ class StreamingHandler(StreamingBase,tornado.websocket.WebSocketHandler):
             
 
         end = time.time()
+        logging.info(self.time_interval - (end - start))
 
         if len(clients.keys()) > 0:
             tornado.ioloop.IOLoop.instance().add_timeout(
@@ -83,6 +84,3 @@ class StreamingHandler(StreamingBase,tornado.websocket.WebSocketHandler):
             del clients[self.id]
 
         self.connection_closed = True
-
-
-
