@@ -73,6 +73,11 @@ def _sort_df(df, metrics=WORST):
 
 
 class ReportDomain(ReportBase):
+    def __init__(self, *args, **kwargs):
+        self._name = 'domain'
+        self._table_name = 'domain_reporting'
+        super(ReportDomain, self).__init__(*args, **kwargs)
+
     def get_report(self, *args, **kwargs):
         if not kwargs.get('group'):
             kwargs['group'] = DOMAIN

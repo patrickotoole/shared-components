@@ -19,6 +19,11 @@ from lib.report.request_json_forms import DATA_PULLING_FORMS
 
 
 class ReportDataPulling(ReportBase):
+    def __init__(self, *args, **kwargs):
+        self._name = 'datapulling'
+        self._table_name = 'v4_reporting'
+        super(ReportDataPulling, self).__init__(*args, **kwargs)
+
     def get_report(self, *args, **kwargs):
         kwargs['group'] = DATA_PULL
         return super(ReportDataPulling, self).get_report(*args, **kwargs)

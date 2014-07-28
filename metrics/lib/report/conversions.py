@@ -81,6 +81,11 @@ def _get_db():
     return _db
 
 class ReportConversions(ReportBase):
+    def __init__(self, *args, **kwargs):
+        self._name = 'conversions'
+        self._table_name = 'conversion_reporting'
+        super(ReportConversions, self).__init__(*args, **kwargs)
+
     def get_report(self, *args, **kwargs):
         kwargs['group'] = CONVERSIONS
         return super(ReportConversions, self).get_report(*args, **kwargs)
