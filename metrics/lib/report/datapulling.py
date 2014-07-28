@@ -13,6 +13,7 @@ cron script runs hourly to pull following data
 writing to database v4_reporting
 """
 from datetime import timedelta
+import pandas as pd
 from lib.report.utils.constants import *
 from lib.report.base import ReportBase
 from lib.report.request_json_forms import DATA_PULLING_FORMS

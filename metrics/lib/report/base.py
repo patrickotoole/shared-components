@@ -241,7 +241,7 @@ class ReportBase(object):
     def _work(self, df):
         """
         write df to sql
-        assuming all the df's field is exactly the fields in the table
+        assuming all data frames field is exactly the fields in the table
 
         @params:
         ________
