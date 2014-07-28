@@ -96,6 +96,9 @@ def _get_or_create_console():
     CONSOLE = console
     return console
 
+def _is_empty(df):
+    return len(df) == 0
+
 class LimitError(ValueError):
     pass
 
@@ -139,6 +142,8 @@ class ReportBase(object):
             except LimitError:
                 break
         dfs = pd.concat(dfs)
+        if _is_empty(dfs):
+            return dfs
         dfs = self._filter(dfs, pred=pred, metrics=metrics)
         return dfs[:limit]
 
