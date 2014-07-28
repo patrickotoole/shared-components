@@ -96,9 +96,6 @@ class ReportConversions(ReportBase):
         df.apply(_is_valid, axis=1)
         return df
 
-    def _get_timedelta(self, lookback):
-        return timedelta(hours=lookback)
-
     def _get_advertiser_ids(self):
         d_ = _advertiser_to_pixels_mapping()
         return d_.keys()

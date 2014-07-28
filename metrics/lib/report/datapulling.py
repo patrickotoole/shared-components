@@ -32,9 +32,6 @@ class ReportDataPulling(ReportBase):
     def _filter(self, df, *args, **kwargs):
         return _analyze(df)
 
-    def _get_timedelta(self, lookback):
-        return timedelta(hours=lookback)
-
     def _get_advertiser_ids(self):
         return ADVERTISER_IDS
 

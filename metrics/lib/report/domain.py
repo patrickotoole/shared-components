@@ -86,9 +86,6 @@ class ReportDomain(ReportBase):
     def _filter(self, df, *args, **kwargs):
         return _filter(df, *args, **kwargs)
 
-    def _get_timedelta(self, lookback):
-        return timedelta(days=lookback)
-
     def _get_form_helper(self, group):
         return (DOMAIN_JSON_FORM if group == 'site_domain' else
                 ADVERTISER_DOMAIN_JSON_FORM if group == 'advertiser,domain' else

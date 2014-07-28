@@ -61,7 +61,7 @@ def main():
     define('pred', type=str, help='predicats, campaign#bob,media_cost>10')
     define('limit', type=int, default=LIMIT)
     define('lookback',
-            help='how many days/hours from the end date',
+            help='how many hours from the end date',
             type=int,
             default=1,
             )
