@@ -86,10 +86,6 @@ class ReportConversions(ReportBase):
         self._table_name = 'conversion_reporting'
         super(ReportConversions, self).__init__(*args, **kwargs)
 
-    def get_report(self, *args, **kwargs):
-        kwargs['group'] = CONVERSIONS
-        return super(ReportConversions, self).get_report(*args, **kwargs)
-
     def _filter(self, df, *args, **kwargs):
         df['pc'] = df['post_click_or_post_view_conv'] == POST_CLICK
         df['is_valid'] = 0
