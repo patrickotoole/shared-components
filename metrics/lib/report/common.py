@@ -54,7 +54,6 @@ def main():
     define('group',
             help="choices: site_domain, advertise,site_domain, or advertise,site_domain,campaign",
             type=str,
-            default='site_domain',
             )
     define('act', type=bool, default=False, help='if read from cache, act will create csv file if file not exist')
     define('path', help='where to put tmp csv file')
