@@ -103,6 +103,9 @@ class LimitError(ValueError):
     pass
 
 class ReportBase(object):
+    def __init__(self, *args, **kwargs):
+        pass
+
     def get_report(self,
             group=None,
             limit=None,

@@ -48,9 +48,6 @@ def run_server(port,
     server.listen(port)
     tornado.ioloop.IOLoop.instance().start()
 
-def _work():
-    pass
-
 
 def main():
     define('report')
@@ -89,7 +86,7 @@ def main():
     cache = options.cache
     metrics = options.metrics
 
-    report_obj = get_report_obj()
+    report_obj = get_report_obj(report)
 
     if runserver:
         run_server(port, report_obj=report_obj, name=report)
@@ -107,7 +104,7 @@ def main():
             pred=pred,
             )
     if act:
-        _work(result)
+        report_obj._work(result)
     else:
         pprint(result)
 
