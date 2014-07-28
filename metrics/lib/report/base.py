@@ -10,6 +10,7 @@ from link import lnk
 from lib.report.utils.utils import retry
 from lib.report.utils.utils import get_start_and_end_date
 from lib.report.utils.utils import parse_params
+from lib.report.utils.utils import memo
 from lib.report.utils.constants import *
 from handlers.reporting import ReportingHandler
 from lib.helpers import decorators
@@ -112,9 +113,14 @@ def _is_empty(df):
 class LimitError(ValueError):
     pass
 
+@memo
+def _get_db():
+    my_db = lnk.dbs.roclocal
+    return my_db
+
 class ReportBase(object):
     def __init__(self, *args, **kwargs):
-        pass
+        self._db_wrapper = kwargs.get('db_wrapper') or my_db
 
     def get_report(self,
             group=None,
@@ -244,7 +250,7 @@ class ReportBase(object):
             database tablename to write to
         """
         table_name = self._table_name
-        my_db = lnk.dbs.roclocal
+        my_db = self._db_wrapper
         logging.info("creating %s" % table_name)
         #from lib.pandas_sql import write_frame
         #write_frame(df, table_name, my_db,  flavor='mysql', if_exists='append', index=False)
