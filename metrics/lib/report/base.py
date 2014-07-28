@@ -121,26 +121,26 @@ class ReportBase(object):
         start_date, end_date = self._get_dates(end_date=end_date, lookback=lookback)
         logging.info("Getting start date: %s, end date: %s" % (start_date, end_date))
         advertiser_ids = self._get_advertiser_ids() or ['']
-        for advertiser_id in advertiser_ids:
-            try:
-                pixel_ids = self._get_pixel_ids(advertiser_id) or ['']
-                for pixel_id in pixel_ids:
-                    result = self._get_report_helper(
-                            group=group,
-                            path=path,
-                            act=act,
-                            cache=cache,
-                            start_date=start_date,
-                            end_date=end_date,
-                            advertiser_id=advertiser_id,
-                            pixel_id=pixel_id,
-                            )
-                    dfs.append(result)
-                    if limit and len(dfs) >= limit:
-                        raise(LimitError)
-            #hacky to break out of 2 loop
-            except LimitError:
-                break
+        try:
+            for advertiser_id in advertiser_ids:
+                    pixel_ids = self._get_pixel_ids(advertiser_id) or ['']
+                    for pixel_id in pixel_ids:
+                        result = self._get_report_helper(
+                                group=group,
+                                path=path,
+                                act=act,
+                                cache=cache,
+                                start_date=start_date,
+                                end_date=end_date,
+                                advertiser_id=advertiser_id,
+                                pixel_id=pixel_id,
+                                )
+                        dfs.append(result)
+                        if limit and len(dfs) >= limit:
+                            raise(LimitError)
+        #hacky to break out of 2 loop
+        except LimitError:
+                pass
         dfs = pd.concat(dfs)
         if _is_empty(dfs):
             return dfs
