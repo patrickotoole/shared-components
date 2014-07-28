@@ -254,6 +254,8 @@ class ReportBase(object):
         table_name = self._table_name
         my_db = lnk.dbs.roclocal
         logging.info("creating %s" % table_name)
+        #from lib.pandas_sql import write_frame
+        #write_frame(df, table_name, my_db,  flavor='mysql', if_exists='append', index=False)
         df.to_sql(table_name, my_db, flavor='mysql',  if_exists='append', index=False)
 
 class ReportDomainHandler(ReportingHandler):
