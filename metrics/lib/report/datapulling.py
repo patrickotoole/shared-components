@@ -41,11 +41,11 @@ class ReportDataPulling(ReportBase):
         return DATA_PULLING_FORMS
 
 def _analyze(df):
-    df['date'] = df['hour']
+    df['date'] = pd.to_datetime(df['hour'])
     df['external_advertiser_id'] = df['advertiser_id']
     df = df.drop(['hour', 'advertiser_id'])
     grouped = df.groupby(['date',
-                          'advertiser_id',
+                          'external_advertiser_id',
                           'line_item_id',
                           'campaign_id',
                           'creative_id',
