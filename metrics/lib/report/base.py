@@ -103,9 +103,6 @@ class LimitError(ValueError):
     pass
 
 class ReportBase(object):
-    def __init__(self, name):
-        self._name = name
-
     def get_report(self,
             group=None,
             limit=None,
@@ -238,20 +235,21 @@ class ReportBase(object):
     def _get_pixel_ids(self, advertiser_id):
         return None
 
-    def _work(self, df, table_name):
+    def _work(self, df):
         """
         write df to sql
         assuming all the df's field is exactly the fields in the table
 
         @params:
         ________
+
         df         : Pandas Dataframe
             df to write to sql
         table_name : string
             database tablename to write to
         """
+        table_name = self._table_name
         my_db = lnk.dbs.roclocal
-        #con = MySQLdb.connect(host="localhost", db='roclocal', user='root')
         logging.info("creating %s" % table_name)
         df.to_sql(table_name, my_db, flavor='mysql',  if_exists='append', index=False)
 

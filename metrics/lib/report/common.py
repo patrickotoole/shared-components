@@ -89,7 +89,7 @@ def main():
     cache = options.cache
     metrics = options.metrics
 
-    report_obj = get_report_obj(report)
+    report_obj = get_report_obj()
 
     if runserver:
         run_server(port, report_obj=report_obj, name=report)
