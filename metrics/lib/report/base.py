@@ -233,6 +233,23 @@ class ReportBase(object):
     def _get_pixel_ids(self, advertiser_id):
         return None
 
+    def _work(self, df, table_name):
+        """
+        write df to sql
+        assuming all the df's field is exactly the fields in the table
+
+        @params:
+        ________
+        df         : Pandas Dataframe
+            df to write to sql
+        table_name : string
+            database tablename to write to
+        """
+        my_db = lnk.dbs.roclocal
+        #con = MySQLdb.connect(host="localhost", db='roclocal', user='root')
+        logging.info("creating %s" % table_name)
+        df.to_sql(table_name, my_db, flavor='mysql',  if_exists='append', index=False)
+
 class ReportDomainHandler(ReportingHandler):
     def initialize(self, name, report_obj, **kwargs):
         self._name = name
