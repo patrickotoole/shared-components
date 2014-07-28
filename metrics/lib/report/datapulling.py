@@ -8,7 +8,9 @@ cron script runs hourly to pull following data
     - Clicks
     - Imps
     - Media Cost
-    adx_spend
+    adx_spend (new_field, compare to v3_reporting)
+
+writing to database v4_reporting
 """
 from datetime import timedelta
 from lib.report.utils.constants import *
@@ -33,7 +35,10 @@ class ReportDataPulling(ReportBase):
         return DATA_PULLING_FORMS
 
 def _analyze(df):
-    grouped = df.groupby(['hour',
+    df['date'] = df['hour']
+    df['external_advertiser_id'] = df['advertiser_id']
+    df = df.drop(['hour', 'advertiser_id'])
+    grouped = df.groupby(['date',
                           'advertiser_id',
                           'line_item_id',
                           'campaign_id',
