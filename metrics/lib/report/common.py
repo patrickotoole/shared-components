@@ -41,7 +41,7 @@ def run_server(port,
         name=None,
         ):
     app = tornado.web.Application([
-        (r'/reportdomain/*', ReportDomainHandler, dict(name=name,
+        (r'/adminreport/*', ReportDomainHandler, dict(name=name,
                                                        report_obj=report_obj)),
         ], debug=True)
     server = tornado.httpserver.HTTPServer(app)

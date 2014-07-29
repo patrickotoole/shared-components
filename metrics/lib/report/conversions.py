@@ -39,12 +39,19 @@ from lib.report.request_json_forms import CONVERSIONS_FORM
 
 LIMIT = 1
 
+PC = 'post_click_expire_mins'
+PV = 'post_view_expire_mins'
+
 @memo
-def _advertiser_to_pixels_mapping():
+def _get_pixels():
     console = _get_or_create_console()
     logging.info("getting pixel ids")
     res = console.get('/pixel')
     pixels = res.json.get("response").get("pixels")
+    return pixels
+
+def _advertiser_to_pixels_mapping():
+    pixels = _get_pixels()
     d = defaultdict(list)
     for p in pixels:
         if p.get('state') == 'active':
@@ -53,7 +60,7 @@ def _advertiser_to_pixels_mapping():
 
 def _is_valid(row):
     pid = row['pixel_id']
-    window_hours = _get_pc_or_pv_hour(pid)
+    window_hours = _get_pc_or_pv_hour(int(pid))
     window_hours = timedelta(window_hours.get('pc') if row['pc'] else
                              window_hours.get('pv'))
     conversion_time = convert_datetime(row['datetime'])
@@ -61,24 +68,18 @@ def _is_valid(row):
     row['is_valid'] = imp_time + window_hours <= conversion_time
     return row
 
-@memo
-def _get_pc_or_pv_hours():
-    _db = _get_db()
-    query = "select * from advertiser_pixel where deleted=0"
-    res = _db.select(query)
-    dict_ = res.as_dict()
-    return dict((int(d.get('pixel_id')), dict(pc=int(d.get('pc_window_hours')),
-                                              pv=int(d.get('pv_window_hours')))
-                ) for d in dict_)
-
 def _get_pc_or_pv_hour(pid):
     dict_ = _get_pc_or_pv_hours()
     return dict_.get(pid)
 
 @memo
-def _get_db():
-    _db = lnk.dbs.mysql
-    return _db
+def _get_pc_or_pv_hours():
+    def _to_hour(mins):
+        return mins / 60.
+    pixels = _get_pixels()
+    return dict((p.get('id'), dict(pc=_to_hour(p.get(PC)),
+                                   pv=_to_hour(p.get(PV)))
+                 ) for p in pixels)
 
 class ReportConversions(ReportBase):
     def __init__(self, *args, **kwargs):
