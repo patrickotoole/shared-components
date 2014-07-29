@@ -15,7 +15,7 @@ from handlers import streaming, reporting, user, analysis
 import handlers.admin as admin
 
 from lib.buffers.pixel_buffer import BufferedSocketFactory
-from lib.buffers.view_buffer import ViewabilityBufferedFactory 
+from lib.buffers.view_buffer import ViewabilityBufferedFactory
 
 from lib.buffered_socket.qs import QSBufferedSocketFactory
 from lib.buffered_socket.schema import SchemaBufferedSocketFactory
@@ -62,9 +62,9 @@ pixel_parsers = {
     "referrer": DomainLookup()
 }
 
-view_schema = ["auction_id", "uid", 
-            "seller", "tag", "pub", "venue", "ecp", 
-            "price", "creative", "visible", "elapsed", 
+view_schema = ["auction_id", "uid",
+            "seller", "tag", "pub", "venue", "ecp",
+            "price", "creative", "visible", "elapsed",
             "action", "ref", "parent"
         ]
 
@@ -74,7 +74,7 @@ view_factory = SchemaBufferedSocketFactory(view_buffer,view_schema,pixel_parsers
 def sig_handler(sig, frame):
     logging.warning('Caught signal: %s', sig)
     tornado.ioloop.IOLoop.instance().add_callback_from_signal(shutdown)
- 
+
 def shutdown():
     logging.info('Stopping http server')
     try:
@@ -82,12 +82,12 @@ def shutdown():
     except:
         pass
     server.stop()
- 
+
     logging.info('Will shutdown in %s seconds ...', MAX_WAIT_SECONDS_BEFORE_SHUTDOWN)
     io_loop = tornado.ioloop.IOLoop.instance()
- 
+
     deadline = time.time() + MAX_WAIT_SECONDS_BEFORE_SHUTDOWN
- 
+
     def stop_loop():
         now = time.time()
         if now < deadline and (io_loop._callbacks or io_loop._timeouts):
@@ -99,7 +99,7 @@ def shutdown():
 
 
 old_handlers = [
-    (r'/debug', admin.lookback.DebugHandler), 
+    (r'/debug', admin.lookback.DebugHandler),
     (r'/uid.*', admin.lookback.UIDHandler),
     (r'/lookback.*', admin.lookback.LookbackHandler)
 ]
@@ -115,14 +115,14 @@ admin_scripts = [
 
 streaming = [
     (r'/streaming', streaming.streaming.IndexHandler),
-    (r'/websocket', streaming.streaming.StreamingHandler, 
+    (r'/websocket', streaming.streaming.StreamingHandler,
       dict(db=db,buffers={"track":track_buffer, "view":view_buffer})
     )
 ]
 
 admin_reporting = [
     (r'/admin/streaming',admin.streaming.IndexHandler),
-    (r'/admin/websocket', admin.streaming.AdminStreamingHandler, 
+    (r'/admin/websocket', admin.streaming.AdminStreamingHandler,
       dict(db=db,buffers={"track":track_buffer, "view":view_buffer})
     ),
     (r'/viewable.*',admin.reporting.ViewabilityHandler, dict(db=db,api=api,hive=hive)),
@@ -157,7 +157,6 @@ app = tornado.web.Application(
 
 if __name__ == '__main__':
     parse_command_line()
-
     reactor.listenTCP(options.listen_port, track_factory)
     reactor.listenTCP(options.view_port, view_factory)
 

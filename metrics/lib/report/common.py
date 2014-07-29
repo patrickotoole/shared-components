@@ -17,32 +17,14 @@ import tornado.web
 import tornado.httpserver
 
 from lib.report.base import ReportDomainHandler
+from lib.report.utils.reportutils import get_report_obj
 
 LIMIT = 5
 WORST = 'worst'
 
-def get_report_obj(report):
-    name = filter(str.isalnum, str(report).lower())
-    if not os.path.dirname(__file__) in sys.path:
-        sys.path.append(os.path.dirname(__file__))
-    os.chdir(os.path.dirname(__file__) or '.')
-    for f in glob.glob("*.py"):
-        f = os.path.splitext(f)[0]
-        if name == f:
-            _module = __import__(f)
-            for member_name, obj in inspect.getmembers(_module):
-                name = ('report' + report).lower()
-                if inspect.isclass(obj) and member_name.lower() == name:
-                    return obj(report)
-    raise ValueError("Can't for related report file")
-
-def run_server(port,
-        report_obj=None,
-        name=None,
-        ):
+def run_server(port):
     app = tornado.web.Application([
-        (r'/adminreport/*', ReportDomainHandler, dict(name=name,
-                                                       report_obj=report_obj)),
+        (r'/adminreport/(.*?)/*', ReportDomainHandler),
         ], debug=True)
     server = tornado.httpserver.HTTPServer(app)
     server.listen(port)
@@ -66,7 +48,7 @@ def main():
             )
     define('end_date', help='end date, examples: 2014-07-15',)
     define("runserver", type=bool, default=False)
-    define("port", default=8081, help="run on the given port", type=int)
+    define("port", default=8080, help="run on the given port", type=int)
     define("cache", type=bool, default=False, help="use cached csv file or api data")
     define("metrics", type=str, default=WORST)
 
@@ -85,12 +67,12 @@ def main():
     cache = options.cache
     metrics = options.metrics
 
-    report_obj = get_report_obj(report)
-
     if runserver:
-        run_server(port, report_obj=report_obj, name=report)
+        import ipdb; ipdb.set_trace()
+        run_server(port)
         return
 
+    report_obj = get_report_obj(report)
     result = report_obj.get_report(
             group=group,
             limit=limit,
