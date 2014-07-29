@@ -6,13 +6,12 @@ from datetime import timedelta
 
 import pandas as pd
 from link import lnk
-import MySQLdb
 
 from lib.report.utils.utils import retry
 from lib.report.utils.utils import get_start_and_end_date
 from lib.report.utils.utils import parse_params
-from lib.report.utils.utils import memo
-from lib.report.common import get_report_obj
+from lib.report.reportutils import get_default_db
+from lib.report.reportutils import get_report_obj
 from lib.report.utils.constants import *
 from lib.pandas_sql import s as _sql
 
@@ -119,14 +118,9 @@ def _is_empty(df):
 class LimitError(ValueError):
     pass
 
-@memo
-def _get_db():
-    my_db = lnk.dbs.roclocal
-    return my_db
-
 class ReportBase(object):
     def __init__(self, *args, **kwargs):
-        self._db_wrapper = kwargs.get('db_wrapper') or _get_db()
+        self._db_wrapper = kwargs.get('db_wrapper') or get_default_db()
 
     def get_report(self,
             group=None,

@@ -4,33 +4,17 @@ python common.py --report=datapulling --cache --act
 python common.py --report=converstions --cache --act --end_date=2014-07-14 --lookback=1
 """
 
-import glob
-import os
 from pprint import pprint
-import sys
-import inspect
 
 from tornado.options import define
 from tornado.options import options
 from tornado.options import parse_command_line
 
+from lib.report.work.report import ReportWorker
+from lib.report.reportutils import get_report_obj
+
 LIMIT = 5
 WORST = 'worst'
-
-def get_report_obj(report):
-    name = filter(str.isalnum, str(report).lower())
-    if not os.path.dirname(__file__) in sys.path:
-        sys.path.append(os.path.dirname(__file__))
-    os.chdir(os.path.dirname(__file__) or '.')
-    for f in glob.glob("*.py"):
-        f = os.path.splitext(f)[0]
-        if name == f:
-            _module = __import__(f)
-            for member_name, obj in inspect.getmembers(_module):
-                name = ('report' + report).lower()
-                if inspect.isclass(obj) and member_name.lower() == name:
-                    return obj(report)
-    raise ValueError("Can't for related report file")
 
 def main():
     define('report')
@@ -53,7 +37,7 @@ def main():
 
     parse_command_line()
 
-    report = options.report
+    name = options.report
     group = options.group
     act = options.act
     path = options.path
@@ -63,9 +47,7 @@ def main():
     end_date = options.end_date
     cache = options.cache
     metrics = options.metrics
-
-    report_obj = get_report_obj(report)
-    result = report_obj.get_report(
+    kwargs = dict(
             group=group,
             limit=limit,
             path=path,
@@ -75,10 +57,13 @@ def main():
             metrics=metrics,
             pred=pred,
             )
-    if act:
-        report_obj._work(result)
-    else:
+    if not act:
+        report_obj = get_report_obj(name)
+        result = report_obj.get_report(**kwargs)
         pprint(result)
+    else:
+        ReportWorker(name).work(**kwargs)
+        return
 
 if __name__ == '__main__':
     exit(main())
