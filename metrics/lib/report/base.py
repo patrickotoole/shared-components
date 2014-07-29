@@ -11,7 +11,9 @@ from lib.report.utils.utils import retry
 from lib.report.utils.utils import get_start_and_end_date
 from lib.report.utils.utils import parse_params
 from lib.report.utils.utils import memo
+from lib.report.common import get_report_obj
 from lib.report.utils.constants import *
+
 from handlers.reporting import ReportingHandler
 from lib.helpers import decorators
 
@@ -144,12 +146,14 @@ class ReportBase(object):
                     start_date=start_date,
                     end_date=end_date,
                     )
+        if path:
             try:
                 logging.info("Getting csv from path: %s" % path)
                 dfs = [pd.read_csv(path)]
             except IOError:
                 logging.warn("CSV file not exists in path: %s" % path)
                 _should_create_csv = True
+
         if not dfs:
             advertiser_ids = self._get_advertiser_ids() or ['']
             try:
@@ -255,13 +259,12 @@ class ReportBase(object):
         df.to_sql(table_name, my_db, flavor='mysql',  if_exists='append', index=False)
 
 class ReportDomainHandler(ReportingHandler):
-    def initialize(self, name, report_obj, **kwargs):
-        self._name = name
-        self._report_obj = report_obj
+    def initialize(self, *args, **kwargs):
+        pass
 
     #@tornado.web.authenticated
     @decorators.formattable
-    def get(self):
+    def get(self, name):
         url = self.request.uri
         kwargs = parse_params(url)
 
@@ -272,10 +275,11 @@ class ReportDomainHandler(ReportingHandler):
                       for k, v in kwargs.items())
         logging.info("kwargs: %s" % kwargs)
 
-        data = self._report_obj.get_report(**kwargs)
+        report_obj = get_report_obj(name)
+        data = report_obj.get_report(**kwargs)
 
         def default(self, data):
-            url = "reporting_domain/_report_%s.html" % self._name
+            url = "reporting_domain/_report_%s.html" % name
             self.render(url, data=data)
 
         yield default, (data,)

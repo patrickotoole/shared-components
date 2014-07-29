@@ -25,10 +25,6 @@ class ReportDataPulling(ReportBase):
         self._table_name = 'v4_reporting'
         super(ReportDataPulling, self).__init__(*args, **kwargs)
 
-    def get_report(self, *args, **kwargs):
-        kwargs['group'] = DATA_PULL
-        return super(ReportDataPulling, self).get_report(*args, **kwargs)
-
     def _filter(self, df, *args, **kwargs):
         return _analyze(df)
 
@@ -41,7 +37,7 @@ class ReportDataPulling(ReportBase):
 def _analyze(df):
     df['date'] = pd.to_datetime(df['hour'])
     df['external_advertiser_id'] = df['advertiser_id']
-    df = df.drop(['hour', 'advertiser_id'])
+    df = df.drop(['hour', 'advertiser_id'], axis=1)
     grouped = df.groupby(['date',
                           'external_advertiser_id',
                           'line_item_id',
@@ -49,6 +45,13 @@ def _analyze(df):
                           'creative_id',
                           'seller_member',
                           ])
+    grouped2 = df.groupby(['date',
+                           'external_advertiser_id',
+                           'line_item_id',
+                           'campaign_id',
+                           'creative_id',
+                          ])
     res = grouped[['imps', 'clicks', 'media_cost']].sum()
+    res2 = grouped2[['imps', 'clicks', 'media_cost']].sum()
     res = res.xs(GOOGLE_ADX, level="seller_member").reset_index()
     return res
