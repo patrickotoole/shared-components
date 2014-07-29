@@ -69,14 +69,16 @@ def _get_report_id(request_url, request_json_form):
 
 @retry(num_retries=NUM_TRIES,
        sleep_interval=SLEEP,
-       retry_log_prefix='retrying getting url',
        )
 def _get_report_url(report_id):
-    #have to get the reponse for other function to work
     url = '/report?id={report_id}'.format(report_id=report_id)
     resp = _get_resp(url)
-    url = resp.json.get('response').get('report').get('url')
-    assert url
+    _resp = resp.json.get('response')
+    url = _resp.get('report').get('url')
+    if not url:
+        status = _resp.get('execution_status')
+        logging.warn("report: %s status is %s" % (report_id, status))
+        raise ValueError(status)
     logging.info("report url is: %s" % url)
     return url
 
@@ -139,7 +141,6 @@ class ReportBase(object):
         dfs = []
         start_date, end_date = self._get_dates(end_date=end_date, lookback=lookback)
         logging.info("Getting start date: %s, end date: %s" % (start_date, end_date))
-
         _should_create_csv = False
         if cache:
             path = _get_path(
@@ -157,35 +158,39 @@ class ReportBase(object):
                 _should_create_csv = True
 
         if not dfs:
-            advertiser_ids = self._get_advertiser_ids() or ['']
-            try:
-                for advertiser_id in advertiser_ids:
-                        pixel_ids = self._get_pixel_ids(advertiser_id) or ['']
-                        for pixel_id in pixel_ids:
-                            resp = self._get_resp_helper(
-                                    group=group,
-                                    end_date=end_date,
-                                    start_date=start_date,
-                                    advertiser_id=advertiser_id,
-                                    pixel_id=pixel_id,
-                                    )
-                            df = _resp_to_df(resp)
-                            dfs.append(df)
-                            if limit and len(dfs) >= limit:
-                                raise(LimitError)
-            #hacky to break out of 2 loop
-            except LimitError:
-                    pass
+            dfs = self._get_dataframes(group=group,
+                    end_date=end_date,
+                    start_date=start_date,
+                    limit=limit,
+                    )
         dfs = pd.concat(dfs)
-
         if _is_empty(dfs):
             return dfs
-
         if _should_create_csv:
             _create_csv(dfs, path)
 
         dfs = self._filter(dfs, pred=pred, metrics=metrics)
         return dfs[:limit]
+
+    def _get_dataframes(self, **kwargs):
+        dfs = []
+        limit = kwargs['limit']
+        advertiser_ids = self._get_advertiser_ids() or ['']
+        for advertiser_id in advertiser_ids:
+            pixel_ids = self._get_pixel_ids(advertiser_id) or ['']
+            for pixel_id in pixel_ids:
+                resp = self._get_resp_helper(
+                        group=kwargs['group'],
+                        end_date=kwargs['end_date'],
+                        start_date=kwargs['start_date'],
+                        advertiser_id=advertiser_id,
+                        pixel_id=pixel_id,
+                        )
+                df = _resp_to_df(resp)
+                dfs.append(df)
+                if limit and len(dfs) >= limit:
+                    return dfs
+        return dfs
 
     def _get_resp_helper(self,
             group=None,
