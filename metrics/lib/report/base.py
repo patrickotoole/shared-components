@@ -6,6 +6,7 @@ from datetime import timedelta
 
 import pandas as pd
 from link import lnk
+import MySQLdb
 
 from lib.report.utils.utils import retry
 from lib.report.utils.utils import get_start_and_end_date
@@ -13,6 +14,7 @@ from lib.report.utils.utils import parse_params
 from lib.report.utils.utils import memo
 from lib.report.common import get_report_obj
 from lib.report.utils.constants import *
+from lib.pandas_sql import s as _sql
 
 from handlers.reporting import ReportingHandler
 from lib.helpers import decorators
@@ -238,25 +240,16 @@ class ReportBase(object):
     def _get_pixel_ids(self, advertiser_id):
         return None
 
-    def _work(self, df):
+    def _work(self, df, db_wrapper=None):
         """
         write df to sql
         assuming all data frames field is exactly the fields in the table
-
-        @params:
-        ________
-
-        df         : Pandas Dataframe
-            df to write to sql
-        table_name : string
-            database tablename to write to
         """
         table_name = self._table_name
-        my_db = self._db_wrapper
-        logging.info("creating %s" % table_name)
-        #from lib.pandas_sql import write_frame
-        #write_frame(df, table_name, my_db,  flavor='mysql', if_exists='append', index=False)
-        df.to_sql(table_name, my_db, flavor='mysql',  if_exists='append', index=False)
+        col_names = df.columns.tolist()
+        _wrapper = db_wrapper or self._db_wrapper
+        cur = _wrapper.cursor()
+        _sql._write_mysql(df, table_name, col_names, cur)
 
 class ReportDomainHandler(ReportingHandler):
     def initialize(self, *args, **kwargs):
