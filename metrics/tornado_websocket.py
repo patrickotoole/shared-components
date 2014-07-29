@@ -13,6 +13,7 @@ from tornado.options import define, options, parse_command_line
 from handlers import streaming, reporting, user, analysis
 
 import handlers.admin as admin
+from handlers.adminreport import AdminReportHandler
 
 from lib.buffers.pixel_buffer import BufferedSocketFactory
 from lib.buffers.view_buffer import ViewabilityBufferedFactory
@@ -127,7 +128,8 @@ admin_reporting = [
     ),
     (r'/viewable.*',admin.reporting.ViewabilityHandler, dict(db=db,api=api,hive=hive)),
     #(r'/target_list.*',admin.reporting.TargetListHandler),
-    (r'/intraweek.*',admin.scripts.IntraWeekHandler, dict(db=db))
+    (r'/intraweek.*',admin.scripts.IntraWeekHandler, dict(db=db)),
+    (r'/adminreport/(.*?)/.*', AdminReportHandler)
 ]
 
 reporting = [
