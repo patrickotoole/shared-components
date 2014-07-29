@@ -126,7 +126,6 @@ class ReportBase(object):
             group=None,
             limit=None,
             path=None,
-            act=False,
             end_date=None,
             cache=False,
             lookback=1,
@@ -176,9 +175,8 @@ class ReportBase(object):
         if _is_empty(dfs):
             return dfs
 
-        if act:
-            if _should_create_csv:
-                _create_csv(dfs, path)
+        if _should_create_csv:
+            _create_csv(dfs, path)
 
         dfs = self._filter(dfs, pred=pred, metrics=metrics)
         return dfs[:limit]
