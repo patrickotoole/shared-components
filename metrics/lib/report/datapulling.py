@@ -43,23 +43,22 @@ class ReportDataPulling(ReportBase):
                 ]
 
 def _analyze(df):
-    df['date'] = pd.to_datetime(df['hour'])
-    df['external_advertiser_id'] = df['advertiser_id']
-    df = df.drop(['hour', 'advertiser_id'], axis=1)
-    grouped = df.groupby(['date',
-                          'external_advertiser_id',
-                          'line_item_id',
-                          'campaign_id',
-                          'creative_id',
-                          'seller_member',
-                          ])
-    grouped2 = df.groupby(['date',
-                           'external_advertiser_id',
-                           'line_item_id',
-                           'campaign_id',
-                           'creative_id',
-                          ])
-    res = grouped[['imps', 'clicks', 'media_cost']].sum()
-    res2 = grouped2[['imps', 'clicks', 'media_cost']].sum()
-    res = res.xs(GOOGLE_ADX, level="seller_member").reset_index()
-    return res
+    df = df.rename(columns=dict(hour='date', advertiser_id='external_advertiser_id'))
+    df['date'] = pd.to_datetime(df['date'])
+    to_group_all = ['date',
+                'external_advertiser_id',
+                'line_item_id',
+                'campaign_id',
+                'creative_id',
+                ]
+    to_group_adx = to_group_all + ['seller_member']
+    adx_grouped = df.groupby(to_group_adx)
+    all_grouped = df.groupby(to_group_all)
+    to_sum = ['imps', 'clicks', 'media_cost']
+    adx_res = adx_grouped[to_sum].sum()
+    adx_res = adx_res.xs(GOOGLE_ADX, level="seller_member").reset_index()
+
+    all_res = all_grouped[to_sum].sum()
+    to_return = all_res.reset_index()
+    to_return['adx_spend'] = adx_res['media_cost']
+    return to_return
