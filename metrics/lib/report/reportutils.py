@@ -7,7 +7,6 @@ import inspect
 from lib.report.utils.utils import memo
 from link import lnk
 
-@memo
 def get_default_db(production=False):
     if production or is_on_production():
         return lnk.dbs.mysql
