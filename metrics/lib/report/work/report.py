@@ -27,7 +27,7 @@ class ReportWorker(BaseWorker):
             self._work(**kwargs)
             status = True
         except UnableGetReporError:
-            logging.info("report job : %s, failed" % self._name)
+            logging.info("report job -- %s, failed" % self._name)
             status = False
 
         job_ended_at = local_now()
