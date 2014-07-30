@@ -137,6 +137,11 @@ def local_now():
 def datetime_to_str(dt):
     return dt.strftime(DATE_TIME_FORMAT)
 
+def get_dates(end_date=None, lookback=None):
+    _timedelta = timedelta(hours=lookback)
+    dates =  get_start_and_end_date(end_date,  _timedelta=_timedelta)
+    return dates.get('start_date'), dates.get('end_date')
+
 def get_start_and_end_date(end_date=None, _timedelta=None):
     if not end_date:
         end_date = local_now()

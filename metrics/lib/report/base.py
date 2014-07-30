@@ -15,6 +15,7 @@ from lib.report.reportutils import get_default_db
 from lib.report.reportutils import get_report_obj
 from lib.report.reportutils import apply_mask
 from lib.report.utils.constants import *
+from lib.report.utils.utils import get_dates
 from lib.pandas_sql import s as _sql
 
 from handlers.reporting import ReportingHandler
@@ -135,7 +136,7 @@ class ReportBase(object):
             metrics=WORST,
             ):
         dfs = []
-        start_date, end_date = self._get_dates(end_date=end_date, lookback=lookback)
+        start_date, end_date = get_dates(end_date=end_date, lookback=lookback)
         logging.info("Getting start date: %s, end date: %s" % (start_date, end_date))
         _should_create_csv = False
         if cache:
@@ -224,11 +225,6 @@ class ReportBase(object):
     def _get_form_helper(self, *args, **kwargs):
         raise NotImplementedError
 
-    def _get_dates(self, end_date=None, lookback=None):
-        _timedelta = self._get_timedelta(lookback)
-        dates =  get_start_and_end_date(end_date,  _timedelta=_timedelta)
-        return dates.get('start_date'), dates.get('end_date')
-
     def _filter(self, df, *args, **kwargs):
         df = self._pred(df, pred=kwargs.get('pred'))
         df = self._filter_helper(df, *args, **kwargs)
@@ -252,9 +248,6 @@ class ReportBase(object):
 
     def _filter_helper(self, df, *args, **kwargs):
         raise NotImplementedError
-
-    def _get_timedelta(self, lookback):
-        return timedelta(hours=lookback)
 
     def _get_advertiser_ids(self):
         return None
