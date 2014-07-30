@@ -2,11 +2,10 @@ import os
 from link import lnk
 from twisted.trial import unittest
 from lib.report.common import get_report_obj
-from lib.report.reportutils import get_default_db
 
 CUR_DIR = os.path.realpath(__file__)
 DOMAIN = 'domain'
-db = get_default_db()
+db = lnk.dbs.test
 
 class ReportTestCase(unittest.TestCase):
     def test_get_report_obj(self):

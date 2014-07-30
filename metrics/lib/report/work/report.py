@@ -5,7 +5,7 @@ from lib.report.work.base import BaseWorker
 from lib.pandas_sql import s as _sql
 from lib.report.utils.utils import local_now
 from lib.report.utils.utils import get_dates
-from lib.report.reportutils import get_default_db
+from lib.report.reportutils import get_db
 from lib.report.reportutils import get_report_obj
 
 class UnableGetReporError(ValueError):
@@ -14,7 +14,7 @@ class UnableGetReporError(ValueError):
 
 class ReportWorker(BaseWorker):
     def __init__(self, name, _db=None):
-        self._db = _db or get_default_db()
+        self._db = _db or get_db()
         self._name = name
 
     def do_work(self, **kwargs):

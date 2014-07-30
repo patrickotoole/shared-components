@@ -3,15 +3,12 @@ import re
 import os
 import io
 import urllib
-from datetime import timedelta
 
 import pandas as pd
 from link import lnk
 
 from lib.report.utils.utils import retry
-from lib.report.utils.utils import get_start_and_end_date
 from lib.report.utils.utils import parse_params
-from lib.report.reportutils import get_default_db
 from lib.report.reportutils import get_report_obj
 from lib.report.reportutils import apply_mask
 from lib.report.utils.constants import *
@@ -126,7 +123,7 @@ class LimitError(ValueError):
 
 class ReportBase(object):
     def __init__(self, db, *args, **kwargs):
-        self._db_wrapper = db or get_default_db()
+        self._db_wrapper = db
 
     def get_report(self,
             group=None,

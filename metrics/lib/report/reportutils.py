@@ -4,20 +4,12 @@ import sys
 import glob
 import inspect
 
-from lib.report.utils.utils import memo
 from link import lnk
 
-def get_default_db(production=False):
-    if production or is_on_production():
-        return lnk.dbs.mysql
-    return lnk.dbs.roclocal
-
-def is_on_production():
-    roclocal = lnk.config().get('dbs').get('roclocal')
-    return roclocal and roclocal.get('host') != '127.0.0.1'
+def get_db(test=True):
+    return lnk.dbs.test if test else lnk.dbs.mysql
 
 def get_report_obj(report_name, db=None):
-    db = db or get_default_db()
     name = filter(str.isalnum, str(report_name).lower())
     if not os.path.dirname(__file__) in sys.path:
         sys.path.append(os.path.dirname(__file__))

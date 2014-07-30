@@ -12,7 +12,7 @@ from tornado.options import parse_command_line
 
 from lib.report.work.report import ReportWorker
 from lib.report.reportutils import get_report_obj
-from lib.report.reportutils import get_default_db
+from lib.report.reportutils import get_db
 
 LIMIT = 5
 WORST = 'worst'
@@ -35,7 +35,7 @@ def main():
     define('end_date', help='end date, examples: 2014-07-15',)
     define("cache", type=bool, default=False, help="use cached csv file or api data")
     define("metrics", type=str, default=WORST)
-    define("production", type=bool, default=False, help="choose either local or productino db_wrapper")
+    define("test", type=bool, default=True, help="when chosen test, will use test-db")
 
     parse_command_line()
 
@@ -59,7 +59,7 @@ def main():
             metrics=metrics,
             pred=pred,
             )
-    db = get_default_db(options.production)
+    db = get_db(options.test)
     if not act:
         report_obj = get_report_obj(name, db=db)
         result = report_obj.get_report(**kwargs)
