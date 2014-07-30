@@ -8,10 +8,8 @@ from lib.report.utils.utils import memo
 from link import lnk
 
 @memo
-def get_default_db():
-    my_db = lnk.dbs.roclocal
-    return my_db
-
+def get_default_db(production=False):
+    return lnk.dbs.mysql if production else lnk.dbs.roclocal
 
 def get_report_obj(report):
     name = filter(str.isalnum, str(report).lower())
