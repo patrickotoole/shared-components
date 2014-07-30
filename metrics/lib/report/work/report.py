@@ -4,6 +4,7 @@ import pandas as pd
 from lib.report.work.base import BaseWorker
 from lib.pandas_sql import s as _sql
 from lib.report.utils.utils import local_now
+from lib.report.utils.utils import get_dates
 from lib.report.reportutils import get_default_db
 from lib.report.reportutils import get_report_obj
 
@@ -21,7 +22,7 @@ class ReportWorker(BaseWorker):
         @return: bool, True if successful, False otherwise
         """
         job_created_at = kwargs.get('job_created_at') or local_now()
-        status = job_ended_at = None
+        status =  None
 
         try:
             self._work(**kwargs)
@@ -29,15 +30,10 @@ class ReportWorker(BaseWorker):
         except UnableGetReporError:
             logging.info("report job -- %s, failed" % self._name)
             status = False
-
-        job_ended_at = local_now()
         con = self._db
-        _create_report_events(con,
-                name=self._name,
-                start=job_created_at,
-                end=job_ended_at,
-                status=int(status),
-                )
+
+        event_kwargs = _get_kwargs_for_reportevent(kwargs, job_created_at, status)
+        _create_report_events(con, **event_kwargs)
         return status
 
     def _work(self, **kwargs):
@@ -61,13 +57,26 @@ def _get_table_name(name):
             'conversion_reporting')
 
 def _create_report_events(con, **kwargs):
-    kwargs['failure'] = kwargs['success'] = None
-    if kwargs['status']:
-        kwargs['success'] = kwargs['end']
-    else:
-        kwargs['failure'] = kwargs['end']
     df = pd.DataFrame([kwargs])
     logging.info("creating report event")
     cur = con.cursor()
     _sql._write_mysql(df, "reportevent", df.columns.tolist(), cur, key=None)
     con.commit()
+
+def _get_kwargs_for_reportevent(kwargs, job_created_at, status):
+    """
+    @return: dict(start: str(time), end: str(time), status: bool,
+                  success: str(time), failure: str(time))
+    """
+    start, end = get_dates(end_date=kwargs['end_date'], lookback=kwargs['lookback'])
+    success = failure = None
+    if status:
+        success = job_created_at
+    else:
+        failure = job_created_at
+    return dict(start=start,
+                end=end,
+                status=status,
+                success=success,
+                failure=failure,
+                )
