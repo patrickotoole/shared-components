@@ -25,7 +25,7 @@ class ReportDataPulling(ReportBase):
         self._table_name = 'v4_reporting'
         super(ReportDataPulling, self).__init__(*args, **kwargs)
 
-    def _filter(self, df, *args, **kwargs):
+    def _filter_helper(self, df, *args, **kwargs):
         return _analyze(df)
 
     def _get_advertiser_ids(self):
@@ -33,6 +33,14 @@ class ReportDataPulling(ReportBase):
 
     def _get_form_helper(self, *args, **kwargs):
         return DATA_PULLING_FORMS
+
+    def _get_unique_table_key(self):
+        return ['date',
+                'external_advertiser_id',
+                'line_item_id',
+                'campaign_id',
+                'creative_id',
+                ]
 
 def _analyze(df):
     df['date'] = pd.to_datetime(df['hour'])
