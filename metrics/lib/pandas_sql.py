@@ -1,6 +1,7 @@
 import pandas.io.sql as s
 from pandas.io.sql import *
-from pandas.io.sql import _write_sqlite
+from lib.report.reportutils import convert_timestr
+#from pandas.io.sql import _write_sqlite
 
 def get_sqltype(pytype, flavor):
     sqltype = {'mysql': 'VARCHAR (63)',
@@ -30,18 +31,27 @@ def get_sqltype(pytype, flavor):
 
     return sqltype[flavor]
 
-def _write_mysql(frame, table, names, cur, key=None):
-
+def _write_mysql(frame, table, names, cur, key=None, fn=None):
+    """
+    @param: frame (df):
+    @param: table (string):
+    @param: names (list(sql_column_names)):
+    @param: cur (cursor):
+    @param: key (list(unique_column_names)):
+    @param: fn (function to transform the strings)
+    """
+    key = key or []
     bracketed_names = ['`' + column + '`' for column in names]
     col_names = ','.join(bracketed_names)
     wildcards = ','.join([r'%s'] * len(names))
-    updates = ','.join(['%s.`%s` = VALUES(%s.`%s`)' % (table,c,table,c) for c in names if c != key])
+    updates = ','.join(['%s.`%s` = VALUES(%s.`%s`)' % (table,c,table,c) for c in names if not c in key])
 
     insert_query = "INSERT INTO %s (%s) VALUES (%s) ON DUPLICATE KEY UPDATE %s" % (
         table, col_names, wildcards, updates)
-    data = [tuple(x) for x in frame.values]
-    
+    fn = fn or (lambda x: x)
+    data = [tuple(map(fn, x)) for x in frame.values]
     cur.executemany(insert_query, data)
+
 
 def write_frame(frame, name, con, flavor='sqlite', if_exists='fail', **kwargs):
     """
