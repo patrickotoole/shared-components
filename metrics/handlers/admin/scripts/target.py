@@ -188,7 +188,7 @@ class TargetingHandler(TargetingBase):
 
             try:
                 to_add = merged[(merged.client == 1) & (merged.stored != 1)]
-                to_add = to_add[["log","pattern","segment"]].T.fillna(0).to_dict().values()
+                to_add = to_add[["log","pattern","segment"]].T.to_dict().values()
 
                 self.add_targets(to_add)
             except:

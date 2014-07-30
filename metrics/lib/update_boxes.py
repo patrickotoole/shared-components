@@ -27,4 +27,5 @@ def update_boxes(boxes=BOXES,timeout=1):
     http_client.close()
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
     update_boxes()

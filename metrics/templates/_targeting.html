@@ -229,15 +229,16 @@ var data = {{ profile }},
 log = crs.dimension(function(d){ return d.log })
 group = log.group().all()
 
-var LOG = '<div class="col-sm-4"><select class="lists form-control" id="log" name="log" data-placeholder="domain list logging name"></select></div>',
+var LOG = '<div class="col-sm-3"><select class="lists form-control" id="log" name="log" data-placeholder="domain list logging name"></select></div>',
   PATTERN = '<div class="col-sm-4"><input class="form-control" id="pattern" name="pattern" placeholder="pattern to match"></div>',
-  INPUT = '<div class="col-sm-4"><select class="segs form-control" id="segment" name="segment" placeholder="segment code"></select></div>',
+  INPUT = '<div class="col-sm-3"><select class="segs form-control" id="segment" name="segment" placeholder="segment code"></select></div>',
   HIDDEN = '<div class="col-sm-4 hidden"><input class="form-control" id="test" name="test" value="1"></input></div>',
+  VALUE = '<div class="col-sm-2"><input class="form-control" id="value" name="value" placeholder="value"></div>',
   ACTION = '<button type="submit" id="add-target" class="submit btn btn-success">Start Targeting</button>'
   DUPLICATE = '<div class="col-md-1"><button type="submit" id="batch" class="submit btn ">Add to Batch</button></div>'
   BATCH  = '<div class="col-md-1"><button type="submit" id="add-batch" class="submit btn btn-success">Add Batch</button></div>'
   
-var NEW = "<div>" + LOG + INPUT + PATTERN + HIDDEN + DUPLICATE + "</div>"
+var NEW = "<div>" + LOG + INPUT + VALUE + PATTERN + HIDDEN + DUPLICATE + "</div>"
 
 $(".new-item").append(NEW)
 
@@ -262,12 +263,24 @@ $('.lists').chosen({
 })
 
 seg = crs.dimension(function(d){ return d.segment})
-seg_group = seg.group().all()
+seg_group = seg.group().all().map(function(x){
+  return x
+})
 
-$.each(seg_group, function(i,v){
+seg_group_values = d3.set( 
+    seg_group.map(function(x){return x.key.split(":")[0]})
+  )
+  .values()
+  .map(function(x){ return {"key":x}})
+
+console.log(seg_group_values)
+
+$.each(seg_group_values, function(i,v){
+  console.log(v)
   var vv = '<option value="' + v.key + '">' + v.key + "</option>"
   $(".segs").append(vv)
 })
+
 $('.segs').chosen({
   create_option: function(term){
     var chosen = this;
@@ -288,24 +301,24 @@ dc.dataTable(".dc-data-table")
   })
   .size(10000)
   .columns([
-  function (d) {
-    return d.log
-  },
-  function (d) {
-    return d.segment
-  },
-  function (d) {
-    return d.pattern
-  },
-  function (d) {
-    return "<span class='imps' id='imps-"+d.pattern+"'></span>"
-  },
-  function (d) {
-    return "<span class='price' id='price-"+d.pattern+"'></span>"
-  },
-  function (d) {
-    return d.actions
-  }
+    function (d) {
+      return d.log
+    },
+    function (d) {
+      return d.segment 
+    },
+    function (d) {
+      return d.pattern
+    },
+    function (d) {
+      return "<span class='imps' id='imps-"+d.pattern+"'></span>"
+    },
+    function (d) {
+      return "<span class='price' id='price-"+d.pattern+"'></span>"
+    },
+    function (d) {
+      return d.actions
+    }
   ])
   .sortBy(function (d) {
     return d.log;
@@ -553,7 +566,10 @@ function draw_batch() {
 
 $('#batch').click(function(e){
   e.preventDefault()
-  batch.push($(e.target).parents("form").serializeObject())
+  var serialized = $(e.target).parents("form").serializeObject()
+  console.log(serialized)
+  serialized['segment'] = serialized['segment'] + ":" + serialized['value']
+  batch.push(serialized)
   draw_batch()
   
   return false;
