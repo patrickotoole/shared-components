@@ -9,7 +9,13 @@ from link import lnk
 
 @memo
 def get_default_db(production=False):
-    return lnk.dbs.mysql if production else lnk.dbs.roclocal
+    if production or is_on_production():
+        return lnk.dbs.mysql
+    return lnk.dbs.roclocal
+
+def is_on_production():
+    roclocal = lnk.config().get('dbs').get('roclocal')
+    return roclocal and roclocal.get('host') != '127.0.0.1'
 
 def get_report_obj(report_name, db=None):
     db = db or get_default_db()
