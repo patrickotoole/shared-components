@@ -37,6 +37,6 @@ class ReportTestCase(unittest.TestCase):
                 path=csv_path,
                 limit=10,
                 )
-        expected = {0: 47, 1: 138, 2: 155, 3: 595, 4: 283, 5: 42, 6: 100, 7: 66, 8: 1, 9: 12}
-        response = resp.to_dict().get('imps')
+        expected = {0: 16932271, 1: 16932278, 2: 16932286, 3: 16932542, 4: 16932636, 5: 16932670, 6: 16932542, 7: 16932636, 8: 16932670, 9: 16932298}
+        response = resp.to_dict().get('creative_id')
         self.assertEqual(expected, response)
