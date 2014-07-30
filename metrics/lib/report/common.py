@@ -61,8 +61,8 @@ def main():
             )
     db = get_default_db(options.production)
     if not act:
-        report_obj = get_report_obj(name)
-        result = report_obj(db).get_report(db, **kwargs)
+        report_obj = get_report_obj(name, db=db)
+        result = report_obj.get_report(**kwargs)
         pprint(result)
     else:
         ReportWorker(name, db).work(**kwargs)

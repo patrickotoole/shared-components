@@ -11,8 +11,9 @@ from link import lnk
 def get_default_db(production=False):
     return lnk.dbs.mysql if production else lnk.dbs.roclocal
 
-def get_report_obj(report):
-    name = filter(str.isalnum, str(report).lower())
+def get_report_obj(report_name, db=None):
+    db = db or get_default_db()
+    name = filter(str.isalnum, str(report_name).lower())
     if not os.path.dirname(__file__) in sys.path:
         sys.path.append(os.path.dirname(__file__))
     os.chdir(os.path.dirname(__file__) or '.')
@@ -21,9 +22,9 @@ def get_report_obj(report):
         if name == f:
             _module = __import__(f)
             for member_name, obj in inspect.getmembers(_module):
-                name = ('report' + report).lower()
+                name = ('report' + report_name).lower()
                 if inspect.isclass(obj) and member_name.lower() == name:
-                    return obj(report)
+                    return obj(db)
     raise ValueError("Can't for related report file")
 
 def convert_timestr(s):
