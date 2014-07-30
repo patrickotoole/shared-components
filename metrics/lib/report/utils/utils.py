@@ -9,6 +9,7 @@ import urlparse
 from functools import update_wrapper
 
 DATE_TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
+DATE_TIME_FORMAT2 = '%Y-%m-%d %H:%M'
 DATE_FORMAT = '%Y-%m-%d'
 TIME_FMTS = [
     DATE_TIME_FORMAT,
@@ -133,13 +134,17 @@ def local_now():
     ny = pytz.timezone('America/New_York')
     return now.astimezone(ny)
 
+def datetime_to_str(dt):
+    return dt.strftime(DATE_TIME_FORMAT2)
+
 def get_start_and_end_date(end_date=None, _timedelta=None):
     if not end_date:
         end_date = local_now()
     if isinstance(end_date, str):
         end_date = convert_datetime(end_date)
     start_date = end_date - _timedelta
-    return dict(start_date=str(start_date), end_date=str(end_date))
+    return dict(start_date=datetime_to_str(start_date),
+                end_date=datetime_to_str(end_date))
 
 def parse_params(url):
     """
