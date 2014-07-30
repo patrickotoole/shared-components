@@ -122,8 +122,8 @@ class LimitError(ValueError):
     pass
 
 class ReportBase(object):
-    def __init__(self, *args, **kwargs):
-        self._db_wrapper = kwargs.get('db_wrapper') or get_default_db()
+    def __init__(self, db, *args, **kwargs):
+        self._db_wrapper = db or get_default_db()
 
     def get_report(self,
             group=None,
