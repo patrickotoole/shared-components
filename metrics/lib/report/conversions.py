@@ -42,6 +42,15 @@ LIMIT = 1
 PC = 'post_click_expire_mins'
 PV = 'post_view_expire_mins'
 
+UNIQUE_KEYS = ["pixel_id",
+               "line_item_id",
+               "campaign_id",
+               "creative_id",
+               "order_id",
+               "user_id",
+               "auction_id",
+               "datetime",
+               ]
 @memo
 def _get_pixels():
     console = _get_or_create_console()
@@ -63,7 +72,7 @@ def _is_valid(row):
     window_hours = _get_pc_or_pv_hour(int(pid))
     window_hours = timedelta(window_hours.get('pc') if row['pc'] else
                              window_hours.get('pv'))
-    conversion_time = convert_datetime(row['datetime'])
+    conversion_time = convert_datetime(row['conversion_time'])
     imp_time = convert_datetime(row['imp_time'])
     row['is_valid'] = imp_time + window_hours <= conversion_time
     return row
@@ -87,10 +96,17 @@ class ReportConversions(ReportBase):
         self._table_name = 'conversion_reporting'
         super(ReportConversions, self).__init__(*args, **kwargs)
 
-    def _filter(self, df, *args, **kwargs):
+    def _filter_helper(self, df, *args, **kwargs):
+        cols = {'advertiser_id': 'external_advertiser_id',
+                'datetime': 'conversion_time'}
+        df = df.rename(columns=cols)
+        to_drop = ['post_click_or_post_view_conv',
+                   'external_data',
+                   ]
         df['pc'] = df['post_click_or_post_view_conv'] == POST_CLICK
         df['is_valid'] = 0
-        df.apply(_is_valid, axis=1)
+        df = df.drop(to_drop, axis=1)
+        df = df.apply(_is_valid, axis=1)
         return df
 
     def _get_advertiser_ids(self):
@@ -103,6 +119,9 @@ class ReportConversions(ReportBase):
 
     def _get_form_helper(self, *args, **kwargs):
         return CONVERSIONS_FORM
+
+    def _get_unique_table_key(self):
+        return UNIQUE_KEYS
 
 def _groupby(df):
     grouped = df.groupby(["pixel_id",
