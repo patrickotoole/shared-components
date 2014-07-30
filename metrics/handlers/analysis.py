@@ -30,7 +30,7 @@ class AnalysisHandler(BaseHandler):
         segment_name = self.db.select_dataframe(segment_name_query)
         return segment_name['segment_name'][0]
 
-    def pull_segments(self, segments, weighted=True):
+    def pull_segments_domains(self, segments, weighted=True):
         '''Given a list of segments (strings), returns a DataFrame containing data about each domain visited by users of that
         segment. Note that low-volume domains are automatically aggregated into the "OTHER" category, and will appear as such
         within the DataFrame. Results may be weighted by using the "weighted" parameter.
@@ -51,7 +51,8 @@ class AnalysisHandler(BaseHandler):
                            FROM agg_domain_imps 
                            WHERE {} 
                            GROUP BY domain 
-                           ORDER BY num_users DESC'''.format(where)
+                           ORDER BY num_users DESC LIMIT 2000'''.format(where)
+        print segment_query
         segment_df = pd.DataFrame(self.hive.session_execute(["set shark.map.tasks=32", "set mapred.reduce.tasks=3", segment_query]))
         
         if weighted:
@@ -90,7 +91,31 @@ class AnalysisHandler(BaseHandler):
     def pull_partitions(self, table_name):
         '''Returns a DataFrame representing the partitions currently available in the table with given table_name'''
         partitions = pd.DataFrame(self.hive.execute("show partitions {}".format(table_name)))
-        return partitions
+        return partition
+    
+    def pull_segments_dmas(self, segments, weighted=True):
+        '''Given a list of segments (strings), returns a DataFrame containing data about each DMA visited by users of that
+        segment. 
+
+        Parameters
+        ---
+        segments (list of strings)
+        weighted (boolean, default: True) - If True, provides a weighted ranking and weighted user percentage based on the
+                                            current population. This should be used for most cases.
+        '''
+
+        segment_list = ["array_contains(segments, '{}')".format(segment) for segment in segments] 
+        where = ' OR '.join(segment_list)
+        segment_query = '''select dma,
+                               sum(num_imps) AS num_imps,
+                               sum(num_unique_users) AS num_users
+                           FROM agg_domain_imps 
+                           WHERE {} 
+                           GROUP BY dma
+                           ORDER BY num_users DESC LIMIT 2000'''.format(where)
+        segment_df = pd.DataFrame(self.hive.session_execute(["set shark.map.tasks=32", "set mapred.reduce.tasks=3", segment_query]))
+
+        return segment_df
 
     def pull_domains(self, domain_list):
         '''Given a list of domains, return a DataFrame summarizing the number of imps, pages, and users by date/hour'''
@@ -135,11 +160,17 @@ class AnalysisHandler(BaseHandler):
         segments = self.get_arguments("segment")
         logs = self.get_arguments("log")
         query = self.get_argument("query", False)
+        dim = self.get_argument("dim", False)
 
         if self.get_argument("query", False):
             segments = [item.strip() for item in query.split(',')]
-            name = "Segments"
-            data = self.pull_segments(segments).to_html(index=False)
+            name = [self.get_segment_name(segment) for segment in segments]
+            if dim == "domain":
+                template = "analysis/_segment_domain.html"
+                data = self.pull_segments_domains(segments).to_html(index=False)
+            elif dim == "dma":
+                template = "analysis/_segment_dma.html"
+                data = self.pull_segments_dmas(segments).to_html(index=False)
 
         elif self.get_argument("format", False):
             if domains:
@@ -147,7 +178,7 @@ class AnalysisHandler(BaseHandler):
                 data = self.pull_domains(domains)
             elif segments:
                 name = [self.get_segment_name(segment) for segment in segments]
-                data = self.pull_segments(segments)
+                data = self.pull_segments_domains(segments)
             elif logs:
                 name = logs
                 data = self.pull_log_volume(logs)
@@ -160,7 +191,7 @@ class AnalysisHandler(BaseHandler):
                 data = self.pull_domains(domains).to_html()
             elif segments:
                 name = [self.get_segment_name(segment) for segment in segments]
-                data = self.pull_segments(segments).to_html(index=False, index_names=False)
+                data = self.pull_segments_domains(segments).to_html(index=False, index_names=False)
             elif logs:
                 name = logs
                 data = self.pull_log_volume(logs).to_html(index=False)
@@ -172,7 +203,7 @@ class AnalysisHandler(BaseHandler):
             if domains:
                 self.render("analysis/_domains.html", stuff=data, name=name)
             elif segments:
-                self.render("analysis/_segment.html", stuff=data, name=name)
+                self.render(template, stuff=data, name=name)
             elif logs:
                 self.render("analysis/_log.html", stuff=data, name=name)
             else:

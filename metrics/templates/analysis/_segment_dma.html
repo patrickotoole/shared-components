@@ -1,0 +1,19 @@
+{% extends "segment_base.html" %}
+
+{% block datatable %}
+<script>
+$(document).ready( function () {
+    $('.dataframe').dataTable( {
+        "pageLength": 20,
+        "order": [ 1, 'desc' ],
+        "dom": 'T<"clear">lfrtip',
+        "tableTools": {
+            "sSwfPath": "/static/copy_csv_xls_pdf.swf"
+        }       
+    });   
+} );
+</script>
+
+{% raw stuff %}
+
+{% end %}
