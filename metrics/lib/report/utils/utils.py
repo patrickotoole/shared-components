@@ -135,7 +135,7 @@ def local_now():
     return now.astimezone(ny)
 
 def datetime_to_str(dt):
-    return dt.strftime(DATE_TIME_FORMAT2)
+    return dt.strftime(DATE_TIME_FORMAT)
 
 def get_start_and_end_date(end_date=None, _timedelta=None):
     if not end_date:
