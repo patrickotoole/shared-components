@@ -1,19 +1,21 @@
 import os
+from link import lnk
 from twisted.trial import unittest
 from lib.report.common import get_report_obj
+from lib.report.reportutils import get_default_db
 
 CUR_DIR = os.path.realpath(__file__)
 DOMAIN = 'domain'
-
+db = get_default_db()
 
 class ReportTestCase(unittest.TestCase):
     def test_get_report_obj(self):
-        obj = get_report_obj('domain')
+        obj = get_report_obj('domain', db)
         expected = obj._name
         self.assertEqual(expected, 'domain')
 
     def test_report_domain(self):
-        obj = get_report_obj('domain')
+        obj = get_report_obj('domain', db)
         metrics = 'best'
         csv_path = os.path.realpath(__file__ + '../../test_csv_files/advertiser,site_domain.csv')
         result = obj.get_report(limit=10, path=csv_path, metrics=metrics)
@@ -32,7 +34,7 @@ class ReportTestCase(unittest.TestCase):
 
     def test_report_datapulling(self):
         csv_path = os.path.realpath(__file__ + '../../test_csv_files/datapulling349923.csv')
-        obj = get_report_obj('datapulling')
+        obj = get_report_obj('datapulling', db)
         resp = obj.get_report(
                 path=csv_path,
                 limit=10,
