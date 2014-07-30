@@ -51,7 +51,7 @@ class AnalysisHandler(BaseHandler):
                            FROM agg_domain_imps 
                            WHERE {} 
                            GROUP BY domain 
-                           ORDER BY num_users DESC'''.format(where)
+                           ORDER BY num_users DESC LIMIT 2000'''.format(where)
         segment_df = pd.DataFrame(self.hive.session_execute(["set shark.map.tasks=32", "set mapred.reduce.tasks=3", segment_query]))
         
         if weighted:
