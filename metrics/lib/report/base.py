@@ -39,8 +39,11 @@ def _get_path(
         start_date=None,
         end_date=None,
         ):
-    _len = len("yyyy-mm-dd")
-    start_date, end_date = start_date[:_len], end_date[:_len]
+    _len = len("yyyy-mm-dd-hh")
+    def _helper(ts):
+        ts = (ts[:_len]).replace(' ', '-')
+        return ts
+    start_date, end_date = _helper(start_date), _helper(end_date)
     file_name = FILE_FMT.format(name=name,
             group=group or "",
             start_date=start_date,
