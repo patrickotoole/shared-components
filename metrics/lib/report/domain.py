@@ -13,36 +13,6 @@ from lib.report.request_json_forms import *
 import os
 CUR_DIR = os.path.dirname(__file__)
 
-def _filter(df, pred=None, metrics=None):
-    df = _truncate(df, pred=pred)
-    df = _sort_df(df, metrics=metrics)
-    df = _convert_inf_cpa(df)
-    return df
-
-def _truncate(df, pred=None):
-    """
-    command_line eg: --pred=campaign=boboba,advertiser=googleadx,media_cost>10
-    url eg: &pred=campaign#b,advertiser#c,media_cost>10
-    treating '#' as '=', not conflicting with func parse_params(url)
-    """
-    if not pred:
-        return df
-    regex= re.compile(r'([><|#=])')
-    params = [p for p in pred.split(',')]
-    params = [regex.split(p) for p in params]
-    for param in params:
-        k, _cmp, v = param
-        df = _apply_mask(df, k, _cmp, v)
-    return df
-
-def _apply_mask(df, k, _cmp, v):
-    v = eval(v) if v.isdigit() else v
-    mask = (df[k] > v if _cmp == '>' else
-            df[k] < v if _cmp == '<' else
-            df[k] == v)
-    df = df[mask]
-    return df
-
 def _convert_inf_cpa(df):
     inf_cpas = df[df['cpa'] > MILLION]
     inf_cpas['cpa'] = CPA_INF
@@ -83,8 +53,11 @@ class ReportDomain(ReportBase):
             kwargs['group'] = DOMAIN
         return super(ReportDomain, self).get_report(*args, **kwargs)
 
-    def _filter(self, df, *args, **kwargs):
-        return _filter(df, *args, **kwargs)
+    def _filter_helper(self, df, pred=None, metrics=None):
+        df = _sort_df(df, metrics=metrics)
+        df = _convert_inf_cpa(df)
+        return df
+
 
     def _get_form_helper(self, group):
         return (DOMAIN_JSON_FORM if group == 'site_domain' else
