@@ -32,7 +32,7 @@ class ReportWorker(BaseWorker):
             status = False
         con = self._db
 
-        event_kwargs = _get_kwargs_for_reportevent(kwargs, job_created_at, status)
+        event_kwargs = _get_kwargs_for_reportevent(kwargs, job_created_at, status, self._name)
         _create_report_events(con, **event_kwargs)
         return status
 
@@ -63,10 +63,10 @@ def _create_report_events(con, **kwargs):
     _sql._write_mysql(df, "reportevent", df.columns.tolist(), cur, key=None)
     con.commit()
 
-def _get_kwargs_for_reportevent(kwargs, job_created_at, status):
+def _get_kwargs_for_reportevent(kwargs, job_created_at, status, name):
     """
     @return: dict(start: str(time), end: str(time), status: bool,
-                  success: str(time), failure: str(time))
+                  success: str(time), failure: str(time), name: str(reportname))
     """
     start, end = get_dates(end_date=kwargs['end_date'], lookback=kwargs['lookback'])
     success = failure = None
@@ -79,4 +79,5 @@ def _get_kwargs_for_reportevent(kwargs, job_created_at, status):
                 status=status,
                 success=success,
                 failure=failure,
+                name=name,
                 )
