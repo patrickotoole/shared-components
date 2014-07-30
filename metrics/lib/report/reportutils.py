@@ -6,8 +6,8 @@ import inspect
 
 from link import lnk
 
-def get_db(test=True):
-    return lnk.dbs.test if test else lnk.dbs.mysql
+def get_db(prod=False):
+    return lnk.dbs.mysql if prod else lnk.dbs.test
 
 def get_report_obj(report_name, db=None):
     name = filter(str.isalnum, str(report_name).lower())
