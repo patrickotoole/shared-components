@@ -1,4 +1,5 @@
 import logging
+import re
 import os
 import io
 import urllib
@@ -12,6 +13,7 @@ from lib.report.utils.utils import get_start_and_end_date
 from lib.report.utils.utils import parse_params
 from lib.report.reportutils import get_default_db
 from lib.report.reportutils import get_report_obj
+from lib.report.reportutils import apply_mask
 from lib.report.utils.constants import *
 from lib.pandas_sql import s as _sql
 
@@ -228,6 +230,27 @@ class ReportBase(object):
         return dates.get('start_date'), dates.get('end_date')
 
     def _filter(self, df, *args, **kwargs):
+        df = self._pred(df, pred=kwargs.get('pred'))
+        df = self._filter_helper(df, *args, **kwargs)
+        return df
+
+    def _pred(self, df, pred=None):
+        """
+        command_line eg: --pred=campaign=boboba,advertiser=googleadx,media_cost>10
+        url eg: &pred=campaign#b,advertiser#c,media_cost>10
+        treating '#' as '=', not conflicting with func parse_params(url)
+        """
+        if not pred:
+            return df
+        regex= re.compile(r'([><|#=])')
+        params = [p for p in pred.split(',')]
+        params = [regex.split(p) for p in params]
+        for param in params:
+            k, _cmp, v = param
+            df = apply_mask(df, k, _cmp, v)
+        return df
+
+    def _filter_helper(self, df, *args, **kwargs):
         raise NotImplementedError
 
     def _get_timedelta(self, lookback):
@@ -237,6 +260,9 @@ class ReportBase(object):
         return None
 
     def _get_pixel_ids(self, advertiser_id):
+        return None
+
+    def _get_unique_table_key(self):
         return None
 
     def _work(self, df, db_wrapper=None):
