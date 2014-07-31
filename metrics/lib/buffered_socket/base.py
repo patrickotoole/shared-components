@@ -1,3 +1,4 @@
+import logging
 from twisted.protocols import basic
 from twisted.internet import protocol, threads
 
@@ -36,6 +37,13 @@ class BufferedSocketBase(basic.LineReceiver):
           line: returns the `line` argument after it is added to the buffer
         """
         if line is not False:
+            # Hack! to prevent the buffer from filling up and crashing
+            # we should have a switch to turn the buffer on and off
+            # when its not being used and would save CPU cycles as well
+            # as just the memory
+            if len(self.buf) > 20000:
+                self.buf = self.buf[10000:]
+            
             self.buf += [line]
 
         return line
