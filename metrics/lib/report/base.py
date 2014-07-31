@@ -1,19 +1,20 @@
 import logging
-import re
 import os
 import io
 import urllib
 
 import pandas as pd
-from link import lnk
 
 from lib.report.utils.utils import retry
 from lib.report.utils.utils import parse_params
 from lib.report.reportutils import get_report_obj
-from lib.report.reportutils import apply_mask
-from lib.report.utils.constants import *
+from lib.report.reportutils import get_or_create_console
+from lib.report.analyze.report import filter_pred
+
+from lib.report.utils.constants import NUM_TRIES
+from lib.report.utils.constants import SLEEP
+from lib.report.utils.constants import WORST
 from lib.report.utils.utils import get_dates
-from lib.pandas_sql import s as _sql
 
 from handlers.reporting import ReportingHandler
 from lib.helpers import decorators
@@ -99,21 +100,12 @@ def _get_report_resp(url):
        sleep_interval=SLEEP,
        retry_log_prefix='reconnecting and get refresh response')
 def _get_resp(url, method='get', forms=None):
-    c = _get_or_create_console()
+    c = get_or_create_console()
     if method == 'get':
         resp = c.get(url)
     else:
         resp = c.post(url, forms)
     return resp
-
-def _get_or_create_console():
-    global CONSOLE
-    if CONSOLE:
-        return CONSOLE
-    console = lnk.api.console
-    logging.info("created a api console")
-    CONSOLE = console
-    return console
 
 def _is_empty(df):
     return len(df) == 0
@@ -127,7 +119,7 @@ class ReportBase(object):
 
     def get_report(self,
             group=None,
-            limit=LIMIT,
+            limit=None,
             path=None,
             end_date=None,
             cache=False,
@@ -166,7 +158,7 @@ class ReportBase(object):
         if _should_create_csv:
             _create_csv(dfs, path)
 
-        dfs = self._filter(dfs, pred=pred, metrics=metrics)
+        dfs = self._analyze(dfs, pred=pred, metrics=metrics)
         return dfs[:limit]
 
     def _get_dataframes(self, **kwargs):
@@ -225,28 +217,12 @@ class ReportBase(object):
     def _get_form_helper(self, *args, **kwargs):
         raise NotImplementedError
 
-    def _filter(self, df, *args, **kwargs):
-        df = self._pred(df, pred=kwargs.get('pred'))
-        df = self._filter_helper(df, *args, **kwargs)
+    def _analyze(self, df, *args, **kwargs):
+        df = filter_pred(df, pred=kwargs.get('pred'))
+        df = self._analyze_helper(df, *args, **kwargs)
         return df
 
-    def _pred(self, df, pred=None):
-        """
-        command_line eg: --pred=campaign=boboba,advertiser=googleadx,media_cost>10
-        url eg: &pred=campaign#b,advertiser#c,media_cost>10
-        treating '#' as '=', not conflicting with func parse_params(url)
-        """
-        if not pred:
-            return df
-        regex= re.compile(r'([><|#=])')
-        params = [p for p in pred.split(',')]
-        params = [regex.split(p) for p in params]
-        for param in params:
-            k, _cmp, v = param
-            df = apply_mask(df, k, _cmp, v)
-        return df
-
-    def _filter_helper(self, df, *args, **kwargs):
+    def _analyze_helper(self, df, *args, **kwargs):
         raise NotImplementedError
 
     def _get_advertiser_ids(self):

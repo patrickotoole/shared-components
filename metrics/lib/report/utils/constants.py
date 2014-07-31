@@ -34,6 +34,8 @@ PC_CONVS = 'post_click_convs'
 PV_CONVS = 'post_view_convs'
 POST_CLICK = 'Post Click'
 MEDIA_COST = 'media_cost'
+PC_EXPIRE = 'post_click_expire_mins'
+PV_EXPIRE = 'post_view_expire_mins'
 CPA = 'cpa'
 HEADERS = [
         MEDIA_COST,
