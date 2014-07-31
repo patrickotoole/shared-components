@@ -7,10 +7,20 @@ import logging
 
 from link import lnk
 
+CONSOLE = None
+def get_or_create_console():
+    global CONSOLE
+    if CONSOLE:
+        return CONSOLE
+    console = lnk.api.console
+    logging.info("created a api console")
+    CONSOLE = console
+    return console
+
 def get_advertiser_ids():
     cur = lnk.dbs.mysql
     df = cur.select('select external_advertiser_id from advertiser;').as_dataframe()
-    return list(df['external_advertiser_id'].values)
+    return map(str, list(df['external_advertiser_id'].values))
 
 def get_db(name='test'):
     str_ = 'lnk.dbs.{name}'.format(name=name)
@@ -45,11 +55,3 @@ def convert_timestr(s):
         regx = re.compile(r'(\d{4}-\d{2}-\d{2})')
         return ((isinstance(s, str) and (not s in ['NULL', 'False'])) or regx.search(s))
     return '"%s"' % s if _should_transform(s) else s
-
-def apply_mask(df, k, _cmp, v):
-    v = eval(v) if v.isdigit() else v
-    mask = (df[k] > v if _cmp == '>' else
-            df[k] < v if _cmp == '<' else
-            df[k] == v)
-    df = df[mask]
-    return df
