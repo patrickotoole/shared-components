@@ -31,6 +31,15 @@ GOAL_TARGETS = """
         where deleted = 0;
 """
 
+GOAL_TARGETS = """
+    select 
+        external_advertiser_id, 
+        goal_cpm_multiplier, 
+        goal_target_cpa 
+    from intraweek
+        where deleted = 0;
+"""
+
 DAILY_SPEND = """
     select
          date(date_add(date,interval -4 hour)) as date,

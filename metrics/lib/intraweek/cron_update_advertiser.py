@@ -19,4 +19,7 @@ if __name__ == "__main__":
   for id in ids:
       
       print "Updating",iw.get_advertiser_name(id), "---------------------------"
-      iw.update_advertiser_targets(id)
+      try:
+        iw.update_advertiser_targets(id)
+      except:
+        pass
