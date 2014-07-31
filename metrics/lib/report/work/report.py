@@ -1,5 +1,4 @@
 import logging
-import pandas as pd
 
 from lib.report.work.base import BaseWorker
 from lib.pandas_sql import s as _sql
@@ -7,6 +6,7 @@ from lib.report.utils.utils import local_now
 from lib.report.utils.utils import get_dates
 from lib.report.reportutils import get_db
 from lib.report.reportutils import get_report_obj
+from lib.report.event.report import EventReport
 
 class UnableGetReporError(ValueError):
     pass
@@ -30,10 +30,19 @@ class ReportWorker(BaseWorker):
         except UnableGetReporError:
             logging.info("report job -- %s, failed" % self._name)
             status = False
-        con = self._db
 
-        event_kwargs = _get_kwargs_for_reportevent(kwargs, job_created_at, status, self._name)
-        _create_report_events(con, **event_kwargs)
+        job_ended_at = local_now()
+        start_date, end_date = get_dates(end_date=kwargs['end_date'],
+                                         lookback=kwargs['lookback'])
+        EventReport(event_name=self._name,
+                    db_wrapper=self._db,
+                    job_created_at=job_created_at,
+                    job_ended_at=job_ended_at,
+                    start_date=start_date,
+                    end_date=end_date,
+                    status=status,
+                    table_name='event_report',
+                    ).create_event()
         return status
 
     def _work(self, **kwargs):
@@ -50,34 +59,3 @@ class ReportWorker(BaseWorker):
         logging.info("inserting into table: %s, cols: %s" % (table_name, col_names))
         _sql._write_mysql(df, table_name, col_names, con.cursor(), key=key)
         con.commit()
-
-def _get_table_name(name):
-    return ('v4_reporting' if name == 'datapulling' else
-            'domain_reporting' if name == 'domain' else
-            'conversion_reporting')
-
-def _create_report_events(con, **kwargs):
-    df = pd.DataFrame([kwargs])
-    logging.info("creating report event")
-    cur = con.cursor()
-    _sql._write_mysql(df, "reportevent", df.columns.tolist(), cur, key=None)
-    con.commit()
-
-def _get_kwargs_for_reportevent(kwargs, job_created_at, status, name):
-    """
-    @return: dict(start: str(time), end: str(time), status: bool,
-                  success: str(time), failure: str(time), name: str(reportname))
-    """
-    start, end = get_dates(end_date=kwargs['end_date'], lookback=kwargs['lookback'])
-    success = failure = None
-    if status:
-        success = job_created_at
-    else:
-        failure = job_created_at
-    return dict(start=start,
-                end=end,
-                status=status,
-                success=success,
-                failure=failure,
-                name=name,
-                )
