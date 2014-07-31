@@ -1,0 +1,1 @@
+INSERT INTO `v4_reporting` ( id, imps, clicks, campaign_id, creative_id,  media_cost, external_advertiser_id, date, last_activity, deleted, cpm_multiplier, active, notes) SELECT  id, imps, clicks, campaign_id, creative_id,  media_cost, external_advertiser_id, date, last_activity, deleted, cpm_multiplier, active, notes FROM `v3_reporting`;
