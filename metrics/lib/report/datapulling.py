@@ -1,7 +1,7 @@
 """
 cron script runs hourly to pull following data
     hour
-    line_item
+    line_item_id  (new_field, compare to v3_reporting)
     campaign
     creative
     advertiser
