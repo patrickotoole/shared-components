@@ -35,7 +35,7 @@ def main():
     define('end_date', help='end date, examples: 2014-07-15',)
     define("cache", type=bool, default=False, help="use cached csv file or api data")
     define("metrics", type=str, default=WORST)
-    define("prod", type=bool, default=False, help="when chosen, will write to production-db")
+    define("db", type=str, default='test', help="choose which database to write to")
 
     parse_command_line()
 
@@ -59,7 +59,7 @@ def main():
             metrics=metrics,
             pred=pred,
             )
-    db = get_db(options.prod)
+    db = get_db(options.db)
     if not act:
         report_obj = get_report_obj(name, db=db)
         result = report_obj.get_report(**kwargs)

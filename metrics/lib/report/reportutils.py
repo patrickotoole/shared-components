@@ -3,11 +3,15 @@ import re
 import sys
 import glob
 import inspect
+import logging
 
 from link import lnk
 
-def get_db(prod=False):
-    return lnk.dbs.mysql if prod else lnk.dbs.test
+def get_db(name='test'):
+    str_ = 'lnk.dbs.{name}'.format(name=name)
+    logging.info("selecting database: %s" % name)
+    db = eval(str_)
+    return db
 
 def get_report_obj(report_name, db=None):
     name = filter(str.isalnum, str(report_name).lower())
