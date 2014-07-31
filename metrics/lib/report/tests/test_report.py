@@ -17,18 +17,14 @@ class ReportTestCase(unittest.TestCase):
         obj = get_report_obj('domain', db)
         metrics = 'best'
         csv_path = os.path.realpath(__file__ + '../../test_csv_files/advertiser,site_domain.csv')
-        result = obj.get_report(limit=10, path=csv_path, metrics=metrics)
-        expected = {19235: 'Bigstock (225133)',
-                    23825: 'Journelle (250058)',
-                    23826: 'Journelle (250058)',
-                    24977: 'Journelle (250058)',
-                    25709: 'Journelle (250058)',
-                    27281: 'Offset (274802)',
-                    31349: 'BaubleBar (302568)',
-                    31406: 'BaubleBar (302568)',
-                    34908: 'Dot & bo (306383)',
-                    35079: 'Dot & bo (306383)'}
+        result = obj.get_report(path=csv_path, metrics=metrics)
+
+        expected = {2: 'LearnVest (195681)', 19: 'Dot & bo (306383)'}
         response = result.to_dict().get('advertiser')
+        self.assertEqual(expected, response)
+
+        expected = {2: 0.44381128571428574, 19: 0.87469199999999991}
+        response = result.to_dict().get('cost_efficiency')
         self.assertEqual(expected, response)
 
     def test_report_datapulling(self):
