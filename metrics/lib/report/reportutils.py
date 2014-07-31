@@ -7,6 +7,11 @@ import logging
 
 from link import lnk
 
+def get_advertiser_ids():
+    cur = lnk.dbs.mysql
+    df = cur.select('select external_advertiser_id from advertiser;').as_dataframe()
+    return list(df['external_advertiser_id'].values)
+
 def get_db(name='test'):
     str_ = 'lnk.dbs.{name}'.format(name=name)
     logging.info("selecting database: %s" % name)

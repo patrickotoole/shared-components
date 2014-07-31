@@ -14,6 +14,7 @@ writing to database v4_reporting
 """
 import pandas as pd
 from lib.report.utils.constants import *
+from lib.report.reportutils import get_advertiser_ids
 from lib.report.base import ReportBase
 from lib.report.request_json_forms import DATA_PULLING_FORMS
 
@@ -28,7 +29,7 @@ class ReportDataPulling(ReportBase):
         return _analyze(df)
 
     def _get_advertiser_ids(self):
-        return ADVERTISER_IDS
+        return get_advertiser_ids()
 
     def _get_form_helper(self, *args, **kwargs):
         return DATA_PULLING_FORMS
