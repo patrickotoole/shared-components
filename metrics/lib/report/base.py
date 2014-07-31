@@ -258,17 +258,6 @@ class ReportBase(object):
     def _get_unique_table_key(self):
         return None
 
-    def _work(self, df, db_wrapper=None):
-        """
-        write df to sql
-        assuming all data frames field is exactly the fields in the table
-        """
-        table_name = self._table_name
-        col_names = df.columns.tolist()
-        _wrapper = db_wrapper or self._db_wrapper
-        cur = _wrapper.cursor()
-        _sql._write_mysql(df, table_name, col_names, cur)
-
 class ReportDomainHandler(ReportingHandler):
     def initialize(self, *args, **kwargs):
         pass
