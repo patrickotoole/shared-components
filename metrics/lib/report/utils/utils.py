@@ -7,6 +7,7 @@ from datetime import timedelta
 import pytz
 import urlparse
 from functools import update_wrapper
+from lib.report.utils.constants import APPNEXUS_REPORT_GAP_HOURS
 
 DATE_TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 DATE_TIME_FORMAT2 = '%Y-%m-%d %H:%M'
@@ -144,7 +145,7 @@ def get_dates(end_date=None, lookback=None):
 
 def get_start_and_end_date(end_date=None, _timedelta=None):
     if not end_date:
-        end_date = local_now()
+        end_date = local_now() - timedelta(hours=APPNEXUS_REPORT_GAP_HOURS)
     if isinstance(end_date, str):
         end_date = convert_datetime(end_date)
     start_date = end_date - _timedelta
