@@ -2,6 +2,7 @@ import logging
 from lib.report.event.base import EventBase
 from lib.report.utils.utils import decorator
 from lib.report.utils.utils import local_now
+from lib.report.utils.utils import get_dates
 
 
 class EventReport(EventBase):
@@ -27,6 +28,7 @@ class EventReport(EventBase):
 @decorator
 def accounting(f):
     def _f(*args, **kwargs):
+        error = None
         status = 0
         job_created_at = local_now()
         try:
@@ -34,17 +36,27 @@ def accounting(f):
             status = 1
         except Exception as e:
             logging.warn(e)
+            error = e
         job_ended_at = local_now()
-        event_name = filter(lambda a: isinstance(a, str), args)[0]
-        start_date, end_date = kwargs.get('start_date'), kwargs.get('end_date')
-        EventReport(event_name=event_name,
-                    db_wrapper=kwargs.get('con'),
-                    job_created_at=job_created_at,
-                    job_ended_at=job_ended_at,
-                    start_date=start_date,
-                    end_date=end_date,
-                    status=status,
-                    table_name='event_report',
-                    ).create_event()
+        _kwargs = _get_kwargs(*args, **kwargs)
+        _kwargs.update(dict(job_created_at=job_created_at,
+                            job_ended_at=job_ended_at,
+                            status=status,
+                            table_name='event_report',
+                            ))
+        EventReport(**_kwargs).create_event()
+        if error:
+            raise ValueError(e)
         return res
     return _f
+
+def _get_kwargs(*args, **kwargs):
+    event_name = kwargs.get('name') or filter(lambda a: isinstance(a, str), args)[0]
+    db_wrapper = kwargs.get('con') or filter(lambda a: 'dbwrappers' in a.__str__(), args)[0]
+    end_date, lookback = kwargs.get('start_date'), kwargs.get('lookback')
+    start_date, end_date = get_dates(end_date, lookback)
+    return dict(event_name=event_name,
+                db_wrapper=db_wrapper,
+                start_date=start_date,
+                end_date=end_date,
+                )
