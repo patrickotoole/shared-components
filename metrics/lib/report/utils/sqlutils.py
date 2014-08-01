@@ -11,3 +11,7 @@ def get_unique_keys(cur, table_name):
         logging.warn("no unique key found for table: %s." % table_name)
         return None
     return keys
+
+def get_report_names(cur):
+    query = 'select group_concat(names) from index_report;'
+    return cur.select(query).as_dict()[0].values()
