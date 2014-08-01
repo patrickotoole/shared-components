@@ -42,7 +42,7 @@ def accounting(f):
         _kwargs.update(dict(job_created_at=job_created_at,
                             job_ended_at=job_ended_at,
                             status=status,
-                            table_name='event_report',
+                            table_name='stats_event_report',
                             ))
         EventReport(**_kwargs).create_event()
         if error:
