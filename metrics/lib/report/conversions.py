@@ -33,16 +33,6 @@ from lib.report.request_json_forms import CONVERSIONS_FORM
 
 LIMIT = 1
 
-UNIQUE_KEYS = ["pixel_id",
-               "line_item_id",
-               "campaign_id",
-               "creative_id",
-               "order_id",
-               "user_id",
-               "auction_id",
-               "datetime",
-               ]
-
 def _advertiser_to_pixels_mapping():
     pixels = get_pixels()
     d = defaultdict(list)
