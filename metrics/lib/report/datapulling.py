@@ -33,11 +33,3 @@ class ReportDataPulling(ReportBase):
 
     def _get_form_helper(self, *args, **kwargs):
         return DATA_PULLING_FORMS
-
-    def _get_unique_table_key(self):
-        return ['date',
-                'external_advertiser_id',
-                'line_item_id',
-                'campaign_id',
-                'creative_id',
-                ]

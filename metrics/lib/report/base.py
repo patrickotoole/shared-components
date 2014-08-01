@@ -15,6 +15,7 @@ from lib.report.utils.constants import NUM_TRIES
 from lib.report.utils.constants import SLEEP
 from lib.report.utils.constants import WORST
 from lib.report.utils.utils import get_dates
+from lib.report.utils.sqlutils import get_unique_keys
 
 from handlers.reporting import ReportingHandler
 from lib.helpers import decorators
@@ -232,7 +233,8 @@ class ReportBase(object):
         return None
 
     def _get_unique_table_key(self):
-        return None
+        cur = self._db_wrapper
+        return get_unique_keys(cur, self._table_name)
 
 class ReportDomainHandler(ReportingHandler):
     def initialize(self, *args, **kwargs):

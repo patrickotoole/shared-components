@@ -71,9 +71,6 @@ class ReportConversions(ReportBase):
     def _get_form_helper(self, *args, **kwargs):
         return CONVERSIONS_FORM
 
-    def _get_unique_table_key(self):
-        return UNIQUE_KEYS
-
 def _groupby(df):
     grouped = df.groupby(["pixel_id",
                           "pixel_name",
