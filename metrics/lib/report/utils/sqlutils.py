@@ -13,5 +13,5 @@ def get_unique_keys(cur, table_name):
     return keys
 
 def get_report_names(cur):
-    query = 'select group_concat(names) from index_report;'
-    return cur.select(query).as_dict()[0].values()
+    query = 'select name from index_report;'
+    return [d.get('name') for d in cur.select(query).as_dict()]
