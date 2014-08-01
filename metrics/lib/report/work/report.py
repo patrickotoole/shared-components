@@ -29,17 +29,14 @@ class ReportWorker(BaseWorker):
         return
 
     @accounting
-    def _work(self, name, con=None, act=True, **kwargs):
-        name = self._name
+    def _work(self, name=None, con=None, act=True, **kwargs):
         _obj = get_report_obj(name)
         report_f = _obj.get_report
-        analyze_f = get_analyze_func(name)
         try:
             df = report_f(**kwargs)
         except Exception as e:
             logging.warn(e)
             raise ReportError
-        df = analyze_f(df)
         if act:
             table_name = _obj._table_name
             created = self._create_reports(df,
@@ -48,7 +45,7 @@ class ReportWorker(BaseWorker):
                     key=get_unique_keys(con, table_name),
                     )
             if created:
-                logging.info("successfully created report for %" % name)
+                logging.info("successfully created report for %s" % name)
 
     def _create_reports(self, df, con=None, table_name=None, key=None):
         cols = df.columns.tolist()
@@ -56,10 +53,3 @@ class ReportWorker(BaseWorker):
         _sql._write_mysql(df, table_name, cols, con.cursor(), key=key)
         con.commit()
         return True
-
-
-def get_analyze_func(name):
-    assert name.isalnum()
-    import_str = "from lib.report.analyze.report import analyze_%s as analyze_func" % name
-    exec(import_str)
-    return analyze_func

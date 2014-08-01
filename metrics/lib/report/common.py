@@ -65,7 +65,7 @@ def main():
         result = report_obj.get_report(**kwargs)
         pprint(result)
     else:
-        ReportWorker(name, db).work(**kwargs)
+        ReportWorker()._work(name, db, **kwargs)
         return
 
 if __name__ == '__main__':

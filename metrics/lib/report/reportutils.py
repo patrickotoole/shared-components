@@ -28,6 +28,12 @@ def get_db(name='test'):
     db = eval(str_)
     return db
 
+def get_analyze_func(name):
+    assert name.isalnum()
+    import_str = "from lib.report.analyze.report import analyze_%s as analyze_func" % name
+    exec(import_str)
+    return analyze_func
+
 def get_report_obj(report_name, db=None):
     name = filter(str.isalnum, str(report_name).lower())
     if not os.path.dirname(__file__) in sys.path:
