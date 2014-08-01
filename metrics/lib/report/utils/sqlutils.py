@@ -9,5 +9,5 @@ def get_unique_keys(cur, table_name):
         keys = res.as_dict()[0].values()
     except Exception:
         logging.warn("no unique key found for table: %s." % table_name)
-        return []
+        return None
     return keys
