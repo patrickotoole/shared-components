@@ -51,6 +51,7 @@ def _write_mysql(frame, table, names, cur, key=None, fn=None):
     fn = fn or (lambda x: x)
     data = [tuple(map(fn, x)) for x in frame.values]
     cur.executemany(insert_query, data)
+    return cur
 
 
 def write_frame(frame, name, con, flavor='sqlite', if_exists='fail', **kwargs):
@@ -82,7 +83,7 @@ def write_frame(frame, name, con, flavor='sqlite', if_exists='fail', **kwargs):
         key = kwargs.get('key',None)
     else:
       key = None
-      
+
     exists = table_exists(name, con, flavor)
     if if_exists == 'fail' and exists:
         raise ValueError, "Table '%s' already exists." % name
