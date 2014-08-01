@@ -31,15 +31,6 @@ GOAL_TARGETS = """
         where deleted = 0;
 """
 
-GOAL_TARGETS = """
-    select 
-        external_advertiser_id, 
-        goal_cpm_multiplier, 
-        goal_target_cpa 
-    from intraweek
-        where deleted = 0;
-"""
-
 DAILY_SPEND = """
     select
          date(date_add(date,interval -4 hour)) as date,
@@ -98,8 +89,12 @@ NEW_CHARGES = """
         sum(clicks) as Clicks,
         sum(media_cost) as Media_Cost,
         sum(media_cost*cpm_multiplier) as Charged_Client,
+<<<<<<< HEAD
         cpm_multiplier,
         sum(if(cpm_multiplier is null, 1, 0)) as cpm_multiplier_count
+=======
+        cpm_multiplier
+>>>>>>> charge_client calculations adjusted
     from v3_reporting
     where
         active=1 and deleted=0
