@@ -138,6 +138,24 @@ def local_now():
 def datetime_to_str(dt):
     return dt.strftime(DATE_TIME_FORMAT)
 
+def align(frequency, ts):
+    """
+    @param frequency: timedelta
+    @param ts: datetime
+    @return aligned_ts: datetime
+    """
+    epoch = datetime(*time.gmtime(0)[:6])
+    if ts.tzinfo:
+        epoch = ts.tzinfo.localize(epoch)
+    delta_sec = elapsed_seconds(ts - epoch)
+    offset = delta_sec % elapsed_seconds(frequency)
+    return ts - timedelta(seconds=offset)
+
+def elapsed_seconds(delta):
+    """Convert a timedelta to total elapsed seconds (as a float).
+    """
+    return (24*60*60) * delta.days + delta.seconds + float(delta.microseconds) / 10**6
+
 def get_dates(end_date=None, lookback=None):
     _timedelta = timedelta(hours=lookback)
     dates =  get_start_and_end_date(end_date,  _timedelta=_timedelta)
