@@ -31,6 +31,8 @@ def accounting(f):
         error = None
         status = 0
         job_created_at = local_now()
+        end_date, lookback = kwargs.get('end_date'), kwargs.get('lookback')
+        start_date, end_date = get_dates(end_date, lookback)
         try:
             res = f(*args, **kwargs)
             status = 1
@@ -43,6 +45,8 @@ def accounting(f):
                             job_ended_at=job_ended_at,
                             status=status,
                             table_name='stats_event_report',
+                            start_date=start_date,
+                            end_date=end_date,
                             ))
         EventReport(**_kwargs).create_event()
         if error:
@@ -53,10 +57,6 @@ def accounting(f):
 def _get_kwargs(*args, **kwargs):
     event_name = kwargs.get('name') or filter(lambda a: isinstance(a, str), args)[0]
     db_wrapper = kwargs.get('con') or filter(lambda a: 'dbwrappers' in a.__str__(), args)[0]
-    end_date, lookback = kwargs.get('end_date'), kwargs.get('lookback')
-    start_date, end_date = get_dates(end_date, lookback)
     return dict(event_name=event_name,
                 db_wrapper=db_wrapper,
-                start_date=start_date,
-                end_date=end_date,
                 )
