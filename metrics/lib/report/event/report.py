@@ -53,7 +53,7 @@ def accounting(f):
 def _get_kwargs(*args, **kwargs):
     event_name = kwargs.get('name') or filter(lambda a: isinstance(a, str), args)[0]
     db_wrapper = kwargs.get('con') or filter(lambda a: 'dbwrappers' in a.__str__(), args)[0]
-    end_date, lookback = kwargs.get('start_date'), kwargs.get('lookback')
+    end_date, lookback = kwargs.get('end_date'), kwargs.get('lookback')
     start_date, end_date = get_dates(end_date, lookback)
     return dict(event_name=event_name,
                 db_wrapper=db_wrapper,
