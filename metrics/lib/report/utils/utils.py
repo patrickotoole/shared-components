@@ -163,7 +163,8 @@ def get_dates(end_date=None, lookback=None):
 
 def get_start_and_end_date(end_date=None, _timedelta=None):
     if not end_date:
-        end_date = local_now() - timedelta(hours=APPNEXUS_REPORT_GAP_HOURS)
+        end_date = align(timedelta(hours=1),
+                (local_now() - timedelta(hours=APPNEXUS_REPORT_GAP_HOURS)))
     if isinstance(end_date, str):
         end_date = convert_datetime(end_date)
     start_date = end_date - _timedelta
