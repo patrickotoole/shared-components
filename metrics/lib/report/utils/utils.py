@@ -17,6 +17,91 @@ TIME_FMTS = [
     DATE_FORMAT,
     ]
 
+#---------timeutils----------------------------------
+
+def convert_datetime(date_str):
+    for f in TIME_FMTS:
+        try:
+            val = datetime.strptime(date_str, f)
+            return val
+        except Exception:
+            pass
+    raise ValueError("wrong time format")
+
+def local_now():
+    utc = pytz.timezone('UTC')
+    now = utc.localize(datetime.utcnow())
+    ny = pytz.timezone('America/New_York')
+    return now.astimezone(ny)
+
+def datetime_to_str(dt):
+    return dt.strftime(DATE_TIME_FORMAT)
+
+def align(frequency, ts):
+    """
+    @param frequency: timedelta
+    @param ts: datetime
+    @return aligned_ts: datetime
+    """
+    epoch = datetime(*time.gmtime(0)[:6])
+    if ts.tzinfo:
+        epoch = ts.tzinfo.localize(epoch)
+    delta_sec = elapsed_seconds(ts - epoch)
+    offset = delta_sec % elapsed_seconds(frequency)
+    return ts - timedelta(seconds=offset)
+
+def elapsed_seconds(delta):
+    """Convert a timedelta to total elapsed seconds (as a float).
+    """
+    return (24*60*60) * delta.days + delta.seconds + float(delta.microseconds) / 10**6
+
+def get_dates(end_date=None, lookback=None):
+    _timedelta = timedelta(hours=lookback)
+    dates =  get_start_and_end_date(end_date,  _timedelta=_timedelta)
+    return dates.get('start_date'), dates.get('end_date')
+
+def get_start_and_end_date(end_date=None, _timedelta=None):
+    if not end_date:
+        end_date = align(timedelta(hours=1),
+                (local_now() - timedelta(hours=APPNEXUS_REPORT_GAP_HOURS)))
+    if isinstance(end_date, str):
+        end_date = convert_datetime(end_date)
+    start_date = end_date - _timedelta
+    return dict(start_date=datetime_to_str(start_date),
+                end_date=datetime_to_str(end_date))
+
+#---------timeutils ended----------------------------------
+
+
+#---------urlutils-----------------------------------
+
+def parse_params(url):
+    """
+    Given a url, return params as dict
+
+    @param url: str
+    @return dict(str,str)
+    """
+    if not url:
+        return {}
+    url_parts = list(urlparse.urlparse(url))
+
+    def _get_key_val(segment):
+        key_val = segment.split('=')
+        if len(key_val) == 1:
+            return (key_val[0], '')
+        return key_val
+
+    params = (dict([_get_key_val(part) for part in url_parts[4].split('&')]) if
+             url_parts[4] else {})
+    return params
+
+#---------urlutils ended-----------------------------------
+
+
+#-----------------------------------
+# decorators utils
+
 def decorator(d):
     "Make function d a decorator: d wraps a function fn."
     def _d(fn):
@@ -119,75 +204,3 @@ def with_retry(func, num_retries=1, validator=None,
                 time.sleep(interval)
             pass
     return None
-
-def convert_datetime(date_str):
-    for f in TIME_FMTS:
-        try:
-            val = datetime.strptime(date_str, f)
-            return val
-        except Exception:
-            pass
-    raise ValueError("wrong time format")
-
-def local_now():
-    utc = pytz.timezone('UTC')
-    now = utc.localize(datetime.utcnow())
-    ny = pytz.timezone('America/New_York')
-    return now.astimezone(ny)
-
-def datetime_to_str(dt):
-    return dt.strftime(DATE_TIME_FORMAT)
-
-def align(frequency, ts):
-    """
-    @param frequency: timedelta
-    @param ts: datetime
-    @return aligned_ts: datetime
-    """
-    epoch = datetime(*time.gmtime(0)[:6])
-    if ts.tzinfo:
-        epoch = ts.tzinfo.localize(epoch)
-    delta_sec = elapsed_seconds(ts - epoch)
-    offset = delta_sec % elapsed_seconds(frequency)
-    return ts - timedelta(seconds=offset)
-
-def elapsed_seconds(delta):
-    """Convert a timedelta to total elapsed seconds (as a float).
-    """
-    return (24*60*60) * delta.days + delta.seconds + float(delta.microseconds) / 10**6
-
-def get_dates(end_date=None, lookback=None):
-    _timedelta = timedelta(hours=lookback)
-    dates =  get_start_and_end_date(end_date,  _timedelta=_timedelta)
-    return dates.get('start_date'), dates.get('end_date')
-
-def get_start_and_end_date(end_date=None, _timedelta=None):
-    if not end_date:
-        end_date = align(timedelta(hours=1),
-                (local_now() - timedelta(hours=APPNEXUS_REPORT_GAP_HOURS)))
-    if isinstance(end_date, str):
-        end_date = convert_datetime(end_date)
-    start_date = end_date - _timedelta
-    return dict(start_date=datetime_to_str(start_date),
-                end_date=datetime_to_str(end_date))
-
-def parse_params(url):
-    """
-    Given a url, return params as dict
-
-    @param url: str
-    @return dict(str,str)
-    """
-    if not url:
-        return {}
-    url_parts = list(urlparse.urlparse(url))
-
-    def _get_key_val(segment):
-        key_val = segment.split('=')
-        if len(key_val) == 1:
-            return (key_val[0], '')
-        return key_val
-
-    params = (dict([_get_key_val(part) for part in url_parts[4].split('&')]) if
-             url_parts[4] else {})
-    return params
