@@ -6,6 +6,7 @@ from lib.report.utils.sqlutils import get_report_names
 from lib.report.utils.sqlutils import get_unique_keys
 from lib.report.reportutils import get_db
 from lib.report.reportutils import get_report_obj
+from lib.report.reportutils import get_analyze_func
 from lib.report.event.report import accounting
 
 
@@ -32,11 +33,15 @@ class ReportWorker(BaseWorker):
     def _work(self, name=None, con=None, act=True, **kwargs):
         _obj = get_report_obj(name)
         report_f = _obj.get_report
+
         try:
             df = report_f(**kwargs)
         except Exception as e:
             logging.warn(e)
             raise ReportError
+
+        _analyze_func = get_analyze_func(name)
+        df = _analyze_func(df, kwargs.get('metrics'))
         if act:
             table_name = _obj._table_name
             created = self._create_reports(df,
