@@ -172,7 +172,9 @@ ul li, ol li {
 /* Let's make sure tables in the content area are 100% wide */
 .content table {
 	width: 100%;
-    border:1px solid green;
+}
+.data td, tr {
+    border: 1 px solid #000;
 }
 
 </style>
@@ -205,16 +207,18 @@ ul li, ol li {
                         </td>
                     </tr>
 			    </table>
+                <div class="data">
+                    <table>
+                        {% for row in alladvers %}
+                           <tr>
+                               {% for cell in row %}
+                                   <td>  {{cell}}  </td>
+                               {% end %}
+                           <tr>
+                        {% end %}
+                    </table>
+                </div>
 
-                <table>
-                    {% for row in alladvers %}
-                       <tr>
-                           {% for cell in row %}
-                               <td>  {{cell}}  </td>
-                           {% end %}
-                       <tr>
-                    {% end %}
-                </table>
                 <!--all advertisers-->
 
                 <!-- table for best or worst performers grouped by advertiser id -->
@@ -228,16 +232,19 @@ ul li, ol li {
                             </td>
                         </tr>
                     </table>
-                    <table>
-                        {% for row in rows %}
-                           <tr>
-                               {% for cell in row %}
-                                   <td>  {{cell}}  </td>
-                               {% end %}
-                           <tr>
-                        {% end %}
-                    {% end %}
-                    </table>
+
+                    <div class="data">
+                        <table>
+                            {% for row in rows %}
+                               <tr>
+                                   {% for cell in row %}
+                                       <td>  {{cell}}  </td>
+                                   {% end %}
+                               <tr>
+                            {% end %}
+                        </table>
+                    </div>
+                {% end %}
                 {% end %}
                 <!-- grouped by advertiser id ended -->
 

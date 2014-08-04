@@ -19,7 +19,7 @@ from lib.report.emails import send_domain_email
 
 LIMIT = 5
 WORST = 'worst'
-EMAIL_BASE = '%s.rockerbox.com'
+EMAIL_BASE = '%s@rockerbox.com'
 
 def main():
     define('report')
