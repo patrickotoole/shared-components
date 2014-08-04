@@ -5,6 +5,7 @@ from link import lnk
 from twisted.trial import unittest
 from lib.report.common import get_report_obj
 from lib.report.work.report import ReportWorker
+from lib.report.reportutils import get_analyze_func
 
 from lib.pandas_sql import s as _sql
 
@@ -24,6 +25,9 @@ class ReportTestCase(unittest.TestCase):
         csv_path = os.path.realpath(__file__ + '../../test_csv_files/advertiser,site_domain.csv')
         result = obj.get_report(path=csv_path, metrics=metrics)
 
+        _analyze_f = get_analyze_func('domain')
+        result  =_analyze_f(result)
+
         expected = {2: 'LearnVest (195681)', 19: 'Dot & bo (306383)'}
         response = result.to_dict().get('advertiser')
         self.assertEqual(expected, response)
@@ -37,9 +41,11 @@ class ReportTestCase(unittest.TestCase):
         obj = get_report_obj('datapulling', db)
         resp = obj.get_report(
                 path=csv_path,
-                limit=10,
+                limit=100,
                 )
-        expected = {0: 16932271, 1: 16932278, 2: 16932286, 3: 16932542, 4: 16932636, 5: 16932670, 6: 16932542, 7: 16932636, 8: 16932670, 9: 16932298}
+        _analyze_f = get_analyze_func('datapulling')
+        resp  =_analyze_f(resp)
+        expected = {0: 16932271, 1: 16932278, 2: 16932286, 3: 16932542, 4: 16932636, 5: 16932670, 6: 16932542, 7: 16932636, 8: 16932670, 9: 16932351, 10: 16932298, 11: 16932351, 12: 16932399, 13: 16932481}
         response = resp.to_dict().get('creative_id')
         self.assertEqual(expected, response)
 
