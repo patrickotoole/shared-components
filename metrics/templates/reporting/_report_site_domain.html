@@ -190,20 +190,17 @@ ul li, ol li {
                 <table>
                     <tr>
                         <td>
-                            <p>Sup, boss</p>
-                            <h3>Here are the {{metrics}} performers</h3>
+                            <p>wadup, boss</p>
+                            <h4>Here are the top {{limit}} {{metrics}} performers from {{start_date}} -- {{end_date}}</h4>
                         </td>
                     </tr>
 			    </table>
-
-
-
 
                 <table>
                     {% for row in table %}
                        <tr>
                            {% for cell in row %}
-                               <td>{{cell}}</td>
+                               <td>  {{cell}}  </td>
                            {% end %}
                        <tr>
                     {% end %}
