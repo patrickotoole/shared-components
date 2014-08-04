@@ -17,7 +17,12 @@ TEMP_MAIN_DIR = os.path.realpath(os.path.dirname(__file__) +
 
 def send_domain_email(to, df, metrics, **kwargs):
     start_date, end_date = kwargs.get('start_date'), kwargs.get('end_date')
-    subject = 'domain report %s - %s' % (start_date, end_date)
+    subject = 'domain top {limit} {metrics} {start_date} - {end_date}'.format(
+            limit=kwargs.get('limit'),
+            start_date=start_date,
+            end_date=end_date,
+            metrics=metrics,
+            )
     _kwargs = {'table': _to_list(df),
                'metrics': metrics,
               }
