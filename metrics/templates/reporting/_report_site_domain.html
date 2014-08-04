@@ -172,6 +172,7 @@ ul li, ol li {
 /* Let's make sure tables in the content area are 100% wide */
 .content table {
 	width: 100%;
+    border:1px solid green;
 }
 
 </style>
@@ -196,8 +197,17 @@ ul li, ol li {
                     </tr>
 			    </table>
 
+                <!-- table for all the advertiser best or worst performers -->
                 <table>
-                    {% for row in table %}
+                    <tr>
+                        <td>
+                            <p>all advertisers</p>
+                        </td>
+                    </tr>
+			    </table>
+
+                <table>
+                    {% for row in alladvers %}
                        <tr>
                            {% for cell in row %}
                                <td>  {{cell}}  </td>
@@ -205,6 +215,32 @@ ul li, ol li {
                        <tr>
                     {% end %}
                 </table>
+                <!--all advertisers-->
+
+                <!-- table for best or worst performers grouped by advertiser id -->
+                {% for adv, rows in grouped_by_adv.items() %}
+                   {% if rows %}
+
+                    <table>
+                        <tr>
+                            <td>
+                                <p> {{ adv }}</p>
+                            </td>
+                        </tr>
+                    </table>
+                    <table>
+                        {% for row in rows %}
+                           <tr>
+                               {% for cell in row %}
+                                   <td>  {{cell}}  </td>
+                               {% end %}
+                           <tr>
+                        {% end %}
+                    {% end %}
+                    </table>
+                {% end %}
+                <!-- grouped by advertiser id ended -->
+
 			</div>
 
 			<!-- /content -->
