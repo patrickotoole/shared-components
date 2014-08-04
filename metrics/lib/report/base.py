@@ -220,11 +220,7 @@ class ReportBase(object):
 
     def _analyze(self, df, *args, **kwargs):
         df = filter_pred(df, pred=kwargs.get('pred'))
-        df = self._analyze_helper(df, *args, **kwargs)
         return df
-
-    def _analyze_helper(self, df, *args, **kwargs):
-        raise NotImplementedError
 
     def _get_advertiser_ids(self):
         return None
