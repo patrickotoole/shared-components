@@ -48,8 +48,13 @@ def analyze_domain(df, metrics=None):
         df = pd.concat([inf_cpas, non_inf_cpas])
         return df
 
+    df = df.drop(['profit_ecpm', 'click_thru_pct'], axis=1)
     df = _sort_df(df, metrics=metrics)
     df = _convert_inf_cpa(df)
+    df = df.rename(columns=dict(booked_revenue='revenue',
+                                post_click_convs='pc_convs',
+                                post_view_convs='pv_convs',
+                                ))
     return df
 
 def analyze_datapulling(df):
