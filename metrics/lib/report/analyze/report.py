@@ -57,7 +57,7 @@ def analyze_domain(df, metrics=None):
                                 ))
     return df
 
-def analyze_datapulling(df):
+def analyze_datapulling(df, **kwargs):
     df = df.rename(columns=dict(hour='date', advertiser_id='external_advertiser_id'))
     df['date'] = pd.to_datetime(df['date'])
     to_group_all = ['date',
@@ -78,7 +78,7 @@ def analyze_datapulling(df):
     to_return['adx_spend'] = adx_res['media_cost']
     return to_return
 
-def analyze_conversions(df):
+def analyze_conversions(df, **kwargs):
     cols = {'advertiser_id': 'external_advertiser_id',
             'datetime': 'conversion_time'}
     df = df.rename(columns=cols)
