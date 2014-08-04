@@ -74,7 +74,7 @@ CHARGES = """
         sum(clicks) as Clicks,
         sum(media_cost) as Media_Cost,
         sum(media_cost*cpm_multiplier) as Charged_Client,
-        cpm_multiplier 
+        cpm_multiplier,
     from v3_reporting 
     where 
         active=1 and deleted=0 
@@ -89,7 +89,8 @@ NEW_CHARGES = """
         sum(clicks) as Clicks,
         sum(media_cost) as Media_Cost,
         sum(media_cost*cpm_multiplier) as Charged_Client,
-        cpm_multiplier
+        cpm_multiplier,
+        sum(if(cpm_multiplier is null, 1, 0)) as cpm_multiplier_count
     from v3_reporting
     where
         active=1 and deleted=0
