@@ -1,8 +1,11 @@
 import logging
 import os
+import re
 
 from tornado.template import Loader
 import sendgrid
+
+from lib.report.reportutils import get_advertiser_ids
 
 from lib.report.utils.constants import (
         DOMAIN,
@@ -11,19 +14,22 @@ from lib.report.utils.constants import (
         SENDGRID_PW,
         )
 
+REGEX = re.compile('\((\d+)\)')
 TEMP_BASE = '_report_%s.html'
 TEMP_MAIN_DIR = os.path.realpath(os.path.dirname(__file__) +
                                  '../../../templates/reporting')
 
 def send_domain_email(to, df, metrics, **kwargs):
     start_date, end_date = kwargs.get('start_date'), kwargs.get('end_date')
+    limit = kwargs.get('limit')
     subject = 'domain top {limit} {metrics} {start_date} - {end_date}'.format(
-            limit=kwargs.get('limit'),
+            limit=limit,
             start_date=start_date,
             end_date=end_date,
             metrics=metrics,
             )
-    _kwargs = {'table': _to_list(df),
+    _kwargs = {'alladvers': _to_list(df)[:limit+1],
+               'grouped_by_adv': _get_grouped_by_adv(df, limit=limit),
                'metrics': metrics,
               }
     _kwargs.update(**kwargs)
@@ -33,6 +39,19 @@ def send_domain_email(to, df, metrics, **kwargs):
                   _kwargs=_kwargs,
                   )
     return send_email(DOMAIN, **kwargs)
+
+def _get_grouped_by_adv(df, limit=None):
+    _ids = get_advertiser_ids()
+    return dict((_id, _to_list(_get_adver(df, _id, limit=limit)))
+                 for _id in _ids)
+
+def _get_adver(df, _id, limit=None):
+    def _helper(x):
+        m = REGEX.search(x)
+        return m.group(1) if m else x
+    df['advertiser'] = df['advertiser'].map(_helper)
+    res = df[df['advertiser'] == _id][:limit]
+    return res
 
 def _to_list(df):
     """
@@ -51,9 +70,11 @@ def _to_list(df):
                 for h in headers
               ]
     results = zip(*results)
-    results = map(lambda res: map(lambda x: round(x,3)
+    results = map(lambda res: map(lambda x: round(x, 3)
                                   if isinstance(x, float) else x, res),
                   results)
+    if not results:
+        return []
     return [tuple(headers)] + results
 
 def send_email(_template,
@@ -90,4 +111,4 @@ def _send_email(
         ):
     message = sendgrid.Mail(to=to, subject=subject, html=html, from_email=from_email)
     status, msg = sg.send(message)
-    logging.info("message sent. status : %s" % status)
+    logging.info("message sent to %s. status : %s" % (to, status))
