@@ -28,7 +28,7 @@ def main():
     define('act', type=bool, default=False, help='if read from cache, act will create csv file if file not exist')
     define('path', help='where to put tmp csv file')
     define('pred', type=str, help='predicats, campaign#bob,media_cost>10')
-    define('limit', type=int, default=LIMIT)
+    define('limit', type=int)
     define('lookback',
             help='how many hours from the end date',
             type=int,
