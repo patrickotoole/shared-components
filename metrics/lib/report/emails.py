@@ -24,7 +24,7 @@ from lib.report.utils.constants import (
 
 REGEX = re.compile('\((\d+)\)')
 TEMP_BASE = '_report_%s.html'
-TEMP_MAIN_DIR = os.path.realpath(os.path.dirname(__file__) + '../../templates/reporting')
+TEMP_MAIN_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../templates/reporting'))
 EMAIL_BASE = '%s@rockerbox.com'
 EMPTY = [" "]
 
