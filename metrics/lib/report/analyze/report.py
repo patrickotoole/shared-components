@@ -41,7 +41,9 @@ def analyze_domain(df, metrics=None):
             #sort by cost/revenue for now
             df[COST_EFFICIENCY] = df[MEDIA_COST] / df[BOOKED_REV]
             df = df[df[BOOKED_REV] > 0]
+            df = df.sort('convs', ascending=False)
             df = df.sort(COST_EFFICIENCY)
+            df = df.drop([COST_EFFICIENCY], axis=1)
         return df
 
     def _convert_inf_cpa(df):
