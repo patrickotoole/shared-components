@@ -51,6 +51,10 @@ def analyze_domain(df, metrics=None):
         df = pd.concat([inf_cpas, non_inf_cpas])
         return df
 
+    undisclosed = df['site_domain'] == 'Undisclosed'
+    none = df['site_domain'] == '---'
+    df = df.drop(df.index[undisclosed | none])
+
     to_drop = ['profit_ecpm']
     df = df.drop(to_drop, axis=1)
     df = _sort_df(df, metrics=metrics)
