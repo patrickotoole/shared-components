@@ -19,6 +19,8 @@ from lib.report.utils.constants import (
         POST_CLICK, PC_EXPIRE, PV_EXPIRE,
         )
 
+FLOAT_PATTERN = r'[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?'
+
 def analyze_domain(df, metrics=None):
     def _sort_df(df, metrics=None):
         """
@@ -48,13 +50,18 @@ def analyze_domain(df, metrics=None):
         df = pd.concat([inf_cpas, non_inf_cpas])
         return df
 
-    df = df.drop(['profit_ecpm', 'click_thru_pct'], axis=1)
+    #df = df.drop(['profit_ecpm', 'click_thru_pct'], axis=1)
     df = _sort_df(df, metrics=metrics)
     df = _convert_inf_cpa(df)
-    df = df.rename(columns=dict(booked_revenue='revenue',
-                                post_click_convs='pc_convs',
-                                post_view_convs='pv_convs',
-                                ))
+    df = _convert_ctr(df)
+    to_rename = dict(booked_revenue='rev',
+                     post_click_convs='pc_convs',
+                     click_thru_pct='ctr',
+                     media_cost='mc',
+                     profit_ecpm='profit',
+                     post_view_convs='pv_convs',
+                     )
+    df = df.rename(columns=to_rename)
     return df
 
 def analyze_datapulling(df, **kwargs):
@@ -132,6 +139,7 @@ def filter_pred(df, pred=None):
     url eg: &pred=campaign#b,advertiser#c,media_cost>10
     treating '#' as '=', not conflicting with func parse_params(url)
     """
+    df = df.applymap(lambda x: round(x, 3) if isinstance(x, float) else x)
     if not pred:
         return df
     regex= re.compile(r'([><|#=])')
