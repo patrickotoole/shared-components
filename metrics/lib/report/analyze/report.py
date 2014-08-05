@@ -19,6 +19,7 @@ from lib.report.utils.constants import (
         POST_CLICK, PC_EXPIRE, PV_EXPIRE,
         )
 
+ID_REGEX = re.compile(r'.*?\((\d+)\)')
 
 def analyze_domain(df, metrics=None):
     def _sort_df(df, metrics=None):
@@ -50,6 +51,8 @@ def analyze_domain(df, metrics=None):
         df = pd.concat([inf_cpas, non_inf_cpas])
         return df
 
+    to_drop = ['profit_ecpm']
+    df = df.drop(to_drop, axis=1)
     df = _sort_df(df, metrics=metrics)
     df = _convert_inf_cpa(df)
     to_rename = dict(booked_revenue='rev',
@@ -136,7 +139,16 @@ def filter_pred(df, pred=None):
     url eg: &pred=campaign#b,advertiser#c,media_cost>10
     treating '#' as '=', not conflicting with func parse_params(url)
     """
-    df = df.applymap(lambda x: round(x, 3) if isinstance(x, float) else x)
+    def _helper(x):
+        if isinstance(x, int):
+            return x
+        if isinstance(x, float):
+            x = round(x, 3)
+            return x
+        m = ID_REGEX.search(x)
+        return m.group(1) if m else x
+
+    df = df.applymap(_helper)
     if not pred:
         return df
     regex= re.compile(r'([><|#=])')
