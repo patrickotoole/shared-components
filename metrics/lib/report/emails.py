@@ -9,7 +9,7 @@ from tornado.options import define
 from tornado.options import options
 from tornado.options import parse_command_line
 
-from lib.report.reportutils import get_advertiser_ids
+from lib.report.reportutils import get_advertisers
 from lib.report.domain import ReportDomain
 
 from lib.report.utils.constants import (
@@ -23,7 +23,7 @@ from lib.report.utils.constants import (
 
 REGEX = re.compile('\((\d+)\)')
 TEMP_BASE = '_report_%s.html'
-TEMP_MAIN_DIR = os.path.realpath(os.path.dirname(__file__) + '../../../templates/reporting')
+TEMP_MAIN_DIR = os.path.realpath(os.path.dirname(__file__) + '../../templates/reporting')
 EMAIL_BASE = '%s@rockerbox.com'
 EMPTY = [" "]
 
@@ -62,31 +62,29 @@ def send_domain_email(to, limit,
 def _get_domain_report_rows(df, limit, **kwargs):
     rows = []
     df = df or ReportDomain().get_report(**kwargs)
-    _all_advertiser_rows = _to_list(df)[:limit]
+    _all_advertiser_rows = _to_list(df, limit)
     _grouped_by_advertiser_rows = _get_grouped_by_adv(df, limit)
     rows.extend(_all_advertiser_rows)
     rows.extend(_grouped_by_advertiser_rows)
+    rows = map(lambda row: row[1:], rows)
     return rows
 
 def _get_grouped_by_adv(df, limit):
     _len = len(df.columns)
     rows = []
-    _ids = get_advertiser_ids()
-    for _id in _ids:
+    _advertisers = list(get_advertisers().values)
+    for _id, name in _advertisers:
         _empty_row = EMPTY * _len
-        _header = [_id] + EMPTY * (_len - 1)
+        _header = EMPTY * (_len - 2) + [name, _id]
         _df = _get_adver(df, _id, limit)
         _rows = _to_list(_df, limit)
-        rows.append(_empty_row)
-        rows.append(_header)
-        rows.extends(_rows)
+        if _rows:
+            rows.append(_empty_row)
+            rows.append(_header)
+            rows.extend(_rows)
     return rows
 
 def _get_adver(df, _id, limit):
-    def _helper(x):
-        m = REGEX.search(x)
-        return m.group(1) if m else x
-    df['advertiser'] = df['advertiser'].map(_helper)
     res = df[df['advertiser'] == _id][:limit]
     return res
 
@@ -100,9 +98,6 @@ def _to_list(df, limit):
     headers  = dict_.keys()
     results = [ dict_.get(h).values()[:limit] for h in headers ]
     results = zip(*results)
-    results = map(lambda res: map(lambda x: round(x, 3)
-                                  if isinstance(x, float) else x, res),
-                  results)
     if not results:
         return []
     return [tuple(headers)] + results
@@ -148,8 +143,8 @@ def _initialize_email():
 def main():
     define("to", type=str, help="email reciever")
     define('limit', type=int)
-    define('start_date', type=str)
-    define('end_date', type=str)
+    define('start_date', type=str, default='28h')
+    define('end_date', type=str, default='4h')
     define("metrics", type=str, default='worst')
     define('group', type=str, default='advertise,site_domain')
     define("cache", type=bool, default=True)
@@ -158,7 +153,7 @@ def main():
     parse_command_line()
 
     kwargs = dict(
-            starte_date=options.start_date,
+            start_date=options.start_date,
             end_date=options.end_date,
             metrics=options.metrics,
             group=options.group,
@@ -168,6 +163,8 @@ def main():
         logging.info("sending email to %s" % options.to)
         send_domain_email(options.to, options.limit, **kwargs)
         return
+    else:
+        logging.info("--act to actually sent the email")
 
 if __name__ == '__main__':
     exit(main())
