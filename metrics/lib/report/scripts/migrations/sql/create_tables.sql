@@ -43,3 +43,15 @@ CREATE TABLE `domain_reporting` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `unique` (`advertiser`, `domain`,`line_item`,`imps`,`clicks`,`ctr`,`convs`,`pv_convs`, `pc_convs`, `rev`, `mc`, `profit`)
 );
+
+CREATE TABLE `segment_reporting` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `segment_id` int(10) NOT NULL,
+  `segment_name` varchar(100) DEFAULT NULL,
+  `month` varchar(100) DEFAULT NULL,
+  `total_loads` int(10) NOT NULL,
+  `monthly_uniques` int(10) NOT NULL,
+  `avg_daily_uniques` int(10) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique` (`segment_id`,`segment_name`,`month`,`total_loads`,`monthly_uniques`, `avg_daily_uniques`)
+)
