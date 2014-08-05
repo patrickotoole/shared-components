@@ -136,7 +136,8 @@ def get_pixels():
     pixels = res.json.get("response").get("pixels")
     return pixels
 
-
+def analyze_segment(df, metrics=None):
+    return df
 """
 Other utils helpers
 """
