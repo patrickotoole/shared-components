@@ -9,12 +9,12 @@ from lib.report.utils.utils import retry
 from lib.report.utils.utils import parse_params
 from lib.report.reportutils import get_report_obj
 from lib.report.reportutils import get_or_create_console
+from lib.report.reportutils import get_analyze_func
 from lib.report.analyze.report import filter_pred
 
 from lib.report.utils.constants import NUM_TRIES
 from lib.report.utils.constants import SLEEP
 from lib.report.utils.constants import WORST
-from lib.report.utils.utils import get_dates
 from lib.report.utils.sqlutils import get_unique_keys
 
 from handlers.reporting import ReportingHandler
@@ -51,10 +51,6 @@ def _get_path(
     path = os.path.join(TMP_DIR, file_name)
     return path
 
-def _get_request_url(advertiser_id=None):
-    if advertiser_id:
-        return '/report?advertiser_id=' + advertiser_id
-    return '/report?'
 
 @retry(num_retries=NUM_TRIES,
        sleep_interval=SLEEP,
@@ -122,14 +118,13 @@ class ReportBase(object):
             group=None,
             limit=None,
             path=None,
+            start_date=None,
             end_date=None,
             cache=False,
-            lookback=1,
             pred=None,
             metrics=WORST,
             ):
         dfs = []
-        start_date, end_date = get_dates(end_date=end_date, lookback=lookback)
         logging.info("Getting start date: %s, end date: %s" % (start_date, end_date))
         _should_create_csv = False
         if cache:
@@ -165,43 +160,31 @@ class ReportBase(object):
     def _get_dataframes(self, **kwargs):
         dfs = []
         limit = kwargs['limit']
-        advertiser_ids = self._get_advertiser_ids() or ['']
-        for advertiser_id in advertiser_ids:
-            pixel_ids = self._get_pixel_ids(advertiser_id) or ['']
-            for pixel_id in pixel_ids:
-                resp = self._get_resp_helper(
-                        group=kwargs['group'],
+        for advertiser_id in self._get_advertiser_ids():
+            for pixel_id in self._get_pixel_ids(advertiser_id):
+                url = self._get_request_url(advertiser_id)
+                _form = self._get_form(
+                        group=kwargs.get('group'),
                         end_date=kwargs['end_date'],
                         start_date=kwargs['start_date'],
-                        advertiser_id=advertiser_id,
                         pixel_id=pixel_id,
                         )
+                resp = self._get_resp_helper(url, _form)
                 df = _resp_to_df(resp)
                 dfs.append(df)
                 if limit and len(dfs) >= limit:
                     return dfs
         return dfs
 
-    def _get_resp_helper(self,
-            group=None,
-            start_date=None,
-            end_date=None,
-            advertiser_id=None,
-            pixel_id=None,
-            ):
-        logging.info("getting data from date: %s -- %s." % (start_date, end_date))
-        request_form = self._get_form(
-                group=group,
-                start_date=start_date,
-                end_date=end_date,
-                pixel_id=pixel_id,
-                )
-        request_url = _get_request_url(advertiser_id)
-        logging.info("requesting data from url: %s" % request_url)
-        _id = _get_report_id(request_url, request_form)
+    def _get_resp_helper(self, url, form):
+        logging.info("requesting data from url: %s" % url)
+        _id = _get_report_id(url, form)
         url = _get_report_url(_id)
         resp = _get_report_resp(url)
         return resp
+
+    def _get_request_url(self, _id=None):
+        return ('/report?advertiser_id=' + _id) if _id else '/report?'
 
     def _get_form(self,
             group=None,
@@ -218,15 +201,17 @@ class ReportBase(object):
     def _get_form_helper(self, *args, **kwargs):
         raise NotImplementedError
 
-    def _analyze(self, df, *args, **kwargs):
-        df = filter_pred(df, pred=kwargs.get('pred'))
+    def _analyze(self, df, pred=None, metrics=None):
+        df = filter_pred(df, pred=pred)
+        _analyze_func = get_analyze_func(self._name)
+        df = _analyze_func(df, metrics=metrics)
         return df
 
     def _get_advertiser_ids(self):
-        return None
+        return ['']
 
     def _get_pixel_ids(self, advertiser_id):
-        return None
+        return ['']
 
     def _get_unique_table_key(self):
         cur = self._db_wrapper
