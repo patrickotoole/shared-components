@@ -12,6 +12,7 @@ import pandas as pd
 from lib.report.utils.utils import convert_datetime
 from lib.report.utils.utils import memo
 from lib.report.reportutils import get_or_create_console
+from lib.report.utils.constants import ROUND
 
 from lib.report.utils.constants import (
         PC_CONVS, PV_CONVS, MEDIA_COST, DAMPING_POINT, WORST,
@@ -147,7 +148,7 @@ def filter_pred(df, pred=None):
         if isinstance(x, int):
             return x
         if isinstance(x, float):
-            x = round(x, 3)
+            x = round(x, ROUND)
             return x
         m = ID_REGEX.search(x)
         return int(m.group(1)) if m else x
