@@ -194,22 +194,15 @@ ul li, ol li {
                     <tr>
                         <td>
                             <p>wadup, boss</p>
-                            <h4>Here are the top {{limit}} {{metrics}} performers from {{start_date}} -- {{end_date}}</h4>
+                            <h4>Here are the top {{metrics}} performers from {{start_date}} -- {{end_date}}</h4>
                         </td>
                     </tr>
 			    </table>
 
                 <!-- table for all the advertiser best or worst performers -->
-                <table>
-                    <tr>
-                        <td>
-                            <p>all advertisers</p>
-                        </td>
-                    </tr>
-			    </table>
                 <div class="data">
                     <table>
-                        {% for row in alladvers %}
+                        {% for row in rows %}
                            <tr>
                                {% for cell in row %}
                                    <td>  {{cell}}  </td>
@@ -219,34 +212,6 @@ ul li, ol li {
                     </table>
                 </div>
 
-                <!--all advertisers-->
-
-                <!-- table for best or worst performers grouped by advertiser id -->
-                {% for adv, rows in grouped_by_adv.items() %}
-                   {% if rows %}
-
-                    <table>
-                        <tr>
-                            <td>
-                                <p> {{ adv }}</p>
-                            </td>
-                        </tr>
-                    </table>
-
-                    <div class="data">
-                        <table>
-                            {% for row in rows %}
-                               <tr>
-                                   {% for cell in row %}
-                                       <td>  {{cell}}  </td>
-                                   {% end %}
-                               <tr>
-                            {% end %}
-                        </table>
-                    </div>
-                {% end %}
-                {% end %}
-                <!-- grouped by advertiser id ended -->
 
 			</div>
 
