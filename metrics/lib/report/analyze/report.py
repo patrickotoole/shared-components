@@ -17,7 +17,7 @@ from lib.report.utils.constants import ROUND
 from lib.report.utils.constants import (
         PC_CONVS, PV_CONVS, MEDIA_COST, DAMPING_POINT, WORST,
         COST_EFFICIENCY, BOOKED_REV, MILLION, CPA_INF, GOOGLE_ADX,
-        POST_CLICK, PC_EXPIRE, PV_EXPIRE,
+        POST_CLICK, PC_EXPIRE, PV_EXPIRE, IMPS,
         )
 
 ID_REGEX = re.compile(r'.*?\((\d+)\)')
@@ -38,6 +38,7 @@ def analyze_domain(df, metrics=None):
             df_have_convs = df_have_convs.sort('cpa', ascending=False)
             df = pd.concat([df_no_convs, df_have_convs])
             df = df.reset_index(drop=True)
+            df = df.sort(IMPS, ascending=False)
         else:
             #sort by cost/revenue for now
             df[COST_EFFICIENCY] = df[MEDIA_COST] / df[BOOKED_REV]
@@ -60,10 +61,12 @@ def analyze_domain(df, metrics=None):
 
     df = _sort_df(df, metrics=metrics)
     df = _convert_inf_cpa(df)
+    df = df.drop(['cpa'], axis=1)
     to_rename = dict(booked_revenue='rev',
                      post_click_convs='pc_convs',
                      click_thru_pct='ctr',
                      media_cost='mc',
+                     site_domain='domain',
                      post_view_convs='pv_convs',
                      )
     df = df.rename(columns=to_rename)

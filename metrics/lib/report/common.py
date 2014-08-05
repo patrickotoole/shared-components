@@ -16,31 +16,13 @@ from lib.report.utils.utils import parse
 from lib.report.utils.utils import align
 from lib.report.utils.utils import datetime_to_str
 from lib.report.utils.utils import TIME_DELTA_REGEX
+from lib.report.utils.utils import get_start_end_date
 from lib.report.work.report import ReportWorker
 from lib.report.reportutils import get_report_obj
 from lib.report.reportutils import get_db
 
 LIMIT = 5
 WORST = 'worst'
-
-def _get_start_end_date(start_date=None, end_date=None):
-    """
-    @param start_date|end_date: str('1m'|'1h'|'1d|2014-07-14')
-    @return: str('2014-07-14 00:00:00')
-    """
-    _td = timedelta(hours=1)
-
-    def _f(t):
-        return align(_td, parse(t))
-    def _is_delta(t):
-        return TIME_DELTA_REGEX.search(t)
-
-    if _is_delta(end_date):
-        end_date = _f(end_date)
-        start_date = _f(start_date)
-        return datetime_to_str(start_date), datetime_to_str(end_date)
-    else:
-        return start_date, end_date
 
 def main():
     define('report')
@@ -67,7 +49,7 @@ def main():
     cache = options.cache
     pred = options.pred
     limit = options.limit
-    start_date, end_date = _get_start_end_date(options.start_date, options.end_date)
+    start_date, end_date = get_start_end_date(options.start_date, options.end_date)
     metrics = options.metrics
     kwargs = dict(
             group=group,

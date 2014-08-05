@@ -11,6 +11,7 @@ from tornado.options import parse_command_line
 
 from lib.report.reportutils import get_advertisers
 from lib.report.domain import ReportDomain
+from lib.report.utils.utils import get_start_end_date
 
 from lib.report.utils.constants import (
         DOMAIN,
@@ -35,7 +36,8 @@ def send_domain_email(to, limit,
         group=None,
         cache=True,
         ):
-    subject = '{metrics} domain: {start_date} - {end_date}'.format(
+    subject = '{limit} {metrics} domain: {start_date} - {end_date}'.format(
+            limit=limit,
             start_date=start_date,
             end_date=end_date,
             metrics=metrics,
@@ -90,8 +92,23 @@ def _to_list(df, limit):
     @param: df: DataFrame
     @return: list(tuple('imps', 'booked_revenue', etc.))
     """
+    names = ['advertiser',
+             'domain',
+             'line_item',
+             'imps',
+             'clicks',
+             'ctr',
+             'convs',
+             'pv_convs',
+             'pc_convs',
+             'rev',
+             'mc',
+             'profit',
+            ]
     dict_ = df.to_dict()
     headers  = dict_.keys()
+    _rank = dict(zip(names, range(len(headers))))
+    headers = sorted(headers, key=lambda h: _rank.get(h))
     results = [ dict_.get(h).values()[:limit] for h in headers ]
     results = zip(*results)
     if not results:
@@ -137,20 +154,21 @@ def _initialize_email():
 
 
 def main():
-    define("to", type=str, help="email reciever")
+    define("to", type=str, multiple=True, help="email reciever")
     define('limit', type=int)
     define('start_date', type=str, default='28h')
     define('end_date', type=str, default='4h')
     define("metrics", type=str, default='worst')
-    define('group', type=str, default='advertise,site_domain')
+    define('group', type=str, default='advertiser,domain,line_item')
     define("cache", type=bool, default=True)
     define('act', type=bool, default=False, help='if read from cache, act will create csv file if file not exist')
 
     parse_command_line()
 
+    start_date, end_date = get_start_end_date(options.start_date, options.end_date)
     kwargs = dict(
-            start_date=options.start_date,
-            end_date=options.end_date,
+            start_date=start_date,
+            end_date=end_date,
             metrics=options.metrics,
             group=options.group,
             cache=options.cache,
