@@ -25,7 +25,7 @@ class ReportDataPulling(ReportBase):
         super(ReportDataPulling, self).__init__(*args, **kwargs)
 
     def _get_advertiser_ids(self):
-        return get_advertiser_ids()
+        return map(str, get_advertiser_ids())
 
     def _get_form_helper(self, *args, **kwargs):
         return DATA_PULLING_FORMS
