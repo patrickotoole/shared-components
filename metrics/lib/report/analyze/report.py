@@ -146,7 +146,7 @@ def filter_pred(df, pred=None):
             x = round(x, 3)
             return x
         m = ID_REGEX.search(x)
-        return m.group(1) if m else x
+        return int(m.group(1)) if m else x
 
     df = df.applymap(_helper)
     if not pred:
