@@ -15,7 +15,6 @@ writing to database v4_reporting
 
 from lib.report.base import ReportBase
 from lib.report.reportutils import get_advertiser_ids
-from lib.report.analyze.report import analyze_datapulling
 from lib.report.request_json_forms import DATA_PULLING_FORMS
 
 
@@ -24,9 +23,6 @@ class ReportDataPulling(ReportBase):
         self._name = 'datapulling'
         self._table_name = 'v4_reporting'
         super(ReportDataPulling, self).__init__(*args, **kwargs)
-
-    def _analyze_helper(self, df, *args, **kwargs):
-        return analyze_datapulling(df)
 
     def _get_advertiser_ids(self):
         return get_advertiser_ids()

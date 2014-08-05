@@ -26,7 +26,6 @@ Hourly cron script that report/pull conversion data:
 from collections import defaultdict
 
 from lib.report.base import ReportBase
-from lib.report.analyze.report import analyze_conversions
 from lib.report.analyze.report import get_pixels
 
 from lib.report.request_json_forms import CONVERSIONS_FORM
@@ -46,9 +45,6 @@ class ReportConversions(ReportBase):
         self._name = 'conversions'
         self._table_name = 'conversion_reporting'
         super(ReportConversions, self).__init__(*args, **kwargs)
-
-    def _analyze_helper(self, df, *args, **kwargs):
-        return analyze_conversions(df)
 
     def _get_advertiser_ids(self):
         d_ = _advertiser_to_pixels_mapping()

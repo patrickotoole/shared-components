@@ -5,7 +5,7 @@ THRESHOLD = 7
 WORST = 'worst'
 BEST = 'best'
 
-NUM_TRIES = 10
+NUM_TRIES = 20
 LIMIT = 10
 SLEEP = 1
 

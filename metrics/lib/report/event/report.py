@@ -2,7 +2,6 @@ import logging
 from lib.report.event.base import EventBase
 from lib.report.utils.utils import decorator
 from lib.report.utils.utils import local_now
-from lib.report.utils.utils import get_dates
 
 
 class EventReport(EventBase):
@@ -31,8 +30,7 @@ def accounting(f):
         error = None
         status = 0
         job_created_at = local_now()
-        end_date, lookback = kwargs.get('end_date'), kwargs.get('lookback')
-        start_date, end_date = get_dates(end_date, lookback)
+        start_date, end_date = kwargs.get('start_date'), kwargs.get('end_date')
         try:
             res = f(*args, **kwargs)
             status = 1
