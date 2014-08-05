@@ -1,6 +1,8 @@
 """
 report the least effective campins/advertiser/domain etc.
 """
+import re
+
 from lib.report.base import ReportBase
 
 from lib.report.request_json_forms import DOMAIN_JSON_FORM
@@ -8,6 +10,7 @@ from lib.report.request_json_forms import ADVERTISER_DOMAIN_JSON_FORM
 from lib.report.request_json_forms import ADVERTISER_DOMAIN_CAMPAIGN_JSON_FORM
 from lib.report.request_json_forms import ADVERTISER_DOMAIN_LINE_ITEM_JSON_FORM
 
+FLOAT_REGEX = re.compile(r'[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?')
 
 class ReportDomain(ReportBase):
     def __init__(self, *args, **kwargs):
@@ -19,6 +22,11 @@ class ReportDomain(ReportBase):
         if not kwargs.get('group'):
             kwargs['group'] = 'advertiser,domain,line_item'
         return super(ReportDomain, self).get_report(*args, **kwargs)
+
+    def _analyze(self, df, pred=None, metrics=None):
+        df['click_thru_pct'] = df['click_thru_pct'].map(
+                lambda x: float(FLOAT_REGEX.search(x).group()))
+        return super(ReportDomain, self)._analyze(df, pred, metrics)
 
     def _get_form_helper(self, group):
         if group == 'domain':
