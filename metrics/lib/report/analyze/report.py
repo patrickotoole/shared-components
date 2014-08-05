@@ -19,7 +19,6 @@ from lib.report.utils.constants import (
         POST_CLICK, PC_EXPIRE, PV_EXPIRE,
         )
 
-FLOAT_PATTERN = r'[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?'
 
 def analyze_domain(df, metrics=None):
     def _sort_df(df, metrics=None):
@@ -28,6 +27,7 @@ def analyze_domain(df, metrics=None):
         """
         df['convs'] = df[PC_CONVS] + df[PV_CONVS]
         df['cpa'] = df[MEDIA_COST] / (df['convs'] + DAMPING_POINT)
+        df['profit'] = df[BOOKED_REV] - df[MEDIA_COST]
         df_no_convs = df[df['convs'] == 0]
         df_have_convs = df[df['convs'] != 0]
 
@@ -50,15 +50,12 @@ def analyze_domain(df, metrics=None):
         df = pd.concat([inf_cpas, non_inf_cpas])
         return df
 
-    #df = df.drop(['profit_ecpm', 'click_thru_pct'], axis=1)
     df = _sort_df(df, metrics=metrics)
     df = _convert_inf_cpa(df)
-    df = _convert_ctr(df)
     to_rename = dict(booked_revenue='rev',
                      post_click_convs='pc_convs',
                      click_thru_pct='ctr',
                      media_cost='mc',
-                     profit_ecpm='profit',
                      post_view_convs='pv_convs',
                      )
     df = df.rename(columns=to_rename)
