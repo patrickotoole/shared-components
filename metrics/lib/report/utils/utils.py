@@ -202,20 +202,25 @@ class FixedOffsetTZ(tzinfo):
     def normalize(self, dt):
         return dt.astimezone(self)
 
-def get_dates(end_date=None, lookback=None):
-    _timedelta = timedelta(hours=lookback)
-    dates =  get_start_and_end_date(end_date,  _timedelta=_timedelta)
-    return dates.get('start_date'), dates.get('end_date')
+def get_start_end_date(start_date=None, end_date=None):
+    """
+    @param start_date|end_date: str('1m'|'1h'|'1d|2014-07-14')
+    @return: str('2014-07-14 00:00:00')
+    """
+    _td = timedelta(hours=1)
 
-def get_start_and_end_date(end_date=None, _timedelta=None):
-    if not end_date:
-        end_date = align(timedelta(hours=1),
-                (local_now() - timedelta(hours=APPNEXUS_REPORT_GAP_HOURS)))
-    if isinstance(end_date, str):
-        end_date = convert_datetime(end_date)
-    start_date = end_date - _timedelta
-    return dict(start_date=datetime_to_str(start_date),
-                end_date=datetime_to_str(end_date))
+    def _f(t):
+        return align(_td, parse(t))
+    def _is_delta(t):
+        return TIME_DELTA_REGEX.search(t)
+
+    if _is_delta(end_date):
+        end_date = _f(end_date)
+        start_date = _f(start_date)
+        return datetime_to_str(start_date), datetime_to_str(end_date)
+    else:
+        return start_date, end_date
+
 
 #---------timeutils ended----------------------------------
 
