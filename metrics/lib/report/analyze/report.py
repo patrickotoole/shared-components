@@ -55,8 +55,6 @@ def analyze_domain(df, metrics=None):
     none = df['site_domain'] == '---'
     df = df.drop(df.index[undisclosed | none])
 
-    to_drop = ['profit_ecpm']
-    df = df.drop(to_drop, axis=1)
     df = _sort_df(df, metrics=metrics)
     df = _convert_inf_cpa(df)
     to_rename = dict(booked_revenue='rev',

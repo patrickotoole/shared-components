@@ -76,17 +76,13 @@ def _get_grouped_by_adv(df, limit):
     for _id, name in _advertisers:
         _empty_row = EMPTY * _len
         _header = EMPTY * (_len - 2) + [name, _id]
-        _df = _get_adver(df, _id, limit)
+        _df = df[df['advertiser'] == _id][:limit]
         _rows = _to_list(_df, limit)
         if _rows:
             rows.append(_empty_row)
             rows.append(_header)
             rows.extend(_rows)
     return rows
-
-def _get_adver(df, _id, limit):
-    res = df[df['advertiser'] == _id][:limit]
-    return res
 
 def _to_list(df, limit):
     """

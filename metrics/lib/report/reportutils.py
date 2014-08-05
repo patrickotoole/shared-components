@@ -17,10 +17,14 @@ def get_or_create_console():
     CONSOLE = console
     return console
 
-def get_advertiser_ids():
+def get_advertisers():
     cur = lnk.dbs.mysql
-    df = cur.select('select external_advertiser_id from advertiser;').as_dataframe()
-    return map(str, list(df['external_advertiser_id'].values))
+    df = cur.select('select external_advertiser_id, advertiser_name from advertiser;').as_dataframe()
+    return df
+
+def get_advertiser_ids():
+    df = get_advertisers()
+    return list(df['external_advertiser_id'].values)
 
 def get_db(name='test'):
     str_ = 'lnk.dbs.{name}'.format(name=name)
