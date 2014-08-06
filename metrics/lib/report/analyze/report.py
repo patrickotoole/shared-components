@@ -91,6 +91,7 @@ def analyze_datapulling(df, **kwargs):
     all_res = all_grouped[to_sum].sum()
     to_return = all_res.reset_index()
     to_return['adx_spend'] = adx_res['media_cost']
+    to_return = to_return.fillna(0)
     return to_return
 
 def analyze_conversions(df, **kwargs):
