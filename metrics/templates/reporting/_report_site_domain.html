@@ -173,9 +173,6 @@ ul li, ol li {
 .content table {
 	width: 100%;
 }
-.data td, tr {
-    border: 1 px solid #000;
-}
 
 </style>
 </head>
@@ -193,25 +190,43 @@ ul li, ol li {
                 <table>
                     <tr>
                         <td>
-                            <p>wadup, boss</p>
-                            <h4>Here are the top {{metrics}} performers from {{start_date}} -- {{end_date}}</h4>
+                            <h4>Domain report from {{start_date}} -- {{end_date}}</h4>
                         </td>
                     </tr>
 			    </table>
 
                 <!-- table for all the advertiser best or worst performers -->
+                <table>
+                    <tr>
+                        <td>
+                            <h4>Worst Ones</h4>
+                        </td>
+                    </tr>
+			    </table>
+
                 <div class="data">
                     <table>
-                        {% for row in rows %}
-                           <tr>
-                               {% for cell in row %}
-                                   <td>  {{cell}}  </td>
-                               {% end %}
-                           <tr>
+                        {% for row in worst_rows %}
+                          {% include "_reporting_table.html" %}
                         {% end %}
                     </table>
                 </div>
 
+                <table>
+                    <tr>
+                        <td>
+                            <h4>Best Ones</h4>
+                        </td>
+                    </tr>
+			    </table>
+
+                <div class="data">
+                    <table>
+                        {% for row in best_rows %}
+                          {% include "_reporting_table.html" %}
+                        {% end %}
+                    </table>
+                </div>
 
 			</div>
 

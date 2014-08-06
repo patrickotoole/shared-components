@@ -28,6 +28,10 @@ TEMP_MAIN_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../t
 EMAIL_BASE = '%s@rockerbox.com'
 EMPTY = [" "]
 
+def _get_pred(metrics):
+    return None
+    return 'imps>100000&convs=0' if metrics == 'worst' else 'convs>3'
+
 def send_domain_email(to, limit,
         df=None,
         start_date=None,
@@ -35,7 +39,9 @@ def send_domain_email(to, limit,
         metrics=None,
         group=None,
         cache=True,
+        pred=None,
         ):
+    pred = pred or _get_pred(metrics)
     subject = '{limit} {metrics} domain: {start_date} - {end_date}'.format(
             limit=limit,
             start_date=start_date,
@@ -48,6 +54,7 @@ def send_domain_email(to, limit,
             end_date=end_date,
             metrics=metrics,
             cache=cache,
+            pred=pred,
             )
     _kwargs = {'rows': rows,
                'start_date': start_date,
@@ -72,12 +79,15 @@ def _get_domain_report_rows(df, limit, **kwargs):
     return rows
 
 def _get_grouped_by_adv(df, limit):
+    def _get_empty_row(l):
+        return EMPTY * l
     _len = len(df.columns)
     rows = []
     _advertisers = list(get_advertisers().values)
     for _id, name in _advertisers:
-        _empty_row = EMPTY * _len
-        _header = EMPTY * (_len - 2) + [name, _id]
+        _empty_row = _get_empty_row(_len)
+        _header = _get_empty_row(_len)
+        _header[1:2] = [name, _id]
         _df = df[df['advertiser'] == _id][:limit]
         _rows = _to_list(_df, limit)
         if _rows:
@@ -105,6 +115,7 @@ def _to_list(df, limit):
              'mc',
              'profit',
             ]
+    df = df.reset_index(drop=True)
     dict_ = df.to_dict()
     headers  = dict_.keys()
     _rank = dict(zip(names, range(len(headers))))
@@ -160,6 +171,7 @@ def main():
     define('end_date', type=str, default='4h')
     define("metrics", type=str, default='worst')
     define('group', type=str, default='advertiser,domain,line_item')
+    define('pred', type=str)
     define("cache", type=bool, default=True)
     define('act', type=bool, default=False, help='if read from cache, act will create csv file if file not exist')
 
@@ -172,6 +184,7 @@ def main():
             metrics=options.metrics,
             group=options.group,
             cache=options.cache,
+            pred=options.pred,
             )
     if options.act:
         logging.info("sending email to %s" % options.to)

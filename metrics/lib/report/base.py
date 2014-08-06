@@ -10,7 +10,8 @@ from lib.report.utils.utils import parse_params
 from lib.report.reportutils import get_report_obj
 from lib.report.reportutils import get_or_create_console
 from lib.report.reportutils import get_analyze_func
-from lib.report.analyze.report import filter_pred
+from lib.report.analyze.report import pre_filter
+from lib.report.analyze.report import post_filter
 
 from lib.report.utils.constants import NUM_TRIES
 from lib.report.utils.constants import SLEEP
@@ -202,9 +203,11 @@ class ReportBase(object):
         raise NotImplementedError
 
     def _analyze(self, df, pred=None, metrics=None):
-        df = filter_pred(df, pred=pred)
+        df = pre_filter(df)
         _analyze_func = get_analyze_func(self._name)
         df = _analyze_func(df, metrics=metrics)
+        df = post_filter(df, pred=pred)
+        df = df.reset_index(drop=True)
         return df
 
     def _get_advertiser_ids(self):

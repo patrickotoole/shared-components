@@ -37,15 +37,14 @@ def analyze_domain(df, metrics=None):
             df_no_convs = df_no_convs.sort('media_cost', ascending=False)
             df_have_convs = df_have_convs.sort('cpa', ascending=False)
             df = pd.concat([df_no_convs, df_have_convs])
-            df = df.reset_index(drop=True)
             df = df.sort(IMPS, ascending=False)
         else:
             #sort by cost/revenue for now
             df[COST_EFFICIENCY] = df[MEDIA_COST] / df[BOOKED_REV]
             df = df[df[BOOKED_REV] > 0]
-            df = df.sort('convs', ascending=False)
             df = df.sort(COST_EFFICIENCY)
             df = df.drop([COST_EFFICIENCY], axis=1)
+            df = df.sort('convs', ascending=False)
         return df
 
     def _convert_inf_cpa(df):
@@ -58,7 +57,6 @@ def analyze_domain(df, metrics=None):
     undisclosed = df['site_domain'] == 'Undisclosed'
     none = df['site_domain'] == '---'
     df = df.drop(df.index[undisclosed | none])
-
     df = _sort_df(df, metrics=metrics)
     df = _convert_inf_cpa(df)
     df = df.drop(['cpa'], axis=1)
@@ -146,12 +144,7 @@ def analyze_segment(df, metrics=None):
 Other utils helpers
 """
 
-def filter_pred(df, pred=None):
-    """
-    command_line eg: --pred=campaign=boboba,advertiser=googleadx,media_cost>10
-    url eg: &pred=campaign#b,advertiser#c,media_cost>10
-    treating '#' as '=', not conflicting with func parse_params(url)
-    """
+def pre_filter(df):
     def _helper(x):
         if isinstance(x, int):
             return x
@@ -160,12 +153,19 @@ def filter_pred(df, pred=None):
             return x
         m = ID_REGEX.search(x)
         return int(m.group(1)) if m else x
-
     df = df.applymap(_helper)
+    return df
+
+def post_filter(df, pred=None):
+    """
+    command_line eg: --pred=campaign=boboba,advertiser=googleadx,media_cost>10
+    url eg: &pred=campaign#b,advertiser#c,media_cost>10
+    treating '#' as '=', not conflicting with func parse_params(url)
+    """
     if not pred:
         return df
     regex= re.compile(r'([><|#=])')
-    params = [p for p in pred.split(',')]
+    params = re.split(r'[,&]', pred)
     params = [regex.split(p) for p in params]
     for param in params:
         k, _cmp, v = param
