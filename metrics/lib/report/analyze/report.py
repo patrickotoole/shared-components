@@ -137,7 +137,10 @@ def get_pixels():
     return pixels
 
 def analyze_segment(df, metrics=None):
+    df = df.rename(columns={'day': 'date_time'})
+    df['date_time'] = df['date_time'].map(lambda x: convert_datetime(x))
     return df
+
 """
 Other utils helpers
 """

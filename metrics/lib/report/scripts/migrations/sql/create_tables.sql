@@ -48,10 +48,10 @@ CREATE TABLE `segment_reporting` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `segment_id` int(10) NOT NULL,
   `segment_name` varchar(100) DEFAULT NULL,
-  `month` varchar(100) DEFAULT NULL,
+  `date_time` datetime DEFAULT NULL,
   `total_loads` int(10) NOT NULL,
   `monthly_uniques` int(10) NOT NULL,
   `avg_daily_uniques` int(10) NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `unique` (`segment_id`,`segment_name`,`month`,`total_loads`,`monthly_uniques`, `avg_daily_uniques`)
+  UNIQUE KEY `unique` (`segment_id`,`segment_name`,`date_time`,`total_loads`,`monthly_uniques`, `avg_daily_uniques`)
 )
