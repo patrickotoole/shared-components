@@ -20,46 +20,24 @@ from lib.report.utils.constants import (
         POST_CLICK, PC_EXPIRE, PV_EXPIRE, IMPS,
         )
 
+FLOAT_REGEX = re.compile(r'[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?')
 ID_REGEX = re.compile(r'.*?\((\d+)\)')
 
-def analyze_domain(df, metrics=None):
-    def _sort_df(df, metrics=None):
-        """
-        given pandas frame, sort them by cpa or media cost if there is no convertions.
-        """
-        df['convs'] = df[PC_CONVS] + df[PV_CONVS]
-        df['cpa'] = df[MEDIA_COST] / (df['convs'] + DAMPING_POINT)
-        df['profit'] = df[BOOKED_REV] - df[MEDIA_COST]
-        df_no_convs = df[df['convs'] == 0]
-        df_have_convs = df[df['convs'] != 0]
+def _sort_by_worst(df):
+    df = df.sort(IMPS, ascending=False)
+    return df
 
-        if metrics == WORST:
-            df_no_convs = df_no_convs.sort('media_cost', ascending=False)
-            df_have_convs = df_have_convs.sort('cpa', ascending=False)
-            df = pd.concat([df_no_convs, df_have_convs])
-            df = df.sort(IMPS, ascending=False)
-        else:
-            #sort by cost/revenue for now
-            df = df[df['convs'] > 0]
-            df[COST_EFFICIENCY] = df[MEDIA_COST] / df[BOOKED_REV]
-            df = df.sort(['convs', COST_EFFICIENCY], ascending=[False, True])
-            df = df.drop([COST_EFFICIENCY], axis=1)
-        return df
+def _sort_by_best(df):
+    #sort by cost/revenue for now
+    df = df[df['convs'] > 0]
+    df[COST_EFFICIENCY] = df['mc'] / df['rev']
+    df = df.sort(['convs', COST_EFFICIENCY], ascending=[False, True])
+    df = df.drop([COST_EFFICIENCY], axis=1)
+    return df
 
-    def _convert_inf_cpa(df):
-        inf_cpas = df[df['cpa'] > MILLION]
-        inf_cpas['cpa'] = CPA_INF
-        non_inf_cpas = df[df['cpa'] < MILLION]
-        df = pd.concat([inf_cpas, non_inf_cpas])
-        return df
-
-    undisclosed = df['site_domain'] == 'Undisclosed'
-    none = df['site_domain'] == '---'
-    df = df.drop(df.index[undisclosed | none])
-    df = _sort_df(df, metrics=metrics)
-    #disable it for now
-    #df = _convert_inf_cpa(df)
-    df = df.drop(['cpa'], axis=1)
+def _modify_domain_columns(df):
+    df['convs'] = df[PC_CONVS] + df[PV_CONVS]
+    df['profit'] = df[BOOKED_REV] - df[MEDIA_COST]
     to_rename = dict(booked_revenue='rev',
                      post_click_convs='pc_convs',
                      click_thru_pct='ctr',
@@ -68,6 +46,19 @@ def analyze_domain(df, metrics=None):
                      post_view_convs='pv_convs',
                      )
     df = df.rename(columns=to_rename)
+    return df
+
+def _filter_domain(df):
+    undisclosed = df['domain'] == 'Undisclosed'
+    none = df['domain'] == '---'
+    df = df.drop(df.index[undisclosed | none])
+    df['ctr'] = df['ctr'].map(lambda x: float(FLOAT_REGEX.search(x).group()))
+    return df
+
+def analyze_domain(df, metrics=None):
+    df = _modify_domain_columns(df)
+    df = _filter_domain(df)
+    df = _sort_by_worst(df) if metrics == WORST else _sort_by_best(df)
     return df
 
 def analyze_datapulling(df, **kwargs):
@@ -164,7 +155,7 @@ def apply_filter(df, pred=None):
     """
     if not pred:
         return df
-    regex= re.compile(r'([><|#=])')
+    regex = re.compile(r'\s*([><|#=])\s*')
     params = re.split(r'[,&]', pred)
     params = [regex.split(p) for p in params]
     for param in params:
