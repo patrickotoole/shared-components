@@ -130,9 +130,7 @@ class ReportBase(object):
             start_date=None,
             end_date=None,
             cache=False,
-            pred=None,
-            metrics=None,
-            ):
+            **kwargs):
         dfs = []
         logging.info("Getting start date: %s, end date: %s" % (start_date, end_date))
         _should_create_csv = False
