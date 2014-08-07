@@ -115,7 +115,15 @@ class ReportBase(object):
     def __init__(self, db=None, *args, **kwargs):
         self._db_wrapper = db
 
-    def get_report(self,
+    def get_report(self, **kwargs):
+        dfs = self._get_report(**kwargs)
+        pred = kwargs.get('pred')
+        metrics = kwargs.get('metrics') or 'worst'
+        dfs = self._analyze(dfs, pred=pred, metrics=metrics)
+        limit = kwargs.get('limit')
+        return dfs[:limit]
+
+    def _get_report(self,
             group=None,
             limit=None,
             path=None,
@@ -123,7 +131,7 @@ class ReportBase(object):
             end_date=None,
             cache=False,
             pred=None,
-            metrics=WORST,
+            metrics=None,
             ):
         dfs = []
         logging.info("Getting start date: %s, end date: %s" % (start_date, end_date))
@@ -155,8 +163,7 @@ class ReportBase(object):
         if _should_create_csv:
             _create_csv(dfs, path)
 
-        dfs = self._analyze(dfs, pred=pred, metrics=metrics)
-        return dfs[:limit]
+        return dfs
 
     def _get_dataframes(self, **kwargs):
         dfs = []
