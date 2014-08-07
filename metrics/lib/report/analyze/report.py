@@ -40,11 +40,10 @@ def analyze_domain(df, metrics=None):
             df = df.sort(IMPS, ascending=False)
         else:
             #sort by cost/revenue for now
+            df = df[df['convs'] > 0]
             df[COST_EFFICIENCY] = df[MEDIA_COST] / df[BOOKED_REV]
-            df = df[df[BOOKED_REV] > 0]
-            df = df.sort(COST_EFFICIENCY)
+            df = df.sort(['convs', COST_EFFICIENCY], ascending=[False, True])
             df = df.drop([COST_EFFICIENCY], axis=1)
-            df = df.sort('convs', ascending=False)
         return df
 
     def _convert_inf_cpa(df):
@@ -58,7 +57,8 @@ def analyze_domain(df, metrics=None):
     none = df['site_domain'] == '---'
     df = df.drop(df.index[undisclosed | none])
     df = _sort_df(df, metrics=metrics)
-    df = _convert_inf_cpa(df)
+    #disable it for now
+    #df = _convert_inf_cpa(df)
     df = df.drop(['cpa'], axis=1)
     to_rename = dict(booked_revenue='rev',
                      post_click_convs='pc_convs',
@@ -144,7 +144,7 @@ def analyze_segment(df, metrics=None):
 Other utils helpers
 """
 
-def pre_filter(df):
+def transform_(df):
     def _helper(x):
         if isinstance(x, int):
             return x
@@ -156,7 +156,7 @@ def pre_filter(df):
     df = df.applymap(_helper)
     return df
 
-def post_filter(df, pred=None):
+def apply_filter(df, pred=None):
     """
     command_line eg: --pred=campaign=boboba,advertiser=googleadx,media_cost>10
     url eg: &pred=campaign#b,advertiser#c,media_cost>10
