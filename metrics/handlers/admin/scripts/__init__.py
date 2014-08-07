@@ -5,3 +5,6 @@ from advertiser import AdvertiserHandler
 from api import APIHandler
 from pixel import PixelHandler
 from intraweek import IntraWeekHandler
+from batch import BatchRequestHandler
+from batch import BatchRequestsHandler
+
