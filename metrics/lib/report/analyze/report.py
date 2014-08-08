@@ -23,6 +23,7 @@ from lib.report.utils.constants import (
 FLOAT_REGEX = re.compile(r'[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?')
 ID_REGEX = re.compile(r'.*?\((\d+)\)')
 
+
 def _sort_by_worst(df):
     df = df.sort(IMPS, ascending=False)
     return df
@@ -84,6 +85,16 @@ def analyze_datapulling(df, **kwargs):
     return to_return
 
 def analyze_conversions(df, **kwargs):
+    def _is_valid(row):
+        pid = row['pixel_id']
+        window_hours = _get_pc_or_pv_hour(int(pid))
+        window_hours = timedelta(window_hours.get('pc') if row['pc'] else
+                                 window_hours.get('pv'))
+        conversion_time = convert_datetime(row['conversion_time'])
+        imp_time = convert_datetime(row['imp_time'])
+        row['is_valid'] = imp_time + window_hours <= conversion_time
+        return row
+
     cols = {'advertiser_id': 'external_advertiser_id',
             'datetime': 'conversion_time'}
     df = df.rename(columns=cols)
@@ -96,15 +107,6 @@ def analyze_conversions(df, **kwargs):
     df = df.apply(_is_valid, axis=1)
     return df
 
-def _is_valid(row):
-    pid = row['pixel_id']
-    window_hours = _get_pc_or_pv_hour(int(pid))
-    window_hours = timedelta(window_hours.get('pc') if row['pc'] else
-                             window_hours.get('pv'))
-    conversion_time = convert_datetime(row['conversion_time'])
-    imp_time = convert_datetime(row['imp_time'])
-    row['is_valid'] = imp_time + window_hours <= conversion_time
-    return row
 
 def _get_pc_or_pv_hour(pid):
     dict_ = _get_pc_or_pv_hours()

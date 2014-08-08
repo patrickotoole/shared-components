@@ -202,12 +202,12 @@ class FixedOffsetTZ(tzinfo):
     def normalize(self, dt):
         return dt.astimezone(self)
 
-def get_start_end_date(start_date=None, end_date=None):
+def get_start_end_date(start_date=None, end_date=None, units='hours'):
     """
     @param start_date|end_date: str('1m'|'1h'|'1d|2014-07-14')
     @return: str('2014-07-14 00:00:00')
     """
-    _td = timedelta(hours=1)
+    _td = timedelta(**{units: 1})
 
     def _f(t):
         return align(_td, parse(t))

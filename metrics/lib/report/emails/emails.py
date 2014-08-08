@@ -46,7 +46,7 @@ def _send_email(_template,
 def send_report_email(to, headers, rows,
         subject='report',
         width=700,
-        table_title=None,
+        title=None,
         ):
     """
     @param to: str
@@ -59,7 +59,7 @@ def send_report_email(to, headers, rows,
     """
     return send_multi_table_report_email(to,
             [Table(headers, rows,
-                table_title=table_title,
+                title=title,
                 )],
             subject=subject,
             width=width,
@@ -78,7 +78,7 @@ def send_multi_table_report_email(to, tables,
     """
     return _send_email(REPORT_TEMPLATE,
             subject=subject,
-            to=[to],
+            to=to,
             tables=tables,
             width=width,
             )

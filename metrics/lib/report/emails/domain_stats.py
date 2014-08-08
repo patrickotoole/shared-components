@@ -1,5 +1,6 @@
 import logging
 from datetime import timedelta
+from pprint import pprint
 
 from tornado.options import define
 from tornado.options import options
@@ -49,8 +50,8 @@ def _get_tables(limit=None,
     best_df = _filter_best(_filter_domain(df), _ismonth, pred)
     worst_df = _filter_worst(_filter_domain(df), _ismonth, pred)
 
-    best_domain_summary = Table('Best performers', _to_list(best_df))
-    worst_domain_summary = Table('Worst Performers', _to_list(worst_df))
+    best_domain_summary = Table(title='Best performers', rows=_to_list(best_df))
+    worst_domain_summary = Table(title='Worst Performers', rows=_to_list(worst_df))
     _best = _get_tables_by_adver(best_df, limit)
     _worst = _get_tables_by_adver(worst_df, limit)
 
@@ -89,12 +90,12 @@ def _get_tables_by_adver(df, limit):
     to_return = []
     _advertisers = list(get_advertisers().values)
     for _id, name in _advertisers:
-        headers = '%s -- %s' % (name, _id)
+        title = '%s -- %s' % (name, _id)
         cp_df = df.copy(deep=True)
         cp_df = cp_df[cp_df['advertiser'] == _id][:limit]
         if not cp_df.empty:
             rows = _to_list(cp_df)
-            table = Table(headers, rows)
+            table = Table(title=title, rows=rows)
             to_return.append(table)
     return to_return
 
@@ -120,14 +121,15 @@ def _to_list(df):
 
 def main():
     define("to", type=str, multiple=True, help="email reciever")
-    define('limit', type=int, default=10)
+    define('limit', type=int, default=100)
     define('start_date', type=str, default='28h')
     define('end_date', type=str, default='4h')
     define('pred', type=str)
     define('act', type=bool, default=False)
     parse_command_line()
 
-    start_date, end_date = get_start_end_date(options.start_date, options.end_date)
+    start_date, end_date = get_start_end_date(options.start_date,
+            options.end_date, units='days')
     subject = 'report domain stats: {start_date} - {end_date}'.format(
             start_date=start_date,
             end_date=end_date,
