@@ -1,3 +1,5 @@
+import os
+
 "media cost under this amount is truncated"
 THRESHOLD = 7
 
@@ -63,3 +65,6 @@ SENDGRID_USER = 'ronjacobson'
 SENDGRID_PW = 'rockerbox13'
 
 ROUND = 2
+
+"logged json files to be parse and rerun reporting jobs"
+LOG_JSON = os.path.realpath('/tmp/cron_job_logging.json')
