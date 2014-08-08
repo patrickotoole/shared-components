@@ -23,11 +23,6 @@ class ReportDomain(ReportBase):
             kwargs['group'] = 'advertiser,domain,line_item'
         return super(ReportDomain, self).get_report(*args, **kwargs)
 
-    def _analyze(self, df, pred=None, metrics=None):
-        df['click_thru_pct'] = df['click_thru_pct'].map(
-                lambda x: float(FLOAT_REGEX.search(x).group()))
-        return super(ReportDomain, self)._analyze(df, pred, metrics)
-
     def _get_form_helper(self, group):
         if group == 'domain':
             return DOMAIN_JSON_FORM

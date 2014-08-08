@@ -25,11 +25,11 @@ class ReportTestCase(unittest.TestCase):
         csv_path = os.path.realpath(__file__ + '../../test_csv_files/advertiser,site_domain.csv')
         result = obj.get_report(path=csv_path, metrics=metrics, limit=10)
 
-        expected = {19: 306383}
+        expected = {0: 306383}
         response = result.to_dict().get('advertiser')
         self.assertEqual(expected, response)
 
-        expected = {19: 3.0}
+        expected = {0: 3.0}
         response = result.to_dict().get('rev')
         self.assertEqual(expected, response)
 
