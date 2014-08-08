@@ -119,6 +119,8 @@ class ReportBase(object):
         dfs = self._get_report(**kwargs)
         pred = kwargs.get('pred')
         metrics = kwargs.get('metrics') or 'worst'
+        if dfs.empty:
+            return dfs
         dfs = self._analyze(dfs, pred=pred, metrics=metrics)
         limit = kwargs.get('limit')
         return dfs[:limit]
