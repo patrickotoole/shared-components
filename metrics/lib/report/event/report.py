@@ -1,7 +1,13 @@
 import logging
+import os
+
+import ujson
+
 from lib.report.event.base import EventBase
 from lib.report.utils.utils import decorator
 from lib.report.utils.utils import local_now
+
+LOG_JSON = os.path.realpath('/tmp/cron_job_logging.json')
 
 
 class EventReport(EventBase):
@@ -39,18 +45,27 @@ def accounting(f):
             error = e
         job_ended_at = local_now()
         _kwargs = _get_kwargs(*args, **kwargs)
+        _d = dict(start_date=start_date, end_date=end_date)
         _kwargs.update(dict(job_created_at=job_created_at,
                             job_ended_at=job_ended_at,
                             status=status,
                             table_name='stats_event_report',
-                            start_date=start_date,
-                            end_date=end_date,
-                            ))
+                            **_d))
         EventReport(**_kwargs).create_event()
+        _create_logging_json(**_d)
         if error:
             raise ValueError(e)
         return res
     return _f
+
+def _create_logging_json(start_date=None, end_date=None):
+    to_dump = ujson.dumps({
+            "start_date":start_date,
+            "end_date": end_date,
+            })
+    f_ = (open(LOG_JSON, 'w') if os.path.exists(LOG_JSON) else
+          open(LOG_JSON, 'a'))
+    f_.write(to_dump)
 
 def _get_kwargs(*args, **kwargs):
     event_name = kwargs.get('name') or filter(lambda a: isinstance(a, str), args)[0]
