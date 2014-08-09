@@ -13,9 +13,10 @@ class ReportError(ValueError):
     pass
 
 class ReportWorker(BaseWorker):
-    def __init__(self, name=None, con=None):
-        self.con = con or get_db()
+    def __init__(self, name=None, con=None, **kwargs):
         self._name = name
+        self._con = con or get_db()
+        self._kwargs = kwargs
 
     def do_work(self, **kwargs):
         report_names = get_report_names(self.con)
@@ -29,23 +30,24 @@ class ReportWorker(BaseWorker):
         return
 
     @accounting
-    def _work(self, name=None, con=None, act=True, **kwargs):
-        _obj = get_report_obj(name)
+    def _work(self):
+        _obj = get_report_obj(self._name)
         report_f = _obj.get_report
         try:
-            df = report_f(**kwargs)
+            df = report_f(**self._kwargs)
         except Exception as e:
             logging.warn(e)
             raise ReportError
+        act = self._kwargs.get('act')
         if act:
             table_name = _obj._table_name
             created = self._create_reports(df,
-                    con=con,
+                    con=self._con,
                     table_name=table_name,
-                    key=get_unique_keys(con, table_name),
+                    key=get_unique_keys(self._con, table_name),
                     )
             if created:
-                logging.info("successfully created report for %s" % name)
+                logging.info("successfully created report for %s" % self._name)
 
     def _create_reports(self, df, con=None, table_name=None, key=None):
         cols = df.columns.tolist()
