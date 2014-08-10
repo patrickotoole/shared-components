@@ -10,7 +10,7 @@ from twisted.internet import reactor, protocol, defer, threads
 from twisted.protocols import basic
 from tornado.options import define, options, parse_command_line
 
-from handlers import streaming, reporting, user, analysis
+from handlers import streaming, reporting, user, analysis, index
 
 import handlers.admin as admin
 from handlers.adminreport import AdminReportHandler
@@ -98,6 +98,9 @@ def shutdown():
             logging.info('Shutdown')
     stop_loop()
 
+index = [
+    (r'/', index.IndexHandler)
+]
 
 old_handlers = [
     (r'/debug', admin.lookback.DebugHandler),
@@ -149,7 +152,7 @@ static = [
 
 dirname = os.path.dirname(os.path.realpath(__file__))
 app = tornado.web.Application(
-    streaming + admin_scripts + admin_reporting + reporting + pixel_analysis + static,
+    streaming + admin_scripts + admin_reporting + reporting + pixel_analysis + static + index, 
     template_path= dirname + "/templates",
     db=lnk.dbs.mysql,
     debug=True,
