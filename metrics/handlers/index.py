@@ -3,7 +3,7 @@ import tornado.web
 class IndexHandler(tornado.web.RequestHandler):
     def get(self):
         production_links = [
-            ("/streaming", "Streaming Tool"),
+            ("/admin/streaming", "Streaming Tool"),
             ("/reporting", "Reporting Tool")
         ]
         
