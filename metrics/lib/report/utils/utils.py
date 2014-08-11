@@ -95,8 +95,9 @@ def localize(dt, normalize=False, tz='America/New_York'):
         return tzinfo.normalize(dt)
     return dt.replace(tzinfo=tzinfo)
 
-def datetime_to_str(dt):
-    return dt.strftime(DATE_TIME_FORMAT)
+def datetime_to_str(dt, fmt=None):
+    fmt = fmt or DATE_TIME_FORMAT
+    return dt.strftime(fmt)
 
 def align(frequency, ts):
     """
@@ -111,6 +112,9 @@ def align(frequency, ts):
     delta_sec = elapsed_seconds(ts - epoch)
     offset = delta_sec % elapsed_seconds(frequency)
     return ts - timedelta(seconds=offset)
+
+def align_to_day(ts):
+    return datetime_to_str(ts, DATE_FORMAT)
 
 def elapsed_seconds(delta):
     """Convert a timedelta to total elapsed seconds (as a float).
