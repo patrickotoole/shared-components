@@ -239,6 +239,8 @@ def get_start_end_date(start_date=None, end_date=None, units='hours'):
         return TIME_DELTA_REGEX.search(t)
 
     if _is_delta(end_date):
+        if units == 'days':
+            return align_to_day(start_date), align_to_day(end_date)
         end_date = _f(end_date)
         start_date = _f(start_date)
         return datetime_to_str(start_date), datetime_to_str(end_date)
