@@ -33,16 +33,18 @@ CREATE TABLE `domain_reporting` (
   `line_item` int(11) DEFAULT NULL,
   `imps` int(11) DEFAULT NULL,
   `clicks` int(11) DEFAULT NULL,
-  `ctr` FLOAT(7,2) DEFAULT NULL,
+  `ctr` float(7,2) DEFAULT NULL,
   `convs` int(11) DEFAULT NULL,
   `pv_convs` int(11) DEFAULT NULL,
   `pc_convs` int(11) DEFAULT NULL,
-  `rev` FLOAT(7,2) DEFAULT NULL,
-  `mc` FLOAT(7,2) DEFAULT NULL,
-  `profit` FLOAT(7,2) DEFAULT NULL,
+  `rev` float(7,2) DEFAULT NULL,
+  `mc` float(7,2) DEFAULT NULL,
+  `profit` float(7,2) DEFAULT NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `unique` (`advertiser`, `domain`,`line_item`,`imps`,`clicks`,`ctr`,`convs`,`pv_convs`, `pc_convs`, `rev`, `mc`, `profit`)
-);
+  UNIQUE KEY `unique` (`advertiser`,`domain`,`line_item`,`imps`,`clicks`,`ctr`,`convs`,`pv_convs`,`pc_convs`,`rev`,`mc`,`profit`)
+)
 
 CREATE TABLE `segment_reporting` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -54,4 +56,16 @@ CREATE TABLE `segment_reporting` (
   `daily_uniques` int(10) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `unique` (`segment_id`,`segment_name`,`date_time`,`total_loads`,`monthly_uniques`, `daily_uniques`)
+)
+
+CREATE TABLE `stats_event_report` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `start_date` datetime DEFAULT NULL,
+  `end_date` datetime DEFAULT NULL,
+  `job_created_at` datetime DEFAULT NULL,
+  `job_ended_at` datetime DEFAULT NULL,
+  `event_name` varchar(250) DEFAULT NULL,
+  `status` tinyint(1) DEFAULT NULL,
+  `active` tinyint(1) DEFAULT '1',
+  PRIMARY KEY (`id`)
 )
