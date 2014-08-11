@@ -17,7 +17,8 @@ TIME_FMTS = [
     DATE_TIME_FORMAT,
     DATE_FORMAT,
     ]
-TIME_DELTA_REGEX = re.compile(r'([-+]?\d+)([dDhHmM])')
+TIME_DELTA_REGEX = re.compile(r'(\s*([-+]?\d+)\s*([dDhHmM])\s*)+')
+TIME_DELTA_SUB_REGEX = re.compile(r'\s*([-+]?\d+)\s*([dDhHmM])\s*')
 
 TIMEDELTA_ABBREVS = [
     ('hours', ['h']),
@@ -65,12 +66,15 @@ def parse_timedelta(delta_str):
     respectively.
     """
     try:
-        val, abbrv_units = TIME_DELTA_REGEX.search(delta_str).groups()
-        units = TIMEDELTA_ABBREV_DICT.get(abbrv_units, abbrv_units)
-        if units == 'months':
-            return timedelta(days=int(val)*MONTH)
-        else:
-            return timedelta(**{units: int(val)})
+        r = timedelta()
+        gs = TIME_DELTA_REGEX.search(delta_str).group()
+        for val, abbrv_units in TIME_DELTA_SUB_REGEX.findall(gs):
+            units = TIMEDELTA_ABBREV_DICT.get(abbrv_units, abbrv_units)
+            if units == 'months':
+                r += timedelta(days=int(val)*MONTH)
+            else:
+                r += timedelta(**{units: int(val)})
+        return r
     except:
         raise
 
