@@ -1,541 +1,116 @@
 {% autoescape None %}
-{% extends "../clean_base.html" %}
+{% extends "v2_base.html" %}
 
-{% block right_toolbar %}
-  <a class="btn btn-default btn-success" href="/reporting">
-    Reporting
-  </a>
+{% block page_title %}Streaming{% end %}
+{% block page_header %}Streaming dashboard{% end %}
 
+{% block page_css %}
+	<link href="http://rockerbox.com/styles/dashboard/reporting-style.css" type="text/css" rel="stylesheet" media="screen">
+	<link href="http://rockerbox.com/styles/dashboard/dc.css" type="text/css" rel="stylesheet" media="screen">
 {% end %}
 
-{% block content %}
+{% block page_sidebar %}
+	<li><a href="reporting"><img src="http://rockerbox.com/assets/img/dashboard/sidebar/reporting-icon.png" alt="Reporting icon" /><span class="sidebar-label">campaign reporting</span></a></li>
+	<li class="active"><a href="streaming"><img src="http://rockerbox.com/assets/img/dashboard/sidebar/streaming-icon.png" alt="Streaming icon" /><span class="sidebar-label">global streaming</span></a></li>
+	<!--
+	<li><a href="global"><img src="http://rockerbox.com/assets/img/dashboard/sidebar/global-icon.png" alt="Global icon" /><span class="sidebar-label">global streaming</span></a></li>
+	
+	<li><a href="intraweek"><img src="http://rockerbox.com/assets/img/dashboard/sidebar/intraweek-icon.png" alt="Intraweek icon" /><span class="sidebar-label">intraweek overview</span></a></li>
+	-->
+{% end %}
 
-<div class="container">
-  <h2>Streaming Dashboard</h2>
-  <br/>
-  <div class="row summary-wrapper" style="background-color:white">
-    <div class="col-md-2"></div>
-    <div class="col-md-8 col-sm-12">
-      <div class="col-md-1"></div>
-      <div class="col-md-3 col-sm-4 summary-stat selected blue chart-selector" data-series="imps" data-color="#1f77b4">
-        <p class="text-uppercase"><strong>Impressions</strong></p>
-        <h2 class="imps-count">0</h2>
-      </div>
-      <div class="col-md-1"></div>
-      <div class="col-md-3 col-sm-4 summary-stat orange chart-selector" data-series="clicks" data-color="#ff7f0e">
-        <p class="text-uppercase"><strong>Domains</strong></p>
-        <h2 class="domains-count">0</h2>
-      </div>
-      <div class="col-md-1"></div>
-      <div class="col-md-3 col-sm-4 summary-stat green chart-selector" data-series="conversions" data-color="#2ca02c">
-        <p class="text-uppercase"><strong>Uniques</strong></p>
-        <h2 class="uniques-count">0</h2>
-      </div>
-    </div> 
-  </div>
+{% block page_content %}
+	<div id="overall-box" class="box half-box">
+        <div id="imps-box"></div>
+        <div id="domain-box"></div>
+        <div id="uniques-box"></div>
+	</div>
+	<div class="box half-box">
+	</div>
+	<div class="clearfix"></div>	
+	<div id="domain-box" class="box half-box">
+        <div class="box-title">Domains</div>
+        <div id="domain-table" class="content-table">
+        <ul class="header-row"><li class="">domain</li><li class="">impressions</li><li class="">uniques</li></ul>		
+		</div>
+	</div>
+	<div id="location-box" class="box half-box">
+        <div class="box-title">Locations</div>
+        <div id="location-table" class="content-table">
+        <ul class="header-row"><li class="">location</li><li class="">impressions</li><li class="">uniques</li></ul>		
+		</div>
+	</div>
+	<div class="clearfix"></div>	
+{% end %}
 
-  <br/>
+{% block page_scripts %}
+	<!-- IO GAUGE -->
+	<script src="http://rockerbox.com/js/dashboard/gauge.min.js"></script>
+	<script src="http://rockerbox.com/js/dashboard/d3.v3.min.js"></script>
+	<script src="http://rockerbox.com/js/dashboard/crossfilter.min.js"></script>
+	<script src="http://rockerbox.com/js/dashboard/dc.mod.js"></script>
+	<script src="http://rockerbox.com/js/dashboard/streaming.js"></script>
+	<script>			
 
-  <div class="row">
-    <div class="col-sm-5" >
-      <button id="start" type="button" class="hidden btn btn-default btn-success" tabindex="-1">Start</button> 
-      <button id="pause" type="button" class="hidden btn btn-default btn-success" tabindex="-1">Start</button> 
-
-      <br/>
-      <h5>Impressions</h5>
-      <div id="graph"></div>
-    </div>
-    <div class="col-sm-7" style="overflow: hidden;">
-      <div id="maps" style="margin-top:-40px;height: 350px;"></div>
-    </div>
-  </div>
-  <div class="row">
-    <div class="col-sm-5" >
-      <div id="domains"></div>
-    </div>
-    <div class="col-sm-7">
-      <div id="geo" style=""></div>
-    </div>
-  </div>
-  <div class="hidden col-sm-6" id="domains"></div>
-  <div class="hidden col-sm-6" id="users"></div>
-
-  <div id="messages" class="hidden" style=""></div>
-  
-</div>
-
-    <script>
-    Element.prototype.prependChild = function(child) { this.insertBefore(child, this.firstChild); };
-
-    var socketWrapper = function(params,on_init) {
-      var self = this;
-      this.id = Math.round(Math.random() * 10000000);
-
-      this.createSocket = function(params){
-        this.socket = new WebSocket("ws://" + window.location.host + "/websocket?id=" + this.id);
-
-        this.socket.onopen = function() {
-          self.sendMessage("initialize")
-          self.sendJSON(sharedJson)
-          $("#start").trigger("click")
-
-          if (on_init) on_init.bind(self)()
-        }
-
-        this.socket.onmessage = function(event) {
-          var parsed = JSON.parse(event.data)
-          self.onMessage(parsed,event)
-        }
-      }
-
-      this.sendMessage = function(message){
-        if (!this.socket) this.createSocket()
-        this.socket.send(message)
-      }
-
-      this.sendJSON = function(object) {
-        console.log(window.location.pathname + "?" + $.param(object,true))
-        window.history.pushState({},"",window.location.pathname + "?" + $.param(object,true))
-        this.sendMessage(JSON.stringify(object))
-      }
-
-      this.onMessage = function(json,event) { }
-      this.createSocket(params)
-
-    }
-
-    var streamingBarWrapper = function(id,steps,width,height,formatter){
-      var self = this;
-      this.t = 0
-      this.data = d3.range(steps).map(function(){
-        self.t++;
-        return {"time":self.t,"value":0}
-      })
-      
-      this.graph = dynamicBar(id,this.data,width,height)
-      this.defaultFormatter = function(time,json) {
-        return {"time":time,"value":json.length}
-      }
-      this.formatter = formatter || this.defaultFormatter
-
-      this.add = function(json) {
-        this.t++;
-        this.data.shift()
-        this.data.push(this.formatter(this.t,json))
-        this.graph(this.data)
-      }
-    }
-
-    var rawDataWrapper = function(steps){
-      this.data = d3.range(steps)
-      this.add = function(json) {
-        this.data.shift()
-        this.data.push(json)
-        this.onAdd.bind(this)(json)
-      }
-      this.group_generic = function(group) {
-        var fn = function(data) {
-          var m = [], n = {}, schema = [],
-            data = data ? data : this.data
-          data.map(function(x){
-            for (var y in x) {
-              if (schema.length == 0) {
-                schema = Object.keys(x[y]['result'])
-                for (var i in group)
-                  schema.splice(schema.indexOf(group[i]),1)
-                schema = group.concat(schema)
-              }
-              var q = []
-              for (var z in schema) {
-                q.push(x[y]['result'][schema[z]])
-              }
-              m.push(q)
-            }
-          })
-          m.map(function(x){
-            if (n[x[0]] === undefined) {
-              n[x[0]] = []
-            }
-            n[x[0]].push(x)
-          })
-          return n
-        }
-        return fn.bind(this)
-      }
-      this.group_user = function() {
-        return this.group_generic(["uid","approved_user","domain","price"])()
-      }
-      this.group_domain = function() {
-        return this.group_generic(["domain","uid","approved_user","advertiser_id","price"])()
-      }
-      this.onAdd = function(){}
-      
-    }
+	var extUserID =  {{ advertiser_id }};
+	
+	// GET ADVERTISER BUDGET AND PROGRESS
+	var getUserInfo = $.getJSON("/intraweek?format=json", function(data){
+		$.each(data, function(key, value){
+			if(value.id != extUserID) return;
+			$('#header #right-align #user-name').text(value.advertiser.toLowerCase());
+	
+			return false;
+		});
+	});
     
-
-    var messageProcessor = function() {
-
-      var messageContainer = document.getElementById("messages"),
-          bar = new streamingBarWrapper('#graph',60,6,80),
-          view = new streamingBarWrapper('#graph-view',60,6,100),
-          approved = new streamingBarWrapper('#graph-approved',60,6,80,
-            function(t,json) {
-              try {
-                var m = json.
-                  map(function(x){return parseFloat(x['result']['approved_user'])}).
-                  reduce(function(pv, cv) { return pv + cv; });
-
-                return {"time":t,"value":m > 0 ? m : 0 }
-              } catch(e) {
-                console.log("caught")
-                return {}
-              }
-
-            }
-          )
-          self = this;
-
-      this.raw_data = new rawDataWrapper(60);
-      this.view_data = new rawDataWrapper(60);
-      this.view_data.onAdd = function(json) {
-        
-      }
-      this.raw_data.onAdd = function(json){
-        
-        var table = messageContainer.getElementsByTagName("table")
-           
-        if (table.length == 0) 
-          try {
-            var keys = Object.keys(json[0]['result']);
-            self.createHeaders(keys);
-          } catch(e) {}
-
-        var header = messageContainer.getElementsByTagName("thead")[0];
-        //self.insertRows(json.map(function(x){return x['result']}),keys,header);
-        var domain_group = this.group_domain(),
-          user_group = this.group_user(),
-          total = this.data.map(function(x){return x.length > 0 ? x.length : 0}).reduce(function(pv, cv) { return pv + cv; }, 0);
-
-        self.domainTable(domain_group,"domains");
-        self.userTable(user_group,"users");
-        self.geoTable(this.group_generic(["state","country","approved_user","domain","advertiser_id"])(),"geo");
-        self.geoMap(this.group_generic(["city_state","latitude","longitude","domain","advertiser_id","approved_user"])());
-
-        $('.imps-count').text(total)
-        $('.uniques-count').text(Object.keys(user_group).length)
-        $('.domains-count').text(Object.keys(domain_group).length)
-        $('.views-count').text(self.viewable_count)
-      }
-
-      this.geoMap = function(data) {
-        var sorted = []
-        for (var key in data) {
-          if (key != "0") {
-            var domains = data[key].map(function(r){return r[3]}).filter(function (e, i, arr) { return arr.indexOf(e, i+1) === -1; }),
-              imps = data[key].length,
-              approved = data[key].map(function(r){return r[5]}).reduce(function(pv, cv) { return pv + cv; }, 0)
-            sorted.push(
-              {
-                "name": key,
-                "latitude": data[key][0][1],
-                "longitude": data[key][0][2],
-                "radius": Math.log(data[key].length*data[key].length*5000), 
-                "fillKey" : approved/imps > .5 ? 'blue' :'gt50' ,
-                "imps": imps,
-                "domains": domains,
-                "approved": approved
-              } 
-            )
-          }
-        }
-        map.bubbles(sorted,{
-          popupTemplate: function(geo, data) {
-            return "<div class='hoverinfo'><b>" + data.name + "</b> ("+ data.approved+"/"+data.imps+")<br/>" + data.domains + "</div>";
-          }
-        })
-      }
-
-      
-      this.userData = function(data) {
-        
-      }
-
-      this.geoTable = function(data,div) {
-        var div = div || "messages"
-        var table = "<table class='table table-condensed'><thead><tr>" + 
-          "<th>State</th>"+
-          "<th>Imps</th>"+
-          "<th>Domains</th>"+
-          "</tr></thead>"
-        var sorted = []
-        for (var key in data) {
-          sorted.push([
-            key == 0 ? "Unknown" : key,
-            //data[key][0][1],
-            data[key].length, 
-            //data[key].map(function(r){return r[2]}).reduce(function(pv, cv) { return pv + cv; }, 0),
-            data[key].map(function(r){return r[3]}).filter(function (e, i, arr) { return arr.indexOf(e, i+1) === -1; }).length,
-            //data[key].map(function(r){return r[4]}).filter(function (e, i, arr) { return arr.indexOf(e, i+1) === -1; }).length
-          ])
-        }
-        sorted = sorted.sort(function(x,y){return y[2]-x[2]})
-        for (var key in sorted) {
-          table += "<tr><td>" + 
-            sorted[key][0] + "</td><td>" + 
-            sorted[key][1] + "</td><td>" + 
-            sorted[key][2] + "</td><td>"
-        }
-        
-
-        table += "</table>"
-        document.getElementById(div).innerHTML = table
-       
-      }
-      
-
-      this.userTable = function(data,div) {
-        var div = div || "messages"
-        var table = "<table class='table table-condensed'><thead><tr>" + 
-          "<th>user</th>"+
-          "<th>count</th>"+
-          "<th>approved</th>"+
-          "<th>domains</th>"+
-          "<th>price</th>"+
-          "</tr></thead>"
-        var sorted = []
-        for (var key in data) {
-          sorted.push([
-            "<a href='/lookback?uid="+key+"' target='_blank'>"+key+"</a>", 
-            data[key].length, 
-            data[key].map(function(r){return r[1]}).reduce(function(pv, cv) { return pv + cv; }, 0),
-            data[key].map(function(r){return r[2]}).filter(function (e, i, arr) { return arr.indexOf(e, i+1) === -1; }).length,
-            (data[key].map(function(r){return parseFloat(r[3])}).reduce(function(pv, cv) { return pv + cv; }, 0)/data[key].length).toFixed(2)
-          ])
-        }
-        sorted = sorted.sort(function(x,y){return y[1]-x[1]})
-        for (var key in sorted) {
-          table += "<tr><td>" + 
-            sorted[key][0] + "</td><td>" + 
-            sorted[key][1] + "</td><td>" + 
-            sorted[key][2] + "</td><td>" + 
-            sorted[key][3] + "</td><td>" +
-            sorted[key][4] + "</td><td>" 
-        }
-
-        table += "</table>"
-        document.getElementById(div).innerHTML = table
-      }
-
-
-      
-      this.domainTable = function(data,div) {
-        var table = "<table class='table table-condensed'><thead><tr>" + 
-          "<th>Domain</th>"+
-          "<th>Imps</th>"+
-          "<th>Uniques</th>"+
-          "</tr></thead>"
-        var sorted = []
-
-        for (var key in data) {
-          sorted.push([
-            key, 
-            data[key].length, 
-            data[key].map(function(r){return r[1]}).filter(function (e, i, arr) { return arr.indexOf(e, i+1) === -1; }).length
-          ])
-        }
-        sorted = sorted.sort(function(x,y){return y[1]-x[1]})
-        for (var key in sorted) {
-          table += "<tr><td>" + 
-            sorted[key][0] + "</td><td>" + 
-            sorted[key][1] + "</td><td>" + 
-            sorted[key][2] + "</td></tr>"    
-        }
-
-        table += "</table>"
-        document.getElementById(div).innerHTML = table
-
-      }
-
-      this.createHeaders = function(keys) {
-        headers = "<table class='table'><thead><tr id='msgHeader'>"
-        for (var key in keys) {
-          headers += "<th>"+keys[key]+"</th>"
-        }
-        headers += "</tr></thead></table>"
-        messageContainer.innerHTML = headers
-      }
-      this.insertRows = function(values,keys,loc) {
-        for (var row in values) {
-          var html_row = document.createElement("tr"),
-              content = "";
-
-          for (var key in keys) {
-              content += "<td>"+values[row][keys[key]]+"</td>"
-          }
-          html_row.innerHTML = content
-          loc.parentNode.insertBefore(html_row,loc.nextSibling)
-        }  
-      }
-      this.clear_data = function(steps) {
-        this.raw_data.data = d3.range(steps)
-
-      }
-      this.onMessage = function(json,event) {
-        bar.add(json["track"]);
-        view.add(json["view"]);
-
-        approved.add(json["track"]);
-        self.view_data.add(json["view"]);
-
-        var view_auctions =self.view_data.group_generic(["auction_id"])() 
-        self.viewable_count = 0
-        for (var auction in self.raw_data.group_generic(["auction_id"])()) {
-          if (view_auctions[auction]) self.viewable_count += 1
-        }
-
-        self.raw_data.add(json["track"]);
-        
-      }
-    }
+    // INITIALISE DC WIDGETS
+    var impsBox = null, domainBox = null, uniquesBox = null, locationTable = null, domainTable = null;
     
-    var socket = new socketWrapper();
-    var processor = new messageProcessor()
-    socket.onMessage = processor.onMessage
-
-    $('#start').click(
-      function(){
-        if (socket.socket.CLOSED == socket.socket.readyState) {
-          socket = new socketWrapper(
-            false,
-            function(){
-              this.sendMessage("start")
-            }
-          )
-          socket.onMessage = processor.onMessage
-        } else {
-          socket.sendMessage("start")
-        }
+    // GENERATE IMPRESSIONS COUNTER
+    impsBox = dc.customDataBox('#overall-box #imps-box')
+    .valueAccessor(function(d){
+        return d.imps;
     })
-    $('#pause').click(
-      function(){
-        socket.socket.close()
-    })
-    $('#clear').click(
-      function(){
-        processor.clear_data(60)
-    })
-
-    var parseQueryString = function( queryString ) {
-        var params = {}, queries, temp, i, l;
-     
-        // Split into key/value pairs
-        queries = queryString.split("&");
-     
-        // Convert the array of strings into an object
-        for ( i = 0, l = queries.length; i < l; i++ ) {
-            temp = queries[i].split('=');
-            if (temp[0].length > 0) {
-              params[temp[0]] = params[temp[0]] || []
-              params[temp[0]].push(temp[1]);
-            }
-        }
-     
-        return params;
-    };
-
-    var sharedJson = parseQueryString(window.location.search.substring(1))
-
-    $.getJSON("http://" + window.location.host+ "/api?table=advertiser&active=1&deleted=0",function(e){
-      var advertiser_list = $('#advertiser-list')
-      $(e).each(function(i,advertiser){
-        advertiser_list.prepend('<li><a href="#' + advertiser.external_advertiser_id + '">' + advertiser.advertiser_name + '</a></li>')
-      })
-      advertiser_list.find("li > a").click(function(e){
-        $(e.target).parents('.input-group-btn').find('button').first().text(e.target.innerText)
-        var advertiser_id = e.target.href.split("#")[1]
-        if (advertiser_id) {
-          sharedJson['advertiser_id'] = [parseInt(advertiser_id)]
-        } else {
-          delete sharedJson['advertiser_id']
-        }
-        socket.sendJSON(sharedJson)
-      })
-    })
-
-    $.getJSON("http://" + window.location.host + "/api?table=creative",function(e){
-      var creative_list = $('#creative-list')
-      $(e).each(function(i,creative){
-        creative_list.prepend('<li><a href="#' + creative.external_id + '">' + creative.external_id + ' ' + creative.file_name + '</a></li>')
-      })
-      creative_list.find("li > a").click(function(e){
-        $(e.target).parents('.input-group-btn').find('button').first().text(e.target.innerText)
-        var creative_id = e.target.href.split("#")[1]
-        if (creative_id) {
-          sharedJson['creative'] = [creative_id]
-        } else {
-          delete sharedJson['creative']
-        }
-        socket.sendJSON(sharedJson)
-      })
-    })
-
-    $.getJSON("http://" + window.location.host + "/api?table=sellers",function(e){
-      var seller_list = $('#seller-list')
-      $(e).each(function(i,seller){
-        seller_list.prepend('<li><a href="#' + seller.id + '">' + seller.name + '</a></li>')
-      })
-      seller_list.find("li > a").click(function(e){
-        $(e.target).parents('.input-group-btn').find('button').first().text(e.target.innerText)
-        var seller_id = e.target.href.split("#")[1]
-        if (seller_id) {
-          sharedJson['seller'] = [seller_id]
-        } else {
-          delete sharedJson['seller']
-        }
-        socket.sendJSON(sharedJson)
-      })
-    })
-
-    var user_list = $('#user-list')
-    user_list.find("li > a").click(function(e){
-      $(e.target).parents('.input-group-btn').find('button').first().text(e.target.innerText)
-      var user_type = e.target.href.split("#")[1]
-      if (user_type) {
-        sharedJson['approved_user'] = [parseInt(user_type)]
-      } else {
-        delete sharedJson['approved_user']
-      }
-      socket.sendJSON(sharedJson)
-    })
-
-    var map = new Datamap({
-      scope: 'usa',
-      element: document.getElementById('maps'),
-      projection: 'mercator',
-      
-      fills: {
-        defaultFill: '#f0af0a',
-        lt50: 'rgba(0,244,244,0.9)',
-        gt50: 'red',
-        blue: 'rgba(66,139,202,1)'
-
-      },
-      bubblesConfig: { 
-        highlightOnHover: false
-      },
-      data: {
-        USA: {fillKey: 'lt50' },
-        RUS: {fillKey: 'lt50' },
-        CAN: {fillKey: 'lt50' },
-        BRA: {fillKey: 'gt50' },
-        ARG: {fillKey: 'gt50'},
-        COL: {fillKey: 'gt50' },
-        AUS: {fillKey: 'gt50' },
-        ZAF: {fillKey: 'gt50' },
-        MAD: {fillKey: 'gt50' }       
-      }
-    })
- 
+    .group(dataWrapper.groups.all)
     
-    </script>
+    // GENERATE DOMAIN COUNTER
+    domainBox = dc.customDataBox('#overall-box #domain-box')
+    .group(dataWrapper.groups.domain_data)
+    
+    // GENERATE UNIQUE VISITORS COUNTER
+    uniquesBox = dc.customDataBox('#overall-box #uniques-box')
+    .group(dataWrapper.groups.uniques_data)
+    
+    // GENERATE DOMAINS TABLE
+    ///*
+    domainTable = dc.customDataTable('#domain-table')
+    .dimension(dataWrapper.aggregateDimensions.domain_data)
+    .group(dataWrapper.groups.domain_data)
+    .sortBy(function(d){
+        return d.domain;					
+    })
+    .order(d3.descending)
+    .size(100)
+    .rowClass("")
+    .listClasses(["", "", ""])
+    .listItems([
+        function(d){
+            return d.domain;
+        },
+        function(d){
+            return formatNumber(d.imps);
+        },
+        function(d){
+            return formatNumber(d.uniques);
+        }
+    ])
+
+    //*/
+    
+    dc.renderAll();
+
+    $('#page-loader').fadeOut();
+
+	</script>
 {% end %}
