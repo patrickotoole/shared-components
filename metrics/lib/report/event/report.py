@@ -35,37 +35,33 @@ def accounting(f):
         error = None
         status = 0
         job_created_at = local_now()
-        start_date, end_date = kwargs.get('start_date'), kwargs.get('end_date')
+
+        worker = args[0]
+        start_date = worker._kwargs.get('start_date')
+        end_date = worker._kwargs.get('end_date')
+
         try:
             res = f(*args, **kwargs)
             status = 1
         except Exception as e:
             logging.warn(e)
             error = e
+
         job_ended_at = local_now()
-        _kwargs = _get_kwargs(*args, **kwargs)
-        _d = dict(start_date=start_date, end_date=end_date)
-        _kwargs.update(dict(job_created_at=job_created_at,
-                            job_ended_at=job_ended_at,
-                            status=status,
-                            table_name='stats_event_report',
-                            **_d))
-        EventReport(**_kwargs).create_event()
-        _create_logging_json(name=_kwargs.get('event_name'), **_d)
+        EventReport(
+                event_name=worker._name,
+                db_wrapper=worker._con,
+                table_name='stats_event_report',
+                job_created_at=job_created_at,
+                job_ended_at=job_ended_at,
+                start_date=start_date,
+                end_date=end_date,
+                status=status,
+                ).create_event()
         if error:
             raise ValueError(e)
         return res
     return _f
-
-def _create_logging_json(name=None, start_date=None, end_date=None):
-    to_dump = ujson.dumps({
-            "start_date":start_date,
-            "end_date": end_date,
-            "name": name,
-            })
-    f_ = (open(LOG_JSON, 'w') if os.path.exists(LOG_JSON) else
-          open(LOG_JSON, 'a'))
-    f_.write(to_dump)
 
 def _get_kwargs(*args, **kwargs):
     event_name = kwargs.get('name') or filter(lambda a: isinstance(a, str), args)[0]
