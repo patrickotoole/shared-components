@@ -9,7 +9,9 @@ from datetime import tzinfo
 import pytz
 import urlparse
 from functools import update_wrapper
+
 from lib.report.utils.constants import APPNEXUS_REPORT_GAP_HOURS
+from calendar import monthrange
 
 DATE_TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 DATE_FORMAT = '%Y-%m-%d'
@@ -27,7 +29,6 @@ TIMEDELTA_ABBREVS = [
     ('months', ['M']),
 ]
 
-MONTH = 30
 TIMEDELTA_ABBREV_DICT = dict(
         (abbrev, full) for full, abbrevs in TIMEDELTA_ABBREVS
         for abbrev in abbrevs)
@@ -71,12 +72,16 @@ def parse_timedelta(delta_str):
         for val, abbrv_units in TIME_DELTA_SUB_REGEX.findall(gs):
             units = TIMEDELTA_ABBREV_DICT.get(abbrv_units, abbrv_units)
             if units == 'months':
-                r += timedelta(days=int(val)*MONTH)
+                _days = days_in_prev_month(local_now())
+                r += timedelta(days=int(val)*_days)
             else:
                 r += timedelta(**{units: int(val)})
         return r
     except:
         raise
+
+def days_in_prev_month(ts):
+    return monthrange(ts.year, ts.month-1)[1]
 
 def convert_datetime(date_str):
     for f in TIME_FMTS:
