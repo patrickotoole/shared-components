@@ -38,7 +38,7 @@ class IntraWeekTable(IntraWeekDB):
         self.df_conversions = self.pull_conversions(num_advertiser)
         self.dfs_tuple = self.make_weight_lists(self.df_charges, self.df_conversions)
         self.df_full = self.add_num_conversions(self.dfs_tuple[0], self.dfs_tuple[1])
-        self.df_full = self.add_cpm_columns(self.df_full, target_cpa)
+        self.df_full = self.add_cpm_columns(self.df_full, num_advertiser)
         self.df_full = self.adjust_charge_client(self.df_full)
         self.df_full = self.finishing_formats(self.df_full) #2.08s
     
@@ -57,9 +57,9 @@ class IntraWeekTable(IntraWeekDB):
           old_multiplier = df_charges['cpm_multiplier'][df_charges.index[week_idx]]
           if old_multiplier == None or math.isnan(old_multiplier):
             df_charges['cpm_multiplier'][df_charges.index[week_idx]] = 1
-            cost = df_charges['media_cost'][df_charges.index[week_idx]]
-            df_charges['charged_client'][df_charges.index[week_idx]] = cost
-        
+            # cost = df_charges['media_cost'][df_charges.index[week_idx]]
+            # if week_idx < len(df_charges) - 1:
+            #   df_charges['charged_client'][df_charges.index[week_idx]] = cost
         return df_charges
 
     def pull_conversions(self, num_advertiser):
@@ -116,10 +116,10 @@ class IntraWeekTable(IntraWeekDB):
           weights_convs[0] = 1
 
         # get a proxy for number of conversions (exact num if only one type of conversion)
-        df_full['num_conversions'] = df_full.ix[:,5:].dot(weights_convs)    
+        df_full['num_conversions'] = df_full.ix[:,7:].dot(weights_convs)    
         return df_full
 
-    def add_cpm_columns(self, df, target_cpa):
+    def add_cpm_columns(self, df, advertiser_id, target_cpa=-1):
 
         df_full = df.copy()
         # add CPA column - how much it costed rockerbox for each type of (proxied) 
@@ -130,39 +130,84 @@ class IntraWeekTable(IntraWeekDB):
         df_full['cpa_charged'] = df_full['charged_client'] / df_full['num_conversions']        
 
         # if second parameter specified, then use that as the target CPA
-        if target_cpa != -1:
-          try:
-            target_cpa_charged = float(target_cpa)
-          except:
-            print "need integer 2nd parameter"
-            sys.exit(1)
+        # TODO - read from the database to figure out what the target_CPA should be
+        if not hasattr(self, 'goal_df'):
+          self.goal_df = self.my_db.select(GOAL_TARGETS).as_dataframe()
+          self.goal_df = self.goal_df.set_index('external_advertiser_id')
+        
+        goal_multiplier = self.goal_df['goal_cpm_multiplier'][advertiser_id]
+        goal_cpa = self.goal_df['goal_target_cpa'][advertiser_id]
+
+        #if target_cpa != -1:
+        #  try:
+        #    target_cpa_charged = float(target_cpa)
+        #  except:
+        #    print "need integer 2nd parameter"
+        #    sys.exit(1)
         # otherwise, do the rolling average (up to 3)
+
+        if isinstance(goal_cpa, float) and not math.isnan(goal_cpa):
+          target_cpa_charged = goal_cpa
+        elif isinstance(goal_multiplier, float) and not math.isnan(goal_multiplier):
+          target_cpa_charged = goal_multiplier * df_full['cpa'][df_full.index[-1]]
         else:
           tail_length = 3
-          
+         
+          # mask to only consider weeks' data 
+           
           # only one week's worth of data is available
           if len(df_full) == 1:
             print "no historical data to propose target CPA - please manually provide"
             sys.exit(0)
 
           # the historical data provided is too far in the past - force input
-          if (df_full.index[-1] - df_full.index[-2]).days / 7 > 4:
-            print "historical data is too far in the past to propose target CPA - please manually provide"
-            sys.exit(0)
+          # if (df_full.index[-1] - df_full.index[-2]).days / 7 > 4:
+          #  print "historical data is too far in the past to propose target CPA - please manually provide"
+          #  sys.exit(0)
           if len(df_full) < 4:
             tail_length = len(df_full) - 1
+        
+          tail_length = 0
+          sum_cpa_charges = 0
+          for idx in range(2, len(df_full) + 1):
+            if (df_full['cpm_multiplier_count'].iloc[-idx] == 0):
+              sum_cpa_charges = sum_cpa_charges + df_full['cpa_charged'].iloc[-idx]
+              tail_length = tail_length + 1
+            if tail_length == 3:
+              break
+    
+          target_cpa_charged = sum_cpa_charges / tail_length
 
-          target_cpa_charged = sum(df_full['cpa_charged'][(-1 - tail_length):-1]) / tail_length
+          # target_cpa_charged = sum(df_full['cpa_charged'][(-1 - tail_length):-1]) / tail_length
 
-        # "fill in" correct cpa_charged
+
+        # "fill in" correct cpa_charged - for ALL times when cpa_charged is not properly set
+        self.fill_in = []
+        for week_idx in range(len(df_full)):
+          old_cpa_charged = df_full['cpa_charged'][df_full.index[week_idx]]
+          if df_full['cpm_multiplier_count'][df_full.index[week_idx]] > 0:
+              df_full['cpa_charged'][df_full.index[week_idx]] = target_cpa_charged
+              self.fill_in.append(week_idx)
+
+ 
         df_full['cpa_charged'][df_full.index[-1]] = target_cpa_charged
         if (df_full['cpa'][df_full.index[-1]] == float('inf')):
           df_full['cpa'][df_full.index[-1]] = 0
 
+        # print df_full.copy(), df_full['cpa_charged'][df_full.index[-1]], "---------", df_full.index[-1]
+      
         # "fill in" CPM and CPM_charged
         df_full['cpm'] = df_full['media_cost'] / df_full['impressions'] * 1000
-        df_full['cpm_charged'] = df_full['cpa_charged'] / df_full['cpa'] * df_full['cpm']
+        df_full['cpm_charged'] = df_full['cpa_charged'] / df_full['cpa'] * df_full['cpm']       
 
+        # code below is meant to handle Vanguard... to restore its cpm_multiplier
+        # because that cpm_multiplier is "perfect"/correct projection
+        if not hasattr(self, 'unknown'):
+          self.unknown = self.my_db.select(UNKNOWN_INTRAWEEK_ADVERTISERS).as_dataframe().values
+        if not advertiser_id in self.unknown:
+          df_full['cpm_multiplier'].iloc[-1] = df_full['charged_client'].iloc[-1] / df_full['media_cost'].iloc[-1]
+
+        #print df_full.copy()
         return df_full
 
     def adjust_charge_client(self, df):
@@ -175,17 +220,24 @@ class IntraWeekTable(IntraWeekDB):
         # if number of conversions is 0, project charge_client according to specified 
         # rules
 
-        our_multiplier = df_full['cpm_multiplier'].ix[-1]
-        multiplier = df_full['multiplier'].ix[-1]
+        our_multiplier = df_full['cpm_multiplier'].iloc[-1]
+        multiplier = df_full['multiplier'].iloc[-1]
 
-        if df_full['num_conversions'].ix[-1] == 0 or our_multiplier == 0:
-          if our_multiplier == 0:
-            our_multiplier = 1
-          df_full['charged_client'].ix[-1] = our_multiplier * df_full['media_cost'].ix[-1]
-          df_full['cpm_charged'].ix[-1] = our_multiplier * df_full['cpm'].ix[-1]
-          df_full['multiplier'].ix[-1] = df_full['cpm_charged'].ix[-1] / df_full['cpm'].ix[-1]
-        else:
-          df_full['charged_client'].ix[-1] = multiplier * df_full['media_cost'].ix[-1]
+        # print df_full
+
+        # TODO - for vanguard, getting this junk 13.7 value, want something lower - how to get?
+        for idx in self.fill_in:
+          our_multiplier = df_full['cpm_multiplier'].iloc[idx]
+          if df_full['num_conversions'].iloc[idx] == 0 or our_multiplier == 0:
+            if our_multiplier == 0:
+              our_multiplier = 1
+            df_full['charged_client'].iloc[idx] = df_full['charged_client'].iloc[idx] + our_multiplier * df_full['base_cost'].iloc[idx]
+            df_full['cpm_charged'].iloc[idx] = our_multiplier * df_full['cpm'].iloc[idx]
+            df_full['multiplier'].iloc[idx] = df_full['cpm_charged'].iloc[idx] / df_full['cpm'].iloc[idx]
+          else:
+            # df_full['charged_client'].iloc[idx] = multiplier * df_full['media_cost'].iloc[idx]
+            multiplier = df_full['multiplier'].iloc[idx]
+            df_full['charged_client'].iloc[idx] = df_full['charged_client'].iloc[idx] + multiplier * df_full['base_cost'].iloc[idx]
 
         return df_full
 
@@ -197,9 +249,10 @@ class IntraWeekTable(IntraWeekDB):
         df_full = df_full.drop(['num_conversions', 'cpm_multiplier'], axis=1)
         cols = df_full.columns.tolist()
 
-        reorder_cols = ['impressions', 'clicks', 'media_cost', 'charged_client', 'cpm','cpm_charged','multiplier']        
-        reorder_cols = reorder_cols + cols[4:-3] # contains the conversion columns (unknown number), cpa, cpa_charged
-        
+        reorder_cols = ['impressions', 'clicks', 'media_cost', 'charged_client', 'cpm','cpm_charged','multiplier']
+        reorder_cols = reorder_cols + cols[6:-3] # contains the conversion columns (unknown number), cpa, cpa_charged
+       
+ 
         # this is unclear what the order will be -- not clear at all what the order will be
         # new_cols = cols[0:4] + cols[-3:] + cols[4:-3]
 

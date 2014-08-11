@@ -11,6 +11,25 @@ RECENT_SPEND = """
         and deleted = 0 and active = 1 
     group by 1,2 order by 1 asc;
 """
+UNKNOWN_INTRAWEEK_ADVERTISERS = """
+    select 
+        external_advertiser_id 
+    from v3_reporting 
+    where 
+        cpm_multiplier is null 
+        and date > STR_TO_DATE(CONCAT(yearweek(date_add(date,interval -4 hour)),'Sunday'), '%X%V%W') 
+        and deleted = 0 and active = 1
+    group by 1;
+"""
+
+GOAL_TARGETS = """
+    select 
+        external_advertiser_id, 
+        goal_cpm_multiplier, 
+        goal_target_cpa 
+    from intraweek
+        where deleted = 0;
+"""
 
 DAILY_SPEND = """
     select
@@ -55,10 +74,26 @@ CHARGES = """
         sum(clicks) as Clicks,
         sum(media_cost) as Media_Cost,
         sum(media_cost*cpm_multiplier) as Charged_Client,
-        cpm_multiplier 
+        cpm_multiplier,
     from v3_reporting 
     where 
         active=1 and deleted=0 
+    group by 1,2 order by 1 asc;
+"""
+NEW_CHARGES = """
+    select
+        STR_TO_DATE(CONCAT(yearweek(date_add(date,interval -4 hour)),'Sunday'), '%X%V%W') as wk_no,
+        external_advertiser_id,
+        sum(if(cpm_multiplier is null, media_cost,0)) as base_cost,
+        sum(imps) as Impressions,
+        sum(clicks) as Clicks,
+        sum(media_cost) as Media_Cost,
+        sum(media_cost*cpm_multiplier) as Charged_Client,
+        cpm_multiplier,
+        sum(if(cpm_multiplier is null, 1, 0)) as cpm_multiplier_count
+    from v3_reporting
+    where
+        active=1 and deleted=0
     group by 1,2 order by 1 asc;
 """
 CPA_TARGET = """select target_cpa 

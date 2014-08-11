@@ -1,6 +1,7 @@
 import tornado.web
 import ujson
 import pandas
+import numpy as np
 from lib.helpers import *
 from tornado.httpclient import AsyncHTTPClient
 from tornado.httpclient import HTTPClient
@@ -33,6 +34,7 @@ class IntraWeekHandler(tornado.web.RequestHandler):
     def get_data(self):
         advertiser = self.get_argument("advertiser",False)
         rows=self.get_argument("rows",False)
+        ioinfo = self.get_argument("ioinfo", False)
         
         if rows: # try the get the int number of advertisers
           try:
@@ -45,11 +47,16 @@ class IntraWeekHandler(tornado.web.RequestHandler):
         # execute the logic for which df to display
         if advertiser: # try to get the table for that advertiser
             try:
-              return self.iw.get_advertiser_table(int(advertiser), rows)
+              return self.iw.get_advertiser_table(int(advertiser), rows).replace([np.inf, -np.inf], np.nan)
             except ValueError:
-              return self.iw.get_compiled_pacing_reports()
+              return self.iw.get_compiled_pacing_reports().replace([np.inf, -np.inf], np.nan)
+        elif ioinfo:
+            try:
+              return self.iw.get_advertiser_info(int(ioinfo)).replace([np.inf, -np.inf], np.nan)
+            except ValueError:
+              return self.iw.get_compiled_pacing_reports().replace([np.inf, -np.inf], np.nan)
         else:
-            return self.iw.get_compiled_pacing_reports()
+            return self.iw.get_compiled_pacing_reports().replace([np.inf, -np.inf], np.nan)
  
         # blank dataframe, should not reach this point! 
         return pandas.DataFrame([1]) #df

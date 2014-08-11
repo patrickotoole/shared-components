@@ -50,7 +50,7 @@ define("view_port", default=1235, help="run on the given port", type=int)
 db = lnk.dbs.mysql
 api = lnk.api.console
 bidder = None#lnk.api.console
-hive = h.Hive(n_map=3,n_reduce=3).hive
+hive = h.Hive().hive
 _redis = redis.StrictRedis(host='162.243.123.240', port=6379, db=1)
 reader = maxminddb.Reader('/root/GeoLite2-City.mmdb')
 

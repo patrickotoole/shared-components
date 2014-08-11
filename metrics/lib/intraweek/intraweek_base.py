@@ -75,6 +75,30 @@ class IntraWeekDB(IntraWeekBase):
 
         return -1
 
+    def get_all_start_dates(self, advertiser_id):
+        """
+        In [2]: iw.get_all_start_dates(225133)
+                10000 2 2014-02-07
+                20000 3 2014-03-05
+                35000 4 2014-04-18
+                50000 5 2014-05-21
+                65000 6 2014-06-18
+                80000 7 2014-07-09
+                95000 35 -1
+                110000 37 -1
+        
+        Gets the end_dates associated with each of historical IOs
+        """
+        mask = self.budget_df['external_advertiser_id'] == advertiser_id
+        cum_budget_df = self.budget_df[mask].set_index('id')
+        cum_budget_df = cum_budget_df.cumsum()
+
+        for idx in range(len(cum_budget_df)):
+          this_budget = cum_budget_df['budget'].iloc[idx]
+          id = self.budget_df[mask]['id'].iloc[idx]
+          print this_budget, id, self.get_actual_start_date(advertiser_id, this_budget)
+
+    @property_checker_twoargs
     def get_pixel_name(self, pixel_id):
         if not hasattr(self, "pixel_info"):
             self.pixel_info = self.my_db.select_dataframe(PIXEL_INFO)
@@ -129,7 +153,7 @@ class IntraWeekDB(IntraWeekBase):
     def pull_charges(self, num_advertiser):
        
         if not hasattr(self, 'charges'):
-            self.charges =  self.my_db.select(CHARGES).as_dataframe()
+            self.charges =  self.my_db.select(NEW_CHARGES).as_dataframe()
             self.charges = self.charges.set_index('wk_no')
         
         mask = self.charges['external_advertiser_id'] == num_advertiser
