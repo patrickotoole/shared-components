@@ -104,6 +104,7 @@ def align(frequency, ts):
     @param ts: datetime
     @return aligned_ts: datetime
     """
+    #TOFIX, align to day has timezone issue.
     epoch = datetime(*time.gmtime(0)[:6])
     if ts.tzinfo:
         epoch = ts.tzinfo.localize(epoch)
