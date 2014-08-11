@@ -14,7 +14,7 @@
           <div class="content">
               {% for table in tables %}
                   {% if table.title %}
-                    <div class='header'>
+                    <div class='title'>
                         <table>
                             <tr>
                                 <td>
@@ -28,12 +28,14 @@
 
 
                 <div class="data">
-                      <table>
-                        {% for row in table.rows %}
-                           {% include "_internal_report_table.html" %}
+                    <table>
+                        {% for header in table.headers %}
+                          <th class='columns'>{{ header }}</th>
                         {% end %}
-                      </table>
-
+                      {% for row in table.rows %}
+                         {% include "_internal_report_table.html" %}
+                      {% end %}
+                    </table>
                 </div>
               {% end %}
           </div>
