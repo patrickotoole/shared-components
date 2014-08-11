@@ -4,18 +4,12 @@ python common.py --report=datapulling --cache --act
 python common.py --report=converstions --cache --act --end_date=2014-07-14 --lookback=1
 """
 
-import re
 from pprint import pprint
-from datetime import timedelta
 
 from tornado.options import define
 from tornado.options import options
 from tornado.options import parse_command_line
 
-from lib.report.utils.utils import parse
-from lib.report.utils.utils import align
-from lib.report.utils.utils import datetime_to_str
-from lib.report.utils.utils import TIME_DELTA_REGEX
 from lib.report.utils.utils import get_start_end_date
 from lib.report.work.report import ReportWorker
 from lib.report.reportutils import get_report_obj
@@ -60,6 +54,7 @@ def main():
             metrics=metrics,
             pred=pred,
             limit=limit,
+            act=act,
             )
     db = get_db(options.db)
     if not act:

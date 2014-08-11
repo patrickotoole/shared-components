@@ -38,8 +38,7 @@ class ReportWorker(BaseWorker):
         except Exception as e:
             logging.warn(e)
             raise ReportError
-        act = self._kwargs.get('act')
-        if act:
+        if self._kwargs.get('act'):
             table_name = _obj._table_name
             created = self._create_reports(df,
                     con=self._con,
