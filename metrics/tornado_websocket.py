@@ -111,7 +111,9 @@ admin_scripts = [
     (r'/targeting.*',admin.scripts.TargetingHandler, dict(redis=_redis,api=api,db=db)),
     (r'/bidder_profile.*',admin.scripts.ProfileHandler, dict(db=db,api=api,bidder=bidder)),
     (r'/advertiser.*',admin.scripts.AdvertiserHandler, dict(db=db,api=api)),
-    (r'/money.*',admin.scripts.MoneyHandler, dict(db=db,api=api))
+    (r'/money.*',admin.scripts.MoneyHandler, dict(db=db,api=api)),
+    (r'/admin/batch_request[^s]*', admin.scripts.BatchRequestHandler, dict(db=db, api=api, hive=hive)),
+    (r'/admin/batch_requests.*', admin.scripts.BatchRequestsHandler, dict(db=db, api=api, hive=hive))
 ]
 
 streaming = [

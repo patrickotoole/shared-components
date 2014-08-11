@@ -41,6 +41,7 @@ class PasswordHash:
         return outp
         
     def hash_password(self, pw):
+        pw = pw.encode('utf-8')
         rnd = os.urandom(16)
         salt = self.gensalt_blowfish(rnd)
         hx = _bcrypt_hashpw(pw, salt)
@@ -48,5 +49,6 @@ class PasswordHash:
             return hx
         
     def check_password(self, pw, stored_hash):
+        pw = pw.encode('utf-8')
         hx = _bcrypt_hashpw(pw, stored_hash)
         return hx == stored_hash
