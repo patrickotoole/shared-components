@@ -23,8 +23,10 @@ TIMEDELTA_ABBREVS = [
     ('hours', ['h']),
     ('minutes', ['m', 'min']),
     ('days', ['d']),
+    ('months', ['M']),
 ]
 
+MONTH = 30
 TIMEDELTA_ABBREV_DICT = dict(
         (abbrev, full) for full, abbrevs in TIMEDELTA_ABBREVS
         for abbrev in abbrevs)
@@ -65,7 +67,10 @@ def parse_timedelta(delta_str):
     try:
         val, abbrv_units = TIME_DELTA_REGEX.search(delta_str).groups()
         units = TIMEDELTA_ABBREV_DICT.get(abbrv_units, abbrv_units)
-        return timedelta(**{units: int(val)})
+        if units == 'months':
+            return timedelta(days=val*MONTH)
+        else:
+            return timedelta(**{units: int(val)})
     except:
         raise
 
