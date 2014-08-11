@@ -9,9 +9,7 @@ from lib.report.utils.utils import retry
 from lib.report.utils.utils import parse_params
 from lib.report.reportutils import get_report_obj
 from lib.report.reportutils import get_or_create_console
-from lib.report.reportutils import get_analyze_func
-from lib.report.analyze.report import transform_
-from lib.report.analyze.report import apply_filter
+from lib.report.analyze.report import get_analyze_obj
 
 from lib.report.utils.constants import NUM_TRIES
 from lib.report.utils.constants import SLEEP
@@ -117,22 +115,39 @@ class ReportBase(object):
 
     def get_report(self, **kwargs):
         dfs = self._get_report(**kwargs)
-        pred = kwargs.get('pred')
-        metrics = kwargs.get('metrics') or 'worst'
         if dfs.empty:
             return dfs
-        dfs = self._analyze(dfs, pred=pred, metrics=metrics)
         limit = kwargs.get('limit')
+        pred = kwargs.get('pred')
+        metrics = kwargs.get('metrics')
+        dfs = self._analyze(dfs, pred=pred, metrics=metrics)
         return dfs[:limit]
 
     def _get_report(self,
             group=None,
             limit=None,
-            path=None,
             start_date=None,
             end_date=None,
             cache=False,
+            path=None,
             **kwargs):
+        """
+        Parameters
+        ---------
+         group:        str
+         limit:        int
+         start_date:   str
+         end_date:     str
+         path:         str
+         cache:        bool
+           when True will load from cached csv file, will create tmp csv file
+           if file dont exist,
+
+        Returns
+        ------
+         Dataframe
+        """
+
         dfs = []
         logging.info("Getting start date: %s, end date: %s" % (start_date, end_date))
         _should_create_csv = False
@@ -210,12 +225,8 @@ class ReportBase(object):
         raise NotImplementedError
 
     def _analyze(self, df, pred=None, metrics=None):
-        df = transform_(df)
-        _analyze_func = get_analyze_func(self._name)
-        df = _analyze_func(df, metrics=metrics)
-        df = apply_filter(df, pred=pred)
-        df = df.reset_index(drop=True)
-        return df
+        obj = get_analyze_obj(self._name)
+        return obj(pred, metrics).analyze(df)
 
     def _get_advertiser_ids(self):
         return ['']

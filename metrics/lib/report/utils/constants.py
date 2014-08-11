@@ -1,4 +1,5 @@
 import os
+from lib.report.utils.enum import Enum
 
 "media cost under this amount is truncated"
 THRESHOLD = 7
@@ -68,3 +69,11 @@ ROUND = 2
 
 "logged json files to be parse and rerun reporting jobs"
 LOG_JSON = os.path.realpath('/tmp/cron_job_logging.json')
+
+"Analyze objects"
+Analyze = Enum([
+    'domain',
+    'datapulling',
+    'conversions',
+    'segment',
+    ])
