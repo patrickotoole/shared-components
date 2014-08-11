@@ -76,7 +76,7 @@ def _get_report_url(report_id):
     url = _resp.get('report').get('url')
     if not url:
         status = _resp.get('execution_status')
-        logging.warn("report: %s status is %s" % (report_id, status))
+        logging.info("report: %s status is %s" % (report_id, status))
         raise ValueError(status)
     logging.info("report url is: %s" % url)
     return url
@@ -163,7 +163,7 @@ class ReportBase(object):
                 logging.info("Getting csv from path: %s" % path)
                 dfs = [pd.read_csv(path)]
             except IOError:
-                logging.warn("CSV file not exists in path: %s" % path)
+                logging.info("CSV file not exists in path: %s" % path)
                 _should_create_csv = True
 
         if not dfs:
