@@ -1,0 +1,26 @@
+{% extends clean_base.html %}
+
+{% block content %}
+<style>
+.page {
+   margin:auto;
+   width:1000px;
+}
+</style>
+
+<div class="page">
+<h2>Production</h2>
+<ul>
+  {% for i in production_links %}
+      <li><a href="{% raw i[0] %}", target="_blank">{% raw i[1] %}</a></li>
+  {% end %}
+</ul>
+
+<h2>Internal</h2>
+<ul>
+  {% for i in internal_links %}
+      <li><a href="{% raw i[0] %}", target="_blank">{% raw i[1] %}</a></li>
+  {% end %}
+</ul>
+</div>
+{% end %}
