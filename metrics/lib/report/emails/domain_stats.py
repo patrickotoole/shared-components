@@ -13,12 +13,8 @@ from lib.report.utils.utils import get_start_end_date
 from lib.report.utils.utils import convert_datetime
 from lib.report.reportutils import get_report_obj
 from lib.report.reportutils import get_advertisers
-from lib.report.analyze.report import _modify_domain_columns
-from lib.report.analyze.report import apply_filter
-from lib.report.analyze.report import _sort_by_best
-from lib.report.analyze.report import _sort_by_worst
-from lib.report.analyze.report import transform_
-from lib.report.analyze.report import _filter_domain
+from lib.report.analyze.report import AnalyzeDomain
+
 
 hundred_k = 100000
 ten_k = 10000
@@ -28,6 +24,11 @@ MON_CONVS_THRES = 2
 DAY_CONVS_THRES = 0
 
 def _is_a_month(start, end):
+    """
+    @param  start : str
+    @param  end   : str
+    @return       : bool
+    """
     _t = convert_datetime(end) - convert_datetime(start)
     return _t >= timedelta(days=28)
 
@@ -39,48 +40,55 @@ def _get_tables(limit=None,
     """
     @return list(Table)
     """
+    best_df, worst_df = _get_dfs(start_date=start_date, end_date=end_date, pred=pred)
+    _best_summary = _create_table(best_df, title='Best performers')
+    _worst_summary = _create_table(worst_df, title='Worst Performers')
+    _best = _get_tables_by_adver(best_df, limit)
+    _worst = _get_tables_by_adver(worst_df, limit)
+    tables = (
+            [ _best_summary  ]  + _best +
+            [ _worst_summary ]  + _worst
+            )
+    return tables
+
+def _get_dfs(start_date=None,
+        end_date=None,
+        pred=None,
+        ):
+    """
+    @param start_date: str
+    @param end_date:   str
+    @return: Tuple(Dataframe(best), Dataframe(worst))
+    """
     df = get_report_obj('domain')._get_report(
             group = 'advertiser,domain,line_item',
             start_date=start_date,
             end_date=end_date,
             cache=True,
             )
-    df = _modify_domain_columns(df)
-    _ismonth = _is_a_month(start_date, end_date)
-    best_df = _filter_best(_filter_domain(df), _ismonth, pred)
-    worst_df = _filter_worst(_filter_domain(df), _ismonth, pred)
-
-    best_domain_summary = Table(title='Best performers', rows=_to_list(best_df))
-    worst_domain_summary = Table(title='Worst Performers', rows=_to_list(worst_df))
-    _best = _get_tables_by_adver(best_df, limit)
-    _worst = _get_tables_by_adver(worst_df, limit)
-
-    tables = [
-            best_domain_summary,
-            worst_domain_summary,
-            ]
-    tables = ([best_domain_summary] + [b for b in _best] +
-              [worst_domain_summary] + [w for w in _worst]
-              )
-    return tables
-
-def _filter_best(df, _ismon, pred):
-    pred_new = 'convs > %d' % (MON_CONVS_THRES if _ismon else DAY_CONVS_THRES)
+    _ismon = _is_a_month(start_date, end_date)
+    best_pred = _pred_for_best(_ismon)
+    worst_pred = _pred_for_worst(_ismon)
     if pred:
-        pred_new = '%s&%s' % (pred, pred_new)
-    df = apply_filter(df, pred_new)
-    df = _sort_by_best(df)
-    df = transform_(df)
-    return df
+        base = '%s&%s'
+        best_pred = base % (best_pred, pred)
+        worst_pred = base % (worst_pred, pred)
+    best_df = _filter(df, best_pred, 'best')
+    worst_df = _filter(df, worst_pred, 'worst')
+    return best_df, worst_df
 
-def _filter_worst(df, _ismon, pred):
-    pred_new = 'imps>%d&convs=0' % (hundred_k if _ismon else ten_k)
-    if pred:
-        pred_new = '%s&%s' % (pred, pred_new)
-    df = apply_filter(df, pred_new)
-    df = _sort_by_worst(df)
-    df = transform_(df)
-    return df
+def _pred_for_best(_ismon):
+    """
+    @param _ismon : bool
+    @return: str
+    """
+    return 'convs > %d' % (MON_CONVS_THRES if _ismon else DAY_CONVS_THRES)
+
+def _pred_for_worst(_ismon):
+    return 'imps>%d&convs=0' % (hundred_k if _ismon else ten_k)
+
+def _filter(df, pred, metrics):
+    return AnalyzeDomain(pred, metrics).analyze(df)
 
 def _get_tables_by_adver(df, limit):
     """
@@ -94,29 +102,32 @@ def _get_tables_by_adver(df, limit):
         cp_df = df.copy(deep=True)
         cp_df = cp_df[cp_df['advertiser'] == _id][:limit]
         if not cp_df.empty:
-            rows = _to_list(cp_df)
-            table = Table(title=title, rows=rows)
-            to_return.append(table)
+            table = _create_table(cp_df, title=title)
+            if table:
+                to_return.append(table)
     return to_return
 
-def _to_list(df):
+def _create_table(df, title=None, to_drop='advertiser'):
     """
-    @param: df: DataFrame
-    @return: list(tuple('imps', 'booked_revenue', etc.))
+    @param: df:        DataFrame
+    @param: title:     str
+    @param: to_drop:   str
+    @return:           Table
     """
-    names = ['advertiser', 'domain', 'line_item', 'imps', 'clicks', 'ctr', 'convs',
+    if to_drop:
+        df = df.drop(to_drop, axis=1)
+    names = ['domain', 'line_item', 'imps', 'clicks', 'ctr', 'convs',
              'pv_convs', 'pc_convs', 'rev', 'mc', 'profit']
     df = df.reset_index(drop=True)
     dict_ = df.to_dict()
     headers  = dict_.keys()
     _rank = dict(zip(names, range(len(headers))))
     headers = sorted(headers, key=lambda h: _rank.get(h))
-    results = [ dict_.get(h).values() for h in headers ]
-    results = zip(*results)
-    if not results:
-        return []
-    results = [tuple(headers)] + results
-    return map(lambda r: r[1:], results)
+    rs = [ dict_.get(h).values() for h in headers ]
+    rs = zip(*rs)
+    if not rs:
+        return None
+    return Table(headers=headers, title=title, rows=rs)
 
 
 def main():
@@ -147,8 +158,8 @@ def main():
                 )
         return
     else:
+        pprint([[r for r in t.rows] for t in tables][:options.limit])
         logging.info("--act to actually sent the email")
-        pprint(tables)
 
 if __name__ == '__main__':
     exit(main())
