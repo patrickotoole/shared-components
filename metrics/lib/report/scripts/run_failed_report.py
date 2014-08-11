@@ -23,7 +23,7 @@ def main():
                 end_date=str(r['end_date']),
                 cache=True,
                 )._work()
-        logging.info("job for %s | %s, start_date: %s, end_date: %s" % (
+        logging.info("job for %s is | %s, start_date: %s, end_date: %s" % (
                 r['event_name'], ['failed', 'succ'][succ],
                 r['start_date'], r['end_date']))
         deactive_event(r['id'])
