@@ -47,8 +47,8 @@ def main():
     pred = options.pred
     limit = options.limit
     if options.align == 'days':
-        start_date, end_date = (align_to_day(parse(options.start_date)),
-                                align_to_day(parse(options.end_date)))
+        start_date, end_date = (align_to_day(options.start_date),
+                                align_to_day(options.end_date))
     else:
         start_date, end_date = get_start_end_date(options.start_date,
                 options.end_date, options.align)

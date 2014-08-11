@@ -68,7 +68,7 @@ def parse_timedelta(delta_str):
         val, abbrv_units = TIME_DELTA_REGEX.search(delta_str).groups()
         units = TIMEDELTA_ABBREV_DICT.get(abbrv_units, abbrv_units)
         if units == 'months':
-            return timedelta(days=val*MONTH)
+            return timedelta(days=int(val)*MONTH)
         else:
             return timedelta(**{units: int(val)})
     except:
@@ -118,7 +118,12 @@ def align(frequency, ts):
     offset = delta_sec % elapsed_seconds(frequency)
     return ts - timedelta(seconds=offset)
 
-def align_to_day(ts):
+def align_to_day(timestr):
+    """
+    @param timestr : str
+    @return        : str
+    """
+    ts = parse(timestr)
     return datetime_to_str(ts, DATE_FORMAT)
 
 def elapsed_seconds(delta):
