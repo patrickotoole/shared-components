@@ -10,12 +10,13 @@ from twisted.internet import reactor, protocol, defer, threads
 from twisted.protocols import basic
 from tornado.options import define, options, parse_command_line
 
-from handlers import streaming, reporting, user
+from handlers import streaming, reporting, user, analysis
 
 import handlers.admin as admin
+from handlers.adminreport import AdminReportHandler
 
 from lib.buffers.pixel_buffer import BufferedSocketFactory
-from lib.buffers.view_buffer import ViewabilityBufferedFactory 
+from lib.buffers.view_buffer import ViewabilityBufferedFactory
 
 from lib.buffered_socket.qs import QSBufferedSocketFactory
 from lib.buffered_socket.schema import SchemaBufferedSocketFactory
@@ -49,7 +50,7 @@ define("view_port", default=1235, help="run on the given port", type=int)
 db = lnk.dbs.mysql
 api = lnk.api.console
 bidder = None#lnk.api.console
-hive = h.Hive(n_map=3,n_reduce=3).hive
+hive = h.Hive().hive
 _redis = redis.StrictRedis(host='162.243.123.240', port=6379, db=1)
 reader = maxminddb.Reader('/root/GeoLite2-City.mmdb')
 
@@ -62,21 +63,19 @@ pixel_parsers = {
     "referrer": DomainLookup()
 }
 
-view_schema = ["auction_id", "uid", 
-            "seller", "tag", "pub", "venue", "ecp", 
-            "price", "creative", "visible", "elapsed", 
+view_schema = ["auction_id", "uid",
+            "seller", "tag", "pub", "venue", "ecp",
+            "price", "creative", "visible", "elapsed",
             "action", "ref", "parent"
         ]
 
 track_factory = QSBufferedSocketFactory(track_buffer,pixel_parsers)
 view_factory = SchemaBufferedSocketFactory(view_buffer,view_schema,pixel_parsers)
 
-
-
 def sig_handler(sig, frame):
     logging.warning('Caught signal: %s', sig)
     tornado.ioloop.IOLoop.instance().add_callback_from_signal(shutdown)
- 
+
 def shutdown():
     logging.info('Stopping http server')
     try:
@@ -84,12 +83,12 @@ def shutdown():
     except:
         pass
     server.stop()
- 
+
     logging.info('Will shutdown in %s seconds ...', MAX_WAIT_SECONDS_BEFORE_SHUTDOWN)
     io_loop = tornado.ioloop.IOLoop.instance()
- 
+
     deadline = time.time() + MAX_WAIT_SECONDS_BEFORE_SHUTDOWN
- 
+
     def stop_loop():
         now = time.time()
         if now < deadline and (io_loop._callbacks or io_loop._timeouts):
@@ -100,9 +99,8 @@ def shutdown():
     stop_loop()
 
 
-
 old_handlers = [
-    (r'/debug', admin.lookback.DebugHandler), 
+    (r'/debug', admin.lookback.DebugHandler),
     (r'/uid.*', admin.lookback.UIDHandler),
     (r'/lookback.*', admin.lookback.LookbackHandler)
 ]
@@ -118,31 +116,40 @@ admin_scripts = [
 
 streaming = [
     (r'/streaming', streaming.streaming.IndexHandler),
-    (r'/websocket', streaming.streaming.StreamingHandler, 
+    (r'/websocket', streaming.streaming.StreamingHandler,
       dict(db=db,buffers={"track":track_buffer, "view":view_buffer})
     )
 ]
 
 admin_reporting = [
     (r'/admin/streaming',admin.streaming.IndexHandler),
-    (r'/admin/websocket', admin.streaming.AdminStreamingHandler, 
+    (r'/admin/websocket', admin.streaming.AdminStreamingHandler,
       dict(db=db,buffers={"track":track_buffer, "view":view_buffer})
     ),
-    (r'/viewable.*',admin.reporting.ViewabilityHandler, dict(db=db,api=api,hive=hive))
-    #(r'/target_list.*',admin.reporting.TargetListHandler)
+    (r'/viewable.*',admin.reporting.ViewabilityHandler, dict(db=db,api=api,hive=hive)),
+    #(r'/target_list.*',admin.reporting.TargetListHandler),
+    (r'/intraweek.*',admin.scripts.IntraWeekHandler, dict(db=db)),
+    (r'/adminreport/(.*?)/.*', AdminReportHandler)
 ]
 
 reporting = [
     (r'/reporting.*',reporting.ReportingHandler, dict(db=db,api=api,hive=hive)),
     (r'/login.*', user.LoginHandler, dict(db=db)),
-    (r'/', user.LoginHandler, dict(db=db)),
-    (r'/signup.*', user.SignupHandler, dict(db=db))
+    (r'/signup*', user.SignupHandler, dict(db=db))
+]
+
+pixel_analysis = [
+    (r'/analysis.*', analysis.AnalysisHandler, dict(db=db,api=api,hive=hive))
+]
+
+static = [
+    (r'/static/(.*)', tornado.web.StaticFileHandler, {'path': "static"})
 ]
 
 
 dirname = os.path.dirname(os.path.realpath(__file__))
 app = tornado.web.Application(
-    streaming + admin_scripts + admin_reporting + reporting,
+    streaming + admin_scripts + admin_reporting + reporting + pixel_analysis + static,
     template_path= dirname + "/templates",
     db=lnk.dbs.mysql,
     debug=True,
@@ -150,10 +157,8 @@ app = tornado.web.Application(
     login_url="/login"
 )
 
-
 if __name__ == '__main__':
     parse_command_line()
-
     reactor.listenTCP(options.listen_port, track_factory)
     reactor.listenTCP(options.view_port, view_factory)
 

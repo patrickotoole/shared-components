@@ -1,20 +1,227 @@
-{% autoescape None %}
-{% extends "../templates/base.html" %}
-{% block stuff %}
+<!-- COPYRIGHT ROCKERBOX INC. 2014 -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Rockerbox / Intraweek</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <meta name="author" content="Julian Laval" /> 
+    <meta name="description" content="" /> 
+    <meta name="keywords" content="" />
+    <!--<base href="http://julian.cluster1.easy-hebergement.net/dev/">-->
+    <link rel="icon" type="image/png" href="https://s3.amazonaws.com/getrockerbox.com/Fav_icon.png">
+    <!-- FONTS -->
+    <link href='http://rockerbox.com/styles/fonts.css' type='text/css' rel='stylesheet' media="screen">
+    <!-- PAGE CSS -->
+    <link href="http://rockerbox.com/styles/dashboard/general-style.css" type="text/css" rel="stylesheet" media="screen">
+    <link href="http://rockerbox.com/styles/dashboard/intraweek-style.css" type="text/css" rel="stylesheet" media="screen">
+    <!-- GOOGLE ANALYTICS -->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
-<h4>Intraweek Reporting</h4>
-<form role="form">
-  {{ df_html }}
-</form>
-<script>
-$.get("/intraweek?advertiser_id=234532&format=json").done(function(e){
-  console.log(e)
-})
+      ga('create', 'UA-50457693-1', 'rockerbox.com');
+      ga('require', 'displayfeatures');
+      ga('send', 'pageview');
+    </script>   
+  </head>
+  <body>
+    <ul id="sidebar">
+      <li><a href="reporting"><img src="http://rockerbox.com/assets/img/dashboard/sidebar/reporting-icon.png" alt="Reporting icon" /></a></li>
+      <li><a href="global"><img src="http://rockerbox.com/assets/img/dashboard/sidebar/global-icon.png" alt="Global icon" /></a></li>
+      <li><a href="#"><img src="http://rockerbox.com/assets/img/dashboard/sidebar/streaming-icon.png" alt="Streaming icon" /></a></li>
+      <li class="active"><a href="intraweek"><img src="http://rockerbox.com/assets/img/dashboard/sidebar/intraweek-icon.png" alt="Intraweek icon" /></a></li>
+    </ul>
+    <div id="container">
+      <div id="header">
+        <a href="/dashboard"><img id="header-logo" src="http://rockerbox.com/assets/img/general/logo-small-black.png" alt="Rockerbox logo" /></a><span id="page-title">Intraweek overview</span>
+      </div>
+      <div id="content">
+        <table id="overview-table" border="0" cellpadding="0" cellspacing="0">
+          <tr id="overview-header">
+            <th></th>
+            <th>advertiser</th>
+            <th>start date</th>
+            <th>campaign progress</th>
+            <th>projected<br />days left/actual</th>
+            <th>budget</th>
+            <th>spent<br />left</th>    
+            <th>yesterday</br>spent</th>
+            <th>daily goal</th>
+            <th>current spent (goal)</th>
+          </tr>
+        </table>
+      </div>
+    </div>
+    <!-- FROM http://code.jquery.com/jquery.min.js -->
+    <script src="http://rockerbox.com/js/jquery.min.js"></script>
+    <!-- SEGMENT PIXEL -->
+    <script src="http://ib.adnxs.com/seg?add=1478777&t=1" type="text/javascript"></script>
+    <script>
+      
+      function getPacingHTML(pacing){
+        if (pacing == "!") return '<img src="http://rockerbox.com/assets/img/dashboard/general/status-green.png" title="So far so good." alt="Status ok" />';
+        else if (pacing == "!!") return '<img src="http://rockerbox.com/assets/img/dashboard/general/status-orange.png" title="Attention!" alt="Status medium" />';
+        return '<img src="http://rockerbox.com/assets/img/dashboard/general/status-red.png" title="Oh shit, DEFCON 1!" alt="Status bad" />';
+      }
+      
+      function getProgressColor(pacing){
+        if (pacing == "!") return "bg-green";
+        else if (pacing == "!!") return "bg-orange";
+        return 'bg-red';
+      }
+      
+      function getPacingColor(pacing){
+        if (pacing == "!") return "color-green";
+        else if (pacing == "!!") return "color-orange";
+        return 'color-red';
+      }
+      
+      function formatDate(date){
+        return date.getUTCFullYear().toString().substr(2,2) + "/" + ("0" + (date.getUTCMonth() + 1)).slice(-2) + "/" + ("0" + date.getUTCDate()).slice(-2);
+      }
+      
+      function formatMoney(money){
+        return '$' + money.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+      }
+      
+      function getProgressBar(value, total){
+        var progress = Math.floor(value / total * 100);
+        progress = (progress > 100) ? 100 : progress;
+        return progress + "%";
+      }
+      
+      function getProgressText(pacing, currentSpent, monthlyGoal){
+        return '<span class="monthly-pacing-qty ' + getPacingColor(pacing) + '">' + formatMoney(currentSpent) + '</span><span class="monthly-goal-qty">(' + formatMoney(monthlyGoal) + ')</span>';
+      }
+      
+      function getProgressHTML(budgetLeft, budget, pacing, currentSpent, monthlyGoal){
+        if(budget <= 0){
+          return '<div class="renew-budget ' + getProgressColor(pacing) + '">Get a new IO</div>';
+        } else if (monthlyGoal == 0){
+          return '<div class="renew-budget ' + getProgressColor(pacing) + '">Set IO end date</div>';
+        }
+        if(monthlyGoal > budget){
+          monthlyGoal = budget;
+        }
+        return '<div class="monthly-progress"><div class="monthly-pacing-bar ' + getProgressColor(pacing) + '" style="width:' + getProgressBar(currentSpent, budget) + '"></div><div class="monthly-goal-bar" style="width:' + getProgressBar(monthlyGoal, budget) + '"></div></div>' + getProgressText(pacing, currentSpent, monthlyGoal);
+      }
+      
+      function getConversionsHTML(purchases, signups){
+        if(signups != undefined){
+          return '<span class="large-number small-row">' + purchases + '<br /><span class="small-number">' + signups + '</span></span><span class="days-dates">purchases<br />signups</span>';
+        }
+        return '<span class="large-number">' + purchases + '</span><span class="days-dates one-liner">purchases</span>'; 
+      }
+      
+      function getIndRowHTML(row){
+        var newRow = '<tr>'
+        + '<td class="week-start"><span class="days-dates">' + formatDate(new Date(row.week_starting * 1000)) + '</span></td>'
+        + '<td><span class="money-field">' + formatMoney(row.media_cost) + '</span></td>'
+        + '<td><span class="large-number">' + row.impressions + '</span></td>'
+        + '<td class="conversions">' + getConversionsHTML(row.Purchase_conversions, row.Signup_conversions) + '</td>'
+        + '<td><span class="large-number">' + row.clicks + '</span></td>'
+        + '<td><span class="money-field">' + formatMoney(row.cpm) + '</span></td>'
+        + '<td class="cpa"><span class="money-field">' + formatMoney(row.cpa) + '</span></td>'
+        + '<td><span class="large-number">' + row.multiplier.toFixed(2) + '</span></td>'
+        + '<td><span class="money-field">' + formatMoney(row.cpm_charged) + '</span></td>'
+        + '<td><span class="money-field">' + formatMoney(row.cpa_charged) + '</span></td>'
+        + '<td><span class="money-field">' + formatMoney(row.charged_client) + '</span></td>'
+        + '</tr>';              
+        
+        return newRow;
+      }
+      
+      // GET DATA
+      $.getJSON("/intraweek?format=json", function(data){
+      //$.getJSON("intraweek-data/intraweek-data.json", function(data){
+      
+        // FOREACH ROW, ADD TO TABLE
+        $.each(data, function(key, row){  
+          
+          // console.log(row);
+          var newRow = '<tr class="overview-tr" data-advertiser-id="' + row.id + '" data-start-date="' + row.start_date + '">'
+          + '<td class="pacing-status">' + getPacingHTML(row.pacing) + '</td>'
+          + '<td class="advertiser-name">' + row.advertiser + '<br /><span class="advertiser-id">' + row.id + '</span></td>'
+          + '<td class="start-date">' +  formatDate(new Date(row.start_date * 1000)) + '</div>'
+          + '<td class="campaign-progress"><span class="large-number">' + (row.proposed_end_date_length - row.actual_days_left) + '/<span class="small-fraction">' + row.proposed_end_date_length + '</span></span><span class="days-dates">Ends on<br />' + formatDate(new Date(row.end_date * 1000)) + '</span></td>'
+          + '<td class="days-projected"><span class="large-number">' + row.expected_days_left + '/<span class="small-fraction">' + row.actual_days_left + '</span></span><span class="days-dates">Ends on<br />' + formatDate(new Date(row.expected_end_date * 1000)) + '</span></td>'
+          + '<td class="money-field">' + formatMoney(row.current_budget) + '</td>'
+          + '<td class="budget-spent-left">' + formatMoney(row.spent) + '<br />' + formatMoney(row.remaining) + '</td>'
+          + '<td class="money-field"><span class="daily-current-qty">' + formatMoney(row.yesterday_spent) + '</span><span class="daily-current-trend"></span></td>'
+          + '<td class="money-field">' + formatMoney(row.to_spend_per_day) + '</td>'
+          + '<td class="monthly-pacing">' + getProgressHTML(row.remaining, row.current_budget, row.pacing, row.spent, row.shouldve_spent_by_now) + '</td>'          
+          + '</tr>';
+          
+          $('#overview-table').append(newRow);
+        });
+      });
+      
+      // ON TR CLICK
+      $('#overview-table').on('click', '.overview-tr', function(){   
+        
+        if($(this).next().hasClass('overview-tr')){
+        
+          var advertiserID = $(this).attr('data-advertiser-id');
+          var startDate = $(this).attr('data-start-date');
+          
+          var headerRow = '<tr class="ind-header"><th>week start</th><th>media cost</th><th>impressions</th><th>conversions</th><th>clicks</th><th>cpm</th><th>cpa</th><th>multiplier</th><th>cpm<br />charged</th><th>cpa<br />charged</th><th>total<br />charged</th></tr>'
+          var indAdvertiserTable = '<tr class="ind-advertiser-tr" data-table-id="' + advertiserID + '"><td colspan="10" class="ind-advertiser-td"><table class="ind-advertiser-table" border="0" cellpadding="0" cellspacing="0">' + headerRow + '</table></td></tr>';
+          $(this).after(indAdvertiserTable);
+          
+          var indBlock = $('.ind-advertiser-tr[data-table-id="' + advertiserID + '"]');
+          
+          $.getJSON("/intraweek?advertiser=" + advertiserID + "&format=json&rows=100", function(data){
+          //$.getJSON("intraweek-data/intraweek-data-" + advertiserID + ".json", function(data){
+            
+            var showMore = false;
+            
+            $.each(data, function(key, row){
+              
+              if(row.week_starting < startDate){
+                showMore = true;
+                return false;
+              }
+              // console.log(row);
+              
+              newRow = getIndRowHTML(row);
+              indBlock.find('.ind-advertiser-table').append(newRow);
+            });
+            
+            
+            if (showMore == true){
+              indBlock.children('.ind-advertiser-td').append('<span class="more-button">show more</span>');
+            }
+          });   
+        }
+        else {
+          $(this).next().toggle();
+        }
+      });
+      
+      // ON TR CLICK
+      $('#overview-table').on('click', '.more-button', function(){   
+        
+        var indBlock = $(this).parent().parent();
+        var advertiserID = indBlock.attr('data-table-id');
+        
+        indBlock.find('.ind-advertiser-table tr:not(.ind-header)').remove();
+        
+        $.getJSON("/intraweek?advertiser=" + advertiserID + "&format=json&rows=100", function(data){
+        // $.getJSON("intraweek-data/intraweek-data-" + advertiserID + ".json", function(data){
+          
+          $.each(data, function(key, row){
+            
+            newRow = getIndRowHTML(row);
+            indBlock.find('.ind-advertiser-table').append(newRow);
+          });
+        });
 
-$.get("/intraweek?advertiser_id=234532&format=json").done(function(e){
-  console.log(e)
-})
-</script>
-<script src="http://rockerbox.com/js/jquery.serialize-object.js"></script>
+        $(this).hide();
+      });
+    </script>
+  </body>
+</html>
 
-{% end %}

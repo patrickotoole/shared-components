@@ -10,7 +10,7 @@ from lib.link_sql_connector import DBCursorWrapper
 from link import lnk
 
 from lib.hive import Hive
-from handlers.scripts import ReportingHandler
+from handlers.reporting import ReportingHandler
 
 import tornado.platform.twisted
 tornado.platform.twisted.install()

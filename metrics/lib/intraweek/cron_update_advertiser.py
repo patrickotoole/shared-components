@@ -10,9 +10,11 @@ from link import lnk
 
 if __name__ == "__main__":
 
-  ids = [225133, 250058, 274802, 302568, 306383, 338003, 312933]
+  # ids = [225133, 250058, 274802, 302568, 306383, 338003, 312933]
 
   iw = Intraweek(lnk.dbs.mysql)
+  ids = iw.active_advertisers()
+
 
   for id in ids:
       

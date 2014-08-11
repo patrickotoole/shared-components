@@ -1,0 +1,27 @@
+{% extends "analysis_base.html" %}
+
+{% block stuff %}
+<script type="text/javascript" language="javascript" src="http://cdn.datatables.net/tabletools/2.2.2/js/dataTables.tableTools.js"></script>
+<link rel="stylesheet"  type="text/css" href="http://cdn.datatables.net/tabletools/2.2.2/css/dataTables.tableTools.css"></script>
+<div class="table_wrapper">
+
+<h1>{{ name }}</h1>
+
+<form>
+Domain Report: 
+<input type="text" name="query" placeholder="Segments (comma-separated)" size=50></input>
+<input type="hidden" name="dim" value="domain"></input>
+<input type="submit" value="Submit">
+</form> 
+
+<form>
+DMA Report: 
+<input type="text" name="query" placeholder="Segments (comma-separated)" size=50></input>
+<input type="hidden" name="dim" value="dma"></input>
+<input type="submit" value="Submit">
+</form>
+
+{% block datatable %}{% end %}
+
+{% end %}
+
