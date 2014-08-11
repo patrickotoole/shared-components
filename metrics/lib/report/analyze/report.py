@@ -42,8 +42,8 @@ class AnalyzeBase(object):
         self.metrics = metrics or 'worst'
 
     def analyze(self, df):
-        df = filter_and_transform(df, self.pred)
         df = self._modify(df)
+        df = filter_and_transform(df, self.pred)
         df = self._sort(df)
         df = df.reset_index(drop=True)
         return df
@@ -202,8 +202,10 @@ def _transform(df):
         if isinstance(x, float):
             x = round(x, ROUND)
             return x
-        m = ID_REGEX.search(x)
-        return int(m.group(1)) if m else x
+        if isinstance(x, str):
+            m = ID_REGEX.search(x)
+            return int(m.group(1)) if m else x
+        return x
     df = df.applymap(_helper)
     return df
 
