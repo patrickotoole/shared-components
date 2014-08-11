@@ -13,6 +13,8 @@ def main():
     if not db:
         logging.warn("No db selected")
     rs = _get_failed_reports()
+    if not rs:
+        logging.info("Failed reporting not found")
     for r in rs:
         logging.info("re-runing %s job for start_date: %s, end_date: %s" % (r['event_name'], r['start_date'], r['end_date']))
         succ = ReportWorker(r['event_name'],
