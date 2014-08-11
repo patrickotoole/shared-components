@@ -11,6 +11,8 @@ from tornado.options import options
 from tornado.options import parse_command_line
 
 from lib.report.utils.utils import get_start_end_date
+from lib.report.utils.utils import parse
+from lib.report.utils.utils import align_to_day
 from lib.report.work.report import ReportWorker
 from lib.report.reportutils import get_report_obj
 from lib.report.reportutils import get_db
@@ -44,8 +46,12 @@ def main():
     cache = options.cache
     pred = options.pred
     limit = options.limit
-    start_date, end_date = get_start_end_date(options.start_date,
-            options.end_date, options.align)
+    if options.align == 'days':
+        start_date, end_date = (align_to_day(parse(options.start_date)),
+                                align_to_day(parse(options.end_date)))
+    else:
+        start_date, end_date = get_start_end_date(options.start_date,
+                options.end_date, options.align)
     metrics = options.metrics
     kwargs = dict(
             group=group,
