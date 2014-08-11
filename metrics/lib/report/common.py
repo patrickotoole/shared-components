@@ -31,6 +31,7 @@ def main():
     define('limit', type=int)
     define('start_date', default='5h')
     define('end_date', default='4h')
+    define('align', default='hours')
     define("metrics", type=str, default=WORST)
     define("db", type=str, default='test', help="choose which database to write to")
 
@@ -43,7 +44,8 @@ def main():
     cache = options.cache
     pred = options.pred
     limit = options.limit
-    start_date, end_date = get_start_end_date(options.start_date, options.end_date)
+    start_date, end_date = get_start_end_date(options.start_date,
+            options.end_date, options.align)
     metrics = options.metrics
     kwargs = dict(
             group=group,
