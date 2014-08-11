@@ -1,0 +1,116 @@
+{% autoescape None %}
+{% extends "base.html" %}
+
+{% block page_title %}Streaming{% end %}
+{% block page_header %}Streaming dashboard{% end %}
+
+{% block page_css %}
+	<link href="http://rockerbox.com/styles/dashboard/reporting-style.css" type="text/css" rel="stylesheet" media="screen">
+	<link href="http://rockerbox.com/styles/dashboard/dc.css" type="text/css" rel="stylesheet" media="screen">
+{% end %}
+
+{% block page_sidebar %}
+	<li><a href="reporting"><img src="http://rockerbox.com/assets/img/dashboard/sidebar/reporting-icon.png" alt="Reporting icon" /><span class="sidebar-label">campaign reporting</span></a></li>
+	<li class="active"><a href="streaming"><img src="http://rockerbox.com/assets/img/dashboard/sidebar/streaming-icon.png" alt="Streaming icon" /><span class="sidebar-label">global streaming</span></a></li>
+	<!--
+	<li><a href="global"><img src="http://rockerbox.com/assets/img/dashboard/sidebar/global-icon.png" alt="Global icon" /><span class="sidebar-label">global streaming</span></a></li>
+	
+	<li><a href="intraweek"><img src="http://rockerbox.com/assets/img/dashboard/sidebar/intraweek-icon.png" alt="Intraweek icon" /><span class="sidebar-label">intraweek overview</span></a></li>
+	-->
+{% end %}
+
+{% block page_content %}
+	<div id="overall-box" class="box half-box">
+        <div id="imps-box"></div>
+        <div id="domain-box"></div>
+        <div id="uniques-box"></div>
+	</div>
+	<div class="box half-box">
+	</div>
+	<div class="clearfix"></div>	
+	<div id="domain-box" class="box half-box">
+        <div class="box-title">Domains</div>
+        <div id="domain-table" class="content-table">
+        <ul class="header-row"><li class="">domain</li><li class="">impressions</li><li class="">uniques</li></ul>		
+		</div>
+	</div>
+	<div id="location-box" class="box half-box">
+        <div class="box-title">Locations</div>
+        <div id="location-table" class="content-table">
+        <ul class="header-row"><li class="">location</li><li class="">impressions</li><li class="">uniques</li></ul>		
+		</div>
+	</div>
+	<div class="clearfix"></div>	
+{% end %}
+
+{% block page_scripts %}
+	<!-- IO GAUGE -->
+	<script src="http://rockerbox.com/js/dashboard/gauge.min.js"></script>
+	<script src="http://rockerbox.com/js/dashboard/d3.v3.min.js"></script>
+	<script src="http://rockerbox.com/js/dashboard/crossfilter.min.js"></script>
+	<script src="http://rockerbox.com/js/dashboard/dc.mod.js"></script>
+	<script src="http://rockerbox.com/js/dashboard/streaming.js"></script>
+	<script>			
+
+	var extUserID =  {{ advertiser_id }};
+	
+	// GET ADVERTISER BUDGET AND PROGRESS
+	var getUserInfo = $.getJSON("/intraweek?format=json", function(data){
+		$.each(data, function(key, value){
+			if(value.id != extUserID) return;
+			$('#header #right-align #user-name').text(value.advertiser.toLowerCase());
+	
+			return false;
+		});
+	});
+    
+    // INITIALISE DC WIDGETS
+    var impsBox = null, domainBox = null, uniquesBox = null, locationTable = null, domainTable = null;
+    
+    // GENERATE IMPRESSIONS COUNTER
+    impsBox = dc.customDataBox('#overall-box #imps-box')
+    .valueAccessor(function(d){
+        return d.imps;
+    })
+    .group(dataWrapper.groups.all)
+    
+    // GENERATE DOMAIN COUNTER
+    domainBox = dc.customDataBox('#overall-box #domain-box')
+    .group(dataWrapper.groups.domain_data)
+    
+    // GENERATE UNIQUE VISITORS COUNTER
+    uniquesBox = dc.customDataBox('#overall-box #uniques-box')
+    .group(dataWrapper.groups.uniques_data)
+    
+    // GENERATE DOMAINS TABLE
+    ///*
+    domainTable = dc.customDataTable('#domain-table')
+    .dimension(dataWrapper.aggregateDimensions.domain_data)
+    .group(dataWrapper.groups.domain_data)
+    .sortBy(function(d){
+        return d.domain;					
+    })
+    .order(d3.descending)
+    .size(100)
+    .rowClass("")
+    .listClasses(["", "", ""])
+    .listItems([
+        function(d){
+            return d.domain;
+        },
+        function(d){
+            return formatNumber(d.imps);
+        },
+        function(d){
+            return formatNumber(d.uniques);
+        }
+    ])
+
+    //*/
+    
+    dc.renderAll();
+
+    $('#page-loader').fadeOut();
+
+	</script>
+{% end %}
