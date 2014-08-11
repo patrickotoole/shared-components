@@ -12,3 +12,4 @@ hive_utils
 twisted
 mysql-python
 matplotlib
+xmltodict
