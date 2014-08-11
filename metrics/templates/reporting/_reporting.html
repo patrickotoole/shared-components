@@ -1,0 +1,500 @@
+{% autoescape None %}
+{% extends "reporting_base.html" %}
+
+{% block page_title %}Reporting{% end %}
+{% block page_header %}Campaign overview{% end %}
+
+{% block page_css %}
+	<link href="http://rockerbox.com/styles/dashboard/reporting-style.css" type="text/css" rel="stylesheet" media="screen">
+	<link href="http://rockerbox.com/styles/dashboard/dc.css" type="text/css" rel="stylesheet" media="screen">
+{% end %}
+
+{% block page_sidebar %}
+	<li class="active"><a href="reporting"><img src="http://rockerbox.com/assets/img/dashboard/sidebar/reporting-icon.png" alt="Reporting icon" /><span class="sidebar-label">campaign reporting</span></a></li>
+	<!--<li><a href="streaming"><img src="http://rockerbox.com/assets/img/dashboard/sidebar/streaming-icon.png" alt="Streaming icon" /><span class="sidebar-label">global streaming</span></a></li>
+
+	<li><a href="global"><img src="http://rockerbox.com/assets/img/dashboard/sidebar/global-icon.png" alt="Global icon" /><span class="sidebar-label">global streaming</span></a></li>
+	
+	<li><a href="intraweek"><img src="http://rockerbox.com/assets/img/dashboard/sidebar/intraweek-icon.png" alt="Intraweek icon" /><span class="sidebar-label">intraweek overview</span></a></li>
+	-->
+{% end %}
+
+{% block page_content %}
+	<div id="io-completion-box" class="box quarter-box">
+		<div class="box-title">IO Progress</div>
+		<div id="io-percentage-bar"><div id="io-percentage-bar-inner"></div></div>
+		<canvas id="io-gauge"></canvas>
+		<div id="io-progress">0</div>
+		<div id="io-remaining">spent/total</div>
+	</div>
+	<div id="campaign-box" class="box three-quarters-box">
+		<div id="campaign-table" class="content-table">
+			<ul id="campaign-header" class="header-row">
+				<li class="campaign-name">campaign</li><li class="campaign-imps border-green">impressions</li><li class="campaign-clicks border-blue">clicks</li><li class="campaign-conversions border-red">conversions</li><li class="campaign-cost border-orange">cost</li>
+			</ul>
+		</div>
+	</div>	
+	<div class="clearfix"></div>	
+	<div id="campaign-graph-box" class="box three-quarters-box">
+		<div id="campaign-graph"></div>
+		<div id="campaign-slider">
+			<!--<div class="outer-interval-select"><ul class="interval-select"><li>day</li><li class="interval-active">week</li><li>month</li></ul></div>-->
+		</div>
+	</div>
+	<div id="filter-box" class="box quarter-box">
+		<div id="graph-interval">
+			<div id="interval-title">current interval <span id="outer-interval-reset">| <span id="interval-reset">reset</span></span></div>
+			<div id="current-interval"></div>
+		</div>
+		<div id="filter-options">
+			<div class="box-title">Display</div>
+			<div class="box-subtitle">Metric</div>
+			<ul id="filter-metric">
+				<li class="filter-metric-active"><img src="http://rockerbox.com/assets/img/dashboard/general/checked-radio.png" alt="Checked radio button" />impressions</li>
+				<li><img src="http://rockerbox.com/assets/img/dashboard/general/unchecked-radio.png" alt="Unchecked radio button" />clicks</li>
+				<li><img src="http://rockerbox.com/assets/img/dashboard/general/unchecked-radio.png" alt="Unchecked radio button" />conversions</li>
+				<li><img src="http://rockerbox.com/assets/img/dashboard/general/unchecked-radio.png" alt="Unchecked radio button" />cost</li>
+			</ul>
+			<!--
+			<div class="box-subtitle">Compare to</div>
+			<select>
+				<option>clicks</option>
+				<option>conversions</option>
+				<option>cost</option>
+			</select>
+			-->
+		</div>
+		<!--<div id="export-box">export data to csv<img src="" alt="Export image" /></div>-->
+	</div>
+	<div class="clearfix"></div>
+	<div id="campaign-reports-box" class="box full-box">
+		<div class="outer-interval-select">sort by<ul class="interval-select"><li>day</li><li class="interval-active">week</li><li>month</li><!--<li>insertion order</li>--></ul></div>
+		<div class="box-title">Campaign reports</div>
+		<div id="campaign-reports-table" class="content-table">
+			<ul id="reports-header" class="header-row"><li class="reports-date"></li><li class="reports-impressions">impressions</li><li class="reports-thin-small">cpm</li><li class="reports-clicks">clicks</li><li class="reports-conversions">conversions</li><li class="reports-thin-small">cpa</li><li class="reports-cost">total cost</li></ul>		
+		</div>
+		<div class="show-more">show more</div>
+	</div>
+	<div class="clearfix"></div>
+{% end %}
+
+{% block page_scripts %}
+	<!-- IO GAUGE -->
+	<script src="http://rockerbox.com/js/dashboard/gauge.min.js"></script>
+	<script src="http://rockerbox.com/js/dashboard/d3.v3.min.js"></script>
+	<script src="http://rockerbox.com/js/dashboard/crossfilter.min.js"></script>
+	<script src="http://rockerbox.com/js/dashboard/dc.mod.js"></script>
+	<script src="http://rockerbox.com/js/dashboard/reporting.js"></script>
+	<script src="http://rockerbox.com/js/dashboard/reporting-functions.js"></script>
+	<script>					
+		// FORMAT DATE BASED ON DISPLAY MODE
+		function createDateValue(dateMode, firstDate){
+			if(dateMode == "date-day") return formatDate(firstDate);
+			else if(dateMode == "date-week"){
+				return formatDate(firstDate) + " - " + formatDate(addDays(firstDate, 6));
+			}
+			else if(dateMode == "date-month"){
+				return formatMonth(firstDate);
+			}
+		}
+		
+		// INITIALISE TABLES
+		var campaignTable = null, campaignReportsTable = null, sliderGraph = null, mainGraph = null;
+		
+		var extUserID =  {{ advertiser_id }};
+		
+		var userBudget = 0, userSpent = 0;
+		
+		// GET ADVERTISER BUDGET AND PROGRESS
+		var getUserInfo = $.getJSON("/intraweek?format=json", function(data){
+			$.each(data, function(key, value){
+				if(value.id != extUserID) return;
+				$('#io-completion-box #io-progress').html(formatMoney(value.spent) + '/<span>' + formatMoney(value.current_budget) + '</span>');
+				$('#header #right-align #user-name').text(value.advertiser.toLowerCase());
+				
+				userBudget = parseInt(value.current_budget);
+				userSpent = parseInt(value.spent);
+		
+				return false;
+			});
+		});
+		
+		// GET DATA
+		var getUserData = $.getJSON("/api?table=campaign_bucket&external_advertiser_id=" + extUserID).done(function(e){
+			var buckets = {};
+
+			$.each(e, function(index, bucket){
+				buckets[bucket.campaign_id] = bucket;
+			});
+
+			/*
+			var data_link = window.location.origin + window.location.pathname;
+			data_link += window.location.search.length ? window.location.search : "?";
+*/
+			d3.json("/reporting?format=json",function(data){
+				window.data = data;
+
+				// INITIAL DATA TREATMENT AND FORMATTING
+				$.each(data, function(key, d){
+					var name = "Default Campaign";
+					
+					try {
+						name = buckets[d.campaign_id]['bucket_name'];
+					}
+					catch(e) {}
+					
+					d.campaign_bucket = name;
+					d.campaign_id = d.campaign_id;
+					d.dd = new Date(d.date * 1000);
+					d.imps = +d.imps;
+					d.clicks = +d.clicks;
+					d.conversions = +d.is_valid;
+					d.cost = d.media_cost * d.cpm_multiplier;
+					
+					/*d.domain = 0;
+					d.referrer = 0;*/
+				});
+
+				// INSTANTIATE CROSSFILTER
+				var crs = crossfilter(data);
+				window.CRS = crossfilterNS(crs, dc);
+
+				// GENERATE IO
+				var campaignQty = CRS.aggregateDimensions.total_campaign_bucket.top(5).length;
+				
+				if(campaignQty == 1 || campaignQty == 2){
+					$('#io-gauge').hide();
+					
+					var usagePercent = userSpent / userBudget;
+					$("#io-percentage-bar-inner").css("width", parseInt(usagePercent * 100) + "%");
+					if(usagePercent > 0.66){
+						$("#io-percentage-bar-inner").addClass('io-red');
+					}
+					else if(usagePercent > 0.33){
+						$("#io-percentage-bar-inner").addClass('io-orange');
+					}
+					else {
+						$("#io-percentage-bar-inner").addClass('io-green');
+					}		
+					
+					if(campaignQty == 1){
+						$('#io-completion-box').addClass('io-small');
+					}
+				}
+				else {
+					$("#io-percentage-bar").hide();
+					$('#io-gauge').show();
+					
+					if(campaignQty == 3){
+						$('#io-completion-box').addClass('io-large');
+					}
+					
+					// DISPLAY IO PROGRESS GAUGE
+					var gauge = new Gauge(document.getElementById('io-gauge')).setOptions({
+						lines: 12,
+						angle: 0,
+						lineWidth: 0.30,
+						pointer: {
+							length: 0.75,
+							strokeWidth: 0.035,
+							color: '#000000'
+						},
+						limitMax: true, 
+						percentColors: [[0.0, "#5ec34b" ], [0.50, "#ffb952"], [1.0, "#e46161"]],
+						strokeColor: '#E0E0E0',
+						generateGradient: true
+					});
+					gauge.animationSpeed = 32;
+					gauge.maxValue = userBudget;
+					gauge.set(userSpent);			
+				}
+				
+				// GENERATE CAMPAIGN BOX CONTENT
+				var totalDimension = CRS.groups.all.value();
+				totalDimension['campaign_bucket'] = "Campaign total";
+				campaignTable = dc.customDataTable('#campaign-table', "graph-group")
+				.dimension(CRS.aggregateDimensions.total_campaign_bucket)
+				.totalDimension(totalDimension)
+				.activeRow(-1)
+				.campaignSelector('.campaign-name')
+				.group(function(d){ return d.campaign_bucket; })
+				.sortBy(function(d){
+					return d.campaign_bucket;					
+				})
+				.size(4)
+				.rowClass("campaign-row")
+				.listClasses(["campaign-name", "campaign-imps", "campaign-clicks", "campaign-conversions", "campaign-cost"])
+				.listItems([
+					function(d){
+						return d.campaign_bucket;
+					},
+					function(d){
+						return formatNumber(d.imps);
+					},
+					function(d){
+						return formatNumber(d.clicks);
+					},
+					function(d){
+						return formatNumber(d.conversions);
+					},
+					function(d){
+						return formatMoney(d.cost);
+					}
+				])
+				.on("preRedraw", function(){
+					CRS.dimensions.total_campaign_bucket.filterAll();	
+				})
+				.on("postRedraw", function(){
+					var currentCampaign = $('#campaign-table .campaign-row.active-row .campaign-name').text();
+					if(currentCampaign == "Campaign total"){
+						CRS.dimensions.total_campaign_bucket.filterAll();
+					}
+					else {
+						CRS.dimensions.total_campaign_bucket.filter(function(d){return d == currentCampaign});
+					}
+
+					if(currentCampaign != $('#campaign-reports-box .box-title').attr("data-campaign-name")){
+						updateCampaignReports($('#campaign-reports-box .outer-interval-select .interval-select li.interval-active').text(), currentCampaign);
+					
+						$('#campaign-reports-table').fadeOut(250, "linear", function(){
+							campaignReportsTable.redraw();
+						});	
+					}
+				});
+				
+				// GENERATE CAMPAIGN REPORTS SECTION					
+				campaignReportsTable = dc.customDataTable('#campaign-reports-table', "reports-group")
+				
+				updateCampaignReports($('#campaign-reports-box .outer-interval-select .interval-select .interval-active').text(), "Campaign total");				
+				dc.renderAll("reports-group");
+				
+				// var dateTimeObj = CRS.groups.datetime.all();
+				// var impsMax = impsMin = dateTimeObj[1].value.imps;
+				// $.each(dateTimeObj, function(key, data){
+					// if(data.value.imps > impsMax) impsMax = data.value.imps;
+					// else if(data.value.imps < impsMin) impsMin = data.value.imps;
+				// });
+				
+				var currentMetric = $('#filter-box #filter-options #filter-metric li.filter-metric-active').text();
+				$('#campaign-graph-box').addClass("data-metric-" + currentMetric);
+					
+				// GENERATE SLIDER GRAPH
+				sliderGraph = dc.lineChart('#campaign-slider', "graph-group")
+				.dimension(CRS.dimensions.daily)
+				.group(CRS.groups.daily)
+				.height(48)
+				.width(843)
+				.renderArea(true)
+				.elasticY(true)
+				.margins({top: 0, right: 0, bottom: 0, left: 0})
+				.yAxisPadding("25%")
+				.round(d3.time.week.round)
+				.xUnits(d3.time.week)
+				.valueAccessor(function(d){					
+					if(currentMetric == "clicks") return d.value.clicks;
+					else if(currentMetric == "conversions") return d.value.conversions;
+					else if(currentMetric == "cost") return d.value.cost;
+					return d.value.imps;
+				})
+				// .y(d3.scale.log().nice().domain([impsMin, impsMax]))
+				.x(d3.time.scale().domain([
+					CRS.groups.all.summary().date_min,
+					CRS.groups.all.summary().date_max
+				]))
+				.on("preRedraw", function(){
+					CRS.dimensions.datetime.filterAll();
+				})
+				// .on("postRedraw", function(){
+					// $('#campaign-slider .axis.x .tick line').attr("y2", "13");
+				// })
+				// .on("postRender", function(){
+					// $('#campaign-slider .axis.x .tick line').attr("y2", "13");
+				// })			
+				// .renderHorizontalGridLines(true)
+				
+				// sliderGraph.yAxis().ticks(5);
+				sliderGraph.xAxis().tickFormat(d3.time.format("%m/%d"));
+				
+				var intervalStart = removeDays(new Date(), 14);
+				intervalStart.setSeconds(0);
+				intervalStart.setMinutes(0);
+				intervalStart.setHours(0);
+				
+				// GENERATE MAIN GRAPH
+				mainGraph = dc.lineChart('#campaign-graph', "graph-group")
+				.dimension(CRS.dimensions.datetime)
+				.group(CRS.groups.datetime)
+				.height(328)
+				.width(843)
+				.margins({top: 0, right: 0, bottom: 0, left: 0})
+				.elasticY(true)
+				.renderArea(true)
+				.yAxisPadding("25%")
+				.round(d3.time.day.round)
+				.xUnits(d3.time.days)
+				.valueAccessor(function(d){
+					if(currentMetric == "clicks") return d.value.clicks;
+					else if(currentMetric == "conversions") return d.value.conversions;
+					else if(currentMetric == "cost") return d.value.cost;
+					return d.value.imps;
+				})
+				.x(d3.time.scale().domain([
+					CRS.groups.all.summary().date_min,
+					// intervalStart,
+					CRS.groups.all.summary().date_max
+				]))
+				.renderHorizontalGridLines(true)
+				.brushOn(false)
+				.renderTitle(true)
+				.rangeChart(sliderGraph)
+				
+				mainGraph.yAxis().ticks(5);
+				mainGraph.xAxis().ticks(8).tickFormat(d3.time.format("%m/%d"));
+				
+				// SET TIME INTERVAL
+				var baseInterval = formatDate(CRS.groups.all.summary().date_min) + " - " + formatDate(CRS.groups.all.summary().date_max);
+				
+				intervalBox = dc.customDataBox('#filter-box #graph-interval #current-interval', "graph-group")
+				.valueAccessor(function(d){
+					var dateMin = formatDate(d.date_min), dateMax = formatDate(d.date_max);
+					if(dateMin == dateMax) return dateMin;
+					return dateMin + " - " + dateMax;
+				})
+				.group(CRS.groups.all)
+				.on("postRedraw", function(){
+					if(intervalBox.value() != baseInterval){
+						$('#graph-interval #interval-title #outer-interval-reset').fadeIn();
+					}
+					else {
+						$('#graph-interval #interval-title #outer-interval-reset').fadeOut();
+					}
+				});
+				
+				
+				var campaignGraphPos = $('#campaign-graph').position();
+				
+				// CRS.dimensions.daily.filter(function(d){return d > intervalStart});
+				dc.renderAll("graph-group");
+
+				$('#page-loader').fadeOut();
+			});		
+		});
+	</script>
+	<script>		
+		// SWITCH CAMPAIGN FOCUS
+		$('#campaign-table').on("click", '.campaign-row', function(){
+			if(!$(this).hasClass('active-row')){
+				$('.campaign-row.active-row').removeClass('active-row');
+				$(this).addClass('active-row');
+				
+				if($(this).index() == $('.campaign-row').length){
+					campaignTable.activeRow(-1);
+				}
+				else {
+					campaignTable.activeRow($(this).index());
+				}
+				
+				var currentCampaign = $(this).children('.campaign-name').text();
+				if(currentCampaign == "Campaign total"){
+					CRS.dimensions.total_campaign_bucket.filterAll();
+				}
+				else {
+					CRS.dimensions.total_campaign_bucket.filter(function(d){return d == currentCampaign});
+				}				
+				
+				sliderGraph.redraw();				
+				mainGraph.redraw();	
+				
+				updateCampaignReports($('#campaign-reports-box .outer-interval-select .interval-select li.interval-active').text(), currentCampaign);
+				
+				$('#campaign-reports-table').fadeOut(250, "linear", function(){
+					campaignReportsTable.redraw();
+				});	
+			}
+		});
+		
+		// SWITCH REPORTING MODE ON CLICK
+		$('#campaign-reports-box .outer-interval-select .interval-select li').on("click", function(){
+			if(!$(this).hasClass('interval-active')){
+				$(this).siblings('.interval-active').removeClass('interval-active');
+				$(this).addClass('interval-active');
+				
+				var currentCampaign = $('#campaign-table .campaign-row.active-row .campaign-name').text();
+				if(currentCampaign == "Campaign total"){
+					CRS.dimensions.total_campaign_bucket.filterAll();
+				}
+				else {
+					CRS.dimensions.total_campaign_bucket.filter(function(d){return d == currentCampaign});
+				}		
+				
+				updateCampaignReports($(this).text(), currentCampaign);
+				
+				$('#campaign-reports-table').fadeOut(250, "linear", function(){
+					campaignReportsTable.redraw();
+				});			
+			}
+		});
+		
+		// IF SHOW MORE ON CAMPAIGN REPORTS
+		$('#campaign-reports-box .show-more').click(function(){				
+			var currentCampaign = $('#campaign-table .campaign-row.active-row .campaign-name').text();
+			if(currentCampaign == "Campaign total"){
+				CRS.dimensions.total_campaign_bucket.filterAll();
+			}
+			else {
+				CRS.dimensions.total_campaign_bucket.filter(function(d){return d == currentCampaign});
+			}		
+			
+			updateCampaignReports($('#campaign-reports-box .outer-interval-select .interval-select li.interval-active').text(), currentCampaign, Infinity);
+			
+			campaignReportsTable.redraw();		
+		});
+		
+		// RESET DATE FILTER
+		$('#interval-reset').click(function(){
+			// CRS.dimensions.datetime.filterAll();
+			dc.filterAll("graph-group");
+			dc.redrawAll("graph-group");
+			// $(this).parent().fadeOut(500);
+		});
+		
+		// CHANGE METRIC
+		$('#filter-box #filter-options #filter-metric li').click(function(){
+			if(!$(this).hasClass('filter-metric-active')){
+				var currentMetric = $(this).text();
+				$('#campaign-graph-box').removeClass('data-metric-' + $('#filter-box #filter-options #filter-metric li.filter-metric-active').text()).addClass("data-metric-" + currentMetric);
+				mainGraph.valueAccessor(function(d){										
+					if(currentMetric == "clicks") return d.value.clicks;
+					else if(currentMetric == "conversions") return d.value.conversions;
+					else if(currentMetric == "cost") return d.value.cost;
+					return d.value.imps;
+				});
+				sliderGraph.valueAccessor(function(d){					
+					if(currentMetric == "clicks") return d.value.clicks;
+					else if(currentMetric == "conversions") return d.value.conversions;
+					else if(currentMetric == "cost") return d.value.cost;
+					return d.value.imps;
+				});
+				
+				var currentCampaign = $('#campaign-table .campaign-row.active-row .campaign-name').text();
+				if(currentCampaign == "Campaign total"){
+					CRS.dimensions.total_campaign_bucket.filterAll();
+				}
+				else {
+					CRS.dimensions.total_campaign_bucket.filter(function(d){return d == currentCampaign});
+				}		
+				
+				if(currentMetric == "cost"){
+					$('.tooltip').addClass('value-cost');
+				}
+				else $('.tooltip').removeClass('value-cost');
+				
+				$('#filter-box #filter-options #filter-metric li.filter-metric-active').removeClass('filter-metric-active').children('img').attr('src', 'http://rockerbox.com/assets/img/dashboard/general/unchecked-radio.png').attr('alt', 'Unchecked radio button');
+				$(this).addClass('filter-metric-active').children('img').attr('src', 'http://rockerbox.com/assets/img/dashboard/general/checked-radio.png').attr('alt', 'Checked radio button');
+				
+				sliderGraph.redraw();
+				mainGraph.redraw();
+			}
+		});
+	</script>
+{% end %}

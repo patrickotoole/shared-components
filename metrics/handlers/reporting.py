@@ -86,6 +86,7 @@ class ReportingHandler(ReportingBase):
             data =""
 
         def default(self,data):
+            # nolonger have multiple templates/ views of reporting
             if campaign or bucket:
                 template = "campaign.html"
             elif strategy:
@@ -93,7 +94,7 @@ class ReportingHandler(ReportingBase):
             else:
                 template = "advertiser_bucket.html"
 
-            self.render("reporting/_" + template, stuff=data, advertiser_id=advertiser)
+            self.render("reporting/_reporting.html", advertiser_id=advertiser)
 
         yield default, (data,)
 
