@@ -10,6 +10,7 @@ class IndexHandler(tornado.web.RequestHandler):
         internal_links = [
             ("/admin/targeting", "Targeting Tool"),
             ("/intraweek", "Intraweek Tool"),
+            ("/admin/batch_request", "Batch Segment Request"),
             ("/analysis", "Segment/DMA Analysis"),
             ("/advertiser", "Advertiser Creator"),
             ("/money", "Money Tool"),
