@@ -10,7 +10,7 @@ from twisted.internet import reactor, protocol, defer, threads
 from twisted.protocols import basic
 from tornado.options import define, options, parse_command_line
 
-from handlers import streaming, reporting, user, analysis, index
+from handlers import streaming, reporting, user, analysis, index, rbox_pixel
 
 import handlers.admin as admin
 from handlers.adminreport import AdminReportHandler
@@ -141,18 +141,18 @@ reporting = [
     (r'/signup*', user.SignupHandler, dict(db=db))
 ]
 
-pixel_analysis = [
-    (r'/analysis.*', analysis.AnalysisHandler, dict(db=db,api=api,hive=hive))
+analysis = [
+    (r'/analysis/pixel/', rbox_pixel.RockerboxPixelHandler, dict(db=db, api=api, hive=hive)),
+    (r'/analysis/pixel/(.*)', rbox_pixel.PixelAdvertiserHandler, dict(db=db, api=api, hive=hive))
 ]
 
 static = [
     (r'/static/(.*)', tornado.web.StaticFileHandler, {'path': "static"})
 ]
 
-
 dirname = os.path.dirname(os.path.realpath(__file__))
 app = tornado.web.Application(
-    streaming + admin_scripts + admin_reporting + reporting + pixel_analysis + static + index, 
+    streaming + admin_scripts + admin_reporting + reporting + analysis + static + index, 
     template_path= dirname + "/templates",
     db=lnk.dbs.mysql,
     debug=True,
