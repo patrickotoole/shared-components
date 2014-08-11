@@ -45,6 +45,7 @@ class AnalyzeBase(object):
         df = filter_and_transform(df, self.pred)
         df = self._modify(df)
         df = self._sort(df)
+        df = df.reset_index(drop=True)
         return df
 
     def _modify(self, *args, **kwargs):

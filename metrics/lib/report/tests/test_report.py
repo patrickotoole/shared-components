@@ -5,7 +5,6 @@ from link import lnk
 from twisted.trial import unittest
 from lib.report.common import get_report_obj
 from lib.report.work.report import ReportWorker
-from lib.report.reportutils import get_analyze_func
 
 from lib.pandas_sql import s as _sql
 
@@ -21,16 +20,36 @@ class ReportTestCase(unittest.TestCase):
 
     def test_report_domain(self):
         obj = get_report_obj('domain', db)
-        metrics = 'best'
         csv_path = os.path.realpath(__file__ + '../../test_csv_files/advertiser,site_domain.csv')
-        result = obj.get_report(path=csv_path, metrics=metrics, limit=10)
-
-        expected = {0: 306383}
-        response = result.to_dict().get('advertiser')
+        result = obj.get_report(path=csv_path, limit=10)
+        expected = {
+                0: 'realsimple.com',
+                1: 'southernliving.com',
+                2: 'trendir.com',
+                3: 'sunset.com',
+                4: 'mocoloco.com',
+                5: 'bing.com',
+                6: 'cityfeet.com',
+                7: 'style-files.com',
+                8: 'brainyquote.com',
+                9: 'auctionzip.com'
+                }
+        response = result.to_dict().get('domain')
         self.assertEqual(expected, response)
 
-        expected = {0: 3.0}
-        response = result.to_dict().get('rev')
+        expected = {
+                 0: 2.6200000000000001,
+                 1: 0.23999999999999999,
+                 2: 0.059999999999999998,
+                 3: 0.080000000000000002,
+                 4: 0.02,
+                 5: 0.0,
+                 6: 0.02,
+                 7: 0.0,
+                 8: 0.02,
+                 9: 0.01,
+                 }
+        response = result.to_dict().get('mc')
         self.assertEqual(expected, response)
 
     def test_report_datapulling(self):
