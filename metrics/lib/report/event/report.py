@@ -60,7 +60,7 @@ def accounting(f):
                 ).create_event()
         if error:
             raise ValueError(e)
-        return res
+        return status
     return _f
 
 def _get_kwargs(*args, **kwargs):
