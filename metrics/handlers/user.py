@@ -21,7 +21,7 @@ class LoginHandler(tornado.web.RequestHandler):
     def get(self):
 
         if self.get_secure_cookie("user"):
-            self.redirect("/reporting")
+            self.redirect(self.get_argument("next", None, True))
         else:
             self.render("_login.html",message = "sign in")
 
