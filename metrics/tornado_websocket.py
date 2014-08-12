@@ -99,7 +99,7 @@ def shutdown():
     stop_loop()
 
 index = [
-    (r'/', index.IndexHandler)
+    (r'/admin/index', index.IndexHandler)
 ]
 
 old_handlers = [
