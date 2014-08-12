@@ -138,9 +138,16 @@ class IntraWeekTable(IntraWeekDB):
         if not hasattr(self, 'goal_df'):
           self.goal_df = self.my_db.select(GOAL_TARGETS).as_dataframe()
           self.goal_df = self.goal_df.set_index('external_advertiser_id')
-        
-        goal_multiplier = self.goal_df['goal_cpm_multiplier'][advertiser_id]
-        goal_cpa = self.goal_df['goal_target_cpa'][advertiser_id]
+       
+        try: 
+          goal_multiplier = self.goal_df['goal_cpm_multiplier'][advertiser_id]
+        except KeyError:
+          goal_multiplier = None
+
+        try:
+          goal_cpa = self.goal_df['goal_target_cpa'][advertiser_id]
+        except KeyError:
+          goal_cpa = None
 
         #if target_cpa != -1:
         #  try:
