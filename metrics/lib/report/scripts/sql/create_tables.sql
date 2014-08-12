@@ -69,3 +69,23 @@ CREATE TABLE `stats_event_report` (
   `active` tinyint(1) DEFAULT '1',
   PRIMARY KEY (`id`)
 )
+
+CREATE TABLE `v4_reporting` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `imps` int(10) NOT NULL,
+  `clicks` int(10) NOT NULL,
+  `campaign_id` int(10) NOT NULL,
+  `creative_id` int(10) NOT NULL,
+  `line_item_id` int(10) NOT NULL,
+  `media_cost` decimal(20,10) NOT NULL,
+  `adx_spend` decimal(20,10) DEFAULT '0.0000000000',
+  `external_advertiser_id` int(10) DEFAULT NULL,
+  `date` datetime DEFAULT NULL,
+  `last_activity` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted` tinyint(1) DEFAULT '0',
+  `cpm_multiplier` decimal(5,2) DEFAULT NULL,
+  `active` tinyint(1) DEFAULT '1',
+  `notes` varchar(400) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique` (`date`,`external_advertiser_id`,`campaign_id`,`creative_id`,`line_item_id`, `deleted`, `imps`, `clicks`, `media_cost`, `adx_spend`, `active`)
+)
