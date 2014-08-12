@@ -8,9 +8,9 @@ THRESHOLD = 7
 WORST = 'worst'
 BEST = 'best'
 
-NUM_TRIES = 20
+NUM_TRIES = 25
 LIMIT = 10
-SLEEP = 1
+SLEEP = 2
 
 "ndigit to round"
 NDIGITS = 2
