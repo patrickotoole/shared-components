@@ -1,23 +1,17 @@
 import logging
 import os
 import io
-import urllib
 
 import pandas as pd
 
 from lib.report.utils.utils import retry
-from lib.report.utils.utils import parse_params
-from lib.report.reportutils import get_report_obj
 from lib.report.reportutils import get_or_create_console
 from lib.report.analyze.report import get_analyze_obj
 
 from lib.report.utils.constants import NUM_TRIES
 from lib.report.utils.constants import SLEEP
-from lib.report.utils.constants import WORST
 from lib.report.utils.sqlutils import get_unique_keys
 
-from handlers.reporting import ReportingHandler
-from lib.helpers import decorators
 
 CUR_DIR = os.path.dirname(__file__)
 TMP_DIR = os.path.abspath('/tmp')
@@ -237,29 +231,3 @@ class ReportBase(object):
     def _get_unique_table_key(self):
         cur = self._db_wrapper
         return get_unique_keys(cur, self._table_name)
-
-class ReportDomainHandler(ReportingHandler):
-    def initialize(self, *args, **kwargs):
-        pass
-
-    #@tornado.web.authenticated
-    @decorators.formattable
-    def get(self, name):
-        url = self.request.uri
-        kwargs = parse_params(url)
-
-        if 'format' in kwargs:
-            kwargs.pop('format')
-
-        kwargs = dict((k, int(v) if v.isdigit() else urllib.unquote(v))
-                      for k, v in kwargs.items())
-        logging.info("kwargs: %s" % kwargs)
-
-        report_obj = get_report_obj(name)
-        data = report_obj.get_report(**kwargs)
-
-        def default(self, data):
-            url = "reporting_domain/_report_%s.html" % name
-            self.render(url, data=data)
-
-        yield default, (data,)
