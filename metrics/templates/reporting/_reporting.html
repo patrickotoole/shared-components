@@ -1,5 +1,5 @@
 {% autoescape None %}
-{% extends "reporting_base.html" %}
+{% extends "base.html" %}
 
 {% block page_title %}Reporting{% end %}
 {% block page_header %}Campaign overview{% end %}
@@ -24,7 +24,7 @@
 		<div class="box-title">IO Progress</div>
 		<div id="io-percentage-bar"><div id="io-percentage-bar-inner"></div></div>
 		<canvas id="io-gauge"></canvas>
-		<div id="io-progress">0</div>
+		<div id="io-progress" title="Estimate">0</div>
 		<div id="io-remaining">spent/total</div>
 	</div>
 	<div id="campaign-box" class="box three-quarters-box">
@@ -106,17 +106,12 @@
 		var userBudget = 0, userSpent = 0;
 		
 		// GET ADVERTISER BUDGET AND PROGRESS
-		var getUserInfo = $.getJSON("/intraweek?format=json", function(data){
-			$.each(data, function(key, value){
-				if(value.id != extUserID) return;
-				$('#io-completion-box #io-progress').html(formatMoney(value.spent) + '/<span>' + formatMoney(value.current_budget) + '</span>');
-				$('#header #right-align #user-name').text(value.advertiser.toLowerCase());
-				
-				userBudget = parseInt(value.current_budget);
-				userSpent = parseInt(value.spent);
-		
-				return false;
-			});
+		var getUserInfo = $.getJSON("/intraweek?format=json&ioinfo=" + extUserID, function(data){
+            $('#io-completion-box #io-progress').html(formatMoney(data[0].spent) + '*<span>/' + formatMoney(data[0].current_budget) + '</span>');
+            $('#header #right-align #user-name').text(data[0].advertiser.toLowerCase());
+            
+            userBudget = parseInt(data[0].current_budget);
+            userSpent = parseInt(data[0].spent);
 		});
 		
 		// GET DATA
@@ -242,7 +237,13 @@
 					}
 				])
 				.on("preRedraw", function(){
-					CRS.dimensions.total_campaign_bucket.filterAll();	
+					CRS.dimensions.total_campaign_bucket.filterAll();
+                    if(CRS.aggregateDimensions.total_campaign_bucket.top(5).length == 1){
+                        campaignTable.totalDimension({});
+                    }
+                    else {
+                        campaignTable.totalDimension(totalDimension);
+                    }
 				})
 				.on("postRedraw", function(){
 					var currentCampaign = $('#campaign-table .campaign-row.active-row .campaign-name').text();
@@ -288,8 +289,8 @@
 				.elasticY(true)
 				.margins({top: 0, right: 0, bottom: 0, left: 0})
 				.yAxisPadding("25%")
-				.round(d3.time.week.round)
-				.xUnits(d3.time.week)
+				.round(d3.time.day.round)
+				.xUnits(d3.time.days)
 				.valueAccessor(function(d){					
 					if(currentMetric == "clicks") return d.value.clicks;
 					else if(currentMetric == "conversions") return d.value.conversions;
