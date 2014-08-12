@@ -99,7 +99,7 @@ def shutdown():
     stop_loop()
 
 index = [
-    (r'/', index.IndexHandler)
+    (r'/admin/index', index.IndexHandler)
 ]
 
 old_handlers = [
@@ -145,7 +145,8 @@ reporting = [
 
 analysis = [
     (r'/analysis/pixel/', rbox_pixel.RockerboxPixelHandler, dict(db=db, api=api, hive=hive)),
-    (r'/analysis/pixel/(.*)', rbox_pixel.PixelAdvertiserHandler, dict(db=db, api=api, hive=hive))
+    (r'/analysis/pixel/(.*)', rbox_pixel.PixelAdvertiserHandler, dict(db=db, api=api, hive=hive)),
+    (r'/analysis*', analysis.AnalysisHandler, dict(db=db, api=api, hive=hive))
 ]
 
 static = [
