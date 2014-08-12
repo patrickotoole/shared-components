@@ -1,5 +1,6 @@
 from decorators import *
 from queries import *
+import math
 
 class IntraWeekBase(object):
     """
@@ -43,6 +44,11 @@ class IntraWeekBase(object):
         # get proposed campaign length
         return dates['proposed_campaign_length'][advertiser_id]
 
+    @property_checker_threeargs
+    def get_current_multiplier(self, advertiser_id, target_cpa):
+      week_df = self.get_table(advertiser_id, target_cpa)
+      return week_df['multiplier'][week_df.index[-1]]
+
 class IntraWeekDB(IntraWeekBase):
     """
     IntraWeekDB handles our database calls. These are small manipulations on 
@@ -66,10 +72,15 @@ class IntraWeekDB(IntraWeekBase):
 
         mask = self.daily_spend['external_advertiser_id'] == advertiser_id  
         cum_charges = self.daily_spend[mask]['charged_client'].cumsum()
-        
+        media_costs = self.daily_spend[mask]['media_cost']        
+
         # go through cumulative sums to find first date, else, return -1
+        last_charge = 0
         for idx in range(len(cum_charges)):
           current_charge = cum_charges[cum_charges.index[idx]]
+          if math.isnan(current_charge):
+            current_charge = last_charge + media_costs[cum_charges.index[idx]] * self.get_current_multiplier(advertiser_id, -1)
+          last_charge = current_charge
           if (current_charge > limit):
             return self.daily_spend['date'].ix[cum_charges.index[idx]]
 
