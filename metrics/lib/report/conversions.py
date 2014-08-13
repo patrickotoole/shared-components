@@ -43,7 +43,7 @@ def _advertiser_to_pixels_mapping():
 class ReportConversions(ReportBase):
     def __init__(self, *args, **kwargs):
         self._name = 'conversions'
-        self._table_name = 'conversion_reporting'
+        self._table_name = 'v2_conversion_reporting'
         super(ReportConversions, self).__init__(*args, **kwargs)
 
     def _get_advertiser_ids(self):
