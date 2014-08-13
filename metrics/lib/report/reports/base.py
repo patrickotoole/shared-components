@@ -110,7 +110,7 @@ class ReportBase(object):
 
     def _get_dataframes(self, **kwargs):
         dfs = []
-        limit = kwargs['limit']
+        limit = kwargs.get('limit')
         for advertiser_id in self._get_advertiser_ids():
             dfs.extend(self._get_dataframe(advertiser_id, **kwargs))
             if limit and len(dfs) >= limit:
@@ -123,8 +123,8 @@ class ReportBase(object):
             url = self._get_request_url(advertiser_id)
             _form = self._get_form(
                     group=kwargs.get('group'),
-                    end_date=kwargs['end_date'],
-                    start_date=kwargs['start_date'],
+                    end_date=kwargs.get('end_date'),
+                    start_date=kwargs.get('start_date'),
                     pixel_id=pixel_id,
                     )
             resp = self._get_resp_helper(url, _form)
