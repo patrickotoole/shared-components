@@ -44,6 +44,7 @@ def accounting(f):
             error = e
 
         job_ended_at = local_now()
+        logging.info("creating event for %s, start_date: %s, end_date: %s" % (worker._name, start_date, end_date))
         EventReport(
                 event_name=worker._name,
                 db_wrapper=worker._con,

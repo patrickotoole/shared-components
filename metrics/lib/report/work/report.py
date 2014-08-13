@@ -13,9 +13,10 @@ class ReportError(ValueError):
     pass
 
 class ReportWorker(BaseWorker):
-    def __init__(self, name=None, con=None, **kwargs):
+    def __init__(self, name=None, con=None, act=None, **kwargs):
         self._name = name
         self._con = con or get_db()
+        self._act = act
         self._kwargs = kwargs
 
     def do_work(self, **kwargs):
@@ -38,9 +39,9 @@ class ReportWorker(BaseWorker):
         except Exception as e:
             logging.warn(e)
             raise ReportError
-        if self._kwargs.get('act'):
+        if self._act:
             table_name = _obj._table_name
-            created = self._create_reports(df,
+            created = self.insert_reports(df,
                     con=self._con,
                     table_name=table_name,
                     key=get_unique_keys(self._con, table_name),
@@ -48,7 +49,7 @@ class ReportWorker(BaseWorker):
             if created:
                 logging.info("successfully created report for %s" % self._name)
 
-    def _create_reports(self, df, con=None, table_name=None, key=None):
+    def insert_reports(self, df, con=None, table_name=None, key=None):
         cols = df.columns.tolist()
         logging.info("inserting into table: %s, cols: %s" % (table_name, cols))
         _sql._write_mysql(df, table_name, cols, con.cursor(), key=key)

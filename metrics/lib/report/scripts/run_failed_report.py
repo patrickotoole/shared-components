@@ -25,8 +25,9 @@ def main():
     logging.info("re-runing reports for %s" % rs)
     for r in rs:
         logging.info("re-runing %s job for start_date: %s, end_date: %s" % (r['event_name'], r['start_date'], r['end_date']))
-        succ = ReportWorker(r['event_name'],
-                db,
+        succ = ReportWorker(
+                name=r['event_name'],
+                db=db,
                 start_date=str(r['start_date']),
                 end_date=str(r['end_date']),
                 cache=True,
