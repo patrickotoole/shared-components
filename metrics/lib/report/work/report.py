@@ -3,7 +3,6 @@ import logging
 from lib.report.work.base import BaseWorker
 from lib.pandas_sql import s as _sql
 from lib.report.utils.sqlutils import get_report_names
-from lib.report.utils.sqlutils import get_unique_keys
 from lib.report.utils.reportutils import get_db
 from lib.report.utils.reportutils import get_report_obj
 from lib.report.event.report import accounting
@@ -32,19 +31,20 @@ class ReportWorker(BaseWorker):
 
     @accounting
     def _work(self):
-        _obj = get_report_obj(self._name)
-        report_f = _obj.get_report
+        obj = get_report_obj(self._name, db=self._con)
+        report_f = obj.get_report
         try:
             df = report_f(**self._kwargs)
         except Exception as e:
             logging.warn(e)
             raise ReportError
         if self._act:
-            table_name = _obj._table_name
+            table_name = obj.table_name
+            keys = obj.unique_table_key
             created = self.insert_reports(df,
                     con=self._con,
                     table_name=table_name,
-                    key=get_unique_keys(self._con, table_name),
+                    key=keys,
                     )
             if created:
                 logging.info("successfully created report for %s" % self._name)

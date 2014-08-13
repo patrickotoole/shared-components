@@ -32,6 +32,15 @@ class ReportBase(object):
     def __init__(self, db=None, *args, **kwargs):
         self._db_wrapper = db
 
+    @property
+    def table_name(self):
+        return self._table_name
+
+    @property
+    def unique_table_key(self):
+        cur = self._db_wrapper
+        return get_unique_keys(cur, self._table_name)
+
     def get_report(self, **kwargs):
         dfs = self._get_report(**kwargs)
         if dfs.empty:
@@ -157,7 +166,3 @@ class ReportBase(object):
 
     def _get_pixel_ids(self, advertiser_id):
         return ['']
-
-    def _get_unique_table_key(self):
-        cur = self._db_wrapper
-        return get_unique_keys(cur, self._table_name)
