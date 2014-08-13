@@ -25,10 +25,9 @@ Hourly cron script that report/pull conversion data:
 
 from collections import defaultdict
 
-from lib.report.base import ReportBase
+from lib.report.reports.base import ReportBase
 from lib.report.analyze.report import get_pixels
-
-from lib.report.request_json_forms import CONVERSIONS_FORM
+from lib.report.utils.constants import CONVERSIONS_FORM
 
 LIMIT = 1
 

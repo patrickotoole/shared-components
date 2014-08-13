@@ -4,7 +4,7 @@ import urllib
 from handlers.reporting import ReportingHandler
 from lib.helpers import decorators
 from lib.report.utils.utils import parse_params
-from lib.report.reportutils import get_report_obj
+from lib.report.utils.reportutils import get_report_obj
 
 
 class ReportDomainHandler(ReportingHandler):

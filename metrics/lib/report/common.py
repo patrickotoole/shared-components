@@ -11,11 +11,9 @@ from tornado.options import options
 from tornado.options import parse_command_line
 
 from lib.report.utils.utils import get_start_end_date
-from lib.report.utils.utils import parse
-from lib.report.utils.utils import align_to_day
 from lib.report.work.report import ReportWorker
-from lib.report.reportutils import get_report_obj
-from lib.report.reportutils import get_db
+from lib.report.utils.reportutils import get_report_obj
+from lib.report.utils.reportutils import get_db
 
 LIMIT = 5
 WORST = 'worst'

@@ -1,12 +1,12 @@
 """
 report the least effective campins/advertiser/domain etc.
 """
-from lib.report.base import ReportBase
+from lib.report.reports.base import ReportBase
 
-from lib.report.request_json_forms import DOMAIN_JSON_FORM
-from lib.report.request_json_forms import ADVERTISER_DOMAIN_JSON_FORM
-from lib.report.request_json_forms import ADVERTISER_DOMAIN_CAMPAIGN_JSON_FORM
-from lib.report.request_json_forms import ADVERTISER_DOMAIN_LINE_ITEM_JSON_FORM
+from lib.report.utils.constants import DOMAIN_JSON_FORM
+from lib.report.utils.constants import ADVERTISER_DOMAIN_JSON_FORM
+from lib.report.utils.constants import ADVERTISER_DOMAIN_CAMPAIGN_JSON_FORM
+from lib.report.utils.constants import ADVERTISER_DOMAIN_LINE_ITEM_JSON_FORM
 
 class ReportDomain(ReportBase):
     def __init__(self, *args, **kwargs):

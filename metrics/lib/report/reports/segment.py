@@ -1,7 +1,7 @@
 
-from lib.report.base import ReportBase
+from lib.report.reports.base import ReportBase
 
-from lib.report.request_json_forms import SEGMENT_FORM
+from lib.report.utils.constants import SEGMENT_FORM
 
 
 class ReportSegment(ReportBase):

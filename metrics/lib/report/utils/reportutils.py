@@ -9,6 +9,29 @@ from link import lnk
 
 FILE_FMT = '{name}_{group}{start_date}_{end_date}.csv'
 TMP_DIR = os.path.abspath('/tmp')
+CUR = os.path.dirname(__file__)
+REPORT_DIR = os.path.abspath(os.path.join(CUR, '../reports'))
+
+def get_report_obj(report_name, db=None, path=REPORT_DIR):
+    name = filter(str.isalnum, str(report_name).lower())
+    if not path in sys.path:
+        sys.path.append(path)
+    os.chdir(path)
+    for f in glob.glob("*.py"):
+        f = os.path.splitext(f)[0]
+        if name == f:
+            _module = __import__(f)
+            found = get_member_name(report_name, _module, db)
+            if found:
+                return found
+    raise ValueError("Can't for related report file")
+
+def get_member_name(report_name, _module, db):
+    for member_name, obj in inspect.getmembers(_module):
+        name = ('report' + report_name).lower()
+        if inspect.isclass(obj) and member_name.lower() == name:
+            return obj(db)
+    return None
 
 def get_path(
         name=None,
@@ -29,16 +52,6 @@ def get_path(
     path = os.path.join(TMP_DIR, file_name)
     return path
 
-CONSOLE = None
-def get_or_create_console():
-    global CONSOLE
-    if CONSOLE:
-        return CONSOLE
-    console = lnk.api.console
-    logging.info("created a api console")
-    CONSOLE = console
-    return console
-
 def get_advertisers():
     cur = lnk.dbs.mysql
     df = cur.select('select external_advertiser_id, advertiser_name from advertiser;').as_dataframe()
@@ -53,21 +66,6 @@ def get_db(name='test'):
     logging.info("selecting database: %s" % name)
     db = eval(str_)
     return db
-
-def get_report_obj(report_name, db=None):
-    name = filter(str.isalnum, str(report_name).lower())
-    if not os.path.dirname(__file__) in sys.path:
-        sys.path.append(os.path.dirname(__file__))
-    os.chdir(os.path.dirname(__file__) or '.')
-    for f in glob.glob("*.py"):
-        f = os.path.splitext(f)[0]
-        if name == f:
-            _module = __import__(f)
-            for member_name, obj in inspect.getmembers(_module):
-                name = ('report' + report_name).lower()
-                if inspect.isclass(obj) and member_name.lower() == name:
-                    return obj(db)
-    raise ValueError("Can't for related report file")
 
 def convert_timestr(s):
     """

@@ -11,8 +11,8 @@ from lib.report.emails.models import HighlightRow
 from lib.report.emails.models import Table
 from lib.report.utils.utils import get_start_end_date
 from lib.report.utils.utils import convert_datetime
-from lib.report.reportutils import get_report_obj
-from lib.report.reportutils import get_advertisers
+from lib.report.utils.reportutils import get_report_obj
+from lib.report.utils.reportutils import get_advertisers
 from lib.report.analyze.report import AnalyzeDomain
 
 

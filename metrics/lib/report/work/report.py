@@ -4,8 +4,8 @@ from lib.report.work.base import BaseWorker
 from lib.pandas_sql import s as _sql
 from lib.report.utils.sqlutils import get_report_names
 from lib.report.utils.sqlutils import get_unique_keys
-from lib.report.reportutils import get_db
-from lib.report.reportutils import get_report_obj
+from lib.report.utils.reportutils import get_db
+from lib.report.utils.reportutils import get_report_obj
 from lib.report.event.report import accounting
 
 

@@ -3,7 +3,7 @@ from itertools import groupby
 from datetime import timedelta
 
 from lib.report.work.report import ReportWorker
-from lib.report.reportutils import get_db
+from lib.report.utils.reportutils import get_db
 from lib.report.utils.utils import align
 
 db = None

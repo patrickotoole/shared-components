@@ -1,6 +1,5 @@
 import pandas.io.sql as s
 from pandas.io.sql import *
-from lib.report.reportutils import convert_timestr
 #from pandas.io.sql import _write_sqlite
 
 def get_sqltype(pytype, flavor):

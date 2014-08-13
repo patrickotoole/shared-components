@@ -13,9 +13,9 @@ cron script runs hourly to pull following data
 writing to database v4_reporting
 """
 
-from lib.report.base import ReportBase
-from lib.report.reportutils import get_advertiser_ids
-from lib.report.request_json_forms import DATA_PULLING_FORMS
+from lib.report.reports.base import ReportBase
+from lib.report.utils.reportutils import get_advertiser_ids
+from lib.report.utils.constants import DATA_PULLING_FORMS
 
 
 class ReportDataPulling(ReportBase):

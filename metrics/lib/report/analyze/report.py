@@ -11,7 +11,7 @@ import pandas as pd
 
 from lib.report.utils.utils import convert_datetime
 from lib.report.utils.utils import memo
-from lib.report.reportutils import get_or_create_console
+from lib.report.utils.apiutils import get_or_create_console
 from lib.report.utils.constants import ROUND
 from lib.report.utils.constants import Analyze
 
