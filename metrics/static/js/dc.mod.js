@@ -4789,15 +4789,16 @@ dc.customDataBox = function (parent, chartGroup) {
     **/
 
     _chart.value = function () {
-        return _chart.data();
+         return _chart.data();
     };
 
     _chart.data(function (group) {
-        if(group.summary) var valObj = group.summary();
-        else if(group.value) var valObj = group.value();
-        else return group.size();
-        
-        return _chart.valueAccessor()(valObj);
+        try {
+            if(group.summary) _chart.valueAccessor()(group.summary()) ;
+            else if(group.value) return group.value();
+            return group.size();
+        }
+        catch(e){ return 0; }
     });
 
     _chart._doRender = function () {
