@@ -116,11 +116,7 @@ class IntraWeekTable(IntraWeekDB):
           weights_convs[0] = 1
 
         # get a proxy for number of conversions (exact num if only one type of conversion)
-<<<<<<< HEAD
         df_full['num_conversions'] = df_full.ix[:,7:].dot(weights_convs)    
-=======
-        df_full['num_conversions'] = df_full.ix[:,6:].dot(weights_convs)    
->>>>>>> charge_client calculations adjusted
         return df_full
 
     def add_cpm_columns(self, df, advertiser_id, target_cpa=-1):
@@ -192,7 +188,6 @@ class IntraWeekTable(IntraWeekDB):
           # target_cpa_charged = sum(df_full['cpa_charged'][(-1 - tail_length):-1]) / tail_length
 
 
-<<<<<<< HEAD
         # "fill in" correct cpa_charged - for ALL times when cpa_charged is not properly set
         self.fill_in = []
         for week_idx in range(len(df_full)):
@@ -200,12 +195,9 @@ class IntraWeekTable(IntraWeekDB):
           if df_full['cpm_multiplier_count'][df_full.index[week_idx]] > 0:
               df_full['cpa_charged'][df_full.index[week_idx]] = target_cpa_charged
               self.fill_in.append(week_idx)
-
  
-=======
 
         # "fill in" correct cpa_charged
->>>>>>> charge_client calculations adjusted
         df_full['cpa_charged'][df_full.index[-1]] = target_cpa_charged
         if (df_full['cpa'][df_full.index[-1]] == float('inf')):
           df_full['cpa'][df_full.index[-1]] = 0
@@ -216,16 +208,10 @@ class IntraWeekTable(IntraWeekDB):
         df_full['cpm'] = df_full['media_cost'] / df_full['impressions'] * 1000
         df_full['cpm_charged'] = df_full['cpa_charged'] / df_full['cpa'] * df_full['cpm']       
 
-<<<<<<< HEAD
         # code below is meant to handle Vanguard... to restore its cpm_multiplier
         # because that cpm_multiplier is "perfect"/correct projection
         if not hasattr(self, 'unknown'):
           self.unknown = self.my_db.select(UNKNOWN_INTRAWEEK_ADVERTISERS).as_dataframe().values
-=======
-        if not hasattr(self, 'unknown'):
-          self.unknown = self.my_db.select(UNKNOWN_INTRAWEEK_ADVERTISERS).as_dataframe().values
-
->>>>>>> charge_client calculations adjusted
         if not advertiser_id in self.unknown:
           df_full['cpm_multiplier'].iloc[-1] = df_full['charged_client'].iloc[-1] / df_full['media_cost'].iloc[-1]
 
@@ -248,7 +234,6 @@ class IntraWeekTable(IntraWeekDB):
         # print df_full
 
         # TODO - for vanguard, getting this junk 13.7 value, want something lower - how to get?
-<<<<<<< HEAD
         for idx in self.fill_in:
           our_multiplier = df_full['cpm_multiplier'].iloc[idx]
           if df_full['num_conversions'].iloc[idx] == 0 or our_multiplier == 0:
@@ -262,20 +247,7 @@ class IntraWeekTable(IntraWeekDB):
             multiplier = df_full['multiplier'].iloc[idx]
             df_full['charged_client'].iloc[idx] = df_full['charged_client'].iloc[idx] + multiplier * df_full['base_cost'].iloc[idx]
         
-      return df_full
-=======
-        if df_full['num_conversions'].iloc[-1] == 0 or our_multiplier == 0:
-          if our_multiplier == 0:
-            our_multiplier = 1
-          df_full['charged_client'].iloc[-1] = df_full['charged_client'].iloc[-1] + our_multiplier * df_full['base_cost'].iloc[-1]
-          df_full['cpm_charged'].iloc[-1] = our_multiplier * df_full['cpm'].iloc[-1]
-          df_full['multiplier'].iloc[-1] = df_full['cpm_charged'].iloc[-1] / df_full['cpm'].iloc[-1]
-        else:
-          # df_full['charged_client'].iloc[-1] = multiplier * df_full['media_cost'].iloc[-1]
-          df_full['charged_client'].iloc[-1] = df_full['charged_client'].iloc[-1] + multiplier * df_full['base_cost'].iloc[-1]
-
         return df_full
->>>>>>> charge_client calculations adjusted
 
     def finishing_formats(self, df):
 
@@ -285,14 +257,8 @@ class IntraWeekTable(IntraWeekDB):
         df_full = df_full.drop(['num_conversions', 'cpm_multiplier'], axis=1)
         cols = df_full.columns.tolist()
 
-<<<<<<< HEAD
         reorder_cols = ['impressions', 'clicks', 'media_cost', 'charged_client', 'cpm','cpm_charged','multiplier']
         reorder_cols = reorder_cols + cols[6:-3] # contains the conversion columns (unknown number), cpa, cpa_charged
-=======
-        reorder_cols = ['impressions', 'clicks', 'media_cost', 'charged_client', 'cpm','cpm_charged','multiplier']        
-        reorder_cols = reorder_cols + cols[5:-3] # contains the conversion columns (unknown number), cpa, cpa_charged
->>>>>>> charge_client calculations adjusted
-       
  
         # this is unclear what the order will be -- not clear at all what the order will be
         # new_cols = cols[0:4] + cols[-3:] + cols[4:-3]

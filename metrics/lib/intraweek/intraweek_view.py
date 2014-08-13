@@ -4,7 +4,6 @@ import sys
 from link import lnk
 import math
 import datetime
-
 from queries import *
 from decorators import *
 from intraweek_table import IntraWeekTable
