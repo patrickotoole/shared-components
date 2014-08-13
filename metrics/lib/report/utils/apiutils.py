@@ -73,8 +73,12 @@ def get_report_resp(url):
 
 def _get_resp(url, method='get', forms=None):
     c = get_or_create_console()
-    if method == 'get':
-        resp = c.get(url)
-    else:
-        resp = c.post(url, forms)
-    return resp
+    try:
+        if method == 'get':
+            resp = c.get(url)
+        else:
+            resp = c.post(url, forms)
+        return resp
+    except ValueError as e:
+        logging.warn(e)
+        raise
