@@ -134,9 +134,16 @@ class IntraWeekTable(IntraWeekDB):
         if not hasattr(self, 'goal_df'):
           self.goal_df = self.my_db.select(GOAL_TARGETS).as_dataframe()
           self.goal_df = self.goal_df.set_index('external_advertiser_id')
-        
-        goal_multiplier = self.goal_df['goal_cpm_multiplier'][advertiser_id]
-        goal_cpa = self.goal_df['goal_target_cpa'][advertiser_id]
+       
+        try: 
+          goal_multiplier = self.goal_df['goal_cpm_multiplier'][advertiser_id]
+        except KeyError:
+          goal_multiplier = None
+
+        try:
+          goal_cpa = self.goal_df['goal_target_cpa'][advertiser_id]
+        except KeyError:
+          goal_cpa = None
 
         #if target_cpa != -1:
         #  try:
@@ -188,8 +195,9 @@ class IntraWeekTable(IntraWeekDB):
           if df_full['cpm_multiplier_count'][df_full.index[week_idx]] > 0:
               df_full['cpa_charged'][df_full.index[week_idx]] = target_cpa_charged
               self.fill_in.append(week_idx)
-
  
+
+        # "fill in" correct cpa_charged
         df_full['cpa_charged'][df_full.index[-1]] = target_cpa_charged
         if (df_full['cpa'][df_full.index[-1]] == float('inf')):
           df_full['cpa'][df_full.index[-1]] = 0
@@ -238,7 +246,7 @@ class IntraWeekTable(IntraWeekDB):
             # df_full['charged_client'].iloc[idx] = multiplier * df_full['media_cost'].iloc[idx]
             multiplier = df_full['multiplier'].iloc[idx]
             df_full['charged_client'].iloc[idx] = df_full['charged_client'].iloc[idx] + multiplier * df_full['base_cost'].iloc[idx]
-
+        
         return df_full
 
     def finishing_formats(self, df):
@@ -251,7 +259,6 @@ class IntraWeekTable(IntraWeekDB):
 
         reorder_cols = ['impressions', 'clicks', 'media_cost', 'charged_client', 'cpm','cpm_charged','multiplier']
         reorder_cols = reorder_cols + cols[6:-3] # contains the conversion columns (unknown number), cpa, cpa_charged
-       
  
         # this is unclear what the order will be -- not clear at all what the order will be
         # new_cols = cols[0:4] + cols[-3:] + cols[4:-3]

@@ -4,7 +4,6 @@ import sys
 from link import lnk
 import math
 import datetime
-
 from queries import *
 from decorators import *
 from intraweek_table import IntraWeekTable
@@ -29,11 +28,6 @@ class IntraWeekView(IntraWeekTable):
         recent_charged_client = 0
      
       return recent_charged_client
-
-    @property_checker_threeargs
-    def get_current_multiplier(self, advertiser_id, target_cpa):
-      week_df = self.get_table(advertiser_id, target_cpa)
-      return week_df['multiplier'][week_df.index[-1]]
 
     @property_checker_twoargs
     def get_current_clientcharge(self, advertiser_id):
@@ -108,6 +102,8 @@ class IntraWeekView(IntraWeekTable):
  
         start_io = budget_tuple[0] - budget_tuple[1]
         self.current_start_date = self.get_actual_start_date(advertiser_id, start_io)
+        if self.current_start_date == -1:
+          self.current_start_date = self.get_current_start_date(advertiser_id)
 
     def set_dollars_per_day(self):
         # assign dollars_per_day spent, as long as days_into_campaign is valid
