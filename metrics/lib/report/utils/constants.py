@@ -67,9 +67,6 @@ SENDGRID_PW = 'rockerbox13'
 
 ROUND = 2
 
-"logged json files to be parse and rerun reporting jobs"
-LOG_JSON = os.path.realpath('/tmp/cron_job_logging.json')
-
 "Analyze objects"
 Analyze = Enum([
     'domain',

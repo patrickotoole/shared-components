@@ -1,12 +1,8 @@
 import logging
-import os
-
-import ujson
 
 from lib.report.event.base import EventBase
 from lib.report.utils.utils import decorator
 from lib.report.utils.utils import local_now
-from lib.report.utils.constants import LOG_JSON
 
 
 class EventReport(EventBase):
