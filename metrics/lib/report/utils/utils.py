@@ -10,7 +10,6 @@ import pytz
 import urlparse
 from functools import update_wrapper
 
-from lib.report.utils.constants import APPNEXUS_REPORT_GAP_HOURS
 from calendar import monthrange
 
 DATE_TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
