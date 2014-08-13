@@ -7,6 +7,28 @@ import logging
 
 from link import lnk
 
+FILE_FMT = '{name}_{group}{start_date}_{end_date}.csv'
+TMP_DIR = os.path.abspath('/tmp')
+
+def get_path(
+        name=None,
+        group=None,
+        start_date=None,
+        end_date=None,
+        ):
+    _len = len("yyyy-mm-dd-hh")
+    def _helper(ts):
+        ts = (ts[:_len]).replace(' ', '-')
+        return ts
+    start_date, end_date = _helper(start_date), _helper(end_date)
+    file_name = FILE_FMT.format(name=name,
+            group=group or "",
+            start_date=start_date,
+            end_date=end_date,
+            ).lower()
+    path = os.path.join(TMP_DIR, file_name)
+    return path
+
 CONSOLE = None
 def get_or_create_console():
     global CONSOLE
