@@ -6,7 +6,7 @@ import pandas as pd
 
 from lib.report.analyze.report import get_analyze_obj
 from lib.report.utils.sqlutils import get_unique_keys
-from lib.report.utils.apiutils import get_path
+from lib.report.utils.reportutils import get_path
 from lib.report.utils.apiutils import get_report_id
 from lib.report.utils.apiutils import get_report_url
 from lib.report.utils.apiutils import get_report_resp
