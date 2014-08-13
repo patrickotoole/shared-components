@@ -43,43 +43,46 @@ socket.onMessage = function(x){
   dataWrapper.tracker++;
 }
 
-var rawDataWrapper = function() {
-   var THRESHOLD = 60
-  var self = this
-  this.tracker = 0
-  this.crs = crossfilter([{"position":0,"result":{}}])
+    var rawDataWrapper = function() {
+    var THRESHOLD = 60
+    var self = this
+    this.tracker = 0
+    this.crs = crossfilter([{"position":0,"result":{}}])
 
-  this.dimensions = {
-    position: this.crs.dimension(function(x){ return x.position }),
-  data: this.crs.dimension(function(x){ return !$.isEmptyObject(x.result) ? x.result : 0 }),
-    // uniques_data: this.crs.dimension(function(x){ return x.result.uid })
-  }
+    this.dimensions = {
+        position: this.crs.dimension(function(x){ return x.position }),
+        data: this.crs.dimension(function(x){ return !$.isEmptyObject(x.result) ? x.result : 0 }),
+        // grouped_data: this.crs.dimension(function(x){ return [x.result.domain, x.result.uid] })
+    }
   
+    this.dimensions.data.filter(function(d){ return d == 0; })
+    this.crs.remove()
+    this.dimensions.data.filterAll()
+    
     this.groups = {
-        all: this.crs.groupAll(),
+        imps_data: this.dimensions.data.groupAll(),
         domain_data: this.dimensions.data.group(function(d){ return d.domain; }).reduce(
-            function(p,v) {           
+            function(p,v) { 
                 ++p.imps;
-                if (typeof v.result.uid === "undefined") v.result.uid = "unknown";
-                if (v.result.uid in p.uniques_array) p.uniques_array[v.result.uid]++;
-                else p.uniques_array[v.result.uid] = 1;
-                // console.log(v.result.uid);
+		p.uids[v.result.uid] = p.uids[v.result.uid] + 1 || 1;
                 return p 
             },
             function(p,v) { 
                 --p.imps;
-                p.uniques_array[v.result.uid]--;
-                if(p.uniques_array[v.result.uid] === 0) delete p.uniques_array[v.result.uid];
+                p.uids[v.result.uid] = p.uids[v.result.uid] - 1;
+                if (p.uids[v.result.uid] == 0) {
+                  delete p.uids[v.result.uid];
+                }
                 return p 
             },
             function() {
                 return { 
                     imps:0,
-                    uniques_array:{}
+                    uids: {}
                 }
             }
         ),
-        uniques_data: this.dimensions.data.group(function(d){ return d.uid; }).reduce(
+        location_data: this.dimensions.data.group(function(d){ return d.city + ", " + d.state + ", " + d.country; }).reduce(
             function(p,v) { 
                 ++p.imps;
                 return p 
@@ -93,19 +96,54 @@ var rawDataWrapper = function() {
                     imps:0
                 }
             }
-        )
+        ),
+        uniques_data: this.dimensions.data.group(function(d){ return d.uid; })    
+        // domain_data: this.dimensions.grouped_data.group(function(d){ return d[0]; }).reduce(
+            // function(p,v) { 
+                // ++p.imps;
+                // return p 
+            // },
+            // function(p,v) { 
+                // --p.imps;
+                // return p 
+            // },
+            // function() {
+                // return { 
+                    // imps:0
+                // }
+            // }
+        // )       
     }
    
    this.aggregateDimensions = {
         domain_data: {
 			top: function(x) {
 				return self.groups.domain_data.top(x).filter(function(x){return x.value.imps}).map(function (grp) { 
-					
-                    // var uniques_qty= self.dimensions.data.filter(function(d){return d.domain == grp.key}).group(function(d){return d.uid}).size();
+                // self.dimensions.grouped_data.filter(function(d){ return (d[0] == grp.key)});
+                // console.log(self.dimensions.grouped_data.group().all());
+                    // console.log(grp.key, self.dimensions.grouped_data.group(function(d){return d[1]}).all());
+                    // self.dimensions.grouped_data.filterAll();
+                    var uniques_qty = Object.keys(grp.value.uids).length;
                     return {
 						"domain":grp.key, 
 						"imps":grp.value.imps,
-						"uniques":Object.keys(grp.value.uniques_array).length
+						"uniques":uniques_qty
+					} 
+				});
+			}
+		},
+        location_data: {
+			top: function(x) {
+				return self.groups.location_data.top(x).filter(function(x){return x.value.imps}).map(function (grp) { 
+                // self.dimensions.grouped_data.filter(function(d){ return (d[0] == grp.key)});
+                // console.log(self.dimensions.grouped_data.group().all());
+                    // console.log(grp.key, self.dimensions.grouped_data.group(function(d){return d[1]}).all());
+                    // self.dimensions.grouped_data.filterAll();
+                    var uniques_qty = 0;
+                    return {
+						"location":grp.key, 
+						"imps":grp.value.imps,
+						"uniques":uniques_qty
 					} 
 				});
 			}
