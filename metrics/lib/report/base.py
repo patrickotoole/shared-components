@@ -86,9 +86,6 @@ def _get_report_resp(url):
     resp = _get_resp(url)
     return resp.text
 
-@retry(num_retries=NUM_TRIES,
-       sleep_interval=SLEEP,
-       retry_log_prefix='reconnecting and get refresh response')
 def _get_resp(url, method='get', forms=None):
     c = get_or_create_console()
     if method == 'get':
