@@ -1,0 +1,40 @@
+/* COPYRIGHT INFO HERE */
+
+/* FUNCTIONS/VARIABLES */
+
+.border-radius(@border) {
+  -webkit-border-radius: @border;
+  -moz-border-radius: @border;
+  border-radius: @border;
+}
+
+@blue: #29a3d8;
+
+@red: #e46161;
+
+@orange: #ffb952;
+
+@green: #5ec34b;
+
+/* CONTENT */
+
+#content {
+	#map-view {
+        height:550px;
+		/* background:#29a3d8; */
+		background:#bbb;
+		.land {
+		  fill: #333;
+		}
+		.boundary {
+		  fill: none;
+		  stroke: #fff;
+		  stroke-width: .5px;
+		}
+		.overlay {
+		  fill: none;
+		  pointer-events: all;
+		}
+	}
+}
+

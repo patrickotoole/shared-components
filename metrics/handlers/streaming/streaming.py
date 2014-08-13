@@ -21,7 +21,7 @@ class IndexHandler(BaseHandler):
     def get(self):
         # self.render("v2_streaming.html",advertiser_id= self.current_advertiser)
         # self.render("v2_streaming_demo.html",advertiser_id="asdf")
-        self.render("streaming/base.html", advertiser_id=self.current_advertiser)
+        self.render("streaming/_streaming.html", advertiser_id=self.current_advertiser)
 
 
 class StreamingHandler(StreamingBase,tornado.websocket.WebSocketHandler):

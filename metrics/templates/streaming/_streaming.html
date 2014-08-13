@@ -5,17 +5,17 @@
 {% block page_header %}Streaming dashboard{% end %}
 
 {% block page_css %}
-	<link href="http://rockerbox.com/styles/dashboard/reporting-style.css" type="text/css" rel="stylesheet" media="screen">
-	<link href="http://rockerbox.com/styles/dashboard/dc.css" type="text/css" rel="stylesheet" media="screen">
+	<link href="/static/css/streaming-style.css" type="text/css" rel="stylesheet" media="screen">
+	<link href="/static/css/dc.css" type="text/css" rel="stylesheet" media="screen">
 {% end %}
 
 {% block page_sidebar %}
-	<li><a href="reporting"><img src="http://rockerbox.com/assets/img/dashboard/sidebar/reporting-icon.png" alt="Reporting icon" /><span class="sidebar-label">campaign reporting</span></a></li>
-	<li class="active"><a href="streaming"><img src="http://rockerbox.com/assets/img/dashboard/sidebar/streaming-icon.png" alt="Streaming icon" /><span class="sidebar-label">global streaming</span></a></li>
+	<li><a href="reporting"><img src="/static/img/sidebar/reporting-icon.png" alt="Reporting icon" /><span class="sidebar-label">campaign reporting</span></a></li>
+	<li class="active"><a href="streaming"><img src="/static/img/sidebar/streaming-icon.png" alt="Streaming icon" /><span class="sidebar-label">global streaming</span></a></li>
 	<!--
-	<li><a href="global"><img src="http://rockerbox.com/assets/img/dashboard/sidebar/global-icon.png" alt="Global icon" /><span class="sidebar-label">global streaming</span></a></li>
+	<li><a href="global"><img src="/static/img/sidebar/global-icon.png" alt="Global icon" /><span class="sidebar-label">global streaming</span></a></li>
 	
-	<li><a href="intraweek"><img src="http://rockerbox.com/assets/img/dashboard/sidebar/intraweek-icon.png" alt="Intraweek icon" /><span class="sidebar-label">intraweek overview</span></a></li>
+	<li><a href="intraweek"><img src="/static/img/sidebar/intraweek-icon.png" alt="Intraweek icon" /><span class="sidebar-label">intraweek overview</span></a></li>
 	-->
 {% end %}
 
@@ -28,6 +28,9 @@
 	<div class="box half-box">
 	</div>
 	<div class="clearfix"></div>	
+    <div id="map-view" class="box full-box">
+	</div>
+	<div class="clearfix"></div>
 	<div id="domain-box" class="box half-box">
         <div class="box-title">Domains</div>
         <div id="domain-table" class="content-table">
@@ -45,34 +48,31 @@
 
 {% block page_scripts %}
 	<!-- IO GAUGE -->
-	<script src="http://rockerbox.com/js/dashboard/gauge.min.js"></script>
-	<script src="http://rockerbox.com/js/dashboard/d3.v3.min.js"></script>
-	<script src="http://rockerbox.com/js/dashboard/crossfilter.min.js"></script>
-	<script src="http://rockerbox.com/js/dashboard/dc.mod.js"></script>
-	<script src="http://rockerbox.com/js/dashboard/streaming.js"></script>
+	<script src="/static/js/gauge.min.js"></script>
+    <script src="/static/js/topojson.v1.min.js"></script>
+	<script src="/static/js/d3.v3.min.js"></script>
+	<script src="/static/js/crossfilter.min.js"></script>
+	<script src="/static/js/dc.mod.js"></script>
+	<script src="/static/js/streaming.js"></script>
 	<script>			
 
 	var extUserID =  {{ advertiser_id }};
 	
 	// GET ADVERTISER BUDGET AND PROGRESS
-	var getUserInfo = $.getJSON("/intraweek?format=json", function(data){
-		$.each(data, function(key, value){
-			if(value.id != extUserID) return;
-			$('#header #right-align #user-name').text(value.advertiser.toLowerCase());
-	
-			return false;
-		});
-	});
+	var getUserInfo = $.getJSON("/intraweek?format=json&ioinfo=" + extUserID, function(data){
+        $('#io-completion-box #io-progress').html(formatMoney(data[0].spent) + '*<span>/' + formatMoney(data[0].current_budget) + '</span>');
+        $('#header #right-align #user-name').text(data[0].advertiser.toLowerCase());
+        
+        userBudget = parseInt(data[0].current_budget);
+        userSpent = parseInt(data[0].spent);
+    });
     
     // INITIALISE DC WIDGETS
     var impsBox = null, domainBox = null, uniquesBox = null, locationTable = null, domainTable = null;
-    
+   
     // GENERATE IMPRESSIONS COUNTER
     impsBox = dc.customDataBox('#overall-box #imps-box')
-    .valueAccessor(function(d){
-        return d.imps;
-    })
-    .group(dataWrapper.groups.all)
+    .group(dataWrapper.groups.imps_data)
     
     // GENERATE DOMAIN COUNTER
     domainBox = dc.customDataBox('#overall-box #domain-box')
@@ -81,9 +81,9 @@
     // GENERATE UNIQUE VISITORS COUNTER
     uniquesBox = dc.customDataBox('#overall-box #uniques-box')
     .group(dataWrapper.groups.uniques_data)
+     ///*
     
-    // GENERATE DOMAINS TABLE
-    ///*
+    // GENERATE DOMAINS TABLE   
     domainTable = dc.customDataTable('#domain-table')
     .dimension(dataWrapper.aggregateDimensions.domain_data)
     .group(dataWrapper.groups.domain_data)
@@ -105,10 +105,93 @@
             return formatNumber(d.uniques);
         }
     ])
+    
+    // GENERATE LOCATION TABLE   
+    domainTable = dc.customDataTable('#location-table')
+    .dimension(dataWrapper.aggregateDimensions.location_data)
+    .group(dataWrapper.groups.location_data)
+    .sortBy(function(d){
+        return d.imps;					
+    })
+    .order(d3.descending)
+    .size(100)
+    .rowClass("")
+    .listClasses(["", "", ""])
+    .listItems([
+        function(d){
+            return d.location;
+        },
+        function(d){
+            return formatNumber(d.imps);
+        },
+        function(d){
+            return formatNumber(d.uniques);
+        }
+    ])
+
 
     //*/
-    
     dc.renderAll();
+    
+    // GENERATE MAP
+    var width = $('#map-view').width(),
+    height = $('#map-view').height();
+
+    var projection = d3.geo.mercator()
+        .scale((width + 1) / 2 / Math.PI)
+        .translate([width / 2, (height + 400) / 2])
+        .precision(.1);
+        
+    var path = d3.geo.path()
+        .projection(projection);
+
+    var zoom = d3.behavior.zoom()
+        .translate([0, 0])
+        .scale(1)
+        .scaleExtent([1, 8])
+        .on("zoom", zoomed);
+        
+    var svg = d3.select("#map-view").append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+    var features = svg.append("g");
+        
+    svg.append("rect")
+        .attr("class", "overlay")
+        .attr("width", width)
+        .attr("height", height)
+        .call(zoom);
+        
+    d3.json("/static/js/world-topo.json", function(error, world) {
+        features.append("path")
+            .datum(topojson.feature(world, world.objects.land))
+            .attr("class", "land")
+            .attr("d", path);
+
+        features.append("path")
+            .datum(topojson.mesh(world, world.objects.countries, function(a, b) { return a !== b; }))
+            .attr("class", "boundary")
+            .attr("d", path);
+    });
+
+    function zoomed() {
+        var t = d3.event.translate;
+        var s = d3.event.scale; 
+        zscale = s;
+        var h = (height + 400) / 4;
+
+
+        t[0] = Math.min((width/height)  * (s - 1), Math.max( width * (1 - s), t[0] ));
+
+        t[1] = Math.min(h * (s - 1) + h * s, Math.max(height  * (1 - s) - h * s, t[1]));
+
+        zoom.translate(t);    
+        features.attr("transform", "translate(" + t + ")scale(" + s + ")");
+        features.select(".boundary").style("stroke-width", .5 / s + "px");
+
+    }
+    d3.select(self.frameElement).style("height", height + "px");
 
     $('#page-loader').fadeOut();
 
