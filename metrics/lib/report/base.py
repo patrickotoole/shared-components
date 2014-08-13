@@ -103,20 +103,25 @@ class ReportBase(object):
         dfs = []
         limit = kwargs['limit']
         for advertiser_id in self._get_advertiser_ids():
-            for pixel_id in self._get_pixel_ids(advertiser_id):
-                url = self._get_request_url(advertiser_id)
-                _form = self._get_form(
-                        group=kwargs.get('group'),
-                        end_date=kwargs['end_date'],
-                        start_date=kwargs['start_date'],
-                        pixel_id=pixel_id,
-                        )
-                resp = self._get_resp_helper(url, _form)
-                df = _resp_to_df(resp)
-                dfs.append(df)
-                if limit and len(dfs) >= limit:
-                    return dfs
+            dfs.extend(self._get_dataframe(advertiser_id, **kwargs))
+            if limit and len(dfs) >= limit:
+                return dfs
         return dfs
+
+    def _get_dataframe(self, advertiser_id, **kwargs):
+        to_return = []
+        for pixel_id in self._get_pixel_ids(advertiser_id):
+            url = self._get_request_url(advertiser_id)
+            _form = self._get_form(
+                    group=kwargs.get('group'),
+                    end_date=kwargs['end_date'],
+                    start_date=kwargs['start_date'],
+                    pixel_id=pixel_id,
+                    )
+            resp = self._get_resp_helper(url, _form)
+            df = _resp_to_df(resp)
+            to_return.append(df)
+        return to_return
 
     def _get_resp_helper(self, url, form):
         logging.info("requesting data from url: %s" % url)
