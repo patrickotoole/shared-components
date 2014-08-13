@@ -1,10 +1,20 @@
 import logging
 
-from lib.report.utils.utils import retry
-from lib.report.reportutils import get_or_create_console
+from link import lnk
 
+from lib.report.utils.utils import retry
 from lib.report.utils.constants import NUM_TRIES
 from lib.report.utils.constants import SLEEP
+
+CONSOLE = None
+def get_or_create_console():
+    global CONSOLE
+    if CONSOLE:
+        return CONSOLE
+    console = lnk.api.console
+    logging.info("created a api console")
+    CONSOLE = console
+    return console
 
 @retry(num_retries=NUM_TRIES,
        sleep_interval=SLEEP,
