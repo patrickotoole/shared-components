@@ -138,6 +138,7 @@ admin_reporting = [
 ]
 
 reporting = [
+    (r'/', user.LoginHandler, dict(db=db)), 
     (r'/reporting.*',reporting.ReportingHandler, dict(db=db,api=api,hive=hive)),
     (r'/login.*', user.LoginHandler, dict(db=db)),
     (r'/signup*', user.SignupHandler, dict(db=db))
