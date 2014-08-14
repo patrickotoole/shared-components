@@ -64,7 +64,7 @@ class ReportWorker(BaseWorker):
                     )
             if created:
                 if not corret_insert(con, df, table_name):
-                    logging.info("record didn't match up when inserting table: %s." % table_name)
+                    logging.warn("record didn't match up when inserting table: %s." % table_name)
                     return False
                 return True
 
