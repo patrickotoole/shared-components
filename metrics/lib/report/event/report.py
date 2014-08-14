@@ -35,13 +35,16 @@ def accounting(f):
         worker = args[0]
         start_date = worker._kwargs.get('start_date')
         end_date = worker._kwargs.get('end_date')
+        event_name=worker._name
 
         try:
             res = f(*args, **kwargs)
             if res:
                 status = 1
+                logging.info("succeed: job for %s: %s - %s" % (event_name, start_date, end_date))
         except Exception as e:
             logging.warn(e)
+            logging.info("failed: job for %s: %s - %s" % (event_name, start_date, end_date))
             error = e
 
         job_ended_at = local_now()
