@@ -97,7 +97,12 @@
 			function formatMonth(date){
 				return monthNames[date.getMonth()] + " " + date.getFullYear();
 			}
-			
+			         			
+            // CONVERT DATE TO UTC
+            function dateToUTC(date){
+                return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(),  date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
+            }
+            
 			// ADD DAYS TO DATE
 			function addDays(firstDate, days){
 				var endDate = new Date(firstDate);

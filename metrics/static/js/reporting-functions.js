@@ -2,7 +2,7 @@ function updateCampaignReports(currentReportView, currentCampaign, rowQty) {
 
 	if(typeof rowQty === "undefined") rowQty = 10;
 	
-	CRS.dimensions.datetime.filterAll();
+	CRS.dimensions.daily.filterAll();
 	
 	var dateClass = null;
 	var reportGroup = null;
@@ -61,7 +61,7 @@ function updateCampaignReports(currentReportView, currentCampaign, rowQty) {
 		$('#campaign-reports-table #reports-header .reports-date').text(currentReportView);
 	})
 	.rowClass("reports-row")
-	.listClasses(["reports-date " + dateClass, "reports-impressions big-number", "reports-thin-small small-number", "reports-clicks big-number", "reports-conversions big-number", "reports-thin-small small-number", "reports-cost small-number"])
+	.listClasses(["reports-date " + dateClass, "reports-impressions", "reports-thin-small", "reports-clicks", "reports-conversions", "reports-thin-small", "reports-cost"])
 	.listItems([
 		function(d){
 			return '<span class="date-span">' + createDateValue(dateClass, d.date) + '</span>';

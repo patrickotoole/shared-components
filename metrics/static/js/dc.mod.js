@@ -4320,8 +4320,8 @@ dc.lineChart = function (parent, chartGroup) {
                         showRefLines(dot, g);
 						
 						// NO GOOD, NO TEMPLATE
-						// var formatTime = d3.time.format('%I%p, %x');
-                        var formatTime = d3.time.format('%x');
+						var formatTime = d3.time.format('%I%p, %x');
+                        // var formatTime = d3.time.format('%x');
 						var customTooltip = d3.select('.tooltip');
 						var tooltipValue = customTooltip.classed('value-cost') ? formatMoney(d.y) : formatNumber(d.y);
 						customTooltip.style("display", "block")
@@ -4794,7 +4794,7 @@ dc.customDataBox = function (parent, chartGroup) {
 
     _chart.data(function (group) {
         try {
-            if(group.summary) _chart.valueAccessor()(group.summary()) ;
+            if(group.summary) return _chart.valueAccessor()(group.summary()) ;
             else if(group.value) return group.value();
             return group.size();
         }

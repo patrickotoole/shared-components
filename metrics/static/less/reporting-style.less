@@ -379,7 +379,7 @@
 					width:100px;
 				}
 				.date-week, .date-month, .date-io {
-					width:170px;
+					width:180px;
 				}
 				.reports-impressions {
 					width:150px;
@@ -412,8 +412,6 @@
 					cursor:pointer;
 				}
 				.reports-date {
-					vertical-align:top;
-					margin-top:5px;
 					span {
 						transition:all .2s linear;
 						border-bottom:1px dotted transparent;
@@ -424,16 +422,10 @@
 						}
 					}
 				}
-				.big-number, .small-number {
-					font-weight:700;
-				}
-				.big-number {
-					font-size:25px;
-				}		
-				.small-number {
-					vertical-align:top;
-					margin-top:5px;
-				}
+                li:not(.reports-date){
+                    font-weight:700;
+
+                }
 			}
 		}
 		.show-more {

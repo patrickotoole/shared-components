@@ -103,7 +103,7 @@
 		
 		var extUserID =  {{ advertiser_id }};
 		
-		var userBudget = 0, userSpent = 0;
+		var userBudget = 0, userSpent = 0, ioStartDate = null;
 		
 		// GET ADVERTISER BUDGET AND PROGRESS
 		var getUserInfo = $.getJSON("/intraweek?format=json&ioinfo=" + extUserID, function(data){
@@ -112,7 +112,9 @@
             
             userBudget = parseInt(data[0].current_budget);
             userSpent = parseInt(data[0].spent);
-		});
+            
+            ioStartDate = dateToUTC(new Date(data[0].start_date * 1000));
+        });
 		
 		// GET DATA
 		var getUserData = $.getJSON("/api?table=campaign_bucket&external_advertiser_id=" + extUserID).done(function(e){
@@ -209,7 +211,6 @@
 				totalDimension['campaign_bucket'] = "Campaign total";
 				campaignTable = dc.customDataTable('#campaign-table', "graph-group")
 				.dimension(CRS.aggregateDimensions.total_campaign_bucket)
-				.totalDimension(totalDimension)
 				.activeRow(-1)
 				.campaignSelector('.campaign-name')
 				.group(function(d){ return d.campaign_bucket; })
@@ -263,12 +264,20 @@
 					}
 				});
 				
+                if(CRS.aggregateDimensions.total_campaign_bucket.top(5).length == 1){
+                    campaignTable.totalDimension({});
+                }
+                else {
+                    campaignTable.totalDimension(totalDimension);
+                }
+            
 				// GENERATE CAMPAIGN REPORTS SECTION					
 				campaignReportsTable = dc.customDataTable('#campaign-reports-table', "reports-group")
-				
-				updateCampaignReports($('#campaign-reports-box .outer-interval-select .interval-select .interval-active').text(), "Campaign total");				
+
+                var currentCampaign = $.isEmptyObject(campaignTable.totalDimension()) ? CRS.aggregateDimensions.total_campaign_bucket.top(1)[0].campaign_bucket : "Campaign total";
+                updateCampaignReports($('#campaign-reports-box .outer-interval-select .interval-select .interval-active').text(), currentCampaign);				
 				dc.renderAll("reports-group");
-				
+				// console.log(CRS.aggregateDimensions.daily.bottom(Infinity).length, CRS.aggregateDimensions.weekly.bottom(Infinity).length);
 				// var dateTimeObj = CRS.groups.datetime.all();
 				// var impsMax = impsMin = dateTimeObj[1].value.imps;
 				// $.each(dateTimeObj, function(key, data){
@@ -314,13 +323,15 @@
 				// .renderHorizontalGridLines(true)
 				
 				// sliderGraph.yAxis().ticks(5);
-				sliderGraph.xAxis().tickFormat(d3.time.format("%m/%d"));
+				sliderGraph.xAxis().ticks(8).tickFormat(d3.time.format("%m/%d"));
 				
+                /*
 				var intervalStart = removeDays(new Date(), 14);
 				intervalStart.setSeconds(0);
 				intervalStart.setMinutes(0);
 				intervalStart.setHours(0);
-				
+				*/
+                
 				// GENERATE MAIN GRAPH
 				mainGraph = dc.lineChart('#campaign-graph', "graph-group")
 				.dimension(CRS.dimensions.datetime)
@@ -341,7 +352,7 @@
 				})
 				.x(d3.time.scale().domain([
 					CRS.groups.all.summary().date_min,
-					// intervalStart,
+					//ioStartDate,
 					CRS.groups.all.summary().date_max
 				]))
 				.renderHorizontalGridLines(true)
@@ -353,7 +364,7 @@
 				mainGraph.xAxis().ticks(8).tickFormat(d3.time.format("%m/%d"));
 				
 				// SET TIME INTERVAL
-				var baseInterval = formatDate(CRS.groups.all.summary().date_min) + " - " + formatDate(CRS.groups.all.summary().date_max);
+				var baseInterval = formatDate(ioStartDate) + " - " + formatDate(CRS.groups.all.summary().date_max);
 				
 				intervalBox = dc.customDataBox('#filter-box #graph-interval #current-interval', "graph-group")
 				.valueAccessor(function(d){
@@ -373,10 +384,10 @@
 				
 				
 				var campaignGraphPos = $('#campaign-graph').position();
-				
-				// CRS.dimensions.daily.filter(function(d){return d > intervalStart});
-				dc.renderAll("graph-group");
 
+				dc.renderAll("graph-group");
+               
+                mainGraph.focus([ioStartDate, CRS.groups.all.summary().date_max])
 				$('#page-loader').fadeOut();
 			});		
 		});
@@ -437,7 +448,8 @@
 		});
 		
 		// IF SHOW MORE ON CAMPAIGN REPORTS
-		$('#campaign-reports-box .show-more').click(function(){				
+		$('#campaign-reports-box .show-more').click(function(){			
+        
 			var currentCampaign = $('#campaign-table .campaign-row.active-row .campaign-name').text();
 			if(currentCampaign == "Campaign total"){
 				CRS.dimensions.total_campaign_bucket.filterAll();
@@ -445,16 +457,40 @@
 			else {
 				CRS.dimensions.total_campaign_bucket.filter(function(d){return d == currentCampaign});
 			}		
-			
 			updateCampaignReports($('#campaign-reports-box .outer-interval-select .interval-select li.interval-active').text(), currentCampaign, Infinity);
-			
+
 			campaignReportsTable.redraw();		
+		});
+        
+        // IF CLICK ON DATESPAN
+		$('#campaign-reports-table').on("click", '.date-span', function(){			
+            if($(this).parent().hasClass('date-day')){
+                dc.filterAll("graph-group");
+                var currentDate = new Date($(this).text());
+                mainGraph.focus([currentDate, addDays(currentDate, 1)])
+                dc.redrawAll("graph-group");
+            }
+            else if($(this).parent().hasClass('date-week')){
+                var currentWeek = $(this).text().split(" - ");
+                dc.filterAll("graph-group");
+                mainGraph.focus([new Date(currentWeek[0]), addDays(new Date(currentWeek[1]), 1)])
+                dc.redrawAll("graph-group");
+            }
+            else if($(this).parent().hasClass('date-month')){
+                var currentMonth = new Date($(this).text());
+                var monthEnd = new Date($(this).text());
+                monthEnd.setMonth(monthEnd.getMonth() + 1);
+                dc.filterAll("graph-group");
+                mainGraph.focus([currentMonth, monthEnd])
+                dc.redrawAll("graph-group");
+            }
 		});
 		
 		// RESET DATE FILTER
 		$('#interval-reset').click(function(){
 			// CRS.dimensions.datetime.filterAll();
 			dc.filterAll("graph-group");
+            mainGraph.focus([ioStartDate, CRS.groups.all.summary().date_max])
 			dc.redrawAll("graph-group");
 			// $(this).parent().fadeOut(500);
 		});
