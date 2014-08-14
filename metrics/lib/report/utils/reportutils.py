@@ -65,8 +65,12 @@ def get_advertiser_ids():
 def get_db(name='test'):
     str_ = 'lnk.dbs.{name}'.format(name=name)
     logging.info("selecting database: %s" % name)
-    db = eval(str_)
-    return db
+    try:
+        db = eval(str_)
+        return db
+    except KeyError:
+        logging.info("Database %s not found" % name)
+        raise
 
 def convert_timestr(s):
     """
@@ -89,8 +93,25 @@ def concat(dfs):
     @param dfs: list(DataFrame)
     @return: DataFrame
     """
+    dfs = pd.concat(dfs)
+    return dfs
+
+def corret_insert(db, df, table_name):
+    """
+    check if all the dataframe is correctly inserted in db
+    @param db         : Lnk.dbs
+    @param df         : DataFrame
+    @param table_name : Lnk.dbs
+    @return           : bool
+    """
+    cols = list(df.columns)
+    db_df = db.select_dataframe("select * from %s" % table_name)
+
+    df = df.set_index(cols)
+    db_df = db_df[cols].set_index(cols)
+
     try:
-        dfs = pd.concat(dfs)
-        return dfs
-    except:
-        import ipdb; ipdb.set_trace()
+        [db_df.ix[idx] for idx in df.index]
+        return True
+    except KeyError:
+        return False
