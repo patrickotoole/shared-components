@@ -1,6 +1,8 @@
 import os
 
 import mock
+from mock import patch
+from mock import Mock
 import pandas as pd
 from link import lnk
 from twisted.trial import unittest
@@ -151,4 +153,7 @@ class ReportTestCase(unittest.TestCase):
         pass
 
     def test_find_insert_report(self):
+        pass
+
+    def test_accounting(self):
         pass
