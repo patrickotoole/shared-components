@@ -12,9 +12,9 @@
     <meta name="keywords" content="" />
     <link rel="icon" type="image/png" href="https://s3.amazonaws.com/getrockerbox.com/Fav_icon.png">
     <!-- FONTS -->
-    <link href='http://rockerbox.com/styles/fonts.css' type='text/css' rel='stylesheet' media="screen">
+    <link href='/static/css/fonts.css' type='text/css' rel='stylesheet' media="screen">
     <!-- PAGE CSS -->
-    <link href="http://rockerbox.com/styles/dashboard/general-style.css" type="text/css" rel="stylesheet" media="screen">
+    <link href="/static/css/general-style.css" type="text/css" rel="stylesheet" media="screen">
    {% block page_css %}{% end %}
     <!-- GOOGLE ANALYTICS -->
     <script>
@@ -31,27 +31,27 @@
   <body>
 		<div id="page-container">	
 			<ul id="sidebar">
-				<img id="sidebar-collapse" src="http://rockerbox.com/assets/img/general/menu-icon-white.png" alt="Collapse header icon" />
+				<img id="sidebar-collapse" src="/static/img/general/menu-icon-white.png" alt="Collapse header icon" />
 				{% block page_sidebar %}{% end %}
 			</ul>
 			<div id="container">
 				<div id="header">
 					<div id="left-align">
-						<img id="sidebar-expand" src="http://rockerbox.com/assets/img/general/menu-icon-black.png" alt="Expand header icon" /><a href="#"><img id="header-logo" src="http://rockerbox.com/assets/img/general/logo-small-black.png" alt="Rockerbox logo" /></a><span id="page-title">{% block page_header %}{% end %}</span>
+						<img id="sidebar-expand" src="/static/img/general/menu-icon-black.png" alt="Expand header icon" /><a href="#"><img id="header-logo" src="/static/img/general/logo-small-black.png" alt="Rockerbox logo" /></a><span id="page-title">{% block page_header %}{% end %}</span>
 					</div>
-                <div id="right-align"><span id="user-name"></span><!--<img id="logout" title="Log out" src="http://rockerbox.com/assets/img/dashboard/general/logout-icon.png" alt="Logout icon" />--></div>
+                <div id="right-align"><span id="user-name"></span><img id="logout" title="Log out" src="/static/img/general/logout-icon.png" alt="Logout icon" /></div>
 					<div class="clearfix"></div>
 				</div>			
 				<div id="content">		
 					
-					<div id="page-loader"><div id="page-loader-content"><img src="http://rockerbox.com/assets/img/general/logo-small.gif" alt="Logo loader" /><br />loading...</div></div>
+					<div id="page-loader"><div id="page-loader-content"><img src="/static/img/general/logo-small.gif" alt="Logo loader" /><br />loading...</div></div>
 					
 					{% block page_content %}{% end %}
 				</div>
 			</div>
 		</div>
 		<!-- FROM http://code.jquery.com/jquery.min.js -->
-		<script src="http://rockerbox.com/js/jquery.min.js"></script>
+		<script src="/static/js/jquery.min.js"></script>
 		<!-- SEGMENT PIXEL -->
 		<script src="http://ib.adnxs.com/seg?add=1478777&t=1" type="text/javascript"></script>
 		<script>
@@ -74,7 +74,8 @@
 
             // LOGOUT
             $('#logout').click(function(){
-            
+                document.cookie = 'user=; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+                location.reload();
             });
             
 			// FORMAT NUMBERS
@@ -96,7 +97,12 @@
 			function formatMonth(date){
 				return monthNames[date.getMonth()] + " " + date.getFullYear();
 			}
-			
+			         			
+            // CONVERT DATE TO UTC
+            function dateToUTC(date){
+                return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(),  date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
+            }
+            
 			// ADD DAYS TO DATE
 			function addDays(firstDate, days){
 				var endDate = new Date(firstDate);
