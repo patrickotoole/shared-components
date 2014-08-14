@@ -106,15 +106,22 @@
 		var userBudget = 0, userSpent = 0, ioStartDate = null;
 		
 		// GET ADVERTISER BUDGET AND PROGRESS
+    
 		var getUserInfo = $.getJSON("/intraweek?format=json&ioinfo=" + extUserID, function(data){
-            $('#io-completion-box #io-progress').html(formatMoney(data[0].spent) + '*<span>/' + formatMoney(data[0].current_budget) + '</span>');
-            $('#header #right-align #user-name').text(data[0].advertiser.toLowerCase());
-            
-            userBudget = parseInt(data[0].current_budget);
-            userSpent = parseInt(data[0].spent);
-            
-            ioStartDate = dateToUTC(new Date(data[0].start_date * 1000));
-        });
+       $('#io-completion-box #io-progress').html(
+        '<span id="estimated-io-spend" style="font-size:30px">' + 
+          formatMoney(data[0].spent) + 
+        '*</span><span>/' + 
+          formatMoney(data[0].current_budget) + 
+        '</span>'
+      );
+      $('#header #right-align #user-name').text(data[0].advertiser.toLowerCase());
+
+      userBudget = parseInt(data[0].current_budget);
+      userSpent = parseInt(data[0].spent);
+
+      ioStartDate = dateToUTC(new Date(data[0].start_date * 1000));
+    });
 		
 		// GET DATA
 		var getUserData = $.getJSON("/api?table=campaign_bucket&external_advertiser_id=" + extUserID).done(function(e){
@@ -262,6 +269,7 @@
 							campaignReportsTable.redraw();
 						});	
 					}
+          $('#estimated-io-spend').text($('#campaign-table').find("ul").last().find(".campaign-cost").text()+"*")
 				});
 				
                 if(CRS.aggregateDimensions.total_campaign_bucket.top(5).length == 1){
@@ -385,9 +393,15 @@
 				
 				var campaignGraphPos = $('#campaign-graph').position();
 
-				dc.renderAll("graph-group");
-               
-                mainGraph.focus([ioStartDate, CRS.groups.all.summary().date_max])
+        dc.renderAll("graph-group");
+
+        mainGraph.focus([ioStartDate, CRS.groups.all.summary().date_max])
+
+        // HACKHACKHACK
+        
+        
+
+
 				$('#page-loader').fadeOut();
 			});		
 		});
