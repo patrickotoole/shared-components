@@ -64,13 +64,13 @@ def get_advertiser_ids():
 
 def get_db(name='test'):
     str_ = 'lnk.dbs.{name}'.format(name=name)
-    logging.info("selecting database: %s" % name)
     try:
         db = eval(str_)
         return db
     except KeyError:
         logging.info("Database %s not found" % name)
         raise
+    logging.info("selected database: %s" % db.database)
 
 def convert_timestr(s):
     """
