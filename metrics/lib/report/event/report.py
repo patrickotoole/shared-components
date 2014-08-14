@@ -44,11 +44,11 @@ def accounting(f):
                 logging.info("succeed: job for %s: %s - %s" % (event_name, start_date, end_date))
         except Exception as e:
             logging.warn(e)
-            logging.info("failed: job for %s: %s - %s" % (event_name, start_date, end_date))
+            logging.warn("failed: job for %s: %s - %s" % (event_name, start_date, end_date))
             error = e
 
         job_ended_at = local_now()
-        logging.info("creating event for %s, start_date: %s, end_date: %s" % (worker._name, start_date, end_date))
+        logging.info("creating event for %s, start_date: %s, end_date: %s, status: %s" % (worker._name, start_date, end_date, status))
         EventReport(
                 event_name=worker._name,
                 db_wrapper=worker._con,

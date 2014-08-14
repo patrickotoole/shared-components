@@ -28,7 +28,6 @@ class EventBase(object):
         cur = con.cursor()
 
         df = pd.DataFrame([kwargs])
-        logging.info("creating report event, from datafram: %s" % df)
         column_names = df.columns.tolist()
 
         _sql._write_mysql(df, table_name, column_names, cur)

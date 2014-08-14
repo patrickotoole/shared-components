@@ -12,6 +12,7 @@ def _is_empty(df):
     """
     @param df: DataFrame
     @return: bool
+    Consider the one that got columns not a failure, but pd.DataFrame()
     """
     return len(df.columns) == 0
 
@@ -66,6 +67,7 @@ class ReportWorker(BaseWorker):
                 if not corret_insert(con, df, table_name):
                     logging.warn("record didn't match up when inserting table: %s." % table_name)
                     return False
+                logging.info('inserted %s correctly' % table_name)
                 return True
 
         return False

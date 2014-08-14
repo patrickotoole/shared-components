@@ -92,7 +92,7 @@ class ReportBase(object):
                     start_date=start_date,
                     limit=limit,
                     )
-        if _should_create_csv and not dfs.empty:
+        if _should_create_csv:
             _create_csv(dfs, path)
         return dfs
 
