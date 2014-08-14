@@ -104,6 +104,10 @@ def corret_insert(db, df, table_name):
     @param table_name : Lnk.dbs
     @return           : bool
     """
+    def nothing_to_insert():
+        return len(df) == 0
+    if nothing_to_insert:
+        return True
     cols = list(df.columns)
     db_df = db.select_dataframe("select * from %s" % table_name)
 
