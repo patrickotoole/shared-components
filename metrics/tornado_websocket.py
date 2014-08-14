@@ -134,7 +134,9 @@ admin_reporting = [
     (r'/viewable.*',admin.reporting.ViewabilityHandler, dict(db=db,api=api,hive=hive)),
     #(r'/target_list.*',admin.reporting.TargetListHandler),
     (r'/intraweek.*',admin.scripts.IntraWeekHandler, dict(db=db)),
-    (r'/adminreport/(.*?)/.*', AdminReportHandler)
+    (r'/adminreport/(.*?)/.*', AdminReportHandler),
+    (r'/admin/event_log',admin.scripts.EventLogHandler, dict(db=db,api=api)),
+    (r'/admin/event_log/(.*?)',admin.scripts.EventLogHandler, dict(db=db,api=api)) 
 ]
 
 reporting = [
