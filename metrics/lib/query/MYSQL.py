@@ -6,15 +6,17 @@ IMPS_QUERY = """
         timestamp(DATE_FORMAT(v3.date, "%%Y-%%m-%%d %%H:00:00")) date,
         sum(v3.imps) as imps,
         sum(v3.clicks) as clicks,
-        sum(v3.media_cost*v3.cpm_multiplier) as media_cost,
+        sum(v3.media_cost* case when v3.cpm_multiplier is null then i.cpm_multiplier else v3.cpm_multiplier end) as media_cost,
         1 as cpm_multiplier,
         0 as is_valid 
     from 
         v3_reporting v3
+    left join intraweek i
+    on v3.external_advertiser_id=i.external_advertiser_id
     where 
         v3.active=1 and 
         v3.deleted=0 and 
-        v3.external_advertiser_id = %(advertiser_id)s  
+        v3.external_advertiser_id =  %(advertiser_id)s   
     group by 
         1,2
 """
