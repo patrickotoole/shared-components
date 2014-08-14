@@ -12,3 +12,6 @@ class ReportSegment(ReportBase):
 
     def _get_form_helper(self, *args, **kwargs):
         return SEGMENT_FORM
+
+    def _get_dataframes(self, **kwargs):
+        return self._get_dataframe(**kwargs)

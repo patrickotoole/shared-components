@@ -7,6 +7,12 @@ from lib.report.utils.reportutils import get_db
 from lib.report.utils.reportutils import get_report_obj
 from lib.report.event.report import accounting
 
+def _is_empty(df):
+    """
+    @param df: DataFrame
+    @return: bool
+    """
+    return len(df.columns) != 0
 
 class ReportError(ValueError):
     pass
@@ -31,13 +37,21 @@ class ReportWorker(BaseWorker):
 
     @accounting
     def _work(self):
+        """
+        @return: bool | True if job succeed, False otherwise
+        """
         obj = get_report_obj(self._name, db=self._con)
         report_f = obj.get_report
+
         try:
             df = report_f(**self._kwargs)
         except Exception as e:
             logging.warn(e)
-            raise ReportError
+            return False
+
+        if _is_empty(df):
+            return False
+
         if self._act:
             table_name = obj.table_name
             keys = obj.unique_table_key
@@ -49,9 +63,14 @@ class ReportWorker(BaseWorker):
             if created:
                 logging.info("successfully created report for %s" % self._name)
 
+        return True
+
     def insert_reports(self, df, con=None, table_name=None, key=None):
         cols = df.columns.tolist()
         logging.info("inserting into table: %s, cols: %s" % (table_name, cols))
         _sql._write_mysql(df, table_name, cols, con.cursor(), key=key)
         con.commit()
         return True
+
+    def check_insertions():
+        pass

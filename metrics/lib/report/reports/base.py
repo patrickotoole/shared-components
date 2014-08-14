@@ -10,6 +10,7 @@ from lib.report.utils.reportutils import get_path
 from lib.report.utils.apiutils import get_report_id
 from lib.report.utils.apiutils import get_report_url
 from lib.report.utils.apiutils import get_report_resp
+from lib.report.utils.reportutils import empty_frame
 
 
 CUR_DIR = os.path.dirname(__file__)
@@ -17,13 +18,6 @@ CUR_DIR = os.path.dirname(__file__)
 def _create_csv(df, path):
     logging.info("creating csv file to path: %s" % path)
     df.to_csv(path, index=False)
-
-def _resp_to_df(resp):
-    df = pd.read_csv(io.StringIO(unicode(resp)))
-    return df
-
-def _is_empty(df):
-    return len(df) == 0
 
 class LimitError(ValueError):
     pass
@@ -42,6 +36,10 @@ class ReportBase(object):
         return get_unique_keys(cur, self._table_name)
 
     def get_report(self, **kwargs):
+        """
+        @return: DataFrame
+        there is error when returning emptyFrame(no columns,no index)
+        """
         dfs = self._get_report(**kwargs)
         if dfs.empty:
             return dfs
@@ -75,78 +73,52 @@ class ReportBase(object):
         ------
          Dataframe
         """
-
-        dfs = []
-        logging.info("Getting start date: %s, end date: %s" % (start_date, end_date))
+        dfs = None
         _should_create_csv = False
+        logging.info("Getting start date: %s, end date: %s" % (start_date, end_date))
         if cache:
-            path = get_path(
-                    name=self._name,
-                    group=group,
-                    start_date=start_date,
-                    end_date=end_date,
-                    )
+            path = get_path(name=self._name, group=group,
+                            start_date=start_date, end_date=end_date)
         if path:
             try:
                 logging.info("Getting csv from path: %s" % path)
-                dfs = [pd.read_csv(path)]
+                dfs = pd.read_csv(path)
             except IOError:
                 logging.info("CSV file not exists in path: %s" % path)
                 _should_create_csv = True
-
-        if not dfs:
+        if not isinstance(dfs, pd.DataFrame):
             dfs = self._get_dataframes(group=group,
                     end_date=end_date,
                     start_date=start_date,
                     limit=limit,
                     )
-        dfs = pd.concat(dfs)
-        if _is_empty(dfs):
-            return dfs
-        if _should_create_csv:
+        if _should_create_csv and not dfs.empty:
             _create_csv(dfs, path)
-
         return dfs
 
     def _get_dataframes(self, **kwargs):
-        dfs = []
-        limit = kwargs.get('limit')
-        for advertiser_id in self._get_advertiser_ids():
-            dfs.extend(self._get_dataframe(advertiser_id, **kwargs))
-            if limit and len(dfs) >= limit:
-                return dfs
-        return dfs
+        raise NotImplementedError
 
-    def _get_dataframe(self, advertiser_id, **kwargs):
-        to_return = []
-        for pixel_id in self._get_pixel_ids(advertiser_id):
-            url = self._get_request_url(advertiser_id)
-            _form = self._get_form(
-                    group=kwargs.get('group'),
-                    end_date=kwargs.get('end_date'),
-                    start_date=kwargs.get('start_date'),
-                    pixel_id=pixel_id,
-                    )
+    def _get_dataframe(self, advertiser_id=None, **kwargs):
+        """
+        @param url : str
+        @return: Dataframe
+        """
+        _form = self._get_form(**kwargs)
+        url = self._get_request_url(advertiser_id)
+        try:
             resp = self._get_resp_helper(url, _form)
-            df = _resp_to_df(resp)
-            to_return.append(df)
-        return to_return
+        except Exception as e:
+            logging.warn(e)
+            return empty_frame()
+        df = self._resp_to_df(resp)
+        return df
 
-    def _get_resp_helper(self, url, form):
-        logging.info("requesting data from url: %s" % url)
-        _id = get_report_id(url, form)
-        url = get_report_url(_id)
-        resp = get_report_resp(url)
-        return resp
-
-    def _get_request_url(self, _id=None):
-        return ('/report?advertiser_id=' + _id) if _id else '/report?'
-
-    def _get_form(self,
-            group=None,
+    def _get_form(self, group=None,
             start_date=None,
             end_date=None,
             pixel_id=None,
+            **args
             ):
         _d = dict(start_date=start_date, end_date=end_date)
         if pixel_id:
@@ -157,12 +129,20 @@ class ReportBase(object):
     def _get_form_helper(self, *args, **kwargs):
         raise NotImplementedError
 
+    def _get_resp_helper(self, url, form):
+        logging.info("requesting data from url: %s" % url)
+        _id = get_report_id(url, form)
+        url = get_report_url(_id)
+        resp = get_report_resp(url)
+        return resp
+
+    def _resp_to_df(self, resp):
+        df = pd.read_csv(io.StringIO(unicode(resp)))
+        return df
+
+    def _get_request_url(self, _id=None):
+        return ('/report?advertiser_id=' + _id) if _id else '/report?'
+
     def _analyze(self, df, pred=None, metrics=None):
         obj = get_analyze_obj(self._name)
         return obj(pred, metrics).analyze(df)
-
-    def _get_advertiser_ids(self):
-        return ['']
-
-    def _get_pixel_ids(self, advertiser_id):
-        return ['']

@@ -31,3 +31,6 @@ class ReportDomain(ReportBase):
         elif group == 'advertiser,domain,line_item':
             return ADVERTISER_DOMAIN_LINE_ITEM_JSON_FORM
         raise ValueError("No form found for group: %s" % group)
+
+    def _get_dataframes(self, **kwargs):
+        return self._get_dataframe(**kwargs)

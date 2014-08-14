@@ -6,6 +6,7 @@ import inspect
 import logging
 
 from link import lnk
+import pandas as pd
 
 FILE_FMT = '{name}_{group}{start_date}_{end_date}.csv'
 TMP_DIR = os.path.abspath('/tmp')
@@ -79,3 +80,17 @@ def convert_timestr(s):
         regx = re.compile(r'(\d{4}-\d{2}-\d{2})')
         return ((isinstance(s, str) and (not s in ['NULL', 'False'])) or regx.search(s))
     return '"%s"' % s if _should_transform(s) else s
+
+def empty_frame():
+    return pd.DataFrame()
+
+def concat(dfs):
+    """
+    @param dfs: list(DataFrame)
+    @return: DataFrame
+    """
+    try:
+        dfs = pd.concat(dfs)
+        return dfs
+    except:
+        import ipdb; ipdb.set_trace()

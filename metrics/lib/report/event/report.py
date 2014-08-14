@@ -38,7 +38,8 @@ def accounting(f):
 
         try:
             res = f(*args, **kwargs)
-            status = 1
+            if res:
+                status = 1
         except Exception as e:
             logging.warn(e)
             error = e
