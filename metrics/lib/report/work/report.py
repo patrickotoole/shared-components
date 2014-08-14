@@ -21,7 +21,7 @@ class ReportError(ValueError):
 class ReportWorker(BaseWorker):
     def __init__(self, name=None, con=None, act=True, **kwargs):
         self._name = name
-        self._con = con or get_db()
+        self._con = con
         self._act = act
         self._kwargs = kwargs
 
