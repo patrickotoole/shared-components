@@ -28,26 +28,31 @@
         </script>   
     </head>
     <body>
-        <form role="form">
-            <a href="http://rockerbox.com"><img src="http://rockerbox.com/assets/img/general/logo-white.png" alt="Rockerbox logo" /></a><br />
-            <input name="username" type="text" placeholder="Username" required autofocus><br />
-            <input name="password" type="password" placeholder="Password" required"><br />
-            <input type="submit" value="sign in"><br />
-            <a href="#" id="password-forgot">forgotten your password</a>
-        </form>
+      <form id="signin" action="javascript:$('#signin').trigger('click')"> 
+        <a href="http://rockerbox.com">
+          <img src="http://rockerbox.com/assets/img/general/logo-white.png" alt="Rockerbox logo" />i
+        </a>
+        <br />
+        <input name="username" type="text" placeholder="Username" required autofocus><br />
+        <input name="password" type="password" placeholder="Password" required"><br />
+        <input type="submit" value="sign in"><br />
+            <!-- <a href="#" id="password-forgot">forgotten your password</a> -->
+      </form>
         <!-- FROM http://code.jquery.com/jquery.min.js -->
 		<script src="http://rockerbox.com/js/jquery.min.js"></script>
+    <script src="http://rockerbox.com/js/jquery.serialize-object.js"></script>
 		<!-- SEGMENT PIXEL -->
 		<script src="http://ib.adnxs.com/seg?add=1478777&t=1" type="text/javascript"></script>
-        <script>
-        $('#signin').click(function(e){
-          var obj = JSON.stringify($(e.target).parents("form").serializeObject())
-          $.post("/login",obj).done(function(e){
-            if (parseInt(e) > 0) location.reload()
-          })
-          e.preventDefault()
-          return false;
+      <script>
+
+      $('#signin').click(function(e){
+        var obj = JSON.stringify($(e.target).parents('form').serializeObject())
+        $.post("/login",obj).done(function(e){
+          if (parseInt(e) > 0) location.reload()
         })
-        </script>
+        e.preventDefault()
+        return false;
+      })
+      </script>
     </body>
 </html>
