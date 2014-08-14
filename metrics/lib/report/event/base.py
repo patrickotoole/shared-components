@@ -7,7 +7,6 @@ and e.create_event() to create event entry.
 """
 
 import pandas as pd
-import logging
 from lib.pandas_sql import s as _sql
 
 

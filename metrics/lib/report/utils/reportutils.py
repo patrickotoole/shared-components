@@ -68,7 +68,7 @@ def get_db(name='test'):
         db = eval(str_)
         return db
     except KeyError:
-        logging.info("Database %s not found" % name)
+        logging.warn("Database %s not found" % name)
         raise
     logging.info("selected database: %s" % db.database)
 

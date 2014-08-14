@@ -20,7 +20,7 @@ class ReportError(ValueError):
     pass
 
 class ReportWorker(BaseWorker):
-    def __init__(self, name=None, con=None, act=True, **kwargs):
+    def __init__(self, name, con, act=True, **kwargs):
         self._name = name
         self._con = con
         self._act = act

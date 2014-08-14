@@ -135,7 +135,7 @@ class ReportTestCase(unittest.TestCase):
             with mock.patch.object(ReportBase, "_get_form_helper") as h:
                 h.return_value = ''
                 m.return_value = mocked_resp
-                resp = ReportBase()._get_dataframe()
+                resp = ReportBase(self.db)._get_dataframe()
                 self.assertTrue(expected.equals(resp))
 
     def test_get_dataframes_failure(self):
@@ -143,7 +143,7 @@ class ReportTestCase(unittest.TestCase):
             with mock.patch.object(ReportBase, "_get_form_helper") as h:
                 h.return_value = ''
                 m.side_effect = ValueError('blow')
-                resp = ReportBase()._get_dataframe()
+                resp = ReportBase(self.db)._get_dataframe()
                 expected = empty_frame()
                 self.assertTrue(expected.equals(resp))
 
