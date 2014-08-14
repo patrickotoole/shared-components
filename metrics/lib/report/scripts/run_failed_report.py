@@ -15,28 +15,23 @@ def main():
 
     global db
     db = get_db(options.db)
-    if not db:
-        logging.warn("No db selected")
-
     rs = _failed_reports(options.days)
     if not rs:
         logging.info("Failed reporting not found")
 
-    logging.info("re-runing reports for %s" % rs)
+    logging.info("Found %s missing|failed reports, re-runing reports for %s" % (len(rs), rs))
     for r in rs:
-        logging.info("re-runing %s job for start_date: %s, end_date: %s" % (r['event_name'], r['start_date'], r['end_date']))
-        succ = ReportWorker(
-                name=r['event_name'],
-                db=db,
-                start_date=str(r['start_date']),
-                end_date=str(r['end_date']),
+        start_date = r['start_date']
+        end_date = r['end_date']
+        event_name = r['event_name']
+        logging.info("re-runing %s job for start_date: %s, end_date: %s" % (event_name, start_date, end_date))
+        succ = ReportWorker(event_name, db,
+                start_date=str(start_date),
+                end_date=str(end_date),
                 cache=True,
                 )._work()
-        logging.info("job for %s is | %s, start_date: %s, end_date: %s" % (
-                r['event_name'], ['failed', 'succ'][succ],
-                r['start_date'], r['end_date']))
-        if r.get('id'):
-            deactive_event(r['id'])
+        logging.info("job for %s is | %s, start_date: %s, end_date: %s" % ( event_name, ['failed', 'succ'][succ], start_date, end_date))
+        deactive_event(start_date, end_date, event_name)
     return
 
 def _failed_reports(days=1):
@@ -55,7 +50,7 @@ def _get_failed_reports(hours):
     @return: list(dict(start_date, end_date, event_name))
     """
     q = """
-        select start_date, end_date, event_name, id from stats_event_report
+        select distinct start_date, end_date, event_name from stats_event_report
         where status = 0 and active = 1 and
         start_date >= date_sub(CURDATE(), interval %d hour) and start_date < CURDATE()
         """
@@ -104,13 +99,14 @@ def _start_end(base, h):
     d2 = dict(start_date=str(start_date), end_date=str(end_date), event_name='conversions')
     return [d1, d2]
 
-def deactive_event(_id):
+def deactive_event(start, end, name):
     """
     @param _id: int
     """
-    q = "update stats_event_report set active=0 where id=%s" % _id
+    q = "update stats_event_report set active=0 where status = 0 and start_date='%s' and end_date='%s' and event_name = '%s'" % (start, end, name)
     db.execute(q)
     db.commit()
+    logging.info("deactived %s from %s -- %s" % (name, start, end))
 
 
 if __name__ == '__main__':
