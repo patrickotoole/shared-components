@@ -17,9 +17,9 @@ from lib.report.utils.reportutils import empty_frame
 CUR_DIR = os.path.realpath(__file__)
 TEST_FILES = os.path.abspath(os.path.join(os.path.dirname(__file__), 'test_files/'))
 DOMAIN = 'domain'
-DROP = "drop table roclocaltest.v4_reporting;"
+DROP = "drop table roclocaltest.v4_reporting_test_blah;"
 CREATE = """
-    CREATE TABLE `v4_reporting` (
+    CREATE TABLE `v4_reporting_test_blah` (
       `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
       `imps` int(10) NOT NULL,
       `clicks` int(10) NOT NULL,
@@ -111,9 +111,9 @@ class ReportTestCase(unittest.TestCase):
         csv_path = _testfile_path('test2.csv')
         df = pd.read_csv(csv_path, index_col=True)
         cur = self.db.cursor()
-        _cur = _sql._write_mysql(df, 'v4_reporting', df.columns.tolist(), cur)
+        _cur = _sql._write_mysql(df, 'v4_reporting_test_blah', df.columns.tolist(), cur)
         res = vars(_cur)
-        expected_exe = "INSERT INTO v4_reporting (`date`,`line_item_id`,`campaign_id`,`creative_id`,`imps`,`clicks`,`media_cost`,`adx_spend`) VALUES ('2014-07-09 00:00:00',1037447,3657781,14654391,200,0,0.330013,0.13152) ON DUPLICATE KEY UPDATE v4_reporting.`date` = VALUES(v4_reporting.`date`),v4_reporting.`line_item_id` = VALUES(v4_reporting.`line_item_id`),v4_reporting.`campaign_id` = VALUES(v4_reporting.`campaign_id`),v4_reporting.`creative_id` = VALUES(v4_reporting.`creative_id`),v4_reporting.`imps` = VALUES(v4_reporting.`imps`),v4_reporting.`clicks` = VALUES(v4_reporting.`clicks`),v4_reporting.`media_cost` = VALUES(v4_reporting.`media_cost`),v4_reporting.`adx_spend` = VALUES(v4_reporting.`adx_spend`)"
+        expected_exe = "INSERT INTO v4_reporting_test_blah (`date`,`line_item_id`,`campaign_id`,`creative_id`,`imps`,`clicks`,`media_cost`,`adx_spend`) VALUES ('2014-07-09 00:00:00',1037447,3657781,14654391,200,0,0.330013,0.13152) ON DUPLICATE KEY UPDATE v4_reporting_test_blah.`date` = VALUES(v4_reporting_test_blah.`date`),v4_reporting_test_blah.`line_item_id` = VALUES(v4_reporting_test_blah.`line_item_id`),v4_reporting_test_blah.`campaign_id` = VALUES(v4_reporting_test_blah.`campaign_id`),v4_reporting_test_blah.`creative_id` = VALUES(v4_reporting_test_blah.`creative_id`),v4_reporting_test_blah.`imps` = VALUES(v4_reporting_test_blah.`imps`),v4_reporting_test_blah.`clicks` = VALUES(v4_reporting_test_blah.`clicks`),v4_reporting_test_blah.`media_cost` = VALUES(v4_reporting_test_blah.`media_cost`),v4_reporting_test_blah.`adx_spend` = VALUES(v4_reporting_test_blah.`adx_spend`)"
         resp_exe = res.get('_last_executed').replace("\n","")
         self.assertEqual(expected_exe, resp_exe)
 
