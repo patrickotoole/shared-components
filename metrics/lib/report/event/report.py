@@ -63,10 +63,3 @@ def accounting(f):
             raise ValueError(e)
         return status
     return _f
-
-def _get_kwargs(*args, **kwargs):
-    event_name = kwargs.get('name') or filter(lambda a: isinstance(a, str), args)[0]
-    db_wrapper = kwargs.get('con') or filter(lambda a: 'dbwrappers' in a.__str__(), args)[0]
-    return dict(event_name=event_name,
-                db_wrapper=db_wrapper,
-                )
