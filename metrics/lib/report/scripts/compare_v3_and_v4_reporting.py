@@ -1,5 +1,3 @@
-import logging
-
 from link import lnk
 from lib.report.utils.reportutils import get_advertiser_ids
 
@@ -36,9 +34,12 @@ def compare_advertiser(comparables):
     }
 
 def find_dates_missing(comps_null):
-    return { k: df.groupby(level=3).count()['imps']  for k, df in comps_null.iteritems() }
+    try:
+        return { k: df.groupby(level=3).count()['imps']  for k, df in comps_null.iteritems() }
+    except KeyError:
+        return {}
 
-def _check(advertiser_id='195681'):
+def _check(advertiser_id):
     comps = pull_advertiser_data(advertiser_id)
     comps_null = compare_advertiser(comps)
     dates_missing = find_dates_missing(comps_null)
@@ -46,7 +47,11 @@ def _check(advertiser_id='195681'):
 
 def main():
     for advertiser_id in get_advertiser_ids():
-        logging.info(_check(advertiser_id))
+        missed = _check(advertiser_id)
+        if not missed:
+            print ('No missing dates found for :%s' % advertiser_id)
+        else:
+            print '%s missing dates are:%s' % (advertiser_id, missed)
 
 if __name__ == '__main__':
     exit(main())
