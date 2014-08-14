@@ -8,11 +8,11 @@ dbs = lnk.dbs
 v3_db = dbs.mysql
 v4_db = dbs.roclocaltest
 
-V3_QUERY = "select * from v3_reporting where external_advertiser_id = %s"
-V4_QUERY = "select * from v4_reporting where external_advertiser_id = %s"
+V3_QUERY = "select * from conversion_reporting where external_advertiser_id = %s"
+V4_QUERY = "select * from v2_conversion_reporting where external_advertiser_id = %s"
 
-COLUMNS = ['imps','clicks','media_cost']
-INDEX = ["campaign_id","creative_id","external_advertiser_id","date"]
+COLUMNS =['pc', 'auction_id', "imp_time"]
+INDEX=["campaign_id","creative_id","external_advertiser_id", "line_item_id", "conversion_time"]
 
 def pull_advertiser_data(advertiser_id):
     dataframes = {
@@ -31,17 +31,17 @@ def compare_advertiser(comparables):
     joined_v4 = comparables['v4'].join(comparables['v3'],rsuffix="_v3")
 
     return {
-        "v4_null": joined_v3[joined_v3.media_cost_v4.isnull()],
-        "v3_null": joined_v4[joined_v4.media_cost_v3.isnull()]
+        "v4_null": joined_v3[joined_v3.pc_v4.isnull()],
+        "v3_null": joined_v4[joined_v4.pc_v3.isnull()]
     }
 
 def find_dates_missing(comps_null):
     try:
-        return { k: df.groupby(level=3).count()['imps']  for k, df in comps_null.iteritems() }
+        return { k: df.groupby(level=4).count()['imp_time']  for k, df in comps_null.iteritems() }
     except KeyError:
         return {}
 
-def _check(advertiser_id):
+def _check(advertiser_id='195681'):
     comps = pull_advertiser_data(advertiser_id)
     comps_null = compare_advertiser(comps)
     dates_missing = find_dates_missing(comps_null)
@@ -66,13 +66,13 @@ def main():
 
             missed_v3 = missed.get('v3_null')
             if not missed_v3.empty:
-                print ('Missing in production v3_reporting')
+                print ('Missing in production conversion_reporting')
                 print missed.get('v3_null')
                 print '\n'
 
             missed_v4 = missed.get('v4_null')
             if not missed_v4.empty:
-                print ('Missing in wei localbox v4_reporting')
+                print ('Missing in wei localbox v2_conversion_reporting')
                 print missed_v4
                 print '\n'
 
