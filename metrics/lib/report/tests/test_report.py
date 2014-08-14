@@ -17,7 +17,8 @@ from lib.report.utils.reportutils import empty_frame
 CUR_DIR = os.path.realpath(__file__)
 TEST_FILES = os.path.abspath(os.path.join(os.path.dirname(__file__), 'test_files/'))
 DOMAIN = 'domain'
-DROP = "drop table roclocaltest.v4_reporting_test_blah;"
+
+DROP = "drop table {database}.v4_reporting_test_blah;"
 CREATE = """
     CREATE TABLE `v4_reporting_test_blah` (
       `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -50,15 +51,17 @@ class ReportTestCase(unittest.TestCase):
 
     def setUp(self):
         self.db = lnk.dbs.test
+        drop = DROP.format(database=self.db.database)
         try:
-            self.db.execute(DROP)
+            self.db.execute(drop)
         except:
             pass
         self.db.execute(CREATE)
         self.db.commit()
 
     def tearDown(self):
-        self.db.execute(DROP)
+        drop = DROP.format(database=self.db.database)
+        self.db.execute(drop)
         self.db.commit()
 
     def test_report_domain(self):
@@ -150,10 +153,25 @@ class ReportTestCase(unittest.TestCase):
         self.assertEqual(expected, 'domain')
 
     def test_get_db(self):
-        pass
-
-    def test_find_insert_report(self):
-        pass
+        assert get_db('test').database == self.db.database
+        random = 'random'
+        try:
+            get_db(random)
+        except Exception as e:
+            assert isinstance(e, KeyError)
+            assert e.message == 'No such configured object dbs.%s' % random
 
     def test_accounting(self):
+        """
+        make sure the stats is 0 when work fails:
+         - wrong insert
+         - not able to get response, exceptions
+        """
+        pass
+
+    def test_report_inserts(self):
+        """
+        potentially use this:
+        lib.report.utils.reportutils import correct_insert
+        """
         pass
