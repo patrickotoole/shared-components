@@ -3,8 +3,8 @@ import logging
 
 from lib.report.event.base import EventBase
 from lib.report.utils.utils import decorator
-from lib.report.utils.utils import local_now
 from lib.report.utils.utils import datetime_to_str
+from lib.report.utils.utils import parse
 
 
 
@@ -31,7 +31,6 @@ class EventReport(EventBase):
 @decorator
 def accounting(f):
     def _f(*args, **kwargs):
-        error = None
         status = 0
         job_created_at = datetime_to_str(datetime.now())
 
@@ -48,22 +47,26 @@ def accounting(f):
         except Exception as e:
             logging.warn(e)
             logging.warn("failed: job for %s: %s - %s" % (event_name, start_date, end_date))
-            error = e
 
         job_ended_at = datetime_to_str(datetime.now())
-        logging.info("creating event on database %s for %s, start_date: %s, end_date: %s, status: %s" % (
+        try:
+            EventReport(
+                    event_name=event_name,
+                    db_wrapper=db_wrapper,
+                    table_name='stats_event_report',
+                    job_created_at=job_created_at,
+                    job_ended_at=job_ended_at,
+                    #TODO Better way of ensuring dates are the right format
+                    start_date=str(start_date)[:19],
+                    end_date=str(end_date)[:19],
+                    status=status,
+                    ).create_event()
+        except Exception as e:
+            logging.warn(e)
+            logging.warn("creating event failed for database %s for %s, start_date: %s, end_date: %s, status: %s" % (
+                    db_wrapper.database, event_name, start_date, end_date, status))
+
+        logging.info("created event on database %s for %s, start_date: %s, end_date: %s, status: %s" % (
                 db_wrapper.database, event_name, start_date, end_date, status))
-        EventReport(
-                event_name=event_name,
-                db_wrapper=db_wrapper,
-                table_name='stats_event_report',
-                job_created_at=job_created_at,
-                job_ended_at=job_ended_at,
-                start_date=start_date,
-                end_date=end_date,
-                status=status,
-                ).create_event()
-        if error:
-            raise ValueError(e)
         return status
     return _f

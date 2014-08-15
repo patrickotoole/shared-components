@@ -32,7 +32,22 @@ TIMEDELTA_ABBREV_DICT = dict(
         (abbrev, full) for full, abbrevs in TIMEDELTA_ABBREVS
         for abbrev in abbrevs)
 
+def decorator(d):
+    "Make function d a decorator: d wraps a function fn."
+    def _d(fn):
+        return update_wrapper(d(fn), fn)
+    update_wrapper(_d, d)
+    return _d
+
 #---------timeutils----------------------------------
+
+@decorator
+def no_microsec(f):
+    def _f(*args, **kwargs):
+        t = f(*args, **kwargs)
+        t = t.replace(microsecond=0)
+        return t
+    return _f
 
 def _as_datetime(t):
     try:
@@ -112,6 +127,7 @@ def datetime_to_str(dt, fmt=None):
     fmt = fmt or DATE_TIME_FORMAT
     return dt.strftime(fmt)
 
+@no_microsec
 def align(frequency, ts):
     """
     @param frequency: timedelta
@@ -278,13 +294,6 @@ def parse_params(url):
 
 #-----------------------------------
 # decorators utils
-
-def decorator(d):
-    "Make function d a decorator: d wraps a function fn."
-    def _d(fn):
-        return update_wrapper(d(fn), fn)
-    update_wrapper(_d, d)
-    return _d
 
 @decorator
 def memo(f):

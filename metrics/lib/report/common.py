@@ -48,6 +48,7 @@ def main():
     limit = options.limit
     start_date, end_date = get_start_end_date(options.start_date,
             options.end_date, options.align)
+    assert start_date < end_date
     metrics = options.metrics
     kwargs = dict(
             group=group,

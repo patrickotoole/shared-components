@@ -20,13 +20,13 @@ HOUR = timedelta(hours=1)
 MISSED_QUERY = """
    select distinct start_date from stats_event_report
    where event_name = 'datapulling' and
-   start_date > '{start_date}' and start_date < '{end_date}';
+   start_date >= '{start_date}' and start_date <= '{end_date}';
    """
 
 FAILED_QUERY = """
    select distinct start_date, end_date, event_name from stats_event_report
    where status = 0 and active = 1 and
-   start_date >= '{start_date}' and start_date < '{end_date}'
+   start_date >= '{start_date}' and start_date <= '{end_date}'
    """
 
 def rerun_previous_day():
@@ -38,7 +38,7 @@ def check(hours=1):
     """
     re-run all the jobs that's either missing or fails * hours ealier
     """
-    end_date = align(timedelta(hours=1), parse("4h"))
+    end_date = align(timedelta(hours=1), parse("4h")).replace(tzinfo=None)
     start_date = end_date - timedelta(hours=hours)
     missed = _get_miss(start_date, end_date)
     failed = _get_fail(start_date, end_date)
@@ -115,10 +115,10 @@ def deactive_event(start, end, name):
     """
     @param _id: int
     """
-    q = "update stats_event_report set active=0 where status = 0 and start_date>='%s' and end_date<='%s' and event_name = '%s'" % (start, end, name)
+    q = "update stats_event_report set active=0 where status = 0 and start_date>='%s' and end_date<='%s' and event_name = '%s'" % (datetime_to_str(start), datetime_to_str(end), name)
     db.execute(q)
     db.commit()
-    logging.info("deactived failed %s from %s -- %s" % (name, start, end))
+    logging.info("deactived %s from %s -- %s, changed status to 0" % (name, start, end))
 
 
 def main():
