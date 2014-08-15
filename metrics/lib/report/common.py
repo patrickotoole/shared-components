@@ -11,6 +11,7 @@ from tornado.options import options
 from tornado.options import parse_command_line
 
 from lib.report.utils.utils import get_start_end_date
+from lib.report.utils.loggingutils import basicConfig
 from lib.report.work.report import ReportWorker
 from lib.report.utils.reportutils import get_report_obj
 from lib.report.utils.reportutils import get_db
@@ -36,6 +37,7 @@ def main():
     define("db", type=str, default='test', help="choose which database to write to")
 
     parse_command_line()
+    basicConfig()
 
     name = options.report
     group = options.group

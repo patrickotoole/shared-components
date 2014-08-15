@@ -5,6 +5,7 @@ from datetime import timedelta
 from lib.report.work.report import ReportWorker
 from lib.report.utils.reportutils import get_db
 from lib.report.utils.utils import align
+from lib.report.utils.loggingutils import basicConfig
 
 db = None
 
@@ -12,6 +13,7 @@ def main():
     define('db')
     define('days', type=int, default=1)
     parse_command_line()
+    basicConfig()
 
     global db
     db = get_db(options.db)
@@ -34,7 +36,7 @@ def main():
             logging.info("job for %s is | %s, start_date: %s, end_date: %s" % ( event_name, ['failed', 'succ'][succ], start_date, end_date))
             deactive_event(start_date, end_date, event_name)
         except Exception:
-            logging.warn("re-runing failed for start_date: %s, end_date: %s" % (event_name, start_date, end_date))
+            logging.warn("re-runing %s failed for start_date: %s, end_date: %s" % (event_name, start_date, end_date))
             pass
     return
 
