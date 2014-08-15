@@ -70,4 +70,5 @@ class EventLogHandler(tornado.web.RequestHandler):
         except Exception,e :
             self.write(str(e))
 
-
+    def delete(self):
+        self.write("")
