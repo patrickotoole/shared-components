@@ -65,8 +65,11 @@ def _has_misses(d):
     @param d: dict(GroupedDataFrame)
     @return : bool
     """
-    return any((isinstance(v, pd.DataFrame) or isinstance(v, pd.Series)) and not v.empty
+    return any(_is_dataframe(d) and not v.empty
                for k, v in d.iteritems())
+
+def _is_dataframe(thing):
+    return (isinstance(thing, pd.DataFrame) or isinstance(thing, pd.Series))
 
 def compare(old_table=None, new_table=None,
         elem=None,
@@ -98,17 +101,26 @@ def compare(old_table=None, new_table=None,
         if _has_misses(dates_missing):
             print ('Advertiser: %s' % advertiser_id)
             missed_old = dates_missing.get('old_null')
-            if not missed_old.empty:
+            missed_new = dates_missing.get('new_null')
+
+            if _should_print(missed_old):
                 print ('Missing in production database %s: %s' % (OLD_DB.database, old_table))
                 print missed_old
                 print '\n'
 
-            missed_v4 = dates_missing.get('new_null')
-            if not missed_v4.empty:
-                print ('Missing in new testing database %s: %s' % (NEW_DB.database, new_table))
-                print missed_v4
+            if _should_print(missed_new):
+                print ('Missing in test database %s: %s' % (NEW_DB.database, new_table))
+                print missed_new
                 print '\n'
+
     print '------------------------------------------'
+
+def _should_print(missed):
+    if _is_dataframe(missed):
+        if not missed.empty:
+            return True
+    return False
+
 
 def cmp_v3_v4_reporting():
     logging.info("compareing v4_reporting with production v3_reporting")
