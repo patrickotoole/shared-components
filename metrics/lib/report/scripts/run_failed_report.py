@@ -11,6 +11,8 @@ from lib.report.utils.utils import align
 from lib.report.utils.utils import parse
 from lib.report.utils.loggingutils import basicConfig
 from lib.report.utils.utils import get_start_end_date
+from lib.report.utils.utils import datetime_to_str
+
 
 db = None
 HOUR = timedelta(hours=1)
@@ -44,7 +46,7 @@ def check(hours=1):
     _run(to_run)
 
 def _get_fail(start_date, end_date):
-    q = FAILED_QUERY.format(start_date=start_date, end_date=end_date)
+    q = FAILED_QUERY.format(start_date=datetime_to_str(start_date), end_date=datetime_to_str(end_date))
     d = db.select(q).as_dict()
     return d
 
@@ -94,7 +96,7 @@ def _get_parsed(start_date, end_date, query):
     @param end_date  : Datetime
     @return          : set(datetime)
     """
-    query = query.format(start_date=start_date, end_date=end_date)
+    query = query.format(start_date=datetime_to_str(start_date), end_date=datetime_to_str(end_date))
     rs = db.select(query).as_dict()
     return set(map(lambda r: r.get('start_date'), rs))
 

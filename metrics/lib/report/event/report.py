@@ -38,8 +38,8 @@ def accounting(f):
         worker = args[0]
         start_date = worker._kwargs.get('start_date')
         end_date = worker._kwargs.get('end_date')
-        event_name=worker._name
-
+        event_name = worker._name
+        db_wrapper = worker._con
         try:
             res = f(*args, **kwargs)
             if res:
@@ -51,10 +51,11 @@ def accounting(f):
             error = e
 
         job_ended_at = datetime_to_str(datetime.now())
-        logging.info("creating event for %s, start_date: %s, end_date: %s, status: %s" % (worker._name, start_date, end_date, status))
+        logging.info("creating event on database %s for %s, start_date: %s, end_date: %s, status: %s" % (
+                db_wrapper.database, event_name, start_date, end_date, status))
         EventReport(
-                event_name=worker._name,
-                db_wrapper=worker._con,
+                event_name=event_name,
+                db_wrapper=db_wrapper,
                 table_name='stats_event_report',
                 job_created_at=job_created_at,
                 job_ended_at=job_ended_at,
