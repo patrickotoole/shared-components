@@ -36,10 +36,7 @@ def compare_advertiser(comparables):
     }
 
 def find_dates_missing(comps_null):
-    try:
-        return { k: df.groupby(level=3).count()['imps']  for k, df in comps_null.iteritems() }
-    except KeyError:
-        return {}
+    return { k: df.groupby(level=3).count().get('imps')  for k, df in comps_null.iteritems() }
 
 def _check(advertiser_id):
     comps = pull_advertiser_data(advertiser_id)
