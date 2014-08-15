@@ -2,7 +2,7 @@ import tornado.web
 import ujson
 from lib.helpers import Convert
 UNFINISHED = """ SELECT * from data_integrity_log where row_count != agg_count """
-SELECT = "SELECT * from data_integrity_log where deleted = 0 and  %s"
+SELECT = "SELECT * from data_integrity_log where %s"
 INSERT = "insert into data_integrity_log (`table_name`,`agg_name`, `partition`, `row_count`, `agg_count`, `result`) values ('%(table_name)s','%(agg_name)s','%(partition)s','%(row_count)s','%(agg_count)s','%(result)s')"
 UPDATE = "update data_integrity_log set `table_name` = '%(table_name)s',`agg_name` = '%(agg_name)s', `partition` = '%(partition)s', `row_count` = '%(row_count)s', `agg_count` = '%(agg_count)s', `result` = '%(result)s', `deleted` = '%(deleted)s' where id = '%(id)s'"
 
@@ -15,13 +15,17 @@ class EventLogHandler(tornado.web.RequestHandler):
         if self.get_argument("unfinished",False):
             unfinished = self.db.select_dataframe(UNFINISHED)
             as_json = Convert.df_to_json(unfinished)
-            
+
+        elif self.get_argument("deleted",False):
+            _all = self.db.select_dataframe(SELECT % "deleted=1")
+            print _all
+            as_json = Convert.df_to_json(_all)    
         elif args and len(args[0]):
             where = "id = %s" % args[0]
             _all = self.db.select_dataframe(SELECT % where)
             as_json = Convert.df_to_json(_all)
         else:
-            _all = self.db.select_dataframe(SELECT % "1=1")
+            _all = self.db.select_dataframe(SELECT % "deleted=0")
             as_json = Convert.df_to_json(_all)
 
         self.write(as_json)
