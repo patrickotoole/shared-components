@@ -1,28 +1,57 @@
 import logging
-from itertools import groupby
 from datetime import timedelta
 
 from lib.report.work.report import ReportWorker
 from lib.report.utils.reportutils import get_db
 from lib.report.utils.utils import align
+from lib.report.utils.utils import parse
 from lib.report.utils.loggingutils import basicConfig
+from lib.report.utils.utils import get_start_end_date
 
 db = None
+HOUR = timedelta(hours=1)
 
-def main():
-    define('db')
-    define('days', type=int, default=1)
-    parse_command_line()
-    basicConfig()
+MISSED_QUERY = """
+   select distinct start_date from stats_event_report
+   where event_name = 'datapulling' and
+   start_date > '{start_date}' and start_date < '{end_date}';
+   """
 
-    global db
-    db = get_db(options.db)
-    rs = _failed_reports(options.days)
-    if not rs:
+FAILED_QUERY = """
+   select distinct start_date, end_date, event_name from stats_event_report
+   where status = 0 and active = 1 and
+   start_date >= '{start_date}' and start_date < '{end_date}'
+   """
+
+def rerun_previous_day():
+    start_date, end_date = get_start_end_date('1d', '0m', units='days')
+    to_run = _create_missed_dict(start_date, end_date)
+    _run(to_run)
+
+def check(hours=1):
+    """
+    re-run all the jobs that's either missing or fails * hours ealier
+    """
+    end_date = align(timedelta(hours=1), parse("4h"))
+    start_date = end_date - timedelta(hours=hours)
+    missed = _get_miss(start_date, end_date)
+    failed = _get_fail(start_date, end_date)
+    to_run = missed + failed
+    _run(to_run)
+
+def _get_fail(start_date, end_date):
+    q = FAILED_QUERY.format(start_date=start_date, end_date=end_date)
+    d = db.select(q).as_dict()
+    return d
+
+def _run(to_rerun):
+    """
+    @param to_rerun: list(dict(start_date, end_date, event_name))
+    """
+    if not to_rerun:
         logging.info("Failed reporting not found")
-
-    logging.info("Found %s missing|failed reports, re-runing reports for %s" % (len(rs), rs))
-    for r in rs:
+    logging.info("Found %s missing|failed reports, re-runing reports for %s" % (len(to_rerun), to_rerun))
+    for r in to_rerun:
         start_date = r['start_date']
         end_date = r['end_date']
         event_name = r['event_name']
@@ -40,80 +69,65 @@ def main():
             pass
     return
 
-def _failed_reports(days=1):
+def _get_miss(start_date, end_date):
     """
-    @param days: int
-    @return: list(dict)
-    """
-    hours = 24 * days
-    r1 = _get_failed_reports(hours)
-    r2 = _get_missed_reports(hours)
-    return r1 + r2
-
-def _get_failed_reports(hours):
-    """
-    @param : hours: int
+    @param start_date : Datatime
+    @param end_date : Datatime
     @return: list(dict(start_date, end_date, event_name))
     """
-    q = """
-        select distinct start_date, end_date, event_name from stats_event_report
-        where status = 0 and active = 1 and
-        start_date >= date_sub(CURDATE(), interval %d hour) and start_date < CURDATE()
-        """
-    q = q % hours
-    d = db.select(q).as_dict()
-    return d
+    to_run = []
+    parsed = _get_parsed(start_date, end_date, MISSED_QUERY)
+    while start_date < end_date:
+        if not start_date in parsed:
+            _end = start_date + HOUR
+            to_run.extend(_create_missed_dict(start_date, _end))
+        start_date += HOUR
+    return to_run
 
-def _get_missed_reports(hours):
+def _get_parsed(start_date, end_date, query):
     """
-    @param : hours: int
-    @return: list(dict(start_date, end_date, event_name)
+    @param start_date: Datetime
+    @param end_date  : Datetime
+    @return          : set(datetime)
     """
-    #Hacky, currently only consider reports that ran hourly,
-    #should make it generic to recognize what's missing even if there
-    #were start_date and end_date ran accorss mutilple hours or days
-    to_return = []
-    q = """
-        select start_date from stats_event_report
-        where event_name = 'datapulling' and
-        start_date > date_sub(CURDATE(), interval %d hour) and start_date < CURDATE();
-        """
-    q = q % hours
-    dict_lis = db.select(q).as_dict()
-    dict_lis = [
-            list(d)
-            for (_, d) in groupby(dict_lis, lambda x: x.get('start_date').day)
-            ]
-    hours = { i for i in range(0, 24) }
-    for lis in dict_lis:
-        hours_parsed = set(map(lambda x: x.get('start_date').hour, lis))
-        misses = hours - hours_parsed
-        base = align(timedelta(days=1), lis[0].get('start_date'))
-        d_pairs = map(lambda m:_start_end(base, m), misses)
-        [to_return.extend(d) for d in d_pairs]
-    return to_return
+    query = query.format(start_date=start_date, end_date=end_date)
+    rs = db.select(query).as_dict()
+    return set(map(lambda r: r.get('start_date'), rs))
 
-def _start_end(base, h):
-    """
-    @param base: Datetime
-    @param h   : int(hours)
-    @return: list(dict)
-    """
-    start_date = base + timedelta(hours=h)
-    end_date = base + timedelta(hours=(h+1))
-    d1 = dict(start_date=str(start_date), end_date=str(end_date), event_name='datapulling')
-    d2 = dict(start_date=str(start_date), end_date=str(end_date), event_name='conversions')
-    return [d1, d2]
+def _create_missed_dict(start_date, end_date):
+    names = ['datapulling', 'conversions']
+    return [_create_dict(start_date, end_date, name) for name in names]
+
+def _create_dict(start_date, end_date, name):
+    return {
+            'start_date': start_date,
+            'end_date': end_date,
+            'event_name': name,
+            }
 
 def deactive_event(start, end, name):
     """
     @param _id: int
     """
-    q = "update stats_event_report set active=0 where status = 0 and start_date='%s' and end_date='%s' and event_name = '%s'" % (start, end, name)
+    q = "update stats_event_report set active=0 where status = 0 and start_date>='%s' and end_date<='%s' and event_name = '%s'" % (start, end, name)
     db.execute(q)
     db.commit()
-    logging.info("deactived %s from %s -- %s" % (name, start, end))
+    logging.info("deactived failed %s from %s -- %s" % (name, start, end))
 
+
+def main():
+    define('db')
+    define('hours', type=int, default=1)
+    define('daily', type=bool, default=False)
+    parse_command_line()
+    basicConfig()
+
+    global db
+    db = get_db(options.db)
+    if options.daily:
+        rerun_previous_day()
+        return
+    check(options.hours)
 
 if __name__ == '__main__':
     from tornado.options import define
