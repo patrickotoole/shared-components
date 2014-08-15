@@ -1,3 +1,4 @@
+import time
 import logging
 import os
 import io
@@ -11,6 +12,7 @@ from lib.report.utils.apiutils import get_report_id
 from lib.report.utils.apiutils import get_report_url
 from lib.report.utils.apiutils import get_report_resp
 from lib.report.utils.reportutils import empty_frame
+from lib.report.utils.constants import SLEEP
 
 
 CUR_DIR = os.path.dirname(__file__)
@@ -132,6 +134,8 @@ class ReportBase(object):
     def _get_resp_helper(self, url, form):
         logging.info("requesting data from url: %s" % url)
         _id = get_report_id(url, form)
+        #sleep before getting report url -- appnexus takes time to generate the report
+        time.sleep(SLEEP)
         url = get_report_url(_id)
         resp = get_report_resp(url)
         return resp
