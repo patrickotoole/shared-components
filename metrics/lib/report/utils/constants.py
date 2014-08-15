@@ -10,7 +10,7 @@ BEST = 'best'
 
 NUM_TRIES = 25
 LIMIT = 10
-SLEEP = 2
+SLEEP = 6
 
 "ndigit to round"
 NDIGITS = 2
