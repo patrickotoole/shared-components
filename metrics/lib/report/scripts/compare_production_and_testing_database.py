@@ -5,6 +5,7 @@ from link import lnk
 
 from lib.report.utils.reportutils import get_advertiser_ids
 from lib.report.utils.utils import parse
+from lib.report.utils.loggingutils import basicConfig
 
 dbs = lnk.dbs
 
@@ -60,13 +61,6 @@ def _compare_advertiser(comparables, elem):
 def _find_dates_missing(comps_null, col, level=3):
     return { k: df.groupby(level=level).count().get(col) for k, df in comps_null.iteritems() }
 
-def _has_misses(d):
-    """
-    @param d: dict(GroupedDataFrame)
-    @return : bool
-    """
-    return any(_is_dataframe(d) and not v.empty
-               for k, v in d.iteritems())
 
 def _is_dataframe(thing):
     return (isinstance(thing, pd.DataFrame) or isinstance(thing, pd.Series))
@@ -97,30 +91,24 @@ def compare(old_table=None, new_table=None,
                 )
         comps_null = _compare_advertiser(comps,elem)
         dates_missing = _find_dates_missing(comps_null, col, level=level)
+        missed_old = dates_missing.get('old_null')
+        missed_new = dates_missing.get('new_null')
 
-        if _has_misses(dates_missing):
-            print ('Advertiser: %s' % advertiser_id)
-            missed_old = dates_missing.get('old_null')
-            missed_new = dates_missing.get('new_null')
+        def _log(miss, db, table):
+            if _is_dataframe(miss):
+                if not miss.empty:
+                    logging.warn(
+                    'Advertiser: {advertiser_id}, missing in {database} | table: {table}, {messegae}'.format(
+                            advertiser_id=advertiser_id,
+                            database=db,
+                            table=table,
+                            messegae=miss,
+                            ))
+                    return
+            logging.info('Advertiser: %s no misses' % advertiser_id)
 
-            if _should_print(missed_old):
-                print ('Missing in production database %s: %s' % (OLD_DB.database, old_table))
-                print missed_old
-                print '\n'
-
-            if _should_print(missed_new):
-                print ('Missing in test database %s: %s' % (NEW_DB.database, new_table))
-                print missed_new
-                print '\n'
-
-    print '------------------------------------------'
-
-def _should_print(missed):
-    if _is_dataframe(missed):
-        if not missed.empty:
-            return True
-    return False
-
+        _log(missed_old, OLD_DB.database, old_table)
+        _log(missed_new, NEW_DB.database, new_table)
 
 def cmp_v3_v4_reporting():
     logging.info("compareing v4_reporting with production v3_reporting")
@@ -145,10 +133,11 @@ def cmp_v1_v2_conversion_reporting():
             )
 
 def main():
-    print "Compared at time: %s" % parse('0m')
+    logging.info("Compared at time: %s" % parse('0m'))
     cmp_v3_v4_reporting()
     cmp_v1_v2_conversion_reporting()
 
 
 if __name__ == '__main__':
+    basicConfig()
     exit(main())
