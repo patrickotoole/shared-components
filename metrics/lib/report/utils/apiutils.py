@@ -55,6 +55,7 @@ def get_report_resp(url):
     if not url.startswith('/'):
         url = '/' + url
     resp = _get_resp(url)
+    logging.info("successfully got response from url: %s" % url)
     return resp.text
 
 def _get_resp(url, method='get', forms=None):
