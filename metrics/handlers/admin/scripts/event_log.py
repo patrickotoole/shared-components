@@ -18,7 +18,6 @@ class EventLogHandler(tornado.web.RequestHandler):
 
         elif self.get_argument("deleted",False):
             _all = self.db.select_dataframe(SELECT % "deleted=1")
-            print _all
             as_json = Convert.df_to_json(_all)    
         elif args and len(args[0]):
             where = "id = %s" % args[0]
