@@ -2,9 +2,9 @@ import tornado.web
 import ujson
 from lib.helpers import Convert
 UNFINISHED = """ SELECT * from data_integrity_log where row_count != agg_count """
-SELECT = "SELECT * from data_integrity_log where %s"
+SELECT = "SELECT * from data_integrity_log where deleted = 0 and  %s"
 INSERT = "insert into data_integrity_log (`table_name`,`agg_name`, `partition`, `row_count`, `agg_count`, `result`) values ('%(table_name)s','%(agg_name)s','%(partition)s','%(row_count)s','%(agg_count)s','%(result)s')"
-UPDATE = "update data_integrity_log set `table_name` = '%(table_name)s',`agg_name` = '%(agg_name)s', `partition` = '%(partition)s', `row_count` = '%(row_count)s', `agg_count` = '%(agg_count)s', `result` = '%(result)s' where id = '%(id)s'"
+UPDATE = "update data_integrity_log set `table_name` = '%(table_name)s',`agg_name` = '%(agg_name)s', `partition` = '%(partition)s', `row_count` = '%(row_count)s', `agg_count` = '%(agg_count)s', `result` = '%(result)s', `deleted` = '%(deleted)s' where id = '%(id)s'"
 
 class EventLogHandler(tornado.web.RequestHandler):
     def initialize(self, db, api):
@@ -70,5 +70,11 @@ class EventLogHandler(tornado.web.RequestHandler):
         except Exception,e :
             self.write(str(e))
 
-    def delete(self):
-        self.write("")
+    def delete(self,*args):
+        where = "id = %s" % args[0]
+        _all = self.db.select_dataframe(SELECT % where)
+        obj = _all.T.to_dict()[0]
+        obj['deleted'] = '1'
+
+        self.db.execute(UPDATE % obj)
+        self.write("1")
