@@ -25,13 +25,17 @@ def main():
         end_date = r['end_date']
         event_name = r['event_name']
         logging.info("re-runing %s job for start_date: %s, end_date: %s" % (event_name, start_date, end_date))
-        succ = ReportWorker(event_name, db,
-                start_date=str(start_date),
-                end_date=str(end_date),
-                cache=True,
-                )._work()
-        logging.info("job for %s is | %s, start_date: %s, end_date: %s" % ( event_name, ['failed', 'succ'][succ], start_date, end_date))
-        deactive_event(start_date, end_date, event_name)
+        try:
+            succ = ReportWorker(event_name, db,
+                    start_date=str(start_date),
+                    end_date=str(end_date),
+                    cache=True,
+                    )._work()
+            logging.info("job for %s is | %s, start_date: %s, end_date: %s" % ( event_name, ['failed', 'succ'][succ], start_date, end_date))
+            deactive_event(start_date, end_date, event_name)
+        except Exception:
+            logging.warn("re-runing failed for start_date: %s, end_date: %s" % (event_name, start_date, end_date))
+            pass
     return
 
 def _failed_reports(days=1):
