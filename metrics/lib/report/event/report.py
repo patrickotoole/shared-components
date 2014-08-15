@@ -1,9 +1,11 @@
+from datetime import datetime
 import logging
 
 from lib.report.event.base import EventBase
 from lib.report.utils.utils import decorator
 from lib.report.utils.utils import local_now
 from lib.report.utils.utils import datetime_to_str
+
 
 
 class EventReport(EventBase):
@@ -31,7 +33,7 @@ def accounting(f):
     def _f(*args, **kwargs):
         error = None
         status = 0
-        job_created_at = datetime_to_str(local_now(False))
+        job_created_at = datetime_to_str(datetime.now())
 
         worker = args[0]
         start_date = worker._kwargs.get('start_date')
@@ -48,7 +50,7 @@ def accounting(f):
             logging.warn("failed: job for %s: %s - %s" % (event_name, start_date, end_date))
             error = e
 
-        job_ended_at = datetime_to_str(local_now(False))
+        job_ended_at = datetime_to_str(datetime.now())
         logging.info("creating event for %s, start_date: %s, end_date: %s, status: %s" % (worker._name, start_date, end_date, status))
         EventReport(
                 event_name=worker._name,

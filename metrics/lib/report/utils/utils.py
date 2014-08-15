@@ -91,11 +91,9 @@ def convert_datetime(date_str):
             pass
     raise ValueError("wrong time format")
 
-def local_now(ny=True):
+def local_now():
     utc = pytz.timezone('UTC')
     now = utc.localize(datetime.utcnow())
-    if not ny:
-        return now
     ny = pytz.timezone('America/New_York')
     return now.astimezone(ny)
 
