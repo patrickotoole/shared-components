@@ -8,17 +8,20 @@ import logging
 import tornado.platform.twisted
 from twisted.internet import  protocol, defer, threads
 from twisted.protocols import basic
-
+from ..base import BaseHandler
 from streaming_base import StreamingBase
 from lib.query.MYSQL import BRAND_QUERY
 
 clients = dict()
 
-class IndexHandler(tornado.web.RequestHandler):
+class IndexHandler(BaseHandler):
 
+    @tornado.web.authenticated
     @tornado.web.asynchronous
     def get(self):
-        self.render("streaming/base.html")
+        # self.render("v2_streaming.html",advertiser_id= self.current_advertiser)
+        # self.render("v2_streaming_demo.html",advertiser_id="asdf")
+        self.render("streaming/_streaming.html", advertiser_id=self.current_advertiser)
 
 
 class StreamingHandler(StreamingBase,tornado.websocket.WebSocketHandler):

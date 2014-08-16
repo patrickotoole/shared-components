@@ -1,0 +1,325 @@
+{% autoescape None %}
+{% extends "base.html" %}
+
+{% block page_title %}Streaming{% end %}
+{% block page_header %}Streaming dashboard{% end %}
+
+{% block page_css %}
+	<link href="/static/css/streaming-style.css" type="text/css" rel="stylesheet" media="screen">
+	<link href="/static/css/dc.css" type="text/css" rel="stylesheet" media="screen">
+{% end %}
+
+{% block page_sidebar %}
+	<li><a href="reporting"><img src="/static/img/sidebar/reporting-icon.png" alt="Reporting icon" /><span class="sidebar-label">campaign reporting</span></a></li>
+	<li class="active"><a href="streaming"><img src="/static/img/sidebar/global-icon.png" alt="Global icon" /><span class="sidebar-label">global streaming</span></a></li>
+	<!--
+	<li><a href="global"><img src="/static/img/sidebar/global-icon.png" alt="Global icon" /><span class="sidebar-label">global streaming</span></a></li>
+	
+	<li><a href="intraweek"><img src="/static/img/sidebar/intraweek-icon.png" alt="Intraweek icon" /><span class="sidebar-label">intraweek overview</span></a></li>
+	-->
+{% end %}
+
+{% block page_content %}
+	<div id="overall-box" class="box half-box">
+        <ul id="overall-stats">
+            <li class="border-green"><div class="overall-item-header">impressions</div><div id="imps-box" class="overall-item-value">0</div></li>
+            <li class="border-blue"><div class="overall-item-header">domains</div><div id="domain-box" class="overall-item-value">0</div></li>
+            <li class="border-orange"><div class="overall-item-header">unique visitors</div><div id="uniques-box" class="overall-item-value">0</div></li>
+        </ul>
+	</div>
+	<div id="filter-box" class="box half-box">
+        <div class="box-title">Filters</div>
+        <ul id="filter-radio"><li class="filter-radio-active"><img src="/static/img/general/checked-radio.png" alt="Checked radio button" />impressions</li><li><img src="/static/img/general/unchecked-radio.png" alt="Unchecked radio button" />unique viewers</li></ul>
+        <div class="clearfix"></div>
+        <div class="custom-filter-select" id="campaign-select">
+            All campaigns<img src="/static/img/general/dropdown-down.png" alt="Dropdown arrow" />
+            <div id="campaign-select-expanded">
+                <ul>
+                    <li>dailyfinance.com</li>
+                    <li>yahoo.com</li>
+                    <li>ibtimes.com</li>
+                </ul>      
+            </div>
+        </div>
+        <div class="custom-filter-select">All domains<span class="filter-reset">reset</span></div>
+        <div class="custom-filter-select">All locations<span class="filter-reset">reset</span></div>
+        <div class="clearfix"></div>
+    </div>    
+	<div class="clearfix"></div>	
+    <div id="map-box" class="box full-box">
+	</div>
+	<div class="clearfix"></div>
+	<div id="domain-box" class="box half-box">
+        <div class="box-title">Domains</div>
+        <div id="domain-table" class="content-table">
+            <ul class="header-row"><li class="domain-name" title="Sort by domain (descending)" data-sort="down">domain</li><li class="domain-imps active-sorted" title="Sort by impressions (ascending)" data-sort="up">impressions<img src="/static/img/general/dropdown-down.png" alt="Sort by impressions" /></li><li class="domain-uniques" data-sort="down"  title="Sort by unique views (descending)" >uniques</li></ul>		
+		</div>
+        <div class="show-more">show more</div>
+	</div>
+	<div id="location-box" class="box half-box">
+        <div class="box-title">Locations</div>
+        <div id="location-table" class="content-table">
+            <ul class="header-row"><li class="location-name" title="Sort by location (descending)" data-sort="down">location</li><li class="location-imps active-sorted" title="Sort by impressions (ascending)" data-sort="up">impressions<img src="/static/img/general/dropdown-down.png" alt="Sort by impressions" /></li><li class="location-uniques" data-sort="down"  title="Sort by unique views (descending)" >uniques</li></ul>			
+		</div>
+        <div class="show-more">show more</div>
+	</div>
+	<div class="clearfix"></div>	
+{% end %}
+
+{% block page_scripts %}
+	<!-- IO GAUGE -->
+	<script src="/static/js/gauge.min.js"></script>
+    <script src="/static/js/topojson.v1.min.js"></script>
+	<script src="/static/js/d3.v3.min.js"></script>
+	<script src="/static/js/crossfilter.min.js"></script>
+	<script src="/static/js/dc.mod.js"></script>
+	<script src="/static/js/streaming.js"></script>
+    <script src="/static/js/streaming-map.js"></script>
+	<script>			
+
+	var extUserID =  {{ advertiser_id }};
+	
+	// GET ADVERTISER BUDGET AND PROGRESS
+	var getUserInfo = $.getJSON("/intraweek?format=json&ioinfo=" + extUserID, function(data){
+        $('#header #right-align #user-name').text(data[0].advertiser.toLowerCase());
+    });
+    
+    // FORMAT LOCATION
+    function formatLocation(location){
+        // IF COUNTRY UNKNOWN, RETURN UNKNOWN
+        if($.inArray(location[2], ["", "0", 0]) != -1){
+            return "Unknown";
+        }
+        // ELSE IF ONLY COUNTRY, RETURN COUNTRY
+        else if($.inArray(location[0], ["", "0", 0]) != -1 && $.inArray(location[1], ["", "0", 0]) != -1){
+            return location[2];
+        }
+        // ELSE IF CITY BUT NOT STATE
+        else if($.inArray(location[1], ["", "0", 0]) != -1){
+            return location[0] + ", " + location[2];
+        }
+        // ELSE IF STATE BUT NOT CITY
+        else if($.inArray(location[0], ["", "0", 0]) != -1){
+            return location[1] + ", " + location[2];
+        }
+        return location[0] + ', ' + location[1] + ', ' + location[2];
+    }
+    
+    // REFRESH BUBBLES
+    function refreshBubbles(){
+        mapGraph.bubbles(
+            dataWrapper.aggregateDimensions.latlong_location_data.top(10000),
+            {
+                fillOpacity: 1,
+                borderWidth: 1,
+                popupTemplate: function(geography, data) { //this function should just return a string
+                return '<div class="tooltip"><div class="tooltip-content">' + formatLocation(data.location) + '<span id="tooltip-imps" class="tooltip-values">' + data.imps + '</span><span id="tooltip-uniques" class="tooltip-values">' + data.uniques + '</span></div></div>';
+                },
+                highlightOnHover: false
+            }
+        );
+    }
+    
+    // INITIALISE DC WIDGETS
+    var impsBox = null, domainBox = null, uniquesBox = null, mapGraph = null, locationTable = null, domainTable = null;
+   
+    // GENERATE IMPRESSIONS COUNTER
+    impsBox = dc.customDataBox('#overall-box #imps-box')
+    .group(dataWrapper.groups.imps_data)
+    .on("postRedraw", function(){
+       refreshBubbles();
+    });
+    
+    // GENERATE DOMAIN COUNTER
+    domainBox = dc.customDataBox('#overall-box #domain-box')
+    .group(dataWrapper.groups.domain_data)
+    
+    // GENERATE UNIQUE VISITORS COUNTER
+    uniquesBox = dc.customDataBox('#overall-box #uniques-box')
+    .group(dataWrapper.groups.uniques_data)
+     ///*
+    
+    // GENERATE MAP
+    mapGraph = new Datamap({
+        scope: 'usa',
+        element: document.getElementById('map-box'),
+        projection:"mercator",
+        /*
+        setProjection: function(element) {
+            var projection = d3.geo.mercator()
+            
+              .translate([element.offsetWidth / 2, element.offsetHeight / 2]);
+            var path = d3.geo.path()
+              .projection(projection);
+            
+            return {path: path, projection: projection};
+        },*/
+        fills: {
+            defaultFill: '#333',
+            'green': '#5ec34b',
+            'orange': '#ffb952'
+        },
+         geographyConfig: {
+            highlightOnHover: false,
+            popupOnHover: false,
+            borderColor: '#888888'
+        }
+    });
+   
+    // GENERATE DOMAINS TABLE   
+    
+    var domainRowSize = 10;
+    
+    domainTable = dc.customDataTable('#domain-table')
+    .dimension(dataWrapper.aggregateDimensions.domain_data)
+    .group(dataWrapper.groups.domain_data)
+    .sortBy(function(d){
+        return d.imps;					
+    })
+    .order(d3.descending)
+    .size(domainRowSize)
+    .rowClass("domain-row")
+    .listClasses(["domain-name", "domain-imps", "domain-uniques"])
+    .listItems([
+        function(d){
+            if($.inArray(d.domain, ["", "0", 0]) != -1){
+                return "Unknown";
+            }
+            return d.domain.replace("www.", "");
+        },
+        function(d){
+            return formatNumber(d.imps);
+        },
+        function(d){
+            return formatNumber(d.uniques);
+        }
+    ])
+    .on("preRedraw", function(){
+        if(dataWrapper.aggregateDimensions.domain_data.top(domainRowSize + 1).length > domainRowSize){
+            $('#domain-box .show-more').css("display", "inline-block");
+        }
+        else {
+            $('#domain-box .show-more').hide();
+        }
+    })
+    
+    // GENERATE LOCATION TABLE   
+    
+    var locationRowSize = 10;
+    
+    locationTable = dc.customDataTable('#location-table')
+    .dimension(dataWrapper.aggregateDimensions.location_data)
+    .group(dataWrapper.groups.location_data)
+    .sortBy(function(d){
+        return d.imps;					
+    })
+    .order(d3.descending)
+    .size(locationRowSize)
+    
+    .rowClass("location-row")
+    .listClasses(["location-name", "location-imps", "location-uniques"])
+    .listItems([
+        function(d){
+            return formatLocation(d.location);
+        },
+        function(d){
+            return formatNumber(d.imps);
+        },
+        function(d){
+            return formatNumber(d.uniques);
+        }
+    ])
+     .on("preRedraw", function(){
+        if(dataWrapper.aggregateDimensions.location_data.top(locationRowSize + 1).length > locationRowSize){
+            $('#location-box .show-more').css("display", "inline-block");
+        }
+        else {
+            $('#location-box .show-more').hide();
+        }
+    })
+
+
+    //*/
+    dc.renderAll();
+    
+    // GENERATE MAP
+    
+
+    $('#page-loader').fadeOut();
+
+	</script>
+    <script>
+        
+        // IF SHOW MORE ON TABLE CLICKED
+        $('.show-more').click(function(){
+            var parentID = $(this).parent().attr('id');   
+            if(parentID == "location-box"){
+                locationRowSize = Infinity;
+                locationTable.size(locationRowSize);
+            }
+            else {
+                domainRowSize = Infinity;
+                 domainTable.size(domainRowSize);
+            }
+            dc.redrawAll();
+        });
+        
+        // IF CHANGE FILTER RADIO
+        $('#filter-radio li').click(function(){
+            if(!$(this).hasClass('.filter-radio-active')){
+                if($(this).text() == "unique viewers"){
+                    dataWrapper.bubbleFillKey = "orange";     
+                    dataWrapper.bubbleType = "uniques";
+                }
+                else {
+                    dataWrapper.bubbleFillKey = "green";
+                    dataWrapper.bubbleType = "imps";
+                }
+                $('#filter-radio li.filter-radio-active').removeClass('filter-radio-active').children('img').attr("src", "/static/img/general/unchecked-radio.png").attr("alt", "Unchecked radio button");
+                $(this).addClass('filter-radio-active').children('img').attr("src", "/static/img/general/checked-radio.png").attr("alt", "Checked radio button");
+                refreshBubbles();
+            }
+        });
+        
+        // IF CAMPAIGN FILTER HOVERED
+        /*
+        $('#campaign-select').hover(function(){
+            $(this).children('#campaign-select-expanded').fadeIn();
+        }, function(){
+            if (!$(this).children('#campaign-select-expanded').is(':hover')) {
+                $(this).children('#campaign-select-expanded').fadeOut();
+            }      
+        });
+        */
+        
+        // SHOW DROPDOWN ON DOMAIN/LOCATION TABLES
+        $('.header-row li').hover(function(){
+            if($(this).hasClass('active-sorted')){
+                         
+                if($(this).attr('data-sort') == "up"){
+                    $(this).children('img').attr('src', '/static/img/general/dropdown-up.png');
+                }
+                else {
+                    $(this).children('img').attr('src', '/static/img/general/dropdown-down.png');
+                }
+            }
+            else {
+                $(this).append('<img src="/static/img/general/dropdown-down.png" />');
+                $(this).siblings('.active-sorted').children('img').hide();
+            }
+        }, function(){
+            if($(this).hasClass('active-sorted')){
+                if($(this).attr('data-sort') == "up"){
+                    $(this).children('img').attr('src', '/static/img/general/dropdown-down.png');
+                }
+                else {
+                    $(this).children('img').attr('src', '/static/img/general/dropdown-up.png');
+                }
+            }
+            else {
+                $(this).children('img').remove();
+                 $(this).siblings('.active-sorted').children('img').css("display","inline");
+            }
+        });
+    </script>
+{% end %}

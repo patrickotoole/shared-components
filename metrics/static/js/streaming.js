@@ -3,7 +3,7 @@ var socketWrapper = function(params,on_init) {
   this.id = Math.round(Math.random() * 10000000);
 
   this.createSocket = function(params){
-    this.socket = new WebSocket("ws://portal.getrockerbox.com/websocket?id=" + this.id);
+    this.socket = new WebSocket("ws://" + window.location.host + "/websocket?id=" + this.id);
 
     this.socket.onopen = function() {
       self.sendMessage("initialize")
@@ -43,69 +43,179 @@ socket.onMessage = function(x){
   dataWrapper.tracker++;
 }
 
-var rawDataWrapper = function() {
-   var THRESHOLD = 60
-  var self = this
-  this.tracker = 0
-  this.crs = crossfilter([{"position":0,"result":{}}])
+    var rawDataWrapper = function() {
+    var THRESHOLD = 60
+    var self = this
+    this.tracker = 0
+    this.crs = crossfilter([{"position":0,"result":{}}])
 
-  this.dimensions = {
-    position: this.crs.dimension(function(x){ return x.position }),
-  data: this.crs.dimension(function(x){ return !$.isEmptyObject(x.result) ? x.result : 0 }),
-    // uniques_data: this.crs.dimension(function(x){ return x.result.uid })
-  }
+    this.dimensions = {
+        position: this.crs.dimension(function(x){ return x.position }),
+        data: this.crs.dimension(function(x){ return !$.isEmptyObject(x.result) ? x.result : 0 }),
+        // grouped_data: this.crs.dimension(function(x){ return [x.result.domain, x.result.uid] })
+    }
   
+    this.dimensions.data.filter(function(d){ return d == 0; })
+    this.crs.remove()
+    this.dimensions.data.filterAll()
+    
     this.groups = {
-        all: this.crs.groupAll(),
-        domain_data: this.dimensions.data.group(function(d){ return d.domain; }).reduce(
-            function(p,v) {           
+        imps_data: this.dimensions.data.groupAll(),
+        domain_data: this.dimensions.data.group(function(d){ return d.domain; }).order(function(d){return d}).reduce(
+            function(p,v) { 
                 ++p.imps;
-                if (typeof v.result.uid === "undefined") v.result.uid = "unknown";
-                if (v.result.uid in p.uniques_array) p.uniques_array[v.result.uid]++;
-                else p.uniques_array[v.result.uid] = 1;
-                // console.log(v.result.uid);
+                p.uids[v.result.uid] = p.uids[v.result.uid] + 1 || 1;
                 return p 
             },
             function(p,v) { 
                 --p.imps;
-                p.uniques_array[v.result.uid]--;
-                if(p.uniques_array[v.result.uid] === 0) delete p.uniques_array[v.result.uid];
+                p.uids[v.result.uid] = p.uids[v.result.uid] - 1;
+                if (p.uids[v.result.uid] == 0) {
+                  delete p.uids[v.result.uid];
+                }
                 return p 
             },
             function() {
                 return { 
                     imps:0,
-                    uniques_array:{}
+                    uids: {}
                 }
             }
         ),
-        uniques_data: this.dimensions.data.group(function(d){ return d.uid; }).reduce(
+        location_data: this.dimensions.data.group(function(d){ return [d.city, d.state, d.country]; }).order(function(d){return d}).reduce(
             function(p,v) { 
                 ++p.imps;
+                p.uids[v.result.uid] = p.uids[v.result.uid] + 1 || 1;
                 return p 
             },
             function(p,v) { 
                 --p.imps;
+                 p.uids[v.result.uid] = p.uids[v.result.uid] - 1;
+                 if (p.uids[v.result.uid] == 0) {
+                  delete p.uids[v.result.uid];
+                }
                 return p 
             },
             function() {
                 return { 
-                    imps:0
+                    imps:0,
+                    uids: {}
                 }
             }
-        )
+        ),
+        latlong_location_data: this.dimensions.data.group(function(d){ return [d.city, d.state, d.country, d.latitude, d.longitude]; }).order(function(d){return d}).reduce(
+            function(p,v) { 
+                ++p.imps;
+                p.uids[v.result.uid] = p.uids[v.result.uid] + 1 || 1;
+                return p 
+            },
+            function(p,v) { 
+                --p.imps;
+                 p.uids[v.result.uid] = p.uids[v.result.uid] - 1;
+                 if (p.uids[v.result.uid] == 0) {
+                  delete p.uids[v.result.uid];
+                }
+                return p 
+            },
+            function() {
+                return { 
+                    imps:0,
+                    uids: {}
+                }
+            }
+        ),
+        uniques_data: this.dimensions.data.group(function(d){ return d.uid; })    
+        // domain_data: this.dimensions.grouped_data.group(function(d){ return d[0]; }).reduce(
+            // function(p,v) { 
+                // ++p.imps;
+                // return p 
+            // },
+            // function(p,v) { 
+                // --p.imps;
+                // return p 
+            // },
+            // function() {
+                // return { 
+                    // imps:0
+                // }
+            // }
+        // )       
     }
+   
+   this.bubbleFillKey = "green";
+   this.bubbleType = "imps";
    
    this.aggregateDimensions = {
         domain_data: {
 			top: function(x) {
-				return self.groups.domain_data.top(x).filter(function(x){return x.value.imps}).map(function (grp) { 
-					
-                    // var uniques_qty= self.dimensions.data.filter(function(d){return d.domain == grp.key}).group(function(d){return d.uid}).size();
+				return self.groups.domain_data.all().filter(function(x){return x.value.imps}).slice(0, x).map(function (grp) { 
                     return {
 						"domain":grp.key, 
 						"imps":grp.value.imps,
-						"uniques":Object.keys(grp.value.uniques_array).length
+						"uniques":Object.keys(grp.value.uids).length
+					} 
+				});
+			},
+            bottom: function(x) {
+				return self.groups.domain_data.all().filter(function(x){return x.value.imps}).slice(-x).map(function (grp) { 
+                    return {
+						"domain":grp.key, 
+						"imps":grp.value.imps,
+						"uniques":Object.keys(grp.value.uids).length
+					} 
+				});
+			}
+		},
+        location_data: {
+			top: function(x) {
+				return self.groups.location_data.all().filter(function(x){return x.value.imps}).slice(0, x).map(function (grp) { 
+                    return {
+						"location":grp.key, 
+						"imps":grp.value.imps,
+						"uniques":Object.keys(grp.value.uids).length
+					} 
+				});
+			},
+            bottom: function(x) {
+				return self.groups.location_data.all().filter(function(x){return x.value.imps}).slice(-x).map(function (grp) { 
+                    return {
+						"location":grp.key, 
+						"imps":grp.value.imps,
+						"uniques":Object.keys(grp.value.uids).length
+					} 
+				});
+			}
+		},
+        latlong_location_data: {
+			top: function(x) {
+                var locationData = self.groups.location_data.all();
+                if(locationData.length){
+                    if(self.bubbleType == "imps"){
+                        var impsMax = 0;
+                        $.each(locationData, function(key, data){
+                            if(data.value.imps > impsMax) impsMax = data.value.imps;
+                        });
+                    }
+                    else {
+                         var uniquesMax = 0;
+                        $.each(locationData, function(key, data){
+                            var uniqueCount = Object.keys(data.value.uids).length;
+                            if(uniqueCount > uniquesMax) uniquesMax = uniqueCount;
+                        });
+                    }
+                }
+                else impsMax = 0;
+				return self.groups.latlong_location_data.all().filter(function(x){return x.value.imps}).slice(0, x).map(function (grp) { 
+                   var uniqueCount = Object.keys(grp.value.uids).length;
+                    var radius = self.bubbleType == "imps" ? grp.value.imps / impsMax * 13 + 3 : uniqueCount / uniquesMax * 13 + 5;
+                   return {
+						"location":grp.key, 
+						"imps":grp.value.imps,
+						"uniques":uniqueCount,
+                        "latitude":grp.key[3],
+                        "longitude":grp.key[4],
+                        "radius":radius,
+                        "fillKey":self.bubbleFillKey
 					} 
 				});
 			}
@@ -134,6 +244,7 @@ var rawDataWrapper = function() {
     this.dimensions.position.filterAll()
     
     this.crs.add(results)
+    // console.log(results);
     dc.redrawAll();
     
   }
