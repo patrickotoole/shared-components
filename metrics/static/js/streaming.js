@@ -3,7 +3,7 @@ var socketWrapper = function(params,on_init) {
   this.id = Math.round(Math.random() * 10000000);
 
   this.createSocket = function(params){
-    this.socket = new WebSocket("ws://portal.getrockerbox.com/websocket?id=" + this.id);
+    this.socket = new WebSocket("ws://" + window.location.host + "/websocket?id=" + this.id);
 
     this.socket.onopen = function() {
       self.sendMessage("initialize")
@@ -61,10 +61,10 @@ socket.onMessage = function(x){
     
     this.groups = {
         imps_data: this.dimensions.data.groupAll(),
-        domain_data: this.dimensions.data.group(function(d){ return d.domain; }).reduce(
+        domain_data: this.dimensions.data.group(function(d){ return d.domain; }).order(function(d){return d}).reduce(
             function(p,v) { 
                 ++p.imps;
-		p.uids[v.result.uid] = p.uids[v.result.uid] + 1 || 1;
+                p.uids[v.result.uid] = p.uids[v.result.uid] + 1 || 1;
                 return p 
             },
             function(p,v) { 
@@ -82,18 +82,45 @@ socket.onMessage = function(x){
                 }
             }
         ),
-        location_data: this.dimensions.data.group(function(d){ return d.city + ", " + d.state + ", " + d.country; }).reduce(
+        location_data: this.dimensions.data.group(function(d){ return [d.city, d.state, d.country]; }).order(function(d){return d}).reduce(
             function(p,v) { 
                 ++p.imps;
+                p.uids[v.result.uid] = p.uids[v.result.uid] + 1 || 1;
                 return p 
             },
             function(p,v) { 
                 --p.imps;
+                 p.uids[v.result.uid] = p.uids[v.result.uid] - 1;
+                 if (p.uids[v.result.uid] == 0) {
+                  delete p.uids[v.result.uid];
+                }
                 return p 
             },
             function() {
                 return { 
-                    imps:0
+                    imps:0,
+                    uids: {}
+                }
+            }
+        ),
+        latlong_location_data: this.dimensions.data.group(function(d){ return [d.city, d.state, d.country, d.latitude, d.longitude]; }).order(function(d){return d}).reduce(
+            function(p,v) { 
+                ++p.imps;
+                p.uids[v.result.uid] = p.uids[v.result.uid] + 1 || 1;
+                return p 
+            },
+            function(p,v) { 
+                --p.imps;
+                 p.uids[v.result.uid] = p.uids[v.result.uid] - 1;
+                 if (p.uids[v.result.uid] == 0) {
+                  delete p.uids[v.result.uid];
+                }
+                return p 
+            },
+            function() {
+                return { 
+                    imps:0,
+                    uids: {}
                 }
             }
         ),
@@ -115,35 +142,80 @@ socket.onMessage = function(x){
         // )       
     }
    
+   this.bubbleFillKey = "green";
+   this.bubbleType = "imps";
+   
    this.aggregateDimensions = {
         domain_data: {
 			top: function(x) {
-				return self.groups.domain_data.top(x).filter(function(x){return x.value.imps}).map(function (grp) { 
-                // self.dimensions.grouped_data.filter(function(d){ return (d[0] == grp.key)});
-                // console.log(self.dimensions.grouped_data.group().all());
-                    // console.log(grp.key, self.dimensions.grouped_data.group(function(d){return d[1]}).all());
-                    // self.dimensions.grouped_data.filterAll();
-                    var uniques_qty = Object.keys(grp.value.uids).length;
+				return self.groups.domain_data.all().filter(function(x){return x.value.imps}).slice(0, x).map(function (grp) { 
                     return {
 						"domain":grp.key, 
 						"imps":grp.value.imps,
-						"uniques":uniques_qty
+						"uniques":Object.keys(grp.value.uids).length
+					} 
+				});
+			},
+            bottom: function(x) {
+				return self.groups.domain_data.all().filter(function(x){return x.value.imps}).slice(-x).map(function (grp) { 
+                    return {
+						"domain":grp.key, 
+						"imps":grp.value.imps,
+						"uniques":Object.keys(grp.value.uids).length
 					} 
 				});
 			}
 		},
         location_data: {
 			top: function(x) {
-				return self.groups.location_data.top(x).filter(function(x){return x.value.imps}).map(function (grp) { 
-                // self.dimensions.grouped_data.filter(function(d){ return (d[0] == grp.key)});
-                // console.log(self.dimensions.grouped_data.group().all());
-                    // console.log(grp.key, self.dimensions.grouped_data.group(function(d){return d[1]}).all());
-                    // self.dimensions.grouped_data.filterAll();
-                    var uniques_qty = 0;
+				return self.groups.location_data.all().filter(function(x){return x.value.imps}).slice(0, x).map(function (grp) { 
                     return {
 						"location":grp.key, 
 						"imps":grp.value.imps,
-						"uniques":uniques_qty
+						"uniques":Object.keys(grp.value.uids).length
+					} 
+				});
+			},
+            bottom: function(x) {
+				return self.groups.location_data.all().filter(function(x){return x.value.imps}).slice(-x).map(function (grp) { 
+                    return {
+						"location":grp.key, 
+						"imps":grp.value.imps,
+						"uniques":Object.keys(grp.value.uids).length
+					} 
+				});
+			}
+		},
+        latlong_location_data: {
+			top: function(x) {
+                var locationData = self.groups.location_data.all();
+                if(locationData.length){
+                    if(self.bubbleType == "imps"){
+                        var impsMax = 0;
+                        $.each(locationData, function(key, data){
+                            if(data.value.imps > impsMax) impsMax = data.value.imps;
+                        });
+                    }
+                    else {
+                         var uniquesMax = 0;
+                        $.each(locationData, function(key, data){
+                            var uniqueCount = Object.keys(data.value.uids).length;
+                            if(uniqueCount > uniquesMax) uniquesMax = uniqueCount;
+                        });
+                    }
+                }
+                else impsMax = 0;
+				return self.groups.latlong_location_data.all().filter(function(x){return x.value.imps}).slice(0, x).map(function (grp) { 
+                   var uniqueCount = Object.keys(grp.value.uids).length;
+                    var radius = self.bubbleType == "imps" ? grp.value.imps / impsMax * 13 + 3 : uniqueCount / uniquesMax * 13 + 5;
+                   return {
+						"location":grp.key, 
+						"imps":grp.value.imps,
+						"uniques":uniqueCount,
+                        "latitude":grp.key[3],
+                        "longitude":grp.key[4],
+                        "radius":radius,
+                        "fillKey":self.bubbleFillKey
 					} 
 				});
 			}
@@ -172,6 +244,7 @@ socket.onMessage = function(x){
     this.dimensions.position.filterAll()
     
     this.crs.add(results)
+    // console.log(results);
     dc.redrawAll();
     
   }

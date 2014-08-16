@@ -11,7 +11,7 @@
 
 {% block page_sidebar %}
 	<li><a href="reporting"><img src="/static/img/sidebar/reporting-icon.png" alt="Reporting icon" /><span class="sidebar-label">campaign reporting</span></a></li>
-	<li class="active"><a href="streaming"><img src="/static/img/sidebar/streaming-icon.png" alt="Streaming icon" /><span class="sidebar-label">global streaming</span></a></li>
+	<li class="active"><a href="streaming"><img src="/static/img/sidebar/global-icon.png" alt="Global icon" /><span class="sidebar-label">global streaming</span></a></li>
 	<!--
 	<li><a href="global"><img src="/static/img/sidebar/global-icon.png" alt="Global icon" /><span class="sidebar-label">global streaming</span></a></li>
 	
@@ -21,27 +21,47 @@
 
 {% block page_content %}
 	<div id="overall-box" class="box half-box">
-        <div id="imps-box"></div>
-        <div id="domain-box"></div>
-        <div id="uniques-box"></div>
+        <ul id="overall-stats">
+            <li class="border-green"><div class="overall-item-header">impressions</div><div id="imps-box" class="overall-item-value">0</div></li>
+            <li class="border-blue"><div class="overall-item-header">domains</div><div id="domain-box" class="overall-item-value">0</div></li>
+            <li class="border-orange"><div class="overall-item-header">unique visitors</div><div id="uniques-box" class="overall-item-value">0</div></li>
+        </ul>
 	</div>
-	<div class="box half-box">
-	</div>
+	<div id="filter-box" class="box half-box">
+        <div class="box-title">Filters</div>
+        <ul id="filter-radio"><li class="filter-radio-active"><img src="/static/img/general/checked-radio.png" alt="Checked radio button" />impressions</li><li><img src="/static/img/general/unchecked-radio.png" alt="Unchecked radio button" />unique viewers</li></ul>
+        <div class="clearfix"></div>
+        <div class="custom-filter-select" id="campaign-select">
+            All campaigns<img src="/static/img/general/dropdown-down.png" alt="Dropdown arrow" />
+            <div id="campaign-select-expanded">
+                <ul>
+                    <li>dailyfinance.com</li>
+                    <li>yahoo.com</li>
+                    <li>ibtimes.com</li>
+                </ul>      
+            </div>
+        </div>
+        <div class="custom-filter-select">All domains<span class="filter-reset">reset</span></div>
+        <div class="custom-filter-select">All locations<span class="filter-reset">reset</span></div>
+        <div class="clearfix"></div>
+    </div>    
 	<div class="clearfix"></div>	
-    <div id="map-view" class="box full-box">
+    <div id="map-box" class="box full-box">
 	</div>
 	<div class="clearfix"></div>
 	<div id="domain-box" class="box half-box">
         <div class="box-title">Domains</div>
         <div id="domain-table" class="content-table">
-        <ul class="header-row"><li class="">domain</li><li class="">impressions</li><li class="">uniques</li></ul>		
+            <ul class="header-row"><li class="domain-name" title="Sort by domain (descending)" data-sort="down">domain</li><li class="domain-imps active-sorted" title="Sort by impressions (ascending)" data-sort="up">impressions<img src="/static/img/general/dropdown-down.png" alt="Sort by impressions" /></li><li class="domain-uniques" data-sort="down"  title="Sort by unique views (descending)" >uniques</li></ul>		
 		</div>
+        <div class="show-more">show more</div>
 	</div>
 	<div id="location-box" class="box half-box">
         <div class="box-title">Locations</div>
         <div id="location-table" class="content-table">
-        <ul class="header-row"><li class="">location</li><li class="">impressions</li><li class="">uniques</li></ul>		
+            <ul class="header-row"><li class="location-name" title="Sort by location (descending)" data-sort="down">location</li><li class="location-imps active-sorted" title="Sort by impressions (ascending)" data-sort="up">impressions<img src="/static/img/general/dropdown-down.png" alt="Sort by impressions" /></li><li class="location-uniques" data-sort="down"  title="Sort by unique views (descending)" >uniques</li></ul>			
 		</div>
+        <div class="show-more">show more</div>
 	</div>
 	<div class="clearfix"></div>	
 {% end %}
@@ -54,25 +74,61 @@
 	<script src="/static/js/crossfilter.min.js"></script>
 	<script src="/static/js/dc.mod.js"></script>
 	<script src="/static/js/streaming.js"></script>
+    <script src="/static/js/streaming-map.js"></script>
 	<script>			
 
 	var extUserID =  {{ advertiser_id }};
 	
 	// GET ADVERTISER BUDGET AND PROGRESS
 	var getUserInfo = $.getJSON("/intraweek?format=json&ioinfo=" + extUserID, function(data){
-        $('#io-completion-box #io-progress').html(formatMoney(data[0].spent) + '*<span>/' + formatMoney(data[0].current_budget) + '</span>');
         $('#header #right-align #user-name').text(data[0].advertiser.toLowerCase());
-        
-        userBudget = parseInt(data[0].current_budget);
-        userSpent = parseInt(data[0].spent);
     });
     
+    // FORMAT LOCATION
+    function formatLocation(location){
+        // IF COUNTRY UNKNOWN, RETURN UNKNOWN
+        if($.inArray(location[2], ["", "0", 0]) != -1){
+            return "Unknown";
+        }
+        // ELSE IF ONLY COUNTRY, RETURN COUNTRY
+        else if($.inArray(location[0], ["", "0", 0]) != -1 && $.inArray(location[1], ["", "0", 0]) != -1){
+            return location[2];
+        }
+        // ELSE IF CITY BUT NOT STATE
+        else if($.inArray(location[1], ["", "0", 0]) != -1){
+            return location[0] + ", " + location[2];
+        }
+        // ELSE IF STATE BUT NOT CITY
+        else if($.inArray(location[0], ["", "0", 0]) != -1){
+            return location[1] + ", " + location[2];
+        }
+        return location[0] + ', ' + location[1] + ', ' + location[2];
+    }
+    
+    // REFRESH BUBBLES
+    function refreshBubbles(){
+        mapGraph.bubbles(
+            dataWrapper.aggregateDimensions.latlong_location_data.top(10000),
+            {
+                fillOpacity: 1,
+                borderWidth: 1,
+                popupTemplate: function(geography, data) { //this function should just return a string
+                return '<div class="tooltip"><div class="tooltip-content">' + formatLocation(data.location) + '<span id="tooltip-imps" class="tooltip-values">' + data.imps + '</span><span id="tooltip-uniques" class="tooltip-values">' + data.uniques + '</span></div></div>';
+                },
+                highlightOnHover: false
+            }
+        );
+    }
+    
     // INITIALISE DC WIDGETS
-    var impsBox = null, domainBox = null, uniquesBox = null, locationTable = null, domainTable = null;
+    var impsBox = null, domainBox = null, uniquesBox = null, mapGraph = null, locationTable = null, domainTable = null;
    
     // GENERATE IMPRESSIONS COUNTER
     impsBox = dc.customDataBox('#overall-box #imps-box')
     .group(dataWrapper.groups.imps_data)
+    .on("postRedraw", function(){
+       refreshBubbles();
+    });
     
     // GENERATE DOMAIN COUNTER
     domainBox = dc.customDataBox('#overall-box #domain-box')
@@ -83,20 +139,53 @@
     .group(dataWrapper.groups.uniques_data)
      ///*
     
+    // GENERATE MAP
+    mapGraph = new Datamap({
+        scope: 'usa',
+        element: document.getElementById('map-box'),
+        projection:"mercator",
+        /*
+        setProjection: function(element) {
+            var projection = d3.geo.mercator()
+            
+              .translate([element.offsetWidth / 2, element.offsetHeight / 2]);
+            var path = d3.geo.path()
+              .projection(projection);
+            
+            return {path: path, projection: projection};
+        },*/
+        fills: {
+            defaultFill: '#333',
+            'green': '#5ec34b',
+            'orange': '#ffb952'
+        },
+         geographyConfig: {
+            highlightOnHover: false,
+            popupOnHover: false,
+            borderColor: '#888888'
+        }
+    });
+   
     // GENERATE DOMAINS TABLE   
+    
+    var domainRowSize = 10;
+    
     domainTable = dc.customDataTable('#domain-table')
     .dimension(dataWrapper.aggregateDimensions.domain_data)
     .group(dataWrapper.groups.domain_data)
     .sortBy(function(d){
-        return d.domain;					
+        return d.imps;					
     })
     .order(d3.descending)
-    .size(100)
-    .rowClass("")
-    .listClasses(["", "", ""])
+    .size(domainRowSize)
+    .rowClass("domain-row")
+    .listClasses(["domain-name", "domain-imps", "domain-uniques"])
     .listItems([
         function(d){
-            return d.domain;
+            if($.inArray(d.domain, ["", "0", 0]) != -1){
+                return "Unknown";
+            }
+            return d.domain.replace("www.", "");
         },
         function(d){
             return formatNumber(d.imps);
@@ -105,21 +194,33 @@
             return formatNumber(d.uniques);
         }
     ])
+    .on("preRedraw", function(){
+        if(dataWrapper.aggregateDimensions.domain_data.top(domainRowSize + 1).length > domainRowSize){
+            $('#domain-box .show-more').css("display", "inline-block");
+        }
+        else {
+            $('#domain-box .show-more').hide();
+        }
+    })
     
     // GENERATE LOCATION TABLE   
-    domainTable = dc.customDataTable('#location-table')
+    
+    var locationRowSize = 10;
+    
+    locationTable = dc.customDataTable('#location-table')
     .dimension(dataWrapper.aggregateDimensions.location_data)
     .group(dataWrapper.groups.location_data)
     .sortBy(function(d){
         return d.imps;					
     })
     .order(d3.descending)
-    .size(100)
-    .rowClass("")
-    .listClasses(["", "", ""])
+    .size(locationRowSize)
+    
+    .rowClass("location-row")
+    .listClasses(["location-name", "location-imps", "location-uniques"])
     .listItems([
         function(d){
-            return d.location;
+            return formatLocation(d.location);
         },
         function(d){
             return formatNumber(d.imps);
@@ -128,72 +229,97 @@
             return formatNumber(d.uniques);
         }
     ])
+     .on("preRedraw", function(){
+        if(dataWrapper.aggregateDimensions.location_data.top(locationRowSize + 1).length > locationRowSize){
+            $('#location-box .show-more').css("display", "inline-block");
+        }
+        else {
+            $('#location-box .show-more').hide();
+        }
+    })
 
 
     //*/
     dc.renderAll();
     
     // GENERATE MAP
-    var width = $('#map-view').width(),
-    height = $('#map-view').height();
-
-    var projection = d3.geo.mercator()
-        .scale((width + 1) / 2 / Math.PI)
-        .translate([width / 2, (height + 400) / 2])
-        .precision(.1);
-        
-    var path = d3.geo.path()
-        .projection(projection);
-
-    var zoom = d3.behavior.zoom()
-        .translate([0, 0])
-        .scale(1)
-        .scaleExtent([1, 8])
-        .on("zoom", zoomed);
-        
-    var svg = d3.select("#map-view").append("svg")
-        .attr("width", width)
-        .attr("height", height);
-
-    var features = svg.append("g");
-        
-    svg.append("rect")
-        .attr("class", "overlay")
-        .attr("width", width)
-        .attr("height", height)
-        .call(zoom);
-        
-    d3.json("/static/js/world-topo.json", function(error, world) {
-        features.append("path")
-            .datum(topojson.feature(world, world.objects.land))
-            .attr("class", "land")
-            .attr("d", path);
-
-        features.append("path")
-            .datum(topojson.mesh(world, world.objects.countries, function(a, b) { return a !== b; }))
-            .attr("class", "boundary")
-            .attr("d", path);
-    });
-
-    function zoomed() {
-        var t = d3.event.translate;
-        var s = d3.event.scale; 
-        zscale = s;
-        var h = (height + 400) / 4;
-
-
-        t[0] = Math.min((width/height)  * (s - 1), Math.max( width * (1 - s), t[0] ));
-
-        t[1] = Math.min(h * (s - 1) + h * s, Math.max(height  * (1 - s) - h * s, t[1]));
-
-        zoom.translate(t);    
-        features.attr("transform", "translate(" + t + ")scale(" + s + ")");
-        features.select(".boundary").style("stroke-width", .5 / s + "px");
-
-    }
-    d3.select(self.frameElement).style("height", height + "px");
+    
 
     $('#page-loader').fadeOut();
 
 	</script>
+    <script>
+        
+        // IF SHOW MORE ON TABLE CLICKED
+        $('.show-more').click(function(){
+            var parentID = $(this).parent().attr('id');   
+            if(parentID == "location-box"){
+                locationRowSize = Infinity;
+                locationTable.size(locationRowSize);
+            }
+            else {
+                domainRowSize = Infinity;
+                 domainTable.size(domainRowSize);
+            }
+            dc.redrawAll();
+        });
+        
+        // IF CHANGE FILTER RADIO
+        $('#filter-radio li').click(function(){
+            if(!$(this).hasClass('.filter-radio-active')){
+                if($(this).text() == "unique viewers"){
+                    dataWrapper.bubbleFillKey = "orange";     
+                    dataWrapper.bubbleType = "uniques";
+                }
+                else {
+                    dataWrapper.bubbleFillKey = "green";
+                    dataWrapper.bubbleType = "imps";
+                }
+                $('#filter-radio li.filter-radio-active').removeClass('filter-radio-active').children('img').attr("src", "/static/img/general/unchecked-radio.png").attr("alt", "Unchecked radio button");
+                $(this).addClass('filter-radio-active').children('img').attr("src", "/static/img/general/checked-radio.png").attr("alt", "Checked radio button");
+                refreshBubbles();
+            }
+        });
+        
+        // IF CAMPAIGN FILTER HOVERED
+        /*
+        $('#campaign-select').hover(function(){
+            $(this).children('#campaign-select-expanded').fadeIn();
+        }, function(){
+            if (!$(this).children('#campaign-select-expanded').is(':hover')) {
+                $(this).children('#campaign-select-expanded').fadeOut();
+            }      
+        });
+        */
+        
+        // SHOW DROPDOWN ON DOMAIN/LOCATION TABLES
+        $('.header-row li').hover(function(){
+            if($(this).hasClass('active-sorted')){
+                         
+                if($(this).attr('data-sort') == "up"){
+                    $(this).children('img').attr('src', '/static/img/general/dropdown-up.png');
+                }
+                else {
+                    $(this).children('img').attr('src', '/static/img/general/dropdown-down.png');
+                }
+            }
+            else {
+                $(this).append('<img src="/static/img/general/dropdown-down.png" />');
+                $(this).siblings('.active-sorted').children('img').hide();
+            }
+        }, function(){
+            if($(this).hasClass('active-sorted')){
+                if($(this).attr('data-sort') == "up"){
+                    $(this).children('img').attr('src', '/static/img/general/dropdown-down.png');
+                }
+                else {
+                    $(this).children('img').attr('src', '/static/img/general/dropdown-up.png');
+                }
+            }
+            else {
+                $(this).children('img').remove();
+                 $(this).siblings('.active-sorted').children('img').css("display","inline");
+            }
+        });
+    </script>
 {% end %}

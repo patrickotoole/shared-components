@@ -4802,7 +4802,13 @@ dc.customDataBox = function (parent, chartGroup) {
     });
 
     _chart._doRender = function () {
-        _chart.root().html(_chart.value());
+        var chartValue = _chart.value();
+        if(typeof chartValue == "number"){
+            _chart.root().html(formatNumber(_chart.value()));
+        }
+        else {
+            _chart.root().html(_chart.value());
+        }
     };
 
     _chart._doRedraw = function(){
@@ -4837,10 +4843,8 @@ dc.customDataTable = function(parent, chartGroup) {
 
     _chart._doRender = function() {
         _chart.selectAll("ul:not(.header-row)").remove();
-
-		// console.log(_size);
+        
 		var entries = (_sliceMode == "bottom") ? sortEntries(_chart.dimension().bottom(_size)) : sortEntries(_chart.dimension().top(_size));
-		
         
 		if($.isEmptyObject(_totalDimension) || (!$.isEmptyObject(_totalDimension) && entries.length > 1)){
 			renderRows(entries);
@@ -4876,12 +4880,12 @@ dc.customDataTable = function(parent, chartGroup) {
             .entries(entries.sort(function(a, b){
                 return _order(_sortBy(a), _sortBy(b));
             }));
-	}
+    }
     function renderRows(entries, preservePrevious) {
-		
-		var rows = _chart.root().selectAll(".table-row")
-		.data(entries, _sortBy);
 
+		var rows = _chart.root().selectAll(".table-row")
+		.data(entries);
+// console.log(entries, rows);
 		var classText = "table-row " + _rowClass;
         var rowEnter = rows.enter()
             .append("ul")
