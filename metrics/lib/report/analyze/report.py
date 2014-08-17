@@ -9,7 +9,7 @@ from datetime import timedelta
 
 import pandas as pd
 
-from lib.report.utils.utils import convert_datetime
+from lib.report.utils.utils import parse_datetime
 from lib.report.utils.utils import memo
 from lib.report.utils.apiutils import get_or_create_console
 from lib.report.utils.constants import ROUND
@@ -123,7 +123,7 @@ class AnalyzeDataPulling(AnalyzeBase):
 class AnalyzeSegment(AnalyzeBase):
     def _modify(self, df):
         df = df.rename(columns={'day': 'date_time'})
-        df['date_time'] = df['date_time'].map(lambda x: convert_datetime(x))
+        df['date_time'] = df['date_time'].map(lambda x: parse_datetime(x))
         return df
 
 #-------------------conversions---------------------------------------------------------
@@ -151,8 +151,8 @@ def _is_valid(row):
     window_hours = _get_pc_or_pv_hour(int(pid))
     window_hours = timedelta(window_hours.get('pc') if row['pc'] else
                              window_hours.get('pv'))
-    conversion_time = convert_datetime(row['conversion_time'])
-    imp_time = convert_datetime(row['imp_time'])
+    conversion_time = parse_datetime(row['conversion_time'])
+    imp_time = parse_datetime(row['imp_time'])
     row['is_valid'] = imp_time + window_hours <= conversion_time
     return row
 

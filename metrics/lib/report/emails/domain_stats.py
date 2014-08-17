@@ -10,7 +10,7 @@ from lib.report.emails.emails import send_multi_table_report_email
 from lib.report.emails.models import HighlightRow
 from lib.report.emails.models import Table
 from lib.report.utils.utils import get_start_end_date
-from lib.report.utils.utils import convert_datetime
+from lib.report.utils.utils import parse_datetime
 from lib.report.utils.reportutils import get_report_obj
 from lib.report.utils.reportutils import get_advertisers
 from lib.report.analyze.report import AnalyzeDomain
@@ -29,7 +29,7 @@ def _is_a_month(start, end):
     @param  end   : str
     @return       : bool
     """
-    _t = convert_datetime(end) - convert_datetime(start)
+    _t = parse_datetime(end) - parse_datetime(start)
     return _t >= timedelta(days=28)
 
 def _get_tables(limit=None,
