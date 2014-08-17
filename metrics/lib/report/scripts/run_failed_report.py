@@ -69,9 +69,13 @@ def _run(to_rerun):
                     cache=True,
                     )._work()
             logging.info("job for %s is | %s, start_date: %s, end_date: %s" % ( event_name, ['failed', 'succ'][succ], start_date, end_date))
-            deactive_event(start_date, end_date, event_name)
         except Exception:
             logging.warn("re-runing %s failed for start_date: %s, end_date: %s" % (event_name, start_date, end_date))
+            pass
+        try:
+            deactive_event(start_date, end_date, event_name)
+        except Exception:
+            logging.warn("error when deactiving %s from %s -- %s failed" % (event_name, start_date, end_date))
             pass
     return
 
@@ -115,7 +119,9 @@ def deactive_event(start, end, name):
     """
     @param _id: int
     """
-    q = "update stats_event_report set active=0 where status = 0 and start_date>='%s' and end_date<='%s' and event_name = '%s'" % (datetime_to_str(start), datetime_to_str(end), name)
+    def _h(t):
+        return t if isinstance(t, str) else datetime_to_str(t)
+    q = "update stats_event_report set active=0 where status = 0 and start_date>='%s' and end_date<='%s' and event_name = '%s'" % (_h(start), _h(end), name)
     db.execute(q)
     db.commit()
     logging.info("deactived %s from %s -- %s, changed status to 0" % (name, start, end))
