@@ -65,6 +65,7 @@ def accounting(f):
             logging.warn(e)
             logging.warn("creating event failed for database %s for %s, start_date: %s, end_date: %s, status: %s" % (
                     db_wrapper.database, event_name, start_date, end_date, status))
+            return status
 
         logging.info("created event on database %s for %s, start_date: %s, end_date: %s, status: %s" % (
                 db_wrapper.database, event_name, start_date, end_date, status))
