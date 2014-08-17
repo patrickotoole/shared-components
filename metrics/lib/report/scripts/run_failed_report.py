@@ -125,8 +125,9 @@ def main():
     define('db')
     define('hours', type=int, default=1)
     define('daily', type=bool, default=False)
+
     parse_command_line()
-    basicConfig()
+    basicConfig(options=options)
 
     global db
     db = get_db(options.db)
@@ -136,7 +137,7 @@ def main():
     check(options.hours)
 
 if __name__ == '__main__':
-    from tornado.options import define
-    from tornado.options import options
-    from tornado.options import parse_command_line
+    from lib.report.utils.options import define
+    from lib.report.utils.options import options
+    from lib.report.utils.options import parse_command_line
     exit(main())

@@ -2,9 +2,10 @@ import logging
 from datetime import timedelta
 from pprint import pprint
 
-from tornado.options import define
-from tornado.options import options
-from tornado.options import parse_command_line
+from lib.report.utils.options import define
+from lib.report.utils.options import options
+from lib.report.utils.options import parse_command_line
+from lib.report.utils.loggingutils import basicConfig
 
 from lib.report.emails.emails import send_multi_table_report_email
 from lib.report.emails.models import HighlightRow
@@ -137,7 +138,9 @@ def main():
     define('end_date', type=str, default='4h')
     define('pred', type=str)
     define('act', type=bool, default=False)
+
     parse_command_line()
+    basicConfig(options=options)
 
     start_date, end_date = get_start_end_date(options.start_date,
             options.end_date, units='days')
@@ -163,4 +166,3 @@ def main():
 
 if __name__ == '__main__':
     exit(main())
-
