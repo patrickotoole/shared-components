@@ -133,11 +133,15 @@ def cmp_v1_v2_conversion_reporting():
             )
 
 def main():
+    parse_command_line()
+    basicConfig(options=options)
+
     logging.info("Compared at time: %s" % parse('0m'))
     cmp_v3_v4_reporting()
     cmp_v1_v2_conversion_reporting()
 
 
 if __name__ == '__main__':
-    basicConfig()
+    from lib.report.utils.options import options
+    from lib.report.utils.options import parse_command_line
     exit(main())
