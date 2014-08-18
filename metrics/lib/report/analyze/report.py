@@ -109,15 +109,20 @@ class AnalyzeDataPulling(AnalyzeBase):
         to_group_adx = to_group_all + ['seller_member']
         adx_grouped = df.groupby(to_group_adx)
         all_grouped = df.groupby(to_group_all)
+
         to_sum = ['imps', 'clicks', 'media_cost']
         adx_res = adx_grouped[to_sum].sum()
-        adx_res = adx_res.xs(GOOGLE_ADX, level="seller_member").reset_index()
-
+        adx_res = adx_res.xs(GOOGLE_ADX, level="seller_member")
         all_res = all_grouped[to_sum].sum()
-        to_return = all_res.reset_index()
-        to_return['adx_spend'] = adx_res['media_cost']
-        to_return = to_return.fillna(0)
-        return to_return
+
+        joined = all_res.join(adx_res, rsuffix='_adx')
+        joined = joined.reset_index()
+        cols = to_sum + ['media_cost_adx']
+        joined = joined[cols].reset_index()
+        joined = joined.fillna(0)
+        joined = joined.rename(columns={'media_cost_adx': 'adx_spent'})
+
+        return joined
 
 #-------------------segment------------------------------------------------------------
 class AnalyzeSegment(AnalyzeBase):
