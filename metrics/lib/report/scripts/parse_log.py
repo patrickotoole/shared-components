@@ -15,7 +15,8 @@ from pprint import pprint
 
 from lib.report.utils.utils import parse as parsetime
 from lib.report.utils.fileutils import tail
-from lib.report.utils.utils import parse_params
+from lib.report.emails.emails import send_multi_table_report_email
+from lib.report.emails.models import Table
 
 LOG_LEVELS = {
         'python': r'(\bINFO\b|\bWARNING\b|\bERROR\b|\bFATAL\b)',
@@ -37,19 +38,44 @@ def main():
     define("start", default='1h')
     define("include_info", default=False, type=bool)
     define('log_type', default='python')
+    define('act', default=False, type=bool)
 
     basicConfig(optins=options)
     parse_command_line()
     assert(options.filename)
 
-    lines = parse(options.filename,
+    res = parse(options.filename,
             num_lines=options.num_lines,
             start=options.start,
             include_info=options.include_info,
             log_type=options.log_type,
             )
-    pprint(lines)
+    if options.act:
+        notify(res)
+    else:
+        pprint(res)
 
+def notify(res):
+    tables = _get_tables(res)
+    logging.info('sending email to wei')
+    return send_multi_table_report_email('wei@rockerbox.com',
+            tables,
+            subject='log error alert',
+            )
+
+def _get_tables(res):
+    tables = []
+    headers=['date',
+             'pid',
+             'file',
+             'msg',
+             ]
+    for k, v in res.iteritems():
+        title = k
+        rows = [[_v.get(h) for h in headers] for _v in v]
+        table = Table(headers=headers, title=title, rows=rows)
+        tables.append(table)
+    return tables
 
 def parse(filename, num_lines=10000,
         start='1h',
@@ -80,15 +106,15 @@ def parse(filename, num_lines=10000,
         return
     lines = _parse_lines(lines, options.log_type)
     logging.info("Got %s lines alters" % len(lines))
-    return {
-            filename: lines
-            }
+    d = [ {filename : lines } ]
+    return d
 
 def _parse_all(**kwargs):
     to_return = {}
     filenames = _get_all_logs()
     for name in filenames:
-        to_return.update(parse(name, **kwargs))
+        d = parse(name, **kwargs)[0]
+        to_return.update(d)
     return to_return
 
 def _get_all_logs():
