@@ -73,6 +73,8 @@ def _get_tables(res):
     for k, v in res.iteritems():
         title = k
         rows = [[_v.get(h) for h in headers] for _v in v]
+        if not rows:
+            continue
         table = Table(headers=headers, title=title, rows=rows)
         tables.append(table)
     return tables
