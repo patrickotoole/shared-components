@@ -9,9 +9,6 @@ from lib.report.utils.loggingutils import basicConfig
 
 dbs = lnk.dbs
 
-OLD_DB = dbs.mysql
-NEW_DB = dbs.roclocaltest
-
 QUERY = "select * from %s where external_advertiser_id = %s"
 
 V3_V4_COLS = ['imps','clicks','media_cost']
@@ -19,6 +16,13 @@ V3_V4_IDX = ["campaign_id","creative_id","external_advertiser_id","date"]
 
 V1_V2_COLS =['pc', 'auction_id', "imp_time"]
 V1_V2_IDX=["campaign_id","creative_id","external_advertiser_id", "conversion_time"]
+
+def _get_old_db():
+    db = dbs.mysql
+    return db
+
+def _get_new_db():
+    return dbs.roclocaltest
 
 
 def _pull_advertiser_data(advertiser_id=None,
@@ -30,9 +34,11 @@ def _pull_advertiser_data(advertiser_id=None,
     old_query = QUERY % ( old_table, advertiser_id )
     new_query = QUERY % ( new_table, advertiser_id )
 
+    old_db = _get_old_db()
+    new_db = _get_new_db()
     dataframes = {
-        "old": OLD_DB.select_dataframe(old_query % advertiser_id),
-        "new": NEW_DB.select_dataframe(new_query % advertiser_id)
+        "old": old_db.select_dataframe(old_query % advertiser_id),
+        "new": new_db.select_dataframe(new_query % advertiser_id)
     }
 
     comparables = {}
@@ -107,8 +113,10 @@ def compare(old_table=None, new_table=None,
                     return
             logging.info('Advertiser: %s no misses' % advertiser_id)
 
-        _log(missed_old, OLD_DB.database, old_table)
-        _log(missed_new, NEW_DB.database, new_table)
+        old_db = _get_old_db()
+        new_db = _get_new_db()
+        _log(missed_old, old_db.database, old_table)
+        _log(missed_new, new_db.database, new_table)
 
 def cmp_v3_v4_reporting():
     logging.info("compareing v4_reporting with production v3_reporting")
