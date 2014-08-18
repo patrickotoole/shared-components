@@ -1,5 +1,6 @@
 import logging
 import urllib
+import ujson
 
 from tornado.escape import json_encode
 
@@ -42,4 +43,5 @@ class ParseLogHandler(ReportDomainHandler):
         url = self.request.uri
         kwargs = parse_params(url)
         json_ = parse(filename, **kwargs)
-        self.write(json_encode(json_))
+        content = json_encode(ujson.dumps(json_))
+        self.write(content)
