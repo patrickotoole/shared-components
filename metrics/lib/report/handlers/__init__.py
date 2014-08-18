@@ -38,7 +38,7 @@ class ReportDomainHandler(ReportingHandler):
         yield default, (data,)
 
 
-class ReportLogHandler(ReportDomainHandler):
+class ReportingLogHandler(ReportDomainHandler):
     def get(self, filename):
         url = self.request.uri
         kwargs = parse_params(url)

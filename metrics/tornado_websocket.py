@@ -14,7 +14,7 @@ from handlers import streaming, reporting, user, analysis, index, rbox_pixel
 
 import handlers.admin as admin
 from handlers.adminreport import AdminReportHandler
-from lib.report.handlers import ParseLogHandler
+from lib.report.handlers import ReportingLogHandler
 
 from lib.buffers.pixel_buffer import BufferedSocketFactory
 from lib.buffers.view_buffer import ViewabilityBufferedFactory
@@ -136,7 +136,7 @@ admin_reporting = [
     #(r'/target_list.*',admin.reporting.TargetListHandler),
     (r'/intraweek.*',admin.scripts.IntraWeekHandler, dict(db=db)),
     (r'/adminreport/(.*?)/.*', AdminReportHandler),
-    (r'/admin/parselog/(.*?)', ParseLogHandler),
+    (r'/admin/reportinglog/(.*?)', ReportingLogHandler),
     (r'/admin/event_log',admin.scripts.EventLogHandler, dict(db=db,api=api)),
     (r'/admin/event_log/(.*?)',admin.scripts.EventLogHandler, dict(db=db,api=api))
 ]
