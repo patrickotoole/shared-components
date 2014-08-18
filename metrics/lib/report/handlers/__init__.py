@@ -7,7 +7,7 @@ from handlers.reporting import ReportingHandler
 from lib.helpers import decorators
 from lib.report.utils.utils import parse_params
 from lib.report.utils.reportutils import get_report_obj
-from lib.report.utils.parse_log import parse
+from lib.report.scripts.parse_log import parse
 
 
 class ReportDomainHandler(ReportingHandler):
@@ -37,7 +37,7 @@ class ReportDomainHandler(ReportingHandler):
         yield default, (data,)
 
 
-class CronLogHanlder(ReportDomainHandler):
+class ParseLogHandler(ReportDomainHandler):
     def get(self, filename):
         url = self.request.uri
         kwargs = parse_params(url)
