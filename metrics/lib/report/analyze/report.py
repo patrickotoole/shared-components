@@ -117,10 +117,10 @@ class AnalyzeDataPulling(AnalyzeBase):
 
         joined = all_res.join(adx_res, rsuffix='_adx')
         joined = joined.reset_index()
-        cols = to_sum + ['media_cost_adx']
+        joined = joined.rename(columns={'media_cost_adx': 'adx_spent'})
+        cols = filter(lambda x: not '_adx' in x, list(joined.columns))
         joined = joined[cols].reset_index()
         joined = joined.fillna(0)
-        joined = joined.rename(columns={'media_cost_adx': 'adx_spent'})
 
         return joined
 
