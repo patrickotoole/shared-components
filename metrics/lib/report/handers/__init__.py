@@ -1,10 +1,13 @@
 import logging
 import urllib
 
+from tornado.escape import json_encode
+
 from handlers.reporting import ReportingHandler
 from lib.helpers import decorators
 from lib.report.utils.utils import parse_params
 from lib.report.utils.reportutils import get_report_obj
+from lib.report.utils.parse_log import parse
 
 
 class ReportDomainHandler(ReportingHandler):
@@ -32,3 +35,11 @@ class ReportDomainHandler(ReportingHandler):
             self.render(url, data=data)
 
         yield default, (data,)
+
+
+class CronLogHanlder(ReportDomainHandler):
+    def get(self, filename):
+        url = self.request.uri
+        kwargs = parse_params(url)
+        json_ = parse(filename, **kwargs)
+        self.write(json_encode(json_))

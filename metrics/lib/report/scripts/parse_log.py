@@ -11,8 +11,6 @@ import re
 import glob
 import logging
 
-import tornado.web
-from tornado.escape import json_encode
 from pprint import pprint
 
 from lib.report.utils.utils import parse as parsetime
@@ -127,18 +125,6 @@ def to_dict(line):
     except Exception, e:
         logging.warn(e)
         return {}
-
-
-class CronLogHanlder(tornado.web.RequestHandler):
-    def initialize(self, db, api):
-        self.db = db
-        self.api = api
-
-    def get(self, filename):
-        url = self.request.uri
-        kwargs = parse_params(url)
-        json_ = parse(filename, **kwargs)
-        self.write(json_encode(json_))
 
 
 if __name__ == '__main__':
