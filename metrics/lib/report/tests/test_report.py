@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 
 import mock
 from mock import patch
@@ -13,6 +14,8 @@ from lib.report.utils.reportutils import get_path
 from lib.report.reports.base import ReportBase
 from lib.report.utils.reportutils import get_db
 from lib.report.utils.reportutils import empty_frame
+from lib.report.utils.utils import parse
+from lib.report.utils.utils import local_now
 
 CUR_DIR = os.path.realpath(__file__)
 TEST_FILES = os.path.abspath(os.path.join(os.path.dirname(__file__), 'test_files/'))
@@ -160,6 +163,18 @@ class ReportTestCase(unittest.TestCase):
         except Exception as e:
             assert isinstance(e, KeyError)
             assert e.message == 'No such configured object dbs.%s' % random
+
+    def test_parse_datetime(self):
+        ny_now = local_now()
+
+        expected = ny_now - timedelta(minutes=30)
+        resp = parse('30m', now=ny_now)
+        self.assertEqual(expected, resp)
+
+        expected = ny_now - timedelta(days=24)
+        resp = parse('24d', now=ny_now)
+        self.assertEqual(expected, resp)
+
 
     def test_accounting(self):
         """
