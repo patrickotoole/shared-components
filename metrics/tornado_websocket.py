@@ -14,6 +14,7 @@ from handlers import streaming, reporting, user, analysis, index, rbox_pixel
 
 import handlers.admin as admin
 from handlers.adminreport import AdminReportHandler
+from lib.report.handlers import ReportingLogHandler
 
 from lib.buffers.pixel_buffer import BufferedSocketFactory
 from lib.buffers.view_buffer import ViewabilityBufferedFactory
@@ -135,12 +136,13 @@ admin_reporting = [
     #(r'/target_list.*',admin.reporting.TargetListHandler),
     (r'/intraweek.*',admin.scripts.IntraWeekHandler, dict(db=db)),
     (r'/adminreport/(.*?)/.*', AdminReportHandler),
+    (r'/admin/reportinglog/(.*?)', ReportingLogHandler),
     (r'/admin/event_log',admin.scripts.EventLogHandler, dict(db=db,api=api)),
-    (r'/admin/event_log/(.*?)',admin.scripts.EventLogHandler, dict(db=db,api=api)) 
+    (r'/admin/event_log/(.*?)',admin.scripts.EventLogHandler, dict(db=db,api=api))
 ]
 
 reporting = [
-    (r'/', user.LoginHandler, dict(db=db)), 
+    (r'/', user.LoginHandler, dict(db=db)),
     (r'/reporting.*',reporting.ReportingHandler, dict(db=db,api=api,hive=hive)),
     (r'/login.*', user.LoginHandler, dict(db=db)),
     (r'/signup*', user.SignupHandler, dict(db=db))
@@ -158,7 +160,7 @@ static = [
 
 dirname = os.path.dirname(os.path.realpath(__file__))
 app = tornado.web.Application(
-    streaming + admin_scripts + admin_reporting + reporting + analysis + static + index, 
+    streaming + admin_scripts + admin_reporting + reporting + analysis + static + index,
     template_path= dirname + "/templates",
     db=lnk.dbs.mysql,
     debug=True,

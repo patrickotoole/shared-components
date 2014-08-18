@@ -13,3 +13,5 @@ twisted
 mysql-python
 matplotlib
 xmltodict
+sendgrid
+premailer

@@ -6,13 +6,15 @@ python common.py --report=converstions --cache --act --end_date=2014-07-14 --loo
 
 from pprint import pprint
 
-from tornado.options import define
-from tornado.options import options
-from tornado.options import parse_command_line
+from lib.report.utils.options import define
+from lib.report.utils.options import options
+from lib.report.utils.options import parse_command_line
 
+from lib.report.utils.utils import get_start_end_date
+from lib.report.utils.loggingutils import basicConfig
 from lib.report.work.report import ReportWorker
-from lib.report.reportutils import get_report_obj
-from lib.report.reportutils import get_db
+from lib.report.utils.reportutils import get_report_obj
+from lib.report.utils.reportutils import get_db
 
 LIMIT = 5
 WORST = 'worst'
@@ -20,44 +22,44 @@ WORST = 'worst'
 def main():
     define('report')
     define('group',
-            help="choices: site_domain, advertise,site_domain, or advertise,site_domain,campaign",
+            help="choices: site_domain|advertise,site_domain|advertise,site_domain,campaign",
             type=str,
             )
-    define('act', type=bool, default=False, help='if read from cache, act will create csv file if file not exist')
-    define('path', help='where to put tmp csv file')
+    define('act', type=bool)
+    define('path', help='where to find csv file')
+    define("cache", type=bool, default=False, help="find or create cache csv file")
     define('pred', type=str, help='predicats, campaign#bob,media_cost>10')
-    define('limit', type=int, default=LIMIT)
-    define('lookback',
-            help='how many hours from the end date',
-            type=int,
-            default=1,
-            )
-    define('end_date', help='end date, examples: 2014-07-15',)
-    define("cache", type=bool, default=False, help="use cached csv file or api data")
+    define('limit', type=int)
+    define('start_date', default='5h')
+    define('end_date', default='4h')
+    define('align', default='hours')
     define("metrics", type=str, default=WORST)
     define("db", type=str, default='test', help="choose which database to write to")
 
     parse_command_line()
+    basicConfig(options=options)
 
     name = options.report
     group = options.group
     act = options.act
     path = options.path
+    cache = options.cache
     pred = options.pred
     limit = options.limit
-    lookback = options.lookback
-    end_date = options.end_date
-    cache = options.cache
+    start_date, end_date = get_start_end_date(options.start_date,
+            options.end_date, options.align)
+    assert start_date < end_date
     metrics = options.metrics
     kwargs = dict(
             group=group,
-            limit=limit,
             path=path,
             cache=cache,
+            start_date=start_date,
             end_date=end_date,
-            lookback=lookback,
             metrics=metrics,
             pred=pred,
+            limit=limit,
+            act=act,
             )
     db = get_db(options.db)
     if not act:
@@ -65,7 +67,7 @@ def main():
         result = report_obj.get_report(**kwargs)
         pprint(result)
     else:
-        ReportWorker(name, db).work(**kwargs)
+        ReportWorker(name, db, **kwargs)._work()
         return
 
 if __name__ == '__main__':

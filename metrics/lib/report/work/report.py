@@ -1,83 +1,80 @@
 import logging
-import pandas as pd
 
 from lib.report.work.base import BaseWorker
 from lib.pandas_sql import s as _sql
-from lib.report.utils.utils import local_now
-from lib.report.utils.utils import get_dates
-from lib.report.reportutils import get_db
-from lib.report.reportutils import get_report_obj
+from lib.report.utils.sqlutils import get_report_names
+from lib.report.utils.reportutils import get_db
+from lib.report.utils.reportutils import get_report_obj
+from lib.report.event.report import accounting
+from lib.report.utils.reportutils import corret_insert
 
-class UnableGetReporError(ValueError):
+def _is_empty(df):
+    """
+    @param df: DataFrame
+    @return: bool
+    Consider the one that got columns not a failure, but pd.DataFrame()
+    """
+    return len(df.columns) == 0
+
+class ReportError(ValueError):
     pass
 
-
 class ReportWorker(BaseWorker):
-    def __init__(self, name, _db=None):
-        self._db = _db or get_db()
+    def __init__(self, name, con, act=True, **kwargs):
         self._name = name
+        self._con = con
+        self._act = act
+        self._kwargs = kwargs
 
     def do_work(self, **kwargs):
+        report_names = get_report_names(self.con)
+        logging.info("job report starting: %s" % report_names)
+        for name in report_names:
+            try:
+                self._work(name, con=self.con, act=True, **kwargs)
+            except Exception:
+                logging.info("job: %s failed" % name)
+        logging.info("job report ended for: %s" % report_names)
+        return
+
+    @accounting
+    def _work(self):
         """
-        @return: bool, True if successful, False otherwise
+        @return: bool | True if job succeed, False otherwise
         """
-        job_created_at = kwargs.get('job_created_at') or local_now()
-        status =  None
-
+        obj = get_report_obj(self._name, db=self._con)
+        report_f = obj.get_report
         try:
-            self._work(**kwargs)
-            status = True
-        except UnableGetReporError:
-            logging.info("report job -- %s, failed" % self._name)
-            status = False
-        con = self._db
-
-        event_kwargs = _get_kwargs_for_reportevent(kwargs, job_created_at, status, self._name)
-        _create_report_events(con, **event_kwargs)
-        return status
-
-    def _work(self, **kwargs):
-        _obj = get_report_obj(self._name)
-        table_name = _obj._table_name
-        key = _obj._get_unique_table_key()
-        try:
-            df = _obj.get_report(**kwargs)
+            df = report_f(**self._kwargs)
         except Exception as e:
             logging.warn(e)
-            raise UnableGetReporError(e)
-        con = self._db
-        col_names = df.columns.tolist()
-        logging.info("inserting into table: %s, cols: %s" % (table_name, col_names))
-        _sql._write_mysql(df, table_name, col_names, con.cursor(), key=key)
+            return False
+
+        if _is_empty(df):
+            logging.info("Empty dataframe, not writing to database")
+            return False
+
+        if self._act:
+            table_name = obj.table_name
+            keys = obj.unique_table_key
+            con = self._con
+            created = self.insert_reports(df,
+                    con=con,
+                    table_name=table_name,
+                    key=keys,
+                    )
+            if created:
+                if not corret_insert(con, df, table_name):
+                    logging.warn("record didn't match up when inserting table: %s." % table_name)
+                    return False
+                logging.info('inserted %s correctly' % table_name)
+                return True
+
+        return False
+
+    def insert_reports(self, df, con=None, table_name=None, key=None):
+        cols = df.columns.tolist()
+        logging.info("inserting into table: %s, cols: %s" % (table_name, cols))
+        _sql._write_mysql(df, table_name, cols, con.cursor(), key=key)
         con.commit()
-
-def _get_table_name(name):
-    return ('v4_reporting' if name == 'datapulling' else
-            'domain_reporting' if name == 'domain' else
-            'conversion_reporting')
-
-def _create_report_events(con, **kwargs):
-    df = pd.DataFrame([kwargs])
-    logging.info("creating report event")
-    cur = con.cursor()
-    _sql._write_mysql(df, "reportevent", df.columns.tolist(), cur, key=None)
-    con.commit()
-
-def _get_kwargs_for_reportevent(kwargs, job_created_at, status, name):
-    """
-    @return: dict(start: str(time), end: str(time), status: bool,
-                  success: str(time), failure: str(time), name: str(reportname))
-    """
-    start, end = get_dates(end_date=kwargs['end_date'], lookback=kwargs['lookback'])
-    success = failure = None
-    if status:
-        success = job_created_at
-    else:
-        failure = job_created_at
-    return dict(start=start,
-                end=end,
-                status=status,
-                success=success,
-                failure=failure,
-                name=name,
-                )
+        return True

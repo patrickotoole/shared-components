@@ -1,4 +1,4 @@
-from lib.report.base import ReportDomainHandler
+from lib.report.handlers import ReportDomainHandler
 
 
 class AdminReportHandler(ReportDomainHandler):
