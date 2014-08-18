@@ -22,7 +22,7 @@ def _get_old_db():
     return db
 
 def _get_new_db():
-    return dbs.roclocaltest
+    return dbs.wei_local
 
 
 def _pull_advertiser_data(advertiser_id=None,
