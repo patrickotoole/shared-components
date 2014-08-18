@@ -105,7 +105,7 @@ def parse(filename, num_lines=10000,
                 )
         return
     lines = _parse_lines(lines, options.log_type)
-    logging.info("Got %s lines alters" % len(lines))
+    logging.info("Got %s lines alerts" % len(lines))
     d = [ {filename : lines } ]
     return d
 
