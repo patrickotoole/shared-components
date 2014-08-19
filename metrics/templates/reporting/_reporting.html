@@ -11,8 +11,8 @@
 
 {% block page_sidebar %}
 	<li class="active"><a href="reporting"><img src="/static/img/sidebar/reporting-icon.png" alt="Reporting icon" /><span class="sidebar-label">campaign reporting</span></a></li>
-	<!--<li><a href="streaming"><img src="/static/img/sidebar/streaming-icon.png" alt="Streaming icon" /><span class="sidebar-label">global streaming</span></a></li>
-
+    <li><a href="streaming"><img src="/static/img/sidebar/global-icon.png" alt="Global icon" /><span class="sidebar-label">global streaming</span></a></li>
+<!--
 	<li><a href="global"><img src="/static/img/sidebar/global-icon.png" alt="Global icon" /><span class="sidebar-label">global streaming</span></a></li>
 	
 	<li><a href="intraweek"><img src="/static/img/sidebar/intraweek-icon.png" alt="Intraweek icon" /><span class="sidebar-label">intraweek overview</span></a></li>
@@ -98,6 +98,11 @@
 			}
 		}
 		
+        // GET TIME DIFFERENCE BETWEEN TWO DATES
+        function timeDifference(startDate, endDate){
+            return (endDate.getTime() - startDate.getTime()) / 1000 / 60 / 60 / 24;
+        }
+        
 		// INITIALISE TABLES
 		var campaignTable = null, campaignReportsTable = null, sliderGraph = null, mainGraph = null;
 		
@@ -105,23 +110,26 @@
 		
 		var userBudget = 0, userSpent = 0, ioStartDate = null;
 		
-		// GET ADVERTISER BUDGET AND PROGRESS
-    
+        $.when(getUserInfo).then(getUserData);
+        
+        
+		// GET ADVERTISER BUDGET AND PROGRESS       
+        
 		var getUserInfo = $.getJSON("/intraweek?format=json&ioinfo=" + extUserID, function(data){
-       $('#io-completion-box #io-progress').html(
-        '<span id="estimated-io-spend" style="font-size:30px">' + 
-          formatMoney(data[0].spent) + 
-        '*</span><span>/' + 
-          formatMoney(data[0].current_budget) + 
-        '</span>'
-      );
-      $('#header #right-align #user-name').text(data[0].advertiser.toLowerCase());
+           $('#io-completion-box #io-progress').html(
+            '<span id="estimated-io-spend" style="font-size:30px">' + 
+              formatMoney(data[0].spent) + 
+            '*</span><span>/' + 
+              formatMoney(data[0].current_budget) + 
+            '</span>'
+          );
+          $('#header #right-align #user-name').text(data[0].advertiser.toLowerCase());
 
-      userBudget = parseInt(data[0].current_budget);
-      userSpent = parseInt(data[0].spent);
-
-      ioStartDate = dateToUTC(new Date(data[0].start_date * 1000));
-    });
+          userBudget = parseInt(data[0].current_budget);
+          userSpent = parseInt(data[0].spent);
+          
+          ioStartDate = new Date(data[0].start_date * 1000);
+        });
 		
 		// GET DATA
 		var getUserData = $.getJSON("/api?deleted=0&active=1&table=campaign_bucket&external_advertiser_id=" + extUserID).done(function(e){
@@ -162,7 +170,7 @@
 				// INSTANTIATE CROSSFILTER
 				var crs = crossfilter(data);
 				window.CRS = crossfilterNS(crs, dc);
-
+              
 				// GENERATE IO
 				var campaignQty = CRS.aggregateDimensions.total_campaign_bucket.top(5).length;
 				
@@ -224,6 +232,7 @@
 				.sortBy(function(d){
 					return d.campaign_bucket;					
 				})
+                .dataSortBy(true)
 				.size(4)
 				.rowClass("campaign-row")
 				.listClasses(["campaign-name", "campaign-imps", "campaign-clicks", "campaign-conversions", "campaign-cost"])
@@ -344,6 +353,7 @@
 				mainGraph = dc.lineChart('#campaign-graph', "graph-group")
 				.dimension(CRS.dimensions.datetime)
 				.group(CRS.groups.datetime)
+                .tooltipType("daily")
 				.height(328)
 				.width(843)
 				.margins({top: 0, right: 0, bottom: 0, left: 0})
@@ -360,17 +370,35 @@
 				})
 				.x(d3.time.scale().domain([
 					CRS.groups.all.summary().date_min,
-					//ioStartDate,
 					CRS.groups.all.summary().date_max
 				]))
 				.renderHorizontalGridLines(true)
 				.brushOn(false)
 				.renderTitle(true)
 				.rangeChart(sliderGraph)
-				
+				.on("preRedraw", function(){
+                    var intervalLength = timeDifference(CRS.groups.all.summary().date_min, CRS.groups.all.summary().date_max);
+                    if(intervalLength < 14){
+                        mainGraph.dimension(CRS.dimensions.datetime).group(CRS.groups.datetime).tooltipType("hourly");
+                    }
+                    else {
+                        mainGraph.dimension(CRS.dimensions.daily).group(CRS.groups.daily).tooltipType("daily");                       
+                    }
+                    
+                    if(intervalLength <= 1){
+                        mainGraph.xAxis().tickFormat(d3.time.format("%I%p"));
+                    }
+                    else {
+                        mainGraph.xAxis().tickFormat(d3.time.format("%m/%d"));
+                    }
+                });
+                
 				mainGraph.yAxis().ticks(5);
-				mainGraph.xAxis().ticks(8).tickFormat(d3.time.format("%m/%d"));
+				mainGraph.xAxis().tickFormat(d3.time.format("%m/%d"));
 				
+                
+                dc.renderAll("graph-group");
+                
 				// SET TIME INTERVAL
 				var baseInterval = formatDate(ioStartDate) + " - " + formatDate(CRS.groups.all.summary().date_max);
 				
@@ -388,19 +416,20 @@
 					else {
 						$('#graph-interval #interval-title #outer-interval-reset').fadeOut();
 					}
-				});
-				
+				});				
 				
 				var campaignGraphPos = $('#campaign-graph').position();
 
-        dc.renderAll("graph-group");
+                mainGraph.focus([ioStartDate, CRS.groups.all.summary().date_max])
 
-        mainGraph.focus([ioStartDate, CRS.groups.all.summary().date_max])
-
-        // HACKHACKHACK
-        
-        
-
+                 if(ioStartDate < CRS.groups.all.summary().date_min){
+                    ioStartDate = new Date(CRS.groups.all.summary().date_min.getTime());
+                     mainGraph.focus([ioStartDate, CRS.groups.all.summary().date_max]);
+                     baseInterval = formatDate(ioStartDate) + " - " + formatDate(CRS.groups.all.summary().date_max);
+                     intervalBox.redraw();                   
+                }     
+                
+                // HACKHACKHACK
 
 				$('#page-loader').fadeOut();
 			});		
