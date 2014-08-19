@@ -31,22 +31,21 @@
         <div class="box-title">Filters</div>
         <ul id="filter-radio"><li class="filter-radio-active"><img src="/static/img/general/checked-radio.png" alt="Checked radio button" />impressions</li><li><img src="/static/img/general/unchecked-radio.png" alt="Unchecked radio button" />unique viewers</li></ul>
         <div class="clearfix"></div>
-        <div class="custom-filter-select" id="campaign-select">
-            All campaigns<img src="/static/img/general/dropdown-down.png" alt="Dropdown arrow" />
-            <div id="campaign-select-expanded">
-                <ul>
-                    <li>dailyfinance.com</li>
-                    <li>yahoo.com</li>
-                    <li>ibtimes.com</li>
-                </ul>      
-            </div>
-        </div>
-        <div class="custom-filter-select">All domains<span class="filter-reset">reset</span></div>
-        <div class="custom-filter-select">All locations<span class="filter-reset">reset</span></div>
+        <div class="custom-filter-select"><span class="filter-text">All campaigns</span><span class="filter-reset">reset</span></div>
+        <div class="custom-filter-select"><span class="filter-text">All domains</span><span class="filter-reset">reset</span></div>
+        <div class="custom-filter-select"><span class="filter-text">All locations</span><span class="filter-reset">reset</span></div>
         <div class="clearfix"></div>
     </div>    
 	<div class="clearfix"></div>	
     <div id="map-box" class="box full-box">
+	</div>
+	<div class="clearfix"></div>
+    <div id="campaign-box" class="box full-box">
+        <div class="box-title">Campaigns</div>
+        <div id="campaign-table" class="content-table">
+            <ul class="header-row"><li class="campaign-name" title="Sort by campaign (descending)" data-sort="down">campaign</li><li class="campaign-imps active-sorted" title="Sort by impressions (ascending)" data-sort="up">impressions<img src="/static/img/general/dropdown-down.png" alt="Sort by impressions" /></li><li class="campaign-uniques" data-sort="down"  title="Sort by unique views (descending)" >uniques</li></ul>			
+		</div>
+        <div class="show-more">show more</div>
 	</div>
 	<div class="clearfix"></div>
 	<div id="domain-box" class="box half-box">
@@ -79,6 +78,7 @@
 
 	var extUserID =  {{ advertiser_id }};
 	
+    
 	// GET ADVERTISER BUDGET AND PROGRESS
 	var getUserInfo = $.getJSON("/intraweek?format=json&ioinfo=" + extUserID, function(data){
         $('#header #right-align #user-name').text(data[0].advertiser.toLowerCase());
@@ -105,10 +105,22 @@
         return location[0] + ', ' + location[1] + ', ' + location[2];
     }
     
+    var buckets = {};
+    
+    // INITIALISE DC WIDGETS
+    var impsBox = null, domainBox = null, uniquesBox = null, mapGraph = null, locationTable = null, domainTable = null, campaignTable = null;
+        
+    // GET USER DATA
+    var getUserData = $.getJSON("/api?deleted=0&active=1&table=campaign_bucket&external_advertiser_id=" + extUserID, function(e){
+        $.each(e, function(index, bucket){
+            buckets[bucket.campaign_id] = bucket.bucket_name;
+        });
+    });
+    
     // REFRESH BUBBLES
     function refreshBubbles(){
         mapGraph.bubbles(
-            dataWrapper.aggregateDimensions.latlong_location_data.top(10000),
+            dataWrapper.aggregateDimensions.latlong_location_data.top(Infinity),
             {
                 fillOpacity: 1,
                 borderWidth: 1,
@@ -119,9 +131,6 @@
             }
         );
     }
-    
-    // INITIALISE DC WIDGETS
-    var impsBox = null, domainBox = null, uniquesBox = null, mapGraph = null, locationTable = null, domainTable = null;
    
     // GENERATE IMPRESSIONS COUNTER
     impsBox = dc.customDataBox('#overall-box #imps-box')
@@ -176,6 +185,7 @@
     .sortBy(function(d){
         return d.imps;					
     })
+    .sliceMode("bottom")
     .order(d3.descending)
     .size(domainRowSize)
     .rowClass("domain-row")
@@ -205,7 +215,7 @@
     
     // GENERATE LOCATION TABLE   
     
-    var locationRowSize = 10;
+    var locationRowSize =  10;
     
     locationTable = dc.customDataTable('#location-table')
     .dimension(dataWrapper.aggregateDimensions.location_data)
@@ -215,7 +225,7 @@
     })
     .order(d3.descending)
     .size(locationRowSize)
-    
+    .sliceMode("bottom")
     .rowClass("location-row")
     .listClasses(["location-name", "location-imps", "location-uniques"])
     .listItems([
@@ -228,7 +238,7 @@
         function(d){
             return formatNumber(d.uniques);
         }
-    ])
+        ])
      .on("preRedraw", function(){
         if(dataWrapper.aggregateDimensions.location_data.top(locationRowSize + 1).length > locationRowSize){
             $('#location-box .show-more').css("display", "inline-block");
@@ -238,15 +248,45 @@
         }
     })
 
+    // GENERATE CAMPAIGN TABLE   
+    
+    var campaignRowSize =  10;
+    
+    campaignTable = dc.customDataTable('#campaign-table')
+    .dimension(dataWrapper.aggregateDimensions.campaign_data)
+    .group(dataWrapper.groups.campaign_data)
+    .sortBy(function(d){
+        return d.imps;					
+    })
+    .order(d3.descending)
+    .size(campaignRowSize)
+    .sliceMode("bottom")
+    .rowClass("campaign-row")
+    .listClasses(["campaign-name", "campaign-imps", "campaign-uniques"])
+    .listItems([
+        function(d){
+            return d.campaign;
+        },
+        function(d){
+            return formatNumber(d.imps);
+        },
+        function(d){
+            return formatNumber(d.uniques);
+        }
+        ])
+     .on("preRedraw", function(){
+        if(dataWrapper.aggregateDimensions.campaign_data.top(campaignRowSize + 1).length > campaignRowSize){
+            $('#campaign-box .show-more').css("display", "inline-block");
+        }
+        else {
+            $('#campaign-box .show-more').hide();
+        }
+    })
+    
 
-    //*/
-    dc.renderAll();
-    
-    // GENERATE MAP
-    
+    dc.renderAll();  
 
     $('#page-loader').fadeOut();
-
 	</script>
     <script>
         
@@ -257,9 +297,13 @@
                 locationRowSize = Infinity;
                 locationTable.size(locationRowSize);
             }
-            else {
+            else if(parentID == "domain-box") {
                 domainRowSize = Infinity;
-                 domainTable.size(domainRowSize);
+                domainTable.size(domainRowSize);
+            }
+            else {
+                campaignRowSize = Infinity;
+                campaignTable.size(campaignRowSize);
             }
             dc.redrawAll();
         });
@@ -279,18 +323,7 @@
                 $(this).addClass('filter-radio-active').children('img').attr("src", "/static/img/general/checked-radio.png").attr("alt", "Checked radio button");
                 refreshBubbles();
             }
-        });
-        
-        // IF CAMPAIGN FILTER HOVERED
-        /*
-        $('#campaign-select').hover(function(){
-            $(this).children('#campaign-select-expanded').fadeIn();
-        }, function(){
-            if (!$(this).children('#campaign-select-expanded').is(':hover')) {
-                $(this).children('#campaign-select-expanded').fadeOut();
-            }      
-        });
-        */
+        });      
         
         // SHOW DROPDOWN ON DOMAIN/LOCATION TABLES
         $('.header-row li').hover(function(){
@@ -307,7 +340,7 @@
                 $(this).append('<img src="/static/img/general/dropdown-down.png" />');
                 $(this).siblings('.active-sorted').children('img').hide();
             }
-        }, function(){
+            }, function(){
             if($(this).hasClass('active-sorted')){
                 if($(this).attr('data-sort') == "up"){
                     $(this).children('img').attr('src', '/static/img/general/dropdown-down.png');
@@ -320,6 +353,129 @@
                 $(this).children('img').remove();
                  $(this).siblings('.active-sorted').children('img').css("display","inline");
             }
+        });
+        
+        // CHANGE ORDERING ON CLICK
+        $('.header-row li').click(function(){
+            var parentID = $(this).parent().parent().attr("id");
+            if(parentID == "location-table"){
+                var parentTable = locationTable;
+            }
+            else if(parentID == "domain-table"){
+                var parentTable = domainTable;
+            }
+            else {
+                var parentTable = campaignTable;
+            }   
+            
+            if($(this).attr("data-sort") == "up"){
+                if($.inArray($(this).text(), ["location", "domain", "campaign"]) != -1){
+                    parentTable.order(d3.descending)
+                    .sliceMode("bottom");
+                }
+                else {
+                     parentTable.order(d3.ascending)
+                    .sliceMode("top");                    
+                }  
+                var newTitle = $(this).attr('title').replace("ascending", "descending");
+                $(this).attr('title', newTitle);
+            }
+            else {
+                if($.inArray($(this).text(), ["location", "domain", "campaign"]) != -1){
+                    parentTable.order(d3.ascending)
+                    .sliceMode("top");
+                }
+                else {
+                    parentTable.order(d3.descending)
+                    .sliceMode("bottom");                   
+                }
+                var newTitle = $(this).attr('title').replace("descending", "ascending");
+                $(this).attr('title', newTitle);
+            }
+            
+            if($(this).hasClass('active-sorted')){         
+                if($(this).attr("data-sort") == "up"){
+                    $(this).attr("data-sort", "down");
+                    $(this).children('img').attr('src', '/static/img/general/dropdown-down.png');
+                }
+                else {
+                    $(this).attr("data-sort", "up");
+                    $(this).children('img').attr('src', '/static/img/general/dropdown-up.png');
+                }
+            }
+            else {
+                var sortRow = $(this).text();
+                if(parentID == "location-table"){
+                    if(sortRow == "uniques"){
+                        parentTable.sortBy(function(d){
+                            return d.uniques;					
+                        })
+                        dataWrapper.sortValueLocations = "uid_count";
+                    }
+                    else if(sortRow == "location"){
+                         parentTable.sortBy(function(d){
+                            return formatLocation(d.location);					
+                        })
+                         dataWrapper.sortValueLocations = "location";
+                    }
+                    else {
+                        parentTable.sortBy(function(d){
+                            return d.imps;		                            
+                        })
+                        dataWrapper.sortValueLocations = "imps";
+                    }
+                }
+                else if(parentID == "domain-table"){
+                    if(sortRow == "uniques"){
+                        parentTable.sortBy(function(d){
+                            return d.uniques;					
+                        })
+                        dataWrapper.sortValueDomains = "uid_count";
+                    }
+                    else if(sortRow == "domain"){
+                        parentTable.sortBy(function(d){
+                            return d.domain;					
+                        })
+                         dataWrapper.sortValueDomains = "domain";
+                    }
+                    else {
+                         parentTable.sortBy(function(d){
+                            return d.imps;					
+                        })
+                        dataWrapper.sortValueDomains = "imps";
+                    }
+                }  
+                else {
+                    if(sortRow == "uniques"){
+                        parentTable.sortBy(function(d){
+                            return d.uniques;					
+                        })
+                        dataWrapper.sortValueLocations = "uid_count";
+                    }
+                    else if(sortRow == "campaign"){
+                        parentTable.sortBy(function(d){
+                            return d.campaign;					
+                        })
+                         dataWrapper.sortValueLocations = "campaign";
+                    }
+                    else {
+                         parentTable.sortBy(function(d){
+                            return d.imps;					
+                        })
+                        dataWrapper.sortValueLocations = "imps";
+                    }
+                }      
+                var newTitle = $(this).siblings('.active-sorted').attr('title').replace("ascending", "descending");
+                 $(this).siblings('.active-sorted').removeClass('active-sorted').attr('title', newTitle).attr('data-sort', 'down').children('img').remove();
+                 $(this).addClass('active-sorted').attr('data-sort', 'up').children('img').attr('src', '/static/img/general/dropdown-up.png');            
+            }
+                
+            dc.redrawAll();
+        });
+        
+        // FILTER CAMPAIGNS
+        $('#campaign-select-expanded ul').on("click", 'li', function(){
+            console.log($(this).text());
         });
     </script>
 {% end %}
