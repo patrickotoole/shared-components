@@ -66,10 +66,17 @@
         .custom-filter-select {
             display:inline-block;
             padding:15px;
-            padding-right:30px; 
+            padding-right:10px; 
             font-family:"Source Sans Pro", sans-serif;
             font-weight:300;
-            font-size:16px;                 
+            font-size:16px;     
+            .filter-text {
+                display:inline-block;
+                width:110px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
             .filter-reset {
                 font-family:"Novecento", sans-serif;
                 font-weight:400;
@@ -84,39 +91,6 @@
                     border-bottom:1px solid #aaa;
                 }
             }         
-        }
-        #campaign-select {
-            img {
-                margin-left:20px;
-            }
-            #campaign-select-expanded {
-                display:none;
-                position:absolute;
-                background:#fff;
-                border:1px solid #ddd;
-                border-top:none;
-                margin-left:-16px;
-                margin-top:15px;
-                ul {
-                    width:350px;
-                    list-style-type:none;
-                    li {
-                        font-family:"Source Sans Pro", sans-serif;
-                        font-weight:300;
-                        font-size:16px;
-                        padding:7px 15px;
-                        border-top:1px solid #eee;
-                        transition:all .2s linear;
-                        background:#fff;
-                        &:hover {
-                            background:#f0f0f0;
-                        }
-                    }
-                }
-            }
-            &:hover {
-                cursor:pointer; 
-            }
         }
     }
 	#map-box {
@@ -154,10 +128,10 @@
             }        
         }
 	}
-    #domain-box, #location-box {
+    #domain-box, #location-box, #campaign-box {
         position:relative;
 		text-align:center;
-		#domain-table, #location-table {
+		#domain-table, #location-table, #campaign-table {
 			margin-top:10px;
 			ul {
 				padding-left:15px;
@@ -165,14 +139,22 @@
 					display:inline-block;
 					margin-right:20px;
 				}
-				.domain-name, .location-name {
-					width:260px;
+				.domain-name, .location-name, .campaign-name {					
                     white-space: nowrap;
                     overflow: hidden;
                     text-overflow: ellipsis;
 				}
+                .domain-name, .location-name {
+                    width:260px;
+                }
+                .campaign-name {
+                    width:600px;
+                }
                 .domain-imps, .location-imps {
                     width:120px;
+                }
+                .campaign-imps, .campaign-uniques {
+                    width:200px;
                 }
                 .domain-uniques, .location-uniques {
                     width:70px;
@@ -192,7 +174,7 @@
                     }
                 }
 			}
-			.domain-row, .location-row {
+			.domain-row, .location-row, .campaign-row {
 				padding:10px 15px;
 				font-family:"Source Sans Pro", sans-serif;
 				font-weight:300;
@@ -203,7 +185,7 @@
 					background:#f0f0f0;
 					cursor:pointer;
 				}
-                li:not(.domain-name):not(.location-name) {
+                li:not(.domain-name):not(.location-name):not(.campaign-name) {
                     font-weight:700;
                 }
 			}
