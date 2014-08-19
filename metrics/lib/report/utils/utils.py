@@ -100,7 +100,7 @@ def convert_tzinfo(tz):
 
     raise ValueError("unknown timezone '%s'" % tz)
 
-def localize(dt, normalize=False, tz='America/New_York'):
+def localize(dt, normalize=False, tz='UTC'):
     """
     @param normalize: bool. If not normalize, just changes the timezone
     information. This changes the associated time, so use it carefully. For
@@ -111,11 +111,11 @@ def localize(dt, normalize=False, tz='America/New_York'):
         return tzinfo.normalize(dt)
     return dt.replace(tzinfo=tzinfo)
 
-def local_now():
+def local_now(tz='UTC'):
     utc = pytz.timezone('UTC')
     now = utc.localize(datetime.utcnow())
-    ny = pytz.timezone('America/New_York')
-    return now.astimezone(ny)
+    ptz = pytz.timezone(tz)
+    return now.astimezone(ptz)
 
 def get_week_begin(dt):
     """
@@ -151,7 +151,7 @@ def datetime_to_unixtime(dt):
 def days_in_prev_month(ts):
     return calendar.monthrange(ts.year, ts.month-1)[1]
 
-def parse(time_str, tz='America/New_York', now=None):
+def parse(time_str, tz='UTC', now=None):
     """
     Convert a string that could be either number of seconds since
     epoch (unixtime) or a formatted string to a datetime.
@@ -172,13 +172,11 @@ def parse(time_str, tz='America/New_York', now=None):
         try:
             tzinfo = convert_tzinfo(tz)
             if dt.tzinfo:
-                localize(dt, tz=tz, normalize=True)
+                dt = localize(dt, tz=tz, normalize=True)
             else:
                 dt = tzinfo.localize(dt)
         except pytz.exceptions.UnknownTimeZoneError:
             raise ValueError("unknown timezone '%s'" % tz)
-
-        dt = pytz.timezone('America/New_York').normalize(dt)
 
     return dt
 

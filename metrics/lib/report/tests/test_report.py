@@ -16,6 +16,7 @@ from lib.report.utils.reportutils import get_db
 from lib.report.utils.reportutils import empty_frame
 from lib.report.utils.utils import parse
 from lib.report.utils.utils import local_now
+from lib.report.utils.utils import align
 
 CUR_DIR = os.path.realpath(__file__)
 TEST_FILES = os.path.abspath(os.path.join(os.path.dirname(__file__), 'test_files/'))
@@ -165,16 +166,21 @@ class ReportTestCase(unittest.TestCase):
             assert e.message == 'No such configured object dbs.%s' % random
 
     def test_parse_datetime(self):
-        ny_now = local_now()
+        now = local_now()
 
-        expected = ny_now - timedelta(minutes=30)
-        resp = parse('30m', now=ny_now)
+        expected = now - timedelta(minutes=30)
+        resp = parse('30m', now=now)
         self.assertEqual(expected, resp)
 
-        expected = ny_now - timedelta(days=24)
-        resp = parse('24d', now=ny_now)
+        expected = now - timedelta(days=24)
+        resp = parse('24d', now=now)
         self.assertEqual(expected, resp)
 
+        t = timedelta(minutes=1)
+        utc_now = local_now('UTC')
+        expected = align(t, parse('4h', now=utc_now)).ctime()
+        resp = align(t, parse('0m', tz='America/New_York')).ctime()
+        self.assertEqual(expected, resp)
 
     def test_accounting(self):
         """
