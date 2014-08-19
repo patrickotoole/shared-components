@@ -115,7 +115,7 @@
 		var getUserInfo = $.getJSON("/intraweek?format=json&ioinfo=" + extUserID, function(data){
         
            $('#io-completion-box #io-progress #io-estimated-spent').text(formatMoney(data[0].spent));
-           $('#io-completion-box #io-progress #io-budget').text(formatMoney(data[0].current_budget));
+           $('#io-completion-box #io-progress #io-budget').text("/" + formatMoney(data[0].current_budget));
             $('#header #right-align #user-name').text(data[0].advertiser.toLowerCase());
 
           userBudget = parseInt(data[0].current_budget);
