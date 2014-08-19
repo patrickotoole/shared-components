@@ -4119,6 +4119,7 @@ dc.lineChart = function (parent, chartGroup) {
     var _tension = 0.7;
     var _defined;
     var _dashStyle;
+    var _tooltipType = "daily";
 
     _chart.transitionDuration(500);
     _chart._rangeBandPadding(1);
@@ -4145,6 +4146,12 @@ dc.lineChart = function (parent, chartGroup) {
         drawDots(chartBody, layers);
     };
 
+
+    _chart.tooltipType = function(_){
+        if (!arguments.length) return _tooltipType;
+        _tooltipType = _;
+        return _chart;
+    };
     /**
      #### .interpolate([value])
      Gets or sets the interpolator to use for lines drawn, by string name, allowing e.g. step
@@ -4318,10 +4325,15 @@ dc.lineChart = function (parent, chartGroup) {
                         var dot = d3.select(this);
                         showDot(dot);
                         showRefLines(dot, g);
-						
+                        
+                        if(_chart.tooltipType() == "hourly"){
+                            var formatTime = d3.time.format('%I%p, %x');
+                        }
+                        else {
+                             var formatTime = d3.time.format('%x');
+                        }
+                       
 						// NO GOOD, NO TEMPLATE
-						var formatTime = d3.time.format('%I%p, %x');
-                        // var formatTime = d3.time.format('%x');
 						var customTooltip = d3.select('.tooltip');
 						var tooltipValue = customTooltip.classed('value-cost') ? formatMoney(d.y) : formatNumber(d.y);
 						customTooltip.style("display", "block")
@@ -4838,6 +4850,7 @@ dc.customDataTable = function(parent, chartGroup) {
     var _sortBy = function(d) {
         return d;
     };
+    var _dataSortBy = false;
 	var _sliceMode = "top";
     var _order = d3.ascending;
 
@@ -4882,10 +4895,14 @@ dc.customDataTable = function(parent, chartGroup) {
             }));
     }
     function renderRows(entries, preservePrevious) {
-
-		var rows = _chart.root().selectAll(".table-row")
-		.data(entries);
-// console.log(entries, rows);
+		    
+        if(_dataSortBy === true){
+            var rows = _chart.root().selectAll(".table-row").data(entries, _sortBy);
+        }
+        else {
+            var rows = _chart.root().selectAll(".table-row").data(entries);
+        }
+// console.log(, rows);
 		var classText = "table-row " + _rowClass;
         var rowEnter = rows.enter()
             .append("ul")
@@ -4954,6 +4971,11 @@ dc.customDataTable = function(parent, chartGroup) {
         return _chart;
     };
 	
+    _chart.dataSortBy = function(_) {
+        if (!arguments.length) return _dataSortBy;
+        _dataSortBy = _;
+        return _chart;
+    };
 	 _chart.campaignSelector = function(_) {
         if (!arguments.length) return _campaignSelector;
         _campaignSelector= _;

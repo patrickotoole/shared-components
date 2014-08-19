@@ -42,6 +42,7 @@ function updateCampaignReports(currentReportView, currentCampaign, rowQty) {
 	})
 	.order(d3.descending)
 	.size(rowQty)
+    .dataSortBy(true)
 	.sliceMode("bottom")
 	.on("postRedraw", function(){ 
 		if(typeof currentCampaign !== "undefined") $('#campaign-reports-box .box-title').text("Campaign reports | " + currentCampaign).attr("data-campaign-name", currentCampaign);
