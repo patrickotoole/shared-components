@@ -2,7 +2,7 @@ import tornado.web
 import ujson
 import pandas
 import StringIO
-from base import BaseHandler
+from ..base import BaseHandler
 from lib.helpers import *
 
 from lib.query.MYSQL import *
