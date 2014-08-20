@@ -283,7 +283,7 @@ socket.onMessage = function(x){
                     }
                 }
                 else impsMax = 0;
-				return self.groups.latlong_location_data.all().filter(function(x){return x.value.imps}).slice(0, x).map(function (grp) { 
+				return self.groups.latlong_location_data.all().filter(function(x){return x.value.imps && x.key[2] == "United States"}).slice(0, x).map(function (grp) { 
                     var radius = self.bubbleType == "imps" ? grp.value.imps / impsMax * 13 + 3 : grp.value.uid_count / uniquesMax * 13 + 5;
                    return {
 						"location":grp.key, 
