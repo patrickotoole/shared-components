@@ -91,7 +91,9 @@
 		function createDateValue(dateMode, firstDate){
 			if(dateMode == "date-day") return formatDate(firstDate);
 			else if(dateMode == "date-week"){
-				return formatDate(firstDate) + " - " + formatDate(addDays(firstDate, 6));
+                var endOfWeek = addDays(firstDate, 6);
+                if(endOfWeek > CRS.groups.all.summary().date_max) endOfWeek.setTime(CRS.groups.all.summary().date_max.getTime());
+				return formatDate(firstDate) + " - " + formatDate(endOfWeek);
 			}
 			else if(dateMode == "date-month"){
 				return formatMonth(firstDate);
@@ -113,7 +115,7 @@
 		// GET ADVERTISER BUDGET AND PROGRESS       
         
 		var getUserInfo = $.getJSON("/intraweek?format=json&ioinfo=" + extUserID, function(data){
-        
+ 
            $('#io-completion-box #io-progress #io-estimated-spent').text(formatMoney(data[0].spent));
            $('#io-completion-box #io-progress #io-budget').text("/" + formatMoney(data[0].current_budget));
             $('#header #right-align #user-name').text(data[0].advertiser.toLowerCase());
@@ -165,56 +167,58 @@
                     window.CRS = crossfilterNS(crs, dc);
                   
                     // GENERATE IO
-                    var campaignQty = CRS.aggregateDimensions.total_campaign_bucket.top(5).length;
-                    
-                    if(campaignQty == 1 || campaignQty == 2){
-                        $('#io-gauge').hide();
-                        
-                        var usagePercent = userSpent / userBudget;
-                        $("#io-percentage-bar-inner").css("width", parseInt(usagePercent * 100) + "%");
-                        if(usagePercent > 0.66){
-                            $("#io-percentage-bar-inner").addClass('io-red');
-                        }
-                        else if(usagePercent > 0.33){
-                            $("#io-percentage-bar-inner").addClass('io-orange');
+                    function generateIOProgress(campaignQty){
+                        if(campaignQty == 1 || campaignQty == 2){
+                            $('#io-gauge').hide();
+                            
+                            var usagePercent = userSpent / userBudget;
+                            $("#io-percentage-bar-inner").css("width", parseInt(usagePercent * 100) + "%");
+                            if(usagePercent > 0.66){
+                                $("#io-percentage-bar-inner").addClass('io-red');
+                            }
+                            else if(usagePercent > 0.33){
+                                $("#io-percentage-bar-inner").addClass('io-orange');
+                            }
+                            else {
+                                $("#io-percentage-bar-inner").addClass('io-green');
+                            }		
+                            
+                            if(campaignQty == 1){
+                                $('#io-completion-box').addClass('io-small');
+                            }
                         }
                         else {
-                            $("#io-percentage-bar-inner").addClass('io-green');
-                        }		
-                        
-                        if(campaignQty == 1){
-                            $('#io-completion-box').addClass('io-small');
+                            $("#io-percentage-bar").hide();
+                            $('#io-gauge').show();
+                            
+                            if(campaignQty == 3){
+                                $('#io-completion-box').addClass('io-large');
+                            }
+                            
+                            // DISPLAY IO PROGRESS GAUGE
+                            var gauge = new Gauge(document.getElementById('io-gauge')).setOptions({
+                                lines: 12,
+                                angle: 0,
+                                lineWidth: 0.30,
+                                pointer: {
+                                    length: 0.75,
+                                    strokeWidth: 0.035,
+                                    color: '#000000'
+                                },
+                                limitMax: true, 
+                                percentColors: [[0.0, "#5ec34b" ], [0.50, "#ffb952"], [1.0, "#e46161"]],
+                                strokeColor: '#E0E0E0',
+                                generateGradient: true
+                            });
+                            gauge.animationSpeed = 32;
+                            gauge.maxValue = userBudget;
+                            gauge.set(userSpent);			
                         }
                     }
-                    else {
-                        $("#io-percentage-bar").hide();
-                        $('#io-gauge').show();
-                        
-                        if(campaignQty == 3){
-                            $('#io-completion-box').addClass('io-large');
-                        }
-                        
-                        // DISPLAY IO PROGRESS GAUGE
-                        var gauge = new Gauge(document.getElementById('io-gauge')).setOptions({
-                            lines: 12,
-                            angle: 0,
-                            lineWidth: 0.30,
-                            pointer: {
-                                length: 0.75,
-                                strokeWidth: 0.035,
-                                color: '#000000'
-                            },
-                            limitMax: true, 
-                            percentColors: [[0.0, "#5ec34b" ], [0.50, "#ffb952"], [1.0, "#e46161"]],
-                            strokeColor: '#E0E0E0',
-                            generateGradient: true
-                        });
-                        gauge.animationSpeed = 32;
-                        gauge.maxValue = userBudget;
-                        gauge.set(userSpent);			
-                    }
+                    generateIOProgress();
                     
                     // GENERATE CAMPAIGN BOX CONTENT
+                    var prevQty = 0;
                     var totalDimension = CRS.groups.all.value();
                     totalDimension['campaign_bucket'] = "Campaign total";
                     campaignTable = dc.customDataTable('#campaign-table', "graph-group")
@@ -271,7 +275,14 @@
                                 campaignReportsTable.redraw();
                             });	
                         }
-              
+                        
+                        /*
+                        var currentQty = CRS.aggregateDimensions.total_campaign_bucket.top(5).length;
+                        if(prevQty != currentQty){ 
+                            prevQty = currentQty;
+                            generateIOProgress(currentQty);
+                        }
+                        */
                     });
                     
                     if(CRS.aggregateDimensions.total_campaign_bucket.top(5).length == 1){
