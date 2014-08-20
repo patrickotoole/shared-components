@@ -12,10 +12,8 @@ import lib.query.helpers as query_helpers
 
 class CreativeReportingBase(BaseHandler):
 
-    def initialize(self, db, api, hive):
+    def initialize(self, db, **kwargs):
         self.db = db 
-        self.api = api
-        self.hive = hive
 
     def pull_advertiser_creatives(self,advertiser_id,date_min=None,date_max=None):
         params = {
@@ -31,10 +29,8 @@ class CreativeReportingBase(BaseHandler):
 
 class CreativeReportingHandler(CreativeReportingBase):
 
-    def initialize(self, db, api, hive):
+    def initialize(self, db, **kwargs):
         self.db = db 
-        self.api = api
-        self.hive = hive
 
     @tornado.web.authenticated
     @decorators.formattable
