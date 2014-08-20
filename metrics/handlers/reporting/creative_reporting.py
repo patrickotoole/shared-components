@@ -25,6 +25,7 @@ class CreativeReportingBase(BaseHandler):
         df = self.db.select_dataframe(q)
         df['associated_campaigns'] = df['associated_campaigns'].map(lambda x: x.split(" "))
         df['url'] = df.creative_id.map(lambda x: "http://ib.adnxs.com/cr?id=%s" % x)
+
         return df
 
 class CreativeReportingHandler(CreativeReportingBase):
@@ -50,6 +51,7 @@ class CreativeReportingHandler(CreativeReportingBase):
             # dont do anything with the data
             # wait for async call with the format
             self.render("reporting/_creative_reporting.html", advertiser_id=advertiser)
+
 
         yield default, (data,)
  
