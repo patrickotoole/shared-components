@@ -52,3 +52,50 @@ BUCKET_QUERY = """
         and external_advertiser_id = %(advertiser)s
 """
 
+CREATIVE_QUERY = """
+select 
+    creative_id,
+    sum(imps) imps,
+    sum(clicks) clicks,
+    min(u.date) first_served,
+    max(u.date) last_served,
+    sum(conversions),
+    GROUP_CONCAT(DISTINCT campaign_id ORDER BY campaign_id ASC SEPARATOR ' ') associated_campaigns
+FROM (
+    select 
+        creative_id,
+        imps,
+        clicks,
+        0 conversions,
+        date,
+        campaign_id
+    from
+        v3_reporting v3
+    where 
+        v3.active=1 and
+        v3.deleted=0 and
+        v3.external_advertiser_id = %(advertiser_id)s and
+        UNIX_TIMESTAMP(v3.date) >= %(date_min)s and
+        UNIX_TIMESTAMP(v3.date) <= %(date_max)s
+    UNION ALL (
+    select
+        creative_id,
+        0 imps,
+        0 clicks,
+        1 conversions,
+        conversion_time,
+        NULL
+    FROM 
+        conversion_reporting 
+    WHERE 
+        active=1 and 
+        deleted=0 and 
+        external_advertiser_id= %(advertiser_id)s and 
+        is_valid=1 and
+        UNIX_TIMESTAMP(conversion_reporting.conversion_time) >= %(date_min)s and
+        UNIX_TIMESTAMP(conversion_reporting.conversion_time) <= %(date_max)s
+    )
+) u
+group by
+    creative_id
+"""
