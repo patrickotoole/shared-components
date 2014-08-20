@@ -1,1 +1,413 @@
-#content #overall-box #overall-stats{margin:0 40px}#content #overall-box #overall-stats li{margin:0 25px;padding:10px 0 12px;display:inline-block;text-align:center}#content #overall-box #overall-stats li .overall-item-header{font-family:Novecento,sans-serif;font-weight:400;font-size:18px}#content #overall-box #overall-stats li .overall-item-value{font-family:"Source Sans Pro",sans-serif;font-weight:700;font-size:25px;margin-top:6px;margin-bottom:3px}#content #filter-box .box-title,#content #filter-box #filter-radio{float:left}#content #filter-box #filter-radio{margin-left:60px;margin-top:20px;list-style-type:none}#content #filter-box #filter-radio li{display:inline-block;font-family:Novecento,sans-serif;font-weight:400;font-size:16px;cursor:pointer;margin-right:40px}#content #filter-box #filter-radio li img{margin-right:10px;margin-bottom:-5px}#content #filter-box .custom-filter-select{display:inline-block;padding:15px;padding-right:10px;font-family:"Source Sans Pro",sans-serif;font-weight:300;font-size:16px}#content #filter-box .custom-filter-select .filter-text{display:inline-block;width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#content #filter-box .custom-filter-select .filter-reset{font-family:Novecento,sans-serif;font-weight:400;font-size:14px;color:#aaa;margin-left:10px;border-bottom:1px solid transparent;transition:all .15s linear;visibility:hidden}#content #filter-box .custom-filter-select .filter-reset:hover{cursor:pointer;border-bottom:1px solid #aaa}#content #map-box{height:550px;background:#ccc;position:relative}#content #map-box #map-loading{background:rgba(0,0,0,.3)}#content #map-box #map-loading .data-loading-content{color:#fff;margin-left:-74px}#content #map-box .tooltip{position:absolute;width:100%;margin-top:70px;margin-left:40px;color:#fff;font-family:"Source Sans Pro",sans-serif;font-weight:400;font-size:14px}#content #map-box .tooltip .tooltip-content{display:inline-block;white-space:nowrap;box-shadow:0 0 3px #fff;background:#333;padding:0 10px 6px}#content #map-box .tooltip .tooltip-content .tooltip-values{display:inline-block;margin-left:8px;padding-top:2px}#content #map-box .tooltip .tooltip-content .tooltip-values#tooltip-imps{border-top:3px solid #5ec34b;margin-left:15px}#content #map-box .tooltip .tooltip-content .tooltip-values#tooltip-uniques{border-top:3px solid #ffb952}#content #domain-box,#content #location-box,#content #campaign-box{position:relative;text-align:center}#content #domain-box #domain-table,#content #location-box #domain-table,#content #campaign-box #domain-table,#content #domain-box #location-table,#content #location-box #location-table,#content #campaign-box #location-table,#content #domain-box #campaign-table,#content #location-box #campaign-table,#content #campaign-box #campaign-table{margin-top:10px}#content #domain-box #domain-table ul,#content #location-box #domain-table ul,#content #campaign-box #domain-table ul,#content #domain-box #location-table ul,#content #location-box #location-table ul,#content #campaign-box #location-table ul,#content #domain-box #campaign-table ul,#content #location-box #campaign-table ul,#content #campaign-box #campaign-table ul{padding-left:15px}#content #domain-box #domain-table ul li,#content #location-box #domain-table ul li,#content #campaign-box #domain-table ul li,#content #domain-box #location-table ul li,#content #location-box #location-table ul li,#content #campaign-box #location-table ul li,#content #domain-box #campaign-table ul li,#content #location-box #campaign-table ul li,#content #campaign-box #campaign-table ul li{display:inline-block;margin-right:20px}#content #domain-box #domain-table ul .domain-name,#content #location-box #domain-table ul .domain-name,#content #campaign-box #domain-table ul .domain-name,#content #domain-box #location-table ul .domain-name,#content #location-box #location-table ul .domain-name,#content #campaign-box #location-table ul .domain-name,#content #domain-box #campaign-table ul .domain-name,#content #location-box #campaign-table ul .domain-name,#content #campaign-box #campaign-table ul .domain-name,#content #domain-box #domain-table ul .location-name,#content #location-box #domain-table ul .location-name,#content #campaign-box #domain-table ul .location-name,#content #domain-box #location-table ul .location-name,#content #location-box #location-table ul .location-name,#content #campaign-box #location-table ul .location-name,#content #domain-box #campaign-table ul .location-name,#content #location-box #campaign-table ul .location-name,#content #campaign-box #campaign-table ul .location-name,#content #domain-box #domain-table ul .campaign-name,#content #location-box #domain-table ul .campaign-name,#content #campaign-box #domain-table ul .campaign-name,#content #domain-box #location-table ul .campaign-name,#content #location-box #location-table ul .campaign-name,#content #campaign-box #location-table ul .campaign-name,#content #domain-box #campaign-table ul .campaign-name,#content #location-box #campaign-table ul .campaign-name,#content #campaign-box #campaign-table ul .campaign-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#content #domain-box #domain-table ul .domain-name,#content #location-box #domain-table ul .domain-name,#content #campaign-box #domain-table ul .domain-name,#content #domain-box #location-table ul .domain-name,#content #location-box #location-table ul .domain-name,#content #campaign-box #location-table ul .domain-name,#content #domain-box #campaign-table ul .domain-name,#content #location-box #campaign-table ul .domain-name,#content #campaign-box #campaign-table ul .domain-name,#content #domain-box #domain-table ul .location-name,#content #location-box #domain-table ul .location-name,#content #campaign-box #domain-table ul .location-name,#content #domain-box #location-table ul .location-name,#content #location-box #location-table ul .location-name,#content #campaign-box #location-table ul .location-name,#content #domain-box #campaign-table ul .location-name,#content #location-box #campaign-table ul .location-name,#content #campaign-box #campaign-table ul .location-name{width:260px}#content #domain-box #domain-table ul .campaign-name,#content #location-box #domain-table ul .campaign-name,#content #campaign-box #domain-table ul .campaign-name,#content #domain-box #location-table ul .campaign-name,#content #location-box #location-table ul .campaign-name,#content #campaign-box #location-table ul .campaign-name,#content #domain-box #campaign-table ul .campaign-name,#content #location-box #campaign-table ul .campaign-name,#content #campaign-box #campaign-table ul .campaign-name{width:600px}#content #domain-box #domain-table ul .domain-imps,#content #location-box #domain-table ul .domain-imps,#content #campaign-box #domain-table ul .domain-imps,#content #domain-box #location-table ul .domain-imps,#content #location-box #location-table ul .domain-imps,#content #campaign-box #location-table ul .domain-imps,#content #domain-box #campaign-table ul .domain-imps,#content #location-box #campaign-table ul .domain-imps,#content #campaign-box #campaign-table ul .domain-imps,#content #domain-box #domain-table ul .location-imps,#content #location-box #domain-table ul .location-imps,#content #campaign-box #domain-table ul .location-imps,#content #domain-box #location-table ul .location-imps,#content #location-box #location-table ul .location-imps,#content #campaign-box #location-table ul .location-imps,#content #domain-box #campaign-table ul .location-imps,#content #location-box #campaign-table ul .location-imps,#content #campaign-box #campaign-table ul .location-imps{width:120px}#content #domain-box #domain-table ul .campaign-imps,#content #location-box #domain-table ul .campaign-imps,#content #campaign-box #domain-table ul .campaign-imps,#content #domain-box #location-table ul .campaign-imps,#content #location-box #location-table ul .campaign-imps,#content #campaign-box #location-table ul .campaign-imps,#content #domain-box #campaign-table ul .campaign-imps,#content #location-box #campaign-table ul .campaign-imps,#content #campaign-box #campaign-table ul .campaign-imps,#content #domain-box #domain-table ul .campaign-uniques,#content #location-box #domain-table ul .campaign-uniques,#content #campaign-box #domain-table ul .campaign-uniques,#content #domain-box #location-table ul .campaign-uniques,#content #location-box #location-table ul .campaign-uniques,#content #campaign-box #location-table ul .campaign-uniques,#content #domain-box #campaign-table ul .campaign-uniques,#content #location-box #campaign-table ul .campaign-uniques,#content #campaign-box #campaign-table ul .campaign-uniques{width:200px}#content #domain-box #domain-table ul .domain-uniques,#content #location-box #domain-table ul .domain-uniques,#content #campaign-box #domain-table ul .domain-uniques,#content #domain-box #location-table ul .domain-uniques,#content #location-box #location-table ul .domain-uniques,#content #campaign-box #location-table ul .domain-uniques,#content #domain-box #campaign-table ul .domain-uniques,#content #location-box #campaign-table ul .domain-uniques,#content #campaign-box #campaign-table ul .domain-uniques,#content #domain-box #domain-table ul .location-uniques,#content #location-box #domain-table ul .location-uniques,#content #campaign-box #domain-table ul .location-uniques,#content #domain-box #location-table ul .location-uniques,#content #location-box #location-table ul .location-uniques,#content #campaign-box #location-table ul .location-uniques,#content #domain-box #campaign-table ul .location-uniques,#content #location-box #campaign-table ul .location-uniques,#content #campaign-box #campaign-table ul .location-uniques{width:70px}#content #domain-box #domain-table .header-row,#content #location-box #domain-table .header-row,#content #campaign-box #domain-table .header-row,#content #domain-box #location-table .header-row,#content #location-box #location-table .header-row,#content #campaign-box #location-table .header-row,#content #domain-box #campaign-table .header-row,#content #location-box #campaign-table .header-row,#content #campaign-box #campaign-table .header-row{margin-bottom:5px}#content #domain-box #domain-table .header-row li img,#content #location-box #domain-table .header-row li img,#content #campaign-box #domain-table .header-row li img,#content #domain-box #location-table .header-row li img,#content #location-box #location-table .header-row li img,#content #campaign-box #location-table .header-row li img,#content #domain-box #campaign-table .header-row li img,#content #location-box #campaign-table .header-row li img,#content #campaign-box #campaign-table .header-row li img{position:absolute;width:15px;margin-top:5px;margin-left:5px}#content #domain-box #domain-table .header-row li:hover,#content #location-box #domain-table .header-row li:hover,#content #campaign-box #domain-table .header-row li:hover,#content #domain-box #location-table .header-row li:hover,#content #location-box #location-table .header-row li:hover,#content #campaign-box #location-table .header-row li:hover,#content #domain-box #campaign-table .header-row li:hover,#content #location-box #campaign-table .header-row li:hover,#content #campaign-box #campaign-table .header-row li:hover{cursor:pointer}#content #domain-box #domain-table .domain-row,#content #location-box #domain-table .domain-row,#content #campaign-box #domain-table .domain-row,#content #domain-box #location-table .domain-row,#content #location-box #location-table .domain-row,#content #campaign-box #location-table .domain-row,#content #domain-box #campaign-table .domain-row,#content #location-box #campaign-table .domain-row,#content #campaign-box #campaign-table .domain-row,#content #domain-box #domain-table .location-row,#content #location-box #domain-table .location-row,#content #campaign-box #domain-table .location-row,#content #domain-box #location-table .location-row,#content #location-box #location-table .location-row,#content #campaign-box #location-table .location-row,#content #domain-box #campaign-table .location-row,#content #location-box #campaign-table .location-row,#content #campaign-box #campaign-table .location-row,#content #domain-box #domain-table .campaign-row,#content #location-box #domain-table .campaign-row,#content #campaign-box #domain-table .campaign-row,#content #domain-box #location-table .campaign-row,#content #location-box #location-table .campaign-row,#content #campaign-box #location-table .campaign-row,#content #domain-box #campaign-table .campaign-row,#content #location-box #campaign-table .campaign-row,#content #campaign-box #campaign-table .campaign-row{padding:10px 15px;font-family:"Source Sans Pro",sans-serif;font-weight:300;font-size:16px;border-top:1px solid #ddd;transition:all .15s linear}#content #domain-box #domain-table .domain-row:hover,#content #location-box #domain-table .domain-row:hover,#content #campaign-box #domain-table .domain-row:hover,#content #domain-box #location-table .domain-row:hover,#content #location-box #location-table .domain-row:hover,#content #campaign-box #location-table .domain-row:hover,#content #domain-box #campaign-table .domain-row:hover,#content #location-box #campaign-table .domain-row:hover,#content #campaign-box #campaign-table .domain-row:hover,#content #domain-box #domain-table .location-row:hover,#content #location-box #domain-table .location-row:hover,#content #campaign-box #domain-table .location-row:hover,#content #domain-box #location-table .location-row:hover,#content #location-box #location-table .location-row:hover,#content #campaign-box #location-table .location-row:hover,#content #domain-box #campaign-table .location-row:hover,#content #location-box #campaign-table .location-row:hover,#content #campaign-box #campaign-table .location-row:hover,#content #domain-box #domain-table .campaign-row:hover,#content #location-box #domain-table .campaign-row:hover,#content #campaign-box #domain-table .campaign-row:hover,#content #domain-box #location-table .campaign-row:hover,#content #location-box #location-table .campaign-row:hover,#content #campaign-box #location-table .campaign-row:hover,#content #domain-box #campaign-table .campaign-row:hover,#content #location-box #campaign-table .campaign-row:hover,#content #campaign-box #campaign-table .campaign-row:hover{background:#f0f0f0;cursor:pointer}#content #domain-box #domain-table .domain-row li:not(.domain-name):not(.location-name):not(.campaign-name),#content #location-box #domain-table .domain-row li:not(.domain-name):not(.location-name):not(.campaign-name),#content #campaign-box #domain-table .domain-row li:not(.domain-name):not(.location-name):not(.campaign-name),#content #domain-box #location-table .domain-row li:not(.domain-name):not(.location-name):not(.campaign-name),#content #location-box #location-table .domain-row li:not(.domain-name):not(.location-name):not(.campaign-name),#content #campaign-box #location-table .domain-row li:not(.domain-name):not(.location-name):not(.campaign-name),#content #domain-box #campaign-table .domain-row li:not(.domain-name):not(.location-name):not(.campaign-name),#content #location-box #campaign-table .domain-row li:not(.domain-name):not(.location-name):not(.campaign-name),#content #campaign-box #campaign-table .domain-row li:not(.domain-name):not(.location-name):not(.campaign-name),#content #domain-box #domain-table .location-row li:not(.domain-name):not(.location-name):not(.campaign-name),#content #location-box #domain-table .location-row li:not(.domain-name):not(.location-name):not(.campaign-name),#content #campaign-box #domain-table .location-row li:not(.domain-name):not(.location-name):not(.campaign-name),#content #domain-box #location-table .location-row li:not(.domain-name):not(.location-name):not(.campaign-name),#content #location-box #location-table .location-row li:not(.domain-name):not(.location-name):not(.campaign-name),#content #campaign-box #location-table .location-row li:not(.domain-name):not(.location-name):not(.campaign-name),#content #domain-box #campaign-table .location-row li:not(.domain-name):not(.location-name):not(.campaign-name),#content #location-box #campaign-table .location-row li:not(.domain-name):not(.location-name):not(.campaign-name),#content #campaign-box #campaign-table .location-row li:not(.domain-name):not(.location-name):not(.campaign-name),#content #domain-box #domain-table .campaign-row li:not(.domain-name):not(.location-name):not(.campaign-name),#content #location-box #domain-table .campaign-row li:not(.domain-name):not(.location-name):not(.campaign-name),#content #campaign-box #domain-table .campaign-row li:not(.domain-name):not(.location-name):not(.campaign-name),#content #domain-box #location-table .campaign-row li:not(.domain-name):not(.location-name):not(.campaign-name),#content #location-box #location-table .campaign-row li:not(.domain-name):not(.location-name):not(.campaign-name),#content #campaign-box #location-table .campaign-row li:not(.domain-name):not(.location-name):not(.campaign-name),#content #domain-box #campaign-table .campaign-row li:not(.domain-name):not(.location-name):not(.campaign-name),#content #location-box #campaign-table .campaign-row li:not(.domain-name):not(.location-name):not(.campaign-name),#content #campaign-box #campaign-table .campaign-row li:not(.domain-name):not(.location-name):not(.campaign-name){font-weight:700}#content #domain-box .show-more,#content #location-box .show-more,#content #campaign-box .show-more{display:none;margin:15px 0}
+/* COPYRIGHT INFO HERE */
+/* FUNCTIONS/VARIABLES */
+/* CONTENT */
+#content #overall-box #overall-stats {
+  margin: 0px 40px;
+}
+#content #overall-box #overall-stats li {
+  margin: 0px 25px;
+  padding: 10px 0px 12px;
+  display: inline-block;
+  text-align: center;
+}
+#content #overall-box #overall-stats li .overall-item-header {
+  font-family: "Novecento", sans-serif;
+  font-weight: 400;
+  font-size: 18px;
+}
+#content #overall-box #overall-stats li .overall-item-value {
+  font-family: "Source Sans Pro", sans-serif;
+  font-weight: 700;
+  font-size: 25px;
+  margin-top: 6px;
+  margin-bottom: 3px;
+}
+#content #filter-box .box-title,
+#content #filter-box #filter-radio {
+  float: left;
+}
+#content #filter-box #filter-radio {
+  margin-left: 60px;
+  margin-top: 20px;
+  list-style-type: none;
+}
+#content #filter-box #filter-radio li {
+  display: inline-block;
+  font-family: "Novecento", sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  cursor: pointer;
+  margin-right: 40px;
+}
+#content #filter-box #filter-radio li img {
+  margin-right: 10px;
+  margin-bottom: -5px;
+}
+#content #filter-box .custom-filter-select {
+  display: inline-block;
+  padding: 15px;
+  padding-right: 10px;
+  font-family: "Source Sans Pro", sans-serif;
+  font-weight: 300;
+  font-size: 16px;
+}
+#content #filter-box .custom-filter-select .filter-text {
+  display: inline-block;
+  width: 110px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#content #filter-box .custom-filter-select .filter-reset {
+  font-family: "Novecento", sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  color: #aaa;
+  margin-left: 10px;
+  border-bottom: 1px solid transparent;
+  transition: all .15s linear;
+  visibility: hidden;
+}
+#content #filter-box .custom-filter-select .filter-reset:hover {
+  cursor: pointer;
+  border-bottom: 1px solid #aaa;
+}
+#content #map-box {
+  height: 550px;
+  /*background:lighten(#29a3d8, 20%); */
+  background: #ccc;
+  position: relative;
+}
+#content #map-box #map-loading {
+  background: rgba(0, 0, 0, 0.3);
+}
+#content #map-box #map-loading .data-loading-content {
+  color: #fff;
+  margin-left: -74px;
+}
+#content #map-box .tooltip {
+  position: absolute;
+  width: 100%;
+  margin-top: -40px;
+  margin-left: 20px;
+  color: #fff;
+  font-family: "Source Sans Pro", sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+}
+#content #map-box .tooltip .tooltip-content {
+  display: inline-block;
+  white-space: nowrap;
+  box-shadow: 0px 0px 3px #fff;
+  background: #333;
+  padding: 0px 10px 6px;
+}
+#content #map-box .tooltip .tooltip-content .tooltip-values {
+  display: inline-block;
+  margin-left: 8px;
+  padding-top: 2px;
+}
+#content #map-box .tooltip .tooltip-content .tooltip-values#tooltip-imps {
+  border-top: 3px solid #5ec34b;
+  margin-left: 15px;
+}
+#content #map-box .tooltip .tooltip-content .tooltip-values#tooltip-uniques {
+  border-top: 3px solid #ffb952;
+}
+#content #domain-box,
+#content #location-box,
+#content #campaign-box {
+  position: relative;
+  text-align: center;
+}
+#content #domain-box #domain-table,
+#content #location-box #domain-table,
+#content #campaign-box #domain-table,
+#content #domain-box #location-table,
+#content #location-box #location-table,
+#content #campaign-box #location-table,
+#content #domain-box #campaign-table,
+#content #location-box #campaign-table,
+#content #campaign-box #campaign-table {
+  margin-top: 10px;
+}
+#content #domain-box #domain-table ul,
+#content #location-box #domain-table ul,
+#content #campaign-box #domain-table ul,
+#content #domain-box #location-table ul,
+#content #location-box #location-table ul,
+#content #campaign-box #location-table ul,
+#content #domain-box #campaign-table ul,
+#content #location-box #campaign-table ul,
+#content #campaign-box #campaign-table ul {
+  padding-left: 15px;
+}
+#content #domain-box #domain-table ul li,
+#content #location-box #domain-table ul li,
+#content #campaign-box #domain-table ul li,
+#content #domain-box #location-table ul li,
+#content #location-box #location-table ul li,
+#content #campaign-box #location-table ul li,
+#content #domain-box #campaign-table ul li,
+#content #location-box #campaign-table ul li,
+#content #campaign-box #campaign-table ul li {
+  display: inline-block;
+  margin-right: 20px;
+}
+#content #domain-box #domain-table ul .domain-name,
+#content #location-box #domain-table ul .domain-name,
+#content #campaign-box #domain-table ul .domain-name,
+#content #domain-box #location-table ul .domain-name,
+#content #location-box #location-table ul .domain-name,
+#content #campaign-box #location-table ul .domain-name,
+#content #domain-box #campaign-table ul .domain-name,
+#content #location-box #campaign-table ul .domain-name,
+#content #campaign-box #campaign-table ul .domain-name,
+#content #domain-box #domain-table ul .location-name,
+#content #location-box #domain-table ul .location-name,
+#content #campaign-box #domain-table ul .location-name,
+#content #domain-box #location-table ul .location-name,
+#content #location-box #location-table ul .location-name,
+#content #campaign-box #location-table ul .location-name,
+#content #domain-box #campaign-table ul .location-name,
+#content #location-box #campaign-table ul .location-name,
+#content #campaign-box #campaign-table ul .location-name,
+#content #domain-box #domain-table ul .campaign-name,
+#content #location-box #domain-table ul .campaign-name,
+#content #campaign-box #domain-table ul .campaign-name,
+#content #domain-box #location-table ul .campaign-name,
+#content #location-box #location-table ul .campaign-name,
+#content #campaign-box #location-table ul .campaign-name,
+#content #domain-box #campaign-table ul .campaign-name,
+#content #location-box #campaign-table ul .campaign-name,
+#content #campaign-box #campaign-table ul .campaign-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#content #domain-box #domain-table ul .domain-name,
+#content #location-box #domain-table ul .domain-name,
+#content #campaign-box #domain-table ul .domain-name,
+#content #domain-box #location-table ul .domain-name,
+#content #location-box #location-table ul .domain-name,
+#content #campaign-box #location-table ul .domain-name,
+#content #domain-box #campaign-table ul .domain-name,
+#content #location-box #campaign-table ul .domain-name,
+#content #campaign-box #campaign-table ul .domain-name,
+#content #domain-box #domain-table ul .location-name,
+#content #location-box #domain-table ul .location-name,
+#content #campaign-box #domain-table ul .location-name,
+#content #domain-box #location-table ul .location-name,
+#content #location-box #location-table ul .location-name,
+#content #campaign-box #location-table ul .location-name,
+#content #domain-box #campaign-table ul .location-name,
+#content #location-box #campaign-table ul .location-name,
+#content #campaign-box #campaign-table ul .location-name {
+  width: 260px;
+}
+#content #domain-box #domain-table ul .campaign-name,
+#content #location-box #domain-table ul .campaign-name,
+#content #campaign-box #domain-table ul .campaign-name,
+#content #domain-box #location-table ul .campaign-name,
+#content #location-box #location-table ul .campaign-name,
+#content #campaign-box #location-table ul .campaign-name,
+#content #domain-box #campaign-table ul .campaign-name,
+#content #location-box #campaign-table ul .campaign-name,
+#content #campaign-box #campaign-table ul .campaign-name {
+  width: 600px;
+}
+#content #domain-box #domain-table ul .domain-imps,
+#content #location-box #domain-table ul .domain-imps,
+#content #campaign-box #domain-table ul .domain-imps,
+#content #domain-box #location-table ul .domain-imps,
+#content #location-box #location-table ul .domain-imps,
+#content #campaign-box #location-table ul .domain-imps,
+#content #domain-box #campaign-table ul .domain-imps,
+#content #location-box #campaign-table ul .domain-imps,
+#content #campaign-box #campaign-table ul .domain-imps,
+#content #domain-box #domain-table ul .location-imps,
+#content #location-box #domain-table ul .location-imps,
+#content #campaign-box #domain-table ul .location-imps,
+#content #domain-box #location-table ul .location-imps,
+#content #location-box #location-table ul .location-imps,
+#content #campaign-box #location-table ul .location-imps,
+#content #domain-box #campaign-table ul .location-imps,
+#content #location-box #campaign-table ul .location-imps,
+#content #campaign-box #campaign-table ul .location-imps {
+  width: 120px;
+}
+#content #domain-box #domain-table ul .campaign-imps,
+#content #location-box #domain-table ul .campaign-imps,
+#content #campaign-box #domain-table ul .campaign-imps,
+#content #domain-box #location-table ul .campaign-imps,
+#content #location-box #location-table ul .campaign-imps,
+#content #campaign-box #location-table ul .campaign-imps,
+#content #domain-box #campaign-table ul .campaign-imps,
+#content #location-box #campaign-table ul .campaign-imps,
+#content #campaign-box #campaign-table ul .campaign-imps,
+#content #domain-box #domain-table ul .campaign-uniques,
+#content #location-box #domain-table ul .campaign-uniques,
+#content #campaign-box #domain-table ul .campaign-uniques,
+#content #domain-box #location-table ul .campaign-uniques,
+#content #location-box #location-table ul .campaign-uniques,
+#content #campaign-box #location-table ul .campaign-uniques,
+#content #domain-box #campaign-table ul .campaign-uniques,
+#content #location-box #campaign-table ul .campaign-uniques,
+#content #campaign-box #campaign-table ul .campaign-uniques {
+  width: 200px;
+}
+#content #domain-box #domain-table ul .domain-uniques,
+#content #location-box #domain-table ul .domain-uniques,
+#content #campaign-box #domain-table ul .domain-uniques,
+#content #domain-box #location-table ul .domain-uniques,
+#content #location-box #location-table ul .domain-uniques,
+#content #campaign-box #location-table ul .domain-uniques,
+#content #domain-box #campaign-table ul .domain-uniques,
+#content #location-box #campaign-table ul .domain-uniques,
+#content #campaign-box #campaign-table ul .domain-uniques,
+#content #domain-box #domain-table ul .location-uniques,
+#content #location-box #domain-table ul .location-uniques,
+#content #campaign-box #domain-table ul .location-uniques,
+#content #domain-box #location-table ul .location-uniques,
+#content #location-box #location-table ul .location-uniques,
+#content #campaign-box #location-table ul .location-uniques,
+#content #domain-box #campaign-table ul .location-uniques,
+#content #location-box #campaign-table ul .location-uniques,
+#content #campaign-box #campaign-table ul .location-uniques {
+  width: 70px;
+}
+#content #domain-box #domain-table .header-row,
+#content #location-box #domain-table .header-row,
+#content #campaign-box #domain-table .header-row,
+#content #domain-box #location-table .header-row,
+#content #location-box #location-table .header-row,
+#content #campaign-box #location-table .header-row,
+#content #domain-box #campaign-table .header-row,
+#content #location-box #campaign-table .header-row,
+#content #campaign-box #campaign-table .header-row {
+  margin-bottom: 5px;
+}
+#content #domain-box #domain-table .header-row li img,
+#content #location-box #domain-table .header-row li img,
+#content #campaign-box #domain-table .header-row li img,
+#content #domain-box #location-table .header-row li img,
+#content #location-box #location-table .header-row li img,
+#content #campaign-box #location-table .header-row li img,
+#content #domain-box #campaign-table .header-row li img,
+#content #location-box #campaign-table .header-row li img,
+#content #campaign-box #campaign-table .header-row li img {
+  position: absolute;
+  width: 15px;
+  margin-top: 5px;
+  margin-left: 5px;
+}
+#content #domain-box #domain-table .header-row li:hover,
+#content #location-box #domain-table .header-row li:hover,
+#content #campaign-box #domain-table .header-row li:hover,
+#content #domain-box #location-table .header-row li:hover,
+#content #location-box #location-table .header-row li:hover,
+#content #campaign-box #location-table .header-row li:hover,
+#content #domain-box #campaign-table .header-row li:hover,
+#content #location-box #campaign-table .header-row li:hover,
+#content #campaign-box #campaign-table .header-row li:hover {
+  cursor: pointer;
+}
+#content #domain-box #domain-table .domain-row,
+#content #location-box #domain-table .domain-row,
+#content #campaign-box #domain-table .domain-row,
+#content #domain-box #location-table .domain-row,
+#content #location-box #location-table .domain-row,
+#content #campaign-box #location-table .domain-row,
+#content #domain-box #campaign-table .domain-row,
+#content #location-box #campaign-table .domain-row,
+#content #campaign-box #campaign-table .domain-row,
+#content #domain-box #domain-table .location-row,
+#content #location-box #domain-table .location-row,
+#content #campaign-box #domain-table .location-row,
+#content #domain-box #location-table .location-row,
+#content #location-box #location-table .location-row,
+#content #campaign-box #location-table .location-row,
+#content #domain-box #campaign-table .location-row,
+#content #location-box #campaign-table .location-row,
+#content #campaign-box #campaign-table .location-row,
+#content #domain-box #domain-table .campaign-row,
+#content #location-box #domain-table .campaign-row,
+#content #campaign-box #domain-table .campaign-row,
+#content #domain-box #location-table .campaign-row,
+#content #location-box #location-table .campaign-row,
+#content #campaign-box #location-table .campaign-row,
+#content #domain-box #campaign-table .campaign-row,
+#content #location-box #campaign-table .campaign-row,
+#content #campaign-box #campaign-table .campaign-row {
+  padding: 10px 15px;
+  font-family: "Source Sans Pro", sans-serif;
+  font-weight: 300;
+  font-size: 16px;
+  border-top: 1px solid #ddd;
+  transition: all .15s linear;
+}
+#content #domain-box #domain-table .domain-row:hover,
+#content #location-box #domain-table .domain-row:hover,
+#content #campaign-box #domain-table .domain-row:hover,
+#content #domain-box #location-table .domain-row:hover,
+#content #location-box #location-table .domain-row:hover,
+#content #campaign-box #location-table .domain-row:hover,
+#content #domain-box #campaign-table .domain-row:hover,
+#content #location-box #campaign-table .domain-row:hover,
+#content #campaign-box #campaign-table .domain-row:hover,
+#content #domain-box #domain-table .location-row:hover,
+#content #location-box #domain-table .location-row:hover,
+#content #campaign-box #domain-table .location-row:hover,
+#content #domain-box #location-table .location-row:hover,
+#content #location-box #location-table .location-row:hover,
+#content #campaign-box #location-table .location-row:hover,
+#content #domain-box #campaign-table .location-row:hover,
+#content #location-box #campaign-table .location-row:hover,
+#content #campaign-box #campaign-table .location-row:hover,
+#content #domain-box #domain-table .campaign-row:hover,
+#content #location-box #domain-table .campaign-row:hover,
+#content #campaign-box #domain-table .campaign-row:hover,
+#content #domain-box #location-table .campaign-row:hover,
+#content #location-box #location-table .campaign-row:hover,
+#content #campaign-box #location-table .campaign-row:hover,
+#content #domain-box #campaign-table .campaign-row:hover,
+#content #location-box #campaign-table .campaign-row:hover,
+#content #campaign-box #campaign-table .campaign-row:hover {
+  background: #f0f0f0;
+  cursor: pointer;
+}
+#content #domain-box #domain-table .domain-row li:not(.domain-name):not(.location-name):not(.campaign-name),
+#content #location-box #domain-table .domain-row li:not(.domain-name):not(.location-name):not(.campaign-name),
+#content #campaign-box #domain-table .domain-row li:not(.domain-name):not(.location-name):not(.campaign-name),
+#content #domain-box #location-table .domain-row li:not(.domain-name):not(.location-name):not(.campaign-name),
+#content #location-box #location-table .domain-row li:not(.domain-name):not(.location-name):not(.campaign-name),
+#content #campaign-box #location-table .domain-row li:not(.domain-name):not(.location-name):not(.campaign-name),
+#content #domain-box #campaign-table .domain-row li:not(.domain-name):not(.location-name):not(.campaign-name),
+#content #location-box #campaign-table .domain-row li:not(.domain-name):not(.location-name):not(.campaign-name),
+#content #campaign-box #campaign-table .domain-row li:not(.domain-name):not(.location-name):not(.campaign-name),
+#content #domain-box #domain-table .location-row li:not(.domain-name):not(.location-name):not(.campaign-name),
+#content #location-box #domain-table .location-row li:not(.domain-name):not(.location-name):not(.campaign-name),
+#content #campaign-box #domain-table .location-row li:not(.domain-name):not(.location-name):not(.campaign-name),
+#content #domain-box #location-table .location-row li:not(.domain-name):not(.location-name):not(.campaign-name),
+#content #location-box #location-table .location-row li:not(.domain-name):not(.location-name):not(.campaign-name),
+#content #campaign-box #location-table .location-row li:not(.domain-name):not(.location-name):not(.campaign-name),
+#content #domain-box #campaign-table .location-row li:not(.domain-name):not(.location-name):not(.campaign-name),
+#content #location-box #campaign-table .location-row li:not(.domain-name):not(.location-name):not(.campaign-name),
+#content #campaign-box #campaign-table .location-row li:not(.domain-name):not(.location-name):not(.campaign-name),
+#content #domain-box #domain-table .campaign-row li:not(.domain-name):not(.location-name):not(.campaign-name),
+#content #location-box #domain-table .campaign-row li:not(.domain-name):not(.location-name):not(.campaign-name),
+#content #campaign-box #domain-table .campaign-row li:not(.domain-name):not(.location-name):not(.campaign-name),
+#content #domain-box #location-table .campaign-row li:not(.domain-name):not(.location-name):not(.campaign-name),
+#content #location-box #location-table .campaign-row li:not(.domain-name):not(.location-name):not(.campaign-name),
+#content #campaign-box #location-table .campaign-row li:not(.domain-name):not(.location-name):not(.campaign-name),
+#content #domain-box #campaign-table .campaign-row li:not(.domain-name):not(.location-name):not(.campaign-name),
+#content #location-box #campaign-table .campaign-row li:not(.domain-name):not(.location-name):not(.campaign-name),
+#content #campaign-box #campaign-table .campaign-row li:not(.domain-name):not(.location-name):not(.campaign-name) {
+  font-weight: 700;
+}
+#content #domain-box .show-more,
+#content #location-box .show-more,
+#content #campaign-box .show-more {
+  display: none;
+  margin: 15px 0px;
+}
