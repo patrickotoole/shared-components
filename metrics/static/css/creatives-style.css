@@ -1,0 +1,30 @@
+/* COPYRIGHT INFO HERE */
+/* FUNCTIONS/VARIABLES */
+/* CONTENT */
+#content #filter-box .box-title,
+#content #filter-box #filter-metric {
+  float: left;
+}
+#content #filter-box #filter-metric {
+  list-style-type: none;
+  margin: 17px 10px;
+}
+#content #filter-box #filter-metric li {
+  display: inline-block;
+  cursor: pointer;
+  margin-left: 50px;
+  font-family: "Novecento", sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+}
+#content #filter-box #filter-metric li img {
+  display: inline-block;
+  margin-bottom: -5px;
+  margin-right: 10px;
+}
+#content #creatives-box {
+  margin: 5px;
+}
+#content #creatives-box .ind-creative {
+  float: left;
+}

@@ -1,0 +1,51 @@
+/* COPYRIGHT INFO HERE */
+
+/* FUNCTIONS/VARIABLES */
+
+.border-radius(@border) {
+  -webkit-border-radius: @border;
+  -moz-border-radius: @border;
+  border-radius: @border;
+}
+
+@blue: #29a3d8;
+
+@red: #e46161;
+
+@orange: #ffb952;
+
+@green: #5ec34b;
+
+/* CONTENT */
+
+#content {
+	#filter-box {
+        .box-title, #filter-metric {
+            float:left;
+        }
+        #filter-metric {
+            list-style-type:none;
+            margin:17px 10px;
+            li {
+                display:inline-block;
+                cursor:pointer;
+                margin-left:50px;
+                img {
+                    display:inline-block;
+                    margin-bottom:-5px;
+                    margin-right:10px;
+                }
+                font-family:"Novecento", sans-serif;
+                font-weight:400;
+                font-size:16px;
+            }
+        }
+	}
+    #creatives-box {
+        margin:5px;
+        .ind-creative {
+            float:left;
+        }
+    }
+}
+

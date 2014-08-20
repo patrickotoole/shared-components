@@ -1,1 +1,70 @@
-{{ advertiser_id }}
+{% autoescape None %}
+{% extends "../base.html" %}
+
+{% block page_title %}Creative reporting{% end %}
+{% block page_header %}Creative reporting{% end %}
+
+{% block page_css %}
+    <link href="/static/css/creatives-style.css" type="text/css" rel="stylesheet" media="screen">
+	<link href="/static/css/dc.css" type="text/css" rel="stylesheet" media="screen">
+{% end %}
+
+{% block page_sidebar %}
+	<li><a href="reporting"><img src="/static/img/sidebar/reporting-icon.png" alt="Reporting icon" /><span class="sidebar-label">campaign reporting</span></a></li>
+    <li><a href="streaming"><img src="/static/img/sidebar/global-icon.png" alt="Global icon" /><span class="sidebar-label">global streaming</span></a></li>
+    <li class="active"><a href="creative/reporting"><img src="/static/img/sidebar/creative-icon.png" alt="Creatives icon" /><span class="sidebar-label">creative reporting</span></a></li>
+<!--
+	<li><a href="global"><img src="/static/img/sidebar/global-icon.png" alt="Global icon" /><span class="sidebar-label">global streaming</span></a></li>
+	
+	<li><a href="intraweek"><img src="/static/img/sidebar/intraweek-icon.png" alt="Intraweek icon" /><span class="sidebar-label">intraweek overview</span></a></li>
+	-->
+{% end %}
+
+{% block page_content %}
+    <div id="filter-box" class="box full-box">
+        <div class="box-title">Sort by</div>
+        <ul id="filter-metric">
+            <li><img src="/static/img/general/unchecked-radio.png" alt="Unchecked radio button" />impressions</li>
+            <li><img src="/static/img/general/unchecked-radio.png" alt="Unchecked radio button" />clicks</li>
+            <li class="filter-metric-active"><img src="/static/img/general/checked-radio.png" alt="Checked radio button" />click-through rate</li>
+            <li><img src="/static/img/general/unchecked-radio.png" alt="Unchecked radio button" />conversions</li>
+            <li><img src="/static/img/general/unchecked-radio.png" alt="Unchecked radio button" />size</li>
+        </ul>
+        <div class="clearfix"></div>
+	</div>
+    <div class="clearfix"></div>
+    <div id="creatives-box">   
+        <div class="clearfix"></div>
+    </div>
+{% end %}
+
+{% block page_scripts %}
+	<!-- IO GAUGE -->
+	<script src="/static/js/gauge.min.js"></script>
+	<script src="/static/js/d3.v3.min.js"></script>
+	<script src="/static/js/crossfilter.min.js"></script>
+	<script src="/static/js/dc.mod.js"></script>
+	<script>					
+    
+		var extUserID =  {{ advertiser_id }};
+        
+		       $('#page-loader').hide();
+               
+		// GET ADVERTISER BUDGET AND PROGRESS       
+        
+		var getUserInfo = $.getJSON("/intraweek?format=json&ioinfo=" + extUserID, function(data){
+            $('#header #right-align #user-name').text(data[0].advertiser.toLowerCase());
+        });
+        
+        var getCreativeData = $.getJSON("?format=json", function(data){
+            $.each(data, function(key, value){
+                //console.log(value);
+                $('#creatives-box .clearfix').before('<div class="ind-creative"><iframe src="' + value.url + '"></iframe></div>');
+            });
+        });
+		
+    </script>     
+	<script>		
+
+	</script>
+{% end %}
