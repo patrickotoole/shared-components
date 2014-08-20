@@ -54,13 +54,15 @@ BUCKET_QUERY = """
 
 CREATIVE_QUERY = """
 select 
-    creative_id,
-    sum(imps) imps,
-    sum(clicks) clicks,
+    u.creative_id,
+    sum(u.imps) imps,
+    sum(u.clicks) clicks,
     min(u.date) first_served,
     max(u.date) last_served,
-    sum(conversions),
-    GROUP_CONCAT(DISTINCT campaign_id ORDER BY campaign_id ASC SEPARATOR ' ') associated_campaigns
+    sum(u.conversions) conversions,
+    GROUP_CONCAT(DISTINCT u.campaign_id ORDER BY campaign_id ASC SEPARATOR ' ') associated_campaigns,
+    c.width,
+    c.height
 FROM (
     select 
         creative_id,
@@ -96,6 +98,12 @@ FROM (
         UNIX_TIMESTAMP(conversion_reporting.conversion_time) <= %(date_max)s
     )
 ) u
+join creative c
+on c.external_id = u.creative_id
+where 
+    active=1 and 
+    deleted=0
 group by
-    creative_id
+    u.creative_id
 """
+
