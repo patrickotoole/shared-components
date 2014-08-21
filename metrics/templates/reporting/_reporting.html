@@ -171,6 +171,7 @@
                     function generateIOProgress(campaignQty){
                         if(campaignQty == 1 || campaignQty == 2){
                             $('#io-gauge').hide();
+                            $("#io-percentage-bar").show();
                             
                             var usagePercent = userSpent / userBudget;
                             $("#io-percentage-bar-inner").css("width", parseInt(usagePercent * 100) + "%");
@@ -187,6 +188,9 @@
                             if(campaignQty == 1){
                                 $('#io-completion-box').addClass('io-small');
                             }
+                            else {
+                                $('#io-completion-box').removeClass('io-small');
+                            }
                         }
                         else {
                             $("#io-percentage-bar").hide();
@@ -194,6 +198,9 @@
                             
                             if(campaignQty == 3){
                                 $('#io-completion-box').addClass('io-large');
+                            }
+                            else {
+                                $('#io-completion-box').removeClass('io-large');
                             }
                             
                             // DISPLAY IO PROGRESS GAUGE
@@ -216,7 +223,6 @@
                             gauge.set(userSpent);			
                         }
                     }
-                    generateIOProgress();
                     
                     // GENERATE CAMPAIGN BOX CONTENT
                     var prevQty = 0;
@@ -277,13 +283,13 @@
                             });	
                         }
                         
-                        /*
-                        var currentQty = CRS.aggregateDimensions.total_campaign_bucket.top(5).length;
+                       
+                        var currentQty = CRS.aggregateDimensions.total_campaign_bucket.top(4).length;
                         if(prevQty != currentQty){ 
                             prevQty = currentQty;
                             generateIOProgress(currentQty);
                         }
-                        */
+                        
                     });
                     
                     if(CRS.aggregateDimensions.total_campaign_bucket.top(5).length == 1){
