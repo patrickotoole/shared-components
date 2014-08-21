@@ -38,7 +38,7 @@ def check(hours=1):
     """
     re-run all the jobs that's either missing or fails * hours ealier
     """
-    end_date = align(timedelta(hours=1), parse("4h")).replace(tzinfo=None)
+    end_date = align(timedelta(hours=1), parse("6h")).replace(tzinfo=None)
     start_date = end_date - timedelta(hours=hours)
     missed = _get_miss(start_date, end_date)
     failed = _get_fail(start_date, end_date)
