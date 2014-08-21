@@ -112,8 +112,13 @@ class AnalyzeDataPulling(AnalyzeBase):
 
         to_sum = ['imps', 'clicks', 'media_cost']
         adx_res = adx_grouped[to_sum].sum()
-        adx_res = adx_res.xs(GOOGLE_ADX, level="seller_member")
         all_res = all_grouped[to_sum].sum()
+        try:
+            adx_res = adx_res.xs(GOOGLE_ADX, level="seller_member")
+        except KeyError:
+            all_res = all_res.reset_index()
+            all_res['adx_spend'] = 0
+            return all_res
 
         joined = all_res.join(adx_res, rsuffix='_adx')
         joined = joined.reset_index()
