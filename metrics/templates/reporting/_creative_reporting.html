@@ -1,1 +1,157 @@
-{{ advertiser_id }}
+{% autoescape None %}
+{% extends "../base.html" %}
+
+{% block page_title %}Creative reporting{% end %}
+{% block page_header %}Creative reporting{% end %}
+
+{% block page_css %}
+    <link href="/static/css/creatives-style.css" type="text/css" rel="stylesheet" media="screen">
+{% end %}
+
+{% block page_sidebar %}
+	<li><a href="reporting"><img src="/static/img/sidebar/reporting-icon.png" alt="Reporting icon" /><span class="sidebar-label">campaign reporting</span></a></li>
+    <li><a href="streaming"><img src="/static/img/sidebar/global-icon.png" alt="Global icon" /><span class="sidebar-label">global streaming</span></a></li>
+    <li class="active"><a href="creative/reporting"><img src="/static/img/sidebar/creative-icon.png" alt="Creatives icon" /><span class="sidebar-label">creative reporting</span></a></li>
+<!--
+	<li><a href="global"><img src="/static/img/sidebar/global-icon.png" alt="Global icon" /><span class="sidebar-label">global streaming</span></a></li>
+	
+	<li><a href="intraweek"><img src="/static/img/sidebar/intraweek-icon.png" alt="Intraweek icon" /><span class="sidebar-label">intraweek overview</span></a></li>
+	-->
+{% end %}
+
+{% block page_content %}
+    <div id="filter-box" class="box full-box">
+        <div class="box-title">Sort by</div>
+        <ul id="filter-metric">
+            <li class="filter-metric-active"><img src="/static/img/general/checked-radio.png" alt="Checked radio button" />impressions</li>
+            <li><img src="/static/img/general/unchecked-radio.png" alt="Unchecked radio button" />clicks</li>
+            <li title="Click-through rate"><img src="/static/img/general/unchecked-radio.png" alt="Unchecked radio button" />ctr</li>
+            <li><img src="/static/img/general/unchecked-radio.png" alt="Unchecked radio button" />conversions</li>
+            <li><img src="/static/img/general/unchecked-radio.png" alt="Unchecked radio button" />size</li>
+        </ul>
+        <div class="clearfix"></div>
+	</div>
+    <div class="clearfix"></div>
+    <div id="creatives-box">   
+    </div>
+{% end %}
+
+{% block page_scripts %}
+    <script src="/static/js/packery.pkgd.min.js"></script>
+	<script>					
+    
+		var extUserID =  {{ advertiser_id }};
+        
+		       $('#page-loader').hide();
+               
+		// GET ADVERTISER BUDGET AND PROGRESS       
+        
+		var getUserInfo = $.getJSON("/intraweek?format=json&ioinfo=" + extUserID, function(data){
+            $('#header #right-align #user-name').text(data[0].advertiser.toLowerCase());
+        });
+        
+        function getOuterWidth(width){
+            if(width <= 180) return 180;
+            else if(width <= 370) return 370;
+            else if(width <= 560) return 560;
+            else if(width <= 750) return 750;
+            else if(width <= 940) return 940;
+            return 1130;
+        }
+        function getOuterHeight(height){
+            if(height <= 180) return 180;
+            else if(height <= 370) return 370;
+            else if(height <= 560) return 560;
+            else if(height <= 750) return 750;
+            else if(height <= 940) return 940;
+            return 1130;
+        }
+        
+        var creativesArray = {};
+        var pckry = null;
+        var getCreativeData = $.getJSON("?format=json", function(data){
+            data.sort(function(a,b){if (a.imps > b.imps) { return -1; } if (a.imps < b.imps) { return 1; } return 0;});
+            $.each(data, function(key, value){
+                var outerHeight = getOuterHeight(value.height);
+                var valueSize = value.height * value.width;
+                var valueCtr = value.clicks / value.imps;
+                var indCreative = '<div class="ind-creative" data-id="' + value.creative_id + '" style="width:' + getOuterWidth(value.width) + 'px;height:' + outerHeight + 'px">'
+                + '<div class="ind-creative-stats"><ul>'
+                + '<li><div class="metric-title">creative id</div><div class="metric-value">' + value.creative_id + '</div></li>'
+                + '<li><div class="metric-title">impressions</div><div class="metric-value">' + formatNumber(value.imps) + '</div></li>'
+                + '<li><div class="metric-title">clicks</div><div class="metric-value">' + formatNumber(value.clicks) + '</div></li>'
+                + '<li class="metric-active"><div class="metric-title">ctr</div><div class="metric-value">' + formatPercentage(valueCtr) + '</div></li>'
+                + '<li><div class="metric-title">conversions</div><div class="metric-value">' + formatNumber(value.conversions) + '</div></li>'
+                + '<li><div class="metric-title">size</div><div class="metric-value">' + value.width + 'x' + value.height + '</div></li>'
+                + '</ul></div>'
+                + '<iframe src="' + value.url + '" width="' + (value.width + 16) + '" height="' + (value.height + 16) + '" scrolling="no" style="margin-top:' + ((outerHeight - (value.height + 16)) / 2) + 'px"></iframe>'
+                + '</div>';
+                $('#creatives-box').append(indCreative);
+                    
+                // ADD TO ARRAY
+                creativesArray[value.creative_id] = {imps: value.imps, clicks: value.clicks, ctr: valueCtr, conversions: value.conversions, size: valueSize}
+            });
+            
+            pckry = $('#creatives-box').packery({
+                itemSelector: '.ind-creative',
+                gutter: 10,
+                columnWidth: 180
+            });
+            //console.log($('#creatives-box').packery('getItemElements'));
+        });
+		     
+        
+       
+    </script>     
+	<script>		
+        $('#filter-metric li').click(function(){
+            if(!$(this).hasClass('filter-metric-active')){
+                var filterMetric = $(this).text();
+                if(filterMetric == "impressions"){
+                    var metricSortFunction = function(a, b){
+                        if (creativesArray[$(a).attr("data-id")].imps > creativesArray[$(b).attr("data-id")].imps) return -1;
+                        if (creativesArray[$(a).attr("data-id")].imps < creativesArray[$(b).attr("data-id")].imps) return 1;
+                        return 0;
+                    }
+                }
+                else if(filterMetric == "clicks"){
+                    var metricSortFunction = function(a, b){
+                        if (creativesArray[$(a).attr("data-id")].clicks > creativesArray[$(b).attr("data-id")].clicks) return -1;
+                        if (creativesArray[$(a).attr("data-id")].clicks < creativesArray[$(b).attr("data-id")].clicks) return 1;
+                        return 0;
+                    }
+                }
+                else if(filterMetric == "conversions"){
+                    var metricSortFunction = function(a, b){
+                        if (creativesArray[$(a).attr("data-id")].conversions > creativesArray[$(b).attr("data-id")].conversions) return -1;
+                        if (creativesArray[$(a).attr("data-id")].conversions < creativesArray[$(b).attr("data-id")].conversions) return 1;
+                        return 0;
+                    }
+                }
+                else if(filterMetric == "size"){
+                    var metricSortFunction = function(a, b){
+                        if (creativesArray[$(a).attr("data-id")].size > creativesArray[$(b).attr("data-id")].size) return -1;
+                        if (creativesArray[$(a).attr("data-id")].size < creativesArray[$(b).attr("data-id")].size) return 1;
+                        return 0;
+                    }
+                }
+                else {
+                    var metricSortFunction = function(a, b){
+                        if (creativesArray[$(a).attr("data-id")].ctr > creativesArray[$(b).attr("data-id")].ctr) return -1;
+                        if (creativesArray[$(a).attr("data-id")].ctr < creativesArray[$(b).attr("data-id")].ctr) return 1;
+                        return 0;
+                    }
+                }
+                var creativesGroup = $("#creatives-box");
+                var creativesInd = creativesGroup.children(".ind-creative");
+                creativesInd.detach().sort(metricSortFunction);
+                creativesGroup.append(creativesInd);
+               
+                $(this).siblings('.filter-metric-active').removeClass('filter-metric-active').children('img').attr('src', '/static/img/general/unchecked-radio.png').attr('alt', 'Unchecked radio button');
+                $(this).addClass('filter-metric-active').children('img').attr('src', '/static/img/general/checked-radio.png').attr('alt', 'Checked radio button');
+                pckry.packery("reloadItems");
+                pckry.packery();
+            }
+        });
+	</script>
+{% end %}

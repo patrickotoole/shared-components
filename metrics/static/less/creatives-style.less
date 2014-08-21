@@ -1,0 +1,102 @@
+/* COPYRIGHT INFO HERE */
+
+/* FUNCTIONS/VARIABLES */
+
+.border-radius(@border) {
+  -webkit-border-radius: @border;
+  -moz-border-radius: @border;
+  border-radius: @border;
+}
+
+@blue: #29a3d8;
+
+@red: #e46161;
+
+@orange: #ffb952;
+
+@green: #5ec34b;
+
+/* CONTENT */
+
+#content {
+	#filter-box {
+        .box-title, #filter-metric {
+            float:left;
+        }
+        #filter-metric {
+            list-style-type:none;
+            margin:17px 10px;
+            li {
+                display:inline-block;
+                cursor:pointer;
+                margin-left:50px;
+                img {
+                    display:inline-block;
+                    margin-bottom:-5px;
+                    margin-right:10px;
+                }
+                font-family:"Novecento", sans-serif;
+                font-weight:400;
+                font-size:16px;
+            }
+        }
+	}
+    #creatives-box {
+        margin:5px;
+        .ind-creative {
+            box-sizing: border-box;
+            display:table;
+            border:1px solid #ddd;
+            background:#fff url('/static/img/general/dot-bg.png') repeat;           
+            position:relative;   
+            overflow:hidden;
+            .ind-creative-stats {   
+                display:table;
+                position:absolute;
+                background:rgba(0,0,0,.85);
+                color:#fff;
+                width:100%;
+                height:100%;
+                text-align:center;
+                opacity:0;
+                transition:all .2s linear;
+                ul {
+                    display:table-cell;
+                    vertical-align:middle;
+                    margin-top:15px;
+                    list-style-type:none;
+                    li {
+                        display:inline-block;
+                        margin:20px 0px;
+                        width:178px;
+                        .metric-title {
+                            font-family:"Novecento", sans-serif;
+                            font-weight:400;
+                            font-size:16px;
+                            margin-bottom:10px;
+                        }
+                        .metric-value {
+                            font-family:"Source Sans Pro", sans-serif;
+                            font-weight:700;
+                            font-size:17px;                    
+                        }
+                    }
+                }
+            }
+            iframe {
+                display:table-cell;
+                border:0;
+                text-align:center;
+                overflow:hidden;
+                margin:auto;
+            }
+            &:hover {
+                .ind-creative-stats {
+                    opacity:1;
+                }
+                cursor:pointer;
+            }
+        }
+    }
+}
+

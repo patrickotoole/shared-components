@@ -88,6 +88,11 @@
 				return '$' + money.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
 			}
 			
+            // FORMAT PERCENTAGE
+			function formatPercentage(number){
+				return (number * 100).toFixed(3) +  '%';
+			}
+            
 			// FORMAT DATE
 			var monthNames = [ "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 			var monthNamesAbbr = [ "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
