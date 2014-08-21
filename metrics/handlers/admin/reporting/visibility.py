@@ -3,18 +3,17 @@ import contextlib
 
 import tornado.web
 import ujson
-import pandas
+import pandas as pd
 import StringIO
 import hive_utils
 import tornado.template as template
 from urlparse import urlparse
 from twisted.internet import defer, threads
+from lib.helpers import *
 #from lib.hive import Hive
 
 API_QUERY = "select * from appnexus_reporting.%s where %s "
-
-#hive = None#hive_utils.HiveClient(server="slave4",port="7425")
-#hive = Hive().hive
+QUERY = "select seller, tag, width, height, domain, sum(num_served) as num_served, sum(num_loaded) as num_loaded, sum(num_visible) as num_visible from agg_visibility where {} group by seller, tag, width, height, domain order by cast(num_served as int) limit 100"
 
 @contextlib.contextmanager
 def openclose(transport):
@@ -69,39 +68,65 @@ class ViewabilityHandler(tornado.web.RequestHandler):
         if sort_by:
             v = v.sort_index(by=sort_by, ascending=False)
 
+        if not from_date or not to_date or not from_hour or not to_hour:
+            print "Going to base page"
+            self.render("admin/visibility_base.html")
+            return
 
-        if format_type == "csv":
-            output = StringIO.StringIO()
-            v[v.served > 10][["served","served_visibility","visible"]].to_csv(output)
-            o = output.getvalue()
-            output.close()
         else:
-            o = v[v.served > 10][["served","served_visibility","visible"]].to_html(classes="table table-condensed")
+            domain = self.get_argument("domain", False)
+            tag = self.get_argument("tag", False)
+            seller = self.get_argument("seller", False)
 
-        self.render("../templates/base.html",stuff=o)
-        self.finish()
+            try:
+                data = self.pull_report(from_date, to_date, from_hour, to_hour, domain, tag, seller)
+            except StandardError:
+                data = "No Results for Query"
+                self.render("admin/visibility.html", data=data)
 
-    @tornado.web.asynchronous
-    def get(self):
-        member = self.get_argument("member",False)
-        domain = self.get_argument("domain",False)
-        groups = self.get_argument("group_by","domain").split(",")
-        sort_by = self.get_argument("sort_by",False)
-        format_type = self.get_argument("type",False)
-
-        q = "1=1 "
-        if member:
-            q += "and seller = '%s' " % member
-        if domain:
-            domains = domain.split(",")
-            q += " and (referrer like '%%%s%%'" % domains[0]
-            for d in domains[1:]:
-                q += " or referrer like '%%%s%%' " % d
-            q += ")"
-        
-        self.get_content(q,groups,sort_by,format_type)
+            if not self.get_argument("format", False):
+                data = data.head(10000).to_html(index=False)
+       
+            def default(self, data):
+                self.render("admin/visibility.html", data=data)
+    
+            yield default, (data,)
 
     def post(self):
-        print self.request.body
-        self.write("hello")
+        # Collect the arguments and process them as necessary 
+        from_date = self.get_argument("from_date")
+        to_date = self.get_argument("to_date")
+        
+        from_hour = self.get_argument("from_hour")
+        to_hour = self.get_argument("to_hour")
+
+        domain = self.get_argument("domain", False)
+        seller = self.get_argument("seller", False)
+        tag = self.get_argument("tag", False)
+
+
+        if len(from_hour) == 1:
+            from_hour = '0' + from_hour
+        
+        if len(to_hour) == 1:
+            to_hour = '0' + to_hour
+
+        api_args = {
+            "from_date": from_date,
+            "to_date": to_date,
+            "from_hour": from_hour,
+            "to_hour": to_hour,
+            "domain": domain,
+            "seller": seller,
+            "tag": tag
+        }
+
+        api_call = "/admin/viewable?" + '&'.join(["{}={}".format(k,api_args[k]) for k in api_args.keys() if api_args[k]]) 
+
+        
+        # Send the arguments back to the server as a GET request
+        self.redirect(api_call)
+
+
+        
 

@@ -1,0 +1,131 @@
+{% extends ../clean_base.html %}
+
+{% block content %}
+<link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/dc.css">
+<script type="text/javascript" src="http://rockerbox.com/js/d3.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/crossfilter.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/dc.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/colorbrewer.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/reporting.js"></script>
+<script src="http://getbootstrap.com/dist/js/bootstrap.min.js"></script>
+<link href="http://rockerbox.com/css/bootstrap.css" rel="stylesheet">
+
+<!-- DataTables CSS -->
+<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.0/css/jquery.dataTables.css">
+
+<!-- jQuery -->
+<script type="text/javascript" charset="utf8" src="//code.jquery.com/jquery-1.10.2.min.js"></script>
+
+<!-- datePicker -->
+<script src="//code.jquery.com/ui/1.11.1/jquery-ui.js"></script>
+<link rel="stylesheet" href="//code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css">
+
+<!-- DataTables -->
+<script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.0/js/jquery.dataTables.js"></script>
+
+<style>
+.content{
+   width:1000px;
+   margin:auto;
+}
+
+.header h1{
+   text-align:center;
+}
+.body{
+   width:100%;
+   float:left;
+   padding-top:20px;
+   margin:auto;
+}
+
+#slider-range{
+   width:auto;
+   margin:10px;
+}
+
+tr.space-above > td{
+   margin-top:10px;
+}
+
+td.right-space{
+   padding-right:300px;
+}
+</style>
+
+<script>
+$( document ).ready(function() {
+    $( "#from_date" ).datepicker({
+      defaultDate: "+1w",
+      changeMonth: true,
+      numberOfMonths: 1,
+      onClose: function( selectedDate ) {
+        $( "#to_date" ).datepicker( "option", "minDate", selectedDate );
+        $( "#from_date" ).datepicker( "option", "dateFormat", "y-mm-dd" );
+      }
+    });
+    $( "#to_date" ).datepicker({
+      defaultDate: "+1w",
+      changeMonth: true,
+      numberOfMonths: 1,
+      onClose: function( selectedDate ) {
+        $( "#from_date" ).datepicker( "option", "maxDate", selectedDate );
+        $( "#to_date" ).datepicker( "option", "dateFormat", "y-mm-dd" );
+      }
+    });
+    $( "#slider-range" ).slider({
+      range: true,
+      min: 0,
+      max: 23,
+      values: [0 , 23 ],
+      slide: function( event, ui ) {
+        $( "#amount" ).val(ui.values[ 0 ] + " - " + ui.values[ 1 ] );
+        $( "#from_hour").val( ui.values[ 0 ]);
+        $( "#to_hour").val( ui.values[ 1 ]);
+      }
+    });
+  });
+</script>
+
+<div class="content">
+<form action="" method="POST">
+<table class="query" cellspacing="5" cellpadding="5">
+<tr>
+  <td colspan="2" class="right-space"></td>
+  <td colspan="2">Optional filters:</td>
+</tr>
+<tr>
+  <td><label for="from_date">From</label></td>
+  <td class="right-space"><input type="text" id="from_date" name="from_date"></td>
+  <td><label for="domain">Domain: </label></td>
+  <td><input type="text" id="domain" name="domain" placeholder="(optional)"></td>
+</tr>
+<tr>
+  <td><label for="to_date">to</label></td>
+  <td class="right-space"><input type="text" id="to_date" name="to_date"></td>
+  <td><label for="seller">Seller: </label></td>
+  <td><input type="text" id="seller" name="seller" placeholder="(optional)"></td>
+</tr>
+<tr class="space-above">
+  <td><label for="hour_range">Hour Range: </label></td>
+  <td class="right-space"><input type="text" id="amount" readonly></td>
+  <td><label for="tag">Tag: </label></td>
+  <td><input type="text" id="tag" name="tag" placeholder="(optional)"></td>
+</tr>
+<tr>
+  <td colspan="2" class="right-space"><div id="slider-range"></div></td>
+  <td colspan="2"></td>
+</tr>
+<tr>
+  <td><input type="hidden" id="from_hour" name="from_hour"></td>
+  <td><input type="hidden" id="to_hour" name="to_hour"></td>
+</tr>
+<tr>
+  <td colspan="4" align="center"><input type="submit" value="Submit"></td>
+</tr>
+</table>
+</form>
+{% block data_content %}
+{% end %}
+</div>
+{% end %}
