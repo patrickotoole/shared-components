@@ -1,11 +1,12 @@
 {% extends visibility_base.html %}
 
 {% block data_content %}
+<script type="text/javascript" language="javascript" src="http://cdn.datatables.net/tabletools/2.2.2/js/dataTables.tableTools.js"></script>
+<link rel="stylesheet"  type="text/css" href="http://cdn.datatables.net/tabletools/2.2.2/css/dataTables.tableTools.css"></script>
 <script>
 $(document).ready( function () {
     $('.dataframe').dataTable( {
         "pageLength": 20,
-        "order": [ 1, 'asc' ],
         "dom": 'T<"clear">lfrtip',
         "tableTools": {
             "sSwfPath": "/static/copy_csv_xls_pdf.swf"

@@ -25,7 +25,7 @@
 
 <style>
 .content{
-   width:1000px;
+   width:1200px;
    margin:auto;
 }
 
@@ -51,6 +51,11 @@ tr.space-above > td{
 td.right-space{
    padding-right:300px;
 }
+
+.loading{
+   display:none;
+}
+
 </style>
 
 <script>
@@ -64,6 +69,7 @@ $( document ).ready(function() {
         $( "#from_date" ).datepicker( "option", "dateFormat", "y-mm-dd" );
       }
     });
+
     $( "#to_date" ).datepicker({
       defaultDate: "+1w",
       changeMonth: true,
@@ -73,6 +79,7 @@ $( document ).ready(function() {
         $( "#to_date" ).datepicker( "option", "dateFormat", "y-mm-dd" );
       }
     });
+
     $( "#slider-range" ).slider({
       range: true,
       min: 0,
@@ -84,12 +91,21 @@ $( document ).ready(function() {
         $( "#to_hour").val( ui.values[ 1 ]);
       }
     });
+    $( "#amount" ).val("0 - 0");
+    $( "#from_hour").val(0);
+    $( "#to_hour").val(0);
+$( "#submit").click(function () {
+    $( ".submit").hide();
+    $( ".loading").show();
+});
+
   });
+
 </script>
 
 <div class="content">
-<form action="" method="POST">
-<table class="query" cellspacing="5" cellpadding="5">
+<form id="form" action="" method="POST">
+<table class="query-form" cellspacing="5" cellpadding="5">
 <tr>
   <td colspan="2" class="right-space"></td>
   <td colspan="2">Optional filters:</td>
@@ -121,7 +137,10 @@ $( document ).ready(function() {
   <td><input type="hidden" id="to_hour" name="to_hour"></td>
 </tr>
 <tr>
-  <td colspan="4" align="center"><input type="submit" value="Submit"></td>
+  <td id="submit" colspan="4" align="center"><div class="submit"><input class="submit" id="submit" type="submit" value="Submit"></div></td>
+</tr>
+<tr>
+ <td id="loading" colspan="4" align="center"><div class="loading"><img src="http://portal.getrockerbox.com/static/img/general/logo-small.gif"></img></div></td>
 </tr>
 </table>
 </form>
