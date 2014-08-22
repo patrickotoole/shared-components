@@ -1,2 +1,3 @@
 from reporting import ReportingHandler
 from creative_reporting import CreativeReportingHandler
+from domain_reporting import DomainReportingHandler

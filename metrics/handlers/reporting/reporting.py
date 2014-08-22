@@ -56,7 +56,7 @@ class ReportingBase(object):
         # Pull reporting data by campaign_ids
         """
         params = query_helpers.__whereor__("campaign",campaign_ids)
-        q = PARTITIONED_QUERY % params 
+        q = PARTITIONED_QUERY_LESS % params 
 
         l = list(self.hive.session_execute([
             "set shark.map.tasks=3",
@@ -64,7 +64,7 @@ class ReportingBase(object):
             q 
         ]))
 
-        return pandas.DataFrame(l)
+        return pandas.DataFrame(l)[["campaign","imps","referrer","date"]]
 
     def pull_bucket(self,bucket,advertiser):
         """
@@ -75,7 +75,8 @@ class ReportingBase(object):
         return self.pull_hive_campaigns(campaign_ids)
 
     def pull_advertiser_domain(self,advertiser):
-        campaign_ids = self.get_advertiser_campaigns(advertiser).values
+        campaign_ids = self.get_advertiser_campaigns(advertiser).campaign_id.values
+        print campaign_ids
         return self.pull_hive_campaigns(campaign_ids)
         
 
