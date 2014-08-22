@@ -12,6 +12,7 @@ class IndexHandler(tornado.web.RequestHandler):
             ("/intraweek", "Intraweek Tool"),
             ("/admin/batch_request", "Batch Segment Request"),
             ("/analysis", "Segment/DMA Analysis"),
+            ("/admin/viewable", "Viewability Analysis"),
             ("/advertiser", "Advertiser Creator"),
             ("/analysis/pixel/", "Pixel Analysis (aka Rockerbox vs. Non-Rockerbox)"),
             ("/money", "Money Tool"),
