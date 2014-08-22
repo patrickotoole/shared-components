@@ -16,7 +16,7 @@ from metrics.handlers.admin.reporting.visibility import ViewabilityBase, Viewabi
 import mock
 from mock import MagicMock, patch
 
-cols = [
+correct_cols = [
     "seller",
     "tag",
     "height",
@@ -29,14 +29,27 @@ cols = [
     "percent_visible"
     ]
 
-FIXTURE1 = pd.DataFrame([[0]*8], columns=cols[:-2])
-WHERE_TUPLE = ("14-08-20", "14-08-21", "00", "05")
+cols = [
+    "seller",
+    "tag",
+    "height",
+    "width",
+    "domain",
+    "num_served",
+    "num_loaded",
+    "num_visible"
+]
+
+FIXTURE1 = pd.DataFrame([[0]*8], columns=correct_cols[:-2])
+WHERE_TUPLE = ("14-08-20", "14-08-21", "00", "05", "seller,tag,width,height,domain")
 WHERE_TUPLE_OPTIONAL=("ebay.com", "2928439", "23849")
 WHERE_COMBINED = WHERE_TUPLE + WHERE_TUPLE_OPTIONAL
 WHERE_CLAUSE = 'date >= "14-08-20" and date <= "14-08-21" and hour >= "00" and hour <= "05"'
 WHERE_CLAUSE2 = 'date >= "14-08-20" and date <= "14-08-21" and hour >= "00" and hour <= "05" and domain="ebay.com" and tag="2928439" and seller="23849"'
-FIXTURE2 = QUERY.format(WHERE_CLAUSE)
-FIXTURE3 = QUERY.format(WHERE_CLAUSE2)
+GROUP_BY_CLAUSE = 'seller,tag,width,height,domain'
+SELECT_CLAUSE = GROUP_BY_CLAUSE
+FIXTURE2 = QUERY.format(SELECT_CLAUSE, WHERE_CLAUSE, GROUP_BY_CLAUSE)
+FIXTURE3 = QUERY.format(SELECT_CLAUSE, WHERE_CLAUSE2, GROUP_BY_CLAUSE)
 
 class ViewabilityBaseTest(unittest.TestCase):
 
@@ -58,8 +71,8 @@ class ViewabilityBaseTest(unittest.TestCase):
         self.assertTrue(type(blah)==pd.DataFrame)
 
     def test_formatter(self):
-        blah = self.base.format_results(FIXTURE1.copy())
-        self.assertEqual(set(blah.columns),set(cols))
+        blah = self.base.format_results(FIXTURE1.copy(), cols)
+        self.assertEqual(set(blah.columns),set(correct_cols))
     
     def test_construct_query(self):
         blah = self.base.construct_query(*WHERE_TUPLE)
@@ -71,9 +84,9 @@ class ViewabilityBaseTest(unittest.TestCase):
     def test_pull_report(self):
         with patch.object(self.base, "execute_query", return_value=FIXTURE1.copy()):
             blah = self.base.pull_report(*WHERE_COMBINED)
-            self.assertEqual(set(blah.columns), set(cols))
+            self.assertEqual(set(blah.columns), set(correct_cols))
 
         with patch.object(self.base, "execute_query", return_value=pd.DataFrame()):
-            self.assertRaises(StandardError, self.base.pull_report, WHERE_COMBINED)
+            self.assertRaises(StandardError, self.base.pull_report, *WHERE_COMBINED)
             
     

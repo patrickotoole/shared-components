@@ -16,7 +16,7 @@ from lib.helpers import *
 #from lib.hive import Hive
 
 API_QUERY = "select * from appnexus_reporting.%s where %s "
-QUERY = "select seller, tag, width, height, domain, sum(num_served) as num_served, sum(num_loaded) as num_loaded, sum(num_visible) as num_visible from agg_visibility where {} group by seller, tag, width, height, domain order by cast(num_served as int)"
+QUERY = "select {}, sum(num_served) as num_served, sum(num_loaded) as num_loaded, sum(num_visible) as num_visible from agg_visibility where {} group by {} order by cast(num_served as int)"
 
 class ViewabilityBase():
     def __init__(self, hive):
@@ -34,22 +34,12 @@ class ViewabilityBase():
         return s
     
     @classmethod
-    def format_results(cls, df):
+    def format_results(cls, df, cols):
         df.insert(len(df.columns), 'percent_loaded', df.num_loaded.astype(int) / df.num_served.astype(int))
         df.insert(len(df.columns), 'percent_visible', df.num_visible.astype(int) / df.num_served.astype(int))
-
-        cols = [
-            "seller",
-            "tag",
-            "height",
-            "width",
-            "domain",
-            "num_served",
-            "num_loaded",
-            "num_visible",
-            "percent_loaded",
-            "percent_visible"
-            ]
+        
+        cols.append("percent_loaded")
+        cols.append("percent_visible")
 
         df = df[cols]
         df['num_served'] = df.num_served.astype(int)
@@ -57,9 +47,8 @@ class ViewabilityBase():
 
         return df
 
-    def construct_query(self, from_date, to_date, from_hour, to_hour, domain=False, tag=False, seller=False):
-        where = 'date >= "{}" and date <= "{}" and hour >= "{}" and hour <= "{}"'.format(from_date, to_date, from_hour, to_hour)       
-
+    def construct_query(self, from_date, to_date, from_hour, to_hour, group_by, domain=False, tag=False, seller=False):
+        where = 'date >= "{}" and date <= "{}" and hour >= "{}" and hour <= "{}"'.format(from_date, to_date, from_hour, to_hour)      
 
         if domain:
             where += ''' and domain="{}"'''.format(self.clean_string(domain))
@@ -68,12 +57,14 @@ class ViewabilityBase():
         if seller:
             where += ''' and seller="{}"'''.format(self.clean_string(seller))
 
-        query = QUERY.format(where)
+        select = group_by
+
+        query = QUERY.format(select, where, group_by)
 
         return query
 
-    def pull_report(self, from_date, to_date, from_hour, to_hour, domain=False, tag=False, seller=False):
-        query = self.construct_query(from_date, to_date, from_hour, to_hour, domain, tag, seller)
+    def pull_report(self, from_date, to_date, from_hour, to_hour, group_by, domain=False, tag=False, seller=False):
+        query = self.construct_query(from_date, to_date, from_hour, to_hour, group_by, domain, tag, seller)
 
         try:
             df = self.execute_query(query)
@@ -83,7 +74,10 @@ class ViewabilityBase():
         if df.empty:
             raise StandardError("No results returned")
 
-        data = self.format_results(df)
+        cols = group_by.split(',')
+        cols.extend(["num_served", "num_loaded", "num_visible"])
+
+        data = self.format_results(df, cols)
 
         return data        
 
@@ -94,7 +88,7 @@ class ViewabilityHandler(tornado.web.RequestHandler):
         self.hive = hive
     
     def raw_to_html(self, data):
-        data = data.head(1000).to_html(index=False)
+        data = data.to_html(index=False)
         return data
 
     @decorators.formattable
@@ -103,9 +97,10 @@ class ViewabilityHandler(tornado.web.RequestHandler):
         to_date = self.get_argument("to_date", False)
         from_hour = self.get_argument("from_hour", False)
         to_hour = self.get_argument("to_hour", False)
+        group_by = self.get_argument("group_by", False)
 
         # If no arguments were given
-        if not from_date or not to_date or not from_hour or not to_hour:
+        if not from_date or not to_date or not from_hour or not to_hour or not group_by:
             data = "Please enter query parameters."
 
         # If we saw a minimum amount of arguments, process the parameters
@@ -118,7 +113,7 @@ class ViewabilityHandler(tornado.web.RequestHandler):
             # Try to pull the data. If it fails, report the reason to the user
             try:
                 base = ViewabilityBase(self.hive)
-                data = base.pull_report(from_date, to_date, from_hour, to_hour, domain, tag, seller)
+                data = base.pull_report(from_date, to_date, from_hour, to_hour, group_by, domain, tag, seller)                
             except StandardError as e:
                 data = str(e)
                 self.render("admin/visibility.html", data=data)
@@ -141,6 +136,12 @@ class ViewabilityHandler(tornado.web.RequestHandler):
         from_hour = self.get_argument("from_hour")
         to_hour = self.get_argument("to_hour")
 
+        group_by_domain = self.get_argument("group_by_domain", False)
+        group_by_seller = self.get_argument("group_by_seller", False)
+        group_by_tag = self.get_argument("group_by_tag", False)
+        group_by_width = self.get_argument("group_by_width", False)
+        group_by_height = self.get_argument("group_by_height", False)
+
         domain = self.get_argument("domain", False)
         seller = self.get_argument("seller", False)
         tag = self.get_argument("tag", False)
@@ -152,11 +153,34 @@ class ViewabilityHandler(tornado.web.RequestHandler):
         if len(to_hour) == 1:
             to_hour = '0' + to_hour
 
+
+        # Since dictionaries aren't sorted, this will specify the
+        # order of the select/group_by
+        dims = [
+            "domain",
+            "seller",
+            "tag",
+            "width",
+            "height"
+            ]
+
+        # Convert each group_by to a single statement
+        all_groups =  {
+            "domain": group_by_domain, 
+            "seller": group_by_seller,
+            "tag": group_by_tag,
+            "width": group_by_width,
+            "height": group_by_height
+            }
+
+        group_by = ','.join([group for group in dims if all_groups[group]])
+
         api_args = {
             "from_date": from_date,
             "to_date": to_date,
             "from_hour": from_hour,
             "to_hour": to_hour,
+            "group_by": group_by,
             "domain": domain,
             "seller": seller,
             "tag": tag
