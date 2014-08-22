@@ -49,7 +49,15 @@ BUCKET_QUERY = """
     from campaign_bucket 
     where 
         bucket_name like '%%%(bucket)s%%' 
-        and external_advertiser_id = %(advertiser)s
+        and external_advertiser_id = %(advertiser_id)s
+"""
+
+CAMPAIGN_QUERY = """
+    select
+        campaign_id
+    from advertiser_campaign
+    where
+        external_advertiser_id = %(advertiser_id)s
 """
 
 CREATIVE_QUERY = """
