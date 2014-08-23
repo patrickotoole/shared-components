@@ -57,6 +57,8 @@ def main():
 
 def notify(res):
     tables = _get_tables(res)
+    if not tables:
+        return
     logging.info('sending email to wei')
     return send_multi_table_report_email('wei@rockerbox.com',
             tables,
