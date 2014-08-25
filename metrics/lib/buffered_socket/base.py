@@ -14,8 +14,9 @@ class BufferedSocketBase(basic.LineReceiver):
       buf (array): the buffer that our pixel receiver will append to
     """
 
-    def __init__(self,buf):
+    def __init__(self,buf,control_buffer):
         self.buf = buf
+        self.control_buffer = control_buffer
 
     def process(self,line):
         """
@@ -37,14 +38,9 @@ class BufferedSocketBase(basic.LineReceiver):
           line: returns the `line` argument after it is added to the buffer
         """
         if line is not False:
-            # Hack! to prevent the buffer from filling up and crashing
-            # we should have a switch to turn the buffer on and off
-            # when its not being used and would save CPU cycles as well
-            # as just the memory
-            if len(self.buf) > 20000:
-                self.buf = self.buf[10000:]
-            
-            self.buf += [line]
+            # Hack FIXED! Although done in a hacky way....
+            if self.control_buffer.get("on",False):
+                self.buf += [line]
 
         return line
 
@@ -69,8 +65,9 @@ class BufferedSocketBaseFactory(protocol.Factory):
     BufferedSocketBaseFactory builds a BufferedSocketBase to process received
     lines as they are are sent to a specific port.
     """
-    def __init__(self,buf): 
+    def __init__(self,buf,control_buffer): 
         self.buf = buf 
+        self.control_buffer = control_buffer
 
     def buildProtocol(self, addr): 
         """
@@ -84,7 +81,7 @@ class BufferedSocketBaseFactory(protocol.Factory):
           buffer
         """
 
-        return BufferedSocketBase(self.buf) 
+        return BufferedSocketBase(self.buf,self.control_buffer) 
 
     def set_buffer(self,buf): 
         """

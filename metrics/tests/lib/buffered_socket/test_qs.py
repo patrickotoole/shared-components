@@ -14,7 +14,7 @@ class QSBufferSocketTestCase(base.SocketTestCase):
     def setUp(self):
         self.tr = proto_helpers.StringTransport()
         self.buf = []
-        factory = QSBufferedSocketFactory(self.buf)
+        factory = QSBufferedSocketFactory(self.buf,{},{"on":True})
         self.proto = factory.buildProtocol(('127.0.0.1', 0),{})
         self.proto.makeConnection(self.tr)
 
