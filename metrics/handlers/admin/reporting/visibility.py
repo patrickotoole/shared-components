@@ -19,10 +19,15 @@ API_QUERY = "select * from appnexus_reporting.%s where %s "
 QUERY = "select {}, sum(num_served) as num_served, sum(num_loaded) as num_loaded, sum(num_visible) as num_visible from agg_visibility where {} group by {} order by cast(num_served as int)"
 
 class ViewabilityBase():
+    '''A base class for the viewability handler. This defines several functions that are used to construct queries,
+    return data, and format results. These are separated from the handler class to improve modularity, information
+    hiding, and enable us to utilize traditional testing methods.
+    '''
     def __init__(self, hive):
         self.hive = hive
 
     def execute_query(self, query):
+        ''' Given an HQL query, execute it and return a dataframe'''
         try:
             df = pd.DataFrame(self.hive.session_execute(["set shark.map.tasks=256", "set mapred.reduce.tasks=24", query]))
             return df
@@ -35,6 +40,8 @@ class ViewabilityBase():
     
     @classmethod
     def format_results(cls, df, cols):
+        '''Given a list of columns and a DataFrame, generate summary measurements as new columns and return
+        the updated dataframe.'''
         # Distabling these for now until they prove useful
         # df.insert(len(df.columns), 'percent_loaded', df.num_loaded.astype(int) / df.num_served.astype(int))
         # df.insert(len(df.columns), 'percent_visible', df.num_visible.astype(int) / df.num_served.astype(int))
@@ -59,15 +66,23 @@ class ViewabilityBase():
 
         return df
 
-    def construct_query(self, from_date, to_date, from_hour, to_hour, group_by, domain=False, tag=False, seller=False):
+    def construct_query(self, from_date, to_date, from_hour, to_hour, group_by, venue=False, domain=False, tag=False, seller=False, width=False, height=False):
+        '''Return a query given many optional and non-optional parameters
+        '''
         where = 'date >= "{}" and date <= "{}" and hour >= "{}" and hour <= "{}"'.format(from_date, to_date, from_hour, to_hour)      
 
-        if domain:
-            where += ''' and domain="{}"'''.format(self.clean_string(domain))
-        if tag:
-            where += ''' and tag="{}"'''.format(self.clean_string(tag))
-        if seller:
-            where += ''' and seller="{}"'''.format(self.clean_string(seller))
+        opt_dims = {
+            "venue": venue, 
+            "domain": domain, 
+            "tag": tag, 
+            "seller": seller, 
+            "width": width, 
+            "height": height
+            }
+
+        for dim in opt_dims.keys():
+            if opt_dims[dim]:
+                where += ''' and {}="{}"'''.format(dim, self.clean_string(opt_dims[dim]))
 
         select = group_by
 
@@ -75,8 +90,8 @@ class ViewabilityBase():
 
         return query
 
-    def pull_report(self, from_date, to_date, from_hour, to_hour, group_by, domain=False, tag=False, seller=False):
-        query = self.construct_query(from_date, to_date, from_hour, to_hour, group_by, domain, tag, seller)
+    def pull_report(self, from_date, to_date, from_hour, to_hour, group_by, venue=False, domain=False, tag=False, seller=False, width=False, height=False):
+        query = self.construct_query(from_date, to_date, from_hour, to_hour, group_by, venue, domain, tag, seller, width, height)
 
         try:
             df = self.execute_query(query)
