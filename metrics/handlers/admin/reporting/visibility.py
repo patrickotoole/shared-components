@@ -35,11 +35,23 @@ class ViewabilityBase():
     
     @classmethod
     def format_results(cls, df, cols):
-        df.insert(len(df.columns), 'percent_loaded', df.num_loaded.astype(int) / df.num_served.astype(int))
-        df.insert(len(df.columns), 'percent_visible', df.num_visible.astype(int) / df.num_served.astype(int))
+        # Distabling these for now until they prove useful
+        # df.insert(len(df.columns), 'percent_loaded', df.num_loaded.astype(int) / df.num_served.astype(int))
+        # df.insert(len(df.columns), 'percent_visible', df.num_visible.astype(int) / df.num_served.astype(int))
+
+        df.insert(len(df.columns), 'num_not_loaded', df.num_served.astype(int) - df.num_loaded.astype(int))
+        df.insert(len(df.columns), 'load_score', 1 - (df.num_not_loaded.astype(int) ** 2 / df.num_served.astype(int)))
+
+        df.insert(len(df.columns), 'num_not_viewable', df.num_served.astype(int) - df.num_visible.astype(int))
+        df.insert(len(df.columns), 'viewable_score', 1 - (df.num_not_viewable.astype(int) ** 2 / df.num_served.astype(int)))
         
-        cols.append("percent_loaded")
-        cols.append("percent_visible")
+        # Disabling these for now until they prove useful
+        # cols.append("percent_loaded")
+        # cols.append("percent_visible")
+
+
+        cols.append("load_score")
+        cols.append("viewable_score")
 
         df = df[cols]
         df['num_served'] = df.num_served.astype(int)
@@ -136,6 +148,7 @@ class ViewabilityHandler(tornado.web.RequestHandler):
         from_hour = self.get_argument("from_hour")
         to_hour = self.get_argument("to_hour")
 
+        group_by_venue = self.get_argument("group_by_venue", False)
         group_by_domain = self.get_argument("group_by_domain", False)
         group_by_seller = self.get_argument("group_by_seller", False)
         group_by_tag = self.get_argument("group_by_tag", False)
@@ -157,6 +170,7 @@ class ViewabilityHandler(tornado.web.RequestHandler):
         # Since dictionaries aren't sorted, this will specify the
         # order of the select/group_by
         dims = [
+            "venue",
             "domain",
             "seller",
             "tag",
@@ -166,6 +180,7 @@ class ViewabilityHandler(tornado.web.RequestHandler):
 
         # Convert each group_by to a single statement
         all_groups =  {
+            "venue": group_by_venue,
             "domain": group_by_domain, 
             "seller": group_by_seller,
             "tag": group_by_tag,

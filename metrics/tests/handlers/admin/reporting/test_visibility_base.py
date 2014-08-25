@@ -25,8 +25,8 @@ correct_cols = [
     "num_served",
     "num_loaded",
     "num_visible",
-    "percent_loaded",
-    "percent_visible"
+    "load_score",
+    "viewable_score"
     ]
 
 cols = [
@@ -37,7 +37,7 @@ cols = [
     "domain",
     "num_served",
     "num_loaded",
-    "num_visible"
+    "num_visible",
 ]
 
 FIXTURE1 = pd.DataFrame([[0]*8], columns=correct_cols[:-2])
