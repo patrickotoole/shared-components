@@ -65,8 +65,9 @@ class BufferedSocketBaseFactory(protocol.Factory):
     BufferedSocketBaseFactory builds a BufferedSocketBase to process received
     lines as they are are sent to a specific port.
     """
-    def __init__(self,buf): 
+    def __init__(self,buf,control_buffer): 
         self.buf = buf 
+        self.control_buffer = control_buffer
 
     def buildProtocol(self, addr): 
         """
@@ -80,7 +81,7 @@ class BufferedSocketBaseFactory(protocol.Factory):
           buffer
         """
 
-        return BufferedSocketBase(self.buf) 
+        return BufferedSocketBase(self.buf,self.control_buffer) 
 
     def set_buffer(self,buf): 
         """

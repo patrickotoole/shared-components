@@ -1,5 +1,12 @@
 import maxminddb
 import redis
+import os
+
+maxmind_path = os.environ.get("MAXMIND_PATH",False)
+if maxmind_path:
+    reader = maxminddb.Reader(maxmind_path)
+else:
+    reader = dict()
 
 from lib.buffered_socket.qs import QSBufferedSocketFactory
 from lib.buffered_socket.schema import SchemaBufferedSocketFactory
@@ -11,7 +18,7 @@ from lib.buffered_socket.domain import DomainLookup
 from streaming import BufferControl
 
 _redis = redis.StrictRedis(host='162.243.123.240', port=6379, db=1)
-reader = maxminddb.Reader('/root/GeoLite2-City.mmdb')
+
 
 track_buffer = []
 view_buffer = []
