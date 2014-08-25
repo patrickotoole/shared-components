@@ -20,11 +20,12 @@ class SchemaBufferedSocket(QSBufferedSocket):
       processors (dict): from args
     """
 
-    def __init__(self, buf, schema, processors):
+    def __init__(self, buf, schema, processors, control_buffer):
         
         self.buf = buf
         self.schema = schema
         self.set_processors(processors)
+        self.control_buffer = control_buffer
 
     @validators.pixel
     def process(self,split):
@@ -36,10 +37,11 @@ class SchemaBufferedSocketFactory(QSBufferedSocketFactory):
     SchemaBufferedSocketFactor builds a SchemaBufferedSocket to process pixel data
     """
 
-    def __init__(self,buf, schema, processors={}):
+    def __init__(self,buf, schema, processors={}, control_buffer={}):
         self.buf = buf
         self.processors = processors
         self.schema = schema
+        self.control_buffer = control_buffer
 
     def buildProtocol(self, addr, processors=False):
         """
@@ -55,4 +57,4 @@ class SchemaBufferedSocketFactory(QSBufferedSocketFactory):
         """
 
         self.processors = processors or self.processors
-        return SchemaBufferedSocket(self.buf, self.schema, self.processors)
+        return SchemaBufferedSocket(self.buf, self.schema, self.processors, self.control_buffer)

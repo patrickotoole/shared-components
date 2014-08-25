@@ -20,10 +20,11 @@ class QSBufferedSocket(BufferedSocketBase):
       processors (dict): from args
     """
 
-    def __init__(self, buf, processors):
+    def __init__(self, buf, processors, control_buffer):
         
         self.buf = buf
         self.set_processors(processors)
+        self.control_buffer = control_buffer
 
     def set_processors(self,value):
         """
@@ -42,9 +43,10 @@ class QSBufferedSocketFactory(BufferedSocketBaseFactory):
     QSBufferedSocketFactor builds a QSBufferedSocket to process pixel data
     """
 
-    def __init__(self,buf, processors={}):
+    def __init__(self,buf, processors={}, control_buffer={}):
         self.buf = buf
         self.processors = processors
+        self.control_buffer = control_buffer
 
     def buildProtocol(self, addr, processors=False):
         """
@@ -60,4 +62,4 @@ class QSBufferedSocketFactory(BufferedSocketBaseFactory):
         """
 
         self.processors = processors or self.processors
-        return QSBufferedSocket(self.buf, self.processors)
+        return QSBufferedSocket(self.buf, self.processors, self.control_buffer)

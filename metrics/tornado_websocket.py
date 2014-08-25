@@ -70,8 +70,10 @@ view_schema = ["auction_id", "uid",
             "action", "ref", "parent"
         ]
 
-track_factory = QSBufferedSocketFactory(track_buffer,pixel_parsers)
-view_factory = SchemaBufferedSocketFactory(view_buffer,view_schema,pixel_parsers)
+buffer_control = {"on":True}
+
+track_factory = QSBufferedSocketFactory(track_buffer,pixel_parsers,buffer_control)
+view_factory = SchemaBufferedSocketFactory(view_buffer,view_schema,pixel_parsers,buffer_control)
 
 def sig_handler(sig, frame):
     logging.warning('Caught signal: %s', sig)
@@ -123,7 +125,7 @@ admin_scripts = [
 streaming = [
     (r'/streaming', streaming.streaming.IndexHandler),
     (r'/websocket', streaming.streaming.StreamingHandler,
-      dict(db=db,buffers={"track":track_buffer, "view":view_buffer})
+      dict(db=db,buffers={"track":track_buffer, "view":view_buffer},control_buffer=buffer_control)
     )
 ]
 

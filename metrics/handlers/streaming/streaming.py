@@ -26,8 +26,9 @@ class IndexHandler(BaseHandler):
 
 class StreamingHandler(StreamingBase,tornado.websocket.WebSocketHandler):
   
-    def initialize(self,db,buffers={}):
+    def initialize(self,db,buffers={},control_buffer={}):
         self.time_interval = 2
+        self.control_buffer = control_buffer
         super(StreamingHandler,self).initialize(db=db,buffers=buffers)
 
     def generator_loop(self):
@@ -57,12 +58,16 @@ class StreamingHandler(StreamingBase,tornado.websocket.WebSocketHandler):
                 datetime.timedelta(seconds=self.time_interval - (end - start)),
                 self.generator_loop
             )
+        else:
+            print "off"
+            self.control_buffer['on'] = False
 
     def open(self, *args):
         self.id = self.get_argument("id","123")
         clients[self.id] = {"id": self.id, "object": self, "enabled":False}
         if len(clients.keys()) == 1:
             self.buffers['track'].clear()
+            self.control_buffer['on'] = True
             self.generator_loop()
 
     def on_message(self, message):        
