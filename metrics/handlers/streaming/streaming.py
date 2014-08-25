@@ -12,7 +12,32 @@ from ..base import BaseHandler
 from streaming_base import StreamingBase
 from lib.query.MYSQL import BRAND_QUERY
 
-clients = dict()
+class ClientSingleton(dict):
+
+    _instance = None
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super(ClientSingleton, cls).__new__(
+                                cls, *args, **kwargs)
+        return cls._instance
+
+
+class BufferControl(dict):
+
+    _instance = None
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super(BufferControl, cls).__new__(
+                                cls, *args, **kwargs)
+        return cls._instance
+
+    def __init__(self):
+        self['on'] = False
+     
+
+
+clients = ClientSingleton()
+buffer_control = BufferControl()
 
 class IndexHandler(BaseHandler):
 
@@ -26,9 +51,9 @@ class IndexHandler(BaseHandler):
 
 class StreamingHandler(StreamingBase,tornado.websocket.WebSocketHandler):
   
-    def initialize(self,db,buffers={},control_buffer={}):
-        self.time_interval = 2
-        self.control_buffer = control_buffer
+    def initialize(self,db,buffers={}):
+        self.time_interval = 1
+        self.control_buffer = buffer_control
         super(StreamingHandler,self).initialize(db=db,buffers=buffers)
 
     def generator_loop(self):
@@ -51,7 +76,7 @@ class StreamingHandler(StreamingBase,tornado.websocket.WebSocketHandler):
             
 
         end = time.time()
-        logging.info(self.time_interval - (end - start))
+        #logging.info(self.time_interval - (end - start))
 
         if len(clients.keys()) > 0:
             tornado.ioloop.IOLoop.instance().add_timeout(
@@ -59,7 +84,7 @@ class StreamingHandler(StreamingBase,tornado.websocket.WebSocketHandler):
                 self.generator_loop
             )
         else:
-            print "off"
+            logging.info("buffer off")
             self.control_buffer['on'] = False
 
     def open(self, *args):
@@ -77,6 +102,7 @@ class StreamingHandler(StreamingBase,tornado.websocket.WebSocketHandler):
             clients[self.id]['masks']['advertiser_id'] = [self.get_secure_cookie("advertiser")]
         except:
             pass
+
 
         if message == "start":
             clients[self.id]['enabled'] = True

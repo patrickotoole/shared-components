@@ -12,6 +12,7 @@ from tornado.options import define, options, parse_command_line
 
 from handlers import streaming, reporting, user, analysis, index, rbox_pixel
 
+
 import handlers.admin as admin
 from handlers.adminreport import AdminReportHandler
 from lib.report.handlers import ReportingLogHandler
@@ -19,14 +20,7 @@ from lib.report.handlers import ReportingLogHandler
 from lib.buffers.pixel_buffer import BufferedSocketFactory
 from lib.buffers.view_buffer import ViewabilityBufferedFactory
 
-from lib.buffered_socket.qs import QSBufferedSocketFactory
-from lib.buffered_socket.schema import SchemaBufferedSocketFactory
 
-from lib.buffered_socket.maxmind import MaxmindLookup
-from lib.buffered_socket.redis import RedisApprovedUID
-from lib.buffered_socket.domain import DomainLookup
-
-import redis
 import lib.hive as h
 from lib.link_sql_connector import DBCursorWrapper
 from link import lnk
@@ -36,7 +30,7 @@ import requests
 import logging
 import time
 import os
-import maxminddb
+
 
 requests_log = logging.getLogger("requests")
 requests_log.setLevel(logging.WARNING)
@@ -52,28 +46,11 @@ db = lnk.dbs.mysql
 api = lnk.api.console
 bidder = None#lnk.api.console
 hive = h.Hive().hive
-_redis = redis.StrictRedis(host='162.243.123.240', port=6379, db=1)
-reader = maxminddb.Reader('/root/GeoLite2-City.mmdb')
 
-track_buffer = []
-view_buffer = []
+_redis = streaming._redis
+track_buffer = streaming.track_buffer
+view_buffer = streaming.view_buffer
 
-pixel_parsers = {
-    "ip_address":MaxmindLookup(reader),
-    "uid":RedisApprovedUID([_redis]),
-    "referrer": DomainLookup()
-}
-
-view_schema = ["auction_id", "uid",
-            "seller", "tag", "pub", "venue", "ecp",
-            "price", "creative", "visible", "elapsed",
-            "action", "ref", "parent"
-        ]
-
-buffer_control = {"on":True}
-
-track_factory = QSBufferedSocketFactory(track_buffer,pixel_parsers,buffer_control)
-view_factory = SchemaBufferedSocketFactory(view_buffer,view_schema,pixel_parsers,buffer_control)
 
 def sig_handler(sig, frame):
     logging.warning('Caught signal: %s', sig)
@@ -122,10 +99,10 @@ admin_scripts = [
     (r'/admin/batch_requests.*', admin.scripts.BatchRequestsHandler, dict(db=db, api=api, hive=hive))
 ]
 
-streaming = [
+_streaming = [
     (r'/streaming', streaming.streaming.IndexHandler),
     (r'/websocket', streaming.streaming.StreamingHandler,
-      dict(db=db,buffers={"track":track_buffer, "view":view_buffer},control_buffer=buffer_control)
+      dict(db=db,buffers={"track":track_buffer, "view":view_buffer})
     )
 ]
 
@@ -164,7 +141,7 @@ static = [
 
 dirname = os.path.dirname(os.path.realpath(__file__))
 app = tornado.web.Application(
-    streaming + admin_scripts + admin_reporting + reporting + analysis + static + index,
+    _streaming + admin_scripts + admin_reporting + reporting + analysis + static + index,
     template_path= dirname + "/templates",
     db=lnk.dbs.mysql,
     debug=True,
@@ -174,8 +151,8 @@ app = tornado.web.Application(
 
 if __name__ == '__main__':
     parse_command_line()
-    reactor.listenTCP(options.listen_port, track_factory)
-    reactor.listenTCP(options.view_port, view_factory)
+    reactor.listenTCP(options.listen_port, streaming.track_factory)
+    reactor.listenTCP(options.view_port, streaming.view_factory)
 
     server = tornado.httpserver.HTTPServer(app)
     server.listen(options.port)
