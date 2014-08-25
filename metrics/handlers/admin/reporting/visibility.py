@@ -19,10 +19,15 @@ API_QUERY = "select * from appnexus_reporting.%s where %s "
 QUERY = "select {}, sum(num_served) as num_served, sum(num_loaded) as num_loaded, sum(num_visible) as num_visible from agg_visibility where {} group by {} order by cast(num_served as int)"
 
 class ViewabilityBase():
+    '''A base class for the viewability handler. This defines several functions that are used to construct queries,
+    return data, and format results. These are separated from the handler class to improve modularity, information
+    hiding, and enable us to utilize traditional testing methods.
+    '''
     def __init__(self, hive):
         self.hive = hive
 
     def execute_query(self, query):
+        ''' Given an HQL query, execute it and return a dataframe'''
         try:
             df = pd.DataFrame(self.hive.session_execute(["set shark.map.tasks=256", "set mapred.reduce.tasks=24", query]))
             return df
@@ -35,11 +40,25 @@ class ViewabilityBase():
     
     @classmethod
     def format_results(cls, df, cols):
-        df.insert(len(df.columns), 'percent_loaded', df.num_loaded.astype(int) / df.num_served.astype(int))
-        df.insert(len(df.columns), 'percent_visible', df.num_visible.astype(int) / df.num_served.astype(int))
+        '''Given a list of columns and a DataFrame, generate summary measurements as new columns and return
+        the updated dataframe.'''
+        # Distabling these for now until they prove useful
+        # df.insert(len(df.columns), 'percent_loaded', df.num_loaded.astype(int) / df.num_served.astype(int))
+        # df.insert(len(df.columns), 'percent_visible', df.num_visible.astype(int) / df.num_served.astype(int))
+
+        df.insert(len(df.columns), 'num_not_loaded', df.num_served.astype(int) - df.num_loaded.astype(int))
+        df.insert(len(df.columns), 'load_score', 1 - (df.num_not_loaded.astype(int) ** 2 / df.num_served.astype(int)))
+
+        df.insert(len(df.columns), 'num_not_viewable', df.num_served.astype(int) - df.num_visible.astype(int))
+        df.insert(len(df.columns), 'viewable_score', 1 - (df.num_not_viewable.astype(int) ** 2 / df.num_served.astype(int)))
         
-        cols.append("percent_loaded")
-        cols.append("percent_visible")
+        # Disabling these for now until they prove useful
+        # cols.append("percent_loaded")
+        # cols.append("percent_visible")
+
+
+        cols.append("load_score")
+        cols.append("viewable_score")
 
         df = df[cols]
         df['num_served'] = df.num_served.astype(int)
@@ -47,15 +66,23 @@ class ViewabilityBase():
 
         return df
 
-    def construct_query(self, from_date, to_date, from_hour, to_hour, group_by, domain=False, tag=False, seller=False):
+    def construct_query(self, from_date, to_date, from_hour, to_hour, group_by, venue=False, domain=False, tag=False, seller=False, width=False, height=False):
+        '''Return a query given many optional and non-optional parameters
+        '''
         where = 'date >= "{}" and date <= "{}" and hour >= "{}" and hour <= "{}"'.format(from_date, to_date, from_hour, to_hour)      
 
-        if domain:
-            where += ''' and domain="{}"'''.format(self.clean_string(domain))
-        if tag:
-            where += ''' and tag="{}"'''.format(self.clean_string(tag))
-        if seller:
-            where += ''' and seller="{}"'''.format(self.clean_string(seller))
+        opt_dims = {
+            "venue": venue, 
+            "domain": domain, 
+            "tag": tag, 
+            "seller": seller, 
+            "width": width, 
+            "height": height
+            }
+
+        for dim in opt_dims.keys():
+            if opt_dims[dim]:
+                where += ''' and {}="{}"'''.format(dim, self.clean_string(opt_dims[dim]))
 
         select = group_by
 
@@ -63,8 +90,8 @@ class ViewabilityBase():
 
         return query
 
-    def pull_report(self, from_date, to_date, from_hour, to_hour, group_by, domain=False, tag=False, seller=False):
-        query = self.construct_query(from_date, to_date, from_hour, to_hour, group_by, domain, tag, seller)
+    def pull_report(self, from_date, to_date, from_hour, to_hour, group_by, venue=False, domain=False, tag=False, seller=False, width=False, height=False):
+        query = self.construct_query(from_date, to_date, from_hour, to_hour, group_by, venue, domain, tag, seller, width, height)
 
         try:
             df = self.execute_query(query)
@@ -136,6 +163,7 @@ class ViewabilityHandler(tornado.web.RequestHandler):
         from_hour = self.get_argument("from_hour")
         to_hour = self.get_argument("to_hour")
 
+        group_by_venue = self.get_argument("group_by_venue", False)
         group_by_domain = self.get_argument("group_by_domain", False)
         group_by_seller = self.get_argument("group_by_seller", False)
         group_by_tag = self.get_argument("group_by_tag", False)
@@ -157,6 +185,7 @@ class ViewabilityHandler(tornado.web.RequestHandler):
         # Since dictionaries aren't sorted, this will specify the
         # order of the select/group_by
         dims = [
+            "venue",
             "domain",
             "seller",
             "tag",
@@ -166,6 +195,7 @@ class ViewabilityHandler(tornado.web.RequestHandler):
 
         # Convert each group_by to a single statement
         all_groups =  {
+            "venue": group_by_venue,
             "domain": group_by_domain, 
             "seller": group_by_seller,
             "tag": group_by_tag,

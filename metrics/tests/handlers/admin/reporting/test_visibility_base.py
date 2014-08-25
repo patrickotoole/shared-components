@@ -25,8 +25,8 @@ correct_cols = [
     "num_served",
     "num_loaded",
     "num_visible",
-    "percent_loaded",
-    "percent_visible"
+    "load_score",
+    "viewable_score"
     ]
 
 cols = [
@@ -37,12 +37,12 @@ cols = [
     "domain",
     "num_served",
     "num_loaded",
-    "num_visible"
+    "num_visible",
 ]
 
 FIXTURE1 = pd.DataFrame([[0]*8], columns=correct_cols[:-2])
 WHERE_TUPLE = ("14-08-20", "14-08-21", "00", "05", "seller,tag,width,height,domain")
-WHERE_TUPLE_OPTIONAL=("ebay.com", "2928439", "23849")
+WHERE_TUPLE_OPTIONAL=(False, "ebay.com", "2928439", "23849")
 WHERE_COMBINED = WHERE_TUPLE + WHERE_TUPLE_OPTIONAL
 WHERE_CLAUSE = 'date >= "14-08-20" and date <= "14-08-21" and hour >= "00" and hour <= "05"'
 WHERE_CLAUSE2 = 'date >= "14-08-20" and date <= "14-08-21" and hour >= "00" and hour <= "05" and domain="ebay.com" and tag="2928439" and seller="23849"'
