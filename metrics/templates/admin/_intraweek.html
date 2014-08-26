@@ -135,7 +135,7 @@
       }
       
       // GET DATA
-      $.getJSON("/intraweek?format=json", function(data){
+      $.getJSON("/admin/intraweek?format=json", function(data){
       //$.getJSON("intraweek-data/intraweek-data.json", function(data){
       
         // FOREACH ROW, ADD TO TABLE
@@ -173,7 +173,7 @@
           
           var indBlock = $('.ind-advertiser-tr[data-table-id="' + advertiserID + '"]');
           
-          $.getJSON("/intraweek?advertiser=" + advertiserID + "&format=json&rows=100", function(data){
+          $.getJSON("/admin/intraweek?advertiser=" + advertiserID + "&format=json&rows=100", function(data){
           //$.getJSON("intraweek-data/intraweek-data-" + advertiserID + ".json", function(data){
             
             var showMore = false;
@@ -209,7 +209,7 @@
         
         indBlock.find('.ind-advertiser-table tr:not(.ind-header)').remove();
         
-        $.getJSON("/intraweek?advertiser=" + advertiserID + "&format=json&rows=100", function(data){
+        $.getJSON("/admin/intraweek?advertiser=" + advertiserID + "&format=json&rows=100", function(data){
         // $.getJSON("intraweek-data/intraweek-data-" + advertiserID + ".json", function(data){
           
           $.each(data, function(key, row){
