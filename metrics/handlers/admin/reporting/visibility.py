@@ -34,6 +34,7 @@ class ViewabilityBase():
             raise StandardError("Problem with query: {}".format(query))
 
     def clean_string(self, s):
+        '''Given a string, returns a cleaned, HQL-safe string'''
         s = s.replace('"', '').replace("'", "")
         return s
     
