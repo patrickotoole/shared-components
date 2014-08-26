@@ -249,6 +249,21 @@ class decorators:
             return d
         
         return deferred_fn
+
+    @staticmethod
+    def make_run_query(err_msg):
+        def run_query(fn):
+            
+            def run(self,*args):
+                db, q, params = fn(self,*args)
+                df = db.select_dataframe(q % params)
+                if df.empty:
+                    raise Exception(err_msg % params)
+                return df
+
+            return run
+        return run_query
+     
      
 class validators:
     @staticmethod
