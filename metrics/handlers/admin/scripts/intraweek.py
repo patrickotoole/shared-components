@@ -18,7 +18,7 @@ def default_renderer(self,data,*args):
 
     # create a new template 
     self.render(
-        "../templates/_intraweek.html", 
+        "../templates/admin/_intraweek.html", 
         df_html=formatted,
         profile=Convert.df_to_json(data)
     )
