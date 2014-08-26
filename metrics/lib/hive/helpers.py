@@ -8,5 +8,5 @@ def run_hive_deferred(hive,q):
 @decorators.deferred
 @decorators.time_log
 def run_hive_session_deferred(hive,q_session):
-    return list(hive.execute_session(q_session))
+    return list(hive.session_execute(q_session))
  
