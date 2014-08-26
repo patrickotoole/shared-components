@@ -115,3 +115,23 @@ group by
     u.creative_id
 """
 
+CONVERSION_QUERY = """
+SELECT 
+    date(cr.conversion_time) as 'Conversion Time',
+    case when cr.pc=1 then 'Post Click' else 'Post View' end as 'Conversion Type',
+    concat(ap.pixel_display_name," Conversion") as 'Conversion Event',
+    order_id as "Converter Data",
+    round(time_to_sec(timediff(conversion_time,imp_time))/60/60/24,1) as 'Conversion Window (Days)', 
+    round(time_to_sec(timediff(conversion_time,imp_time))/60/60,1) as 'Conversion Window (Hours)' 
+FROM conversion_reporting cr 
+LEFT JOIN advertiser_pixel ap 
+ON cr.pixel_id=ap.pixel_id 
+WHERE 
+    cr.external_advertiser_id= %(advertiser_id)s and 
+    cr.active=1 and 
+    cr.deleted=0 and 
+    cr.is_valid=1 and 
+    ap.deleted=0 
+ORDER BY 
+    1 asc;
+"""

@@ -125,6 +125,7 @@ reporting = [
     (r'/reporting.*',reporting.ReportingHandler, dict(db=db,api=api,hive=hive)),
     (r'/creative/reporting.*', reporting.CreativeReportingHandler, dict(db=db,api=api,hive=hive)),
     (r'/domain/reporting.*', reporting.DomainReportingHandler, dict(db=db,api=api,hive=hive)), 
+    (r'/conversion/reporting.*', reporting.ConversionReportingHandler, dict(db=db,api=api,hive=hive)),  
     (r'/login.*', user.LoginHandler, dict(db=db)),
     (r'/signup*', user.SignupHandler, dict(db=db)),
     (r'/intraweek.*',reporting.InsertionOrderHandler, dict(db=db)),
