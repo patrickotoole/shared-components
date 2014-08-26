@@ -41,7 +41,13 @@ class ConversionReportingHandler(BaseHandler,ConversionReportingBase):
             data = pandas.DataFrame([])
 
         def default(self,data):
-            self.render("reporting/_conversion.html", advertiser_id=advertiser)
+            _json = """{"advertiser":{"id":%(id)s,"conversions":%(data_formatted)s}}"""
+            _json = _json % {
+                "id":advertiser,
+                "data_formatted":Convert.df_to_json(data)
+            }
+            self.write(_json)
+            #self.render("reporting/_conversion.html", advertiser_id=advertiser)
 
-        yield renderers['json'], (data,)
+        yield default, (data,)
  

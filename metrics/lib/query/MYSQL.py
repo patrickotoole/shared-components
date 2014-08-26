@@ -117,12 +117,12 @@ group by
 
 CONVERSION_QUERY = """
 SELECT 
-    date(cr.conversion_time) as 'Conversion Time',
-    case when cr.pc=1 then 'Post Click' else 'Post View' end as 'Conversion Type',
-    concat(ap.pixel_display_name," Conversion") as 'Conversion Event',
-    order_id as "Converter Data",
-    round(time_to_sec(timediff(conversion_time,imp_time))/60/60/24,1) as 'Conversion Window (Days)', 
-    round(time_to_sec(timediff(conversion_time,imp_time))/60/60,1) as 'Conversion Window (Hours)' 
+    date(cr.conversion_time) as 'conversion_time',
+    case when cr.pc=1 then 'post_click' else 'post_view' end as 'conversion_type',
+    concat(ap.pixel_display_name," Conversion") as 'conversion_event',
+    order_id as "converter_data",
+    round(time_to_sec(timediff(conversion_time,imp_time))/60/60/24,1) as 'conversion_window_days', 
+    round(time_to_sec(timediff(conversion_time,imp_time))/60/60,1) as 'conversion_window_hours' 
 FROM conversion_reporting cr 
 LEFT JOIN advertiser_pixel ap 
 ON cr.pixel_id=ap.pixel_id 
