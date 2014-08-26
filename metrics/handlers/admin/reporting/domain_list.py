@@ -36,7 +36,6 @@ class TargetListHandler(tornado.web.RequestHandler):
         date = self.get_argument("date",datetime.datetime.now().strftime("%y-%m-%d"))
         hour = self.get_argument("hour",False)
         groupby = self.get_argument("groupby","domain")
-
        
         w = "date='%s' and type like '%%%s%%' " % (date,domain_list)
         if hour:
