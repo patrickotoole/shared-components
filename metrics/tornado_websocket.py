@@ -112,9 +112,9 @@ admin_reporting = [
       dict(db=db,buffers={"track":track_buffer, "view":view_buffer})
     ),
     (r'/admin/viewable.*',admin.reporting.ViewabilityHandler, dict(db=db,api=api,hive=hive)),
-    #(r'/target_list.*',admin.reporting.TargetListHandler),
+    (r'/admin/target_list.*',admin.reporting.TargetListHandler, dict(hive=hive)),
     (r'/intraweek.*',admin.scripts.IntraWeekHandler, dict(db=db)),
-    (r'/adminreport/(.*?)/.*', AdminReportHandler),
+    (r'/admin/report/(.*?)/.*', AdminReportHandler),
     (r'/admin/reportinglog/(.*?)', ReportingLogHandler),
     (r'/admin/event_log',admin.scripts.EventLogHandler, dict(db=db,api=api)),
     (r'/admin/event_log/(.*?)',admin.scripts.EventLogHandler, dict(db=db,api=api))

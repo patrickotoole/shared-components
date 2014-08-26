@@ -2,6 +2,7 @@ import contextlib
 import hive_utils
 import requests
 import json
+from twisted.internet import threads
 
 @contextlib.contextmanager
 def openclose(transport):
