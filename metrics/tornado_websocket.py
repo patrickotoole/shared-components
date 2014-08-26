@@ -44,7 +44,7 @@ define("view_port", default=1235, help="run on the given port", type=int)
 
 db = lnk.dbs.mysql
 api = lnk.api.console
-bidder = None#lnk.api.console
+bidder = lnk.api.bidder
 hive = h.Hive().hive
 
 _redis = streaming._redis
@@ -90,11 +90,10 @@ old_handlers = [
 
 admin_scripts = [
     (r'/api.*', admin.scripts.APIHandler, dict(db=db)),
-    (r'/pixel.*',admin.scripts.PixelHandler, dict(db=db,api=api,bidder=bidder)),
+    (r'/admin.pixel.*',admin.scripts.PixelHandler, dict(db=db,api=api,bidder=bidder)),
     (r'/admin/targeting.*',admin.scripts.TargetingHandler, dict(redis=_redis,api=api,db=db)),
-    (r'/bidder_profile.*',admin.scripts.ProfileHandler, dict(db=db,api=api,bidder=bidder)),
-    (r'/advertiser.*',admin.scripts.AdvertiserHandler, dict(db=db,api=api)),
-    (r'/money.*',admin.scripts.MoneyHandler, dict(db=db,api=api)),
+    (r'/admin/advertiser.*',admin.scripts.AdvertiserHandler, dict(db=db,api=api)),
+    (r'/admin/money.*',admin.scripts.MoneyHandler, dict(db=db,api=api)),
     (r'/admin/batch_request[^s]*', admin.scripts.BatchRequestHandler, dict(db=db, api=api, hive=hive)),
     (r'/admin/batch_requests.*', admin.scripts.BatchRequestsHandler, dict(db=db, api=api, hive=hive))
 ]
@@ -117,7 +116,9 @@ admin_reporting = [
     (r'/admin/report/(.*?)/.*', AdminReportHandler),
     (r'/admin/reportinglog/(.*?)', ReportingLogHandler),
     (r'/admin/event_log',admin.scripts.EventLogHandler, dict(db=db,api=api)),
-    (r'/admin/event_log/(.*?)',admin.scripts.EventLogHandler, dict(db=db,api=api))
+    (r'/admin/event_log/(.*?)',admin.scripts.EventLogHandler, dict(db=db,api=api)),
+    (r'/admin/scrubbed_segments/?',admin.scripts.ProfileHandler, dict(bidder=bidder)),  
+    (r'/admin/scrubbed_segments/(.*?)',admin.scripts.ProfileHandler, dict(bidder=bidder)) 
 ]
 
 reporting = [
