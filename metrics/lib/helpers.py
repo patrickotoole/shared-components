@@ -239,6 +239,16 @@ class decorators:
             return _return
 
         return wrap
+
+    @staticmethod
+    def deferred(fn):
+        from twisted.internet import threads
+
+        def deferred_fn(*args,**kwargs):
+            d = threads.deferToThread(fn,*args,**kwargs)
+            return d
+        
+        return deferred_fn
      
 class validators:
     @staticmethod

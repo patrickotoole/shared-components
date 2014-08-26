@@ -3,7 +3,6 @@ import hive_utils
 import requests
 import json
 from twisted.internet import threads
-from lib.helpers import decorators
 
 @contextlib.contextmanager
 def openclose(transport):
@@ -12,17 +11,6 @@ def openclose(transport):
     yield
     if not getattr(transport, 'keep_open', None):
         transport.close()
-
-@decorators.time_log
-def run_hive(hive,q):
-    with openclose(hive._HiveClient__transport):
-        hive._HiveClient__client.execute('set shark.map.tasks=8; set mapred.reduce.tasks = 8;')
-
-    return list(hive.execute(q))
-
-def async_run_hive(hive,q):
-    d = threads.deferToThread(run_hive,hive,q)
-    return d
 
 def singleton(cls):
     instances = {}

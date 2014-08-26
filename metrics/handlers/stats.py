@@ -4,7 +4,6 @@ import tornado.web
 import ujson
 import pandas
 import StringIO
-import hive_utils
 from urlparse import urlparse
 from twisted.internet import defer, threads
 

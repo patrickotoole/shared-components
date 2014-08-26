@@ -4,9 +4,9 @@ import tornado.web
 import logging
 
 from twisted.internet import defer
-from lib.hive import async_run_hive
-from lib.helpers import *
 
+from lib.helpers import *
+from lib.hive.helpers import run_hive_deferred
 from lib.query.HIVE import AGG_APPROVED_AUCTIONS
 
 class TargetListHandler(tornado.web.RequestHandler):
@@ -26,7 +26,7 @@ class TargetListHandler(tornado.web.RequestHandler):
 
     @defer.inlineCallbacks
     def get_data(self,q):
-        t = yield async_run_hive(self.hive,q)
+        t = yield run_hive_deferred(self.hive,q)
         u = pandas.DataFrame(t)
         self.get_content(u)
 

@@ -3,7 +3,6 @@ import tornado.web
 import ujson
 import pandas as pd
 import StringIO
-import hive_utils
 import tornado.template as template
 import os
 import json
