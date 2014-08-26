@@ -2,6 +2,7 @@ import StringIO
 import pandas
 import ujson
 import urlparse
+import logging
 
 class Cast:
     @staticmethod
@@ -225,6 +226,19 @@ class decorators:
             renderer(self,*data)
 
         return wrapped
+
+    @staticmethod 
+    def time_log(fn):
+        import time
+
+        def wrap(*args,**kwargs):
+            logging.info("Start %s: %s" % (fn.__name__,str(args)))
+            start = time.time()
+            _return = fn(*args,**kwargs)
+            logging.info("Finished %s in %.2fs" % (fn.__name__,(time.time() - start)))
+            return _return
+
+        return wrap
      
 class validators:
     @staticmethod
