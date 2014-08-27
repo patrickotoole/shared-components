@@ -4,16 +4,7 @@ import pandas
 
 from lib.helpers import *
 from lib.query.MYSQL import *
-from lib.query.HIVE import *
 import lib.query.helpers as query_helpers
-
-QUERY = """
-SELECT
-    *
-FROM daily_dash
-WHERE 
-    %(where)s
-""" 
 
 class AdvertiserReportingHandler(tornado.web.RequestHandler):
 
@@ -43,10 +34,8 @@ class AdvertiserReportingHandler(tornado.web.RequestHandler):
             "date_range": self.get_argument("date_range","yesterday")
         }                                           
 
-        where = " date_range = '%(date_range)s'" % params
-
-        q = QUERY % {
-            "where": where
+        q = DAILY_DASH % {
+            "where": query_helpers.__where_and_eq__(params)
         }
 
         data = self.get_data(q)
