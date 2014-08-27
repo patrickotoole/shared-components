@@ -1,6 +1,8 @@
 import tornado.web
 import ujson
 import pandas as pd
+from lib.helpers import *
+from target import button_builder
 
 MEMBER_ID = 181
 PROFILE_ID = 5126120
@@ -21,10 +23,17 @@ class ProfileHandler(tornado.web.RequestHandler):
 
         return profile
 
+    @decorators.formattable
     def get(self):
         profile = self.get_profile()
-        segments_df = pd.DataFrame(profile['segment_targets'])[SEGMENT_COLUMNS]
-        self.write(segments_df.to_html())
+        data = pd.DataFrame(profile['segment_targets'])[SEGMENT_COLUMNS]
+
+        def default(self,data):
+            data['actions'] = data.id.map(lambda name: button_builder(name, "delete", True))
+
+            self.render("admin/bidder_profile.html",profile=Convert.df_to_json(data))
+
+        yield default, (data,)
 
     def post(self):
         new_segment = ujson.loads(self.request.body)
@@ -54,7 +63,3 @@ class ProfileHandler(tornado.web.RequestHandler):
         response = self.bidder.put(URI,data=POST_DATA).content
 
         self.write(response) 
-
-        
-        
-        pass
