@@ -19,7 +19,7 @@ SEGMENTS_DOMAINS = '''
     FROM agg_domain_imps
     WHERE {}
     GROUP BY domain
-    ORDER BY num_users DESC LIMIT 2000
+    ORDER BY num_users DESC
 '''
 
 AGG_POP_DOMAINS = '''
@@ -38,7 +38,7 @@ SELECT
 FROM agg_domain_imps
 WHERE {}
 GROUP BY dma
-ORDER BY num_users DESC LIMIT 2000
+ORDER BY num_users DESC
 '''
 
 IMPS_DOMAINS = '''
