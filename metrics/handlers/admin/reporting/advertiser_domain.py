@@ -16,8 +16,7 @@ class AdvertiserReportingHandler(tornado.web.RequestHandler):
 
         def default(self,data):
             _json = Convert.df_to_json(data)
-            self.write(_json)
-            self.finish()
+            self.render("admin/reporting/advertiser.html",data=_json)
         
         yield default, (data,)
 
@@ -39,6 +38,21 @@ class AdvertiserReportingHandler(tornado.web.RequestHandler):
         }
 
         data = self.get_data(q)
+
+    @tornado.web.asynchronous
+    def post(self):
+        print self.__dict__
+
+        params = {
+            "date_range": ujson.loads(self.request.body).get("date_range","yesterday")
+        }                                           
+
+        q = DAILY_DASH % {
+            "where": query_helpers.__where_and_eq__(params)
+        }
+
+        data = self.get_data(q)
+        
 
 
         

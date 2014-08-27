@@ -59,11 +59,12 @@ class CreativeReportingTest(AsyncHTTPTestCase):
     def get_app(self):
         self.db = lnk.dbs.test
         self.db.execute(CREATE_DASH)
+        print INSERT_DASH % {"range":"yesterday","advertiser_id":ADVERTISER_ID}
         self.db.execute(INSERT_DASH % {"range":"yesterday","advertiser_id":ADVERTISER_ID})
         self.db.execute(INSERT_DASH % {"range":"past_week","advertiser_id":ADVERTISER_ID}) 
         self.db.execute(INSERT_DASH % {"range":"past_month","advertiser_id":ADVERTISER_ID})  
 
-        dirname = os.path.dirname(os.path.realpath(__file__)) + "../../../../templates"
+        dirname = os.path.dirname(os.path.realpath(__file__)) + "../../../../../templates"
         self.app = Application([('/', reporting.AdvertiserReportingHandler, dict(db=self.db))],
             cookie_secret="rickotoole",
             template_path=dirname
@@ -73,22 +74,22 @@ class CreativeReportingTest(AsyncHTTPTestCase):
     def tearDown(self):
         self.db.execute(DROP_DASH)
 
-    def test_get_dash_page(self):
-        response = self.fetch("/").body
+    def test_api_get_dash(self):
+        response = self.fetch("/?format=json").body
         obj = ujson.loads(response)
         self.assertEqual(len(obj), 3)
         
-    def test_default_params(self):
-        default = ujson.loads(self.fetch("/").body)
-        paramd = ujson.loads(self.fetch("?date_range=yesterday").body)
+    def test_api_default_params(self):
+        default = ujson.loads(self.fetch("/?format=json").body)
+        paramd = ujson.loads(self.fetch("?date_range=yesterday&format=json").body)
 
         default_df = DataFrame(default)
         new_df = DataFrame(paramd)
 
         assert_frame_equal(default_df,new_df) 
 
-    def test_date_range(self):
-        paramd = ujson.loads(self.fetch("?date_range=past_week").body)
+    def test_api_date_range(self):
+        paramd = ujson.loads(self.fetch("?date_range=past_week&format=json").body)
         df = DataFrame(paramd)
 
         self.assertEqual(sum(df.date_range == "past_week"),3)
