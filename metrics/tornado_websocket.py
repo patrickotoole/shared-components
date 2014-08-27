@@ -119,7 +119,10 @@ admin_reporting = [
     (r'/admin/event_log/(.*?)',admin.scripts.EventLogHandler, dict(db=db,api=api)),
     (r'/admin/segment/reporting/?',admin.reporting.SegmentReportingHandler, dict(hive=hive)),   
     (r'/admin/segment/scrubbed/?',admin.scripts.ProfileHandler, dict(bidder=bidder)),  
-    (r'/admin/segment/scrubbed/(.*?)',admin.scripts.ProfileHandler, dict(bidder=bidder)) 
+    (r'/admin/segment/scrubbed/(.*?)',admin.scripts.ProfileHandler, dict(bidder=bidder)),
+    (r'/admin/analysis/pixel/', rbox_pixel.RockerboxPixelHandler, dict(db=db, api=api, hive=hive)),
+    (r'/admin/analysis/pixel/(.*)', rbox_pixel.PixelAdvertiserHandler, dict(db=db, api=api, hive=hive)),
+    (r'/admin/analysis*', analysis.AnalysisHandler, dict(db=db, api=api, hive=hive))
 ]
 
 reporting = [
@@ -133,11 +136,6 @@ reporting = [
     (r'/intraweek.*',reporting.InsertionOrderHandler, dict(db=db)),
 ]
 
-analysis = [
-    (r'/analysis/pixel/', rbox_pixel.RockerboxPixelHandler, dict(db=db, api=api, hive=hive)),
-    (r'/analysis/pixel/(.*)', rbox_pixel.PixelAdvertiserHandler, dict(db=db, api=api, hive=hive)),
-    (r'/analysis*', analysis.AnalysisHandler, dict(db=db, api=api, hive=hive))
-]
 
 static = [
     (r'/static/(.*)', tornado.web.StaticFileHandler, {'path': "static"})
@@ -145,7 +143,7 @@ static = [
 
 dirname = os.path.dirname(os.path.realpath(__file__))
 app = tornado.web.Application(
-    _streaming + admin_scripts + admin_reporting + reporting + analysis + static + index,
+    _streaming + admin_scripts + admin_reporting + reporting + static + index,
     template_path= dirname + "/templates",
     db=lnk.dbs.mysql,
     debug=True,
