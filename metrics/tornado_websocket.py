@@ -119,7 +119,7 @@ admin_reporting = [
     (r'/admin/event_log/(.*?)',admin.scripts.EventLogHandler, dict(db=db,api=api)),
     (r'/admin/segment/reporting/?',admin.reporting.SegmentReportingHandler, dict(hive=hive)),   
     (r'/admin/segment/scrubbed/?',admin.scripts.ProfileHandler, dict(bidder=bidder)),  
-    (r'/admin/segment/scrubbed/(.*?)',admin.scripts.ProfileHandler, dict(bidder=bidder))
+    (r'/admin/segment/scrubbed/(.*?)',admin.scripts.ProfileHandler, dict(bidder=bidder)),
     (r'/admin/analysis/pixel/', rbox_pixel.RockerboxPixelHandler, dict(db=db, api=api, hive=hive)),
     (r'/admin/analysis/pixel/(.*)', rbox_pixel.PixelAdvertiserHandler, dict(db=db, api=api, hive=hive)),
     (r'/admin/analysis*', analysis.AnalysisHandler, dict(db=db, api=api, hive=hive))
