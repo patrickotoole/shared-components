@@ -13,10 +13,10 @@ class IndexHandler(tornado.web.RequestHandler):
             ("/admin/batch_request", "Batch Segment Request"),
             ("/admin/segment/scrubbed", "Scrubbed Segments"), 
             ("/admin/segment/reporting", "Segment Avails Reporting"),  
-            ("/analysis", "Segment/DMA Analysis"),
+            ("/admin/analysis", "Segment/DMA Analysis"),
             ("/admin/viewable", "Viewability Analysis"),
             ("/admin/advertiser", "Advertiser Creator"),
-            ("/analysis/pixel/", "Pixel Analysis (aka Rockerbox vs. Non-Rockerbox)"),
+            ("/admin/analysis/pixel/", "Pixel Analysis (aka Rockerbox vs. Non-Rockerbox)"),
             ("/admin/money", "Money Tool"),
             ("http://graphite.getrockerbox.com/dashboard", "Graphite (Engineering)")
         ]
