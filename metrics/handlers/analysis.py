@@ -8,21 +8,13 @@ import time
 import vincent
 from base import BaseHandler
 from lib.helpers import *
+from lib.query import *
 
 class AnalysisHandler(BaseHandler):
     def initialize(self, db, api, hive):
         self.db = db 
         self.api = api
         self.hive = hive
-
-    def load_df(self, directory="/root/projects/rockerbox-datascience/data/web/"):
-        '''This should be used for development purposes only'''
-        df = dict()
-        for filename in os.listdir("/root/projects/rockerbox-datascience/data/web/"):
-            with open(directory+filename, 'r') as json_file:
-                data = json_file.read()
-                df[filename.replace('.json','')] = pd.read_json(data)
-        return df        
 
     def get_segment_name(self, segment_id):
         '''Given a segment id, return the name associated with that id'''
@@ -43,26 +35,14 @@ class AnalysisHandler(BaseHandler):
         '''
         segment_list = ["array_contains(segments, '{}')".format(segment) for segment in segments] 
         where = ' OR '.join(segment_list)
-        segment_query = '''select domain,
-                               sum(num_imps) AS num_imps,
-                               sum(num_unique_users) AS num_users, 
-                               sum(num_unique_pages) AS num_pages, 
-                               avg(unique_pages_per_user) AS pages_per_user 
-                           FROM agg_domain_imps 
-                           WHERE {} 
-                           GROUP BY domain 
-                           ORDER BY num_users DESC LIMIT 2000'''.format(where)
+        segment_query = SEGMENTS_DOMAINS.format(where)
         print segment_query
         segment_df = pd.DataFrame(self.hive.session_execute(["set shark.map.tasks=32", "set mapred.reduce.tasks=3", segment_query]))
         
         if weighted:
             population_df = pd.DataFrame(self.hive.session_execute(["set shark.map.tasks=32", 
                                                                     "set mapred.reduce.tasks=3",
-                                                                    '''select 
-                                                                         domain, 
-                                                                         num_imps, 
-                                                                         num_users 
-                                                                     FROM agg_pop_domains''']))
+                                                                     AGG_POP_DOMAINS]))
 
             print segment_query
             population_df['percent_imps'] = population_df.num_users.astype(float) / sum(population_df.num_users.astype(float))
@@ -85,7 +65,7 @@ class AnalysisHandler(BaseHandler):
 
     def pull_segments_list(self):
         '''Returns a DataFrame representing all segments along with their advertiser_id and name'''
-        segments = self.db.select_dataframe("select external_advertiser_id,segment_name,external_segment_id from advertiser_segment inner join advertiser using (external_advertiser_id)")
+        segments = self.db.select_dataframe(SEGMENTS_LIST)
         return segments
 
     def pull_partitions(self, table_name):
@@ -106,13 +86,7 @@ class AnalysisHandler(BaseHandler):
 
         segment_list = ["array_contains(segments, '{}')".format(segment) for segment in segments] 
         where = ' OR '.join(segment_list)
-        segment_query = '''select dma,
-                               sum(num_imps) AS num_imps,
-                               sum(num_unique_users) AS num_users
-                           FROM agg_domain_imps 
-                           WHERE {} 
-                           GROUP BY dma
-                           ORDER BY num_users DESC LIMIT 2000'''.format(where)
+        segment_query = SEGMENTS_DMAS.format(where)
         segment_df = pd.DataFrame(self.hive.session_execute(["set shark.map.tasks=32", "set mapred.reduce.tasks=3", segment_query]))
 
         return segment_df
@@ -123,8 +97,8 @@ class AnalysisHandler(BaseHandler):
         where = ' OR '.join(domain_list)
 
         imps_query = ["set shark.map.tasks = 54", "set mapred.reduce.tasks = 10", 
-                      '''SELECT domain, date, hour, sum(num_imps) AS num_imps FROM agg_domain_imps WHERE {} GROUP BY date,hour,domain'''.format(where)]
-        auctions_query = ["set shark.map.tasks = 54", "set mapred.reduce.tasks = 10", "SELECT domain, date, hour, sum(num_auctions) AS num_auctions FROM agg_approved_auctions WHERE {} GROUP BY date,hour,domain".format(where)]
+                      IMPS_DOMAINS.format(where)]
+        auctions_query = ["set shark.map.tasks = 54", "set mapred.reduce.tasks = 10", APPROVED_DOMAINS.format(where)]
 
         imps_data = pd.DataFrame(self.hive.session_execute(imps_query))
         auctions_data = pd.DataFrame(self.hive.session_execute(auctions_query))
@@ -147,7 +121,7 @@ class AnalysisHandler(BaseHandler):
             select+= ",seller"
             groupby+=",seller"
 
-        log_query = ["set shark.map.tasks = 32", "set mapred.reduce.tasks = 3", "SELECT type,date,hour,seller, sum(num_auctions) as num_auctions from agg_approved_auctions WHERE {} GROUP BY {}".format(where, groupby)]
+        log_query = ["set shark.map.tasks = 32", "set mapred.reduce.tasks = 3", APPROVED_TYPE_SELLER.format(where, groupby)]
 
         '''Given a log name, returns a summary of approved volume for that domain list'''
         log_data = pd.DataFrame(self.hive.session_execute(log_query))
