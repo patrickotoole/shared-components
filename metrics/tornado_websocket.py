@@ -117,8 +117,9 @@ admin_reporting = [
     (r'/admin/reportinglog/(.*?)', ReportingLogHandler),
     (r'/admin/event_log',admin.scripts.EventLogHandler, dict(db=db,api=api)),
     (r'/admin/event_log/(.*?)',admin.scripts.EventLogHandler, dict(db=db,api=api)),
-    (r'/admin/scrubbed_segments/?',admin.scripts.ProfileHandler, dict(bidder=bidder)),  
-    (r'/admin/scrubbed_segments/(.*?)',admin.scripts.ProfileHandler, dict(bidder=bidder)) 
+    (r'/admin/segment/reporting/?',admin.reporting.SegmentReportingHandler, dict(hive=hive)),   
+    (r'/admin/segment/scrubbed/?',admin.scripts.ProfileHandler, dict(bidder=bidder)),  
+    (r'/admin/segment/scrubbed/(.*?)',admin.scripts.ProfileHandler, dict(bidder=bidder)) 
 ]
 
 reporting = [

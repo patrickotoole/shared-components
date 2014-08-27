@@ -16,9 +16,17 @@
 
 <h4>Add Segment</h4>
 
-<form role="form">
-  <div class="row new-item">
-</form>
+<div class="row">
+  <div class="col-sm-9">
+    <form role="form">
+      <div class="new-item"></div>
+    </form>
+  </div>
+  <div class="col-sm-3">
+    <div class="data-loading-content">
+      <img style="height:30px" src="/static/img/general/logo-small.gif" alt="Logo loader" /> loading volume data...
+    </div>
+  </div>
 </div>
 <br/>
 <h4>Existing</h4>
@@ -28,13 +36,13 @@
     <tr>
       <th>ID</th>
       <th>Name</th>
+      <th>Volume (yesterday)</th> 
       <th>Actions</th>
     </tr>
   </thead>
 </table>
 
 </div>
-<script type="text/javascript" src="/static/streaming.js"></script>
 <script>
 
 
@@ -51,6 +59,7 @@ var LOG = '<div class="col-sm-3"><input class="form-control" id="id" name="id" d
   
 var NEW = "<div>" + LOG + DUPLICATE + "</div>"
 $(".new-item").append(NEW)
+var format = d3.format("0,000");
 
 dc.dataTable(".dc-data-table")
   .dimension(log)
@@ -64,6 +73,9 @@ dc.dataTable(".dc-data-table")
     },
     function (d) {
       return d.name
+    },
+    function (d) {
+      return "<span id='volume-"+d.id+"'>"+format(d.imps)+"</span>"
     },
     function (d) {
       return d.actions
@@ -87,7 +99,7 @@ dc.renderAll()
 $(".remove").click(function(e){
   e.preventDefault()
   $.ajax({
-    url: "/admin/scrubbed_segments/"+e.target.id.split("delete=")[1],
+    url: "/admin/segment/scrubbed/"+e.target.id.split("delete=")[1],
     type: "DELETE"
   }).done(function(){
     if (e.target.id.match("delete")) {
@@ -103,7 +115,7 @@ var send_data = function(json_string,cb) {
   $.ajax({
     type: "POST",
     dataType: "json",
-    url: "/admin/scrubbed_segments/", 
+    url: "/admin/segment/scrubbed/", 
     data: json_string, 
     success: function(last){ 
       if (cb) cb()
@@ -120,6 +132,19 @@ $('#batch').click(function(e){
   var stringified = JSON.stringify(serialized)
   send_data(stringified)
   return false;
+})
+
+
+$.getJSON("/admin/segment/reporting", function(d){ 
+  $('.data-loading-content').hide()
+  var h = {};
+  $(d).each(function(a,x){
+    h[x.segment] = x.imps;
+  })
+  $(data).each(function(a,x){
+    data[a].imps = parseInt(h[x.id]) || 0
+  })
+  dc.redrawAll()
 })
 
 </script>

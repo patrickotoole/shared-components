@@ -11,6 +11,7 @@ SEGMENT_COLUMNS = [
     "id",
     "name"
 ]
+HIVE_QUERY = "select segment, sum(num_imps) from agg_domain_imps LATERAL VIEW explode(segments) segTable as segment where date='14-08-25' group by segment"
 
 
 class ProfileHandler(tornado.web.RequestHandler):
@@ -27,6 +28,7 @@ class ProfileHandler(tornado.web.RequestHandler):
     def get(self):
         profile = self.get_profile()
         data = pd.DataFrame(profile['segment_targets'])[SEGMENT_COLUMNS]
+        data['imps'] = 0
 
         def default(self,data):
             data['actions'] = data.id.map(lambda name: button_builder(name, "delete", True))
