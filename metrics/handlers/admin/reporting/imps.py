@@ -116,5 +116,5 @@ class ImpsReportingHandler(tornado.web.RequestHandler):
 
         elif group_by == "dma":
             query = self.construct_dmas_query(from_date, to_date, segments)
-            self.execute_query(query)
+            self.execute_dmas_query(query)
         
