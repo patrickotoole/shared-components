@@ -1,3 +1,6 @@
+{% extends ../clean_base.html %}
+
+{% block content %}
 <link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/dc.css">
 <script type="text/javascript" src="http://rockerbox.com/js/d3.js"></script>
 <script type="text/javascript" src="http://rockerbox.com/js/crossfilter.js"></script>
@@ -20,40 +23,19 @@ $( document ).ready()
 <style>
 /*.dataTables_wrapper{margin-left: 200; margin-right: 200;}*/
 .content{
-  margin-left: 200;
-  margin-right: 200;
-}
-
-.sidebar{
-  float:left;
-  margin-top: 100px;
-  margin-right: 40px;
-}
-
-.sidebar ul{
-  list-style-type:none;
+  width:1000px;
+  margin:auto;
 }
 
 .table_wrapper{
-  float:left;
-  width: 70%;
+  width: 100%;
 }
 </style>
 
 <div class="content">
 
-  <div class="sidebar">
-    <h3>Pixel Data</h3>
-      <ul>
-        <li></li>
-      </ul>
-    <h3>Imps Data</h3>
-      <ul>
-        <li><a href="/analysis?segments=True">Segments</a></li>
-      </ul>
-  </div>
-
 {% block stuff %}default{% end %}
 
 </div>
 </div>
+{% end %}

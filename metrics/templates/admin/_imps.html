@@ -1,10 +1,9 @@
-{% extends "analysis_base.html" %}
+{% extends "imps_base.html" %}
 
 {% block stuff %}
 <script type="text/javascript" language="javascript" src="http://cdn.datatables.net/tabletools/2.2.2/js/dataTables.tableTools.js"></script>
 <link rel="stylesheet"  type="text/css" href="http://cdn.datatables.net/tabletools/2.2.2/css/dataTables.tableTools.css"></script>
 <div class="table_wrapper">
-<a href="/analysis">Back to Index</a>
 
 <script src="//code.jquery.com/ui/1.11.1/jquery-ui.js"></script>
 <link rel="stylesheet" href="//code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css">
@@ -42,7 +41,7 @@ $(document).ready( function () {
 } );
 </script>
 
-<form action="" method="POST">
+<form action="reporting">
 <table>
 <tr>
   <td><label for="from_date">From: </label></td>
