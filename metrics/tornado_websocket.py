@@ -97,7 +97,7 @@ admin_scripts = [
     (r'/admin/money.*',admin.scripts.MoneyHandler, dict(db=db,api=api)),
     (r'/admin/batch_request[^s]*', admin.scripts.BatchRequestHandler, dict(db=db, api=api, hive=hive)),
     (r'/admin/batch_requests.*', admin.scripts.BatchRequestsHandler, dict(db=db, api=api, hive=hive)),
-    (r'/admin/imps/', admin.scripts.ImpsHandler, dict(db=db, api=api, hive=hive))
+    (r'/admin/imps/?', admin.scripts.ImpsHandler, dict(db=db, api=api, hive=hive))
 ]
 
 _streaming = [
@@ -118,9 +118,8 @@ admin_reporting = [
     (r'/admin/segment/reporting/?',admin.reporting.SegmentReportingHandler, dict(hive=hive)),   
     (r'/admin/segment/scrubbed/?',admin.scripts.ProfileHandler, dict(bidder=bidder)),  
     (r'/admin/segment/scrubbed/(.*?)',admin.scripts.ProfileHandler, dict(bidder=bidder)),
-    (r'/admin/imps/reporting', admin.reporting.ImpsReportingHandler, dict(db=db, api=api, hive=hive))
-    (r'/admin/pixel/reporting/?', reporting.PixelAdvertiserHandler, dict(db=db, api=api, hive=hive)),
-    (r'/admin/analysis*', analysis.AnalysisHandler, dict(db=db, api=api, hive=hive))
+    (r'/admin/imps/reporting', admin.reporting.ImpsReportingHandler, dict(db=db, api=api, hive=hive)),
+    (r'/admin/pixel/reporting/?', reporting.PixelAdvertiserHandler, dict(db=db, api=api, hive=hive))
 ]
 
 reporting = [
