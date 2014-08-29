@@ -1,0 +1,163 @@
+{% autoescape None %}
+{% extends "../clean_base.html" %}
+{% block content %}
+
+<link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/dc.css">
+<link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/chosen.css">
+
+<script type="text/javascript" src="http://rockerbox.com/js/d3.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/crossfilter.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/dc.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/colorbrewer.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/reporting.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/chosen.js"></script>
+
+<div class='container'>
+
+<h4 class="hide">Add Segment</h4>
+
+<div class="row">
+  <div class="col-sm-9">
+    <form role="form">
+      <div class="new-item"></div>
+    </form>
+  </div>
+</div>
+<br/>
+
+<h4>Advertiser Pixels</h4>
+
+<table class="table table-hover dc-data-table">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Pixel Source</th>
+      <th>Vists</th>
+      <th>(Touched)</th> 
+      <th>Conversions</th>
+      <th>(Touched)</th>  
+    </tr>
+  </thead>
+</table>
+
+</div>
+<script>
+
+
+
+
+var data = {{ data }},
+  crs = crossfilter(data);
+
+log = crs.dimension(function(d){ return "Segments"})
+group = log.group().all()
+
+/*
+var LOG = '<div class="col-sm-3"><input class="form-control" id="id" name="id" data-placeholder="id"></input></div>',
+  DUPLICATE = '<div class="col-md-1"><button type="submit" id="batch" class="submit btn ">Add</button></div>' 
+  
+var NEW = "<div>" + LOG + DUPLICATE + "</div>"
+$(".new-item").append(NEW)
+*/
+var format = d3.format("0,000");
+var dateFormat = d3.time.format("%Y-%m-%d");
+
+dc.dataTable(".dc-data-table")
+  .dimension(log)
+  .group(function (d) {
+    return d.active ? "Active Advertisers" : "Inactive Advertisers"
+  })
+  .size(10000)
+  .columns([
+    function (d) {
+      return "<a href='/admin/pixel/reporting?advertiser_id="+
+        d.external_advertiser_id+"'>" + d.advertiser_name + "</a>"
+    },
+    function (d) {
+      return d.pixel_source_name
+    },
+    function (d) {
+      return d.imps
+    },
+    function (d) {
+      return d.rbox_imps
+    },
+    function (d) {
+      return d.conversions
+    },
+    function (d) {
+      return d.rbox_conversions
+    }  
+  ])
+  .sortBy(function (d) {
+    return d.log;
+  })
+  .order(d3.ascending)
+  .renderlet(function (table) {
+
+    table.selectAll(".dc-table-row")
+    $(document.getElementsByClassName('dc-table-row')).each(function(x,y){
+      y.classList.add("warning")
+    })
+  });
+
+dc.renderAll()
+
+
+$(".remove").click(function(e){
+  e.preventDefault()
+  $.ajax({
+    url: "/admin/segment/scrubbed/"+e.target.id.split("delete=")[1],
+    type: "DELETE"
+  }).done(function(){
+    if (e.target.id.match("delete")) {
+      $(e.target).parents("tr").remove()
+    } else {
+      $(e.target).parent().find("button").toggleClass("hidden")
+    }
+  })
+})
+
+var send_data = function(json_string,cb) {
+  console.log(json_string)
+  $.ajax({
+    type: "POST",
+    dataType: "json",
+    url: "/admin/segment/scrubbed/", 
+    data: json_string, 
+    success: function(last){ 
+      if (cb) cb()
+    },
+    failure: function(last) {
+      console.log(last)
+    }
+  })
+}
+
+$('#batch').click(function(e){
+  e.preventDefault()
+  var serialized = $(e.target).parents("form").serializeObject()
+  var stringified = JSON.stringify(serialized)
+  send_data(stringified)
+  return false;
+})
+
+/*
+// want to reimplement something like this
+$.getJSON("/admin/segment/reporting", function(d){ 
+  $('.data-loading-content').hide()
+  var h = {};
+  $(d).each(function(a,x){
+    h[x.segment] = x.imps;
+  })
+  $(data).each(function(a,x){
+    data[a].imps = parseInt(h[x.id]) || 0
+  })
+  dc.redrawAll()
+})
+*/
+
+</script>
+<script src="http://rockerbox.com/js/jquery.serialize-object.js"></script>
+
+{% end %}  

@@ -50,6 +50,8 @@ _redis = streaming._redis
 track_buffer = streaming.track_buffer
 view_buffer = streaming.view_buffer
 
+buffers = {"track":track_buffer, "view":view_buffer}
+
 
 def sig_handler(sig, frame):
     logging.warning('Caught signal: %s', sig)
@@ -89,27 +91,23 @@ old_handlers = [
 
 admin_scripts = [
     (r'/api.*', admin.scripts.APIHandler, dict(db=db)),
-    (r'/admin.pixel.*',admin.scripts.PixelHandler, dict(db=db,api=api,bidder=bidder)),
+    (r'/admin/pixel/?',admin.scripts.PixelHandler, dict(db=db,api=api,bidder=bidder)),
     (r'/admin/targeting.*',admin.scripts.TargetingHandler, dict(redis=_redis,api=api,db=db)),
     (r'/admin/advertiser.*',admin.scripts.AdvertiserHandler, dict(db=db,api=api)),
     (r'/admin/money.*',admin.scripts.MoneyHandler, dict(db=db,api=api)),
     (r'/admin/batch_request[^s]*', admin.scripts.BatchRequestHandler, dict(db=db, api=api, hive=hive)),
     (r'/admin/batch_requests.*', admin.scripts.BatchRequestsHandler, dict(db=db, api=api, hive=hive)),
-    (r'/admin/imps/', admin.scripts.ImpsHandler, dict(db=db, api=api, hive=hive))
+    (r'/admin/imps/?', admin.scripts.ImpsHandler, dict(db=db, api=api, hive=hive))
 ]
 
 _streaming = [
     (r'/streaming', streaming.streaming.IndexHandler),
-    (r'/websocket', streaming.streaming.StreamingHandler,
-      dict(db=db,buffers={"track":track_buffer, "view":view_buffer})
-    )
+    (r'/websocket', streaming.streaming.StreamingHandler, dict(db=db,buffers=buffers))
 ]
 
 admin_reporting = [
     (r'/admin/streaming',admin.streaming.IndexHandler),
-    (r'/admin/websocket', admin.streaming.AdminStreamingHandler,
-      dict(db=db,buffers={"track":track_buffer, "view":view_buffer})
-    ),
+    (r'/admin/websocket', admin.streaming.AdminStreamingHandler, dict(db=db,buffers=buffers)),
     (r'/admin/viewable.*',admin.reporting.ViewabilityHandler, dict(db=db,api=api,hive=hive)),
     (r'/admin/target_list.*',admin.reporting.TargetListHandler, dict(hive=hive)),
     (r'/admin/intraweek.*',admin.scripts.IntraWeekHandler, dict(db=db)),
@@ -120,9 +118,8 @@ admin_reporting = [
     (r'/admin/segment/reporting/?',admin.reporting.SegmentReportingHandler, dict(hive=hive)),   
     (r'/admin/segment/scrubbed/?',admin.scripts.ProfileHandler, dict(bidder=bidder)),  
     (r'/admin/segment/scrubbed/(.*?)',admin.scripts.ProfileHandler, dict(bidder=bidder)),
-    (r'/admin/analysis/pixel/', rbox_pixel.RockerboxPixelHandler, dict(db=db, api=api, hive=hive)),
-    (r'/admin/analysis/pixel/(.*)', rbox_pixel.PixelAdvertiserHandler, dict(db=db, api=api, hive=hive)),
-    (r'/admin/imps/reporting', admin.reporting.ImpsReportingHandler, dict(db=db, api=api, hive=hive))
+    (r'/admin/imps/reporting', admin.reporting.ImpsReportingHandler, dict(db=db, api=api, hive=hive)),
+    (r'/admin/pixel/reporting/?', reporting.PixelAdvertiserHandler, dict(db=db, api=api, hive=hive))
 ]
 
 reporting = [
