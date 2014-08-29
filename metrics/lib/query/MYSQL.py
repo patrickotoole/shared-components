@@ -135,3 +135,11 @@ WHERE
 ORDER BY 
     1 asc;
 """
+
+SEGMENTS_LIST = '''
+SELECT 
+    external_advertiser_id,
+    segment_name,
+    external_segment_id 
+FROM advertiser_segment INNER JOIN advertiser using (external_advertiser_id)
+'''

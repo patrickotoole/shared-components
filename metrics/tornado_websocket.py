@@ -10,8 +10,7 @@ from twisted.internet import reactor, protocol, defer, threads
 from twisted.protocols import basic
 from tornado.options import define, options, parse_command_line
 
-from handlers import streaming, reporting, user, analysis, index, rbox_pixel
-
+from handlers import streaming, reporting, user, index, rbox_pixel
 
 import handlers.admin as admin
 from handlers.adminreport import AdminReportHandler
@@ -95,7 +94,8 @@ admin_scripts = [
     (r'/admin/advertiser.*',admin.scripts.AdvertiserHandler, dict(db=db,api=api)),
     (r'/admin/money.*',admin.scripts.MoneyHandler, dict(db=db,api=api)),
     (r'/admin/batch_request[^s]*', admin.scripts.BatchRequestHandler, dict(db=db, api=api, hive=hive)),
-    (r'/admin/batch_requests.*', admin.scripts.BatchRequestsHandler, dict(db=db, api=api, hive=hive))
+    (r'/admin/batch_requests.*', admin.scripts.BatchRequestsHandler, dict(db=db, api=api, hive=hive)),
+    (r'/admin/imps/', admin.scripts.ImpsHandler, dict(db=db, api=api, hive=hive))
 ]
 
 _streaming = [
@@ -122,7 +122,7 @@ admin_reporting = [
     (r'/admin/segment/scrubbed/(.*?)',admin.scripts.ProfileHandler, dict(bidder=bidder)),
     (r'/admin/analysis/pixel/', rbox_pixel.RockerboxPixelHandler, dict(db=db, api=api, hive=hive)),
     (r'/admin/analysis/pixel/(.*)', rbox_pixel.PixelAdvertiserHandler, dict(db=db, api=api, hive=hive)),
-    (r'/admin/analysis*', analysis.AnalysisHandler, dict(db=db, api=api, hive=hive))
+    (r'/admin/imps/reporting', admin.reporting.ImpsReportingHandler, dict(db=db, api=api, hive=hive))
 ]
 
 reporting = [
