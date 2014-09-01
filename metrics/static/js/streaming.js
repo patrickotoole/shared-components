@@ -3,6 +3,7 @@ var socketWrapper = function(params,on_init) {
   this.id = Math.round(Math.random() * 10000000);
 
   this.createSocket = function(params){
+    // should be window.location.host
     this.socket = new WebSocket("ws://portal.getrockerbox.com/websocket?id=" + this.id);
 
     this.socket.onopen = function() {
@@ -315,8 +316,10 @@ socket.onMessage = function(x){
       var campaignBucket = typeof buckets[x['result']['campaign_id']] !== "undefined" ? buckets[x['result']['campaign_id']] : "Default campaign";
       x['result']['campaign_bucket'] = campaignBucket;
        
-      x['result']['domain'] = x['result']['domain'].replace("www.", "");
-
+      if(x['result']['domain'] != 0){
+        x['result']['domain'] = x['result']['domain'].replace("www.", "");
+      }
+        
       return x
       
     })
