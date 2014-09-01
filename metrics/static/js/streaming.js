@@ -3,7 +3,7 @@ var socketWrapper = function(params,on_init) {
   this.id = Math.round(Math.random() * 10000000);
 
   this.createSocket = function(params){
-    this.socket = new WebSocket("ws://" + window.location.host + "/websocket?id=" + this.id);
+    this.socket = new WebSocket("ws://portal.getrockerbox.com/websocket?id=" + this.id);
 
     this.socket.onopen = function() {
       self.sendMessage("initialize")
@@ -314,7 +314,11 @@ socket.onMessage = function(x){
       x['position'] = self.tracker
       var campaignBucket = typeof buckets[x['result']['campaign_id']] !== "undefined" ? buckets[x['result']['campaign_id']] : "Default campaign";
       x['result']['campaign_bucket'] = campaignBucket;
+       
+      x['result']['domain'] = x['result']['domain'].replace("www.", "");
+
       return x
+      
     })
     this.dimensions.position.filter(function(x,y){
       return x < self.tracker - THRESHOLD 
@@ -323,7 +327,6 @@ socket.onMessage = function(x){
     this.dimensions.position.filterAll()
     
     this.crs.add(results)
-    // console.log(results);
     dc.redrawAll();
     
   }

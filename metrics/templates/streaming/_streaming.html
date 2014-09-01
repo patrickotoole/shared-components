@@ -200,7 +200,7 @@
                 if($.inArray(d.domain, ["", "0", 0]) != -1){
                     return "Unknown";
                 }
-                return d.domain.replace("www.", "");
+                return d.domain;
             },
             function(d){
                 return formatNumber(d.imps);
