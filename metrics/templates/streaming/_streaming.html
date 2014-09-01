@@ -113,29 +113,27 @@
         return location[0] + ', ' + location[1] + ', ' + location[2];
     }
     
+   // REFRESH BUBBLES
+    function refreshBubbles(){
+        mapGraph.bubbles(
+            dataWrapper.aggregateDimensions.latlong_location_data.top(Infinity),
+            {
+                fillOpacity: 1,
+                borderWidth: 1,
+                popupTemplate: function(geography, data) { //this function should just return a string
+                return '<div class="tooltip"><div class="tooltip-content">' + formatLocation(data.location) + '<span id="tooltip-imps" class="tooltip-values">' + data.imps + '</span><span id="tooltip-uniques" class="tooltip-values">' + data.uniques + '</span></div></div>';
+                },
+                highlightOnHover: false
+            }
+        );
+    }
     
     // GET USER DATA
     var getUserData = $.getJSON("/api?deleted=0&active=1&table=campaign_bucket&external_advertiser_id=" + extUserID, function(e){
         $.each(e, function(index, bucket){
             buckets[bucket.campaign_id] = bucket.bucket_name;
         });
-
-        
-        // REFRESH BUBBLES
-        function refreshBubbles(){
-            mapGraph.bubbles(
-                dataWrapper.aggregateDimensions.latlong_location_data.top(Infinity),
-                {
-                    fillOpacity: 1,
-                    borderWidth: 1,
-                    popupTemplate: function(geography, data) { //this function should just return a string
-                    return '<div class="tooltip"><div class="tooltip-content">' + formatLocation(data.location) + '<span id="tooltip-imps" class="tooltip-values">' + data.imps + '</span><span id="tooltip-uniques" class="tooltip-values">' + data.uniques + '</span></div></div>';
-                    },
-                    highlightOnHover: false
-                }
-            );
-        }
-       
+      
         // GENERATE IMPRESSIONS COUNTER
         impsBox = dc.customDataBox('#overall-box #imps-box')
         .group(dataWrapper.groups.imps_data)
@@ -200,7 +198,7 @@
                 if($.inArray(d.domain, ["", "0", 0]) != -1){
                     return "Unknown";
                 }
-                return d.domain.replace("www.", "");
+                return d.domain;
             },
             function(d){
                 return formatNumber(d.imps);
