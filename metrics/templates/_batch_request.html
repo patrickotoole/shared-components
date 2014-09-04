@@ -36,7 +36,48 @@ table.form{
    padding-top:10px;
    margin-right: 40px;
 }
+
+#hive_query{
+   width: 400px;
+   height: 200px;
+}
+
+#comment{
+   width: 400px;
+   height: 200px;
+}
+
+#owner{
+   width: 200px;
+}
 </style>
+
+<script>
+$(document).ready( function() {
+  $("#segment").prop("disabled", false);
+  $("#hive_query").keyup( function() {
+      if(!this.value) {
+          $("#segment").prop("disabled", false);
+      }
+      else{
+          $("#segment").prop("disabled", true);
+      }
+  });
+
+  $("#segment").change( function() {
+      if (!this.value){
+          $("#hive_query").prop("disabled", false);
+      }
+      else {
+          $("#hive_query").prop("disabled", true);
+      }
+  });
+
+  $("#segment").prepend("<option value='' selected='selected'></option>");
+});
+
+</script>
+
 <div class="content">
 <div class="header">
   <h1>Batch Request Form</h1>
@@ -54,11 +95,20 @@ table.form{
 <table class="form">
 <tr>
   <td>Segment: </td>
-  <td><select name="segment">
+  <td><select id="segment" name="segment">
     {% for segment in segments %}
     <option value="{{segment}}">{{segment}}</option>
     {% end %}
   </select> </td>
+</tr>
+
+<tr>
+  <td colspan="2" align="center"><b>OR</b></td>
+</tr>
+
+<tr>
+  <td>Hive Query: </td>
+  <td><textarea id="hive_query" name="hive_query"></textarea></td>
 </tr>
 
 <tr>
@@ -72,16 +122,28 @@ table.form{
 </tr>
 
 <tr>
-  <td>Target Segment (optional): </td>
+  <td>Target Segment: </td>
   <td><input type="text" name="target_segment"></input></td>
 </tr>
+
 <tr>
   <td>Active: </td>
-  <td><select name="active">
+  <td>
+    <select name="active">
       <option value="1">Yes</option>
       <option value="0">No</option>
-      </select>
+    </select>
   </td>
+</tr>
+
+<tr>
+  <td>Comment: </td>
+  <td><textarea id="comment" type="text" name="comment" placeholder="Describe in plain english what this batch request should be doing. Example: Targets all users who have been to cnn.com in the past 20 minutes. Expires after 30 minutes."></textarea></td>
+</tr>
+
+<tr>
+  <td>Owner (email): </td>
+  <td><input id="owner" type="text" name="owner" placeholder="you@rockerbox.com"></input></td>
 </tr>
 
 <tr>
