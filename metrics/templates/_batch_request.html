@@ -54,25 +54,6 @@ table.form{
 
 <script>
 $(document).ready( function() {
-  $("#segment").prop("disabled", false);
-  $("#hive_query").keyup( function() {
-      if(!this.value) {
-          $("#segment").prop("disabled", false);
-      }
-      else{
-          $("#segment").prop("disabled", true);
-      }
-  });
-
-  $("#segment").change( function() {
-      if (!this.value){
-          $("#hive_query").prop("disabled", false);
-      }
-      else {
-          $("#hive_query").prop("disabled", true);
-      }
-  });
-
   $("select[name=request_type]").change(function() {
      if (this.value == "domain_list") {
          $("label[for=target_window], input[name=target_window]").prop("disabled", false).prop("hidden", false);
@@ -85,14 +66,36 @@ $(document).ready( function() {
      }
 
      if (this.value == "hive_query") {
-         $("label[for=hive_query], textarea[name=hive_query]").prop("disabled", true).prop("hidden", false);
+         $("label[for=hive_query], textarea[name=hive_query]").prop("disabled", false).prop("hidden", false);
+         $("label[for=custom_expiration], input[name=custom_expiration]").prop("disabled", false).prop("hidden", false);
+         $("label[for=custom_target_segment], input[name=custom_target_segment]").prop("disabled", false).prop("hidden", false);
      }
 
      else {
          $("label[for=hive_query], textarea[name=hive_query]").prop("disabled", true).prop("hidden", true);
+         $("label[for=custom_expiration], input[name=custom_expiration]").prop("disabled", true).prop("hidden", true);
+         $("label[for=custom_target_segment], input[name=custom_target_segment]").prop("disabled", true).prop("hidden", true);
      }
 
   }).change();
+
+  $("#custom_expiration").on("click", function() {
+      if ($("input[name=custom_expiration]").is(":checked")) {
+          $("input[name=expiration]").prop("disabled", true);
+      }
+      else {
+          $("input[name=expiration]").prop("disabled", false);
+      }
+  });
+
+  $("#custom_target_segment").on("click", function() {
+      if ($("input[name=custom_target_segment]").is(":checked")) {
+          $("input[name=target_segment]").prop("disabled", true);
+      }
+      else {
+          $("input[name=target_segment]").prop("disabled", false);
+      }
+  });
 
   $("#segment").prepend("<option value='' selected='selected'></option>");
 });
@@ -135,22 +138,26 @@ $(document).ready( function() {
 
 <tr>
   <td><label for="hive_query">Hive Query</label></td>
-  <td><textarea id="hive_query" name="hive_query"></textarea></td>
-</tr>
-
-<tr>
-<td><label for="expiration">Expiration (minutes)</label></td>
-<td><input type="text" name="expiration"></input></td>
+  <td colspan="3"><textarea id="hive_query" name="hive_query"></textarea></td>
 </tr>
 
 <tr>
   <td><label for="target_window">Target Window (minutes)</label></td>
-  <td><input type="text" name="target_window"></input></td>
+  <td colspan="3"><input type="text" name="target_window"></input></td>
+</tr>
+
+<tr>
+  <td><label for="expiration">Expiration (minutes)</label></td>
+  <td><input type="text" name="expiration"></input></td>
+  <td><input type="checkbox" name="custom_expiration" id="custom_expiration"></input></td>
+  <td><label for="custom_expiration">Specify the expiration(s) within my query</label></td>
 </tr>
 
 <tr>
   <td><label for="target_segment">Target Segment</label></td>
   <td><input type="text" name="target_segment"></input></td>
+  <td><input type="checkbox" name="custom_target_segment" id="custom_target_segment"></input></td>
+  <td><label for="custom_target_segment">Specify the target segment(s) within my query</label></td>
 </tr>
 
 <tr>
@@ -165,7 +172,7 @@ $(document).ready( function() {
 
 <tr>
   <td><label for="comment">Comment</label></td>
-  <td><textarea id="comment" type="text" name="comment" placeholder="Describe in plain english what this batch request should be doing. Example: Targets all users who have been to cnn.com in the past 20 minutes. Expires after 30 minutes."></textarea></td>
+  <td colspan="3"><textarea id="comment" type="text" name="comment" placeholder="Describe in plain english what this batch request should be doing. Example: Targets all users who have been to cnn.com in the past 20 minutes. Expires after 30 minutes."></textarea></td>
 </tr>
 
 <tr>

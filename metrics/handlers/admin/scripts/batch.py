@@ -52,6 +52,7 @@ class BatchRequestHandler(BatchRequestBase):
         query = query.replace("\n", " ")
         query = query.replace("\r", " ")
         query = query.replace(";","")
+        query = query.replace("'", "\\'")
         
         return query
 
@@ -64,8 +65,8 @@ class BatchRequestHandler(BatchRequestBase):
     def post(self):
         # Universal parameters
         request_type = self.get_argument("request_type")
-        expiration = self.get_argument("expiration")
-        target_segment = self.get_argument("target_segment")
+        expiration = self.get_argument("expiration", False)
+        target_segment = self.get_argument("target_segment", False)
         active = self.get_argument("active")
         owner = self.get_argument("owner")
         comment = self.get_argument("comment")
@@ -76,6 +77,8 @@ class BatchRequestHandler(BatchRequestBase):
 
         # Parameters specific to hive_query
         hive_query = self.get_argument("hive_query", False)
+        custom_target_segment = self.get_argument("custom_target_segment", False)
+        custom_expiration = self.get_argument("custom_expiration", False)
 
         if not request_type:
             raise StandardError("Missing request type parameter")
@@ -86,8 +89,13 @@ class BatchRequestHandler(BatchRequestBase):
         if segment:
             query = "INSERT INTO batch_request (type, content, owner, target_segment, expiration, active, comment) VALUES ('{}','{}', '{}', '{}', {}, {}, '{}');".format('domain_list', '#'.join([segment, target_window]), owner, target_segment, expiration, active, comment)
         else:
+            if custom_target_segment:
+                target_segment = "NULL"
+            if custom_expiration:
+                expiration = "NULL"
             hive_query = self.clean_query(hive_query)
-            query = "INSERT INTO batch_request (type, content, owner, target_segment, expiration, active, comment) VALUES ('{}','{}', '{}', '{}', {}, {}, '{}');".format('hive_query', hive_query, owner, target_segment, expiration, active, comment)
+            print hive_query
+            query = "INSERT INTO batch_request (type, content, owner, target_segment, expiration, active, comment) VALUES ('{}','{}', '{}', '{}', {}, {}, '{}');".format('hive_query', hive_query, owner, target_segment, expiration, active, comment)                
         
         self.db.execute(query)
         self.db.commit()
