@@ -74,3 +74,17 @@ FROM agg_approved_auctions
 WHERE {} 
 GROUP BY {}
 '''
+
+ADVERTISER_VIEWABLE = """
+SELECT 
+    advertiser,
+    campaign,
+    sum(num_served) num_served,
+    sum(num_loaded) num_loaded,
+    sum(num_visible) num_visible
+FROM advertiser_visibility
+WHERE %(where)s
+GROUP BY 
+    advertiser,
+    campaign
+"""

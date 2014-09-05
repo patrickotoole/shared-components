@@ -77,13 +77,15 @@ class Hive(object):
         resp = requests.get(self.marathon_endpoint, headers={"Accept": "application/json"})
         instances = json.loads(resp.content)
 
-        shark_servers = [ i for i in instances if i["id"] == "shark_server" ]
+        shark_servers = [ i for i in instances if i["id"] == "shark_server_debug" ]
         server = shark_servers[0]["instances"][0]
         return server
+       
 
     def connect(self):
         try:
             server = self.marathon_instance()
+            print server
             hive = CustomHiveClient(server=server["host"],port=server["ports"][0])
             return hive
         except:

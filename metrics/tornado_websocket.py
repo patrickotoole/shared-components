@@ -93,6 +93,7 @@ admin_scripts = [
     (r'/api.*', admin.scripts.APIHandler, dict(db=db)),
     (r'/admin/pixel/?',admin.scripts.PixelHandler, dict(db=db,api=api,bidder=bidder)),
     (r'/admin/targeting.*',admin.scripts.TargetingHandler, dict(redis=_redis,api=api,db=db)),
+    (r'/admin/advertiser/viewable/?',admin.reporting.AdvertiserViewableHandler, dict(db=db,hive=hive)), 
     (r'/admin/advertiser/?',admin.scripts.AdvertiserHandler, dict(db=db,api=api)),
     (r'/admin/money.*',admin.scripts.MoneyHandler, dict(db=db,api=api)),
     (r'/admin/batch_request[^s]*', admin.scripts.BatchRequestHandler, dict(db=db, api=api, hive=hive)),

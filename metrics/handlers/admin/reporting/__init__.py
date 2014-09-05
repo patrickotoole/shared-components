@@ -3,3 +3,4 @@ from visibility import ViewabilityHandler, ViewabilityBase
 from segment import SegmentReportingHandler
 from imps import ImpsReportingHandler
 from advertiser_domain import AdvertiserReportingHandler
+from advertiser_viewable import AdvertiserViewableHandler
