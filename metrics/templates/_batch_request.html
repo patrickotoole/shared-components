@@ -73,6 +73,27 @@ $(document).ready( function() {
       }
   });
 
+  $("select[name=request_type]").change(function() {
+     if (this.value == "domain_list") {
+         $("label[for=target_window], input[name=target_window]").prop("disabled", false).prop("hidden", false);
+	 $("label[for=segment], select[name=segment]").prop("disabled", false).prop("hidden", false);
+     }
+
+     else {
+         $("label[for=target_window], input[name=target_window]").prop("disabled", true).prop("hidden", true);
+	 $("label[for=segment], select[name=segment]").prop("disabled", true).prop("hidden", true);
+     }
+
+     if (this.value == "hive_query") {
+         $("label[for=hive_query], textarea[name=hive_query]").prop("disabled", true).prop("hidden", false);
+     }
+
+     else {
+         $("label[for=hive_query], textarea[name=hive_query]").prop("disabled", true).prop("hidden", true);
+     }
+
+  }).change();
+
   $("#segment").prepend("<option value='' selected='selected'></option>");
 });
 
@@ -94,7 +115,17 @@ $(document).ready( function() {
 <form action="" method="post">
 <table class="form">
 <tr>
-  <td>Segment: </td>
+  <td><label for="request_type">Type</label></td>
+  <td><select id="request_type" name="request_type">
+      {% for request_type in request_types %}
+      <option value="{{request_type}}">{{request_type}}</option>
+      {% end %}
+      </select>
+  </td>
+</tr>
+
+<tr>
+  <td><label for="segment">Segment</label></td>
   <td><select id="segment" name="segment">
     {% for segment in segments %}
     <option value="{{segment}}">{{segment}}</option>
@@ -103,31 +134,27 @@ $(document).ready( function() {
 </tr>
 
 <tr>
-  <td colspan="2" align="center"><b>OR</b></td>
-</tr>
-
-<tr>
-  <td>Hive Query: </td>
+  <td><label for="hive_query">Hive Query</label></td>
   <td><textarea id="hive_query" name="hive_query"></textarea></td>
 </tr>
 
 <tr>
-<td>Expiration (minutes): </td>
+<td><label for="expiration">Expiration (minutes)</label></td>
 <td><input type="text" name="expiration"></input></td>
 </tr>
 
 <tr>
-  <td>Target Window (minutes): </td>
+  <td><label for="target_window">Target Window (minutes)</label></td>
   <td><input type="text" name="target_window"></input></td>
 </tr>
 
 <tr>
-  <td>Target Segment: </td>
+  <td><label for="target_segment">Target Segment</label></td>
   <td><input type="text" name="target_segment"></input></td>
 </tr>
 
 <tr>
-  <td>Active: </td>
+  <td><label for="active">Active</label></td>
   <td>
     <select name="active">
       <option value="1">Yes</option>
@@ -137,12 +164,12 @@ $(document).ready( function() {
 </tr>
 
 <tr>
-  <td>Comment: </td>
+  <td><label for="comment">Comment</label></td>
   <td><textarea id="comment" type="text" name="comment" placeholder="Describe in plain english what this batch request should be doing. Example: Targets all users who have been to cnn.com in the past 20 minutes. Expires after 30 minutes."></textarea></td>
 </tr>
 
 <tr>
-  <td>Owner (email): </td>
+  <td><label for="owner">Owner (email)</label></td>
   <td><input id="owner" type="text" name="owner" placeholder="you@rockerbox.com"></input></td>
 </tr>
 

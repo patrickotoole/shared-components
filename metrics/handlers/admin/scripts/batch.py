@@ -38,34 +38,56 @@ class BatchRequestsHandler(BatchRequestBase):
         else:
             requests = self.db.select_dataframe("select * from batch_request")
             self.render("../templates/_batch_requests.html", data=requests.to_html(classes=["dataframe"]))
-        
-        
+
 class BatchRequestHandler(BatchRequestBase):
+    def clean_query(self, query):
+        '''Given a Hive query, sanitizes it for use in batch processing'''
+        first_char = query[0]
+        last_char = query[-1]
+
+        if first_char in ['"', "'"] and last_char in ['"', "'"]:
+            query = query[1:]
+            query = query[:-1]
+        
+        query = query.replace("\n", " ")
+        query = query.replace("\r", " ")
+        query = query.replace(";","")
+        
+        return query
+
     def get(self):
         segments = self.pull_segments()
-        
-        self.render("../templates/_batch_request.html", segments=segments)
+        request_types = ["domain_list", "hive_query"]
+
+        self.render("../templates/_batch_request.html", segments=segments, request_types=request_types)
 
     def post(self):
-        segment = self.get_argument("segment", False)
-        hive_query = self.get_argument("hive_query", False)
+        # Universal parameters
+        request_type = self.get_argument("request_type")
         expiration = self.get_argument("expiration")
         target_segment = self.get_argument("target_segment")
-        target_window = self.get_argument("target_window")
         active = self.get_argument("active")
         owner = self.get_argument("owner")
         comment = self.get_argument("comment")
 
-        if (segment and hive_query) or not (segment or hive_query):
-            raise StandardError("Missing an argument")
+        # Parameters specific to domain_list
+        segment = self.get_argument("segment", False)
+        target_window = self.get_argument("target_window", False)
+
+        # Parameters specific to hive_query
+        hive_query = self.get_argument("hive_query", False)
+
+        if not request_type:
+            raise StandardError("Missing request type parameter")
+
+        if segment and not target_window:
+            raise StandardError("Missing target_window argument")
 
         if segment:
-            # I don't think we need this any more, but not positive, so leaving
-            # it for now
-            #log = self.db.select_dataframe("SELECT DISTINCT log FROM domain_list WHERE segment='{}'".format(segment))['log'].tolist()[0]
-            query = "INSERT INTO batch_request (type, content, owner, target_segment, target_window, expiration, active, comment) VALUES ('{}','{}', '{}', '{}', {}, {}, {}, '{}');".format('domain_list', segment, owner, target_segment, target_window, expiration, active, comment)
+            query = "INSERT INTO batch_request (type, content, owner, target_segment, expiration, active, comment) VALUES ('{}','{}', '{}', '{}', {}, {}, '{}');".format('domain_list', '#'.join([segment, target_window]), owner, target_segment, expiration, active, comment)
         else:
-            query = "INSERT INTO batch_request (type, content, owner, target_segment, target_window, expiration, active, comment) VALUES ('{}','{}', '{}', '{}', {}, {}, {}, '{}');".format('hive_query', hive_query, owner, target_segment, target_window, expiration, active, comment)
+            hive_query = self.clean_query(hive_query)
+            query = "INSERT INTO batch_request (type, content, owner, target_segment, expiration, active, comment) VALUES ('{}','{}', '{}', '{}', {}, {}, '{}');".format('hive_query', hive_query, owner, target_segment, expiration, active, comment)
         
         self.db.execute(query)
         self.db.commit()
