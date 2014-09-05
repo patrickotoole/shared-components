@@ -80,6 +80,7 @@ def shutdown():
     stop_loop()
 
 index = [
+    (r'/admin/?', index.IndexHandler),
     (r'/admin/index', index.IndexHandler)
 ]
 
@@ -93,7 +94,7 @@ admin_scripts = [
     (r'/api.*', admin.scripts.APIHandler, dict(db=db)),
     (r'/admin/pixel/?',admin.scripts.PixelHandler, dict(db=db,api=api,bidder=bidder)),
     (r'/admin/targeting.*',admin.scripts.TargetingHandler, dict(redis=_redis,api=api,db=db)),
-    (r'/admin/advertiser/viewable/?',admin.reporting.AdvertiserViewableHandler, dict(db=db,hive=hive)), 
+     
     (r'/admin/advertiser/?',admin.scripts.AdvertiserHandler, dict(db=db,api=api)),
     (r'/admin/money.*',admin.scripts.MoneyHandler, dict(db=db,api=api)),
     (r'/admin/batch_request[^s]*', admin.scripts.BatchRequestHandler, dict(db=db, api=api, hive=hive)),
@@ -110,18 +111,22 @@ admin_reporting = [
     (r'/admin/streaming',admin.streaming.IndexHandler),
     (r'/admin/websocket', admin.streaming.AdminStreamingHandler, dict(db=db,buffers=buffers)),
     (r'/admin/viewable.*',admin.reporting.ViewabilityHandler, dict(db=db,api=api,hive=hive)),
-    (r'/admin/target_list.*',admin.reporting.TargetListHandler, dict(hive=hive)),
+    (r'/admin/advertiser/target_list.*',admin.reporting.TargetListHandler, dict(hive=hive)),
+    (r'/admin/advertiser/pixel/reporting/?', reporting.PixelAdvertiserHandler, dict(db=db, api=api, hive=hive)),
+    (r'/admin/advertiser/viewable/?',admin.reporting.AdvertiserViewableHandler, dict(db=db,hive=hive)),
+    (r'/admin/advertiser/reporting/?',admin.reporting.AdvertiserReportingHandler, dict(db=db)),     
+
     (r'/admin/intraweek.*',admin.scripts.IntraWeekHandler, dict(db=db)),
     (r'/admin/report/(.*?)/.*', AdminReportHandler),
     (r'/admin/reportinglog/(.*?)', ReportingLogHandler),
     (r'/admin/event_log',admin.scripts.EventLogHandler, dict(db=db,api=api)),
     (r'/admin/event_log/(.*?)',admin.scripts.EventLogHandler, dict(db=db,api=api)),
-    (r'/admin/advertiser/reporting/?',admin.reporting.AdvertiserReportingHandler, dict(db=db)),    
+    
     (r'/admin/segment/reporting/?',admin.reporting.SegmentReportingHandler, dict(hive=hive)),   
     (r'/admin/segment/scrubbed/?',admin.scripts.ProfileHandler, dict(bidder=bidder)),  
     (r'/admin/segment/scrubbed/(.*?)',admin.scripts.ProfileHandler, dict(bidder=bidder)),
-    (r'/admin/imps/reporting', admin.reporting.ImpsReportingHandler, dict(db=db, api=api, hive=hive)),
-    (r'/admin/pixel/reporting/?', reporting.PixelAdvertiserHandler, dict(db=db, api=api, hive=hive))
+    (r'/admin/imps/reporting', admin.reporting.ImpsReportingHandler, dict(db=db, api=api, hive=hive))
+    
 ]
 
 reporting = [
