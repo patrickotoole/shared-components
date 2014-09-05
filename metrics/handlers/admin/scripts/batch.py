@@ -56,6 +56,11 @@ class BatchRequestHandler(BatchRequestBase):
         
         return query
 
+    def clean_target_segment(self, target_segment):
+        if ':' not in target_segment:
+            target_segment = target_segment + ":0"
+        return target_segment
+
     def get(self):
         segments = self.pull_segments()
         request_types = ["domain_list", "hive_query"]
@@ -77,21 +82,24 @@ class BatchRequestHandler(BatchRequestBase):
 
         # Parameters specific to hive_query
         hive_query = self.get_argument("hive_query", False)
-        custom_target_segment = self.get_argument("custom_target_segment", False)
-        custom_expiration = self.get_argument("custom_expiration", False)
+        custom_params = self.get_argument("custom_params", False)
 
+        # If the user has specified a custom target segment, but hasn't added a
+        # rhs parameter (after the colon), add a ':0' to the end of the segment
+        if not custom_params:
+            target_segment = self.clean_target_segment(target_segment)
+
+        # Check that all required parameters are passed
         if not request_type:
             raise StandardError("Missing request type parameter")
-
         if segment and not target_window:
             raise StandardError("Missing target_window argument")
 
         if segment:
             query = "INSERT INTO batch_request (type, content, owner, target_segment, expiration, active, comment) VALUES ('{}','{}', '{}', '{}', {}, {}, '{}');".format('domain_list', '#'.join([segment, target_window]), owner, target_segment, expiration, active, comment)
         else:
-            if custom_target_segment:
+            if custom_params:
                 target_segment = "NULL"
-            if custom_expiration:
                 expiration = "NULL"
             hive_query = self.clean_query(hive_query)
             print hive_query

@@ -67,35 +67,26 @@ $(document).ready( function() {
 
      if (this.value == "hive_query") {
          $("label[for=hive_query], textarea[name=hive_query]").prop("disabled", false).prop("hidden", false);
-         $("label[for=custom_expiration], input[name=custom_expiration]").prop("disabled", false).prop("hidden", false);
-         $("label[for=custom_target_segment], input[name=custom_target_segment]").prop("disabled", false).prop("hidden", false);
+         $("label[for=custom_params], input[name=custom_params]").prop("disabled", false).prop("hidden", false);
      }
 
      else {
          $("label[for=hive_query], textarea[name=hive_query]").prop("disabled", true).prop("hidden", true);
-         $("label[for=custom_expiration], input[name=custom_expiration]").prop("disabled", true).prop("hidden", true);
-         $("label[for=custom_target_segment], input[name=custom_target_segment]").prop("disabled", true).prop("hidden", true);
+         $("label[for=custom_params], input[name=custom_params]").prop("disabled", true).prop("hidden", true);
      }
 
   }).change();
 
-  $("#custom_expiration").on("click", function() {
-      if ($("input[name=custom_expiration]").is(":checked")) {
+  $("#custom_params").on("click", function() {
+      if ($("input[name=custom_params]").is(":checked")) {
           $("input[name=expiration]").prop("disabled", true);
-      }
-      else {
-          $("input[name=expiration]").prop("disabled", false);
-      }
-  });
-
-  $("#custom_target_segment").on("click", function() {
-      if ($("input[name=custom_target_segment]").is(":checked")) {
           $("input[name=target_segment]").prop("disabled", true);
       }
       else {
+          $("input[name=expiration]").prop("disabled", false);
           $("input[name=target_segment]").prop("disabled", false);
       }
-  });
+  }).triggerHandler("click");;
 
   $("#segment").prepend("<option value='' selected='selected'></option>");
 });
@@ -149,15 +140,13 @@ $(document).ready( function() {
 <tr>
   <td><label for="expiration">Expiration (minutes)</label></td>
   <td><input type="text" name="expiration"></input></td>
-  <td><input type="checkbox" name="custom_expiration" id="custom_expiration"></input></td>
-  <td><label for="custom_expiration">Specify the expiration(s) within my query</label></td>
+  <td><input type="checkbox" name="custom_params" id="custom_params"></input></td>
+  <td><label for="custom_params">Specify the expiration(s) and target_segment(s) within my query</label></td>
 </tr>
 
 <tr>
   <td><label for="target_segment">Target Segment</label></td>
   <td><input type="text" name="target_segment"></input></td>
-  <td><input type="checkbox" name="custom_target_segment" id="custom_target_segment"></input></td>
-  <td><label for="custom_target_segment">Specify the target segment(s) within my query</label></td>
 </tr>
 
 <tr>
