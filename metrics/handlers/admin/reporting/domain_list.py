@@ -9,7 +9,7 @@ from lib.helpers import *
 from lib.hive.helpers import run_hive_session_deferred, run_hive_deferred
 from lib.query.HIVE import AGG_APPROVED_AUCTIONS
 
-class TargetListHandler(tornado.web.RequestHandler):
+class DomainListHandler(tornado.web.RequestHandler):
     def initialize(self, db=None, api=None, hive=None):
         self.db = db 
         self.api = api
@@ -66,7 +66,8 @@ class TargetListHandler(tornado.web.RequestHandler):
         if not _until:
             _until = date
 
-        w = "date>='%s' and date <='%s'" % (_from, _until)
+        #w = "date>='%s' and date <='%s'" % (_from, _until)
+        w = "date>='%s' " % (_from) 
 
         default_group = "type,domain"
 

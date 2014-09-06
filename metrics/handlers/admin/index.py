@@ -11,12 +11,13 @@ class IndexHandler(tornado.web.RequestHandler):
             ("/admin/advertiser", "Advertiser Creator"),
             ("/admin/advertiser/pixel/reporting", "On-site Analysis (Rockerbox vs. all users)"),
             ("/admin/advertiser/viewable", "Advertiser Viewability"),
-            ("/admin/advertiser/target_list", "Advertiser Domain List Reporting (Total Available Impressions)"), 
+            ("/admin/advertiser/domain_list/reporting", "Advertiser Domain List Reporting (Total Available Impressions)"), 
             ("/admin/advertiser/reporting", "Advertiser Quick Stats Reporting"),  
         ]
+
         
         internal_links = [
-            ("/admin/targeting", "Targeting Tool"),
+            ("/admin/advertiser/domain_list/", "Targeting Tool"),
             ("/admin/intraweek", "Intraweek Tool"),
             ("/admin/batch_request", "Batch Segment Request"),
             ("/admin/segment/scrubbed", "Scrubbed Segments"), 
@@ -29,7 +30,7 @@ class IndexHandler(tornado.web.RequestHandler):
         ]
         
         self.render(
-            '../templates/index.html', 
+            '../templates/admin/index.html', 
             production_links=production_links, 
             internal_links=internal_links,
             advertiser_links=advertiser_links
