@@ -13,11 +13,11 @@ my_db = lnk.dbs.vluu_local
 def get_date_from_yearweek(yearweek):
   sunday = '%d Sunday' % yearweek
   format = r'%X%V %W'
-  date_info = my_db.select("select STR_TO_DATE('%s', '%s')" % (sunday, format)).as_dataframe()
+  date_info = my_db.select_dataframe("select STR_TO_DATE('%s', '%s')" % (sunday, format))
   return str(date_info.ix[0][0])
 
 def get_pixel_name(pixel_id):
-  pixel_info = my_db.select('select pixel_display_name from advertiser_pixel where pixel_id = (%d)' % pixel_id).as_dataframe()
+  pixel_info = my_db.select_dataframe('select pixel_display_name from advertiser_pixel where pixel_id = (%d)' % pixel_id)
   return pixel_info.ix[0][0]
 
 def property_checker_twoargs(func):
@@ -42,9 +42,9 @@ def property_checker_onearg(func):
 # class Intraweek(object):
 class Intraweek:
     def __init__(self,db_wrapper):
-        self.my_db = db_wrapper 
+        self.my_db = db_wrapper
         # assign db_wrapper to my_db
-    
+
     def pull_1(self):
         ## Anytime we access the database, have a wrapper function for the request
         ## use the mysql wrapper here
@@ -53,15 +53,15 @@ class Intraweek:
         # self.data = db.select()
         # return self.data
         pass
-    
+
     def get_date_from_yearweek(self, yearweek):
         sunday = '%d Sunday' % yearweek
         format = r'%X%V %W'
-        date_info = my_db.select("select STR_TO_DATE('%s', '%s')" % (sunday, format)).as_dataframe()
+        date_info = my_db.select_dataframe("select STR_TO_DATE('%s', '%s')" % (sunday, format))
         return str(date_info.ix[0][0])
 
     def get_pixel_name(self, pixel_id):
-        pixel_info = my_db.select('select pixel_display_name from advertiser_pixel where pixel_id = (%d)' % pixel_id).as_dataframe()
+        pixel_info = my_db.select_dataframe('select pixel_display_name from advertiser_pixel where pixel_id = (%d)' % pixel_id)
         return pixel_info.ix[0][0]
 
     def property_checker_twoargs(func):
@@ -93,7 +93,7 @@ class Intraweek:
     @property_checker_onearg
     def get_historical_charge(self, advertiser_id):
       # TODO - need to ensure that the current_week is excluded
-      budget_info = my_db.select('select sum(media_cost*cpm_multiplier) as charged_client from v3_reporting where external_advertiser_id=(%d) and active=1 and deleted=0;' % advertiser_id).as_dataframe()
+      budget_info = my_db.select_dataframe('select sum(media_cost*cpm_multiplier) as charged_client from v3_reporting where external_advertiser_id=(%d) and active=1 and deleted=0;' % advertiser_id)
       return budget_info[0][0]
 
     # get money used so far
@@ -104,7 +104,7 @@ class Intraweek:
 
     # get the "most reasonable-looking budget" -> next budget cap to consider
     def get_budget(self, advertiser_id, money_spent):
-      budget_df = my_db.select('select budget from insertion_order where external_advertiser_id = (%d);' % advertiser_id).as_dataframe()
+      budget_df = my_db.select_dataframe('select budget from insertion_order where external_advertiser_id = (%d);' % advertiser_id)
       cum_budget_df = budget_df.cumsum()
       for idx in range(len(cum_budget_df)):
         current_budget = cum_budget_df['budget'][idx]
@@ -119,31 +119,31 @@ class Intraweek:
     # get days into campaign
     @property_checker_onearg
     def get_days_into_campaign(self, advertiser_id):
-      diff_df = my_db.select('select timestampdiff(DAY,actual_start_date,NOW()) as diff from insertion_order where external_advertiser_id = (%d) and actual_end_date IS NULL;' % advertiser_id).as_dataframe()
+      diff_df = my_db.select_dataframe('select timestampdiff(DAY,actual_start_date,NOW()) as diff from insertion_order where external_advertiser_id = (%d) and actual_end_date IS NULL;' % advertiser_id)
       return diff_df.ix[0][0]
 
     # get current start date
     @property_checker_onearg
     def get_current_start_date(self, advertiser_id):
-      diff_df = my_db.select('select actual_start_date from insertion_order where external_advertiser_id = (%d) and actual_end_date IS NULL;' % advertiser_id).as_dataframe()
+      diff_df = my_db.select_dataframe('select actual_start_date from insertion_order where external_advertiser_id = (%d) and actual_end_date IS NULL;' % advertiser_id)
       return diff_df.ix[0][0]
 
     # get end_date_proposed
     @property_checker_onearg
     def get_end_date_proposed(self, advertiser_id):
-      diff_df = my_db.select('select end_date_proposed from insertion_order where external_advertiser_id = (%d) and actual_end_date IS NULL;' % advertiser_id).as_dataframe()
+      diff_df = my_db.select_dataframe('select end_date_proposed from insertion_order where external_advertiser_id = (%d) and actual_end_date IS NULL;' % advertiser_id)
       return diff_df.ix[0][0]
 
     # get proposed campaign length
     @property_checker_onearg
     def get_proposed_campaign_length(self, advertiser_id):
-      length_df = my_db.select('select timestampdiff(DAY,start_date_proposed, end_date_proposed) as diff from insertion_order where external_advertiser_id = (%d) and actual_end_date IS NULL' % advertiser_id).as_dataframe()
+      length_df = my_db.select_dataframe('select timestampdiff(DAY,start_date_proposed, end_date_proposed) as diff from insertion_order where external_advertiser_id = (%d) and actual_end_date IS NULL' % advertiser_id)
       return length_df.ix[0][0]
 
     # get advertiser name
     @property_checker_onearg
     def get_advertiser_name(self, advertiser_id):
-      advertiser_row = my_db.select('select advertiser_name from advertiser where external_advertiser_id=(%d)' % advertiser_id).as_dataframe()
+      advertiser_row = my_db.select_dataframe('select advertiser_name from advertiser where external_advertiser_id=(%d)' % advertiser_id)
       advertiser_name = advertiser_row.ix[0][0]
       return advertiser_name
 
@@ -157,7 +157,7 @@ class Intraweek:
         return "!!!"
 
     def get_advertiser_info(advertiser_id):
- 
+
         advertiser_name = self.get_advertiser_name(advertiser_id)
         if (advertiser_name == -1):
           return pandas.DataFrame(["Advertiser DNE"])
@@ -171,28 +171,28 @@ class Intraweek:
         dollars_per_day = current_spent / days_into_campaign
         expected_campaign_length = current_budget / dollars_per_day
         proposed_campaign_length = self.get_proposed_campaign_length(advertiser_id)
-        current_start_date = self.get_current_start_date(advertiser_id) 
+        current_start_date = self.get_current_start_date(advertiser_id)
         end_date_proposed = self.get_end_date_proposed(advertiser_id)
 
         map = { 'advertiser': [advertiser_name],
                 'start_date': [current_start_date],
                 'end_date': [end_date_proposed],
-                'current_budget': [current_budget], 
-                'spent': [current_spent], 
-                'remaining': [current_remaining], 
-                # 'days_into_campaign': [days_into_campaign], 
+                'current_budget': [current_budget],
+                'spent': [current_spent],
+                'remaining': [current_remaining],
+                # 'days_into_campaign': [days_into_campaign],
                 'days_left': [int(expected_campaign_length) - days_into_campaign],
-                '$_per_day': [dollars_per_day], 
+                '$_per_day': [dollars_per_day],
                 'monthly_pacing': [30 * dollars_per_day],
                 'expected_length': [expected_campaign_length],
-                'expected_end_date': [DateOffset(days=int(expected_campaign_length)) + current_start_date], 
+                'expected_end_date': [DateOffset(days=int(expected_campaign_length)) + current_start_date],
                  'proposed_end_date_length': [proposed_campaign_length]
                 }
         advertiser_df = DataFrame(map)
         advertiser_df['pacing'] = advertiser_df.apply(determine_pacing, axis=1)
-        return advertiser_df[['advertiser', 
+        return advertiser_df[['advertiser',
                              'start_date',
-                             'end_date', 
+                             'end_date',
                              'proposed_end_date_length',
                              'expected_end_date',
                              'expected_length',
@@ -205,10 +205,10 @@ class Intraweek:
                              'pacing']]
 
     #########################
-  
+
     def update_advertiser_targets(self,advertiser_id):
         # get the cpa target of the advertiser currently
-        cpa_target = my_db.select('select target_cpa from intraweek where external_advertiser_id = (%d)' % advertiser_id).as_dataframe()
+        cpa_target = my_db.select_dataframe('select target_cpa from intraweek where external_advertiser_id = (%d)' % advertiser_id)
         target = cpa_target.ix[0][0]
         if target == None:
           new_target = -1
@@ -241,7 +241,7 @@ class Intraweek:
     #############################
 
     def get_table(self,advertiser_id, target_cpa):
-        
+
         # process arguments
         try:
           num_advertiser=int(advertiser_id)
@@ -262,17 +262,17 @@ class Intraweek:
         self.df_full = self.add_cpm_columns(self.df_full, target_cpa)
         self.df_full = self.adjust_charge_client(self.df_full)
         self.df_full = self.finishing_formats(self.df_full)
-    
+
         return self.df_full
 
     def pull_charges(self, num_advertiser):
-        df_charges = self.my_db.select('select yearweek(date_add(date,interval -4 hour)) as wk_no,sum(imps) as Impressions,sum(clicks) as Clicks,sum(media_cost) as Media_Cost,sum(media_cost*cpm_multiplier) as Charged_Client,cpm_multiplier from v3_reporting where external_advertiser_id =(%d) and active=1 and deleted=0 group by 1 order by 1 asc;' % num_advertiser).as_dataframe()
+        df_charges = self.my_db.select_dataframe('select yearweek(date_add(date,interval -4 hour)) as wk_no,sum(imps) as Impressions,sum(clicks) as Clicks,sum(media_cost) as Media_Cost,sum(media_cost*cpm_multiplier) as Charged_Client,cpm_multiplier from v3_reporting where external_advertiser_id =(%d) and active=1 and deleted=0 group by 1 order by 1 asc;' % num_advertiser)
         df_charges = df_charges.set_index('wk_no')
 
         return df_charges
 
     def fill_historical_cpm(self,df):
-        
+
         # fill in 'charged_client' historical values if cpm_multiplier was null
         # for the most recent week, cpm_multiplier gets overwritten by average in "this_multiplier"
         df_charges = df.copy()
@@ -281,16 +281,16 @@ class Intraweek:
           if old_multiplier == None or math.isnan(old_multiplier):
             df_charges['cpm_multiplier'][df_charges.index[week_idx]] = 1
             df_charges['charged_client'][df_charges.index[week_idx]] = df_charges['media_cost'][df_charges.index[week_idx]]
-        
-        return df_charges              
+
+        return df_charges
 
     def pull_conversions(self, num_advertiser):
-        
-        df_conversions = self.my_db.select('select yearweek(date_add(conversion_time,interval -4 hour)) as wk_no,pixel_id,sum(case when is_valid=1 then 1 else 0 end) as num_conversions from conversion_reporting where external_advertiser_id =(%d) and active=1 and deleted=0 group by 1,2 order by 1 asc;' % num_advertiser ).as_dataframe()
-        return df_conversions  
+
+        df_conversions = self.my_db.select_dataframe('select yearweek(date_add(conversion_time,interval -4 hour)) as wk_no,pixel_id,sum(case when is_valid=1 then 1 else 0 end) as num_conversions from conversion_reporting where external_advertiser_id =(%d) and active=1 and deleted=0 group by 1,2 order by 1 asc;' % num_advertiser )
+        return df_conversions
 
     def make_weight_lists(self, df_charges, df_conversions):
-        
+
         # make a list of dataframes/weights containing corresponding to each distinct pixel_id (Signup and Purchase)
         dfs_convs = []
         weights_convs = []
@@ -300,20 +300,20 @@ class Intraweek:
           to_add = to_add.rename(columns={'num_conversions': new_name })
           to_add = to_add.drop('pixel_id', axis=1)
           dfs_convs.append(to_add)
-          
+
           # assign weights, hard-coded here
           # TODO: access the weight as "get_pixel_weight(pixel_id)" - which queries database
           if "Signup" in new_name:
-            weights_convs.append(0.05) 
+            weights_convs.append(0.05)
           else:
             weights_convs.append(1)
           dfs_convs.insert(0, df_charges)
-          
+
           return (dfs_convs, weights_convs)
         ## TODO - do we return a tuple - (dfs_convs, weights_convs), or assign into self?
 
     def add_num_conversions(self,dfs_convs, weights_convs):
-        
+
         ## TODO - from above, need to pull dfs_convs, weight_convs from self, or arguments
         df_full = pd.concat(dfs_convs, axis=1).fillna(0)
         # make sure that we're properly weighting by exactly 1
@@ -321,23 +321,23 @@ class Intraweek:
           weights_convs[0] = 1
 
         # get a proxy for number of conversions (exact num if only one type of conversion)
-        df_full['num_conversions'] = df_full.ix[:,5:].dot(weights_convs)    
+        df_full['num_conversions'] = df_full.ix[:,5:].dot(weights_convs)
         return df_full
-        
+
     def add_cpa_columns(self, df):
-        
+
         df_full = df.copy()
         # add CPA column - how much it costed rockerbox for each type of (proxied) conversion
         df_full['cpa'] = df_full['media_cost'] / df_full['num_conversions']
 
         # add CPA_charged column - analogous for cost to client
-        df_full['cpa_charged'] = df_full['charged_client'] / df_full['num_conversions'] 
+        df_full['cpa_charged'] = df_full['charged_client'] / df_full['num_conversions']
         return df_full
 
     def add_cpm_columns(self, df, target_cpa):
 
         df_full = df.copy()
- 
+
         # if second parameter specified, then use that as the target CPA
         if target_cpa != -1:
           try:
@@ -348,7 +348,7 @@ class Intraweek:
         # otherwise, do the rolling average (up to 3)
         else:
           tail_length = 3
-          
+
           # only one week's worth of data is available
           if len(df_full) == 1:
             print "no historical data to propose target CPA - please manually provide"
@@ -373,8 +373,8 @@ class Intraweek:
         return df_full
 
     def adjust_charge_client(self, df):
-        
-        # TODO = df.copy() elsewhere  
+
+        # TODO = df.copy() elsewhere
         df_full = df.copy()
 
         # if number of conversions is 0, project charge_client according to specified rules
@@ -386,17 +386,17 @@ class Intraweek:
           df_full['cpm_charged'][last_idx] = df_full['cpm'][last_idx]
         elif df_full['num_conversions'][last_idx] == 0:
           df_full['charged_client'][last_idx] = our_multiplier * df_full['media_cost'][last_idx]
-          df_full['cpm_charged'][last_idx] = our_multiplier * df_full['cpm'][last_idx] 
+          df_full['cpm_charged'][last_idx] = our_multiplier * df_full['cpm'][last_idx]
         else:
           df_full['charged_client'][last_idx] = our_multiplier * df_full['media_cost'][last_idx]
-       
+
         # add a multiplier column (charged / cost)
-        df_full['multiplier'] = df_full['cpm_charged'] / df_full['cpm'] 
+        df_full['multiplier'] = df_full['cpm_charged'] / df_full['cpm']
         return df_full
 
     def finishing_formats(self, df):
         df_full = df.copy()
-        
+
         # arrange column order
         df_full = df_full.drop(['num_conversions', 'cpm_multiplier'], axis=1)
         cols = df_full.columns.tolist()
@@ -404,14 +404,14 @@ class Intraweek:
         df_full = df_full[new_cols]
         # print df_full
         # print "multiplier:", df_full['multiplier'][df_full.index[-1]]
-        
+
         # convert wk_no back to something to work with
         df_full['week_starting'] = df_full.index.map(self.get_date_from_yearweek)
         df_full = df_full.set_index('week_starting')
         return df_full
 
 ####################
-    
+
     def maniputlate(self,df):
         transformed_Df = stuff(df)
         return transformed_df
@@ -420,7 +420,7 @@ class Intraweek:
         ## Lets add the manipulation to another method
         df = df or self.data
         self.data = self.add_column(self.data)
-        
+
 
         # directly modifies self.data
         # instance methods
@@ -442,11 +442,11 @@ class Intraweek:
         return self.data
 
     def multi_2(self,df):
-        # depends on the result of multi 
+        # depends on the result of multi
         # self.multi_2(self.multi())
         return df
-        
-    
+
+
     def add_column(self,df):
         ## Lets break out the individual manipulation methods
         ## lets add tests for all these things
@@ -464,15 +464,15 @@ def get_table(advertiser_id, target_cpa):
     print "pass one argument - advertiser ID"
     sys.exit(0)
 
-  
+
   # fetch cost dataframe (imps, clicks, cost)
   # commented out yearweek()
 
-  ## PULL SCRIPT 
+  ## PULL SCRIPT
 
-  df_charges = my_db.select('select yearweek(date_add(date,interval -4 hour)) as wk_no,sum(imps) as Impressions,sum(clicks) as Clicks,sum(media_cost) as Media_Cost,sum(media_cost*cpm_multiplier) as Charged_Client,cpm_multiplier from v3_reporting where external_advertiser_id =(%d) and active=1 and deleted=0 group by 1 order by 1 asc;' % num_advertiser).as_dataframe()
+  df_charges = my_db.select_dataframe('select yearweek(date_add(date,interval -4 hour)) as wk_no,sum(imps) as Impressions,sum(clicks) as Clicks,sum(media_cost) as Media_Cost,sum(media_cost*cpm_multiplier) as Charged_Client,cpm_multiplier from v3_reporting where external_advertiser_id =(%d) and active=1 and deleted=0 group by 1 order by 1 asc;' % num_advertiser)
   if (len(df_charges) == 0): # this advertiser doesn't exist
-    return pd.DataFrame(['advertiser not found in DB'])  
+    return pd.DataFrame(['advertiser not found in DB'])
 
   df_charges = df_charges.set_index('wk_no')
 
@@ -489,7 +489,7 @@ def get_table(advertiser_id, target_cpa):
   ## PULL SCRIPT
 
   # fetch conversion dataframe (pixel_ids with num_conversions)
-  df_conversions = my_db.select('select yearweek(date_add(conversion_time,interval -4 hour)) as wk_no,pixel_id,sum(case when is_valid=1 then 1 else 0 end) as num_conversions from conversion_reporting where external_advertiser_id =(%d) and active=1 and deleted=0 group by 1,2 order by 1 asc;' % num_advertiser ).as_dataframe()
+  df_conversions = my_db.select_dataframe('select yearweek(date_add(conversion_time,interval -4 hour)) as wk_no,pixel_id,sum(case when is_valid=1 then 1 else 0 end) as num_conversions from conversion_reporting where external_advertiser_id =(%d) and active=1 and deleted=0 group by 1,2 order by 1 asc;' % num_advertiser )
 
 
   ## MANIPULATION
@@ -503,11 +503,11 @@ def get_table(advertiser_id, target_cpa):
     to_add = to_add.rename(columns={'num_conversions': new_name })
     to_add = to_add.drop('pixel_id', axis=1)
     dfs_convs.append(to_add)
-    
+
     # assign weights, hard-coded here
     # TODO: access the weight as "get_pixel_weight(pixel_id)" - which queries database
     if "Signup" in new_name:
-      weights_convs.append(0.05) 
+      weights_convs.append(0.05)
     else:
       weights_convs.append(1)
 
@@ -547,7 +547,7 @@ def get_table(advertiser_id, target_cpa):
   # otherwise, do the rolling average (up to 3)
   else:
     tail_length = 3
-    
+
     # only one week's worth of data is available
     if len(df_full) == 1:
       print "no historical data to propose target CPA - please manually provide"
@@ -581,7 +581,7 @@ def get_table(advertiser_id, target_cpa):
     df_full['cpm_charged'][df_full.index[-1]] = df_full['cpm'][df_full.index[-1]]
   elif df_full['num_conversions'][df_full.index[-1]] == 0:
     df_full['charged_client'][df_full.index[-1]] = our_multiplier * df_full['media_cost'][df_full.index[-1]]
-    df_full['cpm_charged'][df_full.index[-1]] = our_multiplier * df_full['cpm'][df_full.index[-1]] 
+    df_full['cpm_charged'][df_full.index[-1]] = our_multiplier * df_full['cpm'][df_full.index[-1]]
   else:
     df_full['charged_client'][df_full.index[-1]] = multiplier * df_full['media_cost'][df_full.index[-1]]
 
@@ -589,7 +589,7 @@ def get_table(advertiser_id, target_cpa):
   df_full['multiplier'] = df_full['cpm_charged'] / df_full['cpm']
 
   # get advertiser name
-  advertiser_row = my_db.select('select advertiser_name from advertiser where external_advertiser_id=(%d)' % num_advertiser).as_dataframe()
+  advertiser_row = my_db.select_dataframe('select advertiser_name from advertiser where external_advertiser_id=(%d)' % num_advertiser)
   advertiser_name = advertiser_row.ix[0][0]
 
   # output
@@ -602,7 +602,7 @@ def get_table(advertiser_id, target_cpa):
   df_full = df_full[new_cols]
   # print df_full
   # print "multiplier:", df_full['multiplier'][df_full.index[-1]]
-  
+
   # convert wk_no back to something to work with
   df_full['week_starting'] = df_full.index.map(get_date_from_yearweek)
   df_full = df_full.set_index('week_starting')
@@ -630,7 +630,7 @@ def get_current_clientcharge(advertiser_id):
 @property_checker_onearg
 def get_historical_charge(advertiser_id):
   # TODO - need to ensure that the current_week is excluded
-  budget_info = my_db.select('select sum(media_cost*cpm_multiplier) as charged_client from v3_reporting where external_advertiser_id=(%d) and active=1 and deleted=0;' % advertiser_id).as_dataframe()
+  budget_info = my_db.select_dataframe('select sum(media_cost*cpm_multiplier) as charged_client from v3_reporting where external_advertiser_id=(%d) and active=1 and deleted=0;' % advertiser_id)
   return budget_info[0][0]
 
 # get money used so far
@@ -639,9 +639,9 @@ def get_cumulative_clientcharge(advertiser_id):
   week_df = get_table(advertiser_id, -1)
   return sum(week_df['charged_client'])
 
-# get the "most reasonable-looking budget" -> next budget cap to consider 
+# get the "most reasonable-looking budget" -> next budget cap to consider
 def get_budget(advertiser_id, money_spent):
-  budget_df = my_db.select('select budget from insertion_order where external_advertiser_id = (%d);' % advertiser_id).as_dataframe()
+  budget_df = my_db.select_dataframe('select budget from insertion_order where external_advertiser_id = (%d);' % advertiser_id)
   cum_budget_df = budget_df.cumsum()
   for idx in range(len(cum_budget_df)):
     current_budget = cum_budget_df['budget'][idx]
@@ -656,31 +656,31 @@ def get_dollars_remaining(advertiser_id):
 # get days into campaign
 @property_checker_onearg
 def get_days_into_campaign(advertiser_id):
-  diff_df = my_db.select('select timestampdiff(DAY,actual_start_date,NOW()) as diff from insertion_order where external_advertiser_id = (%d) and actual_end_date IS NULL;' % advertiser_id).as_dataframe()
+  diff_df = my_db.select_dataframe('select timestampdiff(DAY,actual_start_date,NOW()) as diff from insertion_order where external_advertiser_id = (%d) and actual_end_date IS NULL;' % advertiser_id)
   return diff_df.ix[0][0]
 
 # get current start date
 @property_checker_onearg
 def get_current_start_date(advertiser_id):
-  diff_df = my_db.select('select actual_start_date from insertion_order where external_advertiser_id = (%d) and actual_end_date IS NULL;' % advertiser_id).as_dataframe()
+  diff_df = my_db.select_dataframe('select actual_start_date from insertion_order where external_advertiser_id = (%d) and actual_end_date IS NULL;' % advertiser_id)
   return diff_df.ix[0][0]
 
 # get end_date_proposed
 @property_checker_onearg
 def get_end_date_proposed(advertiser_id):
-  diff_df = my_db.select('select end_date_proposed from insertion_order where external_advertiser_id = (%d) and actual_end_date IS NULL;' % advertiser_id).as_dataframe()
+  diff_df = my_db.select_dataframe('select end_date_proposed from insertion_order where external_advertiser_id = (%d) and actual_end_date IS NULL;' % advertiser_id)
   return diff_df.ix[0][0]
 
 # get proposed campaign length
 @property_checker_onearg
 def get_proposed_campaign_length(advertiser_id):
-  length_df = my_db.select('select timestampdiff(DAY,start_date_proposed, end_date_proposed) as diff from insertion_order where external_advertiser_id = (%d) and actual_end_date IS NULL' % advertiser_id).as_dataframe()  
+  length_df = my_db.select_dataframe('select timestampdiff(DAY,start_date_proposed, end_date_proposed) as diff from insertion_order where external_advertiser_id = (%d) and actual_end_date IS NULL' % advertiser_id)
   return length_df.ix[0][0]
 
 # get advertiser name
 @property_checker_onearg
 def get_advertiser_name(advertiser_id):
-  advertiser_row = my_db.select('select advertiser_name from advertiser where external_advertiser_id=(%d)' % advertiser_id).as_dataframe()
+  advertiser_row = my_db.select_dataframe('select advertiser_name from advertiser where external_advertiser_id=(%d)' % advertiser_id)
   advertiser_name = advertiser_row.ix[0][0]
   return advertiser_name
 
@@ -695,7 +695,7 @@ def determine_pacing(row):
 
 # get comprehensive campaign information
 def get_advertiser_info(advertiser_id):
- 
+
   advertiser_name = get_advertiser_name(advertiser_id)
   if (advertiser_name == -1):
     return pandas.DataFrame(["Advertiser DNE"])
@@ -709,28 +709,28 @@ def get_advertiser_info(advertiser_id):
   dollars_per_day = current_spent / days_into_campaign
   expected_campaign_length = current_budget / dollars_per_day
   proposed_campaign_length = get_proposed_campaign_length(advertiser_id)
-  current_start_date = get_current_start_date(advertiser_id) 
+  current_start_date = get_current_start_date(advertiser_id)
   end_date_proposed = get_end_date_proposed(advertiser_id)
 
   map = { 'advertiser': [advertiser_name],
           'start_date': [current_start_date],
           'end_date': [end_date_proposed],
-          'current_budget': [current_budget], 
-          'spent': [current_spent], 
-          'remaining': [current_remaining], 
-          # 'days_into_campaign': [days_into_campaign], 
+          'current_budget': [current_budget],
+          'spent': [current_spent],
+          'remaining': [current_remaining],
+          # 'days_into_campaign': [days_into_campaign],
           'days_left': [int(expected_campaign_length) - days_into_campaign],
-          '$_per_day': [dollars_per_day], 
+          '$_per_day': [dollars_per_day],
           'monthly_pacing': [30 * dollars_per_day],
           'expected_length': [expected_campaign_length],
-          'expected_end_date': [DateOffset(days=int(expected_campaign_length)) + current_start_date], 
+          'expected_end_date': [DateOffset(days=int(expected_campaign_length)) + current_start_date],
            'proposed_end_date_length': [proposed_campaign_length]
           }
   advertiser_df = DataFrame(map)
   advertiser_df['pacing'] = advertiser_df.apply(determine_pacing, axis=1)
-  return advertiser_df[['advertiser', 
+  return advertiser_df[['advertiser',
                        'start_date',
-                       'end_date', 
+                       'end_date',
                        'proposed_end_date_length',
                        'expected_end_date',
                        'expected_length',
@@ -745,7 +745,7 @@ def get_advertiser_info(advertiser_id):
 
 def update_advertiser_targets(advertiser_id):
   # get the cpa target of the advertiser currently
-  cpa_target = my_db.select('select target_cpa from intraweek where external_advertiser_id = (%d)' % advertiser_id).as_dataframe()
+  cpa_target = my_db.select_dataframe('select target_cpa from intraweek where external_advertiser_id = (%d)' % advertiser_id)
   target = cpa_target.ix[0][0]
   if target == None:
     new_target = -1
@@ -783,7 +783,7 @@ def get_all_advertiser_tables():
 def get_advertiser_table(advertiser_id):
    return get_table(advertiser_id, -1).ix[-4:]
 
-# sample usages below, will probably comment these out later 
+# sample usages below, will probably comment these out later
 #if __name__ == "__main__":
 
   # print get_compiled_pacing_reports()

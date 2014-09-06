@@ -10,12 +10,12 @@ from intraweek_table import IntraWeekTable
 
 class IntraWeekView(IntraWeekTable):
     """
-    This is the view of the IntraWeekTable. The table gets constructed behind 
+    This is the view of the IntraWeekTable. The table gets constructed behind
     the scenes and this is how we interact with it.
     """
 
     def __init__(self,db_wrapper):
-        self.my_db = db_wrapper 
+        self.my_db = db_wrapper
 
     def get_recent_charged(self, advertiser_id):
       try:
@@ -26,7 +26,7 @@ class IntraWeekView(IntraWeekTable):
       except IndexError:
         recent_media_cost = 0
         recent_charged_client = 0
-     
+
       return recent_charged_client
 
     @property_checker_twoargs
@@ -47,7 +47,7 @@ class IntraWeekView(IntraWeekTable):
       spent = sum(week_df['charged_client'].iloc[-2:])
 
       # one full week, then number of days this week
-      days = 7 + ((1 + datetime.datetime.today().weekday()) % 7) 
+      days = 7 + ((1 + datetime.datetime.today().weekday()) % 7)
       return spent / days
 
     def determine_pacing(self, row):
@@ -68,11 +68,11 @@ class IntraWeekView(IntraWeekTable):
         self.advertiser_name = self.get_advertiser_name(advertiser_id)
         if (self.advertiser_name == -1):
           return pandas.DataFrame(["Advertiser DNE"])
-        
+
         # getting budget information
         self.money_spent = self.get_cumulative_clientcharge(advertiser_id) # 2.34s
         budget_tuple = self.get_budget(advertiser_id, self.money_spent)
-        
+
         self.campaign_id = budget_tuple[2]
         if (self.campaign_id == -1):
           self.current_budget = 0
@@ -81,25 +81,25 @@ class IntraWeekView(IntraWeekTable):
         else:
           self.current_budget = budget_tuple[1]
           self.current_remaining = budget_tuple[0] - self.money_spent
-          self.current_spent = self.current_budget - self.current_remaining      
+          self.current_spent = self.current_budget - self.current_remaining
 
         # getting most recent day's spent information
         self.yesterday_spent = self.get_recent_charged(advertiser_id)
-        # self.yesterday_spent = 0 
+        # self.yesterday_spent = 0
 
         # getting date/calendar information
         if not hasattr(self, 'dates'):
-          self.dates = self.my_db.select(IO_DATES).as_dataframe()
+          self.dates = self.my_db.select_dataframe(IO_DATES)
           self.dates = self.dates.set_index('external_advertiser_id')
-        
+
         self.perceived_campaign_id = self.get_id(self.dates, advertiser_id)
 
         self.days_into_campaign = self.get_days_into_campaign(self.dates, advertiser_id)
         self.proposed_campaign_length = self.get_proposed_campaign_length(self.dates, advertiser_id)
         # self.current_start_date = self.get_current_start_date(self.dates, advertiser_id)
         self.end_date_proposed = self.get_end_date_proposed(self.dates, advertiser_id)
-        self.dollars_per_day_last_sunday = self.get_average_spent_twoweeks(advertiser_id)    
- 
+        self.dollars_per_day_last_sunday = self.get_average_spent_twoweeks(advertiser_id)
+
         start_io = budget_tuple[0] - budget_tuple[1]
         self.current_start_date = self.get_actual_start_date(advertiser_id, start_io)
         if self.current_start_date == -1:
@@ -118,7 +118,7 @@ class IntraWeekView(IntraWeekTable):
           self.expected_campaign_length = self.current_budget / self.dollars_per_day
         else:
           self.expected_campaign_length = 0
- 
+
     def set_shouldve_spent(self):
         if self.shouldve_spent > self.current_budget:
           self.shouldve_spent = self.current_budget
@@ -134,7 +134,7 @@ class IntraWeekView(IntraWeekTable):
             self.to_spend_per_day = 0
         else:
           self.to_spend_per_day = 0
- 
+
     def transform_columns(self):
 
         ##
@@ -150,42 +150,42 @@ class IntraWeekView(IntraWeekTable):
         ##
         ## RICK:
         ## I cant follow this easily, give me a function for this
-        ## provide functions for things before we set values so we can explain 
+        ## provide functions for things before we set values so we can explain
         ## what the value is.
         ##
         ## Note: that the functions don't necessarily need to be part of the class
-        ## VL - something like set_date_info? seems like this is just "inlining" 
+        ## VL - something like set_date_info? seems like this is just "inlining"
 
         self.set_dollars_per_day()
         self.set_expected_campaign_length()
         self.set_shouldve_spent()
         self.set_to_spend_per_day()
-        
+
         self.actual_days_left = (self.proposed_campaign_length - self.days_into_campaign)
-    
+
     def display_advinfo(self, advertiser_id):
-       
-        # populate dataframe based on whether there is a valid IO current going on 
+
+        # populate dataframe based on whether there is a valid IO current going on
         columns = ['advertiser', 'id', 'start_date', 'end_date', 'current_budget',
-                    'spent', 'remaining', 'expected_days_left', 'dollars_per_day', 
+                    'spent', 'remaining', 'expected_days_left', 'dollars_per_day',
                     'dollars_per_day_last_sunday', 'monthly_pacing', 'expected_length',
                     'expected_end_date', 'proposed_end_date_length', 'shouldve_spent_by_now',
                     'to_spend_per_day', 'actual_days_left', 'yesterday_spent']
         valid_data = [[self.advertiser_name], [advertiser_id], [self.current_start_date],
                       [self.end_date_proposed], [self.current_budget], [self.current_spent],
                       [self.current_remaining], [int(self.expected_campaign_length) - self.days_into_campaign],
-                      [self.dollars_per_day], [self.dollars_per_day_last_sunday], 
+                      [self.dollars_per_day], [self.dollars_per_day_last_sunday],
                       [30 * self.dollars_per_day_last_sunday], [self.expected_campaign_length],
                       [DateOffset(days=int(self.expected_campaign_length)) + self.current_start_date],
                       [self.proposed_campaign_length], [self.shouldve_spent], [self.to_spend_per_day],
                       [self.actual_days_left], [self.yesterday_spent]]
         invalid_data = [[self.advertiser_name], [advertiser_id], [self.current_start_date],
                       [self.end_date_proposed], [self.current_budget], [self.current_spent],
-                      [self.current_remaining], [0],[0], [0], [0], [0], [self.current_start_date], 
+                      [self.current_remaining], [0],[0], [0], [0], [0], [self.current_start_date],
                       [0], [0], [0], [0], [self.yesterday_spent]]
 
         if self.campaign_id == self.perceived_campaign_id:
-          map = dict(zip(columns, valid_data)) 
+          map = dict(zip(columns, valid_data))
         else:
           map = dict(zip(columns, invalid_data))
         advertiser_df = DataFrame(map)
@@ -216,8 +216,8 @@ class IntraWeekView(IntraWeekTable):
         return self.display_advinfo(advertiser_id)
 
     def get_compiled_pacing_reports(self, ids=None):
-        """        
-        get_compiled_pacing_reports is called by the intraweek.py handler to 
+        """
+        get_compiled_pacing_reports is called by the intraweek.py handler to
         get a summary view of pacing for all active advertisers
 
         Note:
@@ -259,7 +259,7 @@ class IntraWeekView(IntraWeekTable):
             pacing_reports.append(to_append)
           except:
             continue
-            
+
 
         compiled_pacing = pandas.concat(pacing_reports)
 
@@ -272,9 +272,9 @@ class IntraWeekView(IntraWeekTable):
         Args:
           advertiser_id: numeric value corresponding to advertiser
           num_rows: number of recent weeks to display
-    
+
         Returns:
-          last "num_rows" weeks of multiplier/charge information for the given 
+          last "num_rows" weeks of multiplier/charge information for the given
           "advertiser_id"
 
         """

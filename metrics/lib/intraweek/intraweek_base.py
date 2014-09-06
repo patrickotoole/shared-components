@@ -5,7 +5,7 @@ import math
 class IntraWeekBase(object):
     """
     These are classmethods that we will use in various places throughout
-    the IntraWeek. 
+    the IntraWeek.
 
     This will be the base for other operations for the intraweek analysis.
 
@@ -51,11 +51,11 @@ class IntraWeekBase(object):
 
 class IntraWeekDB(IntraWeekBase):
     """
-    IntraWeekDB handles our database calls. These are small manipulations on 
+    IntraWeekDB handles our database calls. These are small manipulations on
     top of raw data that puts our dataset into a format where we can transform
     it in a standard way using specific methods.
 
-    TODOS: 
+    TODOS:
       - doc strings
       - tests around the methods
       - can these be properties rather than methods?
@@ -70,9 +70,9 @@ class IntraWeekDB(IntraWeekBase):
         if not hasattr(self, "daily_spend"):
             self.daily_spend = self.my_db.select_dataframe(DAILY_SPEND)
 
-        mask = self.daily_spend['external_advertiser_id'] == advertiser_id  
+        mask = self.daily_spend['external_advertiser_id'] == advertiser_id
         cum_charges = self.daily_spend[mask]['charged_client'].cumsum()
-        media_costs = self.daily_spend[mask]['media_cost']        
+        media_costs = self.daily_spend[mask]['media_cost']
 
         # go through cumulative sums to find first date, else, return -1
         last_charge = 0
@@ -97,7 +97,7 @@ class IntraWeekDB(IntraWeekBase):
                 80000 7 2014-07-09
                 95000 35 -1
                 110000 37 -1
-        
+
         Gets the end_dates associated with each of historical IOs
         """
         mask = self.budget_df['external_advertiser_id'] == advertiser_id
@@ -121,7 +121,7 @@ class IntraWeekDB(IntraWeekBase):
     # get the "most reasonable-looking budget" -> next budget cap to consider
     def get_budget(self, advertiser_id, money_spent):
       if not hasattr(self, 'budget_df'):
-        self.budget_df = self.my_db.select(BUDGET).as_dataframe()
+        self.budget_df = self.my_db.select_dataframe(BUDGET)
 
       mask = self.budget_df['external_advertiser_id'] == advertiser_id
       cum_budget_df = self.budget_df[mask].cumsum()
@@ -130,18 +130,18 @@ class IntraWeekDB(IntraWeekBase):
         current_budget = cum_budget_df['budget'][cum_budget_df.index[idx]]
         if (current_budget >= money_spent):
           return (
-            current_budget, 
-            self.budget_df['budget'][cum_budget_df.index[idx]], 
+            current_budget,
+            self.budget_df['budget'][cum_budget_df.index[idx]],
             self.budget_df['id'][cum_budget_df.index[idx]]
           )
-      
+
       # else, there are no campaigns remaining, just return money_spent
       return (-1, -1, -2)
 
     # get the recent media cost from yesterday - to be used to populate "yesterday_spent" field
     def get_recent_spent(self, advertiser_id):
       if not hasattr(self, 'recent_spent'):
-         self.recent_spent = self.my_db.select(RECENT_SPEND).as_dataframe()
+         self.recent_spent = self.my_db.select_dataframe(RECENT_SPEND)
 
       try:
         mask = self.recent_spent['external_advertiser_id'] == advertiser_id
@@ -150,30 +150,30 @@ class IntraWeekDB(IntraWeekBase):
         recent_media_cost = 0
 
       return recent_media_cost
-     
+
     # get advertiser name
     @property_checker_twoargs
     def get_advertiser_name(self, advertiser_id):
       if not hasattr(self, 'names_df'):
-        self.names_df = self.my_db.select(ADVERTISER_NAME).as_dataframe()
-      
+        self.names_df = self.my_db.select_dataframe(ADVERTISER_NAME)
+
       mask = self.names_df['external_advertiser_id'] == advertiser_id
       return self.names_df[mask]['advertiser_name'].iloc[0]
 
     # pulls and caches basic information on charges - impressions, clicks, cost, charges
     def pull_charges(self, num_advertiser):
-       
+
         if not hasattr(self, 'charges'):
-            self.charges =  self.my_db.select(NEW_CHARGES).as_dataframe()
+            self.charges =  self.my_db.select_dataframe(NEW_CHARGES)
             self.charges = self.charges.set_index('wk_no')
-        
+
         mask = self.charges['external_advertiser_id'] == num_advertiser
-        df_charges = self.charges[mask] 
+        df_charges = self.charges[mask]
 
         return df_charges.drop('external_advertiser_id', axis=1)
 
     # pulls the list of active advertisers from "advertiser" DB
     # input list for the compiled IO reports
     def active_advertisers(self):
-        id_df = self.my_db.select('select external_advertiser_id from advertiser where active=1 and deleted=0;').as_dataframe()
+        id_df = self.my_db.select_dataframe('select external_advertiser_id from advertiser where active=1 and deleted=0;')
         return id_df['external_advertiser_id'].tolist()
