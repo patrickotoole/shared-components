@@ -112,7 +112,7 @@ admin_reporting = [
     (r'/admin/websocket', admin.streaming.AdminStreamingHandler, dict(db=db,buffers=buffers)),
     (r'/admin/viewable.*',admin.reporting.ViewabilityHandler, dict(db=db,api=api,hive=hive)),
     (r'/admin/advertiser/target_list.*',admin.reporting.TargetListHandler, dict(hive=hive)),
-    (r'/admin/advertiser/pixel/reporting/?', reporting.PixelAdvertiserHandler, dict(db=db, api=api, hive=hive)),
+    (r'/admin/advertiser/pixel/reporting/?', reporting.PixelAdvertiserHandler, dict(db=db, hive=hive)),
     (r'/admin/advertiser/viewable/?',admin.reporting.AdvertiserViewableHandler, dict(db=db,hive=hive)),
     (r'/admin/advertiser/reporting/?',admin.reporting.AdvertiserReportingHandler, dict(db=db)),     
 
