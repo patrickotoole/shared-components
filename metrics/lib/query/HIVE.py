@@ -3,8 +3,8 @@ PARTITIONED_QUERY_LESS = "select campaign, referrer, datetime date, imps from ca
 
 AGG_APPROVED_AUCTIONS = """
     select 
-        %(groups)s, 
-        sum(num_auctions) num_auctions 
+        %(additional_selection)s
+        %(selects)s
     from agg_approved_auctions 
     where %(where)s 
     group by %(groups)s

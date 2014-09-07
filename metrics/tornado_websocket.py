@@ -113,7 +113,7 @@ admin_advertiser = [
 
     (r'/admin/advertiser/domain_list/?',admin.scripts.TargetingHandler, dict(redis=_redis,api=api,db=db)),
     (r'/admin/advertiser/domain_list/streaming/?',admin.scripts.TargetingHandler, dict(redis=_redis,api=api,db=db)),
-    (r'/admin/advertiser/domain_list/reporting/?',admin.reporting.DomainListHandler, dict(hive=hive))
+    (r'/admin/advertiser/domain_list/reporting/?(meta)?/?',admin.reporting.DomainListHandler, dict(hive=hive))
 ]
 
 admin_reporting = [

@@ -21,153 +21,202 @@
     <form role="form">
       <div class="new-item"></div>
     </form>
+    <script>
+      var LOG = '<div class="col-sm-3"><select class="lists form-control" id="date_range" name="date_range" data-placeholder="date range"></select></div>',
+       DUPLICATE = '<div class="col-md-1"><button type="submit" id="batch" class="submit btn ">Add</button></div>' 
+        
+      var NEW = "<div>" + LOG + DUPLICATE + "</div>"
+      $(".new-item").append(NEW)
+
+      var arrayToHashes = function(a){
+        return a.map(function(x,i) {
+          return {"key":x}
+        })
+      }
+
+      var items = arrayToHashes(["yesterday","past_week","past_month"])
+
+      $.each(items, function(i,v) {
+        var vv = '<option value="' + v.key + '">' + v.key + "</option>" 
+        $('.lists').append(vv)
+      })
+      </script>
   </div>
 </div>
 <br/>
-<h4>Results</h4>
+<h4 id="results-header">Results</h4>
 
 <table class="table table-hover dc-data-table">
   <thead>
-    <tr>
-      <th>Advertiser</th>
-      <th>Imps Available</th>
-      <th></th>
-    </tr>
+    <tr id="headers"></tr>
   </thead>
 </table>
 
 </div>
 <script>
 
+var URL = window.location.pathname + window.location.search,
+  META =  window.location.pathname + "/meta" + window.location.search
 
+var addParam = function(u,p) {
+  return u.indexOf("?") >= 0 ? u + "&" + p : u + "?" + p
+}
 
+URL = addParam(URL,"format=json")
+META = addParam(META,"format=json")
 
-var data = {{ data }};
+$.getJSON(META,function(meta){
+  window.meta = meta
 
-$(data).each(function(i,x){
-  var split = x.domain.split(".")
-  x.domain = split[split.length-2] + "." + split[split.length-1]
+  console.log(meta)
 
-})
+  d3.select("#results-header")
+    .text("Imps Available for " + 
+      meta['groups'].map(function(f){
+        return f.charAt(0).toUpperCase() + f.slice(1)
+      }).join(" and ")
+    )
 
-var crs = crossfilter(data);
+  $.getJSON(URL,function(data){
+    window.data = data
 
-advertiser = crs.dimension(function(d){ return d.type})
-group = advertiser.group(function(x) {return x}).reduce(
-  function(p,v){
-    p.num_auctions += v.num_auctions
-    return p
-  },
-  function(p,v){
-    p.num_auctions -= v.num_auctions
-    return p
-  },
-  function(){
-    return {
-      num_auctions:0
-    }
-  }
+    var crs = crossfilter(data);
 
-)
-group.toHash = toHash
-hash = group.toHash()
+    groups = meta["groups"]
+    groupBy = groups[0]
+      fields = meta["fields"]
+      dim = crs.dimension(function(d){ return d[groupBy] })
+      group = dim.group(function(x) {return x}).reduce(
+        function(p,v){
+          $(fields).each(function(i,f){
+            p[f] += v[f]
+          })
+          return p
+        },
+        function(p,v){
+          $(fields).each(function(i,f){
+            p[f] -= v[f]
+          })
+          return p
+        },
+        function(){
+          var o = {}
+          $(fields).each(function(i,f){
+            o[f] = 0
+          })
+          return o
+        }
 
-var LOG = '<div class="col-sm-3"><select class="lists form-control" id="date_range" name="date_range" data-placeholder="date range"></select></div>',
- DUPLICATE = '<div class="col-md-1"><button type="submit" id="batch" class="submit btn ">Add</button></div>' 
-  
-var NEW = "<div>" + LOG + DUPLICATE + "</div>"
-$(".new-item").append(NEW)
+      )
+    group.toHash = toHash
+    hash = group.toHash()
 
-var items = [
-  {
-    "key":"yesterday"
-  },
-  {
-    "key":"past_week"
-  },
-  {
-    "key":"past_month"
-  }
-]
-$.each(items, function(i,v) {
-  var vv = '<option value="' + v.key + '">' + v.key + "</option>" 
-  $('.lists').append(vv)
-})
-var format = d3.format("0,000");
-var percentFormat = d3.format(".4p")
+    header = d3.select("#headers")
+    header_values = meta["groups"].concat(meta["fields"])
+    $(header_values).each(function(i,h){
+       header.append("td")
+        .text(h)
+    })
+   
 
-dc.dataTable(".dc-data-table")
-  .dimension(advertiser)
-  .group(function (d) {
-    return d.type
+    var format = d3.format("0,000");
+    var percentFormat = d3.format(".4p")
 
-  })
-  .size(10000)
-  .columns([
-    function (d) {
-      return d.domain
-    },
-    function (d) {
-      return format(d.num_auctions)
-    },
-    function (d) {
-      return "<a href='http://console.appnexus.com/v2/campaign:" + d.domain+ "/edit'>Edit</a>"
-    }
-  ])
-  .sortBy(function (d) {
-    return 10000000000 - parseInt(d.num_auctions);
-  })
-  .order(d3.ascending)
-  .renderlet(function (table) {
-
-    table.selectAll(".dc-table-row").classed("hide",true)
-    table.selectAll(".dc-table-group")
-      .selectAll(".dc-table-label")
-      .attr("colspan",0)
-
-    var s = table.selectAll(".dc-table-group")
-    s.append("td")
-      .text(function(x){
-        return format(hash[x.key].num_auctions)
+    dc.dataTable(".dc-data-table")
+      .dimension(dim)
+      .group(function (d) {
+        return d[groupBy]
       })
-    
-    s.append("td")
-      .classed("lock",true)
-      .classed("right",true)
-      .classed("btn-xs",true)
-      .text("View domains")
-     
-     
-     
+      .size(10000)
+      .columns(header_values.map(function(x,i){
+        if (i > 0)
+          return function(h) {
+            return isNaN(h[x]) ? h[x] : format(h[x])
+          }
+        }).concat([
+          function(h){
+            console.log("add details link to meta")
+            return "<a href='" + window.location.pathname + "?" + 
+              groups.slice(1).map(function(f){
+                return f + "=" + h[f]
+              }).join("&") +
+              "' class='btn btn-primary btn-xs' target='_'>Details</a>"
+          }
+        ])
+      )
+      .sortBy(function (d) {
+        return 10000000000 - parseInt(d.num_auctions);
+      })
+      .order(d3.ascending)
+      .renderlet(function (table) {
 
-    table.selectAll(".dc-table-group").classed("info", true).on("click", function(e){
-      var lock = d3.select(this.parentNode).selectAll(".lock");
-      var text = lock.text();
-      if (text == "View domains") {
-        lock.text("Hide domains")
-        d3.select(this.parentNode)
-          .selectAll(".dc-table-row")
-          .classed("hide" , false)
-          .transition().duration(500)
+        table.selectAll(".dc-table-row")//.classed("hide",true)
+        table.selectAll(".dc-table-group")
+          .selectAll(".dc-table-label")
+          .attr("colspan",0)
 
-      } else if (text == "Hide domains") {
-                
-        lock.text("View domains")
-        d3.select(this.parentNode)
-          .selectAll(".dc-table-row")
+        var s = table.selectAll(".dc-table-group")
+
+        $(groups.slice(1).concat(fields)).each(function(i,f){
+          s.append("td")
+            .text(function(x){
+              return isNaN(hash[x.key][f]) ? "" : format(hash[x.key][f])
+            })
+        })
+
+        
+        s.append("td")
+          .append("a")
+          .attr("href",function(x){
+            return window.location.pathname + 
+              "?" + groupBy + "=" + x.key
+          })
+          .attr("target","_")
+          .text("More")
+          .classed("btn btn-primary btn-xs", true)
+            
+        
+        s.append("td")
+          .classed("lock",true)
+          .classed("right",true)
+          .classed("btn-xs",true)
           .classed("hide",true)
-          .transition().duration(500)
+          .text("Hide lists")
+         
+         
+         
 
-      } 
+        table.selectAll(".dc-table-group").classed("info", true).on("click", function(e){
+          var lock = d3.select(this.parentNode).selectAll(".lock");
+          var text = lock.text();
+          if (text == "Show lists") {
+            lock.text("Hide lists")
+            d3.select(this.parentNode)
+              .selectAll(".dc-table-row")
+              .classed("hide" , false)
+              .transition().duration(500)
 
-    })
- 
-    $(document.getElementsByClassName('dc-table-row')).each(function(x,y){
-      y.classList.add("warning")
-    })
-  });
+          } else if (text == "Hide lists") {
+                    
+            lock.text("Show lists")
+            d3.select(this.parentNode)
+              .selectAll(".dc-table-row")
+              .classed("hide",true)
+              .transition().duration(500)
 
-dc.renderAll()
+          } 
+
+        })
+     
+      });
+
+    dc.renderAll()
+              
+  })
+   
+})
+
+
 
 var send_data = function(json_string,cb) {
   $.ajax({
