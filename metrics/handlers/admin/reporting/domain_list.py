@@ -72,7 +72,7 @@ class DomainListHandler(AdminReportingBaseHandler):
                 return ".".join(s[-3:])
 
         data["domain"] = data.domain.map(lambda x: split_help(x))
-        data["domain"] = data.domain.map(lambda x: x.replace("$","").replace("%","").replace("]",""))
+        data["domain"] = data.domain.map(lambda x: x.replace("$","").replace("]",""))
         data = data.groupby([c for c in data.columns if c != "num_auctions"]).sum()
         return data.reset_index()
         
