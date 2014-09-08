@@ -32,21 +32,42 @@ OPTIONS = {
     }
 }
 
-def groups_to_group_helper(g):
-    if g == "advertiser":
-        return "SPLIT(type,'_')[0]"
-    if g == "domain_count":
-        return "count(distinct domain)"
-    if g == "num_auctions":
-        return "sum(num_auctions)"
-    return g
-    
- 
-def groups_to_select_helper(g):
-    return "%s as %s" % (groups_to_group_helper(g),g)
-    
+GROUPS = {
+    "advertiser" : "SPLIT(type,'_')[0]",
+    "type" : "type",
+    "domain" : "domain",
+    "state" : "state",
+    "city" : "city"
+}
+
+FIELDS = {
+    "domain_count" : "count(distinct domain)",
+    "num_auctions" : "sum(num_auctions)"
+}
+
+WHERE = {
+    "advertiser" : "type like '%%%(advertiser)s%%'",
+    "type" : "type like '%%%(type)s%%'",
+    "domain" : "domain like '%%%(domain)s%%'",
+    "state" : "state = '%(state)s'",
+    "city" : "city = '%(city)s'"
+}
+
 
 class AdminReportingBaseHandler(tornado.web.RequestHandler):
+
+    def groups_to_group_helper(self,g):
+        return self.GROUPS.get(g,g)
+        
+    def groups_to_field_helper(self,g):
+        group = self.groups_to_group_helper(g)
+        select = self.FIELDS.get(group,group)
+        return "%s as %s" % (select,g)
+        
+
+    def make_query(self,params):
+        q = self.QUERY % params
+        return " ".join(q.replace('\n',' ').split())
     
     def parse_date_where(self):
         date = self.get_argument("date",datetime.datetime.now().strftime("%y-%m-%d"))
@@ -55,7 +76,66 @@ class AdminReportingBaseHandler(tornado.web.RequestHandler):
 
         return "date>='%s' and date <='%s'" % (_from, _until)
 
+    def and_groupings(self):
+        args = self.request.arguments
+        groupings = {i:j for i,j in args.iteritems() if i in self.WHERE.keys()}
+        return groupings
+
+    def or_groupings(self,field,values):
+        where_string = self.WHERE.get(field)
+        return [where_string % {field:v} for v in values]
+        
+
+    def parse_qs_where(self):
+        groups = self.and_groupings()
+        ands = ["1=1"]
+        for i,j in groups.iteritems():
+            ors = self.or_groupings(i,j[0].split(","))
+            ands += ["(%s)" % "  or ".join(ors)]
+
+        return " and ".join(ands)
+
+    def make_where(self):
+        where_list = [
+            self.parse_date_where(), 
+            self.parse_qs_where()
+        ]
+        return " and ".join(where_list)
+
+    def get_meta_data(self,meta_group):
+        meta_lookup = self.OPTIONS.get(meta_group,{}).get("meta",{})
+        meta_data = copy.deepcopy(meta_lookup)
+
+        additional_dims = self.get_argument("include",False)
+
+        if additional_dims:
+            meta_data['groups'] += additional_dims.split(",")
+
+        return meta_data
+
+    def make_params(self,groups,fields,where):
+        gs = map(self.groups_to_group_helper,groups)
+        fs = map(self.groups_to_field_helper,groups + fields)
+
+        return {
+            "groups": ",".join(gs),
+            "fields": ",".join(fs),
+            "where": where
+        }
+     
+
+    
+
 class DomainListHandler(AdminReportingBaseHandler):
+
+    QUERY = AGG_APPROVED_AUCTIONS
+    WHERE = WHERE
+    FIELDS = FIELDS
+    GROUPS = GROUPS
+
+    OPTIONS = OPTIONS
+
+
     def initialize(self, db=None, api=None, hive=None):
         self.db = db 
         self.api = api
@@ -123,8 +203,6 @@ class DomainListHandler(AdminReportingBaseHandler):
 
         self.get_content(formatted)
 
-    
-
     def get_meta_group(self,default="default"):
         
         domain_list = self.get_argument("type",False)
@@ -138,81 +216,32 @@ class DomainListHandler(AdminReportingBaseHandler):
         
         return default
 
-    def parse_select(self):
-
-        default = self.get_argument("select","")
-        return default
-
-    def parse_where(self,default="1=1"):
-
-        domain_list = self.get_argument("type",False)
-        advertiser = self.get_argument("advertiser",False)
-
-        if domain_list:
-            return "type like '%%%s%%' " % (domain_list)
-
-        if advertiser:
-            return "type like '%%%s%%' " % (advertiser)
-
-        return default
-
-    def parse_state_where(self,default="1=1"):
- 
-        state = self.get_argument("state",False)
-
-        if state:
-            states = map(lambda x: "state = '%s'" % x, state.split(","))
-            return "(" + " or ".join(states) + ")"
-
-        return default 
-        
-
-    def make_where(self):
-        where_list = [
-            self.parse_state_where(),
-            self.parse_date_where(), 
-            self.parse_where()
-        ]
-        return " and ".join(where_list)
-
-    def make_query(self,params):
-        q = AGG_APPROVED_AUCTIONS % params
-        return " ".join(q.replace('\n',' ').split())
-
+    
 
     @tornado.web.asynchronous
     def get(self,meta=False):
         formatted = self.get_argument("format",False)
 
-        params = {
-            "meta_group": self.get_meta_group(),
-            "where" : self.make_where(),
-            "additional_selection": self.parse_select()
-        }
-        meta_data = copy.deepcopy(OPTIONS.get(params["meta_group"],{}).get("meta",{}))
-
-        fields = self.get_argument("fields",False)
-        if fields:
-            meta_data['groups'] += fields.split(",")
-
-
-        gs = meta_data.get("groups",[])
-        fs = meta_data.get("fields",[])
-
-        groups = map(groups_to_group_helper,gs)
-        selects = map(groups_to_select_helper,gs + fs)
-
-        params["groups"] = ",".join(groups)
-        params["selects"] = ",".join(selects)
+        meta_group = self.get_meta_group()
+        meta_data = self.get_meta_data(meta_group)
 
         if meta:
             self.write(ujson.dumps(meta_data))
             self.finish()
+
         elif formatted:
+            params = self.make_params(
+                meta_data.get("groups",[]),
+                meta_data.get("fields",[]),
+                self.make_where()
+            )
             self.get_data(
                 self.make_query(params),
-                params["groups"],
+                meta_data.get("groups",[]),
                 self.get_argument("wide",False)
             )
+
         else:
             self.get_content(pandas.DataFrame())
+
+

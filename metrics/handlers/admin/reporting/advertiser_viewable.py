@@ -10,6 +10,7 @@ from lib.hive.helpers import run_hive_session_deferred, run_hive_deferred
 from lib.query.HIVE import ADVERTISER_VIEWABLE
 import lib.query.helpers as query_helpers
 
+
 class AdvertiserViewableHandler(tornado.web.RequestHandler):
 
     def initialize(self, db=None, hive=None, **kwargs):
@@ -28,7 +29,7 @@ class AdvertiserViewableHandler(tornado.web.RequestHandler):
     @defer.inlineCallbacks
     def get_data(self,q,groupby=False,wide=False):
         try:
-            t = yield run_hive_session_deferred(self.hive,["set shark.map.tasks=64", "set mapred.reduce.tasks=0",q])
+            t = yield run_hive_session_deferred(self.hive,["set shark.map.tasks=7", "set mapred.reduce.tasks=0",q])
         except:
             self.finish()
 
@@ -48,34 +49,17 @@ class AdvertiserViewableHandler(tornado.web.RequestHandler):
         _until = self.get_argument("end_date",False) 
 
         params = {
-            "1":"1",
-            "date": date
+            "1":"1"#,
+            #"date": date
             #"hour": "00"
             #"date_range": self.get_argument("date_range","yesterday")
         }                                           
 
         q = ADVERTISER_VIEWABLE % {
-            "where": query_helpers.__where_and_eq__(params) #+ 
-            #    " and date >= '%(date)s' " % {"date":_from}
-        }
-        print q
-
-        data = self.get_data(q)
-
-    @tornado.web.asynchronous
-    def post(self):
-        print self.__dict__
-
-        params = {
-            "date_range": ujson.loads(self.request.body).get("date_range","yesterday")
-        }                                           
-
-        q = DAILY_DASH % {
-            "where": query_helpers.__where_and_eq__(params)
+            "where": query_helpers.__where_and_eq__(params) + 
+                " and date >= '%(date)s' " % {"date":_from}
         }
 
         data = self.get_data(q)
-        
 
-
-        
+    

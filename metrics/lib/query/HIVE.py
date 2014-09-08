@@ -3,8 +3,7 @@ PARTITIONED_QUERY_LESS = "select campaign, referrer, datetime date, imps from ca
 
 AGG_APPROVED_AUCTIONS = """
     select 
-        %(additional_selection)s
-        %(selects)s
+        %(fields)s
     from agg_approved_auctions 
     where %(where)s 
     group by %(groups)s
@@ -82,7 +81,7 @@ SELECT
     sum(num_served) num_served,
     sum(num_loaded) num_loaded,
     sum(num_visible) num_visible
-FROM advertiser_visibility
+FROM advertiser_visibility_daily
 WHERE %(where)s
 GROUP BY 
     advertiser,
