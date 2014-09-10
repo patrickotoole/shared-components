@@ -54,9 +54,10 @@ class CustomHiveClient(hive_utils.HiveClient):
  
 @singleton
 class Hive(object):
-    def __init__(self,marathon_endpoint="http://dev.marathon.getrockerbox.com:8080/v1/endpoints", n_map=1, n_reduce=1):
-        self._hive = self.connect()
+    def __init__(self,marathon_endpoint="http://dev.marathon.getrockerbox.com:8080/v2/tasks", n_map=1, n_reduce=1):
         self.marathon_endpoint = marathon_endpoint
+        self._hive = self.connect()
+        
 
         # Sets number of mappers/reducers
         self.n_map = n_map
@@ -75,10 +76,11 @@ class Hive(object):
 
     def marathon_instance(self):
         resp = requests.get(self.marathon_endpoint, headers={"Accept": "application/json"})
-        instances = json.loads(resp.content)
-
-        shark_servers = [ i for i in instances if i["id"] == "shark_server_debug" ]
-        server = shark_servers[0]["instances"][0]
+        instances = json.loads(resp.content)['tasks']
+        print instances
+        shark_servers = [ i for i in instances if i["appId"] == "/shark-server-debug" ]
+        print shark_servers
+        server = shark_servers[0]
         return server
        
 

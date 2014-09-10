@@ -59,7 +59,7 @@ class CreativeReportingTest(AsyncHTTPTestCase):
     def get_app(self):
         self.db = lnk.dbs.test
         self.db.execute(CREATE_DASH)
-        print INSERT_DASH % {"range":"yesterday","advertiser_id":ADVERTISER_ID}
+        #print INSERT_DASH % {"range":"yesterday","advertiser_id":ADVERTISER_ID}
         self.db.execute(INSERT_DASH % {"range":"yesterday","advertiser_id":ADVERTISER_ID})
         self.db.execute(INSERT_DASH % {"range":"past_week","advertiser_id":ADVERTISER_ID}) 
         self.db.execute(INSERT_DASH % {"range":"past_month","advertiser_id":ADVERTISER_ID})  

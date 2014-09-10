@@ -108,7 +108,8 @@ class DomainListHandler(AdminReportingBaseHandler):
             u = self.reformat_domain_data(u)
 
         if groupby and wide:
-            u = u.set_index(groupby.split(",")).sort_index()
+            print groupby
+            u = u.set_index(groupby).sort_index()
             u = u["num_auctions"].unstack(wide)
 
         return u
@@ -150,9 +151,9 @@ class DomainListHandler(AdminReportingBaseHandler):
     @tornado.web.asynchronous
     def get(self,meta=False):
         formatted = self.get_argument("format",False)
-
+        include = self.get_argument("include",False)
         meta_group = self.get_meta_group()
-        meta_data = self.get_meta_data(meta_group)
+        meta_data = self.get_meta_data(meta_group,include)
 
         if meta:
             self.write(ujson.dumps(meta_data))

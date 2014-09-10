@@ -35,7 +35,6 @@ class ViewabilityBase():
         '''Given a list of columns and a DataFrame, generate summary measurements as new columns and return
         the updated dataframe.'''
 
-        print df.head()
 
         df.insert(len(df.columns), 'num_not_loaded', df.num_served.astype(int) - df.num_loaded.astype(int))
         df.insert(len(df.columns), 'load_score', 1 - (df.num_not_loaded.astype(int) ** 2 / df.num_served.astype(int)))
