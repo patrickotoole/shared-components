@@ -26,7 +26,8 @@ correct_cols = [
     "num_loaded",
     "num_visible",
     "load_score",
-    "viewable_score"
+    "viewable_score",
+    "percent_viewable"
     ]
 
 cols = [
@@ -40,7 +41,7 @@ cols = [
     "num_visible",
 ]
 
-FIXTURE1 = pd.DataFrame([[0]*8], columns=correct_cols[:-2])
+FIXTURE1 = pd.DataFrame([[0]*8], columns=correct_cols[:-3])
 WHERE_TUPLE = ("14-08-20", "14-08-21", "00", "05", "seller,tag,width,height,domain",{})
 WHERE_TUPLE_W_OPTIONAL=("14-08-20", "14-08-21", "00", "05", "seller,tag,width,height,domain", {"venue": False, "domain": "ebay.com", "tag": "2928439", "seller": "23849"})
 WHERE_CLAUSE = 'date >= "14-08-20" and date <= "14-08-21" and hour >= "00" and hour <= "05"'

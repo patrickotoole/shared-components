@@ -143,3 +143,11 @@ SELECT
     external_segment_id 
 FROM advertiser_segment INNER JOIN advertiser using (external_advertiser_id)
 '''
+
+DAILY_DASH = """
+SELECT
+    *
+FROM daily_dash
+WHERE 
+    %(where)s
+"""

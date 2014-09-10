@@ -13,7 +13,7 @@ Q = "select pixel_source_name from advertiser where external_advertiser_id = %s"
 HIVE_QUERY='select date, hour, sum(num_imps) as imps, sum(num_conv) as conv, sum(num_rbox_imps) as rbox_imp, sum(num_rbox_conv) as rbox_conv from agg_pixel where source = "{}" and date >= "14-07-01" group by date, hour'
 
 class PixelBaseHandler(BaseHandler):
-    def initialize(self, db, api, hive):
+    def initialize(self, db=None, api=None, hive=None):
         self.db = db 
         self.api = api
         self.hive = hive

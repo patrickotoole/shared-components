@@ -15,7 +15,7 @@ from lib.helpers import *
 from lib.hive.helpers import run_hive_session_deferred
 
 API_QUERY = "select * from appnexus_reporting.%s where %s "
-QUERY = "select {}, sum(num_served) as num_served, sum(num_loaded) as num_loaded, sum(num_visible) as num_visible from agg_visibility where {} group by {} order by cast(num_served as int)"
+QUERY = "select {}, sum(num_served) as num_served, sum(num_loaded) as num_loaded, sum(num_visible) as num_visible from agg_visibility where {} group by {}"
 
 class ViewabilityBase():
     '''A base class for the viewability handler. This defines several functions that are used to construct queries,
@@ -35,16 +35,17 @@ class ViewabilityBase():
         '''Given a list of columns and a DataFrame, generate summary measurements as new columns and return
         the updated dataframe.'''
 
-        print df.head()
 
         df.insert(len(df.columns), 'num_not_loaded', df.num_served.astype(int) - df.num_loaded.astype(int))
         df.insert(len(df.columns), 'load_score', 1 - (df.num_not_loaded.astype(int) ** 2 / df.num_served.astype(int)))
 
         df.insert(len(df.columns), 'num_not_viewable', df.num_served.astype(int) - df.num_visible.astype(int))
         df.insert(len(df.columns), 'viewable_score', 1 - (df.num_not_viewable.astype(int) ** 2 / df.num_served.astype(int)))
+        df.insert(len(df.columns), 'percent_viewable', (df.num_visible.astype(int) / df.num_served.astype(int))) 
 
         cols.append("load_score")
         cols.append("viewable_score")
+        cols.append("percent_viewable")
 
         df = df[cols]
         df['num_served'] = df.num_served.astype(int)
@@ -77,7 +78,7 @@ class ViewabilityHandler(tornado.web.RequestHandler):
     def execute_query(self, query, cols):
         ''' Given an HQL query, execute it and return a dataframe'''
         try:
-            t = yield run_hive_session_deferred(self.hive, ["set shark.map.tasks=256", "set mapred.reduce.tasks=24", query])
+            t = yield run_hive_session_deferred(self.hive, ["set shark.map.tasks=128", "set mapred.reduce.tasks=8", query])
             df = pd.DataFrame(t)
             self.get_content(df, cols)
         except StandardError as e:

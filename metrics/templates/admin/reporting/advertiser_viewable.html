@@ -1,0 +1,233 @@
+{% autoescape None %}
+{% extends "../../clean_base.html" %}
+{% block content %}
+
+<link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/dc.css">
+<link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/chosen.css">
+
+<script type="text/javascript" src="http://rockerbox.com/js/d3.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/crossfilter.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/dc.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/colorbrewer.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/reporting.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/chosen.js"></script>
+
+<div class='container'>
+
+<h4>Select date range</h4>
+
+<div class="row">
+  <div class="col-sm-9">
+    <form role="form">
+      <div class="new-item"></div>
+    </form>
+  </div>
+</div>
+<br/>
+<h4>Results</h4>
+
+<table class="table table-hover dc-data-table">
+  <thead>
+    <tr>
+      <th>Advertiser</th>
+      <th>served</th>
+      <th>loaded</th> 
+      <th>viewable</th>
+      <th>% viewable</th> 
+      <th></th>
+    </tr>
+  </thead>
+</table>
+
+</div>
+<script>
+
+
+
+
+var data = {{ data }};
+
+var crs = crossfilter(data);
+
+advertiser = crs.dimension(function(d){ return d.advertiser})
+group = advertiser.group(function(x) {return x}).reduce(
+  function(p,v){
+    p.num_served += v.num_served
+    p.num_loaded += v.num_loaded
+    p.num_visible += v.num_visible
+    return p
+  },
+  function(p,v){
+    p.num_served -= v.num_served
+    p.num_loaded -= v.num_loaded
+    p.num_visible -= v.num_visible
+    return p
+  },
+  function(){
+    return {
+      num_served:0,
+      num_loaded:0,
+      num_visible:0
+    }
+  }
+
+)
+group.toHash = toHash
+hash = group.toHash()
+
+var LOG = '<div class="col-sm-3"><select class="lists form-control" id="date_range" name="date_range" data-placeholder="date range"></select></div>',
+ DUPLICATE = '<div class="col-md-1"><button type="submit" id="batch" class="submit btn ">Add</button></div>' 
+  
+var NEW = "<div>" + LOG + DUPLICATE + "</div>"
+$(".new-item").append(NEW)
+
+var items = [
+  {
+    "key":"yesterday"
+  },
+  {
+    "key":"past_week"
+  },
+  {
+    "key":"past_month"
+  }
+]
+$.each(items, function(i,v) {
+  var vv = '<option value="' + v.key + '">' + v.key + "</option>" 
+  $('.lists').append(vv)
+})
+var format = d3.format("0,000");
+var percentFormat = d3.format(".4p")
+
+dc.dataTable(".dc-data-table")
+  .dimension(advertiser)
+  .group(function (d) {
+    return d.advertiser
+
+  })
+  .size(10000)
+  .columns([
+    function (d) {
+      return d.campaign
+    },
+    function (d) {
+      return format(d.num_served)
+    },
+    function (d) {
+      return format(d.num_loaded)
+    },
+    function (d) {
+      return format(d.num_visible)
+    },
+    function (d) {
+      return percentFormat(d.num_visible/d.num_served)
+    },
+    function (d) {
+      return "<a href='http://console.appnexus.com/v2/campaign:" + d.campaign + "/edit'>Edit</a>"
+    }
+  ])
+  .sortBy(function (d) {
+    return 10000000000 - parseInt(d.num_served);
+  })
+  .order(d3.ascending)
+  .renderlet(function (table) {
+
+    table.selectAll(".dc-table-row").classed("hide",true)
+    table.selectAll(".dc-table-group")
+      .selectAll(".dc-table-label")
+      .attr("colspan",0)
+
+    var s = table.selectAll(".dc-table-group")
+    s
+      .append("td")
+      .text(function(x){
+        return format(hash[x.key].num_served)
+      })
+    s
+      .append("td")
+      .text(function(x){
+        return format(hash[x.key].num_loaded)
+      })
+    s
+      .append("td")
+      .text(function(x){
+        return format(hash[x.key].num_visible)
+      })
+    s
+      .append("td")
+      .text(function(x){
+        return percentFormat(hash[x.key].num_visible/hash[x.key].num_served)
+      })
+    s
+      .append("td")
+      .classed("lock",true)
+      .classed("right",true)
+      .classed("btn-xs",true)
+      .text("View campaigns")
+     
+     
+     
+
+    table.selectAll(".dc-table-group").classed("info", true).on("click", function(e){
+      var lock = d3.select(this.parentNode).selectAll(".lock");
+      var text = lock.text();
+      if (text == "View campaigns") {
+        lock.text("Hide campaigns")
+        d3.select(this.parentNode)
+          .selectAll(".dc-table-row")
+          .classed("hide" , false)
+          .transition().duration(500)
+
+      } else if (text == "Hide campaigns") {
+                
+        lock.text("View campaigns")
+        d3.select(this.parentNode)
+          .selectAll(".dc-table-row")
+          .classed("hide",true)
+          .transition().duration(500)
+
+      } 
+
+    })
+ 
+    $(document.getElementsByClassName('dc-table-row')).each(function(x,y){
+      y.classList.add("warning")
+    })
+  });
+
+dc.renderAll()
+
+var send_data = function(json_string,cb) {
+  $.ajax({
+    type: "POST",
+    dataType: "json",
+    url: "/admin/advertiser/reporting/?format=json", 
+    data: json_string, 
+    success: function(last){ 
+      if (cb) cb(last)
+    },
+    failure: function(last) {
+      console.log(last)
+    }
+  })
+}
+
+$('#batch').click(function(e){
+  e.preventDefault()
+  var serialized = $(e.target).parents("form").serializeObject()
+  var stringified = JSON.stringify(serialized)
+  send_data(stringified,function(a){
+    crs.remove()
+    crs.add(a);
+    dc.redrawAll()
+  })
+  return false;
+})
+
+
+
+
+</script>
+<script src="http://rockerbox.com/js/jquery.serialize-object.js"></script>
+
+{% end %} 

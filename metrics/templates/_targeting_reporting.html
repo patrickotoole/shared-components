@@ -240,7 +240,7 @@ dc.renderAll()
 $(".remove").click(function(e){
   e.preventDefault()
   $.ajax({
-    url: "?"+e.target.id,
+    url: "targeting?"+e.target.id,
     type: "DELETE"
   }).done(function(){
     if (e.target.id.match("delete")) {
@@ -255,7 +255,7 @@ $(".remove").click(function(e){
 $(".enable").click(function(e){
   e.preventDefault()
   $.ajax({
-    url: "?"+e.target.id,
+    url: "targeting?"+e.target.id,
     type: "POST"
   }).done(function(){
     $(e.target).parent().find("button").toggleClass("hidden")
@@ -267,7 +267,7 @@ var send_data = function(json_string,cb) {
   $.ajax({
     type: "POST",
     dataType: "json",
-    url: "?", 
+    url: "targeting", 
     data: json_string, 
     success: function(last){ 
       if (cb) cb()
@@ -279,7 +279,7 @@ var send_data = function(json_string,cb) {
 $('form').on('click','#add-batch',function(e){
   e.preventDefault()
   $.ajax({
-    url:"?format=json",
+    url:"targeting?format=json",
     dataType:"json"
   }).done(function(original){
     batch = batch.map(function(x){x.active = 1; return x})
@@ -294,7 +294,7 @@ $('form').on('click','#add-batch',function(e){
 $('form').on('click','#disable-batch',function(e){
   e.preventDefault()
   $.ajax({
-    url:"?format=json",
+    url:"targeting?format=json",
     dataType:"json"
   }).done(function(original){
     batch = batch.map(function(x){x.active = 0; return x})
@@ -308,7 +308,7 @@ $('form').on('click','#disable-batch',function(e){
 $('form').on('click','#delete-batch',function(e){
   e.preventDefault()
   $.ajax({
-    url:"?format=json",
+    url:"targeting?format=json",
     dataType:"json"
   }).done(function(original){
     var logs = [],
@@ -346,7 +346,7 @@ $('form').on('click','#delete-batch',function(e){
 $('form').on('click','#confirm-batch',function(e){
   e.preventDefault()
   $.ajax({
-    url:"?format=json",
+    url:"targeting?format=json",
     dataType:"json"
   }).done(function(original){
     var logs = [],
@@ -388,7 +388,7 @@ $('form').on('click','#confirm-batch',function(e){
 $('#add-target').click(function(e){
   e.preventDefault()
   $.ajax({
-    url:"?format=json",
+    url:"targeting?format=json",
     dataType:"json"
   }).done(function(original){
     _new = $(e.target).parents("form").serializeObject()
@@ -445,7 +445,7 @@ $('#batches').on('click','.remove-batch',function(e){
       segment = e.target.id.split("remove-")[1].split("|")[2]
     console.log(log,pattern)
     $.ajax({
-      url:"?format=json",
+      url:"targeting?format=json",
       dataType:"json"
     }).done(function(original){
       var remove = function() {

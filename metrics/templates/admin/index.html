@@ -1,4 +1,4 @@
-{% extends clean_base.html %}
+{% extends "../clean_base.html" %}
 
 {% block content %}
 <style>
@@ -16,7 +16,14 @@
   {% end %}
 </ul>
 
-<h2>Internal</h2>
+<h2>Advertiser</h2>
+<ul>
+  {% for i in advertiser_links %}
+      <li><a href="{% raw i[0] %}", target="_blank">{% raw i[1] %}</a></li>
+  {% end %}
+</ul> 
+
+<h2>Other</h2>
 <ul>
   {% for i in internal_links %}
       <li><a href="{% raw i[0] %}", target="_blank">{% raw i[1] %}</a></li>
