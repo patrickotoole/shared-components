@@ -45,8 +45,29 @@ var groupedDataWrapper = function(data,meta) {
 
 }
 
-var numberFormat = d3.format("0,000");
-var percentFormat = d3.format(".4p")
+FORMATTER = {
+    "numberFormat": d3.format("0,000"),
+    "percentFormat":  d3.format(".4p"),
+    "currency": d3.format("$0,000.00"),
+    "cpm": function(x) {
+      return d3.format("$0,000.00")(d3.round(x/1000,3))
+    },
+    "none" : function(x) {return x}
+}
+
+var defaultFormatColumn = function(x,h) {
+  var formatted = FORMATTER.numberFormat(h[x]),
+    formatters = self.crsWrapped.meta.formatters
+
+  if (isNaN(h[x])) {
+    return h[x]
+  } else if (formatters && formatters[x]) {
+    return FORMATTER[formatters[x]](h[x])
+  } else {
+    return formatted
+  }
+  
+}
 
 var groupedTableWrapper = function(crsWrapped,data_table_id) {
   var MAX_SIZE = 10000000
@@ -56,10 +77,8 @@ var groupedTableWrapper = function(crsWrapped,data_table_id) {
   this.crsWrapped = crsWrapped
   window.crsWrapped = this.crsWrapped
 
-  var self = this;
-    defaultFormatColumn = function(x,h) {
-      return isNaN(h[x]) ? h[x] : numberFormat(h[x])
-    },
+  var self = this,
+    
     defaultMoreColumn = function(h) {
       var group_names = Object.keys(self.crsWrapped.groups),
         remaining_groups = group_names.filter(function(x) {
@@ -150,9 +169,12 @@ var groupedTableWrapper = function(crsWrapped,data_table_id) {
       $(self.headers.slice(1)).each(function(i,f){
         s.append("td")
           .text(function(x){
-            return isNaN(hash[x.key][f]) ? 
+            return defaultFormatColumn(f, hash[x.key])
+
+            /*return isNaN(hash[x.key][f]) ? 
               "" : 
-              numberFormat(hash[x.key][f])
+              FORMATTER.numberFormat(hash[x.key][f])
+            */
           })
       })
       

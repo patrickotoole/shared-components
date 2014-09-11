@@ -15,7 +15,10 @@ OPTIONS = {
     "default": {
         "meta": {
             "groups" : ["advertiser","domain"],
-            "fields" : ["served","available","seen","visible","spent"]
+            "fields" : ["available","seen","served","visible","spent"],
+            "formatters":{
+                "spent":"cpm"
+            }
         }
     }
 }
@@ -84,7 +87,10 @@ class AdvertiserReportingHandler(AdminReportingBaseHandler):
     def format_data(self,u,groupby,wide):
         for field in FIELDS:
             try:
-                u[field] = u[field].astype(int)
+                try:
+                    u[field] = u[field].astype(int)
+                except:
+                    u[field] = u[field].astype(float) 
             except:
                 pass
 

@@ -14,6 +14,7 @@ AGG_ADVERTISER_DOMAIN = """
     from agg_advertiser_domain
     where %(where)s 
     group by %(groups)s
+    having served > 20
 """ 
 
 
@@ -83,15 +84,9 @@ GROUP BY {}
 '''
 
 ADVERTISER_VIEWABLE = """
-SELECT 
-    advertiser,
-    campaign,
-    sum(num_served) num_served,
-    sum(num_loaded) num_loaded,
-    sum(num_visible) num_visible
+select 
+    %(fields)s
 FROM advertiser_visibility_daily
-WHERE %(where)s
-GROUP BY 
-    advertiser,
-    campaign
+where %(where)s 
+group by %(groups)s 
 """
