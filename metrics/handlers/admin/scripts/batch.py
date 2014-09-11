@@ -8,7 +8,7 @@ from lib.query.MYSQL import *
 from lib.query.HIVE import *
 import lib.query.helpers as query_helpers
 
-class BatchRequestBase(tornado.web.RequestHandler):
+class BatchRequestBase():
     def initialize(self, db, api, hive):
         self.db = db 
         self.api = api
@@ -23,6 +23,10 @@ class BatchRequestBase(tornado.web.RequestHandler):
                              , expiration, active, comment):
         '''Given data for a batch request, insert a row in the batch_request
         table.'''
+
+        if request_type == "hive_query":
+            content = self.clean_query(content)
+
         query = INSERT_BATCH_REQUEST.format(
             request_type,
             content,
@@ -48,29 +52,6 @@ class BatchRequestBase(tornado.web.RequestHandler):
         self.db.execute(query)
         self.db.commit()
 
-class BatchRequestsHandler(BatchRequestBase):
-    '''Handler for viewing batch requests'''
-
-    def get(self):
-        deactivate_request_id = self.get_argument("deactivate_request", 
-                                                  default=False)
-        activate_request_id = self.get_argument("activate_request", 
-                                                default=False)
-        
-        if deactivate_request_id:
-            self.deactivate_request(deactivate_request_id)
-            self.redirect("/admin/batch_requests")
-        elif activate_request_id:
-            self.activate_request(activate_request_id)
-            self.redirect("/admin/batch_requests")
-        else:
-            requests = self.db.select_dataframe("select * from batch_request")
-            self.render("../templates/admin/batch_requests.html", 
-                        data=requests.to_html(classes=["dataframe"]))
-
-class BatchRequestFormHandler(BatchRequestBase):
-    '''Handler for submitting new batch requests'''
-
     def clean_query(self, query):
         '''Given a Hive query, sanitize it for use in batch processing'''
 
@@ -83,9 +64,7 @@ class BatchRequestFormHandler(BatchRequestBase):
             query = query[:-1]
         
         # Replace whitespace with single space
-        query = query.replace("\n", " ")
-        query = query.replace("\r", " ")
-        query = query.replace("\t", " ")
+        query = ' '.join(query.split())
         
         # Remove ending semicolon
         if query[-1] == ';':
@@ -102,6 +81,38 @@ class BatchRequestFormHandler(BatchRequestBase):
         if ':' not in target_segment:
             target_segment = target_segment + ":0"
         return target_segment
+
+
+class BatchRequestsHandler(BatchRequestBase, tornado.web.RequestHandler):
+    '''Handler for viewing batch requests'''
+
+    @decorators.formattable
+    def get(self):
+        deactivate_request_id = self.get_argument("deactivate_request", 
+                                                  default=False)
+        activate_request_id = self.get_argument("activate_request", 
+                                                default=False)
+
+        requests = self.db.select_dataframe("select * from batch_request")
+                
+        if not self.get_argument("format", False):
+            requests = requests.to_html(classes=["dataframe"])
+
+        if deactivate_request_id:
+            self.deactivate_request(deactivate_request_id)
+            self.redirect("/admin/batch_requests")
+        elif activate_request_id:
+            self.activate_request(activate_request_id)
+            self.redirect("/admin/batch_requests")
+        
+        def default(self, requests):
+            self.render( "../templates/admin/batch_requests.html", 
+                         data = requests)
+
+        yield default, (requests,)
+
+class BatchRequestFormHandler(BatchRequestBase, tornado.web.RequestHandler):
+    '''Handler for submitting new batch requests'''
 
     def get(self):
         '''Display a form for a new batch request'''
@@ -133,28 +144,23 @@ class BatchRequestFormHandler(BatchRequestBase):
         hive_query = self.get_argument("hive_query", False)
         custom_params = self.get_argument("custom_params", False)
 
-        # If the user has specified a custom target segment, but hasn't added a
-        # rhs parameter (after the colon), add a ':0' to the end of the segment
-        if not custom_params:
-            target_segment = self.clean_target_segment(target_segment)
-
         if request_type=="domain_list":
             # Set the content parameter to segment#target_window
             content = '#'.join([segment, target_window])
-
-        elif request_type=="hive_query":
-            # If custom parameters are being used, no need for expiration or 
-            # target segment.
-            if custom_params:
-                target_segment = "NULL"
-                expiration = "NULL"
-            hive_query = self.clean_query(hive_query)
-
+        else if request_type=="hive_query":
             # Set the content parameter to the query
             content = hive_query
+
+        # If the user has specified a custom target segment, but hasn't added a
+        # rhs parameter (after the colon), add a ':0' to the end of the segment
+        if custom_params:
+            target_segment = "NULL"
+            expiration = "NULL"
+        else:
+            target_segment = self.clean_target_segment(target_segment)
             
         self.insert_request(request_type, content, owner, target_segment, 
                             expiration, active, comment)
 
         self.redirect("/admin/batch_requests")
-                
+
