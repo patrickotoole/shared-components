@@ -147,7 +147,7 @@ class BatchRequestFormHandler(BatchRequestBase, tornado.web.RequestHandler):
         if request_type=="domain_list":
             # Set the content parameter to segment#target_window
             content = '#'.join([segment, target_window])
-        else if request_type=="hive_query":
+        elif request_type=="hive_query":
             # Set the content parameter to the query
             content = hive_query
 
