@@ -75,7 +75,6 @@ class CreativeReportingTest(AsyncHTTPTestCase):
         self.db.execute(DROP_DASH)
 
     def test_api_get_dash(self):
-        import pdb; pdb.set_trace()
         response = self.fetch("/?format=json").body
         obj = ujson.loads(response)
         self.assertEqual(len(obj), 3)
