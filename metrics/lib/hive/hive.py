@@ -58,6 +58,7 @@ class Hive(object):
         self.marathon_endpoint = marathon_endpoint
         self._hive = self.connect()
 
+
         # Sets number of mappers/reducers
         self.n_map = n_map
         self.n_reduce = n_reduce
@@ -82,6 +83,7 @@ class Hive(object):
         server = shark_servers[0]
         return server
        
+
 
 
     def connect(self):
