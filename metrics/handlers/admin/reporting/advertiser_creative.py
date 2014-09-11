@@ -6,7 +6,7 @@ from lib.helpers import *
 from lib.query.MYSQL import *
 import lib.query.helpers as query_helpers
 
-class AdvertiserReportingHandler(tornado.web.RequestHandler):
+class AdvertiserCreativeReportingHandler(tornado.web.RequestHandler):
 
     def initialize(self, db=None, **kwargs):
         self.db = db 
