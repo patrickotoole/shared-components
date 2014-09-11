@@ -105,8 +105,6 @@ class BatchRequestBaseTest(AsyncHTTPTestCase):
         self.base.initialize(db=self.db, hive=None, api=None)
 
         # Create test tables
-        self.db.execute("DROP TABLE IF EXISTS batch_request")
-        self.db.execute("DROP TABLE IF EXISTS domain_list")
         self.db.execute(CREATE_REQUEST_TABLE)
         self.db.execute(CREATE_DOMAIN_LIST_TABLE)
         
