@@ -144,7 +144,6 @@ SELECT
 FROM advertiser_segment INNER JOIN advertiser using (external_advertiser_id)
 '''
 
-
 DAILY_DASH = """
 SELECT
     *
@@ -172,7 +171,7 @@ WHERE id={}
 '''
 
 DISTINCT_SEGMENT = '''
-SELECT DISTINCT segment 
+SELECT DISTINCT log
 FROM domain_list
 '''
 
