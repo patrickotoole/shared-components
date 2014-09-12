@@ -65,15 +65,19 @@ class AdminReportingBase(object):
 
         return meta_data
 
-    def make_params(self,groups,fields,where):
+    def make_params(self,groups,fields,where,joins="",**kwargs):
         gs = map(self.get_group,groups)
         fs = map(self.get_field,groups + fields)
 
-        return {
+        params = {
             "groups": ", ".join(gs),
             "fields": ", ".join(fs),
-            "where": where
+            "where": where,
+            "joins": joins
         } 
+        for i,j in kwargs.iteritems():
+            params[j] = i
+        return params
 
 class AdminReportingBaseHandler(tornado.web.RequestHandler,AdminReportingBase):
     """

@@ -11,6 +11,10 @@ from lib.query.HIVE import ADVERTISER_VIEWABLE
 import lib.query.helpers as query_helpers
 from ..base import AdminReportingBaseHandler 
 
+JOIN = {
+    "type":"v JOIN domain_list d on d.pattern = v.domain"    
+}
+
 OPTIONS = {
     "default": {
         "meta": {
@@ -31,7 +35,18 @@ OPTIONS = {
                 "spent": "cpm"
             }
         }
-    } 
+    },
+    "domain_list": {
+        "meta": {
+            "groups" : ["type","domain"],
+            "fields" : ["served","loaded","visible","spent"],
+            "formatters" : {
+                "campaign":"none",
+                "spent": "cpm"
+            },
+            "joins" : JOIN["type"]
+        }
+    }
 }
 
 # s/\(.\{-}\) .*/    "\1":"\1",/g
@@ -45,7 +60,8 @@ GROUPS = {
     "domain":"domain",
     "creative":"creative",
     "width":"width",
-    "height":"height"
+    "height":"height",
+    "type":"d.log"
 }
 
 FIELDS = {
@@ -60,8 +76,12 @@ FIELDS = {
 
 WHERE = {
     "advertiser":"advertiser like '%%%(advertiser)s%%'",
-    "campaign":"campaign = '%(campaign)s'"
+    "campaign":"campaign = '%(campaign)s'",
+    "domain":"domain like '%%%(domain)s%%'",
+    "type":"d.log like '%%%(type)s%%'"
 }
+
+
 
 
 class AdvertiserViewableHandler(AdminReportingBaseHandler):
@@ -88,7 +108,7 @@ class AdvertiserViewableHandler(AdminReportingBaseHandler):
             else:
                 return ".".join(s[-3:])
 
-        data["domain"] = data.domain.map(lambda x: split_help(x))
+        #data["domain"] = data.domain.map(lambda x: split_help(x))
         data["domain"] = data.domain.map(lambda x: x.replace("$","").replace("]",""))
         data = data.groupby([c for c in data.columns if c != "served"]).sum()
         return data.reset_index()
@@ -127,14 +147,14 @@ class AdvertiserViewableHandler(AdminReportingBaseHandler):
             u = self.reformat_domain_data(u)
 
         if groupby and wide:
-            print groupby
-            #ll = lambda df: df.iloc[0][[ i for i in df.columns if i not in groupby]].T
-            #uu = u.groupby(groupby).apply(ll)
-            #import ipdb; ipdb.set_trace() 
             u = u.set_index(groupby).sort_index()
             u = u.stack().unstack(wide)
-            u = u.reset_index()
-            u.rename(columns={"level_2":''}, inplace=True)
+
+            new_index = [i if i else "" for i in u.index.names]
+            u.index.rename(new_index,inplace=True)
+            u = u.reset_index().reset_index()
+            u.rename(columns={"index":"__index__"},inplace=True)
+
 
         return u
 
@@ -186,8 +206,10 @@ class AdvertiserViewableHandler(AdminReportingBaseHandler):
             params = self.make_params(
                 meta_data.get("groups",[]),
                 meta_data.get("fields",[]),
-                self.make_where()
+                self.make_where(),
+                joins=meta_data.get("joins","")
             )
+
             self.get_data(
                 self.make_query(params),
                 meta_data.get("groups",[]),

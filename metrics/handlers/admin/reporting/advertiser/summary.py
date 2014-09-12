@@ -103,9 +103,13 @@ class AdvertiserReportingHandler(AdminReportingBaseHandler):
             u = self.reformat_domain_data(u)
 
         if groupby and wide:
-            print groupby
             u = u.set_index(groupby).sort_index()
-            u = u["served"].unstack(wide)
+            u = u.stack().unstack(wide)
+
+            new_index = [i if i else "" for i in u.index.names]
+            u.index.rename(new_index,inplace=True)
+            u = u.reset_index().reset_index()
+            u.rename(columns={"index":"__index__"},inplace=True) 
 
         return u
 

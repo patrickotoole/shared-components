@@ -50,12 +50,13 @@ var groupedDataWrapper = function(data,meta) {
       headers = []
     
     keys.map(function(x){
-      if (self.meta.groups.indexOf(x) == -1) {
+      if (self.meta.groups.indexOf(x) == -1 && x != "__index__") {
         headers.push(x)
       }
     })
     this.headers = this.meta.groups.filter(function(x){
-      return x != self.meta.is_wide
+      console.log(x)
+      return x != self.meta.is_wide 
     }).concat(headers.sort(function(x,y){return new Date("20"+x) - new Date("20"+y)}))
   }
 
@@ -86,7 +87,7 @@ var defaultFormatColumn = function(x,h) {
 }
 
 var groupedTableWrapper = function(crsWrapped,data_table_id) {
-  var MAX_SIZE = 10000000
+  var MAX_SIZE = 1000
 
   this.dataTable = dc.dataTable(data_table_id)
   this.headers = crsWrapped.headers
@@ -134,24 +135,24 @@ var groupedTableWrapper = function(crsWrapped,data_table_id) {
       columns = (columns != undefined) ? columns : self.crsWrapped.defaultHeaders,
       value_name = self.crsWrapped.defaultValueName
 
+
+
+    
+
     self.dataTable
       .dimension(dim)
       .group(function (d) {
+        d.hello = "asdf"
         return d[group_name]
       })
       .size(MAX_SIZE) 
       .columns(self.buildColumns())
       .sortBy(function (d) {
+
         if (self.crsWrapped.meta.is_wide == false) {
           return d[self.crsWrapped.defaultValueName]
         } else {
-          return Object.keys(
-            self.crsWrapped.groups).map(function(g) {
-              return self.crsWrapped.meta.is_wide == g ? 
-                self.crsWrapped.fields.length + 1 - self.crsWrapped.fields.indexOf(d[""]) : 
-                d[g] 
-            }
-          ).join()
+          return d.__index__
         }
       })
       .order(d3.descending)
