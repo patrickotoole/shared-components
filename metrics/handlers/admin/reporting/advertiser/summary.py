@@ -1,72 +1,50 @@
 import tornado.web
 import ujson
 import pandas
-import datetime
 
 from twisted.internet import defer 
 
 from lib.helpers import *
-from lib.hive.helpers import run_hive_session_deferred, run_hive_deferred
-from lib.query.HIVE import ADVERTISER_VIEWABLE
+from lib.query.MYSQL import *
 import lib.query.helpers as query_helpers
-from base import AdminReportingBaseHandler 
+from lib.hive.helpers import run_hive_session_deferred
+from lib.query.HIVE import AGG_ADVERTISER_DOMAIN
+from ..base import AdminReportingBaseHandler 
 
 OPTIONS = {
     "default": {
         "meta": {
-            "groups" : ["advertiser","campaign"],
-            "fields" : ["served","loaded","visible","spent"],
-            "formatters" : {
-                "campaign":"none",
-                "spent": "cpm"
+            "groups" : ["advertiser","domain"],
+            "fields" : ["available","seen","served","visible","spent"],
+            "formatters":{
+                "spent":"cpm"
             }
         }
-    },
-    "tag": {
-        "meta": {
-            "groups" : ["seller","tag","domain"],
-            "fields" : ["served","loaded","visible","spent"],
-            "formatters" : {
-                "campaign":"none",
-                "spent": "cpm"
-            }
-        }
-    } 
-}
-
-# s/\(.\{-}\) .*/    "\1":"\1",/g
-GROUPS = {
-    "advertiser":"advertiser",
-    "date":"date",
-    "campaign":"campaign",
-    "seller":"seller",
-    "tag":"tag",
-    "venue":"venue",
-    "domain":"domain",
-    "creative":"creative",
-    "width":"width",
-    "height":"height"
+    }
 }
 
 FIELDS = {
-    "spent":"sum(spent)",
-    "total_ecp":"sum(total_ecp)",
-    "served":"sum(num_served)",
-    "loaded":"sum(num_loaded)",
-    "visible":"sum(num_visible)",
-    "num_visible_on_load":"sum(num_visible_on_load)",
-    "num_long_visit":"sum(num_long_visit)"
+    "available":"sum(num_avail)",
+    "seen":"sum(num_seen)", 
+    "served":"sum(num_served)", 
+    "visible":"sum(num_visible)", 
+    "spent":"sum(total_spent)"
+}
+
+GROUPS = {
+    "advertiser":"advertiser",
+    "domain":"domain",
+    "date":"date"
 }
 
 WHERE = {
     "advertiser":"advertiser like '%%%(advertiser)s%%'",
-    "campaign":"campaign = '%(campaign)s'"
+    "domain": "domain like '%%%(domain)s%%'"
 }
 
+class AdvertiserReportingHandler(AdminReportingBaseHandler):
 
-class AdvertiserViewableHandler(AdminReportingBaseHandler):
-
-    QUERY = ADVERTISER_VIEWABLE
+    QUERY = AGG_ADVERTISER_DOMAIN
     WHERE = WHERE
     FIELDS = FIELDS
     GROUPS = GROUPS
@@ -108,15 +86,15 @@ class AdvertiserViewableHandler(AdminReportingBaseHandler):
 
     def format_data(self,u,groupby,wide):
         for field in FIELDS:
-            if field in u.columns:
+            try:
                 try:
-                    try:
-                        u[field] = u[field].astype(int)
-                    except:
-                        u[field] = u[field].astype(float) 
+                    u[field] = u[field].astype(int)
                 except:
-                    logging.warn("Could not format %s" % field)
-                    pass
+                    u[field] = u[field].astype(float) 
+                if field == "spent":
+                    u[field] = u[field]/1000
+            except:
+                pass
 
         if "domain_count" in u.columns:
             u["domain_count"] = u.domain_count.astype(int)
@@ -126,13 +104,8 @@ class AdvertiserViewableHandler(AdminReportingBaseHandler):
 
         if groupby and wide:
             print groupby
-            #ll = lambda df: df.iloc[0][[ i for i in df.columns if i not in groupby]].T
-            #uu = u.groupby(groupby).apply(ll)
-            #import ipdb; ipdb.set_trace() 
             u = u.set_index(groupby).sort_index()
-            u = u.stack().unstack(wide)
-            u = u.reset_index()
-            u.rename(columns={"level_2":''}, inplace=True)
+            u = u["served"].unstack(wide)
 
         return u
 
@@ -157,11 +130,15 @@ class AdvertiserViewableHandler(AdminReportingBaseHandler):
 
     def get_meta_group(self,default="default"):
         
-        meta = self.get_argument("meta",False)
+        domain_list = self.get_argument("type",False)
+        advertiser = self.get_argument("advertiser",False)
 
-        if meta:
-            return meta
+        if domain_list:
+            return "type"
 
+        if advertiser:
+            return "advertiser"
+        
         return default
 
     
@@ -169,12 +146,9 @@ class AdvertiserViewableHandler(AdminReportingBaseHandler):
     @tornado.web.asynchronous
     def get(self,meta=False):
         formatted = self.get_argument("format",False)
-        include = self.get_argument("include","").split(",")
-        wide = self.get_argument("wide",False)
-
+        include = self.get_argument("include",False)
         meta_group = self.get_meta_group()
         meta_data = self.get_meta_data(meta_group,include)
-        meta_data["is_wide"] = wide
 
         if meta:
             self.write(ujson.dumps(meta_data))
@@ -189,7 +163,7 @@ class AdvertiserViewableHandler(AdminReportingBaseHandler):
             self.get_data(
                 self.make_query(params),
                 meta_data.get("groups",[]),
-                wide
+                self.get_argument("wide",False)
             )
 
         else:

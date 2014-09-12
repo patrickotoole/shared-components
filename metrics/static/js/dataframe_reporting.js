@@ -66,7 +66,7 @@ FORMATTER = {
     "percentFormat":  d3.format(".4p"),
     "currency": d3.format("$0,000.00"),
     "cpm": function(x) {
-      return d3.format("$0,000.00")(d3.round(x/1000,3))
+      return d3.format("$0,000.00")(d3.round(x,3))
     },
     "none" : function(x) {return x}
 }

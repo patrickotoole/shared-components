@@ -1,7 +1,8 @@
-from domain_list import DomainListHandler
 from visibility import ViewabilityHandler, ViewabilityBase
 from segment import SegmentReportingHandler
 from imps import ImpsReportingHandler
 from advertiser_creative import AdvertiserCreativeReportingHandler
-from advertiser_summary import AdvertiserReportingHandler
-from advertiser_viewable import AdvertiserViewableHandler
+
+from advertiser.summary import AdvertiserReportingHandler
+from advertiser.viewable import AdvertiserViewableHandler
+from advertiser.domain_list import DomainListHandler
