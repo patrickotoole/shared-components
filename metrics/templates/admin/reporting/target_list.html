@@ -24,6 +24,7 @@
     </form>
     <script>
       data = {{data}}
+      if (data.length) {
       var GROUPS = '<div class="col-sm-3"><h4>Select Grouping</h4><div class="groups" id="groups"></div></div>',
        FIELDS = '<div class="col-sm-3"><h4>Select Fields</h4><div class="fields" id="fields"></div></div>', 
        DUPLICATE = '<div class="col-md-1"><button type="submit" id="batch" class="submit btn ">Add</button></div>' 
@@ -136,6 +137,7 @@
         return false;
       })
  
+      }
       </script>
   </div>
 </div>
