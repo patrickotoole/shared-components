@@ -58,7 +58,7 @@ class AdminReportingBase(object):
 
         if additional_dims:
             dims = [dim for dim in additional_dims if dim in self.GROUPS.keys()]
-            missing = [dim for dim in dims if dim not in additional_dims]
+            missing = [dim for dim in additional_dims if dim not in dims]
             if len(missing):
                 logging.warn("Some of the requested dimensions do not exist %s " % ",".join(missing))
             meta_data['groups'] += dims

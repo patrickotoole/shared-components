@@ -109,7 +109,6 @@ class AdminReportingBaseTestCase(unittest.TestCase):
  
 
 def helper(self):
-    import pdb; pdb.set_trace()
     print self
     return
  

@@ -65,7 +65,7 @@ class CreativeReportingTest(AsyncHTTPTestCase):
         self.db.execute(INSERT_DASH % {"range":"past_month","advertiser_id":ADVERTISER_ID})  
 
         dirname = os.path.dirname(os.path.realpath(__file__)) + "../../../../../templates"
-        self.app = Application([('/', reporting.AdvertiserReportingHandler, dict(db=self.db))],
+        self.app = Application([('/', reporting.AdvertiserCreativeReportingHandler, dict(db=self.db))],
             cookie_secret="rickotoole",
             template_path=dirname
         )
