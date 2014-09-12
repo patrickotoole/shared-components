@@ -7,6 +7,7 @@ $(document).ready( function() {
 	    $("label[for=segment], select[name=segment]")
 		.prop("disabled", false)
 		.prop("hidden", false);
+	    $("#custom_hive_instructions, #default_hive_instructions").hide();
 	}
 
 	else {
@@ -16,6 +17,7 @@ $(document).ready( function() {
 	    $("label[for=segment], select[name=segment]")
 		.prop("disabled", true)
 		.prop("hidden", true);
+	    $("#default_hive_instructions").show();
 	}
 
 	if (this.value == "hive_query") {
@@ -25,7 +27,7 @@ $(document).ready( function() {
 	    $("label[for=custom_params], input[name=custom_params]")
 		.prop("disabled", false)
 		.prop("hidden", false);
-
+	    $("#default_hive_instructions").show();
 	}
 
 	else {
@@ -35,9 +37,10 @@ $(document).ready( function() {
 	    $("label[for=custom_params], input[name=custom_params]")
 		.prop("disabled", true)
 		.prop("hidden", true);
+	    $("#custom_hive_instructions, #default_hive_instructions").hide();
 	}
 
-    }).change();
+    }).triggerHandler("change");
 
     $("#custom_params").on("click", function() {
 	if ($("input[name=custom_params]").is(":checked")) {
@@ -52,8 +55,8 @@ $(document).ready( function() {
 	    $("#custom_hive_instructions").hide();
 	    $("#default_hive_instructions").show();
 	}
-    }).triggerHandler("click");;
-
+    });
+    
     $("#segment").prepend("<option value='' selected='selected'></option>");
 
     $("#request_form").validate({

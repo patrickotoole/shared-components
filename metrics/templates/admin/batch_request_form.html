@@ -48,7 +48,7 @@ table.form{
 </style>
 
 <div class="content">
-<p><button><a href="/admin/batch_requests">Requests</a></button></p>
+<p><a href="/admin/batch_requests"><button>Requests</button></a></p>
 <div class="header">
   <h1>Batch Request Form</h1>
 </div>
@@ -84,7 +84,7 @@ table.form{
   <td><label for="expiration">Expiration (minutes)</label></td>
   <td><input type="text" name="expiration"></input></td>
   <td><input type="checkbox" name="custom_params" id="custom_params"></input></td>
-  <td><label for="custom_params">Specify the expiration(s) and target_segment(s) within my query</label></td>
+  <td><label for="custom_params">Specify the expiration(s) and target_segment(s) within my query (ONLY FOR EXPERIENCED USERS)</label></td>
 </tr>
 
 <tr>
@@ -94,10 +94,10 @@ table.form{
 
 <tr>
   <td></td>
-  <td id="default_hive_instructions" colspan="3">
+  <td id="default_hive_instructions" colspan="3" style="display: none;">
     <p>Your query should return only one column: <b>uid</b>, containing a list of uids to be added to the segment</p>
   </td>
-  <td id="custom_hive_instructions" colspan="3">
+  <td id="custom_hive_instructions" colspan="3" style="display: none;" >
     <p>If specifying your own expiration/target segment(s), your query should 
       only return two columns: <b>uid</b> and <b>rhs</b>. The results of your query should look like:
     <p style="margin-left:50px;"><i><b>uid</b>, <b>rhs</b><br />193848281829, 284748:0:30</i></p>
