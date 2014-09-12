@@ -9,65 +9,114 @@ from lib.query.HIVE import *
 import lib.query.helpers as query_helpers
 
 class BatchRequestBase(tornado.web.RequestHandler):
-
     def initialize(self, db, api, hive):
         self.db = db 
         self.api = api
         self.hive = hive
 
     def pull_segments(self):
-        segments = self.db.select_dataframe("select distinct segment from domain_list")
-        print segments
+        '''Return a list of domain list segments'''
+        segments = self.db.select_dataframe(DISTINCT_SEGMENT)
         return segments['segment'].tolist()
 
+    def insert_request(self, request_type, content, owner, target_segment
+                             , expiration, active, comment):
+        '''Given data for a batch request, insert a row in the batch_request
+        table.'''
+        query = INSERT_BATCH_REQUEST.format(
+            request_type,
+            content,
+            owner,
+            target_segment,
+            expiration,
+            active,
+            comment
+            )
+
+        self.db.execute(query)
+        self.db.commit()        
+
+    def deactivate_request(self, request_id):
+        '''Given an id of a batch request, set the 'active' column to 0'''
+        query = DEACTIVATE_REQUEST.format(request_id)
+        self.db.execute(query)
+        self.db.commit()
+
+    def activate_request(self, request_id):
+        '''Given an id of a batch request, set the 'active' column to 1'''
+        query = ACTIVATE_REQUEST.format(request_id)
+        self.db.execute(query)
+        self.db.commit()
+
 class BatchRequestsHandler(BatchRequestBase):
+    '''Handler for viewing batch requests'''
+
     def get(self):
-        deactivate_request = self.get_argument("deactivate_request", default=False)
-        activate_request = self.get_argument("activate_request", default=False)
+        deactivate_request_id = self.get_argument("deactivate_request", 
+                                                  default=False)
+        activate_request_id = self.get_argument("activate_request", 
+                                                default=False)
         
-        if deactivate_request:
-            query = "UPDATE batch_request SET active=0 WHERE id={}".format(deactivate_request)
-            self.db.execute(query)
-            self.db.commit()
+        if deactivate_request_id:
+            self.deactivate_request(deactivate_request_id)
             self.redirect("/admin/batch_requests")
-        elif activate_request:
-            query = "UPDATE batch_request SET active=1 WHERE id={}".format(activate_request)
-            self.db.execute(query)
-            self.db.commit()
+        elif activate_request_id:
+            self.activate_request(activate_request_id)
             self.redirect("/admin/batch_requests")
         else:
             requests = self.db.select_dataframe("select * from batch_request")
-            self.render("../templates/_batch_requests.html", data=requests.to_html(classes=["dataframe"]))
+            self.render("../templates/admin/batch_requests.html", 
+                        data=requests.to_html(classes=["dataframe"]))
 
-class BatchRequestHandler(BatchRequestBase):
+class BatchRequestFormHandler(BatchRequestBase):
+    '''Handler for submitting new batch requests'''
+
     def clean_query(self, query):
-        '''Given a Hive query, sanitizes it for use in batch processing'''
+        '''Given a Hive query, sanitize it for use in batch processing'''
+
         first_char = query[0]
         last_char = query[-1]
 
-        if first_char in ['"', "'"] and last_char in ['"', "'"]:
+        # If query is surrounded by quotes, remove them
+        if first_char in ['"', "'"] and last_char==first_char:
             query = query[1:]
             query = query[:-1]
         
+        # Replace whitespace with single space
         query = query.replace("\n", " ")
         query = query.replace("\r", " ")
-        query = query.replace(";","")
+        query = query.replace("\t", " ")
+        
+        # Remove ending semicolon
+        if query[-1] == ';':
+            query = query[:-1]
+            
+        # Replace 
         query = query.replace("'", "\\'")
         
         return query
 
     def clean_target_segment(self, target_segment):
+        '''Given a target segment, sanitize it for entry into database'''
+
         if ':' not in target_segment:
             target_segment = target_segment + ":0"
         return target_segment
 
     def get(self):
+        '''Display a form for a new batch request'''
+
         segments = self.pull_segments()
         request_types = ["domain_list", "hive_query"]
 
-        self.render("../templates/_batch_request.html", segments=segments, request_types=request_types)
+        self.render("../templates/admin/batch_request_form.html", 
+                    segments = segments, 
+                    request_types = request_types)
 
     def post(self):
+        '''Given parameters for a new batch request, preprocess them and insert
+        the data into the SQL table'''
+
         # Universal parameters
         request_type = self.get_argument("request_type")
         expiration = self.get_argument("expiration", False)
@@ -89,24 +138,23 @@ class BatchRequestHandler(BatchRequestBase):
         if not custom_params:
             target_segment = self.clean_target_segment(target_segment)
 
-        # Check that all required parameters are passed
-        if not request_type:
-            raise StandardError("Missing request type parameter")
-        if segment and not target_window:
-            raise StandardError("Missing target_window argument")
+        if request_type=="domain_list":
+            # Set the content parameter to segment#target_window
+            content = '#'.join([segment, target_window])
 
-        if segment:
-            query = "INSERT INTO batch_request (type, content, owner, target_segment, expiration, active, comment) VALUES ('{}','{}', '{}', '{}', {}, {}, '{}');".format('domain_list', '#'.join([segment, target_window]), owner, target_segment, expiration, active, comment)
-        else:
+        elif request_type=="hive_query":
+            # If custom parameters are being used, no need for expiration or 
+            # target segment.
             if custom_params:
                 target_segment = "NULL"
                 expiration = "NULL"
             hive_query = self.clean_query(hive_query)
-            print hive_query
-            query = "INSERT INTO batch_request (type, content, owner, target_segment, expiration, active, comment) VALUES ('{}','{}', '{}', '{}', {}, {}, '{}');".format('hive_query', hive_query, owner, target_segment, expiration, active, comment)                
-        
-        self.db.execute(query)
-        self.db.commit()
+
+            # Set the content parameter to the query
+            content = hive_query
+            
+        self.insert_request(request_type, content, owner, target_segment, 
+                            expiration, active, comment)
 
         self.redirect("/admin/batch_requests")
                 

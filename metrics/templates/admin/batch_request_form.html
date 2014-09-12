@@ -1,0 +1,143 @@
+{% extends ../clean_base.html %}
+
+{% block content %}
+<script src="/static/js/batch.js"></script>
+<script src="/static/js/jquery.validate.js"></script>
+<style>
+.content{
+   width:1000px;
+   margin:auto;
+}
+.header{
+   float:left;
+   width:100%;
+}
+.header h1{
+   text-align:center;
+}
+.body{
+   width:100%;
+   float:left;
+   padding-top:20px;
+   margin:auto;
+}
+.table_wrapper{
+   margin:auto;
+   width:80%;
+}
+table.form{
+   border-spacing:10px;
+   border-collapse:separate;
+   margin:auto;
+   align:center;
+}
+
+#hive_query{
+   width: 400px;
+   height: 200px;
+}
+
+#comment{
+   width: 400px;
+   height: 100px;
+}
+
+#owner{
+   width: 200px;
+}
+</style>
+
+<div class="content">
+<p><button><a href="/admin/batch_requests">Requests</a></button></p>
+<div class="header">
+  <h1>Batch Request Form</h1>
+</div>
+<div class="body">
+<div class="table_wrapper">
+<form id="request_form" action="" method="post">
+<table class="form">
+<tr>
+  <td><label for="request_type">Type</label></td>
+  <td><select id="request_type" name="request_type">
+      {% for request_type in request_types %}
+      <option value="{{request_type}}">{{request_type}}</option>
+      {% end %}
+      </select>
+  </td>
+</tr>
+
+<tr>
+  <td><label for="segment">Segment</label></td>
+  <td><select id="segment" name="segment">
+    {% for segment in segments %}
+    <option value="{{segment}}">{{segment}}</option>
+    {% end %}
+  </select> </td>
+</tr>
+
+<tr>
+  <td><label for="target_window">Target Window (minutes)</label></td>
+  <td colspan="3"><input type="text" name="target_window" required></input></td>
+</tr>
+
+<tr>
+  <td><label for="expiration">Expiration (minutes)</label></td>
+  <td><input type="text" name="expiration"></input></td>
+  <td><input type="checkbox" name="custom_params" id="custom_params"></input></td>
+  <td><label for="custom_params">Specify the expiration(s) and target_segment(s) within my query</label></td>
+</tr>
+
+<tr>
+  <td><label for="target_segment">Target Segment</label></td>
+  <td><input type="text" name="target_segment"></input></td>
+</tr>
+
+<tr>
+  <td></td>
+  <td id="default_hive_instructions" colspan="3">
+    <p>Your query should return only one column: <b>uid</b>, containing a list of uids to be added to the segment</p>
+  </td>
+  <td id="custom_hive_instructions" colspan="3">
+    <p>If specifying your own expiration/target segment(s), your query should 
+      only return two columns: <b>uid</b> and <b>rhs</b>. The results of your query should look like:
+    <p style="margin-left:50px;"><i><b>uid</b>, <b>rhs</b><br />193848281829, 284748:0:30</i></p>
+    <p>Where 193848281829 is the uid, 284748:0 is the target_segment, and 30 is the expiration.</p>
+  </td>
+</tr>
+
+<tr>
+  <td><label for="hive_query">Hive Query</label></td>
+  <td colspan="3"><textarea id="hive_query" name="hive_query"></textarea></td>
+</tr>
+
+
+<tr>
+  <td><label for="active">Active</label></td>
+  <td>
+    <select name="active">
+      <option value="1">Yes</option>
+      <option value="0">No</option>
+    </select>
+  </td>
+</tr>
+
+<tr>
+  <td><label for="comment">Comment</label></td>
+  <td colspan="3"><textarea id="comment" type="text" name="comment" placeholder="Describe in plain english what this batch request should be doing. Example: Targets all users who have been to cnn.com in the past 20 minutes. Expires after 30 minutes." ></textarea></td>
+</tr>
+
+<tr>
+  <td><label for="owner">Owner (email)</label></td>
+  <td><input id="owner" type="text" name="owner" placeholder="you@rockerbox.com"></input></td>
+</tr>
+
+<tr>
+  <td align="center" colspan="2"><input type="submit" value="Submit"></td>
+</tr>
+</table>
+</form>
+</div>
+</div>
+
+</div>
+{% end %}
