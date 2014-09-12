@@ -144,6 +144,15 @@ SELECT
 FROM advertiser_segment INNER JOIN advertiser using (external_advertiser_id)
 '''
 
+
+DAILY_DASH = """
+SELECT
+    *
+FROM daily_dash
+WHERE 
+    %(where)s
+"""
+
 INSERT_BATCH_REQUEST = '''
 INSERT INTO batch_request 
     (type, content, owner, target_segment, expiration, active, comment) 
@@ -166,3 +175,4 @@ DISTINCT_SEGMENT = '''
 SELECT DISTINCT segment 
 FROM domain_list
 '''
+

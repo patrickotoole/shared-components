@@ -17,7 +17,7 @@ class BatchRequestBase():
     def pull_segments(self):
         '''Return a list of domain list segments'''
         segments = self.db.select_dataframe(DISTINCT_SEGMENT)
-        return segments['segment'].tolist()
+        return segments['log'].tolist()
 
     def insert_request(self, request_type, content, owner, target_segment
                              , expiration, active, comment):

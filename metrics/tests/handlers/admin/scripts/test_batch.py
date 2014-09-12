@@ -129,9 +129,8 @@ class BatchRequestBaseTest(AsyncHTTPTestCase):
 
     def test_pull_segments(self):
          blah = self.base.pull_segments()
-        
-         # List should have at least 1 element
-         self.assertTrue( len(blah) > 0 )
+         expected = ["test"]
+         self.assertEqual(blah, expected)
 
     def test_insert_request(self):
         blah = self.base.insert_request( *(HIVE_QUERY_PARAMS))
