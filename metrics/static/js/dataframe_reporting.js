@@ -9,9 +9,15 @@ var groupedDataWrapper = function(data,meta) {
   this.fields = this.meta.fields
 
 
-  var self = this;
+  var self = this,
+    dims = this.meta.groups;
 
-  this.meta.groups.map(function(group){
+  this.defaultGroupName = this.meta.groups[0]
+  
+  dims = [this.defaultGroupName]
+  if (this.meta.is_wide != false) dims = dims.concat(["__index__"])
+
+  dims.map(function(group){
     // make them dims
     self.dimensions[group] = self.crs.dimension(function(d) {return d[group] })
 
@@ -37,13 +43,15 @@ var groupedDataWrapper = function(data,meta) {
 
   })
 
-  this.defaultGroupName = this.meta.groups[0]
   this.defaultDimension = this.dimensions[this.defaultGroupName]
   this.defaultGroup = this.groups[this.defaultGroupName]
   this.defaultHeaders = this.meta.groups.concat(this.meta.fields) 
   this.defaultValueName = this.meta.fields[0]
 
   this.headers = this.defaultHeaders
+  this.dimension = this.meta.is_wide == false ? this.defaultDimension : this.dimensions.__index__ 
+
+  
 
   if (this.meta.is_wide != false) {
     var keys = Object.keys(this.raw[0]),
@@ -55,7 +63,6 @@ var groupedDataWrapper = function(data,meta) {
       }
     })
     this.headers = this.meta.groups.filter(function(x){
-      console.log(x)
       return x != self.meta.is_wide 
     }).concat(headers.sort(function(x,y){return new Date("20"+x) - new Date("20"+y)}))
   }
@@ -87,7 +94,7 @@ var defaultFormatColumn = function(x,h) {
 }
 
 var groupedTableWrapper = function(crsWrapped,data_table_id) {
-  var MAX_SIZE = 1000
+  var MAX_SIZE = 1000000
 
   this.dataTable = dc.dataTable(data_table_id)
   this.headers = crsWrapped.headers
@@ -129,20 +136,15 @@ var groupedTableWrapper = function(crsWrapped,data_table_id) {
   }
 
   this.buildTable = function(dimension,group,group_name, columns) {
-    var dim = (dimension != undefined) ? dimension : self.crsWrapped.defaultDimension,
+    var dim = (dimension != undefined) ? dimension : self.crsWrapped.dimension,
       group_name = (group_name != undefined) ? group : self.crsWrapped.defaultGroupName,
       group = (group != undefined) ? group : self.crsWrapped.defaultGroup,
       columns = (columns != undefined) ? columns : self.crsWrapped.defaultHeaders,
       value_name = self.crsWrapped.defaultValueName
 
-
-
-    
-
     self.dataTable
       .dimension(dim)
       .group(function (d) {
-        d.hello = "asdf"
         return d[group_name]
       })
       .size(MAX_SIZE) 
@@ -152,8 +154,9 @@ var groupedTableWrapper = function(crsWrapped,data_table_id) {
         if (self.crsWrapped.meta.is_wide == false) {
           return d[self.crsWrapped.defaultValueName]
         } else {
-          return d.__index__
+          return MAX_SIZE - d.__index__
         }
+
       })
       .order(d3.descending)
 
