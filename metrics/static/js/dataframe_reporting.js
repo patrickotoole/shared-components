@@ -154,7 +154,7 @@ var groupedTableWrapper = function(crsWrapped,data_table_id) {
         if (self.crsWrapped.meta.is_wide == false) {
           return d[self.crsWrapped.defaultValueName]
         } else {
-          return MAX_SIZE - d.__index__
+          return d.__index__
         }
 
       })
@@ -200,12 +200,8 @@ var groupedTableWrapper = function(crsWrapped,data_table_id) {
         s.append("td")
           .text(function(x){
             return defaultFormatColumn(f, hash[x.key])
-
-            /*return isNaN(hash[x.key][f]) ? 
-              "" : 
-              FORMATTER.numberFormat(hash[x.key][f])
-            */
           })
+          
       })
       
       s.append("td")

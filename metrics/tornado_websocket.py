@@ -94,7 +94,7 @@ admin_scripts = [
     (r'/api.*', admin.scripts.APIHandler, dict(db=db)),
     (r'/admin/pixel/?',admin.scripts.PixelHandler, dict(db=db,api=api,bidder=bidder)),
     
-    (r'/admin/advertiser/?',admin.scripts.AdvertiserHandler, dict(db=db,api=api)),
+    
     (r'/admin/money.*',admin.scripts.MoneyHandler, dict(db=db,api=api)),
     (r'/admin/batch_request/new.*', admin.scripts.BatchRequestFormHandler, dict(db=db, api=api, hive=hive)),
     (r'/admin/batch_requests.*', admin.scripts.BatchRequestsHandler, dict(db=db, api=api, hive=hive)),
@@ -107,14 +107,16 @@ _streaming = [
 ]
 
 admin_advertiser = [
+    (r'/admin/advertiser/new/?',admin.scripts.AdvertiserHandler, dict(db=db,api=api)),
     (r'/admin/advertiser/pixel/reporting/?', reporting.PixelAdvertiserHandler, dict(db=db, hive=hive)),
-    (r'/admin/advertiser/viewable/?',admin.reporting.AdvertiserViewableHandler, dict(db=db,hive=hive)),
-    (r'/admin/advertiser/viewable/?(meta)?/?',admin.reporting.AdvertiserViewableHandler, dict(db=db,hive=hive)), 
-    (r'/admin/advertiser/reporting/?',admin.reporting.AdvertiserReportingHandler, dict(hive=hive)),
-    (r'/admin/advertiser/reporting/?(meta)?/?',admin.reporting.AdvertiserReportingHandler, dict(hive=hive)),
-
-    (r'/admin/advertiser/domain_list/?',admin.scripts.TargetingHandler, dict(redis=_redis,api=api,db=db)),
+    (r'/admin/advertiser/reporting/?', admin.reporting.AdvertiserReportingHandler, dict(db=db, hive=hive)), 
+    (r'/admin/advertiser/viewable/reporting/?',admin.reporting.AdvertiserViewableHandler, dict(db=db,hive=hive)),
+    (r'/admin/advertiser/viewable/reporting/?(meta)?/?',admin.reporting.AdvertiserViewableHandler, dict(db=db,hive=hive)), 
+    (r'/admin/advertiser/summary/reporting/?',admin.reporting.AdvertiserSummaryHandler, dict(hive=hive)),
+    (r'/admin/advertiser/summary/reporting/?(meta)?/?',admin.reporting.AdvertiserSummaryHandler, dict(hive=hive)),
+    
     (r'/admin/advertiser/domain_list/streaming/?',admin.scripts.TargetingHandler, dict(redis=_redis,api=api,db=db)),
+    (r'/admin/advertiser/domain_list/reporting/?',admin.reporting.DomainListHandler, dict(hive=hive)),
     (r'/admin/advertiser/domain_list/reporting/?(meta)?/?',admin.reporting.DomainListHandler, dict(hive=hive))
 ]
 

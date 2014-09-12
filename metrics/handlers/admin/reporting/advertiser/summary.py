@@ -42,7 +42,7 @@ WHERE = {
     "domain": "domain like '%%%(domain)s%%'"
 }
 
-class AdvertiserReportingHandler(AdminReportingBaseHandler):
+class AdvertiserSummaryHandler(AdminReportingBaseHandler):
 
     QUERY = AGG_ADVERTISER_DOMAIN
     WHERE = WHERE

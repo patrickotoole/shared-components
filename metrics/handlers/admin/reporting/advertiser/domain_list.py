@@ -100,7 +100,7 @@ class DomainListHandler(AdminReportingBaseHandler):
 
     def format_data(self,u,groupby,wide):
         u["num_auctions"] = u.num_auctions.astype(int)
-        u["spent"] = u["spent"]/1000
+
 
         if "domain_count" in u.columns:
             u["domain_count"] = u.domain_count.astype(int)
