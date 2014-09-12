@@ -96,7 +96,7 @@ admin_scripts = [
     
     (r'/admin/advertiser/?',admin.scripts.AdvertiserHandler, dict(db=db,api=api)),
     (r'/admin/money.*',admin.scripts.MoneyHandler, dict(db=db,api=api)),
-    (r'/admin/batch_request[^s]*', admin.scripts.BatchRequestHandler, dict(db=db, api=api, hive=hive)),
+    (r'/admin/batch_request/new.*', admin.scripts.BatchRequestFormHandler, dict(db=db, api=api, hive=hive)),
     (r'/admin/batch_requests.*', admin.scripts.BatchRequestsHandler, dict(db=db, api=api, hive=hive)),
     (r'/admin/imps/?', admin.scripts.ImpsHandler, dict(db=db, api=api, hive=hive))
 ]

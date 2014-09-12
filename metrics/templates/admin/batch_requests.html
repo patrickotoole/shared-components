@@ -1,4 +1,4 @@
-{% extends clean_base.html %}
+{% extends ../clean_base.html %}
 
 {% block content %}
 <link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/dc.css">
@@ -63,6 +63,8 @@ $(document).ready( function () {
 }
 </style>
 <div class="content">
+<p><button style="margin-bottom:20px;"><a href="/admin/batch_request/new">Request Form</a></button></p>
+
 {% raw data %}
 </div>
 
