@@ -21,7 +21,17 @@ OPTIONS = {
                 "spent": "cpm"
             }
         }
-    }
+    },
+    "tag": {
+        "meta": {
+            "groups" : ["seller","tag","domain"],
+            "fields" : ["served","loaded","visible","spent"],
+            "formatters" : {
+                "campaign":"none",
+                "spent": "cpm"
+            }
+        }
+    } 
 }
 
 # s/\(.\{-}\) .*/    "\1":"\1",/g
@@ -116,8 +126,13 @@ class AdvertiserViewableHandler(AdminReportingBaseHandler):
 
         if groupby and wide:
             print groupby
+            #ll = lambda df: df.iloc[0][[ i for i in df.columns if i not in groupby]].T
+            #uu = u.groupby(groupby).apply(ll)
+            #import ipdb; ipdb.set_trace() 
             u = u.set_index(groupby).sort_index()
-            u = u["served"].unstack(wide)
+            u = u.stack().unstack(wide)
+            u = u.reset_index()
+            u.rename(columns={"level_2":''}, inplace=True)
 
         return u
 
@@ -142,15 +157,11 @@ class AdvertiserViewableHandler(AdminReportingBaseHandler):
 
     def get_meta_group(self,default="default"):
         
-        domain_list = self.get_argument("type",False)
-        advertiser = self.get_argument("advertiser",False)
+        meta = self.get_argument("meta",False)
 
-        if domain_list:
-            return "type"
+        if meta:
+            return meta
 
-        if advertiser:
-            return "advertiser"
-        
         return default
 
     
@@ -158,9 +169,12 @@ class AdvertiserViewableHandler(AdminReportingBaseHandler):
     @tornado.web.asynchronous
     def get(self,meta=False):
         formatted = self.get_argument("format",False)
-        include = self.get_argument("include",False)
+        include = self.get_argument("include","").split(",")
+        wide = self.get_argument("wide",False)
+
         meta_group = self.get_meta_group()
         meta_data = self.get_meta_data(meta_group,include)
+        meta_data["is_wide"] = wide
 
         if meta:
             self.write(ujson.dumps(meta_data))
@@ -175,7 +189,7 @@ class AdvertiserViewableHandler(AdminReportingBaseHandler):
             self.get_data(
                 self.make_query(params),
                 meta_data.get("groups",[]),
-                self.get_argument("wide",False)
+                wide
             )
 
         else:
