@@ -23,6 +23,14 @@
   {% end %}
 </ul> 
 
+<h2>Segments</h2>
+<ul>
+  {% for i in segment_links %}
+      <li><a href="{% raw i[0] %}", target="_blank">{% raw i[1] %}</a></li>
+  {% end %}
+</ul> 
+ 
+
 <h2>Other</h2>
 <ul>
   {% for i in internal_links %}

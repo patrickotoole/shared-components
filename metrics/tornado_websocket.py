@@ -112,6 +112,7 @@ admin_advertiser = [
     (r'/admin/advertiser/reporting/?', admin.reporting.AdvertiserReportingHandler, dict(db=db, hive=hive)), 
     (r'/admin/advertiser/viewable/reporting/?',admin.reporting.AdvertiserViewableHandler, dict(db=db,hive=hive)),
     (r'/admin/advertiser/viewable/reporting/?(meta)?/?',admin.reporting.AdvertiserViewableHandler, dict(db=db,hive=hive)), 
+
     (r'/admin/advertiser/summary/reporting/?',admin.reporting.AdvertiserSummaryHandler, dict(hive=hive)),
     (r'/admin/advertiser/summary/reporting/?(meta)?/?',admin.reporting.AdvertiserSummaryHandler, dict(hive=hive)),
     

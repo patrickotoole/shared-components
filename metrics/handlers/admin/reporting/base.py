@@ -85,10 +85,15 @@ class AdminReportingBaseHandler(tornado.web.RequestHandler,AdminReportingBase):
     """
     
     def parse_date_where(self):
-        from datetime import datetime
+        from datetime import datetime, timedelta
         date = self.get_argument("date",datetime.now().strftime("%y-%m-%d"))
-        _from = self.get_argument("start_date",date)
-        _until = self.get_argument("end_date",date)
+        if date == "past_week":
+            _until = datetime.now().strftime("%y-%m-%d")
+            _from = (datetime.now() - timedelta(7)).strftime("%y-%m-%d")
+            
+        else:
+            _from = self.get_argument("start_date",date)
+            _until = self.get_argument("end_date",date)
 
         return "date>='%s' and date <='%s'" % (_from, _until)
 
