@@ -86,7 +86,7 @@ class AdminReportingBaseTestCase(unittest.TestCase):
         # missing groups
         ADDITIONAL_DIMS = ["1","2","3"]
         result = self.a.get_meta_data("default",ADDITIONAL_DIMS)
-        self.assertEqual(ADDITIONAL_DIMS,result['groups'])
+        self.assertEqual(set(ADDITIONAL_DIMS),set(result['groups']))
 
     def test_make_params_blank(self):
         GROUPS = []
