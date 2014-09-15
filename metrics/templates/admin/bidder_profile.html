@@ -36,7 +36,9 @@
     <tr>
       <th>ID</th>
       <th>Name</th>
-      <th>Volume (yesterday)</th> 
+      <th>Volume (today)</th> 
+      <th>Considered</th> 
+      <th>Approved</th> 
       <th>Actions</th>
     </tr>
   </thead>
@@ -77,6 +79,12 @@ dc.dataTable(".dc-data-table")
     function (d) {
       return "<span id='volume-"+d.id+"'>"+format(d.imps)+"</span>"
     },
+    function (d) {
+      return "<span id='volume-"+d.id+"'>"+format(d.considered)+"</span>"
+    }, 
+    function (d) {
+      return "<span id='volume-"+d.id+"'>"+format(d.approved)+"</span>"
+    }, 
     function (d) {
       return d.actions
     }
@@ -139,10 +147,18 @@ $.getJSON("/admin/segment/reporting", function(d){
   $('.data-loading-content').hide()
   var h = {};
   $(d).each(function(a,x){
-    h[x.segment] = x.imps;
+    h[x.segment] = {};
+    h[x.segment].imps = x.imps;
+    h[x.segment].considered = x.considered_imps; 
+    h[x.segment].approved = x.approved_imps; 
   })
+  window.h = h;
   $(data).each(function(a,x){
-    data[a].imps = parseInt(h[x.id]) || 0
+    try {
+      data[a].imps = parseInt(h[x.id].imps) || 0
+      data[a].considered = parseInt(h[x.id].considered) || 0 
+      data[a].approved = parseInt(h[x.id].approved) || 0  
+    } catch (e) {}
   })
   dc.redrawAll()
 })
