@@ -14,8 +14,9 @@ class IndexHandler(tornado.web.RequestHandler):
             ("/admin/advertiser/viewable/reporting", "Campaign Viewability"),
             ("/admin/advertiser/viewable/reporting?meta=domain_list", "Domain List Viewability"),
             ("/admin/advertiser/domain_list/reporting", "Domain List Impressions Available"), 
-               
+            
             ("/admin/advertiser/summary/reporting", "Domain Aggregated Reporting"),  
+            ("/admin/advertiser/conversion/reporting", "Conversion Lookup"),                 
         ]
 
         segment_links = [

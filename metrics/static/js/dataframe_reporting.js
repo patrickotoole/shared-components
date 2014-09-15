@@ -17,6 +17,7 @@ var groupedDataWrapper = function(data,meta) {
   dims = [this.defaultGroupName]
   if (this.meta.is_wide != false) dims = dims.concat(["__index__"])
 
+
   dims.map(function(group){
     // make them dims
     self.dimensions[group] = self.crs.dimension(function(d) {return d[group] })
@@ -46,7 +47,7 @@ var groupedDataWrapper = function(data,meta) {
   this.defaultDimension = this.dimensions[this.defaultGroupName]
   this.defaultGroup = this.groups[this.defaultGroupName]
   this.defaultHeaders = this.meta.groups.concat(this.meta.fields) 
-  this.defaultValueName = this.meta.fields[0]
+  this.defaultValueName = this.meta.fields.length > 0 ? this.meta.fields[0] : this.defaultGroupName
 
   this.headers = this.defaultHeaders
   this.dimension = this.meta.is_wide == false ? this.defaultDimension : this.dimensions.__index__ 
@@ -141,6 +142,7 @@ var groupedTableWrapper = function(crsWrapped,data_table_id) {
       group = (group != undefined) ? group : self.crsWrapped.defaultGroup,
       columns = (columns != undefined) ? columns : self.crsWrapped.defaultHeaders,
       value_name = self.crsWrapped.defaultValueName
+
 
     self.dataTable
       .dimension(dim)

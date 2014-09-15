@@ -37,7 +37,8 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
                 "fields": ["source","uid", "segment", "referrer", "user_agent"],
                 "formatters":{
                     "uid":"none"
-                }
+                },
+                "is_wide":False
 
             }
         }
@@ -73,7 +74,7 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
 
         raw = yield run_hive_session_deferred(self.hive,query_list)
         df = pandas.DataFrame(raw)
-        print df['source']
+        print sum(df['source'] == "")
         self.get_content(df)
 
     def get_meta_group(self,default="default"):
@@ -110,7 +111,6 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
                 meta_data.get("fields",[]),
                 self.make_where()
             )
-            print params
             self.get_data(
                 self.make_query(params),
                 meta_data.get("groups",[]),
