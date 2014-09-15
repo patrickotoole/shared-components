@@ -138,20 +138,19 @@
       })
  
       } else {
+        var qs =  (window.location.search.indexOf("?") >=0 ) ?  "&" : "?";
         if (!window.location.search.match("past_week")) {
-          var qs =  (window.location.search.match("\\?")) ? 
-            "&" : "?"
-            $('#report-form').append($("<a href='" + 
-              window.location.href + 
-              qs + 
-              "include=date&wide=date&date=past_week"+
-              "'>Show Past Week</a>"
-            ))
-          } 
-          $('#report-form').append($("<br/><a href='" +
-            window.location.href + qs + "format=csv" +
-            "'>Show as csv</a>"                  
+          $('#report-form').append($("<a href='" + 
+            window.location.href + 
+            qs + 
+            "include=date&wide=date&date=past_week"+
+            "'>Show Past Week</a>"
           ))
+        } 
+        $('#report-form').append($("<br/><a href='" +
+          window.location.href + qs + "format=csv" +
+          "'>Show as csv</a>"                  
+        ))
 
       }
       </script>
