@@ -4,6 +4,12 @@
 
 <link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/dc.css">
 <link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/chosen.css">
+<style>
+input[type="checkbox"]:disabled + label{
+  color: #ccc;
+}
+
+</style>
 
 <script type="text/javascript" src="http://rockerbox.com/js/d3.js"></script>
 <script type="text/javascript" src="http://rockerbox.com/js/crossfilter.js"></script>
@@ -24,10 +30,10 @@
     </form>
     <script>
       data = {{data}}
-      if (data.length) {
+      if (Object.keys(data).length) {
       var GROUPS = '<div class="col-sm-3"><h4>Select Grouping</h4><div class="groups" id="groups"></div></div>',
-       FIELDS = '<div class="col-sm-3"><h4>Select Fields</h4><div class="fields" id="fields"></div></div>', 
-       DUPLICATE = '<div class="col-md-1"><button type="submit" id="batch" class="submit btn ">Add</button></div>' 
+       FIELDS = '<div class="hidden col-sm-3"><h4>Select Fields</h4><div class="fields" id="fields"></div></div>', 
+       DUPLICATE = '<div class="col-md-9">Reporting Link: <a id="reporting-link"></a><button type="submit" id="batch" class="hidden submit btn ">Add</button></div>' 
         
       var NEW = "<div>" + GROUPS + FIELDS + DUPLICATE + "</div>"
       $(".new-item").append(NEW)
@@ -52,27 +58,28 @@
           fields[gv].push(gn)
         })
       }) 
-      console.log(fields)
 
       // add everything
       $.each(items, function(i,v) {
-        var vv = '<input type="checkbox" value="' + i + '" class="' + v.join(" ") + '">' + i+ "</input><br/>"
+        var vv = '<input type="checkbox" value="' + i + '" class="' + v.join(" ") + '"><label>' + i+ "</label><br/>"
         $('.groups').append(vv)
       })
 
       $.each(fields, function(i,v) {
-        var vv = '<input type="checkbox" value="' + i + '" class="' + v.join(" ") + '">' + i+ "</input><br/>"
+        var vv = '<input type="checkbox" value="' + i + '" class="' + v.join(" ") + '"><label>' + i+ "</label><br/>"
         $('.fields').append(vv)
       })
 
       // when an option added, recalc eligible
-      $('.groups > input').on('change',function(y){
+      $('.groups  input').on('change',function(y){
         
         var report_limits = {}
 
-        $parent = $('#'+$(y.target).parent().attr('id'))
+        $parent = $('#'+$(y.target).parents("form").attr('id'))
 
-        $('#'+$(y.target).parent().attr('id')+' input:checked').each(function(i,x){
+        var checked = $parent.find('input:checked')
+        
+        checked.each(function(i,x){
           var classes = $(x).attr('class').split(' ')
           classes.map(function(c){
             report_limits[c] = report_limits[c] || []
@@ -107,7 +114,15 @@
         }) 
         
         report = eligible_reports[0]
-        console.log(report)
+        var includes = $.makeArray(checked).map(function(x){return x.value}).join(",")
+        var url_base = "/admin/advertiser/" + report + "/reporting"
+
+        if (includes.length > 0) {
+
+          $('#reporting-link').attr("href",url_base + "?include=" + includes)
+          $('#reporting-link').text(url_base + "?include=" + includes)
+        }
+        
       })
 
       var send_data = function(json_string,cb) {

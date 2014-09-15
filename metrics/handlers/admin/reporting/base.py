@@ -62,6 +62,7 @@ class AdminReportingBase(object):
             if len(missing):
                 logging.warn("Some of the requested dimensions do not exist %s " % ",".join(missing))
             meta_data['groups'] += dims
+            meta_data['groups'] = list(set(meta_data['groups']))
 
         return meta_data
 

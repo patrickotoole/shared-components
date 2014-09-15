@@ -91,3 +91,11 @@ FROM advertiser_visibility_daily
 where %(where)s 
 group by %(groups)s 
 """
+
+CONVERSION_QUERY = """
+SELECT *
+FROM pixel_data 
+WHERE 
+    type = "conv" and 
+    %(where)s
+"""
