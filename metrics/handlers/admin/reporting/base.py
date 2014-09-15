@@ -62,18 +62,23 @@ class AdminReportingBase(object):
             if len(missing):
                 logging.warn("Some of the requested dimensions do not exist %s " % ",".join(missing))
             meta_data['groups'] += dims
+            meta_data['groups'] = list(set(meta_data['groups']))
 
         return meta_data
 
-    def make_params(self,groups,fields,where):
+    def make_params(self,groups,fields,where,joins="",**kwargs):
         gs = map(self.get_group,groups)
         fs = map(self.get_field,groups + fields)
 
-        return {
+        params = {
             "groups": ", ".join(gs),
             "fields": ", ".join(fs),
-            "where": where
+            "where": where,
+            "joins": joins
         } 
+        for i,j in kwargs.iteritems():
+            params[j] = i
+        return params
 
 class AdminReportingBaseHandler(tornado.web.RequestHandler,AdminReportingBase):
     """
@@ -81,10 +86,15 @@ class AdminReportingBaseHandler(tornado.web.RequestHandler,AdminReportingBase):
     """
     
     def parse_date_where(self):
-        from datetime import datetime
+        from datetime import datetime, timedelta
         date = self.get_argument("date",datetime.now().strftime("%y-%m-%d"))
-        _from = self.get_argument("start_date",date)
-        _until = self.get_argument("end_date",date)
+        if date == "past_week":
+            _until = datetime.now().strftime("%y-%m-%d")
+            _from = (datetime.now() - timedelta(7)).strftime("%y-%m-%d")
+            
+        else:
+            _from = self.get_argument("start_date",date)
+            _until = self.get_argument("end_date",date)
 
         return "date>='%s' and date <='%s'" % (_from, _until)
 

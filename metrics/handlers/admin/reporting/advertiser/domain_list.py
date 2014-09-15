@@ -7,7 +7,7 @@ from twisted.internet import defer
 from lib.helpers import *
 from lib.hive.helpers import run_hive_session_deferred
 from lib.query.HIVE import AGG_APPROVED_AUCTIONS
-from base import AdminReportingBaseHandler
+from ..base import AdminReportingBaseHandler
 
 OPTIONS = {
     "default": {
@@ -101,6 +101,7 @@ class DomainListHandler(AdminReportingBaseHandler):
     def format_data(self,u,groupby,wide):
         u["num_auctions"] = u.num_auctions.astype(int)
 
+
         if "domain_count" in u.columns:
             u["domain_count"] = u.domain_count.astype(int)
 
@@ -108,9 +109,13 @@ class DomainListHandler(AdminReportingBaseHandler):
             u = self.reformat_domain_data(u)
 
         if groupby and wide:
-            print groupby
             u = u.set_index(groupby).sort_index()
-            u = u["num_auctions"].unstack(wide)
+            u = u.stack().unstack(wide)
+
+            new_index = [i if i else "" for i in u.index.names]
+            u.index.rename(new_index,inplace=True)
+            u = u.reset_index().reset_index()
+            u.rename(columns={"index":"__index__"},inplace=True) 
 
         return u
 

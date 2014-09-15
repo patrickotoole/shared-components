@@ -1,50 +1,92 @@
 import tornado.web
 import ujson
 import pandas
+import datetime
 
 from twisted.internet import defer 
 
 from lib.helpers import *
-from lib.query.MYSQL import *
+from lib.hive.helpers import run_hive_session_deferred, run_hive_deferred
+from lib.query.HIVE import ADVERTISER_VIEWABLE
 import lib.query.helpers as query_helpers
-from lib.hive.helpers import run_hive_session_deferred
-from lib.query.HIVE import AGG_ADVERTISER_DOMAIN
-from base import AdminReportingBaseHandler 
+from ..base import AdminReportingBaseHandler 
+
+JOIN = {
+    "type":"v JOIN domain_list d on d.pattern = v.domain"    
+}
 
 OPTIONS = {
     "default": {
         "meta": {
-            "groups" : ["advertiser","domain"],
-            "fields" : ["available","seen","served","visible","spent"],
-            "formatters":{
-                "spent":"cpm"
+            "groups" : ["advertiser","campaign"],
+            "fields" : ["served","loaded","visible","spent"],
+            "formatters" : {
+                "campaign":"none",
+                "spent": "cpm"
             }
+        }
+    },
+    "tag": {
+        "meta": {
+            "groups" : ["seller","tag","domain"],
+            "fields" : ["served","loaded","visible","spent"],
+            "formatters" : {
+                "campaign":"none",
+                "spent": "cpm"
+            }
+        }
+    },
+    "domain_list": {
+        "meta": {
+            "groups" : ["type","domain"],
+            "fields" : ["served","loaded","visible","spent"],
+            "formatters" : {
+                "campaign":"none",
+                "spent": "cpm"
+            },
+            "joins" : JOIN["type"]
         }
     }
 }
 
-FIELDS = {
-    "available":"sum(num_avail)",
-    "seen":"sum(num_seen)", 
-    "served":"sum(num_served)", 
-    "visible":"sum(num_visible)", 
-    "spent":"sum(total_spent)"
-}
-
+# s/\(.\{-}\) .*/    "\1":"\1",/g
 GROUPS = {
     "advertiser":"advertiser",
+    "date":"date",
+    "campaign":"campaign",
+    "seller":"seller",
+    "tag":"tag",
+    "venue":"venue",
     "domain":"domain",
-    "date":"date"
+    "creative":"creative",
+    "width":"width",
+    "height":"height",
+    "type":"d.log"
+}
+
+FIELDS = {
+    "spent":"sum(spent)",
+    "total_ecp":"sum(total_ecp)",
+    "served":"sum(num_served)",
+    "loaded":"sum(num_loaded)",
+    "visible":"sum(num_visible)",
+    "num_visible_on_load":"sum(num_visible_on_load)",
+    "num_long_visit":"sum(num_long_visit)"
 }
 
 WHERE = {
     "advertiser":"advertiser like '%%%(advertiser)s%%'",
-    "domain": "domain like '%%%(domain)s%%'"
+    "campaign":"campaign = '%(campaign)s'",
+    "domain":"domain like '%%%(domain)s%%'",
+    "type":"d.log like '%%%(type)s%%'"
 }
 
-class AdvertiserReportingHandler(AdminReportingBaseHandler):
 
-    QUERY = AGG_ADVERTISER_DOMAIN
+
+
+class AdvertiserViewableHandler(AdminReportingBaseHandler):
+
+    QUERY = ADVERTISER_VIEWABLE
     WHERE = WHERE
     FIELDS = FIELDS
     GROUPS = GROUPS
@@ -66,7 +108,7 @@ class AdvertiserReportingHandler(AdminReportingBaseHandler):
             else:
                 return ".".join(s[-3:])
 
-        data["domain"] = data.domain.map(lambda x: split_help(x))
+        #data["domain"] = data.domain.map(lambda x: split_help(x))
         data["domain"] = data.domain.map(lambda x: x.replace("$","").replace("]",""))
         data = data.groupby([c for c in data.columns if c != "served"]).sum()
         return data.reset_index()
@@ -86,13 +128,17 @@ class AdvertiserReportingHandler(AdminReportingBaseHandler):
 
     def format_data(self,u,groupby,wide):
         for field in FIELDS:
-            try:
+            if field in u.columns:
                 try:
-                    u[field] = u[field].astype(int)
+                    try:
+                        u[field] = u[field].astype(int)
+                    except:
+                        u[field] = u[field].astype(float) 
+                    if field == "spent":
+                        u[field] = u[field]/1000
                 except:
-                    u[field] = u[field].astype(float) 
-            except:
-                pass
+                    logging.warn("Could not format %s" % field)
+                    pass
 
         if "domain_count" in u.columns:
             u["domain_count"] = u.domain_count.astype(int)
@@ -101,9 +147,14 @@ class AdvertiserReportingHandler(AdminReportingBaseHandler):
             u = self.reformat_domain_data(u)
 
         if groupby and wide:
-            print groupby
             u = u.set_index(groupby).sort_index()
-            u = u["served"].unstack(wide)
+            u = u.stack().unstack(wide)
+
+            new_index = [i if i else "" for i in u.index.names]
+            u.index.rename(new_index,inplace=True)
+            u = u.reset_index().reset_index()
+            u.rename(columns={"index":"__index__"},inplace=True)
+
 
         return u
 
@@ -128,15 +179,11 @@ class AdvertiserReportingHandler(AdminReportingBaseHandler):
 
     def get_meta_group(self,default="default"):
         
-        domain_list = self.get_argument("type",False)
-        advertiser = self.get_argument("advertiser",False)
+        meta = self.get_argument("meta",False)
 
-        if domain_list:
-            return "type"
+        if meta:
+            return meta
 
-        if advertiser:
-            return "advertiser"
-        
         return default
 
     
@@ -144,9 +191,12 @@ class AdvertiserReportingHandler(AdminReportingBaseHandler):
     @tornado.web.asynchronous
     def get(self,meta=False):
         formatted = self.get_argument("format",False)
-        include = self.get_argument("include",False)
+        include = self.get_argument("include","").split(",")
+        wide = self.get_argument("wide",False)
+
         meta_group = self.get_meta_group()
         meta_data = self.get_meta_data(meta_group,include)
+        meta_data["is_wide"] = wide
 
         if meta:
             self.write(ujson.dumps(meta_data))
@@ -156,12 +206,14 @@ class AdvertiserReportingHandler(AdminReportingBaseHandler):
             params = self.make_params(
                 meta_data.get("groups",[]),
                 meta_data.get("fields",[]),
-                self.make_where()
+                self.make_where(),
+                joins=meta_data.get("joins","")
             )
+
             self.get_data(
                 self.make_query(params),
                 meta_data.get("groups",[]),
-                self.get_argument("wide",False)
+                wide
             )
 
         else:

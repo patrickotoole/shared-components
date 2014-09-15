@@ -11,11 +11,20 @@ from lib.query.HIVE import AGG_APPROVED_AUCTIONS
 SEGMENT_VOLUME = """
 SELECT 
     segment, 
-    sum(num_imps) as imps
-FROM agg_domain_imps 
+    sum(num_imps) as imps, 
+    sum(num_considered) as considered_imps, 
+    sum(num_approved) as approved_imps 
+FROM (
+    SELECT 
+        segments, 
+        num_imps, 
+        CASE WHEN array_contains(segments,'1448516') THEN num_imps ELSE CAST(0 AS BIGINT) END as num_considered, 
+        CASE WHEN array_contains(segments,'1436688') THEN num_imps ELSE CAST(0 AS BIGINT) END as num_approved 
+    FROM agg_domain_imps 
+    WHERE
+        %(where)s
+) a 
 LATERAL VIEW explode(segments) segTable as segment 
-WHERE 
-    %(where)s
 GROUP BY 
     %(groupby)s
 """
@@ -42,7 +51,7 @@ class SegmentReportingHandler(tornado.web.RequestHandler):
 
     @tornado.web.asynchronous
     def get(self):
-        yesterday = (datetime.date.today() - datetime.timedelta(1))
+        yesterday = (datetime.date.today()) #- datetime.timedelta(1))
         date = self.get_argument("date",yesterday.strftime("%y-%m-%d"))
         hour = self.get_argument("hour",False)
         groupby = self.get_argument("groupby","segment")

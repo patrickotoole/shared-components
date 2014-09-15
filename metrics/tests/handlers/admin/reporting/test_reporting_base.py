@@ -86,7 +86,7 @@ class AdminReportingBaseTestCase(unittest.TestCase):
         # missing groups
         ADDITIONAL_DIMS = ["1","2","3"]
         result = self.a.get_meta_data("default",ADDITIONAL_DIMS)
-        self.assertEqual(ADDITIONAL_DIMS,result['groups'])
+        self.assertEqual(set(ADDITIONAL_DIMS),set(result['groups']))
 
     def test_make_params_blank(self):
         GROUPS = []
@@ -94,7 +94,7 @@ class AdminReportingBaseTestCase(unittest.TestCase):
         WHERE = ""
 
         values = self.a.make_params(GROUPS,FIELDS,WHERE)
-        self.assertEqual(values,{"fields":"","where":"","groups":""})
+        self.assertEqual(values,{"fields":"","where":"","groups":"","joins":""})
 
     def test_make_params(self):
         self.a.GROUPS = {"g":"1"}
@@ -104,7 +104,7 @@ class AdminReportingBaseTestCase(unittest.TestCase):
         WHERE = ""
 
         values = self.a.make_params(GROUPS,FIELDS,WHERE)
-        self.assertEqual(values,{"fields":"1 as g, 2 as f","where":"","groups":"1"})
+        self.assertEqual(values,{"fields":"1 as g, 2 as f","where":"","groups":"1","joins":""})
  
  
 

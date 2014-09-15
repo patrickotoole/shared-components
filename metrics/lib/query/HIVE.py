@@ -87,6 +87,15 @@ ADVERTISER_VIEWABLE = """
 select 
     %(fields)s
 FROM advertiser_visibility_daily
+%(joins)s
 where %(where)s 
 group by %(groups)s 
+"""
+
+CONVERSION_QUERY = """
+SELECT *
+FROM pixel_data 
+WHERE 
+    type = "conv" and 
+    %(where)s
 """

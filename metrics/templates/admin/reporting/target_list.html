@@ -4,6 +4,12 @@
 
 <link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/dc.css">
 <link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/chosen.css">
+<style>
+input[type="checkbox"]:disabled + label{
+  color: #ccc;
+}
+
+</style>
 
 <script type="text/javascript" src="http://rockerbox.com/js/d3.js"></script>
 <script type="text/javascript" src="http://rockerbox.com/js/crossfilter.js"></script>
@@ -11,35 +17,112 @@
 <script type="text/javascript" src="http://rockerbox.com/js/colorbrewer.js"></script>
 <script type="text/javascript" src="http://rockerbox.com/js/reporting.js"></script>
 <script type="text/javascript" src="http://rockerbox.com/js/chosen.js"></script>
- <script type="text/javascript" src="/static/js/dataframe_reporting.js"></script> 
+<script type="text/javascript" src="/static/js/dataframe_reporting.js"></script> 
 
 <div class='container'>
 
-<h4>Select date range</h4>
+
 
 <div class="row">
   <div class="col-sm-9">
-    <form role="form">
+    <form id="report-form" role="form">
       <div class="new-item"></div>
     </form>
     <script>
-      var LOG = '<div class="col-sm-3"><select class="lists form-control" id="date_range" name="date_range" data-placeholder="date range"></select></div>',
-       DUPLICATE = '<div class="col-md-1"><button type="submit" id="batch" class="submit btn ">Add</button></div>' 
+      data = {{data}}
+      if (Object.keys(data).length) {
+      var GROUPS = '<div class="col-sm-3"><h4>Select Grouping</h4><div class="groups" id="groups"></div></div>',
+       FIELDS = '<div class="hidden col-sm-3"><h4>Select Fields</h4><div class="fields" id="fields"></div></div>', 
+       DUPLICATE = '<div class="col-md-9">Reporting Link: <a id="reporting-link"></a><button type="submit" id="batch" class="hidden submit btn ">Add</button></div>' 
         
-      var NEW = "<div>" + LOG + DUPLICATE + "</div>"
+      var NEW = "<div>" + GROUPS + FIELDS + DUPLICATE + "</div>"
       $(".new-item").append(NEW)
 
-      var arrayToHashes = function(a){
-        return a.map(function(x,i) {
-          return {"key":x}
+
+      var items = {},
+        fields = {},
+        eligible_reports = Object.keys(data.groupings),
+        report
+
+      // convert all the groups to better format
+      $.each(data.groupings,function(gn,gl){
+        gl.map(function(gv){
+          items[gv] = items[gv] || []
+          items[gv].push(gn)
         })
-      }
+      })
 
-      var items = arrayToHashes(["yesterday","past_week","past_month"])
+      $.each(data.fields,function(gn,gl){
+        gl.map(function(gv){
+          fields[gv] = fields[gv] || []
+          fields[gv].push(gn)
+        })
+      }) 
 
+      // add everything
       $.each(items, function(i,v) {
-        var vv = '<option value="' + v.key + '">' + v.key + "</option>" 
-        $('.lists').append(vv)
+        var vv = '<input type="checkbox" value="' + i + '" class="' + v.join(" ") + '"><label>' + i+ "</label><br/>"
+        $('.groups').append(vv)
+      })
+
+      $.each(fields, function(i,v) {
+        var vv = '<input type="checkbox" value="' + i + '" class="' + v.join(" ") + '"><label>' + i+ "</label><br/>"
+        $('.fields').append(vv)
+      })
+
+      // when an option added, recalc eligible
+      $('.groups  input').on('change',function(y){
+        
+        var report_limits = {}
+
+        $parent = $('#'+$(y.target).parents("form").attr('id'))
+
+        var checked = $parent.find('input:checked')
+        
+        checked.each(function(i,x){
+          var classes = $(x).attr('class').split(' ')
+          classes.map(function(c){
+            report_limits[c] = report_limits[c] || []
+            report_limits[c].push( x.value )
+          })
+        })
+
+        
+        eligible_reports = []
+
+        var keys = Object.keys(report_limits),
+          counts = keys.map(function(x){
+            return report_limits[x].length
+          }),
+          max = Math.max.apply(null,counts)
+
+        $.each(report_limits,function(g,i){
+          if (i.length == max) eligible_reports.push(g)
+        })
+
+        if (eligible_reports.length == 0) {
+          eligible_reports = Object.keys(data.groupings)
+        }
+
+        $("input[type='checkbox']").each(function(i,o){
+          $(o).attr('disabled','disabled')
+        })
+
+        eligible_reports.map(function(r){
+          var a = $('.'+r)
+          a.removeAttr('disabled')
+        }) 
+        
+        report = eligible_reports[0]
+        var includes = $.makeArray(checked).map(function(x){return x.value}).join(",")
+        var url_base = "/admin/advertiser/" + report + "/reporting"
+
+        if (includes.length > 0) {
+
+          $('#reporting-link').attr("href",url_base + "?include=" + includes)
+          $('#reporting-link').text(url_base + "?include=" + includes)
+        }
+        
       })
 
       var send_data = function(json_string,cb) {
@@ -69,6 +152,22 @@
         return false;
       })
  
+      } else {
+        var qs =  (window.location.search.indexOf("?") >=0 ) ?  "&" : "?";
+        if (!window.location.search.match("past_week")) {
+          $('#report-form').append($("<a href='" + 
+            window.location.href + 
+            qs + 
+            "include=date&wide=date&date=past_week"+
+            "'>Show Past Week</a>"
+          ))
+        } 
+        $('#report-form').append($("<br/><a href='" +
+          window.location.href + qs + "format=csv" +
+          "'>Show as csv</a>"                  
+        ))
+
+      }
       </script>
   </div>
 </div>
