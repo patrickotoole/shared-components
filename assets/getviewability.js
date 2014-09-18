@@ -222,11 +222,11 @@ rockerbox.vb.prototype.defaultCallback = function(id,v1,action,frames,ts) {
 (function(rockerbox){
   if (rockerbox.cr.length) {
 	var creative = rockerbox.cr.pop();
-	
+	//console.log(creative)
 	var id = "flashPos",
 		vis = document.getElementById('vis_'+creative.creative),
 		f = document.createElement("div"),
-		wrap = document.getElementById('cr_'+creative.creative+'_'+creative.auction_id);
+		wrap = document.getElementById('cr_'+creative.creative+'_'+creative.auction_id+'_'+creative.cb);
 
 	try { wrap.style.visibility="";} catch (e){}
 
@@ -236,7 +236,11 @@ rockerbox.vb.prototype.defaultCallback = function(id,v1,action,frames,ts) {
   var callbackID = Math.random() +"";
   callbackID  = "middle_"+callbackID.slice(2,8);
   //console.log(callbackID);
-  var origin = "&origin=" + encodeURIComponent(window.location.href) + "&parent=" + encodeURIComponent(window.parent.location.href)
+  _parent = "no_top_level"
+  try {
+    var _parent = URIComponent(window.parent.location.href)
+  } catch(e) {}
+  var origin = "&origin=" + encodeURIComponent(window.location.href) + "&parent=" + _parent
 
 	var params = rockerbox.serialize(creative) + origin + "&",
 		pixel = "http://metrics.getrockerbox.com/viewability?" + params,
