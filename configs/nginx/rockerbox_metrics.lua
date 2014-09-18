@@ -76,7 +76,7 @@ end
 
 function set_uid(args)
   if args["adnxs_uid"] and tonumber(args["adnxs_uid"]) ~= nil then
-    ngx.header['Set-Cookie'] = 'uuid=' .. args["adnxs_uid"] .. '; path=/'
+    ngx.header['Set-Cookie'] = 'uuid=' .. args["adnxs_uid"] .. '; path=/;Max-Age=2592000;'
   end
 end
 
