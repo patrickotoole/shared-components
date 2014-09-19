@@ -52,12 +52,13 @@ class AdvertiserHandler(tornado.web.RequestHandler):
         contact_name = self.get_argument('contact_name')
         contact_email = self.get_argument('contact_email')
         all_pages_pixel = self.get_argument('all_pages_pixel_checkbox')
+        pixel_source_name = self.get_argument('pixel_source_name','')
         post_data = { "advertiser": { "name":advertiser_name, "state":"active" }}
         advertiser_post_response = self.api.post('/advertiser',data=ujson.dumps(post_data)).json
         print advertiser_post_response
         advertiser_id = advertiser_post_response["response"]["advertiser"]["id"]
 
-        insert_advertiser_query = "insert into appnexus_reporting.advertiser (contact_name,external_advertiser_id,email,advertiser_name) values ('%s', %s, '%s', '%s')" % (contact_name,str(advertiser_id),contact_email,advertiser_name)
+        insert_advertiser_query = "insert into appnexus_reporting.advertiser (contact_name,external_advertiser_id,email,advertiser_name,pixel_source_name) values ('%s', %s, '%s', '%s' , '%s')" % (contact_name,str(advertiser_id),contact_email,advertiser_name,pixel_source_name)
         #Insert New Advertiser
         self.write(insert_advertiser_query)
         self.db.execute(insert_advertiser_query)            
