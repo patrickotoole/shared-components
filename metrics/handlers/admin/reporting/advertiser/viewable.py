@@ -53,6 +53,7 @@ OPTIONS = {
 GROUPS = {
     "advertiser":"advertiser",
     "date":"date",
+    "hour":"hour",
     "campaign":"campaign",
     "seller":"seller",
     "tag":"tag",

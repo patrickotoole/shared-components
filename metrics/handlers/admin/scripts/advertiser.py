@@ -43,7 +43,7 @@ class AdvertiserHandler(tornado.web.RequestHandler):
         else:
             #j = self.api.get('/member').json
 
-            self.render("../templates/admin/advertiser.html")
+            self.render("../templates/admin/advertiser/new.html")
             #self.write(ujson.dumps(j))
 
 

@@ -157,7 +157,7 @@
       advertiser_name = $("#advertiser_name").val();
       contact_name = $("#advertiser_contact").val();
       contact_email = $("#advertiser_contact_email").val();
-      pixel_source_name = $("#advertiser_name").val().replace(" ","_").replace(/\W/g,"")
+      pixel_source_name = $("#advertiser_name").val().replace(" ","_").replace(/\W/g,"").toLowerCase()
       all_pages_pixel_checkbox = false;
       logged_in_pixel_checkbox = false;
       signup_conversion_checkbox = false;

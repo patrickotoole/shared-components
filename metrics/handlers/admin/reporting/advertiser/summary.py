@@ -140,9 +140,6 @@ class AdvertiserSummaryHandler(AdminReportingBaseHandler):
         if domain_list:
             return "type"
 
-        if advertiser:
-            return "advertiser"
-        
         return default
 
     

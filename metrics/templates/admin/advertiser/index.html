@@ -1,0 +1,281 @@
+{% autoescape None %}
+{% extends "../../clean_base.html" %}
+{% block content %}
+<link rel="stylesheet" type="text/css" href="http://getbootstrap.com/dist/css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/dc.css">
+<link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/chosen.css">
+<style>
+  .bar {}
+  .negative {
+    fill:red;
+  }
+</style>
+
+<script type="text/javascript" src="http://rockerbox.com/js/d3.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/crossfilter.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/dc.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/colorbrewer.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/reporting.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/chosen.js"></script>
+<script type="text/javascript" src="/static/js/render.js"></script> 
+<script type="text/html" id="advertiser-template">
+  <div class="col-md-6">
+    <div class="panel <%= active ? 'panel-success' : 'panel-default' %>" id="advertiser-<%= external_advertiser_id %>">
+        <div class="panel-heading">
+          <h3 class="panel-title">
+            <span class="pull-right"><%= external_advertiser_id %></span>
+            <%= advertiser_name %>
+          </h3>
+        </div>
+        <div class="list-group">
+          <a class="list-group-item campaigns">
+            <span class="badge"><%= campaigns.length %></span>
+            Campaigns
+          </a>
+          <a class="list-group-item segments">
+            <span class="badge"><%= segments.length %></span>
+            Segments
+          </a> 
+          <a class="list-group-item pixels">
+            <span class="badge"><%= pixels.length %></span>
+            Conversion Pixels
+          </a>  
+
+        </div>
+    </div>
+</div>
+</script>
+
+
+<div id="advertiser-content" class='container'>
+  <div class="row">
+    <h4>Advertisers</h4>
+  </div>
+
+</div>
+<script>
+
+
+
+var data = {{ data }}
+  data.sort(function(x){
+    return - parseInt(x.active)
+  })
+
+var container = $('#advertiser-content > .row'),
+  renderer = Rockerbox.render.renderer(document.getElementById("advertiser-template").innerHTML)
+
+/*$.each(data,function(i,d){
+  container.append(renderer(d))
+})*/
+
+d3.json("/admin/advertiser/viewable/reporting?format=json&date=14-09-20",function(reporting){
+
+  var buildSummary = function(Sum,panels) {
+    var sum = Sum.toLowerCase().replace(" ","_")
+  
+    var summary = panels
+      .append("div")
+      .classed("panel-body " + sum + "-summary",true)
+
+    summary.append("h5")
+      .text(Sum + " Summary")
+
+    var summary_body = summary
+      .append("div")
+      .classed("col-md-3 small",true)
+      .selectAll("div")
+      .data(function(x){
+        return x[sum + "_summary"]
+      })
+      .enter()
+      .append("div")
+      .html(function(x){
+        return x.key + " " + format(x.values[0])
+      })
+
+    var x = d3.scale.linear()
+      .range([0, 100])
+
+    y = d3.scale.ordinal()
+      .rangeRoundBands([0, 50], .2)
+      .domain(["served","loaded","visible"])
+
+    var LABEL_WIDTH = 50
+
+    var svg = summary
+      .append("div")
+      .classed("col-md-3",true)
+      .append("svg")
+      .attr("width", 170)
+      .attr("height",50)
+      .append("g")
+
+    svg
+      .append("rect")
+      .attr("x",LABEL_WIDTH + 50)
+      .attr("y",0)
+      .attr("width",1)
+      .attr("height",50)
+      
+    bars = svg.selectAll(".bar")
+      .data(function(d){
+        return d[sum + "_summary"]
+      })
+      .enter()
+
+    bars
+     .append("text")
+     .text(function(d){return d.key})
+     .attr("x", function(d) { return x(Math.min(0, d.values[1])); })
+     .attr("y", function(d) { return y(d.key) + 10; }) 
+     .attr("width",LABEL_WIDTH)
+     .attr("class","small")
+
+    bars
+      .append("rect")
+        .attr("class", function(d) { return d.values[1] < .5 ? "bar negative" : "bar positive"; })
+        .attr("x", function(d) { return LABEL_WIDTH + x(Math.min(0, d.values[1])); })
+        .attr("y", function(d) { return y(d.key); })
+        .attr("width", function(d) { return Math.abs(x(d.values[1]) - x(0)); })
+        .attr("height", y.rangeBand());
+  
+  }
+
+  reporting = d3.nest()
+    .key(function(d) {return d.advertiser})
+    .rollup(function(l){
+      var fields = ["served","loaded","visible"],
+        values =  fields.map(function(n){
+          return d3.sum(l.map(function(k,i){return k[n]}))
+        }),
+        rolled = fields.map(function(n,i){
+          return {
+            key: n,
+            values: [values[i],values[i]/values[0]]
+          }
+        })
+
+      return rolled
+    })
+    .map(reporting,d3.map)
+
+   window.r = reporting                             
+
+  data.forEach(function(d){
+    d.viewability_summary = reporting.get(d.pixel_source_name) || []
+    d.segment_summary = []
+    d.campaign_summary = []
+    d.pixel_summary = []
+  })
+
+  var wrappers = d3.select('#advertiser-content').selectAll("div")
+      .data(data).enter()
+      .append("div")
+        .classed("col-md-6",true)
+        .attr("id",function(x){return x.external_advertiser_id})
+
+  var panels = wrappers
+      .append("div")
+      .classed("panel",true)
+      .classed("panel-default",function(x) {
+        return !x.active 
+      })
+      .classed("panel-success", function(x) {
+        return x.active 
+      })
+
+  var format = d3.format("0,000"),
+    headings = panels.append("div").classed("panel-heading",true);
+
+
+  var titles = headings.append("h3")
+    .classed("panel-title",true)
+    .text(function(x) {return x.advertiser_name})
+
+  titles.append("span")
+    .classed("pull-right",true)
+    .text(function(x){return x.external_advertiser_id})
+
+
+  var groupings = {
+    "Viewability":["Domain Lists","Campaign Viewability", "Tag Viewability"],
+    //"Campaign":["Campaign"], 
+    //"Pixel":["Pixel"], 
+    //"Segment":["Segment"]
+  }
+
+
+
+  Object.keys(groupings).map(function(key){
+
+    buildSummary(key,panels)
+
+    groupings[key].map(function(grouping) { 
+
+      var class_name= grouping.toLowerCase().replace(" ","-"),
+        group_class = class_name + "-group",
+        group_header_class = class_name + "-header",
+        group_item_class = class_name + "-item"
+
+      var group = panels.append("div")
+        .classed("list-group " + group_class,true)
+        .on("click",function(x){
+
+          var p = d3.select(this.parentNode.parentNode), 
+            has_opened = Object.keys(x.is_opened).filter(function(y){return x.is_opened[y]}).length;
+
+          p.classed("col-md-6",!has_opened) 
+          p.classed("col-md-12",has_opened)  
+            
+        })
+
+      var header = group.append("a")
+        .classed("list-group-item " + group_header_class,true)
+        .text(grouping)
+        .on("click",function(data){
+          data.is_opened = data.is_opened || {}
+          d3.select(this.parentNode)
+            .selectAll("." + group_item_class)
+            .classed("hidden",function(x){
+              var is_visible = !this.classList.contains("hidden")
+              data.is_opened[class_name] = !is_visible
+              return is_visible
+            })
+        })
+
+      header
+        .append("span")
+        .classed("badge",true)
+        .text(function(x){
+          var values = x[class_name + "s"]
+          values = values ? values : []
+          return values.length
+        })
+
+      var items = group.selectAll("div")
+        .data(function(x){
+          var values = x[class_name + "s"]
+          return values ? values : []
+        })
+        .enter()
+          .append("div")
+          .classed("list-group-item list-group-item-warning hidden " + group_item_class,true)
+          .text(function(x){return x[class_name + "_name"]})
+
+    })
+  })
+}) 
+
+
+
+
+$(".pixels").on("click",function(x,i){
+  $(x.target).addClass("active")
+  $(x.target).parents(".panel").parent().attr("class","col-md-12")
+}) 
+
+</script>
+<script src="http://rockerbox.com/js/jquery.serialize-object.js"></script>
+
+{% end %} 

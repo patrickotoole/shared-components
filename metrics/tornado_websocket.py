@@ -107,7 +107,10 @@ _streaming = [
 ]
 
 admin_advertiser = [
+    (r'/admin/advertiser/?',admin.advertiser.AdvertiserHandler, dict(db=db,api=api)),  
     (r'/admin/advertiser/new/?',admin.scripts.AdvertiserHandler, dict(db=db,api=api)),
+
+    
     (r'/admin/advertiser/pixel/reporting/?', reporting.PixelAdvertiserHandler, dict(db=db, hive=hive)),
     (r'/admin/advertiser/reporting/?', admin.reporting.AdvertiserReportingHandler, dict(db=db, hive=hive)), 
     (r'/admin/advertiser/viewable/reporting/?',admin.reporting.AdvertiserViewableHandler, dict(db=db,hive=hive)),
@@ -121,7 +124,9 @@ admin_advertiser = [
     (r'/admin/advertiser/domain_list/reporting/?(meta)?/?',admin.reporting.DomainListHandler, dict(hive=hive)),
 
     (r'/admin/advertiser/conversion/reporting/?',admin.reporting.ConversionCheckHandler, dict(hive=hive)) ,
-    (r'/admin/advertiser/conversion/reporting/?(meta)?/?',admin.reporting.ConversionCheckHandler, dict(hive=hive))
+    (r'/admin/advertiser/conversion/reporting/?(meta)?/?',admin.reporting.ConversionCheckHandler, dict(hive=hive)),
+
+    (r'/admin/advertiser/(.*?)/?',admin.advertiser.AdvertiserHandler, dict(db=db,api=api))
 ]
 
 admin_reporting = [
