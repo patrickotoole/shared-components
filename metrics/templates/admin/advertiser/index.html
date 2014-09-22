@@ -68,79 +68,87 @@ var container = $('#advertiser-content > .row'),
 /*$.each(data,function(i,d){
   container.append(renderer(d))
 })*/
+var format = d3.format("0,000"),
+  formatPercent = d3.format("%")
 
-d3.json("/admin/advertiser/viewable/reporting?format=json&date=14-09-20",function(reporting){
+var buildViewable = function(summary,accessor,_class,height) {
+  var height = height || 50
+  var x = d3.scale.linear()
+    .range([0, 100])
 
-  var buildSummary = function(Sum,panels) {
-    var sum = Sum.toLowerCase().replace(" ","_")
+  var y = d3.scale.ordinal()
+    .rangeRoundBands([0, height], .2)
+    .domain(["served","loaded","visible"])
+
+  var LABEL_WIDTH = 50
+
+  var svg = summary
+    .append("div")
+    .classed(_class,true)
+    .append("svg")
+    .attr("width", 170)
+    .attr("height",height)
+    .append("g")
+
+  svg
+    .append("rect")
+    .attr("x",LABEL_WIDTH + 50)
+    .attr("y",0)
+    .attr("width",1)
+    .attr("height",height)
+    
+  bars = svg.selectAll(".bar")
+    .data(function(d){
+      return d[accessor]
+    })
+    .enter()
+
+  bars
+   .append("text")
+   .text(function(d){return d.key})
+   .attr("x", function(d) { return x(Math.min(0, d.values[1])); })
+   .attr("y", function(d) { return y(d.key) + 10; }) 
+   .attr("width",LABEL_WIDTH)
+   .attr("class","small")
+
+  bars
+    .append("rect")
+      .attr("class", function(d) { return d.values[1] < .5 ? "bar negative" : "bar positive"; })
+      .attr("x", function(d) { return LABEL_WIDTH + x(Math.min(0, d.values[1])); })
+      .attr("y", function(d) { return y(d.key); })
+      .attr("width", function(d) { return Math.abs(x(d.values[1]) - x(0)); })
+      .attr("height", y.rangeBand());
+}
+
+var buildSummary = function(Sum,panels) {
+  var sum = Sum.toLowerCase().replace(" ","_")
+
+  var summary = panels
+    .append("div")
+    .classed("panel-body " + sum + "-summary",true)
+
+  summary.append("h5")
+    .text(Sum + " Summary")
+
+  var summary_body = summary
+    .append("div")
+    .classed("col-md-3 small",true)
+    .selectAll("div")
+    .data(function(x){
+      return x[sum + "_summary"]
+    })
+    .enter()
+    .append("div")
+    .html(function(x){
+      return x.key + " " + format(x.values[0])
+    })
+
+  buildViewable(summary,sum + "_summary","col-md-3")
   
-    var summary = panels
-      .append("div")
-      .classed("panel-body " + sum + "-summary",true)
+}
 
-    summary.append("h5")
-      .text(Sum + " Summary")
 
-    var summary_body = summary
-      .append("div")
-      .classed("col-md-3 small",true)
-      .selectAll("div")
-      .data(function(x){
-        return x[sum + "_summary"]
-      })
-      .enter()
-      .append("div")
-      .html(function(x){
-        return x.key + " " + format(x.values[0])
-      })
-
-    var x = d3.scale.linear()
-      .range([0, 100])
-
-    y = d3.scale.ordinal()
-      .rangeRoundBands([0, 50], .2)
-      .domain(["served","loaded","visible"])
-
-    var LABEL_WIDTH = 50
-
-    var svg = summary
-      .append("div")
-      .classed("col-md-3",true)
-      .append("svg")
-      .attr("width", 170)
-      .attr("height",50)
-      .append("g")
-
-    svg
-      .append("rect")
-      .attr("x",LABEL_WIDTH + 50)
-      .attr("y",0)
-      .attr("width",1)
-      .attr("height",50)
-      
-    bars = svg.selectAll(".bar")
-      .data(function(d){
-        return d[sum + "_summary"]
-      })
-      .enter()
-
-    bars
-     .append("text")
-     .text(function(d){return d.key})
-     .attr("x", function(d) { return x(Math.min(0, d.values[1])); })
-     .attr("y", function(d) { return y(d.key) + 10; }) 
-     .attr("width",LABEL_WIDTH)
-     .attr("class","small")
-
-    bars
-      .append("rect")
-        .attr("class", function(d) { return d.values[1] < .5 ? "bar negative" : "bar positive"; })
-        .attr("x", function(d) { return LABEL_WIDTH + x(Math.min(0, d.values[1])); })
-        .attr("y", function(d) { return y(d.key); })
-        .attr("width", function(d) { return Math.abs(x(d.values[1]) - x(0)); })
-        .attr("height", y.rangeBand());
-  
-  }
+d3.json("/admin/advertiser/viewable/reporting?format=json&date=14-09-22&include=tag",function(reporting_data){
 
   reporting = d3.nest()
     .key(function(d) {return d.advertiser})
@@ -158,16 +166,66 @@ d3.json("/admin/advertiser/viewable/reporting?format=json&date=14-09-20",functio
 
       return rolled
     })
-    .map(reporting,d3.map)
+    .map(reporting_data,d3.map)
 
-   window.r = reporting                             
+
+  campaign_viewability = d3.nest()
+    .key(function(d) {return d.advertiser})
+    .map(reporting_data,d3.map)
+
+  tag_viewability = d3.nest()
+    .key(function(d) {return d.advertiser})
+    .map(reporting_data,d3.map)
+
 
   data.forEach(function(d){
     d.viewability_summary = reporting.get(d.pixel_source_name) || []
-    d.segment_summary = []
-    d.campaign_summary = []
-    d.pixel_summary = []
+
+    var v = campaign_viewability.get(d.pixel_source_name) || []
+
+    d.campaign_viewabilitys = d3.nest()
+      .key(function(d) { return d["campaign"]})
+      .rollup(function(l){
+        var fields = ["served","loaded","visible"],
+          values =  fields.map(function(n){
+            return d3.sum(l.map(function(k,i){return k[n]}))
+          }),
+          rolled = fields.map(function(n,i){
+            return {
+              key: n,
+              values: [values[i],values[i]/values[0]]
+            }
+          })
+
+        return rolled
+      })
+      .entries(v)
+
+    var v = tag_viewability.get(d.pixel_source_name) || []
+
+    d.tag_viewabilitys = d3.nest()
+      .key(function(d) { return d["tag"]})
+      .rollup(function(l){
+        var fields = ["served","loaded","visible"],
+          values =  fields.map(function(n){
+            return d3.sum(l.map(function(k,i){return k[n]}))
+          }),
+          rolled = fields.map(function(n,i){
+            return {
+              key: n,
+              values: [values[i],values[i]/values[0]]
+            }
+          })
+
+        return rolled
+      })
+      .entries(v) 
+
+      d.tag_viewabilitys = d.tag_viewabilitys.filter(function(x){ return x.values[0].values[0] > 10})
+
   })
+
+  
 
   var wrappers = d3.select('#advertiser-content').selectAll("div")
       .data(data).enter()
@@ -185,8 +243,7 @@ d3.json("/admin/advertiser/viewable/reporting?format=json&date=14-09-20",functio
         return x.active 
       })
 
-  var format = d3.format("0,000"),
-    headings = panels.append("div").classed("panel-heading",true);
+  var  headings = panels.append("div").classed("panel-heading",true);
 
 
   var titles = headings.append("h3")
@@ -199,10 +256,38 @@ d3.json("/admin/advertiser/viewable/reporting?format=json&date=14-09-20",functio
 
 
   var groupings = {
-    "Viewability":["Domain Lists","Campaign Viewability", "Tag Viewability"],
-    //"Campaign":["Campaign"], 
-    //"Pixel":["Pixel"], 
-    //"Segment":["Segment"]
+    "Viewability":["Domain List","Campaign Viewability", "Tag Viewability"]
+  }
+
+  var render = function(class_name,items) {
+    if (class_name == "campaign_viewability" || class_name == "tag_viewability") {
+
+      var summary_body = items
+        .append("div")
+        .classed("col-md-3 small",true)
+        .selectAll("div")
+        .data(function(x){
+          return x["values"]
+        })
+        .enter()
+        .append("div")
+        .html(function(x){
+          return x.key + " " + format(x.values[0]) + " (" + formatPercent(x.values[1]) +")"
+        })
+   
+      buildViewable(items,"values","col-md-3",45)
+
+      items
+        .append("div")
+        .classed("col-md-3",true)
+        .html(function(x){
+          var base = "/admin/advertiser/viewable/reporting?"
+          return "<a href='" + base + "include=tag,domain&campaign="+x.key+"'>by domain, tag</a><br/>" + 
+            "<a href='" + base + "include=domain&campaign="+x.key+"'>by domain</a><br/>" + 
+            "<a href='" + base + "include=tag&campaign="+x.key+"'>by tag</a>" 
+        })
+       
+    }
   }
 
 
@@ -213,7 +298,7 @@ d3.json("/admin/advertiser/viewable/reporting?format=json&date=14-09-20",functio
 
     groupings[key].map(function(grouping) { 
 
-      var class_name= grouping.toLowerCase().replace(" ","-"),
+      var class_name= grouping.toLowerCase().replace(" ","_"),
         group_class = class_name + "-group",
         group_header_class = class_name + "-header",
         group_item_class = class_name + "-item"
@@ -249,19 +334,41 @@ d3.json("/admin/advertiser/viewable/reporting?format=json&date=14-09-20",functio
         .classed("badge",true)
         .text(function(x){
           var values = x[class_name + "s"]
-          values = values ? values : []
-          return values.length
+          values = values ? values : {}
+          return Object.keys(values).length
         })
 
       var items = group.selectAll("div")
         .data(function(x){
           var values = x[class_name + "s"]
-          return values ? values : []
+          return values ? values : {}
         })
+        
         .enter()
+        
           .append("div")
-          .classed("list-group-item list-group-item-warning hidden " + group_item_class,true)
-          .text(function(x){return x[class_name + "_name"]})
+          .sort(function(x,y) {
+            return x.key - y.key
+          })
+          .classed("list-group-item hidden " + group_item_class,true)
+          .classed("list-group-item-warning",function(x){
+            if (x.values) 
+              return x.values[2].values[1] < .35
+          })
+          .classed("list-group-item-danger",function(x){
+            if (x.values) 
+              return x.values[2].values[1] < .2
+          })
+          .append("p")
+          .classed("row list-group-item-text",true)
+
+          .html(function(x){
+            return '<div class="col-md-3">' +  x["key"]  + '</div>'
+          })
+          
+
+
+      render(class_name,items)
 
     })
   })
