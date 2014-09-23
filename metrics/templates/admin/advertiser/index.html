@@ -147,8 +147,9 @@ var buildSummary = function(Sum,panels) {
   
 }
 
+var BASE_URL = "/admin/advertiser/viewable/reporting"
 
-d3.json("/admin/advertiser/viewable/reporting?format=json&date=14-09-22&include=tag",function(reporting_data){
+d3.json(BASE_URL + "?format=json&start_date=14-09-22&include=tag",function(reporting_data){
 
   reporting = d3.nest()
     .key(function(d) {return d.advertiser})
@@ -230,7 +231,7 @@ d3.json("/admin/advertiser/viewable/reporting?format=json&date=14-09-22&include=
   var wrappers = d3.select('#advertiser-content').selectAll("div")
       .data(data).enter()
       .append("div")
-        .classed("col-md-6",true)
+        .classed("wrapper col-md-6",true)
         .attr("id",function(x){return x.external_advertiser_id})
 
   var panels = wrappers
@@ -276,17 +277,29 @@ d3.json("/admin/advertiser/viewable/reporting?format=json&date=14-09-22&include=
         })
    
       buildViewable(items,"values","col-md-3",45)
-
-      items
-        .append("div")
-        .classed("col-md-3",true)
-        .html(function(x){
-          var base = "/admin/advertiser/viewable/reporting?"
-          return "<a href='" + base + "include=tag,domain&campaign="+x.key+"'>by domain, tag</a><br/>" + 
-            "<a href='" + base + "include=domain&campaign="+x.key+"'>by domain</a><br/>" + 
-            "<a href='" + base + "include=tag&campaign="+x.key+"'>by tag</a>" 
-        })
-       
+      if (class_name == "campaign_viewability") {
+        items
+          .append("div")
+          .classed("col-md-3",true)
+          .html(function(x){
+            var base = "/admin/advertiser/viewable/reporting?"
+            return "<a href='" + base + "include=tag,domain&campaign="+x.key+"'>by domain, tag</a><br/>" + 
+              "<a href='" + base + "include=domain&campaign="+x.key+"'>by domain</a><br/>" + 
+              "<a href='" + base + "include=tag&campaign="+x.key+"'>by tag</a>" 
+          })
+         
+      } else {
+        items
+          .append("div")
+          .classed("col-md-3",true)
+          .html(function(x){
+            var advertiser = this.parentNode.parentNode.parentNode.parentNode.__data__.pixel_source_name
+            var base = "/admin/advertiser/viewable/reporting?advertiser=" + advertiser + "&"
+            return "<a href='" + base + "include=campaign,domain&tag="+x.key+"'>by campaign, tag</a><br/>" + 
+              "<a href='" + base + "include=domain&tag="+x.key+"'>by domain</a><br/>" + 
+              "<a href='" + base + "include=campaign&tag="+x.key+"'>by campaign</a>" 
+          })
+        }   
     }
   }
 
