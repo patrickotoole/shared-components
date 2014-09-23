@@ -81,7 +81,7 @@
 <script>
 
 
-
+  $('document').ready(function(){
 
 var data = {{ profile }},
   crs = crossfilter(data);
@@ -117,7 +117,7 @@ $('.lists').chosen({
       value: term,
       text: "Custom: " + term
     });
-    $j(".lists").trigger("change")
+    $(".lists").trigger("change")
   },
   persistent_create_option: false
 })
@@ -278,6 +278,7 @@ var send_data = function(json_string,cb) {
 
 $('form').on('click','#add-batch',function(e){
   e.preventDefault()
+  console.log("asdf")
   $.ajax({
     url:"?format=json",
     dataType:"json"
@@ -470,7 +471,7 @@ $('#batches').on('click','.remove-batch',function(e){
   
 })
 
-
+})
 </script>
 <script src="http://rockerbox.com/js/jquery.serialize-object.js"></script>
 

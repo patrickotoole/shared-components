@@ -8,7 +8,8 @@ class IndexHandler(tornado.web.RequestHandler):
         ]
 
         advertiser_links = [
-            ("/admin/advertiser", "Advertiser Creator"),
+            ("/admin/advertiser/", "Advertiser Info"), 
+            ("/admin/advertiser/new", "Advertiser Creator"),
             ("/admin/advertiser/pixel/reporting", "[ALPHA] On-site (Rockerbox vs. all users)"),
             ("/admin/advertiser/reporting", "[ALPHA] Reporting (unified)"), 
             ("/admin/advertiser/viewable/reporting", "Campaign Viewability"),
@@ -27,7 +28,7 @@ class IndexHandler(tornado.web.RequestHandler):
 
         
         internal_links = [
-            ("/admin/advertiser/domain_list/", "Targeting Tool"),
+            ("/admin/advertiser/domain_list/streaming", "Targeting Tool"),
             ("/admin/intraweek", "Intraweek Tool"),
             ("/admin/imps/", "Segment/DMA Analysis"),
             ("/admin/viewable", "Viewability Analysis"),
