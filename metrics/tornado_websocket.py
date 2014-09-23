@@ -130,6 +130,7 @@ admin_advertiser = [
 ]
 
 admin_reporting = [
+    
     (r'/admin/streaming',admin.streaming.IndexHandler),
     (r'/admin/websocket', admin.streaming.AdminStreamingHandler, dict(db=db,buffers=buffers)),
     (r'/admin/viewable.*',admin.reporting.ViewabilityHandler, dict(db=db,api=api,hive=hive)),
@@ -143,6 +144,7 @@ admin_reporting = [
     (r'/admin/segment/reporting/?',admin.reporting.SegmentReportingHandler, dict(hive=hive)),   
     (r'/admin/segment/scrubbed/?',admin.scripts.ProfileHandler, dict(bidder=bidder)),  
     (r'/admin/segment/scrubbed/(.*?)',admin.scripts.ProfileHandler, dict(bidder=bidder)),
+    (r'/admin/segment/?(.*?)/?',admin.segment.SegmentHandler, dict(db=db, api=api)), 
     (r'/admin/imps/reporting', admin.reporting.ImpsReportingHandler, dict(db=db, api=api, hive=hive))
     
 ] + admin_advertiser
