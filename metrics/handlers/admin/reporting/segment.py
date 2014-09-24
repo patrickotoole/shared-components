@@ -6,7 +6,7 @@ import logging
 from twisted.internet import defer
 
 from lib.helpers import *
-from lib.hive.helpers import run_hive_deferred
+from lib.hive.helpers import run_hive_session_deferred
 from lib.query.HIVE import AGG_APPROVED_AUCTIONS
 SEGMENT_VOLUME = """
 SELECT 
@@ -29,6 +29,20 @@ GROUP BY
     %(groupby)s
 """
 
+SEGMENT_VOLUME = """
+SELECT 
+    segment,
+    sum(imps) as imps,
+    sum(considered_imps) as considered_imps,
+    sum(approved_imps) as approved_imps
+FROM
+    agg_segments_scrubbed
+WHERE
+    %(where)s
+GROUP BY
+    %(groupby)s
+"""
+
 class SegmentReportingHandler(tornado.web.RequestHandler):
     def initialize(self, hive=None):
         self.hive = hive
@@ -45,13 +59,19 @@ class SegmentReportingHandler(tornado.web.RequestHandler):
 
     @defer.inlineCallbacks
     def get_data(self,q):
-        t = yield run_hive_deferred(self.hive,q)
+        query_list = [
+            "set shark.map.tasks=44", 
+            "set mapred.reduce.tasks=0",
+            q
+        ]
+
+        t = yield run_hive_session_deferred(self.hive,query_list) 
         u = pandas.DataFrame(t)
         self.get_content(u)
 
     @tornado.web.asynchronous
     def get(self):
-        yesterday = (datetime.date.today()) #- datetime.timedelta(1))
+        yesterday = (datetime.date.today() - datetime.timedelta(1))
         date = self.get_argument("date",yesterday.strftime("%y-%m-%d"))
         hour = self.get_argument("hour",False)
         groupby = self.get_argument("groupby","segment")
