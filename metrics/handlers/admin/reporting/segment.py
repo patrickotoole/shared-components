@@ -71,7 +71,7 @@ class SegmentReportingHandler(tornado.web.RequestHandler):
 
     @tornado.web.asynchronous
     def get(self):
-        yesterday = (datetime.date.today() - datetime.timedelta(1))
+        yesterday = (datetime.date.today()) #- datetime.timedelta(1))
         date = self.get_argument("date",yesterday.strftime("%y-%m-%d"))
         hour = self.get_argument("hour",False)
         groupby = self.get_argument("groupby","segment")

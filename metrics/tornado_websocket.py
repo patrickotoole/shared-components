@@ -1,3 +1,4 @@
+
 import tornado.ioloop
 import tornado.web
 import tornado.websocket
@@ -107,8 +108,8 @@ _streaming = [
 ]
 
 admin_advertiser = [
-    (r'/admin/advertiser/?',admin.advertiser.AdvertiserHandler, dict(db=db,api=api)),  
-    (r'/admin/advertiser/new/?',admin.scripts.AdvertiserHandler, dict(db=db,api=api)),
+    
+    #(r'/admin/advertiser/new/?',admin.scripts.AdvertiserHandler, dict(db=db,api=api)),
 
     
     (r'/admin/advertiser/pixel/reporting/?', reporting.PixelAdvertiserHandler, dict(db=db, hive=hive)),
@@ -126,7 +127,8 @@ admin_advertiser = [
     (r'/admin/advertiser/conversion/reporting/?',admin.reporting.ConversionCheckHandler, dict(hive=hive)) ,
     (r'/admin/advertiser/conversion/reporting/?(meta)?/?',admin.reporting.ConversionCheckHandler, dict(hive=hive)),
     (r'/admin/advertiser/segment/?(.*?)/?',admin.segment.SegmentHandler, dict(db=db, api=api)), 
-    (r'/admin/advertiser/viewable/?(.*?)/?',admin.advertiser.AdvertiserViewableHandler, dict(db=db,api=api))
+    (r'/admin/advertiser/viewable/?(.*?)/?',admin.advertiser.AdvertiserViewableHandler, dict(db=db,api=api)),
+    (r'/admin/advertiser/?(.*?)/?',admin.scripts.AdvertiserHandler, dict(db=db,api=api)),  
 ]
 
 admin_reporting = [

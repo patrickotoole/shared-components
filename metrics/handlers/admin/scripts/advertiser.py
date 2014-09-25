@@ -227,8 +227,13 @@ class AdvertiserHandler(tornado.web.RequestHandler,Advertiser):
         self.api.get().json = self.api.post().json
         """ 
 
-    def get(self):
-        self.render("../templates/admin/advertiser/new.html")
+    def get(self,arg=None):
+        if arg == "new":
+            self.render("../templates/admin/advertiser/new.html")
+        elif arg.isnumeric():
+            self.render("../templates/admin/advertiser/show.html")
+        else:
+            self.render("../templates/admin/advertiser/index.html")
 
    
 
@@ -284,3 +289,5 @@ class AdvertiserHandler(tornado.web.RequestHandler,Advertiser):
 
         self.set_managed_target(advertiser_id, campaign_id, placement_id)
 
+    def put(self):
+        pass

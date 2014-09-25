@@ -312,13 +312,21 @@ $.getJSON("/admin/segment/reporting", function(d){
       subgroup.append("p")
         .classed("row list-group-item-text segment_implemented_wrapper hidden",true)
         .html(function(x){
+          var implemented = x['segment_implemented']
+
+          if (implemented)
+            implemented = implemented
+              .replace(/>/g,'&gt;')
+              .replace(/</g,'&lt;')
+              .replace(/"/g,'&quot;')
+
           return '<br/><div class="col-md-12">' + 
             '<pre class="segment_implemented well" id="segment_implemented_' + 
             x["id"] +
             '" data-name="segment_implemented" data-type="textarea" data-pk="'+
             x["id"] + '" data-url="'+
             window.location.pathname + "/" + x["id"] + '" data-title="Enter username" data-rows="3">' + 
-            x['segment_implemented'] + 
+            implemented + 
             '</pre><form>' + '' + '</form></div>'
         })
 

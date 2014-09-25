@@ -28,7 +28,7 @@ class AdvertiserViewableHandler(tornado.web.RequestHandler):
         
         def default(self,data):
             o = Convert.df_to_json(data)
-            self.render("../templates/admin/advertiser/index.html",data=o)
+            self.render("../templates/admin/advertiser/viewable.html",data=o)
 
         yield default, (data,)
 
