@@ -125,8 +125,8 @@ admin_advertiser = [
 
     (r'/admin/advertiser/conversion/reporting/?',admin.reporting.ConversionCheckHandler, dict(hive=hive)) ,
     (r'/admin/advertiser/conversion/reporting/?(meta)?/?',admin.reporting.ConversionCheckHandler, dict(hive=hive)),
-
-    (r'/admin/advertiser/(.*?)/?',admin.advertiser.AdvertiserHandler, dict(db=db,api=api))
+    (r'/admin/advertiser/segment/?(.*?)/?',admin.segment.SegmentHandler, dict(db=db, api=api)), 
+    (r'/admin/advertiser/viewable/?(.*?)/?',admin.advertiser.AdvertiserViewableHandler, dict(db=db,api=api))
 ]
 
 admin_reporting = [
@@ -144,7 +144,7 @@ admin_reporting = [
     (r'/admin/segment/reporting/?',admin.reporting.SegmentReportingHandler, dict(hive=hive)),   
     (r'/admin/segment/scrubbed/?',admin.scripts.ProfileHandler, dict(bidder=bidder)),  
     (r'/admin/segment/scrubbed/(.*?)',admin.scripts.ProfileHandler, dict(bidder=bidder)),
-    (r'/admin/segment/?(.*?)/?',admin.segment.SegmentHandler, dict(db=db, api=api)), 
+    
     (r'/admin/imps/reporting', admin.reporting.ImpsReportingHandler, dict(db=db, api=api, hive=hive))
     
 ] + admin_advertiser

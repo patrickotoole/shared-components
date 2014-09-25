@@ -149,7 +149,7 @@ var buildSummary = function(Sum,panels) {
 
 var BASE_URL = "/admin/advertiser/viewable/reporting"
 
-d3.json(BASE_URL + "?format=json&start_date=14-09-22&include=tag",function(reporting_data){
+d3.json(BASE_URL + "?format=json&start_date=14-09-23&include=tag",function(reporting_data){
 
   reporting = d3.nest()
     .key(function(d) {return d.advertiser})

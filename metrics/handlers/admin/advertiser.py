@@ -17,7 +17,8 @@ INCLUDES = {
 }
 
 
-class AdvertiserHandler(tornado.web.RequestHandler):
+
+class AdvertiserViewableHandler(tornado.web.RequestHandler):
     def initialize(self, db, api):
         self.db = db 
         self.api = api
@@ -38,7 +39,7 @@ class AdvertiserHandler(tornado.web.RequestHandler):
             where = ("external_advertiser_id = %s" % advertiser_id)
         
         df = self.db.select_dataframe(API_QUERY % where).set_index("external_advertiser_id")
-        includes = self.get_argument("include",False)
+        includes = self.get_argument("include","domain_lists")
 
         if includes:
             include_list = includes.split(",")
@@ -56,4 +57,5 @@ class AdvertiserHandler(tornado.web.RequestHandler):
         self.get_data(advertiser_id)
 
 
-
+class AdvertiserHandler(AdvertiserViewableHandler): 
+    pass

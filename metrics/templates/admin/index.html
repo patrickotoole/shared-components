@@ -23,6 +23,14 @@
   {% end %}
 </ul> 
 
+<h4>Advertiser Viewability</h4>
+<ul>
+  {% for i in advertiser_viewability_links %}
+      <li><a href="{% raw i[0] %}", target="_blank">{% raw i[1] %}</a></li>
+  {% end %}
+</ul> 
+ 
+
 <h2>Segments</h2>
 <ul>
   {% for i in segment_links %}

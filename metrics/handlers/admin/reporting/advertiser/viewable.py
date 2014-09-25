@@ -46,6 +46,16 @@ OPTIONS = {
             },
             "joins" : JOIN["type"]
         }
+    },
+    "domain": {
+        "meta": {
+            "groups" : ["domain"],
+            "fields" : ["served","loaded","visible","spent"],
+            "formatters" : {
+                "campaign":"none",
+                "spent": "cpm"
+            }
+        }
     }
 }
 
