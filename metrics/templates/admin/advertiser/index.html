@@ -1,0 +1,35 @@
+{% autoescape None %}
+{% extends "../../clean_base.html" %}
+{% block content %}
+<link rel="stylesheet" type="text/css" href="http://getbootstrap.com/dist/css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/dc.css">
+<link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/chosen.css">
+<script type="text/javascript" src="http://rockerbox.com/js/d3.js"></script>
+<script type="text/javascript" src="/static/js/advertiser.js"></script> 
+
+<div id="advertiser-content" class='container'>
+  <div class="row">
+    <h4>Advertisers</h4>
+  </div>
+</div>
+
+<script>
+
+var data = {{ data }};
+
+data.sort(function(x){
+  return - parseInt(x.active)
+})
+
+var id = '#advertiser-content'
+
+var wrapped = buildAdvertiserWrapper(data,id,"6")
+buildAdvertiserInfo(wrapped)
+buildInsertionOrders(wrapped)
+buildPixels(wrapped)  
+buildSegments(wrapped)  
+
+
+</script>
+
+{% end %}  

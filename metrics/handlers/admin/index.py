@@ -8,6 +8,7 @@ class IndexHandler(tornado.web.RequestHandler):
         ]
 
         advertiser_links = [
+            ("/admin/advertiser", "Index"),
             ("/admin/advertiser/new", "Advertiser Creator"),
 
             

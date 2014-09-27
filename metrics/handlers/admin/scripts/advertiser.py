@@ -4,8 +4,18 @@ import pandas
 import StringIO
 import mock
 
-API_QUERY = "select * from appnexus_reporting.%s where %s "
+from lib.helpers import *  
 
+API_QUERY = "select * from appnexus_reporting.advertiser where %s "
+
+INCLUDES = {
+    "pixels":"advertiser_pixel",
+    "campaigns": "advertiser_campaign",
+    "segments": "advertiser_segment",
+    "domain_lists": "advertiser_domain_list",
+    "insertion_orders": "insertion_order"
+}
+ 
 INSERT_ADVERTISER = """
 INSERT INTO appnexus_reporting.advertiser (
     contact_name, 
@@ -227,13 +237,6 @@ class AdvertiserHandler(tornado.web.RequestHandler,Advertiser):
         self.api.get().json = self.api.post().json
         """ 
 
-    def get(self,arg=None):
-        if arg == "new":
-            self.render("../templates/admin/advertiser/new.html")
-        elif arg.isnumeric():
-            self.render("../templates/admin/advertiser/show.html")
-        else:
-            self.render("../templates/admin/advertiser/index.html")
 
    
 
@@ -288,6 +291,48 @@ class AdvertiserHandler(tornado.web.RequestHandler,Advertiser):
         campaign_id = self.create_managed_campaign(advertiser_id, line_item_id)
 
         self.set_managed_target(advertiser_id, campaign_id, placement_id)
+
+    @decorators.formattable
+    def get_content(self,data,advertiser_id):
+        
+        def default(self,data):
+            o = Convert.df_to_json(data)
+            if advertiser_id:
+                self.render("../templates/admin/advertiser/show.html",data=o)
+            else:
+                self.render("../templates/admin/advertiser/index.html",data=o) 
+
+        yield default, (data,)
+
+    def get_data(self,advertiser_id=False):
+
+        where = "deleted = 0"
+        if advertiser_id:
+            where = ("external_advertiser_id = %s" % advertiser_id)
+        
+        df = self.db.select_dataframe(API_QUERY % where).set_index("external_advertiser_id")
+        includes = self.get_argument("include","domain_lists,segments,pixels,insertion_orders")
+
+        include_list = includes.split(",")
+        for include in include_list:
+            included = INCLUDES.get(include,False)
+            if included:
+              q = "select * from %s where %s" % (included,where)
+              idf = self.db.select_dataframe(q)
+              if len(idf) > 0:
+                  df[include] = idf.groupby("external_advertiser_id").apply(Convert.df_to_values)
+
+        self.get_content(df.reset_index(),advertiser_id)
+        
+
+    @tornado.web.asynchronous
+    def get(self,arg=False):
+
+        if arg == "new":
+            self.render("../templates/admin/advertiser/new.html")
+        else:
+            self.get_data(arg)
+ 
 
     def put(self):
         pass
