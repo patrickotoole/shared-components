@@ -11,7 +11,8 @@ from twisted.internet import reactor, protocol, defer, threads
 from twisted.protocols import basic
 from tornado.options import define, options, parse_command_line
 
-from handlers import streaming, reporting, user, rbox_pixel
+from handlers import streaming, reporting, user
+from handlers.advertiser import AdvertiserHandler
 
 import handlers.admin as admin
 from handlers.adminreport import AdminReportHandler
@@ -160,6 +161,7 @@ reporting = [
     (r'/login.*', user.LoginHandler, dict(db=db)),
     (r'/signup*', user.SignupHandler, dict(db=db)),
     (r'/intraweek.*',reporting.InsertionOrderHandler, dict(db=db)),
+    (r'/advertiser',AdvertiserHandler, dict(api=api,db=db)), 
 ]
 
 

@@ -15,7 +15,7 @@ var buildSegments = function(obj) {
     .classed("pull-right",true)
     .append("a")
     .attr("href","/admin/advertiser/segment")
-    .text("Segment Dashboard")
+    //.text("Segment Dashboard")
 
 
   var segments = default_panel
@@ -283,20 +283,21 @@ var buildAdvertiserInfo = function(obj) {
 var buildAdvertiserWrapper = function(data, id, width) {
   var wrapper_width = width || 6
 
-  var wrappers = d3.select(id).selectAll("div")
+  var wrappers = d3.select(id).selectAll(".wrapper")
     .data(data).enter()
     .append("div")
       .classed("wrapper col-md-" + wrapper_width,true)
       .attr("id",function(x){return x.external_advertiser_id})
 
+
   var panels = wrappers
     .append("div")
     .classed("panel",true)
     .classed("panel-default",function(x) {
-      return !x.active 
+      return !x.active || wrapper_width != 6
     })
     .classed("panel-success", function(x) {
-      return x.active 
+      return x.active && wrapper_width == 6
     })
 
   var headings = panels.append("div").classed("panel-heading",true);
