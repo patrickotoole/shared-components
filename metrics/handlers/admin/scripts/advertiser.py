@@ -193,26 +193,20 @@ class Advertiser(object):
                 "inventory_type": "direct"
             }
         }
+
         URL = "/campaign?advertiser_id=%s&line_item=%s" % (advertiser_id,line_item_id)
         response = self.api.post(URL,data=ujson.dumps(data)).json
         print response
         return response["response"]["campaign"]["id"] 
 
     def set_managed_target(self,advertiser_id,campaign_id,placement_id):
-        """
-        campaign_response = self.api.get("/campaign?id=%s&advertiser_id=%s" % (campaign_id,advertiser_id)).json
-        profile_id = campaign_response["response"]["campaign"]["profile_id"]
-        response = self.api.get("/profile?id=%s&advertiser_id=%s" % (profile_id,advertiser_id)).json
-        import pdb; pdb.set_trace()
-        profile_id = response["response"]["profiles"][0]["id"]
-        """
-
         data = {
             "profile": {
+                "inventory_action": "include",
                 "placement_targets": [{"id":placement_id}]
             }
         }
-        #URL = "/profile?id=%s&advertiser_id=%s&campaign_id=%s" % (profile_id,advertiser_id,campaign_id)
+
         URL = "/profile?advertiser_id=%s&campaign_id=%s" % (advertiser_id,campaign_id) 
         response = self.api.post(URL,data=ujson.dumps(data)).json
         print response
@@ -225,9 +219,9 @@ class Advertiser(object):
                 "state": "active",
                 "revenue_type": "cpa",
                 "pixels": [ {"id":_id, "post_click_revenue":0} for name, _id in pixel_dict.iteritems() ]
-                
             }
         }
+
         URL = "/line-item?advertiser_id=%s" % advertiser_id
         response = self.api.post(URL,data=ujson.dumps(data)).json
         print response
@@ -289,22 +283,7 @@ class AdvertiserHandler(tornado.web.RequestHandler,Advertiser):
     def initialize(self, db, api):
         self.db = db 
         self.api = api
-        """
-        self.api = mock.MagicMock()
-        self.api.post().json = {
-            "response":{
-                "advertiser":{"id":1},
-                "pixel" : {"id":1},
-                "segment" : {"id":2},
-                "publisher": {"id":1},
-                "placements": [{"id":1}]
-            }
-        }
-        self.api.get().json = self.api.post().json
-        """ 
-
-
-   
+  
 
     def create_segments(self,advertiser_id,advertiser_name,_segment_names=[]): 
         segment_names = _segment_names + ["Creative Viewed", "Creative Clicked", "Test Segment"] 
@@ -412,7 +391,3 @@ class AdvertiserHandler(tornado.web.RequestHandler,Advertiser):
             self.render("../templates/admin/advertiser/new.html")
         else:
             self.get_data(arg)
- 
-
-    def put(self):
-        pass
