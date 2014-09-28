@@ -3,6 +3,7 @@ import ujson
 import pandas
 import StringIO
 import mock
+import time
 
 from lib.helpers import *  
 
@@ -198,19 +199,84 @@ class Advertiser(object):
         return response["response"]["campaign"]["id"] 
 
     def set_managed_target(self,advertiser_id,campaign_id,placement_id):
-        response = self.api.get("/profile?campaign_id=%s&advertiser_id=%s" % (campaign_id,advertiser_id)).json
+        """
+        campaign_response = self.api.get("/campaign?id=%s&advertiser_id=%s" % (campaign_id,advertiser_id)).json
+        profile_id = campaign_response["response"]["campaign"]["profile_id"]
+        response = self.api.get("/profile?id=%s&advertiser_id=%s" % (profile_id,advertiser_id)).json
+        import pdb; pdb.set_trace()
         profile_id = response["response"]["profiles"][0]["id"]
+        """
 
         data = {
             "profile": {
-                "id":profile_id,
                 "placement_targets": [{"id":placement_id}]
             }
         }
-        URL = "/profile?id=%s&advertiser_id=%s&campaign_id=%s" % (profile_id,advertiser_id,campaign_id)
-        response = self.api.put(URL,data=ujson.dumps(data)).json
+        #URL = "/profile?id=%s&advertiser_id=%s&campaign_id=%s" % (profile_id,advertiser_id,campaign_id)
+        URL = "/profile?advertiser_id=%s&campaign_id=%s" % (advertiser_id,campaign_id) 
+        response = self.api.post(URL,data=ujson.dumps(data)).json
         print response
         return response["response"]["profile"]["id"]
+
+    def create_live_line_item(self,pixel_dict,advertiser_id):
+        data = {
+            "line-item" : {
+                "name": "Live Test",
+                "state": "active",
+                "revenue_type": "cpa",
+                "pixels": [ {"id":_id, "post_click_revenue":0} for name, _id in pixel_dict.iteritems() ]
+                
+            }
+        }
+        URL = "/line-item?advertiser_id=%s" % advertiser_id
+        response = self.api.post(URL,data=ujson.dumps(data)).json
+        print response
+        return response["response"]["line-item"]["id"]
+
+    def create_live_campaign(self,advertiser_id,line_item_id):
+        data = {
+            "campaign" : {
+                "name": "Live Test",
+                "state": "active",
+                "advertiser_id":  advertiser_id,
+                "line_item_id": line_item_id,
+                "lifetime_budget": 50,
+                "inventory_type": "real_time",
+                "cpm_bid_type": "base",
+                "base_bid": 1
+            }
+        }
+        URL = "/campaign?advertiser_id=%s&line_item=%s" % (advertiser_id,line_item_id)
+        response = self.api.post(URL,data=ujson.dumps(data)).json
+        print response
+        return response["response"]["campaign"]["id"] 
+
+    def set_live_target(self,advertiser_id,campaign_id,segment_id):
+        data = {
+            "profile": {
+                "segment_targets": [{"id":segment_id}]
+            }
+        }
+        URL = "/profile?advertiser_id=%s&campaign_id=%s" % (advertiser_id,campaign_id) 
+        response = self.api.post(URL,data=ujson.dumps(data)).json
+        print response
+        return response["response"]["profile"]["id"]
+
+        
+    def set_campaign_profile_id(self,advertiser_id,campaign_id,profile_id):
+        data = {
+            "campaign": {
+                "id":campaign_id,
+                "profile_id": profile_id
+            }
+        }
+
+        URL = "/campaign?id=%s&advertiser_id=%s" % (campaign_id,advertiser_id)
+        response = self.api.put(URL,data=ujson.dumps(data)).json
+
+        return response
+         
+     
 
     def get_default_placement(self,publisher_id):
         URL = "/placement?publisher_id=%s" % publisher_id
@@ -241,7 +307,7 @@ class AdvertiserHandler(tornado.web.RequestHandler,Advertiser):
    
 
     def create_segments(self,advertiser_id,advertiser_name,_segment_names=[]): 
-        segment_names = _segment_names + ["Creative Viewed", "Creative Clicked"] 
+        segment_names = _segment_names + ["Creative Viewed", "Creative Clicked", "Test Segment"] 
 
         if self.get_argument('all_pages_pixel_checkbox') == "true":
             segment_names.append("All Pages Segment")
@@ -275,7 +341,7 @@ class AdvertiserHandler(tornado.web.RequestHandler,Advertiser):
         return pixel_dict
 
 
-    def post(self):
+    def post(self,arg="new"):
         advertiser_name = self.get_argument('advertiser_name')
 
         advertiser_id = self.create_advertiser(advertiser_name)
@@ -285,12 +351,26 @@ class AdvertiserHandler(tornado.web.RequestHandler,Advertiser):
         segment_dict = self.create_segments(advertiser_id,advertiser_name,pixel_dict.keys())
     
         publisher_id = self.create_publisher(advertiser_name)
+        time.sleep(5)
         placement_id = self.get_default_placement(publisher_id)
         
+        # Managed test
         line_item_id = self.create_managed_line_item(pixel_dict,advertiser_id)
         campaign_id = self.create_managed_campaign(advertiser_id, line_item_id)
 
-        self.set_managed_target(advertiser_id, campaign_id, placement_id)
+        profile_id = self.set_managed_target(advertiser_id, campaign_id, placement_id)
+        self.set_campaign_profile_id(advertiser_id,campaign_id,profile_id)
+
+
+        # Live test
+        line_item_id = self.create_live_line_item(pixel_dict,advertiser_id)
+        campaign_id = self.create_live_campaign(advertiser_id, line_item_id)
+        time.sleep(5)
+
+        segment_id = segment_dict["Test Segment"]
+        profile_id = self.set_live_target(advertiser_id, campaign_id, segment_id)
+        self.set_campaign_profile_id(advertiser_id,campaign_id,profile_id)
+ 
 
     @decorators.formattable
     def get_content(self,data,advertiser_id):
