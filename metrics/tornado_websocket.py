@@ -1,3 +1,4 @@
+
 import tornado.ioloop
 import tornado.web
 import tornado.websocket
@@ -10,7 +11,8 @@ from twisted.internet import reactor, protocol, defer, threads
 from twisted.protocols import basic
 from tornado.options import define, options, parse_command_line
 
-from handlers import streaming, reporting, user, rbox_pixel
+from handlers import streaming, reporting, user
+from handlers.advertiser import AdvertiserHandler
 
 import handlers.admin as admin
 from handlers.adminreport import AdminReportHandler
@@ -107,8 +109,8 @@ _streaming = [
 ]
 
 admin_advertiser = [
-    (r'/admin/advertiser/?',admin.advertiser.AdvertiserHandler, dict(db=db,api=api)),  
-    (r'/admin/advertiser/new/?',admin.scripts.AdvertiserHandler, dict(db=db,api=api)),
+    
+    #(r'/admin/advertiser/new/?',admin.scripts.AdvertiserHandler, dict(db=db,api=api)),
 
     
     (r'/admin/advertiser/pixel/reporting/?', reporting.PixelAdvertiserHandler, dict(db=db, hive=hive)),
@@ -125,11 +127,13 @@ admin_advertiser = [
 
     (r'/admin/advertiser/conversion/reporting/?',admin.reporting.ConversionCheckHandler, dict(hive=hive)) ,
     (r'/admin/advertiser/conversion/reporting/?(meta)?/?',admin.reporting.ConversionCheckHandler, dict(hive=hive)),
-
-    (r'/admin/advertiser/(.*?)/?',admin.advertiser.AdvertiserHandler, dict(db=db,api=api))
+    (r'/admin/advertiser/segment/?(.*?)/?',admin.segment.SegmentHandler, dict(db=db, api=api)), 
+    (r'/admin/advertiser/viewable/?(.*?)/?',admin.advertiser.AdvertiserViewableHandler, dict(db=db,api=api)),
+    (r'/admin/advertiser/?(.*?)/?',admin.scripts.AdvertiserHandler, dict(db=db,api=api)),  
 ]
 
 admin_reporting = [
+    
     (r'/admin/streaming',admin.streaming.IndexHandler),
     (r'/admin/websocket', admin.streaming.AdminStreamingHandler, dict(db=db,buffers=buffers)),
     (r'/admin/viewable.*',admin.reporting.ViewabilityHandler, dict(db=db,api=api,hive=hive)),
@@ -143,6 +147,7 @@ admin_reporting = [
     (r'/admin/segment/reporting/?',admin.reporting.SegmentReportingHandler, dict(hive=hive)),   
     (r'/admin/segment/scrubbed/?',admin.scripts.ProfileHandler, dict(bidder=bidder)),  
     (r'/admin/segment/scrubbed/(.*?)',admin.scripts.ProfileHandler, dict(bidder=bidder)),
+    
     (r'/admin/imps/reporting', admin.reporting.ImpsReportingHandler, dict(db=db, api=api, hive=hive))
     
 ] + admin_advertiser
@@ -156,6 +161,7 @@ reporting = [
     (r'/login.*', user.LoginHandler, dict(db=db)),
     (r'/signup*', user.SignupHandler, dict(db=db)),
     (r'/intraweek.*',reporting.InsertionOrderHandler, dict(db=db)),
+    (r'/advertiser',AdvertiserHandler, dict(api=api,db=db)), 
 ]
 
 

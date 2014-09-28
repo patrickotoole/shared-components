@@ -8,6 +8,7 @@ from twisted.internet import defer
 from lib.helpers import * 
 
 API_QUERY = "select * from appnexus_reporting.advertiser where %s "
+QUERY = "UPDATE advertiser_segment set segment_implemented = '%(segment_implemented)s' where id = %(id)s"
 
 INCLUDES = {
     "pixels":"advertiser_pixel",
@@ -16,9 +17,7 @@ INCLUDES = {
     "domain_lists": "advertiser_domain_list"
 }
 
-
-
-class AdvertiserViewableHandler(tornado.web.RequestHandler):
+class SegmentHandler(tornado.web.RequestHandler):
     def initialize(self, db, api):
         self.db = db 
         self.api = api
@@ -28,18 +27,18 @@ class AdvertiserViewableHandler(tornado.web.RequestHandler):
         
         def default(self,data):
             o = Convert.df_to_json(data)
-            self.render("../templates/admin/advertiser/viewable.html",data=o)
+            self.render("../templates/admin/segment/index.html",data=o)
 
         yield default, (data,)
 
     def get_data(self,advertiser_id=False):
 
-        where = "deleted = 0"
+        where = "deleted = 0 "
         if advertiser_id:
-            where = ("external_advertiser_id = %s" % advertiser_id)
+            where += (" and a.external_advertiser_id = %s" % advertiser_id)
         
-        df = self.db.select_dataframe(API_QUERY % where).set_index("external_advertiser_id")
-        includes = self.get_argument("include","domain_lists")
+        df = self.db.select_dataframe(API_QUERY % where).set_index("external_advertiser_id") 
+        includes = self.get_argument("include","segments")
 
         if includes:
             include_list = includes.split(",")
@@ -50,12 +49,17 @@ class AdvertiserViewableHandler(tornado.web.RequestHandler):
                     df[include] = idf.groupby("external_advertiser_id").apply(Convert.df_to_values)
 
         self.get_content(df.reset_index())
-        
+         
 
     @tornado.web.asynchronous
     def get(self,advertiser_id=False):
         self.get_data(advertiser_id)
 
+    def put(self,advertiser_id=False):
+        json_body = ujson.loads(self.request.body)
+        update = QUERY % json_body
+        self.db.execute(update)
+        self.db.commit()
+        self.write(ujson.dumps(json_body))
 
-class AdvertiserHandler(AdvertiserViewableHandler): 
-    pass
+ 

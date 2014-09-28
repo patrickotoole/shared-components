@@ -1,5 +1,5 @@
 {% autoescape None %}
-{% extends "../../clean_base.html" %}
+{% extends "clean_base.html" %}
 {% block content %}
 <link rel="stylesheet" type="text/css" href="http://getbootstrap.com/dist/css/bootstrap.min.css">
 <link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/dc.css">
@@ -8,9 +8,6 @@
 <script type="text/javascript" src="/static/js/advertiser.js"></script> 
 
 <div id="advertiser-content" class='container'>
-  <div class="row">
-    <h4>Advertisers</h4>
-  </div>
 </div>
 
 <script>
@@ -23,10 +20,10 @@ data.sort(function(x){
 
 var id = '#advertiser-content'
 
-var wrapped = buildAdvertiserWrapper(data,id,"6")
+var wrapped = buildAdvertiserWrapper(data,id,"12")
 buildAdvertiserInfo(wrapped)
-buildInsertionOrders(wrapped)
-buildPixels(wrapped)  
+//buildInsertionOrders(wrapped)
+//buildPixels(wrapped)  
 buildSegments(wrapped)  
 
 

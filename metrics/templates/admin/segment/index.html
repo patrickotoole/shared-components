@@ -1,0 +1,364 @@
+{% autoescape None %}
+{% extends "../../clean_base.html" %}
+{% block content %}
+<link rel="stylesheet" type="text/css" href="http://getbootstrap.com/dist/css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/dc.css">
+<link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/chosen.css">
+<style>
+  .bar {}
+  .negative {
+    fill:red;
+  }
+</style>
+
+<script type="text/javascript" src="http://rockerbox.com/js/d3.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/crossfilter.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/dc.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/colorbrewer.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/reporting.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/chosen.js"></script>
+<link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css" rel="stylesheet"/>
+<script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
+
+
+<div id="advertiser-content" class='container'>
+  <div class="row">
+    <h4>Segments</h4>
+  </div>
+
+</div>
+<script>
+
+var render = function(class_name, items) {
+
+}
+
+
+var data = {{ data }}
+  data.sort(function(x){
+    return - parseInt(x.active)
+  })
+
+var container = $('#advertiser-content > .row')
+
+var format = d3.format("0,000"),
+  formatPercent = d3.format("%")
+
+var buildViewable = function(summary,accessor,_class,height) {
+  var height = height || 50
+  var x = d3.scale.linear()
+    .domain([0, 100])
+
+  var y = d3.scale.ordinal()
+    .rangeRoundBands([0, height], .2)
+    .domain(["imps","","visible"])
+
+  var LABEL_WIDTH = 50
+
+  var svg = summary
+    .append("div")
+    .classed(_class,true)
+    .append("svg")
+    .attr("width", 170)
+    .attr("height",height)
+    .append("g")
+
+  svg
+    .append("rect")
+    .attr("x",LABEL_WIDTH + 50)
+    .attr("y",0)
+    .attr("width",1)
+    .attr("height",height)
+    
+  bars = svg.selectAll(".bar")
+    .data(function(d){
+      return d[accessor]
+    })
+    .enter()
+
+  bars
+   .append("text")
+   .text(function(d){return d.key})
+   .attr("x", function(d) { return x(Math.min(0, d.values[1])); })
+   .attr("y", function(d) { return y(d.key) + 10; }) 
+   .attr("width",LABEL_WIDTH)
+   .attr("class","small")
+
+  bars
+    .append("rect")
+      .attr("class", function(d) { return d.values[1] < .5 ? "bar negative" : "bar positive"; })
+      .attr("x", function(d) { return LABEL_WIDTH + x(Math.min(0, d.values[1])); })
+      .attr("y", function(d) { return y(d.key); })
+      .attr("width", function(d) { return Math.abs(x(d.values[1]) - x(0)); })
+      .attr("height", y.rangeBand());
+}
+
+var buildSummary = function(Sum,panels) {
+  var sum = Sum.toLowerCase().replace(" ","_")
+
+  var summary = panels
+    .append("div")
+    .classed("panel-body " + sum + "-summary",true)
+
+  summary.append("h5")
+    .text(Sum + " Summary")
+
+  var summary_body = summary
+    .append("div")
+    .classed("col-md-3 small",true)
+    .selectAll("div")
+    .data(function(x){
+      return x[sum + "_summary"]
+    })
+    .enter()
+    .append("div")
+    .html(function(x){
+      return x.key + " " + format(x.values[0])
+    })
+
+  buildViewable(summary,sum + "_summary","col-md-3")
+  
+}
+
+
+
+ 
+
+var wrappers = d3.select('#advertiser-content').selectAll("div")
+    .data(data).enter()
+    .append("div")
+      .classed("wrapper col-md-6",true)
+      .attr("id",function(x){return x.external_advertiser_id})
+
+var panels = wrappers
+    .append("div")
+    .classed("panel",true)
+    .classed("panel-default",function(x) {
+      return !x.active 
+    })
+    .classed("panel-success", function(x) {
+      return x.active 
+    })
+
+var  headings = panels.append("div").classed("panel-heading",true);
+
+
+var titles = headings.append("h3")
+  .classed("panel-title",true)
+  .text(function(x) {return x.advertiser_name})
+
+titles.append("span")
+  .classed("pull-right",true)
+  .text(function(x){return x.external_advertiser_id})
+
+
+var groupings = {
+  "Segments":["Segment"]
+}
+
+$.getJSON("/admin/segment/reporting", function(d){
+  var segment_data = d3.nest().key(function(x){return x.segment}).map(d,d3.map)
+
+
+  Object.keys(groupings).map(function(key){
+
+    //buildSummary(key,panels)
+
+    groupings[key].map(function(grouping) { 
+
+      var class_name= grouping.toLowerCase().replace(" ","_"),
+        group_class = class_name + "-group",
+        group_header_class = class_name + "-header",
+        group_item_class = class_name + "-item"
+
+      var group = panels.append("div")
+        .classed("list-group " + group_class,true)
+        .on("click",function(x){
+
+          var p = d3.select(this.parentNode.parentNode), 
+            has_opened = Object.keys(x.is_opened).filter(function(y){return x.is_opened[y]}).length;
+
+          p.classed("col-md-6",!has_opened) 
+          p.classed("col-md-12",has_opened)  
+            
+        })
+
+      var header = group.append("a")
+        .classed("list-group-item " + group_header_class,true)
+        .text(grouping)
+        .on("click",function(data){
+          data.is_opened = data.is_opened || {}
+          d3.select(this.parentNode)
+            .selectAll("." + group_item_class)
+            .classed("hidden",function(x){
+              var is_visible = !this.classList.contains("hidden")
+              data.is_opened[class_name] = !is_visible
+              return is_visible
+            })
+        })
+
+      header
+        .append("span")
+        .classed("badge",true)
+        .text(function(x){
+          var values = x[class_name + "s"]
+          values = values ? values : {}
+          return Object.keys(values).length
+        })
+
+      var subgroup = group.selectAll("div")
+        .data(function(x){
+          var values = x[class_name + "s"]
+          return values ? values : {}
+        })
+        .enter()
+          .append("div")
+          .classed("list-group-item hidden " + group_item_class,true)
+          .attr("id",function(x){return x.external_segment_id})
+
+      var subgroup_row = subgroup
+        .append("p")
+        .classed("row list-group-item-text",true)
+
+      var cell_values = [
+        function(x) {return x['segment_name']},
+        function(x) {return x['external_segment_id']},
+        /*function(x) {
+          var y = segment_data.get(x['external_segment_id'])
+          if (y && y.length > 0)
+            return segment_data.get(x['external_segment_id'])[0].imps
+        } */
+      ]
+
+      cell_values.map(function(y,i){
+        var v = i > 0 ? 2 : 3
+        subgroup_row.append("div")
+          .classed("col-md-" + v,true)
+          .text(y)
+      })
+
+      var svg = subgroup_row
+        .append("div")
+        .classed("col-md-4",true) 
+        .selectAll("svg")
+        .data(function(x){
+           var y = segment_data.get(x['external_segment_id'])
+           return (y && y.length > 0) ? y : []
+        })
+        .enter()
+          .append("svg")
+          .attr("width", 350)
+          .attr("height",50)
+          .append("g")
+
+      var LABEL_WIDTH = 100,
+        height = 50,
+        width = 100,
+        x = d3.scale.linear().domain([0,1]).range([0,width]),
+        y = d3.scale.ordinal()
+          .rangeRoundBands([0, height], .2)
+          .domain(["imps","considered_imps","approved_imps"])
+         
+      var bars = svg.selectAll(".bar")
+        .data(function(d){
+          delete d['segment']
+          var entries = d3.entries(d).map(function(x){
+            x.percent= x.value/d['imps']  
+            return x
+          })
+          return entries
+        })
+        .enter()
+
+      bars
+       .append("text")
+       .text(function(d){ return d.key})
+       .attr("x", function(d) { return x(Math.min(0, d.value)); })
+       .attr("y", function(d) { return y(d.key) + 10; }) 
+       .attr("width",LABEL_WIDTH)
+       .attr("class","small")
+
+     bars
+      .append("rect")
+      .attr("x", function(d) { return LABEL_WIDTH + x(Math.min(0, d.percent)); })
+      .attr("y", function(d) { return y(d.key); })
+      .attr("width", function(d) { return Math.abs(x(d.percent) - x(0)); })
+      .attr("height", y.rangeBand()); 
+
+     bars
+       .append("text")
+       .text(function(d){ return format(d.value) + " (" + formatPercent(d.percent) + ")"})
+       .attr("x", function(d) { return LABEL_WIDTH + width + 10})
+       .attr("y", function(d) { return y(d.key) + 10; }) 
+       .attr("width",LABEL_WIDTH )
+       .attr("class","small")                                 
+ 
+
+      subgroup_row
+        .append("div")
+        .classed("col-md-3 show_implemented",true)
+        .append("a")
+        .text("show implemented")
+        .on('click',function(data){
+          var great_grandparent = this.parentNode.parentNode.parentNode
+          d3.select(great_grandparent)
+            .selectAll(".segment_implemented_wrapper")
+            .classed("hidden",function(x){
+              return !this.classList.contains("hidden")
+            })
+        })
+
+
+      subgroup.append("p")
+        .classed("row list-group-item-text segment_implemented_wrapper hidden",true)
+        .html(function(x){
+          var implemented = x['segment_implemented']
+
+          if (implemented)
+            implemented = implemented
+              .replace(/>/g,'&gt;')
+              .replace(/</g,'&lt;')
+              .replace(/"/g,'&quot;')
+
+          return '<br/><div class="col-md-12">' + 
+            '<pre class="segment_implemented well" id="segment_implemented_' + 
+            x["id"] +
+            '" data-name="segment_implemented" data-type="textarea" data-pk="'+
+            x["id"] + '" data-url="'+
+            window.location.pathname + "/" + x["id"] + '" data-title="Enter username" data-rows="3">' + 
+            implemented + 
+            '</pre><form>' + '' + '</form></div>'
+        })
+
+    })
+  })
+
+
+  $.fn.editable.defaults.mode = 'inline';
+  $('.segment_implemented').editable({
+    params: function(params) {
+      var data = {};
+      data['id'] = params.pk;
+      data[params.name] = params.value;
+      return JSON.stringify(data)
+    },
+    ajaxOptions: {
+      type: 'put',
+      dataType: 'json'
+    }
+  })
+
+  $(".pixels").on("click",function(x,i){
+    $(x.target).addClass("active")
+    $(x.target).parents(".panel").parent().attr("class","col-md-12")
+  }) 
+   
+
+}) 
+
+
+
+</script>
+<script src="http://rockerbox.com/js/jquery.serialize-object.js"></script>
+
+{% end %}  
