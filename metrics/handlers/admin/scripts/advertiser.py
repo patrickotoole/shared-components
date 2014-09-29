@@ -18,8 +18,8 @@ SEGMENT_PIXEL = """<!-- Rockerbox -- %(segment_name)s -->
 """
 
 SEGMENT_DESCRIPTIONS = {
-    "Purchase Conversion Pixel": "Fire the following after a user makes a purchase. Substitute a unique identifier (e.g. user ID, order_id) for [user_identifier] prior to firing the pixel. ",
-    "Signup Conversion Pixel": "Fire the following after a user has executed a signup. Substitute a unique identifier (e.g. user ID, order_id) for [user_identifier] prior to firing the pixel. ",
+    "Purchase Conversion Pixel": "Fire the following after a user makes a purchase. <br/> Substitute a unique identifier (e.g. user ID, order_id, user email) for [user_identifier] prior to firing the pixel. ",
+    "Signup Conversion Pixel": "Fire the following after a user has executed a signup. <br/> Substitute a unique identifier (e.g. user ID, order_id, user email) for [user_identifier] prior to firing the pixel. ",
     "All Pages Segment": "Place the following on ALL PAGES",
     "Logged In Segment": "Place the following on ALL pages for EXISTING CUSTOMERS"
 }
