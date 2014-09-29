@@ -1,23 +1,17 @@
 $(document).ready( function() {
     $("select[name=request_type]").change(function() {
 	if (this.value == "domain_list") {
-	    $("label[for=target_window], input[name=target_window]")
-		.prop("disabled", false)
-		.prop("hidden", false);
 	    $("label[for=segment], select[name=segment]")
 		.prop("disabled", false)
 		.prop("hidden", false);
-	    $("#custom_hive_instructions, #default_hive_instructions").hide();
+	    $("#hive_instructions, #custom_hive_instructions, #default_hive_instructions").hide();
 	}
 
 	else {
-	    $("label[for=target_window], input[name=target_window]")
-		.prop("disabled", true)
-		.prop("hidden", true);
 	    $("label[for=segment], select[name=segment]")
 		.prop("disabled", true)
 		.prop("hidden", true);
-	    $("#default_hive_instructions").show();
+	    $("#hive_instructions, #default_hive_instructions").show();
 	}
 
 	if (this.value == "hive_query") {
@@ -27,7 +21,7 @@ $(document).ready( function() {
 	    $("label[for=custom_params], input[name=custom_params]")
 		.prop("disabled", false)
 		.prop("hidden", false);
-	    $("#default_hive_instructions").show();
+	    $("#hive_instructions, #default_hive_instructions").show();
 	}
 
 	else {
@@ -37,7 +31,7 @@ $(document).ready( function() {
 	    $("label[for=custom_params], input[name=custom_params]")
 		.prop("disabled", true)
 		.prop("hidden", true);
-	    $("#custom_hive_instructions, #default_hive_instructions").hide();
+	    $("#hive_instructions, #custom_hive_instructions, #default_hive_instructions").hide();
 	}
 
     }).triggerHandler("change");
@@ -47,12 +41,14 @@ $(document).ready( function() {
 	    $("input[name=expiration]").prop("disabled", true);
 	    $("input[name=target_segment]").prop("disabled", true);
 	    $("#default_hive_instructions").hide();
+	    $("#hive_instructions").show();
 	    $("#custom_hive_instructions").show();
 	}
 	else {
 	    $("input[name=expiration]").prop("disabled", false);
 	    $("input[name=target_segment]").prop("disabled", false);
 	    $("#custom_hive_instructions").hide();
+	    $("#hive_instructions").show();
 	    $("#default_hive_instructions").show();
 	}
     });

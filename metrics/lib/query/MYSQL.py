@@ -154,8 +154,8 @@ WHERE
 
 INSERT_BATCH_REQUEST = '''
 INSERT INTO batch_request 
-    (type, content, owner, target_segment, expiration, active, comment) 
-VALUES ('{}','{}', '{}', '{}', {}, {}, '{}');
+    (type, content, owner, target_segment, target_window, expiration, active, comment) 
+VALUES ('{}','{}', '{}', '{}', {}, {}, {}, '{}');
 '''
 
 DEACTIVATE_REQUEST = '''

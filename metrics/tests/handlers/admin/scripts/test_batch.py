@@ -18,8 +18,8 @@ from metrics.handlers.admin.scripts.batch import BatchRequestFormHandler
 
 INSERT_BATCH_REQUEST = '''
 INSERT INTO batch_request
-    (type, content, owner, target_segment, expiration, active, comment)
-VALUES ('{}','{}', '{}', '{}', {}, {}, '{}');
+    (type, content, owner, target_segment, target_window, expiration, active, comment)
+VALUES ('{}','{}', '{}', '{}', {}, {}, {}, '{}');
 '''
 
 GOOD_HIVE_QUERY='''
@@ -44,25 +44,26 @@ WHERE
 CLEAN_HIVE_QUERY='SELECT DISTINCT uid, concat( CASE WHEN segment LIKE "%on_demand%" THEN "1980543" WHEN segment LIKE \'%25_a_day%\' THEN \'1980544\' WHEN segment LIKE \'%enhanced%\' THEN \'1980545\' END,\':10:0\') as rhs FROM pixel_data WHERE source=\'offset\' AND date >=\'14-08-21\' AND ( segment LIKE \'1694352%on_demand%\' OR segment like \'1694352%25_a_day%\' OR segment like \'1694352%enhanced%\' ) AND uid !="0"'
 
 # Domain_List-specific parameters
-CONTENT = "baublebar_prospects:3#30"
+CONTENT = "baublebar_prospects:3"
 
 # General parameters
 OWNER = "will@rockerbox.com"
 TARGET_SEGMENT = "999999"
+TARGET_WINDOW = 30
 EXPIRATION = 30
 ACTIVE = 1
 COMMENT = "This is a test comment."
 
 # Fixtures for hive_query requests
-HIVE_QUERY_PARAMS = ("hive_query", GOOD_HIVE_QUERY, OWNER, TARGET_SEGMENT, EXPIRATION, ACTIVE, COMMENT) 
+HIVE_QUERY_PARAMS = ("hive_query", GOOD_HIVE_QUERY, OWNER, TARGET_SEGMENT, TARGET_WINDOW, EXPIRATION, ACTIVE, COMMENT) 
 INSERT_HIVE_REQUEST = INSERT_BATCH_REQUEST.format( *HIVE_QUERY_PARAMS )
 
 # Fixtures for domain_list requests
-DOMAIN_LIST_PARAMS = ("domain_list", CONTENT, OWNER, TARGET_SEGMENT, EXPIRATION, ACTIVE, COMMENT)
+DOMAIN_LIST_PARAMS = ("domain_list", CONTENT, OWNER, TARGET_SEGMENT, TARGET_WINDOW, EXPIRATION, ACTIVE, COMMENT)
 INSERT_DOMAIN_REQUEST = INSERT_BATCH_REQUEST.format( *DOMAIN_LIST_PARAMS )
 
 # Initilization Steps
-CREATE_REQUEST_TABLE = "CREATE TABLE batch_request (id int NOT NULL AUTO_INCREMENT, type varchar(100) NOT NULL, content varchar(5000) NOT NULL, owner varchar(100) NOT NULL, target_segment varchar(100) NOT NULL, expiration int NOT NULL, active int(1) NOT NULL, comment varchar(5000) NOT NULL, requested_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`))"
+CREATE_REQUEST_TABLE = "CREATE TABLE batch_request (id int NOT NULL AUTO_INCREMENT, type varchar(100) NOT NULL, content varchar(5000) NOT NULL, owner varchar(100) NOT NULL, target_segment varchar(100) NOT NULL, target_window int, expiration int NOT NULL, active int(1) NOT NULL, comment varchar(5000) NOT NULL, requested_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`))"
 
 CREATE_DOMAIN_LIST_TABLE = '''CREATE TABLE domain_list (
   id int(11) NOT NULL AUTO_INCREMENT,
@@ -85,14 +86,14 @@ INSERT INTO domain_list
 
 INSERT_ACTIVE_REQUEST = '''
 INSERT INTO batch_request 
-(id, type, content, owner, target_segment, expiration, active, comment) VALUES
-(99, "domain_list", "bitcoin#20", "will@rockerbox.com", "999999", 30, 1, "This is a test comment.")
+(id, type, content, owner, target_segment, target_window, expiration, active, comment) VALUES
+(99, "domain_list", "bitcoin", "will@rockerbox.com", "999999", 30, 30, 1, "This is a test comment.")
 '''
 
 INSERT_INACTIVE_REQUEST = '''
 INSERT INTO batch_request 
-(id, type, content, owner, target_segment, expiration, active, comment) VALUES
-(98, "domain_list", "bitcoin#20", "will@rockerbox.com", "999999", 30, 0, "This is a test comment.")
+(id, type, content, owner, target_segment, target_window, expiration, active, comment) VALUES
+(98, "domain_list", "bitcoin", "will@rockerbox.com", "999999", 30, 30, 0, "This is a test comment.")
 '''
 
 class BatchRequestBaseTest(AsyncHTTPTestCase):
@@ -101,9 +102,10 @@ class BatchRequestBaseTest(AsyncHTTPTestCase):
         self.maxDiff = 1024
         self.db = lnk.dbs.test
         
+        print "Initializing"
         self.base = BatchRequestBase()
         self.base.initialize(db=self.db, hive=None, api=None)
-
+        
         # Create test tables
         self.db.execute(CREATE_REQUEST_TABLE)
         self.db.execute(CREATE_DOMAIN_LIST_TABLE)
@@ -137,8 +139,9 @@ class BatchRequestBaseTest(AsyncHTTPTestCase):
         expected = [
             {
                 "comment": "This is a test comment.",
-                "content":"bitcoin#20", 
+                "content":"bitcoin", 
                 "target_segment": "999999",
+                "target_window": 30,
                 "id":98, 
                 "type":"domain_list", 
                 "owner": "will@rockerbox.com", 
@@ -147,8 +150,9 @@ class BatchRequestBaseTest(AsyncHTTPTestCase):
                 },
             {
                 "comment": "This is a test comment.",
-                "content":"bitcoin#20", 
+                "content":"bitcoin", 
                 "target_segment": "999999",
+                "target_window": 30,
                 "id":99, 
                 "type":"domain_list", 
                 "owner": "will@rockerbox.com", 
@@ -159,6 +163,7 @@ class BatchRequestBaseTest(AsyncHTTPTestCase):
                 "comment": "This is a test comment.",
                 "content":CLEAN_HIVE_QUERY, 
                 "target_segment": "999999",
+                "target_window": 30,
                 "id":100, 
                 "type":"hive_query", 
                 "owner": "will@rockerbox.com", 
@@ -180,8 +185,9 @@ class BatchRequestBaseTest(AsyncHTTPTestCase):
         expected = [
          {
              "comment": "This is a test comment.",
-             "content":"bitcoin#20", 
+             "content":"bitcoin", 
              "target_segment": "999999",
+             "target_window": 30,
              "id":98, 
              "type":"domain_list", 
              "owner": "will@rockerbox.com", 
@@ -190,8 +196,9 @@ class BatchRequestBaseTest(AsyncHTTPTestCase):
              },
          {
              "comment": "This is a test comment.",
-             "content":"bitcoin#20", 
+             "content":"bitcoin", 
              "target_segment": "999999",
+             "target_window": 30,
              "id":99, 
              "type":"domain_list", 
              "owner": "will@rockerbox.com", 
@@ -213,8 +220,9 @@ class BatchRequestBaseTest(AsyncHTTPTestCase):
         expected = [
          {
              "comment": "This is a test comment.",
-             "content":"bitcoin#20", 
+             "content":"bitcoin", 
              "target_segment": "999999",
+             "target_window": 30,
              "id":98, 
              "type":"domain_list", 
              "owner": "will@rockerbox.com", 
@@ -223,8 +231,9 @@ class BatchRequestBaseTest(AsyncHTTPTestCase):
              },
          {
              "comment": "This is a test comment.",
-             "content":"bitcoin#20", 
+             "content":"bitcoin", 
              "target_segment": "999999",
+             "target_window": 30,
              "id":99, 
              "type":"domain_list", 
              "owner": "will@rockerbox.com", 

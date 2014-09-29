@@ -19,8 +19,8 @@ class BatchRequestBase():
         segments = self.db.select_dataframe(DISTINCT_SEGMENT)
         return segments['log'].tolist()
 
-    def insert_request(self, request_type, content, owner, target_segment
-                             , expiration, active, comment):
+    def insert_request(self, request_type, content, owner, target_segment,
+                             target_window, expiration, active, comment):
         '''Given data for a batch request, insert a row in the batch_request
         table.'''
 
@@ -32,6 +32,7 @@ class BatchRequestBase():
             content,
             owner,
             target_segment,
+            target_window,
             expiration,
             active,
             comment
@@ -135,10 +136,10 @@ class BatchRequestFormHandler(BatchRequestBase, tornado.web.RequestHandler):
         active = self.get_argument("active")
         owner = self.get_argument("owner")
         comment = self.get_argument("comment")
+        target_window = self.get_argument("target_window", False)
 
         # Parameters specific to domain_list
         segment = self.get_argument("segment", False)
-        target_window = self.get_argument("target_window", False)
 
         # Parameters specific to hive_query
         hive_query = self.get_argument("hive_query", False)
@@ -146,7 +147,7 @@ class BatchRequestFormHandler(BatchRequestBase, tornado.web.RequestHandler):
 
         if request_type=="domain_list":
             # Set the content parameter to segment#target_window
-            content = '#'.join([segment, target_window])
+            content = segment
         elif request_type=="hive_query":
             # Set the content parameter to the query
             content = hive_query
@@ -158,9 +159,9 @@ class BatchRequestFormHandler(BatchRequestBase, tornado.web.RequestHandler):
             expiration = "NULL"
         else:
             target_segment = self.clean_target_segment(target_segment)
-            
+        
         self.insert_request(request_type, content, owner, target_segment, 
-                            expiration, active, comment)
+                            target_window, expiration, active, comment)
 
         self.redirect("/admin/batch_requests")
 
