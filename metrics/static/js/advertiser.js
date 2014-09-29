@@ -2,13 +2,17 @@ var format = d3.format("0,000"),
   formatPercent = d3.format("%"),
   formatDate = d3.time.format("%Y-%m-%d");
  
-var buildSegments = function(obj) {
-  var default_panel = obj
+var buildSegments = function(obj,name,show_id) {
+  console.log(name)
+
+  var default_panel = obj,
+    name = name || "Segments",
+    show_id = show_id || false
 
   var segment_header = default_panel
     .append("div")
     .classed("panel-heading segments",true)
-    .text("Segments")
+    .text(name)
 
   segment_header
     .append("div")
@@ -23,11 +27,12 @@ var buildSegments = function(obj) {
     .classed("list-group", true)
     .selectAll("div")
     .data(function(x){
-        var segs = x.segments.filter(function(y){
-          return y.segment_implemented != 0
-        })
-        return segs || []
-     })
+      var segs = x.segments.filter(function(y){
+        y.external_segment_id = show_id ? y.external_segment_id : ""
+        return y.segment_implemented != 0
+      })
+      return segs || []
+    })
     .enter()
       .append("div")
       .classed("list-group-item",true)
@@ -36,6 +41,21 @@ var buildSegments = function(obj) {
           x.segment_name + '<span class="pull-right">'+ 
           x.external_segment_id + '</span></h5>'
       })
+
+  var segment_description = segments
+    .selectAll(".block-quote")
+    .data(function(x){
+      return (x.segment_description) ? [x] : []
+    })
+    .enter()
+      .append("div")
+      .classed("block-quote",true)
+      .html(function(x){
+        if (x.segment_description) 
+          x.segment_description = x.segment_description
+            .replace("[user_identifier]","<span style='color:red'>[user_identifier]</span>")
+          return x.segment_description
+      })  
       
   var segment_details = segments
     .append("div")
@@ -47,6 +67,7 @@ var buildSegments = function(obj) {
                 .replace(/</g,'&lt;')
                 .replace(/"/g,'&quot;') 
                 .replace(/\n/g,'<br/>')
+                .replace("[user_identifier]","<span style='color:red'>[user_identifier]</span>") 
     }) 
 }
 
@@ -264,7 +285,7 @@ var buildAdvertiserInfo = function(obj) {
         "Pixel Source" : x['pixel_source_name'],
         "Contact Info": x['contact_name'],
         "Contact Email": x['email'],
-        "Goal": x['advertiser_goal'],
+        //"Goal": x['advertiser_goal'],
       }
       return d3.entries(d)
     })
@@ -280,8 +301,38 @@ var buildAdvertiserInfo = function(obj) {
       })
 }
 
-var buildAdvertiserWrapper = function(data, id, width) {
-  var wrapper_width = width || 6
+var buildClientAdvertiserInfo = function(obj) {
+
+  var panels = obj
+
+  panels
+    .append("div")
+    .classed("panel-body summary",true)
+    .selectAll("div")
+    .data(function(x){
+      var d = {
+        //"Pixel Source" : x['pixel_source_name'],
+        "Contact Info": x['contact_name'],
+        "Contact Email": x['email'],
+        //"Goal": x['advertiser_goal'],
+      }
+      return d3.entries(d)
+    })
+    .enter()
+      .append("div")
+      .text(function(x){
+        return x.key + " : " + x.value
+      })
+      .sort(function(x,y){
+        var w = (typeof x.value == "string") ? 2 : 0
+        var z = (typeof x.value == "string") ? 2 : 0 
+        return w - z
+      })
+}
+
+var buildAdvertiserWrapper = function(data, id, width,show_id) {
+  var wrapper_width = width || 6,
+    show_id = show_id || false
 
   var wrappers = d3.select(id).selectAll(".wrapper")
     .data(data).enter()
@@ -306,9 +357,11 @@ var buildAdvertiserWrapper = function(data, id, width) {
     .classed("panel-title",true)
     .text(function(x) {return x.advertiser_name})
 
-  titles.append("span")
-    .classed("pull-right",true)
-    .text(function(x){return x.external_advertiser_id})
+  if (show_id) {
+    titles.append("span")
+      .classed("pull-right",true)
+      .text(function(x){return x.external_advertiser_id})
+  }
 
   return panels
 }
