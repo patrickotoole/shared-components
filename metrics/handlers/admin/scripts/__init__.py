@@ -9,3 +9,4 @@ from batch import BatchRequestsHandler
 from batch import BatchRequestFormHandler
 from event_log import EventLogHandler
 from imps import ImpsHandler
+from campaign_checks import CampaignChecksHandler
