@@ -33,18 +33,24 @@ table.form{
 }
 
 #hive_query{
-   width: 400px;
+   width: 600px;
    height: 200px;
 }
 
 #comment{
-   width: 400px;
+   width: 600px;
    height: 100px;
 }
 
 #owner{
    width: 200px;
 }
+
+p.indent{
+   font-family: "Courier New";
+   padding-left: 20px;
+}
+
 </style>
 
 <div class="content">
@@ -56,6 +62,27 @@ table.form{
 <div class="table_wrapper">
 <form id="request_form" action="" method="post">
 <table class="form">
+<tr>
+<td></td>
+<td id="hive_instructions" colspan="3" style="display: none;">
+  <p><b>INSTRUCTIONS:</b></p>
+    <p>The <b>target window</b> parameter allows us to specify a date range for your query. It is specified in minutes, and will be used to generate a date/hour range at run time for each execution of the query. To use this date range, you should add <i>${date_range}</i> to your query as a WHERE condition. For example, if your query is specified as:</p>
+    <p class="indent">SELECT * <br />
+FROM my_table  <br />
+WHERE source="bonobos" AND ${date_range}</p>
+    <p>...and the target_window=1440 (1 day) and the current datetime is 
+       14-09-25 10:30:00, the query will be executed as:<p>
+<p class="indent">
+    SELECT *<br />
+    FROM my_table<br />
+    WHERE source="bonobos" AND <br />
+    ( <br />
+        &nbsp;&nbsp;&nbsp;&nbsp;(date = "14-09-24" and hour >="10") OR <br />
+        &nbsp;&nbsp;&nbsp;&nbsp;(date > "14-09-24") <br />
+    )</p>
+</td>
+</tr>
+
 <tr>
   <td><label for="request_type">Type</label></td>
   <td><select id="request_type" name="request_type">
