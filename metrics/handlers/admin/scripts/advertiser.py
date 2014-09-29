@@ -7,6 +7,24 @@ import time
 
 from lib.helpers import *  
 
+CONVERSION_PIXEL = """<!-- Rockerbox -- %(segment_name)s -->
+<script src="https://secure.adnxs.com/px?id=%(pixel_id)s&seg=%(segment_id)s&t=1&order_id=[user_identifier]" type="text/javascript"></script> 
+<script src="https://getrockerbox.com/pixel?source=%(pixel_source_name)s&type=conv&id=%(pixel_id)s&seg=%(segment_id)s&order_type=[user_identifier]" type="text/javascript"></script>
+<!-- End of Segment Pixel -->"""
+
+SEGMENT_PIXEL = """<!-- Rockerbox -- %(segment_name)s -->
+<script src="https://getrockerbox.com/pixel?source=%(pixel_source_name)s&type=imp&an_seg=%(segment_id)s" type="text/javascript"></script>
+<!-- End of Segment Pixel -->
+"""
+
+SEGMENT_DESCRIPTIONS = {
+    "Purchase Conversion Pixel": "Fire the following after a user makes a purchase. Substitute a unique identifier (e.g. user ID, order_id) for [user_identifier] prior to firing the pixel. ",
+    "Signup Conversion Pixel": "Fire the following after a user has executed a signup. Substitute a unique identifier (e.g. user ID, order_id) for [user_identifier] prior to firing the pixel. ",
+    "All Pages Segment": "Place the following on ALL PAGES",
+    "Logged In Segment": "Place the following on ALL pages for EXISTING CUSTOMERS"
+}
+
+
 API_QUERY = "select * from appnexus_reporting.advertiser where %s "
 
 INCLUDES = {
@@ -58,13 +76,17 @@ INSERT INTO appnexus_reporting.advertiser_segment (
     external_advertiser_id,
     external_member_id,
     external_segment_id,
-    segment_name
+    segment_name,
+    segment_implemented,
+    segment_description
 ) 
 VALUES (
     '%(external_advertiser_id)s', 
     '%(external_member_id)s', 
     '%(external_segment_id)s', 
-    '%(segment_name)s'
+    '%(segment_name)s',
+    '%(segment_implemented)s',
+    '%(segment_description)s'
 )
 """
 
@@ -99,13 +121,15 @@ class Advertiser(object):
         self.db.execute(query)            
         self.db.commit()
 
-    def insert_segment(self,segment_id,segment_name,advertiser_id,member_id):
+    def insert_segment(self,segment_id,segment_name,advertiser_id,member_id,segment_implemented,segment_description):
         params = {
             "external_advertiser_id": advertiser_id,
             "external_segment_id": segment_id,
             "segment_name": segment_name,
             "advertiser_id": advertiser_id,
-            "external_member_id": member_id
+            "external_member_id": member_id,
+            "segment_implemented": segment_implemented,
+            "segment_description": segment_description
         }
         query = INSERT_SEGMENT % params
         print query
@@ -120,16 +144,32 @@ class Advertiser(object):
         advertiser_id = response["response"]["advertiser"]["id"]
         return advertiser_id
 
-    def create_segment(self,advertiser_id,advertiser_name,segment_name):
+    def create_segment(self,advertiser_id,advertiser_name,segment_name,conversion_pixel=None):
         data = {"segment":{ "member_id":2024, "short_name":advertiser_name + " - " + segment_name} }
         URL = "/segment?advertiser_id=%s" % advertiser_id
         response = self.api.post(URL,data=ujson.dumps(data)).json
+
+        params = {
+            "pixel_source_name":self.get_argument("pixel_source_name"),
+            "segment_id": response["response"]["segment"]["id"],
+            "segment_name":advertiser_name + " - " + segment_name,
+            "pixel_id":conversion_pixel
+        }
+
+        if conversion_pixel is not None:
+            formatted_pixel = CONVERSION_PIXEL % params 
+        elif "Creative" not in segment_name:
+            formatted_pixel = SEGMENT_PIXEL % params
+        else:
+            formatted_pixel = ""
  
         self.insert_segment(
             response["response"]["segment"]["id"],
             advertiser_name + " - " + segment_name,
             advertiser_id,
-            2024
+            2024,
+            formatted_pixel,
+            SEGMENT_DESCRIPTIONS.get(segment_name,"")
         ) 
         return response["response"]["segment"]["id"]
    
@@ -155,6 +195,7 @@ class Advertiser(object):
             pct,
             pvt
         )
+
         return response["response"]["pixel"]["id"]
 
     def create_publisher(self,advertiser_name):
@@ -285,7 +326,7 @@ class AdvertiserHandler(tornado.web.RequestHandler,Advertiser):
         self.api = api
   
 
-    def create_segments(self,advertiser_id,advertiser_name,_segment_names=[]): 
+    def create_segments(self,advertiser_id,advertiser_name,_segment_names=[],conversion_pixels={}): 
         segment_names = _segment_names + ["Creative Viewed", "Creative Clicked", "Test Segment"] 
 
         if self.get_argument('all_pages_pixel_checkbox') == "true":
@@ -295,7 +336,7 @@ class AdvertiserHandler(tornado.web.RequestHandler,Advertiser):
             segment_names.append("Logged In Segment")
 
         segment_dict = { 
-            segment_name: self.create_segment(advertiser_id,advertiser_name,segment_name) 
+            segment_name: self.create_segment(advertiser_id,advertiser_name,segment_name,conversion_pixels.get(segment_name,None)) 
                 for segment_name in segment_names
         }
 
@@ -327,7 +368,7 @@ class AdvertiserHandler(tornado.web.RequestHandler,Advertiser):
         internal_id = self.insert_advertiser(advertiser_id,advertiser_name)
 
         pixel_dict = self.create_pixels(advertiser_id,advertiser_name)
-        segment_dict = self.create_segments(advertiser_id,advertiser_name,pixel_dict.keys())
+        segment_dict = self.create_segments(advertiser_id,advertiser_name,pixel_dict.keys(),pixel_dict)
     
         publisher_id = self.create_publisher(advertiser_name)
         time.sleep(5)
@@ -371,6 +412,7 @@ class AdvertiserHandler(tornado.web.RequestHandler,Advertiser):
         
         df = self.db.select_dataframe(API_QUERY % where).set_index("external_advertiser_id")
         includes = self.get_argument("include","domain_lists,segments,pixels,insertion_orders")
+
 
         include_list = includes.split(",")
         for include in include_list:

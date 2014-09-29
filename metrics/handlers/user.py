@@ -21,7 +21,11 @@ class LoginHandler(tornado.web.RequestHandler):
     def get(self):
 
         if self.get_secure_cookie("user"):
-            self.redirect(self.get_argument("next", "/reporting", True))
+            user = self.get_secure_cookie("user")
+            if self.db.select_dataframe("select * from user where username = '%s'" % user)['show_reporting'][0] == 0:
+                self.redirect(self.get_argument("next", "/advertiser", True)) 
+            else:
+                self.redirect(self.get_argument("next", "/reporting", True))
         else:
             self.render("_login.html",message = "sign in")
 
@@ -42,7 +46,7 @@ class LoginHandler(tornado.web.RequestHandler):
 
 class SignupHandler(tornado.web.RequestHandler):
 
-    INSERT_QUERY = "insert into user (username, advertiser_id, password) values ('%(username)s' ,'%(advertiser)s', '%(password)s')"
+    INSERT_QUERY = "insert into user (username, advertiser_id, password, show_reporting) values ('%(username)s' ,'%(advertiser)s', '%(password)s', '%(show_reporting)s')"
 
     def initialize(self,db=None):
         self.db = db
@@ -67,7 +71,6 @@ class SignupHandler(tornado.web.RequestHandler):
 
     def login(self,username):
         self.set_secure_cookie("user",username)
-        
 
     def post(self):
         try:
