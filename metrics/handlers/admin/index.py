@@ -10,17 +10,14 @@ class IndexHandler(tornado.web.RequestHandler):
         advertiser_links = [
             ("/admin/advertiser", "Index"),
             ("/admin/advertiser/new", "Advertiser Creator"),
-
-            
-
             ("/admin/advertiser/segment", "Segment"),  
             ("/admin/advertiser/pixel/reporting", "[ALPHA] On-site (Rockerbox vs. all users)"),
             ("/admin/advertiser/reporting", "[ALPHA] Reporting (unified)"), 
-            
             ("/admin/advertiser/domain_list/reporting", "Domain List Impressions Available"), 
-            
             ("/admin/advertiser/summary/reporting", "Domain Aggregated Reporting"),  
-            ("/admin/advertiser/conversion/reporting", "Conversion Lookup"),                 
+            ("/admin/advertiser/conversion/reporting", "Conversion Reporting"),
+            ("/admin/advertiser/conversion/imps/reporting", "Conversion Served Imps Reporting"),
+            ("/admin/advertiser/debug/reporting", "Debug Reporting")
         ]
 
         advertiser_viewability_links = [
@@ -34,7 +31,6 @@ class IndexHandler(tornado.web.RequestHandler):
             ("/admin/segment/scrubbed", "Scrubbed Segments"), 
             ("/admin/segment/reporting", "Segment Avails Reporting"),   
         ]
-
         
         internal_links = [
             ("/admin/advertiser/domain_list/streaming", "Targeting Tool"),

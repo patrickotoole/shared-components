@@ -108,3 +108,11 @@ WHERE
     %(where)s
 GROUP BY %(groups)s
 """
+
+DEBUG_QUERY = """
+SELECT %(fields)s
+FROM debug_data
+WHERE 
+    %(where)s
+GROUP BY %(groups)s
+"""

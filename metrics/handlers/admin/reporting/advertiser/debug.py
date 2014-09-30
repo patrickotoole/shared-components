@@ -6,100 +6,81 @@ from twisted.internet import defer
 
 from lib.helpers import *
 from lib.hive.helpers import run_hive_session_deferred
-from lib.query.HIVE import CONVERSION_IMPS_QUERY
+from lib.query.HIVE import DEBUG_QUERY
 from ..base import AdminReportingBaseHandler
 
 OPTIONS = {
     "default": {
         "meta": {
-            "groups": ["advertiser", "segment"],
-            "fields": ["num_served"],
-            "formatters": {
-                "campaign": "none",
-                "segment": "none",
-                "order_type": "none",
-                "order_id": "none",
-                "conv_id": "none",
-                "auction_id": "none",
-                "seller": "none"
-                }
-            },
-        },
-
-    "advertiser": {
-        "meta": {
-            "groups": ["campaign"],
-            "fields": ["num_conv","num_served"],
-            "formatters": {
-                "campaign": "none",
-                "segment": "none",
-                "order_type": "none",
-                "order_id": "none",
-                "conv_id": "none",
-                "auction_id": "none",
-                "seller": "none"
-                }
+            "groups": ["campaign_id", "bid_result", "is_valid", "deal_transacted"],
+            "fields": ["count"]
             }
         },
     
-    "imps" : {
+    "campaign": {
         "meta": {
-            "groups": ["uid", "conv_id", "order_type", "order_id", "auction_id", "domain", "seller", "campaign"],
-            "fields": [],
-            "formatters": {
-                "campaign": "none",
-                "segment": "none",
-                "order_type": "none",
-                "order_id": "none",
-                "conv_id": "none",
-                "auction_id": "none",
-                "seller": "none"
-                }
+            "groups": ["date", "id", "winning_member_id", "bid_result", "is_valid", "deal_transacted"],
+            "fields": []
             }
         }
     }
 
 GROUPS = {
-    "advertiser": "advertiser",
     "date": "date",
     "hour": "hour",
-    "served_date": "served_date",
-    "served_hour": "served_hour",
-    "uid": "uid",
-    "conv_id": "conv_id",
-    "auction_id": "auction_id",
-    "segment": "segment",
-    "order_type": "order_type",
-    "order_id": "order_id",
-    "domain": "domain",
-    "seller": "seller",
-    "campaign": "campaign",
-    "is_rockerbox": "auction_id IS NOT NULL",
-    "attributed_to": "CASE WHEN auction_id IS NOT NULL THEN 'Rockerbox' ELSE 'Other' END"
+    "id" : "id",
+    "is_valid" : "is_valid",
+    "bid_result" : "bid_result",
+    "campaign_id" : "campaign_id",
+    "winning_member_id" : "winning_member_id",
+    "deal_transacted" : "deal_transacted",
+    "an_user_id" : "an_user_id",
+    "an_placement_id" : "an_placement_id",
+    "dma" : "dma",
+    "country" : "country",
+    "page_url" : "page_url",
+    "ad_format" : "ad_format",
+    "ext_auction_id" : "ext_auction_id",
+    "width" : "width",
+    "height" : "height",
+    "wrong_size" : "wrong_size"
     }
 
 FIELDS = {
-    "num_served": "count(distinct auction_id)",
-    "num_conv": "count(distinct date,hour,uid)"
+    "our_bid" : "our_bid",
+    "net_winning_price" : "net_winning_price",
+    "second_net_price" : "second_net_price",
+    "soft_floor" : "soft_floor",
+    "hard_floor" : "hard_floor",
+    "detail" : "detail",
+    "result" : "result",
+    "count": "count(*)"
     }
 
 WHERE = {
-    "domain": "domain like '%%%(domain)s%%'",
-    "advertiser": "advertiser = '%(advertiser)s'",
-    "campaign": "campaign = '%(campaign)s'",
-    "uid": "uid = '%(uid)s'",
-    "order_id": "order_id = '%(order_id)s'",
-    "order_type": "order_type = '%(order_type)s'",
-    "seller": "seller = '%(seller)s'",
-    "segment": "segment = '%(segment)s'",
-    "conv_id": "conv_id = '%(conv_id)s'",
-    "is_rockerbox": "CASE WHEN lower('%(is_rockerbox)s') = 'true' THEN auction_id IS NOT NULL ELSE auction_id IS NULL END",
-    "attributed_to": "CASE WHEN '%(attributed_to)s' = 'Rockerbox' THEN auction_id IS NOT NULL ELSE auction_id IS NULL END"
+    "page_url": "page_url LIKE '%%%(page_url)s%%'",
+    "id": "id = '%(id)s'",
+    "is_valid": "is_valid = '%(is_valid)s'",
+    "bid_result": "bid_result = '%(bid_result)s'",
+    "campaign_id": "campaign_id = '%(campaign_id)s'",
+    "winning_member_id": "winning_member_id = '%(winning_member_id)s'",
+    "deal_transacted": "deal_transacted = '%(deal_transacted)s'",
+    "an_user_id": "an_user_id = '%(an_user_id)s'",
+    "an_placement_id": "an_placement_id = '%(an_placement_id)s'",
+    "dma": "dma = '%(dma)s'",
+    "country": "country = '%(country)s'",
+    "page_url": "page_url = '%(page_url)s'",
+    "ad_format": "ad_format = '%(ad_format)s'",
+    "ext_auction_id": "ext_auction_id = '%(ext_auction_id)s'",
+    "width": "width = '%(width)s'",
+    "height": "height = '%(height)s'",
+    "wrong_size": "wrong_size = '%(wrong_size)s'"    
     }
 
-class ConversionImpsHandler(AdminReportingBaseHandler):
 
-    QUERY = CONVERSION_IMPS_QUERY
+class DebugReportingHandler(AdminReportingBaseHandler):
+
+    QUERY = DEBUG_QUERY
     WHERE = WHERE
     FIELDS = FIELDS
     GROUPS = GROUPS
@@ -130,11 +111,13 @@ class ConversionImpsHandler(AdminReportingBaseHandler):
         ]
         raw = yield run_hive_session_deferred(self.hive,query_list)
 
+
         formatted = self.format_data(
             pandas.DataFrame(raw),
             groupby,
             wide
         )
+
         self.get_content(formatted)
 
     def format_data(self, u, groupby, wide):
@@ -161,18 +144,12 @@ class ConversionImpsHandler(AdminReportingBaseHandler):
         return u
 
     def get_meta_group(self,default="default"):
-        advertiser = self.get_argument("advertiser",False)
-        campaign = self.get_argument("campaign", False)
-        uid = self.get_argument("uid", False)
-
-        if uid:
-            return "imps"
+        campaign = self.get_argument("campaign_id", False)
+    
         if campaign:
-            return "imps"
-        elif advertiser:
-            return "advertiser"
-        else:
-            return default
+            return "campaign"
+
+        return default
 
     @tornado.web.asynchronous
     def get(self,meta=False):

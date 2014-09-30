@@ -9,29 +9,36 @@ from lib.hive.helpers import run_hive_session_deferred
 from lib.query.HIVE import CONVERSION_QUERY
 from ..base import AdminReportingBaseHandler
 
-"""
-select *
-from pixel_data 
-where date >= "14-09-11" and date <= "14-09-15" and source="shutterstock" and type="conv" and segment like "%25496734%";
-"""
-
-
 OPTIONS = {
     "default": {
         "meta": {
-            "groups": ["advertiser", "attributed_to", "segment"],
+            "groups": ["advertiser", "segment", "attributed_to"],
             "fields": ["num_conv"],
+            "formatters": {
+                "segment": "none",
+                "order_type": "none",
+                "order_id": "none",
+                "conv_id": "none",
+                "uid": "none"
+                }
             }
         },
 
     "advertiser": {
         "meta": {
             "groups": ["segment", "attributed_to"],
-            "fields": ["num_conv"]
+            "fields": ["num_conv"],
+            "formatters": {
+                "segment": "none",
+                "order_type": "none",
+                "order_id": "none",
+                "conv_id": "none",
+                "uid": "none"
+                }
             }
         },
 
-    "all": {
+    "segment": {
         "meta": {
             "groups": [
                 "date", 
@@ -45,10 +52,18 @@ OPTIONS = {
                 "since_last_served", 
                 "since_first_served"
                 ],
-            "fields": ["num_served"]
+            "fields": ["num_served"],
+            "formatters": {
+                "segment": "none",
+                "order_type": "none",
+                "order_id": "none",
+                "conv_id": "none",
+                "uid": "none"
+                }
             }
         }
     }
+
 GROUPS = {
     "advertiser": "advertiser",
     "date": "date",
@@ -71,6 +86,12 @@ FIELDS = {
     }
 
 WHERE = {
+    "advertiser": "advertiser = '%(advertiser)s'",
+    "uid": "uid = '%(uid)s'",
+    "order_id": "order_id = '%(order_id)s'",
+    "order_type": "order_type = '%(order_type)s'",
+    "segment": "segment = '%(segment)s'",
+    "conv_id": "conv_id = '%(conv_id)s'",
     "is_rockerbox": "CASE WHEN lower('%(is_rockerbox)s') = 'true' THEN num_served > 0 ELSE num_served = 0 END",
     "attributed_to": "CASE WHEN '%(attributed_to)s' LIKE 'Rockerbox' THEN num_served > 0 ELSE num_served < 0 END"
     }
@@ -106,9 +127,7 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
             "set mapred.reduce.tasks=0",
             query
         ]
-        print query
         raw = yield run_hive_session_deferred(self.hive,query_list)
-        print raw
 
         formatted = self.format_data(
             pandas.DataFrame(raw),
@@ -116,7 +135,6 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
             wide
         )
 
-        print formatted
         self.get_content(formatted)
 
     def format_data(self, u, groupby, wide):
@@ -132,7 +150,6 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
                     pass
 
         if groupby and wide:
-            print "Here"
             u = u.set_index(groupby).sort_index()
             u = u.stack().unstack(wide)
 
@@ -145,16 +162,21 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
 
         
     def get_meta_group(self,default="default"):
-        for field in OPTIONS["all"]["meta"]["groups"]:
-            if self.get_argument(field, False):
-                return "all"
+        advertiser = self.get_argument("advertiser", False)
+        segment = self.get_argument("segment", False)
+        
+        if segment:
+            return "segment"
+        
+        if advertiser:
+            return "advertiser"
 
         return default
 
     @tornado.web.asynchronous
     def get(self,meta=False):
         formatted = self.get_argument("format",False)
-        include = self.get_argument("include",False)
+        include = self.get_argument("include","").split(",")
         meta_group = self.get_meta_group()
         meta_data = self.get_meta_data(meta_group,include)
         if meta:
