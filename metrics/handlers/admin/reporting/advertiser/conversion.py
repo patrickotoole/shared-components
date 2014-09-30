@@ -26,41 +26,53 @@ OPTIONS = {
 
     "advertiser": {
         "meta": {
-            "groups": [""],
-            "fields": [""]
+            "groups": ["segment", "attributed_to"],
+            "fields": ["num_conv"]
             }
         },
-    
-    "segment": {
+
+    "all": {
         "meta": {
-            "groups": [],
-            "fields": []
-            }
-        },
-    
-    "uid": {
-        "meta": {
-            "groups": [],
-            "fields": []
+            "groups": [
+                "date", 
+                "hour", 
+                "conv_timestamp", 
+                "uid", 
+                "segment", 
+                "conv_id", 
+                "order_id", 
+                "order_type", 
+                "since_last_served", 
+                "since_first_served"
+                ],
+            "fields": ["num_served"]
             }
         }
     }
-
 GROUPS = {
     "advertiser": "advertiser",
+    "date": "date",
+    "hour": "hour",
+    "conv_timestamp": "conv_timestamp",
+    "uid": "uid",
     "segment": "segment",
+    "query_str": "query_str",
+    "conv_id": "conv_id",
+    "order_id": "order_id",
+    "order_type": "order_type",
+    "since_last_served": "since_last_served",
+    "since_first_served": "since_first_served",
     "attributed_to": "CASE WHEN num_served > 0 THEN 'Rockerbox' ELSE 'Other' END"
     }
 
 FIELDS = {
-    "num_conv" : "count(*)"
+    "num_conv" : "count(*)",
+    "num_served": "sum(num_served)"
     }
 
 WHERE = {
-    "attributed_to": "CASE WHEN %(attributed_to)s LIKE 'Rockerbox' THEN num_served > 0 ELSE num_served < 0",
-    "advertiser": "advertiser like '%%%(advertiser)s%%'",
-    "uid": "uid = '%(uid)s'",
-    "segment": "segment like '%%%(segment)s%%'"
+    "is_rockerbox": "CASE WHEN lower('%(is_rockerbox)s') = 'true' THEN num_served > 0 ELSE num_served = 0 END",
+    "attributed_to": "CASE WHEN '%(attributed_to)s' LIKE 'Rockerbox' THEN num_served > 0 ELSE num_served < 0 END"
     }
 
 class ConversionCheckHandler(AdminReportingBaseHandler):
@@ -133,18 +145,11 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
 
         
     def get_meta_group(self,default="default"):
-        advertiser = self.get_argument("advertiser",False)
-        uid = self.get_argument("uid", False)
-        segment = self.get_argument("segment", False)
+        for field in OPTIONS["all"]["meta"]["groups"]:
+            if self.get_argument(field, False):
+                return "all"
 
-        if uid:
-            return "uid"
-        elif segment:
-            return "segment"
-        elif advertiser:
-            return advertiser
-        else:
-            return default
+        return default
 
     @tornado.web.asynchronous
     def get(self,meta=False):

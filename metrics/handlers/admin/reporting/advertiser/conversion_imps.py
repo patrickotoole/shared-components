@@ -12,29 +12,28 @@ from ..base import AdminReportingBaseHandler
 OPTIONS = {
     "default": {
         "meta": {
-            "groups": ["date", "advertiser", "segment", "attributed_to"],
-            "fields": ["num_conv"],
-            },
-        "is_wide":False
+            "groups": ["advertiser", "segment"],
+            "fields": ["num_served"]
+            }
         },
 
     "advertiser": {
         "meta": {
-            "groups": [""],
-            "fields": [""]
+            "groups": ["campaign"],
+            "fields": ["num_conv","num_served"]
             }
         },
-    
-    "segment": {
+
+    "conv": {
         "meta": {
-            "groups": [],
+            "groups": ["uid", "segment", "conv_id", "order_type", "order_id"],
             "fields": []
             }
         },
     
-    "uid": {
+    "imps" : {
         "meta": {
-            "groups": [],
+            "groups": ["uid", "conv_id", "order_type", "order_id", "auction_id", "domain", "seller", "campaign"],
             "fields": []
             }
         }
@@ -44,26 +43,30 @@ GROUPS = {
     "advertiser": "advertiser",
     "date": "date",
     "hour": "hour",
+    "served_date": "served_date",
+    "served_hour": "served_hour",
     "uid": "uid",
-    "segment": "segment",
     "conv_id": "conv_id",
+    "auction_id": "auction_id",
+    "segment": "segment",
     "order_type": "order_type",
     "order_id": "order_id",
-    "segment": "segment",
-    "attributed_to": "CASE WHEN num_served > 0 THEN 'Rockerbox' ELSE 'Other' END"
+    "domain": "domain",
+    "seller": "seller",
+    "campaign": "campaign",
+    "is_rockerbox": "auction_id IS NOT NULL",
+    "attributed_to": "CASE WHEN auction_id IS NOT NULL THEN 'Rockerbox' ELSE 'Other' END"
     }
 
 FIELDS = {
-    "num_conv" : "count(*)",
-    "num_served" : "sum(num_served)"
+    "num_served": "count(distinct auction_id)",
+    "num_conv": "count(distinct date,hour,uid)"
     }
 
 WHERE = {
-    "attributed_to": "CASE WHEN %(attributed_to)s LIKE 'Rockerbox' THEN num_served > 0 ELSE num_served < 0",
-    "advertiser": "advertiser like '%%%(advertiser)s%%'",
-    "uid": "uid = '%(uid)s'",
-    "segment": "segment like '%%%(segment)s%%'"
+    "domain": "domain like '%%%(domain)s%%'"
     }
+
 
 class ConversionImpsHandler(AdminReportingBaseHandler):
 
@@ -133,18 +136,17 @@ class ConversionImpsHandler(AdminReportingBaseHandler):
 
         return u
 
-        
     def get_meta_group(self,default="default"):
         advertiser = self.get_argument("advertiser",False)
+        campaign = self.get_argument("campaign", False)
         uid = self.get_argument("uid", False)
-        segment = self.get_argument("segment", False)
 
         if uid:
             return "uid"
-        elif segment:
-            return "segment"
+        if campaign:
+            return "campaign"
         elif advertiser:
-            return advertiser
+            return "advertiser"
         else:
             return default
 
@@ -177,5 +179,3 @@ class ConversionImpsHandler(AdminReportingBaseHandler):
 
         else:
             self.get_content(pandas.DataFrame())
-
- 
