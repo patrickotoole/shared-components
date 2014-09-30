@@ -104,6 +104,7 @@ CONVERSION_IMPS_QUERY = """
 SELECT %(fields)s
 FROM served_conv
 WHERE 
+    auction_id IS NOT NULL AND
     %(where)s
 GROUP BY %(groups)s
 """
