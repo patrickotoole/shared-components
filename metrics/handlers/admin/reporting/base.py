@@ -44,15 +44,14 @@ class AdminReportingBase(object):
     def make_query(self,params):
         # pragma: string sub and remove \n
         q = self.QUERY % params
+        print q
         return " ".join(q.replace('\n',' ').split())
 
-    
-
     def get_meta_data(self,meta_group,additional_dims=False):
-
         try:
             meta_lookup = self.OPTIONS[meta_group]["meta"]
             meta_data = deepcopy(meta_lookup)
+            print meta_data
         except:
             raise MetaDataException("missing meta data for requested group")
 
@@ -65,7 +64,6 @@ class AdminReportingBase(object):
 
             from collections import OrderedDict
             meta_data['groups'] = list(OrderedDict.fromkeys(meta_data['groups']))
-
 
         return meta_data
 

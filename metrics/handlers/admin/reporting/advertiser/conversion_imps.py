@@ -6,22 +6,16 @@ from twisted.internet import defer
 
 from lib.helpers import *
 from lib.hive.helpers import run_hive_session_deferred
-from lib.query.HIVE import CONVERSION_QUERY
+from lib.query.HIVE import CONVERSION_IMPS_QUERY
 from ..base import AdminReportingBaseHandler
-
-"""
-select *
-from pixel_data 
-where date >= "14-09-11" and date <= "14-09-15" and source="shutterstock" and type="conv" and segment like "%25496734%";
-"""
-
 
 OPTIONS = {
     "default": {
         "meta": {
-            "groups": ["advertiser", "attributed_to", "segment"],
+            "groups": ["date", "advertiser", "segment", "attributed_to"],
             "fields": ["num_conv"],
-            }
+            },
+        "is_wide":False
         },
 
     "advertiser": {
@@ -48,12 +42,20 @@ OPTIONS = {
 
 GROUPS = {
     "advertiser": "advertiser",
+    "date": "date",
+    "hour": "hour",
+    "uid": "uid",
+    "segment": "segment",
+    "conv_id": "conv_id",
+    "order_type": "order_type",
+    "order_id": "order_id",
     "segment": "segment",
     "attributed_to": "CASE WHEN num_served > 0 THEN 'Rockerbox' ELSE 'Other' END"
     }
 
 FIELDS = {
-    "num_conv" : "count(*)"
+    "num_conv" : "count(*)",
+    "num_served" : "sum(num_served)"
     }
 
 WHERE = {
@@ -63,9 +65,9 @@ WHERE = {
     "segment": "segment like '%%%(segment)s%%'"
     }
 
-class ConversionCheckHandler(AdminReportingBaseHandler):
+class ConversionImpsHandler(AdminReportingBaseHandler):
 
-    QUERY = CONVERSION_QUERY
+    QUERY = CONVERSION_IMPS_QUERY
     WHERE = WHERE
     FIELDS = FIELDS
     GROUPS = GROUPS
@@ -150,8 +152,13 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
     def get(self,meta=False):
         formatted = self.get_argument("format",False)
         include = self.get_argument("include",False)
+        wide = self.get_argument("wide",False)
+        
         meta_group = self.get_meta_group()
         meta_data = self.get_meta_data(meta_group,include)
+        
+        meta_data["is_wide"] = wide
+        
         if meta:
             self.write(ujson.dumps(meta_data))
             self.finish()
@@ -165,7 +172,7 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
             self.get_data(
                 self.make_query(params),
                 meta_data.get("groups",[]),
-                self.get_argument("wide",False)
+                wide
             )
 
         else:
