@@ -6,59 +6,54 @@ from twisted.internet import defer
 
 from lib.helpers import *
 from lib.hive.helpers import run_hive_session_deferred
-from lib.query.HIVE import CONVERSION_QUERY
+from lib.query.HIVE import CONVERSION_IMPS_QUERY
 from ..base import AdminReportingBaseHandler
 
 OPTIONS = {
     "default": {
         "meta": {
-            "groups": ["advertiser", "segment", "attributed_to"],
-            "fields": ["num_conv"],
+            "groups": ["advertiser", "segment"],
+            "fields": ["num_served"],
             "formatters": {
+                "campaign": "none",
                 "segment": "none",
                 "order_type": "none",
                 "order_id": "none",
                 "conv_id": "none",
-                "uid": "none"
+                "auction_id": "none",
+                "seller": "none"
                 }
-            }
+            },
         },
 
     "advertiser": {
         "meta": {
-            "groups": ["segment", "attributed_to"],
-            "fields": ["num_conv"],
+            "groups": ["campaign"],
+            "fields": ["num_conv","num_served"],
             "formatters": {
+                "campaign": "none",
                 "segment": "none",
                 "order_type": "none",
                 "order_id": "none",
                 "conv_id": "none",
-                "uid": "none"
+                "auction_id": "none",
+                "seller": "none"
                 }
             }
         },
-
-    "segment": {
+    
+    "imps" : {
         "meta": {
-            "groups": [
-                "date", 
-                "hour", 
-                "conv_timestamp", 
-                "uid", 
-                "segment", 
-                "conv_id", 
-                "order_id", 
-                "order_type", 
-                "since_last_served", 
-                "since_first_served"
-                ],
-            "fields": ["num_served"],
+            "groups": ["uid", "conv_id", "order_type", "order_id", "auction_id", "domain", "seller", "campaign"],
+            "fields": [],
             "formatters": {
+                "campaign": "none",
                 "segment": "none",
                 "order_type": "none",
                 "order_id": "none",
                 "conv_id": "none",
-                "uid": "none"
+                "auction_id": "none",
+                "seller": "none"
                 }
             }
         }
@@ -68,37 +63,43 @@ GROUPS = {
     "advertiser": "advertiser",
     "date": "date",
     "hour": "hour",
-    "conv_timestamp": "conv_timestamp",
+    "served_date": "served_date",
+    "served_hour": "served_hour",
     "uid": "uid",
-    "segment": "segment",
-    "query_str": "query_str",
     "conv_id": "conv_id",
-    "order_id": "order_id",
+    "auction_id": "auction_id",
+    "segment": "segment",
     "order_type": "order_type",
-    "since_last_served": "since_last_served",
-    "since_first_served": "since_first_served",
-    "attributed_to": "CASE WHEN num_served > 0 THEN 'Rockerbox' ELSE 'Other' END"
+    "order_id": "order_id",
+    "domain": "domain",
+    "seller": "seller",
+    "campaign": "campaign",
+    "is_rockerbox": "auction_id IS NOT NULL",
+    "attributed_to": "CASE WHEN auction_id IS NOT NULL THEN 'Rockerbox' ELSE 'Other' END"
     }
 
 FIELDS = {
-    "num_conv" : "count(*)",
-    "num_served": "sum(num_served)"
+    "num_served": "count(distinct auction_id)",
+    "num_conv": "count(distinct date,hour,uid)"
     }
 
 WHERE = {
+    "domain": "domain like '%%%(domain)s%%'",
     "advertiser": "advertiser = '%(advertiser)s'",
+    "campaign": "campaign = '%(campaign)s'",
     "uid": "uid = '%(uid)s'",
     "order_id": "order_id = '%(order_id)s'",
     "order_type": "order_type = '%(order_type)s'",
+    "seller": "seller = '%(seller)s'",
     "segment": "segment = '%(segment)s'",
     "conv_id": "conv_id = '%(conv_id)s'",
-    "is_rockerbox": "CASE WHEN lower('%(is_rockerbox)s') = 'true' THEN num_served > 0 ELSE num_served = 0 END",
-    "attributed_to": "CASE WHEN '%(attributed_to)s' LIKE 'Rockerbox' THEN num_served > 0 ELSE num_served < 0 END"
+    "is_rockerbox": "CASE WHEN lower('%(is_rockerbox)s') = 'true' THEN auction_id IS NOT NULL ELSE auction_id IS NULL END",
+    "attributed_to": "CASE WHEN '%(attributed_to)s' = 'Rockerbox' THEN auction_id IS NOT NULL ELSE auction_id IS NULL END"
     }
 
-class ConversionCheckHandler(AdminReportingBaseHandler):
+class ConversionImpsHandler(AdminReportingBaseHandler):
 
-    QUERY = CONVERSION_QUERY
+    QUERY = CONVERSION_IMPS_QUERY
     WHERE = WHERE
     FIELDS = FIELDS
     GROUPS = GROUPS
@@ -134,7 +135,6 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
             groupby,
             wide
         )
-
         self.get_content(formatted)
 
     def format_data(self, u, groupby, wide):
@@ -160,25 +160,31 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
 
         return u
 
-        
     def get_meta_group(self,default="default"):
-        advertiser = self.get_argument("advertiser", False)
-        segment = self.get_argument("segment", False)
-        
-        if segment:
-            return "segment"
-        
-        if advertiser:
-            return "advertiser"
+        advertiser = self.get_argument("advertiser",False)
+        campaign = self.get_argument("campaign", False)
+        uid = self.get_argument("uid", False)
 
-        return default
+        if uid:
+            return "imps"
+        if campaign:
+            return "imps"
+        elif advertiser:
+            return "advertiser"
+        else:
+            return default
 
     @tornado.web.asynchronous
     def get(self,meta=False):
         formatted = self.get_argument("format",False)
         include = self.get_argument("include","").split(",")
+        wide = self.get_argument("wide",False)
+        
         meta_group = self.get_meta_group()
         meta_data = self.get_meta_data(meta_group,include)
+        
+        meta_data["is_wide"] = wide
+        
         if meta:
             self.write(ujson.dumps(meta_data))
             self.finish()
@@ -192,10 +198,8 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
             self.get_data(
                 self.make_query(params),
                 meta_data.get("groups",[]),
-                self.get_argument("wide",False)
+                wide
             )
 
         else:
             self.get_content(pandas.DataFrame())
-
- 

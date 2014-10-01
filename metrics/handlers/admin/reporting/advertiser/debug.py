@@ -6,99 +6,81 @@ from twisted.internet import defer
 
 from lib.helpers import *
 from lib.hive.helpers import run_hive_session_deferred
-from lib.query.HIVE import CONVERSION_QUERY
+from lib.query.HIVE import DEBUG_QUERY
 from ..base import AdminReportingBaseHandler
 
 OPTIONS = {
     "default": {
         "meta": {
-            "groups": ["advertiser", "segment", "attributed_to"],
-            "fields": ["num_conv"],
-            "formatters": {
-                "segment": "none",
-                "order_type": "none",
-                "order_id": "none",
-                "conv_id": "none",
-                "uid": "none"
-                }
+            "groups": ["campaign_id", "bid_result", "is_valid", "deal_transacted"],
+            "fields": ["count"]
             }
         },
-
-    "advertiser": {
+    
+    "campaign": {
         "meta": {
-            "groups": ["segment", "attributed_to"],
-            "fields": ["num_conv"],
-            "formatters": {
-                "segment": "none",
-                "order_type": "none",
-                "order_id": "none",
-                "conv_id": "none",
-                "uid": "none"
-                }
-            }
-        },
-
-    "segment": {
-        "meta": {
-            "groups": [
-                "date", 
-                "hour", 
-                "conv_timestamp", 
-                "uid", 
-                "segment", 
-                "conv_id", 
-                "order_id", 
-                "order_type", 
-                "since_last_served", 
-                "since_first_served"
-                ],
-            "fields": ["num_served"],
-            "formatters": {
-                "segment": "none",
-                "order_type": "none",
-                "order_id": "none",
-                "conv_id": "none",
-                "uid": "none"
-                }
+            "groups": ["date", "id", "winning_member_id", "bid_result", "is_valid", "deal_transacted"],
+            "fields": []
             }
         }
     }
 
 GROUPS = {
-    "advertiser": "advertiser",
     "date": "date",
     "hour": "hour",
-    "conv_timestamp": "conv_timestamp",
-    "uid": "uid",
-    "segment": "segment",
-    "query_str": "query_str",
-    "conv_id": "conv_id",
-    "order_id": "order_id",
-    "order_type": "order_type",
-    "since_last_served": "since_last_served",
-    "since_first_served": "since_first_served",
-    "attributed_to": "CASE WHEN num_served > 0 THEN 'Rockerbox' ELSE 'Other' END"
+    "id" : "id",
+    "is_valid" : "is_valid",
+    "bid_result" : "bid_result",
+    "campaign_id" : "campaign_id",
+    "winning_member_id" : "winning_member_id",
+    "deal_transacted" : "deal_transacted",
+    "an_user_id" : "an_user_id",
+    "an_placement_id" : "an_placement_id",
+    "dma" : "dma",
+    "country" : "country",
+    "page_url" : "page_url",
+    "ad_format" : "ad_format",
+    "ext_auction_id" : "ext_auction_id",
+    "width" : "width",
+    "height" : "height",
+    "wrong_size" : "wrong_size"
     }
 
 FIELDS = {
-    "num_conv" : "count(*)",
-    "num_served": "sum(num_served)"
+    "our_bid" : "our_bid",
+    "net_winning_price" : "net_winning_price",
+    "second_net_price" : "second_net_price",
+    "soft_floor" : "soft_floor",
+    "hard_floor" : "hard_floor",
+    "detail" : "detail",
+    "result" : "result",
+    "count": "count(*)"
     }
 
 WHERE = {
-    "advertiser": "advertiser = '%(advertiser)s'",
-    "uid": "uid = '%(uid)s'",
-    "order_id": "order_id = '%(order_id)s'",
-    "order_type": "order_type = '%(order_type)s'",
-    "segment": "segment = '%(segment)s'",
-    "conv_id": "conv_id = '%(conv_id)s'",
-    "is_rockerbox": "CASE WHEN lower('%(is_rockerbox)s') = 'true' THEN num_served > 0 ELSE num_served = 0 END",
-    "attributed_to": "CASE WHEN '%(attributed_to)s' LIKE 'Rockerbox' THEN num_served > 0 ELSE num_served < 0 END"
+    "page_url": "page_url LIKE '%%%(page_url)s%%'",
+    "id": "id = '%(id)s'",
+    "is_valid": "is_valid = '%(is_valid)s'",
+    "bid_result": "bid_result = '%(bid_result)s'",
+    "campaign_id": "campaign_id = '%(campaign_id)s'",
+    "winning_member_id": "winning_member_id = '%(winning_member_id)s'",
+    "deal_transacted": "deal_transacted = '%(deal_transacted)s'",
+    "an_user_id": "an_user_id = '%(an_user_id)s'",
+    "an_placement_id": "an_placement_id = '%(an_placement_id)s'",
+    "dma": "dma = '%(dma)s'",
+    "country": "country = '%(country)s'",
+    "page_url": "page_url = '%(page_url)s'",
+    "ad_format": "ad_format = '%(ad_format)s'",
+    "ext_auction_id": "ext_auction_id = '%(ext_auction_id)s'",
+    "width": "width = '%(width)s'",
+    "height": "height = '%(height)s'",
+    "wrong_size": "wrong_size = '%(wrong_size)s'"    
     }
 
-class ConversionCheckHandler(AdminReportingBaseHandler):
 
-    QUERY = CONVERSION_QUERY
+class DebugReportingHandler(AdminReportingBaseHandler):
+
+    QUERY = DEBUG_QUERY
     WHERE = WHERE
     FIELDS = FIELDS
     GROUPS = GROUPS
@@ -128,6 +110,7 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
             query
         ]
         raw = yield run_hive_session_deferred(self.hive,query_list)
+
 
         formatted = self.format_data(
             pandas.DataFrame(raw),
@@ -160,16 +143,11 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
 
         return u
 
-        
     def get_meta_group(self,default="default"):
-        advertiser = self.get_argument("advertiser", False)
-        segment = self.get_argument("segment", False)
-        
-        if segment:
-            return "segment"
-        
-        if advertiser:
-            return "advertiser"
+        campaign = self.get_argument("campaign_id", False)
+    
+        if campaign:
+            return "campaign"
 
         return default
 
@@ -177,8 +155,13 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
     def get(self,meta=False):
         formatted = self.get_argument("format",False)
         include = self.get_argument("include","").split(",")
+        wide = self.get_argument("wide",False)
+        
         meta_group = self.get_meta_group()
         meta_data = self.get_meta_data(meta_group,include)
+        
+        meta_data["is_wide"] = wide
+        
         if meta:
             self.write(ujson.dumps(meta_data))
             self.finish()
@@ -192,10 +175,8 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
             self.get_data(
                 self.make_query(params),
                 meta_data.get("groups",[]),
-                self.get_argument("wide",False)
+                wide
             )
 
         else:
             self.get_content(pandas.DataFrame())
-
- 

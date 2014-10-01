@@ -46,10 +46,7 @@ class AdminReportingBase(object):
         q = self.QUERY % params
         return " ".join(q.replace('\n',' ').split())
 
-    
-
     def get_meta_data(self,meta_group,additional_dims=False):
-
         try:
             meta_lookup = self.OPTIONS[meta_group]["meta"]
             meta_data = deepcopy(meta_lookup)
@@ -65,7 +62,6 @@ class AdminReportingBase(object):
 
             from collections import OrderedDict
             meta_data['groups'] = list(OrderedDict.fromkeys(meta_data['groups']))
-
 
         return meta_data
 

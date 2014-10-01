@@ -93,9 +93,26 @@ group by %(groups)s
 """
 
 CONVERSION_QUERY = """
-SELECT *
-FROM pixel_data 
+SELECT %(fields)s
+FROM conv_attribution
 WHERE 
-    type = "conv" and 
     %(where)s
+GROUP BY %(groups)s
+"""
+
+CONVERSION_IMPS_QUERY = """
+SELECT %(fields)s
+FROM served_conv
+WHERE 
+    auction_id IS NOT NULL AND
+    %(where)s
+GROUP BY %(groups)s
+"""
+
+DEBUG_QUERY = """
+SELECT %(fields)s
+FROM debug_data
+WHERE 
+    %(where)s
+GROUP BY %(groups)s
 """
