@@ -24,7 +24,6 @@ class CampaignChecksHandler(tornado.web.RequestHandler):
         d = self.db.select_dataframe(API_QUERY % ("view","1=1"))
         d = d.reset_index()
         d = d.rename(columns={"index":"__index__"})
-        print d.columns
         return d 
 
     @decorators.formattable
@@ -37,6 +36,7 @@ class CampaignChecksHandler(tornado.web.RequestHandler):
         yield default, (data,)
 
     def get(self,arg=None):
+
         if arg == "fixtures":
             pass
         elif arg == "meta":

@@ -398,7 +398,7 @@ class AdvertiserHandler(tornado.web.RequestHandler,Advertiser):
         def default(self,data):
             o = Convert.df_to_json(data)
             if advertiser_id:
-                self.render("../templates/admin/advertiser/show.html",data=o)
+                self.render("../templates/admin/advertiser/index.html",data=o)
             else:
                 self.render("../templates/admin/advertiser/index.html",data=o) 
 
@@ -411,7 +411,7 @@ class AdvertiserHandler(tornado.web.RequestHandler,Advertiser):
             where = ("external_advertiser_id = %s" % advertiser_id)
         
         df = self.db.select_dataframe(API_QUERY % where).set_index("external_advertiser_id")
-        includes = self.get_argument("include","domain_lists,segments,pixels,insertion_orders")
+        includes = self.get_argument("include","domain_lists,segments,pixels,insertion_orders,campaigns")
 
 
         include_list = includes.split(",")

@@ -93,8 +93,20 @@ $.getJSON(META,function(meta){
 
       data.map(function(x){
         var str = x.campaign_id +",test_"+ x.profilekey
-        x.failures = mapped_entries.get(str)
+        try {
+          x.failures = [mapped_entries.get(str)[0].failure]
+        } catch(e) {
+          x.failures = []
+        }
       })
+
+      /* data = data.filter(function(x){
+        try {
+          return x.failures.length
+        } catch(e) {
+          return 0
+        }
+      })*/
 
       var crsWrapped = new groupedDataWrapper(data,meta),
         tableWrapped = new groupedTableWrapper(crsWrapped,"#data-table-avail")
