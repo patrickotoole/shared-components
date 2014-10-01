@@ -1,7 +1,48 @@
+import logging
+
 RB_API_BASE = "http://portal.getrockerbox.com:8080/admin/advertiser/viewable/reporting"
 URL = RB_API_BASE + "?meta=domain_list&include=date,campaign&type=baublebar_womens_interest&date=%s&format=csv&campaign=%s" 
 
-class ViewabilityAnalysis(object):
+class DomainAPI(object):
+    def __init__(self,api):
+        self.api = api
+
+    def pull_campaign_ids(self,line_item_id):
+        logging.info("AppNexus API line-item request: %s" % line_item_id)
+
+        response = self.api.get("/line-item?id=%s" % line_item_id)
+        campaign_list = response.json["response"]["line-item"]["campaigns"]
+        campaign_id_list = [c["id"] for c in campaign_list]
+        
+        logging.info("AppNexus API campaigns received: %s" % campaign_id_list)
+        return campaign_id_list
+
+    def pull_viewability_csv(self,duration="past_month"):
+        # use the API and pull the CSV
+        import requests
+        campaign_ids = self.campaign_ids
+        
+        campaign_string = ",".join(map(str,campaign_ids))
+        compiled_url = URL % (duration,campaign_string)
+        logging.info("Rockerbox API csv request: %s" % compiled_url) 
+
+        rq = requests.get(compiled_url)
+        logging.info("Rockerbox API csv lines received: %s" % rq.text.count("\n"))  
+
+        return rq.text.replace("<pre>","").replace("</pre>","")
+     
+    def get_viewability_df(self):
+        # convert the csv to a df
+        import pandas
+        import StringIO
+        csv = self.pull_viewability_csv()
+        s = StringIO.StringIO(csv)
+        df = pandas.read_csv(s,index_col=0)
+ 
+        return df
+
+
+class DomainAnalysis(DomainAPI):
     def __init__(self,api,**obj):
         self.api = api
         self.__dict__.update(**obj)
@@ -42,13 +83,13 @@ class ViewabilityAnalysis(object):
     @property
     def campaign_ids(self):
         if self._campaign_ids is None:
-            self.get_campaigns()
+            self._campaign_ids = self.pull_campaign_ids(self.learn_line_item_id)
         return self._campaign_ids
 
     @property
     def viewability_report(self):
         if self._viewability_report is None:
-            self.get_viewability_report()
+            self._viewability_report = self.get_viewability_report()
         return self._viewability_report
 
     @property
@@ -62,45 +103,10 @@ class ViewabilityAnalysis(object):
         if self._blacklist is None:
             self._blacklist = self.get_blacklist()
         return self._blacklist
-
-    def _pull_campaigns(self,line_item_id):
-        response = self.api.get("/line-item?id=%s" % line_item_id)
-        campaign_list = response.json["response"]["line-item"]["campaigns"]
-        return campaign_list
-
-    def get_campaigns(self):
-        line_item_id = self.learn_line_item_id 
-        
-        self._campaign_ids = [c["id"] for c in self._pull_campaigns(line_item_id)]
-        return self._campaign_ids
-
-    def get_viewability_report_csv(self,duration="past_month"):
-        # use the API and pull the CSV
-        import requests
-        campaign_ids = self.campaign_ids
-        
-        campaign_string = ",".join(map(str,campaign_ids))
-        compiled_url = URL % (duration,campaign_string)
-        rq = requests.get(compiled_url)
-
-        return rq.text.replace("<pre>","").replace("</pre>","")
-
-    def get_viewability_report_df(self):
-        # convert the csv to a df
-        import pandas
-        import StringIO
-        csv = self.get_viewability_report_csv()
-        s = StringIO.StringIO(csv)
-        df = pandas.read_csv(s)
- 
-        return df
-
+    
     def get_viewability_report(self):
-        # add calculate columns to the df
-        df = self.get_viewability_report_df()
-        self._viewability_report = self.calc_percent_visible(df)
-
-        return self._viewability_report
+        df = self.get_viewability_df()
+        return self.calc_percent_visible(df)
 
     def get_whitelist(self):
         return self.compute_whitelist(
@@ -120,12 +126,14 @@ class ViewabilityAnalysis(object):
 
 
 def main():
+    from lib.report.utils.loggingutils import basicConfig 
     from link import lnk
+    basicConfig(options={})
     dlv = lnk.dbs.mysql.select_dataframe("select * from domain_list_viewability")
     api = lnk.api.console
 
     obj = dlv.iloc[0].to_dict()
-    va = ViewabilityAnalysis(api,**obj)
+    va = DomainAnalysis(api,**obj)
     print va.whitelist
     print va.blacklist
 
