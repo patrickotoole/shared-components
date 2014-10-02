@@ -18,6 +18,7 @@ class DomainAPI(object):
         return campaign_id_list
 
     def update_domain_list(self,domain_list_id,domains):
+        import ujson
         response = self.api.get("/domain-list?id=%s" % domain_list_id)
         existing_domains = response.json["response"]["domain-list"]["domains"]
 
@@ -27,7 +28,7 @@ class DomainAPI(object):
         )
 
         obj = {"domain-list":{"domains":domains}}
-        #put_response = self.api.put("/domain-list?id=%s" % domain_list_id, ujson.dumps(obj))
+        put_response = self.api.put("/domain-list?id=%s" % domain_list_id, ujson.dumps(obj))
 
     def pull_viewability_csv(self,duration="past_month"):
         # use the API and pull the CSV
