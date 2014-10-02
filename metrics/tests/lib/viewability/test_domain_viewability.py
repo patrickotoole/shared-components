@@ -4,7 +4,7 @@ import os
 sys.path.append("../../../")
 
 import unittest
-import metrics.lib.viewability.domain_viewability as domain_viewability
+import metrics.lib.viewability.domain as domain
 from link import lnk
 CSV_OBJ = """,domain,loaded,spent,type,visible,served
 0,123freevectors.com,1,0.00317,bigstock_online_graphic&themes,0,2
@@ -20,7 +20,7 @@ class ViewabilityDomainAPITestCase(unittest.TestCase):
     """
 
     def setUp(self):
-        self.va = domain_viewability.DomainAPI(mock.MagicMock())
+        self.va = domain.DomainAPI(mock.MagicMock(),mock.MagicMock())
 
     def test_pull_campaigns_success(self):
         MOCKED_JSON_RESPONSE = {"response":{"line-item":{"campaigns":[{"id":1}]}}}
@@ -37,8 +37,8 @@ class ViewabilityDomainAPITestCase(unittest.TestCase):
 
     def test_pull_viewability_df(self):
 
-        with mock.patch.object(domain_viewability.DomainAPI,"pull_viewability_csv",return_value=CSV_OBJ):
-            columns = self.va.get_viewability_df().columns
+        with mock.patch.object(domain.DomainAPI,"pull_viewability_csv",return_value=CSV_OBJ):
+            columns = self.va.get_viewability_df("baublebar_womens_interest").columns
             self.assertEqual(list(columns),['domain', 'loaded', 'spent', 'type', 'visible', 'served'])
      
  
@@ -54,22 +54,23 @@ class ViewabilityDomainAnalysisTestCase(unittest.TestCase):
             "blacklist_threshold":1,
             "whitelist_threshold":0,
             "loaded_threshold": 0,
-            "learn_size": 1
+            "learn_size": 1,
+            "domain_list_id": "baublebar_womens_interest"
         }
-        self.va = domain_viewability.DomainAnalysis(mock.MagicMock(),**CONFIG)
+        self.va = domain.DomainAnalysis(mock.MagicMock(),mock.MagicMock(),**CONFIG)
 
     def test_get_viewability_report(self):
-        with mock.patch.object(domain_viewability.DomainAPI,"pull_viewability_csv",return_value=CSV_OBJ): 
+        with mock.patch.object(domain.DomainAPI,"pull_viewability_csv",return_value=CSV_OBJ): 
             df = self.va.get_viewability_report()
             self.assertEqual(list(df.columns),['served', 'visible', 'loaded', 'percent_visible', 'percent_loaded'])
 
     def test_get_viewability_report(self):
-        with mock.patch.object(domain_viewability.DomainAPI,"pull_viewability_csv",return_value=CSV_OBJ): 
+        with mock.patch.object(domain.DomainAPI,"pull_viewability_csv",return_value=CSV_OBJ): 
             df = self.va.get_whitelist()
             self.assertEqual(list(df.columns),['served', 'visible', 'loaded', 'percent_visible', 'percent_loaded'])
 
     def test_get_viewability_report(self):
-        with mock.patch.object(domain_viewability.DomainAPI,"pull_viewability_csv",return_value=CSV_OBJ): 
+        with mock.patch.object(domain.DomainAPI,"pull_viewability_csv",return_value=CSV_OBJ): 
             df = self.va.get_blacklist()
             self.assertEqual(list(df.columns),['served', 'visible', 'loaded', 'percent_visible', 'percent_loaded'])
 
