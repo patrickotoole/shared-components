@@ -93,7 +93,7 @@ class Intraweek:
     @property_checker_onearg
     def get_historical_charge(self, advertiser_id):
       # TODO - need to ensure that the current_week is excluded
-      budget_info = my_db.select_dataframe('select sum(media_cost*cpm_multiplier) as charged_client from v3_reporting where external_advertiser_id=(%d) and active=1 and deleted=0;' % advertiser_id)
+      budget_info = my_db.select_dataframe('select sum(media_cost*cpm_multiplier) as charged_client from reporting.v4_reporting where external_advertiser_id=(%d) and active=1 and deleted=0;' % advertiser_id)
       return budget_info[0][0]
 
     # get money used so far
@@ -266,7 +266,7 @@ class Intraweek:
         return self.df_full
 
     def pull_charges(self, num_advertiser):
-        df_charges = self.my_db.select_dataframe('select yearweek(date_add(date,interval -4 hour)) as wk_no,sum(imps) as Impressions,sum(clicks) as Clicks,sum(media_cost) as Media_Cost,sum(media_cost*cpm_multiplier) as Charged_Client,cpm_multiplier from v3_reporting where external_advertiser_id =(%d) and active=1 and deleted=0 group by 1 order by 1 asc;' % num_advertiser)
+        df_charges = self.my_db.select_dataframe('select yearweek(date_add(date,interval -4 hour)) as wk_no,sum(imps) as Impressions,sum(clicks) as Clicks,sum(media_cost) as Media_Cost,sum(media_cost*cpm_multiplier) as Charged_Client,cpm_multiplier from reporting.v4_reporting where external_advertiser_id =(%d) and active=1 and deleted=0 group by 1 order by 1 asc;' % num_advertiser)
         df_charges = df_charges.set_index('wk_no')
 
         return df_charges
@@ -470,7 +470,7 @@ def get_table(advertiser_id, target_cpa):
 
   ## PULL SCRIPT
 
-  df_charges = my_db.select_dataframe('select yearweek(date_add(date,interval -4 hour)) as wk_no,sum(imps) as Impressions,sum(clicks) as Clicks,sum(media_cost) as Media_Cost,sum(media_cost*cpm_multiplier) as Charged_Client,cpm_multiplier from v3_reporting where external_advertiser_id =(%d) and active=1 and deleted=0 group by 1 order by 1 asc;' % num_advertiser)
+  df_charges = my_db.select_dataframe('select yearweek(date_add(date,interval -4 hour)) as wk_no,sum(imps) as Impressions,sum(clicks) as Clicks,sum(media_cost) as Media_Cost,sum(media_cost*cpm_multiplier) as Charged_Client,cpm_multiplier from reporting.v4_reporting where external_advertiser_id =(%d) and active=1 and deleted=0 group by 1 order by 1 asc;' % num_advertiser)
   if (len(df_charges) == 0): # this advertiser doesn't exist
     return pd.DataFrame(['advertiser not found in DB'])
 
@@ -630,7 +630,7 @@ def get_current_clientcharge(advertiser_id):
 @property_checker_onearg
 def get_historical_charge(advertiser_id):
   # TODO - need to ensure that the current_week is excluded
-  budget_info = my_db.select_dataframe('select sum(media_cost*cpm_multiplier) as charged_client from v3_reporting where external_advertiser_id=(%d) and active=1 and deleted=0;' % advertiser_id)
+  budget_info = my_db.select_dataframe('select sum(media_cost*cpm_multiplier) as charged_client from reporting.v4_reporting where external_advertiser_id=(%d) and active=1 and deleted=0;' % advertiser_id)
   return budget_info[0][0]
 
 # get money used so far

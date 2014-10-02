@@ -28,7 +28,7 @@ def get_table(advertiser_id, target_cpa):
 
   # fetch cost dataframe (imps, clicks, cost)
   # commented out yearweek()
-  df_charges = my_db.select_dataframe('select yearweek(date_add(date,interval -4 hour)) as wk_no,sum(imps) as Impressions,sum(clicks) as Clicks,sum(media_cost) as Media_Cost,sum(media_cost*cpm_multiplier) as Charged_Client,cpm_multiplier from v3_reporting where external_advertiser_id =(%d) and active=1 and deleted=0 group by 1 order by 1 asc;' % num_advertiser)
+  df_charges = my_db.select_dataframe('select yearweek(date_add(date,interval -4 hour)) as wk_no,sum(imps) as Impressions,sum(clicks) as Clicks,sum(media_cost) as Media_Cost,sum(media_cost*cpm_multiplier) as Charged_Client,cpm_multiplier from reporting.v4_reporting where external_advertiser_id =(%d) and active=1 and deleted=0 group by 1 order by 1 asc;' % num_advertiser)
   df_charges = df_charges.set_index('wk_no')
 
   # fill in 'charged_client' historical values if cpm_multiplier was null
@@ -40,7 +40,7 @@ def get_table(advertiser_id, target_cpa):
       df_charges['charged_client'][df_charges.index[week_idx]] = df_charges['media_cost'][df_charges.index[week_idx]]
 
   # fetch conversion dataframe (pixel_ids with num_conversions)
-  df_conversions = my_db.select_dataframe('select yearweek(date_add(conversion_time,interval -4 hour)) as wk_no,pixel_id,sum(case when is_valid=1 then 1 else 0 end) as num_conversions from conversion_reporting where external_advertiser_id =(%d) and active=1 and deleted=0 group by 1,2 order by 1 asc;' % num_advertiser )
+  df_conversions = my_db.select_dataframe('select yearweek(date_add(conversion_time,interval -4 hour)) as wk_no,pixel_id,sum(case when is_valid=1 then 1 else 0 end) as num_conversions from reporting.v2_conversion_reporting where external_advertiser_id =(%d) and active=1 and deleted=0 group by 1,2 order by 1 asc;' % num_advertiser )
 
   # make a list of dataframes/weights containing corresponding to each distinct pixel_id (Signup and Purchase)
   dfs_convs = []
@@ -171,7 +171,7 @@ def get_current_clientcharge(advertiser_id):
 
 def get_historical_charge(advertiser_id):
   # TODO - need to ensure that the current_week is excluded
-  budget_info = my_db.select_dataframe('select sum(media_cost*cpm_multiplier) as charged_client from v3_reporting where external_advertiser_id=(%d) and active=1 and deleted=0;' % advertiser_id)
+  budget_info = my_db.select_dataframe('select sum(media_cost*cpm_multiplier) as charged_client from reporting.v4_reporting where external_advertiser_id=(%d) and active=1 and deleted=0;' % advertiser_id)
   return budget_info[0][0]
 
 # get money used so far

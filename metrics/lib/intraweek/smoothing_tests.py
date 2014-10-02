@@ -14,7 +14,7 @@ class SmoothCharges:
       self.my_db = db_wrapper
 
     def pull_daily_charges(self, num_advertiser):
-        df_charges = self.my_db.select_dataframe('select date(date_add(date,interval -4 hour)) as date,sum(imps) as Impressions,sum(clicks) as Clicks,sum(media_cost) as Media_Cost,sum(media_cost*cpm_multiplier) as Charged_Client,cpm_multiplier from v3_reporting where external_advertiser_id =(%d) and active=1 and deleted=0 group by 1 order by 1 asc;' % num_advertiser)
+        df_charges = self.my_db.select_dataframe('select date(date_add(date,interval -4 hour)) as date,sum(imps) as Impressions,sum(clicks) as Clicks,sum(media_cost) as Media_Cost,sum(media_cost*cpm_multiplier) as Charged_Client,cpm_multiplier from reporting.v4_reporting where external_advertiser_id =(%d) and active=1 and deleted=0 group by 1 order by 1 asc;' % num_advertiser)
         df_charges = df_charges.set_index('date')
 
         return df_charges

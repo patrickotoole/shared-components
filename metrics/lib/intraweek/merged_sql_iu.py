@@ -330,17 +330,17 @@ class Intraweek:
         return self.df_full
 
     def pull_charges(self, num_advertiser):
-        # df_charges = self.my_db.select_dataframe('select yearweek(date_add(date,interval -4 hour)) as wk_no,sum(imps) as Impressions,sum(clicks) as Clicks,sum(media_cost) as Media_Cost,sum(media_cost*cpm_multiplier) as Charged_Client,cpm_multiplier from v3_reporting where external_advertiser_id =(%d) and active=1 and deleted=0 group by 1 order by 1 asc;' % num_advertiser)
+        # df_charges = self.my_db.select_dataframe('select yearweek(date_add(date,interval -4 hour)) as wk_no,sum(imps) as Impressions,sum(clicks) as Clicks,sum(media_cost) as Media_Cost,sum(media_cost*cpm_multiplier) as Charged_Client,cpm_multiplier from reporting.v4_reporting where external_advertiser_id =(%d) and active=1 and deleted=0 group by 1 order by 1 asc;' % num_advertiser)
 
         format = r'%X%V%W'
         if not hasattr(self, 'charges'):
-            self.charges =  self.my_db.select_dataframe("select STR_TO_DATE(CONCAT(yearweek(date_add(date,interval -4 hour)),'Sunday'), '%X%V%W') as wk_no,external_advertiser_id,sum(imps) as Impressions,sum(clicks) as Clicks,sum(media_cost) as Media_Cost,sum(media_cost*cpm_multiplier) as Charged_Client,cpm_multiplier from v3_reporting where active=1 and deleted=0 group by 1,2 order by 1 asc;")
+            self.charges =  self.my_db.select_dataframe("select STR_TO_DATE(CONCAT(yearweek(date_add(date,interval -4 hour)),'Sunday'), '%X%V%W') as wk_no,external_advertiser_id,sum(imps) as Impressions,sum(clicks) as Clicks,sum(media_cost) as Media_Cost,sum(media_cost*cpm_multiplier) as Charged_Client,cpm_multiplier from reporting.v4_reporting where active=1 and deleted=0 group by 1,2 order by 1 asc;")
             self.charges = self.charges.set_index('wk_no')
 
         df_charges = self.charges[self.charges['external_advertiser_id'] == num_advertiser]
 
-        #df_charges = self.my_db.select_dataframe("select STR_TO_DATE(CONCAT(yearweek(date_add(date,interval -4 hour)),'Sunday'), '%s') as wk_no,sum(imps) as Impressions,sum(clicks) as Clicks,sum(media_cost) as Media_Cost,sum(media_cost*cpm_multiplier) as Charged_Client,cpm_multiplier from v3_reporting where external_advertiser_id =(%d) and active=1 and deleted=0 group by 1 order by 1 asc;" % (format, num_advertiser))
-        # df_charges = self.my_db.select_dataframe("select STR_TO_DATE(CONCAT(yearweek(date_add(date,interval -4 hour)),'Sunday'), '%s') as wk_no,sum(imps) as Impressions,sum(clicks) as Clicks,sum(media_cost) as Media_Cost,sum(media_cost*cpm_multiplier) as Charged_Client,cpm_multiplier from v3_reporting_advertiser where external_advertiser_id =(%d) group by 1 order by 1 asc;" % (format, num_advertiser))
+        #df_charges = self.my_db.select_dataframe("select STR_TO_DATE(CONCAT(yearweek(date_add(date,interval -4 hour)),'Sunday'), '%s') as wk_no,sum(imps) as Impressions,sum(clicks) as Clicks,sum(media_cost) as Media_Cost,sum(media_cost*cpm_multiplier) as Charged_Client,cpm_multiplier from reporting.v4_reporting where external_advertiser_id =(%d) and active=1 and deleted=0 group by 1 order by 1 asc;" % (format, num_advertiser))
+        # df_charges = self.my_db.select_dataframe("select STR_TO_DATE(CONCAT(yearweek(date_add(date,interval -4 hour)),'Sunday'), '%s') as wk_no,sum(imps) as Impressions,sum(clicks) as Clicks,sum(media_cost) as Media_Cost,sum(media_cost*cpm_multiplier) as Charged_Client,cpm_multiplier from reporting.v4_reporting_advertiser where external_advertiser_id =(%d) group by 1 order by 1 asc;" % (format, num_advertiser))
         # df_charges = df_charges.set_index('wk_no')
 
         return df_charges.drop('external_advertiser_id', axis=1)
@@ -366,8 +366,8 @@ class Intraweek:
 
         format = r'%X%V%W'
         if not hasattr(self, 'conversions'):
-            self.conversions = df_conversions = self.my_db.select_dataframe("select STR_TO_DATE(CONCAT(yearweek(date_add(conversion_time,interval -4 hour)),'Sunday'), '%X%V%W') as wk_no,pixel_id,external_advertiser_id, sum(case when is_valid=1 then 1 else 0 end) as num_conversions from conversion_reporting where active=1 and deleted=0 group by 1,2,3 order by 1 asc;")
-        # df_conversions = self.my_db.select_dataframe("select STR_TO_DATE(CONCAT(yearweek(date_add(conversion_time,interval -4 hour)),'Sunday'), '%s') as wk_no,pixel_id,sum(case when is_valid=1 then 1 else 0 end) as num_conversions from conversion_reporting where external_advertiser_id =(%d) and active=1 and deleted=0 group by 1,2 order by 1 asc;" % (format, num_advertiser) )
+            self.conversions = df_conversions = self.my_db.select_dataframe("select STR_TO_DATE(CONCAT(yearweek(date_add(conversion_time,interval -4 hour)),'Sunday'), '%X%V%W') as wk_no,pixel_id,external_advertiser_id, sum(case when is_valid=1 then 1 else 0 end) as num_conversions from reporting.v2_conversion_reporting where active=1 and deleted=0 group by 1,2,3 order by 1 asc;")
+        # df_conversions = self.my_db.select_dataframe("select STR_TO_DATE(CONCAT(yearweek(date_add(conversion_time,interval -4 hour)),'Sunday'), '%s') as wk_no,pixel_id,sum(case when is_valid=1 then 1 else 0 end) as num_conversions from reporting.v2_conversion_reporting where external_advertiser_id =(%d) and active=1 and deleted=0 group by 1,2 order by 1 asc;" % (format, num_advertiser) )
         # return df_conversions
         return self.conversions[self.conversions['external_advertiser_id'] == num_advertiser].drop('external_advertiser_id', axis=1)
 

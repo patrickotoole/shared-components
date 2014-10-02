@@ -10,7 +10,7 @@ IMPS_QUERY = """
         1 as cpm_multiplier,
         0 as is_valid 
     from 
-        v3_reporting v3
+        reporting.v4_reporting v3
     left join intraweek i
     on v3.external_advertiser_id=i.external_advertiser_id
     where 
@@ -31,7 +31,7 @@ CONVERSION_QUERY = """
         1 as cpm_multiplier,
         count(*) as is_valid
     from 
-        conversion_reporting 
+        reporting.v2_conversion_reporting 
     where 
         active=1 and 
         deleted=0 and 
@@ -80,7 +80,7 @@ FROM (
         date,
         campaign_id
     from
-        v3_reporting v3
+        reporting.v4_reporting v3
     where 
         v3.active=1 and
         v3.deleted=0 and
@@ -96,14 +96,14 @@ FROM (
         conversion_time,
         NULL
     FROM 
-        conversion_reporting 
+        reporting.v2_conversion_reporting 
     WHERE 
         active=1 and 
         deleted=0 and 
         external_advertiser_id= %(advertiser_id)s and 
         is_valid=1 and
-        UNIX_TIMESTAMP(conversion_reporting.conversion_time) >= %(date_min)s and
-        UNIX_TIMESTAMP(conversion_reporting.conversion_time) <= %(date_max)s
+        UNIX_TIMESTAMP(reporting.v2_conversion_reporting.conversion_time) >= %(date_min)s and
+        UNIX_TIMESTAMP(reporting.v2_conversion_reporting.conversion_time) <= %(date_max)s
     )
 ) u
 join creative c
@@ -123,7 +123,7 @@ SELECT
     order_id as "converter_data",
     round(time_to_sec(timediff(conversion_time,imp_time))/60/60/24,1) as 'conversion_window_days', 
     round(time_to_sec(timediff(conversion_time,imp_time))/60/60,1) as 'conversion_window_hours' 
-FROM conversion_reporting cr 
+FROM reporting.v2_conversion_reporting cr 
 LEFT JOIN advertiser_pixel ap 
 ON cr.pixel_id=ap.pixel_id 
 WHERE 
