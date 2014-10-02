@@ -17,6 +17,18 @@ class DomainAPI(object):
         logging.info("AppNexus API campaigns received: %s" % campaign_id_list)
         return campaign_id_list
 
+    def update_domain_list(self,domain_list_id,domains):
+        response = self.api.get("/domain-list?id=%s" % domain_list_id)
+        existing_domains = response.json["response"]["domain-list"]["domains"]
+
+        domains = list(set(existing_domains + list(domains.index)))
+        logging.info("Modifying domain list %s: %s %s" % 
+            (domain_list_id,len(existing_domains),len(domains))
+        )
+
+        obj = {"domain-list":{"domains":domains}}
+        #put_response = self.api.put("/domain-list?id=%s" % domain_list_id, ujson.dumps(obj))
+
     def pull_viewability_csv(self,duration="past_month"):
         # use the API and pull the CSV
         import requests
@@ -24,7 +36,7 @@ class DomainAPI(object):
         
         campaign_string = ",".join(map(str,campaign_ids))
         compiled_url = URL % (duration,campaign_string)
-        logging.info("Rockerbox API csv request: %s" % compiled_url) 
+        logging.info("Rockerbox API csv request for (%s): %s" % (duration,campaign_string)) 
 
         rq = requests.get(compiled_url)
         logging.info("Rockerbox API csv lines received: %s" % rq.text.count("\n"))  
@@ -49,6 +61,7 @@ class DomainAnalysis(DomainAPI):
 
         self._whitelist = None
         self._blacklist = None
+        self._greylist = None
         self._viewability_report = None
         self._campaign_ids = None 
 
@@ -103,10 +116,23 @@ class DomainAnalysis(DomainAPI):
         if self._blacklist is None:
             self._blacklist = self.get_blacklist()
         return self._blacklist
+
+    @property
+    def greylist(self):
+        if self._greylist is None:
+            self._greylist = self.get_greylist()
+        return self._greylist
     
     def get_viewability_report(self):
         df = self.get_viewability_df()
         return self.calc_percent_visible(df)
+
+    def get_greylist(self):
+        black_domains = list(self.blacklist.index)
+        white_domains = list(self.whitelist.index)
+        combined = black_domains + white_domains
+        grey_domains = [i for i in self.viewability_report.index if i not in combined]
+        return self.viewability_report.ix[grey_domains]
 
     def get_whitelist(self):
         return self.compute_whitelist(
@@ -124,6 +150,13 @@ class DomainAnalysis(DomainAPI):
             self.learn_size
         )
 
+    def push_whitelist(self):
+        whitelist = self.whitelist
+        self.update_domain_list(self.white_list_id, whitelist)
+
+    def push_blacklist(self):
+        blacklist = self.blacklist
+        self.update_domain_list(self.black_list_id,blacklist) 
 
 def main():
     from lib.report.utils.loggingutils import basicConfig 
@@ -132,10 +165,11 @@ def main():
     dlv = lnk.dbs.mysql.select_dataframe("select * from domain_list_viewability")
     api = lnk.api.console
 
-    obj = dlv.iloc[0].to_dict()
-    va = DomainAnalysis(api,**obj)
-    print va.whitelist
-    print va.blacklist
+    for obj in dlv.iterrows():
+        va = DomainAnalysis(api,**obj[1].to_dict())
+        va.push_whitelist()
+        va.push_blacklist()
+        print va.greylist[va.greylist.served > 500].sort_index(by="served")
 
 if __name__ == "__main__":
     main()
