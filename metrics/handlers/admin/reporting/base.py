@@ -90,7 +90,9 @@ class AdminReportingBaseHandler(tornado.web.RequestHandler,AdminReportingBase):
         if date == "past_week":
             _until = datetime.now().strftime("%y-%m-%d")
             _from = (datetime.now() - timedelta(7)).strftime("%y-%m-%d")
-            
+        elif date == "past_month":
+            _until = datetime.now().strftime("%y-%m-%d")
+            _from = (datetime.now() - timedelta(30)).strftime("%y-%m-%d")
         else:
             _from = self.get_argument("start_date",date)
             _until = self.get_argument("end_date",date)

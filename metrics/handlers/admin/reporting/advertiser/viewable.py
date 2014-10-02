@@ -53,10 +53,26 @@ OPTIONS = {
             "fields" : ["served","loaded","visible","spent"],
             "formatters" : {
                 "campaign":"none",
-                "spent": "cpm"
-            }
+                "spent": "cpm",
+                "venue": "none",
+                "tag": "none"
+            },
+            "joins" : JOIN["type"] 
         }
-    }
+    },
+    "none": {
+        "meta": {
+            "groups" : [],
+            "fields" : ["served","loaded","visible","spent"],
+            "formatters" : {
+                "campaign":"none",
+                "spent": "cpm",
+                "venue": "none",
+                "tag": "none"
+            },
+            "joins" : JOIN["type"] 
+        }
+    } 
 }
 
 # s/\(.\{-}\) .*/    "\1":"\1",/g
