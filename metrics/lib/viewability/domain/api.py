@@ -2,7 +2,7 @@ import requests
 import ujson
 import logging
 
-RB_API_BASE = "http://portal.getrockerbox.com:8080/admin/advertiser/viewable/reporting"
+RB_API_BASE = "http://portal.getrockerbox.com/admin/advertiser/viewable/reporting"
 URL = RB_API_BASE + "?meta=domain_list&include=date,campaign&type=%s&date=%s&format=csv&campaign=%s" 
 
 LOGGING_SQL = "INSERT INTO domain_list_change_ref %(fields)s VALUES %(values)s"
