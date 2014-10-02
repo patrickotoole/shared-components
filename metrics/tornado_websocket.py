@@ -44,6 +44,7 @@ define("view_port", default=1235, help="run on the given port", type=int)
 
 
 db = lnk.dbs.rockerbox
+reporting_db = lnk.dbs.reporting
 api = lnk.api.console
 bidder = lnk.api.bidder
 hive = h.Hive().hive
@@ -145,8 +146,8 @@ admin_reporting = [
     (r'/admin/intraweek.*',admin.scripts.IntraWeekHandler, dict(db=db)),
     (r'/admin/report/(.*?)/.*', AdminReportHandler),
     (r'/admin/reportinglog/(.*?)', ReportingLogHandler),
-    (r'/admin/event_log',admin.scripts.EventLogHandler, dict(db=db,api=api)),
-    (r'/admin/event_log/(.*?)',admin.scripts.EventLogHandler, dict(db=db,api=api)),
+    (r'/admin/event_log',admin.scripts.EventLogHandler, dict(db=reporting_db,api=api)),
+    (r'/admin/event_log/(.*?)',admin.scripts.EventLogHandler, dict(db=reporting_db,api=api)),
     
     (r'/admin/segment/reporting/?',admin.reporting.SegmentReportingHandler, dict(hive=hive)),   
     (r'/admin/segment/scrubbed/?',admin.scripts.ProfileHandler, dict(bidder=bidder)),  
