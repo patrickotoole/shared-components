@@ -24,11 +24,11 @@ u'conversion_type',
 u'converter_data',
 ]
 
-CREATE_CONVERSION = "create table test.conversion_reporting like appnexus_reporting.conversion_reporting;"
-CREATE_PIXEL = "create table test.advertiser_pixel like appnexus_reporting.advertiser_pixel;"
+CREATE_CONVERSION = "create table test.conversion_reporting like reporting.v2_conversion_reporting;"
+CREATE_PIXEL = "create table test.advertiser_pixel like rockerbox.advertiser_pixel;"
 
-INSERT_CONVERSION = "insert into test.conversion_reporting select * from appnexus_reporting.conversion_reporting where creative_id = %s limit 10;" % CREATIVE_ID
-INSERT_PIXEL = "INSERT INTO test.advertiser_pixel select * from appnexus_reporting.advertiser_pixel where external_advertiser_id = %s" % ADVERTISER_ID
+INSERT_CONVERSION = "insert into test.conversion_reporting select * from reporting.v2_conversion_reporting where creative_id = %s limit 10;" % CREATIVE_ID
+INSERT_PIXEL = "INSERT INTO test.advertiser_pixel select * from rockerbox.advertiser_pixel where external_advertiser_id = %s" % ADVERTISER_ID
 
 DROP_CONVERSION = "drop table test.conversion_reporting;"
 DROP_PIXEL = "drop table test.advertiser_pixel;" 

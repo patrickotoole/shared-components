@@ -102,8 +102,9 @@ class IntraWeekView(IntraWeekTable):
 
         start_io = budget_tuple[0] - budget_tuple[1]
         self.current_start_date = self.get_actual_start_date(advertiser_id, start_io)
+        import ipdb; ipdb.set_trace()
         if self.current_start_date == -1:
-          self.current_start_date = self.get_current_start_date(advertiser_id)
+          self.current_start_date = self.get_current_start_date(self.dates,advertiser_id)
 
     def set_dollars_per_day(self):
         # assign dollars_per_day spent, as long as days_into_campaign is valid

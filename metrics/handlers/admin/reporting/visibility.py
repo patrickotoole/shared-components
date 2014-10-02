@@ -14,7 +14,7 @@ from twisted.internet import defer
 from lib.helpers import *
 from lib.hive.helpers import run_hive_session_deferred
 
-API_QUERY = "select * from appnexus_reporting.%s where %s "
+API_QUERY = "select * from %s where %s "
 QUERY = "select {}, sum(num_served) as num_served, sum(num_loaded) as num_loaded, sum(num_visible) as num_visible from agg_visibility where {} group by {}"
 
 class ViewabilityBase():

@@ -7,7 +7,7 @@ import StringIO
 from urlparse import urlparse
 from twisted.internet import defer, threads
 
-API_QUERY = "select * from appnexus_reporting.%s where %s "
+API_QUERY = "select * from %s where %s "
 
 
 @contextlib.contextmanager

@@ -25,7 +25,7 @@ u'conversion_type',
 u'converter_data',
 ]
 
-CREATE_DASH = "create table test.daily_dash like appnexus_reporting.daily_dash;"
+CREATE_DASH = "create table test.daily_dash like reporting.daily_dash;"
 INSERT_DASH = """
 INSERT INTO test.daily_dash 
     (

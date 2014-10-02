@@ -3,7 +3,7 @@ import ujson
 import pandas
 import StringIO
 
-API_QUERY = "select * from appnexus_reporting.%s where %s "
+API_QUERY = "select * from %s where %s "
 
 
 class MoneyHandler(tornado.web.RequestHandler):

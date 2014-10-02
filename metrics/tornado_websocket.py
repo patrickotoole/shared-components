@@ -43,7 +43,7 @@ define("listen_port", default=1234, help="run on the given port", type=int)
 define("view_port", default=1235, help="run on the given port", type=int)
 
 
-db = lnk.dbs.mysql
+db = lnk.dbs.rockerbox
 api = lnk.api.console
 bidder = lnk.api.bidder
 hive = h.Hive().hive

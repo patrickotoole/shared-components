@@ -8,7 +8,7 @@ from base import BaseHandler
 
 from lib.helpers import *  
 
-API_QUERY = "select * from appnexus_reporting.advertiser where %s "
+API_QUERY = "select * from advertiser where %s "
 
 INCLUDES = {
     "pixels":"advertiser_pixel",

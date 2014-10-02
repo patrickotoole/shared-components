@@ -25,7 +25,7 @@ SEGMENT_DESCRIPTIONS = {
 }
 
 
-API_QUERY = "select * from appnexus_reporting.advertiser where %s "
+API_QUERY = "select * from advertiser where %s "
 
 INCLUDES = {
     "pixels":"advertiser_pixel",
@@ -36,7 +36,7 @@ INCLUDES = {
 }
  
 INSERT_ADVERTISER = """
-INSERT INTO appnexus_reporting.advertiser (
+INSERT INTO advertiser (
     contact_name, 
     external_advertiser_id, 
     email,
@@ -53,7 +53,7 @@ VALUES (
 """
 
 INSERT_PIXEL = """
-INSERT INTO appnexus_reporting.advertiser_pixel (
+INSERT INTO advertiser_pixel (
     external_advertiser_id, 
     pixel_id,
     pixel_display_name,
@@ -72,7 +72,7 @@ VALUES (
 """
 
 INSERT_SEGMENT = """
-INSERT INTO appnexus_reporting.advertiser_segment (
+INSERT INTO advertiser_segment (
     external_advertiser_id,
     external_member_id,
     external_segment_id,

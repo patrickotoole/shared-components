@@ -17,13 +17,13 @@ ADVERTISER_ID = "306383"
 CREATIVE_ID = "14889899"
 EXPECTED_KEYS = [u'imps', u'last_served', u'associated_campaigns', u'url', u'creative_id', u'conversions', u'first_served', u'clicks', u'width', u'height']
 
-CREATE_REPORTING = "create table test.v3_reporting like appnexus_reporting.v3_reporting;"
-CREATE_CONVERSION = "create table test.conversion_reporting like appnexus_reporting.conversion_reporting;"
-CREATE_ATTRIBUTE = "create table test.creative like appnexus_reporting.creative;" 
+CREATE_REPORTING = "create table test.v3_reporting like reporting.v4_reporting;"
+CREATE_CONVERSION = "create table test.conversion_reporting like reporting.v2_conversion_reporting;"
+CREATE_ATTRIBUTE = "create table test.creative like rockerbox.creative;" 
 
-INSERT_REPORTING = "insert into test.v3_reporting select * from appnexus_reporting.v3_reporting where external_advertiser_id = %s limit 10;" % ADVERTISER_ID
-INSERT_CONVERSION = "insert into test.conversion_reporting select * from appnexus_reporting.conversion_reporting where creative_id = %s limit 10;" % CREATIVE_ID
-INSERT_ATTRIBUTE = "insert into test.creative select * from appnexus_reporting.creative where external_id = %s limit 10;" % CREATIVE_ID 
+INSERT_REPORTING = "insert into test.v3_reporting select * from reporting.v4_reporting where external_advertiser_id = %s limit 10;" % ADVERTISER_ID
+INSERT_CONVERSION = "insert into test.conversion_reporting select * from reporting.v2_conversion_reporting where creative_id = %s limit 10;" % CREATIVE_ID
+INSERT_ATTRIBUTE = "insert into test.creative select * from rockerbox.creative where external_id = %s limit 10;" % CREATIVE_ID 
 
 DROP_REPORTING = "drop table test.conversion_reporting;" 
 DROP_CONVERSION = "drop table test.v3_reporting;"

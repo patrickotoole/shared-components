@@ -5,7 +5,7 @@ RECENT_SPEND = """
         date(date) as wk_no,
         external_advertiser_id,
         sum(media_cost) as Media_Cost
-    from v3_reporting 
+    from reporting.v4_reporting 
     where 
         date(date_add(date,interval -4 hour)) = subdate(current_date,1) 
         and deleted = 0 and active = 1 
@@ -14,7 +14,7 @@ RECENT_SPEND = """
 UNKNOWN_INTRAWEEK_ADVERTISERS = """
     select 
         external_advertiser_id 
-    from v3_reporting 
+    from reporting.v4_reporting 
     where 
         cpm_multiplier is null 
         and date > STR_TO_DATE(CONCAT(yearweek(date_add(date,interval -4 hour)),'Sunday'), '%X%V%W') 
@@ -37,7 +37,7 @@ DAILY_SPEND = """
          external_advertiser_id,
          sum(media_cost) as Media_Cost,
          sum(media_cost * cpm_multiplier) as charged_client
-    from v3_reporting
+    from reporting.v4_reporting
     where
          active=1 and deleted=0     
     group by 1,2 order by 1 asc;
@@ -61,7 +61,7 @@ CONVERSIONS = """
     select 
         STR_TO_DATE(CONCAT(yearweek(date_add(conversion_time,interval -4 hour)),'Sunday'), '%X%V%W') as wk_no,pixel_id,
         external_advertiser_id, sum(case when is_valid=1 then 1 else 0 end) as num_conversions 
-    from conversion_reporting 
+    from reporting.v2_conversion_reporting 
     where 
         active=1 and deleted=0 
         and is_valid=1 
@@ -75,7 +75,7 @@ CHARGES = """
         sum(media_cost) as Media_Cost,
         sum(media_cost*cpm_multiplier) as Charged_Client,
         cpm_multiplier,
-    from v3_reporting 
+    from reporting.v4_reporting 
     where 
         active=1 and deleted=0 
     group by 1,2 order by 1 asc;
@@ -91,7 +91,7 @@ NEW_CHARGES = """
         sum(media_cost*cpm_multiplier) as Charged_Client,
         cpm_multiplier,
         sum(if(cpm_multiplier is null, 1, 0)) as cpm_multiplier_count
-    from v3_reporting
+    from reporting.v4_reporting
     where
         active=1 and deleted=0
     group by 1,2 order by 1 asc;

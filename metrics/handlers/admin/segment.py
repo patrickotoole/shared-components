@@ -7,7 +7,7 @@ from twisted.internet import defer
 
 from lib.helpers import * 
 
-API_QUERY = "select * from appnexus_reporting.advertiser where %s "
+API_QUERY = "select * from advertiser where %s "
 QUERY = "UPDATE advertiser_segment set segment_implemented = '%(segment_implemented)s' where id = %(id)s"
 
 INCLUDES = {
