@@ -1,10 +1,10 @@
 import tornado.web
 import ujson
 from lib.helpers import Convert
-UNFINISHED = """ SELECT * from data_integrity_log where row_count != agg_count """
-SELECT = "SELECT * from data_integrity_log where %s"
-INSERT = "insert into data_integrity_log (`table_name`,`agg_name`, `partition`, `row_count`, `agg_count`, `result`) values ('%(table_name)s','%(agg_name)s','%(partition)s','%(row_count)s','%(agg_count)s','%(result)s')"
-UPDATE = "update data_integrity_log set `table_name` = '%(table_name)s',`agg_name` = '%(agg_name)s', `partition` = '%(partition)s', `row_count` = '%(row_count)s', `agg_count` = '%(agg_count)s', `result` = '%(result)s', `deleted` = '%(deleted)s' where id = '%(id)s'"
+UNFINISHED = """ SELECT * from reporting.data_integrity_log where row_count != agg_count """
+SELECT = "SELECT * from reporting.data_integrity_log where %s"
+INSERT = "insert into reporting.data_integrity_log (`table_name`,`agg_name`, `partition`, `row_count`, `agg_count`, `result`) values ('%(table_name)s','%(agg_name)s','%(partition)s','%(row_count)s','%(agg_count)s','%(result)s')"
+UPDATE = "update reporting.data_integrity_log set `table_name` = '%(table_name)s',`agg_name` = '%(agg_name)s', `partition` = '%(partition)s', `row_count` = '%(row_count)s', `agg_count` = '%(agg_count)s', `result` = '%(result)s', `deleted` = '%(deleted)s' where id = '%(id)s'"
 
 class EventLogHandler(tornado.web.RequestHandler):
     def initialize(self, db, api):
