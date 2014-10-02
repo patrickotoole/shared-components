@@ -159,12 +159,14 @@ def _is_valid(row):
     @return: bool. whether the conversion happened within expire windows.
     """
     pid = int(row['pixel_id'])
-    window_hours = _get_pc_or_pv_hour(int(pid))
-    window_hours = timedelta(window_hours.get('pc') if row['pc'] else
-                             window_hours.get('pv'))
+    def _get_window_hours():
+        window_hours = _get_pc_or_pv_hour(int(pid))
+        return timedelta(hours=(window_hours.get('pc') if row['pc']
+                                else window_hours.get('pv')))
+    window_hours = _get_window_hours()
     conversion_time = parse_datetime(row['conversion_time'])
     imp_time = parse_datetime(row['imp_time'])
-    row['is_valid'] = imp_time + window_hours <= conversion_time
+    row['is_valid'] = imp_time >= conversion_time - window_hours
     return row
 
 def _get_pc_or_pv_hour(pid):
