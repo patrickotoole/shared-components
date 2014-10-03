@@ -2,7 +2,7 @@ import requests
 import ujson
 import logging
 
-RB_API_BASE = "http://portal.getrockerbox.com/admin/advertiser/viewable/reporting"
+RB_API_BASE = "http://rockerbox:rockerbox@portal.getrockerbox.com/admin/advertiser/viewable/reporting"
 URL = RB_API_BASE + "?meta=domain_list&include=date,campaign&type=%s&date=%s&format=csv&campaign=%s" 
 
 LOGGING_SQL = "INSERT INTO domain_list_change_ref %(fields)s VALUES %(values)s"
@@ -68,7 +68,6 @@ class DomainAPI(object):
         campaign_string = ",".join(map(str,campaign_ids))
         compiled_url = URL % (domain_list,duration,campaign_string)
         logging.info("Rockerbox API csv request for %s (%s): %s" % (domain_list,duration,campaign_string)) 
-
         rq = requests.get(compiled_url)
         logging.info("Rockerbox API csv lines received: %s" % rq.text.count("\n"))  
 
