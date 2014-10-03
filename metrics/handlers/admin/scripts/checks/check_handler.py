@@ -1,10 +1,5 @@
 import tornado.web
-import ujson
-import pandas
-import StringIO
-
 from lib.helpers import *
-from relation import CampaignRelation
 
 class CampaignChecksHandler(tornado.web.RequestHandler):
     
@@ -55,33 +50,4 @@ class CampaignChecksHandler(tornado.web.RequestHandler):
             data = self.get_all()
             self.get_content(data)
                 
-
-
-class CampaignRelationsHandler(CampaignRelation,tornado.web.RequestHandler):
-    
-    def post(self,arg=None):
-        _json = ujson.loads(self.request.body)
-        campaign_id = _json.get("campaign_id",False)
-        fixture_id = _json.get("fixture_id",False)
-        suite_id = _json.get("suite_id",False)
-
-        if campaign_id:
-            if fixture_id:
-                self.add_campaign_fixture(campaign_id,fixture_id)
-                self.write("success")
-            elif suite_id:
-                self.add_campaign_suite(campaign_id,suite_id)
-                self.write("success") 
-
-    def delete(self,arg=None):
-        campaign_id = self.get_argument("campaign_id",False)
-        fixture_id = self.get_argument("fixture_id",False)
-        suite_id = self.get_argument("suite_id",False) 
-
-        if campaign_id:
-            if fixture_id:
-                self.delete_campaign_fixture(campaign_id,fixture_id)
-                self.write("success")
-            elif suite_id:
-                self.delete_campaign_suite(campaign_id,suite_id)
-                self.write("success")
+ 

@@ -1,4 +1,3 @@
-
 import tornado.ioloop
 import tornado.web
 import tornado.websocket
@@ -102,7 +101,8 @@ admin_scripts = [
     (r'/admin/batch_request/new.*', admin.scripts.BatchRequestFormHandler, dict(db=db, api=api, hive=hive)),
     (r'/admin/batch_requests.*', admin.scripts.BatchRequestsHandler, dict(db=db, api=api, hive=hive)),
     (r'/admin/imps/?', admin.scripts.ImpsHandler, dict(db=db, api=api, hive=hive)),
-    (r'/admin/campaign_checks/?(.*?)/?', admin.scripts.CampaignChecksHandler, dict(db=db)), 
+    (r'/admin/campaign_check/relation/?(.*?)/?', admin.scripts.CampaignRelationsHandler, dict(db=db)),  
+    (r'/admin/campaign_check/?(.*?)/?', admin.scripts.CampaignChecksHandler, dict(db=db)), 
 ]
 
 _streaming = [
