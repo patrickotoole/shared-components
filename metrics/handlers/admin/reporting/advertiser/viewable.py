@@ -104,6 +104,7 @@ FIELDS = {
 WHERE = {
     "advertiser":"advertiser like '%%%(advertiser)s%%'",
     "campaign":"campaign = '%(campaign)s'",
+    "venue":"venue = '%(venue)s'", 
     "domain":"domain like '%%%(domain)s%%'",
     "type":"d.log like '%%%(type)s%%'"
 }
