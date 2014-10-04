@@ -22,7 +22,7 @@ class CampaignRelationsHandler(CampaignRelation,tornado.web.RequestHandler):
         
         def default(self,data):
             _json = Convert.df_to_json(data)
-            self.render("admin/advertiser/index.html",data=_json)  
+            self.render("admin/campaign_checks.html",data=_json)  
 
         yield default, (data,)
 

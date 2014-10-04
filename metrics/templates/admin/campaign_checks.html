@@ -1,133 +1,20 @@
 {% autoescape None %}
 {% extends "../clean_base.html" %}
 {% block content %}
-
+<link rel="stylesheet" type="text/css" href="http://getbootstrap.com/dist/css/bootstrap.min.css">
 <link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/dc.css">
 <link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/chosen.css">
-<style>
-input[type="checkbox"]:disabled + label{
-  color: #ccc;
-}
-
-</style>
-
 <script type="text/javascript" src="http://rockerbox.com/js/d3.js"></script>
-<script type="text/javascript" src="http://rockerbox.com/js/crossfilter.js"></script>
-<script type="text/javascript" src="http://rockerbox.com/js/dc.js"></script>
-<script type="text/javascript" src="http://rockerbox.com/js/colorbrewer.js"></script>
-<script type="text/javascript" src="http://rockerbox.com/js/reporting.js"></script>
-<script type="text/javascript" src="http://rockerbox.com/js/chosen.js"></script>
-<script type="text/javascript" src="/static/js/dataframe_reporting.js"></script> 
+<script type="text/javascript" src="/static/js/advertiser.js"></script> 
 
-<div class='container'>
-
-
-
-<div class="row">
-  <div class="col-sm-9">
-    <form id="report-form" role="form">
-      <div class="new-item"></div>
-    </form>
-    <script>
-      data = {{data}}
-    </script>
+<div id="advertiser-content" class='container'>
+  <div class="row">
+    <h4>Advertisers</h4>
   </div>
 </div>
-<br/>
-<h4 id="results-header">Results</h4>
 
-<table id="data-table-avail" class="table table-hover dc-data-table">
-  <thead>
-    <tr class="data-table-headers"></tr>
-  </thead>
-</table>
-
-</div>
 <script>
-
-var URL = window.location.pathname + window.location.search,
-  META =  window.location.pathname + "/meta" + window.location.search
-
-var addParam = function(u,p) {
-  return u.indexOf("?") >= 0 ? u + "&" + p : u + "?" + p
-}
-
-URL = addParam(URL,"format=json")
-META = addParam(META,"format=json")
-
-
-$.getJSON(META,function(meta){
-
-  d3.select("#results-header")
-    .text("Imps Available for " + 
-      meta['groups'].map(function(f){
-        return f.charAt(0).toUpperCase() + f.slice(1)
-      }).join(", ")
-    )
-
-  $.getJSON(URL,function(data){
-
-    d3.xml("/static/nosetest.xml", "application/xml", function(xml) {
-      var testcases = xml.documentElement.getElementsByTagName("testcase")
-      var entries = d3.entries(testcases)
-      entries = entries.filter(function(x){
-        try {
-          if (x.value.children.length > 0) {
-            var value = x.value,
-              info = x.value.getAttribute("classname"),
-              split_info = info.split("_")
-
-            x.test_name = x.value.getAttribute("name")
-            x.campaign_id = split_info[3]
-            x.advertiser_id = split_info[1]
-            x.failure = x.value.children[0].getAttribute("message")
-            return true
-          }
-        } catch(e) { }
-        return false
-      })
-
-      var mapped_entries = d3.nest()
-        .key(function(x){ return [x.campaign_id,x.test_name]})
-        .map(entries,d3.map)
-
-      data.map(function(x){
-        var str = x.campaign_id +",test_"+ x.profilekey
-        try {
-          x.failures = [mapped_entries.get(str)[0].failure]
-        } catch(e) {
-          x.failures = []
-        }
-      })
-
-      /* data = data.filter(function(x){
-        try {
-          return x.failures.length
-        } catch(e) {
-          return 0
-        }
-      })*/
-
-      var crsWrapped = new groupedDataWrapper(data,meta),
-        tableWrapped = new groupedTableWrapper(crsWrapped,"#data-table-avail")
-
-      tableWrapped.makeHeaders(".data-table-headers")
-      tableWrapped.buildTable()
-      tableWrapped.renderGroupHeaders(data.length > 100)
-      
-      dc.renderAll()
-      window.crsWrapped = crsWrapped
-
-     
-      
-    })
-    
-
-
-  })
-})
-
+  var d = {{data}}
 </script>
-<script src="http://rockerbox.com/js/jquery.serialize-object.js"></script>
 
 {% end %}   
