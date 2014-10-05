@@ -43,6 +43,8 @@ class ReportAPIRequestWrapper(ConsoleAPIRequestWrapper):
         _json = json.loads(_resp)
 
         report_id = _json.get('response',{}).get('report_id',False)
+        if not report_id:
+            raise Exception('No reporting found for %s' % base)
         return report_id
 
        
@@ -57,6 +59,7 @@ class ReportAPIRequestWrapper(ConsoleAPIRequestWrapper):
             return "/%s" % report_url
         elif _tries < MAX_TRIES:
             time.sleep(5*_tries)
+            print report_id, _tries
             return self.check_reporting(report_id,_tries+1)
 
 
