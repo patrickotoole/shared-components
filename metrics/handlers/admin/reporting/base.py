@@ -1,4 +1,4 @@
-import tornado.web
+import tornado.web 
 import logging
 from copy import deepcopy
 
@@ -18,6 +18,7 @@ class AdminReportingBase(object):
     QUERY = ""
     OPTIONS = {}
     WHERE = {}
+    JOINS = {}
 
     def get_meta_group(self,default="default"):
         # pragma: no coverage
@@ -45,6 +46,13 @@ class AdminReportingBase(object):
         # pragma: string sub and remove \n
         q = self.QUERY % params
         return " ".join(q.replace('\n',' ').split())
+
+    def make_joins(self,args):
+        joins = {i:self.JOINS[i] for i,j in args.iteritems() if i in self.JOINS.keys()}
+        return joins
+
+        
+        
 
     def get_meta_data(self,meta_group,additional_dims=False):
         try:
@@ -108,6 +116,13 @@ class AdminReportingBaseHandler(tornado.web.RequestHandler,AdminReportingBase):
             ands += ["(%s)" % "  or ".join(ors)]
 
         return " and ".join(ands)
+
+    def make_join(self):
+        _args = self.request.arguments
+        args = {i:j[0] for i,j in _args.iteritems()}
+        joins = self.make_joins(args)
+
+        return " ".join(joins.values()) % args
 
     def make_where(self):
         where_list = [

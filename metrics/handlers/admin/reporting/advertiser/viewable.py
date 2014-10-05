@@ -12,7 +12,7 @@ import lib.query.helpers as query_helpers
 from ..base import AdminReportingBaseHandler 
 
 JOIN = {
-    "type":"v JOIN domain_list d on d.pattern = v.domain"    
+    "type":"v JOIN (select * from domain_list where log like '%%%(type)s%%') d on d.pattern = v.domain"    
 }
 
 OPTIONS = {
@@ -104,6 +104,7 @@ FIELDS = {
 WHERE = {
     "advertiser":"advertiser like '%%%(advertiser)s%%'",
     "campaign":"campaign = '%(campaign)s'",
+    "venue":"venue = '%(venue)s'", 
     "domain":"domain like '%%%(domain)s%%'",
     "type":"d.log like '%%%(type)s%%'"
 }
@@ -117,6 +118,7 @@ class AdvertiserViewableHandler(AdminReportingBaseHandler):
     WHERE = WHERE
     FIELDS = FIELDS
     GROUPS = GROUPS
+    JOINS = JOIN 
 
     OPTIONS = OPTIONS
  
@@ -234,7 +236,8 @@ class AdvertiserViewableHandler(AdminReportingBaseHandler):
                 meta_data.get("groups",[]),
                 meta_data.get("fields",[]),
                 self.make_where(),
-                joins=meta_data.get("joins","")
+                self.make_join()
+                #joins=meta_data.get("joins","")
             )
 
             self.get_data(

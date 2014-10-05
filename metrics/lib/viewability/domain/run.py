@@ -16,6 +16,7 @@ def main():
         va = DomainAnalysis(api,reporting_db,**obj[1].to_dict())
         va.push_whitelist()
         va.push_blacklist()
+        print va.viewability_report[va.viewability_report.served < 1000].sort_index(by="served",ascending=False).head()
 
 if __name__ == "__main__":
     main()
