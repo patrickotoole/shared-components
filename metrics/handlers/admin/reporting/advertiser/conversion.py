@@ -9,6 +9,11 @@ from lib.hive.helpers import run_hive_session_deferred
 from lib.query.HIVE import CONVERSION_QUERY
 from ..base import AdminReportingBaseHandler
 
+JOIN = {
+    "experiment": "v JOIN experiment_test_ref t on v.first_campaign = t.campaign_id",
+    "bucket": "v JOIN (SELECT bucket_name, campaign_id FROM campaign_bucket_ref WHERE campaign_id IS NOT NULL) t on v.first_campaign = t.campaign_id"
+}
+
 OPTIONS = {
     "default": {
         "meta": {
@@ -23,6 +28,30 @@ OPTIONS = {
                 }
             }
         },
+
+    "experiment" : {
+        "meta": {
+            "groups" : ["experiment", "is_control"],
+            "fields" : ["num_conv"],
+            "joins" : JOIN["experiment"]
+        }
+    },
+
+    "experiment_groups" : {
+        "meta": {
+            "groups" : ["experiment", "group_name", "is_control"],
+            "fields" : ["num_conv"],
+            "joins" : JOIN["experiment"]
+        }
+    },
+
+    "bucket" : {
+        "meta": {
+            "groups" : ["advertiser", "bucket_name", "campaign_id"],
+            "fields" : ["num_conv"],
+            "joins" : JOIN["bucket"]
+        }
+    },
 
     "advertiser": {
         "meta": {
@@ -77,8 +106,11 @@ GROUPS = {
     "order_type": "order_type",
     "since_last_served": "since_last_served",
     "since_first_served": "since_first_served",
-    "attributed_to": "CASE WHEN num_served > 0 THEN 'Rockerbox' ELSE 'Other' END"
+    "attributed_to": "CASE WHEN num_served > 0 THEN 'Rockerbox' ELSE 'Other' END",
+    "bucket": "t.bucket_name",
+    "experiment": "t.experiment_id"
     }
+
 
 FIELDS = {
     "num_conv" : "count(*)",
@@ -93,7 +125,8 @@ WHERE = {
     "segment": "segment = '%(segment)s'",
     "conv_id": "conv_id = '%(conv_id)s'",
     "is_rockerbox": "CASE WHEN lower('%(is_rockerbox)s') = 'true' THEN num_served > 0 ELSE num_served = 0 END",
-    "attributed_to": "CASE WHEN '%(attributed_to)s' LIKE 'Rockerbox' THEN num_served > 0 ELSE num_served < 0 END"
+    "attributed_to": "CASE WHEN '%(attributed_to)s' LIKE 'Rockerbox' THEN num_served > 0 ELSE num_served < 0 END",
+    "experiment": "num_served > 0 AND t.experiment_id = '%(experiment)s'"
     }
 
 class ConversionCheckHandler(AdminReportingBaseHandler):
@@ -162,9 +195,13 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
 
         
     def get_meta_group(self,default="default"):
+        meta = self.get_argument("meta", False)
         advertiser = self.get_argument("advertiser", False)
         segment = self.get_argument("segment", False)
         
+        if meta:
+            return meta
+
         if segment:
             return "segment"
         
@@ -179,6 +216,8 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
         include = self.get_argument("include","").split(",")
         meta_group = self.get_meta_group()
         meta_data = self.get_meta_data(meta_group,include)
+        print meta_data
+        print include
         if meta:
             self.write(ujson.dumps(meta_data))
             self.finish()
@@ -187,8 +226,12 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
             params = self.make_params(
                 meta_data.get("groups",[]),
                 meta_data.get("fields",[]),
-                self.make_where()
+                self.make_where(),
+                joins=meta_data.get("joins","")
             )
+
+            print params
+
             self.get_data(
                 self.make_query(params),
                 meta_data.get("groups",[]),
