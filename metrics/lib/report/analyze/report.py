@@ -184,6 +184,17 @@ def _get_pc_or_pv_hours():
     return { d['pixel_id']: { 'pc': d['pc_window_hours'], 'pv':d['pv_window_hours'] }
             for _, d in df.iterrows() }
 
+@memo
+def get_pixels():
+    """
+    @return: list(dict)
+    """
+    console = get_or_create_console()
+    logging.info("getting pixel ids")
+    res = console.get('/pixel')
+    pixels = res.json.get("response").get("pixels")
+    return pixels
+
 #----------------------------------------------------------------------------
 """
 Other utils helpers
