@@ -159,7 +159,7 @@ class AnalyzeConversions(AnalyzeBase):
 def _filter_advertiser(df):
     adv_df = DB.select_dataframe('select * from advertiser')
     adv_ids = adv_df.external_advertiser_id.unique().tolist()
-    return df[df.advertiser_id.isin(adv_ids)]
+    return df[df.external_advertiser_id.isin(adv_ids)]
 
 def _is_valid(row):
     """
