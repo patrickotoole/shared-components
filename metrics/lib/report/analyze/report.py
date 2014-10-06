@@ -17,16 +17,16 @@ from lib.report.utils.constants import ROUND
 from lib.report.utils.constants import Analyze
 
 from lib.report.utils.constants import (
-        PC_CONVS, PV_CONVS, MEDIA_COST, DAMPING_POINT, WORST,
-        COST_EFFICIENCY, BOOKED_REV, MILLION, CPA_INF, GOOGLE_ADX,
-        POST_CLICK, PC_EXPIRE, PV_EXPIRE, IMPS,
-        )
+    PC_CONVS, PV_CONVS, MEDIA_COST, DAMPING_POINT, WORST,
+    COST_EFFICIENCY, BOOKED_REV, MILLION, CPA_INF, GOOGLE_ADX,
+    POST_CLICK, PC_EXPIRE, PV_EXPIRE, IMPS,
+    DB,
+)
 
 FLOAT_REGEX = re.compile(r'[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?')
 
 "Babaubar (102934)"
 ID_REGEX = re.compile(r'.*?\((\d+)\)')
-DB = lnk.dbs.rockerbox
 
 def get_analyze_obj(name):
     if not name in Analyze:

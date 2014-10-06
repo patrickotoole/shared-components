@@ -1,4 +1,5 @@
 import os
+from link import lnk
 from lib.report.utils.enum import Enum
 
 "media cost under this amount is truncated"
@@ -26,6 +27,8 @@ NO_CONVS = None
 
 TYPE = 'network_analytics'
 CONSOLE = None
+
+DB = lnk.dbs.rockerbox
 
 COST_EFFICIENCY = 'cost_efficiency'
 DOMAIN = 'site_domain'

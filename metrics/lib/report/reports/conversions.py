@@ -22,13 +22,12 @@ Hourly cron script that report/pull conversion data:
     - is_valid
     - notes
 """
-import logging
-
 from collections import defaultdict
 
 from lib.report.reports.base import ReportBase
 from lib.report.analyze.report import get_pixels
 from lib.report.utils.constants import CONVERSIONS_FORM
+from lib.report.utils.constants import DB
 from lib.report.utils.reportutils import empty_frame
 from lib.report.utils.reportutils import concat
 
@@ -67,8 +66,8 @@ class ReportConversions(ReportBase):
         super(ReportConversions, self).__init__(*args, **kwargs)
 
     def _get_advertiser_ids(self):
-        d_ = _advertiser_to_pixels_mapping()
-        return d_.keys()
+        df = DB.select_dataframe('select * from advertiser')
+        return df.external_advertiser_id.unique().tolist()
 
     def _get_pixel_ids(self, advertiser_id):
         d_ = _advertiser_to_pixels_mapping()
