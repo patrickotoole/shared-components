@@ -132,7 +132,11 @@ class TargetingHandler(TargetingBase):
 
     @decorators.formattable
     def get(self,*args,**kwargs):
-        data = self.get_targets()
+        log = self.get_argument("log",False)
+        where = "1=1"
+        if log:
+          where += " and log like '%%%(log)s%%'" % {"log":log}
+        data = self.get_targets(where)
         yield default_renderer, (data,)
 
     def delete(self):

@@ -1,8 +1,10 @@
+import logging
 from api import DomainAPI 
 
 class DomainAnalysis(DomainAPI):
-    def __init__(self,api,db,**obj):
-        self.api = api
+    def __init__(self,api,rb,db,**obj):
+        self.an_api = api
+        self.rb_api = rb
         self.db = db
         self.__dict__.update(**obj)
 
@@ -11,6 +13,7 @@ class DomainAnalysis(DomainAPI):
         self._greylist = None
         self._viewability_report = None
         self._campaign_ids = None 
+        self._domain_list = None
 
     @staticmethod
     def calc_percent_visible(df):
@@ -50,6 +53,7 @@ class DomainAnalysis(DomainAPI):
     def viewability_report(self):
         if self._viewability_report is None:
             self._viewability_report = self.get_viewability_report()
+            logging.info("Have viewability info for %s domains on (%s)" % (len(self._viewability_report),self.domain_list_id))
         return self._viewability_report
 
     @property
@@ -69,6 +73,24 @@ class DomainAnalysis(DomainAPI):
         if self._greylist is None:
             self._greylist = self.get_greylist()
         return self._greylist
+
+    @property
+    def domain_list(self):
+        if self._domain_list is None:
+            self._domain_list = self.get_domain_list(self.domain_list_id)
+        return self._domain_list
+
+    def missing_domains(self):
+        _v = self.viewability_report
+        _d = self.domain_list.set_index("pattern")
+        _j = _d.join(_v) 
+
+        missing = _j[_j.served.isnull()]
+        logging.info("No served info for %s domains on (%s)" % (len(missing),self.domain_list_id))
+
+        return missing
+
+        
     
     def get_viewability_report(self):
         df = self.get_viewability_df(self.domain_list_id)
@@ -79,6 +101,7 @@ class DomainAnalysis(DomainAPI):
         white_domains = list(self.whitelist.index)
         combined = black_domains + white_domains
         grey_domains = [i for i in self.viewability_report.index if i not in combined]
+        logging.info("Collecting more data for %s domains on (%s)" % (len(grey_domains),self.domain_list_id))
         return self.viewability_report.ix[grey_domains]
 
     def get_whitelist(self):
@@ -99,9 +122,11 @@ class DomainAnalysis(DomainAPI):
 
     def push_whitelist(self):
         whitelist = self.whitelist
+        logging.info("Whitelisted %s domains on %s" % (len(whitelist),self.domain_list_id))
         self.update_domain_list(whitelist,self.white_list_id, self.domain_list_id, "approve")
 
     def push_blacklist(self):
         blacklist = self.blacklist
+        logging.info("Blacklisted %s domains on %s" % (len(blacklist),self.domain_list_id)) 
         self.update_domain_list(blacklist,self.black_list_id, self.domain_list_id, "ban") 
  
