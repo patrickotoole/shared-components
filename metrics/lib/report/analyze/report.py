@@ -8,6 +8,7 @@ import logging
 from datetime import timedelta
 
 import pandas as pd
+from link import lnk
 
 from lib.report.utils.utils import parse_datetime
 from lib.report.utils.utils import memo
@@ -25,6 +26,7 @@ FLOAT_REGEX = re.compile(r'[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?')
 
 "Babaubar (102934)"
 ID_REGEX = re.compile(r'.*?\((\d+)\)')
+DB = lnk.dbs.rockerbox
 
 def get_analyze_obj(name):
     if not name in Analyze:
@@ -178,22 +180,9 @@ def _get_pc_or_pv_hours():
     """
     @return: dict(int(pixelid), dict(pc_exp, pv_exp))
     """
-    def _to_hour(mins):
-        return mins / 60.
-    pixels = get_pixels()
-    return dict((int(p.get('id')), dict(pc=_to_hour(p.get(PC_EXPIRE)),
-                                        pv=_to_hour(p.get(PV_EXPIRE)))
-                 ) for p in pixels)
-@memo
-def get_pixels():
-    """
-    @return: list(dict)
-    """
-    console = get_or_create_console()
-    logging.info("getting pixel ids")
-    res = console.get('/pixel')
-    pixels = res.json.get("response").get("pixels")
-    return pixels
+    df = DB.select_dataframe("select * from advertiser_pixel");
+    return { d['pixel_id']: { 'pc': d['pc_window_hours'], 'pv':d['pv_window_hours'] }
+            for _, d in df.iterrows() }
 
 #----------------------------------------------------------------------------
 """
