@@ -12,8 +12,11 @@ import lib.query.helpers as query_helpers
 from ..base import AdminReportingBaseHandler 
 
 JOIN = {
+<<<<<<< HEAD
     "type":"v JOIN (select distinct log as log, pattern as pattern from domain_list where log like '%%%(type)s%%') d on d.pattern = v.domain",
-    "static_type": "v JOIN (select distinct log as log, pattern as pattern from domain_list) d on d.pattern = v.domain"
+    "static_type": "v JOIN (select distinct log as log, pattern as pattern from domain_list) d on d.pattern = v.domain",
+    "experiment":"v JOIN experiment_test_ref t on v.campaign = t.campaign_id",
+    "bucket":"v JOIN (SELECT bucket_name, campaign_id FROM campaign_bucket_ref) t on v.campaign = t.campaign_id"
 }
 
 OPTIONS = {
@@ -48,6 +51,43 @@ OPTIONS = {
             "static_joins" : JOIN["static_type"]
         }
     },
+       
+    "experiment" : {
+        "meta": {
+            "groups" : ["experiment", "is_control"],
+            "fields" : ["served", "loaded", "percent_loaded", "visible", "percent_visible", "spent"],
+            "formatters" :{
+                "campaign":"none",
+                "spent":"cpm"
+            },
+            "joins" : JOIN["experiment"]
+        }
+    },
+
+    "experiment_groups" : {
+        "meta": {
+            "groups" : ["experiment", "group_name", "is_control"],
+            "fields" : ["served", "loaded", "percent_loaded", "visible", "percent_visible", "spent"],
+            "formatters" :{
+                "campaign":"none",
+                "spent":"cpm"
+            },
+            "joins" : JOIN["experiment"]
+        }
+    },
+    
+    "bucket" : {
+        "meta": {
+            "groups" : ["advertiser", "bucket"],
+            "fields" : ["served", "loaded", "visible", "spent"],
+            "formatters" : {
+                "campaign": "none",
+                "spent": "cpm"
+            },
+            "joins" : JOIN["bucket"]
+        }
+    },
+
     "domain": {
         "meta": {
             "groups" : ["domain"],
@@ -89,7 +129,11 @@ GROUPS = {
     "creative":"creative",
     "width":"width",
     "height":"height",
-    "type":"d.log"
+    "type":"d.log",
+    "group_name": "group_name",
+    "is_control": "is_control",
+    "bucket": "bucket_name",
+    "experiment": "experiment_id"
 }
 
 FIELDS = {
@@ -99,7 +143,9 @@ FIELDS = {
     "loaded":"sum(num_loaded)",
     "visible":"sum(num_visible)",
     "num_visible_on_load":"sum(num_visible_on_load)",
-    "num_long_visit":"sum(num_long_visit)"
+    "num_long_visit":"sum(num_long_visit)",
+    "percent_loaded": "round(sum(num_loaded) / sum(num_served), 3)",
+    "percent_visible": "round(sum(num_visible) / sum(num_served), 3)"
 }
 
 WHERE = {
@@ -107,7 +153,8 @@ WHERE = {
     "campaign":"campaign = '%(campaign)s'",
     "venue":"venue = '%(venue)s'", 
     "domain":"domain like '%%%(domain)s%%'",
-    "type":"d.log like '%%%(type)s%%'"
+    "type":"d.log like '%%%(type)s%%'",
+    "experiment":"t.experiment_id = '%(experiment)s'" 
 }
 
 
