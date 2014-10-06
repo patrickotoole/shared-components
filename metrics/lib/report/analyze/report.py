@@ -146,6 +146,7 @@ class AnalyzeConversions(AnalyzeBase):
                 advertiser_id='external_advertiser_id',
                 datetime='conversion_time',
                 ))
+        df = _filter_advertiser(df)
         to_drop = ['post_click_or_post_view_conv',
                    'external_data',
                    ]
@@ -154,6 +155,11 @@ class AnalyzeConversions(AnalyzeBase):
         df = df.drop(to_drop, axis=1)
         df = df.apply(_is_valid, axis=1)
         return df
+
+def _filter_advertiser(df):
+    adv_df = DB.select_dataframe('select * from advertiser')
+    adv_ids = adv_df.external_advertiser_id.unique().tolist()
+    return df[df.advertiser_id.isin(adv_ids)]
 
 def _is_valid(row):
     """
