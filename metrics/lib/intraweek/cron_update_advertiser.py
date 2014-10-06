@@ -12,7 +12,7 @@ if __name__ == "__main__":
 
   # ids = [225133, 250058, 274802, 302568, 306383, 338003, 312933]
 
-  iw = Intraweek(lnk.dbs.mysql)
+  iw = Intraweek(lnk.dbs.rockerbox)
   ids = iw.active_advertisers()
 
 

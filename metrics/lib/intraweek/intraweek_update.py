@@ -64,7 +64,7 @@ class Intraweek(IntraWeekView):
 
 
 if __name__ == "__main__":
-    iw = Intraweek(lnk.dbs.mysql)
+    iw = Intraweek(lnk.dbs.rockerbox)
     print iw.get_compiled_pacing_reports()
     # print iw.get_table(306383,-1)
 
