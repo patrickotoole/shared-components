@@ -12,7 +12,6 @@ import lib.query.helpers as query_helpers
 from ..base import AdminReportingBaseHandler 
 
 JOIN = {
-<<<<<<< HEAD
     "type":"v JOIN (select distinct log as log, pattern as pattern from domain_list where log like '%%%(type)s%%') d on d.pattern = v.domain",
     "static_type": "v JOIN (select distinct log as log, pattern as pattern from domain_list) d on d.pattern = v.domain",
     "experiment":"v JOIN experiment_test_ref t on v.campaign = t.campaign_id",
