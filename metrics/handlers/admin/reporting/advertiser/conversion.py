@@ -216,8 +216,7 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
         include = self.get_argument("include","").split(",")
         meta_group = self.get_meta_group()
         meta_data = self.get_meta_data(meta_group,include)
-        print meta_data
-        print include
+
         if meta:
             self.write(ujson.dumps(meta_data))
             self.finish()
@@ -229,8 +228,6 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
                 self.make_where(),
                 joins=meta_data.get("joins","")
             )
-
-            print params
 
             self.get_data(
                 self.make_query(params),
