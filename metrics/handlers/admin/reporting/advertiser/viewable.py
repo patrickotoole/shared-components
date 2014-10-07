@@ -12,7 +12,7 @@ import lib.query.helpers as query_helpers
 from ..base import AdminReportingBaseHandler 
 
 JOIN = {
-    "type":"v JOIN (select * from domain_list where log like '%%%(type)s%%') d on d.pattern = v.domain"    
+    "type":"v JOIN (select * from domain_list where log like '%%%(type)s%%') d on d.pattern = v.domain",
     "experiment":"v JOIN experiment_test_ref t on v.campaign = t.campaign_id",
     "bucket":"v JOIN (SELECT bucket_name, campaign_id FROM campaign_bucket_ref) t on v.campaign = t.campaign_id"
 }
