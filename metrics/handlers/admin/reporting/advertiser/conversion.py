@@ -90,8 +90,15 @@ OPTIONS = {
                 "uid": "none"
                 }
             }
+        },
+
+    "top_domains": {
+        "meta": {
+            "groups": [],
+            "fields": []
         }
     }
+}
 
 GROUPS = {
     "advertiser": "advertiser",

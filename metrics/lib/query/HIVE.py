@@ -93,6 +93,8 @@ group by %(groups)s
 """
 
 CONVERSION_QUERY = """
+CREATE TEMPORARY FUNCTION map_group_sum as 'com.dataiku.hive.udf.maps.UDAFMapGroupSum';
+CREATE TEMPORARY FUNCTION map_filter_top_n as 'com.dataiku.hive.udf.maps.UDFMapValueFilterTopN';
 SELECT %(fields)s
 FROM conv_attribution
 %(joins)s
