@@ -12,7 +12,8 @@ import lib.query.helpers as query_helpers
 from ..base import AdminReportingBaseHandler 
 
 JOIN = {
-    "type":"v JOIN (select * from domain_list where log like '%%%(type)s%%') d on d.pattern = v.domain"    
+    "type":"v JOIN (select distinct log as log, pattern as pattern from domain_list where log like '%%%(type)s%%') d on d.pattern = v.domain",
+    "static_type": "v JOIN (select distinct log as log, pattern as pattern from domain_list) d on d.pattern = v.domain"
 }
 
 OPTIONS = {
@@ -44,7 +45,7 @@ OPTIONS = {
                 "campaign":"none",
                 "spent": "cpm"
             },
-            "joins" : JOIN["type"]
+            "static_joins" : JOIN["static_type"]
         }
     },
     "domain": {
@@ -236,8 +237,7 @@ class AdvertiserViewableHandler(AdminReportingBaseHandler):
                 meta_data.get("groups",[]),
                 meta_data.get("fields",[]),
                 self.make_where(),
-                self.make_join()
-                #joins=meta_data.get("joins","")
+                self.make_join(meta_data.get("static_joins",""))
             )
 
             self.get_data(
