@@ -59,7 +59,7 @@ OPTIONS = {
                 "campaign":"none",
                 "spent":"cpm"
             },
-            "joins" : JOIN["experiment"]
+            "static_joins" : JOIN["experiment"]
         }
     },
 
@@ -71,7 +71,7 @@ OPTIONS = {
                 "campaign":"none",
                 "spent":"cpm"
             },
-            "joins" : JOIN["experiment"]
+            "static_joins" : JOIN["experiment"]
         }
     },
     
@@ -83,7 +83,7 @@ OPTIONS = {
                 "campaign": "none",
                 "spent": "cpm"
             },
-            "joins" : JOIN["bucket"]
+            "static_joins" : JOIN["bucket"]
         }
     },
 

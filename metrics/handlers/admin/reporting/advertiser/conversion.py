@@ -34,7 +34,7 @@ OPTIONS = {
         "meta": {
             "groups" : ["experiment", "is_control"],
             "fields" : ["num_conv"],
-            "joins" : JOIN["experiment"]
+            "static_joins" : JOIN["experiment"]
         }
     },
 
@@ -42,7 +42,7 @@ OPTIONS = {
         "meta": {
             "groups" : ["experiment", "group_name", "is_control"],
             "fields" : ["num_conv"],
-            "joins" : JOIN["experiment"]
+            "static_joins" : JOIN["experiment"]
         }
     },
 
@@ -50,7 +50,7 @@ OPTIONS = {
         "meta": {
             "groups" : ["advertiser", "bucket_name", "campaign_id"],
             "fields" : ["num_conv"],
-            "joins" : JOIN["bucket"]
+            "static_joins" : JOIN["bucket"]
         }
     },
 
@@ -97,7 +97,7 @@ OPTIONS = {
         "meta": {
             "groups": ["advertiser", "domain"],
             "fields": ["imps"],
-            "joins": JOIN["lateral_view"]
+            "static_joins": JOIN["lateral_view"]
         }
     }
 }
@@ -244,7 +244,7 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
                 meta_data.get("groups",[]),
                 meta_data.get("fields",[]),
                 self.make_where(),
-                joins=meta_data.get("joins","")
+                self.make_join(meta_data.get("static_joins",""))
             )
 
             self.get_data(
