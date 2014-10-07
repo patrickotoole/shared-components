@@ -11,7 +11,8 @@ from ..base import AdminReportingBaseHandler
 
 JOIN = {
     "experiment": "v JOIN experiment_test_ref t on v.first_campaign = t.campaign_id",
-    "bucket": "v JOIN (SELECT bucket_name, campaign_id FROM campaign_bucket_ref WHERE campaign_id IS NOT NULL) t on v.first_campaign = t.campaign_id"
+    "bucket": "v JOIN (SELECT bucket_name, campaign_id FROM campaign_bucket_ref WHERE campaign_id IS NOT NULL) t on v.first_campaign = t.campaign_id",
+    "lateral_view": " LATERAL VIEW explode(domains) a as domain, imps"
 }
 
 OPTIONS = {
@@ -94,8 +95,9 @@ OPTIONS = {
 
     "top_domains": {
         "meta": {
-            "groups": [],
-            "fields": []
+            "groups": ["advertiser", "domain"],
+            "fields": ["imps"],
+            "joins": JOIN["lateral_view"]
         }
     }
 }
@@ -115,13 +117,15 @@ GROUPS = {
     "since_first_served": "since_first_served",
     "attributed_to": "CASE WHEN num_served > 0 THEN 'Rockerbox' ELSE 'Other' END",
     "bucket": "t.bucket_name",
-    "experiment": "t.experiment_id"
+    "experiment": "t.experiment_id",
+    "domain": "domain"
     }
 
 
 FIELDS = {
     "num_conv" : "count(*)",
-    "num_served": "sum(num_served)"
+    "num_served": "sum(num_served)",
+    "imps": "sum(imps)"
     }
 
 WHERE = {
@@ -165,6 +169,9 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
         query_list = [
             "set shark.map.tasks=12", 
             "set mapred.reduce.tasks=0",
+            "CREATE TEMPORARY FUNCTION map_group_sum as 'com.dataiku.hive.udf.maps.UDAFMapGroupSum'",
+            "CREATE TEMPORARY FUNCTION map_filter_top_n as 'com.dataiku.hive.udf.maps.UDFMapValueFilterTopN'",
+            "CREATE TEMPORARY FUNCTION map_key_values AS 'brickhouse.udf.collect.MapKeyValuesUDF'",
             query
         ]
         raw = yield run_hive_session_deferred(self.hive,query_list)
@@ -205,7 +212,11 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
         meta = self.get_argument("meta", False)
         advertiser = self.get_argument("advertiser", False)
         segment = self.get_argument("segment", False)
-        
+        top_domains = self.get_argument("top_domains", False)
+
+        if top_domains:
+            return "top_domains"
+
         if meta:
             return meta
 
@@ -244,5 +255,3 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
 
         else:
             self.get_content(pandas.DataFrame())
-
- 

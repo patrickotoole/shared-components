@@ -30,7 +30,8 @@ class IndexHandler(tornado.web.RequestHandler):
             ("/admin/advertiser/conversion/reporting", "Conversion Reporting"),
             ("/admin/advertiser/conversion/imps/reporting", "Served Imps Resulting in Conversions"),
             ("/admin/advertiser/conversion/reporting?meta=bucket", "Campaign Bucket Conversions"),
-            ("/admin/advertiser/conversion/reporting?meta=experiment", "Experiment Conversions")
+            ("/admin/advertiser/conversion/reporting?meta=experiment", "Experiment Conversions"),
+            ("/admin/advertiser/conversion/reporting?meta=top_domains", "Top Performing Domains")
         ]
 
         segment_links = [
