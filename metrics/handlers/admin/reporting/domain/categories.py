@@ -13,22 +13,16 @@ OPTIONS = {
     "default": {
         "meta": {
             "groups" : ["category", "domain", "page"],
-            "fields" : ["imps"],
-            "orders": ["imps"]
+            "fields" : ["imps"]
         }
     },
     
     "category": {
         "meta": {
             "groups": ["category", "domain", "page"],
-            "fields": ["imps"],
-            "orders": ["imps"]
+            "fields": ["imps"]
         }
     }
-}
-
-ORDERS = {
-    "imps": "imps desc"
 }
 
 GROUPS = {
@@ -53,7 +47,6 @@ class DomainCategoriesHandler(AdminReportingBaseHandler):
     WHERE = WHERE
     FIELDS = FIELDS
     GROUPS = GROUPS
-    ORDERS = ORDERS
 
     OPTIONS = OPTIONS
 
@@ -139,9 +132,6 @@ class DomainCategoriesHandler(AdminReportingBaseHandler):
         meta_group = self.get_meta_group()
         meta_data = self.get_meta_data(meta_group,include)
 
-        print meta_data
-        print meta_data.get("orders")
-
         if meta:
             self.write(ujson.dumps(meta_data))
             self.finish()
@@ -150,8 +140,7 @@ class DomainCategoriesHandler(AdminReportingBaseHandler):
             params = self.make_params(
                 meta_data.get("groups",[]),
                 meta_data.get("fields",[]),
-                self.make_where(date=False),
-                orders = meta_data.get("orders", [])
+                self.make_where(date=False)
             )
             print params
             self.get_data(
