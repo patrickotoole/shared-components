@@ -49,7 +49,7 @@ var buildDomainListWrapper = function(data, id, width) {
   return panels
 }
 
-var buildDomainListInfo = function(obj) {
+var buildDomainListInfo = function(obj,summary_data) {
   var panels = obj
 
   panels
@@ -57,16 +57,13 @@ var buildDomainListInfo = function(obj) {
     .classed("panel-body summary",true)
     .selectAll("div")
     .data(function(x){
-      var s = [{
-        "info":"some info"
-      }]
-
-      return s
+      var y = summary_data.get(x.key)
+      return y ? d3.entries(y) : []
     })
     .enter()
       .append("div")
       .text(function(x){
-        return x.info
+        return x.key + " : " + x.value
       })
 }
 
@@ -77,10 +74,23 @@ var buildDomains = function(obj,reporting_data) {
     .append("div")
     .classed("panel-heading domain",true)
     .text("Domains")
+    .on("click",function(x){
+      d3.select(this.nextSibling).classed("hidden",function(x){
+        if (x.is_opened === undefined) x.is_opened = 0
+        if (this.classList.contains("hidden")) {
+          x.is_opened += 1
+          return false
+        } else {
+          x.is_opened -= 1
+          return true
+        }
+      })
+      return x
+    })
 
   var domain = default_panel
     .append("div")
-    .classed("list-group",true)
+    .classed("list-group hidden",true)
 
   var domain_details = domain
     .selectAll("div")
@@ -128,14 +138,33 @@ var buildDomains = function(obj,reporting_data) {
 }
 
 var wrapped = buildDomainListWrapper(rolled,id),
- URL = "/admin/advertiser/viewable/reporting?meta=domain_list&format=json&date=past_month"
+  URL = "/admin/advertiser/viewable/reporting?meta=domain_list&format=json",
+  rolled_map = d3.nest()
+    .key(function(x){return x.key})
+    .rollup(function(x){
+      return x[0].values
+    })
+    .map(rolled,d3.map)
 
 d3.json(URL,function(reporting_data){
   var reporting_rolled = d3.nest()
     .key(function(x){return x.type})
-    .entries(reporting_data,d3.map)
+    .rollup(function(x){
+      var d = {
+        "domains_served":x.length,
+        "served":d3.sum(x,function(y){return y.served}),
+        "loaded":d3.sum(x,function(y){return y.loaded}),
+        "visible":d3.sum(x,function(y){return y.visible})
+      }
+      d.percent_loaded = d.loaded/d.served
+      d.percent_visible = d.visible/d.loaded
+      d["domains_total"] = rolled_map.get(x[0].type).length
+      
+      return d
+    })
+    .map(reporting_data,d3.map)
 
-   var reporting_domain_rolled = d3.nest()
+  var reporting_domain_rolled = d3.nest()
     .key(function(x){return x.domain})
     .map(reporting_data,d3.map)
  
