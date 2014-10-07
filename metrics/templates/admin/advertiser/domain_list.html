@@ -9,7 +9,7 @@
 
 <div id="domain-content" class='container'>
   <div class="row">
-    <h4>Domains</h4>
+    <h4>Domain Lists</h4>
   </div>
 </div>
 
@@ -24,12 +24,17 @@ rolled = d3.nest()
 
 var id = '#domain-content'
 
-var buildDomainListWrapper = function(data, id, width) {
+var buildDomainListWrapper = function(data, summary_data, id, width) {
+  console.log(summary_data)
   var wrapper_width = width || 6
     
 
   var wrappers = d3.select(id).selectAll(".wrapper")
-    .data(data).enter()
+    .data(data,function(x){
+      var y = summary_data.get(x.key)
+      x['summary'] = y || {}
+      return x.key
+    }).enter()
     .append("div")
       .classed("wrapper col-md-" + wrapper_width,true)
       .attr("id",function(x){return x.key})
@@ -46,10 +51,10 @@ var buildDomainListWrapper = function(data, id, width) {
     .classed("panel-title",true)
     .text(function(x) {return x.key})
 
-  return panels
+  return [wrappers, panels]
 }
 
-var buildDomainListInfo = function(obj,summary_data) {
+var buildDomainListInfo = function(obj) {
   var panels = obj
 
   panels
@@ -57,8 +62,7 @@ var buildDomainListInfo = function(obj,summary_data) {
     .classed("panel-body summary",true)
     .selectAll("div")
     .data(function(x){
-      var y = summary_data.get(x.key)
-      return y ? d3.entries(y) : []
+      return d3.entries(x['summary'])
     })
     .enter()
       .append("div")
@@ -137,14 +141,14 @@ var buildDomains = function(obj,reporting_data) {
 
 }
 
-var wrapped = buildDomainListWrapper(rolled,id),
-  URL = "/admin/advertiser/viewable/reporting?meta=domain_list&format=json",
+var URL = "/admin/advertiser/viewable/reporting?meta=domain_list&format=json&date=past_month",
   rolled_map = d3.nest()
     .key(function(x){return x.key})
     .rollup(function(x){
       return x[0].values
     })
     .map(rolled,d3.map)
+
 
 d3.json(URL,function(reporting_data){
   var reporting_rolled = d3.nest()
@@ -167,11 +171,35 @@ d3.json(URL,function(reporting_data){
   var reporting_domain_rolled = d3.nest()
     .key(function(x){return x.domain})
     .map(reporting_data,d3.map)
- 
 
-  buildDomainListInfo(wrapped,reporting_rolled)
+  window.panels = buildDomainListWrapper(rolled,reporting_rolled,id)
+  window.wrapped = panels[1]
+
+  buildDomainListInfo(wrapped)
   buildDomains(wrapped,reporting_domain_rolled)
+
+  wrapped
+    .on("click",function(data){
+      var p = d3.select(this.parentNode), 
+      has_opened = (data.is_opened >  0)
+
+      p.classed("col-md-6",!has_opened) 
+      p.classed("col-md-12",has_opened)  
+    }) 
+
+  panels[0]
+    .sort(function(x,y){
+
+      var r = (x.summary.served != undefined) ? x.summary.served : 0,
+        l = (y.summary.served != undefined) ? y.summary.served : 0
+
+      return l - r
+    
+    })
 })
+
+
+ 
 
 
 
