@@ -169,9 +169,6 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
         query_list = [
             "set shark.map.tasks=12", 
             "set mapred.reduce.tasks=0",
-            "CREATE TEMPORARY FUNCTION map_group_sum as 'com.dataiku.hive.udf.maps.UDAFMapGroupSum'",
-            "CREATE TEMPORARY FUNCTION map_filter_top_n as 'com.dataiku.hive.udf.maps.UDFMapValueFilterTopN'",
-            "CREATE TEMPORARY FUNCTION map_key_values AS 'brickhouse.udf.collect.MapKeyValuesUDF'",
             query
         ]
         raw = yield run_hive_session_deferred(self.hive,query_list)
