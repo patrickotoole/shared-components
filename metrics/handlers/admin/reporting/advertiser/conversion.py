@@ -9,6 +9,12 @@ from lib.hive.helpers import run_hive_session_deferred
 from lib.query.HIVE import CONVERSION_QUERY
 from ..base import AdminReportingBaseHandler
 
+JOIN = {
+    "experiment": "v JOIN experiment_test_ref t on v.first_campaign = t.campaign_id",
+    "bucket": "v JOIN (SELECT bucket_name, campaign_id FROM campaign_bucket_ref WHERE campaign_id IS NOT NULL) t on v.first_campaign = t.campaign_id",
+    "lateral_view": " LATERAL VIEW explode(domains) a as domain, imps"
+}
+
 OPTIONS = {
     "default": {
         "meta": {
@@ -23,6 +29,30 @@ OPTIONS = {
                 }
             }
         },
+
+    "experiment" : {
+        "meta": {
+            "groups" : ["experiment", "is_control"],
+            "fields" : ["num_conv"],
+            "static_joins" : JOIN["experiment"]
+        }
+    },
+
+    "experiment_groups" : {
+        "meta": {
+            "groups" : ["experiment", "group_name", "is_control"],
+            "fields" : ["num_conv"],
+            "static_joins" : JOIN["experiment"]
+        }
+    },
+
+    "bucket" : {
+        "meta": {
+            "groups" : ["advertiser", "bucket_name", "campaign_id"],
+            "fields" : ["num_conv"],
+            "static_joins" : JOIN["bucket"]
+        }
+    },
 
     "advertiser": {
         "meta": {
@@ -61,8 +91,16 @@ OPTIONS = {
                 "uid": "none"
                 }
             }
+        },
+
+    "top_domains": {
+        "meta": {
+            "groups": ["advertiser", "domain"],
+            "fields": ["imps"],
+            "static_joins": JOIN["lateral_view"]
         }
     }
+}
 
 GROUPS = {
     "advertiser": "advertiser",
@@ -77,12 +115,17 @@ GROUPS = {
     "order_type": "order_type",
     "since_last_served": "since_last_served",
     "since_first_served": "since_first_served",
-    "attributed_to": "CASE WHEN num_served > 0 THEN 'Rockerbox' ELSE 'Other' END"
+    "attributed_to": "CASE WHEN num_served > 0 THEN 'Rockerbox' ELSE 'Other' END",
+    "bucket": "t.bucket_name",
+    "experiment": "t.experiment_id",
+    "domain": "domain"
     }
+
 
 FIELDS = {
     "num_conv" : "count(*)",
-    "num_served": "sum(num_served)"
+    "num_served": "sum(num_served)",
+    "imps": "sum(imps)"
     }
 
 WHERE = {
@@ -93,7 +136,8 @@ WHERE = {
     "segment": "segment = '%(segment)s'",
     "conv_id": "conv_id = '%(conv_id)s'",
     "is_rockerbox": "CASE WHEN lower('%(is_rockerbox)s') = 'true' THEN num_served > 0 ELSE num_served = 0 END",
-    "attributed_to": "CASE WHEN '%(attributed_to)s' LIKE 'Rockerbox' THEN num_served > 0 ELSE num_served < 0 END"
+    "attributed_to": "CASE WHEN '%(attributed_to)s' LIKE 'Rockerbox' THEN num_served > 0 ELSE num_served < 0 END",
+    "experiment": "num_served > 0 AND t.experiment_id = '%(experiment)s'"
     }
 
 class ConversionCheckHandler(AdminReportingBaseHandler):
@@ -162,9 +206,17 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
 
         
     def get_meta_group(self,default="default"):
+        meta = self.get_argument("meta", False)
         advertiser = self.get_argument("advertiser", False)
         segment = self.get_argument("segment", False)
-        
+        top_domains = self.get_argument("top_domains", False)
+
+        if top_domains:
+            return "top_domains"
+
+        if meta:
+            return meta
+
         if segment:
             return "segment"
         
@@ -179,6 +231,7 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
         include = self.get_argument("include","").split(",")
         meta_group = self.get_meta_group()
         meta_data = self.get_meta_data(meta_group,include)
+
         if meta:
             self.write(ujson.dumps(meta_data))
             self.finish()
@@ -187,8 +240,10 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
             params = self.make_params(
                 meta_data.get("groups",[]),
                 meta_data.get("fields",[]),
-                self.make_where()
+                self.make_where(),
+                self.make_join(meta_data.get("static_joins",""))
             )
+
             self.get_data(
                 self.make_query(params),
                 meta_data.get("groups",[]),
@@ -197,5 +252,3 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
 
         else:
             self.get_content(pandas.DataFrame())
-
- 

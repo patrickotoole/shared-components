@@ -95,6 +95,7 @@ group by %(groups)s
 CONVERSION_QUERY = """
 SELECT %(fields)s
 FROM conv_attribution
+%(joins)s
 WHERE 
     %(where)s
 GROUP BY %(groups)s
