@@ -14,23 +14,26 @@ class DomainAPI(object):
         self.rb_api = rb
         self.db = db
 
-    def pull_campaign_ids(self,line_item_id):
-        logging.info("AppNexus API line-item request: %s" % line_item_id)
+    def get_campaign_ids(self,line_item_id):
+        LI_MSG = "AppNexus API line-item request: %s"
+        CA_MSG = "AppNexus API campaigns received: %s"
+
+        logging.info(LI_MSG % line_item_id)
 
         response = self.an_api.get("/line-item?id=%s" % line_item_id)
-        self.advertiser_id = response.json["response"]["line-item"]["advertiser_id"]
-        campaign_list = response.json["response"]["line-item"]["campaigns"]
-        campaign_id_list = [c["id"] for c in campaign_list]
+        campaigns = response.json["response"]["line-item"]["campaigns"]
+        id_list = [c["id"] for c in campaigns]
         
-        logging.info("AppNexus API campaigns received: %s" % campaign_id_list)
-        return campaign_id_list
+        logging.info(CA_MSG % id_list)
+        return id_list
 
     def get_existing_domains(self,domain_list_id):
         response = self.an_api.get("/domain-list?id=%s" % domain_list_id)
         existing_domains = response.json["response"]["domain-list"]["domains"]
         return existing_domains
 
-    def log_domain_change(self,new_domain_df):
+    def domain_change_ref(self,new_domain_df):
+        MSG = "Adding domains: %s"
         
         records = new_domain_df.to_records()
         columns = tuple(["domain"] + list(new_domain_df.columns))
@@ -42,52 +45,59 @@ class DomainAPI(object):
                 "values": values
             }
             self.db.execute(LOGGING_SQL % params)
-            logging.info("Adding domains: %s" % list(new_domain_df.index))
+            logging.info(MSG % list(new_domain_df.index))
         
     @classmethod
-    def add_acct_to_df(self,domains,ext_domain_list_id,domain_list,action):
+    def add_acct_to_df(self,domains,external_id,domain_list,action):
 
-        domains["external_domain_list_id"] = ext_domain_list_id
+        domains["external_domain_list_id"] = external_id
         domains["domain_list"] = domain_list
         domains["action"] = action
 
         return domains
 
-    def update_domain_list(self,domains,ext_domain_list_id,domain_list,action):
+    def update_domain_list(self,domains,external_id,domain_list,action):
+        URL = "/domain-list?id=%s"
+        MOD_MSG = "Modifying AppNexus domain list %s: %s %s"
 
-        domains = self.add_acct_to_df(domains,ext_domain_list_id,domain_list,action)
-        
-        existing_domains = self.get_existing_domains(ext_domain_list_id)
-        all_domains = list(set(existing_domains + list(domains.index)))
-        new_domains = [d for d in all_domains if d not in existing_domains]
+        self.add_acct_to_df(domains,external_id,domain_list,action)
 
-        self.log_domain_change(domains.ix[new_domains])
+        _domains = list(domains.index)
+        _existing = self.get_existing_domains(external_id)
+        _all = list(set(_existing + _domains))
 
-        logging.info("Modifying AppNexus domain list %s: %s %s" % 
-            (ext_domain_list_id,len(existing_domains),len(all_domains))
-        )
+        count_ext = len(_existing)
+        count_all = len(_all)
 
-        obj = {"domain-list":{"domains":all_domains}}
-        put_response = self.an_api.put("/domain-list?id=%s" % ext_domain_list_id, ujson.dumps(obj))
+        _new = [d for d in _all if d not in _existing]
+        _new_df = domains.ix[_new]
+
+        self.domain_change_ref(_new_df)
+
+        logging.info(MOD_MSG % (external_id,count_ext,count_all))
+
+        obj = {"domain-list":{"domains":_all}}
+        put_response = self.an_api.put(URL % external_id, ujson.dumps(obj))
 
     def get_domain_list(self,domain_list):
-        domains = self.rb_api.get_report("/advertiser/domain_list/streaming?format=json&log=%s" % domain_list)
-        
-        domain_count = len(domains)
-        logging.info("Domains on list %s: %s" % (domain_list,domain_count))
+        URL = "/advertiser/domain_list/streaming?format=json&log=%s"
+        DL_MSG = "Domains on list %s: %s"
+
+        domains = self.rb_api.get_report(URL % domain_list)
+        logging.info(DL_MSG % (domain_list,len(domains)))
+
         return domains
         
     def get_viewability_df(self,domain_list,duration="past_month"):
-        
-        campaign_ids = self.campaign_ids
-        
-        campaign_string = ",".join(map(str,campaign_ids))
+        RQ_MSG = "Rockerbox API request for %s (%s): %s"
+        LN_MSG = "Rockerbox API lines received: %s"
+
+        campaign_string = ",".join(map(str,self.campaign_ids))
         compiled_url = URL % (domain_list,duration,campaign_string)
 
-        logging.info("Rockerbox API request for %s (%s): %s" % (domain_list,duration,campaign_string)) 
-
+        logging.info(RQ_MSG % (domain_list,duration,campaign_string)) 
         df = self.rb_api.get_report(compiled_url)
-        logging.info("Rockerbox API lines received: %s" % len(df))
+        logging.info(LN_MSG % len(df))
          
         return df
  
