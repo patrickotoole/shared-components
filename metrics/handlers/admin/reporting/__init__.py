@@ -10,3 +10,6 @@ from advertiser.domain_list import DomainListHandler
 from advertiser.conversion import ConversionCheckHandler
 from advertiser.conversion_imps import ConversionImpsHandler
 from advertiser.debug import DebugReportingHandler
+
+from domain.categories import DomainCategoriesHandler
+

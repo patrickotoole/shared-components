@@ -15,6 +15,7 @@ class AdminReportingBase(object):
 
     GROUPS = {}
     FIELDS = {}
+    ORDERS = {}
     QUERY = ""
     OPTIONS = {}
     WHERE = {}
@@ -24,6 +25,9 @@ class AdminReportingBase(object):
         # pragma: no coverage
         # to override to support better default selection
         return default
+
+    def get_orders(self, g):
+        return self.ORDERS.get(g,g)
 
     def get_group(self,g):
         return self.GROUPS.get(g,g)
@@ -41,7 +45,6 @@ class AdminReportingBase(object):
         where_string = self.WHERE.get(field)
         return [where_string % {field:v} for v in values]
      
-
     def make_query(self,params):
         # pragma: string sub and remove \n
         q = self.QUERY % params
@@ -50,9 +53,6 @@ class AdminReportingBase(object):
     def make_joins(self,args):
         joins = {i:self.JOINS[i] for i,j in args.iteritems() if i in self.JOINS.keys()}
         return joins
-
-        
-        
 
     def get_meta_data(self,meta_group,additional_dims=False):
         try:
@@ -73,15 +73,20 @@ class AdminReportingBase(object):
 
         return meta_data
 
-    def make_params(self,groups,fields,where,joins="",**kwargs):
+    def make_params(self,groups,fields,where,joins="", orders="",**kwargs):
         gs = map(self.get_group,groups)
         fs = map(self.get_field,groups + fields)
+        os = map(self.get_orders, orders)
+
+        print orders
+        print os
 
         params = {
             "groups": ", ".join(gs),
             "fields": ", ".join(fs),
             "where": where,
-            "joins": joins
+            "joins": joins,
+            "orders": ", ".join(os)
         } 
         for i,j in kwargs.iteritems():
             params[j] = i
@@ -127,11 +132,14 @@ class AdminReportingBaseHandler(tornado.web.RequestHandler,AdminReportingBase):
         else:
             return default
 
-    def make_where(self):
+    def make_where(self, date=True):
         where_list = [
-            self.parse_date_where(), 
             self.parse_qs_where()
         ]
+
+        if date:
+            where_list.append(self.parse_date_where())
+
         return " and ".join(where_list)
 
     def get(self):
