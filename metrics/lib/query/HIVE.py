@@ -117,3 +117,11 @@ WHERE
     %(where)s
 GROUP BY %(groups)s
 """
+
+DOMAIN_CATEGORIES = """
+SELECT %(fields)s
+FROM domain_categories
+WHERE %(where)s
+GROUP BY %(groups)s
+ORDER BY %(orders)s
+"""
