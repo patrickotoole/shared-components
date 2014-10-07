@@ -22,6 +22,7 @@ class DomainAPI(object):
 
         response = self.an_api.get("/line-item?id=%s" % line_item_id)
         campaigns = response.json["response"]["line-item"]["campaigns"]
+        self.advertiser_d = response.json["response"]["line-item"]["advertiser_id"] 
         id_list = [c["id"] for c in campaigns]
         
         logging.info(CA_MSG % id_list)

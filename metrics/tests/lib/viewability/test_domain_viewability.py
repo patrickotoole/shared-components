@@ -26,10 +26,10 @@ class ViewabilityDomainAPITestCase(unittest.TestCase):
     def setUp(self):
         self.va = domain.DomainAPI(mock.MagicMock(),mock.MagicMock(),mock.MagicMock())
 
-    def test_pull_campaigns_success(self):
+    def test_get_campaigns_success(self):
         MOCKED_JSON_RESPONSE = {"response":{"line-item":{"campaigns":[{"id":1}],"advertiser_id":1}}}
         self.va.an_api.get.return_value = mock.MagicMock(json=MOCKED_JSON_RESPONSE)
-        campaign_list = self.va.pull_campaign_ids(1234)
+        campaign_list = self.va.get_campaign_ids(1234)
         self.assertEqual(campaign_list,[1])
 
 
@@ -37,7 +37,7 @@ class ViewabilityDomainAPITestCase(unittest.TestCase):
         MOCKED_JSON_RESPONSE = {"response":{}}
         self.va.an_api.get.return_value = mock.MagicMock(json=MOCKED_JSON_RESPONSE)
         with self.assertRaises(KeyError):
-            campaign_list = self.va.pull_campaign_ids(1234)
+            campaign_list = self.va.get_campaign_ids(1234)
 
     def test_get_viewability_df(self):
 
