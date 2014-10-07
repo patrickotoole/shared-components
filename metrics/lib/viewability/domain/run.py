@@ -1,3 +1,4 @@
+import logging
 from analysis import DomainAnalysis
 
 def main():
@@ -9,14 +10,17 @@ def main():
 
     basicConfig(options={})
     dlv = lnk.dbs.rockerbox.select_dataframe("select * from domain_list_viewability")
-    api = lnk.api.console
+    an_api = lnk.api.console
+    rb_api = lnk.api.rockerbox
     reporting_db = lnk.dbs.reporting
 
     for obj in dlv.iterrows():
-        va = DomainAnalysis(api,reporting_db,**obj[1].to_dict())
+        va = DomainAnalysis(an_api,rb_api,reporting_db,**obj[1].to_dict())
+        va.missing_domains()
         va.push_whitelist()
         va.push_blacklist()
-        print va.viewability_report[va.viewability_report.served < 1000].sort_index(by="served",ascending=False).head()
+        va.greylist
+        
 
 if __name__ == "__main__":
     main()

@@ -24,7 +24,7 @@ OPTIONS = {
     },
     "type": {
         "meta": {
-            "groups": ["domain", "state"],
+            "groups": ["domain"],
             "fields": ["num_auctions"]
         }
     }

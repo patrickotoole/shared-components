@@ -117,12 +117,15 @@ class AdminReportingBaseHandler(tornado.web.RequestHandler,AdminReportingBase):
 
         return " and ".join(ands)
 
-    def make_join(self):
+    def make_join(self,default=""):
         _args = self.request.arguments
         args = {i:j[0] for i,j in _args.iteritems()}
         joins = self.make_joins(args)
 
-        return " ".join(joins.values()) % args
+        if len(joins) > 0:
+            return " ".join(joins.values()) % args
+        else:
+            return default
 
     def make_where(self):
         where_list = [
