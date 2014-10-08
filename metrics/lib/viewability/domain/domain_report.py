@@ -1,10 +1,30 @@
 import logging
 import datetime
 
-REPORT_FORM = '{"report":{"special_pixel_reporting":false,"report_type":"network_site_domain_performance","timezone":"UTC","report_interval":"last_30_days","filters":[{"buyer_member_id":"2024"}],"columns":["site_domain","campaign_id","line_item_id","imps","clicks"]}}'
+REPORT_FORM = ''' {
+    "report": {
+        "columns": [
+            "site_domain", 
+            "campaign_id", 
+            "line_item_id", 
+            "imps", 
+            "clicks"
+        ], 
+        "filters": [
+            {
+                "buyer_member_id": "2024"
+            }
+        ], 
+        "report_interval": "last_30_days", 
+        "report_type": "network_site_domain_performance", 
+        "special_pixel_reporting": false, 
+        "timezone": "UTC"
+    }
+}
+'''
 
 TABLE_EXISTS = "show tables like '%v2_domain_reporting%'"
-LAST_INSERT = "select max(last_insert) last_insert from v2_domain_reporting"
+LAST_INSERT = "select max(last_insert) last_insert from %s"
 SELECT = "select * from v2_domain_reporting where %s"
 
 class DomainReport(object):
@@ -12,6 +32,7 @@ class DomainReport(object):
         self.an_reporting = reporting
         self.db = db
         self.now = datetime.date.today()
+        self.table_name = "v2_domain_reporting"
         self.check_table()
 
     @property
@@ -22,11 +43,13 @@ class DomainReport(object):
     @property
     def last_insert_date(self):
         try:
-            last_insert = self.db.select_dataframe(LAST_INSERT)
-            return last_insert['last_insert'][0]
+            last_insert = self.db.select_dataframe(LAST_INSERT % self.table_name)
+            last_insert_str = last_insert['last_insert'][0]
+            last_insert_date = datetime.datetime.strptime(last_insert_str,'%Y-%m-%d').date()
+            return last_insert_date
         except:
-            return 0
-
+            return datetime.date.today() + datetime.timedelta(-30)
+     
     def get_data(self,campaign_ids=[]):
         where = "campaign_id in (%s)" % ",".join(map(str,campaign_ids))
         df = self.db.select_dataframe(SELECT % where)
@@ -35,7 +58,9 @@ class DomainReport(object):
         
 
     def check_table(self):
-        if not self.table_exists or self.last_insert_date < int(self.now.strftime("%s")):
+        print self.last_insert_date
+        print self.now
+        if not self.table_exists or self.last_insert_date < self.now:
             self.rebuild_table()
 
     def rebuild_table(self):

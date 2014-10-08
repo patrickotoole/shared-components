@@ -62,10 +62,12 @@ class VenueReport(object):
     def last_insert_date(self):
         try:
             last_insert = self.db.select_dataframe(LAST_INSERT % self.table_name)
-            return last_insert['last_insert'][0]
+            last_insert_str = last_insert['last_insert'][0]
+            last_insert_date = datetime.datetime.strptime(last_insert_str,'%Y-%m-%d').date()
+            return last_insert_date
         except:
-            return 0
-
+            return datetime.date.today() + datetime.timedelta(-30)
+     
     def get_data(self,campaign_ids=[]):
         where = "campaign_id in (%s)" % ",".join(map(str,campaign_ids))
         df = self.db.select_dataframe(SELECT % (self.table_name,where))
@@ -74,7 +76,7 @@ class VenueReport(object):
         
 
     def check_table(self):
-        if not self.table_exists or datetime.datetime.strptime(self.last_insert_date,'%Y-%m-%d').date() < self.now:
+        if not self.table_exists or self.last_insert_date < self.now:
             self.rebuild_table()
 
     def rebuild_table(self):
