@@ -39,8 +39,10 @@ class DomainAPI(object):
 
     def domain_change_ref(self,new_domain_df):
         MSG = "Adding domains: %s"
+
+        _cols = ['served', 'visible', 'loaded', 'percent_visible', 'percent_loaded', 'external_domain_list_id', 'domain_list', 'action']
         
-        records = new_domain_df.to_records()
+        records = new_domain_df[_cols].to_records()
         columns = tuple(["domain"] + list(new_domain_df.columns))
         values  = ", ".join(map(str,records)).replace("(u'","('")
 

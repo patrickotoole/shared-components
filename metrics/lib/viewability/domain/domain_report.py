@@ -58,8 +58,6 @@ class DomainReport(object):
         
 
     def check_table(self):
-        print self.last_insert_date
-        print self.now
         if not self.table_exists or self.last_insert_date < self.now:
             self.rebuild_table()
 

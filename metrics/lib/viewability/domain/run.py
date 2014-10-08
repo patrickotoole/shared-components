@@ -18,9 +18,9 @@ def main():
     for obj in dlv.iterrows():
         va = DomainAnalysis(an_api,an_reporting,rb_api,reporting_db,**obj[1].to_dict())
         va.missing_domains()
-        print va.bad_domains()
         va.push_whitelist()
         va.push_blacklist()
+        va.push_bad_domains()
         va.greylist
         #print va.appnexus_report
         
