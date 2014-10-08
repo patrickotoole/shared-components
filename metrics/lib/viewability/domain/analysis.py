@@ -1,9 +1,11 @@
 import logging
 from api import DomainAPI 
+from domain_report import DomainReport
 
 class DomainAnalysis(DomainAPI):
-    def __init__(self,api,rb,db,**obj):
+    def __init__(self,api,reporting,rb,db,**obj):
         self.an_api = api
+        self.an_reporting = reporting
         self.rb_api = rb
         self.db = db
         self.__dict__.update(**obj)
@@ -46,7 +48,7 @@ class DomainAnalysis(DomainAPI):
     @property
     def campaign_ids(self):
         if self._campaign_ids is None:
-            self._campaign_ids = self.pull_campaign_ids(self.learn_line_item_id)
+            self._campaign_ids = self.get_campaign_ids(self.learn_line_item_id)
         return self._campaign_ids
 
     @property
@@ -55,6 +57,14 @@ class DomainAnalysis(DomainAPI):
             self._viewability_report = self.get_viewability_report()
             logging.info("Have viewability info for %s domains on (%s)" % (len(self._viewability_report),self.domain_list_id))
         return self._viewability_report
+
+    @property
+    def appnexus_report(self):
+        if not hasattr(self, "_appnexus_report"):
+            self._appnexus_report = DomainReport(self.an_api,self.db).get_data(self.campaign_ids)
+            logging.info("Have appnexus domain report for %s" % 1)
+        return self._appnexus_report
+
 
     @property
     def whitelist(self):
@@ -90,6 +100,11 @@ class DomainAnalysis(DomainAPI):
 
         return missing
 
+    def bad_domains(self):
+        _joined = self.appnexus_report.join(self.viewability_report)
+        _joined = _joined[_joined.index != "Undisclosed"]
+        bad = _joined[(_joined.served.fillna(0)/_joined.imps < .05) & (_joined.imps > 1000)]
+        return list(bad.index)
         
     
     def get_viewability_report(self):

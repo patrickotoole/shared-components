@@ -35,15 +35,16 @@ class ReportAPIRequestWrapper(ConsoleAPIRequestWrapper):
                                                        password=password)
 
     def post_report(self,data,advertiser_id=None):
-        base = "/report?"
+        base = "/report"
         if advertiser_id:
-            base += "advertiser_id=%s" % advertiser_id
+            base += "?advertiser_id=%s" % advertiser_id
 
         _resp = self.request('post', url_params=base, data=data).content
         _json = json.loads(_resp)
 
         report_id = _json.get('response',{}).get('report_id',False)
         if not report_id:
+            import ipdb; ipdb.set_trace()
             raise Exception('No reporting found for %s' % base)
         return report_id
 
