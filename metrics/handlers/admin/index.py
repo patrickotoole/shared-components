@@ -34,6 +34,10 @@ class IndexHandler(tornado.web.RequestHandler):
             ("/admin/advertiser/conversion/reporting?meta=top_domains", "Top Performing Domains")
         ]
 
+        domain_links = [
+            ("/admin/domain/categories/reporting", "Domain Volume by Category")
+        ]
+
         segment_links = [
             ("/admin/batch_request/new", "Batch Segment Request"),
             ("/admin/segment/scrubbed", "Scrubbed Segments"), 
@@ -56,5 +60,6 @@ class IndexHandler(tornado.web.RequestHandler):
             advertiser_links=advertiser_links,
             advertiser_viewability_links=advertiser_viewability_links,
             advertiser_conversion_links = advertiser_conversion_links,
+            domain_links = domain_links,
             segment_links=segment_links
         )

@@ -41,7 +41,6 @@ class AdminReportingBase(object):
         where_string = self.WHERE.get(field)
         return [where_string % {field:v} for v in values]
      
-
     def make_query(self,params):
         # pragma: string sub and remove \n
         q = self.QUERY % params
@@ -50,9 +49,6 @@ class AdminReportingBase(object):
     def make_joins(self,args):
         joins = {i:self.JOINS[i] for i,j in args.iteritems() if i in self.JOINS.keys()}
         return joins
-
-        
-        
 
     def get_meta_data(self,meta_group,additional_dims=False):
         try:
@@ -127,11 +123,14 @@ class AdminReportingBaseHandler(tornado.web.RequestHandler,AdminReportingBase):
         else:
             return default
 
-    def make_where(self):
-        where_list = [
-            self.parse_date_where(), 
-            self.parse_qs_where()
-        ]
+    def make_where(self, date=True):
+        where_list = []
+
+        if date:
+            where_list.append(self.parse_date_where())
+
+        where_list.append(self.parse_qs_where())
+
         return " and ".join(where_list)
 
     def get(self):

@@ -139,6 +139,11 @@ admin_advertiser = [
     (r'/admin/advertiser/?(.*?)/?',admin.scripts.AdvertiserHandler, dict(db=db,api=api)),  
 ]
 
+admin_domain = [
+    (r'/admin/domain/categories/reporting/?', admin.reporting.DomainCategoriesHandler, dict(db=db, api=api, hive=hive)),
+    (r'/admin/domain/categories/reporting/?(meta)?/?', admin.reporting.DomainCategoriesHandler, dict(db=db, api=api, hive=hive))
+]
+
 admin_reporting = [
     
     (r'/admin/streaming',admin.streaming.IndexHandler),
@@ -178,7 +183,7 @@ static = [
 
 dirname = os.path.dirname(os.path.realpath(__file__))
 app = tornado.web.Application(
-    _streaming + admin_scripts + admin_reporting + reporting + static + index,
+    _streaming + admin_scripts + admin_reporting + admin_domain + reporting + static + index,
     template_path= dirname + "/templates",
     db=lnk.dbs.mysql,
     debug=True,
