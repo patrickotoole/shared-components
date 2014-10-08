@@ -153,7 +153,6 @@ class DomainAnalysis(DomainAPI):
         bad_domains = self.bad_domains
         bad_domains['domain'] = bad_domains.index
         bad_domains = bad_domains.set_index('domain')
-        print bad_domains
         self.log("Bad domains (only in appnexus) %s" % len(bad_domains))
         self.update_domain_list(bad_domains,self.black_list_id, self.domain_list_id, "bad")
  

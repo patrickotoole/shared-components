@@ -21,7 +21,7 @@ def main():
         va.push_whitelist()
         va.push_blacklist()
         va.push_bad_domains()
-        va.greylist
+        #va.greylist
         #print va.appnexus_report
         
 

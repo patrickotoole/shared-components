@@ -7,7 +7,7 @@ REPORT_FORM = '{"report":{"special_pixel_reporting":false,"report_type":"network
 RB_API_BASE = "/advertiser/viewable/reporting"
 URL = RB_API_BASE + "?meta=none&include=domain&type=%s&date=%s&format=json&campaign=%s" 
 
-LOGGING_SQL = "INSERT INTO domain_list_change_ref %(fields)s VALUES %(values)s"
+LOGGING_SQL = "INSERT IGNORE INTO domain_list_change_ref %(fields)s VALUES %(values)s"
 DOMAIN_REPORT_INSERT = "INSERT INTO v2_domain_reporting"
 
 
@@ -43,7 +43,7 @@ class DomainAPI(object):
         _cols = ['served', 'visible', 'loaded', 'percent_visible', 'percent_loaded', 'external_domain_list_id', 'domain_list', 'action']
         
         records = new_domain_df[_cols].to_records()
-        columns = tuple(["domain"] + list(new_domain_df.columns))
+        columns = tuple(["domain"] + list(new_domain_df[_cols].columns))
         values  = ", ".join(map(str,records)).replace("(u'","('")
 
         if len(records):
