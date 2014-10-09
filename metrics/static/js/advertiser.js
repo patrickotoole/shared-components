@@ -1,6 +1,148 @@
 var format = d3.format("0,000"),
   formatPercent = d3.format("%"),
   formatDate = d3.time.format("%Y-%m-%d");
+
+var buildCampaigns = function(obj,name,show_id) {
+
+  var default_panel = obj,
+    name = name || "Campaigns",
+    show_id = show_id || false
+
+
+  var url = "/admin/campaign_check.xml"
+  d3.xml(url, "application/xml", function(xml) {
+    var testcases = xml.documentElement.getElementsByTagName("testcase")
+    console.log(testcases)
+    var entries = d3.entries(testcases)
+    entries = entries.filter(function(x){
+      try {
+        if (x.value.children.length > 0) {
+          var value = x.value,
+            info = x.value.getAttribute("classname"),
+            split_info = info.split("_")
+
+          x.test_name = x.value.getAttribute("name")
+          x.campaign_id = split_info[3]
+          x.advertiser_id = split_info[1]
+          x.failure = x.value.children[0].getAttribute("message")
+          return true
+        }
+      } catch(e) { }
+      return false
+    })
+
+    var mapped_entries = d3.nest()
+      .key(function(x){ return x.campaign_id })
+      .map(entries,d3.map)
+     
+    var campaign_header = default_panel
+      .append("div")
+      .classed("panel-sub-heading campaigns list-group",true)
+      .append("div")
+      .classed("list-group-item",true)
+      .classed("list-group-item-danger",function(x){
+        if (x.campaigns) {
+          var filtered = x.campaigns.map(function(y){
+            return mapped_entries.get(y.campaign_id) || []       
+          }).filter(function(y){
+            console.log(y)
+            return y.length
+          })
+          console.log(filtered)
+          return filtered.length
+        } else {
+          return 0
+        }
+      })
+      .text(name)
+
+    campaign_header
+      .append("div")
+      .classed("pull-right",true)
+      .append("a")
+      .attr("href","/admin/advertiser/campaign")
+
+
+    var campaigns = default_panel
+      .append("div")
+      .classed("list-group campaigns hidden", true)
+      .selectAll("div")
+      .data(function(x){
+        return x.campaigns
+      })
+      .enter()
+        .append("div")
+        .classed("list-group-item",true)
+        .html(function(x){
+          return '<span class="pull-right">' + 
+            x.campaign_id + '</span><h5 class="list-group-item-heading">' + 
+            x.campaign_name + '</h5>'
+        })
+
+    var campaign_description = campaigns
+      .selectAll(".block-quote")
+      .data(function(x){
+        return (x.name) ? [x] : []
+      })
+      .enter()
+        .append("div")
+        .classed("block-quote",true)
+        .html(function(x){
+          return x.name
+        })  
+        
+   
+
+    
+    var campaign_details = campaigns
+      .append("div")
+      .classed("details", true)
+
+    var test_cases = campaign_details
+      .selectAll("details")
+      .data(function(x) {
+        var entries = mapped_entries.get(x.campaign_id) || []
+        return entries
+      })
+      .enter()
+        .append("div")
+        .classed("list-group test-case",true)
+
+    test_cases
+      .append("h5")
+      .classed("list-group-item list-group-item-danger ",true)
+      .html(function(x){
+        return x.test_name
+      })  
+
+    test_cases
+      .append("pre")
+      .classed("list-group-item well",true)
+      .html(function(x){
+        return x.failure 
+      })  
+
+    default_panel.selectAll(".panel-sub-heading > .list-group-item")
+      .on("click",function(x){
+        d3.select(this.parentNode.nextSibling).classed("hidden",function(x){
+          if (x.is_opened === undefined) x.is_opened = 0
+          if (this.classList.contains("hidden")) {
+            x.is_opened += 1
+            return false
+          } else {
+            x.is_opened -= 1
+            return true
+          }
+        })
+      })    
+   
+  }) 
+  
+
+  
+
+}
+ 
  
 var buildSegments = function(obj,name,show_id) {
   console.log(name)
@@ -11,7 +153,10 @@ var buildSegments = function(obj,name,show_id) {
 
   var segment_header = default_panel
     .append("div")
-    .classed("panel-heading segments",true)
+    .classed("panel-sub-heading segments list-group",true)
+    .append("div")
+    .classed("list-group-item",true)
+    //.classed("disabled",true)
     .text(name)
 
   segment_header
@@ -24,7 +169,7 @@ var buildSegments = function(obj,name,show_id) {
 
   var segments = default_panel
     .append("div")
-    .classed("list-group", true)
+    .classed("list-group segments hidden", true)
     .selectAll("div")
     .data(function(x){
       var segs = x.segments.filter(function(y){
@@ -76,12 +221,21 @@ var buildInsertionOrders = function(obj) {
 
   default_panel
     .append("div")
-    .classed("panel-heading pixels",true)
+    .classed("panel-sub-heading inserition-orders list-group",true)
+    .append("div")
+    .classed("list-group-item",true)
+    .classed("list-group-item-warning",function(x){
+      if (x.insertion_orders) {
+        return x.insertion_orders.filter(function(y){
+          return y.actual_end_date > 0 && y.client_paid == 0
+        }).length
+      }
+    }) 
     .text("Insertion Orders")
 
   var io = default_panel
     .append("div")
-    .classed("list-group", true)
+    .classed("list-group insertion-orders hidden", true)
     .selectAll("div")
     .data(function(x){
         return x.insertion_orders || []
@@ -190,7 +344,6 @@ var buildInsertionOrders = function(obj) {
 
   io.selectAll(".notes")
     .data(function(x){
-      console.log(x.notes)
       return (x.notes != 0) ? [x] : []
     })
     .enter()
@@ -202,7 +355,6 @@ var buildInsertionOrders = function(obj) {
       .append("div")
       .classed("block-quote",true)
       .text(function(x){
-        console.log(x)
         return x.notes
       })
   
@@ -213,12 +365,14 @@ var buildPixels = function(obj) {
 
   default_panel
     .append("div")
-    .classed("panel-heading pixels",true)
+    .classed("panel-sub-heading pixels list-group",true)
+    .append("div")
+    .classed("list-group-item",true)
     .text("Conversion Pixels")
 
   var pixel = default_panel
     .append("div")
-    .classed("list-group", true)
+    .classed("list-group pixel hidden", true)
     .selectAll("div")
     .data(function(x){
         return x.pixels || []
@@ -353,15 +507,16 @@ var buildAdvertiserWrapper = function(data, id, width,show_id) {
 
   var headings = panels.append("div").classed("panel-heading",true);
 
-  var titles = headings.append("h3")
-    .classed("panel-title",true)
-    .text(function(x) {return x.advertiser_name})
-
   if (show_id) {
-    titles.append("span")
+    headings.append("span")
       .classed("pull-right",true)
       .text(function(x){return x.external_advertiser_id})
   }
 
+  var titles = headings.append("h3")
+    .classed("panel-title",true)
+    .text(function(x) {return x.advertiser_name})
+
   return panels
+
 }

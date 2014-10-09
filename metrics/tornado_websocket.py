@@ -100,7 +100,11 @@ admin_scripts = [
     (r'/admin/money.*',admin.scripts.MoneyHandler, dict(db=db,api=api)),
     (r'/admin/batch_request/new.*', admin.scripts.BatchRequestFormHandler, dict(db=db, api=api, hive=hive)),
     (r'/admin/batch_requests.*', admin.scripts.BatchRequestsHandler, dict(db=db, api=api, hive=hive)),
-    (r'/admin/imps/?', admin.scripts.ImpsHandler, dict(db=db, api=api, hive=hive))
+    (r'/admin/imps/?', admin.scripts.ImpsHandler, dict(db=db, api=api, hive=hive)),
+    (r'/admin/campaign_check/relation/?(.*?)/?', admin.scripts.CampaignRelationsHandler, dict(db=db)),  
+    (r'/admin/campaign_check.xml', admin.scripts.CircleCIXMLHandler ),   
+    (r'/admin/campaign_check/?(.*?)/?', admin.scripts.CampaignChecksHandler, dict(db=db)), 
+
 ]
 
 _streaming = [
@@ -136,7 +140,7 @@ admin_advertiser = [
     (r'/admin/advertiser/conversion/imps/reporting/?(meta)?/?',admin.reporting.ConversionImpsHandler, dict(hive=hive)),
     (r'/admin/advertiser/segment/?(.*?)/?',admin.segment.SegmentHandler, dict(db=db, api=api)), 
     (r'/admin/advertiser/viewable/?(.*?)/?',admin.advertiser.AdvertiserViewableHandler, dict(db=db,api=api)),
-    (r'/admin/advertiser/?(.*?)/?',admin.scripts.AdvertiserHandler, dict(db=db,api=api)),  
+    (r'/admin/advertiser/?(.*?)/?',admin.scripts.AdvertiserHandler, dict(db=db,api=api))
 ]
 
 admin_domain = [
