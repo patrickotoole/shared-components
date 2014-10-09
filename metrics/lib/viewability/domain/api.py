@@ -2,15 +2,19 @@ import requests
 import ujson
 import logging
 
+REPORT_FORM = '{"report":{"special_pixel_reporting":false,"report_type":"network_site_domain_performance","timezone":"UTC","report_interval":"last_30_days","filters":[{"buyer_member_id":"2024"}],"columns":["site_domain","campaign_id","line_item_id","imps","clicks"],"row_per":["site_domain"],"pivot_report":false,"fixed_columns":[],"show_usd_currency":false,"orders":["site_domain","imps","clicks","click_thru_pct","convs_rate","booked_revenue","post_view_convs","post_click_convs","media_cost","profit_ecpm"],"name":"","ui_columns":["site_domain","imps","clicks","click_thru_pct","convs_rate","booked_revenue","post_view_convs","post_click_convs","media_cost","profit_ecpm"]}}'
 
 RB_API_BASE = "/advertiser/viewable/reporting"
 URL = RB_API_BASE + "?meta=none&include=domain&type=%s&date=%s&format=json&campaign=%s" 
 
-LOGGING_SQL = "INSERT INTO domain_list_change_ref %(fields)s VALUES %(values)s"
+LOGGING_SQL = "INSERT IGNORE INTO domain_list_change_ref %(fields)s VALUES %(values)s"
+DOMAIN_REPORT_INSERT = "INSERT INTO v2_domain_reporting"
+
 
 class DomainAPI(object):
-    def __init__(self,api,rb,db):
+    def __init__(self,api,reporting,rb,db):
         self.an_api = api
+        self.an_reporting = reporting
         self.rb_api = rb
         self.db = db
 
@@ -18,11 +22,11 @@ class DomainAPI(object):
         LI_MSG = "AppNexus API line-item request: %s"
         CA_MSG = "AppNexus API campaigns received: %s"
 
-        logging.info(LI_MSG % line_item_id)
+        logging.info(LI_MSG % {"line_item_id":line_item_id})
 
         response = self.an_api.get("/line-item?id=%s" % line_item_id)
         campaigns = response.json["response"]["line-item"]["campaigns"]
-        self.advertiser_d = response.json["response"]["line-item"]["advertiser_id"] 
+        self.advertiser_id = response.json["response"]["line-item"]["advertiser_id"] 
         id_list = [c["id"] for c in campaigns]
         
         logging.info(CA_MSG % id_list)
@@ -35,16 +39,19 @@ class DomainAPI(object):
 
     def domain_change_ref(self,new_domain_df):
         MSG = "Adding domains: %s"
+
+        _cols = ['served', 'visible', 'loaded', 'percent_visible', 'percent_loaded', 'external_domain_list_id', 'domain_list', 'action']
         
-        records = new_domain_df.to_records()
-        columns = tuple(["domain"] + list(new_domain_df.columns))
-        values  = ", ".join(map(str,records))
+        records = new_domain_df[_cols].to_records()
+        columns = tuple(["domain"] + list(new_domain_df[_cols].columns))
+        values  = ", ".join(map(str,records)).replace("(u'","('")
 
         if len(records):
             params = {
-                "fields": str(columns).replace("'","`"),
+                "fields": str(columns).replace("'","`").replace("u`","`"),
                 "values": values
             }
+            logging.info(LOGGING_SQL % params)
             self.db.execute(LOGGING_SQL % params)
             logging.info(MSG % list(new_domain_df.index))
         
@@ -99,6 +106,6 @@ class DomainAPI(object):
         logging.info(RQ_MSG % (domain_list,duration,campaign_string)) 
         df = self.rb_api.get_report(compiled_url)
         logging.info(LN_MSG % len(df))
-         
+
         return df
  

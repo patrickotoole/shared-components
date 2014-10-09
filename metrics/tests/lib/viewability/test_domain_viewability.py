@@ -24,7 +24,7 @@ class ViewabilityDomainAPITestCase(unittest.TestCase):
     """
 
     def setUp(self):
-        self.va = domain.DomainAPI(mock.MagicMock(),mock.MagicMock(),mock.MagicMock())
+        self.va = domain.DomainAPI(mock.MagicMock(),mock.MagicMock(),mock.MagicMock(),mock.MagicMock())
 
     def test_get_campaigns_success(self):
         MOCKED_JSON_RESPONSE = {"response":{"line-item":{"campaigns":[{"id":1}],"advertiser_id":1}}}
@@ -61,7 +61,7 @@ class ViewabilityDomainAnalysisTestCase(unittest.TestCase):
             "learn_size": 1,
             "domain_list_id": "baublebar_womens_interest"
         }
-        self.va = domain.DomainAnalysis(mock.MagicMock(),mock.MagicMock(),mock.MagicMock(),**CONFIG)
+        self.va = domain.DomainAnalysis(mock.MagicMock(),mock.MagicMock(),mock.MagicMock(),mock.MagicMock(),**CONFIG)
 
     def test_get_viewability_report(self):
         with mock.patch.object(domain.DomainAPI,"get_viewability_df",return_value=DF): 

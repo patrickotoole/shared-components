@@ -1,9 +1,11 @@
 import logging
 from api import DomainAPI 
+from domain_report import DomainReport
 
 class DomainAnalysis(DomainAPI):
-    def __init__(self,api,rb,db,**obj):
+    def __init__(self,api,reporting,rb,db,**obj):
         self.an_api = api
+        self.an_reporting = reporting
         self.rb_api = rb
         self.db = db
         self.__dict__.update(**obj)
@@ -14,6 +16,9 @@ class DomainAnalysis(DomainAPI):
         self._viewability_report = None
         self._campaign_ids = None 
         self._domain_list = None
+
+    def log(self,msg):
+        logging.info("[%s] %s" % (self.domain_list_id,msg))
 
     @staticmethod
     def calc_percent_visible(df):
@@ -46,15 +51,23 @@ class DomainAnalysis(DomainAPI):
     @property
     def campaign_ids(self):
         if self._campaign_ids is None:
-            self._campaign_ids = self.pull_campaign_ids(self.learn_line_item_id)
+            self._campaign_ids = self.get_campaign_ids(self.learn_line_item_id)
         return self._campaign_ids
 
     @property
     def viewability_report(self):
         if self._viewability_report is None:
             self._viewability_report = self.get_viewability_report()
-            logging.info("Have viewability info for %s domains on (%s)" % (len(self._viewability_report),self.domain_list_id))
+            self.log("Have viewability info for %s" % (len(self._viewability_report)))
         return self._viewability_report
+
+    @property
+    def appnexus_report(self):
+        if not hasattr(self, "_appnexus_report"):
+            self._appnexus_report = DomainReport(self.an_api,self.db).get_data(self.campaign_ids)
+            self.log("Have appnexus domain report for %s" % 1)
+        return self._appnexus_report
+
 
     @property
     def whitelist(self):
@@ -86,10 +99,16 @@ class DomainAnalysis(DomainAPI):
         _j = _d.join(_v) 
 
         missing = _j[_j.served.isnull()]
-        logging.info("No served info for %s domains on (%s)" % (len(missing),self.domain_list_id))
+        self.log("No served info for %s domains" % (len(missing)))
 
         return missing
 
+    @property
+    def bad_domains(self):
+        _joined = self.appnexus_report.join(self.viewability_report)
+        _joined = _joined[_joined.index != "Undisclosed"]
+        bad = _joined[(_joined.served.fillna(0)/_joined.imps < .05) & (_joined.imps > 1000)]
+        return bad
         
     
     def get_viewability_report(self):
@@ -101,7 +120,7 @@ class DomainAnalysis(DomainAPI):
         white_domains = list(self.whitelist.index)
         combined = black_domains + white_domains
         grey_domains = [i for i in self.viewability_report.index if i not in combined]
-        logging.info("Collecting more data for %s domains on (%s)" % (len(grey_domains),self.domain_list_id))
+        self.log("Collecting more data for %s domains" % (len(grey_domains)))
         return self.viewability_report.ix[grey_domains]
 
     def get_whitelist(self):
@@ -122,11 +141,18 @@ class DomainAnalysis(DomainAPI):
 
     def push_whitelist(self):
         whitelist = self.whitelist
-        logging.info("Whitelisted %s domains on %s" % (len(whitelist),self.domain_list_id))
+        self.log("Whitelisted %s domains" % (len(whitelist)))
         self.update_domain_list(whitelist,self.white_list_id, self.domain_list_id, "approve")
 
     def push_blacklist(self):
         blacklist = self.blacklist
-        logging.info("Blacklisted %s domains on %s" % (len(blacklist),self.domain_list_id)) 
+        self.log("Blacklisted %s domains" % (len(blacklist))) 
         self.update_domain_list(blacklist,self.black_list_id, self.domain_list_id, "ban") 
+
+    def push_bad_domains(self):
+        bad_domains = self.bad_domains
+        bad_domains['domain'] = bad_domains.index
+        bad_domains = bad_domains.set_index('domain')
+        self.log("Bad domains (only in appnexus) %s" % len(bad_domains))
+        self.update_domain_list(bad_domains,self.black_list_id, self.domain_list_id, "bad")
  
