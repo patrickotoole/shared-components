@@ -25,7 +25,6 @@ rolled = d3.nest()
 var id = '#domain-content'
 
 var buildDomainListWrapper = function(data, summary_data, id, width) {
-  console.log(summary_data)
   var wrapper_width = width || 6
     
 
@@ -131,13 +130,6 @@ var buildDomains = function(obj,reporting_data) {
           r = y.reporting.served || 0
         return l - r
       })
-      
-
-
-  //domain_details.append("div")
-  //  .text(function(x) {
-  //    return JSON.stringify(x.reporting)
-  //  })
 
 }
 
