@@ -64,7 +64,7 @@ class DomainAnalysis(DomainAPI):
     @property
     def appnexus_report(self):
         if not hasattr(self, "_appnexus_report"):
-            self._appnexus_report = DomainReport(self.an_api,self.db).get_data(self.campaign_ids)
+            self._appnexus_report = DomainReport(self.an_reporting,self.db).get_data(self.campaign_ids)
             self.log("Have appnexus domain report for %s" % 1)
         return self._appnexus_report
 
