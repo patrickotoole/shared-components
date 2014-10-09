@@ -8,8 +8,11 @@ var buildCampaigns = function(obj,name,show_id) {
     name = name || "Campaigns",
     show_id = show_id || false
 
-  d3.xml("/static/nosetest.xml", "application/xml", function(xml) {
+
+  var url = "/admin/campaign_check.xml"
+  d3.xml(url, "application/xml", function(xml) {
     var testcases = xml.documentElement.getElementsByTagName("testcase")
+    console.log(testcases)
     var entries = d3.entries(testcases)
     entries = entries.filter(function(x){
       try {
@@ -133,7 +136,10 @@ var buildCampaigns = function(obj,name,show_id) {
         })
       })    
    
-  })
+  }) 
+  
+
+  
 
 }
  

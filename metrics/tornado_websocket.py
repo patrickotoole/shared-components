@@ -102,7 +102,9 @@ admin_scripts = [
     (r'/admin/batch_requests.*', admin.scripts.BatchRequestsHandler, dict(db=db, api=api, hive=hive)),
     (r'/admin/imps/?', admin.scripts.ImpsHandler, dict(db=db, api=api, hive=hive)),
     (r'/admin/campaign_check/relation/?(.*?)/?', admin.scripts.CampaignRelationsHandler, dict(db=db)),  
+    (r'/admin/campaign_check.xml', admin.scripts.CircleCIXMLHandler ),   
     (r'/admin/campaign_check/?(.*?)/?', admin.scripts.CampaignChecksHandler, dict(db=db)), 
+
 ]
 
 _streaming = [
