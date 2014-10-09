@@ -30,6 +30,21 @@ OPTIONS = {
             }
         },
 
+    "campaign": {
+        "meta": {
+            "groups": ["advertiser", "segment", "campaigns"],
+            "fields": ["num_conv"],
+            "formatters": {
+                "segment": "none",
+                "campaigns": "none",
+                "order_type": "none",
+                "order_id": "none",
+                "conv_id": "none",
+                "uid": "none"                
+            }
+        }
+    },
+
     "experiment" : {
         "meta": {
             "groups" : ["experiment", "is_control"],
@@ -118,7 +133,8 @@ GROUPS = {
     "attributed_to": "CASE WHEN num_served > 0 THEN 'Rockerbox' ELSE 'Other' END",
     "bucket": "t.bucket_name",
     "experiment": "t.experiment_id",
-    "domain": "domain"
+    "domain": "domain",
+    "campaigns": "campaigns"
     }
 
 
@@ -137,7 +153,8 @@ WHERE = {
     "conv_id": "conv_id = '%(conv_id)s'",
     "is_rockerbox": "CASE WHEN lower('%(is_rockerbox)s') = 'true' THEN num_served > 0 ELSE num_served = 0 END",
     "attributed_to": "CASE WHEN '%(attributed_to)s' LIKE 'Rockerbox' THEN num_served > 0 ELSE num_served < 0 END",
-    "experiment": "num_served > 0 AND t.experiment_id = '%(experiment)s'"
+    "experiment": "num_served > 0 AND t.experiment_id = '%(experiment)s'",
+    "campaign": "array_contains(map_keys(campaigns), '%(campaign)s')"
     }
 
 class ConversionCheckHandler(AdminReportingBaseHandler):
@@ -210,6 +227,10 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
         advertiser = self.get_argument("advertiser", False)
         segment = self.get_argument("segment", False)
         top_domains = self.get_argument("top_domains", False)
+        campaign = self.get_argument("campaign", False)
+
+        if campaign:
+            return "campaign"
 
         if top_domains:
             return "top_domains"
