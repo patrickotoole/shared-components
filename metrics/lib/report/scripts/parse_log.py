@@ -31,6 +31,11 @@ MSG_REGEX = r'\d+> (.*)'
 RE = '%s.*?%s.*?%s.*?%s' % (DATE_TIME_REGEX, PID_REGEX, FILE_REGEX, MSG_REGEX)
 REGEX = re.compile(RE)
 
+RECIEVERS = [
+    'wei@rockerbox.com',
+    'ron@rockerbox.com',
+]
+
 
 def main():
     define("filename", type=str)
@@ -60,7 +65,7 @@ def notify(res):
     if not tables:
         return
     logging.info('sending email to wei')
-    return send_multi_table_report_email('wei@rockerbox.com',
+    return send_multi_table_report_email(RECIEVERS,
             tables,
             subject='log error alert',
             )
