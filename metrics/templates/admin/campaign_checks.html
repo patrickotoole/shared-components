@@ -1,20 +1,24 @@
 {% autoescape None %}
 {% extends "../clean_base.html" %}
 {% block content %}
-<link rel="stylesheet" type="text/css" href="http://getbootstrap.com/dist/css/bootstrap.min.css">
-<link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/dc.css">
-<link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/chosen.css">
-<script type="text/javascript" src="http://rockerbox.com/js/d3.js"></script>
-<script type="text/javascript" src="/static/js/advertiser.js"></script> 
+<link rel="stylesheet" type="text/css" href="/static/tmp/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="/static/tmp/dc.css">
+<link rel="stylesheet" type="text/css" href="/static/tmp/chosen.css">
+<script type="text/javascript" src="/static/tmp/d3.js"></script>
+<script type="text/javascript" src="/static/js/checks.js"></script> 
 
-<div id="advertiser-content" class='container'>
+<div id="fixture-content" class='container'>
   <div class="row">
-    <h4>Advertisers</h4>
+    <h4>Campaign Fixtures</h4>
   </div>
 </div>
 
 <script>
-  var d = {{data}}
+  var d = {{data}},
+    wrapped = buildChecksWrapper(d,"#fixture-content")
+
+  buildFixtureInfo(wrapped)
+
 </script>
 
 {% end %}   

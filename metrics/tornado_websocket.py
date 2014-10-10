@@ -44,9 +44,9 @@ define("view_port", default=1235, help="run on the given port", type=int)
 
 db = lnk.dbs.rockerbox
 reporting_db = lnk.dbs.reporting
-api = lnk.api.console
-bidder = lnk.api.bidder
-hive = h.Hive().hive
+api = None#lnk.api.console
+bidder = None#lnk.api.bidder
+hive = None#h.Hive().hive
 
 _redis = streaming._redis
 track_buffer = streaming.track_buffer
@@ -101,9 +101,11 @@ admin_scripts = [
     (r'/admin/batch_request/new.*', admin.scripts.BatchRequestFormHandler, dict(db=db, api=api, hive=hive)),
     (r'/admin/batch_requests.*', admin.scripts.BatchRequestsHandler, dict(db=db, api=api, hive=hive)),
     (r'/admin/imps/?', admin.scripts.ImpsHandler, dict(db=db, api=api, hive=hive)),
-    (r'/admin/campaign_check/relation/?(.*?)/?', admin.scripts.CampaignRelationsHandler, dict(db=db)),  
-    (r'/admin/campaign_check.xml', admin.scripts.CircleCIXMLHandler ),   
-    (r'/admin/campaign_check/?(.*?)/?', admin.scripts.CampaignChecksHandler, dict(db=db)), 
+
+    (r'/admin/campaign_check/fixtures/?(.*?)/?', admin.checks.FixtureHandler, dict(db=db)),   
+    (r'/admin/campaign_check/relation/?(.*?)/?', admin.checks.CampaignRelationsHandler, dict(db=db)),  
+    (r'/admin/campaign_check.xml', admin.checks.CircleCIXMLHandler ),   
+    (r'/admin/campaign_check/?(.*?)/?', admin.checks.CampaignChecksHandler, dict(db=db)), 
 
 ]
 
@@ -181,7 +183,6 @@ dirname = os.path.dirname(os.path.realpath(__file__))
 app = tornado.web.Application(
     _streaming + admin_scripts + admin_reporting + reporting + static + index,
     template_path= dirname + "/templates",
-    db=lnk.dbs.mysql,
     debug=True,
     cookie_secret="rickotoole",
     login_url="/login"

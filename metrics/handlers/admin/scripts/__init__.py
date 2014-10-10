@@ -9,6 +9,3 @@ from batch import BatchRequestsHandler
 from batch import BatchRequestFormHandler
 from event_log import EventLogHandler
 from imps import ImpsHandler
-from checks.relation_handler import CampaignRelationsHandler
-from checks.check_handler import CampaignChecksHandler 
-from checks.relation_handler import CircleCIXMLHandler
