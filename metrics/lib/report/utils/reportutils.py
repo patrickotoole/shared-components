@@ -54,7 +54,7 @@ def get_path(
     return path
 
 def get_advertisers():
-    cur = lnk.dbs.mysql
+    cur = lnk.dbs.rockerbox
     df = cur.select('select external_advertiser_id, advertiser_name from advertiser where deleted=0 and active=1;').as_dataframe()
     return df
 
