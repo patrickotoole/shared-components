@@ -123,8 +123,8 @@ class DomainListHandler(AdminReportingBaseHandler):
     def get_data(self,query,groupby=False,wide=False):
 
         query_list = [
-            #"set shark.map.tasks=44", 
-            #"set mapred.reduce.tasks=0",
+            "set shark.map.tasks=44",
+            "set mapred.reduce.tasks=0",
             query
         ]
 

@@ -15,12 +15,15 @@ def main():
     rb_api = lnk.api.rockerbox
     reporting_db = lnk.dbs.reporting
 
-    for obj in dlv.iterrows():
-        va = DomainAnalysis(an_api,an_reporting,rb_api,reporting_db,**obj[1].to_dict())
-        va.missing_domains()
-        va.push_whitelist()
-        va.push_blacklist()
-        va.push_bad_domains()
+    for obj in list(dlv.iterrows()):
+        try:
+            va = DomainAnalysis(an_api,an_reporting,rb_api,reporting_db,**obj[1].to_dict())
+            va.missing_domains()
+            va.push_whitelist()
+            va.push_blacklist()
+            va.push_bad_domains()
+        except:
+            logging.error("%s" % str(obj))
         #va.greylist
         #print va.appnexus_report
         

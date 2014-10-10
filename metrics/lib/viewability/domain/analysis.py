@@ -1,4 +1,5 @@
 import logging
+import pandas
 from api import DomainAPI 
 from domain_report import DomainReport
 
@@ -105,11 +106,18 @@ class DomainAnalysis(DomainAPI):
 
     @property
     def bad_domains(self):
-        _joined = self.appnexus_report.join(self.viewability_report)
+        try:
+            r = self.appnexus_report
+            if len(r) == 0:
+                raise Exception
+        except:
+            return pandas.DataFrame([])
+
+        _joined = r.join(self.viewability_report)
         _joined = _joined[_joined.index != "Undisclosed"]
         bad = _joined[(_joined.served.fillna(0)/_joined.imps < .05) & (_joined.imps > 1000)]
         return bad
-        
+    
     
     def get_viewability_report(self):
         df = self.get_viewability_df(self.domain_list_id)
@@ -154,5 +162,6 @@ class DomainAnalysis(DomainAPI):
         bad_domains['domain'] = bad_domains.index
         bad_domains = bad_domains.set_index('domain')
         self.log("Bad domains (only in appnexus) %s" % len(bad_domains))
-        self.update_domain_list(bad_domains,self.black_list_id, self.domain_list_id, "bad")
+        if len(bad_domains) > 0:
+            self.update_domain_list(bad_domains,self.black_list_id, self.domain_list_id, "bad")
  
