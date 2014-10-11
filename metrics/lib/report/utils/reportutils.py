@@ -15,8 +15,7 @@ REPORT_DIR = os.path.abspath(os.path.join(CUR, '../reports'))
 
 def get_report_obj(report_name, db=None, path=REPORT_DIR):
     name = filter(str.isalnum, str(report_name).lower())
-    if not path in sys.path:
-        sys.path.append(path)
+    _insert_path_to_front(path)
     os.chdir(path)
     for f in glob.glob("*.py"):
         f = os.path.splitext(f)[0]
@@ -26,6 +25,11 @@ def get_report_obj(report_name, db=None, path=REPORT_DIR):
             if found:
                 return found
     raise ValueError("Can't for related report file")
+
+def _insert_path_to_front(path):
+    if path in sys.path:
+        sys.path.pop(sys.path.index(path))
+    sys.path = [path] + sys.path
 
 def get_member_name(report_name, _module, db):
     for member_name, obj in inspect.getmembers(_module):
