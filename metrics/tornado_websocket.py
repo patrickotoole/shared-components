@@ -103,6 +103,7 @@ admin_scripts = [
     (r'/admin/imps/?', admin.scripts.ImpsHandler, dict(db=db, api=api, hive=hive)),
 
     (r'/admin/campaign_check/fixtures/?(.*?)/?', admin.checks.FixtureHandler, dict(db=db)),   
+    (r'/admin/campaign_check/suites/?(.*?)/?', admin.checks.SuiteHandler, dict(db=db)),   
     (r'/admin/campaign_check/relation/?(.*?)/?', admin.checks.CampaignRelationsHandler, dict(db=db)),  
     (r'/admin/campaign_check.xml', admin.checks.CircleCIXMLHandler ),   
     (r'/admin/campaign_check/?(.*?)/?', admin.checks.CampaignChecksHandler, dict(db=db)), 
