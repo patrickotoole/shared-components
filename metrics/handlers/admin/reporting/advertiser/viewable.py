@@ -96,8 +96,7 @@ OPTIONS = {
                 "spent": "cpm",
                 "venue": "none",
                 "tag": "none"
-            },
-            "joins" : JOIN["type"] 
+            }
         }
     },
     "none": {
