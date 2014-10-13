@@ -225,6 +225,8 @@ def _transform(df):
             m = ID_REGEX.search(x)
             return int(m.group(1)) if m else x
         return x
+    if df.empty:
+        return df
     df = df.applymap(_helper)
     return df
 
