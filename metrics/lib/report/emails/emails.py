@@ -66,6 +66,7 @@ def send_report_email(to, headers, rows,
             )
 
 def send_multi_table_report_email(to, tables,
+        from_email=None,
         subject='report',
         width=700,
         ):
@@ -79,6 +80,7 @@ def send_multi_table_report_email(to, tables,
     return _send_email(REPORT_TEMPLATE,
             subject=subject,
             to=to,
+            from_email=from_email,
             tables=tables,
             width=width,
             )

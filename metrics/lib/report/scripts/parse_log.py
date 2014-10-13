@@ -67,6 +67,7 @@ def notify(res):
     logging.info('sending email to wei')
     return send_multi_table_report_email(RECIEVERS,
             tables,
+            from_email='cron_error@rockerbox.com',
             subject='log error alert',
             )
 
