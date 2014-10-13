@@ -30,6 +30,22 @@ OPTIONS = {
             }
         },
 
+    "first_campaign": {
+        "meta": {
+            "groups": ["advertiser", "first_campaign", "segment"],
+            "fields": ["num_conv"],
+            "formatters": {
+                "first_campaign": "none",
+                "segment": "none",
+                "campaigns": "none",
+                "order_type": "none",
+                "order_id": "none",
+                "conv_id": "none",
+                "uid": "none"                
+            }
+        }
+    },
+
     "campaign": {
         "meta": {
             "groups": ["advertiser", "segment", "campaigns"],
@@ -111,8 +127,34 @@ OPTIONS = {
     "top_domains": {
         "meta": {
             "groups": ["advertiser", "domain"],
-            "fields": ["imps"],
+            "fields": ["imps", "num_conv"],
             "static_joins": JOIN["lateral_view"]
+        }
+    },
+    
+    "none": {
+        "meta": {
+            "groups": [
+                "advertiser",
+                "date",
+                "hour",
+                "conv_timestamp",
+                "uid",
+                "segment",
+                "query_str",
+                "conv_id",
+                "order_id",
+                "order_type",
+                "since_last_served",
+                "since_first_served",
+                "attributed_to",
+                "domains",
+                "campaigns",
+                "first_campaign",
+                "last_campaign",
+                "influencer_campaign"
+                       ],
+            "fields": ["num_conv", "num_served"]
         }
     }
 }
@@ -134,14 +176,18 @@ GROUPS = {
     "bucket": "t.bucket_name",
     "experiment": "t.experiment_id",
     "domain": "domain",
-    "campaigns": "campaigns"
+    "domains": "domains",
+    "campaigns": "campaigns",
+    "first_campaign": "first_campaign",
+    "last_campaign": "last_campaign",
+    "influencer_campaign": "influencer_campaign"
     }
 
 
 FIELDS = {
-    "num_conv" : "count(*)",
     "num_served": "sum(num_served)",
-    "imps": "sum(imps)"
+    "imps": "sum(imps)",
+    "num_conv": "count (distinct uid)"
     }
 
 WHERE = {
@@ -226,17 +272,13 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
         meta = self.get_argument("meta", False)
         advertiser = self.get_argument("advertiser", False)
         segment = self.get_argument("segment", False)
-        top_domains = self.get_argument("top_domains", False)
         campaign = self.get_argument("campaign", False)
-
-        if campaign:
-            return "campaign"
-
-        if top_domains:
-            return "top_domains"
 
         if meta:
             return meta
+
+        if campaign:
+            return "campaign"
 
         if segment:
             return "segment"
