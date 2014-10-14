@@ -23,7 +23,7 @@ class LoginHandler(tornado.web.RequestHandler):
         if self.get_secure_cookie("user"):
             user = self.get_secure_cookie("user")
             if self.db.select_dataframe("select * from user where username = '%s'" % user)['show_reporting'][0] == 0:
-                self.redirect(self.get_argument("next", "/advertiser", True)) 
+                self.redirect(self.get_argument("next", "/advertiser", True))
             else:
                 self.redirect(self.get_argument("next", "/reporting", True))
         else:
@@ -33,16 +33,19 @@ class LoginHandler(tornado.web.RequestHandler):
         body = ujson.loads(self.request.body)
         username = body["username"]
         password = body.get("password","")
-        lookup = self.db.select(USER_QUERY % username).fetchall() 
+        df = self.db.select_dataframe(USER_QUERY % username)
 
-        if len(lookup) > 0 and self._check_password(password,lookup[0][3]):
-            self.set_secure_cookie("advertiser",str(lookup[0][2]))
-            self.set_secure_cookie("user",username)
-            self.write("1")
-        else:
-            self.write("0")
+        if not df.empty:
+            dict_ = df.to_dict(outtype='records')[0]
+            pw = dict_.get('password')
+            aid = dict_.get('advertiser_id')
+            if self._check_password(password, pw):
+                self.set_secure_cookie("advertiser",str(aid))
+                self.set_secure_cookie("user",username)
+                self.write("1")
+                return
 
-
+        self.write("0")
 
 class SignupHandler(tornado.web.RequestHandler):
 
@@ -59,7 +62,7 @@ class SignupHandler(tornado.web.RequestHandler):
 
     def create(self,to_create):
         validate = to_create.get("username",False) and to_create.get("password",False)
-        
+
         if validate:
             to_create["password"] = pw_hash.hash_password(to_create["password"])
 
