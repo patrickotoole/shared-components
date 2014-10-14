@@ -4,7 +4,7 @@ mock
 vincent
 bcrypt
 pandas
-https://github.com/patrickotoole/link/archive/mysql-errorhandling.zip
+https://github.com/dhrod5/link/archive/master.zip
 ujson
 redis
 maxminddb
