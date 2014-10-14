@@ -169,7 +169,7 @@ var buildSegments = function(obj,name,show_id) {
 
   var segments = default_panel
     .append("div")
-    .classed("list-group segments hidden", true)
+    .classed("list-group segments", true)
     .selectAll("div")
     .data(function(x){
       var segs = x.segments.filter(function(y){
