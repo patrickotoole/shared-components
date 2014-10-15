@@ -115,9 +115,9 @@ _streaming = [
 admin_advertiser = [
     
     #(r'/admin/advertiser/new/?',admin.scripts.AdvertiserHandler, dict(db=db,api=api)),
-
     
-    (r'/admin/advertiser/pixel/reporting/?', reporting.PixelAdvertiserHandler, dict(db=db, hive=hive)),
+    (r'/admin/advertiser/pixel/reporting/?', admin.reporting.AdvertiserPixelHandler, dict(db=db, hive=hive)),
+    (r'/admin/advertiser/pixel/reporting/?(meta)?/?', admin.reporting.AdvertiserPixelHandler, dict(db=db, hive=hive)),
     (r'/admin/advertiser/reporting/?', admin.reporting.AdvertiserReportingHandler, dict(db=db, hive=hive)), 
     (r'/admin/advertiser/viewable/reporting/?',admin.reporting.AdvertiserViewableHandler, dict(db=db,hive=hive)),
     (r'/admin/advertiser/viewable/reporting/?(meta)?/?',admin.reporting.AdvertiserViewableHandler, dict(db=db,hive=hive)), 

@@ -124,3 +124,10 @@ FROM domain_categories
 WHERE %(where)s
 GROUP BY %(groups)s
 """
+
+PIXEL= '''
+SELECT %(fields)s
+FROM agg_pixel
+WHERE %(where)s
+GROUP BY %(groups)s
+'''
