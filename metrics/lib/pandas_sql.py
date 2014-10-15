@@ -39,19 +39,23 @@ def _write_mysql(frame, table, names, con, key=None, fn=None):
     @param: key (list(unique_column_names)):
     @param: fn (function to transform the strings)
     """
+    def _escape_quote(s):
+        return str(s).replace("'", r'\'')
+
     key = key or []
     bracketed_names = ['`' + column + '`' for column in names]
     col_names = ','.join(bracketed_names)
     wildcards = '(' + ','.join([r"%s"] * len(names)) + ')'
     updates = ','.join(['%s.`%s` = VALUES(%s.`%s`)' % (table,c,table,c) for c in names if not c in key])
 
-    fn = fn or (lambda x: "'%s'" % x)
+    fn = fn or (lambda x: "'%s'" % _escape_quote(x))
     ts = [ tuple(map(fn, v)) for v in frame.values.tolist() ]
     values = ','.join([wildcards % t for t in ts])
 
     insert_query = "INSERT INTO %s (%s) VALUES %s ON DUPLICATE KEY UPDATE %s" % (
         table, col_names, values, updates)
     con.execute(insert_query)
+    return insert_query
 
 
 def write_frame(frame, name, con, flavor='sqlite', if_exists='fail', **kwargs):
