@@ -47,8 +47,7 @@ def check(hours=1):
 
 def _get_fail(start_date, end_date):
     q = FAILED_QUERY.format(start_date=datetime_to_str(start_date), end_date=datetime_to_str(end_date))
-    d = db.select(q).as_dict()
-    return d
+    return db.select_dataframe(q).to_dict(outtype='records')
 
 def _run(to_rerun):
     """
@@ -101,8 +100,7 @@ def _get_parsed(start_date, end_date, query):
     @return          : set(datetime)
     """
     query = query.format(start_date=datetime_to_str(start_date), end_date=datetime_to_str(end_date))
-    rs = db.select(query).as_dict()
-    return set(map(lambda r: r.get('start_date'), rs))
+    return set(map(str, db.select_dataframe(query).start_date.tolist()))
 
 def _create_missed_dict(start_date, end_date):
     names = ['datapulling', 'conversions']
