@@ -1,8 +1,7 @@
-/*
 div.dc-chart {
     float: left;
 }
-*/
+
 .dc-chart rect.bar {
     stroke: none;
     cursor: pointer;
@@ -25,15 +24,6 @@ div.dc-chart {
 .dc-chart rect.deselected {
     stroke: none;
     fill: #ccc;
-}
-
-.dc-chart .empty-chart .pie-slice path {
-    fill: #FFEEEE;
-    cursor: default;
-}
-
-.dc-chart .empty-chart .pie-slice {
-    cursor: default;
 }
 
 .dc-chart .pie-slice {
