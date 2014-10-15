@@ -75,6 +75,5 @@ class ReportWorker(BaseWorker):
     def insert_reports(self, df, con=None, table_name=None, key=None):
         cols = df.columns.tolist()
         logging.info("inserting into table: %s, cols: %s" % (table_name, cols))
-        _sql._write_mysql(df, table_name, cols, con.cursor(), key=key)
-        con.commit()
+        _sql._write_mysql(df, table_name, cols, con, key=key)
         return True

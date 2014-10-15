@@ -30,27 +30,28 @@ def get_sqltype(pytype, flavor):
 
     return sqltype[flavor]
 
-def _write_mysql(frame, table, names, cur, key=None, fn=None):
+def _write_mysql(frame, table, names, con, key=None, fn=None):
     """
     @param: frame (df):
     @param: table (string):
     @param: names (list(sql_column_names)):
-    @param: cur (cursor):
+    @param: con Link(db_wrapper):
     @param: key (list(unique_column_names)):
     @param: fn (function to transform the strings)
     """
     key = key or []
     bracketed_names = ['`' + column + '`' for column in names]
     col_names = ','.join(bracketed_names)
-    wildcards = ','.join([r'%s'] * len(names))
+    wildcards = '(' + ','.join([r"%s"] * len(names)) + ')'
     updates = ','.join(['%s.`%s` = VALUES(%s.`%s`)' % (table,c,table,c) for c in names if not c in key])
 
-    insert_query = "INSERT INTO %s (%s) VALUES (%s) ON DUPLICATE KEY UPDATE %s" % (
-        table, col_names, wildcards, updates)
-    fn = fn or (lambda x: x)
-    data = [tuple(map(fn, x)) for x in frame.values]
-    cur.executemany(insert_query, data)
-    return cur
+    fn = fn or (lambda x: "'%s'" % x)
+    ts = [ tuple(map(fn, v)) for v in frame.values.tolist() ]
+    values = ','.join([wildcards % t for t in ts])
+
+    insert_query = "INSERT INTO %s (%s) VALUES %s ON DUPLICATE KEY UPDATE %s" % (
+        table, col_names, values, updates)
+    con.execute(insert_query)
 
 
 def write_frame(frame, name, con, flavor='sqlite', if_exists='fail', **kwargs):
