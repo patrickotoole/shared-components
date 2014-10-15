@@ -113,15 +113,12 @@ class ReportTestCase(unittest.TestCase):
         response = resp.to_dict().get('creative_id')
         self.assertEqual(expected, response)
 
-    #TODO fix this report
     def test_write_mysql_insert_query(self):
         csv_path = _testfile_path('test2.csv')
         df = pd.read_csv(csv_path, index_col=True)
-        cur = self.db.cursor()
-        _cur = _sql._write_mysql(df, 'v4_reporting_test_blah', df.columns.tolist(), cur)
-        res = vars(_cur)
-        expected_exe = "INSERT INTO v4_reporting_test_blah (`date`,`line_item_id`,`campaign_id`,`creative_id`,`imps`,`clicks`,`media_cost`,`adx_spend`) VALUES ('2014-07-09 00:00:00',1037447,3657781,14654391,200,0,0.330013,0.13152) ON DUPLICATE KEY UPDATE v4_reporting_test_blah.`date` = VALUES(v4_reporting_test_blah.`date`),v4_reporting_test_blah.`line_item_id` = VALUES(v4_reporting_test_blah.`line_item_id`),v4_reporting_test_blah.`campaign_id` = VALUES(v4_reporting_test_blah.`campaign_id`),v4_reporting_test_blah.`creative_id` = VALUES(v4_reporting_test_blah.`creative_id`),v4_reporting_test_blah.`imps` = VALUES(v4_reporting_test_blah.`imps`),v4_reporting_test_blah.`clicks` = VALUES(v4_reporting_test_blah.`clicks`),v4_reporting_test_blah.`media_cost` = VALUES(v4_reporting_test_blah.`media_cost`),v4_reporting_test_blah.`adx_spend` = VALUES(v4_reporting_test_blah.`adx_spend`)"
-        resp_exe = res.get('_last_executed').replace("\n","")
+        unique_key = ['date', 'line_item_id']
+        expected_exe = "INSERT INTO v4_reporting_test_blah (`date`,`line_item_id`,`campaign_id`,`creative_id`,`imps`,`clicks`,`media_cost`,`adx_spend`) VALUES ('2014-07-09 00:00:00','1037447.0','3657781.0','14654391.0','200.0','0.0','0.330013','0.13152') ON DUPLICATE KEY UPDATE v4_reporting_test_blah.`campaign_id` = VALUES(v4_reporting_test_blah.`campaign_id`),v4_reporting_test_blah.`creative_id` = VALUES(v4_reporting_test_blah.`creative_id`),v4_reporting_test_blah.`imps` = VALUES(v4_reporting_test_blah.`imps`),v4_reporting_test_blah.`clicks` = VALUES(v4_reporting_test_blah.`clicks`),v4_reporting_test_blah.`media_cost` = VALUES(v4_reporting_test_blah.`media_cost`),v4_reporting_test_blah.`adx_spend` = VALUES(v4_reporting_test_blah.`adx_spend`)"
+        resp_exe = _sql._write_mysql(df, 'v4_reporting_test_blah', df.columns.tolist(), self.db, key=unique_key)
         self.assertEqual(expected_exe, resp_exe)
 
     def test_get_path(self):
