@@ -28,7 +28,7 @@ NO_CONVS = None
 TYPE = 'network_analytics'
 CONSOLE = None
 
-DB = lnk.dbs.rockerbox
+DEFAULT_DB = lambda: lnk.dbs.rockerbox
 
 COST_EFFICIENCY = 'cost_efficiency'
 DOMAIN = 'site_domain'

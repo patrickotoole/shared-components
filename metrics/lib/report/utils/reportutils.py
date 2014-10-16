@@ -57,13 +57,13 @@ def get_path(
     path = os.path.join(TMP_DIR, file_name)
     return path
 
-def get_advertisers():
-    cur = lnk.dbs.rockerbox
-    df = cur.select_dataframe('select external_advertiser_id, advertiser_name from advertiser where deleted=0 and active=1;')
+def get_advertisers(db=None):
+    db = db or get_db('rockerbox')
+    df = db.select_dataframe('select external_advertiser_id, advertiser_name from advertiser where deleted=0 and active=1;')
     return df
 
-def get_advertiser_ids():
-    df = get_advertisers()
+def get_advertiser_ids(db=None):
+    df = get_advertisers(db)
     return list(df['external_advertiser_id'].values)
 
 def get_db(name='test'):

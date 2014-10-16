@@ -20,7 +20,7 @@ from lib.report.utils.constants import (
     PC_CONVS, PV_CONVS, MEDIA_COST, DAMPING_POINT, WORST,
     COST_EFFICIENCY, BOOKED_REV, MILLION, CPA_INF, GOOGLE_ADX,
     POST_CLICK, PC_EXPIRE, PV_EXPIRE, IMPS,
-    DB,
+    DEFAULT_DB,
 )
 
 FLOAT_REGEX = re.compile(r'[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?')
@@ -157,7 +157,7 @@ class AnalyzeConversions(AnalyzeBase):
         return df
 
 def _filter_advertiser(df):
-    adv_df = DB.select_dataframe('select * from advertiser')
+    adv_df = DEFAULT_DB().select_dataframe('select * from advertiser')
     adv_ids = adv_df.external_advertiser_id.unique().tolist()
     return df[df.external_advertiser_id.isin(adv_ids)]
 
@@ -186,7 +186,7 @@ def _get_pc_or_pv_hours():
     """
     @return: dict(int(pixelid), dict(pc_exp, pv_exp))
     """
-    df = DB.select_dataframe("select * from advertiser_pixel");
+    df = DEFAULT_DB().select_dataframe("select * from advertiser_pixel");
     return { d['pixel_id']: { 'pc': d['pc_window_hours'], 'pv':d['pv_window_hours'] }
             for _, d in df.iterrows() }
 
