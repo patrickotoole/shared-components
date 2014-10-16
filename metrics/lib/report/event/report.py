@@ -4,8 +4,8 @@ import logging
 from lib.report.event.base import EventBase
 from lib.report.utils.utils import decorator
 from lib.report.utils.utils import datetime_to_str
-from lib.report.utils.utils import parse
 
+ERROR_CODE = 1
 
 
 class EventReport(EventBase):
@@ -31,7 +31,7 @@ class EventReport(EventBase):
 @decorator
 def accounting(f):
     def _f(*args, **kwargs):
-        status = 0
+        status = 1
         job_created_at = datetime_to_str(datetime.now())
 
         worker = args[0]
@@ -42,11 +42,10 @@ def accounting(f):
         try:
             res = f(*args, **kwargs)
             if res:
-                status = 1
                 logging.info("succeed: job for %s: %s - %s" % (event_name, start_date, end_date))
         except Exception as e:
-            logging.warn(e)
-            logging.warn("failed: job for %s: %s - %s" % (event_name, start_date, end_date))
+            status = 0
+            logging.warn("%s, failed: job for %s: %s - %s" % (str(e), event_name, start_date, end_date))
 
         job_ended_at = datetime_to_str(datetime.now())
         try:
@@ -62,12 +61,9 @@ def accounting(f):
                     status=status,
                     ).create_event()
         except Exception as e:
-            logging.warn(e)
-            logging.warn("creating event failed for database %s for %s, start_date: %s, end_date: %s, status: %s" % (
-                    db_wrapper.database, event_name, start_date, end_date, status))
-            return status
-
-        logging.info("created event on database %s for %s, start_date: %s, end_date: %s, status: %s" % (
-                db_wrapper.database, event_name, start_date, end_date, status))
-        return status
+            status = 0
+            logging.warn("%s, creating event failed for database %s for %s, start_date: %s, end_date: %s" % (
+                    str(e), db_wrapper.database, event_name, start_date, end_date))
+        if status == 0:
+            raise SystemExit, ERROR_CODE
     return _f
