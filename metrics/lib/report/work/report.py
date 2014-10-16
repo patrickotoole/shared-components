@@ -8,16 +8,6 @@ from lib.report.utils.reportutils import get_report_obj
 from lib.report.event.report import accounting
 from lib.report.utils.reportutils import corret_insert
 
-def _is_empty(df):
-    """
-    @param df: DataFrame
-    @return: bool
-    Consider the one that got columns not a failure, but pd.DataFrame()
-    """
-    return len(df.columns) == 0
-
-class ReportError(ValueError):
-    pass
 
 class ReportWorker(BaseWorker):
     def __init__(self, name, con, act=True, **kwargs):
@@ -50,9 +40,9 @@ class ReportWorker(BaseWorker):
             logging.warn(e)
             return False
 
-        if _is_empty(df):
+        if not len(df):
             logging.info("Empty dataframe, not writing to database")
-            return False
+            return True
 
         if self._act:
             table_name = obj.table_name

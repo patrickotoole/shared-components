@@ -108,11 +108,7 @@ class ReportBase(object):
         """
         _form = self._get_form(**kwargs)
         url = self._get_request_url(advertiser_id)
-        try:
-            resp = self._get_resp_helper(url, _form)
-        except Exception as e:
-            logging.warn(e)
-            return empty_frame()
+        resp = self._get_resp_helper(url, _form)
         df = self._resp_to_df(resp)
         return df
 
