@@ -67,8 +67,9 @@ class ReportConversions(ReportBase):
         super(ReportConversions, self).__init__(*args, **kwargs)
 
     def _get_advertiser_ids(self):
-        d_ = _advertiser_to_pixels_mapping()
-        return d_.keys()
+        q = "select * from advertiser"
+        df = self._db_wrapper.select_dataframe(q)
+        return list(df[df.active==1].external_advertiser_id)
 
     def _get_pixel_ids(self, advertiser_id):
         d_ = _advertiser_to_pixels_mapping()
