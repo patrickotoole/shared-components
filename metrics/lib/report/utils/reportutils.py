@@ -6,6 +6,7 @@ import inspect
 import logging
 
 from link import lnk
+from lib.report.utils.utils import memo
 import pandas as pd
 
 FILE_FMT = '{name}_{group}{start_date}_{end_date}.csv'
@@ -62,9 +63,11 @@ def get_advertisers(db=None):
     df = db.select_dataframe('select external_advertiser_id, advertiser_name from advertiser where deleted=0 and active=1;')
     return df
 
-def get_advertiser_ids(db=None):
-    df = get_advertisers(db)
-    return list(df['external_advertiser_id'].values)
+@memo
+def get_advertiser_ids():
+    c = lnk.api.console
+    advs = c.get_all_pages('/advertiser', 'advertisers')
+    return set(a.get('id') for a in advs if a.get('state') == 'active')
 
 def get_db(name='test'):
     str_ = 'lnk.dbs.{name}'.format(name=name)
