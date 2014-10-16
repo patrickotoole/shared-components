@@ -13,7 +13,7 @@ from lib.report.emails.models import Table
 from lib.report.utils.utils import get_start_end_date
 from lib.report.utils.utils import parse_datetime
 from lib.report.utils.reportutils import get_report_obj
-from lib.report.utils.reportutils import get_advertisers
+from lib.report.utils.reportutils import get_advertiser_ids
 from lib.report.analyze.report import AnalyzeDomain
 
 
@@ -97,9 +97,9 @@ def _get_tables_by_adver(df, limit):
     @return: list(Table)
     """
     to_return = []
-    _advertisers = list(get_advertisers().values)
-    for _id, name in _advertisers:
-        title = '%s -- %s' % (name, _id)
+    _advertisers = get_advertiser_ids()
+    for _id in _advertisers:
+        title = '%s' % _id
         cp_df = df.copy(deep=True)
         cp_df = cp_df[cp_df['advertiser'] == _id][:limit]
         if not cp_df.empty:
