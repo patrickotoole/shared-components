@@ -139,15 +139,6 @@ class ReportTestCase(unittest.TestCase):
                 resp = ReportBase(self.db)._get_dataframe()
                 self.assertTrue(expected.equals(resp))
 
-    def test_get_dataframes_failure(self):
-        with mock.patch.object(ReportBase, "_get_resp_helper") as m:
-            with mock.patch.object(ReportBase, "_get_form_helper") as h:
-                h.return_value = ''
-                m.side_effect = ValueError('blow')
-                resp = ReportBase(self.db)._get_dataframe()
-                expected = empty_frame()
-                self.assertTrue(expected.equals(resp))
-
     def test_get_report_obj(self):
         obj = get_report_obj('domain', self.db)
         expected = obj._name
