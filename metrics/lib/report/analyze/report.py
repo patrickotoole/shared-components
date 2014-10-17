@@ -35,7 +35,8 @@ def get_analyze_obj(name):
     return (AnalyzeDomain if name == Analyze.domain else
             AnalyzeDataPulling if name == Analyze.datapulling else
             AnalyzeConversions if name == Analyze.conversions else
-            AnalyzeSegment)
+            AnalyzeSegment if name == Analyze.segment else
+            AnalyzeGeo)
 
 
 class AnalyzeBase(object):
@@ -189,6 +190,24 @@ def _get_pc_or_pv_hours():
     df = DEFAULT_DB().select_dataframe("select * from advertiser_pixel");
     return { d['pixel_id']: { 'pc': d['pc_window_hours'], 'pv':d['pv_window_hours'] }
             for _, d in df.iterrows() }
+
+#----------------------------------------------------------------------------
+
+class AnalyzeGeo(AnalyzeBase):
+    def _modify(self, df):
+        to_rename = dict(
+            advertiser='external_advertiser_id',
+            day='date',
+            geo_dma='dma',
+            geo_region='region',
+            booked_revenue='revenue',
+            click_thru_pct='ctr',
+            total_convs='convs',
+        )
+        df = df.rename(columns=to_rename)
+        df['ctr'] = df['ctr'].map(lambda x:
+                round(float(FLOAT_REGEX.search(x).group()), ROUND))
+        return df
 
 #----------------------------------------------------------------------------
 """
