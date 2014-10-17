@@ -25,6 +25,7 @@ Hourly cron script that report/pull conversion data:
 
 from lib.report.reports.base import ReportBase
 from lib.report.utils.constants import CONVERSIONS_FORM
+from lib.report.utils.constants import DEFAULT_DB
 from lib.report.utils.reportutils import concat
 from lib.report.utils.reportutils import get_advertiser_ids
 
@@ -82,7 +83,7 @@ class ReportConversions(ReportBase):
         return: dict(int(advertiser_id), list(int(pixel_id))
         """
         if not self._pixels:
-            df = self._db_wrapper.select_dataframe('select * from advertiser_pixel')
+            df = DEFAULT_DB().select_dataframe('select * from advertiser_pixel')
             d_ = {s[0]: s[1].T.to_dict() for s in df.groupby('external_advertiser_id')}
             self._pixels = {k:[s.get('pixel_id') for s in v.values()]
                             for k,v in d_.iteritems()}
