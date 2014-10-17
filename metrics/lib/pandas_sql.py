@@ -40,6 +40,8 @@ def _write_mysql(frame, table, names, con, key=None, fn=None):
     @param: fn (function to transform the strings)
     """
     def _escape_quote(s):
+        if isinstance(s, bool):
+            s = int(s)
         return str(s).replace("'", r'\'')
 
     key = key or []

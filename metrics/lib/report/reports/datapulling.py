@@ -41,7 +41,7 @@ class ReportDataPulling(ReportBase):
         """
         dfs = []
         limit = kwargs.get('limit')
-        for advertiser_id in map(str, get_advertiser_ids(db=self._db_wrapper)):
+        for advertiser_id in map(str, get_advertiser_ids()):
             df = self._get_dataframe(advertiser_id, **kwargs)
             dfs.append(df)
             if limit and len(dfs) >= limit:

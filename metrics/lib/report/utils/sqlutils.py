@@ -11,7 +11,7 @@ def get_unique_keys(con, table_name):
     query = SELECT_UNIQUE_KEY_QUERY.format(table_name=table_name)
     try:
         res = con.select_dataframe(query)
-        return res.values.tolist()[0]
+        return list(res.values[0])
     except Exception as e:
         logging.warn("no unique key found for table: %s; error: %s" % (table_name, str(e)))
         return None

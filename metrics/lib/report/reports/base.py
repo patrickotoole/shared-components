@@ -141,7 +141,7 @@ class ReportBase(object):
         return df
 
     def _get_request_url(self, _id=None):
-        return ('/report?advertiser_id=' + _id) if _id else '/report?'
+        return ('/report?advertiser_id=' + str(_id)) if _id else '/report?'
 
     def _analyze(self, df, pred=None, metrics=None):
         obj = get_analyze_obj(self._name)
