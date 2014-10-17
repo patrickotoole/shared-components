@@ -76,6 +76,7 @@ Analyze = Enum([
     'datapulling',
     'conversions',
     'segment',
+    'geo',
     ])
 
 "request forms for reports"
@@ -452,6 +453,82 @@ SEGMENT_FORM = """
         "orders": [
             "day"
         ],
+        "format": "csv"
+    }
+}
+"""
+
+GEO_FORM = """
+{
+    "report": {
+        "special_pixel_reporting": false,
+        "report_type": "geo_analytics",
+        "timezone": "UTC",
+        "start_date": "%(start_date)s",
+        "end_date": "%(end_date)s",
+        "row_per": [
+            "advertiser_id",
+            "day",
+            "geo_dma",
+            "geo_region_id"
+        ],
+        "columns": [
+            "advertiser",
+            "day",
+            "geo_dma",
+            "geo_region",
+            "imps",
+            "clicks",
+            "click_thru_pct",
+            "total_convs",
+            "convs_rate",
+            "booked_revenue",
+            "cost",
+            "profit",
+            "cpm"
+        ],
+        "filters": [
+            {
+                "geo_country_code": [
+                    "US"
+                ]
+            }
+        ],
+        "pivot_report": false,
+        "fixed_columns": [],
+        "show_usd_currency": false,
+        "orders": [
+            "advertiser",
+            "day",
+            "geo_dma",
+            "geo_region",
+            "imps",
+            "clicks",
+            "click_thru_pct",
+            "total_convs",
+            "convs_rate",
+            "booked_revenue",
+            "cost",
+            "profit",
+            "cpm"
+        ],
+        "name": " Report - 10/17/2014",
+        "ui_columns": [
+            "advertiser",
+            "day",
+            "geo_dma",
+            "geo_region",
+            "imps",
+            "clicks",
+            "click_thru_pct",
+            "total_convs",
+            "convs_rate",
+            "booked_revenue",
+            "cost",
+            "profit",
+            "cpm"
+        ],
+        "filter_objects": [],
         "format": "csv"
     }
 }
