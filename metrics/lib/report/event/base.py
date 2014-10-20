@@ -24,10 +24,8 @@ class EventBase(object):
 
         table_name =  kwargs.pop('table_name')
         con =  kwargs.pop('db_wrapper')
-        cur = con.cursor()
 
         df = pd.DataFrame([kwargs])
         column_names = df.columns.tolist()
 
-        _sql._write_mysql(df, table_name, column_names, cur)
-        con.commit()
+        _sql._write_mysql(df, table_name, column_names, con)
