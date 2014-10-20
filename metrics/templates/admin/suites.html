@@ -19,7 +19,10 @@
 
     fixture_heading = buildSuiteInfo(wrapped)
 
-    buildFixtureInfo(fixture_headings)
+    buildFixtureInfo(fixture_heading,true)
+    d3.json("/admin/campaign_check/fixtures?format=json", function(d){
+      addSuiteFixture(wrapped,d)
+    })
 
 </script>
 

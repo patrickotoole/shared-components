@@ -3,7 +3,7 @@ import ujson
 import pandas
 
 from lib.helpers import *
-from relation import CampaignRelation
+from relation import Relation
 
 CAMPAIGN_QUERY = "select * from advertiser_campaign where %(where)s"
 ADVERTISER_QUERY = "select * from advertiser where %(where)s"
@@ -18,7 +18,7 @@ def fill_isnan(x):
         return x
 
 
-class CampaignRelationsHandler(CampaignRelation,tornado.web.RequestHandler):
+class CampaignRelationsHandler(Relation,tornado.web.RequestHandler):
 
     def initialize(self, db):
         self.db = db 
@@ -46,9 +46,9 @@ class CampaignRelationsHandler(CampaignRelation,tornado.web.RequestHandler):
     def get_all(self):
         where = "1=1"
 
-        advertiser = self.db.select_dataframe(ADVERTISER_QUERY % where).set_index("external_advertiser_id")
-        campaigns = self.db.select_dataframe(CAMPAIGN_QUERY % where).set_index("campaign_id")
-        df = self.db.select_dataframe(CAMPAIGN_VIEW_QUERY % where)
+        advertiser = self.db.select_dataframe(ADVERTISER_QUERY % {"where":where}).set_index("external_advertiser_id")
+        campaigns = self.db.select_dataframe(CAMPAIGN_QUERY % {"where":where}).set_index("campaign_id")
+        df = self.db.select_dataframe(CAMPAIGN_VIEW_QUERY % {"where":where})
         campaigns = self.transform(campaigns,df)
         
         advertiser['campaign_relations'] = campaigns.groupby("external_advertiser_id").apply(Convert.df_to_values)
@@ -94,6 +94,10 @@ class CampaignRelationsHandler(CampaignRelation,tornado.web.RequestHandler):
                 self.add_campaign_suite(campaign_id,suite_id)
                 self.write("success") 
 
+        elif suite_id:
+            if fixture_id:
+                self.add_suite_fixture(suite_id,fixture_id)
+
     def delete(self,arg=None):
         campaign_id = self.get_argument("campaign_id",False)
         fixture_id = self.get_argument("fixture_id",False)
@@ -106,5 +110,9 @@ class CampaignRelationsHandler(CampaignRelation,tornado.web.RequestHandler):
             elif suite_id:
                 self.delete_campaign_suite(campaign_id,suite_id)
                 self.write("success")
+        elif suite_id:
+            if fixture_id:
+                self.delete_suite_fixture(suite_id,fixture_id)
+
 
 

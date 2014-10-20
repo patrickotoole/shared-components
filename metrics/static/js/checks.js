@@ -30,6 +30,47 @@ var buildChecksWrapper = function(data, id, key, width, show_id) {
 
 }
 
+var addSuiteFixture = function(obj,d) {
+  var form_group = obj.append("div")
+    .classed("panel-body",true)
+    .append("form")
+    .classed("form-group",true)
+
+  form_group
+    .append("select")
+    .classed("form-control",true)
+    .selectAll("option")
+    .data(function(x){
+      return d
+    })
+      .enter()
+      .append("option")
+      .text(function(x){
+        return x.fixture_name
+      })
+      .attr("value",function(x){
+        return x.fixture_id
+      })
+
+  form_group
+    .append("div")
+    .classed("pull-right btn btn-sm btn-success",true)
+    .text("add")
+    .on("click",function(x){
+      var sel = d3.select(this.parentNode).select("select")[0][0]
+      var suite_id = x.id
+      var fixture_id = sel.options[sel.selectedIndex].value
+      var _o = {
+          "suite_id":suite_id,
+          "fixture_id":fixture_id
+      }
+      $.post("/admin/campaign_check/relation",JSON.stringify(_o))
+    })
+    
+
+
+}
+
 var buildSuiteInfo = function(obj) {
 
   var panels = obj
@@ -92,6 +133,8 @@ var buildSuiteInfo = function(obj) {
 
       data[attr] = value  
       this.parentNode.parentNode.parentNode.parentNode.parentNode.__data__ = data
+      console.log(this.parentNode.parentNode.parentNode.parentNode.parentNode)
+      console.log(data)
       
       d3.select(this.parentNode.previousSibling).text(value)
     })
@@ -106,7 +149,9 @@ var buildSuiteInfo = function(obj) {
     .text("click put")
     .on("click",function(x){
       var data = d3.select(this.parentNode.parentNode.parentNode).data()[0]
-      $.ajax("/admin/campaign_check/fixtures",{"type":"put","data":JSON.stringify(data)})
+      console.log(this.parentNode.parentNode.parentNode)
+      console.log(data)
+      $.ajax("/admin/campaign_check/suites",{"type":"put","data":JSON.stringify(data)})
       d3.select(this.parentNode.parentNode.parentNode.parentNode)
         .selectAll(".input-option")                  
         .classed("hidden",function(x){               
@@ -115,11 +160,18 @@ var buildSuiteInfo = function(obj) {
 
     })
 
+  panels
+    .append("div").classed("panel-heading",true)
+    .append("h4").classed("panel-title",true)
+    .text("Associated Fixtures")
+   
+
   var groups = panels
     .append("div")
     .classed("list-group",true)
 
-  groups
+  
+  var fixtures = groups
     .selectAll("div")
     .data(function(x){
       return x.fixtures
@@ -127,16 +179,51 @@ var buildSuiteInfo = function(obj) {
     .enter()
       .append("div")
       .classed("list-group-item",true)
-      .text(function(x){
-        return x.fixture_name
-      })
 
-  panels.append("div")
+ fixtures
+    .append("a")
+    .classed("btn-xs btn btn-danger pull-right",true)
+    .text("remove")
+    .on("click",function(x){
+      var r = confirm("are you sure?")
+      if (r) {
+        $.ajax("/admin/campaign_check/relation?fixture_id=" + x.fixture_id + 
+          "&suite_id=" + x.suite_id,
+          {"type":"delete"}
+        )
+        d3.select(this.parentNode).remove()
+      }
+    })
+   
+
+  fixtures
+    .append("h5")
+    .classed("list-group-item-heading",true)
+
+    .text(function(x){
+      return x.fixture_name
+    })
+    .on("click",function(x){
+      d3.select(this.parentNode).select(".fixture-body").classed("hidden",function(y){
+        return !this.classList.contains("hidden")
+      })
+    })
+
+  
+  var bodies = fixtures
+    .append("div")
+    .classed("fixture-body hidden",true)
+
+  return bodies
+
 
 
 }
 
-var buildFixtureInfo = function(obj) {
+var buildFixtureInfo = function(obj,exclude_edit) {
+
+  var exclude_edit = exclude_edit || false
+
 
   var panels = obj
 
@@ -166,59 +253,71 @@ var buildFixtureInfo = function(obj) {
       return x.key
     })
 
-  objs
-    .append("a")
-    .classed("col-md-8 input-option",true)
-    .text(function(x){
-      return x.value
-    })
-    .on("click",function(x){
-      d3.select(this.parentNode.parentNode.parentNode.parentNode)
-        .selectAll(".input-option")
-        .classed("hidden",function(x){
-          return !this.classList.contains("hidden") 
-        })
-    })
+  if (exclude_edit) {
 
-   
+    objs
+      .append("div")
+      .classed("col-md-8 input-option",true)
+      .text(function(x){
+        return x.value
+      })
 
-  objs
-    .append("div")
-    .classed("col-md-8 hidden input-option",true)
-    .append("input")
-    .classed("form-control",true)
-    .attr("value",function(x){
-      return x.value
-    })
-    .on("change",function(x){
-      
-      var value = this.value,
-        data = d3.select(this.parentNode.parentNode.parentNode.parentNode).data()[0],
-        attr = x.key
+  } else {
 
-      data[attr] = value  
-      this.parentNode.parentNode.parentNode.parentNode.parentNode.__data__ = data
-      
-      d3.select(this.parentNode.previousSibling).text(value)
-    })
+    objs
+      .append("a")
+      .classed("col-md-8 input-option",true)
+      .text(function(x){
+        return x.value
+      })
+      .on("click",function(x){
+        d3.select(this.parentNode.parentNode.parentNode.parentNode)
+          .selectAll(".input-option")
+          .classed("hidden",function(x){
+            return !this.classList.contains("hidden") 
+          })
+      })
 
-  panels
-    .append("div")
-    .classed("row hidden input-option",true)
-    .append("div")
-    .classed("col-md-12",true)
-    .append("div")
-    .classed("btn btn-success btn-sm",true)
-    .text("click put")
-    .on("click",function(x){
-      var data = d3.select(this.parentNode.parentNode.parentNode).data()[0]
-      $.ajax("/admin/campaign_check/fixtures",{"type":"put","data":JSON.stringify(data)})
-      d3.select(this.parentNode.parentNode.parentNode.parentNode)
-        .selectAll(".input-option")                  
-        .classed("hidden",function(x){               
-          return !this.classList.contains("hidden")
-        })
+     
 
-    })
+    objs
+      .append("div")
+      .classed("col-md-8 hidden input-option",true)
+      .append("input")
+      .classed("form-control",true)
+      .attr("value",function(x){
+        return x.value
+      })
+      .on("change",function(x){
+        
+        var value = this.value,
+          data = d3.select(this.parentNode.parentNode.parentNode.parentNode).data()[0],
+          attr = x.key
 
+        data[attr] = value  
+        this.parentNode.parentNode.parentNode.parentNode.parentNode.__data__ = data
+        
+        d3.select(this.parentNode.previousSibling).text(value)
+      })
+
+    panels
+      .append("div")
+      .classed("row hidden input-option",true)
+      .append("div")
+      .classed("col-md-12",true)
+      .append("div")
+      .classed("btn btn-success btn-sm",true)
+      .text("click put")
+      .on("click",function(x){
+        var data = d3.select(this.parentNode.parentNode.parentNode).data()[0]
+        $.ajax("/admin/campaign_check/fixtures",{"type":"put","data":JSON.stringify(data)})
+        d3.select(this.parentNode.parentNode.parentNode.parentNode)
+          .selectAll(".input-option")                  
+          .classed("hidden",function(x){               
+            return !this.classList.contains("hidden")
+          })
+
+      })
+
+  }
 }
