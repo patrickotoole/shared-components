@@ -143,6 +143,7 @@ class AnalyzeSegment(AnalyzeBase):
 #-------------------conversions---------------------------------------------------------
 class AnalyzeConversions(AnalyzeBase):
     def _modify(self, df):
+        df[['user_id', 'auction_id']] = df[['user_id', 'auction_id']].astype('int')
         df = df.rename(columns=dict(
                 advertiser_id='external_advertiser_id',
                 datetime='conversion_time',
