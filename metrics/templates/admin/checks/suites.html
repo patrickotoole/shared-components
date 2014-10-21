@@ -1,5 +1,5 @@
 {% autoescape None %}
-{% extends "../clean_base.html" %}
+{% extends "../../clean_base.html" %}
 {% block content %}
 <link rel="stylesheet" type="text/css" href="/static/css/bootstrap.min.css">
 <link rel="stylesheet" type="text/css" href="/static/css/dc.css">
@@ -7,17 +7,22 @@
 <script type="text/javascript" src="/static/js/d3.js"></script>
 <script type="text/javascript" src="/static/js/checks.js"></script> 
 
-<div id="fixture-content" class='container'>
+<div id="suite-content" class='container'>
   <div class="row">
-    <h4>Campaign Fixtures</h4>
+    <h4>Fixture Suites</h4>
   </div>
 </div>
 
 <script>
   var d = {{data}},
-    wrapped = buildChecksWrapper(d,"#fixture-content")
+    wrapped = buildChecksWrapper(d,"#suite-content",'name')
 
-  buildFixtureInfo(wrapped)
+    fixture_heading = buildSuiteInfo(wrapped)
+
+    buildFixtureInfo(fixture_heading,true)
+    d3.json("/admin/campaign_check/fixtures?format=json", function(d){
+      addSuiteFixture(wrapped,d)
+    })
 
 </script>
 

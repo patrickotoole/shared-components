@@ -52,7 +52,7 @@ class SuiteHandler(tornado.web.RequestHandler):
 
         def default(self,data):
             _json = Convert.df_to_json(data)
-            self.render("admin/suites.html",data=_json) 
+            self.render("admin/checks/suites.html",data=_json) 
 
         yield default, (data,)
 
