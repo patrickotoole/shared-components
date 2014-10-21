@@ -12,6 +12,8 @@ from lib.pandas_sql import s as _sql
 from lib.report.common import get_report_obj
 from lib.report.utils.reportutils import get_path
 from lib.report.reports.base import ReportBase
+from lib.report.analyze.report import _is_valid
+from lib.report.analyze.report import AnalyzeConversions
 from lib.report.utils.reportutils import get_db
 from lib.report.utils.reportutils import empty_frame
 from lib.report.utils.utils import parse
@@ -22,7 +24,7 @@ CUR_DIR = os.path.realpath(__file__)
 TEST_FILES = os.path.abspath(os.path.join(os.path.dirname(__file__), 'test_files/'))
 DOMAIN = 'domain'
 
-DROP = "drop table {database}.v4_reporting_test_blah;"
+DROP = "drop table {database}.v4_reporting_test_blah; drop table {database}.v2_conversion_reporting_test_blah;"
 CREATE = """
     CREATE TABLE `v4_reporting_test_blah` (
       `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -45,6 +47,35 @@ CREATE = """
     )
 """
 
+CREATE_V2_CON = """
+CREATE TABLE `v2_conversion_reporting_test_blah` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `external_advertiser_id` int(10) DEFAULT NULL,
+  `pixel_id` int(10) NOT NULL,
+  `pixel_name` varchar(250) DEFAULT NULL,
+  `line_item_id` int(10) NOT NULL,
+  `line_item_name` varchar(250) DEFAULT NULL,
+  `campaign_id` int(10) DEFAULT NULL,
+  `campaign_name` varchar(500) DEFAULT NULL,
+  `creative_id` int(10) DEFAULT NULL,
+  `creative_name` varchar(250) DEFAULT NULL,
+  `pc` tinyint(1) DEFAULT NULL,
+  `order_id` varchar(100) DEFAULT NULL,
+  `user_id` varchar(40) DEFAULT NULL,
+  `auction_id` varchar(40) DEFAULT NULL,
+  `imp_time` datetime DEFAULT NULL,
+  `conversion_time` datetime DEFAULT NULL,
+  `last_activity` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted` tinyint(1) DEFAULT '0',
+  `active` tinyint(4) DEFAULT '1',
+  `new_user` tinyint(1) DEFAULT '1',
+  `is_valid` tinyint(1) DEFAULT '1',
+  `notes` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique` (`pixel_id`,`line_item_id`,`campaign_id`,`creative_id`,`order_id`,`user_id`,`auction_id`,`conversion_time`)
+)
+"""
+
 # we want to use the setup method of the test case
 #db = lnk.dbs.test
 
@@ -61,6 +92,7 @@ class ReportTestCase(unittest.TestCase):
         except:
             pass
         self.db.execute(CREATE)
+        self.db.execute(CREATE_V2_CON)
         self.db.commit()
 
     def tearDown(self):
@@ -117,8 +149,14 @@ class ReportTestCase(unittest.TestCase):
         csv_path = _testfile_path('test2.csv')
         df = pd.read_csv(csv_path, index_col=True)
         unique_key = ['date', 'line_item_id']
-        expected_exe = "INSERT INTO v4_reporting_test_blah (`date`,`line_item_id`,`campaign_id`,`creative_id`,`imps`,`clicks`,`media_cost`,`adx_spend`) VALUES ('2014-07-09 00:00:00','1037447.0','3657781.0','14654391.0','200.0','0.0','0.330013','0.13152') ON DUPLICATE KEY UPDATE v4_reporting_test_blah.`campaign_id` = VALUES(v4_reporting_test_blah.`campaign_id`),v4_reporting_test_blah.`creative_id` = VALUES(v4_reporting_test_blah.`creative_id`),v4_reporting_test_blah.`imps` = VALUES(v4_reporting_test_blah.`imps`),v4_reporting_test_blah.`clicks` = VALUES(v4_reporting_test_blah.`clicks`),v4_reporting_test_blah.`media_cost` = VALUES(v4_reporting_test_blah.`media_cost`),v4_reporting_test_blah.`adx_spend` = VALUES(v4_reporting_test_blah.`adx_spend`)"
+        expected_exe = "INSERT INTO v4_reporting_test_blah (`date`,`line_item_id`,`campaign_id`,`creative_id`,`imps`,`clicks`,`media_cost`,`adx_spend`) VALUES ('2014-07-09 00:00:00',1037447,3657781,14654391,200,0,0.330013,0.13152) ON DUPLICATE KEY UPDATE v4_reporting_test_blah.`campaign_id` = VALUES(v4_reporting_test_blah.`campaign_id`),v4_reporting_test_blah.`creative_id` = VALUES(v4_reporting_test_blah.`creative_id`),v4_reporting_test_blah.`imps` = VALUES(v4_reporting_test_blah.`imps`),v4_reporting_test_blah.`clicks` = VALUES(v4_reporting_test_blah.`clicks`),v4_reporting_test_blah.`media_cost` = VALUES(v4_reporting_test_blah.`media_cost`),v4_reporting_test_blah.`adx_spend` = VALUES(v4_reporting_test_blah.`adx_spend`)"
         resp_exe = _sql._write_mysql(df, 'v4_reporting_test_blah', df.columns.tolist(), self.db, key=unique_key)
+        self.assertEqual(expected_exe, resp_exe)
+
+        df2 = pd.read_csv(_testfile_path('test_conversion.csv'))
+        df2 = AnalyzeConversions().analyze(df2)
+        expected_exe = """INSERT INTO v2_conversion_reporting_test_blah (`external_advertiser_id`,`pixel_id`,`pixel_name`,`line_item_id`,`line_item_name`,`campaign_id`,`campaign_name`,`creative_id`,`creative_name`,`order_id`,`user_id`,`auction_id`,`imp_time`,`conversion_time`,`pc`,`is_valid`) VALUES (374955,289686,'Shutterstock - Footage Purchase Conversion Pixel',1370765,'Shutterstock - Retargeting - Image - Eng - [No Logged In // No Purchase]',5181465,'Shutterstock - Retargeting - Image - Eng - [No Logged In // No Purchase] - Cookie Age 12h',19250516,'[Eng] ShutterStock_Sep_160x600_Stunning Girl_simplified.jpg',20004949,1660056179411816192,9131062495952975872,'2014-10-13 19:37:05','2014-10-13 19:40:33',0,0) ON DUPLICATE KEY UPDATE v2_conversion_reporting_test_blah.`external_advertiser_id` = VALUES(v2_conversion_reporting_test_blah.`external_advertiser_id`),v2_conversion_reporting_test_blah.`pixel_id` = VALUES(v2_conversion_reporting_test_blah.`pixel_id`),v2_conversion_reporting_test_blah.`pixel_name` = VALUES(v2_conversion_reporting_test_blah.`pixel_name`),v2_conversion_reporting_test_blah.`line_item_id` = VALUES(v2_conversion_reporting_test_blah.`line_item_id`),v2_conversion_reporting_test_blah.`line_item_name` = VALUES(v2_conversion_reporting_test_blah.`line_item_name`),v2_conversion_reporting_test_blah.`campaign_id` = VALUES(v2_conversion_reporting_test_blah.`campaign_id`),v2_conversion_reporting_test_blah.`campaign_name` = VALUES(v2_conversion_reporting_test_blah.`campaign_name`),v2_conversion_reporting_test_blah.`creative_id` = VALUES(v2_conversion_reporting_test_blah.`creative_id`),v2_conversion_reporting_test_blah.`creative_name` = VALUES(v2_conversion_reporting_test_blah.`creative_name`),v2_conversion_reporting_test_blah.`order_id` = VALUES(v2_conversion_reporting_test_blah.`order_id`),v2_conversion_reporting_test_blah.`user_id` = VALUES(v2_conversion_reporting_test_blah.`user_id`),v2_conversion_reporting_test_blah.`auction_id` = VALUES(v2_conversion_reporting_test_blah.`auction_id`),v2_conversion_reporting_test_blah.`imp_time` = VALUES(v2_conversion_reporting_test_blah.`imp_time`),v2_conversion_reporting_test_blah.`conversion_time` = VALUES(v2_conversion_reporting_test_blah.`conversion_time`),v2_conversion_reporting_test_blah.`pc` = VALUES(v2_conversion_reporting_test_blah.`pc`),v2_conversion_reporting_test_blah.`is_valid` = VALUES(v2_conversion_reporting_test_blah.`is_valid`)"""
+        resp_exe = _sql._write_mysql(df2, 'v2_conversion_reporting_test_blah', df2.columns.tolist(), self.db)
         self.assertEqual(expected_exe, resp_exe)
 
     def test_get_path(self):
@@ -169,6 +207,28 @@ class ReportTestCase(unittest.TestCase):
         expected = align(t, parse('4h', now=utc_now)).ctime()
         resp = align(t, parse('0m', tz='America/New_York')).ctime()
         self.assertEqual(expected, resp)
+
+    def test_is_valid(self):
+        df = pd.DataFrame(
+            [{'imp_time': '2014-10-16 06:15:55',
+              'conversion_time': '2014-10-18 06:15:54',
+              'pixel_id': '128793',
+              'pc': 0},
+             {'imp_time': '2014-10-16 06:15:55',
+              'conversion_time': '2014-10-18 06:15:56',
+              'pixel_id': '128793',
+              'pc': 0},
+             {'imp_time': '2014-10-16 06:15:55',
+              'conversion_time': '2014-10-20 10:32:27',
+              'pixel_id': '349337',
+              'pc': 0},
+             {'imp_time': '2014-10-16 06:15:55',
+              'conversion_time': '2014-10-20 10:32:27',
+              'pixel_id': '349337',
+              'pc': 1},
+              ])
+        df = df.apply(_is_valid, axis=1)
+        self.assertEqual([1, 0, 0, 1], list(df['is_valid'].values))
 
     def test_accounting(self):
         """

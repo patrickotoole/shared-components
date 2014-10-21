@@ -153,7 +153,7 @@ class AnalyzeConversions(AnalyzeBase):
                    'external_data',
                    ]
         df['pc'] = df['post_click_or_post_view_conv'] == POST_CLICK
-        df['is_valid'] = 0
+        df['is_valid'] = 1
         df = df.drop(to_drop, axis=1)
         df = df.apply(_is_valid, axis=1)
         return df
@@ -176,7 +176,8 @@ def _is_valid(row):
     window_hours = _get_window_hours()
     conversion_time = parse_datetime(row['conversion_time'])
     imp_time = parse_datetime(row['imp_time'])
-    row['is_valid'] = imp_time >= conversion_time - window_hours
+    is_valid = conversion_time - imp_time <= window_hours
+    row['is_valid'] = int(is_valid)
     return row
 
 def _get_pc_or_pv_hour(pid):
