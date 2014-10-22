@@ -71,6 +71,8 @@ class ReportConversions(ReportBase):
             kwargs.update(dict(pixel_id=pixel_id))
             df = super(ReportConversions, self)._get_dataframe(
                     advertiser_id, **kwargs)
+            if len(df) == 0:
+                continue
             to_return.append(df)
         return to_return
 
