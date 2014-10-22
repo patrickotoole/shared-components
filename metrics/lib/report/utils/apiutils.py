@@ -17,7 +17,8 @@ def get_or_create_console():
     try:
         console = lnk.api.console
     except:
-        raise ValueError("blocked by appnexus when creating lnk.console")
+        logging.warning("blocked by appnexus when creating lnk.console")
+        raise
     logging.info("created a api console")
     CONSOLE = console
     return console
