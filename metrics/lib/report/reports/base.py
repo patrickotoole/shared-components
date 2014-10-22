@@ -11,7 +11,6 @@ from lib.report.utils.reportutils import get_path
 from lib.report.utils.apiutils import get_report_id
 from lib.report.utils.apiutils import get_report_url
 from lib.report.utils.apiutils import get_report_resp
-from lib.report.utils.reportutils import empty_frame
 from lib.report.utils.constants import SLEEP
 
 
