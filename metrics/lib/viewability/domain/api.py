@@ -5,7 +5,7 @@ import logging
 REPORT_FORM = '{"report":{"special_pixel_reporting":false,"report_type":"network_site_domain_performance","timezone":"UTC","report_interval":"last_30_days","filters":[{"buyer_member_id":"2024"}],"columns":["site_domain","campaign_id","line_item_id","imps","clicks"],"row_per":["site_domain"],"pivot_report":false,"fixed_columns":[],"show_usd_currency":false,"orders":["site_domain","imps","clicks","click_thru_pct","convs_rate","booked_revenue","post_view_convs","post_click_convs","media_cost","profit_ecpm"],"name":"","ui_columns":["site_domain","imps","clicks","click_thru_pct","convs_rate","booked_revenue","post_view_convs","post_click_convs","media_cost","profit_ecpm"]}}'
 
 RB_API_BASE = "/advertiser/viewable/reporting"
-URL = RB_API_BASE + "?meta=none&include=domain&type=%s&date=%s&format=json&campaign=%s" 
+URL = RB_API_BASE + "?meta=none&include=domain&date=%s&format=json&campaign=%s" 
 
 LOGGING_SQL = "INSERT IGNORE INTO domain_list_change_ref %(fields)s VALUES %(values)s"
 DOMAIN_REPORT_INSERT = "INSERT INTO v2_domain_reporting"
@@ -101,7 +101,7 @@ class DomainAPI(object):
         LN_MSG = "Rockerbox API lines received: %s"
 
         campaign_string = ",".join(map(str,self.campaign_ids))
-        compiled_url = URL % (domain_list,duration,campaign_string)
+        compiled_url = URL % (duration,campaign_string)
 
         logging.info(RQ_MSG % (domain_list,duration,campaign_string)) 
         df = self.rb_api.get_report(compiled_url)
