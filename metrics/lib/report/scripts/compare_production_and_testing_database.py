@@ -87,6 +87,7 @@ def compare(old_table=None, new_table=None,
     @return             : dict(GroupedDataFrame)
     """
     for advertiser_id in get_advertiser_ids():
+        logging.info("comparing advertiser: %s" % advertiser_id)
         comps = _pull_advertiser_data(advertiser_id=advertiser_id,
                 old_table=old_table,
                 new_table=new_table,
