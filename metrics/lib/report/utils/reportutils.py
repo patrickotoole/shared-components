@@ -7,6 +7,7 @@ import logging
 
 from link import lnk
 from lib.report.utils.utils import memo
+from lib.report.utils.constants import DEFAULT_DB
 import pandas as pd
 
 FILE_FMT = '{name}_{group}{start_date}_{end_date}.csv'
@@ -65,9 +66,16 @@ def get_advertisers(db=None):
 
 @memo
 def get_advertiser_ids():
+    q = 'select * from rockerbox.advertiser where active=1 and deleted=0 and running=1'
     c = lnk.api.console
+
     advs = c.get_all_pages('/advertiser', 'advertisers')
-    return set(a.get('id') for a in advs if a.get('state') == 'active')
+    active_on_appnexus = set(a.get('id') for a in advs if a.get('state') == 'active')
+    df = DEFAULT_DB().select_dataframe(q);
+    active_in_db = set(df.external_advertiser_id)
+
+    return active_in_db & active_on_appnexus
+
 
 def get_db(name='test'):
     str_ = 'lnk.dbs.{name}'.format(name=name)
