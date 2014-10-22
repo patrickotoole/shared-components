@@ -100,6 +100,7 @@ def concat(dfs):
     @param dfs: list(DataFrame)
     @return: DataFrame
     """
+    dfs = filter(lambda d: not len(d) == 0, dfs)
     dfs = pd.concat(dfs)
     return dfs
 
