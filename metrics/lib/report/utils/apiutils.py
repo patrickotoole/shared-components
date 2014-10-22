@@ -7,11 +7,17 @@ from lib.report.utils.constants import NUM_TRIES
 from lib.report.utils.constants import SLEEP
 
 CONSOLE = None
+@retry(num_retries=5,
+       sleep_interval=60,
+       )
 def get_or_create_console():
     global CONSOLE
     if CONSOLE:
         return CONSOLE
-    console = lnk.api.console
+    try:
+        console = lnk.api.console
+    except:
+        raise ValueError("blocked by appnexus when creating lnk.console")
     logging.info("created a api console")
     CONSOLE = console
     return console
