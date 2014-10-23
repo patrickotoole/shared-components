@@ -8,6 +8,7 @@ import logging
 from link import lnk
 from lib.report.utils.utils import memo
 from lib.report.utils.constants import DEFAULT_DB
+from lib.report.utils.apiutils import get_or_create_console
 import pandas as pd
 
 FILE_FMT = '{name}_{group}{start_date}_{end_date}.csv'
@@ -15,7 +16,7 @@ TMP_DIR = os.path.abspath('/tmp')
 CUR = os.path.dirname(__file__)
 REPORT_DIR = os.path.abspath(os.path.join(CUR, '../reports'))
 
-def get_report_obj(report_name, db=None, path=REPORT_DIR):
+def get_report_obj(report_name, path=REPORT_DIR):
     name = filter(str.isalnum, str(report_name).lower())
     _insert_path_to_front(path)
     os.chdir(path)
@@ -23,7 +24,7 @@ def get_report_obj(report_name, db=None, path=REPORT_DIR):
         f = os.path.splitext(f)[0]
         if name == f:
             _module = __import__(f)
-            found = get_member_name(report_name, _module, db)
+            found = get_member_name(name, _module)
             if found:
                 return found
     raise ValueError("Can't for related report file")
@@ -33,11 +34,11 @@ def _insert_path_to_front(path):
         sys.path.pop(sys.path.index(path))
     sys.path = [path] + sys.path
 
-def get_member_name(report_name, _module, db):
+def get_member_name(report_name, _module):
     for member_name, obj in inspect.getmembers(_module):
         name = ('report' + report_name).lower()
         if inspect.isclass(obj) and member_name.lower() == name:
-            return obj(db)
+            return obj
     return None
 
 def get_path(
@@ -67,7 +68,7 @@ def get_advertisers(db=None):
 @memo
 def get_advertiser_ids():
     q = 'select * from rockerbox.advertiser where active=1 and deleted=0 and running=1'
-    c = lnk.api.console
+    c = get_or_create_console()
 
     advs = c.get_all_pages('/advertiser', 'advertisers')
     active_on_appnexus = set(a.get('id') for a in advs if a.get('state') == 'active')
