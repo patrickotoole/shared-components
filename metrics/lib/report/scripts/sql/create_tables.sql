@@ -89,3 +89,13 @@ CREATE TABLE `v4_reporting` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `unique` (`date`,`external_advertiser_id`,`campaign_id`,`creative_id`,`line_item_id`, `deleted`, `imps`, `clicks`, `media_cost`, `adx_spend`, `active`)
 )
+
+CREATE TABLE `report` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(40) NOT NULL,
+  `table` varchar(40) NULL,
+  `manual` tinyint(1) DEFAULT '1',
+  `last_activity` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique` (`name`)
+)
