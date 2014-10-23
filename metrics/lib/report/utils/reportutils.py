@@ -5,16 +5,19 @@ import glob
 import inspect
 import logging
 
+import pandas as pd
 from link import lnk
+
 from lib.report.utils.utils import memo
 from lib.report.utils.constants import DEFAULT_DB
 from lib.report.utils.apiutils import get_or_create_console
-import pandas as pd
+from lib.pandas_sql import s as _sql
 
 FILE_FMT = '{name}_{group}{start_date}_{end_date}.csv'
 TMP_DIR = os.path.abspath('/tmp')
 CUR = os.path.dirname(__file__)
 REPORT_DIR = os.path.abspath(os.path.join(CUR, '../reports'))
+SELECT_UNIQUE_KEY_QUERY = """SELECT k.COLUMN_NAME FROM information_schema.table_constraints t LEFT JOIN information_schema.key_column_usage k USING(constraint_name,table_schema,table_name) WHERE t.constraint_type='UNIQUE' AND t.table_schema=DATABASE() AND t.table_name='{table_name}'"""
 
 def get_report_obj(report_name, path=REPORT_DIR):
     name = filter(str.isalnum, str(report_name).lower())
@@ -41,8 +44,7 @@ def get_member_name(report_name, _module):
             return obj
     return None
 
-def get_path(
-        name=None,
+def get_path( name=None,
         group=None,
         start_date=None,
         end_date=None,
@@ -101,38 +103,26 @@ def convert_timestr(s):
         return ((isinstance(s, str) and (not s in ['NULL', 'False'])) or regx.search(s))
     return '"%s"' % s if _should_transform(s) else s
 
-def empty_frame():
-    return pd.DataFrame()
-
 def concat(dfs):
     """
     @param dfs: list(DataFrame)
     @return: DataFrame
     """
     dfs = filter(lambda d: not len(d) == 0, dfs)
+    if not dfs:
+        return pd.DataFrame()
     dfs = pd.concat(dfs)
     return dfs
 
-def corret_insert(db, df, table_name):
+def get_unique_keys(con, table_name):
     """
-    check if all the dataframe is correctly inserted in db
-    @param db         : Lnk.dbs
-    @param df         : DataFrame
-    @param table_name : Lnk.dbs
-    @return           : bool
+    :con: Link(db_wrapper)
+    :table_name: str
+    :return: list(str)|None
     """
-    def nothing_to_insert():
-        return len(df) == 0
-    if nothing_to_insert:
-        return True
-    cols = list(df.columns)
-    db_df = db.select_dataframe("select * from %s" % table_name)
+    query = SELECT_UNIQUE_KEY_QUERY.format(table_name=table_name)
+    return set(list(con.select_dataframe(query)['column_name']))
 
-    df = df.set_index(cols)
-    db_df = db_df[cols].set_index(cols)
-
-    try:
-        [db_df.ix[idx] for idx in df.index]
-        return True
-    except KeyError:
-        return False
+def write_mysql(frame, table=None, con=None):
+    key = get_unique_keys(con, table)
+    return _sql._write_mysql(frame, table, list(frame.columns), con, key=key)

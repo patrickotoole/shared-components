@@ -11,6 +11,11 @@ from lib.pandas_sql import s as _sql
 
 
 class EventBase(object):
+    def __init__(self, **kwargs):
+        for k, v in kwargs.iteritems():
+            if v is not None:
+                setattr(self, k, v)
+
     def create_event(self):
         """
         use key in __init__ kwargs as event's column name,
@@ -18,7 +23,6 @@ class EventBase(object):
         """
         assert self.table_name
         assert self.db_wrapper
-        assert self.event_name
 
         kwargs = vars(self)
 

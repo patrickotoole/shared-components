@@ -55,8 +55,6 @@ GROUPS = [
     'advertiser',
  ]
 
-ADVERTISER_IDS = map(str, [185711,195681,225133,250058,251793,272759,274802,285817,302568,306383,306401,309251,312933,319800,338195,349923,356780])
-
 APPNEXUS_REPORT_GAP_HOURS = 5
 
 
@@ -69,15 +67,6 @@ SENDGRID_USER = 'ronjacobson'
 SENDGRID_PW = 'rockerbox13'
 
 ROUND = 2
-
-"Analyze objects"
-Analyze = Enum([
-    'domain',
-    'datapulling',
-    'conversions',
-    'segment',
-    'geo',
-    ])
 
 "request forms for reports"
 
@@ -189,7 +178,7 @@ ADVERTISER_DOMAIN_LINE_ITEM_JSON_FORM = """
 }
 """
 
-DATA_PULLING_FORMS = """
+ANALYTICS_FORM = """
 {
     "report": {
         "report_type": "advertiser_analytics",
