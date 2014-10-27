@@ -145,7 +145,8 @@ def _integrity_check(db=None, df=None, **kwargs):
     q = _get_query(**kwargs)
     db_df = db.select_dataframe(q)[list(df.columns)]
     try:
-        assert sorted(df.to_csv(index=False)) == sorted(db_df.to_csv(index=False))
+        assert (sorted(db_df.to_csv(index=False).split('\n')) ==
+                sorted(db_df.to_csv(index=False).split('\n')))
     except:
         raise ValueError("csv not equal")
 
