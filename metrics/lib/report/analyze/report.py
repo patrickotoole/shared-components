@@ -213,6 +213,8 @@ class AnalyzeGeo(AnalyzeBase):
             total_convs='convs',
         )
         df = df.rename(columns=to_rename)
+        df['date'] = df['date'].map(lambda x: parse_datetime(x))
+        df['profit'] = df['profit'].map(lambda x: 0.0 if x == 0 else x)
         df['ctr'] = df['ctr'].map(lambda x:
                 round(float(FLOAT_REGEX.search(x).group()), ROUND))
         return df
