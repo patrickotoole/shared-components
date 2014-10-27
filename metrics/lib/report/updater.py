@@ -1,12 +1,13 @@
 import logging
 from datetime import datetime
+from datetime import timedelta
 
 from lib.report.utils.options import define
 from lib.report.utils.options import options
 from lib.report.utils.options import parse_command_line
-from lib.pandas_sql import s as _sql
 from lib.report.utils.utils import get_start_end_date
 from lib.report.utils.utils import datetime_to_str
+from lib.report.utils.utils import parse
 from lib.report.utils.loggingutils import basicConfig
 from lib.report.utils.reportutils import get_report_obj
 from lib.report.utils.reportutils import get_db
@@ -25,6 +26,7 @@ def main():
     define('align', default='hours')
     define("db", type=str, default=None, help="choose which database to write to")
     define('limit', type=int, default=None)
+    define('f', type=bool, default=False)
 
     parse_command_line()
     basicConfig(options=options)
@@ -34,6 +36,14 @@ def main():
     start_date, end_date = get_start_end_date(options.start_date,
             options.end_date, options.align)
     assert start_date < end_date
+    try:
+        assert _no_early_than_a_week(start_date=start_date)
+    except AssertionError:
+        if not options.f:
+            logging.info("add --f to force update")
+            raise
+        else:
+            pass
 
     failed = 0
     for _, report in reports.iterrows():
@@ -129,14 +139,14 @@ def _get_rows_count(db, table):
     df = db.select_dataframe("select count(*) c from %s" % table)
     return df['c'][0]
 
-# todo segments's datecolumn dont really work.
+# TODO segments's datecolumn dont really work.
+# TODO still reply on types: geo's profile column is -0.0 while db is 0.0
 def _integrity_check(db=None, df=None, **kwargs):
     q = _get_query(**kwargs)
     db_df = db.select_dataframe(q)[list(df.columns)]
     try:
         assert sorted(df.to_csv(index=False)) == sorted(db_df.to_csv(index=False))
     except:
-        import ipdb; ipdb.set_trace()
         raise ValueError("csv not equal")
 
 # todo if not date column just use limit (len of the dataframe)
@@ -170,6 +180,11 @@ def _reports_to_run(db, names, include_manual=False):
         df = df[df.manual == 0]
     logging.info("found %s reports to run: %s" % (len(df), list(df.name)))
     return df
+
+def _no_early_than_a_week(start_date=None):
+    # didn't find good way of avoiding getting same report twice
+    # temporaily enforce start_date must be within a week
+    return parse('0m') - parse(start_date) <= timedelta(weeks=1)
 
 if __name__ == '__main__':
     from lib.report.utils.options import define
