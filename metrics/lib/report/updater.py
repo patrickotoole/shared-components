@@ -113,6 +113,7 @@ def update(db=None, start_date=None, end_date=None,
                        error_advertiser_ids=','.join(map(str, error_advertiser_ids)) or None,
                        rows_df=total_rows,
                        rows_inserted=(rows_after-rows_before),
+                       rows_after=rows_after,
                        report_name=name,
                        db_wrapper=db,
                        job_created_at=job_created_at,
@@ -135,6 +136,7 @@ def _integrity_check(db=None, df=None, **kwargs):
     try:
         assert sorted(df.to_csv(index=False)) == sorted(db_df.to_csv(index=False))
     except:
+        import ipdb; ipdb.set_trace()
         raise ValueError("csv not equal")
 
 # todo if not date column just use limit (len of the dataframe)
