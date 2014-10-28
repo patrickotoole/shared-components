@@ -1,3 +1,4 @@
+import logging
 import pandas.io.sql as s
 from pandas.io.sql import *
 #from pandas.io.sql import _write_sqlite
@@ -30,7 +31,7 @@ def get_sqltype(pytype, flavor):
 
     return sqltype[flavor]
 
-def _write_mysql(frame, table, names, con, key=None, fn=None):
+def _write_mysql(frame, table, names, con, key=None):
     """
     @param: frame (df):
     @param: table (string):
@@ -39,26 +40,25 @@ def _write_mysql(frame, table, names, con, key=None, fn=None):
     @param: key (list(unique_column_names)):
     @param: fn (function to transform the strings)
     """
-    def _escape_quote(s):
-        if isinstance(s, bool):
-            s = int(s)
-        return str(s).replace("'", r'\'')
-
     key = key or []
     bracketed_names = ['`' + column + '`' for column in names]
     col_names = ','.join(bracketed_names)
     wildcards = '(' + ','.join([r"%s"] * len(names)) + ')'
-    updates = ','.join(['%s.`%s` = VALUES(%s.`%s`)' % (table,c,table,c) for c in names if not c in key])
-
-    fn = fn or (lambda x: "'%s'" % _escape_quote(x))
-    ts = [ tuple(map(fn, v)) for v in frame.values.tolist() ]
-    values = ','.join([wildcards % t for t in ts])
-
+    updates = ','.join(['%s.`%s` = VALUES(%s.`%s`)' % (table,c,table,c)
+                        for c in names if not c in key])
+    _db = con.cursor()._get_db()
+    values = ','.join([wildcards % tuple([_db.literal(_v) for _v in v])
+                       for v in frame.values])
     insert_query = "INSERT INTO %s (%s) VALUES %s ON DUPLICATE KEY UPDATE %s" % (
         table, col_names, values, updates)
-    con.execute(insert_query)
-    return insert_query
 
+    try:
+        con.execute(insert_query)
+    except Exception as e:
+        logging.exception("%s, query: %s" % (e, insert_query))
+        raise
+
+    return insert_query
 
 def write_frame(frame, name, con, flavor='sqlite', if_exists='fail', **kwargs):
     """

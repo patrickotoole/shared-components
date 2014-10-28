@@ -13,14 +13,11 @@ from link import lnk
 from lib.report.utils.utils import parse_datetime
 from lib.report.utils.utils import memo
 from lib.report.utils.apiutils import get_or_create_console
-from lib.report.utils.constants import ROUND
-from lib.report.utils.constants import Analyze
-
 from lib.report.utils.constants import (
     PC_CONVS, PV_CONVS, MEDIA_COST, DAMPING_POINT, WORST,
     COST_EFFICIENCY, BOOKED_REV, MILLION, CPA_INF, GOOGLE_ADX,
     POST_CLICK, PC_EXPIRE, PV_EXPIRE, IMPS,
-    DEFAULT_DB,
+    DEFAULT_DB, ROUND,
 )
 
 FLOAT_REGEX = re.compile(r'[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?')
@@ -28,39 +25,46 @@ FLOAT_REGEX = re.compile(r'[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?')
 "Babaubar (102934)"
 ID_REGEX = re.compile(r'.*?\((\d+)\)')
 
-def get_analyze_obj(name):
-    if not name in Analyze:
-        raise ValueError("Analyze object not found")
-
-    return (AnalyzeDomain if name == Analyze.domain else
-            AnalyzeDataPulling if name == Analyze.datapulling else
-            AnalyzeConversions if name == Analyze.conversions else
-            AnalyzeSegment if name == Analyze.segment else
-            AnalyzeGeo)
-
+def _transform(df):
+    """
+    Round float fields
+    Make id fields int:
+     str(GoogleAdx (192)) -> Int(192)
+    """
+    def _helper(x):
+        if isinstance(x, int):
+            return x
+        if isinstance(x, float):
+            x = round(x, ROUND)
+            return x
+        if isinstance(x, str):
+            m = ID_REGEX.search(x)
+            return int(m.group(1)) if m else x
+        return x
+    if df.empty:
+        return df
+    df = df.applymap(_helper)
+    return df
 
 class AnalyzeBase(object):
-    def __init__(self, pred=None, metrics=None):
-        self.pred = pred
-        self.metrics = metrics or 'worst'
+    @classmethod
+    def analyze(cls, df):
+        return _transform(cls._modify(df)).reset_index(drop=True)
 
-    def analyze(self, df):
-        df = self._modify(df)
-        df = filter_and_transform(df, self.pred)
-        df = self._sort(df)
-        df = df.reset_index(drop=True)
-        return df
-
-    def _modify(self, *args, **kwargs):
-        raise NotImplementedError
-
-    def _sort(self, df):
-        return df
+    @classmethod
+    def _modify(cls, *args, **kwargs):
+        raise NotImplementedError()
 
 #-------------------domain----------------------------------------------------------
 
 class AnalyzeDomain(AnalyzeBase):
-    def _modify(self, df):
+    def __init__(self, *args, **kwargs):
+        self.metrics = kwargs.get('metrics')
+        self.pred = kwargs.get('pred')
+        super(AnalyzeBase, self).__init__(*args, **kwargs)
+
+    @classmethod
+    def _modify(cls, df):
         df['convs'] = df[PC_CONVS] + df[PV_CONVS]
         df['profit'] = df[BOOKED_REV] - df[MEDIA_COST]
         to_rename = dict(booked_revenue='rev',
@@ -96,8 +100,9 @@ def _sort_by_best(df):
 
 #-------------------datapulling-------------------------------------------------------
 
-class AnalyzeDataPulling(AnalyzeBase):
-    def _modify(self, df):
+class AnalyzeAnalytics(AnalyzeBase):
+    @classmethod
+    def _modify(cls, df):
         df = df.rename(columns=dict(
                 hour='date',
                 advertiser_id='external_advertiser_id',
@@ -120,7 +125,7 @@ class AnalyzeDataPulling(AnalyzeBase):
             adx_res = adx_res.xs(GOOGLE_ADX, level="seller_member")
         except KeyError:
             all_res = all_res.reset_index()
-            all_res['adx_spend'] = 0
+            all_res['adx_spend'] = 0.0
             return all_res
 
         joined = all_res.join(adx_res, rsuffix='_adx')
@@ -135,24 +140,29 @@ class AnalyzeDataPulling(AnalyzeBase):
 
 #-------------------segment------------------------------------------------------------
 class AnalyzeSegment(AnalyzeBase):
-    def _modify(self, df):
+    @classmethod
+    def _modify(cls, df):
         df = df.rename(columns={'day': 'date_time'})
         df['date_time'] = df['date_time'].map(lambda x: parse_datetime(x))
         return df
 
 #-------------------conversions---------------------------------------------------------
 class AnalyzeConversions(AnalyzeBase):
-    def _modify(self, df):
+    @classmethod
+    def _modify(cls, df):
+        df[['user_id', 'auction_id']] = df[['user_id', 'auction_id']].astype('int')
         df = df.rename(columns=dict(
                 advertiser_id='external_advertiser_id',
                 datetime='conversion_time',
                 ))
         df = _filter_advertiser(df)
-        to_drop = ['post_click_or_post_view_conv',
-                   'external_data',
-                   ]
+        to_drop = [
+            'post_click_or_post_view_conv',
+            'external_data',
+        ]
         df['pc'] = df['post_click_or_post_view_conv'] == POST_CLICK
-        df['is_valid'] = 0
+        df['pc'] = df['pc'].astype('int')
+        df['is_valid'] = 1
         df = df.drop(to_drop, axis=1)
         df = df.apply(_is_valid, axis=1)
         return df
@@ -167,20 +177,17 @@ def _is_valid(row):
     @param row: Datafram rows
     @return: bool. whether the conversion happened within expire windows.
     """
-    pid = int(row['pixel_id'])
-    def _get_window_hours():
-        window_hours = _get_pc_or_pv_hour(int(pid))
-        return timedelta(hours=(window_hours.get('pc') if row['pc']
-                                else window_hours.get('pv')))
-    window_hours = _get_window_hours()
+    window_hours = _get_window_hours(row)
     conversion_time = parse_datetime(row['conversion_time'])
     imp_time = parse_datetime(row['imp_time'])
-    row['is_valid'] = imp_time >= conversion_time - window_hours
+    is_valid = conversion_time - imp_time <= window_hours
+    row['is_valid'] = int(is_valid)
     return row
 
-def _get_pc_or_pv_hour(pid):
-    dict_ = _get_pc_or_pv_hours()
-    return dict_.get(pid)
+def _get_window_hours(row):
+    pid = int(row['pixel_id'])
+    _h = _get_pc_or_pv_hours().get(pid)
+    return timedelta(hours=(_h.get('pc') if row['pc'] else _h.get('pv')))
 
 @memo
 def _get_pc_or_pv_hours():
@@ -194,7 +201,8 @@ def _get_pc_or_pv_hours():
 #----------------------------------------------------------------------------
 
 class AnalyzeGeo(AnalyzeBase):
-    def _modify(self, df):
+    @classmethod
+    def _modify(cls, df):
         to_rename = dict(
             advertiser='external_advertiser_id',
             day='date',
@@ -205,6 +213,8 @@ class AnalyzeGeo(AnalyzeBase):
             total_convs='convs',
         )
         df = df.rename(columns=to_rename)
+        df['date'] = df['date'].map(lambda x: parse_datetime(x))
+        df['profit'] = df['profit'].map(lambda x: 0.0 if x == 0 else x)
         df['ctr'] = df['ctr'].map(lambda x:
                 round(float(FLOAT_REGEX.search(x).group()), ROUND))
         return df
@@ -213,30 +223,6 @@ class AnalyzeGeo(AnalyzeBase):
 """
 Other utils helpers
 """
-
-def filter_and_transform(df, pred=None):
-    return _transform(apply_filter(df, pred))
-
-def _transform(df):
-    """
-    Round float fields
-    Make id fields int:
-     str(GoogleAdx (192)) -> Int(192)
-    """
-    def _helper(x):
-        if isinstance(x, int):
-            return x
-        if isinstance(x, float):
-            x = round(x, ROUND)
-            return x
-        if isinstance(x, str):
-            m = ID_REGEX.search(x)
-            return int(m.group(1)) if m else x
-        return x
-    if df.empty:
-        return df
-    df = df.applymap(_helper)
-    return df
 
 def apply_filter(df, pred=None):
     """

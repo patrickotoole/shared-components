@@ -18,12 +18,10 @@ V1_V2_COLS =['pc', 'auction_id', "imp_time"]
 V1_V2_IDX=["campaign_id","creative_id","external_advertiser_id", "conversion_time"]
 
 def _get_old_db():
-    db = dbs.mysql
-    return db
+    return dbs.mysql
 
 def _get_new_db():
-    return dbs.wei_local
-
+    return dbs.reporting
 
 def _pull_advertiser_data(advertiser_id=None,
         old_table=None,
@@ -37,8 +35,8 @@ def _pull_advertiser_data(advertiser_id=None,
     old_db = _get_old_db()
     new_db = _get_new_db()
     dataframes = {
-        "old": old_db.select_dataframe(old_query % advertiser_id),
-        "new": new_db.select_dataframe(new_query % advertiser_id)
+        "old": old_db.select_dataframe(old_query),
+        "new": new_db.select_dataframe(new_query)
     }
 
     comparables = {}
@@ -89,6 +87,7 @@ def compare(old_table=None, new_table=None,
     @return             : dict(GroupedDataFrame)
     """
     for advertiser_id in get_advertiser_ids():
+        logging.info("comparing advertiser: %s" % advertiser_id)
         comps = _pull_advertiser_data(advertiser_id=advertiser_id,
                 old_table=old_table,
                 new_table=new_table,

@@ -23,7 +23,7 @@ CREATE TABLE `conversion_reporting` (
   `notes` varchar(100) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `unique` (`pixel_id`,`line_item_id`,`campaign_id`,`creative_id`,`order_id`,`user_id`,`auction_id`)
-)
+);
 
 CREATE TABLE `domain_reporting` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -44,7 +44,7 @@ CREATE TABLE `domain_reporting` (
   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `unique` (`advertiser`,`domain`,`line_item`,`imps`,`clicks`,`ctr`,`convs`,`pv_convs`,`pc_convs`,`rev`,`mc`,`profit`)
-)
+);
 
 CREATE TABLE `segment_reporting` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -56,7 +56,7 @@ CREATE TABLE `segment_reporting` (
   `daily_uniques` int(10) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `unique` (`segment_id`,`segment_name`,`date_time`,`total_loads`,`monthly_uniques`, `daily_uniques`)
-)
+);
 
 CREATE TABLE `stats_event_report` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -68,7 +68,7 @@ CREATE TABLE `stats_event_report` (
   `status` tinyint(1) DEFAULT NULL,
   `active` tinyint(1) DEFAULT '1',
   PRIMARY KEY (`id`)
-)
+);
 
 CREATE TABLE `v4_reporting` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -88,4 +88,26 @@ CREATE TABLE `v4_reporting` (
   `notes` varchar(400) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `unique` (`date`,`external_advertiser_id`,`campaign_id`,`creative_id`,`line_item_id`, `deleted`, `imps`, `clicks`, `media_cost`, `adx_spend`, `active`)
-)
+);
+
+CREATE TABLE `report` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(40) NOT NULL,
+  `table` varchar(40) NULL,
+  `manual` tinyint(1) DEFAULT '1',
+  `last_activity` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique` (`name`)
+);
+
+CREATE TABLE `stats_reportadvertiser` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `start_date` datetime DEFAULT NULL,
+  `end_date` datetime DEFAULT NULL,
+  `num_error` int(10) DEFAULT 0,
+  `rows` int(10) DEFAULT 0,
+  `external_advertiser_id` int(10) DEFAULT NULL,
+  `report_name` varchar(250) DEFAULT NULL,
+  `error` varchar(250) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+);

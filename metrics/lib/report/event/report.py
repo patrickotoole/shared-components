@@ -41,11 +41,13 @@ def accounting(f):
         db_wrapper = worker._con
         try:
             res = f(*args, **kwargs)
-            if res:
-                logging.info("succeed: job for %s: %s - %s" % (event_name, start_date, end_date))
+            if not res:
+                status = 0
         except Exception as e:
+            logging.warn(str(e))
             status = 0
-            logging.warn("%s, failed: job for %s: %s - %s" % (str(e), event_name, start_date, end_date))
+
+        logging.info("%s: job for %s: %s - %s" % (['failed', 'succeed'][status], event_name, start_date, end_date))
 
         job_ended_at = datetime_to_str(datetime.now())
         try:

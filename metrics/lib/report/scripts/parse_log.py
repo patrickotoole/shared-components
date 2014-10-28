@@ -22,7 +22,7 @@ LOG_LEVELS = {
         'python': r'(\bINFO\b|\bWARNING\b|\bERROR\b|\bFATAL\b)',
         }
 
-LOG_PATH = '/var/log/ubuntu/cron'
+LOG_PATH = None
 
 DATE_TIME_REGEX = r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})'
 PID_REGEX = r'pid:(\d+)'
@@ -38,6 +38,7 @@ RECIEVERS = [
 
 
 def main():
+    define("log_path", default="/var/log/ubuntu/cron")
     define("filename", type=str)
     define("num_lines", type=int, default=10000)
     define("start", default='1h')
@@ -48,6 +49,8 @@ def main():
     basicConfig(optins=options)
     parse_command_line()
     assert(options.filename)
+    global LOG_PATH
+    LOG_PATH = options.log_path
 
     res = parse(options.filename,
             num_lines=options.num_lines,
