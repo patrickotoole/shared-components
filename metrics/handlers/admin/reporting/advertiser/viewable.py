@@ -149,6 +149,7 @@ FIELDS = {
 
 WHERE = {
     "advertiser":"advertiser like '%%%(advertiser)s%%'",
+    "advertiser_equal":"advertiser = '%(advertiser_equal)s'",
     "campaign":"campaign = '%(campaign)s'",
     "venue":"venue = '%(venue)s'", 
     "domain":"domain like '%%%(domain)s%%'",

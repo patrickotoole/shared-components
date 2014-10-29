@@ -22,10 +22,10 @@ def main():
             va.push_whitelist()
             va.push_blacklist()
             va.push_bad_domains()
-        except:
-            logging.error("%s" % str(obj))
-        #va.greylist
-        #print va.appnexus_report
+        except Exception as e:
+            logging.error("%s \n %s " % (str(e),str(obj)))
+            #va.greylist
+            #print va.appnexus_report
         
 
 if __name__ == "__main__":

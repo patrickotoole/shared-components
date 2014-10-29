@@ -121,7 +121,10 @@ class DomainAnalysis(DomainAPI):
     
     def get_viewability_report(self):
         df = self.get_viewability_df(self.domain_list_id)
-        return self.calc_percent_visible(df)
+        if len(df) > 0:
+            return self.calc_percent_visible(df)
+        else:
+            raise Exception("No viewability data for %s" % self.domain_list_id)
 
     def get_greylist(self):
         black_domains = list(self.blacklist.index)
