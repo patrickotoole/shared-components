@@ -115,7 +115,7 @@ class DomainAnalysis(DomainAPI):
 
         _joined = r.join(self.viewability_report)
         _joined = _joined[_joined.index != "Undisclosed"]
-        bad = _joined[(_joined.served.fillna(0)/_joined.imps < .05) & (_joined.imps > 1000)]
+        bad = _joined[(_joined.served.fillna(0)/_joined.imps < .05) & (_joined.imps > 1000)].fillna(0)
         return bad
     
     
