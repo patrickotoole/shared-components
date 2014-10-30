@@ -148,6 +148,7 @@ FIELDS = {
 
 WHERE = {
     "advertiser":"advertiser like '%%%(advertiser)s%%'",
+    "advertiser_equal":"advertiser = '%(advertiser_equal)s'",
     "campaign":"campaign = '%(campaign)s'",
     "venue":"venue = '%(venue)s'", 
     "domain":"domain like '%%%(domain)s%%'",
@@ -242,15 +243,20 @@ class AdvertiserViewableHandler(AdminReportingBaseHandler):
             query
         ]
 
-        raw = yield run_hive_session_deferred(self.hive,query_list)
+        try:
+            raw = yield run_hive_session_deferred(self.hive,query_list)
+            formatted = self.format_data(
+                pandas.DataFrame(raw),
+                groupby,
+                wide
+            )
 
-        formatted = self.format_data(
-            pandas.DataFrame(raw),
-            groupby,
-            wide
-        )
+            self.get_content(formatted)
+        except:
+            self.set_status(408, "Hive server")
+            self.finish()
 
-        self.get_content(formatted)
+        
 
     def get_meta_group(self,default="default"):
         

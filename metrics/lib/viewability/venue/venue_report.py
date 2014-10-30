@@ -80,9 +80,9 @@ class VenueReport(object):
             self.rebuild_table()
 
     def rebuild_table(self):
-        domains = self.pull_report()
-        domains['last_insert'] = self.now
-        domains.to_sql(self.table_name,self.db,flavor="mysql",if_exists="replace")
+        venues = self.pull_report()
+        venues['last_insert'] = self.now
+        venues.to_sql(self.table_name,self.db,flavor="mysql",if_exists="replace")
 
     def pull_report(self):
         PU_MSG = "Pulling domain report from appnexus"
@@ -93,13 +93,13 @@ class VenueReport(object):
             "start_date": self.now + datetime.timedelta(-30),
             "end_date": self.now
         }
-        domains = self.an_reporting.get_report(
+        venues = self.an_reporting.get_report(
             advertiser_id=self.advertiser_id,
             data=REPORT_FORM % params
         )
-        logging.info(RE_MSG % len(domains))
+        logging.info(RE_MSG % len(venues))
 
-        return domains
+        return venues
 
 if __name__ == "__main__":
     from link import lnk

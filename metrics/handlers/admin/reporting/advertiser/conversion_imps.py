@@ -41,6 +41,23 @@ OPTIONS = {
                 }
             }
         },
+
+    "advertiser_orders": {
+        "meta": {
+            "groups": ["order_type"],
+            "fields": ["num_served"],
+            "formatters": {
+                "campaign": "none",
+                "segment": "none",
+                "order_type": "none",
+                "order_id": "none",
+                "conv_id": "none",
+                "auction_id": "none",
+                "seller": "none"
+                }
+            }
+        },
+     
     
     "imps" : {
         "meta": {
@@ -63,8 +80,8 @@ GROUPS = {
     "advertiser": "advertiser",
     "date": "date",
     "hour": "hour",
-    "served_date": "served_date",
-    "served_hour": "served_hour",
+    "serv_date": "serv_date",
+    "serv_hour": "serv_hour",
     "uid": "uid",
     "conv_id": "conv_id",
     "auction_id": "auction_id",
@@ -164,6 +181,10 @@ class ConversionImpsHandler(AdminReportingBaseHandler):
         advertiser = self.get_argument("advertiser",False)
         campaign = self.get_argument("campaign", False)
         uid = self.get_argument("uid", False)
+        meta = self.get_argument("meta",False)
+
+        if meta:
+            return meta
 
         if uid:
             return "imps"

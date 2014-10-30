@@ -200,7 +200,8 @@ WHERE = {
     "is_rockerbox": "CASE WHEN lower('%(is_rockerbox)s') = 'true' THEN num_served > 0 ELSE num_served = 0 END",
     "attributed_to": "CASE WHEN '%(attributed_to)s' LIKE 'Rockerbox' THEN num_served > 0 ELSE num_served < 0 END",
     "experiment": "num_served > 0 AND t.experiment_id = '%(experiment)s'",
-    "campaign": "array_contains(map_keys(campaigns), '%(campaign)s')"
+    "campaign": "array_contains(map_keys(campaigns), '%(campaign)s')",
+    "since_last_served": "since_last_served <= '%(since_last_served)s'"
     }
 
 class ConversionCheckHandler(AdminReportingBaseHandler):

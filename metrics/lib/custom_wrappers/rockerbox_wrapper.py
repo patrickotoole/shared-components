@@ -29,7 +29,10 @@ class RockerboxAPIRequestWrapper(APIRequestWrapper):
     
     @formattable(json_as_dataframe)
     def get_report(self, url_params= '', data='', **kwargs):
+        response = self.get(url_params= url_params)
+        if response.status_code == 408:
+            raise Exception("Request timed out. Try again")
         
-        return self.get(url_params= url_params).content
+        return response.content
 
         
