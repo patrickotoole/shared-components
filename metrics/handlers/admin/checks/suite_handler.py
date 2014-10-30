@@ -57,9 +57,7 @@ class SuiteHandler(tornado.web.RequestHandler):
         yield default, (data,)
 
     def update(self,obj):
-        print obj
         UPDATE = "UPDATE campaigntest_suite set name = '%(name)s' where id = %(id)s"
-        print UPDATE % obj
         self.db.execute(UPDATE % obj)
 
 
@@ -73,6 +71,7 @@ class SuiteHandler(tornado.web.RequestHandler):
 
     def post(self):
         obj = ujson.loads(self.request.body)
+        print obj
 
 
                

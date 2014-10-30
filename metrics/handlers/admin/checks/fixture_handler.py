@@ -75,7 +75,9 @@ class FixtureHandler(tornado.web.RequestHandler):
         obj = ujson.loads(self.request.body)
         self.update(obj)
 
-
+    def post(self):
+        obj = ujson.loads(self.request.body)
+        print obj
                
  
  
