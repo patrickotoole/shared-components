@@ -1,5 +1,6 @@
 import tornado.web 
 import tornado.httpclient
+import ujson
 
 class CircleCIXMLHandler(tornado.web.RequestHandler):
     TOKEN = "circle-token=8c33a0c315af4520e128c9bf4b4854d731d3937c"
@@ -29,10 +30,11 @@ class CircleCIXMLHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self):
 
-        #URL = "https://circleci.com/api/v1/project/rockerbox/rocamp/tree/trigger?%s&limit=1" % self.TOKEN
-        URL = "http://localhost:9999/static/nosetest.xml"
+        URL = "https://circleci.com/api/v1/project/rockerbox/rocamp/tree/trigger?%s&limit=1" % self.TOKEN
+        #URL = "http://localhost:9999/static/nosetest.xml" # for testing
         http_client = tornado.httpclient.AsyncHTTPClient()
 
-        #http_client.fetch(URL,headers={"Accept": "application/json"}, callback=self.get_build)
-        http_client.fetch(URL,headers={"Accept": "application/json"}, callback=self.get_xml)
+        http_client.fetch(URL,headers={"Accept": "application/json"}, callback=self.get_build)
+        # for testing
+        #http_client.fetch(URL,headers={"Accept": "application/json"}, callback=self.get_xml)
  

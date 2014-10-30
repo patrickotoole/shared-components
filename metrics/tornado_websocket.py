@@ -44,9 +44,9 @@ define("view_port", default=1235, help="run on the given port", type=int)
 
 db = lnk.dbs.rockerbox
 reporting_db = lnk.dbs.reporting
-api = None#lnk.api.console
-bidder = None#lnk.api.bidder
-hive = None#h.Hive().hive
+api = lnk.api.console
+bidder = lnk.api.bidder
+hive = h.Hive().hive
 
 _redis = streaming._redis
 track_buffer = streaming.track_buffer
