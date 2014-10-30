@@ -101,7 +101,7 @@ class DomainAPI(object):
         LN_MSG = "Rockerbox API lines received: %s"
 
         campaign_string = ",".join(map(str,self.campaign_ids))
-        compiled_url = URL % (duration,campaign_string,domain_list.split("_")[0])
+        compiled_url = URL % (duration,campaign_string,domain_list.split("_")[0],domain_list)
         print compiled_url
 
         logging.info(RQ_MSG % (domain_list,duration,campaign_string)) 

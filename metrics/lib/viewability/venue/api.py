@@ -29,15 +29,16 @@ def retry(ExceptionToCheck, tries=10, timeout_secs=1.0, logger=None):
         return f_retry  # true decorator
     return deco_retry
 
-URL = "/advertiser/viewable/reporting?include=venue&campaign=%s&date=%s&format=json"
+URL = "/advertiser/viewable/reporting?include=venue&campaign=%s&date=%s&format=json&advertiser_equal=%s"
 
 LOGGING_SQL = "INSERT IGNORE INTO venue_change_ref %(fields)s VALUES %(values)s" 
 
 
 class VenueAPI(object):
-    def __init__(self,api,reporting_db):
+    def __init__(self,api,reporting_db,advertiser_name):
         self.an_api = api
         self.reporting_db = reporting_db
+        self.advertiser_name = advertiser_name
 
     def get_advertiser(self,line_item_id):
         LI_MSG = "AppNexus API line-item (advertiser) request: %s"
@@ -135,7 +136,7 @@ class VenueAPI(object):
         LN_MSG = "Rockerbox API lines received: %s"
 
         campaign_string = ",".join(map(str,self.campaign_ids))
-        compiled_url = URL % (campaign_string,duration)
+        compiled_url = URL % (campaign_string,duration,self.advertiser_name)
 
         logging.info(RQ_MSG % (campaign_string,duration)) 
         df = self.rb_api.get_report(compiled_url)

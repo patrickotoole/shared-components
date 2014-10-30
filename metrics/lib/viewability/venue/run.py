@@ -12,7 +12,7 @@ def get_campaigns():
     console = lnk.api.console
 
     line_items = rockerbox.select_dataframe(Q).values
-    dapi = VenueAPI(console,None)
+    dapi = VenueAPI(console,None,None)
 
     campaigns = {}
     for group in line_items:
@@ -22,6 +22,11 @@ def get_campaigns():
         }
 
     return campaigns 
+
+def get_venue_bucket_campaigns():
+    campaigns = {}
+
+    return campaigns
 
 def main():
     from lib.report.utils.loggingutils import basicConfig 
@@ -39,7 +44,7 @@ def main():
     venue_db = lnk.dbs.venue
 
 
-    campaigns = get_campaigns()
+    campaigns = dict(get_campaigns().items() + get_venue_bucket_campaigns().items())
     sleep(15)
 
 
@@ -47,24 +52,27 @@ def main():
     for dl,obj in list(campaigns.iteritems()):
         campaigns = obj['campaigns']
         advertiser_id = obj['advertiser']
-        va = VenueAnalysis(an_api,an_reporting,venue_db,rb_api,reporting_db,campaigns,advertiser_id)
+        advertiser_name = rb_api.get("/advertiser/%s?format=json" % advertiser_id).json[0]['pixel_source_name']
+        print advertiser_name
+        try:
+            va = VenueAnalysis(an_api,an_reporting,venue_db,rb_api,reporting_db,campaigns,advertiser_id,advertiser_name)
 
-        to_block = va.bad_venues
-        to_block['action'] = 'bad'
+            to_block = va.bad_venues
+            to_block['action'] = 'bad'
 
-        to_block = to_block.append(va.hidden_venues)
-        to_block['action'] = to_block['action'].fillna('ban')
-        to_block = to_block.fillna(0)
-        to_block = to_block.replace([pd.np.inf, -pd.np.inf], 0)
+            to_block = to_block.append(va.hidden_venues)
+            to_block['action'] = to_block['action'].fillna('ban')
+            to_block = to_block.fillna(0)
+            to_block = to_block.replace([pd.np.inf, -pd.np.inf], 0)
 
-        for cp in campaigns:
-            to_block['campaign_id'] = cp
-            va.block_venues(cp,list(to_block.index))
-            va.venue_change_ref(to_block)
+            for cp in campaigns:
+                to_block['campaign_id'] = cp
+                va.block_venues(cp,list(to_block.index))
+                va.venue_change_ref(to_block)
 
-        sleep(5)
-
-#       logging.error("%s" % str(obj))
+            sleep(5)
+        except:
+           logging.error("%s" % str(obj))
         
 
 if __name__ == "__main__":

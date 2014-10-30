@@ -4,7 +4,7 @@ from api import VenueAPI
 from venue_report import VenueReport
 
 class VenueAnalysis(VenueAPI):
-    def __init__(self,an_api,reporting,db,rb_api,reporting_db,campaign_ids=[5298883],advertiser_id=302568):
+    def __init__(self,an_api,reporting,db,rb_api,reporting_db,campaign_ids=[5298883],advertiser_id=302568, advertiser_name=None):
         self.an_api = an_api
         self.an_reporting = reporting
         self.db = db
@@ -14,6 +14,7 @@ class VenueAnalysis(VenueAPI):
         self._viewability_report = None
         self.advertiser_id = advertiser_id
         self._campaign_ids = campaign_ids
+        self.advertiser_name = advertiser_name
 
     def log(self,msg):
         logging.info("[%s] %s" % (self.campaign_ids[0],msg))
@@ -42,7 +43,7 @@ class VenueAnalysis(VenueAPI):
     def appnexus_report(self):
         if not hasattr(self, "_appnexus_report"):
             self._appnexus_report = VenueReport(self.an_reporting,self.db,self.advertiser_id).get_data(self.campaign_ids)
-            self.log("Have appnexus domain report for %s" % 1)
+            self.log("Have appnexus venue report for %s" % 1)
         return self._appnexus_report
 
     @property
@@ -58,7 +59,10 @@ class VenueAnalysis(VenueAPI):
     
     def get_viewability_report(self):
         df = self.get_viewability_df()
-        return self.calc_percent_visible(df)
+        if len(df) > 0:
+            return self.calc_percent_visible(df)
+        else:
+            raise Exception("No venue data for advertiser %s" % self.advertiser_id)
 
     @property
     def hidden_venues(self):
