@@ -4,6 +4,7 @@ from api import VenueAPI
 from time import sleep
 
 Q = "SELECT learn_line_item_id, optimized_line_item_id, domain_list_id FROM domain_list_viewability"
+R = "SELECT * FROM venue_campaign_bucket where active = 1"
 
 def get_campaigns():
     from link import lnk
@@ -24,7 +25,17 @@ def get_campaigns():
     return campaigns 
 
 def get_venue_bucket_campaigns():
+    from link import lnk
+
+    rockerbox = lnk.dbs.rockerbox
+    venue_buckets = rockerbox.select_dataframe(R)
+    
     campaigns = {}
+    for bucket,row in venue_buckets.groupby(["bucket_name","external_advertiser_id"]):
+        campaigns[bucket[0]] = {
+            "campaigns":list(row['campaign_id'].values),
+            "advertiser":bucket[1]
+        }
 
     return campaigns
 
