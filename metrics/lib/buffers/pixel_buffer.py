@@ -5,6 +5,7 @@ import maxminddb
 from twisted.internet import  protocol, defer, threads
 from twisted.protocols import basic
 from lib.helpers import URL
+# TODO: This shouldnt be hard coded but instead an option withing the buffered socket
 reader = maxminddb.Reader('/root/GeoLite2-City.mmdb')
 
 parse_domain = URL.parse_domain

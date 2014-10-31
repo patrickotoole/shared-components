@@ -1,8 +1,11 @@
 import tornado.web
+import ujson
 from lib.helpers import *
 
+API_QUERY = "SELECT * FROM campaigntest_fixture_view WHERE %s" 
+
 class CampaignChecksHandler(tornado.web.RequestHandler):
-    
+
     def initialize(self, db):
         self.db = db 
 
@@ -16,10 +19,8 @@ class CampaignChecksHandler(tornado.web.RequestHandler):
         return self.db.select_dataframe(API_QUERY % ("view",where)) 
 
     def get_all(self):
-        d = self.db.select_dataframe(API_QUERY % ("view","1=1"))
-        d = d.reset_index()
-        d = d.rename(columns={"index":"__index__"})
-        return d 
+        d = self.db.select_dataframe(API_QUERY % "1=1")
+        self.get_content(d)
 
     @decorators.formattable
     def get_content(self,data):
@@ -33,21 +34,16 @@ class CampaignChecksHandler(tornado.web.RequestHandler):
     def get(self,arg=None):
 
         if arg == "fixtures":
-            self.write("fixtures")
+            self.get_all()
+        if arg == "suites":
+            self.write("suites")
         elif arg == "new":
             self.write("new")
-        elif arg == "meta":
-            self.write("""{
-                "groups":["campaign_id"],
-                "fields":[],
-                "is_wide":true
-            }""")
-            return 
-        elif arg.isnumeric():
-            data = self.get_campaign(arg)
-            self.get_content(data)
-        else:
-            data = self.get_all()
-            self.get_content(data)
-                
+
+    def put(self,_id):
+        obj = ujson.loads(self.request.body)
+        self.update(obj)
+
+
+               
  

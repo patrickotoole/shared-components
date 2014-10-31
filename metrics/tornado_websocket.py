@@ -102,9 +102,12 @@ admin_scripts = [
     (r'/admin/batch_request/new.*', admin.scripts.BatchRequestFormHandler, dict(db=db, api=api, hive=hive)),
     (r'/admin/batch_requests.*', admin.scripts.BatchRequestsHandler, dict(db=db, api=api, hive=hive)),
     (r'/admin/imps/?', admin.scripts.ImpsHandler, dict(db=db, api=api, hive=hive)),
-    (r'/admin/campaign_check/relation/?(.*?)/?', admin.scripts.CampaignRelationsHandler, dict(db=db)),  
-    (r'/admin/campaign_check.xml', admin.scripts.CircleCIXMLHandler ),   
-    (r'/admin/campaign_check/?(.*?)/?', admin.scripts.CampaignChecksHandler, dict(db=db)), 
+
+    (r'/admin/campaign_check/fixtures/?(.*?)/?', admin.checks.FixtureHandler, dict(db=db)),   
+    (r'/admin/campaign_check/suites/?(.*?)/?', admin.checks.SuiteHandler, dict(db=db)),   
+    (r'/admin/campaign_check/relation/?(.*?)/?', admin.checks.CampaignRelationsHandler, dict(db=db)),  
+    (r'/admin/campaign_check.xml', admin.checks.CircleCIXMLHandler ),   
+    (r'/admin/campaign_check/?(.*?)/?', admin.checks.CampaignChecksHandler, dict(db=db)), 
 
 ]
 
@@ -190,7 +193,6 @@ dirname = os.path.dirname(os.path.realpath(__file__))
 app = tornado.web.Application(
     _streaming + admin_scripts + admin_reporting + admin_domain + reporting + static + index,
     template_path= dirname + "/templates",
-    db=lnk.dbs.mysql,
     debug=True,
     cookie_secret="rickotoole",
     login_url="/login"
