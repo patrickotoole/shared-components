@@ -25,7 +25,9 @@ OPTIONS = {
             "fields" : ["served","loaded","visible","spent"],
             "formatters" : {
                 "campaign":"none",
-                "spent": "cpm"
+                "spent": "cpm",
+                "tag":"none",
+                "seller":"none"
             }
         }
     },
@@ -35,7 +37,8 @@ OPTIONS = {
             "fields" : ["served","loaded","visible","spent"],
             "formatters" : {
                 "campaign":"none",
-                "spent": "cpm"
+                "spent": "cpm",
+                "tag":"none"
             }
         }
     },
@@ -153,7 +156,9 @@ WHERE = {
     "venue":"venue = '%(venue)s'", 
     "domain":"domain like '%%%(domain)s%%'",
     "type":"d.log like '%%%(type)s%%'",
-    "experiment":"t.experiment_id = '%(experiment)s'" 
+    "experiment":"t.experiment_id = '%(experiment)s'",
+    "tag":"tag = '%(tag)s'",
+    "seller":"seller = '%(seller)s'"
 }
 
 
