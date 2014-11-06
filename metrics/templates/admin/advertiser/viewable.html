@@ -40,7 +40,7 @@ var defaultWidth = advertiser_data.length > 1 ? "6" : "12",
 
   formatter = d3.time.format("%y-%m-%d"),
   BASE_URL = "/admin/advertiser/viewable/reporting",
-  COMPILED_URL = BASE_URL + "?format=json&start_date=" + formatter(new Date()) + "&include=advertiser,campaign,tag,type&meta=none";
+  COMPILED_URL = BASE_URL + "?format=json&start_date=" + formatter(new Date()) + "&include=advertiser,campaign,tag,type,venue&meta=none";
 
 if (advertiser_data.length == 1) 
   COMPILED_URL = COMPILED_URL + "&advertiser_equal=" + advertiser_data[0].pixel_source_name;
@@ -57,7 +57,8 @@ d3.json(COMPILED_URL,function(reporting_data){
     "Viewability":[
       "Domain List Viewability",
       "Campaign Viewability", 
-      "Tag Viewability"
+      "Tag Viewability",
+      "Venue Viewability"
     ]
   }
 

@@ -103,6 +103,11 @@ var transformData = function(advertiser_data,reporting_data) {
   domain_list_viewability = d3.nest()
     .key(function(d) {return d.advertiser})
     .map(reporting_data,d3.map)
+
+  venue_viewability = d3.nest()
+    .key(function(d) {return d.advertiser})
+    .map(reporting_data,d3.map)
+   
    
 
 
@@ -178,6 +183,29 @@ var transformData = function(advertiser_data,reporting_data) {
       d.domain_list_viewabilitys = d.domain_list_viewabilitys.filter(function(x){ 
         return lists.indexOf(x.key) > -1
       })
+
+    var v = venue_viewability.get(d.pixel_source_name) || []
+
+    d.venue_viewabilitys = d3.nest()
+      .key(function(d) { return d["venue"]})
+      .rollup(function(l){
+        var fields = ["served","loaded","visible"],
+          values =  fields.map(function(n){
+            return d3.sum(l.map(function(k,i){return k[n]}))
+          }),
+          rolled = fields.map(function(n,i){
+            return {
+              key: n,
+              values: [values[i],values[i]/values[0]]
+            }
+          })
+
+        return rolled
+      })
+      .entries(v) 
+
+      d.venue_viewabilitys = d.venue_viewabilitys.filter(function(x){ return x.values[0].values[0] > 10})
+     
      
 
   })
@@ -189,7 +217,14 @@ var buildViewableWrapper = function(advertiser_data,defaultWidth) {
 
   var wrappers = d3.select('#advertiser-content').selectAll("div")
     .data(advertiser_data).enter()
+    
     .append("div")
+      .sort(function(x,y){
+        var xvs = x.viewability_summary[0] || {"values":[0]},
+          yvs = y.viewability_summary[0] || {"values":[0]} 
+          
+        return yvs.values[0] - xvs.values[0]
+      })
       .classed("wrapper col-md-" + defaultWidth,true)
       .attr("id",function(x){
         return x.external_advertiser_id
@@ -314,7 +349,8 @@ var renderRows = function(class_name,items) {
   var links = {
     "campaign_viewability": ["tag,domain","domain","tag"],
     "domain_list_viewability": ["campaign","domain","domain,venue"],
-    "tag_viewability": ["campaign,domain","campaign","domain"]
+    "tag_viewability": ["campaign,domain","campaign","domain"],
+    "venue_viewability": ["campaign","tag","domain"] 
   }
 
   items
