@@ -142,10 +142,55 @@ var buildCampaigns = function(obj,name,show_id) {
   
 
 }
+
+ var buildUserSegments = function(obj,name,show_id,hide_on_load) {
+
+  var default_panel = obj,
+    name = name || "Segments",
+    show_id = show_id || false
+
+  var segment_header = default_panel
+    .append("div")
+    .classed("panel-sub-heading segments list-group",true)
+    .append("div")
+    .classed("list-group-item",true)
+    //.classed("disabled",true)
+    .text(name)
+
+  segment_header
+    .append("div")
+    .classed("pull-right",true)
+    .append("a")
+    .attr("href","/admin/advertiser/segment")
+    //.text("Segment Dashboard")
+
+
+  var segments = default_panel
+    .append("div")
+    .classed("list-group segments", true)
+    .classed("hidden",hide_on_load)
+    .selectAll("div")
+    .data(function(x){
+      var segs = x.segments.filter(function(y){
+        y.external_segment_id = show_id ? y.external_segment_id : ""
+        return y.segment_implemented == 0
+      })
+      return segs || []
+    })
+    .enter()
+      .append("div")
+      .classed("list-group-item",true)
+      .html(function(x){
+        return '<h5 class="list-group-item-heading">' + 
+          x.segment_name + '<span class="pull-right">'+ 
+          x.external_segment_id + '</span></h5>'
+      })
+
+
+}
  
  
 var buildSegments = function(obj,name,show_id,hide_on_load) {
-  console.log(name)
 
   var default_panel = obj,
     name = name || "Segments",
@@ -369,13 +414,13 @@ var buildEdit = function(obj) {
     .classed("panel-sub-heading edit list-group",true)
     .append("div")
     .classed("list-group-item",true)
-    .text("More Info")
+    .text("General Info")
 
   var setup = default_panel
     .append("div")
     .classed("edit hidden row",true)
     .append("div")
-    .classed("container",true)
+    .classed("col-md-12",true)
 
   var table = setup
     .append("div")
@@ -428,18 +473,27 @@ var buildObjects = function(obj) {
   var table = obj
     .append("div")
     .classed("col-md-6",true)
-    .append("div")
-    .classed("objects", true)
+    .append("table")
+    .classed("table table-condensed", true)
+
+  var h = table.append("thead").append("tr")
+
+  h.append("th")
+    .text("object summary")
+
+  h.append("th") 
+ 
 
   var r = table
-    .selectAll("div")
+    .append("tbody")
+    .selectAll("tr")
     .data(function(x){
         return d3.entries(x).filter(function(x){
           return typeof(x.value) == "object"
         })
      })
     .enter()
-      .append("div")
+      .append("tr")
       .sort(function(x,y){
         var vx = typeof(x.value) == "object" ? 1 : 0,
           vy = typeof(y.value) == "object" ? 1 : 0
@@ -447,37 +501,18 @@ var buildObjects = function(obj) {
         return vx - vy
       })
 
-  r.append("h5")
+  r.append("td")
     .html(function(x){
       return x.key
     })
+   
 
- r.append("div")
-    .style("max-height","400px")
-    .style("overflow","scroll") 
-    .style("overflow-x","hidden")  
-    .selectAll("div")
-    .data(function(x){
-      return x.value
+  r.append("td")
+    .html(function(x){
+      return x.value.length
     })
-    .enter()
-      .append("div")
-      .classed("btn btn-default btn-xs",true)
-      .html(function(x){
-        if (x.pixel_name) {
-          return x.pixel_name
-        } else if (x.campaign_name) {
-          return x.campaign_name
-        } else if (x.segment_name) {
-          return x.segment_name
-        } else if (x.name) {
-          return x.name
-        }   
-        return x
-      }) 
-      .on("click",function(x){
-        
-      })
+
+ 
 }
 
 

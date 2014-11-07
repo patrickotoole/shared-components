@@ -38,19 +38,26 @@ $(document).ready(function(){
     wrapped.append("div")
       .classed("panel-body",true)
       .append("h4")
-      .text("Advertiser Information")
+      .text("Information and Implementation")
 
     var setup = buildEdit(wrapped)
     buildObjects(setup)
     buildInsertionOrders(wrapped)
     buildPixels(wrapped)  
     buildSegments(wrapped,"Segment Pixels",true,true)  
+    buildUserSegments(wrapped,"Constructed Segments (not on page)",true,true)
     buildCampaigns(wrapped) 
 
     wrapped.append("div")
       .classed("panel-body",true)
       .append("h4")
-      .text("Advertiser Reporting")
+      .text("Tools Reporting")
+     
+
+    wrapped.append("div")
+      .classed("panel-body",true)
+      .append("h4")
+      .text("Reporting")
             
     wrapped
       .on("click",function(data){
