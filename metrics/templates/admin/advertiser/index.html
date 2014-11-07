@@ -27,11 +27,31 @@ $(document).ready(function(){
 
     var id = '#advertiser-content'
 
-    var wrapped = buildAdvertiserWrapper(data,id,"12",true)
+    var wrapped = buildAdvertiserWrapper(data,id,"12",true,true)
+    wrapped
+    .sort(function(x,y){
+      var wx = (x.active + x.running - x.deleted)*(x.monthly_budget+1),
+        wy = (y.active + y.running - y.deleted)*(y.monthly_budget+1)
+      return wy-wx  
+    })
     buildAdvertiserInfo(wrapped)
+    wrapped.append("div")
+      .classed("panel-body",true)
+      .append("h4")
+      .text("Advertiser Information")
+
     var setup = buildEdit(wrapped)
     buildObjects(setup)
+    buildInsertionOrders(wrapped)
+    buildPixels(wrapped)  
+    buildSegments(wrapped,"Segment Pixels",true,true)  
+    buildCampaigns(wrapped) 
 
+    wrapped.append("div")
+      .classed("panel-body",true)
+      .append("h4")
+      .text("Advertiser Reporting")
+            
     wrapped
       .on("click",function(data){
         var p = d3.select(this.parentNode), 
@@ -72,7 +92,6 @@ $(document).ready(function(){
 })
 
 
-console.log($('.editable'))
  
 
 

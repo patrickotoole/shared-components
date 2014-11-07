@@ -144,7 +144,7 @@ var buildCampaigns = function(obj,name,show_id) {
 }
  
  
-var buildSegments = function(obj,name,show_id) {
+var buildSegments = function(obj,name,show_id,hide_on_load) {
   console.log(name)
 
   var default_panel = obj,
@@ -170,6 +170,7 @@ var buildSegments = function(obj,name,show_id) {
   var segments = default_panel
     .append("div")
     .classed("list-group segments", true)
+    .classed("hidden",hide_on_load)
     .selectAll("div")
     .data(function(x){
       var segs = x.segments.filter(function(y){
@@ -429,8 +430,6 @@ var buildObjects = function(obj) {
     .classed("col-md-6",true)
     .append("div")
     .classed("objects", true)
-    
-     
 
   var r = table
     .selectAll("div")
@@ -609,7 +608,7 @@ var buildClientAdvertiserInfo = function(obj) {
       })
 }
 
-var buildAdvertiserWrapper = function(data, id, width,show_id) {
+var buildAdvertiserWrapper = function(data, id, width, show_id, internal) {
   var wrapper_width = width || 6,
     show_id = show_id || false
 
@@ -623,12 +622,16 @@ var buildAdvertiserWrapper = function(data, id, width,show_id) {
   var panels = wrappers
     .append("div")
     .classed("panel",true)
-    .classed("panel-default",function(x) {
-      return !x.active || wrapper_width != 6
+    .classed("panel-default",true)
+    .classed("panel-warning", function(x) {
+      return x.active && internal && !x.running
     })
     .classed("panel-success", function(x) {
-      return x.active && wrapper_width == 6
+      console.log(x)
+      return x.active && x.running && internal
     })
+    
+     
 
   var headings = panels.append("div").classed("panel-heading",true);
 
