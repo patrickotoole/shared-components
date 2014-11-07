@@ -7,8 +7,6 @@ from ..base import BaseHandler
 from lib.helpers import *
 
 from lib.query.MYSQL import *
-from lib.query.HIVE import *
-import lib.query.helpers as query_helpers
 
 class CreativeReportingBase(BaseHandler):
 

@@ -20,6 +20,7 @@
 <script type="text/javascript" src="/static/js/render.js"></script> 
 <script type="text/javascript" src="/static/js/advertiser_viewable.js"></script>  
 
+
 <div id="advertiser-content" class='container'>
   <div class="row">
     <h4>Advertisers</h4>
@@ -32,15 +33,30 @@
 var advertiser_data = {{ data }};
 advertiser_data.sort(function(x){return - parseInt(x.active)})
 
+var qs = (function(a) {
+    if (a == "") return {};
+    var b = {};
+    for (var i = 0; i < a.length; ++i)
+    {
+      var p=a[i].split('=', 2);
+      if (p.length == 1)
+        b[p[0]] = "";
+      else
+        b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
+    }
+    return b;
+  })(window.location.search.substr(1).split('&'));
+
 
 var defaultWidth = advertiser_data.length > 1 ? "6" : "12",
   container = $('#advertiser-content > .row'),
   format = d3.format("0,000"),
   formatPercent = d3.format("%"),
-
   formatter = d3.time.format("%y-%m-%d"),
+  start_date = qs["start_date"] || formatter(new Date()),
+  
   BASE_URL = "/admin/advertiser/viewable/reporting",
-  COMPILED_URL = BASE_URL + "?format=json&start_date=" + formatter(new Date()) + "&include=advertiser,campaign,tag,type,venue&meta=none";
+  COMPILED_URL = BASE_URL + "?format=json&start_date=" + start_date + "&include=advertiser,campaign,tag,type,venue&meta=none";
 
 if (advertiser_data.length == 1) 
   COMPILED_URL = COMPILED_URL + "&advertiser_equal=" + advertiser_data[0].pixel_source_name;
@@ -77,7 +93,6 @@ d3.json(COMPILED_URL,function(reporting_data){
     })
   })
 }) 
-
 
 
 

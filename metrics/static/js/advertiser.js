@@ -360,6 +360,128 @@ var buildInsertionOrders = function(obj) {
   
 }
 
+var buildEdit = function(obj) {
+  var default_panel = obj
+
+  default_panel
+    .append("div")
+    .classed("panel-sub-heading edit list-group",true)
+    .append("div")
+    .classed("list-group-item",true)
+    .text("More Info")
+
+  var setup = default_panel
+    .append("div")
+    .classed("edit hidden row",true)
+    .append("div")
+    .classed("container",true)
+
+  var table = setup
+    .append("div")
+    .classed("col-md-6",true)
+    .append("table")
+    .classed("table table-condensed", true)
+
+  var h = table.append("thead").append("tr")
+
+  h.append("th")
+    .text("advertser attributes (click to edit)")
+
+  h.append("th") 
+
+  var r = table
+    .append("tbody")
+    .selectAll("tr")
+    .data(function(x){
+        return d3.entries(x).filter(function(x){
+          return typeof(x.value) != "object"
+        })
+     })
+    .enter()
+      .append("tr")
+      .sort(function(x,y){
+        var vx = typeof(x.value) == "object" ? 1 : 0,
+          vy = typeof(y.value) == "object" ? 1 : 0
+        console.log(vx,vy, vx-vy)
+        return vx - vy
+      })
+
+  r.append("td")
+    .html(function(x){
+      return x.key
+    })
+
+ r.append("td")
+    .classed("editable",true)
+    .attr("data-pk",function(x){return x.value})
+    .attr("data-title",function(x){return "Enter " + x.key}) 
+    .attr("data-url",function(x){return window.location.pathname })  
+    .html(function(x){
+      return x.value
+    }) 
+ return setup
+}    
+
+var buildObjects = function(obj) {
+
+  var table = obj
+    .append("div")
+    .classed("col-md-6",true)
+    .append("div")
+    .classed("objects", true)
+    
+     
+
+  var r = table
+    .selectAll("div")
+    .data(function(x){
+        return d3.entries(x).filter(function(x){
+          return typeof(x.value) == "object"
+        })
+     })
+    .enter()
+      .append("div")
+      .sort(function(x,y){
+        var vx = typeof(x.value) == "object" ? 1 : 0,
+          vy = typeof(y.value) == "object" ? 1 : 0
+        console.log(vx,vy, vx-vy)
+        return vx - vy
+      })
+
+  r.append("h5")
+    .html(function(x){
+      return x.key
+    })
+
+ r.append("div")
+    .style("max-height","400px")
+    .style("overflow","scroll") 
+    .style("overflow-x","hidden")  
+    .selectAll("div")
+    .data(function(x){
+      return x.value
+    })
+    .enter()
+      .append("div")
+      .classed("btn btn-default btn-xs",true)
+      .html(function(x){
+        if (x.pixel_name) {
+          return x.pixel_name
+        } else if (x.campaign_name) {
+          return x.campaign_name
+        } else if (x.segment_name) {
+          return x.segment_name
+        } else if (x.name) {
+          return x.name
+        }   
+        return x
+      }) 
+      .on("click",function(x){
+        
+      })
+}
+
+
 var buildPixels = function(obj) {
   var default_panel = obj
 
@@ -447,6 +569,9 @@ var buildAdvertiserInfo = function(obj) {
       .append("div")
       .text(function(x){
         return x.key + " : " + x.value
+      })
+      .sort(function(x,y){
+        return -x.key.localeCompare(y.key);
       })
       .sort(function(x,y){
         var w = (typeof x.value == "string") ? 2 : 0
