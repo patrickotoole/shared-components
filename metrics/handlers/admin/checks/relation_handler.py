@@ -28,7 +28,7 @@ class CampaignRelationsHandler(Relation,tornado.web.RequestHandler):
         
         def default(self,data):
             _json = Convert.df_to_json(data)
-            self.render("admin/campaign_checks.html",data=_json)  
+            self.render("admin/checks/advertiser.html",data=_json)  
 
         yield default, (data,)
 
@@ -49,7 +49,7 @@ class CampaignRelationsHandler(Relation,tornado.web.RequestHandler):
         advertiser = self.db.select_dataframe(ADVERTISER_QUERY % {"where":where}).set_index("external_advertiser_id")
         campaigns = self.db.select_dataframe(CAMPAIGN_QUERY % {"where":where}).set_index("campaign_id")
         df = self.db.select_dataframe(CAMPAIGN_VIEW_QUERY % {"where":where})
-        campaigns = self.transform(campaigns,df)
+        campaigns = self.transform(campaigns,df).reset_index()
         
         advertiser['campaign_relations'] = campaigns.groupby("external_advertiser_id").apply(Convert.df_to_values)
 
@@ -68,7 +68,7 @@ class CampaignRelationsHandler(Relation,tornado.web.RequestHandler):
         advertiser = a_df.set_index("external_advertiser_id")
 
         df = self.db.select_dataframe(CAMPAIGN_VIEW_QUERY % _id)
-        campaigns = self.transform(campaigns,df) 
+        campaigns = self.transform(campaigns,df).reset_index()
 
         advertiser['campaign_relations'] = campaigns.groupby("external_advertiser_id").apply(Convert.df_to_values) 
 
@@ -79,6 +79,9 @@ class CampaignRelationsHandler(Relation,tornado.web.RequestHandler):
             self.get_campaign(arg)
         else:
             self.get_all()
+
+    def put(self,data):
+        return
     
     def post(self,arg=None):
         _json = ujson.loads(self.request.body)

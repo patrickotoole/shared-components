@@ -33,9 +33,14 @@ class SuiteHandler(tornado.web.RequestHandler):
     def initialize(self, db):
         self.db = db 
 
-    def get_all(self):
-        _o = self.db.select_dataframe(SUITE_QUERY % "1=1").set_index("id")
-        _d = self.db.select_dataframe(API_QUERY % "1=1")
+    def get_all(self,arg=None):
+        aw, sw = "1=1", "1=1"
+        if arg is not None:
+            sw = "id = %s" % arg
+            aw = "suite_id = %s" % arg
+
+        _o = self.db.select_dataframe(SUITE_QUERY % sw).set_index("id")
+        _d = self.db.select_dataframe(API_QUERY % aw)
 
         # Need to make this unique based on fixture_id
         _d['suite_id'] = _d.suite_id.map(int)
@@ -63,7 +68,7 @@ class SuiteHandler(tornado.web.RequestHandler):
 
     def get(self,arg=None):
 
-        self.get_all()
+        self.get_all(arg)
 
     def put(self,_id):
         obj = ujson.loads(self.request.body)

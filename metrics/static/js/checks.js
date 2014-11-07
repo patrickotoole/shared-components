@@ -1,3 +1,134 @@
+var buildCampaignChecks = function(obj,name) {
+
+  var name = name || "Campaign Suites and Fixtures"
+
+  obj.append("div")
+    .classed("panel-sub-heading campaigns list-group",true) 
+    .append("div")
+    .classed("list-group-item",true)
+    .text(name)
+
+  var campaigns = obj
+    .append("div")
+    .classed("list-group campaigns hidden", true)
+    .selectAll("div")
+    .data(function(x){
+      return x.campaign_relations
+    })
+    .enter()
+      .append("div")
+      .classed("list-group-item",true)
+      .append("div")
+
+  campaigns
+    .append("a")
+    .attr("href",function(x){
+      return "/admin/campaign_check/relation/" + x.campaign_id
+    })
+    .text(function(x){
+      return x.campaign_name
+    })
+
+  var details = campaigns
+    .selectAll("div")
+    .data(function(x){
+      var nested = d3.nest().key(function(y){
+        return y.suite_name || "Fixtures"
+      }).entries(x.fixtures)
+      return nested
+    })
+    .enter()
+      .append("div")
+      .classed("row",true)
+      .append("dl")
+      .classed("dl-horizontal info",true)
+
+  details
+    .append("dt")
+    .text(function(x){
+      return x.key
+    })
+
+  var desc = details
+    .append("dd")
+
+  var descr = desc
+    .append("p")
+    .classed("col-md-10",true)
+    .html("a description") 
+
+  var btns = desc
+    .append("div")
+    .classed("col-md-2",true)
+    
+  descr
+    .append("button")
+    .classed("pull-right btn btn-default btn-xs",true)
+    .text("Show more")
+    .on("click",function(x){
+      d3.select(this)
+        .classed("hidden",true)
+      d3.select(this.nextSibling)
+        .classed("hidden",false)
+      return x
+    }) 
+
+  btns
+    .append("a")
+    .attr("href",function(x){
+      return "/admin/campaign_check/suites/" + x.values[0].suite_id
+    })
+    .classed("btn btn-success btn-xs",true)
+    .text("Edit suite")
+    .on("click",function(x){
+      return x
+    })
+   
+  btns
+    .append("button")
+    .classed("btn btn-danger btn-xs",true)
+    .text("Remove suite")
+    .on("click",function(x){
+      var campaign_id = x.values[0].campaign_id
+      var suite_id = x.values[0].suite_id
+      var URL = "/admin/campaign_check/relation?campaign_id=" + 
+        campaign_id + "&suite_id=" + suite_id
+
+      var self = this
+      $.ajax(URL,{"type":"delete"}).done(function(x){
+        var torm = self.parentNode.parentNode.parentNode.parentNode
+        console.log(self,torm)
+        d3.select(torm).remove()
+      }) 
+        
+      return x
+    })
+
+  fixtures = descr
+    .append("div")
+    .classed("hidden",true)
+    .append("dl")
+    .classed("dl-horizontal",true)
+    .selectAll("div")
+    .data(function(x){
+      return x.values
+    })
+    .enter()
+      .append("div")
+
+  fixtures
+    .append("dt")
+    .text(function(x){return x.fixture_name})
+
+  fixtures
+    .append("dd")
+    .text("desc")
+
+
+}
+
+
+
 var buildChecksWrapper = function(data, id, key, width, show_id) {
   var wrapper_width = width || 6,
     show_id = show_id || false,
@@ -196,7 +327,7 @@ var buildSuiteInfo = function(obj) {
     })
    
 
-  fixtures
+  svkgherf
     .append("h5")
     .classed("list-group-item-heading",true)
 
