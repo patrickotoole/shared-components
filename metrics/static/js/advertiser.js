@@ -331,7 +331,7 @@ var buildInsertionOrders = function(obj) {
       return x.budget 
     })
 
- io_details 
+  io_details 
     .append("div")
     .classed("col-md-1",true)
     .html(function(x){
@@ -374,7 +374,7 @@ var buildInsertionOrders = function(obj) {
       return (x.client_paid) ? x.budget : "&nbsp;"
     })
 
- io_details 
+  io_details 
     .append("div")
     .classed("col-md-1",true)
     .html(function(x){
@@ -405,6 +405,8 @@ var buildInsertionOrders = function(obj) {
       })
   
 }
+
+
 
 var buildEdit = function(obj) {
   var default_panel = obj
@@ -440,17 +442,12 @@ var buildEdit = function(obj) {
     .selectAll("tr")
     .data(function(x){
         return d3.entries(x).filter(function(x){
-          return typeof(x.value) != "object"
+          return typeof(x.value) != "object" && 
+            ["id","active","deleted","running"].indexOf(x.key) == -1
         })
      })
     .enter()
       .append("tr")
-      .sort(function(x,y){
-        var vx = typeof(x.value) == "object" ? 1 : 0,
-          vy = typeof(y.value) == "object" ? 1 : 0
-        console.log(vx,vy, vx-vy)
-        return vx - vy
-      })
 
   r.append("td")
     .html(function(x){
@@ -458,15 +455,67 @@ var buildEdit = function(obj) {
     })
 
  r.append("td")
-    .classed("editable",true)
+    .append("a")
+    .classed("editable editable-click",true)
     .attr("data-pk",function(x){return x.value})
     .attr("data-title",function(x){return "Enter " + x.key}) 
     .attr("data-url",function(x){return window.location.pathname })  
-    .html(function(x){
+    .text(function(x){
       return x.value
     }) 
+
  return setup
 }    
+
+var buildStatus = function(obj) {
+  var table = obj
+    .append("div")
+    .classed("col-md-6",true)
+    .append("table")
+    .classed("table table-condensed", true)
+
+  var h = table.append("thead").append("tr")
+
+  h.append("th")
+    .text("advertiser status")
+
+  h.append("th") 
+ 
+
+  var r = table
+    .append("tbody")
+    .selectAll("tr")
+    .data(function(x){
+        return d3.entries(x).filter(function(x){
+          return typeof(x.value) != "object" && ["active","deleted","running"].indexOf(x.key) > -1 
+        }) 
+    })
+    .enter()
+      .append("tr")
+      .sort(function(x,y){
+        var vx = typeof(x.value) == "object" ? 1 : 0,
+          vy = typeof(y.value) == "object" ? 1 : 0
+        return vx - vy
+      })
+
+  r.append("td")
+    .html(function(x){
+      return x.key
+    })
+   
+
+  r.append("td")
+    .append("a")
+    .classed("editable editable-click",true)
+    .attr("data-pk",function(x){return x.value})
+    .attr("data-title",function(x){return "Enter " + x.key}) 
+    .attr("data-url",function(x){return window.location.pathname })  
+    .text(function(x){
+      return x.value
+    })
+   
+
+}
 
 var buildObjects = function(obj) {
 
@@ -497,7 +546,6 @@ var buildObjects = function(obj) {
       .sort(function(x,y){
         var vx = typeof(x.value) == "object" ? 1 : 0,
           vy = typeof(y.value) == "object" ? 1 : 0
-        console.log(vx,vy, vx-vy)
         return vx - vy
       })
 
@@ -514,6 +562,141 @@ var buildObjects = function(obj) {
 
  
 }
+
+var buildConversionReporting = function(obj) {
+  var default_panel = obj
+
+  var conversion_group = default_panel
+    .append("div")
+    .classed("panel-sub-heading conversion-reporting list-group",true)
+
+  conversion_group
+    .append("div")
+    .classed("list-group-item",true)
+    .text("Conversion Reporting")
+
+  var pixels = default_panel
+    .append("div")
+    .classed("list-group conversion-reporting hidden", true)
+
+  pixels
+    .selectAll("div")
+    .data(function(x){
+      return x.conversion_reporting || []
+    })
+    .enter()
+      .append("div")
+      .classed("list-group-item",true)
+      .html(function(x){
+        return '<h5 class="list-group-item-heading">' + x.pixel_name + '</h5>'
+      })
+   
+
+  conversion_group
+    .on("click",function(x){
+      if (!x['conversion_reporting']) {
+        var qs = (function(a) {
+          if (a == "") return {};
+          var b = {};
+          for (var i = 0; i < a.length; ++i)
+          {
+            var p=a[i].split('=', 2);
+            if (p.length == 1)
+              b[p[0]] = "";
+            else
+              b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
+          }
+          return b;
+        })(window.location.search.substr(1).split('&')),
+          formatter = d3.time.format("%y-%m-%d"),
+          start_date = qs["start_date"] || formatter(new Date());
+         
+
+        var URL = "/admin/advertiser/conversion/reporting?format=json&start_date=" + start_date +
+          "&advertiser=" + x.pixel_source_name
+
+        d3.json(URL,function(reporting_data){
+          reporting = d3.nest()
+            .key(function(d) {return d.segment})
+            .entries(reporting_data)
+
+          x.conversion_reporting = reporting
+          var table = pixels
+            .append("div")
+              .classed("row",true)
+            .append("div")
+              .classed("col-md-12",true)
+            .append("div")
+              .classed("col-md-12",true) 
+            .append("table")
+              .classed("col-md-12 table table-condensed",true)
+
+          var th = table.append("thead").append("tr")
+
+          th.append("th").text("pixel")
+          th.append("th").text("Other") 
+          th.append("th").text("")  
+          th.append("th").text("Rockerbox") 
+          th.append("th").text("")   
+          th.append("th").text("Total")  
+            
+
+            
+
+          var tr = table
+            .append("tbody")
+            .selectAll("tr")
+            .data(function(d){
+              return x.conversion_reporting
+            })
+            .enter()
+              .append("tr")
+
+          tr.append("td")
+            .text(function(x){
+              return x.key
+            })
+
+          tr.append("td")
+            .text(function(x){
+              var v = x.values[0].num_conv
+              return  v 
+            })
+          tr.append("td")
+            .text(function(x){
+              var v = x.values[0].num_conv,
+                t = (parseInt(x.values[0].num_conv) + parseInt(x.values[1].num_conv))
+              return  v/t
+            })
+           
+           
+          tr.append("td")
+            .text(function(x){
+              return x.values[1].num_conv 
+            })
+          tr.append("td")
+            .text(function(x){
+              var v = x.values[1].num_conv,
+                t = (parseInt(x.values[0].num_conv) + parseInt(x.values[1].num_conv))
+              return  v/t
+            })
+           
+           
+          tr.append("td")
+            .text(function(x){
+              return parseInt(x.values[0].num_conv) + parseInt(x.values[1].num_conv)
+            })
+           
+ 
+              
+          
+        })
+         
+      }
+      
+    })
+
+}    
 
 
 var buildPixels = function(obj) {
@@ -662,7 +845,6 @@ var buildAdvertiserWrapper = function(data, id, width, show_id, internal) {
       return x.active && internal && !x.running
     })
     .classed("panel-success", function(x) {
-      console.log(x)
       return x.active && x.running && internal
     })
     

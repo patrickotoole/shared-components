@@ -1,3 +1,10 @@
+window.rockerbox = window.rockerbox || {}
+rockerbox = window.rockerbox
+
+rockerbox.advertiser = rockerbox.advertiser || {}
+rockerbox.advertiser.viewable = rockerbox.advertiser.viewable || {}
+v = rockerbox.advertiser.viewable
+
 var buildViewableGraph = function(summary,accessor,_class,height) {
 
   var height = height || 50,
@@ -72,12 +79,40 @@ var buildViewableSummary = function(Sum,panels) {
   
 }
 
+v.data = v.data || {}
+v.data.groupAdvertiser = function(reporting_data) {
+  return d3.nest()
+    .key(function(d) {return d.advertiser})
+    .map(reporting_data,d3.map)
+}
+
+v.data.transformGroupAdvertiser = function(d,source_data,key,override){
+  var override = override || key
+
+  d[override+ "_viewabilitys"] = d3.nest()
+    .key(function(d) { return d[key]})
+    .rollup(function(l){
+      var fields = ["served","loaded","visible"],
+        values =  fields.map(function(n){
+          return d3.sum(l.map(function(k,i){return k[n]}))
+        }),
+        rolled = fields.map(function(n,i){
+          return {
+            key: n,
+            values: [values[i],values[i]/values[0]]
+          }
+        })
+
+      return rolled
+    })
+    .entries(source_data) 
+}
+
 var transformData = function(advertiser_data,reporting_data) {
   reporting = d3.nest()
     .key(function(d) {return d.advertiser})
     .rollup(function(l){
-      var 
-        fields = ["served","loaded","visible"],
+      var fields = ["served","loaded","visible"],
         values =  fields.map(function(n){
           return d3.sum(l.map(function(k,i){return k[n]}))
         }),
@@ -92,123 +127,21 @@ var transformData = function(advertiser_data,reporting_data) {
     })
     .map(reporting_data,d3.map)
 
-  campaign_viewability = d3.nest()
-    .key(function(d) {return d.advertiser})
-    .map(reporting_data,d3.map)
-
-  tag_viewability = d3.nest()
-    .key(function(d) {return d.advertiser})
-    .map(reporting_data,d3.map)
-
-  domain_list_viewability = d3.nest()
-    .key(function(d) {return d.advertiser})
-    .map(reporting_data,d3.map)
-
-  venue_viewability = d3.nest()
-    .key(function(d) {return d.advertiser})
-    .map(reporting_data,d3.map)
-   
-   
-
+  data = v.data.groupAdvertiser(reporting_data)
 
   advertiser_data.forEach(function(d){
     d.viewability_summary = reporting.get(d.pixel_source_name) || []
 
-    var v = campaign_viewability.get(d.pixel_source_name) || []
-
-    d.campaign_viewabilitys = d3.nest()
-      .key(function(d) { return d["campaign"]})
-      .rollup(function(l){
-        var fields = ["served","loaded","visible"],
-          values =  fields.map(function(n){
-            return d3.sum(l.map(function(k,i){return k[n]}))
-          }),
-          rolled = fields.map(function(n,i){
-            return {
-              key: n,
-              values: [values[i],values[i]/values[0]]
-            }
-          })
-
-        return rolled
-      })
-      .entries(v)
-
-    var v = tag_viewability.get(d.pixel_source_name) || []
-
-    d.tag_viewabilitys = d3.nest()
-      .key(function(d) { return d["tag"]})
-      .rollup(function(l){
-        var fields = ["served","loaded","visible"],
-          values =  fields.map(function(n){
-            return d3.sum(l.map(function(k,i){return k[n]}))
-          }),
-          rolled = fields.map(function(n,i){
-            return {
-              key: n,
-              values: [values[i],values[i]/values[0]]
-            }
-          })
-
-        return rolled
-      })
-      .entries(v) 
-
-      d.tag_viewabilitys = d.tag_viewabilitys.filter(function(x){ return x.values[0].values[0] > 10})
-
-    var v = domain_list_viewability.get(d.pixel_source_name) || []
-
-    d.domain_list_viewabilitys = d3.nest()
-      .key(function(d) { return d["type"]})
-      .rollup(function(l){
-        var fields = ["served","loaded","visible"],
-          values =  fields.map(function(n){
-            return d3.sum(l.map(function(k,i){return k[n]}))
-          }),
-          rolled = fields.map(function(n,i){
-            return {
-              key: n,
-              values: [values[i],values[i]/values[0]]
-            }
-          })
-
-        return rolled
-      })
-      .entries(v) 
-
-      d.domain_lists = d.domain_lists || []
-
-      var lists = d.domain_lists.map(function(x){return x.domain_list_name})
-      
-      d.domain_list_viewabilitys = d.domain_list_viewabilitys.filter(function(x){ 
-        return lists.indexOf(x.key) > -1
-      })
-
-    var v = venue_viewability.get(d.pixel_source_name) || []
-
-    d.venue_viewabilitys = d3.nest()
-      .key(function(d) { return d["venue"]})
-      .rollup(function(l){
-        var fields = ["served","loaded","visible"],
-          values =  fields.map(function(n){
-            return d3.sum(l.map(function(k,i){return k[n]}))
-          }),
-          rolled = fields.map(function(n,i){
-            return {
-              key: n,
-              values: [values[i],values[i]/values[0]]
-            }
-          })
-
-        return rolled
-      })
-      .entries(v) 
-
-      d.venue_viewabilitys = d.venue_viewabilitys.filter(function(x){ return x.values[0].values[0] > 10})
-     
-     
+    source_data = data.get(d.pixel_source_name)
+    if (source_data) {
+      v.data.transformGroupAdvertiser(d,source_data,"campaign")
+      v.data.transformGroupAdvertiser(d,source_data,"type","domain_list")
+      v.data.transformGroupAdvertiser(d,source_data,"venue")
+      v.data.transformGroupAdvertiser(d,source_data,"tag") 
+    }
 
   })
+
 
   return advertiser_data
 }
@@ -254,22 +187,103 @@ var buildViewableWrapper = function(advertiser_data,defaultWidth) {
   return panels
 }
 
-var buildGroup = function(panel,class_name,grouping) {
+var buildGroup = function(panel,class_name,grouping,defaultWidth) {
   var group_class = class_name + "-group",
     group_header_class = class_name + "-header",
     group_item_class = class_name + "-item"
 
-
   var group = panel.append("div")
     .classed("list-group " + group_class,true)
     .on("click",function(x){
-      var isOpened = function(y){return x.is_opened[y]},
-        p = d3.select(this.parentNode.parentNode), 
-        has_opened = Object.keys(x.is_opened).filter(isOpened).length;
+      
 
-      if (defaultWidth == "6") {
-        p.classed("col-md-6",!has_opened) 
-        p.classed("col-md-12",has_opened)  
+
+      if (x[group_class]) {
+        var isOpened = function(y){return x.is_opened[y]},
+          p = d3.select(this.parentNode.parentNode), 
+          has_opened = Object.keys(x.is_opened).filter(isOpened).length;
+
+        if (defaultWidth == "6") {
+          p.classed("col-md-6",!has_opened) 
+          p.classed("col-md-12",has_opened)  
+        }
+      } else if (x[class_name +"s"]) {
+        var g = group.select("a")
+          .select("span.badge")
+
+        g.text("Loading...")
+        var items = buildItems(group,class_name)
+
+        items[1].classed("hidden",false)
+        rows = renderRows(class_name,items[0])
+        g.text(items[1][0].length)
+         
+
+      } else if (x.made_request != 1){
+        x.made_request = 1
+        var g = group.select("a")
+          .select("span.badge")
+
+        g.text("Loading...") 
+        var qs = (function(a) {
+          if (a == "") return {};
+          var b = {};
+          for (var i = 0; i < a.length; ++i)
+          {
+            var p=a[i].split('=', 2);
+            if (p.length == 1)
+              b[p[0]] = "";
+            else
+              b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
+          }
+          return b;
+        })(window.location.search.substr(1).split('&')),
+          formatter = d3.time.format("%y-%m-%d"),
+          start_date = qs["start_date"] || formatter(new Date());
+
+        var URL = "/admin/advertiser/viewable/reporting?format=json&start_date=" + start_date +
+          "&include=advertiser,campaign,tag,type,venue&meta=none&advertiser_equal=" + x.pixel_source_name
+
+        d3.json(URL,function(reporting_data){
+          reporting = d3.nest()
+            .key(function(d) {return d.advertiser})
+            .rollup(function(l){
+              var fields = ["served","loaded","visible"],
+                values =  fields.map(function(n){
+                  return d3.sum(l.map(function(k,i){return k[n]}))
+                }),
+                rolled = fields.map(function(n,i){
+                  return {
+                    key: n,
+                    values: [values[i],values[i]/values[0]]
+                  }
+                })
+
+              return rolled
+            })
+            .map(reporting_data,d3.map)
+
+          data = v.data.groupAdvertiser(reporting_data)
+
+          x.viewability_summary = reporting.get(x.pixel_source_name) || []
+
+          source_data = data.get(x.pixel_source_name)
+          if (source_data) {
+            v.data.transformGroupAdvertiser(x,source_data,"campaign")
+            v.data.transformGroupAdvertiser(x,source_data,"type","domain_list")
+            v.data.transformGroupAdvertiser(x,source_data,"venue")
+            v.data.transformGroupAdvertiser(x,source_data,"tag") 
+          }
+          
+          var items = buildItems(group,class_name)
+          items[1].classed("hidden",false)
+          rows = renderRows(class_name,items[0])
+          console.log(items[1])
+          g.text(items[1][0].length) 
+        });
+
+          
+        
       }
     })
 
@@ -327,7 +341,7 @@ var buildItems = function(group,class_name) {
       return '<div class="col-md-3">' +  x["key"]  + '</div>'
     })
 
-  return pitems
+  return [pitems,items]
 }
 
 var renderRows = function(class_name,items) {

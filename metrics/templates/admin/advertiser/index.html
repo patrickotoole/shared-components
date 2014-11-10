@@ -6,6 +6,7 @@
 <link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/chosen.css">
 <script type="text/javascript" src="http://rockerbox.com/js/d3.js"></script>
 <script type="text/javascript" src="/static/js/advertiser.js"></script> 
+<script type="text/javascript" src="/static/js/advertiser_viewable.js"></script>  
 <link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css" rel="stylesheet"/>
 <script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
 
@@ -41,6 +42,7 @@ $(document).ready(function(){
       .text("Information and Implementation")
 
     var setup = buildEdit(wrapped)
+    buildStatus(setup)
     buildObjects(setup)
     buildInsertionOrders(wrapped)
     buildPixels(wrapped)  
@@ -48,17 +50,47 @@ $(document).ready(function(){
     buildUserSegments(wrapped,"Constructed Segments (not on page)",true,true)
     buildCampaigns(wrapped) 
 
-    wrapped.append("div")
-      .classed("panel-body",true)
-      .append("h4")
-      .text("Tools Reporting")
-     
+    
 
     wrapped.append("div")
       .classed("panel-body",true)
       .append("h4")
       .text("Reporting")
-            
+
+    var groupings = {
+      "Viewability":[
+        "Domain List Viewability",
+        "Campaign Viewability", 
+        "Tag Viewability",
+        "Venue Viewability"
+      ]
+    }
+
+    var panels = wrapped,
+      defaultWidth = 12
+
+    Object.keys(groupings).map(function(key){
+
+      //buildViewableSummary(key,panels)
+      groupings[key].map(function(grouping) { 
+
+        var class_name = grouping.toLowerCase().split(" ").join("_"),
+          groups = buildGroup(panels,class_name,grouping,defaultWidth),
+          items = buildItems(groups,class_name),
+          rows = renderRows(class_name,items[0])
+
+      })
+    })
+
+    wrapped.append("div")
+      .classed("panel-body",true)
+      .append("h4")
+      .text("Conversions")
+
+    buildConversionReporting(wrapped)
+
+ 
+              
     wrapped
       .on("click",function(data){
         var p = d3.select(this.parentNode), 
