@@ -556,8 +556,16 @@ var buildObjects = function(obj) {
     .html(function(x){
       return x.value.length
     })
+}
 
- 
+var makeGraphArea = function(obj){
+
+  obj.text(function(x){
+    console.log(x)
+    return x
+  })
+
+
 }
 
 var buildPixelReporting = function(obj) {
@@ -575,6 +583,10 @@ var buildPixelReporting = function(obj) {
   var pixels = default_panel
     .append("div")
     .classed("list-group pixel-reporting hidden", true)
+
+  var graph_area = pixels
+    .append("div")
+    .classed("hello", true)
 
   pixels
     .selectAll("div")
@@ -619,14 +631,10 @@ var buildPixelReporting = function(obj) {
 
           x.pixel_reporting = reporting
           var table = pixels
-            .append("div")
-              .classed("row",true)
-            .append("div")
-              .classed("col-md-12",true)
-            .append("div")
-              .classed("col-md-12",true) 
-            .append("table")
-              .classed("col-md-12 table table-condensed",true)
+            .append("div").classed("row",true)
+            .append("div").classed("col-md-12",true)
+            .append("div").classed("col-md-12",true) 
+            .append("table").classed("col-md-12 table table-condensed",true)
 
           var th = table.append("thead").append("tr")
 
@@ -686,6 +694,8 @@ var buildPixelReporting = function(obj) {
             .text(function(x){
               return formatPercent(x.values[0].rbox_users/x.values[0].users)
             })
+
+          makeGraphArea(graph_area)
            
  
               

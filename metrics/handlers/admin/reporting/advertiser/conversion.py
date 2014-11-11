@@ -131,8 +131,7 @@ OPTIONS = {
             "static_joins": JOIN["lateral_view"]
         }
     },
-    
-    "none": {
+    "full": {
         "meta": {
             "groups": [
                 "advertiser",
@@ -155,6 +154,19 @@ OPTIONS = {
                 "influencer_campaign"
                        ],
             "fields": ["num_conv", "num_served"]
+        }
+    },
+    "none": {
+        "meta": {
+            "groups": [],
+            "fields": ["num_conv", "num_served"],
+            "formatters": {
+                "segment": "none",
+                "order_type": "none",
+                "order_id": "none",
+                "conv_id": "none",
+                "uid": "none"
+                } 
         }
     }
 }
