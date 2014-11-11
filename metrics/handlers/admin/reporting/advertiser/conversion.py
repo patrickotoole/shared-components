@@ -12,7 +12,8 @@ from ..base import AdminReportingBaseHandler
 JOIN = {
     "experiment": "v JOIN experiment_test_ref t on v.first_campaign = t.campaign_id",
     "bucket": "v JOIN (SELECT bucket_name, campaign_id FROM campaign_bucket_ref WHERE campaign_id IS NOT NULL) t on v.first_campaign = t.campaign_id",
-    "lateral_view": " LATERAL VIEW explode(domains) a as domain, imps"
+    "lateral_view": " LATERAL VIEW explode(domains) a as domain, imps",
+    "campaign_view": " LATERAL VIEW explode(campaigns) a as campaign, imps" 
 }
 
 OPTIONS = {
@@ -123,7 +124,16 @@ OPTIONS = {
                 }
             }
         },
-
+    "top_campaigns": {
+        "meta": {
+            "groups": ["advertiser", "campaign"],
+            "fields": ["imps", "num_conv"],
+            "static_joins": JOIN["campaign_view"],
+            "formatters" : {
+                "campaign": "none"    
+            }
+        }
+    },
     "top_domains": {
         "meta": {
             "groups": ["advertiser", "domain"],

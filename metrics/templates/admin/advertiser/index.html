@@ -88,6 +88,8 @@ $(document).ready(function(){
       .text("Conversions Attribution")
 
     buildConversionReporting(wrapped)
+    buildCampaignConversionReporting(wrapped)
+    buildDomainConversionReporting(wrapped) 
 
     wrapped.append("div")
       .classed("panel-body",true)
@@ -95,6 +97,7 @@ $(document).ready(function(){
       .text("On-site Activity Attribution (Pixels)")
 
     buildPixelReporting(wrapped)
+    
  
               
     wrapped
