@@ -60,7 +60,7 @@ class VenueAPI(object):
         logging.info(LI_MSG % {"line_item_id":line_item_id})
 
         response = self.an_api.get("/line-item?id=%s" % line_item_id)
-        campaigns = response.json["response"]["line-item"]["campaigns"]
+        campaigns = response.json["response"]["line-item"]["campaigns"] or []
         self.advertiser_id = response.json["response"]["line-item"]["advertiser_id"] 
         id_list = [c["id"] for c in campaigns]
         

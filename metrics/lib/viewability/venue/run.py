@@ -3,7 +3,7 @@ from analysis import VenueAnalysis
 from api import VenueAPI
 from time import sleep
 
-Q = "SELECT learn_line_item_id, optimized_line_item_id, domain_list_id FROM domain_list_viewability"
+Q = "SELECT learn_line_item_id, optimized_line_item_id, domain_list_id FROM domain_list_viewability where active = 1"
 R = "SELECT * FROM venue_campaign_bucket where active = 1"
 
 def get_campaigns():
@@ -65,25 +65,28 @@ def main():
         advertiser_id = obj['advertiser']
         advertiser_name = rb_api.get("/advertiser/%s?format=json" % advertiser_id).json[0]['pixel_source_name']
         print advertiser_name
-        try:
-            va = VenueAnalysis(an_api,an_reporting,venue_db,rb_api,reporting_db,campaigns,advertiser_id,advertiser_name)
+    #try:
+        va = VenueAnalysis(an_api,an_reporting,venue_db,rb_api,reporting_db,campaigns,advertiser_id,advertiser_name)
 
-            to_block = va.bad_venues
-            to_block['action'] = 'bad'
+        #to_block = va.bad_venues
+        #to_block['action'] = 'bad'
 
-            to_block = to_block.append(va.hidden_venues)
-            to_block['action'] = to_block['action'].fillna('ban')
-            to_block = to_block.fillna(0)
-            to_block = to_block.replace([pd.np.inf, -pd.np.inf], 0)
+        #to_block = to_block.append(va.hidden_venues)
+        to_block = va.hidden_venues
+        #to_block['action'] = to_block['action'].fillna('ban')
+        to_block['action'] = 'ban'
+        to_block['imps'] = 0
+        to_block = to_block.fillna(0)
+        to_block = to_block.replace([pd.np.inf, -pd.np.inf], 0)
 
-            for cp in campaigns:
-                to_block['campaign_id'] = cp
-                va.block_venues(cp,list(to_block.index))
-                va.venue_change_ref(to_block)
+        for cp in campaigns:
+            to_block['campaign_id'] = cp
+            va.block_venues(cp,list(to_block.index))
+            va.venue_change_ref(to_block)
 
-            sleep(5)
-        except:
-           logging.error("%s" % str(obj))
+        sleep(5)
+    #except:
+        logging.error("%s" % str(obj))
         
 
 if __name__ == "__main__":

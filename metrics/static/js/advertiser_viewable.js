@@ -242,7 +242,8 @@ var buildGroup = function(panel,class_name,grouping,defaultWidth) {
           start_date = qs["start_date"] || formatter(new Date());
 
         var URL = "/admin/advertiser/viewable/reporting?format=json&start_date=" + start_date +
-          "&include=advertiser,campaign,tag,type,venue&meta=none&advertiser_equal=" + x.pixel_source_name
+          "&include=advertiser,campaign,tag,type,venue&meta=type&advertiser_equal=" + 
+          x.pixel_source_name
 
         d3.json(URL,function(reporting_data){
           reporting = d3.nest()
