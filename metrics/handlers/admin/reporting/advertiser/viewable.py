@@ -111,8 +111,7 @@ OPTIONS = {
                 "spent": "cpm",
                 "venue": "none",
                 "tag": "none"
-            },
-            "static_joins" : JOIN["static_type"] 
+            }
         }
     } 
 }
@@ -156,6 +155,7 @@ WHERE = {
     "venue":"venue = '%(venue)s'", 
     "domain":"domain like '%%%(domain)s%%'",
     "type":"d.log like '%%%(type)s%%'",
+    "static_type":"d.log like '%%%(static_type)s%%'", 
     "experiment":"t.experiment_id = '%(experiment)s'",
     "tag":"tag = '%(tag)s'",
     "seller":"seller = '%(seller)s'"
