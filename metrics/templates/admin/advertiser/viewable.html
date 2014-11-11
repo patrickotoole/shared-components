@@ -56,7 +56,7 @@ var defaultWidth = advertiser_data.length > 1 ? "6" : "12",
   start_date = qs["start_date"] || formatter(new Date()),
   
   BASE_URL = "/admin/advertiser/viewable/reporting",
-  COMPILED_URL = BASE_URL + "?format=json&start_date=" + start_date + "&include=advertiser,campaign,tag,type,venue&meta=none";
+  COMPILED_URL = BASE_URL + "?format=json&start_date=" + start_date + "&include=advertiser,campaign,tag,type,venue&meta=type";
 
 if (advertiser_data.length == 1) 
   COMPILED_URL = COMPILED_URL + "&advertiser_equal=" + advertiser_data[0].pixel_source_name;

@@ -55,7 +55,7 @@ $(document).ready(function(){
     wrapped.append("div")
       .classed("panel-body",true)
       .append("h4")
-      .text("Reporting")
+      .text("Viewability")
 
     var groupings = {
       "Viewability":[
@@ -85,10 +85,19 @@ $(document).ready(function(){
     wrapped.append("div")
       .classed("panel-body",true)
       .append("h4")
-      .text("Conversions")
+      .text("Conversions Attribution")
 
     buildConversionReporting(wrapped)
+    buildCampaignConversionReporting(wrapped)
+    buildDomainConversionReporting(wrapped) 
 
+    wrapped.append("div")
+      .classed("panel-body",true)
+      .append("h4")
+      .text("On-site Activity Attribution (Pixels)")
+
+    buildPixelReporting(wrapped)
+    
  
               
     wrapped
