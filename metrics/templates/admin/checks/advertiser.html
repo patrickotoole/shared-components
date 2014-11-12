@@ -1,0 +1,62 @@
+{% autoescape None %}
+{% extends "../../clean_base.html" %}
+{% block content %}
+<link rel="stylesheet" type="text/css" href="http://getbootstrap.com/dist/css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/dc.css">
+<link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/chosen.css">
+<script type="text/javascript" src="http://rockerbox.com/js/d3.js"></script>
+<script type="text/javascript" src="/static/js/advertiser.js"></script> 
+<script type="text/javascript" src="/static/js/checks.js"></script>  
+<style>
+dl {margin-top:10px}
+dl.info {border: 1px solid #e1e1e8;background-color: #f7f7f9;padding: 9px 14px;}
+</style>
+
+<div id="advertiser-content" class='container'>
+  <div class="row">
+    <h4>Advertisers</h4>
+  </div>
+</div>
+
+<script>
+
+var data = {{ data }};
+
+data.sort(function(x){
+  return - parseInt(x.active)
+})
+
+var id = '#advertiser-content'
+
+var wrapped = buildAdvertiserWrapper(data,id,"6",true)
+buildAdvertiserInfo(wrapped)
+
+buildCampaignChecks(wrapped)    
+
+wrapped
+  .on("click",function(data){
+    var p = d3.select(this.parentNode), 
+    has_opened = (data.is_opened >  0)
+
+    p.classed("col-md-6",!has_opened) 
+    p.classed("col-md-12",has_opened)  
+  })
+
+wrapped.selectAll(".panel-sub-heading > .list-group-item")
+  .on("click",function(x){
+    d3.select(this.parentNode.nextSibling).classed("hidden",function(x){
+      if (x.is_opened === undefined) x.is_opened = 0
+      if (this.classList.contains("hidden")) {
+        x.is_opened += 1
+        return false
+      } else {
+        x.is_opened -= 1
+        return true
+      }
+    })
+  })
+
+
+</script>
+
+{% end %}   

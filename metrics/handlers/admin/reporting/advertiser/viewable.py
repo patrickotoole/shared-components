@@ -13,7 +13,7 @@ from ..base import AdminReportingBaseHandler
 
 JOIN = {
     "type":"v JOIN (select distinct log as log, pattern as pattern from domain_list where log like '%%%(type)s%%') d on d.pattern = v.domain",
-    "static_type": "v JOIN (select distinct log as log, pattern as pattern from domain_list) d on d.pattern = v.domain",
+    "static_type": "v LEFT OUTER JOIN domain_list d on d.pattern = v.domain and d.pixel_source_name = v.advertiser",
     "experiment":"v JOIN experiment_test_ref t on v.campaign = t.campaign_id",
     "bucket":"v JOIN (SELECT bucket_name, campaign_id FROM campaign_bucket_ref) t on v.campaign = t.campaign_id"
 }
@@ -25,7 +25,9 @@ OPTIONS = {
             "fields" : ["served","loaded","visible","spent"],
             "formatters" : {
                 "campaign":"none",
-                "spent": "cpm"
+                "spent": "cpm",
+                "tag":"none",
+                "seller":"none"
             }
         }
     },
@@ -35,7 +37,8 @@ OPTIONS = {
             "fields" : ["served","loaded","visible","spent"],
             "formatters" : {
                 "campaign":"none",
-                "spent": "cpm"
+                "spent": "cpm",
+                "tag":"none"
             }
         }
     },
@@ -108,10 +111,22 @@ OPTIONS = {
                 "spent": "cpm",
                 "venue": "none",
                 "tag": "none"
-            },
-            "joins" : JOIN["type"] 
+            }
         }
-    } 
+    },
+    "type": {
+        "meta": {
+            "groups" : [],
+            "fields" : ["served","loaded","visible","spent"],
+            "formatters" : {
+                "campaign":"none",
+                "spent": "cpm",
+                "venue": "none",
+                "tag": "none"
+            },
+            "static_joins" : JOIN["static_type"] 
+        }
+    }
 }
 
 # s/\(.\{-}\) .*/    "\1":"\1",/g
@@ -153,7 +168,10 @@ WHERE = {
     "venue":"venue = '%(venue)s'", 
     "domain":"domain like '%%%(domain)s%%'",
     "type":"d.log like '%%%(type)s%%'",
-    "experiment":"t.experiment_id = '%(experiment)s'" 
+    "static_type":"d.log like '%%%(static_type)s%%'", 
+    "experiment":"t.experiment_id = '%(experiment)s'",
+    "tag":"tag = '%(tag)s'",
+    "seller":"seller = '%(seller)s'"
 }
 
 
@@ -276,6 +294,7 @@ class AdvertiserViewableHandler(AdminReportingBaseHandler):
         wide = self.get_argument("wide",False)
 
         meta_group = self.get_meta_group()
+        print meta_group
         meta_data = self.get_meta_data(meta_group,include)
         meta_data["is_wide"] = wide
 

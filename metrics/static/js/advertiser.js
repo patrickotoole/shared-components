@@ -137,15 +137,10 @@ var buildCampaigns = function(obj,name,show_id) {
       })    
    
   }) 
-  
-
-  
 
 }
- 
- 
-var buildSegments = function(obj,name,show_id) {
-  console.log(name)
+
+ var buildUserSegments = function(obj,name,show_id,hide_on_load) {
 
   var default_panel = obj,
     name = name || "Segments",
@@ -170,6 +165,53 @@ var buildSegments = function(obj,name,show_id) {
   var segments = default_panel
     .append("div")
     .classed("list-group segments", true)
+    .classed("hidden",hide_on_load)
+    .selectAll("div")
+    .data(function(x){
+      var segs = x.segments.filter(function(y){
+        y.external_segment_id = show_id ? y.external_segment_id : ""
+        return y.segment_implemented == 0
+      })
+      return segs || []
+    })
+    .enter()
+      .append("div")
+      .classed("list-group-item",true)
+      .html(function(x){
+        return '<h5 class="list-group-item-heading">' + 
+          x.segment_name + '<span class="pull-right">'+ 
+          x.external_segment_id + '</span></h5>'
+      })
+
+}
+ 
+ 
+var buildSegments = function(obj,name,show_id,hide_on_load) {
+
+  var default_panel = obj,
+    name = name || "Segments",
+    show_id = show_id || false
+
+  var segment_header = default_panel
+    .append("div")
+    .classed("panel-sub-heading segments list-group",true)
+    .append("div")
+    .classed("list-group-item",true)
+    //.classed("disabled",true)
+    .text(name)
+
+  segment_header
+    .append("div")
+    .classed("pull-right",true)
+    .append("a")
+    .attr("href","/admin/advertiser/segment")
+    //.text("Segment Dashboard")
+
+
+  var segments = default_panel
+    .append("div")
+    .classed("list-group segments", true)
+    .classed("hidden",hide_on_load)
     .selectAll("div")
     .data(function(x){
       var segs = x.segments.filter(function(y){
@@ -285,7 +327,7 @@ var buildInsertionOrders = function(obj) {
       return x.budget 
     })
 
- io_details 
+  io_details 
     .append("div")
     .classed("col-md-1",true)
     .html(function(x){
@@ -328,7 +370,7 @@ var buildInsertionOrders = function(obj) {
       return (x.client_paid) ? x.budget : "&nbsp;"
     })
 
- io_details 
+  io_details 
     .append("div")
     .classed("col-md-1",true)
     .html(function(x){
@@ -359,6 +401,656 @@ var buildInsertionOrders = function(obj) {
       })
   
 }
+
+
+
+var buildEdit = function(obj) {
+  var default_panel = obj
+
+  default_panel
+    .append("div")
+    .classed("panel-sub-heading edit list-group",true)
+    .append("div")
+    .classed("list-group-item",true)
+    .text("General Info")
+
+  var setup = default_panel
+    .append("div")
+    .classed("edit hidden row",true)
+    .append("div")
+    .classed("col-md-12",true)
+
+  var table = setup
+    .append("div")
+    .classed("col-md-6",true)
+    .append("table")
+    .classed("table table-condensed", true)
+
+  var h = table.append("thead").append("tr")
+
+  h.append("th")
+    .text("advertser attributes (click to edit)")
+
+  h.append("th") 
+
+  var r = table
+    .append("tbody")
+    .selectAll("tr")
+    .data(function(x){
+        return d3.entries(x).filter(function(x){
+          return typeof(x.value) != "object" && 
+            ["id","active","deleted","running"].indexOf(x.key) == -1
+        })
+     })
+    .enter()
+      .append("tr")
+
+  r.append("td")
+    .html(function(x){
+      return x.key
+    })
+
+ r.append("td")
+    .append("a")
+    .classed("editable editable-click",true)
+    .attr("data-pk",function(x){return x.value})
+    .attr("data-title",function(x){return "Enter " + x.key}) 
+    .attr("data-url",function(x){return window.location.pathname })  
+    .text(function(x){
+      return x.value
+    }) 
+
+ return setup
+}    
+
+var buildStatus = function(obj) {
+  var table = obj
+    .append("div")
+    .classed("col-md-6",true)
+    .append("table")
+    .classed("table table-condensed", true)
+
+  var h = table.append("thead").append("tr")
+
+  h.append("th")
+    .text("advertiser status")
+
+  h.append("th") 
+ 
+
+  var r = table
+    .append("tbody")
+    .selectAll("tr")
+    .data(function(x){
+        return d3.entries(x).filter(function(x){
+          return typeof(x.value) != "object" && ["active","deleted","running"].indexOf(x.key) > -1 
+        }) 
+    })
+    .enter()
+      .append("tr")
+      .sort(function(x,y){
+        var vx = typeof(x.value) == "object" ? 1 : 0,
+          vy = typeof(y.value) == "object" ? 1 : 0
+        return vx - vy
+      })
+
+  r.append("td")
+    .html(function(x){
+      return x.key
+    })
+   
+
+  r.append("td")
+    .append("a")
+    .classed("editable editable-click",true)
+    .attr("data-pk",function(x){return x.value})
+    .attr("data-title",function(x){return "Enter " + x.key}) 
+    .attr("data-url",function(x){return window.location.pathname })  
+    .text(function(x){
+      return x.value
+    })
+   
+
+}
+
+var buildObjects = function(obj) {
+
+  var table = obj
+    .append("div")
+    .classed("col-md-6",true)
+    .append("table")
+    .classed("table table-condensed", true)
+
+  var h = table.append("thead").append("tr")
+
+  h.append("th")
+    .text("object summary")
+
+  h.append("th") 
+ 
+
+  var r = table
+    .append("tbody")
+    .selectAll("tr")
+    .data(function(x){
+        return d3.entries(x).filter(function(x){
+          return typeof(x.value) == "object"
+        })
+     })
+    .enter()
+      .append("tr")
+      .sort(function(x,y){
+        var vx = typeof(x.value) == "object" ? 1 : 0,
+          vy = typeof(y.value) == "object" ? 1 : 0
+        return vx - vy
+      })
+
+  r.append("td")
+    .html(function(x){
+      return x.key
+    })
+   
+
+  r.append("td")
+    .html(function(x){
+      return x.value.length
+    })
+}
+
+var makeGraphArea = function(obj){
+
+  obj.text(function(x){
+    console.log(x)
+    return x
+  })
+
+
+}
+
+var buildCampaignConversionReporting = function(obj) {
+  var default_panel = obj
+
+  var conversion_group = default_panel
+    .append("div")
+    .classed("panel-sub-heading campaign-conversion-reporting list-group",true)
+
+  conversion_group
+    .append("div")
+    .classed("list-group-item",true)
+    .text("Campaign Conversions Touched")
+
+  var pixels = default_panel
+    .append("div")
+    .classed("list-group campaign-conversion-reporting hidden", true)
+
+  pixels
+    .selectAll("div")
+    .data(function(x){
+      return x.campaign_conversion_reporting || []
+    })
+    .enter()
+      .append("div")
+      .classed("list-group-item",true)
+      .html(function(x){
+        return '<h5 class="list-group-item-heading">' + x.pixel_name + '</h5>'
+      })
+   
+
+  conversion_group
+    .on("click",function(x){
+      if (!x['campaign_conversion_reporting']) {
+        var qs = (function(a) {
+          if (a == "") return {};
+          var b = {};
+          for (var i = 0; i < a.length; ++i)
+          {
+            var p=a[i].split('=', 2);
+            if (p.length == 1)
+              b[p[0]] = "";
+            else
+              b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
+          }
+          return b;
+        })(window.location.search.substr(1).split('&')),
+          formatter = d3.time.format("%y-%m-%d"),
+          start_date = qs["start_date"] || formatter(new Date());
+         
+
+        var URL = "/admin/advertiser/conversion/reporting?format=json&meta=top_campaigns" + 
+          "&advertiser=baublebar&start_date=" + start_date + "&advertiser=" + x.pixel_source_name 
+
+        d3.json(URL,function(reporting_data){
+          reporting = d3.nest()
+            .key(function(d) {return d.campaign})
+            .entries(reporting_data)
+
+          x.campaign_conversion_reporting = reporting
+          var table = pixels
+            .append("div")
+              .classed("row",true)
+            .append("div")
+              .classed("col-md-12",true)
+            .append("div")
+              .classed("col-md-12",true) 
+            .append("table")
+              .classed("col-md-12 table table-condensed",true)
+
+          var th = table.append("thead").append("tr")
+
+          th.append("th").text("Campaign")
+          th.append("th").text("Converted users touched") 
+          th.append("th").text("Touches")  
+            
+
+            
+
+          var tr = table
+            .append("tbody")
+            .selectAll("tr")
+            .data(function(d){
+              return x.campaign_conversion_reporting
+            })
+            .enter()
+              .append("tr")
+
+          tr.append("td")
+            .text(function(x){ return x.key })
+          tr.append("td")
+            .text(function(x){ return x.values[0].num_conv })
+          tr.append("td")
+            .text(function(x){ return x.values[0].imps })
+                    
+ 
+              
+          
+        })
+         
+      }
+      
+    })     
+
+}
+
+var buildDomainConversionReporting = function(obj) {
+  var default_panel = obj
+
+  var conversion_group = default_panel
+    .append("div")
+    .classed("panel-sub-heading domain-conversion-reporting list-group",true)
+
+  conversion_group
+    .append("div")
+    .classed("list-group-item",true)
+    .text("Domain Conversions Touched")
+
+  var pixels = default_panel
+    .append("div")
+    .classed("list-group domain-conversion-reporting hidden", true)
+
+  pixels
+    .selectAll("div")
+    .data(function(x){
+      return x.domain_conversion_reporting || []
+    })
+    .enter()
+      .append("div")
+      .classed("list-group-item",true)
+      .html(function(x){
+        return '<h5 class="list-group-item-heading">' + x.pixel_name + '</h5>'
+      })
+   
+
+  conversion_group
+    .on("click",function(x){
+      if (!x['domain_conversion_reporting']) {
+        var qs = (function(a) {
+          if (a == "") return {};
+          var b = {};
+          for (var i = 0; i < a.length; ++i)
+          {
+            var p=a[i].split('=', 2);
+            if (p.length == 1)
+              b[p[0]] = "";
+            else
+              b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
+          }
+          return b;
+        })(window.location.search.substr(1).split('&')),
+          formatter = d3.time.format("%y-%m-%d"),
+          start_date = qs["start_date"] || formatter(new Date());
+         
+
+        var URL = "/admin/advertiser/conversion/reporting?format=json&meta=top_domains" + 
+          "&advertiser=baublebar&start_date=" + start_date + "&advertiser=" + x.pixel_source_name 
+
+        d3.json(URL,function(reporting_data){
+          reporting = d3.nest()
+            .key(function(d) {return d.domain})
+            .entries(reporting_data)
+
+          x.domain_conversion_reporting = reporting
+          var table = pixels
+            .append("div")
+              .classed("row",true)
+            .append("div")
+              .classed("col-md-12",true)
+            .append("div")
+              .classed("col-md-12",true) 
+            .append("table")
+              .classed("col-md-12 table table-condensed",true)
+
+          var th = table.append("thead").append("tr")
+
+          th.append("th").text("domain")
+          th.append("th").text("Converted users touched") 
+          th.append("th").text("Touches")  
+            
+
+            
+
+          var tr = table
+            .append("tbody")
+            .selectAll("tr")
+            .data(function(d){
+              return x.domain_conversion_reporting
+            })
+            .enter()
+              .append("tr")
+
+          tr.append("td")
+            .text(function(x){ return x.key })
+          tr.append("td")
+            .text(function(x){ return x.values[0].num_conv })
+          tr.append("td")
+            .text(function(x){ return x.values[0].imps })
+                    
+ 
+              
+          
+        })
+         
+      }
+      
+    })     
+ 
+
+}
+
+var buildPixelReporting = function(obj) {
+  var default_panel = obj
+
+  var pixel_group = default_panel
+    .append("div")
+    .classed("panel-sub-heading pixel-reporting list-group",true)
+
+  pixel_group
+    .append("div")
+    .classed("list-group-item",true)
+    .text("Pixel Reporting")
+
+  var pixels = default_panel
+    .append("div")
+    .classed("list-group pixel-reporting hidden", true)
+
+  var graph_area = pixels
+    .append("div")
+    .classed("hello", true)
+
+  pixels
+    .selectAll("div")
+    .data(function(x){
+      return x.pixel_reporting || []
+    })
+    .enter()
+      .append("div")
+      .classed("list-group-item",true)
+      .html(function(x){
+        return '<h5 class="list-group-item-heading">' + x.pixel_name + '</h5>'
+      })
+   
+
+  pixel_group
+    .on("click",function(x){
+      if (!x['pixel_reporting']) {
+        var qs = (function(a) {
+          if (a == "") return {};
+          var b = {};
+          for (var i = 0; i < a.length; ++i)
+          {
+            var p=a[i].split('=', 2);
+            if (p.length == 1)
+              b[p[0]] = "";
+            else
+              b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
+          }
+          return b;
+        })(window.location.search.substr(1).split('&')),
+          formatter = d3.time.format("%y-%m-%d"),
+          start_date = qs["start_date"] || formatter(new Date());
+         
+
+        var URL = "/admin/advertiser/pixel/reporting?format=json&start_date=" + start_date +
+          "&advertiser=" + x.pixel_source_name
+
+        d3.json(URL,function(reporting_data){
+          reporting = d3.nest()
+            .key(function(d) {return d.segment})
+            .entries(reporting_data)
+
+          x.pixel_reporting = reporting
+          var table = pixels
+            .append("div").classed("row",true)
+            .append("div").classed("col-md-12",true)
+            .append("div").classed("col-md-12",true) 
+            .append("table").classed("col-md-12 table table-condensed",true)
+
+          var th = table.append("thead").append("tr")
+
+          th.append("th").text("pixel")
+          th.append("th").text("Views") 
+          th.append("th").text("via rockerbox")  
+          th.append("th").text("%") 
+
+          th.append("th").text("Users")   
+          th.append("th").text("via rockerbox")  
+          th.append("th").text("%")  
+            
+
+            
+
+          var tr = table
+            .append("tbody")
+            .selectAll("tr")
+            .data(function(d){
+              return x.pixel_reporting
+            })
+            .enter()
+              .append("tr")
+
+          tr.append("td")
+            .text(function(x){
+              console.log(x)
+              return x.key
+            })
+
+          tr.append("td")
+            .text(function(x){
+              var v = x.values[0].imps
+              return  v
+            })
+          tr.append("td")
+            .text(function(x){
+              var v = x.values[0].rbox_imps
+              return  v 
+            })
+          tr.append("td")
+            .text(function(x){
+              return formatPercent(x.values[0].rbox_imps/x.values[0].imps)
+            })
+            
+           
+          tr.append("td")
+            .text(function(x){
+              return x.values[0].users
+            })
+          tr.append("td")
+            .text(function(x){
+              var v = x.values[0].rbox_users
+              return  v
+            })
+          tr.append("td")
+            .text(function(x){
+              return formatPercent(x.values[0].rbox_users/x.values[0].users)
+            })
+
+          makeGraphArea(graph_area)
+           
+ 
+              
+          
+        })
+         
+      }
+      
+    })
+
+}
+
+var buildConversionReporting = function(obj) {
+  var default_panel = obj
+
+  var conversion_group = default_panel
+    .append("div")
+    .classed("panel-sub-heading conversion-reporting list-group",true)
+
+  conversion_group
+    .append("div")
+    .classed("list-group-item",true)
+    .text("Conversion Reporting")
+
+  var pixels = default_panel
+    .append("div")
+    .classed("list-group conversion-reporting hidden", true)
+
+  pixels
+    .selectAll("div")
+    .data(function(x){
+      return x.conversion_reporting || []
+    })
+    .enter()
+      .append("div")
+      .classed("list-group-item",true)
+      .html(function(x){
+        return '<h5 class="list-group-item-heading">' + x.pixel_name + '</h5>'
+      })
+   
+
+  conversion_group
+    .on("click",function(x){
+      if (!x['conversion_reporting']) {
+        var qs = (function(a) {
+          if (a == "") return {};
+          var b = {};
+          for (var i = 0; i < a.length; ++i)
+          {
+            var p=a[i].split('=', 2);
+            if (p.length == 1)
+              b[p[0]] = "";
+            else
+              b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
+          }
+          return b;
+        })(window.location.search.substr(1).split('&')),
+          formatter = d3.time.format("%y-%m-%d"),
+          start_date = qs["start_date"] || formatter(new Date());
+         
+
+        var URL = "/admin/advertiser/conversion/reporting?format=json&start_date=" + start_date +
+          "&advertiser=" + x.pixel_source_name
+
+        d3.json(URL,function(reporting_data){
+          reporting = d3.nest()
+            .key(function(d) {return d.segment})
+            .entries(reporting_data)
+
+          x.conversion_reporting = reporting
+          var table = pixels
+            .append("div")
+              .classed("row",true)
+            .append("div")
+              .classed("col-md-12",true)
+            .append("div")
+              .classed("col-md-12",true) 
+            .append("table")
+              .classed("col-md-12 table table-condensed",true)
+
+          var th = table.append("thead").append("tr")
+
+          th.append("th").text("pixel")
+          th.append("th").text("Other") 
+          th.append("th").text("")  
+          th.append("th").text("Rockerbox") 
+          th.append("th").text("")   
+          th.append("th").text("Total")  
+            
+
+            
+
+          var tr = table
+            .append("tbody")
+            .selectAll("tr")
+            .data(function(d){
+              return x.conversion_reporting
+            })
+            .enter()
+              .append("tr")
+
+          tr.append("td")
+            .text(function(x){
+              return x.key
+            })
+
+          tr.append("td")
+            .text(function(x){
+              var v = x.values[0].num_conv
+              return  v 
+            })
+          tr.append("td")
+            .text(function(x){
+              var v = x.values[0].num_conv,
+                t = (parseInt(x.values[0].num_conv) + parseInt(x.values[1].num_conv))
+              return  v/t
+            })
+           
+           
+          tr.append("td")
+            .text(function(x){
+              return x.values[1].num_conv 
+            })
+          tr.append("td")
+            .text(function(x){
+              var v = x.values[1].num_conv,
+                t = (parseInt(x.values[0].num_conv) + parseInt(x.values[1].num_conv))
+              return  v/t
+            })
+           
+           
+          tr.append("td")
+            .text(function(x){
+              return parseInt(x.values[0].num_conv) + parseInt(x.values[1].num_conv)
+            })
+           
+ 
+              
+          
+        })
+         
+      }
+      
+    })
+
+}    
+
 
 var buildPixels = function(obj) {
   var default_panel = obj
@@ -449,6 +1141,9 @@ var buildAdvertiserInfo = function(obj) {
         return x.key + " : " + x.value
       })
       .sort(function(x,y){
+        return -x.key.localeCompare(y.key);
+      })
+      .sort(function(x,y){
         var w = (typeof x.value == "string") ? 2 : 0
         var z = (typeof x.value == "string") ? 2 : 0 
         return w - z
@@ -484,7 +1179,7 @@ var buildClientAdvertiserInfo = function(obj) {
       })
 }
 
-var buildAdvertiserWrapper = function(data, id, width,show_id) {
+var buildAdvertiserWrapper = function(data, id, width, show_id, internal) {
   var wrapper_width = width || 6,
     show_id = show_id || false
 
@@ -498,12 +1193,15 @@ var buildAdvertiserWrapper = function(data, id, width,show_id) {
   var panels = wrappers
     .append("div")
     .classed("panel",true)
-    .classed("panel-default",function(x) {
-      return !x.active || wrapper_width != 6
+    .classed("panel-default",true)
+    .classed("panel-warning", function(x) {
+      return x.active && internal && !x.running
     })
     .classed("panel-success", function(x) {
-      return x.active && wrapper_width == 6
+      return x.active && x.running && internal
     })
+    
+     
 
   var headings = panels.append("div").classed("panel-heading",true);
 

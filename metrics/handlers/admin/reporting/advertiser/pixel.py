@@ -42,7 +42,8 @@ FIELDS = {
 WHERE = {
     "advertiser": "source = '%(advertiser)s'",
     "segment": "segment = '%(segment)s'",
-    "order_type": "order_type = '%(order_type)s'"
+    "order_type": "order_type = '%(order_type)s'",
+    "hour": "hour = '%(hour)s'"
 }
 
 
