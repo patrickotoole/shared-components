@@ -298,7 +298,50 @@ class Advertiser(object):
         print response
         return response["response"]["profile"]["id"]
 
-        
+    def set_live_target_placement(self,advertiser_id,campaign_id,segment_id,placement_id,domain):
+        data = {
+            "profile": {
+                 "segment_group_targets": [
+                                {
+                                    "boolean_operator": "and",
+                                    "segments": [
+                                        {
+                                            "action": "include",
+                                            "id": segment_id
+                                        }
+                                    ]
+                                }
+                            ],
+                 "platform_placement_targets": [
+                                {
+                                    "action": "include",
+                                    "id": placement_id
+                                }
+                            ],
+                 "domain_action": "include",
+                 "domain_targets": [
+                                {
+                                    "domain": domain
+                                }
+                            ],
+                 "intended_audience_targets": [
+                                "general",
+                                "children",
+                                "young_adult"
+                            ],
+                 "position_targets": {
+                                "allow_unknown": true,
+                                "positions": null
+                            },
+                 "trust": "appnexus",
+                 "use_inventory_attribute_targets": true,
+                 "use_operating_system_extended_targeting": true
+            }
+        }
+        URL = "/profile?advertiser_id=%s&campaign_id=%s" % (advertiser_id,campaign_id) 
+        response = self.api.post(URL,data=ujson.dumps(data)).json
+        print response
+
     def set_campaign_profile_id(self,advertiser_id,campaign_id,profile_id):
         data = {
             "campaign": {
