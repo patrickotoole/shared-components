@@ -6,6 +6,13 @@
 <link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/chosen.css">
 <script type="text/javascript" src="http://rockerbox.com/js/d3.js"></script>
 <script type="text/javascript" src="/static/js/advertiser.js"></script> 
+ <script type="text/javascript" src="/static/js/advertiser/info.js"></script>  
+ <script type="text/javascript" src="/static/js/advertiser/conversion.js"></script>   
+ <script type="text/javascript" src="/static/js/advertiser/pixel.js"></script>   
+ <script type="text/javascript" src="/static/js/advertiser/domain_list.js"></script>   
+ <script type="text/javascript" src="/static/js/advertiser/viewability.js"></script>    
+
+
 <script type="text/javascript" src="/static/js/advertiser_viewable.js"></script>  
 <link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css" rel="stylesheet"/>
 <script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
@@ -29,29 +36,18 @@ $(document).ready(function(){
     var id = '#advertiser-content'
 
     var wrapped = buildAdvertiserWrapper(data,id,"12",true,true)
-    wrapped
-    .sort(function(x,y){
-      var wx = (x.active + x.running - x.deleted)*(x.monthly_budget+1),
-        wy = (y.active + y.running - y.deleted)*(y.monthly_budget+1)
-      return wy-wx  
-    })
+    wrapped.sort(function(x,y){
+        var wx = (x.active + x.running - x.deleted)*(x.monthly_budget+1),
+          wy = (y.active + y.running - y.deleted)*(y.monthly_budget+1)
+        return wy-wx  
+      })
     buildAdvertiserInfo(wrapped)
-    wrapped.append("div")
-      .classed("panel-body",true)
-      .append("h4")
-      .text("Information and Implementation")
-
-    var setup = buildEdit(wrapped)
-    buildStatus(setup)
-    buildObjects(setup)
-    buildInsertionOrders(wrapped)
-    buildPixels(wrapped)  
-    buildSegments(wrapped,"Segment Pixels",true,true)  
-    buildUserSegments(wrapped,"Constructed Segments (not on page)",true,true)
-    buildCampaigns(wrapped) 
+    buildInfo(wrapped)
+    buildPixel(wrapped)
+    buildConversion(wrapped)
 
     
-
+    // Reporting
     wrapped.append("div")
       .classed("panel-body",true)
       .append("h4")
@@ -81,25 +77,15 @@ $(document).ready(function(){
 
       })
     })
-
-    wrapped.append("div")
-      .classed("panel-body",true)
-      .append("h4")
-      .text("Conversions Attribution")
-
-    buildConversionReporting(wrapped)
-    buildCampaignConversionReporting(wrapped)
-    buildDomainConversionReporting(wrapped) 
-
-    wrapped.append("div")
-      .classed("panel-body",true)
-      .append("h4")
-      .text("On-site Activity Attribution (Pixels)")
-
-    buildPixelReporting(wrapped)
-    
  
-              
+    // Tools
+    wrapped.append("div")
+      .classed("panel-body",true)
+      .append("h4")
+      .text("Tools")
+
+    buildDomainList(wrapped)
+    
     wrapped
       .on("click",function(data){
         var p = d3.select(this.parentNode), 
@@ -109,19 +95,28 @@ $(document).ready(function(){
         //p.classed("col-md-12",has_opened)  
       })
 
-    wrapped.selectAll(".panel-sub-heading > .list-group-item")
-      .on("click",function(x){
-        d3.select(this.parentNode.nextSibling).classed("hidden",function(x){
-          if (x.is_opened === undefined) x.is_opened = 0
-          if (this.classList.contains("hidden")) {
-            x.is_opened += 1
-            return false
-          } else {
-            x.is_opened -= 1
-            return true
-          }
+    var accordianify = function(wrapped, accordian_class) {
+
+      var heading = wrapped.selectAll(accordian_class)
+
+      heading
+        .select(function(){return this.nextSibling}) 
+        .classed("hidden",true)
+
+      heading
+        .on("click",function(x){
+          d3.select(this.nextSibling).classed("hidden",function(x){
+            x.is_opened = x.is_opened || 0
+            var is_hidden = this.classList.contains("hidden")
+            x.is_opened += is_hidden ? 1 : -1
+            return !is_hidden
+          })
         })
-      })
+      
+    }
+    accordianify(wrapped, ".panel-sub-heading")
+
+    
 
     $.fn.editable.defaults.mode = 'inline';
 
