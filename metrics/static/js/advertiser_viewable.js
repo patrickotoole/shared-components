@@ -388,3 +388,36 @@ var renderRows = function(class_name,items) {
      
 }       
 
+var buildReporting = function(wrapped) {
+
+  wrapped.append("div")
+    .classed("panel-body",true)
+    .append("h4")
+    .text("Viewability")
+
+  var groupings = {
+    "Viewability":[
+      "Domain List Viewability",
+      "Campaign Viewability", 
+      "Tag Viewability",
+      "Venue Viewability"
+    ]
+  }
+
+  var panels = wrapped,
+    defaultWidth = 12
+
+  Object.keys(groupings).map(function(key){
+
+    //buildViewableSummary(key,panels)
+    groupings[key].map(function(grouping) { 
+
+      var class_name = grouping.toLowerCase().split(" ").join("_"),
+        groups = buildGroup(panels,class_name,grouping,defaultWidth),
+        items = buildItems(groups,class_name),
+        rows = renderRows(class_name,items[0])
+
+    })
+  })
+
+}

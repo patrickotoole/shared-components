@@ -48,14 +48,14 @@ def default_renderer(self,data,*args):
     profile_df = data.copy()
     profile_df['actions'] = profile_df.T.apply(lambda row: buttons(row.name, row.active))
 
-    formatted = profile_df[["log","pattern","segment","actions"]].to_html(
-        escape=False,
-        classes="table table-condensed\" id=\"targets"
-    )
+   # formatted = profile_df[["log","pattern","segment","actions"]].to_html(
+   #     escape=False,
+   #     classes="table table-condensed\" id=\"targets"
+   # )
 
     self.render(
         "../templates/_targeting.html",
-        df=formatted,
+        #df=formatted,
         profile=Convert.df_to_json(profile_df)
     )
 
@@ -133,9 +133,13 @@ class TargetingHandler(TargetingBase):
     @decorators.formattable
     def get(self,*args,**kwargs):
         log = self.get_argument("log",False)
+        advertiser_id = self.get_argument("advertiser_id",False)
         where = "1=1"
         if log:
-          where += " and log like '%%%(log)s%%'" % {"log":log}
+            where += " and log like '%%%(log)s%%'" % {"log":log}
+        if advertiser_id:
+            where += " and external_advertiser_id = %s" % advertiser_id
+        
         data = self.get_targets(where)
         yield default_renderer, (data,)
 

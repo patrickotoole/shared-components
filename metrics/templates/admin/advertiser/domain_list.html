@@ -22,6 +22,7 @@ rolled = d3.nest()
   .entries(data,d3.map)
 
 
+
 var id = '#domain-content'
 
 var buildDomainListWrapper = function(data, summary_data, id, width) {
@@ -133,7 +134,7 @@ var buildDomains = function(obj,reporting_data) {
 
 }
 
-var URL = "/admin/advertiser/viewable/reporting?meta=domain_list&format=json&date=past_month",
+var URL = "/admin/advertiser/viewable/reporting?meta=domain_list&format=json",
   rolled_map = d3.nest()
     .key(function(x){return x.key})
     .rollup(function(x){
@@ -154,7 +155,8 @@ d3.json(URL,function(reporting_data){
       }
       d.percent_loaded = d.loaded/d.served
       d.percent_visible = d.visible/d.loaded
-      d["domains_total"] = rolled_map.get(x[0].type).length
+      var xx = rolled_map.get(x[0].type)
+      d["domains_total"] = xx ? xx.length : 0
       
       return d
     })
@@ -189,7 +191,6 @@ d3.json(URL,function(reporting_data){
     
     })
 })
-
 
  
 

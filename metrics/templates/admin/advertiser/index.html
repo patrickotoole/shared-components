@@ -6,6 +6,14 @@
 <link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/chosen.css">
 <script type="text/javascript" src="http://rockerbox.com/js/d3.js"></script>
 <script type="text/javascript" src="/static/js/advertiser.js"></script> 
+<script type="text/javascript" src="/static/js/advertiser/info.js"></script>  
+<script type="text/javascript" src="/static/js/advertiser/conversion.js"></script>   
+<script type="text/javascript" src="/static/js/advertiser/pixel.js"></script>   
+<script type="text/javascript" src="/static/js/advertiser/domain_list.js"></script>   
+<script type="text/javascript" src="/static/js/advertiser/viewability.js"></script>    
+<script type="text/javascript" src="/static/js/d3_helpers.js"></script>     
+
+
 <script type="text/javascript" src="/static/js/advertiser_viewable.js"></script>  
 <link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css" rel="stylesheet"/>
 <script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
@@ -29,99 +37,28 @@ $(document).ready(function(){
     var id = '#advertiser-content'
 
     var wrapped = buildAdvertiserWrapper(data,id,"12",true,true)
-    wrapped
-    .sort(function(x,y){
-      var wx = (x.active + x.running - x.deleted)*(x.monthly_budget+1),
-        wy = (y.active + y.running - y.deleted)*(y.monthly_budget+1)
-      return wy-wx  
-    })
-    buildAdvertiserInfo(wrapped)
-    wrapped.append("div")
-      .classed("panel-body",true)
-      .append("h4")
-      .text("Information and Implementation")
-
-    var setup = buildEdit(wrapped)
-    buildStatus(setup)
-    buildObjects(setup)
-    buildInsertionOrders(wrapped)
-    buildPixels(wrapped)  
-    buildSegments(wrapped,"Segment Pixels",true,true)  
-    buildUserSegments(wrapped,"Constructed Segments (not on page)",true,true)
-    buildCampaigns(wrapped) 
-
-    
-
-    wrapped.append("div")
-      .classed("panel-body",true)
-      .append("h4")
-      .text("Viewability")
-
-    var groupings = {
-      "Viewability":[
-        "Domain List Viewability",
-        "Campaign Viewability", 
-        "Tag Viewability",
-        "Venue Viewability"
-      ]
-    }
-
-    var panels = wrapped,
-      defaultWidth = 12
-
-    Object.keys(groupings).map(function(key){
-
-      //buildViewableSummary(key,panels)
-      groupings[key].map(function(grouping) { 
-
-        var class_name = grouping.toLowerCase().split(" ").join("_"),
-          groups = buildGroup(panels,class_name,grouping,defaultWidth),
-          items = buildItems(groups,class_name),
-          rows = renderRows(class_name,items[0])
-
+    wrapped.sort(function(x,y){
+        var wx = (x.active + x.running - x.deleted)*(x.monthly_budget+1),
+          wy = (y.active + y.running - y.deleted)*(y.monthly_budget+1)
+        return wy-wx  
       })
-    })
-
-    wrapped.append("div")
-      .classed("panel-body",true)
-      .append("h4")
-      .text("Conversions Attribution")
-
-    buildConversionReporting(wrapped)
-    buildCampaignConversionReporting(wrapped)
-    buildDomainConversionReporting(wrapped) 
-
-    wrapped.append("div")
-      .classed("panel-body",true)
-      .append("h4")
-      .text("On-site Activity Attribution (Pixels)")
-
-    buildPixelReporting(wrapped)
+    buildAdvertiserInfo(wrapped)
+    buildInfo(wrapped)
+    buildPixel(wrapped)
+    buildConversion(wrapped)
+    buildReporting(wrapped)
     
  
-              
-    wrapped
-      .on("click",function(data){
-        var p = d3.select(this.parentNode), 
-        has_opened = (data.is_opened >  0)
+    // Tools
+    wrapped.append("div")
+      .classed("panel-body",true)
+      .append("h4")
+      .text("Tools")
 
-        //p.classed("col-md-6",!has_opened) 
-        //p.classed("col-md-12",has_opened)  
-      })
+    buildDomainList(wrapped)
+    
+    accordianify(wrapped, ".panel-sub-heading > .list-group-item",function(){return this.parentNode.nextSibling})
 
-    wrapped.selectAll(".panel-sub-heading > .list-group-item")
-      .on("click",function(x){
-        d3.select(this.parentNode.nextSibling).classed("hidden",function(x){
-          if (x.is_opened === undefined) x.is_opened = 0
-          if (this.classList.contains("hidden")) {
-            x.is_opened += 1
-            return false
-          } else {
-            x.is_opened -= 1
-            return true
-          }
-        })
-      })
 
     $.fn.editable.defaults.mode = 'inline';
 

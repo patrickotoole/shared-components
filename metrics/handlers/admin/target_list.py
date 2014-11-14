@@ -24,9 +24,14 @@ class TargetListHandler(tornado.web.RequestHandler):
 
     def get_data(self,domain_list=False):
 
+        advertiser_id = self.get_argument("advertiser_id",False)
         where = "1=1"
         if domain_list:
-            where += " and log = '%%%s%%'" % domain_list
+            where += " and log like '%%%s%%'" % domain_list
+        if advertiser_id:
+            where += " and external_advertiser_id = %s" % advertiser_id
+
+        print API_QUERY % where
         df = self.db.select_dataframe(API_QUERY % where)
         self.get_content(df)
         

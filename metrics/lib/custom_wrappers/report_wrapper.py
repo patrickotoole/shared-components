@@ -2,11 +2,12 @@ import json
 import time
 from link.wrappers import ConsoleAPIRequestWrapper
 
-MAX_TRIES = 10
+MAX_TRIES = 20
 
 def csv_to_dataframe(csv):
     import StringIO
     import pandas
+
     s = StringIO.StringIO(csv)
     df = pandas.read_csv(s) 
 
@@ -69,7 +70,11 @@ class ReportAPIRequestWrapper(ConsoleAPIRequestWrapper):
         
         report_id = self.post_report(data,advertiser_id)
         report_url = self.check_reporting(report_id)
+        try:
+            got = self.request('get',report_url)
+        except Exception, e:
+            print str(e)[:300]
         
-        return self.get(report_url).content
+        return got.content
 
         
