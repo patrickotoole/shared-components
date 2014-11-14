@@ -43,7 +43,6 @@ class DomainList(object):
     @Model.run_select
     def select(self,fields=[],where=["1=1"]):
 
-
         fields = fields + FIXED
         fields = [FIELD_MAPPING.get(f) if FIELD_MAPPING.get(f,False) else f for f in fields] 
 
@@ -105,6 +104,8 @@ class ViewabilityHandler(DomainViewabilityHandler):
 
         if domain_list:
             where += ["log = '%s' " % domain_list]
+        else:
+            where += ["action = 'approve'"]
 
         return where
 
