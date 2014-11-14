@@ -19,6 +19,10 @@ input[type="checkbox"]:disabled + label{
 <script type="text/javascript" src="http://rockerbox.com/js/chosen.js"></script>
 <script type="text/javascript" src="/static/js/dataframe_reporting.js"></script> 
 
+<link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css" rel="stylesheet"/>
+<script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
+ 
+
 <div class='container'>
 
 
@@ -57,6 +61,7 @@ URL = addParam(URL,"format=json")
 META = addParam(META,"format=json")
 
 $.getJSON(META,function(meta){
+  console.log(meta)
 
   d3.select("#results-header")
     .text("Imps Available for " + 
@@ -66,7 +71,6 @@ $.getJSON(META,function(meta){
     )
 
   $.getJSON(URL,function(data){
-    console.log(data)
 
     var crsWrapped = new groupedDataWrapper(data,meta),
       tableWrapped = new groupedTableWrapper(crsWrapped,"#data-table-avail")
@@ -77,12 +81,28 @@ $.getJSON(META,function(meta){
     
     dc.renderAll()
     window.crsWrapped = crsWrapped
+    window.tableWrapped = tableWrapped
 
+    $('.editable').editable({
+      url: "/admin/viewable/domain_list",
+      send: 'always',
+      params: function(params) {
+        var values = {}
+        
+        values.id = params.pk
+        values[params['name']] = params['value']
+        return JSON.stringify(values)
+      },
+      ajaxOptions: {
+        type: 'put',
+        dataType: 'json'
+      }
+    })
 
-
-
+ 
   })
 })
+
 
 </script>
 <script src="http://rockerbox.com/js/jquery.serialize-object.js"></script>

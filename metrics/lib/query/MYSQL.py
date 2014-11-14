@@ -175,3 +175,16 @@ SELECT DISTINCT log
 FROM domain_list
 '''
 
+DOMAIN_LIST_STATUS = """
+SELECT 
+    %(fields)s
+FROM 
+    domain_list dl 
+LEFT JOIN 
+    reporting.domain_list_change_ref ref 
+ON 
+    ref.domain = dl.pattern 
+WHERE 
+    %(where)s
+"""
+ 
