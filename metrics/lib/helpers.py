@@ -315,4 +315,46 @@ class validators:
 
         return wrapped
 
+class Model:
+    @staticmethod
+    def isnumeric(fn):
+        def check_numeric(self,*args):
+            for arg in args:
+                if not unicode(arg).isnumeric():
+                    raise TypeError("arguments must be numeric")
+            return fn(self,*args)
+
+        return check_numeric
+
+    @staticmethod
+    def exists(query,pos=None,message="Data is missing"):
+        def check_exists(fn):
+            def check(self,*args):
+                _id = args
+                if pos is not None:
+                    _id = args[pos]
+                if len(self.db.select_dataframe(query % _id)) == 0:
+                    raise Exception(message)
+                return fn(self,*args)
+
+            return check
+        return check_exists
+
+    @staticmethod 
+    def run_query(fn):
+        def run(self,*args):
+            result = fn(self,*args)
+            self.db.execute(result)
+
+        return run
+
+    @staticmethod 
+    def run_select(fn):
+        def run(self,*args):
+            result = fn(self,*args)
+            return self.db.select_dataframe(result)
+
+        return run
+     
+     
 

@@ -59,7 +59,7 @@ var groupedDataWrapper = function(data,meta) {
       headers = []
     
     keys.map(function(x){
-      if (self.meta.groups.indexOf(x) == -1 && x != "__index__") {
+      if (self.meta.groups.indexOf(x) == -1 && x != "__index__" && x != "__id__") {
         headers.push(x)
       }
     })
@@ -77,7 +77,12 @@ FORMATTER = {
     "cpm": function(x) {
       return d3.format("$0,000.00")(d3.round(x,3))
     },
-    "none" : function(x) {return x}
+    "none" : function(x) {return x},
+    "editable" : function(x,k,h) {
+      if (x !== undefined) {
+        return "<span data-pk='"+h.__id__+"' data-name='"+k+"'class='editable'>"+x+"</span>" 
+      }
+    }
 }
 
 var defaultFormatColumn = function(x,h) {
@@ -85,6 +90,9 @@ var defaultFormatColumn = function(x,h) {
     formatters = self.crsWrapped.meta.formatters
 
   if (isNaN(h[x])) {
+    if (formatters && formatters[x]) {
+      return FORMATTER[formatters[x]](h[x],x,h)
+    }
     return h[x]
   } else if (formatters && formatters[x]) {
     return FORMATTER[formatters[x]](h[x])
@@ -94,8 +102,10 @@ var defaultFormatColumn = function(x,h) {
   
 }
 
-var groupedTableWrapper = function(crsWrapped,data_table_id) {
+var groupedTableWrapper = function(crsWrapped,data_table_id,show_more) {
   var MAX_SIZE = 1000000
+
+  this.showMore = show_more || false
 
   this.dataTable = dc.dataTable(data_table_id)
   this.headers = crsWrapped.headers
@@ -112,7 +122,7 @@ var groupedTableWrapper = function(crsWrapped,data_table_id) {
 
       return  "<a href='" + window.location.pathname + "?" + 
         remaining_groups.map(function(f){
-          return f + "=" + h[f]
+          return f + "=" + escape(h[f])
         }).join("&") + "' class='btn btn-primary btn-xs' target='_'>Details</a>" 
     }
 
@@ -129,11 +139,19 @@ var groupedTableWrapper = function(crsWrapped,data_table_id) {
   }
 
   this.buildColumns = function() {
-    return self.headers.map(function(x,i){
+    var columns = self.headers.map(function(x,i){
       if (i > 0) return self.formatColumn.bind(self,x)
-    }).concat([
-      self.moreColumn
-    ]) 
+    })
+    if (this.showMore) {
+      columns = columns.concat([
+        self.moreColumn
+      ])            
+    } else {
+       columns = columns.concat([
+        function(){}
+      ])             
+    }
+    return columns
   }
 
   this.buildTable = function(dimension,group,group_name, columns) {
@@ -210,7 +228,7 @@ var groupedTableWrapper = function(crsWrapped,data_table_id) {
         .append("a")
         .attr("href",function(x){
           return window.location.pathname + 
-            "?" + self.crsWrapped.defaultGroupName + "=" + x.key
+            "?" + self.crsWrapped.defaultGroupName + "=" + escape(x.key)
         })
         .attr("target","_")
         .text("More")

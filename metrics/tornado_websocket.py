@@ -46,7 +46,7 @@ db = lnk.dbs.rockerbox
 reporting_db = lnk.dbs.reporting
 api = lnk.api.console
 bidder = lnk.api.bidder
-hive = h.Hive().hive
+hive = None#h.Hive().hive
 
 _redis = streaming._redis
 track_buffer = streaming.track_buffer
@@ -102,6 +102,9 @@ admin_scripts = [
     (r'/admin/batch_requests.*', admin.scripts.BatchRequestsHandler, dict(db=db, api=api, hive=hive)),
     (r'/admin/imps/?', admin.scripts.ImpsHandler, dict(db=db, api=api, hive=hive)),
 
+    (r'/admin/viewable/?(.*?)/?(meta)/?',admin.scripts.ViewabilityHandler, dict(db=db,api=api)), 
+    (r'/admin/viewable/?(.*?)/?',admin.scripts.ViewabilityHandler, dict(db=db,api=api)),  
+
     (r'/admin/campaign_check/fixtures/?(.*?)/?', admin.checks.FixtureHandler, dict(db=db)),   
     (r'/admin/campaign_check/suites/?(.*?)/?', admin.checks.SuiteHandler, dict(db=db)),   
     (r'/admin/campaign_check/relation/?(.*?)/?', admin.checks.CampaignRelationsHandler, dict(db=db)),  
@@ -155,7 +158,7 @@ admin_reporting = [
     
     (r'/admin/streaming',admin.streaming.IndexHandler),
     (r'/admin/websocket', admin.streaming.AdminStreamingHandler, dict(db=db,buffers=buffers)),
-    (r'/admin/viewable.*',admin.reporting.ViewabilityHandler, dict(db=db,api=api,hive=hive)),
+    (r'/admin/viewable/reporting.*',admin.reporting.ViewabilityHandler, dict(db=db,api=api,hive=hive)),
 
     (r'/admin/intraweek.*',admin.scripts.IntraWeekHandler, dict(db=db)),
     (r'/admin/report/(.*?)/.*', AdminReportHandler),

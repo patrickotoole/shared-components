@@ -35,6 +35,7 @@ class IndexHandler(tornado.web.RequestHandler):
         ]
 
         domain_links = [
+            ("/admin/viewable/domain_list", "Domain List Optimization Status"),
             ("/admin/domain/categories/reporting", "Domain Volume by Category")
         ]
 
