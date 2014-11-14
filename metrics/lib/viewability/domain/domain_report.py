@@ -27,6 +27,10 @@ TABLE_EXISTS = "show tables like '%v2_domain_reporting%'"
 LAST_INSERT = "select max(last_insert) last_insert from %s"
 SELECT = "select * from v2_domain_reporting where %s"
 
+
+
+
+
 class DomainReport(object):
     def __init__(self,reporting,db):
         self.an_reporting = reporting
@@ -34,6 +38,24 @@ class DomainReport(object):
         self.now = datetime.date.today()
         self.table_name = "v2_domain_reporting"
         self.check_table()
+
+    def insert_helper(self,df,tablename="v2_domain_reporting",if_exists="replace"):
+
+        CHUNKSIZE = 10000
+        iterator = 1
+        initial_chunk = df[CHUNKSIZE*(iterator-1):CHUNKSIZE]
+
+        logging.info("Inserting into %s" % tablename)
+        initial_chunk.to_sql(tablename,self.db,flavor="mysql",if_exists=if_exists)
+
+
+        while CHUNKSIZE*iterator < len(domains):
+            iterator += 1
+            chunk = domains[CHUNKSIZE*(iterator-1):CHUNKSIZE*iterator]
+            chunk.to_sql(tablename,self.db,flavor="mysql",if_exists="append")
+
+        logging.info("Inserted %s" % tablename)
+ 
 
     @property
     def table_exists(self):
@@ -61,10 +83,17 @@ class DomainReport(object):
         if not self.table_exists or self.last_insert_date < self.now:
             self.rebuild_table()
 
+    def drop_table(self):
+        logging.info("Dropping v2_domain_reporting...")
+        self.db.execute("DROP TABLE v2_domain_reporting")
+        logging.info("Dropped v2_domain_reporting")
+
     def rebuild_table(self):
+        self.drop_table()
         domains = self.pull_report()
         domains['last_insert'] = self.now
-        domains.to_sql("v2_domain_reporting",self.db,flavor="mysql",if_exists="replace")
+        self.insert_helper(domains,"v2_domain_reporting")
+
 
     def pull_report(self):
         PU_MSG = "Pulling domain report from appnexus"

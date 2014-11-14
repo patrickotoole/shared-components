@@ -44,6 +44,7 @@ var buildPixelReporting = function(obj) {
 
   pixel_group
     .on("click",function(x){
+      console.log(x)
       if (!x['pixel_reporting']) {
         var qs = (function(a) {
           if (a == "") return {};

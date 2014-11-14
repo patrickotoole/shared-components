@@ -6,11 +6,12 @@
 <link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/chosen.css">
 <script type="text/javascript" src="http://rockerbox.com/js/d3.js"></script>
 <script type="text/javascript" src="/static/js/advertiser.js"></script> 
- <script type="text/javascript" src="/static/js/advertiser/info.js"></script>  
- <script type="text/javascript" src="/static/js/advertiser/conversion.js"></script>   
- <script type="text/javascript" src="/static/js/advertiser/pixel.js"></script>   
- <script type="text/javascript" src="/static/js/advertiser/domain_list.js"></script>   
- <script type="text/javascript" src="/static/js/advertiser/viewability.js"></script>    
+<script type="text/javascript" src="/static/js/advertiser/info.js"></script>  
+<script type="text/javascript" src="/static/js/advertiser/conversion.js"></script>   
+<script type="text/javascript" src="/static/js/advertiser/pixel.js"></script>   
+<script type="text/javascript" src="/static/js/advertiser/domain_list.js"></script>   
+<script type="text/javascript" src="/static/js/advertiser/viewability.js"></script>    
+<script type="text/javascript" src="/static/js/d3_helpers.js"></script>     
 
 
 <script type="text/javascript" src="/static/js/advertiser_viewable.js"></script>  
@@ -45,38 +46,8 @@ $(document).ready(function(){
     buildInfo(wrapped)
     buildPixel(wrapped)
     buildConversion(wrapped)
-
+    buildReporting(wrapped)
     
-    // Reporting
-    wrapped.append("div")
-      .classed("panel-body",true)
-      .append("h4")
-      .text("Viewability")
-
-    var groupings = {
-      "Viewability":[
-        "Domain List Viewability",
-        "Campaign Viewability", 
-        "Tag Viewability",
-        "Venue Viewability"
-      ]
-    }
-
-    var panels = wrapped,
-      defaultWidth = 12
-
-    Object.keys(groupings).map(function(key){
-
-      //buildViewableSummary(key,panels)
-      groupings[key].map(function(grouping) { 
-
-        var class_name = grouping.toLowerCase().split(" ").join("_"),
-          groups = buildGroup(panels,class_name,grouping,defaultWidth),
-          items = buildItems(groups,class_name),
-          rows = renderRows(class_name,items[0])
-
-      })
-    })
  
     // Tools
     wrapped.append("div")
@@ -86,37 +57,8 @@ $(document).ready(function(){
 
     buildDomainList(wrapped)
     
-    wrapped
-      .on("click",function(data){
-        var p = d3.select(this.parentNode), 
-        has_opened = (data.is_opened >  0)
+    accordianify(wrapped, ".panel-sub-heading > .list-group-item",function(){return this.parentNode.nextSibling})
 
-        //p.classed("col-md-6",!has_opened) 
-        //p.classed("col-md-12",has_opened)  
-      })
-
-    var accordianify = function(wrapped, accordian_class) {
-
-      var heading = wrapped.selectAll(accordian_class)
-
-      heading
-        .select(function(){return this.nextSibling}) 
-        .classed("hidden",true)
-
-      heading
-        .on("click",function(x){
-          d3.select(this.nextSibling).classed("hidden",function(x){
-            x.is_opened = x.is_opened || 0
-            var is_hidden = this.classList.contains("hidden")
-            x.is_opened += is_hidden ? 1 : -1
-            return !is_hidden
-          })
-        })
-      
-    }
-    accordianify(wrapped, ".panel-sub-heading")
-
-    
 
     $.fn.editable.defaults.mode = 'inline';
 

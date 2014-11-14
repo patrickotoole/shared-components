@@ -49,6 +49,24 @@ class VenueReport(object):
         self.check_table()
 
 
+    def insert_helper(self,df,tablename="v2_domain_reporting",if_exists="replace"):
+
+        CHUNKSIZE = 10000
+        iterator = 1
+        initial_chunk = df[CHUNKSIZE*(iterator-1):CHUNKSIZE]
+
+        logging.info("Inserting into %s" % tablename)
+        initial_chunk.to_sql(tablename,self.db,flavor="mysql",if_exists=if_exists)
+
+
+        while CHUNKSIZE*iterator < len(domains):
+            iterator += 1
+            chunk = domains[CHUNKSIZE*(iterator-1):CHUNKSIZE*iterator]
+            chunk.to_sql(tablename,self.db,flavor="mysql",if_exists="append")
+
+        logging.info("Inserted %s" % tablename)
+     
+
     @property
     def table_name(self):
         return TABLE_NAME % self.advertiser_id
@@ -82,7 +100,8 @@ class VenueReport(object):
     def rebuild_table(self):
         venues = self.pull_report()
         venues['last_insert'] = self.now
-        venues.to_sql(self.table_name,self.db,flavor="mysql",if_exists="replace")
+        self.insert_helper(venues,self.table_name)
+        #venues.to_sql(self.table_name,self.db,flavor="mysql",if_exists="replace")
 
     def pull_report(self):
         PU_MSG = "Pulling domain report from appnexus"

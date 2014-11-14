@@ -33,6 +33,10 @@ class DomainAPI(object):
         return id_list
 
     def get_existing_domains(self,domain_list_id):
+        MSG = "Pulling external domain_list %s" % domain_list_id
+
+        logging.info(MSG)
+
         response = self.an_api.get("/domain-list?id=%s" % domain_list_id)
         existing_domains = response.json["response"]["domain-list"]["domains"]
         return existing_domains
