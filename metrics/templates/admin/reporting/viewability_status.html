@@ -64,11 +64,7 @@ $.getJSON(META,function(meta){
   console.log(meta)
 
   d3.select("#results-header")
-    .text("Imps Available for " + 
-      meta['groups'].map(function(f){
-        return f.charAt(0).toUpperCase() + f.slice(1)
-      }).join(", ")
-    )
+    .text("Domain list viewability optimization")
 
   $.getJSON(URL,function(data){
 

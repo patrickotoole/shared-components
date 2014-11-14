@@ -27,7 +27,10 @@ FIELD_MAPPING = {
     "domain_list":"log as domain_list"
 }
 
-FIXED = ["id as __id__","concat(log,CASE WHEN action is not null then action else 'learn' end) as __index__"]
+FIXED = [
+    "id as __id__",
+    "concat(log,CASE WHEN action is not null then action else 'learn' end) as __index__"
+]
  
 
 
@@ -46,7 +49,7 @@ class DomainList(object):
 
         params = {
             "fields" : ",".join(fields),
-            "where" : ",".join(where)
+            "where" : " and ".join(where)
         }
 
         return DOMAIN_LIST_STATUS % params
