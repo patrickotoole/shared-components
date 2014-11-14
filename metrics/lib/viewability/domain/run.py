@@ -33,14 +33,14 @@ def main():
     rb_d = lnk.dbs.reporting
 
     for obj in list(dlv.iterrows()):
-        #try:
+        try:
             values = obj[1].to_dict()
             va = DomainAnalysis(an_c,an_r,rb_a,rb_d,**values)
-            #va.missing_domains()
-            #va.push_whitelist()
-            #va.push_blacklist()
+            va.missing_domains()
+            va.push_whitelist()
+            va.push_blacklist()
             va.push_bad_domains()
-        #except Exception as e:
+        except Exception as e:
             logging.error("%s \n %s " % (str(e),str(obj)))
         
 
