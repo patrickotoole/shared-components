@@ -112,7 +112,7 @@ var groupedTableWrapper = function(crsWrapped,data_table_id) {
 
       return  "<a href='" + window.location.pathname + "?" + 
         remaining_groups.map(function(f){
-          return f + "=" + h[f]
+          return f + "=" + escape(h[f])
         }).join("&") + "' class='btn btn-primary btn-xs' target='_'>Details</a>" 
     }
 
@@ -209,8 +209,9 @@ var groupedTableWrapper = function(crsWrapped,data_table_id) {
       s.append("td")
         .append("a")
         .attr("href",function(x){
+          console.log(escape(x.key))
           return window.location.pathname + 
-            "?" + self.crsWrapped.defaultGroupName + "=" + x.key
+            "?" + self.crsWrapped.defaultGroupName + "=" + escape(x.key)
         })
         .attr("target","_")
         .text("More")

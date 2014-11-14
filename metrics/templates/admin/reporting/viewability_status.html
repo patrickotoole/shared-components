@@ -1,0 +1,90 @@
+{% autoescape None %}
+{% extends "../../clean_base.html" %}
+{% block content %}
+
+<link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/dc.css">
+<link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/chosen.css">
+<style>
+input[type="checkbox"]:disabled + label{
+  color: #ccc;
+}
+
+</style>
+
+<script type="text/javascript" src="http://rockerbox.com/js/d3.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/crossfilter.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/dc.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/colorbrewer.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/reporting.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/chosen.js"></script>
+<script type="text/javascript" src="/static/js/dataframe_reporting.js"></script> 
+
+<div class='container'>
+
+
+
+<div class="row">
+  <div class="col-sm-9">
+    <form id="report-form" role="form">
+      <div class="new-item"></div>
+    </form>
+    <script>
+      data = {{data}}
+
+    </script>
+  </div>
+</div>
+<br/>
+<h4 id="results-header">Results</h4>
+
+<table id="data-table-avail" class="table table-hover dc-data-table">
+  <thead>
+    <tr class="data-table-headers"></tr>
+  </thead>
+</table>
+
+</div>
+<script>
+
+var URL = window.location.pathname + window.location.search,
+  META =  window.location.pathname + "/meta" + window.location.search
+
+var addParam = function(u,p) {
+  return u.indexOf("?") >= 0 ? u + "&" + p : u + "?" + p
+}
+
+URL = addParam(URL,"format=json")
+META = addParam(META,"format=json")
+
+$.getJSON(META,function(meta){
+
+  d3.select("#results-header")
+    .text("Imps Available for " + 
+      meta['groups'].map(function(f){
+        return f.charAt(0).toUpperCase() + f.slice(1)
+      }).join(", ")
+    )
+
+  $.getJSON(URL,function(data){
+    console.log(data)
+
+    var crsWrapped = new groupedDataWrapper(data,meta),
+      tableWrapped = new groupedTableWrapper(crsWrapped,"#data-table-avail")
+
+    tableWrapped.makeHeaders(".data-table-headers")
+    tableWrapped.buildTable()
+    tableWrapped.renderGroupHeaders(data.length > 100)
+    
+    dc.renderAll()
+    window.crsWrapped = crsWrapped
+
+
+
+
+  })
+})
+
+</script>
+<script src="http://rockerbox.com/js/jquery.serialize-object.js"></script>
+
+{% end %}  
