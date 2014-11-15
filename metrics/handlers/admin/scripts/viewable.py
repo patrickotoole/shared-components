@@ -51,6 +51,8 @@ class DomainList(object):
             "where" : " and ".join(where)
         }
 
+        print DOMAIN_LIST_STATUS % params
+
         return DOMAIN_LIST_STATUS % params
 
     @Model.run_query
@@ -99,13 +101,18 @@ class ViewabilityHandler(DomainViewabilityHandler):
         action = self.get_argument("action",False)
         domain_list = self.get_argument("domain_list",False)
 
-        if action:
-            where += ["action = '%s' " % action]
 
+        if action == "learn":
+            where += ["action is null"]
+        elif action:
+            where += ["action = '%s' " % action]
+        
         if domain_list:
             where += ["log = '%s' " % domain_list]
         else:
-            where += ["action = 'approve'"]
+            if not action:
+                where += ["action = 'approve' "]
+
 
         return where
 
