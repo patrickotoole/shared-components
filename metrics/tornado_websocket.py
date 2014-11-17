@@ -124,6 +124,11 @@ admin_advertiser = [
     
     (r'/admin/advertiser/pixel/reporting/?', admin.reporting.AdvertiserPixelHandler, dict(db=db, hive=hive)),
     (r'/admin/advertiser/pixel/reporting/?(meta)?/?', admin.reporting.AdvertiserPixelHandler, dict(db=db, hive=hive)),
+    (r'/admin/advertiser/pixel/geo/reporting/?', admin.reporting.AdvertiserPixelGeoHandler, dict(db=db, hive=hive)),
+    (r'/admin/advertiser/pixel/geo/reporting/?(meta)?/?', admin.reporting.AdvertiserPixelGeoHandler, dict(db=db, hive=hive)),
+    (r'/admin/advertiser/pixel/device/reporting/?', admin.reporting.AdvertiserPixelDeviceHandler, dict(db=db, hive=hive)),
+    (r'/admin/advertiser/pixel/device/reporting/?(meta)?/?', admin.reporting.AdvertiserPixelDeviceHandler, dict(db=db, hive=hive)),
+
     (r'/admin/advertiser/reporting/?', admin.reporting.AdvertiserReportingHandler, dict(db=db, hive=hive)), 
     (r'/admin/advertiser/viewable/reporting/?',admin.reporting.AdvertiserViewableHandler, dict(db=db,hive=hive)),
     (r'/admin/advertiser/viewable/reporting/?(meta)?/?',admin.reporting.AdvertiserViewableHandler, dict(db=db,hive=hive)), 
