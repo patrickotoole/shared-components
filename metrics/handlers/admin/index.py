@@ -12,6 +12,8 @@ class IndexHandler(tornado.web.RequestHandler):
             ("/admin/advertiser/new", "Advertiser Creator"),
             ("/admin/advertiser/segment", "Segment"),  
             ("/admin/advertiser/pixel/reporting", "On-site (Rockerbox vs. all users)"),
+            ("/admin/advertiser/pixel/geo/reporting", "On-site geo (city, state, zip, dma, etc.) data"),
+            ("/admin/advertiser/pixel/device/reporting", "On-site device (browser, os) data"),
             ("/admin/advertiser/reporting", "[ALPHA] Reporting (unified)"), 
             ("/admin/advertiser/domain_list/reporting", "Domain List Impressions Available"), 
             ("/admin/advertiser/summary/reporting", "Domain Aggregated Reporting"),  
