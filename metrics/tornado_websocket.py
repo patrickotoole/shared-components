@@ -46,7 +46,7 @@ db = lnk.dbs.rockerbox
 reporting_db = lnk.dbs.reporting
 api = lnk.api.console
 bidder = lnk.api.bidder
-hive = None#h.Hive().hive
+hive = h.Hive().hive
 
 _redis = streaming._redis
 track_buffer = streaming.track_buffer
