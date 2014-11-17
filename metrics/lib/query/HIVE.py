@@ -131,3 +131,17 @@ FROM agg_pixel
 WHERE %(where)s
 GROUP BY %(groups)s
 '''
+
+PIXEL_GEO= '''
+SELECT %(fields)s
+FROM pixel_geo_analytics
+WHERE %(where)s
+GROUP BY %(groups)s
+'''
+
+PIXEL_DEVICE= '''
+SELECT %(fields)s
+FROM pixel_agent_analytics
+WHERE %(where)s
+GROUP BY %(groups)s
+'''

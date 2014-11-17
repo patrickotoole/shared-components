@@ -11,6 +11,8 @@ from advertiser.conversion import ConversionCheckHandler
 from advertiser.conversion_imps import ConversionImpsHandler
 from advertiser.debug import DebugReportingHandler
 from advertiser.pixel import AdvertiserPixelHandler
+from advertiser.pixel_geo import AdvertiserPixelGeoHandler
+from advertiser.pixel_device import AdvertiserPixelDeviceHandler
 
 from domain.categories import DomainCategoriesHandler
 
