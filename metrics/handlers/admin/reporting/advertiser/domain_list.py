@@ -46,6 +46,7 @@ FIELDS = {
 WHERE = {
     "advertiser" : "type like '%%%(advertiser)s%%'",
     "type" : "type like '%%%(type)s%%'",
+    "type_equal" : "type = '%(type_equal)s'", 
     "domain" : "domain like '%%%(domain)s%%'",
     "state" : "state = '%(state)s'",
     "city" : "city = '%(city)s'"
@@ -142,6 +143,10 @@ class DomainListHandler(AdminReportingBaseHandler):
         
         domain_list = self.get_argument("type",False)
         advertiser = self.get_argument("advertiser",False)
+        meta = self.get_argument("meta",False)
+
+        if meta:
+            return meta
 
         if domain_list:
             return "type"

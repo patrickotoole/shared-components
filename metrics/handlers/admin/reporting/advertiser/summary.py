@@ -11,6 +11,11 @@ from lib.hive.helpers import run_hive_session_deferred
 from lib.query.HIVE import AGG_ADVERTISER_DOMAIN
 from ..base import AdminReportingBaseHandler 
 
+JOIN = {
+    "type":"v JOIN (select distinct log as log, pattern as pattern, action as action from domain_list where log like '%%%(type)s%%') d on d.pattern = v.domain",
+    "static_type": "v JOIN domain_list d on d.pattern = v.domain"
+}
+
 OPTIONS = {
     "default": {
         "meta": {
@@ -20,7 +25,27 @@ OPTIONS = {
                 "spent":"cpm"
             }
         }
+    },
+    "type": {
+        "meta": {
+            "groups" : ["type"],
+            "fields" : ["available","seen","served","visible","spent"],
+            "formatters":{
+                "spent":"cpm"
+            },
+            "static_joins" : JOIN["static_type"]
+        }
+    },
+    "none": {
+        "meta": {
+            "groups" : [],
+            "fields" : ["available","seen","served","visible","spent"],
+            "formatters":{
+                "spent":"cpm"
+            }
+        }
     }
+
 }
 
 FIELDS = {
@@ -34,12 +59,17 @@ FIELDS = {
 GROUPS = {
     "advertiser":"advertiser",
     "domain":"domain",
-    "date":"date"
+    "date":"date",
+    "type":"d.log",
+    "action":"d.action"
 }
 
 WHERE = {
     "advertiser":"advertiser like '%%%(advertiser)s%%'",
-    "domain": "domain like '%%%(domain)s%%'"
+    "domain": "domain like '%%%(domain)s%%'",
+    "type":"d.log like '%%%(type)s%%'",
+    "action":"d.action = '%(action)s'",
+    "advertiser_equal":"advertiser = '%(advertiser_equal)s'"
 }
 
 class AdvertiserSummaryHandler(AdminReportingBaseHandler):
@@ -48,6 +78,7 @@ class AdvertiserSummaryHandler(AdminReportingBaseHandler):
     WHERE = WHERE
     FIELDS = FIELDS
     GROUPS = GROUPS
+    JOINS = JOIN
 
     OPTIONS = OPTIONS
  
@@ -136,6 +167,10 @@ class AdvertiserSummaryHandler(AdminReportingBaseHandler):
         
         domain_list = self.get_argument("type",False)
         advertiser = self.get_argument("advertiser",False)
+        meta = self.get_argument("meta",False)
+
+        if meta:
+            return meta
 
         if domain_list:
             return "type"
@@ -147,8 +182,9 @@ class AdvertiserSummaryHandler(AdminReportingBaseHandler):
     @tornado.web.asynchronous
     def get(self,meta=False):
         formatted = self.get_argument("format",False)
-        include = self.get_argument("include",False)
+        include = self.get_argument("include",False).split(",")
         meta_group = self.get_meta_group()
+        print meta_group
         meta_data = self.get_meta_data(meta_group,include)
 
         if meta:
@@ -159,7 +195,8 @@ class AdvertiserSummaryHandler(AdminReportingBaseHandler):
             params = self.make_params(
                 meta_data.get("groups",[]),
                 meta_data.get("fields",[]),
-                self.make_where()
+                self.make_where(),
+                self.make_join(meta_data.get("static_joins",""))
             )
             self.get_data(
                 self.make_query(params),

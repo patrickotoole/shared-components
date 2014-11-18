@@ -22,7 +22,7 @@ OPTIONS = {
     "default": {
         "meta": {
             "groups" : ["advertiser","campaign"],
-            "fields" : ["id","served","loaded","visible","spent"],
+            "fields" : ["served","loaded","visible","spent"],
             "formatters" : {
                 "campaign":"none",
                 "spent": "cpm",

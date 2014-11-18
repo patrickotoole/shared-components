@@ -11,10 +11,9 @@ AGG_APPROVED_AUCTIONS = """
 AGG_ADVERTISER_DOMAIN = """
     select 
         %(fields)s
-    from agg_advertiser_domain
+    from agg_advertiser_domain %(joins)s
     where %(where)s 
     group by %(groups)s
-    having served > 20
 """ 
 
 
