@@ -13,4 +13,4 @@ from advertiser.debug import DebugReportingHandler
 from advertiser.pixel import AdvertiserPixelHandler
 
 from domain.categories import DomainCategoriesHandler
-
+from domain.domain import DomainHandler

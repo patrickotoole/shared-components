@@ -130,3 +130,10 @@ FROM agg_pixel
 WHERE %(where)s
 GROUP BY %(groups)s
 '''
+
+DOMAIN_AVAILS = """
+SELECT %(fields)s
+FROM agg_domain_avails %(joins)s
+WHERE %(where)s
+GROUP BY %(groups)s
+"""
