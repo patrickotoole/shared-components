@@ -41,38 +41,50 @@
 $(document).ready(function(){
   var data = {{ data }};
 
-  var URL = window.location.pathname.replace("/summary","/reporting")
+  var URL = "/admin/advertiser/viewable/reporting?meta=domain_list&include=action&action=learn&format=json"
+  var URL2 = "/admin/domain/reporting?meta=type&action=learn&format=json"
 
-  URL = "/admin/advertiser/viewable/reporting?meta=domain_list&include=action&action=learn&format=json"
   d3.json(URL,function(reporting_data){
-    var entries = d3.nest()
-      .key(function(x){return x.type})
-      .rollup(function(x){
-        return x.length
+
+    d3.json(URL2,function(available_reporting){
+
+      var spending = d3.nest()
+        .key(function(x){return x.type})
+        .rollup(function(x){
+          return x.length
+        })
+        .map(reporting_data,d3.map)
+
+      var available = d3.nest()
+        .key(function(x){return x.type})
+        .rollup(function(x){
+          return x.length
+        })
+        .map(available_reporting,d3.map)
+       
+
+      combined_data = data.map(function(x){
+        x.active_learn = spending.get(x.log) || 0 
+        x.available_learn = available.get(x.log) || 0 
+        x.domain_list = "domain counts"
+        return x
       })
-      .map(reporting_data,d3.map)
 
-    combined_data = data.map(function(x){
-      var value = entries.get(x.log) || 0 
-      x.active_learn = value
-      x.domain_list = "domain_list"
-      return x
+      meta = {
+        "fields":["approve","ban","bad","learn","active_learn","available_learn"],
+        "groups":["domain_list","log"]
+      }
+
+      var crsWrapped = new groupedDataWrapper(combined_data,meta),
+        tableWrapped = new groupedTableWrapper(crsWrapped,"#data-table-avail")
+
+      tableWrapped.makeHeaders(".data-table-headers")
+      tableWrapped.buildTable()
+      tableWrapped.renderGroupHeaders(data.length > 100)
+      
+      dc.renderAll()
+
     })
-
-    meta = {
-      "fields":["approve","ban","bad","learn","active_learn"],
-      "groups":["domain_list","log"]
-    }
-
-    var crsWrapped = new groupedDataWrapper(combined_data,meta),
-      tableWrapped = new groupedTableWrapper(crsWrapped,"#data-table-avail")
-
-    tableWrapped.makeHeaders(".data-table-headers")
-    tableWrapped.buildTable()
-    tableWrapped.renderGroupHeaders(data.length > 100)
-    
-    dc.renderAll()
-
 
   })
 });
