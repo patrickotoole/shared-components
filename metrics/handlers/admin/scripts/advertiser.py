@@ -8,21 +8,21 @@ import time
 
 from lib.helpers import *  
 
-CONVERSION_PIXEL = """<!-- Rockerbox -- %(segment_name)s -->
-<script src="https://secure.adnxs.com/px?id=%(pixel_id)s&seg=%(segment_id)s&t=1&order_id=[user_identifier]" type="text/javascript"></script> 
-<script src="https://getrockerbox.com/pixel?source=%(pixel_source_name)s&type=conv&id=%(pixel_id)s&seg=%(segment_id)s&order_type=[user_identifier]" type="text/javascript"></script>
+CONVERSION_PIXEL = """<!-- Rockerbox - %(segment_name)s -->
+<script src="https://secure.adnxs.com/px?id=%(pixel_id)s&seg=%(segment_id)s&t=1&order_id=[variable_holder]" type="text/javascript"></script> 
+<script src="https://getrockerbox.com/pixel?source=%(pixel_source_name)s&type=conv&id=%(pixel_id)s&seg=%(segment_id)s&order_type=[variable_holder]" type="text/javascript"></script>
 <!-- End of Segment Pixel -->"""
 
-SEGMENT_PIXEL = """<!-- Rockerbox -- %(segment_name)s -->
+SEGMENT_PIXEL = """<!-- Rockerbox - %(segment_name)s -->
 <script src="https://getrockerbox.com/pixel?source=%(pixel_source_name)s&type=imp&an_seg=%(segment_id)s" type="text/javascript"></script>
 <!-- End of Segment Pixel -->
 """
 
 SEGMENT_DESCRIPTIONS = {
-    "Purchase Conversion Pixel": "Fire the following after a user makes a purchase. <br/> Substitute a unique identifier (e.g. user ID, order_id, user email) for [user_identifier] prior to firing the pixel. ",
-    "Signup Conversion Pixel": "Fire the following after a user has executed a signup. <br/> Substitute a unique identifier (e.g. user ID, order_id, user email) for [user_identifier] prior to firing the pixel. ",
-    "All Pages Segment": "Place the following on ALL PAGES",
-    "Logged In Segment": "Place the following on ALL pages for EXISTING CUSTOMERS"
+    "Purchase Conversion Pixel": "<b>Implementation Instructions :</b><div style=\"margin-left:20px\">The Purchase Conversion Pixel should be fired after a user executes a purchase.<br>The [variable_holder] field is used to pass purchase level information (e.g. order ID, purchase value, purchaser\\'s email) to Rockerbox. This information needs to be passed in <i>both</i> [variable_holder] locations.<br><br>Example :<ul><li><b>Order ID</b> : ....&amp;order_id=3454....&amp;order_type=3454</li><li><b>Purchaser\\'s Email :</b> ....&amp;order_id=test@test.com....&amp;order_type=test@test.com...</li></ul></div></div>",
+    "Signup Conversion Pixel": "<b>Implementation Instructions :</b><div style=\"margin-left:20px\">The Signup Conversion Pixel should be fired after a user signs up / registers.<br>The [variable_holder] field is used to pass signup level information (e.g. user ID,  purchaser\\'s email) to Rockerbox. This information needs to be passed in <i>both</i> [variable_holder] locations.<br><br>Example :<ul><li><b>User ID</b> : ....&amp;order_id=432353....&amp;order_type=432353</li><li><b>Purchaser\\'s Email :</b> ....&amp;order_id=test@test.com....&amp;order_type=test@test.com...</li></ul></div></div>",
+    "All Pages Segment": "<b>Implementation Instructions :</b><div style=\"margin-left:20px\">The All Pages Segment should be placed on <b>all</b> pages.</div>",
+    "Logged In Segment": "<b>Implementation Instructions :</b><div style=\"margin-left:20px\">The Logged In Segment should be fired on <b>all</b> pages for visitors that are logged in. This allows Rockerbox to differentiate between new visitors and existing customrs.</div>"
 }
 
 
@@ -42,14 +42,16 @@ INSERT INTO advertiser (
     external_advertiser_id, 
     email,
     advertiser_name,
-    pixel_source_name
+    pixel_source_name,
+    client_goals 
 ) 
 VALUES (
     '%(contact_name)s', 
     %(advertiser_id)s, 
     '%(email)s', 
     '%(advertiser_name)s' , 
-    '%(pixel_source_name)s'
+    '%(pixel_source_name)s',
+    '%(client_goals)s'
 )
 """
 
@@ -90,7 +92,19 @@ VALUES (
     '%(segment_description)s'
 )
 """
-
+INSERT_EMAIL = """
+INSERT INTO advertiser_email (
+    external_advertiser_id,
+    contact_name,
+    email
+) 
+VALUES (
+    '%(external_advertiser_id)s', 
+    '%(contact_name)s', 
+    '%(email)s'
+)
+"""
+ 
 class Advertiser(object):
 
     def insert_advertiser(self,advertiser_id,advertiser_name):
@@ -99,7 +113,8 @@ class Advertiser(object):
             "contact_name": self.get_argument('contact_name'),
             "email": self.get_argument('contact_email'),
             "advertiser_name": advertiser_name,
-            "pixel_source_name": self.get_argument("pixel_source_name")
+            "pixel_source_name": self.get_argument("pixel_source_name"),
+            "client_goals" : self.get_argument("advertiser_details")
         }
         query = INSERT_ADVERTISER % params
         self.db.execute(query)            
@@ -137,7 +152,28 @@ class Advertiser(object):
         self.db.execute(query)            
         self.db.commit()
  
-
+    def insert_emails(self,advertiser_id):
+        params = {
+            "external_advertiser_id": advertiser_id,
+            "contact_name": self.get_argument('contact_name'),
+            "email": self.get_argument('contact_email')
+        }
+        query = INSERT_EMAIL % params
+        print query
+        self.db.execute(query)            
+        self.db.commit()
+ 
+        if self.get_argument('contact_name_2') != "":
+            params = {
+                "external_advertiser_id": advertiser_id,
+                "contact_name": self.get_argument('contact_name_2'),
+                "email": self.get_argument('contact_email_2')
+            }
+            query = INSERT_EMAIL % params
+            print query
+            self.db.execute(query)            
+            self.db.commit()
+              
     def create_advertiser(self,advertiser_name):
         data = {"advertiser": {"name": advertiser_name, "state": "active"} }
         response = self.api.post('/advertiser',data=ujson.dumps(data)).json
@@ -159,7 +195,7 @@ class Advertiser(object):
 
         if conversion_pixel is not None:
             formatted_pixel = CONVERSION_PIXEL % params 
-        elif "Creative" not in segment_name:
+        elif "Creative" not in segment_name and "Test" not in segment_name:
             formatted_pixel = SEGMENT_PIXEL % params
         else:
             formatted_pixel = ""
@@ -187,6 +223,12 @@ class Advertiser(object):
         } 
         URL = "/pixel?advertiser_id=%s" % advertiser_id
         response = self.api.post(URL,data=ujson.dumps(data)).json
+        if pixel_name == "Signup Conversion Pixel":
+            pct = self.get_argument("signup_conversion_checkbox_pc")
+            pvt = self.get_argument("signup_conversion_checkbox_pv")
+        if pixel_name == "Purchase Conversion Pixel":
+            pct = self.get_argument("purchase_conversion_checkbox_pc")
+            pvt = self.get_argument("purchase_conversion_checkbox_pv")
 
         self.insert_pixel(
             response["response"]["pixel"]["id"],
@@ -206,9 +248,39 @@ class Advertiser(object):
             }
         }
         URL = "/publisher"
-        response = self.api.post(URL,data=ujson.dumps(data)).json
+        response_pub = self.api.post(URL,data=ujson.dumps(data)).json
+        publisher_id = response_pub["response"]["publisher"]["id"]
+        #Making base payment rule
+        data = { 
+                "payment-rule":{ 
+                    "name": "Base Rule", 
+                    "pricing_type": "revshare", 
+                    "revshare": "1", 
+                    "state": "active" 
+                }
+            }
+        URL = "/payment-rule?publisher_id=%s" % publisher_id
+        response_payment = self.api.post(URL,data=ujson.dumps(data)).json
+        payment_id = response_payment["response"]["payment-rule"]["id"]
+        #Adding base payment rule to publisher
+        data = {
+                "publisher":{
+                    "base_payment_rule_id":payment_id
+            }
+        }
+        URL = "/publisher?id=%s" % publisher_id
+        response = self.api.put(URL,data=ujson.dumps(data)).json
+        return publisher_id
 
-        return response["response"]["publisher"]["id"]
+    def set_default_placement_reselling(self,placement_id):
+        data = {
+            "placement":{
+                "exclusive":"true"
+            }
+        }
+        URL = "/placement?id=%s" % placement_id
+        response = self.api.put(URL,data=ujson.dumps(data)).json
+        return response
 
     def create_managed_line_item(self,pixel_dict,advertiser_id):
         data = {
@@ -391,7 +463,7 @@ class AdvertiserHandler(tornado.web.RequestHandler,Advertiser):
         pixel_names = []
         if self.get_argument('signup_conversion_checkbox') == "true":
             pixel_names.append("Signup Conversion Pixel")
-
+            
         if self.get_argument('purchase_conversion_checkbox') == "true":
             pixel_names.append("Purchase Conversion Pixel")
         pct = 1
@@ -410,14 +482,16 @@ class AdvertiserHandler(tornado.web.RequestHandler,Advertiser):
 
         advertiser_id = self.create_advertiser(advertiser_name)
         internal_id = self.insert_advertiser(advertiser_id,advertiser_name)
+        self.insert_emails(advertiser_id)
 
         pixel_dict = self.create_pixels(advertiser_id,advertiser_name)
         segment_dict = self.create_segments(advertiser_id,advertiser_name,pixel_dict.keys(),pixel_dict)
     
         publisher_id = self.create_publisher(advertiser_name)
-        time.sleep(5)
+        time.sleep(10)
         placement_id = self.get_default_placement(publisher_id)
-        
+        self.set_default_placement_reselling(placement_id) 
+
         # Managed test
         line_item_id = self.create_managed_line_item(pixel_dict,advertiser_id)
         campaign_id = self.create_managed_campaign(advertiser_id, line_item_id)
@@ -434,7 +508,7 @@ class AdvertiserHandler(tornado.web.RequestHandler,Advertiser):
         segment_id = segment_dict["Test Segment"]
         profile_id = self.set_live_target(advertiser_id, campaign_id, segment_id)
         self.set_campaign_profile_id(advertiser_id,campaign_id,profile_id)
- 
+        self.write(ujson.dumps(advertiser_id)) 
 
     @decorators.formattable
     def get_content(self,data,advertiser_id):
