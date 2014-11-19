@@ -17,23 +17,31 @@ class PaginatedConsoleAPIRequestWrapper(ConsoleAPIRequestWrapper):
 
 
     def get_all_pages(self, url_params = '', key= '', **kwargs):
+        if '?' in url_params:
+            delimiter = '&'
+        else:
+            delimiter = '?'
         response = self.get(url_params, **kwargs).json['response']
         items = response[key]
         total = response['count']
         num = response['start_element'] + response['num_elements']
         while num < total:
-            response = self.get(url_params + "?start_element=%s" % num, **kwargs).json['response']
+            response = self.get(url_params + delimiter + "start_element=%s" % num, **kwargs).json['response']
             items += response[key]
             num = response['start_element'] + response['num_elements']
         return items
 
     def post_all_pages(self, url_params = '', obj = '', key= '', **kwargs):
+        if '?' in url_params:
+            delimiter = '&'
+        else:
+            delimiter = '?'
         response = self.post(url_params, obj, **kwargs).json['response']
         items = response[key]
         total = response['count']
         num = response['start_element'] + response['num_elements']
         while num < total:
-            response = self.post(url_params + "?start_element=%s" % num, obj, **kwargs).json['response']
+            response = self.post(url_params + delimiter + "start_element=%s" % num, obj, **kwargs).json['response']
             items += response[key]
             num = response['start_element'] + response['num_elements']
         return items
