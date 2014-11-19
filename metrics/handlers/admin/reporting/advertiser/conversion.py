@@ -12,7 +12,8 @@ from ..base import AdminReportingBaseHandler
 JOIN = {
     "experiment": "v JOIN experiment_test_ref t on v.first_campaign = t.campaign_id",
     "bucket": "v JOIN (SELECT bucket_name, campaign_id FROM campaign_bucket_ref WHERE campaign_id IS NOT NULL) t on v.first_campaign = t.campaign_id",
-    "lateral_view": " LATERAL VIEW explode(domains) a as domain, imps",
+    "lateral_view_imps": " LATERAL VIEW explode(domains) a as domain, imps",
+    "lateral_view_clicks": " LATERAL VIEW explode(domains) as as domain, num_clicks",
     "campaign_view": " LATERAL VIEW explode(campaigns) a as campaign, imps" 
 }
 
@@ -105,7 +106,7 @@ OPTIONS = {
             "groups": [
                 "date", 
                 "hour", 
-                "conv_timestamp", 
+                "conv_timestamp_utc", 
                 "uid", 
                 "segment", 
                 "conv_id", 
@@ -134,20 +135,43 @@ OPTIONS = {
             }
         }
     },
-    "top_domains": {
+    "top_domains_imps": {
         "meta": {
             "groups": ["advertiser", "domain"],
             "fields": ["imps", "num_conv"],
-            "static_joins": JOIN["lateral_view"]
+            "static_joins": JOIN["lateral_view_imps"]
         }
     },
+
+    "top_domains_clicks": {
+        "meta": {
+            "groups": ["advertiser", "domain"],
+            "fields": ["num_clicks", "num_conv"],
+            "static_joins": JOIN["lateral_view_clicks"]
+        }
+    },
+
+    "geo": {
+        "meta": {
+            "groups": ["advertiser", "city", "state"],
+            "fields": ["num_conv", "clicks", "num_served"]
+            }
+    },
+
+    "device": {
+        "meta": {
+            "groups": ["advertiser", "browser", "os", "device"],
+            "fields": ["num_conv", "clicks", "num_served"]
+            }
+    },
+
     "full": {
         "meta": {
             "groups": [
                 "advertiser",
                 "date",
                 "hour",
-                "conv_timestamp",
+                "conv_timestamp_utc",
                 "uid",
                 "segment",
                 "query_str",
@@ -158,7 +182,9 @@ OPTIONS = {
                 "since_first_served",
                 "attributed_to",
                 "domains",
+                "click_domains",
                 "campaigns",
+                "click_campaigns",
                 "first_campaign",
                 "last_campaign",
                 "influencer_campaign"
@@ -185,8 +211,19 @@ GROUPS = {
     "advertiser": "advertiser",
     "date": "date",
     "hour": "hour",
-    "conv_timestamp": "conv_timestamp",
+    "conv_timestamp_utc": "conv_timestamp_utc",
     "uid": "uid",
+    "city": "city",
+    "state": "state",
+    "country": "country",
+    "timezone": "timezone",
+    "coordinates": "coordinates",
+    "dma": "dma",
+    "zip_code": "zip_code",
+    "browser": "browser",
+    "device": "device",
+    "os": "os",
+    "ip": "ip",
     "segment": "segment",
     "query_str": "query_str",
     "conv_id": "conv_id",
@@ -199,17 +236,27 @@ GROUPS = {
     "experiment": "t.experiment_id",
     "domain": "domain",
     "domains": "domains",
+    "sellers": "sellers",
+    "tags": "tags",
+    "venues": "venues",
     "campaigns": "campaigns",
+    "click_campaigns": "click_campaigns",
     "first_campaign": "first_campaign",
     "last_campaign": "last_campaign",
-    "influencer_campaign": "influencer_campaign"
+    "influencer_campaign": "influencer_campaign",
+    "click_sellers": "click_sellers",
+    "click_tags": "click_tags",
+    "click_venues": "click_venues",
+    "click_domains": "click_domains"
     }
 
 
 FIELDS = {
     "num_served": "sum(num_served)",
     "imps": "sum(imps)",
-    "num_conv": "count (distinct uid)"
+    "clicks": "sum(num_clicked)",
+    "num_clicks": "sum(num_clicks)",
+    "num_conv": "count (*)"
     }
 
 WHERE = {
@@ -223,7 +270,8 @@ WHERE = {
     "attributed_to": "CASE WHEN '%(attributed_to)s' LIKE 'Rockerbox' THEN num_served > 0 ELSE num_served < 0 END",
     "experiment": "num_served > 0 AND t.experiment_id = '%(experiment)s'",
     "campaign": "array_contains(map_keys(campaigns), '%(campaign)s')",
-    "since_last_served": "since_last_served <= '%(since_last_served)s'"
+    "since_last_served": "since_last_served <= '%(since_last_served)s'",
+    "post_click": "CASE WHEN lower('%(post_click)s') = 'true' THEN num_clicked > 0 END"
     }
 
 class ConversionCheckHandler(AdminReportingBaseHandler):
