@@ -15,4 +15,4 @@ from advertiser.pixel_geo import AdvertiserPixelGeoHandler
 from advertiser.pixel_device import AdvertiserPixelDeviceHandler
 
 from domain.categories import DomainCategoriesHandler
-
+from domain.domain import DomainHandler

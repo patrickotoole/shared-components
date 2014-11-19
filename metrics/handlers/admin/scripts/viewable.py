@@ -40,6 +40,25 @@ class DomainList(object):
     def __init__(self):
         pass
 
+    def make_where(self):
+        where = ["1=1"]
+        action = self.get_argument("action",False)
+        domain_list = self.get_argument("domain_list",False)
+
+
+        if action == "learn":
+            where += ["action is null"]
+        elif action:
+            where += ["action = '%s' " % action]
+        
+        if domain_list:
+            where += ["log = '%s' " % domain_list]
+        else:
+            if not action:
+                where += ["action = 'approve' "]
+
+
+        return where
     @Model.run_select
     def select(self,fields=[],where=["1=1"]):
 
@@ -50,6 +69,8 @@ class DomainList(object):
             "fields" : ",".join(fields),
             "where" : " and ".join(where)
         }
+
+        print DOMAIN_LIST_STATUS % params
 
         return DOMAIN_LIST_STATUS % params
 
@@ -74,9 +95,6 @@ class VenueBlock(object):
 
 class DomainViewabilityHandler(tornado.web.RequestHandler,DomainList):
 
-    def make_where(self):
-        return "1=1"
-
     def get_domain_list(self,meta):
         fields = meta['groups'] + meta['fields']
         where = self.make_where()
@@ -94,20 +112,7 @@ class ViewabilityHandler(DomainViewabilityHandler):
         self.db = db 
         self.api = api
 
-    def make_where(self):
-        where = ["1=1"]
-        action = self.get_argument("action",False)
-        domain_list = self.get_argument("domain_list",False)
 
-        if action:
-            where += ["action = '%s' " % action]
-
-        if domain_list:
-            where += ["log = '%s' " % domain_list]
-        else:
-            where += ["action = 'approve'"]
-
-        return where
 
     @decorators.formattable
     def get_content(self,data):

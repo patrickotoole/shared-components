@@ -1,0 +1,94 @@
+{% autoescape None %}
+{% extends "../../clean_base.html" %}
+{% block content %}
+<link rel="stylesheet" type="text/css" href="http://getbootstrap.com/dist/css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/dc.css">
+<link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/chosen.css">
+<script type="text/javascript" src="http://rockerbox.com/js/d3.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/crossfilter.js"></script> 
+ <script type="text/javascript" src="http://rockerbox.com/js/dc.js"></script> 
+
+<script type="text/javascript" src="/static/js/advertiser.js"></script> 
+<script type="text/javascript" src="/static/js/reporting.js"></script>  
+<script type="text/javascript" src="/static/js/dataframe_reporting.js"></script>  
+<script type="text/javascript" src="/static/js/advertiser/info.js"></script>  
+<script type="text/javascript" src="/static/js/advertiser/conversion.js"></script>   
+<script type="text/javascript" src="/static/js/advertiser/pixel.js"></script>   
+<script type="text/javascript" src="/static/js/advertiser/domain_list.js"></script>   
+<script type="text/javascript" src="/static/js/advertiser/viewability.js"></script>    
+<script type="text/javascript" src="/static/js/d3_helpers.js"></script>     
+
+
+<script type="text/javascript" src="/static/js/advertiser_viewable.js"></script>  
+<link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css" rel="stylesheet"/>
+<script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
+
+ 
+
+<div id="advertiser-content" class='container'>
+  <div class="row">
+    <h4>Domain Lists</h4>
+    <table id="data-table-avail" class="table table-hover dc-data-table">
+      <thead>
+        <tr class="data-table-headers"></tr>
+      </thead>
+    </table>
+     
+  </div>
+</div>
+
+<script>
+$(document).ready(function(){
+  var data = {{ data }};
+
+  var URL = "/admin/advertiser/viewable/reporting?meta=domain_list&include=action&action=learn&format=json"
+  var URL2 = "/admin/domain/reporting?meta=type&action=learn&format=json"
+
+  d3.json(URL,function(reporting_data){
+
+    d3.json(URL2,function(available_reporting){
+
+      var spending = d3.nest()
+        .key(function(x){return x.type})
+        .rollup(function(x){
+          return x.length
+        })
+        .map(reporting_data,d3.map)
+
+      var available = d3.nest()
+        .key(function(x){return x.type})
+        .rollup(function(x){
+          return x.length
+        })
+        .map(available_reporting,d3.map)
+       
+
+      combined_data = data.map(function(x){
+        x.active_learn = spending.get(x.log) || 0 
+        x.available_learn = available.get(x.log) || 0 
+        x.domain_list = "domain counts"
+        return x
+      })
+
+      meta = {
+        "fields":["approve","ban","bad","learn","active_learn","available_learn"],
+        "groups":["domain_list","log"]
+      }
+
+      var crsWrapped = new groupedDataWrapper(combined_data,meta),
+        tableWrapped = new groupedTableWrapper(crsWrapped,"#data-table-avail")
+
+      tableWrapped.makeHeaders(".data-table-headers")
+      tableWrapped.buildTable()
+      tableWrapped.renderGroupHeaders(data.length > 100)
+      
+      dc.renderAll()
+
+    })
+
+  })
+});
+
+</script>
+
+{% end %}   

@@ -80,7 +80,7 @@ class Hive(object):
         print instances
         shark_servers = [ i for i in instances if i["appId"] == "/shark-server-debug" ]
         print shark_servers
-        server = shark_servers[-1]
+        server = shark_servers[0]
         return server
        
 

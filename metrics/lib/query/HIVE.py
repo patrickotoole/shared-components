@@ -11,10 +11,9 @@ AGG_APPROVED_AUCTIONS = """
 AGG_ADVERTISER_DOMAIN = """
     select 
         %(fields)s
-    from agg_advertiser_domain
+    from agg_advertiser_domain %(joins)s
     where %(where)s 
     group by %(groups)s
-    having served > 20
 """ 
 
 
@@ -145,3 +144,9 @@ FROM pixel_agent_analytics
 WHERE %(where)s
 GROUP BY %(groups)s
 '''
+DOMAIN_AVAILS = """
+SELECT %(fields)s
+FROM agg_domain_avails %(joins)s
+WHERE %(where)s
+GROUP BY %(groups)s
+"""
