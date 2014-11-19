@@ -59,9 +59,9 @@ class VenueReport(object):
         initial_chunk.to_sql(tablename,self.db,flavor="mysql",if_exists=if_exists)
 
 
-        while CHUNKSIZE*iterator < len(domains):
+        while CHUNKSIZE*iterator < len(df):
             iterator += 1
-            chunk = domains[CHUNKSIZE*(iterator-1):CHUNKSIZE*iterator]
+            chunk = df[CHUNKSIZE*(iterator-1):CHUNKSIZE*iterator]
             chunk.to_sql(tablename,self.db,flavor="mysql",if_exists="append")
 
         logging.info("Inserted %s" % tablename)
