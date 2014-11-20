@@ -1,5 +1,8 @@
 from link import lnk
+import sendgrid
 import math
+import datetime
+import time
 c = lnk.api.console
 db = lnk.dbs.reporting
 
@@ -44,8 +47,10 @@ keys = keys[:-1]
 def getLatestDate(li, cr1, cr2):
 	if li not in li_creative_lastbreak:
 		print "error1"
+		return "error1"
 	elif cr1 not in li_creative_lastbreak[li] or cr2 not in li_creative_lastbreak[li]:
 		print "error2"
+		return "error2"
 	else:
 		t1 = li_creative_lastbreak[li][cr1]
 		t2 = li_creative_lastbreak[li][cr2]
@@ -100,9 +105,12 @@ def getClicksAndImps(li, cr, date):
 	imps = 0
 	for i in date_data.iterrows():
 		if i[1]["line_item_id"] == li and i[1]["creative_id"] == cr:
-			if i[1]["date"] >= date:
-				clicks += i[1]["clicks"]
-				imps += i[1]["imps"]
+			try:
+				if i[1]["date"] >= date:
+					clicks += i[1]["clicks"]
+					imps += i[1]["imps"]
+			except TypeError:
+				print i
 	return [clicks, imps]
 
 decision_dict = {}
@@ -131,3 +139,56 @@ for i in lineitems_dict: #lineitem
 				print "-----"
 				
 print decision_dict
+
+#Print and output to necessary places
+
+def add_to_db(row, line_item_id):
+        db.execute("insert into pvalue_test (line_item_id,creative1,creative2,zscore,pvalue,addressed) values (" + str(line_item_id) + "," + str(row["creative1"]) + "," + str(row["creative2"]) + "," + str(row["p_value"]) + "," + str(row["z_score"]) + ",0)")
+
+def already_done(row, line_item_id):
+        now = datetime.datetime.fromtimestamp(time.time())
+        for i in done_data.iterrows():
+                if i[1]["line_item_id"] == line_item_id and i[1]["creative1"] == row["creative1"] and i[1]["creative2"] == row["creative2"]:
+                        if (now-i[1]["timestamp"]).days < 7:
+                                return True
+        return False
+
+done_data = db.select_dataframe("select * from pvalue_test")
+
+
+
+output_str = ""
+for i in decision_dict:
+	for j in decision_dict[i]:
+		if j["p_value"] < .01:
+                        if not already_done(j, i):
+                                add_to_db(j, i)
+                                print "Line Item " + str(i) + " has creatives with a statistical difference of p_value " + str(j["p_value"])
+                                output_str += "Line Item " + str(i) + " has creatives with a statistical difference of p_value " + str(j["p_value"])
+                                output_str += "<br/>"
+                                if j["z_score"] > 0:
+                                        print "Winner: http://ib.adnxs.com/cr?id=" + str(j["creative1"])
+                                        output_str += "Winner: http://ib.adnxs.com/cr?id=" + str(j["creative1"])
+                                        output_str += "<br/>"
+                                        print "Loser: http://ib.adnxs.com/cr?id=" + str(j["creative2"])
+                                        output_str += "Loser: http://ib.adnxs.com/cr?id=" + str(j["creative2"])
+                                else:
+                                        print "Winner: http://ib.adnxs.com/cr?id=" + str(j["creative2"])
+                                        output_str += "Winner: http://ib.adnxs.com/cr?id=" + str(j["creative2"])
+                                        output_str += "<br/>"
+                                        print "Loser: http://ib.adnxs.com/cr?id=" + str(j["creative1"])
+                                        output_str += "Loser: http://ib.adnxs.com/cr?id=" + str(j["creative1"])
+                                print "-----"
+                                output_str += "<br/><br/>"
+
+if output_str != "":
+        print "emailing..."
+	sg = sendgrid.SendGridClient('ronjacobson', 'rockerbox13')
+	message = sendgrid.Mail()
+	message.add_to(['Lee Yanco <lee@rockerbox.com>','Rick O\'Toole <rick@rockerbox.com>','Alan Kwok <alan@rockerbox.com>','Will West <will@rockerbox.com>'])
+	message.set_subject('Creative pTest Report')
+	message.set_html(output_str)
+	message.set_from('reporting <reporting@rockerbox.com>')
+	status, msg = sg.send(message)
+        print "sent!"
+
