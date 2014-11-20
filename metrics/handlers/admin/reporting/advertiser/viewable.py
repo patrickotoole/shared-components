@@ -27,7 +27,8 @@ OPTIONS = {
                 "campaign":"none",
                 "spent": "cpm",
                 "tag":"none",
-                "seller":"none"
+                "seller":"none",
+                "timeseries":"timeseries"
             }
         }
     },
@@ -107,10 +108,12 @@ OPTIONS = {
             "groups" : [],
             "fields" : ["served","loaded","visible","spent"],
             "formatters" : {
+                "seller":"none",
                 "campaign":"none",
                 "spent": "cpm",
                 "venue": "none",
-                "tag": "none"
+                "tag": "none",
+                "timeseries":"timeseries"
             }
         }
     },
@@ -128,6 +131,7 @@ OPTIONS = {
         }
     }
 }
+
 
 # s/\(.\{-}\) .*/    "\1":"\1",/g
 GROUPS = {
@@ -218,7 +222,7 @@ class AdvertiserViewableHandler(AdminReportingBaseHandler):
                 data = self.reformat_domain_data(data)
 
             o = Convert.df_to_json(data)
-            self.render("admin/reporting/target_list.html",data=o)
+            self.render("admin/reporting/timeseries.html",data=o)
 
         yield default, (data,)
 
@@ -242,7 +246,23 @@ class AdvertiserViewableHandler(AdminReportingBaseHandler):
         if "domain" in u.columns:
             u = self.reformat_domain_data(u)
 
-        if groupby and wide:
+        if groupby and wide == "timeseries":
+
+            def timeseries_group(x):
+                _v = x[val_cols].T.to_dict().values()
+                return _v
+                
+            group_cols = [ i for i in groupby if i != "date" and i in u.columns]
+            val_cols = [ i for i in u.columns if i not in group_cols]
+
+            grouped = u.groupby(group_cols).sum()
+            
+            u = u.groupby(group_cols).apply(timeseries_group)
+            grouped['timeseries'] = u
+            u = grouped.reset_index()
+ 
+
+        elif groupby and wide:
             u = u.set_index(groupby).sort_index()
             u = u.stack().unstack(wide)
 
@@ -290,27 +310,37 @@ class AdvertiserViewableHandler(AdminReportingBaseHandler):
     
 
     @tornado.web.asynchronous
-    def get(self,meta=False):
+    def get(self,meta=""):
+
         formatted = self.get_argument("format",False)
         include = self.get_argument("include","").split(",")
         wide = self.get_argument("wide",False)
 
         meta_group = self.get_meta_group()
-        print meta_group
         meta_data = self.get_meta_data(meta_group,include)
         meta_data["is_wide"] = wide
 
         fields = self.get_argument("fields","").split(",")
+        has_fields = len(fields) > 0 and len(fields[0]) > 0
 
-        meta_data['fields'] = fields if len(fields) > 0 and len(fields[0]) > 0 else meta_data.get("fields",[])
+        if has_fields:
+            meta_data['fields'] = fields 
 
-        if meta:
+        if "meta" in meta:
+            if "timeseries" in meta:
+                meta_data['fields'] += ["timeseries"]
+                
             self.write(ujson.dumps(meta_data))
             self.finish()
 
         elif formatted:
+            groups = meta_data.get("groups",[])
+            if "timeseries" in meta:
+                wide = "timeseries"
+                groups = groups + ["date"]
+             
             params = self.make_params(
-                meta_data.get("groups",[]),
+                groups,
                 meta_data.get("fields",[]),
                 self.make_where(),
                 self.make_join(meta_data.get("static_joins",""))

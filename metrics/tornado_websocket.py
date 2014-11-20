@@ -131,7 +131,7 @@ admin_advertiser = [
 
     (r'/admin/advertiser/reporting/?', admin.reporting.AdvertiserReportingHandler, dict(db=db, hive=hive)), 
     (r'/admin/advertiser/viewable/reporting/?',admin.reporting.AdvertiserViewableHandler, dict(db=db,hive=hive)),
-    (r'/admin/advertiser/viewable/reporting/?(meta)?/?',admin.reporting.AdvertiserViewableHandler, dict(db=db,hive=hive)), 
+    (r'/admin/advertiser/viewable/reporting/?(.*?)/?',admin.reporting.AdvertiserViewableHandler, dict(db=db,hive=hive)), 
 
     (r'/admin/advertiser/summary/reporting/?',admin.reporting.AdvertiserSummaryHandler, dict(hive=hive)),
     (r'/admin/advertiser/summary/reporting/?(meta)?/?',admin.reporting.AdvertiserSummaryHandler, dict(hive=hive)),
@@ -159,7 +159,7 @@ admin_domain = [
     (r'/admin/domain/categories/reporting/?', admin.reporting.DomainCategoriesHandler, dict(db=db, api=api, hive=hive)),
     (r'/admin/domain/categories/reporting/?(meta)?/?', admin.reporting.DomainCategoriesHandler, dict(db=db, api=api, hive=hive)),
     (r'/admin/domain/reporting/?', admin.reporting.DomainHandler, dict(db=db, api=api, hive=hive)),
-    (r'/admin/domain/reporting/(timeseries)/(meta)/?', admin.reporting.DomainHandler, dict(db=db, api=api, hive=hive)),
+    #(r'/admin/domain/reporting/(timeseries)/(meta)/?', admin.reporting.DomainHandler, dict(db=db, api=api, hive=hive)),
     (r'/admin/domain/reporting/?(.*)?/?', admin.reporting.DomainHandler, dict(db=db, api=api, hive=hive))
       
 ]

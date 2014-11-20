@@ -47,6 +47,10 @@ OPTIONS = {
     } 
 }
 
+FORMATTERS = {
+    "timeseries":"timeseries"
+}
+
 GROUPS = {
     "domain": "domain",
     "seller": "seller",
@@ -101,21 +105,6 @@ class DomainHandler(AdminReportingBaseHandler):
     def get_content(self,data):
 
         def default(self,data):
-            if "domain" in data.columns:
-                data = self.reformat_domain_data(data)
-
-            o = Convert.df_to_json(data)
-            self.render("admin/reporting/target_list.html",data=o)
-
-        yield default, (data,)
-
-    @decorators.formattable
-    def get_timeseries(self,data):
-
-        def default(self,data):
-            if "domain" in data.columns:
-                data = self.reformat_domain_data(data)
-
             o = Convert.df_to_json(data)
             self.render("admin/reporting/timeseries.html",data=o)
 
@@ -126,13 +115,19 @@ class DomainHandler(AdminReportingBaseHandler):
             u = self.reformat_domain_data(u)
 
         if groupby and wide == "timeseries":
+            def timeseries_group(x):
+                _v = x[val_cols].T.to_dict().values()
+                return _v
+                
             group_cols = [ i for i in groupby if i != "date" and i in u.columns]
             val_cols = [ i for i in u.columns if i not in group_cols]
-            
-            u = u.groupby(group_cols).apply(lambda x: x[val_cols].T.to_dict().values())
-            u = u.reset_index()
-            u.rename(columns={0:"timeseries"},inplace=True)
 
+            grouped = u.groupby(group_cols).sum()
+            
+            u = u.groupby(group_cols).apply(timeseries_group)
+            grouped['timeseries'] = u
+            u = grouped.reset_index()
+             
         elif groupby and wide:
             u = u.set_index(groupby).sort_index()
             u = u.stack().unstack(wide)
@@ -176,28 +171,34 @@ class DomainHandler(AdminReportingBaseHandler):
         return default
 
     @tornado.web.asynchronous
-    def get(self,arg1=False,arg2=False):
+    def get(self,arg1=""):
         formatted = self.get_argument("format",False)
         include = self.get_argument("include","").split(",")
         meta_group = self.get_meta_group()
         meta_data = self.get_meta_data(meta_group,include)
         wide = self.get_argument("wide",False)
+        meta_data['is_wide'] = wide
 
         
 
-        if arg1 == "meta" or arg2 == "meta":
+        if "meta" in arg1:
+            if "timeseries" in arg1:
+                meta_data['fields'] += ["timeseries"]
+ 
             self.write(ujson.dumps(meta_data))
             self.finish()
 
         elif formatted:
-            if arg1 == "timeseries":
+            groups = meta_data.get("groups",[])
+            fields = meta_data.get("fields",[])
+            if "timeseries" in arg1:
                 wide = "timeseries"
-                groups = meta_data.get("groups",[]) + ["date"]
+                groups += ["date"]
          
 
             params = self.make_params(
                 groups,
-                meta_data.get("fields",[]),
+                fields,
                 self.make_where(),
                 self.make_join(meta_data.get("static_joins",""))
             )
@@ -206,9 +207,6 @@ class DomainHandler(AdminReportingBaseHandler):
                 meta_data.get("groups",[]),
                 wide
             )
-
-        elif arg1 == "timeseries":
-            self.get_timeseries(pandas.DataFrame())
 
         else:
             self.get_content(pandas.DataFrame())

@@ -85,11 +85,10 @@ FORMATTER = {
     },
     "timeseries": function(value,key,object) {
 
-      
-
-      if (value) {
-        var _id = Object.keys(object).map(function(x){return typeof(object[x]) == "string" ? object[x] : ""}).join("-").replace(/\./g,"").replace(/&/g,"")
+      if (Array.isArray(value)) {
+        var _id = "ts-"+Object.keys(object).map(function(x){return typeof(object[x]) == "string" ? object[x] : ""}).join("-").replace(/\./g,"").replace(/&/g,"")
         var values = value.map(function(x){x.date = new Date("20"+x.date); return x})
+        var keys = Object.keys(object[key][0]).filter(function(x){return x != "date"})
         setTimeout(function(){
           data_graphic({
               data: values,
@@ -97,7 +96,7 @@ FORMATTER = {
               height: 150,
               target: '#' + _id,
               x_accessor: 'date',
-              y_accessor: 'num_auctions',
+              y_accessor: keys
           })
         },0)
         
@@ -193,7 +192,6 @@ var groupedTableWrapper = function(crsWrapped,data_table_id,show_more) {
       .size(MAX_SIZE) 
       .columns(self.buildColumns())
       .sortBy(function (d) {
-
         if (self.crsWrapped.meta.is_wide == false) {
           return d[self.crsWrapped.defaultValueName]
         } else {
