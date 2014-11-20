@@ -355,8 +355,9 @@ var buildSegments = function(obj,name,show_id,hide_on_load) {
       .html(function(x){
         if (x.segment_description) 
           x.segment_description = x.segment_description
-            .replace("[user_identifier]","<span style='color:red'>[user_identifier]</span>")
-          return x.segment_description
+            .replace(/\[user_identifier\]/g,"<span style='color:red'>[user_identifier]</span>")
+            .replace(/\[variable_holder\]/g,"<span style='color:red'>[variable_holder]</span>")
+        return x.segment_description
       })  
       
   var segment_details = segments
@@ -369,7 +370,8 @@ var buildSegments = function(obj,name,show_id,hide_on_load) {
                 .replace(/</g,'&lt;')
                 .replace(/"/g,'&quot;') 
                 .replace(/\n/g,'<br/>')
-                .replace("[user_identifier]","<span style='color:red'>[user_identifier]</span>") 
+                .replace(/\[user_identifier\]/g,"<span style='color:red'>[user_identifier]</span>") 
+                .replace(/\[variable_holder\]/g,"<span style='color:red'>[variable_holder]</span>")
     }) 
 }
 

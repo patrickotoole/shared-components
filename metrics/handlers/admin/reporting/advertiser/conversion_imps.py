@@ -83,6 +83,7 @@ GROUPS = {
     "serv_date": "serv_date",
     "serv_hour": "serv_hour",
     "uid": "uid",
+    "user_agent": "user_agent",
     "conv_id": "conv_id",
     "auction_id": "auction_id",
     "segment": "segment",
@@ -90,6 +91,9 @@ GROUPS = {
     "order_id": "order_id",
     "domain": "domain",
     "seller": "seller",
+    "tag": "tag",
+    "venue": "venue",
+    "clicked": "clicked",
     "campaign": "campaign",
     "is_rockerbox": "auction_id IS NOT NULL",
     "attributed_to": "CASE WHEN auction_id IS NOT NULL THEN 'Rockerbox' ELSE 'Other' END"
@@ -111,7 +115,8 @@ WHERE = {
     "segment": "segment = '%(segment)s'",
     "conv_id": "conv_id = '%(conv_id)s'",
     "is_rockerbox": "CASE WHEN lower('%(is_rockerbox)s') = 'true' THEN auction_id IS NOT NULL ELSE auction_id IS NULL END",
-    "attributed_to": "CASE WHEN '%(attributed_to)s' = 'Rockerbox' THEN auction_id IS NOT NULL ELSE auction_id IS NULL END"
+    "attributed_to": "CASE WHEN lower('%(attributed_to)s') = 'rockerbox' THEN auction_id IS NOT NULL ELSE auction_id IS NULL END",
+    "clicked": "CASE WHEN lower('%(clicked)s') = 'true' THEN clicked ELSE NOT CLICKED END"
     }
 
 class ConversionImpsHandler(AdminReportingBaseHandler):
