@@ -88,7 +88,7 @@ FORMATTER = {
       
 
       if (value) {
-        var _id = Object.keys(object).map(function(x){return typeof(object[x]) == "string" ? object[x] : ""}).join("-").replace(".","").replace("&","")
+        var _id = Object.keys(object).map(function(x){return typeof(object[x]) == "string" ? object[x] : ""}).join("-").replace(/\./g,"").replace(/&/g,"")
         var values = value.map(function(x){x.date = new Date("20"+x.date); return x})
         setTimeout(function(){
           data_graphic({
