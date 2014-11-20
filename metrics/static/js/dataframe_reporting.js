@@ -82,6 +82,28 @@ FORMATTER = {
       if (x !== undefined) {
         return "<span data-pk='"+h.__id__+"' data-name='"+k+"'class='editable'>"+x+"</span>" 
       }
+    },
+    "timeseries": function(value,key,object) {
+
+      var _id = Object.keys(object).map(function(x){return typeof(object[x]) == "string" ? object[x] : ""}).join("-").replace(".","").replace("&","")
+
+      if (value) {
+        values = value.map(function(x){x.date = new Date("20"+x.date); return x})
+        setTimeout(function(){
+          data_graphic({
+              data: values,
+              width: 600,
+              height: 150,
+              target: '#' + _id,
+              x_accessor: 'date',
+              y_accessor: 'num_auctions',
+          })
+        },1)
+        
+        return "<span id='"+_id+"'></span>"
+      } else {
+        return ""
+      }
     }
 }
 
@@ -219,7 +241,7 @@ var groupedTableWrapper = function(crsWrapped,data_table_id,show_more) {
       $(self.headers.slice(1)).each(function(i,f){
         s.append("td")
           .text(function(x){
-            return defaultFormatColumn(f, hash[x.key])
+            return defaultFormatColumn.bind(this)(f, hash[x.key])
           })
           
       })

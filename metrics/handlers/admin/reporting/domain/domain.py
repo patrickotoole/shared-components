@@ -18,14 +18,20 @@ OPTIONS = {
     "default": {
         "meta": {
             "groups" : ["domain"],
-            "fields" : ["num_auctions"]
+            "fields" : ["num_auctions"],
+            "formatters": {
+                "timeseries":"timeseries"    
+            }
         }
     },
     "type": {
         "meta": {
             "groups" : ["type","domain"],
             "fields" : ["num_auctions"],
-            "static_joins" : JOIN["static_type"]
+            "static_joins" : JOIN["static_type"],
+            "formatters": {
+                "timeseries":"timeseries"    
+            }
         },
 
     }
@@ -110,10 +116,9 @@ class DomainHandler(AdminReportingBaseHandler):
             u = self.reformat_domain_data(u)
 
         if groupby and wide == "timeseries":
-            group_cols = [ i for i in groupby if i != "date"]
+            group_cols = [ i for i in groupby if i != "date" and i in u.columns]
             val_cols = [ i for i in u.columns if i not in group_cols]
             
-
             u = u.groupby(group_cols).apply(lambda x: x[val_cols].T.to_dict().values())
             u = u.reset_index()
             u.rename(columns={0:"timeseries"},inplace=True)
@@ -134,7 +139,7 @@ class DomainHandler(AdminReportingBaseHandler):
 
         query_list = [
             "set shark.map.tasks=44", 
-            "set mapred.reduce.tasks=0",
+            "set mapred.reduce.tasks=4",
             query
         ]
 
