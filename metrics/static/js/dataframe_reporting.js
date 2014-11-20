@@ -85,10 +85,11 @@ FORMATTER = {
     },
     "timeseries": function(value,key,object) {
 
-      var _id = Object.keys(object).map(function(x){return typeof(object[x]) == "string" ? object[x] : ""}).join("-").replace(".","").replace("&","")
+      
 
       if (value) {
-        values = value.map(function(x){x.date = new Date("20"+x.date); return x})
+        var _id = Object.keys(object).map(function(x){return typeof(object[x]) == "string" ? object[x] : ""}).join("-").replace(".","").replace("&","")
+        var values = value.map(function(x){x.date = new Date("20"+x.date); return x})
         setTimeout(function(){
           data_graphic({
               data: values,
@@ -98,7 +99,7 @@ FORMATTER = {
               x_accessor: 'date',
               y_accessor: 'num_auctions',
           })
-        },1)
+        },0)
         
         return "<span id='"+_id+"'></span>"
       } else {

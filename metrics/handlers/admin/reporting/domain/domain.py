@@ -34,7 +34,17 @@ OPTIONS = {
             }
         },
 
-    }
+    },
+    "none": {
+        "meta": {
+            "groups" : [],
+            "fields" : ["num_auctions"],
+            "formatters": {
+                "timeseries":"timeseries"    
+            }
+        },
+
+    } 
 }
 
 GROUPS = {
@@ -171,24 +181,30 @@ class DomainHandler(AdminReportingBaseHandler):
         include = self.get_argument("include","").split(",")
         meta_group = self.get_meta_group()
         meta_data = self.get_meta_data(meta_group,include)
+        wide = self.get_argument("wide",False)
 
+        
 
         if arg1 == "meta" or arg2 == "meta":
             self.write(ujson.dumps(meta_data))
             self.finish()
 
         elif formatted:
+            if arg1 == "timeseries":
+                wide = "timeseries"
+                groups = meta_data.get("groups",[]) + ["date"]
+         
+
             params = self.make_params(
-                meta_data.get("groups",[]),
+                groups,
                 meta_data.get("fields",[]),
                 self.make_where(),
                 self.make_join(meta_data.get("static_joins",""))
             )
-            print params
             self.get_data(
                 self.make_query(params),
                 meta_data.get("groups",[]),
-                self.get_argument("wide",False)
+                wide
             )
 
         elif arg1 == "timeseries":
