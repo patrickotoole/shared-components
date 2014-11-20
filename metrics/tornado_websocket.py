@@ -155,10 +155,13 @@ admin_advertiser = [
 ]
 
 admin_domain = [
+    (r'/admin/optimization/domain/?', admin.optimization.DomainListHandler, dict(db=db, api=api, hive=hive)), 
     (r'/admin/domain/categories/reporting/?', admin.reporting.DomainCategoriesHandler, dict(db=db, api=api, hive=hive)),
     (r'/admin/domain/categories/reporting/?(meta)?/?', admin.reporting.DomainCategoriesHandler, dict(db=db, api=api, hive=hive)),
     (r'/admin/domain/reporting/?', admin.reporting.DomainHandler, dict(db=db, api=api, hive=hive)),
-    (r'/admin/domain/reporting/?(meta)?/?', admin.reporting.DomainHandler, dict(db=db, api=api, hive=hive)) 
+    (r'/admin/domain/reporting/(timeseries)/(meta)/?', admin.reporting.DomainHandler, dict(db=db, api=api, hive=hive)),
+    (r'/admin/domain/reporting/?(.*)?/?', admin.reporting.DomainHandler, dict(db=db, api=api, hive=hive))
+      
 ]
 
 admin_reporting = [

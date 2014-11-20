@@ -93,11 +93,32 @@ class DomainHandler(AdminReportingBaseHandler):
 
         yield default, (data,)
 
+    @decorators.formattable
+    def get_timeseries(self,data):
+
+        def default(self,data):
+            if "domain" in data.columns:
+                data = self.reformat_domain_data(data)
+
+            o = Convert.df_to_json(data)
+            self.render("admin/reporting/timeseries.html",data=o)
+
+        yield default, (data,)
+
     def format_data(self,u,groupby,wide):
         if "domain" in u.columns:
             u = self.reformat_domain_data(u)
 
-        if groupby and wide:
+        if groupby and wide == "timeseries":
+            group_cols = [ i for i in groupby if i != "date"]
+            val_cols = [ i for i in u.columns if i not in group_cols]
+            
+
+            u = u.groupby(group_cols).apply(lambda x: x[val_cols].T.to_dict().values())
+            u = u.reset_index()
+            u.rename(columns={0:"timeseries"},inplace=True)
+
+        elif groupby and wide:
             u = u.set_index(groupby).sort_index()
             u = u.stack().unstack(wide)
 
@@ -140,13 +161,14 @@ class DomainHandler(AdminReportingBaseHandler):
         return default
 
     @tornado.web.asynchronous
-    def get(self,meta=False):
+    def get(self,arg1=False,arg2=False):
         formatted = self.get_argument("format",False)
         include = self.get_argument("include","").split(",")
         meta_group = self.get_meta_group()
         meta_data = self.get_meta_data(meta_group,include)
 
-        if meta:
+
+        if arg1 == "meta" or arg2 == "meta":
             self.write(ujson.dumps(meta_data))
             self.finish()
 
@@ -164,7 +186,8 @@ class DomainHandler(AdminReportingBaseHandler):
                 self.get_argument("wide",False)
             )
 
+        elif arg1 == "timeseries":
+            self.get_timeseries(pandas.DataFrame())
+
         else:
             self.get_content(pandas.DataFrame())
-
- 
