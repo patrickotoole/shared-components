@@ -133,7 +133,7 @@ for i in lineitems_dict: #lineitem
 						print z
 						if i not in decision_dict:
 							decision_dict[i] = []
-						decision_dict[i].append({"creative1":cr1, "creative2": cr2, "z_score":z[0], "p_value":z[1]})
+                                                decision_dict[i].append({"creative1":cr1, "creative2": cr2, "z_score":z[0], "p_value":z[1], "creative1_clicks": ci1[0], "creative1_imps": ci1[1], "creative2_clicks": ci2[0], "creative2_imps": ci2[1], "start_date": date})
 					else:
 						print "Sample size not large enough"
 				print "-----"
@@ -143,7 +143,7 @@ print decision_dict
 #Print and output to necessary places
 
 def add_to_db(row, line_item_id):
-        db.execute("insert into pvalue_test (line_item_id,creative1,creative2,zscore,pvalue,addressed) values (" + str(line_item_id) + "," + str(row["creative1"]) + "," + str(row["creative2"]) + "," + str(row["p_value"]) + "," + str(row["z_score"]) + ",0)")
+        db.execute("insert into pvalue_test (line_item_id,creative1,creative2,zscore,pvalue,creative1_clicks,creative1_imps,creative1_ctr,creative2_clicks,creative2_imps,creative2_ctr,comparison_start_date,addressed) values (" + str(line_item_id) + "," + str(row["creative1"]) + "," + str(row["creative2"]) + "," + str(row["p_value"]) + "," + str(row["z_score"]) + "," + str(row["creative1_clicks"]) + "," + str(row["creative1_imps"]) + "," + str(float(row["creative1_clicks"])/float(row["creative1_imps"])) + "," + str(row["creative2_clicks"]) + "," + str(row["creative2_imps"]) + "," + str(float(row["creative2_clicks"])/float(row["creative2_imps"])) + ",'" + str(row["start_date"]) + "',0)")
 
 def already_done(row, line_item_id):
         now = datetime.datetime.fromtimestamp(time.time())
@@ -167,17 +167,17 @@ for i in decision_dict:
                                 output_str += "Line Item " + str(i) + " has creatives with a statistical difference of p_value " + str(j["p_value"])
                                 output_str += "<br/>"
                                 if j["z_score"] > 0:
-                                        print "Winner: http://ib.adnxs.com/cr?id=" + str(j["creative1"])
-                                        output_str += "Winner: http://ib.adnxs.com/cr?id=" + str(j["creative1"])
+                                        print "Winner (" + str(j["creative1_clicks"]) + "/" + str(j["creative1_imps"]) + "): http://ib.adnxs.com/cr?id=" + str(j["creative1"])
+                                        output_str += "Winner (" + str(j["creative1_clicks"]) + "/" + str(j["creative1_imps"]) + "): http://ib.adnxs.com/cr?id=" + str(j["creative1"])
                                         output_str += "<br/>"
-                                        print "Loser: http://ib.adnxs.com/cr?id=" + str(j["creative2"])
-                                        output_str += "Loser: http://ib.adnxs.com/cr?id=" + str(j["creative2"])
+                                        print "Loser (" + str(j["creative2_clicks"]) + "/" + str(j["creative2_imps"]) + "): http://ib.adnxs.com/cr?id=" + str(j["creative2"])
+                                        output_str += "Loser (" + str(j["creative2_clicks"]) + "/" + str(j["creative2_imps"]) + "): http://ib.adnxs.com/cr?id=" + str(j["creative2"])
                                 else:
-                                        print "Winner: http://ib.adnxs.com/cr?id=" + str(j["creative2"])
-                                        output_str += "Winner: http://ib.adnxs.com/cr?id=" + str(j["creative2"])
+                                        print "Winner (" + str(j["creative2_clicks"]) + "/" + str(j["creative2_imps"]) + "): http://ib.adnxs.com/cr?id=" + str(j["creative2"])
+                                        output_str += "Winner (" + str(j["creative2_clicks"]) + "/" + str(j["creative2_imps"]) + "): http://ib.adnxs.com/cr?id=" + str(j["creative2"])
                                         output_str += "<br/>"
-                                        print "Loser: http://ib.adnxs.com/cr?id=" + str(j["creative1"])
-                                        output_str += "Loser: http://ib.adnxs.com/cr?id=" + str(j["creative1"])
+                                        print "Loser (" + str(j["creative1_clicks"]) + "/" + str(j["creative1_imps"]) + "): http://ib.adnxs.com/cr?id=" + str(j["creative1"])
+                                        output_str += "Loser (" + str(j["creative1_clicks"]) + "/" + str(j["creative1_imps"]) + "): http://ib.adnxs.com/cr?id=" + str(j["creative1"])
                                 print "-----"
                                 output_str += "<br/><br/>"
 
