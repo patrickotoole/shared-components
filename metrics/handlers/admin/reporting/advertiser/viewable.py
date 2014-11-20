@@ -300,6 +300,10 @@ class AdvertiserViewableHandler(AdminReportingBaseHandler):
         meta_data = self.get_meta_data(meta_group,include)
         meta_data["is_wide"] = wide
 
+        fields = self.get_argument("fields","").split(",")
+
+        meta_data['fields'] = fields if len(fields) > 0 and len(fields[0]) > 0 else meta_data.get("fields",[])
+
         if meta:
             self.write(ujson.dumps(meta_data))
             self.finish()
