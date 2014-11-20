@@ -133,7 +133,7 @@ for i in lineitems_dict: #lineitem
 						print z
 						if i not in decision_dict:
 							decision_dict[i] = []
-                                                decision_dict[i].append({"creative1":cr1, "creative2": cr2, "z_score":z[0], "p_value":z[1], "creative1_clicks": ci1[0], "creative1_imps": ci1[1], "creative2_clicks": ci2[0], "creative2_imps": ci2[1], "start_date": date})
+						decision_dict[i].append({"creative1":cr1, "creative2": cr2, "z_score":z[0], "p_value":z[1], "creative1_clicks": ci1[0], "creative1_imps": ci1[1], "creative2_clicks": ci2[0], "creative2_imps": ci2[1], "start_date": date})
 					else:
 						print "Sample size not large enough"
 				print "-----"
@@ -143,46 +143,57 @@ print decision_dict
 #Print and output to necessary places
 
 def add_to_db(row, line_item_id):
-        db.execute("insert into pvalue_test (line_item_id,creative1,creative2,zscore,pvalue,creative1_clicks,creative1_imps,creative1_ctr,creative2_clicks,creative2_imps,creative2_ctr,comparison_start_date,addressed) values (" + str(line_item_id) + "," + str(row["creative1"]) + "," + str(row["creative2"]) + "," + str(row["p_value"]) + "," + str(row["z_score"]) + "," + str(row["creative1_clicks"]) + "," + str(row["creative1_imps"]) + "," + str(float(row["creative1_clicks"])/float(row["creative1_imps"])) + "," + str(row["creative2_clicks"]) + "," + str(row["creative2_imps"]) + "," + str(float(row["creative2_clicks"])/float(row["creative2_imps"])) + ",'" + str(row["start_date"]) + "',0)")
+	db.execute("insert into pvalue_test (line_item_id,creative1,creative2,zscore,pvalue,creative1_clicks,creative1_imps,creative1_ctr,creative2_clicks,creative2_imps,creative2_ctr,comparison_start_date,addressed) values (" + str(line_item_id) + "," + str(row["creative1"]) + "," + str(row["creative2"]) + "," + str(row["z_score"]) + "," + str(row["p_value"]) + "," + str(row["creative1_clicks"]) + "," + str(row["creative1_imps"]) + "," + str(float(row["creative1_clicks"])/float(row["creative1_imps"])) + "," + str(row["creative2_clicks"]) + "," + str(row["creative2_imps"]) + "," + str(float(row["creative2_clicks"])/float(row["creative2_imps"])) + ",'" + str(row["start_date"]) + "',0)")
 
 def already_done(row, line_item_id):
-        now = datetime.datetime.fromtimestamp(time.time())
-        for i in done_data.iterrows():
-                if i[1]["line_item_id"] == line_item_id and i[1]["creative1"] == row["creative1"] and i[1]["creative2"] == row["creative2"]:
-                        if (now-i[1]["timestamp"]).days < 7:
-                                return True
-        return False
+	now = datetime.datetime.fromtimestamp(time.time())
+	for i in done_data.iterrows():
+		if i[1]["line_item_id"] == line_item_id and i[1]["creative1"] == row["creative1"] and i[1]["creative2"] == row["creative2"]:
+			if (now-i[1]["timestamp"]).days < 7:
+				return True
+	return False
 
 done_data = db.select_dataframe("select * from pvalue_test")
 
 
 
 output_str = ""
+copypaste_dict = {}
 for i in decision_dict:
 	for j in decision_dict[i]:
 		if j["p_value"] < .01:
-                        if not already_done(j, i):
-                                add_to_db(j, i)
-                                print "Line Item " + str(i) + " has creatives with a statistical difference of p_value " + str(j["p_value"])
-                                output_str += "Line Item " + str(i) + " has creatives with a statistical difference of p_value " + str(j["p_value"])
-                                output_str += "<br/>"
-                                if j["z_score"] > 0:
-                                        print "Winner (" + str(j["creative1_clicks"]) + "/" + str(j["creative1_imps"]) + "): http://ib.adnxs.com/cr?id=" + str(j["creative1"])
-                                        output_str += "Winner (" + str(j["creative1_clicks"]) + "/" + str(j["creative1_imps"]) + "): http://ib.adnxs.com/cr?id=" + str(j["creative1"])
-                                        output_str += "<br/>"
-                                        print "Loser (" + str(j["creative2_clicks"]) + "/" + str(j["creative2_imps"]) + "): http://ib.adnxs.com/cr?id=" + str(j["creative2"])
-                                        output_str += "Loser (" + str(j["creative2_clicks"]) + "/" + str(j["creative2_imps"]) + "): http://ib.adnxs.com/cr?id=" + str(j["creative2"])
-                                else:
-                                        print "Winner (" + str(j["creative2_clicks"]) + "/" + str(j["creative2_imps"]) + "): http://ib.adnxs.com/cr?id=" + str(j["creative2"])
-                                        output_str += "Winner (" + str(j["creative2_clicks"]) + "/" + str(j["creative2_imps"]) + "): http://ib.adnxs.com/cr?id=" + str(j["creative2"])
-                                        output_str += "<br/>"
-                                        print "Loser (" + str(j["creative1_clicks"]) + "/" + str(j["creative1_imps"]) + "): http://ib.adnxs.com/cr?id=" + str(j["creative1"])
-                                        output_str += "Loser (" + str(j["creative1_clicks"]) + "/" + str(j["creative1_imps"]) + "): http://ib.adnxs.com/cr?id=" + str(j["creative1"])
-                                print "-----"
-                                output_str += "<br/><br/>"
+			if not already_done(j, i):
+				add_to_db(j, i)
+				if i not in  copypaste_dict:
+					copypaste_dict[i] = []
+				print "Line Item " + str(i) + " has creatives with a statistical difference of p_value " + str(j["p_value"])
+				output_str += "Line Item " + str(i) + " has creatives with a statistical difference of p_value " + str(j["p_value"])
+				output_str += "<br/>"
+				if j["z_score"] > 0:
+					print "Winner (" + str(j["creative1_clicks"]) + "/" + str(j["creative1_imps"]) + "): http://ib.adnxs.com/cr?id=" + str(j["creative1"])
+					output_str += "Winner (" + str(j["creative1_clicks"]) + "/" + str(j["creative1_imps"]) + "): http://ib.adnxs.com/cr?id=" + str(j["creative1"])
+					output_str += "<br/>"
+					print "Loser (" + str(j["creative2_clicks"]) + "/" + str(j["creative2_imps"]) + "): http://ib.adnxs.com/cr?id=" + str(j["creative2"])
+					output_str += "Loser (" + str(j["creative2_clicks"]) + "/" + str(j["creative2_imps"]) + "): http://ib.adnxs.com/cr?id=" + str(j["creative2"])
+					copypaste_dict[i].append(j["creative2"])
+				else:
+					print "Winner (" + str(j["creative2_clicks"]) + "/" + str(j["creative2_imps"]) + "): http://ib.adnxs.com/cr?id=" + str(j["creative2"])
+					output_str += "Winner (" + str(j["creative2_clicks"]) + "/" + str(j["creative2_imps"]) + "): http://ib.adnxs.com/cr?id=" + str(j["creative2"])
+					output_str += "<br/>"
+					print "Loser (" + str(j["creative1_clicks"]) + "/" + str(j["creative1_imps"]) + "): http://ib.adnxs.com/cr?id=" + str(j["creative1"])
+					output_str += "Loser (" + str(j["creative1_clicks"]) + "/" + str(j["creative1_imps"]) + "): http://ib.adnxs.com/cr?id=" + str(j["creative1"])
+					copypaste_dict[i].append(j["creative1"])
+				print "-----"
+				output_str += "<br/><br/>"
+
 
 if output_str != "":
-        print "emailing..."
+	output_str += "Line item: [Creatives] to remove<br/>"
+	copypaste_str = ""
+	for i in copypaste_dict:
+		copypaste_str += str(i) + ": " + str(copypaste_dict[i]) + "<br/>" 
+	output_str += copypaste_str
+	print "emailing..."
 	sg = sendgrid.SendGridClient('ronjacobson', 'rockerbox13')
 	message = sendgrid.Mail()
 	message.add_to(['Lee Yanco <lee@rockerbox.com>','Rick O\'Toole <rick@rockerbox.com>','Alan Kwok <alan@rockerbox.com>','Will West <will@rockerbox.com>'])
@@ -190,5 +201,5 @@ if output_str != "":
 	message.set_html(output_str)
 	message.set_from('reporting <reporting@rockerbox.com>')
 	status, msg = sg.send(message)
-        print "sent!"
+	print "sent!"
 
