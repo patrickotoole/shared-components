@@ -139,6 +139,7 @@ class VenueAPI(object):
         compiled_url = URL % (campaign_string,duration,self.advertiser_name)
 
         logging.info(RQ_MSG % (campaign_string,duration)) 
+        print compiled_url
         df = self.rb_api.get_report(compiled_url)
         logging.info(LN_MSG % len(df))
 

@@ -82,6 +82,28 @@ FORMATTER = {
       if (x !== undefined) {
         return "<span data-pk='"+h.__id__+"' data-name='"+k+"'class='editable'>"+x+"</span>" 
       }
+    },
+    "timeseries": function(value,key,object) {
+
+      if (Array.isArray(value)) {
+        var _id = "ts-"+Object.keys(object).map(function(x){return typeof(object[x]) == "string" ? object[x] : ""}).join("-").replace(/\./g,"").replace(/&/g,"")
+        var values = value.map(function(x){x.date = new Date("20"+x.date); return x})
+        var keys = Object.keys(object[key][0]).filter(function(x){return x != "date"})
+        setTimeout(function(){
+          data_graphic({
+              data: values,
+              width: 600,
+              height: 150,
+              target: '#' + _id,
+              x_accessor: 'date',
+              y_accessor: keys
+          })
+        },0)
+        
+        return "<span id='"+_id+"'></span>"
+      } else {
+        return ""
+      }
     }
 }
 
@@ -170,7 +192,6 @@ var groupedTableWrapper = function(crsWrapped,data_table_id,show_more) {
       .size(MAX_SIZE) 
       .columns(self.buildColumns())
       .sortBy(function (d) {
-
         if (self.crsWrapped.meta.is_wide == false) {
           return d[self.crsWrapped.defaultValueName]
         } else {
@@ -219,7 +240,7 @@ var groupedTableWrapper = function(crsWrapped,data_table_id,show_more) {
       $(self.headers.slice(1)).each(function(i,f){
         s.append("td")
           .text(function(x){
-            return defaultFormatColumn(f, hash[x.key])
+            return defaultFormatColumn.bind(this)(f, hash[x.key])
           })
           
       })

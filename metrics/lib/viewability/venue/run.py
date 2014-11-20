@@ -47,7 +47,6 @@ def main():
 
         to_block = va.bad_venues
         to_block['action'] = 'bad'
-        to_block['imps'] = 0
         logging.info("Bad venues: %s" % len(va.bad_venues))
 
         if not options.skip_hidden_venues:

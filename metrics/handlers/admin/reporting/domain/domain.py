@@ -18,17 +18,37 @@ OPTIONS = {
     "default": {
         "meta": {
             "groups" : ["domain"],
-            "fields" : ["num_auctions"]
+            "fields" : ["num_auctions"],
+            "formatters": {
+                "timeseries":"timeseries"    
+            }
         }
     },
     "type": {
         "meta": {
             "groups" : ["type","domain"],
             "fields" : ["num_auctions"],
-            "static_joins" : JOIN["static_type"]
+            "static_joins" : JOIN["static_type"],
+            "formatters": {
+                "timeseries":"timeseries"    
+            }
         },
 
-    }
+    },
+    "none": {
+        "meta": {
+            "groups" : [],
+            "fields" : ["num_auctions"],
+            "formatters": {
+                "timeseries":"timeseries"    
+            }
+        },
+
+    } 
+}
+
+FORMATTERS = {
+    "timeseries":"timeseries"
 }
 
 GROUPS = {
@@ -85,11 +105,8 @@ class DomainHandler(AdminReportingBaseHandler):
     def get_content(self,data):
 
         def default(self,data):
-            if "domain" in data.columns:
-                data = self.reformat_domain_data(data)
-
             o = Convert.df_to_json(data)
-            self.render("admin/reporting/target_list.html",data=o)
+            self.render("admin/reporting/timeseries.html",data=o)
 
         yield default, (data,)
 
@@ -97,7 +114,21 @@ class DomainHandler(AdminReportingBaseHandler):
         if "domain" in u.columns:
             u = self.reformat_domain_data(u)
 
-        if groupby and wide:
+        if groupby and wide == "timeseries":
+            def timeseries_group(x):
+                _v = x[val_cols].T.to_dict().values()
+                return _v
+                
+            group_cols = [ i for i in groupby if i != "date" and i in u.columns]
+            val_cols = [ i for i in u.columns if i not in group_cols]
+
+            grouped = u.groupby(group_cols).sum()
+            
+            u = u.groupby(group_cols).apply(timeseries_group)
+            grouped['timeseries'] = u
+            u = grouped.reset_index()
+             
+        elif groupby and wide:
             u = u.set_index(groupby).sort_index()
             u = u.stack().unstack(wide)
 
@@ -113,7 +144,7 @@ class DomainHandler(AdminReportingBaseHandler):
 
         query_list = [
             "set shark.map.tasks=44", 
-            "set mapred.reduce.tasks=0",
+            "set mapred.reduce.tasks=4",
             query
         ]
 
@@ -140,31 +171,42 @@ class DomainHandler(AdminReportingBaseHandler):
         return default
 
     @tornado.web.asynchronous
-    def get(self,meta=False):
+    def get(self,arg1=""):
         formatted = self.get_argument("format",False)
         include = self.get_argument("include","").split(",")
         meta_group = self.get_meta_group()
         meta_data = self.get_meta_data(meta_group,include)
+        wide = self.get_argument("wide",False)
+        meta_data['is_wide'] = wide
 
-        if meta:
+        
+
+        if "meta" in arg1:
+            if "timeseries" in arg1:
+                meta_data['fields'] += ["timeseries"]
+ 
             self.write(ujson.dumps(meta_data))
             self.finish()
 
         elif formatted:
+            groups = meta_data.get("groups",[])
+            fields = meta_data.get("fields",[])
+            if "timeseries" in arg1:
+                wide = "timeseries"
+                groups += ["date"]
+         
+
             params = self.make_params(
-                meta_data.get("groups",[]),
-                meta_data.get("fields",[]),
+                groups,
+                fields,
                 self.make_where(),
                 self.make_join(meta_data.get("static_joins",""))
             )
-            print params
             self.get_data(
                 self.make_query(params),
                 meta_data.get("groups",[]),
-                self.get_argument("wide",False)
+                wide
             )
 
         else:
             self.get_content(pandas.DataFrame())
-
- 
