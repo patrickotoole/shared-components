@@ -2,7 +2,7 @@ BRAND_QUERY = "select external_id id, external_advertiser_id advertiser_id from 
 
 IMPS_QUERY = """
     select 
-        v3.campaign_id,
+        /*v3.campaign_id,*/
         timestamp(DATE_FORMAT(v3.date, "%%Y-%%m-%%d %%H:00:00")) date,
         sum(v3.imps) as imps,
         sum(v3.clicks) as clicks,
@@ -16,14 +16,16 @@ IMPS_QUERY = """
     where 
         v3.active=1 and 
         v3.deleted=0 and 
-        v3.external_advertiser_id =  %(advertiser_id)s   
+        v3.external_advertiser_id =  %(advertiser_id)s and
+        v3.date < SUBDATE(NOW(),1)
+        
     group by 
-        1,2
+        1/*,2*/
 """
 
 CONVERSION_QUERY = """
     select 
-        campaign_id,
+        /*campaign_id,*/
         timestamp(DATE_FORMAT(conversion_time, "%%Y-%%m-%%d %%H:00:00")) date,
         0 imps,
         0 as clicks,
@@ -36,9 +38,10 @@ CONVERSION_QUERY = """
         active=1 and 
         deleted=0 and 
         external_advertiser_id= %(advertiser_id)s  and 
-        is_valid=1 
+        is_valid=1 and
+        conversion_time < SUBDATE(NOW(),1)
     group 
-        by 1,2
+        by 1/*,2*/
 """
 
 UNION_QUERY = "%s UNION ALL (%s)" % (IMPS_QUERY, CONVERSION_QUERY)
