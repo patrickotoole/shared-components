@@ -94,13 +94,15 @@ FORMATTER = {
               data: values,
               width: 600,
               height: 150,
+              legend: keys,
+              legend_target: '#legend' + _id,
               target: '#' + _id,
               x_accessor: 'date',
               y_accessor: keys
           })
         },0)
         
-        return "<span id='"+_id+"'></span>"
+        return "<div id='legend"+_id+"'></div><span id='"+_id+"'></span>"
       } else {
         return ""
       }

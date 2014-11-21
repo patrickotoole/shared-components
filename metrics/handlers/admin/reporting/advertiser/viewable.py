@@ -125,7 +125,8 @@ OPTIONS = {
                 "campaign":"none",
                 "spent": "cpm",
                 "venue": "none",
-                "tag": "none"
+                "tag": "none",
+                "timeseries":"timeseries"
             },
             "static_joins" : JOIN["static_type"] 
         }
@@ -255,9 +256,11 @@ class AdvertiserViewableHandler(AdminReportingBaseHandler):
             group_cols = [ i for i in groupby if i != "date" and i in u.columns]
             val_cols = [ i for i in u.columns if i not in group_cols]
 
+            u = u.set_index(group_cols + ['date']).unstack('date').fillna(0).stack().reset_index()
+
             grouped = u.groupby(group_cols).sum()
             
-            u = u.groupby(group_cols).apply(timeseries_group)
+            u = u.fillna(0).groupby(group_cols).apply(timeseries_group)
             grouped['timeseries'] = u
             u = grouped.reset_index()
  
@@ -292,7 +295,9 @@ class AdvertiserViewableHandler(AdminReportingBaseHandler):
             )
 
             self.get_content(formatted)
-        except:
+        except Exception, e:
+            print e
+
             self.set_status(408, "Hive server")
             self.finish()
 
