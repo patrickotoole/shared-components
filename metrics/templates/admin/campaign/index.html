@@ -1,0 +1,120 @@
+{% autoescape None %}
+{% extends "../../clean_base.html" %}
+{% block content %}
+
+<link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/dc.css">
+<link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/chosen.css">
+<style>
+input[type="checkbox"]:disabled + label{
+  color: #ccc;
+}
+
+</style>
+
+<script type="text/javascript" src="http://rockerbox.com/js/d3.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/crossfilter.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/dc.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/colorbrewer.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/reporting.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/chosen.js"></script>
+<script type="text/javascript" src="/static/js/dataframe_reporting.js"></script> 
+
+<div class='container'>
+
+
+
+<div class="row">
+  <div class="col-sm-9">
+    <h4>Edit multiple appnexus objects by campaign</h4>
+    <form id="form" role="form" ></form>
+    <script>
+        
+      var form = d3.select("#form")
+
+      form
+        .append("div")
+        .classed("input-group",true)
+        .append("label")
+        .text("campaign ids")
+        .append("input")
+        .attr("name","campaign_ids")
+        .classed("form-control",true) 
+
+      var select = form
+        .append("div")
+        .classed("input-group",true)
+        .append("label")
+        .text("object to edit")
+        .append("select")
+        .attr("name","object")
+        .classed("form-control",true) 
+
+      select
+        .append("option")
+        .text("campaign")
+
+      select
+        .append("option")
+        .text("profile")
+
+      select
+        .append("option")
+        .text("line item")
+       
+      form
+        .append("div")
+        .classed("input-group",true) 
+        .append("label")
+        .text("content to put")
+        .append("textarea")
+        .attr("name","content")
+        .classed("form-control",true)
+        .attr("rows",8)
+
+      form
+        .append("div")
+        .classed("input-group",true) 
+        .append("button")
+        .attr("type","submit")
+        .text("Submit")
+        .classed("btn btn-default form-control",true)
+        .on("click",function(e){
+          d3.event.preventDefault()
+          submit(this)    
+        })
+       
+
+
+      var send_data = function(json_string,cb) {
+        $.ajax({
+          type: "PUT",
+          dataType: "json",
+          url: "/admin/appnexus/campaign", 
+          data: json_string, 
+          success: function(last){ 
+            if (cb) cb(last)
+          },
+          failure: function(last) {
+            console.log(last)
+          }
+        })
+      }
+
+      var submit = function(e){
+        d3.event.preventDefault()
+        var serialized = $(e).parents("form").serializeObject()
+        serialized['campaign_ids'] = serialized['campaign_ids'].split(",")
+        var stringified = JSON.stringify(serialized)
+        send_data(stringified)
+        return false;
+      }
+ 
+      
+      </script>
+  </div>
+</div>
+
+</div>
+<script src="http://rockerbox.com/js/jquery.serialize-object.js"></script>
+
+{% end %}   
