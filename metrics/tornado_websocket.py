@@ -1,3 +1,4 @@
+
 import tornado.ioloop
 import tornado.web
 import tornado.websocket
@@ -154,13 +155,17 @@ admin_advertiser = [
     (r'/admin/advertiser/?(.*?)',admin.scripts.AdvertiserHandler, dict(db=db,api=api)) 
 ]
 
+admin_appnexus = [
+    (r'/admin/appnexus/campaign/?', admin.appnexus.CampaignHandler, dict(db=db, api=api))
+]
+
 admin_domain = [
     (r'/admin/optimization/domain/?', admin.optimization.DomainListHandler, dict(db=db, api=api, hive=hive)), 
     (r'/admin/domain/categories/reporting/?', admin.reporting.DomainCategoriesHandler, dict(db=db, api=api, hive=hive)),
     (r'/admin/domain/categories/reporting/?(meta)?/?', admin.reporting.DomainCategoriesHandler, dict(db=db, api=api, hive=hive)),
     (r'/admin/domain/reporting/?', admin.reporting.DomainHandler, dict(db=db, api=api, hive=hive)),
     #(r'/admin/domain/reporting/(timeseries)/(meta)/?', admin.reporting.DomainHandler, dict(db=db, api=api, hive=hive)),
-    (r'/admin/domain/reporting/?(.*)?/?', admin.reporting.DomainHandler, dict(db=db, api=api, hive=hive))
+    (r'/admin/domain/reporting/?(.*?)/?', admin.reporting.DomainHandler, dict(db=db, api=api, hive=hive))
       
 ]
 
@@ -203,7 +208,7 @@ static = [
 
 dirname = os.path.dirname(os.path.realpath(__file__))
 app = tornado.web.Application(
-    _streaming + admin_scripts + admin_reporting + admin_domain + reporting + static + index,
+    _streaming + admin_scripts + admin_reporting + admin_domain + reporting + static + index + admin_appnexus,
     template_path= dirname + "/templates",
     debug=True,
     cookie_secret="rickotoole",
