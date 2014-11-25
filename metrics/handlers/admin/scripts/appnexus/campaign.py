@@ -19,6 +19,9 @@ class CampaignHandler(tornado.web.RequestHandler):
     @decorators.deferred
     def defer_put_object(self,url,data):
         response = self.api.put(url,data).json['response']
+        print response
+        import time
+        time.sleep(1)
         return response
         
 
@@ -46,6 +49,9 @@ class CampaignHandler(tornado.web.RequestHandler):
                 obj['profile'] =  {k:v for k,v in profile.iteritems() if k in fields} 
             if "line_item" in include: 
                 obj['line-item'] =  {k:v for k,v in line_item.iteritems() if k in fields} 
+
+        import time
+        time.sleep(1.1)
              
         return obj
 
@@ -65,7 +71,8 @@ class CampaignHandler(tornado.web.RequestHandler):
         campaigns = []
         for _id in _ids:
             campaign = yield self.defer_get_campaign(_id,include,fields)
-            campaigns += [campaign]
+            if campaign is not None:
+                campaigns += [campaign] 
 
         callback(campaigns)
 
@@ -87,7 +94,7 @@ class CampaignHandler(tornado.web.RequestHandler):
         responses = []
         for campaign in campaigns:
             c = campaign['campaign']
-            _d = "{'%s':%s}" % (object_key,data)
+            _d = """{"%s":%s}""" % (object_key,data)
             _obj = yield self.defer_put_object(url % (c[key],c['advertiser_id']),_d)
             responses += [_obj]
                      
@@ -122,6 +129,7 @@ class CampaignHandler(tornado.web.RequestHandler):
             self.set_status("404","bad content format")
             self.finish()
             return
+       
 
         put_campaign = partial(self.put_campaign,edit_object,put_string)
         

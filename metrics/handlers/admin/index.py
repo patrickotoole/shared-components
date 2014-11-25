@@ -48,6 +48,7 @@ class IndexHandler(tornado.web.RequestHandler):
         ]
         
         internal_links = [
+            ("/admin/appnexus/campaign", "Mass edit (by campaign)"), 
             ("/admin/advertiser/domain_list/streaming", "Targeting Tool"),
             ("/admin/intraweek", "Intraweek Tool"),
             ("/admin/imps/", "Segment/DMA Analysis"),
