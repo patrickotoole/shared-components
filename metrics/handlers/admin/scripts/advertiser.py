@@ -437,9 +437,8 @@ class Advertiser(object):
         try:
             placement =  response["response"]["placements"][0]["id"]
         except KeyError:
-            sleep(30)
-            count += 1
-            get_default_placement(self,publisher_id,count)
+            sleep(5*count)
+            get_default_placement(self,publisher_id,count + 1)
         return placement
  
 
