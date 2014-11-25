@@ -429,11 +429,18 @@ class Advertiser(object):
          
      
 
-    def get_default_placement(self,publisher_id):
+    def get_default_placement(self,publisher_id,count=0):
         URL = "/placement?publisher_id=%s" % publisher_id
         response = self.api.get(URL).json
-        print response
-        return response["response"]["placements"][0]["id"]
+        if count==10:
+            raise Exception("Fucked")
+        try:
+            placement =  response["response"]["placements"][0]["id"]
+        except KeyError:
+            sleep(30)
+            count += 1
+            get_default_placement(self,publisher_id,count)
+        return placement
  
 
 class AdvertiserHandler(tornado.web.RequestHandler,Advertiser):
@@ -488,7 +495,7 @@ class AdvertiserHandler(tornado.web.RequestHandler,Advertiser):
         segment_dict = self.create_segments(advertiser_id,advertiser_name,pixel_dict.keys(),pixel_dict)
     
         publisher_id = self.create_publisher(advertiser_name)
-        time.sleep(10)
+        #time.sleep(10)
         placement_id = self.get_default_placement(publisher_id)
         self.set_default_placement_reselling(placement_id) 
 
