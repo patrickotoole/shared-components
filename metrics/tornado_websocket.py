@@ -137,19 +137,22 @@ admin_advertiser = [
     (r'/admin/advertiser/summary/reporting/?',admin.reporting.AdvertiserSummaryHandler, dict(hive=hive)),
     (r'/admin/advertiser/summary/reporting/?(meta)?/?',admin.reporting.AdvertiserSummaryHandler, dict(hive=hive)),
 
-
-    
     (r'/admin/advertiser/domain_list/streaming/?',admin.scripts.TargetingHandler, dict(redis=_redis,api=api,db=db)),
     (r'/admin/advertiser/domain_list/reporting/?',admin.reporting.DomainListHandler, dict(hive=hive)),
     (r'/admin/advertiser/domain_list/reporting/?(meta)?/?',admin.reporting.DomainListHandler, dict(hive=hive)),
     (r'/admin/advertiser/domain_list/?(.*?)/?',admin.target_list.TargetListHandler, dict(api=api,db=db)),  
 
     (r'/admin/advertiser/conversion/reporting/?',admin.reporting.ConversionCheckHandler, dict(hive=hive)) ,
-    (r'/admin/advertiser/conversion/reporting/?(meta)?/?',admin.reporting.ConversionCheckHandler, dict(hive=hive)),
+    (r'/admin/advertiser/conversion/reporting/?(meta)?/?',admin.reporting.ClickCheckHandler, dict(hive=hive)),
+    (r'/admin/advertiser/click/reporting/?',admin.reporting.ClickCheckHandler, dict(hive=hive)) ,
+    (r'/admin/advertiser/click/reporting/?(meta)?/?',admin.reporting.ClickCheckHandler, dict(hive=hive)),
+
     (r'/admin/advertiser/debug/reporting/?',admin.reporting.DebugReportingHandler, dict(hive=hive)),
     (r'/admin/advertiser/debug/reporting/?(meta)?/?',admin.reporting.DebugReportingHandler, dict(hive=hive)),
     (r'/admin/advertiser/conversion/imps/reporting/?',admin.reporting.ConversionImpsHandler, dict(hive=hive)) ,
     (r'/admin/advertiser/conversion/imps/reporting/?(meta)?/?',admin.reporting.ConversionImpsHandler, dict(hive=hive)),
+    (r'/admin/advertiser/click/imps/reporting/?',admin.reporting.ClickImpsHandler, dict(hive=hive)) ,
+    (r'/admin/advertiser/click/imps/reporting/?(meta)?/?',admin.reporting.ClickImpsHandler, dict(hive=hive)),
     (r'/admin/advertiser/segment/?(.*?)/?',admin.segment.SegmentHandler, dict(db=db, api=api)), 
     (r'/admin/advertiser/viewable/?(.*?)/?',admin.advertiser.AdvertiserViewableHandler, dict(db=db,api=api)),
     (r'/admin/advertiser/?(.*?)',admin.scripts.AdvertiserHandler, dict(db=db,api=api)) 

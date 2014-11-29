@@ -9,6 +9,8 @@ from advertiser.viewable import AdvertiserViewableHandler
 from advertiser.domain_list import DomainListHandler
 from advertiser.conversion import ConversionCheckHandler
 from advertiser.conversion_imps import ConversionImpsHandler
+from advertiser.click import ClickCheckHandler
+from advertiser.click_imps import ClickImpsHandler
 from advertiser.debug import DebugReportingHandler
 from advertiser.pixel import AdvertiserPixelHandler
 from advertiser.pixel_geo import AdvertiserPixelGeoHandler
