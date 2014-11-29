@@ -196,7 +196,8 @@ WHERE = {
     "uid": "uid = '%(uid)s'",
     "experiment": "t.experiment_id = '%(experiment)s'",
     "campaign": "array_contains(map_keys(click_campaigns), '%(campaign)s')",
-    "since_last_served": "since_last_served <= '%(since_last_served)s'"
+    "since_last_served": "since_last_served <= '%(since_last_served)s'",
+    "last_campaign": "last_campaign = '%(last_campaign)s'"
     }
 
 class ClickCheckHandler(AdminReportingBaseHandler):
@@ -269,6 +270,7 @@ class ClickCheckHandler(AdminReportingBaseHandler):
         advertiser = self.get_argument("advertiser", False)
         segment = self.get_argument("segment", False)
         campaign = self.get_argument("campaign", False)
+        last_campaign = self.get_argument("last_campaign", False)
 
         if meta:
             return meta
@@ -281,6 +283,9 @@ class ClickCheckHandler(AdminReportingBaseHandler):
         
         if advertiser:
             return "advertiser"
+
+        if last_campaign:
+            return "campaign"
 
         return default
 
