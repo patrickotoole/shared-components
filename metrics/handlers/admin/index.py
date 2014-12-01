@@ -36,6 +36,13 @@ class IndexHandler(tornado.web.RequestHandler):
             ("/admin/advertiser/conversion/reporting?meta=top_domains", "Top Performing Domains")
         ]
 
+        advertiser_click_links = [
+            ("/admin/advertiser/click/reporting", "Click Reporting"),
+            ("/admin/advertiser/click/imps/reporting", "Served Imps Resulting in Clicks"),
+            ("/admin/advertiser/click/reporting?meta=bucket", "Campaign Bucket Clicks"),
+            ("/admin/advertiser/click/reporting?meta=experiment", "Experiment Clicks")
+        ]
+
         domain_links = [
             ("/admin/viewable/domain_list", "Domain List Optimization Status"),
             ("/admin/domain/categories/reporting", "Domain Volume by Category")
@@ -64,6 +71,7 @@ class IndexHandler(tornado.web.RequestHandler):
             advertiser_links=advertiser_links,
             advertiser_viewability_links=advertiser_viewability_links,
             advertiser_conversion_links = advertiser_conversion_links,
+            advertiser_click_links = advertiser_click_links,
             domain_links = domain_links,
             segment_links=segment_links
         )

@@ -150,3 +150,21 @@ FROM agg_domain_avails %(joins)s
 WHERE %(where)s
 GROUP BY %(groups)s
 """
+
+CLICK_QUERY = """
+SELECT %(fields)s
+FROM click_attribution
+%(joins)s
+WHERE 
+    %(where)s
+GROUP BY %(groups)s
+"""
+
+CLICK_IMPS_QUERY = """
+SELECT %(fields)s
+FROM served_clicked
+WHERE 
+    auction_id IS NOT NULL AND
+    %(where)s
+GROUP BY %(groups)s
+"""
