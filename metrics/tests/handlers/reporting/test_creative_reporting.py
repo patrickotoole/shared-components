@@ -13,8 +13,8 @@ import unittest
 import ujson
 import metrics.handlers.reporting as reporting
 import lib.query.MYSQL as MYSQL
-ADVERTISER_ID = "306383"
-CREATIVE_ID = "14889899"
+ADVERTISER_ID = "394850"
+CREATIVE_ID = "20308190"
 EXPECTED_KEYS = [u'imps', u'last_served', u'associated_campaigns', u'url', u'creative_id', u'conversions', u'first_served', u'clicks', u'width', u'height']
 
 CREATE_REPORTING = "create table test.v3_reporting like reporting.v4_reporting;"

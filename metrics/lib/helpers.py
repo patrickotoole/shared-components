@@ -8,6 +8,8 @@ import time
 import random
 import sys
 
+import gzip
+import cStringIO
 
 class Cast:
     @staticmethod
@@ -159,17 +161,29 @@ class Convert:
 
 class Render:
 
+    @staticmethod
+    def compressWrite(self, buf):
+        if self.request.headers.get("Accept-Encoding","").find("gzip") != "-1":
+            zbuf = cStringIO.StringIO()
+            zfile = gzip.GzipFile(mode = 'wb',  fileobj = zbuf, compresslevel = 1)
+            zfile.write(buf)
+            zfile.close()
+            self.set_header("Content-Encoding", "gzip")
+            self.write(zbuf.getvalue())
+        else:
+            self.write(buf)
+        self.finish()
+
     @staticmethod 
     def df_to_csv(self,df,*args):
         response = Convert.df_to_csv(df)
-        self.write("<pre>%s</pre>" % response)
-        self.finish()
+        response = "<pre>%s</pre>" % response
+        Render.compressWrite(self, response)
 
     @staticmethod
     def df_to_json(self,df,*args):
         response = Convert.df_to_json(df)
-        self.write(response)
-        self.finish()
+        Render.compressWrite(self, response)
         
 
 renderers = {

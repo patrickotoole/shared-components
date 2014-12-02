@@ -9,6 +9,7 @@ from lib.query.MYSQL import *
 from lib.query.HIVE import *
 import lib.query.helpers as query_helpers
 
+
 def make_run_query(err_msg):
     def run_query(fn):
         
