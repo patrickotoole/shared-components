@@ -45,3 +45,11 @@ class PaginatedConsoleAPIRequestWrapper(ConsoleAPIRequestWrapper):
             items += response[key]
             num = response['start_element'] + response['num_elements']
         return items
+
+    def put_it(self, url_params = '', obj = '', key= '', **kwargs):
+        response = self.put(url_params, obj, **kwargs).json['response']
+        items = response[key]
+        return items
+
+
+

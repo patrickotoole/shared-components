@@ -3,6 +3,7 @@ import sendgrid
 import math
 import datetime
 import time
+import json
 c = lnk.api.console
 db = lnk.dbs.reporting
 
@@ -142,8 +143,8 @@ print decision_dict
 
 #Print and output to necessary places
 
-def add_to_db(row, line_item_id):
-	db.execute("insert into pvalue_test (line_item_id,creative1,creative2,zscore,pvalue,creative1_clicks,creative1_imps,creative1_ctr,creative2_clicks,creative2_imps,creative2_ctr,comparison_start_date,addressed) values (" + str(line_item_id) + "," + str(row["creative1"]) + "," + str(row["creative2"]) + "," + str(row["z_score"]) + "," + str(row["p_value"]) + "," + str(row["creative1_clicks"]) + "," + str(row["creative1_imps"]) + "," + str(float(row["creative1_clicks"])/float(row["creative1_imps"])) + "," + str(row["creative2_clicks"]) + "," + str(row["creative2_imps"]) + "," + str(float(row["creative2_clicks"])/float(row["creative2_imps"])) + ",'" + str(row["start_date"]) + "',0)")
+def add_to_db(row, line_item_id, addressed):
+	db.execute("insert into pvalue_test (line_item_id,creative1,creative2,zscore,pvalue,creative1_clicks,creative1_imps,creative1_ctr,creative2_clicks,creative2_imps,creative2_ctr,comparison_start_date,addressed) values (" + str(line_item_id) + "," + str(row["creative1"]) + "," + str(row["creative2"]) + "," + str(row["z_score"]) + "," + str(row["p_value"]) + "," + str(row["creative1_clicks"]) + "," + str(row["creative1_imps"]) + "," + str(float(row["creative1_clicks"])/float(row["creative1_imps"])) + "," + str(row["creative2_clicks"]) + "," + str(row["creative2_imps"]) + "," + str(float(row["creative2_clicks"])/float(row["creative2_imps"])) + ",'" + str(row["start_date"]) + "'," + str(addressed) + ")")
 
 def already_done(row, line_item_id):
 	now = datetime.datetime.fromtimestamp(time.time())
@@ -152,6 +153,35 @@ def already_done(row, line_item_id):
 			if (now-i[1]["timestamp"]).days < 7:
 				return True
 	return False
+
+#Pull line item again because it would be a pain to rectify from back int he beginning, and remove any creatives via PUT
+def remove_creative(row, line_item_id):
+        #creative to remove
+        if row["z_score"] > 0:
+                creative_id = row["creative2"]
+        elif row["z_score"] < 0:
+                creative_id = row["creative1"]
+        lineitem = c.get_all_pages("/line-item?id=" + str(line_item_id),"line-item")
+        li_to_put = {}
+        li_to_put["line-item"] = {}
+        li_to_put["line-item"]["creatives"] = lineitem["creatives"]
+        advertiser = lineitem["advertiser_id"]
+
+        to_remove = -1
+        for i in range(0, len(li_to_put["line-item"]["creatives"])):
+                if li_to_put["line-item"]["creatives"][i]["id"] == creative_id:
+                        to_remove = i
+
+        if to_remove > -1:
+                li_to_put["line-item"]["creatives"].pop(to_remove)
+                resp = c.put_it("/line-item?id=" + str(line_item_id) + "&advertiser_id=" + str(advertiser), json.dumps(li_to_put), "line-item")
+                print json.dumps(li_to_put)
+                add_to_db(row, line_item_id, 1)
+        else:
+                add_to_db(row, line_item_id, 0)
+                    
+
+
 
 done_data = db.select_dataframe("select * from pvalue_test")
 
@@ -163,7 +193,7 @@ for i in decision_dict:
 	for j in decision_dict[i]:
 		if j["p_value"] < .01:
 			if not already_done(j, i):
-				add_to_db(j, i)
+                                remove_creative(j, i)
 				if i not in  copypaste_dict:
 					copypaste_dict[i] = []
 				print "Line Item " + str(i) + " has creatives with a statistical difference of p_value " + str(j["p_value"])
