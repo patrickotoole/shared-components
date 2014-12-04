@@ -114,6 +114,11 @@ admin_scripts = [
 
 ]
 
+admin_demographics = [
+    (r'/admin/census/?(.*?)/?(meta)/?', admin.demographics.CensusHandler, dict(hive=hive)),
+    (r'/admin/census/?(.*?)/?', admin.demographics.CensusHandler, dict(hive=hive))
+]
+
 _streaming = [
     (r'/streaming', streaming.streaming.IndexHandler),
     (r'/websocket', streaming.streaming.StreamingHandler, dict(db=db,buffers=buffers))

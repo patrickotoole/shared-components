@@ -18,3 +18,5 @@ from advertiser.pixel_device import AdvertiserPixelDeviceHandler
 
 from domain.categories import DomainCategoriesHandler
 from domain.domain import DomainHandler
+
+from census import AgeGenderCensusHandler
