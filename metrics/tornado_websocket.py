@@ -115,8 +115,6 @@ admin_scripts = [
 ]
 
 admin_demographics = [
-    (r'/admin/census/?(.*?)/?(meta)/?', admin.demographics.CensusHandler, dict(hive=hive)),
-    (r'/admin/census/?(.*?)/?', admin.demographics.CensusHandler, dict(hive=hive))
 ]
 
 _streaming = [
@@ -193,7 +191,10 @@ admin_reporting = [
     (r'/admin/segment/scrubbed/?',admin.scripts.ProfileHandler, dict(bidder=bidder)),  
     (r'/admin/segment/scrubbed/(.*?)',admin.scripts.ProfileHandler, dict(bidder=bidder)),
     
-    (r'/admin/imps/reporting', admin.reporting.ImpsReportingHandler, dict(db=db, api=api, hive=hive))
+    (r'/admin/imps/reporting', admin.reporting.ImpsReportingHandler, dict(db=db, api=api, hive=hive)),
+
+    (r'/admin/census/age_gender/?(.*?)/?', admin.reporting.AgeGenderCensusHandler, dict(hive=hive)),
+    (r'/admin/census/age_gender/?(.*?)/?(meta)/?', admin.reporting.AgeGenderCensusHandler, dict(hive=hive))
     
 ] + admin_advertiser
 

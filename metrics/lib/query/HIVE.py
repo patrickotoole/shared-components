@@ -168,3 +168,11 @@ WHERE
     %(where)s
 GROUP BY %(groups)s
 """
+
+CENSUS_AGE_GENDER_QUERY = """
+SELECT %(fields)s
+FROM census_age_gender a %(joins)s
+WHERE
+    %(where)s
+GROUP BY %(groups)s
+"""

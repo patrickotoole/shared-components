@@ -9,4 +9,3 @@ import segment
 import target_list
 import optimization
 import scripts.appnexus as appnexus
-import demographics
