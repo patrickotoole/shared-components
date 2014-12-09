@@ -53,6 +53,12 @@ class IndexHandler(tornado.web.RequestHandler):
             ("/admin/segment/scrubbed", "Scrubbed Segments"), 
             ("/admin/segment/reporting", "Segment Avails Reporting"),   
         ]
+
+        demographics_links = [
+            ("/admin/census/income", "Income Census Data"),
+            ("/admin/census/age_gender", "Age/Gender Census Data"),
+            ("/admin/census/race", "Race Census Data")
+        ]
         
         internal_links = [
             ("/admin/appnexus/campaign", "Mass edit (by campaign)"), 
@@ -73,5 +79,6 @@ class IndexHandler(tornado.web.RequestHandler):
             advertiser_conversion_links = advertiser_conversion_links,
             advertiser_click_links = advertiser_click_links,
             domain_links = domain_links,
-            segment_links=segment_links
+            segment_links=segment_links,
+            demographics_links = demographics_links
         )
