@@ -200,8 +200,8 @@ class RaceCensusHandler(AdminReportingBaseHandler):
                 meta_data.get("groups",[]),
                 meta_data.get("fields",[]),
                 self.make_where(date=False),
-                self.make_having(),
-                self.make_join(meta_data.get("static_joins",""))
+                self.make_join(meta_data.get("static_joins","")),
+                self.make_having()
             )
 
             self.get_data(

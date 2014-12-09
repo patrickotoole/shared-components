@@ -78,7 +78,7 @@ class AdminReportingBase(object):
 
         return meta_data
 
-    def make_params(self, groups, fields, where, having="", joins="", **kwargs):
+    def make_params(self, groups, fields, where, joins="", having="", **kwargs):
         gs = map(self.get_group, groups)
         fs = map(self.get_field, groups + fields)
 
@@ -86,8 +86,8 @@ class AdminReportingBase(object):
             "groups": ", ".join(gs),
             "fields": ", ".join(fs),
             "where": where,
-            "having": having,
-            "joins": joins
+            "joins": joins,
+            "having": having
         } 
         for i,j in kwargs.iteritems():
             params[j] = i
