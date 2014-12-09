@@ -10,25 +10,8 @@ from lib.hive.helpers import run_hive_session_deferred
 from lib.query.HIVE import CENSUS_AGE_GENDER_QUERY
 from ..base import AdminReportingBaseHandler
 
-EXAMPLE = '''
-select 
-    zip_code, 
-    min(min_age) as min_age, 
-    max(max_age) as max_age, 
-    sum(number) as number, 
-    sum(percent) as percent, 
-    max(CASE WHEN number = 0 THEN 0.0 ELSE (number*100.0) / percent END > 1000.0) as population 
-FROM census_age_gender 
-WHERE gender="both" and min_age>=18 and max_age<=29 and CASE WHEN number = 0 THEN 0.0 ELSE (number*100.0) / percent END > 1000.0 
-GROUP BY zip_code 
-ORDER BY perc desc limit 25;
-'''
-
 JOIN = {
     "ref": "JOIN (SELECT zip_code, split(max(concat(city, ',', state)),',')[1] as state, split(max(concat(city, ',', state)),',')[0] as city FROM zip_code_ref GROUP BY zip_code) b on a.zip_code = b.zip_code"
-}
-
-CONFIG = {
 }
 
 OPTIONS = {
@@ -45,7 +28,7 @@ OPTIONS = {
 
     "search" : {
         "meta": {
-            "groups": ["zip_code", "city", "state", "gender"],
+            "groups": ["zip_code", "city", "state"],
             "fields": ["min_age", "max_age", "percent", "number", "population"],
             "static_joins": JOIN["ref"],
             "formatters": {
@@ -80,27 +63,31 @@ GROUPS = {
     "max_age": "max_age"
     }
 
-
 FIELDS = {
     "min_age": "min(min_age)",
     "max_age": "max(max_age)",
     "number": "sum(number)",
     "percent": "ROUND(sum(percent), 2)",
     "avg_percent": "ROUND(avg(percent), 2)",
-    "population": "CAST(ROUND(min(CASE WHEN number = 0 THEN 0.0 ELSE (number*100.0) / percent END)) AS BIGINT)"
+    "population": "CAST(ROUND(min( ((number*100.0) / percent))) AS BIGINT)"
     }
 
 WHERE = {    
     "zip_code": "a.zip_code = '%(zip_code)s'",
     "city": "lower(b.city) like lower('%(city)s')",
-    "state": "lower(b.state) like lower('%(state)s')",
+    "state": "CASE WHEN length('%(state)s') != 2 THEN (lower(state) like lower('%(state)s')) ELSE (lower(state_abbr) like lower('%(state)s')) END",
     "gender": "gender = lower('%(gender)s')",
     "min_age": "min_age >= %(min_age)s",
     "max_age": "max_age <= %(max_age)s",
-    "race_threshold": "",
-    "gender_threshold":"",
-    "min_population": "CASE WHEN number = 0 THEN 0.0 ELSE (number*100.0) / percent END > %(min_population)s"
+    "min_total_population": "((number*100.0) / percent) > %(min_total_population)s"
     }
+
+HAVING = {
+    "min_percent": "sum(percent) >= %(min_percent)s",
+    "max_percent": "sum(percent) <= %(max_percent)s",
+    "min_number": "sum(number) >= %(min_number)s",
+    "max_number": "sum(number) <= %(max_number)s"
+}
 
 class AgeGenderCensusHandler(AdminReportingBaseHandler):
 
@@ -108,7 +95,7 @@ class AgeGenderCensusHandler(AdminReportingBaseHandler):
     WHERE = WHERE
     FIELDS = FIELDS
     GROUPS = GROUPS
-    CONFIG = CONFIG
+    HAVING = HAVING
 
     OPTIONS = OPTIONS
 
@@ -189,11 +176,11 @@ class AgeGenderCensusHandler(AdminReportingBaseHandler):
         if meta:
             return meta
 
-        if zip_code or city or state:
-            return "zip_code"
-
         if gender or min_age or max_age:
             return "search"
+
+        if zip_code or city or state:
+            return "zip_code"
 
         return default
 
@@ -213,6 +200,7 @@ class AgeGenderCensusHandler(AdminReportingBaseHandler):
                 meta_data.get("groups",[]),
                 meta_data.get("fields",[]),
                 self.make_where(date=False),
+                self.make_having(),
                 self.make_join(meta_data.get("static_joins",""))
             )
 
