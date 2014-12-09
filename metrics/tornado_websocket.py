@@ -192,10 +192,16 @@ admin_reporting = [
     (r'/admin/segment/scrubbed/(.*?)',admin.scripts.ProfileHandler, dict(bidder=bidder)),
     
     (r'/admin/imps/reporting', admin.reporting.ImpsReportingHandler, dict(db=db, api=api, hive=hive)),
-
+ 
     (r'/admin/census/age_gender/?(.*?)/?', admin.reporting.AgeGenderCensusHandler, dict(hive=hive)),
-    (r'/admin/census/age_gender/?(.*?)/?(meta)/?', admin.reporting.AgeGenderCensusHandler, dict(hive=hive))
-    
+    (r'/admin/census/age_gender/?(.*?)/?(meta)/?', admin.reporting.AgeGenderCensusHandler, dict(hive=hive)),
+
+    (r'/admin/census/income/?(.*?)/?', admin.reporting.IncomeCensusHandler, dict(hive=hive)),
+    (r'/admin/census/income/?(.*?)/?(meta)/?', admin.reporting.IncomeCensusHandler, dict(hive=hive)),
+
+    (r'/admin/census/race/?(.*?)/?', admin.reporting.RaceCensusHandler, dict(hive=hive)),
+    (r'/admin/census/race/?(.*?)/?(meta)/?', admin.reporting.RaceCensusHandler, dict(hive=hive))
+   
 ] + admin_advertiser
 
 reporting = [

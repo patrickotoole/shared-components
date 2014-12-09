@@ -20,3 +20,5 @@ from domain.categories import DomainCategoriesHandler
 from domain.domain import DomainHandler
 
 from census import AgeGenderCensusHandler
+from census import IncomeCensusHandler
+from census import RaceCensusHandler

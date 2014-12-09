@@ -173,6 +173,24 @@ CENSUS_AGE_GENDER_QUERY = """
 SELECT %(fields)s
 FROM census_age_gender a %(joins)s
 WHERE
-    %(where)s
+    %(where)s AND number > 0 AND percent > 0.0
 GROUP BY %(groups)s
+HAVING %(having)s
+"""
+
+CENSUS_INCOME_QUERY = """
+SELECT %(fields)s
+FROM zip_code_ref
+WHERE
+    %(where)s AND median_household_income is NOT NULL AND population IS NOT NULL
+GROUP BY %(groups)s
+"""
+
+CENSUS_RACE_QUERY = """
+SELECT %(fields)s
+FROM census_race a %(joins)s
+WHERE
+    %(where)s AND number > 0 AND percent > 0.0
+GROUP BY %(groups)s
+HAVING %(having)s
 """

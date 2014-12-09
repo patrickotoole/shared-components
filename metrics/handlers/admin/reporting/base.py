@@ -18,6 +18,7 @@ class AdminReportingBase(object):
     QUERY = ""
     OPTIONS = {}
     WHERE = {}
+    HAVING = {}
     JOINS = {}
 
     def get_meta_group(self,default="default"):
@@ -40,6 +41,14 @@ class AdminReportingBase(object):
     def or_groupings(self,field,values):
         where_string = self.WHERE.get(field)
         return [where_string % {field:v} for v in values]
+
+    def having_and_groupings(self, args):
+        groupings = {i:j for i,j in args.iteritems() if i in self.HAVING.keys()}
+        return groupings
+
+    def having_or_groupings(self, field, values):
+        having_string = self.HAVING.get(field)
+        return [having_string % {field:v} for v in values]
      
     def make_query(self,params):
         # pragma: string sub and remove \n
@@ -69,21 +78,22 @@ class AdminReportingBase(object):
 
         return meta_data
 
-    def make_params(self,groups,fields,where,joins="",**kwargs):
-        gs = map(self.get_group,groups)
-        fs = map(self.get_field,groups + fields)
+    def make_params(self, groups, fields, where, having="", joins="", **kwargs):
+        gs = map(self.get_group, groups)
+        fs = map(self.get_field, groups + fields)
 
         params = {
             "groups": ", ".join(gs),
             "fields": ", ".join(fs),
             "where": where,
+            "having": having,
             "joins": joins
         } 
         for i,j in kwargs.iteritems():
             params[j] = i
         return params
 
-class AdminReportingBaseHandler(tornado.web.RequestHandler,AdminReportingBase):
+class AdminReportingBaseHandler(tornado.web.RequestHandler, AdminReportingBase):
     """
     Base handler for admin reporting
     """
@@ -113,6 +123,16 @@ class AdminReportingBaseHandler(tornado.web.RequestHandler,AdminReportingBase):
 
         return " and ".join(ands)
 
+    def parse_qs_having(self):
+        args = self.request.arguments
+        groups = self.having_and_groupings(args)
+        ands = ["1=1"]
+        for i,j in groups.iteritems():
+            ors = self.having_or_groupings(i,j[0].split(","))
+            ands += ["(%s)" % "  or ".join(ors)]
+
+        return " and ".join(ands)
+
     def make_join(self,default=""):
         _args = self.request.arguments
         args = {i:j[0] for i,j in _args.iteritems()}
@@ -133,6 +153,13 @@ class AdminReportingBaseHandler(tornado.web.RequestHandler,AdminReportingBase):
 
         return " and ".join(where_list)
 
+    def make_having(self):
+        having_list = []
+
+        having_list.append(self.parse_qs_having())
+
+        return " and ".join(having_list)
+        
     def get(self):
         self.write(self.make_where())
 
