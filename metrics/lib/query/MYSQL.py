@@ -1,58 +1,95 @@
 BRAND_QUERY = "select external_id id, external_advertiser_id advertiser_id from creative"
 
 IMPS_QUERY = """
-    select 
-        /*v3.campaign_id,*/
-        timestamp(DATE_FORMAT(v3.date, "%%Y-%%m-%%d %%H:00:00")) date,
-        sum(v3.imps) as imps,
-        sum(v3.clicks) as clicks,
-        sum(v3.media_cost* case when v3.cpm_multiplier is null then i.cpm_multiplier else v3.cpm_multiplier end) as media_cost,
-        1 as cpm_multiplier,
-        0 as is_valid 
-    from 
-        reporting.v4_reporting v3
-    left join intraweek i
-    on v3.external_advertiser_id=i.external_advertiser_id
-    where 
-        v3.active=1 and 
-        v3.deleted=0 and 
-        v3.external_advertiser_id =  %(advertiser_id)s and
-        v3.date < SUBDATE(NOW(),1)
-        
-    group by 
-        1/*,2*/
+select 
+    a.date, 
+    a.campaign_id,
+    a.imps,
+    a.clicks,
+    a.media_cost,
+    a.cpm_multiplier,
+    a.is_valid
+    from (
+       select
+            timestamp(DATE_FORMAT(v4.date, "%%Y-%%m-%%d %%H:00:00")) date,
+            max(v4.campaign_id) as campaign_id,
+            cb.bucket_name,
+            sum(v4.imps) as imps,
+            sum(v4.clicks) as clicks,
+            sum(v4.media_cost* case when v4.cpm_multiplier is null then i.cpm_multiplier else v4.cpm_multiplier end) as media_cost,
+            1 as cpm_multiplier,
+            0 as is_valid
+        from
+            reporting.v4_reporting v4
+        left join intraweek i
+        on v4.external_advertiser_id=i.external_advertiser_id
+        left join campaign_bucket cb
+        on v4.campaign_id=cb.campaign_id
+        where
+            (
+                (
+                    cb.active=1 and
+                    cb.deleted=0
+                ) OR
+                cb.active is null
+            ) and
+            v4.active=1 and
+            v4.deleted=0 and
+            v4.external_advertiser_id =  %(advertiser_id)s  and
+            v4.date < SUBDATE(NOW(),1)
+
+        group by 1,3 ) a
 """
 
 CONVERSION_QUERY = """
-    select 
-        /*campaign_id,*/
-        timestamp(DATE_FORMAT(conversion_time, "%%Y-%%m-%%d %%H:00:00")) date,
-        0 imps,
-        0 as clicks,
-        0 as media_cost,
-        1 as cpm_multiplier,
-        count(*) as is_valid
-    from 
-        reporting.v2_conversion_reporting 
-    where 
-        active=1 and 
-        deleted=0 and 
-        external_advertiser_id= %(advertiser_id)s  and 
-        is_valid=1 and
-        conversion_time < SUBDATE(NOW(),1)
-    group 
-        by 1/*,2*/
+    select
+        date,
+        campaign_id,
+        imps,
+        clicks,
+        media_cost,
+        cpm_multiplier,
+        is_valid
+        from (
+            select
+                timestamp(DATE_FORMAT(v2.conversion_time, "%%Y-%%m-%%d %%H:00:00")) date,
+                max(v2.campaign_id) as campaign_id,
+                cb.bucket_name,
+                0 imps,
+                0 as clicks,
+                0 as media_cost,
+                1 as cpm_multiplier,
+                count(*) as is_valid
+            from
+                reporting.v2_conversion_reporting v2
+            left join campaign_bucket cb
+            on v2.campaign_id=cb.campaign_id
+            where
+                (
+                    (
+                        cb.active=1 and
+                        cb.deleted=0
+                    ) OR
+                    cb.active is null
+                ) and
+                v2.active=1 and
+                v2.deleted=0 and
+                v2.external_advertiser_id=  %(advertiser_id)s   and
+                v2.is_valid=1 and
+                v2.conversion_time < SUBDATE(NOW(),1)
+            group by 1,3 ) b
 """
 
 UNION_QUERY = "%s UNION ALL (%s)" % (IMPS_QUERY, CONVERSION_QUERY)
 
 BUCKET_QUERY = """
-    select 
-        campaign_id 
-    from campaign_bucket 
-    where 
-        bucket_name like '%%%(bucket)s%%' 
+    select
+        campaign_id
+    from campaign_bucket
+    where
+        bucket_name like '%%%(bucket)s%%'
         and external_advertiser_id = %(advertiser_id)s
+        and active=1 and deleted=0
 """
 
 CAMPAIGN_QUERY = """
@@ -64,7 +101,7 @@ CAMPAIGN_QUERY = """
 """
 
 CREATIVE_QUERY = """
-select 
+select
     u.creative_id,
     sum(u.imps) imps,
     sum(u.clicks) clicks,
@@ -75,7 +112,7 @@ select
     c.width,
     c.height
 FROM (
-    select 
+    select
         creative_id,
         imps,
         clicks,
@@ -84,7 +121,7 @@ FROM (
         campaign_id
     from
         reporting.v4_reporting v3
-    where 
+    where
         v3.active=1 and
         v3.deleted=0 and
         v3.external_advertiser_id = %(advertiser_id)s and
@@ -98,12 +135,12 @@ FROM (
         1 conversions,
         conversion_time,
         NULL
-    FROM 
-        reporting.v2_conversion_reporting 
-    WHERE 
-        active=1 and 
-        deleted=0 and 
-        external_advertiser_id= %(advertiser_id)s and 
+    FROM
+        reporting.v2_conversion_reporting
+    WHERE
+        active=1 and
+        deleted=0 and
+        external_advertiser_id= %(advertiser_id)s and
         is_valid=1 and
         UNIX_TIMESTAMP(reporting.v2_conversion_reporting.conversion_time) >= %(date_min)s and
         UNIX_TIMESTAMP(reporting.v2_conversion_reporting.conversion_time) <= %(date_max)s
@@ -111,39 +148,39 @@ FROM (
 ) u
 join creative c
 on c.external_id = u.creative_id
-where 
-    active=1 and 
+where
+    active=1 and
     deleted=0
 group by
     u.creative_id
 """
 
 CONVERSION_QUERY = """
-SELECT 
+SELECT
     date(cr.conversion_time) as 'conversion_time',
     case when cr.pc=1 then 'post_click' else 'post_view' end as 'conversion_type',
     concat(ap.pixel_display_name," Conversion") as 'conversion_event',
     order_id as "converter_data",
-    round(time_to_sec(timediff(conversion_time,imp_time))/60/60/24,1) as 'conversion_window_days', 
-    round(time_to_sec(timediff(conversion_time,imp_time))/60/60,1) as 'conversion_window_hours' 
-FROM reporting.v2_conversion_reporting cr 
-LEFT JOIN advertiser_pixel ap 
-ON cr.pixel_id=ap.pixel_id 
-WHERE 
-    cr.external_advertiser_id= %(advertiser_id)s and 
-    cr.active=1 and 
-    cr.deleted=0 and 
-    cr.is_valid=1 and 
-    ap.deleted=0 
-ORDER BY 
+    round(time_to_sec(timediff(conversion_time,imp_time))/60/60/24,1) as 'conversion_window_days',
+    round(time_to_sec(timediff(conversion_time,imp_time))/60/60,1) as 'conversion_window_hours'
+FROM reporting.v2_conversion_reporting cr
+LEFT JOIN advertiser_pixel ap
+ON cr.pixel_id=ap.pixel_id
+WHERE
+    cr.external_advertiser_id= %(advertiser_id)s and
+    cr.active=1 and
+    cr.deleted=0 and
+    cr.is_valid=1 and
+    ap.deleted=0
+ORDER BY
     1 asc;
 """
 
 SEGMENTS_LIST = '''
-SELECT 
+SELECT
     external_advertiser_id,
     segment_name,
-    external_segment_id 
+    external_segment_id
 FROM advertiser_segment INNER JOIN advertiser using (external_advertiser_id)
 '''
 
@@ -151,25 +188,25 @@ DAILY_DASH = """
 SELECT
     *
 FROM daily_dash
-WHERE 
+WHERE
     %(where)s
 """
 
 INSERT_BATCH_REQUEST = '''
-INSERT INTO batch_request 
-    (type, content, owner, target_segment, target_window, expiration, active, comment) 
+INSERT INTO batch_request
+    (type, content, owner, target_segment, target_window, expiration, active, comment)
 VALUES ('{}','{}', '{}', '{}', {}, {}, {}, '{}');
 '''
 
 DEACTIVATE_REQUEST = '''
-UPDATE batch_request 
-SET active=0 
+UPDATE batch_request
+SET active=0
 WHERE id={}
 '''
 
 ACTIVATE_REQUEST = '''
-UPDATE batch_request 
-SET active=1 
+UPDATE batch_request
+SET active=1
 WHERE id={}
 '''
 
@@ -179,15 +216,14 @@ FROM domain_list
 '''
 
 DOMAIN_LIST_STATUS = """
-SELECT 
+SELECT
     %(fields)s
-FROM 
-    domain_list dl 
-LEFT JOIN 
-    reporting.domain_list_change_ref ref 
-ON 
-    ref.domain = dl.pattern 
-WHERE 
+FROM
+    domain_list dl
+LEFT JOIN
+    reporting.domain_list_change_ref ref
+ON
+    ref.domain = dl.pattern
+WHERE
     %(where)s
 """
- 
