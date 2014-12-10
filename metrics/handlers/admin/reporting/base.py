@@ -50,9 +50,14 @@ class AdminReportingBase(object):
         having_string = self.HAVING.get(field)
         return [having_string % {field:v} for v in values]
      
-    def make_query(self,params, query=QUERY):
+    def make_query(self,params, query=""):
         # pragma: string sub and remove \n
-        q = query % params
+
+        # Support older APIs that don't specify query options
+        if query != "":
+            q = query % params
+        else:
+            q = self.QUERY % params
         return " ".join(q.replace('\n',' ').split())
 
     def make_joins(self,args):
