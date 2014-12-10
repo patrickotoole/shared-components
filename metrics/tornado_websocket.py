@@ -146,7 +146,7 @@ admin_advertiser = [
     (r'/admin/advertiser/domain_list/?(.*?)/?',admin.target_list.TargetListHandler, dict(api=api,db=db)),  
 
     (r'/admin/advertiser/conversion/reporting/?',admin.reporting.ConversionCheckHandler, dict(hive=hive)) ,
-    (r'/admin/advertiser/conversion/reporting/?(meta)?/?',admin.reporting.ClickCheckHandler, dict(hive=hive)),
+    (r'/admin/advertiser/conversion/reporting/?(meta)?/?',admin.reporting.ConversionCheckHandler, dict(hive=hive)),
     (r'/admin/advertiser/click/reporting/?',admin.reporting.ClickCheckHandler, dict(hive=hive)) ,
     (r'/admin/advertiser/click/reporting/?(meta)?/?',admin.reporting.ClickCheckHandler, dict(hive=hive)),
 
