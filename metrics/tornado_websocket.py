@@ -133,6 +133,10 @@ admin_advertiser = [
     (r'/admin/advertiser/pixel/device/reporting/?', admin.reporting.AdvertiserPixelDeviceHandler, dict(db=db, hive=hive)),
     (r'/admin/advertiser/pixel/device/reporting/?(meta)?/?', admin.reporting.AdvertiserPixelDeviceHandler, dict(db=db, hive=hive)),
 
+    (r'/admin/advertiser/served/geo/reporting/?', admin.reporting.AdvertiserServedGeoHandler, dict(db=db, hive=hive)),
+    (r'/admin/advertiser/served/geo/reporting/?(meta)?/?', admin.reporting.AdvertiserServedGeoHandler, dict(db=db, hive=hive)),
+
+
     (r'/admin/advertiser/reporting/?', admin.reporting.AdvertiserReportingHandler, dict(db=db, hive=hive)), 
     (r'/admin/advertiser/viewable/reporting/?',admin.reporting.AdvertiserViewableHandler, dict(db=db,hive=hive)),
     (r'/admin/advertiser/viewable/reporting/?(.*?)/?',admin.reporting.AdvertiserViewableHandler, dict(db=db,hive=hive)), 

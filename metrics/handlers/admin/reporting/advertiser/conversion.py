@@ -9,36 +9,6 @@ from lib.hive.helpers import run_hive_session_deferred
 from lib.query.HIVE import CONVERSION_QUERY, CENSUS_CONVERSION_QUERY
 from ..base import AdminReportingBaseHandler
 
-EXAMPLE = '''
-SELECT
-       gender, 
-       min_age, 
-       max_age, 
-       sum(CASE WHEN a.zip_code IS NOT NULL THEN (number*num_conv) ELSE CAST(0 AS BIGINT) END) as weighted_conv, 
-       sum(number) as population, 
-       sum(CASE WHEN a.zip_code IS NOT NULL THEN (number*num_conv) ELSE CAST(0 AS BIGINT) END) / sum(number) as percentage
-FROM (
-     SELECT
-            advertiser,
-            zip_code,
-            count(*) as num_conv
-     FROM conv_attribution
-     WHERE date >= "14-11-01" and zip_code is not null and (advertiser="journelle")
-     GROUP BY advertiser, zip_code
-) a RIGHT OUTER JOIN (
-    SELECT 
-        zip_code,
-        gender, 
-        max_age, 
-        min_age, 
-        number, 
-        percent 
-    FROM census_age_gender 
-    GROUP BY zip_code, gender, min_age, max_age, number, percent
-) b ON (a.zip_code) = (b.zip_code)
-GROUP BY gender, min_age, max_age
-'''
-
 JOIN = {
     "experiment": "v JOIN experiment_test_ref t on v.first_campaign = t.campaign_id",
     "bucket": "v JOIN (SELECT bucket_name, campaign_id FROM campaign_bucket_ref WHERE campaign_id IS NOT NULL) t on v.first_campaign = t.campaign_id",

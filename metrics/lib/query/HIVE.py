@@ -203,3 +203,28 @@ WHERE
 GROUP BY %(groups)s
 HAVING %(having)s
 """
+
+SERVED_GEO = """
+SELECT %(fields)s
+FROM served_geo_analytics
+WHERE
+    %(where)s 
+GROUP BY %(groups)s
+"""
+
+CENSUS_SERVED_GEO = """
+SELECT %(fields)s
+FROM (
+     SELECT
+            advertiser,
+            date,
+            zip_code,
+            sum(num_served) as num_served
+     FROM served_geo_analytics
+     WHERE %(where)s and zip_code is not null
+     GROUP BY advertiser, date, zip_code
+) %(joins)s
+WHERE
+    %(where)s 
+GROUP BY %(groups)s
+"""
