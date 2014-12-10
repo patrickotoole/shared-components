@@ -8,8 +8,8 @@ UPDATE = "update data_integrity_log set `table_name` = '%(table_name)s',`agg_nam
 
 class EventLogHandler(tornado.web.RequestHandler):
 
-    def initialize(self, db, api):
-        self.db = db 
+    def initialize(self, reporting_db=None, api=None):
+        self.db = reporting_db 
         self.api = api
 
     def get(self,*args):
