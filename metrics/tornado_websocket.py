@@ -18,7 +18,6 @@ import signal
 import logging
 import os
 
-
 requests_log = logging.getLogger("requests")
 requests_log.setLevel(logging.WARNING)
 
@@ -35,15 +34,17 @@ define("skip_buffers", default=False,type=bool)
 define("skip_redis", default=False,type=bool) 
 define("skip_hive", default=False,type=bool)  
 define("no_internet",default=False, help="turns off things that require internet connection",type=bool)
+define("routes",default="", help="list of routes to include",type=str) 
 
 
-static = [
-    (r'/static/(.*)', tornado.web.StaticFileHandler, {'path': "static"})
-]
 
-def build_routes(connectors):
+
+def build_routes(connectors,override=[]):
     routes = AllRoutes(**connectors)
-    return routes(*routes.all) + static
+    static = [(r'/static/(.*)', tornado.web.StaticFileHandler, {'path': "static"})]
+    selected_routes = [route for route in routes.all if route in override]
+
+    return routes(*(selected_routes or routes.all)) + static
 
 
 
@@ -60,9 +61,10 @@ if __name__ == '__main__':
         options.no_internet or options.skip_hive
     ).connectors
 
+    routes = options.routes.split(",")
 
     app = tornado.web.Application(
-        build_routes(connectors), 
+        build_routes(connectors,routes), 
         template_path= dirname + "/templates",
         debug=True,
         cookie_secret="rickotoole",
