@@ -100,6 +100,15 @@ WHERE
 GROUP BY %(groups)s
 """
 
+CENSUS_CONVERSION_QUERY = """
+SELECT %(fields)s
+FROM (SELECT date, advertiser, zip_code, count(*) as num_conv FROM conv_attribution WHERE %(where)s and zip_code IS NOT NULL GROUP BY date, advertiser, zip_code)
+%(joins)s
+WHERE 
+    %(where)s
+GROUP BY %(groups)s
+"""
+
 CONVERSION_IMPS_QUERY = """
 SELECT %(fields)s
 FROM served_conv
