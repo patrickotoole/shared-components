@@ -19,9 +19,18 @@ class Routes(object):
     def connectors(self):
         return self._conns
 
+    def make_nested_routes(self,requested_routes):
+        nested_routes = {
+            name:[r[0] for r in self.__getattribute__(name)()] for name in requested_routes
+        }
+        return nested_routes
 
-    def __call__(self,*requested_routes):
+    def make_routes(self,requested_routes): 
         routes = [ route for name in requested_routes for route in self.__getattribute__(name)() ]
         return routes
+
+    def __call__(self,*requested_routes):
+        return self.make_routes(requested_routes)
+        
  
 

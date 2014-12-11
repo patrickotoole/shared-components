@@ -24,6 +24,7 @@ requests_log.setLevel(logging.WARNING)
 dirname = os.path.dirname(os.path.realpath(__file__))
 route_options = ", ".join(AllRoutes.get_all()) 
 
+
 define("port", default=8080, help="run on the given port", type=int)
 define("listen_port", default=1234, help="run on the given port", type=int)
 define("view_port", default=1235, help="run on the given port", type=int)
@@ -36,6 +37,7 @@ define("skip_redis", default=False,type=bool)
 define("skip_hive", default=False,type=bool)  
 define("no_internet",default=False, help="turns off things that require internet connection",type=bool)
 define("routes",default="", help="list of routes to include: \n" + route_options,type=str) 
+define("show_routes",default=False, help="will print a list of the available routes",type=bool)  
 
 
 
@@ -63,7 +65,12 @@ if __name__ == '__main__':
         options.no_internet or options.skip_hive
     ).connectors
 
-    routes = options.routes.split(",")
+    routes = [r for r in options.routes.split(",") if len(r)]
+
+    if options.show_routes:
+        AllRoutes().__mock_all__(routes)
+        os._exit(1)
+
 
     app = tornado.web.Application(
         build_routes(connectors,routes), 

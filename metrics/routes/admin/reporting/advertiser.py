@@ -60,6 +60,19 @@ class AdvertiserReportingRoutes(Routes):
             ('/imps/reporting/?(meta)?/?', reporting.ConversionImpsHandler, self.connectors)
         ]
 
+    @namespace("/admin/advertiser/click")
+    @connectors("hive")
+    def conversion_reporting(self):
+        import handlers.admin.reporting as reporting
+
+        return [
+            ('/reporting/?', reporting.ClickCheckHandler, self.connectors), 
+            ('/reporting/?(meta)?/?', reporting.ClickCheckHandler, self.connectors), 
+            ('/imps/reporting/?', reporting.ClickImpsHandler, self.connectors), 
+            ('/imps/reporting/?(meta)?/?', reporting.ClickImpsHandler, self.connectors)
+        ]
+ 
+
     @namespace("/admin/advertiser/debug")
     @connectors("hive")
     def debug_reporting(self):
