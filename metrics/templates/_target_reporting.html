@@ -7,17 +7,9 @@
 <script type="text/javascript" src="http://rockerbox.com/js/crossfilter.js"></script>
 <script type="text/javascript" src="http://rockerbox.com/js/dc.js"></script>
 <script type="text/javascript" src="http://rockerbox.com/js/colorbrewer.js"></script>
+<script src="/static/js/mixpanel.js"></script>
 <script>
-  //Adding mixpanel stuff here
-  var advertiserID =  {{ advertiser_id }};
-  $.getJSON("/intraweek?format=json&ioinfo=" + advertiserID, function(data){
-    mixpanel.identify(advertiserID.toString());
-    mixpanel.people.set({
-        "$name": data[0].advertiser,
-        "$last_login": new Date()
-    });
-  });
-  mixpanel.track("load target reporting");
+  addMixpanelEvent({{ advertiser_id }}, "{{ user_id }}", "load target reporting");
 </script>
 <script>
 

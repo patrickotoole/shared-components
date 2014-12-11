@@ -38,17 +38,9 @@
 
 {% block page_scripts %}
   <script src="/static/js/packery.pkgd.min.js"></script>
+  <script src="/static/js/mixpanel.js"></script>
   <script>
-    //Adding mixpanel stuff here
-    var advertiserID =  {{ advertiser_id }};
-    $.getJSON("/intraweek?format=json&ioinfo=" + advertiserID, function(data){
-      mixpanel.identify(advertiserID.toString());
-      mixpanel.people.set({
-          "$name": data[0].advertiser,
-          "$last_login": new Date()
-      });
-    });
-    mixpanel.track("load creative reporting");
+    addMixpanelEvent({{ advertiser_id }}, "{{ user_id }}", "load creative reporting");
   </script>
   
 	<script>					

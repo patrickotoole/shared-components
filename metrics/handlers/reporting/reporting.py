@@ -93,6 +93,7 @@ class ReportingHandler(BaseHandler,ReportingBase):
     def get(self):
 
         advertiser = self.current_advertiser
+        user = self.current_user
         _format  = self.get_argument("format",False)
 
         campaign = self.get_argument("campaign",False)
@@ -121,7 +122,7 @@ class ReportingHandler(BaseHandler,ReportingBase):
             else:
                 template = "advertiser_bucket.html"
 
-            self.render("reporting/_reporting.html", advertiser_id=advertiser)
+            self.render("reporting/_reporting.html", advertiser_id=advertiser, user_id=user)
 
         yield default, (data,)
 

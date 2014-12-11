@@ -23,6 +23,7 @@ class DomainReportingHandler(BaseHandler,ReportingBase):
     @decorators.formattable
     def get(self):
         advertiser = self.current_advertiser
+        user = self.current_user
         _format  = self.get_argument("format",False)
 
         campaign = self.get_argument("campaign",False)
@@ -40,7 +41,7 @@ class DomainReportingHandler(BaseHandler,ReportingBase):
 
         def default(self,data):
 
-            self.render("reporting/_domain.html", advertiser_id=advertiser)
+            self.render("reporting/_domain.html", advertiser_id=advertiser, user_id=user)
 
         yield default, (data,)
  

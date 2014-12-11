@@ -33,6 +33,7 @@ class ConversionReportingHandler(BaseHandler,ConversionReportingBase):
     def get(self):
 
         advertiser = self.current_advertiser
+        user = self.current_user
         _format  = self.get_argument("format",False)
 
         try:
@@ -47,7 +48,7 @@ class ConversionReportingHandler(BaseHandler,ConversionReportingBase):
                 "data_formatted":Convert.df_to_json(data)
             }
             self.write(_json)
-            #self.render("reporting/_conversion.html", advertiser_id=advertiser)
+            #self.render("reporting/_conversion.html", advertiser_id=advertiser, user_id=user)
 
         yield default, (data,)
  

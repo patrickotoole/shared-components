@@ -36,6 +36,7 @@ class CreativeReportingHandler(CreativeReportingBase):
     def get(self):
 
         advertiser = self.current_advertiser
+        user = self.current_user
         _format  = self.get_argument("format",False)
         _min = self.get_argument("start_date",0)
         _max = self.get_argument("end_date",int(time.time()))
@@ -48,7 +49,7 @@ class CreativeReportingHandler(CreativeReportingBase):
         def default(self,data):
             # dont do anything with the data
             # wait for async call with the format
-            self.render("reporting/_creative_reporting.html", advertiser_id=advertiser)
+            self.render("reporting/_creative_reporting.html", advertiser_id=advertiser, user_id=user)
 
 
         yield default, (data,)
