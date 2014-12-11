@@ -34,30 +34,21 @@ class AdminReportingBase(object):
         select = self.FIELDS.get(group,group)
         return "%s as %s" % (select,g)
 
-    def and_groupings(self,args):
-        groupings = {i:j for i,j in args.iteritems() if i in self.WHERE.keys()}
+    def and_groupings(self, config, args):
+        groupings = {i:j for i,j in args.iteritems() if i in config.keys()}
         return groupings
 
-    def or_groupings(self,field,values):
-        where_string = self.WHERE.get(field)
+    def or_groupings(self, config, field, values):
+        where_string = config.get(field)
         return [where_string % {field:v} for v in values]
-
-    def having_and_groupings(self, args):
-        groupings = {i:j for i,j in args.iteritems() if i in self.HAVING.keys()}
-        return groupings
-
-    def having_or_groupings(self, field, values):
-        having_string = self.HAVING.get(field)
-        return [having_string % {field:v} for v in values]
      
-    def make_query(self,params, query=""):
+    def make_query(self,params, query=None):
         # pragma: string sub and remove \n
 
         # Support older APIs that don't specify query options
-        if query != "":
-            q = query % params
-        else:
-            q = self.QUERY % params
+        query = query or self.QUERY
+        q = query % params
+        
         return " ".join(q.replace('\n',' ').split())
 
     def make_joins(self,args):
@@ -120,20 +111,20 @@ class AdminReportingBaseHandler(tornado.web.RequestHandler, AdminReportingBase):
 
     def parse_qs_where(self):
         args = self.request.arguments
-        groups = self.and_groupings(args)
+        groups = self.and_groupings(self.WHERE, args)
         ands = ["1=1"]
         for i,j in groups.iteritems():
-            ors = self.or_groupings(i,j[0].split(","))
+            ors = self.or_groupings(self.WHERE, i, j[0].split(","))
             ands += ["(%s)" % "  or ".join(ors)]
 
         return " and ".join(ands)
 
     def parse_qs_having(self):
         args = self.request.arguments
-        groups = self.having_and_groupings(args)
+        groups = self.and_groupings(self.HAVING, args)
         ands = ["1=1"]
         for i,j in groups.iteritems():
-            ors = self.having_or_groupings(i,j[0].split(","))
+            ors = self.or_groupings(self.HAVING, i, j[0].split(","))
             ands += ["(%s)" % "  or ".join(ors)]
 
         return " and ".join(ands)
