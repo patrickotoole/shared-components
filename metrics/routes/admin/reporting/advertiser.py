@@ -62,7 +62,7 @@ class AdvertiserReportingRoutes(Routes):
 
     @namespace("/admin/advertiser/click")
     @connectors("hive")
-    def conversion_reporting(self):
+    def click_reporting(self):
         import handlers.admin.reporting as reporting
 
         return [
