@@ -17,7 +17,8 @@ class IndexHandler(tornado.web.RequestHandler):
             ("/admin/advertiser/reporting", "[ALPHA] Reporting (unified)"), 
             ("/admin/advertiser/domain_list/reporting", "Domain List Impressions Available"), 
             ("/admin/advertiser/summary/reporting", "Domain Aggregated Reporting"),  
-            ("/admin/advertiser/debug/reporting", "Debug Reporting")
+            ("/admin/advertiser/debug/reporting", "Debug Reporting"),
+            ("/admin/advertiser/served/geo/reporting", "Served Geo data")
         ]
 
         advertiser_viewability_links = [
