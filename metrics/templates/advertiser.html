@@ -7,6 +7,7 @@
 <script type="text/javascript" src="http://rockerbox.com/js/d3.js"></script>
 <script type="text/javascript" src="/static/js/advertiser.js"></script> 
 <script type="text/javascript" src="/static/js/advertiser/info.js"></script>  
+<script type="text/javascript" src="/static/js/mixpanel.js"></script>  
 
 <div id="advertiser-content" class='container'>
 </div>
@@ -29,6 +30,9 @@ var wrapped = buildAdvertiserWrapper(data,id,"12",false)
 buildSegments(wrapped,"Pixel Implementation Guide",false)  
 
 
+</script>
+<script>
+  addMixpanelEvent({{ advertiser_id }}, "{{ user_id }}", "load advertiser");
 </script>
 
 {% end %}  

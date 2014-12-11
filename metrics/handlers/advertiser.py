@@ -29,7 +29,7 @@ class AdvertiserHandler(BaseHandler):
         
         def default(self,data):
             o = Convert.df_to_json(data)
-            self.render("../templates/advertiser.html",data=o) 
+            self.render("../templates/advertiser.html",data=o,advertiser_id=self.current_advertiser,user_id=self.current_user) 
 
         yield default, (data,)
 
