@@ -44,7 +44,7 @@ class AdminReportingBaseTestCase(unittest.TestCase):
         self.a.WHERE.keys.return_value = ["a","b"]
 
         expected = {"a":1,"b":2} 
-        groupings = self.a.and_groupings(h)
+        groupings = self.a.and_groupings(self.a.WHERE, h)
         self.assertEqual(expected,groupings)
 
     def test_or_groupings(self):
@@ -55,7 +55,7 @@ class AdminReportingBaseTestCase(unittest.TestCase):
         self.a.WHERE.get.return_value = RETURN
 
         expected = map(lambda x: "where_field = " + x,values)
-        groupings = self.a.or_groupings(field,values)
+        groupings = self.a.or_groupings(self.a.WHERE, field,values)
         self.assertEqual(expected,groupings)
 
         
