@@ -26,7 +26,7 @@ class AdvertiserRoutes(Routes):
             (r'/conversion/reporting.*', reporting.ConversionReportingHandler, self.connectors),  
 
             (r'/intraweek.*',reporting.InsertionOrderHandler, self.connectors),
-            (r'/advertiser',advertiser.AdvertiserHandler, self.connectors)
+            (r'/advertiser', advertiser.AdvertiserHandler, self.connectors)
         ]
 
 class StreamingRoutes(Routes):

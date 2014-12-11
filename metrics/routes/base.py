@@ -5,8 +5,9 @@ class Routes(object):
     def __init__(self, **kwargs):
         self._conns = kwargs
 
-    def get_all(self):
-        return [k for c in self.__class__.__mro__ for k in c.__dict__.keys() if c is not Routes and c is not object and not k.startswith("__")]
+    @classmethod
+    def get_all(cls):
+        return [k for c in cls.__mro__ for k in c.__dict__.keys() if c is not Routes and c is not object and not k.startswith("__")]
         #return [i for i in self.__class__.__dict__.keys() if not i.startswith("__")]
 
         

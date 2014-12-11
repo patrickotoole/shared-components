@@ -22,6 +22,7 @@ requests_log = logging.getLogger("requests")
 requests_log.setLevel(logging.WARNING)
 
 dirname = os.path.dirname(os.path.realpath(__file__))
+route_options = ", ".join(AllRoutes.get_all()) 
 
 define("port", default=8080, help="run on the given port", type=int)
 define("listen_port", default=1234, help="run on the given port", type=int)
@@ -34,7 +35,8 @@ define("skip_buffers", default=False,type=bool)
 define("skip_redis", default=False,type=bool) 
 define("skip_hive", default=False,type=bool)  
 define("no_internet",default=False, help="turns off things that require internet connection",type=bool)
-define("routes",default="", help="list of routes to include",type=str) 
+define("routes",default="", help="list of routes to include: \n" + route_options,type=str) 
+
 
 
 

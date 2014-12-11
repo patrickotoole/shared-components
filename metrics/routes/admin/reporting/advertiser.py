@@ -5,11 +5,11 @@ class AdvertiserReportingRoutes(Routes):
 
     @namespace("/admin/advertiser")
     @connectors("db","hive")
-    def viewable_reporting(self):
+    def advertiser_reporting(self):
         import handlers.admin.reporting as reporting
 
         return [
-            (r'/reporting/?',reporting.AdvertiserHandler, self.connectors),
+            (r'/reporting/?',reporting.AdvertiserReportingHandler, self.connectors),
         ]
  
 
