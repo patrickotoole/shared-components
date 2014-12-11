@@ -179,11 +179,9 @@ class AdvertiserServedGeoHandler(AdminReportingBaseHandler):
         wide = self.get_argument("wide",False)
 
         meta_group = self.get_meta_group()
-        print meta_group
+
         meta_data = self.get_meta_data(meta_group,include)
         meta_data["is_wide"] = wide
-
-        print meta_data
 
         if meta:
             self.write(ujson.dumps(meta_data))

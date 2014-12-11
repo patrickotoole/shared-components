@@ -420,7 +420,6 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
             self.finish()
 
         elif formatted:
-            print meta_data
             params = self.make_params(
                 meta_data.get("groups",[]),
                 meta_data.get("fields",[]),
