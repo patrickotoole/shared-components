@@ -7,7 +7,10 @@
 <script type="text/javascript" src="http://rockerbox.com/js/crossfilter.js"></script>
 <script type="text/javascript" src="http://rockerbox.com/js/dc.js"></script>
 <script type="text/javascript" src="http://rockerbox.com/js/colorbrewer.js"></script>
-
+<script src="/static/js/mixpanel.js"></script>
+<script>
+  addMixpanelEvent({{ advertiser_id }}, "{{ user_id }}", "load target reporting");
+</script>
 <script>
 
 d3.json(window.location.href+"&format=json",function(data){

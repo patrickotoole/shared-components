@@ -87,6 +87,10 @@
 	<script src="/static/js/dc.mod.js"></script>
 	<script src="/static/js/reporting.js"></script>
 	<script src="/static/js/reporting-functions.js"></script>
+  <script src="/static/js/mixpanel.js"></script>
+  <script>
+    addMixpanelEvent({{ advertiser_id }}, "{{ user_id }}", "load reporting");
+  </script>
 	<script>					
 		// FORMAT DATE BASED ON DISPLAY MODE
 		function createDateValue(dateMode, firstDate){
@@ -125,7 +129,7 @@
           userSpent = parseInt(data[0].spent);
           
           ioStartDate = new Date(data[0].start_date * 1000);
-        
+
 		
             // GET DATA
             var getUserData = $.getJSON("/api?deleted=0&active=1&table=campaign_bucket&external_advertiser_id=" + extUserID).done(function(e){

@@ -76,6 +76,10 @@
 	<script src="/static/js/dc.mod.js"></script>
 	<script src="/static/js/streaming.js"></script>
     <script src="/static/js/streaming-map.js"></script>
+  <script src="/static/js/mixpanel.js"></script>
+  <script>
+    addMixpanelEvent({{ advertiser_id }}, "{{ user_id }}", "load streaming");
+  </script>
 	<script>			
      $('#page-loader').hide();
 	var extUserID =  {{ advertiser_id }};

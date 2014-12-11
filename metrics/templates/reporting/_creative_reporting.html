@@ -37,7 +37,12 @@
 {% end %}
 
 {% block page_scripts %}
-    <script src="/static/js/packery.pkgd.min.js"></script>
+  <script src="/static/js/packery.pkgd.min.js"></script>
+  <script src="/static/js/mixpanel.js"></script>
+  <script>
+    addMixpanelEvent({{ advertiser_id }}, "{{ user_id }}", "load creative reporting");
+  </script>
+  
 	<script>					
     
 		var extUserID =  {{ advertiser_id }};
