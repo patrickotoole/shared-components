@@ -1,6 +1,7 @@
 deployment:
   production:
     branch: master
+    owner: patrickotoole
     commands:
       - ./script/deploy_prod.sh
   staging:
