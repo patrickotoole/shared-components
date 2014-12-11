@@ -7,9 +7,20 @@ from twisted.internet import defer
 
 from lib.helpers import *
 from lib.hive.helpers import run_hive_session_deferred, run_hive_deferred
-from lib.query.HIVE import PIXEL_GEO
+from lib.query.HIVE import PIXEL_GEO, CENSUS_PIXEL_GEO
 import lib.query.helpers as query_helpers
 from ..base import AdminReportingBaseHandler
+
+JOIN = {
+    "census_income": "v JOIN (SELECT * FROM zip_code_ref WHERE median_household_income IS NOT NULL and zip_code IS NOT NULL) b ON (v.zip_code = b.zip_code)",
+    "census_age_gender": "v RIGHT OUTER JOIN (SELECT zip_code, gender, max_age, min_age, number, percent FROM census_age_gender GROUP BY zip_code, gender, min_age, max_age, number, percent) b ON (v.zip_code = b.zip_code)",
+    "census_race": " v RIGHT OUTER JOIN (SELECT zip_code, race, sum(number) as number, sum(percent) as percent FROM census_race GROUP BY zip_code, race ) b ON (v.zip_code = b.zip_code)"
+}
+
+QUERY_OPTIONS = {
+    "default": PIXEL_GEO,
+    "census": CENSUS_PIXEL_GEO
+}
 
 OPTIONS = {
     "default": {
@@ -18,6 +29,33 @@ OPTIONS = {
             "fields" : ["views", "users"]
         }
     },
+
+    "census_income": {
+        "meta": {
+            "groups": ["advertiser", "date"],
+            "query": "census",
+            "fields": ["median_household_income"],
+            "static_joins": JOIN["census_income"]
+        }
+     },
+
+    "census_age_gender": {
+        "meta": {
+            "groups": ["advertiser", "date", "gender", "min_age", "max_age"],
+            "query": "census",
+            "fields": ["population", "viewed_population"],
+            "static_joins": JOIN["census_age_gender"]
+        }
+     },
+
+    "census_race": {
+        "meta": {
+            "groups": ["advertiser", "date", "race"],
+            "query": "census",
+            "fields": ["population", "viewed_population"],
+            "static_joins": JOIN["census_race"]
+        }
+     },
 
     "none": {
         "meta": {
@@ -40,7 +78,10 @@ GROUPS = {
 
 FIELDS = {
     "views": "sum(num_views)",
-    "users": "sum(num_users)"
+    "users": "sum(num_users)",
+    "median_household_income": "round(sum(b.median_household_income * num_views) / sum(num_views), 0)",
+    "viewed_population": "sum(CASE WHEN v.zip_code IS NOT NULL THEN (num_views*(percent / 100.0)) ELSE 0.0 END)",
+    "population": "sum(number)"
 }
 
 WHERE = {
@@ -135,11 +176,7 @@ class AdvertiserPixelGeoHandler(AdminReportingBaseHandler):
         wide = self.get_argument("wide",False)
 
         meta_group = self.get_meta_group()
-        print meta_group
         meta_data = self.get_meta_data(meta_group,include)
-        meta_data["is_wide"] = wide
-
-        print meta_data
 
         if meta:
             self.write(ujson.dumps(meta_data))
@@ -153,10 +190,14 @@ class AdvertiserPixelGeoHandler(AdminReportingBaseHandler):
                 self.make_join(meta_data.get("static_joins",""))
             )
 
+            # Get the query string based on the query specified in the metadata
+            # If there is no query specified, use the default query
+            query = QUERY_OPTIONS[meta_data.get("query", "default")]
+
             self.get_data(
-                self.make_query(params),
+                self.make_query(params, query),
                 meta_data.get("groups",[]),
-                wide
+                self.get_argument("wide", False)
             )
 
         else:

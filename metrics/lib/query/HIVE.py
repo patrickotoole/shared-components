@@ -147,6 +147,22 @@ WHERE %(where)s
 GROUP BY %(groups)s
 '''
 
+CENSUS_PIXEL_GEO= '''
+SELECT %(fields)s
+FROM (
+     SELECT
+            advertiser,
+            date,
+            zip_code,
+            sum(num_views) as num_views
+     FROM pixel_geo_analytics
+     WHERE %(where)s and zip_code is not null
+     GROUP BY advertiser, date, zip_code
+) %(joins)s
+WHERE %(where)s
+GROUP BY %(groups)s
+'''
+
 PIXEL_DEVICE= '''
 SELECT %(fields)s
 FROM pixel_agent_analytics
