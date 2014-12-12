@@ -19,7 +19,7 @@ INCLUDES = {
 
 
 class AdvertiserViewableHandler(tornado.web.RequestHandler):
-    def initialize(self, db, api):
+    def initialize(self, db=None, api=None):
         self.db = db 
         self.api = api
 

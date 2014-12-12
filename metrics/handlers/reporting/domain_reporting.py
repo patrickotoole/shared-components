@@ -14,7 +14,7 @@ from base import ReportingBase
 
 class DomainReportingHandler(BaseHandler,ReportingBase):
 
-    def initialize(self, db, api, hive):
+    def initialize(self, db=None, api=None, hive=None):
         self.db = db 
         self.api = api
         self.hive = hive

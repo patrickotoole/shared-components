@@ -51,7 +51,7 @@ class IndexHandler(BaseHandler):
 
 class StreamingHandler(StreamingBase,tornado.websocket.WebSocketHandler):
   
-    def initialize(self,db,buffers={}):
+    def initialize(self,db=None,buffers={}):
         self.time_interval = 1
         self.control_buffer = buffer_control
         super(StreamingHandler,self).initialize(db=db,buffers=buffers)
