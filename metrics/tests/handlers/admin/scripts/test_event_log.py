@@ -18,7 +18,7 @@ create table data_integrity_log (id int primary key auto_increment, table_name v
 FIXTURE1 = "insert into data_integrity_log (row_count, agg_count, result) values (1,1,1);"
 FIXTURE2 = "insert into data_integrity_log (row_count, agg_count, result) values (2,1,0);" 
 
-class LoginTest(AsyncHTTPTestCase):
+class EventLogTest(AsyncHTTPTestCase):
 
     def get_app(self):
         self.maxDiff = 1024
@@ -29,8 +29,8 @@ class LoginTest(AsyncHTTPTestCase):
         self.db.execute(FIXTURE2)
 
         self.app = Application([
-          ('/', ev.EventLogHandler, dict(db=self.db, api=None)),
-          ('/(.*?)', ev.EventLogHandler, dict(db=self.db, api=None)) 
+          ('/', ev.EventLogHandler, dict(reporting_db=self.db, api=None)),
+          ('/(.*?)', ev.EventLogHandler, dict(reporting_db=self.db, api=None)) 
         ],
             cookie_secret="rickotoole"
         )

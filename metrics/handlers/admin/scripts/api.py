@@ -6,7 +6,7 @@ import StringIO
 API_QUERY = "select * from %s where %s "
 
 class APIHandler(tornado.web.RequestHandler):
-    def initialize(self, db):
+    def initialize(self, db=None, **kwargs):
         self.db = db 
 
     def get(self):

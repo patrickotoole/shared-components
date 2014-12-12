@@ -9,7 +9,7 @@ from lib.helpers import *
 SUMMARY_QUERY = "SELECT log, action, count(*) count from reporting.domain_list_status group by 1,2"
 
 class DomainListHandler(tornado.web.RequestHandler):
-    def initialize(self, db, api, hive):
+    def initialize(self, db=None, api=None, hive=None):
         self.db = db 
         self.api = api
         self.hive = hive
