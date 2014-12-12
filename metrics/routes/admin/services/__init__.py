@@ -11,7 +11,8 @@ class ServiceRoutes(
     BatchRequestRoutes,
     CampaignCheckRoutes,
     AdvertiserRoutes,
-    SegmentRoutes
+    SegmentRoutes,
+    LoggingRoutes
 ):
 
     @namespace("/admin/pixel")
