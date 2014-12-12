@@ -20,7 +20,7 @@ INCLUDES = {
 
 class AdvertiserHandler(BaseHandler):
 
-    def initialize(self, db, api):
+    def initialize(self, db=None, api=None):
         self.db = db 
         self.api = api
 
