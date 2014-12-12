@@ -28,7 +28,7 @@ class CreativeReportingBase(BaseHandler):
 
 class CreativeReportingHandler(CreativeReportingBase):
 
-    def initialize(self, db, **kwargs):
+    def initialize(self, db=None, **kwargs):
         self.db = db 
 
     @tornado.web.authenticated
