@@ -1,11 +1,11 @@
 from ...helpers import *
 from ...base import Routes
 
-class CensusReportingRoutes(Routes):
+class CensusRoutes(Routes):
 
     @namespace("/admin/census")
     @connectors("hive")
-    def advertiser_reporting(self):
+    def census(self):
         import handlers.admin.reporting as reporting
 
         return [

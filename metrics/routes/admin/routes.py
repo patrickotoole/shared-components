@@ -3,12 +3,14 @@ from ..base import Routes
 from reporting import ReportingRoutes
 from services import ServiceRoutes
 from streaming import StreamingRoutes
+from census import CensusRoutes 
 
 
 class AdminRoutes(
     ReportingRoutes,
     ServiceRoutes,
-    StreamingRoutes
+    StreamingRoutes,
+    CensusRoutes
 ):
 
     @namespace("/admin")
