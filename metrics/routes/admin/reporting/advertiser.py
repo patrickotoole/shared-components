@@ -93,6 +93,17 @@ class AdvertiserReportingRoutes(Routes):
             ('/reporting/?(meta)?/?', reporting.AdvertiserSummaryHandler, self.connectors), 
         ]
 
+    @namespace("/admin/advertiser/served")
+    @connectors("hive")
+    def joined_reporting(self):
+        import handlers.admin.reporting as reporting
+
+        return [
+            ('/geo/reporting/?', reporting.AdvertiserServedGeoHandler, self.connectors), 
+            ('/geo/reporting/?(meta)?/?', reporting.AdvertiserServedGeoHandler, self.connectors), 
+        ]
+ 
+
      
 
  
