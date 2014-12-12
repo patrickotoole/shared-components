@@ -18,6 +18,7 @@ class AdminReportingBase(object):
     QUERY = ""
     OPTIONS = {}
     WHERE = {}
+    HAVING = {}
     JOINS = {}
 
     def get_meta_group(self,default="default"):
@@ -33,17 +34,21 @@ class AdminReportingBase(object):
         select = self.FIELDS.get(group,group)
         return "%s as %s" % (select,g)
 
-    def and_groupings(self,args):
-        groupings = {i:j for i,j in args.iteritems() if i in self.WHERE.keys()}
+    def and_groupings(self, config, args):
+        groupings = {i:j for i,j in args.iteritems() if i in config.keys()}
         return groupings
 
-    def or_groupings(self,field,values):
-        where_string = self.WHERE.get(field)
+    def or_groupings(self, config, field, values):
+        where_string = config.get(field)
         return [where_string % {field:v} for v in values]
      
-    def make_query(self,params):
+    def make_query(self,params, query=None):
         # pragma: string sub and remove \n
-        q = self.QUERY % params
+
+        # Support older APIs that don't specify query options
+        query = query or self.QUERY
+        q = query % params
+        
         return " ".join(q.replace('\n',' ').split())
 
     def make_joins(self,args):
@@ -69,21 +74,22 @@ class AdminReportingBase(object):
 
         return meta_data
 
-    def make_params(self,groups,fields,where,joins="",**kwargs):
-        gs = map(self.get_group,groups)
-        fs = map(self.get_field,groups + fields)
+    def make_params(self, groups, fields, where, joins="", having="", **kwargs):
+        gs = map(self.get_group, groups)
+        fs = map(self.get_field, groups + fields)
 
         params = {
             "groups": ", ".join(gs),
             "fields": ", ".join(fs),
             "where": where,
-            "joins": joins
+            "joins": joins,
+            "having": having
         } 
         for i,j in kwargs.iteritems():
             params[j] = i
         return params
 
-class AdminReportingBaseHandler(tornado.web.RequestHandler,AdminReportingBase):
+class AdminReportingBaseHandler(tornado.web.RequestHandler, AdminReportingBase):
     """
     Base handler for admin reporting
     """
@@ -105,10 +111,20 @@ class AdminReportingBaseHandler(tornado.web.RequestHandler,AdminReportingBase):
 
     def parse_qs_where(self):
         args = self.request.arguments
-        groups = self.and_groupings(args)
+        groups = self.and_groupings(self.WHERE, args)
         ands = ["1=1"]
         for i,j in groups.iteritems():
-            ors = self.or_groupings(i,j[0].split(","))
+            ors = self.or_groupings(self.WHERE, i, j[0].split(","))
+            ands += ["(%s)" % "  or ".join(ors)]
+
+        return " and ".join(ands)
+
+    def parse_qs_having(self):
+        args = self.request.arguments
+        groups = self.and_groupings(self.HAVING, args)
+        ands = ["1=1"]
+        for i,j in groups.iteritems():
+            ors = self.or_groupings(self.HAVING, i, j[0].split(","))
             ands += ["(%s)" % "  or ".join(ors)]
 
         return " and ".join(ands)
@@ -133,6 +149,13 @@ class AdminReportingBaseHandler(tornado.web.RequestHandler,AdminReportingBase):
 
         return " and ".join(where_list)
 
+    def make_having(self):
+        having_list = []
+
+        having_list.append(self.parse_qs_having())
+
+        return " and ".join(having_list)
+        
     def get(self):
         self.write(self.make_where())
 

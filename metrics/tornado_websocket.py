@@ -114,6 +114,9 @@ admin_scripts = [
 
 ]
 
+admin_demographics = [
+]
+
 _streaming = [
     (r'/streaming', streaming.streaming.IndexHandler),
     (r'/websocket', streaming.streaming.StreamingHandler, dict(db=db,buffers=buffers))
@@ -130,6 +133,10 @@ admin_advertiser = [
     (r'/admin/advertiser/pixel/device/reporting/?', admin.reporting.AdvertiserPixelDeviceHandler, dict(db=db, hive=hive)),
     (r'/admin/advertiser/pixel/device/reporting/?(meta)?/?', admin.reporting.AdvertiserPixelDeviceHandler, dict(db=db, hive=hive)),
 
+    (r'/admin/advertiser/served/geo/reporting/?', admin.reporting.AdvertiserServedGeoHandler, dict(db=db, hive=hive)),
+    (r'/admin/advertiser/served/geo/reporting/?(meta)?/?', admin.reporting.AdvertiserServedGeoHandler, dict(db=db, hive=hive)),
+
+
     (r'/admin/advertiser/reporting/?', admin.reporting.AdvertiserReportingHandler, dict(db=db, hive=hive)), 
     (r'/admin/advertiser/viewable/reporting/?',admin.reporting.AdvertiserViewableHandler, dict(db=db,hive=hive)),
     (r'/admin/advertiser/viewable/reporting/?(.*?)/?',admin.reporting.AdvertiserViewableHandler, dict(db=db,hive=hive)), 
@@ -143,7 +150,7 @@ admin_advertiser = [
     (r'/admin/advertiser/domain_list/?(.*?)/?',admin.target_list.TargetListHandler, dict(api=api,db=db)),  
 
     (r'/admin/advertiser/conversion/reporting/?',admin.reporting.ConversionCheckHandler, dict(hive=hive)) ,
-    (r'/admin/advertiser/conversion/reporting/?(meta)?/?',admin.reporting.ClickCheckHandler, dict(hive=hive)),
+    (r'/admin/advertiser/conversion/reporting/?(meta)?/?',admin.reporting.ConversionCheckHandler, dict(hive=hive)),
     (r'/admin/advertiser/click/reporting/?',admin.reporting.ClickCheckHandler, dict(hive=hive)) ,
     (r'/admin/advertiser/click/reporting/?(meta)?/?',admin.reporting.ClickCheckHandler, dict(hive=hive)),
 
@@ -188,8 +195,17 @@ admin_reporting = [
     (r'/admin/segment/scrubbed/?',admin.scripts.ProfileHandler, dict(bidder=bidder)),  
     (r'/admin/segment/scrubbed/(.*?)',admin.scripts.ProfileHandler, dict(bidder=bidder)),
     
-    (r'/admin/imps/reporting', admin.reporting.ImpsReportingHandler, dict(db=db, api=api, hive=hive))
-    
+    (r'/admin/imps/reporting', admin.reporting.ImpsReportingHandler, dict(db=db, api=api, hive=hive)),
+ 
+    (r'/admin/census/age_gender/?(.*?)/?', admin.reporting.AgeGenderCensusHandler, dict(hive=hive)),
+    (r'/admin/census/age_gender/?(.*?)/?(meta)/?', admin.reporting.AgeGenderCensusHandler, dict(hive=hive)),
+
+    (r'/admin/census/income/?(.*?)/?', admin.reporting.IncomeCensusHandler, dict(hive=hive)),
+    (r'/admin/census/income/?(.*?)/?(meta)/?', admin.reporting.IncomeCensusHandler, dict(hive=hive)),
+
+    (r'/admin/census/race/?(.*?)/?', admin.reporting.RaceCensusHandler, dict(hive=hive)),
+    (r'/admin/census/race/?(.*?)/?(meta)/?', admin.reporting.RaceCensusHandler, dict(hive=hive))
+   
 ] + admin_advertiser
 
 reporting = [

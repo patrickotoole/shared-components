@@ -7,7 +7,7 @@ from twisted.internet import defer
 
 from lib.helpers import *
 from lib.hive.helpers import run_hive_session_deferred, run_hive_deferred
-from lib.query.HIVE import PIXEL_GEO, CENSUS_PIXEL_GEO
+from lib.query.HIVE import SERVED_GEO, CENSUS_SERVED_GEO
 import lib.query.helpers as query_helpers
 from ..base import AdminReportingBaseHandler
 
@@ -17,16 +17,17 @@ JOIN = {
     "census_race": " v RIGHT OUTER JOIN (SELECT zip_code, race, sum(number) as number, sum(percent) as percent FROM census_race GROUP BY zip_code, race ) b ON (v.zip_code = b.zip_code)"
 }
 
+
 QUERY_OPTIONS = {
-    "default": PIXEL_GEO,
-    "census": CENSUS_PIXEL_GEO
+    "default": SERVED_GEO,
+    "census": CENSUS_SERVED_GEO
 }
 
 OPTIONS = {
     "default": {
         "meta": {
             "groups" : ["advertiser", "city", "state"],
-            "fields" : ["views", "users"]
+            "fields" : ["num_served"]
         }
     },
 
@@ -43,7 +44,7 @@ OPTIONS = {
         "meta": {
             "groups": ["advertiser", "date", "gender", "min_age", "max_age"],
             "query": "census",
-            "fields": ["population", "viewed_population"],
+            "fields": ["population", "served_population"],
             "static_joins": JOIN["census_age_gender"]
         }
      },
@@ -52,7 +53,7 @@ OPTIONS = {
         "meta": {
             "groups": ["advertiser", "date", "race"],
             "query": "census",
-            "fields": ["population", "viewed_population"],
+            "fields": ["population", "served_population"],
             "static_joins": JOIN["census_race"]
         }
      },
@@ -60,7 +61,7 @@ OPTIONS = {
     "none": {
         "meta": {
             "groups" : [],
-            "fields" : ["views", "users"]
+            "fields" : ["num_served"]
          }
     }
 }
@@ -73,14 +74,16 @@ GROUPS = {
     "country": "country",
     "timezone": "timezone",
     "dma": "dma",
-    "zip_code": "zip_code"
+    "zip_code": "zip_code",
+    "lat": "coordinates['lat']",
+    "long": "coordinates['long']",
+    "coordinates": "coordinates"
 }
 
 FIELDS = {
-    "views": "sum(num_views)",
-    "users": "sum(num_users)",
-    "median_household_income": "round(sum(b.median_household_income * num_views) / sum(num_views), 0)",
-    "viewed_population": "sum(CASE WHEN v.zip_code IS NOT NULL THEN (num_views*(percent / 100.0)) ELSE 0.0 END)",
+    "num_served": "sum(num_served)",
+    "median_household_income": "round(sum(b.median_household_income * num_served) / sum(num_served), 0)",
+    "served_population": "sum(CASE WHEN v.zip_code IS NOT NULL THEN (num_served*(percent / 100.0)) ELSE 0.0 END)",
     "population": "sum(number)"
 }
 
@@ -94,8 +97,8 @@ WHERE = {
     "zip_code": "zip_code = '%(zip_code)s'"
 }
 
-class AdvertiserPixelGeoHandler(AdminReportingBaseHandler):
-    QUERY = PIXEL_GEO
+class AdvertiserServedGeoHandler(AdminReportingBaseHandler):
+    QUERY = SERVED_GEO
     WHERE = WHERE
     FIELDS = FIELDS
     GROUPS = GROUPS
@@ -176,7 +179,9 @@ class AdvertiserPixelGeoHandler(AdminReportingBaseHandler):
         wide = self.get_argument("wide",False)
 
         meta_group = self.get_meta_group()
+
         meta_data = self.get_meta_data(meta_group,include)
+        meta_data["is_wide"] = wide
 
         if meta:
             self.write(ujson.dumps(meta_data))

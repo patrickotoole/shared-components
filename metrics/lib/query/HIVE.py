@@ -100,6 +100,15 @@ WHERE
 GROUP BY %(groups)s
 """
 
+CENSUS_CONVERSION_QUERY = """
+SELECT %(fields)s
+FROM (SELECT date, advertiser, zip_code, count(*) as num_conv FROM conv_attribution WHERE %(where)s and zip_code IS NOT NULL GROUP BY date, advertiser, zip_code)
+%(joins)s
+WHERE 
+    %(where)s
+GROUP BY %(groups)s
+"""
+
 CONVERSION_IMPS_QUERY = """
 SELECT %(fields)s
 FROM served_conv
@@ -138,6 +147,22 @@ WHERE %(where)s
 GROUP BY %(groups)s
 '''
 
+CENSUS_PIXEL_GEO= '''
+SELECT %(fields)s
+FROM (
+     SELECT
+            advertiser,
+            date,
+            zip_code,
+            sum(num_views) as num_views
+     FROM pixel_geo_analytics
+     WHERE %(where)s and zip_code is not null
+     GROUP BY advertiser, date, zip_code
+) %(joins)s
+WHERE %(where)s
+GROUP BY %(groups)s
+'''
+
 PIXEL_DEVICE= '''
 SELECT %(fields)s
 FROM pixel_agent_analytics
@@ -166,5 +191,56 @@ FROM served_clicked
 WHERE 
     auction_id IS NOT NULL AND
     %(where)s
+GROUP BY %(groups)s
+"""
+
+CENSUS_AGE_GENDER_QUERY = """
+SELECT %(fields)s
+FROM census_age_gender a %(joins)s
+WHERE
+    %(where)s AND number > 0 AND percent > 0.0
+GROUP BY %(groups)s
+HAVING %(having)s
+"""
+
+CENSUS_INCOME_QUERY = """
+SELECT %(fields)s
+FROM zip_code_ref
+WHERE
+    %(where)s AND median_household_income is NOT NULL AND population IS NOT NULL
+GROUP BY %(groups)s
+"""
+
+CENSUS_RACE_QUERY = """
+SELECT %(fields)s
+FROM census_race a %(joins)s
+WHERE
+    %(where)s AND number > 0 AND percent > 0.0
+GROUP BY %(groups)s
+HAVING %(having)s
+"""
+
+SERVED_GEO = """
+SELECT %(fields)s
+FROM served_geo_analytics
+WHERE
+    %(where)s 
+GROUP BY %(groups)s
+"""
+
+CENSUS_SERVED_GEO = """
+SELECT %(fields)s
+FROM (
+     SELECT
+            advertiser,
+            date,
+            zip_code,
+            sum(num_served) as num_served
+     FROM served_geo_analytics
+     WHERE %(where)s and zip_code is not null
+     GROUP BY advertiser, date, zip_code
+) %(joins)s
+WHERE
+    %(where)s 
 GROUP BY %(groups)s
 """

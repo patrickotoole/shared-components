@@ -6,7 +6,7 @@ from twisted.internet import defer
 
 from lib.helpers import *
 from lib.hive.helpers import run_hive_session_deferred
-from lib.query.HIVE import CONVERSION_QUERY
+from lib.query.HIVE import CONVERSION_QUERY, CENSUS_CONVERSION_QUERY
 from ..base import AdminReportingBaseHandler
 
 JOIN = {
@@ -14,7 +14,15 @@ JOIN = {
     "bucket": "v JOIN (SELECT bucket_name, campaign_id FROM campaign_bucket_ref WHERE campaign_id IS NOT NULL) t on v.first_campaign = t.campaign_id",
     "lateral_view_imps": " LATERAL VIEW explode(domains) a as domain, imps",
     "lateral_view_clicks": " LATERAL VIEW explode(domains) as as domain, num_clicks",
-    "campaign_view": " LATERAL VIEW explode(campaigns) a as campaign, imps" 
+    "campaign_view": " LATERAL VIEW explode(campaigns) a as campaign, imps",
+    "census_income": "v JOIN (SELECT * FROM zip_code_ref WHERE median_household_income IS NOT NULL and zip_code IS NOT NULL) b ON (v.zip_code = b.zip_code)",
+    "census_age_gender": "v RIGHT OUTER JOIN (SELECT zip_code, gender, max_age, min_age, number, percent FROM census_age_gender GROUP BY zip_code, gender, min_age, max_age, number, percent) b ON (v.zip_code = b.zip_code)",
+    "census_race": " v RIGHT OUTER JOIN (SELECT zip_code, race, sum(number) as number, sum(percent) as percent FROM census_race GROUP BY zip_code, race ) b ON (v.zip_code = b.zip_code)"
+}
+
+QUERY_OPTIONS = {
+    "default": CONVERSION_QUERY,
+    "census": CENSUS_CONVERSION_QUERY
 }
 
 OPTIONS = {
@@ -31,6 +39,42 @@ OPTIONS = {
                 }
             }
         },
+
+    "census_income": {
+        "meta": {
+            "groups": ["advertiser", "date"],
+            "query": "census",
+            "fields": ["median_household_income"],
+            "static_joins": JOIN["census_income"],
+            "formatters": {
+                "zip": "none"
+            }
+        }
+    },
+
+    "census_age_gender": {
+        "meta": {
+            "groups": ["advertiser", "date", "gender", "min_age", "max_age"],
+            "query": "census",
+            "fields": ["population", "converted_population"],
+            "static_joins": JOIN["census_age_gender"],
+            "formatters": {
+                "zip": "none"
+            }
+        }
+    },
+
+    "census_race": {
+        "meta": {
+            "groups": ["advertiser", "date", "race"],
+            "query": "census",
+            "fields": ["population", "converted_population"],
+            "static_joins": JOIN["census_race"],
+            "formatters": {
+                "zip": "none"
+            }
+        }
+    },
 
     "first_campaign": {
         "meta": {
@@ -247,7 +291,9 @@ GROUPS = {
     "click_sellers": "click_sellers",
     "click_tags": "click_tags",
     "click_venues": "click_venues",
-    "click_domains": "click_domains"
+    "click_domains": "click_domains",
+    "zip": "v.zip_code",
+    "median_household_income": "round(sum(b.median_household_income * num_conv) / sum(num_conv), 0)"
     }
 
 
@@ -256,7 +302,9 @@ FIELDS = {
     "imps": "sum(imps)",
     "clicks": "sum(num_clicked)",
     "num_clicks": "sum(num_clicks)",
-    "num_conv": "count (*)"
+    "num_conv": "count (*)",
+    "converted_population": "sum(CASE WHEN v.zip_code IS NOT NULL THEN (num_conv*(percent / 100.0)) ELSE 0.0 END)", 
+    "population": "sum(number)"
     }
 
 WHERE = {
@@ -282,6 +330,7 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
     GROUPS = GROUPS
 
     OPTIONS = OPTIONS
+    QUERY_OPTIONS = QUERY_OPTIONS
 
     def initialize(self, db=None, api=None, hive=None):
         self.db = db 
@@ -378,8 +427,12 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
                 self.make_join(meta_data.get("static_joins",""))
             )
 
+            # Get the query string based on the query specified in the metadata
+            # If there is no query specified, use the default query
+            query = QUERY_OPTIONS[meta_data.get("query", "default")]
+
             self.get_data(
-                self.make_query(params),
+                self.make_query(params, query),
                 meta_data.get("groups",[]),
                 self.get_argument("wide",False)
             )

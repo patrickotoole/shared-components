@@ -44,7 +44,7 @@ class AdminReportingBaseTestCase(unittest.TestCase):
         self.a.WHERE.keys.return_value = ["a","b"]
 
         expected = {"a":1,"b":2} 
-        groupings = self.a.and_groupings(h)
+        groupings = self.a.and_groupings(self.a.WHERE, h)
         self.assertEqual(expected,groupings)
 
     def test_or_groupings(self):
@@ -55,7 +55,7 @@ class AdminReportingBaseTestCase(unittest.TestCase):
         self.a.WHERE.get.return_value = RETURN
 
         expected = map(lambda x: "where_field = " + x,values)
-        groupings = self.a.or_groupings(field,values)
+        groupings = self.a.or_groupings(self.a.WHERE, field,values)
         self.assertEqual(expected,groupings)
 
         
@@ -94,7 +94,7 @@ class AdminReportingBaseTestCase(unittest.TestCase):
         WHERE = ""
 
         values = self.a.make_params(GROUPS,FIELDS,WHERE)
-        self.assertEqual(values,{"fields":"","where":"","groups":"","joins":""})
+        self.assertEqual(values,{"fields":"","where":"","groups":"","joins":"", "having": ""})
 
     def test_make_params(self):
         self.a.GROUPS = {"g":"1"}
@@ -104,7 +104,7 @@ class AdminReportingBaseTestCase(unittest.TestCase):
         WHERE = ""
 
         values = self.a.make_params(GROUPS,FIELDS,WHERE)
-        self.assertEqual(values,{"fields":"1 as g, 2 as f","where":"","groups":"1","joins":""})
+        self.assertEqual(values,{"fields":"1 as g, 2 as f","where":"","groups":"1","joins":"", "having":""})
  
  
 
