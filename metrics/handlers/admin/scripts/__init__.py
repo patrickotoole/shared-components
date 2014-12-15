@@ -10,4 +10,5 @@ from batch import BatchRequestFormHandler
 from event_log import EventLogHandler
 from imps import ImpsHandler
 from viewable import ViewabilityHandler
+from logins import LoginsHandler
 import appnexus
