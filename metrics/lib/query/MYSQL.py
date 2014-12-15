@@ -227,3 +227,12 @@ ON
 WHERE
     %(where)s
 """
+
+ADMIN_LOGINS= """
+SELECT 
+    a.advertiser_name,
+    u.username,'admin' as password,
+    external_advertiser_id as advertiser_id 
+FROM rockerbox.advertiser a LEFT JOIN rockerbox.user u ON a.external_advertiser_id=u.advertiser_id 
+WHERE u.username like 'a\_%' and a.deleted=0
+"""

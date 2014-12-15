@@ -11,6 +11,7 @@ class AdvertiserRoutes(Routes):
             (r'/domain_list/?(.*?)/?',admin.target_list.TargetListHandler, self.connectors),  
             (r'/segment/?(.*?)/?',admin.segment.SegmentHandler, self.connectors), 
             (r'/viewable/?(.*?)/?',admin.advertiser.AdvertiserViewableHandler, self.connectors),
+            (r'/logins/?(.*?)/?', admin.scripts.LoginsHandler, self.connectors),
             (r'/?(.*?)',admin.scripts.AdvertiserHandler, self.connectors)   
         ]
  

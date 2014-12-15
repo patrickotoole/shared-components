@@ -10,6 +10,7 @@ class IndexHandler(tornado.web.RequestHandler):
         advertiser_links = [
             ("/admin/advertiser", "Index"),
             ("/admin/advertiser/new", "Advertiser Creator"),
+            ("/admin/advertiser/logins", "Advertiser Admin Logins"),            
             ("/admin/advertiser/segment", "Segment"),  
             ("/admin/advertiser/pixel/reporting", "On-site (Rockerbox vs. all users)"),
             ("/admin/advertiser/pixel/geo/reporting", "On-site geo (city, state, zip, dma, etc.) data"),
