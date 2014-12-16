@@ -133,7 +133,7 @@
     }
     
     // GET USER DATA
-    var getUserData = $.getJSON("/api?deleted=0&active=1&table=campaign_bucket&external_advertiser_id=" + extUserID, function(e){
+    var getUserData = $.getJSON("/admin/api?deleted=0&active=1&table=campaign_bucket&external_advertiser_id=" + extUserID, function(e){
         $.each(e, function(index, bucket){
             buckets[bucket.campaign_id] = bucket.bucket_name;
         });

@@ -132,7 +132,7 @@
 
 		
             // GET DATA
-            var getUserData = $.getJSON("/api?deleted=0&active=1&table=campaign_bucket&external_advertiser_id=" + extUserID).done(function(e){
+            var getUserData = $.getJSON("/admin/api?deleted=0&active=1&table=campaign_bucket&external_advertiser_id=" + extUserID).done(function(e){
                 var buckets = {};
 
                 $.each(e, function(index, bucket){

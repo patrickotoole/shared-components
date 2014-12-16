@@ -500,7 +500,7 @@ var parseQueryString = function( queryString ) {
 
 var sharedJson = parseQueryString(window.location.search.substring(1))
 
-$.getJSON("http://"+window.location.host+"/api?table=advertiser&active=1&deleted=0",function(e){
+$.getJSON("http://"+window.location.host+"/admin/api?table=advertiser&active=1&deleted=0",function(e){
   var advertiser_list = $('#advertiser-list')
   $(e).each(function(i,advertiser){
     advertiser_list.prepend('<li><a href="#' + advertiser.external_advertiser_id + '">' + advertiser.advertiser_name + '</a></li>')
@@ -517,7 +517,7 @@ $.getJSON("http://"+window.location.host+"/api?table=advertiser&active=1&deleted
   })
 })
 
-$.getJSON("http://"+window.location.host+"/api?table=creative",function(e){
+$.getJSON("http://"+window.location.host+"/admin/api?table=creative",function(e){
   var creative_list = $('#creative-list')
   $(e).each(function(i,creative){
     creative_list.prepend('<li><a href="#' + creative.external_id + '">' + creative.external_id + ' ' + creative.file_name + '</a></li>')
@@ -534,7 +534,7 @@ $.getJSON("http://"+window.location.host+"/api?table=creative",function(e){
   })
 })
 
-$.getJSON("http://"+window.location.host+"/api?table=sellers",function(e){
+$.getJSON("http://"+window.location.host+"/admin/api?table=sellers",function(e){
   var seller_list = $('#seller-list')
   $(e).each(function(i,seller){
     seller_list.prepend('<li><a href="#' + seller.id + '">' + seller.name + '</a></li>')

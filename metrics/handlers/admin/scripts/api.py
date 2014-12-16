@@ -27,7 +27,6 @@ class APIHandler(tornado.web.RequestHandler):
             table_query = API_QUERY % (table, where)
             data = self.db.select_dataframe(table_query)
             
-
             if response_format == "json":
                 l = data.fillna(0).T.to_dict().values()
                 response = ujson.dumps(l)

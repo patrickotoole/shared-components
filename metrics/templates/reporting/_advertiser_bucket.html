@@ -28,7 +28,7 @@ for(var i = 0; i < qs.length; i++) {
 
 var advertiser_id = qs_params['advertiser'] || {{ advertiser_id }}
 
-$.getJSON("/api?table=advertiser&external_advertiser_id=" + advertiser_id).done(function(e){
+$.getJSON("/admin/api?table=advertiser&external_advertiser_id=" + advertiser_id).done(function(e){
   var name = e[0]["advertiser_name"];
   $(".advertiser").text(name);
   $(".campaign").text("Advertiser")
@@ -40,7 +40,7 @@ $.getJSON("/api?table=advertiser&external_advertiser_id=" + advertiser_id).done(
   );
 })
 
-$.getJSON("/api?table=campaign_bucket&external_advertiser_id=" + advertiser_id).done(function(e){
+$.getJSON("/admin/api?table=campaign_bucket&external_advertiser_id=" + advertiser_id).done(function(e){
   var buckets = {};
 
   e.forEach(function(bucket){
