@@ -7,9 +7,9 @@ from census import CensusRoutes
 
 
 class AdminRoutes(
+    StreamingRoutes,
     ReportingRoutes,
     ServiceRoutes,
-    StreamingRoutes,
     CensusRoutes
 ):
 
