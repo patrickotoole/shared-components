@@ -1,6 +1,22 @@
 {% autoescape None %}
-{% extends "clean_base.html" %}
-{% block content %}
+{% extends "base.html" %}
+
+{% block page_title %}Advertiser{% end %}
+{% block page_header %}Pixels{% end %}
+
+{% block page_sidebar %}
+    <li><a href="/reporting"><img src="/static/img/sidebar/reporting-icon.png" alt="Reporting icon" /><span class="sidebar-label">campaign reporting</span></a></li>
+    <li><a href="/streaming"><img src="/static/img/sidebar/global-icon.png" alt="Global icon" /><span class="sidebar-label">global streaming</span></a></li>
+    <li><a href="/creative/reporting"><img src="/static/img/sidebar/creative-icon.png" alt="Creatives icon" /><span class="sidebar-label">creative reporting</span></a></li>
+    <li class="active"><a href="/advertiser"><img src="/static/img/sidebar/intraweek-icon.png" alt="Pixels icon" /><span class="sidebar-label">pixels</span></a></li>
+<!--
+  <li><a href="global"><img src="/static/img/sidebar/global-icon.png" alt="Global icon" /><span class="sidebar-label">global streaming</span></a></li>
+
+  <li><a href="intraweek"><img src="/static/img/sidebar/intraweek-icon.png" alt="Intraweek icon" /><span class="sidebar-label">intraweek overview</span></a></li>
+  -->
+{% end %}
+
+{% block page_content %}
 <link rel="stylesheet" type="text/css" href="http://getbootstrap.com/dist/css/bootstrap.min.css">
 <link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/dc.css">
 <link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/chosen.css">
@@ -11,7 +27,8 @@
 
 <div id="advertiser-content" class='container'>
 </div>
-
+{% end %}
+{% block page_scripts %}
 <script>
 
 var data = {{ data }};
@@ -29,10 +46,15 @@ var wrapped = buildAdvertiserWrapper(data,id,"12",false)
 //buildPixels(wrapped)  
 buildSegments(wrapped,"Pixel Implementation Guide",false)  
 
-
-</script>
-<script>
+$(document).ready(function() { 
+  $('#page-loader').fadeOut(); // put this inside the callback if you don't want it to pop up after the page content loads. will slow down the page load by a second or so though.
+  var extUserID = {{ advertiser_id }};
+  $.getJSON("/intraweek?format=json&ioinfo=" + extUserID, function(data){
+    $('#header #right-align #user-name').text(data[0].advertiser.toLowerCase());
+  });
   addMixpanelEvent({{ advertiser_id }}, "{{ user_id }}", "load advertiser");
+});
+
 </script>
 
 {% end %}  

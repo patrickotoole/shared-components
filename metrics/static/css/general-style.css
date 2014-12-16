@@ -133,6 +133,7 @@ a {
   display: inline-block;
   width: 180px;
   transition: all .10s linear;
+  box-sizing: content-box;
 }
 #sidebar li:not(.active) img {
   opacity: .6;
@@ -168,6 +169,7 @@ a {
 #header #left-align #header-logo {
   width: 140px;
   padding: 12px 20px 10px;
+  box-sizing: content-box;
 }
 #header #left-align #page-title {
   font-family: "Source Sans Pro", sans-serif;
