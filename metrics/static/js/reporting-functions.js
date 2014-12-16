@@ -71,7 +71,7 @@ function updateCampaignReports(currentReportView, currentCampaign, rowQty) {
 			return formatNumber(d.imps);
 		},
 		function(d){
-			return formatMoney(d.cost / (d.imps / 1000));
+      return d.cost > 0 ? formatMoney(d.cost / (d.imps / 1000)): '-';
 		},
 		function(d){
 			return formatNumber(d.clicks);
@@ -80,10 +80,10 @@ function updateCampaignReports(currentReportView, currentCampaign, rowQty) {
 			return formatNumber(d.conversions);
 		},
 		function(d){
-			return d.conversions > 0 ? formatMoney(d.cost / d.conversions) : '-';
+			return d.conversions > 0 && d.cost > 0 ? formatMoney(d.cost / d.conversions) : '-';
 		},
 		function(d){
-			return formatMoney(d.cost);
+			return d.cost > 0 ? formatMoney(d.cost) : '-';
 		},
 	]);
 }
