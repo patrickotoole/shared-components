@@ -332,6 +332,14 @@ a {
 #content .two-thirds-box {
   width: 750px;
 }
+#content #footer {
+  float: right;
+  display: inline-block;
+  font-family: "Source Sans Pro", sans-serif;
+  font-weight: 400;
+  font-size: 13px;
+  opacity: .5;
+}
 /* TABLE STYLES */
 .content-table ul {
   list-style-type: none;

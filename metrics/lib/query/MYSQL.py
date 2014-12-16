@@ -16,13 +16,11 @@ select
             cb.bucket_name,
             sum(v4.imps) as imps,
             sum(v4.clicks) as clicks,
-            sum(v4.media_cost* case when v4.cpm_multiplier is null then i.cpm_multiplier else v4.cpm_multiplier end) as media_cost,
+            sum(v4.media_cost* case when v4.cpm_multiplier is null then 0 else v4.cpm_multiplier end) as media_cost,
             1 as cpm_multiplier,
             0 as is_valid
         from
             reporting.v4_reporting v4
-        left join intraweek i
-        on v4.external_advertiser_id=i.external_advertiser_id
         left join campaign_bucket cb
         on v4.campaign_id=cb.campaign_id
         where
