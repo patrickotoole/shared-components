@@ -52,7 +52,7 @@
                
 		// GET ADVERTISER BUDGET AND PROGRESS       
         
-		var getUserInfo = $.getJSON("/admin/api?table=advertiser&external_advertiser_id=" + extUserID, function(data){
+		var getUserInfo = $.getJSON("/api?table=advertiser&external_advertiser_id=" + extUserID, function(data){
             $('#header #right-align #user-name').text(data[0].advertiser_name.toLowerCase());
         });
         

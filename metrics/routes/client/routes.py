@@ -18,6 +18,8 @@ class AdvertiserRoutes(Routes):
     def user_advertiser_routes(self):
         import handlers.reporting as reporting
         import handlers.advertiser as advertiser
+#        import handlers.api as api
+#        import handlers.admin.scripts as scripts
 
         return [
             (r'/reporting.*',reporting.ReportingHandler, self.connectors),
@@ -26,6 +28,7 @@ class AdvertiserRoutes(Routes):
             (r'/conversion/reporting.*', reporting.ConversionReportingHandler, self.connectors),  
 
             (r'/intraweek.*',reporting.InsertionOrderHandler, self.connectors),
+            (r'/api.*', reporting.APIHandler, self.connectors),
             (r'/advertiser', advertiser.AdvertiserHandler, self.connectors)
         ]
 

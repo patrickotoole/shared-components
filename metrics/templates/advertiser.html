@@ -49,7 +49,7 @@ buildSegments(wrapped,"Pixel Implementation Guide",false)
 $(document).ready(function() { 
   $('#page-loader').fadeOut(); // put this inside the callback if you don't want it to pop up after the page content loads. will slow down the page load by a second or so though.
   var extUserID = {{ advertiser_id }};
-  $.getJSON("/admin/api?table=advertiser&external_advertiser_id=" + extUserID, function(data){
+  $.getJSON("/api?table=advertiser&external_advertiser_id=" + extUserID, function(data){
     $('#header #right-align #user-name').text(data[0].advertiser_name.toLowerCase());
   });
   addMixpanelEvent({{ advertiser_id }}, "{{ user_id }}", "load advertiser");
