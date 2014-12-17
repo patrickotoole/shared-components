@@ -46,7 +46,7 @@ $(document).ready(function(){
     campaign_id = qs_params['campaign'],
     bucket = qs_params['group'] ? unescape(qs_params['group']) : false
 
-  $.getJSON("/admin/api?table=advertiser&external_advertiser_id=" + advertiser_id).done(function(e){
+  $.getJSON("/api?table=advertiser&external_advertiser_id=" + advertiser_id).done(function(e){
     var name = e[0]["advertiser_name"];
     $(".advertiser").text(name);
     $(".breadcrumb").append("<li><a href='" + 
@@ -62,7 +62,7 @@ $(document).ready(function(){
   })
   
   if (campaign_id) {
-    $.getJSON("/admin/api?table=campaign_bucket&campaign_id=" + campaign_id).done(function(e){
+    $.getJSON("/api?table=campaign_bucket&campaign_id=" + campaign_id).done(function(e){
       var name = (e.length > 0) ? e[0]["bucket_name"] : "Default Campaign"
       $(".campaign").text(name);
       $(".breadcrumb").append("<li>" + name + "</li>");

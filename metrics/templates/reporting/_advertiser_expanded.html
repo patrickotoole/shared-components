@@ -23,7 +23,7 @@
 
   var advertiser_id = qs_params['advertiser']
 
-  $.getJSON("/admin/api?table=advertiser&external_advertiser_id=" + advertiser_id).done(function(e){
+  $.getJSON("/api?table=advertiser&external_advertiser_id=" + advertiser_id).done(function(e){
     var name = e[0]["advertiser_name"];
     $(".advertiser").text(name);
     $(".campaign").text("Advertiser")

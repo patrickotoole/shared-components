@@ -1,6 +1,6 @@
 function addMixpanelEvent(advertiserID, userID, eventName) {
   if (userID.indexOf("a_") !== 0) {
-    $.getJSON("/admin/api?table=advertiser&external_advertiser_id=" + advertiserID, function(data){
+    $.getJSON("/api?table=advertiser&external_advertiser_id=" + advertiserID, function(data){
       if (userID.indexOf("a_") === 0) {
         userID = "admin";
       }
