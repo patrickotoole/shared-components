@@ -22,7 +22,8 @@ class ConnectorConfig(object):
         if not skip_buffers:
             self.connectors["buffers"] = {
                 "track": streaming.track_buffer,
-                "view" : streaming.view_buffer
+                "view" : streaming.view_buffer,
+                "imps" : streaming.imps_buffer
             }                          
         else:
             self.connectors["buffers"] = None

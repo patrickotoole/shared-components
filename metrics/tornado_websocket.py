@@ -50,7 +50,26 @@ def build_routes(connectors,override=[]):
 
     return routes(*(selected_routes or routes.all)) + static
 
+def test_the_thread(x,buffer_control):
+    # fill up the imps_buffer from kafka
+    from kafka import KafkaClient, MultiProcessConsumer
+    import ujson
+    kafka = KafkaClient("slave6:9092")
+    consumer = MultiProcessConsumer(kafka, "none","imps")
+    for message in consumer.get_messages(count=1000):
+        print message
+        if buffer_control['on']:
+            j = ujson.loads(message.message.value)
+            obj = dict(j['bid_request']['bid_info'].items() + j['bid_request']['tags'][0].items())
 
+            # wrangling
+            obj['creative'] = 0 
+            obj['auction_id'] = obj['auction_id_64']
+            obj['user_id'] = str(obj['user_id_64'])
+            if "703" in obj['user_id']:
+                print obj['user_id'], obj['user_id'] == "7033212274983420963"
+            obj['tag_id'] = obj['id']
+            x += [obj]
 
 if __name__ == '__main__':
     parse_command_line()
@@ -82,6 +101,7 @@ if __name__ == '__main__':
 
     reactor.listenTCP(options.listen_port, streaming.track_factory)
     reactor.listenTCP(options.view_port, streaming.view_factory)  
+    reactor.callInThread(test_the_thread,streaming.imps_buffer,streaming.BufferControl())
 
     server = tornado.httpserver.HTTPServer(app)
     server.listen(options.port)

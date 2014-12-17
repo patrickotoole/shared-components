@@ -75,6 +75,7 @@ class StreamingBase(BufferBase):
 
     def build_df(self,buffer_name):
         values = self.reset(buffer_name)
+        print len(values)
         return self.build(values)
 
     def mask_select_convert(self,df,masks):
