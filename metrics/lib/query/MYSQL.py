@@ -80,6 +80,20 @@ CONVERSION_QUERY = """
 
 UNION_QUERY = "%s UNION ALL (%s)" % (IMPS_QUERY, CONVERSION_QUERY)
 
+IMPS_CONVERSIONS_EXPORT_QUERY = """
+    select
+        date,
+        sum(imps) as imps,
+        sum(clicks) as clicks,
+        sum(media_cost) as media_cost,
+        sum(is_valid) as conversions
+    from
+        (%s) un
+    group by 1
+
+""" % (UNION_QUERY)
+
+
 BUCKET_QUERY = """
     select
         campaign_id

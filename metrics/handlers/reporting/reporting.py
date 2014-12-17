@@ -52,6 +52,11 @@ class ReportingBase(object):
         q = UNION_QUERY % params
         return self.db.select_dataframe(q)
 
+    def pull_advertiser_export(self,advertiser_id):
+        params = {"advertiser_id": advertiser_id}
+        q = IMPS_CONVERSIONS_EXPORT_QUERY % params
+        return self.db.select_dataframe(q)
+
     def pull_hive_campaigns(self,campaign_ids):
         """
         # Pull reporting data by campaign_ids
@@ -100,6 +105,7 @@ class ReportingHandler(BaseHandler,ReportingBase):
         bucket   = self.get_argument("group",False)
         strategy = self.get_argument("strategy",False)
         domain   = self.get_argument("domain", False)
+        export   = self.get_argument("export", False)
 
         if _format:
             if campaign:
@@ -108,6 +114,8 @@ class ReportingHandler(BaseHandler,ReportingBase):
                 data = self.pull_bucket(bucket,advertiser)
             elif domain:
                 data = self.pull_advertiser_domain(advertiser)
+            elif export:
+                data = self.pull_advertiser_export(advertiser)
             else:
                 data = self.pull_advertiser(advertiser)
         else:
