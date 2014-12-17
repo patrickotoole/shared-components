@@ -175,10 +175,12 @@ class Render:
             self.write(buf)
         self.finish()
 
+
     @staticmethod 
     def df_to_csv(self,df,*args):
         response = Convert.df_to_csv(df)
-        response = "<pre>%s</pre>" % response
+        if not self._headers.get("Content-Disposition"):
+            response = "<pre>%s</pre>" % response
         Render.compressWrite(self, response)
 
     @staticmethod
@@ -238,12 +240,16 @@ class decorators:
             # should make this determine the request type
             # based on the mime/type
             _format = self.get_argument("format",False)
+            _download = self.get_argument("download",False)
+
+            if _download:
+                self.set_header("Content-Disposition", "attachment")
 
             resp = fn(self,*args,**kwargs)
             _renderer, data = resp.next()
 
             renderer = renderers.get(_format,_renderer)
-            renderer(self,*data)
+            renderer(self, *data)
 
         return wrapped
 
