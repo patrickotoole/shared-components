@@ -140,6 +140,30 @@
   border: 1px solid #ddd;
   box-sizing: border-box;
   width: 100%;
+  margin-bottom: 10px;
+}
+#content #filter-box #download-buttons-box {
+  background: #fff;
+  border: 1px solid #ddd;
+  box-sizing: border-box;
+  width: 100%;
+  height: 50px;
+  font-weight: 400;
+  font-size: 16px;
+}
+#content #filter-box #download-buttons-box #download-buttons-content {
+  text-align: center;
+  vertical-align: middle;
+}
+#content #filter-box #download-buttons-box #download-buttons-content span {
+  width: 20px;
+  display: inline-block;
+}
+#content #filter-box #download-buttons-header {
+  font-family: "Novecento", sans-serif;
+}
+#content #filter-box #download-buttons-buttons {
+  font-family: "Source Sans Pro", sans-serif;
 }
 #content #filter-box #graph-interval {
   margin-bottom: 10px;
