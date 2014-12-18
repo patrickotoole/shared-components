@@ -179,13 +179,17 @@ class Render:
     @staticmethod 
     def df_to_csv(self,df,*args):
         response = Convert.df_to_csv(df)
-        if not self._headers.get("Content-Disposition"):
+        if self._headers.get("Content-Disposition"):
+            self.set_header("Content-Type", "text/csv");
+        else:
             response = "<pre>%s</pre>" % response
         Render.compressWrite(self, response)
 
     @staticmethod
     def df_to_json(self,df,*args):
         response = Convert.df_to_json(df)
+        if self._headers.get("Content-Disposition"):
+            self.set_header("Content-Type", "application/json");
         Render.compressWrite(self, response)
         
 
