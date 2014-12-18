@@ -57,7 +57,8 @@ class AdvertiserHandler(BaseHandler):
     @tornado.web.asynchronous
     def get(self):
         advertiser_id = self.current_advertiser
-        if advertiser_id:
+        user_id = self.current_user
+        if advertiser_id and user_id:
             self.get_data(advertiser_id)
         else:
             self.redirect("/")
