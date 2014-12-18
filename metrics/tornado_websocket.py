@@ -50,6 +50,29 @@ def build_routes(connectors,override=[]):
 
     return routes(*(selected_routes or routes.all)) + static
 
+def run_kafka(_buffer,buffer_control):
+    from kafka import KafkaClient, SimpleConsumer
+    import ujson, time
+
+    # this needs to be modified to use marathon 
+    # to get the list of kafka clients
+    kafka = KafkaClient("slave2:9092,slave7:9092,slave9:9092")
+    consumer = SimpleConsumer(kafka, "none","filtered_imps")
+
+    while True:
+        message = consumer.get_message(True,1)
+        if message is None:
+            time.sleep(1)
+        elif buffer_control['on']:
+            j = ujson.loads(message.message.value)
+            obj = dict(j['bid_request']['bid_info'].items() + j['bid_request']['tags'][0].items())
+
+            # wrangling
+            obj['creative'] = 0 
+            obj['auction_id'] = str(obj['auction_id_64'])
+            obj['user_id'] = str(obj['user_id_64'])
+            obj['tag_id'] = obj['id']
+            _buffer += [obj]
 
 
 if __name__ == '__main__':
@@ -82,6 +105,7 @@ if __name__ == '__main__':
 
     reactor.listenTCP(options.listen_port, streaming.track_factory)
     reactor.listenTCP(options.view_port, streaming.view_factory)  
+    reactor.callInThread(run_kafka,streaming.imps_buffer,streaming.BufferControl())
 
     server = tornado.httpserver.HTTPServer(app)
     server.listen(options.port)
