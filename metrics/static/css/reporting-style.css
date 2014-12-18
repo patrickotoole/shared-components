@@ -154,16 +154,14 @@
 #content #filter-box #download-buttons-box #download-buttons-content {
   text-align: center;
   vertical-align: middle;
+  margin-top: 15px;
 }
-#content #filter-box #download-buttons-box #download-buttons-content span {
-  width: 20px;
-  display: inline-block;
-}
-#content #filter-box #download-buttons-header {
+#content #filter-box #download-buttons-box #download-buttons-list {
+  position: inherit;
   font-family: "Novecento", sans-serif;
-}
-#content #filter-box #download-buttons-buttons {
-  font-family: "Source Sans Pro", sans-serif;
+  font-weight: 400;
+  color: #888;
+  font-size: 15px;
 }
 #content #filter-box #graph-interval {
   margin-bottom: 10px;
