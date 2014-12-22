@@ -29,8 +29,8 @@ class AdvertiserReportingRoutes(Routes):
         import handlers.admin.reporting as reporting
 
         return [
-            (r'/reporting/?',reporting.AdvertiserViewableHandler, self.connectors),
-            (r'/reporting/?(.*?)/?',reporting.AdvertiserViewableHandler, self.connectors),
+            (r'/reporting/?',reporting.DomainListHandler, self.connectors),
+            (r'/reporting/?(.*?)/?',reporting.DomainListHandler, self.connectors),
         ]
 
     @namespace("/admin/advertiser/pixel")
