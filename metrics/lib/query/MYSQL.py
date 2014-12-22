@@ -82,7 +82,7 @@ UNION_QUERY = "%s UNION ALL (%s)" % (IMPS_QUERY, CONVERSION_QUERY)
 
 IMPS_CONVERSIONS_EXPORT_QUERY = """
     select
-        date_add(date, interval -5 hour) as date,
+        DATE_FORMAT(date_add(date, interval -4 hour), "%%%%Y-%%%%m-%%%%d") as date,
         sum(imps) as imps,
         sum(clicks) as clicks,
         sum(media_cost) as media_cost,
