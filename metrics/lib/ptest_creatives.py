@@ -226,7 +226,7 @@ if output_str != "":
 	print "emailing..."
 	sg = sendgrid.SendGridClient('ronjacobson', 'rockerbox13')
 	message = sendgrid.Mail()
-	message.add_to(['Lee Yanco <lee@rockerbox.com>','Rick O\'Toole <rick@rockerbox.com>','Alan Kwok <alan@rockerbox.com>','Will West <will@rockerbox.com>'])
+	message.add_to(['Lee Yanco <lee@rockerbox.com>','Rick O\'Toole <rick@rockerbox.com>','Alan Kwok <alan@rockerbox.com>','Will West <will@rockerbox.com>', 'Stephen Ma <stephen@rockerbox.com>'])
 	message.set_subject('Creative pTest Report')
 	message.set_html(output_str)
 	message.set_from('reporting <reporting@rockerbox.com>')
