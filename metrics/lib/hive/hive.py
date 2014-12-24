@@ -2,6 +2,7 @@ import contextlib
 import hive_utils
 import requests
 import json
+import logging
 from twisted.internet import threads
 
 @contextlib.contextmanager
@@ -62,7 +63,7 @@ class Hive(object):
         # Sets number of mappers/reducers
         self.n_map = n_map
         self.n_reduce = n_reduce
-        print self.n_map
+        #print self.n_map
 
 
 
@@ -77,9 +78,9 @@ class Hive(object):
     def marathon_instance(self):
         resp = requests.get(self.marathon_endpoint, headers={"Accept": "application/json"})
         instances = json.loads(resp.content)['tasks']
-        print instances
+        #print instances
         shark_servers = [ i for i in instances if i["appId"] == "/shark-server-debug" ]
-        print shark_servers
+        #print shark_servers
         server = shark_servers[-1]
         return server
        
@@ -90,7 +91,7 @@ class Hive(object):
     def connect(self):
         try:
             server = self.marathon_instance()
-            print server
+            logging.info("Hive connecting: %(host)s" % server)
             hive = CustomHiveClient(server=server["host"],port=server["ports"][0])
             return hive
         except:
