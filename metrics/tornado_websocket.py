@@ -52,23 +52,25 @@ def get_partitions(client,topic):
 
 def run_kafka(_buffer,buffer_control):
     from kafka import KafkaClient, SimpleConsumer, common
-
+    from link import lnk 
     import ujson, time
 
-    # this needs to be modified to use marathon 
-    # to get the list of kafka clients
-    kafka = KafkaClient("slave3:9092,slave7:9092,slave9:9092")
-    # kafka = KafkaClient("slave3:9092,slave11:9092,slave13:9092
-    # kafka = KafkaClient("slave9:9092,slave11:9092,slave12:9092,slave10:9092")
-
-    topic = "filtered_imps_2"
+    topic = "filtered_imps"
     group = "none"
+    
+    tasks = lnk.api.marathon.get("/v2/apps//docker-kafka").json['app']['tasks']
+    hosts_str = ",".join(["%s:9092" % t['host'] for t in tasks])
 
-    consumer = SimpleConsumer(kafka, group,topic)
+    logging.info("Kafka client hosts string: %s" % hosts_str)
+
+    kafka = KafkaClient(hosts_str)
+    consumer = SimpleConsumer(kafka, group, topic)
     partitions = get_partitions(kafka,topic)
 
-    print consumer.offsets
+    logging.info("Connecting kafka consumer: %s" % str(consumer.offsets))
+    
 
+    """
     ti = int(time.time()*1000)
     for partition in partitions:
 
@@ -88,15 +90,18 @@ def run_kafka(_buffer,buffer_control):
 
     print consumer.offsets
     consumer.commit()
-
+    """
 
     while True:
+        try:
             message = consumer.get_message(True,1)
             if message is None:
                 time.sleep(1)
             elif buffer_control['on']:
                 j = ujson.loads(message.message.value)
                 obj = dict(j['bid_request']['bid_info'].items() + j['bid_request']['tags'][0].items())
+                logging.info(j)
+
 
                 obj['timestamp'] = str(j['bid_request']['timestamp'])
                 obj['sizes'] = str(j['bid_request']['tags'][0]['sizes'])
@@ -107,6 +112,11 @@ def run_kafka(_buffer,buffer_control):
                 obj['user_id'] = str(obj['user_id_64'])
                 obj['tag_id'] = obj['id']
                 _buffer += [obj]
+            else:
+                logging.info(ujson.loads(message.message.value))
+        except Exception as e:
+            logging.info(e)
+            pass
 
 
 if __name__ == '__main__':
