@@ -12,6 +12,7 @@ from routes import AllRoutes
 from connectors import ConnectorConfig
 from shutdown import sig_wrap
 from handlers import streaming
+from lib.kafka_queue import KafkaQueue
 
 import requests
 import signal
@@ -47,67 +48,6 @@ def build_routes(connectors,override=[]):
 
     return routes(*(selected_routes or routes.all)) + static
 
-def get_partitions(client,topic):
-    return client.topic_partitions[topic]
-
-def run_kafka(_buffer,buffer_control):
-    from kafka import KafkaClient, SimpleConsumer, common
-
-    import ujson, time
-
-    # this needs to be modified to use marathon 
-    # to get the list of kafka clients
-    kafka = KafkaClient("slave3:9092,slave7:9092,slave9:9092")
-    # kafka = KafkaClient("slave3:9092,slave11:9092,slave13:9092
-    # kafka = KafkaClient("slave9:9092,slave11:9092,slave12:9092,slave10:9092")
-
-    topic = "filtered_imps_2"
-    group = "none"
-
-    consumer = SimpleConsumer(kafka, group,topic)
-    partitions = get_partitions(kafka,topic)
-
-    print consumer.offsets
-
-    ti = int(time.time()*1000)
-    for partition in partitions:
-
-        offset_req = common.OffsetRequest(topic,partition,ti,2147483647)
-        offsets = kafka.send_offset_request([offset_req])
-        offset_min = offsets[0]
-        offset_max = offsets[-1]
-
-
-        offset_req_group = common.OffsetFetchRequest(topic,0)
-        offset_cur = kafka.send_offset_fetch_request([offset_req_group])
-
-        if offset_min <= offset_cur <= offset_max:
-            consumer.offsets[partition] = offset_cur.offsets[0]
-        else:
-            consumer.offsets[partition] = offset_min.offsets[0]
-
-    print consumer.offsets
-    consumer.commit()
-
-
-    while True:
-            message = consumer.get_message(True,1)
-            if message is None:
-                time.sleep(1)
-            elif buffer_control['on']:
-                j = ujson.loads(message.message.value)
-                obj = dict(j['bid_request']['bid_info'].items() + j['bid_request']['tags'][0].items())
-
-                obj['timestamp'] = str(j['bid_request']['timestamp'])
-                obj['sizes'] = str(j['bid_request']['tags'][0]['sizes'])
-
-                # wrangling
-                obj['creative'] = 0
-                obj['auction_id'] = str(obj['auction_id_64'])
-                obj['user_id'] = str(obj['user_id_64'])
-                obj['tag_id'] = obj['id']
-                _buffer += [obj]
-
 
 if __name__ == '__main__':
     parse_command_line()
@@ -139,7 +79,7 @@ if __name__ == '__main__':
 
     reactor.listenTCP(options.listen_port, streaming.track_factory)
     reactor.listenTCP(options.view_port, streaming.view_factory)  
-    reactor.callInThread(run_kafka,streaming.imps_buffer,streaming.BufferControl())
+    reactor.callInThread(connectors['kafka'],streaming.imps_buffer,streaming.BufferControl())
 
     server = tornado.httpserver.HTTPServer(app)
     server.listen(options.port)

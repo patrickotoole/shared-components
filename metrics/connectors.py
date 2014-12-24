@@ -1,11 +1,13 @@
 from link import lnk
 from handlers import streaming
+from lib.kafka_queue import KafkaQueue
 import lib.hive as h
 
 class ConnectorConfig(object):
 
     def __init__(self, skip_db=False, skip_reporting_db=False, skip_console_api=False, 
-            skip_bidder_api=False, skip_buffers=False, skip_redis=False, skip_hive=False):
+            skip_bidder_api=False, skip_buffers=False, skip_redis=False, skip_hive=False,
+            skip_kafka=False):
 
         self.connectors = {}
 
@@ -17,6 +19,7 @@ class ConnectorConfig(object):
 
         self.connectors["hive"] = h.Hive().hive if not skip_hive else None
         self.connectors["redis"] = streaming._redis if not skip_redis else None
+        self.connectors["kafka"] = KafkaQueue(mock_connect=skip_kafka)
         
 
         if not skip_buffers:
@@ -27,5 +30,5 @@ class ConnectorConfig(object):
             }                          
         else:
             self.connectors["buffers"] = None
-        
+
  

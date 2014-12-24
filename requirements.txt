@@ -16,3 +16,4 @@ xmltodict
 sendgrid
 premailer
 pyyaml
+kafka-python
