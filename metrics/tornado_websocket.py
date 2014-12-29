@@ -35,6 +35,7 @@ define("skip_bidder_api", default=False,type=bool)
 define("skip_buffers", default=False,type=bool) 
 define("skip_redis", default=False,type=bool) 
 define("skip_hive", default=False,type=bool)  
+define("skip_kafka", default=False,type=bool)   
 define("no_internet",default=False, help="turns off things that require internet connection",type=bool)
 define("routes",default="", help="list of routes to include: \n" + route_options,type=str) 
 define("show_routes",default=False, help="will print a list of the available routes",type=bool)  
@@ -59,7 +60,8 @@ if __name__ == '__main__':
         options.no_internet or options.skip_bidder_api,
         options.skip_buffers,
         options.no_internet or options.skip_redis,
-        options.no_internet or options.skip_hive
+        options.no_internet or options.skip_hive,
+        options.no_internet or options.skip_kafka
     ).connectors
 
     routes = [r for r in options.routes.split(",") if len(r)]
