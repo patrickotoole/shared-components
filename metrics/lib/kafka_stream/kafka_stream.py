@@ -4,13 +4,15 @@ class KafkaStream(object):
 
     def __init__(self,topic="test_conversions_raw",
             kafka_hosts="slave1:9092", use_marathon=True,async=True,
-            batch_send=False, batch_count=30, batch_time=10,**kwargs):
+            batch_send=False, batch_count=30, batch_time=10,use_parse=False,**kwargs):
 
         self.topic = str(topic)
         self.async = async
         self.batch_count = batch_count
         self.batch_send = batch_send
         self.batch_time = batch_time
+
+        self.use_parse = use_parse
 
         self.hosts_str = self.marathon_hosts() if use_marathon else kafka_hosts
         self._producer = self.connect(self.hosts_str)
@@ -49,7 +51,24 @@ class KafkaStream(object):
             return self._producer
 
     def send_message(self,msg):
+        if self.use_parse:
+            msg = parse_url(msg)
         self.producer.send_messages(self.topic, msg)
+
+def parse_url(msg):
+    import urlparse
+    import ujson
+    space_split = msg.split(" ") 
+    quote_split = msg.split("\"")
+    url = space_split[1]
+
+    storage = { i:j[0] for i,j in urlparse.parse_qs(url.split("?")[1]).iteritems() }
+    storage['ip'] = space_split[-1]
+    storage['referrer'] = quote_split[1]
+    storage['user_agent'] = " ".join(quote_split[-1].split(" ")[:-1])
+
+    return ujson.dumps(storage)
+
 
 
 if __name__ == "__main__":
@@ -64,6 +83,7 @@ if __name__ == "__main__":
     define("use_batch",type=bool)
     define("batch_size",type=int)
     define("batch_time",type=int)
+    define("use_parse",type=bool)
 
     parse_command_line()
      
@@ -74,7 +94,8 @@ if __name__ == "__main__":
         options.async,
         options.use_batch,
         options.batch_size,
-        options.batch_time
+        options.batch_time,
+        options.use_parse
     )
   
     input_stream = takewhile(bool, (stdin.readline() for _ in count()))
