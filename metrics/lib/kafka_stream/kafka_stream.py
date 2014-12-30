@@ -59,7 +59,7 @@ def parse_url(msg):
     omsg = msg
     try:
         import urlparse
-        import ujson
+        import json
         space_split = msg.split(" ") 
         quote_split = msg.split("\"")
         url = space_split[1]
@@ -76,7 +76,7 @@ def parse_url(msg):
         if "." in storage['ip'] == False:
             raise Exception("IP parse: " + storage['ip'])
 
-        return ujson.dumps(storage)
+        return json.dumps(storage)
     except Exception as e:
         logging.error("Issue parsing: " + str(e.message))
         return ""
