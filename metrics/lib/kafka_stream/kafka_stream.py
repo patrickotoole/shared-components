@@ -56,18 +56,31 @@ class KafkaStream(object):
         self.producer.send_messages(self.topic, msg)
 
 def parse_url(msg):
-    import urlparse
-    import ujson
-    space_split = msg.split(" ") 
-    quote_split = msg.split("\"")
-    url = space_split[1]
+    omsg = msg
+    try:
+        import urlparse
+        import ujson
+        space_split = msg.split(" ") 
+        quote_split = msg.split("\"")
+        url = space_split[1]
 
-    storage = { i:j[0] for i,j in urlparse.parse_qs(url.split("?")[1]).iteritems() }
-    storage['ip'] = space_split[-1]
-    storage['referrer'] = quote_split[1]
-    storage['user_agent'] = " ".join(quote_split[-1].split(" ")[:-1])
+        storage = { i:j[0] for i,j in urlparse.parse_qs(url.split("?")[1]).iteritems() }
+        storage['ip'] = space_split[-1]
+        storage['referrer'] = quote_split[1]
+        storage['user_agent'] = " ".join(quote_split[-1].split(" ")[:-1])
+        storage['timestamp'] = quote_split[0].split(" ")[-3]
 
-    return ujson.dumps(storage)
+        if not "/20" in storage['timestamp']:
+            raise Exception("Timestamp parse: " + storage['timestamp'])
+
+        if "." in storage['ip'] == False:
+            raise Exception("IP parse: " + storage['ip'])
+
+        return ujson.dumps(storage)
+    except Exception as e:
+        logging.error("Issue parsing: " + str(e.message))
+        return ""
+
 
 
 

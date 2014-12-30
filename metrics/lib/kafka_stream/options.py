@@ -57,9 +57,6 @@ import logging
 import os
 import sys
 
-from lib.report.utils.utils import parse_datetime
-from lib.report.utils.utils import parse_timedelta
-
 FILE_PATHS =  [
                 "/etc/rockerbox/%s",
                 os.path.expanduser("~/.rockerbox/%s"),
@@ -262,8 +259,6 @@ class _Option(object):
 
     def parse(self, value):
         _parse = {
-            datetime.datetime: parse_datetime,
-            datetime.timedelta: parse_timedelta,
             bool: self._parse_bool,
             str: self._parse_string,
         }.get(self.type, self.type)
