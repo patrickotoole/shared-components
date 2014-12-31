@@ -148,7 +148,7 @@ class TargetingHandler(TargetingBase):
         if disable:
             self.disable_target(disable)
             self.update_profile()
-            self.update_boxes()
+#            self.update_boxes()
 
         delete = self.get_argument("delete",False)
         if delete:
@@ -203,7 +203,7 @@ class TargetingHandler(TargetingBase):
                 to_add = {}
 
         self.update_profile()
-        self.update_boxes()
+#        self.update_boxes()
 
         json = ujson.dumps(to_add)
         self.write(json)
