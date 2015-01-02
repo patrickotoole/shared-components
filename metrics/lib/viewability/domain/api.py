@@ -99,13 +99,26 @@ class DomainAPI(object):
         logging.info(DL_MSG % (domain_list,len(domains)))
 
         return domains
+
+    def get_pixel_source_name(self):
+        RQ_MSG = "Pull pixel_source_name for advertiser: %s"
+        LN_MSG = "Received pixel_source_name: %s"
+        ADVERTISER_URL = "/advertiser/%s?format=json" % self.advertiser_id 
+        logging.info(RQ_MSG % self.advertiser_id)
+        value = self.rb_api.get(ADVERTISER_URL)
+        source = value.json[0]['pixel_source_name']
+        logging.info(LN_MSG % source)
+        return source
+
         
     def get_viewability_df(self,domain_list,duration="past_month"):
         RQ_MSG = "Rockerbox API request for %s (%s): %s"
         LN_MSG = "Rockerbox API lines received: %s"
 
         campaign_string = ",".join(map(str,self.campaign_ids))
-        compiled_url = URL % (duration,campaign_string,domain_list.split("_")[0],domain_list)
+        #pixel_source = domain_list.split("_")[0] 
+        pixel_source = self.get_pixel_source_name()
+        compiled_url = URL % (duration,campaign_string,pixel_source,domain_list)
         print compiled_url
 
         logging.info(RQ_MSG % (domain_list,duration,campaign_string)) 
