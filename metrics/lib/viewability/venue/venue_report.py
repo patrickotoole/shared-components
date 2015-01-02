@@ -104,8 +104,8 @@ class VenueReport(object):
         #venues.to_sql(self.table_name,self.db,flavor="mysql",if_exists="replace")
 
     def pull_report(self):
-        PU_MSG = "Pulling domain report from appnexus"
-        RE_MSG = "AppNexus domain report lines received: %s"
+        PU_MSG = "Pulling venue report from appnexus"
+        RE_MSG = "AppNexus venue report lines received: %s"
 
         logging.info(PU_MSG)
         params = {

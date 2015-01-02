@@ -42,30 +42,30 @@ def main():
         advertiser_id = obj['advertiser']
         advertiser_name = rb_api.get("/advertiser/%s?format=json" % advertiser_id).json[0]['pixel_source_name']
         print advertiser_name
-    #try:
-        va = VenueAnalysis(an_api,an_reporting,venue_db,rb_api,reporting_db,campaigns,advertiser_id,advertiser_name)
+        try:
+            va = VenueAnalysis(an_api,an_reporting,venue_db,rb_api,reporting_db,campaigns,advertiser_id,advertiser_name)
 
-        to_block = va.bad_venues
-        to_block['action'] = 'bad'
-        logging.info("Bad venues: %s" % len(va.bad_venues))
+            to_block = va.bad_venues
+            to_block['action'] = 'bad'
+            logging.info("Bad venues: %s" % len(va.bad_venues))
 
-        if not options.skip_hidden_venues:
-            to_block = to_block.append(va.hidden_venues)
-            to_block['action'] = to_block['action'].fillna('ban') if "action" in to_block.columns else 'ban'
-            logging.info("Appneuxs hidden venues: %s" % len(va.hidden_venues))
+            if not options.skip_hidden_venues:
+                to_block = to_block.append(va.hidden_venues)
+                to_block['action'] = to_block['action'].fillna('ban') if "action" in to_block.columns else 'ban'
+                logging.info("Appneuxs hidden venues: %s" % len(va.hidden_venues))
+            
+            to_block = to_block.fillna(0)
+            to_block = to_block.replace([pd.np.inf, -pd.np.inf], 0)
+
+            for cp in campaigns:
+                to_block['campaign_id'] = cp
+                va.block_venues(cp,list(to_block.index))
+                va.venue_change_ref(to_block)
+
+            sleep(5)
+        except Exception, e:
+            logging.error("%s %s" % (str(obj),e))
         
-        to_block = to_block.fillna(0)
-        to_block = to_block.replace([pd.np.inf, -pd.np.inf], 0)
-
-        for cp in campaigns:
-            to_block['campaign_id'] = cp
-            va.block_venues(cp,list(to_block.index))
-            va.venue_change_ref(to_block)
-
-        sleep(5)
-    #except Exception, e:
-        #logging.error("%s %s" % (str(obj),e))
-    
 
 if __name__ == "__main__":
     main() 
