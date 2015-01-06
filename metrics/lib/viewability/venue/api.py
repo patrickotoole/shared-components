@@ -76,9 +76,10 @@ class VenueAPI(object):
         campaign = self.get_campaign(campaign_id)
         is_active = campaign['state'] == "active"
         profile_id = campaign['profile_id']
-
-        if is_active:
+        
+        if not is_active:
             return
+        
         
         venues += self.get_venue_targets(campaign_id)
 

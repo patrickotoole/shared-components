@@ -144,11 +144,15 @@ def _get_rows_count(db, table):
 def _integrity_check(db=None, df=None, **kwargs):
     q = _get_query(**kwargs)
     db_df = db.select_dataframe(q)[list(df.columns)]
+    """
     try:
+        # this is just flat wrong
         assert (sorted(db_df.to_csv(index=False).split('\n')) ==
                 sorted(db_df.to_csv(index=False).split('\n')))
     except:
         raise ValueError("csv not equal")
+    """
+
 
 # todo if not date column just use limit (len of the dataframe)
 def _get_query(**kwargs):
