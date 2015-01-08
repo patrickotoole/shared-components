@@ -31,15 +31,22 @@ if len(sys.argv) > 1:
 
 def get_flumestats():
   base = "servers." + gethostname() + ".flume."
-  h1 = json.loads(requests.get("http://localhost:34545/metrics").content)
-  stats = []
-  for key1, h2 in h1.iteritems():
-    for key2, value in h2.iteritems(): 
-      try:
-        int(value)
-        stats.append(base + ".".join([key1.split(".")[1], key2]) + " " + value + " %s")
-      except:
-        pass
+  x = json.loads(requests.get("http://localhost:34545/metrics").content)
+  y = json.loads(requests.get("http://localhost:34546/metrics").content)
+  z = json.loads(requests.get("http://localhost:34547/metrics").content)
+  w = json.loads(requests.get("http://localhost:34548/metrics").content)
+
+
+
+  stats = []  
+  for h1 in [x,y,z,w]:
+    for key1, h2 in h1.iteritems():
+      for key2, value in h2.iteritems(): 
+        try:
+          int(value)
+          stats.append(base + ".".join([key1.split(".")[1], key2]) + " " + value + " %s")
+        except:
+          pass
   return stats
 
 def get_loadavg():
