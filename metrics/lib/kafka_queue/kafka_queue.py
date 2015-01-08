@@ -5,7 +5,7 @@ def transform_message(message):
     j = ujson.loads(message)
     obj = dict(j['bid_request']['bid_info'].items() + j['bid_request']['tags'][0].items())
     obj['timestamp'] = str(j['bid_request']['timestamp'])
-    obj['sizes'] = str(j['bid_request']['tags'][0]['sizes'])
+    obj['sizes'] = j['bid_request']['tags'][0]['sizes']
 
     # wrangling
     obj['creative'] = 0
@@ -18,7 +18,7 @@ def transform_message(message):
 class KafkaQueue(object):
 
     def __init__(self,default_hosts="slave1:9092",
-            use_marathon=True,topic="filtered_imps",group="none",
+            use_marathon=True,topic="conversion_impsw",group="none",
             mock_connect=False):
 
         self.topic = topic
@@ -47,12 +47,14 @@ class KafkaQueue(object):
     @classmethod
     def connect(self,hosts_str,topic,group):
         from kafka import KafkaClient, SimpleConsumer, common
+        try:
+            logging.info("Kafka connecting: %s" % hosts_str)
 
-        logging.info("Kafka connecting: %s" % hosts_str)
-
-        client = KafkaClient(hosts_str)
-        consumer = SimpleConsumer(client, group, topic)
-        return consumer
+            client = KafkaClient(hosts_str)
+            consumer = SimpleConsumer(client, group, topic)
+            return consumer
+        except:
+            self.connect(hosts_str,topic,group)
 
 
     @property
@@ -67,19 +69,27 @@ class KafkaQueue(object):
     def populate_buffer(self,_buffer,buffer_control,transform=lambda x: x):
         import time
         consumer = self.consumer
+        repeated_failure = 0 
         while True:
             try:
+
                 message = consumer.get_message(True,1)
                 if message is None:
                     time.sleep(1)
                     continue
-
-                logging.debug(message.message.value)
+                logging.info(message.message.value)
                 if buffer_control['on']:
                     obj = transform(message.message.value)
                     _buffer += [obj]
+
             except Exception as e:
-                logging.info(e)
+
+                logging.error(e)
+                repeated_failure += 1
+                if repeated_failure > 5:
+                     time.sleep(1)
+                     self._consumer = self.connect(self.hosts_str, self.topic, self.group)
+                     repeated_failure = 0
      
 
 
