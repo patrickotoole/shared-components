@@ -17,8 +17,8 @@ def transform_message(message):
 
 class KafkaQueue(object):
 
-    def __init__(self,default_hosts="slave1:9092",
-            use_marathon=True,topic="conversion_impsw",group="none",
+    def __init__(self,default_hosts="slave16:9092",
+            use_marathon=True,topic="filtered_imps",group="none",
             mock_connect=False):
 
         self.topic = topic
@@ -50,11 +50,15 @@ class KafkaQueue(object):
         try:
             logging.info("Kafka connecting: %s" % hosts_str)
 
-            client = KafkaClient(hosts_str)
+            client = KafkaClient(hosts_str,timeout=10)
             consumer = SimpleConsumer(client, group, topic)
             return consumer
-        except:
-            self.connect(hosts_str,topic,group)
+        except Exception as e:
+            import time
+            logging.error(e)
+            logging.error("Sleeping 5 seconds before attempting reconnect...")
+            time.sleep(5)
+            return self.connect(hosts_str,topic,group)
 
 
     @property
@@ -77,7 +81,7 @@ class KafkaQueue(object):
                 if message is None:
                     time.sleep(1)
                     continue
-                logging.info(message.message.value)
+                logging.debug(message.message.value)
                 if buffer_control['on']:
                     obj = transform(message.message.value)
                     _buffer += [obj]
