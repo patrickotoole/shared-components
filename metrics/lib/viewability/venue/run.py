@@ -22,6 +22,7 @@ def main():
     define("skip_domain_list",type=bool,default=False)
     define("skip_campaign_bucket",type=bool,default=False)
     define("skip_hidden_venues",type=bool,default=False) 
+    define("debug",type=bool,default=False)  
     define("domain_list",default="1=1")
     define("campaign_bucket",default="1=1") 
     
@@ -48,6 +49,13 @@ def main():
             to_block = va.bad_venues
             to_block['action'] = 'bad'
             logging.info("Bad venues: %s" % len(va.bad_venues))
+
+            if options.debug:
+                print va.good_venues
+                print va.bad_venues
+                print va.hidden_venues
+                print va.learn_venues.sum()
+                continue
 
             if not options.skip_hidden_venues:
                 to_block = to_block.append(va.hidden_venues)

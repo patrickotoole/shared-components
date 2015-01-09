@@ -71,6 +71,20 @@ class VenueAnalysis(VenueAPI):
         _v = _v[(_v.served > 500) & ((_v.percent_loaded < .5) | (_v.percent_visible < .4))]
         return _v
 
+    @property
+    def good_venues(self):
+        _v = self.viewability_report
+        _v = _v[(_v.served > 500) & ~((_v.percent_loaded < .5) | (_v.percent_visible < .4))]
+        return _v
+
+    @property
+    def learn_venues(self):
+        _v = self.viewability_report
+        _v = _v[(_v.served < 500)] 
+        return _v
+     
+     
+
 if __name__ == "__main__":
     from link import lnk
     _d = VenueAnalysis(lnk.api.reporting,lnk.dbs.venue,lnk.api.rockerbox)
