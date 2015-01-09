@@ -24,6 +24,10 @@ class AdminStreamingHandler(StreamingHandler):
     def on_message(self, message):        
         try:
             masks = ujson.loads(message)
+            streams = masks.get("streams",False)
+            if streams:
+                clients[self.id]['streams'] = streams
+                del masks["streams"] 
             clients[self.id]['masks'] = masks
         except:
             pass

@@ -66,7 +66,8 @@ class StreamingHandler(StreamingBase,tornado.websocket.WebSocketHandler):
                 continue
 
             masks = client.get('masks',False)
-            dicts = { key: self.mask_select_convert(df,masks) for key, df in base.iteritems() }
+            streams = client.get('streams',['track'])
+            dicts = { key: self.mask_select_convert(df,masks,key) for key, df in base.iteritems() if key in streams}
             json = ujson.dumps(dicts,ensure_ascii=True)
 
             try:

@@ -19,10 +19,11 @@ class KafkaQueue(object):
 
     def __init__(self,default_hosts="slave16:9092",
             use_marathon=True,topic="filtered_imps",group="none",
-            mock_connect=False):
+            mock_connect=False,transform=transform_message):
 
         self.topic = topic
         self.group = group
+        self.transform = transform
 
         if not mock_connect:
             self.hosts_str = self.marathon_hosts() if use_marathon else default_hosts
@@ -33,7 +34,10 @@ class KafkaQueue(object):
             self._consumer.get_message.return_value = None
 
     def __call__(self,_buffer,buffer_control):
-        self.populate_buffer(_buffer,buffer_control,transform_message)
+        if self.transform:
+            self.populate_buffer(_buffer,buffer_control,self.transform)
+        else:
+            self.populate_buffer(_buffer,buffer_control)
 
     @classmethod
     def marathon_hosts(self):
@@ -93,6 +97,7 @@ class KafkaQueue(object):
                 if repeated_failure > 5:
                      time.sleep(1)
                      self._consumer = self.connect(self.hosts_str, self.topic, self.group)
+                     self._consumer
                      repeated_failure = 0
      
 
@@ -102,7 +107,9 @@ def get_partitions(client,topic):
     return client.topic_partitions[topic]
 
 
-def update_partitions(kafka,topic):
+def update_partitions(kafka,topic,consumer):
+    import time
+    from kafka import common
     
     partitions = get_partitions(kafka,topic)
     ti = int(time.time()*1000)
@@ -114,9 +121,11 @@ def update_partitions(kafka,topic):
         offset_max = offsets[-1]
 
 
-        offset_req_group = common.OffsetFetchRequest(topic,0)
+        offset_req_group = common.OffsetFetchRequest(topic,partition)
         offset_cur = kafka.send_offset_fetch_request([offset_req_group])
 
+    
+        print offset_min, offset_cur, offset_max 
         if offset_min <= offset_cur <= offset_max:
             consumer.offsets[partition] = offset_cur.offsets[0]
         else:
