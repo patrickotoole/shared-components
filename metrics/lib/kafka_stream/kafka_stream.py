@@ -50,10 +50,18 @@ class KafkaStream(object):
             self._producer = self.connect(self.hosts_str)
             return self._producer
 
-    def send_message(self,msg):
-        if self.use_parse:
-            msg = parse_url(msg)
-        self.producer.send_messages(self.topic, msg)
+    def send_message(self,msg,retry=0):
+        omsg = msg
+        try:
+            if self.use_parse:
+                msg = parse_url(msg)
+            self.producer.send_messages(self.topic, msg)
+        except Exception as e:
+            if retry > 5: raise e
+            import time
+            time.sleep(1*(retry+1))
+            self._producer = self.connect(self.hosts_str)
+            self.send_message(omsg,retry+1)
 
 def parse_url(msg):
     omsg = msg

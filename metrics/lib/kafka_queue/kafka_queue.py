@@ -5,7 +5,7 @@ def transform_message(message):
     j = ujson.loads(message)
     obj = dict(j['bid_request']['bid_info'].items() + j['bid_request']['tags'][0].items())
     obj['timestamp'] = str(j['bid_request']['timestamp'])
-    obj['sizes'] = str(j['bid_request']['tags'][0]['sizes'])
+    obj['sizes'] = j['bid_request']['tags'][0]['sizes']
 
     # wrangling
     obj['creative'] = 0
@@ -17,12 +17,13 @@ def transform_message(message):
 
 class KafkaQueue(object):
 
-    def __init__(self,default_hosts="slave1:9092",
+    def __init__(self,default_hosts="slave16:9092",
             use_marathon=True,topic="filtered_imps",group="none",
-            mock_connect=False):
+            mock_connect=False,transform=transform_message):
 
         self.topic = topic
         self.group = group
+        self.transform = transform
 
         if not mock_connect:
             self.hosts_str = self.marathon_hosts() if use_marathon else default_hosts
@@ -33,7 +34,10 @@ class KafkaQueue(object):
             self._consumer.get_message.return_value = None
 
     def __call__(self,_buffer,buffer_control):
-        self.populate_buffer(_buffer,buffer_control,transform_message)
+        if self.transform:
+            self.populate_buffer(_buffer,buffer_control,self.transform)
+        else:
+            self.populate_buffer(_buffer,buffer_control)
 
     @classmethod
     def marathon_hosts(self):
@@ -47,12 +51,18 @@ class KafkaQueue(object):
     @classmethod
     def connect(self,hosts_str,topic,group):
         from kafka import KafkaClient, SimpleConsumer, common
+        try:
+            logging.info("Kafka connecting: %s" % hosts_str)
 
-        logging.info("Kafka connecting: %s" % hosts_str)
-
-        client = KafkaClient(hosts_str)
-        consumer = SimpleConsumer(client, group, topic)
-        return consumer
+            client = KafkaClient(hosts_str,timeout=10)
+            consumer = SimpleConsumer(client, group, topic)
+            return consumer
+        except Exception as e:
+            import time
+            logging.error(e)
+            logging.error("Sleeping 5 seconds before attempting reconnect...")
+            time.sleep(5)
+            return self.connect(hosts_str,topic,group)
 
 
     @property
@@ -67,19 +77,28 @@ class KafkaQueue(object):
     def populate_buffer(self,_buffer,buffer_control,transform=lambda x: x):
         import time
         consumer = self.consumer
+        repeated_failure = 0 
         while True:
             try:
+
                 message = consumer.get_message(True,1)
                 if message is None:
                     time.sleep(1)
                     continue
-
                 logging.debug(message.message.value)
                 if buffer_control['on']:
                     obj = transform(message.message.value)
                     _buffer += [obj]
+
             except Exception as e:
-                logging.info(e)
+
+                logging.error(e)
+                repeated_failure += 1
+                if repeated_failure > 5:
+                     time.sleep(1)
+                     self._consumer = self.connect(self.hosts_str, self.topic, self.group)
+                     self._consumer
+                     repeated_failure = 0
      
 
 
@@ -88,7 +107,9 @@ def get_partitions(client,topic):
     return client.topic_partitions[topic]
 
 
-def update_partitions(kafka,topic):
+def update_partitions(kafka,topic,consumer):
+    import time
+    from kafka import common
     
     partitions = get_partitions(kafka,topic)
     ti = int(time.time()*1000)
@@ -100,9 +121,11 @@ def update_partitions(kafka,topic):
         offset_max = offsets[-1]
 
 
-        offset_req_group = common.OffsetFetchRequest(topic,0)
+        offset_req_group = common.OffsetFetchRequest(topic,partition)
         offset_cur = kafka.send_offset_fetch_request([offset_req_group])
 
+    
+        print offset_min, offset_cur, offset_max 
         if offset_min <= offset_cur <= offset_max:
             consumer.offsets[partition] = offset_cur.offsets[0]
         else:

@@ -23,6 +23,10 @@ _redis = redis.StrictRedis(host='162.243.123.240', port=6379, db=1)
 track_buffer = []
 view_buffer = []
 imps_buffer = []
+conversion_imps_buffer = [] 
+conversion_events_buffer = [] 
+visit_events_buffer = [] 
+
 
 pixel_parsers = {
     "ip_address":MaxmindLookup(reader),

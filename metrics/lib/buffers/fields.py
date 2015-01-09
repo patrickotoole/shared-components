@@ -3,11 +3,20 @@ DEBUG = ["second_price", "count", "50%", "$mod", "gross_bid", "biased_bid", "min
 INFO = ["brand_id", "result", "pub", "ecp", "ip_address", "referrer", "venue", "debug"]
 AUCTION = ["city", "user_id_64", "venue_id", "estimated_average_price", "userdata_json", "url", "country", "region", "estimated_clear_price", "time_zone", "auction_id_64", "auction_id", "postal_code", "user_agent", "selling_member_id", "user_id", "ip_address", "tag_id", "timestamp", "sizes"]
 
+CONVERSION = ["order_revenue", "order_type", "referrer", "timestamp", "source", "user_agent", "adnxs_uid", "ip", "type"]
+PIXEL = ["referrer", "ip", "source", "user_agent", "adnxs_uid", "timestamp", "type", "an_seg"]
+
+
 COLUMN_OBJECTS = {
     "debug":DEBUG,
     "result":RESULT,
+    "track":RESULT,
+    "view":RESULT,
     "info":INFO,
-    "auction": AUCTION
+    "filtered_imps": AUCTION,
+    "visit_events": PIXEL,
+    "conversion_events": CONVERSION,
+    "conversion_imps": RESULT
 }
 COLS = COLUMN_OBJECTS.keys()
 

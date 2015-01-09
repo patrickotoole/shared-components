@@ -40,8 +40,9 @@ class StreamingBase(BufferBase):
           pandas.DataFrame: Will have auction_id as index, no null values.
         """
         df = pandas.DataFrame(values)
-        df = self.merge_brand(df)
-        df = df.set_index("auction_id",drop=False)
+        if "creative" in df.columns:
+            df = self.merge_brand(df)
+            df = df.set_index("auction_id",drop=False)
         df = df.fillna(0)
 
         return df
@@ -75,11 +76,17 @@ class StreamingBase(BufferBase):
 
     def build_df(self,buffer_name):
         values = self.reset(buffer_name)
-        return self.build(values)
+        if buffer_name in fields.COLUMN_OBJECTS.keys():
+            column_objects = { buffer_name: fields.COLUMN_OBJECTS[buffer_name] }
+        else:
+            column_objects = fields.COLUMN_OBJECTS
+        return self.build(values,column_objects)
 
-    def mask_select_convert(self,df,masks):
+    def mask_select_convert(self,df,masks,col=False):
         _df = mask_data(df,masks)
         _cols = x_in_y(fields.COLS, _df.columns)
+        if col in _cols:
+            return list(_df[col])
         return Convert.df_to_values(_df[_cols])
 
 

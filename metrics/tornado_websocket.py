@@ -35,7 +35,12 @@ define("skip_bidder_api", default=False,type=bool)
 define("skip_buffers", default=False,type=bool) 
 define("skip_redis", default=False,type=bool) 
 define("skip_hive", default=False,type=bool)  
-define("skip_kafka", default=False,type=bool)   
+define("skip_filtered_imps", default=False,type=bool)   
+define("skip_conversion_imps", default=False,type=bool)    
+define("skip_conversion_events", default=False,type=bool)     
+define("skip_visit_events", default=False,type=bool)      
+
+
 define("no_internet",default=False, help="turns off things that require internet connection",type=bool)
 define("routes",default="", help="list of routes to include: \n" + route_options,type=str) 
 define("show_routes",default=False, help="will print a list of the available routes",type=bool)  
@@ -61,7 +66,10 @@ if __name__ == '__main__':
         options.skip_buffers,
         options.no_internet or options.skip_redis,
         options.no_internet or options.skip_hive,
-        options.no_internet or options.skip_kafka
+        options.no_internet or options.skip_filtered_imps,
+        options.no_internet or options.skip_conversion_imps,
+        options.no_internet or options.skip_conversion_events, 
+        options.no_internet or options.skip_visit_events 
     ).connectors
 
     routes = [r for r in options.routes.split(",") if len(r)]
@@ -81,7 +89,10 @@ if __name__ == '__main__':
 
     reactor.listenTCP(options.listen_port, streaming.track_factory)
     reactor.listenTCP(options.view_port, streaming.view_factory)  
-    reactor.callInThread(connectors['kafka'],streaming.imps_buffer,streaming.BufferControl())
+    reactor.callInThread(connectors['filtered_imps'],streaming.imps_buffer,streaming.BufferControl())
+    reactor.callInThread(connectors['conversion_imps'],streaming.conversion_imps_buffer,streaming.BufferControl()) 
+    reactor.callInThread(connectors['conversion_events'],streaming.conversion_events_buffer,streaming.BufferControl()) 
+    reactor.callInThread(connectors['visit_events'],streaming.visit_events_buffer,streaming.BufferControl()) 
 
     server = tornado.httpserver.HTTPServer(app)
     server.listen(options.port)
