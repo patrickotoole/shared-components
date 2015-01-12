@@ -244,3 +244,10 @@ WHERE
     %(where)s 
 GROUP BY %(groups)s
 """
+
+HOVERBOARD = """
+SELECT %(fields)s
+FROM conv_imps
+WHERE %(where)s
+GROUP BY %(groups)s
+"""

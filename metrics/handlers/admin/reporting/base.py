@@ -76,6 +76,7 @@ class AdminReportingBase(object):
 
     def make_params(self, groups, fields, where, joins="", having="", **kwargs):
         gs = map(self.get_group, groups)
+
         fs = map(self.get_field, groups + fields)
 
         params = {
