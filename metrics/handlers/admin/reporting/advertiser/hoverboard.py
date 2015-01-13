@@ -20,7 +20,7 @@ OPTIONS = {
     "default": {
         "meta": {
             "groups": ["advertiser"],
-            "fields": ["num_imps", "num_users", "num_conv"]
+            "fields": ["num_imps", "num_users"]
             },
         "formatters": {
             "uid": "none",
@@ -31,7 +31,7 @@ OPTIONS = {
     "advertiser": {
         "meta": {
             "groups": ["advertiser", "conversion_ids"],
-            "fields": ["num_imps", "num_users", "num_conv"]
+            "fields": ["num_imps", "num_users"]
             },
         "formatters": {
             "uid": "none",
@@ -42,7 +42,7 @@ OPTIONS = {
     "none": {
         "meta": {
             "groups": [],
-            "fields": ["num_imps", "num_users", "num_conv"]
+            "fields": ["num_imps", "num_users"]
             },
         "formatters": {
             "uid": "none",
@@ -68,7 +68,7 @@ OPTIONS = {
                 "uid",
                 "conversion_ids"
                 ],
-            "fields": ["num_imps", "num_users", "num_conv"]
+            "fields": ["num_imps", "num_users"]
             },
         "formatters": {
             "uid": "none",
@@ -88,6 +88,7 @@ GROUPS = {
     "ip_address": "bid_request.bid_info.ip_address",
     "user_agent": "bid_request.bid_info.user_agent",
     "url": "bid_request.bid_info.url",
+    "domain": "lower(regexp_replace(parse_url(concat('http://', regexp_replace(reflect('java.net.URLDecoder', 'decode',bid_request.bid_info.url), 'http://|https://', '')), 'HOST'), 'www.', ''))",
     "seller": "bid_request.bid_info.selling_member_id",
     "time_zone": "bid_request.bid_info.time_zone",
     "uid": "bid_request.bid_info.user_id_64",
@@ -98,8 +99,8 @@ GROUPS = {
 FIELDS = {
     "num_imps": "count(*)",
     "num_users": "count(distinct bid_request.bid_info.user_id_64)",
-    "num_conv": "sum(size(conversion_ids))",
-    "urls": "collect_set(bid_request.bid_info.url)"
+    "urls": "collect_set(bid_request.bid_info.url)",
+    "domains": "collect_set(lower(regexp_replace(parse_url(concat('http://', regexp_replace(reflect('java.net.URLDecoder', 'decode',bid_request.bid_info.url), 'http://|https://', '')), 'HOST'), 'www.', '')))"
     }
 
 WHERE = {
