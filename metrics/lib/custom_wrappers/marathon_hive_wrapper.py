@@ -1,5 +1,6 @@
 import signal
 import logging
+import hive_utils
 from link.wrappers import Hive2DB, Hive2Cursor, DBConnectionWrapper
 
 class timeout:
@@ -16,7 +17,6 @@ class timeout:
 
 class TimeoutError(Exception):
         pass
-
 
 class MarathonHive2DB(DBConnectionWrapper):
 
@@ -47,14 +47,14 @@ class MarathonHive2DB(DBConnectionWrapper):
             instance = random.choice(instances)
             self.host = instance['host']
             self.port = instance['ports'][0]
-
         
     def create_connection(self):
         """
         Override the create_connection by first getting the host from the
         marathon endpoint and then connecting
         """
-        #self.refresh_via_endpoint()
+
+        # self.refresh_via_endpoint()
 
         import pyhs2
         conn = pyhs2.connect(host=self.host, 
@@ -66,17 +66,18 @@ class MarathonHive2DB(DBConnectionWrapper):
         return conn
 
     def session_execute(self, queries, args=()):
-        print queries[-1]
-        return self.execute(queries[-1],args)
-
+        yield self.execute(queries[-1],args)
 
     def execute(self, query, args = ()):
         from pyhs2.TCLIService.ttypes import TGetSchemasReq
         
+        # Try creating a connection
         try:
-            with timeout(1):
-                h._wrapped.client.GetSchemas(TGetSchemasReq(h.session))
-        except:
+            self._wrapped = self.create_connection()
+
+        # If it fails, refresh the endpoint and try again.
+        except Exception as e:
+            logging.error(e)
             logging.info("Refreshing endpoint...")
             self.refresh_via_endpoint()
             self._wrapped = self.create_connection()
@@ -84,5 +85,4 @@ class MarathonHive2DB(DBConnectionWrapper):
         cursor = self._wrapped.cursor()
         res = self.CURSOR_WRAPPER(cursor, query, args=args)()
         print res
-        return res
-
+        return res.as_dict()
