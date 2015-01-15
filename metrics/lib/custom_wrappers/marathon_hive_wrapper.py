@@ -1,6 +1,7 @@
 import signal
 import logging
 import hive_utils
+import pandas as pd
 from link.wrappers import Hive2DB, Hive2Cursor, DBConnectionWrapper
 
 class timeout:
@@ -105,3 +106,10 @@ class MarathonHive2DB(DBConnectionWrapper):
         logging.info(res)
         d = res.as_dict()
         return d
+
+    def select_dataframe(self, query, args=()):
+        results = self.execute(query, args = args)
+        return pd.DataFrame(results)
+
+    def tables(self):
+        return self.execute("show tables")
