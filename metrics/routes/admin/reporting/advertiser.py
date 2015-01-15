@@ -103,7 +103,12 @@ class AdvertiserReportingRoutes(Routes):
             ('/geo/reporting/?(meta)?/?', reporting.AdvertiserServedGeoHandler, self.connectors), 
         ]
  
+    @namespace("/admin/advertiser/hoverboard")
+    @connectors("hive")
+    def hoverboard_reporting(self):
+        import handlers.admin.reporting as reporting
 
-     
-
- 
+        return [
+            ('/reporting/?', reporting.HoverboardHandler, self.connectors), 
+            ('/reporting/?(meta)?/?', reporting.HoverboardHandler, self.connectors)
+        ]

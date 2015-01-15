@@ -12,6 +12,7 @@ from advertiser.conversion_imps import ConversionImpsHandler
 from advertiser.click import ClickCheckHandler
 from advertiser.click_imps import ClickImpsHandler
 from advertiser.debug import DebugReportingHandler
+from advertiser.hoverboard import HoverboardHandler
 
 from advertiser.pixel import AdvertiserPixelHandler
 from advertiser.pixel_geo import AdvertiserPixelGeoHandler
