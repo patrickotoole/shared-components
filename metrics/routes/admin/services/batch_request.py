@@ -4,7 +4,7 @@ from ...base import Routes
 class BatchRequestRoutes(Routes):
 
     @namespace("/admin/batch_request")
-    @connectors("db","api","hive")
+    @connectors("db","api")
     def batch_request(self):
         import handlers.admin.scripts as scripts
 

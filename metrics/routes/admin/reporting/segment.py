@@ -3,7 +3,7 @@ from ...base import Routes
  
 class SegmentRoutes(Routes):
     @namespace("/admin/segment")
-    @connectors("hive")
+    @connectors("hive", "spark_sql")
     def segment_reporting(self):
         import handlers.admin.reporting as reporting
 

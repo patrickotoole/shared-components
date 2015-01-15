@@ -9,10 +9,9 @@ from lib.query.HIVE import *
 import lib.query.helpers as query_helpers
 
 class BatchRequestBase():
-    def initialize(self, db, api, hive):
+    def initialize(self, db, api):
         self.db = db 
         self.api = api
-        self.hive = hive
 
     def pull_segments(self):
         '''Return a list of domain list segments'''

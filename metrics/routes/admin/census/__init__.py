@@ -4,12 +4,11 @@ from ...base import Routes
 class CensusRoutes(Routes):
 
     @namespace("/admin/census")
-    @connectors("hive")
+    @connectors("hive", "spark_sql")
     def census(self):
         import handlers.admin.reporting as reporting
 
         return [
-            (r'/age_gender/?',reporting.AdvertiserReportingHandler, self.connectors),
             (r'/age_gender/?(.*?)/?', reporting.AgeGenderCensusHandler, self.connectors),
             (r'/age_gender/?(.*?)/?(meta)/?', reporting.AgeGenderCensusHandler, self.connectors),
             (r'/income/?(.*?)/?', reporting.IncomeCensusHandler, self.connectors),

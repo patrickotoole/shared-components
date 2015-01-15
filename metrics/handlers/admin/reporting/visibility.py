@@ -12,7 +12,7 @@ import logging
 from urlparse import urlparse
 from twisted.internet import defer
 from lib.helpers import *
-from lib.hive.helpers import run_hive_session_deferred
+from lib.hive.helpers import run_spark_sql_session_deferred
 
 API_QUERY = "select * from %s where %s "
 QUERY = "select {}, sum(num_served) as num_served, sum(num_loaded) as num_loaded, sum(num_visible) as num_visible from agg_visibility where {} group by {}"
@@ -22,8 +22,8 @@ class ViewabilityBase():
     return data, and format results. These are separated from the handler class to improve modularity, information
     hiding, and enable us to utilize traditional testing methods.
     '''
-    def __init__(self, hive):
-        self.hive = hive
+    def __init__(self, spark_sql):
+        self.spark_sql = spark_sql
 
     def clean_string(self, s):
         '''Given a string, returns a cleaned, HQL-safe string'''
@@ -67,18 +67,22 @@ class ViewabilityBase():
         return query
 
 class ViewabilityHandler(tornado.web.RequestHandler):
-    def initialize(self, db=None, api=None, hive=None):
+    def initialize(self, db=None, api=None, hive=None, spark_sql=None):
         self.db = db 
         self.api = api
-        self.hive = hive
+        self.spark_sql = spark_sql
 
-        self.base = ViewabilityBase(self.hive)
+        self.base = ViewabilityBase(self.spark_sql)
 
     @defer.inlineCallbacks
     def execute_query(self, query, cols):
         ''' Given an HQL query, execute it and return a dataframe'''
         try:
-            t = yield run_hive_session_deferred(self.hive, ["set shark.map.tasks=128", "set mapred.reduce.tasks=8", query])
+            query_list = [
+                "SET spark.sql.shuffle.partitions=3",
+                query
+                ]
+            t = yield run_spark_sql_session_deferred(self.spark_sql, query_list)
             df = pd.DataFrame(t)
             self.get_content(df, cols)
         except StandardError as e:

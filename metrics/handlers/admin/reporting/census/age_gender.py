@@ -6,7 +6,7 @@ import numpy as np
 from twisted.internet import defer
 
 from lib.helpers import *
-from lib.hive.helpers import run_hive_session_deferred
+from lib.hive.helpers import run_spark_sql_session_deferred
 from lib.query.HIVE import CENSUS_AGE_GENDER_QUERY
 from ..base import AdminReportingBaseHandler
 
@@ -99,10 +99,10 @@ class AgeGenderCensusHandler(AdminReportingBaseHandler):
 
     OPTIONS = OPTIONS
 
-    def initialize(self, db=None, api=None, hive=None):
+    def initialize(self, db=None, api=None, hive=None, spark_sql=None):
         self.db = db 
         self.api = api
-        self.hive = hive
+        self.spark_sql = spark_sql
 
     @decorators.formattable
     def get_content(self,data):
@@ -117,11 +117,10 @@ class AgeGenderCensusHandler(AdminReportingBaseHandler):
     def get_data(self,query,groupby=False,wide=False):
 
         query_list = [
-            "set shark.map.tasks=12", 
-            "set mapred.reduce.tasks=0",
+            "SET spark.sql.shuffle.partitions=3",
             query
         ]
-        raw = yield run_hive_session_deferred(self.hive,query_list)
+        raw = yield run_spark_sql_session_deferred(self.spark_sql,query_list)
 
         formatted = self.format_data(
             pandas.DataFrame(raw),

@@ -5,7 +5,7 @@ import ujson
 from twisted.internet import defer
 
 from lib.helpers import *
-from lib.hive.helpers import run_hive_session_deferred
+from lib.hive.helpers import run_spark_sql_session_deferred
 
 import domain_list
 import summary
@@ -26,10 +26,11 @@ OPTIONS = {
 
 class AdvertiserReportingHandler(tornado.web.RequestHandler):
 
-    def initialize(self, db=None, api=None, hive=None, **kwargs):
+    def initialize(self, db=None, api=None, hive=None, spark_sql=None, **kwargs):
         self.db = db 
         self.api = api
         self.hive = hive
+        self.spark_sql = spark_sql
 
     @decorators.formattable
     def get_content(self,data=False):
