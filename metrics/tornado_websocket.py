@@ -34,7 +34,7 @@ define("skip_console_api", default=False,type=bool)
 define("skip_bidder_api", default=False,type=bool) 
 define("skip_buffers", default=False,type=bool) 
 define("skip_redis", default=False,type=bool) 
-define("skip_hive", default=False,type=bool)  
+define("include_hive", default=False,type=bool)  
 define("skip_filtered_imps", default=False,type=bool)   
 define("skip_conversion_imps", default=False,type=bool)    
 define("skip_conversion_events", default=False,type=bool)     
@@ -66,7 +66,7 @@ if __name__ == '__main__':
         options.no_internet or options.skip_bidder_api,
         options.skip_buffers,
         options.no_internet or options.skip_redis,
-        options.no_internet or options.skip_hive,
+        options.no_internet or options.include_hive,
         options.no_internet or options.skip_filtered_imps,
         options.no_internet or options.skip_conversion_imps,
         options.no_internet or options.skip_conversion_events, 
