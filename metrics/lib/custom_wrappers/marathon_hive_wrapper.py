@@ -66,7 +66,25 @@ class MarathonHive2DB(DBConnectionWrapper):
         return conn
 
     def session_execute(self, queries, args=()):
-        yield self.execute(queries[-1],args)
+        try:
+            self._wrapped = self.create_connection()
+
+            with self._wrapped.cursor() as cur:
+                for q in queries:
+                    cur.execute(q)
+
+                rows = cur.fetch()
+                columns = [i["columnName"] for i in cur.getSchema()]
+
+            data = [dict(zip(columns, row)) for row in rows]
+                    
+            return data
+
+        except Exception as e:
+            logging.error(e)
+            logging.info("Refreshing endpoint...")
+            self.refresh_via_endpoint()
+            self._wrapped = self.create_connection()
 
     def execute(self, query, args = ()):
         from pyhs2.TCLIService.ttypes import TGetSchemasReq
@@ -81,8 +99,9 @@ class MarathonHive2DB(DBConnectionWrapper):
             logging.info("Refreshing endpoint...")
             self.refresh_via_endpoint()
             self._wrapped = self.create_connection()
-
+            
         cursor = self._wrapped.cursor()
         res = self.CURSOR_WRAPPER(cursor, query, args=args)()
-        print res
-        return res.as_dict()
+        logging.info(res)
+        d = res.as_dict()
+        return d

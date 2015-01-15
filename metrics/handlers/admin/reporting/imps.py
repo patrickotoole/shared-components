@@ -5,16 +5,17 @@ import StringIO
 import json
 
 from twisted.internet import defer
-from lib.hive.helpers import run_hive_session_deferred
+from lib.hive.helpers import run_spark_sql_session_deferred
 from lib.helpers import *
 from lib.query.MYSQL import *
 from lib.query.HIVE import *
 
 class ImpsReportingHandler(tornado.web.RequestHandler):
-    def initialize(self, db, api, hive):
+    def initialize(self, db=None, api=None, hive=None, spark_sql=None):
         self.db = db 
         self.api = api
         self.hive = hive
+        self.spark_sql = spark_sql
     
     def construct_dmas_query(self, from_date, to_date, segments):
         '''Given a list of segments (strings), returns a query that will
@@ -73,26 +74,24 @@ class ImpsReportingHandler(tornado.web.RequestHandler):
     @defer.inlineCallbacks
     def execute_dmas_query(self, query):
         q = [ "set shark.map.tasks=32", "set mapred.reduce.tasks=3", query]
-        data = yield run_hive_session_deferred(self.hive, q)
+        data = yield run_spark_sql_session_deferred(self.hive, q)
         df = pd.DataFrame(data)
         self.get_content(df)
 
     @defer.inlineCallbacks
     def execute_domains_query(self, segments_query, pop_query):
         segments_q = [
-            "set shark.map.tasks=32", 
-            "set mapred.reduce.tasks=3", 
+            "SET spark.sql.shuffle.partitions=8",
             segments_query
         ]
 
         pop_q = [
-            "set shark.map.tasks=32", 
-            "set mapred.reduce.tasks=3",
+            "SET spark.sql.shuffle.partitions=8",
             pop_query
         ]
             
-        segments_data = yield run_hive_session_deferred(self.hive, segments_q)
-        pop_data = yield run_hive_session_deferred(self.hive, pop_q)
+        segments_data = yield run_spark_sql_session_deferred(self.spark_sql, segments_q)
+        pop_data = yield run_spark_sql_session_deferred(self.spark_sql, pop_q)
 
         segments_df = pd.DataFrame(segments_data)
         pop_df = pd.DataFrame(pop_data)

@@ -3,7 +3,7 @@ from ...base import Routes
  
 class DomainRoutes(Routes):  
     @namespace("/admin/domain")
-    @connectors("hive") 
+    @connectors("hive", "spark_sql") 
     def domain_reporting(self):
         import handlers.admin.reporting as reporting
 
