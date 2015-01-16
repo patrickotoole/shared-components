@@ -4,7 +4,7 @@ from ...base import Routes
 class AdvertiserReportingRoutes(Routes):
 
     @namespace("/admin/advertiser")
-    @connectors("db","hive")
+    @connectors("db","hive", "spark_sql")
     def advertiser_reporting(self):
         import handlers.admin.reporting as reporting
 
@@ -14,7 +14,7 @@ class AdvertiserReportingRoutes(Routes):
  
 
     @namespace("/admin/advertiser/viewable")
-    @connectors("db","hive")
+    @connectors("db","hive", "spark_sql")
     def viewable_reporting(self):
         import handlers.admin.reporting as reporting
 
@@ -24,7 +24,7 @@ class AdvertiserReportingRoutes(Routes):
         ]
 
     @namespace("/admin/advertiser/domain_list")
-    @connectors("hive")
+    @connectors("hive", "spark_sql")
     def domain_list_reporting(self):
         import handlers.admin.reporting as reporting
 
@@ -34,7 +34,7 @@ class AdvertiserReportingRoutes(Routes):
         ]
 
     @namespace("/admin/advertiser/pixel")
-    @connectors("db","hive")
+    @connectors("db","hive", "spark_sql")
     def pixel_reporting(self):
         import handlers.admin.reporting as reporting
 
@@ -47,9 +47,8 @@ class AdvertiserReportingRoutes(Routes):
             (r'/device/reporting/?(meta)?/?', reporting.AdvertiserPixelDeviceHandler, self.connectors)
         ]
 
- 
     @namespace("/admin/advertiser/conversion")
-    @connectors("hive")
+    @connectors("hive", "spark_sql")
     def conversion_reporting(self):
         import handlers.admin.reporting as reporting
 
@@ -61,7 +60,7 @@ class AdvertiserReportingRoutes(Routes):
         ]
 
     @namespace("/admin/advertiser/click")
-    @connectors("hive")
+    @connectors("hive", "spark_sql")
     def click_reporting(self):
         import handlers.admin.reporting as reporting
 
@@ -71,10 +70,9 @@ class AdvertiserReportingRoutes(Routes):
             ('/imps/reporting/?', reporting.ClickImpsHandler, self.connectors), 
             ('/imps/reporting/?(meta)?/?', reporting.ClickImpsHandler, self.connectors)
         ]
- 
 
     @namespace("/admin/advertiser/debug")
-    @connectors("hive")
+    @connectors("hive", "spark_sql")
     def debug_reporting(self):
         import handlers.admin.reporting as reporting
 
@@ -84,7 +82,7 @@ class AdvertiserReportingRoutes(Routes):
         ]
 
     @namespace("/admin/advertiser/summary")
-    @connectors("hive")
+    @connectors("hive", "spark_sql")
     def joined_reporting(self):
         import handlers.admin.reporting as reporting
 
@@ -94,7 +92,7 @@ class AdvertiserReportingRoutes(Routes):
         ]
 
     @namespace("/admin/advertiser/served")
-    @connectors("hive")
+    @connectors("hive", "spark_sql")
     def joined_reporting(self):
         import handlers.admin.reporting as reporting
 
@@ -103,7 +101,12 @@ class AdvertiserReportingRoutes(Routes):
             ('/geo/reporting/?(meta)?/?', reporting.AdvertiserServedGeoHandler, self.connectors), 
         ]
  
+    @namespace("/admin/advertiser/hoverboard")
+    @connectors("hive")
+    def hoverboard_reporting(self):
+        import handlers.admin.reporting as reporting
 
-     
-
- 
+        return [
+            ('/reporting/?', reporting.HoverboardHandler, self.connectors), 
+            ('/reporting/?(meta)?/?', reporting.HoverboardHandler, self.connectors)
+        ]

@@ -41,7 +41,6 @@ class CustomHiveClient(hive_utils.HiveClient):
             for schema in schema.fieldSchemas:
                 stypes.append(schema.name)
 
-
             while True:
                 # used buffered read, thrift no likey big reads
                 rows = self._HiveClient__client.fetchN(500)
@@ -59,13 +58,10 @@ class Hive(object):
         self.marathon_endpoint = marathon_endpoint
         self._hive = self.connect()
 
-
         # Sets number of mappers/reducers
         self.n_map = n_map
         self.n_reduce = n_reduce
         #print self.n_map
-
-
 
     @property
     def hive(self):
@@ -84,10 +80,6 @@ class Hive(object):
         server = shark_servers[-1]
         return server
        
-
-
-
-
     def connect(self):
         try:
             server = self.marathon_instance()

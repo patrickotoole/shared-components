@@ -128,10 +128,11 @@ class ConversionImpsHandler(AdminReportingBaseHandler):
 
     OPTIONS = OPTIONS
 
-    def initialize(self, db=None, api=None, hive=None):
+    def initialize(self, db=None, api=None, hive=None, spark_sql=None):
         self.db = db 
         self.api = api
         self.hive = hive
+        self.spark_sql = spark_sql
 
     @decorators.formattable
     def get_content(self,data):

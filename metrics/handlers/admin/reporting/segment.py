@@ -6,7 +6,7 @@ import logging
 from twisted.internet import defer
 
 from lib.helpers import *
-from lib.hive.helpers import run_hive_session_deferred
+from lib.hive.helpers import run_spark_sql_session_deferred
 from lib.query.HIVE import AGG_APPROVED_AUCTIONS
 SEGMENT_VOLUME = """
 SELECT 
@@ -44,8 +44,8 @@ GROUP BY
 """
 
 class SegmentReportingHandler(tornado.web.RequestHandler):
-    def initialize(self, hive=None):
-        self.hive = hive
+    def initialize(self, hive=None, spark_sql=None):
+        self.spark_sql = spark_sql
 
     @decorators.formattable
     def get_content(self,data):
@@ -60,12 +60,11 @@ class SegmentReportingHandler(tornado.web.RequestHandler):
     @defer.inlineCallbacks
     def get_data(self,q):
         query_list = [
-            "set shark.map.tasks=44", 
-            "set mapred.reduce.tasks=0",
+            "SET spark.sql.shuffle.partitions=3",
             q
         ]
 
-        t = yield run_hive_session_deferred(self.hive,query_list) 
+        t = yield run_spark_sql_session_deferred(self.spark_sql,query_list) 
         u = pandas.DataFrame(t)
         self.get_content(u)
 

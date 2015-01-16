@@ -3,7 +3,7 @@ from ...base import Routes
  
 class ViewableRoutes(Routes):
     @namespace("/admin/viewable")
-    @connectors("api","db","hive")
+    @connectors("api","db","hive", "spark_sql")
     def viewability(self):
         import handlers.admin.reporting as reporting
 

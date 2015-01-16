@@ -7,7 +7,6 @@ MAX_TRIES = 20
 def csv_to_dataframe(csv):
     import StringIO
     import pandas
-
     s = StringIO.StringIO(csv)
     df = pandas.read_csv(s) 
 

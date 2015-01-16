@@ -8,9 +8,9 @@ import ujson
 class ConnectorConfig(object):
 
     def __init__(self, skip_db=False, skip_reporting_db=False, skip_console_api=False, 
-            skip_bidder_api=False, skip_buffers=False, skip_redis=False, skip_hive=False,
+            skip_bidder_api=False, skip_buffers=False, skip_redis=False, include_hive=False,
             skip_filtered_imps=False, skip_conversion_imps=False, skip_conversion_events=False,
-            skip_visit_events=False):
+            skip_visit_events=False, skip_spark_sql=False):
 
         self.connectors = {}
 
@@ -20,7 +20,10 @@ class ConnectorConfig(object):
         self.connectors["api"] = lnk.api.console if not skip_console_api else None
         self.connectors["bidder"] = lnk.api.bidder if not skip_bidder_api else None
 
-        self.connectors["hive"] = h.Hive().hive if not skip_hive else None
+        self.connectors["hive"] = h.Hive().hive if include_hive else None
+
+        self.connectors["spark_sql"] = lnk.dbs.hive if not skip_spark_sql else None
+
         self.connectors["redis"] = streaming._redis if not skip_redis else None
         self.connectors["filtered_imps"] = KafkaQueue(mock_connect=skip_filtered_imps)
         self.connectors["conversion_imps"] = KafkaQueue(

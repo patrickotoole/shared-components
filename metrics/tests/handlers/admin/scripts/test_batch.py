@@ -104,7 +104,7 @@ class BatchRequestBaseTest(AsyncHTTPTestCase):
         
         print "Initializing"
         self.base = BatchRequestBase()
-        self.base.initialize(db=self.db, hive=None, api=None)
+        self.base.initialize(db=self.db, api=None)
         
         # Create test tables
         self.db.execute(CREATE_REQUEST_TABLE)
@@ -118,8 +118,8 @@ class BatchRequestBaseTest(AsyncHTTPTestCase):
         self.db.execute(INSERT_INACTIVE_REQUEST)
 
         self.app = Application([
-                ('/admin/batch_requests', BatchRequestsHandler, dict(db=self.db, hive = None, api=None)),
-                ('/admin/batch_request/new', BatchRequestFormHandler, dict(db=self.db, hive = None, api=None))
+                ('/admin/batch_requests', BatchRequestsHandler, dict(db=self.db, api=None)),
+                ('/admin/batch_request/new', BatchRequestFormHandler, dict(db=self.db, api=None))
         ], cookie_secret = "rickotoole" )
 
         return self.app

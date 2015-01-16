@@ -6,7 +6,7 @@ import datetime
 from twisted.internet import defer 
 
 from lib.helpers import *
-from lib.hive.helpers import run_hive_session_deferred, run_hive_deferred
+from lib.hive.helpers import run_hive_session_deferred, run_hive_deferred, run_spark_sql_session_deferred
 from lib.query.HIVE import ADVERTISER_VIEWABLE
 import lib.query.helpers as query_helpers
 from ..base import AdminReportingBaseHandler 
@@ -195,12 +195,14 @@ class AdvertiserViewableHandler(AdminReportingBaseHandler):
     OPTIONS = OPTIONS
  
 
-    def initialize(self, db=None, hive=None, **kwargs):
+    def initialize(self, db=None, hive=None, spark_sql=None, **kwargs):
         self.db = db 
         self.hive = hive
+        self.spark_sql = spark_sql
 
     @classmethod
     def reformat_domain_data(self,data):
+        data = data.fillna("NULL")
         #helper
         def split_help(x):
             s = x.replace(" ","").split(".")
@@ -281,13 +283,14 @@ class AdvertiserViewableHandler(AdminReportingBaseHandler):
     def get_data(self,query,groupby=False,wide=False):
 
         query_list = [
-            "set shark.map.tasks=44", 
-            "set mapred.reduce.tasks=0",
+            "SET spark.sql.shuffle.partitions=8",
             query
         ]
 
         try:
-            raw = yield run_hive_session_deferred(self.hive,query_list)
+            raw = yield run_spark_sql_session_deferred(self.spark_sql,query_list)
+            # raw = yield run_hive_session_deferred(self.hive, query_list)
+
             formatted = self.format_data(
                 pandas.DataFrame(raw),
                 groupby,
@@ -296,12 +299,9 @@ class AdvertiserViewableHandler(AdminReportingBaseHandler):
 
             self.get_content(formatted)
         except Exception, e:
-            print e
-
+            print "Exception: {}".format(e)
             self.set_status(408, "Hive server")
             self.finish()
-
-        
 
     def get_meta_group(self,default="default"):
         

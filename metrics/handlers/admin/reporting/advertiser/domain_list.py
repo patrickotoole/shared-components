@@ -5,7 +5,7 @@ import ujson
 from twisted.internet import defer
 
 from lib.helpers import *
-from lib.hive.helpers import run_hive_session_deferred
+from lib.hive.helpers import run_spark_sql_session_deferred
 from lib.query.HIVE import AGG_APPROVED_AUCTIONS
 from ..base import AdminReportingBaseHandler
 
@@ -50,11 +50,7 @@ WHERE = {
     "domain" : "domain like '%%%(domain)s%%'",
     "state" : "state = '%(state)s'",
     "city" : "city = '%(city)s'"
-}
-
-
-
-    
+}    
 
 class DomainListHandler(AdminReportingBaseHandler):
 
@@ -66,10 +62,11 @@ class DomainListHandler(AdminReportingBaseHandler):
     OPTIONS = OPTIONS
 
 
-    def initialize(self, db=None, api=None, hive=None):
+    def initialize(self, db=None, api=None, hive=None, spark_sql=None):
         self.db = db 
         self.api = api
         self.hive = hive
+        self.spark_sql = spark_sql
 
     @classmethod
     def reformat_domain_data(self,data):
@@ -124,12 +121,11 @@ class DomainListHandler(AdminReportingBaseHandler):
     def get_data(self,query,groupby=False,wide=False):
 
         query_list = [
-            "set shark.map.tasks=44",
-            "set mapred.reduce.tasks=0",
+            "SET spark.sql.shuffle.partitions=8",
             query
         ]
 
-        raw = yield run_hive_session_deferred(self.hive,query_list)
+        raw = yield run_spark_sql_session_deferred(self.spark_sql,query_list)
 
         formatted = self.format_data(
             pandas.DataFrame(raw),
