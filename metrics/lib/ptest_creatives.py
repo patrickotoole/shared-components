@@ -11,6 +11,7 @@ db = lnk.dbs.reporting
 
 lineitems = c.get_all_pages("/line-item?state=active","line-items")
 
+#organize lineitems into a dict of lineitem:size:creatives. only do creatives on LI level where the LI has active creative and campaigns
 lineitems_dict = {}
 for lineitem in lineitems:
 	if lineitem["campaigns"] != None and lineitem["creatives"] != None:
@@ -26,6 +27,7 @@ for lineitem in lineitems:
 					lineitems_dict[lineitem["id"]] = {}
 				lineitems_dict[lineitem["id"]][i] = tempdict[i]
 			
+#reverse for lookup purposes
 creatives_to_sizes = {}
 for i in lineitems_dict:
 	for j in lineitems_dict[i]:
@@ -45,23 +47,14 @@ keys = keys[:-1]
 
 ##determine most recent datestart for each creative within a line item
 
-def getLatestDate(li, cr1, cr2):
-	if li not in li_creative_lastbreak:
-		print "error1"
-		return "error1"
-	elif cr1 not in li_creative_lastbreak[li] or cr2 not in li_creative_lastbreak[li]:
-		print "error2"
-		return "error2"
-	else:
-		t1 = li_creative_lastbreak[li][cr1]
-		t2 = li_creative_lastbreak[li][cr2]
-		return max(t1,t2)
 
 date_data = db.select_dataframe("select creative_id, date, line_item_id, clicks, imps from v4_reporting where line_item_id in (" + keys + ") and creative_id in (" + creatives + ") and date > (CURDATE() - INTERVAL 1 MONTH) order by 3,1,2 asc")
 
 
-#temp_data = db.select_dataframe("select creative_id, date, line_item_id, clicks, imps from v4_reporting where line_item_id = 1488470 and creative_id in (21324300,21324303,21324297,21324298) and date > (CURDATE() - INTERVAL 1 MONTH) order by 3,1,2 asc")
 
+#for each creative in a line item, get the earliest date that it served
+#We're looking for an unbroken chain of imps under that line item with a MAXIMUM 4-day break in serving (campaign pauses)
+#Reason is we need to make sure that buying strats didnt change while one creative was disabled, resulting in better delivery for the other creative
 li_creative_lastbreak = {}
 for i in date_data.iterrows():
 	li = i[1]["line_item_id"]
@@ -80,6 +73,17 @@ for i in date_data.iterrows():
 		print lastdate
 	lastdate = thisdate
 
+def getLatestDate(li, cr1, cr2):
+	if li not in li_creative_lastbreak:
+		print "error1"
+		return "error1"
+	elif cr1 not in li_creative_lastbreak[li] or cr2 not in li_creative_lastbreak[li]:
+		print "error2"
+		return "error2"
+	else:
+		t1 = li_creative_lastbreak[li][cr1]
+		t2 = li_creative_lastbreak[li][cr2]
+		return max(t1,t2)
 
 ##Loop through every creative in a size, compare it to others in that size, output a zscore + pvalue for that combination under the line item (size not important after comparing)
 def z_to_p(z):
@@ -101,35 +105,33 @@ def ztest(x1,n1,x2,n2):
 	else:
 		return "no data"
  
-def getClicksAndImps(li, cr, date):
-	clicks = 0
-	imps = 0
-	for i in date_data.iterrows():
-		if i[1]["line_item_id"] == li and i[1]["creative_id"] == cr:
-			try:
-				if i[1]["date"] >= date:
-					clicks += i[1]["clicks"]
-					imps += i[1]["imps"]
-			except TypeError:
-				print i
+
+def getClicksAndImps(li, cr, date, date_data):
+        date_data.imps.fillna(0, inplace=True)
+        date_data.clicks.fillna(0, inplace=True)
+        row = date_data[(date_data.line_item_id == li) & (date_data.creative_id == cr) & (date_data.date >= date)]
+
+        imps = row.imps.sum()
+        clicks = row.clicks.sum()
 	return [clicks, imps]
+
 
 decision_dict = {}
 for i in lineitems_dict: #lineitem
 	for j in lineitems_dict[i]: #size
-		for k in range(0,len(lineitems_dict[i][j])):
-			for l in range (k+1, len(lineitems_dict[i][j])):
+		for k in range(0,len(lineitems_dict[i][j])): #creative in a size
+			for l in range (k+1, len(lineitems_dict[i][j])): #all other creatives in the size (after the one int he current position)
 				cr1 = lineitems_dict[i][j][k]
 				cr2 = lineitems_dict[i][j][l]
 				print str(i) + "-" + str(cr1) + ":" + str(cr2)
 				date = getLatestDate(i,cr1,cr2)
 				if date != "error1" and date != "error2":
-					ci1 = getClicksAndImps(i,cr1,date)
-					ci2 = getClicksAndImps(i,cr2,date)
+					ci1 = getClicksAndImps(i,cr1,date,date_data)
+					ci2 = getClicksAndImps(i,cr2,date,date_data)
 					print ci1
 					print ci2
 					print date
-					if ci1[1] > 5000 and ci2[1] > 5000:
+					if ci1[1] > 5000 and ci2[1] > 5000: #5000 imp minimum for comparison
 						z = ztest(ci1[0],ci1[1],ci2[0],ci2[1])
 						print z
 						if i not in decision_dict:
@@ -191,7 +193,7 @@ output_str = ""
 copypaste_dict = {}
 for i in decision_dict:
 	for j in decision_dict[i]:
-		if j["p_value"] < .01:
+		if j["p_value"] < .01: #.01 threshold
 			if not already_done(j, i):
                                 remove_creative(j, i)
 				if i not in  copypaste_dict:
