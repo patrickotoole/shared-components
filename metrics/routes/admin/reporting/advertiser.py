@@ -102,7 +102,7 @@ class AdvertiserReportingRoutes(Routes):
         ]
  
     @namespace("/admin/advertiser/hoverboard")
-    @connectors("hive")
+    @connectors("hive", "spark_sql")
     def hoverboard_reporting(self):
         import handlers.admin.reporting as reporting
 
