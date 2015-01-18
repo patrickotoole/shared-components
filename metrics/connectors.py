@@ -19,8 +19,9 @@ class ConnectorConfig(object):
 
         self.connectors["api"] = lnk.api.console if not skip_console_api else None
         self.connectors["bidder"] = lnk.api.bidder if not skip_bidder_api else None
+        self.connectors["do"] = lnk.api.digitalocean 
 
-        self.connectors["hive"] = h.Hive().hive if include_hive else None
+        self.connectors["hive"] = h.Hive().hive if include_hive is not False else None
 
         self.connectors["spark_sql"] = lnk.dbs.hive if not skip_spark_sql else None
 

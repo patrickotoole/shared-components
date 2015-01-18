@@ -6,8 +6,10 @@ from campaign_check import CampaignCheckRoutes
 from advertiser import AdvertiserRoutes
 from segment import SegmentRoutes
 from logging import LoggingRoutes
+from bidder import BidderRoutes
 
 class ServiceRoutes(
+    BidderRoutes,
     BatchRequestRoutes,
     CampaignCheckRoutes,
     AdvertiserRoutes,
