@@ -10,7 +10,6 @@ PIXEL = ["referrer", "ip", "source", "user_agent", "adnxs_uid", "timestamp", "ty
 COLUMN_OBJECTS = {
     "debug":DEBUG,
     "result":RESULT,
-    "track":RESULT,
     "view":RESULT,
     "info":INFO,
     "filtered_imps": AUCTION,

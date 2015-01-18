@@ -3,3 +3,4 @@ from scp_wrapper import *
 from report_wrapper import *
 from rockerbox_wrapper import *
 from marathon_hive_wrapper import *
+from digitalocean_wrapper import *

@@ -6,7 +6,7 @@ from options import define, options, parse_command_line
 class BidderControl(object):
 
     def __init__(self,load_balancers=[], marathon_endpoint="", path_endpoint="/bidder_path", 
-            state_endpoint="/state", ready_endpoint="/ready"):
+            state_endpoint="/state", ready_endpoint="/ready", use_link=True):
 
         self.load_balancers = load_balancers
         self.marathon_endpoint = marathon_endpoint
@@ -14,6 +14,10 @@ class BidderControl(object):
         self.path = path_endpoint
         self.state_url = state_endpoint
         self.ready_url = ready_endpoint
+
+        if use_link:
+            from link import lnk
+            self.api = lnk.api.bidder
 
     @property
     def bidders(self):
@@ -25,7 +29,6 @@ class BidderControl(object):
 
         return self._bidders
 
-        
 
     @classmethod
     def parse_bidder_json(cls, bidders_json):
@@ -89,7 +92,7 @@ def init_logging():
     
 if __name__ == "__main__":
     define('load_balancers', type=str, 
-        default="listener-1:8888,listener-2:8888,listener-3:8888,listener-4:8888",
+        default="listener-1:8888,listener-2:8888,listener-3:8888,listener-4:8888,listener-5:8888,listener-6:8888,listener-7:8888,listener-8:8888",
         help="load balancers to pull and push from",metavar="LB=1:PORT,LB-2:PORT,..."
     )
     define('marathon_endpoint', type=str,default="http://master2:8080/v2/apps/docker-bidder")
@@ -114,8 +117,10 @@ if __name__ == "__main__":
         options.marathon_endpoint,
         options.path_endpoint,
         options.state_endpoint,
-        options.ready_endpoint
+        options.ready_endpoint,
+        True
     )
+
 
     if options.show_state:
         controls.get_status()
