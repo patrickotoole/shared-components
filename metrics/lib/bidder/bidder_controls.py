@@ -25,11 +25,15 @@ class BidderControl(object):
 
         return self._bidders
 
+    @classmethod
+    def host_to_ip(cls,host):
+        import socket
+        return socket.gethostbyname(host)
 
     @classmethod
     def parse_bidder_json(cls, bidders_json):
         import socket
-        hosts = {str(t['host']):socket.gethostbyname(t['host']) + ":9999" for t in bidders_json['app']['tasks']}
+        hosts = {str(t['host']):cls.host_to_ip(t['host']) + ":9999" for t in bidders_json['app']['tasks']}
         return hosts
 
 

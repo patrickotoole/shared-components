@@ -4,7 +4,7 @@ from ...base import Routes
 class BidderRoutes(Routes):
 
     @namespace("/admin/bidder")
-    @connectors("bidder","do")
+    @connectors("bidder","do","marathon")
     def bidder(self):
         import handlers.admin as admin
 
