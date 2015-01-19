@@ -5,8 +5,8 @@ from options import define, options, parse_command_line
 
 class BidderControl(object):
 
-    def __init__(self,load_balancers=[], marathon_endpoint="", path_endpoint="/bidder_path", 
-            state_endpoint="/state", ready_endpoint="/ready", use_link=True):
+    def __init__(self,load_balancers=[], marathon_endpoint="http://master2:8080/v2/apps/docker-bidder", 
+            path_endpoint="/bidder_path", state_endpoint="/state", ready_endpoint="/ready"):
 
         self.load_balancers = load_balancers
         self.marathon_endpoint = marathon_endpoint
@@ -14,10 +14,6 @@ class BidderControl(object):
         self.path = path_endpoint
         self.state_url = state_endpoint
         self.ready_url = ready_endpoint
-
-        if use_link:
-            from link import lnk
-            self.api = lnk.api.bidder
 
     @property
     def bidders(self):
@@ -46,17 +42,23 @@ class BidderControl(object):
 
     def get_status(self):
         URL = "http://%s" + self.ready_url
+        bidder_status = {}
         for node in self.load_balancers:
             rsp = requests.get(URL % node).content
             flag ="online" if rsp == "1\n" else "offline" 
             logging.info("%s is %s" % (node, flag))
+            bidder_status[node] = {"state":flag}
+        return bidder_status
 
     def get_bidder_routes(self):
         URL = "http://%s" + self.path
+        bidder_routes = {}
         for node in self.load_balancers:
             rsp = requests.get(URL % node).content
             bidder_on = self.parse_bidder_path(rsp)
             logging.info("%s routes to %s" % (node, bidder_on))
+            bidder_routes[node] = bidder_on.split(",")
+        return bidder_routes
  
     def set_bidder_routes(self,path=""):
         URL = "http://%s" + self.path

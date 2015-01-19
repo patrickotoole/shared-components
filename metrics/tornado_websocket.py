@@ -66,7 +66,7 @@ if __name__ == '__main__':
         options.no_internet or options.skip_bidder_api,
         options.skip_buffers,
         options.no_internet or options.skip_redis,
-        options.no_internet or options.include_hive,
+        options.include_hive,
         options.no_internet or options.skip_filtered_imps,
         options.no_internet or options.skip_conversion_imps,
         options.no_internet or options.skip_conversion_events, 
