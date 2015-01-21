@@ -9,6 +9,6 @@ class BidderRoutes(Routes):
         import handlers.admin as admin
 
         return [
-            (r'/?',admin.scripts.bidder.BidderHandler, self.connectors)
+            (r'/?(.*?)',admin.scripts.bidder.BidderHandler, self.connectors)
         ]
  

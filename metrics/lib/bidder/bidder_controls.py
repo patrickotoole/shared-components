@@ -68,7 +68,7 @@ class BidderControl(object):
         for node in self.load_balancers:
             rsp = requests.post(URL % node,path).content
             bidder_on = self.parse_bidder_path(rsp)
-            logging.info("%s routes to %s" % (node, bidder_on))
+            logging.info("updated %s routes to %s" % (node, bidder_on))
      
 
     def set_state(self,state=True):
@@ -77,6 +77,16 @@ class BidderControl(object):
             content = "1" if state else ""
             rsp = requests.post(URL % node, content).content
             logging.info("%s set state to %s" % (node,len(content)))
+
+    def toggle_state(self):
+        status = self.get_status()
+        URL = "http://%s" + self.state_url
+        for node, state_d in status.iteritems():
+            new_state = "1" if state_d['state'] == "offline" else ""
+            rsp = requests.post(URL % node, new_state)
+            logging.info("%s set state to %s" % (node,len(new_state)))
+
+        
          
 def init_logging():
     requests_log = logging.getLogger("requests")
