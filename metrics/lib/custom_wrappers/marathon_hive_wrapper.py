@@ -69,17 +69,17 @@ class MarathonHive2DB(DBConnectionWrapper):
     def session_execute(self, queries, args=()):
         try:
             self._wrapped = self.create_connection()
+            with self._wrapped:
+                with self._wrapped.cursor() as cur:
+                    for q in queries:
+                        cur.execute(q)
 
-            with self._wrapped.cursor() as cur:
-                for q in queries:
-                    cur.execute(q)
+                    rows = cur.fetch()
+                    columns = [i["columnName"] for i in cur.getSchema()]
 
-                rows = cur.fetch()
-                columns = [i["columnName"] for i in cur.getSchema()]
-
-            data = [dict(zip(columns, row)) for row in rows]
-                    
-            return data
+                data = [dict(zip(columns, row)) for row in rows]
+                        
+                return data
 
         except Exception as e:
             logging.error(e)
@@ -101,10 +101,11 @@ class MarathonHive2DB(DBConnectionWrapper):
             self.refresh_via_endpoint()
             self._wrapped = self.create_connection()
             
-        cursor = self._wrapped.cursor()
-        res = self.CURSOR_WRAPPER(cursor, query, args=args)()
-        logging.info(res)
-        d = res.as_dict()
+        with self._wrapped:
+            cursor = self._wrapped.cursor()
+            res = self.CURSOR_WRAPPER(cursor, query, args=args)()
+            logging.info(res)
+            d = res.as_dict()
         return d
 
     def select_dataframe(self, query, args=()):
