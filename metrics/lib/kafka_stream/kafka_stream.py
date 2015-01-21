@@ -74,8 +74,11 @@ def parse_url(msg):
 
         storage = { i:j[0] for i,j in urlparse.parse_qs(url.split("?")[1]).iteritems() }
         storage['ip'] = space_split[-1]
-        storage['referrer'] = quote_split[1]
-        storage['user_agent'] = " ".join(quote_split[-1].split(" ")[:-1])
+	try:
+            storage['referrer'] = quote_split[1]
+            storage['user_agent'] = " ".join(quote_split[-1].split(" ")[:-1])
+        except:
+            pass
         storage['timestamp'] = quote_split[0].split(" ")[-3]
 
         if not "/20" in storage['timestamp']:
