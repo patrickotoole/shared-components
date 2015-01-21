@@ -98,7 +98,6 @@ class BidderHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def put(self,box=None):
         boxes = [box + ":8888"] if box else self.get_current_listeners()
-        import ipdb; ipdb.set_trace()
 
         control = bidder_controls.BidderControl(boxes)
         action = self.get_argument("action",False)
