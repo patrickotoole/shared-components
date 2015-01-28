@@ -21,7 +21,8 @@ class YoshiCampaignHandler(BaseHandler):
     def get_content(self,data,advertiser_id):
         
         def default(self,data):
-            self.write(str(data))
+            o = Convert.df_to_json(data) 
+            self.write(data.to_html())
             self.finish()
 
         yield default, (data,)
@@ -92,11 +93,16 @@ class YoshiCampaignHandler(BaseHandler):
      
 
     @defer.inlineCallbacks 
-    def make_campaign(self,advertiser_id,profile):
+    def make_campaign(self,advertiser_id,profile,details):
+        name = "Yoshi"
+        name += " | " + ",".join([d['domain'] for d in profile['domain_targets']])
+        name += " | " + ",".join(details['sizes'])
+
+        price = 1 # need to get this from details
 
         line_item_id = yield self.get_line_item_id(advertiser_id) 
-        campaign = yield self.create_campaign(line_item_id,advertiser_id,"TEST",1)
-        profile = yield self.create_profile(advertiser_id,campaign['id'],{})
+        campaign = yield self.create_campaign(line_item_id,advertiser_id,name,price)
+        profile = yield self.create_profile(advertiser_id,campaign['id'],profile)
 
         campaign_with_profile = yield self.set_campaign_profile_id(advertiser_id,campaign['id'],profile['id'])
 
@@ -104,16 +110,15 @@ class YoshiCampaignHandler(BaseHandler):
             "campaign":campaign_with_profile,
             "profile":profile
         }
+        df = pandas.DataFrame(obj)
+        
 
-        self.get_content(ujson.dumps(obj),advertiser_id)
-
-
-
+        self.get_content(df,advertiser_id)
        
     @defer.inlineCallbacks
     def modify_campaign(self,advertiser_id,campaign_id,campaign):
         campaign = yield self.defer_modify_campaign(advertiser_id,campaign_id,campaign)
-        self.get_content(ujson.dumps(campaign),advertiser_id)
+        self.get_content(pandas.DataFrame([campaign]),advertiser_id)
 
     @defer.inlineCallbacks
     def get_campaigns(self,advertiser_id):
@@ -121,8 +126,14 @@ class YoshiCampaignHandler(BaseHandler):
         line_item_id = yield self.get_line_item_id(advertiser_id)
         campaigns = yield self.defer_get_campaigns(advertiser_id,line_item_id)
 
-        self.get_content(ujson.dumps(campaigns),advertiser_id)
+        df = pandas.DataFrame(campaigns)
+        if self.get_argument("show_all",False) == False:
+            df = df[['id','name','base_bid','lifetime_budget','state']].set_index("id")
 
+        if self.get_argument("format",False) == False:     
+            self.write("<h4>Yoshi campaigns</h4>")
+
+        self.get_content(df,advertiser_id)
 
     @tornado.web.asynchronous
     def get(self):
@@ -154,8 +165,9 @@ class YoshiCampaignHandler(BaseHandler):
         obj = ujson.loads(self.request.body)
         print obj
         profile = obj.get('profile',False)
+        details = obj.get('details',{})
         if advertiser_id and profile is not False:
-            self.make_campaign(advertiser_id,profile)
+            self.make_campaign(advertiser_id,profile,details)
         else:
             self.write("need to be logging and supply a profile object in the json you post")
             self.finish()
