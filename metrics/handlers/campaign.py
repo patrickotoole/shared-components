@@ -42,7 +42,8 @@ class YoshiCampaignHandler(BaseHandler):
                 "state": "inactive",
                 "advertiser_id":  advertiser_id,
                 "line_item_id": line_item_id,
-                "lifetime_budget": 50,
+                "lifetime_budget": 5000,
+                "daily_budget": 50,
                 "inventory_type": "real_time",
                 "cpm_bid_type": "base",
                 "base_bid": bid_price
@@ -112,8 +113,9 @@ class YoshiCampaignHandler(BaseHandler):
         }
         df = pandas.DataFrame(obj)
         
-
-        self.get_content(df,advertiser_id)
+        self.write(ujson.dumps(obj))
+        self.finish()
+        #self.get_content(df,advertiser_id)
        
     @defer.inlineCallbacks
     def modify_campaign(self,advertiser_id,campaign_id,campaign):
@@ -128,7 +130,7 @@ class YoshiCampaignHandler(BaseHandler):
 
         df = pandas.DataFrame(campaigns)
         if self.get_argument("show_all",False) == False:
-            df = df[['id','name','base_bid','lifetime_budget','state']].set_index("id")
+            df = df[['id','name','base_bid','daily_budget','state']]
 
         if self.get_argument("format",False) == False:     
             self.write("<h4>Yoshi campaigns</h4>")
