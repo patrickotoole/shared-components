@@ -18,6 +18,7 @@ class AdvertiserRoutes(Routes):
     def user_advertiser_routes(self):
         import handlers.reporting as reporting
         import handlers.advertiser as advertiser
+        import handlers.campaign as campaign
 #        import handlers.api as api
 #        import handlers.admin.scripts as scripts
 
@@ -29,8 +30,19 @@ class AdvertiserRoutes(Routes):
 
             (r'/intraweek.*',reporting.InsertionOrderHandler, self.connectors),
             (r'/api.*', reporting.APIHandler, self.connectors),
-            (r'/advertiser', advertiser.AdvertiserHandler, self.connectors)
+            (r'/advertiser', advertiser.AdvertiserHandler, self.connectors),
+            (r'/campaign', campaign.YoshiCampaignHandler, self.connectors)
         ]
+
+    @connectors("db","api")
+    def yoshi_routes(self):
+        import handlers.campaign as campaign
+
+        return [
+            (r'/campaign', campaign.YoshiCampaignHandler, self.connectors)
+        ]
+     
+
 
 class StreamingRoutes(Routes):
 
