@@ -78,7 +78,12 @@ class YoshiCampaignHandler(BaseHandler):
         data = self.api.put(URL,data=ujson.dumps(data))
         return data.json
      
-
+    @decorators.deferred
+    def defer_get_campaigns(self,advertiser_id,line_item_id):
+        URL = "/campaign?advertiser_id=%s&line_item_id=%s" % (advertiser_id,line_item_id)
+        data = self.api.get(URL)
+        return data.json['response']['campaigns']
+     
 
     @defer.inlineCallbacks 
     def make_campaign(self,advertiser_id,profile):
@@ -96,14 +101,25 @@ class YoshiCampaignHandler(BaseHandler):
 
         self.get_content(ujson.dumps(obj),advertiser_id)
 
+       
+
+    @defer.inlineCallbacks
+    def get_campaigns(self,advertiser_id):
+
+        line_item_id = yield self.get_line_item_id(advertiser_id)
+        campaigns = yield self.defer_get_campaigns(advertiser_id,line_item_id)
+
+        self.get_content(ujson.dumps(campaigns),advertiser_id)
+
+        
+
         
 
     @tornado.web.asynchronous
     def get(self):
         advertiser_id = self.current_advertiser
-        profile = ujson.loads(self.request.body)['profile']
-        if advertiser_id and profile:
-            self.get_campaigns(advertiser_id,profile)
+        if advertiser_id: 
+            self.get_campaigns(advertiser_id)
         else:
             self.redirect("/")
 
