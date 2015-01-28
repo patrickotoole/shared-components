@@ -99,7 +99,7 @@ class BidderHandler(tornado.web.RequestHandler):
     def put(self,box=None):
         boxes = [box + ":8888"] if box else self.get_current_listeners()
 
-        control = bidder_controls.BidderControl(boxes)
+        control = bidder_controls.BidderControl(boxes,"http://master2:8080/v2/apps/docker-bidder")
         action = self.get_argument("action",False)
         if action: 
             getattr(control,action)()

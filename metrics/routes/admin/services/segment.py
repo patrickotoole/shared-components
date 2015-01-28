@@ -5,7 +5,7 @@ class SegmentRoutes(Routes):
 
     @namespace("/admin/segment")
     @connectors("bidder")
-    def bidder(self):
+    def scrubbed(self):
         import handlers.admin.scripts as scripts
 
         return [

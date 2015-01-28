@@ -64,6 +64,7 @@ class BidderControl(object):
         return bidder_routes
     
     def set_bidder_routes(self,path=""):
+        path = path or ",".join(self.bidders.values())
         URL = "http://%s" + self.path
         for node in self.load_balancers:
             rsp = requests.post(URL % node,path).content
