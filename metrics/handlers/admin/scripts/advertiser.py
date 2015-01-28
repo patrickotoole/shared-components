@@ -439,7 +439,7 @@ class Advertiser(object):
         except KeyError:
             import time
             time.sleep(5*count)
-            get_default_placement(self,publisher_id,count + 1)
+            self.get_default_placement(publisher_id,count + 1)
         return placement
  
 
