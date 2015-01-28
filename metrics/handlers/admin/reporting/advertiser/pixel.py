@@ -17,7 +17,8 @@ OPTIONS = {
             "groups" : ["advertiser","segment"],
             "fields" : ["imps","conv","users","rbox_imps", "rbox_conv", "rbox_users"],
             "formatters" : {
-                "segment":"none"
+                "segment":"none",
+                "timeseries":"timeseries"
             }
         }
     }
@@ -27,7 +28,8 @@ OPTIONS = {
 GROUPS = {
     "advertiser": "source",
     "segment": "segment",
-    "order_type": "order_type"
+    "order_type": "order_type",
+    "date": "date"
 }
 
 FIELDS = {
@@ -68,7 +70,7 @@ class AdvertiserPixelHandler(AdminReportingBaseHandler):
                 data = self.reformat_domain_data(data)
 
             o = Convert.df_to_json(data)
-            self.render("admin/reporting/target_list.html",data=o)
+            self.render("admin/reporting/timeseries.html",data=o)
 
         yield default, (data,)
 
@@ -84,8 +86,25 @@ class AdvertiserPixelHandler(AdminReportingBaseHandler):
                     logging.warn("Could not format %s" % field)
                     pass
 
-        if groupby and wide:
-            u = u.set_index(groupby).sort_index()
+        if groupby and wide == "timeseries":
+
+            def timeseries_group(x):
+                _v = x[val_cols].T.to_dict().values()
+                return _v
+                
+            group_cols = [ i for i in groupby if i != "date" and i in u.columns]
+            val_cols = [ i for i in u.columns if i not in group_cols]
+
+            u = u.fillna(0).set_index(group_cols + ['date']).unstack('date').fillna(0).stack().reset_index()
+
+            grouped = u.groupby(group_cols).sum()
+            
+            u = u.fillna(0).groupby(group_cols).apply(timeseries_group)
+            grouped['timeseries'] = u
+            u = grouped.reset_index()
+         
+        elif groupby and wide:
+            u = u.fillna(0).set_index(groupby).sort_index()
             u = u.stack().unstack(wide)
 
             new_index = [i if i else "" for i in u.index.names]
@@ -132,6 +151,12 @@ class AdvertiserPixelHandler(AdminReportingBaseHandler):
         print meta_group
         meta_data = self.get_meta_data(meta_group,include)
         meta_data["is_wide"] = wide
+
+        fields = self.get_argument("fields","").split(",")
+        has_fields = len(fields) > 0 and len(fields[0]) > 0
+
+        if has_fields:
+            meta_data['fields'] = fields 
 
         print meta_data
 
