@@ -83,6 +83,12 @@ class YoshiCampaignHandler(BaseHandler):
         URL = "/campaign?advertiser_id=%s&line_item_id=%s" % (advertiser_id,line_item_id)
         data = self.api.get(URL)
         return data.json['response']['campaigns']
+
+    @decorators.deferred
+    def defer_modify_campaign(self,advertiser_id,campaign_id,campaign):
+        URL = "/campaign?advertiser_id=%s&id=%s" % (advertiser_id,campaign_id)
+        data = self.api.put(URL,data=ujson.dumps({"campaign":campaign}))
+        return data.json['response']
      
 
     @defer.inlineCallbacks 
@@ -101,7 +107,13 @@ class YoshiCampaignHandler(BaseHandler):
 
         self.get_content(ujson.dumps(obj),advertiser_id)
 
+
+
        
+    @defer.inlineCallbacks
+    def modify_campaign(self,advertiser_id,campaign_id,campaign):
+        campaign = yield self.defer_modify_campaign(advertiser_id,campaign_id,campaign)
+        self.get_content(ujson.dumps(campaign),advertiser_id)
 
     @defer.inlineCallbacks
     def get_campaigns(self,advertiser_id):
@@ -111,9 +123,6 @@ class YoshiCampaignHandler(BaseHandler):
 
         self.get_content(ujson.dumps(campaigns),advertiser_id)
 
-        
-
-        
 
     @tornado.web.asynchronous
     def get(self):
@@ -121,7 +130,23 @@ class YoshiCampaignHandler(BaseHandler):
         if advertiser_id: 
             self.get_campaigns(advertiser_id)
         else:
-            self.redirect("/")
+            self.write("need to be logged in")
+            self.finish()
+
+    @tornado.web.asynchronous
+    def put(self):
+        advertiser_id = self.current_advertiser
+        campaign_id = self.get_argument("id",False)
+        state = self.get_argument("state",False)
+        if state:
+            campaign = {"state":state}
+        else:
+            obj = ujson.loads(self.request.body)
+            campaign = obj.get("campaign",False)
+        
+        if advertiser_id and campaign_id and campaign:
+            self.modify_campaign(advertiser_id,campaign_id,campaign)
+
 
     @tornado.web.asynchronous
     def post(self):
@@ -132,4 +157,6 @@ class YoshiCampaignHandler(BaseHandler):
         if advertiser_id and profile is not False:
             self.make_campaign(advertiser_id,profile)
         else:
-            self.redirect("/") 
+            self.write("need to be logging and supply a profile object in the json you post")
+            self.finish()
+
