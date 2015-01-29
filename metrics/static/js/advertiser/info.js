@@ -677,21 +677,33 @@ var buildObjects = function(obj) {
     })
 }
 
-var makeGraphArea = function(obj){
+var makeGraphArea = function(obj,series){
   var chart_obj = obj
 
   chart_obj.html(function(x){
     var _id = "asdf"
-    window.x = x
-    console.log(x)
-    var keys = Object.keys(x[0][0]).filter(function(x){return x != "date"})
-    console.log(keys)
-    console.log(x)
+    var values = x[0].map(function(z){z.date = new Date("20"+z.date); return z})
+    
+
+    if (series) {
+      values = values.map(function(z){
+        y = {
+          "date":z.date
+        }
+        series.map(function(m){
+          y[m.name] = z[m.key]
+        })
+        return y
+      })
+    }
+
+   var keys = Object.keys(values[0]).filter(function(x){return x != "date"})
+   
+
     setTimeout(function(){
-      console.log(values)
       data_graphic({
-        data: x[0],
-        width: 600,
+        data: values,
+        width: 520,
         height: 150,
         legend: keys,
         legend_target: '#legend' + _id,

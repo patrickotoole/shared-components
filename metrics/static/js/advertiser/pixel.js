@@ -57,7 +57,7 @@ var buildPixelReportingTables = function(pixel) {
   var visits = wrapper.append("div").classed("col-md-6",true)
   visits.append("h5").text("On-site page views") 
   var visits_graph = visits.append("div")
-  makeGraphArea(visits_graph)
+  //makeGraphArea(visits_graph)
    
   var visits_table = visits.append("table").classed("table table-condensed",true)
 
@@ -77,8 +77,10 @@ var buildPixelReportingTables = function(pixel) {
     values.map(function(z) {z.date = new Date("20" + z.date); return z})
     return [values]
   }).enter().append("div")
+
+  var user_series = [{"name":"Rockerbox Users","key":"rbox_users"},{"name":"All Users","key":"users"}]
     
-  makeGraphArea(users_graph)
+  makeGraphArea(users_graph,user_series)
 
   var users_table = users.append("table").classed("table table-condensed",true)
 
