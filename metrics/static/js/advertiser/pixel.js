@@ -9,6 +9,88 @@ var buildPixel = function(wrapped) {
      
 }
 
+var buidlTable = function(table,columns) {
+  var th = table.append("thead").append("tr")
+
+  columns.map(function(x){
+    th.append("th").text(x.header)
+  })
+
+  var tr = table
+    .append("tbody")
+    .selectAll("tr")
+    .data(function(d){
+      return d.pixel_reporting
+    })
+    .enter()
+      .append("tr")
+
+  columns.map(function(x) {
+    tr.append("td").text(function(d){
+      if (typeof(x.key) == "string") {
+        // if the key
+        return d[x.key]
+      } else if (x.key.length > 1 && x.formatter) {
+        // if the formatter takes multiple values
+        var args = x.key.map(function(q) {
+          return d.values[0][q]
+        })
+        return x.formatter.apply(false,args)
+      } else {
+        // everything else
+        if (x.formatter) {
+          return x.formatter(d.values[0][x.key[0]])
+        } else {
+          return d.values[0][x.key[0]]
+        }
+      }
+    })
+  })
+
+}
+
+var buildPixelReportingTables = function(pixel) {
+
+  var wrapper = pixel.append("div").classed("row",true)
+    .append("div").classed("col-md-12",true)
+
+  var visits = wrapper.append("div").classed("col-md-6",true)
+  visits.append("h5").text("On-site page views") 
+  var visits_graph = visits.append("div")
+  makeGraphArea(visits_graph)
+   
+  var visits_table = visits.append("table").classed("table table-condensed",true)
+
+  var visits_headers = [
+    {"header":"Pixel","key":"name"},
+    {"header":"Rockerbox","key":["rbox_imps"],"formatter":format},
+    {"header":"Total","key":["imps"],"formatter":format} ,
+    {"header":"%","key":["rbox_imps","imps"],"formatter":buildPercent}  
+  ]
+
+  buidlTable(visits_table,visits_headers)
+
+  var users = wrapper.append("div").classed("col-md-6",true)
+  users.append("h5").text("On-site users")
+  var users_graph = users
+    .selectAll("div").data(function(d){
+      return d.pixel_reporting.map(function(z){return z.values[0].timeseries})
+    }).enter().append("div")
+  makeGraphArea(users_graph)
+
+  var users_table = users.append("table").classed("table table-condensed",true)
+
+  var users_headers = [
+    {"header":"Pixel","key":"name"},
+    {"header":"Rockerbox","key":["rbox_users"],"formatter":format},
+    {"header":"Total","key":["users"],"formatter":format} ,
+    {"header":"%","key":["rbox_users","users"],"formatter":buildPercent}  
+  ]
+   
+  buidlTable(users_table,users_headers) 
+
+}
+
 var buildPixelReporting = function(obj) {
   var default_panel = obj
 
@@ -23,12 +105,10 @@ var buildPixelReporting = function(obj) {
 
   var pixels = default_panel
     .append("div")
-    .classed("list-group pixel-reporting hidden", true)
+    //.classed("list-group pixel-reporting hidden", true)
+    .classed("list-group pixel-reporting ", true) 
 
-  var graph_area = pixels
-    .append("div")
-    .classed("hello", true)
-
+  
   pixels
     .selectAll("div")
     .data(function(x){
@@ -40,11 +120,67 @@ var buildPixelReporting = function(obj) {
       .html(function(x){
         return '<h5 class="list-group-item-heading">' + x.pixel_name + '</h5>'
       })
+
+  pixels.map(function(x){
+    var dataset = x[0].__data__
+    var pixel = d3.select(x[0])
+    if (!dataset['pixel_reporting']) {
+       var qs = (function(a) {
+        if (a == "") return {};
+        var b = {};
+        for (var i = 0; i < a.length; ++i)
+        {
+          var p=a[i].split('=', 2);
+          if (p.length == 1)
+            b[p[0]] = "";
+          else
+            b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
+        }
+        return b;
+      })(window.location.search.substr(1).split('&')),
+        formatter = d3.time.format("%y-%m-%d"),
+        start_date = qs["start_date"] || formatter(new Date());
+       
+
+      var URL = "/admin/advertiser/pixel/reporting?format=json&start_date=" + "15-01-15" +
+        "&advertiser=" + dataset.pixel_source_name + "&wide=timeseries&include=date"
+
+      d3.json(URL,function(reporting_data){
+        reporting = d3.nest()
+          .key(function(d) {return d.segment})
+          .entries(reporting_data)
+
+        console.log(reporting)
+
+        var segments = d3.nest()
+          .key(function(d) {return d.external_segment_id})
+          .map(dataset.segments, d3.map)
+
+        // lets get the names on there
+        reporting.map(function(e){
+          var t = segments.get(e.key) || [{}]
+          e.name = t[0]["segment_name"]
+        })
+
+        // decent hack to get the data binding issue
+        pixel.text(function(x){
+          x.pixel_reporting = reporting
+        })
+        
+        buildPixelReportingTables(pixel,reporting)
+        
+      })
+ 
+    }
+  })
+
+
    
+  
 
   pixel_group
     .on("click",function(x){
-      console.log(x)
+      console.log(this)
       if (!x['pixel_reporting']) {
         var qs = (function(a) {
           if (a == "") return {};
@@ -63,7 +199,7 @@ var buildPixelReporting = function(obj) {
           start_date = qs["start_date"] || formatter(new Date());
          
 
-        var URL = "/admin/advertiser/pixel/reporting?format=json&start_date=" + start_date +
+        var URL = "/admin/advertiser/pixel/reporting?format=json&date=past_month&" + //start_date=" + start_date +
           "&advertiser=" + x.pixel_source_name
 
         d3.json(URL,function(reporting_data){
@@ -76,7 +212,8 @@ var buildPixelReporting = function(obj) {
             .append("div").classed("row",true)
             .append("div").classed("col-md-12",true)
             .append("div").classed("col-md-12",true) 
-            .append("table").classed("col-md-12 table table-condensed",true)
+            .append("table").classed("table table-condensed",true)
+
 
           var th = table.append("thead").append("tr")
 
@@ -146,3 +283,4 @@ var buildPixelReporting = function(obj) {
 
 }
  
+

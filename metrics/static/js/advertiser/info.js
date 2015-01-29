@@ -1,6 +1,9 @@
 var format = d3.format("0,000"),
   formatPercent = d3.format("%"),
-  formatDate = d3.time.format("%Y-%m-%d");
+  formatDate = d3.time.format("%Y-%m-%d"),
+  buildPercent = function(x,y) {
+    return formatPercent(x/y)
+  }
 
 var buildInfo = function(wrapped) {
   wrapped.append("div")
@@ -676,9 +679,12 @@ var buildObjects = function(obj) {
 
 var makeGraphArea = function(obj){
 
+
   obj.text(function(x){
+    console.log(d3.select(this))
+    console.log("Make a graph out of this: ")
     console.log(x)
-    //return x
+    return "a graph goes here"
   })
 
 
