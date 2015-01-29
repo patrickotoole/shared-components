@@ -678,13 +678,31 @@ var buildObjects = function(obj) {
 }
 
 var makeGraphArea = function(obj){
+  var chart_obj = obj
 
-
-  obj.text(function(x){
-    console.log(d3.select(this))
-    console.log("Make a graph out of this: ")
+  chart_obj.html(function(x){
+    var _id = "asdf"
+    window.x = x
     console.log(x)
-    return "a graph goes here"
+    var keys = Object.keys(x[0][0]).filter(function(x){return x != "date"})
+    console.log(keys)
+    console.log(x)
+    setTimeout(function(){
+      console.log(values)
+      data_graphic({
+        data: x[0],
+        width: 600,
+        height: 150,
+        legend: keys,
+        legend_target: '#legend' + _id,
+        target: '#' + _id,
+        x_accessor: 'date',
+        y_accessor: keys
+      })
+    },0)
+     
+
+    return "<div id='legend"+_id+"'></div><span id='"+_id+"'></span>"
   })
 
 

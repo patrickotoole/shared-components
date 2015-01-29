@@ -90,6 +90,7 @@ FORMATTER = {
         var values = value.map(function(x){x.date = new Date("20"+x.date); return x})
         var keys = Object.keys(object[key][0]).filter(function(x){return x != "date"})
         setTimeout(function(){
+          console.log(values)
           data_graphic({
               data: values,
               width: 600,

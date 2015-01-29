@@ -72,10 +72,12 @@ var buildPixelReportingTables = function(pixel) {
 
   var users = wrapper.append("div").classed("col-md-6",true)
   users.append("h5").text("On-site users")
-  var users_graph = users
-    .selectAll("div").data(function(d){
-      return d.pixel_reporting.map(function(z){return z.values[0].timeseries})
-    }).enter().append("div")
+  var users_graph = users.selectAll("div").data(function(d){
+    var values = d.pixel_reporting.map(function(z){return z.values[0].timeseries})
+    values.map(function(z) {z.date = new Date("20" + z.date); return z})
+    return [values]
+  }).enter().append("div")
+    
   makeGraphArea(users_graph)
 
   var users_table = users.append("table").classed("table table-condensed",true)

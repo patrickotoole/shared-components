@@ -1,0 +1,27 @@
+{% autoescape None %}
+{% extends "base.html" %}
+
+{% block page_content %}
+<link rel="stylesheet" type="text/css" href="http://getbootstrap.com/dist/css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/dc.css">
+<link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/chosen.css">
+<script type="text/javascript" src="http://rockerbox.com/js/d3.js"></script>
+<script type="text/javascript" src="/static/js/advertiser.js"></script> 
+<script type="text/javascript" src="/static/js/advertiser/info.js"></script>   
+<script type="text/javascript" src="/static/js/advertiser/pixel.js"></script>    
+
+<div id="advertiser-content"></div>
+
+<script>
+
+
+d3.json('/advertiser?format=json',function(data){
+  var wrapped = buildAdvertiserWrapper(data,"#advertiser-content","12",false)
+  buildPixelReporting(wrapped,"Pixel Reporting")
+
+  d3.select('#page-loader').classed("hidden",true)
+})
+
+</script>
+
+{% end %}
