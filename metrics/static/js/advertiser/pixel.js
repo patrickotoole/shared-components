@@ -20,30 +20,34 @@ var buidlTable = function(table,columns) {
     .append("tbody")
     .selectAll("tr")
     .data(function(d){
+      d.pixel_reporting.sort(function(x,y) {return y.values[0].imps - x.values[0].imps})
       return d.pixel_reporting
     })
     .enter()
       .append("tr")
+      .text(function(x,i){
+        x.position = i
+      })
+
+  tr.on("click",function(x){
+    table.selectAll("td").classed("active",false)
+    d3.select(this).selectAll("td").classed("active",true) 
+  })
 
   columns.map(function(x) {
     tr.append("td").text(function(d){
       if (typeof(x.key) == "string") {
-        // if the key
         return d[x.key]
       } else if (x.key.length > 1 && x.formatter) {
-        // if the formatter takes multiple values
-        var args = x.key.map(function(q) {
-          return d.values[0][q]
-        })
+        var args = x.key.map(function(q) { return d.values[0][q] })
         return x.formatter.apply(false,args)
       } else {
-        // everything else
-        if (x.formatter) {
-          return x.formatter(d.values[0][x.key[0]])
-        } else {
-          return d.values[0][x.key[0]]
-        }
+        return (x.formatter) ? 
+          x.formatter(d.values[0][x.key[0]]) : 
+          d.values[0][x.key[0]]
       }
+    }).classed("active",function(x){
+      return x.position == 0
     })
   })
 
@@ -56,10 +60,19 @@ var buildPixelReportingTables = function(pixel) {
 
   var visits = wrapper.append("div").classed("col-md-6",true)
   visits.append("h5").text("On-site page views") 
-  var visits_graph = visits.append("div")
-  //makeGraphArea(visits_graph)
+  var visits_graph = visits.selectAll("div").data(function(d){
+    var values = d.pixel_reporting.map(function(z){return z.values[0].timeseries})
+    values.map(function(z) {z.date = new Date("20" + z.date); return z})
+    return [values]
+  }).enter().append("div")
+
+  var visit_series = [
+    {"name":"Rockerbox visits","key":"rbox_imps"},
+    {"name":"All visits","key":"imps"}
+  ]
+  makeGraphArea(visits_graph,visit_series)
    
-  var visits_table = visits.append("table").classed("table table-condensed",true)
+  var visits_table = visits.append("table").classed("table table-condensed table-hover",true)
 
   var visits_headers = [
     {"header":"Pixel","key":"name"},
@@ -78,11 +91,13 @@ var buildPixelReportingTables = function(pixel) {
     return [values]
   }).enter().append("div")
 
-  var user_series = [{"name":"Rockerbox Users","key":"rbox_users"},{"name":"All Users","key":"users"}]
-    
+  var user_series = [
+    {"name":"Rockerbox Users","key":"rbox_users"},
+    {"name":"All Users","key":"users"}
+  ]
   makeGraphArea(users_graph,user_series)
 
-  var users_table = users.append("table").classed("table table-condensed",true)
+  var users_table = users.append("table").classed("table table-condensed table-hover",true)
 
   var users_headers = [
     {"header":"Pixel","key":"name"},

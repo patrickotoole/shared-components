@@ -681,27 +681,26 @@ var makeGraphArea = function(obj,series){
   var chart_obj = obj
 
   chart_obj.html(function(x){
-    var _id = "asdf"
-    var values = x[0].map(function(z){z.date = new Date("20"+z.date); return z})
-    
+    var _id = "asdf" + parseInt(Math.random()*10000000)
+    var values = x[0].map(function(z){
+      z.date = typeof(z.date) == "string" ? new Date("20"+z.date) : z.date; 
+      return z
+    })
 
     if (series) {
       values = values.map(function(z){
-        y = {
-          "date":z.date
-        }
-        series.map(function(m){
-          y[m.name] = z[m.key]
-        })
+        y = { "date":z.date }
+        series.map(function(m){ y[m.name] = z[m.key] })
         return y
       })
     }
 
-   var keys = Object.keys(values[0]).filter(function(x){return x != "date"})
-   
+    var keys = Object.keys(values[0]).filter(function(x){return x != "date"})
+    console.log(values)
 
     setTimeout(function(){
       data_graphic({
+        title: "testing",
         data: values,
         width: 520,
         height: 150,
@@ -714,7 +713,7 @@ var makeGraphArea = function(obj,series){
     },0)
      
 
-    return "<div id='legend"+_id+"'></div><span id='"+_id+"'></span>"
+    return "<div class='legend' id='legend"+_id+"'></div><span id='"+_id+"'></span>"
   })
 
 
