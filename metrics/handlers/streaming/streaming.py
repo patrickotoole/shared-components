@@ -99,8 +99,14 @@ class StreamingHandler(StreamingBase,tornado.websocket.WebSocketHandler):
     def on_message(self, message):        
         try:
             masks = ujson.loads(message)
-            clients[self.id]['masks'] = masks
-            clients[self.id]['masks']['advertiser_id'] = [self.get_secure_cookie("advertiser")]
+            streams = masks.get("streams",False)                                                                       
+            if streams:                                                                                                
+                clients[self.id]['streams'] = streams                                                                  
+                del masks["streams"]      
+            else:
+                clients[self.id]['masks'] = masks
+                clients[self.id]['masks']['advertiser_id'] = [self.get_secure_cookie("advertiser")]
+
         except:
             pass
 
