@@ -89,6 +89,7 @@ class StreamingHandler(StreamingBase,tornado.websocket.WebSocketHandler):
             self.control_buffer['on'] = False
 
     def open(self, *args):
+        logging.info("active clients: " + str(clients))
         self.id = self.get_argument("id","123")
         clients[self.id] = {"id": self.id, "object": self, "enabled":False}
         if len(clients.keys()) == 1:
@@ -106,7 +107,6 @@ class StreamingHandler(StreamingBase,tornado.websocket.WebSocketHandler):
             else:
                 clients[self.id]['masks'] = masks
                 clients[self.id]['masks']['advertiser_id'] = [self.get_secure_cookie("advertiser")]
-
         except:
             pass
 
