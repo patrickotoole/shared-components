@@ -19,6 +19,7 @@ class AdvertiserRoutes(Routes):
         import handlers.reporting as reporting
         import handlers.advertiser as advertiser
         import handlers.campaign as campaign
+        import handlers.seller as seller
 #        import handlers.api as api
 #        import handlers.admin.scripts as scripts
 
@@ -32,6 +33,7 @@ class AdvertiserRoutes(Routes):
             (r'/api.*', reporting.APIHandler, self.connectors),
             (r'/advertiser', advertiser.AdvertiserHandler, self.connectors),
             (r'/campaign', campaign.YoshiCampaignHandler, self.connectors),
+            (r'/sellers', seller.SellerHandler, self.connectors), 
             
         ]
 
