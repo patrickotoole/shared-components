@@ -677,12 +677,16 @@ var buildObjects = function(obj) {
     })
 }
 
-var makeGraphArea = function(obj,series){
-  var chart_obj = obj
+var makeGraphArea = function(obj,series,title_prefix,position,outer){
+
+  var chart_obj = obj,
+    position = position || 0
+
+  obj.attr("style","height:200px;width:100%")
 
   chart_obj.html(function(x){
     var _id = "asdf" + parseInt(Math.random()*10000000)
-    var values = x[0].map(function(z){
+    var values = x[position].map(function(z){
       z.date = typeof(z.date) == "string" ? new Date("20"+z.date) : z.date; 
       return z
     })
@@ -699,10 +703,11 @@ var makeGraphArea = function(obj,series){
     console.log(values)
 
     setTimeout(function(){
-      data_graphic({
-        title: "testing",
+      MG.data_graphic({
+        title: title_prefix + " &mdash; " + outer.name,
         data: values,
-        width: 520,
+        full_width: true,
+        right: 20,
         height: 150,
         legend: keys,
         legend_target: '#legend' + _id,
@@ -713,7 +718,7 @@ var makeGraphArea = function(obj,series){
     },0)
      
 
-    return "<div class='legend' id='legend"+_id+"'></div><span id='"+_id+"'></span>"
+    return "<div class='legend' id='legend"+_id+"'></div><div id='"+_id+"'></div>"
   })
 
 

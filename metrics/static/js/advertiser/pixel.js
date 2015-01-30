@@ -9,7 +9,7 @@ var buildPixel = function(wrapped) {
      
 }
 
-var buidlTable = function(table,columns) {
+var buidlTable = function(table,columns,graph) {
   var th = table.append("thead").append("tr")
 
   columns.map(function(x){
@@ -20,18 +20,16 @@ var buidlTable = function(table,columns) {
     .append("tbody")
     .selectAll("tr")
     .data(function(d){
-      d.pixel_reporting.sort(function(x,y) {return y.values[0].imps - x.values[0].imps})
+      d.pixel_reporting
       return d.pixel_reporting
     })
     .enter()
       .append("tr")
-      .text(function(x,i){
-        x.position = i
-      })
 
   tr.on("click",function(x){
     table.selectAll("td").classed("active",false)
     d3.select(this).selectAll("td").classed("active",true) 
+    graph(x.position,x)
   })
 
   columns.map(function(x) {
@@ -59,7 +57,7 @@ var buildPixelReportingTables = function(pixel) {
     .append("div").classed("col-md-12",true)
 
   var visits = wrapper.append("div").classed("col-md-6",true)
-  visits.append("h5").text("On-site page views") 
+//  visits.append("h5").text("On-site page views") 
   var visits_graph = visits.selectAll("div").data(function(d){
     var values = d.pixel_reporting.map(function(z){return z.values[0].timeseries})
     values.map(function(z) {z.date = new Date("20" + z.date); return z})
@@ -70,7 +68,8 @@ var buildPixelReportingTables = function(pixel) {
     {"name":"Rockerbox visits","key":"rbox_imps"},
     {"name":"All visits","key":"imps"}
   ]
-  makeGraphArea(visits_graph,visit_series)
+  var visitsMakeGraphArea = makeGraphArea.bind(false,visits_graph,visit_series,"On-site visits")
+  visitsMakeGraphArea(0,visits[0][0].__data__.pixel_reporting.filter(function(x){return x.position ==0})[0])
    
   var visits_table = visits.append("table").classed("table table-condensed table-hover",true)
 
@@ -81,10 +80,10 @@ var buildPixelReportingTables = function(pixel) {
     {"header":"%","key":["rbox_imps","imps"],"formatter":buildPercent}  
   ]
 
-  buidlTable(visits_table,visits_headers)
+  buidlTable(visits_table,visits_headers,visitsMakeGraphArea)
 
   var users = wrapper.append("div").classed("col-md-6",true)
-  users.append("h5").text("On-site users")
+ // users.append("h5").text("On-site users")
   var users_graph = users.selectAll("div").data(function(d){
     var values = d.pixel_reporting.map(function(z){return z.values[0].timeseries})
     values.map(function(z) {z.date = new Date("20" + z.date); return z})
@@ -95,7 +94,8 @@ var buildPixelReportingTables = function(pixel) {
     {"name":"Rockerbox Users","key":"rbox_users"},
     {"name":"All Users","key":"users"}
   ]
-  makeGraphArea(users_graph,user_series)
+  var usersMakeGraphArea = makeGraphArea.bind(false,users_graph,user_series,"On-site users")
+  usersMakeGraphArea(0,users[0][0].__data__.pixel_reporting.filter(function(x){return x.position ==0})[0]) 
 
   var users_table = users.append("table").classed("table table-condensed table-hover",true)
 
@@ -106,7 +106,7 @@ var buildPixelReportingTables = function(pixel) {
     {"header":"%","key":["rbox_users","users"],"formatter":buildPercent}  
   ]
    
-  buidlTable(users_table,users_headers) 
+  buidlTable(users_table,users_headers,usersMakeGraphArea) 
 
 }
 
@@ -169,7 +169,8 @@ var buildPixelReporting = function(obj) {
           .key(function(d) {return d.segment})
           .entries(reporting_data)
 
-        console.log(reporting)
+        reporting.sort(function(x,y) {return y.values[0].imps - x.values[0].imps})
+        reporting.map(function(x,i){x.position = i})
 
         var segments = d3.nest()
           .key(function(d) {return d.external_segment_id})
