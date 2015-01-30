@@ -1,6 +1,9 @@
 var format = d3.format("0,000"),
   formatPercent = d3.format("%"),
-  formatDate = d3.time.format("%Y-%m-%d");
+  formatDate = d3.time.format("%Y-%m-%d"),
+  buildPercent = function(x,y) {
+    return formatPercent(x/y)
+  }
 
 var buildInfo = function(wrapped) {
   wrapped.append("div")
@@ -674,11 +677,48 @@ var buildObjects = function(obj) {
     })
 }
 
-var makeGraphArea = function(obj){
+var makeGraphArea = function(obj,series,title_prefix,position,outer){
 
-  obj.text(function(x){
-    console.log(x)
-    //return x
+  var chart_obj = obj,
+    position = position || 0
+
+  obj.attr("style","height:200px;width:100%")
+
+  chart_obj.html(function(x){
+    var _id = "asdf" + parseInt(Math.random()*10000000)
+    var values = x[position].map(function(z){
+      z.date = typeof(z.date) == "string" ? new Date("20"+z.date) : z.date; 
+      return z
+    })
+
+    if (series) {
+      values = values.map(function(z){
+        y = { "date":z.date }
+        series.map(function(m){ y[m.name] = z[m.key] })
+        return y
+      })
+    }
+
+    var keys = Object.keys(values[0]).filter(function(x){return x != "date"})
+    console.log(values)
+
+    setTimeout(function(){
+      MG.data_graphic({
+        title: title_prefix + " &mdash; " + outer.name,
+        data: values,
+        full_width: true,
+        right: 20,
+        height: 150,
+        legend: keys,
+        legend_target: '#legend' + _id,
+        target: '#' + _id,
+        x_accessor: 'date',
+        y_accessor: keys
+      })
+    },0)
+     
+
+    return "<div class='legend' id='legend"+_id+"'></div><div id='"+_id+"'></div>"
   })
 
 

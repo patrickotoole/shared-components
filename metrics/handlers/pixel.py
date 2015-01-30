@@ -9,7 +9,8 @@ from lib.helpers import *
 from lib.hive.helpers import run_spark_sql_session_deferred
 from lib.query.HIVE import PIXEL
 import lib.query.helpers as query_helpers
-from ..base import AdminReportingBaseHandler
+from admin.reporting.base import AdminReportingBaseHandler
+from base import BaseHandler
 
 OPTIONS = {
     "default": {
@@ -49,7 +50,7 @@ WHERE = {
 }
 
 
-class AdvertiserPixelHandler(AdminReportingBaseHandler):
+class PixelReportingHandler(AdminReportingBaseHandler,BaseHandler):
     QUERY = PIXEL
     WHERE = WHERE
     FIELDS = FIELDS
@@ -57,8 +58,8 @@ class AdvertiserPixelHandler(AdminReportingBaseHandler):
 
     OPTIONS = OPTIONS
 
-    def initialize(self, db=None, hive=None, spark_sql=None, **kwargs):
-        self.db = db
+    def initialize(self, reporting_db=None, hive=None, spark_sql=None, **kwargs):
+        self.db = reporting_db
         self.hive = hive
         self.spark_sql = spark_sql
 
@@ -70,7 +71,7 @@ class AdvertiserPixelHandler(AdminReportingBaseHandler):
                 data = self.reformat_domain_data(data)
 
             o = Convert.df_to_json(data)
-            self.render("admin/reporting/timeseries.html",data=o)
+            self.render("reporting/_pixel.html",data=o)
 
         yield default, (data,)
 
@@ -114,18 +115,16 @@ class AdvertiserPixelHandler(AdminReportingBaseHandler):
 
         return u
 
+    @decorators.deferred
+    def pull_mysql(self,query):
+        return self.db.select_dataframe(query)
+
     @defer.inlineCallbacks
     def get_data(self,query,groupby=False,wide=False):
 
-        query_list = [
-            "SET spark.sql.shuffle.partitions=8",
-            query
-        ]
-
-        raw = yield run_spark_sql_session_deferred(self.spark_sql,query_list)
-
+        df = yield self.pull_mysql(query)
         formatted = self.format_data(
-            pandas.DataFrame(raw),
+            df,
             groupby,
             wide
         )
