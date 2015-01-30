@@ -9,7 +9,7 @@ var buildPixel = function(wrapped) {
      
 }
 
-var buidlTable = function(table,columns,graph) {
+var buildTable = function(table,columns,graph) {
   var th = table.append("thead").append("tr")
 
   columns.map(function(x){
@@ -48,6 +48,24 @@ var buidlTable = function(table,columns,graph) {
       return x.position == 0
     })
   })
+}
+
+var populateTableWrapper = function(wrapper,data_key,graph_series,table_series,title) {
+
+  var graphWrapper = wrapper.selectAll("div").data(function(d){
+    var values = d[data_key].map(function(z){return z.values[0].timeseries})
+    values.map(function(z) {z.date = new Date("20" + z.date); return z})
+    return [values]
+  }).enter().append("div") 
+
+  var tableWrapper = wrapper.append("table").classed("table table-condensed table-hover",true) 
+
+  var boundGraphArea = makeGraphArea.bind(false,graphWrapper,graph_series,title),
+    defaultPosition = 0,
+    defaultSelection = wrapper[0][0].__data__[data_key].filter(function(x){return x.position == defaultPosition })[0]
+
+  boundGraphArea(defaultPosition,defaultSelection)
+  buildTable(tableWrapper,table_series,boundGraphArea)
 
 }
 
@@ -56,57 +74,32 @@ var buildPixelReportingTables = function(pixel) {
   var wrapper = pixel.append("div").classed("row",true)
     .append("div").classed("col-md-12",true)
 
-  var visits = wrapper.append("div").classed("col-md-6",true)
-//  visits.append("h5").text("On-site page views") 
-  var visits_graph = visits.selectAll("div").data(function(d){
-    var values = d.pixel_reporting.map(function(z){return z.values[0].timeseries})
-    values.map(function(z) {z.date = new Date("20" + z.date); return z})
-    return [values]
-  }).enter().append("div")
+  var visitsWrapper = wrapper.append("div").classed("col-md-6",true),
+      usersWrapper  = wrapper.append("div").classed("col-md-6",true)
 
   var visit_series = [
-    {"name":"Rockerbox visits","key":"rbox_imps"},
-    {"name":"All visits","key":"imps"}
-  ]
-  var visitsMakeGraphArea = makeGraphArea.bind(false,visits_graph,visit_series,"On-site visits")
-  visitsMakeGraphArea(0,visits[0][0].__data__.pixel_reporting.filter(function(x){return x.position ==0})[0])
-   
-  var visits_table = visits.append("table").classed("table table-condensed table-hover",true)
+      {"name":"Rockerbox visits","key":"rbox_imps"},
+      {"name":"All visits","key":"imps"}
+    ],
+    visit_headers = [
+      {"header":"Pixel","key":"name"},
+      {"header":"Rockerbox","key":["rbox_imps"],"formatter":format},
+      {"header":"Total","key":["imps"],"formatter":format} ,
+      {"header":"%","key":["rbox_imps","imps"],"formatter":buildPercent}  
+    ],
+    user_series = [
+      {"name":"Rockerbox Users","key":"rbox_users"},
+      {"name":"All Users","key":"users"}
+    ],
+    user_headers = [
+      {"header":"Pixel","key":"name"},
+      {"header":"Rockerbox","key":["rbox_users"],"formatter":format},
+      {"header":"Total","key":["users"],"formatter":format} ,
+      {"header":"%","key":["rbox_users","users"],"formatter":buildPercent}  
+    ]
 
-  var visits_headers = [
-    {"header":"Pixel","key":"name"},
-    {"header":"Rockerbox","key":["rbox_imps"],"formatter":format},
-    {"header":"Total","key":["imps"],"formatter":format} ,
-    {"header":"%","key":["rbox_imps","imps"],"formatter":buildPercent}  
-  ]
-
-  buidlTable(visits_table,visits_headers,visitsMakeGraphArea)
-
-  var users = wrapper.append("div").classed("col-md-6",true)
- // users.append("h5").text("On-site users")
-  var users_graph = users.selectAll("div").data(function(d){
-    var values = d.pixel_reporting.map(function(z){return z.values[0].timeseries})
-    values.map(function(z) {z.date = new Date("20" + z.date); return z})
-    return [values]
-  }).enter().append("div")
-
-  var user_series = [
-    {"name":"Rockerbox Users","key":"rbox_users"},
-    {"name":"All Users","key":"users"}
-  ]
-  var usersMakeGraphArea = makeGraphArea.bind(false,users_graph,user_series,"On-site users")
-  usersMakeGraphArea(0,users[0][0].__data__.pixel_reporting.filter(function(x){return x.position ==0})[0]) 
-
-  var users_table = users.append("table").classed("table table-condensed table-hover",true)
-
-  var users_headers = [
-    {"header":"Pixel","key":"name"},
-    {"header":"Rockerbox","key":["rbox_users"],"formatter":format},
-    {"header":"Total","key":["users"],"formatter":format} ,
-    {"header":"%","key":["rbox_users","users"],"formatter":buildPercent}  
-  ]
-   
-  buidlTable(users_table,users_headers,usersMakeGraphArea) 
+  populateTableWrapper(visitsWrapper, "pixel_reporting", visit_series, visit_headers, "On-site visits")
+  populateTableWrapper(usersWrapper, "pixel_reporting", user_series, user_headers, "On-site uniques") 
 
 }
 
@@ -200,7 +193,7 @@ var buildPixelReporting = function(obj) {
 
   pixel_group
     .on("click",function(x){
-      console.log(this)
+      //console.log(this)
       if (!x['pixel_reporting']) {
         var qs = (function(a) {
           if (a == "") return {};

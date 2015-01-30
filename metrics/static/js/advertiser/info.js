@@ -679,6 +679,7 @@ var buildObjects = function(obj) {
 
 var makeGraphArea = function(obj,series,title_prefix,position,outer){
 
+  console.log(arguments)
   var chart_obj = obj,
     position = position || 0
 
@@ -700,7 +701,6 @@ var makeGraphArea = function(obj,series,title_prefix,position,outer){
     }
 
     var keys = Object.keys(values[0]).filter(function(x){return x != "date"})
-    console.log(values)
 
     setTimeout(function(){
       MG.data_graphic({
