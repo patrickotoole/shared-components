@@ -89,8 +89,9 @@ class StreamingHandler(StreamingBase,tornado.websocket.WebSocketHandler):
             self.control_buffer['on'] = False
 
     def open(self, *args):
-        logging.info("active clients: " + str(clients))
+        logging.info("current clients: " + str(clients))
         self.id = self.get_argument("id","123")
+        logging.info("adding new client: " + self.id)
         clients[self.id] = {"id": self.id, "object": self, "enabled":False}
         if len(clients.keys()) == 1:
             self.buffers['track'].clear()
@@ -98,21 +99,29 @@ class StreamingHandler(StreamingBase,tornado.websocket.WebSocketHandler):
             self.generator_loop()
 
     def on_message(self, message):        
-        try:
-            masks = ujson.loads(message)
-            streams = masks.get("streams",False)                                                                       
-            if streams:                                                                                                
-                clients[self.id]['streams'] = streams                                                                  
-                del masks["streams"]      
-            else:
-                clients[self.id]['masks'] = masks
-                clients[self.id]['masks']['advertiser_id'] = [self.get_secure_cookie("advertiser")]
-        except:
-            pass
-
-
-        if message == "start":
+        if message == "initialize":
+            logging.info("initializing: %s" % self.id)
+        elif message == "start":
+            logging.info("starting: %s" % self.id)
             clients[self.id]['enabled'] = True
+        else:
+            
+
+            try:
+                masks = ujson.loads(message)
+                logging.info("client setting for %s: %s" % (self.id,str(masks)))
+                streams = masks.get("streams",False)                                                                       
+                if streams:                                                                                                
+                    clients[self.id]['streams'] = streams                                                                  
+                    del masks["streams"]      
+                    clients[self.id]['masks'] = masks
+                else:
+                    clients[self.id]['masks'] = masks
+                    clients[self.id]['masks']['advertiser_id'] = [self.get_secure_cookie("advertiser")]
+                logging.info("updated clients : " + str(clients))
+            except Exception as e:
+                logging.info(e)
+
 
         print "Client %s received a message : %s" % (self.id, message)
         
