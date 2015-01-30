@@ -44,7 +44,7 @@ class AdvertiserRoutes(Routes):
         ]
      
 
-    @connectors("db","api")
+    @connectors("reporting_db","api")
     def yoshi_routes(self):
         import handlers.pixel as pixel
      

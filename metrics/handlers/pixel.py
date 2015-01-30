@@ -58,8 +58,8 @@ class PixelReportingHandler(AdminReportingBaseHandler,BaseHandler):
 
     OPTIONS = OPTIONS
 
-    def initialize(self, db=None, hive=None, spark_sql=None, **kwargs):
-        self.db = db
+    def initialize(self, reporting_db=None, hive=None, spark_sql=None, **kwargs):
+        self.db = reporting_db
         self.hive = hive
         self.spark_sql = spark_sql
 
@@ -115,18 +115,16 @@ class PixelReportingHandler(AdminReportingBaseHandler,BaseHandler):
 
         return u
 
+    @decorators.deferred
+    def pull_mysql(self,query):
+        return self.db.select_dataframe(query)
+
     @defer.inlineCallbacks
     def get_data(self,query,groupby=False,wide=False):
 
-        query_list = [
-            "SET spark.sql.shuffle.partitions=8",
-            query
-        ]
-
-        raw = yield run_spark_sql_session_deferred(self.spark_sql,query_list)
-
+        df = yield self.pull_mysql(query)
         formatted = self.format_data(
-            pandas.DataFrame(raw),
+            df,
             groupby,
             wide
         )

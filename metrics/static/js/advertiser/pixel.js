@@ -161,7 +161,7 @@ var buildPixelReporting = function(obj) {
         start_date = qs["start_date"] || formatter(new Date());
        
 
-      var URL = "/admin/advertiser/pixel/reporting?format=json&start_date=" + "15-01-15" +
+      var URL = "/pixel?format=json&start_date=" + "15-01-01" +
         "&advertiser=" + dataset.pixel_source_name + "&wide=timeseries&include=date"
 
       d3.json(URL,function(reporting_data){
@@ -219,7 +219,7 @@ var buildPixelReporting = function(obj) {
           start_date = qs["start_date"] || formatter(new Date());
          
 
-        var URL = "/admin/advertiser/pixel/reporting?format=json&date=past_month&" + //start_date=" + start_date +
+        var URL = "/pixel?format=json&date=past_month&" + //start_date=" + start_date +
           "&advertiser=" + x.pixel_source_name
 
         d3.json(URL,function(reporting_data){
