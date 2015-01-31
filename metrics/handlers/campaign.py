@@ -99,7 +99,7 @@ class YoshiCampaignHandler(BaseHandler):
     @defer.inlineCallbacks 
     def make_campaign(self,advertiser_id,profile,details):
         name = "Yoshi"
-        name += " | " + ",".join([d['domain'] for d in profile['domain_targets'][:4]]) + ", and %s more" % len(profile['domain_targets']) if len(profile['domain_targets']) > 4 else ""
+        name += " | " + ",".join([d['domain'] for d in profile['domain_targets'][:4]]) + (", and %s more" % len(profile['domain_targets']) if len(profile['domain_targets']) > 4 else "")
         name += " | " + ",".join(details['sizes'])
 
         price = 1 # need to get this from details
