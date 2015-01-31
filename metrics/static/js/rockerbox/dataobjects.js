@@ -186,7 +186,7 @@ RB.objects = (function(rb) {
 
         var build = function(wrapper,data_key,graph_series,table_series,title) {
 
-          var graphWrapper = wrapper
+          var graphWrapper = wrapper.classed("chart-table-wrapper",true)
             .selectAll("div")
             .data(self.helpers.timeseries_transform(data_key))
               .enter()
