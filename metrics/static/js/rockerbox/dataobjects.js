@@ -25,13 +25,29 @@ RB.helpers = {
   timeseries_formatter: function(z){
     return {
       "values":z.values[0].timeseries,
-      "title": z.name
+      "title": z.name,
     }
   },
+  add_id: function(id){
+    return function(x) {
+      x.id = x.id || id
+      return x
+    }
+  },
+
   timeseries_transform: function(data_key) {
     var self = this
     return function(d) {
-      var values = d[data_key].map(self.timeseries_formatter)
+      var rand = parseInt(Math.random()*10000000)
+      var values = d[data_key]
+        .map(self.timeseries_formatter)
+        .map(self.add_id(rand))
+      values.map(function(z){
+        z.values = z.values.map(function(d){
+          d.date = typeof(d.date) == "string" ? new Date("20"+d.date) : d.date;  
+          return d
+        })
+      })
       return [values]
     }
   }
@@ -86,50 +102,84 @@ RB.objects = (function(rb) {
 
   return {
     timeseries: {
-      multiSeriesGraph: function(obj,series,title_prefix,initial_position,outer,height) { 
-
-        var chart_obj = obj,
-          position = initial_position || 0,
+      graph: function(obj,limit_series,title_prefix,height) {
+        var chart_obj = obj
+          .classed("chart",true)
+          .style("height","100%"),
           height = height || 150
 
-        chart_obj.attr("style","height:200px")
-
-        chart_obj.html(function(x){
-          var _id = "asdf" + parseInt(Math.random()*10000000)
-          var values = x[position].values.map(function(z){
-            z.date = typeof(z.date) == "string" ? new Date("20"+z.date) : z.date; 
-            return z
+        
+        chart_obj.append("div")
+          .classed("legend",true)
+          .attr("id",function(x){
+            return "legend" + x.id
           })
-          var name = x[position].title
 
-          if (series) {
-            values = values.map(function(z){
-              y = { "date":z.date }
-              series.map(function(m){ y[m.name] = z[m.key] })
-              return y
-            })
-          }
+        var chart = chart_obj.append("div")
+          .classed("chart",true)
+          .attr("id",function(x){
+            return "chart" + x.id
+          })
+          .style("height",chart_obj.style("height"))
 
-          var keys = Object.keys(values[0]).filter(function(x){return x != "date"})
+        var helper = chart_obj.append("div")
+          .classed("chart-helper",true)
+          .html(function(x){
+            var values = x.values
 
-          setTimeout(function(){
-            MG.data_graphic({
-              title: title_prefix + " &mdash; " + name,
-              data: values,
-              full_width: true,
-              right: 20,
-              height: height,
-              legend: keys,
-              legend_target: '#legend' + _id,
-              target: '#' + _id,
-              x_accessor: 'date',
-              y_accessor: keys
-            })
-          },0)
-           
+            if (limit_series) {
+              values = values.map(function(z){
+                y = { "date":z.date }
+                limit_series.map(function(m){ y[m.name] = z[m.key] })
+                return y
+              })
+            }
 
-          return "<div class='legend' id='legend"+_id+"'></div><div id='"+_id+"'></div>"
-        })
+            var keys = Object.keys(values[0]).filter(function(x){return x != "date"})
+
+            var build = function() {
+               MG.data_graphic({
+                title: title_prefix + " &mdash; " + x.title,
+                data: values,
+                full_width: true,
+                right: 20,
+                full_height: true,
+                top:20,
+                bottom:20,
+                legend: keys,
+                legend_target: '#legend' + x.id,
+                target: '#chart' + x.id,
+                x_accessor: 'date',
+                y_accessor: keys
+              })
+            }
+
+            build()
+            
+          })
+      },
+
+      multiSeriesGraph: function(obj,series,title_prefix,initial_position,outer,height) { 
+
+        var position = initial_position || 0,
+          height = height || 150
+
+        var chart_obj = obj.selectAll("div")
+          .data(function(data){
+            return [data[position]]
+          })
+
+        chart_obj.enter()
+          .append("div")
+
+        self.objects.timeseries.graph(
+          chart_obj,
+          series,
+          title_prefix,
+          height
+        )
+
+        
   
       },
       graphWithTable: function(d) {
@@ -141,6 +191,9 @@ RB.objects = (function(rb) {
             .data(self.helpers.timeseries_transform(data_key))
               .enter()
               .append("div") 
+              .classed("chart-wrapper","true")
+              .style("height","200px")
+              .style("padding-bottom","50px")
 
           var tableWrapper = wrapper
             .append("table")

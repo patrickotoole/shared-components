@@ -1795,7 +1795,7 @@
             svg_width = get_width(args.target);
         }
 
-        if (args.fill_height) {
+        if (args.full_height) {
             svg_height = get_height(args.target);
         }
 
@@ -1853,8 +1853,10 @@
         svg.attr('viewBox', '0 0 ' + svg_width + ' ' + svg_height);
 
         if (args.full_width || args.full_height) {
-            svg.attr('preserveAspectRatio', 'xMinYMin meet');
+            //svg.attr('preserveAspectRatio', 'xMinYMin meet');
         }
+
+        
 
         // remove missing class
         svg.classed('mg-missing', false);
@@ -1993,20 +1995,22 @@
         return this;
     }
 
-    function mg_window_listeners(args){
-        mg_if_aspect_ratio_resize_svg(args);
+    function mg_window_listeners(args,t){
+        mg_if_aspect_ratio_resize_svg(args,t);
     }
 
-    function mg_if_aspect_ratio_resize_svg(args){
+    function mg_if_aspect_ratio_resize_svg(args,t){
         // If we've asked the svg to fill a div, resize with div.
         if (args.full_width || args.full_height){
             window.addEventListener('resize', function(){
+                //t.init.bind(t,t.args)()
                 // var svg_width = 
                 // var svg_height = 
                 // args.width = svg_width;
                 // args.height = svg_height;
                 d3.select(args.target).select('svg')
                     .attr('width', get_width(args.target));
+
             }, true);
         }
 
@@ -2341,7 +2345,7 @@
             var svg = d3.select($(args.target).find('svg').get(0));
             var g;
             var data_median = 0;
-            var updateTransitionDuration = (args.transition_on_update) ? 1000 : 0;
+            var updateTransitionDuration = (args.transition_on_update) ? 350 : 0;
             var mapToY = function(d) {
                 return d[args.y_accessor];
             };
@@ -2966,7 +2970,7 @@
         };
 
         this.windowListeners = function() {
-            mg_window_listeners(this.args);
+            mg_window_listeners(this.args,this);
             return this;
         };
 
@@ -3204,7 +3208,7 @@
         };
         
         this.windowListeners = function() {
-            mg_window_listeners(this.args);
+            mg_window_listeners(this.args,this);
             return this;
         };
 
@@ -3436,7 +3440,7 @@
         };
 
         this.windowListeners = function() {
-            mg_window_listeners(this.args);
+            mg_window_listeners(this.args,this);
             return this;
         };
 
@@ -3825,7 +3829,7 @@
         };
 
         this.windowListeners = function() {
-            mg_window_listeners(this.args);
+            mg_window_listeners(this.args,this);
             return this;
         };
 
