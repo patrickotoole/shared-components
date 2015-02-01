@@ -163,10 +163,10 @@ var buildCampaigns = function(obj,name,show_id) {
           var filtered = x.campaigns.map(function(y){
             return mapped_entries.get(y.campaign_id) || []       
           }).filter(function(y){
-            console.log(y)
+            //console.log(y)
             return y.length
           })
-          console.log(filtered)
+          //console.log(filtered)
           return filtered.length
         } else {
           return 0
@@ -678,8 +678,6 @@ var buildObjects = function(obj) {
 }
 
 var makeGraphArea = function(obj,series,title_prefix,initial_position,outer,height){
-
-  
 
 }
  
