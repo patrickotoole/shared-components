@@ -3,7 +3,7 @@ import tornado.httpclient
 import ujson
 
 class CircleCIXMLHandler(tornado.web.RequestHandler):
-    TOKEN = "circle-token=8c33a0c315af4520e128c9bf4b4854d731d3937c"
+    TOKEN = "circle-token=969e3d7b360a41afe14278d1abfc433ac1c8f4c3"
 
     @tornado.web.asynchronous
     def get_xml(self,resp):
@@ -22,7 +22,8 @@ class CircleCIXMLHandler(tornado.web.RequestHandler):
 
     @tornado.web.asynchronous
     def get_build(self,resp):
-        build_num = ujson.loads(str(resp.body))[0]['build_num']
+        json = ujson.loads(str(resp.body))
+        build_num = json[0]['build_num']
         client = tornado.httpclient.AsyncHTTPClient()
         URL = "https://circleci.com/api/v1/project/rockerbox/rocamp/%s/artifacts?" % build_num
         client.fetch(URL + self.TOKEN, headers={"Accept": "application/json"}, callback=self.get_url)
