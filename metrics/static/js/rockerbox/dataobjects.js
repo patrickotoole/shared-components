@@ -58,7 +58,8 @@ RB.helpers = {
 RB.defaults= {
   timeseries: "?format=json&wide=timeseries&include=date",
   paths: {
-    pixel_reporting: "/pixel"
+    pixel_reporting: "/pixel",
+    conversion_reporting: "/admin/advertiser/conversion/reporting"
   }
 
 }
@@ -70,6 +71,31 @@ RB.data = (function(rb) {
     stored_data = rb.__data__
 
   return {
+    conversion_reporting: function(advertiser,callback,order,url_override) {
+      var start = self.helpers.get_start_date(),
+        BASE    = url_override || self.defaults.paths.conversion_reporting,
+        URL     = BASE + self.defaults.timeseries + "&start_date=" + start + "&advertiser=" + advertiser + "&meta=rbox_vs_total",
+        order   = order || "num_conv";
+
+      if (stored_data[URL]) {
+        callback(stored_data[URL])
+      } else {
+        d3.json(URL,function(data){
+
+          reporting = d3.nest()
+            .key(function(d) {return d.conv_id})
+            .entries(data)
+
+          if (order) {
+            reporting.sort(self.helpers.order_by_nested(order))
+            reporting.map(function(x,i){x.position = i})
+          }
+
+          callback(reporting)
+          
+        })
+      }
+    },
     pixel_reporting: function(advertiser,callback,order,url_override) {
       var start = self.helpers.get_start_date(),
         BASE    = url_override || self.defaults.paths.pixel_reporting,
