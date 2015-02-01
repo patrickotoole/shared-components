@@ -130,12 +130,12 @@ class ReportTestCase(unittest.TestCase):
         self.db.execute(CREATE_V2_CON)
         self.db.execute(CREATE_NOUNIQ)
         self.db.execute(CREATE_UNIQ)
-        self.db.commit()
+        #self.db.commit()
 
     def tearDown(self):
         drop = DROP.format(database=self.db.database)
         self.db.execute(drop)
-        self.db.commit()
+        #self.db.commit()
 
     def test_get_unique_keys(self):
         k1 = get_unique_keys(self.db, 'v4_reporting_test_blah')
