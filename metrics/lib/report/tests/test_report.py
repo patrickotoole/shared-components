@@ -134,7 +134,11 @@ class ReportTestCase(unittest.TestCase):
 
     def tearDown(self):
         drop = DROP.format(database=self.db.database)
-        self.db.execute(drop)
+        for dr in drop.split(";"):
+            try:
+                self.db.execute(dr)
+            except:
+                pass
         #self.db.commit()
 
     def test_get_unique_keys(self):

@@ -33,10 +33,13 @@ class MysqlDB(DBConnectionWrapper):
                 self._wrapped.close()
             except:
                 pass
-            _wrapped = self.create_connection()
-            with _wrapped:
-                cursor = _wrapped.cursor()
-                return self.CURSOR_WRAPPER(cursor, query, args=args)()
+            with self.create_connection() as cursor:
+                result = self.CURSOR_WRAPPER(cursor, query, args=args)()
+
+                if "insert into" in query.lower():
+                    return cursor.lastrowid
+                    
+                return result
         except MySQLdb.OperationalError, e:
             if e[0] == 2006:
                 self._wrapped.close()
