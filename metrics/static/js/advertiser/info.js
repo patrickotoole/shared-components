@@ -130,7 +130,6 @@ var buildCampaigns = function(obj,name,show_id) {
   var url = "/admin/campaign_check.xml"
   d3.xml(url, "application/xml", function(xml) {
     var testcases = xml.documentElement.getElementsByTagName("testcase")
-    console.log(testcases)
     var entries = d3.entries(testcases)
     entries = entries.filter(function(x){
       try {

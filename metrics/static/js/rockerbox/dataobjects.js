@@ -17,7 +17,9 @@ RB.helpers = {
     date: d3.time.format("%y-%m-%d")
   },
   get_start_date: function(){
-    return  RB.QS["start_date"] || this.formatters.date(new Date())
+    var today = new Date()
+    var thirtydaysago = new Date(today - (30 * 24 * 60 * 60 * 1000))
+    return  RB.QS["start_date"] || this.formatters.date(thirtydaysago)
   },
   order_by_nested: function(key) {
     return function (x,y) { return y.values[0].imps - x.values[0].imps }
@@ -102,11 +104,11 @@ RB.objects = (function(rb) {
 
   return {
     timeseries: {
-      graph: function(obj,limit_series,title_prefix,height) {
+      graph: function(obj,limit_series,title_prefix) {
+
         var chart_obj = obj
           .classed("chart",true)
-          .style("height","100%"),
-          height = height || 150
+          .style("height","100%")
 
         
         chart_obj.append("div")
@@ -120,7 +122,7 @@ RB.objects = (function(rb) {
           .attr("id",function(x){
             return "chart" + x.id
           })
-          .style("height",chart_obj.style("height"))
+          .style("height",function(){ return chart_obj.style("height")})
 
         var helper = chart_obj.append("div")
           .classed("chart-helper",true)
@@ -166,11 +168,13 @@ RB.objects = (function(rb) {
 
         var chart_obj = obj.selectAll("div")
           .data(function(data){
-            return [data[position]]
+            var values = data[position]
+            //console.log(values ? [data[position]] : [])
+            return values ? [data[position]] : []
           })
 
         chart_obj.enter()
-          .append("div")
+            .append("div")
 
         self.objects.timeseries.graph(
           chart_obj,

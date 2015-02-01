@@ -50,7 +50,6 @@ var buildPixelReportingTables = function(pixel,data_key) {
 var buildPixelReporting = function(obj) {
 
   var build = function(x) {
-    console.log(x)
     var elem = d3.select(x),
       data = x.__data__,
       data_key = "pixel_reporting",
