@@ -38,19 +38,19 @@ class BatchRequestBase():
             )
 
         self.db.execute(query)
-        self.db.commit()        
+        #self.db.commit()        
 
     def deactivate_request(self, request_id):
         '''Given an id of a batch request, set the 'active' column to 0'''
         query = DEACTIVATE_REQUEST.format(request_id)
         self.db.execute(query)
-        self.db.commit()
+        #self.db.commit()
 
     def activate_request(self, request_id):
         '''Given an id of a batch request, set the 'active' column to 1'''
         query = ACTIVATE_REQUEST.format(request_id)
         self.db.execute(query)
-        self.db.commit()
+        #self.db.commit()
 
     def clean_query(self, query):
         '''Given a Hive query, sanitize it for use in batch processing'''

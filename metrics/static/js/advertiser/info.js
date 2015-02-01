@@ -130,7 +130,6 @@ var buildCampaigns = function(obj,name,show_id) {
   var url = "/admin/campaign_check.xml"
   d3.xml(url, "application/xml", function(xml) {
     var testcases = xml.documentElement.getElementsByTagName("testcase")
-    console.log(testcases)
     var entries = d3.entries(testcases)
     entries = entries.filter(function(x){
       try {
@@ -163,10 +162,10 @@ var buildCampaigns = function(obj,name,show_id) {
           var filtered = x.campaigns.map(function(y){
             return mapped_entries.get(y.campaign_id) || []       
           }).filter(function(y){
-            console.log(y)
+            //console.log(y)
             return y.length
           })
-          console.log(filtered)
+          //console.log(filtered)
           return filtered.length
         } else {
           return 0
@@ -678,8 +677,6 @@ var buildObjects = function(obj) {
 }
 
 var makeGraphArea = function(obj,series,title_prefix,initial_position,outer,height){
-
-  
 
 }
  

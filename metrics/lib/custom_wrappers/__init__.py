@@ -4,3 +4,4 @@ from report_wrapper import *
 from rockerbox_wrapper import *
 from marathon_hive_wrapper import *
 from digitalocean_wrapper import *
+from mysql_wrapper import *

@@ -45,8 +45,8 @@ class EventLogHandler(tornado.web.RequestHandler):
         try:
             insert_obj = self.make_to_insert(self.request.body)
                 
-            self.db.execute(INSERT % insert_obj)
-            where = "id = LAST_INSERT_ID()"
+            lastrowid = self.db.execute(INSERT % insert_obj)
+            where = "id = %s" % lastrowid
             res = self.db.select_dataframe(SELECT % where)
             as_json = Convert.df_to_json(res)
             self.write(as_json)

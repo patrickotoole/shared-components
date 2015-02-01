@@ -50,8 +50,8 @@ var buildPixelReportingTables = function(pixel,data_key) {
 var buildPixelReporting = function(obj) {
 
   var build = function(x) {
-    var elem = d3.select(x[0]),
-      data = x[0].__data__,
+    var elem = d3.select(x),
+      data = x.__data__,
       data_key = "pixel_reporting",
       advertiser = data.pixel_source_name
 
@@ -84,7 +84,7 @@ var buildPixelReporting = function(obj) {
   var pixels = obj.append("div")
     .classed("list-group pixel-reporting ", true) 
 
-  pixels.map(build)
+  pixels[0].map(build)
 
   pixel_group.on("click",function(x){
     if (!x['pixel_reporting']) build([this.nextSibling])

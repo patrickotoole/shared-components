@@ -123,13 +123,16 @@ class PixelReportingHandler(AdminReportingBaseHandler,BaseHandler):
     def get_data(self,query,groupby=False,wide=False):
 
         df = yield self.pull_mysql(query)
-        formatted = self.format_data(
-            df,
-            groupby,
-            wide
-        )
+        if len(df):
+            formatted = self.format_data(
+                df,
+                groupby,
+                wide
+            )
 
-        self.get_content(formatted)
+            self.get_content(formatted)
+        else:
+            self.get_content(pandas.DataFrame())
 
     def get_meta_group(self,default="default"):
 
