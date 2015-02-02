@@ -2,7 +2,7 @@ var format = d3.format("0,000"),
   formatPercent = d3.format("%"),
   formatDate = d3.time.format("%Y-%m-%d"),
   buildPercent = function(x,y) {
-    return formatPercent(x/y)
+    return (y == 0) ? formatPercent(0) : formatPercent(x/y)
   }
 
 var buildInfo = function(wrapped) {

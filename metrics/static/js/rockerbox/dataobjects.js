@@ -22,7 +22,7 @@ RB.helpers = {
     return  RB.QS["start_date"] || this.formatters.date(thirtydaysago)
   },
   order_by_nested: function(key) {
-    return function (x,y) { return y.values[0].imps - x.values[0].imps }
+    return function (x,y) { return y.values[0][key] - x.values[0][key] }
   },
   timeseries_formatter: function(z){
     return {
@@ -59,7 +59,8 @@ RB.defaults= {
   timeseries: "?format=json&wide=timeseries&include=date",
   paths: {
     pixel_reporting: "/pixel",
-    conversion_reporting: "/admin/advertiser/conversion/reporting"
+    conversion_reporting: "/admin/advertiser/conversion/reporting",
+    advertiser_reporting: "/admin/advertiser/viewable/reporting"
   }
 
 }
@@ -71,6 +72,58 @@ RB.data = (function(rb) {
     stored_data = rb.__data__
 
   return {
+    campaign_reporting: function(advertiser,callback,order,url_override) {
+      var start = self.helpers.get_start_date(),
+        BASE    = url_override || self.defaults.paths.advertiser_reporting,
+        URL     = BASE + self.defaults.timeseries + "&start_date=" + start + "&advertiser_equal=" + advertiser + 
+          "&meta=none&include=campaign,date&fields=loaded,served,visible",
+        order   = order || "served";
+
+      if (stored_data[URL]) {
+        callback(stored_data[URL])
+      } else {
+        d3.json(URL,function(data){
+
+          reporting = d3.nest()
+            .key(function(d) {return d.campaign})
+            .entries(data)
+
+          if (order) {
+            reporting.sort(self.helpers.order_by_nested(order))
+            reporting.map(function(x,i){x.position = i})
+          }
+
+          callback(reporting)
+          
+        })
+      }
+    },
+    advertiser_reporting: function(advertiser,callback,order,url_override) {
+      var start = self.helpers.get_start_date(),
+        BASE    = url_override || self.defaults.paths.advertiser_reporting,
+        URL     = BASE + self.defaults.timeseries + "&start_date=" + start + "&advertiser_equal=" + advertiser + 
+          "&meta=none&include=advertiser,date&fields=loaded,served,visible",
+        order   = order || "num_conv";
+
+      if (stored_data[URL]) {
+        callback(stored_data[URL])
+      } else {
+        d3.json(URL,function(data){
+
+          reporting = d3.nest()
+            .key(function(d) {return "advertiser"})
+            .entries(data)
+
+          if (order) {
+            reporting.sort(self.helpers.order_by_nested(order))
+            reporting.map(function(x,i){x.position = i})
+          }
+
+          callback(reporting)
+          
+        })
+      }
+    }, 
     conversion_reporting: function(advertiser,callback,order,url_override) {
       var start = self.helpers.get_start_date(),
         BASE    = url_override || self.defaults.paths.conversion_reporting,
