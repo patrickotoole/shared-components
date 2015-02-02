@@ -8,6 +8,7 @@ var buildViewable = function(wrapped) {
   buildCampaignViewabilityReporting(wrapped)
   buildTagViewabilityReporting(wrapped) 
   buildVenueViewabilityReporting(wrapped)  
+  buildDomainListViewabilityReporting(wrapped)   
    
 }
 
@@ -66,7 +67,7 @@ var buildAdvertiserViewabilityReporting = function(obj) {
     .classed("panel-sub-heading advertiser-reporting list-group",true)
 
   advertiser_group.append("div").classed("list-group-item",true)
-    .text("Advertiser Reporting")
+    .text("")
 
   var pixels = obj.append("div")
     .classed("list-group advertiser-reporting", true)
@@ -149,7 +150,7 @@ var buildCampaignViewabilityReporting = function(obj) {
     .classed("panel-sub-heading campaign-reporting list-group",true)
 
   campaign_group.append("div").classed("list-group-item",true)
-    .text("Campaign Reporting")
+    .text("Viewability by campaign")
 
   var pixels = obj.append("div")
     .classed("list-group campaign-reporting hidden", true)
@@ -221,7 +222,7 @@ var buildTagViewabilityReporting = function(obj) {
     .classed("panel-sub-heading tag-reporting list-group",true)
 
   tag_group.append("div").classed("list-group-item",true)
-    .text("Tag Reporting")
+    .text("Viewability by tag")
 
   var pixels = obj.append("div")
     .classed("list-group tag-reporting hidden", true)
@@ -293,7 +294,7 @@ var buildVenueViewabilityReporting = function(obj) {
     .classed("panel-sub-heading venue-reporting list-group",true)
 
   venue_group.append("div").classed("list-group-item",true)
-    .text("Venue Reporting")
+    .text("Viewability by venue")
 
   var pixels = obj.append("div")
     .classed("list-group venue-reporting hidden", true)
@@ -306,3 +307,73 @@ var buildVenueViewabilityReporting = function(obj) {
 
 }    
  
+var buildDomainListViewabilityReportingTables = function(pixel,data_key) {
+
+  var wrapper = pixel.append("div").classed("row",true)
+    .append("div").classed("col-md-12",true)
+
+
+  RB.objects.timeseries.graphWithTable({
+    "wrapper": wrapper.append("div").classed("col-md-6",true),
+    "data_key": data_key,
+    "graph_series": [
+      {"name":"Visible","key":"visible"}, 
+      {"name":"Loaded","key":"loaded"},
+      {"name":"Served","key":"served"} 
+    ],
+    "table_series": [
+      {"header":"Domain List","key":"name"},
+      {"header":"Visible","key":["visible"],"formatter":format}, 
+      {"header":"Loaded","key":["loaded"],"formatter":format},
+      {"header":"Served","key":["served"],"formatter":format},
+      {"header":"% loaded","key":["loaded","served"],"formatter":buildPercent},
+      {"header":"% visible","key":["visible","loaded"],"formatter":buildPercent} 
+    ],
+    "title": "Domain List Viewability"
+  })
+
+}
+
+var buildDomainListViewabilityReporting = function(obj) {
+
+  var build = function(x) {
+    var elem = d3.select(x),
+      data = x.__data__,
+      data_key = "domain_list_reporting",
+      domain_list = data.pixel_source_name,
+      domain_list_name = data.domain_list_name,
+      advertiser_name = data.advertiser_name
+
+    if (!data[data_key]) {
+
+      RB.data.domain_list_reporting(domain_list,function(data){
+        
+
+        data.map(function(e){
+          e.name =  e.key 
+        })
+
+        elem.text(function(x){ x[data_key] = data})
+        buildDomainListViewabilityReportingTables(elem,data_key)
+      })
+ 
+    }
+  }
+
+
+  var domain_list_group = obj.append("div")
+    .classed("panel-sub-heading domain_list-reporting list-group",true)
+
+  domain_list_group.append("div").classed("list-group-item",true)
+    .text("Viewability by domain_list")
+
+  var pixels = obj.append("div")
+    .classed("list-group domain_list-reporting hidden", true)
+
+  //pixels[0].map(build)
+
+  domain_list_group.on("click",function(x){
+    if (!x['domain_list_reporting']) build(this.nextSibling)
+  })
+
+}

@@ -72,6 +72,32 @@ RB.data = (function(rb) {
     stored_data = rb.__data__
 
   return {
+    domain_list_reporting: function(advertiser,callback,order,url_override) {
+      var start = self.helpers.get_start_date(),
+        BASE    = url_override || self.defaults.paths.advertiser_reporting,
+        URL     = BASE + self.defaults.timeseries + "&start_date=" + start + "&advertiser_equal=" + advertiser + 
+          "&meta=type&include=type,date&fields=loaded,served,visible",
+        order   = order || "served";
+
+      if (stored_data[URL]) {
+        callback(stored_data[URL])
+      } else {
+        d3.json(URL,function(data){
+
+          reporting = d3.nest()
+            .key(function(d) {return d.type})
+            .entries(data)
+
+          if (order) {
+            reporting.sort(self.helpers.order_by_nested(order))
+            reporting.map(function(x,i){x.position = i})
+          }
+
+          callback(reporting)
+          
+        })
+      }
+    },
     venue_reporting: function(advertiser,callback,order,url_override) {
       var start = self.helpers.get_start_date(),
         BASE    = url_override || self.defaults.paths.advertiser_reporting,
