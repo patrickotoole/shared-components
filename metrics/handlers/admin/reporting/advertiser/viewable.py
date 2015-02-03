@@ -258,13 +258,13 @@ class AdvertiserViewableHandler(AdminReportingBaseHandler):
             group_cols = [ i for i in groupby if i != "date" and i in u.columns]
             val_cols = [ i for i in u.columns if i not in group_cols]
 
-            u = u.set_index(group_cols + ['date']).unstack('date').fillna(0).stack().reset_index()
+            u = u.fillna(0).set_index(group_cols + ['date']).unstack('date').fillna(0).stack().reset_index()
 
             grouped = u.groupby(group_cols).sum()
             
             u = u.fillna(0).groupby(group_cols).apply(timeseries_group)
             grouped['timeseries'] = u
-            u = grouped.reset_index()
+            u = grouped.reset_index() 
  
 
         elif groupby and wide:

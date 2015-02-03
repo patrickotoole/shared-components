@@ -248,6 +248,19 @@ OPTIONS = {
                 "uid": "none"
                 } 
         }
+    },
+    "rbox_vs_total": {
+         "meta": {
+            "groups": ["conv_id","date"],
+            "fields": ["num_conv", "rbox_conv"],
+            "formatters": {
+                "segment": "none",
+                "order_type": "none",
+                "order_id": "none",
+                "conv_id": "none",
+                "uid": "none"
+                } 
+        }
     }
 }
 
@@ -303,6 +316,7 @@ FIELDS = {
     "clicks": "sum(num_clicked)",
     "num_clicks": "sum(num_clicks)",
     "num_conv": "count (*)",
+    "rbox_conv": "sum(CASE WHEN num_served > 0 THEN 1 ELSE 0 END)",
     "converted_population": "sum(CASE WHEN v.zip_code IS NOT NULL THEN (num_conv*(percent / 100.0)) ELSE 0.0 END)", 
     "population": "sum(number)"
     }
@@ -365,20 +379,37 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
 
         self.get_content(formatted)
 
-    def format_data(self, u, groupby, wide):
+    def format_data(self,u,groupby,wide):
         for field in FIELDS:
             if field in u.columns:
                 try:
                     try:
                         u[field] = u[field].astype(int)
                     except:
-                        u[field] = u[field].astype(float) 
+                        u[field] = u[field].astype(float)
                 except:
                     logging.warn("Could not format %s" % field)
                     pass
 
-        if groupby and wide:
-            u = u.set_index(groupby).sort_index()
+        if groupby and wide == "timeseries":
+
+            def timeseries_group(x):
+                _v = x[val_cols].T.to_dict().values()
+                return _v
+                
+            group_cols = [ i for i in groupby if i != "date" and i in u.columns]
+            val_cols = [ i for i in u.columns if i not in group_cols]
+
+            u = u.fillna(0).set_index(group_cols + ['date']).unstack('date').fillna(0).stack().reset_index()
+
+            grouped = u.groupby(group_cols).sum()
+            
+            u = u.fillna(0).groupby(group_cols).apply(timeseries_group)
+            grouped['timeseries'] = u
+            u = grouped.reset_index()
+         
+        elif groupby and wide:
+            u = u.fillna(0).set_index(groupby).sort_index()
             u = u.stack().unstack(wide)
 
             new_index = [i if i else "" for i in u.index.names]
@@ -387,7 +418,7 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
             u.rename(columns={"index":"__index__"},inplace=True)
 
         return u
-
+     
         
     def get_meta_group(self,default="default"):
         meta = self.get_argument("meta", False)
@@ -415,6 +446,13 @@ class ConversionCheckHandler(AdminReportingBaseHandler):
         include = self.get_argument("include","").split(",")
         meta_group = self.get_meta_group()
         meta_data = self.get_meta_data(meta_group,include)
+
+        fields = self.get_argument("fields","").split(",")
+        has_fields = len(fields) > 0 and len(fields[0]) > 0
+
+        if has_fields:
+            meta_data['fields'] = fields 
+         
 
         if meta:
             self.write(ujson.dumps(meta_data))

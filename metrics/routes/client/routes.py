@@ -49,9 +49,11 @@ class AdvertiserRoutes(Routes):
     @connectors("reporting_db","api")
     def client_pixel_routes(self):
         import handlers.pixel as pixel
+        import handlers.campaign_conversion as campaign_conversion
      
         return [
-            (r'/pixel', pixel.PixelReportingHandler, self.connectors)
+            (r'/pixel', pixel.PixelReportingHandler, self.connectors),
+            (r'/campaign_conversion', campaign_conversion.CampaignConversionReportingHandler, self.connectors) 
         ]
 
 class StreamingRoutes(Routes):

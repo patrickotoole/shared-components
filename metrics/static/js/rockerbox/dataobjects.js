@@ -22,7 +22,7 @@ RB.helpers = {
     return  RB.QS["start_date"] || this.formatters.date(thirtydaysago)
   },
   order_by_nested: function(key) {
-    return function (x,y) { return y.values[0].imps - x.values[0].imps }
+    return function (x,y) { return y.values[0][key] - x.values[0][key] }
   },
   timeseries_formatter: function(z){
     return {
@@ -40,6 +40,7 @@ RB.helpers = {
   timeseries_transform: function(data_key) {
     var self = this
     return function(d) {
+      console.log(d)
       var rand = parseInt(Math.random()*10000000)
       var values = d[data_key]
         .map(self.timeseries_formatter)
@@ -58,7 +59,10 @@ RB.helpers = {
 RB.defaults= {
   timeseries: "?format=json&wide=timeseries&include=date",
   paths: {
-    pixel_reporting: "/pixel"
+    pixel_reporting: "/pixel",
+    conversion_reporting: "/admin/advertiser/conversion/reporting",
+    campaign_conversion_reporting: "/campaign_conversion",
+    advertiser_reporting: "/admin/advertiser/viewable/reporting"
   }
 
 }
@@ -70,6 +74,192 @@ RB.data = (function(rb) {
     stored_data = rb.__data__
 
   return {
+    campaign_conversion_reporting: function(advertiser,callback,order,url_override) {
+      var start = self.helpers.get_start_date(),
+        BASE    = url_override || self.defaults.paths.campaign_conversion_reporting,
+        URL     = BASE + self.defaults.timeseries + "&start_date=" + start + "&advertiser=" + advertiser
+        order   = order || "conv";
+
+      if (stored_data[URL]) {
+        callback(stored_data[URL])
+      } else {
+        d3.json(URL,function(data){
+
+          reporting = d3.nest()
+            .key(function(d) {return d.conv_id})
+            .key(function(d) {return d.campaign })
+            .entries(data)
+
+          if (order) {
+            reporting.map(function(x){
+              v.values = x.values.sort(self.helpers.order_by_nested(order))
+              x.values.map(function(y,i) {
+                y.name = y.key;
+                y.position = i
+              })
+            })
+          }
+
+          callback(reporting)
+          
+        })
+      }
+    },
+    domain_list_reporting: function(advertiser,callback,order,url_override) {
+      var start = self.helpers.get_start_date(),
+        BASE    = url_override || self.defaults.paths.advertiser_reporting,
+        URL     = BASE + self.defaults.timeseries + "&start_date=" + start + "&advertiser_equal=" + advertiser + 
+          "&meta=type&include=type,date&fields=loaded,served,visible",
+        order   = order || "served";
+
+      if (stored_data[URL]) {
+        callback(stored_data[URL])
+      } else {
+        d3.json(URL,function(data){
+
+          reporting = d3.nest()
+            .key(function(d) {return d.type})
+            .entries(data)
+
+          if (order) {
+            reporting.sort(self.helpers.order_by_nested(order))
+            reporting.map(function(x,i){ x.position = i })
+          }
+
+          callback(reporting)
+          
+        })
+      }
+    },
+    venue_reporting: function(advertiser,callback,order,url_override) {
+      var start = self.helpers.get_start_date(),
+        BASE    = url_override || self.defaults.paths.advertiser_reporting,
+        URL     = BASE + self.defaults.timeseries + "&start_date=" + start + "&advertiser_equal=" + advertiser + 
+          "&meta=none&include=venue,date&fields=loaded,served,visible",
+        order   = order || "served";
+
+      if (stored_data[URL]) {
+        callback(stored_data[URL])
+      } else {
+        d3.json(URL,function(data){
+
+          reporting = d3.nest()
+            .key(function(d) {return d.venue})
+            .entries(data)
+
+          if (order) {
+            reporting.sort(self.helpers.order_by_nested(order))
+            reporting.map(function(x,i){x.position = i})
+          }
+
+          callback(reporting)
+          
+        })
+      }
+    },
+    tag_reporting: function(advertiser,callback,order,url_override) {
+      var start = self.helpers.get_start_date(),
+        BASE    = url_override || self.defaults.paths.advertiser_reporting,
+        URL     = BASE + self.defaults.timeseries + "&start_date=" + start + "&advertiser_equal=" + advertiser + 
+          "&meta=none&include=tag,date&fields=loaded,served,visible",
+        order   = order || "served";
+
+      if (stored_data[URL]) {
+        callback(stored_data[URL])
+      } else {
+        d3.json(URL,function(data){
+
+          reporting = d3.nest()
+            .key(function(d) {return d.tag})
+            .entries(data)
+
+          if (order) {
+            reporting.sort(self.helpers.order_by_nested(order))
+            reporting.map(function(x,i){x.position = i})
+          }
+
+          callback(reporting)
+          
+        })
+      }
+    },
+    campaign_reporting: function(advertiser,callback,order,url_override) {
+      var start = self.helpers.get_start_date(),
+        BASE    = url_override || self.defaults.paths.advertiser_reporting,
+        URL     = BASE + self.defaults.timeseries + "&start_date=" + start + "&advertiser_equal=" + advertiser + 
+          "&meta=none&include=campaign,date&fields=loaded,served,visible",
+        order   = order || "served";
+
+      if (stored_data[URL]) {
+        callback(stored_data[URL])
+      } else {
+        d3.json(URL,function(data){
+
+          reporting = d3.nest()
+            .key(function(d) {return d.campaign})
+            .entries(data)
+
+          if (order) {
+            reporting.sort(self.helpers.order_by_nested(order))
+            reporting.map(function(x,i){x.position = i})
+          }
+
+          callback(reporting)
+          
+        })
+      }
+    },
+    advertiser_reporting: function(advertiser,callback,order,url_override) {
+      var start = self.helpers.get_start_date(),
+        BASE    = url_override || self.defaults.paths.advertiser_reporting,
+        URL     = BASE + self.defaults.timeseries + "&start_date=" + start + "&advertiser_equal=" + advertiser + 
+          "&meta=none&include=advertiser,date&fields=loaded,served,visible",
+        order   = order || "num_conv";
+
+      if (stored_data[URL]) {
+        callback(stored_data[URL])
+      } else {
+        d3.json(URL,function(data){
+
+          reporting = d3.nest()
+            .key(function(d) {return "advertiser"})
+            .entries(data)
+
+          if (order) {
+            reporting.sort(self.helpers.order_by_nested(order))
+            reporting.map(function(x,i){x.position = i})
+          }
+
+          callback(reporting)
+          
+        })
+      }
+    }, 
+    conversion_reporting: function(advertiser,callback,order,url_override) {
+      var start = self.helpers.get_start_date(),
+        BASE    = url_override || self.defaults.paths.conversion_reporting,
+        URL     = BASE + self.defaults.timeseries + "&start_date=" + start + "&advertiser=" + advertiser + "&meta=rbox_vs_total",
+        order   = order || "num_conv";
+
+      if (stored_data[URL]) {
+        callback(stored_data[URL])
+      } else {
+        d3.json(URL,function(data){
+
+          reporting = d3.nest()
+            .key(function(d) {return d.conv_id})
+            .entries(data)
+
+          if (order) {
+            reporting.sort(self.helpers.order_by_nested(order))
+            reporting.map(function(x,i){x.position = i})
+          }
+
+          callback(reporting)
+          
+        })
+      }
+    },
     pixel_reporting: function(advertiser,callback,order,url_override) {
       var start = self.helpers.get_start_date(),
         BASE    = url_override || self.defaults.paths.pixel_reporting,
@@ -199,7 +389,7 @@ RB.objects = (function(rb) {
               .style("height","200px")
               .style("padding-bottom","50px")
 
-          var tableWrapper = wrapper
+          var tableWrapper = wrapper.append("div").classed("table-wrapper",true)
             .append("table")
             .classed("table table-condensed table-hover",true) 
 
@@ -235,6 +425,7 @@ RB.objects = (function(rb) {
         tr.on("click",function(x){
           obj.selectAll("td").classed("active",false)
           d3.select(this).selectAll("td").classed("active",true) 
+          console.log(x)
           onclick(x.position,x)
         })
       }
