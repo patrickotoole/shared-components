@@ -151,12 +151,12 @@ var buildCampaignConversionReporting = function(obj) {
     .text("Campaign Conversion Reporting")
 
   var pixels = obj.append("div")
-    .classed("list-group campaign-conversion-reporting", true)
+    .classed("list-group campaign-conversion-reporting hidden", true)
 
-  pixels[0].map(build)
+  //pixels[0].map(build)
 
   campaign_conversion_group.on("click",function(x){
-    if (!x['campaign_conversion_reporting']) build([this.nextSibling])
+    if (!x['campaign_conversion_reporting']) build(this.nextSibling)
   })
 
 }

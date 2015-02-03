@@ -67,7 +67,7 @@ var buildAdvertiserViewabilityReporting = function(obj) {
     .classed("panel-sub-heading advertiser-reporting list-group",true)
 
   advertiser_group.append("div").classed("list-group-item",true)
-    .text("")
+    .text("Advertiser Viewability")
 
   var pixels = obj.append("div")
     .classed("list-group advertiser-reporting", true)
@@ -210,7 +210,11 @@ var buildTagViewabilityReporting = function(obj) {
           e.name =  e.key 
         })
 
-        elem.text(function(x){ x[data_key] = data})
+        elem.text(function(x){ 
+          x[data_key] = data.filter(function(z){
+            return z.values[0].served > 0
+          })
+        })
         buildTagViewabilityReportingTables(elem,data_key)
       })
  
