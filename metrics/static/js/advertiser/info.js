@@ -3,7 +3,10 @@ var format = d3.format("0,000"),
   formatDate = d3.time.format("%Y-%m-%d"),
   buildPercent = function(x,y) {
     return (y == 0) ? formatPercent(0) : formatPercent(x/y)
-  }
+  },
+  buildRatio = function(x,y) {
+    return parseInt(((y == 0) ? 0 : (x/y))*10)/10.0 + "x"
+  } 
 
 var buildInfo = function(wrapped) {
   wrapped.append("div")
