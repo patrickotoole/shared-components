@@ -1,11 +1,15 @@
 module("rockerbox_metrics", package.seeall)
 
-function set_content_type (args)
+function infer_content_type (args)
   if args["img"] or string.sub(ngx.var.uri,-4,-1) == ".gif"  then
-    ngx.header.content_type = "image/gif"
+    return "image/gif"
   else
-    ngx.header.content_type = "text/javascript"
+    return "text/javascript"
   end
+end
+
+function set_content_type (args)
+  ngx.header.content_type = infer_content_type(args)
 end
 
 function send_pixel_response ()
@@ -23,6 +27,18 @@ function redirect_with_debug (debug, url)
   end
 end
 
+function respond_with_debug (args)
+  if args["img"] or string.sub(ngx.var.uri,-4,-1) == ".gif"  then
+    ngx.header.content_type = "image/gif"
+  else
+    ngx.header.content_type = "text/javascript"
+    if args["debug"] then
+      ngx.say("//debug")
+    end
+  end
+
+
+end
 
 function rb_sync_url () 
   -- original url with UID macro to be filled in
@@ -36,8 +52,17 @@ function url_as_redir (url)
   return "&redir=" .. ngx.escape_uri(url)
 end
 
-function an_seg_add (seg, url)
-  local seg_add = "/seg?add=" .. seg
+function an_seg_add_type (args)
+  local content_type = infer_content_type(args)
+  if content_type == "image/gif" then
+    return ""
+  else
+    return "&t=1"
+  end
+end
+
+function an_seg_add (seg, args, url)
+  local seg_add = "/seg?add=" .. seg .. an_seg_add_type(args)
   if url then
     seg_add = seg_add .. url_as_redir(url)
   end
@@ -67,7 +92,7 @@ function uid_cookie_sync (args)
   local url = rb_sync_url()
 
   if args["an_seg"] ~= nil then
-    url = an_seg_add(args["an_seg"], url)
+    url = an_seg_add(args["an_seg"], args, url)
   end 
   
   redirect_with_debug(args["debug"], sync_url(url))
@@ -89,10 +114,12 @@ end
 
 function set_seg (args)
   if args["an_seg"] ~= nil then
-    local url = an_base() .. an_seg_add(args["an_seg"])
+    local url = an_base() .. an_seg_add(args["an_seg"], args)
     if args["adnxs_uid"] == nil then
       redirect_with_debug(args["debug"], url)
     end
+  else
+    respond_with_debug(args)
   end
  
 end
