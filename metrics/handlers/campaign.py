@@ -116,6 +116,7 @@ class YoshiCampaignHandler(BaseHandler):
         }
         df = pandas.DataFrame(obj)
         
+        self.db.execute("INSERT INTO campaign_bucket (external_advertiser_id, campaign_id, bucket_name) VALUES (%s, %s, '%s')" % (advertiser_id, campaign['id'], name))
         self.write(ujson.dumps(obj))
         self.finish()
         #self.get_content(df,advertiser_id)
