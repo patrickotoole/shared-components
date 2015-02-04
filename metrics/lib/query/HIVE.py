@@ -250,4 +250,5 @@ SELECT %(fields)s
 FROM conv_imps
 WHERE %(where)s
 GROUP BY %(groups)s
+HAVING %(having)s
 """

@@ -105,15 +105,22 @@ FIELDS = {
 
 WHERE = {
     "advertiser": "source = '%(advertiser)s'",
-    "conversion_id": "array_contains(conversion_ids, '%(conversion_id)s')"
+    "conversion_id": "array_contains(conversion_ids, '%(conversion_id)s')",
+    "domain": "lower(regexp_replace(parse_url(concat('http://', regexp_replace(reflect('java.net.URLDecoder', 'decode',bid_request.bid_info.url), 'http://|https://', '')), 'HOST'), 'www.', '')) like '%%%(domain)s%%'",
+    "url": "reflect('java.net.URLDecoder', 'decode',bid_request.bid_info.url) like '%%%(url)s%%'"
     }
 
+HAVING = {
+    "min_imps": "num_imps >= %(min_imps)s",
+    "min_users": "num_users >= %(min_users)s"
+}
 class HoverboardHandler(AdminReportingBaseHandler):
 
     QUERY = HOVERBOARD
     WHERE = WHERE
     FIELDS = FIELDS
     GROUPS = GROUPS
+    HAVING = HAVING
 
     OPTIONS = OPTIONS
     QUERY_OPTIONS = QUERY_OPTIONS
@@ -208,7 +215,8 @@ class HoverboardHandler(AdminReportingBaseHandler):
             params = self.make_params(
                 meta_data.get("groups",[]),
                 meta_data.get("fields",[]),
-                self.make_where()
+                self.make_where(),
+                having = self.make_having()
             )
 
             # Get the query string based on the query specified in the metadata
