@@ -143,6 +143,7 @@ class YoshiCampaignHandler(BaseHandler):
 
         self.get_content(df,advertiser_id)
 
+    @tornado.web.authenticated
     @tornado.web.asynchronous
     def get(self):
         advertiser_id = self.current_advertiser

@@ -127,6 +127,14 @@ for(g=0;g<i.length;g++)f(c,i[g]);b._i.push([a,e,d])};b.__SV=1.2;a=f.createElemen
 				endDate.setDate(firstDate.getDate() - days);
 				return endDate;
 			}
+      // Yoshi YOSHI yoshi hakkk
+
+      $("a[href='/campaign']").parent().hide()
+      $.get("/advertiser?format=json",function(x){
+        if (JSON.parse(x)[0].pixel_source_name.indexOf("dot") >= 0 ) {
+          $("a[href='/campaign']").parent().show()
+        }
+      })
 		</script>
 		{% block page_scripts %}{% end %}
 	</body>
