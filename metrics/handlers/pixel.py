@@ -143,6 +143,7 @@ class PixelReportingHandler(AdminReportingBaseHandler,BaseHandler):
 
         return default
 
+    @tornado.web.authenticated
     @tornado.web.asynchronous
     def get(self,meta=False):
         formatted = self.get_argument("format",False)

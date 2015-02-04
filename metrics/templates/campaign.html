@@ -2,16 +2,17 @@
 {% extends "base.html" %}
 
 {% block page_title %}Advertiser{% end %}
-{% block page_header %}Pixels{% end %}
+{% block page_header %}Campaigns{% end %}
 
 {% block page_sidebar %}
     <li><a href="/reporting"><img src="/static/img/sidebar/reporting-icon.png" alt="Reporting icon" /><span class="sidebar-label">campaign reporting</span></a></li>
     <li><a href="/streaming"><img src="/static/img/sidebar/global-icon.png" alt="Global icon" /><span class="sidebar-label">global streaming</span></a></li>
     <li><a href="/creative/reporting"><img src="/static/img/sidebar/creative-icon.png" alt="Creatives icon" /><span class="sidebar-label">creative reporting</span></a></li>
-    <li class="active"><a href="/advertiser"><img src="/static/img/sidebar/pixel-icon.png" alt="Pixels icon" /><span class="sidebar-label">pixels</span></a></li>
- <li >
+    <li><a href="/advertiser"><img src="/static/img/sidebar/pixel-icon.png" alt="Pixels icon" /><span class="sidebar-label">pixels</span></a></li>
+
+  <li class="active">
     <a href="/campaign" style="padding:0px;position:relative">
-      <div style="opacity:.6;text-align:center;width:50px;line-height:50px;font-size:20px;color:white" class="glyphicon glyphicon-th-list"></div>
+      <div style="text-align:center;width:50px;line-height:50px;font-size:20px;color:white" class="glyphicon glyphicon-th-list"></div>
       <span class="sidebar-label" style="top:0px;margin-top:0px"> campaign manager</span>
     </a>
   </li>
@@ -21,12 +22,7 @@
       <div style="opacity:.6;text-align:center;width:50px;line-height:50px;font-size:20px;color:white" class="glyphicon glyphicon glyphicon-star"></div>
       <span class="sidebar-label" style="top:0px;margin-top:0px"> pixel reporting</span>
     </a>
-  </li>  
-<!--
-  <li><a href="global"><img src="/static/img/sidebar/global-icon.png" alt="Global icon" /><span class="sidebar-label">global streaming</span></a></li>
-
-  <li><a href="intraweek"><img src="/static/img/sidebar/intraweek-icon.png" alt="Intraweek icon" /><span class="sidebar-label">intraweek overview</span></a></li>
-  -->
+  </li> 
 {% end %}
 
 {% block page_content %}
@@ -34,9 +30,14 @@
 <link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/dc.css">
 <link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/chosen.css">
 <script type="text/javascript" src="http://rockerbox.com/js/d3.js"></script>
+<link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css" rel="stylesheet"/>
+<script type="text/javascript" src="/static/js/bootstrap.min.js"></script>   
+<script type="text/javascript" src="/static/js/editable-limited.js"></script>  
 <script type="text/javascript" src="/static/js/advertiser.js"></script> 
 <script type="text/javascript" src="/static/js/advertiser/info.js"></script>  
+<script type="text/javascript" src="/static/js/advertiser/campaign.js"></script>   
 <script type="text/javascript" src="/static/js/mixpanel.js"></script>  
+  
 <style>
 .container {
   padding-top:15px
@@ -100,21 +101,17 @@ data.sort(function(x){
 
 var id = '#advertiser-content'
 
-var wrapped = buildAdvertiserWrapper(data,id,"12",false)
-//buildAdvertiserInfo(wrapped)
-//buildClientAdvertiserInfo(wrapped) 
-//buildInsertionOrders(wrapped)
-//buildPixels(wrapped)  
-buildSegments(wrapped,"Pixel Implementation Guide",false)  
+//buildCampaigns(wrapped)  
+d3.json('/advertiser?format=json',function(data){
+  var wrapped = buildAdvertiserWrapper(data,"#advertiser-content","12",false)
 
-$(document).ready(function() { 
-  $('#page-loader').fadeOut(); // put this inside the callback if you don't want it to pop up after the page content loads. will slow down the page load by a second or so though.
-  var extUserID = {{ advertiser_id }};
-  $.getJSON("/api?table=advertiser&external_advertiser_id=" + extUserID, function(data){
-    $('#header #right-align #user-name').text(data[0].advertiser_name.toLowerCase());
-  });
-  addMixpanelEvent({{ advertiser_id }}, "{{ user_id }}", "load advertiser");
-});
+  buildCampaigns(wrapped)
+
+  d3.select('#page-loader').classed("hidden",true)
+})
+ 
+
+
 
 </script>
 

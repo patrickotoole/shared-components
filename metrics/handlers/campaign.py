@@ -23,8 +23,9 @@ class YoshiCampaignHandler(BaseHandler):
         
         def default(self,data):
             o = Convert.df_to_json(data) 
-            self.write(data.to_html())
-            self.finish()
+            self.render("campaign.html",data=o,advertiser_id=advertiser_id,user_id=0)
+            #self.write(data.to_html())
+            #self.finish()
 
         yield default, (data,)
 
@@ -116,6 +117,7 @@ class YoshiCampaignHandler(BaseHandler):
         }
         df = pandas.DataFrame(obj)
         
+        self.db.execute("INSERT INTO campaign_bucket (external_advertiser_id, campaign_id, bucket_name) VALUES (%s, %s, '%s')" % (advertiser_id, campaign['id'], name))
         self.write(ujson.dumps(obj))
         self.finish()
         #self.get_content(df,advertiser_id)
@@ -136,10 +138,12 @@ class YoshiCampaignHandler(BaseHandler):
             df = df[['id','name','base_bid','daily_budget','state']]
 
         if self.get_argument("format",False) == False:     
-            self.write("<h4>Yoshi campaigns</h4>")
+            pass
+            #self.write("<h4>Yoshi campaigns</h4>")
 
         self.get_content(df,advertiser_id)
 
+    @tornado.web.authenticated
     @tornado.web.asynchronous
     def get(self):
         advertiser_id = self.current_advertiser
