@@ -17,6 +17,18 @@
 <script type="text/javascript" src="/static/js/metricsgraphics.js"></script>      
 <script type="text/javascript" src="/static/js/rockerbox/dataobjects.js"></script>       
 <style>
+.min-height {font-size:0px}
+.axis path,
+.axis line {
+    fill: none;
+    stroke: #ccc;
+    shape-rendering: crispEdges;
+}
+
+.axis text {
+    font-family: sans-serif;
+    font-size: 6px;
+}
 .mg-chart-title {
   font-size:16px;
   padding-top:14px;
@@ -73,9 +85,9 @@ $(document).ready(function(){
     buildAdvertiserInfo(wrapped)
     buildInfo(wrapped)
     buildPixel(wrapped)
-    buildConversion(wrapped)
+    //buildConversion(wrapped)
     //buildReporting(wrapped)
-    buildViewable(wrapped)
+    //buildViewable(wrapped)
     
  
     // Tools

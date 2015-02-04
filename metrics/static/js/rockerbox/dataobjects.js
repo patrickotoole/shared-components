@@ -1,3 +1,14 @@
+function unique(arr) {
+    var hash = {}, result = [];
+    for ( var i = 0, l = arr.length; i < l; ++i ) {
+        if ( !hash.hasOwnProperty(arr[i]) ) { //it works with objects! in FF, at least
+            hash[ arr[i] ] = true;
+            result.push(arr[i]);
+        }
+    }
+    return result;
+}
+
 var RB = RB || {}
 
 RB.QS = (function(a) {
@@ -40,7 +51,6 @@ RB.helpers = {
   timeseries_transform: function(data_key) {
     var self = this
     return function(d) {
-      console.log(d)
       var rand = parseInt(Math.random()*10000000)
       var values = d[data_key]
         .map(self.timeseries_formatter)
@@ -68,6 +78,81 @@ RB.defaults= {
 }
 
 RB.__data__ = {}
+
+RB.websocket = (function(rb){
+  var self = rb,
+    ws;
+
+
+  
+  return {
+    addSubscription: function(stream,filter,callback) {
+
+      var hash = btoa(
+        self.websocket.streams.length + "," + 
+        self.websocket.filters.length + "," + 
+        self.websocket.message_handlers.length
+      )
+
+      self.websocket.streams.push(stream)
+      self.websocket.filters.push(filter)
+      self.websocket.message_handlers.push(callback)
+
+      //self.websocket.subscribe()
+      return hash
+    },
+    removeSubscription: function(hash) {
+      var arr = atob(hash).split(",").map(function(x){return parseInt(x)})
+      self.websocket.streams.splice(arr[0],1)
+      self.websocket.filters.splice(arr[1],1)
+      self.websocket.message_handlers.splice(arr[2],1)
+      
+    },
+    streams: [],
+    filters: [],
+    subscribe: function() {
+      var uniq = unique(self.websocket.streams)
+      var subscriptions = { streams: uniq }
+
+      self.websocket.filters.map(function(x){
+        var current = subscriptions[x.name] || []
+        if (x.values[0]) {
+          current.push(x.values[0])
+          subscriptions[x.name] = current
+        }
+      })
+
+      ws.send(JSON.stringify(subscriptions))
+    },
+    on_message: function(x){
+      var data = JSON.parse(x.data)
+      self.websocket.message_handlers.map(function(fn){
+        fn(data)
+      })
+    },
+    connect: function(){
+
+      if (!self.websocket.is_connected) {
+      
+        ws = new WebSocket("ws://localhost:8080/admin/websocket?id=" + 1234);
+        ws.onopen = function() {
+          self.websocket.is_connected = 1
+          ws.send("initialize");
+          ws.send("start");
+        };
+        ws.onmessage = self.websocket.on_message
+        ws.onclose = function() {
+          self.websocket.is_connected = 0
+          console.log("disconnected");
+        }
+        self.websocket.ws = ws
+      }
+    },
+    message_handlers: [],
+    is_connected: 0,
+    ws: ""
+  }
+})(RB)
 
 RB.data = (function(rb) {
   var self = rb,
@@ -420,6 +505,7 @@ RB.objects = (function(rb) {
         .data(function(d){ return d[data_key] })
         .enter()
           .append("tr")
+          .attr("id",function(x){return x.key})
 
       if (onclick) {
         tr.on("click",function(x){
