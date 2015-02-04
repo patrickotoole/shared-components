@@ -23,8 +23,9 @@ class YoshiCampaignHandler(BaseHandler):
         
         def default(self,data):
             o = Convert.df_to_json(data) 
-            self.write(data.to_html())
-            self.finish()
+            self.render("campaign.html",data=o,advertiser_id=advertiser_id,user_id=0)
+            #self.write(data.to_html())
+            #self.finish()
 
         yield default, (data,)
 
@@ -137,7 +138,8 @@ class YoshiCampaignHandler(BaseHandler):
             df = df[['id','name','base_bid','daily_budget','state']]
 
         if self.get_argument("format",False) == False:     
-            self.write("<h4>Yoshi campaigns</h4>")
+            pass
+            #self.write("<h4>Yoshi campaigns</h4>")
 
         self.get_content(df,advertiser_id)
 
