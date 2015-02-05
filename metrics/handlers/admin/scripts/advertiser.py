@@ -118,7 +118,7 @@ class Advertiser(object):
         }
         query = INSERT_ADVERTISER % params
         self.db.execute(query)            
-        self.db.commit()
+        #self.db.commit()
         df = self.db.select_dataframe(
             "select id from advertiser where external_advertiser_id = %s" % advertiser_id
         )
@@ -135,7 +135,7 @@ class Advertiser(object):
         }
         query = INSERT_PIXEL % params
         self.db.execute(query)            
-        self.db.commit()
+        #self.db.commit()
 
     def insert_segment(self,segment_id,segment_name,advertiser_id,member_id,segment_implemented,segment_description):
         params = {
@@ -150,7 +150,7 @@ class Advertiser(object):
         query = INSERT_SEGMENT % params
         print query
         self.db.execute(query)            
-        self.db.commit()
+        #self.db.commit()
  
     def insert_emails(self,advertiser_id):
         params = {
@@ -161,7 +161,7 @@ class Advertiser(object):
         query = INSERT_EMAIL % params
         print query
         self.db.execute(query)            
-        self.db.commit()
+        #self.db.commit()
  
         if self.get_argument('contact_name_2') != "":
             params = {
@@ -172,7 +172,7 @@ class Advertiser(object):
             query = INSERT_EMAIL % params
             print query
             self.db.execute(query)            
-            self.db.commit()
+            #self.db.commit()
               
     def create_advertiser(self,advertiser_name):
         data = {"advertiser": {"name": advertiser_name, "state": "active"} }
