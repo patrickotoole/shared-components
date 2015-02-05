@@ -134,7 +134,7 @@ class YoshiCampaignHandler(BaseHandler):
         campaigns = yield self.defer_get_campaigns(advertiser_id,line_item_id)
 
         df = pandas.DataFrame(campaigns)
-        if self.get_argument("show_all",False) == False:
+        if len(df) > 0 and self.get_argument("show_all",False) == False:
             df = df[['id','name','base_bid','daily_budget','state']]
 
         if self.get_argument("format",False) == False:     
