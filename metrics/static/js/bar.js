@@ -122,7 +122,7 @@ window.serialize = function(form) {
   return q.join("&");
 }
 
-window.dynamicBarWithFormatter = function(where,data,w,h,formatter){
+window.dynamicBarWithFormatter = function(where,data,w,h,formatter,groupFormatter){
   var w = w || 5,
     h = h || 80;
 
@@ -177,6 +177,15 @@ window.dynamicBarWithFormatter = function(where,data,w,h,formatter){
      .attr("y2", h + 0)
      .style("stroke", "#ccc");
 
+  var calcY = function(d) { 
+    var y = this.parentNode.previousSibling.__chart__; 
+    return y(d.value) - .5; 
+  }
+  var calcHeight = function(d) { 
+    var y = this.parentNode.previousSibling.__chart__; 
+    return h - y(d.value); 
+  }
+
   var redraw = function (data) {
 
     var max = d3.max(data.map(function(x){ return x.value.length }))
@@ -189,7 +198,22 @@ window.dynamicBarWithFormatter = function(where,data,w,h,formatter){
       .orient("left")
       .ticks(1);
 
-    yAxisDrawn.call(yAxis)
+    yAxisDrawn.call(function(groups) {
+      var maxes = groups.map(function(group){
+        var rep = (group.length) ? group[0].__data__ : false
+        var format = rep ? groupFormatter(rep) : false
+        var arr = format ? data.map(format).map(function(y){return y.value}) : data.map(function(){return 0})
+
+        return d3.max(arr)
+      })
+
+      groups.map(function(group,i){
+        var y = d3.scale.linear().domain([0, maxes[i]]).range([h, 0])
+        group.map(function(x){ x.__newchart__ = y })
+      })
+
+      return yAxis(groups)
+    })
 
     var rect = chart.selectAll("rect")
       .data(function(d){
@@ -199,20 +223,20 @@ window.dynamicBarWithFormatter = function(where,data,w,h,formatter){
 
     rect.enter().insert("rect", "line")
       .attr("x", function(d, i) { return x(i + 1) - .5; })
-      .attr("y", function(d) { return h - y(d.value) - .5; })
+      .attr("y", calcY)
       .attr("width", w)
-      .attr("height", function(d) { return y(d.value); })
+      .attr("height", calcHeight)
     .transition()
       .duration(200)
       .attr("x", function(d, i) { return x(i) - .5; })
-      .attr("y", function(d) { return h - y(d.value) - .5; }) 
-      .attr("height", function(d) { return y(d.value); }) 
+      .attr("y", calcY)
+      .attr("height", calcHeight)
 
     rect.transition()
       .duration(200)
       .attr("x", function(d, i) { return x(i) - .5; })
-      .attr("y", function(d) { return h - y(d.value) - .5; }) 
-      .attr("height", function(d) { return y(d.value); }) 
+      .attr("y", calcY)
+      .attr("height", calcHeight)
 
     rect.exit().transition()
       .duration(200)

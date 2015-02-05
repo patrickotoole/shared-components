@@ -98,7 +98,6 @@ RB.websocket = (function(rb){
       self.websocket.filters.push(filter)
       self.websocket.message_handlers.push(callback)
 
-      //self.websocket.subscribe()
       return hash
     },
     removeSubscription: function(hash) {
@@ -126,7 +125,8 @@ RB.websocket = (function(rb){
     },
     on_message: function(x){
       var data = JSON.parse(x.data)
-      self.websocket.message_handlers.map(function(fn){
+
+      self.websocket.unique_handlers().map(function(fn){
         fn(data)
       })
     },
@@ -148,9 +148,16 @@ RB.websocket = (function(rb){
         self.websocket.ws = ws
       }
     },
+    unique_handlers: function(){
+      var uniques = {}
+      self.websocket.message_handlers.map(function(d){
+        uniques[d.name] = d.callback
+      })
+      return Object.keys(uniques).map(function(k){return uniques[k]})
+    },
     message_handlers: [],
     is_connected: 0,
-    ws: ""
+    ws: false
   }
 })(RB)
 

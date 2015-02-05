@@ -32,6 +32,7 @@ var buildPixelStreaming = function(wrapped) {
   var rows = pixel_bars.append("div").classed("row",true).selectAll("div")
     .data(function(d){
       return d.segments.filter(function(x){ 
+        x.pixel_source_name = d.pixel_source_name
         return x.segment_raw != 0 && x.segment_implemented.indexOf("type=conv") == -1
       })
     })
@@ -48,7 +49,7 @@ var buildPixelStreaming = function(wrapped) {
   bar_wrapper = rows.append("div").classed("col-md-3 min-height",true)
   count_wrapper = rows.append("div").classed("col-md-1",true)
 
-  var streamingBarWrapper = function(id,steps,width,height,formatter){
+  var streamingBarWrapper = function(id,steps,width,height,formatter,groupFormatter){
     var self = this;
     this.t = 0
     this.data = d3.range(steps).map(function(){
@@ -56,7 +57,7 @@ var buildPixelStreaming = function(wrapped) {
       return {"time":self.t,"value":[]}
     })
     
-    this.graph = dynamicBarWithFormatter(id,this.data,width,height,formatter)
+    this.graph = dynamicBarWithFormatter(id,this.data,width,height,formatter,groupFormatter)
     this.defaultFormatter = function(time,json) {
       return {"time":time,"value":json}
     }
@@ -76,24 +77,31 @@ var buildPixelStreaming = function(wrapped) {
     }
   }
 
-  var bar = new streamingBarWrapper(bar_wrapper,60,2,22,formatter)
+  var groupFormatter = function(w) {
+    return function(obj) {
+      var data = obj.value.filter(function(x){ return x.source == w.pixel_source_name})
+      return {"time":obj.time,"value":data.length}
+    }
+  }
+
+  var bar = new streamingBarWrapper(bar_wrapper,60,2,22,formatter,groupFormatter)
 
   pixel_group.on("click",function(x){
 
-    if (!pixels.classed("hidden")) {
+    if (!x.pixels_streaming) {
+      x.pixels_streaming = true
       var selection = d3.select(this)
 
       selection[0][0].__data__.subscriptions = selection.data().map(function(a){
         return RB.websocket.addSubscription(
           "visit_events",
           {"name":"source","values":[a.pixel_source_name]},
-          function(x){ 
-            bar.add(x.visit_events)
-          }
+          {"name":"pixel","callback":function(x){bar.add(x.visit_events)} }
         )                             
       })
 
     } else {
+      x.pixels_streaming = false
       var selection = d3.select(this).data() 
       selection.map(function(sel){sel.subscriptions.map(RB.websocket.removeSubscription)})
     }
