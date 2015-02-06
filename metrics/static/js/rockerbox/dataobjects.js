@@ -1,3 +1,4 @@
+
 function unique(arr) {
     var hash = {}, result = [];
     for ( var i = 0, l = arr.length; i < l; ++i ) {
@@ -63,6 +64,20 @@ RB.helpers = {
       })
       return [values]
     }
+  },
+  recursiveMapBuffer: function(tsmap,times) {
+    Object.keys(tsmap).map(function(k){
+      var arr = tsmap[k] || {}
+      if (arr instanceof Array) {
+        times.map(function(y) { 
+          var to_count = tsmap[y] || []; 
+          tsmap[y] = to_count.length 
+        })
+      } else {
+        RB.helpers.recursiveMapBuffer(arr,times)
+      }
+    })
+    return tsmap
   }
 }
 
@@ -436,10 +451,7 @@ RB.objects = (function(rb) {
           .attr("transform","translate(" + 18 + ",4)")
 
         chart.selectAll("rect")
-           .data(function(d){
-              var dd = data.map(transform(d)) 
-              return dd
-           })
+           .data(original_data)
          .enter().append("rect")
            .attr("x", function(d, i) { return x(i) - .5; })
            .attr("y", function(d) { return h - y(d.value) - .5; })
@@ -482,7 +494,8 @@ RB.objects = (function(rb) {
         }
 
         var redraw = function(data) {
-          var max = d3.max(data.map(function(x){ return x.value.length }))
+          //var max = d3.max(data.map(function(x){ return x.value.length }))
+          var max = 10
 
           y.domain([0, max])
           yAxisScale.domain([0,max])
@@ -493,12 +506,8 @@ RB.objects = (function(rb) {
 
           var rect = chart.selectAll("rect")
             .data(function(d){
-              var dd = data.map(transform(d)),
-                od = original_data.map(transform(d)),
-                sum = dd.reduce(function(p,c){return p + c.value},0);
-
-              // keep the original data if its blank so we dont update unnecessarily
-              return sum ? dd : od;
+              var dd = transform(data)(d);
+              return dd ? dd : original_data;
            }, function(d) { return d.time; });
 
           rect.enter().insert("rect", "line")

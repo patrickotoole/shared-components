@@ -12,21 +12,7 @@ var buildPixel = function(wrapped) {
      
 }
 
-var buildPixelStreaming = function(wrapped) {
-  RB.websocket.connect()
-
- var pixel_group = wrapped.append("div")
-    .classed("panel-sub-heading pixel-streaming list-group",true)
-
-  pixel_group.append("div").classed("list-group-item",true)
-    .text("Pixel Streaming")
-
-  var pixels = wrapped.append("div")
-    .classed("list-group pixel-streaming hidden", true) 
-
-  var row = pixels.append("div").classed("row",true)
-    .append("div").classed("col-md-12",true)
-
+var buildBufferedRow = function(row) {
   var pixel_bars = row.append("div").classed("col-md-6",true)
 
   var rows = pixel_bars.append("div").classed("row",true).selectAll("div")
@@ -49,52 +35,67 @@ var buildPixelStreaming = function(wrapped) {
   bar_wrapper = rows.append("div").classed("col-md-3 min-height",true)
   count_wrapper = rows.append("div").classed("col-md-1",true)
 
-  var streamingBarWrapper = function(id,steps,width,height,formatter,groupFormatter){
-    var self = this;
-    this.t = 0
-    this.data = d3.range(steps).map(function(){
-      self.t++;
-      return {"time":self.t,"value":[]}
-    })
-    
-    
 
-    this.graph = dynamicBarWithFormatter(id,this.data,width,height,formatter,groupFormatter)
-    this.defaultFormatter = function(time,json) {
-      return {"time":time,"value":json}
-    }
-
-    this.add = function(json) {
-      this.t++;
-      this.data.shift()
-      this.data.push(this.defaultFormatter(this.t,json))
-      this.graph(this.data)
-    }
-  }
-
-  var formatter = function(w) {
-    return function(obj) {
-      var data = obj.value.filter(function(x){ return x.an_seg == w.external_segment_id })
-      return {"time":obj.time,"value":data.length}
+  var formatter = function(data) {
+    var data = data;
+    return function(segment) {
+      var source = data[segment.pixel_source_name] || {}
+      var datum = source[segment.external_segment_id] 
+      return datum ? d3.map(datum).entries().map(function(x){x.time = x.key;return x}) : false;
     }
   }
 
   var groupFormatter = function(w) {
     return function(obj) {
+      // im not certain this is a good long term solution but it works for now
       var data = obj.value.filter(function(x){ return x.source == w.pixel_source_name})
       return {"time":obj.time,"value":data.length}
     }
   }
-
  
-  //var bar = new streamingBarWrapper(bar_wrapper,60,2,22,formatter,groupFormatter)
-
   var buffered_wrapper = RB.websocket.buildBufferedWrapper(60);
   var graph = RB.objects.streaming.graph(bar_wrapper,2,22,buffered_wrapper.buffer,formatter,groupFormatter)
-  buffered_wrapper.callbacks.push(function(x){graph(x)})
+  buffered_wrapper.callbacks.push(function(x){
+
+    var flattened = [].concat.apply([],x.map(function(x){ 
+      x.value.map( function(y) { y.time = x.time }); 
+      return x.value
+    }))
+
+    var m = d3.nest()
+      .key(function(x){return x.source})
+      .key(function(x){return x.an_seg})
+      .key(function(x){return x.time})
+      .map(flattened) 
+
+    var times = x.map(function(y){return y.time})
+
+    RB.helpers.recursiveMapBuffer(m,times)
+
+    graph(m)
+  })
+ 
+  return buffered_wrapper
+}
+
+var buildPixelStreaming = function(wrapped) {
+  RB.websocket.connect()
+
+ var pixel_group = wrapped.append("div")
+    .classed("panel-sub-heading pixel-streaming list-group",true)
+
+  pixel_group.append("div").classed("list-group-item",true)
+    .text("Pixel Streaming")
+
+  var pixels = wrapped.append("div")
+    .classed("list-group pixel-streaming hidden", true) 
+
+  var row = pixels.append("div").classed("row",true)
+    .append("div").classed("col-md-12",true)
+
+  var buffered_wrapper = buildBufferedRow(row)
 
 
-  
 
   pixel_group.on("click",function(x){
     console.log(bar_wrapper.node().getBoundingClientRect())
@@ -111,7 +112,6 @@ var buildPixelStreaming = function(wrapped) {
             "name":"pixel",
             "callback":function(x){
               buffered_wrapper.add(x.visit_events)
-              //bar.add(x.visit_events)
             } 
           }
         )                             
