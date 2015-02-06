@@ -242,19 +242,6 @@ var buildCampaigns = function(obj,name,show_id) {
         return x.failure 
       })  
 
-    default_panel.selectAll(".panel-sub-heading > .list-group-item")
-      .on("click",function(x){
-        d3.select(this.parentNode.nextSibling).classed("hidden",function(x){
-          if (x.is_opened === undefined) x.is_opened = 0
-          if (this.classList.contains("hidden")) {
-            x.is_opened += 1
-            return false
-          } else {
-            x.is_opened -= 1
-            return true
-          }
-        })
-      })    
    
   }) 
 

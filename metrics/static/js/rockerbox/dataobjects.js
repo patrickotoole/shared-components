@@ -82,8 +82,6 @@ RB.__data__ = {}
 RB.websocket = (function(rb){
   var self = rb,
     ws;
-
-
   
   return {
     addSubscription: function(stream,filter,callback) {
@@ -157,7 +155,31 @@ RB.websocket = (function(rb){
     },
     message_handlers: [],
     is_connected: 0,
-    ws: false
+    ws: false,
+    buildBufferedWrapper: function(steps,transformer) {
+
+      var transformer = transformer || function(time,json) { return {"time":time,"value":json} }     
+
+      var Wrapper = function(_obj,_steps) {
+        var wrap = this;
+        this.callbacks = []
+        this.t = 0
+        this.buffer = d3.range(steps).map(function(){
+          wrap.t++;
+          return {"time":wrap.t,"value":[]}
+        })
+        this.add = function(data) {
+          this.t++;
+          this.buffer.shift()
+          this.buffer.push(transformer(this.t,data))
+          this.callbacks.map(function(cb) { cb(wrap.buffer) })
+        }
+        
+      }
+
+      return new Wrapper(steps,transformer)
+    
+    }
   }
 })(RB)
 
@@ -385,6 +407,126 @@ RB.objects = (function(rb) {
   var self = rb;
 
   return {
+    streaming: {
+      graph: function(obj,width,height,data,transform,axisTransform) {
+        var useRedrawAxis = !!axisTransform,
+          original_data = JSON.parse(JSON.stringify(data));
+
+        var w = width || 5, h = height || 80,
+          transform = transform || function(x) {return x},
+          axisTransform = axisTransform || function(x) {return x};
+
+        var x = d3.scale.linear().domain([0, 1]).range([0, w]),
+          y = d3.scale.linear().domain([0, 10]).range([0, h]),
+          yAxisScale = d3.scale.linear().domain([0, 10]).range([h, 0]),
+          yAxis = d3.svg.axis().scale(yAxisScale).orient("left").ticks(1); 
+
+        var wrapper = obj.append("svg")
+           .attr("class", "chart")
+           .attr("width", w * data.length - 1 + 20)
+           .attr("height", h + 8);
+
+        var yAxisDrawn = wrapper.append("g")
+          .attr("height", h + 6)
+          .attr("class","mg-y-axis axis") 
+          .attr("transform", "translate(" + 15 + ",4)")
+          .call(yAxis);
+
+        var chart = wrapper.append("g")
+          .attr("transform","translate(" + 18 + ",4)")
+
+        chart.selectAll("rect")
+           .data(function(d){
+              var dd = data.map(transform(d)) 
+              return dd
+           })
+         .enter().append("rect")
+           .attr("x", function(d, i) { return x(i) - .5; })
+           .attr("y", function(d) { return h - y(d.value) - .5; })
+           .attr("width", w)
+           .attr("height", function(d) { return y(d.value); });
+
+        chart.append("line")
+           .attr("x1", 0)
+           .attr("x2", w * data.length)
+           .attr("y1", h + 0)
+           .attr("y2", h + 0)
+           .style("stroke", "#ccc");
+
+        var calcY = function(d) { 
+          var y = this.parentNode.previousSibling.__chart__; 
+          return y(d.value) - .5; 
+        }
+        var calcHeight = function(d) { 
+          var y = this.parentNode.previousSibling.__chart__; 
+          return h - y(d.value); 
+        }
+
+        var redrawAxis = function(groups) {
+          var maxes = groups.map(function(group){
+            var rep = (group.length) ? group[0].__data__ : false,
+              format = rep ? axisTransform(rep) : false,
+              arr = format ? 
+                data.map(format).map(function(y){return y.value}) : 
+                data.map(function(){return 0});
+
+            return d3.max(arr)
+          })
+
+          groups.map(function(group,i){
+            var y = d3.scale.linear().domain([0, maxes[i]]).range([h, 0])
+            group.map(function(x){ x.__newchart__ = y })
+          })
+
+          return yAxis(groups)
+        }
+
+        var redraw = function(data) {
+          var max = d3.max(data.map(function(x){ return x.value.length }))
+
+          y.domain([0, max])
+          yAxisScale.domain([0,max])
+
+          var customAxis = useRedrawAxis ? redrawAxis : yAxis
+
+          yAxisDrawn.call(customAxis)
+
+          var rect = chart.selectAll("rect")
+            .data(function(d){
+              var dd = data.map(transform(d)),
+                od = original_data.map(transform(d)),
+                sum = dd.reduce(function(p,c){return p + c.value},0);
+
+              // keep the original data if its blank so we dont update unnecessarily
+              return sum ? dd : od;
+           }, function(d) { return d.time; });
+
+          rect.enter().insert("rect", "line")
+            .attr("x", function(d, i) { return x(i + 1) - .5; })
+            .attr("y", calcY)
+            .attr("width", w)
+            .attr("height", calcHeight)
+          .transition()
+            .duration(1)
+            .attr("x", function(d, i) { return x(i) - .5; })
+            .attr("y", calcY)
+            .attr("height", calcHeight)
+
+          rect.transition()
+            .duration(1)
+            .attr("x", function(d, i) { return x(i) - .5; })
+            .attr("y", calcY)
+            .attr("height", calcHeight)
+
+          rect.exit().transition()
+            .duration(1)
+            .attr("x", function(d, i) { return x(i - 1) - .5; })
+            .remove(); 
+        }
+        
+        return redraw
+      },
+    },
     timeseries: {
       graph: function(obj,limit_series,title_prefix) {
 

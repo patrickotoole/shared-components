@@ -3,7 +3,7 @@ var buildPixel = function(wrapped) {
   wrapped.append("div").classed("panel-body",true)
     .append("h4").text("On-site Activity Attribution (Pixels)")
 
-  buildPixelReporting(wrapped)
+  //buildPixelReporting(wrapped)
 
   wrapped.append("div").classed("panel-body",true)
     .append("h4").text("Live Pixel Activity")
@@ -33,7 +33,7 @@ var buildPixelStreaming = function(wrapped) {
     .data(function(d){
       return d.segments.filter(function(x){ 
         x.pixel_source_name = d.pixel_source_name
-        return x.segment_raw != 0 && x.segment_implemented.indexOf("type=conv") == -1
+        return x.segment_implemented != 0 && x.segment_implemented.indexOf("type=conv") == -1
       })
     })
     .enter()
@@ -57,6 +57,8 @@ var buildPixelStreaming = function(wrapped) {
       return {"time":self.t,"value":[]}
     })
     
+    
+
     this.graph = dynamicBarWithFormatter(id,this.data,width,height,formatter,groupFormatter)
     this.defaultFormatter = function(time,json) {
       return {"time":time,"value":json}
@@ -84,9 +86,18 @@ var buildPixelStreaming = function(wrapped) {
     }
   }
 
-  var bar = new streamingBarWrapper(bar_wrapper,60,2,22,formatter,groupFormatter)
+ 
+  //var bar = new streamingBarWrapper(bar_wrapper,60,2,22,formatter,groupFormatter)
+
+  var buffered_wrapper = RB.websocket.buildBufferedWrapper(60);
+  var graph = RB.objects.streaming.graph(bar_wrapper,2,22,buffered_wrapper.buffer,formatter,groupFormatter)
+  buffered_wrapper.callbacks.push(function(x){graph(x)})
+
+
+  
 
   pixel_group.on("click",function(x){
+    console.log(bar_wrapper.node().getBoundingClientRect())
 
     if (!x.pixels_streaming) {
       x.pixels_streaming = true
@@ -96,7 +107,13 @@ var buildPixelStreaming = function(wrapped) {
         return RB.websocket.addSubscription(
           "visit_events",
           {"name":"source","values":[a.pixel_source_name]},
-          {"name":"pixel","callback":function(x){bar.add(x.visit_events)} }
+          { 
+            "name":"pixel",
+            "callback":function(x){
+              buffered_wrapper.add(x.visit_events)
+              //bar.add(x.visit_events)
+            } 
+          }
         )                             
       })
 

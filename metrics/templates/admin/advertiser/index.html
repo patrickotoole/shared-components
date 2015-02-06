@@ -82,8 +82,8 @@ $(document).ready(function(){
           wy = (y.active + y.running - y.deleted)*(y.monthly_budget+1)
         return wy-wx  
       })
-    buildAdvertiserInfo(wrapped)
-    buildInfo(wrapped)
+    //buildAdvertiserInfo(wrapped)
+    //buildInfo(wrapped)
     buildPixel(wrapped)
     //buildConversion(wrapped)
     //buildReporting(wrapped)
@@ -91,15 +91,25 @@ $(document).ready(function(){
     
  
     // Tools
-    wrapped.append("div")
-      .classed("panel-body",true)
-      .append("h4")
-      .text("Tools")
+    wrapped.append("div").classed("panel-body",true).append("h4").text("Tools")
 
-    buildDomainList(wrapped)
+    //buildDomainList(wrapped)
     
     //accordianify(wrapped, ".panel-sub-heading > .list-group-item",function(){return this.parentNode.nextSibling})
 
+    wrapped.selectAll(".panel-sub-heading > .list-group-item")
+      .on("click",function(x){
+        d3.select(this.parentNode.nextSibling).classed("hidden",function(x){
+          if (x.is_opened === undefined) x.is_opened = 0
+          if (this.classList.contains("hidden")) {
+            x.is_opened += 1
+            return false
+          } else {
+            x.is_opened -= 1
+            return true
+          }
+        })
+      })
 
     $.fn.editable.defaults.mode = 'inline';
 
