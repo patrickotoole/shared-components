@@ -78,6 +78,30 @@ RB.helpers = {
       }
     })
     return tsmap
+  },
+  nestedDataSelector: function(fields) {
+    var fields = fields;
+    return function(data) {
+      
+      var data = data,
+        timeToKey = function(x) {
+          x.time = x.key
+          return x
+        }
+
+      return function(segment) {
+        var keys = fields.object_fields.map(function(x){return segment[x]}),
+          selected = data;
+
+        keys.map(function(field) {
+          selected = selected[field] || {}
+        })
+
+        var result = d3.map(selected).entries().map(timeToKey)
+
+        return result.length ? result : false
+      }
+    }
   }
 }
 
@@ -477,8 +501,9 @@ RB.objects = (function(rb) {
         var redrawAxis = function(groups) {
           var maxes = groups.map(function(group){
             var rep = (group.length) ? group[0].__data__ : false,
-              format = rep ? axisTransform(rep) : false,
-              arr = format ? 
+              format = rep ? axisTransform(rep) : false;
+
+            var arr = format ? 
                 data.map(format).map(function(y){return y.value}) : 
                 data.map(function(){return 0});
 
