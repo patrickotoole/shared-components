@@ -37,6 +37,10 @@ class ConnectorConfig(object):
         self.connectors["visit_events"] = KafkaQueue(
             mock_connect=skip_visit_events,topic="visit_events",transform=ujson.loads
         )
+        self.connectors["served_imps"] = KafkaQueue(
+            mock_connect=skip_visit_events,topic="served_imps",transform=ujson.loads
+        )
+ 
 
         if not skip_buffers:
             self.connectors["buffers"] = {
@@ -45,7 +49,8 @@ class ConnectorConfig(object):
                 "filtered_imps" : streaming.imps_buffer,
                 "conversion_imps": streaming.conversion_imps_buffer,
                 "conversion_events": streaming.conversion_events_buffer,
-                "visit_events": streaming.visit_events_buffer
+                "visit_events": streaming.visit_events_buffer,
+                "served_imps": streaming.served_buffer
             }                          
         else:
             self.connectors["buffers"] = None

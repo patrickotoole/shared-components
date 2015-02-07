@@ -12,103 +12,8 @@ var buildPixel = function(wrapped) {
      
 }
 
-var buildBufferedRow = function(row,rowFilter,name_key,data_fields,object_data_fields) {
-
-  /*
-  var fields = {
-    name_field: name_key,
-    data_fields: data_fields,
-    object_data_fields: object_data_fields,
-    data_field: data_fields[data_fields.length-1],
-    object_data_field: object_data_fields[object_data_fields-1]
-  }*/
-
-  var fields = {
-    name_field: "segment_name",
-    data_fields: ["source","an_seg"],
-    data_field: "an_seg",
-    object_fields: ["pixel_source_name","external_segment_id"],
-    object_field: "external_segment_id"
-  }
-
-  var pixel_bars = row
-    .append("div")
-    .classed("col-md-6 pixel-row-wrapper",true)
-
-  var rows = pixel_bars.append("div").classed("row",true).selectAll("div")
-    .data(rowFilter)
-    .enter()
-      .append("div")
-      .attr("id",function(x){return x[fields.name_field] })
-
-  var col = rows.append("div").classed("col-md-6 pixel-row-name",true)
-
-  col.append("div")
-    .style("font-size","13px").style("height","13px")
-    .style("padding","6px").style("vertical-align","bottom")
-    .text(function(x){return x[fields.name_field] })
-
-  bar_wrapper   = rows.append("div").classed("col-md-3 min-height",true)
-  count_wrapper = rows.append("div").classed("col-md-1",true)
-   
-  
-
-  var axisTransform = function(obj) {
-
-    return function(data) {
-      var filtered = data.value.filter(function(x){ 
-        return x[fields.data_fields[0]] == obj[fields.object_fields[0]]
-      })
-      return {"time":data.time,"value":filtered.length}
-    }   
-  }
-
-  var STEPS = 60,
-    BAR_WIDTH = 2,
-    HEIGHT = 22;
-
-
-  var buffered_wrapper = RB.websocket.buildBufferedWrapper(STEPS);
-  var graph = RB.objects.streaming.graph(
-    bar_wrapper,
-    BAR_WIDTH,
-    HEIGHT,
-    buffered_wrapper.buffer,
-    RB.helpers.nestedDataSelector(fields),
-    axisTransform
-  )
-
-  buffered_wrapper.callbacks.push(function(x){
-
-    var flattened = [].concat.apply([],x.map(function(x){ 
-      x.value.map( function(y) { y.time = x.time }); 
-      return x.value
-    }))
-
-    var m = d3.nest()
-      .key(function(x){return x.source})
-      .key(function(x){return x.an_seg})
-      .key(function(x){return x.time})
-      .map(flattened) 
-
-    var times = x.map(function(y){return y.time})
-
-    RB.helpers.recursiveMapBuffer(m,times)
-
-
-    graph(m)
-  })
-
-  return buffered_wrapper
-}
-
-
 var buildPixelBufferedRow = function(row) {
-  /*var pixel_bars = row
-    .append("div")
-    .classed("col-md-6",true)
-  */
-
+  
   rowFilter = function(d){
     return d.segments.filter(function(x){ 
       x.pixel_source_name = d.pixel_source_name
@@ -116,67 +21,20 @@ var buildPixelBufferedRow = function(row) {
     })
   }
 
-  return buildBufferedRow(row,rowFilter)
-  /*
-  var rows = pixel_bars.append("div").classed("row",true).selectAll("div")
-    .data(rowFilter)
-    .enter()
-      .append("div")
-      .attr("id",function(x){return x.segment_name})
-
-
-  col = rows.append("div").classed("col-md-6 ",true)
-
-  col.append("div")
-    .style("font-size","13px").style("height","13px").style("padding","6px").style("vertical-align","bottom")
-    .text(function(x){return x.segment_name})
-
-  bar_wrapper = rows.append("div").classed("col-md-3 min-height",true)
-  count_wrapper = rows.append("div").classed("col-md-1",true)
-
-
-  var formatter = function(data) {
-    var data = data;
-    return function(segment) {
-      var source = data[segment.pixel_source_name] || {}
-      var datum = source[segment.external_segment_id] 
-      return datum ? d3.map(datum).entries().map(function(x){x.time = x.key;return x}) : false;
-    }
+   var fields = {
+    name_field: "segment_name",
+    data_fields: ["source","an_seg"],
+    object_fields: ["pixel_source_name","external_segment_id"],
   }
 
-  var groupFormatter = function(w) {
-    return function(obj) {
-      // im not certain this is a good long term solution but it works for now
-      var data = obj.value.filter(function(x){ return x.source == w.pixel_source_name})
-      return {"time":obj.time,"value":data.length}
-    }
-  }
- 
-  var buffered_wrapper = RB.websocket.buildBufferedWrapper(60);
-  var graph = RB.objects.streaming.graph(bar_wrapper,2,22,buffered_wrapper.buffer,formatter,groupFormatter)
-  buffered_wrapper.callbacks.push(function(x){
+  return RB.objects.streaming.buffered_row(
+    row,
+    rowFilter,
+    fields.name_field,
+    fields.data_fields,
+    fields.object_fields
+  )
 
-    var flattened = [].concat.apply([],x.map(function(x){ 
-      x.value.map( function(y) { y.time = x.time }); 
-      return x.value
-    }))
-
-    var m = d3.nest()
-      .key(function(x){return x.source})
-      .key(function(x){return x.an_seg})
-      .key(function(x){return x.time})
-      .map(flattened) 
-
-    var times = x.map(function(y){return y.time})
-
-    RB.helpers.recursiveMapBuffer(m,times)
-
-    graph(m)
-  })
- 
-  return buffered_wrapper
-
-  */
 }
 
 var buildPixelStreaming = function(wrapped) {

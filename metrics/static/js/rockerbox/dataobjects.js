@@ -447,6 +447,91 @@ RB.objects = (function(rb) {
 
   return {
     streaming: {
+      buffered_row: function(row,rowFilter,name_key,data_fields,object_fields) {
+
+        var fields = {
+          name_field: name_key,
+          data_fields: data_fields,
+          object_fields: object_fields,
+          data_field: data_fields[data_fields.length-1],
+          object_field: object_fields[object_fields-1]
+        }
+
+
+        var pixel_bars = row
+          .append("div")
+          .classed("col-md-6 pixel-row-wrapper",true)
+
+        var rows = pixel_bars.append("div").classed("row",true).selectAll("div")
+          .data(rowFilter)
+          .enter()
+            .append("div")
+            .attr("id",function(x){return x[fields.name_field] })
+
+        var col = rows.append("div").classed("col-md-6 pixel-row-name",true)
+
+        col.append("div")
+          .style("font-size","13px").style("height","13px")
+          .style("padding","6px").style("vertical-align","bottom")
+          .text(function(x){return x[fields.name_field] })
+
+        bar_wrapper   = rows.append("div").classed("col-md-3 min-height",true)
+        count_wrapper = rows.append("div").classed("col-md-1",true)
+         
+        
+
+        var axisTransform = function(obj) {
+
+          return function(data) {
+            var filtered = data.value.filter(function(x){ 
+              return x[fields.data_fields[0]] == obj[fields.object_fields[0]]
+            })
+            return {"time":data.time,"value":filtered.length}
+          }   
+        }
+
+        var STEPS = 60,
+          BAR_WIDTH = 2,
+          HEIGHT = 22;
+
+
+        var buffered_wrapper = RB.websocket.buildBufferedWrapper(STEPS);
+        var graph = RB.objects.streaming.graph(
+          bar_wrapper,
+          BAR_WIDTH,
+          HEIGHT,
+          buffered_wrapper.buffer,
+          RB.helpers.nestedDataSelector(fields),
+          axisTransform
+        )
+
+        buffered_wrapper.callbacks.push(function(x){
+
+          var flattened = [].concat.apply([],x.map(function(x){ 
+            x.value.map( function(y) { y.time = x.time }); 
+            return x.value
+          }))
+
+          var toNest = d3.nest()
+
+          var nest_keys = [].concat(fields.data_fields).concat(["time"]) 
+
+          nest_keys.map(function(f){
+            toNest.key(function(x){return x[f]})
+          })
+          
+          var m = toNest.map(flattened)
+
+          var times = x.map(function(y){return y.time})
+
+          RB.helpers.recursiveMapBuffer(m,times)
+
+
+          graph(m)
+        })
+
+        return buffered_wrapper
+      },
       graph: function(obj,width,height,data,transform,axisTransform) {
         var useRedrawAxis = !!axisTransform,
           original_data = JSON.parse(JSON.stringify(data));

@@ -4,13 +4,88 @@ var buildViewable = function(wrapped) {
     .append("h4")
     .text("Viewability Reporting")
 
-  buildAdvertiserViewabilityReporting(wrapped)
-  buildCampaignViewabilityReporting(wrapped)
-  buildTagViewabilityReporting(wrapped) 
-  buildVenueViewabilityReporting(wrapped)  
-  buildDomainListViewabilityReporting(wrapped)   
+  //buildAdvertiserViewabilityReporting(wrapped)
+  buildCampaignStreaming(wrapped)
+  //buildCampaignViewabilityReporting(wrapped)
+  //buildTagViewabilityReporting(wrapped) 
+  //buildVenueViewabilityReporting(wrapped)  
+  //buildDomainListViewabilityReporting(wrapped)   
    
 }
+
+var buildCampaignBufferedRow = function(row) {
+  
+  rowFilter = function(d){
+    return d.segments.filter(function(x){ 
+      x.pixel_source_name = d.pixel_source_name
+      return x.segment_implemented != 0 && x.segment_implemented.indexOf("type=conv") == -1 
+    })
+  }
+
+   var fields = {
+    name_field: "segment_name",
+    data_fields: ["source","an_seg"],
+    object_fields: ["pixel_source_name","external_segment_id"],
+  }
+
+  return RB.objects.streaming.buffered_row(
+    row,
+    rowFilter,
+    fields.name_field,
+    fields.data_fields,
+    fields.object_fields
+  )
+
+}
+
+var buildCampaignStreaming = function(wrapped) {
+  //RB.websocket.connect()
+
+ var campaign_group = wrapped.append("div")
+    .classed("panel-sub-heading campaign-streaming list-group",true)
+
+  campaign_group.append("div").classed("list-group-item",true)
+    .text("Campaign Streaming")
+
+  var campaigns = wrapped.append("div")
+    .classed("list-group campaign-streaming hidden", true) 
+
+  var row = campaigns.append("div").classed("row",true)
+    .append("div").classed("col-md-12",true)
+
+  var buffered_wrapper = buildCampaignBufferedRow(row)
+
+
+
+  campaign_group.on("click",function(x){
+    console.log(bar_wrapper.node().getBoundingClientRect())
+
+    if (!x.campaigns_streaming) {
+      x.campaigns_streaming = true
+      var selection = d3.select(this)
+
+      selection[0][0].__data__.subscriptions = selection.data().map(function(a){
+        return RB.websocket.addSubscription(
+          "served_imps",
+          {"name":"advertiser_id","values":[new String(a.external_advertiser_id)]},
+          { 
+            "name":"campaign",
+            "callback":function(x){
+              buffered_wrapper.add(x.track)
+            } 
+          }
+        )                             
+      })
+
+    } else {
+      x.campaigns_streaming = false
+      var selection = d3.select(this).data() 
+      selection.map(function(sel){sel.subscriptions.map(RB.websocket.removeSubscription)})
+    }
+    RB.websocket.subscribe()
+
+  })
+}             
 
 var buildAdvertiserViewabilityReportingTables = function(pixel,data_key) {
 

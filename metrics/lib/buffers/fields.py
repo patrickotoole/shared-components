@@ -5,6 +5,7 @@ AUCTION = ["city", "user_id_64", "venue_id", "estimated_average_price", "userdat
 
 CONVERSION = ["order_revenue", "order_type", "referrer", "timestamp", "source", "user_agent", "adnxs_uid", "ip", "type"]
 PIXEL = ["referrer", "ip", "source", "user_agent", "adnxs_uid", "timestamp", "type", "an_seg"]
+SERVED = ["ip", "uid", "timestamp", "referrer", "price", "ecp", "venue", "campaign_id", "pub", "seller", "width", "auction_id", "tag", "height", "ip_address", "creative", "external_advertiser_id"]
 
 
 COLUMN_OBJECTS = {
@@ -15,7 +16,8 @@ COLUMN_OBJECTS = {
     "filtered_imps": AUCTION,
     "visit_events": PIXEL,
     "conversion_events": CONVERSION,
-    "conversion_imps": RESULT
+    "conversion_imps": RESULT,
+    "served_imps": SERVED
 }
 COLS = COLUMN_OBJECTS.keys()
 
