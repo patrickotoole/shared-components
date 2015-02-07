@@ -72,6 +72,8 @@ RB.helpers = {
         times.map(function(y) { 
           var to_count = tsmap[y] || []; 
           tsmap[y] = to_count.length 
+          // want to do something here so that we can have a calced value
+          // i.e., spend from served impressions
         })
       } else {
         RB.helpers.recursiveMapBuffer(arr,times)
@@ -475,8 +477,8 @@ RB.objects = (function(rb) {
           .style("padding","6px").style("vertical-align","bottom")
           .text(function(x){return x[fields.name_field] })
 
-        bar_wrapper   = rows.append("div").classed("col-md-3 min-height",true)
-        count_wrapper = rows.append("div").classed("col-md-1",true)
+        var bar_wrapper   = rows.append("div").classed("col-md-3 min-height",true)
+        var count_wrapper = rows.append("div").classed("col-md-1",true)
          
         
 
@@ -494,6 +496,8 @@ RB.objects = (function(rb) {
           BAR_WIDTH = 2,
           HEIGHT = 22;
 
+        var transform = RB.helpers.nestedDataSelector(fields)
+
 
         var buffered_wrapper = RB.websocket.buildBufferedWrapper(STEPS);
         var graph = RB.objects.streaming.graph(
@@ -501,7 +505,7 @@ RB.objects = (function(rb) {
           BAR_WIDTH,
           HEIGHT,
           buffered_wrapper.buffer,
-          RB.helpers.nestedDataSelector(fields),
+          transform,
           axisTransform
         )
 
@@ -512,19 +516,26 @@ RB.objects = (function(rb) {
             return x.value
           }))
 
-          var toNest = d3.nest()
-
-          var nest_keys = [].concat(fields.data_fields).concat(["time"]) 
+          var toNest = d3.nest(), 
+            nest_keys = [].concat(fields.data_fields).concat(["time"]) 
 
           nest_keys.map(function(f){
             toNest.key(function(x){return x[f]})
           })
           
-          var m = toNest.map(flattened)
+          var m = toNest.map(flattened),
+            times = x.map(function(y){return y.time})
 
-          var times = x.map(function(y){return y.time})
+          m = RB.helpers.recursiveMapBuffer(m,times)
 
-          RB.helpers.recursiveMapBuffer(m,times)
+          var bound = count_wrapper.selectAll("div").data(function(d){
+            var data = transform(m)(d) || []
+            var count = data.reduce(function(p,c){ return c.value + p},0)
+            return [count]
+          })
+
+          bound.enter().append("div").text(function(x){return x})
+          bound.text(function(x){return x})
 
 
           graph(m)
@@ -546,7 +557,7 @@ RB.objects = (function(rb) {
           yAxis = d3.svg.axis().scale(yAxisScale).orient("left").ticks(1); 
 
         var wrapper = obj.append("svg")
-           .attr("class", "chart")
+           .attr("class", "chart row")
            .attr("width", w * data.length - 1 + 20)
            .attr("height", h + 8);
 

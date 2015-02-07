@@ -57,7 +57,6 @@ var buildPixelStreaming = function(wrapped) {
 
 
   pixel_group.on("click",function(x){
-    console.log(bar_wrapper.node().getBoundingClientRect())
 
     if (!x.pixels_streaming) {
       x.pixels_streaming = true

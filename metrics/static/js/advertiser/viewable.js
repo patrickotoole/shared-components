@@ -16,16 +16,15 @@ var buildViewable = function(wrapped) {
 var buildCampaignBufferedRow = function(row) {
   
   rowFilter = function(d){
-    return d.segments.filter(function(x){ 
-      x.pixel_source_name = d.pixel_source_name
-      return x.segment_implemented != 0 && x.segment_implemented.indexOf("type=conv") == -1 
+    return d.campaigns.filter(function(x){
+      return x.active
     })
   }
 
    var fields = {
-    name_field: "segment_name",
-    data_fields: ["source","an_seg"],
-    object_fields: ["pixel_source_name","external_segment_id"],
+    name_field: "campaign_name",
+    data_fields: ["advertiser_id","campaign_id"],
+    object_fields: ["external_advertiser_id","campaign_id"],
   }
 
   return RB.objects.streaming.buffered_row(
@@ -58,7 +57,6 @@ var buildCampaignStreaming = function(wrapped) {
 
 
   campaign_group.on("click",function(x){
-    console.log(bar_wrapper.node().getBoundingClientRect())
 
     if (!x.campaigns_streaming) {
       x.campaigns_streaming = true
@@ -71,7 +69,7 @@ var buildCampaignStreaming = function(wrapped) {
           { 
             "name":"campaign",
             "callback":function(x){
-              buffered_wrapper.add(x.track)
+              buffered_wrapper.add(x["served_imps"])
             } 
           }
         )                             

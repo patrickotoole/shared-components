@@ -5,7 +5,7 @@ AUCTION = ["city", "user_id_64", "venue_id", "estimated_average_price", "userdat
 
 CONVERSION = ["order_revenue", "order_type", "referrer", "timestamp", "source", "user_agent", "adnxs_uid", "ip", "type"]
 PIXEL = ["referrer", "ip", "source", "user_agent", "adnxs_uid", "timestamp", "type", "an_seg"]
-SERVED = ["ip", "uid", "timestamp", "referrer", "price", "ecp", "venue", "campaign_id", "pub", "seller", "width", "auction_id", "tag", "height", "ip_address", "creative", "external_advertiser_id"]
+SERVED = ["ip", "uid", "timestamp", "referrer", "price", "ecp", "venue", "campaign_id", "pub", "seller", "width", "auction_id", "tag", "height", "ip_address", "creative", "advertiser_id"]
 
 
 COLUMN_OBJECTS = {
