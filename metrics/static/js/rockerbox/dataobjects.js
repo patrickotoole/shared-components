@@ -140,14 +140,15 @@ RB.websocket = (function(rb){
       return hash
     },
     removeSubscription: function(hash) {
-      var arr = atob(hash).split(",").map(function(x){return parseInt(x)})
-      self.websocket.streams.splice(arr[0],1)
-      self.websocket.filters.splice(arr[1],1)
-      self.websocket.message_handlers.splice(arr[2],1)
+      var arr_pos = self.websocket.hashes.indexOf(hash)
+      self.websocket.streams.splice(arr_pos,1)
+      self.websocket.filters.splice(arr_pos,1)
+      self.websocket.message_handlers.splice(arr_pos,1)
       
     },
     streams: [],
     filters: [],
+    hashes: [],
     subscribe: function() {
       var uniq = unique(self.websocket.streams)
       var subscriptions = { streams: uniq }
@@ -537,7 +538,10 @@ RB.objects = (function(rb) {
           bound.enter().append("div").text(function(x){return x})
           bound.text(function(x){return x})
 
-
+          // need a way of limiting which graphs get updated at this step
+          // otherwise we wend up selecting and binding too many rows
+          // potentially use the count to say a graph is considered "active"
+          
           graph(m)
         })
 

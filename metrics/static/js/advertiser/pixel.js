@@ -78,6 +78,7 @@ var buildPixelStreaming = function(wrapped) {
     } else {
       x.pixels_streaming = false
       var selection = d3.select(this).data() 
+      console.log(selection)
       selection.map(function(sel){sel.subscriptions.map(RB.websocket.removeSubscription)})
     }
     RB.websocket.subscribe()

@@ -16,9 +16,13 @@ var buildViewable = function(wrapped) {
 var buildCampaignBufferedRow = function(row) {
   
   rowFilter = function(d){
-    return d.campaigns.filter(function(x){
-      return x.active
-    })
+    if (d.campaigns.length) {
+      return d.campaigns.filter(function(x){
+        return x.active
+      })
+    } else {
+      return []
+    }
   }
 
    var fields = {
@@ -78,6 +82,7 @@ var buildCampaignStreaming = function(wrapped) {
     } else {
       x.campaigns_streaming = false
       var selection = d3.select(this).data() 
+      console.log(selection)
       selection.map(function(sel){sel.subscriptions.map(RB.websocket.removeSubscription)})
     }
     RB.websocket.subscribe()
