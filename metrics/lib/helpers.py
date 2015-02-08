@@ -40,6 +40,7 @@ class Mask:
         
         mask = df.index == df.index
         in_df = Mask.masks_in_df(df,masks)
+        
         len_masks_in_df = len(in_df.keys())
 
         
@@ -101,12 +102,12 @@ class Mask:
             # if nothing to mask
             return mask
 
-        if len_masks_in_df < len(masks):
+        if len_masks_in_df == 0: # < len(masks):
             # if we dont have the columns    
             return mask == False
 
         
-        for column,values in masks.iteritems():
+        for column,values in in_df.iteritems():
 
             # check for both integer and string values in columns
             values_int = Cast.try_cast_list(int,values)
