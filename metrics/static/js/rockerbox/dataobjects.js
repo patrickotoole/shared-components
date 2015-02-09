@@ -538,11 +538,16 @@ RB.objects = (function(rb) {
           bound.enter().append("div").text(function(x){return x})
           bound.text(function(x){return x})
 
-          // need a way of limiting which graphs get updated at this step
+          // TODO: need a way of limiting which graphs get updated at this step
           // otherwise we wend up selecting and binding too many rows
           // potentially use the count to say a graph is considered "active"
+          var counts_filter = function(d) {
+            var data = transform(m)(d) || []
+            var count = data.reduce(function(p,c){ return c.value +p},0)
+            return count
+          }
           
-          graph(m)
+          graph(m,counts_filter)
         })
 
         return buffered_wrapper
@@ -618,20 +623,24 @@ RB.objects = (function(rb) {
           return yAxis(groups)
         }
 
-        var redraw = function(data) {
+        var redraw = function(data,counts_filter) {
           //var max = d3.max(data.map(function(x){ return x.value.length }))
-          var max = 10
+          var max = 10,
+            counts_filter = counts_filter || function(){return true}
 
           y.domain([0, max])
           yAxisScale.domain([0,max])
 
           var customAxis = useRedrawAxis ? redrawAxis : yAxis
 
-          yAxisDrawn.call(customAxis)
+          yAxisDrawn.filter(counts_filter).call(customAxis)
 
-          var rect = chart.selectAll("rect")
+          var selected = chart.filter(counts_filter)
+
+          var rect = selected.selectAll("rect")
             .data(function(d){
               var dd = transform(data)(d);
+              // this should prevent the redraw for the actual chart
               return dd ? dd : original_data;
            }, function(d) { return d.time; });
 

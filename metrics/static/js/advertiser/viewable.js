@@ -82,7 +82,6 @@ var buildCampaignStreaming = function(wrapped) {
     } else {
       x.campaigns_streaming = false
       var selection = d3.select(this).data() 
-      console.log(selection)
       selection.map(function(sel){sel.subscriptions.map(RB.websocket.removeSubscription)})
     }
     RB.websocket.subscribe()
