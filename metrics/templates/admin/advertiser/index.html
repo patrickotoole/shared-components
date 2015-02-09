@@ -5,7 +5,7 @@
 <link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/dc.css">
 <link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/chosen.css">
 <link rel="stylesheet" type="text/css" href="/static/css/metricsgraphics.css">   
-<script type="text/javascript" src="http://rockerbox.com/js/d3.js"></script>
+<script type="text/javascript" src="/static/js/d3.js"></script>
 <script type="text/javascript" src="/static/js/advertiser.js"></script> 
 <script type="text/javascript" src="/static/js/advertiser/info.js"></script>  
 <script type="text/javascript" src="/static/js/advertiser/conversion.js"></script>   
@@ -17,6 +17,18 @@
 <script type="text/javascript" src="/static/js/metricsgraphics.js"></script>      
 <script type="text/javascript" src="/static/js/rockerbox/dataobjects.js"></script>       
 <style>
+.min-height {font-size:0px}
+.axis path,
+.axis line {
+    fill: none;
+    stroke: #ccc;
+    shape-rendering: crispEdges;
+}
+
+.axis text {
+    font-family: sans-serif;
+    font-size: 6px;
+}
 .mg-chart-title {
   font-size:16px;
   padding-top:14px;
@@ -74,20 +86,30 @@ $(document).ready(function(){
     buildInfo(wrapped)
     buildPixel(wrapped)
     buildConversion(wrapped)
-    //buildReporting(wrapped)
+    buildReporting(wrapped)
     buildViewable(wrapped)
     
  
     // Tools
-    wrapped.append("div")
-      .classed("panel-body",true)
-      .append("h4")
-      .text("Tools")
+    wrapped.append("div").classed("panel-body",true).append("h4").text("Tools")
 
     buildDomainList(wrapped)
     
     //accordianify(wrapped, ".panel-sub-heading > .list-group-item",function(){return this.parentNode.nextSibling})
 
+    wrapped.selectAll(".panel-sub-heading > .list-group-item")
+      .on("click",function(x){
+        d3.select(this.parentNode.nextSibling).classed("hidden",function(x){
+          if (x.is_opened === undefined) x.is_opened = 0
+          if (this.classList.contains("hidden")) {
+            x.is_opened += 1
+            return false
+          } else {
+            x.is_opened -= 1
+            return true
+          }
+        })
+      })
 
     $.fn.editable.defaults.mode = 'inline';
 
