@@ -4,7 +4,86 @@ var buildPixel = function(wrapped) {
     .append("h4").text("On-site Activity Attribution (Pixels)")
 
   buildPixelReporting(wrapped)
+
+  wrapped.append("div").classed("panel-body",true)
+    .append("h4").text("Live Pixel Activity")
+ 
+  buildPixelStreaming(wrapped)
      
+}
+
+var buildPixelBufferedRow = function(row) {
+  
+  rowFilter = function(d){
+    return d.segments.filter(function(x){ 
+      x.pixel_source_name = d.pixel_source_name
+      return x.segment_implemented != 0 && x.segment_implemented.indexOf("type=conv") == -1 
+    })
+  }
+
+   var fields = {
+    name_field: "segment_name",
+    data_fields: ["source","an_seg"],
+    object_fields: ["pixel_source_name","external_segment_id"],
+  }
+
+  return RB.objects.streaming.buffered_row(
+    row,
+    rowFilter,
+    fields.name_field,
+    fields.data_fields,
+    fields.object_fields
+  )
+
+}
+
+var buildPixelStreaming = function(wrapped) {
+  RB.websocket.connect()
+
+ var pixel_group = wrapped.append("div")
+    .classed("panel-sub-heading pixel-streaming list-group",true)
+
+  pixel_group.append("div").classed("list-group-item",true)
+    .text("Pixel Streaming")
+
+  var pixels = wrapped.append("div")
+    .classed("list-group pixel-streaming hidden", true) 
+
+  var row = pixels.append("div").classed("row",true)
+    .append("div").classed("col-md-12",true)
+
+  var buffered_wrapper = buildPixelBufferedRow(row)
+
+
+
+  pixel_group.on("click",function(x){
+
+    if (!x.pixels_streaming) {
+      x.pixels_streaming = true
+      var selection = d3.select(this)
+
+      selection[0][0].__data__.subscriptions = selection.data().map(function(a){
+        return RB.websocket.addSubscription(
+          "visit_events",
+          {"name":"source","values":[a.pixel_source_name]},
+          { 
+            "name":"pixel",
+            "callback":function(x){
+              buffered_wrapper.add(x.visit_events)
+            } 
+          }
+        )                             
+      })
+
+    } else {
+      x.pixels_streaming = false
+      var selection = d3.select(this).data() 
+      console.log(selection)
+      selection.map(function(sel){sel.subscriptions.map(RB.websocket.removeSubscription)})
+    }
+    RB.websocket.subscribe()
+
+  })
 }
 
 var buildPixelReportingTables = function(pixel,data_key) {
@@ -21,10 +100,10 @@ var buildPixelReportingTables = function(pixel,data_key) {
       {"name":"All visits","key":"imps"}
     ],
     "table_series": [
-      {"header":"Pixel","key":"name"},                                                                                 
-      {"header":"Rockerbox","key":["rbox_imps"],"formatter":format},                                                   
-      {"header":"Total","key":["imps"],"formatter":format} ,                                                           
-      {"header":"%","key":["rbox_imps","imps"],"formatter":buildPercent}                                               
+      {"header":"Pixel","key":"name"},
+      {"header":"Rockerbox","key":["rbox_imps"],"formatter":format},
+      {"header":"Total","key":["imps"],"formatter":format} ,
+      {"header":"%","key":["rbox_imps","imps"],"formatter":buildPercent}
     ],
     "title": "On-site visits"
   })

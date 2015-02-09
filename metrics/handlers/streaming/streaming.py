@@ -93,7 +93,7 @@ class StreamingHandler(StreamingBase,tornado.websocket.WebSocketHandler):
         self.id = self.get_argument("id","123")
         logging.info("adding new client: " + self.id)
         clients[self.id] = {"id": self.id, "object": self, "enabled":False}
-        if len(clients.keys()) == 1:
+        if len(clients.keys()) == 1 and self.control_buffer['on'] is False:
             self.buffers['track'].clear()
             self.control_buffer['on'] = True
             self.generator_loop()

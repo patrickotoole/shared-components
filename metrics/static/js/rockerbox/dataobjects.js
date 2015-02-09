@@ -1,3 +1,15 @@
+
+function unique(arr) {
+    var hash = {}, result = [];
+    for ( var i = 0, l = arr.length; i < l; ++i ) {
+        if ( !hash.hasOwnProperty(arr[i]) ) { //it works with objects! in FF, at least
+            hash[ arr[i] ] = true;
+            result.push(arr[i]);
+        }
+    }
+    return result;
+}
+
 var RB = RB || {}
 
 RB.QS = (function(a) {
@@ -40,7 +52,6 @@ RB.helpers = {
   timeseries_transform: function(data_key) {
     var self = this
     return function(d) {
-      console.log(d)
       var rand = parseInt(Math.random()*10000000)
       var values = d[data_key]
         .map(self.timeseries_formatter)
@@ -52,6 +63,51 @@ RB.helpers = {
         })
       })
       return [values]
+    }
+  },
+  standardAggregation: function(arr) {
+    return {"count":arr.length}
+  },
+  recursiveMapBuffer: function(tsmap,times,custom_aggregation) {
+    Object.keys(tsmap).map(function(k){
+      var arr = tsmap[k] || {}
+      if (arr instanceof Array) {
+        times.map(function(y) { 
+          var to_count = tsmap[y] || []; 
+          var aggregation = custom_aggregation || RB.helpers.standardAggregation;
+          tsmap[y] = aggregation(to_count)
+
+          // want to do something here so that we can have a calced value
+          // i.e., spend from served impressions
+        })
+      } else {
+        RB.helpers.recursiveMapBuffer(arr,times,custom_aggregation)
+      }
+    })
+    return tsmap
+  },
+  nestedDataSelector: function(fields) {
+    var fields = fields;
+    return function(data) {
+      
+      var data = data,
+        timeToKey = function(x) {
+          x.time = x.key
+          return x
+        }
+
+      return function(segment) {
+        var keys = fields.object_fields.map(function(x){return segment[x]}),
+          selected = data;
+
+        keys.map(function(field) {
+          selected = selected[field] || {}
+        })
+
+        var result = d3.map(selected).entries().map(timeToKey)
+
+        return result.length ? result : false
+      }
     }
   }
 }
@@ -68,6 +124,111 @@ RB.defaults= {
 }
 
 RB.__data__ = {}
+
+RB.websocket = (function(rb){
+  var self = rb,
+    ws;
+  
+  return {
+    addSubscription: function(stream,filter,callback) {
+
+      var hash = stream + "," + JSON.stringify(filter)
+
+      self.websocket.streams.push(stream)
+      self.websocket.filters.push(filter)
+      self.websocket.message_handlers.push(callback)
+
+      self.websocket.hashes.push(hash)
+
+      return hash
+    },
+    removeSubscription: function(hash) {
+      var arr_pos = self.websocket.hashes.indexOf(hash)
+
+      self.websocket.hashes.splice(arr_pos,1)
+      self.websocket.streams.splice(arr_pos,1)
+      self.websocket.filters.splice(arr_pos,1)
+      self.websocket.message_handlers.splice(arr_pos,1)
+      
+    },
+    streams: [],
+    filters: [],
+    hashes: [],
+    subscribe: function() {
+      var uniq = unique(self.websocket.streams)
+      var subscriptions = { streams: uniq }
+
+      self.websocket.filters.map(function(x){
+        var current = subscriptions[x.name] || []
+        if (x.values[0]) {
+          current.push(x.values[0])
+          subscriptions[x.name] = current
+        }
+      })
+
+      ws.send(JSON.stringify(subscriptions))
+    },
+    on_message: function(x){
+      var data = JSON.parse(x.data)
+
+      self.websocket.unique_handlers().map(function(fn){
+        fn(data)
+      })
+    },
+    connect: function(){
+
+      if (!self.websocket.is_connected) {
+      
+        ws = new WebSocket("ws://localhost:8080/admin/websocket?id=" + 1234);
+        ws.onopen = function() {
+          self.websocket.is_connected = 1
+          ws.send("initialize");
+          ws.send("start");
+        };
+        ws.onmessage = self.websocket.on_message
+        ws.onclose = function() {
+          self.websocket.is_connected = 0
+          console.log("disconnected");
+        }
+        self.websocket.ws = ws
+      }
+    },
+    unique_handlers: function(){
+      var uniques = {}
+      self.websocket.message_handlers.map(function(d){
+        uniques[d.name] = d.callback
+      })
+      return Object.keys(uniques).map(function(k){return uniques[k]})
+    },
+    message_handlers: [],
+    is_connected: 0,
+    ws: false,
+    buildBufferedWrapper: function(steps,transformer) {
+
+      var transformer = transformer || function(time,json) { return {"time":time,"value":json} }     
+
+      var Wrapper = function(_obj,_steps) {
+        var wrap = this;
+        this.callbacks = []
+        this.t = 0
+        this.buffer = d3.range(steps).map(function(){
+          wrap.t++;
+          return {"time":wrap.t,"value":[]}
+        })
+        this.add = function(data) {
+          this.t++;
+          this.buffer.shift()
+          this.buffer.push(transformer(this.t,data))
+          this.callbacks.map(function(cb) { cb(wrap.buffer) })
+        }
+        
+      }
+
+      return new Wrapper(steps,transformer)
+    
+    }
+  }
+})(RB)
 
 RB.data = (function(rb) {
   var self = rb,
@@ -293,6 +454,242 @@ RB.objects = (function(rb) {
   var self = rb;
 
   return {
+    streaming: {
+      buffered_row: function(row,rowFilter,name_key,data_fields,object_fields,custom_elements,custom_aggregation) {
+
+        console.log(custom_aggregation)
+
+        var fields = {
+          name_field: name_key,
+          data_fields: data_fields,
+          object_fields: object_fields,
+          data_field: data_fields[data_fields.length-1],
+          object_field: object_fields[object_fields-1]
+        }
+
+
+        var pixel_bars = row
+          .append("div")
+          .classed("col-md-6 pixel-row-wrapper",true)
+
+        var rows = pixel_bars.append("div").classed("row",true).selectAll("div")
+          .data(rowFilter)
+          .enter()
+            .append("div")
+            .attr("id",function(x){return x[fields.name_field] })
+
+        var col = rows.append("div").classed("col-md-6 pixel-row-name",true)
+
+        col.append("div")
+          .style("font-size","13px").style("height","13px")
+          .style("padding","6px").style("vertical-align","bottom")
+          .text(function(x){return x[fields.name_field] })
+
+        var bar_wrapper   = rows.append("div").classed("col-md-3 min-height",true)
+        var count_wrapper = rows.append("div").classed("col-md-1",true)
+         
+        
+
+        var axisTransform = function(obj) {
+
+          return function(data) {
+            var filtered = data.value.filter(function(x){ 
+              return x[fields.data_fields[0]] == obj[fields.object_fields[0]]
+            })
+            return {"time":data.time,"value":filtered.length}
+          }   
+        }
+
+        var STEPS = 60,
+          BAR_WIDTH = 2,
+          HEIGHT = 22;
+
+        var transform = RB.helpers.nestedDataSelector(fields)
+
+
+        var buffered_wrapper = RB.websocket.buildBufferedWrapper(STEPS);
+        var graph = RB.objects.streaming.graph(
+          bar_wrapper,
+          BAR_WIDTH,
+          HEIGHT,
+          buffered_wrapper.buffer,
+          transform,
+          axisTransform
+        )
+
+        buffered_wrapper.callbacks.push(function(x){
+
+          var flattened = [].concat.apply([],x.map(function(x){ 
+            x.value.map( function(y) { y.time = x.time }); 
+            return x.value
+          }))
+
+          var toNest = d3.nest(), 
+            nest_keys = [].concat(fields.data_fields).concat(["time"]) 
+
+          nest_keys.map(function(f){
+            toNest.key(function(x){return x[f]})
+          })
+          
+          var m = toNest.map(flattened),
+            times = x.map(function(y){return y.time})
+
+          m = RB.helpers.recursiveMapBuffer(m,times,custom_aggregation)
+
+          var bound = count_wrapper.selectAll("div").data(function(d){
+            var data = transform(m)(d) || []
+            var count = data.reduce(function(p,c){ return c.value.count + p},0)
+            return [count]
+          })
+
+          bound.enter().append("div").text(function(x){return x})
+          bound.text(function(x){return x})
+
+          if (custom_elements) 
+            custom_elements(m,transform,rows)
+
+
+
+          // TODO: need a way of limiting which graphs get updated at this step
+          // otherwise we wend up selecting and binding too many rows
+          // potentially use the count to say a graph is considered "active"
+          var counts_filter = function(d) {
+            var data = transform(m)(d) || []
+            var count = data.reduce(function(p,c){ return c.value +p},0)
+            return count
+          }
+          
+          graph(m,counts_filter)
+        })
+
+        return buffered_wrapper
+      },
+      graph: function(obj,width,height,data,transform,axisTransform) {
+        var useRedrawAxis = !!axisTransform,
+          original_data = JSON.parse(JSON.stringify(data));
+
+        var w = width || 5, h = height || 80,
+          transform = transform || function(x) {return x},
+          axisTransform = axisTransform || function(x) {return x};
+
+        var x = d3.scale.linear().domain([0, 1]).range([0, w]),
+          y = d3.scale.linear().domain([0, 10]).range([0, h]),
+          yAxisScale = d3.scale.linear().domain([0, 10]).range([h, 0]),
+          yAxis = d3.svg.axis().scale(yAxisScale).orient("left").ticks(1); 
+
+        var wrapper = obj.append("svg")
+           .attr("class", "chart row")
+           .attr("width", w * data.length - 1 + 20)
+           .attr("height", h + 8);
+
+        var yAxisDrawn = wrapper.append("g")
+          .attr("height", h + 6)
+          .attr("class","mg-y-axis axis") 
+          .attr("transform", "translate(" + 15 + ",4)")
+          .call(yAxis);
+
+        var chart = wrapper.append("g")
+          .attr("transform","translate(" + 18 + ",4)")
+
+        chart.selectAll("rect")
+           .data(original_data)
+         .enter().append("rect")
+           .attr("x", function(d, i) { return x(i) - .5; })
+           .attr("y", function(d) { return h - y(d.value) - .5; })
+           .attr("width", w)
+           .attr("height", function(d) { return y(d.value); });
+
+        chart.append("line")
+           .attr("x1", 0)
+           .attr("x2", w * data.length)
+           .attr("y1", h + 0)
+           .attr("y2", h + 0)
+           .style("stroke", "#ccc");
+
+        var calcY = function(d) { 
+          var y = this.parentNode.previousSibling.__chart__; 
+          return y(d.value) - .5; 
+        }
+        var calcHeight = function(d) { 
+          var y = this.parentNode.previousSibling.__chart__; 
+          return h - y(d.value); 
+        }
+
+        var redrawAxis = function(groups) {
+          var maxes = groups.map(function(group){
+            var rep = (group.length) ? group[0].__data__ : false,
+              format = rep ? axisTransform(rep) : false;
+
+            var arr = format ? 
+                data.map(format).map(function(y){return y.value}) : 
+                data.map(function(){return 0});
+
+            return d3.max(arr)
+          })
+
+          groups.map(function(group,i){
+            var y = d3.scale.linear().domain([0, maxes[i]]).range([h, 0])
+            group.map(function(x){ x.__newchart__ = y })
+          })
+
+          return yAxis(groups)
+        }
+
+        var redraw = function(data,counts_filter) {
+          //var max = d3.max(data.map(function(x){ return x.value.length }))
+          var max = 10,
+            counts_filter = counts_filter || function(){return true}
+
+          y.domain([0, max])
+          yAxisScale.domain([0,max])
+
+          var customAxis = useRedrawAxis ? redrawAxis : yAxis
+
+          yAxisDrawn.filter(counts_filter).call(customAxis)
+
+          var selected = chart.filter(counts_filter)
+
+          var rect = selected.selectAll("rect")
+            .data(function(d){
+              var dd = transform(data)(d);
+              // this should prevent the redraw for the actual chart
+              if (dd) {
+                dd = dd.map(function(x){
+                  return {
+                    time: x.time,
+                    value: x.value.count
+                  }
+                })
+              }
+              return dd ? dd : original_data;
+           }, function(d) { return d.time; });
+
+          rect.enter().insert("rect", "line")
+            .attr("x", function(d, i) { return x(i + 1) - .5; })
+            .attr("y", calcY)
+            .attr("width", w)
+            .attr("height", calcHeight)
+          .transition()
+            .duration(1)
+            .attr("x", function(d, i) { return x(i) - .5; })
+            .attr("y", calcY)
+            .attr("height", calcHeight)
+
+          rect.transition()
+            .duration(1)
+            .attr("x", function(d, i) { return x(i) - .5; })
+            .attr("y", calcY)
+            .attr("height", calcHeight)
+
+          rect.exit().transition()
+            .duration(1)
+            .attr("x", function(d, i) { return x(i - 1) - .5; })
+            .remove(); 
+        }
+        
+        return redraw
+      },
+    },
     timeseries: {
       graph: function(obj,limit_series,title_prefix) {
 
@@ -420,6 +817,7 @@ RB.objects = (function(rb) {
         .data(function(d){ return d[data_key] })
         .enter()
           .append("tr")
+          .attr("id",function(x){return x.key})
 
       if (onclick) {
         tr.on("click",function(x){
