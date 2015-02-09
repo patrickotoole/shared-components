@@ -82,18 +82,18 @@ $(document).ready(function(){
           wy = (y.active + y.running - y.deleted)*(y.monthly_budget+1)
         return wy-wx  
       })
-    //buildAdvertiserInfo(wrapped)
-    //buildInfo(wrapped)
+    buildAdvertiserInfo(wrapped)
+    buildInfo(wrapped)
     buildPixel(wrapped)
-    //buildConversion(wrapped)
-    //buildReporting(wrapped)
+    buildConversion(wrapped)
+    buildReporting(wrapped)
     buildViewable(wrapped)
     
  
     // Tools
     wrapped.append("div").classed("panel-body",true).append("h4").text("Tools")
 
-    //buildDomainList(wrapped)
+    buildDomainList(wrapped)
     
     //accordianify(wrapped, ".panel-sub-heading > .list-group-item",function(){return this.parentNode.nextSibling})
 

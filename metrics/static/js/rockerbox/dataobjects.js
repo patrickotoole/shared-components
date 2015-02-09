@@ -65,18 +65,23 @@ RB.helpers = {
       return [values]
     }
   },
-  recursiveMapBuffer: function(tsmap,times) {
+  standardAggregation: function(arr) {
+    return {"count":arr.length}
+  },
+  recursiveMapBuffer: function(tsmap,times,custom_aggregation) {
     Object.keys(tsmap).map(function(k){
       var arr = tsmap[k] || {}
       if (arr instanceof Array) {
         times.map(function(y) { 
           var to_count = tsmap[y] || []; 
-          tsmap[y] = to_count.length 
+          var aggregation = custom_aggregation || RB.helpers.standardAggregation;
+          tsmap[y] = aggregation(to_count)
+
           // want to do something here so that we can have a calced value
           // i.e., spend from served impressions
         })
       } else {
-        RB.helpers.recursiveMapBuffer(arr,times)
+        RB.helpers.recursiveMapBuffer(arr,times,custom_aggregation)
       }
     })
     return tsmap
@@ -127,20 +132,20 @@ RB.websocket = (function(rb){
   return {
     addSubscription: function(stream,filter,callback) {
 
-      var hash = btoa(
-        self.websocket.streams.length + "," + 
-        self.websocket.filters.length + "," + 
-        self.websocket.message_handlers.length
-      )
+      var hash = stream + "," + JSON.stringify(filter)
 
       self.websocket.streams.push(stream)
       self.websocket.filters.push(filter)
       self.websocket.message_handlers.push(callback)
 
+      self.websocket.hashes.push(hash)
+
       return hash
     },
     removeSubscription: function(hash) {
       var arr_pos = self.websocket.hashes.indexOf(hash)
+
+      self.websocket.hashes.splice(arr_pos,1)
       self.websocket.streams.splice(arr_pos,1)
       self.websocket.filters.splice(arr_pos,1)
       self.websocket.message_handlers.splice(arr_pos,1)
@@ -450,7 +455,9 @@ RB.objects = (function(rb) {
 
   return {
     streaming: {
-      buffered_row: function(row,rowFilter,name_key,data_fields,object_fields) {
+      buffered_row: function(row,rowFilter,name_key,data_fields,object_fields,custom_elements,custom_aggregation) {
+
+        console.log(custom_aggregation)
 
         var fields = {
           name_field: name_key,
@@ -527,16 +534,21 @@ RB.objects = (function(rb) {
           var m = toNest.map(flattened),
             times = x.map(function(y){return y.time})
 
-          m = RB.helpers.recursiveMapBuffer(m,times)
+          m = RB.helpers.recursiveMapBuffer(m,times,custom_aggregation)
 
           var bound = count_wrapper.selectAll("div").data(function(d){
             var data = transform(m)(d) || []
-            var count = data.reduce(function(p,c){ return c.value + p},0)
+            var count = data.reduce(function(p,c){ return c.value.count + p},0)
             return [count]
           })
 
           bound.enter().append("div").text(function(x){return x})
           bound.text(function(x){return x})
+
+          if (custom_elements) 
+            custom_elements(m,transform,rows)
+
+
 
           // TODO: need a way of limiting which graphs get updated at this step
           // otherwise we wend up selecting and binding too many rows
@@ -641,6 +653,14 @@ RB.objects = (function(rb) {
             .data(function(d){
               var dd = transform(data)(d);
               // this should prevent the redraw for the actual chart
+              if (dd) {
+                dd = dd.map(function(x){
+                  return {
+                    time: x.time,
+                    value: x.value.count
+                  }
+                })
+              }
               return dd ? dd : original_data;
            }, function(d) { return d.time; });
 

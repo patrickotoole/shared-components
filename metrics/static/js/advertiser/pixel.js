@@ -3,7 +3,7 @@ var buildPixel = function(wrapped) {
   wrapped.append("div").classed("panel-body",true)
     .append("h4").text("On-site Activity Attribution (Pixels)")
 
-  //buildPixelReporting(wrapped)
+  buildPixelReporting(wrapped)
 
   wrapped.append("div").classed("panel-body",true)
     .append("h4").text("Live Pixel Activity")

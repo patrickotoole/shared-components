@@ -1,15 +1,23 @@
 var buildViewable = function(wrapped) {
+
+  wrapped.append("div")
+    .classed("panel-body",true)
+    .append("h4")
+    .text("Live campaign activity")
+  
+
+  buildCampaignStreaming(wrapped)
+
   wrapped.append("div")
     .classed("panel-body",true)
     .append("h4")
     .text("Viewability Reporting")
-
-  //buildAdvertiserViewabilityReporting(wrapped)
-  buildCampaignStreaming(wrapped)
-  //buildCampaignViewabilityReporting(wrapped)
-  //buildTagViewabilityReporting(wrapped) 
-  //buildVenueViewabilityReporting(wrapped)  
-  //buildDomainListViewabilityReporting(wrapped)   
+ 
+  buildAdvertiserViewabilityReporting(wrapped)
+  buildCampaignViewabilityReporting(wrapped)
+  buildTagViewabilityReporting(wrapped) 
+  buildVenueViewabilityReporting(wrapped)  
+  buildDomainListViewabilityReporting(wrapped)   
    
 }
 
@@ -36,7 +44,36 @@ var buildCampaignBufferedRow = function(row) {
     rowFilter,
     fields.name_field,
     fields.data_fields,
-    fields.object_fields
+    fields.object_fields,
+    function(x,transform,rows) {
+      var spent = rows.selectAll(".spent-value").data(function(d){
+        var data = transform(x)(d)
+        if (data)
+          var v = data.reduce(function(p,n){ return p + n.value.spend },0),
+            cpm = v/data.reduce(function(p,n){ return p + n.value.count},0)
+        return data ? [v, cpm] : [0, 0]
+      })
+
+      var get_spend = function(x) {
+        var rounded = parseInt(x*100)/100.0
+        return format(rounded)
+      }
+
+      spent.enter()
+        .append("div").classed("spent-value col-md-1",true)
+        .text(get_spend)
+
+      spent
+        .text(get_spend)
+    },
+    function(to_count) {
+      var price = to_count.map(function(x){ return parseFloat(x.price) }).reduce(function(c,n){return c+n},0)
+
+      return {
+        "count":to_count.length,
+        "spend": price
+      }
+    }
   )
 
 }
@@ -60,6 +97,7 @@ var buildCampaignStreaming = function(wrapped) {
 
 
 
+
   campaign_group.on("click",function(x){
 
     if (!x.campaigns_streaming) {
@@ -72,7 +110,7 @@ var buildCampaignStreaming = function(wrapped) {
           {"name":"advertiser_id","values":[new String(a.external_advertiser_id)]},
           { 
             "name":"campaign",
-            "callback":function(x){
+            "callback":function(x,w){
               buffered_wrapper.add(x["served_imps"])
             } 
           }
@@ -147,9 +185,9 @@ var buildAdvertiserViewabilityReporting = function(obj) {
     .text("Advertiser Viewability")
 
   var pixels = obj.append("div")
-    .classed("list-group advertiser-reporting", true)
+    .classed("list-group advertiser-reporting hidden", true)
 
-  pixels[0].map(build)
+  //pixels[0].map(build)
 
   advertiser_group.on("click",function(x){
     if (!x['advertiser_reporting']) build(this.nextSibling)
