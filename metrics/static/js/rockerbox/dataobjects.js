@@ -575,18 +575,13 @@ RB.objects = (function(rb) {
           if (custom_elements) 
             custom_elements(m,transform,rows)
 
-
-
-          // TODO: need a way of limiting which graphs get updated at this step
-          // otherwise we wend up selecting and binding too many rows
-          // potentially use the count to say a graph is considered "active"
           var counts_filter = function(d) {
             var data = transform(m)(d) || []
             var count = data.reduce(function(p,c){ return c.value +p},0)
             return count
           }
           
-          graph(m,counts_filter,custom_field)
+          if (!document.hidden) graph(m,counts_filter,custom_field)
         })
 
         return buffered_wrapper        
@@ -686,7 +681,7 @@ RB.objects = (function(rb) {
 
 
           rows.sort(function(x,y){
-            return y.rank - x.rank
+            return (y.rank - x.rank) || (y.campaign_id - x.campaign_id)
           })
 
           // TODO: need a way of limiting which graphs get updated at this step
@@ -697,8 +692,10 @@ RB.objects = (function(rb) {
             var count = data.reduce(function(p,c){ return c.value +p},0)
             return count
           }
+
+
           
-          graph(m,counts_filter)
+          if (!document.hidden) graph(m,counts_filter)
         })
 
         return buffered_wrapper
