@@ -1,35 +1,40 @@
-var buildStreaming = function(wrapped) {
+var buildStreaming = function(wrapped,skip_title) {
   var live_summary = wrapped.append("div")
     .classed("panel-body",true)
 
-  live_summary
-    .append("h4")
-    .text("Live Summary")
+  console.log(skip_title)
+
+  if (!skip_title) live_summary.append("h4").text("Live Summary")
 
   buildPixelSummaryStreaming(live_summary)
+  buildConversionSummaryStreaming(live_summary)
   buildServingSummaryStreaming(live_summary) 
   buildSpentSummaryStreaming(live_summary) 
 
-  buildCampaignStreaming(wrapped)
-  buildPixelStreaming(wrapped)
+  if (RB.QS.limited != "true") {
+    buildCampaignStreaming(wrapped)
+    buildPixelStreaming(wrapped)
+    buildConversionStreaming(wrapped)
+  }
+
+  RB.websocket.connect()
  
 }
 
 var buildSpentSummaryStreaming = function(wrapped) {
-  RB.websocket.connect()
 
   var group = wrapped.append("div")
-    .classed("panel-sub-heading serving-summary-streaming list-group",true)
+    .classed("panel-sub-heading serving-summary-streaming ",true)
 
   rowFilter = function(d){ return [d] }
 
   var buffered_wrapper = RB.objects.streaming.buffered_block(
-    "spent/min", 
-    group,
-    rowFilter,
-    "advertiser_name",
-    ["advertiser_id"],
-    ["external_advertiser_id"],
+    "spent/min",                //title
+    group,                      //obj
+    rowFilter,                  //filter
+    "advertiser_name",          //obj_name_key
+    ["advertiser_id"],          //data_fields to recursively match obj_fields
+    ["external_advertiser_id"], //obj_fields to recursively match data_fields
     function(){},
     function(to_count) {
       var price = to_count.map(function(x){ return parseFloat(x.price) }).reduce(function(c,n){return c+n},0)
@@ -70,10 +75,9 @@ var buildSpentSummaryStreaming = function(wrapped) {
 }
 
 var buildServingSummaryStreaming = function(wrapped) {
-  RB.websocket.connect()
 
   var group = wrapped.append("div")
-    .classed("panel-sub-heading serving-summary-streaming list-group",true)
+    .classed("panel-sub-heading serving-summary-streaming ",true)
 
   rowFilter = function(d){ return [d] }
 
@@ -114,10 +118,9 @@ var buildServingSummaryStreaming = function(wrapped) {
 }
 
 var buildPixelSummaryStreaming = function(wrapped) {
-  RB.websocket.connect()
 
   var pixel_group = wrapped.append("div")
-    .classed("panel-sub-heading pixel-summary-streaming list-group",true)
+    .classed("panel-sub-heading pixel-summary-streaming ",true)
 
   rowFilter = function(d){ return [d] }
 
@@ -215,7 +218,6 @@ var buildCampaignBufferedRow = function(row) {
 }
 
 var buildCampaignStreaming = function(wrapped) {
-  //RB.websocket.connect()
 
  var campaign_group = wrapped.append("div")
     .classed("panel-sub-heading campaign-streaming list-group",true)
@@ -289,7 +291,6 @@ var buildPixelBufferedRow = function(row) {
 }
 
 var buildPixelStreaming = function(wrapped) {
-  RB.websocket.connect()
 
  var pixel_group = wrapped.append("div")
     .classed("panel-sub-heading pixel-streaming list-group",true)
@@ -334,5 +335,117 @@ var buildPixelStreaming = function(wrapped) {
     }
     RB.websocket.subscribe()
 
+  })
+}
+
+var buildConversionStreaming = function(wrapped) {
+
+  var pixel_group = wrapped.append("div")
+    .classed("panel-sub-heading conversion-streaming list-group",true)
+
+  pixel_group.append("div").classed("list-group-item",true)
+    .text("Conversion Streaming")
+
+  var pixels = wrapped.append("div")
+    .classed("list-group conversion-streaming hidden", true) 
+
+  var row = pixels.append("div").classed("row",true)
+    .append("div").classed("col-md-12",true)
+
+
+  var rowFilter = function(d){
+    return d.segments.filter(function(x){ 
+      x.pixel_source_name = d.pixel_source_name
+      return x.segment_implemented != 0 && x.segment_implemented.indexOf("type=conv") > -1 
+    })
+  }
+
+  var buffered_wrapper = RB.objects.streaming.buffered_row(
+    row,                          //obj
+    rowFilter,                    //filter
+    "segment_name",               //obj_name_key
+    ["source","seg"],          //data_fields to recursively match obj_fields
+    ["pixel_source_name","external_segment_id"], //obj_fields to recursively match data_fields
+    function(){},
+    function(to_count) {
+      var price = to_count.map(function(x){ return parseFloat(x.price) }).reduce(function(c,n){return c+n},0)
+
+      return {
+        "count": to_count.length,
+        "spend": price
+      }
+    },
+    "spend"
+  )
+
+  RB.websocket.add_on_connected( function(){
+
+    pixel_group.attr("id",function(x){
+
+      if (!x.conversion_streaming) {
+        
+        var selection = d3.select(this),
+          subscriptions = selection[0][0].__data__.subscriptions
+
+        subscriptions = RB.helpers.buildSimpleSubscription(
+          selection.data(),             //data
+          "conversion_events",          //stream
+          "an_seg",                     //filter column (from data)
+          "external_segment_id",        //filter value  (from object)
+          "conversion_events",              //callback registered name
+          function(x) {
+            buffered_wrapper.add(x.conversion_events)
+          } //callback
+        )
+
+      } 
+      x.conversion_streaming = true
+      RB.websocket.subscribe()
+      return subscriptions
+
+    })
+  })
+}
+
+var buildConversionSummaryStreaming = function(wrapped) {
+
+  var pixel_group = wrapped.append("div")
+    .classed("panel-sub-heading conversion-summary-streaming ",true)
+
+  rowFilter = function(d){ return [d] }
+
+  var buffered_wrapper = RB.objects.streaming.buffered_block(
+    "conv/min",
+    pixel_group,
+    rowFilter,
+    "advertiser_name",
+    ["source"],
+    ["pixel_source_name"]
+  )
+
+  RB.websocket.add_on_connected( function(){
+
+    pixel_group.attr("id",function(x){
+
+      if (!x.conversion_summary_streaming) {
+        
+        var selection = d3.select(this),
+          subscriptions = selection[0][0].__data__.subscriptions
+
+        subscriptions = RB.helpers.buildSimpleSubscription(
+          selection.data(),
+          "conversion_events",
+          "source",
+          "pixel_source_name",
+          "conversion_summary",
+          function(x) {buffered_wrapper.add(x.conversion_events)}
+        )
+
+      } 
+      x.conversion_summary_streaming = true
+      RB.websocket.subscribe()
+      return subscriptions
+
+    })
   })
 }

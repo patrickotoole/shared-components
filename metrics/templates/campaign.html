@@ -103,7 +103,7 @@ var id = '#advertiser-content'
 
 //buildCampaigns(wrapped)  
 d3.json('/advertiser?format=json',function(data){
-  var wrapped = buildAdvertiserWrapper(data,"#advertiser-content","12",false)
+  var wrapped = buildAdvertiserWrapper(data,"#advertiser-content","12",false).selectAll(".panel")
 
   buildCampaigns(wrapped)
 

@@ -52,6 +52,17 @@
   position: absolute;
   right: 20px;
 }
+.panel.limited {margin:0px}
+.panel.limited  .panel-heading {
+transform: rotate(90deg);
+transform-origin: left top 0;
+width: 175px;
+}
+.panel.limited .panel-body {
+  margin-top: -35px;
+  padding: 0px;
+  padding-bottom: 15px;
+}
 </style>
 
 
@@ -61,11 +72,7 @@
 
  
 
-<div id="advertiser-content" class='container'>
-  <div class="row">
-    <h4>Advertisers</h4>
-  </div>
-</div>
+<div id="advertiser-content" class='container'> </div>
 
 <script>
 $(document).ready(function(){
@@ -79,11 +86,20 @@ $(document).ready(function(){
 
     var wrapped = buildAdvertiserWrapper(data,id,"12",true,true)
     wrapped.sort(function(x,y){
-        var wx = (x.active + x.running - x.deleted)*(x.monthly_budget+1),
-          wy = (y.active + y.running - y.deleted)*(y.monthly_budget+1)
-        return wy-wx  
-      })
-    buildStreaming(wrapped)
+      var wx = (x.active + x.running*100000 - x.deleted*100000)*(x.monthly_budget+1),
+          wy = (y.active + y.running*100000 - y.deleted*100000)*(y.monthly_budget+1)
+
+      return wy-wx  
+    })
+    var panels = wrapped.selectAll(".panel")
+
+    if (RB.QS.limited) {
+      d3.select(".navbar-wrapper").classed("hidden",true)
+      panels.classed("limited",true)
+      d3.select("body").style("padding-top","15px")
+    }
+
+    buildStreaming(wrapped.selectAll(".panel"),RB.QS.limited)
    
     //accordianify(wrapped, ".panel-sub-heading > .list-group-item",function(){return this.parentNode.nextSibling})
 

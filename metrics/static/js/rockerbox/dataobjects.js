@@ -490,7 +490,7 @@ RB.objects = (function(rb) {
 
         var pixel_bars = row
           .append("div")
-          .classed("col-xs-12 col-sm-12 col-md-4 pixel-row-wrapper buffered-block",true)
+          .classed("col-xs-12 col-sm-12 col-md-3 pixel-row-wrapper buffered-block",true)
           .style("position","relative")
 
         var rows = pixel_bars.append("div").classed("row",true).selectAll("div")

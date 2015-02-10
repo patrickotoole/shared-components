@@ -3,7 +3,7 @@ DEBUG = ["second_price", "count", "50%", "$mod", "gross_bid", "biased_bid", "min
 INFO = ["brand_id", "result", "pub", "ecp", "ip_address", "referrer", "venue", "debug"]
 AUCTION = ["city", "user_id_64", "venue_id", "estimated_average_price", "userdata_json", "url", "country", "region", "estimated_clear_price", "time_zone", "auction_id_64", "auction_id", "postal_code", "user_agent", "selling_member_id", "user_id", "ip_address", "tag_id", "timestamp", "sizes"]
 
-CONVERSION = ["order_revenue", "order_type", "referrer", "timestamp", "source", "user_agent", "adnxs_uid", "ip", "type"]
+CONVERSION = ["order_revenue", "order_type", "referrer", "timestamp", "source", "user_agent", "adnxs_uid", "ip", "type","seg"]
 PIXEL = ["referrer", "ip", "source", "user_agent", "adnxs_uid", "timestamp", "type", "an_seg"]
 SERVED = ["ip", "uid", "timestamp", "referrer", "price", "ecp", "venue", "campaign_id", "pub", "seller", "width", "auction_id", "tag", "height", "ip_address", "creative", "advertiser_id"]
 

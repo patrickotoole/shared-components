@@ -42,8 +42,9 @@ var buildAdvertiserWrapper = function(data, id, width, show_id, internal) {
       .attr("id",function(x){return x.external_advertiser_id})
 
 
-  var panels = wrappers
-    .append("div")
+  var panels = wrappers.append("div")
+
+  panels
     .classed("panel",true)
     .classed("panel-default",true)
     .classed("panel-warning", function(x) {
@@ -67,6 +68,6 @@ var buildAdvertiserWrapper = function(data, id, width, show_id, internal) {
     .classed("panel-title",true)
     .text(function(x) {return x.advertiser_name})
 
-  return panels
+  return wrappers
 
 }
