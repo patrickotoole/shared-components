@@ -1,12 +1,5 @@
 var buildViewable = function(wrapped) {
 
-  wrapped.append("div")
-    .classed("panel-body",true)
-    .append("h4")
-    .text("Live campaign activity")
-  
-
-  buildCampaignStreaming(wrapped)
 
   wrapped.append("div")
     .classed("panel-body",true)
@@ -21,111 +14,7 @@ var buildViewable = function(wrapped) {
    
 }
 
-var buildCampaignBufferedRow = function(row) {
-  
-  rowFilter = function(d){
-    if (d.campaigns.length) {
-      return d.campaigns.filter(function(x){
-        return x.active
-      })
-    } else {
-      return []
-    }
-  }
-
-   var fields = {
-    name_field: "campaign_name",
-    data_fields: ["advertiser_id","campaign_id"],
-    object_fields: ["external_advertiser_id","campaign_id"],
-  }
-
-  return RB.objects.streaming.buffered_row(
-    row,
-    rowFilter,
-    fields.name_field,
-    fields.data_fields,
-    fields.object_fields,
-    function(x,transform,rows) {
-      var spent = rows.selectAll(".spent-value").data(function(d){
-        var data = transform(x)(d)
-        if (data)
-          var v = data.reduce(function(p,n){ return p + n.value.spend },0),
-            cpm = v/data.reduce(function(p,n){ return p + n.value.count},0)
-        return data ? [v, cpm] : [0, 0]
-      })
-
-      var get_spend = function(x) {
-        var rounded = parseInt(x*100)/100.0
-        return format(rounded)
-      }
-
-      spent.enter()
-        .append("div").classed("spent-value col-md-1",true)
-        .text(get_spend)
-
-      spent
-        .text(get_spend)
-    },
-    function(to_count) {
-      var price = to_count.map(function(x){ return parseFloat(x.price) }).reduce(function(c,n){return c+n},0)
-
-      return {
-        "count":to_count.length,
-        "spend": price
-      }
-    }
-  )
-
-}
-
-var buildCampaignStreaming = function(wrapped) {
-  //RB.websocket.connect()
-
- var campaign_group = wrapped.append("div")
-    .classed("panel-sub-heading campaign-streaming list-group",true)
-
-  campaign_group.append("div").classed("list-group-item",true)
-    .text("Campaign Streaming")
-
-  var campaigns = wrapped.append("div")
-    .classed("list-group campaign-streaming hidden", true) 
-
-  var row = campaigns.append("div").classed("row",true)
-    .append("div").classed("col-md-12",true)
-
-  var buffered_wrapper = buildCampaignBufferedRow(row)
-
-
-
-
-  campaign_group.on("click",function(x){
-
-    if (!x.campaigns_streaming) {
-      x.campaigns_streaming = true
-      var selection = d3.select(this)
-
-      selection[0][0].__data__.subscriptions = selection.data().map(function(a){
-        return RB.websocket.addSubscription(
-          "served_imps",
-          {"name":"advertiser_id","values":[new String(a.external_advertiser_id)]},
-          { 
-            "name":"campaign",
-            "callback":function(x,w){
-              buffered_wrapper.add(x["served_imps"])
-            } 
-          }
-        )                             
-      })
-
-    } else {
-      x.campaigns_streaming = false
-      var selection = d3.select(this).data() 
-      selection.map(function(sel){sel.subscriptions.map(RB.websocket.removeSubscription)})
-    }
-    RB.websocket.subscribe()
-
-  })
-}             
+             
 
 var buildAdvertiserViewabilityReportingTables = function(pixel,data_key) {
 

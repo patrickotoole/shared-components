@@ -84,19 +84,7 @@ $(document).ready(function(){
         return wy-wx  
       })
     buildStreaming(wrapped)
-    buildAdvertiserInfo(wrapped)
-    buildInfo(wrapped)
-    buildPixel(wrapped)
-    buildConversion(wrapped)
-    buildReporting(wrapped)
-    buildViewable(wrapped)
-    
- 
-    // Tools
-    wrapped.append("div").classed("panel-body",true).append("h4").text("Tools")
-
-    buildDomainList(wrapped)
-    
+   
     //accordianify(wrapped, ".panel-sub-heading > .list-group-item",function(){return this.parentNode.nextSibling})
 
     wrapped.selectAll(".panel-sub-heading > .list-group-item")
@@ -135,4 +123,4 @@ $(document).ready(function(){
 
 </script>
 
-{% end %}  
+{% end %}   
