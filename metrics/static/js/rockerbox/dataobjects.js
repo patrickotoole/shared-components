@@ -674,6 +674,7 @@ RB.objects = (function(rb) {
           var bound = count_wrapper.selectAll("div").data(function(d){
             var data = transform(m)(d) || []
             var count = data.reduce(function(p,c){ return c.value.count + p},0)
+            d.rank = count
             return [count]
           })
 
@@ -684,6 +685,9 @@ RB.objects = (function(rb) {
             custom_elements(m,transform,rows)
 
 
+          rows.sort(function(x,y){
+            return y.rank - x.rank
+          })
 
           // TODO: need a way of limiting which graphs get updated at this step
           // otherwise we wend up selecting and binding too many rows
