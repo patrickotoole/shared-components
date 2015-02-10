@@ -189,7 +189,7 @@ RB.websocket = (function(rb){
 
       if (!self.websocket.is_connected) {
       
-        ws = new WebSocket("ws://localhost:8080/admin/websocket?id=" + 1234);
+        ws = new WebSocket("ws://" + location.host + "/admin/websocket?id=" + parseInt(Math.random()*100000));
         ws.onopen = function() {
           self.websocket.is_connected = 1
           ws.send("initialize");
