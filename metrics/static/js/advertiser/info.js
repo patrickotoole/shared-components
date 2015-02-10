@@ -9,6 +9,8 @@ var format = d3.format("0,000"),
   } 
 
 var buildInfo = function(wrapped) {
+
+ 
   wrapped.append("div")
     .classed("panel-body",true)
     .append("h4")
@@ -22,8 +24,10 @@ var buildInfo = function(wrapped) {
   buildSegments(wrapped,"Segment Pixels",true,true)  
   buildUserSegments(wrapped,"Constructed Segments (not on page)",true,true)
   buildCampaigns(wrapped) 
-   
+    
 }
+
+
 
 var buildPixels = function(obj) {
   var default_panel = obj
@@ -525,7 +529,7 @@ var buildEdit = function(obj) {
 
   var setup = default_panel
     .append("div")
-    .classed("edit row",true)
+    .classed("edit row hidden",true)
     .append("div")
     .classed("col-md-12",true)
 

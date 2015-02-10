@@ -559,6 +559,10 @@ class AdvertiserHandler(tornado.web.RequestHandler,Advertiser):
 
         if arg == "new":
             self.render("../templates/admin/advertiser/new.html")
+        elif "streaming" in arg:
+            a = arg.replace("streaming","").replace("/","")
+            self.page = "streaming"
+            self.get_data(False) if len(a) == 0 else self.get_data(a) 
         elif "info" in arg:
             a = arg.replace("info","").replace("/","")
             self.page = "info"
