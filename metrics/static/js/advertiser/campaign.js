@@ -56,7 +56,7 @@ var buildCampaigns = (function() {
 
     var thead = table.append("thead").append("tr")
 
-    var headers = ["ID","Name","Base Bid","Daily Budget","State"]
+    var headers = ["ID","Name","Base Bid","Daily Budget","State","Remove"]
     headers.map(function(x){
       thead.append("th").text(x)
     })
@@ -75,7 +75,7 @@ var buildCampaigns = (function() {
 
   function addNewRows(tableRow) {
 
-    var entries = ["id","name","base_bid","daily_budget","state"];
+    var entries = ["id","name","base_bid","daily_budget","state","remove"];
     var values = {
       "state": function(entry,data) {
         return data[entry] === "active" ? "1" : "2"
@@ -84,7 +84,8 @@ var buildCampaigns = (function() {
     var titles = {
       "state": "Select state",
       "base_bid": "Enter bid",
-      "daily_budget": "Enter budget"
+      "daily_budget": "Enter budget",
+      "comments": "Enter a comment"
     }
 
     entries.map(function(entry) {
@@ -104,6 +105,7 @@ var buildCampaigns = (function() {
           .text(function(d){return d[entry]})
       } else {
         tableRow.append("td")
+          .classed(entry,true)
           .text(function(d){return d[entry]})
       }
     })
@@ -144,10 +146,78 @@ var buildCampaigns = (function() {
               return "Budget must be between 0 and 500";
             }
           },
-      success: function(response, newValue) { sendToServer(response, newValue, this); }
+          success: function(response, newValue) { sendToServer(response, newValue, this); }
+        });
+        $('.comments').editable({
+          type: "text",
+          showbuttons: false,
+          success: function(response, newValue) { sendToServer(response, newValue, this); }
         });
     });
+    $(".remove").addClass("glyphicon glyphicon-remove-circle").css("display","table-cell").css("padding-left","25px").on("click",function(x){
+      var should = confirm("Are you sure you want to delete this campaign?")
+
+      if (should) {
+        var selection = d3.select(x.currentTarget)
+        var obj = { 
+          "campaign":{
+            "id": selection.data()[0].id,
+            "state":"inactive",
+            "comments":"deleted"
+          }
+        }
+
+        put( "/campaign?format=json&id=" + obj.campaign.id, obj, function(){ $(x.currentTarget).parent().remove() })
+      }
+
+    })
   }
+
+  function put(url, obj, callback) {
+    var loadingInterval;
+    var xhr = new XMLHttpRequest();
+    var callback = callback || function(){}
+
+    xhr.open("PUT", url, true);
+    xhr.setRequestHeader("Content-type", "application/json");
+    xhr.onreadystatechange = function() {
+        
+        if(xhr.readyState == 4 && xhr.status == 200) {
+          clearInterval(loadingInterval);
+
+            var text = "Changes saved!",
+              color = "lime"
+
+            if (JSON.parse(xhr.responseText)[0]['error']) {
+              text = "Error: " + JSON.parse(xhr.responseText)[0]['error']
+              color = "red"
+            }
+            
+            d3.select("#flash").text(text)
+              .style("visibility","visible").style("color",color)
+              .transition()
+                .duration(1500)
+                .style("color", "black")
+            callback()
+
+        } else if (xhr.readyState == 4 && xhr.status != 200) {
+          clearInterval(loadingInterval);
+          d3.select("#flash").text("Changes failed, please contact support.")
+            .style("visibility","visible").style("color","red")
+            .transition()
+              .duration(1500)
+              .style("color", "black");
+        }
+    }
+
+    xhr.send(JSON.stringify(obj));
+
+    loadingFlash();
+    loadingInterval = setInterval(function() {
+        loadingFlash();
+    }, 500);
+  }
+  
 
   function sendToServer(response, newValue, thisNode) {
     var selection = d3.select(thisNode);
@@ -178,7 +248,7 @@ var buildCampaigns = (function() {
 
             var text = "Changes saved!",
               color = "lime"
-             
+
             if (JSON.parse(xhr.responseText)[0]['error']) {
               text = "Error: " + JSON.parse(xhr.responseText)[0]['error']
               color = "red"
