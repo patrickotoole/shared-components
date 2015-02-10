@@ -1,19 +1,19 @@
-var buildStreaming = function(wrapped) {
+var buildStreaming = function(wrapped,skip_title) {
   var live_summary = wrapped.append("div")
     .classed("panel-body",true)
 
-  live_summary
-    .append("h4")
-    .text("Live Summary")
+  if (skip_title == true) live_summary.append("h4").text("Live Summary")
 
   buildPixelSummaryStreaming(live_summary)
   buildConversionSummaryStreaming(live_summary)
   buildServingSummaryStreaming(live_summary) 
   buildSpentSummaryStreaming(live_summary) 
 
-  buildCampaignStreaming(wrapped)
-  buildPixelStreaming(wrapped)
-  buildConversionStreaming(wrapped)
+  if (RB.QS.limited != "true") {
+    buildCampaignStreaming(wrapped)
+    buildPixelStreaming(wrapped)
+    buildConversionStreaming(wrapped)
+  }
 
   RB.websocket.connect()
  
