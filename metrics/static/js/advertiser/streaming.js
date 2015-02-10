@@ -2,7 +2,9 @@ var buildStreaming = function(wrapped,skip_title) {
   var live_summary = wrapped.append("div")
     .classed("panel-body",true)
 
-  if (skip_title == true) live_summary.append("h4").text("Live Summary")
+  console.log(skip_title)
+
+  if (!skip_title) live_summary.append("h4").text("Live Summary")
 
   buildPixelSummaryStreaming(live_summary)
   buildConversionSummaryStreaming(live_summary)
@@ -22,7 +24,7 @@ var buildStreaming = function(wrapped,skip_title) {
 var buildSpentSummaryStreaming = function(wrapped) {
 
   var group = wrapped.append("div")
-    .classed("panel-sub-heading serving-summary-streaming list-group",true)
+    .classed("panel-sub-heading serving-summary-streaming ",true)
 
   rowFilter = function(d){ return [d] }
 
@@ -75,7 +77,7 @@ var buildSpentSummaryStreaming = function(wrapped) {
 var buildServingSummaryStreaming = function(wrapped) {
 
   var group = wrapped.append("div")
-    .classed("panel-sub-heading serving-summary-streaming list-group",true)
+    .classed("panel-sub-heading serving-summary-streaming ",true)
 
   rowFilter = function(d){ return [d] }
 
@@ -118,7 +120,7 @@ var buildServingSummaryStreaming = function(wrapped) {
 var buildPixelSummaryStreaming = function(wrapped) {
 
   var pixel_group = wrapped.append("div")
-    .classed("panel-sub-heading pixel-summary-streaming list-group",true)
+    .classed("panel-sub-heading pixel-summary-streaming ",true)
 
   rowFilter = function(d){ return [d] }
 
@@ -408,7 +410,7 @@ var buildConversionStreaming = function(wrapped) {
 var buildConversionSummaryStreaming = function(wrapped) {
 
   var pixel_group = wrapped.append("div")
-    .classed("panel-sub-heading conversion-summary-streaming list-group",true)
+    .classed("panel-sub-heading conversion-summary-streaming ",true)
 
   rowFilter = function(d){ return [d] }
 

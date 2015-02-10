@@ -89,7 +89,6 @@ $(document).ready(function(){
       var wx = (x.active + x.running*100000 - x.deleted*100000)*(x.monthly_budget+1),
           wy = (y.active + y.running*100000 - y.deleted*100000)*(y.monthly_budget+1)
 
-      console.log(x.advertiser_name,wx,x.active,x.running)
       return wy-wx  
     })
     var panels = wrapped.selectAll(".panel")
@@ -100,7 +99,7 @@ $(document).ready(function(){
       d3.select("body").style("padding-top","15px")
     }
 
-    buildStreaming(wrapped.selectAll(".panel"))
+    buildStreaming(wrapped.selectAll(".panel"),RB.QS.limited)
    
     //accordianify(wrapped, ".panel-sub-heading > .list-group-item",function(){return this.parentNode.nextSibling})
 

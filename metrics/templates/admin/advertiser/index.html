@@ -83,6 +83,8 @@ $(document).ready(function(){
           wy = (y.active + y.running - y.deleted)*(y.monthly_budget+1)
         return wy-wx  
       })
+
+    wrapped = wrapped.selectAll(".panel")
     buildStreaming(wrapped)
     buildAdvertiserInfo(wrapped)
     buildInfo(wrapped)
