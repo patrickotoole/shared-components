@@ -33,7 +33,8 @@ INCLUDES = {
     "campaigns": "advertiser_campaign",
     "segments": "advertiser_segment",
     "domain_lists": "advertiser_domain_list",
-    "insertion_orders": "insertion_order"
+    "insertion_orders": "insertion_order",
+    "hourly_served_estimate":"reporting.advertiser_served_hourly"
 }
  
 INSERT_ADVERTISER = """
@@ -537,7 +538,7 @@ class AdvertiserHandler(tornado.web.RequestHandler,Advertiser):
 
         print API_QUERY % where
         df = self.db.select_dataframe(API_QUERY % where).set_index("external_advertiser_id")
-        includes = self.get_argument("include","domain_lists,segments,pixels,insertion_orders,campaigns")
+        includes = self.get_argument("include","domain_lists,segments,pixels,insertion_orders,campaigns,hourly_served_estimate")
 
 
         include_list = includes.split(",")

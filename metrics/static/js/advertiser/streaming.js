@@ -21,6 +21,28 @@ var buildStreaming = function(wrapped,skip_title) {
  
 }
 
+var ff = function(x,transform,rows) {
+      var spent = rows.selectAll(".spent-value").data(function(d){
+        var data = transform(x)(d)
+        if (data)
+          var v = data.reduce(function(p,n){ return p + n.value.spend },0),
+            cpm = v/data.reduce(function(p,n){ return p + n.value.count},0)
+        return data ? [v, cpm] : [0, 0]
+      })
+
+      var get_spend = function(x) {
+        var rounded = parseInt(x*100)/100.0
+        return format(rounded)
+      }
+
+      spent.enter()
+        .append("div").classed("spent-value col-md-1",true)
+        .text(get_spend)
+
+      spent
+        .text(get_spend)
+}
+
 var buildSpentSummaryStreaming = function(wrapped) {
 
   var group = wrapped.append("div")
@@ -35,8 +57,24 @@ var buildSpentSummaryStreaming = function(wrapped) {
     "advertiser_name",          //obj_name_key
     ["advertiser_id"],          //data_fields to recursively match obj_fields
     ["external_advertiser_id"], //obj_fields to recursively match data_fields
-    function(){},
-    function(to_count) {
+    function(data,transform,rows){              //formatting function (takes data,transform_fn,rows)
+
+      var time_hour = (new Date).getUTCHours()
+      
+      var filtered = rows.classed("custom-alert",function(x){
+        var d = transform(data)(x)
+        if (!d) return false
+        try {
+          var spend = d.reduce(function(p,n){ return p + n.value.spend},0)
+          var stddev = x.hourly_served_estimate[time_hour][0].stddev_spent/60
+          var mean = x.hourly_served_estimate[time_hour][0].mean_spent/60
+          return mean - stddev*2 > spend || spend > mean + stddev*2
+        } catch(e) {
+          return true
+        }
+      })
+    },
+    function(to_count) {        //computes custom count
       var price = to_count.map(function(x){ return parseFloat(x.price) }).reduce(function(c,n){return c+n},0)
 
       return {
@@ -44,7 +82,7 @@ var buildSpentSummaryStreaming = function(wrapped) {
         "spend": price
       }
     },
-    "spend"
+    "spend"                     //uses custom count value for graph
   )
 
   RB.websocket.add_on_connected( function(){
@@ -87,7 +125,23 @@ var buildServingSummaryStreaming = function(wrapped) {
     rowFilter,
     "advertiser_name",
     ["advertiser_id"],
-    ["external_advertiser_id"]
+    ["external_advertiser_id"],
+    function(data,transform,rows){              //formatting function (takes data,transform_fn,rows) 
+      var time_hour = (new Date).getUTCHours()
+      
+      var filtered = rows.classed("custom-alert",function(x){
+        var d = transform(data)(x)
+        if (!d) return false
+        try {
+          var count = d.reduce(function(p,n){ return p + n.value.count},0)
+          var stddev = x.hourly_served_estimate[time_hour][0].stddev_served/60
+          var mean = x.hourly_served_estimate[time_hour][0].mean_served/60
+          return mean - stddev*2 > count || count > mean + stddev*2
+        } catch(e) {
+          return true
+        }
+      })
+    }
   )
 
   RB.websocket.add_on_connected( function(){

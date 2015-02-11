@@ -52,16 +52,20 @@
   position: absolute;
   right: 20px;
 }
-.panel.limited {margin:0px}
+.panel.limited {margin:0px; border-radius:0px}
 .panel.limited  .panel-heading {
 transform: rotate(90deg);
 transform-origin: left top 0;
-width: 175px;
+width: 162px;
+position:absolute;
+margin-top:-1px;
 }
 .panel.limited .panel-body {
-  margin-top: -35px;
-  padding: 0px;
   padding-bottom: 15px;
+}
+
+.panel .custom-alert {
+  color:red
 }
 </style>
 
