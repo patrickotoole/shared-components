@@ -69,7 +69,7 @@ RB.helpers = {
     return {"count":arr.length}
   },
   recursiveMapBuffer: function(tsmap,times,custom_aggregation) {
-    Object.keys(tsmap).map(function(k){
+    if (tsmap instanceof Object) Object.keys(tsmap).map(function(k){
       var arr = tsmap[k] || {}
       if (arr instanceof Array) {
         times.map(function(y) { 

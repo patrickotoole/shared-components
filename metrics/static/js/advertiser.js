@@ -35,13 +35,15 @@ var buildAdvertiserWrapper = function(data, id, width, show_id, internal) {
   var wrapper_width = width || 6,
     show_id = show_id || false
 
-  data.map(function(advertiser){
-    var hourly = d3.nest()
-      .key(function(x){return parseInt(x.hour)})
-      .map(advertiser.hourly_served_estimate)
 
-    advertiser.hourly_served_estimate = hourly
-  
+  data.map(function(advertiser){
+    if (advertiser.hourly_served_estimate) {
+      var hourly = d3.nest()
+        .key(function(x){return parseInt(x.hour)})
+        .map(advertiser.hourly_served_estimate)
+
+      advertiser.hourly_served_estimate = hourly
+    }
   })
 
   var wrappers = d3.select(id).selectAll(".wrapper")
