@@ -10,6 +10,7 @@ from lib.query.HIVE import HOVERBOARD
 from ..base import AdminReportingBaseHandler
 
 JOIN = {
+    "category": "v JOIN domain_category t on lower(regexp_replace(parse_url(concat('http://', regexp_replace(reflect('java.net.URLDecoder', 'decode',v.bid_request.bid_info.url), 'http://|https://', '')), 'HOST'), 'www.', '')) = t.domain"
 }
 
 QUERY_OPTIONS = {
@@ -49,6 +50,14 @@ OPTIONS = {
             "auction_id": "none"
             }
         },
+
+    "category": {
+        "meta":{
+            "groups": ["category"],
+            "fields": ["num_imps", "num_users"],
+            "static_joins": JOIN["category"]
+        }
+    },
 
     "full": {
         "meta": {
@@ -92,7 +101,8 @@ GROUPS = {
     "seller": "bid_request.bid_info.selling_member_id",
     "time_zone": "bid_request.bid_info.time_zone",
     "uid": "bid_request.bid_info.user_id_64",
-    "conversion_ids": "conversion_ids"
+    "conversion_ids": "conversion_ids",
+    "category": "t.category_name"
     }
 
 
@@ -105,15 +115,23 @@ FIELDS = {
 
 WHERE = {
     "advertiser": "source = '%(advertiser)s'",
-    "conversion_id": "array_contains(conversion_ids, '%(conversion_id)s')"
+    "conversion_id": "array_contains(conversion_ids, '%(conversion_id)s')",
+    "domain": "lower(regexp_replace(parse_url(concat('http://', regexp_replace(reflect('java.net.URLDecoder', 'decode',bid_request.bid_info.url), 'http://|https://', '')), 'HOST'), 'www.', '')) like lower('%%%(domain)s%%')",
+    "url": "lower(reflect('java.net.URLDecoder', 'decode',bid_request.bid_info.url)) like lower('%%%(url)s%%')",
+    "category": "lower(category_name) like lower('%%%(category)s%%')"
     }
 
+HAVING = {
+    "min_imps": "num_imps >= %(min_imps)s",
+    "min_users": "num_users >= %(min_users)s"
+}
 class HoverboardHandler(AdminReportingBaseHandler):
 
     QUERY = HOVERBOARD
     WHERE = WHERE
     FIELDS = FIELDS
     GROUPS = GROUPS
+    HAVING = HAVING
 
     OPTIONS = OPTIONS
     QUERY_OPTIONS = QUERY_OPTIONS
@@ -137,6 +155,7 @@ class HoverboardHandler(AdminReportingBaseHandler):
     def get_data(self,query,groupby=False,wide=False):
 
         query_list = [
+            "add jar lib_managed/jars/serdes/json-serde-1.1.9.3-SNAPSHOT-jar-with-dependencies.jar",
             "SET spark.sql.shuffle.partitions=8",
             query
         ]
@@ -178,9 +197,17 @@ class HoverboardHandler(AdminReportingBaseHandler):
     def get_meta_group(self,default="default"):
         meta = self.get_argument("meta", False)
         advertiser = self.get_argument("advertiser", False)
+        category = self.get_argument("category", False)
+        includes = self.get_argument("include", False)
 
         if meta:
             return meta
+
+        if includes and "category" in includes:
+            return "category"
+
+        if category:
+            return "category"
         
         if advertiser:
             return "advertiser"
@@ -208,7 +235,9 @@ class HoverboardHandler(AdminReportingBaseHandler):
             params = self.make_params(
                 meta_data.get("groups",[]),
                 meta_data.get("fields",[]),
-                self.make_where()
+                self.make_where(),
+                joins = self.make_join(meta_data.get("static_joins","")),
+                having = self.make_having()
             )
 
             # Get the query string based on the query specified in the metadata
