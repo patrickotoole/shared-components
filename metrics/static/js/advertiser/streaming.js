@@ -66,7 +66,7 @@ var buildSpentSummaryStreaming = function(wrapped) {
         if (!d) return false
         try {
           var spend = d.reduce(function(p,n){ return p + n.value.spend},0)
-          var stddev = x.hourly_served_estimate[time_hour][0].stddev_spent/60
+          var stddev = Math.sqrt(x.hourly_served_estimate[time_hour][0].stddev_spent^2/60)
           var mean = x.hourly_served_estimate[time_hour][0].mean_spent/60
           return mean - stddev*2 > spend || spend > mean + stddev*2
         } catch(e) {
@@ -134,7 +134,7 @@ var buildServingSummaryStreaming = function(wrapped) {
         if (!d) return false
         try {
           var count = d.reduce(function(p,n){ return p + n.value.count},0)
-          var stddev = x.hourly_served_estimate[time_hour][0].stddev_served/60
+          var stddev = Math.sqrt(x.hourly_served_estimate[time_hour][0].stddev_served^2/60)
           var mean = x.hourly_served_estimate[time_hour][0].mean_served/60
           return mean - stddev*2 > count || count > mean + stddev*2
         } catch(e) {
