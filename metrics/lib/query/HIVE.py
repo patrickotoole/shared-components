@@ -252,3 +252,17 @@ WHERE %(where)s
 GROUP BY %(groups)s
 HAVING %(having)s
 """
+
+HOVERBOARD_KEYWORDS = """
+SELECT %(fields)s
+FROM (
+        SELECT
+            source,
+            bid_request.bid_info.user_id_64 as uid,
+            combine_unique(url_terms(lower(reflect('java.net.URLDecoder', 'decode',bid_request.bid_info.url)))) as terms
+        FROM conv_imps
+        WHERE %(where)s
+        GROUP BY source, bid_request.bid_info.user_id_64
+) a
+GROUP BY source
+"""

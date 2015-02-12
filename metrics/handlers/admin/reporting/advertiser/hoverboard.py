@@ -7,6 +7,7 @@ from twisted.internet import defer
 from lib.helpers import *
 from lib.hive.helpers import run_spark_sql_session_deferred
 from lib.query.HIVE import HOVERBOARD
+from lib.query.HIVE import HOVERBOARD_KEYWORDS
 from ..base import AdminReportingBaseHandler
 
 JOIN = {
@@ -14,7 +15,8 @@ JOIN = {
 }
 
 QUERY_OPTIONS = {
-    "default": HOVERBOARD
+    "default": HOVERBOARD,
+    "keywords": HOVERBOARD_KEYWORDS
 }
 
 OPTIONS = {
@@ -22,40 +24,48 @@ OPTIONS = {
         "meta": {
             "groups": ["advertiser"],
             "fields": ["num_imps", "num_users"]
-            },
+        },
         "formatters": {
             "uid": "none",
             "auction_id": "none"
-            }
-        },
+        }
+    },
 
     "advertiser": {
         "meta": {
             "groups": ["advertiser", "conversion_ids"],
             "fields": ["num_imps", "num_users"]
-            },
+        },
         "formatters": {
             "uid": "none",
             "auction_id": "none"
-            }
-        },
+        }
+    },
 
     "none": {
         "meta": {
             "groups": [],
             "fields": ["num_imps", "num_users"]
-            },
+        },
         "formatters": {
             "uid": "none",
             "auction_id": "none"
-            }
-        },
+        }
+    },
 
     "category": {
         "meta":{
             "groups": ["category"],
             "fields": ["num_imps", "num_users"],
             "static_joins": JOIN["category"]
+        }
+    },
+
+    "keywords": {
+        "meta": {
+            "groups": ["advertiser"],
+            "fields": ["top_10"],
+            "query": "keywords"
         }
     },
 
@@ -76,14 +86,14 @@ OPTIONS = {
                 "time_zone",
                 "uid",
                 "conversion_ids"
-                ],
+            ],
             "fields": ["num_imps", "num_users"]
-            },
+        },
         "formatters": {
             "uid": "none",
             "auction_id": "none"
-            }
         }
+   }
 }
 
 GROUPS = {
@@ -110,7 +120,8 @@ FIELDS = {
     "num_imps": "count(*)",
     "num_users": "count(distinct bid_request.bid_info.user_id_64)",
     "urls": "collect_set(bid_request.bid_info.url)",
-    "domains": "collect_set(lower(regexp_replace(parse_url(concat('http://', regexp_replace(reflect('java.net.URLDecoder', 'decode',bid_request.bid_info.url), 'http://|https://', '')), 'HOST'), 'www.', '')))"
+    "domains": "collect_set(lower(regexp_replace(parse_url(concat('http://', regexp_replace(reflect('java.net.URLDecoder', 'decode',bid_request.bid_info.url), 'http://|https://', '')), 'HOST'), 'www.', '')))",
+    "top_10": "map_filter_top_n(map_group_sum(count_to_map(a.terms)), 10)"
     }
 
 WHERE = {
@@ -118,7 +129,8 @@ WHERE = {
     "conversion_id": "array_contains(conversion_ids, '%(conversion_id)s')",
     "domain": "lower(regexp_replace(parse_url(concat('http://', regexp_replace(reflect('java.net.URLDecoder', 'decode',bid_request.bid_info.url), 'http://|https://', '')), 'HOST'), 'www.', '')) like lower('%%%(domain)s%%')",
     "url": "lower(reflect('java.net.URLDecoder', 'decode',bid_request.bid_info.url)) like lower('%%%(url)s%%')",
-    "category": "lower(category_name) like lower('%%%(category)s%%')"
+    "category": "lower(category_name) like lower('%%%(category)s%%')",
+    "exclude_domain": "lower(regexp_replace(parse_url(concat('http://', regexp_replace(reflect('java.net.URLDecoder', 'decode',bid_request.bid_info.url), 'http://|https://', '')), 'HOST'), 'www.', '')) != '%(exclude_domain)s'"
     }
 
 HAVING = {
@@ -156,6 +168,16 @@ class HoverboardHandler(AdminReportingBaseHandler):
 
         query_list = [
             "add jar lib_managed/jars/serdes/json-serde-1.1.9.3-SNAPSHOT-jar-with-dependencies.jar",
+            "add jar lib_managed/jars/udfs/brickhouse-0.7.1-SNAPSHOT.jar",
+            "add jar lib_managed/jars/udfs/dataiku-hive-udf.jar",
+            "add jar lib_managed/jars/udfs/rockerbox-udfs_2.11-0.0.1.jar",
+            "CREATE TEMPORARY FUNCTION count_to_map as 'com.dataiku.hive.udf.maps.UDFCountToMap'",
+            "CREATE TEMPORARY FUNCTION url_terms as 'org.rockerbox.UDFURLTerms'",
+            "CREATE TEMPORARY FUNCTION map_group_sum as 'com.dataiku.hive.udf.maps.UDAFMapGroupSum'",
+            "CREATE TEMPORARY FUNCTION map_filter_top_n as 'com.dataiku.hive.udf.maps.UDFMapValueFilterTopN'",
+            "CREATE TEMPORARY FUNCTION combine AS 'brickhouse.udf.collect.CombineUDF'",
+            "CREATE TEMPORARY FUNCTION combine_unique AS 'brickhouse.udf.collect.CombineUniqueUDAF'",
+            "CREATE TEMPORARY FUNCTION collect_to_array AS 'com.dataiku.hive.udf.arrays.UDAFCollectToArray'",
             "SET spark.sql.shuffle.partitions=8",
             query
         ]
