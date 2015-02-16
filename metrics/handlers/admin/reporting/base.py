@@ -29,18 +29,23 @@ class AdminReportingBase(object):
     def get_group(self,g):
         return self.GROUPS.get(g,g)
         
+    
     def get_field(self,g):
         group = self.get_group(g)
         select = self.FIELDS.get(group,group)
-        args = self.request.arguments
 
         try:
-            field = "%s as %s" % (select % {k:v[0] for k,v in args.iteritems() if k == g}, g)
+            field = self.substitute_args(g, select)
         except Exception as e:
             logging.info("No string substition in field: {}, Error thrown: {}".format(g, e))
             field = "%s as %s" % (select, g)
         finally:
             return field
+
+    def substitute_args(self, g, select):
+        args = self.request.arguments
+        field = "%s as %s" % (select % {k:v[0] for k,v in args.iteritems() if k == g}, g)
+        return field
 
     def and_groupings(self, config, args):
         groupings = {i:j for i,j in args.iteritems() if i in config.keys()}
