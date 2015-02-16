@@ -1,6 +1,7 @@
 import pandas
 import tornado.web
 import ujson
+import numpy as np
 
 from twisted.internet import defer
 
@@ -11,7 +12,6 @@ from lib.query.HIVE import HOVERBOARD_KEYWORDS
 from ..base import AdminReportingBaseHandler
 
 JOIN = {
-    "category": "v JOIN domain_category t on lower(regexp_replace(parse_url(concat('http://', regexp_replace(reflect('java.net.URLDecoder', 'decode',v.bid_request.bid_info.url), 'http://|https://', '')), 'HOST'), 'www.', '')) = t.domain"
 }
 
 QUERY_OPTIONS = {
@@ -23,24 +23,16 @@ OPTIONS = {
     "default": {
         "meta": {
             "groups": ["advertiser"],
-            "fields": ["num_imps", "num_users"]
-        },
-        "formatters": {
-            "uid": "none",
-            "auction_id": "none"
+            "fields": ["num_users", "num_imps"]
         }
     },
 
     "advertiser": {
         "meta": {
-            "groups": ["advertiser", "conversion_ids"],
-            "fields": ["num_imps", "num_users"]
+            "groups": ["category", "domain", "url"],
+            "fields": ["num_users", "num_imps"]
+            }
         },
-        "formatters": {
-            "uid": "none",
-            "auction_id": "none"
-        }
-    },
 
     "none": {
         "meta": {
@@ -50,14 +42,6 @@ OPTIONS = {
         "formatters": {
             "uid": "none",
             "auction_id": "none"
-        }
-    },
-
-    "category": {
-        "meta":{
-            "groups": ["category"],
-            "fields": ["num_imps", "num_users"],
-            "static_joins": JOIN["category"]
         }
     },
 
@@ -97,46 +81,44 @@ OPTIONS = {
 }
 
 GROUPS = {
-    "advertiser": "source",
+    "advertiser": "advertiser",
     "date": "date",
-    "hour": "hour(bid_request.timestamp)",
-    "timestamp": "bid_request.timestamp",
-    "city": "bid_request.bid_info.city",
-    "state": "bid_request.bid_info.region",
-    "country": "bid_request.bid_info.country",
-    "ip_address": "bid_request.bid_info.ip_address",
-    "user_agent": "bid_request.bid_info.user_agent",
-    "url": "bid_request.bid_info.url",
-    "domain": "lower(regexp_replace(parse_url(concat('http://', regexp_replace(reflect('java.net.URLDecoder', 'decode',bid_request.bid_info.url), 'http://|https://', '')), 'HOST'), 'www.', ''))",
-    "seller": "bid_request.bid_info.selling_member_id",
-    "time_zone": "bid_request.bid_info.time_zone",
-    "uid": "bid_request.bid_info.user_id_64",
+    "hour": "hour",
+    "city": "city",
+    "state": "region",
+    "country": "country",
+    "url": "url",
+    "domain": "lower(regexp_replace(parse_url(concat('http://', regexp_replace(url, 'http://|https://', '')), 'HOST'), 'www.', ''))",
     "conversion_ids": "conversion_ids",
-    "category": "t.category_name"
+    "category": "category"
     }
 
 
 FIELDS = {
-    "num_imps": "count(*)",
-    "num_users": "count(distinct bid_request.bid_info.user_id_64)",
-    "urls": "collect_set(bid_request.bid_info.url)",
-    "domains": "collect_set(lower(regexp_replace(parse_url(concat('http://', regexp_replace(reflect('java.net.URLDecoder', 'decode',bid_request.bid_info.url), 'http://|https://', '')), 'HOST'), 'www.', '')))",
-    "top_10": "map_filter_top_n(map_group_sum(count_to_map(a.terms)), 10)"
+    "num_imps": "sum(num_users)",
+    "num_users": "sum(num_users)",
+    "urls": "collect_set(url)",
+    "domains": "collect_set(lower(regexp_replace(parse_url(concat('http://', regexp_replace(url, 'http://|https://', '')), 'HOST'), 'www.', '')))",
+    "keywords": "map_filter_top_n(map_group_sum(count_to_map(url_terms(url))), 10)",
+    "top_n": "map_filter_top_n(map_group_sum(count_to_map(a.terms)), %(top_n)s)"
     }
 
 WHERE = {
-    "advertiser": "source = '%(advertiser)s'",
+    "advertiser": "advertiser = '%(advertiser)s'",
+    "source": "source = '%(source)s'",
     "conversion_id": "array_contains(conversion_ids, '%(conversion_id)s')",
-    "domain": "lower(regexp_replace(parse_url(concat('http://', regexp_replace(reflect('java.net.URLDecoder', 'decode',bid_request.bid_info.url), 'http://|https://', '')), 'HOST'), 'www.', '')) like lower('%%%(domain)s%%')",
-    "url": "lower(reflect('java.net.URLDecoder', 'decode',bid_request.bid_info.url)) like lower('%%%(url)s%%')",
-    "category": "lower(category_name) like lower('%%%(category)s%%')",
-    "exclude_domain": "lower(regexp_replace(parse_url(concat('http://', regexp_replace(reflect('java.net.URLDecoder', 'decode',bid_request.bid_info.url), 'http://|https://', '')), 'HOST'), 'www.', '')) != '%(exclude_domain)s'"
+    "domain": "lower(regexp_replace(parse_url(concat('http://', regexp_replace(url, 'http://|https://', '')), 'HOST'), 'www.', '')) rlike lower('.*(%(domain)s).*')",
+    "url": "lower(url) rlike lower('.*(%(url)s).*')",
+    "category": "lower(category) like lower('%%%(category)s%%')",
+    "exclude": "lower(regexp_replace(parse_url(concat('http://', regexp_replace(url, 'http://|https://', '')), 'HOST'), 'www.', '')) != '%(exclude)s'",
+    "exclude_raw": "lower(regexp_replace(parse_url(concat('http://', regexp_replace(bid_request.bid_info.url, 'http://|https://', '')), 'HOST'), 'www.', '')) != '%(exclude_raw)s'"
     }
 
 HAVING = {
     "min_imps": "num_imps >= %(min_imps)s",
     "min_users": "num_users >= %(min_users)s"
 }
+
 class HoverboardHandler(AdminReportingBaseHandler):
 
     QUERY = HOVERBOARD
@@ -175,17 +157,16 @@ class HoverboardHandler(AdminReportingBaseHandler):
             "CREATE TEMPORARY FUNCTION url_terms as 'org.rockerbox.UDFURLTerms'",
             "CREATE TEMPORARY FUNCTION map_group_sum as 'com.dataiku.hive.udf.maps.UDAFMapGroupSum'",
             "CREATE TEMPORARY FUNCTION map_filter_top_n as 'com.dataiku.hive.udf.maps.UDFMapValueFilterTopN'",
-            "CREATE TEMPORARY FUNCTION combine AS 'brickhouse.udf.collect.CombineUDF'",
             "CREATE TEMPORARY FUNCTION combine_unique AS 'brickhouse.udf.collect.CombineUniqueUDAF'",
             "CREATE TEMPORARY FUNCTION collect_to_array AS 'com.dataiku.hive.udf.arrays.UDAFCollectToArray'",
-            "SET spark.sql.shuffle.partitions=8",
+            "SET spark.sql.shuffle.partitions=18",
             query
         ]
 
         raw = yield run_spark_sql_session_deferred(self.spark_sql,query_list)
 
         formatted = self.format_data(
-            pandas.DataFrame(raw),
+            pandas.DataFrame(raw).fillna(value="NA"),
             groupby,
             wide
         )
@@ -193,6 +174,7 @@ class HoverboardHandler(AdminReportingBaseHandler):
         self.get_content(formatted)
 
     def format_data(self, u, groupby, wide):
+        
         for field in FIELDS:
             if field in u.columns:
                 try:
@@ -219,17 +201,17 @@ class HoverboardHandler(AdminReportingBaseHandler):
     def get_meta_group(self,default="default"):
         meta = self.get_argument("meta", False)
         advertiser = self.get_argument("advertiser", False)
-        category = self.get_argument("category", False)
-        includes = self.get_argument("include", False)
+        # category = self.get_argument("category", False)
+        # includes = self.get_argument("include", False)
 
         if meta:
             return meta
 
-        if includes and "category" in includes:
-            return "category"
+        # if includes and "category" in includes:
+        #     return "category"
 
-        if category:
-            return "category"
+        # if category:
+        #     return "category"
         
         if advertiser:
             return "advertiser"
@@ -238,22 +220,40 @@ class HoverboardHandler(AdminReportingBaseHandler):
 
     @tornado.web.asynchronous
     def get(self,meta=False):
+        logging.info("Formatting")
         formatted = self.get_argument("format",False)
+
+        logging.info("Include")
         include = self.get_argument("include","").split(",")
+
+        logging.info("Get Meta Group")
         meta_group = self.get_meta_group()
+
+        logging.info("Get Meta Data")
         meta_data = self.get_meta_data(meta_group,include)
 
+        logging.info("Get Fields")
         fields = self.get_argument("fields","").split(",")
+
+        logging.info(fields)
+
         has_fields = len(fields) > 0 and len(fields[0]) > 0
 
+        logging.info(meta)
+        logging.info(meta_data)
+        logging.info(meta_group)
+
         if has_fields:
+            logging.info("Has Fields")
             meta_data['fields'] = fields
 
         if meta:
+            logging.info("Meta")
             self.write(ujson.dumps(meta_data))
             self.finish()
 
         elif formatted:
+            logging.info("Formatted")
             params = self.make_params(
                 meta_data.get("groups",[]),
                 meta_data.get("fields",[]),

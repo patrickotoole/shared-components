@@ -247,7 +247,7 @@ GROUP BY %(groups)s
 
 HOVERBOARD = """
 SELECT %(fields)s
-FROM conv_imps %(joins)s
+FROM agg_conv_imps %(joins)s
 WHERE %(where)s
 GROUP BY %(groups)s
 HAVING %(having)s
@@ -257,12 +257,12 @@ HOVERBOARD_KEYWORDS = """
 SELECT %(fields)s
 FROM (
         SELECT
-            source,
+            source as advertiser,
             bid_request.bid_info.user_id_64 as uid,
             combine_unique(url_terms(lower(reflect('java.net.URLDecoder', 'decode',bid_request.bid_info.url)))) as terms
         FROM conv_imps
         WHERE %(where)s
         GROUP BY source, bid_request.bid_info.user_id_64
 ) a
-GROUP BY source
+GROUP BY advertiser
 """
