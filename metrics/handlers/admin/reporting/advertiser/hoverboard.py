@@ -48,7 +48,7 @@ OPTIONS = {
     "keywords": {
         "meta": {
             "groups": ["advertiser"],
-            "fields": ["top_10"],
+            "fields": ["top_n_raw"],
             "query": "keywords"
         }
     },
@@ -95,12 +95,12 @@ GROUPS = {
 
 
 FIELDS = {
-    "num_imps": "sum(num_users)",
+    "num_imps": "sum(num_imps)",
     "num_users": "sum(num_users)",
     "urls": "collect_set(url)",
     "domains": "collect_set(lower(regexp_replace(parse_url(concat('http://', regexp_replace(url, 'http://|https://', '')), 'HOST'), 'www.', '')))",
-    "keywords": "map_filter_top_n(map_group_sum(count_to_map(url_terms(url))), 10)",
-    "top_n": "map_filter_top_n(map_group_sum(count_to_map(a.terms)), %(top_n)s)"
+    "top_n": "map_filter_top_n(map_group_sum(count_to_map(url_terms(url))), %(top_n)s)",
+    "top_n_raw": "map_filter_top_n(map_group_sum(count_to_map(a.terms)), %(top_n_raw)s)"
     }
 
 WHERE = {
@@ -201,18 +201,10 @@ class HoverboardHandler(AdminReportingBaseHandler):
     def get_meta_group(self,default="default"):
         meta = self.get_argument("meta", False)
         advertiser = self.get_argument("advertiser", False)
-        # category = self.get_argument("category", False)
-        # includes = self.get_argument("include", False)
 
         if meta:
             return meta
 
-        # if includes and "category" in includes:
-        #     return "category"
-
-        # if category:
-        #     return "category"
-        
         if advertiser:
             return "advertiser"
 
@@ -220,40 +212,21 @@ class HoverboardHandler(AdminReportingBaseHandler):
 
     @tornado.web.asynchronous
     def get(self,meta=False):
-        logging.info("Formatting")
         formatted = self.get_argument("format",False)
-
-        logging.info("Include")
         include = self.get_argument("include","").split(",")
-
-        logging.info("Get Meta Group")
         meta_group = self.get_meta_group()
-
-        logging.info("Get Meta Data")
         meta_data = self.get_meta_data(meta_group,include)
-
-        logging.info("Get Fields")
         fields = self.get_argument("fields","").split(",")
-
-        logging.info(fields)
-
         has_fields = len(fields) > 0 and len(fields[0]) > 0
 
-        logging.info(meta)
-        logging.info(meta_data)
-        logging.info(meta_group)
-
         if has_fields:
-            logging.info("Has Fields")
             meta_data['fields'] = fields
 
         if meta:
-            logging.info("Meta")
             self.write(ujson.dumps(meta_data))
             self.finish()
 
         elif formatted:
-            logging.info("Formatted")
             params = self.make_params(
                 meta_data.get("groups",[]),
                 meta_data.get("fields",[]),

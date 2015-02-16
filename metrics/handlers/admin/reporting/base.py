@@ -32,7 +32,15 @@ class AdminReportingBase(object):
     def get_field(self,g):
         group = self.get_group(g)
         select = self.FIELDS.get(group,group)
-        return "%s as %s" % (select,g)
+        args = self.request.arguments
+
+        try:
+            field = "%s as %s" % (select % {k:v[0] for k,v in args.iteritems() if k == g}, g)
+        except Exception as e:
+            logging.info("No string substition in field: {}, Error thrown: {}".format(g, e))
+            field = "%s as %s" % (select, g)
+        finally:
+            return field
 
     def and_groupings(self, config, args):
         groupings = {i:j for i,j in args.iteritems() if i in config.keys()}
