@@ -13,3 +13,4 @@ from viewable import ViewabilityHandler
 from logins import LoginsHandler
 import appnexus
 import bidder
+from filter import FilterHandler
