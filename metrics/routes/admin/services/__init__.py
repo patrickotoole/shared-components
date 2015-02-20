@@ -7,8 +7,10 @@ from advertiser import AdvertiserRoutes
 from segment import SegmentRoutes
 from logging import LoggingRoutes
 from bidder import BidderRoutes
+from treefilter import TreeFilterRoutes
 
 class ServiceRoutes(
+    TreeFilterRoutes,
     BidderRoutes,
     BatchRequestRoutes,
     CampaignCheckRoutes,

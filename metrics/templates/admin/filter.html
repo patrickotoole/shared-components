@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+.node circle {
+  fill: #fff;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}
+
+.node {
+  font: 10px sans-serif;
+}
+
+.link {
+  fill: none;
+  stroke: #ccc;
+  stroke-width: 1.5px;
+}
+
+</style>
+<body>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script>
+
+SERVER = "{{server}}"
+
+
+var radial = false
+if (radial) {
+  var diameter = 960
+
+  var tree = d3.layout.tree()
+    .size([360, diameter / 2 - 120])
+    .separation(function(a, b) { return (a.parent == b.parent ? 1 : 2) / a.depth; });
+
+  var diagonal = d3.svg.diagonal.radial()
+    .projection(function(d) { return [d.y, d.x / 180 * Math.PI]; });
+
+  var svg = d3.select("body").append("svg")
+    .attr("width", diameter)
+    .attr("height", diameter - 150)
+  .append("g")
+    .attr("transform", "translate(" + diameter / 2 + "," + diameter / 2 + ")");
+
+} else {
+  var width = 960,
+    height = 600;
+
+  var tree = d3.layout.tree()
+    .size([height, width - 160]);
+
+  var diagonal = d3.svg.diagonal()
+    .projection(function(d) { return [d.y, d.x]; });
+
+  var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height)
+  .append("g")
+    .attr("transform", "translate(40,0)");
+
+}
+
+
+var i = 0,
+  level_occurances = [];
+
+var drawTree = function(data) {
+  window.data = data;
+  var nodes = tree.nodes(data),
+      links = tree.links(nodes);
+
+  var link = svg.selectAll("path.link")
+      .data(links)
+
+  link.enter().append("path")
+    .attr("class", "link")
+    .attr("d", diagonal);
+
+  link.transition()
+    .duration(500)
+    .attr("class", "link")
+    .attr("d", diagonal);
+
+  link.exit().transition()
+    .duration(500) 
+    .remove()
+
+  var node = svg.selectAll("g.node")
+    .data(nodes, function(d) { return d.id || (d.id = ++i);})
+
+  var nodeEnter = node
+    .enter().append("g")
+      .attr("class", "node")
+      .attr("transform", function(d,i) { 
+        if (d.parent) { 
+          d.parent.incrementor = d.parent.incrementor || 0
+          if (!d.array_position) {
+            d.parent.incrementor += 1
+            d.array_position = d.parent.incrementor
+          }
+        }
+
+        return "translate(" + d.y + "," + d.x + ")"; 
+      })
+
+  nodeEnter.append("text")
+      .attr("dx", function(d) { return d.children ? -8 : 8; })
+      .attr("dy", 3)
+      .attr("text-anchor", function(d) { return d.children ? "end" : "start"; })
+      .text(function(d) { 
+        try {
+          var t = (d.node.label ? " (" + d.node.label + ")" : "")
+          t = t + d.node.pattern
+          t = t + (d.node.segment ? " (" + d.node.segment.id + ")" : "")
+          t = t + (d.node.queue ? " (" + d.node.queue.id + ")" : "")
+          return t
+        } catch(e) {
+          return d.array_position + "," + i
+        }
+      });
+
+  node.transition()
+    .duration(500)
+    .attr("class", "node")
+    .attr("transform", function(d,i) { 
+        if (d.parent) { 
+          d.parent.incrementor = d.parent.incrementor || 0
+          if (!d.array_position) {
+            d.parent.incrementor += 1
+            d.array_position = d.parent.incrementor
+          }
+        }
+      return "translate(" + d.y + "," + d.x + ")"; 
+    })
+
+  node.exit().transition()
+    .duration(500)
+    .remove()
+
+
+  var circle = node.append("circle")
+      .attr("r", 4.5);
+
+  var findParentLevelArray = function(x,arr) {
+    return x.parent ? findParentLevelArray(x.parent,[x.array_position].concat(arr)) : arr;
+  }
+
+  var extractData = function(x) {
+    return x.children ? {node: x.node, children: x.children.map(extractData)} : {node: x.node}
+  }
+
+  var resetNodePositions = function(x) {
+    x.array_position = undefined
+    x.incrementor = undefined
+    return x.children ? x.children.map(resetNodePositions) : x
+  }
+
+  circle.on("click",function(x){
+    if (window.tooltip_opened != 1) {
+    d3.event.stopPropagation();
+    var tooltip = makeTooltip(function(values){
+
+      var y = findParentLevelArray(x,[]);
+
+      var dp = data
+      y.map(function(d){ dp = dp.children[d-1] })
+      dp.children = dp.children || []
+
+      var node = {"node":{"pattern":values.pattern}}
+
+      if (values.segment_id != "")
+        node["node"]["segment"] = {"id":values.segment_id,"value":values.value,"duration":values.duration}
+
+      if (values.queue_id != "")
+        node["node"]["queue"] = {"id":values.queue_id}
+
+      if (values.label_name != "")
+        node["node"]["label"] = values.label_name
+
+      dp.children.push(node)
+      pushTree(extractData(data))
+      drawTree(data)
+    });
+
+
+    tooltip.style("visibility", "visible");
+    tooltip.style("top", (d3.event.pageY-10)+"px").style("left",(d3.event.pageX+10)+"px");
+    }
+    
+  })
+
+  circle.on("contextmenu",function(x){
+    d3.event.preventDefault();
+
+    if (!x.children) {
+      var y = findParentLevelArray(x,[]);
+      y.pop()
+
+      var dp = data
+      y.map(function(d){ dp = dp.children[d-1]})
+      dp.children.splice(x.array_position-1,1)
+      
+      resetNodePositions(data)
+      pushTree(extractData(data))
+      drawTree(data)
+    }
+  })  
+
+  
+}
+
+var makeTooltip = function(callback){
+
+
+var tooltip = d3.select("body")
+  .append("div")
+  .style("position", "absolute")
+  .style("z-index", "10")
+  .style("background-color","white")
+  .style("width","300px")
+  .style("height","140px")
+  .style("padding","10px")
+  .style("border","1px solid #ccc")
+  .style("font-family","Helvetica")
+  .style("font-size","12px")
+
+
+tooltip
+  .append("div")
+  .text("Add a node");
+
+var patlabel = tooltip.append("div")
+  .append("label")
+
+patlabel
+  .append("span")
+  .text("pattern")
+
+patlabel
+  .append("input")
+  .attr("id","pattern")
+
+
+var x = ["segment_id","duration","value"]
+
+var seglabel = tooltip.append("div")
+  .classed("segment",true).selectAll("label")
+  .data(x)
+  .enter()
+    .append("div")
+    .append("label")
+
+
+seglabel
+  .append("span")
+  .text(function(i){return i})
+
+seglabel
+  .append("input")
+    .attr("id",function(x){return x})
+
+var queuelabel = tooltip.append("div")
+  .append("label")
+
+queuelabel
+  .append("span")
+  .text("queue")
+
+queuelabel
+  .append("input")
+  .attr("id","queue_id")
+
+
+var lablabel = tooltip.append("div")
+  .append("label")
+
+lablabel
+  .append("span")
+  .text("label")
+
+lablabel
+  .append("input")
+  .attr("id","label_name")
+
+tooltip.append("div")
+  .append("button")
+  .text("add")
+  .on("click",function(x){
+    d3.event.preventDefault();
+    d3.event.stopPropagation();
+    var values = {}
+    tooltip.selectAll("input")[0].map(function(x){ values[x.id] = x.value})
+    callback(values)
+    return false
+  })
+
+tooltip.on("click",function(x){
+  d3.event.preventDefault();
+  d3.event.stopPropagation();
+  return false
+})
+
+d3.select("body").on("click",function(x){
+  tooltip.remove()
+  window.tooltip_opened = 0
+})
+
+window.tooltip_opened = 1
+
+return tooltip
+
+}
+
+var pushTree = function(x) {
+  d3.xhr(SERVER + "/segments")
+    //.header("Content-Type", "application/json")
+    .post(
+      JSON.stringify(x),
+      function(err, rawData){
+        console.log("got response", rawData);
+      }
+    );
+}
+
+d3.json(SERVER + "/segments",function(json) {
+  drawTree(json.pattrenTree)
+  
+})
+
+d3.select(self.frameElement).style("height", height + "px");
+
+</script>
