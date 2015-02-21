@@ -66,6 +66,10 @@ class YoshiCampaignHandler(BaseHandler):
         }
         data['profile']['country_action'] = "include"
         data['profile']['country_targets'] = [{"country": "US"}]
+        data['profile']['device_type_targets'] = ["phone"]
+        data['profile']['supply_type_targets'] = ["mobile_app", "mobile_web"]
+        data['profile']['max_day_imps'] = 5
+        data['profile']['max_lifetime_imps'] = 15
 
         data = self.api.post(URL,data=ujson.dumps(data))
         return data.json['response']['profile']

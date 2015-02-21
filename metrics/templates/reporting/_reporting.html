@@ -417,6 +417,7 @@
                     .renderTitle(true)
                     .rangeChart(sliderGraph)
                     .on("preRedraw", function(){
+                        try {
                         var intervalLength = timeDifference(CRS.groups.all.summary().date_min, CRS.groups.all.summary().date_max);
                         if(intervalLength < 14){
                             mainGraph.dimension(CRS.dimensions.datetime).group(CRS.groups.datetime).tooltipType("hourly");
@@ -424,6 +425,7 @@
                         else {
                             mainGraph.dimension(CRS.dimensions.daily).group(CRS.groups.daily).tooltipType("daily");                       
                         }
+                        } catch(e) {}
                         
                         if(intervalLength <= 1){
                             mainGraph.xAxis().tickFormat(d3.time.format("%I%p"));
@@ -462,12 +464,14 @@
 
                     mainGraph.focus([ioStartDate, CRS.groups.all.summary().date_max])
 
-                     if(ioStartDate < CRS.groups.all.summary().date_min){
+                    try {
+                      if(ioStartDate < CRS.groups.all.summary().date_min){
                         ioStartDate = new Date(CRS.groups.all.summary().date_min.getTime());
                          mainGraph.focus([ioStartDate, CRS.groups.all.summary().date_max]);
                          baseInterval = formatDate(ioStartDate) + " - " + formatDate(CRS.groups.all.summary().date_max);
                          intervalBox.redraw();                   
-                    }     
+                      }     
+                    } catch(e) {}
                     
                     // HACKHACKHACK
                     //$('#io-completion-box #io-progress #io-estimated-spent').text(formatMoney(CRS.groups.all.value().cost) + "*");
