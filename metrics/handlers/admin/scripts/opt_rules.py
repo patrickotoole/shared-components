@@ -8,13 +8,9 @@ FROM opt_rules
 """
 
 GET = """
-SELECT * FROM opt_rules
-"""
-
-GET_ID = """
 SELECT * 
 FROM opt_rules
-WHERE rule_group_id = {}
+WHERE {}
 """
 
 INSERT = """
@@ -22,6 +18,12 @@ INSERT INTO opt_rules
     (rule_group_id, rule_group_name, rule) 
 VALUES 
     (%(id)s, "%(rule_group_name)s", "%(rule)s")
+"""
+
+DEACTIVATE = """
+UPDATE opt_rules
+SET active=0
+WHERE {} and active=1
 """
 
 DELETE = """
@@ -40,18 +42,47 @@ class OptRulesHandler(tornado.web.RequestHandler):
             "rules"
             ]
 
-    def get(self,*args):
-        if len(args) > 0:
-            decision_id = args[0]
-            results = self.db.select_dataframe(GET_ID.format(decision_id))
-            as_json = Convert.df_to_json(results)
-        else:
-            _all = self.db.select_dataframe(GET)
-            as_json = Convert.df_to_json(_all)
+    def get_all(self, inactive):
+        where = "1=1"
+        if not inactive:
+            where = where + " and active = 1"
+        return self.db.select_dataframe(GET.format(where))       
 
+    def get_id(self, id_str, inactive):
+        where = "rule_group_id = {}".format(id_str)
+        if not inactive:
+            where = where + " and active = 1"
+        return self.db.select_dataframe(GET.format(where))
+
+    def get_name(self, name, inactive):
+        where = "rule_group_name = '{}'".format(name)
+        if not inactive:
+            where = where + " and active = 1"
+        return self.db.select_dataframe(GET.format(where))
+
+    def get(self,*args):
+        inactive = self.get_argument("inactive", False)
+        if inactive == "false":
+            inactive = False
+
+        if len(args) > 0:
+            rule_group_id = args[0]
+            results = self.get_id(rule_group_id, inactive)
+
+        elif self.get_argument("id", False):
+            rule_group_id = self.get_argument("id")
+            results = self.get_id(rule_group_id, inactive)
+
+        elif self.get_argument("name", False):
+            rule_group_name = self.get_argument("name")
+            results = self.get_name(rule_group_name, inactive)
+
+        else:
+            results = self.get_all(inactive)
+
+        as_json = Convert.df_to_json(results)
         self.write(as_json)
         self.finish()
-
 
     def get_new_id(self):
         new_id = self.db.execute(MAX_ID).data[0][0]
@@ -80,9 +111,14 @@ class OptRulesHandler(tornado.web.RequestHandler):
         rules = obj["rules"]
 
         try:
+            # Insert each new rule
             for rule in rules:
                 rule_obj = {"id": new_id, "rule_group_name": rule_group_name, "rule": rule}
                 self.db.execute(INSERT % rule_obj)
+
+            # Change all rules with this name and not this id to inactive
+            where = "rule_group_name='{}' and rule_group_id!={}".format(rule_group_name, new_id)
+            self.db.execute(DEACTIVATE.format(where))
         except Exception as e:
             # Roll back any changes that might have occurred
             self.db.execute(DELETE.format(new_id))

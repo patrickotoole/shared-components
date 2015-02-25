@@ -105,13 +105,14 @@ class OptLogHandler(tornado.web.RequestHandler):
                             "field_name, field_old_value, field_new_value, " + 
                             "metric_values, rule_group_id")
 
-
         # Check that the rule_group_id exists
         if not self.rule_exists(obj["rule_group_id"]):
             raise Exception("rule_group_id {} does not exist".format(obj["rule_group_id"]))
 
+        # Create object with all columns
         log_obj = { i: obj[i] for i in self.log_cols }
 
+        # Pull out metric values
         values = obj["metric_values"]
 
         # Try to insert the log data. If it succeeds, insert the values data
