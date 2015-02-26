@@ -178,7 +178,7 @@ class Advertiser(object):
     def create_advertiser(self,advertiser_name):
         data = {"advertiser": {"name": advertiser_name, "state": "active"} }
         response = self.api.post('/advertiser',data=ujson.dumps(data)).json
-        print response
+        logging.info(response)
         advertiser_id = response["response"]["advertiser"]["id"]
         return advertiser_id
 
