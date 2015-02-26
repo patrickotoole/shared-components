@@ -123,7 +123,7 @@ class OptRulesHandler(tornado.web.RequestHandler):
             raise Exception("Error during INSERT execution: {}".format(e))
 
 
-        get_where = "where rule_group_id={}".format(new_id)
+        get_where = "rule_group_id={}".format(new_id)
         return self.db.select_dataframe(GET.format(get_where))
 
     def post(self):
