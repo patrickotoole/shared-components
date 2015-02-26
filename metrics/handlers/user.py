@@ -19,10 +19,16 @@ class LoginHandler(tornado.web.RequestHandler):
         return pw_hash.check_password(submitted,stored)
 
     def get(self):
-
+  
         if self.get_secure_cookie("user"):
             user = self.get_secure_cookie("user")
-            if self.db.select_dataframe("select * from user where username = '%s'" % user)['show_reporting'][0] == 0:
+            from_db = self.db.select_dataframe("select username, advertiser_id, id, show_reporting from user where username = '%s'" % user)
+            if self.get_argument("format",False) == "json":
+                self.write(ujson.dumps(from_db.T.to_dict().values()[0]))
+                self.finish()
+                return
+
+            if from_db['show_reporting'][0] == 0:
                 self.redirect(self.get_argument("next", "/advertiser", True))
             else:
                 self.redirect(self.get_argument("next", "/reporting", True))
