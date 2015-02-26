@@ -48,10 +48,8 @@ class OptRulesHandler(tornado.web.RequestHandler):
             where = where + " and active = 1"
         return self.db.select_dataframe(GET.format(where))       
 
-    def get_id(self, id_str, inactive):
+    def get_id(self, id_str):
         where = "rule_group_id = {}".format(id_str)
-        if not inactive:
-            where = where + " and active = 1"
         return self.db.select_dataframe(GET.format(where))
 
     def get_name(self, name, inactive):
@@ -67,11 +65,11 @@ class OptRulesHandler(tornado.web.RequestHandler):
 
         if len(args) > 0:
             rule_group_id = args[0]
-            results = self.get_id(rule_group_id, inactive)
+            results = self.get_id(rule_group_id)
 
         elif self.get_argument("id", False):
             rule_group_id = self.get_argument("id")
-            results = self.get_id(rule_group_id, inactive)
+            results = self.get_id(rule_group_id)
 
         elif self.get_argument("name", False):
             rule_group_name = self.get_argument("name")
@@ -123,6 +121,7 @@ class OptRulesHandler(tornado.web.RequestHandler):
             # Roll back any changes that might have occurred
             self.db.execute(DELETE.format(new_id))
             raise Exception("Error during INSERT execution: {}".format(e))
+
 
         get_where = "where rule_group_id={}".format(new_id)
         return self.db.select_dataframe(GET.format(get_where))
