@@ -124,7 +124,8 @@ class OptRulesHandler(tornado.web.RequestHandler):
             self.db.execute(DELETE.format(new_id))
             raise Exception("Error during INSERT execution: {}".format(e))
 
-        return self.db.select_dataframe(GET_ID.format(new_id))
+        get_where = "where rule_group_id={}".format(new_id)
+        return self.db.select_dataframe(GET.format(get_where))
 
     def post(self):
         try:
