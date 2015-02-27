@@ -32,7 +32,6 @@ class AdvertiserRoutes(Routes):
             (r'/intraweek.*',reporting.InsertionOrderHandler, self.connectors),
             (r'/api.*', reporting.APIHandler, self.connectors),
             (r'/advertiser', advertiser.AdvertiserHandler, self.connectors),
-            (r'/campaign', campaign.YoshiCampaignHandler, self.connectors),
             (r'/sellers', seller.SellerHandler, self.connectors), 
             
         ]
@@ -40,9 +39,11 @@ class AdvertiserRoutes(Routes):
     @connectors("db","api")
     def yoshi_routes(self):
         import handlers.campaign as campaign
+        import handlers.creative as creative
 
         return [
-            (r'/campaign', campaign.YoshiCampaignHandler, self.connectors)
+            (r'/campaign', campaign.YoshiCampaignHandler, self.connectors),
+            (r'/creative', creative.CreativeHandler, self.connectors) 
         ]
      
 
