@@ -130,6 +130,6 @@ class OptRulesHandler(tornado.web.RequestHandler):
         try:
             data = self.make_to_insert(self.request.body)
             as_json = Convert.df_to_json(data)
-            self.write(as_json)
+            self.write(ujson.dumps({"response": ujson.loads(as_json), "status": "ok"}))
         except Exception, e:
-            self.write(str(e))
+            self.write(ujson.dumps({"response": str(e), "status": "error"}))

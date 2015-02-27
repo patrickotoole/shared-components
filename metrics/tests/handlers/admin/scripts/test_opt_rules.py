@@ -81,8 +81,9 @@ class OptRulesTest(AsyncHTTPTestCase):
         self.assertEqual(response,expected)
      
     def test_post_fails(self):
-        body = self.fetch("/",method="POST",body="{}").body
-        self.assertEqual(body,"required_columns: rule_group_name, rules")
+        body = ujson.loads(self.fetch("/",method="POST",body="{}").body)
+        self.assertEqual(body["response"],"required_columns: rule_group_name, rules")
+        self.assertEqual(body["status"], "error")
 
     def test_post_success(self):
         to_post = {
@@ -100,7 +101,7 @@ class OptRulesTest(AsyncHTTPTestCase):
         body = ujson.loads(self.fetch("/",method="POST",body=to_post_json).body)
 
         # Don't check the created column, it's not really predictable
-        for i in body:
+        for i in body["response"]:
             del i["created"]
 
-        self.assertEqual(body,expected)
+        self.assertEqual(body["response"],expected)
