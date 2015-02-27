@@ -69,8 +69,7 @@ class YoshiCampaignHandler(BaseHandler):
                 "cpm_bid_type": "clearing",
                 "max_bid": 2,
                 "lifetime_budget_imps": 2000,
-                "daily_budget_imps": 10000,
-                "allow_unaudited": True
+                "daily_budget_imps": 10000
             }
         }
         logging.info(data)
@@ -107,6 +106,7 @@ class YoshiCampaignHandler(BaseHandler):
         data['profile']['supply_type_targets'] = ["mobile_app", "mobile_web"]
         data['profile']['max_day_imps'] = 5
         data['profile']['max_lifetime_imps'] = 15
+        data['profile']['allow_unaudited'] = True
         data['profile']['daypart_targets'] = [
             {u'day': u'sunday', u'end_hour': 0, u'start_hour': 0},
             {u'day': u'sunday', u'end_hour': 23, u'start_hour': 8},
