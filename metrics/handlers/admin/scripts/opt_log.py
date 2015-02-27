@@ -1,6 +1,10 @@
+import logging
 import tornado.web
 import ujson
-from lib.helpers import Convert
+import time
+from twisted.internet import defer
+
+from lib.helpers import *
 
 GET = "SELECT * FROM opt_log"
 
@@ -18,9 +22,9 @@ WHERE rule_group_id={}
 
 INSERT = """
 INSERT INTO opt_log 
-    (rule_group_id, object_modified, object_id, field_name, field_old_value, field_new_value) 
+    (rule_group_id, object_modified, campaign_id, profile_id, field_name, field_old_value, field_new_value) 
 VALUES 
-    (%(rule_group_id)s, "%(object_modified)s", %(object_id)s, "%(field_name)s", "%(field_old_value)s", "%(field_new_value)s")
+    (%(rule_group_id)s, "%(object_modified)s", %(campaign_id)s, %(profile_id)s, "%(field_name)s", "%(field_old_value)s", "%(field_new_value)s")
 """
 
 INSERT_VALUE = """
@@ -47,7 +51,7 @@ class OptLogHandler(tornado.web.RequestHandler):
         self.api = api
         self.log_cols = [
             "object_modified",
-            "object_id",
+            "campaign_id",
             "field_name",
             "field_old_value", 
             "field_new_value",
@@ -58,6 +62,73 @@ class OptLogHandler(tornado.web.RequestHandler):
             "metric_values"
             ]
 
+    def rate_limited(func):
+        def inner(*args, **kwargs):
+            r = func(*args, **kwargs)
+
+            # Check for bad response
+            if "status" not in r.json["response"] or "error" in r.json["response"]:
+                raise Exception("Call to AppNexus did not succeed: " +
+                                "{}".format(r.json["response"]["error"]))
+
+            debug_info = r.json["response"]["dbg_info"]
+
+            write_limit = debug_info["write_limit"]
+            read_limit = debug_info["read_limit"]
+
+            reads = debug_info["reads"]
+            writes = debug_info["writes"]
+
+            if writes >= write_limit:
+                print "Sleeping for {} seconds".format(debug_info["write_limit_seconds"] + 2)
+                time.sleep(debug_info["write_limit_seconds"] + 2)
+                return r
+            if reads >= read_limit:
+                print "Sleeping for {} seconds".format(debug_info["read_limit_seconds"] + 2)
+                time.sleep(debug_info["read_limit_seconds"] + 2)
+                return r
+
+            return r
+
+        return inner
+
+    def get_lock(self, object_type, object_id):        
+        """We need to implement this!"""
+        pass
+
+    @decorators.deferred
+    @rate_limited
+    def get_campaigns(self, campaign_ids):
+        if len(campaign_ids) == 1:
+            url = "/campaign?id={}".format(campaign_ids[0])
+        else:
+            url = "/campaign?id={}".format(','.join(campaign_ids))
+        r = self.api.get(url)
+        return r
+
+    @decorators.deferred
+    @rate_limited
+    def get_profile(self, profile_id):
+        url = "/profile?id={}".format(profile_id)
+        r = self.api.get(url)
+        return r
+
+    @decorators.deferred
+    @rate_limited
+    def edit_campaign(self, campaign_id, data=None, profile_data=None, profile_id=None):
+        '''Edit a campaign.
+        '''
+        url = "/campaign?id={}".format(campaign_id)
+        r = self.api.put(url, data=ujson.dumps({"campaign": data}))
+        return r
+
+    @decorators.deferred
+    @rate_limited
+    def edit_profile(self, profile_id, data):
+        url = "/profile?id={}".format(profile_id)
+        r = self.api.put(url, data=ujson.dumps({"profile": data}))
+        return r
+
     def get(self,*args):
         if len(args) > 0:
             decision_id = args[0]
@@ -66,7 +137,7 @@ class OptLogHandler(tornado.web.RequestHandler):
         else:
             _all = self.db.select_dataframe(GET)
             as_json = Convert.df_to_json(_all)
-
+                
         self.write(as_json)
         self.finish()
 
@@ -81,7 +152,7 @@ class OptLogHandler(tornado.web.RequestHandler):
             # For some reason this won't error out on failure unless we try to 
             # access the data
             succeeded = self.db.execute(INSERT_VALUE % value_obj)
-            print succeeded
+
             if succeeded is None:
                 raise Exception("INSERT value query failed")
 
@@ -92,31 +163,39 @@ class OptLogHandler(tornado.web.RequestHandler):
         else:
             return False
 
-    def make_to_insert(self,body):
-        # Get POSTed data
-        obj = ujson.loads(body)
-
+    def check_request(self, obj):
         # Make list of all relevant POSTed columns
         all_cols = [ i for i in self.log_cols + self.value_cols if i in obj.keys() ]
 
         # Check that the POSTed columns are correct
         if len(all_cols) != len(self.log_cols + self.value_cols):
-            raise Exception("required_columns: object_modified, object_id, " + 
+            raise Exception("required_columns: object_modified, campaign_id, " + 
                             "field_name, field_old_value, field_new_value, " + 
                             "metric_values, rule_group_id")
 
         # Check that the rule_group_id exists
         if not self.rule_exists(obj["rule_group_id"]):
-            raise Exception("rule_group_id {} does not exist".format(obj["rule_group_id"]))
+            raise Exception("rule_group_id {} does not exist".format(obj["rule_group_id"]))        
 
-        # Create object with all columns
-        log_obj = { i: obj[i] for i in self.log_cols }
+        if obj["object_modified"] not in ["campaign_profile", "campaign"]:
+            raise Exception("object_modified field must be one of " + 
+                            "[campaign, campaign_profile]")
 
+    def assert_field_val(self, obj, field, value):
+        if type(obj[field]) is list:
+            obj[field].sort()
+            value.sort()
+
+        if not (str(obj[field]) == str(value)):
+            raise Exception("current field value in AppNexus does not match " +
+                            "field_old_value. {} != {}".format(obj[field], value))
+
+    def log_changes(self, obj):
         # Pull out metric values
         values = obj["metric_values"]
 
         # Try to insert the log data. If it succeeds, insert the values data
-        value_group_id = self.db.execute(INSERT % log_obj)
+        value_group_id = self.db.execute(INSERT % obj)
 
         if value_group_id:
             try:
@@ -127,16 +206,67 @@ class OptLogHandler(tornado.web.RequestHandler):
                 self.db.execute(DELETE_VALUES.format(value_group_id))
                 raise Exception("Value Query failed during execution: {}".format(e))
         else:
-            raise Exception("Query {} failed during execution".format(INSERT % log_obj))
+            raise Exception("Query {} failed during execution".format(INSERT % obj))
 
-        return value_group_id
+        new_log = self.db.select_dataframe(GET_ID.format(value_group_id))
+        as_dict = Convert.df_to_values(new_log)
+        self.get_content(as_dict)
 
+    @defer.inlineCallbacks
+    def push_to_appnexus(self, body):
+        # Get POSTed data
+        obj = ujson.loads(body)
+
+        try:
+            # Ensure that the request is formatted correctly and 
+            # contains all necessary fields.
+            self.check_request(obj)
+
+            # Get the profile_id for the campaign
+            campaign_data = yield self.get_campaigns([obj["campaign_id"]])
+            obj["profile_id"] = campaign_data.json["response"]["campaign"]["profile_id"]
+
+            # Get ids
+            campaign_id = obj["campaign_id"]
+            profile_id = obj["profile_id"]
+
+            # Get field name and value
+            field_name = obj["field_name"]
+            field_val = obj["field_new_value"]
+            expected_val = obj["field_old_value"]
+
+            # Construct an object with the field to be changed
+            changes = {field_name : field_val}
+
+            # Check if field_old_value matches what we find in AppNexus object
+            # If so, make the changes to the campaign/profile
+            if obj["object_modified"] == "campaign_profile":
+                profile = yield self.get_profile(profile_id)
+                self.assert_field_val(profile.json["response"]["profile"], 
+                                      field_name, expected_val)
+                response = yield self.edit_profile(profile_id, changes)
+
+            elif obj["object_modified"] == "campaign":
+                campaign = yield self.get_campaigns([campaign_id])
+                self.assert_field_val(campaign.json["response"]["campaign"], 
+                                      field_name, expected_val)
+                response = yield self.edit_campaign(campaign_id, changes)
+
+            # Now that we made the changes in Appnexus, log them out.
+            self.log_changes(obj)
+
+        # If we hit an exception, send a JSON response back with the error
+        except Exception as e:
+            self.get_content(str(e))
+
+    
+    def get_content(self, response):
+        self.write(ujson.dumps({"response": response}))
+        self.finish()
+
+    @tornado.web.asynchronous
     def post(self):
         try:
-            print self.request.body
-            lastrowid = self.make_to_insert(self.request.body)
-            res = self.db.select_dataframe(GET_ID.format(lastrowid))
-            as_json = Convert.df_to_json(res)
-            self.write(as_json)
+            self.push_to_appnexus(self.request.body)
         except Exception, e:
-            self.write(str(e))
+            self.get_content(str(e))
