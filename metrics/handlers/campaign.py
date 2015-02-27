@@ -69,7 +69,8 @@ class YoshiCampaignHandler(BaseHandler):
                 "cpm_bid_type": "clearing",
                 "max_bid": 2,
                 "lifetime_budget_imps": 2000,
-                "daily_budget_imps": 10000
+                "daily_budget_imps": 10000,
+                "allow_unaudited": True
             }
         }
         logging.info(data)
@@ -102,8 +103,6 @@ class YoshiCampaignHandler(BaseHandler):
         data = {
             "profile" : profile
         }
-        data['profile']['country_action'] = "include"
-        data['profile']['country_targets'] = [{"country": "US"}]
         data['profile']['device_type_targets'] = ["phone"]
         data['profile']['supply_type_targets'] = ["mobile_app", "mobile_web"]
         data['profile']['max_day_imps'] = 5
@@ -180,7 +179,8 @@ class YoshiCampaignHandler(BaseHandler):
         }
         df = pandas.DataFrame(obj)
         
-        self.db.execute("INSERT INTO campaign_bucket (external_advertiser_id, campaign_id, bucket_name) VALUES (%s, %s, '%s')" % (advertiser_id, campaign['id'], name))
+        if not details.get('username','').startswith("a_"):
+            self.db.execute("INSERT INTO campaign_bucket (external_advertiser_id, campaign_id, bucket_name) VALUES (%s, %s, '%s')" % (advertiser_id, campaign['id'], name))
         self.write(ujson.dumps(obj))
         self.finish()
         #self.get_content(df,advertiser_id)

@@ -34,7 +34,7 @@ function toHash() {
 var crossfilterNS = function(crs,dc) {
 
 	var dimensions = {
-		datetime: crs.dimension(function(d){ console.log(d); return d.dd }),
+		datetime: crs.dimension(function(d){ return d.dd }),
 		daily: crs.dimension(function(d) { return d3.time.day(d.dd) }),
 		weekly: crs.dimension(function(d) { return d3.time.week(d.dd) }),
 		monthly: crs.dimension(function(d) { return d3.time.month(d.dd) }),

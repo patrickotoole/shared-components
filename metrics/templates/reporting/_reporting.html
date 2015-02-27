@@ -263,10 +263,11 @@
                     .campaignSelector('.campaign-name')
                     .group(function(d){ return d.campaign_bucket; })
                     .sortBy(function(d){
+                        console.log(d.campaign_bucket)
                         return d.campaign_bucket;					
                     })
                     .dataSortBy(true)
-                    .size(4)
+                    .size(20)
                     .rowClass("campaign-row")
                     .listClasses(["campaign-name", "campaign-imps", "campaign-clicks", "campaign-conversions", "campaign-cost"])
                     .listItems([
