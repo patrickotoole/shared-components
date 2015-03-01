@@ -37,7 +37,7 @@ class YoshiCampaignHandler(BaseHandler):
 
 
     @decorators.deferred
-    def create_campaign(self,line_item_id,advertiser_id,name="test",bid_price=1):
+    def create_campaign(self,line_item_id,advertiser_id,name="test",bid_price=1,creatives=[]):
         data = {
             "campaign" : {
                 "name": name,
@@ -48,7 +48,8 @@ class YoshiCampaignHandler(BaseHandler):
                 "daily_budget": 50,
                 "inventory_type": "real_time",
                 "cpm_bid_type": "base",
-                "base_bid": bid_price
+                "base_bid": bid_price,
+                "creatives": creatives
             }
         }
         logging.info(data)
@@ -58,7 +59,7 @@ class YoshiCampaignHandler(BaseHandler):
         return data.json['response']['campaign']
 
     @decorators.deferred
-    def create_admin_campaign(self,line_item_id,advertiser_id,name="test",bid_price=2):
+    def create_admin_campaign(self,line_item_id,advertiser_id,name="test",bid_price=2,creatives=[]):
         data = {
             "campaign" : {
                 "name": name,
@@ -69,7 +70,8 @@ class YoshiCampaignHandler(BaseHandler):
                 "cpm_bid_type": "clearing",
                 "max_bid": 2,
                 "lifetime_budget_imps": 2000,
-                "daily_budget_imps": 10000
+                "daily_budget_imps": 10000,
+                "creatives":creatives
             }
         }
         logging.info(data)
@@ -156,7 +158,7 @@ class YoshiCampaignHandler(BaseHandler):
      
 
     @defer.inlineCallbacks 
-    def make_campaign(self,advertiser_id,profile,details):
+    def make_campaign(self,advertiser_id,profile,details,campaign):
         name = "Yoshi"
         name += " | " + ",".join([d['domain'] for d in profile['domain_targets'][:4]]) + (", and %s more" % len(profile['domain_targets']) if len(profile['domain_targets']) > 4 else "")
         name += " | " + ",".join(details['sizes'])
@@ -165,10 +167,10 @@ class YoshiCampaignHandler(BaseHandler):
 
         line_item_id = yield self.get_line_item_id(advertiser_id) 
         if details.get('username','').startswith("a_"):
-            campaign = yield self.create_admin_campaign(line_item_id,advertiser_id,name,price)
+            campaign = yield self.create_admin_campaign(line_item_id,advertiser_id,name,price,campaign.get("creatives",[])) 
             profile = yield self.create_admin_profile(advertiser_id,campaign['id'],profile)
         else:
-            campaign = yield self.create_campaign(line_item_id,advertiser_id,name,price)
+            campaign = yield self.create_campaign(line_item_id,advertiser_id,name,price,campaign.get("creatives",[]))
             profile = yield self.create_profile(advertiser_id,campaign['id'],profile)
 
         campaign_with_profile = yield self.set_campaign_profile_id(advertiser_id,campaign['id'],profile['id'])
@@ -241,8 +243,9 @@ class YoshiCampaignHandler(BaseHandler):
         print obj
         profile = obj.get('profile',False)
         details = obj.get('details',{})
+        campaign = obj.get('campaign',{})
         if advertiser_id and profile is not False:
-            self.make_campaign(advertiser_id,profile,details)
+            self.make_campaign(advertiser_id,profile,details,campaign)
         else:
             self.write("need to be logging and supply a profile object in the json you post")
             self.finish()
