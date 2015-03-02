@@ -12,6 +12,5 @@ def side_effect(func):
 
 mocked_deferred = mock.MagicMock()
 mocked_deferred.side_effect = side_effect
-lib.helpers.decorators = mock.MagicMock()
+
 lib.helpers.decorators.deferred = mocked_deferred
-import ipdb; ipdb.set_trace()
