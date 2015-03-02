@@ -62,59 +62,31 @@ class OptLogHandler(tornado.web.RequestHandler):
             "metric_values"
             ]
 
-    def rate_limited(func):
-        def inner(*args, **kwargs):
-            r = func(*args, **kwargs)
-
-            # Check for bad response
-            if "status" not in r.json["response"] or "error" in r.json["response"]:
-                raise Exception("Call to AppNexus did not succeed: " +
-                                "{}".format(r.json["response"]["error"]))
-
-            debug_info = r.json["response"]["dbg_info"]
-
-            write_limit = debug_info["write_limit"]
-            read_limit = debug_info["read_limit"]
-
-            reads = debug_info["reads"]
-            writes = debug_info["writes"]
-
-            if writes >= write_limit:
-                print "Sleeping for {} seconds".format(debug_info["write_limit_seconds"] + 2)
-                time.sleep(debug_info["write_limit_seconds"] + 2)
-                return r
-            if reads >= read_limit:
-                print "Sleeping for {} seconds".format(debug_info["read_limit_seconds"] + 2)
-                time.sleep(debug_info["read_limit_seconds"] + 2)
-                return r
-
-            return r
-
-        return inner
 
     def get_lock(self, object_type, object_id):        
         """We need to implement this!"""
         pass
 
     @decorators.deferred
-    @rate_limited
+    @decorators.rate_limited
     def get_campaigns(self, campaign_ids):
+        print "In get campaigns"
         if len(campaign_ids) == 1:
             url = "/campaign?id={}".format(campaign_ids[0])
         else:
             url = "/campaign?id={}".format(','.join(campaign_ids))
         r = self.api.get(url)
-        return r
+        return r.json
 
     @decorators.deferred
-    @rate_limited
+    @decorators.rate_limited
     def get_profile(self, profile_id):
         url = "/profile?id={}".format(profile_id)
         r = self.api.get(url)
-        return r
+        return r.json
 
     @decorators.deferred
-    @rate_limited
+    @decorators.rate_limited
     def edit_campaign(self, campaign_id, data=None, profile_data=None, profile_id=None):
         '''Edit a campaign.
         '''
@@ -123,7 +95,7 @@ class OptLogHandler(tornado.web.RequestHandler):
         return r
 
     @decorators.deferred
-    @rate_limited
+    @decorators.rate_limited
     def edit_profile(self, profile_id, data):
         url = "/profile?id={}".format(profile_id)
         r = self.api.put(url, data=ujson.dumps({"profile": data}))
@@ -169,7 +141,7 @@ class OptLogHandler(tornado.web.RequestHandler):
 
         # Check that the POSTed columns are correct
         if len(all_cols) != len(self.log_cols + self.value_cols):
-            raise Exception("required_columns: object_modified, campaign_id, " + 
+            raise Exception("required columns: object_modified, campaign_id, " + 
                             "field_name, field_old_value, field_new_value, " + 
                             "metric_values, rule_group_id")
 
@@ -224,7 +196,7 @@ class OptLogHandler(tornado.web.RequestHandler):
 
             # Get the profile_id for the campaign
             campaign_data = yield self.get_campaigns([obj["campaign_id"]])
-            obj["profile_id"] = campaign_data.json["response"]["campaign"]["profile_id"]
+            obj["profile_id"] = campaign_data["response"]["campaign"]["profile_id"]
 
             # Get ids
             campaign_id = obj["campaign_id"]
@@ -242,13 +214,13 @@ class OptLogHandler(tornado.web.RequestHandler):
             # If so, make the changes to the campaign/profile
             if obj["object_modified"] == "campaign_profile":
                 profile = yield self.get_profile(profile_id)
-                self.assert_field_val(profile.json["response"]["profile"], 
+                self.assert_field_val(profile["response"]["profile"], 
                                       field_name, expected_val)
                 response = yield self.edit_profile(profile_id, changes)
 
             elif obj["object_modified"] == "campaign":
                 campaign = yield self.get_campaigns([campaign_id])
-                self.assert_field_val(campaign.json["response"]["campaign"], 
+                self.assert_field_val(campaign["response"]["campaign"], 
                                       field_name, expected_val)
                 response = yield self.edit_campaign(campaign_id, changes)
 
@@ -257,11 +229,11 @@ class OptLogHandler(tornado.web.RequestHandler):
 
         # If we hit an exception, send a JSON response back with the error
         except Exception as e:
-            self.get_content(str(e))
+            self.get_content(str(e), status="error")
 
     
-    def get_content(self, response):
-        self.write(ujson.dumps({"response": response}))
+    def get_content(self, response, status="ok"):
+        self.write(ujson.dumps({"response": response, "status": status}))
         self.finish()
 
     @tornado.web.asynchronous
@@ -269,4 +241,4 @@ class OptLogHandler(tornado.web.RequestHandler):
         try:
             self.push_to_appnexus(self.request.body)
         except Exception, e:
-            self.get_content(str(e))
+            self.get_content(str(e), status="error")

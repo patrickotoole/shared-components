@@ -3,23 +3,17 @@ import lib.helpers
 import os
 import ujson
 import importlib
+import mock
 sys.path.append("../../../../")
-
-import metrics.handlers.admin.scripts.opt_log as handler
 
 from tornado.testing import AsyncHTTPTestCase
 from tornado.web import  Application, RequestHandler
 from tornado.escape import to_unicode, json_decode, json_encode
 from link import lnk
 
-from twisted.internet import defer
-
 import unittest
 
-import tornado.platform.twisted
-tornado.platform.twisted.install()
-
-from twisted.internet import reactor
+from metrics.handlers.admin.scripts import opt_log
 
 CREATE_TABLE = """
 CREATE TABLE opt_log (
@@ -42,6 +36,14 @@ CREATE TABLE opt_rules (
     rule varchar(1000) NOT NULL,
     active tinyint(1) DEFAULT 1,
     created timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+)
+"""
+
+CREATE_VALUES_TABLE = """
+CREATE TABLE opt_values (
+    value_group_id int(11) NOT NULL,
+    metric_name varchar(1000) NOT NULL,
+    metric_value varchar(1000) NOT NULL
 )
 """
 
@@ -80,6 +82,7 @@ class OptLogTest(AsyncHTTPTestCase):
 
         self.db.execute(CREATE_TABLE)
         self.db.execute(CREATE_RULES_TABLE)
+        self.db.execute(CREATE_VALUES_TABLE)
 
         self.db.execute(RULES_FIXTURE1)
 
@@ -87,9 +90,11 @@ class OptLogTest(AsyncHTTPTestCase):
         self.db.execute(FIXTURE2)
         self.db.execute(FIXTURE3)
 
+        self.mock_api = mock.MagicMock()
+
         self.app = Application([
-          ('/', handler.OptLogHandler, dict(reporting_db=self.db, api=None)),
-          ('/(.*?)', handler.OptLogHandler, dict(reporting_db=self.db, api=None)) 
+          ('/', opt_log.OptLogHandler, dict(reporting_db=self.db, api=self.mock_api)),
+          ('/(.*?)', opt_log.OptLogHandler, dict(reporting_db=self.db, api=self.mock_api)) 
         ],
             cookie_secret="rickotoole"
         )
@@ -160,7 +165,7 @@ class OptLogTest(AsyncHTTPTestCase):
             del r["last_modified"]
         self.assertEqual(response,expected)
      
-    def test_post_fails(self):
+    def test_post_fails_required_columns(self):
         body = ujson.loads(self.fetch("/",method="POST",body="{}").body)
         self.assertEqual(body["response"],
                          "required columns: object_modified, campaign_id, " +
@@ -169,12 +174,24 @@ class OptLogTest(AsyncHTTPTestCase):
         self.assertEqual(body["status"], "error")
 
 
-    def test_post_success(self):
+    @mock.patch.object(opt_log.OptLogHandler, 'get_campaigns', autospec=True)
+    def test_post_success(self, mock_get_campaigns):
+        # Set the get_campaigns return value
+        mock_get_campaigns.return_value = {
+            "response":{
+                "campaign": {
+                    "profile_id":"987654", 
+                    "state": "inactive"
+                    }
+                }
+            }
+
+        # Construct our POST object and submit it
         to_post = {
             "rule_group_id": 1,
             "field_old_value": "inactive",
             "field_new_value": "active",
-            "campaign_id": 7318310,
+            "campaign_id": 1234567,
             "object_modified": "campaign",
             "field_name": "state",
             "metric_values": {
@@ -183,19 +200,63 @@ class OptLogTest(AsyncHTTPTestCase):
             }
         }
         to_post_json = ujson.dumps(to_post)
+        response = ujson.loads(self.fetch("/", method="POST", body=to_post_json).body)
 
-        print self.fetch("/", method="POST", body=to_post_json).body
+        # Check that get_campaigns was called with the correct argument
+        args,kwargs =  mock_get_campaigns.call_args
+        self.assertEqual(args[1], [1234567])
+        
+        # Check that the insert succeeded and that we have the correct object
+        expected = {
+            "rule_group_id": 1,
+            "field_old_value": "inactive",
+            "field_new_value": "active",
+            "campaign_id": 1234567,
+            "profile_id": 987654,
+            "object_modified": "campaign",
+            "field_name": "state",
+            "value_group_id": 4
+        }
 
-    #     expected = [
-    #         {"active": 1, "rule_group_id": 3, "rule_group_name": "da_best_rules", "rule": "the"},
-    #         {"active": 1, "rule_group_id": 3, "rule_group_name": "da_best_rules", "rule": "best"},
-    #         {"active": 1, "rule_group_id": 3, "rule_group_name": "da_best_rules", "rule": "rule"}
-    #     ]
+        # Don't want to check the last_modified time
+        del response["response"][0]["last_modified"]
 
-    #     body = ujson.loads(self.fetch("/",method="POST",body=to_post_json).body)
+        self.assertEqual(response["status"], "ok")
+        self.assertEqual(response["response"][0], expected)
 
-    #     # Don't check the created column, it's not really predictable
-    #     for i in body["response"]:
-    #         del i["created"]
+    @mock.patch.object(opt_log.OptLogHandler, 'get_campaigns', autospec=True)
+    def test_post_fails_unexpected_field_value(self, mock_get_campaigns):
+        # Set the get_campaigns return value
+        mock_get_campaigns.return_value = {
+            "response":{
+                "campaign": {
+                    "profile_id":"987654", 
+                    "state": "inactive"
+                    }
+                }
+            }
 
-    #     self.assertEqual(body["response"],expected)
+        # Construct our POST object and submit it
+        to_post = {
+            "rule_group_id": 1,
+            "field_old_value": "active",
+            "field_new_value": "inactive",
+            "campaign_id": 1234567,
+            "object_modified": "campaign",
+            "field_name": "state",
+            "metric_values": {
+                "metric1": 29348,
+                "metric2": 123.0129
+            }
+        }
+        to_post_json = ujson.dumps(to_post)
+        response = ujson.loads(self.fetch("/", method="POST", body=to_post_json).body)
+
+        # Check that get_campaigns was called with the correct argument
+        args,kwargs =  mock_get_campaigns.call_args
+        self.assertEqual(args[1], [1234567])
+        
+        expected = "current field value in AppNexus does not match field_old_value. inactive != active"
+        
+        self.assertEqual(response["status"], "error")
+        self.assertEqual(response["response"], expected)
