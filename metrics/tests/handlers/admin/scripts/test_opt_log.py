@@ -219,7 +219,9 @@ class OptLogTest(AsyncHTTPTestCase):
         }
 
         # Don't want to check the last_modified time
-        del response["response"][0]["last_modified"]
+        response["response"][0] = {k:v for k,v 
+                                   in response["response"][0].iteritems() 
+                                   if k != "last_modified"}
 
         self.assertEqual(response["status"], "ok")
         self.assertEqual(response["response"][0], expected)
