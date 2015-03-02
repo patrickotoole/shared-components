@@ -54,7 +54,6 @@ class VenueAnalysis(VenueAPI):
         try:
             bad = _joined[(_joined.served.fillna(0)/_joined.imps < .05) & (_joined.imps > 500)]
         except:
-            #import ipdb; ipdb.set_trace()
             pass
         return bad
     

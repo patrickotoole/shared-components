@@ -316,7 +316,6 @@ class decorators:
         def deferred_fn(*args,**kwargs):
             d = threads.deferToThread(fn,*args,**kwargs)
             d.addErrback(raiseError)
-            import ipdb; ipdb.set_trace()
             return d
         
         return deferred_fn
