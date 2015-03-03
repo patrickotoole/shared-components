@@ -51,42 +51,13 @@ OPTIONS = {
             "fields": ["top_n_raw"],
             "query": "keywords"
         }
-    },
-
-    "full": {
-        "meta": {
-            "groups": [
-                "advertiser",
-                "date",
-                "hour",
-                "timestamp",
-                "city",
-                "state",
-                "country",
-                "ip_address",
-                "user_agent",
-                "url",
-                "seller",
-                "time_zone",
-                "uid",
-                "conversion_ids"
-            ],
-            "fields": ["num_imps", "num_users"]
-        },
-        "formatters": {
-            "uid": "none",
-            "auction_id": "none"
-        }
-   }
+    }
 }
 
 GROUPS = {
     "advertiser": "advertiser",
     "date": "date",
     "hour": "hour",
-    "city": "city",
-    "state": "region",
-    "country": "country",
     "url": "url",
     "domain": "lower(regexp_replace(parse_url(concat('http://', regexp_replace(url, 'http://|https://', '')), 'HOST'), 'www.', ''))",
     "conversion_ids": "conversion_ids",
