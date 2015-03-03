@@ -92,14 +92,14 @@ class OptLogHandler(tornado.web.RequestHandler):
         '''
         url = "/campaign?id={}".format(campaign_id)
         r = self.api.put(url, data=ujson.dumps({"campaign": data}))
-        return r
+        return r.json
 
     @decorators.deferred
     @decorators.rate_limited
     def edit_profile(self, profile_id, data):
         url = "/profile?id={}".format(profile_id)
         r = self.api.put(url, data=ujson.dumps({"profile": data}))
-        return r
+        return r.json
 
     def get(self,*args):
         if len(args) > 0:

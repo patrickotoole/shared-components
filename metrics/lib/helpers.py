@@ -247,11 +247,11 @@ class decorators:
             r = func(*args, **kwargs)
 
             # Check for bad response
-            if "status" not in r.json["response"] or "error" in r.json["response"]:
+            if "status" not in r["response"] or "error" in r.json["response"]:
                 raise Exception("Call to AppNexus did not succeed: " +
-                                "{}".format(r.json["response"]["error"]))
+                                "{}".format(r["response"]["error"]))
 
-            debug_info = r.json["response"]["dbg_info"]
+            debug_info = r["response"]["dbg_info"]
 
             write_limit = debug_info["write_limit"]
             read_limit = debug_info["read_limit"]
