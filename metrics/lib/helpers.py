@@ -238,6 +238,41 @@ class Parse:
 
 
 class decorators:
+    
+    @staticmethod
+    def rate_limited(func):
+        print "In rate limited"
+        def inner(*args, **kwargs):
+            print "In rate limited"
+            r = func(*args, **kwargs)
+
+            # Check for bad response
+            if "status" not in r["response"] or "error" in r.json["response"]:
+                raise Exception("Call to AppNexus did not succeed: " +
+                                "{}".format(r["response"]["error"]))
+
+            debug_info = r["response"]["dbg_info"]
+
+            write_limit = debug_info["write_limit"]
+            read_limit = debug_info["read_limit"]
+
+            reads = debug_info["reads"]
+            writes = debug_info["writes"]
+
+            if writes >= write_limit:
+                print "Sleeping for {} seconds".format(debug_info["write_limit_seconds"] + 2)
+                time.sleep(debug_info["write_limit_seconds"] + 2)
+                return r
+            if reads >= read_limit:
+                print "Sleeping for {} seconds".format(debug_info["read_limit_seconds"] + 2)
+                time.sleep(debug_info["read_limit_seconds"] + 2)
+                return r
+
+            return r
+
+        return inner
+
+
     @staticmethod
     def formattable(fn):
         

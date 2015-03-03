@@ -44,7 +44,6 @@ class ReportAPIRequestWrapper(ConsoleAPIRequestWrapper):
 
         report_id = _json.get('response',{}).get('report_id',False)
         if not report_id:
-            import ipdb; ipdb.set_trace()
             raise Exception('No reporting found for %s' % base)
         return report_id
 

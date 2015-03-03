@@ -1,4 +1,5 @@
-import unittest, paramiko, os, pwd
+import unittest, paramiko, os, pwd, sys
+sys.path.append("../../../")
 from scp_wrapper import SCPWrapper
 class TestSCPWrapper(unittest.TestCase):
 
