@@ -247,7 +247,7 @@ GROUP BY %(groups)s
 
 HOVERBOARD = """
 SELECT %(fields)s
-FROM agg_conv_imps %(joins)s
+FROM agg_conv_imps_new %(joins)s
 WHERE %(where)s
 GROUP BY %(groups)s
 HAVING %(having)s
