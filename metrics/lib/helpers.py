@@ -247,7 +247,7 @@ class decorators:
             r = func(*args, **kwargs)
 
             # Check for bad response
-            if "status" not in r["response"] or "error" in r.json["response"]:
+            if "status" not in r["response"] or "error" in r["response"]:
                 raise Exception("Call to AppNexus did not succeed: " +
                                 "{}".format(r["response"]["error"]))
 
