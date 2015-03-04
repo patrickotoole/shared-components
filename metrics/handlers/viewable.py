@@ -28,6 +28,7 @@ class ViewabilityHandler(BaseHandler):
     @defer.inlineCallbacks
     def get_viewability(self,tag_ids,domains):
         viewability = yield self.defer_get_viewablity(tag_ids,domains)
+        viewability['percent_viewable'] = viewability['num_visible']/viewability['num_loaded']
 
         viewability_list = viewability.T.to_dict().values()
         self.write(ujson.dumps(viewability_list))
