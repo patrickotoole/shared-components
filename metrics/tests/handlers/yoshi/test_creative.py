@@ -10,7 +10,7 @@ def side_effect(func):
         result = [func()]
         for r in result:
             yield r
-    import ipdb; ipdb.set_trace()
+    #import ipdb; ipdb.set_trace()
     return inner
 
 mocked_deferred = mock.MagicMock()
