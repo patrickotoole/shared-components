@@ -34,7 +34,7 @@ class ViewabilityHandler(BaseHandler):
         self.write(ujson.dumps(viewability_list))
         self.finish()
 
-    @tornado.web.authenticated
+    #@tornado.web.authenticated
     @tornado.web.asynchronous
     def get(self):
         self.get_viewability(self.get_arguments("tag_id"),self.get_arguments("domain",[]))
