@@ -10,7 +10,7 @@ class ConnectorConfig(object):
     def __init__(self, skip_db=False, skip_reporting_db=False, skip_console_api=False, 
             skip_bidder_api=False, skip_buffers=False, skip_redis=False, include_hive=False,
             skip_filtered_imps=False, skip_conversion_imps=False, skip_conversion_events=False,
-            skip_visit_events=False, skip_spark_sql=False):
+            skip_visit_events=False, skip_spark_sql=False, skip_cassandra=False):
 
         self.connectors = {}
 
@@ -21,7 +21,7 @@ class ConnectorConfig(object):
         self.connectors["bidder"] = lnk.api.bidder if not skip_bidder_api else None
         self.connectors["do"] = lnk.api.digitalocean 
         self.connectors["marathon"] = lnk.api.marathon
-        self.connectors["cassandra"] = lnk.dbs.cassandra
+        self.connectors["cassandra"] = lnk.dbs.cassandra if not skip_cassandra else None
 
         self.connectors["hive"] = h.Hive().hive if include_hive is not False else None
 

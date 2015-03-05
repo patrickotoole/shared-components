@@ -26,7 +26,8 @@ OPTIONS = {
 
 class AdvertiserReportingHandler(tornado.web.RequestHandler):
 
-    def initialize(self, db=None, api=None, hive=None, spark_sql=None, **kwargs):
+    def initialize(self, db=None, api=None, hive=None, spark_sql=None, reporting_db =None, **kwargs):
+        self.reporting.db = db
         self.db = db 
         self.api = api
         self.hive = hive

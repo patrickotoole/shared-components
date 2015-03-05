@@ -20,6 +20,7 @@ class AdminReportingBase(object):
     WHERE = {}
     HAVING = {}
     JOINS = {}
+    LIMIT = {}
 
     def get_meta_group(self,default="default"):
         # pragma: no coverage
@@ -87,7 +88,7 @@ class AdminReportingBase(object):
 
         return meta_data
 
-    def make_params(self, groups, fields, where, joins="", having="", **kwargs):
+    def make_params(self, groups, fields, where, joins="", having="", limit="", **kwargs):
         gs = map(self.get_group, groups)
 
         fs = map(self.get_field, groups + fields)
@@ -97,7 +98,8 @@ class AdminReportingBase(object):
             "fields": ", ".join(fs),
             "where": where,
             "joins": joins,
-            "having": having
+            "having": having,
+            "limit": limit
         } 
         for i,j in kwargs.iteritems():
             params[j] = i
@@ -169,6 +171,13 @@ class AdminReportingBaseHandler(tornado.web.RequestHandler, AdminReportingBase):
         having_list.append(self.parse_qs_having())
 
         return " and ".join(having_list)
+
+    def make_limit(self):
+        limit = self.get_argument("limit", False)
+        if limit:
+            return limit
+        else:
+            return 100000
         
     def get(self):
         self.write(self.make_where())

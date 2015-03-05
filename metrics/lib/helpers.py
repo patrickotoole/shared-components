@@ -241,9 +241,7 @@ class decorators:
     
     @staticmethod
     def rate_limited(func):
-        print "In rate limited"
         def inner(*args, **kwargs):
-            print "In rate limited"
             r = func(*args, **kwargs)
 
             # Check for bad response

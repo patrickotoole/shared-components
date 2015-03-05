@@ -20,7 +20,10 @@ class IndexHandler(tornado.web.RequestHandler):
             ("/admin/advertiser/summary/reporting", "Domain Aggregated Reporting"),  
             ("/admin/advertiser/debug/reporting", "Debug Reporting"),
             ("/admin/advertiser/served/geo/reporting", "Served Geo data"),
-            ("/admin/advertiser/hoverboard/reporting", "Hoverboard data")
+            ("/admin/advertiser/hoverboard/reporting", "Hoverboard data"),
+            ("/admin/advertiser/hoverboard_v2/reporting?meta=category&advertiser=baublebar&limit=20", "Hoverboard V2 (categories)"),
+            ("/admin/advertiser/hoverboard_v2/reporting?meta=keyword&advertiser=baublebar&limit=20", "Hoverboard V2 (keywords)"),
+            ("/admin/advertiser/hoverboard_v2/reporting?meta=domain&advertiser=baublebar&limit=20", "Hoverboard V2 (domains)")
         ]
 
         advertiser_viewability_links = [

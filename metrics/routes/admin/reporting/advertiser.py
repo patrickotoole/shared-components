@@ -110,3 +110,13 @@ class AdvertiserReportingRoutes(Routes):
             ('/reporting/?', reporting.HoverboardHandler, self.connectors), 
             ('/reporting/?(meta)?/?', reporting.HoverboardHandler, self.connectors)
         ]
+
+    @namespace("/admin/advertiser/hoverboard_v2")
+    @connectors("reporting_db")
+    def hoverboard_reporting_v2(self):
+        import handlers.admin.reporting as reporting
+
+        return [
+            ('/reporting/?', reporting.HoverboardHandlerV2, self.connectors), 
+            ('/reporting/?(meta)?/?', reporting.HoverboardHandlerV2, self.connectors)
+        ]
