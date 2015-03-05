@@ -70,7 +70,6 @@ class OptLogHandler(tornado.web.RequestHandler):
     @decorators.deferred
     @decorators.rate_limited
     def get_campaigns(self, campaign_ids):
-        print "In get campaigns"
         if len(campaign_ids) == 1:
             url = "/campaign?id={}".format(campaign_ids[0])
         else:

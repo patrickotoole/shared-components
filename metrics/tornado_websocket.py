@@ -40,6 +40,7 @@ define("skip_conversion_imps", default=False,type=bool)
 define("skip_conversion_events", default=False,type=bool)     
 define("skip_visit_events", default=False,type=bool)      
 define("skip_spark_sql", default=False,type=bool)      
+define("skip_cassandra", default=False,type=bool)      
 
 
 define("no_internet",default=False, help="turns off things that require internet connection",type=bool)
@@ -71,7 +72,8 @@ if __name__ == '__main__':
         options.no_internet or options.skip_conversion_imps,
         options.no_internet or options.skip_conversion_events, 
         options.no_internet or options.skip_visit_events,
-        options.no_internet or options.skip_spark_sql
+        options.no_internet or options.skip_spark_sql,
+        options.no_internet or options.skip_cassandra
     ).connectors
 
     routes = [r for r in options.routes.split(",") if len(r)]
