@@ -51,6 +51,21 @@ OPTIONS = {
             "fields": ["tf_idf"],
             "query": "keywords"
         }
+    },
+
+    "bubble_category": {
+        "meta": {
+            "groups": ["advertiser", "category"],
+            "fields": ["tf_idf", "num_users", "avg_min_before_conv"]
+        }
+    },
+
+    "bubble_domain": {
+        "meta": {
+            "groups": ["advertiser", "domain"],
+            "fields": ["tf_idf", "num_users", "avg_min_before_conv"],
+            "query": "domain"
+        }
     }
 }
 
@@ -112,6 +127,12 @@ class HoverboardHandlerV2(AdminReportingBaseHandler):
 
         self.get_content(formatted)
 
+    # Function to normalize a series (used to generate bubble sizes)
+    def normalized(self, series, base, scale_factor):
+        max = series.max()
+        min = series.min()
+        return ((series - min) / (max-min) * scale_factor) + base
+
     def format_data(self, u, groupby, wide):
         
         for field in FIELDS:
@@ -133,6 +154,13 @@ class HoverboardHandlerV2(AdminReportingBaseHandler):
             u.index.rename(new_index,inplace=True)
             u = u.reset_index().reset_index()
             u.rename(columns={"index":"__index__"},inplace=True)
+
+        if "bubble" in self.get_argument("meta", False):
+            u["bubble_size"] = self.normalized(u.tf_idf, 1000, 5000)
+
+        limit = self.get_argument("limit", False)
+        if limit:
+            u = u.head(int(limit))
 
         return u
         

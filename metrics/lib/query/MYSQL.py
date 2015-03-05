@@ -251,7 +251,6 @@ SELECT %(fields)s
 FROM hoverboard_category
 WHERE %(where)s
 ORDER BY tf_idf DESC
-LIMIT %(limit)s
 """
 
 HOVERBOARD_V2_DOMAIN = """
@@ -259,7 +258,6 @@ SELECT %(fields)s
 FROM hoverboard_domain
 WHERE %(where)s
 ORDER BY tf_idf DESC
-LIMIT %(limit)s
 """
 
 HOVERBOARD_V2_KEYWORDS = """
