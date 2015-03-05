@@ -245,3 +245,27 @@ SELECT
 FROM rockerbox.advertiser a LEFT JOIN rockerbox.user u ON a.external_advertiser_id=u.advertiser_id 
 WHERE u.username like 'a\_%' and a.deleted=0
 """
+
+HOVERBOARD_V2_CATEGORY = """
+SELECT %(fields)s
+FROM hoverboard_category
+WHERE %(where)s
+ORDER BY tf_idf DESC
+LIMIT %(limit)s
+"""
+
+HOVERBOARD_V2_DOMAIN = """
+SELECT %(fields)s
+FROM hoverboard_domain
+WHERE %(where)s
+ORDER BY tf_idf DESC
+LIMIT %(limit)s
+"""
+
+HOVERBOARD_V2_KEYWORDS = """
+SELECT %(fields)s
+FROM hoverboard_keywords
+WHERE %(where)s
+ORDER BY tf_idf DESC
+LIMIT %(limit)s
+"""
