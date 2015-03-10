@@ -100,7 +100,8 @@ WHERE = {
 
 HAVING = {
     "min_imps": "num_imps >= %(min_imps)s",
-    "min_users": "num_users >= %(min_users)s"
+    "min_users": "num_users >= %(min_users)s",
+    "min_terms": "size(terms) > %(min_terms)s"
 }
 
 class HoverboardHandler(AdminReportingBaseHandler):
