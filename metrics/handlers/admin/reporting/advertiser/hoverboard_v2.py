@@ -1,6 +1,7 @@
 import pandas
 import tornado.web
 import ujson
+import json
 import numpy as np
 
 from twisted.internet import defer
@@ -12,7 +13,7 @@ from lib.query.MYSQL import HOVERBOARD_V2_DOMAIN
 from lib.query.MYSQL import HOVERBOARD_V2_KEYWORDS
 from ..base import AdminReportingBaseHandler
 
-JOIN = {
+JOINS = {
 }
 
 QUERY_OPTIONS = {
@@ -111,7 +112,6 @@ class HoverboardHandlerV2(AdminReportingBaseHandler):
             o = Convert.df_to_json(data)
             self.render("admin/reporting/target_list.html",data=o)
 
-        print data
         yield default, (data,)
 
     @defer.inlineCallbacks
@@ -155,7 +155,9 @@ class HoverboardHandlerV2(AdminReportingBaseHandler):
             u = u.reset_index().reset_index()
             u.rename(columns={"index":"__index__"},inplace=True)
 
-        if "bubble" in self.get_argument("meta", False):
+        meta = self.get_argument("meta", False)
+
+        if meta and "bubble" in meta:
             u["bubble_size"] = self.normalized(u.tf_idf, 1000, 5000)
 
         limit = self.get_argument("limit", False)
@@ -173,7 +175,9 @@ class HoverboardHandlerV2(AdminReportingBaseHandler):
         return default
 
     @tornado.web.asynchronous
-    def get(self,meta=False):
+    @decorators.meta_enabled
+    @decorators.help_enabled
+    def get(self, meta=False):
         formatted = self.get_argument("format",False)
         include = self.get_argument("include","").split(",")
         meta_group = self.get_meta_group()
@@ -183,10 +187,6 @@ class HoverboardHandlerV2(AdminReportingBaseHandler):
 
         if has_fields:
             meta_data['fields'] = fields
-
-        if meta:
-            self.write(ujson.dumps(meta_data))
-            self.finish()
 
         elif formatted:
             params = self.make_params(

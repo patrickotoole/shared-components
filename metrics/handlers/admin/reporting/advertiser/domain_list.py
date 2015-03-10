@@ -155,17 +155,15 @@ class DomainListHandler(AdminReportingBaseHandler):
     
 
     @tornado.web.asynchronous
+    @decorators.help_enabled
+    @decorators.meta_enabled
     def get(self,meta=False):
         formatted = self.get_argument("format",False)
         include = self.get_argument("include",False)
         meta_group = self.get_meta_group()
         meta_data = self.get_meta_data(meta_group,include)
 
-        if meta:
-            self.write(ujson.dumps(meta_data))
-            self.finish()
-
-        elif formatted:
+        if formatted:
             params = self.make_params(
                 meta_data.get("groups",[]),
                 meta_data.get("fields",[]),

@@ -238,6 +238,42 @@ class Parse:
 
 
 class decorators:
+
+    @staticmethod
+    def meta_enabled(func):
+        def inner(self, *args, **kwargs):
+            include = self.get_argument("include","").split(",")
+            meta_group = self.get_meta_group()
+            meta_data = self.get_meta_data(meta_group,include)
+            if args and args[0]=="meta":
+                self.write(ujson.dumps(meta_data))
+                self.finish()
+            else:
+                return func(self, *args, **kwargs)
+        return inner
+
+    @staticmethod
+    def help_enabled(func):
+        def inner(self, *args, **kwargs):
+            uri = '/'.join(self.request.uri.split("/")[:-1])
+            formatted = self.get_argument("format",False)
+            help_opt = self.get_argument("help", False)
+
+            if len(args) == 0 or args[0] != "help":
+                return func(self, *args, **kwargs)
+
+            if len(args) > 1 and args[1] == "all":
+                help_data = self.get_help()
+            else:
+                help_data = {"meta_options": self.get_help()["meta_options"]}
+
+            if formatted == "json":
+                self.write(ujson.dumps(help_data))
+                self.finish()
+            else:
+                self.render("admin/reporting/help.html",data=help_data, uri=uri)
+
+        return inner
     
     @staticmethod
     def rate_limited(func):

@@ -5,7 +5,7 @@ import ujson
 from twisted.internet import defer
 
 from lib.helpers import *
-from lib.hive.helpers import run_hive_session_deferred
+from lib.hive.helpers import run_spark_sql_session_deferred
 from lib.query.HIVE import CONVERSION_IMPS_QUERY
 from ..base import AdminReportingBaseHandler
 
@@ -147,11 +147,9 @@ class ConversionImpsHandler(AdminReportingBaseHandler):
     def get_data(self,query,groupby=False,wide=False):
 
         query_list = [
-            "set shark.map.tasks=12", 
-            "set mapred.reduce.tasks=0",
             query
         ]
-        raw = yield run_hive_session_deferred(self.hive,query_list)
+        raw = yield run_spark_sql_session_deferred(self.spark_sql,query_list)
 
         formatted = self.format_data(
             pandas.DataFrame(raw),
@@ -202,6 +200,8 @@ class ConversionImpsHandler(AdminReportingBaseHandler):
             return default
 
     @tornado.web.asynchronous
+    @decorators.meta_enabled
+    @decorators.help_enabled
     def get(self,meta=False):
         formatted = self.get_argument("format",False)
         include = self.get_argument("include","").split(",")
@@ -212,11 +212,7 @@ class ConversionImpsHandler(AdminReportingBaseHandler):
         
         meta_data["is_wide"] = wide
         
-        if meta:
-            self.write(ujson.dumps(meta_data))
-            self.finish()
-
-        elif formatted:
+        if formatted:
             params = self.make_params(
                 meta_data.get("groups",[]),
                 meta_data.get("fields",[]),

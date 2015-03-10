@@ -13,6 +13,7 @@ class AdminReportingBase(object):
     and constants need to overridden
     """
 
+    QUERY_OPTIONS = {}
     GROUPS = {}
     FIELDS = {}
     QUERY = ""
@@ -178,7 +179,19 @@ class AdminReportingBaseHandler(tornado.web.RequestHandler, AdminReportingBase):
             return limit
         else:
             return 100000
-        
+
+    def get_help(self):
+        HELP = {
+            "groups": self.GROUPS,
+            "fields": self.FIELDS,
+            "filters": self.WHERE,
+            "limits": self.LIMIT,
+            "joins": self.JOINS,
+            "queries": self.QUERY_OPTIONS,
+            "meta_options": self.OPTIONS
+        }
+        return HELP
+
     def get(self):
         self.write(self.make_where())
 
