@@ -51,6 +51,17 @@ OPTIONS = {
             "fields": ["top_n_raw"],
             "query": "keywords"
         }
+    },
+
+    "keywords_raw": {
+        "meta": {
+            "groups": ["advertiser", "uid"],
+            "fields": ["terms"],
+            "query": "keywords"
+        },
+        "formatters": {
+            "uid": "none"
+        }
     }
 }
 
@@ -61,7 +72,8 @@ GROUPS = {
     "url": "url",
     "domain": "lower(regexp_replace(parse_url(concat('http://', regexp_replace(url, 'http://|https://', '')), 'HOST'), 'www.', ''))",
     "conversion_ids": "conversion_ids",
-    "category": "category"
+    "category": "category",
+    "uid": "uid"
     }
 
 
@@ -71,7 +83,8 @@ FIELDS = {
     "urls": "collect_set(url)",
     "domains": "collect_set(lower(regexp_replace(parse_url(concat('http://', regexp_replace(url, 'http://|https://', '')), 'HOST'), 'www.', '')))",
     "top_n": "map_filter_top_n(map_group_sum(count_to_map(url_terms(url))), %(top_n)s)",
-    "top_n_raw": "map_filter_top_n(map_group_sum(count_to_map(a.terms)), %(top_n_raw)s)"
+    "top_n_raw": "map_filter_top_n(map_group_sum(count_to_map(a.terms)), %(top_n_raw)s)",
+    "terms": "max(terms)"
     }
 
 WHERE = {
