@@ -226,8 +226,12 @@ $.getJSON(META,function(meta){
     
       dc.renderAll()
       window.crsWrapped = crsWrapped
-   } 
-  })
+   }  
+ }).fail( function (xhr, status, error){
+    console.log("ERROR")
+    $(".loading").hide();
+     $("#data-table-avail").append("<tr><td>Error: " + error + ".</td></tr>");
+ });
 
 })
 
