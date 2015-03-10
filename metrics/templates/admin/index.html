@@ -23,6 +23,13 @@
   {% end %}
 </ul> 
 
+<h4>Advertiser Pixels (On-Page Reporting)</h4>
+<ul>
+  {% for i in advertiser_pixel_links %}
+      <li><a href="{% raw i[0] %}", target="_blank">{% raw i[1] %}</a></li>
+  {% end %}
+</ul> 
+
 <h4>Advertiser Viewability</h4>
 <ul>
   {% for i in advertiser_viewability_links %}

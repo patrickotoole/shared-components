@@ -315,6 +315,7 @@ class AdvertiserViewableHandler(AdminReportingBaseHandler):
     
 
     @tornado.web.asynchronous
+    @decorators.help_enabled
     def get(self,meta=""):
 
         formatted = self.get_argument("format",False)

@@ -131,8 +131,8 @@ class AdvertiserSummaryHandler(AdminReportingBaseHandler):
         if "domain_count" in u.columns:
             u["domain_count"] = u.domain_count.astype(int)
 
-        if "domain" in u.columns:
-            u = self.reformat_domain_data(u)
+        # if "domain" in u.columns:
+        #    u = self.reformat_domain_data(u)
 
         if groupby and wide:
             u = u.set_index(groupby).sort_index()
@@ -177,21 +177,16 @@ class AdvertiserSummaryHandler(AdminReportingBaseHandler):
 
         return default
 
-    
-
     @tornado.web.asynchronous
+    @decorators.meta_enabled
+    @decorators.help_enabled
     def get(self,meta=False):
         formatted = self.get_argument("format",False)
-        include = self.get_argument("include",False).split(",")
+        include = self.get_argument("include","").split(",")
         meta_group = self.get_meta_group()
-        print meta_group
         meta_data = self.get_meta_data(meta_group,include)
 
-        if meta:
-            self.write(ujson.dumps(meta_data))
-            self.finish()
-
-        elif formatted:
+        if formatted:
             params = self.make_params(
                 meta_data.get("groups",[]),
                 meta_data.get("fields",[]),

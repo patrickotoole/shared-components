@@ -182,6 +182,8 @@ class HoverboardHandler(AdminReportingBaseHandler):
         return default
 
     @tornado.web.asynchronous
+    @decorators.meta_enabled
+    @decorators.help_enabled
     def get(self,meta=False):
         formatted = self.get_argument("format",False)
         include = self.get_argument("include","").split(",")
@@ -193,11 +195,7 @@ class HoverboardHandler(AdminReportingBaseHandler):
         if has_fields:
             meta_data['fields'] = fields
 
-        if meta:
-            self.write(ujson.dumps(meta_data))
-            self.finish()
-
-        elif formatted:
+        if formatted:
             params = self.make_params(
                 meta_data.get("groups",[]),
                 meta_data.get("fields",[]),

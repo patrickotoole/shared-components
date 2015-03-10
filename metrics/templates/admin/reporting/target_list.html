@@ -9,6 +9,9 @@ input[type="checkbox"]:disabled + label{
   color: #ccc;
 }
 
+.loading {
+   display: none;
+}
 </style>
 
 <script type="text/javascript" src="http://rockerbox.com/js/d3.js"></script>
@@ -154,26 +157,29 @@ input[type="checkbox"]:disabled + label{
  
       } else {
         var qs =  (window.location.search.indexOf("?") >=0 ) ?  "&" : "?";
+        $('#report-form').append($("<a href='" +
+          window.location.href.split('?')[0] +
+          "/help' target=_blank>Help</a>"                  
+        ))
         if (!window.location.search.match("past_week")) {
-          $('#report-form').append($("<a href='" + 
+          $('#report-form').append($("<br /><a href='" + 
             window.location.href + 
             qs + 
             "include=date&wide=date&date=past_week"+
             "'>Show Past Week</a>"
           ))
-        } 
+        }
         $('#report-form').append($("<br/><a href='" +
           window.location.href + qs + "format=csv" +
           "'>Show as csv</a>"                  
         ))
-
       }
       </script>
   </div>
 </div>
 <br/>
 <h4 id="results-header">Results</h4>
-
+<div class="loading" align="center"><img src="http://portal.getrockerbox.com/static/img/general/logo-small.gif"></img></div>
 <table id="data-table-avail" class="table table-hover dc-data-table">
   <thead>
     <tr class="data-table-headers"></tr>
@@ -202,22 +208,27 @@ $.getJSON(META,function(meta){
       }).join(", ")
     )
 
-  $.getJSON(URL,function(data){
+  $(".loading").show();
 
-    var crsWrapped = new groupedDataWrapper(data,meta),
+  $.getJSON(URL,function(data){
+    $(".loading").hide();
+    if (data.length === 0){
+        $("#data-table-avail").append("<tr><td>Sorry, no results available.</td></tr>");
+    }
+
+    else {
+      var crsWrapped = new groupedDataWrapper(data,meta),
       tableWrapped = new groupedTableWrapper(crsWrapped,"#data-table-avail")
 
-    tableWrapped.makeHeaders(".data-table-headers")
-    tableWrapped.buildTable()
-    tableWrapped.renderGroupHeaders(data.length > 100)
+      tableWrapped.makeHeaders(".data-table-headers")
+      tableWrapped.buildTable()
+      tableWrapped.renderGroupHeaders(data.length > 100)
     
-    dc.renderAll()
-    window.crsWrapped = crsWrapped
-
-
-
-
+      dc.renderAll()
+      window.crsWrapped = crsWrapped
+   } 
   })
+
 })
 
 </script>
