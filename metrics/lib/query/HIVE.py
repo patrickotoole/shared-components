@@ -265,4 +265,5 @@ FROM (
         GROUP BY source, bid_request.bid_info.user_id_64
 ) a
 GROUP BY %(groups)s
+HAVING %(having)s
 """
