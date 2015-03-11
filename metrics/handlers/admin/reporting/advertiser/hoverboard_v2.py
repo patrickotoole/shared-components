@@ -33,7 +33,7 @@ OPTIONS = {
 
     "category": {
         "meta": {
-            "groups": ["advertiser", "category"],
+            "groups": ["advertiser", "category", "parent_category"],
             "fields": ["tf_idf", "num_users", "avg_min_before_conv"]
         }
     },
@@ -56,7 +56,7 @@ OPTIONS = {
 
     "bubble_category": {
         "meta": {
-            "groups": ["advertiser", "category"],
+            "groups": ["advertiser", "category", "parent_category"],
             "fields": ["tf_idf", "num_users", "avg_min_before_conv"]
         }
     },
@@ -74,7 +74,8 @@ GROUPS = {
     "advertiser":"advertiser",
     "category": "category",
     "keyword": "keyword",
-    "domain": "domain"
+    "domain": "domain",
+    "parent_category": "parent_category_name"
     }
 
 

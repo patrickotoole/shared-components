@@ -12,8 +12,15 @@ from ..base import AdminReportingBaseHandler
 OPTIONS = {
     "default": {
         "meta": {
-            "groups" : ["category"],
+            "groups" : ["parent_category", "category"],
             "fields" : ["imps_per_day", "users_per_day", "percent_of_imps", "percent_of_users"]
+        }
+    },
+
+    "parent_category": {
+        "meta": {
+            "groups": ["category", "domain"],
+            "fields": ["imps_per_day", "users_per_day", "percent_of_imps", "percent_of_users"]
         }
     },
 
@@ -26,9 +33,10 @@ OPTIONS = {
 }
 
 GROUPS = {
-    "category_id": "category_id",
+    "category_id": "a.category_id",
     "audit_status": "audit_status",
-    "category": "category_name",
+    "category": "a.category_name",
+    "parent_category": "parent_category_name",
     "domain": "domain"
 }
 
@@ -42,9 +50,10 @@ FIELDS = {
 }
 
 WHERE = {
-    "category_id": "category_id = '%(category_id)s'",
+    "category_id": "a.category_id = '%(category_id)s'",
     "audit_status": "audit_status = '%(audit_status)s'",
-    "category": 'category_name = "%(category)s"',
+    "category": 'a.category_name = "%(category)s"',
+    "parent_category": 'parent_category_name = "%(parent_category)s"',
     "domain": "domain like '%%%(domain)s%%'"
 }
 
@@ -122,11 +131,14 @@ class DomainCategoriesHandler(AdminReportingBaseHandler):
     def get_meta_group(self,default="default"):
         meta = self.get_argument("meta", False)
         category = self.get_argument("category", False)
+        parent_category = self.get_argument("parent_category", False)
         
         if meta:
             return meta
         elif category:
             return "category"
+        elif parent_category:
+            return "parent_category"
 
         return default
 
