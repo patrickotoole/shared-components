@@ -35,7 +35,7 @@
 <script type="text/javascript" src="/static/js/editable-limited.js"></script>  
 <script type="text/javascript" src="/static/js/advertiser.js"></script> 
 <script type="text/javascript" src="/static/js/advertiser/info.js"></script>  
-<script type="text/javascript" src="/static/js/advertiser/campaign.js"></script>   
+<script type="text/javascript" src="/static/js/advertiser/hoverboard.js"></script>    
 <script type="text/javascript" src="/static/js/mixpanel.js"></script>  
   
 <style>
@@ -85,6 +85,35 @@ body {
   background:none;
   background-color:rgb(118, 118, 118);
 }
+
+svg {
+  font: 10px sans-serif;
+}
+
+svg .label {
+  font-weight:normal;
+  font-size:10px
+}
+
+.custom-tooltip {
+  font: 10px sans-serif;
+  background:rgba(255,255,255,.5);
+  padding:5px;
+  margin-top:15px
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.dot {
+  /*stroke: #000;*/
+  opacity:.8
+}
+
 </style>
 
 <div id="advertiser-content" class='container row'>
@@ -102,9 +131,11 @@ data.sort(function(x){
 var id = '#advertiser-content'
 
 d3.json('?format=json',function(data){
-  var wrapped = buildAdvertiserWrapper(data,"#advertiser-content","12",false).selectAll(".panel")
+  var wrapped = buildAdvertiserWrapper([{"bubble_data":data}],"#advertiser-content","12",false).selectAll(".panel")
 
-  wrapped.text(JSON.stringify(data))
+  wrapped.selectAll(".panel-title").text("Where do users spend their time before converting?")
+
+  buildHoverboard(wrapped)
 
   d3.select('#page-loader').classed("hidden",true)
 })
