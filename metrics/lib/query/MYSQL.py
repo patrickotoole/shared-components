@@ -247,8 +247,8 @@ WHERE u.username like 'a\_%' and a.deleted=0
 """
 
 HOVERBOARD_V2_CATEGORY = """
-SELECT %(fields)s
-FROM hoverboard_category
+SELECT DISTINCT %(fields)s
+FROM reporting.hoverboard_category a JOIN rockerbox.category b ON (a.category = b.category_name)
 WHERE %(where)s
 ORDER BY tf_idf DESC
 """
@@ -269,8 +269,8 @@ LIMIT %(limit)s
 """
 
 DOMAIN_CATEGORY = """
-SELECT %(fields)s
-FROM domain_category
+SELECT DISTINCT %(fields)s
+FROM domain_category a JOIN category b ON (a.category_name = b.category_name)
 WHERE %(where)s
 GROUP BY %(groups)s
 ORDER BY sum(percent_of_users) DESC
