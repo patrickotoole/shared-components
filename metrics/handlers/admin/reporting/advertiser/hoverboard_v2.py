@@ -49,7 +49,7 @@ OPTIONS = {
     "keyword": {
         "meta": {
             "groups": ["advertiser", "keyword"],
-            "fields": ["tf_idf"],
+            "fields": ["tf_idf", "num_users"],
             "query": "keywords"
         }
     },
@@ -117,7 +117,6 @@ class HoverboardHandlerV2(AdminReportingBaseHandler):
 
     @defer.inlineCallbacks
     def get_data(self,query,groupby=False,wide=False):
-
         df = yield run_mysql_deferred(self.reporting_db,query)
 
         formatted = self.format_data(
