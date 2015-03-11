@@ -41,12 +41,12 @@ GROUPS = {
 }
 
 FIELDS = {
-    "percent_of_imps": "sum(percent_of_imps)",
-    "percent_of_users": "sum(percent_of_users)",
+    "percent_of_imps": "round(sum(percent_of_imps) * 100, 4)",
+    "percent_of_users": "round(sum(percent_of_users) * 100, 4)",
     "total_imps": "sum(total_imps)",
     "total_users": "sum(total_users)",
-    "imps_per_day": "sum(imps_per_day)",
-    "users_per_day": "sum(users_per_day)"
+    "imps_per_day": "round(sum(imps_per_day))",
+    "users_per_day": "round(sum(users_per_day))"
 }
 
 WHERE = {
