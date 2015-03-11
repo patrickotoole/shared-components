@@ -132,7 +132,7 @@ data.sort(function(x){
 
 var id = '#advertiser-content'
 
-d3.json('?format=json',function(data){
+d3.json('/hoverboard?format=json&limit=15&meta=bubble_category',function(data){
   var wrapped = buildAdvertiserWrapper([{"bubble_data":data}],"#advertiser-content","12",false).selectAll(".panel")
 
   wrapped.selectAll(".panel-title").text("Where do users spend their time before converting?")

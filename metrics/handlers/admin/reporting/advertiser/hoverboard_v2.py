@@ -49,7 +49,7 @@ OPTIONS = {
     "keyword": {
         "meta": {
             "groups": ["advertiser", "keyword"],
-            "fields": ["tf_idf"],
+            "fields": ["tf_idf", "num_users"],
             "query": "keywords"
         }
     },

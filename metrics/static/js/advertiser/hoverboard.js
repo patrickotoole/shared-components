@@ -3,13 +3,11 @@ var buildHoverboard = function(wrapper) {
     .append("div")
     .classed("bubble-wrapper",true)
 
-
   var width, height;
-
       
   var buildSVG = function(wrapper) {
     var w = wrapper.node().getBoundingClientRect().width
-    var margin = {top: 20, right: 20, bottom: 30, left: 40}
+    var margin = {top: 30, right: 30, bottom: 30, left: 50}
         width = w - margin.left - margin.right,
         height = 300 - margin.top - margin.bottom;
     
@@ -95,7 +93,7 @@ var buildHoverboard = function(wrapper) {
         .attr("r", function(d) { return z(d.z); })
         .attr("cx", function(d) { return x(d.x); })
         .attr("cy", function(d) { return y(d.y); })
-        .style("fill", function(d) { return color(d.category); })
+        .style("fill", function(d) { return color(d.parent_category); })
         .on("mouseover", function(d){tooltip.style("visibility", "visible"); tooltip.text(d.category); return})
         .on("mousemove", function(){return tooltip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");})
         .on("mouseout", function(){return tooltip.style("visibility", "hidden");});
@@ -126,11 +124,12 @@ var buildHoverboard = function(wrapper) {
   buildBubblePlot(svg_wrapper)
 
   var buildBarSVG = function(wrapper) {
+    console.log(wrapper)
     var w = wrapper.node().getBoundingClientRect().width 
 
     var margin = {top: 10, right: 10, bottom: 10, left: 170},
       width = w - margin.left - margin.right,
-      height = 300 - margin.top - margin.bottom;
+      height = 400 - margin.top - margin.bottom;
 
     var svg = wrapper.append("svg")
       .attr("width", width + margin.left + margin.right)
@@ -138,6 +137,7 @@ var buildHoverboard = function(wrapper) {
       .append("g")
       .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
       .attr("data-width",width)
+      .attr("data-height",height) 
 
     var tooltip = wrapper
       .append("div") 
@@ -153,10 +153,11 @@ var buildHoverboard = function(wrapper) {
     return svg
   }
 
-  var transformCategory = function(data) {
+  var transformCategory = function(data,name) {
   
+
     return d3.nest()
-      .key(function(d){return d.category})
+      .key(function(d){return d[name]})
       .rollup(function(d){
   
         var values = d3.entries(d[0]).filter(function(x) {return x.key == "num_users" || x.key == "tf_idf" || x.key == "population"})
@@ -168,8 +169,9 @@ var buildHoverboard = function(wrapper) {
   }
 
 
-  var buildBars = function(svg) {
+  var buildBars = function(svg,name) {
     var width = svg.attr("data-width")
+    var height = svg.attr("data-height") 
     var x = d3.scale.linear().range([0, width])
     var z = d3.scale.linear().range([0, width])
     var w = d3.scale.linear().range([0, width]) 
@@ -180,10 +182,9 @@ var buildHoverboard = function(wrapper) {
 
     var color = d3.scale.category20c();   
 
-    var datum = svg.data()[0]['category_data']
-    console.log(datum)
+    var datum = svg.data()[0]['values']
 
-    var data = transformCategory(datum)  
+    var data = transformCategory(datum,name)  
                           
     x.domain([0,d3.max(datum.map(function(x){return x.num_users}))]).nice();                                                                     
     z.domain([0,d3.max(datum.map(function(x){return x.tf_idf}))]).nice(); 
@@ -254,24 +255,73 @@ var buildHoverboard = function(wrapper) {
   
   }
 
-  var bar_wrapper = wrapper.selectAll(".bar-wrapper")
-    .data([{"category_data":[{"category":"Travel Agencies & Services","advertiser":"smartertravelmedia","num_users":3718,"tf_idf":17657,"avg_min_before_conv":9},{"category":"Timeshares & Vacation Properties","advertiser":"smartertravelmedia","num_users":816,"tf_idf":7047,"avg_min_before_conv":16},{"category":"Hotels & Accommodations","advertiser":"smartertravelmedia","num_users":433,"tf_idf":2827,"avg_min_before_conv":12},{"category":"Email & Messaging","advertiser":"smartertravelmedia","num_users":475,"tf_idf":2687,"avg_min_before_conv":11},{"category":"Air Travel","advertiser":"smartertravelmedia","num_users":387,"tf_idf":2614,"avg_min_before_conv":12},{"category":"Celebrity News","advertiser":"smartertravelmedia","num_users":620,"tf_idf":2327,"avg_min_before_conv":15},{"category":"News","advertiser":"smartertravelmedia","num_users":713,"tf_idf":2023,"avg_min_before_conv":13},{"category":"Web Portals","advertiser":"smartertravelmedia","num_users":467,"tf_idf":1714,"avg_min_before_conv":12},{"category":"Travel","advertiser":"smartertravelmedia","num_users":262,"tf_idf":1422,"avg_min_before_conv":10},{"category":"Weather","advertiser":"smartertravelmedia","num_users":424,"tf_idf":1410,"avg_min_before_conv":10}]}])
+
+  d3.json('/hoverboard?meta=category&limit=15&format=json',function(data) {
+  
+  var bar_wrapper = wrapper.selectAll(".category-bar-wrapper")
+    .data([{"values":data}])
     .enter()
       .append("div")
-      .classed("col-md-4 bar-wrapper row",true)
+      .classed("col-md-4 bar-wrapper category-bar-wrapper",true)
+      .append("div").classed("col-md-12 row",true) 
 
-  bar_wrapper.append("div")
-    .style("margin-top","15px")
-    .classed("panel-heading",true)
-    .append("h4")
-    .classed("panel-title",true)
-    .text("What categories are uniquely important?")
+    bar_wrapper.append("div")
+      .style("margin-top","15px")
+      .classed("panel-heading",true)
+      .append("h4")
+      .classed("panel-title",true)
+      .text("What categories are important?")
 
-  var svg_bar_wrapper = buildBarSVG(bar_wrapper)
+    var svg_bar_wrapper = buildBarSVG(bar_wrapper)
 
-  buildBars(svg_bar_wrapper)
+    buildBars(svg_bar_wrapper,"category")
+ 
+  })
 
-
+  d3.json('/hoverboard?meta=domain&limit=15&format=json',function(data) {
   
+  var bar_wrapper = wrapper.selectAll(".domain-bar-wrapper")
+    .data([{"values":data}])
+    .enter()
+      .append("div")
+      .classed("col-md-4 domain-bar-wrapper bar-wrapper",true)
+      .append("div").classed("col-md-12 row",true)  
+
+    bar_wrapper.append("div")
+      .style("margin-top","15px")
+      .classed("panel-heading",true)
+      .append("h4")
+      .classed("panel-title",true)
+      .text("What domains are important?")
+
+    var svg_bar_wrapper = buildBarSVG(bar_wrapper)
+
+    buildBars(svg_bar_wrapper,"domain")
+ 
+  })
+
+  d3.json('/hoverboard?meta=keyword&limit=15&format=json',function(data) {
+  
+  var bar_wrapper = wrapper.selectAll(".keyword-bar-wrapper")
+    .data([{"values":data}])
+    .enter()
+      .append("div")
+      .classed("col-md-4 keyword-bar-wrapper bar-wrapper",true)
+      .append("div").classed("cold-md-12 row",true)
+
+    bar_wrapper.append("div")
+      .style("margin-top","15px")
+      .classed("panel-heading",true)
+      .append("h4")
+      .classed("panel-title",true)
+      .text("What keywords are important?")
+
+    var svg_bar_wrapper = buildBarSVG(bar_wrapper)
+
+    buildBars(svg_bar_wrapper,"keyword")
+ 
+  })
+   
+ 
 
 } 
