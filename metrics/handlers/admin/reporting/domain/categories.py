@@ -135,7 +135,7 @@ class DomainCategoriesHandler(AdminReportingBaseHandler):
     @decorators.help_enabled
     def get(self,meta=False):
         formatted = self.get_argument("format",False)
-        include = self.get_argument("include",False).split(",")
+        include = self.get_argument("include","").split(",")
         meta_group = self.get_meta_group()
         meta_data = self.get_meta_data(meta_group,include)
         fields = self.get_argument("fields", "").split(",")

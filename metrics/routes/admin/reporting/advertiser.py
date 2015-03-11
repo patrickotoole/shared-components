@@ -20,7 +20,7 @@ class AdvertiserReportingRoutes(Routes):
 
         return [
             (r'/reporting/?',reporting.AdvertiserViewableHandler, self.connectors),
-            (r'/reporting/?(.*?)/?',reporting.AdvertiserViewableHandler, self.connectors),
+            (r'/reporting/+(meta|help)?/?(.*?)',reporting.AdvertiserViewableHandler, self.connectors),
         ]
 
     @namespace("/admin/advertiser/domain_list")
@@ -30,7 +30,7 @@ class AdvertiserReportingRoutes(Routes):
 
         return [
             (r'/reporting/?',reporting.DomainListHandler, self.connectors),
-            (r'/reporting/?(.*?)/?',reporting.DomainListHandler, self.connectors),
+            (r'/reporting/+(meta|help)?/?(.*?)',reporting.DomainListHandler, self.connectors),
         ]
 
     @namespace("/admin/advertiser/pixel")
@@ -40,11 +40,11 @@ class AdvertiserReportingRoutes(Routes):
 
         return [
             (r'/reporting/?', reporting.AdvertiserPixelHandler, self.connectors),
-            (r'/reporting/?(meta|help)?/?(.*?)', reporting.AdvertiserPixelHandler, self.connectors),
+            (r'/reporting/+(meta|help)?/?(.*?)', reporting.AdvertiserPixelHandler, self.connectors),
             (r'/geo/reporting/?', reporting.AdvertiserPixelGeoHandler, self.connectors),
-            (r'/geo/reporting/?(meta|help)?/?(.*?)', reporting.AdvertiserPixelGeoHandler, self.connectors),
+            (r'/geo/reporting/+(meta|help)?/?(.*?)', reporting.AdvertiserPixelGeoHandler, self.connectors),
             (r'/device/reporting/?', reporting.AdvertiserPixelDeviceHandler, self.connectors),
-            (r'/device/reporting/?(meta|help)?/?(.*?)', reporting.AdvertiserPixelDeviceHandler, self.connectors)
+            (r'/device/reporting/+(meta|help)?/?(.*?)', reporting.AdvertiserPixelDeviceHandler, self.connectors)
         ]
 
     @namespace("/admin/advertiser/conversion")
@@ -54,9 +54,9 @@ class AdvertiserReportingRoutes(Routes):
 
         return [
             ('/reporting/?', reporting.ConversionCheckHandler, self.connectors), 
-            ('/reporting/?(meta|help)?/?(.*?)', reporting.ConversionCheckHandler, self.connectors), 
+            ('/reporting/+(meta|help)?/?(.*?)', reporting.ConversionCheckHandler, self.connectors), 
             ('/imps/reporting/?', reporting.ConversionImpsHandler, self.connectors), 
-            ('/imps/reporting/?(meta|help)?/?(.*?)', reporting.ConversionImpsHandler, self.connectors)
+            ('/imps/reporting/+(meta|help)?/?(.*?)', reporting.ConversionImpsHandler, self.connectors)
         ]
 
     @namespace("/admin/advertiser/click")
@@ -66,9 +66,9 @@ class AdvertiserReportingRoutes(Routes):
 
         return [
             ('/reporting/?', reporting.ClickCheckHandler, self.connectors), 
-            ('/reporting/?(meta|help)?/?(.*?)', reporting.ClickCheckHandler, self.connectors), 
+            ('/reporting/+(meta|help)?/?(.*?)', reporting.ClickCheckHandler, self.connectors), 
             ('/imps/reporting/?', reporting.ClickImpsHandler, self.connectors), 
-            ('/imps/reporting/?(meta|help)?/?(.*?)', reporting.ClickImpsHandler, self.connectors)
+            ('/imps/reporting/+(meta|help)?/?(.*?)', reporting.ClickImpsHandler, self.connectors)
         ]
 
     @namespace("/admin/advertiser/summary")
@@ -78,7 +78,7 @@ class AdvertiserReportingRoutes(Routes):
 
         return [
             ('/reporting/?', reporting.AdvertiserSummaryHandler, self.connectors), 
-            ('/reporting/?(meta|help)?/?(.*?)', reporting.AdvertiserSummaryHandler, self.connectors), 
+            ('/reporting/+(meta|help)?/?(.*?)', reporting.AdvertiserSummaryHandler, self.connectors), 
         ]
 
     @namespace("/admin/advertiser/served")
@@ -88,7 +88,7 @@ class AdvertiserReportingRoutes(Routes):
 
         return [
             ('/geo/reporting/?', reporting.AdvertiserServedGeoHandler, self.connectors), 
-            ('/geo/reporting/?(meta|help)?/?(.*?)', reporting.AdvertiserServedGeoHandler, self.connectors), 
+            ('/geo/reporting/+(meta|help)?/?(.*?)', reporting.AdvertiserServedGeoHandler, self.connectors), 
         ]
  
     @namespace("/admin/advertiser/hoverboard")
@@ -98,7 +98,7 @@ class AdvertiserReportingRoutes(Routes):
 
         return [
             ('/reporting/?', reporting.HoverboardHandler, self.connectors), 
-            ('/reporting/?(meta|help)?/?(.*?)', reporting.HoverboardHandler, self.connectors)
+            ('/reporting/+(meta|help)?/?(.*?)', reporting.HoverboardHandler, self.connectors)
         ]
 
     @namespace("/admin/advertiser/hoverboard_v2")
@@ -108,5 +108,5 @@ class AdvertiserReportingRoutes(Routes):
 
         return [
             ('/reporting/?', reporting.HoverboardHandlerV2, self.connectors), 
-            ('/reporting/?(meta|help)?/?(.*?)', reporting.HoverboardHandlerV2, self.connectors)
+            ('/reporting/+(meta|help)?/?(.*?)', reporting.HoverboardHandlerV2, self.connectors)
         ]
