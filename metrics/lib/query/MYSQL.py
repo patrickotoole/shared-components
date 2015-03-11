@@ -270,7 +270,7 @@ LIMIT %(limit)s
 
 DOMAIN_CATEGORY = """
 SELECT %(fields)s
-FROM domain_category_new
+FROM domain_category
 WHERE %(where)s
 GROUP BY %(groups)s
 ORDER BY sum(percent_of_users) DESC

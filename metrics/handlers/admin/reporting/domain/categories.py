@@ -26,6 +26,8 @@ OPTIONS = {
 }
 
 GROUPS = {
+    "category_id": "category_id",
+    "audit_status": "audit_status",
     "category": "category_name",
     "domain": "domain"
 }
@@ -40,6 +42,8 @@ FIELDS = {
 }
 
 WHERE = {
+    "category_id": "category_id = '%(category_id)s'",
+    "audit_status": "audit_status = '%(audit_status)s'",
     "category": 'category_name = "%(category)s"',
     "domain": "domain like '%%%(domain)s%%'"
 }
@@ -131,9 +135,14 @@ class DomainCategoriesHandler(AdminReportingBaseHandler):
     @decorators.help_enabled
     def get(self,meta=False):
         formatted = self.get_argument("format",False)
-        include = self.get_argument("include",False)
+        include = self.get_argument("include",False).split(",")
         meta_group = self.get_meta_group()
         meta_data = self.get_meta_data(meta_group,include)
+        fields = self.get_argument("fields", "").split(",")
+        has_fields = len(fields) > 0 and len(fields[0]) > 0
+
+        if has_fields:
+            meta_data["fields"] = fields
 
         if formatted:
             params = self.make_params(
