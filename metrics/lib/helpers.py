@@ -63,10 +63,6 @@ class Mask:
             
         return mask
 
-
-
-
-
 class Cast:
     @staticmethod
     def try_cast_list(cast,l,default="---"):
@@ -245,6 +241,7 @@ class decorators:
             include = self.get_argument("include","").split(",")
             meta_group = self.get_meta_group()
             meta_data = self.get_meta_data(meta_group,include)
+            print args, kwargs
             if args and args[0]=="meta":
                 self.write(ujson.dumps(meta_data))
                 self.finish()
@@ -260,6 +257,7 @@ class decorators:
             help_opt = self.get_argument("help", False)
 
             if len(args) == 0 or args[0] != "help":
+                print args, kwargs
                 return func(self, *args, **kwargs)
 
             if len(args) > 1 and args[1] == "all":
