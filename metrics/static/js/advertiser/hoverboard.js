@@ -210,6 +210,7 @@ var buildHoverboard = function(wrapper) {
     group 
       .on("mouseover", function(d){ 
         var tooltip = d3.select(svg[0].parentNode).selectAll(".custom-tooltip") 
+        var tooltip = d3.select(svg.node().parentNode.parentNode).selectAll(".custom-tooltip")
         
         tooltip.style("visibility", "visible");  
         var asmap = d3.nest() 
@@ -219,7 +220,7 @@ var buildHoverboard = function(wrapper) {
    
         tooltip.html( 
           "<div>Conversions: " + asmap.num_users + "</div>" + 
-          "<div>Category Importance: " + d3.format("%")((asmap.tf_idf+tf_idf_sum/10)/tf_idf_sum) + "</div>" 
+          "<div>" + name.replace(/^./, function(x){return x.toUpperCase()}) + " Importance: " + d3.format("%")((asmap.tf_idf+tf_idf_sum/10)/tf_idf_sum) + "</div>" 
         ) 
    
         return 
