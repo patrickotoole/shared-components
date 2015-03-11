@@ -36,6 +36,14 @@ class AdvertiserRoutes(Routes):
             
         ]
 
+    @connectors("reporting_db")
+    def user_advertiser_reporting(self):
+        import handlers.hoverboard as hoverboard
+
+        return [
+             (r'/hoverboard', hoverboard.HoverboardHandler, self.connectors),   
+        ]
+
     @connectors("db","api","cassandra")
     def yoshi_routes(self):
         import handlers.campaign as campaign
