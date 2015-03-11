@@ -267,3 +267,12 @@ WHERE %(where)s
 ORDER BY tf_idf DESC
 LIMIT %(limit)s
 """
+
+DOMAIN_CATEGORY = """
+SELECT %(fields)s
+FROM domain_category_new
+WHERE %(where)s
+GROUP BY %(groups)s
+ORDER BY sum(percent_of_users) DESC
+LIMIT %(limit)s
+"""

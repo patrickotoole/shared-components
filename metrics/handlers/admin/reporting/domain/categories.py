@@ -5,56 +5,61 @@ import ujson
 from twisted.internet import defer
 
 from lib.helpers import *
-from lib.hive.helpers import run_spark_sql_session_deferred
-from lib.query.HIVE import DOMAIN_CATEGORIES
+from lib.mysql.helpers import run_mysql_deferred
+from lib.query.MYSQL import DOMAIN_CATEGORY
 from ..base import AdminReportingBaseHandler
 
 OPTIONS = {
     "default": {
         "meta": {
-            "groups" : ["category", "domain", "page"],
-            "fields" : ["imps"]
+            "groups" : ["category"],
+            "fields" : ["imps_per_day", "users_per_day", "percent_of_imps", "percent_of_users"]
         }
     },
-    
+
     "category": {
         "meta": {
-            "groups": ["category", "domain", "page"],
-            "fields": ["imps"]
+            "groups": ["category", "domain"],
+            "fields": ["imps_per_day", "users_per_day", "percent_of_imps", "percent_of_users"]
         }
     }
 }
 
 GROUPS = {
-    "category": "topic",
-    "domain": "domain",
-    "description": "description",
-    "page": "url"
+    "category": "category_name",
+    "domain": "domain"
 }
 
 FIELDS = {
-    "imps": "sum(volume)"
+    "percent_of_imps": "sum(percent_of_imps)",
+    "percent_of_users": "sum(percent_of_users)",
+    "total_imps": "sum(total_imps)",
+    "total_users": "sum(total_users)",
+    "imps_per_day": "sum(imps_per_day)",
+    "users_per_day": "sum(users_per_day)"
 }
 
 WHERE = {
-    "category": "lower(topic) like concat('%%', lower('%(category)s'), '%%')"
+    "category": 'category_name = "%(category)s"',
+    "domain": "domain like '%%%(domain)s%%'"
 }
 
+LIMIT = {
+    "limit": "%(limit)s"
+}
 
 class DomainCategoriesHandler(AdminReportingBaseHandler):
 
-    QUERY = DOMAIN_CATEGORIES
+    QUERY = DOMAIN_CATEGORY
     WHERE = WHERE
     FIELDS = FIELDS
     GROUPS = GROUPS
+    LIMIT = LIMIT
 
     OPTIONS = OPTIONS
 
     def initialize(self, db=None, api=None, hive=None, spark_sql=None):
         self.db = db 
-        self.api = api
-        self.hive = hive
-        self.spark_sql = spark_sql
 
     @classmethod
     def reformat_domain_data(self,data):
@@ -86,9 +91,6 @@ class DomainCategoriesHandler(AdminReportingBaseHandler):
         yield default, (data,)
 
     def format_data(self,u,groupby,wide):
-        if "domain" in u.columns:
-            u = self.reformat_domain_data(u)
-
         if groupby and wide:
             u = u.set_index(groupby).sort_index()
             u = u.stack().unstack(wide)
@@ -101,17 +103,12 @@ class DomainCategoriesHandler(AdminReportingBaseHandler):
         return u
 
     @defer.inlineCallbacks
-    def get_data(self,query,groupby=False,wide=False):
+    def get_data(self, query, groupby=False, wide=False):
 
-        query_list = [
-            "SET spark.sql.shuffle.partitions=8",
-            query
-        ]
-
-        raw = yield run_spark_sql_session_deferred(self.spark_sql,query_list)
-
+        df = yield run_mysql_deferred(self.db,query)
+        
         formatted = self.format_data(
-            pandas.DataFrame(raw),
+            df.fillna(value="NA"),
             groupby,
             wide
         )
@@ -119,29 +116,31 @@ class DomainCategoriesHandler(AdminReportingBaseHandler):
         self.get_content(formatted)
 
     def get_meta_group(self,default="default"):
+        meta = self.get_argument("meta", False)
         category = self.get_argument("category", False)
         
-        if category:
+        if meta:
+            return meta
+        elif category:
             return "category"
 
         return default
 
     @tornado.web.asynchronous
+    @decorators.meta_enabled
+    @decorators.help_enabled
     def get(self,meta=False):
         formatted = self.get_argument("format",False)
         include = self.get_argument("include",False)
         meta_group = self.get_meta_group()
         meta_data = self.get_meta_data(meta_group,include)
 
-        if meta:
-            self.write(ujson.dumps(meta_data))
-            self.finish()
-
-        elif formatted:
+        if formatted:
             params = self.make_params(
                 meta_data.get("groups",[]),
                 meta_data.get("fields",[]),
-                self.make_where(date=False)
+                self.make_where(date=False),
+                limit = self.make_limit()
             )
             print params
             self.get_data(
