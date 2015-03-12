@@ -14,13 +14,13 @@ class AdminRoutes(
 ):
 
     @namespace("/admin")
-    @connectors("")
+    @connectors("db")
     def index(self):
         import handlers.admin.index as index 
 
         return [
-            (r'/?', index.IndexHandler, {}),
-            (r'/index', index.IndexHandler, {}),
+            (r'/?', index.IndexHandler, self.connectors),
+            (r'/index', index.IndexHandler, self.connectors),
         ]
 
     @namespace("/admin")

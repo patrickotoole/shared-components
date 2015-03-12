@@ -52,9 +52,9 @@ var buildHoverboard = function(wrapper) {
         .orient("left");
      
   
-    x.domain([0,d3.max(data.map(function(d){return d.x}))+2]).nice();
+    x.domain([-1.5+d3.min(data.map(function(d){return d.x})),d3.max(data.map(function(d){return d.x}))+2]).nice();
     y.domain(d3.extent(data, function(d) { return d.y; })).nice();
-    z.domain([-150+d3.min(data.map(function(d){return d.z})),d3.max(data.map(function(d){return d.z}))]).nice();
+    z.domain([0,d3.max(data.map(function(d){return d.z}))]).nice();
   
     var tooltip = d3.select("body")
         .append("div")
@@ -198,6 +198,7 @@ var buildHoverboard = function(wrapper) {
     }                                                                                                                                            
     
     var tf_idf_sum = datum.map(function(x){return x.tf_idf}).reduce(function(p,c){return p+c}) 
+    var asmap = d3.nest().key(function(x){return x[name]}).map(datum)
    
     y.domain(data.map(function(d) { return d.key; })); 
    
@@ -206,6 +207,7 @@ var buildHoverboard = function(wrapper) {
       .enter() 
         .append("g") 
         .attr("class","bar-group") 
+        .sort(function(a,b){return asmap[a.key][0].tf_idf - asmap[b.key][0].tf_idf})
    
     group 
       .on("mouseover", function(d){ 

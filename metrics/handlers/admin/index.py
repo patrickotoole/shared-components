@@ -1,7 +1,21 @@
 import tornado.web
+from ..base import BaseHandler
 
-class IndexHandler(tornado.web.RequestHandler):
+class IndexHandler(BaseHandler):
+
+    def initialize(self, db=None):
+        self.db = db
+ 
     def get(self):
+        advertiser_id = self.get_argument("advertiser_id", False)
+        pixel_source_name = self.get_argument("advertiser", False) 
+
+        if pixel_source_name:
+            Q = "select external_advertiser_id from advertiser where pixel_source_name = '%s' "
+            advertiser_id = str(self.db.select_dataframe(Q % pixel_source_name).external_advertiser_id[0])
+
+        if advertiser_id: 
+            self.set_secure_cookie( "advertiser",advertiser_id )
         production_links = [
             ("/streaming", "Streaming"),
             ("/reporting", "Reporting")
