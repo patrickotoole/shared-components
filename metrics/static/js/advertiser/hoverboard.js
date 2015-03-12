@@ -198,6 +198,7 @@ var buildHoverboard = function(wrapper) {
     }                                                                                                                                            
     
     var tf_idf_sum = datum.map(function(x){return x.tf_idf}).reduce(function(p,c){return p+c}) 
+    var asmap = d3.nest().key(function(x){return x[name]}).map(datum)
    
     y.domain(data.map(function(d) { return d.key; })); 
    
@@ -206,6 +207,7 @@ var buildHoverboard = function(wrapper) {
       .enter() 
         .append("g") 
         .attr("class","bar-group") 
+        .sort(function(a,b){return asmap[a.key][0].tf_idf - asmap[b.key][0].tf_idf})
    
     group 
       .on("mouseover", function(d){ 
