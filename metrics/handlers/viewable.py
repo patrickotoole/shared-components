@@ -28,7 +28,7 @@ class ViewabilityHandler(BaseHandler):
         logging.info(QUERY + WHERE)
         df = self.cassandra.select_dataframe(QUERY + WHERE )
 
-        if len(sizes):
+        if len(sizes) and len(df):
             return df[df['size'].isin(sizes)]
 
         return df
@@ -36,7 +36,8 @@ class ViewabilityHandler(BaseHandler):
     @defer.inlineCallbacks
     def get_viewability(self,tag_ids,sizes,domains):
         viewability = yield self.defer_get_viewablity(tag_ids,sizes,domains)
-        viewability['percent_viewable'] = viewability['num_visible']/viewability['num_loaded']
+        if len(viewability):
+            viewability['percent_viewable'] = viewability['num_visible']/viewability['num_loaded']
 
         viewability_list = viewability.T.to_dict().values()
         self.write(ujson.dumps(viewability_list))
