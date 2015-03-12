@@ -268,6 +268,14 @@ ORDER BY tf_idf DESC
 LIMIT %(limit)s
 """
 
+HOVERBOARD_V2_TOPICS = """
+SELECT DISTINCT %(fields)s
+FROM hoverboard_topic a JOIN hoverboard_topic_terms b ON (a.topic_id = b.topic_id)
+WHERE %(where)s
+GROUP BY %(groups)s
+LIMIT %(limit)s
+"""
+
 DOMAIN_CATEGORY = """
 SELECT DISTINCT %(fields)s
 FROM domain_category a JOIN category b ON (a.category_name = b.category_name)
