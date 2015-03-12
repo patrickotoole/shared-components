@@ -52,9 +52,9 @@ var buildHoverboard = function(wrapper) {
         .orient("left");
      
   
-    x.domain([0,d3.max(data.map(function(d){return d.x}))+2]).nice();
+    x.domain([-1.5+d3.min(data.map(function(d){return d.x})),d3.max(data.map(function(d){return d.x}))+2]).nice();
     y.domain(d3.extent(data, function(d) { return d.y; })).nice();
-    z.domain([-150+d3.min(data.map(function(d){return d.z})),d3.max(data.map(function(d){return d.z}))]).nice();
+    z.domain([0,d3.max(data.map(function(d){return d.z}))]).nice();
   
     var tooltip = d3.select("body")
         .append("div")

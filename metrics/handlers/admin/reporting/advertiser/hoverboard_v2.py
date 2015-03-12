@@ -135,7 +135,7 @@ class HoverboardHandlerV2(AdminReportingBaseHandler):
 
     def format_data(self, u, groupby, wide):
         
-        for field in FIELDS:
+        """for field in FIELDS:
             if field in u.columns:
                 try:
                     try:
@@ -145,6 +145,7 @@ class HoverboardHandlerV2(AdminReportingBaseHandler):
                 except:
                     logging.warn("Could not format %s" % field)
                     pass
+        """
 
         if groupby and wide:
             u = u.set_index(groupby).sort_index()
