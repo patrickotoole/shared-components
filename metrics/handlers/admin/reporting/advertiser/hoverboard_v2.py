@@ -11,6 +11,7 @@ from lib.mysql.helpers import run_mysql_deferred
 from lib.query.MYSQL import HOVERBOARD_V2_CATEGORY
 from lib.query.MYSQL import HOVERBOARD_V2_DOMAIN
 from lib.query.MYSQL import HOVERBOARD_V2_KEYWORDS
+from lib.query.MYSQL import HOVERBOARD_V2_TOPICS
 from ..base import AdminReportingBaseHandler
 
 JOINS = {
@@ -20,7 +21,8 @@ QUERY_OPTIONS = {
     "default": HOVERBOARD_V2_CATEGORY,
     "category": HOVERBOARD_V2_CATEGORY,
     "domain": HOVERBOARD_V2_DOMAIN,
-    "keywords": HOVERBOARD_V2_KEYWORDS
+    "keywords": HOVERBOARD_V2_KEYWORDS,
+    "topics": HOVERBOARD_V2_TOPICS
 }
 
 OPTIONS = {
@@ -53,6 +55,22 @@ OPTIONS = {
             "query": "keywords"
         }
     },
+    
+    "topics": {
+        "meta": {
+            "groups": ["advertiser", "topic", "term"],
+            "fields": ["topic_probability", "term_probability"],
+            "query": "topics"
+        }
+    },
+
+    "advertiser_topics": {
+        "meta": {
+            "groups": ["topic", "term"],
+            "fields": ["topic_probability", "term_probability"],
+            "query": "topics"
+        }
+    },
 
     "bubble_category": {
         "meta": {
@@ -75,7 +93,9 @@ GROUPS = {
     "category": "category",
     "keyword": "keyword",
     "domain": "domain",
-    "parent_category": "parent_category_name"
+    "parent_category": "parent_category_name",
+    "topic": "a.topic_id",
+    "term": "term"
     }
 
 
@@ -169,8 +189,11 @@ class HoverboardHandlerV2(AdminReportingBaseHandler):
         
     def get_meta_group(self,default="default"):
         meta = self.get_argument("meta", False)
+        advertiser = self.get_argument("advertiser", False)
 
-        if meta:
+        if meta=="topics" and advertiser:
+            return "advertiser_topics"
+        elif meta:
             return meta
 
         return default
