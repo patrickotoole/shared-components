@@ -315,6 +315,7 @@ class AdvertiserViewableHandler(AdminReportingBaseHandler):
     
 
     @tornado.web.asynchronous
+    @decorators.meta_enabled
     @decorators.help_enabled
     def get(self,meta=""):
 
