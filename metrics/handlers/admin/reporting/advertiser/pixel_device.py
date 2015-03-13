@@ -14,7 +14,14 @@ from ..base import AdminReportingBaseHandler
 OPTIONS = {
     "default": {
         "meta": {
-            "groups" : ["advertiser", "os", "browser", "device"],
+            "groups" : ["advertiser", "os", "browser"],
+            "fields" : ["views", "users"]
+        }
+    },
+
+    "advertiser": {
+        "meta": {
+            "groups" : ["os", "browser", "device"],
             "fields" : ["views", "users"]
         }
     },
@@ -71,6 +78,7 @@ class AdvertiserPixelDeviceHandler(AdminReportingBaseHandler):
         yield default, (data,)
 
     def format_data(self,u,groupby,wide):
+        u = u.fillna("NA")
         for field in FIELDS:
             if field in u.columns:
                 try:
@@ -112,11 +120,14 @@ class AdvertiserPixelDeviceHandler(AdminReportingBaseHandler):
         self.get_content(formatted)
 
     def get_meta_group(self,default="default"):
-
+        advertiser = self.get_argument("advertiser", False)
         meta = self.get_argument("meta",False)
 
         if meta:
             return meta
+        
+        if advertiser:
+            return "advertiser"
 
         return default
 

@@ -67,8 +67,7 @@ class IndexHandler(BaseHandler):
 
         domain_links = [
             ("/admin/viewable/domain_list", "Domain List Optimization Status"),
-            ("/admin/domain/categories/reporting", "Domain Volume by Category"),
-            ("/admin/advertiser/domain_list/reporting", "Domain List Impressions Available")
+            ("/admin/domain/categories/reporting", "Domain Volume by Category")
         ]
 
         demographics_links = [
@@ -82,6 +81,7 @@ class IndexHandler(BaseHandler):
         ]
 
         deprecated = [
+            ("/admin/advertiser/domain_list/reporting", "Domain List Impressions Available"),
             ("/admin/advertiser/segment", "Segment"),
             ("/admin/advertiser/reporting", "[ALPHA] Reporting (unified)"), 
             ("/admin/money", "Money Tool"),

@@ -18,13 +18,33 @@ JOIN = {
 OPTIONS = {
     "default": {
         "meta": {
-            "groups": ["zip_code", "city", "state"],
+            "groups": ["state"],
             "fields": ["population", "median_household_income"],
             "formatters": {
                 "zip_code": "none"
                 }
             }
         },
+
+    "state": {
+        "meta": {
+            "groups": ["city"],
+            "fields": ["population", "median_household_income"],
+            "formatters": {
+                "zip_code": "none"
+            }
+        }
+     },
+
+    "city": {
+        "meta": {
+            "groups": ["zip_code"],
+            "fields": ["population", "median_household_income"],
+            "formatters": {
+                "zip_code": "none"
+            }
+        }
+     },
 
     "none": {
         "meta": {
@@ -128,9 +148,16 @@ class IncomeCensusHandler(AdminReportingBaseHandler):
         
     def get_meta_group(self,default="default"):
         meta = self.get_argument("meta", False)
+        state = self.get_argument("state", False)
+        city = self.get_argument("city", False)
 
         if meta:
             return meta
+        
+        if state:
+            return "state"
+        if city:
+            return "city"
 
         return default
 
