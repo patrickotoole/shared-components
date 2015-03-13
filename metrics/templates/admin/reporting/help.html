@@ -4,6 +4,9 @@
 
 <div class="container">
 <h3>Help - {{uri}}</h3>
+{% if request.uri.split('/')[-1]=="help" %}
+<p><a href="help/all">See more (groups, filters, etc.)</a></p>
+{% end %}
 <div id="accordion" class="list-group">
 </div>
 <script>
