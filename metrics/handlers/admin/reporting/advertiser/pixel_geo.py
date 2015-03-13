@@ -25,7 +25,14 @@ QUERY_OPTIONS = {
 OPTIONS = {
     "default": {
         "meta": {
-            "groups" : ["advertiser", "city", "state"],
+            "groups" : ["advertiser", "state"],
+            "fields" : ["views", "users"]
+        }
+    },
+
+    "advertiser":{
+        "meta": {
+            "groups" : ["state", "city"],
             "fields" : ["views", "users"]
         }
     },
@@ -120,6 +127,7 @@ class AdvertiserPixelGeoHandler(AdminReportingBaseHandler):
         yield default, (data,)
 
     def format_data(self,u,groupby,wide):
+        u = u.fillna("NA")
         for field in FIELDS:
             if field in u.columns:
                 try:
@@ -161,11 +169,14 @@ class AdvertiserPixelGeoHandler(AdminReportingBaseHandler):
         self.get_content(formatted)
 
     def get_meta_group(self,default="default"):
-
+        advertiser = self.get_argument("advertiser", False)
         meta = self.get_argument("meta",False)
 
         if meta:
             return meta
+
+        if advertiser:
+            return "advertiser"
 
         return default
 
