@@ -28,5 +28,8 @@ class FilterHandler(tornado.web.RequestHandler):
     
     @tornado.web.asynchronous
     def get(self,*args):
-        self.get_listeners()
+        if args and args[0] == "streaming":
+            self.render("../templates/admin/bubble_filter.html")
+        else:
+            self.get_listeners()
 

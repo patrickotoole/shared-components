@@ -28,22 +28,29 @@ class ConnectorConfig(object):
         self.connectors["spark_sql"] = lnk.dbs.hive if not skip_spark_sql else None
 
         self.connectors["redis"] = streaming._redis if not skip_redis else None
-        self.connectors["filtered_imps"] = KafkaQueue(mock_connect=skip_filtered_imps)
-        self.connectors["conversion_imps"] = KafkaQueue(
-            mock_connect=skip_conversion_imps,topic="conversion_impsw",transform=ujson.loads
-        ) 
-        self.connectors["conversion_events"] = KafkaQueue(
-            mock_connect=skip_conversion_events,topic="conversion_events",transform=ujson.loads
-        )
-        self.connectors["visit_events"] = KafkaQueue(
-            mock_connect=skip_visit_events,topic="visit_events",transform=ujson.loads
-        )
-        self.connectors["served_imps"] = KafkaQueue(
-            mock_connect=skip_visit_events,topic="served_imps",transform=ujson.loads
-        )
+        
+ 
  
 
         if not skip_buffers:
+            if False:
+                self.connectors["filtered_imps"] = KafkaQueue(mock_connect=skip_filtered_imps)
+                self.connectors["conversion_imps"] = KafkaQueue(
+                    mock_connect=skip_conversion_imps,topic="conversion_impsw",transform=ujson.loads
+                ) 
+                self.connectors["conversion_events"] = KafkaQueue(
+                    mock_connect=skip_conversion_events,topic="conversion_events",transform=ujson.loads
+                )
+                self.connectors["visit_events"] = KafkaQueue(
+                    mock_connect=skip_visit_events,topic="visit_events",transform=ujson.loads
+                )
+                self.connectors["served_imps"] = KafkaQueue(
+                    mock_connect=skip_visit_events,topic="served_imps",transform=ujson.loads
+                )
+            self.connectors["treefilter"] = KafkaQueue(
+                mock_connect=skip_visit_events,topic="filtertree",transform=ujson.loads
+            )
+
             self.connectors["buffers"] = {
                 "track": streaming.track_buffer,
                 "view" : streaming.view_buffer,
@@ -51,7 +58,8 @@ class ConnectorConfig(object):
                 "conversion_imps": streaming.conversion_imps_buffer,
                 "conversion_events": streaming.conversion_events_buffer,
                 "visit_events": streaming.visit_events_buffer,
-                "served_imps": streaming.served_buffer
+                "served_imps": streaming.served_buffer,
+                "treefilter": streaming.treefilter_buffer
             }                          
         else:
             self.connectors["buffers"] = None

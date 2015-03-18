@@ -59,6 +59,7 @@ class StreamingHandler(StreamingBase,tornado.websocket.WebSocketHandler):
     def generator_loop(self):
 
         start = time.time()
+        delorean = self.reset("treefilter") 
         base = { key:self.build_df(key) for key in self.buffers.keys()}
             
         for i,client in clients.iteritems():
@@ -68,6 +69,8 @@ class StreamingHandler(StreamingBase,tornado.websocket.WebSocketHandler):
             masks = client.get('masks',False)
             streams = client.get('streams',['track'])
             dicts = { key: self.mask_select_convert(df,masks,key) for key, df in base.iteritems() if key in streams}
+            if "treefilter" in streams:
+                dicts["treefilter"] = delorean
             json = ujson.dumps(dicts,ensure_ascii=True)
 
             try:
@@ -92,12 +95,16 @@ class StreamingHandler(StreamingBase,tornado.websocket.WebSocketHandler):
         logging.info("current clients: " + str(clients))
         self.id = self.get_argument("id","123")
         logging.info("adding new client: " + self.id)
+        
         #if (len(clients.keys()) < 10):
+        """
         if self.request.headers['X-Real-Ip'] != '184.153.72.149':
             logging.info(self.request.headers['X-Real-Ip'])
             clients[self.id] = {"id": self.id, "object": self, "enabled":False}
         else:
             logging.info(self.request)
+        """
+        clients[self.id] = {"id": self.id, "object": self, "enabled":False}
         if len(clients.keys()) == 1 and self.control_buffer['on'] is False:
             self.buffers['track'].clear()
             self.control_buffer['on'] = True
