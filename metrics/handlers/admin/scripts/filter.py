@@ -30,6 +30,9 @@ class FilterHandler(tornado.web.RequestHandler):
     def get(self,*args):
         if args and args[0] == "streaming":
             self.render("../templates/admin/bubble_filter.html")
+        elif args and args[0] == "sankey":
+            print "HERE"
+            self.render("../templates/admin/sankey_filter.html")
         else:
             self.get_listeners()
 

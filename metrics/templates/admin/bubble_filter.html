@@ -75,8 +75,8 @@ var codify = function(node) {
 var recursive = function(node) {
 
   node.merkle = (node.children && node.children.length > 0) ? 
-    JSON.stringify(codify(node.node)) + node.children.sort(function(x,y){return x.node.pattern + x.node.label > y.node.pattern + y.node.label }).map(recursive).join(",") : 
-    JSON.stringify(codify(node.node))
+    codify(node.node) + node.children.sort(function(x,y){return x.node.pattern + x.node.label > y.node.pattern + y.node.label }).map(recursive).join(",") : 
+    codify(node.node)
 
   return node.merkle
 
@@ -90,8 +90,6 @@ var build = function(data) {
   node = root = data;
 
   var nodes = pack.nodes(root);
-  window.nodes = nodes
-
 
   circles = vis.selectAll("circle")
       .data(nodes,function(f,i){ return f.merkle})
@@ -161,7 +159,6 @@ function zoom(d, new_data) {
 
   var or = d.r,
     ok = r / d.r / 2;
-  debugger;
 
   var dr = new_data ? asMap[d.merkle][0].r : d.r,
     dx = new_data ? asMap[d.merkle][0].x : d.x,
@@ -170,16 +167,6 @@ function zoom(d, new_data) {
   var k = r / dr / 2;
   x.domain([dx - dr, dx + dr]);
   y.domain([dy - dr, dy + dr]);  
-
-  /*
-  var k = r / d.r / 2;
-  x.domain([d.x - d.r, d.x + d.r]);
-  y.domain([d.y - d.r, d.y + d.r]);
-
-  console.log(d.r,asMap[d.merkle][0].r)
-  console.log(d.x,asMap[d.merkle][0].x)
-  console.log(d.y,asMap[d.merkle][0].y)
-  */
 
   t = vis.transition()
       .duration(d3.event && d3.event.altKey ? 7500 : 750);
@@ -198,7 +185,6 @@ function zoom(d, new_data) {
   t.selectAll("text").selectAll("tspan")
       .attr("x", function(d) { return x(d.x); })
       .style("opacity", function(d) { 
-        //console.log(or, dr, ok, k, d.r, asMap[d.merkle][0].r, k*d.r, k*asMap[d.merkle][0].r); 
         return k*d.r > 20 ? 1 : 0; 
       })
       .text(function(d) { return d.value; });
@@ -210,11 +196,13 @@ function zoom(d, new_data) {
 }
 
 
+
+
 RB.websocket.addSubscription("treefilter",{"name":"treefilter","values":false},{"name":"treefilter","callback":function(x){
     x.treefilter.filter(function(y){ 
       return y.count
-    }).map(function(x){
-      build(x)
+    }).map(function(z,i){
+      setTimeout(build.bind(false,z),1000*i)
     })
   }
 })
