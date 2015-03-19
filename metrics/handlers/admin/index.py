@@ -27,8 +27,16 @@ class IndexHandler(BaseHandler):
             ("/admin/segment/scrubbed", "Scrubbed Segments Tool"),
             ("/admin/batch_request/new", "Batch Request Tool"),
             ("/admin/appnexus/campaign", "Mass edit (by campaign)"),
-            ("/admin/filter","Delorean Filter Tool"),
             ("/admin/advertiser/logins", "Advertiser Admin Logins")
+        ]
+
+        delorean_links = [
+            ("/admin/filter/domains","Delorean Domain"),
+            ("/admin/filter","Delorean Filter Tool"),
+
+            ("/admin/filter/streaming","Delorean Monitoring -- Bubbles"), 
+            ("/admin/filter/sankey","Delorean Monitoring -- Sankey"),  
+
         ]
 
         dashboard_links = [
@@ -105,5 +113,6 @@ class IndexHandler(BaseHandler):
             demographics_links = demographics_links,
             hoverboard_links = hoverboard_links,
             tools = tools,
-            deprecated = deprecated
+            deprecated = deprecated,
+            delorean_links = delorean_links
         )

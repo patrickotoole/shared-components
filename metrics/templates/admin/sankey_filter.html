@@ -1,0 +1,340 @@
+<meta charset="UTF-8">
+<style>
+
+
+text {font-size:11px}
+
+#chart {
+  height: 500px;
+}
+
+.node rect {
+  cursor: move;
+  fill-opacity: .9;
+  shape-rendering: crispEdges;
+}
+
+.node text {
+  pointer-events: none;
+  text-shadow: 0 1px 0 #fff;
+}
+
+.link {
+  fill: none;
+  stroke: #000;
+  stroke-opacity: .2;
+}
+
+.link:hover {
+  stroke-opacity: .5;
+}
+
+</style>
+
+<div id="chart"></div>
+
+<script src="http://d3js.org/d3.v3.min.js"></script> 
+<script src="/static/js/rockerbox/dataobjects.js"></script> 
+<script src="/static/js/sankey.js" ></script>
+
+<script>
+var data = {"node":{"pattern":"","label":"all"},"children":[{"node":{"pattern":"","label":""},"children":[{"node":{"pattern":"pgl_id","queue":{"id":"filtered_imps_test"},"label":""},"children":[],"count":0},{"node":{"pattern":"pgl_id","queue":{"id":"filtered_imps"},"label":""},"children":[],"count":0},{"node":{"pattern":"","label":"smartertravel"},"children":[{"node":{"pattern":"LAS","segment":{"id":"2472049","value":"0","duration":"10080"},"label":""},"children":[],"count":0},{"node":{"pattern":"Las-Vegas","segment":{"id":"2472049","value":"0","duration":"10080"},"label":""},"children":[],"count":1},{"node":{"pattern":"McCarran","segment":{"id":"2472049","value":"0","duration":"10080"},"label":""},"children":[],"count":0},{"node":{"pattern":"Las_Vegas","segment":{"id":"2472049","value":"0","duration":"10080"},"label":""},"children":[],"count":0},{"node":{"pattern":"las-vegas","segment":{"id":"2472049","value":"0","duration":"10080"},"label":""},"children":[],"count":17},{"node":{"pattern":"Las%20Vegas","segment":{"id":"2472049","value":"0","duration":"10080"},"label":""},"children":[],"count":0},{"node":{"pattern":"Las+Vegas","segment":{"id":"2472049","value":"0","duration":"10080"},"label":""},"children":[],"count":0},{"node":{"pattern":"orbitz.com","label":""},"children":[{"node":{"pattern":"shop/hotelsearch","segment":{"id":"2608729","value":"0","duration":"4320"},"queue":{"id":"syphon_imps"},"label":""},"children":[],"count":1},{"node":{"pattern":"shop/packagesearch","segment":{"id":"2608729","value":"0","duration":"4320"},"queue":{"id":"syphon_imps"},"label":""},"children":[],"count":0},{"node":{"pattern":"shop/airsearch","segment":{"id":"2608729","value":"0","duration":"4320"},"queue":{"id":"syphon_imps"},"label":""},"children":[],"count":0}],"count":73},{"node":{"pattern":"cheaptickets.com","label":""},"children":[{"node":{"pattern":"shop/hotelsearch","segment":{"id":"2608929","value":"0","duration":"4320"},"queue":{"id":"syphon_imps"},"label":""},"children":[],"count":0},{"node":{"pattern":"shop/packagesearch","segment":{"id":"2608929","value":"0","duration":"4320"},"queue":{"id":"syphon_imps"},"label":""},"children":[],"count":0},{"node":{"pattern":"shop/airsearch","segment":{"id":"2608929","value":"0","duration":"4320"},"queue":{"id":"syphon_imps"},"label":""},"children":[],"count":1}],"count":6}],"count":425},{"node":{"pattern":"","label":"syphon"},"children":[{"node":{"pattern":",1602040","queue":{"id":"syphon_imps"},"label":"baublebar"},"children":[],"count":327}],"count":425},{"node":{"pattern":"wendyslookbook.com","label":""},"children":[{"node":{"pattern":"a-dream-baublebar-design-collaboration","segment":{"id":"2543866","value":"1","duration":"10080"},"queue":{"id":"wendys_baublebar"},"label":"baublebar blog post"},"children":[],"count":0},{"node":{"pattern":"a-dream-baublebar-design-collaboration","queue":{"id":"syphon_imps"},"label":"baublebar"},"children":[],"count":0}],"count":0},{"node":{"pattern":"dealcatcher.com","label":""},"children":[{"node":{"pattern":"baublebar","segment":{"id":"2543866","value":"2","duration":"10080"},"queue":{"id":"dealcatcher_baublebar"},"label":"baublebar deals"},"children":[],"count":0},{"node":{"pattern":"baublebar","queue":{"id":"syphon_imps"},"label":"baublebar"},"children":[],"count":0}],"count":0},{"node":{"pattern":"","label":"troweprice"},"children":[{"node":{"pattern":"schaeffersresearch.com","segment":{"id":"2613628","value":"6","duration":"2592000"},"label":""},"children":[],"count":0},{"node":{"pattern":"nasdaq.com","segment":{"id":"2613628","value":"7","duration":"2592000"},"label":""},"children":[],"count":0},{"node":{"pattern":"zacks.com","segment":{"id":"2613628","value":"8","duration":"2592000"},"label":""},"children":[],"count":0},{"node":{"pattern":"thestreet.com","segment":{"id":"2613628","value":"9","duration":"2592000"},"label":""},"children":[],"count":0},{"node":{"pattern":"marketwatch.com","segment":{"id":"2613628","value":"10","duration":"2592000"},"label":""},"children":[],"count":0},{"node":{"pattern":"cnbc.com","segment":{"id":"2613628","value":"11","duration":"2592000"},"label":""},"children":[],"count":1},{"node":{"pattern":"morningstar.com","label":""},"children":[{"node":{"pattern":"morningstar.com","segment":{"id":"2613628","value":"1","duration":"2592000"},"label":""},"children":[],"count":0},{"node":{"pattern":"news.morningstar.com","segment":{"id":"2613628","value":"2","duration":"2592000"},"label":""},"children":[],"count":0},{"node":{"pattern":"quote.morningstar.com","segment":{"id":"2613628","value":"3","duration":"2592000"},"label":""},"children":[],"count":0},{"node":{"pattern":"portfolio.morningstar.com","segment":{"id":"2613628","value":"4","duration":"2592000"},"label":""},"children":[],"count":0},{"node":{"pattern":"screen.morningstar.com","segment":{"id":"2613628","value":"5","duration":"2592000"},"label":""},"children":[],"count":0}],"count":0}],"count":425}],"count":3236}
+
+]}
+
+
+var data2 = {"node":{"pattern":"","label":"all"},"children":[{"node":{"pattern":"","label":""},"children":[{"node":{"pattern":"pgl_id","queue":{"id":"filtered_imps_test"},"label":""},"children":[],"count":0},{"node":{"pattern":"pgl_id","queue":{"id":"filtered_imps"},"label":""},"children":[],"count":0},{"node":{"pattern":"","label":"smartertravel"},"children":[{"node":{"pattern":"LAS","segment":{"id":"2472049","value":"0","duration":"10080"},"label":""},"children":[],"count":4},{"node":{"pattern":"Las-Vegas","segment":{"id":"2472049","value":"0","duration":"10080"},"label":""},"children":[],"count":3},{"node":{"pattern":"McCarran","segment":{"id":"2472049","value":"0","duration":"10080"},"label":""},"children":[],"count":2},{"node":{"pattern":"Las_Vegas","segment":{"id":"2472049","value":"0","duration":"10080"},"label":""},"children":[],"count":0},{"node":{"pattern":"las-vegas","segment":{"id":"2472049","value":"0","duration":"10080"},"label":""},"children":[],"count":5},{"node":{"pattern":"Las%20Vegas","segment":{"id":"2472049","value":"0","duration":"10080"},"label":""},"children":[],"count":0},{"node":{"pattern":"Las+Vegas","segment":{"id":"2472049","value":"0","duration":"10080"},"label":""},"children":[],"count":0},{"node":{"pattern":"orbitz.com","label":""},"children":[{"node":{"pattern":"shop/hotelsearch","segment":{"id":"2608729","value":"0","duration":"4320"},"queue":{"id":"syphon_imps"},"label":""},"children":[],"count":1},{"node":{"pattern":"shop/packagesearch","segment":{"id":"2608729","value":"0","duration":"4320"},"queue":{"id":"syphon_imps"},"label":""},"children":[],"count":0},{"node":{"pattern":"shop/airsearch","segment":{"id":"2608729","value":"0","duration":"4320"},"queue":{"id":"syphon_imps"},"label":""},"children":[],"count":9}],"count":66},{"node":{"pattern":"cheaptickets.com","label":""},"children":[{"node":{"pattern":"shop/hotelsearch","segment":{"id":"2608929","value":"0","duration":"4320"},"queue":{"id":"syphon_imps"},"label":""},"children":[],"count":3},{"node":{"pattern":"shop/packagesearch","segment":{"id":"2608929","value":"0","duration":"4320"},"queue":{"id":"syphon_imps"},"label":""},"children":[],"count":0},{"node":{"pattern":"shop/airsearch","segment":{"id":"2608929","value":"0","duration":"4320"},"queue":{"id":"syphon_imps"},"label":""},"children":[],"count":3}],"count":12}],"count":1202},{"node":{"pattern":"","label":"syphon"},"children":[{"node":{"pattern":",1602040","queue":{"id":"syphon_imps"},"label":"baublebar"},"children":[],"count":1085}],"count":1202},{"node":{"pattern":"wendyslookbook.com","label":""},"children":[{"node":{"pattern":"a-dream-baublebar-design-collaboration","segment":{"id":"2543866","value":"1","duration":"10080"},"queue":{"id":"wendys_baublebar"},"label":"baublebar blog post"},"children":[],"count":0},{"node":{"pattern":"a-dream-baublebar-design-collaboration","queue":{"id":"syphon_imps"},"label":"baublebar"},"children":[],"count":0}],"count":0},{"node":{"pattern":"dealcatcher.com","label":""},"children":[{"node":{"pattern":"baublebar","segment":{"id":"2543866","value":"2","duration":"10080"},"queue":{"id":"dealcatcher_baublebar"},"label":"baublebar deals"},"children":[],"count":0},{"node":{"pattern":"baublebar","queue":{"id":"syphon_imps"},"label":"baublebar"},"children":[],"count":0}],"count":1},{"node":{"pattern":"","label":"troweprice"},"children":[{"node":{"pattern":"schaeffersresearch.com","segment":{"id":"2613628","value":"6","duration":"2592000"},"label":""},"children":[],"count":0},{"node":{"pattern":"nasdaq.com","segment":{"id":"2613628","value":"7","duration":"2592000"},"label":""},"children":[],"count":6},{"node":{"pattern":"zacks.com","segment":{"id":"2613628","value":"8","duration":"2592000"},"label":""},"children":[],"count":0},{"node":{"pattern":"thestreet.com","segment":{"id":"2613628","value":"9","duration":"2592000"},"label":""},"children":[],"count":4},{"node":{"pattern":"marketwatch.com","segment":{"id":"2613628","value":"10","duration":"2592000"},"label":""},"children":[],"count":12},{"node":{"pattern":"cnbc.com","segment":{"id":"2613628","value":"11","duration":"2592000"},"label":""},"children":[],"count":6},{"node":{"pattern":"morningstar.com","label":""},"children":[{"node":{"pattern":"morningstar.com","segment":{"id":"2613628","value":"1","duration":"2592000"},"label":""},"children":[],"count":4},{"node":{"pattern":"news.morningstar.com","segment":{"id":"2613628","value":"2","duration":"2592000"},"label":""},"children":[],"count":0},{"node":{"pattern":"quote.morningstar.com","segment":{"id":"2613628","value":"3","duration":"2592000"},"label":""},"children":[],"count":0},{"node":{"pattern":"portfolio.morningstar.com","segment":{"id":"2613628","value":"4","duration":"2592000"},"label":""},"children":[],"count":0},{"node":{"pattern":"screen.morningstar.com","segment":{"id":"2613628","value":"5","duration":"2592000"},"label":""},"children":[],"count":0}],"count":4}],"count":1202}],"count":11145}]}
+
+
+
+</script>
+
+<script>
+
+var margin = {top: 1, right: 1, bottom: 6, left: 1},
+    width = window.innerWidth -20 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+var formatNumber = d3.format(",.0f"),
+    format = function(d) { return formatNumber(d) + " imps"; },
+    color = d3.scale.category20();
+
+var svg = d3.select("#chart").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var sankey = d3.sankey()
+    .nodeWidth(15)
+    .nodePadding(10)
+    .size([width, height]);
+
+var path = sankey.link();
+
+var energy;
+
+var linkGroup = svg.append("g")
+      .attr("class","link-group")
+
+var nodeGroup = svg.append("g")
+      .attr("class","node-group")
+
+
+var codify = function(node) {
+  var s = node.pattern + node.label
+  if (node.segment)
+    s += node.segment.id + node.segment.value + node.segment.duration
+  if (node.queue)
+    s += node.queue.id
+  if (node.extra)
+    s += node.extra
+  return s
+}
+
+var recursive = function(node) {
+
+ if (node.node.segment) {
+    node.children = node.children || []
+      node.children.push({"node":{"pattern":"segment","label":node.node.segment.id, "extra":node.node.pattern}, "count":node.count})
+  }
+
+ if (node.node.queue) {
+    node.children = node.children || []
+      node.children.push({"node":{"pattern":"queue","label":node.node.queue.id, "extra":node.node.pattern},"count":node.count})
+  }
+
+  node.merkle = (node.children && node.children.length > 0) ? 
+    codify(node.node) + 
+      node.children.sort(function(x,y){
+        return x.node.pattern + x.node.label > y.node.pattern + y.node.label 
+      }).map(recursive).join(",") : 
+    codify(node.node)
+
+  
+
+  
+
+  return node.merkle
+
+}
+
+
+
+var build = function(data) {
+
+  
+  var tree = d3.layout.tree()
+
+
+  energy = {
+    nodes: tree.nodes(data).map(function(x){x.name = x.node.pattern + " " + (x.node.label.length ? " (" + x.node.label + ")" : x.node.label)  ; return x}),
+    links: tree.links(tree.nodes(data)).map(function(x){
+      x.name = x.target.name + "&" + x.source.name
+      x.value = x.target.count ?  x.target.count + 20 : .1; 
+      return x
+    })
+  }
+
+
+  var deduplicated = d3.nest().key(function(x){
+    delete x.node.extra
+    if (codify(x.node) == x.merkle) console.log(codify(x.node), x.merkle)
+    x.merkle = codify(x.node)
+    return x.merkle + x.name 
+  }).rollup(function(y){
+    var tmp = y[0]
+    tmp.count = y.reduce(function(p,c){return p + c.count},0)
+    return y[0]
+  }).map(energy.nodes,d3.map)
+
+  deduplicatedMap = deduplicated["_"]
+
+  energy.links.map(function(l){ 
+    var newtarget= deduplicatedMap[l.target.merkle + l.target.name]
+    if (
+      (newtarget.children && newtarget.children[0].node.pattern == "segment") || 
+      (newtarget.children && newtarget.children[0].node.pattern == "queue") || 
+      (newtarget.children == undefined)
+    ) l.target = newtarget;
+    return l
+  })
+
+
+  sankey
+      .nodes(energy.nodes)
+      .links(energy.links)
+      .layout(6);
+
+  var link = linkGroup.selectAll(".link")
+      .data(energy.links,function(d){ return d.name })
+
+  var new_link = link
+    .enter().append("path")
+      .attr("class", "link")
+      .attr("d", path)
+      .style("stroke-width", function(d) { return Math.max(.25, d.dy); })
+      .on("mouseover",function(d){
+        console.log(d)    
+      })
+
+  new_link.append("title")
+      .text(function(d) { return d.source.name + " → " + d.target.name + "\n" + format(d.source.count); });
+
+  var linkTrans = link.transition()
+
+  linkTrans
+      .attr("d", path)
+      .style("stroke-width", function(d) { return Math.max(.25, d.dy); })
+
+  linkTrans
+      .sort(function(a, b) { return b.dy - a.dy; });
+
+  linkTrans
+      .select("title")
+      .text(function(d) { return d.source.name + " to " + d.target.name + "\n" + format(d.source.count); });
+
+
+
+
+
+  var node = nodeGroup.selectAll(".node")
+      .data(energy.nodes,function(d,i){ return d.merkle + d.name })
+
+  var new_node = node
+    .enter().append("g")
+      .attr("class", "node")
+      .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
+    .call(d3.behavior.drag()
+      .origin(function(d) { return d; })
+      .on("dragstart", function() { this.parentNode.appendChild(this); })
+      .on("drag", dragmove));
+
+  new_node.append("rect")
+      .attr("height", function(d) { return d.dy; })
+      .attr("width", sankey.nodeWidth())
+      .style("fill", function(d) { return d.color = color(d.name.replace(/ .*/, "")); })
+      .style("stroke", function(d) { return d3.rgb(d.color).darker(1); })
+      .style("stroke-width", function(d) { return .5; })
+    .append("title")
+      .text(function(d) { return d.name + "\n" + format(d.count); });
+
+  new_node.append("text")
+      .attr("x", -6)
+      .attr("y", function(d) { return d.dy / 2; })
+      .attr("dy", ".35em")
+      .attr("text-anchor", "end")
+      .attr("transform", null)
+      .text(function(d) { return d.count ? d.name : ""; })
+    .filter(function(d) { return d.x < width / 2; })
+      .attr("x", 6 + sankey.nodeWidth())
+      .attr("text-anchor", "start");
+
+
+  var nodeTrans = node.transition()
+
+  nodeTrans
+      .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
+
+  nodeTrans
+      .select("rect")
+      .attr("height", function(d) { return d.dy; })
+      .attr("width", sankey.nodeWidth())
+      .style("fill", function(d) { return d.color = color(d.name.replace(/ .*/, "")); })
+      .style("stroke", function(d) { return d3.rgb(d.color).darker(2); })
+    .select("title")
+      .text(function(d) { return d.name + "\n" + format(d.count); });
+
+  nodeTrans
+      .select("text")
+      .attr("x", -6)
+      .attr("y", function(d) { return d.dy / 2; })
+      .attr("dy", ".35em")
+      .attr("text-anchor", "end")
+      .attr("transform", null)
+      .text(function(d) { return d.count ? d.name : ""; })
+    .filter(function(d) { return d.x < width / 2; })
+      .attr("x", 6 + sankey.nodeWidth())
+      .attr("text-anchor", "start");
+
+//sankey.relayout();
+
+
+  function dragmove(d) {
+    d3.select(this).attr("transform", "translate(" + d.x + "," + (d.y = Math.max(0, Math.min(height - d.dy, d3.event.y))) + ")");
+    sankey.relayout();
+    link.attr("d", path);
+  }
+}
+
+//build(data)
+var tree = d3.layout.tree()
+
+var recursiveSum = function(merkleSum,node) {
+
+  
+  if (node.count != merkleSum[node.merkle]) console.log(node.merkle,node.count,merkleSum[node.merkle])
+  node.count = merkleSum[node.merkle]/5
+
+  
+  try {
+  node.children.map(function(y){
+    recursiveSum(merkleSum,y)    
+  })
+  } catch(e) {}
+}
+
+RB.websocket.addSubscription("treefilter",{"name":"treefilter","values":false},{"name":"treefilter","callback":function(x){
+    
+    window.values = x
+
+    window.merkleArrays = x.treefilter.map(function(z,i){
+
+      recursive(z)
+
+      return d3.nest()
+        .key(function(x){
+          //if (x.merkle == "queuesyphon_imps") console.log(x)
+          //if (x.merkle == undefined) console.log(x);
+          return x.merkle
+        }).map(tree.nodes(z))
+    })
+
+    var merkleSums = {}
+    if (merkleArrays.length) {
+
+      var first = x.treefilter.filter(function(x){
+        return x.count  
+      })
+
+      console.log(Object.keys(merkleArrays[0]).map(function(k){
+        var count = merkleArrays.reduce(function(p,x){
+          return p + x[k].reduce(function(p,q){return p + q.count},0)
+        },0)
+        obj = merkleArrays[0][k][0]
+        //obj.count = count
+        merkleSums[k] = count
+        return [obj.count,obj.count*5,count] 
+      }))
+
+      //build(first[0])
+      recursiveSum(merkleSums,first[0])
+      setTimeout(function(){build(first[0])},500)
+      
+
+      //console.log(merkleSums)
+
+
+    }
+  }
+})
+
+RB.websocket.connect()
+RB.websocket.add_on_connected(function(){
+  RB.websocket.subscribe()
+})
+ 
+
+</script>
+
+<img src="/static/img/general/flux.jpg"></img>
