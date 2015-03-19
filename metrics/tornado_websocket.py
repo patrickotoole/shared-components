@@ -93,12 +93,12 @@ if __name__ == '__main__':
 
     reactor.listenTCP(options.listen_port, streaming.track_factory)
     reactor.listenTCP(options.view_port, streaming.view_factory)  
-    """reactor.callInThread(connectors['served_imps'],streaming.served_buffer,streaming.BufferControl()) 
+    reactor.callInThread(connectors['served_imps'],streaming.served_buffer,streaming.BufferControl()) 
     reactor.callInThread(connectors['filtered_imps'],streaming.imps_buffer,streaming.BufferControl())
     reactor.callInThread(connectors['conversion_imps'],streaming.conversion_imps_buffer,streaming.BufferControl()) 
     reactor.callInThread(connectors['conversion_events'],streaming.conversion_events_buffer,streaming.BufferControl()) 
     reactor.callInThread(connectors['visit_events'],streaming.visit_events_buffer,streaming.BufferControl()) 
-    """
+    
     reactor.callInThread(connectors['treefilter'],streaming.treefilter_buffer,streaming.BufferControl())  
 
     server = tornado.httpserver.HTTPServer(app)

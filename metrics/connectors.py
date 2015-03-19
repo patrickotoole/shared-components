@@ -33,20 +33,19 @@ class ConnectorConfig(object):
  
 
         if not skip_buffers:
-            if False:
-                self.connectors["filtered_imps"] = KafkaQueue(mock_connect=skip_filtered_imps)
-                self.connectors["conversion_imps"] = KafkaQueue(
-                    mock_connect=skip_conversion_imps,topic="conversion_impsw",transform=ujson.loads
-                ) 
-                self.connectors["conversion_events"] = KafkaQueue(
-                    mock_connect=skip_conversion_events,topic="conversion_events",transform=ujson.loads
-                )
-                self.connectors["visit_events"] = KafkaQueue(
-                    mock_connect=skip_visit_events,topic="visit_events",transform=ujson.loads
-                )
-                self.connectors["served_imps"] = KafkaQueue(
-                    mock_connect=skip_visit_events,topic="served_imps",transform=ujson.loads
-                )
+            self.connectors["filtered_imps"] = KafkaQueue(mock_connect=skip_filtered_imps)
+            self.connectors["conversion_imps"] = KafkaQueue(
+                mock_connect=skip_conversion_imps,topic="conversion_impsw",transform=ujson.loads
+            ) 
+            self.connectors["conversion_events"] = KafkaQueue(
+                mock_connect=skip_conversion_events,topic="conversion_events",transform=ujson.loads
+            )
+            self.connectors["visit_events"] = KafkaQueue(
+                mock_connect=skip_visit_events,topic="visit_events",transform=ujson.loads
+            )
+            self.connectors["served_imps"] = KafkaQueue(
+                mock_connect=skip_visit_events,topic="served_imps",transform=ujson.loads
+            )
             self.connectors["treefilter"] = KafkaQueue(
                 mock_connect=skip_visit_events,topic="filtertree",transform=ujson.loads
             )
