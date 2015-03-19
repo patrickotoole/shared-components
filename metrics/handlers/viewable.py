@@ -8,6 +8,7 @@ from base import BaseHandler
 from twisted.internet import defer
 from lib.helpers import decorators
 QUERY = "SELECT * from rockerbox.tag_size_viewability "
+QUERY2 = "SELECT * from rockerbox.domain_tag_viewability " 
 
 class ViewabilityHandler(BaseHandler):
     def initialize(self, db=None, cassandra=None, **kwargs):
@@ -17,7 +18,9 @@ class ViewabilityHandler(BaseHandler):
     @decorators.deferred
     def defer_get_viewablity(self,tag_ids,sizes,domains):
         where = []
+        Q = QUERY2
         if len(tag_ids):
+            Q = QUERY
             where.append(" tag_id in (" + ",".join(tag_ids) + ")")
 
         if len(domains):
@@ -25,8 +28,8 @@ class ViewabilityHandler(BaseHandler):
 
 
         WHERE = "where " + " and ".join(where)
-        logging.info(QUERY + WHERE)
-        df = self.cassandra.select_dataframe(QUERY + WHERE )
+        logging.info(Q + WHERE)
+        df = self.cassandra.select_dataframe(Q + WHERE )
 
         if len(sizes) and len(df):
             return df[df['size'].isin(sizes)]
