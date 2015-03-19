@@ -52,7 +52,7 @@ var data2 = {"node":{"pattern":"","label":"all"},"children":[{"node":{"pattern":
 <script>
 
 var margin = {top: 1, right: 1, bottom: 6, left: 1},
-    width = 960 - margin.left - margin.right,
+    width = window.innerWidth -20 - margin.left - margin.right,
     height = 500 - margin.top - margin.bottom;
 
 var formatNumber = d3.format(",.0f"),
@@ -80,35 +80,106 @@ var linkGroup = svg.append("g")
 var nodeGroup = svg.append("g")
       .attr("class","node-group")
 
+
+var codify = function(node) {
+  var s = node.pattern + node.label
+  if (node.segment)
+    s += node.segment.id + node.segment.value + node.segment.duration
+  if (node.queue)
+    s += node.queue.id
+  if (node.extra)
+    s += node.extra
+  return s
+}
+
+var recursive = function(node) {
+
+ if (node.node.segment) {
+    node.children = node.children || []
+      node.children.push({"node":{"pattern":"segment","label":node.node.segment.id, "extra":node.node.pattern}, "count":node.count})
+  }
+
+ if (node.node.queue) {
+    node.children = node.children || []
+      node.children.push({"node":{"pattern":"queue","label":node.node.queue.id, "extra":node.node.pattern},"count":node.count})
+  }
+
+  node.merkle = (node.children && node.children.length > 0) ? 
+    codify(node.node) + 
+      node.children.sort(function(x,y){
+        return x.node.pattern + x.node.label > y.node.pattern + y.node.label 
+      }).map(recursive).join(",") : 
+    codify(node.node)
+
+  
+
+  
+
+  return node.merkle
+
+}
+
+
+
 var build = function(data) {
 
+  
   var tree = d3.layout.tree()
 
+
   energy = {
-    nodes: tree.nodes(data).map(function(x){x.name = x.node.pattern + " " + x.node.label; return x}),
+    nodes: tree.nodes(data).map(function(x){x.name = x.node.pattern + " " + (x.node.label.length ? " (" + x.node.label + ")" : x.node.label)  ; return x}),
     links: tree.links(tree.nodes(data)).map(function(x){
       x.name = x.target.name + "&" + x.source.name
-      x.value = x.target.count ?  x.target.count + 0 : .1; 
+      x.value = x.target.count ?  x.target.count + 20 : .1; 
       return x
     })
   }
 
+
+  var deduplicated = d3.nest().key(function(x){
+    delete x.node.extra
+    if (codify(x.node) == x.merkle) console.log(codify(x.node), x.merkle)
+    x.merkle = codify(x.node)
+    return x.merkle + x.name 
+  }).rollup(function(y){
+    var tmp = y[0]
+    tmp.count = y.reduce(function(p,c){return p + c.count},0)
+    return y[0]
+  }).map(energy.nodes,d3.map)
+
+  deduplicatedMap = deduplicated["_"]
+
+  energy.links.map(function(l){ 
+    var newtarget= deduplicatedMap[l.target.merkle + l.target.name]
+    if (
+      (newtarget.children && newtarget.children[0].node.pattern == "segment") || 
+      (newtarget.children && newtarget.children[0].node.pattern == "queue") || 
+      (newtarget.children == undefined)
+    ) l.target = newtarget;
+    return l
+  })
+
+
   sankey
       .nodes(energy.nodes)
       .links(energy.links)
-      .layout(2);
+      .layout(6);
 
   var link = linkGroup.selectAll(".link")
-      .data(energy.links,function(d){ console.log(d); return d.name })
+      .data(energy.links,function(d){ return d.name })
 
   var new_link = link
     .enter().append("path")
       .attr("class", "link")
       .attr("d", path)
       .style("stroke-width", function(d) { return Math.max(.25, d.dy); })
+      .on("mouseover",function(d){
+        console.log(d)    
+      })
 
   new_link.append("title")
-      .text(function(d) { return d.source.name + " → " + d.target.name + "\n" + format(d.target.count); });
+      .text(function(d) { return d.source.name + " → " + d.target.name + "\n" + format(d.source.count); });
 
   var linkTrans = link.transition()
 
@@ -121,14 +192,14 @@ var build = function(data) {
 
   linkTrans
       .select("title")
-      .text(function(d) { return d.source.name + " → " + d.target.name + "\n" + format(d.target.count); });
+      .text(function(d) { return d.source.name + " to " + d.target.name + "\n" + format(d.source.count); });
 
 
 
 
 
   var node = nodeGroup.selectAll(".node")
-      .data(energy.nodes,function(d,i){ return d.name })
+      .data(energy.nodes,function(d,i){ return d.merkle + d.name })
 
   var new_node = node
     .enter().append("g")
@@ -143,7 +214,8 @@ var build = function(data) {
       .attr("height", function(d) { return d.dy; })
       .attr("width", sankey.nodeWidth())
       .style("fill", function(d) { return d.color = color(d.name.replace(/ .*/, "")); })
-      .style("stroke", function(d) { return d3.rgb(d.color).darker(2); })
+      .style("stroke", function(d) { return d3.rgb(d.color).darker(1); })
+      .style("stroke-width", function(d) { return .5; })
     .append("title")
       .text(function(d) { return d.name + "\n" + format(d.count); });
 
@@ -196,12 +268,64 @@ var build = function(data) {
 }
 
 //build(data)
+var tree = d3.layout.tree()
+
+var recursiveSum = function(merkleSum,node) {
+
+  
+  if (node.count != merkleSum[node.merkle]) console.log(node.merkle,node.count,merkleSum[node.merkle])
+  node.count = merkleSum[node.merkle]/5
+
+  
+  try {
+  node.children.map(function(y){
+    recursiveSum(merkleSum,y)    
+  })
+  } catch(e) {}
+}
+
 RB.websocket.addSubscription("treefilter",{"name":"treefilter","values":false},{"name":"treefilter","callback":function(x){
-    x.treefilter.filter(function(y){ 
-      return y.count
-    }).map(function(z,i){
-      setTimeout(build.bind(false,{"node":{"pattern":"","label":"all"},"children":[z]}),1000*i)
+    
+    window.values = x
+
+    window.merkleArrays = x.treefilter.map(function(z,i){
+
+      recursive(z)
+
+      return d3.nest()
+        .key(function(x){
+          //if (x.merkle == "queuesyphon_imps") console.log(x)
+          //if (x.merkle == undefined) console.log(x);
+          return x.merkle
+        }).map(tree.nodes(z))
     })
+
+    var merkleSums = {}
+    if (merkleArrays.length) {
+
+      var first = x.treefilter.filter(function(x){
+        return x.count  
+      })
+
+      console.log(Object.keys(merkleArrays[0]).map(function(k){
+        var count = merkleArrays.reduce(function(p,x){
+          return p + x[k].reduce(function(p,q){return p + q.count},0)
+        },0)
+        obj = merkleArrays[0][k][0]
+        //obj.count = count
+        merkleSums[k] = count
+        return [obj.count,obj.count*5,count] 
+      }))
+
+      //build(first[0])
+      recursiveSum(merkleSums,first[0])
+      setTimeout(function(){build(first[0])},500)
+      
+
+      //console.log(merkleSums)
+
+
+    }
   }
 })
 

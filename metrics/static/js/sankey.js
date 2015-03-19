@@ -128,7 +128,7 @@ d3.sankey = function() {
     }
 
     //
-    //moveSinksRight(x);
+    moveSinksRight(x);
     scaleNodeBreadths((size[0] - nodeWidth) / (x - 1));
   }
 
@@ -252,6 +252,7 @@ d3.sankey = function() {
     }
 
     function ascendingDepth(a, b) {
+      return b.y - a.y
       return a.y - b.y;
     }
   }
