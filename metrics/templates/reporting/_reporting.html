@@ -7,6 +7,9 @@
 {% block page_css %}
 	<link href="/static/css/reporting-style.css" type="text/css" rel="stylesheet" media="screen">
 	<link href="/static/css/dc.css" type="text/css" rel="stylesheet" media="screen">
+  <style>
+    .active-row {font-weight:bold}
+  </style>
 {% end %}
 
 {% block page_sidebar %}
@@ -45,12 +48,19 @@
 	</div>
   -->
 	<div id="campaign-box" class="box three-quarters-box">
-		<div id="campaign-table" class="content-table">
+		<!--<div id="campaign-table" class="content-table">
 			<ul id="campaign-header" class="header-row">
-				<li class="campaign-name">campaign</li><li class="campaign-imps border-green">impressions</li><li class="campaign-clicks border-blue">clicks</li><li class="campaign-conversions border-red">conversions</li><li class="campaign-cost border-orange">cost</li>
+				<li class="col-md-6">campaign</li>
+        <li class="col-md-1 border-green">impressions</li>
+        <li class="col-md-1 border-blue">clicks</li>
+        <li class="col-md-1 border-red">conversions</li>
+        <li class="col-md-1 border-orange">cost</li>
+        <li class="col-md-1 ">viewable</li> 
+        <li class="col-md-1 ">visits</li>  
 			</ul>
-		</div>
+    </div>-->
 	</div>	
+
 	<div class="clearfix"></div>	
 	<div id="campaign-graph-box" class="box three-quarters-box">
 		<div id="campaign-graph"></div>
@@ -194,149 +204,105 @@
                     var crs = crossfilter(data);
                     window.CRS = crossfilterNS(crs, dc);
                   
-                    // GENERATE IO
-                    /*
-                    function generateIOProgress(campaignQty){
-                        if(campaignQty == 1 || campaignQty == 2){
-                            $('#io-gauge').hide();
-                            $("#io-percentage-bar").show();
-                            
-                            var usagePercent = userSpent / userBudget;
-                            $("#io-percentage-bar-inner").css("width", parseInt(usagePercent * 100) + "%");
-                            if(usagePercent > 0.66){
-                                $("#io-percentage-bar-inner").addClass('io-red');
-                            }
-                            else if(usagePercent > 0.33){
-                                $("#io-percentage-bar-inner").addClass('io-orange');
-                            }
-                            else {
-                                $("#io-percentage-bar-inner").addClass('io-green');
-                            }		
-                            
-                            if(campaignQty == 1){
-                                $('#io-completion-box').addClass('io-small');
-                            }
-                            else {
-                                $('#io-completion-box').removeClass('io-small');
-                            }
-                        }
-                        else {
-                            $("#io-percentage-bar").hide();
-                            $('#io-gauge').show();
-                            
-                            if(campaignQty == 3){
-                                $('#io-completion-box').addClass('io-large');
-                            }
-                            else {
-                                $('#io-completion-box').removeClass('io-large');
-                            }
-                            
-                            // DISPLAY IO PROGRESS GAUGE
-                            var gauge = new Gauge(document.getElementById('io-gauge')).setOptions({
-                                lines: 12,
-                                angle: 0,
-                                lineWidth: 0.30,
-                                pointer: {
-                                    length: 0.75,
-                                    strokeWidth: 0.035,
-                                    color: '#000000'
-                                },
-                                limitMax: true, 
-                                percentColors: [[0.0, "#5ec34b" ], [0.50, "#ffb952"], [1.0, "#e46161"]],
-                                strokeColor: '#E0E0E0',
-                                generateGradient: true
-                            });
-                            gauge.animationSpeed = 32;
-                            gauge.maxValue = userBudget;
-                            gauge.set(userSpent);			
-                        }
-                    }
-                    */
+                    
                     
                     // GENERATE CAMPAIGN BOX CONTENT
                     var prevQty = 0;
                     var totalDimension = CRS.groups.all.value();
                     totalDimension['campaign_bucket'] = "Campaign total";
 
-                    campaignTable = dc.customDataTable('#campaign-table', "graph-group")
-                    .dimension(CRS.aggregateDimensions.total_campaign_bucket)
-                    .activeRow(-1)
-                    .campaignSelector('.campaign-name')
-                    .group(function(d){ return d.campaign_bucket; })
-                    .sortBy(function(d){
-                        console.log(d.campaign_bucket)
-                        return d.campaign_bucket;					
-                    })
-                    .dataSortBy(true)
-                    .size(20)
-                    .rowClass("campaign-row")
-                    .listClasses(["campaign-name", "campaign-imps", "campaign-clicks", "campaign-conversions", "campaign-cost", "another"])
-                    .listItems([
-                        function(d){
-                            return d.campaign_bucket;
-                        },
-                        function(d){
-                            return formatNumber(d.imps);
-                        },
-                        function(d){
-                            return formatNumber(d.clicks);
-                        },
-                        function(d){
-                            return formatNumber(d.conversions);
-                        },
-                        function(d){
-                            return formatMoney(d.cost);
-                        },
-                        function(d){
-                            return d3.format("%")(d.percent_visible)
-                        }
-                    ])
-                    .on("preRedraw", function(){
-                        CRS.dimensions.total_campaign_bucket.filterAll();
-                        if(CRS.aggregateDimensions.total_campaign_bucket.top(5).length == 1){
-                            campaignTable.totalDimension({});
-                        }
-                        else {
-                            campaignTable.totalDimension(totalDimension);
-                        }
-                    })
-                    .on("postRedraw", function(){
-                        var currentCampaign = $('#campaign-table .campaign-row.active-row .campaign-name').text();
-                        if(currentCampaign == "Campaign total"){
-                            CRS.dimensions.total_campaign_bucket.filterAll();
-                        }
-                        else {
-                            CRS.dimensions.total_campaign_bucket.filter(function(d){return d == currentCampaign});
-                        }
+                    var topData = CRS.aggregateDimensions.total_campaign_bucket.top(100)
+                    topData.push(totalDimension)
 
-                        if(currentCampaign != $('#campaign-reports-box .box-title').attr("data-campaign-name")){
-                            updateCampaignReports($('#campaign-reports-box .outer-interval-select .interval-select li.interval-active').text(), currentCampaign);
-                        
-                            $('#campaign-reports-table').fadeOut(250, "linear", function(){
-                                campaignReportsTable.redraw();
-                            });	
-                        }
-                        
-                       
-                        var currentQty = CRS.aggregateDimensions.total_campaign_bucket.top(4).length;
-                        if(prevQty != currentQty){ 
-                            prevQty = currentQty;
-                            //generateIOProgress(currentQty);
-                        }
-                        
-                    });
-                    
-                    if(CRS.aggregateDimensions.total_campaign_bucket.top(5).length == 1){
-                        campaignTable.totalDimension({});
-                    }
-                    else {
-                        campaignTable.totalDimension(totalDimension);
-                    }
+
+                    d3.select("#campaign-box").append("br")
+
+                    var topCampaigns = d3.select("#campaign-box")
+                      .append("div")
+                      .classed("campaign-table-new",true)
+
+                    var topHeader = topCampaigns.append("div").classed("header",true)
+                      .style("line-height","40px")
+                      .style("font-weight","500")
+                      .style("font-size","13px")
+                      .style("text-transform","uppercase")
+
+                    topHeader.append("div")
+                      .classed("col-md-3",true)
+                      .text("Campaign Name")
+
+                    names = ["Impressions","Clicks","Conversions","Visits","Cost","Viewable"]
+
+                    var colors = d3.scale.category10()
+
+                    var innerTopHeader = topHeader.append("div")
+                      .classed("col-md-8",true)
+
+                    names.map(function(name){
+                      innerTopHeader.append("div")
+                        .classed("col-md-2",true)
+                        .append("div")
+                        .style("border-top",function(x,i){
+                          return "5px solid " + colors(name)
+                        })
+                        //.style("border-left","5px solid white")
+                        .text(name)
+                    })
+
+                    var topBody = topCampaigns.append("div")
+                      .classed("campaigns-body",true)
+
+
+                    var row = topBody.selectAll(".campaign").data(topData)
+                      .enter()
+                      .append("div").classed("campaign",true)
+                      .style("line-height","40px") 
+                      .style("margin-bottom","10px")
+                      
+
+                    row.selectAll(".campaign-metric")
+                      .data(function(x){
+                        return [
+                            [
+                              {"class":"name","value":x.campaign_bucket}
+                            ], 
+                            [
+                              {"class":"metric","value":formatNumber(x.imps)}, 
+                              {"class":"metric","value":formatNumber(x.clicks)}, 
+                              {"class":"metric","value":formatNumber(x.conversions)}, 
+                              {"class":"metric","value":formatNumber(x.visits || 0)}, 
+                              {"class":"metric","value":formatMoney(x.cost)}, 
+                              {"class":"metric","value":d3.format("%")(x.percent_visible)}
+                            ],[
+                              {"class":"streaming"}
+                            ]
+                        ]
+                      }).enter()
+                        .append("div")
+                        .classed("col-md-8",function(x,i){return (i == 1) })
+                        .classed("col-md-1",function(x,i){return (i == 2) }) 
+                        .classed("campaign-name-no-style col-md-3",function(x,i){return i == 0}) 
+                        .style("border-top", "1px solid #ddd")
+                        .selectAll(".campaign-metric")
+                        .data(function(x){
+                          return x
+                        })
+                        .enter()
+                          .append("div")
+                          .attr("class",function(x){
+                            return x.class == "metric" ? "col-md-2" : "col-md-12"
+                          })
+                          .style("overflow","hidden")
+                          .style("height","40px")
+                          .style("font-size",function(x){return x.class == "name" ? "12px": ""})
+                          .text(function(x){return typeof(x) != "object" ? x : x.value})
+
                 
                     // GENERATE CAMPAIGN REPORTS SECTION					
                     campaignReportsTable = dc.customDataTable('#campaign-reports-table', "reports-group")
 
-                    var currentCampaign = $.isEmptyObject(campaignTable.totalDimension()) ? CRS.aggregateDimensions.total_campaign_bucket.top(1)[0].campaign_bucket : "Campaign total";
+                    var currentCampaign = "Campaign total";
+                    //var currentCampaign = $.isEmptyObject(campaignTable.totalDimension()) ? CRS.aggregateDimensions.total_campaign_bucket.top(1)[0].campaign_bucket : "Campaign total";
                     updateCampaignReports($('#campaign-reports-box .outer-interval-select .interval-select .interval-active').text(), currentCampaign);				
                     dc.renderAll("reports-group");
                     // console.log(CRS.aggregateDimensions.daily.bottom(Infinity).length, CRS.aggregateDimensions.weekly.bottom(Infinity).length);
@@ -486,19 +452,12 @@
 	</script>
 	<script>		
 		// SWITCH CAMPAIGN FOCUS
-		$('#campaign-table').on("click", '.campaign-row', function(){
+		$('body').on("click", '.campaign', function(){
 			if(!$(this).hasClass('active-row')){
-				$('.campaign-row.active-row').removeClass('active-row');
+				$('.campaign.active-row').removeClass('active-row');
 				$(this).addClass('active-row');
 				
-				if($(this).index() == $('.campaign-row').length){
-					campaignTable.activeRow(-1);
-				}
-				else {
-					campaignTable.activeRow($(this).index());
-				}
-				
-				var currentCampaign = $(this).children('.campaign-name').text();
+				var currentCampaign = $(this).children('.campaign-name-no-style').text();
 				if(currentCampaign == "Campaign total"){
 					CRS.dimensions.total_campaign_bucket.filterAll();
 				}
@@ -523,7 +482,7 @@
 				$(this).siblings('.interval-active').removeClass('interval-active');
 				$(this).addClass('interval-active');
 				
-				var currentCampaign = $('#campaign-table .campaign-row.active-row .campaign-name').text();
+				var currentCampaign = $('#campaign-table .campaign-row.active-row .campaign-name-no-style').text();
 				if(currentCampaign == "Campaign total"){
 					CRS.dimensions.total_campaign_bucket.filterAll();
 				}
@@ -542,7 +501,7 @@
 		// IF SHOW MORE ON CAMPAIGN REPORTS
 		$('#campaign-reports-box .show-more').click(function(){			
         
-			var currentCampaign = $('#campaign-table .campaign-row.active-row .campaign-name').text();
+			var currentCampaign = $('#campaign-table .campaign-row.active-row .campaign-name-no-style').text();
 			if(currentCampaign == "Campaign total"){
 				CRS.dimensions.total_campaign_bucket.filterAll();
 			}
@@ -605,7 +564,7 @@
 					return d.value.imps;
 				});
 				
-				var currentCampaign = $('#campaign-table .campaign-row.active-row .campaign-name').text();
+				var currentCampaign = $('#campaign-table .campaign-row.active-row .campaign-name-no-style').text();
 				if(currentCampaign == "Campaign total"){
 					CRS.dimensions.total_campaign_bucket.filterAll();
 				}
