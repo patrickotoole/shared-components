@@ -7,35 +7,47 @@ select
     a.imps,
     a.clicks,
     a.media_cost,
-    a.cpm_multiplier,
-    a.is_valid
-    from (
-       select
-            timestamp(DATE_FORMAT(v4.date, "%%Y-%%m-%%d %%H:00:00")) date,
-            max(v4.campaign_id) as campaign_id,
-            cb.bucket_name,
-            sum(v4.imps) as imps,
-            sum(v4.clicks) as clicks,
-            sum(v4.media_cost* case when v4.cpm_multiplier is null then 0 else v4.cpm_multiplier end) as media_cost,
-            1 as cpm_multiplier,
-            0 as is_valid
-        from
-            reporting.v4_reporting v4
-        left join campaign_bucket cb
-        on v4.campaign_id=cb.campaign_id
-        where
+    1 cpm_multiplier,
+    0 is_valid,
+cbv.loaded,
+cbv.visible
+from (
+    select
+        v4.date as date,
+        max(v4.campaign_id) as campaign_id,
+        v4.external_advertiser_id,
+        CASE WHEN bucket_name is not null THEN bucket_name ELSE 'default' END as bucket_name,
+        sum(v4.imps) as imps,
+        sum(v4.clicks) as clicks,
+        sum(case when v4.cpm_multiplier is null then 0 else v4.media_cost*v4.cpm_multiplier end) as media_cost
+    from
+        reporting.v4_reporting v4
+    left 
+        join campaign_bucket cb
+    on 
+        v4.campaign_id = cb.campaign_id
+    where
+        (
             (
-                (
-                    cb.active=1 and
-                    cb.deleted=0
-                ) OR
-                cb.active is null
-            ) and
-            v4.active=1 and
-            v4.deleted=0 and
-            v4.external_advertiser_id =  %(advertiser_id)s
-        group by 1,3 ) a
+                cb.active=1 and
+                cb.deleted=0
+            ) OR
+            cb.active is null
+        ) and
+        v4.active=1 and
+        v4.deleted=0 and
+        v4.external_advertiser_id = %(advertiser_id)s
+    group by 1,3 
+) a
+
+left join 
+    reporting.campaign_bucket_viewability cbv 
+on 
+    cbv.bucket = a.bucket_name and
+    cbv.datetime = a.date and
+    cbv.external_advertiser_id = a.external_advertiser_id
 """
+
 
 CONVERSION_QUERY = """
     select
@@ -45,7 +57,9 @@ CONVERSION_QUERY = """
         clicks,
         media_cost,
         cpm_multiplier,
-        is_valid
+        is_valid,
+        0,
+        0
         from (
             select
                 timestamp(DATE_FORMAT(v2.conversion_time, "%%Y-%%m-%%d %%H:00:00")) date,

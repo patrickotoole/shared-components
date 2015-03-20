@@ -257,6 +257,7 @@
                     var prevQty = 0;
                     var totalDimension = CRS.groups.all.value();
                     totalDimension['campaign_bucket'] = "Campaign total";
+
                     campaignTable = dc.customDataTable('#campaign-table', "graph-group")
                     .dimension(CRS.aggregateDimensions.total_campaign_bucket)
                     .activeRow(-1)
@@ -269,7 +270,7 @@
                     .dataSortBy(true)
                     .size(20)
                     .rowClass("campaign-row")
-                    .listClasses(["campaign-name", "campaign-imps", "campaign-clicks", "campaign-conversions", "campaign-cost"])
+                    .listClasses(["campaign-name", "campaign-imps", "campaign-clicks", "campaign-conversions", "campaign-cost", "another"])
                     .listItems([
                         function(d){
                             return d.campaign_bucket;
@@ -285,6 +286,9 @@
                         },
                         function(d){
                             return formatMoney(d.cost);
+                        },
+                        function(d){
+                            return d3.format("%")(d.percent_visible)
                         }
                     ])
                     .on("preRedraw", function(){

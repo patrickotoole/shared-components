@@ -241,6 +241,8 @@ var crossfilterNS = function(crs,dc) {
 				p.conversions += v.conversions                                                                     
 				p.imps += v.imps                                                                                   
 				p.clicks += v.clicks                                                                               
+        p.visible += v.visible
+        p.loaded += v.loaded
 				p.dd = "1"
 				return p 
 			},
@@ -249,6 +251,8 @@ var crossfilterNS = function(crs,dc) {
 				p.conversions -= v.conversions                                                                     
 				p.imps -= v.imps
 				p.clicks -= v.clicks                                                                               
+        p.visible -= v.visible
+        p.loaded -= v.loaded 
 				p.dd = "1"
 				return p                                                                                           
 			},
@@ -258,6 +262,8 @@ var crossfilterNS = function(crs,dc) {
 					conversions: 0,                                                                                  
 					clicks: 0,
 					imps: 0,
+          visible: 0,
+          loaded: 0,
 					dd: ""                                                                                           
 				}
 			}
@@ -582,6 +588,9 @@ var crossfilterNS = function(crs,dc) {
 						"clicks": grp.value.clicks,
 						"conversions": grp.value.conversions,
 						"cost": grp.value.cost,
+            "visible": grp.value.visible,
+            "loaded": grp.value.loaded,
+            "percent_visible": grp.value.visible/grp.value.loaded,
 						"date_min": groups.all.summary().date_min,
 						"date_max": groups.all.summary().date_max								
 					} 
