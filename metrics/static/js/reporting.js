@@ -58,6 +58,10 @@ var crossfilterNS = function(crs,dc) {
 				p.clicks += v.clicks
 				p.cost += v.cost
 				p.conversions += v.conversions
+        p.loaded += v.loaded
+        p.visible += v.visible
+        p.visits += v.visits
+        p.percent_visible = p.visible/p.loaded
 
 				return p
 			},
@@ -67,6 +71,11 @@ var crossfilterNS = function(crs,dc) {
 				p.clicks -= v.clicks
 				p.cost -= v.cost
 				p.conversions -= v.conversions
+        p.loaded -= v.loaded 
+        p.visible -= v.visible
+        p.visits -= v.visits
+        p.percent_visible = p.visible/p.loaded 
+
 				return p 
 			},
 			function(){
@@ -75,7 +84,10 @@ var crossfilterNS = function(crs,dc) {
 					imps: 0,
 					clicks: 0,
 					cost:0,
-					conversions: 0
+					conversions: 0,
+          loaded: 0,
+          visible: 0,
+          visits: 0
 				}
 			}
 		),
@@ -243,6 +255,7 @@ var crossfilterNS = function(crs,dc) {
 				p.clicks += v.clicks                                                                               
         p.visible += v.visible
         p.loaded += v.loaded
+        p.visits += v.visits
 				p.dd = "1"
 				return p 
 			},
@@ -253,6 +266,7 @@ var crossfilterNS = function(crs,dc) {
 				p.clicks -= v.clicks                                                                               
         p.visible -= v.visible
         p.loaded -= v.loaded 
+        p.visits += v.visits
 				p.dd = "1"
 				return p                                                                                           
 			},
@@ -264,6 +278,7 @@ var crossfilterNS = function(crs,dc) {
 					imps: 0,
           visible: 0,
           loaded: 0,
+          visits: 0,
 					dd: ""                                                                                           
 				}
 			}
@@ -590,6 +605,7 @@ var crossfilterNS = function(crs,dc) {
 						"cost": grp.value.cost,
             "visible": grp.value.visible,
             "loaded": grp.value.loaded,
+            "visits": grp.value.visits,
             "percent_visible": grp.value.visible/grp.value.loaded,
 						"date_min": groups.all.summary().date_min,
 						"date_max": groups.all.summary().date_max								

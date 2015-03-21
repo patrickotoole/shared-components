@@ -8,6 +8,7 @@
 	<link href="/static/css/reporting-style.css" type="text/css" rel="stylesheet" media="screen">
 	<link href="/static/css/dc.css" type="text/css" rel="stylesheet" media="screen">
   <style>
+    .campaign {cursor:pointer}
     .active-row {font-weight:bold}
   </style>
 {% end %}
@@ -38,27 +39,8 @@
 {% end %}
 
 {% block page_content %}
-<!--
-	<div id="io-completion-box" class="box quarter-box">
-		<div class="box-title">IO Progress</div>
-		<div id="io-percentage-bar"><div id="io-percentage-bar-inner"></div></div>
-		<canvas id="io-gauge"></canvas>
-		<div id="io-progress"><span id="io-estimated-spent" title="Estimate">0</span><span id="io-budget"></span></div>
-		<div id="io-remaining">spent/total</div>
-	</div>
-  -->
+
 	<div id="campaign-box" class="box three-quarters-box">
-		<!--<div id="campaign-table" class="content-table">
-			<ul id="campaign-header" class="header-row">
-				<li class="col-md-6">campaign</li>
-        <li class="col-md-1 border-green">impressions</li>
-        <li class="col-md-1 border-blue">clicks</li>
-        <li class="col-md-1 border-red">conversions</li>
-        <li class="col-md-1 border-orange">cost</li>
-        <li class="col-md-1 ">viewable</li> 
-        <li class="col-md-1 ">visits</li>  
-			</ul>
-    </div>-->
 	</div>	
 
 	<div class="clearfix"></div>	
@@ -77,19 +59,12 @@
 			<div class="box-title">Display</div>
 			<div class="box-subtitle">Metric</div>
 			<ul id="filter-metric">
-				<li class="filter-metric-active"><img src="/static/img/general/checked-radio.png" alt="Checked radio button" />impressions</li>
+				<li class="filter-metric-active"><img src="/static/img/general/checked-radio.png" alt="Checked radio button" />imps</li>
 				<li><img src="/static/img/general/unchecked-radio.png" alt="Unchecked radio button" />clicks</li>
 				<li><img src="/static/img/general/unchecked-radio.png" alt="Unchecked radio button" />conversions</li>
 				<li><img src="/static/img/general/unchecked-radio.png" alt="Unchecked radio button" />cost</li>
 			</ul>
-			<!--
-			<div class="box-subtitle">Compare to</div>
-			<select>
-				<option>clicks</option>
-				<option>conversions</option>
-				<option>cost</option>
-			</select>
-			-->
+	
 		</div>
 		<!--<div id="export-box">export data to csv<img src="" alt="Export image" /></div>-->
     <div id="download-buttons-box">
@@ -117,6 +92,8 @@
 
 {% block page_scripts %}
 	<!-- IO GAUGE -->
+  <script src="/static/js/rockerbox/ajax.js"></script>
+	<script src="/static/js/rockerbox/data.js"></script> 
 	<script src="/static/js/gauge.min.js"></script>
 	<script src="/static/js/d3.v3.min.js"></script>
 	<script src="/static/js/crossfilter.min.js"></script>
@@ -161,320 +138,144 @@
 		// GET ADVERTISER BUDGET AND PROGRESS       
 
 		$.getJSON("/api?table=advertiser&external_advertiser_id=" + extUserID, function(data){
-          $('#header #right-align #user-name').text(data[0].advertiser_name.toLowerCase());
+      $('#header #right-align #user-name').text(data[0].advertiser_name.toLowerCase());
     });
 
-            // GET DATA
-            var getUserData = $.getJSON("/api?deleted=0&active=1&table=campaign_bucket&external_advertiser_id=" + extUserID).done(function(e){
-                var buckets = {};
+    RB.portal.data.reporting(function(data){
 
-                $.each(e, function(index, bucket){
-                    buckets[bucket.campaign_id] = bucket;
-                });
+      var crs = crossfilter(data);
+      window.CRS = crossfilterNS(crs, dc);
 
-                /*
-                var data_link = window.location.origin + window.location.pathname;
-                data_link += window.location.search.length ? window.location.search : "?";
-    */
-                d3.json("/reporting?format=json",function(data){
-                    window.data = data;
+      buildBucketReporting(CRS,d3.select("#campaign-box"))
+      campaignReportsTable = dc.customDataTable('#campaign-reports-table', "reports-group")
 
-                    // INITIAL DATA TREATMENT AND FORMATTING
-                    $.each(data, function(key, d){
-                        var name = "Default Campaign";
-                        
-                        try {
-                            name = buckets[d.campaign_id]['bucket_name'];
-                        }
-                        catch(e) {}
-                        
-                        d.campaign_bucket = name;
-                        d.campaign_id = d.campaign_id;
-                        d.dd = new Date(d.date * 1000);
-                        d.imps = +d.imps;
-                        d.clicks = +d.clicks;
-                        d.conversions = +d.is_valid;
-                        d.cost = d.media_cost * d.cpm_multiplier;
-                        
-                        /*d.domain = 0;
-                        d.referrer = 0;*/
-                    });
+      var currentCampaign = "Campaign total";
+      updateCampaignReports(
+        $('#campaign-reports-box .outer-interval-select .interval-select .interval-active').text(), 
+        currentCampaign
+      );
+      dc.renderAll("reports-group");
+      
+      
+      var currentMetric = $('#filter-box #filter-options #filter-metric li.filter-metric-active').text();
+      $('#campaign-graph-box').addClass("data-metric-" + currentMetric);
+          
+      // GENERATE SLIDER GRAPH
+      sliderGraph = dc.lineChart('#campaign-slider', "graph-group")
+        .dimension(CRS.dimensions.daily)
+        .group(CRS.groups.daily)
+        .height(48)
+        .width(843)
+        .renderArea(true)
+        .elasticY(true)
+        .margins({top: 0, right: 0, bottom: 0, left: 0})
+        .yAxisPadding("25%")
+        .round(d3.time.day.round)
+        .xUnits(d3.time.days)
+        .valueAccessor(function(d){					
+            if(currentMetric == "clicks") return d.value.clicks;
+            else if(currentMetric == "conversions") return d.value.conversions;
+            else if(currentMetric == "cost") return d.value.cost;
+            return d.value.imps;
+        })
+        // .y(d3.scale.log().nice().domain([impsMin, impsMax]))
+        .x(d3.time.scale().domain([
+            CRS.groups.all.summary().date_min,
+            CRS.groups.all.summary().date_max
+        ]))
+        .on("preRedraw", function(){
+            CRS.dimensions.datetime.filterAll();
+        })
+      
+      sliderGraph.xAxis().ticks(8).tickFormat(d3.time.format("%m/%d"));
+      
+      
+      // GENERATE MAIN GRAPH
+      mainGraph = dc.lineChart('#campaign-graph', "graph-group")
+        .dimension(CRS.dimensions.datetime)
+        .group(CRS.groups.datetime)
+        .tooltipType("daily")
+        .height(328)
+        .width(843)
+        .margins({top: 0, right: 0, bottom: 0, left: 0})
+        .elasticY(true)
+        .renderArea(true)
+        .yAxisPadding("25%")
+        .round(d3.time.day.round)
+        .xUnits(d3.time.days)
+        .valueAccessor(function(d){
+            return d.value[currentMetric || "imps"]
+        })
+        .x(d3.time.scale().domain([
+            CRS.groups.all.summary().date_min,
+            CRS.groups.all.summary().date_max
+        ]))
+        .renderHorizontalGridLines(true)
+        .brushOn(false)
+        .renderTitle(true)
+        .rangeChart(sliderGraph)
+        .on("preRedraw", function(){
+          var intervalLength = timeDifference(
+            CRS.groups.all.summary().date_min, 
+            CRS.groups.all.summary().date_max
+          );
 
-                    // INSTANTIATE CROSSFILTER
-                    var crs = crossfilter(data);
-                    window.CRS = crossfilterNS(crs, dc);
-                  
-                    
-                    
-                    // GENERATE CAMPAIGN BOX CONTENT
-                    var prevQty = 0;
-                    var totalDimension = CRS.groups.all.value();
-                    totalDimension['campaign_bucket'] = "Campaign total";
+          var tooltipType = (intervalLength < 14) ? "hourly" : "daily",
+            dimensionType = (intervalLength < 14) ? "datetime" : "daily",
+            group = CRS.groups[dimensionType],
+            dimension = CRS.dimensions[dimensionType],
+            tickFormat = (intervalLength <= 1) ? d3.time.format("%I%p") : d3.time.format("%m/%d");
 
-                    var topData = CRS.aggregateDimensions.total_campaign_bucket.top(100)
-                    topData.push(totalDimension)
-
-
-                    d3.select("#campaign-box").append("br")
-
-                    var topCampaigns = d3.select("#campaign-box")
-                      .append("div")
-                      .classed("campaign-table-new",true)
-
-                    var topHeader = topCampaigns.append("div").classed("header",true)
-                      .style("line-height","40px")
-                      .style("font-weight","500")
-                      .style("font-size","13px")
-                      .style("text-transform","uppercase")
-
-                    topHeader.append("div")
-                      .classed("col-md-3",true)
-                      .text("Campaign Name")
-
-                    names = ["Impressions","Clicks","Conversions","Visits","Cost","Viewable"]
-
-                    var colors = d3.scale.category10()
-
-                    var innerTopHeader = topHeader.append("div")
-                      .classed("col-md-8",true)
-
-                    names.map(function(name){
-                      innerTopHeader.append("div")
-                        .classed("col-md-2",true)
-                        .append("div")
-                        .style("border-top",function(x,i){
-                          return "5px solid " + colors(name)
-                        })
-                        //.style("border-left","5px solid white")
-                        .text(name)
-                    })
-
-                    var topBody = topCampaigns.append("div")
-                      .classed("campaigns-body",true)
-
-
-                    var row = topBody.selectAll(".campaign").data(topData)
-                      .enter()
-                      .append("div").classed("campaign",true)
-                      .style("line-height","40px") 
-                      .style("margin-bottom","10px")
-                      
-
-                    row.selectAll(".campaign-metric")
-                      .data(function(x){
-                        return [
-                            [
-                              {"class":"name","value":x.campaign_bucket}
-                            ], 
-                            [
-                              {"class":"metric","value":formatNumber(x.imps)}, 
-                              {"class":"metric","value":formatNumber(x.clicks)}, 
-                              {"class":"metric","value":formatNumber(x.conversions)}, 
-                              {"class":"metric","value":formatNumber(x.visits || 0)}, 
-                              {"class":"metric","value":formatMoney(x.cost)}, 
-                              {"class":"metric","value":d3.format("%")(x.percent_visible)}
-                            ],[
-                              {"class":"streaming"}
-                            ]
-                        ]
-                      }).enter()
-                        .append("div")
-                        .classed("col-md-8",function(x,i){return (i == 1) })
-                        .classed("col-md-1",function(x,i){return (i == 2) }) 
-                        .classed("campaign-name-no-style col-md-3",function(x,i){return i == 0}) 
-                        .style("border-top", "1px solid #ddd")
-                        .selectAll(".campaign-metric")
-                        .data(function(x){
-                          return x
-                        })
-                        .enter()
-                          .append("div")
-                          .attr("class",function(x){
-                            return x.class == "metric" ? "col-md-2" : "col-md-12"
-                          })
-                          .style("overflow","hidden")
-                          .style("height","40px")
-                          .style("font-size",function(x){return x.class == "name" ? "12px": ""})
-                          .text(function(x){return typeof(x) != "object" ? x : x.value})
-
-                
-                    // GENERATE CAMPAIGN REPORTS SECTION					
-                    campaignReportsTable = dc.customDataTable('#campaign-reports-table', "reports-group")
-
-                    var currentCampaign = "Campaign total";
-                    //var currentCampaign = $.isEmptyObject(campaignTable.totalDimension()) ? CRS.aggregateDimensions.total_campaign_bucket.top(1)[0].campaign_bucket : "Campaign total";
-                    updateCampaignReports($('#campaign-reports-box .outer-interval-select .interval-select .interval-active').text(), currentCampaign);				
-                    dc.renderAll("reports-group");
-                    // console.log(CRS.aggregateDimensions.daily.bottom(Infinity).length, CRS.aggregateDimensions.weekly.bottom(Infinity).length);
-                    // var dateTimeObj = CRS.groups.datetime.all();
-                    // var impsMax = impsMin = dateTimeObj[1].value.imps;
-                    // $.each(dateTimeObj, function(key, data){
-                        // if(data.value.imps > impsMax) impsMax = data.value.imps;
-                        // else if(data.value.imps < impsMin) impsMin = data.value.imps;
-                    // });
-                    
-                    var currentMetric = $('#filter-box #filter-options #filter-metric li.filter-metric-active').text();
-                    $('#campaign-graph-box').addClass("data-metric-" + currentMetric);
-                        
-                    // GENERATE SLIDER GRAPH
-                    sliderGraph = dc.lineChart('#campaign-slider', "graph-group")
-                    .dimension(CRS.dimensions.daily)
-                    .group(CRS.groups.daily)
-                    .height(48)
-                    .width(843)
-                    .renderArea(true)
-                    .elasticY(true)
-                    .margins({top: 0, right: 0, bottom: 0, left: 0})
-                    .yAxisPadding("25%")
-                    .round(d3.time.day.round)
-                    .xUnits(d3.time.days)
-                    .valueAccessor(function(d){					
-                        if(currentMetric == "clicks") return d.value.clicks;
-                        else if(currentMetric == "conversions") return d.value.conversions;
-                        else if(currentMetric == "cost") return d.value.cost;
-                        return d.value.imps;
-                    })
-                    // .y(d3.scale.log().nice().domain([impsMin, impsMax]))
-                    .x(d3.time.scale().domain([
-                        CRS.groups.all.summary().date_min,
-                        CRS.groups.all.summary().date_max
-                    ]))
-                    .on("preRedraw", function(){
-                        CRS.dimensions.datetime.filterAll();
-                    })
-                    // .on("postRedraw", function(){
-                        // $('#campaign-slider .axis.x .tick line').attr("y2", "13");
-                    // })
-                    // .on("postRender", function(){
-                        // $('#campaign-slider .axis.x .tick line').attr("y2", "13");
-                    // })			
-                    // .renderHorizontalGridLines(true)
-                    
-                    // sliderGraph.yAxis().ticks(5);
-                    sliderGraph.xAxis().ticks(8).tickFormat(d3.time.format("%m/%d"));
-                    
-                    /*
-                    var intervalStart = removeDays(new Date(), 14);
-                    intervalStart.setSeconds(0);
-                    intervalStart.setMinutes(0);
-                    intervalStart.setHours(0);
-                    */
-                    
-                    // GENERATE MAIN GRAPH
-                    mainGraph = dc.lineChart('#campaign-graph', "graph-group")
-                    .dimension(CRS.dimensions.datetime)
-                    .group(CRS.groups.datetime)
-                    .tooltipType("daily")
-                    .height(328)
-                    .width(843)
-                    .margins({top: 0, right: 0, bottom: 0, left: 0})
-                    .elasticY(true)
-                    .renderArea(true)
-                    .yAxisPadding("25%")
-                    .round(d3.time.day.round)
-                    .xUnits(d3.time.days)
-                    .valueAccessor(function(d){
-                        if(currentMetric == "clicks") return d.value.clicks;
-                        else if(currentMetric == "conversions") return d.value.conversions;
-                        else if(currentMetric == "cost") return d.value.cost;
-                        return d.value.imps;
-                    })
-                    .x(d3.time.scale().domain([
-                        CRS.groups.all.summary().date_min,
-                        CRS.groups.all.summary().date_max
-                    ]))
-                    .renderHorizontalGridLines(true)
-                    .brushOn(false)
-                    .renderTitle(true)
-                    .rangeChart(sliderGraph)
-                    .on("preRedraw", function(){
-                        try {
-                        var intervalLength = timeDifference(CRS.groups.all.summary().date_min, CRS.groups.all.summary().date_max);
-                        if(intervalLength < 14){
-                            mainGraph.dimension(CRS.dimensions.datetime).group(CRS.groups.datetime).tooltipType("hourly");
-                        }
-                        else {
-                            mainGraph.dimension(CRS.dimensions.daily).group(CRS.groups.daily).tooltipType("daily");                       
-                        }
-                        } catch(e) {}
-                        
-                        if(intervalLength <= 1){
-                            mainGraph.xAxis().tickFormat(d3.time.format("%I%p"));
-                        }
-                        else {
-                            mainGraph.xAxis().tickFormat(d3.time.format("%m/%d"));
-                        }
-                    });
-                    
-                    mainGraph.yAxis().ticks(5);
-                    mainGraph.xAxis().tickFormat(d3.time.format("%m/%d"));
-                    
-                    
-                    dc.renderAll("graph-group");
-                    
-                    // SET TIME INTERVAL
-                    var baseInterval = formatDate(ioStartDate) + " - " + formatDate(CRS.groups.all.summary().date_max);
-                    
-                    intervalBox = dc.customDataBox('#filter-box #graph-interval #current-interval', "graph-group")
-                    .valueAccessor(function(d){
-                        var dateMin = formatDate(d.date_min), dateMax = formatDate(d.date_max);
-                        if(dateMin == dateMax) return dateMin;
-                        return dateMin + " - " + dateMax;
-                    })
-                    .group(CRS.groups.all)
-                    .on("postRedraw", function(){
-                        if(intervalBox.value() != baseInterval){
-                            $('#graph-interval #interval-title #outer-interval-reset').fadeIn();
-                        }
-                        else {
-                            $('#graph-interval #interval-title #outer-interval-reset').fadeOut();
-                        }
-                    });				
-                    
-                    var campaignGraphPos = $('#campaign-graph').position();
-
-                    mainGraph.focus([ioStartDate, CRS.groups.all.summary().date_max])
-
-                    try {
-                      if(ioStartDate < CRS.groups.all.summary().date_min){
-                        ioStartDate = new Date(CRS.groups.all.summary().date_min.getTime());
-                         mainGraph.focus([ioStartDate, CRS.groups.all.summary().date_max]);
-                         baseInterval = formatDate(ioStartDate) + " - " + formatDate(CRS.groups.all.summary().date_max);
-                         intervalBox.redraw();                   
-                      }     
-                    } catch(e) {}
-                    
-                    // HACKHACKHACK
-                    //$('#io-completion-box #io-progress #io-estimated-spent').text(formatMoney(CRS.groups.all.value().cost) + "*");
-                    $('#page-loader').fadeOut();
-                });		
+          mainGraph.dimension(dimension).group(group).tooltipType(tooltipType)
+          mainGraph.xAxis().tickFormat(tickFormat)
         });
+      
+      mainGraph.yAxis().ticks(5);
+      mainGraph.xAxis().tickFormat(d3.time.format("%m/%d"));
+      
+      
+      dc.renderAll("graph-group");
+      
+      // SET TIME INTERVAL
+      var baseInterval = formatDate(ioStartDate) + " - " + formatDate(CRS.groups.all.summary().date_max);
+      
+      intervalBox = dc.customDataBox('#filter-box #graph-interval #current-interval', "graph-group")
+      .valueAccessor(function(d){
+          var dateMin = formatDate(d.date_min), dateMax = formatDate(d.date_max);
+          if(dateMin == dateMax) return dateMin;
+          return dateMin + " - " + dateMax;
+      })
+      .group(CRS.groups.all)
+      .on("postRedraw", function(){
+          if(intervalBox.value() != baseInterval){
+              $('#graph-interval #interval-title #outer-interval-reset').fadeIn();
+          }
+          else {
+              $('#graph-interval #interval-title #outer-interval-reset').fadeOut();
+          }
+      });				
+      
+      var campaignGraphPos = $('#campaign-graph').position();
+
+      mainGraph.focus([ioStartDate, CRS.groups.all.summary().date_max])
+
+      try {
+        if(ioStartDate < CRS.groups.all.summary().date_min){
+          ioStartDate = new Date(CRS.groups.all.summary().date_min.getTime());
+           mainGraph.focus([ioStartDate, CRS.groups.all.summary().date_max]);
+           baseInterval = formatDate(ioStartDate) + " - " + formatDate(CRS.groups.all.summary().date_max);
+           intervalBox.redraw();                   
+        }     
+      } catch(e) {}
+      
+      // HACKHACKHACK
+      //$('#io-completion-box #io-progress #io-estimated-spent').text(formatMoney(CRS.groups.all.value().cost) + "*");
+      $('#page-loader').fadeOut();
+    });		
 	</script>
 	<script>		
 		// SWITCH CAMPAIGN FOCUS
-		$('body').on("click", '.campaign', function(){
-			if(!$(this).hasClass('active-row')){
-				$('.campaign.active-row').removeClass('active-row');
-				$(this).addClass('active-row');
-				
-				var currentCampaign = $(this).children('.campaign-name-no-style').text();
-				if(currentCampaign == "Campaign total"){
-					CRS.dimensions.total_campaign_bucket.filterAll();
-				}
-				else {
-					CRS.dimensions.total_campaign_bucket.filter(function(d){return d == currentCampaign});
-				}				
-				
-				sliderGraph.redraw();				
-				mainGraph.redraw();	
-				
-				updateCampaignReports($('#campaign-reports-box .outer-interval-select .interval-select li.interval-active').text(), currentCampaign);
-				
-				$('#campaign-reports-table').fadeOut(250, "linear", function(){
-					campaignReportsTable.redraw();
-				});	
-			}
-		});
+		
 		
 		// SWITCH REPORTING MODE ON CLICK
 		$('#campaign-reports-box .outer-interval-select .interval-select li').on("click", function(){
@@ -482,7 +283,7 @@
 				$(this).siblings('.interval-active').removeClass('interval-active');
 				$(this).addClass('interval-active');
 				
-				var currentCampaign = $('#campaign-table .campaign-row.active-row .campaign-name-no-style').text();
+				var currentCampaign = $('.active-row .campaign-name-no-style').text();
 				if(currentCampaign == "Campaign total"){
 					CRS.dimensions.total_campaign_bucket.filterAll();
 				}

@@ -2,6 +2,7 @@ BRAND_QUERY = "select external_id id, external_advertiser_id advertiser_id from 
 
 IMPS_QUERY = """
 select 
+    a.bucket_name,
     a.date, 
     a.campaign_id,
     a.imps,
@@ -10,12 +11,13 @@ select
     1 cpm_multiplier,
     0 is_valid,
 cbv.loaded,
-cbv.visible
+cbv.visible,
+cbv.visits
 from (
     select
         v4.date as date,
         max(v4.campaign_id) as campaign_id,
-        v4.external_advertiser_id,
+        v4.external_advertiser_id as external_advertiser_id,
         CASE WHEN bucket_name is not null THEN bucket_name ELSE 'default' END as bucket_name,
         sum(v4.imps) as imps,
         sum(v4.clicks) as clicks,
@@ -38,7 +40,7 @@ from (
         v4.deleted=0 and
         v4.external_advertiser_id = %(advertiser_id)s and
         v4.date > '2015-03-01'
-    group by 1,3 
+    group by 1,4
 ) a
 
 left join 
@@ -52,6 +54,7 @@ on
 
 CONVERSION_QUERY = """
     select
+        bucket_name,
         date,
         campaign_id,
         imps,
@@ -59,6 +62,7 @@ CONVERSION_QUERY = """
         media_cost,
         cpm_multiplier,
         is_valid,
+        0,
         0,
         0
         from (
