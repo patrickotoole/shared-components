@@ -891,6 +891,8 @@ dc.baseMixin = function (_chart) {
         } else {
             _anchor = a;
             _root = d3.select(_anchor);
+            _root = d3.selectAll(_anchor); 
+            //debugger;
             _root.classed(dc.constants.CHART_CLASS, true);
             dc.registerChart(_chart, chartGroup);
         }
@@ -4120,6 +4122,7 @@ dc.lineChart = function (parent, chartGroup) {
     var _defined;
     var _dashStyle;
     var _tooltipType = "daily";
+
 
     _chart.transitionDuration(500);
     _chart._rangeBandPadding(1);

@@ -25,7 +25,7 @@ RB.portal.data = (function(data){
     API.getReporting(function(json){
       var transformed = json.map(reportingTransform)
       localStorage.setItem(
-        REPORT_PREFIXi + name,
+        REPORT_PREFIX + name,
         JSON.stringify(transformed)
       )
       get_reporting(callback)
@@ -36,7 +36,14 @@ RB.portal.data = (function(data){
 
     API.getAdvertiser(function(x) {
       var name = x[0].pixel_source_name
-      var cached = JSON.parse(localStorage.getItem(REPORT_PREFIX + name));
+      console.log(name)
+      var fromCache = localStorage.getItem(REPORT_PREFIX + name)
+      if (fromCache) {
+        var cached = JSON.parse(fromCache).map(function(d){
+          d.dd = new Date(d.dd)
+          return d 
+        });
+      }
 
       (!cached) ? 
         set_reporting(name,callback) :
