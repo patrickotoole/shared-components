@@ -8,6 +8,9 @@
 	<link href="/static/css/reporting-style.css" type="text/css" rel="stylesheet" media="screen">
 	<link href="/static/css/dc.css" type="text/css" rel="stylesheet" media="screen">
   <style>
+    #content {padding-right: 15px;}
+    #content #campaign-box {width:100%}
+    #page-container {width:inherit}
     .with-border { border-top-width: 1px; border-top-style: solid; border-top-color: rgb(221, 221, 221); }
     .dc-grid-top {font-size:13px}
     .dc-table-group { display:none }
@@ -100,15 +103,15 @@
 	</div>
   -->
 	<div class="clearfix"></div>
-	<div id="campaign-reports-box" class="box full-box">
+	<!--<div id="campaign-reports-box" class="box full-box">
 		<div class="outer-interval-select">sort by<ul class="interval-select"><li>day</li><li class="interval-active">week</li><li>month</li><!--<li>insertion order</li>--></ul></div>
-		<div class="box-title">Campaign reports</div>
+		<!--<div class="box-title">Campaign reports</div>
 		<div id="campaign-reports-table" class="content-table">
 			<ul id="reports-header" class="header-row"><li class="reports-date"></li><li class="reports-impressions">impressions</li><li class="reports-thin-small">cpm</li><li class="reports-clicks">clicks</li><li class="reports-conversions">conversions</li><li class="reports-thin-small">cpa</li><li class="reports-cost">total cost</li></ul>		
 		</div>
 		<div class="show-more">show more</div>
-	</div>
-  <div id="footer">*Note: Media cost and CPMs are computed weekly. Recent numbers may read as null (showing "-") until the start of the week.</div>
+  </div>
+  <div id="footer">*Note: Media cost and CPMs are computed weekly. Recent numbers may read as null (showing "-") until the start of the week.</div>-->
 	<div class="clearfix"></div>
 {% end %}
 
@@ -177,13 +180,13 @@
       //buildBucketReporting(CRS,d3.select("#campaign-box"))
       campaignReportsTable = dc.customDataTable('#campaign-reports-table', "reports-group")
 
-      var currentCampaign = "Campaign total";
+      /*var currentCampaign = "Campaign total";
       updateCampaignReports(
         $('#campaign-reports-box .outer-interval-select .interval-select .interval-active').text(), 
         currentCampaign
       );
       dc.renderAll("reports-group");
-      
+        */
       
       var currentMetric = $('#filter-box #filter-options #filter-metric li.filter-metric-active').text();
       $('#campaign-graph-box').addClass("data-metric-" + currentMetric);

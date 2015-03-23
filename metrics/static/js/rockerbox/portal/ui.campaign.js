@@ -83,23 +83,6 @@ RB.portal.UI = (function(UI){
           .size(10)
       })
 
-      /*wrapper.selectAll(".detail-row").data(function(x){
-        //CRS.dimensions.total_campaign_bucket.filterAll()
-        CRS.dimensions.total_campaign_bucket.filter(function(d){ 
-          return d == x.campaign_bucket
-        })
-        var data = JSON.parse(JSON.stringify(CRS.groups.weekly.all()))
-        CRS.dimensions.total_campaign_bucket.filterAll()
-        //console.log(data)
-        console.log("here")
-        
-        return data
-      }).enter()
-          .append("div")
-          .classed("detail-row",true)
-          .text(function(x){return JSON.stringify(x)})
-      console.log(wrapper)
-      */
     }
 
     campaign_bucket.buildSliderChart = function(wrapper,CRS) {
@@ -206,14 +189,10 @@ RB.portal.UI = (function(UI){
 
           });
       })    
-
-
     
     }
 
-
     campaign_bucket.buildRowExpansion = function(row,CRS) { 
-
 
       var expansion = row.append("div")
           .classed("expansion col-md-12",true)
@@ -230,15 +209,16 @@ RB.portal.UI = (function(UI){
       expansion.append("h5")
         .style("padding-top","8px")
         .classed("col-md-12",true)
-        .text(function(d){return d.campaign_bucket + " details"})
- 
-
+        .text(function(d){return "Detailed reporting for " + d.campaign_bucket })
 
       var detailsRow = expansion.append("div")
         .classed("row",true)
         .append("div")
         .classed("col-md-12",true)
         .style("margin-top","10px")
+
+      expansion.append("div")
+        .style("height","40px")
 
       var expansionLeft = graphRow.append("div")
         .classed("campaign-expansion col-md-3",true)
