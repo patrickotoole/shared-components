@@ -56,23 +56,45 @@ OPTIONS = {
                 "auction_id": "none"
                 }
         }
-    }
+    },
+    
+    "none": {
+        "meta": {
+            "groups": [],
+            "fields": ["num_visits"],
+            "formatters": {
+                "campaign": "none",
+                "spent": "cpm",
+                "tag": "none",
+                "venue": "none",
+                "auction_id": "none"
+                }
+            }
+        }
 }
 
 GROUPS = {
     "campaign": "campaign",
     "campaign_name": "campaign_name",
-    "visit_time": "visit_time",
-    "served_time": "from_unixtime(CAST(served_time AS BIGINT), 'yyyy-MM-dd HH:mm:ss')",
     "advertiser": "advertiser",
-    "served_url": "served_url",
-    "visit_url": "visit_url",
-    "visit_segment": "visit_segment",
-    "domain": "lower(regexp_replace(parse_url(concat('http://', regexp_replace(url, 'http://|https://', '')), 'HOST'), 'www.', ''))",
     "uid": "uid",
     "auction_id": "auction_id",
     "venue": "venue",
-    "tag": "tag"
+    "tag": "tag",
+    "seller": "seller",
+    "price": "price",
+    "ecp": "ecp",
+    "creative_id": "creative_id",
+    "height": "height",
+    "width": "width",
+    "hour": "hour",
+    "ip": "ip",
+    "visit_time": "visit_time",
+    "served_time": "from_unixtime(CAST(served_time AS BIGINT), 'yyyy-MM-dd HH:mm:ss')",
+    "served_url": "served_url",
+    "visit_url": "visit_url",
+    "visit_segment": "visit_segment",
+    "served_domain": "lower(regexp_replace(parse_url(concat('http://', regexp_replace(served_url, 'http://|https://', '')), 'HOST'), 'www.', ''))"
     }
 
 
@@ -95,16 +117,26 @@ WHERE = {
     "advertiser": "advertiser = '%(advertiser)s'",
     "campaign_name": "campaign_name like '%%%(campaign_name)s%%'",
     "source": "source = '%(source)s'",
-    "domain": "lower(regexp_replace(parse_url(concat('http://', regexp_replace(url, 'http://|https://', '')), 'HOST'), 'www.', '')) rlike lower('.*(%(domain)s).*')",
-    "url": "lower(url) rlike lower('.*(%(url)s).*')",
+    "served_domain": "lower(regexp_replace(parse_url(concat('http://', regexp_replace(url, 'http://|https://', '')), 'HOST'), 'www.', '')) rlike lower('.*(%(served_url)s).*')",
+    "served_url": "lower(served_url) rlike lower('.*(%(served_url)s).*')",
+    "visit_url": "lower(visit_url) rlike lower('.*(%(visit_url)s).*')",
     "category": "lower(category) like lower('%%%(category)s%%')",
-    "campaign": "campaign = '%(campaign)s'"
+    "campaign": "campaign = '%(campaign)s'",
+    "tag": "tag = '%(tag)s'",
+    "seller": "seller = '%(seller)s'",
+    "creative_id": "creative_id = '%(creative_id)s'",
+    "hour": "hour = '%(hour)s'",
+    "auction_id": "auction_id = '%(auction_id)s'",
+    "width": "width = '%(width)s'",
+    "height": "height = '%(height)s'",
+    "uid": "uid = '%(uid)s'"
     }
 
 HAVING = {
     "min_imps": "num_imps >= %(min_imps)s",
-    "min_users": "num_users >= %(min_users)s",
-    "min_terms": "size(terms) > %(min_terms)s"
+    "min_served": "num_served >= %(min_served)s",
+    "min_visible": "num_visible >= %(min_visible)s",
+    "min_spent": "spent >= %(min_spent)s"
 }
 
 class VisitsHandler(AdminReportingBaseHandler):
