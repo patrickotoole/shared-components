@@ -10,12 +10,16 @@ var selectCampaign = function(campaign,target) {
 
   console.log("#" + target.select(".main-chart").attr("id"))
 
+  console.log(detail_tables)
+
   dc.registerChart(main_charts["#" + target.select(".main-chart").attr("id")],"infocus-group")
   dc.registerChart(slider_charts["#" + target.select(".interval-chart").attr("id")],"infocus-group") 
+  dc.registerChart(detail_tables["#" + target.select(".details-table").attr("id")],"infocus-group")  
 
   //sliderGraph.redraw()
   //mainGraph.redraw()
   dc.renderAll("infocus-group")
+  dc.redrawAll("graph-group")
 
   updateCampaignReports(
     $('#campaign-reports-box .outer-interval-select .interval-select li.interval-active').text(),

@@ -4845,82 +4845,81 @@ dc.customDataTable = function(parent, chartGroup) {
 
     var _size = 5;
     var _listItems = [];
-	var _listClasses = [];
-	var _totalDimension = {};
-	var _rowClass = "";
-	var _activeRow = -2;
-	var _campaignSelector = "";
+	  var _listClasses = [];
+	  var _totalDimension = {};
+	  var _rowClass = "";
+	  var _activeRow = -2;
+	  var _campaignSelector = "";
     var _sortBy = function(d) {
         return d;
     };
     var _dataSortBy = false;
-	var _sliceMode = "top";
+	  var _sliceMode = "top";
     var _order = d3.ascending;
 
     _chart._doRender = function() {
         _chart.selectAll("ul:not(.header-row)").remove();
         
-		var entries = (_sliceMode == "bottom") ? sortEntries(_chart.dimension().bottom(_size)) : sortEntries(_chart.dimension().top(_size));
-        
-		if($.isEmptyObject(_totalDimension) || (!$.isEmptyObject(_totalDimension) && entries.length > 1)){
-			renderRows(entries);
-		}
-		
-		if(!$.isEmptyObject(_totalDimension)){
-			renderRows([_totalDimension], true);
-		}
-		
-		if (_activeRow != -2){
-			var selectID = _activeRow != -1 ? '.' + _rowClass + ":nth-of-type(" + (_activeRow + 1) + ")" : '.' + _rowClass + ":last-of-type";
-			var activeRow = _chart.root().select(selectID);
-			if(activeRow[0][0] == null){
-				activeRow = _chart.root().select('.' + _rowClass + ":last-of-type");
-				CRS.dimensions.total_campaign_bucket.filterAll();
-			}
-			else if(_activeRow == -1){
-				CRS.dimensions.total_campaign_bucket.filterAll();
-			}
-			else {
-				CRS.dimensions.total_campaign_bucket.filter(function(d){return d == activeRow.select(_campaignSelector).text()});
-			}
-			activeRow.attr("class", activeRow.attr("class") + " active-row");
-			
-			dc.redrawAll();
-		}
+		    var entries = (_sliceMode == "bottom") ? 
+          sortEntries(_chart.dimension().bottom(_size)) : 
+          sortEntries(_chart.dimension().top(_size));
+            
+		    if($.isEmptyObject(_totalDimension) || (!$.isEmptyObject(_totalDimension) && entries.length > 1)){
+		    	renderRows(entries);
+		    }
+		    
+		    if(!$.isEmptyObject(_totalDimension)){
+		    	renderRows([_totalDimension], true);
+		    }
+		    
+		    if (_activeRow != -2){
+		    	var selectID = _activeRow != -1 ? '.' + _rowClass + ":nth-of-type(" + (_activeRow + 1) + ")" : '.' + _rowClass + ":last-of-type";
+		    	var activeRow = _chart.root().select(selectID);
+		    	if(activeRow[0][0] == null){
+		    		activeRow = _chart.root().select('.' + _rowClass + ":last-of-type");
+		    		CRS.dimensions.total_campaign_bucket.filterAll();
+		    	}
+		    	else if(_activeRow == -1){
+		    		CRS.dimensions.total_campaign_bucket.filterAll();
+		    	}
+		    	else {
+		    		CRS.dimensions.total_campaign_bucket.filter(function(d){return d == activeRow.select(_campaignSelector).text()});
+		    	}
+		    	activeRow.attr("class", activeRow.attr("class") + " active-row");
+		    	
+		    	dc.redrawAll();
+		    }
 		
         return _chart;
     };
 	
-	function sortEntries(entries){
-		return d3.nest().sortKeys(_order)
+	  function sortEntries(entries){
+		    return d3.nest().sortKeys(_order)
             .entries(entries.sort(function(a, b){
                 return _order(_sortBy(a), _sortBy(b));
             }));
     }
     function renderRows(entries, preservePrevious) {
 		    
-        if(_dataSortBy === true){
+        if (_dataSortBy === true){
             var rows = _chart.root().selectAll(".table-row").data(entries, _sortBy);
         }
         else {
             var rows = _chart.root().selectAll(".table-row").data(entries);
         }
-// console.log(, rows);
-		var classText = "table-row " + _rowClass;
+		    var classText = "table-row " + _rowClass;
         var rowEnter = rows.enter()
             .append("ul")
             .attr("class", classText)		
-			
-		$.each(_listItems, function(key, value){
-			rowEnter.append("li")
-			.html(value)
-			.attr("class", _listClasses[key]);
+		    	
+		    $.each(_listItems, function(key, value){
+		    	rowEnter.append("li")
+		    	  .html(value)
+		    	  .attr("class", _listClasses[key]);
         });
-        
+            
 
-		if(!preservePrevious){
-			rows.exit().remove();
-		}
+		    if(!preservePrevious) rows.exit().remove();
         return rows;
     }
 
@@ -4979,37 +4978,38 @@ dc.customDataTable = function(parent, chartGroup) {
         _dataSortBy = _;
         return _chart;
     };
-	 _chart.campaignSelector = function(_) {
+
+	  _chart.campaignSelector = function(_) {
         if (!arguments.length) return _campaignSelector;
         _campaignSelector= _;
         return _chart;
     };
 	
-	_chart.activeRow = function(_) {
+	  _chart.activeRow = function(_) {
         if (!arguments.length) return _activeRow;
         _activeRow = _;
         return _chart;
     };
 	
-	 _chart.listClasses = function(_) {
+	  _chart.listClasses = function(_) {
         if (!arguments.length) return _listClasses;
         _listClasses = _;
         return _chart;
     };
 	
-	_chart.rowClass = function(_) {
+	  _chart.rowClass = function(_) {
         if (!arguments.length) return _rowClass;
         _rowClass = _;
         return _chart;
     };
 	
-	_chart.totalDimension = function(_) {
+	  _chart.totalDimension = function(_) {
         if (!arguments.length) return _totalDimension;
         _totalDimension = _;
         return _chart;
     };
 	
-	_chart.sliceMode = function(_) {
+	  _chart.sliceMode = function(_) {
         if (!arguments.length) return _sliceMode;
         _sliceMode = _;
         return _chart;
@@ -5087,15 +5087,28 @@ dc.dataGrid = function(parent, chartGroup) {
 
     var _size = 999; // shouldn't be needed, but you might
     var _html = function (d) { return "you need to provide an html() handling param:  " + JSON.stringify(d); };
+    var _sliceMode = "top"
     var _sortBy = function(d) {
         return d;
     };
     var _order = d3.ascending;
 
     var _htmlGroup = function (d) {
-        return "<div class='"+GROUP_CSS_CLASS+"'><h1 class='"+LABEL_CSS_CLASS+"'>"+
-            _chart.keyAccessor()(d)+"</h1></div>";
+        return "<div class='"+GROUP_CSS_CLASS+"'><div class='"+LABEL_CSS_CLASS+"'>"+
+            _chart.keyAccessor()(d)+"</div></div>";
     };
+
+    _chart.groupClass = function(cls) {
+      GROUP_CSS_CLASS = cls
+      return _chart
+    }
+
+    _chart.groupHtml = function(d) {
+
+      _htmlGroup = d
+
+      return _chart
+    }
 
     _chart._doRender = function() {
         _chart.selectAll("div."+ GRID_CSS_CLASS).remove();
@@ -5128,7 +5141,9 @@ dc.dataGrid = function(parent, chartGroup) {
     }
 
     function nestEntries() {
-        var entries = _chart.dimension().top(_size);
+        var entries = _sliceMode == "top" ? 
+          _chart.dimension().top(_size) :
+          _chart.dimension().bottom(_size);
 
         return d3.nest()
             .key(_chart.group())
@@ -5148,8 +5163,8 @@ dc.dataGrid = function(parent, chartGroup) {
         items.enter()
             .append("div")
             .attr("class", ITEM_CSS_CLASS)
-            .html(function(d) {
-                return _html(d);
+            .html(function(d,i) {
+                return _html(d,i);
             });
 
         items.exit().remove();
@@ -5159,6 +5174,12 @@ dc.dataGrid = function(parent, chartGroup) {
 
     _chart._doRedraw = function() {
         return _chart._doRender();
+    };
+
+    _chart.sliceMode = function(_) {
+        if (!arguments.length) return _sliceMode;
+        _sliceMode = _;
+        return _chart;
     };
 
     /**

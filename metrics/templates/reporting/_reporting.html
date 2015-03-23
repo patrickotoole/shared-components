@@ -8,6 +8,9 @@
 	<link href="/static/css/reporting-style.css" type="text/css" rel="stylesheet" media="screen">
 	<link href="/static/css/dc.css" type="text/css" rel="stylesheet" media="screen">
   <style>
+    .with-border { border-top-width: 1px; border-top-style: solid; border-top-color: rgb(221, 221, 221); }
+    .dc-grid-top {font-size:13px}
+    .dc-table-group { display:none }
     .campaign {cursor:pointer}
     .active-row {font-weight:bold}
     .expansion {
@@ -64,13 +67,13 @@
 	</div>	
 
 	<div class="clearfix"></div>	
-	<div id="campaign-graph-box" class="box three-quarters-box">
+	<!--<div id="campaign-graph-box" class="box three-quarters-box">
 		<div id="campaign-graph"></div>
 		<div id="campaign-slider">
-			<!--<div class="outer-interval-select"><ul class="interval-select"><li>day</li><li class="interval-active">week</li><li>month</li></ul></div>-->
+			<div class="outer-interval-select"><ul class="interval-select"><li>day</li><li class="interval-active">week</li><li>month</li></ul></div>
 		</div>
-	</div>
-	<div id="filter-box" class="box quarter-box">
+  </div>-->
+	<!--<div id="filter-box" class="box quarter-box">
 		<div id="graph-interval">
 			<div id="interval-title">current interval <span id="outer-interval-reset">| <span id="interval-reset">reset</span></span></div>
 			<div id="current-interval"></div>
@@ -86,17 +89,16 @@
 			</ul>
 	
 		</div>
-		<!--<div id="export-box">export data to csv<img src="" alt="Export image" /></div>-->
+		<div id="export-box">export data to csv<img src="" alt="Export image" /></div>
     <div id="download-buttons-box">
       <div id="download-buttons-content">
       <div id="download-buttons-list" class="outer-interval-select">download as:<ul class="interval-select"><li><a href="/reporting?format=json&export=1&download=1">json</a></li><li><a href="/reporting?format=csv&export=1&download=1">csv</a></li></ul></div>
-            <!--
         <div id="download-buttons-header">download as:</div>
         <div id="download-buttons-buttons"><a href="/reporting?format=json&export=1&download=1">JSON</a><span></span><a href="/reporting?format=csv&export=1&download=1">CSV</a></div>
-        -->
       </div>
     </div>
 	</div>
+  -->
 	<div class="clearfix"></div>
 	<div id="campaign-reports-box" class="box full-box">
 		<div class="outer-interval-select">sort by<ul class="interval-select"><li>day</li><li class="interval-active">week</li><li>month</li><!--<li>insertion order</li>--></ul></div>
@@ -186,79 +188,7 @@
       var currentMetric = $('#filter-box #filter-options #filter-metric li.filter-metric-active').text();
       $('#campaign-graph-box').addClass("data-metric-" + currentMetric);
           
-      /*// GENERATE SLIDER GRAPH
-      sliderGraph = dc.lineChart('#campaign-slider', "graph-group")
-        .dimension(CRS.dimensions.daily)
-        .group(CRS.groups.daily)
-        .height(48)
-        .width(843)
-        .renderArea(true)
-        .elasticY(true)
-        .margins({top: 0, right: 0, bottom: 0, left: 0})
-        .yAxisPadding("25%")
-        .round(d3.time.day.round)
-        .xUnits(d3.time.days)
-        .valueAccessor(function(d){					
-            if(currentMetric == "clicks") return d.value.clicks;
-            else if(currentMetric == "conversions") return d.value.conversions;
-            else if(currentMetric == "cost") return d.value.cost;
-            return d.value.imps;
-        })
-        // .y(d3.scale.log().nice().domain([impsMin, impsMax]))
-        .x(d3.time.scale().domain([
-            CRS.groups.all.summary().date_min,
-            CRS.groups.all.summary().date_max
-        ]))
-        .on("preRedraw", function(){
-            CRS.dimensions.datetime.filterAll();
-        })
       
-      sliderGraph.xAxis().ticks(8).tickFormat(d3.time.format("%m/%d"));
-      
-      
-      // GENERATE MAIN GRAPH
-      mainGraph = dc.lineChart('#campaign-graph', "graph-group")
-        .dimension(CRS.dimensions.datetime)
-        .group(CRS.groups.datetime)
-        .tooltipType("daily")
-        .height(328)
-        .width(843)
-        .margins({top: 0, right: 0, bottom: 0, left: 0})
-        .elasticY(true)
-        .renderArea(true)
-        .yAxisPadding("25%")
-        .round(d3.time.day.round)
-        .xUnits(d3.time.days)
-        .valueAccessor(function(d){
-            return d.value[currentMetric || "imps"]
-        })
-        .x(d3.time.scale().domain([
-            CRS.groups.all.summary().date_min,
-            CRS.groups.all.summary().date_max
-        ]))
-        .renderHorizontalGridLines(true)
-        .brushOn(false)
-        .renderTitle(true)
-        .rangeChart(sliderGraph)
-        .on("preRedraw", function(){
-          var intervalLength = timeDifference(
-            CRS.groups.all.summary().date_min, 
-            CRS.groups.all.summary().date_max
-          );
-
-          var tooltipType = (intervalLength < 14) ? "hourly" : "daily",
-            dimensionType = (intervalLength < 14) ? "datetime" : "daily",
-            group = CRS.groups[dimensionType],
-            dimension = CRS.dimensions[dimensionType],
-            tickFormat = (intervalLength <= 1) ? d3.time.format("%I%p") : d3.time.format("%m/%d");
-
-          mainGraph.dimension(dimension).group(group).tooltipType(tooltipType)
-          mainGraph.xAxis().tickFormat(tickFormat)
-        });
-      
-      mainGraph.yAxis().ticks(5);
-      mainGraph.xAxis().tickFormat(d3.time.format("%m/%d"));
-      */
       
       
       dc.renderAll("graph-group");
@@ -267,21 +197,20 @@
       var baseInterval = formatDate(ioStartDate) + " - " + formatDate(CRS.groups.all.summary().date_max);
 
       
-      intervalBox = dc.customDataBox('.interval-span, #filter-box #graph-interval #current-interval', "graph-group")
+      intervalBox = dc.customDataBox('.interval-span', "interval-group")
       .valueAccessor(function(d){
           var dateMin = formatDate(d.date_min), dateMax = formatDate(d.date_max);
-          if(dateMin == dateMax) return dateMin;
           return dateMin + " - " + dateMax;
       })
       .group(CRS.groups.all)
-      .on("postRedraw", function(){
+      /*.on("postRedraw", function(){
           if(intervalBox.value() != baseInterval){
               $('#graph-interval #interval-title #outer-interval-reset').fadeIn();
           }
           else {
               $('#graph-interval #interval-title #outer-interval-reset').fadeOut();
           }
-      });				
+      });*/				
       
       var campaignGraphPos = $('#campaign-graph').position();
 
