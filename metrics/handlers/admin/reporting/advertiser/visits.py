@@ -23,7 +23,15 @@ OPTIONS = {
     "default": {
         "meta": {
             "groups": ["advertiser", "campaign_name", "campaign"],
-            "fields": ["spent", "num_served", "num_visits", "num_clicks", "num_conv", "num_visible", "num_loaded"],
+            "fields": [
+                "spent", 
+                "num_served", 
+                "num_loaded",
+                "num_visible", 
+                "num_visits", 
+                "num_clicks", 
+                "num_conv"
+            ],
             "query": "campaign",
             "formatters": {
                 "campaign": "none",
@@ -46,7 +54,18 @@ OPTIONS = {
 
     "campaign": {
         "meta": {
-            "groups": ["uid", "visit_time", "visit_url", "tag", "venue"],
+            "groups": [
+                "uid", 
+                "visit_time", 
+                "visit_url", 
+                "seller", 
+                "tag", 
+                "venue", 
+                "creative_id", 
+                "served_url",
+                "price",
+                "ecp"
+                ],
             "fields": [],
             "formatters": {
                 "campaign": "none",
@@ -203,7 +222,7 @@ class VisitsHandler(AdminReportingBaseHandler):
         advertiser = self.get_argument("advertiser", False)
         campaign = self.get_argument("campaign", False)
         campaign_name = self.get_argument("campaign_name", False)
-
+        
         if meta:
             return meta
 
@@ -212,7 +231,6 @@ class VisitsHandler(AdminReportingBaseHandler):
 
         if advertiser:
             return "advertiser"
-
 
         return default
 
