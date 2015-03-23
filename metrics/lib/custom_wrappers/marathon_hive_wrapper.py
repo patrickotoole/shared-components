@@ -25,7 +25,8 @@ class MarathonHive2DB(DBConnectionWrapper):
 
     def __init__(self, wrap_name=None, user='', password='', 
                  database='default', auth_mechanism = "PLAIN",
-                 marathon_endpoint="http://m.marathon.getrockerbox.com:8080/v2/tasks"
+                 marathon_endpoint="http://m.marathon.getrockerbox.com:8080/v2/tasks",
+                 identifier="spark-sql"
                  ):
         self.user = str(user)
         self.password = str(password)
@@ -34,6 +35,7 @@ class MarathonHive2DB(DBConnectionWrapper):
         self.marathon_endpoint = marathon_endpoint
         self.host = ""
         self.port = 0
+        self.identifier = identifier
         self.refresh_via_endpoint()
         super(MarathonHive2DB, self).__init__(wrap_name=wrap_name)
 
@@ -41,7 +43,7 @@ class MarathonHive2DB(DBConnectionWrapper):
         import requests
         response = requests.get(self.marathon_endpoint)
         tasks = response.json()['tasks']
-        instances = [task for task in tasks if "spark-sql" in task['id'] ]
+        instances = [task for task in tasks if self.identifier in task['id'] ]
 
         if len(instances):
             import random
