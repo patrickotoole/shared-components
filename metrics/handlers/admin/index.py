@@ -59,6 +59,10 @@ class IndexHandler(BaseHandler):
             ("/admin/advertiser/pixel/device/reporting", "Device (browser, os) data")
         ]
 
+        advertiser_visit_links = [
+            ("/admin/advertiser/visits/reporting", "Visits Reporting")
+            ]
+
         advertiser_conversion_links = [
             ("/admin/advertiser/conversion/reporting", "Conversion Reporting"),
             ("/admin/advertiser/conversion/imps/reporting", "Served Imps Resulting in Conversions")
@@ -109,6 +113,7 @@ class IndexHandler(BaseHandler):
             advertiser_conversion_links = advertiser_conversion_links,
             advertiser_click_links = advertiser_click_links,
             advertiser_pixel_links = advertiser_pixel_links,
+            advertiser_visit_links = advertiser_visit_links,
             domain_links = domain_links,
             demographics_links = demographics_links,
             hoverboard_links = hoverboard_links,

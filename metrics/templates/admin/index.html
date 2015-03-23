@@ -61,6 +61,13 @@
   {% end %}
 </ul> 
 
+<h4>Visits Reporting</h4>
+<ul>
+  {% for i in advertiser_visit_links %}
+      <li><a href="{% raw i[0] %}", target="_blank">{% raw i[1] %}</a></li>
+  {% end %}
+</ul> 
+
 <h4>Conversion Reporting</h4>
 <ul>
   {% for i in advertiser_conversion_links %}

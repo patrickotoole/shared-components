@@ -109,4 +109,14 @@ class AdvertiserReportingRoutes(Routes):
         return [
             ('/reporting/?', reporting.HoverboardHandlerV2, self.connectors), 
             ('/reporting/+(meta|help)?/?(.*?)', reporting.HoverboardHandlerV2, self.connectors)
+        ]    
+
+    @namespace("/admin/advertiser/visits")
+    @connectors("hive", "spark_sql")
+    def visits_reporting(self):
+        import handlers.admin.reporting as reporting
+
+        return [
+            ('/reporting/?', reporting.VisitsHandler, self.connectors), 
+            ('/reporting/+(meta|help)?/?(.*?)', reporting.VisitsHandler, self.connectors)
         ]
