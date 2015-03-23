@@ -267,3 +267,21 @@ FROM (
 GROUP BY %(groups)s
 HAVING %(having)s
 """
+
+VISITS = """
+SELECT %(fields)s
+FROM served_visits
+WHERE %(where)s
+GROUP BY %(groups)s
+HAVING %(having)s
+"""
+
+CAMPAIGN_DAILY = """
+SELECT %(fields)s
+FROM campaign_hourly a 
+JOIN (SELECT DISTINCT campaign_id, campaign_name FROM campaign_ref) b ON (a.campaign = b.campaign_id)
+WHERE %(where)s and advertiser!= "__HIVE_DEFAULT_PARTITION__"
+GROUP BY %(groups)s
+HAVING %(having)s
+"""
+

@@ -14,6 +14,8 @@ from advertiser.click_imps import ClickImpsHandler
 from advertiser.hoverboard import HoverboardHandler
 from advertiser.hoverboard_v2 import HoverboardHandlerV2
 
+from advertiser.visits import VisitsHandler
+
 from advertiser.pixel import AdvertiserPixelHandler
 from advertiser.pixel_geo import AdvertiserPixelGeoHandler
 from advertiser.pixel_device import AdvertiserPixelDeviceHandler
