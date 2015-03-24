@@ -6,7 +6,39 @@ RB.portal.UI = (function(UI){
   UI.constants = {
     CAMPAIGN_TOTAL : "Campaign total",
     HEADERS : ["Impressions","Views","Visits","Clicks","Conversions","Cost"],
-    HEADER_COLORS : d3.scale.category10()
+    HEADER_COLORS : d3.scale.category10(),
+    HEADINGS : [
+                {"key":"imps","values":[
+                  {"key":"raw","value":"Impressions", "id":"imps"},
+                  {"key":"rate","value":"Impressions", "id":"imps"}, 
+                  {"key":"cost_rate","value":"CPM", "id":"imps"}  
+                ]},
+                {"key":"views","values":[
+                  {"key":"raw","value":"Views", "id":"views"},
+                  {"key":"rate","value":"% Viewable", "id":"views"}, 
+                  {"key":"cost_rate","value":"CPM (Viewable)", "id":"views"}  
+                ]},
+                {"key":"visits","values":[
+                  {"key":"raw","value":"Visits", "id":"visits"},
+                  {"key":"rate","value":"Visit Rate", "id":"visits"}, 
+                  {"key":"cost_rate","value":"Cost/Visit", "id":"visits"}  
+                ]},
+                {"key":"clicks","values":[
+                  {"key":"raw","value":"Clicks", "id":"clicks"},
+                  {"key":"rate","value":"CTR", "id":"clicks"}, 
+                  {"key":"cost_rate","value":"CPC", "id":"clicks"}  
+                ]},
+                {"key":"conversions","values":[
+                  {"key":"raw","value":"Conversions", "id":"conversions"},
+                  {"key":"rate","value":"Conv Rate", "id":"conversions"}, 
+                  {"key":"cost_rate","value":"CPA", "id":"conversions"}  
+                ]},
+                {"key":"cost","values":[
+                  {"key":"raw","value":"Cost", "id":"cost"},
+                  {"key":"rate","value":"CPM", "id":"cost"}, 
+                  {"key":"cost_rate","value":"Cost", "id":"cost"}  
+                ]}
+              ]
   }
 
   UI.campaign_bucket = (function(campaign_bucket){
@@ -47,35 +79,110 @@ RB.portal.UI = (function(UI){
 
     campaign_bucket.buildDetailsTable = function(wrapper,CRS) { 
       window.detail_tables = {}
+      var colors = UI.constants.HEADER_COLORS; 
 
       wrapper.data().map(function(x,i){
         var o ="#details-table-" + i
 
         detail_tables[o] = dc.dataGrid(o,"table-group")
-          .dimension(CRS.aggregateDimensions.daily) 
+          .dimension(CRS.aggregateDimensions.weekly) 
           .group(function(d){console.log(d); return x.campaign_bucket})
-          .groupHtml(function(x){
-            return "<div class='row' style='font-size:13px;font-weight:500;text-transform:uppercase;margin:0px;margin-top:10px'><div class='col-md-3'>" + 
-              "Date Interval" + "</div>" +
-              '<div style="" class="col-md-8"><div class="col-md-2"><div style="border-top-width: 5px; border-top-style: solid; border-top-color: rgb(31, 119, 180);">Impressions</div></div><div class="col-md-2"><div style="border-top-width: 5px; border-top-style: solid; border-top-color: rgb(255, 127, 14);">Views</div></div><div class="col-md-2"><div style="border-top-width: 5px; border-top-style: solid; border-top-color: rgb(44, 160, 44);">Visits</div></div><div class="col-md-2"><div style="border-top-width: 5px; border-top-style: solid; border-top-color: rgb(214, 39, 40);">Clicks</div></div><div class="col-md-2"><div style="border-top-width: 5px; border-top-style: solid; border-top-color: rgb(148, 103, 189);">Conversions</div></div><div class="col-md-2"><div style="border-top-width: 5px; border-top-style: solid; border-top-color: rgb(140, 86, 75);">Cost</div></div></div><div class="col-md-1"></div></div>'
+          .d3Group(function(wrapped){
+
+            var row = wrapped.append("div")
+              .classed("row",true)
+              .attr("style","font-size:13px;font-weight:500;text-transform:uppercase;margin:0px;margin-top:10px")
+
+            row.append("div")
+              .classed("col-md-3",true)
+              .text("Date Interval")
+
+            var inner = row.append("div")
+              .classed("col-md-8",true)
+
+            var innerHeading = inner.selectAll(".metric")
+              .data(UI.constants.HEADINGS)
+              .enter()
+                .append("div")
+                .classed("col-md-2",true)
+                .attr("class",function(x) {return "col-md-2 " + x.key})
+
+              innerHeading.selectAll(".metric")
+                .data(function(d){return d.values})
+                .enter()
+                  .append("div")
+                  .attr("class",function(x){return x.key + " metric"})
+                  .style("border-top",function(x){ return "5px solid " + colors(x.id) })
+                  .text(function(x){return x.value})
+              
           })
-	        .html(function(d,i){
-            var date = "<div class='col-md-3 with-border date detail' style='padding-left:20px;font-size:13px'>" + 
-              createDateValue("date-day",d.date) + "</div>"
+          .d3(function(wrapped){
 
-            var imps = "<div class='col-md-2 imps detail'>" + formatNumber(d.imps) + "</div>"
-            var views = "<div class='col-md-2 views detail'>" + d.views + "</div>"
-            var visits = "<div class='col-md-2 visits detail'>" + d.visits + "</div>"
-            var clicks = "<div class='col-md-2 clicks detail'>" + formatNumber(d.clicks) + "</div>"  
-            var conversions = "<div class='col-md-2 conversions detail'>" + formatNumber(d.conversions) + "</div>"  
-            var cost = "<div class='col-md-2 cost detail'>" + formatMoney(d.cost) + "</div>" 
+              wrapped.append("div")
+                .classed("col-md-3 with-border date detail",true)
+                .style("padding-left","20px")
+                .style("font-size","13px")
+                .html(function(d){
+                  return createDateValue("date-week",d.date)
+                })
 
-            var wrap = "<div class='col-md-8 with-border'>" + 
-              imps + views + visits + clicks + conversions + cost
-              "</div>"
+              var details = wrapped.append("div")
+                .classed("col-md-8 with-border",true)
 
-            // Something seems screwy here.. guesing its in the date function
-            return date + wrap + "</div><div class='col-md-1 with-border'></div>"
+              var series = [
+                {"key":"imps","formatter":formatNumber},
+                {"key":"views","formatter":d3.format(",.0f")}, 
+                {"key":"visits","formatter":formatNumber}, 
+                {"key":"clicks","formatter":formatNumber}, 
+                {"key":"conversions","formatter":formatNumber}, 
+                {"key":"cost","formatter":formatMoney}, 
+              ]
+
+              var metric = details.selectAll(".detail")
+                .data(function(d) {
+                  var data = []
+
+                  series.map(function(x){
+                    data.push({
+                      "key":x.key,
+                      "formatter":x.formatter,
+                      "value":d[x.key],
+                      "imps":d.imps,
+                      "cost":d.cost
+                    })
+                  })
+
+                  return data
+                }).enter()
+                  .append("div")
+                  .attr("class",function(d){ return d.key + " col-md-2 detail"})
+
+                metric.selectAll(".metric")
+                  .data(function(d){
+
+                    var costMultiplier = 
+                      ((d.key == "visits") || (d.key == "clicks") || (d.key == "conversions")) ? 1 : 1000
+
+                    return [
+                      { "key":"raw","value": d.formatter(d.value)},
+                      { "key":"rate","value":
+                        (d.key == "imps") ? d.formatter(d.value) : 
+                        (d.key == "cost") ? formatMoney(d.value/d.imps*costMultiplier) : 
+                          d3.format(".2%")(d.value/d.imps)
+                      },
+                      { "key":"cost_rate","value":
+                        (d.key == "cost") ? formatMoney(d.cost) : 
+                          formatMoney(d.cost/d.value*costMultiplier)}
+                    ]
+                  })
+                  .enter()
+                    .append("div")
+                    .attr("class",function(d){return "metric " + d.key })
+                    .text(function(x){return x.value})
+
+              
+
+              
           })
           .sortBy(function(x){return x.date})
           .order(d3.descending)
@@ -88,7 +195,7 @@ RB.portal.UI = (function(UI){
     campaign_bucket.buildSliderChart = function(wrapper,CRS) {
       window.slider_charts = {}
 
-      wrapper.data().map(function(x,i){return "#stuff-" + i}).map(function(o){
+      wrapper.data().map(function(x,i){return "#interval-chart-" + i}).map(function(o){
 
         slider_charts[o] = dc.lineChart(o, "slider-group") 
           .dimension(CRS.dimensions.daily)
@@ -143,27 +250,27 @@ RB.portal.UI = (function(UI){
           .dimension(CRS.dimensions.datetime)
           .group(CRS.groups.datetime)
           .tooltipType("daily")
-          .height(250)
+          .height(253)
           .width(function(x){
             return d3.select(".active-row").selectAll(".main-chart").node().getBoundingClientRect().width
           })
-          .margins({top: 0, right: 0, bottom: 0, left: 0})
+          .margins({top: 12, right: 12, bottom: 0, left: 50})
           .elasticY(true)
           .renderArea(true)
           .yAxisPadding("25%")
           .round(d3.time.day.round)
           .xUnits(d3.time.days)
           .valueAccessor(function(d){
-              return d.value.imps
+             return d.value.imps
           })
           .x(d3.time.scale().domain([
               CRS.groups.all.summary().date_min,
               CRS.groups.all.summary().date_max
           ]))
-          .renderHorizontalGridLines(true)
+          //.renderHorizontalGridLines(true)
           .brushOn(false)
           .renderTitle(true)
-          .rangeChart(slider_charts["#stuff-"+i])
+          .rangeChart(slider_charts["#interval-chart-"+i])
           .on("preRedraw", function(e){
             var intervalLength = timeDifference(
               CRS.groups.all.summary().date_min, 
@@ -195,7 +302,10 @@ RB.portal.UI = (function(UI){
     campaign_bucket.buildRowExpansion = function(row,CRS) { 
 
       var expansion = row.append("div")
-          .classed("expansion col-md-12",true)
+          .classed("shadow expansion col-md-12",function(d,i){
+            d.index = i
+            return true
+          })
 
       expansion.append("h5")
         .style("padding-bottom","8px")
@@ -228,16 +338,63 @@ RB.portal.UI = (function(UI){
           .style("min-height","100px")
           .classed("col-md-12",true)
 
-      expansionLeft.append("h5")
+      var metric = expansionLeft.append("h5")
         .classed("row",true)
         .attr("style","border-bottom: 1px solid #ccc; line-height: 35px; margin-top: 0px; padding-left: 10px;")
+
+      metric.append("span")
         .text("Metrics")
 
+      var metricTypes = metric.append("span") 
+        .classed("metric-span",true)
+          .style("font-size","11px")
+          .style("font-weight","normal")
+          .style("text-transform","uppercase")
+          .style("line-height","35px")
+          .style("padding-right","12px")
+          .style("float","right")
+          .selectAll(".metric-type")
+          .data(["Raw","Rate","Cost"])
+          .enter()
+            .append("span")
+            .style("margin-left","15px")
+            .classed("metric-type",true)
+            .text(function(x){return x})
+            .style("font-weight",function(x,i){return i == 0 ? "bold" : ""})
+            .style("opacity",function(x,i){return i ? ".5" : ""})
+            .on("click",function(x){
+              var current = d3.select(this)
+              metricTypes.style("font-weight","")
+              metricTypes.style("opacity",".5")
+
+              d3.selectAll(".details-table")
+                .classed("raw",function(d){return x == "Raw"})
+                .classed("rate",function(d){return x == "Rate"})
+                .classed("cost_rate",function(d){return x == "Cost"})
+
+              d3.selectAll(".series-selector")
+                .classed("raw",function(d){return x == "Raw"})
+                .classed("rate",function(d){return x == "Rate"})
+                .classed("cost_rate",function(d){return x == "Cost"})
+
+              current.style("font-weight","bold")
+              current.style("opacity","") 
+
+
+
+            })
+
+       
+
       var series = expansionLeft.append("div")
-        .classed("row",true)
+        .classed("row raw series-selector",true)
         .style("padding","10px")
         .selectAll(".series-selction")
-        .data(UI.constants.HEADERS)
+        .data(function(x){
+          var flat = []  
+          UI.constants.HEADINGS.map(function(y){y.values.map(function(z){flat.push(z)})})
+          return flat
+        })
         .enter()
           .append("div")
 
@@ -257,8 +414,10 @@ RB.portal.UI = (function(UI){
         
       series
         .classed("col-md-6",true)
-          .style("opacity",function(d,i){return i ? ".5" : ""})
-          .style("border-left",function(d){return "5px solid" + UI.constants.HEADER_COLORS(d)})
+          .attr("class",function(d){
+            return "col-md-6 metric " + d.key + " " + d.id
+          })
+          .style("border-left",function(d){return "5px solid" + UI.constants.HEADER_COLORS(d.id)})
           .style("padding-bottom","3px")
           .style("padding-left","5px")
           .style("font-size","11px")
@@ -266,7 +425,71 @@ RB.portal.UI = (function(UI){
           .style("line-height","25px")
           .style("margin-bottom","3px")
           .style("text-transform","uppercase")
-          .text(function(d){return d})
+          .text(function(d){return d.value})
+          .on("click",function(x){
+
+            var i = this.parentNode.parentNode.__data__.index
+            var metric_type = 
+              d3.select(this.parentNode).classed("cost_rate") ? "cost_rate" :
+              d3.select(this.parentNode).classed("rate") ? "rate" : "raw"
+
+            var accessor = function(d) {
+              var costMultiplier = 
+                ((x.id == "visits") || (x.id == "clicks") || (x.id == "conversions")) ? 1 : 1000
+
+              var val;
+
+              if (metric_type == "rate") {
+                val = (x.id == "imps") ? d.value[x.id] : 
+                  (x.id == "cost") ? d.value[x.id]/d.value.imps*costMultiplier : 
+                    d.value[x.id]/d.value.imps
+
+              } else if (metric_type == "cost_rate") {
+                
+                val = (x.id == "cost") ? d.value.cost : 
+                    d.value.cost/d.value[x.id]*costMultiplier
+                  
+              } else {
+                val = d.value[x.id]
+              }
+
+              return ((val == Infinity) || isNaN(val)) ? 0 : val
+            }
+
+
+            for (var cid in main_charts) {
+              main_charts[cid]
+                .valueAccessor(accessor)
+                .colorCalculator(function(){return UI.constants.HEADER_COLORS(x.id)})
+            }
+
+            for (var sid in slider_charts) {
+              slider_charts[sid]
+                .valueAccessor(function(d){ return d.value[x.id] })
+                .colorCalculator(function(){return UI.constants.HEADER_COLORS(x.id)})
+            }
+
+            var current_class = d3.selectAll(".details-table")
+              .classed("imps",function(d){return x.id == "imps"})
+              .classed("views",function(d){return x.id == "views"}) 
+              .classed("visits",function(d){return x.id == "visits"}) 
+              .classed("clicks",function(d){return x.id == "clicks"}) 
+              .classed("conversions",function(d){return x.id == "conversions"}) 
+              .classed("cost",function(d){return x.id == "cost"}) 
+
+            var current_class = d3.selectAll(".series-selector")
+              .classed("imps",function(d){return x.id == "imps"})
+              .classed("views",function(d){return x.id == "views"}) 
+              .classed("visits",function(d){return x.id == "visits"}) 
+              .classed("clicks",function(d){return x.id == "clicks"}) 
+              .classed("conversions",function(d){return x.id == "conversions"}) 
+              .classed("cost",function(d){return x.id == "cost"}) 
+             
+
+            dc.redrawAll("infocus-group")
+
+          
+          })
 
       expansionLeft.append("div")
         .classed("col-md-12",true)
@@ -281,7 +504,7 @@ RB.portal.UI = (function(UI){
       var sliderGroup = expansionLeft.append("div").classed("interval-chart dc-chart",true)
         .style("width","100%")
         .style("display","block")
-        .attr("id",function(x,i){return "stuff-"+i})
+        .attr("id",function(x,i){return "interval-chart-"+i})
        
       var mainGraphGroup = expansionRight.append("div")
         .classed("main-chart dc-chart",true)
@@ -290,7 +513,7 @@ RB.portal.UI = (function(UI){
         .attr("id",function(x,i){return "main-chart-" + i})
 
       var detailsGroup = detailsRow.append("table")
-        .classed("details-table",true)
+        .classed("raw details-table imps",true)
         .style("font-weight","normal")
         .style("background-color","white")
         .style("border","1px solid #ddd")
@@ -321,6 +544,12 @@ RB.portal.UI = (function(UI){
           var bucket = this.parentNode.__data__.campaign_bucket
           row.classed("active-row",false)
           d3.select(this.parentNode).classed("active-row",true)
+
+          d3.select(this.parentNode).select(".expansion")
+            /*.style("z-index","0")
+            .style("height", 0)
+            .transition().duration(400).style("height","400px")
+              */
           selectCampaign(bucket,d3.select(this.parentNode))
           //d3.event().preventDefault()
         })
@@ -381,8 +610,8 @@ RB.portal.UI = (function(UI){
           var a = x.campaign_bucket,
             b = y.campaign_bucket;
 
-          if (x.campaign_bucket == UI.constants.CAMPAIGN_TOTAL) return 1
-          if (y.campaign_bucket == UI.constants.CAMPAIGN_TOTAL) return 0
+          if (x.campaign_bucket == UI.constants.CAMPAIGN_TOTAL) return -1
+          if (y.campaign_bucket == UI.constants.CAMPAIGN_TOTAL) return 1
           
           return a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN;
         })
@@ -413,13 +642,14 @@ RB.portal.UI = (function(UI){
       var innerHeader = header.append("div")
         .classed("col-md-8",true)
 
-      names.map(function(name){
-        innerHeader.append("div")
+      innerHeader.selectAll("div")
+        .data(UI.constants.HEADINGS)
+        .enter()
+          .append("div")
           .classed("col-md-2",true)
           .append("div")
-          .style("border-top",function(x,i){ return "5px solid " + colors(name) })
-          .text(name)
-      })
+          .style("border-top",function(x){ console.log(x.key); return "5px solid " + colors(x.key) })
+          .text(function(x){return x.values[0].value })
 
       var body = panel.append("div")
         .classed("campaigns-body",true)

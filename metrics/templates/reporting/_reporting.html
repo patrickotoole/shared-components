@@ -8,6 +8,70 @@
 	<link href="/static/css/reporting-style.css" type="text/css" rel="stylesheet" media="screen">
 	<link href="/static/css/dc.css" type="text/css" rel="stylesheet" media="screen">
   <style>
+    
+    .metric.raw {
+      display:none; opacity:.5
+    }
+    .metric.rate {
+      display:none ; opacity:.5 
+    }
+    .metric.cost_rate {
+      display:none; opacity:.5
+    }
+
+    .details-table.raw .metric.raw, .details-table.rate .metric.rate, .details-table.cost_rate .metric.cost_rate {
+      display:block    
+    }
+    .details-table.raw.imps .imps > .metric.raw, 
+    .details-table.raw.views .views > .metric.raw,  
+    .details-table.raw.visits .visits > .metric.raw,  
+    .details-table.raw.clicks .clicks > .metric.raw,  
+    .details-table.raw.conversions .conversions > .metric.raw,  
+    .details-table.raw.cost .cost > .metric.raw ,
+
+    .details-table.rate.imps .imps > .metric.rate, 
+    .details-table.rate.views .views > .metric.rate,  
+    .details-table.rate.visits .visits > .metric.rate,  
+    .details-table.rate.clicks .clicks > .metric.rate,  
+    .details-table.rate.conversions .conversions > .metric.rate,  
+    .details-table.rate.cost .cost > .metric.rate ,
+
+    .details-table.cost_rate.imps .imps > .metric.cost_rate, 
+    .details-table.cost_rate.views .views > .metric.cost_rate,  
+    .details-table.cost_rate.visits .visits > .metric.cost_rate,  
+    .details-table.cost_rate.clicks .clicks > .metric.cost_rate,  
+    .details-table.cost_rate.conversions .conversions > .metric.cost_rate,  
+    .details-table.cost_rate.cost .cost > .metric.cost_rate
+    {
+      opacity:1
+    }
+
+    .series-selector.raw.imps  .metric.raw.imps, 
+    .series-selector.raw.views  .metric.raw.views,  
+    .series-selector.raw.visits  .metric.raw.visits,  
+    .series-selector.raw.clicks  .metric.raw.clicks,  
+    .series-selector.raw.conversions  .metric.raw.conversions,  
+    .series-selector.raw.cost  .metric.raw.cost,
+    .series-selector.imps  .metric.imps, 
+    .series-selector.rate.views  .metric.rate.views,  
+    .series-selector.rate.visits  .metric.rate.visits,  
+    .series-selector.rate.clicks  .metric.rate.clicks,  
+    .series-selector.rate.conversions  .metric.rate.conversions,  
+    .series-selector.rate.cost  .metric.rate.cost,
+    .series-selector.cost_rate.imps  .metric.cost_rate.imps, 
+    .series-selector.cost_rate.views  .metric.cost_rate.views,  
+    .series-selector.cost_rate.visits  .metric.cost_rate.visits,  
+    .series-selector.cost_rate.clicks  .metric.cost_rate.clicks,  
+    .series-selector.cost_rate.conversions  .metric.cost_rate.conversions,  
+    .series-selector.cost_rate.cost  .metric.cost_rate.cost 
+    {
+      opacity:1
+    }
+    .series-selector.raw .metric.raw, .series-selector.rate .metric.rate, .series-selector.cost_rate .metric.cost_rate {
+      display:block    
+    }
+ 
+
     #content {padding-right: 15px;}
     #content #campaign-box {width:100%}
     #page-container {width:inherit}
@@ -25,8 +89,15 @@
     .expansion div div div {background:white}
     .active-row .expansion {display:block}
     .shadow{
+      box-shadow:
       inset 0px 11px 8px -10px #CCC,
       inset 0px -11px 8px -10px #CCC; 
+
+box-shadow: inset 0px 0px 5px 0px #CCC;
+-webkit-box-shadow: inset 0px 0px 7px -1px #CCC;
+-moz-box-shadow: inset 0px 0px 10px 2px #ABABAB;
+-o-box-shadow: inset 0px 0px 10px 2px #ABABAB;
+      
     }
     .row {
       margin-right: -10px;
@@ -66,53 +137,8 @@
 
 {% block page_content %}
 
-	<div id="campaign-box" class="box three-quarters-box">
-	</div>	
+	<div id="campaign-box" class="box three-quarters-box"></div>	
 
-	<div class="clearfix"></div>	
-	<!--<div id="campaign-graph-box" class="box three-quarters-box">
-		<div id="campaign-graph"></div>
-		<div id="campaign-slider">
-			<div class="outer-interval-select"><ul class="interval-select"><li>day</li><li class="interval-active">week</li><li>month</li></ul></div>
-		</div>
-  </div>-->
-	<!--<div id="filter-box" class="box quarter-box">
-		<div id="graph-interval">
-			<div id="interval-title">current interval <span id="outer-interval-reset">| <span id="interval-reset">reset</span></span></div>
-			<div id="current-interval"></div>
-		</div>
-		<div id="filter-options">
-			<div class="box-title">Display</div>
-			<div class="box-subtitle">Metric</div>
-			<ul id="filter-metric">
-				<li class="filter-metric-active"><img src="/static/img/general/checked-radio.png" alt="Checked radio button" />imps</li>
-				<li><img src="/static/img/general/unchecked-radio.png" alt="Unchecked radio button" />clicks</li>
-				<li><img src="/static/img/general/unchecked-radio.png" alt="Unchecked radio button" />conversions</li>
-				<li><img src="/static/img/general/unchecked-radio.png" alt="Unchecked radio button" />cost</li>
-			</ul>
-	
-		</div>
-		<div id="export-box">export data to csv<img src="" alt="Export image" /></div>
-    <div id="download-buttons-box">
-      <div id="download-buttons-content">
-      <div id="download-buttons-list" class="outer-interval-select">download as:<ul class="interval-select"><li><a href="/reporting?format=json&export=1&download=1">json</a></li><li><a href="/reporting?format=csv&export=1&download=1">csv</a></li></ul></div>
-        <div id="download-buttons-header">download as:</div>
-        <div id="download-buttons-buttons"><a href="/reporting?format=json&export=1&download=1">JSON</a><span></span><a href="/reporting?format=csv&export=1&download=1">CSV</a></div>
-      </div>
-    </div>
-	</div>
-  -->
-	<div class="clearfix"></div>
-	<!--<div id="campaign-reports-box" class="box full-box">
-		<div class="outer-interval-select">sort by<ul class="interval-select"><li>day</li><li class="interval-active">week</li><li>month</li><!--<li>insertion order</li>--></ul></div>
-		<!--<div class="box-title">Campaign reports</div>
-		<div id="campaign-reports-table" class="content-table">
-			<ul id="reports-header" class="header-row"><li class="reports-date"></li><li class="reports-impressions">impressions</li><li class="reports-thin-small">cpm</li><li class="reports-clicks">clicks</li><li class="reports-conversions">conversions</li><li class="reports-thin-small">cpa</li><li class="reports-cost">total cost</li></ul>		
-		</div>
-		<div class="show-more">show more</div>
-  </div>
-  <div id="footer">*Note: Media cost and CPMs are computed weekly. Recent numbers may read as null (showing "-") until the start of the week.</div>-->
-	<div class="clearfix"></div>
 {% end %}
 
 {% block page_scripts %}
@@ -170,52 +196,21 @@
 
     RB.portal.data.reporting(function(data){
 
-
       var crs = crossfilter(data);
       window.CRS = crossfilterNS(crs, dc);
-      console.log(CRS)
 
       RB.portal.UI.campaign_bucket.buildPanel(CRS,d3.select("#campaign-box"))
-
-      //buildBucketReporting(CRS,d3.select("#campaign-box"))
-      campaignReportsTable = dc.customDataTable('#campaign-reports-table', "reports-group")
-
-      /*var currentCampaign = "Campaign total";
-      updateCampaignReports(
-        $('#campaign-reports-box .outer-interval-select .interval-select .interval-active').text(), 
-        currentCampaign
-      );
-      dc.renderAll("reports-group");
-        */
       
-      var currentMetric = $('#filter-box #filter-options #filter-metric li.filter-metric-active').text();
-      $('#campaign-graph-box').addClass("data-metric-" + currentMetric);
-          
-      
-      
-      
-      dc.renderAll("graph-group");
+      //dc.renderAll("graph-group");
       
       // SET TIME INTERVAL
       var baseInterval = formatDate(ioStartDate) + " - " + formatDate(CRS.groups.all.summary().date_max);
 
       
       intervalBox = dc.customDataBox('.interval-span', "interval-group")
-      .valueAccessor(function(d){
-          var dateMin = formatDate(d.date_min), dateMax = formatDate(d.date_max);
-          return dateMin + " - " + dateMax;
-      })
-      .group(CRS.groups.all)
-      /*.on("postRedraw", function(){
-          if(intervalBox.value() != baseInterval){
-              $('#graph-interval #interval-title #outer-interval-reset').fadeIn();
-          }
-          else {
-              $('#graph-interval #interval-title #outer-interval-reset').fadeOut();
-          }
-      });*/				
+        .valueAccessor(function(d){ return formatDate(d.date_min) + " - " + formatDate(d.date_max) })
+        .group(CRS.groups.all)
       
-      var campaignGraphPos = $('#campaign-graph').position();
 
       //mainGraph.focus([ioStartDate, CRS.groups.all.summary().date_max])
 
@@ -348,5 +343,6 @@
 				//mainGraph.redraw();
 			}
 		});
+    
 	</script>
 {% end %}

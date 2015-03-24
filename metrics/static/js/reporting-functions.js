@@ -1,16 +1,10 @@
 var selectCampaign = function(campaign,target) {
 
-  console.log(campaign,target)
-
   campaign == "Campaign total" ?
     CRS.dimensions.total_campaign_bucket.filterAll() :
     CRS.dimensions.total_campaign_bucket.filter(function(f){return f == campaign});
 
   dc.deregisterAllCharts("infocus-group")
-
-  console.log("#" + target.select(".main-chart").attr("id"))
-
-  console.log(detail_tables)
 
   dc.registerChart(main_charts["#" + target.select(".main-chart").attr("id")],"infocus-group")
   dc.registerChart(slider_charts["#" + target.select(".interval-chart").attr("id")],"infocus-group") 
@@ -19,7 +13,7 @@ var selectCampaign = function(campaign,target) {
   //sliderGraph.redraw()
   //mainGraph.redraw()
   dc.renderAll("infocus-group")
-  dc.redrawAll("graph-group")
+  //dc.redrawAll("graph-group")
 
   updateCampaignReports(
     $('#campaign-reports-box .outer-interval-select .interval-select li.interval-active').text(),

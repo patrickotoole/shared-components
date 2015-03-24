@@ -5093,6 +5093,9 @@ dc.dataGrid = function(parent, chartGroup) {
     };
     var _order = d3.ascending;
 
+    var _d3Group;
+    var _d3;
+
     var _htmlGroup = function (d) {
         return "<div class='"+GROUP_CSS_CLASS+"'><div class='"+LABEL_CSS_CLASS+"'>"+
             _chart.keyAccessor()(d)+"</div></div>";
@@ -5128,8 +5131,11 @@ dc.dataGrid = function(parent, chartGroup) {
                 .enter()
                 .append("div")
                 .attr("class", GRID_CSS_CLASS);
+        if (_d3Group) {
 
-        if (_htmlGroup) {
+          _d3Group(itemGroup)
+
+        } else if (_htmlGroup) {
             itemGroup
                 .html(function(d) {
                     return _htmlGroup(d);
@@ -5160,12 +5166,18 @@ dc.dataGrid = function(parent, chartGroup) {
                     return d.values;
                 });
 
-        items.enter()
+        var d3Items = items.enter()
             .append("div")
             .attr("class", ITEM_CSS_CLASS)
-            .html(function(d,i) {
-                return _html(d,i);
-            });
+
+        if (_d3) {
+            _d3(d3Items)
+        } else {
+            d3Items
+                .html(function(d,i) {
+                    return _html(d,i);
+                });
+        }
 
         items.exit().remove();
 
@@ -5209,6 +5221,12 @@ dc.dataGrid = function(parent, chartGroup) {
         return _chart;
     };
 
+    _chart.d3 = function(_) {
+        if (!arguments.length) return _d3;
+        _d3 = _;
+        return _chart;
+    }
+
 
     /**
      #### .htmlGroup( function (data) { return "<html>"; })
@@ -5223,6 +5241,13 @@ dc.dataGrid = function(parent, chartGroup) {
         _htmlGroup = _;
         return _chart;
     };
+
+    _chart.d3Group = function(_) {
+        if (!arguments.length) return _d3Group;
+        _d3Group = _;
+        return _chart;
+    }
+
 
     /**
      #### .sortBy([sortByFunction])
