@@ -3,6 +3,23 @@ RB.portal = RB.portal || {}
 
 RB.portal.UI = (function(UI){
 
+  var createDateValue = function(dateMode, firstDate) {
+    var formatted = formatDate(firstDate)
+		if (dateMode == "weekly") {
+      var endOfWeek = addDays(firstDate, 6)
+      if (endOfWeek > CRS.groups.all.summary().date_max) 
+        endOfWeek.setTime(CRS.groups.all.summary().date_max.getTime());
+			formatted += " - " + formatDate(endOfWeek);
+		} else if (dateMode == "monthly") {
+			formatted = formatMonth(firstDate);
+		}
+    return formatted
+	} 
+
+  var timeDifference = function(startDate, endDate){
+    return (endDate.getTime() - startDate.getTime()) / 1000 / 60 / 60 / 24;
+  }                       
+
   UI.constants = {
     CAMPAIGN_TOTAL : "Campaign total",
     HEADERS : ["Impressions","Views","Visits","Clicks","Conversions","Cost"],
@@ -42,6 +59,30 @@ RB.portal.UI = (function(UI){
   }
 
   UI.campaign_bucket = (function(campaign_bucket){
+
+    var main_charts, slider_charts, detail_tables;
+
+    var selectCampaign = function(campaign,target) {
+    
+      campaign == "Campaign total" ?
+        CRS.dimensions.total_campaign_bucket.filterAll() :
+        CRS.dimensions.total_campaign_bucket.filter(function(f){return f == campaign});
+    
+      dc.deregisterAllCharts("infocus-group")
+    
+      dc.registerChart(main_charts["#" + target.select(".main-chart").attr("id")],"infocus-group")
+      dc.registerChart(slider_charts["#" + target.select(".interval-chart").attr("id")],"infocus-group") 
+      dc.registerChart(detail_tables["#" + target.select(".details-table").attr("id")],"infocus-group")  
+    
+      dc.renderAll("infocus-group")
+    
+      updateCampaignReports(
+        $('#campaign-reports-box .outer-interval-select .interval-select li.interval-active').text(),
+        campaign 
+      )
+    
+      campaignReportsTable.redraw()
+    }
 
     var bucketDataFormatter = function(CRS) {
 
@@ -114,7 +155,7 @@ RB.portal.UI = (function(UI){
     }
 
     campaign_bucket.buildDetailsTable = function(wrapper,CRS) { 
-      window.detail_tables = {}
+      detail_tables = {}
       var colors = UI.constants.HEADER_COLORS; 
 
       wrapper.data().map(function(x,i){
@@ -253,7 +294,7 @@ RB.portal.UI = (function(UI){
     }
 
     campaign_bucket.buildSliderChart = function(wrapper,CRS) {
-      window.slider_charts = {}
+      slider_charts = {}
 
       wrapper.data().map(function(x,i){return "#interval-chart-" + i}).map(function(o){
 
@@ -301,7 +342,7 @@ RB.portal.UI = (function(UI){
     campaign_bucket.buildMainChart = function(wrapper,CRS) {
       var expansionRight = wrapper;
 
-      window.main_charts = { }
+      main_charts = { }
 
       expansionRight.data().map(function(x,i){
         var main_chart_id = "#main-chart-" + i

@@ -159,7 +159,7 @@ box-shadow: inset 0px 0px 5px 0px #CCC;
   <script src="/static/js/d3.v3.min.js"></script> 
   <script src="/static/js/rockerbox/ajax.js"></script>
 	<script src="/static/js/rockerbox/data.js"></script> 
-  <script src="/static/js/rockerbox/portal/ui.campaign.js"></script>
+  <script src="/static/js/rockerbox/portal/ui.campaign.accordian.js"></script>
 	<script src="/static/js/gauge.min.js"></script>
 	
 	<script src="/static/js/crossfilter.min.js"></script>
@@ -171,37 +171,8 @@ box-shadow: inset 0px 0px 5px 0px #CCC;
     addMixpanelEvent({{ advertiser_id }}, "{{ user_id }}", "load reporting");
   </script>
 	<script>					
-		// FORMAT DATE BASED ON DISPLAY MODE
-		function createDateValue(dateMode, firstDate){
-			if(dateMode == "daily") return formatDate(firstDate);
-			else if(dateMode == "weekly"){
-                var endOfWeek = addDays(firstDate, 6);
-                if(endOfWeek > CRS.groups.all.summary().date_max) endOfWeek.setTime(CRS.groups.all.summary().date_max.getTime());
-				return formatDate(firstDate) + " - " + formatDate(endOfWeek);
-			}
-			else if(dateMode == "monthly"){
-				return formatMonth(firstDate);
-			}
-		}
-		
-        // GET TIME DIFFERENCE BETWEEN TWO DATES
-        function timeDifference(startDate, endDate){
-            return (endDate.getTime() - startDate.getTime()) / 1000 / 60 / 60 / 24;
-        }
         
-		// INITIALISE TABLES
-		var campaignTable = null, campaignReportsTable = null, sliderGraph = null, mainGraph = null;
-		
 		var extUserID =  {{ advertiser_id }};
-		
-		var userBudget = 0, userSpent = 0;
-
-    //changes where the selector is on the graph. note that the campaign buckets list above will change to the selection!
-    var dt = new Date();
-    var ioStartDate = dt.setMonth(dt.getMonth()-3);
-    ioStartDate = new Date(ioStartDate);
-        
-		// GET ADVERTISER BUDGET AND PROGRESS       
 
 		$.getJSON("/api?table=advertiser&external_advertiser_id=" + extUserID, function(data){
       $('#header #right-align #user-name').text(data[0].advertiser_name.toLowerCase());
@@ -214,148 +185,14 @@ box-shadow: inset 0px 0px 5px 0px #CCC;
 
       RB.portal.UI.campaign_bucket.buildPanel(CRS,d3.select("#campaign-box"))
       
-      //dc.renderAll("graph-group");
-      
-      // SET TIME INTERVAL
-      var baseInterval = formatDate(ioStartDate) + " - " + formatDate(CRS.groups.all.summary().date_max);
-
-      
       intervalBox = dc.customDataBox('.interval-span', "interval-group")
         .valueAccessor(function(d){ return formatDate(d.date_min) + " - " + formatDate(d.date_max) })
         .group(CRS.groups.all)
       
-
       //mainGraph.focus([ioStartDate, CRS.groups.all.summary().date_max])
 
-      try {
-        if(ioStartDate < CRS.groups.all.summary().date_min){
-          ioStartDate = new Date(CRS.groups.all.summary().date_min.getTime());
-           //mainGraph.focus([ioStartDate, CRS.groups.all.summary().date_max]);
-           baseInterval = formatDate(ioStartDate) + " - " + formatDate(CRS.groups.all.summary().date_max);
-           intervalBox.redraw();                   
-        }     
-      } catch(e) {}
-      
-      // HACKHACKHACK
-      //$('#io-completion-box #io-progress #io-estimated-spent').text(formatMoney(CRS.groups.all.value().cost) + "*");
       $('#page-loader').fadeOut();
     });		
 	</script>
-	<script>		
-		// SWITCH CAMPAIGN FOCUS
-		
-		
-		// SWITCH REPORTING MODE ON CLICK
-		$('#campaign-reports-box .outer-interval-select .interval-select li').on("click", function(){
-			if(!$(this).hasClass('interval-active')){
-				$(this).siblings('.interval-active').removeClass('interval-active');
-				$(this).addClass('interval-active');
-				
-				var currentCampaign = $('.active-row .campaign-name-no-style').text();
-				if(currentCampaign == "Campaign total"){
-					CRS.dimensions.total_campaign_bucket.filterAll();
-				}
-				else {
-					CRS.dimensions.total_campaign_bucket.filter(function(d){return d == currentCampaign});
-				}		
-				
-				updateCampaignReports($(this).text(), currentCampaign);
-				
-				$('#campaign-reports-table').fadeOut(250, "linear", function(){
-					campaignReportsTable.redraw();
-				});			
-			}
-		});
-		
-		// IF SHOW MORE ON CAMPAIGN REPORTS
-		$('#campaign-reports-box .show-more').click(function(){			
-        
-			var currentCampaign = $('#campaign-table .campaign-row.active-row .campaign-name-no-style').text();
-			if(currentCampaign == "Campaign total"){
-				CRS.dimensions.total_campaign_bucket.filterAll();
-			}
-			else {
-				CRS.dimensions.total_campaign_bucket.filter(function(d){return d == currentCampaign});
-			}		
-			updateCampaignReports($('#campaign-reports-box .outer-interval-select .interval-select li.interval-active').text(), currentCampaign, Infinity);
-
-			campaignReportsTable.redraw();		
-		});
-        
-        // IF CLICK ON DATESPAN
-		$('#campaign-reports-table').on("click", '.date-span', function(){			
-            if($(this).parent().hasClass('date-day')){
-                dc.filterAll("graph-group");
-                var currentDate = new Date($(this).text());
-                //mainGraph.focus([currentDate, addDays(currentDate, 1)])
-                dc.redrawAll("graph-group");
-            }
-            else if($(this).parent().hasClass('date-week')){
-                var currentWeek = $(this).text().split(" - ");
-                dc.filterAll("graph-group");
-                //mainGraph.focus([new Date(currentWeek[0]), addDays(new Date(currentWeek[1]), 1)])
-                dc.redrawAll("graph-group");
-            }
-            else if($(this).parent().hasClass('date-month')){
-                var currentMonth = new Date($(this).text());
-                var monthEnd = new Date($(this).text());
-                monthEnd.setMonth(monthEnd.getMonth() + 1);
-                dc.filterAll("graph-group");
-                //mainGraph.focus([currentMonth, monthEnd])
-                dc.redrawAll("graph-group");
-            }
-		});
-		
-		// RESET DATE FILTER
-		$('#interval-reset').click(function(){
-			// CRS.dimensions.datetime.filterAll();
-			//dc.filterAll("graph-group");
-      //mainGraph.focus([ioStartDate, CRS.groups.all.summary().date_max])
-			//dc.redrawAll("graph-group");
-			// $(this).parent().fadeOut(500);
-		});
-		
-		// CHANGE METRIC
-		$('#filter-box #filter-options #filter-metric li').click(function(){
-			if(!$(this).hasClass('filter-metric-active')){
-				var currentMetric = $(this).text();
-				$('#campaign-graph-box').removeClass('data-metric-' + $('#filter-box #filter-options #filter-metric li.filter-metric-active').text()).addClass("data-metric-" + currentMetric);
-
-				/*
-        mainGraph.valueAccessor(function(d){										
-					if(currentMetric == "clicks") return d.value.clicks;
-					else if(currentMetric == "conversions") return d.value.conversions;
-					else if(currentMetric == "cost") return d.value.cost;
-					return d.value.imps;
-				});*/
-
-				/*sliderGraph.valueAccessor(function(d){					
-					if(currentMetric == "clicks") return d.value.clicks;
-					else if(currentMetric == "conversions") return d.value.conversions;
-					else if(currentMetric == "cost") return d.value.cost;
-					return d.value.imps;
-				});*/
-				
-				var currentCampaign = $('#campaign-table .campaign-row.active-row .campaign-name-no-style').text();
-				if(currentCampaign == "Campaign total"){
-					CRS.dimensions.total_campaign_bucket.filterAll();
-				}
-				else {
-					CRS.dimensions.total_campaign_bucket.filter(function(d){return d == currentCampaign});
-				}		
-				
-				if(currentMetric == "cost"){
-					$('.tooltip').addClass('value-cost');
-				}
-				else $('.tooltip').removeClass('value-cost');
-				
-				$('#filter-box #filter-options #filter-metric li.filter-metric-active').removeClass('filter-metric-active').children('img').attr('src', '/static/img/general/unchecked-radio.png').attr('alt', 'Unchecked radio button');
-				$(this).addClass('filter-metric-active').children('img').attr('src', '/static/img/general/checked-radio.png').attr('alt', 'Checked radio button');
-				
-				//sliderGraph.redraw();
-				//mainGraph.redraw();
-			}
-		});
-    
-	</script>
+	
 {% end %}
