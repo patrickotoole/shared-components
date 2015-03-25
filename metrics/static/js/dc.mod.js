@@ -2058,7 +2058,7 @@ dc.coordinateGridMixin = function (_chart) {
 
         if (axisXG.empty())
             axisXG = g.append("g")
-                .attr("class", "axis x")
+                .attr("class", "axis x dc-axis")
                 .attr("transform", "translate(" + _chart.margins().left + "," + _chart._xAxisY() + ")");
 
         var axisXLab = g.selectAll("text."+X_AXIS_LABEL_CLASS);
@@ -4353,7 +4353,7 @@ dc.lineChart = function (parent, chartGroup) {
                     })
 					
 				if(_chart.renderTitle()){
-					// dots.append("title").text(dc.pluck('data', _chart.title(d.name)));
+					 dots.append("title").text(dc.pluck('data', _chart.title(d.name)));
 					
 					// NO GOOD, NO TEMPLATE
 					var tooltip = d3.select("#campaign-graph").append("div")   
@@ -4375,6 +4375,71 @@ dc.lineChart = function (parent, chartGroup) {
             });
         }
     }
+
+    function renderTitle(dot, d) {
+        if (_chart.renderTitle()) {
+            dot.selectAll('title').remove();
+            dot.append('title').text(dc.pluck('data', _chart.title(d.name)));
+        }
+    }
+
+    function drawDots(chartBody, layers) {
+        if (!_chart.brushOn()) {
+            var tooltipListClass = TOOLTIP_G_CLASS + '-list';
+            var tooltips = chartBody.select('g.' + tooltipListClass);
+
+            if (tooltips.empty()) {
+                tooltips = chartBody.append('g').attr('class', tooltipListClass);
+            }
+
+            layers.each(function (d, layerIndex) {
+                var points = d.values;
+                if (_defined) {
+                    points = points.filter(_defined);
+                }
+
+                var g = tooltips.select('g.' + TOOLTIP_G_CLASS + '._' + layerIndex);
+                if (g.empty()) {
+                    g = tooltips.append('g').attr('class', TOOLTIP_G_CLASS + ' _' + layerIndex);
+                }
+
+                createRefLines(g);
+
+                var dots = g.selectAll('circle.' + DOT_CIRCLE_CLASS)
+                    .data(points, dc.pluck('x'));
+
+                dots.enter()
+                    .append('circle')
+                    .attr('class', DOT_CIRCLE_CLASS)
+                    .attr('r', getDotRadius())
+                    .style('fill-opacity', _dataPointFillOpacity)
+                    .style('stroke-opacity', _dataPointStrokeOpacity)
+                    .on('mousemove', function () {
+                        var dot = d3.select(this);
+                        showDot(dot);
+                        showRefLines(dot, g);
+                    })
+                    .on('mouseout', function () {
+                        var dot = d3.select(this);
+                        hideDot(dot);
+                        hideRefLines(g);
+                    });
+
+                dots
+                    .attr('cx', function (d) {
+                        return dc.utils.safeNumber(_chart.x()(d.x));
+                    })
+                    .attr('cy', function (d) {
+                        return dc.utils.safeNumber(_chart.y()(d.y + d.y0));
+                    })
+                    .attr('fill', _chart.getColor)
+                    .call(renderTitle, d);
+
+                dots.exit().remove();
+            });
+        }
+    }
+
 
     function createRefLines(g) {
         var yRefLine = g.select("path." + Y_AXIS_REF_LINE_CLASS).empty() ? g.append("path").attr("class", Y_AXIS_REF_LINE_CLASS) : g.select("path." + Y_AXIS_REF_LINE_CLASS);

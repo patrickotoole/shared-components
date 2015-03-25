@@ -8,16 +8,29 @@
 	<link href="/static/css/reporting-style.css" type="text/css" rel="stylesheet" media="screen">
 	<link href="/static/css/dc.css" type="text/css" rel="stylesheet" media="screen">
   <style>
+    .dc-axis {
+      opacity:0
+    }
+    .dc-axis.placed {
+      opacity:.5
+    }
     
-    .metric.raw {
+    .metric.raw , .metric.rate, .metric.cost_rate {
       display:none; opacity:.5
     }
-    .metric.rate {
-      display:none ; opacity:.5 
+
+    .interval-type {
+      opacity:.5
     }
-    .metric.cost_rate {
-      display:none; opacity:.5
+
+    .datetime .interval-type.datetime,  
+    .daily .interval-type.daily, 
+    .weekly .interval-type.weekly, 
+    .monthly .interval-type.monthly {
+      opacity:1; font-weight:bold
     }
+
+    
 
     .details-table.raw .metric.raw, .details-table.rate .metric.rate, .details-table.cost_rate .metric.cost_rate {
       display:block    
@@ -160,13 +173,13 @@ box-shadow: inset 0px 0px 5px 0px #CCC;
 	<script>					
 		// FORMAT DATE BASED ON DISPLAY MODE
 		function createDateValue(dateMode, firstDate){
-			if(dateMode == "date-day") return formatDate(firstDate);
-			else if(dateMode == "date-week"){
+			if(dateMode == "daily") return formatDate(firstDate);
+			else if(dateMode == "weekly"){
                 var endOfWeek = addDays(firstDate, 6);
                 if(endOfWeek > CRS.groups.all.summary().date_max) endOfWeek.setTime(CRS.groups.all.summary().date_max.getTime());
 				return formatDate(firstDate) + " - " + formatDate(endOfWeek);
 			}
-			else if(dateMode == "date-month"){
+			else if(dateMode == "monthly"){
 				return formatMonth(firstDate);
 			}
 		}

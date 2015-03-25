@@ -468,7 +468,8 @@ var crossfilterNS = function(crs,dc) {
             "percent_visible": grp.value.visible/grp.value.loaded,
             "views": grp.value.imps*grp.value.visible/grp.value.loaded,
 						"date_min": groups.all.summary().date_min,
-						"date_max": groups.all.summary().date_max								
+						"date_max": groups.all.summary().date_max,
+            "type":"daily"
 					} 
 				});
 			},
@@ -488,7 +489,8 @@ var crossfilterNS = function(crs,dc) {
             "percent_visible": grp.value.visible/grp.value.loaded,
             "views": grp.value.imps*grp.value.visible/grp.value.loaded,
 						"date_min": groups.all.summary().date_min,
-						"date_max": groups.all.summary().date_max								
+						"date_max": groups.all.summary().date_max,
+            "type":"daily" 
 					} 
 				});
 			},
@@ -510,7 +512,8 @@ var crossfilterNS = function(crs,dc) {
             "percent_visible": grp.value.visible/grp.value.loaded,
             "views": grp.value.imps*grp.value.visible/grp.value.loaded,
 						"date_min": groups.all.summary().date_min,
-						"date_max": groups.all.summary().date_max								
+						"date_max": groups.all.summary().date_max,
+            "type":"weekly"
 					} 
 				});
 			},
@@ -530,7 +533,8 @@ var crossfilterNS = function(crs,dc) {
             "percent_visible": grp.value.visible/grp.value.loaded,
             "views": grp.value.imps*grp.value.visible/grp.value.loaded,
 						"date_min": groups.all.summary().date_min,
-						"date_max": groups.all.summary().date_max								
+						"date_max": groups.all.summary().date_max,
+            "type":"weekly"                           								
 					} 
 				});
 			},
@@ -552,7 +556,8 @@ var crossfilterNS = function(crs,dc) {
             "percent_visible": grp.value.visible/grp.value.loaded,
             "views": grp.value.imps*grp.value.visible/grp.value.loaded,
 						"date_min": groups.all.summary().date_min,
-						"date_max": groups.all.summary().date_max								
+						"date_max": groups.all.summary().date_max,
+            "type":"monthly"                           								
 					} 
 				});
 			},
@@ -572,7 +577,8 @@ var crossfilterNS = function(crs,dc) {
             "percent_visible": grp.value.visible/grp.value.loaded,
             "views": grp.value.imps*grp.value.visible/grp.value.loaded,
 						"date_min": groups.all.summary().date_min,
-						"date_max": groups.all.summary().date_max								
+						"date_max": groups.all.summary().date_max,
+            "type":"monthly"
 					} 
 				});
 			},
