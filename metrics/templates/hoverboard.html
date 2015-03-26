@@ -12,9 +12,9 @@
     -->
     <li><a href="/advertiser"><img src="/static/img/sidebar/pixel-icon.png" alt="Pixels icon" /><span class="sidebar-label">pixels</span></a></li>
 
-  <li class="active">
+  <li>
     <a href="/campaign" style="padding:0px;position:relative">
-      <div style="text-align:center;width:50px;line-height:50px;font-size:20px;color:white" class="glyphicon glyphicon-th-list"></div>
+      <div style="opacity:.6;text-align:center;width:50px;line-height:50px;font-size:20px;color:white" class="glyphicon glyphicon-th-list"></div>
       <span class="sidebar-label" style="top:0px;margin-top:0px"> campaign manager</span>
     </a>
   </li>
@@ -26,9 +26,9 @@
     </a>
   </li> 
 
-  <li>
+  <li class="active">
     <a href="/hoverboard" style="padding:0px;position:relative">
-      <div style="opacity:.6;text-align:center;width:50px;line-height:50px;font-size:20px;color:white" class="glyphicon glyphicon-ice-lolly"></div>
+      <div style="text-align:center;width:50px;line-height:50px;font-size:20px;color:white" class="glyphicon glyphicon-ice-lolly"></div>
       <span class="sidebar-label" style="top:0px;margin-top:0px"> hoverboard analysis</span>
     </a>
   </li>    
@@ -127,7 +127,7 @@ svg .label {
 }
 </style>
 
-<div id="advertiser-content" class='container row'>
+<div id="advertiser-content" class='container row' style="height:inherit;overflow:scroll">
 </div>
 {% end %}
 {% block page_scripts %}

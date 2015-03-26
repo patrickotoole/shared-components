@@ -38,8 +38,7 @@ from (
         ) and
         v4.active=1 and
         v4.deleted=0 and
-        v4.external_advertiser_id = %(advertiser_id)s and
-        v4.date > '2015-03-01'
+        v4.external_advertiser_id = %(advertiser_id)s
     group by 1,4
 ) a
 
@@ -90,8 +89,7 @@ CONVERSION_QUERY = """
                 v2.active=1 and
                 v2.deleted=0 and
                 v2.external_advertiser_id=  %(advertiser_id)s   and
-                v2.is_valid=1 and
-                v2.conversion_time > '2015-03-01' 
+                v2.is_valid=1
             group by 1,3 ) b
 """
 
