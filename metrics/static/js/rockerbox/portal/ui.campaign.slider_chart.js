@@ -42,6 +42,20 @@ RB.portal.UI.slider_chart = (function(slider_chart) {
         
 
       }) 
+      .on("postRender",function(e){
+        var anchor = d3.select(e.anchor())
+        anchor.selectAll(".y.axis")
+          .attr("class","y axis dc-axis placed")
+
+        anchor.selectAll(".x.axis.dc-axis") 
+          .attr("class","x axis dc-axis placed")
+          .selectAll(".tick text")
+            .style("text-anchor", "start")
+            .style("font-size","8px")
+            .attr("x", 6)
+            .attr("y", 9)    
+         
+      })
   }
 
   return slider_chart

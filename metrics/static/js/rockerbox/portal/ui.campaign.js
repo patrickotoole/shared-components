@@ -83,7 +83,7 @@ RB.portal.UI = (function(UI){
     
       dc.registerChart(main_charts["#main-chart-0"],"infocus-group")
       dc.registerChart(slider_charts["#interval-chart-0"],"infocus-group") 
-      //dc.registerChart(detail_tables["#" + target.select(".details-table").attr("id")],"infocus-group")  
+      dc.registerChart(detail_tables["#" + target.select(".details-table").attr("id")],"infocus-group")  
     
       dc.renderAll("infocus-group")
       
@@ -139,6 +139,7 @@ RB.portal.UI = (function(UI){
         .classed("campaign-expansion col-md-3",true)
         .style("padding-right","0px")
         .append("div")
+          .style("background","white")
           .style("border","1px solid #ddd")
           .style("min-height","100px")
           .classed("col-md-12",true)
@@ -146,6 +147,7 @@ RB.portal.UI = (function(UI){
       var expansionRight = graphRow.append("div")
         .classed("campaign-expansion col-md-9",true)
         .append("div")
+          .style("background","white")
           .style("border","1px solid #ddd")
           .style("min-height","100px")    
 
@@ -183,17 +185,13 @@ RB.portal.UI = (function(UI){
         .style("width","100%")
         .style("display","block")
         .style("line-height","0px")
+        
         .attr("id",function(x,i){return "main-chart-" + i})
        
       
       campaign_bucket.selectorLegend.build(expansionLeft,selectMetric)
-       
       slider_charts["#interval-chart-0"] = UI.slider_chart.build("#interval-chart-0",CRS,graphRow)
       main_charts["#main-chart-0"] = UI.chart.build("#main-chart-0",CRS,slider_charts["#interval-chart-0"],graphRow) 
-
-      selectCampaign("Campaign total",graphRow) 
-
-
 
       var header = panel.append("div").classed("header",true)
         .style("line-height","40px")
@@ -223,6 +221,7 @@ RB.portal.UI = (function(UI){
       var data = bucketDataFormatter(CRS)
 
       campaign_bucket.buildRows(data,body,CRS)
+      selectCampaign("Campaign total",d3.select(".active-row"))  
 
       return body
 
@@ -255,7 +254,7 @@ RB.portal.UI = (function(UI){
         })
 
       campaign_bucket.buildRowMetrics(row)
-      //campaign_bucket.buildRowExpansion( row,CRS)
+      campaign_bucket.buildRowExpansion(row,CRS)
     
     }
 
@@ -290,8 +289,9 @@ RB.portal.UI = (function(UI){
     var selectMetric = function(metric_name, metric_type) {
       var accessor = function(d) {
         var costMultiplier = 
-          ((metric_name == "visits") || (metric_name == "clicks") || (metric_name == "conversions")) ? 1 : 1000,
-          val;
+          ((metric_name == "visits") || (metric_name == "clicks") || (metric_name == "conversions")) ? 1 : 1000;
+
+        var val;
     
         if (metric_type == "rate") {
           val = (metric_name == "imps") ? d.value[metric_name] : 
@@ -306,8 +306,8 @@ RB.portal.UI = (function(UI){
         } else {
           val = d.value[metric_name]
         }
-    
-        return ((val == Infinity) || isNaN(val)) ? 0 : val
+
+        return ((val == Infinity) || isNaN(val) || (val == -Infinity)) ? 0 : val
       }
     
     
@@ -339,7 +339,7 @@ RB.portal.UI = (function(UI){
             return true
           })
 
-      expansion.append("h5")
+      /*expansion.append("h5")
         .style("padding-bottom","8px")
         .classed("col-md-12",true)
         .text(function(d){return "Explore " + d.campaign_bucket})
@@ -352,13 +352,13 @@ RB.portal.UI = (function(UI){
         .style("padding-top","8px")
         .classed("col-md-12",true)
         .text(function(d){return "Detailed reporting for " + d.campaign_bucket })
-
+      */
       var detailsRow = expansion.append("div")
         .classed("row",true)
         .append("div")
         .classed("col-md-12",true)
         .style("margin-top","10px")
-
+      /*
       expansion.append("div")
         .style("height","40px")
 
@@ -414,6 +414,7 @@ RB.portal.UI = (function(UI){
         .style("display","block")
         .style("line-height","0px")
         .attr("id",function(x,i){return "main-chart-" + i})
+      */
 
       var detailsGroup = detailsRow.append("table")
         .classed("raw details-table imps",true)
@@ -431,6 +432,7 @@ RB.portal.UI = (function(UI){
         })
       }
 
+      /*
       campaign_bucket.buildSliderChart = function(wrapper,CRS) {
         wrapper.data().map(function(x,i){return "#interval-chart-" + i}).map(function(o){
           slider_charts[o] = UI.slider_chart.build(o,CRS)
@@ -447,8 +449,9 @@ RB.portal.UI = (function(UI){
         })    
       }
 
-      campaign_bucket.buildSliderChart(mainGraphGroup,CRS) 
-      campaign_bucket.buildMainCharts(mainGraphGroup,CRS)
+      //campaign_bucket.buildSliderChart(mainGraphGroup,CRS) 
+      //campaign_bucket.buildMainCharts(mainGraphGroup,CRS)
+      */
       campaign_bucket.buildDetailsTables(detailsGroup,CRS)
 
     }

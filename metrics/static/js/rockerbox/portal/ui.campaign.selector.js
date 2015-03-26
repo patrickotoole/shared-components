@@ -141,6 +141,7 @@ RB.portal.UI.selector = (function(selector){
     wrapper.append("div").classed("interval-chart dc-chart",true)
       .style("width","100%")
       .style("display","block")
+      .style("padding-bottom","6px")
       .attr("id",function(x,i){return "interval-chart-"+i})
             
   
