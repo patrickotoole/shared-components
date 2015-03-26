@@ -248,6 +248,8 @@ RB.portal.UI = (function(UI){
       var path = d3.select(".metric.raw.imps")
       path.on("click").call(path.node(), path.datum());
 
+      //var interval = d3.select(d3.select(".interval-type.datetime").node().parentNode).attr("class","interval-type datetime")
+
 
       return body
 
@@ -492,7 +494,7 @@ RB.portal.UI = (function(UI){
           var currentParent = this.parentNode
           d3.select(this.parentNode.parentNode)
             .transition()
-            .duration(500)
+            .duration(300)
             .tween("",function() { 
               var i = d3.interpolateNumber(this.scrollTop, currentParent.offsetTop); 
               return function(t) { this.scrollTop = i(t); }; 
