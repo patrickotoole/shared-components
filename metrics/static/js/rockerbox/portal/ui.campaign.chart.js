@@ -11,8 +11,8 @@ RB.portal.UI.chart = (function(chart) {
     var target = target || d3.select(".active-row");
   
     var main_chart = dc.lineChart(id)
-      .dimension(CRS.dimensions.datetime)
-      .group(CRS.groups.datetime)
+      .dimension(CRS.dimensions.daily)
+      .group(CRS.groups.daily)
       .tooltipType("daily")
       .height(265)
       .width(function(x){

@@ -130,7 +130,7 @@ RB.portal.UI = (function(UI){
       expansion.append("h5")
         .style("padding-top","18px")
         .style("padding-bottom","8px")
-        .classed("col-md-12",true)
+        .classed("col-md-12 main-header",true)
         .text(function(d){return "Campaign Performance" })
 
       var graphRow = expansion
@@ -248,7 +248,7 @@ RB.portal.UI = (function(UI){
       var path = d3.select(".metric.raw.imps")
       path.on("click").call(path.node(), path.datum());
 
-      //var interval = d3.select(d3.select(".interval-type.datetime").node().parentNode).attr("class","interval-type datetime")
+      var interval = d3.select(d3.select(".interval-type.datetime").node().parentNode).attr("class","interval-select-span daily")
 
 
       return body
@@ -511,6 +511,10 @@ RB.portal.UI = (function(UI){
           var active = row.filter(function(x){ 
             return this.classList.contains("active-row")
           })
+
+          d3parent = d3.select(currentParent)
+
+          d3.select(".main-header").text("Campaign Performance > " + d3parent.datum().campaign_bucket)
         })
         .append("div")
         .classed("col-md-8",function(x,i){return (i == 1) })
