@@ -105,29 +105,44 @@ RB.portal.UI = (function(UI){
       var names = UI.constants.HEADERS,
         colors = UI.constants.HEADER_COLORS;
 
-      var expansion = wrapper.append("div") 
+      var expansion = wrapper.append("div")
+        .style("position","relative")
+        .style("width","100%")
 
-      var panel = wrapper.append("div").classed("row",true)
+        .append("div")
+        .style("position","absolute")
+        .style("width","inherit")
+
+
+      var panel = wrapper
+        .append("div").classed("row",true)
         .style("margin","0px")
+        .style("height","100%")
+        .style("padding-top","350px")
         .append("div")
         .classed("col-md-12 campaign-table-new",true)
         .style("background","white")
         .style("padding","0px")
         .style("padding-top","10px")
+        
+        .style("height","inherit")
 
       expansion.append("h5")
         .style("padding-top","18px")
         .style("padding-bottom","8px")
         .classed("col-md-12",true)
-        .text(function(d){return "Explore " })
+        .text(function(d){return "Campaign Performance" })
 
       var graphRow = expansion
           .append("div")
           .classed("row",true)
+          .style("top","300px")
 
       expansion.append("h5")
         .style("padding-top","8px")
         .classed("col-md-12",true)
+        .text(function(d){return ""}) 
+        
 
       var detailsRow = expansion.append("div")
         .classed("row",true)
@@ -198,6 +213,9 @@ RB.portal.UI = (function(UI){
         .style("font-weight","500")
         .style("font-size","13px")
         .style("text-transform","uppercase")
+        .style("position","absolute")
+        .style("top","0px")
+        .style("width","inherit")
 
       header.append("div")
         .classed("col-md-3",true)
@@ -217,11 +235,19 @@ RB.portal.UI = (function(UI){
 
       var body = panel.append("div")
         .classed("campaigns-body",true)
+        .style("position","absolute")
+        .style("top","50px")
+        .style("width","inherit") 
+        .style("height","inherit")
+        .style("overflow","scroll")
 
       var data = bucketDataFormatter(CRS)
 
       campaign_bucket.buildRows(data,body,CRS)
       selectCampaign("Campaign total",d3.select(".active-row"))  
+      var path = d3.select(".metric.raw.imps")
+      path.on("click").call(path.node(), path.datum());
+
 
       return body
 
@@ -236,7 +262,7 @@ RB.portal.UI = (function(UI){
         .append("div").classed("campaign",true)
         .classed("active-row",function(x,i){return i == (data.length - 1)})
         .style("line-height","35px") 
-        .style("margin-bottom","10px") 
+        .style("height","35px")
         .on('mouseover',function(x){
           d3.select(this).selectAll(".mini-metric").style("visibility","visible")
         })
@@ -462,11 +488,16 @@ RB.portal.UI = (function(UI){
 
       var innerMetric = metric.enter()
         .append("div")
-        .on("click",function(d) {
-
-          var active = row.filter(function(x){ 
-            return this.classList.contains("active-row")
-          })
+        .on("click",function(d,i) {
+          var currentParent = this.parentNode
+          d3.select(this.parentNode.parentNode)
+            .transition()
+            .duration(500)
+            .tween("",function() { 
+              var i = d3.interpolateNumber(this.scrollTop, currentParent.offsetTop); 
+              return function(t) { this.scrollTop = i(t); }; 
+            })
+           
 
           var bucket = this.parentNode.__data__.campaign_bucket
           row.classed("active-row",false)
@@ -474,6 +505,10 @@ RB.portal.UI = (function(UI){
           d3.select(this.parentNode).select(".expansion")
 
           selectCampaign(bucket,d3.select(this.parentNode))
+          
+          var active = row.filter(function(x){ 
+            return this.classList.contains("active-row")
+          })
         })
         .append("div")
         .classed("col-md-8",function(x,i){return (i == 1) })
