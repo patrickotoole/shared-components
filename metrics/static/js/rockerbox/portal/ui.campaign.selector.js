@@ -2,18 +2,28 @@ var RB = RB || {}
 RB.portal = RB.portal || {}
 RB.portal.UI = RB.portal.UI || {}
  
-RB.portal.UI.selectorLegend = (function(selectorLegend){
+RB.portal.UI.selector = (function(selector){
 
   var UI = RB.portal.UI
 
-  selectorLegend.setMetricType = function(obj,x) {
+  selector.setMetricType = function(obj,x) {
     obj
       .classed("raw",function(d){return x == "Raw"})
       .classed("rate",function(d){return x == "Rate"})
       .classed("cost_rate",function(d){return x == "Cost"})  
   }
 
-  selectorLegend.getMetricKey = function(obj) {
+  selector.setMetricKey = function(obj,metric_name) {
+    obj
+      .classed("imps",function(d){return metric_name == "imps"})
+      .classed("views",function(d){return metric_name == "views"}) 
+      .classed("visits",function(d){return metric_name == "visits"}) 
+      .classed("clicks",function(d){return metric_name == "clicks"}) 
+      .classed("conversions",function(d){return metric_name == "conversions"}) 
+      .classed("cost",function(d){return metric_name == "cost"}) 
+  }
+
+  selector.getMetricKey = function(obj) {
     return obj.classed("imps") ? "imps" :
       obj.classed("clicks") ? "clicks" : 
       obj.classed("conversions") ? "conversions" : 
@@ -22,13 +32,13 @@ RB.portal.UI.selectorLegend = (function(selectorLegend){
       obj.classed("cost") ? "cost" : "" 
   }
 
-  selectorLegend.getMetricType = function(obj) {
+  selector.getMetricType = function(obj) {
     return obj.classed("raw") ? "raw" :
       obj.classed("cost_rate") ? "cost_rate" :
       obj.classed("rate") ? "rate" : ""
   }
 
-  selectorLegend.header = function(wrapper) {
+  selector.header = function(wrapper,selectMetric) {
     
     var metric = wrapper.append("h5")   
       .classed("row header",true)                    
@@ -55,20 +65,20 @@ RB.portal.UI.selectorLegend = (function(selectorLegend){
               .select(".series-selector")
              
             
-            selectorLegend.setMetricType(metricSpan,x)
-            selectorLegend.setMetricType(d3.selectAll(".details-table"),x)
-            selectorLegend.setMetricType(d3.selectAll(".series-selector"),x)
+            selector.setMetricType(metricSpan,x)
+            selector.setMetricType(d3.selectAll(".details-table"),x)
+            selector.setMetricType(d3.selectAll(".series-selector"),x)
 
             
-            var metric_name = selectorLegend.getMetricKey(type_wrapper)
-            var metric_type = selectorLegend.getMetricType(metricSpan)
+            var metric_name = selector.getMetricKey(type_wrapper)
+            var metric_type = selector.getMetricType(metricSpan)
 
             selectMetric(metric_name,metric_type)
 
           })   
   }
 
-  selectorLegend.dateHeader = function(wrapper) {
+  selector.dateHeader = function(wrapper) {
     var currentInterval = wrapper.append("h5")
       .classed("row",true)
       .attr("style","border-bottom: 1px solid #ccc; line-height: 35px; margin-top: 0px; padding-left: 10px;")
@@ -84,7 +94,7 @@ RB.portal.UI.selectorLegend = (function(selectorLegend){
         .style("padding-left","12px")
   }
 
-  selectorLegend.series = function(wrapper) {
+  selector.series = function(wrapper,selectMetric) {
     var series = wrapper.append("div")
       .classed("row raw series-selector",true)
       .style("padding","10px")
@@ -98,44 +108,44 @@ RB.portal.UI.selectorLegend = (function(selectorLegend){
 
     series
       .classed("col-md-6",true)
-        .attr("class",function(d){
-          return "col-md-6 metric " + d.key + " " + d.id
-        })
-        .style("border-left",function(d){return "5px solid" + UI.constants.HEADER_COLORS(d.id)})
-        .style("padding-bottom","3px")
-        .style("padding-left","5px")
-        .style("font-size","11px")
-        .style("font-weight","500")
-        .style("line-height","25px")
-        .style("margin-bottom","3px")
-        .style("text-transform","uppercase")
-        .text(function(d){return d.value})
-        .on("click",function(x){
+      .attr("class",function(d){
+        return "col-md-6 metric " + d.key + " " + d.id
+      })
+      .style("border-left",function(d){return "5px solid" + UI.constants.HEADER_COLORS(d.id)})
+      .style("padding-bottom","3px")
+      .style("padding-left","5px")
+      .style("font-size","11px")
+      .style("font-weight","500")
+      .style("line-height","25px")
+      .style("margin-bottom","3px")
+      .style("text-transform","uppercase")
+      .text(function(d){return d.value})
+      .on("click",function(x){
 
-          var metric_name = x.id;
-          var metric_type = selectorLegend.getMetricType(d3.select(this.parentNode))
+        var metric_name = x.id;
+        var metric_type = selector.getMetricType(d3.select(this.parentNode))
 
-          selectMetric(metric_name,metric_type)
-        
-        })
-      }
-
-      selectorLegend.build = function(wrapper) {
-        wrapper.classed("selector-legend",true)
-        selectorLegend.header(wrapper)
-        selectorLegend.series(wrapper)
-        selectorLegend.dateHeader(wrapper) 
-        wrapper.append("div")
-          .classed("col-md-12",true)
-          .style("height","10px")              
-        wrapper.append("div").classed("interval-chart dc-chart",true)
-          .style("width","100%")
-          .style("display","block")
-          .attr("id",function(x,i){return "interval-chart-"+i})
-                
+        selectMetric(metric_name,metric_type)
       
-      }
+      })
+  }
 
-  return selectorLegend
+  selector.build = function(wrapper,selectMetric) {
+    wrapper.classed("selector-legend",true)
+    selector.header(wrapper,selectMetric)
+    selector.series(wrapper,selectMetric)
+    selector.dateHeader(wrapper) 
+    wrapper.append("div")
+      .classed("col-md-12",true)
+      .style("height","10px")              
+    wrapper.append("div").classed("interval-chart dc-chart",true)
+      .style("width","100%")
+      .style("display","block")
+      .attr("id",function(x,i){return "interval-chart-"+i})
+            
+  
+  }
 
-})(RB.portal.UI.selectorLegend || {}) 
+  return selector
+
+})(RB.portal.UI.selector || {}) 

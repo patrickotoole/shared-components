@@ -32,37 +32,37 @@ RB.portal.UI = (function(UI){
     HEADERS : ["Impressions","Views","Visits","Clicks","Conversions","Cost"],
     HEADER_COLORS : d3.scale.category10(),
     HEADINGS : [
-                {"key":"imps","values":[
-                  {"key":"raw","value":"Impressions", "id":"imps"},
-                  {"key":"rate","value":"Impressions", "id":"imps"}, 
-                  {"key":"cost_rate","value":"CPM", "id":"imps"}  
-                ]},
-                {"key":"views","values":[
-                  {"key":"raw","value":"Views", "id":"views"},
-                  {"key":"rate","value":"% Viewable", "id":"views"}, 
-                  {"key":"cost_rate","value":"CPM (Viewable)", "id":"views"}  
-                ]},
-                {"key":"visits","values":[
-                  {"key":"raw","value":"Visits", "id":"visits"},
-                  {"key":"rate","value":"Visit Rate", "id":"visits"}, 
-                  {"key":"cost_rate","value":"Cost/Visit", "id":"visits"}  
-                ]},
-                {"key":"clicks","values":[
-                  {"key":"raw","value":"Clicks", "id":"clicks"},
-                  {"key":"rate","value":"CTR", "id":"clicks"}, 
-                  {"key":"cost_rate","value":"CPC", "id":"clicks"}  
-                ]},
-                {"key":"conversions","values":[
-                  {"key":"raw","value":"Conversions", "id":"conversions"},
-                  {"key":"rate","value":"Conv Rate", "id":"conversions"}, 
-                  {"key":"cost_rate","value":"CPA", "id":"conversions"}  
-                ]},
-                {"key":"cost","values":[
-                  {"key":"raw","value":"Cost", "id":"cost"},
-                  {"key":"rate","value":"CPM", "id":"cost"}, 
-                  {"key":"cost_rate","value":"Cost", "id":"cost"}  
-                ]}
-              ]
+      {"key":"imps","values":[
+        {"key":"raw","value":"Impressions", "id":"imps"},
+        {"key":"rate","value":"Impressions", "id":"imps"}, 
+        {"key":"cost_rate","value":"CPM", "id":"imps"}  
+      ]},
+      {"key":"views","values":[
+        {"key":"raw","value":"Views", "id":"views"},
+        {"key":"rate","value":"% Viewable", "id":"views"}, 
+        {"key":"cost_rate","value":"CPM (Viewable)", "id":"views"}  
+      ]},
+      {"key":"visits","values":[
+        {"key":"raw","value":"Visits", "id":"visits"},
+        {"key":"rate","value":"Visit Rate", "id":"visits"}, 
+        {"key":"cost_rate","value":"Cost/Visit", "id":"visits"}  
+      ]},
+      {"key":"clicks","values":[
+        {"key":"raw","value":"Clicks", "id":"clicks"},
+        {"key":"rate","value":"CTR", "id":"clicks"}, 
+        {"key":"cost_rate","value":"CPC", "id":"clicks"}  
+      ]},
+      {"key":"conversions","values":[
+        {"key":"raw","value":"Conversions", "id":"conversions"},
+        {"key":"rate","value":"Conv Rate", "id":"conversions"}, 
+        {"key":"cost_rate","value":"CPA", "id":"conversions"}  
+      ]},
+      {"key":"cost","values":[
+        {"key":"raw","value":"Cost", "id":"cost"},
+        {"key":"rate","value":"CPM", "id":"cost"}, 
+        {"key":"cost_rate","value":"Cost", "id":"cost"}  
+      ]}
+    ]
   }
 
   UI.campaign_bucket = (function(campaign_bucket){
@@ -310,25 +310,21 @@ RB.portal.UI = (function(UI){
           .style("min-height","100px")
           .classed("col-md-12",true)
 
-      campaign_bucket.selectorLegend = RB.portal.UI.selectorLegend
-
-      campaign_bucket.selectorLegend.build(expansionLeft)
-
-
       
+
 
       var selectMetric = function(metric_name, metric_type) {
         var accessor = function(d) {
           var costMultiplier = 
             ((metric_name == "visits") || (metric_name == "clicks") || (metric_name == "conversions")) ? 1 : 1000
-
+    
           var val;
-
+    
           if (metric_type == "rate") {
             val = (metric_name == "imps") ? d.value[metric_name] : 
               (metric_name == "cost") ? d.value[metric_name]/d.value.imps*costMultiplier : 
                 d.value[metric_name]/d.value.imps
-
+    
           } else if (metric_type == "cost_rate") {
             
             val = (metric_name == "cost") ? d.value.cost : 
@@ -337,42 +333,34 @@ RB.portal.UI = (function(UI){
           } else {
             val = d.value[metric_name]
           }
-
+    
           return ((val == Infinity) || isNaN(val)) ? 0 : val
         }
-
-
+    
+    
         for (var cid in main_charts) {
           main_charts[cid]
             .valueAccessor(accessor)
             .colorCalculator(function(){return UI.constants.HEADER_COLORS(metric_name)})
         }
-
+    
         for (var sid in slider_charts) {
           slider_charts[sid]
             .valueAccessor(function(d){ return d.value[metric_name] })
             .colorCalculator(function(){return UI.constants.HEADER_COLORS(metric_name)})
         }
-
-        var current_class = d3.selectAll(".details-table")
-          .classed("imps",function(d){return metric_name == "imps"})
-          .classed("views",function(d){return metric_name == "views"}) 
-          .classed("visits",function(d){return metric_name == "visits"}) 
-          .classed("clicks",function(d){return metric_name == "clicks"}) 
-          .classed("conversions",function(d){return metric_name == "conversions"}) 
-          .classed("cost",function(d){return metric_name == "cost"}) 
-
-        var current_class = d3.selectAll(".series-selector")
-          .classed("imps",function(d){return metric_name == "imps"})
-          .classed("views",function(d){return metric_name == "views"}) 
-          .classed("visits",function(d){return metric_name == "visits"}) 
-          .classed("clicks",function(d){return metric_name == "clicks"}) 
-          .classed("conversions",function(d){return metric_name == "conversions"}) 
-          .classed("cost",function(d){return metric_name == "cost"}) 
-         
-
+    
+        campaign_bucket.selectorLegend.setMetricKey(d3.selectAll(".details-table"),metric_name)
+        campaign_bucket.selectorLegend.setMetricKey(d3.selectAll(".series-selector"),metric_name)
+          
+    
         dc.redrawAll("infocus-group") 
       }
+
+      campaign_bucket.selectorLegend = RB.portal.UI.selector
+      campaign_bucket.selectorLegend.build(expansionLeft,selectMetric)
+
+      
         
       
 
