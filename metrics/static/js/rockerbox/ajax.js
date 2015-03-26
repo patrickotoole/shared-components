@@ -40,6 +40,7 @@ RB.AJAX = (function(obj){
         try {
           cb(JSON.parse(resp))
         } catch(e){
+          console.log(e)
           fail(resp)
         }
       }

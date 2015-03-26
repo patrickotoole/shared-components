@@ -102,6 +102,83 @@ RB.portal.UI = (function(UI){
       return topData
     }
 
+    campaign_bucket.buildPanel = function(CRS,wrapper) {
+
+      var names = UI.constants.HEADERS,
+        colors = UI.constants.HEADER_COLORS;
+
+      var panel = wrapper.append("div")
+        .classed("campaign-table-new",true)
+
+      var header = panel.append("div").classed("header",true)
+        .style("line-height","40px")
+        .style("font-weight","500")
+        .style("font-size","13px")
+        .style("text-transform","uppercase")
+
+      header.append("div")
+        .classed("col-md-3",true)
+        .text("Campaign Name")      
+
+      var innerHeader = header.append("div")
+        .classed("col-md-8",true)
+
+      innerHeader.selectAll("div")
+        .data(UI.constants.HEADINGS)
+        .enter()
+          .append("div")
+          .classed("col-md-2",true)
+          .append("div")
+          .style("border-top",function(x){ console.log(x.key); return "5px solid " + colors(x.key) })
+          .text(function(x){return x.values[0].value })
+
+      var body = panel.append("div")
+        .classed("campaigns-body",true)
+
+      var data = bucketDataFormatter(CRS)
+
+      campaign_bucket.buildRows(data,body,CRS)
+
+      return body
+
+    }
+
+    campaign_bucket.buildRows = function(data,body,CRS) {
+
+      var last = data.length -1
+
+      var row = body.selectAll(".campaign")
+        .data(data)
+
+      row
+        .enter()
+        .append("div").classed("campaign",true)
+        .classed("active-row",function(x,i){return i == last})
+          .style("line-height","35px") 
+          .style("margin-bottom","10px") 
+
+        
+        .on('mouseover',function(x){
+          d3.select(this).selectAll(".mini-metric").style("visibility","visible")
+        })
+        .on('mouseout',function(x){
+          d3.select(this).selectAll(".mini-metric").style("visibility","hidden")
+        })
+        .sort(function(x,y){
+          var a = x.campaign_bucket,
+            b = y.campaign_bucket;
+
+          if (x.campaign_bucket == UI.constants.CAMPAIGN_TOTAL) return -1
+          if (y.campaign_bucket == UI.constants.CAMPAIGN_TOTAL) return 1
+          
+          return a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN;
+        })
+
+      campaign_bucket.buildRowMetrics(row)
+      campaign_bucket.buildRowExpansion( row,CRS)
+    
+    }
+
     var rowMetricTransform = function(rowData) {
       var x = rowData;
       return [
@@ -145,131 +222,13 @@ RB.portal.UI = (function(UI){
       slider_charts = {}
 
       wrapper.data().map(function(x,i){return "#interval-chart-" + i}).map(function(o){
-
-        slider_charts[o] = dc.lineChart(o, "slider-group") 
-          .dimension(CRS.dimensions.daily)
-          .group(CRS.groups.daily)
-          .height(38)
-          .width(function(x){
-            return d3.select(".active-row").selectAll(".interval-chart").node().getBoundingClientRect().width
-          })
-          .renderArea(true)
-          .elasticY(true)
-          .margins({top: 0, right: 0, bottom: 0, left: 0})
-          .yAxisPadding("25%")
-          .round(d3.time.day.round)
-          .xUnits(d3.time.days)
-          .valueAccessor(function(d){					
-            return d.value.imps;
-          })
-          .x(d3.time.scale().domain([
-              CRS.groups.all.summary().date_min,
-              CRS.groups.all.summary().date_max
-          ]))
-          .on("preRedraw", function(e){
-            var anchor = e.anchor();
-            var campaign = d3.select(anchor).data()[0].campaign_bucket
-
-            campaign == "Campaign total" ?
-              CRS.dimensions.total_campaign_bucket.filterAll() :
-              CRS.dimensions.total_campaign_bucket.filter(function(f){return f == campaign});
-
-            dc.redrawAll("interval-group")
-             
-            CRS.dimensions.datetime.filterAll();
-            
-
-          })
-
+        slider_charts[o] = UI.slider_chart.build(o,CRS)
         return slider_charts[o]
-
       })
  
     }
 
-    campaign_bucket.buildMainChart = function(wrapper,CRS) {
-      var expansionRight = wrapper;
-
-      main_charts = { }
-
-      expansionRight.data().map(function(x,i){
-        var main_chart_id = "#main-chart-" + i
-
-        main_charts[main_chart_id] = dc.lineChart(main_chart_id)
-          .dimension(CRS.dimensions.datetime)
-          .group(CRS.groups.datetime)
-          .tooltipType("daily")
-          .height(265)
-          .width(function(x){
-            return d3.select(".active-row").selectAll(".main-chart").node().getBoundingClientRect().width
-          })
-          .margins({top: 12, right: 12, bottom: 12, left: 50})
-          .elasticY(true)
-          .renderArea(true)
-          .yAxisPadding("25%")
-          .round(d3.time.day.round)
-          .xUnits(d3.time.days)
-          .valueAccessor(function(d){
-             return d.value.imps
-          })
-          .x(d3.time.scale().domain([
-              CRS.groups.all.summary().date_min,
-              CRS.groups.all.summary().date_max
-          ]))
-          //.renderHorizontalGridLines(true)
-          .brushOn(false)
-          .renderTitle(true)
-          .title(function(){return "Impressions by hour"})
-          .rangeChart(slider_charts["#interval-chart-"+i])
-          .on("preRedraw", function(e){
-            var intervalLength = UI.formatters.timeDifference(
-              CRS.groups.all.summary().date_min, 
-              CRS.groups.all.summary().date_max
-            );
-
-            var tooltipType = (intervalLength < 14) ? "hourly" : "daily",
-              dimensionType = (intervalLength < 14) ? "datetime" : "daily",
-              group = CRS.groups[dimensionType],
-              dimension = CRS.dimensions[dimensionType],
-              tickFormat = (intervalLength <= 1) ? d3.time.format("%I%p") : d3.time.format("%m/%d");
-
-            //mainGraph.dimension(dimension).group(group).tooltipType(tooltipType)
-            //mainGraph.xAxis().tickFormat(tickFormat)
-
-            var anchor = e.anchor();
-            var campaign = d3.select(anchor).data()[0].campaign_bucket 
-
-            campaign == "Campaign total" ?
-              CRS.dimensions.total_campaign_bucket.filterAll() :
-              CRS.dimensions.total_campaign_bucket.filter(function(f){return f == campaign});
- 
-
-          })
-          .on("postRender", function(e) {
-            var anchor = d3.select(e.anchor())
-            anchor.selectAll(".y.axis")
-              .attr("class","y axis dc-axis placed")
-
-            anchor.selectAll(".x.axis.dc-axis")
-              .attr("class","x axis dc-axis placed")
-              .selectAll(".tick text")
-                .style("text-anchor", "start")
-                .style("font-size","8px")
-                .attr("x", 6)
-                .attr("y", 9)    
-            
-          });
-        main_charts[main_chart_id]
-          .xAxis()
-          .tickFormat(d3.time.format("%m/%d"))
-          .ticks(10)
-          .tickSize(4, -1)
-          .orient("top")
-        
-        
-      })    
     
-    }
 
     campaign_bucket.buildRowExpansion = function(row,CRS) { 
 
@@ -360,21 +319,11 @@ RB.portal.UI = (function(UI){
       campaign_bucket.selectorLegend = RB.portal.UI.selector
       campaign_bucket.selectorLegend.build(expansionLeft,selectMetric)
 
-      
-        
-      
-
       var expansionRight = graphRow.append("div")
         .classed("campaign-expansion col-md-9",true)
         .append("div")
           .style("border","1px solid #ddd")
           .style("min-height","100px")    
-       
-      /*var sliderGroup = expansionLeft.append("div").classed("interval-chart dc-chart",true)
-        .style("width","100%")
-        .style("display","block")
-        .attr("id",function(x,i){return "interval-chart-"+i})
-      */
 
       var graphHeader = expansionRight.append("h5")
         .classed("graph-interval-selector",true)
@@ -423,7 +372,16 @@ RB.portal.UI = (function(UI){
        
 
       campaign_bucket.buildSliderChart(mainGraphGroup,CRS) 
-      campaign_bucket.buildMainChart(mainGraphGroup,CRS)
+
+      campaign_bucket.buildMainCharts = function(wrapper,CRS) {
+        main_charts = {}
+        wrapper.data().map(function(x,i){
+          var main_chart_id = "#main-chart-" + i
+          var range = slider_charts["#interval-chart-"+i]
+          main_charts[main_chart_id] = UI.chart.build(main_chart_id,CRS,range)
+        })    
+      }
+      campaign_bucket.buildMainCharts(mainGraphGroup,CRS)
       campaign_bucket.buildDetailsTables(detailsGroup,CRS)
 
 
@@ -485,82 +443,9 @@ RB.portal.UI = (function(UI){
        
     }
 
-    campaign_bucket.buildRows = function(data,body,CRS) {
-
-      var last = data.length -1
-
-      var row = body.selectAll(".campaign")
-        .data(data)
-
-      row
-        .enter()
-        .append("div").classed("campaign",true)
-        .classed("active-row",function(x,i){return i == last})
-          .style("line-height","35px") 
-          .style("margin-bottom","10px") 
-
-        
-        .on('mouseover',function(x){
-          d3.select(this).selectAll(".mini-metric").style("visibility","visible")
-        })
-        .on('mouseout',function(x){
-          d3.select(this).selectAll(".mini-metric").style("visibility","hidden")
-        })
-        .sort(function(x,y){
-          var a = x.campaign_bucket,
-            b = y.campaign_bucket;
-
-          if (x.campaign_bucket == UI.constants.CAMPAIGN_TOTAL) return -1
-          if (y.campaign_bucket == UI.constants.CAMPAIGN_TOTAL) return 1
-          
-          return a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN;
-        })
-
-      campaign_bucket.buildRowMetrics(row)
-      campaign_bucket.buildRowExpansion( row,CRS)
     
-    }
 
-    campaign_bucket.buildPanel = function(CRS,wrapper) {
-
-      var names = UI.constants.HEADERS,
-        colors = UI.constants.HEADER_COLORS;
-
-      var panel = wrapper.append("div")
-        .classed("campaign-table-new",true)
-
-      var header = panel.append("div").classed("header",true)
-        .style("line-height","40px")
-        .style("font-weight","500")
-        .style("font-size","13px")
-        .style("text-transform","uppercase")
-
-      header.append("div")
-        .classed("col-md-3",true)
-        .text("Campaign Name")      
-
-      var innerHeader = header.append("div")
-        .classed("col-md-8",true)
-
-      innerHeader.selectAll("div")
-        .data(UI.constants.HEADINGS)
-        .enter()
-          .append("div")
-          .classed("col-md-2",true)
-          .append("div")
-          .style("border-top",function(x){ console.log(x.key); return "5px solid " + colors(x.key) })
-          .text(function(x){return x.values[0].value })
-
-      var body = panel.append("div")
-        .classed("campaigns-body",true)
-
-      var data = bucketDataFormatter(CRS)
-
-      campaign_bucket.buildRows(data,body,CRS)
-
-      return body
-
-    }
+    
     
 
     return campaign_bucket
