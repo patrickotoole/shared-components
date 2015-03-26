@@ -10,6 +10,8 @@
   <style>
   /* selectorLegend */
 
+
+
   .selector-legend .header {
     border-bottom: 1px solid #ccc;
     line-height: 35px;
@@ -193,7 +195,7 @@ box-shadow: inset 0px 0px 5px 0px #CCC;
 
 {% block page_content %}
 
-	<div id="campaign-box" class="box three-quarters-box"></div>	
+	<div id="wrapper" class="col-md-12" ></div>	
 
 {% end %}
 
@@ -208,6 +210,7 @@ box-shadow: inset 0px 0px 5px 0px #CCC;
   <script src="/static/js/rockerbox/portal/ui.campaign.chart.js"></script>     
   <script src="/static/js/rockerbox/portal/ui.campaign.slider_chart.js"></script>      
  
+  <!-- <script src="/static/js/rockerbox/portal/ui.campaign.accordian.js"></script>-->
   <script src="/static/js/rockerbox/portal/ui.campaign.js"></script>
 	<script src="/static/js/gauge.min.js"></script>
 	
@@ -232,7 +235,7 @@ box-shadow: inset 0px 0px 5px 0px #CCC;
       var crs = crossfilter(data);
       window.CRS = crossfilterNS(crs, dc);
 
-      RB.portal.UI.campaign_bucket.buildPanel(CRS,d3.select("#campaign-box"))
+      RB.portal.UI.campaign_bucket.buildPanel(CRS,d3.select("#wrapper"))
       
       // This should be moved inside at somepoint...
       var intervalBox = dc.customDataBox('.interval-span', "interval-group")

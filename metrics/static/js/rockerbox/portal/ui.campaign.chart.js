@@ -6,17 +6,17 @@ RB.portal.UI.chart = (function(chart) {
 
   var UI = RB.portal.UI
 
-  chart.build = function(id,CRS,range){
+  chart.build = function(id,CRS,range,target){
+
+    var target = target || d3.select(".active-row");
   
     var main_chart = dc.lineChart(id)
-
-    main_chart
       .dimension(CRS.dimensions.datetime)
       .group(CRS.groups.datetime)
       .tooltipType("daily")
       .height(265)
       .width(function(x){
-        return d3.select(".active-row").selectAll(".main-chart").node().getBoundingClientRect().width
+        return target.selectAll(".main-chart").node().getBoundingClientRect().width
       })
       .margins({top: 12, right: 12, bottom: 12, left: 50})
       .elasticY(true)

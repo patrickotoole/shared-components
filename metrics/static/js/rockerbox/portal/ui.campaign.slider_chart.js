@@ -4,13 +4,16 @@ RB.portal.UI = RB.portal.UI || {}
 
 RB.portal.UI.slider_chart = (function(slider_chart) {
 
-  slider_chart.build = function(id,CRS) {
+  slider_chart.build = function(id,CRS,target) {
+
+    var target = target || d3.select(".active-row")
+
     return dc.lineChart(id, "slider-group") 
       .dimension(CRS.dimensions.daily)
       .group(CRS.groups.daily)
       .height(38)
       .width(function(x){
-        return d3.select(".active-row").selectAll(".interval-chart").node().getBoundingClientRect().width
+        return target.selectAll(".interval-chart").node().getBoundingClientRect().width
       })
       .renderArea(true)
       .elasticY(true)
