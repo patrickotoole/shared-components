@@ -1,9 +1,33 @@
- var RB = RB || {}
+var RB = RB || {}
 RB.portal = RB.portal || {}
 
 RB.portal.UI = (function(UI){
 
+  UI.formatters = {
+    createDateValue: function(dateMode, firstDate) {
+      var formatted = formatDate(firstDate)
+	  	if (dateMode == "weekly") {
+        var endOfWeek = addDays(firstDate, 6)
+        if (endOfWeek > CRS.groups.all.summary().date_max) 
+          endOfWeek.setTime(CRS.groups.all.summary().date_max.getTime());
+	  		formatted += " - " + formatDate(endOfWeek);
+	  	} else if (dateMode == "monthly") {
+	  		formatted = formatMonth(firstDate);
+	  	}
+      return formatted
+	  },
+    timeDifference: function(startDate, endDate){
+      return (endDate.getTime() - startDate.getTime()) / 1000 / 60 / 60 / 24;
+    }                       
+  }
+
   UI.constants = {
+    INTERVAL_OPTIONS : [
+        {"key":"Hour","value":"datetime"}, 
+        {"key":"Day","value":"daily"},
+        {"key":"Week","value":"weekly"},
+        {"key":"Month","value":"monthly"} 
+      ],
     CAMPAIGN_TOTAL : "Campaign total",
     HEADERS : ["Impressions","Views","Visits","Clicks","Conversions","Cost"],
     HEADER_COLORS : d3.scale.category10(),
@@ -43,6 +67,30 @@ RB.portal.UI = (function(UI){
 
   UI.campaign_bucket = (function(campaign_bucket){
 
+    var main_charts, slider_charts, detail_tables;
+
+    var selectCampaign = function(campaign,target) {
+    
+      campaign == "Campaign total" ?
+        CRS.dimensions.total_campaign_bucket.filterAll() :
+        CRS.dimensions.total_campaign_bucket.filter(function(f){return f == campaign});
+    
+      dc.deregisterAllCharts("infocus-group")
+    
+      dc.registerChart(main_charts["#" + target.select(".main-chart").attr("id")],"infocus-group")
+      dc.registerChart(slider_charts["#" + target.select(".interval-chart").attr("id")],"infocus-group") 
+      dc.registerChart(detail_tables["#" + target.select(".details-table").attr("id")],"infocus-group")  
+    
+      dc.renderAll("infocus-group")
+    
+      updateCampaignReports(
+        $('#campaign-reports-box .outer-interval-select .interval-select li.interval-active').text(),
+        campaign 
+      )
+    
+      campaignReportsTable.redraw()
+    }
+
     var bucketDataFormatter = function(CRS) {
 
       var totalDimension = CRS.groups.all.value(),
@@ -77,183 +125,24 @@ RB.portal.UI = (function(UI){
       ]
     }
 
-    var buildIntervalSelector = function(wrapper,callback,only) {
 
-      var selected;
-
-      var options = [
-        {"key":"Hour","value":"datetime"}, 
-        {"key":"Day","value":"daily"},
-        {"key":"Week","value":"weekly"},
-        {"key":"Month","value":"monthly"} 
-      ]
-
-      var only = only || ["Day", "Week", "Month"]
-
-      options = options.filter(function(x){
-        return only.indexOf(x.key) > -1
-      })
-
-      wrapper.append("span")
-        .classed("interval-select-span weekly",true)
-          .style("font-size","11px")
-          .style("font-weight","normal")
-          .style("text-transform","uppercase")
-          .style("line-height","35px")
-          .style("float","right")
-          .selectAll(".interval-type")
-          .data(options)
-          .enter()
-            .append("span")
-            .style("margin-left","15px")
-            .attr("class",function(x,i){return "interval-type " + x.value + " " })
-            .text(function(x){return x.key})
-            .on("click",callback)
-
+    campaign_bucket.intervalSelector = UI.intervalSelector
+    campaign_bucket.detailsTable = UI.detailsTable
     
-    }
 
-    campaign_bucket.buildDetailsTable = function(wrapper,CRS) { 
-      window.detail_tables = {}
+    campaign_bucket.buildDetailsTables = function(wrapper,CRS) { 
+      detail_tables = {}
       var colors = UI.constants.HEADER_COLORS; 
 
       wrapper.data().map(function(x,i){
         var o ="#details-table-" + i
-
-        detail_tables[o] = dc.dataGrid(o,"table-group")
-          .dimension(CRS.aggregateDimensions.weekly) 
-          .group(function(d){return x.campaign_bucket})
-          .d3Group(function(wrapped){
-
-            var row = wrapped.append("div")
-              .classed("row",true)
-              .attr("style","font-size:13px;font-weight:500;text-transform:uppercase;margin:0px;margin-top:10px")
-
-            var date = row.append("div")
-              .classed("col-md-3 table-interval-selector",true)
-
-            date.append("span")
-              .text("Date Interval")
-
-            buildIntervalSelector(date,function(x){
-
-              var current = "#" + this.parentNode.parentNode.parentNode.parentNode.parentNode.id
-
-              selected = x.value
-              for (var cid in detail_tables) {
-                detail_tables[cid].dimension(CRS.aggregateDimensions[selected])
-              }
-
-              detail_tables[current]
-                .on("postRedraw",function(e){
-                  var anchor = d3.select(e.anchor())
-                  var current = anchor.selectAll(".interval-select-span")
-                    .classed("daily",x.value == "daily")
-                    .classed("weekly",x.value == "weekly") 
-                    .classed("monthly",x.value == "monthly")  
-                   
-                }).redraw()
-
-            })
-            
-
-            var inner = row.append("div")
-              .classed("col-md-8",true)
-
-            var innerHeading = inner.selectAll(".metric")
-              .data(UI.constants.HEADINGS)
-              .enter()
-                .append("div")
-                .classed("col-md-2",true)
-                .attr("class",function(x) {return "col-md-2 " + x.key})
-
-            innerHeading.selectAll(".metric")
-              .data(function(d){return d.values})
-              .enter()
-                .append("div")
-                .attr("class",function(x){return x.key + " metric"})
-                .style("border-top",function(x){ return "5px solid " + colors(x.id) })
-                .text(function(x){return x.value})
-            
-          })
-          .d3(function(wrapped){
-
-              wrapped.append("div")
-                .classed("col-md-3 with-border date detail",true)
-                .style("padding-left","20px")
-                .style("font-size","13px")
-                .html(function(d){
-                  return createDateValue(d.type,d.date)
-                })
-
-              var details = wrapped.append("div")
-                .classed("col-md-8 with-border",true)
-
-              var series = [
-                {"key":"imps","formatter":formatNumber},
-                {"key":"views","formatter":d3.format(",.0f")}, 
-                {"key":"visits","formatter":formatNumber}, 
-                {"key":"clicks","formatter":formatNumber}, 
-                {"key":"conversions","formatter":formatNumber}, 
-                {"key":"cost","formatter":formatMoney}, 
-              ]
-
-              var metric = details.selectAll(".detail")
-                .data(function(d) {
-                  var data = []
-
-                  series.map(function(x){
-                    data.push({
-                      "key":x.key,
-                      "formatter":x.formatter,
-                      "value":d[x.key],
-                      "imps":d.imps,
-                      "cost":d.cost
-                    })
-                  })
-
-                  return data
-                }).enter()
-                  .append("div")
-                  .attr("class",function(d){ return d.key + " col-md-2 detail"})
-
-                metric.selectAll(".metric")
-                  .data(function(d){
-
-                    var costMultiplier = 
-                      ((d.key == "visits") || (d.key == "clicks") || (d.key == "conversions")) ? 1 : 1000
-
-                    return [
-                      { "key":"raw","value": d.formatter(d.value)},
-                      { "key":"rate","value":
-                        (d.key == "imps") ? d.formatter(d.value) : 
-                        (d.key == "cost") ? formatMoney(d.value/d.imps*costMultiplier) : 
-                          d3.format(".2%")(d.value/d.imps)
-                      },
-                      { "key":"cost_rate","value":
-                        (d.key == "cost") ? formatMoney(d.cost) : 
-                          formatMoney(d.cost/d.value*costMultiplier)}
-                    ]
-                  })
-                  .enter()
-                    .append("div")
-                    .attr("class",function(d){return "metric " + d.key })
-                    .text(function(x){return x.value})
-
-              
-
-              
-          })
-          .sortBy(function(x){return x.date})
-          .order(d3.descending)
-          .sliceMode("bottom")
-          .size(10)
+        detail_tables[o] = campaign_bucket.detailsTable.build(o,CRS)
       })
 
     }
 
     campaign_bucket.buildSliderChart = function(wrapper,CRS) {
-      window.slider_charts = {}
+      slider_charts = {}
 
       wrapper.data().map(function(x,i){return "#interval-chart-" + i}).map(function(o){
 
@@ -301,7 +190,7 @@ RB.portal.UI = (function(UI){
     campaign_bucket.buildMainChart = function(wrapper,CRS) {
       var expansionRight = wrapper;
 
-      window.main_charts = { }
+      main_charts = { }
 
       expansionRight.data().map(function(x,i){
         var main_chart_id = "#main-chart-" + i
@@ -333,7 +222,7 @@ RB.portal.UI = (function(UI){
           .title(function(){return "Impressions by hour"})
           .rangeChart(slider_charts["#interval-chart-"+i])
           .on("preRedraw", function(e){
-            var intervalLength = timeDifference(
+            var intervalLength = UI.formatters.timeDifference(
               CRS.groups.all.summary().date_min, 
               CRS.groups.all.summary().date_max
             );
@@ -421,96 +310,12 @@ RB.portal.UI = (function(UI){
           .style("min-height","100px")
           .classed("col-md-12",true)
 
-      var metric = expansionLeft.append("h5")
-        .classed("row",true)
-        .attr("style","border-bottom: 1px solid #ccc; line-height: 35px; margin-top: 0px; padding-left: 10px;")
+      campaign_bucket.selectorLegend = RB.portal.UI.selectorLegend
 
-      metric.append("span")
-        .text("Metrics")
-
-      var metricTypes = metric.append("span") 
-        .classed("metric-span",true)
-          .style("font-size","11px")
-          .style("font-weight","normal")
-          .style("text-transform","uppercase")
-          .style("line-height","35px")
-          .style("padding-right","12px")
-          .style("float","right")
-          .selectAll(".metric-type")
-          .data(["Raw","Rate","Cost"])
-          .enter()
-            .append("span")
-            .style("margin-left","15px")
-            .classed("metric-type",true)
-            .text(function(x){return x})
-            .style("font-weight",function(x,i){return i == 0 ? "bold" : ""})
-            .style("opacity",function(x,i){return i ? ".5" : ""})
-            .on("click",function(x){
-              var current = d3.select(this)
-              metricTypes.style("font-weight","")
-              metricTypes.style("opacity",".5")
-
-              d3.selectAll(".details-table")
-                .classed("raw",function(d){return x == "Raw"})
-                .classed("rate",function(d){return x == "Rate"})
-                .classed("cost_rate",function(d){return x == "Cost"})
-
-              d3.selectAll(".series-selector")
-                .classed("raw",function(d){return x == "Raw"})
-                .classed("rate",function(d){return x == "Rate"})
-                .classed("cost_rate",function(d){return x == "Cost"})
-
-              current.style("font-weight","bold")
-              current.style("opacity","") 
-
-              var type_wrapper = d3.select(this.parentNode.parentNode.parentNode)
-                .select(".series-selector")
-
-              var metric_name = 
-                type_wrapper.classed("imps") ? "imps" :
-                type_wrapper.classed("clicks") ? "clicks" : 
-                type_wrapper.classed("conversions") ? "conversions" : 
-                type_wrapper.classed("views") ? "views" : 
-                type_wrapper.classed("visits") ? "visits" : 
-                type_wrapper.classed("cost") ? "cost" : ""
-
-              var metric_type = x == "Cost" ? "cost_rate" : x.toLowerCase()
-
-              console.log(metric_name,metric_type)
-
-              selectMetric(metric_name,metric_type)
-         
+      campaign_bucket.selectorLegend.build(expansionLeft)
 
 
-            })
-
-       
-
-      var series = expansionLeft.append("div")
-        .classed("row raw series-selector",true)
-        .style("padding","10px")
-        .selectAll(".series-selction")
-        .data(function(x){
-          var flat = []  
-          UI.constants.HEADINGS.map(function(y){y.values.map(function(z){flat.push(z)})})
-          return flat
-        })
-        .enter()
-          .append("div")
-
-      var currentInterval = expansionLeft.append("h5")
-        .classed("row",true)
-        .attr("style","border-bottom: 1px solid #ccc; line-height: 35px; margin-top: 0px; padding-left: 10px;")
-
-      currentInterval.append("span")
-        .text("Date Range: ")
-
-      currentInterval.append("span") 
-        .classed("interval-span",true)
-          .style("font-size","11px")
-          .style("font-weight","normal")
-          .style("line-height","25px")
-          .style("padding-left","12px")
+      
 
       var selectMetric = function(metric_name, metric_type) {
         var accessor = function(d) {
@@ -569,35 +374,7 @@ RB.portal.UI = (function(UI){
         dc.redrawAll("infocus-group") 
       }
         
-      series
-        .classed("col-md-6",true)
-          .attr("class",function(d){
-            return "col-md-6 metric " + d.key + " " + d.id
-          })
-          .style("border-left",function(d){return "5px solid" + UI.constants.HEADER_COLORS(d.id)})
-          .style("padding-bottom","3px")
-          .style("padding-left","5px")
-          .style("font-size","11px")
-          .style("font-weight","500")
-          .style("line-height","25px")
-          .style("margin-bottom","3px")
-          .style("text-transform","uppercase")
-          .text(function(d){return d.value})
-          .on("click",function(x){
-
-            var metric_name = x.id;
-
-            var metric_type = 
-              d3.select(this.parentNode).classed("cost_rate") ? "cost_rate" :
-              d3.select(this.parentNode).classed("rate") ? "rate" : "raw";
-
-            selectMetric(metric_name,metric_type)
-          
-          })
-
-      expansionLeft.append("div")
-        .classed("col-md-12",true)
-        .style("height","10px")
+      
 
       var expansionRight = graphRow.append("div")
         .classed("campaign-expansion col-md-9",true)
@@ -605,16 +382,17 @@ RB.portal.UI = (function(UI){
           .style("border","1px solid #ddd")
           .style("min-height","100px")    
        
-      var sliderGroup = expansionLeft.append("div").classed("interval-chart dc-chart",true)
+      /*var sliderGroup = expansionLeft.append("div").classed("interval-chart dc-chart",true)
         .style("width","100%")
         .style("display","block")
         .attr("id",function(x,i){return "interval-chart-"+i})
+      */
 
       var graphHeader = expansionRight.append("h5")
         .classed("graph-interval-selector",true)
         .attr("style","position:absolute;right:30px;margin:0px")
 
-      buildIntervalSelector(graphHeader,function(x){
+      campaign_bucket.intervalSelector.build(graphHeader,function(x){
 
         var current = "#" + this.parentNode.parentNode.nextSibling.id
 
@@ -658,7 +436,7 @@ RB.portal.UI = (function(UI){
 
       campaign_bucket.buildSliderChart(mainGraphGroup,CRS) 
       campaign_bucket.buildMainChart(mainGraphGroup,CRS)
-      campaign_bucket.buildDetailsTable(detailsGroup,CRS)
+      campaign_bucket.buildDetailsTables(detailsGroup,CRS)
 
 
     }
@@ -803,4 +581,4 @@ RB.portal.UI = (function(UI){
 
   return UI
 
-})(RB.portal.UI || {}) 
+})(RB.portal.UI || {})  

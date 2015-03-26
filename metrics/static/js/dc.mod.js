@@ -5198,7 +5198,7 @@ dc.dataGrid = function(parent, chartGroup) {
                 .attr("class", GRID_CSS_CLASS);
         if (_d3Group) {
 
-          _d3Group(itemGroup)
+          _d3Group(itemGroup,_chart)
 
         } else if (_htmlGroup) {
             itemGroup

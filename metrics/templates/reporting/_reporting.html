@@ -8,6 +8,42 @@
 	<link href="/static/css/reporting-style.css" type="text/css" rel="stylesheet" media="screen">
 	<link href="/static/css/dc.css" type="text/css" rel="stylesheet" media="screen">
   <style>
+  /* selectorLegend */
+
+  .selector-legend .header {
+    border-bottom: 1px solid #ccc;
+    line-height: 35px;
+    margin-top: 0px;
+    padding-left: 10px;
+  }
+
+  .selector-legend .metric-span {
+    font-size: 11px;
+    font-weight: normal;
+    text-transform: uppercase;
+    line-height: 35px;
+    padding-right: 12px;
+    float: right; 
+  }
+
+  .metric-span .metric-type {
+    margin-left:15px
+  }
+
+  .metric-type.cost_rate, .metric-type.rate, .metric-type.raw {
+    opacity:.5
+  }
+
+  .metric-span.raw .metric-type.raw, 
+  .metric-span.rate .metric-type.rate, 
+  .metric-span.cost_rate .metric-type.cost_rate { 
+    font-weight:bold;
+    opacity:1
+  }
+
+  </style>
+
+  <style>
     .dc-axis {
       opacity:0
     }
@@ -17,6 +53,10 @@
     
     .metric.raw , .metric.rate, .metric.cost_rate {
       display:none; opacity:.5
+    }
+
+    .interval-select-span {
+      
     }
 
     .interval-type {
@@ -30,6 +70,9 @@
       opacity:1; font-weight:bold
     }
 
+    .details-table .details-header {
+      font-size:13px;font-weight:500;text-transform:uppercase;margin:0px;margin-top:10px
+    }
     
 
     .details-table.raw .metric.raw, .details-table.rate .metric.rate, .details-table.cost_rate .metric.cost_rate {
@@ -159,7 +202,11 @@ box-shadow: inset 0px 0px 5px 0px #CCC;
   <script src="/static/js/d3.v3.min.js"></script> 
   <script src="/static/js/rockerbox/ajax.js"></script>
 	<script src="/static/js/rockerbox/data.js"></script> 
-  <script src="/static/js/rockerbox/portal/ui.campaign.accordian.js"></script>
+  <script src="/static/js/rockerbox/portal/ui.campaign.interval.js"></script>  
+  <script src="/static/js/rockerbox/portal/ui.campaign.table.js"></script>   
+  <script src="/static/js/rockerbox/portal/ui.campaign.selector.js"></script>    
+ 
+  <script src="/static/js/rockerbox/portal/ui.campaign.js"></script>
 	<script src="/static/js/gauge.min.js"></script>
 	
 	<script src="/static/js/crossfilter.min.js"></script>
@@ -185,7 +232,8 @@ box-shadow: inset 0px 0px 5px 0px #CCC;
 
       RB.portal.UI.campaign_bucket.buildPanel(CRS,d3.select("#campaign-box"))
       
-      intervalBox = dc.customDataBox('.interval-span', "interval-group")
+      // This should be moved inside at somepoint...
+      var intervalBox = dc.customDataBox('.interval-span', "interval-group")
         .valueAccessor(function(d){ return formatDate(d.date_min) + " - " + formatDate(d.date_max) })
         .group(CRS.groups.all)
       
