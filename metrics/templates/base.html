@@ -138,7 +138,7 @@ for(g=0;g<i.length;g++)f(c,i[g]);b._i.push([a,e,d])};b.__SV=1.2;a=f.createElemen
       $("a[href='/campaign']").parent().hide()
       $.get("/advertiser?format=json",function(x){
         var source = JSON.parse(x)[0].pixel_source_name
-        if (source.indexOf("dot") >= 0 || source.indexOf("minoff") >= 0 || source.indexOf("bombas") >= 0) {
+        if (source.indexOf("dot") >= 0 || source.indexOf("minoff") >= 0 || source.indexOf("bombas") >= 0 || source.indexOf("smarter") >= 0 || source.indexOf("fundera") >= 0) {
           $("a[href='/campaign']").parent().show()
         }
       })
