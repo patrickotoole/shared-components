@@ -1,9 +1,21 @@
 var RB = RB || {}
 RB.portal = RB.portal || {}
 
+var range = function(n) { return Array.apply(null, Array(n)).map(function (_, i) {return i;});}
+
 RB.portal.data = (function(data){
 
+  var db = new Dexie("Rockerbox")
+  db.version(1).stores({imps: "++id,imps,visible,campaign_id,visits,is_valid,bucket_name,media_cost,date,loaded,cpm_multiplier,clicks,campaign_buckets,dd,impressions,conversions,cost"})
+  db.open()
+
+
   var REPORT_PREFIX = "reporting-"
+
+  var dateString = function(){
+    var date = new Date()
+    return date.getFullYear() + "-" + date.getMonth() + "-" + date.getDate()
+  }
 
   var API = RB.AJAX.rockerbox,
     reportingTransform = function(d) {
@@ -23,11 +35,11 @@ RB.portal.data = (function(data){
 
   var set_reporting = function(name,callback) {
     API.getReporting(function(json){
+
       var transformed = json.map(reportingTransform)
-      localStorage.setItem(
-        REPORT_PREFIX + name,
-        JSON.stringify(transformed)
-      )
+
+      transformed.map(function(i){ db.imps.add(i) })
+      
       get_reporting(callback)
     })
   }
@@ -36,18 +48,22 @@ RB.portal.data = (function(data){
 
     API.getAdvertiser(function(x) {
       var name = x[0].pixel_source_name
-      console.log(name)
-      var fromCache = localStorage.getItem(REPORT_PREFIX + name)
-      if (fromCache) {
-        var cached = JSON.parse(fromCache).map(function(d){
-          d.dd = new Date(d.dd)
-          return d 
-        });
-      }
 
-      (!cached) ? 
-        set_reporting(name,callback) :
-        callback(cached)
+      db.imps.orderBy("dd").uniqueKeys(function(dd){
+        var max_date = dd.map(function(y){ return +new Date(y)}).reduce(function(p,c){return Math.max(p,c)},0);
+        var yesterday = +new Date(new Date() -86400000)
+
+        if (yesterday > max_date) {
+          console.log("HERE")
+          set_reporting(name,callback)
+        } else {
+          db.imps.orderBy("date").toArray(function(data){
+            callback(data)
+          })
+        }
+      })
+
+      
     })
     
   }

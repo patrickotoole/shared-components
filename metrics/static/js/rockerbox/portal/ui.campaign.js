@@ -67,7 +67,7 @@ RB.portal.UI = (function(UI){
 
   UI.campaign_bucket = (function(campaign_bucket){
 
-    var main_charts = {}, slider_charts = {}, detail_tables = {};
+    var main_charts = {}, slider_charts = {}, detail_tables = {}, campaignHeader;
 
     var selectCampaign = function(campaign,target) {
 
@@ -108,7 +108,6 @@ RB.portal.UI = (function(UI){
       var expansion = wrapper.append("div")
         .style("position","relative")
         .style("width","100%")
-
         .append("div")
         .style("position","absolute")
         .style("width","inherit")
@@ -117,13 +116,15 @@ RB.portal.UI = (function(UI){
       var panel = wrapper
         .append("div").classed("row",true)
         .style("margin","0px")
-        .style("height","100%")
+        .style("height","350px")
         .style("padding-top","350px")
+
         .append("div")
         .classed("col-md-12 campaign-table-new",true)
         .style("background","white")
         .style("padding","0px")
         .style("padding-top","10px")
+        .style("border","1px solid rgb(221, 221, 221)")
         
         .style("height","inherit")
 
@@ -217,10 +218,33 @@ RB.portal.UI = (function(UI){
         .style("top","0px")
         .style("width","inherit")
 
-      header.append("div")
-        .classed("col-md-3",true)
+      campaignHeader = header.append("div")
+        .classed("col-md-3 table-interval-selector",true)
+        .style("border-top","5px solid white")
+
+      campaignHeader
+        .append("span")
         .text("Campaign Name")      
 
+      
+      var inner = header.append("div")
+        .classed("col-md-8",true)
+
+      var innerHeading = inner.selectAll(".metric")
+        .data(UI.constants.HEADINGS)
+        .enter()
+          .append("div")
+          .classed("col-md-2",true)
+          .attr("class",function(x) {return "col-md-2 " + x.key})
+
+      innerHeading.selectAll(".metric")
+        .data(function(d){return d.values})
+        .enter()
+          .append("div")
+          .attr("class",function(x){return x.key + " metric"})
+          .style("border-top",function(x){ return "5px solid " + UI.constants.HEADER_COLORS(x.id) })
+          .text(function(x){return x.value})
+      /*
       var innerHeader = header.append("div")
         .classed("col-md-8",true)
 
@@ -232,13 +256,14 @@ RB.portal.UI = (function(UI){
           .append("div")
           .style("border-top",function(x){ console.log(x.key); return "5px solid " + colors(x.key) })
           .text(function(x){return x.values[0].value })
+      */
 
       var body = panel.append("div")
-        .classed("campaigns-body",true)
+        .classed("campaigns-body col-md-12",true)
         .style("position","absolute")
         .style("top","50px")
         .style("width","inherit") 
-        .style("height","inherit")
+        .style("height","300px")
         .style("overflow","scroll")
 
       var data = bucketDataFormatter(CRS)
@@ -261,10 +286,10 @@ RB.portal.UI = (function(UI){
 
       row
         .enter()
-        .append("div").classed("campaign",true)
+        .append("div").classed("row campaign",true)
         .classed("active-row",function(x,i){return i == (data.length - 1)})
         .style("line-height","35px") 
-        .style("height","35px")
+        .style("min-height","35px")
         .on('mouseover',function(x){
           d3.select(this).selectAll(".mini-metric").style("visibility","visible")
         })
@@ -353,6 +378,7 @@ RB.portal.UI = (function(UI){
     
       campaign_bucket.selectorLegend.setMetricKey(d3.selectAll(".details-table"),metric_name)
       campaign_bucket.selectorLegend.setMetricKey(d3.selectAll(".series-selector"),metric_name)
+      campaign_bucket.selectorLegend.setMetricType2(d3.selectAll(".campaign-table-new"),metric_type) 
         
     
       dc.redrawAll("infocus-group") 
@@ -362,10 +388,11 @@ RB.portal.UI = (function(UI){
     campaign_bucket.buildRowExpansion = function(row,CRS) { 
 
       var expansion = row.append("div")
-          .classed("shadow expansion col-md-12",function(d,i){
+          .classed("expansion col-md-12",function(d,i){
             d.index = i
             return true
           })
+          .style("padding","0px")
 
       /*expansion.append("h5")
         .style("padding-bottom","8px")
@@ -381,11 +408,9 @@ RB.portal.UI = (function(UI){
         .classed("col-md-12",true)
         .text(function(d){return "Detailed reporting for " + d.campaign_bucket })
       */
-      var detailsRow = expansion.append("div")
-        .classed("row",true)
+      var detailsRow = expansion
         .append("div")
-        .classed("col-md-12",true)
-        .style("margin-top","10px")
+        //.style("margin-top","10px")
       /*
       expansion.append("div")
         .style("height","40px")
@@ -444,11 +469,12 @@ RB.portal.UI = (function(UI){
         .attr("id",function(x,i){return "main-chart-" + i})
       */
 
+
       var detailsGroup = detailsRow.append("table")
         .classed("raw details-table imps",true)
         .style("font-weight","normal")
-        .style("background-color","white")
-        .style("border","1px solid #ddd")
+        //.style("background-color","white")
+        //.style("border","1px solid #ddd")
         .style("min-height","100px") 
         .style("width","100%")
         .attr("id",function(x,i){return "details-table-" + i}) 
@@ -491,30 +517,52 @@ RB.portal.UI = (function(UI){
       var innerMetric = metric.enter()
         .append("div")
         .on("click",function(d,i) {
-          var currentParent = this.parentNode
-          d3.select(this.parentNode.parentNode)
+          var currentParent = this.parentNode;
+          var current_select = d3.select(currentParent)
+
+          row.filter(function(){return this != currentParent})
+            .selectAll(".expansion")
             .transition()
-            .duration(300)
-            .tween("",function() { 
-              var i = d3.interpolateNumber(this.scrollTop, currentParent.offsetTop); 
-              return function(t) { this.scrollTop = i(t); }; 
+            .style("max-height","0px")
+               
+          current_select.classed("active-row",true)
+
+
+          current_select.select(".expansion")
+            .style("max-height","0px")
+            .transition()
+            .style("max-height","500px")
+            .each("end",function(){
+
+              d3.select(currentParent.parentNode)
+                .transition()
+                .tween("",function() { 
+                  var i = d3.interpolateNumber(this.scrollTop, currentParent.offsetTop); 
+                  return function(t) { this.scrollTop = i(t); }; 
+                }).each("end",function(){
+                  row.classed("active-row",false)
+                  current_select.classed("active-row",true)
+                     
+                })
             })
+            
            
-
+         
           var bucket = this.parentNode.__data__.campaign_bucket
-          row.classed("active-row",false)
-          d3.select(this.parentNode).classed("active-row",true)
-          d3.select(this.parentNode).select(".expansion")
-
-          selectCampaign(bucket,d3.select(this.parentNode))
           
-          var active = row.filter(function(x){ 
-            return this.classList.contains("active-row")
-          })
-
+          selectCampaign(bucket,d3.select(this.parentNode))
           d3parent = d3.select(currentParent)
 
           d3.select(".main-header").text("Campaign Performance > " + d3parent.datum().campaign_bucket)
+
+          campaignHeader.select(".interval-select-span").remove()
+
+          RB.portal.UI.detailsTable.build_interval(
+            campaignHeader,
+            RB.portal.UI.detailsTable.onIntervalSelection,
+            false,
+            detail_tables["#" + current_select.select(".details-table").attr("id")]
+          )
         })
         .append("div")
         .classed("col-md-8",function(x,i){return (i == 1) })

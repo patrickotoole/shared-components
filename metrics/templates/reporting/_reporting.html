@@ -75,6 +75,12 @@
     .details-table .details-header {
       font-size:13px;font-weight:500;text-transform:uppercase;margin:0px;margin-top:10px
     }
+
+    .campaign-table-new.raw .metric.raw, 
+    .campaign-table-new.rate .metric.rate, 
+    .campaign-table-new.cost_rate .metric.cost_rate {
+      display:block; opacity:1
+    }
     
 
     .details-table.raw .metric.raw, .details-table.rate .metric.rate, .details-table.cost_rate .metric.cost_rate {
@@ -129,6 +135,7 @@
       display:block    
     }
  
+    .details-header {display:none}
 
     #content {padding-right: 15px;}
     #content #campaign-box {width:100%}
@@ -139,13 +146,29 @@
     .campaign {cursor:pointer}
     .active-row {font-weight:bold}
     .expansion {
-      display:none;
+      margin-top:1px;
       padding-top:10px;padding-bottom:10px;
-      border-top:1px solid rgb(221, 221, 221);
-      background:#f0f0f0
+      /*border-top:1px solid rgb(221, 221, 221);*/
+      max-height:0px;
+      /*transition: max-height 0.2s;
+      -webkit-transition: max-height 0.2s;
+      -moz-transition: max-height 0.2s;*/
+      overflow:hidden
     }
-    .expansion div div div {background:white}
-    .active-row .expansion {display:block}
+    .expansion .details-table {
+      display:none
+    }
+    .active-row .expansion .details-table {
+      display:block
+    }
+    /*.expansion div div div {background:white}*/
+    .active-row .expansion {
+      max-height:500px;
+      background:#f0f0f0;
+      /*transition: max-height 0s;
+      -webkit-transition: max-height 0s;
+      -moz-transition: max-height 0s; */
+    }
     .shadow{
       box-shadow:
       inset 0px 11px 8px -10px #CCC,
@@ -207,6 +230,7 @@ box-shadow: inset 0px 0px 5px 0px #CCC;
 
 {% block page_scripts %}
 	<!-- IO GAUGE -->
+  <script src="/static/js/dexie.js"></script>  
   <script src="/static/js/d3.v3.min.js"></script> 
   <script src="/static/js/rockerbox/ajax.js"></script>
 	<script src="/static/js/rockerbox/data.js"></script> 
@@ -234,9 +258,13 @@ box-shadow: inset 0px 0px 5px 0px #CCC;
 
 		$.getJSON("/api?table=advertiser&external_advertiser_id=" + extUserID, function(data){
       $('#header #right-align #user-name').text(data[0].advertiser_name.toLowerCase());
-    });
+    })
 
     RB.portal.data.reporting(function(data){
+
+      console.log(data.slice(11000,12000))
+
+      window.xx = data.slice(1409,1410)
 
       var crs = crossfilter(data);
       window.CRS = crossfilterNS(crs, dc);

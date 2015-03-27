@@ -20,6 +20,10 @@ RB.portal.UI.intervalSelector = (function(intervalSelector) {
     var buildCallbackWithCurrent = function() {
 
       return function(x,y) {
+        wrapper.selectAll(".interval-select-span")
+          .classed("daily",x.value == "daily")
+          .classed("weekly",x.value == "weekly")
+          .classed("monthly",x.value == "monthly")  
         callback.bind(this)(x,y,current)
         intervalSelector.update_current(current)
       }

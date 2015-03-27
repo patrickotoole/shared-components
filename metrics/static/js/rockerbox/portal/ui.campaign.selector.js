@@ -13,6 +13,14 @@ RB.portal.UI.selector = (function(selector){
       .classed("cost_rate",function(d){return x == "Cost"})  
   }
 
+  selector.setMetricType2 = function(obj,x) {
+    console.log(obj,x)
+    obj
+      .classed("raw",function(d){return x == "raw"})
+      .classed("rate",function(d){return x == "rate"})
+      .classed("cost_rate",function(d){return x == "cost_rate"})  
+  }
+
   selector.setMetricKey = function(obj,metric_name) {
     obj
       .classed("imps",function(d){return metric_name == "imps"})

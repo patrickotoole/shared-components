@@ -135,7 +135,7 @@ RB.portal.UI.detailsTable = (function(detailsTable) {
       .sortBy(function(x){return x.date})
       .order(d3.descending)
       .sliceMode("bottom")
-      .size(10)
+      .size(30)
       .data(CRS)
   }
 
