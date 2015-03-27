@@ -3,8 +3,8 @@ RB.AJAX = (function(obj){
 
   obj.constants = (function(constants) {
     var an_base = "http://ib.adnxs.com",
-      //rb_base = "http://portal.getrockerbox.com"
-      rb_base = "http://localhost:8080"
+      rb_base = "http://portal.getrockerbox.com"
+      //rb_base = "http://localhost:8080"
 
     constants.AN_BASE = an_base
     constants.ANPXJ = an_base + "/pxj?bidder=222&action=setPageLoadID(12345);"

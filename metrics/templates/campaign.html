@@ -6,8 +6,9 @@
 
 {% block page_sidebar %}
     <li><a href="/reporting"><img src="/static/img/sidebar/reporting-icon.png" alt="Reporting icon" /><span class="sidebar-label">campaign reporting</span></a></li>
-    <li><a href="/streaming"><img src="/static/img/sidebar/global-icon.png" alt="Global icon" /><span class="sidebar-label">global streaming</span></a></li>
+    <!--<li><a href="/streaming"><img src="/static/img/sidebar/global-icon.png" alt="Global icon" /><span class="sidebar-label">global streaming</span></a></li>
     <li><a href="/creative/reporting"><img src="/static/img/sidebar/creative-icon.png" alt="Creatives icon" /><span class="sidebar-label">creative reporting</span></a></li>
+    -->
     <li><a href="/advertiser"><img src="/static/img/sidebar/pixel-icon.png" alt="Pixels icon" /><span class="sidebar-label">pixels</span></a></li>
 
   <li class="active">
@@ -22,6 +23,13 @@
       <div style="opacity:.6;text-align:center;width:50px;line-height:50px;font-size:20px;color:white" class="glyphicon glyphicon glyphicon-star"></div>
       <span class="sidebar-label" style="top:0px;margin-top:0px"> pixel reporting</span>
     </a>
+
+  <li>
+    <a href="/hoverboard" style="padding:0px;position:relative">
+      <div style="opacity:.6;text-align:center;width:50px;line-height:50px;font-size:20px;color:white" class="glyphicon glyphicon-ice-lolly"></div>
+      <span class="sidebar-label" style="top:0px;margin-top:0px"> hoverboard</span>
+    </a>
+  </li>    
   </li> 
 {% end %}
 
@@ -87,7 +95,7 @@ body {
 }
 </style>
 
-<div id="advertiser-content" class='container row'>
+<div id="advertiser-content" class='container row' style="height:inherit;overflow:scroll">
 </div>
 {% end %}
 {% block page_scripts %}
