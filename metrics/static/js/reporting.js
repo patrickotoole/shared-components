@@ -50,6 +50,45 @@ var crossfilterNS = function(crs,dc) {
 		
 	}
 
+  var 
+    groupAdd = function(p,v) {
+      p.cost += v.cost
+      p.conversions += v.conversions                                                                     
+      p.imps += v.imps                                                                                   
+      p.clicks += v.clicks                                                                               
+      p.visible += v.visible
+      p.loaded += v.loaded
+      p.visits += v.visits
+      p.views = p.loaded ? p.imps*p.visible/p.loaded : 0
+      p.dd = "1"
+      return p 
+    },
+    groupReduce = function(p,v) {
+			p.cost -= v.cost
+			p.conversions -= v.conversions                                                                     
+			p.imps -= v.imps
+			p.clicks -= v.clicks                                                                               
+      p.visible -= v.visible
+      p.loaded -= v.loaded 
+      p.visits -= v.visits
+      p.views = p.loaded ? p.imps*p.visible/p.loaded : 0 
+			p.dd = "1"
+			return p                                                                                           
+		},
+    groupInit = function() {
+			return {
+				cost: 0,
+				conversions: 0,                                                                                  
+				clicks: 0,
+				imps: 0,
+        visible: 0,
+        loaded: 0,
+        visits: 0,
+        views: 0,
+				dd: ""                                                                                           
+			}
+		}
+
 	var groups = {
 		all: crs.groupAll().reduce(
 			function(p, v){
@@ -58,6 +97,10 @@ var crossfilterNS = function(crs,dc) {
 				p.clicks += v.clicks
 				p.cost += v.cost
 				p.conversions += v.conversions
+        p.loaded += v.loaded
+        p.visible += v.visible
+        p.visits += v.visits
+        p.percent_visible = p.visible/p.loaded
 
 				return p
 			},
@@ -67,6 +110,11 @@ var crossfilterNS = function(crs,dc) {
 				p.clicks -= v.clicks
 				p.cost -= v.cost
 				p.conversions -= v.conversions
+        p.loaded -= v.loaded 
+        p.visible -= v.visible
+        p.visits -= v.visits
+        p.percent_visible = p.visible/p.loaded 
+
 				return p 
 			},
 			function(){
@@ -75,113 +123,32 @@ var crossfilterNS = function(crs,dc) {
 					imps: 0,
 					clicks: 0,
 					cost:0,
-					conversions: 0
+					conversions: 0,
+          loaded: 0,
+          visible: 0,
+          visits: 0
 				}
 			}
 		),
 		datetime: dimensions.datetime.group().reduce(
-			function(p,v) {
-				p.imps += v.imps
-				p.clicks += v.clicks
-				p.conversions += v.conversions
-				p.cost += v.cost
-	
-				return p
-			},
-			function(p,v) {
-				p.imps -= v.imps
-				p.clicks -= v.clicks
-				p.conversions -= v.conversions
-				p.cost -= v.cost
-
-				return p
-			},
-			function() {
-				return {
-					imps:0,
-					clicks:0,
-					conversions:0,
-					cost:0
-				}
-			}
+      groupAdd,
+			groupReduce,
+      groupInit 
 		),
 		daily: dimensions.daily.group().order(function(d){return d}).reduce(
-			function(p,v) {
-				p.imps += v.imps
-				p.clicks += v.clicks
-				p.conversions += v.conversions
-				p.cost += v.cost
-	
-				return p
-			},
-			function(p,v) {
-				p.imps -= v.imps
-				p.clicks -= v.clicks
-				p.conversions -= v.conversions
-				p.cost -= v.cost
-
-				return p
-			},
-			function() {
-				return {
-					imps:0,
-					clicks:0,
-					conversions:0,
-					cost:0
-				}
-			}
+      groupAdd,
+			groupReduce,
+      groupInit  
 		),
 		weekly: dimensions.weekly.group().order(function(d){return d}).reduce(
-			function(p,v) {
-				p.imps += v.imps
-				p.clicks += v.clicks
-				p.conversions += v.conversions
-				p.cost += v.cost
-	
-				return p
-			},
-			function(p,v) {
-				p.imps -= v.imps
-				p.clicks -= v.clicks
-				p.conversions -= v.conversions
-				p.cost -= v.cost
-
-				return p
-			},
-			function() {
-				return {
-					imps:0,
-					clicks:0,
-					conversions:0,
-					cost:0
-				}
-			}
+      groupAdd,
+			groupReduce,
+      groupInit     
 		),
 		monthly: dimensions.monthly.group().order(function(d){return d}).reduce(
-			function(p,v) {
-				p.imps += v.imps
-				p.clicks += v.clicks
-				p.conversions += v.conversions
-				p.cost += v.cost
-	
-				return p
-			},
-			function(p,v) {
-				p.imps -= v.imps
-				p.clicks -= v.clicks
-				p.conversions -= v.conversions
-				p.cost -= v.cost
-
-				return p
-			},
-			function() {
-				return {
-					imps:0,
-					clicks:0,
-					conversions:0,
-					cost:0
-				}
-			}
+      groupAdd,
+			groupReduce,
+      groupInit      
 		),
 		/*
 		referrer: dimensions.referrer.group().reduce(
@@ -241,6 +208,9 @@ var crossfilterNS = function(crs,dc) {
 				p.conversions += v.conversions                                                                     
 				p.imps += v.imps                                                                                   
 				p.clicks += v.clicks                                                                               
+        p.visible += v.visible
+        p.loaded += v.loaded
+        p.visits += v.visits
 				p.dd = "1"
 				return p 
 			},
@@ -249,6 +219,9 @@ var crossfilterNS = function(crs,dc) {
 				p.conversions -= v.conversions                                                                     
 				p.imps -= v.imps
 				p.clicks -= v.clicks                                                                               
+        p.visible -= v.visible
+        p.loaded -= v.loaded 
+        p.visits -= v.visits
 				p.dd = "1"
 				return p                                                                                           
 			},
@@ -258,6 +231,9 @@ var crossfilterNS = function(crs,dc) {
 					conversions: 0,                                                                                  
 					clicks: 0,
 					imps: 0,
+          visible: 0,
+          loaded: 0,
+          visits: 0,
 					dd: ""                                                                                           
 				}
 			}
@@ -486,8 +462,14 @@ var crossfilterNS = function(crs,dc) {
 						"clicks": grp.value.clicks,
 						"conversions": grp.value.conversions,
 						"cost": grp.value.cost,
+            "visible": grp.value.visible,
+            "loaded": grp.value.loaded,
+            "visits": grp.value.visits,
+            "percent_visible": grp.value.visible/grp.value.loaded,
+            "views": grp.value.imps*grp.value.visible/grp.value.loaded,
 						"date_min": groups.all.summary().date_min,
-						"date_max": groups.all.summary().date_max								
+						"date_max": groups.all.summary().date_max,
+            "type":"daily"
 					} 
 				});
 			},
@@ -501,8 +483,14 @@ var crossfilterNS = function(crs,dc) {
 						"clicks": grp.value.clicks,
 						"conversions": grp.value.conversions,
 						"cost": grp.value.cost,
+            "visible": grp.value.visible,
+            "loaded": grp.value.loaded,
+            "visits": grp.value.visits,
+            "percent_visible": grp.value.visible/grp.value.loaded,
+            "views": grp.value.imps*grp.value.visible/grp.value.loaded,
 						"date_min": groups.all.summary().date_min,
-						"date_max": groups.all.summary().date_max								
+						"date_max": groups.all.summary().date_max,
+            "type":"daily" 
 					} 
 				});
 			},
@@ -518,8 +506,14 @@ var crossfilterNS = function(crs,dc) {
 						"clicks": grp.value.clicks,
 						"conversions": grp.value.conversions,
 						"cost": grp.value.cost,
+            "visible": grp.value.visible,
+            "loaded": grp.value.loaded,
+            "visits": grp.value.visits,
+            "percent_visible": grp.value.visible/grp.value.loaded,
+            "views": grp.value.imps*grp.value.visible/grp.value.loaded,
 						"date_min": groups.all.summary().date_min,
-						"date_max": groups.all.summary().date_max								
+						"date_max": groups.all.summary().date_max,
+            "type":"weekly"
 					} 
 				});
 			},
@@ -533,8 +527,14 @@ var crossfilterNS = function(crs,dc) {
 						"clicks": grp.value.clicks,
 						"conversions": grp.value.conversions,
 						"cost": grp.value.cost,
+            "visible": grp.value.visible,
+            "loaded": grp.value.loaded,
+            "visits": grp.value.visits,
+            "percent_visible": grp.value.visible/grp.value.loaded,
+            "views": grp.value.imps*grp.value.visible/grp.value.loaded,
 						"date_min": groups.all.summary().date_min,
-						"date_max": groups.all.summary().date_max								
+						"date_max": groups.all.summary().date_max,
+            "type":"weekly"                           								
 					} 
 				});
 			},
@@ -550,8 +550,14 @@ var crossfilterNS = function(crs,dc) {
 						"clicks": grp.value.clicks,
 						"conversions": grp.value.conversions,
 						"cost": grp.value.cost,
+            "visible": grp.value.visible,
+            "loaded": grp.value.loaded,
+            "visits": grp.value.visits,
+            "percent_visible": grp.value.visible/grp.value.loaded,
+            "views": grp.value.imps*grp.value.visible/grp.value.loaded,
 						"date_min": groups.all.summary().date_min,
-						"date_max": groups.all.summary().date_max								
+						"date_max": groups.all.summary().date_max,
+            "type":"monthly"                           								
 					} 
 				});
 			},
@@ -565,8 +571,14 @@ var crossfilterNS = function(crs,dc) {
 						"clicks": grp.value.clicks,
 						"conversions": grp.value.conversions,
 						"cost": grp.value.cost,
+            "visible": grp.value.visible,
+            "loaded": grp.value.loaded,
+            "visits": grp.value.visits,
+            "percent_visible": grp.value.visible/grp.value.loaded,
+            "views": grp.value.imps*grp.value.visible/grp.value.loaded,
 						"date_min": groups.all.summary().date_min,
-						"date_max": groups.all.summary().date_max								
+						"date_max": groups.all.summary().date_max,
+            "type":"monthly"
 					} 
 				});
 			},
@@ -582,6 +594,11 @@ var crossfilterNS = function(crs,dc) {
 						"clicks": grp.value.clicks,
 						"conversions": grp.value.conversions,
 						"cost": grp.value.cost,
+            "visible": grp.value.visible,
+            "loaded": grp.value.loaded,
+            "visits": grp.value.visits,
+            "percent_visible": grp.value.visible/grp.value.loaded,
+            "views": grp.value.imps*grp.value.visible/grp.value.loaded,
 						"date_min": groups.all.summary().date_min,
 						"date_max": groups.all.summary().date_max								
 					} 

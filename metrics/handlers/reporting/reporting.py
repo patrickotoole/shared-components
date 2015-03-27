@@ -50,6 +50,7 @@ class ReportingBase(object):
     def pull_advertiser(self,advertiser_id):
         params = {"advertiser_id": advertiser_id}
         q = UNION_QUERY % params
+        print q
         return self.db.select_dataframe(q)
 
     def pull_advertiser_export(self,advertiser_id):

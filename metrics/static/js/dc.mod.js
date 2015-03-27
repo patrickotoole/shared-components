@@ -891,6 +891,8 @@ dc.baseMixin = function (_chart) {
         } else {
             _anchor = a;
             _root = d3.select(_anchor);
+            _root = d3.selectAll(_anchor); 
+            //debugger;
             _root.classed(dc.constants.CHART_CLASS, true);
             dc.registerChart(_chart, chartGroup);
         }
@@ -2056,7 +2058,7 @@ dc.coordinateGridMixin = function (_chart) {
 
         if (axisXG.empty())
             axisXG = g.append("g")
-                .attr("class", "axis x")
+                .attr("class", "axis x dc-axis")
                 .attr("transform", "translate(" + _chart.margins().left + "," + _chart._xAxisY() + ")");
 
         var axisXLab = g.selectAll("text."+X_AXIS_LABEL_CLASS);
@@ -4121,6 +4123,7 @@ dc.lineChart = function (parent, chartGroup) {
     var _dashStyle;
     var _tooltipType = "daily";
 
+
     _chart.transitionDuration(500);
     _chart._rangeBandPadding(1);
 
@@ -4350,7 +4353,7 @@ dc.lineChart = function (parent, chartGroup) {
                     })
 					
 				if(_chart.renderTitle()){
-					// dots.append("title").text(dc.pluck('data', _chart.title(d.name)));
+					 dots.append("title").text(dc.pluck('data', _chart.title(d.name)));
 					
 					// NO GOOD, NO TEMPLATE
 					var tooltip = d3.select("#campaign-graph").append("div")   
@@ -4372,6 +4375,71 @@ dc.lineChart = function (parent, chartGroup) {
             });
         }
     }
+
+    function renderTitle(dot, d) {
+        if (_chart.renderTitle()) {
+            dot.selectAll('title').remove();
+            dot.append('title').text(dc.pluck('data', _chart.title(d.name)));
+        }
+    }
+
+    function drawDots(chartBody, layers) {
+        if (!_chart.brushOn()) {
+            var tooltipListClass = TOOLTIP_G_CLASS + '-list';
+            var tooltips = chartBody.select('g.' + tooltipListClass);
+
+            if (tooltips.empty()) {
+                tooltips = chartBody.append('g').attr('class', tooltipListClass);
+            }
+
+            layers.each(function (d, layerIndex) {
+                var points = d.values;
+                if (_defined) {
+                    points = points.filter(_defined);
+                }
+
+                var g = tooltips.select('g.' + TOOLTIP_G_CLASS + '._' + layerIndex);
+                if (g.empty()) {
+                    g = tooltips.append('g').attr('class', TOOLTIP_G_CLASS + ' _' + layerIndex);
+                }
+
+                createRefLines(g);
+
+                var dots = g.selectAll('circle.' + DOT_CIRCLE_CLASS)
+                    .data(points, dc.pluck('x'));
+
+                dots.enter()
+                    .append('circle')
+                    .attr('class', DOT_CIRCLE_CLASS)
+                    .attr('r', getDotRadius())
+                    .style('fill-opacity', _dataPointFillOpacity)
+                    .style('stroke-opacity', _dataPointStrokeOpacity)
+                    .on('mousemove', function () {
+                        var dot = d3.select(this);
+                        showDot(dot);
+                        showRefLines(dot, g);
+                    })
+                    .on('mouseout', function () {
+                        var dot = d3.select(this);
+                        hideDot(dot);
+                        hideRefLines(g);
+                    });
+
+                dots
+                    .attr('cx', function (d) {
+                        return dc.utils.safeNumber(_chart.x()(d.x));
+                    })
+                    .attr('cy', function (d) {
+                        return dc.utils.safeNumber(_chart.y()(d.y + d.y0));
+                    })
+                    .attr('fill', _chart.getColor)
+                    .call(renderTitle, d);
+
+                dots.exit().remove();
+            });
+        }
+    }
+
 
     function createRefLines(g) {
         var yRefLine = g.select("path." + Y_AXIS_REF_LINE_CLASS).empty() ? g.append("path").attr("class", Y_AXIS_REF_LINE_CLASS) : g.select("path." + Y_AXIS_REF_LINE_CLASS);
@@ -4842,82 +4910,81 @@ dc.customDataTable = function(parent, chartGroup) {
 
     var _size = 5;
     var _listItems = [];
-	var _listClasses = [];
-	var _totalDimension = {};
-	var _rowClass = "";
-	var _activeRow = -2;
-	var _campaignSelector = "";
+	  var _listClasses = [];
+	  var _totalDimension = {};
+	  var _rowClass = "";
+	  var _activeRow = -2;
+	  var _campaignSelector = "";
     var _sortBy = function(d) {
         return d;
     };
     var _dataSortBy = false;
-	var _sliceMode = "top";
+	  var _sliceMode = "top";
     var _order = d3.ascending;
 
     _chart._doRender = function() {
         _chart.selectAll("ul:not(.header-row)").remove();
         
-		var entries = (_sliceMode == "bottom") ? sortEntries(_chart.dimension().bottom(_size)) : sortEntries(_chart.dimension().top(_size));
-        
-		if($.isEmptyObject(_totalDimension) || (!$.isEmptyObject(_totalDimension) && entries.length > 1)){
-			renderRows(entries);
-		}
-		
-		if(!$.isEmptyObject(_totalDimension)){
-			renderRows([_totalDimension], true);
-		}
-		
-		if (_activeRow != -2){
-			var selectID = _activeRow != -1 ? '.' + _rowClass + ":nth-of-type(" + (_activeRow + 1) + ")" : '.' + _rowClass + ":last-of-type";
-			var activeRow = _chart.root().select(selectID);
-			if(activeRow[0][0] == null){
-				activeRow = _chart.root().select('.' + _rowClass + ":last-of-type");
-				CRS.dimensions.total_campaign_bucket.filterAll();
-			}
-			else if(_activeRow == -1){
-				CRS.dimensions.total_campaign_bucket.filterAll();
-			}
-			else {
-				CRS.dimensions.total_campaign_bucket.filter(function(d){return d == activeRow.select(_campaignSelector).text()});
-			}
-			activeRow.attr("class", activeRow.attr("class") + " active-row");
-			
-			dc.redrawAll();
-		}
+		    var entries = (_sliceMode == "bottom") ? 
+          sortEntries(_chart.dimension().bottom(_size)) : 
+          sortEntries(_chart.dimension().top(_size));
+            
+		    if($.isEmptyObject(_totalDimension) || (!$.isEmptyObject(_totalDimension) && entries.length > 1)){
+		    	renderRows(entries);
+		    }
+		    
+		    if(!$.isEmptyObject(_totalDimension)){
+		    	renderRows([_totalDimension], true);
+		    }
+		    
+		    if (_activeRow != -2){
+		    	var selectID = _activeRow != -1 ? '.' + _rowClass + ":nth-of-type(" + (_activeRow + 1) + ")" : '.' + _rowClass + ":last-of-type";
+		    	var activeRow = _chart.root().select(selectID);
+		    	if(activeRow[0][0] == null){
+		    		activeRow = _chart.root().select('.' + _rowClass + ":last-of-type");
+		    		CRS.dimensions.total_campaign_bucket.filterAll();
+		    	}
+		    	else if(_activeRow == -1){
+		    		CRS.dimensions.total_campaign_bucket.filterAll();
+		    	}
+		    	else {
+		    		CRS.dimensions.total_campaign_bucket.filter(function(d){return d == activeRow.select(_campaignSelector).text()});
+		    	}
+		    	activeRow.attr("class", activeRow.attr("class") + " active-row");
+		    	
+		    	dc.redrawAll();
+		    }
 		
         return _chart;
     };
 	
-	function sortEntries(entries){
-		return d3.nest().sortKeys(_order)
+	  function sortEntries(entries){
+		    return d3.nest().sortKeys(_order)
             .entries(entries.sort(function(a, b){
                 return _order(_sortBy(a), _sortBy(b));
             }));
     }
     function renderRows(entries, preservePrevious) {
 		    
-        if(_dataSortBy === true){
+        if (_dataSortBy === true){
             var rows = _chart.root().selectAll(".table-row").data(entries, _sortBy);
         }
         else {
             var rows = _chart.root().selectAll(".table-row").data(entries);
         }
-// console.log(, rows);
-		var classText = "table-row " + _rowClass;
+		    var classText = "table-row " + _rowClass;
         var rowEnter = rows.enter()
             .append("ul")
             .attr("class", classText)		
-			
-		$.each(_listItems, function(key, value){
-			rowEnter.append("li")
-			.html(value)
-			.attr("class", _listClasses[key]);
+		    	
+		    $.each(_listItems, function(key, value){
+		    	rowEnter.append("li")
+		    	  .html(value)
+		    	  .attr("class", _listClasses[key]);
         });
-        
+            
 
-		if(!preservePrevious){
-			rows.exit().remove();
-		}
+		    if(!preservePrevious) rows.exit().remove();
         return rows;
     }
 
@@ -4976,37 +5043,38 @@ dc.customDataTable = function(parent, chartGroup) {
         _dataSortBy = _;
         return _chart;
     };
-	 _chart.campaignSelector = function(_) {
+
+	  _chart.campaignSelector = function(_) {
         if (!arguments.length) return _campaignSelector;
         _campaignSelector= _;
         return _chart;
     };
 	
-	_chart.activeRow = function(_) {
+	  _chart.activeRow = function(_) {
         if (!arguments.length) return _activeRow;
         _activeRow = _;
         return _chart;
     };
 	
-	 _chart.listClasses = function(_) {
+	  _chart.listClasses = function(_) {
         if (!arguments.length) return _listClasses;
         _listClasses = _;
         return _chart;
     };
 	
-	_chart.rowClass = function(_) {
+	  _chart.rowClass = function(_) {
         if (!arguments.length) return _rowClass;
         _rowClass = _;
         return _chart;
     };
 	
-	_chart.totalDimension = function(_) {
+	  _chart.totalDimension = function(_) {
         if (!arguments.length) return _totalDimension;
         _totalDimension = _;
         return _chart;
     };
 	
-	_chart.sliceMode = function(_) {
+	  _chart.sliceMode = function(_) {
         if (!arguments.length) return _sliceMode;
         _sliceMode = _;
         return _chart;
@@ -5084,15 +5152,31 @@ dc.dataGrid = function(parent, chartGroup) {
 
     var _size = 999; // shouldn't be needed, but you might
     var _html = function (d) { return "you need to provide an html() handling param:  " + JSON.stringify(d); };
+    var _sliceMode = "top"
     var _sortBy = function(d) {
         return d;
     };
     var _order = d3.ascending;
 
+    var _d3Group;
+    var _d3;
+
     var _htmlGroup = function (d) {
-        return "<div class='"+GROUP_CSS_CLASS+"'><h1 class='"+LABEL_CSS_CLASS+"'>"+
-            _chart.keyAccessor()(d)+"</h1></div>";
+        return "<div class='"+GROUP_CSS_CLASS+"'><div class='"+LABEL_CSS_CLASS+"'>"+
+            _chart.keyAccessor()(d)+"</div></div>";
     };
+
+    _chart.groupClass = function(cls) {
+      GROUP_CSS_CLASS = cls
+      return _chart
+    }
+
+    _chart.groupHtml = function(d) {
+
+      _htmlGroup = d
+
+      return _chart
+    }
 
     _chart._doRender = function() {
         _chart.selectAll("div."+ GRID_CSS_CLASS).remove();
@@ -5112,8 +5196,11 @@ dc.dataGrid = function(parent, chartGroup) {
                 .enter()
                 .append("div")
                 .attr("class", GRID_CSS_CLASS);
+        if (_d3Group) {
 
-        if (_htmlGroup) {
+          _d3Group(itemGroup,_chart)
+
+        } else if (_htmlGroup) {
             itemGroup
                 .html(function(d) {
                     return _htmlGroup(d);
@@ -5125,7 +5212,9 @@ dc.dataGrid = function(parent, chartGroup) {
     }
 
     function nestEntries() {
-        var entries = _chart.dimension().top(_size);
+        var entries = _sliceMode == "top" ? 
+          _chart.dimension().top(_size) :
+          _chart.dimension().bottom(_size);
 
         return d3.nest()
             .key(_chart.group())
@@ -5142,12 +5231,18 @@ dc.dataGrid = function(parent, chartGroup) {
                     return d.values;
                 });
 
-        items.enter()
+        var d3Items = items.enter()
             .append("div")
             .attr("class", ITEM_CSS_CLASS)
-            .html(function(d) {
-                return _html(d);
-            });
+
+        if (_d3) {
+            _d3(d3Items)
+        } else {
+            d3Items
+                .html(function(d,i) {
+                    return _html(d,i);
+                });
+        }
 
         items.exit().remove();
 
@@ -5156,6 +5251,12 @@ dc.dataGrid = function(parent, chartGroup) {
 
     _chart._doRedraw = function() {
         return _chart._doRender();
+    };
+
+    _chart.sliceMode = function(_) {
+        if (!arguments.length) return _sliceMode;
+        _sliceMode = _;
+        return _chart;
     };
 
     /**
@@ -5185,6 +5286,12 @@ dc.dataGrid = function(parent, chartGroup) {
         return _chart;
     };
 
+    _chart.d3 = function(_) {
+        if (!arguments.length) return _d3;
+        _d3 = _;
+        return _chart;
+    }
+
 
     /**
      #### .htmlGroup( function (data) { return "<html>"; })
@@ -5199,6 +5306,13 @@ dc.dataGrid = function(parent, chartGroup) {
         _htmlGroup = _;
         return _chart;
     };
+
+    _chart.d3Group = function(_) {
+        if (!arguments.length) return _d3Group;
+        _d3Group = _;
+        return _chart;
+    }
+
 
     /**
      #### .sortBy([sortByFunction])

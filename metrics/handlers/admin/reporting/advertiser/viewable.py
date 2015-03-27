@@ -15,7 +15,7 @@ JOIN = {
     "type":"v JOIN (select distinct log as log, pattern as pattern, action as action from domain_list where log like '%%%(type)s%%') d on d.pattern = v.domain",
     "static_type": "v LEFT OUTER JOIN domain_list d on d.pattern = v.domain and d.pixel_source_name = v.advertiser",
     "experiment":"v JOIN experiment_test_ref t on v.campaign = t.campaign_id",
-    "bucket":"v JOIN (SELECT bucket_name, campaign_id FROM campaign_bucket_ref) t on v.campaign = t.campaign_id"
+    "bucket":"v LEFT OUTER JOIN (SELECT bucket_name, campaign_id FROM campaign_bucket_ref) t on v.campaign = t.campaign_id"
 }
 
 OPTIONS = {
@@ -150,7 +150,7 @@ GROUPS = {
     "type":"d.log",
     "group_name": "group_name",
     "is_control": "is_control",
-    "bucket": "bucket_name",
+    "bucket": "CASE WHEN bucket_name is null THEN 'default' ELSE bucket_name END",
     "experiment": "experiment_id",
     "action":"d.action"
 }
@@ -281,7 +281,7 @@ class AdvertiserViewableHandler(AdminReportingBaseHandler):
 
     @defer.inlineCallbacks
     def get_data(self,query,groupby=False,wide=False):
-
+        print query
         query_list = [
             "SET spark.sql.shuffle.partitions=8",
             query
