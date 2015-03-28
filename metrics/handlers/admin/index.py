@@ -42,7 +42,8 @@ class IndexHandler(BaseHandler):
         dashboard_links = [
             ("/admin/advertiser", "Advertiser Index"),
             ("/admin/advertiser/streaming", "Streaming Dashboard"),
-            ("/admin/advertiser/streaming?limited=true", "Streaming Dashboard (limited)")
+            ("/admin/advertiser/streaming?limited=true", "Streaming Dashboard (limited)"),
+            ("/admin/trello", "Trello Dashboard") 
         ]
 
         hoverboard_links = [
