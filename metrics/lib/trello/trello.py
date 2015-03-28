@@ -131,7 +131,12 @@ class Trello(object):
 class TrelloTimeseries(object):
 
     def __init__(self,db):
-        self.df = db.select_dataframe("select * from trello_status")
+        self.db = db
+        #self.df = db.select_dataframe("select * from trello_status")
+
+    def pull(self):
+        self.df = self.db.select_dataframe("select * from trello_status")
+        return self
 
     @property
     def client_status_by_board_and_list(self):
@@ -160,6 +165,39 @@ class TrelloTimeseries(object):
         return per_client_tasks
 
 
+from twisted.internet import defer
+import tornado.web
+from lib.helpers import *  
+
+class TrelloHandler(tornado.web.RequestHandler):
+
+    def initialize(self, reporting_db=None):
+        self.db = reporting_db
+
+    @decorators.deferred
+    def deferred_trello_object(self):
+        return TrelloTimeseries(self.db).pull()
+
+    @defer.inlineCallbacks
+    def get_trello_object(self):
+        trello = yield self.deferred_trello_object()
+        grouped = list(trello.client_status_by_board_and_list.reset_index().groupby("date"))
+
+        if self.get_argument("format",False) == "json":
+            self.write(ujson.dumps([j for date_group in grouped for j in date_group[1].T.to_dict().values()]))
+            self.finish()
+        else:
+            self.render(
+                "admin/trello/index.html",
+                data="[]"
+            )
+
+    @tornado.web.asynchronous
+    def get(self):
+        self.get_trello_object()
+
+
+        
 
 if __name__ == "__main__":
 
@@ -169,7 +207,7 @@ if __name__ == "__main__":
     tr = Trello()
     write_mysql(tr.board_data_df,"trello_status",lnk.dbs.reporting)
 
-    grouped = TrelloTimeseries(lnk.dbs.reporting).client_status_by_board_and_list.reset_index().groupby("date")
+    grouped = TrelloTimeseries(lnk.dbs.reporting).pull().client_status_by_board_and_list.reset_index().groupby("date")
     ll = list(grouped)
     print ujson.dumps([j for i in ll for j in i[1][i[1]["board"] == "1) Pre Launch Operations"].T.to_dict().values()])
 
