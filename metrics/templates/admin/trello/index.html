@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+body {
+  font: 10px sans-serif;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.x.axis path {
+  display: none;
+}
+
+.line {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}
+
+</style>
+<body>
+<h2>Trello board -- clients with work remaining over time</h2>
+<script src="http://d3js.org/d3.v3.js"></script>
+<script>
+
+var dd = {{data}}
+
+
+var margin = {top: 20, right: 250, bottom: 30, left: 50},
+    width = 960 - margin.left - margin.right,
+    height = 150 - margin.top - margin.bottom;
+
+var parseDate = d3.time.format("%Y%m%d").parse;
+
+var x = d3.time.scale()
+    .range([0, width]);
+
+var y = d3.scale.linear()
+    .range([height, 0]);
+
+var color = d3.scale.category10();
+
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("bottom");
+
+var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient("left");
+
+var opened_line = d3.svg.line()
+    .x(function(d) { return x(d.date); })
+    .y(function(d) { return y(d.total); });
+
+var closed_line = d3.svg.line()
+    .x(function(d) { return x(d.date); })
+    .y(function(d) { return y(d["closed client"]); });
+
+
+var above_open = d3.svg.area()
+  .x(opened_line.x())
+  .y0(opened_line.y())
+  .y1(0);
+
+var below_open = d3.svg.area()
+  .x(opened_line.x())
+  .y0(opened_line.y())
+  .y1(height);
+
+var above_closed = d3.svg.area()
+  .x(closed_line.x())
+  .y0(closed_line.y())
+  .y1(0);
+
+var below_closed = d3.svg.area()
+  .x(closed_line.x())
+  .y0(closed_line.y())
+  .y1(height);
+
+
+
+
+
+var build_svg = function(data) {
+
+  console.log(data)
+
+  var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+  var keys = data.map(function(d){
+    d.key = d.board + " | " + d.list; 
+    return d.key
+  })
+
+  color.domain(d3.set(keys));
+
+  data.forEach(function(d) {
+    d.value = d["opened client"]/(d["opened client"]+d["closed client"]) - ((.5-Math.random())/5)
+    d["opened client"] = d["opened client"] 
+    d["closed client"] = d["closed client"] 
+    d.total = d["closed client"] + d["opened client"]
+    d.date = new Date(d.date*1000);
+  });
+
+  var cities = d3.nest()
+    .key(function(x){return x.key})
+    .entries(data)
+
+
+  x.domain(d3.extent(data, function(d) { return d.date; }));
+
+  y.domain([
+    d3.min(cities, function(c) { return d3.min(c.values, function(v) { return 0 }); }),
+    d3.max(cities, function(c) { return d3.max(c.values, function(v) { return v['closed client'] + v['opened client']; }); })
+  ]);
+
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis)
+    .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .text("Clients");
+
+  var city = svg.selectAll(".city")
+      .data(cities)
+    .enter().append("g")
+      .attr("class", "city");
+
+  city.append("path")
+      .attr("class", "line")
+      .attr("d", function(d) { return opened_line(d.values); })
+      .style("stroke", function(d) { return color(d.name); });
+
+
+  city.append("path")
+      .attr("class", "line")
+      .attr("d", function(d) { return closed_line(d.values); })
+      .style("stroke", function(d) { return color(d.name); });
+
+  city.append('clipPath')
+      .attr('id', 'clip-traffic')
+      .append('path')
+
+      .attr('d', function(d) { return above_open(d.values) });
+
+  city.append('clipPath')
+      .attr('id', 'clip-rate')
+      .append('path')
+      .attr("style", "fill:blue")
+      .attr('d', function(d) { return above_closed(d.values) });
+
+city.append('path')
+  .attr("style", "fill:rgb(145,207,96)")
+  .attr('d', function(d) { return below_open(d.values) })
+  .attr('clip-path', 'url(#clip-rate)')
+
+city.append('path')
+  .attr("style", "fill:rgb(145,207,96)")
+  .attr('d', function(d) { return below_closed(d.values) })
+  .attr('clip-path', 'url(#clip-traffic)')
+
+
+  city.append("text")
+      .datum(function(d) { return {name: d.key, value: d.values[d.values.length - 1]}; })
+      .attr("transform", function(d) { return "translate(-0,-10)"; })
+      .attr("x", 3)
+      .attr("dy", ".35em")
+      .text(function(d) { return d.name; });
+
+  city.append("text")
+      .datum(function(d) { return {name: d.key, value: d.values[d.values.length - 1]}; })
+      .attr("transform", function(d) { return "translate(" + x(d.value.date) + "," + y(d.value.total) + ")"; })
+      .attr("x", 3)
+      .attr("dy", ".35em")
+      .text(function(d) { console.log(d); return d.value["opened client"] + " clients opened (" + parseInt(d.value["closed client"]/d.value.total*100)  + "% closed)"; });
+}
+
+d3.json("?format=json",function(dd){
+
+  dd.map(function(d){
+    d.key = d.board + " | " + d.list; 
+    return d.key
+  })
+ 
+
+  d3.nest().key(function(k){return k.key }).entries(dd).map(function(d){
+    build_svg(d.values)
+  })
+
+})
+
+
+
+</script>
