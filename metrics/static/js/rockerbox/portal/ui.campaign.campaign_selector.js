@@ -37,8 +37,10 @@ RB.portal.UI.campaign_selector = (function(campaign_selector){
       topData = CRS.aggregateDimensions.total_campaign_bucket.top(100)
 
     totalDimension['campaign_bucket'] = UI.constants.CAMPAIGN_TOTAL
-    topData.push(totalDimension)
 
+    if (topData.length == 1) return [totalDimension]
+    
+    topData.push(totalDimension)
     return topData
   }
 
