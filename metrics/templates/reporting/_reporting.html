@@ -10,8 +10,6 @@
   <style>
   /* selectorLegend */
 
-
-
   .selector-legend .header {
     border-bottom: 1px solid #ccc;
     line-height: 35px;
@@ -42,6 +40,44 @@
     font-weight:bold;
     opacity:1
   }
+
+  </style>
+
+  <style>
+  /* campaign-selection body */
+  .row.campaign-selection-body {
+    margin:0px;
+    height:350px;
+    padding-top:350px
+  }
+
+  .campaign-selection-body .campaign-table-new {
+    background:white;
+    padding:0px;
+    padding-top:10px;
+    border:1px solid rgb(221, 221, 221);
+    height:inherit
+  }
+
+  .campaign-table-new .header {
+    line-height:40px;
+    font-weight:500;
+    font-size:13px;
+    text-transform:uppercase;
+    position:absolute;
+    top:0px;
+    width:inherit; 
+  }
+
+  .campaign-table-new .campaigns-body {
+    position:absolute;
+    top:50px;
+    width:inherit; 
+    height:300px;
+    overflow:scroll; 
+  }
+
+
 
   </style>
 
@@ -239,6 +275,7 @@ box-shadow: inset 0px 0px 5px 0px #CCC;
   <script src="/static/js/rockerbox/portal/ui.campaign.selector.js"></script>    
   <script src="/static/js/rockerbox/portal/ui.campaign.chart.js"></script>     
   <script src="/static/js/rockerbox/portal/ui.campaign.slider_chart.js"></script>      
+  <script src="/static/js/rockerbox/portal/ui.campaign.campaign_selector.js"></script>       
  
   <!-- <script src="/static/js/rockerbox/portal/ui.campaign.accordian.js"></script>-->
   <script src="/static/js/rockerbox/portal/ui.campaign.js"></script>
@@ -262,10 +299,7 @@ box-shadow: inset 0px 0px 5px 0px #CCC;
 
     RB.portal.data.reporting(function(data){
 
-      console.log(data.slice(11000,12000))
-
-      window.xx = data.slice(1409,1410)
-
+      try {
       var crs = crossfilter(data);
       window.CRS = crossfilterNS(crs, dc);
 
@@ -278,7 +312,10 @@ box-shadow: inset 0px 0px 5px 0px #CCC;
       
       //mainGraph.focus([ioStartDate, CRS.groups.all.summary().date_max])
 
-      $('#page-loader').fadeOut();
+      $('#page-loader').slideUp(200);
+      } catch(e) {
+        console.log(e)
+      }
     });		
 	</script>
 	

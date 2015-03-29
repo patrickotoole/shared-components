@@ -80,10 +80,12 @@ RB.portal.UI.detailsTable = (function(detailsTable) {
 
   detailsTable.onIntervalSelection = function(x,i,current) {
     var selected = x.value
+    var chart = current.chart
+    current.value = selected
     
-    current.dimension(current.data().aggregateDimensions[selected])
+    chart.dimension(chart.data().aggregateDimensions[selected])
 
-    current.on("postRedraw",function(e){
+    chart.on("postRedraw",function(e){
       var anchor = d3.select(e.anchor())
       anchor.selectAll(".interval-select-span")
         .classed("daily",selected == "daily")

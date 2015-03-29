@@ -7,11 +7,15 @@ RB.portal.UI.intervalSelector = (function(intervalSelector) {
   var UI = RB.portal.UI
 
   intervalSelector.update_current = function(current){
-    current.redraw()
+    current.chart.redraw()
   }
 
   intervalSelector.build = function(wrapper,callback,only,current) {
  
+    var chartHolder = {
+      "chart":current,
+      "value":"weekly"
+    }
     var only = only || ["Day", "Week", "Month"]
     var options = UI.constants.INTERVAL_OPTIONS.filter(function(x){
       return only.indexOf(x.key) > -1
@@ -21,11 +25,12 @@ RB.portal.UI.intervalSelector = (function(intervalSelector) {
 
       return function(x,y) {
         wrapper.selectAll(".interval-select-span")
+          .classed("datetime",x.value == "datetime") 
           .classed("daily",x.value == "daily")
           .classed("weekly",x.value == "weekly")
           .classed("monthly",x.value == "monthly")  
-        callback.bind(this)(x,y,current)
-        intervalSelector.update_current(current)
+        callback.bind(this)(x,y,chartHolder)
+        intervalSelector.update_current(chartHolder)
       }
     }
  
@@ -44,6 +49,8 @@ RB.portal.UI.intervalSelector = (function(intervalSelector) {
           .attr("class",function(x,i){return "interval-type " + x.value + " " })
           .text(function(x){return x.key})
           .on("click",buildCallbackWithCurrent())
+
+    return chartHolder
   
   }
 
