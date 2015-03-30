@@ -68,7 +68,7 @@ RB.portal.UI.detailsTable = (function(detailsTable) {
             },
             { "key":"cost_rate","value":
               (d.key == "cost") ? formatMoney(d.cost) : 
-                formatMoney(d.cost/d.value*costMultiplier)}
+                formatMoney(d.value > 0 ? d.cost/d.value*costMultiplier : 0)}
           ]
         })
         .enter()
