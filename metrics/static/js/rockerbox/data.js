@@ -5,9 +5,15 @@ var range = function(n) { return Array.apply(null, Array(n)).map(function (_, i)
 
 RB.portal.data = (function(data){
 
-  var db = new Dexie("Rockerbox")
-  db.version(1).stores({imps: "++id,imps,visible,campaign_id,visits,is_valid,bucket_name,media_cost,date,loaded,cpm_multiplier,clicks,campaign_buckets,dd,impressions,conversions,cost"})
-  db.open()
+  var db;
+
+  var getDB = function(name) {
+    if (db) return db
+
+    db = new Dexie(name)
+    db.version(3).stores({imps: "&[bucket_name+date],imps,visible,campaign_id,visits,is_valid,bucket_name,media_cost,date,loaded,cpm_multiplier,clicks,campaign_buckets,dd,impressions,conversions,cost"})
+    db.open()
+  }
 
 
   var REPORT_PREFIX = "reporting-"
@@ -34,13 +40,14 @@ RB.portal.data = (function(data){
     }
 
   var set_reporting = function(name,callback) {
+    getDB(name);
+
     API.getReporting(function(json){
 
       var transformed = json.map(reportingTransform)
-
       transformed.map(function(i){ db.imps.add(i) })
       
-      get_reporting(callback)
+      callback(transformed)
     })
   }
 
@@ -49,12 +56,14 @@ RB.portal.data = (function(data){
     API.getAdvertiser(function(x) {
       var name = x[0].pixel_source_name
 
+      getDB(name);
+
       db.imps.orderBy("dd").uniqueKeys(function(dd){
         var max_date = dd.map(function(y){ return +new Date(y)}).reduce(function(p,c){return Math.max(p,c)},0);
         var yesterday = +new Date(new Date() -86400000)
 
         if (yesterday > max_date) {
-          console.log("HERE")
+          console.log("pulling data...")
           set_reporting(name,callback)
         } else {
           db.imps.orderBy("date").toArray(function(data){

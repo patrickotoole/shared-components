@@ -14,7 +14,6 @@ RB.portal.UI.selector = (function(selector){
   }
 
   selector.setMetricType2 = function(obj,x) {
-    console.log(obj,x)
     obj
       .classed("raw",function(d){return x == "raw"})
       .classed("rate",function(d){return x == "rate"})
