@@ -4,6 +4,33 @@ RB.portal = RB.portal || {}
 RB.portal.UI = (function(UI){
 
   UI.formatters = {
+
+    cost: function(field){
+      return function(x) {
+        return formatMoney(x[field] || 0)
+      }
+    },
+    raw: function(field){
+      return function(x) {
+        return formatNumber(x[field] || 0)
+      }
+    },
+    cost_rate: function(field){
+      return function(x) {
+        return formatMoney(x.cost ? x.cost/x[field] : 0)
+      }
+    },
+    cpmRate: function(field){
+      return function(x) {
+        return formatMoney(x.cost ? x.cost/x[field]*1000 : 0)
+      }
+    },
+    rate: function(field){
+      return function(x) {
+        return d3.format(".2%")(x[field]/x.imps)
+      }
+    },
+
     createDateValue: function(dateMode, firstDate) {
       var formatted = formatDate(firstDate)
 	  	if (dateMode == "weekly") {
@@ -34,13 +61,13 @@ RB.portal.UI = (function(UI){
     HEADINGS : [
       {"key":"imps","values":[
         {"key":"raw","value":"Impressions", "id":"imps"},
-        {"key":"rate","value":"Impressions", "id":"imps"}, 
-        {"key":"cost_rate","value":"CPM", "id":"imps"}  
+        {"key":"rate","value":"Impressions", "id":"imps","formatter":UI.formatters.raw("imps")}, 
+        {"key":"cost_rate","value":"CPM", "id":"imps","formatter":UI.formatters.cpmRate("imps")}  
       ]},
       {"key":"views","values":[
         {"key":"raw","value":"Views", "id":"views"},
         {"key":"rate","value":"% Viewable", "id":"views"}, 
-        {"key":"cost_rate","value":"CPM (Viewable)", "id":"views"}  
+        {"key":"cost_rate","value":"CPM (Viewable)", "id":"views","formatter":UI.formatters.cpmRate("views")}  
       ]},
       {"key":"visits","values":[
         {"key":"raw","value":"Visits", "id":"visits"},
@@ -58,9 +85,9 @@ RB.portal.UI = (function(UI){
         {"key":"cost_rate","value":"CPA", "id":"conversions"}  
       ]},
       {"key":"cost","values":[
-        {"key":"raw","value":"Cost", "id":"cost"},
-        {"key":"rate","value":"CPM", "id":"cost"}, 
-        {"key":"cost_rate","value":"Cost", "id":"cost"}  
+        {"key":"raw","value":"Cost", "id":"cost","formatter":UI.formatters.cost("cost")},
+        {"key":"rate","value":"CPM", "id":"cost","formatter":UI.formatters.cpmRate("imps")}, 
+        {"key":"cost_rate","value":"Cost", "id":"cost","formatter":UI.formatters.cost("cost")}  
       ]}
     ]
   }

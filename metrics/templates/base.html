@@ -92,7 +92,7 @@ for(g=0;g<i.length;g++)f(c,i[g]);b._i.push([a,e,d])};b.__SV=1.2;a=f.createElemen
             
 			// FORMAT NUMBERS
 			function formatNumber(number){
-				return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+				return parseInt(number).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 			}
 			
 			// FORMAT MONEY
