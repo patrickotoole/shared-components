@@ -18,8 +18,8 @@ RB.portal.UI.campaign_selector = (function(campaign_selector){
           {"class":"metric","value":formatNumber(x.imps)}, 
           {
             "class":"metric",
-            "value":d3.format(",.0f")(x.imps*x.percent_visible),
-            "mini_value":d3.format(".0%")((x.imps*x.percent_visible)/x.imps)
+            "value":d3.format(",.0f")(x.imps*x.percent_visible || 0),
+            "mini_value":d3.format(".0%")((x.imps*x.percent_visible)/x.imps || 0)
           },  
           {"class":"metric","value":formatNumber(x.visits || 0),"mini_value":d3.format(".2%")(x.visits/x.imps)}, 
           {"class":"metric","value":formatNumber(x.clicks),"mini_value":d3.format(".2%")(x.clicks/x.imps)}, 
