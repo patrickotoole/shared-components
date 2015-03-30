@@ -59,7 +59,7 @@ var crossfilterNS = function(crs,dc) {
       p.visible += v.visible
       p.loaded += v.loaded
       p.visits += v.visits
-      p.views = p.loaded ? p.imps*p.visible/p.loaded : 0
+      p.views = (p.loaded ? p.imps*p.visible/p.loaded : 0) || 0
       p.dd = "1"
       return p 
     },
@@ -71,7 +71,7 @@ var crossfilterNS = function(crs,dc) {
       p.visible -= v.visible
       p.loaded -= v.loaded 
       p.visits -= v.visits
-      p.views = p.loaded ? p.imps*p.visible/p.loaded : 0 
+      p.views = (p.loaded ? p.imps*p.visible/p.loaded : 0) || 0
 			p.dd = "1"
 			return p                                                                                           
 		},
@@ -466,7 +466,7 @@ var crossfilterNS = function(crs,dc) {
             "loaded": grp.value.loaded,
             "visits": grp.value.visits,
             "percent_visible": grp.value.visible/grp.value.loaded,
-            "views": grp.value.imps*grp.value.visible/grp.value.loaded,
+            "views": grp.value.imps*grp.value.visible/grp.value.loaded || 0,
 						"date_min": groups.all.summary().date_min,
 						"date_max": groups.all.summary().date_max,
             "type":"daily"
@@ -487,7 +487,7 @@ var crossfilterNS = function(crs,dc) {
             "loaded": grp.value.loaded,
             "visits": grp.value.visits,
             "percent_visible": grp.value.visible/grp.value.loaded,
-            "views": grp.value.imps*grp.value.visible/grp.value.loaded,
+            "views": grp.value.imps*grp.value.visible/grp.value.loaded || 0,
 						"date_min": groups.all.summary().date_min,
 						"date_max": groups.all.summary().date_max,
             "type":"daily" 
@@ -510,7 +510,7 @@ var crossfilterNS = function(crs,dc) {
             "loaded": grp.value.loaded,
             "visits": grp.value.visits,
             "percent_visible": grp.value.visible/grp.value.loaded,
-            "views": grp.value.imps*grp.value.visible/grp.value.loaded,
+            "views": grp.value.imps*grp.value.visible/grp.value.loaded || 0,
 						"date_min": groups.all.summary().date_min,
 						"date_max": groups.all.summary().date_max,
             "type":"weekly"
@@ -531,7 +531,7 @@ var crossfilterNS = function(crs,dc) {
             "loaded": grp.value.loaded,
             "visits": grp.value.visits,
             "percent_visible": grp.value.visible/grp.value.loaded,
-            "views": grp.value.imps*grp.value.visible/grp.value.loaded,
+            "views": grp.value.imps*grp.value.visible/grp.value.loaded || 0,
 						"date_min": groups.all.summary().date_min,
 						"date_max": groups.all.summary().date_max,
             "type":"weekly"                           								
@@ -554,7 +554,7 @@ var crossfilterNS = function(crs,dc) {
             "loaded": grp.value.loaded,
             "visits": grp.value.visits,
             "percent_visible": grp.value.visible/grp.value.loaded,
-            "views": grp.value.imps*grp.value.visible/grp.value.loaded,
+            "views": grp.value.imps*grp.value.visible/grp.value.loaded || 0,
 						"date_min": groups.all.summary().date_min,
 						"date_max": groups.all.summary().date_max,
             "type":"monthly"                           								
@@ -575,7 +575,7 @@ var crossfilterNS = function(crs,dc) {
             "loaded": grp.value.loaded,
             "visits": grp.value.visits,
             "percent_visible": grp.value.visible/grp.value.loaded,
-            "views": grp.value.imps*grp.value.visible/grp.value.loaded,
+            "views": grp.value.imps*grp.value.visible/grp.value.loaded || 0,
 						"date_min": groups.all.summary().date_min,
 						"date_max": groups.all.summary().date_max,
             "type":"monthly"
@@ -598,7 +598,7 @@ var crossfilterNS = function(crs,dc) {
             "loaded": grp.value.loaded,
             "visits": grp.value.visits,
             "percent_visible": grp.value.visible/grp.value.loaded,
-            "views": grp.value.imps*grp.value.visible/grp.value.loaded,
+            "views": grp.value.imps*grp.value.visible/grp.value.loaded || 0,
 						"date_min": groups.all.summary().date_min,
 						"date_max": groups.all.summary().date_max								
 					} 
