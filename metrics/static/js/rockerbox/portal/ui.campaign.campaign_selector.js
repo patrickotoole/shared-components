@@ -14,18 +14,8 @@ RB.portal.UI.campaign_selector = (function(campaign_selector){
         [
           {"class":"name","value":x.campaign_bucket}
         ], 
+        UI.constants.HEADINGS.map(function(y){y.data = x; return y}),
         [
-          {"class":"metric","value":formatNumber(x.imps)}, 
-          {
-            "class":"metric",
-            "value":d3.format(",.0f")(x.imps*x.percent_visible || 0),
-            "mini_value":d3.format(".0%")((x.imps*x.percent_visible)/x.imps || 0)
-          },  
-          {"class":"metric","value":formatNumber(x.visits || 0),"mini_value":d3.format(".2%")(x.visits/x.imps)}, 
-          {"class":"metric","value":formatNumber(x.clicks),"mini_value":d3.format(".2%")(x.clicks/x.imps)}, 
-          {"class":"metric","value":formatNumber(x.conversions),"mini_value":d3.format(".2%")(x.conversions/x.imps)},
-          {"class":"metric","value":formatMoney(x.cost)}, 
-        ],[
           {"class":"streaming"}
         ]
     ]
@@ -109,7 +99,7 @@ RB.portal.UI.campaign_selector = (function(campaign_selector){
       .enter()
         .append("div")
         .attr("class",function(x){
-          return x.class == "metric" ? "col-md-2" : "col-md-12"
+          return x.key ? "col-md-2" : "col-md-12"
         })
         .classed("campaign-metric",true)
         .style("overflow","hidden")
@@ -117,14 +107,25 @@ RB.portal.UI.campaign_selector = (function(campaign_selector){
         .style("font-size",function(x){return x.class == "name" ? "12px": ""})
 
     innerMetric
-      .append("span")
-      .text(function(x){ return (typeof(x) != "object") ? x : x.value })
-  
-    innerMetric
-      .append("span")
-      .classed("mini-metric",true)
-      .attr("style","font-size:.8em;margin-right:10px;float:right;color:grey;visibility:hidden")
-      .text(function(x){ return x.mini_value })
+      .selectAll("span")
+      .data(function(x){
+        var series = x.key,
+          data = x.data,
+          values = x.values;
+
+        return values ? values.map(function(v){
+            var func = UI.formatters[v.key](series)
+            value = v.formatter ? v.formatter(data) : func(data)
+            return {
+              "value": value,
+              "key": v.key
+            }
+          }) : [{"value":x.value}]
+      })
+      .enter()
+        .append("span")
+        .attr("class",function(x){return "metric " + (x.key || "")})
+        .text(function(x){ return x.value })
      
   }
 

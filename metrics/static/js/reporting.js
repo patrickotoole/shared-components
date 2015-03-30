@@ -101,6 +101,7 @@ var crossfilterNS = function(crs,dc) {
         p.visible += v.visible
         p.visits += v.visits
         p.percent_visible = p.visible/p.loaded
+        p.views = p.imps*p.percent_visible
 
 				return p
 			},
@@ -114,6 +115,7 @@ var crossfilterNS = function(crs,dc) {
         p.visible -= v.visible
         p.visits -= v.visits
         p.percent_visible = p.visible/p.loaded 
+        p.views = p.imps*p.percent_visible
 
 				return p 
 			},
@@ -126,7 +128,8 @@ var crossfilterNS = function(crs,dc) {
 					conversions: 0,
           loaded: 0,
           visible: 0,
-          visits: 0
+          visits: 0,
+          views: 0
 				}
 			}
 		),
