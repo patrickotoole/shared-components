@@ -25,9 +25,15 @@ class CreativeHandler(BaseHandler):
         creatives = yield self.defer_get_creatives(advertiser_id)
         df = pandas.DataFrame(creatives)
         active = df[df['state'] == 'active']
-        del active['segments']
-        del active['campaigns']
-        del active['line_items']
+
+        if active.get('segments',False):
+            del active['segments'] 
+
+        if active.get('campaigns',False):
+            del active['campaigns'] 
+
+        if active.get('line_items',False):
+            del active['line_items']
 
         creative_list = active.T.to_dict().values()
         self.write(ujson.dumps(creative_list))

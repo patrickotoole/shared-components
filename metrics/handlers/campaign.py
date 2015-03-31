@@ -47,7 +47,7 @@ class CampaignHandler(BaseHandler):
 
         to_post = {"campaign": {"id": campaign_id, "profile_id": profile_id }}
         data = self.api.put(URL,data=ujson.dumps(to_post))
-        return data.json
+        return data.json['response']['campaign']
 
 
     @defer.inlineCallbacks
