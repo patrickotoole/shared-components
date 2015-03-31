@@ -11,6 +11,7 @@ from twisted.internet import defer
 from lib.helpers import *  
 
 LINE_ITEM_QUERY = "select * from advertiser_line_item where line_item_name like '%%Yoshi%%' and %s "
+CAMPAIGN_BUCKET = "INSERT INTO campaign_bucket (external_advertiser_id, campaign_id, bucket_name) VALUES (%s, %s, '%s')"
 
 class YoshiCampaignHandler(BaseHandler):
 
@@ -24,8 +25,6 @@ class YoshiCampaignHandler(BaseHandler):
         def default(self,data):
             o = Convert.df_to_json(data) 
             self.render("campaign.html",data=o,advertiser_id=advertiser_id,user_id=0)
-            #self.write(data.to_html())
-            #self.finish()
 
         yield default, (data,)
 
@@ -182,7 +181,7 @@ class YoshiCampaignHandler(BaseHandler):
         df = pandas.DataFrame(obj)
         
         if not details.get('username','').startswith("a_"):
-            self.db.execute("INSERT INTO campaign_bucket (external_advertiser_id, campaign_id, bucket_name) VALUES (%s, %s, '%s')" % (advertiser_id, campaign['id'], name))
+            self.db.execute(CAMPAIGN_BUCKET % (advertiser_id, campaign['id'], name))
         self.write(ujson.dumps(obj))
         self.finish()
         #self.get_content(df,advertiser_id)
@@ -214,6 +213,7 @@ class YoshiCampaignHandler(BaseHandler):
     @tornado.web.authenticated
     @tornado.web.asynchronous
     def get(self):
+        
         advertiser_id = self.current_advertiser
         if advertiser_id: 
             self.get_campaigns(advertiser_id)
