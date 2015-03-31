@@ -2,6 +2,7 @@ from tornado.testing import AsyncHTTPTestCase
 from tornado.web import  Application, RequestHandler 
 import unittest
 import mock
+import mocks
 import ujson
 from link import lnk
 
@@ -16,7 +17,7 @@ class CampaignTest(AsyncHTTPTestCase):
         self.db = lnk.dbs.test
         self.db.execute(FIXTURES.CREATE_BUCKET_TABLE)
 
-        self.mock_api = mock.MagicMock()
+        self.mock_api = mocks.API
 
         campaign.YoshiCampaignHandler.current_advertiser = 1
         campaign.YoshiCampaignHandler.current_user = 1
@@ -27,35 +28,38 @@ class CampaignTest(AsyncHTTPTestCase):
           ], cookie_secret="rickotoole"
         )
 
-
         return self.app
 
 
     def tearDown(self):
         self.db.execute("DROP TABLE test.campaign_bucket")
-        
-        pass
 
-    @mock.patch.object(campaign.YoshiCampaignHandler, 'defer_get_campaigns', autospec=True) 
     @mock.patch.object(campaign.YoshiCampaignHandler, 'get_line_item_id', autospec=True)
-    def test_get_campaigns(self, mock_get_line_item,mock_get_campaigns):
+    def test_get_campaigns(self, mock_get_line_item):
         mock_get_line_item.return_value = 1
-        mock_get_campaigns.return_value = FIXTURES.CAMPAIGNS_MOCKED
-        
         response = self.fetch("/?format=json", method="GET").body
 
-        self.assertEqual(len(ujson.loads(response)), 2)
+        self.assertEqual(len(ujson.loads(response)), 1)
         self.assertEqual(
             set(ujson.loads(response)[0].keys()), 
             set([u'id',u'name',u'base_bid',u'daily_budget',u'state',u'creatives'])
         ) 
 
-    @mock.patch.object(campaign.YoshiCampaignHandler, 'defer_modify_campaign', autospec=True) 
-    def test_update_campaign(self, mock_modified_campaign):
-        mock_modified_campaign.side_effect = lambda s, aid, cid, c: dict(c.items() + [("aid",aid), ("cid",cid)])
+        response = self.fetch("/?format=json&show_deleted=1", method="GET").body
+
+        self.assertEqual(len(ujson.loads(response)), 2)
+        self.assertEqual(
+            set(ujson.loads(response)[0].keys()), 
+            set([u'id',u'name',u'base_bid',u'daily_budget',u'state',u'creatives'])
+        )
+
+
+    #@mock.patch.object(campaign.YoshiCampaignHandler, 'defer_modify_campaign', autospec=True) 
+    def test_update_campaign(self):#, mock_modified_campaign):
+        #mock_modified_campaign.side_effect = lambda s, aid, cid, c: dict(c.items() + [("aid",aid), ("cid",cid)])
         
         response = self.fetch("/?id=1&format=json", method="PUT",body='{"campaign":{"a":"b"}}').body
-        self.assertEqual(ujson.dumps([{"a":"b","aid":1,"cid":"1"}]),response)
+        self.assertEqual(ujson.dumps([{"campaign":{"a":"b","advertiser_id":"1","id":"1"}}]),response)
 
     @mock.patch.object(campaign.YoshiCampaignHandler, 'current_user', autospec=True)  
     @mock.patch.object(campaign.YoshiCampaignHandler, 'get_line_item_id', autospec=True) 
@@ -135,3 +139,4 @@ class CampaignTest(AsyncHTTPTestCase):
         self.assertEqual(expect,ujson.loads(response))
         self.assertEqual("Yoshi | test_domain | 300x250",bucket_name)
         self.assertEqual(CID,cid)
+
