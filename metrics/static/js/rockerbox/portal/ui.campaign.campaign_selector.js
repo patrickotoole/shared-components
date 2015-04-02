@@ -14,7 +14,7 @@ RB.portal.UI.campaign_selector = (function(campaign_selector){
         [
           {"class":"name","value":x.campaign_bucket}
         ], 
-        UI.constants.HEADINGS.map(function(y){y.data = x; return y}),
+        JSON.parse(JSON.stringify(UI.constants.HEADINGS)).map(function(y){y.data = x; return y}),
         [
           {"class":"streaming"}
         ]
