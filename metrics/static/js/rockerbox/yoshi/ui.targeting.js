@@ -7,18 +7,14 @@ RB.yoshi.UI.targeting = (function(targeting){
   
   targeting.country = function(panel){
     RB.AJAX.rockerbox.getCountries(function(countries){
-      var data = panel.selectAll(".list-group .geo-group").data()
+      var data = panel.selectAll(".geo-item").data()
       
       data.push({"key":"Country Targets","values":countries})
 
-      var group = panel.selectAll(".list-group.geo-group")
+      var item = panel.selectAll(".geo-item list-group-item")
         .data(data)
         .enter()
-          .append("div").classed("list-group geo-group",true)
-
-      var item = group
-        .append("div")
-        .classed("list-group-item",true)
+          .append("div").classed("list-group-item geo-item",true)
 
       var row = item.append("div").classed("row",true)
 
@@ -43,16 +39,15 @@ RB.yoshi.UI.targeting = (function(targeting){
       return countries
     })
   }
+
   targeting.state = function(panel,data){
     var states_qs = "?country_code=" + data.map(function(x){return x.code}).join(",")
 
     RB.AJAX.rockerbox.getRegions(states_qs,function(regions){
 
-      console.log(regions)
-
       var newdata = [{"key":"State Targets","values":regions}]
 
-      var group = panel.selectAll(".list-group.geo-group")
+      var group = panel.selectAll(".list-group-item.geo-item")
         .data(newdata,function(x){
           return x.key
         })
@@ -65,18 +60,15 @@ RB.yoshi.UI.targeting = (function(targeting){
           .remove()
       }
 
-      var newGroup = group
+      var item = group
         .enter()
-          .append("div").classed("list-group geo-group",true)
-
-      var item = newGroup
-        .append("div")
-        .classed("list-group-item",true)
+          .append("div").classed("list-group-item geo-item",true)
 
       var row = item.append("div").classed("row",true)
 
       row.append("div").classed("col-md-4",true)
         .append("div").classed("col-md-12",true).text(function(x){return x.key})
+
       var select = row.append("div").classed("col-md-8",true)
         .append("select").property("multiple",true)
         .attr("data-placeholder","Select states...")
@@ -119,34 +111,26 @@ RB.yoshi.UI.targeting = (function(targeting){
       })
       
       $(".region-select").trigger("chosen:updated")
-      
     })
-
   }
 
   targeting.buildCity = function(panel,data) {
       var newdata = [{"key":"City Targets","values":data}] 
 
-      var group = panel.selectAll(".list-group.geo-group")
+      var group = panel.selectAll(".list-group-item.geo-item")
         .data(newdata,function(x){
           return x.key
         })
 
       if (data.length == 0) {
         group
-          .filter(function(x){
-            return (x.key == "City Targets" && data.length == 0)
-          })
+          .filter(function(x){ return (x.key == "City Targets" && data.length == 0) })
           .remove()
       }
 
-      var newGroup = group
+      var item = group
         .enter()
-          .append("div").classed("list-group geo-group",true)
-
-      var item = newGroup
-        .append("div")
-        .classed("list-group-item",true)
+          .append("div").classed("list-group-item geo-item",true)
 
       var row = item.append("div").classed("row",true)
 
@@ -223,29 +207,158 @@ RB.yoshi.UI.targeting = (function(targeting){
   } 
 
   targeting.location = function(panel) {
-    panel.append("div")
-      .classed("list-group",true)
+    var group = panel.append("div")
+      .classed("list-group geo-group",true)
+    
+    group
       .append("div")
       .classed("list-group-item",true)
       .append("h5")
       .classed("list-group-item-heading",true)
-      .text("Location targeting")
+      .text("Location Targets")
 
+
+    targeting.country(group)
+  }
+
+  targeting.frequency = function(panel) {
+    var group = panel.append("div")
+      .classed("list-group freq-group",true)
     
-    var LOCATION_TYPES = [
-        {"key":"Country Targets","values":["US","UK"]},
-        {"key":"State Targets","values":["US","UK"]} ,
-        {"key":"DMA Targets","values":["US","UK"]} 
-        //{"key":"City Targets","values":["US","UK"]} ,
-        //{"key":"Zipcode Targets","values":["US","UK"]} 
-    ]
+    group
+      .append("div")
+      .classed("list-group-item",true)
+      .append("h5")
+      .classed("list-group-item-heading",true)
+      .text("Frequency Caps")
 
-  console.log("HERE")
+    var item = group
+        .append("div").classed("list-group-item freq-item",true)
 
-    targeting.country(panel)
+    var row = item.append("div").classed("row",true)
 
+    row.append("div").classed("col-md-4",true)
+      .append("div").classed("col-md-12",true).text("Daily Imps")
+
+    row.append("div").classed("col-md-8",true)
+      .append("input").classed("form-control",true) .style("width","95%") 
+      .attr("placeholder","Max # of impressions per user per day (default: 5)")
+
+    var item = group
+        .append("div").classed("list-group-item freq-item",true)
+
+    var row = item.append("div").classed("row",true)
+
+    row.append("div").classed("col-md-4",true)
+      .append("div").classed("col-md-12",true).text("Lifetime Imps")
+
+    row.append("div").classed("col-md-8",true)
+      .append("input").classed("form-control",true).style("width","95%")
+      .attr("placeholder","Max # of impressions per user per lifetime (default: 20)") 
+
+  }
+
+  targeting.budget = function(panel) {
+    var group = panel.append("div")
+      .classed("list-group freq-group",true)
     
-     
+    group
+      .append("div")
+      .classed("list-group-item",true)
+      .append("h5")
+      .classed("list-group-item-heading",true)
+      .text("Campaign Budget")
+
+    var item = group
+        .append("div").classed("list-group-item freq-item",true)
+
+    var row = item.append("div").classed("row",true)
+
+    row.append("div").classed("col-md-4",true)
+      .append("div").classed("col-md-12",true).text("Daily Budget")
+
+    row.append("div").classed("col-md-8",true)
+      .append("input").classed("form-control",true) .style("width","95%") 
+      .attr("placeholder","Spend per day in dollars")
+
+    var item = group
+        .append("div").classed("list-group-item freq-item",true)
+
+    var row = item.append("div").classed("row",true)
+
+    row.append("div").classed("col-md-4",true)
+      .append("div").classed("col-md-12",true).text("Lifetime Budget")
+
+    row.append("div").classed("col-md-8",true)
+      .append("input").classed("form-control",true).style("width","95%")
+      .attr("placeholder","Lifetime spend in dollars") 
+
+  }
+
+  targeting.placement = function(panel) {
+    var group = panel.append("div")
+      .classed("list-group placement-group",true)
+    
+    group
+      .append("div")
+      .classed("list-group-item",true)
+      .append("h5")
+      .classed("list-group-item-heading",true)
+      .text("Placement Targets")
+
+    var item = group
+        .append("div").classed("list-group-item placement-item",true)
+
+    var row = item.append("div").classed("row",true)
+
+    row.append("div").classed("col-md-4",true)
+      .append("div").classed("col-md-12",true).text("Placement Targets")
+
+    var select = row.append("div").classed("col-md-8",true)
+        .append("select").property("multiple",true)
+        .attr("data-placeholder","Enter placements...")
+        .classed("placement-select",true)
+
+    $(".placement-select").chosen({width:"95%"}).change(function(x,y){
+      var selected = d3.select(".placement-select").selectAll("option").filter(function(x){return this.selected}).data()
+      //targeting.city(panel,selected)
+    })
+
+    $(".placement-select").trigger("chosen:updated")
+       
+  }
+
+  targeting.domain = function(panel) {
+    var group = panel.append("div")
+      .classed("list-group domain-group",true)
+    
+    group
+      .append("div")
+      .classed("list-group-item",true)
+      .append("h5")
+      .classed("list-group-item-heading",true)
+      .text("Domain Targets")
+
+    var item = group
+        .append("div").classed("list-group-item domain-item",true)
+
+    var row = item.append("div").classed("row",true)
+
+    row.append("div").classed("col-md-4",true)
+      .append("div").classed("col-md-12",true).text("Domain Targets")
+
+    var select = row.append("div").classed("col-md-8",true)
+        .append("select").property("multiple",true)
+        .attr("data-placeholder","Enter domains...")
+        .classed("domain-select",true)
+
+    $(".domain-select").chosen({width:"95%"}).change(function(x,y){
+      var selected = d3.select(".domain-select").selectAll("option").filter(function(x){return this.selected}).data()
+      //targeting.city(panel,selected)
+    })
+
+    $(".domain-select").trigger("chosen:updated")
+       
   }
 
   targeting.build = function(target) {
@@ -258,8 +371,45 @@ RB.yoshi.UI.targeting = (function(targeting){
       .classed("panel-title",true)
       .text("Select additional campaign targeting settings")  
 
+    /*targeting.domain(panel)  
+
+    panel.append("div")
+      .classed("panel-heading",true)
+      .append("h3")
+      .classed("panel-title",true)  
+
+    targeting.placement(panel) 
+ 
+    panel.append("div")
+      .classed("panel-heading",true)
+      .append("h3")
+      .classed("panel-title",true)  
+  
+    */
+
     targeting.location(panel)
 
+    panel.append("div")
+      .classed("panel-heading",true)
+      .append("h3")
+      .classed("panel-title",true) 
+
+    targeting.frequency(panel) 
+
+    panel.append("div")
+      .classed("panel-heading",true)
+      .append("h3")
+      .classed("panel-title",true) 
+
+    targeting.budget(panel) 
+
+    panel.append("div")
+      .classed("panel-heading",true)
+      .append("h3")
+      .classed("panel-title",true) 
+     
+
+ 
   }
  
   return targeting

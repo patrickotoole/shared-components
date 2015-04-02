@@ -14,6 +14,7 @@ LINE_ITEM_QUERY = "select * from advertiser_line_item where line_item_name like 
 CAMPAIGN_BUCKET = "INSERT INTO campaign_bucket (external_advertiser_id, campaign_id, bucket_name) VALUES (%s, %s, '%s')"
 
 def make_name(domain_targets, sizes):
+
     base = "Yoshi"
     domains = ",".join([d['domain'] for d in domain_targets[:4]]) 
     domains += (", and %s more" % len(domain_targets)) if len(domain_targets) > 4 else ""

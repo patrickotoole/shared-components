@@ -49,7 +49,7 @@ RB.yoshi.UI = (function(UI){
 
       var thead = table.append("thead").append("tr")
 
-      var headers = ["Name","Creatives","Base Bid","Daily Budget","State","Remove"]
+      var headers = ["Name","Edit","Base Bid","Daily Budget","State","Remove"]
       headers.map(function(x){
         thead.append("th").text(x)
       })
@@ -71,8 +71,11 @@ RB.yoshi.UI = (function(UI){
         .append("div").classed("list-group campaign-creatives",true)
         .style("margin-top","10px")
 
-      campaign.buildCreativeGroup(campaignCreatives)
       campaign.buildRow(newRow);
+      campaign.buildCreativeGroup(campaignCreatives)
+
+      //UI.targeting.budget(entered.insert("tr").classed("hidden",true))
+      
       tableRow.exit().remove();
     }
 
@@ -178,15 +181,18 @@ RB.yoshi.UI = (function(UI){
     }
 
     campaign.buildRow = function(row) {
-      var entries = ["name","creatives","base_bid","daily_budget","state","remove"];
+      var entries = ["name","edit","base_bid","daily_budget","state","remove"];
       var values = {
+        "name": function(entry,data) {
+          return data[entry].split("Yoshi | ")[1]
+        },
         "state": function(entry,data) {
           return data[entry] 
         },
-        "creatives": function(entry,data) {
-          var num = data[entry].filter(function(x){return x.attached}).length || 0
+        "edit": function(entry,data) {
+          //var num = data[entry].filter(function(x){return x.attached}).length || 0
           
-          return num ? num + " (update)" : "Add creatives!"
+          return "More"//num ? num + " (update)" : "Add creatives!"
         }
       }
       var titles = {
@@ -194,7 +200,7 @@ RB.yoshi.UI = (function(UI){
         "base_bid": "Enter bid",
         "daily_budget": "Enter budget",
         "comments": "Enter a comment",
-        "creatives": "Modify creatives"
+        "edit": "Edit"
       }
   
       entries.map(function(entry) {
@@ -218,7 +224,11 @@ RB.yoshi.UI = (function(UI){
         } else {
           row.append("td")
             .classed(entry,true)
-            .text(function(d){return d[entry]})
+            .text(function(d){
+              var fn = values[entry] 
+              return fn ? fn(entry,d) : d[entry]
+            })
+           
         }
       })
    
@@ -285,10 +295,14 @@ RB.yoshi.UI = (function(UI){
         success: campaign.update
       });
 
-      $('.creatives').on("click",function(x){
+      $('.edit').on("click",function(x){
         d3.select($(this).parent().parent().next()[0])
           .classed("hidden",function(x){return !this.classList.contains("hidden")})
           .classed("active",function(x){return !this.classList.contains("hidden")})
+        d3.select($(this).parent().parent().next().next()[0])
+          .classed("hidden",function(x){return !this.classList.contains("hidden")})
+          .classed("active",function(x){return !this.classList.contains("hidden")})
+         
 
       })
 
