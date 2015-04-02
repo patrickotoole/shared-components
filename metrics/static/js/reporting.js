@@ -36,6 +36,7 @@ var crossfilterNS = function(crs,dc) {
 	var dimensions = {
 		datetime: crs.dimension(function(d){ return d.dd }),
 		daily: crs.dimension(function(d) { return d3.time.day(d.dd) }),
+ 		daily_grouped: crs.dimension(function(d) { return d3.time.day(d.dd) }), 
 		weekly: crs.dimension(function(d) { return d3.time.week(d.dd) }),
 		monthly: crs.dimension(function(d) { return d3.time.month(d.dd) }),
 		total_campaign_bucket: crs.dimension(function(d){ return d.campaign_bucket}),
@@ -138,7 +139,12 @@ var crossfilterNS = function(crs,dc) {
 			groupReduce,
       groupInit 
 		),
-		daily: dimensions.daily.group().order(function(d){return d}).reduce(
+    daily: dimensions.daily.group().order(function(d){return d}).reduce(
+      groupAdd,
+			groupReduce,
+      groupInit  
+		),
+		daily_grouped: dimensions.daily_grouped.group().order(function(d){return d}).reduce(
       groupAdd,
 			groupReduce,
       groupInit  
@@ -454,6 +460,50 @@ var crossfilterNS = function(crs,dc) {
 				});
 			}
 		},*/
+    daily_grouped: {
+			top: function(x) {
+				var min_date = groups.all.summary().date_min
+				var max_date = groups.all.summary().date_max
+				return groups.daily_grouped.all().filter(function(x){return x.value.imps}).slice(0, x).map(function (grp) { 
+					return {
+						"date":grp.key,
+						"imps":grp.value.imps, 
+						"clicks": grp.value.clicks,
+						"conversions": grp.value.conversions,
+						"cost": grp.value.cost,
+            "visible": grp.value.visible,
+            "loaded": grp.value.loaded,
+            "visits": grp.value.visits,
+            "percent_visible": grp.value.visible/grp.value.loaded,
+            "views": grp.value.imps*grp.value.visible/grp.value.loaded || 0,
+						"date_min": groups.all.summary().date_min,
+						"date_max": groups.all.summary().date_max,
+            "type":"daily"
+					} 
+				});
+			},
+			bottom: function(x) {
+				var min_date = groups.all.summary().date_min
+				var max_date = groups.all.summary().date_max
+				return groups.daily_grouped.all().filter(function(x){return x.value.imps}).slice(-x).map(function (grp) { 
+					return {
+						"date":grp.key,
+						"imps":grp.value.imps, 
+						"clicks": grp.value.clicks,
+						"conversions": grp.value.conversions,
+						"cost": grp.value.cost,
+            "visible": grp.value.visible,
+            "loaded": grp.value.loaded,
+            "visits": grp.value.visits,
+            "percent_visible": grp.value.visible/grp.value.loaded,
+            "views": grp.value.imps*grp.value.visible/grp.value.loaded || 0,
+						"date_min": groups.all.summary().date_min,
+						"date_max": groups.all.summary().date_max,
+            "type":"daily" 
+					} 
+				});
+			},
+		},
 		daily: {
 			top: function(x) {
 				var min_date = groups.all.summary().date_min

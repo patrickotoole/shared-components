@@ -56,6 +56,8 @@ RB.portal.UI.slider_chart = (function(slider_chart) {
             .attr("y", 9)    
          
       })
+      
+      
   }
 
   return slider_chart

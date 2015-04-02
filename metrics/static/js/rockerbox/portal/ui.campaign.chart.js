@@ -69,6 +69,15 @@ RB.portal.UI.chart = (function(chart) {
             .attr("x", 6)
             .attr("y", 9)    
         
+      })
+      .on("filtered",function(x){
+        var filters = x.filters();
+        for (var table in UI.campaign_selector.detail_tables) {
+          var t = UI.campaign_selector.detail_tables[table]
+          t.filter(filters)
+          t.redraw()
+        }
+        
       });
 
     main_chart

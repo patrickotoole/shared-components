@@ -82,7 +82,8 @@ RB.portal.UI.campaign_selector = (function(campaign_selector){
 
 
         interval.chart = campaign_selector.detail_tables["#" +current_select.select(".details-table").attr("id")]
-        interval.chart.dimension(interval.chart.data().aggregateDimensions[interval.value])
+        var dim = (interval.value == "daily") ? "daily_grouped" : interval.value
+        interval.chart.dimension(interval.chart.data().aggregateDimensions[dim])
         interval.chart.redraw()
 
          
