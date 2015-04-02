@@ -83,7 +83,8 @@ RB.portal.UI.detailsTable = (function(detailsTable) {
     var chart = current.chart
     current.value = selected
     
-    chart.dimension(chart.data().aggregateDimensions[selected])
+    var dim = (selected == "daily") ? "daily_grouped" : selected
+    chart.dimension(chart.data().aggregateDimensions[dim])
 
     chart.on("postRedraw",function(e){
       var anchor = d3.select(e.anchor())
@@ -129,7 +130,7 @@ RB.portal.UI.detailsTable = (function(detailsTable) {
   }
 
   detailsTable.build = function(selector,CRS){
-    return dc.dataGrid(selector,"table-group")
+    var table = dc.dataGrid(selector,"table-group")
       .dimension(CRS.aggregateDimensions.weekly) 
       .group(function(d){return d.campaign_bucket})
       .d3Group(detailsTable.header)
@@ -139,6 +140,8 @@ RB.portal.UI.detailsTable = (function(detailsTable) {
       .sliceMode("bottom")
       .size(30)
       .data(CRS)
+    
+    return table
   }
 
   return detailsTable

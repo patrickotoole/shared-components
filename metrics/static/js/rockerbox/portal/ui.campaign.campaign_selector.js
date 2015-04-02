@@ -14,7 +14,7 @@ RB.portal.UI.campaign_selector = (function(campaign_selector){
         [
           {"class":"name","value":x.campaign_bucket}
         ], 
-        UI.constants.HEADINGS.map(function(y){y.data = x; return y}),
+        JSON.parse(JSON.stringify(UI.constants.HEADINGS)).map(function(y){y.data = x; return y}),
         [
           {"class":"streaming"}
         ]
@@ -82,7 +82,8 @@ RB.portal.UI.campaign_selector = (function(campaign_selector){
 
 
         interval.chart = campaign_selector.detail_tables["#" +current_select.select(".details-table").attr("id")]
-        interval.chart.dimension(interval.chart.data().aggregateDimensions[interval.value])
+        var dim = (interval.value == "daily") ? "daily_grouped" : interval.value
+        interval.chart.dimension(interval.chart.data().aggregateDimensions[dim])
         interval.chart.redraw()
 
          
