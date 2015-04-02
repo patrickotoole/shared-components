@@ -4,7 +4,7 @@ RB.yoshi = RB.yoshi || {}
 RB.yoshi.UI = (function(UI){
 
   UI.flash = function(msg) {
-    var flash = d3.select("#flash")
+    var flash = d3.selectAll(".flash")
     console.log(msg) 
     if (msg) {
       flash.style("visibility","visible").style("color","red").html(msg)
@@ -56,6 +56,9 @@ RB.yoshi.UI = (function(UI){
         .attr("type","button")
         .text("Create Campaign")
         .on("click",function(){
+          var current = d3.select(this)
+          current.classed("btn-success",false)
+
           var selected = d3.selectAll(".build tbody > tr") 
             .filter(function(x){ 
               return d3.select(this).selectAll("input").property("checked")
@@ -68,9 +71,12 @@ RB.yoshi.UI = (function(UI){
           if (isvalid) {
 
             var callback = function(response, xhr) {
+              current.classed("btn-success",true)
               var msg = (xhr.status == 200) ? "Successfully created campaign!" : "Error creating campaign."
               RB.yoshi.UI.flash(msg)
             }
+
+
 
             console.log(profile)
             // TODO: send this to the background page

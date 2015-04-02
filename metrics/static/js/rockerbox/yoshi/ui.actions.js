@@ -17,17 +17,11 @@ RB.yoshi.actions = (function(actions){
   }
 
   actions.toggleCampaignVerification = function(keepVisible) {
-    var notVisible = d3.select(".campaign-verification").classed("hidden") && keepVisible
 
-    //TODO: dry this up
-    var selected = d3.selectAll(".build").selectAll("tbody > tr") 
-      .filter(function(x){ 
-        return d3.select(this).selectAll("input").property("checked")
-      })
+    var selected = d3.selectAll(".build tbody > tr input:checked") 
 
     var data = selected.data()
     var profile = RB.yoshi.actions.buildCampaign(data)
-
     var hasTargets = profile.profile.domain_targets.length
 
     d3.select(".campaign-verification")

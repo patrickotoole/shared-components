@@ -49,11 +49,13 @@ class AdvertiserRoutes(Routes):
         import handlers.campaign as campaign
         import handlers.creative as creative
         import handlers.viewable as viewable
+        import handlers.appnexus as appnexus
 
         return [
             (r'/campaign', campaign.YoshiCampaignHandler, self.connectors),
             (r'/creative', creative.CreativeHandler, self.connectors),
-            (r'/viewability', viewable.ViewabilityHandler, self.connectors)  
+            (r'/viewability', viewable.ViewabilityHandler, self.connectors),
+            (r'/location.*', appnexus.AppnexusHandler, self.connectors)   
         ]
      
 

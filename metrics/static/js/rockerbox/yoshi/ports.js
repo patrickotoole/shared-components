@@ -139,7 +139,7 @@ RB.yoshi.ports = (function(ports){
       var draw = function(data,isNewData) {
         console.log("received data on history page")
         var data = RB.yoshi.data.history_reshape(data)
-        RB.yoshi.UI.history.buildTable(d3.select("#content-wrapper .panel"),data,isNewData)
+        RB.yoshi.UI.history.build(d3.select("#content-wrapper .panel"),data,isNewData)
       }
       return ports.initialize(name, nofilter, draw)
     }

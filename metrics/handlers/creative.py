@@ -26,13 +26,13 @@ class CreativeHandler(BaseHandler):
         df = pandas.DataFrame(creatives)
         active = df[df['state'] == 'active']
 
-        if active.get('segments',False):
+        if active.get('segments',False) is not False:
             del active['segments'] 
 
-        if active.get('campaigns',False):
+        if active.get('campaigns',False) is not False:
             del active['campaigns'] 
 
-        if active.get('line_items',False):
+        if active.get('line_items',False) is not False:
             del active['line_items']
 
         creative_list = active.T.to_dict().values()
