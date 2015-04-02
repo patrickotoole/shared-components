@@ -16,11 +16,16 @@ RB.yoshi.UI.history = (function(history){
 
 
   history.heading = function(target) {
-    target.append("div")
+    var h = target.append("div")
       .classed("panel-heading",true)
       .append("h3")
       .classed("panel-title",true)
-      .text("Ad placements that you have visited")
+
+    h.append("a")
+      .text("Select Placements ")
+       
+    h.append("span")
+      .html("&rsaquo; Ad placements that you have visited")
   }
 
   history.table = function(target,data){

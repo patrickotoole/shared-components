@@ -27,40 +27,65 @@ RB.yoshi.UI.campaign_summary = (function(campaign_summary){
 
     campaign_summary.subheading(group,"Domains")
 
-    group.selectAll(".domain-entry")
+    var entries = group.append("div")
+      .classed("list-group-item domain-entries",true)
+      .append("select")
+      .attr("multiple",true)
+      .classed("selected-domains",true)
+
+    entries.selectAll("option")
       .data(function(p){
         return p.profile.domain_targets
       })
       .enter()
-      .append("div")
-      .classed("list-group-item domain-entry campaign-entry",true)
-      .text(function(x){return x.domain})
+        .append("option")
+        .attr("selected",true)
+        .text(function(x){return x.domain})
+
+    $('.selected-domains').chosen({"width":"100%"})
   }
 
   campaign_summary.sizes = function(group) {
     campaign_summary.subheading(group,"Sizes")
 
-    group.selectAll(".size-entry")
+    var entries = group.append("div")
+      .classed("list-group-item size-entries",true)
+      .append("select")
+      .attr("multiple",true)
+      .classed("selected-sizes",true)
+
+    entries.selectAll("option")
       .data(function(p){
         return p.details.sizes
       })
       .enter()
-      .append("div")
-      .classed("list-group-item size-entry campaign-entry",true)
+      .append("option")
+      .attr("selected",true)
       .text(function(x){return x})
+
+    $('.selected-sizes').chosen({"width":"100%"}) 
   }
 
   campaign_summary.tags = function(group) {
     campaign_summary.subheading(group,"Tags")
 
-    group.selectAll(".placement-entry")
+    var entries = group.append("div")
+      .classed("list-group-item tag-entries",true)
+      .append("select")
+      .attr("multiple",true)
+      .classed("selected-tags",true)
+     
+    entries.selectAll("option")
       .data(function(p){
-        return p.profile.platform_placement_targets
+        return p.profile.platform_placement_targets 
       })
       .enter()
-      .append("div")
-      .classed("list-group-item placement-entry campaign-entry",true)
+      .append("option")
+      .attr("selected",true)
       .text(function(x){return x.id})
+
+    $('.selected-tags').chosen({"width":"100%"})  
+ 
   }
 
   campaign_summary.creatives = function(group) {
