@@ -48,14 +48,14 @@ class AdvertiserRoutes(Routes):
     def yoshi_routes(self):
         import handlers.campaign as campaign
         import handlers.creative as creative
-        import handlers.viewable as viewable
+        import handlers.analytics as analytics
 
         return [
             (r'/campaign', campaign.YoshiCampaignHandler, self.connectors),
             (r'/creative', creative.CreativeHandler, self.connectors),
-            (r'/viewability', viewable.ViewabilityHandler, self.connectors)  
+            (r'/viewability', analytics.ViewabilityHandler, self.connectors),
+            (r'/availability', analytics.AvailabilityHandler, self.connectors)
         ]
-     
 
     @connectors("reporting_db","api")
     def client_pixel_routes(self):
