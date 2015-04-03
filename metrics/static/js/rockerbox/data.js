@@ -60,7 +60,7 @@ RB.portal.data = (function(data){
 
       db.imps.orderBy("dd").uniqueKeys(function(dd){
         var max_date = dd.map(function(y){ return +new Date(y)}).reduce(function(p,c){return Math.max(p,c)},0);
-        var yesterday = +new Date(new Date() - 8*3600000)
+        var yesterday = +new Date(new Date() - 11*3600000)
 
         if (yesterday > max_date) {
           console.log("pulling data...")
