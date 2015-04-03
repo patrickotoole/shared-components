@@ -134,6 +134,7 @@ RB.portal.UI.campaign_selector = (function(campaign_selector){
 
     metric_name.enter()
       .append("div")
+      .on("click",onClick) 
       .classed("metric-group metric-name col-md-3 campaign-no-style",true)
       .style("border-top", "1px solid #ddd")
       .append("div")

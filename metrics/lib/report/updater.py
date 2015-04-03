@@ -56,8 +56,13 @@ def main():
             name=name,
             external_advertiser_ids=options.external_advertiser_ids,
         )
+        if report['name'] == "analytics":
+            logging.info("updating materialized view...")
+            db.execute("CALL rockerbox.refresh_mv_now(@rc)")
+            logging.info("finished materialized view.")
         if not succ:
             failed = 1
+
     if failed:
         raise SystemExit, ERROR_CODE
 
