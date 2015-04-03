@@ -1,5 +1,7 @@
 BRAND_QUERY = "select external_id id, external_advertiser_id advertiser_id from creative"
 
+MATERIALIZED_VIEW = "SELECT * from reporting.bucket_reporting where external_advertiser_id = %(advertiser_id)s"
+
 IMPS_QUERY = """
 select 
     a.bucket_name,
@@ -39,6 +41,7 @@ from (
         v4.active=1 and
         v4.deleted=0 and
         v4.external_advertiser_id = %(advertiser_id)s
+        %(date)s
     group by 1,4
 ) a
 
@@ -90,6 +93,7 @@ CONVERSION_QUERY = """
                 v2.deleted=0 and
                 v2.external_advertiser_id=  %(advertiser_id)s   and
                 v2.is_valid=1
+                %(conv_date)s
             group by 1,3 ) b
 """
 

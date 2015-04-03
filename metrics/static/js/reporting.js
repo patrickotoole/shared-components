@@ -640,7 +640,8 @@ var crossfilterNS = function(crs,dc) {
 			top: function(x) {
 				var min_date = groups.all.summary().date_min
 				var max_date = groups.all.summary().date_max
-				return groups.total_campaign_bucket.top(x).filter(function(x){return x.value.imps}).map(function (grp) { 
+				//return groups.total_campaign_bucket.top(x).filter(function(x){return x.value.imps}).map(function (grp) { 
+        return groups.total_campaign_bucket.top(x).map(function (grp) {  
 					return {
 						"campaign_bucket":grp.key, 
 						"imps":grp.value.imps, 

@@ -77,6 +77,8 @@ RB.portal.UI.chart = (function(chart) {
           t.filter(filters)
           t.redraw()
         }
+
+        UI.campaign_selector.update_row_data(CRS)
         
       });
 
