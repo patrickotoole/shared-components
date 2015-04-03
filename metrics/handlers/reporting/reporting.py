@@ -2,12 +2,15 @@ import tornado.web
 import ujson
 import pandas
 import StringIO
+from twisted.internet import defer
+
 from ..base import BaseHandler
 from lib.helpers import *
 
 from lib.query.MYSQL import *
 from lib.query.HIVE import *
 import lib.query.helpers as query_helpers
+from lib.mysql.helpers import run_mysql_deferred 
 
 
 def make_run_query(err_msg):
@@ -47,12 +50,17 @@ class ReportingBase(object):
         params = {"bucket": bucket, "advertiser_id": advertiser}
         return (self.db, BUCKET_QUERY, params)
 
+    @decorators.deferred
     def pull_advertiser(self,advertiser_id):
-        params = {"advertiser_id": advertiser_id}
-        q = UNION_QUERY % params
+        start_date = self.get_argument("start_date",False)
+        params = {"advertiser_id": advertiser_id,"date":""}
+            
+        q = MATERIALIZED_VIEW % params
         print q
         return self.db.select_dataframe(q)
 
+
+    @decorators.deferred
     def pull_advertiser_export(self,advertiser_id):
         params = {"advertiser_id": advertiser_id}
         q = IMPS_CONVERSIONS_EXPORT_QUERY % params
@@ -94,44 +102,35 @@ class ReportingHandler(BaseHandler,ReportingBase):
         self.api = api
         self.hive = hive
 
-    @tornado.web.authenticated
     @decorators.formattable
-    def get(self):
-
-        advertiser = self.current_advertiser
-        user = self.current_user
-        _format  = self.get_argument("format",False)
-
-        campaign = self.get_argument("campaign",False)
-        bucket   = self.get_argument("group",False)
-        strategy = self.get_argument("strategy",False)
-        domain   = self.get_argument("domain", False)
-        export   = self.get_argument("export", False)
-
-        if _format:
-            if campaign:
-                data = self.pull_hive_campaigns([campaign])
-            elif bucket:
-                data = self.pull_bucket(bucket,advertiser)
-            elif domain:
-                data = self.pull_advertiser_domain(advertiser)
-            elif export:
-                data = self.pull_advertiser_export(advertiser)
-            else:
-                data = self.pull_advertiser(advertiser)
-        else:
-            data =""
+    def get_content(self,data,advertiser,user):
 
         def default(self,data):
-            # nolonger have multiple templates/ views of reporting
-            if campaign or bucket:
-                template = "campaign.html"
-            elif strategy:
-                template = "advertiser.html"
-            else:
-                template = "advertiser_bucket.html"
-
             self.render("reporting/_reporting.html", advertiser_id=advertiser, user_id=user)
 
         yield default, (data,)
+ 
 
+    @defer.inlineCallbacks 
+    def get_data(self,_format,export):
+
+        advertiser = self.current_advertiser
+        user = self.current_user
+
+        if _format is False:
+            data = ""
+        elif export:
+            data = yield self.pull_advertiser_export(advertiser)
+        else:
+            data = yield self.pull_advertiser(advertiser)
+
+        self.get_content(data,advertiser,user)  
+
+    @tornado.web.authenticated
+    @tornado.web.asynchronous  
+    def get(self):
+
+        _format = self.get_argument("format",False)
+        export = self.get_argument("export", False)
+
+        self.get_data(_format,export)
