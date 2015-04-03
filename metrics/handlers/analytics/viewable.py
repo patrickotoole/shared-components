@@ -4,7 +4,7 @@ import pandas
 import StringIO
 import logging
 
-from base import BaseHandler
+from ..base import BaseHandler
 from twisted.internet import defer
 from lib.helpers import decorators
 QUERY = "SELECT * from rockerbox.tag_size_viewability "
@@ -38,15 +38,19 @@ class ViewabilityHandler(BaseHandler):
 
     @defer.inlineCallbacks
     def get_viewability(self,tag_ids,sizes,domains):
-        viewability = yield self.defer_get_viewablity(tag_ids,sizes,domains)
-        if len(viewability):
-            viewability['percent_viewable'] = viewability['num_visible']/viewability['num_loaded']
+        df = yield self.defer_get_viewablity(tag_ids,sizes,domains)
+        if len(df):
+            df['percent_viewable'] = df.num_visible / df.num_loaded
 
-        viewability_list = viewability.T.to_dict().values()
+        viewability_list = df.T.to_dict().values()
         self.write(ujson.dumps(viewability_list))
         self.finish()
 
     #@tornado.web.authenticated
     @tornado.web.asynchronous
     def get(self):
-        self.get_viewability(self.get_arguments("tag_id"),self.get_arguments("size",[]),self.get_arguments("domain",[]))
+        self.get_viewability(
+            self.get_arguments("tag_id"),
+            self.get_arguments("size",[]),
+            self.get_arguments("domain",[])
+        )
