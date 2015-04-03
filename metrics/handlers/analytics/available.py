@@ -16,7 +16,7 @@ class AvailabilityHandler(BaseHandler):
         self.cassandra = cassandra
 
     @decorators.deferred
-    def defer_get_availability(self, tag_id, sellers, domains):
+    def defer_get_availability(self, tag_id, sellers, sizes, domains):
         where = []
         Q = QUERY
         if len(domains):
@@ -32,11 +32,14 @@ class AvailabilityHandler(BaseHandler):
         if len(sellers) and len(df):
             return df[df['seller'].isin(sellers)]
 
+        if len(sizes) and len(df):
+            return df[df['size'].isin(sizes)]
+
         return df
 
     @defer.inlineCallbacks
-    def get_availability(self, tag_id, sellers, domains):
-        df = yield self.defer_get_availability(tag_id, sellers, domains)
+    def get_availability(self, tag_id, sellers, sizes, domains):
+        df = yield self.defer_get_availability(tag_id, sellers, sizes, domains)
         if len(df):
             df['ecp'] = df.ecp / df.imps / 1000
             df['eap'] = df.eap / df.imps / 1000
@@ -50,5 +53,6 @@ class AvailabilityHandler(BaseHandler):
         self.get_availability(
             self.get_arguments("tag", []),
             self.get_arguments("seller",[]),
+            self.get_arguments("size",[]),
             self.get_arguments("domain",[])
         )
