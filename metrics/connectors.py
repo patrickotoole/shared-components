@@ -15,7 +15,7 @@ class ConnectorConfig(object):
 
         self.connectors = {}
 
-        self.connectors["db"] = lnk.dbs.rockerbox if not skip_db else None
+        self.connectors["db"] = lnk.dbs.rockerbox if not skip_db else mocks.yoshi.API
         self.connectors["reporting_db"] = lnk.dbs.reporting if not skip_reporting_db else None
 
         self.connectors["api"] = lnk.api.console if not skip_console_api else mocks.yoshi.API

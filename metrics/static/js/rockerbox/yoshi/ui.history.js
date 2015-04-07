@@ -108,7 +108,7 @@ RB.yoshi.UI.history = (function(history){
         childCheckboxes.property('disabled',isChecked)
 
         RB.yoshi.actions.toggleCampaignVerification(true)
-        d3.event.stopPropagation()
+        if (d3.event) d3.event.stopPropagation()
       })
 
     index.append("span")

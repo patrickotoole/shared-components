@@ -136,12 +136,44 @@ RB.yoshi.data = (function(data){
       var formatter = d3.time.format("%I:%M:%S %p")
       return formatter(new Date(epoch*1000))
     }
-  
+
     var entries = d3.nest().key(function(x){return x.key }).rollup(function(x){
       
       return { 
         timestamp: formatTime(x[0].key),
         timestamp_epoch: x[0].key,
+        domains: d3.entries(x[0].value).reduce(function(p,domain){
+
+          var ds = domain.value.reduce(function(p,x){
+              if (p.indexOf(x.domain) == -1) p.push(x.domain)
+              return p
+            },[])
+
+          //console.log(ds)
+
+          p.push.apply(p,ds)
+          return p
+        },[]),
+        placements: d3.entries(x[0].value).reduce(function(p,placement){
+
+          var ds = placement.value.reduce(function(p,x){
+              if (x.placements) x.placements.map(function(y){ p[y] = true }) 
+              return p
+            },{})
+
+          p.push.apply(p,Object.keys(ds))
+          return p
+        },[]), 
+        sizes: d3.entries(x[0].value).reduce(function(p,size){
+
+          var ds = size.value.reduce(function(p,x){
+              if (x.sizes) x.sizes.map(function(y){ p[y] = true }) 
+              return p
+            },{})
+
+          p.push.apply(p,Object.keys(ds))
+          return p
+        },[]),  
         urls: d3.entries(x[0].value).map(function(url){
           return { 
             "key": url.key,

@@ -8,6 +8,7 @@ RB.yoshi = RB.yoshi || {}
 RB.yoshi.actions = (function(actions){
 
   actions.validateCampaign = function(profile){
+
     var msg = (!profile.details.advertiser) ? 
       LOGGED_IN_ERROR : (!profile.profile.domain_targets.length) ? 
       SELLER_ERROR : false
@@ -18,23 +19,67 @@ RB.yoshi.actions = (function(actions){
 
   actions.toggleCampaignVerification = function(keepVisible) {
 
-    var selected = d3.selectAll(".build tbody > tr input:checked") 
+    var history = d3.selectAll(".ad-history tbody > tr input:checked") 
+    var creative = d3.selectAll(".creative-selection tbody > tr input:checked")  
+    var targeting = d3.selectAll(".targeting-selection tbody > tr input:checked")   
 
-    var data = selected.data()
+    var countries = d3.selectAll(".country-select option").filter(function(x){return this.selected}).data()
+    var regions = d3.selectAll(".region-select option").filter(function(x){return this.selected}).data()
+    var cities = d3.selectAll(".city-select option").filter(function(x){return this.selected}).data()
+
+    var targets = RB.yoshi.selection.targets()
+
+    var campaign_parameters = d3.selectAll(".campaign-parameter")[0].map(function(x){
+      var h = {}
+      h[x.name] = x.value
+      return h
+    })
+
+    console.log(campaign_parameters)
+
+    console.log("HERE",targets)
+
+    var data = []
+    //data.push.apply(data,history.data())
+    data.push.apply(data,targets.auctions)
+    data.push.apply(data,creative.data())
+    data.push.apply(data,targeting.data())
+
+
     var profile = RB.yoshi.actions.buildCampaign(data)
+
+    profile.profile.country_targets = countries
+    profile.profile.region_targets = regions
+    profile.profile.city_targets = cities
+
+    campaign_parameters.map(function(params){
+      for (var key in params) {
+        profile.campaign[key] = params[key]
+      }
+    })
+
     var hasTargets = profile.profile.domain_targets.length
 
     d3.select(".campaign-verification")
       .classed("hidden",!(keepVisible && hasTargets))
 
-    RB.yoshi.UI.history.buildCampaignVerification(
-      d3.select("#campaign-wrapper .panel-default"),
-      profile
-    )
+    if (hasTargets) {
+      RB.yoshi.UI.campaign_summary.build(
+        d3.select("#campaign-wrapper .panel-default"),
+        profile,
+        targets
+      )
+    }
 
     $(window).trigger("resize")
 
     return 
+  }
+
+  actions.buildVerifiedCampaign = function(data) {
+    var profile = d3.select("#campaign-wrapper .panel-default").data()
+
+    return profile[0]
   }
 
   actions.buildCampaign = function(data) {

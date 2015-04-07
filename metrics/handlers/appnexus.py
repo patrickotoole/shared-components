@@ -15,7 +15,6 @@ services = {
     "city":"cities"
 }
 
-
 class AppnexusHandler(BaseHandler):
 
     def initialize(self, db=None, api=None, **kwargs):

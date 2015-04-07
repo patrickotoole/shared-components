@@ -1,6 +1,7 @@
 import mock
 import copy
 import ujson
+import pandas
 from .. import helpers
 from FIXTURES import *
 
@@ -121,4 +122,4 @@ API.get.side_effect = get_mock
 API.get_all_pages.side_effect = get_all_mock 
 API.put.side_effect = put_mock 
 API.post.side_effect = post_mock 
-
+API.select_dataframe.side_effect = lambda x: pandas.DataFrame([{"external_advertiser_id":1}])

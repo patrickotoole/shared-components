@@ -8,7 +8,10 @@ def service_params(fn):
             split_params = params.split("&")
             for kv in split_params:
                 kvalue = kv.split("=")
-                value = int(kvalue[1]) if str(int(kvalue[1])) == kvalue[1] else kvalue[1]
+                try:
+                    value = int(kvalue[1]) 
+                except:
+                    value = kvalue[1]
                 qs += [(kvalue[0],value)]
         return dict(qs)
  

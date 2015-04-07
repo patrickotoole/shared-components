@@ -33,7 +33,7 @@ RB.yoshi.UI.targeting = (function(targeting){
       $(".country-select").chosen({width:"95%"}).change(function(x,y){
         var selected = d3.select(".country-select").selectAll("option").filter(function(x){return this.selected}).data()
         targeting.state(panel,selected)
-
+        RB.yoshi.actions.toggleCampaignVerification(true) 
       })
 
       return countries
@@ -108,6 +108,7 @@ RB.yoshi.UI.targeting = (function(targeting){
       $(".region-select").chosen({width:"95%"}).change(function(x,y){
         var selected = d3.select(".region-select").selectAll("option").filter(function(x){return this.selected}).data()
         targeting.city(panel,selected)
+        RB.yoshi.actions.toggleCampaignVerification(true) 
       })
       
       $(".region-select").trigger("chosen:updated")
@@ -178,6 +179,7 @@ RB.yoshi.UI.targeting = (function(targeting){
       $(".city-select").chosen({width:"95%"}).change(function(x,y){
         var selected = d3.select(".city-select").selectAll("option").filter(function(x){return this.selected}).data()
         //targeting.city(panel,selected)
+        RB.yoshi.actions.toggleCampaignVerification(true) 
       })
       
       $(".city-select").trigger("chosen:updated") 
@@ -241,8 +243,12 @@ RB.yoshi.UI.targeting = (function(targeting){
       .append("div").classed("col-md-12",true).text("Daily Imps")
 
     row.append("div").classed("col-md-8",true)
-      .append("input").classed("form-control",true) .style("width","95%") 
+      .append("input").classed("campaign-parameter form-control",true).style("width","95%") 
       .attr("placeholder","Max # of impressions per user per day (default: 5)")
+      .attr("name","max_day_imps")
+      .on("blur",function(x){
+        RB.yoshi.actions.toggleCampaignVerification(true) 
+      })
 
     var item = group
         .append("div").classed("list-group-item freq-item",true)
@@ -253,8 +259,12 @@ RB.yoshi.UI.targeting = (function(targeting){
       .append("div").classed("col-md-12",true).text("Lifetime Imps")
 
     row.append("div").classed("col-md-8",true)
-      .append("input").classed("form-control",true).style("width","95%")
+      .append("input").classed("campaign-parameter form-control",true).style("width","95%")
       .attr("placeholder","Max # of impressions per user per lifetime (default: 20)") 
+      .attr("name","max_lifetime_imps")
+      .on("blur",function(x){
+        RB.yoshi.actions.toggleCampaignVerification(true) 
+      })
 
   }
 
@@ -275,11 +285,45 @@ RB.yoshi.UI.targeting = (function(targeting){
     var row = item.append("div").classed("row",true)
 
     row.append("div").classed("col-md-4",true)
+      .append("div").classed("col-md-12",true).text("Maximum CPM")
+
+    var ig = row.append("div").classed("col-md-8",true)
+      .append("div").classed("input-group",true)
+
+    ig.append("span")
+      .classed("input-group-addon",true)
+      .text("$")
+
+    ig
+      .append("input").classed("campaign-parameter form-control",true) .style("width","95%") 
+      .attr("placeholder","Bid price per impression")
+      .attr("name","base_bid")
+      .on("blur",function(x){
+        RB.yoshi.actions.toggleCampaignVerification(true) 
+      })
+     
+    var item = group
+        .append("div").classed("list-group-item freq-item",true)
+     
+    var row = item.append("div").classed("row",true)
+
+    row.append("div").classed("col-md-4",true)
       .append("div").classed("col-md-12",true).text("Daily Budget")
 
-    row.append("div").classed("col-md-8",true)
-      .append("input").classed("form-control",true) .style("width","95%") 
-      .attr("placeholder","Spend per day in dollars")
+    var ig = row.append("div").classed("col-md-8",true)
+      .append("div").classed("input-group",true)
+
+    ig.append("span")
+      .classed("input-group-addon",true)
+      .text("$")
+
+    ig
+      .append("input").classed("campaign-parameter form-control",true) .style("width","95%") 
+      .attr("name","daily_budget") 
+      .attr("placeholder","Spend per day")
+      .on("blur",function(x){
+        RB.yoshi.actions.toggleCampaignVerification(true) 
+      })
 
     var item = group
         .append("div").classed("list-group-item freq-item",true)
@@ -289,9 +333,20 @@ RB.yoshi.UI.targeting = (function(targeting){
     row.append("div").classed("col-md-4",true)
       .append("div").classed("col-md-12",true).text("Lifetime Budget")
 
-    row.append("div").classed("col-md-8",true)
-      .append("input").classed("form-control",true).style("width","95%")
-      .attr("placeholder","Lifetime spend in dollars") 
+    var ig = row.append("div").classed("col-md-8",true)
+      .append("div").classed("input-group",true)
+
+    ig.append("span")
+      .classed("input-group-addon",true)
+      .text("$")
+
+    ig 
+      .append("input").classed("campaign-parameter form-control",true).style("width","95%")
+      .attr("name","lifetime_budget")
+      .attr("placeholder","Lifetime spend") 
+      .on("blur",function(x){
+        RB.yoshi.actions.toggleCampaignVerification(true) 
+      })
 
   }
 
@@ -321,6 +376,7 @@ RB.yoshi.UI.targeting = (function(targeting){
 
     $(".placement-select").chosen({width:"95%"}).change(function(x,y){
       var selected = d3.select(".placement-select").selectAll("option").filter(function(x){return this.selected}).data()
+      RB.yoshi.actions.toggleCampaignVerification(true) 
       //targeting.city(panel,selected)
     })
 
@@ -354,6 +410,7 @@ RB.yoshi.UI.targeting = (function(targeting){
 
     $(".domain-select").chosen({width:"95%"}).change(function(x,y){
       var selected = d3.select(".domain-select").selectAll("option").filter(function(x){return this.selected}).data()
+      RB.yoshi.actions.toggleCampaignVerification(true) 
       //targeting.city(panel,selected)
     })
 

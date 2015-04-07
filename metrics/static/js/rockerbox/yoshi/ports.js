@@ -105,6 +105,7 @@ RB.yoshi.ports = (function(ports){
       var name = "history_page_" + (+new Date).toString()
       var nofilter = function(x){return x}
 
+        /*
         RB.AJAX.appnexus.getUID(function(resp,xhr){
           var uuid = xhr.responseURL.split("cookie?uuid=")[1];
           window.intercomSettings.name = "Not logged in: " + uuid
@@ -132,7 +133,7 @@ RB.yoshi.ports = (function(ports){
 
           })
         })
-
+        */
 
         
 
