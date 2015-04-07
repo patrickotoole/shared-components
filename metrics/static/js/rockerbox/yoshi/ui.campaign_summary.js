@@ -16,11 +16,14 @@ RB.yoshi.UI.campaign_summary = (function(campaign_summary){
 
   campaign_summary.subheading = function(group,text) {
   
-    group.append("div")
+    var g = group.append("div")
       .classed("list-group-item",true)
+
+    g
       .append("h5")
       .classed("list-group-item-heading",true)
       .text(text)
+    return g
   }
 
   campaign_summary.domains = function(group) {
@@ -222,7 +225,9 @@ RB.yoshi.UI.campaign_summary = (function(campaign_summary){
   }
 
   campaign_summary.location = function(group,data) {
-    campaign_summary.subheading(group,"Location")
+    var heading = campaign_summary.subheading(group,"Location")
+    heading
+      .style("border-top", "10px solid #f5f5f5") 
 
     if (data.profile.country_targets.length > 0) {
 
@@ -328,6 +333,7 @@ RB.yoshi.UI.campaign_summary = (function(campaign_summary){
 
   campaign_summary.creatives = function(group) {
     campaign_summary.subheading(group,"Creatives")
+      .style("border-top", "10px solid #f5f5f5") 
 
     group.append("div").classed("line-group-item campaign-entry",true)
       .selectAll("span")

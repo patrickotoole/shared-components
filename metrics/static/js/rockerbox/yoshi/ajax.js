@@ -20,6 +20,7 @@ RB.AJAX = (function(obj){
     constants.REGION = rb_base + "/location/region"  
     constants.CITY = rb_base + "/location/city"   
 
+    constants.HOVERBOARD = rb_base + "/hoverboard?format=json&meta=domain&limit=12"
 
 
     return constants
@@ -106,7 +107,8 @@ RB.AJAX = (function(obj){
     rockerbox.getViewability = function(x,cb) { return obj.helpers.GETJSON(obj.constants.VIEWABLE + x,cb) }
     rockerbox.getCountries = obj.helpers.GETJSON.bind(false,obj.constants.COUNTRY) 
     rockerbox.getRegions = function(x,cb) { return obj.helpers.GETJSON(obj.constants.REGION+ x,cb) } 
-    rockerbox.getCities= function(x,cb) { return obj.helpers.GETJSON(obj.constants.CITY+ x,cb) }  
+    rockerbox.getCities = function(x,cb) { return obj.helpers.GETJSON(obj.constants.CITY+ x,cb) }  
+    rockerbox.getHoverboard = obj.helpers.GETJSON.bind(false,obj.constants.HOVERBOARD)
 
     //rockerbox.getCreatives = creativeMock
     return rockerbox 

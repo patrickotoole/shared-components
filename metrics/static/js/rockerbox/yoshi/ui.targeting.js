@@ -215,6 +215,7 @@ RB.yoshi.UI.targeting = (function(targeting){
     group
       .append("div")
       .classed("list-group-item",true)
+      
       .append("h5")
       .classed("list-group-item-heading",true)
       .text("Location Targets")

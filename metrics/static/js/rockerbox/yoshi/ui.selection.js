@@ -33,7 +33,7 @@ RB.yoshi.selection = (function(selection){
 
 
   selection.targets = function(){
-    var history = d3.selectAll(".ad-history tbody > tr input:checked")
+    var history = d3.selectAll(".ad-selection tbody > tr input:checked")
     var history_data = history.data()
 
     resetInclusions()

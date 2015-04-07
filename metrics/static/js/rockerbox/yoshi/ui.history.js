@@ -12,6 +12,7 @@ RB.yoshi.UI.history = (function(history){
   history.build = function(target,data) {
     history.heading(target)
     history.table(target,data)
+    UI.recommended.build(d3.selectAll(".ad-recommendations .panel"))
   }
 
 
@@ -23,6 +24,12 @@ RB.yoshi.UI.history = (function(history){
 
     h.append("a")
       .text("Select Placements ")
+      .on("click", function(){
+        d3.selectAll(".ad-selection .ad-selection-content")
+          .classed("hidden",true)
+        d3.selectAll(".ad-selection-content.ad-selection")
+          .classed("hidden",false)
+      })
        
     h.append("span")
       .html("&rsaquo; Ad placements that you have visited")
