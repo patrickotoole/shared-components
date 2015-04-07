@@ -534,7 +534,7 @@ class AdvertiserHandler(tornado.web.RequestHandler,Advertiser):
 
         where = "deleted = 0"
         if advertiser_id:
-            where = ("external_advertiser_id = %s" % advertiser_id)
+            where = ("external_advertiser_id in (%s)" % advertiser_id)
 
         print API_QUERY % where
         df = self.db.select_dataframe(API_QUERY % where).set_index("external_advertiser_id")
