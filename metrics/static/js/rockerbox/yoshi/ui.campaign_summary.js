@@ -349,6 +349,8 @@ RB.yoshi.UI.campaign_summary = (function(campaign_summary){
 
     target.html("")
 
+    console.log(data)
+
     var bound = d3.select(target.node().parentNode)
       .selectAll(".panel").data([data])
 

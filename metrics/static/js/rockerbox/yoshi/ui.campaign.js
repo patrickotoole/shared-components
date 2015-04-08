@@ -6,6 +6,7 @@ RB.yoshi.UI = (function(UI){
   UI.campaign = (function(campaign){
 
     campaign.buildCampaignPanel = function(data,wrapper,cr) {
+
       var creativeMap = d3.nest().key(function(x){return x.id}).rollup(function(x){return x[0]}).map(cr)
 
       data.map(function(d){
@@ -49,7 +50,7 @@ RB.yoshi.UI = (function(UI){
 
       var thead = table.append("thead").append("tr")
 
-      var headers = ["Name","Edit","Base Bid","Daily Budget","State","Remove"]
+      var headers = ["State", "Name","Edit","Remove","Profile"]
       headers.map(function(x){
         thead.append("th").text(x)
       })
@@ -63,6 +64,29 @@ RB.yoshi.UI = (function(UI){
 
       var newRow = entered
         .append("tr").classed("campaign",true)
+        .on("click",function(x){
+
+          var withProfile = function(p){
+            x.profile = x.profile || p
+            console.log(x.profile)
+
+            var obj = {
+              "profile": x.profile[0],
+              "campaign": x,
+              "details": {"sizes":[],"creative_folders":[]}
+            }
+
+            d3.select(".campaign-verification")
+              .classed("hidden",false)
+
+            RB.yoshi.UI.campaign_summary.build(d3.select("#campaign-wrapper .panel-default"),obj)
+            
+          };
+
+          (x.profile !== undefined ) ? 
+            withProfile(x.profile) :
+            RB.AJAX.rockerbox.getProfile(x.profile_id,withProfile);
+        })
 
       var campaignCreatives = entered
         .insert("tr").classed("creatives hidden",true)
@@ -181,7 +205,7 @@ RB.yoshi.UI = (function(UI){
     }
 
     campaign.buildRow = function(row) {
-      var entries = ["name","edit","base_bid","daily_budget","state","remove"];
+      var entries = ["state","name","edit","remove","profile_id"];
       var values = {
         "name": function(entry,data) {
           return data[entry].split("Yoshi | ")[1]

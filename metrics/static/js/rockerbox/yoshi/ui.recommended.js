@@ -160,9 +160,10 @@ RB.yoshi.UI.recommended = (function(recommended){
       var obj = d3.selectAll(r)
       var d = obj.data()[0]
       RB.AJAX.rockerbox.getViewability("?domain=" + d,function(data){
-        data.map(function(x){
+        var data = data.filter(function(x){
           x.sizes = [x.size]
           x.placements = [x.tag_id]
+          return x.num_loaded > 40
         })
         build(obj,data) 
       })

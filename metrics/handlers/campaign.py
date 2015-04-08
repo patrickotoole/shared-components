@@ -34,7 +34,17 @@ class CampaignHandler(BaseHandler):
     def defer_get_campaigns(self,advertiser_id,line_item_id):
         URL = "/campaign?advertiser_id=%s&line_item_id=%s" % (advertiser_id,line_item_id)
         data = self.api.get(URL)
-        return data.json['response']['campaigns']
+        campaigns = data.json['response']['campaigns']
+
+        return campaigns
+
+    @decorators.deferred
+    def defer_get_profile(self,advertiser_id,profile_id):
+        URL = "/profile?advertiser_id=%s&id=%s" % (advertiser_id,profile_id)
+        data = self.api.get(URL)
+        profile = data.json['response']['profile']
+
+        return profile
 
     @decorators.deferred
     def defer_modify_campaign(self,advertiser_id,campaign_id,campaign):
@@ -66,7 +76,7 @@ class CampaignHandler(BaseHandler):
         if len(df) > 0 and self.get_argument("show_all",False) == False:
             if not self.get_argument("show_deleted",False):
                 df = df[df.comments != "deleted"]
-            df = df[['id','name','base_bid','daily_budget','state','creatives']]
+            df = df[['id','name','base_bid','daily_budget','state','creatives','profile_id']]
             
 
         if self.get_argument("format",False) == False:     

@@ -15,6 +15,7 @@ RB.AJAX = (function(obj){
     constants.ADVERTISER = rb_base + "/advertiser?format=json&include="
     constants.USER = rb_base + "/login?format=json"
     constants.CREATIVE = rb_base + "/creative?format=json"
+    constants.PROFILE = rb_base + "/profile?format=json" 
     constants.VIEWABLE = rb_base + "/viewability"
     constants.COUNTRY = rb_base + "/location/country" 
     constants.REGION = rb_base + "/location/region"  
@@ -109,6 +110,7 @@ RB.AJAX = (function(obj){
     rockerbox.getRegions = function(x,cb) { return obj.helpers.GETJSON(obj.constants.REGION+ x,cb) } 
     rockerbox.getCities = function(x,cb) { return obj.helpers.GETJSON(obj.constants.CITY+ x,cb) }  
     rockerbox.getHoverboard = obj.helpers.GETJSON.bind(false,obj.constants.HOVERBOARD)
+    rockerbox.getProfile = function(x,cb) { return obj.helpers.GETJSON(obj.constants.PROFILE + "&id=" + x,cb) } 
 
     //rockerbox.getCreatives = creativeMock
     return rockerbox 
