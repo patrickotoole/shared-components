@@ -64,39 +64,71 @@ RB.yoshi.UI = (function(UI){
 
       var newRow = entered
         .append("tr").classed("campaign",true)
+        .style("cursor","pointer")
         .on("click",function(x){
 
+          tbody.selectAll("tr")
+            .style("opacity",".8")
+            .style("background-color","#f5f5f5")
+            .style("font-weight",null)
+
+          d3.select(this)
+            .style("opacity","1")
+            .style("background-color","white") 
+            .style("font-weight","bold")
+
           var withProfile = function(p){
-            x.profile = x.profile || p
-            console.log(x.profile)
+
+            x.profile = x.profile || p[0]
+
+            var sizes = x.profile.size_targets.map(function(x){
+              return x.width + "x" + x.height
+            })
 
             var obj = {
-              "profile": x.profile[0],
+              "profile": x.profile,
               "campaign": x,
-              "details": {"sizes":[],"creative_folders":[]}
+              "details": {
+                "sizes":sizes,
+                "creative_folders":[],
+                "advertiser":x.advertiser_id
+              }
             }
 
-            d3.select(".campaign-verification")
-              .classed("hidden",false)
+            d3.select(".campaign-verification").classed("hidden",false)
 
-            RB.yoshi.UI.campaign_summary.build(d3.select("#campaign-wrapper .panel-default"),obj)
+            RB.yoshi.UI.campaign_summary.build(
+              d3.select("#campaign-wrapper .panel-default"),
+              obj
+            )
+
+            d3.select("#validated-campaign-button-div")
+              .classed("hidden",true)
             
           };
 
           (x.profile !== undefined ) ? 
             withProfile(x.profile) :
             RB.AJAX.rockerbox.getProfile(x.profile_id,withProfile);
+          
         })
 
-      var campaignCreatives = entered
+
+      /*var campaignCreatives = entered
         .insert("tr").classed("creatives hidden",true)
         .append("td")
         .attr("colspan",42)
         .append("div").classed("list-group campaign-creatives",true)
         .style("margin-top","10px")
+        */
 
       campaign.buildRow(newRow);
-      campaign.buildCreativeGroup(campaignCreatives)
+      newRow.sort(function(x,y){
+        xa = (x.state == "active") ? 1 : 0
+        ya = (y.state == "active") ? 1 : 0 
+        return ya - xa
+      })
+      //campaign.buildCreativeGroup(campaignCreatives)
 
       //UI.targeting.budget(entered.insert("tr").classed("hidden",true))
       
@@ -208,7 +240,7 @@ RB.yoshi.UI = (function(UI){
       var entries = ["state","name","edit","remove","profile_id"];
       var values = {
         "name": function(entry,data) {
-          return data[entry].split("Yoshi | ")[1]
+          return data[entry].split("Yoshi | ")[1].split(" | ")[0]
         },
         "state": function(entry,data) {
           return data[entry] 

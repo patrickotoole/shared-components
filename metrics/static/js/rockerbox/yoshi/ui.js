@@ -49,6 +49,28 @@ RB.yoshi.UI = (function(UI){
         })
     }
 
+    buttons.update_campaign = function(target) {
+      target.append("a")
+        .attr("id","campaign_button")
+        .classed(" btn btn-default btn-success",true)
+        .attr("type","button")
+        .text("Update Campaign")
+        .on("click",function(){
+          var current = d3.select(this)
+          current.classed("btn-success",false)
+
+          console.log("UPDATE CAMPAIGN"); 
+          var callback = function(response, xhr) {
+            current.classed("btn-success",true)
+            var msg = (xhr.status == 200) ? "Successfully created campaign!" : "Error creating campaign."
+            RB.yoshi.UI.flash(msg)
+          }
+
+          RB.yoshi.controller.updateCampaign(callback)
+          
+        })
+    }
+
     buttons.validated_campaign = function(target) {
       target.append("a")
         .attr("id","campaign_button")
@@ -59,34 +81,13 @@ RB.yoshi.UI = (function(UI){
           var current = d3.select(this)
           current.classed("btn-success",false)
 
-          var selected = d3.selectAll(".build tbody > tr") 
-            .filter(function(x){ 
-              return d3.select(this).selectAll("input").property("checked")
-            })
-
-          var data = selected.data()
-
-          var profile = RB.yoshi.actions.buildVerifiedCampaign(data)
-          var isvalid = !RB.yoshi.actions.validateCampaign(profile)
-          if (isvalid) {
-
-            var callback = function(response, xhr) {
-              current.classed("btn-success",true)
-              var msg = (xhr.status == 200) ? "Successfully created campaign!" : "Error creating campaign."
-              RB.yoshi.UI.flash(msg)
-            }
-
-
-
-            console.log(profile)
-            // TODO: send this to the background page
-            // don't run the ajax actions on the specific pages
-            RB.AJAX.rockerbox.getUser(function(x){
-              profile.details.username = x.username //HACK: for now this tells us which template to use
-              RB.AJAX.rockerbox.postCampaign(JSON.stringify(profile),callback)
-            })
-            
+          var callback = function(response, xhr) {
+            current.classed("btn-success",true)
+            var msg = (xhr.status == 200) ? "Successfully created campaign!" : "Error creating campaign."
+            RB.yoshi.UI.flash(msg)
           }
+
+          RB.yoshi.controller.createCampaign(callback)
           
         })
     }        
@@ -158,6 +159,7 @@ RB.yoshi.UI = (function(UI){
     buttons.history(d3.select("#history-button-div"))
     buttons.campaign(d3.select("#campaign-button-div"))
     buttons.validated_campaign(d3.select("#validated-campaign-button-div")) 
+    buttons.update_campaign(d3.select("#update-campaign-button-div"))  
     buttons.show_campaigns(d3.select("#campaign-history-button-div"))
     buttons.clear_button(d3.select("#clear_button_div"))
     

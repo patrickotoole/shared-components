@@ -275,7 +275,7 @@ RB.yoshi.UI.campaign_summary = (function(campaign_summary){
     group.append("div").classed("line-group-item campaign-entry",true)
       .selectAll("span")
       .data(function(p){
-        return [p.campaign.max_day_imps, p.campaign.max_lifetime_imps]
+        return [p.profile.max_day_imps, p.profile.max_lifetime_imps]
       })
       .enter()
       .append("span").style("margin-right","3px").style("display","inline-block")

@@ -17,8 +17,8 @@ RB.yoshi.actions = (function(actions){
     return msg    
   }
 
-  actions.toggleCampaignVerification = function(keepVisible) {
-
+  actions.buildCampaignData = function(){
+ 
     var history = d3.selectAll(".ad-history tbody > tr input:checked") 
     var creative = d3.selectAll(".creative-selection tbody > tr input:checked")  
     var targeting = d3.selectAll(".targeting-selection tbody > tr input:checked")   
@@ -35,12 +35,9 @@ RB.yoshi.actions = (function(actions){
       return h
     })
 
-    console.log(campaign_parameters)
-
-    console.log("HERE",targets)
 
     var data = []
-    //data.push.apply(data,history.data())
+
     data.push.apply(data,targets.auctions)
     data.push.apply(data,creative.data())
     data.push.apply(data,targeting.data())
@@ -54,26 +51,34 @@ RB.yoshi.actions = (function(actions){
 
     campaign_parameters.map(function(params){
       for (var key in params) {
+        if (key.indexOf('imps' > -1)) profile.profile[key] = params[key]
         profile.campaign[key] = params[key]
       }
     })
 
-    var hasTargets = profile.profile.domain_targets.length
+    return profile
+  
+  }
+
+  actions.toggleCampaignVerification = function(keepVisible) {
+
+    var profile = actions.buildCampaignData(),
+      hasTargets = profile.profile.domain_targets.length
 
     d3.select(".campaign-verification")
       .classed("hidden",!(keepVisible && hasTargets))
 
+    d3.select("#validated-campaign-button-div")
+      .classed("hidden",false) 
+
     if (hasTargets) {
       RB.yoshi.UI.campaign_summary.build(
         d3.select("#campaign-wrapper .panel-default"),
-        profile,
-        targets
+        profile
       )
     }
 
     $(window).trigger("resize")
-
-    return 
   }
 
   actions.buildVerifiedCampaign = function(data) {

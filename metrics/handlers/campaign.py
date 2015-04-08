@@ -1,3 +1,4 @@
+
 import tornado.web
 import ujson
 import pandas
@@ -76,7 +77,7 @@ class CampaignHandler(BaseHandler):
         if len(df) > 0 and self.get_argument("show_all",False) == False:
             if not self.get_argument("show_deleted",False):
                 df = df[df.comments != "deleted"]
-            df = df[['id','name','base_bid','daily_budget','state','creatives','profile_id']]
+            df = df[['advertiser_id','id','name','base_bid','daily_budget','state','creatives','profile_id','lifetime_budget']]
             
 
         if self.get_argument("format",False) == False:     
@@ -237,6 +238,9 @@ class UserCampaignHandler(CampaignHandler):
     
 
 class YoshiCampaignHandler(AdminCampaignHandler,UserCampaignHandler):
+    """
+    Handles campaign creation, updates and retrevial for Yoshi
+    """
 
     def initialize(self, db=None, api=None, **kwargs):
         self.db = db 
