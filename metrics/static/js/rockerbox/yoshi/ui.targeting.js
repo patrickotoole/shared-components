@@ -31,7 +31,10 @@ RB.yoshi.UI.targeting = (function(targeting){
         .text(function(x){return x.name })
       
       $(".country-select").chosen({width:"95%"}).change(function(x,y){
-        var selected = d3.select(".country-select").selectAll("option").filter(function(x){return this.selected}).data()
+        var selected = panel.select(".country-select")
+          .selectAll("option")
+          .filter(function(x){return this.selected}).data()
+
         targeting.state(panel,selected)
         RB.yoshi.actions.toggleCampaignVerification(true) 
       })

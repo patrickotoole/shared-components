@@ -10,6 +10,13 @@ from base import BaseHandler
 from twisted.internet import defer
 from lib.helpers import *  
 
+PROFILE_COLUMNS = [
+    "id","domain_targets",
+    "platform_placement_targets","country_targets",
+    "region_targets","city_targets","size_targets",
+    "max_lifetime_imps","max_day_imps"
+]
+
 class YoshiProfileHandler(BaseHandler):
 
     def initialize(self, db=None, api=None, **kwargs):
@@ -50,7 +57,7 @@ class YoshiProfileHandler(BaseHandler):
         profile = yield self.defer_get_profile(advertiser_id,profile_id)
         profile_df = pandas.DataFrame([profile])
 
-        profile_df = profile_df[["id","domain_targets","platform_placement_targets","country_targets","region_targets","city_targets","size_targets","max_lifetime_imps","max_day_imps"]]
+        profile_df = profile_df[PROFILE_COLUMNS]
 
         self.get_content(profile_df,advertiser_id)
  

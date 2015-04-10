@@ -276,7 +276,7 @@ RB.yoshi.UI.campaign_summary = (function(campaign_summary){
         .enter()
         .append("span").style("margin-right","3px").style("display","inline-block")
         .classed("city",true)
-        .text(function(x){return x.name})  
+        .text(function(x){return x.name || x.city})  
     }
   }
 
@@ -352,7 +352,7 @@ RB.yoshi.UI.campaign_summary = (function(campaign_summary){
         return p.details.creative_folders.length ? p.details.creative_folders : ["No creatives attached"]
       })
       .enter()
-      .append("span").style("margin-right","3px").style("display","inline-block")
+      .append("span").style("margin-right","3px").style("display","block")
       .text(function(x){return x})
   }
 

@@ -6,11 +6,7 @@ RB.yoshi.UI = (function(UI){
   UI.flash = function(msg) {
     var flash = d3.selectAll(".flash")
     console.log(msg) 
-    if (msg) {
-      flash.style("visibility","visible").style("color","red").html(msg)
-    } else {
-      flash.style("visibility","hidden").html("")
-    }
+    if (msg) flash.classed("hidden",false).html(msg)
 
   }
 
@@ -62,7 +58,7 @@ RB.yoshi.UI = (function(UI){
           console.log("UPDATE CAMPAIGN"); 
           var callback = function(response, xhr) {
             current.classed("btn-success",true)
-            var msg = (xhr.status == 200) ? "Successfully created campaign!" : "Error creating campaign."
+            var msg = (xhr.status == 200) ? "Successfully updated campaign!" : "Error creating campaign."
             RB.yoshi.UI.flash(msg)
           }
 

@@ -20,11 +20,35 @@ RB.yoshi.controller = (function(controller){
 
   }
 
+  var reformatCountries = function(profile) {
+    if (profile.country_targets) 
+      profile.country_targets = profile.country_targets
+        .map(function(x){
+          return {"country": x.code}
+        })
+   
+    profile.country_action = "include"
+  }
+
+  var reformatRegions = function(profile) {
+    if (profile.region_targets)
+      profile.region_targets = profile.region_targets
+        .map(function(x){
+          return {"region": x.country_code + ":" + x.code}
+        })
+
+    profile.region_action = "include"    
+  }
+
+  var reformatCities = function(profile) {
+    profile.city_action = profile.city_targets.length ? 
+      "include" : "exclude"
+  }
+
   controller.updateCampaign = function(callback,failure){
 
     var callback = callback || function(){},
       failure = failure || function(){}
-
 
     var profile = RB.yoshi.actions.buildVerifiedCampaign(),
       invalid = RB.yoshi.actions.validateCampaign(profile)
@@ -37,7 +61,14 @@ RB.yoshi.controller = (function(controller){
       profile.details.username = x.username 
       var campaign = JSON.parse(JSON.stringify(profile.campaign))
 
-      campaign.creatives = campaign.creatives.filter(function(x){ return x.attached })
+      campaign.creatives = campaign.creatives
+        .filter(function(x){ return x.attached })
+
+      reformatCountries(profile.profile)
+      reformatRegions(profile.profile)
+      reformatCities(profile.profile)
+      
+      profile.profile.domain_action = "include"  
 
       var cb = function(){
         RB.AJAX.rockerbox.putProfile(

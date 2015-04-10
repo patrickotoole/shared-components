@@ -175,8 +175,17 @@ RB.yoshi.actions = (function(actions){
     d3.select(".campaign-verification")
       .classed("hidden",!(keepVisible && hasTargets))
 
-    d3.select("#validated-campaign-button-div")
-      .classed("hidden",false) 
+    var to_show = (mode == "EDIT") ?
+      d3.select("#update-campaign-button-div") :
+      d3.select("#validated-campaign-button-div"); 
+
+    var to_hide = (mode == "CREATE") ?
+      d3.select("#update-campaign-button-div") :
+      d3.select("#validated-campaign-button-div"); 
+
+    to_show.classed("hidden",false)
+    to_hide.classed("hidden",true) 
+
 
     if (hasTargets) {
       RB.yoshi.UI.campaign_summary.build(
@@ -189,9 +198,9 @@ RB.yoshi.actions = (function(actions){
   }
 
   actions.buildVerifiedCampaign = function(data) {
-    var profile = d3.select("#campaign-wrapper .panel-default").data()
+    var profile = d3.select("#campaign-wrapper .panel-default").datum()
 
-    return profile[0]
+    return profile
   }
 
   actions.buildCampaign = function(data) {

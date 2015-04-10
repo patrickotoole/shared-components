@@ -5,6 +5,48 @@ RB.yoshi.UI = (function(UI){
 
   UI.campaign = (function(campaign){
 
+    var nestCreatives = function(creatives) {
+      var folders = d3.nest()
+        .key(function(y){ return y.folder.name }).entries(creatives)
+        .filter(function(x){ 
+          var v = x.values.reduce(function(p,c){ return p + c.attached },0)
+          return v
+        })
+        .map(function(x){ return x.key }) 
+      return folders
+    }
+
+    var withProfile = function(x,p){
+
+      x.profile = x.profile || p[0]
+
+      var sizes = (x.profile.size_targets) ?
+        x.profile.size_targets
+          .map(function(x){ return x.width + "x" + x.height }) : 
+        []
+
+      var obj = {
+        "profile": x.profile,
+        "campaign": x,
+        "details": {
+          "sizes":sizes,
+          "creative_folders":nestCreatives(x.creatives),
+          "advertiser":x.advertiser_id
+        }
+      }
+
+      d3.select(".campaign-verification").classed("hidden",false)
+
+      RB.yoshi.UI.campaign_summary.build(
+        d3.select("#campaign-wrapper .panel-default"),
+        obj
+      )
+
+      d3.select("#validated-campaign-button-div")
+        .classed("hidden",true)
+      
+    };
+
     campaign.buildCampaignPanel = function(data,wrapper,cr) {
 
       var creativeMap = d3.nest().key(function(x){return x.id}).rollup(function(x){return x[0]}).map(cr)
@@ -95,6 +137,7 @@ RB.yoshi.UI = (function(UI){
           var locationGroup = expansion.append("div")
             .classed("edit-group location-group hidden",true)
 
+          UI.targeting.location(locationGroup) 
           UI.targeting.frequency(locationGroup)
           UI.targeting.budget(locationGroup) 
 
@@ -104,42 +147,12 @@ RB.yoshi.UI = (function(UI){
 
           d3.select(this)
             .style("background-color","white") 
-            .style("font-weight","bold")
+            .style("font-weight","bold");
 
-
-          var withProfile = function(p){
-
-            x.profile = x.profile || p[0]
-
-            var sizes = x.profile.size_targets.map(function(x){
-              return x.width + "x" + x.height
-            })
-
-            var obj = {
-              "profile": x.profile,
-              "campaign": x,
-              "details": {
-                "sizes":sizes,
-                "creative_folders":[],
-                "advertiser":x.advertiser_id
-              }
-            }
-
-            d3.select(".campaign-verification").classed("hidden",false)
-
-            RB.yoshi.UI.campaign_summary.build(
-              d3.select("#campaign-wrapper .panel-default"),
-              obj
-            )
-
-            d3.select("#validated-campaign-button-div")
-              .classed("hidden",true)
-            
-          };
 
           (x.profile !== undefined ) ? 
-            withProfile(x.profile) :
-            RB.AJAX.rockerbox.getProfile(x.profile_id,withProfile);
+            withProfile(x,x.profile) :
+            RB.AJAX.rockerbox.getProfile(x.profile_id,withProfile.bind(false,x));
           
         })
 
@@ -201,12 +214,16 @@ RB.yoshi.UI = (function(UI){
         .on("click",function(x){
           var isChecked = d3.select(this).property("checked")
           d3.select(this.parentNode.parentNode).selectAll("input").property("checked",isChecked)
-          d3.select(this.parentNode.parentNode).data()[0].values
+          d3.select(this.parentNode.parentNode).datum().values
             .map(function(z){
               z.attached = isChecked
             })
-          campaign.update.bind(this.parentNode.parentNode.parentNode)()
-          campaign.modifyCreativeCount()
+          
+          x.values.map(function(z){ z.attached = isChecked })
+          var profile = d3.select(this.parentElement.parentElement.parentElement).datum()
+          withProfile(profile)
+          //campaign.update.bind(this.parentNode.parentNode.parentNode)()
+          //campaign.modifyCreativeCount()
         })
 
       group.append("div").classed("col-md-1",true)
@@ -259,7 +276,7 @@ RB.yoshi.UI = (function(UI){
       group.selectAll("table tbody tr td").selectAll("input")
         .on("click",function(x){
           x.attached = d3.select(this).property("checked")
-          campaign.update.bind(this.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode)()
+          //campaign.update.bind(this.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode)()
           campaign.modifyCreativeCount()
         })
 
@@ -270,7 +287,11 @@ RB.yoshi.UI = (function(UI){
       var entries = ["name","state","remove"];
       var values = {
         "name": function(entry,data) {
-          return data[entry].split("Yoshi | ")[1].split(" | ")[0]
+          try {
+            return data[entry].split("Yoshi | ")[1].split(" | ")[0]
+          } catch(e) {
+            return data[entry].split("Yoshi | ")[1]
+          }
         },
         "state": function(entry,data) {
           return data[entry] 
