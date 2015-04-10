@@ -49,7 +49,9 @@ RB.yoshi.UI.recommended = (function(recommended){
     recommended.heading(target)
     
     RB.AJAX.rockerbox.getHoverboard(function(data){
-      data.map(function(x){x.key = x.domain})
+      var data = data.map(function(x){x.key = x.domain; return x})
+        .filter(function(x){return !(x.domain.indexOf("anonymous.google") > -1)})
+
       recommended.table(target,data)
     })
   }
