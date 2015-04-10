@@ -3,23 +3,6 @@ RB.yoshi = RB.yoshi || {}
 
 RB.yoshi.controller = (function(controller){
 
-  controller.createCampaign = function(callback,failure){
-
-    var callback = callback || function(){},
-      failure = failure || function(){}
-
-    var profile = RB.yoshi.actions.buildVerifiedCampaign(),
-      invalid = RB.yoshi.actions.validateCampaign(profile)
-
-    if (invalid) return failure(profile)
-
-    RB.AJAX.rockerbox.getUser(function(x){
-      profile.details.username = x.username 
-      RB.AJAX.rockerbox.postCampaign(JSON.stringify(profile),callback)
-    })
-
-  }
-
   var reformatCountries = function(profile) {
     if (profile.country_targets) 
       profile.country_targets = profile.country_targets
@@ -45,6 +28,32 @@ RB.yoshi.controller = (function(controller){
       "include" : "exclude"
   }
 
+
+
+
+
+  controller.createCampaign = function(callback,failure){
+
+    var callback = callback || function(){},
+      failure = failure || function(){}
+
+    var profile = JSON.parse(JSON.stringify(RB.yoshi.actions.buildVerifiedCampaign())),
+      invalid = RB.yoshi.actions.validateCampaign(profile)
+
+    if (invalid) return failure(profile)
+
+    RB.AJAX.rockerbox.getUser(function(x){
+
+      reformatCountries(profile.profile)
+      reformatRegions(profile.profile)
+      reformatCities(profile.profile)
+ 
+      profile.details.username = x.username.split("a_")[1]
+      RB.AJAX.rockerbox.postCampaign(JSON.stringify(profile),callback)
+    })
+
+  }
+
   controller.updateCampaign = function(callback,failure){
 
     var callback = callback || function(){},
@@ -52,8 +61,6 @@ RB.yoshi.controller = (function(controller){
 
     var profile = RB.yoshi.actions.buildVerifiedCampaign(),
       invalid = RB.yoshi.actions.validateCampaign(profile)
-
-    console.log("CAMPAING ON UPDATE", profile.campaign.creatives)
 
     if (invalid) return failure(profile)
 

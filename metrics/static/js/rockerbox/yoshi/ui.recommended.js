@@ -7,6 +7,43 @@ RB.yoshi.UI.recommended = (function(recommended){
   var UI = RB.yoshi.UI
   var history = UI.history
 
+  recommended.bar = function(target) {
+
+    var max = target.data().reduce(function(p,c){return p > c.tf_idf ? p : c.tf_idf},0)
+
+    var chart = target.append("svg") // creating the svg object inside the container div
+      .attr("class", "chart")
+      .attr("width", 80) // bar has a fixed width
+      .attr("height", 20);
+    
+    var x = d3.scale.linear() // takes the fixed width and creates the percentage from the data values
+      .domain([0, Math.log(max)])
+      .range([0, 80]); 
+    
+    chart.selectAll("rect") // this is what actually creates the bars
+      .data(function(x){
+        return [max,x.tf_idf].map(function(x){return Math.log(x)})
+      })
+    .enter().append("rect")
+      .attr("width", x)
+      .attr("height", 10)
+      .attr("y",5)
+      .attr("rx", 5) // rounded corners
+      .attr("ry", 5);
+      
+    chart.selectAll("text") // adding the text labels to the bar
+      .data(function(x){
+        return [max,x.tf_idf].map(function(x){return Math.log(x)}) 
+      })
+    .enter().append("text")
+      .attr("x", x)
+      .attr("y", 10) // y position of the text inside bar
+      .attr("dx", -3) // padding-right
+      .attr("dy", ".35em") // vertical-align: middle
+      .attr("text-anchor", "end") // text-align: right
+      //.text(String);
+  }
+
   recommended.build = function(target) {
     console.log("HERE",target)
     recommended.heading(target)
@@ -46,11 +83,15 @@ RB.yoshi.UI.recommended = (function(recommended){
         .append("div")
         .classed("list-group",true)
         .attr("id",function(x){return x.key})
-        .sort(function(a,b){
-          return d3.descending(Date.parse(a.key), Date.parse(b.key))
-        })
+
+
 
     var rows = recommended.addGroup(newDays) 
+
+    target.selectAll(".list-group-item")
+      .sort(function(a,b){
+       return d3.descending(a.tf_idf,b.tf_idf)
+     })
     recommended.buildPanelRow(rows) 
 
   }
@@ -67,7 +108,8 @@ RB.yoshi.UI.recommended = (function(recommended){
     var index = row.append("div")
       .classed("col-md-2",true)
 
-    index.append("span")
+    index.append("div")
+      .style("float","left")
       .append("input")
       .attr("type","checkbox")
       .on("click",function(){
@@ -81,8 +123,14 @@ RB.yoshi.UI.recommended = (function(recommended){
         if (d3.event) d3.event.stopPropagation()
       })
 
-    index.append("span")
-      .text(function(d) {return d.tf_idf})
+    var barWrapper = index.append("div").style("float","left").style("margin-left","15px")
+      .attr("data-toggle","tooltip")
+      .attr("data-placement","top")
+      .attr("title","Domain importance score determined from Rockerbox hoverboard data")
+
+    recommended.bar(barWrapper)
+
+      //.text(function(d) {return d.tf_idf})
 
     var urlWrap = row.append("div")
       .classed("col-md-9",true)

@@ -182,15 +182,15 @@ class UserCampaignHandler(CampaignHandler):
         self.api = api 
 
     @decorators.deferred
-    def create_campaign(self,line_item_id,advertiser_id,name="test",bid_price=1,creatives=[]):
+    def create_campaign(self,line_item_id,advertiser_id,name="test",bid_price=1,creatives=[],campaign={}):
         data = {
             "campaign" : {
                 "name": name,
                 "state": "inactive",
                 "advertiser_id":  advertiser_id,
                 "line_item_id": line_item_id,
-                "lifetime_budget": 5000,
-                "daily_budget": 50,
+                "lifetime_budget": campaign.get("lifetime_budget",5000),
+                "daily_budget": campaign.get("daily_budget",50),
                 "inventory_type": "real_time",
                 "cpm_bid_type": "base",
                 "base_bid": bid_price,
@@ -205,18 +205,18 @@ class UserCampaignHandler(CampaignHandler):
 
     @decorators.deferred
     def create_profile(self,advertiser_id,campaign_id,profile):
-        profile = {k:v for k,v in profile.items() if "targets" not in k or ("targets" in k and v != 0)}
+        p = {k:v for k,v in profile.items() if "targets" not in k or ("targets" in k and v != 0)}
         URL = "/profile?advertiser_id=%s&campaign_id=%s" % (advertiser_id,campaign_id) 
 
         data = {
-            "profile" : profile
+            "profile" : p
         }
         data['profile']['country_action'] = "include"
-        data['profile']['country_targets'] = [{"country": "US"}]
+        data['profile']['country_targets'] = data['profile'].get("country_targets",[{"country": "US"}])
         data['profile']['device_type_targets'] = ["phone"]
         data['profile']['supply_type_targets'] = ["mobile_app", "mobile_web"]
-        data['profile']['max_day_imps'] = 5
-        data['profile']['max_lifetime_imps'] = 15
+        data['profile']['max_day_imps'] = profile.get("max_day_imps",5)
+        data['profile']['max_lifetime_imps'] = profile.get("max_lifetime_imps",15)
 
         data = self.api.post(URL,data=ujson.dumps(data))
         return data.json['response']['profile']
@@ -225,7 +225,7 @@ class UserCampaignHandler(CampaignHandler):
     def create(self, name, line_item_id, advertiser_id, price, campaign, profile):
 
         #import ipdb; ipdb.set_trace()
-        campaign = yield self.create_campaign(line_item_id,advertiser_id,name,price,campaign.get("creatives",[]))
+        campaign = yield self.create_campaign(line_item_id,advertiser_id,name,campaign.get("base_bid",1),campaign.get("creatives",[]),campaign)
         profile = yield self.create_profile(advertiser_id,campaign['id'],profile)
         campaign_with_profile = yield self.set_campaign_profile_id(advertiser_id,campaign['id'],profile['id'])
 
