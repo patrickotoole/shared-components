@@ -35,6 +35,7 @@ class YoshiProfileHandler(BaseHandler):
 
     @decorators.deferred
     def defer_modify_profile(self,advertiser_id,profile_id,profile):
+        profile = {k:v for k,v in profile.items() if "targets" not in k or ("targets" in k and v != 0)}
         URL = "/profile?advertiser_id=%s&id=%s" % (advertiser_id,profile_id)
         data = self.api.put(URL,data=ujson.dumps({"profile":profile}))
         return data.json['response']

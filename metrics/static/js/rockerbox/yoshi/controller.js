@@ -29,11 +29,25 @@ RB.yoshi.controller = (function(controller){
     var profile = RB.yoshi.actions.buildVerifiedCampaign(),
       invalid = RB.yoshi.actions.validateCampaign(profile)
 
+    console.log("CAMPAING ON UPDATE", profile.campaign.creatives)
+
     if (invalid) return failure(profile)
 
     RB.AJAX.rockerbox.getUser(function(x){
       profile.details.username = x.username 
-      RB.AJAX.rockerbox.postCampaign(JSON.stringify(profile),callback) 
+      var campaign = JSON.parse(JSON.stringify(profile.campaign))
+
+      campaign.creatives = campaign.creatives.filter(function(x){ return x.attached })
+
+      var cb = function(){
+        RB.AJAX.rockerbox.putProfile(
+          "&id=" + profile.profile.id,
+          JSON.stringify({"profile":profile.profile}), 
+          callback
+        )  
+      }
+
+      RB.AJAX.rockerbox.putCampaign("&id=" + campaign.id,JSON.stringify({"campaign":campaign}), cb) 
     })
 
   }

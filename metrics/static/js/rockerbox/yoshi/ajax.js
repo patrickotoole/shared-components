@@ -100,8 +100,7 @@ RB.AJAX = (function(obj){
       )
     }
     rockerbox.getCampaigns = obj.helpers.GETJSON.bind(false,obj.constants.CAMPAIGN)
-    rockerbox.postCampaign = obj.helpers.POSTJSON.bind(false,obj.constants.CAMPAIGN)
-    rockerbox.putCampaign = obj.helpers.PUTJSON.bind(false,obj.constants.CAMPAIGN)
+    
     rockerbox.getAdvertiser = obj.helpers.GETJSON.bind(false,obj.constants.ADVERTISER)
     rockerbox.getUser = obj.helpers.GETJSON.bind(false,obj.constants.USER)
     rockerbox.getCreatives = obj.helpers.GETJSON.bind(false,obj.constants.CREATIVE)
@@ -111,6 +110,10 @@ RB.AJAX = (function(obj){
     rockerbox.getCities = function(x,cb) { return obj.helpers.GETJSON(obj.constants.CITY+ x,cb) }  
     rockerbox.getHoverboard = obj.helpers.GETJSON.bind(false,obj.constants.HOVERBOARD)
     rockerbox.getProfile = function(x,cb) { return obj.helpers.GETJSON(obj.constants.PROFILE + "&id=" + x,cb) } 
+
+    rockerbox.postCampaign = obj.helpers.POSTJSON.bind(false,obj.constants.CAMPAIGN)
+    rockerbox.putCampaign = obj.helpers.PUTJSON.bind(false,obj.constants.CAMPAIGN) 
+    rockerbox.putProfile = obj.helpers.PUTJSON.bind(false,obj.constants.PROFILE)  
 
     //rockerbox.getCreatives = creativeMock
     return rockerbox 

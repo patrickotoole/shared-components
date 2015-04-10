@@ -224,9 +224,10 @@ RB.yoshi.UI.targeting = (function(targeting){
     targeting.country(group)
   }
 
-  targeting.frequency = function(panel) {
+  targeting.frequency = function(panel,hide) {
     var group = panel.append("div")
       .classed("list-group freq-group",true)
+      .classed("hidden",hide)
     
     group
       .append("div")
@@ -269,9 +270,10 @@ RB.yoshi.UI.targeting = (function(targeting){
 
   }
 
-  targeting.budget = function(panel) {
+  targeting.budget = function(panel,hide) {
     var group = panel.append("div")
       .classed("list-group freq-group",true)
+      .classed("hidden",hide)
     
     group
       .append("div")
@@ -446,26 +448,10 @@ RB.yoshi.UI.targeting = (function(targeting){
     */
 
     targeting.location(panel)
-
-    panel.append("div")
-      .classed("panel-heading",true)
-      .append("h3")
-      .classed("panel-title",true) 
-
     targeting.frequency(panel) 
-
-    panel.append("div")
-      .classed("panel-heading",true)
-      .append("h3")
-      .classed("panel-title",true) 
-
     targeting.budget(panel) 
 
-    panel.append("div")
-      .classed("panel-heading",true)
-      .append("h3")
-      .classed("panel-title",true) 
-     
+    
 
  
   }

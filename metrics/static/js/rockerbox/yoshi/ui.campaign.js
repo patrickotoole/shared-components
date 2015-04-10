@@ -24,6 +24,7 @@ RB.yoshi.UI = (function(UI){
         .classed("panel-sub-heading pixel-reporting list-group",true)
 
       var header = pixel_group.append("div").classed("list-group-item",true)
+
       header
         .append("h5").classed("list-group-item-heading",true)
         .text("Modify Campaign Settings")
@@ -39,6 +40,9 @@ RB.yoshi.UI = (function(UI){
           .append("div")
           .classed("panel-body",true)
           .style("margin-top","-15px")
+          .style("border","1px solid rgb(221, 221, 221)")
+          .style("padding","0px")
+          .style("padding-top","15px")
 
       campaign.buildTable(body)
       campaign.startEditable()
@@ -46,13 +50,14 @@ RB.yoshi.UI = (function(UI){
 
     campaign.buildTable = function(body) {
       var table = body.append("table")
-        .classed("table table-condensed",true)
+        .classed("table",true)
 
       var thead = table.append("thead").append("tr")
 
-      var headers = ["State", "Name","Edit","Remove","Profile"]
-      headers.map(function(x){
+      var headers = ["Name","State","Remove"]
+      headers.map(function(x,i){
         thead.append("th").text(x)
+          .classed("col-md-10",i==0)
       })
 
 
@@ -67,15 +72,40 @@ RB.yoshi.UI = (function(UI){
         .style("cursor","pointer")
         .on("click",function(x){
 
+          d3.selectAll("tr.campaign-expansion").remove()
+
+          var i = Array.prototype.indexOf.call(this.parentNode.childNodes, this) + 2;
+
+          var dthis = d3.select(this.parentNode)
+
+          var expansion = dthis
+            .insert("tr","tr:nth-child("+i+")").classed("campaign-expansion",true)
+            .datum(d3.select(this).datum())
+            .append("td")
+            .attr("colspan",42)
+            .append("div").classed("list-group campaign-expansion",true)
+            .style("margin-top","10px") 
+            .style("margin-bottom","10px")  
+
+          var creativeGroup = expansion.append("div")
+            .classed("edit-group creatives-group",true)
+
+          campaign.buildCreativeGroup(creativeGroup) 
+
+          var locationGroup = expansion.append("div")
+            .classed("edit-group location-group hidden",true)
+
+          UI.targeting.frequency(locationGroup)
+          UI.targeting.budget(locationGroup) 
+
           tbody.selectAll("tr")
-            .style("opacity",".8")
-            .style("background-color","#f5f5f5")
+            .style("background-color","#f0f0f0")
             .style("font-weight",null)
 
           d3.select(this)
-            .style("opacity","1")
             .style("background-color","white") 
             .style("font-weight","bold")
+
 
           var withProfile = function(p){
 
@@ -237,7 +267,7 @@ RB.yoshi.UI = (function(UI){
     }
 
     campaign.buildRow = function(row) {
-      var entries = ["state","name","edit","remove","profile_id"];
+      var entries = ["name","state","remove"];
       var values = {
         "name": function(entry,data) {
           return data[entry].split("Yoshi | ")[1].split(" | ")[0]

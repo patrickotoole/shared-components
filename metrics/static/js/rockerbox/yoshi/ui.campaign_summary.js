@@ -14,15 +14,25 @@ RB.yoshi.UI.campaign_summary = (function(campaign_summary){
       .text("Campaign Summary")
   } 
 
-  campaign_summary.subheading = function(group,text) {
+  campaign_summary.subheading = function(group,text,include_edit) {
   
     var g = group.append("div")
       .classed("list-group-item",true)
 
-    g
+    var h = g
       .append("h5")
       .classed("list-group-item-heading",true)
       .text(text)
+      .attr("data-name",text.toLowerCase())
+
+    if (include_edit) {
+      h.insert("span")
+        .style("float","right")
+        .append("a")
+        .text("edit")
+        .on("click",RB.yoshi.actions.editCreatives)
+    }
+
     return g
   }
 
@@ -225,9 +235,10 @@ RB.yoshi.UI.campaign_summary = (function(campaign_summary){
   }
 
   campaign_summary.location = function(group,data) {
-    var heading = campaign_summary.subheading(group,"Location")
+    var heading = campaign_summary.subheading(group,"Location",true)
     heading
-      .style("border-top", "10px solid #f5f5f5") 
+      .style("border-top", "15px solid rgb(240,240,240)")  
+     // .style("border-top", "10px solid #f5f5f5") 
 
     if (data.profile.country_targets.length > 0) {
 
@@ -332,8 +343,8 @@ RB.yoshi.UI.campaign_summary = (function(campaign_summary){
   }
 
   campaign_summary.creatives = function(group) {
-    campaign_summary.subheading(group,"Creatives")
-      .style("border-top", "10px solid #f5f5f5") 
+    campaign_summary.subheading(group,"Creatives",true)
+      .style("border-top", "15px solid rgb(240,240,240)") 
 
     group.append("div").classed("line-group-item campaign-entry",true)
       .selectAll("span")
@@ -348,8 +359,6 @@ RB.yoshi.UI.campaign_summary = (function(campaign_summary){
   campaign_summary.build = function(target,data) {
 
     target.html("")
-
-    console.log(data)
 
     var bound = d3.select(target.node().parentNode)
       .selectAll(".panel").data([data])

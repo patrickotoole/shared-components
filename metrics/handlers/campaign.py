@@ -1,4 +1,3 @@
-
 import tornado.web
 import ujson
 import pandas
@@ -125,6 +124,9 @@ class AdminCampaignHandler(CampaignHandler):
 
     @decorators.deferred
     def create_admin_profile(self,advertiser_id,campaign_id,profile):
+        #import ipdb; ipdb.set_trace()
+        profile = {k:v for k,v in profile.items() if "targets" not in k or ("targets" in k and v != 0)} 
+
         URL = "/profile?advertiser_id=%s&campaign_id=%s" % (advertiser_id,campaign_id) 
 
         data = {
@@ -203,6 +205,7 @@ class UserCampaignHandler(CampaignHandler):
 
     @decorators.deferred
     def create_profile(self,advertiser_id,campaign_id,profile):
+        profile = {k:v for k,v in profile.items() if "targets" not in k or ("targets" in k and v != 0)}
         URL = "/profile?advertiser_id=%s&campaign_id=%s" % (advertiser_id,campaign_id) 
 
         data = {
@@ -271,6 +274,10 @@ class YoshiCampaignHandler(AdminCampaignHandler,UserCampaignHandler):
 
     @tornado.web.asynchronous
     def put(self):
+        """
+        Requires a logged in user. Expects a json object that contains the 
+        relevant campaign fields which need to be updated.
+        """
         advertiser_id = self.current_advertiser
         campaign_id = self.get_argument("id",False)
         state = self.get_argument("state",False)
@@ -279,7 +286,7 @@ class YoshiCampaignHandler(AdminCampaignHandler,UserCampaignHandler):
         else:
             obj = ujson.loads(self.request.body)
             campaign = obj.get("campaign",False)
-        
+
         if advertiser_id and campaign_id and campaign:
             self.modify_campaign(advertiser_id,campaign_id,campaign)
         else:
