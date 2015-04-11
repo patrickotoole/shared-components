@@ -171,6 +171,7 @@ RB.yoshi.UI.recommended = (function(recommended){
   recommended.buildDetailsTable = function(row) {
     
     var build = function(r,data) {
+
       var wrapper = r.append("div").classed("table-wrapper hidden",true)
 
       wrapper.append("div")
@@ -208,13 +209,27 @@ RB.yoshi.UI.recommended = (function(recommended){
 
     row.map(function(r){
       var obj = d3.selectAll(r)
-      var d = obj.data()[0]
-      RB.AJAX.rockerbox.getViewability("?domain=" + d,function(data){
+      var domain = obj.data()[0]
+      var d = d3.select(obj.node().parentNode.parentNode.parentNode).datum()
+      d.domains = [domain]
+      d.sizes = []
+      d.placements = []
+      RB.AJAX.rockerbox.getViewability("?domain=" + domain,function(data){
         var data = data.filter(function(x){
-          x.sizes = [x.size]
-          x.placements = [x.tag_id]
+
+          if (x.num_loaded > 40) {
+
+            if (d.sizes.indexOf(x.size) == -1) d.sizes.push(x.size)
+            if (d.placements.indexOf(x.tag_id) == -1) d.placements.push(x.tag_id)
+            x.sizes = [x.size]
+            x.placements = [x.tag_id]
+
+          }
           return x.num_loaded > 40
         })
+
+        d3.select(obj.node().parentNode.parentNode.parentNode).datum(d)
+
         build(obj,data) 
       })
       

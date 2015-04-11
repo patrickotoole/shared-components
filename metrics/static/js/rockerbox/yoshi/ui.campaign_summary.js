@@ -60,8 +60,6 @@ RB.yoshi.UI.campaign_summary = (function(campaign_summary){
       var selected = d3.select(".selected-domains")
       var data = selected.data()[0]
 
-      
-
       RB.yoshi.selection.domain_exclusions.push(y.deselected)
 
       data.profile.domain_targets = data.profile.domain_targets.filter(function(d){
@@ -70,7 +68,7 @@ RB.yoshi.UI.campaign_summary = (function(campaign_summary){
 
       var exclusions = RB.yoshi.selection.domain_exclusions
 
-      var toUncheck = d3.selectAll(".ad-history .list-group-item.entry .col-md-2 input:checked")
+      var toUncheck = d3.selectAll(".ad-selection .list-group-item.entry .col-md-2 input:checked")
         .filter(function(x){
           var contained = RB.yoshi.selection.filterContains(exclusions,x.domains)
           return contained.length == x.domains.length
@@ -85,7 +83,7 @@ RB.yoshi.UI.campaign_summary = (function(campaign_summary){
           })
       }
 
-      var toUncheckMini = d3.selectAll(".ad-history tbody > tr input:checked")
+      var toUncheckMini = d3.selectAll(".ad-selection tbody > tr input:checked")
         .filter(function(x){return x.domain == y.deselected})
 
       if (toUncheckMini[0].length) {
@@ -134,10 +132,9 @@ RB.yoshi.UI.campaign_summary = (function(campaign_summary){
 
       var exclusions = RB.yoshi.selection.size_exclusions
 
-      var toUncheck = d3.selectAll(".ad-history .list-group-item.entry .col-md-2 input:checked")
+      var toUncheck = d3.selectAll(".ad-selection .list-group-item.entry .col-md-2 input:checked")
         .filter(function(x){
           var contained = RB.yoshi.selection.filterContains(exclusions,x.sizes)
-
           return contained.length == x.sizes.length
         })
 
@@ -150,7 +147,7 @@ RB.yoshi.UI.campaign_summary = (function(campaign_summary){
           })
       }
 
-      var toUncheckMini = d3.selectAll(".ad-history tbody > tr input:checked")
+      var toUncheckMini = d3.selectAll(".ad-selection tbody > tr input:checked")
         .filter(function(x){
           return RB.yoshi.selection.filterContains(exclusions,x.sizes).length == x.sizes.length
         })
@@ -198,7 +195,7 @@ RB.yoshi.UI.campaign_summary = (function(campaign_summary){
 
       var exclusions = RB.yoshi.selection.placement_exclusions
 
-      var toUncheck = d3.selectAll(".ad-history .list-group-item.entry .col-md-2 input:checked")
+      var toUncheck = d3.selectAll(".ad-selection .list-group-item.entry .col-md-2 input:checked")
         .filter(function(x){
           var contained = RB.yoshi.selection.filterContains(exclusions,x.placements)
 
@@ -214,7 +211,7 @@ RB.yoshi.UI.campaign_summary = (function(campaign_summary){
           })
       }
 
-      var toUncheckMini = d3.selectAll(".ad-history tbody > tr input:checked")
+      var toUncheckMini = d3.selectAll(".ad-selection tbody > tr input:checked")
         .filter(function(x){
           return RB.yoshi.selection.filterContains(exclusions,x.placements).length == x.placements.length
         })
