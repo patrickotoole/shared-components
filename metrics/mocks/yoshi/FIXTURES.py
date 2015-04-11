@@ -7,7 +7,9 @@ FAKE_ACTIVE_CAMPAIGN = {
     "daily_budget": 100,
     "state": "active",
     "creatives": [],
-    "comments": ""
+    "comments": "",
+    "profile_id":1,
+    "lifetime_budget":100
 }
 FAKE_DELETED_CAMPAIGN = copy.copy(FAKE_ACTIVE_CAMPAIGN)
 FAKE_DELETED_CAMPAIGN["comments"] = "deleted"

@@ -41,7 +41,7 @@ class CampaignTest(AsyncHTTPTestCase):
         self.assertEqual(len(ujson.loads(response)), 1)
         self.assertEqual(
             set(ujson.loads(response)[0].keys()), 
-            set([u'id',u'name',u'base_bid',u'daily_budget',u'state',u'creatives'])
+            set([u'id',u'name',u'base_bid',u'daily_budget',u'state',u'creatives','profile_id','lifetime_budget','advertiser_id']) 
         ) 
 
         response = self.fetch("/?format=json&show_deleted=1", method="GET").body
@@ -49,7 +49,7 @@ class CampaignTest(AsyncHTTPTestCase):
         self.assertEqual(len(ujson.loads(response)), 2)
         self.assertEqual(
             set(ujson.loads(response)[0].keys()), 
-            set([u'id',u'name',u'base_bid',u'daily_budget',u'state',u'creatives'])
+            set([u'id',u'name',u'base_bid',u'daily_budget',u'state',u'creatives','profile_id','lifetime_budget','advertiser_id'])
         )
 
 
