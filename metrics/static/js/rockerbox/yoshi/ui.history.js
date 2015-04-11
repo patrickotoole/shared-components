@@ -107,6 +107,7 @@ RB.yoshi.UI.history = (function(history){
     index.append("span")
       .append("input")
       .attr("type","checkbox")
+      .classed("history-selection",true)
       .on("click",function(){
         var isChecked = d3.select(this).property("checked")
         var parent = d3.select(this.parentNode.parentNode.parentNode)
@@ -115,7 +116,7 @@ RB.yoshi.UI.history = (function(history){
         childCheckboxes.property('disabled',isChecked)
 
         RB.yoshi.actions.toggleCampaignVerification(true)
-        if (d3.event) d3.event.stopPropagation()
+        //if (d3.event) d3.event.stopPropagation()
       })
 
     index.append("span")

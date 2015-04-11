@@ -114,6 +114,7 @@ RB.yoshi.UI.recommended = (function(recommended){
       .style("float","left")
       .append("input")
       .attr("type","checkbox")
+      .classed("recommended-selection",true)
       .on("click",function(){
         var isChecked = d3.select(this).property("checked")
         var parent = d3.select(this.parentNode.parentNode.parentNode)
@@ -122,7 +123,7 @@ RB.yoshi.UI.recommended = (function(recommended){
         childCheckboxes.property('disabled',isChecked)
 
         RB.yoshi.actions.toggleCampaignVerification(true)
-        if (d3.event) d3.event.stopPropagation()
+        //if (d3.event) d3.event.stopPropagation()
       })
 
     var barWrapper = index.append("div").style("float","left").style("margin-left","15px")

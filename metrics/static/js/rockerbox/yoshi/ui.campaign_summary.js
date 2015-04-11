@@ -30,6 +30,7 @@ RB.yoshi.UI.campaign_summary = (function(campaign_summary){
         .style("float","right")
         .append("a")
         .text("edit")
+        .classed("summary-"+text.toLowerCase(),true)
         .on("click",RB.yoshi.actions.editCreatives)
     }
 

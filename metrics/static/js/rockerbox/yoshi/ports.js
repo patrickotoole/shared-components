@@ -105,6 +105,8 @@ RB.yoshi.ports = (function(ports){
       var name = "history_page_" + (+new Date).toString()
       var nofilter = function(x){return x}
 
+        heap.load("2497956600");
+
         /*
         RB.AJAX.appnexus.getUID(function(resp,xhr){
           var uuid = xhr.responseURL.split("cookie?uuid=")[1];

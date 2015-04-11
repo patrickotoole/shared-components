@@ -28,6 +28,12 @@ RB.yoshi.controller = (function(controller){
       "include" : "exclude"
   }
 
+  var reformatBudget = function(campaign) {
+    campaign.daily_budget = parseFloat(campaign.daily_budget)
+    campaign.lifetime_budget = parseFloat(campaign.lifetime_budget)
+    campaign.base_bid = parseFloat(campaign.base_bid) 
+  }
+
 
 
 
@@ -47,6 +53,8 @@ RB.yoshi.controller = (function(controller){
       reformatCountries(profile.profile)
       reformatRegions(profile.profile)
       reformatCities(profile.profile)
+
+      reformatBudget(profile.campaign)
  
       profile.details.username = x.username.split("a_")[1]
       RB.AJAX.rockerbox.postCampaign(JSON.stringify(profile),callback)
@@ -74,6 +82,8 @@ RB.yoshi.controller = (function(controller){
       reformatCountries(profile.profile)
       reformatRegions(profile.profile)
       reformatCities(profile.profile)
+
+      reformatBudget(profile.campaign) 
       
       profile.profile.domain_action = "include"  
 
