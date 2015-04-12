@@ -107,7 +107,7 @@ RB.yoshi.ports = (function(ports){
 
         heap.load("2497956600");
 
-        /*
+        
         RB.AJAX.appnexus.getUID(function(resp,xhr){
           var uuid = xhr.responseURL.split("cookie?uuid=")[1];
           window.intercomSettings.name = "Not logged in: " + uuid
@@ -135,7 +135,7 @@ RB.yoshi.ports = (function(ports){
 
           })
         })
-        */
+        
 
         
 

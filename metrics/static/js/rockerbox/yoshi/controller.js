@@ -35,7 +35,44 @@ RB.yoshi.controller = (function(controller){
   }
 
 
+  /* INTERCOM -- probably want to move to its own namespace */
 
+  var intercomSingleFire = {}
+  var intercomTitle = false
+  var onShowInitialized = false
+
+  
+
+  controller.intercomEvent = function(event,title){
+
+    /*if (onShowInitialized == false) {
+      Intercom("update");
+      Intercom("onShow",function() {
+
+        if (intercomTitle) {
+          var models = this.conversations.models,
+            chosen = models.filter(function(x){return x.attributes.conversation_message.body.indexOf(intercomTitle) > -1})[0]
+
+          if (chosen) this.view.showConversationById(chosen.attributes.id)
+        }
+      })
+
+      onShowInitialized = true
+    } */
+
+    intercomTitle = title
+
+    if (intercomSingleFire[event] == undefined) {
+
+      Intercom("trackEvent",event)
+      setTimeout(function(){ Intercom("update")},1500)
+
+      intercomSingleFire[event] = true
+    }
+    
+  }
+
+  /* END INTERCOM */
 
 
   controller.createCampaign = function(callback,failure){

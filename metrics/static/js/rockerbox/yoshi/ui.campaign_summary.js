@@ -235,7 +235,7 @@ RB.yoshi.UI.campaign_summary = (function(campaign_summary){
   campaign_summary.location = function(group,data) {
     var heading = campaign_summary.subheading(group,"Location",true)
     heading
-      .style("border-top", "15px solid rgb(240,240,240)")  
+      //.style("border-top", "15px solid rgb(240,240,240)")  
      // .style("border-top", "10px solid #f5f5f5") 
 
     if (data.profile.country_targets.length > 0) {
@@ -342,7 +342,7 @@ RB.yoshi.UI.campaign_summary = (function(campaign_summary){
 
   campaign_summary.creatives = function(group) {
     campaign_summary.subheading(group,"Creatives",true)
-      .style("border-top", "15px solid rgb(240,240,240)") 
+      //.style("border-top", "15px solid rgb(240,240,240)") 
 
     group.append("div").classed("line-group-item campaign-entry",true)
       .selectAll("span")
@@ -362,20 +362,25 @@ RB.yoshi.UI.campaign_summary = (function(campaign_summary){
       .selectAll(".panel").data([data])
 
     bound.enter().append("div").classed("panel panel-default",true)
+
+    bound
+      .style("background-color","transparent")
     campaign_summary.heading(bound)
 
     var group = bound
       .append("div")
-      .classed("list-group",true)
+      .style("background","none")
     
-    campaign_summary.domains(group)
-    campaign_summary.sizes(group)
-    campaign_summary.tags(group)
-    campaign_summary.creatives(group)
+    var targets_group = group.append("div").classed("list-group",true)
+    campaign_summary.domains(targets_group)
+    campaign_summary.sizes(targets_group)
+    campaign_summary.tags(targets_group)
+    campaign_summary.creatives(group.append("div").classed("list-group",true))
     
-    campaign_summary.location(group,data) 
-    campaign_summary.frequency(group) 
-    campaign_summary.budget(group)  
+    var details_group = group.append("div").classed("list-group",true)
+    campaign_summary.location(details_group,data) 
+    campaign_summary.frequency(details_group) 
+    campaign_summary.budget(details_group)  
 
     setTimeout(function(){$("#campaign-wrapper").sticky({getWidthFrom:".campaign-verification"})},500)
   } 

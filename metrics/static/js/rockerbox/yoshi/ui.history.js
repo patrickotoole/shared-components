@@ -109,6 +109,9 @@ RB.yoshi.UI.history = (function(history){
       .attr("type","checkbox")
       .classed("history-selection",true)
       .on("click",function(){
+
+        RB.yoshi.controller.intercomEvent("ad-selection",false)
+
         var isChecked = d3.select(this).property("checked")
         var parent = d3.select(this.parentNode.parentNode.parentNode)
         var childCheckboxes = parent.selectAll("table").selectAll("input")
