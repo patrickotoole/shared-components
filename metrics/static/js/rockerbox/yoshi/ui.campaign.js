@@ -239,10 +239,11 @@ RB.yoshi.UI = (function(UI){
       var campaignCreatives = group
         .append("table")
         .classed("table condensed hidden",true)
+        .style("margin-top","10px")
 
       var head = campaignCreatives.append("thead").append("tr")
       
-      head.append("th").text("Creative size")
+      head.append("th").text("Size")
       head.append("th").text("Name")
       head.append("th").text("Sample")
       head.append("th").text("Include?")

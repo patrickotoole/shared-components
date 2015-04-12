@@ -7,10 +7,12 @@ RB.yoshi.UI.creative = (function(creative){
   creative.table = function(wrapper) {
     var table = wrapper.append("table").classed("hidden",true)
       .style("margin-left","4.15%")
+      .style("margin-top","10px")
+      .style("background-color", "rgb(240, 240, 240)")
 
     var header = table.classed("table table-hover",true).append("thead").append("tr")
     
-    header.append("th").text("Creative size")
+    header.append("th").text("Size")
     header.append("th").text("Name")
     header.append("th").text("Sample")
     header.append("th").text("Include?")
@@ -32,6 +34,7 @@ RB.yoshi.UI.creative = (function(creative){
     entry.append("td")
       .append("img")
       .attr("src",function(x){return x.media_url_secure})
+      .attr("data-featherlight",function(x){return x.media_url_secure})
       .style("max-height","50px")
       .style("max-width","100%")
 
