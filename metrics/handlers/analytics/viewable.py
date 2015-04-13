@@ -5,7 +5,7 @@ import pandas
 import StringIO
 import logging
 
-from base import BaseHandler
+from ..base import BaseHandler
 from twisted.internet import defer
 from lib.helpers import decorators
 QUERY = "SELECT * from rockerbox.tag_size_viewability "
@@ -50,7 +50,12 @@ class ViewabilityHandler(BaseHandler):
         except:
             self.finish()
 
+
     #@tornado.web.authenticated
     @tornado.web.asynchronous
     def get(self):
-        self.get_viewability(self.get_arguments("tag_id"),self.get_arguments("size",[]),self.get_arguments("domain",[]))
+        self.get_viewability(
+            self.get_arguments("tag_id"),
+            self.get_arguments("size",[]),
+            self.get_arguments("domain",[])
+        )

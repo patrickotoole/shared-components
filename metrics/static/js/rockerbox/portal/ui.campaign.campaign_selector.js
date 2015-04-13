@@ -9,14 +9,20 @@ RB.portal.UI.campaign_selector = (function(campaign_selector){
   var campaignHeader;
 
   var rowMetricTransform = function(rowData) {
+    console.log(rowData)
     var x = rowData;
     return [
         [
           {"class":"name","value":x.campaign_bucket}
         ], 
-        UI.constants.HEADINGS.map(function(y){y.data = x; return y}),
+        JSON.parse(JSON.stringify(UI.constants.HEADINGS)).map(function(y,i){
+          y.values = UI.constants.HEADINGS[i].values
+          y.data = x; 
+          y.class = "metric"
+          return y
+        }),
         [
-          {"class":"streaming"}
+          {"class":"streaming","value":x.campaign_bucket}
         ]
     ]
   } 
@@ -36,59 +42,162 @@ RB.portal.UI.campaign_selector = (function(campaign_selector){
 
   campaign_selector.detail_tables = {}
 
+  campaign_selector.update_row_data = function(CRS) {
+    var data = bucketDataFormatter(CRS)
+    var row = d3.selectAll(".campaigns-body")
+      .selectAll(".campaign").data(data,function(x){return x.campaign_bucket})
+
+    var metric_values = row.selectAll(".metric-group.metric-values")
+      .data(function(x){return [rowMetricTransform(x)[1]]})
+
+
+    var mv_metric = metric_values
+      .selectAll(".campaign-metric")
+      .data(function(x){return x})
+
+
+    var metric = mv_metric
+       .selectAll(".metric")
+       .data(function(x){
+
+         var series = x.key,
+           data = x.data,
+           values = x.values;
+  
+         return values ? values.map(function(v){
+             var func = UI.formatters[v.key](series)
+             value = v.formatter ? v.formatter(data) : func(data)
+             return {
+               "value": value,
+               "key": v.key
+             }
+           }) : [{"value":x.value}]
+
+       })
+
+     metric
+         .attr("class",function(x){return "metric " + (x.key || "")})
+         .text(function(x){ return x.value })
+            
+    
+
+
+  }
+
   campaign_selector.build_metrics = function(row) {
-    var metric = row.selectAll(".campaign-no-style")
-      .data(rowMetricTransform)
+    var onClick = function(d,i) {
+      var currentParent = this.parentNode;
+      var current_select = d3.select(currentParent)
 
-    var innerMetric = metric.enter()
-      .append("div")
-      .on("click",function(d,i) {
-        var currentParent = this.parentNode;
-        var current_select = d3.select(currentParent)
+      row.filter(function(){return this != currentParent})
+        .selectAll(".expansion")
+        .transition()
+        .style("max-height","0px")
+           
+      current_select.classed("active-row",true)
 
-        row.filter(function(){return this != currentParent})
-          .selectAll(".expansion")
-          .transition()
-          .style("max-height","0px")
-             
-        current_select.classed("active-row",true)
+      current_select.select(".expansion")
+        .style("max-height","0px")
+        .transition()
+        .style("max-height","500px")
+        .each("end",function(){
 
-        current_select.select(".expansion")
-          .style("max-height","0px")
-          .transition()
-          .style("max-height","500px")
-          .each("end",function(){
+          d3.select(currentParent.parentNode)
+            .transition()
+            .tween("",function() { 
+              var i = d3.interpolateNumber(this.scrollTop, currentParent.offsetTop); 
+              return function(t) { this.scrollTop = i(t); }; 
+            }).each("end",function(){
+              row.classed("active-row",false)
+              current_select.classed("active-row",true)
+                 
+            })
+        })
+     
+      var bucket = this.parentNode.__data__.campaign_bucket
+      
+      UI.campaign_bucket.selectCampaign(bucket,d3.select(this.parentNode))
+      d3parent = d3.select(currentParent)
 
-            d3.select(currentParent.parentNode)
-              .transition()
-              .tween("",function() { 
-                var i = d3.interpolateNumber(this.scrollTop, currentParent.offsetTop); 
-                return function(t) { this.scrollTop = i(t); }; 
-              }).each("end",function(){
-                row.classed("active-row",false)
-                current_select.classed("active-row",true)
-                   
-              })
-          })
-         
+      d3.select(".main-header").text("Campaign Performance > " + d3parent.datum().campaign_bucket)
+
+      interval.chart = campaign_selector.detail_tables["#" +current_select.select(".details-table").attr("id")]
+      var dim = (interval.value == "daily") ? "daily_grouped" : interval.value
+      interval.chart.dimension(interval.chart.data().aggregateDimensions[dim])
+      interval.chart.redraw()
+
        
-        var bucket = this.parentNode.__data__.campaign_bucket
-        
-        UI.campaign_bucket.selectCampaign(bucket,d3.select(this.parentNode))
-        d3parent = d3.select(currentParent)
+    }
 
-        d3.select(".main-header").text("Campaign Performance > " + d3parent.datum().campaign_bucket)
+    var metric_name = row.selectAll(".metric-group.metric-name")
+      .data(function(x){return rowMetricTransform(x)[0]})
 
+    metric_name.enter()
+      .append("div")
+      .on("click",onClick) 
+      .classed("metric-group metric-name col-md-3 campaign-no-style",true)
+      .style("border-top", "1px solid #ddd")
+      .append("div")
+        .classed("col-md-12 campaign-metric",true)
+        .style("overflow","hidden")
+        .style("height","35px")
+        .style("font-size",function(x){return x.class == "name" ? "12px": ""})
+        .append("span")
+          .classed("metric",true)
+          .text(function(x){return x.value})
 
+    var metric_values = row.selectAll(".metric-group.metric-values")
+      .data(function(x){return [rowMetricTransform(x)[1]]})
 
-        interval.chart = campaign_selector.detail_tables["#" +current_select.select(".details-table").attr("id")]
-        interval.chart.dimension(interval.chart.data().aggregateDimensions[interval.value])
-        interval.chart.redraw()
+    metric_values.enter()
+      .append("div").on("click",onClick)
+      .classed("metric-group metric-values col-md-8",true)
+      .style("border-top", "1px solid #ddd")
+      
+
+    var mv_metric = metric_values
+      .selectAll(".campaign-metric")
+      .data(function(x){return x})
+
+    mv_metric
+      .enter()
+        .append("div")
+        .classed("campaign-metric col-md-2",true)
+        .style("overflow","hidden")
+        .style("height","35px")
+
+    var metric = mv_metric
+       .selectAll(".metric")
+       .data(function(x){
+
+         var series = x.key,
+           data = x.data,
+           values = x.values;
+  
+         return values ? values.map(function(v){
+             var func = UI.formatters[v.key](series)
+             value = v.formatter ? v.formatter(data) : func(data)
+             return {
+               "value": value,
+               "key": v.key
+             }
+           }) : [{"value":x.value}]
+
+       })
+
+     metric
+       .enter()
+         .append("span")
+         .attr("class",function(x){return "metric " + (x.key || "")})
+         .text(function(x){ return x.value })
 
          
-      })
+
+    /*metric_name
       .append("div")
-      .classed("col-md-8",function(x,i){return (i == 1) })
+      .on("click",onClick)
+      .classed("metric-group",true)
+      .classed("metric-values col-md-8",function(x,i){return (i == 1) })
       .classed("col-md-1",function(x,i){return (i == 2) }) 
       .classed("campaign-no-style col-md-3",function(x,i){return i == 0}) 
       .style("border-top", "1px solid #ddd")
@@ -98,15 +207,15 @@ RB.portal.UI.campaign_selector = (function(campaign_selector){
       })
       .enter()
         .append("div")
-        .attr("class",function(x){
-          return x.key ? "col-md-2" : "col-md-12"
-        })
-        .classed("campaign-metric",true)
+        .classed("col-md-12 campaign-metric",true)
         .style("overflow","hidden")
         .style("height","35px")
         .style("font-size",function(x){return x.class == "name" ? "12px": ""})
+        .append("span")
+          .classed("metric",true)
+          .text(function(x){return x.value})
 
-    innerMetric
+    /*innerMetric
       .selectAll("span")
       .data(function(x){
         var series = x.key,
@@ -126,7 +235,7 @@ RB.portal.UI.campaign_selector = (function(campaign_selector){
         .append("span")
         .attr("class",function(x){return "metric " + (x.key || "")})
         .text(function(x){ return x.value })
-     
+      */
   }
 
   campaign_selector.build_expansion = function(row,CRS) { 
@@ -186,6 +295,8 @@ RB.portal.UI.campaign_selector = (function(campaign_selector){
 
     return row
   }
+
+  
 
   campaign_selector.build = function(CRS,campaignTable) {
 
