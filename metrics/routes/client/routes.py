@@ -47,12 +47,17 @@ class AdvertiserRoutes(Routes):
     @connectors("db","api","cassandra")
     def yoshi_routes(self):
         import handlers.campaign as campaign
+        import handlers.profile as profile
         import handlers.creative as creative
+        import handlers.viewable as viewable
+        import handlers.appnexus as appnexus
         import handlers.analytics as analytics
 
         return [
             (r'/campaign', campaign.YoshiCampaignHandler, self.connectors),
+            (r'/profile', profile.YoshiProfileHandler, self.connectors), 
             (r'/creative', creative.CreativeHandler, self.connectors),
+            (r'/location.*', appnexus.AppnexusHandler, self.connectors)   
             (r'/viewability', analytics.ViewabilityHandler, self.connectors),
             (r'/availability', analytics.AvailabilityHandler, self.connectors)
         ]

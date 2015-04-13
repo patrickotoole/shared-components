@@ -1,3 +1,4 @@
+
 import tornado.web
 import ujson
 import pandas
@@ -38,13 +39,17 @@ class ViewabilityHandler(BaseHandler):
 
     @defer.inlineCallbacks
     def get_viewability(self,tag_ids,sizes,domains):
-        df = yield self.defer_get_viewablity(tag_ids,sizes,domains)
-        if len(df):
-            df['percent_viewable'] = df.num_visible / df.num_loaded
+        try:
+            viewability = yield self.defer_get_viewablity(tag_ids,sizes,domains)
+            if len(viewability):
+                viewability['percent_viewable'] = viewability['num_visible']/viewability['num_loaded']
 
-        viewability_list = df.T.to_dict().values()
-        self.write(ujson.dumps(viewability_list))
-        self.finish()
+            viewability_list = viewability.T.to_dict().values()
+            self.write(ujson.dumps(viewability_list))
+            self.finish()
+        except:
+            self.finish()
+
 
     #@tornado.web.authenticated
     @tornado.web.asynchronous

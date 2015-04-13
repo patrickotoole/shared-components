@@ -4,6 +4,7 @@ from lib.kafka_queue import KafkaQueue
 import lib.hive as h
 
 import ujson
+import mocks.yoshi
 
 class ConnectorConfig(object):
 
@@ -14,10 +15,10 @@ class ConnectorConfig(object):
 
         self.connectors = {}
 
-        self.connectors["db"] = lnk.dbs.rockerbox if not skip_db else None
+        self.connectors["db"] = lnk.dbs.rockerbox if not skip_db else mocks.yoshi.API
         self.connectors["reporting_db"] = lnk.dbs.reporting if not skip_reporting_db else None
 
-        self.connectors["api"] = lnk.api.console if not skip_console_api else None
+        self.connectors["api"] = lnk.api.console if not skip_console_api else mocks.yoshi.API
         self.connectors["bidder"] = lnk.api.bidder if not skip_bidder_api else None
         self.connectors["do"] = lnk.api.digitalocean 
         self.connectors["marathon"] = lnk.api.marathon
