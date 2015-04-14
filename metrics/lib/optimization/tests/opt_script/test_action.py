@@ -25,26 +25,26 @@ class ActionTestEx(Action):
     def action_index_fail(self, df):
         pass
 
-class ActionTest(unittest.TestCase):
-    def setUp(self):
-        df = pd.DataFrame([
-                {"a": 0, "b": 1, "c": 2, "d": 5}, 
-                {"a": 3, "b": 4, "c": 5, "d": 5}, 
-                {"a": 6, "b": 7, "c": 8, "d": 5}
-                ]).set_index("d")
+# class ActionTest(unittest.TestCase):
+#     def setUp(self):
+#         df = pd.DataFrame([
+#                 {"a": 0, "b": 1, "c": 2, "d": 5}, 
+#                 {"a": 3, "b": 4, "c": 5, "d": 5}, 
+#                 {"a": 6, "b": 7, "c": 8, "d": 5}
+#                 ]).set_index("d")
 
-        self.a = ActionTestEx({"results_type": df})
+#         self.a = ActionTestEx({"results_type": df})
 
-    def tearDown(self):
-        pass
+#     def tearDown(self):
+#         pass
 
-    def test_good_columns_and_index(self):
-        self.a.action_pass(self.a.results["results_type"])
+#     def test_good_columns_and_index(self):
+#         self.a.action_pass(self.a.results["results_type"])
 
-    @raises(Exception)
-    def test_bad_columns(self):
-        self.a.action_columns_fail(self.a.results["results_type"])
+#     @raises(Exception)
+#     def test_bad_columns(self):
+#         self.a.action_columns_fail(self.a.results["results_type"])
 
-    @raises(Exception)
-    def test_bad_index(self):
-        self.a.action_index_fail(self.a.results["results_type"])
+#     @raises(Exception)
+#     def test_bad_index(self):
+#         self.a.action_index_fail(self.a.results["results_type"])

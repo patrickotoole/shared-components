@@ -1,0 +1,102 @@
+import sys
+sys.path.append("../")
+from opt_script import Action
+from numpy import dtype
+import pandas as pd
+import json
+
+PLATFORM_PLACEMENT_COL_TYPES = {'action': dtype('O'), 'deleted': dtype('bool'), 'id': dtype('int64')}
+
+
+class PlacementAction(Action):
+	
+	def __init__(self, to_run, campaign):
+		self.to_run = to_run
+		self.campaign = campaign
+
+	def actions(self):
+		to_exclude = {}
+		for placement in self.to_run.keys():
+			try:
+				if self.to_run[placement]['action'] == "EXCLUDE_PLACEMENT":
+					to_exclude[placement] = self.to_run[placement]
+			except KeyError:
+				raise KeyError
+
+		self.exclude_placements(to_exclude)
+
+	def get_campaign_placement_targets(self):
+		'''
+		Returns the json object with placement targeting info from Appnexus
+		'''
+
+		try:
+			response = self.console.get_profile("/campaign?id=%s"%self.campaign)
+			try:
+				placement_targets =response.json['response']['profile']['platform_placement_targets']
+				return placement_targets
+			
+			except KeyError:
+				self.logger.error("bad campaign id")
+				raise KeyError
+
+		except KeyError:
+			self.logger.error("bad campaign id")
+			raise KeyError
+		
+
+	def adjust_placement_target(self, placement_targets, placement_id, new_action):
+		'''
+		Adjusts placement targeting object, for placement_id
+		'''
+
+		if placement_targets is None:
+			placement_targets = [{'id':placement_id, 'action':new_action,'deleted':False}]
+
+		else:
+			placement_targets = pd.DataFrame(placement_targets)
+			
+			if placement_targets.dtypes.to_dict() != PLATFORM_PLACEMENT_COL_TYPES:
+				raise TypeError("Incorrect column types")
+
+			else:
+				if placement_id in placement_targets['id'].unique():
+					placement_targets = placement_targets.set_index('id')
+					placement_targets.ix[placement_id, 'action'] = new_action
+					placement_targets = placement_targets.reset_index()
+				
+				else:
+					placement_targets.append([{'id':placement_id, 'action':new_action,'deleted':False}])
+
+			placement_targets = placement_targets.to_dict( 'records')
+
+		return placement_targets
+
+
+	def push_log(self, log):
+		r = self.rockerbox.post("/scripts/opt_log", data=json.dumps(log))
+
+		if r.json['status'] != 'ok':
+			raise TypeError("Incorrect Opt Log")
+
+
+	def exclude_placements(self, to_exclude):
+
+		for placement in to_exclude.keys():
+			try:
+				old_placement_targets = self.get_campaign_placement_targets()
+				new_placement_targets = self.adjust_placement_target(old_placement_targets, placement, 'exclude')
+					
+				log = { "rule_group_id": to_exclude[placement]['rule_group_id'],
+						"object_modified": "campaign_profile",
+						"campaign_id": self.campaign,
+						"field_name": 'platform_placement_targets',
+						"field_old_value": old_placement_targets,
+						"field_new_value": new_placement_targets,
+						"metric_values": to_exclude[placement]['metrics']
+				}	
+				self.push_log(log)			
+				
+			except (TypeError, KeyError) as Exception:
+				raise Exception("Issue with Placement %s targeting"%str(placement))
+

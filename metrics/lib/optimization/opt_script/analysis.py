@@ -1,5 +1,7 @@
 import logging
 from abc import ABCMeta, abstractmethod
+from link import lnk
+
 
 class Analysis(object):
     __metaclass__ = ABCMeta
@@ -10,6 +12,9 @@ class Analysis(object):
         # Set up logger
         logging.basicConfig(level=logging.INFO)
         instance.logger = logging.getLogger(__name__)
+
+
+        instance.rbox_api = lnk.api.rockerbox
 
         return instance
 
