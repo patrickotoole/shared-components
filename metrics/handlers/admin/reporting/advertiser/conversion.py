@@ -231,7 +231,8 @@ OPTIONS = {
                 "click_campaigns",
                 "first_campaign",
                 "last_campaign",
-                "influencer_campaign"
+                "influencer_campaign",
+                "campaign_first_dates"
                        ],
             "fields": ["num_conv", "num_served"]
         }
@@ -306,7 +307,9 @@ GROUPS = {
     "click_venues": "click_venues",
     "click_domains": "click_domains",
     "zip": "v.zip_code",
-    "median_household_income": "round(sum(b.median_household_income * num_conv) / sum(num_conv), 0)"
+    "median_household_income": "round(sum(b.median_household_income * num_conv) / sum(num_conv), 0)",
+    "campaign_first_dates": "campaign_first_dates",
+    "conv_timestamp_local": "conv_timestamp_local"
     }
 
 
