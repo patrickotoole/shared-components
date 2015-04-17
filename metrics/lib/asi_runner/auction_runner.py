@@ -1,7 +1,5 @@
 from auction import Auction
 import logging
-import requests
-import grequests
 
 class AuctionsRunner(object):
 
@@ -12,12 +10,14 @@ class AuctionsRunner(object):
         self.auctions = [Auction(form).form_and_url for form in bidforms]
 
     def bid_single(self,url,form):
+        import requests
         logging.info("running single auction: %s" % url)
         resp = requests.post(url, data=form, headers=self.FORM_HEADERS, timeout=self.TIMEOUT)
         return resp
      
 
     def bid_batch(self):
+        import grequests 
         logging.info("running auctions as batch...") 
         rs = (
             grequests.post(url, data=form, headers=self.FORM_HEADERS, timeout=self.TIMEOUT) 
