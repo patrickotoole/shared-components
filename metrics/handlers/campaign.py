@@ -153,7 +153,7 @@ class AdminCampaignHandler(CampaignHandler):
             {u'day': u'saturday', u'end_hour': 0, u'start_hour': 0},
             {u'day': u'saturday', u'end_hour': 23, u'start_hour': 8}
         ]
-        data['profile']['country_action'] = "exclude" if len(profile['country_targets']) == 0 else "include"
+        data['profile']['country_action'] = "exclude" if len(profile.get("country_targets",[])) == 0 else "include"
 
         data = self.api.post(URL,data=ujson.dumps(data))
         return data.json['response']['profile']
