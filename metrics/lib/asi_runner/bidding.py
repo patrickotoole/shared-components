@@ -49,7 +49,7 @@ def run_campaign(campaign_id,uid,api):
 
     batched_forms = batch(forms, 50)
     for idx, forms in enumerate(batched_forms):
-        resps = AuctionsRunner(forms).run_auctions(False)
+        resps = AuctionsRunner(forms).run_auctions(True)
         for (resp, form) in zip(resps, forms):
             summarized = time_it(summarize_bidding,resp.content,form.get("campaign_id"))
             to_log = dict(summarized,**form)
