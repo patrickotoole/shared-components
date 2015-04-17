@@ -39,16 +39,16 @@ class PlacementAnalysis(Analysis):
         self.placement_rules = PLACEMENT_RULES
         self.to_run = {}
 
-    def find_placements_no_conv_placement_unprofitable(self, row):
+    def find_no_conv_placement_unprofitable(self, row):
         return row['convs'] == 0 and row['profit'] < max(-1 * row['loss_limit'], -1 * row['RPA_multiplier'] * row['RPA'])
 
-    def find_placements_one_conv_placement_unprofitable(self, row):
+    def find_one_conv_placement_unprofitable(self, row):
         return row['convs'] == 1 and row['profit'] < max(-1 * row['loss_limit'], -1 * row['RPA_multiplier'] * row['RPA'])
 
-    def find_placements_multi_conv_placement_unprofitable(self,row):
+    def find_multi_conv_placement_unprofitable(self,row):
         return row['convs'] > 1 and row['profit'] < max(-1 * row['loss_limit'], -1 * row['RPA_multiplier'] * row['RPA'])
 
-    def find_placements_no_conv_placement_clickfraud(self, row):
+    def find_no_conv_placement_clickfraud(self, row):
         return row['convs'] == 0 and row['CTR'] >= row['CTR_cutoff'] and row['imps_served'] >= row['imp_served_cutoff']
 
 
@@ -58,16 +58,16 @@ class PlacementAnalysis(Analysis):
                             "imp_served_cutoff","CTR_cutoff"])
     def analyze(self):
 
-        placements_no_conv_placement_unprofitable = self.df[self.df.apply(lambda row: self.find_placements_no_conv_placement_unprofitable(row), axis = 1)].index.to_list()
+        placements_no_conv_placement_unprofitable = self.df[self.df.apply(self.find_no_conv_placement_unprofitable(row), axis = 1)].index.to_list()
         self.placement_rules['no_conv_placement_unprofitable']['placements'] = placements_no_conv_placement_unprofitable
 
-        placements_one_conv_placement_unprofitable = self.df[self.df.apply(lambda row: self.find_placements_one_conv_placement_unprofitable(row), axis = 1)].index.to_list()
+        placements_one_conv_placement_unprofitable = self.df[self.df.apply(self.find_one_conv_placement_unprofitable(row), axis = 1)].index.to_list()
         self.placement_rules['one_conv_placement_unprofitable']['placements'] = placements_one_conv_placement_unprofitable
 
-        placements_multi_conv_placement_unprofitable = self.df[self.df.apply(lambda row: self.find_placements_multi_conv_placement_unprofitable(row), axis = 1)].index.to_list()
+        placements_multi_conv_placement_unprofitable = self.df[self.df.apply(self.find_multi_conv_placement_unprofitable(row), axis = 1)].index.to_list()
         self.placement_rules['multi_conv_placement_unprofitable']['placements'] = placements_multi_conv_placement_unprofitable
 
-        placements_no_conv_placement_clickfraud = self.df[self.df.apply(lambda row: self.find_placements_no_conv_placement_clickfraud(row), axis = 1)].index.to_list()
+        placements_no_conv_placement_clickfraud = self.df[self.df.apply(self.find_no_conv_placement_clickfraud(row), axis = 1)].index.to_list()
         self.placement_rules['no_conv_placement_clickfraud']['placements'] = placements_no_conv_placement_clickfraud
 
     def add_rule_group_ids(self):

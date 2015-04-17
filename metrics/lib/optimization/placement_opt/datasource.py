@@ -58,10 +58,10 @@ class PlacementDataSource(DataSource):
     def pull(self, start_date, end_date):
 
         try:
-            print datetime.strptime(end_date, "%Y-%m-%d")
-            print datetime.strptime(start_date, "%Y-%m-%d")
+            datetime.strptime(end_date, "%Y-%m-%d")
+            datetime.strptime(start_date, "%Y-%m-%d")
         except ValueError:
-            raise ValueError("incorrect date strings")
+            raise ValueError("incorrect start_date/end_date string format %s %s" %(start_date, end_date))
 
 
         self.start_date = start_date
@@ -69,6 +69,9 @@ class PlacementDataSource(DataSource):
 
         query_args = {
             "start_date" : self.start_date,
+            # Adding a day to end_date
+            # Appnexus returns the reporting data up to the day before end date
+            # This lets us get all data in our date range
             "end_date" : (datetime.strptime(self.end_date, "%Y-%m-%d") + timedelta(days = 1)).strftime("%Y-%m-%d")
             }
 
