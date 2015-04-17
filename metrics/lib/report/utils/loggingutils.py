@@ -150,3 +150,27 @@ def basicConfig(level=logging.INFO,
             **kwargs)
 
     logging.debug('logging configured')
+
+def setup_logger(logger_name, log_file,
+                 fmt=LOG_FORMAT,
+                 datefmt="%s",
+                 level=logging.INFO):
+    """
+    temporaily hack to log to different files with different msg.
+
+    :logger_name: str
+    :log_file: str
+    :fmt: str : '%(asctime)s %(message)s' etc.
+    :level: logging.INFO|WARNING|DEBUG|FATAL
+    """
+    l = logging.getLogger(logger_name)
+    formatter = logging.Formatter(fmt, datefmt=datefmt)
+    fileHandler = logging.FileHandler(log_file, mode='w')
+    fileHandler.setFormatter(formatter)
+    streamHandler = logging.StreamHandler()
+    streamHandler.setFormatter(formatter)
+
+    l.setLevel(level)
+    l.addHandler(fileHandler)
+    l.addHandler(streamHandler)
+
