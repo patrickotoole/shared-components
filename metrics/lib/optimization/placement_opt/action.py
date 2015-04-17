@@ -93,8 +93,9 @@ class PlacementAction(Action):
                             "field_old_value": old_placement_targets,
                             "field_new_value": new_placement_targets,
                             "metric_values": to_exclude[placement]['metrics']
-                    }   
-                    self.push_log(log)          
+                    }  
+                    print log 
+                    #self.push_log(log)          
                 
         except (TypeError, KeyError) as Exception:
             raise Exception("Issue with excluding placement %s in exclude_placements()"%str(placement))

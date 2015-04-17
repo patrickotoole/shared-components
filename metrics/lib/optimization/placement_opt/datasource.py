@@ -100,6 +100,8 @@ class PlacementDataSource(DataSource):
 
     def reshape(self, campaign):
 
+        self.logger.info("On campaign %s" %campaign)
+
         ## Check if data is not None
         if self.data is None:
             raise Exception('Empty DataFrame')
@@ -113,7 +115,7 @@ class PlacementDataSource(DataSource):
             try:
                 datetime.strptime(self.data['day'].iloc[0], "%Y-%m-%d")
             except ValueError:
-                raise ValueError("incorrect date strings")
+                raise ValueError("Incorrect date string format %s" %self.data['day'].iloc[0])
 
             self.df = self.data[self.data['campaign_id'] == campaign]
             grouped_df = self.df.groupby('placement_id')

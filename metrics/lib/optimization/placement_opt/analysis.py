@@ -58,16 +58,17 @@ class PlacementAnalysis(Analysis):
                             "imp_served_cutoff","CTR_cutoff"])
     def analyze(self):
 
-        placements_no_conv_placement_unprofitable = self.df[self.df.apply(self.find_no_conv_placement_unprofitable(row), axis = 1)].index.to_list()
+
+        placements_no_conv_placement_unprofitable = self.df[self.df.apply(self.find_no_conv_placement_unprofitable, axis = 1)].index.get_values()
         self.placement_rules['no_conv_placement_unprofitable']['placements'] = placements_no_conv_placement_unprofitable
 
-        placements_one_conv_placement_unprofitable = self.df[self.df.apply(self.find_one_conv_placement_unprofitable(row), axis = 1)].index.to_list()
+        placements_one_conv_placement_unprofitable = self.df[self.df.apply(self.find_one_conv_placement_unprofitable, axis = 1)].index.get_values()
         self.placement_rules['one_conv_placement_unprofitable']['placements'] = placements_one_conv_placement_unprofitable
 
-        placements_multi_conv_placement_unprofitable = self.df[self.df.apply(self.find_multi_conv_placement_unprofitable(row), axis = 1)].index.to_list()
+        placements_multi_conv_placement_unprofitable = self.df[self.df.apply(self.find_multi_conv_placement_unprofitable, axis = 1)].index.get_values()
         self.placement_rules['multi_conv_placement_unprofitable']['placements'] = placements_multi_conv_placement_unprofitable
 
-        placements_no_conv_placement_clickfraud = self.df[self.df.apply(self.find_no_conv_placement_clickfraud(row), axis = 1)].index.to_list()
+        placements_no_conv_placement_clickfraud = self.df[self.df.apply(self.find_no_conv_placement_clickfraud, axis = 1)].index.get_values()
         self.placement_rules['no_conv_placement_clickfraud']['placements'] = placements_no_conv_placement_clickfraud
 
     def add_rule_group_ids(self):
@@ -95,7 +96,6 @@ class PlacementAnalysis(Analysis):
         }
         '''
 
-        print self.placement_rules
 
         for rule in self.placement_rules.keys():
             try:
@@ -110,7 +110,7 @@ class PlacementAnalysis(Analysis):
         
         for rule in self.placement_rules.keys():
             for placement in self.placement_rules[rule]['placements']:
-                if placement not in self.df.index.to_list():
+                if placement not in self.df.index.get_values():
                     raise AttributeError("Missing placement")
 
         to_run = {}
