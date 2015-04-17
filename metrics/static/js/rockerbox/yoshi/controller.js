@@ -99,7 +99,7 @@ RB.yoshi.controller = (function(controller){
       reformatBudget(profile.campaign)
       reformatCaps(profile.profile)
  
-      profile.details.username = x.username
+      profile.details.username = window.AS_CLIENT ? x.username.split("a_")[1] : x.username 
       RB.AJAX.rockerbox.postCampaign(JSON.stringify(profile),callback)
     })
 
