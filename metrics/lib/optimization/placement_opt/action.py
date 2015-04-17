@@ -95,7 +95,7 @@ class PlacementAction(Action):
                             "metric_values": to_exclude[placement]['metrics']
                     }  
                     print log 
-                    #self.push_log(log)          
+                    self.push_log(log)          
                 
         except (TypeError, KeyError) as Exception:
             raise Exception("Issue with excluding placement %s in exclude_placements()"%str(placement))
