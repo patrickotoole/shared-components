@@ -54,10 +54,9 @@ def lineitem_forms(lineitem,**kwargs):
 
 def campaign_forms(campaign_id, api=False, force=False, use_cache=True, **kwargs):
     kwargs['use_cache'] = use_cache
-    logging.info("use cache: %s" % use_cache)
     return create_forms(campaign_id, api, **kwargs)
 
-def create_forms(campaign_id, api=False, uid=None, use_cache=True, **kwargs):
+def create_forms(campaign_id, api=False, uid=None, use_cache=True, ip_address="98.116.7.78", **kwargs):
     """
 
     :campaign_id: int
@@ -77,7 +76,7 @@ def create_forms(campaign_id, api=False, uid=None, use_cache=True, **kwargs):
         'is_valid': True,
         'campaign_id': campaign_id,
         'profile_id': p.profile.get('id'),
-        'ip_address': '98.116.7.78',
+        'ip_address': ip_address,
         'ad_format': 'iframe'
     }
 
@@ -85,5 +84,6 @@ def create_forms(campaign_id, api=False, uid=None, use_cache=True, **kwargs):
         form['ext_auction_id'] = str(random.randint(LOW, HIGH))
         form.update(d)
     
-    logging.info("created %s forms" % len(forms))
+    logging.info("Campaign: %s, Created %s forms" % (campaign_id,len(forms)))
     return forms
+

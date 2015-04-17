@@ -120,3 +120,11 @@ python bidding.py --uid=7440373686927816718 --lid=1850572 --use_cache
 
 Note that for line_item and advertiser, we include the use_cache parameter to limit abuse of the appnexus API.
 
+
+#### Web example
+
+To run ad-hoc for a single campaign via our API:
+
+```
+http://localhost:8080/admin/debug?campaign_id=7700008&uid=8525358879271627
+```

@@ -37,6 +37,28 @@ def batch(arr, size):
     if cur_arr:
         yield cur_arr
 
+def run_campaign(campaign_id,uid,api):
+
+    bidform_options = {
+        "uid": uid,
+        "use_cache": False
+    }
+
+    forms = campaign_forms(campaign_id,api,**bidform_options)
+    to_return = []
+
+    batched_forms = batch(forms, 50)
+    for idx, forms in enumerate(batched_forms):
+        resps = AuctionsRunner(forms).run_auctions(False)
+        for (resp, form) in zip(resps, forms):
+            summarized = time_it(summarize_bidding,resp.content,form.get("campaign_id"))
+            to_log = dict(summarized,**form)
+            to_return.append(to_log)
+            
+    return to_return
+ 
+
+
 def main():
     define('flume_log_path', default='/tmp/flume.log', type=str)
     define('serial', default=False, type=bool, help='concurrent or not')
@@ -80,16 +102,16 @@ def main():
     elif options.aid:
         forms = advertiser_forms(options.aid,**bidform_options)
     else:
-        raise Exception("need specify a campaign, line_item or advertiser_id")
+        raise exception("need specify a campaign, line_item or advertiser_id")
 
     if options.limit:
         forms = forms[:options.limit]
 
     batched_forms = batch(forms, options.batch_size)
     for idx, forms in enumerate(batched_forms):
-        logging.info("Running auctions for %s forms" % len(forms))
+        logging.info("running auctions for %s forms" % len(forms))
         resps = AuctionsRunner(forms).run_auctions(options.serial)
-        logging.info("Completed running %s auctions" % len(forms))
+        logging.info("completed running %s auctions" % len(forms))
         for (resp, form) in zip(resps, forms):
             summarized = time_it(summarize_bidding,resp.content,form.get("campaign_id"))
             to_log = dict(summarized,**form)
