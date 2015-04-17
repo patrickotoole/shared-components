@@ -29,14 +29,14 @@ RB.yoshi.controller = (function(controller){
   }
 
   var reformatBudget = function(campaign) {
-    campaign.daily_budget = parseFloat(campaign.daily_budget)
-    campaign.lifetime_budget = parseFloat(campaign.lifetime_budget)
-    campaign.base_bid = parseFloat(campaign.base_bid) 
+    campaign.daily_budget = parseFloat(campaign.daily_budget) ? parseFloat(campaign.daily_budget) : 10
+    campaign.lifetime_budget = parseFloat(campaign.lifetime_budget) ? parseFloat(campaign.lifetime_budget) : 100
+    campaign.base_bid = parseFloat(campaign.base_bid) ? parseFloat(campaign.base_bid) : 1
   }
 
   var reformatCaps = function(profile) {
-    profile.max_daily_imps = parseInt(profile.max_daily_imps)
-    profile.max_lifetime_imps = parseInt(profile.max_lifetime_imps)
+    profile.max_daily_imps = parseInt(profile.max_daily_imps) ? parseInt(profile.max_daily_imps) : 5 
+    profile.max_lifetime_imps = parseInt(profile.max_lifetime_imps) ? parseInt(profile.max_lifetime_imps) : 15
   }
 
 
