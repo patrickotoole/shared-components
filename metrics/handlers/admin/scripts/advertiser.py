@@ -318,7 +318,9 @@ class Advertiser(object):
         data = {
             "profile": {
                 "inventory_action": "include",
-                "placement_targets": [{"id":placement_id}]
+                "placement_targets": [{"id":placement_id}],
+                "device_type_targets": ["phone","tablet"],
+                "supply_type_targets": ["mobile_app","mobile_web"]
             }
         }
 
