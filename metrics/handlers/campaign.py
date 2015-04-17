@@ -217,6 +217,7 @@ class UserCampaignHandler(CampaignHandler):
         data['profile']['supply_type_targets'] = ["mobile_app", "mobile_web"]
         data['profile']['max_day_imps'] = profile.get("max_day_imps",5)
         data['profile']['max_lifetime_imps'] = profile.get("max_lifetime_imps",15)
+        data['profile']['allow_unaudited'] = True 
 
         data = self.api.post(URL,data=ujson.dumps(data))
         return data.json['response']['profile']

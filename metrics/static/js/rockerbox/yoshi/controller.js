@@ -34,6 +34,11 @@ RB.yoshi.controller = (function(controller){
     campaign.base_bid = parseFloat(campaign.base_bid) 
   }
 
+  var reformatCaps = function(profile) {
+    profile.max_daily_imps = parseInt(profile.max_daily_imps)
+    profile.max_lifetime_imps = parseInt(profile.max_lifetime_imps)
+  }
+
 
   /* INTERCOM -- probably want to move to its own namespace */
 
@@ -92,8 +97,9 @@ RB.yoshi.controller = (function(controller){
       reformatCities(profile.profile)
 
       reformatBudget(profile.campaign)
+      reformatCaps(profile.profile)
  
-      profile.details.username = x.username.split("a_")[1]
+      profile.details.username = x.username
       RB.AJAX.rockerbox.postCampaign(JSON.stringify(profile),callback)
     })
 
@@ -121,6 +127,7 @@ RB.yoshi.controller = (function(controller){
       reformatCities(profile.profile)
 
       reformatBudget(profile.campaign) 
+      reformatCaps(profile.profile) 
       
       profile.profile.domain_action = "include"  
 
