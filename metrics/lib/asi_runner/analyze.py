@@ -173,7 +173,7 @@ def _analyze(resp, campaign_id=None, member_id=2024):
     if df.empty:
         logging.info("Unable to find member: %s" % member_id)
         return df
-    df = df[df['Camp'] == campaign_id]
+    df = df[df['Camp'].map(str) == str(campaign_id)]
     if df.empty:
         logging.warning("Didn't find campaign_id: %s in bid-response" % campaign_id)
     return df.fillna("")

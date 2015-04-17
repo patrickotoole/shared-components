@@ -100,10 +100,23 @@ To run for a particular campaign, line_item or advertiser, do the following:
 
 ```
 python bidding.py --uid=7440373686927816718 --cid=7700008
-python bidding.py --uid=7440373686927816718 --lid=1850572 --use_cache
-python bidding.py --uid=7440373686927816718 --aid=434652 --use_cache
 ```
+
+Before running with advertiser or a line_item, you should probably first cache the API results first. This will limit the number of calls we make to the appnexus API and make the script run faster.
+
+Use the below command to build the cache for an advertiser:
+```
+python bidding.py --uid=7440373686927816718 --aid=434652 --build_cache
+```
+
+After you have built the cache for the advertiser, you can then run debug auctions for the advertiser or the line_item using the either of the following two calls:
+
+```
+python bidding.py --uid=7440373686927816718 --aid=434652 --use_cache
+python bidding.py --uid=7440373686927816718 --lid=1850572 --use_cache 
+
+```
+
 
 Note that for line_item and advertiser, we include the use_cache parameter to limit abuse of the appnexus API.
 
-More caching functionality will be implemented in the near future so stay tuned.

@@ -19,36 +19,55 @@ class ProfileCache(object):
         self.profile_id = False
         self.line_item_profile_id = False
 
+    def _read_profile_cache(self):
+        try:
+            import ujson
+            return ujson.loads(open("/tmp/profile_cache.json","r").read()) 
+        except:
+            return {}
+
+    def _read_campaign_cache(self):
+        try:
+            import ujson
+            return ujson.loads(open("/tmp/campaign_cache.json","r").read()) 
+        except:
+            return {}
+
+    def _read_line_item_cache(self):
+        try:
+            import ujson
+            return ujson.loads(open("/tmp/line_item_cache.json","r").read()) 
+        except:
+            return {}
+
+     
     @property
     def profile_cache(self):
         if not hasattr(self,"_profile_cache"):
-            import ujson
-            self._profile_cache = ujson.loads(open("/tmp/profile_cache.json").read())
+            self._profile_cache = self._read_profile_cache()
 
         return self._profile_cache
 
     @property
     def campaign_cache(self):
         if not hasattr(self,"_campaign_cache"):
-            import ujson
-            self._campaign_cache = ujson.loads(open("/tmp/campaign_cache.json").read())
+            self._campaign_cache = self._read_campaign_cache()
 
         return self._campaign_cache
      
     @property
     def line_item_cache(self):
         if not hasattr(self,"_line_item_cache"):
-            import ujson
-            self._line_item_cache = ujson.loads(open("/tmp/line_item_cache.json").read())
+            self._line_item_cache = self._read_line_item_cache()
 
         return self._line_item_cache
     
     def write_cache(self):
         import ujson
 
-        profiles = ujson.loads(open("/tmp/profile_cache.json","r+").read())
-        campaigns = ujson.loads(open("/tmp/campaign_cache.json","r+").read()) 
-        line_items = ujson.loads(open("/tmp/line_item_cache.json","r+").read()) 
+        profiles = self._read_profile_cache()
+        campaigns = self._read_campaign_cache()
+        line_items = self._read_line_item_cache()
 
         with open("/tmp/profile_cache.json", 'w+') as f:
             combined = dict(profiles.items() + self.profile_cache.items())
@@ -127,9 +146,13 @@ class BidProfile(ProfileCache,ProfileAPI):
 
         if not self.profile_id:
             self.profile_id = self.campaign['profile_id']
+            if self.profile_id is None:
+                import logging
+                logging.warn("WARNING: BAD CAMPAIGN %s: no profile attached" % self.campaign['id'])
+                return {}
 
         profile = self.cached_profile() if self.use_cache else False
-
+        
         if not profile:
             profile = self.get_profile(self.profile_id)
             self.profile_cache[str(self.profile_id)] = profile
@@ -154,6 +177,11 @@ class BidProfile(ProfileCache,ProfileAPI):
 
         if not self.line_item_profile_id:
             self.line_item_profile_id = self.line_item['profile_id']
+            if self.line_item_profile_id is None:
+                import logging
+                logging.warn("WARNING: BAD LINEITEM %s: no profile attached" % self.campaign['id'])
+                return {}
+             
 
         line_item_profile = self.cached_line_item_profile() if self.use_cache else False 
 
