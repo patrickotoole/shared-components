@@ -52,6 +52,7 @@ RB.yoshi.UI.recommended = (function(recommended){
       var data = data.map(function(x){x.key = x.domain; return x})
         .filter(function(x){return !(x.domain.indexOf("anonymous.google") > -1)})
 
+
       recommended.table(target,data)
     })
   }
@@ -76,9 +77,12 @@ RB.yoshi.UI.recommended = (function(recommended){
       .html("&rsaquo; Rockerbox recommended placements")
   }
 
-  recommended.table = function(target,data){
+  recommended.table = function(target,data,name){
+
+    var name = name || "Recommended Pages"
+
     var days = target.selectAll("div .list-group") 
-      .data([{"key":"Recommended Pages","values":data}])
+      .data([{"key":name,"values":data}])
 
     var newDays = days
       .enter()
@@ -86,22 +90,66 @@ RB.yoshi.UI.recommended = (function(recommended){
         .classed("list-group",true)
         .attr("id",function(x){return x.key})
 
+    var newGroupRows = recommended.addGroup(newDays) 
+    var updates = recommended.updateGroup(days)  
+    var newRows = updates[1]
+    var existingRows = updates[0]
 
-
-    var rows = recommended.addGroup(newDays) 
-
-    target.selectAll(".list-group-item")
+    days.selectAll(".list-group-item.entry")
       .sort(function(a,b){
-       return d3.descending(a.tf_idf,b.tf_idf)
-     })
-    recommended.buildPanelRow(rows) 
+        return d3.descending(a.tf_idf,b.tf_idf)
+      })
 
+    if (newGroupRows.length) recommended.buildPanelRow(newGroupRows) 
+    if (newRows.length) recommended.buildPanelRow(newRows)  
+
+    recommended.updatePanelRow(existingRows)
+
+  }
+
+  recommended.updatePanelRow = function(row) {
+    var toUpdate = row.filter(function(x){
+      var text = d3.select(this)
+        .selectAll(".col-md-9")
+        .text()
+
+      return text != x.domain
+    })
+
+    toUpdate.html("")
+
+    var rowUpdates = toUpdate
+      .append("div")
+      .classed("row",true)
+
+    recommended.buildPanelRow(rowUpdates)
+  }
+
+  recommended.groupItem = function(group) {
+
+    var items = group.selectAll(".list-group-item.entry")
+      .data(function(d){return d.values})
+
+    var newItems = items
+      .enter()
+        .append("div")
+        .classed("list-group-item entry",true)
+        .sort(function(a,b){return d3.descending(a.timestamp_epoch, b.timestamp_epoch)})
+        .append("div").classed("row",true)
+
+    items.exit()
+      .remove()
+
+    return [items,newItems]
   }
 
   recommended.addGroup = function(group){
     history.groupHeader(group)
-    var groupItems = history.groupItem(group) 
+    return recommended.updateGroup(group)[1]
+  }
 
+  recommended.updateGroup = function(group){
+    var groupItems = recommended.groupItem(group) 
     return groupItems
   }
 
