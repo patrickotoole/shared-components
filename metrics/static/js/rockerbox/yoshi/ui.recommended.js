@@ -263,7 +263,7 @@ RB.yoshi.UI.recommended = (function(recommended){
       d.sizes = []
       d.placements = []
       RB.AJAX.rockerbox.getViewability("?domain=" + domain,function(data){
-        var data = data.filter(function(x){
+        var filtered = data.filter(function(x){
 
           if (x.num_loaded > 40) {
 
@@ -273,12 +273,33 @@ RB.yoshi.UI.recommended = (function(recommended){
             x.placements = [x.tag_id]
 
           }
-          return x.num_loaded > 40 && x.percent_viewable > .5
+          return x.num_loaded > 40 && x.percent_viewable > .4
         })
 
         d3.select(obj.node().parentNode.parentNode.parentNode).datum(d)
 
-        build(obj,data) 
+        if (filtered.length == 0) {
+          d3.select(obj.node().parentNode.parentNode.parentNode)
+            .style("background-color","#f5f5f5")
+            .style("opacity",".6")
+            .on("click",function(){
+              var table = d3.select(this)
+                .selectAll("table")
+
+              var parentNode = d3.select(table.node().parentNode)
+
+              parentNode.html("<br/>Based off of historical Rockerbox viewability data, we have not identified any high quality, viewable placements to serve on this site. This is either because the placements that are available are either low quality or we have not collection enough historical ad serving information to recommend a placement. <br/><br/> If you would still like to serve on this site, navigate to the page and use Yoshi's historical view to serve on pages.")
+
+              d3.event.preventDefault()
+            })
+        } else {
+          d3.select(obj.node().parentNode.parentNode.parentNode)
+            .style("background-color","white")
+            .style("opacity","1")
+            .on("click",function(){})
+        }
+
+        build(obj,filtered) 
       })
       
     })
