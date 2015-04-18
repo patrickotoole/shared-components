@@ -52,7 +52,6 @@ RB.yoshi.UI.recommended = (function(recommended){
       var data = data.map(function(x){x.key = x.domain; return x})
         .filter(function(x){return !(x.domain.indexOf("anonymous.google") > -1)})
 
-
       recommended.table(target,data)
     })
   }
@@ -274,7 +273,7 @@ RB.yoshi.UI.recommended = (function(recommended){
             x.placements = [x.tag_id]
 
           }
-          return x.num_loaded > 40
+          return x.num_loaded > 40 && x.percent_viewable > .5
         })
 
         d3.select(obj.node().parentNode.parentNode.parentNode).datum(d)

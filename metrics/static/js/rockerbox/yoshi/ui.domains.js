@@ -7,13 +7,23 @@ RB.yoshi.UI.domains = (function(domains){
   var UI = RB.yoshi.UI 
 
   domains.heading = function(panel) {
+    
     var h = panel.append("div")
       .classed("panel-heading",true)
       .append("h3")
       .classed("panel-title",true)
 
+    h.append("a")
+      .text("Select Placements ")
+      .on("click", function(){
+        d3.selectAll(".ad-selection .ad-selection-content")
+          .classed("hidden",true)
+        d3.selectAll(".ad-selection-content.ad-selection")
+          .classed("hidden",false)
+      })
+       
     h.append("span")
-      .text("Find placements for specific domains")
+      .html("&rsaquo; Find placements for specific domains") 
   }           
 
   domains.processList = function(panel) {
