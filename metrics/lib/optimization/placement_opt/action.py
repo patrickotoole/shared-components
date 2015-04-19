@@ -47,11 +47,16 @@ class PlacementAction(Action):
 
     def adjust_placement_target(self, placement_targets, placement_id, new_action):
         '''
-        Adjusts placement targeting object, for placement_id
+        - If placement already exists in the platform_placement_targets 
+        object,then its action is changed to new_action
+        - If placement does not exist, then new targeting is added
         '''
 
         if placement_targets is None:
-            placement_targets = [{'id':placement_id, 'action':new_action,'deleted':False}]
+            placement_targets = [{  'id':placement_id, 
+                                    'action':new_action,
+                                    'deleted':False
+                                }]
 
         elif pd.DataFrame(placement_targets).dtypes.to_dict() != PLATFORM_PLACEMENT_COL_TYPES:
             raise TypeError("Incorrect column types for platform_placement_targets")
@@ -65,16 +70,37 @@ class PlacementAction(Action):
             placement_targets = placement_targets.to_dict( 'records')
 
         else:
-            placement_targets.append({'id':placement_id, 'action':new_action,'deleted':False})
+            placement_targets.append({  'id':placement_id, 
+                                        'action':new_action,
+                                        'deleted':False
+                                    })
 
         return placement_targets
+
+    def check_for_no_targeting(self, old_placement_targets, new_placement_targets):
+        '''
+        Returns True if old old_placement_targets has inclusion targeting
+        and new_placement_targets has no inclusion targeting 
+        '''
+        if old_placement_targets == None:
+            return False
+
+        old_placement_targets_DF = pd.DataFrame(old_placement_targets)
+        new_placement_targets_DF = pd.DataFrame(new_placement_targets)
+
+        old_placements_has_targeting = "include" in old_placement_targets_DF['action'].unique()
+        new_placements_has_targeting = "include" in new_placement_targets_DF['action'].unique()
+
+        if old_placements_has_targeting and not old_placements_has_targeting:
+            return True
+        else:
+            return False
 
 
     def push_log(self, log):
         r = self.rockerbox.post("/scripts/opt_log", data=json.dumps(log))
-
         if r.json['status'] != 'ok':
-            raise TypeError("Incorrect Opt Log")
+            raise TypeError("Incorrect Opt Log %s" %str(log))
 
 
     def exclude_placements(self, to_exclude):
@@ -83,19 +109,33 @@ class PlacementAction(Action):
 
             for placement in to_exclude.keys():
                 
-                    old_placement_targets = self.get_campaign_placement_targets()
-                    new_placement_targets = self.adjust_placement_target(old_placement_targets, placement, 'exclude')
-                        
-                    log = { "rule_group_id": to_exclude[placement]['rule_group_id'],
-                            "object_modified": "campaign_profile",
-                            "campaign_id": self.campaign,
-                            "field_name": 'platform_placement_targets',
-                            "field_old_value": old_placement_targets,
-                            "field_new_value": new_placement_targets,
-                            "metric_values": to_exclude[placement]['metrics']
-                    }  
-                    print log 
-                    self.push_log(log)          
+                old_placement_targets = self.get_campaign_placement_targets()
+                new_placement_targets = self.adjust_placement_target(old_placement_targets, placement, 'exclude')
+                    
+                log = { "rule_group_id": to_exclude[placement]['rule_group_id'],
+                        "object_modified": "campaign_profile",
+                        "campaign_id": self.campaign,
+                        "field_name": 'platform_placement_targets',
+                        "field_old_value": old_placement_targets,
+                        "field_new_value": new_placement_targets,
+                        "metric_values": to_exclude[placement]['metrics']
+                }  
+                # self.logger.info(log)
+                self.push_log(log)
+
+                # Deactivating campaign if all placement targets are removed
+                if check_for_no_targeting(old_placement_targets, new_placement_targets)
+                    deactivate_log = { "rule_group_id": 56,
+                                        "object_modified": "campaign",
+                                        "campaign_id": self.campaign,
+                                        "field_name": 'state',
+                                        "field_old_value": "active",
+                                        "field_new_value": "inactive",
+                                        "metric_values": {}
+                                    }
+                    # self.logger.info(deactivate_log)
+                    self.push_log(deactivate_log)
+
                 
         except (TypeError, KeyError) as Exception:
             raise Exception("Issue with excluding placement %s in exclude_placements()"%str(placement))
