@@ -28,18 +28,14 @@ class Runner():
 
         for campaign in self.campaigns:
 
-            # print "Starting Data Source..."
             D.reshape(campaign)
             D.transform(self.params)
             D.filter()
-            # print D.df.head()
 
-            # print "Starting Placement Analysis..."
             P = analysis.PlacementAnalysis(D.df)
             P.analyze()
             P.add_rule_group_ids()
             P.reshape()
-            # print P.to_run
 
             A = action.PlacementAction(P.to_run, campaign)
             A.actions()
