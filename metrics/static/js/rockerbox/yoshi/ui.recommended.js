@@ -76,9 +76,12 @@ RB.yoshi.UI.recommended = (function(recommended){
       .html("&rsaquo; Rockerbox recommended placements")
   }
 
-  recommended.table = function(target,data){
+  recommended.table = function(target,data,name){
+
+    var name = name || "Recommended Pages"
+
     var days = target.selectAll("div .list-group") 
-      .data([{"key":"Recommended Pages","values":data}])
+      .data([{"key":name,"values":data}])
 
     var newDays = days
       .enter()
@@ -86,22 +89,66 @@ RB.yoshi.UI.recommended = (function(recommended){
         .classed("list-group",true)
         .attr("id",function(x){return x.key})
 
+    var newGroupRows = recommended.addGroup(newDays) 
+    var updates = recommended.updateGroup(days)  
+    var newRows = updates[1]
+    var existingRows = updates[0]
 
-
-    var rows = recommended.addGroup(newDays) 
-
-    target.selectAll(".list-group-item")
+    days.selectAll(".list-group-item.entry")
       .sort(function(a,b){
-       return d3.descending(a.tf_idf,b.tf_idf)
-     })
-    recommended.buildPanelRow(rows) 
+        return d3.descending(a.tf_idf,b.tf_idf)
+      })
 
+    if (newGroupRows.length) recommended.buildPanelRow(newGroupRows) 
+    if (newRows.length) recommended.buildPanelRow(newRows)  
+
+    recommended.updatePanelRow(existingRows)
+
+  }
+
+  recommended.updatePanelRow = function(row) {
+    var toUpdate = row.filter(function(x){
+      var text = d3.select(this)
+        .selectAll(".col-md-9")
+        .text()
+
+      return text != x.domain
+    })
+
+    toUpdate.html("")
+
+    var rowUpdates = toUpdate
+      .append("div")
+      .classed("row",true)
+
+    recommended.buildPanelRow(rowUpdates)
+  }
+
+  recommended.groupItem = function(group) {
+
+    var items = group.selectAll(".list-group-item.entry")
+      .data(function(d){return d.values})
+
+    var newItems = items
+      .enter()
+        .append("div")
+        .classed("list-group-item entry",true)
+        .sort(function(a,b){return d3.descending(a.timestamp_epoch, b.timestamp_epoch)})
+        .append("div").classed("row",true)
+
+    items.exit()
+      .remove()
+
+    return [items,newItems]
   }
 
   recommended.addGroup = function(group){
     history.groupHeader(group)
-    var groupItems = history.groupItem(group) 
+    return recommended.updateGroup(group)[1]
+  }
 
+  recommended.updateGroup = function(group){
+    var groupItems = recommended.groupItem(group) 
     return groupItems
   }
 
@@ -216,7 +263,7 @@ RB.yoshi.UI.recommended = (function(recommended){
       d.sizes = []
       d.placements = []
       RB.AJAX.rockerbox.getViewability("?domain=" + domain,function(data){
-        var data = data.filter(function(x){
+        var filtered = data.filter(function(x){
 
           if (x.num_loaded > 40) {
 
@@ -226,12 +273,33 @@ RB.yoshi.UI.recommended = (function(recommended){
             x.placements = [x.tag_id]
 
           }
-          return x.num_loaded > 40
+          return x.num_loaded > 40 && x.percent_viewable > .4
         })
 
         d3.select(obj.node().parentNode.parentNode.parentNode).datum(d)
 
-        build(obj,data) 
+        if (filtered.length == 0) {
+          d3.select(obj.node().parentNode.parentNode.parentNode)
+            .style("background-color","#f5f5f5")
+            .style("opacity",".6")
+            .on("click",function(){
+              var table = d3.select(this)
+                .selectAll("table")
+
+              var parentNode = d3.select(table.node().parentNode)
+
+              parentNode.html("<br/>Based off of historical Rockerbox viewability data, we have not identified any high quality, viewable placements to serve on this site. This is either because the placements that are available are either low quality or we have not collection enough historical ad serving information to recommend a placement. <br/><br/> If you would still like to serve on this site, navigate to the page and use Yoshi's historical view to serve on pages.")
+
+              d3.event.preventDefault()
+            })
+        } else {
+          d3.select(obj.node().parentNode.parentNode.parentNode)
+            .style("background-color","white")
+            .style("opacity","1")
+            .on("click",function(){})
+        }
+
+        build(obj,filtered) 
       })
       
     })

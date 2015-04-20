@@ -13,6 +13,7 @@ RB.yoshi.UI.history = (function(history){
     history.heading(target)
     history.table(target,data)
     UI.recommended.build(d3.selectAll(".ad-recommendations .panel"))
+    UI.domains.build(d3.selectAll(".ad-domain-list .panel")) 
   }
 
 
@@ -70,12 +71,17 @@ RB.yoshi.UI.history = (function(history){
   history.groupItem = function(group) {
 
     var items = group.selectAll(".list-group-item.entry")
-    var newItems = items.data(function(d){return d.values})
+      .data(function(d){return d.values})
+
+    var newItems = items
       .enter()
         .append("div")
         .classed("list-group-item entry",true)
         .sort(function(a,b){return d3.descending(a.timestamp_epoch, b.timestamp_epoch)})
         .append("div").classed("row",true)
+
+    items.exit()
+      .remove()
 
     return newItems
   }
