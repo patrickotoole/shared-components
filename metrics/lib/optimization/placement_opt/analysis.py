@@ -40,7 +40,7 @@ class PlacementAnalysis(Analysis):
         self.to_run = {}
 
     def find_no_conv_placement_unprofitable(self, row):
-        return row['convs'] == 0 and row['profit'] < max(-1 * row['loss_limit'], -1 * row['RPA_multiplier'] * row['RPA'])
+        return row['convs'] == 0 and row['profit'] < max(-1 * row['losim`s_limit'], -1 * row['RPA_multiplier'] * row['RPA'])
 
     def find_one_conv_placement_unprofitable(self, row):
         return row['convs'] == 1 and row['profit'] < max(-1 * row['loss_limit'], -1 * row['RPA_multiplier'] * row['RPA'])
