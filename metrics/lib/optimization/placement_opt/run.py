@@ -6,8 +6,8 @@ import datasource
 import analysis
 import action
 
-
 class Runner():
+
     def __init__(self, options):
         
         self.start_date = options.start_date
@@ -41,7 +41,6 @@ class Runner():
             A.actions()
 
 
-
 if __name__ == "__main__":
 
     define("start_date", type = str, required = True, help = "start date for placement optimization")
@@ -49,6 +48,7 @@ if __name__ == "__main__":
 
     define("external_adv_id", type = str, required = True, help = "external advertiser id")
     define("campaigns", type = int, required = True, multiple = True, help = "list of campaign ID's")
+    
     define("RPA", type = int, required = True, help = "Revenue Per Acquisition")
     define("RPA_multipliers", type = int, required = True, multiple = True, help = "mulitplier for RPA")
     define("loss_limits", type = int, required = True, multiple = True, help = "max loss limits for placement")

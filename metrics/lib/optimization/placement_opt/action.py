@@ -91,7 +91,8 @@ class PlacementAction(Action):
         old_placements_has_targeting = "include" in old_placement_targets_DF['action'].unique()
         new_placements_has_targeting = "include" in new_placement_targets_DF['action'].unique()
 
-        if old_placements_has_targeting and not old_placements_has_targeting:
+
+        if (old_placements_has_targeting and not new_placements_has_targeting):
             return True
         else:
             return False
@@ -120,11 +121,12 @@ class PlacementAction(Action):
                         "field_new_value": new_placement_targets,
                         "metric_values": to_exclude[placement]['metrics']
                 }  
-                # self.logger.info(log)
+                self.logger.info(log)
                 self.push_log(log)
 
+
                 # Deactivating campaign if all placement targets are removed
-                if check_for_no_targeting(old_placement_targets, new_placement_targets)
+                if self.check_for_no_targeting(old_placement_targets, new_placement_targets):
                     deactivate_log = { "rule_group_id": 56,
                                         "object_modified": "campaign",
                                         "campaign_id": self.campaign,
@@ -133,7 +135,7 @@ class PlacementAction(Action):
                                         "field_new_value": "inactive",
                                         "metric_values": {}
                                     }
-                    # self.logger.info(deactivate_log)
+                    self.logger.info(deactivate_log)
                     self.push_log(deactivate_log)
 
                 
