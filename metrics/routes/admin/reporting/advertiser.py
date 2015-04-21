@@ -61,16 +61,6 @@ class AdvertiserReportingRoutes(Routes):
             ('/imps/reporting/+(meta|help)?/?(.*?)', reporting.ClickImpsHandler, self.connectors)
         ]
 
-    @namespace("/admin/advertiser/summary")
-    @connectors("hive", "spark_sql")
-    def summary_reporting(self):
-        import handlers.admin.reporting as reporting
-
-        return [
-            ('/reporting/?', reporting.AdvertiserSummaryHandler, self.connectors), 
-            ('/reporting/+(meta|help)?/?(.*?)', reporting.AdvertiserSummaryHandler, self.connectors), 
-        ]
-
     @namespace("/admin/advertiser/served")
     @connectors("hive", "spark_sql")
     def joined_reporting(self):

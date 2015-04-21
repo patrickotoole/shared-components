@@ -9,7 +9,6 @@ AGG_ADVERTISER_DOMAIN = """
     group by %(groups)s
 """ 
 
-
 SEGMENTS_DOMAINS = '''
     SELECT domain,
        sum(num_imps) AS num_imps,
@@ -139,12 +138,6 @@ FROM pixel_agent_analytics
 WHERE %(where)s
 GROUP BY %(groups)s
 '''
-DOMAIN_AVAILS = """
-SELECT %(fields)s
-FROM agg_domain_avails %(joins)s
-WHERE %(where)s
-GROUP BY %(groups)s
-"""
 
 CLICK_QUERY = """
 SELECT %(fields)s
