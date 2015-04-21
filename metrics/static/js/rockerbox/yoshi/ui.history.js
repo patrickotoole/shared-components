@@ -177,8 +177,8 @@ RB.yoshi.UI.history = (function(history){
     var table = wrapper.append("table")
       .classed("table table-condensed",true)
 
-    //var columns = ["count","seller","sizes","tag_id","percent_viewable","historical_cpm","target"]
-    var columns = ["count","seller","sizes","tag_id","percent_viewable","target"]
+    var columns = ["count","seller","sizes","tag_id","percent_viewable","historical_cpm","target"]
+    //var columns = ["count","seller","sizes","tag_id","percent_viewable","target"]
     var header = table.append("thead").append("tr")
     var tr = table.append("tbody").selectAll("tr")
       .data(function(d){return d.value})

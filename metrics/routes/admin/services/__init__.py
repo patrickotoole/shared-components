@@ -38,7 +38,7 @@ class ServiceRoutes(
 
     @namespace("/admin")
     @connectors("reporting_db")
-    def appnexus_scripts(self):
+    def trello_scripts(self):
         import lib.trello.trello as trello
         
         return [
