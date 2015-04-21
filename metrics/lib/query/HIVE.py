@@ -59,29 +59,6 @@ WHERE {}
 GROUP BY date, hour, domain
 '''
 
-APPROVED_DOMAINS = '''
-SELECT 
-    domain, 
-    date, 
-    hour, 
-    sum(num_auctions) AS num_auctions 
-FROM agg_approved_auctions 
-WHERE {} 
-GROUP BY date,hour,domain
-'''
-
-APPROVED_TYPE_SELLER = '''
-SELECT 
-    type,
-    date,
-    hour,
-    seller, 
-    sum(num_auctions) as num_auctions
-FROM agg_approved_auctions 
-WHERE {} 
-GROUP BY {}
-'''
-
 ADVERTISER_VIEWABLE = """
 select 
     %(fields)s
@@ -247,7 +224,7 @@ GROUP BY %(groups)s
 
 HOVERBOARD = """
 SELECT %(fields)s
-FROM agg_conv_imps_new %(joins)s
+agg_conv_imps_new %(joins)s
 WHERE %(where)s
 GROUP BY %(groups)s
 HAVING %(having)s
