@@ -7,16 +7,13 @@ from twisted.internet import defer
 from lib.helpers import *
 from lib.hive.helpers import run_spark_sql_session_deferred
 
-import summary
 import viewable
 
 OPTIONS = {
     "groupings": {
-        "summary" : summary.GROUPS.keys(),
         "viewable" : viewable.GROUPS.keys()
     },
     "fields": {
-        "summary" : summary.FIELDS.keys(),
         "viewable" : viewable.FIELDS.keys()
     }
 }
