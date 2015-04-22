@@ -23,16 +23,6 @@ class AdvertiserReportingRoutes(Routes):
             (r'/reporting/+(meta|help)?/?(.*?)',reporting.AdvertiserViewableHandler, self.connectors),
         ]
 
-    @namespace("/admin/advertiser/domain_list")
-    @connectors("hive", "spark_sql")
-    def domain_list_reporting(self):
-        import handlers.admin.reporting as reporting
-
-        return [
-            (r'/reporting/?',reporting.DomainListHandler, self.connectors),
-            (r'/reporting/+(meta|help)?/?(.*?)',reporting.DomainListHandler, self.connectors),
-        ]
-
     @namespace("/admin/advertiser/pixel")
     @connectors("db","hive", "spark_sql")
     def pixel_reporting(self):
@@ -69,16 +59,6 @@ class AdvertiserReportingRoutes(Routes):
             ('/reporting/+(meta|help)?/?(.*?)', reporting.ClickCheckHandler, self.connectors), 
             ('/imps/reporting/?', reporting.ClickImpsHandler, self.connectors), 
             ('/imps/reporting/+(meta|help)?/?(.*?)', reporting.ClickImpsHandler, self.connectors)
-        ]
-
-    @namespace("/admin/advertiser/summary")
-    @connectors("hive", "spark_sql")
-    def summary_reporting(self):
-        import handlers.admin.reporting as reporting
-
-        return [
-            ('/reporting/?', reporting.AdvertiserSummaryHandler, self.connectors), 
-            ('/reporting/+(meta|help)?/?(.*?)', reporting.AdvertiserSummaryHandler, self.connectors), 
         ]
 
     @namespace("/admin/advertiser/served")

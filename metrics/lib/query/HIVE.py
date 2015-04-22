@@ -1,22 +1,6 @@
 PARTITIONED_QUERY = "select campaign, seller, referrer, datetime date, imps, clicks, cost, is_valid from campaign_domain_partitioned_new where %s"
 PARTITIONED_QUERY_LESS = "select campaign, referrer, datetime date, imps from campaign_domain_partitioned_new where %s" 
 
-AGG_APPROVED_AUCTIONS = """
-    select 
-        %(fields)s
-    from agg_approved_auctions_daily
-    where %(where)s 
-    group by %(groups)s
-"""
-AGG_ADVERTISER_DOMAIN = """
-    select 
-        %(fields)s
-    from agg_advertiser_domain %(joins)s
-    where %(where)s 
-    group by %(groups)s
-""" 
-
-
 SEGMENTS_DOMAINS = '''
     SELECT domain,
        sum(num_imps) AS num_imps,
@@ -57,29 +41,6 @@ SELECT
 FROM agg_domain_imps 
 WHERE {} 
 GROUP BY date, hour, domain
-'''
-
-APPROVED_DOMAINS = '''
-SELECT 
-    domain, 
-    date, 
-    hour, 
-    sum(num_auctions) AS num_auctions 
-FROM agg_approved_auctions 
-WHERE {} 
-GROUP BY date,hour,domain
-'''
-
-APPROVED_TYPE_SELLER = '''
-SELECT 
-    type,
-    date,
-    hour,
-    seller, 
-    sum(num_auctions) as num_auctions
-FROM agg_approved_auctions 
-WHERE {} 
-GROUP BY {}
 '''
 
 ADVERTISER_VIEWABLE = """
@@ -169,12 +130,6 @@ FROM pixel_agent_analytics
 WHERE %(where)s
 GROUP BY %(groups)s
 '''
-DOMAIN_AVAILS = """
-SELECT %(fields)s
-FROM agg_domain_avails %(joins)s
-WHERE %(where)s
-GROUP BY %(groups)s
-"""
 
 CLICK_QUERY = """
 SELECT %(fields)s
@@ -247,7 +202,7 @@ GROUP BY %(groups)s
 
 HOVERBOARD = """
 SELECT %(fields)s
-FROM agg_conv_imps_new %(joins)s
+agg_conv_imps_new %(joins)s
 WHERE %(where)s
 GROUP BY %(groups)s
 HAVING %(having)s

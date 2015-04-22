@@ -7,7 +7,7 @@ from twisted.internet import defer
 
 from lib.helpers import *
 from lib.hive.helpers import run_spark_sql_session_deferred
-from lib.query.HIVE import AGG_APPROVED_AUCTIONS
+
 SEGMENT_VOLUME = """
 SELECT 
     segment, 
