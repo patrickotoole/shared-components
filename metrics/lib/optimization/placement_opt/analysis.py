@@ -59,17 +59,22 @@ class PlacementAnalysis(Analysis):
     def analyze(self):
 
 
-        placements_no_conv_placement_unprofitable = self.df[self.df.apply(self.find_no_conv_placement_unprofitable, axis = 1)].index.get_values()
-        self.placement_rules['no_conv_placement_unprofitable']['placements'] = placements_no_conv_placement_unprofitable
+        rows = self.df.apply(self.find_no_conv_placement_unprofitable, axis = 1)
+        placements = self.df[rows].index.get_values()
+        self.placement_rules['no_conv_placement_unprofitable']['placements'] = placements
 
-        placements_one_conv_placement_unprofitable = self.df[self.df.apply(self.find_one_conv_placement_unprofitable, axis = 1)].index.get_values()
-        self.placement_rules['one_conv_placement_unprofitable']['placements'] = placements_one_conv_placement_unprofitable
 
-        placements_multi_conv_placement_unprofitable = self.df[self.df.apply(self.find_multi_conv_placement_unprofitable, axis = 1)].index.get_values()
-        self.placement_rules['multi_conv_placement_unprofitable']['placements'] = placements_multi_conv_placement_unprofitable
+        rows = self.df.apply(self.find_one_conv_placement_unprofitable, axis = 1)
+        placements = self.df[rows].index.get_values()
+        self.placement_rules['one_conv_placement_unprofitable']['placements'] = placements
 
-        placements_no_conv_placement_clickfraud = self.df[self.df.apply(self.find_no_conv_placement_clickfraud, axis = 1)].index.get_values()
-        self.placement_rules['no_conv_placement_clickfraud']['placements'] = placements_no_conv_placement_clickfraud
+        rows = self.df.apply(self.find_multi_conv_placement_unprofitable, axis = 1)
+        placements = self.df[rows].index.get_values()
+        self.placement_rules['multi_conv_placement_unprofitable']['placements'] = placements
+
+        rows = self.df.apply(self.find_no_conv_placement_clickfraud, axis = 1)
+        placements = self.df[rows].index.get_values()
+        self.placement_rules['no_conv_placement_clickfraud']['placements'] = placements
 
     def add_rule_group_ids(self):
 
