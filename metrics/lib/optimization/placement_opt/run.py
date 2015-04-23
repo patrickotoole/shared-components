@@ -35,6 +35,7 @@ class Runner():
             P = analysis.PlacementAnalysis(D.df)
             P.analyze()
             P.add_rule_group_ids()
+            
             P.reshape()
 
             A = action.PlacementAction(P.to_run, campaign)

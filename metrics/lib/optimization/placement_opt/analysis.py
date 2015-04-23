@@ -2,34 +2,36 @@ import sys
 sys.path.append("../")
 from opt_script import Analysis
 import json
-
+import re
 
 PLACEMENT_RULES = { 
 
     'no_conv_placement_unprofitable': {
-            'metrics': ['convs', 'profit', 'loss_limit', 'RPA_multiplier', 'RPA'],
             'desc': "No convs/unprofitable:",
             'action': 'EXCLUDE_PLACEMENT',
     },
 
     'one_conv_placement_unprofitable': {
-            'metrics': ['convs', 'profit', 'loss_limit', 'RPA_multiplier', 'RPA'],
             'desc': "One convs/unprofitable:",
             'action': 'EXCLUDE_PLACEMENT'
     },
 
     'multi_conv_placement_unprofitable': {
-            'metrics': ['convs', 'profit', 'loss_limit', 'RPA_multiplier', 'RPA'],
             'desc': "Multi convs/unprofitable: (MEDIA TRADER INVESTIGATE)",
             'action': None
     },
 
     'no_conv_placement_clickfraud': {
-            'metrics': ['convs', 'CTR', 'CTR_cutoff', 'imps_served', 'imp_served_cutoff'],
             'desc': "No convs/click fraud:",
             'action': 'EXCLUDE_PLACEMENT'
     }
 }
+
+
+DF_COLS = ['clicks', 'convs', 'imps_served_apnx', 'last_served_date','media_cost', 
+            'num_days', 'profit', 'revenue', 'imps_served_rbox', 'loaded', 
+            'CTR', 'RPA', 'loss_limit', 'RPA_multiplier','imp_served_cutoff', 
+            'CTR_cutoff', 'loaded_ratio','apnx_rbox_served_ratio']
 
 class PlacementAnalysis(Analysis):
     
@@ -38,53 +40,47 @@ class PlacementAnalysis(Analysis):
         self.df = df
         self.placement_rules = PLACEMENT_RULES
         self.to_run = {}
+        
 
-    def find_no_conv_placement_unprofitable(self, row):
-        return row['convs'] == 0 and row['profit'] < max(-1 * row['losim`s_limit'], -1 * row['RPA_multiplier'] * row['RPA'])
+    def extract_rule(self, rule_name):
 
-    def find_one_conv_placement_unprofitable(self, row):
-        return row['convs'] == 1 and row['profit'] < max(-1 * row['loss_limit'], -1 * row['RPA_multiplier'] * row['RPA'])
+        r = self.rbox_api.get("/opt_rules?name=%s"%rule_name)
+        if len(r.json) > 0:
+            self.placement_rules[rule_name]['rule_group_id'] = r.json[0]['rule_group_id']
+            self.placement_rules[rule_name]['conditions'] = [d['rule'] for d in r.json]
+            
+            metrics = []
+            for cond in self.placement_rules[rule_name]['conditions']:
+                metrics = metrics + re.findall(r"%\((\w+)\)", cond)
+            self.placement_rules[rule_name]['metrics'] = metrics
 
-    def find_multi_conv_placement_unprofitable(self,row):
-        return row['convs'] > 1 and row['profit'] < max(-1 * row['loss_limit'], -1 * row['RPA_multiplier'] * row['RPA'])
-
-    def find_no_conv_placement_clickfraud(self, row):
-        return row['convs'] == 0 and row['CTR'] >= row['CTR_cutoff'] and row['imps_served'] >= row['imp_served_cutoff']
+        else:
+            raise Exception("Incorrect Rule %s"%rule_name)
 
 
-    @Analysis.verify_cols([ "last_served_date", "num_days", "imps_served", 
-                            "convs","clicks","media_cost", "revenue","profit",
-                            "CTR", "RPA", "RPA_multiplier","loss_limit",
-                            "imp_served_cutoff","CTR_cutoff"])
+    def evaluate_rules(self, rule_name, row):
+
+        conditions = self.placement_rules[rule_name]['conditions']
+        
+        for cond in conditions:
+            if not eval(cond % row.to_dict()):
+                return False        
+        return True
+
+
+    @Analysis.verify_cols(DF_COLS)
     def analyze(self):
 
-
-        rows = self.df.apply(self.find_no_conv_placement_unprofitable, axis = 1)
-        placements = self.df[rows].index.get_values()
-        self.placement_rules['no_conv_placement_unprofitable']['placements'] = placements
+        for rule_name in self.placement_rules.keys():
+            self.extract_rule(rule_name)
 
 
-        rows = self.df.apply(self.find_one_conv_placement_unprofitable, axis = 1)
-        placements = self.df[rows].index.get_values()
-        self.placement_rules['one_conv_placement_unprofitable']['placements'] = placements
+        for rule_name in self.placement_rules.keys():
 
-        rows = self.df.apply(self.find_multi_conv_placement_unprofitable, axis = 1)
-        placements = self.df[rows].index.get_values()
-        self.placement_rules['multi_conv_placement_unprofitable']['placements'] = placements
+            rows = self.df.apply(lambda row: self.evaluate_rules(rule_name, row), axis = 1)
+            placements = self.df[rows].index.get_values()
+            self.placement_rules[rule_name]['placements'] = placements
 
-        rows = self.df.apply(self.find_no_conv_placement_clickfraud, axis = 1)
-        placements = self.df[rows].index.get_values()
-        self.placement_rules['no_conv_placement_clickfraud']['placements'] = placements
-
-    def add_rule_group_ids(self):
-
-        for rule in self.placement_rules.keys():
-            r = self.rbox_api.get("/opt_rules?name=%s"%rule)
-            try:
-                self.placement_rules[rule]['rule_group_id'] = r.json[0]['rule_group_id']
-            except IndexError:
-                self.logger.error("Bad rule group name {}".format(rule))
-                raise IndexError
 
     @Analysis.verify_cols([ "last_served_date", "num_days", "imps_served", 
                             "convs","clicks","media_cost", "revenue","profit",
@@ -101,17 +97,16 @@ class PlacementAnalysis(Analysis):
         }
         '''
 
+        # for rule in self.placement_rules.keys():
+        #     try:
+        #         self.placement_rules[rule]['rule_group_id']
+        #     except KeyError:
+        #         raise AttributeError("Missing rule ids")
 
-        for rule in self.placement_rules.keys():
-            try:
-                self.placement_rules[rule]['rule_group_id']
-            except KeyError:
-                raise AttributeError("Missing rule ids")
-
-            try:
-                self.placement_rules[rule]['placements']
-            except KeyError:
-                raise AttributeError("Missing placements")
+        #     try:
+        #         self.placement_rules[rule]['placements']
+        #     except KeyError:
+        #         raise AttributeError("Missing placements")
         
         for rule in self.placement_rules.keys():
             for placement in self.placement_rules[rule]['placements']:
