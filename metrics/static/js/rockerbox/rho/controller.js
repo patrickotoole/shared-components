@@ -114,8 +114,6 @@ RB.rho.controller = (function(controller) {
             key
           )
         }
-
-       
       })
       
     }

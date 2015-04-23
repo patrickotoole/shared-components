@@ -106,7 +106,7 @@ RB.rho.ui = (function(ui) {
       .text("+ Add Filter ")
 
     h5.append("span").append("select")
-      .classed("xxx",true)
+      .classed("add-filter",true)
       .on("change",function(x){
         rho.controller.add_filter(this.selectedOptions[0].value)
       })

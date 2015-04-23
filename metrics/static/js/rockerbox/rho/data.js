@@ -68,6 +68,14 @@ RB.rho.data = (function(data){
     }
   }
 
+  var uniqueOrdered = function(name,lookup) {
+
+    return data.CRS.groups[name].all()
+      .sort(function(x,y){return y.value.imps - x.value.imps})
+      .filter(function(x){return lookup[x.key] })
+      .map(function(x){return x.key})
+  }
+
   data.options = function() {
     var sellers = {},
       tags = {},
@@ -85,10 +93,10 @@ RB.rho.data = (function(data){
       })
 
     return {
-      seller: Object.keys(sellers),
-      tag: Object.keys(tags),
-      size: Object.keys(sizes),
-      domain: Object.keys(domains)
+      seller: uniqueOrdered("sellers",sellers),
+      tag: uniqueOrdered("tags",tags),
+      size: uniqueOrdered("sizes",sizes),
+      domain: uniqueOrdered("domain",domains),
     }
 
   }
