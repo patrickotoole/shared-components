@@ -9,13 +9,25 @@ from twisted.internet import defer
 from lib.helpers import decorators
 from lib.helpers import *
 
-QUERY = "SELECT * from rockerbox.domain_tag_imps "
-QUERY_2 = "SELECT * from rockerbox.domain_tag_imps_2 "
+DEFAULT_INTERVAL = "minute"
+
+QUERIES = {
+    "minute": [
+        "SELECT * from rockerbox.domain_tag_imps ",
+        "SELECT * from rockerbox.domain_tag_imps_2 "
+    ],
+    "15_minute": [
+        "SELECT * FROM rockerbox.domain_tag_imps_quarter_hourly ",
+        "SELECT * FROM rockerbox.domain_tag_imps_quarter_hourly_2 "
+    ]
+}
 
 class AvailabilityHandler(BaseHandler):
     def initialize(self, db=None, cassandra=None, **kwargs):
         self.db = db
         self.cassandra = cassandra
+        self.limit = None
+        self.queries = QUERIES[DEFAULT_INTERVAL]
 
     @decorators.formattable
     def get_content(self, data):
@@ -46,19 +58,19 @@ class AvailabilityHandler(BaseHandler):
 
         WHERE = "where " + " and ".join(where)
 
-        logging.info(QUERY + WHERE)
-        logging.info(QUERY_2 + WHERE)
+        for query in self.queries:
+            logging.info(query + WHERE)
 
-        df_a = self.cassandra.select_dataframe(QUERY + WHERE )
-        df_b = self.cassandra.select_dataframe(QUERY_2 + WHERE)
+        df_a = self.cassandra.select_dataframe(self.queries[0] + WHERE)
+        df_b = self.cassandra.select_dataframe(self.queries[1] + WHERE)
 
         df = self.combine(df_a, df_b)
 
         if len(sellers) and len(df):
-            return df[df['seller'].isin(sellers)]
+            df = df[df['seller'].isin(sellers)]
 
         if len(sizes) and len(df):
-            return df[df['size'].isin(sizes)]
+            df = df[df['size'].isin(sizes)]
 
         return df
 
@@ -77,6 +89,11 @@ class AvailabilityHandler(BaseHandler):
     @tornado.web.asynchronous
     def get(self):
         formatted = self.get_argument("format", False)
+        interval = self.get_argument("interval", False)
+        limit = self.get_argument("limit", False)
+
+        if interval:
+            self.queries = QUERIES[interval]
 
         if formatted:
             self.get_availability(
