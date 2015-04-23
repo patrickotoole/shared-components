@@ -19,7 +19,7 @@ class Runner():
         self.params['RPA'] = options.RPA
         self.params['RPA_multipliers'] = options.RPA_multipliers
         self.params['loss_limits'] = options.loss_limits
-        self.params['imp_served_cutoff'] = options.imp_served_cutoff
+        self.params['imps_served_cutoff'] = options.imps_served_cutoff
         self.params['CTR_cutoff']  = options.CTR_cutoff
 
     def run(self):
@@ -33,9 +33,7 @@ class Runner():
             D.filter()
 
             P = analysis.PlacementAnalysis(D.df)
-            P.analyze()
-            P.add_rule_group_ids()
-            
+            P.analyze()            
             P.reshape()
 
             A = action.PlacementAction(P.to_run, campaign)
@@ -53,7 +51,7 @@ if __name__ == "__main__":
     define("RPA", type = int, required = True, help = "Revenue Per Acquisition")
     define("RPA_multipliers", type = int, required = True, multiple = True, help = "mulitplier for RPA")
     define("loss_limits", type = int, required = True, multiple = True, help = "max loss limits for placement")
-    define("imp_served_cutoff", type = int, required = True, help = "Imps Served cut-off")
+    define("imps_served_cutoff", type = int, required = True, help = "Imps Served cut-off")
     define("CTR_cutoff", type = float, required = True, help = "Click-thru rate cut-off")
 
 

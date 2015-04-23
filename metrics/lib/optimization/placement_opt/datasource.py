@@ -21,7 +21,7 @@ APNX_COL_TYPES = {
         }
 
 PARAM_KEYS = ['loss_limits','RPA_multipliers', 'RPA', 
-                'imp_served_cutoff', 'CTR_cutoff']
+                'imps_served_cutoff', 'CTR_cutoff']
 
 REPORT = """
 { 
@@ -109,6 +109,7 @@ class PlacementDataSource(DataSource):
                         'end_date':self.end_date[2:] 
                     }
 
+        self.logger.info("Executing query: {}".format(HIVE_QUERY))
         df_rbox = pd.DataFrame(self.hive.execute(HIVE_QUERY % query_args))
         self.rbox_data = df_rbox
 
@@ -204,13 +205,13 @@ class PlacementDataSource(DataSource):
         elif type(params['RPA']) != int and type(params['RPA']) != float:
             raise TypeError("RPA is wrong type")
 
-        elif type(params['imp_served_cutoff']) != int and type(params['imp_served_cutoff']) != float:
-            raise TypeError("imp_served_cutoff is wrong type")
+        elif type(params['imps_served_cutoff']) != int and type(params['imps_served_cutoff']) != float:
+            raise TypeError("imps_served_cutoff is wrong type")
 
         elif type(params['CTR_cutoff']) != int and type(params['CTR_cutoff']) != float:
             raise TypeError("CTR_cutoff is wrong type")
 
-        elif params['RPA'] < 0 or params['imp_served_cutoff'] < 0 or  params['CTR_cutoff'] < 0 :
+        elif params['RPA'] < 0 or params['imps_served_cutoff'] < 0 or  params['CTR_cutoff'] < 0 :
             raise AttributeError("Inputs cannot be negative")
 
 
@@ -222,7 +223,7 @@ class PlacementDataSource(DataSource):
         self.df['RPA'] = params['RPA'] 
         self.df['loss_limit'] = self.df['convs'].apply(lambda x: params['loss_limits'][0] if x == 0 else (params['loss_limits'][1] if x == 1 else params['loss_limits'][2]))
         self.df['RPA_multiplier'] = self.df['convs'].apply(lambda x: params['RPA_multipliers'][0] if x == 0 else (params['RPA_multipliers'][1] if x == 1 else params['RPA_multipliers'][2]))
-        self.df['imp_served_cutoff'] = params['imp_served_cutoff']
+        self.df['imps_served_cutoff'] = params['imps_served_cutoff']
         self.df['CTR_cutoff'] = params['CTR_cutoff']
         self.df['loaded_ratio'] = self.df['loaded'] / self.df['imps_served_rbox'].astype(float)
         self.df['apnx_rbox_served_ratio'] = self.df['imps_served_rbox'] / self.df['imps_served_apnx'].astype(float)

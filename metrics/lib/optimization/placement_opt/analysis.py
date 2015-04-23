@@ -24,14 +24,25 @@ PLACEMENT_RULES = {
     'no_conv_placement_clickfraud': {
             'desc': "No convs/click fraud:",
             'action': 'EXCLUDE_PLACEMENT'
+    },
+    'no_conv_bad_served_ratio': {
+            'desc': "No convs/ bad apnx/rbox imps served ratio",
+            'action': 'EXCLUDE_PLACEMENT'    
+    },
+    'no_conv_bad_load_ratio': {
+            'desc': "No convs/ bad loaded/served ratio",
+            'action': 'EXCLUDE_PLACEMENT'    
     }
+
 }
 
 
-DF_COLS = ['clicks', 'convs', 'imps_served_apnx', 'last_served_date','media_cost', 
-            'num_days', 'profit', 'revenue', 'imps_served_rbox', 'loaded', 
-            'CTR', 'RPA', 'loss_limit', 'RPA_multiplier','imp_served_cutoff', 
-            'CTR_cutoff', 'loaded_ratio','apnx_rbox_served_ratio']
+DF_COLS = ['clicks', 'convs', 'imps_served_apnx', 'last_served_date',
+            'media_cost', 'num_days', 'profit', 'revenue', 'imps_served_rbox', 
+            'loaded', 'CTR', 'RPA', 'loss_limit', 'RPA_multiplier',
+            'imps_served_cutoff', 'CTR_cutoff', 'loaded_ratio',
+            'apnx_rbox_served_ratio'
+            ]
 
 class PlacementAnalysis(Analysis):
     
@@ -64,7 +75,7 @@ class PlacementAnalysis(Analysis):
         
         for cond in conditions:
             if not eval(cond % row.to_dict()):
-                return False        
+                return False   
         return True
 
 
@@ -74,18 +85,16 @@ class PlacementAnalysis(Analysis):
         for rule_name in self.placement_rules.keys():
             self.extract_rule(rule_name)
 
-
         for rule_name in self.placement_rules.keys():
 
             rows = self.df.apply(lambda row: self.evaluate_rules(rule_name, row), axis = 1)
             placements = self.df[rows].index.get_values()
             self.placement_rules[rule_name]['placements'] = placements
 
+        import ipdb
+        ipdb.set_trace()
 
-    @Analysis.verify_cols([ "last_served_date", "num_days", "imps_served", 
-                            "convs","clicks","media_cost", "revenue","profit",
-                            "CTR", "RPA", "RPA_multiplier","loss_limit",
-                            "imp_served_cutoff","CTR_cutoff"])
+
     def reshape(self):
         '''
         Creates json/dictionary object for placement metrics:
@@ -96,22 +105,11 @@ class PlacementAnalysis(Analysis):
                         'rule_group_id': id 
         }
         '''
-
-        # for rule in self.placement_rules.keys():
-        #     try:
-        #         self.placement_rules[rule]['rule_group_id']
-        #     except KeyError:
-        #         raise AttributeError("Missing rule ids")
-
-        #     try:
-        #         self.placement_rules[rule]['placements']
-        #     except KeyError:
-        #         raise AttributeError("Missing placements")
         
         for rule in self.placement_rules.keys():
             for placement in self.placement_rules[rule]['placements']:
                 if placement not in self.df.index.get_values():
-                    raise AttributeError("Missing placement")
+                    raise AttributeError("Missing placement %s in df" %placement)
 
         to_run = {}
 
@@ -128,6 +126,7 @@ class PlacementAnalysis(Analysis):
                 to_run[placement]['rule_group_id'] =  self.placement_rules[rule]['rule_group_id']
 
         self.to_run = to_run
+
 
 
 
