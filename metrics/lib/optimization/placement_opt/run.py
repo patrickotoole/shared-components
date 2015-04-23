@@ -12,6 +12,7 @@ class Runner():
         
         self.start_date = options.start_date
         self.end_date = options.end_date
+        self.advertiser = options.advertiser
         self.external_adv_id = options.external_adv_id
         self.campaigns = options.campaigns
 
@@ -23,7 +24,7 @@ class Runner():
         self.params['CTR_cutoff']  = options.CTR_cutoff
 
     def run(self):
-        D = datasource.PlacementDataSource(self.external_adv_id, self.campaigns)
+        D = datasource.PlacementDataSource(self.external_adv_id, self.advertiser, self.campaigns)
         D.pull(self.start_date, self.end_date)
 
         for campaign in self.campaigns:
@@ -31,6 +32,7 @@ class Runner():
             D.reshape(campaign)
             D.transform(self.params)
             D.filter()
+
 
             P = analysis.PlacementAnalysis(D.df)
             P.analyze()            
@@ -40,10 +42,13 @@ class Runner():
             A.actions()
 
 
+
 if __name__ == "__main__":
 
     define("start_date", type = str, required = True, help = "start date for placement optimization")
     define("end_date", type = str, required = True, help = "start date for placement optimization")
+
+    define("advertiser", type = str, required = True, help = "advertiser pixel_source_name")
 
     define("external_adv_id", type = str, required = True, help = "external advertiser id")
     define("campaigns", type = int, required = True, multiple = True, help = "list of campaign ID's")

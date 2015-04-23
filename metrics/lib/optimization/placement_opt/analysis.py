@@ -88,11 +88,12 @@ class PlacementAnalysis(Analysis):
         for rule_name in self.placement_rules.keys():
 
             rows = self.df.apply(lambda row: self.evaluate_rules(rule_name, row), axis = 1)
-            placements = self.df[rows].index.get_values()
-            self.placement_rules[rule_name]['placements'] = placements
 
-        import ipdb
-        ipdb.set_trace()
+            if len(rows) > 0:
+                placements = self.df[rows].index.get_values()
+            else:
+                placements  = []
+            self.placement_rules[rule_name]['placements'] = placements
 
 
     def reshape(self):

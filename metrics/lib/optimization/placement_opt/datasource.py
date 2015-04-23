@@ -50,7 +50,7 @@ HIVE_QUERY = """
 Select campaign, domain, tag, 
 sum(num_served) as imps_served, sum(num_loaded) as loaded 
 FROM advertiser_visibility_daily 
-WHERE date >= "%(start_date)s" AND date <= "%(end_date)s" AND advertiser = "bigstock"
+WHERE date >= "%(start_date)s" AND date <= "%(end_date)s" AND advertiser = "%(advertiser)s"
 GROUP BY campaign, domain, tag
 HAVING imps_served > 100
 """
@@ -75,9 +75,10 @@ def date_range_to_days(START_DATE, END_DATE, num_days, by = 1):
 
 class PlacementDataSource(DataSource):
 
-    def __init__(self, external_adv_id, campaigns):
+    def __init__(self, external_adv_id, advertiser, campaigns):
         self.campaigns = campaigns
         self.external_adv_id = external_adv_id
+        self.advertiser = advertiser
         self.data = None
         self.df = None
 
@@ -106,7 +107,8 @@ class PlacementDataSource(DataSource):
     def pull_rbox_data(self):
 
         query_args = {  'start_date': self.start_date[2:] ,
-                        'end_date':self.end_date[2:] 
+                        'end_date':self.end_date[2:],
+                        'advertiser':self.advertiser
                     }
 
         self.logger.info("Executing query: {}".format(HIVE_QUERY))
