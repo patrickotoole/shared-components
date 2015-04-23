@@ -20,6 +20,7 @@ class Action(object):
 
         # Set up rockerbox API connector
         instance.rockerbox = lnk.api.rockerbox
+        instance.console = lnk.api.console
 
         return instance
 

@@ -18,14 +18,14 @@ class DataSourceTestEx(DataSource):
     def transform(self):
         pass
 
-class DataSourceTest(unittest.TestCase):
-    def setUp(self):
-        d = DataSourceTestEx()
-        d.pull()
-        pass
+# class DataSourceTest(unittest.TestCase):
+#     def setUp(self):
+#         d = DataSourceTestEx()
+#         d.pull()
+#         pass
 
-    def tearDown(self):
-        pass
+#     def tearDown(self):
+#         pass
 
-    def test_something(self):
-        assert True
+#     def test_something(self):
+#         assert True
