@@ -8,8 +8,8 @@ RB.rho.data = (function(data){
       var total_ecp = p.imps*p.ecp || 0, total_eap = p.imps*p.eap || 0;
  
       p.imps += v.imps
-      p.ecp = (total_ecp + v.imps*v.ecp)/p.imps
-      p.eap = (total_eap + v.imps*v.eap)/p.imps 
+      p.ecp = (total_ecp + v.imps*v.ecp)/p.imps || 0
+      p.eap = (total_eap + v.imps*v.eap)/p.imps || 0
  
       return p
     },
@@ -17,8 +17,8 @@ RB.rho.data = (function(data){
       var total_ecp = p.imps*p.ecp || 0, total_eap = p.imps*p.eap || 0;
  
       p.imps -= v.imps
-      p.ecp = (total_ecp - v.imps*v.ecp)/p.imps
-      p.eap = (total_eap - v.imps*v.eap)/p.imps 
+      p.ecp = (total_ecp - v.imps*v.ecp)/p.imps || 0
+      p.eap = (total_eap - v.imps*v.eap)/p.imps || 0
        
       return p
     },
@@ -34,7 +34,8 @@ RB.rho.data = (function(data){
       tag: crs.dimension(function(d){return d.tag}),
       size: crs.dimension(function(d){return d.size}),
       domain: crs.dimension(function(d){return d.domain}),
-      date: crs.dimension(function(d){return d.timestamp})
+      date: crs.dimension(function(d){return d.timestamp}),
+      seller_tag_size: crs.dimension(function(d){ return [d.seller,d.tag,d.size] })
     }
 
     var groups = {
@@ -53,6 +54,9 @@ RB.rho.data = (function(data){
       date: dimensions.date.group()
         .order(function(d){return d.imps})
         .reduce(group.add,group.reduce,group.init),  
+      seller_tag_size: dimensions.seller_tag_size.group()
+        .order(function(d){return d.imps})
+        .reduce(group.add,group.reduce,group.init),   
     }
 
     return {
@@ -61,9 +65,41 @@ RB.rho.data = (function(data){
     }
   }
 
+  data.options = function() {
+    var sellers = {},
+      tags = {},
+      sizes = {};
+
+
+    data.CRS.groups.seller_tag_size.all()
+      .filter(function(x){return x.value.imps > 0})
+      .map(function(x){
+        sellers[x.key[0]] = true
+        tags[x.key[1]] = true
+        sizes[x.key[2]] = true
+      })
+
+    return {
+      seller: Object.keys(sellers),
+      tag: Object.keys(tags),
+      size: Object.keys(sizes)
+    }
+
+  }
+
   data.build = function(dd) {
     data.CRS = buildCrossfilter(dd)
     return data.CRS
+  }
+
+  var filters = {}
+
+  data.add_filter = function(item){
+    filters[item] = true
+  }
+
+  data.get_filters = function() {
+    return Object.keys(filters)
   }
 
 

@@ -12,35 +12,92 @@ RB.rho.controller = (function(controller) {
   URL = addParam(URL,"format=json")
 
   controller.init = function(){
+
     d3.json(URL, function(dd){
       rho.data.build(dd) 
-      controller.render(dd)
+      controller.render([])
+      //controller.add_filter("tag")
+      //controller.add_filter("size") 
     });  
   }
 
-  controller.render = function(dd) {
+  controller.add_filter = function(item) {
+    rho.data.add_filter(item)
+    controller.render(rho.data.get_filters())
+  }
 
-    var kvs = dd.length == 0 ? false : ["seller","tag","size"].map(function(x){
-      var values = Object.keys(dd.reduce(function(p,c){p[c[x]] = true;return p},{}))
-      return {"key": x,"values": values}
-    })
-    
+  controller.render = function(filter_array,key) {
+
+    var target = d3.select("#filterable"); 
     var data = rho.data.CRS.groups.date.all();
-    rho.ui.build(d3.select("#filterable"),kvs,data)  
+    var o = rho.data.options()
 
+    var selected_filters = filter_array.reduce(function(p,x){
+      p.push({"key":x, "value":o[x]})
+      return p
+    },[])
+
+    rho.ui.build(target,selected_filters,data,controller.select,key)  
   }
 
   controller.select = function(x) {
+    var special = 1
 
     var key = d3.select(this.parentElement).datum().key
     var data = d3.selectAll(this.selectedOptions).data()
+     
+    if (special) {
 
-    rho.data.CRS.dimensions[key].filterFunction(function(x){
-      return data.indexOf(x) > -1 || data.length == 0
-    })
+      // get what is currently selected
+      var selectors = d3.select(this.parentElement.parentElement)
+      var key_order = selectors.selectAll("select")[0].map(function(x){
+        return d3.select(x).datum().key
+      })
 
-    controller.render([])
+      var current_selections = selectors.selectAll("select")[0].reduce(function(p,x){
+        var key = d3.select(x).datum().key
+        p[key] = d3.selectAll(x.selectedOptions).data()
+        return p
+      },{})
+
+      // reset dimensions which come after current selections
+      rho.data.CRS.dimensions['seller_tag_size'].filterAll() 
+      rho.data.CRS.dimensions['seller'].filterAll()  
+      rho.data.CRS.dimensions['tag'].filterAll()  
+      rho.data.CRS.dimensions['size'].filterAll()  
+
+      // apply new selection parameters
+      var firstKey = key_order.indexOf(key) 
+      var items = key_order//.slice(firstKey,key_order.length)
+
+      // need to reapply current selections sequentially
+      items.map(function(item){
+        var data = current_selections[item]
+        rho.data.CRS.dimensions[item].filterFunction(function(x){
+          return data.indexOf(x) > -1 || data.length == 0
+        })
+
+        var pos = key_order.indexOf(item)
+
+        if (pos >= firstKey) {
+          controller.render(
+            key_order.slice(pos,key_order.length),
+            key
+          )
+        }
+
+       
+      })
+
+
+      
+    }
+
+    
+    
+    //controller.render(rho.data.get_filters(),key) 
   }  
 
   return controller
+
 })(RB.rho.controller || {})

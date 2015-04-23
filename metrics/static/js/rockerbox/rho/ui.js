@@ -1,45 +1,10 @@
 var RB = RB || {}
 RB.rho = RB.rho || {}
+RB.rho.ui = RB.rho.ui || {}
 
 RB.rho.ui = (function(ui) {
 
   var rho = RB.rho
-
-  ui.buildFilter = function(filter){
-    filter.append("h5").text(function(x){return x.key})
-  
-    var select = filter.append("select")
-      .attr("multiple",true)
-      .classed("filter-select",true)
-  
-    select.selectAll("option")
-      .data(function(x){return x.values})
-      .enter()
-        .append("option")
-        .text(function(x){return x})
-  
-    $(".filter-select")
-      .chosen({width: "100%"})
-      .change(rho.controller.select)
-  
-  }
-  
-  ui.buildFilters = function(target,options){
-  
-    var filterWrapper = target.append("div")
-      .classed("filter-wrapper row",true)
-  
-    var w = filterWrapper.append("div")
-      .classed("col-md-12",true)
-  
-    var filters = w.selectAll(".filter")
-      .data(options)
-      .enter()
-        .append("div").classed("filter",true)
-  
-    ui.buildFilter(filters)
-  
-  }
   
   ui.buildTimeseries = function(target,data,title) {
 
@@ -121,11 +86,47 @@ RB.rho.ui = (function(ui) {
       .datum(data)
       .attr("d", line2);  
   }
+
+  ui.selectFilter = function(target,items) {
+    var addFilter = target.selectAll(".new-filter")
+      .data([items])
+
+    var newAddFilter = addFilter.enter()
+      .append("div")
+      .classed("new-filter",true)
+
+    var h5 = newAddFilter
+      .append("h5")
+
+    h5.append("span")
+      .text("+ Add Filter ")
+
+    h5.append("span").append("select")
+      .classed("xxx",true)
+      .on("change",function(x){
+        rho.controller.add_filter(this.selectedOptions[0].value)
+      })
+
+    var select = addFilter.select("select")
+
+    select
+      .selectAll("option")
+      .data(["Select filter..."].concat(items))
+      .enter()
+        .append("option")
+        .text(String)
+        .property("selected",function(x,i){return i == 0})
+        .property("disabled",function(x,i){return i == 0}) 
+
+  }
   
-  ui.build = function(target,filters,data){
-    if (filters) ui.buildFilters(target,filters)
+  ui.build = function(target,filters,data,callback,key){
+    ui.filter.build(target,filters,callback,key)
+    ui.selectFilter(target,['seller','tag','size'])
     ui.buildTimeseries(d3.select(".container"),data,"t")
   } 
 
   return ui
 })(RB.rho.ui || {})
+
+
