@@ -32,11 +32,15 @@ RB.rho.ui = (function(ui) {
       .x(function(d) { return x(d.date); })
       .y(function(d) { return y(d.eap); });
   
-    target.selectAll("h2")
+    var h2 = target.selectAll("h2")
       .data([data])
+
+    h2
       .enter()
         .append("h2")
-        .text(title)
+
+    h2
+      .text(title)
   
     var svg = target.selectAll("svg")
       .data([data])
@@ -120,10 +124,10 @@ RB.rho.ui = (function(ui) {
 
   }
   
-  ui.build = function(target,filters,data,callback,key){
+  ui.build = function(target,filters,data,callback,key,title){
     ui.filter.build(target,filters,callback,key)
-    ui.selectFilter(target,['seller','tag','size'])
-    ui.buildTimeseries(d3.select(".container"),data,"t")
+    ui.selectFilter(target,['domain','seller','tag','size'])
+    ui.buildTimeseries(d3.select(".container"),data,title)
   } 
 
   return ui

@@ -35,10 +35,12 @@ RB.rho.data = (function(data){
       size: crs.dimension(function(d){return d.size}),
       domain: crs.dimension(function(d){return d.domain}),
       date: crs.dimension(function(d){return d.timestamp}),
-      seller_tag_size: crs.dimension(function(d){ return [d.seller,d.tag,d.size] })
+      seller_tag_size: crs.dimension(function(d){ return [d.seller,d.tag,d.size,d.domain] })
     }
 
     var groups = {
+      all: dimensions.seller_tag_size.groupAll()
+        .reduce(group.add,group.reduce,group.init),  
       sellers: dimensions.seller.group()
         .order(function(d){return d.imps})
         .reduce(group.add,group.reduce,group.init),
@@ -60,6 +62,7 @@ RB.rho.data = (function(data){
     }
 
     return {
+      crs: crs,
       dimensions: dimensions,
       groups: groups
     }
@@ -68,7 +71,8 @@ RB.rho.data = (function(data){
   data.options = function() {
     var sellers = {},
       tags = {},
-      sizes = {};
+      sizes = {},
+      domains = {};
 
 
     data.CRS.groups.seller_tag_size.all()
@@ -77,12 +81,14 @@ RB.rho.data = (function(data){
         sellers[x.key[0]] = true
         tags[x.key[1]] = true
         sizes[x.key[2]] = true
+        domains[x.key[3]] = true
       })
 
     return {
       seller: Object.keys(sellers),
       tag: Object.keys(tags),
-      size: Object.keys(sizes)
+      size: Object.keys(sizes),
+      domain: Object.keys(domains)
     }
 
   }
@@ -97,6 +103,10 @@ RB.rho.data = (function(data){
   data.add_filter = function(item){
     filters[item] = true
   }
+
+  data.remove_filter = function(item){
+    delete filters[item] 
+  } 
 
   data.get_filters = function() {
     return Object.keys(filters)

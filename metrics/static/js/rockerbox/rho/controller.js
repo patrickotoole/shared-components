@@ -16,7 +16,7 @@ RB.rho.controller = (function(controller) {
     d3.json(URL, function(dd){
       rho.data.build(dd) 
       controller.render([])
-      //controller.add_filter("tag")
+      //controller.add_filter("seller")
       //controller.add_filter("size") 
     });  
   }
@@ -24,6 +24,27 @@ RB.rho.controller = (function(controller) {
   controller.add_filter = function(item) {
     rho.data.add_filter(item)
     controller.render(rho.data.get_filters())
+  }
+
+  controller.remove_filter = function(item) {
+    rho.data.remove_filter(item)
+
+    var index = 0
+    var toRemove = d3.selectAll(".filter").filter(function(x,i){
+      if (x.key == item) index = i 
+      return x.key == item
+    })
+
+    toRemove.selectAll("option")
+      .property("selected",null)
+      .attr("selected",false)
+
+    var key = d3.select(d3.selectAll(".filter")[0][index]).datum().key
+    var t = toRemove.select("select").node()
+
+    controller.select.apply(t)
+
+    toRemove.remove()
   }
 
   controller.render = function(filter_array,key) {
@@ -37,7 +58,14 @@ RB.rho.controller = (function(controller) {
       return p
     },[])
 
-    rho.ui.build(target,selected_filters,data,controller.select,key)  
+    var total = rho.data.CRS.groups.all.value()
+    var summary = ""
+    
+    for (var k in total) {
+      summary += k + " " + total[k] + " -- "
+    }
+
+    rho.ui.build(target,selected_filters,data,controller.select,key,summary)  
   }
 
   controller.select = function(x) {
@@ -45,6 +73,7 @@ RB.rho.controller = (function(controller) {
 
     var key = d3.select(this.parentElement).datum().key
     var data = d3.selectAll(this.selectedOptions).data()
+
      
     if (special) {
 
@@ -88,8 +117,6 @@ RB.rho.controller = (function(controller) {
 
        
       })
-
-
       
     }
 

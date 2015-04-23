@@ -23,7 +23,20 @@ RB.rho.ui.filter = (function(f) {
   f.buildFilter = function(filter,callback){
 
 
-    filter.append("h5").text(function(x){return x.key})
+    var h5 = filter.append("h5")
+      
+    h5.append("span")
+      .text(function(x){return x.key})
+
+    h5.append("a")
+      .style("float","right")
+      .text("X")
+      .on("click",function(){
+        RB.rho.controller.remove_filter(d3.select(this).datum().key)
+      })
+
+    filter.append("div").html(" and ")
+      .classed("and",true) 
 
     var select = filter.append("select")
       .attr("multiple",true)
@@ -61,8 +74,7 @@ RB.rho.ui.filter = (function(f) {
       var previous_mark = mark
       mark = mark || d['key'] == key
       return previous_mark 
-    })
-
+    });
 
     f.buildOptions(toUpdate)
      
