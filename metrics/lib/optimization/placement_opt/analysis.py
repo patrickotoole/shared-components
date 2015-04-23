@@ -60,21 +60,33 @@ class PlacementAnalysis(Analysis):
 
 
         rows = self.df.apply(self.find_no_conv_placement_unprofitable, axis = 1)
-        placements = self.df[rows].index.get_values()
-        self.placement_rules['no_conv_placement_unprofitable']['placements'] = placements
+        if len(rows) > 0:
+		placements = self.df[rows].index.get_values()
+        else:
+		placements = []
+	self.placement_rules['no_conv_placement_unprofitable']['placements'] = placements
 
 
         rows = self.df.apply(self.find_one_conv_placement_unprofitable, axis = 1)
-        placements = self.df[rows].index.get_values()
-        self.placement_rules['one_conv_placement_unprofitable']['placements'] = placements
+        if len(rows) >0:
+		placements = self.df[rows].index.get_values()
+        else:
+		placements = []
+	self.placement_rules['one_conv_placement_unprofitable']['placements'] = placements
 
         rows = self.df.apply(self.find_multi_conv_placement_unprofitable, axis = 1)
-        placements = self.df[rows].index.get_values()
-        self.placement_rules['multi_conv_placement_unprofitable']['placements'] = placements
+        if len(rows) > 0:
+		placements = self.df[rows].index.get_values()
+	else:
+		placements = []
+	self.placement_rules['multi_conv_placement_unprofitable']['placements'] = placements
 
         rows = self.df.apply(self.find_no_conv_placement_clickfraud, axis = 1)
-        placements = self.df[rows].index.get_values()
-        self.placement_rules['no_conv_placement_clickfraud']['placements'] = placements
+        if len(rows) > 0:
+		placements = self.df[rows].index.get_values()
+        else:
+		placements = []
+	self.placement_rules['no_conv_placement_clickfraud']['placements'] = placements
 
     def add_rule_group_ids(self):
 
