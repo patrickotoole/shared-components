@@ -13,8 +13,11 @@ RB.rho.ui = (function(ui) {
       for (var i in x.value) 
         x[i] = x.value[i]
     })
+
+    var targetWidth = target.style("width").replace("px","")
+
     var margin = {top: 20, right: 20, bottom: 30, left: 50},
-      width = 960 - margin.left - margin.right,
+      width = targetWidth - margin.left - margin.right,
       height = 200 - margin.top - margin.bottom;
   
     var parseDate = d3.time.format("%D-%b-%y %H:%M").parse;
@@ -25,14 +28,6 @@ RB.rho.ui = (function(ui) {
     var yAxis = d3.svg.axis().scale(y).orient("left");
   
     
-    
-    var h2 = target.selectAll("h2")
-      .data([data])
-
-    h2.enter().append("h2")
-    h2.text(title)
-      .style("color","green")
-      .style("text-align","right")
 
     var svg = target.selectAll("svg")
       .data([data])
@@ -158,8 +153,34 @@ RB.rho.ui = (function(ui) {
     ui.filter.build(target,filters,callback,key)
     ui.selectFilter(target,['domain','seller','tag','size'])
     
-    ui.buildTimeseries(d3.select("#graphable"),data,title,series || ['imps'])
+    
+
+    var target = d3.select("#graphable").select(".col-md-9")
+    var h5 = target.selectAll("h5")
+      .data([0])
+
+    h5.enter()
+      .append("h5")
+
+    h5
+      .text("placeholding title -- should describe everything that is selected above")
+      .style("margin-top","20px")
+
+     
+    ui.buildTimeseries(d3.select("#graphable").select(".col-md-9"),data,title,series || ['imps'])
     ui.selectSeries(d3.select("#seriesable"),['imps','eap','ecp']) 
+     
+
+    var legend = d3.select(".legend")
+    
+    var h2 = legend.selectAll("h5")
+      .data([data])
+
+    h2.enter().append("h5")
+    h2.text(title)
+      .style("color","green")
+      .style("margin-top","20px")
+ 
 
   } 
 
