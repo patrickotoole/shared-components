@@ -4,7 +4,7 @@ from opt_script import Action
 from numpy import dtype
 import pandas as pd
 import json
-
+import time
 PLATFORM_PLACEMENT_COL_TYPES = {'action': dtype('O'), 'deleted': dtype('bool'), 'id': dtype('int64')}
 
 
@@ -121,8 +121,8 @@ class PlacementAction(Action):
                         "field_new_value": new_placement_targets,
                         "metric_values": to_exclude[placement]['metrics']
                 }  
-                self.logger.info(log)
-                self.push_log(log)
+                self.logger.info(log)      
+		self.push_log(log)
 
 
                 # Deactivating campaign if all placement targets are removed
@@ -138,7 +138,7 @@ class PlacementAction(Action):
                     self.logger.info(deactivate_log)
                     self.push_log(deactivate_log)
 
-                
-        except (TypeError, KeyError) as Exception:
+            	time.sleep(3)    
+        except (TypeError, KeyError):
             raise Exception("Issue with excluding placement %s in exclude_placements()"%str(placement))
 

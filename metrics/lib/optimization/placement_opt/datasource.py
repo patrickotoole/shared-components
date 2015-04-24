@@ -122,6 +122,7 @@ class PlacementDataSource(DataSource):
             reshaped_df = self.aggregrate_all(grouped_df)
             self.df = reshaped_df
 
+      
     def transform(self, params):
 
         if not all (k in params for k in PARAM_KEYS):
@@ -151,16 +152,19 @@ class PlacementDataSource(DataSource):
         elif params['RPA'] < 0 or params['imp_served_cutoff'] < 0 or  params['CTR_cutoff'] < 0 :
             raise AttributeError("Inputs cannot be negative")
 
-        else:
+        elif len(self.df) > 0:
             self.df['CTR'] = self.df['clicks'] / self.df['imps_served'].astype(float)
             self.df['RPA'] = params['RPA'] 
             self.df['loss_limit'] = self.df['convs'].apply(lambda x: params['loss_limits'][0] if x == 0 else (params['loss_limits'][1] if x == 1 else params['loss_limits'][2]))
             self.df['RPA_multiplier'] = self.df['convs'].apply(lambda x: params['RPA_multipliers'][0] if x == 0 else (params['RPA_multipliers'][1] if x == 1 else params['RPA_multipliers'][2]))
             self.df['imp_served_cutoff'] = params['imp_served_cutoff']
             self.df['CTR_cutoff'] = params['CTR_cutoff']
+        else:
+            self.logger.info("No data for campaign")
 
     def filter(self):
-        self.df = self.df[self.df['last_served_date'] >= self.end_date]
+        if len(self.df) > 0:
+	    self.df = self.df[self.df['last_served_date'] >= self.end_date]
 
 
 
