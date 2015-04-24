@@ -24,21 +24,41 @@ RB.rho.ui.filter = (function(f) {
 
 
     var h5 = filter.append("h5")
-      
-    h5.append("span")
-      .text(function(x){return x.key})
+      .classed("col-md-6 row",true)
 
     h5.append("a")
-      .style("float","right")
-      .text("X")
+      .classed("col-md-1",true)
+      .html("&#215;")
       .on("click",function(){
         RB.rho.controller.remove_filter(d3.select(this).datum().key)
       })
+     
 
-    filter.append("div").html(" and ")
+    var where = h5.append("span")
+      .classed("col-md-4",true)
+
+    where.append("span")
+      .text("WHERE")
+
+    where.append("span")
+      .text("AND")
+      
+    h5.append("span")
+      .classed("col-md-4",true) 
+      .text(function(x){return x.key})
+
+    h5.append("span")
+      .classed("col-md-3",true) 
+      .text("IS IN")
+     
+
+    
+    /*filter.append("div").html(" and ")
       .classed("and",true) 
-
-    var select = filter.append("select")
+      */
+    var select = filter.append("div")
+      .classed("col-md-6",true)
+      .append("select")
       .attr("multiple",true)
       .classed("filter-select",true)
 
@@ -53,7 +73,8 @@ RB.rho.ui.filter = (function(f) {
 
   f.newFilters = function(filters,callback){
     var newFilters = filters.enter()
-      .append("div").classed("filter col-md-3",true)
+      //.append("div").classed("filter col-md-3",true)
+      .append("div").classed("filter col-md-12 row",true) 
   
     var elements = newFilters.data().reduce(function(c,x){
       return c + (x != undefined)

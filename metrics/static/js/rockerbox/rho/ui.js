@@ -6,7 +6,7 @@ RB.rho.ui = (function(ui) {
 
   var rho = RB.rho
   
-  ui.buildTimeseries = function(target,data,title) {
+  ui.buildTimeseries = function(target,data,title,series) {
 
     data.map(function(x){
       x.date = new Date(x.key)
@@ -24,23 +24,13 @@ RB.rho.ui = (function(ui) {
     var xAxis = d3.svg.axis().scale(x).orient("bottom"); 
     var yAxis = d3.svg.axis().scale(y).orient("left");
   
-    var line = d3.svg.line()
-      .x(function(d) { return x(d.date); })
-      .y(function(d) { return y(d.ecp); });
-  
-    var line2 = d3.svg.line()
-      .x(function(d) { return x(d.date); })
-      .y(function(d) { return y(d.eap); });
-  
+    
+    
     var h2 = target.selectAll("h2")
       .data([data])
 
-    h2
-      .enter()
-        .append("h2")
-
-    h2
-      .text(title)
+    h2.enter().append("h2")
+    h2.text(title)
   
     var svg = target.selectAll("svg")
       .data([data])
@@ -54,7 +44,7 @@ RB.rho.ui = (function(ui) {
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
   
     x.domain(d3.extent(data, function(d) { return d.date; }));
-    y.domain([0,d3.max(data, function(d) { return d.ecp; })]);
+    y.domain([0,d3.max(data, function(d) { return d[series[0]]; })]);
   
     newSvg.append("g")
       .attr("class", "x axis")
@@ -74,21 +64,21 @@ RB.rho.ui = (function(ui) {
       .attr("y", 6)
       .attr("dy", ".71em")
       .style("text-anchor", "end")
-      .text("ECP");
+      .text(series[0].toUpperCase());
   
-    newSvg.append("path")
-      .attr("class", "line1 line")
+    series.map(function(series){
+      var line = d3.svg.line()
+        .x(function(d) { return x(d.date); })
+        .y(function(d) { return y(d[series]); });
+     
+      newSvg.append("path")
+        .attr("class", series + " line")
 
-    d3.select(".line1")
-      .datum(data)
-      .attr("d", line);
-  
-    newSvg.append("path")
-      .attr("class", "line2 line") 
+      d3.select(".line")// + series)
+        .datum(data)
+        .attr("d", line); 
+    })
 
-    d3.select(".line2")
-      .datum(data)
-      .attr("d", line2);  
   }
 
   ui.selectFilter = function(target,items) {
@@ -123,11 +113,47 @@ RB.rho.ui = (function(ui) {
         .property("disabled",function(x,i){return i == 0}) 
 
   }
+
+  ui.selectSeries = function(target,items) {
+    var addSeries = target.selectAll(".select-series")
+      .data([items])
+
+    var newAddSeries = addSeries.enter()
+      .append("div")
+      .classed("select-series",true)
+
+    var h5 = newAddSeries
+      .append("h5")
+
+    h5.append("span")
+      .text("+ Add Series ")
+
+    h5.append("span").append("select")
+      .classed("select-series",true)
+      .on("change",function(x){
+        rho.controller.add_series(this.selectedOptions[0].value)
+      })
+
+    var select = addSeries.select("select")
+
+    select
+      .selectAll("option")
+      .data(["Select Series..."].concat(items))
+      .enter()
+        .append("option")
+        .text(String)
+        .property("selected",function(x,i){return i == 0})
+        .property("disabled",function(x,i){return i == 0}) 
+
+  }
   
-  ui.build = function(target,filters,data,callback,key,title){
+  ui.build = function(target,filters,data,callback,key,title,series){
     ui.filter.build(target,filters,callback,key)
     ui.selectFilter(target,['domain','seller','tag','size'])
-    ui.buildTimeseries(d3.select(".container"),data,title)
+    
+    ui.buildTimeseries(target,data,title,series || ['imps'])
+    ui.selectSeries(target,['imps','eap','ecp']) 
+
   } 
 
   return ui

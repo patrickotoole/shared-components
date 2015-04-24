@@ -26,6 +26,13 @@ RB.rho.controller = (function(controller) {
     controller.render(rho.data.get_filters())
   }
 
+  controller.add_series = function(item) {
+
+    controller.series = item
+    controller.render(rho.data.get_filters())
+  }
+ 
+
   controller.remove_filter = function(item) {
     rho.data.remove_filter(item)
 
@@ -59,13 +66,15 @@ RB.rho.controller = (function(controller) {
     },[])
 
     var total = rho.data.CRS.groups.all.value()
-    var summary = ""
+    var summary = total[controller.series]
     
+    /*
     for (var k in total) {
       summary += k + " " + total[k] + " -- "
     }
+    */
 
-    rho.ui.build(target,selected_filters,data,controller.select,key,summary)  
+    rho.ui.build(target,selected_filters,data,controller.select,key,summary,[controller.series || "imps"])  
   }
 
   controller.select = function(x) {
