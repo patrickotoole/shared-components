@@ -31,14 +31,14 @@ class Runner():
             D.reshape(campaign)
             D.transform(self.params)
             D.filter()
+	    if len(D.df) > 0:
+            	P = analysis.PlacementAnalysis(D.df)
+            	P.analyze()
+            	P.add_rule_group_ids()
+            	P.reshape()
 
-            P = analysis.PlacementAnalysis(D.df)
-            P.analyze()
-            P.add_rule_group_ids()
-            P.reshape()
-
-            A = action.PlacementAction(P.to_run, campaign)
-            A.actions()
+            	A = action.PlacementAction(P.to_run, campaign)
+           	A.actions()
 
 
 if __name__ == "__main__":
