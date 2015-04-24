@@ -16,4 +16,4 @@ The entire optimization can be run by calling the `run.py` script. The necessary
 
  The inputs are called from the command line in the following fashion:
 
-`python run.py --start_date="2015-04-01" --end_date="2015-04-10" --external_adv_id=225133 --campaigns=6865740 --RPA=70 --RPA_multipliers=1,2,3 --loss_limits=0,2,3 --imps_served_cutoff=40000 --CTR_cutoff=0.05`
+`python run.py --start_date="2015-04-01" --end_date="2015-04-10" --external_adv_id=225133 --advertiser=bigstock --campaigns=6865740 --RPA=70 --RPA_multipliers=1,2,3 --loss_limits=0,2,3 --imps_served_cutoff=40000 --CTR_cutoff=0.05`

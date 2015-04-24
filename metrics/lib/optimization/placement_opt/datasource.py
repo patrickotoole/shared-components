@@ -1,7 +1,6 @@
 import sys
 sys.path.append("../")
 from opt_script import DataSource
-# from opt_script import Analysis
 import numpy as np
 from numpy import dtype
 import pandas as pd

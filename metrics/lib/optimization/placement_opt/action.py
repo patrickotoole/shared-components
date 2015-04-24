@@ -4,7 +4,7 @@ from opt_script import Action
 from numpy import dtype
 import pandas as pd
 import json
-
+import time
 PLATFORM_PLACEMENT_COL_TYPES = {'action': dtype('O'), 'deleted': dtype('bool'), 'id': dtype('int64')}
 
 
@@ -22,7 +22,6 @@ class PlacementAction(Action):
                     to_exclude[placement] = self.to_run[placement]
             except KeyError:
                 raise KeyError
-
         self.exclude_placements(to_exclude)
 
     def get_campaign_placement_targets(self):
@@ -106,39 +105,41 @@ class PlacementAction(Action):
 
     def exclude_placements(self, to_exclude):
 
-        try:
+        # try:
 
-            for placement in to_exclude.keys():
+        for placement in to_exclude.keys():
+            
+            old_placement_targets = self.get_campaign_placement_targets()
+            new_placement_targets = self.adjust_placement_target(old_placement_targets, placement, 'exclude')
                 
-                old_placement_targets = self.get_campaign_placement_targets()
-                new_placement_targets = self.adjust_placement_target(old_placement_targets, placement, 'exclude')
-                    
-                log = { "rule_group_id": to_exclude[placement]['rule_group_id'],
-                        "object_modified": "campaign_profile",
-                        "campaign_id": self.campaign,
-                        "field_name": 'platform_placement_targets',
-                        "field_old_value": old_placement_targets,
-                        "field_new_value": new_placement_targets,
-                        "metric_values": to_exclude[placement]['metrics']
-                }  
-                self.logger.info(log)
-                self.push_log(log)
+            log = { "rule_group_id": to_exclude[placement]['rule_group_id'],
+                    "object_modified": "campaign_profile",
+                    "campaign_id": self.campaign,
+                    "field_name": 'platform_placement_targets',
+                    "field_old_value": old_placement_targets,
+                    "field_new_value": new_placement_targets,
+                    "metric_values": to_exclude[placement]['metrics']
+            }  
+            self.logger.info(log)
+            self.push_log(log)
 
 
-                # Deactivating campaign if all placement targets are removed
-                if self.check_for_no_targeting(old_placement_targets, new_placement_targets):
-                    deactivate_log = { "rule_group_id": 56,
-                                        "object_modified": "campaign",
-                                        "campaign_id": self.campaign,
-                                        "field_name": 'state',
-                                        "field_old_value": "active",
-                                        "field_new_value": "inactive",
-                                        "metric_values": {}
-                                    }
-                    self.logger.info(deactivate_log)
-                    self.push_log(deactivate_log)
+            # Deactivating campaign if all placement targets are removed
+            if self.check_for_no_targeting(old_placement_targets, new_placement_targets):
+                deactivate_log = { "rule_group_id": 56,
+                                    "object_modified": "campaign",
+                                    "campaign_id": self.campaign,
+                                    "field_name": 'state',
+                                    "field_old_value": "active",
+                                    "field_new_value": "inactive",
+                                    "metric_values": {}
+                                }
+                self.logger.info(deactivate_log)
+                self.push_log(deactivate_log)
+
+            time.sleep(5)
 
                 
-        except (TypeError, KeyError) as Exception:
-            raise Exception("Issue with excluding placement %s in exclude_placements()"%str(placement))
+        # except (TypeError, KeyError) as Exception:
+        #     raise Exception("Issue with excluding placement %s in exclude_placements()"%str(placement))
 
