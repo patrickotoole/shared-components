@@ -83,11 +83,10 @@ RB.rho.controller = (function(controller) {
     var key = d3.select(this.parentElement).datum().key
     var data = d3.selectAll(this.selectedOptions).data()
 
-     
     if (special) {
 
       // get what is currently selected
-      var selectors = d3.select(this.parentElement.parentElement)
+      var selectors = d3.select(this.parentElement.parentElement.parentElement) // this is ugly
       var key_order = selectors.selectAll("select")[0].map(function(x){
         return d3.select(x).datum().key
       })

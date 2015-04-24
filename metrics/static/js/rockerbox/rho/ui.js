@@ -31,7 +31,9 @@ RB.rho.ui = (function(ui) {
 
     h2.enter().append("h2")
     h2.text(title)
-  
+      .style("color","green")
+      .style("text-align","right")
+
     var svg = target.selectAll("svg")
       .data([data])
 
@@ -57,6 +59,10 @@ RB.rho.ui = (function(ui) {
     newSvg.append("g")
       .attr("class", "y axis")
 
+    d3.select(".y.axis") 
+      .selectAll("text.y-label")
+      .remove()
+
     d3.select(".y.axis")
       .call(yAxis)
       .append("text")
@@ -64,6 +70,7 @@ RB.rho.ui = (function(ui) {
       .attr("y", 6)
       .attr("dy", ".71em")
       .style("text-anchor", "end")
+      .classed("y-label",true)
       .text(series[0].toUpperCase());
   
     series.map(function(series){
@@ -151,8 +158,8 @@ RB.rho.ui = (function(ui) {
     ui.filter.build(target,filters,callback,key)
     ui.selectFilter(target,['domain','seller','tag','size'])
     
-    ui.buildTimeseries(target,data,title,series || ['imps'])
-    ui.selectSeries(target,['imps','eap','ecp']) 
+    ui.buildTimeseries(d3.select("#graphable"),data,title,series || ['imps'])
+    ui.selectSeries(d3.select("#seriesable"),['imps','eap','ecp']) 
 
   } 
 
