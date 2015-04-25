@@ -128,7 +128,26 @@ RB.rho.ui = (function(ui) {
       .append("h5")
 
     h5.append("span")
-      .text("+ Add Series ")
+      .text("Date Interval")
+
+    h5.append("span").append("select")
+      .classed("select-interval",true)
+      .on("change",function(x){
+        rho.controller.select_interval(this.selectedOptions[0].value)
+      })
+
+    var select = addSeries.select(".select-interval")
+
+    select
+      .selectAll("option")
+      .data(["past 30 minutes","past day"])
+      .enter()
+        .append("option")
+        .text(String)
+     
+
+    h5.append("span")
+      .text("Show Series ")
 
     h5.append("span").append("select")
       .classed("select-series",true)
@@ -136,53 +155,114 @@ RB.rho.ui = (function(ui) {
         rho.controller.add_series(this.selectedOptions[0].value)
       })
 
-    var select = addSeries.select("select")
+    var select = addSeries.select("select.select-series")
 
     select
       .selectAll("option")
-      .data(["Select Series..."].concat(items))
+      .data(items)
       .enter()
         .append("option")
         .text(String)
-        .property("selected",function(x,i){return i == 0})
-        .property("disabled",function(x,i){return i == 0}) 
 
   }
   
-  ui.build = function(target,filters,data,callback,key,title,series){
+  ui.build = function(target,filters,data,callback,key,summary,series,selected_range){
     ui.filter.build(target,filters,callback,key)
     ui.selectFilter(target,['domain','seller','tag','size'])
     
+    var target = d3.select("#graphable").select(".col-md-9")
+
+    //ui.buildTitle(filters)
+
+    ui.buildTimeseries(d3.select("#graphable").select(".col-md-9"),data,summary,series || ['imps'])
+    ui.selectSeries(d3.select("#seriesable"),['imps','eap','ecp']) 
+    
+    var min_date = 0
+    var max_date = 30*60
+
+    console.log(selected_range)
+
+    ui.buildLegend(summary,{"selected":selected_range})
+   
+  } 
+
+  ui.buildLegend = function(total,date_selection) {
+    var summary = ""
+    var format = d3.format(",.2")
+    
+    for (var k in total) {
+      summary += k + " " + format(d3.round(total[k],2)) + "<br/>"
+    }
+
+    var legend = d3.select(".legend")
+    
+    var h2 = legend.selectAll("h5")
+      .data([0])
+
+    var text = "Availability Summary <br>" + 
+      "<div style='font-weight:normal;margin-top:5px;margin-left:5px;font-size:13px'>" + 
+        summary
+
+    var d = 
+      date_selection.selected.max_date - 
+      date_selection.selected.min_date
+
+    var minutes = d/60/1000
+
+    text += "<br/>imps/min: "  + format(d3.round(total.imps/minutes)) + "<br/>" 
+    text += "cost/min: " + format(d3.round(total.imps*total.eap/minutes/1000,2))  + "<br/>"  
+
+    text += "</div>"
+    /*text += "<br/> Date Interval <br>"
+    text += "<div style='font-weight:normal;margin-top:5px;margin-left:5px;font-size:13px'>" +  
+      "<select>"+
+      "<option>Past hour</option>" +
+      "<option>Past day</option>" +
+      "</select>" +
+      "</div>"
+      */
+    text += "<br/> Sampled Data?"
+    text += "<div style='font-weight:normal;margin-top:5px;margin-left:5px;font-size:13px'>Unknown Sample</div>"
     
 
-    var target = d3.select("#graphable").select(".col-md-9")
+    h2.enter().append("h5")
+    h2.html(text)
+      .style("margin-top","20px") 
+
+   
+
+     
+  }
+
+  ui.buildTitle = function(filters) {
+    var target = d3.select("#graphable").select(".col-md-9") 
+
     var h5 = target.selectAll("h5")
       .data([0])
 
     h5.enter()
       .append("h5")
 
-    h5
-      .text("placeholding title -- should describe everything that is selected above")
+    var showing = "Showing availability for ",
+      showing_arr = []
+
+    if (filters.length == 0) {
+      showing_arr.push(" all data ")
+    } else {
+      filters.map(function(kv){
+        var joined = (kv.value.length > 4 ? kv.value.slice(0,4).join(",") + "... " : kv.value.join(",")) 
+        showing_arr.push(" " + kv.key + "s: " + joined)
+      
+      })
+    }
+
+    showing += showing_arr.join(" and ")
+
+    h5.text(showing)
       .style("margin-top","20px")
 
-     
-    ui.buildTimeseries(d3.select("#graphable").select(".col-md-9"),data,title,series || ['imps'])
-    ui.selectSeries(d3.select("#seriesable"),['imps','eap','ecp']) 
-     
-
-    var legend = d3.select(".legend")
     
-    var h2 = legend.selectAll("h5")
-      .data([data])
-
-    h2.enter().append("h5")
-    h2.text(title)
-      .style("color","green")
-      .style("margin-top","20px")
- 
-
-  } 
+  }
 
   return ui
 })(RB.rho.ui || {})

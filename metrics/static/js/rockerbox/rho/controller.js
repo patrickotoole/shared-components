@@ -54,9 +54,9 @@ RB.rho.controller = (function(controller) {
     toRemove.remove()
   }
 
-  controller.render = function(filter_array,key) {
+  controller.render = function(filter_array,key,skip_title) {
 
-    var target = d3.select("#filterable"); 
+    var target = d3.select("#filterable");
     var data = rho.data.CRS.groups.date.all();
     var o = rho.data.options()
 
@@ -66,15 +66,26 @@ RB.rho.controller = (function(controller) {
     },[])
 
     var total = rho.data.CRS.groups.all.value()
-    var summary = total[controller.series]
-    
-    /*
-    for (var k in total) {
-      summary += k + " " + total[k] + " -- "
+    var dates = rho.data.CRS.groups.date.all().map(function(x){return +new Date(x.key)})
+    var selected_range = {
+      min_date: dates.reduce(function(p,x){ return p < x ? p : x},Infinity),
+      max_date: dates.reduce(function(p,x){ return p < x ? x : p},0) 
     }
-    */
 
-    rho.ui.build(target,selected_filters,data,controller.select,key,summary,[controller.series || "imps"])  
+    if (!skip_title) rho.ui.buildTitle(selected_filters)
+
+    console.log(selected_range)
+
+    rho.ui.build(
+      target,
+      selected_filters,
+      data,
+      controller.select,
+      key,
+      total,
+      [controller.series || "imps"],
+      selected_range
+    )  
   }
 
   controller.select = function(x) {
@@ -108,7 +119,7 @@ RB.rho.controller = (function(controller) {
       var items = key_order//.slice(firstKey,key_order.length)
 
       // need to reapply current selections sequentially
-      items.map(function(item){
+      items.map(function(item,i){
         var data = current_selections[item]
         rho.data.CRS.dimensions[item].filterFunction(function(x){
           return data.indexOf(x) > -1 || data.length == 0
@@ -117,12 +128,24 @@ RB.rho.controller = (function(controller) {
         var pos = key_order.indexOf(item)
 
         if (pos >= firstKey) {
+          console.log(i)
           controller.render(
             key_order.slice(pos,key_order.length),
-            key
+            key,
+            true
           )
         }
       })
+
+      var o = rho.data.options() 
+      var selected_filters = key_order.reduce(function(p,x){
+        p.push({"key":x, "value":o[x]})
+        return p
+      },[])
+     
+      rho.ui.buildTitle(selected_filters)
+
+      //rho.ui.build(target,selected_filters,data,controller.select,key,summary,[controller.series || "imps"])   
       
     }
 
