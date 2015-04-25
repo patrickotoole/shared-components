@@ -17,6 +17,9 @@
   <link href="/static/css/bootstrap.css" rel="stylesheet"> 
 
   <style>
+
+    .filter-wrapper h5 {font-size:13px}
+    .container {padding-top:15px}
     input[type="checkbox"]:disabled + label{ color: #ccc; }
     .loading { display: none; } 
     body { font: 10px sans-serif; }
@@ -26,19 +29,44 @@
     .line { fill: none; stroke: steelblue; stroke-width: 1.5px; }
     .and {float: right; margin-right: -26px; font-size: 12px; line-height:30px}
     .filter-wrapper .filter:last-of-type .and {display:none}
+    .filter-wrapper .col-md-4 span:first-of-type {display:none}  
+    .filter-wrapper .filter:first-of-type .col-md-4:first-of-type span:last-of-type {display:none}
+    .filter-wrapper .filter:first-of-type .col-md-4:first-of-type span:first-of-type {display:inline} 
+    a {cursor:pointer}
+    /*.filter-wrapper {background:grey}*/
+    .chosen-container {margin-top:2.5px}
+    #seriesable, #filterable {
+      padding-top:5px;padding-bottom:5px;
+      margin-left:-25px; 
+      margin-right:-25px;
+      padding-right:25px;
+      padding-left:25px; 
+      background-color:#ddd
+    }
   </style>
 
-  <script>
-    RB.rho.controller.init()
-  </script>
+  <script> RB.rho.controller.init() </script>
 
 </head>
 
 <body>
 
-  <div class="container">
-    <h1>Availability</h1>
-    <div id="filterable"></div>
+  <div style="position:fixed;width:200px;top:0px;left:0px;height:100%;background:black">
+  
+  </div>
+  <div class="container" style="width:inherit;margin-left:200px">
+    <h3>Domain Availability</h3>
+    <br/>
+   
+    <div id="filterable" class="row">
+      <h4>Filter</h4>  
+    </div>
+    <div id="graphable" class="row">
+      <div class="col-md-9 display"></div>
+      <div class="col-md-3 legend"> </div> 
+    </div> 
+    <div id="seriesable"></div>  
+
   </div>
 </body>
 
