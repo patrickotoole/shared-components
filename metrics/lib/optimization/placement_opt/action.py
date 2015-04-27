@@ -6,7 +6,7 @@ import pandas as pd
 import json
 import time
 PLATFORM_PLACEMENT_COL_TYPES = {'action': dtype('O'), 'deleted': dtype('bool'), 'id': dtype('int64')}
-
+from pprint import pprint
 
 class PlacementAction(Action):
     
@@ -99,8 +99,9 @@ class PlacementAction(Action):
 
 
     def push_log(self, log):
-        r = self.rockerbox.post("/scripts/opt_log", data=json.dumps(log))
-        if r.json['status'] != 'ok':
+	pprint(log)
+        r = self.rockerbox.post("/opt_log", data=json.dumps(log))
+	if r.json['status'] != 'ok':
             raise TypeError("Incorrect Opt Log %s" %str(log))
 
 
@@ -123,8 +124,7 @@ class PlacementAction(Action):
                 }  
                 self.logger.info(log)      
 		self.push_log(log)
-
-
+		
                 # Deactivating campaign if all placement targets are removed
                 if self.check_for_no_targeting(old_placement_targets, new_placement_targets):
                     deactivate_log = { "rule_group_id": 56,
