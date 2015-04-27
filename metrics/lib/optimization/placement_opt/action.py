@@ -105,8 +105,6 @@ class PlacementAction(Action):
 
     def exclude_placements(self, to_exclude):
 
-        # try:
-
         for placement in to_exclude.keys():
             
             old_placement_targets = self.get_campaign_placement_targets()
@@ -121,7 +119,7 @@ class PlacementAction(Action):
                     "metric_values": to_exclude[placement]['metrics']
             }  
             self.logger.info(log)
-            self.push_log(log)
+            #self.push_log(log)
 
 
             # Deactivating campaign if all placement targets are removed
@@ -135,11 +133,6 @@ class PlacementAction(Action):
                                     "metric_values": {}
                                 }
                 self.logger.info(deactivate_log)
-                self.push_log(deactivate_log)
+                #self.push_log(deactivate_log)
 
-            time.sleep(5)
-
-                
-        # except (TypeError, KeyError) as Exception:
-        #     raise Exception("Issue with excluding placement %s in exclude_placements()"%str(placement))
-
+            time.sleep(3)

@@ -220,18 +220,27 @@ class PlacementDataSource(DataSource):
 
         self.check_params(params)
 
-        self.df['CTR'] = self.df['clicks'] / self.df['imps_served_apnx'].astype(float)
-        self.df['RPA'] = params['RPA'] 
-        self.df['loss_limit'] = self.df['convs'].apply(lambda x: params['loss_limits'][0] if x == 0 else (params['loss_limits'][1] if x == 1 else params['loss_limits'][2]))
-        self.df['RPA_multiplier'] = self.df['convs'].apply(lambda x: params['RPA_multipliers'][0] if x == 0 else (params['RPA_multipliers'][1] if x == 1 else params['RPA_multipliers'][2]))
-        self.df['imps_served_cutoff'] = params['imps_served_cutoff']
-        self.df['CTR_cutoff'] = params['CTR_cutoff']
-        self.df['loaded_ratio'] = self.df['loaded'] / self.df['imps_served_rbox'].astype(float)
-        self.df['apnx_rbox_served_ratio'] = self.df['imps_served_rbox'] / self.df['imps_served_apnx'].astype(float)
+        if len(self.df) > 0:
+
+            self.df['CTR'] = self.df['clicks'] / self.df['imps_served_apnx'].astype(float)
+            self.df['RPA'] = params['RPA'] 
+            self.df['loss_limit'] = self.df['convs'].apply(lambda x: params['loss_limits'][0] if x == 0 else (params['loss_limits'][1] if x == 1 else params['loss_limits'][2]))
+            self.df['RPA_multiplier'] = self.df['convs'].apply(lambda x: params['RPA_multipliers'][0] if x == 0 else (params['RPA_multipliers'][1] if x == 1 else params['RPA_multipliers'][2]))
+            self.df['imps_served_cutoff'] = params['imps_served_cutoff']
+            self.df['CTR_cutoff'] = params['CTR_cutoff']
+            self.df['loaded_ratio'] = self.df['loaded'] / self.df['imps_served_rbox'].astype(float)
+            self.df['apnx_rbox_served_ratio'] = self.df['imps_served_rbox'] / self.df['imps_served_apnx'].astype(float)
+
+            self.df['served_ratio_cutoff'] = params['served_ratio_cutoff']
+            self.df['loaded_ratio_cutoff'] = params['loaded_ratio_cutoff']
+
+        else:
+            self.logger.info("no data for campaign")
 
 
     def filter(self):
-        self.df = self.df[self.df['last_served_date'] >= self.end_date]
+        if len(self.df) > 0:
+            self.df = self.df[self.df['last_served_date'] >= self.end_date]
 
 
 

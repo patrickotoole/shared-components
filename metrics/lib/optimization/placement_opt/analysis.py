@@ -71,23 +71,22 @@ class PlacementAnalysis(Analysis):
 
     def evaluate_rules(self, rule_name, row):
 
-        conditions = self.placement_rules[rule_name]['conditions']
-        
-        for cond in conditions:
-            if not eval(cond % row.to_dict()):
-                return False   
-        return True
+        conditions = self.placement_rules[rule_name]['conditions']    
+        evals = [eval(cond % row.to_dict()) for cond in conditions]
+        return (False not in evals)
 
 
     @Analysis.verify_cols(DF_COLS)
     def analyze(self):
 
+        
         for rule_name in self.placement_rules.keys():
             self.extract_rule(rule_name)
 
         for rule_name in self.placement_rules.keys():
 
             rows = self.df.apply(lambda row: self.evaluate_rules(rule_name, row), axis = 1)
+
 
             if len(rows) > 0:
                 placements = self.df[rows].index.get_values()
@@ -127,6 +126,13 @@ class PlacementAnalysis(Analysis):
                 to_run[placement]['rule_group_id'] =  self.placement_rules[rule]['rule_group_id']
 
         self.to_run = to_run
+
+    def run_analysis(self):
+        if len(self.df) > 0:
+            self.analyze()            
+            self.reshape()
+        else:
+            self.to_run = {}
 
 
 

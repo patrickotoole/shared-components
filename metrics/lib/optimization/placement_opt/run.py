@@ -22,6 +22,8 @@ class Runner():
         self.params['loss_limits'] = options.loss_limits
         self.params['imps_served_cutoff'] = options.imps_served_cutoff
         self.params['CTR_cutoff']  = options.CTR_cutoff
+        self.params['served_ratio_cutoff']  = options.served_ratio_cutoff
+        self.params['loaded_ratio_cutoff']  = options.loaded_ratio_cutoff
 
     def run(self):
         D = datasource.PlacementDataSource(self.external_adv_id, self.advertiser, self.campaigns)
@@ -35,8 +37,9 @@ class Runner():
 
 
             P = analysis.PlacementAnalysis(D.df)
-            P.analyze()            
-            P.reshape()
+            P.run_analysis()
+
+            print P.to_run
 
             A = action.PlacementAction(P.to_run, campaign)
             A.actions()
@@ -58,6 +61,8 @@ if __name__ == "__main__":
     define("loss_limits", type = int, required = True, multiple = True, help = "max loss limits for placement")
     define("imps_served_cutoff", type = int, required = True, help = "Imps Served cut-off")
     define("CTR_cutoff", type = float, required = True, help = "Click-thru rate cut-off")
+    define("served_ratio_cutoff", type = float, required = True, help = "Appenxus served / Rbox cut-off")
+    define("loaded_ratio_cutoff", type = float, required = True, help = "Imps Loaded/Served cut-off")
 
 
     # Get command line arguments
