@@ -221,6 +221,9 @@ class UserCampaignHandler(CampaignHandler):
         data['profile']['max_lifetime_imps'] = profile.get("max_lifetime_imps",15)
         data['profile']['allow_unaudited'] = True 
 
+        data['profile']['region_action'] = "exclude" if len(profile.get("region_targets",[])) == 0 else "include" 
+        data['profile']['dma_action'] = "exclude" if len(profile.get("dma_targets",[])) == 0 else "include"   
+
         data = self.api.post(URL,data=ujson.dumps(data))
         return data.json['response']['profile']
 
