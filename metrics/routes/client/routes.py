@@ -59,7 +59,8 @@ class AdvertiserRoutes(Routes):
             (r'/creative', creative.CreativeHandler, self.connectors),
             (r'/location.*', appnexus.AppnexusHandler, self.connectors),
             (r'/viewability', analytics.ViewabilityHandler, self.connectors),
-            (r'/availability', analytics.AvailabilityHandler, self.connectors)
+            (r'/availability', analytics.AvailabilityHandler, self.connectors),
+            (r'/visit_urls', analytics.VisitUrlsHandler, self.connectors)
         ]
 
     @connectors("reporting_db","api")
