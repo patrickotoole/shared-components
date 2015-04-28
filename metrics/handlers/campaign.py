@@ -217,8 +217,8 @@ class UserCampaignHandler(CampaignHandler):
         data['profile']['country_targets'] = data['profile'].get("country_targets",[{"country": "US"}])
         data['profile']['device_type_targets'] = ["phone"]
         data['profile']['supply_type_targets'] = ["mobile_app", "mobile_web"]
-        data['profile']['max_day_imps'] = profile.get("max_day_imps",5)
-        data['profile']['max_lifetime_imps'] = profile.get("max_lifetime_imps",15)
+        data['profile']['max_day_imps'] = profile.get("max_day_imps",5) or None
+        data['profile']['max_lifetime_imps'] = profile.get("max_lifetime_imps",15) or None
         data['profile']['allow_unaudited'] = True 
 
         data['profile']['region_action'] = "exclude" if len(profile.get("region_targets",[])) == 0 else "include" 
