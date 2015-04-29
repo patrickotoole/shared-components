@@ -173,6 +173,9 @@ class PlacementDataSourceTest(unittest.TestCase):
         with self.assertRaises(AttributeError):
             self.d.check_params( params )
 
+    def test_trasnsform_empty_df(self):
+        self.d.df = pd.DataFrame()
+        self.d.transform(FIXTURE_PARAM)
 
 
     def test_transform_check_df(self):

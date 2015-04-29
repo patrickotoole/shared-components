@@ -104,6 +104,18 @@ class PlacementActionTest(unittest.TestCase):
             self.assertEqual(x, y)
 
 
+    def test_check_for_no_targeting(self):
+
+        old_placement_targets = PLACEMENT_TARGET_1.copy()
+        old_placement_targets['action'] = 'include'
+        new_placement_targets = PLACEMENT_TARGET_1.copy()
+        new_placement_targets['action'] = 'exclude'
+        self.assertTrue(self.d.check_for_no_targeting([old_placement_targets], [new_placement_targets]))
+
+        old_placement_targets['action'] = 'exclude'
+        self.assertFalse(self.d.check_for_no_targeting([old_placement_targets], [new_placement_targets]))
+
+
     def test_push_log_error(self):
 
         m = MagicMock()
@@ -112,5 +124,10 @@ class PlacementActionTest(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             self.d.push_log({})
+
+    def test_exclude_placements_missing(self):
+
+        with self.assertRaises(KeyError): 
+            self.d.exclude_placements({'1235':{}})
 
 

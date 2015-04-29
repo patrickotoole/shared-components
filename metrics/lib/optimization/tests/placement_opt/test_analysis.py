@@ -107,14 +107,6 @@ class PlacementAnalysisTest(unittest.TestCase):
 
         self.d.reshape()
 
-
-
-
-        # from pprint import pprint
-        # import ipdb
-        # ipdb.set_trace()
-        # for k in self.d.to_run['1243']['metrics'].keys():
-        #     print k, self.d.to_run['1243']['metrics'][k], TO_RUN['1243']['metrics'][k]
         self.assertEqual(self.d.to_run, TO_RUN)
 
 

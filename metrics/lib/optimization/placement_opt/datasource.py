@@ -191,13 +191,6 @@ class PlacementDataSource(DataSource):
 
         if not all (k in params for k in PARAM_KEYS):
 
-            # if params != {}:
-                
-            #     for k in PARAM_KEYS:
-            #         if k not in params:
-            #             print k
-            #     import ipdb
-            #     ipdb.set_trace()
             raise ValueError("params missing necessary keys")
 
         elif len(params['RPA_multipliers']) < 3:

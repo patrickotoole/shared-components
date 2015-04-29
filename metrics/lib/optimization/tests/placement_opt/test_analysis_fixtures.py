@@ -48,7 +48,6 @@ GOOD_PLACEMENT_RULES_GOOD_PLACEMENT = {'multi_conv_placement_unprofitable':
 
             }}
 
-
 FIXTURE_DF = pd.DataFrame([{'imps_served_cutoff': 40000, 
                             'RPA': 70, 
                             'loss_limit': 0, 
@@ -90,106 +89,11 @@ TO_RUN = { "1243" :
 
 
 
-# PLACEMENT_RULES = { 
-
-#     'no_conv_placement_unprofitable': {
-#             'desc': "No convs/unprofitable:",
-#             'action': 'EXCLUDE_PLACEMENT',
-#     },
-
-#     'one_conv_placement_unprofitable': {
-#             'desc': "One convs/unprofitable:",
-#             'action': 'EXCLUDE_PLACEMENT'
-#     },
-
-#     'multi_conv_placement_unprofitable': {
-#             'desc': "Multi convs/unprofitable: (MEDIA TRADER INVESTIGATE)",
-#             'action': None
-#     },
-
-#     'no_conv_placement_clickfraud': {
-#             'desc': "No convs/click fraud:",
-#             'action': 'EXCLUDE_PLACEMENT'
-#     },
-#     'no_conv_bad_served_ratio': {
-#             'desc': "No convs/ bad apnx/rbox imps served ratio",
-#             'action': 'EXCLUDE_PLACEMENT'    
-#     },
-#     'no_conv_bad_load_ratio': {
-#             'desc': "No convs/ bad loaded/served ratio",
-#             'action': 'EXCLUDE_PLACEMENT'    
-#     }
-
-# }
 
 
 
 
 
-
-PLACEMENT_RULE_MISSING_GROUP_ID = { 
-
-    'no_conv_placement_unprofitable': {
-            'metrics': ['convs', 'profit', 'loss_limit', 'RPA_multiplier', 'RPA'],
-            'desc': "No convs/unprofitable:",
-            'action': 'EXCLUDE_PLACEMENT',
-    },
-
-    'one_conv_placement_unprofitable': {
-            'metrics': ['convs', 'profit', 'loss_limit', 'RPA_multiplier', 'RPA'],
-            'desc': "One convs/unprofitable:",
-            'action': 'EXCLUDE_PLACEMENT'
-    },
-
-    'multi_conv_placement_unprofitable': {
-            'metrics': ['convs', 'profit', 'loss_limit', 'RPA_multiplier', 'RPA'],
-            'desc': "Multi convs/unprofitable: (MEDIA TRADER INVESTIGATE)",
-            'action': None,
-
-    },
-
-    'no_conv_placement_clickfraud': {
-            'metrics': ['convs', 'CTR', 'CTR_cutoff', 'imps_served', 'imp_served_cutoff'],
-            'desc': "No convs/click fraud:",
-            'action': 'EXCLUDE_PLACEMENT'
-    }
-}
-
-PLACEMENT_RULE_WITH_PLACEMENTS = { 
-
-    'no_conv_placement_unprofitable': {
-            'metrics': ['convs', 'profit', 'loss_limit', 'RPA_multiplier', 'RPA'],
-            'desc': "No convs/unprofitable:",
-            'action': 'EXCLUDE_PLACEMENT',
-            'placements': [],
-            'rule_group_id':1
-
-    },
-
-    'one_conv_placement_unprofitable': {
-            'metrics': ['convs', 'profit', 'loss_limit', 'RPA_multiplier', 'RPA'],
-            'desc': "One convs/unprofitable:",
-            'action': 'EXCLUDE_PLACEMENT',
-            'placements': [],
-            'rule_group_id':2
-    },
-
-    'multi_conv_placement_unprofitable': {
-            'metrics': ['convs', 'profit', 'loss_limit', 'RPA_multiplier', 'RPA'],
-            'desc': "Multi convs/unprofitable: (MEDIA TRADER INVESTIGATE)",
-            'action': None,
-            'placements': [],
-            'rule_group_id':3
-
-    },
-
-    'no_conv_placement_clickfraud': {
-            'metrics': ['convs', 'CTR', 'CTR_cutoff', 'imps_served', 'imp_served_cutoff'],
-            'desc': "No convs/click fraud:",
-            'action': 'EXCLUDE_PLACEMENT',
-            'placements': [2],
-            'rule_group_id':4
-    }
-}
+# 
 
 

@@ -32,7 +32,7 @@ class PlacementAction(Action):
         try:
             response = self.console.get_profile("/campaign?id=%s"%self.campaign)
             try:
-                placement_targets =response.json['response']['profile']['platform_placement_targets']
+                placement_targets = response.json['response']['profile']['platform_placement_targets']
                 return placement_targets
             
             except KeyError:
@@ -105,6 +105,15 @@ class PlacementAction(Action):
 
     def exclude_placements(self, to_exclude):
 
+
+        for placement in to_exclude.keys():
+            try:
+                to_exclude[placement]['rule_group_id']
+                to_exclude[placement]['metrics']
+            except KeyError:
+                raise KeyError("to_exclude missing rule_group_id/metrics")
+
+
         for placement in to_exclude.keys():
             
             old_placement_targets = self.get_campaign_placement_targets()
@@ -119,12 +128,12 @@ class PlacementAction(Action):
                     "metric_values": to_exclude[placement]['metrics']
             }  
             self.logger.info(log)
-            #self.push_log(log)
+            self.push_log(log)
 
 
             # Deactivating campaign if all placement targets are removed
             if self.check_for_no_targeting(old_placement_targets, new_placement_targets):
-                deactivate_log = { "rule_group_id": 56,
+                deactivate_log = { "rule_group_id": to_exclude[placement]['rule_group_id'],
                                     "object_modified": "campaign",
                                     "campaign_id": self.campaign,
                                     "field_name": 'state',
@@ -133,6 +142,13 @@ class PlacementAction(Action):
                                     "metric_values": {}
                                 }
                 self.logger.info(deactivate_log)
-                #self.push_log(deactivate_log)
+                self.push_log(deactivate_log)
 
             time.sleep(3)
+
+
+
+
+
+
+
