@@ -52,7 +52,7 @@ class PlacementAction(Action):
         '''
 
         if placement_targets is None:
-            placement_targets = [{  'id':placement_id, 
+            placement_targets = [{  'id':int(placement_id), 
                                     'action':new_action,
                                     'deleted':False
                                 }]
@@ -60,16 +60,16 @@ class PlacementAction(Action):
         elif pd.DataFrame(placement_targets).dtypes.to_dict() != PLATFORM_PLACEMENT_COL_TYPES:
             raise TypeError("Incorrect column types for platform_placement_targets")
         
-        elif placement_id in pd.DataFrame(placement_targets)['id'].unique():
+        elif int(placement_id) in pd.DataFrame(placement_targets)['id'].unique():
             
             placement_targets = pd.DataFrame(placement_targets)
             placement_targets = placement_targets.set_index('id')
-            placement_targets.ix[placement_id, 'action'] = new_action
+            placement_targets.ix[int(placement_id) , 'action'] = new_action
             placement_targets = placement_targets.reset_index()
             placement_targets = placement_targets.to_dict( 'records')
 
         else:
-            placement_targets.append({  'id':placement_id, 
+            placement_targets.append({  'id': int(placement_id) , 
                                         'action':new_action,
                                         'deleted':False
                                     })
@@ -115,6 +115,7 @@ class PlacementAction(Action):
 
 
         for placement in to_exclude.keys():
+            print placement
             
             old_placement_targets = self.get_campaign_placement_targets()
             new_placement_targets = self.adjust_placement_target(old_placement_targets, placement, 'exclude')
@@ -143,6 +144,8 @@ class PlacementAction(Action):
                                 }
                 self.logger.info(deactivate_log)
                 self.push_log(deactivate_log)
+
+            print "\n"
 
             time.sleep(3)
 

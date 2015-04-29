@@ -39,8 +39,6 @@ class Runner():
             P = analysis.PlacementAnalysis(D.df)
             P.run_analysis()
 
-            print P.to_run
-
             A = action.PlacementAction(P.to_run, campaign)
             A.actions()
 

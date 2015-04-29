@@ -245,6 +245,7 @@ class PlacementDataSource(DataSource):
             self.df['apnx_rbox_served_ratio'] = self.df['imps_served_rbox'] / self.df['imps_served_apnx'].astype(float)
             self.df['served_ratio_cutoff'] = params['served_ratio_cutoff']
             self.df['loaded_ratio_cutoff'] = params['loaded_ratio_cutoff']
+            self.df = self.df.fillna(0)
 
         else:
             self.logger.info("no data for campaign")
