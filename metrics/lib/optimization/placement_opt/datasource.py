@@ -19,8 +19,17 @@ APNX_COL_TYPES = {
             'day': dtype('O')
         }
 
-PARAM_KEYS = ['loss_limits','RPA_multipliers', 'RPA', 
-                'imps_served_cutoff', 'CTR_cutoff']
+RBOX_COL_TYPES = {  
+                'loaded': dtype('int64'), 
+                'tag': dtype('O'), 
+                'imps_served': dtype('int64'),
+                'campaign': dtype('O')
+                }
+
+PARAM_KEYS = [  'loss_limits','RPA_multipliers', 'RPA', 
+                'imps_served_cutoff', 'CTR_cutoff','served_ratio_cutoff',
+                'loaded_ratio_cutoff'
+            ]
 
 REPORT = """
 { 
@@ -46,29 +55,12 @@ REPORT = """
 """
 
 HIVE_QUERY = """
-Select campaign, domain, tag, 
-sum(num_served) as imps_served, sum(num_loaded) as loaded 
+SELECT campaign, tag,  sum(num_served) as imps_served, sum(num_loaded) as loaded 
 FROM advertiser_visibility_daily 
 WHERE date >= "%(start_date)s" AND date <= "%(end_date)s" AND advertiser = "%(advertiser)s"
 GROUP BY campaign, domain, tag
 HAVING imps_served > 100
 """
-
-
-def date_range_to_days(START_DATE, END_DATE, num_days, by = 1):
-
-    dates = []
-
-    first_date = datetime.strptime(START_DATE, '%y-%m-%d')
-    last_date = first_date + timedelta(days = num_days)
-    final_date = datetime.strptime(END_DATE, '%y-%m-%d') + timedelta(days = num_days)
-
-    while last_date < final_date:
-        dates.append((first_date.strftime('%y-%m-%d'), last_date.strftime('%y-%m-%d')))
-        first_date = last_date + timedelta(days = by)
-        last_date = first_date + timedelta(days = num_days)
-    dates.append((first_date.strftime('%y-%m-%d'), final_date.strftime('%y-%m-%d')))
-    return dates
 
 
 
@@ -111,8 +103,12 @@ class PlacementDataSource(DataSource):
                     }
 
         self.logger.info("Executing query: {}".format(HIVE_QUERY))
-        df_rbox = pd.DataFrame(self.hive.execute(HIVE_QUERY % query_args))
-        self.rbox_data = df_rbox
+        try:
+            df_rbox = pd.DataFrame(self.hive.execute(HIVE_QUERY % query_args))
+            self.rbox_data = df_rbox
+        except Exception:
+            raise Exception("Incorrect Hive query")
+
 
 
     def pull(self, start_date, end_date):
@@ -149,21 +145,25 @@ class PlacementDataSource(DataSource):
         self.apnx_data['campaign_id'] = self.apnx_data['campaign_id'].astype(str)
         self.rbox_data['campaign_id'] = self.rbox_data['campaign_id'].astype(str)
         self.apnx_data['placement_id'] = self.apnx_data['placement_id'].astype(str)
+        self.rbox_data['tag'] = self.rbox_data['tag'].astype(str)
 
 
     def reshape(self, campaign):
 
         self.logger.info("On campaign %s" %campaign)
 
-        ## Check if data is not None
         if self.apnx_data is None:
             raise Exception('Empty DataFrame')
 
-        ## Check that all columns are correct type
+        elif self.rbox_data is None:
+            raise Exception('Empty DataFrame')
+
         elif self.apnx_data.dtypes.to_dict() !=  APNX_COL_TYPES:
-            raise TypeError("Incorrect column types")  
+            raise TypeError("Incorrect column types for self.apnx_data") 
+
+        elif self.rbox_data.dtypes.to_dict() != RBOX_COL_TYPES:
+            raise TypeError("Incorrect column types for self.rbox_data")
             
-        ## Check day string is in correct format
         try:
             datetime.strptime(self.apnx_data['day'].iloc[0], "%Y-%m-%d")
         except ValueError:
@@ -177,19 +177,28 @@ class PlacementDataSource(DataSource):
         apnx_grouped_df = apnx_campaign_df.groupby('placement_id')
         apnx_reshaped_df = self.aggregrate_all(apnx_grouped_df)
 
-        reshaped_both = pd.merge( apnx_reshaped_df, 
-                                rbox_campaign_df.groupby('tag').sum(),
+        rbox_reshaped_df = rbox_campaign_df.drop('campaign_id', axis = 1)
+        rbox_reshaped_df = rbox_reshaped_df.groupby('tag').sum()
+
+        reshaped_both = pd.merge(apnx_reshaped_df, rbox_reshaped_df,
                                 suffixes = ("_apnx", "_rbox"),
                                 left_index = True, right_index = True, 
                                 how = "outer")
         reshaped_both = reshaped_both.fillna(0)
-
         self.df = reshaped_both
 
     def check_params(self, params):
 
         if not all (k in params for k in PARAM_KEYS):
-            raise ValueError("params missing necessary keys") 
+
+            # if params != {}:
+                
+            #     for k in PARAM_KEYS:
+            #         if k not in params:
+            #             print k
+            #     import ipdb
+            #     ipdb.set_trace()
+            raise ValueError("params missing necessary keys")
 
         elif len(params['RPA_multipliers']) < 3:
             raise ValueError("RPA_multipliers must have 3 values")
@@ -212,9 +221,20 @@ class PlacementDataSource(DataSource):
         elif type(params['CTR_cutoff']) != int and type(params['CTR_cutoff']) != float:
             raise TypeError("CTR_cutoff is wrong type")
 
-        elif params['RPA'] < 0 or params['imps_served_cutoff'] < 0 or  params['CTR_cutoff'] < 0 :
+        elif params['RPA'] < 0:
             raise AttributeError("Inputs cannot be negative")
 
+        elif params['imps_served_cutoff'] < 0:
+            raise AttributeError("Inputs cannot be negative")
+
+        elif params['CTR_cutoff'] < 0:
+            raise AttributeError("Inputs cannot be negative")
+
+        elif params['served_ratio_cutoff'] < 0:
+            raise AttributeError("Inputs cannot be negative")
+
+        elif params['loaded_ratio_cutoff'] < 0:
+            raise AttributeError("Inputs cannot be negative")
 
     def transform(self, params):
 
@@ -230,7 +250,6 @@ class PlacementDataSource(DataSource):
             self.df['CTR_cutoff'] = params['CTR_cutoff']
             self.df['loaded_ratio'] = self.df['loaded'] / self.df['imps_served_rbox'].astype(float)
             self.df['apnx_rbox_served_ratio'] = self.df['imps_served_rbox'] / self.df['imps_served_apnx'].astype(float)
-
             self.df['served_ratio_cutoff'] = params['served_ratio_cutoff']
             self.df['loaded_ratio_cutoff'] = params['loaded_ratio_cutoff']
 
@@ -241,6 +260,7 @@ class PlacementDataSource(DataSource):
     def filter(self):
         if len(self.df) > 0:
             self.df = self.df[self.df['last_served_date'] >= self.end_date]
+
 
 
 

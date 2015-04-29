@@ -78,7 +78,6 @@ class PlacementAnalysis(Analysis):
 
     @Analysis.verify_cols(DF_COLS)
     def analyze(self):
-
         
         for rule_name in self.placement_rules.keys():
             self.extract_rule(rule_name)
