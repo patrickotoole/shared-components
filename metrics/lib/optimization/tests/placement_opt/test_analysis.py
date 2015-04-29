@@ -23,83 +23,104 @@ from link import lnk
 class PlacementAnalysisTest(unittest.TestCase):
     
     def setUp(self):
-        self.d = PlacementAnalysis(DF)
+        self.d = PlacementAnalysis(None)
         lnk.api = mock.MagicMock()
 
     def tearDown(self):
         pass
 
-    def test_find_placements_no_conv_placement_unprofitable(self):
-
-        row_false = {'convs': 0, 'profit': -10, 'RPA': 10, 'loss_limit': 50, 
-                    'RPA_multiplier': 1 }
-        actual = self.d.find_no_conv_placement_unprofitable(row_false)
-        self.assertEqual(False, actual)
-
-    def test_find_placements_one_conv_placement_unprofitable(self):
-        row_false = {'convs': 1, 'profit': -10, 'RPA': 10, 'loss_limit': 50, 
-                    'RPA_multiplier': 1 }
-        actual = self.d.find_one_conv_placement_unprofitable(row_false)
-        self.assertEqual(False, actual)
-
-
-    def test_find_placements_multi_conv_placement_unprofitable(self):
-        row_false = {'convs': 2, 'profit': -10, 'RPA': 10, 'loss_limit': 50, 
-                    'RPA_multiplier': 1 }
-        actual = self.d.find_one_conv_placement_unprofitable(row_false)
-        self.assertEqual(False, actual)
-
-    def test_find_placements_no_conv_placement_clickfraud(self):
-        row_false = {'convs': 0, 'CTR': 0.05, 'CTR_cutoff': 0.04, 'imps_served': 100, 'imp_served_cutoff':50 }
-        actual = self.d.find_one_conv_placement_unprofitable(row_false)
-        self.assertEqual(False, actual)
-
-
-    def test_add_rule_group_ids_real_rules(self):
-        '''
-        Testing for good rule group names
-        '''
-
-        self.d.placement_rules = deepcopy(PLACEMENT_RULE_MISSING_GROUP_ID)
+    def test_extract_rule_good_response(self):
         
         m = MagicMock()
         m.json = ujson.loads(GOOD_RULE_GROUP_RESPONSE)
         self.d.rbox_api.get.return_value = m
 
-        self.d.add_rule_group_ids()
-        for rule in self.d.placement_rules.keys():
-            self.assertTrue(self.d.placement_rules[rule]['rule_group_id'])
+        rule_name = m.json[0]['rule_group_name']
+        self.d.placement_rules = {}
+        self.d.placement_rules[rule_name] = {}
 
-    def test_add_rule_group_ids_fake_rules(self):
-        '''
-        Testing for bad rule group names
-        '''
+        self.d.extract_rule(rule_name)
 
-        self.d.placement_rules = deepcopy(PLACEMENT_RULE_MISSING_GROUP_ID)
+        self.assertTrue(self.d.placement_rules[rule_name]['rule_group_id'])
+        self.assertTrue(len(self.d.placement_rules[rule_name]['conditions']) > 0)
+        self.assertTrue(len(self.d.placement_rules[rule_name]['metrics']) > 0)
+
+    def test_extract_rule_bad_response(self):
 
         m = MagicMock()
-        m.json = []
-
+        m.json = ujson.loads("[]")
         self.d.rbox_api.get.return_value = m
 
-        with self.assertRaises(IndexError):
-            self.d.add_rule_group_ids()
+        with self.assertRaises(Exception):
+            self.d.extract_rule("bad_rule")
 
 
-    def test_reshape_missing_group_id(self):
+    def test_evaluate_rules_true(self):
 
-        self.d.placement_rules = deepcopy(PLACEMENT_RULE_MISSING_GROUP_ID)
-        
-        with self.assertRaises(AttributeError):
-            self.d.reshape()
+        self.d.placement_rules = deepcopy(GOOD_PLACEMENT_RULES)
+        row = deepcopy(ROW_DICT_TRUE)
+
+        rule_name = self.d.placement_rules.keys()[0]
+        row = pd.DataFrame([row]).iloc[0]
+
+        self.assertTrue(self.d.evaluate_rules(rule_name, row))
+
+    def test_evaluate_rules_false(self):
+
+        self.d.placement_rules = deepcopy(GOOD_PLACEMENT_RULES)
+        row = deepcopy(ROW_DICT_FALSE)
+
+        rule_name = self.d.placement_rules.keys()[0]
+        row = pd.DataFrame([row]).iloc[0]
+
+        self.assertFalse(self.d.evaluate_rules(rule_name, row))
+
+
+    def test_evaluate_rules_missing_col(self):
+
+        self.d.placement_rules = deepcopy(GOOD_PLACEMENT_RULES)
+        row = deepcopy(ROW_DICT_MISSING)
+
+        rule_name = self.d.placement_rules.keys()[0]
+        row = pd.DataFrame([row]).iloc[0]
+
+        with self.assertRaises(KeyError):
+            self.d.evaluate_rules(rule_name, row)
+
+
+    def test_analyze(self):
+        pass
 
 
     def test_reshape_missing_placement(self):
 
-        self.d.placement_rules = deepcopy(PLACEMENT_RULE_WITH_PLACEMENTS)
+        self.d.placement_rules = deepcopy(GOOD_PLACEMENT_RULES_BAD_PLACEMENT)
         
         with self.assertRaises(AttributeError):
             self.d.reshape()
+
+
+    def test_reshape_correct(self):
+
+        self.d.placement_rules = deepcopy(GOOD_PLACEMENT_RULES_GOOD_PLACEMENT)
+        self.d.df = FIXTURE_DF
+
+        self.d.reshape()
+
+
+
+
+        # from pprint import pprint
+        # import ipdb
+        # ipdb.set_trace()
+        # for k in self.d.to_run['1243']['metrics'].keys():
+        #     print k, self.d.to_run['1243']['metrics'][k], TO_RUN['1243']['metrics'][k]
+        self.assertEqual(self.d.to_run, TO_RUN)
+
+
+
+
+
 
 
 

@@ -33,16 +33,15 @@ PLACEMENT_RULES = {
             'desc': "No convs/ bad loaded/served ratio",
             'action': 'EXCLUDE_PLACEMENT'    
     }
-
 }
 
 
-DF_COLS = ['clicks', 'convs', 'imps_served_apnx', 'last_served_date',
-            'media_cost', 'num_days', 'profit', 'revenue', 'imps_served_rbox', 
+DF_COLS =  ['clicks', 'convs', 'imps_served_apnx', 'last_served_date',
+            'media_cost', 'num_days', 'profit', 'revenue', 'imps_served_rbox',
             'loaded', 'CTR', 'RPA', 'loss_limit', 'RPA_multiplier',
             'imps_served_cutoff', 'CTR_cutoff', 'loaded_ratio',
-            'apnx_rbox_served_ratio'
-            ]
+            'apnx_rbox_served_ratio', 'served_ratio_cutoff',
+            'loaded_ratio_cutoff']
 
 class PlacementAnalysis(Analysis):
     
@@ -66,12 +65,12 @@ class PlacementAnalysis(Analysis):
             self.placement_rules[rule_name]['metrics'] = metrics
 
         else:
-            raise Exception("Incorrect Rule %s"%rule_name)
+            raise Exception("Bad Rule %s"%rule_name)
 
 
     def evaluate_rules(self, rule_name, row):
 
-        conditions = self.placement_rules[rule_name]['conditions']    
+        conditions = self.placement_rules[rule_name]['conditions']
         evals = [eval(cond % row.to_dict()) for cond in conditions]
         return (False not in evals)
 
@@ -86,33 +85,39 @@ class PlacementAnalysis(Analysis):
 
             rows = self.df.apply(lambda row: self.evaluate_rules(rule_name, row), axis = 1)
 
-
             if len(rows) > 0:
                 placements = self.df[rows].index.get_values()
             else:
                 placements  = []
+
             self.placement_rules[rule_name]['placements'] = placements
 
 
     def reshape(self):
         '''
-        Creates json/dictionary object for placement metrics:
+        Creates placement level dictionary object:
 
-        { placement: 'metrics': {m1:v1, m2:v2, ... }, 
-                        'rule_group_name': rule_group_name,
-                        'action': ACTION,
-                        'rule_group_id': id 
+        { 
+            { placement_1: 
+                'metrics': {m1:v1, m2:v2, ... }, 
+                'rule_group_name': rule_group_name,
+                'action': ACTION,
+                'rule_group_id': id 
+            },
+            { placement_2:
+                        ....
+            }
         }
+
         '''
-        
+        ## Checking for placements that don't exist in dataframe
         for rule in self.placement_rules.keys():
             for placement in self.placement_rules[rule]['placements']:
                 if placement not in self.df.index.get_values():
                     raise AttributeError("Missing placement %s in df" %placement)
 
+        ## Reshaping to placement level dictionary
         to_run = {}
-
-        # Reshaping to placement level dict
         for rule in self.placement_rules.keys():
             metrics = self.placement_rules[rule]['metrics']
 
