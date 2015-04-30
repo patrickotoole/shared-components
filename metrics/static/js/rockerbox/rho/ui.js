@@ -128,7 +128,7 @@ RB.rho.ui = (function(ui) {
       .append("h5")
 
     h5.append("span")
-      .text("Date Interval")
+      .text("Date Interval ")
 
     h5.append("span").append("select")
       .classed("select-interval",true)

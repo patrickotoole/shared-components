@@ -54,6 +54,28 @@ RB.rho.controller = (function(controller) {
     toRemove.remove()
   }
 
+  controller.select_interval = function(option) {
+
+    console.log(option)
+
+    if (option == "past day") {
+      
+      d3.json(URL + "&interval=15_minute", function(dd){
+        rho.data.CRS.crs.remove()
+        rho.data.CRS.crs.add(dd) 
+        controller.render([])
+      });   
+    } else if (option == "past 30 minutes") {
+      d3.json(URL, function(dd){
+        rho.data.CRS.crs.remove()
+        rho.data.CRS.crs.add(dd) 
+        controller.render([])
+      });
+    }
+  
+  }
+
+
   controller.render = function(filter_array,key,skip_title) {
 
     var target = d3.select("#filterable");
