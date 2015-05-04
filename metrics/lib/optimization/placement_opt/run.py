@@ -1,3 +1,4 @@
+import pandas as pd
 import sys
 sys.path.append("../../bidder/")
 from options import define, options, parse_command_line
@@ -5,8 +6,9 @@ from datetime import datetime
 import datasource 
 import analysis
 import action
-import time
-
+from link import lnk
+import json
+api = lnk.api.rockerbox
 
 class Runner():
 
@@ -16,7 +18,14 @@ class Runner():
         self.end_date = options.end_date
         self.advertiser = options.advertiser
         self.external_adv_id = options.external_adv_id
-        self.campaigns = options.campaigns
+        
+        #self.campaigns = options.campaigns
+
+        r = api.get("/opt_campaigns?script_name=bigstock_placement_opt")
+        if len(r.json) > 0:
+            self.campaigns = pd.DataFrame(r.json)['campaign_id'].get_values()
+        else:
+            self.campaigns = []
 
         self.params = {}
         self.params['RPA'] = options.RPA
@@ -57,7 +66,9 @@ if __name__ == "__main__":
     define("advertiser", type = str, required = True, help = "advertiser pixel_source_name")
 
     define("external_adv_id", type = str, required = True, help = "external advertiser id")
-    define("campaigns", type = int, required = True, multiple = True, help = "list of campaign ID's")
+    #define("campaigns", type = int, required = True, multiple = True, help = "list of campaign ID's")
+    define("script_name", type = int, required = True, help = "campaign list name in opt_campaigns")
+
     
     define("RPA", type = int, required = True, help = "Revenue Per Acquisition")
     define("RPA_multipliers", type = int, required = True, multiple = True, help = "mulitplier for RPA")
