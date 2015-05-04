@@ -67,7 +67,7 @@ if __name__ == "__main__":
 
     define("external_adv_id", type = str, required = True, help = "external advertiser id")
     #define("campaigns", type = int, required = True, multiple = True, help = "list of campaign ID's")
-    define("script_name", type = int, required = True, help = "campaign list name in opt_campaigns")
+    define("script_name", type = str, required = True, help = "campaign list name in opt_campaigns")
 
     
     define("RPA", type = int, required = True, help = "Revenue Per Acquisition")
