@@ -58,7 +58,7 @@ HIVE_QUERY = """
 SELECT campaign, tag,  sum(num_served) as imps_served, sum(num_loaded) as loaded 
 FROM advertiser_visibility_daily 
 WHERE date >= "%(start_date)s" AND date <= "%(end_date)s" AND advertiser = "%(advertiser)s"
-GROUP BY campaign, domain, tag
+GROUP BY campaign, tag
 HAVING imps_served > 100
 """
 
@@ -120,6 +120,8 @@ class PlacementDataSource(DataSource):
 
         self.start_date = start_date
         self.end_date = end_date
+        self.logger.info("start_date: %s" %self.start_date)
+        self.logger.info("end_date: %s" %self.end_date)
 
         self.pull_apnx_data()
         self.pull_rbox_data()
