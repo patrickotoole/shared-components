@@ -20,6 +20,7 @@ class DataSource(object):
         # instance.reporting = lnk.dbs.reporting
         # instance.console = lnk.api.console
         instance.reporting_api = lnk.api.reporting
+        instance.hive = lnk.dbs.hive
 
         return instance
 
