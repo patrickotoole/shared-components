@@ -1,0 +1,81 @@
+{% autoescape None %}
+{% block content %}
+
+<head>
+  <script type="text/javascript" src="/static/js/d3.js" charset="utf-8"></script>
+  <script src="/static/js/jquery.min.js"></script>
+  <script src="/static/js/crossfilter.min.js"></script> 
+  <script src="/static/js/bootstrap.min.js"></script>
+  <script src="/static/js/rockerbox/rho/visit/visit_data.js"></script> 
+  <script src="/static/js/rockerbox/rho//visit/visit_controller.js"></script> 
+  <script src="/static/js/rockerbox/rho/visit/visit_ui.js"></script> 
+  <script src="/static/js/rockerbox/rho/ui.filter.js"></script>  
+  <script src="/static/js/rockerbox/visit_urls.js"></script>
+
+  <script type="text/javascript" src="/static/js/chosen/chosen.jquery.min.js"> </script>
+
+  <link href="/static/js/chosen/chosen.min.css" rel="stylesheet"> 
+  <link href="/static/css/bootstrap.css" rel="stylesheet"> 
+
+  <style>
+
+    .filter-wrapper h5 {font-size:13px}
+    .container {padding-top:15px}
+    input[type="checkbox"]:disabled + label{ color: #ccc; }
+    .loading { display: none; } 
+    body { font: 10px sans-serif; }
+    .axis path,
+    .axis line { fill: none; stroke: #000; shape-rendering: crispEdges; }
+    .x.axis path { display: none; }
+    .line { fill: none; stroke: steelblue; stroke-width: 1.5px; }
+    .and {float: right; margin-right: -26px; font-size: 12px; line-height:30px}
+    .filter-wrapper .filter:last-of-type .and {display:none}
+    .filter-wrapper .col-md-4 span:first-of-type {display:none}  
+    .filter-wrapper .filter:first-of-type .col-md-4:first-of-type span:last-of-type {display:none}
+    .filter-wrapper .filter:first-of-type .col-md-4:first-of-type span:first-of-type {display:inline} 
+    a {cursor:pointer}
+    /*.filter-wrapper {background:grey}*/
+    .chosen-container {margin-top:2.5px}
+    #seriesable, #filterable {
+      padding-top:5px;padding-bottom:5px;
+      margin-left:-25px; 
+      margin-right:-25px;
+      padding-right:25px;
+      padding-left:25px; 
+      background-color:#ddd
+    }
+  </style>
+
+  <script> RB.init() </script>
+
+</head>
+
+<body>
+
+  <div style="position:fixed;width:200px;top:0px;left:0px;height:100%;background:black">
+  
+  </div>
+  <div class="container" style="width:inherit;margin-left:200px">
+    <h3>UID Targeting - On-site Data</h3>
+    <br/>
+
+    <h4>1. Choose an Advertiser</h4>
+    <div class="row">
+      <form id="source" class="navbar-form pull-left form-inline" action="submit">
+	<input id="source" type="text" class="form-control span12" placeholder="Pixel Source Name">
+	<button class="btn btn-primary pull-right" type="submit" id="get-source">Go!</button>
+      </form>
+    </div>
+
+    <h4>2. Choose URLs to Target</h4>
+    <div class="row">
+      <select id="urls" multiple="multiple" class="multi-chosen-select span12" data-placeholder="Enter a source name first..." style="width:800px;"></select>
+    </div>
+
+    <h4>UIDs</h4>
+    <ul id="uids">
+    </ul>
+  </div>
+</body>
+
+{% end %}   
