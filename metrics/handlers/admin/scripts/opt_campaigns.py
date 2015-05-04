@@ -16,8 +16,8 @@ VALUES
 """
 
 DELETE = """
-DELETE FROM rockerbox.opt_rules
-WHERE script_name = {} AND campaign_id = {}
+DELETE FROM rockerbox.opt_campaigns
+WHERE script_name = "{}" AND campaign_id = {}
 """
 
 class OptCampaignsHandler(tornado.web.RequestHandler):
@@ -75,7 +75,6 @@ class OptCampaignsHandler(tornado.web.RequestHandler):
         self.finish()
 
     def make_to_insert(self,body):
-        print body
 
         # Get POSTed data
         obj = ujson.loads(body)
@@ -104,9 +103,23 @@ class OptCampaignsHandler(tornado.web.RequestHandler):
 
     def post(self):
         try:
-            print self.request.body
             data = self.make_to_insert(self.request.body)
             as_json = Convert.df_to_json(data)
             self.write(ujson.dumps({"response": ujson.loads(as_json), "status": "ok"}))
         except Exception, e:
             self.write(ujson.dumps({"response": str(e), "status": "error"}))
+
+    def delete(self):
+        try:
+            script_name = self.get_argument("script_name")
+            campaign_id = self.get_argument("campaign_id")
+
+            self.db.execute(DELETE.format(script_name, campaign_id))
+
+            results = self.get_all()
+            self.write(Convert.df_to_json(results))
+            self.finish()
+        except Exception, e:
+            self.write(ujson.dumps({"response": str(e), "status": "error"}))
+
+                    
