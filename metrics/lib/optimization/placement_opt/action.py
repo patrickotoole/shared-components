@@ -132,7 +132,7 @@ class PlacementAction(Action):
                     "metric_values": to_exclude[placement]['metrics']
             }  
             self.logger.info(log)
-            #self.push_log(log)
+            self.push_log(log)
 
 
             # Deactivating campaign if all placement targets are removed
@@ -146,7 +146,7 @@ class PlacementAction(Action):
                                     "metric_values": {}
                                 }
                 self.logger.info(deactivate_log)
-                #self.push_log(deactivate_log)
+                self.push_log(deactivate_log)
 
             print "\n"
 
