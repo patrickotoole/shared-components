@@ -1,30 +1,7 @@
 import pandas as pd
 
-# Fixtures
-REPORT = """
-{ 
-    "report": { 
-        "report_type":"advertiser_analytics", 
-        "columns": [ 
-            "hour",
-            "day",
-            "seller_member", 
-            "placement_id", 
-            "campaign_id", 
-            "imps", 
-            "clicks", 
-            "total_convs",
-            "media_cost",
-            "total_revenue"
-        ], 
-         "start_date": "%(start_date)s",
-        "end_date": "%(end_date)s", 
-        "format":"csv" 
-    } 
-}
-"""
 
-FIXTURE1 = pd.DataFrame([
+FIXTURE_APNX_DATA_GOOD = pd.DataFrame([
         {
 
             'imps': 1000, 
@@ -53,7 +30,7 @@ FIXTURE1 = pd.DataFrame([
         }
         ])
 
-FIXTURE_BAD_DAY_STR = pd.DataFrame([
+FIXTURE_APNX_DATA_BAD_DAY_STR = pd.DataFrame([
         {
 
             'imps': 1000, 
@@ -68,18 +45,53 @@ FIXTURE_BAD_DAY_STR = pd.DataFrame([
             'day':  "2015-033-03"
         }])
 
-FIXTURE_EMPTY_DF = pd.DataFrame(columns = ["imps","hour"])
+FIXTURE_APNX_DATA_EMPTY_DF = pd.DataFrame(columns = ["imps","hour"])
 
-FIXTURE_DF = { 'placement_id': 1273,
-                'last_served_date': "2015-03-04",
-                'num_days': 2,
-                'imps_served': 2000,
-                'convs': 0,
-                'clicks': 100,
-                'media_cost': 4,
-                'revenue': 0,
-                'profit': -4
-            }
 
-FIXTURE_PARAM = {'RPA_multipliers':[1,2,3], 'loss_limits':[1,2,3],
-                    'RPA': 2, 'imp_served_cutoff':1000, 'CTR_cutoff':.004}
+FIXTURE_RBOX_GOOD = pd.DataFrame([
+        {
+
+            'campaign': "7320174",
+            'tag': "1243",
+            'imps_served': 1000, 
+            'loaded': 800
+        },
+        {
+
+            'campaign': "7320174",
+            'tag': "1243",
+            'imps_served': 1000, 
+            'loaded': 800
+        }
+        ])
+
+FIXTURE_MERGED_DF = pd.DataFrame( [{ 'placement_id': "1243",
+                                    'last_served_date': "2015-03-04",
+                                    'num_days': 2,
+                                    'imps_served_apnx': 2000,
+                                    'convs': 20,
+                                    'clicks': 100,
+                                    'media_cost': 200.,
+                                    'revenue': 200.,
+                                    'profit': 0.,
+                                    'imps_served_rbox':  2000,
+                                    'loaded': 1600
+                                    }] ).set_index('placement_id')
+
+
+
+
+
+FIXTURE_PARAM = {   'RPA_multipliers':[1,2,3], 
+                    'loss_limits':[1,2,3],
+                    'RPA': 2, 'imps_served_cutoff':1000, 
+                    'CTR_cutoff':.004,
+                    'served_ratio_cutoff':0.8, 
+                    'loaded_ratio_cutoff':0.8
+                }
+
+
+
+
+
+
