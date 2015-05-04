@@ -1,7 +1,7 @@
 import sys
 sys.path.append("../../bidder/")
 from options import define, options, parse_command_line
-
+from datetime import datetime
 import datasource 
 import analysis
 import action
@@ -47,7 +47,9 @@ class Runner():
 if __name__ == "__main__":
 
     define("start_date", type = str, required = True, help = "start date for placement optimization")
-    define("end_date", type = str, required = True, help = "start date for placement optimization")
+    define("end_date", type = str, required = False, help = "end date for placement optimization")
+
+    options.end_date = datetime.today().strftime('%Y-%m-%d')
 
     define("advertiser", type = str, required = True, help = "advertiser pixel_source_name")
 
