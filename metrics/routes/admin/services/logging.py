@@ -18,5 +18,7 @@ class LoggingRoutes(Routes):
             (r'/opt_log', scripts.OptLogHandler, self.connectors),
             (r'/opt_log/(.*?)', scripts.OptLogHandler, self.connectors),
             (r'/opt_rules', scripts.OptRulesHandler, self.connectors),
-            (r'/opt_rules/(.*?)', scripts.OptRulesHandler, self.connectors)
+            (r'/opt_rules/(.*?)', scripts.OptRulesHandler, self.connectors),
+            (r'/opt_campaigns', scripts.OptCampaignsHandler, self.connectors),
+            (r'/opt_campaigns/(.*?)', scripts.OptCampaignsHandler, self.connectors)
         ]

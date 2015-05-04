@@ -13,6 +13,7 @@ from viewable import ViewabilityHandler
 from logins import LoginsHandler
 from opt_log import OptLogHandler
 from opt_rules import OptRulesHandler
+from opt_campaigns import OptCampaignsHandler
 import appnexus
 import bidder
 from filter import FilterHandler
