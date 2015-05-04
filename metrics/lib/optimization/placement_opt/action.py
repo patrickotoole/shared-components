@@ -9,10 +9,14 @@ PLATFORM_PLACEMENT_COL_TYPES = {'action': dtype('O'), 'deleted': dtype('bool'), 
 
 
 class PlacementAction(Action):
+
+    def __init__(self):
+        pass
     
-    def __init__(self, to_run, campaign):
+    def run(self, to_run, campaign):
         self.to_run = to_run
         self.campaign = campaign
+        self.actions()
 
     def actions(self):
         to_exclude = {}
@@ -115,7 +119,6 @@ class PlacementAction(Action):
 
 
         for placement in to_exclude.keys():
-            print placement
             
             old_placement_targets = self.get_campaign_placement_targets()
             new_placement_targets = self.adjust_placement_target(old_placement_targets, placement, 'exclude')
@@ -129,7 +132,7 @@ class PlacementAction(Action):
                     "metric_values": to_exclude[placement]['metrics']
             }  
             self.logger.info(log)
-            self.push_log(log)
+            #self.push_log(log)
 
 
             # Deactivating campaign if all placement targets are removed
@@ -143,11 +146,11 @@ class PlacementAction(Action):
                                     "metric_values": {}
                                 }
                 self.logger.info(deactivate_log)
-                self.push_log(deactivate_log)
+                #self.push_log(deactivate_log)
 
             print "\n"
 
-            time.sleep(3)
+            time.sleep(5)
 
 
 

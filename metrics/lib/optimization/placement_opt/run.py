@@ -5,6 +5,8 @@ from datetime import datetime
 import datasource 
 import analysis
 import action
+import time
+
 
 class Runner():
 
@@ -29,6 +31,8 @@ class Runner():
         D = datasource.PlacementDataSource(self.external_adv_id, self.advertiser, self.campaigns)
         D.pull(self.start_date, self.end_date)
 
+        A = action.PlacementAction()
+
         for campaign in self.campaigns:
 
             D.reshape(campaign)
@@ -39,8 +43,7 @@ class Runner():
             P = analysis.PlacementAnalysis(D.df)
             P.run_analysis()
 
-            A = action.PlacementAction(P.to_run, campaign)
-            A.actions()
+            A.run(P.to_run, campaign)
 
 
 

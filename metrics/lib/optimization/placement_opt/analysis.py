@@ -33,6 +33,7 @@ PLACEMENT_RULES = {
             'desc': "No convs/ bad loaded/served ratio",
             'action': 'EXCLUDE_PLACEMENT'    
     }
+
 }
 
 
@@ -70,11 +71,7 @@ class PlacementAnalysis(Analysis):
 
     def evaluate_rules(self, rule_name, row):
 
-
-
         conditions = self.placement_rules[rule_name]['conditions']
-        # import ipdb
-        # ipdb.set_trace()
         evals = [eval(cond % row.to_dict()) for cond in conditions]
         return (False not in evals)
 

@@ -11,8 +11,8 @@ APNX_COL_TYPES = {
             'hour': dtype('O'), 
             'total_convs': dtype('int64'), 
             'total_revenue': dtype('float64'), 
-            'placement_id': dtype('int64'), 
-            'campaign_id': dtype('int64'), 
+            'placement_id': dtype('O'), 
+            'campaign_id': dtype('O'), 
             'clicks': dtype('int64'), 
             'media_cost': dtype('float64'), 
             'seller_member': dtype('O'), 
@@ -23,7 +23,7 @@ RBOX_COL_TYPES = {
                 'loaded': dtype('int64'), 
                 'tag': dtype('O'), 
                 'imps_served': dtype('int64'),
-                'campaign': dtype('O')
+                'campaign_id': dtype('O')
                 }
 
 PARAM_KEYS = [  'loss_limits','RPA_multipliers', 'RPA', 
@@ -89,6 +89,7 @@ class PlacementDataSource(DataSource):
         self.logger.info("Executing query: {}".format(query))
         try:
             self.apnx_data = self.reporting_api.get_report(self.external_adv_id, query)
+
             self.logger.info("Pulled DataFrame with {} rows and {} columns".format(len(self.apnx_data), len(self.apnx_data.columns.tolist())))
 
         except Exception:
@@ -102,12 +103,12 @@ class PlacementDataSource(DataSource):
                         'advertiser':self.advertiser
                     }
 
-        self.logger.info("Executing query: {}".format(HIVE_QUERY))
+        self.logger.info("Executing query: {}".format(HIVE_QUERY % query_args))
         try:
             df_rbox = pd.DataFrame(self.hive.execute(HIVE_QUERY % query_args))
             self.rbox_data = df_rbox
         except Exception:
-            raise Exception("Incorrect Hive query")
+            raise Exception("Hive query failed")
 
 
 
@@ -125,6 +126,8 @@ class PlacementDataSource(DataSource):
 
         self.pull_apnx_data()
         self.pull_rbox_data()
+
+        self.reformat_cols()
 
 
     def aggregrate_all(self, grouped_df):
@@ -171,7 +174,7 @@ class PlacementDataSource(DataSource):
         except ValueError:
             raise ValueError("Incorrect date string format %s" %self.apnx_data['day'].iloc[0])
 
-        self.reformat_cols()
+        
 
         apnx_campaign_df = self.apnx_data[self.apnx_data['campaign_id'] == str(campaign)]
         rbox_campaign_df = self.rbox_data[self.rbox_data['campaign_id'] == str(campaign)]
