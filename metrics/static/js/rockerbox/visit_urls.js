@@ -13,6 +13,25 @@ RB.init = (function(){
 	return 0;
     }
 
+    function updateUids() {
+	var chosen_values = $("select#urls").val();
+	console.log(chosen_values)
+
+	if (chosen_values != null){
+	    var url = chosen_values.join()
+
+	    $.getJSON(addParam("/visit_uids?format=json", "url=" + url), function(data) {
+		$("ul#uids").empty();
+		$.each(data, function(i, item) {
+		    $("ul#uids").append($("<li>" + item.uid + "</li>"));
+		});
+	    });
+	}
+	else {
+	    $("ul#uids").empty();
+	}
+    }
+
     URL = addParam(URL,"format=json")
     
     $(document).ready(function() {
@@ -38,15 +57,7 @@ RB.init = (function(){
 	});
 	
 	$("select#urls").chosen().change( function() {
-	    var chosen_values = $("select#urls").val();
-	    console.log(chosen_values)
-	    var url = chosen_values[0]
-	    $.getJSON(addParam("/visit_uids?format=json", "url=" + url), function(data) {
-		$.each(data, function(i, item) {
-		    $("ul#uids").append($("<li>" + item.uid + "</li>"));
-		});
-
-	    });
+	    updateUids();
 	});
     })
 });
