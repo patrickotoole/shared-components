@@ -61,7 +61,8 @@ class AdvertiserRoutes(Routes):
             (r'/viewability', analytics.ViewabilityHandler, self.connectors),
             (r'/availability', analytics.AvailabilityHandler, self.connectors),
             (r'/visit_urls', analytics.VisitUrlsHandler, self.connectors),
-            (r'/visit_uids', analytics.VisitUidsHandler, self.connectors)
+            (r'/visit_uids', analytics.VisitUidsHandler, self.connectors),
+            (r'/visit_domains', analytics.VisitDomainsHandler, self.connectors)
         ]
 
     @connectors("reporting_db","api")
