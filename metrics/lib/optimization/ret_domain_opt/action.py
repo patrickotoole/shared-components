@@ -95,7 +95,7 @@ class DomainAction(Action):
                     "metric_values": to_exclude[domain]['metrics']
             }  
             self.logger.info(log)
-            # self.push_log(log)
+            self.push_log(log)
 
             time.sleep(3)
 
