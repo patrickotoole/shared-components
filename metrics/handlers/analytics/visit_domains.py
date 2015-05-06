@@ -26,14 +26,20 @@ class VisitDomainsHandler(BaseHandler, AnalyticsBase):
     def get_content(self, data):
         def default(self, data):
             df = Convert.df_to_json(data)
+            print df
             self.render("analysis/visit_urls.html", data=df)
         yield default, (data,)
 
 
     @defer.inlineCallbacks
-    def get_domains(self, uid, date_clause):
+    def get_domains(self, uid, date_clause, kind):
         df = yield self.defer_get_domains(uid, date_clause)
         print df
+
+        if len(df) > 0:
+            if kind == "domains":
+                df = df.groupby("domain").uid.nunique().reset_index()
+
         self.get_content(df)
 
     @decorators.deferred
@@ -56,7 +62,10 @@ class VisitDomainsHandler(BaseHandler, AnalyticsBase):
         in_clause = self.make_in_clause(uids)
         WHERE = where.format(in_clause)
         logging.info(self.query + WHERE)
-        return self.cassandra.execute(self.query + WHERE)
+
+        results = self.query + WHERE
+
+        return self.cassandra.execute(results)
 
     @tornado.web.asynchronous
     def get(self):
@@ -65,13 +74,44 @@ class VisitDomainsHandler(BaseHandler, AnalyticsBase):
         start_date = self.get_argument("start_date", "")
         end_date = self.get_argument("end_date", "")
         date = self.get_argument("date", "")
+        kind = self.get_argument("kind", "")
 
         date_clause = self.make_date_clause("date", date, start_date, end_date)
 
         if formatted:
             self.get_domains(
                 uid,
-                date_clause
+                date_clause,
+                kind
             )
+
+        else:
+            self.get_content(pandas.DataFrame())
+
+    @tornado.web.asynchronous
+    def post(self):
+        print tornado.escape.json_decode(self.request.body)
+        formatted = self.get_argument("format", False)
+        payload = tornado.escape.json_decode(self.request.body)
+        
+        if "uids" not in payload:
+            raise Exception("Please submit a json object containing a list of uids called 'uids'")
+
+        start_date = self.get_argument("start_date", "")
+        end_date = self.get_argument("end_date", "")
+        date = self.get_argument("date", "")
+        kind = self.get_argument("kind", "")
+
+        date_clause = self.make_date_clause("date", date, start_date, end_date)
+
+        uid = ','.join(payload["uids"])
+
+        if formatted:
+            self.get_domains(
+                uid,
+                date_clause,
+                kind
+                )
+        
         else:
             self.get_content(pandas.DataFrame())
