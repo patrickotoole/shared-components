@@ -6,6 +6,7 @@ import pandas as pd
 import json
 import time
 import numpy
+from copy import deepcopy
 
 DOMAIN_TARGETS_COL_TYPES = {u'domain': dtype('O'), u'profile_id': dtype('int64')}
 
@@ -53,22 +54,25 @@ class DomainAction(Action):
 
     def adjust_domain_target(self, domain_targets, domain):
 
-        if domain_targets is None:
-            domain_targets = [{'domain':domain, 'profile_id': 22606190}]
+        new_domain_targets = deepcopy(domain_targets)
 
-        elif pd.DataFrame(domain_targets).dtypes.to_dict() != DOMAIN_TARGETS_COL_TYPES:
+        if new_domain_targets is None:
+            new_domain_targets = [{'domain':domain, 'profile_id': 22606190}]
+
+        elif pd.DataFrame(new_domain_targets).dtypes.to_dict() != DOMAIN_TARGETS_COL_TYPES:
             raise TypeError("Incorrect column types for domain_targets")
         
-        elif domain not in pd.DataFrame(domain_targets)['domain'].unique():
-            domain_targets.append({'domain':domain, 'profile_id': 22606190})
+        elif domain not in pd.DataFrame(new_domain_targets)['domain'].unique():
+            new_domain_targets.append({'domain':domain, 'profile_id': 22606190})
 
-        return domain_targets
+        return new_domain_targets
 
 
     def push_log(self, log):
 
         r = self.rockerbox.post("/opt_log", data=json.dumps(log))
         if r.json['status'] != 'ok':
+            
             raise TypeError("Incorrect Opt Log %s" %str(log))
 
 
