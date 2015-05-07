@@ -49,6 +49,40 @@ class MysqlDB(DBConnectionWrapper):
 
         return
 
+    def batch_update(self, query_list, args = ()):
+        """
+        Creates a cursor and executes the query for you
+        """
+        import MySQLdb
+        try:
+            try:
+                self._wrapped.close()
+            except:
+                pass
+
+            try:
+                self.autocommit = False
+                conn = self.create_connection()
+                cur = conn.cursor()
+                for query in query_list:
+                    cur.execute(query)
+                conn.commit()
+            except Exception as e:
+                conn.rollback()
+                raise e
+            finally:
+                self.autocommit = True
+                    
+            return
+        except MySQLdb.OperationalError, e:
+            if e[0] == 2006:
+                self._wrapped.close()
+                self._wrapped = self.create_connection()
+                cursor = self._wrapped.cursor()
+                return self.CURSOR_WRAPPER(cursor, query, args=args)()
+        return
+        
+
     def create_connection(self):
         """
         Override the create_connection from the DbConnectionWrapper
