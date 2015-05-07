@@ -7,7 +7,7 @@ import analysis
 import action
 from link import lnk
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 
 api = lnk.api.rockerbox
 
@@ -55,8 +55,11 @@ class Runner():
 
 if __name__ == "__main__":
 
-    define("start_date", type = str, required = True, help = "start date for placement optimization")
+    define("start_date", type = str, required = False, help = "start date for placement optimization")
     define("end_date", type = str, required = False, help = "end date for placement optimization")
+
+    if not options.end_date:
+        options.start_date = (datetime.today() - timedelta(days = 7)).strftime('%Y-%m-%d')
 
     if not options.end_date:
         options.end_date = datetime.today().strftime('%Y-%m-%d')
