@@ -71,8 +71,8 @@ class DomainAction(Action):
     def push_log(self, log):
 
         r = self.rockerbox.post("/opt_log", data=json.dumps(log))
+        
         if r.json['status'] != 'ok':
-            
             raise TypeError("Incorrect Opt Log %s" %str(log))
 
 
