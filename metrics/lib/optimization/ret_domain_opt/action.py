@@ -92,7 +92,6 @@ class DomainAction(Action):
             old_domain_targets = self.get_campaign_domain_targets()
             new_domain_targets = self.adjust_domain_target(old_domain_targets, domain)
 
-
             if old_domain_targets is not None and len(old_domain_targets) >= 100:
 
                 self.logger.info("reached max of 100 domains!")
