@@ -109,7 +109,7 @@ class DomainDataSource(DataSource):
             df_rbox = pd.DataFrame(self.hive.execute(HIVE_QUERY % query_args))
             self.rbox_data = df_rbox
         except Exception:
-            raise Exception("Incorrect Hive query")
+            raise Exception("Hive query failed")
 
 
     def pull(self, start_date, end_date):
