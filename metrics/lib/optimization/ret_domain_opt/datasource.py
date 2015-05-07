@@ -246,5 +246,9 @@ class DomainDataSource(DataSource):
             # Filtering out domains which stopped serving on
             self.df = self.df[self.df['last_served_date'] >= self.end_date]
 
+            # Choosing top 50 domains currently serving on 
+            self.df = self.df.sort('imps_served_apnx', ascending = False).head(50)
+
+
 
 

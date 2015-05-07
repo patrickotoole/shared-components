@@ -29,6 +29,7 @@ class DomainAction(Action):
                     to_exclude[domain] = self.to_run[domain]
             except KeyError:
                 raise KeyError("Missing rule group actions")
+
         self.exclude_domains(to_exclude)
 
 
@@ -70,8 +71,9 @@ class DomainAction(Action):
 
     def push_log(self, log):
 
+        self.logger.info("pushing to opt_log / Apnx")
+
         r = self.rockerbox.post("/opt_log", data=json.dumps(log))
-        
         if r.json['status'] != 'ok':
             raise TypeError("Incorrect Opt Log %s" %str(log))
 
@@ -89,19 +91,29 @@ class DomainAction(Action):
             
             old_domain_targets = self.get_campaign_domain_targets()
             new_domain_targets = self.adjust_domain_target(old_domain_targets, domain)
-                
-            log = { "rule_group_id": to_exclude[domain]['rule_group_id'],
-                    "object_modified": "campaign_profile",
-                    "campaign_id": self.campaign,
-                    "field_name": 'domain_targets',
-                    "field_old_value": old_domain_targets,
-                    "field_new_value": new_domain_targets,
-                    "metric_values": to_exclude[domain]['metrics']
-            }  
-            self.logger.info(log)
-            self.push_log(log)
 
-            time.sleep(3)
+
+            if len(old_domain_targets) >= 100:
+
+                self.logger.info("reached max of 100 domains!")
+
+            elif old_domain_targets == new_domain_targets:
+                self.logger.info("new targeting same as old targeting")
+
+
+            else:
+
+                log = { "rule_group_id": to_exclude[domain]['rule_group_id'],
+                        "object_modified": "campaign_profile",
+                        "campaign_id": self.campaign,
+                        "field_name": 'domain_targets',
+                        "field_old_value": old_domain_targets,
+                        "field_new_value": new_domain_targets,
+                        "metric_values": to_exclude[domain]['metrics']
+                }  
+                self.logger.info(log)
+                self.push_log(log)
+                time.sleep(3)
 
 
 
