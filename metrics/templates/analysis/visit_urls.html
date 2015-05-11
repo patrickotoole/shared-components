@@ -11,11 +11,14 @@
   <script src="/static/js/rockerbox/rho/visit/visit_ui.js"></script> 
   <script src="/static/js/rockerbox/rho/ui.filter.js"></script>  
   <script src="/static/js/rockerbox/visit_urls.js"></script>
+  <script src="/static/js/bootstrap-switch.js"></script>
+  <script src="/static/js/jquery.serialize-object.js"></script>
 
   <script type="text/javascript" src="/static/js/chosen/chosen.jquery.min.js"> </script>
 
   <link href="/static/js/chosen/chosen.min.css" rel="stylesheet"> 
   <link href="/static/css/bootstrap.css" rel="stylesheet"> 
+  <link href="/static/css/bootstrap-switch.css" rel="stylesheet">
 
   <style>
 
@@ -69,16 +72,42 @@
 
     <h4>2. Choose URLs to Target</h4>
     <div class="row">
-      <select id="urls" multiple="multiple" class="multi-chosen-select span12" data-placeholder="Enter a source name first..." style="width:800px;"></select>
+      <form id="form" class="navbar-form pull-left form-inline" onSubmit="submitForm()" method="POST" action="javascript:myFunction(); return false;">
+      <select id="urls" name="urls[]" multiple="multiple" class="multi-chosen-select span12" data-placeholder="Enter a source name first..." style="width:800px;"></select>
     </div>
 
-    <h4>Domains</h4>
-    <ul id="domains">
-    </ul>
+    <h4>3. Select a start and end date</h4>
+    <input id="start_date" type="text" name="start_date" class="form-control span12" placeholder="Start Date" maxlength="8" >
+    <br /><br />
+    <input id="end_date" type="text" name="end_date" class="form-control span12" placeholder="End Date" maxlength="8">
+    <br /><br />
 
-    <h4>UIDs</h4>
-    <ul id="uids">
-    </ul>
+    <h4>4. Create a name for this funnel</h4>
+    <div class="row">
+      <input id="funnel_name" type="text" name="funnel_name" class="form-control span12" placeholder="Group Name" maxlength="100">
+      <h4>5. Select the boolean logic to use for this funnel group</h4>
+      <div id="switch-container" class="switch-container" style="display:inline-block; height: 30px;">
+	<input id="operation" type="radio" data-on-text="AND" data-off-text="OR" data-radio-all-off="true" checked>
+      </div>
+      <br /><br />
+      <h4>6. Enter your email address</h4>
+      <input id="owner" type="text" name="owner" class="form-control span12" placeholder="Email" maxlength="50">
+	<button class="btn btn-primary pull-right" type="submit">Submit</button>
+    </div>
+    </form>
+
+    <div class="row">
+      <h4>Domains</h4>
+      <ul id="domains">
+      </ul>
+    </div>
+    <div class="row">
+      <h4>UIDs</h4>
+      <ul id="uids">
+      </ul>
+    </div>
+
+    </div>    
   </div>
 </body>
 

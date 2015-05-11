@@ -15,12 +15,14 @@ class LoggingRoutes(Routes):
             (r'/reportinglog/(.*?)', ReportingLogHandler, {}),
             (r'/event_log', scripts.EventLogHandler, self.connectors),
             (r'/event_log/(.*?)', scripts.EventLogHandler, self.connectors),
-            (r'/opt_log', scripts.opt.OptLogHandler, self.connectors),
-            (r'/opt_log/(.*?)', scripts.opt.OptLogHandler, self.connectors),
-            (r'/opt_rules', scripts.opt.OptRulesHandler, self.connectors),
-            (r'/opt_rules/(.*?)', scripts.opt.OptRulesHandler, self.connectors),
             (r'/opt_campaigns', scripts.opt.OptCampaignsHandler, self.connectors),
             (r'/opt_campaigns/(.*?)', scripts.opt.OptCampaignsHandler, self.connectors),
             (r'/opt_config', scripts.opt.OptConfigHandler, self.connectors),
             (r'/opt_config/(.*?)', scripts.opt.OptConfigHandler, self.connectors)
+            (r'/opt_log', scripts.OptLogHandler, self.connectors),
+            (r'/opt_log/(.*?)', scripts.OptLogHandler, self.connectors),
+            (r'/opt_rules', scripts.OptRulesHandler, self.connectors),
+            (r'/opt_rules/(.*?)', scripts.OptRulesHandler, self.connectors),
+            (r'/funnel', scripts.FunnelHandler, self.connectors),
+            (r'/funnel/(.*?)', scripts.FunnelHandler, self.connectors)
         ]

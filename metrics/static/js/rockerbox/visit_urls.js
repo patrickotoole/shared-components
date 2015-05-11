@@ -1,3 +1,31 @@
+var submitForm = function() {
+
+    var formData = $("form#form").serializeObject();
+
+    var source = $("input#source").val();
+    var operator = "AND";
+
+    if (!$("input#operation").is(":checked")) {
+	operator = "OR";
+    }
+
+    formData["advertiser"] = source
+    formData["operator"] = operator
+
+    console.log(formData);
+
+    $.ajax({
+	type: "POST",
+	url: "/admin/funnel",
+	processData: false,
+	contentType: 'application/json',
+	data: JSON.stringify(formData),
+	success: function(r) {
+	    alert("Sent!");
+	}
+    });
+}
+
 RB.init = (function(){
     var uids = [];
     var domains = [];
@@ -77,6 +105,7 @@ RB.init = (function(){
     URL = addParam(URL,"format=json")
     
     $(document).ready(function() {
+	$("input#operation").bootstrapSwitch();
 	$(".multi-chosen-select").chosen();
 
 	$("#source").submit(function(e) {
