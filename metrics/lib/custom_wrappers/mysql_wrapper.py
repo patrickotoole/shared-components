@@ -54,6 +54,7 @@ class MysqlDB(DBConnectionWrapper):
         Creates a cursor and executes the query for you
         """
         import MySQLdb
+        last_row_ids = []
         try:
             try:
                 self._wrapped.close()
@@ -66,21 +67,23 @@ class MysqlDB(DBConnectionWrapper):
                 cur = conn.cursor()
                 for query in query_list:
                     cur.execute(query)
+                    last_row_ids.append(cur.lastrowid)
                 conn.commit()
             except Exception as e:
+                print e
                 conn.rollback()
                 raise e
             finally:
                 self.autocommit = True
                     
-            return
+            return last_row_ids
         except MySQLdb.OperationalError, e:
+            print e
             if e[0] == 2006:
                 self._wrapped.close()
                 self._wrapped = self.create_connection()
                 cursor = self._wrapped.cursor()
                 return self.CURSOR_WRAPPER(cursor, query, args=args)()
-        return
         
 
     def create_connection(self):
