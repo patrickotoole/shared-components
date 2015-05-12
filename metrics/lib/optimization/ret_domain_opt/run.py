@@ -1,7 +1,7 @@
 import sys
 sys.path.append("../../bidder/")
 sys.path.append("../opt_script/")
-from options import define, options, parse_command_line
+from options import define, options, parse_command_line, options_to_dict
 import pandas as pd
 import datasource 
 import analysis
@@ -51,8 +51,28 @@ if __name__ == "__main__":
         "served_ratio_cutoff": float
     }
 
+    define("start_date", type = str, required = False, help = "start date for placement optimization")
+    define("end_date", type = str, required = False, help = "end date for placement optimization")
+
+    define("advertiser", type = str, required = False, help = "advertiser pixel_source_name")
+
+    define("external_adv_id", type = str, required = False, help = "external advertiser id")
+    define("campaigns", type = int, required = False, multiple = True, help = "list of campaign ID's")
+    define("script_name", type = str, required = False, help = "campaign list name in opt_campaigns")
+
+    define("imps_served_cutoff", type = int, required = False, help = "Imps Served cut-off")
+    define("imps_loaded_cutoff", type = int, required = False, help = "Imps Loaded cut-off")
+
+    define("loaded_ratio_cutoff", type = float, required = False, help = "Domain Loaded/Served Ratio Cutoff")
+    define("visible_ratio_cutoff", type = float, required = False, help = "Domain Visibility Cutoff")
+    define("served_ratio_cutoff", type = float, required = False, help = "Appenxus served / Rbox cut-off")
+
+    # Get command line arguments
+    parse_command_line()
+
+    command_line_args = options_to_dict(options)
+
     for config_name, params in configs.iteritems():
-        print config_name
         if "start_date" not in params:
             params["start_date"] = (datetime.today() - timedelta(days = 7)).strftime('%Y-%m-%d')
 
@@ -64,5 +84,10 @@ if __name__ == "__main__":
             if param in datatypes:
                 params[param] = datatypes[param](params[param])
 
+            # If we passed a specific value via command line, overwrite the 
+            # paramater value
+            if param in command_line_args and command_line_args[param]:
+                params[param] = command_line_args[param]
+                
         runner = Runner(params)
         runner.run()
