@@ -44,16 +44,19 @@ class OptCampaignsHandler(EditableBaseHandler):
                 "id",
                 "campaign_group_name",
                 "campaign_id",
-                "date_added"
+                "date_added",
+                "active"
             ],
             "editable": [
                 "campaign_group_name",
-                "campaign_id"
+                "campaign_id",
+                "active"
             ],
             "filterable": [
                 "id",
                 "campaign_group_name",
-                "campaign_id"
+                "campaign_id",
+                "active"
             ],
             "insertable": [
                 "campaign_group_name",
