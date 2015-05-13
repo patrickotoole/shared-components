@@ -11,6 +11,7 @@ from event_log import EventLogHandler
 from imps import ImpsHandler
 from viewable import ViewabilityHandler
 from logins import LoginsHandler
+from editable_base import EditableBaseHandler
 import appnexus
 import bidder
 import opt

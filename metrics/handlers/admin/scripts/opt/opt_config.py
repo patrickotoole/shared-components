@@ -1,3 +1,6 @@
+import sys
+sys.path.append("../")
+from ..editable_base import EditableBaseHandler
 import tornado.web
 import ujson
 import json
@@ -24,13 +27,14 @@ WHERE id = {}
 
 DELETE = """DELETE FROM rockerbox.opt_config WHERE {}"""
 
-class OptConfigHandler(tornado.web.RequestHandler):
+class OptConfigHandler(EditableBaseHandler):
 
     def initialize(self, reporting_db=None, api=None, db=None):
         self.db = reporting_db 
         self.api = api
         self.params = {}
         self.query = ""
+        self.GET = GET
         
         self.col_settings = {
             "visible": [
@@ -56,53 +60,31 @@ class OptConfigHandler(tornado.web.RequestHandler):
                 "param",
                 "value",
                 "active"
+            ],
+            "insertable": [
+                "opt_type",
+                "config_name",
+                "param",
+                "value"
             ]
         }
 
-    def get_query(self):
-        where = self.make_where()
-        if not where:
-            where = "1=1"
-        self.query = GET.format(where)
-        return self.query
-
     def post(self):
+        print self.request.body
         pk = self.get_argument("pk", False)
 
         try:
             if pk:
-                query = self.make_update(pk)
+                query = self.make_update(UPDATE, pk)
                 self.update(query)
+            else:
+                query = self.make_insert()
+                self.update(query)
+                self.get()
+                
         except Exception, e:
             print e
             self.write(ujson.dumps({"response": str(e), "status": "error"}))
-
-    def make_update(self, pk):
-        print self.request.body
-        col_to_change = self.get_argument("name")
-        value = self.get_argument("value")
-        
-        set_clause = '{} = "{}"'.format(col_to_change, value)
-
-        return UPDATE.format(set_clause, pk)
-
-    def make_where(self):
-        # If no params, just return a placeholder
-        if not self.params:
-            return "1=1"
-
-        where = ['{} = "{}"'.format(k, v) for (k,v) in self.params.iteritems() if v]
-        return ' and '.join(where)
-
-    def respond(self):
-        def default(self):
-            self.write("Something")
-        yield default
-
-    @defer.inlineCallbacks
-    def update(self, query):
-        yield execute_mysql_deferred(self.db, query)
-        self.respond()
 
     @decorators.formattable
     def get_content(self, data):
@@ -114,14 +96,10 @@ class OptConfigHandler(tornado.web.RequestHandler):
                 data=o, 
                 query=self.query,
                 cols=json.dumps(self.col_settings["visible"]), 
-                editable=json.dumps(self.col_settings["editable"])
+                editable=json.dumps(self.col_settings["editable"]),
+                insertable=json.dumps(self.col_settings["insertable"])
             )
         yield default, (data,)
-
-    @defer.inlineCallbacks
-    def get_data(self, query):
-        df = yield run_mysql_deferred(self.db, query)
-        self.get_content(df)
 
     @tornado.web.asynchronous
     def get(self,*args):
@@ -129,35 +107,20 @@ class OptConfigHandler(tornado.web.RequestHandler):
 
         for col in self.col_settings["filterable"]:
             self.params[col] = self.get_argument(col, False)
-        query = self.get_query()
+        query = self.make_query(GET)
         
         if formatted:
             self.get_data(query)
         else:
             self.get_content(pandas.DataFrame())
 
-    # def make_to_insert(self,body):
+    def make_insert(self):
+        print self.request.body
 
-    #     # Get POSTed data
-    #     obj = ujson.loads(body)
+        for col in self.col_settings["insertable"]:
+            self.params[col] = self.get_argument(col, False)
 
-    #     # Make list of all relevant POSTed columns
-    #     all_cols = [ i for i in self.required_cols if i in obj.keys() ]
+        if '' in self.params.values():
+            raise Exception("Missing one or more parameters")
 
-    #     # Check that the POSTed columns are correct
-    #     if len(all_cols) != len(self.required_cols):
-    #         raise Exception("required_columns: script_name, campaign_id")
-
-    #     script_name = obj["script_name"]
-    #     campaign_id = obj["campaign_id"]
-
-    #     try:
-    #         new_row = {"script_name": script_name, "campaign_id": campaign_id}
-    #         self.db.execute(INSERT % new_row)
-    #         print (INSERT % new_row)
-        
-    #     except Exception as e:
-    #         # Roll back any changes that might have occurred
-    #         raise Exception("Error during INSERT execution: {}".format(e))
-    
-    #     return self.get_row(script_name, campaign_id)
+        return INSERT % self.params

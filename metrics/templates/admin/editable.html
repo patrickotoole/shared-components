@@ -11,19 +11,22 @@
     </script>
   </div>
 
+<form id="new-row" action="" method="post">
   <table id="data-table" class="table table-hover table-striped dc-data-table">
     <thead>
       <tr class="data-table-headers"></tr>
     </thead>
   </table>
+</form>
 </div>
 
 <script>
 var cols = {{cols}}
 var editable = {{editable}}
+var insertable = {{insertable}}
 var query = '{{query}}'
 
-populateTable(cols, editable, query)
+populateTable(cols, editable, insertable, query)
 </script>
 
 {% end %}

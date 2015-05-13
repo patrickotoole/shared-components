@@ -25,7 +25,26 @@ function makeHeader(cols) {
     return $header
 }
 
-function populateTable(cols, editable, query) {
+function makeInsertForm(cols, insertable) {
+    var $row = $('<tr></tr>')
+    console.log(insertable)
+    $.each(cols, function(i, col){
+	if ($.inArray(col, insertable) != -1) {
+	    $row.append('<td><input id="' + col + '" type="text" name="' + col + '" placeholder="' + col + '"></td>')
+	}
+	else {
+	    $row.append("<td></td>")
+	}
+    });
+
+    var $submitRow = $('<tr></tr>')
+    var $submitCell = $('<td colspan="'+ cols.length +'"></td>')
+    $submitCell.append($('<button class="btn btn-primary center-block" type="submit">Submit</button>'))
+    $submitRow.append($submitCell)
+    return $row.add($submitRow)
+}
+
+function populateTable(cols, editable, insertable, query) {
     var URL = window.location.pathname + window.location.search
     URL = addParam(URL, "format=json")
 
@@ -50,5 +69,7 @@ function populateTable(cols, editable, query) {
 		});
 	    });
 	}
+	$("#data-table").append(makeInsertForm(cols, insertable));
     });
+
 }
