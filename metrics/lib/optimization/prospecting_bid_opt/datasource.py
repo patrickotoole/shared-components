@@ -44,10 +44,9 @@ PARAM_KEYS = ['learn_max_bid_limit', 'learn_total_imps_limit', 'learn_daily_imps
 
 class CampaignDataSource(DataSource):
 
-    def __init__(self, external_adv_id, advertiser, campaigns):
+    def __init__(self, external_adv_id, campaigns):
         
         self.external_adv_id = external_adv_id
-        self.advertiser = advertiser
         self.campaigns = campaigns
 
         self.conv_data = None
@@ -150,7 +149,7 @@ class CampaignDataSource(DataSource):
         merged = pd.merge(rep_by_campaign, conv_by_campaign, 
                         left_index = True, right_index = True, 
                         how = 'outer').fillna(0)
-        self.df = merged.head(10)
+        self.df = merged
 
 
     def run(self, params):
@@ -181,9 +180,12 @@ class CampaignDataSource(DataSource):
             raise AttributeError("Inputs cannot be negative")
     
     def transform(self, params):
-        
-        for col in params.keys():
-            self.df[col] = params[col]
+
+        self.df['learn_total_imps_limit'] = params['learn_total_imps_limit']
+        self.df['learn_daily_imps_limit'] = params['learn_daily_imps_limit']
+        self.df['learn_daily_cpm_limit'] = params['learn_daily_cpm_limit']
+        self.df['learn_max_bid_limit'] = params['learn_max_bid_limit']
+
 
 
     def filter(self):

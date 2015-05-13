@@ -17,8 +17,8 @@ class DataSource(object):
         # Create any connections that might be necessary
         # to pull data
         # instance.hive = lnk.dbs.hive
-        # instance.reporting = lnk.dbs.reporting
-        # instance.console = lnk.api.console
+        instance.reporting = lnk.dbs.reporting
+        instance.console = lnk.api.console
         instance.reporting_api = lnk.api.reporting
         instance.hive = lnk.dbs.hive
 

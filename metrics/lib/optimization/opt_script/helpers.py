@@ -5,7 +5,7 @@ from pandas import Series
 db = lnk.dbs.rockerbox
 
 QUERY = """
-SELECT * FROM opt_config WHERE opt_type = "{}"
+SELECT * FROM opt_config WHERE opt_type = "{}" AND active = 1
 """
 
 CAMPAIGNS_QUERY = """
@@ -27,9 +27,9 @@ def get_configs(opt_type):
         opt_type = name[0]
         config_name = name[1]
 
+        
         params = Series(group.value.values, index=group.param).to_dict()
         configs[config_name] = params
-
         campaign_group_name = params["campaign_group_name"]
         params["campaigns"] = get_campaigns(campaign_group_name)
 
