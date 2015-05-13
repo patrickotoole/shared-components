@@ -11,10 +11,7 @@ from event_log import EventLogHandler
 from imps import ImpsHandler
 from viewable import ViewabilityHandler
 from logins import LoginsHandler
-from opt_log import OptLogHandler
-from opt_rules import OptRulesHandler
-from opt_campaigns import OptCampaignsHandler
-from opt_config import OptConfigHandler
 import appnexus
 import bidder
+import opt
 from filter import FilterHandler

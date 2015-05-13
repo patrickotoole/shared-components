@@ -1,0 +1,29 @@
+{% extends "../clean_base.html" %}
+{% autoescape None %}
+{% block content %}
+
+<link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css" rel="stylesheet"/>
+<script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
+<script src="/static/js/rockerbox/editable.js"></script>
+
+<div id="content" class="container">
+  <div class="row">
+    </script>
+  </div>
+
+  <table id="data-table" class="table table-hover table-striped dc-data-table">
+    <thead>
+      <tr class="data-table-headers"></tr>
+    </thead>
+  </table>
+</div>
+
+<script>
+var cols = {{cols}}
+var editable = {{editable}}
+var query = '{{query}}'
+
+populateTable(cols, editable, query)
+</script>
+
+{% end %}

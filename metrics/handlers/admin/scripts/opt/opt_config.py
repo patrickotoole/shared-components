@@ -1,5 +1,6 @@
 import tornado.web
 import ujson
+import json
 from twisted.internet import defer
 
 from lib.mysql.helpers import run_mysql_deferred
@@ -29,20 +30,41 @@ class OptConfigHandler(tornado.web.RequestHandler):
         self.db = reporting_db 
         self.api = api
         self.params = {}
-
-        self.cols = [
-            "opt_type",
-            "config_name",
-            "param",
-            "value",
-            "active"
-            ]
+        self.query = ""
         
+        self.col_settings = {
+            "visible": [
+                "id",
+                "opt_type",
+                "config_name",
+                "param",
+                "value",
+                "last_update",
+                "active"
+            ],
+            "editable": [
+                "opt_type",
+                "param",
+                "value",
+                "config_name",
+                "active",
+                "advertiser"
+            ],
+            "filterable": [
+                "opt_type",
+                "config_name",
+                "param",
+                "value",
+                "active"
+            ]
+        }
+
     def get_query(self):
         where = self.make_where()
         if not where:
             where = "1=1"
-        return GET.format(where)
+        self.query = GET.format(where)
+        return self.query
 
     def post(self):
         pk = self.get_argument("pk", False)
@@ -87,7 +109,13 @@ class OptConfigHandler(tornado.web.RequestHandler):
         def default(self, data):
             o = Convert.df_to_json(data)
             print o
-            self.render("admin/opt_config.html", data=o)
+            self.render(
+                "admin/editable.html", 
+                data=o, 
+                query=self.query,
+                cols=json.dumps(self.col_settings["visible"]), 
+                editable=json.dumps(self.col_settings["editable"])
+            )
         yield default, (data,)
 
     @defer.inlineCallbacks
@@ -99,7 +127,7 @@ class OptConfigHandler(tornado.web.RequestHandler):
     def get(self,*args):
         formatted = self.get_argument("format", False)
 
-        for col in self.cols:
+        for col in self.col_settings["filterable"]:
             self.params[col] = self.get_argument(col, False)
         query = self.get_query()
         
@@ -107,7 +135,6 @@ class OptConfigHandler(tornado.web.RequestHandler):
             self.get_data(query)
         else:
             self.get_content(pandas.DataFrame())
-        
 
     # def make_to_insert(self,body):
 
