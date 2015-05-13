@@ -30,6 +30,11 @@ class IndexHandler(BaseHandler):
             ("/admin/advertiser/logins", "Advertiser Admin Logins")
         ]
 
+        opt_tools = [
+            ("/admin/opt_config", "Optimization Config"),
+            ("/admin/opt_campaigns", "Optimization Campaigns")
+        ]
+
         delorean_links = [
             ("/admin/filter/domains","Delorean Domain"),
             ("/admin/filter","Delorean Filter Tool"),
@@ -119,6 +124,7 @@ class IndexHandler(BaseHandler):
             demographics_links = demographics_links,
             hoverboard_links = hoverboard_links,
             tools = tools,
+            opt_tools = opt_tools,
             deprecated = deprecated,
             delorean_links = delorean_links
         )

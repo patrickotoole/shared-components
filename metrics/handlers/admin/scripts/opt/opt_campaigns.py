@@ -1,18 +1,28 @@
+import sys
+sys.path.append("../")
+from ..editable_base import EditableBaseHandler
 import tornado.web
 import ujson
-from lib.helpers import Convert
+import json
+from twisted.internet import defer
 
-GET = """
-SELECT * 
-FROM rockerbox.opt_campaigns
-WHERE {}
-"""
+from lib.mysql.helpers import run_mysql_deferred
+from lib.mysql.helpers import execute_mysql_deferred
+from lib.helpers import *
+
+GET = """SELECT * FROM rockerbox.opt_campaigns WHERE {}"""
 
 INSERT = """
 INSERT INTO rockerbox.opt_campaigns
-    (script_name, campaign_id) 
+    (campaign_group_name, campaign_id) 
 VALUES 
-    ("%(script_name)s", %(campaign_id)s)
+    ("%(campaign_group_name)s", %(campaign_id)s)
+"""
+
+UPDATE = """
+UPDATE rockerbox.opt_campaigns
+SET {}
+WHERE id = {}
 """
 
 DELETE = """
@@ -20,106 +30,90 @@ DELETE FROM rockerbox.opt_campaigns
 WHERE script_name = "{}" AND campaign_id = {}
 """
 
-class OptCampaignsHandler(tornado.web.RequestHandler):
+class OptCampaignsHandler(EditableBaseHandler):
 
     def initialize(self, reporting_db=None, api=None, db=None):
-        self.db = reporting_db 
+        self.db = reporting_db
         self.api = api
+        self.params = {}
+        self.query = ""
+        self.GET = GET
 
-        self.required_cols = [
-            "script_name",
-            "campaign_id"
+        self.col_settings = {
+            "visible": [
+                "id",
+                "campaign_group_name",
+                "campaign_id",
+                "date_added"
+            ],
+            "editable": [
+                "campaign_group_name",
+                "campaign_id"
+            ],
+            "filterable": [
+                "id",
+                "campaign_group_name",
+                "campaign_id"
+            ],
+            "insertable": [
+                "campaign_group_name",
+                "campaign_id"
             ]
-
-    def get_all(self):
-        where = "1=1"
-        return self.db.select_dataframe(GET.format(where))       
-
-    def get_campaigns(self, script_name):
-        where = "script_name = '{}'".format(script_name)
-        return self.db.select_dataframe(GET.format(where))
-
-    def get_script_names(self, campaign_id):
-        where = "campaign_id = {}".format(campaign_id)
-        return self.db.select_dataframe(GET.format(where))
-
-    def get_row(self, script_name, campaign_id):
-        get_where = "campaign_id = {} and script_name='{}'".format(campaign_id, script_name)
-        print (GET.format(get_where))
-        return self.db.select_dataframe(GET.format(get_where))
-
-    def get(self,*args):
-        script_name = self.get_argument("script_name", False)
-        campaign_id = self.get_argument("campaign_id", False)
-
-        if len(args) > 0:
-            script_name = args[0]
-            results = self.get_campaigns(script_name)
-
-        elif script_name and campaign_id:
-            results = self.get_row(script_name, campaign_id)
-
-        elif script_name:
-            script_name = self.get_argument("script_name")
-            results = self.get_campaigns(script_name)
-
-        elif campaign_id:
-            campaign_id = self.get_argument("campaign_id")
-            results = self.get_script_names(campaign_id)
-
-        else:
-            results = self.get_all()
-
-        as_json = Convert.df_to_json(results)
-        self.write(as_json)
-        self.finish()
-
-    def make_to_insert(self,body):
-
-        # Get POSTed data
-        obj = ujson.loads(body)
-
-        # Make list of all relevant POSTed columns
-        all_cols = [ i for i in self.required_cols if i in obj.keys() ]
-
-        # Check that the POSTed columns are correct
-        if len(all_cols) != len(self.required_cols):
-            raise Exception("required_columns: script_name, campaign_id")
-
-        script_name = obj["script_name"]
-        campaign_id = obj["campaign_id"]
-
-        try:
-            new_row = {"script_name": script_name, "campaign_id": campaign_id}
-            self.db.execute(INSERT % new_row)
-            print (INSERT % new_row)
-        
-        except Exception as e:
-            # Roll back any changes that might have occurred
-            raise Exception("Error during INSERT execution: {}".format(e))
-    
-        return self.get_row(script_name, campaign_id)
-
+        }
 
     def post(self):
+        print self.request.body
+        pk = self.get_argument("pk", False)
+
         try:
-            data = self.make_to_insert(self.request.body)
-            as_json = Convert.df_to_json(data)
-            self.write(ujson.dumps({"response": ujson.loads(as_json), "status": "ok"}))
+            if pk:
+                query = self.make_update(UPDATE, pk)
+                self.update(query)
+            else:
+                query = self.make_insert()
+                self.update(query)
+                self.get()
+
         except Exception, e:
-            self.write(ujson.dumps({"response": str(e), "status": "error"}))
-
-    def delete(self):
-        try:
-            script_name = self.get_argument("script_name")
-            campaign_id = self.get_argument("campaign_id")
-
-            self.db.execute(DELETE.format(script_name, campaign_id))
-
-            results = self.get_all()
-            self.write(Convert.df_to_json(results))
-            self.finish()
-        except Exception, e:
+            print e
             self.write(ujson.dumps({"response": str(e), "status": "error"}))
 
                     
+    @decorators.formattable
+    def get_content(self, data):
+        def default(self, data):
+            o = Convert.df_to_json(data)
+            print o
+            self.render(
+                "admin/editable.html",
+                data=o,
+                query=self.query,
+                cols=json.dumps(self.col_settings["visible"]),
+                editable=json.dumps(self.col_settings["editable"]),
+                insertable=json.dumps(self.col_settings["insertable"])
+            )
+        yield default, (data,)
+
+    @tornado.web.asynchronous
+    def get(self,*args):
+        formatted = self.get_argument("format", False)
+
+        for col in self.col_settings["filterable"]:
+            self.params[col] = self.get_argument(col, False)
+        query = self.make_query(GET)
+
+        if formatted:
+            self.get_data(query)
+        else:
+            self.get_content(pandas.DataFrame())
+
+    def make_insert(self):
+        print self.request.body
+
+        for col in self.col_settings["insertable"]:
+            self.params[col] = self.get_argument(col, False)
+
+        if '' in self.params.values():
+            raise Exception("Missing one or more parameters")
+
+        return INSERT % self.params
