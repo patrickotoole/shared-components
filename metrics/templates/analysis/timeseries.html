@@ -11,9 +11,11 @@
   <script src="/static/js/rockerbox/rho/ui.js"></script> 
   <script src="/static/js/rockerbox/rho/ui.filter.js"></script>  
 
-  <script type="text/javascript" src="/static/js/chosen/chosen.jquery.min.js"> </script>
+  <!-- <script type="text/javascript" src="/static/js/chosen/chosen.jquery.min.js"> </script> -->
+  <script type="text/javascript" src="/static/js/chosen.jquery.js"> </script>
 
-  <link href="/static/js/chosen/chosen.min.css" rel="stylesheet"> 
+
+  <link href="/static/css/chosen.css" rel="stylesheet"> 
   <link href="/static/css/bootstrap.css" rel="stylesheet"> 
 
   <style>
@@ -35,6 +37,9 @@
     a {cursor:pointer}
     /*.filter-wrapper {background:grey}*/
     .chosen-container {margin-top:2.5px}
+    .chzn-container {margin-top:2.5px} 
+    .chzn-container-multi .chzn-choices {height:30px !important}
+    .chzn-container-multi .chzn-choices .search-field input {height:28px}
     #seriesable, #filterable {
       padding-top:5px;padding-bottom:5px;
       margin-left:-25px; 

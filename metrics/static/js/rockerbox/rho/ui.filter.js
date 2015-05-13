@@ -61,12 +61,26 @@ RB.rho.ui.filter = (function(f) {
       .append("select")
       .attr("multiple",true)
       .classed("filter-select",true)
+      .style("width","100%")
 
     var node = select[0].filter(function(x){return x})
 
-    $(node)
-      .chosen({width: "100%"})
-      .change(callback)
+    setTimeout(function(){
+      $(node)
+        .chosen({
+          width: "100%",
+          create_option: function(term){
+            var chosen = this;
+            chosen.append_option({
+              value: term,
+              text: "Custom: " + term
+            });
+            $(node).trigger("change")
+          },
+          persistent_create_option: false 
+        })
+        .change(callback)
+    },1)
   
     return select
   }
