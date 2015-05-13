@@ -13,7 +13,7 @@ from link import lnk
 
 import unittest
 
-from metrics.handlers.admin.scripts import opt_log
+from metrics.handlers.admin.scripts.opt import opt_log
 
 CREATE_TABLE = """
 CREATE TABLE opt_log (
