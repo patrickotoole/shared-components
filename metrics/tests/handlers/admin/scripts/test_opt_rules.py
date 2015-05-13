@@ -10,7 +10,7 @@ from tornado.escape import to_unicode, json_decode, json_encode
 from link import lnk
 
 import unittest
-import metrics.handlers.admin.scripts.opt_rules as handler
+import metrics.handlers.admin.scripts.opt.opt_rules as handler
 
 CREATE_TABLE = """
 CREATE TABLE opt_rules ( 
