@@ -1,6 +1,11 @@
 import pandas as pd
 import sys
 sys.path.append("../../bidder/")
+
+sys.path.append("../../")
+import buffering_smtp_handler
+import logging
+
 from options import define, options, parse_command_line
 from datetime import datetime
 import datasource 
@@ -55,6 +60,8 @@ class Runner():
 
 
 if __name__ == "__main__":
+    import logsetup
+    logsetup.configure_log(subject="placement_opt")
 
     define("start_date", type = str, required = True, help = "start date for placement optimization")
     define("end_date", type = str, required = False, help = "end date for placement optimization")

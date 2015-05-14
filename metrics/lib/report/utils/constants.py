@@ -64,7 +64,7 @@ WEI_EMAIL = 'imweilu@gmail.com'
 
 
 SENDGRID_USER = 'ronjacobson'
-SENDGRID_PW = 'rockerbox13'
+SENDGRID_PW = 'rockerbox2013'
 
 ROUND = 2
 
