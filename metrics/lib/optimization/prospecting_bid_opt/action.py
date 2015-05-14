@@ -7,7 +7,9 @@ import json
 import time
 import numpy
 from copy import deepcopy
+from datetime import datetime
 
+TODAY = datetime.today().strftime('%Y-%m-%d')
 
 class CampaignAction(Action):
     
@@ -38,6 +40,16 @@ class CampaignAction(Action):
         if r.json['status'] != 'ok':
             raise TypeError("Incorrect Opt Log %s" %str(log))
 
+    def check_for_prev_run(self, campaign_id, rule_group_id):
+
+        query = '''
+        SELECT * FROM opt_log WHERE campaign_id = {}  AND date(last_modified) >= "{}" 
+        AND rule_group_id  = {} AND field_old_value  != field_new_value  
+        '''.format(campaign_id, TODAY, rule_group_id)
+
+        df = self.reporting_db.select_dataframe(query)
+        return len(df) > 0
+
 
     def increase_max_bids(self, max_bids_to_increase):
 
@@ -60,11 +72,14 @@ class CampaignAction(Action):
                         "field_old_value": old_max_bid,
                         "field_new_value": new_max_bid,
                         "metric_values": max_bids_to_increase[campaign]['metrics']
-                }  
+                }
 
-            self.logger.info(log)
-            self.push_log(log)
-            time.sleep(3)
+            if self.check_for_prev_run(log['campaign_id'], log['rule_group_id']):
+                self.logger.info("Already ran on %s for %s" %(log['campaign_id'], TODAY))
+            else:
+                self.logger.info(log)
+                self.push_log(log)
+                time.sleep(3)
 
 
 
