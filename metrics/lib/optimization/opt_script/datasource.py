@@ -1,4 +1,5 @@
 import logging
+logger = logging.getLogger("opt")
 from abc import ABCMeta, abstractmethod
 
 from link import lnk
@@ -11,8 +12,7 @@ class DataSource(object):
         instance = object.__new__(cls)
 
         # Set up logger
-        logging.basicConfig(level=logging.INFO)
-        instance.logger = logging.getLogger(__name__)
+        instance.logger = logger
 
         # Create any connections that might be necessary
         # to pull data

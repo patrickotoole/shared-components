@@ -1,18 +1,23 @@
 import sys
 sys.path.append("../../bidder/")
 sys.path.append("../opt_script/")
+
+sys.path.append("../../")
+import buffering_smtp_handler
+import logging
+
 from options import define, options, parse_command_line, options_to_dict
 import pandas as pd
 import datasource 
 import analysis
 import action
 import helpers
+import testing
 from link import lnk
 import json
 from datetime import datetime, timedelta
 
 api = lnk.api.rockerbox
-
 
 class Runner():
 
@@ -39,8 +44,10 @@ class Runner():
             P.run_analysis()
             A.run(P.to_run, campaign)
 
-
 if __name__ == "__main__":
+    import logsetup
+    logsetup.configure_log(subject="ret_domain_opt")
+
     configs = helpers.get_configs("retargeting_domain_opt")
 
     datatypes = {
@@ -91,3 +98,6 @@ if __name__ == "__main__":
                 
         runner = Runner(params)
         runner.run()
+
+    logging.shutdown()
+

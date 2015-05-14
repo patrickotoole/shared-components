@@ -1,6 +1,11 @@
 import sys
 sys.path.append("../../bidder/")
 sys.path.append("../opt_script/")
+
+sys.path.append("../../")
+import buffering_smtp_handler
+import logging
+
 from options import define, options, parse_command_line, options_to_dict
 import pandas as pd
 import datasource 
@@ -35,6 +40,8 @@ class Runner():
 
 
 if __name__ == "__main__":
+    import logsetup
+    logsetup.configure_log(subject="prospecting_bid_opt")
 
     configs = helpers.get_configs("prospecting_bid_opt")
 

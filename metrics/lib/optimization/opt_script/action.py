@@ -1,4 +1,6 @@
 import logging
+logger = logging.getLogger("opt")
+
 from abc import ABCMeta, abstractmethod
 
 from link import lnk
@@ -15,8 +17,7 @@ class Action(object):
         instance = object.__new__(cls)
 
         # Set up logger
-        logging.basicConfig(level=logging.INFO)
-        instance.logger = logging.getLogger(__name__)
+        instance.logger = logger
 
         # Set up rockerbox API connector
         instance.rockerbox = lnk.api.rockerbox
