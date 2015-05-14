@@ -12,8 +12,6 @@ class Analysis(object):
         # Set up logger
         logging.basicConfig(level=logging.INFO)
         instance.logger = logging.getLogger(__name__)
-
-
         instance.rbox_api = lnk.api.rockerbox
 
         return instance

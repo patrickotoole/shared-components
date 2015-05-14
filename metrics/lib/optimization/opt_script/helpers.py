@@ -11,7 +11,7 @@ SELECT * FROM opt_config WHERE opt_type = "{}" AND active = 1
 CAMPAIGNS_QUERY = """
 SELECT campaign_id
 FROM opt_campaigns 
-WHERE campaign_group_name = "{}"
+WHERE campaign_group_name = "{}" AND active = 1
 """
 
 def get_campaigns(campaign_group_name):

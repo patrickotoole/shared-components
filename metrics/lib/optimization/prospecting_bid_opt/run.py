@@ -11,21 +11,19 @@ from link import lnk
 import json
 from datetime import datetime, timedelta
 
-
 class Runner():
 
     def __init__(self, params):
                 
         self.start_date = params['start_date']
         self.end_date = params['end_date']
-        #self.advertiser = params['advertiser']
         self.external_adv_id = params['external_advertiser_id']     
         self.campaigns = params['campaigns']
         self.params = params
 
     def run(self):
 
-        D = datasource.CampaignDataSource(self.external_adv_id, None)
+        D = datasource.CampaignDataSource(self.external_adv_id, self.campaigns)
         D.pull(self.start_date, self.end_date)
         D.run(self.params)
 
@@ -64,7 +62,6 @@ if __name__ == "__main__":
 
     command_line_args = options_to_dict(options)
 
-    print configs
     for config_name, params in configs.iteritems():
 
         if "end_date" not in params:
@@ -83,7 +80,5 @@ if __name__ == "__main__":
         runner = Runner(params)
         runner.run()
 
-
-# python run.py --external_adv_id=430556 --advertiser=citi --start_date="2015-05-01" --end_date="2015-05-11" --learn_total_imps_limit=1000 --learn_daily_imps_limit=1000 --learn_daily_cpm_limit=4 --learn_max_bid_limit=8"
 
 
