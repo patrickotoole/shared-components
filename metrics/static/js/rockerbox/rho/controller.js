@@ -54,6 +54,28 @@ RB.rho.controller = (function(controller) {
     toRemove.remove()
   }
 
+  controller.select_interval = function(option) {
+
+    console.log(option)
+
+    if (option == "past day") {
+      
+      d3.json(URL + "&interval=15_minute", function(dd){
+        rho.data.CRS.crs.remove()
+        rho.data.CRS.crs.add(dd) 
+        controller.render([])
+      });   
+    } else if (option == "past 30 minutes") {
+      d3.json(URL, function(dd){
+        rho.data.CRS.crs.remove()
+        rho.data.CRS.crs.add(dd) 
+        controller.render([])
+      });
+    }
+  
+  }
+
+
   controller.render = function(filter_array,key,skip_title) {
 
     var target = d3.select("#filterable");
@@ -89,12 +111,32 @@ RB.rho.controller = (function(controller) {
   }
 
   controller.select = function(x) {
-    var special = 1
 
-    var key = d3.select(this.parentElement).datum().key
-    var data = d3.selectAll(this.selectedOptions).data()
+    var special = 1,
+      self = this;
+
+    if (x != "skip") { 
+      var key = d3.select(this.parentElement).datum().key
+      var data = d3.selectAll(this.selectedOptions).data()
+    }
 
     if (special) {
+
+      if (key == "domain"){
+        URL = window.location.pathname + "?domain=" + data
+        history.replaceState({}, "", URL);
+      }
+
+      // special case for *new* domain requests
+      if (key == "domain" && data != "" && this.__data__['is_new']) {
+        delete this.__data__['is_new']
+        d3.json(URL + "&format=json", function(dd){
+          //rho.data.CRS.crs.remove()
+          rho.data.CRS.crs.add(dd)
+          controller.select.bind(self)("skip")
+        });
+        return
+      }
 
       // get what is currently selected
       var selectors = d3.select(this.parentElement.parentElement.parentElement) // this is ugly

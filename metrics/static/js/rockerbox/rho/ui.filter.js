@@ -61,12 +61,30 @@ RB.rho.ui.filter = (function(f) {
       .append("select")
       .attr("multiple",true)
       .classed("filter-select",true)
+      .style("width","100%")
 
     var node = select[0].filter(function(x){return x})
 
-    $(node)
-      .chosen({width: "100%"})
-      .change(callback)
+    setTimeout(function(){
+      $(node)
+        .chosen({
+          width: "100%",
+          create_option: function(term){
+            var chosen = this;
+            chosen.append_option({
+              value: term,
+              text: term
+            });
+            var data = d3.select(node[0].parentNode).datum()
+            data.value = data.value.concat([term])
+            d3.select(node[0]).selectAll("option").data(data.value)
+            node[0].__data__['is_new'] = true
+            $(node).trigger("change")
+          },
+          persistent_create_option: false 
+        })
+        .change(callback)
+    },1)
   
     return select
   }
