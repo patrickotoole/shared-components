@@ -73,8 +73,12 @@ RB.rho.ui.filter = (function(f) {
             var chosen = this;
             chosen.append_option({
               value: term,
-              text: "Custom: " + term
+              text: term
             });
+            var data = d3.select(node[0].parentNode).datum()
+            data.value = data.value.concat([term])
+            d3.select(node[0]).selectAll("option").data(data.value)
+            node[0].__data__['is_new'] = true
             $(node).trigger("change")
           },
           persistent_create_option: false 
