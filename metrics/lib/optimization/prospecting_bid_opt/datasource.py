@@ -130,7 +130,7 @@ class CampaignDataSource(DataSource):
 
 
     def add_max_bids(self):
-
+        self.logger.info("Adding max bids...")
         max_bids = [None] * len(self.df)
         for k in range(len(self.df)):
             campaign_id = self.df.index[k]
