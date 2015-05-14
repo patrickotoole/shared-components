@@ -44,10 +44,9 @@ PARAM_KEYS = ['learn_max_bid_limit', 'learn_total_imps_limit', 'learn_daily_imps
 
 class CampaignDataSource(DataSource):
 
-    def __init__(self, external_adv_id, advertiser, campaigns):
+    def __init__(self, external_adv_id, campaigns):
         
         self.external_adv_id = external_adv_id
-        self.advertiser = advertiser
         self.campaigns = campaigns
 
         self.conv_data = None
@@ -60,11 +59,13 @@ class CampaignDataSource(DataSource):
                         'external_advertiser_id': self.external_adv_id }
         try:
             self.reporting_data = self.reporting.select_dataframe(REPORTING_DATA_QUERY % query_args)
+            self.logger.info("Pulled DataFrame with {} rows and {} columns".format(len(self.reporting_data), len(self.reporting_data.columns.tolist())))
         except AttributeError:
             raise AttributeError("Issue with reporting query")
 
         try:
             self.conv_data = self.reporting.select_dataframe(CONV_DATA_QUERY % query_args)
+            self.logger.info("Pulled DataFrame with {} rows and {} columns".format(len(self.conv_data), len(self.conv_data.columns.tolist())))
         except AttributeError:
             raise AttributeError("Issue with conv query")
 
@@ -115,9 +116,7 @@ class CampaignDataSource(DataSource):
 
     def aggregate_conv(self, x):
         x = x.sort('conversion_time')
-        cols = {'attr_conv': len(x),
-                'attr_conv_pc': x['pc'].sum()
-                }
+        cols = {'attr_conv': len(x), 'attr_conv_pc': x['pc'].sum() }
         return cols
 
 
@@ -150,15 +149,18 @@ class CampaignDataSource(DataSource):
         merged = pd.merge(rep_by_campaign, conv_by_campaign, 
                         left_index = True, right_index = True, 
                         how = 'outer').fillna(0)
-        self.df = merged.head(10)
+        self.df = merged
+
+        self.logger.info("DataFrame with {} campaigns".format(len(self.df)))
 
 
     def run(self, params):
         self.reshape()
-        self.add_max_bids()
         self.check_params(params)
         self.transform(params)
         self.filter()
+        self.add_max_bids()
+
 
     def check_params(self, params):
 
@@ -181,14 +183,35 @@ class CampaignDataSource(DataSource):
             raise AttributeError("Inputs cannot be negative")
     
     def transform(self, params):
-        
-        for col in params.keys():
-            self.df[col] = params[col]
+
+        self.df['learn_total_imps_limit'] = params['learn_total_imps_limit']
+        self.df['learn_daily_imps_limit'] = params['learn_daily_imps_limit']
+        self.df['learn_daily_cpm_limit'] = params['learn_daily_cpm_limit']
+        self.df['learn_max_bid_limit'] = params['learn_max_bid_limit']
 
 
     def filter(self):
 
         self.df = self.df[self.df['last_served_date'] >= self.end_date]
+        self.logger.info("Filtered Dataframe to {} campaigns".format(len(self.df)))
+
+        if self.campaigns != "all":
+            self.df = self.df[list(pd.Series(self.df.index).apply(lambda x: x in self.campaigns))]
+            self.logger.info("Filtered Dataframe to {} campaigns".format(len(self.df)))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

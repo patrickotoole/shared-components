@@ -63,8 +63,8 @@ class CampaignAction(Action):
                 }  
 
             self.logger.info(log)
-            # self.push_log(log)
-            # time.sleep(3)
+            self.push_log(log)
+            time.sleep(3)
 
 
 

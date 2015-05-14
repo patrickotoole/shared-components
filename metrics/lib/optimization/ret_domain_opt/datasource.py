@@ -232,7 +232,8 @@ class DomainDataSource(DataSource):
             self.df['visible_ratio'] = self.df['visible'] / self.df['loaded'].astype(float)
             self.df['loaded_ratio'] = self.df['loaded'] / self.df['imps_served_rbox'].astype(float)
             self.df['served_ratio'] = self.df['imps_served_rbox'] / self.df['imps_served_apnx'].astype(float)
-            self.df = self.df.fillna(0)        
+            self.df = self.df.fillna(0)
+    
 
 
     def filter(self):
