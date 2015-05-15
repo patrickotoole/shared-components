@@ -2,6 +2,8 @@ from link import lnk
 from handlers import streaming
 from lib.kafka_queue import KafkaQueue
 import lib.hive as h
+import logging
+logger = requests_log = logging.getLogger("connectors")
 
 import ujson
 import mocks.yoshi
@@ -22,7 +24,12 @@ class ConnectorConfig(object):
         self.connectors["bidder"] = lnk.api.bidder if not skip_bidder_api else None
         self.connectors["do"] = lnk.api.digitalocean 
         self.connectors["marathon"] = lnk.api.marathon
-        self.connectors["cassandra"] = lnk.dbs.cassandra if not skip_cassandra else None
+        try:
+            self.connectors["cassandra"] = lnk.dbs.cassandra if not skip_cassandra else None
+        except:
+            print "Cassandra not connected"
+            logging.error("Cassandra not connected")
+            self.connectors["cassandra"] = None
 
         self.connectors["hive"] = h.Hive().hive if include_hive is not False else None
 
@@ -34,33 +41,38 @@ class ConnectorConfig(object):
  
 
         if not skip_buffers:
-            self.connectors["filtered_imps"] = KafkaQueue(mock_connect=skip_filtered_imps)
-            self.connectors["conversion_imps"] = KafkaQueue(
-                mock_connect=skip_conversion_imps,topic="conversion_impsw",transform=ujson.loads
-            ) 
-            self.connectors["conversion_events"] = KafkaQueue(
-                mock_connect=skip_conversion_events,topic="conversion_events",transform=ujson.loads
-            )
-            self.connectors["visit_events"] = KafkaQueue(
-                mock_connect=skip_visit_events,topic="visit_events",transform=ujson.loads
-            )
-            self.connectors["served_imps"] = KafkaQueue(
-                mock_connect=skip_visit_events,topic="served_imps",transform=ujson.loads
-            )
-            self.connectors["treefilter"] = KafkaQueue(
-                mock_connect=skip_visit_events,topic="filtertree",transform=ujson.loads
-            )
+            try:
+                self.connectors["filtered_imps"] = KafkaQueue(mock_connect=skip_filtered_imps)
+                self.connectors["conversion_imps"] = KafkaQueue(
+                    mock_connect=skip_conversion_imps,topic="conversion_impsw",transform=ujson.loads
+                    ) 
+                self.connectors["conversion_events"] = KafkaQueue(
+                    mock_connect=skip_conversion_events,topic="conversion_events",transform=ujson.loads
+                    )
+                self.connectors["visit_events"] = KafkaQueue(
+                    mock_connect=skip_visit_events,topic="visit_events",transform=ujson.loads
+                    )
+                self.connectors["served_imps"] = KafkaQueue(
+                    mock_connect=skip_visit_events,topic="served_imps",transform=ujson.loads
+                    )
+                self.connectors["treefilter"] = KafkaQueue(
+                    mock_connect=skip_visit_events,topic="filtertree",transform=ujson.loads
+                    )
 
-            self.connectors["buffers"] = {
-                "track": streaming.track_buffer,
-                "view" : streaming.view_buffer,
-                "filtered_imps" : streaming.imps_buffer,
-                "conversion_imps": streaming.conversion_imps_buffer,
-                "conversion_events": streaming.conversion_events_buffer,
-                "visit_events": streaming.visit_events_buffer,
-                "served_imps": streaming.served_buffer,
-                "treefilter": streaming.treefilter_buffer
-            }                          
+                self.connectors["buffers"] = {
+                    "track": streaming.track_buffer,
+                    "view" : streaming.view_buffer,
+                    "filtered_imps" : streaming.imps_buffer,
+                    "conversion_imps": streaming.conversion_imps_buffer,
+                    "conversion_events": streaming.conversion_events_buffer,
+                    "visit_events": streaming.visit_events_buffer,
+                    "served_imps": streaming.served_buffer,
+                    "treefilter": streaming.treefilter_buffer
+                    }
+            except:
+                logging.error("One or more buffers not connected")
+                print "One or more buffers not connected"
+                self.connectors["buffers"] = None
         else:
             self.connectors["buffers"] = None
 
