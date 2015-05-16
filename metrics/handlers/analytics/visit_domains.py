@@ -26,7 +26,6 @@ class VisitDomainsHandler(BaseHandler, AnalyticsBase):
     def get_content(self, data):
         def default(self, data):
             df = Convert.df_to_json(data)
-            print df
             self.render("analysis/visit_urls.html", data=df)
         yield default, (data,)
 
@@ -34,7 +33,6 @@ class VisitDomainsHandler(BaseHandler, AnalyticsBase):
     @defer.inlineCallbacks
     def get_domains(self, uid, date_clause, kind):
         df = yield self.defer_get_domains(uid, date_clause)
-        print df
 
         if len(df) > 0:
             if kind == "domains":
@@ -50,6 +48,8 @@ class VisitDomainsHandler(BaseHandler, AnalyticsBase):
             raise Exception("Must specify url using url=")
 
         uids = uid.split(",")
+
+        xx = self.get_w_in(uids, date_clause)
 
         df = pandas.DataFrame(self.get_w_in(uids, date_clause))
 
@@ -90,7 +90,7 @@ class VisitDomainsHandler(BaseHandler, AnalyticsBase):
 
     @tornado.web.asynchronous
     def post(self):
-        print tornado.escape.json_decode(self.request.body)
+        #print tornado.escape.json_decode(self.request.body)
         formatted = self.get_argument("format", False)
         payload = tornado.escape.json_decode(self.request.body)
         

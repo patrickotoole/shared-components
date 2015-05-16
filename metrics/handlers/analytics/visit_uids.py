@@ -33,7 +33,6 @@ class VisitUidsHandler(BaseHandler, AnalyticsBase):
     @defer.inlineCallbacks
     def get_uids(self, url, date_clause):
         df = yield self.defer_get_uids(url, date_clause)
-        print df
         self.get_content(df)
 
     @decorators.deferred
