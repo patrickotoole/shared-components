@@ -12,8 +12,6 @@ from imps import ImpsHandler
 from viewable import ViewabilityHandler
 from logins import LoginsHandler
 from editable_base import EditableBaseHandler
-from opt_log import OptLogHandler
-from opt_rules import OptRulesHandler
 from funnel import FunnelHandler
 import appnexus
 import bidder
