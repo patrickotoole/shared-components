@@ -12,7 +12,7 @@ from imps import ImpsHandler
 from viewable import ViewabilityHandler
 from logins import LoginsHandler
 from editable_base import EditableBaseHandler
-from funnel import FunnelHandler
+import funnel
 import appnexus
 import bidder
 import opt

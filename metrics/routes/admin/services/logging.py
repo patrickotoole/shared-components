@@ -9,6 +9,7 @@ class LoggingRoutes(Routes):
         from handlers.adminreport import AdminReportHandler
         from lib.report.handlers import ReportingLogHandler
         import handlers.admin.scripts as scripts 
+        import handlers.admin.scripts.funnel as funnel
 
         return [
             (r'/report/(.*?)/.*', AdminReportHandler, {}),
@@ -23,6 +24,8 @@ class LoggingRoutes(Routes):
             (r'/opt_log/(.*?)', scripts.opt.OptLogHandler, self.connectors),
             (r'/opt_rules', scripts.opt.OptRulesHandler, self.connectors),
             (r'/opt_rules/(.*?)', scripts.opt.OptRulesHandler, self.connectors),
-            (r'/funnel', scripts.FunnelHandler, self.connectors),
-            (r'/funnel/(.*?)', scripts.FunnelHandler, self.connectors)
+            (r'/funnel/action', funnel.ActionHandler, self.connectors),
+            (r'/funnel/action/(.*?)', funnel.ActionHandler, self.connectors),
+            (r'/funnel', funnel.FunnelHandler, self.connectors),
+            (r'/funnel/(.*?)', funnel.FunnelHandler, self.connectors)
         ]

@@ -26,7 +26,7 @@ var submitForm = function() {
     });
 }
 
-RB.init = (function(){
+RB.init = function(){
     var uids = [];
     var domains = [];
     var URL = window.location.pathname + window.location.search
@@ -132,4 +132,4 @@ RB.init = (function(){
 	    });
 	});
     })
-});
+};

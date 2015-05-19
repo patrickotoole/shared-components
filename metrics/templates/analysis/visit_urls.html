@@ -6,10 +6,11 @@
   <script src="/static/js/jquery.min.js"></script>
   <script src="/static/js/crossfilter.min.js"></script> 
   <script src="/static/js/bootstrap.min.js"></script>
-  <script src="/static/js/rockerbox/rho/visit/visit_data.js"></script> 
-  <script src="/static/js/rockerbox/rho//visit/visit_controller.js"></script> 
-  <script src="/static/js/rockerbox/rho/visit/visit_ui.js"></script> 
   <script src="/static/js/rockerbox/rho/ui.filter.js"></script>  
+ <script src="/static/js/rockerbox/crusher/ui.js"></script>   
+ <script src="/static/js/rockerbox/crusher/ui.action.js"></script>    
+ <script src="/static/js/rockerbox/crusher/controller.js"></script>   
+
   <script src="/static/js/rockerbox/visit_urls.js"></script>
   <script src="/static/js/bootstrap-switch.js"></script>
   <script src="/static/js/jquery.serialize-object.js"></script>
@@ -19,6 +20,7 @@
   <link href="/static/js/chosen/chosen.min.css" rel="stylesheet"> 
   <link href="/static/css/bootstrap.css" rel="stylesheet"> 
   <link href="/static/css/bootstrap-switch.css" rel="stylesheet">
+
 
   <style>
 
@@ -49,7 +51,18 @@
     }
   </style>
 
-  <script> RB.init() </script>
+  <script> 
+    
+
+  $(document).ready(function(){
+    console.log("// start things") 
+    RB.init()  
+    RB.crusher.controller.init()
+    
+    console.log("// finish things")
+  })
+
+  </script>
 
 </head>
 
@@ -58,7 +71,12 @@
   <div style="position:fixed;width:200px;top:0px;left:0px;height:100%;background:black">
   
   </div>
+
   <div class="container" style="width:inherit;margin-left:200px">
+    <div class="row actions">
+      <div class="action-wrapper"></div>
+    </div>
+
     <h3>UID Targeting - On-site Data</h3>
     <br/>
 
