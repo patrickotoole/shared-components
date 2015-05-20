@@ -6,14 +6,17 @@ RB.crusher.ui = (function(ui) {
 
   var crusher = RB.crusher
 
-  ui.build = function(){
-    var targets = d3.selectAll(".action-wrapper").selectAll(".action")
-      .data([{"values":["a","b","c"]}])
-      .enter()
-        .append("div")
-        .classed("action",true) 
+  ui.add_action = function(dd) {
+    var wrapper = d3.selectAll(".action-wrapper")
 
-    ui.action.build(targets)
+    wrapper.append("button")
+      .classed("btn btn-xs",true)
+      .text("New action")
+      .on("click",crusher.controller.new_action.bind(this,wrapper,dd))
+  }
+
+  ui.build = function(dd){
+    ui.add_action(dd)
     console.log("building crusher...")   
   } 
 

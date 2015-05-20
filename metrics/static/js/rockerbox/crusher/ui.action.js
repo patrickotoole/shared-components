@@ -4,97 +4,151 @@ RB.crusher.ui = RB.crusher.ui || {}
 
 RB.crusher.ui.action = (function(action) {
 
-  action.add_pattern = function() {
-    var datum = this.datum(),
-      pattern_values = datum.values
-
-    datum.rows = datum.rows || []
-
-    datum.rows = datum.rows.concat([{
-      "values": pattern_values,
-      "selected": pattern_values[0]
-    }])
-
-    var patternSelector = this.selectAll(".action-pattern")
-      .data(datum.rows)
-      .enter()
-        .append("div")
-        .classed("action-pattern",true)
-
-    var rm = patternSelector.append("div")
-      .text("remove")
-      .on("click",function(){action.remove_pattern.bind(this.parentNode)()})
-
-    var selectBox = patternSelector.append("select")
-      .on("change",function(x){
-        x.selected = d3.selectAll(this.selectedOptions).data()
-      })
-
-    selectBox.selectAll("option")
-      .data(function(x){return x.values})
-      .enter()
-        .append("option")
-        .text(String) 
-
-  }
-
-  action.remove_pattern = function(){
-    var p = this.parentNode,
-      self = this,
-      patternSelector = d3.select(p).selectAll(".action-pattern");
-
-    var toRemove = patternSelector.filter(function(x,i){
-      x.position = i
-      return this == self
-    })
-
-    var data = d3.select(p).datum().rows
-    data.splice(toRemove.datum().position,1)
-
-    var selected = patternSelector.data(data,function(x){ 
-      return x.position
-    })
-
-    selected.exit().remove()
-    
-  }
-
-  action.summarize = function() {
+  action.save = function(callback) {
     
     var data = this.selectAll(".action-pattern").data()           
 
     var d = data.reduce(function(p,c){
-      p = p.concat(c.selected)
+      p = p.concat(c.url_pattern)
       return p
     },[])
 
-    var actionObj = {
-      name: this.selectAll("input").node().value,
-      patterns: d
-    }
+    var objectData = this.datum()
+    objectData.url_pattern = d
+    objectData.action_name = this.selectAll("input").node().value
+    objectData.operator = this.selectAll(".operator").node().value
 
-    console.log(actionObj)
-         
+    this.text("")
+    action.show(this,callback)
+
+    callback(objectData)
+
   }
 
-  action.build = function(target) {
-    target.append("h5") 
-      .text("action")
+  action.edit = function(newEdit,onSave) {
 
-    target.append("div")
+    newEdit.append("h5") 
+      .text(function(x){
+        return x.url_pattern ? "Edit an action" : "Create an action"
+      })
+
+    var group = newEdit.append("div")
+      .classed("input-group input-group-sm",true)
+
+    group.append("span")
+      .classed("input-group-addon",true)
+      .text("Action name")
+
+    group
       .append("input")
+      .classed("form-control",true)
+      .attr("placeholder","e.g., Landing pages")
+      .attr("value",function(x){return x.action_name})
 
-    var patterns = target.append("div")
-      .classed("action-patterns",true)
+    var operatorGroup = newEdit.append("div")
+      .classed("input-group input-group-sm",true)
+    
+    operatorGroup.append("span")
+      .classed("input-group-addon",true)
+      .text("Boolean operator")
+       
+    var operator = operatorGroup
+      .append("select")
+      .classed("operator form-control",true)
 
-    target.append("a")
-      .classed("bottom",true)
-      .text("add pattern-selector")
-      .on("click", action.add_pattern.bind(patterns))
+    var options = operator.selectAll("option")
+      .data(["and","or"])
+      .enter()
+        .append("option")
 
-    target.append("a")
-      .text("finish")
-      .on("click", action.summarize.bind(target))
+    options 
+      .text(String)
+      .attr("selected",function(x){
+        return x.operator
+      })
+
+    var newPatterns = newEdit.selectAll(".action-patterns")
+      .data(function(x){
+        if (x.url_pattern) {
+          x.rows = x.url_pattern.map(function(y){
+            return {"url_pattern":y,"values":x.values}
+          })
+        }
+        return [x]
+      })
+      .enter()
+        .append("div")
+        .classed("action-patterns",true)
+
+    action.pattern.add.bind(newPatterns)(false)
+
+    newEdit.append("a")
+      .classed("bottom btn btn-primary btn-xs",true)
+      .text("add")
+      .on("click", action.pattern.add.bind(newPatterns))
+
+    newEdit.append("a")
+      .text("save")
+      .classed("btn btn-success btn-xs",true)
+      .on("click", action.save.bind(newEdit,onSave))
+  }
+
+  action.show = function(target,onSave) {
+
+    target.append("h5")
+      .text(function(x){
+        return x.action_name
+      })
+
+    target.append("button")
+      .classed("btn btn-xs",true)
+      .text("edit")
+      .on("click",function(){
+        var edit = d3.select(this.parentNode)
+        edit.text("") // clear out the shit.
+        action.edit(edit,onSave)
+      })  
+  }
+
+  action.showAll = function(actions,onSave) {
+    
+    var selected = d3.selectAll(".action-wrapper")
+      .selectAll(".action")
+      .data(actions)
+
+    var newActions = selected
+      .enter()
+        .append("div")
+        .classed("action col-md-3",true)
+
+    action.show(newActions,onSave) 
+
+  }
+
+  action.showList = function(target,actions) {
+    var select = target.append("select")
+
+    select.selectAll("option")
+      .data(actions)
+      .enter()
+        .append("option")
+        .attr("value",function(x){return x.id})
+        .text(function(x){return x.action_name})
+
+  }
+
+  action.buildEdit = function(target,data,onSave) {
+
+    var edit = target.selectAll(".action")
+      .data(data)
+
+    var newEdit = edit
+      .enter()
+      .append("div")
+      .classed("action",true)
+
+    action.edit(newEdit,onSave)
+    
   }
 
   return action
