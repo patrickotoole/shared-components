@@ -59,7 +59,7 @@ RB.crusher.controller = (function(controller) {
     data['advertiser'] = source
     d3.xhr(actionURL)
       .header("Content-Type", "application/json")
-      .post(
+      .put(
         
         JSON.stringify(data),
         function(err, rawData){

@@ -68,7 +68,7 @@ class ActionTest(AsyncHTTPTestCase):
         action_json = """{
           "advertiser": "homie",
           "action_name" : "yo homie",
-          "url_patterns": ["a","b","c"],
+          "url_pattern": ["a","b","c"],
           "operator": "and"
         }"""
 
@@ -76,7 +76,62 @@ class ActionTest(AsyncHTTPTestCase):
 
         ajson = ujson.loads(_a)
         ojson = ujson.loads(action_json)
-
+        
         self.assertEqual(ajson['response']['action_name'],ojson['action_name'])
-        self.assertEqual(ajson['response']['url_patterns'],ojson['url_patterns']) 
+        self.assertEqual(ajson['response']['url_pattern'],ojson['url_pattern']) 
  
+    def test_update(self):
+        action_string = """
+            {
+                "pixel_source_name":"baublebar",
+                "action_name":"0",
+                "operator":"and",
+                "url_pattern":["http://www.baublebar.com/necklaces.html","http://www.baublebar.com/checkout/cart"],
+                "advertiser":"baublebar"
+            }
+        """
+
+        action_posted = self.fetch("/",method="POST",body=action_string).body
+        action_get_json = ujson.loads(self.fetch("/?advertiser=baublebar",method="GET").body)
+
+        self.assertEqual(ujson.loads(action_string)['action_name'],action_get_json[0]['action_name'])
+        self.assertEqual(ujson.loads(action_string)['url_pattern'],action_get_json[0]['url_pattern']) 
+
+
+        
+        action_json = ujson.loads(action_string)
+        action_json['action_name'] = "NEW NAME" 
+        action_put = self.fetch("/",method="PUT",body=ujson.dumps(action_json)).body
+        action_put_json = ujson.loads(action_put)['response']
+
+        self.assertEqual(action_put_json,"Need action_id to update action")
+
+
+        action_json['action_id'] = action_get_json[0]['action_id']
+        action_post = self.fetch("/",method="POST",body=ujson.dumps(action_json)).body
+        action_post_json = ujson.loads(action_put)['response']
+
+        self.assertEqual(action_put_json,"Need action_id to update action") 
+
+
+        action_put = self.fetch("/",method="PUT",body=ujson.dumps(action_json)).body
+        action_put_json = ujson.loads(action_put)['response']
+
+        self.assertEqual(action_put_json['action_name'],"NEW NAME") 
+
+        Q = "select * from action_patterns where action_id = %s"
+        df = self.db.select_dataframe(Q % action_get_json[0]['action_id'])
+        self.assertEqual(len(df),2)
+
+        action_json['url_pattern'] = ["only_one"]
+        action_put = self.fetch("/",method="PUT",body=ujson.dumps(action_json)).body
+        action_put_json = ujson.loads(action_put)['response']
+
+        self.assertEqual(action_put_json['url_pattern'],["only_one"]) 
+
+        df = self.db.select_dataframe(Q % action_get_json[0]['action_id']) 
+        self.assertEqual(len(df),1)
+          
+        
+        
+

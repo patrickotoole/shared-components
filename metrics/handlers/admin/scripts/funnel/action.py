@@ -98,8 +98,6 @@ class ActionHandler(tornado.web.RequestHandler):
         action = ujson.loads(body)
         action = dict(action.items() + [("start_date","0"),("end_date","0")])
 
-        import ipdb; ipdb.set_trace()
-        
         try:
             
             self.db.autocommit = False
@@ -133,12 +131,14 @@ class ActionHandler(tornado.web.RequestHandler):
         action = ujson.loads(body)
         
         try:
-            if (action.get("action_id",False) == False):
-                raise Exception("Action needs id to update") 
             
             self.db.autocommit = False
             conn = self.db.create_connection()
             cur = conn.cursor()
+
+            if (action.get("action_id",False) == False):
+                raise Exception("Need action_id to update action") 
+             
 
             excludes = ["action_id","url_pattern","advertiser"]
             fields = ", ".join(["%s=\"%s\"" % (i,j) for i,j in action.items() if not (i in excludes)])
@@ -178,14 +178,21 @@ class ActionHandler(tornado.web.RequestHandler):
         return action
 
     def put(self):
-        self.make_to_update(self.request.body)
+        try:
+            print self.request.body
+            data = self.make_to_update(self.request.body)
+            as_json = data
+            self.write(ujson.dumps({"response": as_json, "status": "ok"}))
+        except Exception, e:
+            print e
+            self.write(ujson.dumps({"response": str(e), "status": "error"}))
 
 
     def post(self):
         try:
             print self.request.body
             if "action_id" in self.request.body:
-                data = self.make_to_update(self.request.body)
+                raise Exception("Can't post and include an action_id")
             else:
                 data = self.make_to_insert(self.request.body)
             as_json = data
