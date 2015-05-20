@@ -10,10 +10,12 @@ CAMPAIGN_RULES = {
     'prosp_learn_bid_increase':{'action': 'INCREASE_MAX_BID'}
 }
 
-DF_COLS = [ 'CPM_daily', 'clicks', 'imps_served_daily', 'imps_served_total',
-            'last_served_date', 'media_cost', 'attr_conv', 'attr_conv_pc',
-            'max_bid', 'learn_total_imps_limit', 'learn_daily_imps_limit',
-            'learn_daily_cpm_limit', 'learn_max_bid_limit']
+
+DF_COLS = ['CPM_daily', 'clicks', 'imps_served_daily', 'imps_served_total', 
+            'last_served_date', 'media_cost', 'attr_conv', 'attr_conv_pc', 
+            'learn_total_imps_limit', 'learn_daily_imps_limit', 
+            'learn_daily_cpm_limit', 'learn_max_bid_limit', 'max_bid', 
+            'campaign_state']
 
 class CampaignAnalysis(Analysis):
 
@@ -24,10 +26,13 @@ class CampaignAnalysis(Analysis):
         self.to_run = {}
 
     def run_analysis(self):
+        self.logger.info("Starting Opt Rule Analysis ...")
+
         if len(self.df) > 0:
             self.analyze()            
             self.reshape()
         else:
+            self.logger.info("No data to run on")
             self.to_run = {}
 
     def extract_rule(self, rule_name):
@@ -44,6 +49,7 @@ class CampaignAnalysis(Analysis):
             self.opt_rules[rule_name]['metrics'] = metrics
 
         else:
+            logger.error("Extract rule failed with %s"%rule_name)
             raise Exception("Bad Rule: %s"%rule_name)
 
 
@@ -77,6 +83,7 @@ class CampaignAnalysis(Analysis):
         for rule in self.opt_rules.keys():
             for campaign in self.opt_rules[rule]['campaigns']:
                 if campaign not in self.df.index.get_values():
+                    logger.error("Missing campaigns %s in df" %campaign)
                     raise AttributeError("Missing campaigns %s in df" %campaign)
 
         ## Reshaping to campaigns level dictionary

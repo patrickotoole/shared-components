@@ -8,7 +8,7 @@ import time
 import numpy
 from copy import deepcopy
 from datetime import datetime
-
+import pprint
 TODAY = datetime.today().strftime('%Y-%m-%d')
 
 class CampaignAction(Action):
@@ -38,7 +38,10 @@ class CampaignAction(Action):
 
         r = self.rockerbox.post("/opt_log", data=json.dumps(log))
         if r.json['status'] != 'ok':
-            raise TypeError("Incorrect Opt Log %s" %str(log))
+            self.logger.error(r.text)
+            raise TypeError("Error with Opt Log:\n %s" %r.text)
+            
+        self.logger.info("push ok")
 
     def check_for_prev_run(self, campaign_id, rule_group_id):
 
@@ -53,6 +56,7 @@ class CampaignAction(Action):
 
     def increase_max_bids(self, max_bids_to_increase):
 
+        
         for campaign in max_bids_to_increase.keys():
             try:
                 max_bids_to_increase[campaign]['rule_group_id']
@@ -60,10 +64,15 @@ class CampaignAction(Action):
             except KeyError:
                 raise KeyError("to_exclude missing rule_group_id/metrics")
 
+        self.logger.info("INCREASING BIDS")
         for campaign in max_bids_to_increase.keys():
 
             old_max_bid = max_bids_to_increase[campaign]['metrics']['max_bid']
             new_max_bid = old_max_bid + self.run_params['increase_max_bid_by']
+
+            ## Changing to int if necessary, b/c Appnexus sucks
+            if old_max_bid % 1 == 0:
+                old_max_bid = int(old_max_bid)
 
             log = { "rule_group_id": max_bids_to_increase[campaign]['rule_group_id'],
                         "object_modified": "campaign",
@@ -77,13 +86,6 @@ class CampaignAction(Action):
             if self.check_for_prev_run(log['campaign_id'], log['rule_group_id']):
                 self.logger.info("Already ran on %s for %s" %(log['campaign_id'], TODAY))
             else:
-                self.logger.info(log)
+                self.logger.info("\n" + pprint.pformat(log) + "\n")
                 self.push_log(log)
                 time.sleep(3)
-
-
-
-
-
-
-

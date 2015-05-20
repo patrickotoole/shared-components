@@ -39,6 +39,9 @@ class Runner():
         Action.run()
 
 
+
+logger = logging.getLogger("opt")
+
 if __name__ == "__main__":
     import logsetup
     logsetup.configure_log(subject="prospecting_bid_opt")
@@ -71,6 +74,7 @@ if __name__ == "__main__":
 
     for config_name, params in configs.iteritems():
 
+
         if "end_date" not in params:
             params["end_date"] = datetime.today().strftime('%Y-%m-%d')
 
@@ -83,9 +87,12 @@ if __name__ == "__main__":
             # parameter value
             if param in command_line_args and command_line_args[param]:
                 params[param] = command_line_args[param]
-
+        
+        logger.info(config_name)
+        logger.info(params)
         runner = Runner(params)
         runner.run()
 
+        logger.info("prospecting_bid_opt finished successfully with config %s" %config_name)
 
 

@@ -138,6 +138,23 @@ class CampaignDataSource(DataSource):
             time.sleep(3)
         self.df['max_bid'] = max_bids
 
+    def get_campaign_state(self, campaign_id):
+        response = self.console.get("/campaign?id=%s"%campaign_id).json 
+        return response['response']['campaign']['state']
+
+        
+    def add_campaign_state(self):
+        
+        self.logger.info("Adding campaign_state...")
+        campaign_state = [None] * len(self.df)
+        for k in range(len(self.df)):
+            campaign_id = self.df.index[k]
+            campaign_state[k] = self.get_campaign_state(campaign_id)
+            time.sleep(3)
+            
+        self.df['campaign_state'] = campaign_state
+        
+
     def reshape(self):
 
         reporting_grouped = self.reporting_data.groupby('campaign_id')
@@ -159,7 +176,6 @@ class CampaignDataSource(DataSource):
         self.check_params(params)
         self.transform(params)
         self.filter()
-        self.add_max_bids()
 
 
     def check_params(self, params):
@@ -192,15 +208,15 @@ class CampaignDataSource(DataSource):
 
     def filter(self):
 
-        self.df = self.df[self.df['last_served_date'] >= self.end_date]
-        self.logger.info("Filtered Dataframe to {} campaigns".format(len(self.df)))
-
         if self.campaigns != "all":
             self.df = self.df[list(pd.Series(self.df.index).apply(lambda x: x in self.campaigns))]
             self.logger.info("Filtered Dataframe to {} campaigns".format(len(self.df)))
 
+        self.add_max_bids()
+        self.add_campaign_state()
 
-
+        self.df = self.df[self.df['campaign_state'] == "active"]
+        self.logger.info("Filtered Dataframe to {} active campaigns".format(len(self.df)))
 
 
 
