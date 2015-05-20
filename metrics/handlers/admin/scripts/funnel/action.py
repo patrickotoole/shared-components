@@ -116,6 +116,7 @@ class ActionHandler(tornado.web.RequestHandler):
                 } 
                 cur.execute(INSERT_ACTION_PATTERNS % pattern)
 
+            action['action_id'] = action_id
             conn.commit()
 
         except Exception as e:

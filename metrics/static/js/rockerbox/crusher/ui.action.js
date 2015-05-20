@@ -21,7 +21,7 @@ RB.crusher.ui.action = (function(action) {
     this.text("")
     action.show(this,callback)
 
-    callback(objectData)
+    callback(objectData,this)
 
   }
 

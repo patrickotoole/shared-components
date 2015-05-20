@@ -52,18 +52,23 @@ RB.crusher.controller = (function(controller) {
 
   }
 
-  controller.save_action = function(data) {
-    var data = JSON.parse(JSON.stringify(data))
-    delete data['values'];
-    delete data['rows']
-    data['advertiser'] = source
+  controller.save_action = function(data, obj) {
+    var cdata = JSON.parse(JSON.stringify(data))
+    delete cdata['values'];
+    delete cdata['rows']
+    cdata['advertiser'] = source
+
+    var onResponse = onResponse 
+
     d3.xhr(actionURL)
       .header("Content-Type", "application/json")
-      .put(
-        
-        JSON.stringify(data),
+      .send(
+        data['action_id'] ? "PUT" : "POST",
+        JSON.stringify(cdata),
         function(err, rawData){
-          console.log("got response", rawData.response);
+          var resp = JSON.parse(rawData.response)
+          data['action_id'] = resp['response']['action_id']
+          obj.filter(function(){return this}).datum(data)
         }
       );
     actionURL
