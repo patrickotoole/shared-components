@@ -95,13 +95,16 @@ RB.crusher.ui.action = (function(action) {
 
   action.show = function(target,onSave) {
 
-    target.append("h5")
+    var h5 = target.append("h5")
+
+    h5
+      .append("span")
       .text(function(x){
         return x.action_name
       })
 
-    target.append("button")
-      .classed("btn btn-xs",true)
+    h5.append("button")
+      .classed("btn btn-xs pull-right",true)
       .text("edit")
       .on("click",function(){
         var edit = d3.select(this.parentNode)
@@ -118,8 +121,9 @@ RB.crusher.ui.action = (function(action) {
 
     var newActions = selected
       .enter()
+        .append("div").classed("row col-md-12",true)
         .append("div")
-        .classed("action col-md-3",true)
+        .classed("action col-md-4",true)
 
     action.show(newActions,onSave) 
 
@@ -144,8 +148,8 @@ RB.crusher.ui.action = (function(action) {
 
     var newEdit = edit
       .enter()
-      .append("div")
-      .classed("action",true)
+      .append("div").classed("row col-md-12",true) 
+      .append("div").classed("action col-md-4",true)
 
     action.edit(newEdit,onSave)
     

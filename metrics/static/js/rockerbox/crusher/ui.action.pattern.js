@@ -24,6 +24,11 @@ RB.crusher.ui.action.pattern = (function(pattern) {
       .enter()
         .append("div")
         .classed("action-pattern input-group input-group-sm",true)
+
+    patternSelector.append("span")
+      .classed("input-group-addon",true)
+      .text(function(x,i) { return "Pattern " + (i+1)})
+        
     
     var selectBox = patternSelector
       .append("select")

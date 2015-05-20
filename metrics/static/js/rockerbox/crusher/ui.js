@@ -9,7 +9,9 @@ RB.crusher.ui = (function(ui) {
   ui.add_action = function(dd) {
     var wrapper = d3.selectAll(".action-wrapper")
 
-    wrapper.append("button")
+    d3.select(wrapper.node().parentNode)
+      .append("div").classed("button-wrapper",true)
+      .append("button")
       .classed("btn btn-xs",true)
       .text("New action")
       .on("click",crusher.controller.new_action.bind(this,wrapper,dd))
