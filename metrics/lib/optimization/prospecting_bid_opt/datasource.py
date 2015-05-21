@@ -10,18 +10,19 @@ import time
 
 CONV_DATA_QUERY = '''
 Select conversion_time, imp_time, pixel_id, pc, 
-campaign_id, campaign_name, user_id, creative_id, line_item_id
+campaign_id, campaign_name, user_id, creative_id, line_item_id, is_valid
 From v2_conversion_reporting 
 Where date(conversion_time) >= "%(start_date)s" AND date(conversion_time) <= "%(end_date)s" 
 AND external_advertiser_id = %(external_advertiser_id)s 
-AND deleted = 0 and active = 1 AND is_valid = 0
+AND deleted = 0 and active = 1
 '''
 
 CONV_DATA_DTYPES = {'user_id': dtype('O'), 'pixel_id': dtype('int64'), 
         'creative_id': dtype('int64'), 'campaign_id': dtype('int64'), 
         'imp_time': dtype('<M8[ns]'), 'pc': dtype('int64'), 
         'conversion_time': dtype('<M8[ns]'), 
-        'campaign_name': dtype('O'), 'line_item_id': dtype('int64')}
+        'campaign_name': dtype('O'), 'line_item_id': dtype('int64'),
+        'is_valid': dtype('int64')}
 
 
 REPORTING_DATA_QUERY = '''
@@ -116,7 +117,10 @@ class CampaignDataSource(DataSource):
 
     def aggregate_conv(self, x):
         x = x.sort('conversion_time')
-        cols = {'attr_conv': len(x), 'attr_conv_pc': x['pc'].sum() }
+        cols = {'total_conv': len(x),
+                'attr_conv': x['is_valid'].sum(), 
+                'attr_conv_pc': x['pc'].sum() 
+                }
         return cols
 
 
@@ -204,7 +208,8 @@ class CampaignDataSource(DataSource):
         self.df['learn_daily_imps_limit'] = params['learn_daily_imps_limit']
         self.df['learn_daily_cpm_limit'] = params['learn_daily_cpm_limit']
         self.df['learn_max_bid_limit'] = params['learn_max_bid_limit']
-
+        ## campaign deactivation
+        self.df['loss_limit'] = params['loss_limit']
 
     def filter(self):
 
