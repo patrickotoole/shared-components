@@ -82,14 +82,17 @@ RB.crusher.ui.action = (function(action) {
 
     action.pattern.add.bind(newPatterns)(false)
 
-    newEdit.append("a")
-      .classed("bottom btn btn-primary btn-xs",true)
-      .text("add")
+    newEdit.append("div")
+      .style("padding","10px")
+      .style("padding-top","0px") 
+      .append("a")
+      .classed("bottom btn btn-primary btn-sm pull-right",true)
+      .text("Add Pattern")
       .on("click", action.pattern.add.bind(newPatterns))
 
     newEdit.append("a")
-      .text("save")
-      .classed("btn btn-success btn-xs",true)
+      .text("Define Action")
+      .classed("btn btn-success btn-sm",true)
       .on("click", action.save.bind(newEdit,onSave))
   }
 
@@ -123,7 +126,7 @@ RB.crusher.ui.action = (function(action) {
       .enter()
         .append("div").classed("row col-md-12",true)
         .append("div")
-        .classed("action col-md-4",true)
+        .classed("action col-md-6",true)
 
     action.show(newActions,onSave) 
 
@@ -149,7 +152,7 @@ RB.crusher.ui.action = (function(action) {
     var newEdit = edit
       .enter()
       .append("div").classed("row col-md-12",true) 
-      .append("div").classed("action col-md-4",true)
+      .append("div").classed("action col-md-6",true)
 
     action.edit(newEdit,onSave)
     
