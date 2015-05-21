@@ -6,7 +6,7 @@ from tornado.testing import AsyncHTTPTestCase
 from tornado.web import  Application, RequestHandler
 from link import lnk
 
-import funnel
+import handlers.admin.scripts.funnel.funnel as funnel
 
 CREATE_FUNNEL_ACTION_TABLE = """
 CREATE TABLE `funnel_actions` (
@@ -97,7 +97,7 @@ INSERT INTO action_patterns (`action_id`,url_pattern)
 VALUES (1,"alans_pattern2") 
 """
  
- 
+POST_FIXTURE = """{"owner":"waikiki","advertiser":"baublebar","funnel_name":"landing+earings","actions":[{"url_pattern":["wills_pattern","wills_pattern_again"],"action_name":"wills_action","action_id":2},{"url_pattern":["alans_pattern","alans_pattern2"],"action_name":"alans_action","action_id":1}]}"""
  
  
 
@@ -179,9 +179,8 @@ class FunnelTest(AsyncHTTPTestCase):
 
 
     def test_put_action_order(self):
-        # changing order of funnel
-        obj = ujson.loads("""{"owner":"waikiki","advertiser":"baublebar","funnel_name":"landing+earings","actions":[{"url_pattern":["wills_pattern","wills_pattern_again"],"action_name":"wills_action","action_id":2},{"url_pattern":["alans_pattern","alans_pattern2"],"action_name":"alans_action","action_id":1}]}""")
-        
+
+        obj = ujson.loads(POST_FIXTURE)
 
         from_get = self.fetch("/?id=%s" % 1, method="GET")
         from_get_json = ujson.loads(from_get.body)[0]
@@ -189,9 +188,11 @@ class FunnelTest(AsyncHTTPTestCase):
 
         self.assertEqual([1,2],original_action_ids) 
 
+        # testing required field
         from_put = self.fetch("/", method="PUT",body=ujson.dumps(obj))
         self.assertTrue("must contain a funnel_id" in from_put.body)
         
+        # changing order of funnel 
         obj['funnel_id'] = 1
         from_put = self.fetch("/", method="PUT",body=ujson.dumps(obj))
         from_put_json = ujson.loads(str(from_put.body))
@@ -204,11 +205,11 @@ class FunnelTest(AsyncHTTPTestCase):
 
         self.assertEqual([2,1],action_ids)
         self.assertEqual(set(original_action_ids),set(action_ids))
+
  
     def test_put_add_remove_action(self):
-        # changing order of funnel
-        obj = ujson.loads("""{"owner":"waikiki","advertiser":"baublebar","funnel_name":"landing+earings","actions":[{"url_pattern":["wills_pattern","wills_pattern_again"],"action_name":"wills_action","action_id":2},{"url_pattern":["alans_pattern","alans_pattern2"],"action_name":"alans_action","action_id":1}]}""")
-        
+
+        obj = ujson.loads(POST_FIXTURE)
 
         from_get = self.fetch("/?id=%s" % 1, method="GET")
         from_get_json = ujson.loads(from_get.body)[0]
@@ -226,16 +227,29 @@ class FunnelTest(AsyncHTTPTestCase):
         
         self.assertEqual(from_put_json['response'],obj)
 
+        from_get = self.fetch("/?id=%s" % 1, method="GET")
+        from_get_json = ujson.loads(from_get.body)[0]
+        action_ids = map(lambda x: x['action_id'], from_get_json['actions'])
+
+        self.assertEqual([2],action_ids) 
+
         df = self.db.select_dataframe("select * from funnel_actions where funnel_id = 1")
+
         self.assertEqual(len(df),1)
 
-        # deleting action from funnel
+        # adding action to funnel
         obj['funnel_id'] = 1
         obj['actions'] = stored_actions
         from_put = self.fetch("/", method="PUT",body=ujson.dumps(obj))
         from_put_json = ujson.loads(str(from_put.body))
         
         self.assertEqual(from_put_json['response'],obj)
+
+        from_get = self.fetch("/?id=%s" % 1, method="GET")
+        from_get_json = ujson.loads(from_get.body)[0]
+        action_ids = map(lambda x: x['action_id'], from_get_json['actions'])
+
+        self.assertEqual(set(original_action_ids),set(action_ids))
 
         df = self.db.select_dataframe("select * from funnel_actions where funnel_id = 1")
         self.assertEqual(len(df),2)
