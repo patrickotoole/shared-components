@@ -23,6 +23,7 @@ RB.crusher.controller = (function(controller) {
   var source = qs.source
   var actionURL = "/admin/funnel/action?advertiser=" + source
   var visitURL = "/visit_urls?format=json&source=" + source
+  var visitUID = "/visit_uids?format=json&url="
   var funnelURL = "/admin/funnel?advertiser=" + source
 
   var addParam = function(u,p) { 
@@ -44,9 +45,9 @@ RB.crusher.controller = (function(controller) {
           return x
         })
 
-        //crusher.ui.action.showAll(actions,controller.save_action)
+        crusher.ui.action.showAll(actions,controller.save_action)
         //crusher.ui.action.showList(d3.select(".funnel-wrapper"),actions)
-        //crusher.ui.build(crusher.urls) 
+        crusher.ui.build(crusher.urls) 
         
 
         d3.json(funnelURL, function(dd) {
@@ -55,11 +56,29 @@ RB.crusher.controller = (function(controller) {
           console.log(crusher.funnelData)
           crusher.ui.funnel.build(crusher.funnelData,crusher.urls,crusher.actionData)
           crusher.ui.add_funnel_action(actions) 
+          crusher.ui.compute_funnel()
         })
  
       })
-
     
+    })
+  }
+
+  controller.get_action_data = function(action) {
+
+    var domains = []
+
+    action.all[0].values.map(function(d){
+      action.url_pattern.map(function(x){
+        if (d.indexOf(x) > -1) domains.push(d)
+      })
+    })
+
+    var domain_str = domains.join(",")
+
+    d3.json(visitUID + domain_str,function(dd){
+      action.uids = dd.map(function(x){return x.uid})
+      action.count = dd.length
     })
   }
 

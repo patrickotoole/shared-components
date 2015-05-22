@@ -17,6 +17,17 @@ RB.crusher.ui = (function(ui) {
       .text("New funnel action")
       .on("click",crusher.controller.new_funnel_action.bind(this,action_wrapper,dd))
   }
+
+  ui.compute_funnel = function(){
+    var wrapper = d3.selectAll(".add-funnel-action-wrapper")
+
+    wrapper
+      .append("div").classed("button-wrapper",true)
+      .append("button")
+      .classed("btn btn-xs",true)
+      .text("Compute Funnel")
+      .on("click",crusher.ui.funnel.show)
+  }
  
 
   ui.add_action = function(dd) {

@@ -13,6 +13,9 @@ RB.crusher.ui.funnel = (function(funnel) {
       .data(function(x){
         return x.actions.map(function(y){
           y.all = actions
+
+          crusher.controller.get_action_data(y) 
+
           return y
         })
       })
@@ -33,8 +36,11 @@ RB.crusher.ui.funnel = (function(funnel) {
           x[i] = i != "all" ? selectedData[i] : x[i]
         }
 
+        crusher.controller.get_action_data(x)
+
         var funnel = d3.select(this.parentNode.parentNode.parentNode) 
-        crusher.controller.save_funnel(funnel.datum())
+        var funnel_datum = funnel.datum()
+        crusher.controller.save_funnel(funnel_datum)
 
       })
       
@@ -52,7 +58,33 @@ RB.crusher.ui.funnel = (function(funnel) {
   }
 
   funnel.show = function() {
-  
+    var funnel = d3.selectAll(".funnel-wrapper").selectAll(".funnel") 
+    var data = funnel.datum()
+
+    data.actions.reduce(function(p,c){
+      
+      var intersected = []
+      c.uids.map(function(x){
+        if (p.indexOf(x) > -1) intersected.push(x)
+      })
+      
+      c.funnel_uids = intersected
+      c.funnel_count = c.funnel_uids.length
+
+      return c.funnel_uids
+    },data.actions[0].uids)
+
+    var display = d3.selectAll(".funnel-display").selectAll("div")
+      .data(data.actions)
+
+    display
+      .enter()
+        .append("div")
+        .text(function(x,i){return "Step " + (i+1) + ": " + x.funnel_count})
+
+    display
+      .text(function(x,i){return "Step " + (i+1) + ": " + x.funnel_count})
+
   }
 
   funnel.add_action = function(target,options) {
