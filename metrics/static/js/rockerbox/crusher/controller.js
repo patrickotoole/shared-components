@@ -23,6 +23,7 @@ RB.crusher.controller = (function(controller) {
   var source = qs.source
   var actionURL = "/admin/funnel/action?advertiser=" + source
   var visitURL = "/visit_urls?format=json&source=" + source
+  var funnelURL = "/admin/funnel?advertiser=" + source
 
   var addParam = function(u,p) { 
     return u.indexOf("?") >= 0 ? u + "&" + p : u + "?" + p 
@@ -43,13 +44,42 @@ RB.crusher.controller = (function(controller) {
           return x
         })
 
-        crusher.ui.action.showAll(actions,controller.save_action)
-        crusher.ui.action.showList(d3.select(".funnel-wrapper"),actions)
-        crusher.ui.build(crusher.urls) 
+        //crusher.ui.action.showAll(actions,controller.save_action)
+        //crusher.ui.action.showList(d3.select(".funnel-wrapper"),actions)
+        //crusher.ui.build(crusher.urls) 
+        
+
+        d3.json(funnelURL, function(dd) {
+          crusher.funnelData = dd
+
+          console.log(crusher.funnelData)
+          crusher.ui.funnel.build(crusher.funnelData,crusher.urls,crusher.actionData)
+          crusher.ui.add_funnel_action(actions) 
+        })
+ 
       })
 
+    
+    })
+  }
+
+  controller.save_funnel = function(data) {
+    var cdata = JSON.parse(JSON.stringify(data))
+    cdata.actions.map(function(action){
+      delete action['all']
+      return action
     })
 
+    d3.xhr(funnelURL)
+      .header("Content-Type", "application/json")
+      .send(
+        data['funnel_id'] ? "PUT" : "POST",
+        JSON.stringify(cdata),
+        function(err, rawData){
+          var resp = JSON.parse(rawData.response)
+        }
+      );
+     
   }
 
   controller.save_action = function(data, obj) {
@@ -57,8 +87,6 @@ RB.crusher.controller = (function(controller) {
     delete cdata['values'];
     delete cdata['rows']
     cdata['advertiser'] = source
-
-    var onResponse = onResponse 
 
     d3.xhr(actionURL)
       .header("Content-Type", "application/json")
@@ -71,7 +99,7 @@ RB.crusher.controller = (function(controller) {
           obj.filter(function(){return this}).datum(data)
         }
       );
-    actionURL
+    //actionURL
   }
 
   controller.new_action = function(target,options) {
@@ -82,7 +110,12 @@ RB.crusher.controller = (function(controller) {
     crusher.ui.action.buildEdit(target,crusher.actionData,controller.save_action)
 
   }                 
-  
+
+  controller.new_funnel_action = function(target,options) {
+    
+    crusher.ui.funnel.add_action(target,options)
+
+  }  
   return controller
 
 })(RB.crusher.controller || {}) 
