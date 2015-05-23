@@ -24,6 +24,7 @@ RB.crusher.controller = (function(controller) {
   var actionURL = "/admin/funnel/action?advertiser=" + source
   var visitURL = "/visit_urls?format=json&source=" + source
   var visitUID = "/visit_uids?format=json&url="
+  var visitDomains = "/visit_domains?format=json&kind=domains"
   var funnelURL = "/admin/funnel?advertiser=" + source
 
   var addParam = function(u,p) { 
@@ -64,6 +65,22 @@ RB.crusher.controller = (function(controller) {
     })
   }
 
+  controller.get_domains = function(uids,callback) {
+    var data = {
+      "uids":uids
+    }
+    d3.xhr(visitDomains)
+      .header("Content-Type", "application/json")
+      .post(
+        JSON.stringify(data),
+        function(err, rawData){
+          var resp = JSON.parse(rawData.response)
+          callback(resp)
+        }
+      );
+     
+  }
+
   controller.get_action_data = function(action) {
 
     var domains = []
@@ -74,12 +91,28 @@ RB.crusher.controller = (function(controller) {
       })
     })
 
-    var domain_str = domains.join(",")
+    var obj = {"urls": domains}
 
+    d3.xhr(visitUID)
+      .header("Content-Type", "application/json")
+      .post(
+        JSON.stringify(obj),
+        function(err, rawData){
+          var dd = JSON.parse(rawData.response)
+          action.uids = dd.map(function(x){return x.uid})
+          action.count = dd.length 
+        }
+      );
+     
+
+    /*
     d3.json(visitUID + domain_str,function(dd){
       action.uids = dd.map(function(x){return x.uid})
       action.count = dd.length
     })
+    */
+
+
   }
 
   controller.save_funnel = function(data) {

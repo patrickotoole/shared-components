@@ -58,33 +58,60 @@ RB.crusher.ui.funnel = (function(funnel) {
   }
 
   funnel.show = function() {
-    var funnel = d3.selectAll(".funnel-wrapper").selectAll(".funnel") 
-    var data = funnel.datum()
+    var f = d3.selectAll(".funnel-wrapper").selectAll(".funnel") 
+    var data = f.datum()
 
-    data.actions.reduce(function(p,c){
+    var reduced = data.actions.reduce(function(p,c){
       
       var intersected = []
-      c.uids.map(function(x){
-        if (p.indexOf(x) > -1) intersected.push(x)
-      })
+
+      if (p == false) {
+        intersected = c.uids
+      } else {
+        c.uids.map(function(x){
+          if (p.indexOf(x) > -1) intersected.push(x)
+        })
+      }
       
       c.funnel_uids = intersected
       c.funnel_count = c.funnel_uids.length
 
       return c.funnel_uids
-    },data.actions[0].uids)
+    }, false)
 
-    var display = d3.selectAll(".funnel-display").selectAll("div")
+    var display = d3.selectAll(".funnel-display").selectAll(".step")
       .data(data.actions)
 
     display
       .enter()
         .append("div")
+        .classed("step",true)
         .text(function(x,i){return "Step " + (i+1) + ": " + x.funnel_count})
 
     display
       .text(function(x,i){return "Step " + (i+1) + ": " + x.funnel_count})
 
+    crusher.controller.get_domains(reduced,funnel.show_domains)
+    
+  }
+
+  funnel.show_domains = function(domains) {
+    var domains = d3.selectAll(".funnel-domain-display").selectAll(".domain")
+      .data(domains)
+
+    domains.enter()
+      .append("div")
+      .classed("domain",true)
+      .text(JSON.stringify)
+      //.text(function(x){return x.domain})
+    
+    domains
+      .text(JSON.stringify) 
+      .sort(function(x,y){ return y.uid - x.uid})
+
+    domains.exit()
+      .remove()
+     
   }
 
   funnel.add_action = function(target,options) {

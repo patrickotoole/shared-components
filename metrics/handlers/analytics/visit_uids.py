@@ -43,6 +43,7 @@ class VisitUidsHandler(BaseHandler, AnalyticsBase):
             raise Exception("Must specify url using url=")
 
         urls = url.split(",")
+        urls = map(lambda x: x.replace("badcomma",","),urls)
         data = []
 
         # df = pandas.DataFrame(self.get_w_futures(urls))
@@ -56,8 +57,11 @@ class VisitUidsHandler(BaseHandler, AnalyticsBase):
             where = where + " and {}".format(date_clause)
         in_clause = self.make_in_clause(urls)
         WHERE = where.format(in_clause)
-        logging.info(self.query + WHERE)
-        return self.cassandra.execute(self.query + WHERE)
+        QUERY = self.query + WHERE 
+
+        #logging.info(QUERY)
+        
+        return self.cassandra.execute(QUERY)
 
     def get_w_futures(self, urls):
         queries = []
@@ -88,3 +92,23 @@ class VisitUidsHandler(BaseHandler, AnalyticsBase):
             )
         else:
             self.get_content(pandas.DataFrame())
+
+    @tornado.web.asynchronous
+    def post(self):
+        formatted = self.get_argument("format", False)
+        start_date = self.get_argument("start_date", "")
+        end_date = self.get_argument("end_date", "")
+        date = self.get_argument("date", "")
+
+        date_clause = self.make_date_clause("timestamp", date, start_date, end_date)
+
+        urls = map(lambda x: x.replace("'","-").replace(",","badcomma"), ujson.loads(self.request.body)['urls'])
+        url = ",".join(urls).encode('utf-8').decode("ascii","ignore")
+
+        if formatted:
+            self.get_uids(
+                url,
+                date_clause
+            )
+        else:
+            self.get_content(pandas.DataFrame()) 
