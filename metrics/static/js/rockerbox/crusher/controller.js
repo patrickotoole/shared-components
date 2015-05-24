@@ -85,7 +85,7 @@ RB.crusher.controller = (function(controller) {
     var domains = []
 
 
-    action.all.length && action.all[0].values.map(function(d){
+    action.all.length && action.all[0].values && action.all[0].values.map(function(d){
       action.url_pattern.map(function(x){
         if (d.indexOf(x) > -1) domains.push(d)
       })

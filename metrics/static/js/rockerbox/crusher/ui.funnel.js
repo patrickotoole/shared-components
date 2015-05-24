@@ -18,13 +18,20 @@ RB.crusher.ui.funnel = (function(funnel) {
 
           return y
         })
-      })
+      },function(x){return x.action_id})
+
+    actions.exit()
+      .remove()
+
+    actions.select(".step")
+      .text(function(x,i){return "Step " + (i+1) + ": "}) 
 
     var newActions = actions
         .enter()
         .append("div").classed("action",true)
 
     newActions.append("div")
+      .classed("step",true)
       .style("float","left")
       .text(function(x,i){return "Step " + (i+1) + ": "})
 
@@ -55,6 +62,21 @@ RB.crusher.ui.funnel = (function(funnel) {
           var data = d3.select(this.parentNode).datum()
           return x.action_name == data.action_name ? "selected" : null
         })
+
+    newActions.append("div")
+      .text("remove")
+      .on("click",function(x){
+        var funnel_datum = d3.select(this.parentNode.parentNode).datum()
+        var data = d3.select(this).datum()
+        
+        funnel_datum.actions = funnel_datum.actions.filter(function(x){return x != data})
+
+        // need to save the funnel here
+
+        crusher.controller.save_funnel(funnel_datum) 
+        funnel.edit(funnels,actions)
+
+      })
   }
 
   funnel.show = function() {
