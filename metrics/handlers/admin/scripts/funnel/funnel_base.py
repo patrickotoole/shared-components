@@ -77,6 +77,7 @@ class FunnelBase(tornado.web.RequestHandler):
             })
 
     def get_from_db(self,where):
+        QUERY = GET % {"where": where}
         return self.db.select_dataframe(GET % {"where": where})
 
     def get_all(self):
@@ -90,5 +91,3 @@ class FunnelBase(tornado.web.RequestHandler):
     def get_funnel_by_id(self, _id):
         where = "a.funnel_id = '{}'".format(_id)
         return self.get_from_db(where)
-      
- 

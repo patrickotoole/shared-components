@@ -4,6 +4,8 @@ RB.crusher.ui = RB.crusher.ui || {}
 
 RB.crusher.ui.action = (function(action) {
 
+  var crusher = RB.crusher
+
   action.save = function(callback) {
     
     var data = this.selectAll(".action-pattern").data()           
@@ -107,13 +109,24 @@ RB.crusher.ui.action = (function(action) {
       })
 
     h5.append("button")
-      .classed("btn btn-xs pull-right",true)
+      .classed("btn  btn-xs pull-right",true)
       .text("edit")
       .on("click",function(){
         var edit = d3.select(this.parentNode)
         edit.text("") // clear out the shit.
         action.edit(edit,onSave)
+      }) 
+
+    h5.append("button")
+      .classed("btn btn-danger btn-xs pull-right",true)
+      .text("remove")
+      .on("click",function(){
+        var edit = d3.select(this.parentNode)
+        edit.text("") // clear out the shit.
+        crusher.controller.delete_action(edit.datum())
       })  
+
+      
   }
 
   action.showAll = function(actions,onSave) {

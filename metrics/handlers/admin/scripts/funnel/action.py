@@ -31,6 +31,14 @@ WHERE action_id = %(action_id)s
 DELETE_ACTION_PATTERNS = """
 DELETE FROM action_patterns where action_id = %(action_id)s and url_pattern = "%(url_pattern)s"
 """
+
+DELETE_ACTION = """
+DELETE FROM action where action_id = %(action_id)s
+"""
+
+DELETE_ACTION_PATTERN = """
+DELETE FROM action_patterns where action_id = %(action_id)s
+"""
  
 
 
@@ -187,6 +195,33 @@ class ActionHandler(tornado.web.RequestHandler):
         except Exception, e:
             print e
             self.write(ujson.dumps({"response": str(e), "status": "error"}))
+
+    def delete(self):
+        action_id = self.get_argument("action_id",False)
+        if not action_id:
+            self.write("failed to delete, missing ?action_id=")
+            self.finish()
+            return
+        action = {"action_id":action_id}
+        try:
+            self.db.autocommit = False
+            conn = self.db.create_connection()
+            cur = conn.cursor()
+            
+            cur.execute(DELETE_ACTION % action)
+            cur.execute(DELETE_ACTION_PATTERN % action) 
+                
+            conn.commit()
+
+        except Exception as e:
+            conn.rollback()
+            raise e
+        finally:
+            self.db.autocommit = True            
+        self.write("ok")
+        self.finish()
+
+                     
 
 
     def post(self):

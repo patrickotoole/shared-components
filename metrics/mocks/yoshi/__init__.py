@@ -114,6 +114,32 @@ def get_all_mock(url,*args,**kwargs):
     }
 
     return services[service](qs)
+
+def select_dataframe(query):
+
+    if "FROM funnel" in query:
+        as_list = [{'pixel_source_name': 'baublebar', 'funnel_name': 'landing+earings', 'url_pattern': 'alans_pattern', 'action_name': 'alans_action', 'operator': 'and', 'owner': 'waikiki', 'order': 1.0, 'funnel_id': 1, 'action_id': 1.0}, {'pixel_source_name': 'baublebar', 'funnel_name': 'landing+earings', 'url_pattern': 'wills_pattern', 'action_name': 'wills_action', 'operator': 'and', 'owner': 'waikiki', 'order': 2.0, 'funnel_id': 1, 'action_id': 2.0}, {'pixel_source_name': 'baublebar', 'funnel_name': 'landing+earings', 'url_pattern': 'alans_pattern2', 'action_name': 'alans_action', 'operator': 'and', 'owner': 'waikiki', 'order': 1.0, 'funnel_id': 1, 'action_id': 1.0}, {'pixel_source_name': 'baublebar', 'funnel_name': 'landing+earings', 'url_pattern': 'wills_pattern_again', 'action_name': 'wills_action', 'operator': 'and', 'owner': 'waikiki', 'order': 2.0, 'funnel_id': 1, 'action_id': 2.0}, {'pixel_source_name': 'baublebar', 'funnel_name': 'other', 'url_pattern': 0, 'action_name': 0, 'operator': 0, 'owner': 'makiki', 'order': 0.0, 'funnel_id': 2, 'action_id': 0.0}]
+
+        return pandas.DataFrame(as_list) 
+
+    elif "from action_patterns" in query:
+        as_list = [{'url_pattern': 'http://www.baublebar.com/necklaces.html', 'action_id': 3}, {'url_pattern': 'http://www.baublebar.com/checkout/cart', 'action_id': 3}]
+
+        return pandas.DataFrame(as_list)
+     
+    elif "from action" in query:
+
+        as_list = [{'pixel_source_name': 'baublebar', 'end_date': '0', 'action_name': 'alans_action', 'operator': 'and', 'start_date': '0', 'action_id': 1}, {'pixel_source_name': 'baublebar', 'end_date': '0', 'action_name': 'wills_action', 'operator': 'and', 'start_date': '0', 'action_id': 2}]
+
+        return pandas.DataFrame(as_list)
+
+    elif "from funnel_actions" in query:
+
+        as_list = [{'order': 1, 'funnel_id': 1, 'action_id': 1}, {'order': 2, 'funnel_id': 1, 'action_id': 2}, {'order': 2, 'funnel_id': 3, 'action_id': 1}, {'order': 1, 'funnel_id': 3, 'action_id': 2}]
+        return pandas.DataFrame(as_list)
+
+    
+    return pandas.DataFrame([{"external_advertiser_id":1}]) 
  
 
 API = mock.MagicMock()
@@ -122,4 +148,4 @@ API.get.side_effect = get_mock
 API.get_all_pages.side_effect = get_all_mock 
 API.put.side_effect = put_mock 
 API.post.side_effect = post_mock 
-API.select_dataframe.side_effect = lambda x: pandas.DataFrame([{"external_advertiser_id":1}])
+API.select_dataframe.side_effect = select_dataframe

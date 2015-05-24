@@ -54,7 +54,6 @@ RB.crusher.controller = (function(controller) {
         d3.json(funnelURL, function(dd) {
           crusher.funnelData = dd
 
-          console.log(crusher.funnelData)
           crusher.ui.funnel.build(crusher.funnelData,crusher.urls,crusher.actionData)
           crusher.ui.add_funnel_action(actions) 
           crusher.ui.compute_funnel()
@@ -85,7 +84,8 @@ RB.crusher.controller = (function(controller) {
 
     var domains = []
 
-    action.all[0].values.map(function(d){
+
+    action.all.length && action.all[0].values.map(function(d){
       action.url_pattern.map(function(x){
         if (d.indexOf(x) > -1) domains.push(d)
       })
@@ -162,6 +162,22 @@ RB.crusher.controller = (function(controller) {
     crusher.ui.action.buildEdit(target,crusher.actionData,controller.save_action)
 
   }                 
+
+  controller.delete_action = function(action){
+    console.log(action)
+
+    d3.xhr(actionURL + "&action_id=" + action.action_id)
+      .header("Content-Type", "application/json")
+      .send(
+        "DELETE",
+        function(err, rawData){
+          var resp = JSON.parse(rawData.response)
+          data['action_id'] = resp['response']['action_id']
+          obj.filter(function(){return this}).datum(data)
+        }
+      ); 
+  
+  }
 
   controller.new_funnel_action = function(target,options) {
     
