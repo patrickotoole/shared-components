@@ -46,7 +46,7 @@ RB.crusher.controller = (function(controller) {
           return x
         })
 
-        crusher.ui.action.showAll(actions,controller.save_action)
+        //crusher.ui.action.showAll(actions,controller.save_action)
         //crusher.ui.action.showList(d3.select(".funnel-wrapper"),actions)
         crusher.ui.build(crusher.urls) 
         
@@ -55,7 +55,6 @@ RB.crusher.controller = (function(controller) {
           crusher.funnelData = dd
 
           crusher.ui.funnel.build(crusher.funnelData,crusher.urls,crusher.actionData)
-          crusher.ui.add_funnel_action(actions) 
           crusher.ui.compute_funnel()
         })
  
@@ -80,107 +79,98 @@ RB.crusher.controller = (function(controller) {
      
   }
 
-  controller.get_action_data = function(action) {
-
-    var domains = []
-
-
-    action.all.length && action.all[0].values && action.all[0].values.map(function(d){
-      action.url_pattern.map(function(x){
-        if (d.indexOf(x) > -1) domains.push(d)
-      })
-    })
-
-    var obj = {"urls": domains}
-
-    d3.xhr(visitUID)
-      .header("Content-Type", "application/json")
-      .post(
-        JSON.stringify(obj),
-        function(err, rawData){
-          var dd = JSON.parse(rawData.response)
-          action.uids = dd.map(function(x){return x.uid})
-          action.count = dd.length 
-        }
-      );
-     
-
-    /*
-    d3.json(visitUID + domain_str,function(dd){
-      action.uids = dd.map(function(x){return x.uid})
-      action.count = dd.length
-    })
-    */
-
-
-  }
-
-  controller.save_funnel = function(data) {
-    var cdata = JSON.parse(JSON.stringify(data))
-    cdata.actions.map(function(action){
-      delete action['all']
-      return action
-    })
-
-    d3.xhr(funnelURL)
-      .header("Content-Type", "application/json")
-      .send(
-        data['funnel_id'] ? "PUT" : "POST",
-        JSON.stringify(cdata),
-        function(err, rawData){
-          var resp = JSON.parse(rawData.response)
-        }
-      );
-     
-  }
-
-  controller.save_action = function(data, obj) {
-    var cdata = JSON.parse(JSON.stringify(data))
-    delete cdata['values'];
-    delete cdata['rows']
-    cdata['advertiser'] = source
-
-    d3.xhr(actionURL)
-      .header("Content-Type", "application/json")
-      .send(
-        data['action_id'] ? "PUT" : "POST",
-        JSON.stringify(cdata),
-        function(err, rawData){
-          var resp = JSON.parse(rawData.response)
-          data['action_id'] = resp['response']['action_id']
-          obj.filter(function(){return this}).datum(data)
-        }
-      );
-    //actionURL
-  }
-
-  controller.new_action = function(target,options) {
-
-    var defaultAction = [{"values":options}]
-
-    crusher.actionData = crusher.actionData.concat(defaultAction) 
-    crusher.ui.action.buildEdit(target,crusher.actionData,controller.save_action)
-
-  }                 
-
-  controller.delete_action = function(action){
-    console.log(action)
-
-    d3.xhr(actionURL + "&action_id=" + action.action_id)
-      .header("Content-Type", "application/json")
-      .send(
-        "DELETE",
-        function(err, rawData){
-          var resp = JSON.parse(rawData.response)
-          data['action_id'] = resp['response']['action_id']
-          obj.filter(function(){return this}).datum(data)
-        }
-      ); 
   
+
+
+  controller.funnel = {
+    new: function(target) {
+      crusher.ui.funnel.add_funnel(target)
+    },
+    save: function(data) {
+      var cdata = JSON.parse(JSON.stringify(data)),
+        type = data['funnel_id'] ? "PUT" : "POST";
+
+      cdata.actions.map(function(action){ delete action['all'] })
+
+      d3.xhr(funnelURL)
+        .header("Content-Type", "application/json")
+        .send(type, JSON.stringify(cdata), function(err, rawData){});
+    }
   }
+
+  controller.action = {
+    new: function(target,options) {
+      var defaultAction = [{"values":options}]
+
+      crusher.actionData = crusher.actionData.concat(defaultAction) 
+      crusher.ui.action.buildEdit(target,crusher.actionData,controller.save_action)
+    },
+    delete: function(action){
+      d3.xhr(actionURL + "&action_id=" + action.action_id)
+        .header("Content-Type", "application/json")
+        .send(
+          "DELETE",
+          function(err, rawData){
+            var resp = JSON.parse(rawData.response)
+            data['action_id'] = resp['response']['action_id']
+            obj.filter(function(){return this}).datum(data)
+          }
+        ); 
+    },
+    save: function(data, obj) {
+      var cdata = JSON.parse(JSON.stringify(data)),
+        type = data['action_id'] ? "PUT" : "POST";
+
+      delete cdata['values'];
+      delete cdata['rows']
+
+      cdata['advertiser'] = source
+
+      d3.xhr(actionURL)
+        .header("Content-Type", "application/json")
+        .send(type,
+          JSON.stringify(cdata),
+          function(err, rawData){
+            var resp = JSON.parse(rawData.response)
+            data['action_id'] = resp['response']['action_id']
+            obj.filter(function(){return this}).datum(data)
+          }
+        );                    
+    },
+    get: function(action) {
+      var domains = []
+  
+      action.all.length && action.all[0].values && action.all[0].values.map(function(d){
+        action.url_pattern.map(function(x){
+          if (d.indexOf(x) > -1) domains.push(d)
+        })
+      })
+  
+      var obj = {"urls": domains}
+  
+      d3.xhr(visitUID)
+        .header("Content-Type", "application/json")
+        .post(
+          JSON.stringify(obj),
+          function(err, rawData){
+            var dd = JSON.parse(rawData.response)
+            action.uids = dd.map(function(x){return x.uid})
+            action.count = dd.length 
+          }
+        );
+    }
+  }
+
+
+  controller.new_funnel = controller.funnel.new 
+  controller.save_funnel = controller.funnel.save
+  
+  controller.get_action_data = controller.action.get 
+  controller.new_action = controller.action.new
+  controller.save_action = controller.action.save 
+  controller.delete_action = controller.action.delete
 
   controller.new_funnel_action = function(target,options) {
-    
     crusher.ui.funnel.add_action(target,options)
 
   }  
