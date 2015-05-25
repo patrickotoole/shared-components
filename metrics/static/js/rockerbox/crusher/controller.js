@@ -55,7 +55,7 @@ RB.crusher.controller = (function(controller) {
           crusher.funnelData = dd
 
           crusher.ui.funnel.build(crusher.funnelData,crusher.urls,crusher.actionData)
-          crusher.ui.compute_funnel()
+          //crusher.ui.compute_funnel()
         })
  
       })
