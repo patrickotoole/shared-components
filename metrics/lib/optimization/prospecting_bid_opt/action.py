@@ -22,14 +22,22 @@ class CampaignAction(Action):
 
     def actions(self):
         max_bids_to_increase = {}
+        to_deactivate = {}
+
         for campaign in self.to_run.keys():
             try:
-                if self.to_run[campaign]['action'] == "INCREASE_MAX_BID":
-                    max_bids_to_increase[campaign] = self.to_run[campaign]
+                for act in self.to_run[campaign]:
+                    
+                    if act['action']  == "INCREASE_MAX_BID":
+                        max_bids_to_increase[campaign] = act
+                
+                    elif act['action'] == "DEACTIVATE":
+                        to_deactivate[campaign] =  act
             except KeyError:
                 raise KeyError("Missing rule group actions")
-
+        
         self.increase_max_bids(max_bids_to_increase)
+        self.deactivate_campaigns(to_deactivate)
 
 
     def push_log(self, log):
@@ -56,7 +64,6 @@ class CampaignAction(Action):
 
     def increase_max_bids(self, max_bids_to_increase):
 
-        
         for campaign in max_bids_to_increase.keys():
             try:
                 max_bids_to_increase[campaign]['rule_group_id']
@@ -89,3 +96,34 @@ class CampaignAction(Action):
                 self.logger.info("\n" + pprint.pformat(log) + "\n")
                 self.push_log(log)
                 time.sleep(3)
+
+    def deactivate_campaigns(self, to_deactivate):
+
+        for campaign in to_deactivate.keys():
+            try:
+                to_deactivate[campaign]['rule_group_id']
+                to_deactivate[campaign]['metrics']
+            except KeyError:
+                raise KeyError("to_deactivate missing rule_group_id/metrics")
+
+        self.logger.info("DEACTIVATING CAMPAIGNS")
+        
+        for campaign in to_deactivate.keys():
+
+            log = { "rule_group_id": to_deactivate[campaign]['rule_group_id'],
+                        "object_modified": "campaign",
+                        "campaign_id": campaign,
+                        "field_name": 'state',
+                        "field_old_value": "active",
+                        "field_new_value": "inactive",
+                        "metric_values": to_deactivate[campaign]['metrics']
+                }
+
+            if self.check_for_prev_run(log['campaign_id'], log['rule_group_id']):
+                self.logger.info("Already ran on %s for %s" %(log['campaign_id'], TODAY))
+            else:
+                self.logger.info("\n" + pprint.pformat(log) + "\n")
+                self.push_log(log)
+                time.sleep(3)
+
+

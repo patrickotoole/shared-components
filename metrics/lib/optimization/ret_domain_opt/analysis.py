@@ -11,11 +11,11 @@ DOMAIN_RULES = {
     'domain_low_loaded':{'action': 'EXCLUDE'},
     'domain_low_served_ratio':{'action': 'EXCLUDE'},
 }
-DF_COLS = [ 'convs', 'imps_served_apnx', 'last_served_date', 'imps_served_rbox',
-            'loaded', 'visible', 'imps_served_cutoff', 'imps_loaded_cutoff',
-            'loaded_ratio_cutoff', 'visible_ratio_cutoff',
-            'served_ratio_cutoff', 'visible_ratio', 'loaded_ratio',
-            'served_ratio']
+DF_COLS = ['convs', 'imps_served_apnx', 'last_served_date', 
+        'imps_served_rbox', 'imps_served', 'loaded', 'visible', 
+        'imps_served_cutoff', 'imps_loaded_cutoff', 'loaded_ratio_cutoff', 
+        'visible_ratio_cutoff', 'served_ratio_cutoff', 
+        'visible_ratio', 'loaded_ratio', 'served_ratio']
 
 class DomainAnalysis(Analysis):
     
@@ -66,8 +66,6 @@ class DomainAnalysis(Analysis):
                 domains  = []
 
             self.opt_rules[rule_name]['domains'] = domains
-
-
 
 
     def reshape(self):

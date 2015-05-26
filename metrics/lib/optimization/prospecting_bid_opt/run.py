@@ -53,7 +53,8 @@ if __name__ == "__main__":
         "learn_daily_imps_limit": int,
         "learn_daily_cpm_limit": float,
         "learn_max_bid_limit": float,
-        "increase_max_bid_by": float
+        "increase_max_bid_by": float,
+        "loss_limit": float
     }
 
     define("start_date", type = str, required = False, help = "start date for campaign bid/budget optimization")

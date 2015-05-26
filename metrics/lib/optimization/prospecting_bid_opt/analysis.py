@@ -7,15 +7,15 @@ from numpy import nan
 
 
 CAMPAIGN_RULES = {
-    'prosp_learn_bid_increase':{'action': 'INCREASE_MAX_BID'}
+    'prosp_learn_bid_increase':{'action': 'INCREASE_MAX_BID'},
+    'unprofitable_no_conv': {'action': 'DEACTIVATE'},
 }
 
 
 DF_COLS = ['CPM_daily', 'clicks', 'imps_served_daily', 'imps_served_total', 
-            'last_served_date', 'media_cost', 'attr_conv', 'attr_conv_pc', 
-            'learn_total_imps_limit', 'learn_daily_imps_limit', 
-            'learn_daily_cpm_limit', 'learn_max_bid_limit', 'max_bid', 
-            'campaign_state']
+    'last_served_date', 'media_cost', 'attr_conv', 'attr_conv_pc', 'total_conv', 
+    'learn_total_imps_limit', 'learn_daily_imps_limit', 'learn_daily_cpm_limit', 
+    'learn_max_bid_limit', 'loss_limit', 'max_bid', 'campaign_state']
 
 class CampaignAnalysis(Analysis):
 
@@ -93,12 +93,17 @@ class CampaignAnalysis(Analysis):
 
             for campaign in self.opt_rules[rule]['campaigns']:
 
-                to_run[campaign] = {}
-                to_run[campaign]['metrics'] = self.df.ix[campaign][metrics].to_dict()
-                to_run[campaign]['rule_group_name'] = rule
-                to_run[campaign]['action'] = self.opt_rules[rule]['action']
-                to_run[campaign]['rule_group_id'] =  self.opt_rules[rule]['rule_group_id']
+                reshaped = {}
+                
+                reshaped['metrics'] = self.df.ix[campaign][metrics].to_dict()
+                reshaped['rule_group_name'] = rule
+                reshaped['action'] = self.opt_rules[rule]['action']
+                reshaped['rule_group_id'] =  self.opt_rules[rule]['rule_group_id']
+
+                if campaign not in to_run.keys():
+                    to_run[campaign] = [reshaped]
+                else:
+                    to_run[campaign].append(reshaped)
 
         self.to_run = to_run
 
-   
