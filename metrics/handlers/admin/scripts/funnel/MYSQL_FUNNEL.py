@@ -51,3 +51,12 @@ VALUES
     (%(funnel_id)s, %(action_id)s, %(order)s)
 """
  
+DELETE_FUNNEL = """
+DELETE FROM funnel 
+WHERE funnel_id = %(funnel_id)s
+"""
+DELETE_FUNNEL_ACTION_BY_ID = """
+DELETE FROM funnel_actions
+WHERE funnel_id = %(funnel_id)s
+"""
+

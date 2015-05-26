@@ -87,6 +87,9 @@ RB.crusher.controller = (function(controller) {
       crusher.ui.funnel.add_funnel(target)
     },
     save: function(data) {
+      data['advertiser'] = source
+      data['owner'] = "owner"
+
       var cdata = JSON.parse(JSON.stringify(data)),
         type = data['funnel_id'] ? "PUT" : "POST";
 
@@ -94,7 +97,27 @@ RB.crusher.controller = (function(controller) {
 
       d3.xhr(funnelURL)
         .header("Content-Type", "application/json")
-        .send(type, JSON.stringify(cdata), function(err, rawData){});
+        .send(type, JSON.stringify(cdata), function(err, rawData){
+          var resp = JSON.parse(rawData.response).response
+          data['funnel_id'] = resp.funnel_id
+        });
+    },
+    delete: function(data,parent_data,funnel) {
+      d3.xhr(funnelURL + "&funnel_id=" + data.funnel_id)
+        .header("Content-Type", "application/json")
+        .send("DELETE", function(err, rawData){
+
+          var funnel_ids = parent_data
+            .filter(function(x,i){
+              x.pos = i; 
+              return x.funnel_id == data.funnel_id 
+            })
+
+          parent_data.splice(funnel_ids[0].pos,1)
+
+          funnel.remove()
+          console.log(rawData)
+        }); 
     }
   }
 

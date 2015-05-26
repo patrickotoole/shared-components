@@ -168,3 +168,25 @@ class FunnelHandler(FunnelBase,FunnelHelpers):
             print e
             self.write(ujson.dumps({"response": str(e), "status": "error"}))
 
+    def delete(self):
+        funnel_id = self.get_argument("funnel_id",False)
+
+        if funnel_id:
+            obj = {"funnel_id": funnel_id}
+
+            try:
+                self.db.autocommit = False
+                conn = self.db.create_connection()
+                cur = conn.cursor()
+                
+                cur.execute(DELETE_FUNNEL % obj)
+                cur.execute(DELETE_FUNNEL_ACTION_BY_ID % obj)
+
+                conn.commit()
+                self.write("{'status':'removed'}") 
+            except Exception as e:
+                self.write("{'status':'%s'}" % e) 
+            finally:
+                self.db.autocommit = True
+                self.finish() 
+            

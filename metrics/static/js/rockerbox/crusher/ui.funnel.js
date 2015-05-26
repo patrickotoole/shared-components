@@ -17,8 +17,70 @@ RB.crusher.ui.funnel = (function(funnel) {
     
     funnel.edit.component.add_action(funnels,options)
     funnel.edit.component.compute_funnel(funnels,options) 
+    funnel.edit.component.remove_funnel(funnels)  
 
   }
+
+  funnel.show = function(funnels) {
+    
+    var reduced = funnel.show.component.steps(funnels)
+    var domains_callback = funnel.show.component.domains.bind(false,funnels)
+
+    crusher.controller.get_domains(reduced,domains_callback)
+
+  }
+
+  funnel.methods = {
+    add_action: function(target,options) {
+
+      var parentTarget = d3.select(target.node().parentNode.parentNode),
+        data = target.datum()
+
+      data.actions = data.actions.concat([{
+        "action_id":0,
+        "action_name":"",
+        "url_pattern":[]
+      }])
+      funnel.edit(parentTarget,options)
+
+    },
+    add_funnel: function(target) {
+
+      var action_data = target.data()[0]
+
+      var data = target.selectAll(".funnel").data()
+      data = data.concat([{"funnel_name":"named","actions":[]}])
+
+      var newFunnel = target.selectAll(".funnel").data(data)
+        .enter()
+        .append("div").classed("funnel",true)
+
+      newFunnel
+        .append("h4")
+        .text(function(x){return x.funnel_name})
+
+      funnel.edit(newFunnel,action_data)
+
+    },
+    compute_uniques: function(actions) {
+      return actions.reduce(function(p,c){
+        
+        var intersected = []
+
+        if (p == false) { intersected = c.uids } 
+        else {
+          c.uids.map(function(x){
+            if (p.indexOf(x) > -1) intersected.push(x)
+          })
+        }
+        
+        c.funnel_uids = intersected
+        c.funnel_count = c.funnel_uids.length
+
+        return c.funnel_uids
+      }, false)                   
+    }
+  } 
 
   funnel.edit.component = {
     compute_funnel: function(funnels){
@@ -42,11 +104,27 @@ RB.crusher.ui.funnel = (function(funnel) {
           .append("div").classed("button-wrapper",true)
           .append("button")
           .classed("btn btn-xs",true)
-          .text("New funnel action")
+          .text("Add funnel action")
           .on("click",function(x){
             crusher.controller.new_funnel_action(d3.select(this),options)
           }) 
          
+    },
+    remove_funnel: function(funnels){
+
+      funnels.selectAll(".remove-funnel")
+        .data(function(x){return [x]})
+        .enter()
+          .append("div").classed("remove-funnel",true)
+          .append("button")
+          .classed("btn btn-xs btn-danger",true)
+          .text("Remove Funnel")
+          .on("click",function(x){
+            var parent_data = d3.select(this.parentNode.parentNode.parentNode).selectAll(".funnel").data()
+            var funnel = d3.select(this.parentNode.parentNode)
+            crusher.controller.funnel.delete(x,parent_data,funnel)
+          }) 
+       
     },
     actions: function(funnels) {
 
@@ -132,14 +210,7 @@ RB.crusher.ui.funnel = (function(funnel) {
     }
   } 
 
-  funnel.show = function(funnels) {
-    
-    var reduced = funnel.show.component.steps(funnels)
-    var domains_callback = funnel.show.component.domains.bind(false,funnels)
-
-    crusher.controller.get_domains(reduced,domains_callback)
-
-  }
+  
 
   funnel.show.component = {
     steps: function(funnels) {
@@ -164,11 +235,12 @@ RB.crusher.ui.funnel = (function(funnel) {
         .append("div").classed("step",true)
         .text(function(x,i){return "Step " + (i+1) + ": " + x.funnel_count}) 
 
-      step.text(function(x,i){return "Step " + (i+1) + ": " + x.funnel_count})   
+      step
+        .text(function(x,i){return "Step " + (i+1) + ": " + x.funnel_count})   
     },
     domains: function(funnels,data) {
       var domains = funnels.selectAll(".domains")
-        .data(data)
+        .data([data])
 
       domains.enter()
         .append("div").classed("domains",true)
@@ -176,73 +248,20 @@ RB.crusher.ui.funnel = (function(funnel) {
       funnel.show.component.domain(domains)
     },
     domain: function(domains) {
-      domains.enter()
+      var domain = domains.selectAll(".domain")
+        .data(function(x){return x})
+
+      domain.enter()
         .append("div")
         .classed("domain",true)
         .text(JSON.stringify)
       
-      domains
-        .text(JSON.stringify) 
+      domain.text(JSON.stringify) 
         .sort(function(x,y){ return y.uid - x.uid})
 
-      domains.exit()
-        .remove()
+      domain.exit().remove()
     }
   }
-  
-  funnel.methods = {
-    add_action: function(target,options) {
-
-      var parentTarget = d3.select(target.node().parentNode.parentNode),
-        data = target.datum()
-
-      data.actions = data.actions.concat([{
-        "action_id":0,
-        "action_name":"",
-        "url_pattern":[]
-      }])
-      funnel.edit(parentTarget,options)
-
-    },
-    add_funnel: function(target) {
-
-      var action_data = target.data()[0]
-
-      var data = target.selectAll(".funnel").data()
-      data = data.concat([{"funnel_name":"named","actions":[]}])
-
-      var newFunnel = target.selectAll(".funnel").data(data)
-        .enter()
-        .append("div").classed("funnel",true)
-
-      newFunnel
-        .append("h4")
-        .text(function(x){return x.funnel_name})
-
-      funnel.edit(newFunnel,action_data)
-
-    },
-    compute_uniques: function(actions) {
-      return actions.reduce(function(p,c){
-        
-        var intersected = []
-
-        if (p == false) { intersected = c.uids } 
-        else {
-          c.uids.map(function(x){
-            if (p.indexOf(x) > -1) intersected.push(x)
-          })
-        }
-        
-        c.funnel_uids = intersected
-        c.funnel_count = c.funnel_uids.length
-
-        return c.funnel_uids
-      }, false)                   
-    }
-  }
-
-  
 
   funnel.build = function(data, values, action_data) {
     var target = d3.selectAll(".funnel-wrapper")
@@ -261,6 +280,8 @@ RB.crusher.ui.funnel = (function(funnel) {
     funnel.edit(funnels,action_data)
     
   }
+
+  
 
   funnel.add_action = funnel.methods.add_action
   funnel.add_funnel = funnel.methods.add_funnel
