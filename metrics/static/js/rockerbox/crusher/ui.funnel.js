@@ -13,7 +13,7 @@ RB.crusher.ui.funnel = (function(funnel) {
     
     funnel.edit.component.step(newAction)
     funnel.edit.component.select(newAction) 
-    funnel.edit.component.remove(newAction) 
+    funnel.edit.component.remove(newAction,options) 
     
     funnel.edit.component.add_action(funnels,options)
     funnel.edit.component.compute_funnel(funnels,options) 
@@ -26,7 +26,7 @@ RB.crusher.ui.funnel = (function(funnel) {
     var reduced = funnel.show.component.steps(funnels)
     var domains_callback = funnel.show.component.domains.bind(false,funnels)
 
-    crusher.controller.get_domains(reduced,domains_callback)
+    //crusher.controller.get_domains(reduced,domains_callback)
 
   }
 
@@ -142,6 +142,7 @@ RB.crusher.ui.funnel = (function(funnel) {
       var action = actions
         .selectAll(".action")
         .data(function(x){
+          console.log(x)
           return x.actions.map(function(y){
             y.all = options
             crusher.controller.get_action_data(y) 
@@ -194,11 +195,12 @@ RB.crusher.ui.funnel = (function(funnel) {
           })
        
     },
-    remove: function(newAction) {
+    remove: function(newAction,actions) {
       newAction.append("div")
         .text("remove")
         .on("click",function(x){
-          var funnel_datum = d3.select(this.parentNode.parentNode).datum()
+          var funnels = d3.select(this.parentNode.parentNode.parentNode)
+          var funnel_datum = funnels.datum()
           var data = d3.select(this).datum()
           
           funnel_datum.actions = funnel_datum.actions.filter(function(x){return x != data})
@@ -213,7 +215,74 @@ RB.crusher.ui.funnel = (function(funnel) {
   
 
   funnel.show.component = {
+    step_chart: function(funnels){
+      
+      var data = funnels.datum().actions
+      
+      var margin = {top: 20, right: 20, bottom: 30, left: 40},
+        width = 600 - margin.left - margin.right,
+        height = 300 - margin.top - margin.bottom;
+  
+      var x = d3.scale.ordinal().rangeRoundBands([0, width], .1);
+      var y = d3.scale.linear().range([height, 0]);
+      var xAxis = d3.svg.axis().scale(x).orient("bottom");
+  
+      var yAxis = d3.svg.axis().scale(y).orient("left").ticks(10);
+
+      var svg = funnels.selectAll("svg")
+        .data(function(x){return [x]})
+
+      svg
+        .enter()
+          .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+          .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+      x.domain(data.map(function(d) { return d.action_name; }));
+      y.domain([0, d3.max(data, function(d) { return d.funnel_count; })]);
+
+      xax = svg.selectAll(".x.axis")
+        .data(function(x){return [x]})
+
+      xax
+        .enter()
+        .append("g")
+
+      xax
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis);
+
+      svg.append("g")
+          .attr("class", "y axis")
+          .call(yAxis)
+        .append("text")
+          .attr("transform", "rotate(-90)")
+          .attr("y", 6)
+          .attr("dy", ".71em")
+          .style("text-anchor", "end")
+          .text("Users");
+
+      var bar = svg.selectAll(".bar")
+          .data(data,function(x){return x.action_name})
+
+      bar
+        .enter().append("rect")
+
+      bar
+          .attr("class", "bar")
+          .attr("x", function(d) { return x(d.action_name); })
+          .attr("width", x.rangeBand())
+          .attr("y", function(d) { return y(d.funnel_count); })
+          .attr("height", function(d) { return height - y(d.funnel_count); }); 
+      
+      bar.exit().remove()
+
+    },
     steps: function(funnels) {
+
       var data = funnels.datum(),
         reduced = funnel.methods.compute_uniques(data.actions)
 
@@ -224,6 +293,7 @@ RB.crusher.ui.funnel = (function(funnel) {
         .append("div").classed("steps",true)
 
       funnel.show.component.step(steps)
+      funnel.show.component.step_chart(funnels) 
 
       return reduced
     },

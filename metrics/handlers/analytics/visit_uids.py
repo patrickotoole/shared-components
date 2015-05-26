@@ -10,6 +10,8 @@ from twisted.internet import defer
 from lib.helpers import decorators
 from lib.helpers import *
 
+from cassandra import ReadTimeout
+
 DEFAULT_INTERVAL = "minute"
 
 QUERY = "SELECT * FROM rockerbox.visit_uids_2 "
@@ -58,10 +60,15 @@ class VisitUidsHandler(BaseHandler, AnalyticsBase):
         in_clause = self.make_in_clause(urls)
         WHERE = where.format(in_clause)
         QUERY = self.query + WHERE 
-
-        #logging.info(QUERY)
         
-        return self.cassandra.execute(QUERY)
+        from cassandra.query import SimpleStatement
+        #logging.info(QUERY)
+        try:
+            return self.cassandra.execute(QUERY,None,60)
+        except ReadTimeout:
+            logging.info("Cassandra read timeout...")
+            return []
+            
 
     def get_w_futures(self, urls):
         queries = []
