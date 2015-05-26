@@ -14,19 +14,19 @@ PARAM_KEYS = [  'imps_loaded_cutoff', 'loaded_ratio_cutoff',
 APNX_COL_TYPES = {
             'imps': dtype('int64'), 
             'post_click_convs': dtype('int64'), 
-            'campaign_id': dtype('O'), 
+            'campaign_id': dtype('int64'), 
             'post_view_convs': dtype('int64'), 
             'site_domain': dtype('O'), 
             'day': dtype('O')
             }
 
-RBOX_COL_TYPES = {
-            'loaded': dtype('int64'), 
-            'domain': dtype('O'), 
-            'imps_served': dtype('int64'), 
-            'campaign_id': dtype('O'), 
-            'visible': dtype('int64')
-            }
+RBOX_COL_TYPES = {'advertiser': dtype('O'), 
+                'domain': dtype('O'), 
+                'imps_served': dtype('int64'), 
+                'campaign': dtype('O'), 
+                'visible': dtype('int64'), 
+                'loaded': dtype('int64')
+                }
 
 
 VIEW_COL_TYPES = {'imps_served': dtype('int64'),
@@ -55,11 +55,11 @@ REPORT = """
 """
 
 HIVE_QUERY = """
-SELECT campaign, domain, sum(num_served) as imps_served, 
+SELECT advertiser, campaign, domain, sum(num_served) as imps_served, 
 sum(num_loaded) as loaded, sum(num_visible) as visible 
 FROM advertiser_visibility_daily 
-WHERE date >= "%(start_date)s" AND date <= "%(end_date)s" AND advertiser = "%(advertiser)s"
-GROUP BY campaign, domain
+WHERE date >= "%(start_date)s" AND date <= "%(end_date)s" AND domain != ""
+GROUP BY advertiser, campaign, domain
 HAVING imps_served > 100
 """
 
@@ -112,6 +112,34 @@ class DomainDataSource(DataSource):
             raise Exception("Hive query failed")
 
 
+    def check_data(self):
+
+        if self.apnx_data is None:
+            raise Exception('Empty DataFrame')
+
+        elif self.rbox_data is None:
+            raise Exception('Empty DataFrame')
+
+        elif self.apnx_data.dtypes.to_dict() !=  APNX_COL_TYPES:
+            raise TypeError("Incorrect column types for self.apnx_data") 
+
+        elif self.rbox_data.dtypes.to_dict() != RBOX_COL_TYPES:
+            raise TypeError("Incorrect column types for self.rbox_data")
+
+        if len(self.rbox_data) == 0 or len(self.apnx_data) == 0:
+            raise Exception('Empty DataFrame')
+
+        try:
+            datetime.strptime(self.apnx_data['day'].iloc[0], "%Y-%m-%d")
+        except ValueError:
+            raise ValueError("Incorrect date string format %s" %self.apnx_data['day'].iloc[0])
+
+    def reformat_cols(self):
+        self.rbox_data = self.rbox_data.rename(columns={'campaign': 'campaign_id'})
+        self.apnx_data['campaign_id'] = self.apnx_data['campaign_id'].astype(str)
+        self.rbox_data['campaign_id'] = self.rbox_data['campaign_id'].astype(str)
+
+
     def pull(self, start_date, end_date):
         try:
             datetime.strptime(end_date, "%Y-%m-%d")
@@ -127,7 +155,9 @@ class DomainDataSource(DataSource):
 
         self.pull_apnx_data()
         self.pull_rbox_data()
+        self.check_data()
         self.reformat_cols()
+
 
     def run(self, campaign, params):
 
@@ -144,37 +174,9 @@ class DomainDataSource(DataSource):
                                     'imps_served': x['imps'].sum()
                                     } ))
         return reshaped_df
-
-    def reformat_cols(self):
-        self.rbox_data = self.rbox_data.rename(columns={'campaign': 'campaign_id'})
-        self.apnx_data['campaign_id'] = self.apnx_data['campaign_id'].astype(str)
-        self.rbox_data['campaign_id'] = self.rbox_data['campaign_id'].astype(str)
+    
 
     def reshape(self, campaign):
-
-        if self.apnx_data is None:
-            raise Exception('Empty DataFrame')
-
-        elif self.rbox_data is None:
-            raise Exception('Empty DataFrame')
-
-        elif self.apnx_data.dtypes.to_dict() !=  APNX_COL_TYPES:
-            # import ipdb
-            # ipdb.set_trace()
-            raise TypeError("Incorrect column types for self.apnx_data") 
-
-        elif self.rbox_data.dtypes.to_dict() != RBOX_COL_TYPES:
-            raise TypeError("Incorrect column types for self.rbox_data")
-
-        if len(self.rbox_data) == 0 or len(self.apnx_data) == 0:
-            raise Exception('Empty DataFrame')
-
-        try:
-            datetime.strptime(self.apnx_data['day'].iloc[0], "%Y-%m-%d")
-        except ValueError:
-            raise ValueError("Incorrect date string format %s" %self.apnx_data['day'].iloc[0])
-        
-        
 
         apnx_campaign_df = self.apnx_data[self.apnx_data['campaign_id'] == str(campaign)]
         rbox_campaign_df = self.rbox_data[self.rbox_data['campaign_id'] == str(campaign)]
@@ -183,13 +185,20 @@ class DomainDataSource(DataSource):
         apnx_reshaped_df = self.aggregrate_all(apnx_grouped_df)
 
         rbox_reshaped_df = rbox_campaign_df.drop('campaign_id', axis = 1)
-        rbox_reshaped_df = rbox_reshaped_df.groupby('domain').sum()
+        rbox_reshaped_df = rbox_reshaped_df.groupby('domain').sum()[['imps_served']]
 
         merged = pd.merge(apnx_reshaped_df, rbox_reshaped_df,
                         suffixes = ("_apnx", "_rbox"),
                         left_index = True, right_index = True, 
                         how = "outer")
+
+        merged = pd.merge(merged,
+                        self.rbox_data.groupby('domain').sum()[['imps_served','loaded','visible']],
+                        left_index = True, right_index = True,
+                        how = 'left')
+
         merged = merged.fillna(0)
+        
 
         self.df = merged
 
@@ -230,7 +239,7 @@ class DomainDataSource(DataSource):
             self.df['served_ratio_cutoff'] = params['served_ratio_cutoff']
 
             self.df['visible_ratio'] = self.df['visible'] / self.df['loaded'].astype(float)
-            self.df['loaded_ratio'] = self.df['loaded'] / self.df['imps_served_rbox'].astype(float)
+            self.df['loaded_ratio'] = self.df['loaded'] / self.df['imps_served'].astype(float)
             self.df['served_ratio'] = self.df['imps_served_rbox'] / self.df['imps_served_apnx'].astype(float)
             self.df = self.df.fillna(0)
     
@@ -248,7 +257,9 @@ class DomainDataSource(DataSource):
             self.df = self.df[self.df['last_served_date'] >= self.end_date]
 
             # Choosing top 50 domains currently serving on 
-            self.df = self.df.sort('imps_served_apnx', ascending = False).head(50)
+            self.df = self.df.sort('imps_served_apnx', ascending = False)
+            self.df = self.df.head(50)
+
 
 
 

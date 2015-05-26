@@ -7,8 +7,12 @@ import json
 import time
 import numpy
 from copy import deepcopy
+import ast
+from datetime import datetime
+import pprint
 
 DOMAIN_TARGETS_COL_TYPES = {u'domain': dtype('O'), u'profile_id': dtype('int64')}
+TODAY = datetime.today().strftime('%Y-%m-%d')
 
 
 class DomainAction(Action):
@@ -75,8 +79,33 @@ class DomainAction(Action):
 
         r = self.rockerbox.post("/opt_log", data=json.dumps(log))
         if r.json['status'] != 'ok':
+            self.logger.error(r.text)
             raise TypeError("Incorrect Opt Log %s" %str(log))
 
+
+    def check_for_prev_run(self, campaign_id, domain):
+
+        query = '''
+        SELECT * FROM opt_log WHERE campaign_id = {}  AND date(last_modified) >= "{}" 
+        AND field_name = 'domain_targets'
+        '''.format(campaign_id, TODAY)
+        df = self.reporting_db.select_dataframe(query)
+
+        for k in range(len(df)):
+            row = df.loc[k]
+            field_old_value = ast.literal_eval(row['field_old_value'])
+            field_new_value = ast.literal_eval(row['field_new_value'])
+            if field_old_value is None:
+                field_old_value = []
+            if field_new_value is None:
+                field_new_value = []
+
+            diff = lambda l1,l2: [x for x in l1 if x not in l2]
+            d = diff(field_new_value, field_old_value)
+            if len(d) > 0:
+                if d[0]['domain'] == domain:
+                    return True
+        return False
 
     def exclude_domains(self, to_exclude):
 
@@ -99,7 +128,6 @@ class DomainAction(Action):
             elif old_domain_targets == new_domain_targets:
                 self.logger.info("new targeting same as old targeting")
 
-
             else:
 
                 log = { "rule_group_id": to_exclude[domain]['rule_group_id'],
@@ -109,10 +137,16 @@ class DomainAction(Action):
                         "field_old_value": old_domain_targets,
                         "field_new_value": new_domain_targets,
                         "metric_values": to_exclude[domain]['metrics']
-                }  
-                self.logger.info(log)
-                self.push_log(log)
-                time.sleep(3)
+                }
+
+                if self.check_for_prev_run(log['campaign_id'], domain):
+                    self.logger.info("Already excluded on %s for %s" %(domain, TODAY))
+                
+                else:
+                    self.logger.info("Excluding domain %s" %domain)
+                    self.logger.info("\n" + pprint.pformat(log['metric_values']) + "\n")
+                    self.push_log(log)
+                    time.sleep(3)
 
 
 

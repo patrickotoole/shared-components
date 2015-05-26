@@ -44,6 +44,9 @@ class Runner():
             P.run_analysis()
             A.run(P.to_run, campaign)
 
+
+logger = logging.getLogger("opt")
+
 if __name__ == "__main__":
     import logsetup
     logsetup.configure_log(subject="ret_domain_opt")
@@ -80,6 +83,7 @@ if __name__ == "__main__":
     command_line_args = options_to_dict(options)
 
     for config_name, params in configs.iteritems():
+
         if "start_date" not in params:
             params["start_date"] = (datetime.today() - timedelta(days = 7)).strftime('%Y-%m-%d')
 
@@ -96,8 +100,12 @@ if __name__ == "__main__":
             if param in command_line_args and command_line_args[param]:
                 params[param] = command_line_args[param]
                 
+        logger.info(config_name)
+        logger.info(params)
         runner = Runner(params)
         runner.run()
+
+        logger.info("prospecting_bid_opt finished successfully with config %s" %config_name)
 
     logging.shutdown()
 
