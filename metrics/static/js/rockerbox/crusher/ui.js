@@ -36,20 +36,9 @@ RB.crusher.ui = (function(ui) {
   }
  
 
-  ui.add_action = function(dd) {
-    var wrapper = d3.selectAll(".add-action-wrapper")
-    var action_wrapper = d3.selectAll(".action-wrapper") 
-
-    wrapper
-      .append("div").classed("button-wrapper",true)
-      .append("button")
-      .classed("btn btn-xs",true)
-      .text("New action")
-      .on("click",crusher.controller.new_action.bind(this,action_wrapper,dd))
-  }
+  
 
   ui.build = function(dd){
-    ui.add_action(dd)
     ui.add_funnel()
     console.log("building crusher...")   
   } 

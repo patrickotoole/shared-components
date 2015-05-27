@@ -143,6 +143,20 @@ RB.crusher.ui.action = (function(action) {
 
     action.show(newActions,onSave) 
 
+    action.add_action(actions)
+
+  }
+
+  action.add_action = function(dd) {
+    var wrapper = d3.selectAll(".add-action-wrapper")
+    var action_wrapper = d3.selectAll(".action-wrapper") 
+
+    wrapper
+      .append("div").classed("button-wrapper",true)
+      .append("button")
+      .classed("btn btn-xs",true)
+      .text("New action")
+      .on("click",crusher.controller.new_action.bind(this,action_wrapper,dd))
   }
 
   action.showList = function(target,actions) {

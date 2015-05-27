@@ -33,7 +33,14 @@ RB.crusher.controller = (function(controller) {
   URL = addParam(URL,"format=json")
 
   controller.init = function(){
-    
+
+    d3.json("/admin/api?table=reporting.pop_domain&format=json", function(dd){
+      crusher.pop_domains = {}
+      dd.map(function(x){
+        crusher.pop_domains[x.domain] = x.idf
+      })
+    }) 
+
     d3.json(visitURL, function(dd){
       crusher.urlData = dd
       crusher.urls = dd.map(function(x){return x.url})
@@ -46,7 +53,7 @@ RB.crusher.controller = (function(controller) {
           return x
         })
 
-        //crusher.ui.action.showAll(actions,controller.save_action)
+        //crusher.ui.action.showAll(actions,controller.save_action,crusher.urls)
         //crusher.ui.action.showList(d3.select(".funnel-wrapper"),actions)
         crusher.ui.build(crusher.urls) 
         
