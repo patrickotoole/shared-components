@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
 import time
+import requests
 
 CONV_DATA_QUERY = '''
 Select conversion_time, imp_time, pixel_id, pc, 
@@ -40,8 +41,28 @@ REPORTING_DATA_DTYPES = {'imps': dtype('int64'),
                     'date': dtype('<M8[ns]'), 
                     'clicks': dtype('int64')}
 
-PARAM_KEYS = ['learn_max_bid_limit', 'learn_total_imps_limit', 'learn_daily_imps_limit', 'learn_daily_cpm_limit']
+VISIBILITY_QUERY = '''
+SELECT campaign,
+SUM(num_served) as num_served, SUM(num_loaded) as num_loaded, SUM(num_visible) as num_visible
+FROM
+(
+    SELECT campaign, num_served, num_loaded, num_visible
+    FROM advertiser_visibility_daily
+    WHERE date >= "%(start_date)s" AND date <= "%(end_date)s" AND %(campaign_list)s 
+)a
+GROUP BY campaign
+'''
 
+VISIBILITY_URL = "http://portal.getrockerbox.com/admin/advertiser/viewable/reporting?include=campaign&start_date=%s&end_date=%s&campaign=%s&format=json&meta=none"
+
+VISIBILITY_DATA_DTYPEs = {'loaded': dtype('int64'),
+                        'visible': dtype('int64'), 
+                        'spent': dtype('float64'), 
+                        'campaign': dtype('O'), 
+                        'served': dtype('int64')}
+
+
+PARAM_KEYS = ['learn_max_bid_limit', 'learn_total_imps_limit', 'learn_daily_imps_limit', 'learn_daily_cpm_limit']
 
 class CampaignDataSource(DataSource):
 
@@ -52,6 +73,7 @@ class CampaignDataSource(DataSource):
 
         self.conv_data = None
         self.reporting_data = None
+        self.visible_data = None
 
 
     def pull_rbox_data(self):
@@ -70,6 +92,24 @@ class CampaignDataSource(DataSource):
         except AttributeError:
             raise AttributeError("Issue with conv query")
 
+    def pull_visibility_data(self):
+        campaign_list = '''( campaign = "%s" '''%str(self.campaigns[0])
+        for k in range(1, len(self.campaigns)):
+            campaign_list += '''OR campaign = "%s" '''%str(self.campaigns[k])
+        campaign_list += ")"
+        
+        query_args = {  'start_date': self.start_date[2:],
+                        'end_date': self.end_date[2:],
+                        'campaign_list': campaign_list }
+
+        self.logger.info("Executing query: {}".format(VISIBILITY_QUERY % query_args))
+        # try:
+        df_vis = pd.DataFrame(self.hive.execute(VISIBILITY_QUERY % query_args))
+        self.visible_data = df_vis
+
+        # except Exception:
+        #     raise Exception("Hive query failed")
+
 
     def check_data(self):
 
@@ -84,6 +124,8 @@ class CampaignDataSource(DataSource):
 
         elif len(self.reporting_data) == 0:
             raise Exception('Empty DataFrame for conv_data')
+        elif len(self.visible_data) == 0:
+            raise Exception('Empty DataFrame for visible_data')
 
         elif self.reporting_data.dtypes.to_dict() !=  REPORTING_DATA_DTYPES:
             raise TypeError("Incorrect column types for reporting_data") 
@@ -102,49 +144,43 @@ class CampaignDataSource(DataSource):
         self.start_date = start_date
         self.end_date = end_date
         self.pull_rbox_data()
+        self.pull_visibility_data()
         self.check_data()
         
-    def aggregate_reporting(self, x):
-        x = x.sort('date')
-        cols = {'imps_served_total': x['imps'].sum(),
-                'clicks': x['clicks'].sum(),
-                'media_cost': x['media_cost'].sum(),
-                'imps_served_daily': x['imps'].tail(3).mean(),
-                'CPM_daily': x['imps'].tail(3).mean(),
-                'last_served_date': str(x['date'].max().date())
-                }
-        return cols
+    # def get_max_bid(self, campaign_id):
+    #     response = self.console.get("/campaign?id=%s"%campaign_id).json            
+    #     if response['response']['campaign']['max_bid'] is None:
+    #         max_bid = np.nan
+    #     else:
+    #         max_bid = response['response']['campaign']['max_bid']
+    #     return max_bid
 
-    def aggregate_conv(self, x):
-        x = x.sort('conversion_time')
-        cols = {'total_conv': len(x),
-                'attr_conv': x['is_valid'].sum(), 
-                'attr_conv_pc': x['pc'].sum() 
-                }
-        return cols
-
-
-    def get_max_bid(self, campaign_id):
-        response = self.console.get("/campaign?id=%s"%campaign_id).json            
-        if response['response']['campaign']['max_bid'] is None:
-            max_bid = np.nan
-        else:
-            max_bid = response['response']['campaign']['max_bid']
-        return max_bid
+    def get_campaign_param(self, campaign_id, param):
+        self.logger.info("Getting %s for campaign %s" %(param,str(campaign_id)))
+        response = self.console.get("/campaign?id=%s"%campaign_id).json
+        try:
+            param_value = response['response']['campaign'][param]
+            return param_value
+        except KeyError:
+            self.logger.error("param %s does not exist" %param)
+            raise KeyError("param %s does not exist" %param)
 
 
     def add_max_bids(self):
-        self.logger.info("Adding max bids...")
+        
         max_bids = [None] * len(self.df)
         for k in range(len(self.df)):
             campaign_id = self.df.index[k]
-            max_bids[k] = self.get_max_bid(campaign_id)
+            max_bid = self.get_campaign_param(campaign_id, 'max_bid')
+            if max_bid is None :
+                 max_bid = np.nan
+            max_bids[k] = max_bid
             time.sleep(3)
         self.df['max_bid'] = max_bids
 
-    def get_campaign_state(self, campaign_id):
-        response = self.console.get("/campaign?id=%s"%campaign_id).json 
-        return response['response']['campaign']['state']
+    # def get_campaign_state(self, campaign_id):
+    #     response = self.console.get("/campaign?id=%s"%campaign_id).json 
+    #     return response['response']['campaign']['state']
 
         
     def add_campaign_state(self):
@@ -153,33 +189,71 @@ class CampaignDataSource(DataSource):
         campaign_state = [None] * len(self.df)
         for k in range(len(self.df)):
             campaign_id = self.df.index[k]
-            campaign_state[k] = self.get_campaign_state(campaign_id)
+            campaign_state[k] = self.get_campaign_param(campaign_id, 'state')
             time.sleep(3)
             
         self.df['campaign_state'] = campaign_state
         
+    def run(self, params):
+        self.reshape()
+        self.filter()
+        self.check_params(params)
+        self.transform(params)
+        
 
     def reshape(self):
 
+        def aggregate_reporting(x):
+            x = x.sort('date')
+            cols = {'imps_served_total': x['imps'].sum(),
+                    'clicks': x['clicks'].sum(),
+                    'media_cost': x['media_cost'].sum(),
+                    'imps_served_daily': x['imps'].tail(3).mean(),
+                    'CPM_daily': x['imps'].tail(3).mean(),
+                    'last_served_date': str(x['date'].max().date())
+                    }
+            return cols
+
+        def aggregate_conv(x):
+            x = x.sort('conversion_time')
+            cols = {'total_conv': len(x),
+                    'attr_conv': x['is_valid'].sum(), 
+                    'attr_conv_pc': x['pc'].sum() 
+                    }
+            return cols
+
+
         reporting_grouped = self.reporting_data.groupby('campaign_id')
-        rep_by_campaign = reporting_grouped.apply(lambda x: pd.Series(self.aggregate_reporting(x)))
+        rep_by_campaign = reporting_grouped.apply(lambda x: pd.Series(aggregate_reporting(x)))
         
         conv_grouped = self.conv_data.groupby('campaign_id')
-        conv_by_campaign = conv_grouped.apply(lambda x: pd.Series(self.aggregate_conv(x)))
+        conv_by_campaign = conv_grouped.apply(lambda x: pd.Series(aggregate_conv(x)))
         
         merged = pd.merge(rep_by_campaign, conv_by_campaign, 
                         left_index = True, right_index = True, 
                         how = 'outer').fillna(0)
-        self.df = merged
 
+        self.visible_data['campaign'] = self.visible_data['campaign'].astype(int)
+
+        merged = pd.merge(merged, self.visible_data.set_index('campaign'), 
+                        left_index = True, right_index = True, 
+                        how = 'outer').fillna(0)
+
+        self.df = merged
         self.logger.info("DataFrame with {} campaigns".format(len(self.df)))
 
+    def filter(self):
 
-    def run(self, params):
-        self.reshape()
-        self.check_params(params)
-        self.transform(params)
-        self.filter()
+        if self.campaigns != "all":
+            self.df = self.df[list(pd.Series(self.df.index).apply(lambda x: x in self.campaigns))]
+            self.logger.info("Filtered Dataframe to {} campaigns".format(len(self.df)))
+
+
+        self.add_max_bids()
+        self.add_campaign_state()
+
+        self.df = self.df[self.df['campaign_state'] == "active"]
+        self.logger.info("Filtered Dataframe to {} active campaigns".format(len(self.df)))
 
 
     def check_params(self, params):
@@ -201,6 +275,7 @@ class CampaignDataSource(DataSource):
 
         elif any(x < 0 for x in list(params.values())):
             raise AttributeError("Inputs cannot be negative")
+
     
     def transform(self, params):
 
@@ -208,20 +283,18 @@ class CampaignDataSource(DataSource):
         self.df['learn_daily_imps_limit'] = params['learn_daily_imps_limit']
         self.df['learn_daily_cpm_limit'] = params['learn_daily_cpm_limit']
         self.df['learn_max_bid_limit'] = params['learn_max_bid_limit']
-        ## campaign deactivation
+        
+        ## Unprofitable campaigns
         self.df['loss_limit'] = params['loss_limit']
 
-    def filter(self):
+        ## Low Visibility
+        self.df['visible_ratio'] = self.df['num_visible'] / self.df['num_loaded'].astype(float)
+        self.df['loaded_ratio'] = self.df['num_loaded'] / self.df['num_served'].astype(float)
+        self.df['imps_loaded_cutoff'] = params['imps_loaded_cutoff']
+        self.df['imps_served_cutoff'] = params['imps_served_cutoff']
+        self.df['visible_ratio_cutoff'] = params['visible_ratio_cutoff']
+        self.df['loaded_ratio_cutoff'] = params['loaded_ratio_cutoff']
 
-        if self.campaigns != "all":
-            self.df = self.df[list(pd.Series(self.df.index).apply(lambda x: x in self.campaigns))]
-            self.logger.info("Filtered Dataframe to {} campaigns".format(len(self.df)))
-
-        self.add_max_bids()
-        self.add_campaign_state()
-
-        self.df = self.df[self.df['campaign_state'] == "active"]
-        self.logger.info("Filtered Dataframe to {} active campaigns".format(len(self.df)))
 
 
 
