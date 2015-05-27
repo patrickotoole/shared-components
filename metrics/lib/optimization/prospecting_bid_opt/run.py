@@ -54,7 +54,11 @@ if __name__ == "__main__":
         "learn_daily_cpm_limit": float,
         "learn_max_bid_limit": float,
         "increase_max_bid_by": float,
-        "loss_limit": float
+        "loss_limit": float,
+        'imps_loaded_cutoff': int,
+        'imps_served_cutoff': int,
+        'visible_ratio_cutoff': float,
+        'loaded_ratio_cutoff': float
     }
 
     define("start_date", type = str, required = False, help = "start date for campaign bid/budget optimization")
@@ -88,7 +92,7 @@ if __name__ == "__main__":
             # parameter value
             if param in command_line_args and command_line_args[param]:
                 params[param] = command_line_args[param]
-        
+
         logger.info(config_name)
         logger.info(params)
         runner = Runner(params)

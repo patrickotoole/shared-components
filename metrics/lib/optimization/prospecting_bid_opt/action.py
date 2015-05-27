@@ -71,7 +71,7 @@ class CampaignAction(Action):
             except KeyError:
                 raise KeyError("to_exclude missing rule_group_id/metrics")
 
-        self.logger.info("INCREASING BIDS")
+        self.logger.info("INCREASING BIDS...")
         for campaign in max_bids_to_increase.keys():
 
             old_max_bid = max_bids_to_increase[campaign]['metrics']['max_bid']
@@ -106,7 +106,7 @@ class CampaignAction(Action):
             except KeyError:
                 raise KeyError("to_deactivate missing rule_group_id/metrics")
 
-        self.logger.info("DEACTIVATING CAMPAIGNS")
+        self.logger.info("DEACTIVATING CAMPAIGNS...")
         
         for campaign in to_deactivate.keys():
 
