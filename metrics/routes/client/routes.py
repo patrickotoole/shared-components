@@ -60,10 +60,24 @@ class AdvertiserRoutes(Routes):
             (r'/location.*', appnexus.AppnexusHandler, self.connectors),
             (r'/viewability', analytics.ViewabilityHandler, self.connectors),
             (r'/availability', analytics.AvailabilityHandler, self.connectors),
+        ]
+
+    @namespace("/crusher")
+    @connectors("db","api","cassandra")
+    def crusher_routes(self):
+        import handlers.analytics as analytics
+        import handlers.funnel as funnel
+
+        return [
             (r'/visit_urls', analytics.VisitUrlsHandler, self.connectors),
             (r'/visit_uids', analytics.VisitUidsHandler, self.connectors),
-            (r'/visit_domains', analytics.VisitDomainsHandler, self.connectors)
+            (r'/visit_domains', analytics.VisitDomainsHandler, self.connectors),
+            (r'/funnel/action', funnel.ActionHandler, self.connectors),
+            (r'/funnel/action/(.*?)', funnel.ActionHandler, self.connectors),
+            (r'/funnel', funnel.FunnelHandler, self.connectors),
+            (r'/funnel/(.*?)', funnel.FunnelHandler, self.connectors)
         ]
+     
 
     @connectors("reporting_db","api")
     def client_pixel_routes(self):

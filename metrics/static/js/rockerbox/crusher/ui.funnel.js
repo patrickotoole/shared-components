@@ -417,12 +417,12 @@ RB.crusher.ui.funnel = (function(funnel) {
     }
   }
 
-  funnel.build = function(data, values, action_data) {
+  funnel.build = function(funnel_data, action_data) {
     var target = d3.selectAll(".funnel-wrapper")
     target.data([action_data])
 
     var funnels = target.selectAll(".funnel")
-      .data(data)
+      .data(funnel_data)
         .enter()
         .append("div")
         .classed("funnel",true)

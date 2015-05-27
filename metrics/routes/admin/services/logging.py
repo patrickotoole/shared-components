@@ -24,8 +24,5 @@ class LoggingRoutes(Routes):
             (r'/opt_log/(.*?)', scripts.opt.OptLogHandler, self.connectors),
             (r'/opt_rules', scripts.opt.OptRulesHandler, self.connectors),
             (r'/opt_rules/(.*?)', scripts.opt.OptRulesHandler, self.connectors),
-            (r'/funnel/action', funnel.ActionHandler, self.connectors),
-            (r'/funnel/action/(.*?)', funnel.ActionHandler, self.connectors),
-            (r'/funnel', funnel.FunnelHandler, self.connectors),
-            (r'/funnel/(.*?)', funnel.FunnelHandler, self.connectors)
+            
         ]

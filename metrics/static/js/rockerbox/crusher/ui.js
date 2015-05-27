@@ -39,7 +39,7 @@ RB.crusher.ui = (function(ui) {
   
 
   ui.build = function(dd){
-    ui.add_funnel()
+    //ui.add_funnel()
     console.log("building crusher...")   
   } 
 

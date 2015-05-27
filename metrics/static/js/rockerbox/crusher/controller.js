@@ -21,53 +21,71 @@ RB.crusher.controller = (function(controller) {
   })(window.location.search.substr(1).split('&'))
 
   var source = qs.source
-  var actionURL = "/admin/funnel/action?advertiser=" + source
-  var visitURL = "/visit_urls?format=json&source=" + source
-  var visitUID = "/visit_uids?format=json&url="
-  var visitDomains = "/visit_domains?format=json&kind=domains"
-  var funnelURL = "/admin/funnel?advertiser=" + source
+  var actionURL = "/crusher/funnel/action?format=json&advertiser=" + source
+  var visitURL = "/crusher/visit_urls?format=json&source=" + source
+  var visitUID = "/crusher/visit_uids?format=json&url="
+  var visitDomains = "/crusher/visit_domains?format=json&kind=domains"
+  var funnelURL = "/crusher/funnel?format=json&advertiser=" + source
 
   var addParam = function(u,p) { 
     return u.indexOf("?") >= 0 ? u + "&" + p : u + "?" + p 
   }
   URL = addParam(URL,"format=json")
 
-  controller.init = function(){
+  controller.initializers = {
+    "funnel": function() {
+      controller.get_tf_idf()
+
+      d3.json(actionURL,function(actions){
+
+        crusher.actionData = actions
+
+        d3.json(funnelURL, function(dd) {
+          crusher.funnelData = dd
+
+          crusher.ui.funnel.build(crusher.funnelData,crusher.actionData)
+          crusher.ui.add_funnel()
+        })
+ 
+      })
+    },
+    "action": function() {
+    
+      d3.json(visitURL, function(dd){
+        crusher.urlData = dd
+        crusher.urls = dd.map(function(x){return x.url})
+        
+        d3.json(actionURL,function(actions){
+          crusher.actionData = actions
+
+          actions.map(function(x) { x.values = crusher.urls })
+
+          crusher.ui.action.showAll(actions,controller.save_action,crusher.urls)
+          //crusher.ui.action.showList(d3.select(".funnel-wrapper"),actions)
+          //crusher.ui.build(crusher.urls) 
+ 
+        }) 
+      
+      })
+    }
+  }
+
+  controller.get_tf_idf = function() {
 
     d3.json("/admin/api?table=reporting.pop_domain&format=json", function(dd){
       crusher.pop_domains = {}
       dd.map(function(x){
         crusher.pop_domains[x.domain] = x.idf
       })
-    }) 
-
-    d3.json(visitURL, function(dd){
-      crusher.urlData = dd
-      crusher.urls = dd.map(function(x){return x.url})
-      
-      d3.json(actionURL,function(actions){
-        crusher.actionData = actions
-
-        actions.map(function(x) {
-          x.values = crusher.urls
-          return x
-        })
-
-        //crusher.ui.action.showAll(actions,controller.save_action,crusher.urls)
-        //crusher.ui.action.showList(d3.select(".funnel-wrapper"),actions)
-        crusher.ui.build(crusher.urls) 
-        
-
-        d3.json(funnelURL, function(dd) {
-          crusher.funnelData = dd
-
-          crusher.ui.funnel.build(crusher.funnelData,crusher.urls,crusher.actionData)
-          //crusher.ui.compute_funnel()
-        })
- 
-      })
-    
     })
+
+  }
+
+
+  controller.init = function(type){
+     
+    controller.initializers[type]()
+    
   }
 
   controller.get_domains = function(uids,callback) {

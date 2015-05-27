@@ -22,35 +22,39 @@ class FunnelHandler(FunnelBase,FunnelHelpers):
 
     def get(self,*args):
         advertiser = self.get_argument("advertiser", False)
-        _id = self.get_argument("id", False) 
-        if advertiser:
-            results = self.get_advertiser_funnels(advertiser)
-        elif _id:
-            results = self.get_funnel_by_id(_id) 
+        format = self.get_argument("format",False)
+        if format == "json":
+            _id = self.get_argument("id", False) 
+            if advertiser:
+                results = self.get_advertiser_funnels(advertiser)
+            elif _id:
+                results = self.get_funnel_by_id(_id) 
+            else:
+                results = self.get_all()
+
+            results = results.fillna(0)
+            results['action_id'] = results['action_id'].map(int)
+            results['advertiser'] = results['pixel_source_name']
+            
+
+            ordered = self.column_to_list(results,"url_pattern",['order','funnel_id'])
+
+            funnel_indices = ["funnel_name","funnel_id","owner","advertiser"]
+            grouped = ordered.groupby(funnel_indices)
+
+            action_indices = ['action_id','action_name','url_pattern'] 
+            group_fn = self.group_to_dict(action_indices,lambda v: v['action_id'] != 0) 
+            
+            grouped_actions = grouped.apply(group_fn)
+            funnel = pandas.DataFrame({"actions":grouped_actions}).reset_index()
+            
+            as_json = Convert.df_to_json(funnel)
+            self.write(as_json)
+            self.finish()
         else:
-            results = self.get_all()
+            self.render("analysis/visit_urls.html",data="{}")
 
-        results = results.fillna(0)
-        results['action_id'] = results['action_id'].map(int)
-        results['advertiser'] = results['pixel_source_name']
         
-
-        ordered = self.column_to_list(results,"url_pattern",['order','funnel_id'])
-
-        funnel_indices = ["funnel_name","funnel_id","owner","advertiser"]
-        grouped = ordered.groupby(funnel_indices)
-
-        action_indices = ['action_id','action_name','url_pattern'] 
-        group_fn = self.group_to_dict(action_indices,lambda v: v['action_id'] != 0) 
-        
-        grouped_actions = grouped.apply(group_fn)
-        funnel = pandas.DataFrame({"actions":grouped_actions}).reset_index()
-        
-        as_json = Convert.df_to_json(funnel)
-        self.write(as_json)
-        self.finish()
-
-    
 
     def make_to_update(self,body):
 
