@@ -82,14 +82,19 @@ class ActionHandler(tornado.web.RequestHandler):
 
     def get(self):
         advertiser = self.get_argument("advertiser", False)
-        if advertiser:
-            results = self.get_advertiser_actions(advertiser)
-        else:
-            results = self.get_all()
+        format = self.get_argument("format",False)
+        if format == "json":
+            if advertiser:
+                results = self.get_advertiser_actions(advertiser)
+            else:
+                results = self.get_all()
 
-        as_json = Convert.df_to_json(results)
-        self.write(as_json)
-        self.finish()
+            as_json = Convert.df_to_json(results)
+            self.write(as_json)
+            self.finish()
+        else:
+            self.render("analysis/visit_urls.html",data="")
+
 
     def check_required(self,obj):
         all_cols = [ i for i in self.required_cols if i in obj.keys() ]

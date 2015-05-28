@@ -36,20 +36,29 @@ RB.crusher.controller = (function(controller) {
     "funnel": function() {
       controller.get_tf_idf()
 
-      d3.json(actionURL,function(actions){
+      crusher.ui.funnel.buildBase() 
 
-        crusher.actionData = actions
+      d3.json(visitURL, function(dd){
+        crusher.urlData = dd
+        crusher.urls = dd.map(function(x){return x.url})
+        
+        d3.json(actionURL,function(actions){
+          crusher.actionData = actions
+          actions.map(function(x) { x.values = crusher.urls }) 
 
-        d3.json(funnelURL, function(dd) {
-          crusher.funnelData = dd
-
-          crusher.ui.funnel.build(crusher.funnelData,crusher.actionData)
-          crusher.ui.add_funnel()
-        })
+          d3.json(funnelURL, function(dd) {
+            crusher.funnelData = dd
+            crusher.ui.funnel.build(crusher.funnelData,crusher.actionData)
+            crusher.ui.add_funnel()
+          })
  
+        })
+
       })
     },
-    "action": function() {
+    "funnel/action": function() {
+
+      crusher.ui.action.buildBase()
     
       d3.json(visitURL, function(dd){
         crusher.urlData = dd

@@ -435,6 +435,21 @@ RB.crusher.ui.funnel = (function(funnel) {
     
   }
 
+  funnel.buildBase = function() {
+   var funnelRow = d3.selectAll(".container")
+      .append("div")
+      .classed("row funnels",true)
+
+    funnelRow
+      .append("div")
+      .classed("funnel-wrapper col-md-12",true)
+     
+    funnelRow
+      .append("div")
+      .classed("add-funnel-wrapper col-md-12",true)
+     
+  }
+
   
 
   funnel.add_action = funnel.methods.add_action

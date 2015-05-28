@@ -70,7 +70,9 @@
   $(document).ready(function(){
     console.log("// start things") 
     RB.init()  
-    RB.crusher.controller.init("funnel")
+
+    var page = window.location.pathname.replace("/crusher/","")
+    RB.crusher.controller.init(page)
     
     console.log("// finish things")
   })
@@ -86,6 +88,7 @@
   </div>
 
   <div class="container" style="width:inherit;margin-left:200px">
+    <!--
     <div class="row actions">
       <div class="action-wrapper"></div>
       <div class="add-action-wrapper"></div> 
@@ -95,6 +98,7 @@
       <div class="add-funnel-wrapper col-md-12"></div>  
 
     </div>
+    -->
     <br>
     
     <div class="hidden">

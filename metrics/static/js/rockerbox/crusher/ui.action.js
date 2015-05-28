@@ -98,12 +98,12 @@ RB.crusher.ui.action = (function(action) {
       .on("click", action.save.bind(newEdit,onSave))
   }
 
-  action.show = function(target,onSave) {
+  action.show = function(target,onSave,expandTarget) {
 
-    var h5 = target.append("h5")
+    var h5 = target.append("div")
+      .classed("row col-md-12",true)
 
-    h5
-      .append("span")
+    h5.append("span")
       .text(function(x){
         return x.action_name
       })
@@ -113,8 +113,11 @@ RB.crusher.ui.action = (function(action) {
       .text("edit")
       .on("click",function(){
         var edit = d3.select(this.parentNode)
-        edit.text("") // clear out the shit.
-        action.edit(edit,onSave)
+        //edit.text("") // clear out the shit.
+        //action.edit(edit,onSave)  
+        
+        expandTarget.datum(edit.datum())
+        action.edit(expandTarget,onSave)
       }) 
 
     h5.append("button")
@@ -129,7 +132,7 @@ RB.crusher.ui.action = (function(action) {
       
   }
 
-  action.showAll = function(actions,onSave) {
+  action.showAll = function(actions,onSave,urls) {
     
     var selected = d3.selectAll(".action-wrapper")
       .selectAll(".action")
@@ -137,13 +140,14 @@ RB.crusher.ui.action = (function(action) {
 
     var newActions = selected
       .enter()
-        .append("div").classed("row col-md-12",true)
+        //.append("div").classed("row",true)
         .append("div")
-        .classed("action col-md-6",true)
+        .classed("action",true)
 
-    action.show(newActions,onSave) 
+    var expandTarget = d3.selectAll(".action-view-wrapper")
 
-    action.add_action(actions)
+    action.show(newActions,onSave,expandTarget) 
+    action.add_action(urls)
 
   }
 
@@ -178,11 +182,35 @@ RB.crusher.ui.action = (function(action) {
 
     var newEdit = edit
       .enter()
-      .append("div").classed("row col-md-12",true) 
-      .append("div").classed("action col-md-6",true)
+      .append("div").classed("row",true) 
+      .append("div").classed("action",true)
 
     action.edit(newEdit,onSave)
     
+  }
+
+  action.buildBase = function() {
+    var actionsRow = d3.selectAll(".container")
+      .append("div")
+      .classed("row actions",true)
+
+    var action_wrapper = actionsRow
+      .append("div")
+      .classed("action-view-wrapper col-md-6",true)
+     
+
+    var action_wrapper = actionsRow
+      .append("div")
+      .classed("action-list-wrapper col-md-6",true)
+
+    action_wrapper
+      .append("h5").text("Advertiser Actions")
+
+    action_wrapper
+      .append("div").classed("action-wrapper",true)
+
+    action_wrapper
+      .append("div").classed("add-action-wrapper",true) 
   }
 
   return action
