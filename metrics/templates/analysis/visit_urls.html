@@ -26,13 +26,20 @@
 
 
   <style>
-
+    .list-group-item.active, .list-group-item.active:focus, .list-group-item.active:hover {
+      z-index: 2;
+      color: #fff;
+      background-color: #337ab7;
+      border-color: #337ab7;
+    }
 
     .filter-wrapper h5 {font-size:13px}
     .container {padding-top:15px}
     input[type="checkbox"]:disabled + label{ color: #ccc; }
     .loading { display: none; } 
     body { font: 10px sans-serif; }
+    body { font-size: 12px; font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;}
+    .list-group-item .btn {margin-top:-4px}
     .axis path,
     .axis line { fill: none; stroke: #000; shape-rendering: crispEdges; }
     .x.axis path { display: none; }
@@ -83,76 +90,9 @@
 
 <body>
 
-  <div style="position:fixed;width:200px;top:0px;left:0px;height:100%;background:black">
-  
-  </div>
+  <div style="position:fixed;width:200px;top:0px;left:0px;height:100%;background:black"></div>
+  <div class="container" style="width:inherit;margin-left:200px"></div>
 
-  <div class="container" style="width:inherit;margin-left:200px">
-    <!--
-    <div class="row actions">
-      <div class="action-wrapper"></div>
-      <div class="add-action-wrapper"></div> 
-      <div style="clear:both;display:block;padding-top:10px"></div>
-      <div class="funnel-wrapper col-md-12"></div>
-      <div class="add-funnel-action-wrapper col-md-12"></div> 
-      <div class="add-funnel-wrapper col-md-12"></div>  
-
-    </div>
-    -->
-    <br>
-    
-    <div class="hidden">
-    <h3>UID Targeting - On-site Data</h3>
-    <br/>
-
-    <h4>1. Choose an Advertiser</h4>
-    <div class="row">
-      <form id="source" class="navbar-form pull-left form-inline" action="submit">
-	<input id="source" type="text" class="form-control span12" placeholder="Pixel Source Name">
-	<button class="btn btn-primary pull-right" type="submit" id="get-source">Go!</button>
-      </form>
-    </div>
-
-    <h4>2. Choose URLs to Target</h4>
-    <div class="row">
-      <form id="form" class="navbar-form pull-left form-inline" onSubmit="submitForm()" method="POST" action="javascript:myFunction(); return false;">
-      <select id="urls" name="urls[]" multiple="multiple" class="multi-chosen-select span12" data-placeholder="Enter a source name first..." style="width:800px;"></select>
-    </div>
-
-    <h4>3. Select a start and end date</h4>
-    <input id="start_date" type="text" name="start_date" class="form-control span12" placeholder="Start Date" maxlength="8" >
-    <br /><br />
-    <input id="end_date" type="text" name="end_date" class="form-control span12" placeholder="End Date" maxlength="8">
-    <br /><br />
-
-    <h4>4. Create a name for this funnel</h4>
-    <div class="row">
-      <input id="funnel_name" type="text" name="funnel_name" class="form-control span12" placeholder="Group Name" maxlength="100">
-      <h4>5. Select the boolean logic to use for this funnel group</h4>
-      <div id="switch-container" class="switch-container" style="display:inline-block; height: 30px;">
-	<input id="operation" type="radio" data-on-text="AND" data-off-text="OR" data-radio-all-off="true" checked>
-      </div>
-      <br /><br />
-      <h4>6. Enter your email address</h4>
-      <input id="owner" type="text" name="owner" class="form-control span12" placeholder="Email" maxlength="50">
-	<button class="btn btn-primary pull-right" type="submit">Submit</button>
-    </div>
-    </form>
-
-    <div class="row">
-      <h4>Domains</h4>
-      <ul id="domains">
-      </ul>
-    </div>
-    <div class="row">
-      <h4>UIDs</h4>
-      <ul id="uids">
-      </ul>
-    </div>
-
-    </div>    
-  </div>
-  </div>
 </body>
 
 {% end %}   

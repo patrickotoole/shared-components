@@ -7,7 +7,7 @@ RB.crusher.ui.action = (function(action) {
   var crusher = RB.crusher
 
   action.save = function(callback) {
-    
+
     var data = this.selectAll(".action-pattern").data()           
 
     var d = data.reduce(function(p,c){
@@ -20,18 +20,35 @@ RB.crusher.ui.action = (function(action) {
     objectData.action_name = this.selectAll("input").node().value
     objectData.operator = this.selectAll(".operator").node().value
 
-    this.text("")
-    action.show(this,callback)
+    this.select("h5").text("Edit an action")
+    this.select(".save").text("Update action")  
+
+    var actions = crusher.actionData // this should really be in the controller
+    var onSave = callback
+    urls = actions[0].values
+    action.showAll(actions,onSave,urls)
+
+    action.select(objectData)
 
     callback(objectData,this)
 
   }
 
-  action.edit = function(newEdit,onSave) {
+  action.edit = function(edit,onSave) {
+
+    var edits = edit.selectAll(".action")
+      .data(function(x){return [x]},function(x){return x.action_id})
+
+    var newEdit = edits.enter()
+      .append("div")
+      .classed("action",true)
+
+    edits.exit()
+      .remove()
 
     newEdit.append("h5") 
       .text(function(x){
-        return x.url_pattern ? "Edit an action" : "Create an action"
+        return x.action_id ? "Edit an action" : "Create an action"
       })
 
     var group = newEdit.append("div")
@@ -69,7 +86,7 @@ RB.crusher.ui.action = (function(action) {
         return x.operator
       })
 
-    var newPatterns = newEdit.selectAll(".action-patterns")
+    var patterns = newEdit.selectAll(".action-patterns")
       .data(function(x){
         if (x.url_pattern) {
           x.rows = x.url_pattern.map(function(y){
@@ -78,11 +95,13 @@ RB.crusher.ui.action = (function(action) {
         }
         return [x]
       })
+
+    var newPatterns = patterns
       .enter()
         .append("div")
         .classed("action-patterns",true)
 
-    action.pattern.add.bind(newPatterns)(false)
+    if (newPatterns.length) action.pattern.add.bind(newPatterns)(false)
 
     newEdit.append("div")
       .style("padding","10px")
@@ -93,39 +112,41 @@ RB.crusher.ui.action = (function(action) {
       .on("click", action.pattern.add.bind(newPatterns))
 
     newEdit.append("a")
-      .text("Define Action")
-      .classed("btn btn-success btn-sm",true)
+      .text(function(x) {return x.action_id ? "Update Action" : "Define Action"})
+      .classed("save btn btn-success btn-sm",true)
       .on("click", action.save.bind(newEdit,onSave))
   }
 
   action.show = function(target,onSave,expandTarget) {
 
-    var h5 = target.append("div")
-      .classed("row col-md-12",true)
+    var h5 = target.selectAll("div").data(function(x){return [x]})
+    h5.enter().append("div").classed("",true)
 
-    h5.append("span")
-      .text(function(x){
-        return x.action_name
-      })
+    var spans = h5.selectAll("span").data(function(x){return [x]})
+    spans.enter().append("span")
+    spans.text(function(x){ return x.action_name })
 
-    h5.append("button")
-      .classed("btn  btn-xs pull-right",true)
+    h5.selectAll(".edit").data(function(x){return [x]}).enter()
+      .append("button")
+      .classed("edit btn  btn-xs pull-right",true)
       .text("edit")
       .on("click",function(){
         var edit = d3.select(this.parentNode)
-        //edit.text("") // clear out the shit.
-        //action.edit(edit,onSave)  
-        
-        expandTarget.datum(edit.datum())
+        var data = edit.datum()
+
+        action.select(data)
+
+        expandTarget.datum(data)
         action.edit(expandTarget,onSave)
       }) 
 
-    h5.append("button")
-      .classed("btn btn-danger btn-xs pull-right",true)
+    h5.selectAll(".remove").data(function(x){return [x]}).enter() 
+      .append("button")
+      .classed("remove btn btn-danger btn-xs pull-right",true)
       .text("remove")
       .on("click",function(){
-        var edit = d3.select(this.parentNode)
-        edit.text("") // clear out the shit.
+        var edit = d3.select(this.parentNode.parentNode)
+        edit.remove()
         crusher.controller.delete_action(edit.datum())
       })  
 
@@ -133,34 +154,40 @@ RB.crusher.ui.action = (function(action) {
   }
 
   action.showAll = function(actions,onSave,urls) {
-    
-    var selected = d3.selectAll(".action-wrapper")
-      .selectAll(".action")
+
+    var selected = d3.selectAll(".action-wrapper").selectAll(".action")
       .data(actions)
 
-    var newActions = selected
-      .enter()
-        //.append("div").classed("row",true)
-        .append("div")
-        .classed("action",true)
+    selected.enter().append("div")
+      .classed("list-group-item action",true)
 
     var expandTarget = d3.selectAll(".action-view-wrapper")
 
-    action.show(newActions,onSave,expandTarget) 
+    action.show(selected,onSave,expandTarget) 
     action.add_action(urls)
 
   }
 
+  action.select = function(data) {
+    var selected = d3.selectAll(".action-wrapper").selectAll(".action")
+      .classed("active",false)
+      .filter(function(x) { return x == data })
+      .classed("active",true)
+    
+  }
+
   action.add_action = function(dd) {
     var wrapper = d3.selectAll(".add-action-wrapper")
-    var action_wrapper = d3.selectAll(".action-wrapper") 
+    var action_wrapper = d3.selectAll(".action-view-wrapper") 
 
-    wrapper
-      .append("div").classed("button-wrapper",true)
-      .append("button")
-      .classed("btn btn-xs",true)
-      .text("New action")
-      .on("click",crusher.controller.new_action.bind(this,action_wrapper,dd))
+    wrapper.selectAll(".button-wrapper")
+      .data([{}])
+      .enter()
+        .append("div").classed("button-wrapper",true)
+        .append("button")
+        .classed("btn btn-xs",true)
+        .text("New action")
+        .on("click",crusher.controller.new_action.bind(this,action_wrapper,dd))
   }
 
   action.showList = function(target,actions) {
@@ -207,7 +234,7 @@ RB.crusher.ui.action = (function(action) {
       .append("h5").text("Advertiser Actions")
 
     action_wrapper
-      .append("div").classed("action-wrapper",true)
+      .append("div").classed("list-group action-wrapper",true)
 
     action_wrapper
       .append("div").classed("add-action-wrapper",true) 

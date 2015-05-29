@@ -156,11 +156,13 @@ RB.crusher.controller = (function(controller) {
   }
 
   controller.action = {
-    new: function(target,options) {
+    new: function(expandTarget,options) {
       var defaultAction = [{"values":options}]
 
-      crusher.actionData = crusher.actionData.concat(defaultAction) 
-      crusher.ui.action.buildEdit(target,crusher.actionData,controller.save_action)
+      crusher.actionData = crusher.actionData.filter(function(x){return x.action_id}).concat(defaultAction) 
+      expandTarget.datum(defaultAction[0])
+      crusher.ui.action.edit(expandTarget,controller.save_action)
+      crusher.ui.action.select({})
     },
     delete: function(action){
       d3.xhr(actionURL + "&action_id=" + action.action_id)
@@ -168,9 +170,12 @@ RB.crusher.controller = (function(controller) {
         .send(
           "DELETE",
           function(err, rawData){
+            crusher.actionData = crusher.actionData.filter(function(x){return x.action_id != action.action_id})
+            /*
             var resp = JSON.parse(rawData.response)
             data['action_id'] = resp['response']['action_id']
             obj.filter(function(){return this}).datum(data)
+            */
           }
         ); 
     },
