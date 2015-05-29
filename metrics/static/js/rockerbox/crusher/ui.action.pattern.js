@@ -47,15 +47,17 @@ RB.crusher.ui.action.pattern = (function(pattern) {
         action.pattern.remove.bind(this.parentNode.parentNode)()
       })
   
-    selectBox.selectAll("option")
-      .data(function(x){return x.values})
-      .enter()
-        .append("option")
-        .text(String) 
-        .attr("selected",function(x){
-          var pattern = d3.select(this.parentNode).datum().url_pattern
-          return x == pattern ? "selected" : null
-        })
+    setTimeout(function(){
+      selectBox.selectAll("option")
+        .data(function(x){return x.values})
+        .enter()
+          .append("option")
+          .text(String) 
+          .attr("selected",function(x){
+            var pattern = d3.select(this.parentNode).datum().url_pattern
+            return x == pattern ? "selected" : null
+          })
+    },1)
   } 
 
   pattern.remove = function() {

@@ -34,6 +34,73 @@ RB.crusher.ui.action = (function(action) {
 
   }
 
+  action.view = function(wrapper) {
+    var actionView = wrapper.selectAll(".action-view")
+      .data(function(x){return [x]},function(x){return x.action_id})
+      
+    actionView.enter()
+      .append("div")
+      .classed("action-view",true)
+
+    actionView.exit().remove()
+
+    var info = actionView.selectAll(".urls").data(function(x){
+
+      if (!x.visits_data) {
+        x.all = [x]
+        crusher.controller.action.get(x,action.view.bind(false,wrapper))
+        delete x['all']
+      }
+
+      return [x]
+    })
+
+    info.enter()
+      .append("div").classed("urls",true)
+
+    info.filter(function(x){console.log(x); return !x.action_id}).remove()
+
+    var with_data = info.filter(function(x){return x.visits_data})
+
+
+    var timeseries = with_data.selectAll(".ts").data(function(x){
+      var nested = d3.nest()
+        .key(function(x){return x.timestamp})
+        .rollup(function(x){ return {
+            "visits": d3.sum(x.map(function(x){return x.visits})),
+            "uniques": x.length
+          }
+        })
+        .entries(x.visits_data).map(function(x){
+          x.date = x.key
+          x.visits = x.values.visits
+          x.uniques = x.values.uniques
+          return x
+        }).sort(function(x,y) {
+          return (+new Date(x.date)) - (+new Date(y.date))
+        }).filter(function(x){
+          return x.key != ""
+        })
+
+      return (nested.length) ? [nested] : []
+    })
+
+    var newTs = timeseries.enter().append("div").classed("ts",true)
+
+
+    if (newTs.length) {
+      var tsData = newTs.datum()
+      RB.rho.ui.buildTimeseries(newTs,tsData,"asdf",["visits","uniques"])
+    }
+
+    //var svg = timeseries.selectAll("svg").data(function(x){return [x]})
+    //svg.enter().append("svg")
+
+    
+
+
+  }
+
   action.edit = function(edit,onSave) {
 
     var edits = edit.selectAll(".action")
@@ -138,6 +205,7 @@ RB.crusher.ui.action = (function(action) {
 
         expandTarget.datum(data)
         action.edit(expandTarget,onSave)
+        action.view(expandTarget)
       }) 
 
     h5.selectAll(".remove").data(function(x){return [x]}).enter() 

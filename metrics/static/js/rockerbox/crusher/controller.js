@@ -162,6 +162,7 @@ RB.crusher.controller = (function(controller) {
       crusher.actionData = crusher.actionData.filter(function(x){return x.action_id}).concat(defaultAction) 
       expandTarget.datum(defaultAction[0])
       crusher.ui.action.edit(expandTarget,controller.save_action)
+      crusher.ui.action.view(expandTarget)
       crusher.ui.action.select({})
     },
     delete: function(action){
@@ -185,6 +186,9 @@ RB.crusher.controller = (function(controller) {
 
       delete cdata['values'];
       delete cdata['rows']
+      delete cdata['count']
+      delete cdata['uids']
+      delete cdata['visits_data']
 
       cdata['advertiser'] = source
 
@@ -199,13 +203,14 @@ RB.crusher.controller = (function(controller) {
           }
         );                    
     },
-    get: function(action) {
+    get: function(action,callback) {
       var domains = []
   
       action.all.length && action.all[0].values && action.all[0].values.map(function(d){
-        action.url_pattern.map(function(x){
-          if (d.indexOf(x) > -1) domains.push(d)
-        })
+        if (action.url_pattern)
+          action.url_pattern.map(function(x){
+            if (d.indexOf(x) > -1) domains.push(d)
+          })
       })
   
       var obj = {"urls": domains}
@@ -216,10 +221,14 @@ RB.crusher.controller = (function(controller) {
           JSON.stringify(obj),
           function(err, rawData){
             var dd = JSON.parse(rawData.response)
+            action.visits_data = dd
             action.uids = dd.map(function(x){return x.uid})
             action.count = dd.length 
+            if (callback) callback()
           }
         );
+
+      return obj
     }
   }
 
