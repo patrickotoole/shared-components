@@ -49,7 +49,7 @@ class CampaignAction(Action):
             self.logger.error(r.text)
             raise TypeError("Error with Opt Log:\n %s" %r.text)
             
-        self.logger.info("push ok")
+        self.logger.info("push ok\n")
 
     def check_for_prev_run(self, campaign_id, rule_group_id):
 
@@ -93,7 +93,7 @@ class CampaignAction(Action):
             if self.check_for_prev_run(log['campaign_id'], log['rule_group_id']):
                 self.logger.info("Already ran on %s for %s" %(log['campaign_id'], TODAY))
             else:
-                self.logger.info("\n" + pprint.pformat(log) + "\n")
+                self.logger.info("\n" + pprint.pformat(log))
                 self.push_log(log)
                 time.sleep(3)
 

@@ -98,6 +98,6 @@ if __name__ == "__main__":
         runner = Runner(params)
         runner.run()
 
-        logger.info("prospecting_bid_opt finished successfully with config %s" %config_name)
+        logger.info("prospecting_bid_opt finished successfully with config %s\n\n\n" %config_name)
 
 
