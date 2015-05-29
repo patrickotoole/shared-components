@@ -205,13 +205,15 @@ class CampaignDataSource(DataSource):
 
         def aggregate_reporting(x):
             x = x.sort('date')
+            
             cols = {'imps_served_total': x['imps'].sum(),
                     'clicks': x['clicks'].sum(),
                     'media_cost': x['media_cost'].sum(),
-                    'imps_served_daily': x['imps'].tail(3).mean(),
-                    'CPM_daily': x['imps'].tail(3).mean(),
+                    'imps_served_daily':  x.groupby(x['date'].apply(lambda x: x.date())).sum()['imps'].tail(3).mean(),
+                    'CPM_daily': x.groupby(x['date'].apply(lambda x: x.date())).sum()['media_cost'].tail(3).mean() * 1000 / x.groupby(x['date'].apply(lambda x: x.date())).sum()['imps'].tail(3).mean(),
                     'last_served_date': str(x['date'].max().date())
                     }
+
             return cols
 
         def aggregate_conv(x):
