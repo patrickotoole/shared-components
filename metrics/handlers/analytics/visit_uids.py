@@ -60,9 +60,12 @@ class VisitUidsHandler(BaseHandler, AnalyticsBase):
         in_clause = self.make_in_clause(urls)
         WHERE = where.format(in_clause)
         QUERY = self.query + WHERE 
+
+        # DEV: NEED TO REMOVE THE BELOW 
+        #QUERY = QUERY + " limit 100"
         
         from cassandra.query import SimpleStatement
-        #logging.info(QUERY)
+        logging.info(QUERY)
         try:
             return self.cassandra.execute(QUERY,None,60)
         except ReadTimeout:

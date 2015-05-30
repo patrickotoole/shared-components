@@ -44,10 +44,17 @@ class VisitUrlsHandler(BaseHandler):
             raise Exception("Must specify source using source=")
 
         WHERE = "where " + " and ".join(where)
+        QUERY = self.query + WHERE 
 
-        logging.info(self.query + WHERE)
+        # DEV: NEED TO REMOVE THE BELOW 
+        #QUERY = QUERY + " limit 100"
+        logging.info(QUERY)
 
-        df = self.cassandra.select_dataframe(self.query + WHERE)
+        
+        
+
+
+        df = pandas.DataFrame(self.cassandra.execute(QUERY,None,60))
 
         return df
 

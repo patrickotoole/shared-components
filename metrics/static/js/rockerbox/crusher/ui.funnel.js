@@ -18,7 +18,8 @@ RB.crusher.ui.funnel = (function(funnel) {
     funnel.edit.component.step(newAction)
     funnel.edit.component.select(newAction) 
     funnel.edit.component.remove(newAction,options) 
-    
+    funnel.edit.component.add(newAction,options) 
+     
     //funnel.edit.component.add_action(settings,options)
     funnel.edit.component.compute_funnel(settings,options) 
     //funnel.edit.component.remove_funnel(settings)  
@@ -35,18 +36,38 @@ RB.crusher.ui.funnel = (function(funnel) {
   }
 
   funnel.methods = {
-    add_action: function(target,options) {
+    remove_action: function(actions,action) {
+      var data = actions.datum()
 
-      var parentTarget = d3.select(target.node().parentNode.parentNode),
-        data = target.datum()
+      data.actions = data.actions.filter(function(x){
+        return x.action_id != action.action_id
+      })
 
-      data.actions = data.actions.concat([{
+      actions.selectAll(".action").filter(function(x){
+        return x.action_id == action.action_id
+      }).remove()
+
+      actions.selectAll("span.step")
+        .text(function(x,i){return "Step " + (i+1) + ": "}) 
+    },
+    add_action: function(actions,options) {
+
+      var data = actions.datum()
+      data.actions = data.actions.filter(function(x){return x.action_id != 0}).concat([{
         "action_id":0,
         "action_name":"",
         "url_pattern":[]
-      }])
-      funnel.edit(parentTarget,options)
+      }])           
 
+      actions.datum(data)
+      var newAction = funnel.edit.component.action(actions, options)
+        .append("div").classed("input-group input-group-sm",true)
+      
+      funnel.edit.component.step(newAction)
+      funnel.edit.component.select(newAction) 
+      funnel.edit.component.remove(newAction,options) 
+      funnel.edit.component.add(newAction,options) 
+     
     },
     add_funnel: function(target) {
 
@@ -221,16 +242,22 @@ RB.crusher.ui.funnel = (function(funnel) {
         .classed("btn btn-xs btn-danger",true)
         .html("&ndash;")
         .on("click",function(x){
-          var funnels = d3.select(this.parentNode.parentNode.parentNode.parentNode.parentNode)
+          var actions = d3.select(this.parentElement.parentElement.parentElement.parentElement)
+          funnel.methods.remove_action(actions,x) 
+
+          /*var funnels = d3.select(this.parentNode.parentNode.parentNode.parentNode.parentNode)
           var funnel_datum = funnels.datum()
           var data = d3.select(this).datum()
           
           funnel_datum.actions = funnel_datum.actions.filter(function(x){return x != data})
 
           crusher.controller.save_funnel(funnel_datum) 
-          funnel.edit(funnels,actions)
+          */
+          //funnel.edit(funnels,actions)
 
         })
+    },
+    add: function(newAction,options) {
 
       newAction.append("span")
         .classed("input-group-btn",true)
@@ -238,15 +265,8 @@ RB.crusher.ui.funnel = (function(funnel) {
         .classed("btn btn-xs btn-primary",true)
         .text("+")
         .on("click",function(x){
-          var funnels = d3.select(this.parentNode.parentNode.parentNode.parentNode.parentNode)
-          var funnel_datum = funnels.datum()
-          var data = d3.select(this).datum()
-          
-          funnel_datum.actions = funnel_datum.actions.filter(function(x){return x != data})
-
-          crusher.controller.save_funnel(funnel_datum) 
-          funnel.edit(funnels,actions)
-
+          var actions = d3.select(this.parentElement.parentElement.parentElement.parentElement)
+          funnel.methods.add_action(actions,options)
         }) 
     }
   } 
@@ -464,6 +484,29 @@ RB.crusher.ui.funnel = (function(funnel) {
     funnels
       .classed("funnel list-group-item",true)
       .text(function(x){return x.funnel_name})
+      .on("click",function(x){
+
+        d3.select(this.parentNode.parentNode).selectAll(".funnel")
+          .classed("active",false)
+
+        d3.select(this)
+          .classed("active",true)
+
+        var target = d3.selectAll(".funnel-view-wrapper").selectAll(".funnel-wrapper")
+        var f = target.selectAll(".funnel").data([x],function(y){return y.funnel_id})
+
+        f.enter()
+          .append("div")
+          .classed("funnel",true)
+
+        f
+         .append("h5")
+         .text("Edit a funnel")
+ 
+        f.exit().remove()
+
+        funnel.edit(f,action_data)
+      })
 
     funnel.edit.component.remove_funnel(funnels)   
      
@@ -471,10 +514,9 @@ RB.crusher.ui.funnel = (function(funnel) {
 
   funnel.build = function(funnel_data, action_data) {
     var target = d3.selectAll(".funnel-wrapper")
-    target.data([action_data])
 
     var funnels = target.selectAll(".funnel")
-      .data(funnel_data)
+      .data([funnel_data[0]])
         .enter()
         .append("div")
         .classed("funnel",true)
