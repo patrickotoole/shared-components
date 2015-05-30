@@ -8,7 +8,10 @@ RB.crusher.ui.funnel = (function(funnel) {
 
   funnel.edit = function(funnels, options) {
 
-    var actions = funnel.edit.component.actions(funnels)
+    var settings = funnels.append("div").classed("settings",true)
+
+    funnel.edit.component.name(settings) 
+    var actions = funnel.edit.component.actions(settings)
     var newAction = funnel.edit.component.action(actions, options)
       .append("div").classed("input-group input-group-sm",true)
     
@@ -16,9 +19,9 @@ RB.crusher.ui.funnel = (function(funnel) {
     funnel.edit.component.select(newAction) 
     funnel.edit.component.remove(newAction,options) 
     
-    funnel.edit.component.add_action(funnels,options)
-    funnel.edit.component.compute_funnel(funnels,options) 
-    funnel.edit.component.remove_funnel(funnels)  
+    //funnel.edit.component.add_action(settings,options)
+    funnel.edit.component.compute_funnel(settings,options) 
+    //funnel.edit.component.remove_funnel(settings)  
 
   }
 
@@ -85,16 +88,30 @@ RB.crusher.ui.funnel = (function(funnel) {
   } 
 
   funnel.edit.component = {
+    name: function(funnels){
+
+      var group = funnels.append("div")
+        .classed("input-group input-group-sm",true)
+
+      group.append("span").classed("input-group-addon",true).text("Funnel name")
+
+      group.append("input").classed("form-control",true)
+        .attr("value",function(x){return x.funnel_name})
+    },
     compute_funnel: function(funnels){
       funnels.selectAll(".compute-funnel-wrapper")
         .data(function(x){return [x]})
         .enter()
           .append("div").classed("compute-funnel-wrapper",true)
           .append("button")
-          .classed("btn btn-xs",true)
+          .classed("btn btn-sm btn-success",true)
           .text("Compute Funnel")
           .on("click",function(){
-            var funnels = d3.select(this.parentElement.parentElement)
+            var funnels = d3.select(this.parentElement.parentElement.parentElement)
+              .selectAll(".show")
+              .data(function(x){return [x]})
+
+            funnels.enter().append("div").classed("show",true)
             funnel.show(funnels)
           })
     },
@@ -103,7 +120,7 @@ RB.crusher.ui.funnel = (function(funnel) {
       funnels.selectAll(".button-wrapper")
         .data(function(x){return [x]})
         .enter()
-          .append("div").classed("button-wrapper row",true)
+          .append("div").classed("button-wrapper",true)
           .append("button")
           .classed("btn btn-xs",true)
           .text("Add funnel action")
@@ -120,7 +137,7 @@ RB.crusher.ui.funnel = (function(funnel) {
           .append("div").classed("remove-funnel",true)
           .append("button")
           .classed("btn btn-xs btn-danger",true)
-          .text("Remove Funnel")
+          .text("remove")
           .on("click",function(x){
             var parent_data = d3.select(this.parentNode.parentNode.parentNode).selectAll(".funnel").data()
             var funnel = d3.select(this.parentNode.parentNode)
@@ -136,7 +153,7 @@ RB.crusher.ui.funnel = (function(funnel) {
         
       funnel_actions
         .enter()
-        .append("div").classed("actions row",true)
+        .append("div").classed("actions action-steps row",true)
 
       return funnel_actions
     },
@@ -159,7 +176,7 @@ RB.crusher.ui.funnel = (function(funnel) {
 
       return action
         .enter()
-        .append("div").classed("action col-md-3",true)
+        .append("div").classed("action col-md-12",true)
          
     },
     step: function(newAction) {
@@ -218,7 +235,7 @@ RB.crusher.ui.funnel = (function(funnel) {
       newAction.append("span")
         .classed("input-group-btn",true)
         .append("button")
-        .classed("btn btn-xs",true)
+        .classed("btn btn-xs btn-primary",true)
         .text("+")
         .on("click",function(x){
           var funnels = d3.select(this.parentNode.parentNode.parentNode.parentNode.parentNode)
@@ -240,9 +257,11 @@ RB.crusher.ui.funnel = (function(funnel) {
     step_chart: function(funnels){
       
       var data = funnels.datum().actions
+
+      var targetWidth = funnels.style("width").replace("px","")
       
       var margin = {top: 20, right: 20, bottom: 30, left: 40},
-        width = 600 - margin.left - margin.right,
+        width = targetWidth - margin.left - margin.right,
         height = 300 - margin.top - margin.bottom;
   
       var x = d3.scale.ordinal().rangeRoundBands([0, width], .1);
@@ -321,6 +340,7 @@ RB.crusher.ui.funnel = (function(funnel) {
       var data = funnels.datum(),
         reduced = funnel.methods.compute_uniques(data.actions)
 
+      /*
       var steps = funnels.selectAll(".steps")
         .data(function(x){return [x]})
 
@@ -328,7 +348,8 @@ RB.crusher.ui.funnel = (function(funnel) {
         .append("div").classed("steps",true)
 
       funnel.show.component.step(steps)
-      funnel.show.component.step_chart(funnels) 
+      */
+      funnel.show.component.step_chart(funnels.append("div").classed("col-md-12 step-chart",true)) 
 
       return reduced
     },
@@ -344,8 +365,9 @@ RB.crusher.ui.funnel = (function(funnel) {
         .text(function(x,i){return "Step " + (i+1) + ": " + x.funnel_count})   
     },
     domain_chart: function(funnels,data) {
+      var targetWidth = funnels.style("width").replace("px","") 
       
-      var width = 600,
+      var width = targetWidth,
           barHeight = 15;
       
       var x = d3.scale.linear()
@@ -392,14 +414,20 @@ RB.crusher.ui.funnel = (function(funnel) {
         return y.wuid - x.wuid
       }).slice(0,25)
 
+      /*
       var domains = funnels.selectAll(".domains")
         .data([data])
 
       domains.enter()
         .append("div").classed("domains",true)
 
-      funnel.show.component.domain_chart(funnels,data)
-      //funnel.show.component.domain(domains)
+      funnel.show.component.domain(domains) 
+      */
+      var domain_chart = funnels.selectAll("domain-chart").data(function(x){return [x]})
+      domain_chart.enter()
+        .append("div").classed("col-md-12 domain-chart",true)
+      funnel.show.component.domain_chart(domain_chart,data)
+      
     },
     domain: function(domains) {
       var domain = domains.selectAll(".domain")
@@ -417,6 +445,30 @@ RB.crusher.ui.funnel = (function(funnel) {
     }
   }
 
+  funnel.showList = function(funnel_data,action_data) {
+    var target = d3.selectAll(".funnel-list-wrapper")
+    target.data([action_data])
+
+    target.append("h5").text("Advertiser Funnels")
+
+    var funnelWrapper = target.append("div")
+      .classed("list-group funnel-wrapper",true)
+
+    var funnels = funnelWrapper.selectAll(".funnel")
+      .data(funnel_data)
+
+    funnels
+      .enter()
+      .append("div")
+
+    funnels
+      .classed("funnel list-group-item",true)
+      .text(function(x){return x.funnel_name})
+
+    funnel.edit.component.remove_funnel(funnels)   
+     
+  }
+
   funnel.build = function(funnel_data, action_data) {
     var target = d3.selectAll(".funnel-wrapper")
     target.data([action_data])
@@ -428,10 +480,12 @@ RB.crusher.ui.funnel = (function(funnel) {
         .classed("funnel",true)
 
     funnels
-      .append("h4")
-      .text(function(x){return "Funnel: " + x.funnel_name})
+      .append("h5")
+      .text("Edit a funnel")
     
     funnel.edit(funnels,action_data)
+
+    funnel.showList(funnel_data,action_data)
     
   }
 
@@ -442,7 +496,14 @@ RB.crusher.ui.funnel = (function(funnel) {
 
     funnelRow
       .append("div")
-      .classed("funnel-wrapper col-md-12",true)
+      .classed("funnel-view-wrapper col-md-6",true)
+      .append("div")
+      .classed("funnel-wrapper ",true)
+
+    funnelRow
+      .append("div")
+      .classed("funnel-list-wrapper col-md-6",true)
+      
      
     funnelRow
       .append("div")

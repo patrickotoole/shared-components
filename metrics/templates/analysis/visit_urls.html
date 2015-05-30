@@ -27,6 +27,13 @@
 
 
   <style>
+    .compute-funnel-wrapper {
+      /*padding-top: 8px;*/
+      padding-bottom: 8px;
+    }
+    .list-group-item .remove-funnel {
+      float:right
+    }
     .list-group-item.active, .list-group-item.active:focus, .list-group-item.active:hover {
       z-index: 2;
       color: #fff;
@@ -61,7 +68,7 @@
       padding-left:25px; 
       background-color:#ddd
     }
-    .action-patterns {
+    .action-patterns, .action-steps {
       padding:10px
     }
 
@@ -91,7 +98,14 @@
 
 <body>
 
-  <div style="position:fixed;width:200px;top:0px;left:0px;height:100%;background:black"></div>
+  <div style="position:fixed;width:200px;top:0px;left:0px;height:100%;background:black">
+    <div class="row col-md-12">
+      <a href="/crusher/funnel/action?source=baublebar">Action</a> 
+    </div>
+    <div class="row col-md-12"> 
+      <a href="/crusher/funnel?source=baublebar">Funnel</a>
+    </div>
+  </div>
   <div class="container" style="width:inherit;margin-left:200px"></div>
 
 </body>
