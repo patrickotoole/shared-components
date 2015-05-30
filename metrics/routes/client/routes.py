@@ -49,7 +49,6 @@ class AdvertiserRoutes(Routes):
         import handlers.campaign as campaign
         import handlers.profile as profile
         import handlers.creative as creative
-        import handlers.viewable as viewable
         import handlers.appnexus as appnexus
         import handlers.analytics as analytics
 

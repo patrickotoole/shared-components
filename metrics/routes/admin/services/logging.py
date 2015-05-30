@@ -9,7 +9,6 @@ class LoggingRoutes(Routes):
         from handlers.adminreport import AdminReportHandler
         from lib.report.handlers import ReportingLogHandler
         import handlers.admin.scripts as scripts 
-        import handlers.admin.scripts.funnel as funnel
 
         return [
             (r'/report/(.*?)/.*', AdminReportHandler, {}),
