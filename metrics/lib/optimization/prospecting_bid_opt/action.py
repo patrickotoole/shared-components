@@ -42,14 +42,13 @@ class CampaignAction(Action):
 
     def push_log(self, log):
 
-        self.logger.info("pushing to opt_log / Apnx")
 
         r = self.rockerbox.post("/opt_log", data=json.dumps(log))
         if r.json['status'] != 'ok':
             self.logger.error(r.text)
             raise TypeError("Error with Opt Log:\n %s" %r.text)
             
-        self.logger.info("push ok\n")
+        self.logger.info("pushing to opt_log / Apnx OK\n")
 
     def check_for_prev_run(self, campaign_id, rule_group_id):
 
@@ -71,7 +70,7 @@ class CampaignAction(Action):
             except KeyError:
                 raise KeyError("to_exclude missing rule_group_id/metrics")
 
-        self.logger.info("INCREASING BIDS...")
+        self.logger.info("INCREASING BIDS on %d campaigns..." %len(max_bids_to_increase.keys()))
         for campaign in max_bids_to_increase.keys():
 
             old_max_bid = max_bids_to_increase[campaign]['metrics']['max_bid']
@@ -97,6 +96,8 @@ class CampaignAction(Action):
                 self.push_log(log)
                 time.sleep(3)
 
+        self.logger.info("FINISED INCREASING BIDS...\n")
+
     def deactivate_campaigns(self, to_deactivate):
 
         for campaign in to_deactivate.keys():
@@ -106,7 +107,7 @@ class CampaignAction(Action):
             except KeyError:
                 raise KeyError("to_deactivate missing rule_group_id/metrics")
 
-        self.logger.info("DEACTIVATING CAMPAIGNS...")
+        self.logger.info("DEACTIVATING CAMPAIGNS on %d campaigns..." %len(to_deactivate.keys()))
         
         for campaign in to_deactivate.keys():
 
@@ -122,8 +123,10 @@ class CampaignAction(Action):
             if self.check_for_prev_run(log['campaign_id'], log['rule_group_id']):
                 self.logger.info("Already ran on %s for %s" %(log['campaign_id'], TODAY))
             else:
-                self.logger.info("\n" + pprint.pformat(log) + "\n")
+                self.logger.info("\n" + pprint.pformat(log))
                 self.push_log(log)
                 time.sleep(3)
+
+        self.logger.info("FINISED DEACTIVATING BIDS...\n")
 
 
