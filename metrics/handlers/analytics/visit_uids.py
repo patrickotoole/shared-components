@@ -14,7 +14,7 @@ from cassandra import ReadTimeout
 
 DEFAULT_INTERVAL = "minute"
 
-QUERY = "SELECT * FROM rockerbox.visit_uids_3 "
+QUERY = "SELECT * FROM rockerbox.visit_uids_2 "
 
 class VisitUidsHandler(BaseHandler, AnalyticsBase):
     def initialize(self, db=None, cassandra=None, **kwargs):
