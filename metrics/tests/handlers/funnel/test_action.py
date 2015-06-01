@@ -6,7 +6,7 @@ import mocks.yoshi as mocks
 import ujson
 from link import lnk 
 
-import handlers.admin.scripts.funnel.action as action
+import handlers.funnel.action as action
 
 CREATE_ACTION_TABLE = """
 CREATE TABLE `action` (
@@ -48,9 +48,11 @@ class ActionTest(AsyncHTTPTestCase):
         self.db.execute(ACTION_FIXTURE_2)
 
         self.app = Application([
-          ('/',action.ActionHandler, dict(db=self.db)),
-          ('/(.*?)',action.ActionHandler, dict(db=self.db)) 
-        ])
+            ('/',action.ActionHandler, dict(db=self.db)),
+            ('/(.*?)',action.ActionHandler, dict(db=self.db)) 
+          ],
+          template_path="../../../templates"
+        )
 
         return self.app
 
@@ -59,8 +61,9 @@ class ActionTest(AsyncHTTPTestCase):
         self.db.execute("DROP TABLE action_patterns")
 
     def test_get(self):
-        _a = ujson.loads(self.fetch("/?advertiser=alan",method="GET").body)
-        _b = ujson.loads(self.fetch("/",method="GET").body)
+        
+        _a = ujson.loads(self.fetch("/?format=json&advertiser=alan",method="GET").body)
+        _b = ujson.loads(self.fetch("/?format=json&",method="GET").body)
         self.assertEqual(len(_a),1)
         self.assertEqual(len(_b),2)
 
@@ -72,7 +75,7 @@ class ActionTest(AsyncHTTPTestCase):
           "operator": "and"
         }"""
 
-        _a = self.fetch("/",method="POST",body=action_json).body
+        _a = self.fetch("/?format=json&",method="POST",body=action_json).body
 
         ajson = ujson.loads(_a)
         ojson = ujson.loads(action_json)
@@ -91,8 +94,8 @@ class ActionTest(AsyncHTTPTestCase):
             }
         """
 
-        action_posted = self.fetch("/",method="POST",body=action_string).body
-        action_get_json = ujson.loads(self.fetch("/?advertiser=baublebar",method="GET").body)
+        action_posted = self.fetch("/?format=json&",method="POST",body=action_string).body
+        action_get_json = ujson.loads(self.fetch("/?format=json&advertiser=baublebar",method="GET").body)
 
         self.assertEqual(ujson.loads(action_string)['action_name'],action_get_json[0]['action_name'])
         self.assertEqual(ujson.loads(action_string)['url_pattern'],action_get_json[0]['url_pattern']) 
@@ -101,20 +104,20 @@ class ActionTest(AsyncHTTPTestCase):
         
         action_json = ujson.loads(action_string)
         action_json['action_name'] = "NEW NAME" 
-        action_put = self.fetch("/",method="PUT",body=ujson.dumps(action_json)).body
+        action_put = self.fetch("/?format=json&",method="PUT",body=ujson.dumps(action_json)).body
         action_put_json = ujson.loads(action_put)['response']
 
         self.assertEqual(action_put_json,"Need action_id to update action")
 
 
         action_json['action_id'] = action_get_json[0]['action_id']
-        action_post = self.fetch("/",method="POST",body=ujson.dumps(action_json)).body
+        action_post = self.fetch("/?format=json&",method="POST",body=ujson.dumps(action_json)).body
         action_post_json = ujson.loads(action_put)['response']
 
         self.assertEqual(action_put_json,"Need action_id to update action") 
 
 
-        action_put = self.fetch("/",method="PUT",body=ujson.dumps(action_json)).body
+        action_put = self.fetch("/?format=json&",method="PUT",body=ujson.dumps(action_json)).body
         action_put_json = ujson.loads(action_put)['response']
 
         self.assertEqual(action_put_json['action_name'],"NEW NAME") 
@@ -124,7 +127,7 @@ class ActionTest(AsyncHTTPTestCase):
         self.assertEqual(len(df),2)
 
         action_json['url_pattern'] = ["only_one"]
-        action_put = self.fetch("/",method="PUT",body=ujson.dumps(action_json)).body
+        action_put = self.fetch("/?format=json&",method="PUT",body=ujson.dumps(action_json)).body
         action_put_json = ujson.loads(action_put)['response']
 
         self.assertEqual(action_put_json['url_pattern'],["only_one"]) 

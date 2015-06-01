@@ -6,7 +6,7 @@ from tornado.testing import AsyncHTTPTestCase
 from tornado.web import  Application, RequestHandler
 from link import lnk
 
-import handlers.admin.scripts.funnel.funnel as funnel
+import handlers.funnel.funnel as funnel
 
 CREATE_FUNNEL_ACTION_TABLE = """
 CREATE TABLE `funnel_actions` (
@@ -134,9 +134,11 @@ class FunnelTest(AsyncHTTPTestCase):
         self.db.execute(FUNNEL_ACTION_FIXTURE_2) 
  
         self.app = Application([
-          ('/',funnel.FunnelHandler, dict(db=self.db)),
-          ('/(.*?)',funnel.FunnelHandler, dict(db=self.db)) 
-        ])
+            ('/',funnel.FunnelHandler, dict(db=self.db)),
+            ('/(.*?)',funnel.FunnelHandler, dict(db=self.db)) 
+          ],
+          template_path="../../../templates"
+        )
 
         return self.app
 
@@ -148,7 +150,7 @@ class FunnelTest(AsyncHTTPTestCase):
         self.db.execute("DROP TABLE action_patterns") 
 
     def test_get(self):
-        body = self.fetch("/?advertiser=baublebar", method="GET").body
+        body = self.fetch("/?format=json&advertiser=baublebar", method="GET").body
 
         expected = [{"owner":"waikiki","advertiser":"baublebar","funnel_name":"landing+earings","actions":[{"url_pattern":["alans_pattern","alans_pattern2"],"action_name":"alans_action","action_id":1},{"url_pattern":["wills_pattern","wills_pattern_again"],"action_name":"wills_action","action_id":2}],"funnel_id":1},{"owner":"makiki","advertiser":"baublebar","funnel_name":"other","actions":[],"funnel_id":2}]
 
@@ -161,7 +163,7 @@ class FunnelTest(AsyncHTTPTestCase):
     def test_post(self):
         to_post = """{"owner":"waikiki","advertiser":"baublebar","funnel_name":"landing+earings","actions":[{"url_pattern":["wills_pattern","wills_pattern_again"],"action_name":"wills_action","action_id":2},{"url_pattern":["alans_pattern","alans_pattern2"],"action_name":"alans_action","action_id":1}]}"""
         
-        from_post = self.fetch("/", method="POST",body=to_post)
+        from_post = self.fetch("/?format=json", method="POST",body=to_post)
         from_post_json = ujson.loads(from_post.body)
 
         funnel_id = from_post_json["response"]["funnel_id"]
@@ -170,7 +172,7 @@ class FunnelTest(AsyncHTTPTestCase):
         
         self.assertEqual(funnel_actions.order.sum(),(len(funnel_actions)*(len(funnel_actions)+1))/2) 
 
-        from_get = self.fetch("/?id=%s" % funnel_id, method="GET")
+        from_get = self.fetch("/?format=json&id=%s" % funnel_id, method="GET")
         from_get_json = ujson.loads(from_get.body)[0]
         action_ids = map(lambda x: x['action_id'], from_get_json['actions'])
 
@@ -182,24 +184,24 @@ class FunnelTest(AsyncHTTPTestCase):
 
         obj = ujson.loads(POST_FIXTURE)
 
-        from_get = self.fetch("/?id=%s" % 1, method="GET")
+        from_get = self.fetch("/?format=json&id=%s" % 1, method="GET")
         from_get_json = ujson.loads(from_get.body)[0]
         original_action_ids = map(lambda x: x['action_id'], from_get_json['actions'])
 
         self.assertEqual([1,2],original_action_ids) 
 
         # testing required field
-        from_put = self.fetch("/", method="PUT",body=ujson.dumps(obj))
+        from_put = self.fetch("/?format=json", method="PUT",body=ujson.dumps(obj))
         self.assertTrue("must contain a funnel_id" in from_put.body)
         
         # changing order of funnel 
         obj['funnel_id'] = 1
-        from_put = self.fetch("/", method="PUT",body=ujson.dumps(obj))
+        from_put = self.fetch("/?format=json", method="PUT",body=ujson.dumps(obj))
         from_put_json = ujson.loads(str(from_put.body))
         
         self.assertEqual(from_put_json['response'],obj)
 
-        from_get = self.fetch("/?id=%s" % 1, method="GET")
+        from_get = self.fetch("/?format=json&id=%s" % 1, method="GET")
         from_get_json = ujson.loads(from_get.body)[0]
         action_ids = map(lambda x: x['action_id'], from_get_json['actions'])
 
@@ -211,7 +213,7 @@ class FunnelTest(AsyncHTTPTestCase):
 
         obj = ujson.loads(POST_FIXTURE)
 
-        from_get = self.fetch("/?id=%s" % 1, method="GET")
+        from_get = self.fetch("/?format=json&id=%s" % 1, method="GET")
         from_get_json = ujson.loads(from_get.body)[0]
         original_action_ids = map(lambda x: x['action_id'], from_get_json['actions'])
 
@@ -222,12 +224,12 @@ class FunnelTest(AsyncHTTPTestCase):
         # deleting action from funnel
         obj['funnel_id'] = 1
         obj['actions'] = obj['actions'][:1]
-        from_put = self.fetch("/", method="PUT",body=ujson.dumps(obj))
+        from_put = self.fetch("/?format=json", method="PUT",body=ujson.dumps(obj))
         from_put_json = ujson.loads(str(from_put.body))
         
         self.assertEqual(from_put_json['response'],obj)
 
-        from_get = self.fetch("/?id=%s" % 1, method="GET")
+        from_get = self.fetch("/?format=json&id=%s" % 1, method="GET")
         from_get_json = ujson.loads(from_get.body)[0]
         action_ids = map(lambda x: x['action_id'], from_get_json['actions'])
 
@@ -240,12 +242,12 @@ class FunnelTest(AsyncHTTPTestCase):
         # adding action to funnel
         obj['funnel_id'] = 1
         obj['actions'] = stored_actions
-        from_put = self.fetch("/", method="PUT",body=ujson.dumps(obj))
+        from_put = self.fetch("/?format=json", method="PUT",body=ujson.dumps(obj))
         from_put_json = ujson.loads(str(from_put.body))
         
         self.assertEqual(from_put_json['response'],obj)
 
-        from_get = self.fetch("/?id=%s" % 1, method="GET")
+        from_get = self.fetch("/?format=json&id=%s" % 1, method="GET")
         from_get_json = ujson.loads(from_get.body)[0]
         action_ids = map(lambda x: x['action_id'], from_get_json['actions'])
 
