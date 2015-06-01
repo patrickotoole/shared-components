@@ -20,15 +20,19 @@ RB.crusher.ui.action = (function(action) {
     objectData.action_name = this.selectAll("input").node().value
     objectData.operator = this.selectAll(".operator").node().value
 
+
+    delete objectData['visits_data']
+
     this.select("h5").text("Edit an action")
     this.select(".save").text("Update action")  
 
     var actions = crusher.actionData // this should really be in the controller
     var onSave = callback
     urls = actions[0].values
-    action.showAll(actions,onSave,urls)
 
+    action.showAll(actions,onSave,urls)
     action.select(objectData)
+    action.view(d3.select(this.node().parentNode))
 
     callback(objectData,this)
 
@@ -43,6 +47,10 @@ RB.crusher.ui.action = (function(action) {
       .classed("action-view",true)
 
     actionView.exit().remove()
+
+    var h5 = actionView.selectAll("h5").data(function(x){return [x.action_name]})
+    h5.enter().append("h5").text("Action details")
+    h5.exit().remove()
 
     var info = actionView.selectAll(".urls").data(function(x){
 
@@ -63,7 +71,7 @@ RB.crusher.ui.action = (function(action) {
     var with_data = info.filter(function(x){return x.visits_data})
 
 
-    var timeseries = with_data.selectAll(".ts").data(function(x){
+    var timeseries = with_data.selectAll(".ts").data(function(data){
       var nested = d3.nest()
         .key(function(x){return x.timestamp})
         .rollup(function(x){ return {
@@ -71,10 +79,11 @@ RB.crusher.ui.action = (function(action) {
             "uniques": x.length
           }
         })
-        .entries(x.visits_data).map(function(x){
+        .entries(data.visits_data).map(function(x){
           x.date = x.key
           x.visits = x.values.visits
           x.uniques = x.values.uniques
+          x.url_pattern = data.url_pattern
           return x
         }).sort(function(x,y) {
           return (+new Date(x.date)) - (+new Date(y.date))
@@ -83,14 +92,19 @@ RB.crusher.ui.action = (function(action) {
         })
 
       return (nested.length) ? [nested] : []
+    },function(x){
+      return x[0].url_pattern
     })
 
+    timeseries.exit().remove()
     var newTs = timeseries.enter().append("div").classed("ts",true)
 
 
-    if (newTs.length) {
+    if (newTs.length && newTs.data()[0]) {
       var tsData = newTs.datum()
-      RB.rho.ui.buildTimeseries(newTs,tsData,"asdf",["visits","uniques"])
+      RB.rho.ui.buildTimeseries(newTs,tsData,"asdf",["visits"])
+      RB.rho.ui.buildTimeseries(newTs,tsData,"sdf",["uniques"])
+
     }
 
     //var svg = timeseries.selectAll("svg").data(function(x){return [x]})

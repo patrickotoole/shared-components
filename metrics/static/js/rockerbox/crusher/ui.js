@@ -6,10 +6,10 @@ RB.crusher.ui = (function(ui) {
 
   var crusher = RB.crusher
 
-  ui.add_funnel = function(dd) {
+  ui.add_funnel = function() {
 
     var wrapper = d3.selectAll(".add-funnel-wrapper")
-    var funnel_wrapper = d3.selectAll(".funnel-wrapper")
+    var funnel_wrapper = d3.selectAll(".funnel-view-wrapper").selectAll(".funnel-wrapper")
 
     wrapper
       .append("div").classed("button-wrapper",true)
@@ -20,23 +20,6 @@ RB.crusher.ui = (function(ui) {
         crusher.controller.new_funnel(funnel_wrapper)
       })
   }
-
-  
-
-  ui.compute_funnel = function(){
-
-    var funnel_wrapper = d3.selectAll(".funnel-wrapper") 
-
-    funnel_wrapper
-      .append("div").classed("button-wrapper",true)
-      .append("button")
-      .classed("btn btn-xs",true)
-      .text("Compute Funnel")
-      .on("click",crusher.ui.funnel.show)
-  }
- 
-
-  
 
   ui.build = function(dd){
     //ui.add_funnel()

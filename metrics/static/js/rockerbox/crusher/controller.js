@@ -41,20 +41,29 @@ RB.crusher.controller = (function(controller) {
       d3.json(visitURL, function(dd){
         crusher.urlData = dd
         crusher.urls = dd.map(function(x){return x.url})
-        
-        d3.json(actionURL,function(actions){
-          crusher.actionData = actions
-          actions.map(function(x) { x.values = crusher.urls }) 
+        crusher.actionData.map(function(x) { x.values = crusher.urls }) 
+        // this could cause an async issue but it seems unlikely...
 
-          d3.json(funnelURL, function(dd) {
-            crusher.funnelData = dd
-            crusher.ui.funnel.build(crusher.funnelData,crusher.actionData)
-            crusher.ui.add_funnel()
-          })
- 
-        })
+        var f = d3.select(".funnel-view-wrapper")
+          .selectAll(".funnel")
+          .selectAll(".show").data(function(x){return [x]})
+
+        f.enter().append("div").classed("show",true)
+        crusher.controller.funnel.show(f.datum(),crusher.ui.funnel.show.bind(false,f))
 
       })
+        
+      d3.json(actionURL,function(actions){
+        crusher.actionData = actions
+
+        d3.json(funnelURL, function(dd) {
+          crusher.funnelData = dd
+          crusher.ui.funnel.build(crusher.funnelData,crusher.actionData)
+        })
+ 
+      })
+
+      
     },
     "funnel/action": function() {
 
@@ -63,19 +72,21 @@ RB.crusher.controller = (function(controller) {
       d3.json(visitURL, function(dd){
         crusher.urlData = dd
         crusher.urls = dd.map(function(x){return x.url})
-        
-        d3.json(actionURL,function(actions){
-          crusher.actionData = actions
+        var no_qs = {}
 
-          actions.map(function(x) { x.values = crusher.urls })
-
-          crusher.ui.action.showAll(actions,controller.save_action,crusher.urls)
-          //crusher.ui.action.showList(d3.select(".funnel-wrapper"),actions)
-          //crusher.ui.build(crusher.urls) 
- 
-        }) 
-      
+        crusher.urls.map(function(x){
+          var url = x.split("?")[0]
+          no_qs[url] = no_qs[url] ? (no_qs[url] + 1) : 1  
+        })
+        crusher.urls_wo_qs = Object.keys(no_qs).sort(function(x,y){return no_qs[y] - no_qs[x]})
+        crusher.actionData.map(function(x) { x.values = crusher.urls_wo_qs })
       })
+        
+      d3.json(actionURL,function(actions){
+        crusher.actionData = actions
+        crusher.ui.action.showAll(actions,controller.save_action,crusher.urls)
+      }) 
+      
     }
   }
 
@@ -121,13 +132,16 @@ RB.crusher.controller = (function(controller) {
       crusher.ui.funnel.add_funnel(target)
     },
     save: function(data) {
-      data['advertiser'] = source
-      data['owner'] = "owner"
+      var d = {
+        "advertiser": source,
+        "owner": "owner",
+        "funnel_id":data.funnel_id,
+        "funnel_name": data.funnel_name,
+        "actions":data.actions.map(function(x){return {"action_id":x.action_id}})
+      }
 
-      var cdata = JSON.parse(JSON.stringify(data)),
+      var cdata = JSON.parse(JSON.stringify(d)),
         type = data['funnel_id'] ? "PUT" : "POST";
-
-      cdata.actions.map(function(action){ delete action['all'] })
 
       d3.xhr(funnelURL)
         .header("Content-Type", "application/json")
@@ -152,6 +166,42 @@ RB.crusher.controller = (function(controller) {
           funnel.remove()
           console.log(rawData)
         }); 
+    },
+    show: function(data,callback) {
+      var q = queue(5)
+      data.actions.map(function(action){
+
+        if (!action.visits_data) {
+          
+          var domains = []
+          action.all.length && action.all[0].values && action.all[0].values.map(function(d){
+            if (action.url_pattern)
+              action.url_pattern.map(function(x){
+                if (d.indexOf(x) > -1) domains.push(d)
+              })
+          })
+          action.matches = domains 
+
+          var obj = {"urls": action.matches}
+          var fn = function(callback) {
+            d3.xhr(visitUID)
+              .header("Content-Type", "application/json")
+              .post(
+                JSON.stringify(obj),
+                function(err, rawData){
+                  var dd = JSON.parse(rawData.response)
+                  action.visits_data = dd
+                  action.uids = dd.map(function(x){return x.uid})
+                  action.count = dd.length 
+                  if (callback) callback(null,action)
+                }
+              );
+          }
+          q.defer(fn)
+        }
+      })
+      q.awaitAll(callback)
+
     }
   }
 
@@ -215,18 +265,19 @@ RB.crusher.controller = (function(controller) {
   
       var obj = {"urls": domains}
   
-      d3.xhr(visitUID)
-        .header("Content-Type", "application/json")
-        .post(
-          JSON.stringify(obj),
-          function(err, rawData){
-            var dd = JSON.parse(rawData.response)
-            action.visits_data = dd
-            action.uids = dd.map(function(x){return x.uid})
-            action.count = dd.length 
-            if (callback) callback()
-          }
-        );
+      if (domains.length && !action.visits_data)
+        d3.xhr(visitUID)
+          .header("Content-Type", "application/json")
+          .post(
+            JSON.stringify(obj),
+            function(err, rawData){
+              var dd = JSON.parse(rawData.response)
+              action.visits_data = dd
+              action.uids = dd.map(function(x){return x.uid})
+              action.count = dd.length 
+              if (callback) callback()
+            }
+          );
 
       return obj
     }

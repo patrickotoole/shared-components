@@ -32,7 +32,10 @@ RB.crusher.ui.action.pattern = (function(pattern) {
     
     var selectBox = patternSelector
       .append("select")
-      .classed("form-control",true)
+        .attr("data-width","100%")
+        .attr("data-live-search","true")
+        .attr("title","Choose a pattern...")
+
       .on("change",function(x){
         x.selected = d3.selectAll(this.selectedOptions).data()
         x.url_pattern = x.selected[0]
@@ -57,6 +60,7 @@ RB.crusher.ui.action.pattern = (function(pattern) {
             var pattern = d3.select(this.parentNode).datum().url_pattern
             return x == pattern ? "selected" : null
           })
+      $("select").selectpicker()
     },1)
   } 
 

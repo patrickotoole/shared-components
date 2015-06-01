@@ -29,12 +29,13 @@ RB.rho.ui = (function(ui) {
   
     
 
-    var svg = target.selectAll("svg")
+    var svg = target.selectAll("svg." + title)
       .data([data])
 
     var newSvg = svg
       .enter()
         .append("svg")
+        .attr("class",title)
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
         .append("g")
@@ -46,7 +47,7 @@ RB.rho.ui = (function(ui) {
     newSvg.append("g")
       .attr("class", "x axis")
 
-    d3.select(".x.axis")
+    svg.select(".x.axis")
       .attr("transform", "translate(0," + height + ")")
       .call(xAxis);
 
@@ -54,11 +55,11 @@ RB.rho.ui = (function(ui) {
     newSvg.append("g")
       .attr("class", "y axis")
 
-    d3.select(".y.axis") 
+    svg.select(".y.axis") 
       .selectAll("text.y-label")
       .remove()
 
-    d3.select(".y.axis")
+    svg.select(".y.axis")
       .call(yAxis)
       .append("text")
       .attr("transform", "rotate(-90)")
@@ -76,7 +77,7 @@ RB.rho.ui = (function(ui) {
       newSvg.append("path")
         .attr("class", series + " line")
 
-      d3.select(".line")// + series)
+      svg.select(".line")// + series)
         .datum(data)
         .attr("d", line); 
     })
