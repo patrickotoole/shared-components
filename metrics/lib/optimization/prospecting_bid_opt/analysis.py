@@ -37,9 +37,9 @@ class CampaignAnalysis(Analysis):
         if len(self.df) > 0:
             self.analyze()            
             self.reshape()
-            self.logger.info("Finished Opt Rule Analysis.")
+            self.logger.info("Finished Opt Rule Analysis\n")
         else:
-            self.logger.info("No data to run on")
+            self.logger.info("No data to run analysis on \n")
             self.to_run = {}
 
     def extract_rule(self, rule_name):
@@ -84,6 +84,8 @@ class CampaignAnalysis(Analysis):
             else:
                 campaigns  = []
             self.opt_rules[rule_name]['campaigns'] = campaigns
+
+            self.logger.info("rule %s applies for %d campaigns" %(rule_name,len(campaigns)))
 
 
     def reshape(self):

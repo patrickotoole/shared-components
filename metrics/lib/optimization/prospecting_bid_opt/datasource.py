@@ -93,22 +93,24 @@ class CampaignDataSource(DataSource):
             raise AttributeError("Issue with conv query")
 
     def pull_visibility_data(self):
-        campaign_list = '''( campaign = "%s" '''%str(self.campaigns[0])
-        for k in range(1, len(self.campaigns)):
-            campaign_list += '''OR campaign = "%s" '''%str(self.campaigns[k])
-        campaign_list += ")"
+        self.logger.info("Loading visiblity data (may take long)...")
+        self.visible_data = pd.DataFrame()
+
+        for i in range(0, len(self.campaigns), 50):
+            campaign_chunk = self.campaigns[i:i + 50]
+
+            campaign_list = '''( campaign = "%s" '''%str(campaign_chunk[0])
+            for k in range(1, len(campaign_chunk)):
+                campaign_list += '''OR campaign = "%s" '''%str(campaign_chunk[k])
+            campaign_list += ")"
         
-        query_args = {  'start_date': self.start_date[2:],
-                        'end_date': self.end_date[2:],
-                        'campaign_list': campaign_list }
+            query_args = {  'start_date': self.start_date[2:],
+                            'end_date': self.end_date[2:],
+                            'campaign_list': campaign_list }
 
-        self.logger.info("Executing query: {}".format(VISIBILITY_QUERY % query_args))
-        # try:
-        df_vis = pd.DataFrame(self.hive.execute(VISIBILITY_QUERY % query_args))
-        self.visible_data = df_vis
-
-        # except Exception:
-        #     raise Exception("Hive query failed")
+            self.logger.info("Executing query: {}".format(VISIBILITY_QUERY % query_args))
+            df_vis = pd.DataFrame(self.hive.execute(VISIBILITY_QUERY % query_args))
+            self.visible_data = pd.concat([self.visible_data, df_vis])
 
 
     def check_data(self):
@@ -140,20 +142,13 @@ class CampaignDataSource(DataSource):
             datetime.strptime(start_date, "%Y-%m-%d")
         except ValueError:
             raise ValueError("incorrect start_date/end_date string format %s %s" %(start_date, end_date))
-
+        self.logger.info("Loading Data ...")
         self.start_date = start_date
         self.end_date = end_date
         self.pull_rbox_data()
         self.pull_visibility_data()
         self.check_data()
         
-    # def get_max_bid(self, campaign_id):
-    #     response = self.console.get("/campaign?id=%s"%campaign_id).json            
-    #     if response['response']['campaign']['max_bid'] is None:
-    #         max_bid = np.nan
-    #     else:
-    #         max_bid = response['response']['campaign']['max_bid']
-    #     return max_bid
 
     def get_campaign_param(self, campaign_id, param):
         self.logger.info("Getting %s for campaign %s" %(param,str(campaign_id)))
@@ -178,10 +173,6 @@ class CampaignDataSource(DataSource):
             time.sleep(3)
         self.df['max_bid'] = max_bids
 
-    # def get_campaign_state(self, campaign_id):
-    #     response = self.console.get("/campaign?id=%s"%campaign_id).json 
-    #     return response['response']['campaign']['state']
-
         
     def add_campaign_state(self):
         
@@ -199,6 +190,7 @@ class CampaignDataSource(DataSource):
         self.filter()
         self.check_params(params)
         self.transform(params)
+        self.logger.info("Finished Loading Data\n")
         
 
     def reshape(self):
