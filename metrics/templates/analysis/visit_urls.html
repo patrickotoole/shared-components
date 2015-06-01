@@ -1,0 +1,120 @@
+{% autoescape None %}
+{% block content %}
+
+<head>
+  <script type="text/javascript" src="/static/js/d3.js" charset="utf-8"></script>
+  <script src="/static/js/jquery.min.js"></script>
+  <script src="/static/js/crossfilter.min.js"></script> 
+  <script src="/static/js/bootstrap.min.js"></script>
+  <script src="/static/js/rockerbox/rho/ui.filter.js"></script>  
+
+ <script src="/static/js/rockerbox/crusher/ui.js"></script>   
+ <script src="/static/js/rockerbox/crusher/ui.action.js"></script>    
+ <script src="/static/js/rockerbox/crusher/ui.funnel.js"></script>     
+ <script src="/static/js/rockerbox/crusher/ui.action.pattern.js"></script>     
+ <script src="/static/js/rockerbox/crusher/controller.js"></script>   
+ <script src="/static/js/rockerbox/rho/ui.js"></script>    
+
+  <script src="/static/js/rockerbox/visit_urls.js"></script>
+  <script src="/static/js/bootstrap-switch.js"></script>
+  <script src="/static/js/jquery.serialize-object.js"></script>
+  <script src="/static/js/bootstrap-select.js"></script>
+  <script src="/static/js/queue.js"></script>
+
+
+
+  <script type="text/javascript" src="/static/js/chosen/chosen.jquery.min.js"> </script>
+
+  <link href="/static/js/chosen/chosen.min.css" rel="stylesheet"> 
+  <link href="/static/css/bootstrap.css" rel="stylesheet"> 
+  <link href="/static/css/bootstrap-switch.css" rel="stylesheet">
+  <link href="/static/css/bootstrap-select.css" rel="stylesheet">
+
+
+
+  <style>
+    .bs-select-hidden {display:none}
+    .compute-funnel-wrapper {
+      /*padding-top: 8px;*/
+      padding-bottom: 8px;
+    }
+    .list-group-item .remove-funnel {
+      float:right
+    }
+    .list-group-item.active, .list-group-item.active:focus, .list-group-item.active:hover {
+      z-index: 2;
+      color: #fff;
+      background-color: #337ab7;
+      border-color: #337ab7;
+    }
+
+    .filter-wrapper h5 {font-size:13px}
+    .container {padding-top:15px}
+    input[type="checkbox"]:disabled + label{ color: #ccc; }
+    .loading { display: none; } 
+    body { font: 10px sans-serif; }
+    body { font-size: 12px; font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;}
+    .list-group-item .btn {margin-top:-4px}
+    .axis path,
+    .axis line { fill: none; stroke: #000; shape-rendering: crispEdges; }
+    .x.axis path { display: none; }
+    .line { fill: none; stroke: steelblue; stroke-width: 1.5px; }
+    .and {float: right; margin-right: -26px; font-size: 12px; line-height:30px}
+    .filter-wrapper .filter:last-of-type .and {display:none}
+    .filter-wrapper .col-md-4 span:first-of-type {display:none}  
+    .filter-wrapper .filter:first-of-type .col-md-4:first-of-type span:last-of-type {display:none}
+    .filter-wrapper .filter:first-of-type .col-md-4:first-of-type span:first-of-type {display:inline} 
+    a {cursor:pointer}
+    /*.filter-wrapper {background:grey}*/
+    .chosen-container {margin-top:2.5px}
+    #seriesable, #filterable {
+      padding-top:5px;padding-bottom:5px;
+      margin-left:-25px; 
+      margin-right:-25px;
+      padding-right:25px;
+      padding-left:25px; 
+      background-color:#ddd
+    }
+    .action-patterns, .action-steps {
+      padding:10px
+    }
+
+    .bar { fill: steelblue; } 
+    .bar:hover { fill: brown; } 
+    .axis { font: 10px sans-serif; } 
+    .axis path, .axis line { fill: none; stroke: #000; shape-rendering: crispEdges; } 
+    .x.axis path { display: none; }
+  </style>
+
+  <script> 
+    
+
+  $(document).ready(function(){
+    console.log("// start things") 
+    RB.init()  
+
+    var page = window.location.pathname.replace("/crusher/","")
+    RB.crusher.controller.init(page)
+    
+    console.log("// finish things")
+  })
+
+  </script>
+
+</head>
+
+<body>
+
+  <div style="position:fixed;width:200px;top:0px;left:0px;height:100%;background:black">
+    <div class="row col-md-12">
+      <a href="/crusher/funnel/action?source=baublebar">Action</a> 
+    </div>
+    <div class="row col-md-12"> 
+      <a href="/crusher/funnel?source=baublebar">Funnel</a>
+    </div>
+  </div>
+  <div class="container" style="width:inherit;margin-left:200px"></div>
+
+</body>
+
+{% end %}   

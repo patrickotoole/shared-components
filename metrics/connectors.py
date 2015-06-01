@@ -7,6 +7,7 @@ logger = requests_log = logging.getLogger("connectors")
 
 import ujson
 import mocks.yoshi
+import mocks.cassandra
 
 class ConnectorConfig(object):
 
@@ -22,10 +23,11 @@ class ConnectorConfig(object):
 
         self.connectors["api"] = lnk.api.console if not skip_console_api else mocks.yoshi.API
         self.connectors["bidder"] = lnk.api.bidder if not skip_bidder_api else None
-        self.connectors["do"] = lnk.api.digitalocean 
-        self.connectors["marathon"] = lnk.api.marathon
+        self.connectors["do"] = lnk.api.digitalocean if not skip_console_api else None
+        self.connectors["marathon"] = lnk.api.marathon if not skip_console_api else None
+
         try:
-            self.connectors["cassandra"] = lnk.dbs.cassandra if not skip_cassandra else None
+            self.connectors["cassandra"] = lnk.dbs.cassandra if not skip_cassandra else mocks.cassandra.CASSANDRA
         except:
             print "Cassandra not connected"
             logging.error("Cassandra not connected")

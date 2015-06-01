@@ -50,6 +50,10 @@ class CassandraDB(NoSqlConnectionWrapper):
         df = DataFrame(resp)
         return df
 
+    def select_async(self, query):
+        future = self.execute_async(query)
+        return future
+
     def __call__(self):
         """
         Run's the command line sqlite application
