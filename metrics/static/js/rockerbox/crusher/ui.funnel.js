@@ -24,15 +24,27 @@ RB.crusher.ui.funnel = (function(funnel) {
 
   }
 
-  funnel.show = function(funnels) {
+  funnel.wait = function(funnels) {
     
     var summary = funnels.selectAll(".summary").data(function(x){return [x]})
     summary.enter().append("div").classed("col-md-12 summary",true)
 
-    var reduced = funnel.show.component.steps(funnels)
+    summary.text("loading...")
+  } 
+
+  funnel.show = function(funnels) {
+
+    var summary = funnels.selectAll(".summary").data(function(x){return [x]})
+    summary.enter().append("div").classed("col-md-12 summary",true)
+
+    funnel.show.component.steps(funnels)
     funnel.show.component.summary(funnels)
 
+    var actions = funnels.datum().actions
+    var reduced = actions[actions.length -1].funnel_uids
     var domains_callback = funnel.show.component.domains.bind(false,funnels)
+
+    
 
     crusher.controller.get_domains(reduced,domains_callback)
 
@@ -414,9 +426,9 @@ RB.crusher.ui.funnel = (function(funnel) {
     },
     steps: function(funnels) {
 
-      var data = funnels.datum(),
+      var data = funnels.datum()/*,
         reduced = funnel.methods.compute_uniques(data.actions)
-
+*/
       var stepsWrapper = funnels.selectAll(".step-chart").data(function(x){return [x]})
 
       stepsWrapper.enter()
@@ -424,7 +436,7 @@ RB.crusher.ui.funnel = (function(funnel) {
 
       funnel.show.component.step_chart(stepsWrapper) 
 
-      return reduced
+      //return reduced
     },
     step: function(steps) {
       var step = steps.selectAll(".step")
@@ -480,7 +492,7 @@ RB.crusher.ui.funnel = (function(funnel) {
           .append("rect")
       rect
           .attr("class","bar")
-          .attr("width", function(d) { return x(d.uid); })
+          .attr("width", function(d) { return x(d.uid || 0); })
           .attr("height", barHeight - 1);
     
       var text = bar.selectAll("text").data(function(x){return [x]})
@@ -572,7 +584,11 @@ RB.crusher.ui.funnel = (function(funnel) {
         var show = f.selectAll(".show").data(function(x){return [x]})
         show.enter().append("div").classed("show",true)
 
-        crusher.controller.funnel.show(f.datum(),funnel.show.bind(false,show))
+        crusher.controller.funnel.show(
+          f.datum(),
+          funnel.show.bind(false,show),
+          funnel.wait.bind(false,show)
+        )
 
       })
 

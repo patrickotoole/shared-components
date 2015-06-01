@@ -49,7 +49,11 @@ RB.crusher.controller = (function(controller) {
           .selectAll(".show").data(function(x){return [x]})
 
         f.enter().append("div").classed("show",true)
-        crusher.controller.funnel.show(f.datum(),crusher.ui.funnel.show.bind(false,f))
+        crusher.controller.funnel.show(
+          f.datum(),
+          crusher.ui.funnel.show.bind(false,f),
+          crusher.ui.funnel.wait.bind(false,f)
+        )
 
       })
         
@@ -167,23 +171,25 @@ RB.crusher.controller = (function(controller) {
           console.log(rawData)
         }); 
     },
-    show: function(data,callback) {
+    show: function(data,callback,wait) {
       var q = queue(5)
-      data.actions.map(function(action){
+      var newSteps = data.actions.filter(function(action){
 
         if (!action.visits_data) {
-          
-          var domains = []
-          action.all.length && action.all[0].values && action.all[0].values.map(function(d){
-            if (action.url_pattern)
-              action.url_pattern.map(function(x){
-                if (d.indexOf(x) > -1) domains.push(d)
-              })
-          })
-          action.matches = domains 
-
-          var obj = {"urls": action.matches}
+          if (wait) wait() 
           var fn = function(callback) {
+
+            var domains = []
+            action.all.length && action.all[0].values && action.all[0].values.map(function(d){
+              if (action.url_pattern)
+                action.url_pattern.map(function(x){
+                  if (d.indexOf(x) > -1) domains.push(d)
+                })
+            })
+            action.matches = domains 
+
+            var obj = {"urls": action.matches}
+
             d3.xhr(visitUID)
               .header("Content-Type", "application/json")
               .post(
@@ -198,9 +204,19 @@ RB.crusher.controller = (function(controller) {
               );
           }
           q.defer(fn)
+          return true
         }
+        return false
       })
-      q.awaitAll(callback)
+
+      if (newSteps.length > 0) {
+        q.awaitAll(function(){
+          crusher.ui.funnel.methods.compute_uniques(data.actions)
+          callback()
+        })
+      } else {
+        q.awaitAll(callback)
+      }
 
     }
   }
