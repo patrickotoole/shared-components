@@ -127,6 +127,6 @@ class CampaignAction(Action):
                 self.push_log(log)
                 time.sleep(3)
 
-        self.logger.info("FINISED DEACTIVATING BIDS...\n")
+        self.logger.info("FINISED DEACTIVATING CAMPAIGNS...\n")
 
 

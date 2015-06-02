@@ -74,6 +74,7 @@ class CampaignAnalysis(Analysis):
         for rule_name in self.opt_rules.keys():
             self.extract_rule(rule_name)
 
+
         for rule_name in self.opt_rules.keys():
             self.logger.info("Evaluating rule %s" %rule_name)
 
