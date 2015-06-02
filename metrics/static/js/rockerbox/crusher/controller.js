@@ -83,15 +83,29 @@ RB.crusher.controller = (function(controller) {
           no_qs[url] = no_qs[url] ? (no_qs[url] + 1) : 1  
         })
         crusher.urls_wo_qs = Object.keys(no_qs).sort(function(x,y){return no_qs[y] - no_qs[x]})
-        crusher.actionData.map(function(x) { x.values = crusher.urls_wo_qs })
+        controller.get_bloodhound(crusher.urls_wo_qs)
       })
+        
         
       d3.json(actionURL,function(actions){
         crusher.actionData = actions
-        crusher.ui.action.showAll(actions,controller.save_action,crusher.urls)
+        crusher.actionData.map(function(x) { x.values = crusher.urls_wo_qs })
+
+        crusher.ui.action.showAll(actions,controller.save_action,crusher.urls_wo_qs)
       }) 
       
     }
+  }
+
+  controller.get_bloodhound = function(pattern_values) {
+    controller.bloodhound = controller.bloodhound || new Bloodhound({
+      datumTokenizer: function(x){return x.split(/\/|-/)}, 
+      queryTokenizer: Bloodhound.tokenizers.whitespace,
+      local: pattern_values 
+    }); 
+
+    return controller.bloodhound
+ 
   }
 
   controller.get_tf_idf = function() {
@@ -272,7 +286,7 @@ RB.crusher.controller = (function(controller) {
     get: function(action,callback) {
       var domains = []
   
-      action.all.length && action.all[0].values && action.all[0].values.map(function(d){
+      action.all.length && crusher.urls_wo_qs && crusher.urls_wo_qs.map(function(d){
         if (action.url_pattern)
           action.url_pattern.map(function(x){
             if (d.indexOf(x) > -1) domains.push(d)

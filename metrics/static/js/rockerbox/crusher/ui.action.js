@@ -8,13 +8,9 @@ RB.crusher.ui.action = (function(action) {
 
   action.save = function(callback) {
 
-    var data = this.selectAll(".action-pattern").data()           
+    var data = this.selectAll(".action-pattern .tt-input")[0].map(function(x){return x.value}) 
 
-    var d = data.reduce(function(p,c){
-      p = p.concat(c.url_pattern)
-      return p
-    },[])
-
+    var d = data 
     var objectData = this.datum()
     objectData.url_pattern = d
     objectData.action_name = this.selectAll("input").node().value
