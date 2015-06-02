@@ -14,7 +14,7 @@ class ConnectorConfig(object):
     def __init__(self, skip_db=False, skip_reporting_db=False, skip_console_api=False, 
             skip_bidder_api=False, skip_buffers=False, skip_redis=False, include_hive=False,
             skip_filtered_imps=False, skip_conversion_imps=False, skip_conversion_events=False,
-            skip_visit_events=False, skip_spark_sql=False, skip_cassandra=False):
+            skip_visit_events=False, skip_spark_sql=False, skip_cassandra=False, skip_mongo=False):
 
         self.connectors = {}
 
@@ -38,7 +38,8 @@ class ConnectorConfig(object):
         self.connectors["spark_sql"] = lnk.dbs.hive if not skip_spark_sql else None
 
         self.connectors["redis"] = streaming._redis if not skip_redis else None
-        
+
+        self.connectors["mongo"] = lnk.dbs.mongo if not skip_mongo else None
  
  
 
