@@ -75,8 +75,17 @@ class DomainsMongoTest(AsyncHTTPTestCase):
         self.assertEqual(data, expected)
 
     def test_duplicate_insert(self):
-        pass
+        to_insert = {"domain": "appnexus.com"}
+        r = self.fetch("/", method="POST", body=ujson.dumps(to_insert))
+        r_obj= ujson.loads(r.body)
+
+        self.assertTrue("error" in r_obj)
 
     def test_update_bad_domain(self):
-        pass
-    
+        updates = {"category": "Advertising"}
+        r = self.fetch("/?domain=baddomain.com", method="PUT", body=ujson.dumps(updates))
+        r_obj = ujson.loads(r.body)
+
+        self.assertTrue("response" in r_obj)
+        self.assertTrue("num_modified" in r_obj["response"])
+        self.assertEqual(r_obj["response"]["num_modified"], "0")
