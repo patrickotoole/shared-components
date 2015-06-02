@@ -4,7 +4,7 @@ import os
 import ujson
 import importlib
 import mock
-sys.path.append("../../../../")
+sys.path.append("../../../")
 
 from tornado.testing import AsyncHTTPTestCase
 from tornado.web import  Application, RequestHandler
@@ -18,6 +18,7 @@ class DomainsMongoTest(AsyncHTTPTestCase):
 
     def get_app(self):
         self.mongo = lnk.dbs.mongo_test
+        self.mongo.rockerbox.domains.remove()
         self.mongo.rockerbox.domains.create_index("domain", unique=True)
         self.mongo.rockerbox.domains.insert_one({"domain": None})
         self.mongo.rockerbox.domains.insert_one({"domain": "rockerbox.com"})
@@ -72,3 +73,10 @@ class DomainsMongoTest(AsyncHTTPTestCase):
         data = self.fetch("/?domain=rockerbox.com&format=json", method="GET").body
         expected = ujson.dumps([{"domain": "rockerbox.com", "category": "Advertising"}])
         self.assertEqual(data, expected)
+
+    def test_duplicate_insert(self):
+        pass
+
+    def test_update_bad_domain(self):
+        pass
+    
