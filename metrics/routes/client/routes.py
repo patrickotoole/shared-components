@@ -44,7 +44,7 @@ class AdvertiserRoutes(Routes):
              (r'/hoverboard', hoverboard.HoverboardHandler, self.connectors),   
         ]
 
-    @connectors("db","api","cassandra")
+    @connectors("db","api","cassandra", "mongo")
     def yoshi_routes(self):
         import handlers.campaign as campaign
         import handlers.profile as profile
@@ -59,6 +59,7 @@ class AdvertiserRoutes(Routes):
             (r'/location.*', appnexus.AppnexusHandler, self.connectors),
             (r'/viewability', analytics.ViewabilityHandler, self.connectors),
             (r'/availability', analytics.AvailabilityHandler, self.connectors),
+            (r'/domains', analytics.DomainsMongoHandler, self.connectors)
         ]
 
     @namespace("/crusher")

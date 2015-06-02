@@ -18,3 +18,4 @@ premailer
 pyyaml
 kafka-python
 cassandra-driver
+pymongo
