@@ -152,7 +152,6 @@ RB.crusher.controller = (function(controller) {
       crusher.ui.funnel.add_funnel(target)
     },
     save: function(data,callback) {
-     debugger
       var d = {
         "advertiser": source,
         "owner": "owner",

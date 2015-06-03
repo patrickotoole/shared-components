@@ -510,10 +510,15 @@ RB.crusher.ui.funnel = (function(funnel) {
         .text("remove")
         .on("click",function(x){
           d3.event.stopPropagation()
-          // TODO: do something if the funnel is currently active
+          var funnel_wrapper = d3.selectAll(".funnel-view-wrapper").selectAll(".funnel-wrapper")
+          var selected_funnel = funnel_wrapper.selectAll(".funnel").datum()
+          
           var parent_data = d3.select(this.parentNode.parentNode.parentNode).selectAll(".funnel").data()
           var funnel = d3.select(this.parentNode.parentNode)
           crusher.controller.funnel.delete(x,parent_data,funnel)
+
+          if (x == selected_funnel) crusher.controller.new_funnel(funnel_wrapper)
+
         })
 
       return wrapper
