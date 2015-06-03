@@ -117,14 +117,8 @@ RB.crusher.ui.funnel.action = (function(action){
       .classed("btn btn-xs btn-danger",true)
       .html("&ndash;")
       .on("click",function(x){
-        var f = d3.select(this.parentNode.parentNode.parentNode.parentNode.parentNode) 
-        var funnel_datum = funnel.methods.save_funnel(f)
-
         var actions = d3.select(this.parentElement.parentElement.parentElement.parentElement)
         funnel.methods.remove_action(actions,x) 
-        
-        crusher.controller.save_funnel(funnel_datum)
-
       })
   }
 

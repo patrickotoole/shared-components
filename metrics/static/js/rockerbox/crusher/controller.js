@@ -152,6 +152,7 @@ RB.crusher.controller = (function(controller) {
       crusher.ui.funnel.add_funnel(target)
     },
     save: function(data,callback) {
+     debugger
       var d = {
         "advertiser": source,
         "owner": "owner",
@@ -193,10 +194,11 @@ RB.crusher.controller = (function(controller) {
     },
     show: function(data,callback,wait) {
       var q = queue(5)
+      if (wait) wait() 
       var newSteps = data.actions.filter(function(action){
 
         if (!action.visits_data) {
-          if (wait) wait() 
+          
           var fn = function(callback) {
 
             var domains = []
@@ -217,8 +219,11 @@ RB.crusher.controller = (function(controller) {
                   JSON.stringify(obj),
                   function(err, rawData){
                     var dd = JSON.parse(rawData.response)
+                    var uids = {} 
+                    dd.map(function(x){uids[x.uid] = true})
+
                     action.visits_data = dd
-                    action.uids = dd.map(function(x){return x.uid})
+                    action.uids = Object.keys(uids) 
                     action.count = dd.length 
                     if (callback) callback(null,action)
                   }
