@@ -24,7 +24,7 @@ RB.crusher.ui.action = (function(action) {
 
     var actions = crusher.actionData // this should really be in the controller
 
-    actions.push(objectData)
+    if (!objectData.action_id) actions.push(objectData)
 
     var onSave = callback
     urls = actions[0].values

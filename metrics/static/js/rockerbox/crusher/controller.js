@@ -98,6 +98,7 @@ RB.crusher.controller = (function(controller) {
         var rec = crusher.sorted_uris
           .filter(function(x){
             var actions = crusher.actionData.filter(function(z){
+              if (!z.url_pattern) return false
               var matched = z.url_pattern.filter(function(q){
                 return (q.indexOf(x.key) > -1) || (x.key.indexOf(q) > -1
               )})
