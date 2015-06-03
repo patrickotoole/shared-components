@@ -46,6 +46,8 @@ class FunnelHandler(FunnelBase,FunnelHelpers):
             group_fn = self.group_to_dict(action_indices,lambda v: v['action_id'] != 0) 
             
             grouped_actions = grouped.apply(group_fn)
+            
+            grouped_actions = grouped_actions if len(grouped_actions) > 0 else []
             funnel = pandas.DataFrame({"actions":grouped_actions}).reset_index()
             
             as_json = Convert.df_to_json(funnel)

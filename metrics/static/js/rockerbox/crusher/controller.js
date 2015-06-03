@@ -83,15 +83,58 @@ RB.crusher.controller = (function(controller) {
           no_qs[url] = no_qs[url] ? (no_qs[url] + 1) : 1  
         })
         crusher.urls_wo_qs = Object.keys(no_qs).sort(function(x,y){return no_qs[y] - no_qs[x]})
-        crusher.actionData.map(function(x) { x.values = crusher.urls_wo_qs })
+        controller.get_bloodhound(crusher.urls_wo_qs)
+
+        var uris = dd.map(function(x){ return {"url":x.url.split("?")[0].split(".com")[1], "visits":x.visits }})
+
+        crusher.sorted_uris = d3.nest()
+          .key(function(x){return x.url})
+          .rollup(function(x){
+            return d3.sum(x,function(y){ return y.visits})
+          })
+          .entries(uris)
+          .sort(function(x,y){return y.values -  x.values })
+
+        var rec = crusher.sorted_uris
+          .filter(function(x){
+            var actions = crusher.actionData.filter(function(z){
+              if (!z.url_pattern) return false
+              var matched = z.url_pattern.filter(function(q){
+                return (q.indexOf(x.key) > -1) || (x.key.indexOf(q) > -1
+              )})
+              return matched.length
+            })
+            return actions.length == 0 
+          })
+          .slice(0,10)
+          .map(function(x){
+            return {"action_name":x.key,"url_pattern":[x.key]}
+          })
+        
+        crusher.ui.action.showRecommended(rec,controller.save_action,crusher.urls_wo_qs) 
+        
       })
+        
         
       d3.json(actionURL,function(actions){
         crusher.actionData = actions
-        crusher.ui.action.showAll(actions,controller.save_action,crusher.urls)
+        crusher.actionData.map(function(x) { x.values = crusher.urls_wo_qs })
+
+        crusher.ui.action.showAll(actions,controller.save_action,crusher.urls_wo_qs)
       }) 
       
     }
+  }
+
+  controller.get_bloodhound = function(pattern_values) {
+    controller.bloodhound = controller.bloodhound || new Bloodhound({
+      datumTokenizer: function(x){return x.split(/\/|-/)}, 
+      queryTokenizer: Bloodhound.tokenizers.whitespace,
+      local: pattern_values 
+    }); 
+
+    return controller.bloodhound
+ 
   }
 
   controller.get_tf_idf = function() {
@@ -113,18 +156,20 @@ RB.crusher.controller = (function(controller) {
   }
 
   controller.get_domains = function(uids,callback) {
-    var data = {
-      "uids":uids
+    var data = { "uids":uids }
+    if (uids.length) {
+      d3.xhr(visitDomains)
+        .header("Content-Type", "application/json")
+        .post(
+          JSON.stringify(data),
+          function(err, rawData){
+            var resp = JSON.parse(rawData.response)
+            callback(resp)
+          }
+        );
+    } else {
+      callback([])
     }
-    d3.xhr(visitDomains)
-      .header("Content-Type", "application/json")
-      .post(
-        JSON.stringify(data),
-        function(err, rawData){
-          var resp = JSON.parse(rawData.response)
-          callback(resp)
-        }
-      );
      
   }
 
@@ -135,7 +180,7 @@ RB.crusher.controller = (function(controller) {
     new: function(target) {
       crusher.ui.funnel.add_funnel(target)
     },
-    save: function(data) {
+    save: function(data,callback) {
       var d = {
         "advertiser": source,
         "owner": "owner",
@@ -151,7 +196,10 @@ RB.crusher.controller = (function(controller) {
         .header("Content-Type", "application/json")
         .send(type, JSON.stringify(cdata), function(err, rawData){
           var resp = JSON.parse(rawData.response).response
+          data['funnel_name'] = resp.funnel_name
           data['funnel_id'] = resp.funnel_id
+          crusher.funnelData.push(data)
+          callback(crusher.funnelData)
         });
     },
     delete: function(data,parent_data,funnel) {
@@ -167,20 +215,22 @@ RB.crusher.controller = (function(controller) {
 
           parent_data.splice(funnel_ids[0].pos,1)
 
+          crusher.funnelData = parent_data
           funnel.remove()
           console.log(rawData)
         }); 
     },
     show: function(data,callback,wait) {
       var q = queue(5)
+      if (wait) wait() 
       var newSteps = data.actions.filter(function(action){
 
         if (!action.visits_data) {
-          if (wait) wait() 
+          
           var fn = function(callback) {
 
             var domains = []
-            action.all.length && action.all[0].values && action.all[0].values.map(function(d){
+            crusher.urls && crusher.urls.map(function(d){
               if (action.url_pattern)
                 action.url_pattern.map(function(x){
                   if (d.indexOf(x) > -1) domains.push(d)
@@ -190,18 +240,26 @@ RB.crusher.controller = (function(controller) {
 
             var obj = {"urls": action.matches}
 
-            d3.xhr(visitUID)
-              .header("Content-Type", "application/json")
-              .post(
-                JSON.stringify(obj),
-                function(err, rawData){
-                  var dd = JSON.parse(rawData.response)
-                  action.visits_data = dd
-                  action.uids = dd.map(function(x){return x.uid})
-                  action.count = dd.length 
-                  if (callback) callback(null,action)
-                }
-              );
+            if (action.matches.length > 0) {
+              d3.xhr(visitUID)
+                .header("Content-Type", "application/json")
+                .post(
+                  JSON.stringify(obj),
+                  function(err, rawData){
+                    var dd = JSON.parse(rawData.response)
+                    var uids = {} 
+                    dd.map(function(x){uids[x.uid] = true})
+
+                    action.visits_data = dd
+                    action.uids = Object.keys(uids) 
+                    action.count = dd.length 
+                    if (callback) callback(null,action)
+                  }
+                );
+            } else {
+              if (!action.id) action.uids = []
+              callback(null,action)
+            }
           }
           q.defer(fn)
           return true
@@ -225,7 +283,7 @@ RB.crusher.controller = (function(controller) {
     new: function(expandTarget,options) {
       var defaultAction = [{"values":options}]
 
-      crusher.actionData = crusher.actionData.filter(function(x){return x.action_id}).concat(defaultAction) 
+      crusher.actionData = crusher.actionData.filter(function(x){return x.action_id})
       expandTarget.datum(defaultAction[0])
       crusher.ui.action.edit(expandTarget,controller.save_action)
       crusher.ui.action.view(expandTarget)
@@ -272,7 +330,7 @@ RB.crusher.controller = (function(controller) {
     get: function(action,callback) {
       var domains = []
   
-      action.all.length && action.all[0].values && action.all[0].values.map(function(d){
+      action.all.length && crusher.urls_wo_qs && crusher.urls_wo_qs.map(function(d){
         if (action.url_pattern)
           action.url_pattern.map(function(x){
             if (d.indexOf(x) > -1) domains.push(d)

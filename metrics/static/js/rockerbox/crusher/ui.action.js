@@ -8,13 +8,9 @@ RB.crusher.ui.action = (function(action) {
 
   action.save = function(callback) {
 
-    var data = this.selectAll(".action-pattern").data()           
+    var data = this.selectAll(".action-pattern .tt-input")[0].map(function(x){return x.value}) 
 
-    var d = data.reduce(function(p,c){
-      p = p.concat(c.url_pattern)
-      return p
-    },[])
-
+    var d = data 
     var objectData = this.datum()
     objectData.url_pattern = d
     objectData.action_name = this.selectAll("input").node().value
@@ -27,6 +23,9 @@ RB.crusher.ui.action = (function(action) {
     this.select(".save").text("Update action")  
 
     var actions = crusher.actionData // this should really be in the controller
+
+    if (!objectData.action_id) actions.push(objectData)
+
     var onSave = callback
     urls = actions[0].values
 
@@ -250,6 +249,36 @@ RB.crusher.ui.action = (function(action) {
 
   }
 
+  action.showRecommended = function(actions,onSave,urls) {
+
+    var selected = d3.selectAll(".action-recommended-wrapper").selectAll(".action")
+      .data(actions)
+
+    selected.enter().append("div")
+      .classed("list-group-item action",true)
+
+    var expandTarget = d3.selectAll(".action-view-wrapper")
+
+    action.show(selected,onSave,expandTarget) 
+
+    selected.selectAll(".remove").remove()
+    selected.selectAll(".edit").text("build")
+      .classed("edit",false)
+      .classed("build",true)
+      .on("click",function(){
+        var edit = d3.select(this.parentNode)
+        var data = edit.datum()
+
+        action.select(data)
+
+        expandTarget.datum(data)
+        action.edit(expandTarget,onSave)
+        action.view(expandTarget)
+        d3.select(this.parentNode.parentNode).remove()
+      })
+
+  }
+
   action.select = function(data) {
     var selected = d3.selectAll(".action-wrapper").selectAll(".action")
       .classed("active",false)
@@ -320,6 +349,14 @@ RB.crusher.ui.action = (function(action) {
 
     action_wrapper
       .append("div").classed("add-action-wrapper",true) 
+
+    action_wrapper
+      .append("h5").text("Recommended Actions")
+
+    action_wrapper
+      .append("div").classed("list-group action-recommended-wrapper",true)
+
+
   }
 
   return action
