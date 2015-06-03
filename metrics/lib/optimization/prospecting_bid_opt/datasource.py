@@ -109,8 +109,13 @@ class CampaignDataSource(DataSource):
                             'campaign_list': campaign_list }
 
             self.logger.info("Executing query: {}".format(VISIBILITY_QUERY % query_args))
-            df_vis = pd.DataFrame(self.hive.execute(VISIBILITY_QUERY % query_args))
+            try:
+                df_vis = pd.DataFrame(self.hive.execute(VISIBILITY_QUERY % query_args))
+            except Exception:
+                df_vis = pd.DataFrame(self.hive.execute(VISIBILITY_QUERY % query_args))
+
             self.visible_data = pd.concat([self.visible_data, df_vis])
+            time.sleep(15)
 
 
     def check_data(self):
