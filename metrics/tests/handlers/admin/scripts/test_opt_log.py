@@ -21,8 +21,9 @@ CREATE TABLE opt_log (
   rule_group_id int(11) NOT NULL,
   last_modified timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   object_modified varchar(100) NOT NULL,
-  campaign_id int(11) NOT NULL,
-  profile_id int(11) NOT NULL,
+  campaign_id int(11),
+  profile_id int(11),
+  domain_list_id int(11),
   field_name varchar(100) NOT NULL,
   field_old_value varchar(500) NOT NULL,
   field_new_value varchar(500) NOT NULL
@@ -54,23 +55,23 @@ VALUES (1,'rulegroup1','rule1', '2015-02-25 21:34:06')
 
 FIXTURE1 = """
 INSERT INTO opt_log
-    (rule_group_id, object_modified, campaign_id, profile_id, field_name, field_old_value, field_new_value)
+    (rule_group_id, object_modified, campaign_id, profile_id, domain_list_id, field_name, field_old_value, field_new_value)
 VALUES
-    (1, "campaign", 7318310, 22595617, "state", "inactive", "active")
+    (1, "campaign", 7318310, 22595617, null, "state", "inactive", "active")
 """
 
 FIXTURE3 = """
 INSERT INTO opt_log
-    (rule_group_id, object_modified, campaign_id, profile_id, field_name, field_old_value, field_new_value)
+    (rule_group_id, object_modified, campaign_id, profile_id, domain_list_id, field_name, field_old_value, field_new_value)
 VALUES
-    (1, "campaign", 7318310, 22595617, "state", "inactive", "active")
+    (1, "campaign", 7318310, 22595617, null, "state", "inactive", "active")
 """
 
 FIXTURE2 = """
 INSERT INTO opt_log
-    (rule_group_id, object_modified, campaign_id, profile_id, field_name, field_old_value, field_new_value)
+    (rule_group_id, object_modified, campaign_id, profile_id, domain_list_id, field_name, field_old_value, field_new_value)
 VALUES
-    (1, "campaign", 7318310, 22595617, "state", "inactive", "active")
+    (1, "campaign", 7318310, 22595617, null, "state", "inactive", "active")
 """
 
 
@@ -104,6 +105,7 @@ class OptLogTest(AsyncHTTPTestCase):
     def tearDown(self):
         self.db.execute("DROP TABLE opt_log")
         self.db.execute("DROP TABLE opt_rules")
+        self.db.execute("DROP TABLE opt_values")
 
     def test_get_all(self):
         expected = [
@@ -111,7 +113,8 @@ class OptLogTest(AsyncHTTPTestCase):
                 "rule_group_id": 1, 
                 "field_new_value": "active", 
                 "profile_id": 22595617,
-                "campaign_id": 7318310, 
+                "campaign_id": 7318310,
+                "domain_list_id": 0,
                 "object_modified": "campaign",
                 "value_group_id": 1, 
                 "field_old_value": "inactive", 
@@ -121,7 +124,8 @@ class OptLogTest(AsyncHTTPTestCase):
                 "rule_group_id": 1, 
                 "field_new_value": "active", 
                 "profile_id": 22595617,
-                "campaign_id": 7318310, 
+                "campaign_id": 7318310,
+                "domain_list_id": 0,
                 "object_modified": "campaign",
                 "value_group_id": 2, 
                 "field_old_value": "inactive", 
@@ -131,7 +135,8 @@ class OptLogTest(AsyncHTTPTestCase):
                 "rule_group_id": 1, 
                 "field_new_value": "active", 
                 "profile_id": 22595617,
-                "campaign_id": 7318310, 
+                "campaign_id": 7318310,
+                "domain_list_id": 0,
                 "object_modified": "campaign",
                 "value_group_id": 3, 
                 "field_old_value": "inactive", 
@@ -152,7 +157,8 @@ class OptLogTest(AsyncHTTPTestCase):
                 "rule_group_id": 1, 
                 "field_new_value": "active", 
                 "profile_id": 22595617,
-                "campaign_id": 7318310, 
+                "campaign_id": 7318310,
+                "domain_list_id": 0,
                 "object_modified": "campaign",
                 "value_group_id": 3, 
                 "field_old_value": "inactive", 
@@ -168,7 +174,7 @@ class OptLogTest(AsyncHTTPTestCase):
     def test_post_fails_required_columns(self):
         body = ujson.loads(self.fetch("/",method="POST",body="{}").body)
         self.assertEqual(body["response"],
-                         "required columns: object_modified, campaign_id, " +
+                         "required columns: object_modified, " +
                          "field_name, field_old_value, field_new_value, " + 
                          "metric_values, rule_group_id")
         self.assertEqual(body["status"], "error")
@@ -213,12 +219,11 @@ class OptLogTest(AsyncHTTPTestCase):
             "field_new_value": "active",
             "campaign_id": 1234567,
             "profile_id": 987654,
+            "domain_list_id": 0,
             "object_modified": "campaign",
             "field_name": "state",
             "value_group_id": 4
         }
-
-        print response
 
         # Don't want to check the last_modified time
         response["response"][0] = {k:v for k,v 
@@ -264,3 +269,57 @@ class OptLogTest(AsyncHTTPTestCase):
         
         self.assertEqual(response["status"], "error")
         self.assertEqual(response["response"], expected)
+
+    @mock.patch.object(opt_log.OptLogHandler, 'get_domain_list', autospec=True)
+    def test_post_domain_list(self, mock_get_domain_list):
+        mock_get_domain_list.return_value = {
+            "response": {
+                "domain-list": {
+                    "domains": [
+                        "appnexus.com",
+                        "rockerbox.com"
+                        ]
+                    }
+                }
+            }
+        to_post = {
+            "rule_group_id": 1,
+            "field_old_value": ['appnexus.com', 'rockerbox.com'],
+            "field_new_value": ['appnexus.com', 'google.com', 'rockerbox.com'],
+            "domain_list_id": 414849,
+            "object_modified": "domain_list",
+            "field_name": "domains",
+            "metric_values": {
+                "metric1": 29348,
+                "metric2": 123.0129
+                }
+            }
+
+        to_post_json = ujson.dumps(to_post)
+        response = ujson.loads(self.fetch("/", method="POST", body=to_post_json).body)
+
+        # Check that get_domain_list was called with the correct argument
+
+        args, kwargs = mock_get_domain_list.call_args
+        self.assertEqual(args[1], 414849)
+        
+        expected = {
+            "rule_group_id": 1,
+            "field_old_value": "[u'appnexus.com', u'rockerbox.com']",
+            "field_new_value": "[u'appnexus.com', u'google.com', u'rockerbox.com']",
+            "domain_list_id": 414849,
+            "profile_id": 0,
+            "campaign_id": 0,
+            "object_modified": "domain_list",
+            "field_name": "domains",
+            "value_group_id": 4
+            }
+
+        # Don't want to check the last_modified time
+        response["response"][0] = {k:v for k,v 
+                                   in response["response"][0].iteritems() 
+                                   if k != "last_modified"}
+
+        self.assertEqual(response["status"], "ok")
+
+        self.assertTrue(response["response"][0] == expected)
