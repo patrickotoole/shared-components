@@ -22,7 +22,7 @@ class BatchSubmitHandler(tornado.web.RequestHandler):
     @decorators.deferred
     @decorators.rate_limited
     def get_new_job(self):
-        r = self.api.post("/batch-segment?member_id=2024")
+        r = self.api.post("/batch-segment")
         return r.json
 
     # Given a string of uid,segment:expiration data, submit a batch job
@@ -45,7 +45,8 @@ class BatchSubmitHandler(tornado.web.RequestHandler):
         #
         # Note that we can't use link for this, because the url isn't under
         # the same endpoint as the rest of AppNexus's API
-
+        
+        # Get uniques instead
         num_users = len(data)
 
         cb = functools.partial(self.log_submission, job_url, job_id, num_users)
@@ -56,6 +57,8 @@ class BatchSubmitHandler(tornado.web.RequestHandler):
         http_client = AsyncHTTPClient()
         http_client.fetch(job_url, method='POST', headers=headers, body=body_str, callback=cb)
 
+        # Log out the top 5-10 lines submitted
+
     def log_submission(self, job_url, job_id, num_users, response):
         print "Logging submission..."
         print response.body
@@ -64,6 +67,9 @@ class BatchSubmitHandler(tornado.web.RequestHandler):
 
         print response
 
-        job_submitted_at = response['date']
-        job_id = content['response']['segment_upload']['job_id']
-        status = content['response']['status']
+        job_id = response['response']['segment_upload']['job_id']
+        status = response['response']['status']
+        
+    def test_cb(self, response):
+        print response
+        print response.body
