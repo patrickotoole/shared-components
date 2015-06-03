@@ -10,6 +10,8 @@ class BatchRequestRoutes(Routes):
 
         return [
             (r'/new.*', scripts.BatchRequestFormHandler, self.connectors),
-            (r's.*', scripts.BatchRequestsHandler, self.connectors)
+            (r's.*', scripts.BatchRequestsHandler, self.connectors),
+            (r'/submit', scripts.BatchSubmitHandler, self.connectors),
+            (r'/submit/(.*?)', scripts.BatchSubmitHandler, self.connectors)
         ]
- 
+
