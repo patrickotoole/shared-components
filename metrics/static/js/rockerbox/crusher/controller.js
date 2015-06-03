@@ -84,6 +84,34 @@ RB.crusher.controller = (function(controller) {
         })
         crusher.urls_wo_qs = Object.keys(no_qs).sort(function(x,y){return no_qs[y] - no_qs[x]})
         controller.get_bloodhound(crusher.urls_wo_qs)
+
+        var uris = dd.map(function(x){ return {"url":x.url.split("?")[0].split(".com")[1], "visits":x.visits }})
+
+        crusher.sorted_uris = d3.nest()
+          .key(function(x){return x.url})
+          .rollup(function(x){
+            return d3.sum(x,function(y){ return y.visits})
+          })
+          .entries(uris)
+          .sort(function(x,y){return y.values -  x.values })
+
+        var rec = crusher.sorted_uris
+          .filter(function(x){
+            var actions = crusher.actionData.filter(function(z){
+              var matched = z.url_pattern.filter(function(q){
+                return (q.indexOf(x.key) > -1) || (x.key.indexOf(q) > -1
+              )})
+              return matched.length
+            })
+            return actions.length == 0 
+          })
+          .slice(0,10)
+          .map(function(x){
+            return {"action_name":x.key,"url_pattern":[x.key]}
+          })
+        
+        crusher.ui.action.showRecommended(rec,controller.save_action,crusher.urls_wo_qs) 
+        
       })
         
         
@@ -254,7 +282,7 @@ RB.crusher.controller = (function(controller) {
     new: function(expandTarget,options) {
       var defaultAction = [{"values":options}]
 
-      crusher.actionData = crusher.actionData.filter(function(x){return x.action_id}).concat(defaultAction) 
+      crusher.actionData = crusher.actionData.filter(function(x){return x.action_id})
       expandTarget.datum(defaultAction[0])
       crusher.ui.action.edit(expandTarget,controller.save_action)
       crusher.ui.action.view(expandTarget)
