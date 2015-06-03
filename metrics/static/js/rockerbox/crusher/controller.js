@@ -194,7 +194,7 @@ RB.crusher.controller = (function(controller) {
           var fn = function(callback) {
 
             var domains = []
-            action.all.length && action.all[0].values && action.all[0].values.map(function(d){
+            crusher.urls && crusher.urls.map(function(d){
               if (action.url_pattern)
                 action.url_pattern.map(function(x){
                   if (d.indexOf(x) > -1) domains.push(d)
