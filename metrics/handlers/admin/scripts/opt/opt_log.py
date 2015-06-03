@@ -22,9 +22,9 @@ WHERE rule_group_id={}
 
 INSERT = """
 INSERT INTO opt_log 
-    (rule_group_id, object_modified, campaign_id, profile_id, field_name, field_old_value, field_new_value) 
+    (rule_group_id, object_modified, campaign_id, profile_id, domain_list_id, field_name, field_old_value, field_new_value) 
 VALUES 
-    (%(rule_group_id)s, "%(object_modified)s", %(campaign_id)s, %(profile_id)s, "%(field_name)s", "%(field_old_value)s", "%(field_new_value)s")
+    (%(rule_group_id)s, "%(object_modified)s", %(campaign_id)s, %(profile_id)s, %(domain_list_id)s, "%(field_name)s", "%(field_old_value)s", "%(field_new_value)s")
 """
 
 INSERT_VALUE = """
@@ -51,7 +51,6 @@ class OptLogHandler(tornado.web.RequestHandler):
         self.api = api
         self.log_cols = [
             "object_modified",
-            "campaign_id",
             "field_name",
             "field_old_value", 
             "field_new_value",
@@ -66,6 +65,13 @@ class OptLogHandler(tornado.web.RequestHandler):
     def get_lock(self, object_type, object_id):        
         """We need to implement this!"""
         pass
+
+    @decorators.deferred
+    @decorators.rate_limited
+    def get_domain_list(self, domain_list_id):
+        url = "/domain-list?id={}".format(domain_list_id)
+        r = self.api.get(url)
+        return r.json
 
     @decorators.deferred
     @decorators.rate_limited
@@ -98,6 +104,13 @@ class OptLogHandler(tornado.web.RequestHandler):
     def edit_profile(self, profile_id, data):
         url = "/profile?id={}".format(profile_id)
         r = self.api.put(url, data=ujson.dumps({"profile": data}))
+        return r.json
+
+    @decorators.deferred
+    @decorators.rate_limited
+    def edit_domain_list(self, domain_list_id, data):
+        url = "/domain-list?id={}".format(domain_list_id)
+        r = self.api.put(url, data=ujson.dumps({"domain-list": data}))
         return r.json
 
     def get(self,*args):
@@ -140,7 +153,7 @@ class OptLogHandler(tornado.web.RequestHandler):
 
         # Check that the POSTed columns are correct
         if len(all_cols) != len(self.log_cols + self.value_cols):
-            raise Exception("required columns: object_modified, campaign_id, " + 
+            raise Exception("required columns: object_modified, " + 
                             "field_name, field_old_value, field_new_value, " + 
                             "metric_values, rule_group_id")
 
@@ -148,7 +161,7 @@ class OptLogHandler(tornado.web.RequestHandler):
         if not self.rule_exists(obj["rule_group_id"]):
             raise Exception("rule_group_id {} does not exist".format(obj["rule_group_id"]))        
 
-        if obj["object_modified"] not in ["campaign_profile", "campaign"]:
+        if obj["object_modified"] not in ["campaign_profile", "campaign", "domain_list"]:
             raise Exception("object_modified field must be one of " + 
                             "[campaign, campaign_profile]")
 
@@ -157,9 +170,9 @@ class OptLogHandler(tornado.web.RequestHandler):
             obj[field].sort()
             value.sort()
 
-        if not (str(obj[field]) == str(value)):
+        if not (obj[field] == value):
             raise Exception("current field value in AppNexus does not match " +
-                            "field_old_value. {} != {}".format(obj[field], value))
+                            "field_old_value. {} != {}".format(str(obj[field]), str(value)))
 
     def log_changes(self, obj):
         # Pull out metric values
@@ -194,12 +207,9 @@ class OptLogHandler(tornado.web.RequestHandler):
             self.check_request(obj)
 
             # Get the profile_id for the campaign
-            campaign_data = yield self.get_campaigns([obj["campaign_id"]])
-            obj["profile_id"] = campaign_data["response"]["campaign"]["profile_id"]
-
-            # Get ids
-            campaign_id = obj["campaign_id"]
-            profile_id = obj["profile_id"]
+            if "campaign_id" in obj:
+                campaign_data = yield self.get_campaigns([obj["campaign_id"]])
+                obj["profile_id"] = campaign_data["response"]["campaign"]["profile_id"]
 
             # Get field name and value
             field_name = obj["field_name"]
@@ -212,16 +222,32 @@ class OptLogHandler(tornado.web.RequestHandler):
             # Check if field_old_value matches what we find in AppNexus object
             # If so, make the changes to the campaign/profile
             if obj["object_modified"] == "campaign_profile":
-                profile = yield self.get_profile(profile_id)
+                obj["domain_list_id"] = "null"
+                profile = yield self.get_profile(obj["profile_id"])
                 self.assert_field_val(profile["response"]["profile"], 
                                       field_name, expected_val)
-                response = yield self.edit_profile(profile_id, changes)
+                response = yield self.edit_profile(obj["profile_id"], changes)
 
             elif obj["object_modified"] == "campaign":
-                campaign = yield self.get_campaigns([campaign_id])
+                obj["domain_list_id"] = "null"
+                campaign = yield self.get_campaigns([obj["campaign_id"]])
                 self.assert_field_val(campaign["response"]["campaign"], 
                                       field_name, expected_val)
-                response = yield self.edit_campaign(campaign_id, changes)
+                response = yield self.edit_campaign(obj["campaign_id"], changes)
+
+            elif obj["object_modified"] == "domain_list":
+                obj["campaign_id"] = "null"
+                obj["profile_id"] = "null"
+                domain_list = yield self.get_domain_list(obj["domain_list_id"])
+
+                self.assert_field_val(domain_list["response"]["domain-list"],
+                                      field_name, expected_val)
+                response = yield self.edit_domain_list(obj["domain_list_id"], changes)
+
+            else:
+                raise Exception("object_modified must be one of " +
+                                "['campaign_profile', 'campaign', 'domain_list']." +
+                                "Given value: {}".format(obj["object_modified"]))
 
             # Now that we made the changes in Appnexus, log them out.
             self.log_changes(obj)
