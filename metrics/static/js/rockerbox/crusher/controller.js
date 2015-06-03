@@ -127,18 +127,20 @@ RB.crusher.controller = (function(controller) {
   }
 
   controller.get_domains = function(uids,callback) {
-    var data = {
-      "uids":uids
+    var data = { "uids":uids }
+    if (uids.length) {
+      d3.xhr(visitDomains)
+        .header("Content-Type", "application/json")
+        .post(
+          JSON.stringify(data),
+          function(err, rawData){
+            var resp = JSON.parse(rawData.response)
+            callback(resp)
+          }
+        );
+    } else {
+      callback([])
     }
-    d3.xhr(visitDomains)
-      .header("Content-Type", "application/json")
-      .post(
-        JSON.stringify(data),
-        function(err, rawData){
-          var resp = JSON.parse(rawData.response)
-          callback(resp)
-        }
-      );
      
   }
 
@@ -149,7 +151,7 @@ RB.crusher.controller = (function(controller) {
     new: function(target) {
       crusher.ui.funnel.add_funnel(target)
     },
-    save: function(data) {
+    save: function(data,callback) {
       var d = {
         "advertiser": source,
         "owner": "owner",
@@ -165,7 +167,10 @@ RB.crusher.controller = (function(controller) {
         .header("Content-Type", "application/json")
         .send(type, JSON.stringify(cdata), function(err, rawData){
           var resp = JSON.parse(rawData.response).response
+          data['funnel_name'] = resp.funnel_name
           data['funnel_id'] = resp.funnel_id
+          crusher.funnelData.push(data)
+          callback(crusher.funnelData)
         });
     },
     delete: function(data,parent_data,funnel) {
@@ -181,6 +186,7 @@ RB.crusher.controller = (function(controller) {
 
           parent_data.splice(funnel_ids[0].pos,1)
 
+          crusher.funnelData = parent_data
           funnel.remove()
           console.log(rawData)
         }); 
@@ -204,18 +210,23 @@ RB.crusher.controller = (function(controller) {
 
             var obj = {"urls": action.matches}
 
-            d3.xhr(visitUID)
-              .header("Content-Type", "application/json")
-              .post(
-                JSON.stringify(obj),
-                function(err, rawData){
-                  var dd = JSON.parse(rawData.response)
-                  action.visits_data = dd
-                  action.uids = dd.map(function(x){return x.uid})
-                  action.count = dd.length 
-                  if (callback) callback(null,action)
-                }
-              );
+            if (action.matches.length > 0) {
+              d3.xhr(visitUID)
+                .header("Content-Type", "application/json")
+                .post(
+                  JSON.stringify(obj),
+                  function(err, rawData){
+                    var dd = JSON.parse(rawData.response)
+                    action.visits_data = dd
+                    action.uids = dd.map(function(x){return x.uid})
+                    action.count = dd.length 
+                    if (callback) callback(null,action)
+                  }
+                );
+            } else {
+              if (!action.id) action.uids = []
+              callback(null,action)
+            }
           }
           q.defer(fn)
           return true
