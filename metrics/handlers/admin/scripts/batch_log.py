@@ -7,6 +7,19 @@ from twisted.internet import defer
 from editable_base import EditableBaseHandler
 from tornado.httpclient import *
 from lib.helpers import *
+from lib.mysql.helpers import run_mysql_deferred
+from lib.mysql.helpers import execute_mysql_deferred
+
+INSERT = """
+INSERT INTO batch_log_v2 
+(source_type, source_name, job_id) 
+VALUES 
+("%(source_type)s", "%(source_name)s", "%(job_id)s")
+"""
+
+GET = """
+SELECT * FROM batch_log_v2 WHERE job_id="%(job_id)s"
+"""
 
 class BatchLogHandler(EditableBaseHandler):
 
@@ -18,7 +31,7 @@ class BatchLogHandler(EditableBaseHandler):
         pass
 
     def get(self):
-        self.write(self.make_insert_query("batch_log_v2"))
+        self.write("Put something here")
 
     def template_to_query(self, template, values):
         cleaned = {}
@@ -30,30 +43,34 @@ class BatchLogHandler(EditableBaseHandler):
                 cleaned[k] = v
         return template % cleaned
 
+    @defer.inlineCallbacks
+    def create_log(self, data):
+        insert = INSERT % data
+        get_query = GET % data
+
+        try:
+            response = yield execute_mysql_deferred(self.db, insert)
+
+            get_response = yield run_mysql_deferred(self.db, get_query)
+            
+            # Convert to json
+            values = get_response.to_dict(orient="list")
+            values = {k:v[0] for k,v in values.iteritems()}
+
+            self.write(ujson.dumps({"response":values}))
+            self.finish()
+        except Exception as e:
+            self.write(ujson.dumps({"error": e}))
+            self.finish()
+
+
     @tornado.web.asynchronous
     def post(self):
         posted = ujson.loads(self.request.body)
         job_id = self.get_argument("id")
-        url = "/batch-segment?job_id={}".format(job_id)
-        data = self.api.get(url).json["response"]["batch_segment_upload_job"]
+        posted["job_id"] = job_id        
 
-        # Check if job_id is already logged in batch_log_2
-            # If so, then return a message stating that it has already been logged
-
-        combined = dict(data.items() + posted.items())
-
-        template = self.get_insert_template("batch_log_v2")
-        cb = functools.partial(self.callback)
-
-        print combined
-        insert = self.template_to_query(template, combined)
-
-        response = self.update(insert, callback=cb)
-        self.write(response)
-        
-
-    def callback(self, response):
-        print response
+        response = self.create_log(posted)
 
     def log(self):
         pass

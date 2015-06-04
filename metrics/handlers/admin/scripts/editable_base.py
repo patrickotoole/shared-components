@@ -49,14 +49,20 @@ class EditableBaseHandler(tornado.web.RequestHandler, EditableBase):
 
     @defer.inlineCallbacks
     def update(self, query, callback=None):
-        response = yield execute_mysql_deferred(self.db, query)
-        if callback:
-            callback(response)
-        else:
-            self.respond()
+        try:
+            response = yield execute_mysql_deferred(self.db, query)
+
+            if callback:
+                callback(ujson.dumps({"response": response}))
+            else:
+                self.respond()
+        except Exception as e:
+            if callback:
+                callback(ujson.dumps({"error": e}))
+            else:
+                raise Exception(e)
 
     def make_update(self, update_query, pk):
-        print self.request.body
         col_to_change = self.get_argument("name")
         value = self.get_argument("value")
 

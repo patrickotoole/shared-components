@@ -35,7 +35,6 @@ class MysqlDB(DBConnectionWrapper):
                 pass
             with self.create_connection() as cursor:
                 result = self.CURSOR_WRAPPER(cursor, query, args=args)()
-
                 if "insert into" in query.lower():
                     return cursor.lastrowid
                 return result

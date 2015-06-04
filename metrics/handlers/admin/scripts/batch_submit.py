@@ -1,11 +1,12 @@
 import tornado.web
 import ujson
 import functools
+from batch_log import BatchLogHandler
 from twisted.internet import defer
 from tornado.httpclient import *
 from lib.helpers import *
 
-class BatchSubmitHandler(tornado.web.RequestHandler):
+class BatchSubmitHandler(BatchLogHandler):
 
     def initialize(self, reporting_db=None, api=None, db=None):
         self.db = reporting_db
@@ -14,6 +15,7 @@ class BatchSubmitHandler(tornado.web.RequestHandler):
     def get(self):
         self.write("Here")
 
+    @tornado.web.asynchronous
     def post(self):
         data = ujson.loads(self.request.body)
         print data
@@ -47,9 +49,9 @@ class BatchSubmitHandler(tornado.web.RequestHandler):
         # the same endpoint as the rest of AppNexus's API
         
         # Get uniques instead
-        num_users = len(data)
+        num_users = len(set(data))
 
-        cb = functools.partial(self.log_submission, job_url, job_id, num_users)
+        cb = functools.partial(self.log_submission, num_users)
 
         headers = {"Content-type": "application/octet-stream"}
         body_str = '\n'.join(data)
@@ -59,17 +61,15 @@ class BatchSubmitHandler(tornado.web.RequestHandler):
 
         # Log out the top 5-10 lines submitted
 
-    def log_submission(self, job_url, job_id, num_users, response):
+    def log_submission(self, num_users, response):
+        data = ujson.loads(self.request.body)
+        response_data = ujson.loads(response.body)
         print "Logging submission..."
-        print response.body
-        print type(response.body)
-        response = ujson.loads(response.body)
 
-        print response
+        job_id = response_data['response']['segment_upload']['job_id']
+        data["job_id"] = job_id
+        data["num_users"] = num_users
 
-        job_id = response['response']['segment_upload']['job_id']
-        status = response['response']['status']
+        self.create_log(data)
+
         
-    def test_cb(self, response):
-        print response
-        print response.body
