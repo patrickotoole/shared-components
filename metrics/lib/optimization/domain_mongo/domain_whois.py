@@ -63,11 +63,11 @@ class DomainWhois():
 		if len(domain_data) > 0:
 			if self.whois_col in domain_data[0].keys():
 				if domain_data[0][self.whois_col] != 0:
-					return int(True)
-		return int(False)
+					return True
+		return False
 
 	def domain_exists(self, domain_data):
-		return int(len(domain_data) > 0)
+		return len(domain_data) > 0
 
 	def pull_domain_data(self, domain):
 
@@ -75,7 +75,7 @@ class DomainWhois():
 		r = requests.get(url%domain)
 		try:
 			return r.json()
-		except AttributeError as e:
+		except ValueError as e:
 			logger.error("Error %s in getting mongo db data for domain %s" %(e, domain))
 			logger.info(r.text)
 
@@ -91,7 +91,6 @@ class DomainWhois():
 			data.append(row)
 
 			if (i % 100) == 0:
-				#print "On domain %d" %i
 				logger.info("On domain %d" %i)
 		self.data = pd.DataFrame(data)
 
@@ -129,7 +128,7 @@ class DomainWhois():
 		r = requests.post("http://portal.getrockerbox.com/domains", data=json.dumps(domain_data))
 		logger.info(r.text)
 
-	def update(self, row):
+	def update(self, domain_data):
 		logger.info("Updating %s in domains table"%domain_data['domain'])
 		to_update = {}
 		to_update[self.whois_col] = domain_data[self.whois_col]
