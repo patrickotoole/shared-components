@@ -50,7 +50,6 @@ class DomainWhoisGeo():
 		self.data['admin_country'] = self.data['whois_contacts'].apply(lambda x: extract_admin_field(x, 'admin','country'))
 		self.data['registrant_country'] = self.data['whois_contacts'].apply(lambda x: extract_admin_field(x, 'registrant','country'))
 		self.data = self.data[self.data['registrant_country'].apply(lambda x: self.country_filter(x))]
-		#print len(self.data)
 
 
 	def push(self):
