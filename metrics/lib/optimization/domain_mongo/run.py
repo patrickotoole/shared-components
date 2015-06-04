@@ -14,13 +14,13 @@ logger = logging.getLogger("opt")
 
 if __name__ == "__main__":
 
-	import logsetup
-	logsetup.configure_log(subject="domain_whois")
+    import logsetup
+    logsetup.configure_log(subject="domain_whois")
 
 
-	logger.info("Extracting whois data for %s" %TODAY)
-	D = domain_whois.DomainWhois(TODAY, TODAY)
-	
-	D.load_domains()
-	D.filter_domains()
-	D.push_whois()
+    logger.info("Extracting whois data for %s" %TODAY)
+    D = domain_whois.DomainWhois(TODAY, TODAY)
+    
+    D.load_domains()
+    D.filter_domains()
+    D.push_whois()
