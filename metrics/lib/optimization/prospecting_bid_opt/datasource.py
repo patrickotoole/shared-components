@@ -111,7 +111,8 @@ class CampaignDataSource(DataSource):
             self.logger.info("Executing query: {}".format(VISIBILITY_QUERY % query_args))
             try:
                 df_vis = pd.DataFrame(self.hive.execute(VISIBILITY_QUERY % query_args))
-            except Exception:
+            except Exception as e:
+                self.logger.error("Error in pulling visibility data: {}".format(e))
                 df_vis = pd.DataFrame(self.hive.execute(VISIBILITY_QUERY % query_args))
 
             self.visible_data = pd.concat([self.visible_data, df_vis])

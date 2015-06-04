@@ -15,7 +15,7 @@ Domain Meta Table
 ## 4) Push to table
 
 def get_whois(domain):
-	API_KEY = '1779c3d09740eed52c48c1abe4830457'
+	API_KEY = 'edeeecc7c9b177dad7c9412ef9a60b45'
 	url = 'http://api.whoapi.com/?domain=%s&r=whois&apikey=%s'
 	r = requests.get(url%(domain,API_KEY))
 	return r.json()
@@ -49,7 +49,7 @@ class DomainWhois():
 		'''.format(self.start_date, self.end_date)
 		df_domains = pd.DataFrame(self.hive.execute(query))
 
-		self.domain_list = list(df_domains['domain'])[:2]
+		self.domain_list = list(df_domains['domain'])
 		print "Loaded %d domains" %len(self.domain_list)
 
 
@@ -58,11 +58,11 @@ class DomainWhois():
 		if len(domain_data) > 0:
 			if self.whois_col in domain_data[0].keys():
 				if domain_data[0][self.whois_col] != 0:
-					return True
-		return False
+					return int(True)
+		return int(False)
 
 	def domain_exists(self, domain_data):
-		return len(domain_data) > 0
+		return int(len(domain_data) > 0)
 
 	def pull_domain_data(self, domain):
 
@@ -83,10 +83,12 @@ class DomainWhois():
 		self.data = pd.DataFrame(data)
 
 	def filter_domains(self):
-		print "Starting with ", self.domain_list
+		print "Starting with %d domains" %len(self.domain_list)
 		self.check_data()
-		self.data = self.data[self.data['whois_exists'] != True]
-		print "Filtered domains to ", list(self.data['domain'])
+		self.data = self.data[self.data['whois_exists'] != 1]
+
+		self.data  = self.data.iloc[0:1000]
+		print "Filtered to %d domains" %len(list(self.data['domain']))
 
 	def add_whois(self):
 
@@ -98,10 +100,9 @@ class DomainWhois():
 			domain_data['domain'] = domain
 			whois_json = get_whois(domain)
 			whois_column[k] = extract_whois_contacts(whois_json)
-			time.sleep(90)
+			time.sleep(2)
 		self.data[self.whois_col] = whois_column
-		import ipdb
-		ipdb.set_trace()
+
 
 	def push_data(self):
 
@@ -114,8 +115,11 @@ class DomainWhois():
 
 	def insert(self, row):
 
+		# import ipdb
+		# ipdb.set_trace()
+
 		print "Inserting %s to domains table" %row['domain']
-		r = requests.post("http://portal.getrockerbox.com/domains", data=json.dumps(row))
+		r = requests.post("http://portal.getrockerbox.com/domains", data=json.dumps(row.to_dict()))
 		print r.text
 
 	def update(self, row):
