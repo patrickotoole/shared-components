@@ -31,9 +31,8 @@ def extract_whois_contacts(whois_json):
     if isinstance(whois_json, dict):
         if 'contacts' in whois_json.keys():
             if whois_json['contacts'] is not None:
-                if len(whois_json['contacts']) > 0:
-                    return whois_json['contacts']
-    return {}
+                return whois_json['contacts']
+    return 0
 
 
 class DomainWhois():
@@ -64,7 +63,7 @@ class DomainWhois():
 
         if len(domain_data) > 0:
             if self.whois_col in domain_data[0].keys():
-                if domain_data[0][self.whois_col] != 0:
+                if (domain_data[0][self.whois_col] != 0) or (domain_data[0][self.whois_col] != {}):
                     return True
         return False
 
