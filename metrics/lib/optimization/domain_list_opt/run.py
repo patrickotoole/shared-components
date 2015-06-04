@@ -1,4 +1,4 @@
-import geo_domainlist.py
+import geo_domainlist
 
 
 if __name__ == "__main__":
@@ -7,6 +7,6 @@ if __name__ == "__main__":
 	G = geo_domainlist.DomainWhoisGeo(domain_list_id)
 	G.load_data()
 	G.filter()
-	G.push
+	G.push()
 
 

@@ -6,6 +6,9 @@ from link import lnk
 # h = lnk.dbs.hive
 import logging
 import copy
+from link import lnk
+console  = lnk.api.console
+
 
 
 def extract_admin_field(whois_contacts, contact_type, field):
@@ -37,6 +40,7 @@ class DomainWhoisGeo():
 	def load_data(self):
 		r = requests.get("http://portal.getrockerbox.com/domains?format=json")
 		self.data = pd.DataFrame(r.json())
+		#print len(self.data)
 
 	def country_filter(self, country):
 		return (country not in self.good_countries)
@@ -46,11 +50,10 @@ class DomainWhoisGeo():
 		self.data['admin_country'] = self.data['whois_contacts'].apply(lambda x: extract_admin_field(x, 'admin','country'))
 		self.data['registrant_country'] = self.data['whois_contacts'].apply(lambda x: extract_admin_field(x, 'registrant','country'))
 		self.data = self.data[self.data['registrant_country'].apply(lambda x: self.country_filter(x))]
-	
+		#print len(self.data)
+
 
 	def push(self):
-
-		import copy
 
 		old_domain_list = get_domain_list(self.list_id)
 		new_domain_list = copy.copy(old_domain_list)

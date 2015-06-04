@@ -7,4 +7,4 @@ if __name__ == "__main__":
 	D.load_domains()
 	D.filter_domains()
 	D.add_whois()
-	D.insert()
+	D.push_data()
