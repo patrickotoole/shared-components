@@ -64,6 +64,7 @@ class DomainWhoisGeo():
 
     def filter(self):
         self.data = self.data[self.data['whois_contacts'] != 0]
+        self.data = self.data[self.data['whois_contacts'] != 0]
         logger.info("Data filtered to %d domains with whois data" %len(self.data))
         
         self.data['admin_country'] = self.data['whois_contacts'].apply(lambda x: extract_admin_field(x, 'admin','country'))
