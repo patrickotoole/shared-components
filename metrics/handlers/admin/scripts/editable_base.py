@@ -4,9 +4,17 @@ from lib.mysql.helpers import run_mysql_deferred
 from lib.mysql.helpers import execute_mysql_deferred
 from lib.helpers import *
 
+import re
 import tornado.web 
 import logging
 from copy import deepcopy
+
+INSERT = """
+INSERT INTO {}
+({})
+VALUES
+({})
+"""
 
 class EditableBase(object):
     """
@@ -40,9 +48,12 @@ class EditableBaseHandler(tornado.web.RequestHandler, EditableBase):
         yield default
 
     @defer.inlineCallbacks
-    def update(self, query):
-        yield execute_mysql_deferred(self.db, query)
-        self.respond()
+    def update(self, query, callback=None):
+        response = yield execute_mysql_deferred(self.db, query)
+        if callback:
+            callback(response)
+        else:
+            self.respond()
 
     def make_update(self, update_query, pk):
         print self.request.body
@@ -60,3 +71,26 @@ class EditableBaseHandler(tornado.web.RequestHandler, EditableBase):
 
         where = ['{} = "{}"'.format(k, v) for (k,v) in self.params.iteritems() if v]
         return ' and '.join(where)
+
+    def get_insert_template(self, table_name, excludes=[]):
+        df = self.db.select_dataframe("describe {}".format(table_name))
+        variables = df[["field","type"]].set_index("field").to_dict(orient="dict")["type"]
+
+        for e in excludes:
+            del variables[e]
+
+        placeholders = []
+
+        p = re.compile("(timestamp|varchar).*")
+        for k,v in variables.iteritems():
+            if p.match(v):
+                placeholders.append('"%({})s"'.format(k))
+            else:
+                placeholders.append('%({})s'.format(k))
+        
+        schema = ','.join(variables)
+        values = ','.join(placeholders)
+
+        query = INSERT.format(table_name, schema, values)
+
+        return query

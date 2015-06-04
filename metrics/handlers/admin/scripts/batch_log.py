@@ -2,60 +2,60 @@ import tornado.web
 import ujson
 import functools
 import re
+import functools
 from twisted.internet import defer
+from editable_base import EditableBaseHandler
 from tornado.httpclient import *
 from lib.helpers import *
 
-INSERT = """
-INSERT INTO {}
-({})
-VALUES
-({})
-"""
-
-class BatchLogHandler(tornado.web.RequestHandler):
+class BatchLogHandler(EditableBaseHandler):
 
     def initialize(self, reporting_db=None, api=None, db=None):
         self.db = reporting_db
         self.api = api
 
-    def make_insert_query(self, table_name):
-        df = self.db.select_dataframe("describe {}".format(table_name))
-        variables = df[["field","type"]].set_index("field").to_dict(orient="dict")["type"]
-
-        placeholders = []
-
-        p = re.compile("(timestamp|varchar).*")
-        for k,v in variables.iteritems():
-            if p.match(v):
-                placeholders.append('"%({})s"'.format(k))
-            else:
-                placeholders.append('%({})s'.format(k))
-
-        schema = ','.join(variables)
-        values = ','.join(placeholders)
-        
-        query = INSERT.format(table_name, schema, values)
-
-        return query
+    def write_log(self, data):
+        pass
 
     def get(self):
         self.write(self.make_insert_query("batch_log_v2"))
 
-    def post(self):
-        job_id = self.get_argument("id", False)
-        if job_id:
-            url = "/batch-segment?job_id={}".format(job_id)
-        else:
-            url = "/batch-segment?start_element=0&sort=last_modified.desc"
-        data = self.api.get(url)
+    def template_to_query(self, template, values):
+        cleaned = {}
+        
+        for k,v in values.iteritems():
+            if v == None:
+                cleaned[k] = "null"
+            else:
+                cleaned[k] = v
+        return template % cleaned
 
-        # Extract data from POST request
+    @tornado.web.asynchronous
+    def post(self):
+        posted = ujson.loads(self.request.body)
+        job_id = self.get_argument("id")
+        url = "/batch-segment?job_id={}".format(job_id)
+        data = self.api.get(url).json["response"]["batch_segment_upload_job"]
 
         # Check if job_id is already logged in batch_log_2
             # If so, then return a message stating that it has already been logged
+
+        combined = dict(data.items() + posted.items())
+
+        self.write(ujson.dumps(combined))
+
+        template = self.get_insert_template("batch_log_v2")
+        cb = functools.partial(self.callback)
+
+        print combined
+        insert = self.template_to_query(template, combined)
+
+        response = self.update(insert, callback=cb)
+        self.write(response)
         
-        self.write(data.json)
+
+    def callback(self, response):
+        print response
 
     def log(self):
         pass
