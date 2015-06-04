@@ -5,6 +5,11 @@ import json
 from link import lnk
 console  = lnk.api.console
 
+import logging
+logger = logging.getLogger("opt")
+
+
+
 '''
 Domain Meta Table
 '''
@@ -31,7 +36,7 @@ def extract_whois_contacts(whois_json):
 
 class DomainWhois():
 
-	def __init__(self, start_date, end_date, fields):
+	def __init__(self, start_date, end_date):
 
 		self.hive = lnk.dbs.hive
 		self.start_date = start_date
@@ -49,7 +54,7 @@ class DomainWhois():
 		'''.format(self.start_date, self.end_date)
 		df_domains = pd.DataFrame(self.hive.execute(query))
 
-		self.domain_list = list(df_domains['domain'])
+		self.domain_list = list(df_domains['domain'])[:2000]
 		print "Loaded %d domains" %len(self.domain_list)
 
 
@@ -68,68 +73,95 @@ class DomainWhois():
 
 		url = "http://portal.getrockerbox.com/domains?format=json&domain=%s"
 		r = requests.get(url%domain)
-		return r.json()
+		try:
+			return r.json()
+		except AttributeError as e:
+			logger.error("Error %s in getting mongo db data for domain %s" %(e, domain))
+			logger.info(r.text)
 
 	def check_data(self):
 
 		data = []
-		for domain in self.domain_list:
+		for i,domain in enumerate(self.domain_list):
 			row = {}
 			row['domain'] = domain
 			domain_data = self.pull_domain_data(domain)
 			row['domain_exists'] = self.domain_exists(domain_data)
 			row['whois_exists'] = self.check_whois_field_exists(domain_data)
 			data.append(row)
+
+			if (i % 100) == 0:
+				#print "On domain %d" %i
+				logger.info("On domain %d" %i)
 		self.data = pd.DataFrame(data)
 
 	def filter_domains(self):
-		print "Starting with %d domains" %len(self.domain_list)
+		logger.info("Starting with %d domains" %len(self.domain_list))
 		self.check_data()
 		self.data = self.data[self.data['whois_exists'] != 1]
 
 		self.data  = self.data.iloc[0:1000]
-		print "Filtered to %d domains" %len(list(self.data['domain']))
+		logger.info("Filtered to %d domains" %len(list(self.data['domain'])))
 
-	def add_whois(self):
 
-		whois_column = [None] * len(self.data)
+	def push_whois(self):
+
 		for k in range(len(self.data)):
-			domain = self.data['domain'].iloc[k]
-			print "Extracting whois for %s" %domain
+
+			row = self.data.iloc[k]
+			domain = row['domain']
+
+			logger.info("Extracting whois for %s" %domain)
 			domain_data = {}
 			domain_data['domain'] = domain
 			whois_json = get_whois(domain)
-			whois_column[k] = extract_whois_contacts(whois_json)
-			time.sleep(2)
-		self.data[self.whois_col] = whois_column
+			domain_data[self.whois_col] = extract_whois_contacts(whois_json)
 
-
-	def push_data(self):
-
-		for k in range(len(self.data)):
-			row = self.data.iloc[k]
 			if row['domain_exists']:
-				self.update(row)
+				self.update(domain_data)
 			else:
-				self.insert(row)
+				self.insert(domain_data)
 
-	def insert(self, row):
+			time.sleep(2)
 
-		# import ipdb
-		# ipdb.set_trace()
-
-		print "Inserting %s to domains table" %row['domain']
-		r = requests.post("http://portal.getrockerbox.com/domains", data=json.dumps(row.to_dict()))
-		print r.text
+	def insert(self, domain_data):
+		logger.info("Inserting %s to domains table" %domain_data['domain'])
+		r = requests.post("http://portal.getrockerbox.com/domains", data=json.dumps(domain_data))
+		logger.info(r.text)
 
 	def update(self, row):
-
-		print "Updating %s in domains table"%row['domain']
+		logger.info("Updating %s in domains table"%domain_data['domain'])
 		to_update = {}
-		to_update[self.whois_col] = row[self.whois_col]
-		r = requests.put("http://portal.getrockerbox.com/domains?domain=%s"%row['domain'], 
+		to_update[self.whois_col] = domain_data[self.whois_col]
+		r = requests.put("http://portal.getrockerbox.com/domains?domain=%s"%domain_data['domain'], 
 			data=json.dumps(to_update))
-		print r.text
+		logger.info(r.text)
+
+
+
+
+	# def add_whois(self):
+
+	# 	whois_column = [None] * len(self.data)
+	# 	for k in range(len(self.data)):
+	# 		domain = self.data['domain'].iloc[k]
+	# 		print "Extracting whois for %s" %domain
+	# 		domain_data = {}
+	# 		domain_data['domain'] = domain
+	# 		whois_json = get_whois(domain)
+	# 		whois_column[k] = extract_whois_contacts(whois_json)
+	# 		time.sleep(2)
+	# 	self.data[self.whois_col] = whois_column
+
+
+	# def push_data(self):
+
+	# 	for k in range(len(self.data)):
+	# 		row = self.data.iloc[k]
+	# 		if row['domain_exists']:
+	# 			self.update(row)
+	# 		else:
+	# 			self.insert(row)
 
 
 
