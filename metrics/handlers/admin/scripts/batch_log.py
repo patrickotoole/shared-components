@@ -42,8 +42,6 @@ class BatchLogHandler(EditableBaseHandler):
 
         combined = dict(data.items() + posted.items())
 
-        self.write(ujson.dumps(combined))
-
         template = self.get_insert_template("batch_log_v2")
         cb = functools.partial(self.callback)
 

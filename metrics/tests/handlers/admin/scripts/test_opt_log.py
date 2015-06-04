@@ -104,6 +104,7 @@ class OptLogTest(AsyncHTTPTestCase):
     def tearDown(self):
         self.db.execute("DROP TABLE opt_log")
         self.db.execute("DROP TABLE opt_rules")
+        self.db.execute("DROP TABLE opt_values")
 
     def test_get_all(self):
         expected = [
