@@ -4,7 +4,6 @@ import requests
 import time
 import json
 from link import lnk
-# h = lnk.dbs.hive
 import copy
 from link import lnk
 console  = lnk.api.console
@@ -13,31 +12,22 @@ import logging
 logger = logging.getLogger("opt")
 
 
+def extract_admin_field(whois_raw, field):
 
-def extract_admin_field(whois_contacts, contact_type, field):
+    raw = whois_raw.split('\n')
+    find_field = filter(lambda x: "Registrant Country" in x, raw)
 
-    if whois_contacts == {}:
-        return None
+    if len(find_field) == 1:
 
-    else:
-
-        if isinstance(whois_contacts, dict):
-            if whois_contacts['type'] == contact_type:
-                return whois_contacts[field]
-
-        elif isinstance(whois_contacts, list):
-            contact = filter(lambda contact: contact['type'] == contact_type, whois_contacts)
-            if len(contact) > 0:
-                return contact[0][field]
-        return None
-
+        split = find_field[0].split(':')
+        if len(split) == 2:
+            return split[1].replace(" ", "")
+    return None
 
 
 def get_domain_list(id):
     r = console.get("/domain-list?id=%s"%id)
     try:
-        # import ipdb
-        # ipdb.set_trace()
         return r.json['response']['domain-list']['domains']
     except KeyError as e:
         logger.error("list %d doesn't exist" %id)
@@ -49,7 +39,7 @@ class DomainWhoisGeo():
         
         self.list_id = list_id
         self.data = None
-        self.good_countries = ['United States', 'US', 'UK', 'United Kingdom']
+        self.good_countries = ['UnitedStates', 'US', 'UK', 'UnitedKingdom']
         self.rbox_api = lnk.api.rockerbox
 
 
@@ -63,19 +53,16 @@ class DomainWhoisGeo():
         return (country not in self.good_countries)
 
     def filter(self):
-        self.data = self.data[self.data['whois_contacts'] != 0]
-        self.data = self.data[self.data['whois_contacts'] != 0]
+        self.data = self.data[self.data['whois_raw'] != 0]
         logger.info("Data filtered to %d domains with whois data" %len(self.data))
         
-        self.data['admin_country'] = self.data['whois_contacts'].apply(lambda x: extract_admin_field(x, 'admin','country'))
-        self.data['registrant_country'] = self.data['whois_contacts'].apply(lambda x: extract_admin_field(x, 'registrant','country'))
+        self.data['admin_country'] = self.data['whois_raw'].apply(lambda x: extract_admin_field(x, 'Admin Country'))
+        self.data['registrant_country'] = self.data['whois_raw'].apply(lambda x: extract_admin_field(x, 'Registrant Country'))
         
         logger.info("Filtering based on " +  str(self.good_countries))
         self.data = self.data[self.data['registrant_country'].apply(lambda x: self.country_filter(x))]
         logger.info("Data filtered to %d domains" % len(self.data))
 
-        import ipdb
-        ipdb.set_trace()
 
     def push(self):
 

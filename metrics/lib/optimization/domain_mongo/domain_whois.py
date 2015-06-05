@@ -11,7 +11,6 @@ import logging
 logger = logging.getLogger("opt")
 
 
-
 '''
 Domain Meta Table
 '''
@@ -21,20 +20,25 @@ Domain Meta Table
 ## 3) Iterate through filtered domain list, extract whois data
 ## 4) Push to table
 
+def extract_whois_raw(whois_json):
+    if isinstance(whois_json, dict):
+        if 'whois_raw' in whois_json.keys():
+            return whois_json['whois_raw']
+    return 0
+
+
 def get_whois(domain):
     API_KEY = 'edeeecc7c9b177dad7c9412ef9a60b45'
     url = 'http://api.whoapi.com/?domain=%s&r=whois&apikey=%s'
     r = requests.get(url%(domain,API_KEY))
-
     return r.json()
 
 
-def extract_whois_contacts(whois_json):
-    if isinstance(whois_json, dict):
-        if 'contacts' in whois_json.keys():
-            return whois_json['contacts']
-    return 0
+def check_whois_limit(whois_json):
+    if 'LIMIT EXCEEDED' in whois_json['whois_raw']:
+        return True
 
+        
 
 class DomainWhois():
 
@@ -43,8 +47,7 @@ class DomainWhois():
         self.hive = lnk.dbs.hive
         self.start_date = start_date
         self.end_date = end_date    
-        
-        self.whois_col = 'whois_contacts'
+        self.whois_col = 'whois_raw'
         self.domain_list = None
         self.data = None
 
@@ -56,7 +59,7 @@ class DomainWhois():
         '''.format(self.start_date, self.end_date)
         df_domains = pd.DataFrame(self.hive.execute(query))
 
-        self.domain_list = list(df_domains['domain'])[:1000]
+        self.domain_list = list(df_domains['domain'])[:2000]
         print "Loaded %d domains" %len(self.domain_list)
 
 
@@ -64,7 +67,7 @@ class DomainWhois():
 
         if len(domain_data) > 0:
             if self.whois_col in domain_data[0].keys():
-                if (domain_data[0][self.whois_col] != 0) or (domain_data[0][self.whois_col] != {}):
+                if (domain_data[0][self.whois_col] != 0):
                     return True
         return False
 
@@ -72,7 +75,6 @@ class DomainWhois():
         return len(domain_data) > 0
 
     def pull_domain_data(self, domain):
-
         url = "http://portal.getrockerbox.com/domains?format=json&domain=%s"
         r = requests.get(url%domain)
         try:
@@ -99,9 +101,9 @@ class DomainWhois():
     def filter_domains(self):
         logger.info("Starting with %d domains" %len(self.domain_list))
         self.check_data()
-        self.data = self.data[self.data['whois_exists'] != 1]
+        self.data = self.data[self.data['whois_exists'] != True]
 
-        self.data  = self.data.iloc[0:500]
+        self.data  = self.data.iloc[:1000]
         logger.info("Filtered to %d domains" %len(list(self.data['domain'])))
 
 
@@ -111,26 +113,30 @@ class DomainWhois():
 
             row = self.data.iloc[k]
             domain = row['domain']
-
             logger.info("Extracting whois for %s" %domain)
             domain_data = {}
             domain_data['domain'] = domain
+
+            ## Extracting whois data
             whois_json = get_whois(domain)
+
+            ## Check status of api pull
+            if whois_json['status'] == "0":
+                domain_data[self.whois_col] = extract_whois_raw(whois_json)
+
+                ## Push whois data to table if pull is correct
+                if row['domain_exists']:
+                    self.update(domain_data)
+                else:
+                    self.insert(domain_data)
             
-            while whois_json['limit_hit']:
-                logger.info("Hit API limit, waiting 60 seconds..")
-                time.sleep(60)
-                whois_json = get_whois(domain)
-
-
-            domain_data[self.whois_col] = extract_whois_contacts(whois_json)
-
-            if row['domain_exists']:
-                self.update(domain_data)
+            ## Logging out errors
             else:
-                self.insert(domain_data)
-
-            time.sleep(5)
+                logger.error('whois call failed for %s with status %s' %(domain, whois_json['status']))
+                domain_data[self.whois_col] = 0
+            
+            time.sleep(8)
+            
 
     def insert(self, domain_data):
         logger.info("Inserting %s to domains table" %domain_data['domain'])
@@ -146,34 +152,4 @@ class DomainWhois():
         r = requests.put("http://portal.getrockerbox.com/domains?domain=%s"%domain_data['domain'], 
             data=json.dumps(to_update))
         logger.info(r.text)
-
-
-
-
-    # def add_whois(self):
-
-    #   whois_column = [None] * len(self.data)
-    #   for k in range(len(self.data)):
-    #       domain = self.data['domain'].iloc[k]
-    #       print "Extracting whois for %s" %domain
-    #       domain_data = {}
-    #       domain_data['domain'] = domain
-    #       whois_json = get_whois(domain)
-    #       whois_column[k] = extract_whois_contacts(whois_json)
-    #       time.sleep(2)
-    #   self.data[self.whois_col] = whois_column
-
-
-    # def push_data(self):
-
-    #   for k in range(len(self.data)):
-    #       row = self.data.iloc[k]
-    #       if row['domain_exists']:
-    #           self.update(row)
-    #       else:
-    #           self.insert(row)
-
-
-
-
 
