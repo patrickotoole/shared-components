@@ -76,7 +76,7 @@ class DomainWhois():
         else:
             logger.info("Loaded %d domains" %len(df_domains))
 
-        self.domain_list = list(df_domains['domain'].iloc[:2000])
+        self.domain_list = list(df_domains['domain'])
 
     def clean_domains(self):
 
