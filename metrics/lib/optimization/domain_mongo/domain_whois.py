@@ -6,7 +6,7 @@ import json
 from link import lnk
 import pprint
 console  = lnk.api.console
-
+import tldextract
 import logging
 logger = logging.getLogger("opt")
 
@@ -38,15 +38,22 @@ def check_whois_limit(whois_json):
     if 'LIMIT EXCEEDED' in whois_json['whois_raw']:
         return True
 
+def extract_sld(domain):
+    extracted = tldextract.extract(domain)
+    sld_tld = extracted[1] + "." + extracted[2]
+    return sld_tld
         
 
 class DomainWhois():
 
-    def __init__(self, start_date, end_date):
+    def __init__(self, start_date, end_date, start_hour, end_hour):
 
         self.hive = lnk.dbs.hive
         self.start_date = start_date
-        self.end_date = end_date    
+        self.end_date = end_date
+        self.start_hour = start_hour
+        self.end_hour = end_hour
+
         self.whois_col = 'whois_raw'
         self.domain_list = None
         self.data = None
@@ -55,12 +62,30 @@ class DomainWhois():
         query = '''
         SELECT DISTINCT domain
         FROM advertiser_visibility_daily
-        WHERE date >= "{}" AND date <= "{}" AND domain != "" 
-        '''.format(self.start_date, self.end_date)
+        WHERE date >= "{}" AND date <= "{}" 
+        AND hour >= "{}" AND hour <= "{}" 
+        AND domain != "" 
+        '''.format(self.start_date, self.end_date, self.start_hour, self.end_hour)
+        
+        logger.info(query)
         df_domains = pd.DataFrame(self.hive.execute(query))
 
-        self.domain_list = list(df_domains['domain'])[:2000]
-        print "Loaded %d domains" %len(self.domain_list)
+        if df_domains is None or len(df_domains) == 0:
+            logger.error("No data loaded")
+            raise AttributeError("No data loaded")
+        else:
+            logger.info("Loaded %d domains" %len(df_domains))
+
+        self.domain_list = list(df_domains['domain'].iloc[:2000])
+
+    def clean_domains(self):
+
+        cleaned_list = []
+        for domain in self.domain_list:
+            cleaned_domain = extract_sld(domain)
+            logger.info("cleaned %s to %s" %(domain, cleaned_domain))
+            cleaned_list.append(cleaned_domain)
+        self.domain_list = cleaned_list
 
 
     def check_whois_field_exists(self, domain_data):
