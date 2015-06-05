@@ -116,7 +116,7 @@ class CampaignDataSource(DataSource):
                 df_vis = pd.DataFrame(self.hive.execute(VISIBILITY_QUERY % query_args))
 
             self.visible_data = pd.concat([self.visible_data, df_vis])
-            time.sleep(15)
+
 
 
     def check_data(self):
