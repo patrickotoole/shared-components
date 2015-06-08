@@ -150,6 +150,7 @@ RB.crusher.controller = (function(controller) {
 
 
   controller.init = function(type){
+    var type = (type == "/crusher") ? "funnel" : type
      
     controller.initializers[type]()
     
