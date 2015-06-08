@@ -12,9 +12,9 @@ from lib.mysql.helpers import execute_mysql_deferred
 
 INSERT = """
 INSERT INTO batch_log_v2 
-(source_type, source_name, job_id) 
+(source_type, source_name, job_id, num_users) 
 VALUES 
-("%(source_type)s", "%(source_name)s", "%(job_id)s")
+("%(source_type)s", "%(source_name)s", "%(job_id)s", %(num_users)s)
 """
 
 GET = """
