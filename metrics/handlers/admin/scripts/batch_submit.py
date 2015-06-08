@@ -18,7 +18,6 @@ class BatchSubmitHandler(BatchLogHandler):
     @tornado.web.asynchronous
     def post(self):
         data = ujson.loads(self.request.body)
-        print data
         self.submit_batch_segments(data)
 
     @decorators.deferred
@@ -37,29 +36,29 @@ class BatchSubmitHandler(BatchLogHandler):
 
         if "batch_segment_upload_job" in response:
             job_info = response["batch_segment_upload_job"]
-            job_id = job_info["job_id"]
             job_url = job_info["upload_url"]
         else:
             raise StandardError("Problem requesting job id: {}".format(r.json))
 
+        # Get unique number of user/segment combinations
+        num_users = len(set(data["uids"]))
+        body_str = '\n'.join(data["uids"])
 
-        # Use the job url to submit the users
-        #
-        # Note that we can't use link for this, because the url isn't under
-        # the same endpoint as the rest of AppNexus's API
+        self.push_job_request(job_url, body_str, num_users)
+
+    def push_job_request(self, job_url, body, num_users):
+        """Use the job url to submit the users
         
-        # Get uniques instead
-        num_users = len(set(data))
+        Note that we can't use link for this, because the url isn't under
+        the same endpoint as the rest of AppNexus's API
+        """
 
         cb = functools.partial(self.log_submission, num_users)
 
         headers = {"Content-type": "application/octet-stream"}
-        body_str = '\n'.join(data)
 
         http_client = AsyncHTTPClient()
-        http_client.fetch(job_url, method='POST', headers=headers, body=body_str, callback=cb)
-
-        # Log out the top 5-10 lines submitted
+        http_client.fetch(job_url, method='POST', headers=headers, body=body, callback=cb)
 
     def log_submission(self, num_users, response):
         data = ujson.loads(self.request.body)
@@ -71,5 +70,3 @@ class BatchSubmitHandler(BatchLogHandler):
         data["num_users"] = num_users
 
         self.create_log(data)
-
-        

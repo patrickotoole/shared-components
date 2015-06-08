@@ -21,6 +21,10 @@ GET = """
 SELECT * FROM batch_log_v2 WHERE job_id="%(job_id)s"
 """
 
+GET_ALL = """
+SELECT * FROM batch_log_v2
+"""
+
 class BatchLogHandler(EditableBaseHandler):
 
     def initialize(self, reporting_db=None, api=None, db=None):
@@ -30,8 +34,14 @@ class BatchLogHandler(EditableBaseHandler):
     def write_log(self, data):
         pass
 
-    def get(self):
-        self.write("Put something here")
+    @defer.inlineCallbacks
+    def get_logs(self, job_id):
+        if job_id:
+            df = yield run_mysql_deferred(self.db, GET % {"job_id": job_id})
+        else:
+            df = yield run_mysql_deferred(self.db, GET_ALL)
+        self.write(Convert.df_to_json(df))
+        self.finish()
 
     def template_to_query(self, template, values):
         cleaned = {}
@@ -63,14 +73,14 @@ class BatchLogHandler(EditableBaseHandler):
             self.write(ujson.dumps({"error": e}))
             self.finish()
 
+    @tornado.web.asynchronous
+    def get(self):
+        job_id = self.get_argument("job_id", False)
+
+        self.get_logs(job_id)
 
     @tornado.web.asynchronous
     def post(self):
         posted = ujson.loads(self.request.body)
-        job_id = self.get_argument("id")
-        posted["job_id"] = job_id        
-
         response = self.create_log(posted)
 
-    def log(self):
-        pass
