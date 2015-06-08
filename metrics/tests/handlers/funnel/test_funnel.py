@@ -106,11 +106,11 @@ class FunnelTest(AsyncHTTPTestCase):
 
     def get_app(self):
         self.db = lnk.dbs.test
-        self.db.execute("DROP TABLE funnel")
-        self.db.execute("DROP TABLE funnel_actions")
+        self.db.execute("DROP TABLE IF EXISTS funnel")
+        self.db.execute("DROP TABLE IF EXISTS funnel_actions")
         
-        self.db.execute("DROP TABLE action")
-        self.db.execute("DROP TABLE action_patterns") 
+        self.db.execute("DROP TABLE IF EXISTS action")
+        self.db.execute("DROP TABLE IF EXISTS action_patterns") 
          
 
         self.db.execute(CREATE_FUNNEL_ACTION_TABLE) 

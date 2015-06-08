@@ -8,4 +8,6 @@ def run_mysql_deferred(mysql, q):
 @decorators.deferred
 @decorators.time_log
 def execute_mysql_deferred(mysql, q):
-    return mysql.execute(q)
+    print "Excecuting query: {}".format(q)
+    response = mysql.execute(q)
+    return response

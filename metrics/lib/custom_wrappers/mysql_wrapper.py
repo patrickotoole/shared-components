@@ -35,10 +35,8 @@ class MysqlDB(DBConnectionWrapper):
                 pass
             with self.create_connection() as cursor:
                 result = self.CURSOR_WRAPPER(cursor, query, args=args)()
-
                 if "insert into" in query.lower():
                     return cursor.lastrowid
-                    
                 return result
         except MySQLdb.OperationalError, e:
             if e[0] == 2006:
@@ -46,8 +44,8 @@ class MysqlDB(DBConnectionWrapper):
                 self._wrapped = self.create_connection()
                 cursor = self._wrapped.cursor()
                 return self.CURSOR_WRAPPER(cursor, query, args=args)()
-
-        return
+            else:
+                raise Exception("Unknown MySQL error: {}".format(e))
 
     def batch_update(self, query_list, args = ()):
         """

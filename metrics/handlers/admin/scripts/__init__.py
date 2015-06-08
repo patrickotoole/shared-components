@@ -7,6 +7,8 @@ from pixel import PixelHandler
 from intraweek import IntraWeekHandler
 from batch import BatchRequestsHandler
 from batch import BatchRequestFormHandler
+from batch_submit import BatchSubmitHandler
+from batch_log import BatchLogHandler
 from event_log import EventLogHandler
 from imps import ImpsHandler
 from viewable import ViewabilityHandler
