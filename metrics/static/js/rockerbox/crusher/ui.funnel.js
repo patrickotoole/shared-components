@@ -6,31 +6,6 @@ RB.crusher.ui.funnel = (function(funnel) {
 
   var crusher = RB.crusher
 
-
-  var d3_updateable = function(target,selector,type) {
-    var type = type || "div"
-    var updateable = target.selectAll(selector).data(function(x){return [x]})
-
-    updateable.enter()
-      .append(type)
-
-    return updateable
-  }
-
-  var d3_splat = function(target,selector,type,data,joiner) {
-    var type = type || "div"
-    var updateable = target.selectAll(selector).data(
-      data || function(x){return x},
-      joiner || function(x){return x}
-    )
-
-    updateable.enter()
-      .append(type)
-
-    return updateable
-  }
-
-
   funnel.showList = function(funnel_data, options, selected) {
 
     var target = d3.selectAll(".funnel-list-wrapper")
@@ -392,27 +367,23 @@ RB.crusher.ui.funnel = (function(funnel) {
     },
     domain_chart: function(funnels,data) {
 
-      var title = funnels.selectAll("h5.domains")
-        .data(function(x){return [x]})
-      title.enter().append("h5").classed("domains",true)
-      title.text("Popular sites of convertors")
-      
+      var title = d3_updateable(funnels,"h5.domains","h5")
+        .classed("domains",true)
+        .text("Popular sites of convertors")
 
-      var targetWidth = funnels.style("width").replace("px","") 
+      var targetWidth = funnels.style("width").replace("px",""),
+        width = targetWidth,
+        barHeight = 15;
       
-      var width = targetWidth,
-          barHeight = 15;
+      var x = d3.scale.linear().range([0, width-150]);
       
-      var x = d3.scale.linear()
-          .range([0, width-150]);
-      
-      var chart = funnels.selectAll("svg.domain-chart")
+      var chart = funnels.selectAll("svg.domain-chart-svg")
           .data([data])
 
       chart
           .enter()
             .append("svg")
-            .attr("class","domain-chart")
+            .attr("class","domain-chart-svg")
             .attr("width", width);
 
       x.domain([0, d3.max(data, function(d) { return d.uid; })]);
@@ -451,16 +422,19 @@ RB.crusher.ui.funnel = (function(funnel) {
       var data = data.map(function(x){
         var pop_domain = RB.crusher.pop_domains[x.domain] || {}
         var idf = pop_domain.idf || 12
-        x.wuid =  idf * x.uid
+        x.wuid =  idf * idf * idf * x.uid
         return x
       }).sort(function(x,y){
         return y.wuid - x.wuid
       }).slice(0,25)
 
       
-      var domain_chart = d3_updateable(funnels,".domain-chart","div")
+      var domain_chart = d3_updateable(funnels,".domain-chart","div",false,function(x){
+          return x.funnel_id
+        })
         .classed("col-md-12 domain-chart",true)
         .classed("hidden",false)
+
 
       funnel.show.component.domain_chart(domain_chart,data)
       

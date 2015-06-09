@@ -324,7 +324,8 @@ RB.crusher.controller = (function(controller) {
         var q = queue(5)
          
         var newSteps = data.actions.filter(function(action){
-          return controller.api.actionToUIDs(action,q)
+          controller.api.actionToUIDs(action,q)
+          return !action.visits_data
         })
 
         if (newSteps.length > 0) {
