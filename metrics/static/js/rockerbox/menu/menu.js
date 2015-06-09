@@ -2,9 +2,9 @@ RB = RB || {}
 RB.menu = (function(menu) {
 
   try {
-    var source = "source=" + window.location.search.split("source=")[1].split("&")[0]
+    var source = "advertiser=" + window.location.search.split("source=")[1].split("&")[0]
   } catch(e) {
-    var source = "source=baublebar"
+    var source = "advertiser=baublebar"
   }
 
   menu.data = [{
@@ -75,7 +75,10 @@ RB.menu = (function(menu) {
 
       if (x.values) queue.selectbar(x)
       else if (x.get_values_path) menu.methods.get_values(x,queue.selectbar)
-      else console.log("yo!")
+      else {
+        var page = window.location.pathname.replace("/crusher/","")
+        RB.crusher.controller.init(page,x) 
+      } 
 
     }
 

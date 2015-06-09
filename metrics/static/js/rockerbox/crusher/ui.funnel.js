@@ -68,13 +68,40 @@ RB.crusher.ui.funnel = (function(funnel) {
     
     d3_updateable(funnels,".waiting","div")
       .classed("col-md-12 waiting",true)
+      .classed("hidden",false)
       .text("loading... (replace with loading image)...")
 
     d3_updateable(funnels,".summary","div")
       .classed("col-md-12 summary",true)
       .classed("hidden",true)
 
+    d3_updateable(funnels,".step-chart","div")
+      .classed("col-md-12 step-chart",true)
+      .classed("hidden",true)
+
+    d3_updateable(funnels,".domain-chart","div")
+      .classed("col-md-12 domain-chart",true)
+      .classed("hidden",true)
+
+
+
   } 
+
+  funnel.buildShow = function() {
+    var target = d3.select(".funnel-view-wrapper")
+      .selectAll(".funnel") 
+
+    var f = d3_updateable(target,".show","div")
+      .classed("show",true)
+
+    var wait = funnel.wait.bind(false,f),
+      show = funnel.show.bind(false,f),
+      data = f.datum()
+
+    crusher.controller.funnel.show(data, show, wait)
+
+    return f
+  }
 
   funnel.show = function(funnels) {
 
@@ -227,11 +254,8 @@ RB.crusher.ui.funnel = (function(funnel) {
       f.enter().append("div").classed("funnel",true)
       f.exit().remove()
     
-      
-    
       funnel.edit(f,options)
-
-      var show = d3_updateable(f,".show","div").classed("show",true)
+      var show = funnel.buildShow()
     
       crusher.controller.funnel.show(
         f.datum(),
@@ -346,17 +370,14 @@ RB.crusher.ui.funnel = (function(funnel) {
     },
     steps: function(funnels) {
 
-      var data = funnels.datum()/*,
-        reduced = funnel.methods.compute_uniques(data.actions)
-*/
-      var stepsWrapper = funnels.selectAll(".step-chart").data(function(x){return [x]})
+      var data = funnels.datum()
 
-      stepsWrapper.enter()
-        .append("div").classed("col-md-12 step-chart",true) 
+      var stepsWrapper = d3_updateable(funnels,".step-chart","div")
+        .classed("col-md-12 step-chart",true) 
+        .classed("hidden",false)
 
       funnel.show.component.step_chart(stepsWrapper) 
 
-      //return reduced
     },
     step: function(steps) {
       var step = steps.selectAll(".step")
@@ -437,9 +458,9 @@ RB.crusher.ui.funnel = (function(funnel) {
       }).slice(0,25)
 
       
-      var domain_chart = funnels.selectAll(".domain-chart").data(function(x){return [x]})
-      domain_chart.enter()
-        .append("div").classed("col-md-12 domain-chart",true)
+      var domain_chart = d3_updateable(funnels,".domain-chart","div")
+        .classed("col-md-12 domain-chart",true)
+        .classed("hidden",false)
 
       funnel.show.component.domain_chart(domain_chart,data)
       
@@ -534,36 +555,37 @@ RB.crusher.ui.funnel = (function(funnel) {
 
     var funnels = target.selectAll(".funnel")
       .data(data)
+
+      funnels
         .enter()
         .append("div")
         .classed("funnel",true)
 
-    funnels
-      .append("h5")
+    d3_updateable(funnels,"h5","h5")
       .text("Edit a funnel")
 
-    
     funnel.edit(funnels,action_data)
-
-    funnel.showList(funnel_data,action_data)
-      .classed("active",function(x,i){return !i})
           
   }
 
   funnel.buildBase = function() {
-    var funnelRow = d3.selectAll(".container")
-      .append("div")
+
+    var target = d3.selectAll(".container")
+
+    var funnelRow = d3_splat(target,".row.funnels","div",[{"id":"container"}],function(x){return x.id})
       .classed("row funnels",true)
 
-    funnelRow
-      .append("div")
-      .classed("funnel-view-wrapper col-md-6",true)
-      .append("div")
-      .classed("funnel-wrapper ",true)
+    var viewWrapper = d3_updateable(funnelRow,".funnel-view-wrapper","div")
+      .classed("funnel-view-wrapper col-md-12",true)
+
+    d3_updateable(viewWrapper,".funnel-wrapper","div")
+      .classed("funnel-wrapper",true)
+
+    d3_updateable(funnelRow,".funnel-list-wrapper","div")
+      .classed("funnel-list-wrapper col-md-6",true)
 
     funnelRow
-      .append("div")
-      .classed("funnel-list-wrapper col-md-6",true)
+      .exit().remove()
     
   }
 

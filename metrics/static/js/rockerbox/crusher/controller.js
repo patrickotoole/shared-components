@@ -20,7 +20,7 @@ RB.crusher.controller = (function(controller) {
     return b;
   })(window.location.search.substr(1).split('&'))
 
-  var source = qs.source
+  var source = qs.advertiser
   var actionURL = "/crusher/funnel/action?format=json&advertiser=" + source
   var visitURL = "/crusher/visit_urls?format=json&source=" + source
   var visitUID = "/crusher/visit_uids?format=json&url="
@@ -32,41 +32,135 @@ RB.crusher.controller = (function(controller) {
   }
   URL = addParam(URL,"format=json")
 
-  controller.initializers = {
-    "funnel": function() {
-      controller.get_tf_idf()
 
+  controller.getUrls = function(callback) {
+    if (!crusher.urlData) {
+      
+    } else {
+      callback()
+    }
+  }
+
+  var genericQueuedAPI = function(fn){
+    return function(cb,extq) {
+      var q = extq || queue()
+      var bound = fn.bind(false,cb)
+      var d =  q.defer(bound)
+
+      return (!extq) ?  q.await(function(err,cb1){cb1()}) : d 
+    }
+  }
+
+  controller.helpers = {
+    matchDomains: function(url_pattern) {
+
+      var domains = []
+      crusher.urls && crusher.urls.map(function(d){
+        if (url_pattern)
+          url_pattern.map(function(x){
+            if (d.indexOf(x) > -1) domains.push(d)
+          })
+      })
+
+      return domains
+    },
+    visitsToUIDs: function(visits) {
+      var uids = {}
+      visits.map(function(x){uids[x.uid] = true})
+      return Object.keys(uids)
+    }
+  }
+
+  controller.api = {
+
+    visits: genericQueuedAPI(function(cb,deferred_cb) {
+
+      if (!crusher.urlData) {
+        d3.json(visitURL, function(dd){
+          crusher.urlData = dd
+          crusher.urls = dd.map(function(x){return x.url})
+          crusher.actionData.map(function(x) { x.values = crusher.urls }) 
+
+          deferred_cb(null,cb)
+        })
+      } else {
+        deferred_cb(null,cb)
+      }
+    }),
+    actions: genericQueuedAPI(function(cb,deferred_cb) {
+
+      if (!crusher.actionData) {
+        d3.json(actionURL,function(actions){
+          crusher.actionData = actions
+          deferred_cb(null,cb)
+        })
+      } else {
+        deferred_cb(null,cb)
+      }
+    }),
+    funnels: genericQueuedAPI(function(cb,deferred_cb) {
+
+      if (!crusher.funnelData) {
+        d3.json(funnelURL,function(dd){
+          crusher.funnelData = dd 
+          deferred_cb(null,cb)
+        })
+      } else {
+        deferred_cb(null,cb)
+      }
+    }),
+    actionToUIDs: genericQueuedAPI(function(action,deferred_cb) {
+
+      var helpers = controller.helpers
+      var obj = {}
+      obj.urls = helpers.matchDomains(action.url_pattern)
+
+      if ((obj.urls.length) > 0 && (!action.visits_data)) {
+
+        d3.xhr(visitUID)
+          .header("Content-Type", "application/json")
+          .post(
+            JSON.stringify(obj),
+            function(err, rawData){
+              var dd = JSON.parse(rawData.response)
+              action.visits_data = dd
+              action.matches = obj.urls
+
+              action.uids = helpers.visitsToUIDs(action.visits_data) 
+              action.count = dd.length 
+              deferred_cb(null,action)
+            }
+          );
+      } else {
+        if (!action.action_id) action.uids = []
+        deferred_cb(null,action)
+      }
+    })
+
+  }
+
+  controller.initializers = {
+    "":function(){},
+    "funnel": function(id) {
+
+      controller.get_tf_idf()
       crusher.ui.funnel.buildBase() 
 
-      d3.json(visitURL, function(dd){
-        crusher.urlData = dd
-        crusher.urls = dd.map(function(x){return x.url})
-        crusher.actionData.map(function(x) { x.values = crusher.urls }) 
-        // this could cause an async issue but it seems unlikely...
+      var q = queue(5)
 
-        var f = d3.select(".funnel-view-wrapper")
-          .selectAll(".funnel")
-          .selectAll(".show").data(function(x){return [x]})
+      controller.api.actions(function(){},q)
+      controller.api.funnels(function(){},q)
 
-        f.enter().append("div").classed("show",true)
-        crusher.controller.funnel.show(
-          f.datum(),
-          crusher.ui.funnel.show.bind(false,f),
-          crusher.ui.funnel.wait.bind(false,f)
-        )
+      q.awaitAll(function(err,callbacks){
+        //callbacks.map(function(f){f()})
 
+        var data = (id) ? 
+          crusher.funnelData.filter(function(x){return x.funnel_id == id}) : 
+          crusher.funnelData
+
+        crusher.ui.funnel.build(data,crusher.actionData)
+        crusher.ui.funnel.buildShow()
       })
-        
-      d3.json(actionURL,function(actions){
-        crusher.actionData = actions
-
-        d3.json(funnelURL, function(dd) {
-          crusher.funnelData = dd
-          crusher.ui.funnel.build(crusher.funnelData,crusher.actionData)
-        })
- 
-      })
-
       
     },
     "funnel/action": function() {
@@ -149,10 +243,11 @@ RB.crusher.controller = (function(controller) {
   }
 
 
-  controller.init = function(type){
-    var type = (type == "/crusher") ? "funnel" : type
+  controller.init = function(type,data){
+    var type = (type == "/crusher") ? "" : type
+    var id = data ? data.funnel_id : false
      
-    controller.initializers[type]()
+    controller.initializers[type](id)
     
   }
 
@@ -222,61 +317,25 @@ RB.crusher.controller = (function(controller) {
         }); 
     },
     show: function(data,callback,wait) {
-      var q = queue(5)
-      if (wait) wait() 
-      var newSteps = data.actions.filter(function(action){
+     
+      if (wait) wait()
 
-        if (!action.visits_data) {
-          
-          var fn = function(callback) {
-
-            var domains = []
-            crusher.urls && crusher.urls.map(function(d){
-              if (action.url_pattern)
-                action.url_pattern.map(function(x){
-                  if (d.indexOf(x) > -1) domains.push(d)
-                })
-            })
-            action.matches = domains 
-
-            var obj = {"urls": action.matches}
-
-            if (action.matches.length > 0) {
-              d3.xhr(visitUID)
-                .header("Content-Type", "application/json")
-                .post(
-                  JSON.stringify(obj),
-                  function(err, rawData){
-                    var dd = JSON.parse(rawData.response)
-                    var uids = {} 
-                    dd.map(function(x){uids[x.uid] = true})
-
-                    action.visits_data = dd
-                    action.uids = Object.keys(uids) 
-                    action.count = dd.length 
-                    if (callback) callback(null,action)
-                  }
-                );
-            } else {
-              if (!action.id) action.uids = []
-              callback(null,action)
-            }
-          }
-          q.defer(fn)
-          return true
-        }
-        return false
-      })
-
-      if (newSteps.length > 0) {
-        q.awaitAll(function(){
-          crusher.ui.funnel.methods.compute_uniques(data.actions)
-          callback()
+      controller.api.visits(function(){
+        var q = queue(5)
+         
+        var newSteps = data.actions.filter(function(action){
+          return controller.api.actionToUIDs(action,q)
         })
-      } else {
-        q.awaitAll(callback)
-      }
 
+        if (newSteps.length > 0) {
+          q.awaitAll(function(){
+            crusher.ui.funnel.methods.compute_uniques(data.actions)
+            callback()
+          })
+        } else {
+          q.awaitAll(callback)
+        }
+      })
     }
   }
 
