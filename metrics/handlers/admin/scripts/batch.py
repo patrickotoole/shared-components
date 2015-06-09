@@ -9,7 +9,7 @@ from lib.query.HIVE import *
 import lib.query.helpers as query_helpers
 
 class BatchRequestBase():
-    def initialize(self, db, api):
+    def initialize(self, db, api, **kwargs):
         self.db = db 
         self.api = api
 
