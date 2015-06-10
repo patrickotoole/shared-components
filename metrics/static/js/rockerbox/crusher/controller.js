@@ -28,8 +28,6 @@ RB.crusher.controller = (function(controller) {
       crusher.api.funnels(function(){},q)
 
       q.awaitAll(function(err,callbacks){
-        //callbacks.map(function(f){f()})
-
         var data = (id) ? 
           crusher.cache.funnelData.filter(function(x){return x.funnel_id == id}) : 
           crusher.cache.funnelData
@@ -46,31 +44,28 @@ RB.crusher.controller = (function(controller) {
     },
     "funnel/action": function() {
 
+
       crusher.ui.action.buildBase()
-    
-      d3.json(visitURL, function(dd){
-        crusher.cache.urlData = dd
-        crusher.cache.urls = dd.map(function(x){return x.url})
-        var no_qs = {}
 
-        crusher.cache.urls.map(function(x){
-          var url = x.split("?")[0]
-          no_qs[url] = no_qs[url] ? (no_qs[url] + 1) : 1  
-        })
-        crusher.cache.urls_wo_qs = Object.keys(no_qs).sort(function(x,y){return no_qs[y] - no_qs[x]})
-        controller.get_bloodhound(crusher.cache.urls_wo_qs)
+      var q = queue(5)
 
-        var uris = dd.map(function(x){ return {"url":x.url.split("?")[0].split(".com")[1], "visits":x.visits }})
+      crusher.api.actions(function(){
 
-        crusher.sorted_uris = d3.nest()
-          .key(function(x){return x.url})
-          .rollup(function(x){
-            return d3.sum(x,function(y){ return y.visits})
-          })
-          .entries(uris)
-          .sort(function(x,y){return y.values -  x.values })
+        crusher.ui.action.showAll(
+          crusher.cache.actionData,
+          controller.save_action,
+          crusher.cache.urls_wo_qs
+        )
 
-        var rec = crusher.sorted_uris
+      },q)
+      crusher.api.visits(function(){},q)
+
+      q.awaitAll(function(err,callbacks){
+        callbacks.map(function(f){f()})
+
+        crusher.cache.actionData.map(function(x) { x.values = crusher.cache.urls_wo_qs })
+
+        var rec = crusher.cache.uris
           .filter(function(x){
             var actions = crusher.cache.actionData.filter(function(z){
               if (!z.url_pattern) return false
@@ -87,16 +82,8 @@ RB.crusher.controller = (function(controller) {
           })
         
         crusher.ui.action.showRecommended(rec,controller.save_action,crusher.cache.urls_wo_qs) 
-        
+         
       })
-        
-        
-      d3.json(actionURL,function(actions){
-        crusher.cache.actionData = actions
-        crusher.cache.actionData.map(function(x) { x.values = crusher.cache.urls_wo_qs })
-
-        crusher.ui.action.showAll(actions,controller.save_action,crusher.cache.urls_wo_qs)
-      }) 
       
     }
   }

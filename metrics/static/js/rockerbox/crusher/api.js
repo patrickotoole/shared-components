@@ -73,6 +73,17 @@ RB.crusher.api = (function(api) {
       var uids = {}
       visits.map(function(x){uids[x.uid] = true})
       return Object.keys(uids)
+    },
+    set: function(list,fn) {
+      var h = {},
+        fn = fn || function(x) {return x}
+
+      list.map(function(x){
+        var v = fn(x)
+        h[v] = h[v] ? (h[v] + 1) : 1
+      })
+      
+      return Object.keys(h).sort(function(x,y){return h[y] - h[x]})
     }
   } 
 
@@ -95,8 +106,17 @@ RB.crusher.api = (function(api) {
           d3.json(api.URL.visitURL, function(dd){
             cache.urlData = dd
             cache.urls = dd.map(function(x){return x.url})
-            cache.actionData.map(function(x) { x.values = cache.urls }) 
+            cache.urls_wo_qs = api.helpers.set(cache.urls)
 
+            
+            cache.uris = d3.nest()
+              .key(function(x){return x.url.split("?")[0].split(".com")[1]})
+              .rollup(function(x){
+                return d3.sum(x,function(y){ return y.visits})
+              })
+              .entries(dd)
+              .sort(function(x,y){return y.values -  x.values })
+ 
             deferred_cb(null,cb)
           })
         } else {
