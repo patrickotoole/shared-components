@@ -10,24 +10,30 @@ RB.menu.selectbar = (function(selectbar) {
         .classed("selectbar",true)
     },
     heading: function(target,has_back) {
-      var h5 = d3_updateable(target,"h5","h5")
+      var h5 = d3_updateable(target,".heading","h5")
         .classed("heading",true)
+
+      var a = d3_updateable(h5,"a","a")
         .html(function(x){
           var name = x ? x.name : ""
-          return (has_back ? "&#65513; " : "") + name
+          var backarr = (has_back ? "&#65513; " : "") 
+          return backarr + name 
         })
 
-      if (has_back) h5.on("click",menu.queue.back)
+      if (has_back) a.on("click",menu.queue.back)
 
       return h5
     },
     items: function(target) {
-      var items = d3_splat(target, "a","a",
+      var items = d3_splat(target, "a.item","a",
           function(x){return x ? x.values : []},
           function(x){return x.name + x.push_state}
-        ).text(function(x){
+        )
+        .classed("item",true)
+        .text(function(x){
           return x.name
-        }).on("click", menu.queue.forward)
+        })
+        .on("click", menu.queue.forward)
 
       items.exit().remove()
 

@@ -47,7 +47,7 @@ RB.crusher.controller = (function(controller) {
       var bound = fn.bind(false,cb)
       var d =  q.defer(bound)
 
-      return (!extq) ?  q.await(function(err,cb1){cb1()}) : d 
+      return (!extq) ?  q.await(function(err,cb1){ cb1() }) : q
     }
   }
 
@@ -71,6 +71,9 @@ RB.crusher.controller = (function(controller) {
     }
   }
 
+  
+
+  
   controller.api = {
 
     visits: genericQueuedAPI(function(cb,deferred_cb) {
@@ -141,7 +144,14 @@ RB.crusher.controller = (function(controller) {
 
   controller.initializers = {
     "":function(){},
-    "funnel": function(id) {
+    "funnel/existing": function(funnel) {
+      controller.initializers.__funnel(funnel.funnel_id)
+    },
+    "funnel/new": function(){
+      var target = d3.selectAll(".funnel-view-wrapper").selectAll(".funnel-wrapper")
+      RB.crusher.controller.funnel.new(target)
+    },
+    "__funnel": function(id) {
 
       controller.get_tf_idf()
       crusher.ui.funnel.buildBase() 
@@ -431,6 +441,33 @@ RB.crusher.controller = (function(controller) {
     crusher.ui.funnel.add_action(target,options)
 
   }  
+
+  controller.menu = {}
+
+  controller.menu.renderers = controller.initializers
+
+  controller.menu.transforms = {
+    "funnel/new": function(menu_obj){
+      menu_obj.values = RB.crusher.funnelData
+      RB.menu.methods.transform(menu_obj,menu_obj.values_key)
+    },
+    "funnel/existing": function(menu_obj){
+      menu_obj.values = RB.crusher.funnelData
+      RB.menu.methods.transform(menu_obj,menu_obj.values_key)
+    }
+  }
+
+  controller.menu.apis = {
+    "funnel/new": controller.api.funnels,
+    "funnel/existing": controller.api.funnels
+  }
+
+  setTimeout(function(){
+    RB.menu.routes.register(controller.menu)
+  },1)
+
+
+
   return controller
 
 })(RB.crusher.controller || {}) 

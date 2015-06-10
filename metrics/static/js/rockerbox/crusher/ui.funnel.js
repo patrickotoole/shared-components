@@ -106,13 +106,14 @@ RB.crusher.ui.funnel = (function(funnel) {
         .classed("settings",true)
     },
     name: function(funnels){
-      var group = funnels.selectAll(".funnel-name").data(function(x){return [x]})
-      
-      var newGroup = group.enter()
-        .append("div").classed("funnel-name input-group input-group-sm",true)
+      var newGroup = d3_updateable(funnels,".funnel-name")
+        .classed("funnel-name input-group input-group-sm",true)
 
-      newGroup.append("span").classed("input-group-addon",true).text("Funnel name")
-      newGroup.append("input").classed("form-control funnel-name",true)
+      d3_updateable(newGroup,".input-group-addon","span")
+        .classed("input-group-addon",true).text("Funnel name")
+
+      d3_updateable(newGroup,".form-control.funnel-name","input")
+        .classed("form-control funnel-name",true)
         .attr("value",function(x){return x.funnel_name})
     },
     compute_funnel: function(funnels){
@@ -191,7 +192,7 @@ RB.crusher.ui.funnel = (function(funnel) {
       data.funnel_name = this_funnel.selectAll("input.funnel-name").property("value")
 
       var onSave = function(funnel_data) {
-        funnel.showList(funnel_data,action_data,data)
+        //funnel.showList(funnel_data,action_data,data)
       }
 
       crusher.controller.save_funnel(data,onSave)
@@ -422,7 +423,7 @@ RB.crusher.ui.funnel = (function(funnel) {
       var data = data.map(function(x){
         var pop_domain = RB.crusher.pop_domains[x.domain] || {}
         var idf = pop_domain.idf || 12
-        x.wuid =  idf * idf * idf * x.uid
+        x.wuid =  Math.exp(idf) * x.uid
         return x
       }).sort(function(x,y){
         return y.wuid - x.wuid
