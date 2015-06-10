@@ -90,7 +90,7 @@ RB.crusher.ui.funnel = (function(funnel) {
     var reduced = actions[actions.length -1].funnel_uids
     var domains_callback = funnel.show.component.domains.bind(false,funnels)
 
-    crusher.controller.get_domains(reduced,domains_callback)
+    crusher.controller.funnel.show_domains(reduced,domains_callback)
 
   }
 
@@ -195,7 +195,7 @@ RB.crusher.ui.funnel = (function(funnel) {
         //funnel.showList(funnel_data,action_data,data)
       }
 
-      crusher.controller.save_funnel(data,onSave)
+      crusher.controller.funnel.save(data,onSave)
 
     },
     compute_uniques: function(actions) {
@@ -493,7 +493,7 @@ RB.crusher.ui.funnel = (function(funnel) {
       d3_updateable(bw,".btn","button")
         .classed("btn btn-xs",true)
         .text("New funnel")
-        .on("click", crusher.controller.new_funnel.bind(this,funnel_wrapper))
+        .on("click", crusher.controller.funnel.new.bind(this,funnel_wrapper))
       
       return wrapper
     },
@@ -513,7 +513,7 @@ RB.crusher.ui.funnel = (function(funnel) {
           var funnel = d3.select(this.parentNode.parentNode)
           crusher.controller.funnel.delete(x,parent_data,funnel)
 
-          if (x == selected_funnel) crusher.controller.new_funnel(funnel_wrapper)
+          if (x == selected_funnel) crusher.controller.funnel.new(funnel_wrapper)
 
         })
 
