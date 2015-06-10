@@ -15,6 +15,16 @@ RB.crusher.controller = (function(controller) {
   var visitDomains = "/crusher/visit_domains?format=json&kind=domains"
   var funnelURL = "/crusher/funnel?format=json&advertiser=" + source
   
+  var filterRecommended = function(x){
+    var actions = crusher.cache.actionData.filter(function(z){
+      if (!z.url_pattern) return false
+      var matched = z.url_pattern.filter(function(q){
+        return (q.indexOf(x.key) > -1) || (x.key.indexOf(q) > -1
+      )})
+      return matched.length
+    })
+    return actions.length == 0 
+  }
 
   controller.initializers = {
     "funnel/existing": function(funnel) {
@@ -42,49 +52,44 @@ RB.crusher.controller = (function(controller) {
 
       RB.crusher.controller.funnel.new(target)
     },
-    "funnel/action": function() {
+    "action/existing": function() {
 
 
       crusher.ui.action.buildBase()
 
       var q = queue(5)
 
-      crusher.api.actions(function(){
-
-        crusher.ui.action.showAll(
-          crusher.cache.actionData,
-          controller.save_action,
-          crusher.cache.urls_wo_qs
-        )
-
-      },q)
+      crusher.api.actions(function(){},q)
       crusher.api.visits(function(){},q)
 
       q.awaitAll(function(err,callbacks){
-        callbacks.map(function(f){f()})
+
+        crusher.cache.actionData.map(function(x) { x.values = crusher.cache.urls_wo_qs })
+        crusher.ui.action.showAll(crusher.cache.actionData, controller.save_action, crusher.cache.urls_wo_qs)
+         
+      })
+    },
+    "action/new": function() {
+      crusher.ui.action.buildBase()
+
+      var q = queue(5)
+
+      crusher.api.actions(function(){},q)
+      crusher.api.visits(function(){},q)
+
+      q.awaitAll(function(err,callbacks){
 
         crusher.cache.actionData.map(function(x) { x.values = crusher.cache.urls_wo_qs })
 
-        var rec = crusher.cache.uris
-          .filter(function(x){
-            var actions = crusher.cache.actionData.filter(function(z){
-              if (!z.url_pattern) return false
-              var matched = z.url_pattern.filter(function(q){
-                return (q.indexOf(x.key) > -1) || (x.key.indexOf(q) > -1
-              )})
-              return matched.length
-            })
-            return actions.length == 0 
-          })
+        var rec = crusher.cache.uris.filter(filterRecommended)
           .slice(0,10)
           .map(function(x){
             return {"action_name":x.key,"url_pattern":[x.key]}
           })
-        
+
         crusher.ui.action.showRecommended(rec,controller.save_action,crusher.cache.urls_wo_qs) 
          
       })
-      
     }
   }
 
@@ -283,17 +288,35 @@ RB.crusher.controller = (function(controller) {
       "funnel/existing": function(menu_obj){
         menu_obj.values = RB.crusher.cache.funnelData
         RB.menu.methods.transform(menu_obj,menu_obj.values_key)
+      },
+      "action/existing": function(menu_obj){
+        menu_obj.values = RB.crusher.cache.actionData
+        RB.menu.methods.transform(menu_obj,menu_obj.values_key)
+      },
+      "action/new": function(menu_obj){
+
+        crusher.cache.actionData.map(function(x) { x.values = crusher.cache.urls_wo_qs })
+        crusher.cache.recommendedActionData = crusher.cache.uris.filter(filterRecommended)
+          .slice(0,10)
+          .map(function(x){
+            return {"action_name":x.key,"url_pattern":[x.key]}
+          })
+
+        menu_obj.values = RB.crusher.cache.recommendedActionData
+        RB.menu.methods.transform(menu_obj,menu_obj.values_key)
       }
     },
     apis: {
       "funnel/new": crusher.api.funnels,
-      "funnel/existing": crusher.api.funnels
+      "funnel/existing": crusher.api.funnels,
+      "action/existing": crusher.api.actions,
+      "action/new": crusher.api.recommended_actions
     }
   }
 
   setTimeout(function(){
     RB.menu.routes.register(controller.menu)
-  },1)
+  },200)
 
 
 

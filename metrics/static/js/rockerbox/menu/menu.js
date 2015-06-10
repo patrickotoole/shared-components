@@ -19,9 +19,20 @@ RB.menu = (function(menu) {
     "values": [
       {
         "name":"Actions",
-        "push_state":"/crusher/funnel/action",
-        "get_values_path":"/crusher/funnel/action?format=json&" + source,
-        "values_key":"action_name"
+        "push_state":"/crusher/action",
+        "values": [
+          {
+            "name": "Create New Action",
+            "push_state":"/crusher/action/new",
+            "values_key": "action_name"
+          },
+          {
+            "name": "View Existing Actions",
+            "push_state":"/crusher/action/existing",
+            "skipRender": true,
+            "values_key":"action_name"
+          }
+        ]
       },
       {
         "name":"Funnels",

@@ -134,6 +134,28 @@ RB.crusher.api = (function(api) {
           deferred_cb(null,cb)
         }
       }),
+      recommended_actions: function(cb,extq) {
+
+        var filterRecommended = function(x){
+          var actions = cache.actionData.filter(function(z){
+            if (!z.url_pattern) return false
+            var matched = z.url_pattern.filter(function(q){
+              return (q.indexOf(x.key) > -1) || (x.key.indexOf(q) > -1
+            )})
+            return matched.length
+          })
+          return actions.length == 0 
+        }
+
+        var q = extq || queue(2)
+
+        endpoints.actions(function(){},q)
+        endpoints.visits(function(){},q)
+
+        if (extq) return extq
+        else q.awaitAll(cb) 
+
+      },
       funnels: genericQueuedAPI(function(cb,deferred_cb) {
 
         if (!cache.funnelData) {

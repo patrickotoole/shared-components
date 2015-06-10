@@ -10,7 +10,7 @@ RB.crusher.ui.action.pattern = (function(pattern) {
   pattern.add = function(add_row) {
     var datum = this.datum()
 
-    var bloodhound = crusher.controller.bloodhound 
+    var bloodhound = crusher.controller.get_bloodhound()
 
     datum.rows = datum.rows || []
   
