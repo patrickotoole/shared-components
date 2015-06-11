@@ -20,7 +20,7 @@ RB.menu.selectbar = (function(selectbar) {
           return backarr + name 
         })
 
-      if (has_back) a.on("click",menu.queue.back)
+      if (has_back) a.on("click",menu.navigation.back)
 
       return h5
     },
@@ -33,7 +33,7 @@ RB.menu.selectbar = (function(selectbar) {
         .text(function(x){
           return x.name
         })
-        .on("click", menu.queue.forward)
+        .on("click", menu.navigation.forward)
 
       items.exit().remove()
 
@@ -46,12 +46,14 @@ RB.menu.selectbar = (function(selectbar) {
 
     var wrapper = selectbar.components.wrapper(target,[data])
     var bound = selectbar.render.bind(this,target)
-    var has_back = menu.queue.get().length > 1 
+    var has_back = menu.navigation.get().length > 1 
 
-    menu.queue.register(bound)
+    menu.navigation.register(bound)
 
     selectbar.components.heading(wrapper,has_back)
     selectbar.components.items(wrapper)
+
+    return selectbar.render.bind(false,target)
 
   }
 

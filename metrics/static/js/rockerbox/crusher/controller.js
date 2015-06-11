@@ -54,7 +54,6 @@ RB.crusher.controller = (function(controller) {
     },
     "action/existing": function() {
 
-
       crusher.ui.action.buildBase()
 
       var q = queue(5)
@@ -279,6 +278,10 @@ RB.crusher.controller = (function(controller) {
 
 
   controller.menu = {
+    roots: [{
+      "name":"On-page Analytics",
+      "push_state": "/crusher/"
+    }],
     renderers: controller.initializers,
     transforms: {
       "funnel/new": function(menu_obj){
@@ -310,13 +313,40 @@ RB.crusher.controller = (function(controller) {
       "funnel/new": crusher.api.funnels,
       "funnel/existing": crusher.api.funnels,
       "action/existing": crusher.api.actions,
-      "action/new": crusher.api.recommended_actions
+      "action/new": crusher.api.recommended_actions,
+      "": [{
+          "name":"Actions",
+          "push_state":"/crusher/action",
+        },
+        {
+          "name":"Funnels",
+          "push_state":"/crusher/funnel",
+        }] ,
+      "funnel": [{
+          "name":"Create New Funnel",
+          "push_state":"/crusher/funnel/new",
+        },
+        {
+          "name": "View Existing Funnels",
+          "push_state":"/crusher/funnel/existing",
+          "skipRender": true,
+          "values_key":"funnel_name"    
+        }],
+      "action": [{
+          "name": "Create New Action",
+          "push_state":"/crusher/action/new",
+          "values_key": "action_name"
+        },
+        {
+          "name": "View Existing Actions",
+          "push_state":"/crusher/action/existing",
+          "skipRender": true,
+          "values_key":"action_name"
+        }]
     }
   }
 
-  setTimeout(function(){
-    RB.menu.routes.register(controller.menu)
-  },200)
+  RB.routes.register(controller.menu)
 
 
 

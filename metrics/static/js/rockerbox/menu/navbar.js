@@ -8,8 +8,8 @@ RB.menu.navbar = (function(navbar) {
   navbar.methods = {
     pushState: function(selectbar,x) {
 
-      menu.queue.reset()
-      menu.queue.forward(x)
+      menu.navigation.reset()
+      menu.navigation.forward(x)
 
       selectbar(x)
       return false
@@ -40,11 +40,12 @@ RB.menu.navbar = (function(navbar) {
   navbar.render = function(target) {
 
     var wrapper = navbar.components.wrapper(target)
-    var selectbar = menu.selectbar.render(target) 
+    //var selectbar = menu.selectbar.render(target) 
 
     navbar.components.logo(wrapper)
     navbar.components.items(wrapper,menu.selectbar.render.bind(false,target))
 
+    return navbar.components.items.bind(false,wrapper)
   }
 
   return navbar
