@@ -114,7 +114,7 @@ RB.crusher.ui.funnel = (function(funnel) {
 
       d3_updateable(newGroup,".form-control.funnel-name","input")
         .classed("form-control funnel-name",true)
-        .attr("value",function(x){return x.funnel_name})
+        .property("value",function(x){return x.funnel_name})
     },
     compute_funnel: function(funnels){
 
@@ -547,7 +547,7 @@ RB.crusher.ui.funnel = (function(funnel) {
 
     var target = d3.selectAll(".container")
 
-    var funnelRow = d3_splat(target,".row.funnels","div",[{"id":"container"}],function(x){return x.id})
+    var funnelRow = d3_splat(target,".row","div",[{"id":"funnel"}],function(x){return x.id})
       .classed("row funnels",true)
 
     var viewWrapper = d3_updateable(funnelRow,".funnel-view-wrapper","div")

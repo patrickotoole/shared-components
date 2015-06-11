@@ -27,6 +27,17 @@ RB.crusher.controller = (function(controller) {
   }
 
   controller.initializers = {
+    "": function(){
+      var target = d3.selectAll(".container")
+
+      var funnelRow = d3_splat(target,".row","div",[{"id":"about"}],function(x){return x.id})
+        .classed("row funnels",true)
+
+      d3_updateable(funnelRow,"h5","h5").text("about this page and why its here")
+      funnelRow.exit().remove()
+
+ 
+    },
     "funnel/existing": function(funnel) {
       var id = funnel ? funnel.funnel_id : false
       var q = queue(5)
@@ -52,54 +63,52 @@ RB.crusher.controller = (function(controller) {
 
       RB.crusher.controller.funnel.new(target)
     },
-    "action/existing": function() {
+    "action/existing": function(action) {
 
       crusher.ui.action.buildBase()
+      crusher.api.actions(function(){
 
-      var q = queue(5)
+        var target = d3.selectAll(".action-view-wrapper")
+        target.datum(action)
+        
 
-      crusher.api.actions(function(){},q)
-      crusher.api.visits(function(){},q)
+        crusher.api.visits(function(){
+          crusher.cache.actionData.map(function(x) { x.values = crusher.cache.urls_wo_qs })
 
-      q.awaitAll(function(err,callbacks){
-
-        crusher.cache.actionData.map(function(x) { x.values = crusher.cache.urls_wo_qs })
-        crusher.ui.action.showAll(crusher.cache.actionData, controller.save_action, crusher.cache.urls_wo_qs)
+          crusher.ui.action.edit(target,controller.action.save)
+          crusher.ui.action.view(target)
+        })   
          
       })
     },
-    "action/new": function() {
+    "action/new": function(action) {
       crusher.ui.action.buildBase()
 
       var q = queue(5)
+      var target = d3.selectAll(".action-view-wrapper")
 
       crusher.api.actions(function(){},q)
-      crusher.api.visits(function(){},q)
 
       q.awaitAll(function(err,callbacks){
-
-        crusher.cache.actionData.map(function(x) { x.values = crusher.cache.urls_wo_qs })
-
-        var rec = crusher.cache.uris.filter(filterRecommended)
-          .slice(0,10)
-          .map(function(x){
-            return {"action_name":x.key,"url_pattern":[x.key]}
-          })
-
-        crusher.ui.action.showRecommended(rec,controller.save_action,crusher.cache.urls_wo_qs) 
-         
+        var override = (action.action_name) ? action : false
+        controller.action.new(target,crusher.cache.urls_wo_qs, override)
       })
     }
   }
 
-  controller.get_bloodhound = function(pattern_values) {
-    controller.bloodhound = controller.bloodhound || new Bloodhound({
-      datumTokenizer: function(x){return x.split(/\/|-/)}, 
-      queryTokenizer: Bloodhound.tokenizers.whitespace,
-      local: pattern_values 
-    }); 
+  controller.get_bloodhound = function(cb) {
 
-    return controller.bloodhound
+    crusher.api.visits(function(){
+
+      controller.bloodhound = controller.bloodhound || new Bloodhound({
+        datumTokenizer: function(x){return x.split(/\/|-/)}, 
+        queryTokenizer: Bloodhound.tokenizers.whitespace,
+        local: crusher.cache.urls_wo_qs 
+      }); 
+
+      cb(controller.bloodhound)
+
+    })
  
   }
 
@@ -192,12 +201,12 @@ RB.crusher.controller = (function(controller) {
   }
 
   controller.action = {
-    new: function(expandTarget,options) {
+    new: function(expandTarget,options,override) {
       var defaultAction = [{"values":options}]
 
       crusher.cache.actionData = crusher.cache.actionData.filter(function(x){return x.action_id})
-      expandTarget.datum(defaultAction[0])
-      crusher.ui.action.edit(expandTarget,controller.save_action)
+      expandTarget.datum(override || defaultAction[0])
+      crusher.ui.action.edit(expandTarget,controller.action.save)
       crusher.ui.action.view(expandTarget)
       crusher.ui.action.select({})
     },
@@ -225,6 +234,7 @@ RB.crusher.controller = (function(controller) {
       delete cdata['count']
       delete cdata['uids']
       delete cdata['visits_data']
+      delete cdata['name']
 
       cdata['advertiser'] = source
 
@@ -269,15 +279,7 @@ RB.crusher.controller = (function(controller) {
     }
   }
 
-
-  
-  controller.get_action_data = controller.action.get 
-  controller.new_action = controller.action.new
-  controller.save_action = controller.action.save 
-  controller.delete_action = controller.action.delete
-
-
-  controller.menu = {
+  controller.routes = {
     roots: [{
       "name":"On-page Analytics",
       "push_state": "/crusher/"
@@ -346,7 +348,7 @@ RB.crusher.controller = (function(controller) {
     }
   }
 
-  RB.routes.register(controller.menu)
+  RB.routes.register(controller.routes)
 
 
 

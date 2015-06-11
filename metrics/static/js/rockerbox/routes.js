@@ -92,10 +92,13 @@ RB.routes = (function(routes) {
       __forward__ = []
     }
 
+    var current = 0
+
     navigation.forward = function(x) {
       var path = window.location.pathname
       var shouldPush = (x.push_state) && (path != x.push_state)
       var emptyQueue = __back__.length == 0
+      current += 1 
 
       if (shouldPush || emptyQueue) {
         var stateAction = emptyQueue ? "replaceState" : "pushState"
@@ -119,9 +122,14 @@ RB.routes = (function(routes) {
       if (x.push_state && (api || render)) {
         if (api && (typeof(api) == "function")) {
           var q = api(false,queue())
+          var now = parseInt(String(current))
+
+          x.values = x.values || [{"name":"Loading..."}] 
+          navigation.subscribed(x)
+
           q.awaitAll(function(err) {
             if (transform) transform(x)
-            navigation.subscribed(x) 
+            if (now == current) navigation.subscribed(x) 
           })
         } else if (api && (typeof(api) == "object")) {
           x.values = api

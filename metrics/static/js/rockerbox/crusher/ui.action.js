@@ -22,15 +22,15 @@ RB.crusher.ui.action = (function(action) {
     this.select("h5").text("Edit an action")
     this.select(".save").text("Update action")  
 
-    var actions = crusher.actionData // this should really be in the controller
+    var actions = crusher.cache.actionData // this should really be in the controller
 
     if (!objectData.action_id) actions.push(objectData)
 
     var onSave = callback
     urls = actions[0].values
 
-    action.showAll(actions,onSave,urls)
-    action.select(objectData)
+    //action.showAll(actions,onSave,urls)
+    //action.select(objectData)
     action.view(d3.select(this.node().parentNode))
 
     callback(objectData,this)
@@ -39,7 +39,7 @@ RB.crusher.ui.action = (function(action) {
 
   action.view = function(wrapper) {
     var actionView = wrapper.selectAll(".action-view")
-      .data(function(x){return [x]},function(x){return x.action_id})
+      .data(function(x){return [x]},function(x){return x.action_id + x.action_name})
       
     actionView.enter()
       .append("div")
@@ -84,11 +84,12 @@ RB.crusher.ui.action = (function(action) {
           x.uniques = x.values.uniques
           x.url_pattern = data.url_pattern
           return x
-        }).sort(function(x,y) {
-          return (+new Date(x.date)) - (+new Date(y.date))
         }).filter(function(x){
           return x.key != ""
+        }).sort(function(x,y) {
+          return (+new Date(x.date)) - (+new Date(y.date))
         })
+
 
       return (nested.length) ? [nested] : []
     },function(x){
@@ -117,7 +118,7 @@ RB.crusher.ui.action = (function(action) {
   action.edit = function(edit,onSave) {
 
     var edits = edit.selectAll(".action")
-      .data(function(x){return [x]},function(x){return x.action_id})
+      .data(function(x){return [x]},function(x){return x.action_id + x.action_name})
 
     var newEdit = edits.enter()
       .append("div")
@@ -228,7 +229,7 @@ RB.crusher.ui.action = (function(action) {
       .on("click",function(){
         var edit = d3.select(this.parentNode.parentNode)
         edit.remove()
-        crusher.controller.delete_action(edit.datum())
+        crusher.controller.action.delete(edit.datum())
       })  
 
       
@@ -298,7 +299,7 @@ RB.crusher.ui.action = (function(action) {
         .append("button")
         .classed("btn btn-xs",true)
         .text("New action")
-        .on("click",crusher.controller.new_action.bind(this,action_wrapper,dd))
+        .on("click",crusher.controller.action.new.bind(this,action_wrapper,dd))
   }
 
   action.showList = function(target,actions) {
@@ -328,15 +329,17 @@ RB.crusher.ui.action = (function(action) {
   }
 
   action.buildBase = function() {
-    var actionsRow = d3.selectAll(".container")
-      .append("div")
+    var target = d3.selectAll(".container")
+
+    var actionsRow = d3_splat(target,".row","div",[{"id":"action"}],function(x){return x.id})
       .classed("row actions",true)
 
-    var action_wrapper = actionsRow
-      .append("div")
-      .classed("action-view-wrapper col-md-6",true)
-     
+    var viewWrapper = d3_updateable(actionsRow,".action-view-wrapper","div")
+      .classed("action-view-wrapper col-md-12",true)
 
+    actionsRow.exit().remove()
+     
+/*
     var action_wrapper = actionsRow
       .append("div")
       .classed("action-list-wrapper col-md-6",true)
@@ -355,7 +358,7 @@ RB.crusher.ui.action = (function(action) {
 
     action_wrapper
       .append("div").classed("list-group action-recommended-wrapper",true)
-
+*/
 
   }
 

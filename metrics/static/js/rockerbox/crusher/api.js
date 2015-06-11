@@ -128,9 +128,11 @@ RB.crusher.api = (function(api) {
         if (!cache.actionData) {
           d3.json(api.URL.actionURL,function(actions){
             cache.actionData = actions
+            if (cache.urls_wo_qs) cache.actionData.map(function(x) { x.values = cache.urls_wo_qs })
             deferred_cb(null,cb)
           })
         } else {
+          if (cache.urls_wo_qs) cache.actionData.map(function(x) { x.values = cache.urls_wo_qs })
           deferred_cb(null,cb)
         }
       }),
@@ -172,6 +174,8 @@ RB.crusher.api = (function(api) {
         var helpers = api.helpers
         var obj = {}
         obj.urls = helpers.matchDomains(action.url_pattern)
+
+        
 
         if ((obj.urls.length) > 0 && (!action.visits_data)) {
 
