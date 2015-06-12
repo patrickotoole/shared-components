@@ -77,7 +77,6 @@ class DomainVis():
     def filter_domains(self):
         self.data = self.data[(self.data['num_served'] >= self.imps_served_cutoff)]
         self.check_domains()
-
         logger.info("Filtered to %d domains" %len(self.data))
         
     def push(self):

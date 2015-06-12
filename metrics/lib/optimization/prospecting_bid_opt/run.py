@@ -81,26 +81,27 @@ if __name__ == "__main__":
 
     for config_name, params in configs.iteritems():
 
-        
-        if "end_date" not in params:
-            params["end_date"] = datetime.today().strftime('%Y-%m-%d')
+        if config_name == "simple_yoshi":
 
-        # Convert params to correct datatypes
-        for param in params:
-            if param in datatypes:
-                params[param] = datatypes[param](params[param])
+            if "end_date" not in params:
+                params["end_date"] = datetime.today().strftime('%Y-%m-%d')
 
-            # If we passed a specific value via command line, overwrite the 
-            # parameter value
-            if param in command_line_args and command_line_args[param]:
-                params[param] = command_line_args[param]
+            # Convert params to correct datatypes
+            for param in params:
+                if param in datatypes:
+                    params[param] = datatypes[param](params[param])
 
-        logger.info("Starting prospecting_bid_opt with %s" %config_name)
-        logger.info(pprint.pformat(params))
-        runner = Runner(params)
-        runner.run()
+                # If we passed a specific value via command line, overwrite the 
+                # parameter value
+                if param in command_line_args and command_line_args[param]:
+                    params[param] = command_line_args[param]
 
-        logger.info("prospecting_bid_opt FINISHED SUCCESSFULLY with config %s\n\n\n" %config_name)
-        time.sleep(120)
+            logger.info("Starting prospecting_bid_opt with %s" %config_name)
+            logger.info(pprint.pformat(params))
+            runner = Runner(params)
+            runner.run()
+
+            logger.info("prospecting_bid_opt FINISHED SUCCESSFULLY with config %s\n\n\n" %config_name)
+            time.sleep(120)
 
 

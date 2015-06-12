@@ -163,10 +163,10 @@ class CampaignDataSource(DataSource):
         self.check_data()
         
 
-    def get_campaign_param(self, campaign_id, param):
-        self.logger.info("Getting %s for campaign %s" %(param,str(campaign_id)))
+    def get_campaign_param(self, campaign_id):
+        self.logger.info("Getting params for campaign %s" %(str(campaign_id)))
         response = self.console.get("/campaign?id=%s"%campaign_id).json
-        return repsonse
+        return response
 
 
         # try:
@@ -267,7 +267,7 @@ class CampaignDataSource(DataSource):
 
 
         self.add_max_bids()
-        self.add_campaign_state()
+        # self.add_campaign_state()
 
         self.df = self.df[self.df['campaign_state'] == "active"]
         self.logger.info("Filtered Dataframe to {} active campaigns".format(len(self.df)))
