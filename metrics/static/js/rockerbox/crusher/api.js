@@ -5,6 +5,120 @@ RB.crusher.cache = (function(cache) {
   return cache
 })(RB.crusher.cache || {})
 
+RB.crusher.subscribe = (function(subscribe) {
+
+  var Publisher = function(request, callback, name) {
+    this.lock = false
+
+    this.callback = function(data) {
+      // console.debug("publisher finished",name) 
+      callback(data || true) 
+      self.lock = false 
+    }
+
+    var self = this
+
+    this.call = function() {
+      if (self.lock == false) { 
+        self.lock = true
+        request(self.callback)
+      }
+    }
+  }
+
+  var Subscription = function(subscriptions,callback) {
+    var sdata = {}
+    subscriptions.map(function(s){return sdata[s] = null})
+
+    this.add_data = function (name, data) {
+      sdata[name] = data
+    }
+
+    this.has_data = function() {
+      var keys = Object.keys(sdata)
+      var num_present =  keys.filter(function(k) {return sdata[k] != null}).length 
+
+      return num_present == subscriptions.length 
+    }
+
+    this.run_callback = function() {
+      var arr = subscriptions.map(function(s){return sdata[s]})
+      callback.apply(false,arr)
+    } 
+
+    var self = this
+
+    this.evaluate = function (name,data) {
+      
+      self.add_data(name,data)
+      // console.debug("evaluating:" + name, data, sdata, subscriptions)
+      if (self.has_data()) self.run_callback()
+    }
+  }
+
+  subscribe.dispatchers = {}
+
+  subscribe.publishers = {}
+
+  subscribe.register_publisher = function(name,accessor) {
+
+    // adds the data object to the
+    subscribe.dispatchers[name] = d3.dispatch(name)
+
+    var push = subscribe.dispatchers[name][name]
+    var bound = push.bind(subscribe.dispatchers[name],name)
+
+    // the accessor needs to pass back the requested data
+    var publisher = new Publisher(accessor,bound,name)
+    subscribe.publishers[name] = publisher.call 
+  }
+
+  
+
+  subscribe.add_subscriber = function(subscriptions,callback,name,trigger,unpersist) {
+
+    /* subscriptions - things to subscribe to
+       callback - to execute when all subscriptions reply with data
+       name - for this subscriber
+       trigger - to trigger the publisher on load
+       unpersist - to keep this / let this fire for ever event of to remove it
+    */ 
+
+    // unpersist is jsut a wrapper on callback if it is set to true 
+    // trigger will try to find publishers of the same names and trigger them
+
+
+    var dispatchers = subscribe.dispatchers
+
+    var cb = function () {
+      // console.debug("running callback for " + name)
+
+      callback.apply(false,arguments)
+
+      if (unpersist) {
+        Object.keys(dispatchers).map(function(dispatch_name){
+          var dname =  dispatch_name + "." + name
+          dispatchers[dispatch_name].on(dname,null)
+        })  
+      }
+      
+    }
+
+    var subscription = new Subscription(subscriptions,cb)
+    
+    Object.keys(dispatchers).map(function(dispatch_name){
+      var dname =  dispatch_name + "." + name
+      dispatchers[dispatch_name].on(dname,subscription.evaluate) 
+    })
+
+    if (trigger) subscriptions.map(function(name){subscribe.publishers[name]()}) 
+
+  }
+
+  return subscribe  
+})(RB.crusher.subscribe || {})
+
+
 
 
 RB.crusher.api = (function(api) {
@@ -56,7 +170,7 @@ RB.crusher.api = (function(api) {
     }
   }
 
-  var genericQueuedAPI = function(fn) {
+  /*var genericQueuedAPI = function(fn) {
 
     var serviceQueue = function() {
       this.callback_queue = []
@@ -105,7 +219,7 @@ RB.crusher.api = (function(api) {
 
     }
   }  
-
+  */
 
   api.helpers = {
     matchDomains: function(url_pattern) {
@@ -274,103 +388,17 @@ RB.crusher.api = (function(api) {
 
   })(crusher.cache || {})
 
+   
+
 
   Object.keys(endpoints).map(function(e) {
+    crusher.subscribe.register_publisher(e,endpoints[e])
     api[e] = endpoints[e]
   })
 
   return api
 
 })(RB.crusher.api || {})
-
-
-RB.crusher.subscribe = (function(subscribe) {
-
-  var Subscription = function(subscriptions,callback) {
-    sdata = {}
-    subscriptions.map(function(s){return sdata[s] = null})
-
-    this.add_data = function (name, data) {
-      sdata[name] = data
-    }
-
-    this.has_data = function() {
-      var keys = Object.keys(sdata)
-      var num_present =  keys.filter(function(k) {return sdata[k] != null}).length 
-
-      return num_present == subscriptions.length 
-    }
-
-    this.run_callback = function() {
-      var arr = subscriptions.map(function(s){return sdata[s]})
-      callback.apply(false,arr)
-    } 
-
-    var self = this
-
-    this.evaluate = function (name,data) {
-      self.add_data(name,data)
-      if (self.has_data()) self.run_callback()
-    }
-  }
-
-  subscribe.dispatchers = {}
-
-  subscribe.publishers = {}
-
-  subscribe.register_publisher = function(name,accessor) {
-
-    // adds the data object to the
-    subscribe.dispatchers[name] = d3.dispatch(name)
-
-    var push = subscribe.dispatchers[name][name]
-    var bound = push.bind(subscribe.dispatchers[name],name)
-
-    // the accessor needs to pass back the requested data
-    subscribe.publishers[name] = accessor.bind(false,bound)
-  }
-
-  
-
-  subscribe.add_subscriber = function(subscriptions,callback,name,trigger,unpersist) {
-
-    /* subscriptions - things to subscribe to
-       callback - to execute when all subscriptions reply with data
-       name - for this subscriber
-       trigger - to trigger the publisher on load
-       unpersist - to keep this / let this fire for ever event of to remove it
-    */ 
-
-    // unpersist is jsut a wrapper on callback if it is set to true 
-    // trigger will try to find publishers of the same names and trigger them
-
-
-    var dispatchers = subscribe.dispatchers
-
-    var cb = function () {
-      callback.apply(false,arguments)
-
-      if (unpersist) 
-        Object.keys(dispatchers).map(function(dispatch_name){
-          var dname =  dispatch_name + "." + name
-          dispatchers[dispatch_name].on(dname,null)
-        })  
-      
-    }
-
-    var subscription = new Subscription(subscriptions,cb)
-    
-    Object.keys(dispatchers).map(function(dispatch_name){
-      var dname =  dispatch_name + "." + name
-      dispatchers[dispatch_name].on(dname,subscription.evaluate) 
-    })
-
-    if (trigger) subscriptions.map(function(name){subscribe.publishers[name]()}) 
-
-  }
-
-  return subscribe  
-})(RB.crusher.subscribe || {})
 
 
 

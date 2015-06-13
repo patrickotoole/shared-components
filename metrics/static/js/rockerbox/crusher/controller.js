@@ -87,25 +87,19 @@ RB.crusher.controller = (function(controller) {
     "action/new": function(action) {
       crusher.ui.action.buildBase()
 
-      var q = queue(5)
       var target = d3.selectAll(".action-view-wrapper")
 
-      crusher.api.actions(function(){},q)
-      crusher.api.visits(function(){},q)
-
-
-      q.awaitAll(function(err,callbacks){
-        callbacks.map(function(fn){if (typeof(fn) == "function") fn()})
+      crusher.subscribe.add_subscriber(["actions"], function(actionsw){
 
         var override = (action.action_name) ? action : false
         controller.action.new(target,crusher.cache.urls_wo_qs, override)
-      })
+      }, "new",true,true)
     }
   }
 
   controller.get_bloodhound = function(cb) {
 
-    crusher.api.visits(function(){
+    crusher.subscribe.add_subscriber(["visits"], function(visits){
 
       controller.bloodhound = controller.bloodhound || new Bloodhound({
         datumTokenizer: function(x){return x.split(/\/|-/)}, 
@@ -115,7 +109,7 @@ RB.crusher.controller = (function(controller) {
 
       cb(controller.bloodhound)
 
-    })
+    },"bloodhound",true,true)
  
   }
 
@@ -322,7 +316,7 @@ RB.crusher.controller = (function(controller) {
       "funnel/new": crusher.api.funnels,
       "funnel/existing": crusher.api.funnels,
       "action/existing": crusher.api.actions,
-      "action/new": crusher.api.recommended_actions,
+      "action/new": ['visits','actions'],
       "": [{
           "name":"Actions",
           "push_state":"/crusher/action",

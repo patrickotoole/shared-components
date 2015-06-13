@@ -120,20 +120,17 @@ RB.routes = (function(routes) {
 
 
       if (x.push_state && (api || render)) {
-        if (api && (typeof(api) == "function")) {
+        if (api && (typeof(api) == "object") && (typeof(api[0]) == "string")) {
           
-          console.log("routes forward with api")
-          var q = api(false,queue())
           var now = parseInt(String(current))
-
           x.values = x.values || [{"name":"Loading..."}] 
           navigation.subscribed(x)
 
-          q.awaitAll(function(err,cbs) {
-            cbs.map(function(fn){ if (typeof(fn) == "function") fn() })
+          RB.crusher.subscribe.add_subscriber(api, function(err,cbs) {
             if (transform) transform(x)
             if (now == current) navigation.subscribed(x) 
-          })
+          },"menu",true,false)
+
         } else if (api && (typeof(api) == "object")) {
           x.values = api
           navigation.subscribed(x)
