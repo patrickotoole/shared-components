@@ -121,13 +121,16 @@ RB.routes = (function(routes) {
 
       if (x.push_state && (api || render)) {
         if (api && (typeof(api) == "function")) {
+          
+          console.log("routes forward with api")
           var q = api(false,queue())
           var now = parseInt(String(current))
 
           x.values = x.values || [{"name":"Loading..."}] 
           navigation.subscribed(x)
 
-          q.awaitAll(function(err) {
+          q.awaitAll(function(err,cbs) {
+            cbs.map(function(fn){ if (typeof(fn) == "function") fn() })
             if (transform) transform(x)
             if (now == current) navigation.subscribed(x) 
           })

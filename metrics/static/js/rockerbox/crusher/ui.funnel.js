@@ -156,7 +156,7 @@ RB.crusher.ui.funnel = (function(funnel) {
         "url_pattern":[]
       })           
 
-      data.actions.map(function(x,i){x.pos = i})
+      data.actions.map(function(x,i){x.pos = i + 1})
       actions.datum(data)
 
       funnel.action.build(d3.select(actions.node().parentNode),options)
@@ -199,6 +199,7 @@ RB.crusher.ui.funnel = (function(funnel) {
 
     },
     compute_uniques: function(actions) {
+       
       return actions.reduce(function(p,c){
         
         var intersected = []
@@ -279,69 +280,54 @@ RB.crusher.ui.funnel = (function(funnel) {
   
       var yAxis = d3.svg.axis().scale(y).orient("left").ticks(10);
 
-      var svg = funnels.selectAll("svg.steps")
-        .data(function(x){return [x]})
+      var s = d3_updateable(funnels,"svg.steps","svg")
+        .attr("class","steps")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
 
-      svg
-        .enter()
-          .append("svg")
-            .attr("class","steps")
-            .attr("width", width + margin.left + margin.right)
-            .attr("height", height + margin.top + margin.bottom)
-          .append("g")
-            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+      var svg = d3_updateable(s,"g.body","g")
+        .attr("class","body")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
       x.domain(data.map(function(d) { return d.action_name; }));
       y.domain([0, d3.max(data, function(d) { return d.funnel_count; })]);
 
-      xax = svg.selectAll(".x.axis")
-        .data(function(x){return [x]})
-
-      xax
-        .enter()
-        .append("g")
-
-      xax
+      d3_updateable(svg,".x.axis","g")
         .attr("class", "x axis")
         .attr("transform", "translate(0," + height + ")")
         .call(xAxis);
 
-      svg.append("g")
+      var yax = d3_updateable(svg,".y.axis","g")
           .attr("class", "y axis")
           .call(yAxis)
-        .append("text")
+
+      d3_updateable(yax,"text","text")
           .attr("transform", "rotate(-90)")
           .attr("y", 6)
           .attr("dy", ".71em")
           .style("text-anchor", "end")
           .text("Users");
 
-      var bar = svg.selectAll(".bar")
-          .data(data,function(x){return x.action_name})
-
-      bar
-        .enter().append("rect")
-
-      bar
+      var bar = d3_splat(svg,".bar","rect",function(x){return x.actions},function(x){return x.action_name})
           .attr("class", "bar")
           .attr("x", function(d) { return x(d.action_name); })
           .attr("width", x.rangeBand())
           .attr("y", function(d) { return y(d.funnel_count); })
           .attr("height", function(d) { return height - y(d.funnel_count); }); 
 
-      var text = svg.selectAll("text")
-          .data(data,function(x){return x.action_name})
- 
-      text
-        .enter().append("text")
+      bar.exit().remove()
 
-      text
+
+      var text = d3_splat(svg,"text.barlabel","text",function(x){return x.actions},function(x){return x.action_name})
+        .attr("class","barlabel")
         .attr("x", function(d) { return x(d.action_name) + x.rangeBand()/2 - 20 }) 
-        .attr("y", function(d) { return y(d.funnel_count) + 13 } )
+        .attr("y", function(d) { return (height - y(d.funnel_count) > 30) ? y(d.funnel_count) + 13 : ( y(d.funnel_count) - 13) } )
         .attr("dy", ".35em")
         .text(function(d) { return d3.format(",")(d.funnel_count) + " " + d3.format("%.2")(d.funnel_percent); });
+
+      text.exit().remove()
       
-      bar.exit().remove()
+      
 
     },
     steps: function(funnels) {

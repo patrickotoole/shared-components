@@ -56,6 +56,57 @@ RB.crusher.api = (function(api) {
     }
   }
 
+  var genericQueuedAPI = function(fn) {
+
+    var serviceQueue = function() {
+      this.callback_queue = []
+      this.get_queue = function() {
+        if (!this.__queue__) this.__queue__ = queue()
+        return this.__queue__ 
+      }
+      this.set_queue = function(q) {
+        this.__queue__ = this.__queue__ || q
+        return this.__queue__
+      }
+      this.remove_queue = function() { 
+        this.__queue__ = undefined
+      }
+
+      this.run_callbacks = function() {
+        var args = arguments
+        this.callback_queue.map(function(cb){
+          if (typeof(cb) == "function") cb.apply(null,args)
+        })
+        this.remove_queue()
+        this.clear_callbacks()
+      }
+
+      this.clear_callbacks = function() {
+        this.callback_queue = []
+      }
+    } 
+
+    var self = new serviceQueue()
+
+    return function(cb,extq) {
+      
+      var q = (extq) ? self.set_queue(extq) : self.get_queue()   
+      self.callback_queue.push(cb)
+
+      console.log(self.callback_queue,q)
+
+      if (self.callback_queue.length == 1) { 
+        var bound = fn.bind(false,self.run_callbacks)
+        var d =  q.defer(bound)   
+      } 
+
+      if (!extq) return q.await(function(err,cb1){ cb1() })
+      else return q
+
+    }
+  }  
+
+
   api.helpers = {
     matchDomains: function(url_pattern) {
 
@@ -98,15 +149,21 @@ RB.crusher.api = (function(api) {
     current: addParam(window.location.pathname + window.location.search,"format=json")
   }
 
+
+
+
   var endpoints = (function(cache) {
+
+    
     var apis = {
-      visits: genericQueuedAPI(function(cb,deferred_cb) {
+      visits: new genericQueuedAPI(function(cb,deferred_cb) {
 
         if (!cache.urlData) {
           d3.json(api.URL.visitURL, function(dd){
             cache.urlData = dd
             cache.urls = dd.map(function(x){return x.url})
             cache.urls_wo_qs = api.helpers.set(cache.urls)
+            if (cache.actionData) cache.actionData.map(function(x) { x.values = cache.urls_wo_qs })
 
             
             cache.uris = d3.nest()
@@ -120,10 +177,11 @@ RB.crusher.api = (function(api) {
             deferred_cb(null,cb)
           })
         } else {
+          if (cache.actionData) cache.actionData.map(function(x) { x.values = cache.urls_wo_qs })
           deferred_cb(null,cb)
         }
       }),
-      actions: genericQueuedAPI(function(cb,deferred_cb) {
+      actions: new genericQueuedAPI(function(cb,deferred_cb) {
 
         if (!cache.actionData) {
           d3.json(api.URL.actionURL,function(actions){
@@ -137,25 +195,19 @@ RB.crusher.api = (function(api) {
         }
       }),
       recommended_actions: function(cb,extq) {
-
-        var filterRecommended = function(x){
-          var actions = cache.actionData.filter(function(z){
-            if (!z.url_pattern) return false
-            var matched = z.url_pattern.filter(function(q){
-              return (q.indexOf(x.key) > -1) || (x.key.indexOf(q) > -1
-            )})
-            return matched.length
-          })
-          return actions.length == 0 
-        }
-
+        console.log("in reccommended")
         var q = extq || queue(2)
 
         endpoints.actions(function(){},q)
         endpoints.visits(function(){},q)
 
+        console.log("just put two items on the queue")
+
         if (extq) return extq
-        else q.awaitAll(cb) 
+        else q.awaitAll(function(err,cbs) {
+          cbs.map(function(fn){if (typeof(fn) == "function") fn()})
+          cb()
+        }) 
 
       },
       funnels: genericQueuedAPI(function(cb,deferred_cb) {
@@ -179,6 +231,7 @@ RB.crusher.api = (function(api) {
 
         if ((obj.urls.length) > 0 && (!action.visits_data)) {
 
+          console.debug("GETTING DATA FOR: ", action)
           d3.xhr(api.URL.visitUID)
             .header("Content-Type", "application/json")
             .post(
@@ -229,6 +282,95 @@ RB.crusher.api = (function(api) {
   return api
 
 })(RB.crusher.api || {})
+
+
+RB.crusher.subscribe = (function(subscribe) {
+
+  var Subscription = function(subscriptions,callback) {
+    sdata = {}
+    subscriptions.map(function(s){return sdata[s] = null})
+
+    this.add_data = function (name, data) {
+      sdata[name] = data
+    }
+
+    this.has_data = function() {
+      var keys = Object.keys(sdata)
+      var num_present =  keys.filter(function(k) {return sdata[k] != null}).length 
+
+      return num_present == subscriptions.length 
+    }
+
+    this.run_callback = function() {
+      var arr = subscriptions.map(function(s){return sdata[s]})
+      callback.apply(false,arr)
+    } 
+
+    var self = this
+
+    this.evaluate = function (name,data) {
+      self.add_data(name,data)
+      if (self.has_data()) self.run_callback()
+    }
+  }
+
+  subscribe.dispatchers = {}
+
+  subscribe.publishers = {}
+
+  subscribe.register_publisher = function(name,accessor) {
+
+    // adds the data object to the
+    subscribe.dispatchers[name] = d3.dispatch(name)
+
+    var push = subscribe.dispatchers[name][name]
+    var bound = push.bind(subscribe.dispatchers[name],name)
+
+    // the accessor needs to pass back the requested data
+    subscribe.publishers[name] = accessor.bind(false,bound)
+  }
+
+  
+
+  subscribe.add_subscriber = function(subscriptions,callback,name,trigger,unpersist) {
+
+    /* subscriptions - things to subscribe to
+       callback - to execute when all subscriptions reply with data
+       name - for this subscriber
+       trigger - to trigger the publisher on load
+       unpersist - to keep this / let this fire for ever event of to remove it
+    */ 
+
+    // unpersist is jsut a wrapper on callback if it is set to true 
+    // trigger will try to find publishers of the same names and trigger them
+
+
+    var dispatchers = subscribe.dispatchers
+
+    var cb = function () {
+      callback.apply(false,arguments)
+
+      if (unpersist) 
+        Object.keys(dispatchers).map(function(dispatch_name){
+          var dname =  dispatch_name + "." + name
+          dispatchers[dispatch_name].on(dname,null)
+        })  
+      
+    }
+
+    var subscription = new Subscription(subscriptions,cb)
+    
+    Object.keys(dispatchers).map(function(dispatch_name){
+      var dname =  dispatch_name + "." + name
+      dispatchers[dispatch_name].on(dname,subscription.evaluate) 
+    })
+
+    if (trigger) subscriptions.map(function(name){subscribe.publishers[name]()}) 
+
+  }
+
+  return subscribe  
+})(RB.crusher.subscribe || {})
 
 
 

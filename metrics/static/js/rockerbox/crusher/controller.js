@@ -49,6 +49,9 @@ RB.crusher.controller = (function(controller) {
       crusher.api.funnels(function(){},q)
 
       q.awaitAll(function(err,callbacks){
+
+        callbacks.map(function(fn){if (typeof(fn) == "function") fn()})
+
         var data = (id) ? 
           crusher.cache.funnelData.filter(function(x){return x.funnel_id == id}) : 
           crusher.cache.funnelData
@@ -88,8 +91,12 @@ RB.crusher.controller = (function(controller) {
       var target = d3.selectAll(".action-view-wrapper")
 
       crusher.api.actions(function(){},q)
+      crusher.api.visits(function(){},q)
+
 
       q.awaitAll(function(err,callbacks){
+        callbacks.map(function(fn){if (typeof(fn) == "function") fn()})
+
         var override = (action.action_name) ? action : false
         controller.action.new(target,crusher.cache.urls_wo_qs, override)
       })

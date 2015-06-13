@@ -42,7 +42,7 @@ class FunnelHandler(FunnelBase,FunnelHelpers):
             funnel_indices = ["funnel_name","funnel_id","owner","advertiser"]
             grouped = ordered.groupby(funnel_indices)
 
-            action_indices = ['action_id','action_name','url_pattern'] 
+            action_indices = ['action_id','action_name','url_pattern','order'] 
             group_fn = self.group_to_dict(action_indices,lambda v: v['action_id'] != 0) 
             
             grouped_actions = grouped.apply(group_fn)
