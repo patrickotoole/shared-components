@@ -57,17 +57,22 @@ RB.crusher.ui.funnel = (function(funnel) {
     d3_updateable(funnels,".campaign-table","div")
       .classed("col-md-12 campaign-table",true)
       .classed("hidden",true)
+
+    d3_updateable(funnels,".exchange-data","div")
+      .classed("col-md-12 exchange-data",true)
+      .classed("hidden",true)
+
+    /*
+    d3_updateable(funnels,".exchange-data-summary","div")
+      .classed("col-md-3 exchange-data-summary",true)
+      .classed("hidden",true)
+    */
+
+    d3_updateable(funnels,".lookalike-table","div")
+      .classed("col-md-12 lookalike-table",true)
+      .classed("hidden",true)
+
     
-    d3_updateable(funnels,".domain-chart","div")
-      .classed("col-md-9 domain-chart",true)
-      .classed("hidden",true)
-
-    d3_updateable(funnels,".category-chart","div")
-      .classed("col-md-9 category-chart",true)
-      .classed("hidden",true)
-
-
-
   } 
 
   funnel.buildShow = function() {
@@ -94,12 +99,15 @@ RB.crusher.ui.funnel = (function(funnel) {
     funnel.show.component.steps(funnels)
     funnel.show.component.summary(funnels)
     funnel.show.component.campaign(funnels)
+    
 
     var actions = funnels.datum().actions
     var reduced = actions[actions.length -1].funnel_uids
     var domains_callback = funnel.show.component.domains.bind(false,funnels)
 
     crusher.controller.funnel.show_domains(reduced,domains_callback)
+    funnel.show.component.lookalike(funnels)
+
 
   }
 
@@ -112,7 +120,7 @@ RB.crusher.ui.funnel = (function(funnel) {
     },
     settings: function(funnels) {
       return d3_updateable(funnels,".settings","div")
-        .classed("settings",true)
+        .classed("settings col-md-12",true)
     },
     name: function(funnels){
       var newGroup = d3_updateable(funnels,".funnel-name")
@@ -770,26 +778,63 @@ RB.crusher.ui.funnel = (function(funnel) {
           return y.values - x.values
         }).slice(0,15)
 
-
-
-      
-      var domain_chart = d3_updateable(funnels,".domain-chart","div",false,function(x){
-          return x.funnel_id
-        })
-        .classed("col-md-6 domain-chart",true)
+      var exchange_data = d3_updateable(funnels,".exchange-data","div",false,function(x){return x.funnel_id})
+        .classed("exchange-data col-md-12",true)
         .classed("hidden",false)
 
+      
+
+      var h5 = d3_updateable(exchange_data,"h5","h5")
+        .text("Off-site Convertor Activity")
+
+      
+
+
+            
+      var domain_chart = d3_updateable(exchange_data,".domain-chart","div",false,function(x){
+          return x.funnel_id
+        })
+        .classed("col-md-4 domain-chart",true)
+        .classed("hidden",false)
 
       funnel.show.component.domain_chart(domain_chart,data)
 
-      var category_chart = d3_updateable(funnels,".category-chart","div",false,function(x){
+
+      var category_chart = d3_updateable(exchange_data,".category-chart","div",false,function(x){
           return x.funnel_id
         })
-        .classed("col-md-6 category-chart",true)
+        .classed("col-md-4 category-chart",true)
         .classed("hidden",false)
 
-
       funnel.show.component.category_chart(category_chart,cat)
+
+
+      category_chart.exit().remove()
+      domain_chart.exit().remove()
+
+      var exchange_summary = d3_updateable(exchange_data,".exchange-data-summary","div",false,function(x){return x.funnel_id})
+        .classed("exchange-data-summary col-md-4",true)
+        .classed("hidden",false)
+
+      var h5 = d3_updateable(exchange_summary,"h5","h5")
+        .text("User Activity Summary")
+
+      d3_updateable(exchange_summary,"div.user","div")
+        .classed("user",true)
+        .html(function(x){
+          var last = x.actions[x.actions.length - 1]
+          return "Num convertors: " + last.funnel_uids.length + "<br>" +
+            ((last.avails_raw) ? "Num available: " + last.avails_raw.avails : "" ) + "<br><br>" 
+        })
+
+      d3_updateable(exchange_summary,"div.domains","div")
+        .classed("domains",true)
+        .html(function(x){
+          return "Num domains: " + data.length  + "<br>" + 
+            "Num Categories: " + cat.length
+        })
+
+
 
       
     },
@@ -806,7 +851,185 @@ RB.crusher.ui.funnel = (function(funnel) {
         .sort(function(x,y){ return y.uid - x.uid})
 
       domain.exit().remove()
-    }
+    },
+    lookalike: function(funnels){
+      var campaign = d3_updateable(funnels,".lookalike-table","div")
+        .classed("col-md-12 lookalike-table",true)
+        .classed("hidden",false)
+
+      d3_updateable(campaign,"h5","h5")
+        .text("Funnel Convertor Look-a-like Campaigns")
+
+      var wrapper = d3_updateable(campaign,"div.wrapper","div")
+        .classed("wrapper",true)
+
+      var camp = d3_splat(wrapper,"div.campaign","div",function(x){return x.actions},function(x){return x.action_id})
+        .classed("campaign row",true)
+        .style("padding-bottom","15px")
+        .style("border-bottom","1px solid #f0f0f0")
+        .style("margin-bottom","15px")
+
+      var info = d3_updateable(camp,"div.step-info","div") 
+        .classed("step-info col-md-2",true) 
+        .style("line-height","30px")
+
+      d3_updateable(info,"div.name","div")
+        .classed("name",true)
+        .style("font-size","13px")
+        .style("weight","bold")
+        .text(function(x,i){return "Model " + x.pos })
+
+      var onoff = d3_updateable(info,"div.switch","div")
+        .classed("switch", true)
+        .style("height","30px")
+
+      d3_updateable(onoff,"input","input")
+        .attr("type","checkbox")
+
+      $(".switch input[type='checkbox']").bootstrapSwitch();
+
+
+
+      var settings = d3_updateable(camp,"div.settings","div")
+        .classed("settings col-md-3",true)
+
+      var estimates = d3_updateable(camp,"div.estimates","div")
+        .classed("estimates col-md-3",true)
+
+      var reporting = d3_updateable(camp,"div.reporting","div")
+        .classed("reporting col-md-3",true)
+
+
+
+
+      var targeted = d3_updateable(reporting,"div.served-users","div")
+        .classed("served-users statistic",true)
+
+      d3_updateable(targeted,"span.lab","span")
+        .classed("lab",true)
+        .text("Users Reached (Freq): ")
+
+      d3_updateable(targeted,"span.value","span")
+        .classed("value pull-right",true)
+        .text(function(x){
+          return 0 
+        })
+
+
+      var sfreq = d3_updateable(reporting,"div.avg-imps","div")
+        .classed("avg-imps statistic",true)
+
+      d3_updateable(sfreq,"span.lab","span")
+        .classed("lab",true)
+        .text("Imps Served (CPM): ")
+
+      d3_updateable(sfreq,"span.value","span")
+        .classed("value pull-right",true)
+        .text(function(x){
+          return 0  + " (0)"
+        })
+
+
+      var cost = d3_updateable(reporting,"div.cost","div")
+        .classed("cost statistic",true)
+
+      d3_updateable(cost,"span.lab","span")
+        .classed("lab",true)
+        .text("Total Cost: ")
+
+      d3_updateable(cost,"span.value","span")
+        .classed("value pull-right",true)
+        .text(function(x){
+          return 0 + " (0)"
+        })
+
+
+
+      var targetable = d3_updateable(estimates,"div.estimated-users","div")
+        .classed("estimated-users estimate",true)
+
+      d3_updateable(targetable,"span.lab","span")
+        .classed("lab",true)
+        .text("Reachable Users: ")
+
+      d3_updateable(targetable,"span.value","span")
+        .classed("value pull-right",true)
+        .text(function(x){
+          if (x.avails_raw) return x.avails_raw.avails
+        })
+
+      var imps = d3_updateable(estimates,"div.estimated-imps","div")
+        .classed("estimated-imps estimate",true)
+
+
+      d3_updateable(imps,"span.lab","span")
+        .classed("lab",true)
+        .text("Estimated Impressions: ")
+
+      d3_updateable(imps,"span.value","span")
+        .classed("value pull-right",true)
+        .text("value")
+
+      var cost = d3_updateable(estimates,"div.estimated-cost","div")
+        .classed("estimated-cost estimate",true)
+
+
+      d3_updateable(cost,"span.lab","span")
+        .classed("lab",true)
+        .text("Estimated Conversion Rate: ")
+
+      d3_updateable(cost,"span.value","span")
+        .classed("value pull-right",true)
+        .text("value")
+
+
+
+
+      var onChange = function(x) {
+        var id = x.action_id
+        var campaign = camp.filter(function(y){return y.action_id == id})
+
+        var f = campaign.selectAll("div.daily-freq input").property("value")
+        var imps = f * (x.avails_raw.avails)
+
+        var p = campaign.selectAll("div.bid-price input").property("value")
+
+        campaign.selectAll("div.estimated-imps span.value").text(d3.format(",")(imps))
+        campaign.selectAll("div.estimated-cost span.value").text(d3.format("$.2")(imps * p / 1000))
+
+      }
+
+      d3_updateable(estimates,"span.b1","span")
+        .classed("b1",true)
+        .text("{")
+        .style("font-size","38px")
+        .style("line-height","90px")
+        .style("top","0px")
+        .style("left","-5px")
+        .style("transform","scale(1,2)")
+        .style("position","absolute")
+        .style("font-weight",100)
+        .style("color","#ccc")
+
+      
+      var includes = d3_updateable(settings,"div.includes","div")
+        .classed("includes statistic",true)
+
+      d3_updateable(includes,"span","span")
+        .text("User has visited: ")
+
+      var excludes = d3_updateable(settings,"div.excludes","div")
+        .classed("excludes statistic",true)
+
+      d3_updateable(excludes,"span","span")
+        .text("And has not visited: ")
+
+
+
+
+      camp.sort(function(x,y){return x.pos - y.pos})
+      camp.exit().remove()
+    },
   }
 
   
@@ -904,7 +1127,7 @@ RB.crusher.ui.funnel = (function(funnel) {
       .classed("row funnels",true)
 
     var viewWrapper = d3_updateable(funnelRow,".funnel-view-wrapper","div")
-      .classed("funnel-view-wrapper col-md-12",true)
+      .classed("funnel-view-wrapper",true)
 
     d3_updateable(viewWrapper,".funnel-wrapper","div")
       .classed("funnel-wrapper",true)
