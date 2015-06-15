@@ -41,7 +41,6 @@ RB.crusher.controller = (function(controller) {
     "funnel/existing": function(funnel) {
       var id = funnel ? funnel.funnel_id : false
 
-      controller.get_tf_idf()
       crusher.ui.funnel.buildBase() 
 
       crusher.subscribe.add_subscriber(["actions","funnels"], function(){
@@ -51,7 +50,10 @@ RB.crusher.controller = (function(controller) {
           crusher.cache.funnelData
 
         crusher.ui.funnel.build(data,crusher.cache.actionData)
-        crusher.ui.funnel.buildShow()
+
+        crusher.subscribe.add_subscriber(["tf_idf"], function(){
+          crusher.ui.funnel.buildShow()
+        },"funnel_view_show",true,true)
 
       },"funnel_view",true,true)
     },
@@ -126,29 +128,34 @@ RB.crusher.controller = (function(controller) {
 
   controller.funnel = {
     new: function(target) {
-      crusher.ui.funnel.add_funnel(target)
+      crusher.subscribe.add_subscriber(["actions"],function(actions){
+        var actions = crusher.cache.actionData
+        crusher.ui.funnel.add_funnel(target,actions)
+      },"new_funnel",true,true)
     },
     save: function(data,callback) {
-      var d = {
-        "advertiser": source,
-        "owner": "owner",
-        "funnel_id":data.funnel_id,
-        "funnel_name": data.funnel_name,
-        "actions":data.actions.map(function(x){return {"action_id":x.action_id}})
-      }
+      crusher.subscribe.add_subscriber(["funnels","tf_idf"], function(){ 
+        var d = {
+          "advertiser": source,
+          "owner": "owner",
+          "funnel_id":data.funnel_id,
+          "funnel_name": data.funnel_name,
+          "actions":data.actions.map(function(x){return {"action_id":x.action_id}})
+        }
 
-      var cdata = JSON.parse(JSON.stringify(d)),
-        type = data['funnel_id'] ? "PUT" : "POST";
+        var cdata = JSON.parse(JSON.stringify(d)),
+          type = data['funnel_id'] ? "PUT" : "POST";
 
-      d3.xhr(funnelURL)
-        .header("Content-Type", "application/json")
-        .send(type, JSON.stringify(cdata), function(err, rawData){
-          var resp = JSON.parse(rawData.response).response
-          data['funnel_name'] = resp.funnel_name
-          data['funnel_id'] = resp.funnel_id
-          crusher.cache.funnelData.push(data)
-          callback(crusher.cache.funnelData)
-        });
+        d3.xhr(funnelURL)
+          .header("Content-Type", "application/json")
+          .send(type, JSON.stringify(cdata), function(err, rawData){
+            var resp = JSON.parse(rawData.response).response
+            data['funnel_name'] = resp.funnel_name
+            data['funnel_id'] = resp.funnel_id
+            crusher.cache.funnelData.push(data)
+            callback(crusher.cache.funnelData)
+          });
+      },"save_funnel",true,true)
     },
     delete: function(data,parent_data,funnel) {
       d3.xhr(funnelURL + "&funnel_id=" + data.funnel_id)
@@ -191,7 +198,15 @@ RB.crusher.controller = (function(controller) {
       })
     },
     show_domains: function(data,callback) {
-      crusher.api.UIDsToDomains(data,callback)
+      crusher.subscribe.add_subscriber(["UIDsToDomains"], callback, "show_domains",true,true,data)
+    },
+    show_avails: function(data,callback) {
+      var q = queue(5)
+      data.actions.map(function(action) { 
+        crusher.api.actionToAvails(function(){},action,q)
+      })
+      q.awaitAll(callback)
+      
     }
   }
 
@@ -307,7 +322,7 @@ RB.crusher.controller = (function(controller) {
       }
     },
     apis: {
-      "funnel/new": ['funnels'],
+      "funnel/new": [],
       "funnel/existing": ['funnels'],
       "action/existing": ['actions'],
       "action/new": ['visits','actions'],

@@ -18,10 +18,10 @@ RB.crusher.subscribe = (function(subscribe) {
 
     var self = this
 
-    this.call = function() {
+    this.call = function(data) {
       if (self.lock == false) { 
         self.lock = true
-        request(self.callback)
+        request(self.callback,data)
       }
     }
   }
@@ -75,7 +75,7 @@ RB.crusher.subscribe = (function(subscribe) {
 
   
 
-  subscribe.add_subscriber = function(subscriptions,callback,name,trigger,unpersist) {
+  subscribe.add_subscriber = function(subscriptions,callback,name,trigger,unpersist,data) {
 
     /* subscriptions - things to subscribe to
        callback - to execute when all subscriptions reply with data
@@ -111,7 +111,7 @@ RB.crusher.subscribe = (function(subscribe) {
       dispatchers[dispatch_name].on(dname,subscription.evaluate) 
     })
 
-    if (trigger) subscriptions.map(function(name){subscribe.publishers[name]()}) 
+    if (trigger) subscriptions.map(function(name){subscribe.publishers[name](data)}) 
 
   }
 
@@ -161,7 +161,7 @@ RB.crusher.api = (function(api) {
   }
 
   var genericQueuedAPIWithData = function(fn){
-    return function(data,cb,extq) {
+    return function(cb,data,extq) {
       var q = extq || queue()
       var bound = fn.bind(false,data,cb)
       var d =  q.defer(bound)
@@ -259,6 +259,8 @@ RB.crusher.api = (function(api) {
     visitURL: "/crusher/visit_urls?format=json&source=" + source,
     visitUID: "/crusher/visit_uids?format=json&url=",
     visitDomains: "/crusher/visit_domains?format=json&kind=domains",
+    visitAvails: "/crusher/visit_avails?format=json",
+
     funnelURL: "/crusher/funnel?format=json&advertiser=" + source,
     current: addParam(window.location.pathname + window.location.search,"format=json")
   }
@@ -270,6 +272,22 @@ RB.crusher.api = (function(api) {
 
     
     var apis = {
+      tf_idf: new genericQueuedAPI(function(cb,deferred_cb) {
+        if (!crusher.pop_domains) {
+          d3.json("/admin/api?table=reporting.pop_domain_with_category&format=json", function(dd){
+            crusher.pop_domains = {}
+            crusher.cat_domains = {}
+            dd.map(function(x){
+              crusher.pop_domains[x.domain] = x.idf
+              crusher.cat_domains[x.domain] = x.category_name
+
+            })
+            deferred_cb(null,cb)
+          }) 
+        } else {
+          deferred_cb(null,cb)
+        }
+      }),
       visits: new genericQueuedAPI(function(cb,deferred_cb) {
 
         if (!cache.urlData) {
@@ -380,8 +398,24 @@ RB.crusher.api = (function(api) {
         } else {
           deferred_cb(null,cb.bind(false,[]))
         } 
+      }),
+      actionToAvails: genericQueuedAPIWithData(function(action,cb,deferred_cb) {
+        var data = { "uids":action.funnel_uids }
+        if (action.funnel_uids.length && (!action.avails)) {
+          d3.xhr(api.URL.visitAvails)
+            .header("Content-Type", "application/json")
+            .post(
+              JSON.stringify(data),
+              function(err, rawData){
+                var resp = JSON.parse(rawData.response)
+                action.avails_raw = resp[0]
+                deferred_cb(null,cb.bind(false,action))
+              }
+            );
+        } else {
+          deferred_cb(null,cb.bind(false,[]))
+        } 
       })
-
     } 
 
     return apis

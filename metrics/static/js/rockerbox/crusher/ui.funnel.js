@@ -46,16 +46,24 @@ RB.crusher.ui.funnel = (function(funnel) {
       .classed("hidden",false)
       .text("loading... (replace with loading image)...")
 
-    d3_updateable(funnels,".summary","div")
-      .classed("col-md-12 summary",true)
-      .classed("hidden",true)
-
     d3_updateable(funnels,".step-chart","div")
-      .classed("col-md-12 step-chart",true)
+      .classed("col-md-9 step-chart",true)
       .classed("hidden",true)
 
+    var stepDesc = d3_updateable(funnels,".summary","div")
+      .classed("col-md-3 summary",true)
+      .classed("hidden",true)
+
+    d3_updateable(funnels,".campaign-table","div")
+      .classed("col-md-12 campaign-table",true)
+      .classed("hidden",true)
+    
     d3_updateable(funnels,".domain-chart","div")
-      .classed("col-md-12 domain-chart",true)
+      .classed("col-md-9 domain-chart",true)
+      .classed("hidden",true)
+
+    d3_updateable(funnels,".category-chart","div")
+      .classed("col-md-9 category-chart",true)
       .classed("hidden",true)
 
 
@@ -85,6 +93,7 @@ RB.crusher.ui.funnel = (function(funnel) {
 
     funnel.show.component.steps(funnels)
     funnel.show.component.summary(funnels)
+    funnel.show.component.campaign(funnels)
 
     var actions = funnels.datum().actions
     var reduced = actions[actions.length -1].funnel_uids
@@ -162,8 +171,7 @@ RB.crusher.ui.funnel = (function(funnel) {
       funnel.action.build(d3.select(actions.node().parentNode),options)
      
     },
-    add_funnel: function(target) {
-      var action_data = crusher.actionData
+    add_funnel: function(target,action_data) {
       var data = [{"funnel_name":"","actions":[]}]
 
       var newFunnel = d3_splat(target,".funnel","div",data,function(x){return x.funnel_id})
@@ -247,18 +255,303 @@ RB.crusher.ui.funnel = (function(funnel) {
 
     summary: function(funnels) {
       var summary = d3_updateable(funnels,".summary","div")
-        .classed("col-md-12 summary",true)
+        .classed("col-md-3 summary",true)
         .classed("hidden",false)
 
-      d3_updateable(summary,"h5","h5").text("Funnel details")
+      d3_updateable(summary,"h5.details","h5")
+        .classed("details",true)
+        .text("Funnel Summary")
+
+      d3_updateable(summary,".union-size","div")
+        .classed("union-size",true)
+        .text(function(x){
+
+          var users = x.actions.reduce(function(p,c){
+            c.uids.map(function(u){
+              p[u] = true
+            })
+            return p
+          },{})
+
+          return "Union Size: " + d3.format(",")(Object.keys(users).length)
+        })
+
+      d3_updateable(summary,".intersection-size","div")
+        .classed("intersection-size",true)
+        .text(function(x){
+          var last = x.actions[x.actions.length-1].funnel_uids.length
+          return "Intersection Size: " + d3.format(",")(last)
+        })
+
       d3_updateable(summary,".conversion-rate","div")
         .classed("conversion-rate",true)
-        .text(function(x){
+        .html(function(x){
           var first = x.actions[0].uids.length 
           var last = x.actions[x.actions.length-1].funnel_uids.length
-          return "Conversion Rate: " + d3.format("%")(last/first) 
+          return "<br>Conversion Rate: " + d3.format("%")(last/first) + "<br><br>"
         })
+
+
+      d3_updateable(summary,"h5.methods","h5")
+        .classed("methods",true)
+        .text("Funnel Step versus Action")
+
+      var step_summary = d3_updateable(summary,".step-summary","div")
+        .classed("step-summary",true)
+
+      var steps = d3_splat(step_summary,".step","div",function(x){console.log(x);return x.actions},function(x){return x.action_id + ":" + x.pos})
+        .classed("step",true)
+        .text(function(x){
+          return d3.format("%")(x.funnel_uids.length/x.uids.length) + " of all \"" + x.action_name + "\" users (" + x.uids.length + ")"
+        })
+
+      steps.sort(function(x,y) {return x.pos - y.pos})
+
+      steps.exit().remove()
+
+
+      d3_updateable(summary,"h5.exchange","h5")
+        .classed("exchange",true)
+        .html("<br>Step Availability")
+
+      var exchange_summary = d3_updateable(summary,".exchange-summary","div")
+        .classed("exchange-summary",true)
+
+      var exchanges = d3_splat(exchange_summary,".exchange","div",
+          function(x){return x.actions},
+          function(x){return x.action_id + ":" + x.pos}
+        ).classed("exchange",true)
+
+      exchanges.sort(function(x,y) {return x.pos - y.pos})
+      exchanges.exit().remove()
+
+      var bound = funnel.show.component.avails.bind(false,exchanges)
+
+      crusher.controller.funnel.show_avails(summary.datum(),bound)
+
       
+            
+    },
+    avails: function(exchanges) {
+      d3_updateable(exchanges,"div","div")
+        .text(function(x){
+          if (x.avails_raw)
+            return d3.format("%")(x.avails_raw.avails/x.avails_raw.total) + " of \"" + x.action_name + "\" users seen"
+        })
+    },
+    campaign: function(funnels){
+      var campaign = d3_updateable(funnels,".campaign-table","div")
+        .classed("col-md-12 campaign-table",true)
+        .classed("hidden",false)
+
+      d3_updateable(campaign,"h5","h5")
+        .text("Funnel campaigns")
+
+      var wrapper = d3_updateable(campaign,"div.wrapper","div")
+        .classed("wrapper",true)
+
+      var camp = d3_splat(wrapper,"div.campaign","div",function(x){return x.actions},function(x){return x.action_id})
+        .classed("campaign row",true)
+        .style("padding-bottom","15px")
+        .style("border-bottom","1px solid #f0f0f0")
+        .style("margin-bottom","15px")
+
+      var info = d3_updateable(camp,"div.step-info","div") 
+        .classed("step-info col-md-2",true) 
+        .style("line-height","30px")
+
+      d3_updateable(info,"div.name","div")
+        .classed("name",true)
+        .style("font-size","13px")
+        .style("weight","bold")
+        .text(function(x,i){return "Step " + x.pos + ": " + x.action_name})
+
+      var onoff = d3_updateable(info,"div.switch","div")
+        .classed("switch", true)
+        .style("height","30px")
+
+      d3_updateable(onoff,"input","input")
+        .attr("type","checkbox")
+
+      $(".switch input[type='checkbox']").bootstrapSwitch();
+
+
+
+      var settings = d3_updateable(camp,"div.settings","div")
+        .classed("settings col-md-3",true)
+
+      //d3_updateable(settings,"div","div").text("Settings")
+
+
+      var estimates = d3_updateable(camp,"div.estimates","div")
+        .classed("estimates col-md-3",true)
+
+      //d3_updateable(estimates,"div","div").text("Estimates")
+
+
+      var reporting = d3_updateable(camp,"div.reporting","div")
+        .classed("reporting col-md-3",true)
+
+      //d3_updateable(reporting,"div","div").text("Served")
+
+      var targeted = d3_updateable(reporting,"div.served-users","div")
+        .classed("served-users statistic",true)
+
+      d3_updateable(targeted,"span.lab","span")
+        .classed("lab",true)
+        .text("Users Reached (Freq): ")
+
+      d3_updateable(targeted,"span.value","span")
+        .classed("value pull-right",true)
+        .text(function(x){
+          return 0 
+        })
+
+
+      var sfreq = d3_updateable(reporting,"div.avg-imps","div")
+        .classed("avg-imps statistic",true)
+
+      d3_updateable(sfreq,"span.lab","span")
+        .classed("lab",true)
+        .text("Imps Served (CPM): ")
+
+      d3_updateable(sfreq,"span.value","span")
+        .classed("value pull-right",true)
+        .text(function(x){
+          return 0  + " (0)"
+        })
+
+
+      var cost = d3_updateable(reporting,"div.cost","div")
+        .classed("cost statistic",true)
+
+      d3_updateable(cost,"span.lab","span")
+        .classed("lab",true)
+        .text("Total Cost: ")
+
+      d3_updateable(cost,"span.value","span")
+        .classed("value pull-right",true)
+        .text(function(x){
+          return 0 + " (0)"
+        })
+
+
+
+      var targetable = d3_updateable(estimates,"div.estimated-users","div")
+        .classed("estimated-users estimate",true)
+
+      d3_updateable(targetable,"span.lab","span")
+        .classed("lab",true)
+        .text("Reachable Users: ")
+
+      d3_updateable(targetable,"span.value","span")
+        .classed("value pull-right",true)
+        .text(function(x){
+          if (x.avails_raw) return x.avails_raw.avails
+        })
+
+      var imps = d3_updateable(estimates,"div.estimated-imps","div")
+        .classed("estimated-imps estimate",true)
+
+
+      d3_updateable(imps,"span.lab","span")
+        .classed("lab",true)
+        .text("Estimated Impressions: ")
+
+      d3_updateable(imps,"span.value","span")
+        .classed("value pull-right",true)
+        .text("value")
+
+      var cost = d3_updateable(estimates,"div.estimated-cost","div")
+        .classed("estimated-cost estimate",true)
+
+
+      d3_updateable(cost,"span.lab","span")
+        .classed("lab",true)
+        .text("Maximum Daily Cost: ")
+
+      d3_updateable(cost,"span.value","span")
+        .classed("value pull-right",true)
+        .text("value")
+
+
+
+
+      var onChange = function(x) {
+        var id = x.action_id
+        var campaign = camp.filter(function(y){return y.action_id == id})
+
+        var f = campaign.selectAll("div.daily-freq input").property("value")
+        var imps = f * (x.avails_raw.avails)
+
+        var p = campaign.selectAll("div.bid-price input").property("value")
+
+        campaign.selectAll("div.estimated-imps span.value").text(d3.format(",")(imps))
+        campaign.selectAll("div.estimated-cost span.value").text(d3.format("$.2")(imps * p / 1000))
+
+      }
+
+      d3_updateable(estimates,"span.b1","span")
+        .classed("b1",true)
+        .text("{")
+        .style("font-size","38px")
+        .style("line-height","60px")
+        .style("top","0px")
+        .style("left","-5px")
+        .style("position","absolute")
+        .style("font-weight",100)
+        .style("color","#ccc")
+
+      d3_updateable(estimates,"span.b2","span")
+        .classed("b2",true)
+        .html("&#65515;")
+        .style("font-size","24px")
+        .style("line-height","30px")
+        .style("top","60px")
+        .style("left","-5px")
+        .style("position","absolute")
+        .style("font-weight",100)
+        .style("color","#ccc")
+
+
+
+      var dfreq = d3_updateable(settings,"div.daily-freq","div")
+        .classed("daily-freq input-group input-group-sm",true)
+        .style("margin-top","15px")
+        .style("margin-bottom","15px")
+
+      d3_updateable(dfreq,"span","span")
+        .classed("input-group-addon",true)
+        .text("Frequency cap")
+
+      d3_updateable(dfreq,"input","input")
+        .classed("form-control",true)
+        .property("value","0")
+        .on("input",onChange)
+
+
+      
+
+
+      var dfreq = d3_updateable(settings,"div.bid-price","div")
+        .classed("bid-price input-group input-group-sm",true)
+
+      d3_updateable(dfreq,"span","span")
+        .classed("input-group-addon",true)
+        .text("Max bid price")
+
+      d3_updateable(dfreq,"input","input")
+        .classed("form-control",true)
+        .property("value","0")
+        .on("input",onChange)
+
+
+      
+
+
+
+      camp.sort(function(x,y){return x.pos - y.pos})
+      camp.exit().remove()
     },
     step_chart: function(funnels){
 
@@ -335,7 +628,7 @@ RB.crusher.ui.funnel = (function(funnel) {
       var data = funnels.datum()
 
       var stepsWrapper = d3_updateable(funnels,".step-chart","div")
-        .classed("col-md-12 step-chart",true) 
+        .classed("col-md-9 step-chart",true) 
         .classed("hidden",false)
 
       funnel.show.component.step_chart(stepsWrapper) 
@@ -404,26 +697,100 @@ RB.crusher.ui.funnel = (function(funnel) {
           .text(function(d) { return d.domain + " (" + d.uid + ")"; }); 
 
     },
+    category_chart: function(funnels,data) {
+
+      var title = d3_updateable(funnels,"h5.categories","h5")
+        .classed("categories",true)
+        .text("Popular categories of convertors")
+
+      var targetWidth = funnels.style("width").replace("px",""),
+        width = targetWidth,
+        barHeight = 15;
+      
+      var x = d3.scale.linear().range([0, width-150]);
+      
+      var chart = funnels.selectAll("svg.category-chart-svg")
+          .data([data])
+
+      chart
+          .enter()
+            .append("svg")
+            .attr("class","category-chart-svg")
+            .attr("width", width);
+
+      x.domain([0, d3.max(data, function(d) { return d.values; })]);
+    
+      chart.attr("height", barHeight * data.length);
+    
+      var bar = chart.selectAll("g")
+          .data(function(x){return x})
+
+      bar
+        .enter().append("g")
+          .attr("transform", function(d, i) { return "translate(0," + i * barHeight + ")"; });
+
+      bar.exit().remove()
+    
+      var rect = bar.selectAll("rect.bar").data(function(x){return [x]})
+      rect.enter()
+          .append("rect")
+      rect
+          .attr("class","bar")
+          .attr("width", function(d) { return x(d.values || 0); })
+          .attr("height", barHeight - 1);
+    
+      var text = bar.selectAll("text").data(function(x){return [x]})
+      text.enter()
+          .append("text")
+      text
+          .attr("x", function(d) { return x(d.values) + 3; })
+          .attr("y", barHeight / 2)
+          .attr("dy", ".35em")
+          .text(function(d) { return d.key + " (" + d.values + ")"; }); 
+
+    },
     domains: function(funnels,data) {
       
       var data = data.map(function(x){
         var pop_domain = RB.crusher.pop_domains[x.domain] || {}
         var idf = pop_domain.idf || 12
-        x.wuid =  Math.exp(idf) * x.uid
+        x.wuid =  Math.exp(idf) * Math.log(x.uid)
         return x
       }).sort(function(x,y){
         return y.wuid - x.wuid
-      }).slice(0,25)
+      }).slice(0,15)
+
+      var cat = d3.nest()
+        .key(function(x) {
+          return RB.crusher.cat_domains[x.domain] || "NA"
+        })
+        .rollup(function(x){return d3.sum(x.map(function(y){return y.uid})) })
+        .entries(data)
+        .sort(function(x,y){
+          return y.values - x.values
+        }).slice(0,15)
+
+
 
       
       var domain_chart = d3_updateable(funnels,".domain-chart","div",false,function(x){
           return x.funnel_id
         })
-        .classed("col-md-12 domain-chart",true)
+        .classed("col-md-6 domain-chart",true)
         .classed("hidden",false)
 
 
       funnel.show.component.domain_chart(domain_chart,data)
+
+      var category_chart = d3_updateable(funnels,".category-chart","div",false,function(x){
+          return x.funnel_id
+        })
+        .classed("col-md-6 category-chart",true)
+        .classed("hidden",false)
+
+
+      funnel.show.component.category_chart(category_chart,cat)
+
       
     },
     domain: function(domains) {
