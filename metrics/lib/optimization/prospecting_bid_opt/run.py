@@ -81,7 +81,6 @@ if __name__ == "__main__":
 
     for config_name, params in configs.iteritems():
 
-
         if "end_date" not in params:
             params["end_date"] = datetime.today().strftime('%Y-%m-%d')
 
