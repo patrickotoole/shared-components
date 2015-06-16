@@ -20,3 +20,4 @@ kafka-python
 cassandra-driver
 pymongo
 tldextract
+slackclient
