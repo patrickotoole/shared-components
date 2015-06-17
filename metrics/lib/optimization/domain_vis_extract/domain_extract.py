@@ -1,5 +1,5 @@
 import pandas as pd
-import numpy
+import numpy as npc
 import requests
 import time
 import json
@@ -17,7 +17,7 @@ FROM
     FROM advertiser_visibility_daily
     WHERE date >= "{}" AND date <= "{}" AND domain != ""
 )a
-GROUP By domain
+GROUP BY domain
 '''
 
 def pull_domain_data(domain):
@@ -44,8 +44,8 @@ class DomainVis():
         self.end_date = end_date
         self.overwrite = overwrite
 
-        self.imps_served_cutoff = 650
-        self.imps_loaded_cutoff = 650
+        self.imps_served_cutoff = 100
+        self.imps_loaded_cutoff = 100
 
         self.data = None
         self.hive = lnk.dbs.hive
@@ -61,6 +61,7 @@ class DomainVis():
             logger.info("Loaded %d domains" %len(self.data))
             self.data['loaded_ratio'] = self.data['num_loaded'] / self.data['num_served']
             self.data['visible_ratio'] = self.data['num_visible'] / self.data['num_loaded']
+            self.data = self.data.replace([np.inf], 0)
             self.data = self.data.fillna(0) 
             self.data = self.data.sort('num_loaded', ascending = False)
 
@@ -90,6 +91,8 @@ class DomainVis():
             elif row['domain_exists'] and self.overwrite:
                 self.update(row)
 
+        logger.info("Pushed %d domains to table" %len(self.data))
+
 
     def update(self, row):
 
@@ -99,18 +102,18 @@ class DomainVis():
         logger.info("Updating %s in domains table" %row['domain'])
         logger.info("\n" + pprint.pformat(to_update))
 
-        r = requests.put("http://portal.getrockerbox.com/domains?domain=%s"% row['domain'], 
+        r = requests.put("http://portal.getrockerbox.com/domains?domain=%s"%row['domain'], 
             data=json.dumps(to_update))
         logger.info(r.text)
 
 
-    def insert(self, domain, field_name, field_value):
+    def insert(self, row):
 
-        to_update = {'domain': row['domain'],
+        to_insert = {'domain': row['domain'],
                     'visible_ratio': row['visible_ratio'],
                     'loaded_ratio': row['loaded_ratio']}
   
-        logger.info("Inserting %s to domains table" %domain)
+        logger.info("Inserting %s to domains table" %row['domain'])
         logger.info("\n" + pprint.pformat(to_insert))
         r = requests.post("http://portal.getrockerbox.com/domains", data=json.dumps(to_insert))
         logger.info(r.text)

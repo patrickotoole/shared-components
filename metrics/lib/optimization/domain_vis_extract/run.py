@@ -8,7 +8,7 @@ import logging
 import domain_extract
 from datetime import datetime, timedelta
 
-START_DATE = (datetime.today() - timedelta(days = 14)).strftime('%y-%m-%d')
+START_DATE = (datetime.today() - timedelta(days = 3)).strftime('%y-%m-%d')
 END_DATE = (datetime.today() - timedelta(days = 1)).strftime('%y-%m-%d')
 
 logger = logging.getLogger("opt")
