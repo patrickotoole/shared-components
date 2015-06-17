@@ -63,7 +63,7 @@ class AdvertiserRoutes(Routes):
         ]
 
     @namespace("/crusher")
-    @connectors("db","api","cassandra")
+    @connectors("db","api","cassandra", "mongo")
     def crusher_routes(self):
         import handlers.analytics as analytics
         import handlers.funnel as funnel
@@ -74,6 +74,8 @@ class AdvertiserRoutes(Routes):
             (r'/visit_domains', analytics.VisitDomainsHandler, self.connectors),
             (r'/funnel/action', funnel.ActionHandler, self.connectors),
             (r'/funnel/action/(.*?)', funnel.ActionHandler, self.connectors),
+            (r'/funnel/campaigns', funnel.FunnelCampaignsHandler, self.connectors),
+            (r'/funnel/campaigns/(.*?)', funnel.FunnelCampaignsHandler, self.connectors),
             (r'/funnel', funnel.FunnelHandler, self.connectors),
             (r'/funnel/(.*?)', funnel.FunnelHandler, self.connectors)
         ]
