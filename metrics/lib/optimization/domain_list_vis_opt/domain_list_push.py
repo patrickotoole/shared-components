@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 import requests
-import time
 import json
 from link import lnk
 import copy
@@ -43,6 +42,8 @@ class DomainVisPush:
                         (self.data[self.metric] < self.cutoff) ]
         logger.info("Filtered to with %d domains" %len(self.data))
 
+        logger.info("min, max: %f, %f" %(self.data[self.metric].min(), self.data[self.metric].max() )    )
+
 
     def push(self):
 
@@ -75,7 +76,7 @@ class DomainVisPush:
             }
 
         r = self.rbox_api.post("/opt_log", data=json.dumps(log))
-        logger.info("Push successful")
+        logger.info("Push to list %d successful"%self.list_id)
 
 
 

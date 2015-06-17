@@ -59,8 +59,8 @@ class DomainVis():
             raise AttributeError("No data loaded")
         else:
             logger.info("Loaded %d domains" %len(self.data))
-            self.data['loaded_ratio'] = self.data['num_loaded'] / self.data['num_served']
-            self.data['visible_ratio'] = self.data['num_visible'] / self.data['num_loaded']
+            self.data['loaded_ratio'] = self.data['num_loaded'] / self.data['num_served'].astype(float)
+            self.data['visible_ratio'] = self.data['num_visible'] / self.data['num_loaded'].astype(float)
             self.data = self.data.replace([np.inf], 0)
             self.data = self.data.fillna(0) 
             self.data = self.data.sort('num_loaded', ascending = False)

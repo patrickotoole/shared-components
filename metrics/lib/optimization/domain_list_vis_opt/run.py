@@ -45,4 +45,6 @@ if __name__ == "__main__":
         D.filter()
         D.push()
 
+        logger.info("domain list push finished SUCCESSFULLY with %s" %config_name)
+
 
