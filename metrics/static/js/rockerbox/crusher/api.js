@@ -261,6 +261,8 @@ RB.crusher.api = (function(api) {
     visitDomains: "/crusher/visit_domains?format=json&kind=domains",
     visitAvails: "/crusher/visit_avails?format=json",
 
+    campaigns: "/crusher/funnel/campaign?advertiser=" + source,
+
     funnelURL: "/crusher/funnel?format=json&advertiser=" + source,
     current: addParam(window.location.pathname + window.location.search,"format=json")
   }
@@ -310,6 +312,23 @@ RB.crusher.api = (function(api) {
           })
         } else {
           if (cache.actionData) cache.actionData.map(function(x) { x.values = cache.urls_wo_qs })
+          deferred_cb(null,cb)
+        }
+      }),
+      campaigns: new genericQueuedAPI(function(cb,deferred_cb) {
+
+        if (!cache.actionData) {
+          d3.json(api.URL.campaigns,function(campaigns){
+            cache.campaigns = campaigns 
+            cache.campaign_map = d3.nest()
+              .key(function(x){return x.funnel_id})
+              .key(function(x){return x.order})
+              .map(campaigns)
+
+            deferred_cb(null,cb)
+          })
+        } else {
+          if (cache.urls_wo_qs) cache.actionData.map(function(x) { x.values = cache.urls_wo_qs })
           deferred_cb(null,cb)
         }
       }),

@@ -14,6 +14,8 @@ from lib.helpers import *
 LINE_ITEM_QUERY = "select * from advertiser_line_item where line_item_name like '%%Funnel%%' and %s "
 FUNNEL_QUERY = "select * from funnel where %s"
 FUNNEL_CAMPAIGN_QUERY = "select * from funnel_campaigns where %s"
+FUNNEL_CAMPAIGN_QUERY_CAMPAIGN_IDS = "select * from funnel_campaigns where %s"
+
 CAMPAIGN_GET = "SELECT * from advertiser_campaign where line_item_id = %s"
 
 
@@ -50,7 +52,13 @@ class FunnelCampaignHandler(CampaignHandler):
         funnel_df = self.db.select_dataframe(FUNNEL_CAMPAIGN_QUERY % where)
         return funnel_df
 
- 
+    @decorators.deferred
+    def defer_get_funnel_campaigns_by_campaign_ids(self,campaign_ids):
+        where = (" campaign_id in (%s)" % ",".join(campaign_ids))
+        funnel_df = self.db.select_dataframe(FUNNEL_CAMPAIGN_QUERY % where)
+        return funnel_df
+
+
 
     
     @decorators.deferred
@@ -153,7 +161,13 @@ class FunnelCampaignHandler(CampaignHandler):
     def get_campaigns(self,advertiser_id):
         line_item_id = yield self.get_line_item_id(advertiser_id)
         camp = yield self.defer_get_campaigns(advertiser_id,line_item_id)
-        self.write(ujson.dumps(camp))
+        # NEEDS TO ALSO GET THE PROFILE OBJECT
+        camp_df = pandas.DataFrame(camp).set_index("id")
+        funnel_campaign = yield self.defer_get_funnel_campaigns_by_campaign_ids(map(str,camp_df.index))
+
+        df = camp_df.join(funnel_campaign.set_index("campaign_id"))
+        camp_values = df.fillna(0).T.to_dict().values()
+        self.write(ujson.dumps(camp_values))
         self.finish()
         
 
@@ -197,6 +211,10 @@ class FunnelCampaignHandler(CampaignHandler):
 
     @tornado.web.asynchronous
     def post(self):
+        # ERROR CASES: missing segment on funnel
+        # bad price information
+        # bad frequency information
+
         advertiser_id = 302568 #self.current_advertiser
         obj = ujson.loads(self.request.body)
         profile = obj.get('profile',False)

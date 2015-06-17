@@ -43,7 +43,23 @@ RB.crusher.controller = (function(controller) {
 
       crusher.ui.funnel.buildBase() 
 
-      crusher.subscribe.add_subscriber(["actions","funnels"], function(){
+      crusher.subscribe.add_subscriber(["actions","funnels","campaigns"], function(){
+
+        console.log(crusher.cache.campaigns)
+
+        crusher.cache.funnelData.map(function(x){
+          x.actions.map(function(y){
+            var f = crusher.cache.campaign_map[x.funnel_id]
+            if (f) {
+              console.log(f,y.order)
+              var c = f[y.order]
+              if (c) {
+                console.log(c)
+                y.campaign = c[0]
+              }
+            }
+          })
+        })
 
         var data = (id) ? 
           crusher.cache.funnelData.filter(function(x){return x.funnel_id == id}) : 
