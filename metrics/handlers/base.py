@@ -2,8 +2,6 @@ import tornado.web
 from link import lnk
 #from ..lib.hive import Hive
 
-
-
 class BaseHandler(tornado.web.RequestHandler):
 
     def get_current_user(self):

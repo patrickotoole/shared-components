@@ -306,3 +306,10 @@ GROUP BY %(groups)s
 ORDER BY sum(percent_of_users) DESC
 LIMIT %(limit)s
 """
+ADVERTISER_NAME_TO_ID = """
+SELECT external_advertiser_id
+FROM rockerbox.advertiser
+WHERE 
+    pixel_source_name="{}" AND
+    deleted=0
+"""

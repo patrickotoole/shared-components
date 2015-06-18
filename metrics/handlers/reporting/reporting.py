@@ -36,7 +36,7 @@ class ReportingBase(object):
 
     ERR_MSG = "No campaigns for "
 
-    def initialize(self, db, hive):
+    def initialize(self, db, hive, spark_sql=None):
         self.db = db 
         self.hive = hive
 
@@ -58,7 +58,6 @@ class ReportingBase(object):
         q = MATERIALIZED_VIEW % params
         print q
         return self.db.select_dataframe(q)
-
 
     @decorators.deferred
     def pull_advertiser_export(self,advertiser_id):
@@ -97,8 +96,8 @@ class ReportingBase(object):
 
 class ReportingHandler(BaseHandler,ReportingBase):
 
-    def initialize(self, db=None, api=None, hive=None):
-        self.db = db 
+    def initialize(self, db=None, api=None, hive=None, spark_sql=None):
+        self.db = db
         self.api = api
         self.hive = hive
 

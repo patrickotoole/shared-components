@@ -9,7 +9,8 @@ class AdvertiserReportingRoutes(Routes):
         import handlers.admin.reporting as reporting
 
         return [
-            (r'/reporting/?',reporting.AdvertiserReportingHandler, self.connectors),
+            (r'/client/reporting/?', reporting.AdminClientReportingHandler, self.connectors),
+            (r'/reporting/?',reporting.AdvertiserReportingHandler, self.connectors)
         ]
  
 
