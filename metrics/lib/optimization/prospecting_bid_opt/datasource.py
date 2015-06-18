@@ -64,6 +64,15 @@ VISIBILITY_DATA_DTYPEs = {'loaded': dtype('int64'),
 
 PARAM_KEYS = ['learn_max_bid_limit', 'learn_total_imps_limit', 'learn_daily_imps_limit', 'learn_daily_cpm_limit']
 
+
+def create_campaignlist_str(campaign_list):
+    campaign_str = '''( campaign = "%s" '''%str(campaign_list[0])
+    for k in range(1, len(campaign_list)):
+        campaign_str += '''OR campaign = "%s" '''%str(campaign_list[k])
+    campaign_str += ")"
+    return campaign_str
+
+
 class CampaignDataSource(DataSource):
 
     def __init__(self, external_adv_id, campaigns):
@@ -96,15 +105,13 @@ class CampaignDataSource(DataSource):
         self.logger.info("Loading visiblity data (may take long)...")
         self.visible_data = pd.DataFrame()
 
+        run_start_date = (datetime.strptime(self.end_date, '%Y-%m-%d') - timedelta(days = 30)).strftime('%Y-%m-%d')
+
         for i in range(0, len(self.campaigns), 50):
             campaign_chunk = self.campaigns[i:i + 50]
 
-            campaign_list = '''( campaign = "%s" '''%str(campaign_chunk[0])
-            for k in range(1, len(campaign_chunk)):
-                campaign_list += '''OR campaign = "%s" '''%str(campaign_chunk[k])
-            campaign_list += ")"
-        
-            query_args = {  'start_date': self.start_date[2:],
+            campaign_list = create_campaignlist_str(campaign_chunk)
+            query_args = {  'start_date': run_start_date[2:],
                             'end_date': self.end_date[2:],
                             'campaign_list': campaign_list }
 
@@ -156,40 +163,50 @@ class CampaignDataSource(DataSource):
         self.check_data()
         
 
-    def get_campaign_param(self, campaign_id, param):
-        self.logger.info("Getting %s for campaign %s" %(param,str(campaign_id)))
+    def get_campaign_param(self, campaign_id):
+        self.logger.info("Getting params for campaign %s" %(str(campaign_id)))
         response = self.console.get("/campaign?id=%s"%campaign_id).json
-        try:
-            param_value = response['response']['campaign'][param]
-            return param_value
-        except KeyError:
-            self.logger.error("param %s does not exist" %param)
-            raise KeyError("param %s does not exist" %param)
+        return response
+
+
+        # try:
+        #     param_value = response['response']['campaign'][param]
+        #     return param_value
+        # except KeyError as e:
+        #     self.logger.error("%s for campaign %s" %(e,campaign_id))
+        #     raise KeyError("param %s does not exist" %param)
 
 
     def add_max_bids(self):
         
         max_bids = [None] * len(self.df)
+        campaign_state = [None] * len(self.df)
+
         for k in range(len(self.df)):
             campaign_id = self.df.index[k]
-            max_bid = self.get_campaign_param(campaign_id, 'max_bid')
+            campaign_params = self.get_campaign_param(campaign_id)
+
+            max_bid = campaign_params['response']['campaign']['max_bid']
             if max_bid is None :
                  max_bid = np.nan
             max_bids[k] = max_bid
+
+            campaign_state[k] = campaign_params['response']['campaign']['state']
             time.sleep(3)
         self.df['max_bid'] = max_bids
+        self.df['campaign_state'] = campaign_state
 
         
-    def add_campaign_state(self):
+    # def add_campaign_state(self):
         
-        self.logger.info("Adding campaign_state...")
-        campaign_state = [None] * len(self.df)
-        for k in range(len(self.df)):
-            campaign_id = self.df.index[k]
-            campaign_state[k] = self.get_campaign_param(campaign_id, 'state')
-            time.sleep(3)
+    #     self.logger.info("Adding campaign_state...")
+    #     campaign_state = [None] * len(self.df)
+    #     for k in range(len(self.df)):
+    #         campaign_id = self.df.index[k]
+    #         campaign_state[k] = self.get_campaign_param(campaign_id, 'state')
+    #         time.sleep(10)
             
-        self.df['campaign_state'] = campaign_state
+    #     self.df['campaign_state'] = campaign_state
         
     def run(self, params):
         self.reshape()
@@ -250,7 +267,7 @@ class CampaignDataSource(DataSource):
 
 
         self.add_max_bids()
-        self.add_campaign_state()
+        # self.add_campaign_state()
 
         self.df = self.df[self.df['campaign_state'] == "active"]
         self.logger.info("Filtered Dataframe to {} active campaigns".format(len(self.df)))

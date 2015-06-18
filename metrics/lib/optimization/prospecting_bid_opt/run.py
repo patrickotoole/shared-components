@@ -16,6 +16,7 @@ from link import lnk
 import json
 import pprint
 from datetime import datetime, timedelta
+import time
 
 class Runner():
 
@@ -99,5 +100,6 @@ if __name__ == "__main__":
         runner.run()
 
         logger.info("prospecting_bid_opt FINISHED SUCCESSFULLY with config %s\n\n\n" %config_name)
+        time.sleep(120)
 
 

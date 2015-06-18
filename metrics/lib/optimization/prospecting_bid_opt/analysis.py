@@ -10,7 +10,8 @@ CAMPAIGN_RULES = {
     'prosp_learn_bid_increase':{'action': 'INCREASE_MAX_BID'},
     'unprofitable_no_conv': {'action': 'DEACTIVATE'},
     'yoshi_low_loaded': {'action': 'DEACTIVATE'},
-    'yoshi_low_visible': {'action': 'DEACTIVATE'}
+    'yoshi_low_visible': {'action': 'DEACTIVATE'},
+    'prosp_learn_high_bid_deactivate':{'action': 'DEACTIVATE'}
 }
 
 

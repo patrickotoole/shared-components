@@ -6,6 +6,7 @@ sys.path.append("../../")
 import buffering_smtp_handler
 import logging
 import domain_whois
+import domain_visibility
 from datetime import datetime, timedelta
 
 TODAY = datetime.today().strftime('%y-%m-%d')
@@ -18,7 +19,6 @@ if __name__ == "__main__":
 
     import logsetup
     logsetup.configure_log(subject="domain_whois")
-
 
     logger.info("Extracting whois data for %s" %TODAY)
     D = domain_whois.DomainWhois(TODAY, TODAY, START_HOUR, END_HOUR)
