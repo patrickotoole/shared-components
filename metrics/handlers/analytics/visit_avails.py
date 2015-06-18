@@ -59,9 +59,10 @@ class VisitAvailsHandler(BaseHandler, AnalyticsBase):
             where = where + " and {}".format(date_clause)
         in_clause = self.make_in_clause(uids)
         WHERE = where.format(in_clause)
-        logging.info(WHERE)
+        #logging.info(WHERE)
 
         results = self.query + WHERE
+        logging.info("Requested avails...")
 
         return self.cassandra.execute(results)
 

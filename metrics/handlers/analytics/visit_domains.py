@@ -61,7 +61,8 @@ class VisitDomainsHandler(BaseHandler, AnalyticsBase):
             where = where + " and {}".format(date_clause)
         in_clause = self.make_in_clause(uids)
         WHERE = where.format(in_clause)
-        logging.info(self.query + WHERE)
+        #logging.info(self.query + WHERE)
+        logging.info("Started domains request...")
 
         results = self.query + WHERE
 

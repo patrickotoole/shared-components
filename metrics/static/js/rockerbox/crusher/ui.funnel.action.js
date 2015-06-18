@@ -83,8 +83,6 @@ RB.crusher.ui.funnel.action = (function(action){
       delete x.uids
       delete x.count
 
-      
-
     } 
 
     var select = newAction.selectAll("select").data(function(x){return [x]})

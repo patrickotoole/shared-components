@@ -45,16 +45,12 @@ RB.crusher.controller = (function(controller) {
 
       crusher.subscribe.add_subscriber(["actions","funnels","campaigns"], function(){
 
-        console.log(crusher.cache.campaigns)
-
         crusher.cache.funnelData.map(function(x){
           x.actions.map(function(y){
             var f = crusher.cache.campaign_map[x.funnel_id]
             if (f) {
-              console.log(f,y.order)
               var c = f[y.order]
               if (c) {
-                console.log(c)
                 y.campaign = c[0]
               }
             }
@@ -165,6 +161,7 @@ RB.crusher.controller = (function(controller) {
         d3.xhr(funnelURL)
           .header("Content-Type", "application/json")
           .send(type, JSON.stringify(cdata), function(err, rawData){
+            debugger
             var resp = JSON.parse(rawData.response).response
             data['funnel_name'] = resp.funnel_name
             data['funnel_id'] = resp.funnel_id

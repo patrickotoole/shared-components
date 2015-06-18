@@ -43,7 +43,11 @@ RB.crusher.subscribe = (function(subscribe) {
 
     this.run_callback = function() {
       var arr = subscriptions.map(function(s){return sdata[s]})
-      callback.apply(false,arr)
+      try {
+        callback.apply(false,arr)
+      } catch(e) {
+        console.log(e)
+      }
     } 
 
     var self = this

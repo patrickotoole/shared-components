@@ -65,7 +65,8 @@ class VisitUidsHandler(BaseHandler, AnalyticsBase):
         #QUERY = QUERY + " limit 100"
         
         from cassandra.query import SimpleStatement
-        logging.info(QUERY)
+        #logging.info(QUERY)
+        logging.info("Started uids request...")
         try:
             return self.cassandra.execute(QUERY,None,60)
         except ReadTimeout:

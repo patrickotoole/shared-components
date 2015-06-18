@@ -135,8 +135,7 @@ class FunnelHandler(FunnelBase,FunnelHelpers):
             URL = "/segment?advertiser_id=%s" % str(advertiser_id)
             seg_obj = {
                 "segment": {
-                    "short_name":"Funnel: " + obj['funnel_name'] + "_" + obj['advertiser'],
-                    "code":"funnel_" + obj['advertiser'] + "_" + obj['funnel_name'].replace(" ","_") 
+                    "short_name":"Funnel: " + obj['funnel_name'] + " - " + obj['advertiser']
                 }
             }
             data = self.api.post(URL,ujson.dumps(seg_obj))
