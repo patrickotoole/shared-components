@@ -39,12 +39,18 @@ if __name__ == "__main__":
         domain_list_id = params['domain_list_id']
         metric = params['metric']
         threshold = params['threshold']
+        
+        try:
+            D = domain_list_push.DomainVisPush(domain_list_id, metric, threshold)
+            D.load_data()
+            D.filter()
+            D.push()
 
-        D = domain_list_push.DomainVisPush(domain_list_id, metric, threshold)
-        D.load_data()
-        D.filter()
-        D.push()
-
+        except:
+            e = sys.exc_info()[0]
+            logger.error(e)
         logger.info("domain list push finished SUCCESSFULLY with %s" %config_name)
+
+        
 
 

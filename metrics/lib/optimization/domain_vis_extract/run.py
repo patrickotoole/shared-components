@@ -18,9 +18,13 @@ if __name__ == "__main__":
     import logsetup
     logsetup.configure_log(subject="domain_visibility_extract")
 
-
     logger.info("Extracting visibility data for %s to %s" %(START_DATE, END_DATE))
-    V = domain_extract.DomainVis(START_DATE, END_DATE, True)
-    V.load_domains()
-    V.filter_domains()
-    V.push()
+
+    try:	
+	    V = domain_extract.DomainVis(START_DATE, END_DATE, True)
+	    V.load_domains()
+	    V.filter_domains()
+	    V.push()
+    except:
+        e = sys.exc_info()[0]
+        logger.error(e)

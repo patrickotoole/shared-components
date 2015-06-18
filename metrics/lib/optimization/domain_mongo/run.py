@@ -21,9 +21,13 @@ if __name__ == "__main__":
     logsetup.configure_log(subject="domain_whois")
 
     logger.info("Extracting whois data for %s" %TODAY)
-    D = domain_whois.DomainWhois(TODAY, TODAY, START_HOUR, END_HOUR)
-    
-    D.load_domains()
-    D.clean_domains()
-    D.filter_domains()
-    D.push_whois()
+
+    try:
+        D = domain_whois.DomainWhois(TODAY, TODAY, START_HOUR, END_HOUR)
+        D.load_domains()
+        D.clean_domains()
+        D.filter_domains()
+        D.push_whois()
+    except:
+        e = sys.exc_info()[0]
+        logger.error(e)

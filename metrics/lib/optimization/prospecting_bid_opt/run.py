@@ -96,8 +96,13 @@ if __name__ == "__main__":
 
         logger.info("Starting prospecting_bid_opt with %s" %config_name)
         logger.info(pprint.pformat(params))
-        runner = Runner(params)
-        runner.run()
+        
+        try:
+            runner = Runner(params)
+            runner.run()
+        except:
+            e = sys.exc_info()[0]
+            logger.error(e)
 
         logger.info("prospecting_bid_opt FINISHED SUCCESSFULLY with config %s\n\n\n" %config_name)
         time.sleep(120)
