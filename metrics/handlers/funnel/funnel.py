@@ -8,8 +8,9 @@ from funnel_base import FunnelBase, FunnelHelpers
 
 class FunnelHandler(FunnelBase,FunnelHelpers):
 
-    def initialize(self, db=None, **kwargs):
+    def initialize(self, db=None, api=None, **kwargs):
         self.db = db
+        self.api = api
 
         self.required_cols = [
             "advertiser",
@@ -128,6 +129,19 @@ class FunnelHandler(FunnelBase,FunnelHelpers):
             self.db.autocommit = False
             conn = self.db.create_connection()
             cur = conn.cursor()
+
+            Q = "select external_advertiser_id from advertiser where pixel_source_name = '%s'" 
+            advertiser_id = self.db.select_dataframe(Q % obj['advertiser']).values[0][0]
+            URL = "/segment?advertiser_id=%s" % str(advertiser_id)
+            seg_obj = {
+                "segment": {
+                    "short_name":"Funnel: " + obj['funnel_name'] + "_" + obj['advertiser'],
+                    "code":"funnel_" + obj['advertiser'] + "_" + obj['funnel_name'].replace(" ","_") 
+                }
+            }
+            data = self.api.post(URL,ujson.dumps(seg_obj))
+            print data.content
+            obj['segment_id'] = data.json['response']['segment']['id']
             
             cur.execute(INSERT_FUNNEL % obj)
             funnel_id = cur.lastrowid
@@ -143,6 +157,9 @@ class FunnelHandler(FunnelBase,FunnelHelpers):
                 })
 
             obj["funnel_id"] = funnel_id
+
+            # TODO: need to make the segment associated with the funnel
+             
 
             conn.commit()
 

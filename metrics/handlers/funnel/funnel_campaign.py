@@ -230,9 +230,6 @@ class FunnelCampaignHandler(CampaignHandler):
 
     @tornado.web.asynchronous
     def post(self):
-        # ERROR CASES: missing segment on funnel
-        # bad price information
-        # bad frequency information
 
         advertiser_id = 302568 #self.current_advertiser
         obj = ujson.loads(self.request.body)
