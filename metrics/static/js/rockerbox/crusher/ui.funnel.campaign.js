@@ -8,6 +8,7 @@ RB.crusher.ui.funnel.campaign = (function(campaign){
   var registered
 
   campaign.methods = {
+    // for all these functions, this is bound to the row...
     update: function(x) {
       var id = x.action_id
       var campaign = this.filter(function(y){return y.action_id == id})
@@ -20,10 +21,55 @@ RB.crusher.ui.funnel.campaign = (function(campaign){
       campaign.selectAll("div.estimated-imps span.value").text(d3.format(",")(imps))
       campaign.selectAll("div.estimated-cost span.value").text(d3.format("$.2")(imps * p / 1000))
 
+    },
+    toggle: function(x){
+      var selected = this.filter(function(c) {return c == x})
+      var ischecked = selected.selectAll("input[type=checkbox]").property("checked")
+
+      var freq = selected.selectAll('.daily-freq input').property("value")
+      var price = selected.selectAll('.bid-price input').property("value")
+      var obj = {
+        details: {
+          funnel_id: x.funnel_id,
+          step: x.order,
+          funnel_name: selected[0][0].parentNode.__data__.funnel_name,
+        },
+        campaign: {
+          state: ischecked ? "active" : "inactive",
+          base_bid: price,
+          daily_budget: x.avails_raw.avails * freq * price / 1000
+        },
+        profile: {
+          max_day_imps: freq 
+        }
+      }
+
+      if (!x.campaign) {
+      
+        d3.xhr("/crusher/funnel/campaign") 
+          .header("Content-Type", "application/json")
+          .post(
+            JSON.stringify(obj),
+            function(err,raw){
+              var json = JSON.parse(raw.response)
+              if (json.error) {
+                console.log(json.error)
+              }
+              x.campaign = json.campaign
+              
+            }
+          );
+      } else {
+        console.log("UPDATE")
+      }
+      
     }
   }
 
   campaign.build = function(wrapper) {
+
+    // NEED TO MAKE THIS BUILD STEP DEPENDENT ON AVAILABILITY
+
     var camp = campaign.row(wrapper)
     campaign.info(camp) 
     campaign.settings(camp)
@@ -57,53 +103,19 @@ RB.crusher.ui.funnel.campaign = (function(campaign){
 
     var onoff = d3_updateable(info,"div.switch","div")
       .classed("switch", true)
-      .classed("hidden",function(x){return !x.campaign})
       .style("height","30px")
 
-    var create = d3_updateable(info,"div.create","div")
-      .classed("create", true)
-      .classed("hidden",function(x){return x.campaign})
-      .style("height","30px")
-      
-    d3_updateable(create,"button","button")
-      .classed("btn btn-small btn-default", true)
-      .text("Create")
-      .on("click",function(x){
-        var selected = this.filter(function(c) {return c == x})
-
-        var freq = selected.selectAll('.daily-freq input').property("value")
-        var price = selected.selectAll('.bid-price input').property("value")
-        var obj = {
-          details: {
-            funnel_id: x.funnel_id,
-            step: x.order,
-            funnel_name: selected[0][0].parentNode.__data__.funnel_name,
-          },
-          campaign: {
-            active: 1,
-            base_bid: price,
-            daily_budget: x.avails_raw.avails * freq * price / 1000
-          },
-          profile: {
-            max_day_imps: freq 
-          }
-        }
-        
-        d3.xhr("/crusher/funnel/campaign") 
-          .header("Content-Type", "application/json")
-          .post(
-            JSON.stringify(obj),
-            function(err,raw){console.log(raw)}
-          );
-        
-      }.bind(row))
- 
-
+    
     d3_updateable(onoff,"input","input")
       .attr("type","checkbox")
       .property("checked",function(x){return (x.campaign && x.campaign.state == "active") ? "checked": null})
+      .on("click",campaign.methods.toggle.bind(row))
 
-    $(".switch input[type='checkbox']").bootstrapSwitch();
+    $(".switch input[type='checkbox']").bootstrapSwitch({
+      onSwitchChange: function(event,state) {
+        campaign.methods.toggle.bind(row)(event.currentTarget.__data__)
+      }
+    });
 
 
   }

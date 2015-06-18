@@ -80,7 +80,14 @@ class FunnelCampaignHandler(CampaignHandler):
         URL = "/campaign?advertiser_id=%s&line_item=%s" % (advertiser_id,line_item_id) 
         data = self.api.post(URL,data=ujson.dumps(data))
         logging.info(data.content)
-        return data.json['response']['campaign']
+
+        response = data.json['response']
+        error = response.get("error",False)
+        if error:
+            raise Exception(error)
+        
+
+        return response['campaign']
 
 
     @decorators.deferred
@@ -105,7 +112,15 @@ class FunnelCampaignHandler(CampaignHandler):
         }]
 
         data = self.api.post(URL,data=ujson.dumps(data))
-        return data.json['response']['profile']
+        logging.info(data.content)
+
+        response = data.json['response']
+        error = response.get("error",False)
+        if error:
+            raise Exception(error)
+        
+
+        return response['profile']
 
     @decorators.deferred
     def insert_campaign_funnel(self,funnel_id, step, campaign_id):
@@ -119,19 +134,23 @@ class FunnelCampaignHandler(CampaignHandler):
     @defer.inlineCallbacks 
     def create(self, name, advertiser_id, funnel_id, segment_value, campaign, profile):
 
-        line_item_id = yield self.get_line_item_id(advertiser_id) 
-        segment_id = yield self.get_segment_id(funnel_id)
+        try:
+            line_item_id = yield self.get_line_item_id(advertiser_id) 
+            segment_id = yield self.get_segment_id(funnel_id)
 
-        campaign = yield self.create_campaign(line_item_id,advertiser_id,name,campaign)
-        profile = yield self.create_profile(advertiser_id,campaign['id'],segment_id,segment_value,profile)
-        campaign_with_profile = yield self.set_campaign_profile_id(advertiser_id,campaign['id'],profile['id'])
+            campaign = yield self.create_campaign(line_item_id,advertiser_id,name,campaign)
+            profile = yield self.create_profile(advertiser_id,campaign['id'],segment_id,segment_value,profile)
+            campaign_with_profile = yield self.set_campaign_profile_id(advertiser_id,campaign['id'],profile['id'])
 
-        # after the campaign is created, add the campaign_id to the table
-        campaign_id = campaign['id']
-        yield self.insert_campaign_funnel(funnel_id,segment_value,campaign_id)
+            # after the campaign is created, add the campaign_id to the table
+            campaign_id = campaign['id']
+            yield self.insert_campaign_funnel(funnel_id,segment_value,campaign_id)
+            obj = { "campaign":campaign_with_profile, "profile":profile }
+        except Exception as e:
+            obj = {"error": str(e)}
         
 
-        obj = { "campaign":campaign_with_profile, "profile":profile }
+        
         
         self.write(ujson.dumps(obj))
         self.finish() 
