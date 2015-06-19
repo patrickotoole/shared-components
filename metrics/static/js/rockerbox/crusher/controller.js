@@ -45,27 +45,14 @@ RB.crusher.controller = (function(controller) {
 
       crusher.subscribe.add_subscriber(["actions","funnels","campaigns"], function(){
 
-        crusher.cache.funnelData.map(function(x){
-          x.actions.map(function(y){
-            var f = crusher.cache.campaign_map[x.funnel_id]
-            if (f) {
-              var c = f[y.order]
-              if (c) {
-                y.campaign = c[0]
-              }
-            }
-          })
-        })
+        crusher.api.helpers.attachCampaigns()
 
         var data = (id) ? 
           crusher.cache.funnelData.filter(function(x){return x.funnel_id == id}) : 
           crusher.cache.funnelData
 
         crusher.ui.funnel.build(data,crusher.cache.actionData)
-
-        crusher.subscribe.add_subscriber(["tf_idf"], function(){
-          crusher.ui.funnel.buildShow()
-        },"funnel_view_show",true,true)
+        controller.funnel.show()
 
       },"funnel_view",true,true)
     },
@@ -205,27 +192,41 @@ RB.crusher.controller = (function(controller) {
           console.log(rawData)
         }); 
     },
-    show: function(data,callback,wait) {
+    show: function() {
      
-      if (wait) wait()
+      var funnel = crusher.ui.funnel.buildShow()
+      var data = funnel.datum()
 
-      crusher.api.visits(function(){
-        var q = queue(5)
-         
-        var newSteps = data.actions.filter(function(action){
-          crusher.api.actionToUIDs(action,q)
-          return !action.visits_data
-        })
+      var uids = "funnel_uids_" + data.funnel_id,
+        avails = "funnel_avails_" + data.funnel_id,
+        domains = "funnel_domains_" + data.funnel_id
 
-        if (newSteps.length > 0) {
-          q.awaitAll(function(){
-            crusher.ui.funnel.methods.compute_uniques(data.actions)
-            callback()
-          })
-        } else {
-          q.awaitAll(callback)
-        }
-      })
+      crusher.ui.funnel.wait(funnel)
+      crusher.subscribe.add_subscriber(["tf_idf","visits"], function() {
+
+        crusher.subscribe.add_subscriber([uids],function(){
+          crusher.ui.funnel.show(funnel)
+          // register this other components that need specific data
+
+          // domains
+          crusher.subscribe.add_subscriber(
+            [domains],
+            function(x) {
+              crusher.ui.funnel.show.component.domains.bind(false,funnel)(x)
+            },"show_domains",true,true,
+            data
+          )
+
+          
+
+          // avails
+          
+
+
+        },"show",true,true,data)
+
+      },"show_requirements", true, true)
+
     },
     show_domains: function(data,callback) {
       crusher.subscribe.add_subscriber(["UIDsToDomains"], callback, "show_domains",true,true,data)

@@ -20,7 +20,7 @@ RB.crusher.ui.funnel = (function(funnel) {
     var reduced = actions[actions.length -1].funnel_uids
     var domains_callback = funnel.show.component.domains.bind(false,funnels)
 
-    crusher.controller.funnel.show_domains(reduced,domains_callback)
+    //crusher.controller.funnel.show_domains(reduced,domains_callback)
     funnel.show.component.lookalike(funnels)
   }
 
@@ -58,12 +58,6 @@ RB.crusher.ui.funnel = (function(funnel) {
 
     var f = d3_updateable(target,".show","div")
       .classed("show",true)
-
-    var wait = funnel.wait.bind(false,f),
-      show = funnel.show.bind(false,f),
-      data = f.datum()
-
-    crusher.controller.funnel.show(data, show, wait)
 
     return f
   }
@@ -369,7 +363,6 @@ RB.crusher.ui.funnel = (function(funnel) {
 
     },
     domains: function(funnels,data) {
-      
       var data = data.map(function(x){
         var pop_domain = RB.crusher.pop_domains[x.domain] || {}
         var idf = pop_domain.idf || 12
@@ -377,7 +370,7 @@ RB.crusher.ui.funnel = (function(funnel) {
         return x
       }).sort(function(x,y){
         return y.wuid - x.wuid
-      }).slice(0,15)
+      }).slice(0,20)
 
       var cat = d3.nest()
         .key(function(x) {

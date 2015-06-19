@@ -115,18 +115,66 @@ RB.crusher.ui.funnel = (function(funnel) {
     }
   } 
 
+  funnel.register_publishers = function(data) {
+    var uids = "funnel_uids_" + data.funnel_id
+    var avails = "funnel_avails_" + data.funnel_id 
+    var domains = "funnel_domains_" + data.funnel_id 
+
+    crusher.subscribe.register_publisher(uids,function(cb,data){
+
+      var q = queue(5)
+      var newSteps = data.actions.filter(function(action){
+        crusher.api.actionToUIDs(action,q)
+        return !action.visits_data
+      })
+
+      if (newSteps.length > 0) {
+        q.awaitAll(function(){
+          crusher.ui.funnel.methods.compute_uniques(data.actions)
+          cb.apply(false,arguments)
+        })
+      } else {
+        q.awaitAll(cb)
+      }
+
+    })
+
+    crusher.subscribe.register_publisher(avails,function(cb,data){
+      var q = queue(5)
+      data.actions.map(function(action) { 
+        crusher.api.actionToAvails(function(){},action,q)
+      })
+      q.awaitAll(cb)
+    })
+
+    crusher.subscribe.register_publisher(domains,function(cb,data){
+      var last = data.actions[data.actions.length - 1].funnel_uids
+      var q = queue()
+      crusher.api.UIDsToDomains(function(){},last,q)
+      q.awaitAll(function(x,y){
+        cb(y[0])
+      })
+    })
+
+
+
+    
+
+  }
+
   funnel.build = function(funnel_data, action_data) {
     var target = d3.selectAll(".funnel-wrapper")
     
     var data = funnel_data[0] ? [funnel_data[0]] : []
 
+    funnel.register_publishers(data[0])
+
     var funnels = target.selectAll(".funnel")
       .data(data)
 
-      funnels
-        .enter()
-        .append("div")
-        .classed("funnel",true)
+    funnels.enter()
+      .append("div")
+      .classed("funnel",true)
 
     d3_updateable(funnels,"h5","h5")
       .text("Edit a funnel")
