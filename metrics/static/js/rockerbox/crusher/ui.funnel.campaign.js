@@ -5,6 +5,7 @@ RB.crusher.ui.funnel = RB.crusher.ui.funnel || {}
 
 RB.crusher.ui.funnel.campaign = (function(campaign){
 
+  var crusher = RB.crusher
   var registered
 
   campaign.methods = {
@@ -36,7 +37,7 @@ RB.crusher.ui.funnel.campaign = (function(campaign){
         },
         campaign: {
           state: ischecked ? "active" : "inactive",
-          base_bid: price,
+          base_bid: parseFloat(price),
           daily_budget: x.avails_raw.avails * freq * price / 1000
         },
         profile: {
@@ -44,25 +45,8 @@ RB.crusher.ui.funnel.campaign = (function(campaign){
         }
       }
 
-      if (!x.campaign) {
-      
-        d3.xhr("/crusher/funnel/campaign") 
-          .header("Content-Type", "application/json")
-          .post(
-            JSON.stringify(obj),
-            function(err,raw){
-              var json = JSON.parse(raw.response)
-              if (json.error) {
-                console.log(json.error)
-              }
-              x.campaign = json.campaign
-              
-            }
-          );
-      } else {
-        console.log("UPDATE")
-      }
-      
+      crusher.controller.campaign.save(obj,x)
+       
     }
   }
 
@@ -75,6 +59,8 @@ RB.crusher.ui.funnel.campaign = (function(campaign){
     campaign.settings(camp)
     campaign.estimates(camp)
     campaign.reporting(camp)
+    campaign.debug(camp)
+
 
     camp.sort(function(x,y){return x.pos - y.pos})
     camp.exit().remove()
@@ -88,6 +74,12 @@ RB.crusher.ui.funnel.campaign = (function(campaign){
       .style("padding-bottom","15px")
       .style("border-bottom","1px solid #f0f0f0")
       .style("margin-bottom","15px")
+  }
+
+  campaign.debug = function(row) {
+    d3_updateable(row,".debug","div")
+      .text(function(x){return JSON.stringify(x.campaign)})
+    
   }
 
   campaign.info = function(row) {

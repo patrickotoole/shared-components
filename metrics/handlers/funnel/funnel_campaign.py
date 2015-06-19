@@ -66,7 +66,7 @@ class FunnelCampaignHandler(CampaignHandler):
         data = {
             "campaign" : {
                 "name": name,
-                "state": "inactive",
+                "state": campaign.get("state","inactive"),
                 "advertiser_id":  advertiser_id,
                 "line_item_id": line_item_id,
                 "lifetime_budget": campaign.get("lifetime_budget",5000),
@@ -184,7 +184,7 @@ class FunnelCampaignHandler(CampaignHandler):
         camp_df = pandas.DataFrame(camp).set_index("id")
         funnel_campaign = yield self.defer_get_funnel_campaigns_by_campaign_ids(map(str,camp_df.index))
 
-        df = camp_df.join(funnel_campaign.set_index("campaign_id"))
+        df = camp_df.join(funnel_campaign.set_index("campaign_id")).reset_index()
         camp_values = df.fillna(0).T.to_dict().values()
         self.write(ujson.dumps(camp_values))
         self.finish()
@@ -206,6 +206,16 @@ class FunnelCampaignHandler(CampaignHandler):
             self.write("need to be logged in")
             self.finish()
 
+    @defer.inlineCallbacks
+    def modify_campaign(self,advertiser_id,campaign_id,campaign):
+        campaign = yield self.defer_modify_campaign(advertiser_id,campaign_id,campaign)
+        obj = {"campaign":campaign['campaign']} 
+
+        self.write(ujson.dumps(obj))
+        self.finish()
+
+
+
 
     @tornado.web.asynchronous
     def put(self):
@@ -222,6 +232,7 @@ class FunnelCampaignHandler(CampaignHandler):
             obj = ujson.loads(self.request.body)
             campaign = obj.get("campaign",False)
 
+        print advertiser_id, campaign_id, campaign
         if advertiser_id and campaign_id and campaign:
             self.modify_campaign(advertiser_id,campaign_id,campaign)
         else:

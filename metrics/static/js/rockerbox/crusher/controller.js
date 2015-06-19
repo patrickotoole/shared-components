@@ -138,6 +138,23 @@ RB.crusher.controller = (function(controller) {
     if (type.length) controller.initializers[type](id)
   }
 
+  controller.campaign = {
+    save: function(data,obj) {
+      var type = obj['campaign'] ? "PUT" : "POST"
+      var URL = ((type == "PUT") && (obj['campaign']['id'])) ? 
+        "/crusher/funnel/campaign?format=json&id=" + obj['campaign']['id'] : 
+        "/crusher/funnel/campaign?format=json"
+
+      d3.xhr(URL)
+        .header("Content-Type", "application/json")
+        .send(type, JSON.stringify(data),function(err,raw){
+          var json = JSON.parse(raw.response)
+          if (json.error) console.log(json.error)
+          obj.campaign = json.campaign
+        });
+    }
+  }
+
   controller.funnel = {
     new: function(target) {
       crusher.subscribe.add_subscriber(["actions"],function(actions){
