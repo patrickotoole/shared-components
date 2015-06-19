@@ -59,7 +59,7 @@ RB.crusher.ui.funnel.campaign = (function(campaign){
     campaign.settings(camp)
     campaign.estimates(camp)
     campaign.reporting(camp)
-    campaign.debug(camp)
+    //campaign.debug(camp)
 
 
     camp.sort(function(x,y){return x.pos - y.pos})
@@ -177,7 +177,6 @@ RB.crusher.ui.funnel.campaign = (function(campaign){
 
     d3_updateable(imps,"span.value","span")
       .classed("value pull-right",true)
-      .text("value")
 
     var cost = d3_updateable(estimates,"div.estimated-cost","div")
       .classed("estimated-cost estimate",true)
@@ -189,7 +188,6 @@ RB.crusher.ui.funnel.campaign = (function(campaign){
 
     d3_updateable(cost,"span.value","span")
       .classed("value pull-right",true)
-      .text("value")
 
 
 
@@ -218,6 +216,9 @@ RB.crusher.ui.funnel.campaign = (function(campaign){
       .style("font-weight",100)
       .style("color","#ccc")
 
+    row.attr("dummy",function(x){
+      if (x.avails_raw) campaign.methods.update.bind(row)(x)
+    })
 
  
   }

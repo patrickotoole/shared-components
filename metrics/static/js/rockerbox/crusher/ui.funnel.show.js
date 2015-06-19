@@ -395,7 +395,7 @@ RB.crusher.ui.funnel = (function(funnel) {
 
 
       var h5 = d3_updateable(exchange_data,"h5","h5")
-        .text("Off-site Convertor Activity")
+        .text("Convertor Off-site Activity")
             
       var domain_chart = d3_updateable(exchange_data,".domain-chart","div",false,function(x){
           return x.funnel_id
@@ -440,7 +440,7 @@ RB.crusher.ui.funnel = (function(funnel) {
             "Num Categories: " + cat.length
         })
 
-
+      exchange_summary.exit().remove()
 
       
     },
