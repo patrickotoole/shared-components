@@ -13,15 +13,15 @@ RB.crusher.ui.funnel = (function(funnel) {
 
     funnel.show.component.steps(funnels)
     funnel.show.component.summary(funnels)
-    funnel.show.component.campaign(funnels)
+    //funnel.show.component.campaign(funnels)
     
 
-    var actions = funnels.datum().actions
-    var reduced = actions[actions.length -1].funnel_uids
-    var domains_callback = funnel.show.component.domains.bind(false,funnels)
+    //var actions = funnels.datum().actions
+    //var reduced = actions[actions.length -1].funnel_uids
+    //var domains_callback = funnel.show.component.domains.bind(false,funnels)
 
     //crusher.controller.funnel.show_domains(reduced,domains_callback)
-    funnel.show.component.lookalike(funnels)
+    //funnel.show.component.lookalike(funnels)
   }
 
   funnel.wait = function(funnels) {
@@ -138,11 +138,8 @@ RB.crusher.ui.funnel = (function(funnel) {
       exchanges.sort(function(x,y) {return x.pos - y.pos})
       exchanges.exit().remove()
 
-      var bound = funnel.show.component.avails.bind(false,exchanges)
-
-      crusher.controller.funnel.show_avails(summary.datum(),bound)
-
-      
+      //var bound = funnel.show.component.avails.bind(false,exchanges)
+      //crusher.controller.funnel.show_avails(summary.datum(),bound)
             
     },
     avails: function(exchanges) {

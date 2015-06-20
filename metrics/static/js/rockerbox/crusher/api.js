@@ -316,6 +316,23 @@ RB.crusher.api = (function(api) {
           deferred_cb(null,[])
         } 
       }),
+      UIDsToDomainsNoQueue: function(cb,uids) {
+        var data = { "uids":uids }
+
+        if (uids.length) {
+          d3.xhr(api.URL.visitDomains)
+            .header("Content-Type", "application/json")
+            .post(
+              JSON.stringify(data),
+              function(err, rawData){
+                var resp = JSON.parse(rawData.response)
+                cb(resp)
+              }
+            );
+        } else {
+          cb([])
+        } 
+      },
       actionToAvails: genericQueuedAPIWithData(function(action,cb,deferred_cb) {
         var data = { "uids":action.funnel_uids }
         if (action.funnel_uids.length && (!action.avails)) {
@@ -326,11 +343,11 @@ RB.crusher.api = (function(api) {
               function(err, rawData){
                 var resp = JSON.parse(rawData.response)
                 action.avails_raw = resp[0]
-                deferred_cb(null,cb.bind(false,action))
+                deferred_cb(null,action)
               }
             );
         } else {
-          deferred_cb(null,cb.bind(false,[]))
+          deferred_cb(null,action)
         } 
       })
     } 

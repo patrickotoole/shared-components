@@ -7,8 +7,9 @@ RB.crusher.subscribe = (function(subscribe) {
     this.lock = false
 
     this.callback = function(data) {
-      console.debug("publisher finished",name, data) 
+      console.log("publisher finished",name, data) 
       callback(data || true) 
+      console.log("finished callback for",name)
       self.lock = false 
     }
 
@@ -39,20 +40,20 @@ RB.crusher.subscribe = (function(subscribe) {
 
     this.run_callback = function() {
       var arr = subscriptions.map(function(s){return sdata[s]})
-      try {
-        console.log(arr)
+      //try {
+        // console.log(arr)
         callback.apply(false,arr)
-      } catch(e) {
-        console.log(e)
-      }
+      //} catch(e) {
+      //  console.log(e)
+      //}
     } 
 
     var self = this
 
     this.evaluate = function (name,data) {
-      console.log(name,data)    
+      // console.log(name,data)    
       self.add_data(name,data)
-      // console.debug("evaluating:" + name, data, sdata, subscriptions)
+      console.log("evaluating:" + name, data, sdata, subscriptions)
       if (self.has_data()) self.run_callback()
     }
   }
@@ -92,12 +93,12 @@ RB.crusher.subscribe = (function(subscribe) {
     var dispatchers = subscribe.dispatchers
 
     var cb = function () {
-      console.debug("running callback for " + name,arguments)
+      console.log("running callback for " + name,arguments)
 
       callback.apply(false,arguments)
 
       if (unpersist) {
-        Object.keys(dispatchers).map(function(dispatch_name){
+        subscriptions.map(function(dispatch_name){
           var dname =  dispatch_name + "." + name
           dispatchers[dispatch_name].on(dname,null)
         })  
@@ -107,7 +108,7 @@ RB.crusher.subscribe = (function(subscribe) {
 
     var subscription = new Subscription(subscriptions,cb)
     
-    Object.keys(dispatchers).map(function(dispatch_name){
+    subscriptions.map(function(dispatch_name){
       var dname =  dispatch_name + "." + name
       dispatchers[dispatch_name].on(dname,subscription.evaluate) 
     })

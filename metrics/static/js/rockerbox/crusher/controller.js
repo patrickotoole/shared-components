@@ -165,7 +165,6 @@ RB.crusher.controller = (function(controller) {
         d3.xhr(funnelURL)
           .header("Content-Type", "application/json")
           .send(type, JSON.stringify(cdata), function(err, rawData){
-            debugger
             var resp = JSON.parse(rawData.response).response
             data['funnel_name'] = resp.funnel_name
             data['funnel_id'] = resp.funnel_id
@@ -197,31 +196,34 @@ RB.crusher.controller = (function(controller) {
       var funnel = crusher.ui.funnel.buildShow()
       var data = funnel.datum()
 
-      var uids = "funnel_uids_" + data.funnel_id,
-        avails = "funnel_avails_" + data.funnel_id,
-        domains = "funnel_domains_" + data.funnel_id
+      var uids = "uids_" + data.funnel_id,
+        avails = "avails_" + data.funnel_id,
+        domains = "domains_" + data.funnel_id
 
       crusher.ui.funnel.wait(funnel)
       crusher.subscribe.add_subscriber(["tf_idf","visits"], function() {
 
         crusher.subscribe.add_subscriber([uids],function(){
           crusher.ui.funnel.show(funnel)
-          // register this other components that need specific data
 
-          // domains
           crusher.subscribe.add_subscriber(
             [domains],
             function(x) {
               crusher.ui.funnel.show.component.domains.bind(false,funnel)(x)
-            },"show_domains",true,true,
+            },"domains",true,true,
             data
           )
-
           
-
-          // avails
-          
-
+          crusher.subscribe.add_subscriber(
+            [avails],
+            function(x) {
+              var exchanges = funnel.selectAll(".exchange-summary .exchange")
+            
+              crusher.ui.funnel.show.component.avails(exchanges)
+              crusher.ui.funnel.show.component.campaign(funnel)
+            },"show_me_the_money",true,true,
+            data
+          )
 
         },"show",true,true,data)
 
