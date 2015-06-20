@@ -1,4 +1,4 @@
 from funnel import *
-from campaigns import FunnelCampaignsHandler
+from lookalike import * 
 from action import *
 from funnel_campaign import *
