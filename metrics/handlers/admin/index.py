@@ -16,9 +16,13 @@ class IndexHandler(BaseHandler):
 
         if advertiser_id: 
             self.set_secure_cookie( "advertiser",advertiser_id )
+
         production_links = [
             ("/streaming", "Streaming"),
-            ("/reporting", "Reporting")
+            ("/reporting", "Reporting"),
+            ("/admin/advertiser/client/reporting", "[NEW] Reporting - admin access (use advertiser parameter)"),
+            ("/pixel", "Pixel Reporting"),
+            ("/hoverboard", "Hoverboard")
         ]
 
         tools = [
