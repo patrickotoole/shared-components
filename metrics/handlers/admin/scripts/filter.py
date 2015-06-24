@@ -10,7 +10,7 @@ from lib.helpers import *
 
 class FilterHandler(tornado.web.RequestHandler):
 
-    def initialize(self, bidder=None,do=None,marathon=None, db=None, redis=None):
+    def initialize(self, bidder=None,do=None,marathon=None, db=None, redis=None, reporting_db=None):
         self.marathon = marathon
         self.db = db
         self.redis = redis
@@ -41,7 +41,6 @@ class FilterHandler(tornado.web.RequestHandler):
     def defer_get_available(self):
         return self.marathon.get("/v2/apps/akka-tree-filter").json['app']['tasks']
     
-
     @defer.inlineCallbacks 
     def get_listeners(self):
         available = yield self.defer_get_available()

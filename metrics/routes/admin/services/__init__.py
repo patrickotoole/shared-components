@@ -42,7 +42,15 @@ class ServiceRoutes(
         import lib.trello.trello as trello
         
         return [
-            (r'/trello/?', trello.TrelloHandler, self.connectors), 
+            (r'/trello/?', trello.TrelloHandler, self.connectors)
         ]
  
+    @namespace("/admin")
+    @connectors("marathon", "reporting_db")
+    def delorean_scripts(self):
+        import handlers.admin.scripts.delorean as delorean
+        
+        return [
+            (r'/delorean/edit/?(.*?)', delorean.DeloreanHandler, self.connectors)
+        ]
  
