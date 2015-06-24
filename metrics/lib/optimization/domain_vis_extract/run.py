@@ -25,6 +25,7 @@ if __name__ == "__main__":
 	    V.load_domains()
 	    V.filter_domains()
 	    V.push()
+        logger.info("Visibility Extraction finished SUCCESSFULLY")
     except:
         e = sys.exc_info()[0]
         logger.error(e)

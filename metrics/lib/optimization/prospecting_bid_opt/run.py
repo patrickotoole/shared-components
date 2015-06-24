@@ -100,11 +100,13 @@ if __name__ == "__main__":
         try:
             runner = Runner(params)
             runner.run()
+            logger.info("prospecting_bid_opt FINISHED SUCCESSFULLY with config %s\n\n\n" %config_name)
+            time.sleep(120)
         except:
             e = sys.exc_info()[0]
             logger.error(e)
 
-        logger.info("prospecting_bid_opt FINISHED SUCCESSFULLY with config %s\n\n\n" %config_name)
-        time.sleep(120)
+        
+        
 
 

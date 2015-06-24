@@ -28,6 +28,7 @@ if __name__ == "__main__":
         D.clean_domains()
         D.filter_domains()
         D.push_whois()
+        logger.info("whois extraction finished SUCCESSFULLY")
     except:
         e = sys.exc_info()[0]
         logger.error(e)
