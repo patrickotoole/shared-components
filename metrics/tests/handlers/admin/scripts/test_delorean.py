@@ -124,7 +124,7 @@ class DeloreanHandlerTest(AsyncHTTPTestCase):
         mock_defer_get_tree.return_value = TREE
         mock_defer_post_tree.return_value = response
 
-        url = "/delorean/append/?label=_lookalike&replace=False"
+        url = "/delorean/edit/?label=_lookalike&replace=False"
         self.fetch(url, method="POST", body=ujson.dumps(TO_APPEND))
 
         args,kwargs = mock_defer_post_tree.call_args
@@ -140,7 +140,7 @@ class DeloreanHandlerTest(AsyncHTTPTestCase):
         mock_defer_get_tree.return_value = TREE
         mock_defer_post_tree.return_value = response
 
-        url = "/delorean/append/?label=_lookalike&replace=True"
+        url = "/delorean/edit/?label=_lookalike&replace=True"
         self.fetch(url, method="POST", body=ujson.dumps(TO_APPEND))
 
         args,kwargs = mock_defer_post_tree.call_args
@@ -155,7 +155,7 @@ class DeloreanHandlerTest(AsyncHTTPTestCase):
         mock_defer_get_tree.return_value = TREE
         mock_defer_post_tree.return_value = response
 
-        url = "/delorean/append/?label=_lookalike&delete=true"
+        url = "/delorean/edit/?label=_lookalike&delete=true"
         r = self.fetch(url, method="POST", body=ujson.dumps(TO_DELETE))
 
         args,kwargs = mock_defer_post_tree.call_args

@@ -51,6 +51,6 @@ class ServiceRoutes(
         import handlers.admin.scripts.delorean as delorean
         
         return [
-            (r'/delorean/append/?(.*?)', delorean.DeloreanHandler, self.connectors)
+            (r'/delorean/edit/?(.*?)', delorean.DeloreanHandler, self.connectors)
         ]
  
