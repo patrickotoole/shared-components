@@ -107,7 +107,7 @@ class DeloreanHandlerTest(AsyncHTTPTestCase):
         self.mock_marathon = mock.MagicMock()
 
         self.app = Application([
-                (r'/delorean/append/?(.*?)', DeloreanHandler, dict(reporting_db=self.db, marathon=self.mock_marathon))
+                (r'/delorean/edit/?(.*?)', DeloreanHandler, dict(reporting_db=self.db, marathon=self.mock_marathon))
         ], cookie_secret = "rickotoole" )
 
         return self.app
