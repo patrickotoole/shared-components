@@ -181,7 +181,9 @@ WHERE = {
     "seller":"seller = '%(seller)s'"
 }
 
-
+HAVING = {
+    "min_served": "served > %(min_served)s"
+}
 
 
 class AdvertiserViewableHandler(AdminReportingBaseHandler):
@@ -191,6 +193,7 @@ class AdvertiserViewableHandler(AdminReportingBaseHandler):
     FIELDS = FIELDS
     GROUPS = GROUPS
     JOINS = JOIN 
+    HAVING = HAVING
 
     OPTIONS = OPTIONS
  
@@ -350,7 +353,8 @@ class AdvertiserViewableHandler(AdminReportingBaseHandler):
                 groups,
                 meta_data.get("fields",[]),
                 self.make_where(),
-                self.make_join(meta_data.get("static_joins",""))
+                self.make_join(meta_data.get("static_joins","")),
+                having = self.make_having()
             )
 
             self.get_data(
