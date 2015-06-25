@@ -42,7 +42,7 @@ class AdminClientReportingHandler(ReportingHandler):
             data = ""
         elif export:
             data = yield self.pull_advertiser_export(advertiser_id)
-       else:
+        else:
             data = yield self.pull_advertiser(advertiser_id)
 
         self.get_content(data,advertiser_id,user)
