@@ -14,6 +14,7 @@ RB.crusher.controller = (function(controller) {
   var visitUID = "/crusher/visit_uids?format=json&url="
   var visitDomains = "/crusher/visit_domains?format=json&kind=domains"
   var funnelURL = "/crusher/funnel?format=json&advertiser=" + source
+  var lookalikeURL = "/crusher/funnel/lookalike?format=json&advertiser=" + source
   
   var filterRecommended = function(x){
     var actions = crusher.cache.actionData.filter(function(z){
@@ -43,9 +44,11 @@ RB.crusher.controller = (function(controller) {
 
       crusher.ui.funnel.buildBase() 
 
-      crusher.subscribe.add_subscriber(["actions","funnels","campaigns"], function(){
+      crusher.subscribe.add_subscriber(["actions","funnels","campaigns","lookalikes"], function(){
 
         crusher.api.helpers.attachCampaigns()
+        crusher.api.helpers.attachLookalikes()
+
 
         var data = (id) ? 
           crusher.cache.funnelData.filter(function(x){return x.funnel_id == id}) : 
@@ -210,6 +213,7 @@ RB.crusher.controller = (function(controller) {
             [domains],
             function(x) {
               crusher.ui.funnel.show.component.domains.bind(false,funnel)(x)
+              crusher.ui.funnel.show.component.lookalike(funnel)
             },"domains",true,true,
             data
           )

@@ -120,6 +120,13 @@ RB.crusher.api = (function(api) {
         })
       })
     },
+    attachLookalikes: function(){
+      crusher.cache.funnelData.map(function(x){
+        var t = crusher.cache.lookalikeFunnel[x.funnel_id] || [{}]
+        console.log(t) 
+        x.lookalikes = t[0].branches || []
+      })
+    },
     matchDomains: function(url_pattern) {
 
       var domains = []
@@ -160,6 +167,7 @@ RB.crusher.api = (function(api) {
     visitAvails: "/crusher/visit_avails?format=json",
 
     campaigns: "/crusher/funnel/campaign?advertiser=" + source,
+    lookalikes: "/crusher/funnel/lookalike?format=json&advertiser=" + source,
 
     funnelURL: "/crusher/funnel?format=json&advertiser=" + source,
     current: addParam(window.location.pathname + window.location.search,"format=json")
@@ -264,6 +272,21 @@ RB.crusher.api = (function(api) {
         if (!cache.funnelData) {
           d3.json(api.URL.funnelURL,function(dd){
             cache.funnelData = dd 
+            deferred_cb(null,cb)
+          })
+        } else {
+          deferred_cb(null,cb)
+        }
+      }),
+      lookalikes: genericQueuedAPI(function(cb,deferred_cb) {
+
+        if (!cache.lookalikeData) {
+          d3.json(api.URL.lookalikes,function(dd){
+            cache.lookalikeData = dd 
+            cache.lookalikeFunnel = d3.nest()
+              .key(function(x){return x.funnel_id})
+              .rollup(function(x){return x})
+              .map(dd)
             deferred_cb(null,cb)
           })
         } else {

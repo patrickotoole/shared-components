@@ -8,11 +8,22 @@ RB.crusher.ui.funnel.campaign = RB.crusher.ui.funnel.campaign || {}
 RB.crusher.ui.funnel.campaign.lookalike = (function(lookalike){
 
   lookalike.build = function(wrapper) {
-    var camp = d3_splat(wrapper,"div.campaign","div",function(x){return x.actions},function(x){return x.action_id})
+    var camp = d3_splat(wrapper,"div.campaign","div",function(x){
+        console.log("LOOKALIKE ROWS: ",x);
+        x.lookalikes.sort(function(x,y){
+          return y.num_converters - x.num_converters
+        })
+        x.lookalikes.map(function(y,i){y.pos = i+1})
+        return x.lookalikes
+      },function(x){return String(x.num_convertors) + String(x.num_users)})
       .classed("campaign row",true)
       .style("padding-bottom","15px")
       .style("border-bottom","1px solid #f0f0f0")
       .style("margin-bottom","15px")
+
+    camp.sort(function(x,y){
+      return y.num_converters - x.num_converters
+    })
 
     var info = d3_updateable(camp,"div.step-info","div") 
       .classed("step-info col-md-2",true) 
@@ -90,17 +101,32 @@ RB.crusher.ui.funnel.campaign.lookalike = (function(lookalike){
 
 
 
+    var targetable = d3_updateable(estimates,"div.convertors","div")
+      .classed("convertors estimate",true)
+
+    d3_updateable(targetable,"span.lab","span")
+      .classed("lab",true)
+      .text("Users in model: ")
+
+    d3_updateable(targetable,"span.value","span")
+      .classed("value pull-right",true)
+      .text(function(x){
+        return d3.format(",")(x.num_converters)
+      })
+
+
+
     var targetable = d3_updateable(estimates,"div.estimated-users","div")
       .classed("estimated-users estimate",true)
 
     d3_updateable(targetable,"span.lab","span")
       .classed("lab",true)
-      .text("Reachable Users: ")
+      .text("Estimated Reach: ")
 
     d3_updateable(targetable,"span.value","span")
       .classed("value pull-right",true)
       .text(function(x){
-        if (x.avails_raw) return x.avails_raw.avails
+        return d3.format(",")(x.num_daily_users_weighted)
       })
 
     var imps = d3_updateable(estimates,"div.estimated-imps","div")
@@ -113,7 +139,9 @@ RB.crusher.ui.funnel.campaign.lookalike = (function(lookalike){
 
     d3_updateable(imps,"span.value","span")
       .classed("value pull-right",true)
-      .text("value")
+      .text(function(x){
+        return d3.format(",")(x.num_daily_imps_weighted)
+      })
 
     var cost = d3_updateable(estimates,"div.estimated-cost","div")
       .classed("estimated-cost estimate",true)
@@ -125,7 +153,9 @@ RB.crusher.ui.funnel.campaign.lookalike = (function(lookalike){
 
     d3_updateable(cost,"span.value","span")
       .classed("value pull-right",true)
-      .text("value")
+      .text(function(x){
+        return d3.format(".3f")(100*x.conv_rate) + "%"
+      })
 
 
 
@@ -148,10 +178,10 @@ RB.crusher.ui.funnel.campaign.lookalike = (function(lookalike){
       .classed("b1",true)
       .text("{")
       .style("font-size","38px")
-      .style("line-height","90px")
+      .style("line-height","120px")
       .style("top","0px")
       .style("left","-5px")
-      .style("transform","scale(1,2)")
+      .style("transform","scale(1,2.5)")
       .style("position","absolute")
       .style("font-weight",100)
       .style("color","#ccc")
@@ -161,18 +191,36 @@ RB.crusher.ui.funnel.campaign.lookalike = (function(lookalike){
       .classed("includes statistic",true)
 
     d3_updateable(includes,"span","span")
-      .text("User has visited: ")
+      .text("User has visited:")
+
+    d3_splat(includes,"div.item","div",
+      function(x){return x.rules.filter(function(x){return x.action == "include"})},
+      function(x){return x.domain}
+    )
+      .classed("item",true)
+      .text(function(x){
+        return x.domain 
+      })
 
     var excludes = d3_updateable(settings,"div.excludes","div")
       .classed("excludes statistic",true)
 
     d3_updateable(excludes,"span","span")
-      .text("And has not visited: ")
+      .text("User has not visited:")
+
+    d3_splat(excludes,"div.item","div",
+      function(x){return x.rules.filter(function(x){return x.action == "exclude"})},
+      function(x){return x.domain}
+    )
+      .classed("item",true)
+      .text(function(x){
+        return x.domain 
+      })
 
 
 
 
-    camp.sort(function(x,y){return x.pos - y.pos})
+    //camp.sort(function(x,y){return x.pos - y.pos})
     camp.exit().remove()
 
   }

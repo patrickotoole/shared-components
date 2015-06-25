@@ -49,7 +49,7 @@ class VisitUidsHandler(BaseHandler, AnalyticsBase):
         data = []
 
         # df = pandas.DataFrame(self.get_w_futures(urls))
-        df = pandas.DataFrame(self.get_w_in(urls, date_clause))
+        df = pandas.DataFrame(self.get_w_in_multiple(urls, date_clause))
 
         return df
 
@@ -72,6 +72,21 @@ class VisitUidsHandler(BaseHandler, AnalyticsBase):
         except ReadTimeout:
             logging.info("Cassandra read timeout...")
             return []
+
+    def get_w_in_multiple(self,urls, date_clause):
+        batch = len(urls) / min(100,len(urls))
+        queries = []
+        for i in range(0,min(100,len(urls))):
+            b = urls[i*batch:(i+1)*batch]
+            where = 'where url IN {}'
+            if date_clause:
+                where = where + " and {}".format(date_clause)
+            in_clause = self.make_in_clause(b)
+            WHERE = where.format(in_clause)
+            QUERY = self.query + WHERE 
+            queries.append(QUERY)
+
+        return self.batch_execute(queries)
             
 
     def get_w_futures(self, urls):

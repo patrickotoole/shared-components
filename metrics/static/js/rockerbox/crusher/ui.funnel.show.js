@@ -13,7 +13,7 @@ RB.crusher.ui.funnel = (function(funnel) {
 
     funnel.show.component.steps(funnels)
     funnel.show.component.summary(funnels)
-    //funnel.show.component.campaign(funnels)
+    //funnel.show.component.lookalike(funnels)
     
 
     //var actions = funnels.datum().actions

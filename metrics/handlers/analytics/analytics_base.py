@@ -11,16 +11,19 @@ class AnalyticsBase(object):
     
     def batch_execute(self, queries):
         futures = []
-        for query in queries:
+        results = []
+        for i, query in enumerate(queries):
             self.logging.info(query)
-            future = self.cassandra.select_async(query)
-            futures.append(future)
+            self.logging.info("QUERY: %s" % i)
+            results = results + self.cassandra.execute(query,None,60)
+        """    futures.append(future)
 
         results = []
 
         for future in futures:
-            result = future.result()
+            result = future.result(60)
             results.extend(result)
+        """
         return results
         
     def format_timestamp(self, date):
