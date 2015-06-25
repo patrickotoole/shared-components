@@ -13,7 +13,7 @@ import unittest
 import metrics.handlers.admin.scripts.opt.opt_rules as handler
 
 CREATE_TABLE = """
-CREATE TABLE opt_rules ( 
+CREATE TABLE IF NOT EXISTS opt_rules ( 
     rule_group_id int(11) NOT NULL, 
     rule_group_name varchar(100) NOT NULL,
     rule varchar(1000) NOT NULL,

@@ -20,6 +20,16 @@ class AdminClientReportingHandler(ReportingHandler):
         print df
         return df.external_advertiser_id.iloc[0]
 
+    @decorators.deferred
+    def pull_advertiser(self,advertiser_id):
+        start_date = self.get_argument("start_date",False)
+        params = {"advertiser_id": advertiser_id,"date":""}
+            
+        q = ADMIN_MATERIALIZED_VIEW % params
+        print q
+        return self.db.select_dataframe(q)
+
+
     @defer.inlineCallbacks
     def get_data(self,_format,export, advertiser):
 

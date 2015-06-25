@@ -1,6 +1,8 @@
 BRAND_QUERY = "select external_id id, external_advertiser_id advertiser_id from creative"
 
 MATERIALIZED_VIEW = "SELECT * from reporting.bucket_reporting where external_advertiser_id = %(advertiser_id)s"
+ADMIN_MATERIALIZED_VIEW = "SELECT * from reporting.bucket_reporting_admin where external_advertiser_id = %(advertiser_id)s"
+
 
 IMPS_QUERY = """
 select 

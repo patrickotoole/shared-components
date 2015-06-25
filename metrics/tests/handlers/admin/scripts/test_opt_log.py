@@ -16,7 +16,7 @@ import unittest
 from metrics.handlers.admin.scripts.opt import opt_log
 
 CREATE_TABLE = """
-CREATE TABLE opt_log (
+CREATE TABLE IF NOT EXISTS opt_log (
   value_group_id int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
   rule_group_id int(11) NOT NULL,
   last_modified timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -31,7 +31,7 @@ CREATE TABLE opt_log (
 """
 
 CREATE_RULES_TABLE = """
-CREATE TABLE opt_rules (
+CREATE TABLE IF NOT EXISTS opt_rules (
     rule_group_id int(11) NOT NULL,
     rule_group_name varchar(100) NOT NULL,
     rule varchar(1000) NOT NULL,
@@ -41,7 +41,7 @@ CREATE TABLE opt_rules (
 """
 
 CREATE_VALUES_TABLE = """
-CREATE TABLE opt_values (
+CREATE TABLE IF NOT EXISTS opt_values (
     value_group_id int(11) NOT NULL,
     metric_name varchar(1000) NOT NULL,
     metric_value varchar(1000) NOT NULL
