@@ -8,6 +8,12 @@ from sklearn import tree
 from sklearn.externals.six import StringIO
 from sklearn.feature_extraction import DictVectorizer
 
+import logging
+formatter = '%(asctime)s:%(levelname)s - %(message)s'
+logging.basicConfig(level=logging.INFO, format=formatter)
+
+logger = logging.getLogger()
+
 class Tree:
     def __init__(self, df, training_column_name, class_column_name, export_path=None, num_sample_days=7, sample_size=.001):
         self.df = df
@@ -20,7 +26,7 @@ class Tree:
 
         self.good_leaves = self.get_good_leaves()
         self.branches = self.make_branches()
-        print self.branches
+        logger.info(self.branches)
 
     def make_branches(self):
         branches = []
@@ -66,22 +72,22 @@ class Tree:
         df_dict = X.to_dict(outtype="records")
         df_dict = map(self.flatten_domains, df_dict)
 
-        print "Transforming dictionary to vectorized features..."
+        logger.info("Transforming dictionary to vectorized features...")
         v = DictVectorizer(sparse=True)
         X = v.fit_transform(df_dict)
 
-        print "Performing feature selection..."
+        logger.info("Performing feature selection...")
         b = fs.SelectKBest(fs.chi2, k=num_features)
         X = b.fit_transform(X, y).toarray()
 
-        print "Determining sample weights..."
+        logger.info("Determining sample weights...")
         weight_value = 1.0 * y.value_counts()['0'] / y.value_counts()['1']
 
-        print "Using weight = {}...".format(weight_value)
+        logger.info("Using weight = {}...".format(weight_value))
 
         sample_weight = np.array([weight_value if i == '1' else 1 for i in y])
 
-        print "Learning tree..."
+        logger.info("Learning tree...")
         clf = tree.DecisionTreeClassifier( criterion="gini", 
                                            max_depth=max_depth, 
                                            min_samples_leaf=min_samples, 
@@ -94,10 +100,10 @@ class Tree:
         if export_path:
             self.export_tree(export_path)
 
-        print "Done."
+        logger.info("Done.")
 
     def export_tree(self, export_path):
-        print "Exporting tree..."
+        logger.info("Exporting tree...")
         dot_data = StringIO()
         tree.export_graphviz(self.clf, out_file=dot_data, feature_names=self.feature_names)
         graph = pydotplus.graph_from_dot_data(dot_data.getvalue().encode('utf-8'))
@@ -169,24 +175,3 @@ class Tree:
             for domain in d.pop(self.training_column_name):
                 d['%s' % domain.decode("ascii", "ignore")] = True
         return d
-
-    def get_code():
-        left      = self.clf.tree_.children_left
-        right     = self.clf.tree_.children_right
-        threshold = self.clf.tree_.threshold
-        features  = [self.feature_names[i] for i in self.clf.tree_.feature]
-        value = self.clf.tree_.value
-
-        def recurse(left, right, threshold, features, node):
-                if (threshold[node] != -2):
-                        print "if ( " + features[node] + " <= " + str(threshold[node]) + " ) {"
-                        if left[node] != -1:
-                                recurse (left, right, threshold, features,left[node])
-                        print "} else {"
-                        if right[node] != -1:
-                                recurse (left, right, threshold, features,right[node])
-                        print "}"
-                else:
-                        print "return " + str(value[node])
-
-        recurse(left, right, threshold, features, 0)

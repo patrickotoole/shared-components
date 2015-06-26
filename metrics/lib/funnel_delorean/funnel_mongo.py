@@ -13,6 +13,12 @@ from datadiff import diff
 from datadiff.tools import assert_equal
 from datetime import datetime
 
+import logging
+formatter = '%(asctime)s:%(levelname)s - %(message)s'
+logging.basicConfig(level=logging.INFO, format=formatter)
+
+logger = logging.getLogger()
+
 class FunnelMongoAPI:
     def __init__(self, tree):
         self.mongo = lnk.dbs.mongo.rockerbox
@@ -20,7 +26,7 @@ class FunnelMongoAPI:
         self.tree = tree
 
     def get_new_segment(self, name):
-        print "Requesting new segment with name: {}".format(name)
+        logger.info("Requesting new segment with name: {}".format(name))
         to_post = {
             "segment":{
                 "member_id": 2024,
@@ -38,7 +44,7 @@ class FunnelMongoAPI:
         return self.mongo.domains.find_one({"domain": domain})        
 
     def update_domain_segment(self, domain, segment_id):
-        print "Updating domain entry in MongoDB: {}".format(domain)
+        logger.info("Updating domain entry in MongoDB: {}".format(domain))
         search_filter = {"domain":domain}
         updated = {"$set": {"segment_id": segment_id}}
         r = self.mongo.domains.update_one(search_filter, updated)
@@ -92,11 +98,11 @@ class FunnelMongoAPI:
         found = self.mongo.funnel_campaigns.find_one(search_filter)
 
         if not found:
-            print self.mongo.funnel_campaigns.insert_one(obj).inserted_id
+            logger.info(self.mongo.funnel_campaigns.insert_one(obj).inserted_id)
         else:
             del found["_id"]
             # Update entry and send diff
             r = self.mongo.funnel_campaigns.update_one(search_filter, {"$set": obj})
-            print r.modified_count
+            logger.info(r.modified_count)
             self.insert_diff(advertiser, funnel_name, found, obj)
 

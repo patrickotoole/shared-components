@@ -2,6 +2,12 @@ from tree import Tree
 from funnel_mongo import FunnelMongoAPI
 from funnel_cassandra import FunnelAPI
 
+import logging
+formatter = '%(asctime)s:%(levelname)s - %(message)s'
+logging.basicConfig(level=logging.INFO, format=formatter)
+
+logger = logging.getLogger()
+
 class Runner:
     def __init__(self):
         self.api = FunnelAPI()
@@ -23,9 +29,9 @@ class Runner:
         df = domains.append(pop)
         df = self.api.filter_df(df)
         
-        print "Total number of users: {}".format(len(df))
-        print "Total number of converted users: {}".format(len(df[df.converted == "1"]))
-        print "Total number of not converted users: {}".format(len(df[df.converted == "0"]))
+        logger.info("Total number of users: {}".format(len(df)))
+        logger.info("Total number of converted users: {}".format(len(df[df.converted == "1"])))
+        logger.info("Total number of not converted users: {}".format(len(df[df.converted == "0"])))
         
         tree = Tree(df, "domains", "converted")
         self.mongo_api = FunnelMongoAPI(tree)

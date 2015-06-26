@@ -3,6 +3,13 @@ import pandas as pd
 from query import *
 import ast
 
+import logging
+formatter = '%(asctime)s:%(levelname)s - %(message)s'
+logging.basicConfig(level=logging.INFO, format=formatter)
+
+logger = logging.getLogger()
+
+
 class FunnelAPI:
     def __init__(self):
         self.c = lnk.dbs.cassandra
@@ -20,7 +27,7 @@ class FunnelAPI:
             ]
 
     def get_pop_domains(self):
-        print "Getting population data..."
+        logger.info("Getting population data...")
         pop = pd.DataFrame(self.h.execute(GET_POP))
         pop.domains = pop.domains.apply(ast.literal_eval)
         return pop
@@ -31,7 +38,7 @@ class FunnelAPI:
         
         uids = self.get_uids(patterns, advertiser_urls)
         
-        print "Number of uids: {}".format(len(uids))
+        logger.info("Number of uids: {}".format(len(uids)))
         
         domains = self.get_domains(uids)
         return domains
@@ -60,7 +67,7 @@ class FunnelAPI:
     
         # Get a list of sets
         for pattern in patterns:
-            print pattern
+            logger.info(pattern)
             filtered = self.filter_urls(urls, pattern)
             uids = self.fetch_uids(filtered)
             uid_sets.append(uids)
