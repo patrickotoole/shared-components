@@ -12,6 +12,7 @@ class AnalyticsBase(object):
     def batch_execute(self, queries):
         futures = []
         results = []
+        self.logging.info(queries)
         for i, query in enumerate(queries):
             self.logging.info(query)
             self.logging.info("QUERY: %s" % i)

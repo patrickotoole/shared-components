@@ -74,9 +74,10 @@ class VisitUidsHandler(BaseHandler, AnalyticsBase):
             return []
 
     def get_w_in_multiple(self,urls, date_clause):
-        batch = len(urls) / min(100,len(urls))
+        size = 1#min(100,len(urls))
+        batch = len(urls) / size
         queries = []
-        for i in range(0,min(100,len(urls))):
+        for i in range(0,size):
             b = urls[i*batch:(i+1)*batch]
             where = 'where url IN {}'
             if date_clause:

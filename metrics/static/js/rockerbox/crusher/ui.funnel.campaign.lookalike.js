@@ -7,13 +7,56 @@ RB.crusher.ui.funnel.campaign = RB.crusher.ui.funnel.campaign || {}
 
 RB.crusher.ui.funnel.campaign.lookalike = (function(lookalike){
 
+  var crusher = RB.crusher
+  var registered
+
+  lookalike.methods = {
+    update: function(x) {
+      // where i will adjust a bunch of settings associated with bid price, etc
+    },
+    toggle: function(x) {
+      console.log("WE TOGGLE",x,this)
+      var includes = x.rules.filter(function(x){return x.action == "include"}).map(function(x){return x.domain})
+      var excludes = x.rules.filter(function(x){return x.action == "exclude"}).map(function(x){return x.domain})
+
+      var lookalike_obj = {
+        profile: {},
+        campaign: {},
+        details: {
+          funnel_name: x.funnel_name,
+          funnel_id: x.funnel_id,
+          includes: includes,
+          excludes: excludes
+        }
+      }
+
+      console.log(lookalike_obj)
+      // where we will adjust state (create,on,off)
+    }
+  }
+
   lookalike.build = function(wrapper) {
+
+    var row = lookalike.row(wrapper)
+    lookalike.info(row)
+    lookalike.settings(row)
+    lookalike.estimates(row)
+    lookalike.reporting(row)
+
+    row.exit().remove()
+
+  }
+
+  lookalike.row = function(wrapper) {
     var camp = d3_splat(wrapper,"div.campaign","div",function(x){
-        console.log("LOOKALIKE ROWS: ",x);
         x.lookalikes.sort(function(x,y){
           return y.num_converters - x.num_converters
         })
-        x.lookalikes.map(function(y,i){y.pos = i+1})
+        x.lookalikes.map(function(y,i){
+          y.pos = i+1
+          y.funnel_name = x.funnel_name
+          y.funnel_id = x.funnel_id
+        })
         return x.lookalikes
       },function(x){return String(x.num_convertors) + String(x.num_users)})
       .classed("campaign row",true)
@@ -24,6 +67,11 @@ RB.crusher.ui.funnel.campaign.lookalike = (function(lookalike){
     camp.sort(function(x,y){
       return y.num_converters - x.num_converters
     })
+
+    return camp
+  }
+
+  lookalike.info = function(camp) {
 
     var info = d3_updateable(camp,"div.step-info","div") 
       .classed("step-info col-md-2",true) 
@@ -42,64 +90,55 @@ RB.crusher.ui.funnel.campaign.lookalike = (function(lookalike){
     d3_updateable(onoff,"input","input")
       .attr("type","checkbox")
 
-    $(".switch input[type='checkbox']").bootstrapSwitch();
+    $(".switch input[type='checkbox']").bootstrapSwitch({
+      onSwitchChange: function(event,state) {
+        lookalike.methods.toggle.bind(camp)(event.currentTarget.__data__)
+      }
+    });
 
+  }
 
-
+  lookalike.settings = function(camp) {
     var settings = d3_updateable(camp,"div.settings","div")
       .classed("settings col-md-3",true)
 
+    var includes = d3_updateable(settings,"div.includes","div")
+      .classed("includes statistic",true)
+
+    d3_updateable(includes,"span","span")
+      .text("User has visited:")
+
+    d3_splat(includes,"div.item","div",
+      function(x){return x.rules.filter(function(x){return x.action == "include"})},
+      function(x){return x.domain}
+    )
+      .classed("item",true)
+      .text(function(x){
+        return x.domain 
+      })
+
+    var excludes = d3_updateable(settings,"div.excludes","div")
+      .classed("excludes statistic",true)
+
+    d3_updateable(excludes,"span","span")
+      .text("User has not visited:")
+
+    d3_splat(excludes,"div.item","div",
+      function(x){return x.rules.filter(function(x){return x.action == "exclude"})},
+      function(x){return x.domain}
+    )
+      .classed("item",true)
+      .text(function(x){
+        return x.domain 
+      })
+
+
+
+  }
+
+  lookalike.estimates = function(camp) {
     var estimates = d3_updateable(camp,"div.estimates","div")
       .classed("estimates col-md-3",true)
-
-    var reporting = d3_updateable(camp,"div.reporting","div")
-      .classed("reporting col-md-3",true)
-
-
-
-
-    var targeted = d3_updateable(reporting,"div.served-users","div")
-      .classed("served-users statistic",true)
-
-    d3_updateable(targeted,"span.lab","span")
-      .classed("lab",true)
-      .text("Users Reached (Freq): ")
-
-    d3_updateable(targeted,"span.value","span")
-      .classed("value pull-right",true)
-      .text(function(x){
-        return 0 
-      })
-
-
-    var sfreq = d3_updateable(reporting,"div.avg-imps","div")
-      .classed("avg-imps statistic",true)
-
-    d3_updateable(sfreq,"span.lab","span")
-      .classed("lab",true)
-      .text("Imps Served (CPM): ")
-
-    d3_updateable(sfreq,"span.value","span")
-      .classed("value pull-right",true)
-      .text(function(x){
-        return 0  + " (0)"
-      })
-
-
-    var cost = d3_updateable(reporting,"div.cost","div")
-      .classed("cost statistic",true)
-
-    d3_updateable(cost,"span.lab","span")
-      .classed("lab",true)
-      .text("Total Cost: ")
-
-    d3_updateable(cost,"span.value","span")
-      .classed("value pull-right",true)
-      .text(function(x){
-        return 0 + " (0)"
-      })
-
-
 
     var targetable = d3_updateable(estimates,"div.convertors","div")
       .classed("convertors estimate",true)
@@ -113,8 +152,6 @@ RB.crusher.ui.funnel.campaign.lookalike = (function(lookalike){
       .text(function(x){
         return d3.format(",")(x.num_converters)
       })
-
-
 
     var targetable = d3_updateable(estimates,"div.estimated-users","div")
       .classed("estimated-users estimate",true)
@@ -157,23 +194,6 @@ RB.crusher.ui.funnel.campaign.lookalike = (function(lookalike){
         return d3.format(".3f")(100*x.conv_rate) + "%"
       })
 
-
-
-
-    var onChange = function(x) {
-      var id = x.action_id
-      var campaign = camp.filter(function(y){return y.action_id == id})
-
-      var f = campaign.selectAll("div.daily-freq input").property("value")
-      var imps = f * (x.avails_raw.avails)
-
-      var p = campaign.selectAll("div.bid-price input").property("value")
-
-      campaign.selectAll("div.estimated-imps span.value").text(d3.format(",")(imps))
-      campaign.selectAll("div.estimated-cost span.value").text(d3.format("$.2")(imps * p / 1000))
-
-    }
-
     d3_updateable(estimates,"span.b1","span")
       .classed("b1",true)
       .text("{")
@@ -186,42 +206,55 @@ RB.crusher.ui.funnel.campaign.lookalike = (function(lookalike){
       .style("font-weight",100)
       .style("color","#ccc")
 
-    
-    var includes = d3_updateable(settings,"div.includes","div")
-      .classed("includes statistic",true)
 
-    d3_updateable(includes,"span","span")
-      .text("User has visited:")
 
-    d3_splat(includes,"div.item","div",
-      function(x){return x.rules.filter(function(x){return x.action == "include"})},
-      function(x){return x.domain}
-    )
-      .classed("item",true)
+  }
+
+  lookalike.reporting = function(camp) {
+
+    var reporting = d3_updateable(camp,"div.reporting","div")
+      .classed("reporting col-md-3",true)
+
+    var targeted = d3_updateable(reporting,"div.served-users","div")
+      .classed("served-users statistic",true)
+
+    d3_updateable(targeted,"span.lab","span")
+      .classed("lab",true)
+      .text("Users Reached (Freq): ")
+
+    d3_updateable(targeted,"span.value","span")
+      .classed("value pull-right",true)
       .text(function(x){
-        return x.domain 
-      })
-
-    var excludes = d3_updateable(settings,"div.excludes","div")
-      .classed("excludes statistic",true)
-
-    d3_updateable(excludes,"span","span")
-      .text("User has not visited:")
-
-    d3_splat(excludes,"div.item","div",
-      function(x){return x.rules.filter(function(x){return x.action == "exclude"})},
-      function(x){return x.domain}
-    )
-      .classed("item",true)
-      .text(function(x){
-        return x.domain 
+        return 0 
       })
 
 
+    var sfreq = d3_updateable(reporting,"div.avg-imps","div")
+      .classed("avg-imps statistic",true)
+
+    d3_updateable(sfreq,"span.lab","span")
+      .classed("lab",true)
+      .text("Imps Served (CPM): ")
+
+    d3_updateable(sfreq,"span.value","span")
+      .classed("value pull-right",true)
+      .text(function(x){
+        return 0  + " (0)"
+      })
 
 
-    //camp.sort(function(x,y){return x.pos - y.pos})
-    camp.exit().remove()
+    var cost = d3_updateable(reporting,"div.cost","div")
+      .classed("cost statistic",true)
+
+    d3_updateable(cost,"span.lab","span")
+      .classed("lab",true)
+      .text("Total Cost: ")
+
+    d3_updateable(cost,"span.value","span")
+      .classed("value pull-right",true)
+      .text(function(x){
+        return 0 + " (0)"
+      })
 
   }
   return lookalike
