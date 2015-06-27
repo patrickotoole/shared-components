@@ -24,7 +24,14 @@ CREATE TABLE `funnel` (
   `operator` enum('and','or') DEFAULT NULL,
   `owner` varchar(100) DEFAULT NULL,
   `pixel_source_name` varchar(250) DEFAULT NULL,
+  `segment_id` int(11),
   PRIMARY KEY (`funnel_id`)
+)
+"""
+CREATE_ADVERTISER_TABLE = """
+CREATE TABLE `advertiser` (
+  external_advertiser_id int(11),
+  pixel_source_name varchar(100)
 )
 """
 
@@ -99,6 +106,7 @@ VALUES (1,"alans_pattern2")
  
 POST_FIXTURE = """{"owner":"waikiki","advertiser":"baublebar","funnel_name":"landing+earings","actions":[{"url_pattern":["wills_pattern","wills_pattern_again"],"action_name":"wills_action","action_id":2},{"url_pattern":["alans_pattern","alans_pattern2"],"action_name":"alans_action","action_id":1}]}"""
  
+ADVERTISER_FIXTURE = "INSERT INTO advertiser (external_advertiser_id,pixel_source_name) values (1,'baublebar')"
  
 
 
@@ -111,6 +119,8 @@ class FunnelTest(AsyncHTTPTestCase):
         
         self.db.execute("DROP TABLE IF EXISTS action")
         self.db.execute("DROP TABLE IF EXISTS action_patterns") 
+        self.db.execute("DROP TABLE IF EXISTS advertiser") 
+
          
 
         self.db.execute(CREATE_FUNNEL_ACTION_TABLE) 
@@ -118,7 +128,9 @@ class FunnelTest(AsyncHTTPTestCase):
 
         self.db.execute(CREATE_ACTION_TABLE) 
         self.db.execute(CREATE_PATTERN_TABLE)  
+        self.db.execute(CREATE_ADVERTISER_TABLE)  
  
+        self.db.execute(ADVERTISER_FIXTURE) 
         self.db.execute(FUNNEL_FIXTURE_1)
         self.db.execute(FUNNEL_FIXTURE_2)
 
@@ -133,9 +145,12 @@ class FunnelTest(AsyncHTTPTestCase):
         self.db.execute(FUNNEL_ACTION_FIXTURE_1)
         self.db.execute(FUNNEL_ACTION_FIXTURE_2) 
  
+        api_mock = mock.MagicMock()
+        api_mock.post().json['response']['segment'].__getitem__.return_value = 1
+
         self.app = Application([
-            ('/',funnel.FunnelHandler, dict(db=self.db)),
-            ('/(.*?)',funnel.FunnelHandler, dict(db=self.db)) 
+            ('/',funnel.FunnelHandler, dict(db=self.db,api=api_mock)),
+            ('/(.*?)',funnel.FunnelHandler, dict(db=self.db,api=api_mock)) 
           ],
           template_path="../../../templates"
         )
@@ -152,7 +167,7 @@ class FunnelTest(AsyncHTTPTestCase):
     def test_get(self):
         body = self.fetch("/?format=json&advertiser=baublebar", method="GET").body
 
-        expected = [{"owner":"waikiki","advertiser":"baublebar","funnel_name":"landing+earings","actions":[{"url_pattern":["alans_pattern","alans_pattern2"],"action_name":"alans_action","action_id":1},{"url_pattern":["wills_pattern","wills_pattern_again"],"action_name":"wills_action","action_id":2}],"funnel_id":1},{"owner":"makiki","advertiser":"baublebar","funnel_name":"other","actions":[],"funnel_id":2}]
+        expected = [{"owner":"waikiki","advertiser":"baublebar","funnel_name":"landing+earings","actions":[{"url_pattern":["alans_pattern","alans_pattern2"],"action_name":"alans_action","action_id":1,"order":1},{"order":2,"url_pattern":["wills_pattern","wills_pattern_again"],"action_name":"wills_action","action_id":2}],"funnel_id":1},{"owner":"makiki","advertiser":"baublebar","funnel_name":"other","actions":[],"funnel_id":2}]
 
         actual = ujson.loads(body)
 

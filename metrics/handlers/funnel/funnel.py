@@ -19,8 +19,6 @@ class FunnelHandler(FunnelBase,FunnelHelpers):
             "owner"
         ]
 
-      
-
     def get(self,*args):
         advertiser = self.get_argument("advertiser", False)
         format = self.get_argument("format",False)
