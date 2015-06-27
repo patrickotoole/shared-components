@@ -15,13 +15,19 @@ RB.crusher.ui.funnel.campaign.lookalike = (function(lookalike){
       // where i will adjust a bunch of settings associated with bid price, etc
     },
     toggle: function(x) {
-      console.log("WE TOGGLE",x,this)
+      var selected = this.filter(function(c) {return c == x})
+      var ischecked = selected.selectAll("input[type=checkbox]").property("checked")
+
       var includes = x.rules.filter(function(x){return x.action == "include"}).map(function(x){return x.domain})
       var excludes = x.rules.filter(function(x){return x.action == "exclude"}).map(function(x){return x.domain})
 
       var lookalike_obj = {
         profile: {},
-        campaign: {},
+        campaign: {
+          state: ischecked ? "active" : "inactive",
+          base_bid: 2,
+          daily_budget: 100
+        },
         details: {
           funnel_name: x.funnel_name,
           funnel_id: x.funnel_id,
@@ -29,6 +35,8 @@ RB.crusher.ui.funnel.campaign.lookalike = (function(lookalike){
           excludes: excludes
         }
       }
+
+      crusher.controller.lookalike.save(lookalike_obj,x)
 
       console.log(lookalike_obj)
       // where we will adjust state (create,on,off)
