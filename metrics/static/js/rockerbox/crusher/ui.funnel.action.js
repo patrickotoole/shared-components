@@ -29,10 +29,16 @@ RB.crusher.ui.funnel.action = (function(action){
     var a = actions_wrapper.selectAll(".action")
       .data(
         function(x){ 
-          x.actions.map(function(ac,i){ac.pos = i})
+          x.actions = x.actions.map(function(ac,i){
+            ac.funnel_id = x.funnel_id
+            if (!ac.pos) ac.pos = ac.order
+
+            return ac
+          }).sort(function(x,y){return x.pos - y.pos})
+
           return x.actions 
         },
-        function(x){ return x.action_id} 
+        function(x){ return x.action_id + String(x.funnel_id)} 
       )
 
     a.enter().append("div").classed("action col-md-12",true)
@@ -62,7 +68,21 @@ RB.crusher.ui.funnel.action = (function(action){
 
     var onUpdate = function(x){
       var selectedData = d3.selectAll(this.selectedOptions).datum()
-      for (var i in x) { x[i] = i != "all" ? selectedData[i] : x[i] }
+
+      console.log(selectedData.action_name,selectedData) 
+      // selectedData doesnt have url_patterns!
+
+      x.action_id = selectedData.action_id
+      x.action_name = selectedData.action_name
+      x.url_pattern = selectedData.url_pattern
+
+      delete x.visits_data
+      delete x.matches
+      delete x.funnel_uids
+      delete x.funnel_count
+      delete x.uids
+      delete x.count
+
     } 
 
     var select = newAction.selectAll("select").data(function(x){return [x]})
@@ -75,10 +95,7 @@ RB.crusher.ui.funnel.action = (function(action){
       .attr("title","Choose an action for this step..")
       .on("change",onUpdate)
 
-    select.selectAll("option")
-      .data(options)
-      .enter()
-        .append("option")
+    d3_splat(select,"option","option",options,function(x){return x ? x.action_id : 0})
         .attr("value",function(x){return x.id})
         .text(function(x){return x.action_name})
         .attr("selected", function(x){

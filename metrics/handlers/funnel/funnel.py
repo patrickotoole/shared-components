@@ -8,8 +8,9 @@ from funnel_base import FunnelBase, FunnelHelpers
 
 class FunnelHandler(FunnelBase,FunnelHelpers):
 
-    def initialize(self, db=None, **kwargs):
+    def initialize(self, db=None, api=None, **kwargs):
         self.db = db
+        self.api = api
 
         self.required_cols = [
             "advertiser",
@@ -17,8 +18,6 @@ class FunnelHandler(FunnelBase,FunnelHelpers):
             "actions",
             "owner"
         ]
-
-      
 
     def get(self,*args):
         advertiser = self.get_argument("advertiser", False)
@@ -42,7 +41,7 @@ class FunnelHandler(FunnelBase,FunnelHelpers):
             funnel_indices = ["funnel_name","funnel_id","owner","advertiser"]
             grouped = ordered.groupby(funnel_indices)
 
-            action_indices = ['action_id','action_name','url_pattern'] 
+            action_indices = ['action_id','action_name','url_pattern','order'] 
             group_fn = self.group_to_dict(action_indices,lambda v: v['action_id'] != 0) 
             
             grouped_actions = grouped.apply(group_fn)
@@ -128,6 +127,18 @@ class FunnelHandler(FunnelBase,FunnelHelpers):
             self.db.autocommit = False
             conn = self.db.create_connection()
             cur = conn.cursor()
+
+            Q = "select external_advertiser_id from advertiser where pixel_source_name = '%s'" 
+            advertiser_id = self.db.select_dataframe(Q % obj['advertiser']).values[0][0]
+            URL = "/segment?advertiser_id=%s" % str(advertiser_id)
+            seg_obj = {
+                "segment": {
+                    "short_name":"Funnel: " + obj['funnel_name'] + " - " + obj['advertiser']
+                }
+            }
+            data = self.api.post(URL,ujson.dumps(seg_obj))
+            print data.content
+            obj['segment_id'] = data.json['response']['segment']['id']
             
             cur.execute(INSERT_FUNNEL % obj)
             funnel_id = cur.lastrowid
@@ -143,6 +154,9 @@ class FunnelHandler(FunnelBase,FunnelHelpers):
                 })
 
             obj["funnel_id"] = funnel_id
+
+            # TODO: need to make the segment associated with the funnel
+             
 
             conn.commit()
 

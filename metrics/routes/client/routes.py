@@ -72,11 +72,15 @@ class AdvertiserRoutes(Routes):
             (r'/visit_urls', analytics.VisitUrlsHandler, self.connectors),
             (r'/visit_uids', analytics.VisitUidsHandler, self.connectors),
             (r'/visit_domains', analytics.VisitDomainsHandler, self.connectors),
+            (r'/visit_avails', analytics.VisitAvailsHandler, self.connectors),
+            (r'/funnel/campaign', funnel.FunnelCampaignHandler, self.connectors),
+            (r'/funnel/lookalike_campaign', funnel.LookalikeCampaignHandler, self.connectors),
             (r'/funnel/action', funnel.ActionHandler, self.connectors),
             (r'/funnel/action/(.*?)', funnel.ActionHandler, self.connectors),
-            (r'/funnel/campaigns', funnel.FunnelCampaignsHandler, self.connectors),
-            (r'/funnel/campaigns/(.*?)', funnel.FunnelCampaignsHandler, self.connectors),
+            (r'/funnel/lookalike', funnel.FunnelLookalikeHandler, self.connectors),
+            (r'/funnel/lookalike/(.*?)', funnel.FunnelLookalikeHandler, self.connectors),
             (r'/funnel', funnel.FunnelHandler, self.connectors),
+            (r'/?', funnel.FunnelHandler, self.connectors),
             (r'/funnel/(.*?)', funnel.FunnelHandler, self.connectors)
         ]
      

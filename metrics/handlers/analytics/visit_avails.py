@@ -12,9 +12,9 @@ from lib.helpers import *
 
 DEFAULT_INTERVAL = "minute"
 
-QUERY = "SELECT * FROM rockerbox.visitor_domains "
+QUERY = "SELECT uid FROM rockerbox.visitor_domains "
 
-class VisitDomainsHandler(BaseHandler, AnalyticsBase):
+class VisitAvailsHandler(BaseHandler, AnalyticsBase):
     def initialize(self, db=None, cassandra=None, **kwargs):
         self.logging = logging
         self.db = db
@@ -31,21 +31,19 @@ class VisitDomainsHandler(BaseHandler, AnalyticsBase):
 
 
     @defer.inlineCallbacks
-    def get_domains(self, uid, date_clause, kind):
-        df = yield self.defer_get_domains(uid, date_clause)
+    def get_avails(self, uid, date_clause, kind):
+        df = yield self.defer_get_avails(uid, date_clause)
 
-        if len(df) > 0:
-            if kind == "domains":
-                df = df.groupby("domain").uid.nunique().reset_index()
+        df = pandas.DataFrame({"avails":[len(df.groupby("uid"))],"total":[len(uid.split(","))]})
 
         self.get_content(df)
 
     @decorators.deferred
-    def defer_get_domains(self, uid, date_clause):
+    def defer_get_avails(self, uid, date_clause):
         where = []
 
         if not uid:
-            raise Exception("Must specify url using url=")
+            raise Exception("Must specify url using uid=")
 
         uids = uid.split(",")
 
@@ -61,10 +59,10 @@ class VisitDomainsHandler(BaseHandler, AnalyticsBase):
             where = where + " and {}".format(date_clause)
         in_clause = self.make_in_clause(uids)
         WHERE = where.format(in_clause)
-        #logging.info(self.query + WHERE)
-        logging.info("Started domains request...")
+        #logging.info(WHERE)
 
         results = self.query + WHERE
+        logging.info("Requested avails...")
 
         return self.cassandra.execute(results)
 
@@ -80,7 +78,7 @@ class VisitDomainsHandler(BaseHandler, AnalyticsBase):
         date_clause = self.make_date_clause("date", date, start_date, end_date)
 
         if formatted:
-            self.get_domains(
+            self.get_avails(
                 uid,
                 date_clause,
                 kind
@@ -91,7 +89,6 @@ class VisitDomainsHandler(BaseHandler, AnalyticsBase):
 
     @tornado.web.asynchronous
     def post(self):
-        #print tornado.escape.json_decode(self.request.body)
         formatted = self.get_argument("format", False)
         payload = tornado.escape.json_decode(self.request.body)
         
@@ -108,7 +105,7 @@ class VisitDomainsHandler(BaseHandler, AnalyticsBase):
         uid = ','.join(payload["uids"])
 
         if formatted:
-            self.get_domains(
+            self.get_avails(
                 uid,
                 date_clause,
                 kind

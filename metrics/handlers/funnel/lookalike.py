@@ -12,7 +12,7 @@ from twisted.internet import defer
 from lib.helpers import decorators
 from lib.helpers import *
 
-class FunnelCampaignsHandler(BaseHandler):
+class FunnelLookalikeHandler(BaseHandler):
     def initialize(self, mongo=None, **kwargs):
         self.mongo = mongo
 
@@ -32,6 +32,12 @@ class FunnelCampaignsHandler(BaseHandler):
         df = yield self.defer_get_docs(funnel_id)
         self.get_content(df)
 
+    @defer.inlineCallbacks
+    def get_docs_by_advertiser(self, advertiser):
+        df = yield self.defer_get_docs_by_advertiser(advertiser)
+        self.get_content(df)
+
+
     @decorators.deferred
     def defer_get_docs(self, funnel_id):
         excludes = {'_id': False}
@@ -40,16 +46,41 @@ class FunnelCampaignsHandler(BaseHandler):
             includes = {"funnel_id": int(funnel_id)}
         else:
             includes = {}
+
+        l = list(self.mongo.rockerbox.funnel_campaigns.find(includes, excludes))
+        for funnel in l:
+            for branch in funnel['branches']:
+                includes = sorted([rule['segment'] for rule in branch['rules'] if rule['action'] == 'include'])
+                excludes = sorted([rule['segment'] for rule in branch['rules'] if rule['action'] == 'exclude'])
+                branch['includes'] = includes
+                branch['excludes'] = excludes
+                branch['identifier'] = "|".join(map(str,includes)) + ":" + "|".join(map(str,excludes))
+
+        df = pd.DataFrame(l)
+        return df
+
+    @decorators.deferred
+    def defer_get_docs_by_advertiser(self, advertiser):
+        excludes = {'_id': False}
+        
+        if funnel_id:
+            includes = {"advertiser": advertiser}
+        else:
+            includes = {}
             
         df = pd.DataFrame(list(self.mongo.rockerbox.funnel_campaigns.find(includes, excludes)))
         return df
+
 
     @tornado.web.asynchronous
     def get(self):
         formatted = self.get_argument("format", False)
         funnel_id = self.get_argument("id", False)
+        advertiser = self.get_argument("advertiser",False)
 
         if formatted:
             self.get_docs(funnel_id)
+        elif advertiser:
+            self.get_docs_by_advertiser(advertiser)
         else:
             self.get_content(pandas.DataFrame())

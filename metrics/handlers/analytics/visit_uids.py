@@ -49,7 +49,7 @@ class VisitUidsHandler(BaseHandler, AnalyticsBase):
         data = []
 
         # df = pandas.DataFrame(self.get_w_futures(urls))
-        df = pandas.DataFrame(self.get_w_in(urls, date_clause))
+        df = pandas.DataFrame(self.get_w_in_multiple(urls, date_clause))
 
         return df
 
@@ -65,12 +65,29 @@ class VisitUidsHandler(BaseHandler, AnalyticsBase):
         #QUERY = QUERY + " limit 100"
         
         from cassandra.query import SimpleStatement
-        logging.info(QUERY)
+        #logging.info(QUERY)
+        logging.info("Started uids request...")
         try:
             return self.cassandra.execute(QUERY,None,60)
         except ReadTimeout:
             logging.info("Cassandra read timeout...")
             return []
+
+    def get_w_in_multiple(self,urls, date_clause):
+        size = 1#min(100,len(urls))
+        batch = len(urls) / size
+        queries = []
+        for i in range(0,size):
+            b = urls[i*batch:(i+1)*batch]
+            where = 'where url IN {}'
+            if date_clause:
+                where = where + " and {}".format(date_clause)
+            in_clause = self.make_in_clause(b)
+            WHERE = where.format(in_clause)
+            QUERY = self.query + WHERE 
+            queries.append(QUERY)
+
+        return self.batch_execute(queries)
             
 
     def get_w_futures(self, urls):

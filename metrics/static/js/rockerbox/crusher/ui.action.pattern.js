@@ -10,8 +10,6 @@ RB.crusher.ui.action.pattern = (function(pattern) {
   pattern.add = function(add_row) {
     var datum = this.datum()
 
-    var bloodhound = crusher.controller.bloodhound 
-
     datum.rows = datum.rows || []
   
     if (add_row) {
@@ -44,16 +42,20 @@ RB.crusher.ui.action.pattern = (function(pattern) {
       .on("click",function(){
         action.pattern.remove.bind(this.parentNode.parentNode)()
       })
+
+    crusher.controller.get_bloodhound(function(bloodhound){
   
-    $(newSelector.node()).typeahead({
-      hint: true,
-      highlight: true,
-      minLength: 3
-    },
-    {
-      name: 'urls',
-      source: bloodhound 
-    });
+      $(newSelector.node()).typeahead({
+        hint: true,
+        highlight: true,
+        minLength: 3
+      },
+      {
+        name: 'urls',
+        source: bloodhound 
+      });
+
+    })
 
   } 
 

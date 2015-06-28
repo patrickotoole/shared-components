@@ -23,9 +23,9 @@ WHERE funnel_id = %s
 
 INSERT_FUNNEL = """
 INSERT INTO funnel
-    (funnel_name, owner, pixel_source_name) 
+    (funnel_name, owner, pixel_source_name, segment_id) 
 VALUES 
-    ("%(funnel_name)s", "%(owner)s", "%(advertiser)s")
+    ("%(funnel_name)s", "%(owner)s", "%(advertiser)s", "%(segment_id)s")
 """
 
 UPDATE_FUNNEL_ACTION = """
