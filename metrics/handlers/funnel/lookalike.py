@@ -46,8 +46,17 @@ class FunnelLookalikeHandler(BaseHandler):
             includes = {"funnel_id": int(funnel_id)}
         else:
             includes = {}
-            
-        df = pd.DataFrame(list(self.mongo.rockerbox.funnel_campaigns.find(includes, excludes)))
+
+        l = list(self.mongo.rockerbox.funnel_campaigns.find(includes, excludes))
+        for funnel in l:
+            for branch in funnel['branches']:
+                includes = sorted([rule['segment'] for rule in branch['rules'] if rule['action'] == 'include'])
+                excludes = sorted([rule['segment'] for rule in branch['rules'] if rule['action'] == 'exclude'])
+                branch['includes'] = includes
+                branch['excludes'] = excludes
+                branch['identifier'] = "|".join(map(str,includes)) + ":" + "|".join(map(str,excludes))
+
+        df = pd.DataFrame(l)
         return df
 
     @decorators.deferred

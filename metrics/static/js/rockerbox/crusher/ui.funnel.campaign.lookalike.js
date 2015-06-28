@@ -66,7 +66,7 @@ RB.crusher.ui.funnel.campaign.lookalike = (function(lookalike){
           y.funnel_id = x.funnel_id
         })
         return x.lookalikes
-      },function(x){return String(x.num_convertors) + String(x.num_users)})
+      },function(x){return x.identifier})
       .classed("campaign row",true)
       .style("padding-bottom","15px")
       .style("border-bottom","1px solid #f0f0f0")
@@ -97,12 +97,20 @@ RB.crusher.ui.funnel.campaign.lookalike = (function(lookalike){
 
     d3_updateable(onoff,"input","input")
       .attr("type","checkbox")
+      .property("checked",function(x){
+        if (x.campaign) {
+          return x.campaign.state == "active"
+        }
+      })
 
     $(".switch input[type='checkbox']").bootstrapSwitch({
       onSwitchChange: function(event,state) {
         lookalike.methods.toggle.bind(camp)(event.currentTarget.__data__)
       }
     });
+
+    d3_updateable(info,"div.info-details","div")
+      .classed("info-details",true)
 
   }
 

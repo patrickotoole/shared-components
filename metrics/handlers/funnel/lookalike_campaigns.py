@@ -189,12 +189,40 @@ class LookalikeCampaignHandler(CampaignHandler):
 
         self.write(ujson.dumps(camp))
         self.finish()
+
+    @decorators.deferred
+    def defer_get_profiles(self,camps):
+        for camp in camps:
+            advertiser_id = camp['advertiser_id']
+            profile_id = camp['profile_id']
+            URL = "/profile?advertiser_id=%s&id=%s" % (advertiser_id,profile_id)
+            data = self.api.get(URL)
+            profile = data.json['response']['profile']
+            camp['profile'] = profile
+
+            segments = []
+            try:
+                segments = profile['segment_group_targets'][0]['segments']
+            except:
+                print profile['segment_group_targets']
+                pass
+
+            includes = sorted([i['id'] for i in segments if i['action'] == "include"])
+            excludes = sorted([i['id'] for i in segments if i['action'] == "exclude"])
+
+            camp['details'] = {
+                "includes": includes,
+                "excludes": excludes
+            }
+            camp["identifier"] = "|".join(map(str,includes)) + ":" + "|".join(map(str,excludes)) 
+        return camps
      
 
     @defer.inlineCallbacks  
     def get_campaigns(self,advertiser_id):
         line_item_id = yield self.get_line_item_id(advertiser_id)
         camp = yield self.defer_get_campaigns(advertiser_id,line_item_id)
+        camp = yield self.defer_get_profiles(camp)
         # NEEDS TO ALSO GET THE PROFILE OBJECT
         camp_df = pandas.DataFrame(camp).set_index("id")
         lookalike_campaign = yield self.defer_get_lookalike_campaigns_by_campaign_ids(map(str,camp_df.index))
@@ -235,7 +263,7 @@ class LookalikeCampaignHandler(CampaignHandler):
         Requires a logged in user. Expects a json object that contains the 
         relevant campaign fields which need to be updated.
         """
-        advertiser_id = self.current_advertiser
+        advertiser_id = 302568 #self.current_advertiser
         campaign_id = self.get_argument("id",False)
         state = self.get_argument("state",False)
         if state:

@@ -44,7 +44,8 @@ RB.crusher.controller = (function(controller) {
 
       crusher.ui.funnel.buildBase() 
 
-      crusher.subscribe.add_subscriber(["actions","funnels","campaigns","lookalikes"], function(){
+      var to_subscribe = ["actions","funnels","campaigns","lookalikes","lookalikeCampaigns"]
+      crusher.subscribe.add_subscriber(to_subscribe, function(){
 
         crusher.api.helpers.attachCampaigns()
         crusher.api.helpers.attachLookalikes()

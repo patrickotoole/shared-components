@@ -123,8 +123,11 @@ RB.crusher.api = (function(api) {
     attachLookalikes: function(){
       crusher.cache.funnelData.map(function(x){
         var t = crusher.cache.lookalikeFunnel[x.funnel_id] || [{}]
-        console.log(t) 
         x.lookalikes = t[0].branches || []
+        x.lookalikes.map(function(x){
+          var campaign = crusher.cache.lookalikeCampaignsByIdentifier[x.identifier] || [null]
+          x.campaign = campaign[0]
+        })
       })
     },
     matchDomains: function(url_pattern) {
@@ -167,6 +170,7 @@ RB.crusher.api = (function(api) {
     visitAvails: "/crusher/visit_avails?format=json",
 
     campaigns: "/crusher/funnel/campaign?advertiser=" + source,
+    lookalikeCampaigns: "/crusher/funnel/lookalike_campaign?advertiser=" + source,
     lookalikes: "/crusher/funnel/lookalike?format=json&advertiser=" + source,
 
     funnelURL: "/crusher/funnel?format=json&advertiser=" + source,
@@ -285,6 +289,21 @@ RB.crusher.api = (function(api) {
             cache.lookalikeData = dd 
             cache.lookalikeFunnel = d3.nest()
               .key(function(x){return x.funnel_id})
+              .rollup(function(x){return x})
+              .map(dd)
+            deferred_cb(null,cb)
+          })
+        } else {
+          deferred_cb(null,cb)
+        }
+      }),
+      lookalikeCampaigns: genericQueuedAPI(function(cb,deferred_cb) {
+
+        if (!cache.lookalikeCampaigns) {
+          d3.json(api.URL.lookalikeCampaigns,function(dd){
+            cache.lookalikeCampaigns = dd 
+            cache.lookalikeCampaignsByIdentifier = d3.nest()
+              .key(function(x){return x.identifier})
               .rollup(function(x){return x})
               .map(dd)
             deferred_cb(null,cb)
