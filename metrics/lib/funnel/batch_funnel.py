@@ -21,6 +21,8 @@ def get_profile_ids(search_term):
     profile_ids = {}
 
     for line_item in r.json["response"]["line-items"]:
+        if line_item["state"] == "inactive":
+            break
         advertiser_id = line_item["advertiser"]["id"]
         a = advertiser_id_to_name(advertiser_id)
 
@@ -28,7 +30,7 @@ def get_profile_ids(search_term):
         profile_ids[a]["profiles"] = set()
 
         for campaign in line_item["campaigns"]:
-            if campaign["profile_id"]:
+            if campaign["profile_id"] and campaign["state"] == "active":
                 profile_ids[a]["profiles"].add(str(campaign["profile_id"]))
     
     return profile_ids
