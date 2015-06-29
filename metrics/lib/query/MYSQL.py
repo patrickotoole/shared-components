@@ -315,3 +315,11 @@ WHERE
     pixel_source_name="{}" AND
     deleted=0
 """
+
+ADVERTISER_ID_TO_NAME = """
+SELECT pixel_source_name
+FROM rockerbox.advertiser
+WHERE 
+    external_advertiser_id="{}" AND
+    deleted=0
+"""

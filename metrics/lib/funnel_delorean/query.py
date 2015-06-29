@@ -10,12 +10,12 @@ BAD_DOMAINS = [
     ]
 
 GET_PATTERNS = """
-SELECT a.funnel_id, a.funnel_name, c.url_pattern, b.order
+SELECT a.funnel_id, a.funnel_name, a.segment_id, c.url_pattern, b.order
 FROM funnel a
 JOIN funnel_actions b
 JOIN action_patterns c
 on (a.funnel_id = b.funnel_id and b.action_id = c.action_id)
-WHERE a.funnel_name = "{}"
+WHERE {} 
 """
 
 GET_FUNNELS = """
