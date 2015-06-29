@@ -40,7 +40,10 @@ class LookalikeCampaignHandler(CampaignHandler):
     def get_line_item_id(self,advertiser_id):
         where = (" external_advertiser_id = %s" % advertiser_id)
         line_item_df = self.db.select_dataframe(LINE_ITEM_QUERY % where)
-        return line_item_df.line_item_id[0] 
+        try:
+            return line_item_df.line_item_id[0] 
+        except:
+            return 0
 
     @decorators.deferred
     def defer_get_campaigns(self,advertiser_id,line_item_id):
@@ -215,6 +218,7 @@ class LookalikeCampaignHandler(CampaignHandler):
                 "excludes": excludes
             }
             camp["identifier"] = "|".join(map(str,includes)) + ":" + "|".join(map(str,excludes)) 
+
         return camps
      
 
@@ -224,22 +228,26 @@ class LookalikeCampaignHandler(CampaignHandler):
         camp = yield self.defer_get_campaigns(advertiser_id,line_item_id)
         camp = yield self.defer_get_profiles(camp)
         # NEEDS TO ALSO GET THE PROFILE OBJECT
-        camp_df = pandas.DataFrame(camp).set_index("id")
-        lookalike_campaign = yield self.defer_get_lookalike_campaigns_by_campaign_ids(map(str,camp_df.index))
+        if len(camp):
+            camp_df = pandas.DataFrame(camp).set_index("id")
+            lookalike_campaign = yield self.defer_get_lookalike_campaigns_by_campaign_ids(map(str,camp_df.index))
 
-        df = camp_df.join(lookalike_campaign.set_index("campaign_id")).reset_index()
-        camp_values = df.fillna(0).T.to_dict().values()
-        self.write(ujson.dumps(camp_values))
+            df = camp_df.join(lookalike_campaign.set_index("campaign_id")).reset_index()
+            camp_values = df.fillna(0).T.to_dict().values()
+            self.write(ujson.dumps(camp_values))
+        else:
+            self.write("[]")
+
         self.finish()
         
 
 
 
-    #@tornado.web.authenticated
+    @tornado.web.authenticated
     @tornado.web.asynchronous
     def get(self):
         
-        advertiser_id = 302568 #self.current_advertiser
+        advertiser_id = self.current_advertiser
         funnel_id = self.get_argument("funnel_id",False)
         if funnel_id:
             self.get_lookalike_campaigns(advertiser_id,funnel_id)
@@ -257,13 +265,14 @@ class LookalikeCampaignHandler(CampaignHandler):
         self.write(ujson.dumps(obj))
         self.finish()
 
+    @tornado.web.authenticated
     @tornado.web.asynchronous
     def put(self):
         """
         Requires a logged in user. Expects a json object that contains the 
         relevant campaign fields which need to be updated.
         """
-        advertiser_id = 302568 #self.current_advertiser
+        advertiser_id = self.current_advertiser
         campaign_id = self.get_argument("id",False)
         state = self.get_argument("state",False)
         if state:
@@ -278,10 +287,11 @@ class LookalikeCampaignHandler(CampaignHandler):
         else:
             self.finish()
 
+    @tornado.web.authenticated
     @tornado.web.asynchronous
     def post(self):
 
-        advertiser_id = 302568 #self.current_advertiser
+        advertiser_id = self.current_advertiser
         obj = ujson.loads(self.request.body)
         profile = obj.get('profile',False)
         details = obj.get('details',{})

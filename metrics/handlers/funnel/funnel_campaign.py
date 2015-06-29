@@ -30,7 +30,10 @@ class FunnelCampaignHandler(CampaignHandler):
     def get_line_item_id(self,advertiser_id):
         where = (" external_advertiser_id = %s" % advertiser_id)
         line_item_df = self.db.select_dataframe(LINE_ITEM_QUERY % where)
-        return line_item_df.line_item_id[0] 
+        try:
+            return line_item_df.line_item_id[0] 
+        except:
+            return 0
 
     @decorators.deferred
     def get_segment_id(self,funnel_id):
@@ -181,22 +184,25 @@ class FunnelCampaignHandler(CampaignHandler):
         line_item_id = yield self.get_line_item_id(advertiser_id)
         camp = yield self.defer_get_campaigns(advertiser_id,line_item_id)
         # NEEDS TO ALSO GET THE PROFILE OBJECT
-        camp_df = pandas.DataFrame(camp).set_index("id")
-        funnel_campaign = yield self.defer_get_funnel_campaigns_by_campaign_ids(map(str,camp_df.index))
+        if len(camp):
+            camp_df = pandas.DataFrame(camp).set_index("id")
+            funnel_campaign = yield self.defer_get_funnel_campaigns_by_campaign_ids(map(str,camp_df.index))
 
-        df = camp_df.join(funnel_campaign.set_index("campaign_id")).reset_index()
-        camp_values = df.fillna(0).T.to_dict().values()
-        self.write(ujson.dumps(camp_values))
+            df = camp_df.join(funnel_campaign.set_index("campaign_id")).reset_index()
+            camp_values = df.fillna(0).T.to_dict().values()
+            self.write(ujson.dumps(camp_values))
+        else:
+            self.write("[]")
         self.finish()
         
 
 
 
-    #@tornado.web.authenticated
+    @tornado.web.authenticated
     @tornado.web.asynchronous
     def get(self):
         
-        advertiser_id = 302568 #self.current_advertiser
+        advertiser_id = self.current_advertiser
         funnel_id = self.get_argument("funnel_id",False)
         if funnel_id:
             self.get_funnel_campaigns(advertiser_id,funnel_id)
@@ -216,7 +222,7 @@ class FunnelCampaignHandler(CampaignHandler):
 
 
 
-
+    @tornado.web.authenticated
     @tornado.web.asynchronous
     def put(self):
         """
@@ -238,11 +244,11 @@ class FunnelCampaignHandler(CampaignHandler):
         else:
             self.finish()
 
-
+    @tornado.web.authenticated
     @tornado.web.asynchronous
     def post(self):
 
-        advertiser_id = 302568 #self.current_advertiser
+        advertiser_id = self.current_advertiser
         obj = ujson.loads(self.request.body)
         profile = obj.get('profile',False)
         details = obj.get('details',{})
