@@ -49,8 +49,8 @@ def get_segment_targets(profile_ids):
     segment_targets = set(segment_targets)
     return segment_targets
 
-def post_batch(uids, segment):
-    payload = ["{},{}:0:60".format(uid, segment) for uid in uids]
+def post_batch(uids, segment, expiration=300):
+    payload = ["{},{}:0:{}".format(uid, segment, expiration) for uid in uids]
             
     to_post = {
         "uids": payload,
