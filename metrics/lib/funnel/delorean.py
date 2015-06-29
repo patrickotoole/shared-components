@@ -1,6 +1,4 @@
-from tree import Tree
-from funnel_mongo import FunnelMongoAPI
-from funnel_cassandra import FunnelAPI
+from funnel_lib import Tree, FunnelMongoAPI, FunnelAPI
 
 import logging
 formatter = '%(asctime)s:%(levelname)s - %(message)s'

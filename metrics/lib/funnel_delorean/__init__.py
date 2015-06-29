@@ -1,2 +1,0 @@
-from funnel_cassandra import FunnelAPI
-from funnel_mongo import FunnelMongoAPI
