@@ -69,23 +69,14 @@ funnel_api = FunnelAPI()
 for advertiser in data.keys():
     data[advertiser]["targets"] = []
 
-    print "Getting urls for {}...".format(advertiser)
+    logger.info("Getting urls for {}...".format(advertiser))
     urls = funnel_api.get_urls(advertiser)
 
-    print "Getting segment targets..."
+    logger.info("Getting segment targets...")
     for segment in segment_targets:
         # Get the uids for the patterns
-        # Put the uids into a JSON object
-        # POST the JSON object to the batch_submit API
         patterns = funnel_api.get_patterns(segment_id=segment)
         uids = funnel_api.get_uids(patterns, urls)
-
-        new = {
-            "segment": segment, 
-            "patterns": patterns,
-            "uids": uids
-        }
-        data[advertiser]["targets"].append(new)
 
         payload = ["{},{}:0:60".format(uid, segment) for uid in uids]
 
@@ -94,9 +85,12 @@ for advertiser in data.keys():
             "source_type": "opt_script",
             "source_name":"some_script_name"
         }
-        r = api.post("/batch_request/submit", data=json.dumps(to_post))
-        print r.text
-        
-print data
 
-# print segment_targets
+        # POST the JSON object to the batch_submit API
+        if len(payload) > 0:
+            logger.info("Submitting batch request with {} users...".format(len(payload)))
+            r = api.post("/batch_request/submit", data=json.dumps(to_post))
+            logger.info("Done.")
+            logger.info(r.json)
+            if ["error"] in r.json:
+                raise Exception("Error: {}".format(r.text))
