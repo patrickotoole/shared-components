@@ -8,9 +8,16 @@ logger = logging.getLogger()
 
 def get_profile_ids(search_term):
     r = console.get("/line-item?search={}".format(search_term))
-    profile_ids = [ str(campaign["profile_id"])
-                    for li in r.json["response"]["line-items"] 
-                    for campaign in li["campaigns"] ]
+    profile_ids = []
+
+    for li in r.json["response"]["line-items"]:
+        if li["state"] == "inactive":
+            break
+        for campaign in li["campaigns"]:
+            if campaign["state"] == "inactive":
+                break
+            profile_ids.append(campaign["profile_id"])
+
     return profile_ids
     
 
@@ -66,6 +73,10 @@ api = lnk.api.rockerbox
 db = lnk.dbs.rockerbox
 
 profile_ids = get_profile_ids("Lookalike")
-segment_targets = get_segment_targets(profile_ids)
-edits = create_edits(segment_targets)
-push_edits(edits)
+
+if len(profile_ids) > 0:
+    segment_targets = get_segment_targets(profile_ids)
+    edits = create_edits(segment_targets)
+    push_edits(edits)
+else:
+    logger.info("Didn't find any active campaigns. Exiting...")
