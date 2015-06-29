@@ -4,7 +4,9 @@ RB.routes = (function(routes) {
   try {
     var source = "advertiser=" + window.location.search.split("source=")[1].split("&")[0]
   } catch(e) {
-    var source = "advertiser=baublebar"
+    try {
+      var source = "advertiser=" + window.location.search.split("advertiser=")[1].split("&")[0]
+    } catch(e) {}
   }
 
   routes.transforms = {}
