@@ -64,7 +64,7 @@ class BatchLogHandler(EditableBaseHandler):
             get_response = yield run_mysql_deferred(self.db, get_query)
             
             # Convert to json
-            values = get_response.to_dict(orient="list")
+            values = get_response.to_dict()
             values = {k:v[0] for k,v in values.iteritems()}
 
             self.write(ujson.dumps({"response":values}))
