@@ -138,7 +138,8 @@ class FunnelAPI:
         return urls
 
     def format_in_clause(self, l):
-        formatted = ["'{}'".format(item.encode("ascii", "ignore").replace("'", "''")) for item in l]
+        formatted = ["'{}'".format(item.encode("ascii", "ignore").replace("'", "''")) 
+                     for item in l]
         return ','.join(formatted)
 
     def get_chunks(self, l, n):
