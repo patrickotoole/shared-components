@@ -33,7 +33,7 @@ class FunnelAPI:
         return pop
     
     def get_funnel_domains(self, funnel_name, advertiser):
-        patterns = self.get_patterns(funnel_name)
+        patterns = self.get_patterns(funnel_name=funnel_name)
         advertiser_urls = self.get_urls(advertiser)
         
         uids = self.get_uids(patterns, advertiser_urls)
@@ -49,8 +49,16 @@ class FunnelAPI:
         funnels = [tuple(x) for x in funnels.values]
         return funnels
 
-    def get_patterns(self, funnel_name):
-        query = GET_PATTERNS.format(funnel_name)
+    def get_patterns(self, funnel_name=None, segment_id=None):
+        where = "1=1"
+
+        if funnel_name:
+            where = where + " and a.funnel_name = '{}'".format(funnel_name)
+
+        if segment_id:
+            where = where + " and a.segment_id = {}".format(segment_id)
+
+        query = GET_PATTERNS.format(where)
         patterns = self.db.select_dataframe(query).url_pattern.tolist()
         return patterns
 
@@ -130,7 +138,8 @@ class FunnelAPI:
         return urls
 
     def format_in_clause(self, l):
-        formatted = ["'{}'".format(item.encode("ascii", "ignore").replace("'", "''")) for item in l]
+        formatted = ["'{}'".format(item.encode("ascii", "ignore").replace("'", "''")) 
+                     for item in l]
         return ','.join(formatted)
 
     def get_chunks(self, l, n):

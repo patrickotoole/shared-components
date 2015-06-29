@@ -18,13 +18,16 @@ def get_segment_targets(profile_ids):
     combined = ','.join(profile_ids)
     r = console.get("/profile?id={}".format(combined))
 
-    segment_targets = [group["segments"] 
-                       for p in r.json["response"]["profiles"] 
-                       for group in p["segment_group_targets"]]
+    segment_targets = []
+    for p in r.json["response"]["profiles"]:
+        if p["segment_group_targets"]:
+            for group in p["segment_group_targets"]:
+                segment_targets.append(group["segments"])
 
     segment_targets = [(item["id"], item["name"].replace("Delorean - ","")) 
                        for sublist in segment_targets 
-                       for item in sublist]
+                       for item in sublist
+                       if not item["deleted"]]
     
     segment_targets = set(segment_targets)
     return segment_targets
