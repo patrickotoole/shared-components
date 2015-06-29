@@ -11,10 +11,10 @@ def get_profile_ids(search_term):
     profile_ids = []
 
     for li in r.json["response"]["line-items"]:
-        if li["state"] == "inactive":
+        if li["state"] != "active":
             break
         for campaign in li["campaigns"]:
-            if campaign["state"] == "inactive":
+            if campaign["state"] != "active":
                 break
             profile_ids.append(campaign["profile_id"])
 
