@@ -192,11 +192,11 @@ class FunnelCampaignHandler(CampaignHandler):
 
 
 
-    #@tornado.web.authenticated
+    @tornado.web.authenticated
     @tornado.web.asynchronous
     def get(self):
         
-        advertiser_id = 302568 #self.current_advertiser
+        advertiser_id = self.current_advertiser
         funnel_id = self.get_argument("funnel_id",False)
         if funnel_id:
             self.get_funnel_campaigns(advertiser_id,funnel_id)
@@ -216,7 +216,7 @@ class FunnelCampaignHandler(CampaignHandler):
 
 
 
-
+    @tornado.web.authenticated
     @tornado.web.asynchronous
     def put(self):
         """
@@ -238,11 +238,11 @@ class FunnelCampaignHandler(CampaignHandler):
         else:
             self.finish()
 
-
+    @tornado.web.authenticated
     @tornado.web.asynchronous
     def post(self):
 
-        advertiser_id = 302568 #self.current_advertiser
+        advertiser_id = self.current_advertiser
         obj = ujson.loads(self.request.body)
         profile = obj.get('profile',False)
         details = obj.get('details',{})
