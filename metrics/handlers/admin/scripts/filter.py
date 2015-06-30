@@ -39,12 +39,12 @@ class FilterHandler(tornado.web.RequestHandler):
 
     @decorators.deferred
     def defer_get_available(self):
-        return self.marathon.get("/v2/apps/akka-tree-filter").json['app']['tasks']
+        return self.marathon.get("/v2/apps/filter/imps").json['app']['tasks']
     
     @defer.inlineCallbacks 
     def get_listeners(self):
         available = yield self.defer_get_available()
-        server = "http://" + available[0]['host'] + ":9999"
+        server = "http://{}:{}".format(available[0]['host'], available[0]['ports'][0])
 
         self.render("../templates/admin/filter.html",server=server)
 
