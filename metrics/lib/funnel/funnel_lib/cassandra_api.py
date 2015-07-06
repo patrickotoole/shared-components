@@ -36,7 +36,10 @@ class FunnelAPI:
         patterns = self.get_patterns(funnel_name=funnel_name)
         advertiser_urls = self.get_urls(advertiser)
         
-        uids = self.get_uids(patterns, advertiser_urls)
+        
+        logger.info("PATTERNS: {}".format(patterns))
+
+        uids = self.get_uids_updated(patterns, advertiser_urls)
         
         logger.info("Number of uids: {}".format(len(uids)))
         
@@ -58,19 +61,32 @@ class FunnelAPI:
         if segment_id:
             where = where + " and a.segment_id = {}".format(segment_id)
 
-        query = GET_PATTERNS.format(where)
-        patterns = self.db.select_dataframe(query).url_pattern.tolist()
+        q = GET_PATTERNS.format(where)
+        logger.info("Executing query: {}".format(q))
+        
+        r = self.db.select_dataframe(q)
+        grouped = r.groupby(["action_id","operator"])
+        r_dict = grouped["url_pattern"].apply(lambda x: x.tolist()).to_dict()
+        
+        patterns = []
+        for i in r_dict.iteritems():
+            patterns.append({"operator": i[0][1], "patterns": i[1]})
+
+        # patterns = results.url_pattern.tolist()
         return patterns
 
-    def get_urls(self, advertiser):
+    def get_urls(self, advertiser, visits=False):
         query = GET_URLS.format(advertiser)
-        return self.c.select_dataframe(query)
+        df = self.c.select_dataframe(query)
+
+        if not visits:
+            df = df[["url"]]
+        return df
 
     def get_uids(self, patterns, urls):
         '''Return uids that have visited at least one url fufilling each pattern in
         patterns.
         '''
-
         uid_sets = []
     
         # Get a list of sets
@@ -82,20 +98,70 @@ class FunnelAPI:
 
         # Get the set of uids that have gone through all funnel patterns
         common = uid_sets[0]
-
         for uid_set in uid_sets:
             common.intersection_update(uid_set)
+
         return list(common)
 
-    def fetch_uids(self, urls):
-        chunks = self.get_chunks(urls, 10000)
+    def get_action_uids(self, operator, patterns, urls):
+        uid_sets = []
+
+        for pattern in patterns:
+            logger.info(pattern)
+            filtered = self.filter_urls(urls, pattern)
+            uids = self.fetch_uids(filtered)
+            uid_sets.append(uids)
+
+        common = uid_sets[0]
+        
+        for uid_set in uid_sets:
+            if operator == "and":
+                logging.info("Using 'AND' operator to combine uids from {}".format(patterns))
+                common.intersection_update(uid_set)
+            elif operator == "or":
+                logging.info("Using 'OR' operator to combine uids from {}".format(patterns))
+                common.update(uid_set)
+            else:
+                raise Exception("Invalid operator: {}".format(operator))
+        return common
+            
+
+    def get_uids_updated(self, actions, urls):
+        '''This version of get_uids correctly uses operators. Patterns should 
+        be in the form of:
+        [
+            {
+                "operator": "and", 
+                "patterns":["something.com"]
+            }
+        ]
+        '''
+        uid_sets = []
+    
+        # Get a list of sets
+        for action in actions:
+            uids = self.get_action_uids(action["operator"], action["patterns"], urls)
+            uid_sets.append(uids)
+        # Get the set of uids that have gone through all funnel patterns
+        common = uid_sets[0]
+        for uid_set in uid_sets:
+            common.intersection_update(uid_set) 
+        return common
+
+    def fetch_uids(self, urls, chunk_size = 10000):
+        chunks = self.get_chunks(urls, chunk_size)
         queries = []
 
         for chunk in chunks:
             in_clause = self.format_in_clause(chunk)
             query = GET_UIDS.format(in_clause)
             queries.append(query)
-        uids = set(pd.DataFrame(self.batch_execute(queries)).uid.tolist())
+        results = self.batch_execute(queries)
+
+        if not results:
+            return []
+
+        uids = set(pd.DataFrame(results).uid.tolist())
         return uids
 
     def get_domains(self, uids):
@@ -107,12 +173,13 @@ class FunnelAPI:
         
         del grouped["domain"]
         del grouped["uid"]
+        
         grouped["converted"] = "1"
-    
+        
         return grouped
 
     def fetch_domains(self, uids):
-        chunks = self.get_chunks(uids, 10000)
+        chunks = self.get_chunks(list(uids), 10000)
         queries = []
 
         for chunk in chunks:

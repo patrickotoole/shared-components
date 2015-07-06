@@ -10,11 +10,19 @@ BAD_DOMAINS = [
     ]
 
 GET_PATTERNS = """
-SELECT a.funnel_id, a.funnel_name, a.segment_id, c.url_pattern, b.order
+SELECT DISTINCT 
+    a.funnel_id, 
+    a.funnel_name, 
+    a.segment_id, 
+    c.url_pattern, 
+    b.order, 
+    d.operator,
+    d.action_id
 FROM funnel a
 JOIN funnel_actions b
 JOIN action_patterns c
-on (a.funnel_id = b.funnel_id and b.action_id = c.action_id)
+JOIN action d
+on (a.funnel_id = b.funnel_id and b.action_id = c.action_id and c.action_id = d.action_id)
 WHERE {} 
 """
 
@@ -25,7 +33,7 @@ WHERE model_active=1
 """
 
 GET_URLS = """
-SELECT url
+SELECT url, visits
 FROM rockerbox.visit_urls
 WHERE source='{}'
 """
