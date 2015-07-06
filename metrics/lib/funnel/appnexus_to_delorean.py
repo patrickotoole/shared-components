@@ -26,6 +26,7 @@ def get_segment_targets(profile_ids):
     r = console.get("/profile?id={}".format(combined))
 
     segment_targets = []
+
     for p in r.json["response"]["profiles"]:
         if p["segment_group_targets"]:
             for group in p["segment_group_targets"]:
