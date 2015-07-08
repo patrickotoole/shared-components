@@ -6,6 +6,7 @@ from twisted.internet import defer
 from lib.helpers import *
 from base import BaseHandler
 
+import mocks.cassandra
 from datetime import datetime, timedelta
 
 class HealthHandler(BaseHandler):
@@ -44,7 +45,7 @@ class HealthHandler(BaseHandler):
         self.finish()
          
     def check_cassandra(self):
-        if self.cassandra is None: self.write('{"status":0}')
+        if self.cassandra is mocks.cassandra.CASSANDRA: self.write('{"status":0}')
         else:
             df = self.cassandra.select_dataframe("SELECT * FROM rockerbox.visitor_domains limit 1")
             if len(df) == 1: self.write('{"status":1}')
