@@ -106,3 +106,8 @@ class FunnelMongoAPI:
             logger.info(r.modified_count)
             self.insert_diff(advertiser, funnel_name, found, obj)
 
+    # What do we want to include in each recommendation? We need to know how
+    # many users fall into the 
+    def insert_funnel_recs(self, advertiser, recs):
+        to_insert = {"advertiser":advertiser, "funnel_recs":recs}
+        return self.mongo.funnel_recs.insert_one(to_insert)

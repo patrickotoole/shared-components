@@ -13,7 +13,7 @@ logger = logging.getLogger()
 
 api = FunnelAPI()
 
-ADVERTISER = "baublebar"
+ADVERTISER = "bigstock"
 TYPE = "urls"
 
 conv_actions = {
@@ -34,6 +34,12 @@ conv_actions = {
         "https://www.journelle.com/on/demandware.store/Sites-journelle-Site/default/COShipping-Start",
         "https://www.journelle.com/on/demandware.store/Sites-journelle-Site/default/COSummary-Submit",
         "https://www.journelle.com/on/demandware.store/Sites-journelle-Site/default/COBilling-Start"
+    ],
+    "bigstock": [
+        "http://www.bigstockphoto.com/subscribe/payment*",
+        "http://www.bigstockphoto.com/ru/subscribe/payment*",
+        "http://www.bigstockphoto.com/account/commissions*",
+        "http://www.bigstockphoto.com/account/uploads*"
     ]
 }
 
@@ -63,7 +69,8 @@ excludes = {
         "http://www.journelle.com/",
         "https://www.journelle.com/",
         "https://www.journelle.com/on/demandware.store/Sites-journelle-Site/default/Account-SetNewPasswordConfirm"
-    ]
+    ],
+    "bigstock": []
 }
 
 STOPWORDS = [
@@ -107,6 +114,12 @@ def urls_to_keywords(urls):
     keywords = list(set(keywords))
     return keywords
 
+def matches_any(l, regex_list):
+    for s in l:
+        if matches(s, regex_list):
+            return True
+    return False
+
 def matches(s, regex_list):
     for regex in regex_list:
         if fnmatch.fnmatch(s, regex):
@@ -140,7 +153,7 @@ del url_dict
 del uid_dict
 
 # Put DataFrame into correct format for Tree object, remove users with less 
-df["converted"] = df.urls.apply(lambda x: '1' if bool(set(conv_actions[ADVERTISER]) & set(x)) else '0' )
+df["converted"] = df.urls.apply(lambda x: '1' if matches_any(x, conv_actions[ADVERTISER]) else '0' )
 df.urls = df.urls.apply(lambda x: [i for i in x if not matches(i, (conv_actions[ADVERTISER] + excludes[ADVERTISER]))])
 df = df[df.urls.apply(lambda x: len(x) > 1)]
 
@@ -149,3 +162,6 @@ if TYPE == "keywords":
 
 tree = Tree(df, TYPE, "converted", make_branches=False, min_samples=10, 
             max_depth=5, num_features=500, export_path="onsite.pdf")
+
+# We have the recomendations in a list of lists
+# Next, we need to get this into the API

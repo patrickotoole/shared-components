@@ -52,19 +52,26 @@ class Tree:
         recs = []
         branches = [self.get_rules(leaf) for leaf in self.good_leaves]
 
+        df_copy = self.df.copy()
+
         for b in branches:
             while len(b) > 0:
                 # If this is an include-only branch, add it to the recommendations
-                if not self.has_excludes(b):
-                    recs.append(b)
+                if not self.has_excludes(b) and b not in recs:
+                    includes = [action["domain"] for action in b]
+                    df_copy["passes_rule"] = df_copy.apply(self.evaluate, axis=1, args=[includes,[]])
+                    counts = df_copy.passes_rule.value_counts()
+                    num_in_funnel = counts.loc[True]
+                    recs.append({"actions":b, "num_in_funnel": num_in_funnel})
                     break
                 # If it does contain excludes, drop the top-most node and try again
                 b = b[:-1]
         
         final = []
         for rec in recs:
-            to_add = [action["domain"] for action in rec]
-            to_add.reverse()
+            urls = [action["domain"] for action in rec["actions"]]
+            urls.reverse()
+            to_add = {"actions": urls, "num_in_funnel": rec["num_in_funnel"]}
             if to_add not in final:
                 final.append(to_add)
 
@@ -218,13 +225,13 @@ class Tree:
 
     def evaluate(self, user, include, exclude):
         # Make sure that the user hasn't been to any exluded domains
-        for domain in user.domains:
+        for domain in user[self.training_column_name]:
             if domain in exclude:
                 return False
 
         # Make sure that the user has been to all included domains
         for domain in include:
-            if domain not in user.domains:
+            if domain not in user[self.training_column_name]:
                 return False
 
         return True
