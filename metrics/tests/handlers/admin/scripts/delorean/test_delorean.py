@@ -139,12 +139,15 @@ class DeloreanHandlerTest(AsyncHTTPTestCase):
 
     @mock.patch.object(delorean.DeloreanHandler, 'defer_post_tree', autospec=True)
     @mock.patch.object(delorean.DeloreanHandler, 'defer_get_tree', autospec=True)
-    def test_replace_node(self, mock_defer_get_tree, mock_defer_post_tree):
+    @mock.patch.object(delorean.DeloreanHandler, 'defer_get_available', autospec=True)
+    def test_replace_node(self, mock_defer_get_available, mock_defer_get_tree, mock_defer_post_tree):
         response = EmptyObject()
         response.body = '"1"'
 
         mock_defer_get_tree.return_value = TREE
         mock_defer_post_tree.return_value = response
+        mock_defer_get_available.return_value = ("host","port")
+
 
         url = "/delorean/edit/?label=_lookalike&replace=True"
         self.fetch(url, method="POST", body=ujson.dumps(TO_APPEND))
@@ -154,12 +157,15 @@ class DeloreanHandlerTest(AsyncHTTPTestCase):
 
     @mock.patch.object(delorean.DeloreanHandler, 'defer_post_tree', autospec=True)
     @mock.patch.object(delorean.DeloreanHandler, 'defer_get_tree', autospec=True)
-    def test_delete_from_node(self, mock_defer_get_tree, mock_defer_post_tree):
+    @mock.patch.object(delorean.DeloreanHandler, 'defer_get_available', autospec=True)
+    def test_delete_from_node(self, mock_defer_get_available, mock_defer_get_tree, mock_defer_post_tree):
         response = EmptyObject()
         response.body = '"1"'
 
         mock_defer_get_tree.return_value = TREE
         mock_defer_post_tree.return_value = response
+        mock_defer_get_available.return_value = ("host","port")
+
 
         url = "/delorean/edit/?label=_lookalike&delete=true"
         r = self.fetch(url, method="POST", body=ujson.dumps(TO_DELETE))
