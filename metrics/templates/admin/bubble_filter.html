@@ -198,8 +198,7 @@ function zoom(d, new_data) {
 
 http://rdev:8087/admin/filter/streaming
 
-RB.websocket.addSubscription("raw_imps_tree",{"name":"raw_imps_tree","values":false},{"name":"raw_imps_tree","callback":function(x){
-    console.log(x)
+RB.websocket.addSubscription("{{topic}}",{"name":"{{topic}}","values":false},{"name":"{{topic}}","callback":function(x){
     x.raw_imps_tree.filter(function(y){ 
       return y.count
     }).map(function(z,i){

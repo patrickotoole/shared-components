@@ -23,8 +23,8 @@ class DeloreanHandler(FilterHandler):
 
     @defer.inlineCallbacks
     def edit_tree(self, filter_label, edits, replace=False):
-        available = yield self.defer_get_available()
-        self.server = "http://{}:{}".format(available[0]['host'], available[0]['ports'][0])
+        host,port = yield self.defer_get_available()
+        self.server = "http://{}:{}".format(host, port)
 
         tree = yield self.defer_get_tree()
         
@@ -37,8 +37,8 @@ class DeloreanHandler(FilterHandler):
 
     @defer.inlineCallbacks
     def delete_from_tree(self, filter_label, to_delete):
-        available = yield self.defer_get_available()
-        self.server = "http://" + available[0]['host'] + ":" + available[0]['port']
+        host,port = yield self.defer_get_available()
+        self.server = "http://" + host + ":" + port
 
         tree = yield self.defer_get_tree()
 
