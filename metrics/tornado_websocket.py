@@ -90,16 +90,10 @@ if __name__ == '__main__':
         cookie_secret="rickotoole",
         login_url="/login"
     )
-    if not options.skip_buffers:
-        reactor.listenTCP(options.listen_port, streaming.track_factory)
-        reactor.listenTCP(options.view_port, streaming.view_factory)  
-        reactor.callInThread(connectors['served_imps'],streaming.served_buffer,streaming.BufferControl()) 
-        reactor.callInThread(connectors['filtered_imps'],streaming.imps_buffer,streaming.BufferControl())
-        reactor.callInThread(connectors['conversion_imps'],streaming.conversion_imps_buffer,streaming.BufferControl()) 
-        reactor.callInThread(connectors['conversion_events'],streaming.conversion_events_buffer,streaming.BufferControl()) 
-        reactor.callInThread(connectors['visit_events'],streaming.visit_events_buffer,streaming.BufferControl()) 
-        
-        reactor.callInThread(connectors['treefilter'],streaming.treefilter_buffer,streaming.BufferControl())  
+    if not options.skip_buffers and not options.show_routes:
+        # startup the buffers
+        for queue,buf in connectors["buffers"].items():
+            reactor.callInThread(connectors[queue],buf,streaming.BufferControl())
 
     server = tornado.httpserver.HTTPServer(app)
     server.listen(options.port)

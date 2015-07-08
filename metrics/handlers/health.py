@@ -1,9 +1,12 @@
 import tornado.web
 import ujson
+from lib.kafka_queue import kafka_queue
 
 from twisted.internet import defer
 from lib.helpers import *
 from base import BaseHandler
+
+from datetime import datetime, timedelta
 
 class HealthHandler(BaseHandler):
 
@@ -12,6 +15,17 @@ class HealthHandler(BaseHandler):
         self.cassandra = cassandra
         self.spark_sql = spark_sql
         
+
+    def check_buffers(self):
+        if self.db is None: self.write('{"status":0}')
+        else:
+            bools = {
+                key: 1 if value and (value > (datetime.now() - timedelta(seconds=60))) else 0
+                for key,value in kafka_queue.ACTIVE_QUEUES.items() 
+            }
+            self.write(ujson.dumps(bools))
+        self.finish()
+ 
 
     def check_mysql(self):
         if self.db is None: self.write('{"status":0}')
@@ -43,7 +57,6 @@ class HealthHandler(BaseHandler):
        if fn:
            fn(self)
            return 
-           
 
        self.write('{"status":0}')
        self.finish() 

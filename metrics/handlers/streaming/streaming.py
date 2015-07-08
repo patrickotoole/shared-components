@@ -44,8 +44,6 @@ class IndexHandler(BaseHandler):
     @tornado.web.authenticated
     @tornado.web.asynchronous
     def get(self):
-        # self.render("v2_streaming.html",advertiser_id= self.current_advertiser)
-        # self.render("v2_streaming_demo.html",advertiser_id="asdf")
         self.render("streaming/_streaming.html", advertiser_id=self.current_advertiser, user_id=self.current_user)
 
 
@@ -59,7 +57,6 @@ class StreamingHandler(StreamingBase,tornado.websocket.WebSocketHandler):
     def generator_loop(self):
 
         start = time.time()
-        delorean = self.reset("treefilter") 
         base = { key:self.build_df(key) for key in self.buffers.keys()}
             
         for i,client in clients.iteritems():
@@ -67,10 +64,15 @@ class StreamingHandler(StreamingBase,tornado.websocket.WebSocketHandler):
                 continue
 
             masks = client.get('masks',False)
-            streams = client.get('streams',['track'])
-            dicts = { key: self.mask_select_convert(df,masks,key) for key, df in base.iteritems() if key in streams}
-            if "treefilter" in streams:
-                dicts["treefilter"] = delorean
+            streams = client.get('streams',['served_imps'])
+            dicts = { key: df 
+                for key, df in base.iteritems() 
+                if type(df) is not pandas.DataFrame and key in streams
+            }
+            for key, df in base.iteritems():
+                 if type(df) is pandas.DataFrame and key in streams:
+                     dicts[key] = self.mask_select_convert(df,masks,key)
+            
             json = ujson.dumps(dicts,ensure_ascii=True)
 
             try:
@@ -106,14 +108,14 @@ class StreamingHandler(StreamingBase,tornado.websocket.WebSocketHandler):
         """
         clients[self.id] = {"id": self.id, "object": self, "enabled":False}
         if len(clients.keys()) == 1 and self.control_buffer['on'] is False:
-            self.buffers['track'].clear()
+            #self.buffers['track'].clear()
             self.control_buffer['on'] = True
             self.generator_loop()
 
     def on_message(self, message):        
-        if message == "initialize":
+        if message.rstrip() == "initialize":
             logging.info("initializing: %s" % self.id)
-        elif message == "start":
+        elif message.rstrip() == "start":
             logging.info("starting: %s" % self.id)
             clients[self.id]['enabled'] = True
         else:

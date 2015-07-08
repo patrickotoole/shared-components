@@ -27,7 +27,9 @@ imps_buffer = []
 conversion_imps_buffer = [] 
 conversion_events_buffer = [] 
 visit_events_buffer = [] 
-treefilter_buffer = []
+raw_imps_tree_buffer = []
+conversion_events_tree_buffer = []
+visit_events_tree_buffer = []
 
 
 pixel_parsers = {
