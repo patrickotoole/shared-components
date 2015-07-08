@@ -16,7 +16,7 @@ COLUMN_OBJECTS = {
     "filtered_imps": AUCTION,
     "visit_events": PIXEL,
     "conversion_events": CONVERSION,
-    "conversion_imps": RESULT,
+    #"conversion_imps": RESULT,
     "served_imps": SERVED
 }
 COLS = COLUMN_OBJECTS.keys()
