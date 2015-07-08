@@ -78,9 +78,11 @@ class StreamingBase(BufferBase):
         values = self.reset(buffer_name)
         if buffer_name in fields.COLUMN_OBJECTS.keys():
             column_objects = { buffer_name: fields.COLUMN_OBJECTS[buffer_name] }
+            return self.build(values,column_objects)
         else:
-            column_objects = fields.COLUMN_OBJECTS
-        return self.build(values,column_objects)
+            return values 
+ 
+        
 
     def mask_select_convert(self,df,masks,col=False):
         _df = mask_data(df,masks)

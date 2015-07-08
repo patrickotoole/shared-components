@@ -32,7 +32,7 @@ class AdminStreamingHandler(StreamingHandler):
         except:
             pass
 
-        if message == "start":
+        if message.rstrip() == "start":
             clients[self.id]['enabled'] = True
 
         print "Client %s received a message : %s" % (self.id, message)

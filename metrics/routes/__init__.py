@@ -1,9 +1,11 @@
 from admin import AdminRoutes
 from client import ClientRoutes
+from health import HealthRoutes
 
 class AllRoutes(
     AdminRoutes, 
-    ClientRoutes
+    ClientRoutes,
+    HealthRoutes
 ): 
 
     def __mock_all__(self,routes=[]):

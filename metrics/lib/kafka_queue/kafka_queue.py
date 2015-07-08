@@ -1,5 +1,7 @@
 import logging
 
+ACTIVE_QUEUES = {}
+
 def transform_message(message):
     import ujson
     j = ujson.loads(message)
@@ -18,7 +20,7 @@ def transform_message(message):
 class KafkaQueue(object):
 
     def __init__(self,default_hosts="slave16:9092",
-            use_marathon=True,topic="filtered_imps",group="none",
+            use_marathon=True,topic="filtered_imps",group="some",
             mock_connect=False,transform=transform_message):
 
         self.topic = topic
@@ -52,10 +54,10 @@ class KafkaQueue(object):
     def connect(self,hosts_str,topic,group):
         from kafka import KafkaClient, SimpleConsumer, common
         try:
-            logging.info("Kafka connecting: %s" % hosts_str)
-
+            logging.info("Kafka connecting: %s for %s" % (hosts_str,topic))
+            
             client = KafkaClient(hosts_str,timeout=10)
-            consumer = SimpleConsumer(client, group, topic, max_buffer_size=4096*1024)
+            consumer = SimpleConsumer(client, group, topic, max_buffer_size=4096*1024*10)
             return consumer
         except Exception as e:
             import time
@@ -76,6 +78,7 @@ class KafkaQueue(object):
 
     def populate_buffer(self,_buffer,buffer_control,transform=lambda x: x):
         import time
+        import datetime
         consumer = self.consumer
         repeated_failure = 0 
         while True:
@@ -89,11 +92,14 @@ class KafkaQueue(object):
                 if buffer_control['on']:
                     obj = transform(message.message.value)
                     _buffer += [obj]
+                ACTIVE_QUEUES[self.topic] = datetime.datetime.now()
+
 
             except Exception as e:
 
                 logging.error(e)
                 repeated_failure += 1
+                ACTIVE_QUEUES[self.topic] = 0
                 if repeated_failure > 5:
                      time.sleep(1)
                      self._consumer = self.connect(self.hosts_str, self.topic, self.group)

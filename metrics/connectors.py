@@ -49,32 +49,46 @@ class ConnectorConfig(object):
                 self.connectors["filtered_imps"] = KafkaQueue(mock_connect=skip_filtered_imps)
                 self.connectors["conversion_imps"] = KafkaQueue(
                     mock_connect=skip_conversion_imps,topic="conversion_impsw",transform=ujson.loads
-                    ) 
+                ) 
                 self.connectors["conversion_events"] = KafkaQueue(
                     mock_connect=skip_conversion_events,topic="conversion_events",transform=ujson.loads
-                    )
+                )
                 self.connectors["visit_events"] = KafkaQueue(
                     mock_connect=skip_visit_events,topic="visit_events",transform=ujson.loads
-                    )
+                )
                 self.connectors["served_imps"] = KafkaQueue(
                     mock_connect=skip_visit_events,topic="served_imps",transform=ujson.loads
-                    )
-                self.connectors["treefilter"] = KafkaQueue(
-                    mock_connect=skip_visit_events,topic="filtertree",transform=ujson.loads
-                    )
+                )
+
+                self.connectors["raw_imps_tree"] = KafkaQueue(
+                    mock_connect=skip_visit_events,topic="raw_imps_tree",transform=ujson.loads
+                )
+
+                self.connectors["conversion_events_tree"] = KafkaQueue(
+                    mock_connect=skip_visit_events,topic="conversion_events_tree",transform=ujson.loads
+                )
+
+                self.connectors["visit_events_tree"] = KafkaQueue(
+                    mock_connect=skip_visit_events,topic="visit_events_tree",transform=ujson.loads
+                )
+
+
+
 
                 self.connectors["buffers"] = {
-                    "track": streaming.track_buffer,
-                    "view" : streaming.view_buffer,
-                    "filtered_imps" : streaming.imps_buffer,
-                    "conversion_imps": streaming.conversion_imps_buffer,
+                    #"track": streaming.track_buffer,
+                    #"view" : streaming.view_buffer,
+                    "filtered_imps" : streaming.imps_buffer,                   # yoshi
+                    "conversion_imps": streaming.conversion_imps_buffer,       # hoverboard
                     "conversion_events": streaming.conversion_events_buffer,
                     "visit_events": streaming.visit_events_buffer,
                     "served_imps": streaming.served_buffer,
-                    "treefilter": streaming.treefilter_buffer
-                    }
-            except:
-                logging.error("One or more buffers not connected")
+                    "raw_imps_tree": streaming.raw_imps_tree_buffer,           # delorean
+                    "conversion_events_tree": streaming.conversion_events_tree_buffer,
+                    "visit_events_tree": streaming.visit_events_tree_buffer
+                }
+            except Exception as e:
+                logging.error("One or more buffers not connected", e)
                 print "One or more buffers not connected"
                 self.connectors["buffers"] = None
         else:
