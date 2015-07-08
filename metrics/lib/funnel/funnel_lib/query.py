@@ -36,6 +36,7 @@ GET_URLS = """
 SELECT url, visits
 FROM rockerbox.visit_urls
 WHERE source='{}'
+LIMIT 300000
 """
 
 GET_UIDS = """

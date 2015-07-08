@@ -76,6 +76,8 @@ class AdvertiserRoutes(Routes):
             (r'/funnel/action/(.*?)', funnel.ActionHandler, self.connectors),
             (r'/funnel/campaigns', funnel.FunnelCampaignsHandler, self.connectors),
             (r'/funnel/campaigns/(.*?)', funnel.FunnelCampaignsHandler, self.connectors),
+            (r'/funnel/recs', funnel.FunnelRecsHandler, self.connectors),
+            (r'/funnel/recs/(.*?)', funnel.FunnelRecsHandler, self.connectors),
             (r'/funnel', funnel.FunnelHandler, self.connectors),
             (r'/funnel/(.*?)', funnel.FunnelHandler, self.connectors)
         ]
