@@ -27,7 +27,7 @@ class DeloreanHandler(FilterHandler):
         self.server = "http://{}:{}".format(host, port)
 
         tree = yield self.defer_get_tree()
-        
+
         if replace:
             new_tree = self.replace_node(filter_label, tree["pattrenTree"], edits)
         else:
@@ -38,7 +38,7 @@ class DeloreanHandler(FilterHandler):
     @defer.inlineCallbacks
     def delete_from_tree(self, filter_label, to_delete):
         host,port = yield self.defer_get_available()
-        self.server = "http://" + host + ":" + port
+        self.server = "http://{}:{}".format(host, port)
 
         tree = yield self.defer_get_tree()
 

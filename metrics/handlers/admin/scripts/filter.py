@@ -37,16 +37,18 @@ class FilterHandler(tornado.web.RequestHandler):
     @decorators.deferred
     def defer_get_domains(self):
         return self.db.select_dataframe("SELECT * from domain_list where segment like 'delorean%%'")
-
-    @decorators.deferred
-    def defer_get_available(self, filter_type="imps"):
+    
+    def get_available(self, filter_type):
         server = "_{}.filter._tcp.marathon.mesos".format(filter_type)
-        print server
         result = resolver.query(server,"SRV")
         host = list(result.__iter__())[0].target.to_text().strip(".")
         port = list(result.__iter__())[0].port
         return host,port
-    
+
+    @decorators.deferred
+    def defer_get_available(self, filter_type="imps"):
+        return self.get_available(filter_type)
+
     @defer.inlineCallbacks 
     def get_listeners(self, filter_type):
         host,port = yield self.defer_get_available(filter_type)
