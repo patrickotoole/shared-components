@@ -22,7 +22,8 @@ def get_profile_ids(search_term):
     
 
 def get_segment_targets(profile_ids):
-    combined = ','.join(profile_ids)
+    print profile_ids
+    combined = ','.join([str(p) for p in profile_ids])
     r = console.get("/profile?id={}".format(combined))
 
     segment_targets = []
@@ -35,7 +36,7 @@ def get_segment_targets(profile_ids):
     segment_targets = [(item["id"], item["name"].replace("Delorean - ","")) 
                        for sublist in segment_targets 
                        for item in sublist
-                       if not item["deleted"]]
+                       if not item["deleted"] and "Delorean -" in item["name"]]
     
     segment_targets = set(segment_targets)
     return segment_targets
@@ -61,9 +62,10 @@ def create_edits(segment_targets):
 
 def push_edits(edits):
     url = "/delorean/edit/?label=_lookalike&replace=true"
+    logger.info("Submitting edits: {}".format(edits))    
     r = api.post(url, data=json.dumps(edits))
-    logger.info("Submitting edits: {}".format(edits))
-    
+
+    print r.text
     if r.text != "1":
         raise Exception("Error with submitting edits: {}".format(edits))
     else:
@@ -78,6 +80,6 @@ profile_ids = get_profile_ids("Lookalike")
 if len(profile_ids) > 0:
     segment_targets = get_segment_targets(profile_ids)
     edits = create_edits(segment_targets)
-    push_edits(edits)
+    print push_edits(edits)
 else:
     logger.info("Didn't find any active campaigns. Exiting...")
