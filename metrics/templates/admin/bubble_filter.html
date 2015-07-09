@@ -199,7 +199,7 @@ function zoom(d, new_data) {
 http://rdev:8087/admin/filter/streaming
 
 RB.websocket.addSubscription("{{topic}}",{"name":"{{topic}}","values":false},{"name":"{{topic}}","callback":function(x){
-    x.raw_imps_tree.filter(function(y){ 
+    x.{{topic}}.filter(function(y){ 
       return y.count
     }).map(function(z,i){
       setTimeout(build.bind(false,z),1000*i)
