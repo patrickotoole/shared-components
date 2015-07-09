@@ -15,7 +15,7 @@ import mock
 import ujson
 from mock import MagicMock, patch
 from link import lnk
-from metrics.handlers.admin.scripts.delorean import DeloreanHandler
+from metrics.handlers.admin.scripts import delorean
 
 TREE = {
     "pattrenTree": {
@@ -99,6 +99,10 @@ EXPECTED_DELETE["children"][0]["children"].remove(TO_DELETE["children"][0])
 
 class EmptyObject(object):
     pass
+
+def MOCK(args):
+    print "MOCK"
+    return TREE
             
 class DeloreanHandlerTest(AsyncHTTPTestCase):
 
@@ -107,7 +111,7 @@ class DeloreanHandlerTest(AsyncHTTPTestCase):
         self.mock_marathon = mock.MagicMock()
 
         self.app = Application([
-                (r'/delorean/edit/?(.*?)', DeloreanHandler, dict(reporting_db=self.db, marathon=self.mock_marathon))
+                (r'/delorean/edit/?(.*?)', delorean.DeloreanHandler, dict(reporting_db=self.db, marathon=self.mock_marathon))
         ], cookie_secret = "rickotoole" )
 
         return self.app
@@ -115,14 +119,16 @@ class DeloreanHandlerTest(AsyncHTTPTestCase):
     def tearDown(self):
         pass
 
-    @mock.patch.object(DeloreanHandler, 'defer_post_tree', autospec=True)
-    @mock.patch.object(DeloreanHandler, 'defer_get_tree', autospec=True)
-    def test_append_to_node(self, mock_defer_get_tree, mock_defer_post_tree):
+    @mock.patch.object(delorean.DeloreanHandler, 'defer_post_tree', autospec=True)
+    @mock.patch.object(delorean.DeloreanHandler, 'defer_get_tree', autospec=True)
+    @mock.patch.object(delorean.DeloreanHandler, 'defer_get_available', autospec=True)
+    def test_append_to_node(self, mock_defer_get_available,  mock_defer_get_tree, mock_defer_post_tree):
         response = EmptyObject()
         response.body = '"1"'
 
         mock_defer_get_tree.return_value = TREE
         mock_defer_post_tree.return_value = response
+        mock_defer_get_available.return_value = ("host","port")
 
         url = "/delorean/edit/?label=_lookalike&replace=False"
         self.fetch(url, method="POST", body=ujson.dumps(TO_APPEND))
@@ -131,14 +137,17 @@ class DeloreanHandlerTest(AsyncHTTPTestCase):
 
         self.assertEqual(EXPECTED_APPEND, args[1])
 
-    @mock.patch.object(DeloreanHandler, 'defer_post_tree', autospec=True)
-    @mock.patch.object(DeloreanHandler, 'defer_get_tree', autospec=True)
-    def test_replace_node(self, mock_defer_get_tree, mock_defer_post_tree):
+    @mock.patch.object(delorean.DeloreanHandler, 'defer_post_tree', autospec=True)
+    @mock.patch.object(delorean.DeloreanHandler, 'defer_get_tree', autospec=True)
+    @mock.patch.object(delorean.DeloreanHandler, 'defer_get_available', autospec=True)
+    def test_replace_node(self, mock_defer_get_available, mock_defer_get_tree, mock_defer_post_tree):
         response = EmptyObject()
         response.body = '"1"'
 
         mock_defer_get_tree.return_value = TREE
         mock_defer_post_tree.return_value = response
+        mock_defer_get_available.return_value = ("host","port")
+
 
         url = "/delorean/edit/?label=_lookalike&replace=True"
         self.fetch(url, method="POST", body=ujson.dumps(TO_APPEND))
@@ -146,14 +155,17 @@ class DeloreanHandlerTest(AsyncHTTPTestCase):
         args,kwargs = mock_defer_post_tree.call_args
         self.assertEqual(EXPECTED_REPLACE, args[1])
 
-    @mock.patch.object(DeloreanHandler, 'defer_post_tree', autospec=True)
-    @mock.patch.object(DeloreanHandler, 'defer_get_tree', autospec=True)
-    def test_delete_from_node(self, mock_defer_get_tree, mock_defer_post_tree):
+    @mock.patch.object(delorean.DeloreanHandler, 'defer_post_tree', autospec=True)
+    @mock.patch.object(delorean.DeloreanHandler, 'defer_get_tree', autospec=True)
+    @mock.patch.object(delorean.DeloreanHandler, 'defer_get_available', autospec=True)
+    def test_delete_from_node(self, mock_defer_get_available, mock_defer_get_tree, mock_defer_post_tree):
         response = EmptyObject()
         response.body = '"1"'
 
         mock_defer_get_tree.return_value = TREE
         mock_defer_post_tree.return_value = response
+        mock_defer_get_available.return_value = ("host","port")
+
 
         url = "/delorean/edit/?label=_lookalike&delete=true"
         r = self.fetch(url, method="POST", body=ujson.dumps(TO_DELETE))

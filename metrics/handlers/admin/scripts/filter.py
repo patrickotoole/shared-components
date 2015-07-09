@@ -4,6 +4,7 @@ import json
 import pandas
 import StringIO
 import logging
+from dns import resolver
 
 from twisted.internet import defer 
 from lib.helpers import *
@@ -36,15 +37,22 @@ class FilterHandler(tornado.web.RequestHandler):
     @decorators.deferred
     def defer_get_domains(self):
         return self.db.select_dataframe("SELECT * from domain_list where segment like 'delorean%%'")
+    
+    def get_available(self, filter_type):
+        server = "_{}.filter._tcp.marathon.mesos".format(filter_type)
+        result = resolver.query(server,"SRV")
+        host = list(result.__iter__())[0].target.to_text().strip(".")
+        port = list(result.__iter__())[0].port
+        return host,port
 
     @decorators.deferred
-    def defer_get_available(self):
-        return self.marathon.get("/v2/apps/filter/imps").json['app']['tasks']
-    
+    def defer_get_available(self, filter_type="imps"):
+        return self.get_available(filter_type)
+
     @defer.inlineCallbacks 
-    def get_listeners(self):
-        available = yield self.defer_get_available()
-        server = "http://{}:{}".format(available[0]['host'], available[0]['ports'][0])
+    def get_listeners(self, filter_type):
+        host,port = yield self.defer_get_available(filter_type)
+        server = "http://{}:{}".format(host, port)
 
         self.render("../templates/admin/filter.html",server=server)
 
@@ -63,15 +71,18 @@ class FilterHandler(tornado.web.RequestHandler):
     
     @tornado.web.asynchronous
     def get(self,*args):
+        topic = self.get_argument("topic", "raw_imps_tree")
+        filter_type = self.get_argument("type", "imps")
+
         if args and args[0] == "streaming":
-            self.render("../templates/admin/bubble_filter.html")
+            self.render("../templates/admin/bubble_filter.html", topic=topic)
         elif args and args[0] == "sankey":
             print "HERE"
-            self.render("../templates/admin/sankey_filter.html")
+            self.render("../templates/admin/sankey_filter.html", topic=topic)
         elif args and args[0] == "domains":
             self.get_domains()
         else:
-            self.get_listeners()
+            self.get_listeners(filter_type)
 
     @defer.inlineCallbacks
     def post_domain(self,domain):
