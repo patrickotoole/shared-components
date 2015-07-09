@@ -16,7 +16,7 @@ xmltodict
 sendgrid
 premailer
 pyyaml
-kafka-python
+kafka-python==0.9.4
 cassandra-driver
 pymongo
 tldextract
