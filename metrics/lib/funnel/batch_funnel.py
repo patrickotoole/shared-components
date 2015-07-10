@@ -31,7 +31,7 @@ def get_profile_ids(search_term):
         profile_ids[a]["profiles"] = set()
 
         for campaign in line_item["campaigns"]:
-            print camapign
+            print campaign
             if campaign["profile_id"] and campaign["state"] == "active":
                 profile_ids[a]["profiles"].add(str(campaign["profile_id"]))
     
@@ -40,15 +40,19 @@ def get_profile_ids(search_term):
 def get_segment_targets(profile_ids):
     combined = ','.join(profile_ids)
     r = console.get("/profile?id={}".format(combined))
-
+    
     segment_targets = []
 
     for p in r.json["response"]["profiles"]:
         if p["segment_targets"]:
             for group in p["segment_targets"]:
                 segment_targets.append(group)
+        if p["segment_group_targets"]:
+            for group in p["segment_group_targets"]:
+                for segment in group["segments"]:
+                    segment_targets.append(segment)
 
-    segment_targets = [target["id"] for target in segment_targets]
+    segment_targets = [(target["id"], target["other_equals"]) for target in segment_targets]
 
     segment_targets = set(segment_targets)
     return segment_targets
@@ -84,20 +88,28 @@ def run():
        """
     data = get_profile_ids("Funnel")
 
+    logger.info("Profile IDs: {}".format(data))
+
     funnel_api = FunnelAPI()
     
     for advertiser in data.keys():
         logger.info("Getting segment targets for {}".format(advertiser))
         segment_targets = get_segment_targets(data[advertiser]["profiles"])
+
+        logging.info("Segment Targets: {}".format(segment_targets))
         
         logger.info("Getting urls for {}...".format(advertiser))
         urls = funnel_api.get_urls(advertiser)
         
         logger.info("Getting segment targets...")
         for segment in segment_targets:
+            segment_id, step = segment
             # Get the uids for the patterns
-            patterns = funnel_api.get_patterns(segment_id=segment)
-            uids = funnel_api.get_uids(patterns, urls)
+            patterns = funnel_api.get_patterns(segment_id=segment_id, step=step)
+
+            print patterns
+
+            uids = funnel_api.get_uids_updated(patterns, urls)
 
             post_batch(uids, segment)
 

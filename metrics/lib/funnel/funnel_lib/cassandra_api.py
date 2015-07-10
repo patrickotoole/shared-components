@@ -52,7 +52,7 @@ class FunnelAPI:
         funnels = [tuple(x) for x in funnels.values]
         return funnels
 
-    def get_patterns(self, funnel_name=None, segment_id=None):
+    def get_patterns(self, funnel_name=None, segment_id=None, step=None):
         where = "1=1"
 
         if funnel_name:
@@ -60,6 +60,9 @@ class FunnelAPI:
 
         if segment_id:
             where = where + " and a.segment_id = {}".format(segment_id)
+
+        if step:
+            where = where + " and b.order <= {}".format(step)
 
         q = GET_PATTERNS.format(where)
         logger.info("Executing query: {}".format(q))
@@ -82,26 +85,6 @@ class FunnelAPI:
         if not visits:
             df = df[["url"]]
         return df
-
-    def get_uids(self, patterns, urls):
-        '''Return uids that have visited at least one url fufilling each pattern in
-        patterns.
-        '''
-        uid_sets = []
-    
-        # Get a list of sets
-        for pattern in patterns:
-            logger.info(pattern)
-            filtered = self.filter_urls(urls, pattern)
-            uids = self.fetch_uids(filtered)
-            uid_sets.append(uids)
-
-        # Get the set of uids that have gone through all funnel patterns
-        common = uid_sets[0]
-        for uid_set in uid_sets:
-            common.intersection_update(uid_set)
-
-        return list(common)
 
     def get_action_uids(self, operator, patterns, urls):
         uid_sets = []
@@ -142,6 +125,7 @@ class FunnelAPI:
         for action in actions:
             uids = self.get_action_uids(action["operator"], action["patterns"], urls)
             uid_sets.append(uids)
+
         # Get the set of uids that have gone through all funnel patterns
         common = uid_sets[0]
         for uid_set in uid_sets:
