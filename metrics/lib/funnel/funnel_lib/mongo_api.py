@@ -3,15 +3,8 @@ from link import lnk
 import numpy as np
 import json
 import copy
-from datadiff import diff
-from datadiff.tools import assert_equal
 from datetime import datetime
-
 warnings.filterwarnings('ignore')
-
-from datadiff import diff
-from datadiff.tools import assert_equal
-from datetime import datetime
 
 import logging
 formatter = '%(asctime)s:%(levelname)s - %(message)s'
@@ -64,6 +57,8 @@ class FunnelMongoAPI:
             return r["segment_id"]
 
     def insert_diff(self, advertiser, funnel_name, orig, new):
+        from datadiff import diff
+
         difference = diff(orig["branches"], new["branches"])
         dt = datetime.utcnow()
 
