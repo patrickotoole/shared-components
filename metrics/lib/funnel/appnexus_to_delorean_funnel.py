@@ -57,8 +57,10 @@ def get_segment_targets(profile_ids):
     segment_targets = set(segment_targets)
     return segment_targets
 
-def post_batch(uids, segment, expiration=300):
-    payload = ["{},{}:0:{}".format(uid, segment, expiration) for uid in uids]
+def post_batch(uids, segment, value=0, expiration=300):
+    payload = ["{},{}:{}:{}".format(uid, segment, value, expiration) for uid in uids]
+
+    logger.info("Printing sample of payload:\n{}".format('\n'.join(payload[:5])))
             
     to_post = {
         "uids": payload,
@@ -111,7 +113,7 @@ def run():
 
             uids = funnel_api.get_uids_updated(patterns, urls)
 
-            post_batch(uids, segment)
+            post_batch(uids, segment_id, step)
 
 console = lnk.api.console
 api = lnk.api.rockerbox
