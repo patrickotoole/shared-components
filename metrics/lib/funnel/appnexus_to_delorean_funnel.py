@@ -21,7 +21,6 @@ def get_profile_ids(search_term):
     profile_ids = {}
 
     for line_item in r.json["response"]["line-items"]:
-        print line_item
         if line_item["state"] != "active":
             break
         advertiser_id = line_item["advertiser"]["id"]
@@ -31,7 +30,6 @@ def get_profile_ids(search_term):
         profile_ids[a]["profiles"] = set()
 
         for campaign in line_item["campaigns"]:
-            print campaign
             if campaign["profile_id"] and campaign["state"] == "active":
                 profile_ids[a]["profiles"].add(str(campaign["profile_id"]))
     
@@ -52,7 +50,8 @@ def get_segment_targets(profile_ids):
                 for segment in group["segments"]:
                     segment_targets.append(segment)
 
-    segment_targets = [(target["id"], target["other_equals"]) for target in segment_targets]
+
+    segment_targets = [(target["id"], target["other_equals"]) for target in segment_targets if "Funnel" in target["name"]]
 
     segment_targets = set(segment_targets)
     return segment_targets
@@ -108,8 +107,6 @@ def run():
             segment_id, step = segment
             # Get the uids for the patterns
             patterns = funnel_api.get_patterns(segment_id=segment_id, step=step)
-
-            print patterns
 
             uids = funnel_api.get_uids_updated(patterns, urls)
 
