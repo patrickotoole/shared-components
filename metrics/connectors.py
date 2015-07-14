@@ -64,6 +64,10 @@ class ConnectorConfig(object):
                     mock_connect=skip_visit_events,topic="raw_imps_tree",transform=ujson.loads
                 )
 
+                self.connectors["raw_imps_tree_2"] = KafkaQueue(
+                    mock_connect=skip_visit_events,topic="raw_imps_tree_2",transform=ujson.loads
+                )
+
                 self.connectors["conversion_events_tree"] = KafkaQueue(
                     mock_connect=skip_visit_events,topic="conversion_events_tree",transform=ujson.loads
                 )
@@ -84,6 +88,7 @@ class ConnectorConfig(object):
                     "visit_events": streaming.visit_events_buffer,
                     "served_imps": streaming.served_buffer,
                     "raw_imps_tree": streaming.raw_imps_tree_buffer,           # delorean
+                    "raw_imps_tree_2": streaming.raw_imps_tree_2_buffer,           # delorean
                     "conversion_events_tree": streaming.conversion_events_tree_buffer,
                     "visit_events_tree": streaming.visit_events_tree_buffer
                 }
