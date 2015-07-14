@@ -63,8 +63,8 @@ def post_batch(uids, segment, value=0, expiration=300):
             
     to_post = {
         "uids": payload,
-        "source_type": "opt_script",
-        "source_name":"some_script_name"
+        "source_type": "chronos_job",
+        "source_name":"appnexus_to_delorean_funnel"
         }
     
     # POST the JSON object to the batch_submit API
