@@ -41,7 +41,7 @@ class MarathonHive2DB(DBConnectionWrapper):
 
     def refresh_via_endpoint(self):
         import requests
-        response = requests.get(self.marathon_endpoint)
+        response = requests.get(self.marathon_endpoint, headers={'Accept': 'application/json'})
         tasks = response.json()['tasks']
         instances = [task for task in tasks if self.identifier in task['id'] ]
 
