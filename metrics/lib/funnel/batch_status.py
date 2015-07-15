@@ -110,6 +110,10 @@ class BatchAPI:
             start_element += r.json["response"]["num_elements"]
             calls_made += 1
 
+        if len(job_checklist) == 0:
+            logger.info("All jobs found and updated in {} calls. Exiting...".format(calls_made))
+
+
 batch_api = BatchAPI()
 jobs = batch_api.get_pending_jobs()
 batch_api.update_job_log(jobs)
