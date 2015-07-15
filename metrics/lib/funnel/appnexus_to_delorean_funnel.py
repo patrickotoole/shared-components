@@ -1,6 +1,6 @@
 import json
 from link import lnk
-import sys
+import sys,time
 sys.path.append("../")
 from query import MYSQL
 from funnel_lib import FunnelAPI
@@ -107,8 +107,8 @@ def run():
             segment_id, step = segment
             # Get the uids for the patterns
             patterns = funnel_api.get_patterns(segment_id=segment_id, step=step)
-
-            uids = funnel_api.get_uids_updated(patterns, urls)
+            date = time.strftime("%Y-%m-%d 00:00:00")
+            uids = funnel_api.get_uids_updated(patterns, urls, date=date)
 
             post_batch(uids, segment_id, step)
 

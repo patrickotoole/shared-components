@@ -86,13 +86,13 @@ class FunnelAPI:
             df = df[["url"]]
         return df
 
-    def get_action_uids(self, operator, patterns, urls):
+    def get_action_uids(self, operator, patterns, urls, date=None):
         uid_sets = []
 
         for pattern in patterns:
             logger.info(pattern)
             filtered = self.filter_urls(urls, pattern)
-            uids = self.fetch_uids(filtered)
+            uids = self.fetch_uids(filtered, date=date)
             uid_sets.append(uids)
 
         common = uid_sets[0]
@@ -109,7 +109,7 @@ class FunnelAPI:
         return common
             
 
-    def get_uids_updated(self, actions, urls):
+    def get_uids_updated(self, actions, urls, date=None):
         '''This version of get_uids correctly uses operators. Patterns should 
         be in the form of:
         [
@@ -123,7 +123,7 @@ class FunnelAPI:
     
         # Get a list of sets
         for action in actions:
-            uids = self.get_action_uids(action["operator"], action["patterns"], urls)
+            uids = self.get_action_uids(action["operator"], action["patterns"], urls, date=date)
             uid_sets.append(uids)
 
         # Get the set of uids that have gone through all funnel patterns
@@ -132,13 +132,17 @@ class FunnelAPI:
             common.intersection_update(uid_set) 
         return common
 
-    def fetch_uids(self, urls, chunk_size = 10000):
+    def fetch_uids(self, urls, chunk_size = 10000, date=None):
         chunks = self.get_chunks(urls, chunk_size)
         queries = []
 
         for chunk in chunks:
             in_clause = self.format_in_clause(chunk)
-            query = GET_UIDS.format(in_clause)
+            where = "url in ({})".format(in_clause)
+
+            if date:
+                where = where + " and timestamp = '{}'".format(date)
+            query = GET_UIDS.format(where)
             queries.append(query)
         results = self.batch_execute(queries)
 

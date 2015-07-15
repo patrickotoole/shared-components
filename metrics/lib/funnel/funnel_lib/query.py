@@ -40,9 +40,9 @@ LIMIT 300000
 """
 
 GET_UIDS = """
-SELECT uid,url
+SELECT uid, url
 FROM rockerbox.visit_uids_2
-WHERE url IN ({})
+WHERE {}
 """
 
 GET_POP = """
