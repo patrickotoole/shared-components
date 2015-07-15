@@ -23,7 +23,7 @@ class BatchAPI:
             raise Exception("excludes and includes are mutually exclusive")
 
         df = self.sql.select_dataframe("describe {}".format(table_name))
-        variables = df[["field","type"]].set_index("field").to_dict(orient="dict")["type"]
+        variables = df[["field","type"]].set_index("field").to_dict()["type"]
         
         if excludes:
             variables = { k:v for (k, v) in variables.iteritems() if k not in excludes}
