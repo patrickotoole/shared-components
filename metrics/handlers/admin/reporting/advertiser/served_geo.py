@@ -84,7 +84,8 @@ GROUPS = {
     "zip_code": "zip_code",
     "lat": "coordinates['lat']",
     "long": "coordinates['long']",
-    "coordinates": "coordinates"
+    "coordinates": "coordinates",
+    "date": "date"
 }
 
 FIELDS = {
