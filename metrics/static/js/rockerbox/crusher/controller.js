@@ -98,17 +98,33 @@ RB.crusher.controller = (function(controller) {
 
   controller.get_bloodhound = function(cb) {
 
-    crusher.subscribe.add_subscriber(["visits"], function(visits){
+    //crusher.subscribe.add_subscriber(["visits"], function(visits){
+
+      var compare = function(a, b){
+        //if (a.count == b.count) return 0
+        return (a.count < b.count) ? -1 : 1
+      }
 
       controller.bloodhound = controller.bloodhound || new Bloodhound({
-        datumTokenizer: function(x){return x.split(/\/|-/)}, 
+        datumTokenizer: Bloodhound.tokenizers.whitespace,
         queryTokenizer: Bloodhound.tokenizers.whitespace,
-        local: crusher.cache.urls_wo_qs 
+        remote: { 
+          url: "/crusher/api/urls?advertiser=" + source + "&search=%QUERY&format=json&logic=must&timeout=4",
+          wildcard: "%QUERY",
+          prepare: function(x,settings) {
+            console.log(x,settings)
+            var q = x.split(" ").join(",")
+            var split = settings.url.split("%QUERY")
+            settings.url = split[0] + q + split[1]
+            return settings
+          }
+        },
+        sorter:compare
       }); 
 
       cb(controller.bloodhound)
 
-    },"bloodhound",true,true)
+    //},"bloodhound",true,true)
  
   }
 

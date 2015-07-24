@@ -52,7 +52,15 @@ RB.crusher.ui.action.pattern = (function(pattern) {
       },
       {
         name: 'urls',
-        source: bloodhound 
+        source: bloodhound,
+        display: "url",
+        templates: {
+          suggestion: function(x) {
+            return "<div style='width:100%'><div style='display:inline-block;overflow:hidden;width:90%'>" + 
+              x.url + "</div><div style='display:inline-block;width:8%;vertical-align:top;margin-left:5px'>" + 
+              x.count + " visits</div></div>"
+          }
+        }
       });
 
     })
