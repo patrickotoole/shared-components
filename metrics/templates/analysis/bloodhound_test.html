@@ -81,7 +81,7 @@
         datumTokenizer: Bloodhound.tokenizers.whitespace,
         queryTokenizer: Bloodhound.tokenizers.whitespace,
         remote: { 
-          url: "/crusher/api/urls?advertiser=bigstock&search=%QUERY&format=json&logic=must",
+          url: "/crusher/api/urls?advertiser={{advertiser}}&search=%QUERY&format=json&logic=must&timeout=3",
           wildcard: "%QUERY"
         },
         sorter:compare
@@ -90,7 +90,7 @@
       $('#bloodhound .typeahead').typeahead(null, {
         name: 'urls',
         source: urls,
-        timeout: 1000,
+        timeout: 1,
         templates: {
         empty: [
           '<div class="empty-message">',
