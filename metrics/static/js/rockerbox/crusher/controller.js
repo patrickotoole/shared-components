@@ -98,33 +98,29 @@ RB.crusher.controller = (function(controller) {
 
   controller.get_bloodhound = function(cb) {
 
-    //crusher.subscribe.add_subscriber(["visits"], function(visits){
+    var compare = function(a,b) {
+      return (a.count < b.count) ? -1 : 1
+    }
 
-      var compare = function(a, b){
-        //if (a.count == b.count) return 0
-        return (a.count < b.count) ? -1 : 1
-      }
+    controller.bloodhound = controller.bloodhound || new Bloodhound({
+      datumTokenizer: Bloodhound.tokenizers.whitespace,
+      queryTokenizer: Bloodhound.tokenizers.whitespace,
+      remote: { 
+        url: "/crusher/api/urls?advertiser=" + source + "&search=%QUERY&format=json&logic=must&timeout=4",
+        wildcard: "%QUERY",
+        prepare: function(x,settings) {
+          var q = x.split(" ").join(","),
+            split = settings.url.split("%QUERY")
 
-      controller.bloodhound = controller.bloodhound || new Bloodhound({
-        datumTokenizer: Bloodhound.tokenizers.whitespace,
-        queryTokenizer: Bloodhound.tokenizers.whitespace,
-        remote: { 
-          url: "/crusher/api/urls?advertiser=" + source + "&search=%QUERY&format=json&logic=must&timeout=4",
-          wildcard: "%QUERY",
-          prepare: function(x,settings) {
-            console.log(x,settings)
-            var q = x.split(" ").join(",")
-            var split = settings.url.split("%QUERY")
-            settings.url = split[0] + q + split[1]
-            return settings
-          }
-        },
-        sorter:compare
-      }); 
+          settings.url = split[0] + q + split[1]
+          return settings
+        }
+      },
+      sorter:compare
+    }); 
 
-      cb(controller.bloodhound)
+    cb(controller.bloodhound)
 
-    //},"bloodhound",true,true)
  
   }
 

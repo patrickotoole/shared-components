@@ -339,27 +339,6 @@ RB.crusher.ui.action = (function(action) {
 
     actionsRow.exit().remove()
      
-/*
-    var action_wrapper = actionsRow
-      .append("div")
-      .classed("action-list-wrapper col-md-6",true)
-
-    action_wrapper
-      .append("h5").text("Advertiser Actions")
-
-    action_wrapper
-      .append("div").classed("list-group action-wrapper",true)
-
-    action_wrapper
-      .append("div").classed("add-action-wrapper",true) 
-
-    action_wrapper
-      .append("h5").text("Recommended Actions")
-
-    action_wrapper
-      .append("div").classed("list-group action-recommended-wrapper",true)
-*/
-
   }
 
   return action
