@@ -6,25 +6,14 @@ RB.crusher.controller = (function(controller) {
   // requires: api.js, d3.js
 
   var crusher = RB.crusher
-  
-
   var source = crusher.api.source 
-  //var actionURL = "/crusher/funnel/action?format=json&advertiser=" + source
-  //var visitURL = "/crusher/visit_urls?format=json&source=" + source
-  //var visitUID = "/crusher/visit_uids?format=json&url="
-  //var visitDomains = "/crusher/visit_domains?format=json&kind=domains"
-  //var funnelURL = "/crusher/funnel?format=json&advertiser=" + source
-  //var lookalikeURL = "/crusher/funnel/lookalike?format=json&advertiser=" + source
-  
-  var filterRecommended = function(x){
-    var actions = crusher.cache.actionData.filter(function(z){
-      if (!z.url_pattern) return false
-      var matched = z.url_pattern.filter(function(q){
-        return (q.indexOf(x.key) > -1) || (x.key.indexOf(q) > -1
-      )})
-      return matched.length
-    })
-    return actions.length == 0 
+
+  controller.init = function(type,data){
+
+    var type = (type == "/crusher") ? "" : type
+    var id = data ? data.funnel_id : false
+     
+    if (type.length) controller.initializers[type](id)
   }
 
   controller.initializers = {
@@ -36,8 +25,6 @@ RB.crusher.controller = (function(controller) {
 
       d3_updateable(funnelRow,"h5","h5").text("about this page and why its here")
       funnelRow.exit().remove()
-
- 
     },
     "funnel/existing": function(funnel) {
       var id = funnel ? funnel.funnel_id : false
@@ -120,53 +107,10 @@ RB.crusher.controller = (function(controller) {
     }); 
 
     cb(controller.bloodhound)
-
  
   }
 
   
-  controller.init = function(type,data){
-    console.log("YO")
-    debugger
-    var type = (type == "/crusher") ? "" : type
-    var id = data ? data.funnel_id : false
-     
-    if (type.length) controller.initializers[type](id)
-  }
-
-  controller.campaign = {
-    save: function(data,obj) {
-      var type = obj['campaign'] ? "PUT" : "POST"
-      var URL = ((type == "PUT") && (obj['campaign']['id'])) ? 
-        "/crusher/funnel/campaign?format=json&id=" + obj['campaign']['id'] : 
-        "/crusher/funnel/campaign?format=json"
-
-      d3.xhr(URL)
-        .header("Content-Type", "application/json")
-        .send(type, JSON.stringify(data),function(err,raw){
-          var json = JSON.parse(raw.response)
-          if (json.error) console.log(json.error)
-          obj.campaign = json.campaign
-        });
-    }
-  }
-
-  controller.lookalike = {
-    save: function(data,obj) {
-      var type = obj['campaign'] ? "PUT" : "POST"
-      var URL = ((type == "PUT") && (obj['campaign']['id'])) ? 
-        "/crusher/funnel/lookalike_campaign?format=json&id=" + obj['campaign']['id'] : 
-        "/crusher/funnel/lookalike_campaign?format=json"
-
-      d3.xhr(URL)
-        .header("Content-Type", "application/json")
-        .send(type, JSON.stringify(data),function(err,raw){
-          var json = JSON.parse(raw.response)
-          if (json.error) console.log(json.error)
-          obj.campaign = json.campaign
-        });
-    }
-  }
 
   controller.routes = {
     roots: [{
@@ -188,6 +132,17 @@ RB.crusher.controller = (function(controller) {
         RB.menu.methods.transform(menu_obj,menu_obj.values_key)
       },
       "action/new": function(menu_obj){
+
+        var filterRecommended = function(x){
+          var actions = crusher.cache.actionData.filter(function(z){
+            if (!z.url_pattern) return false
+            var matched = z.url_pattern.filter(function(q){
+              return (q.indexOf(x.key) > -1) || (x.key.indexOf(q) > -1
+            )})
+            return matched.length
+          })
+          return actions.length == 0 
+        }
 
         crusher.cache.actionData.map(function(x) { x.values = crusher.cache.urls_wo_qs })
         crusher.cache.recommendedActionData = crusher.cache.uris.filter(filterRecommended)
