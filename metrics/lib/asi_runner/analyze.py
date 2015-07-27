@@ -24,6 +24,7 @@ Auction 8521052081626573507 result: SOLD
 	Deal transacted: 8757
 
 Auction 4749760220392921580 result: SOLD
+	****Winning bid (CPM) gross price***
 	Winning bid gross price: $0.0005
 	Winning bid net price: 0.0004, biased price: 0.0004
 	Soft floor: $5.134
@@ -40,7 +41,9 @@ import logging
 from StringIO import StringIO
 import pandas
 
-H3 = r'<h3>(RTB member.*?)</h3>(?:<p>.*?</p>)?'
+#H3 = r'<h3>(RTB member.*?)</h3>(?:<p>.*?</p>)?'
+H3 = r'<h3>(RTB member.*?)</h3>'
+
 H2 = r'<h2>(.*?)</h2>'
 
 "all the infomation is in table, we are using this regex to grab all of them"
@@ -73,8 +76,9 @@ def _clean(details):
     "Second bid (modified by 0.0%, $0.0000 CPM, inverse-modified by 0.0%, # $0.0000 CPM): $0.010"
     "3rd party price reduction expected, using first price."
     """
+    CPM_SUMM = "\n".join([i for i in details.split("\n") if "(CPM)" in i])
     details = re.sub('.*?(\(.*?\)|3rd).*?\n', '', details)
-    return details
+    return CPM_SUMM + "\n" + details
 
 def summarize_bidding(content, campaign_id):
     """

@@ -51,6 +51,7 @@ def run_campaign(campaign_id,uid,api):
     for idx, forms in enumerate(batched_forms):
         resps = AuctionsRunner(forms).run_auctions(True)
         for (resp, form) in zip(resps, forms):
+            #print resp.content
             summarized = time_it(summarize_bidding,resp.content,form.get("campaign_id"))
             to_log = dict(summarized,**form)
             to_return.append(to_log)
