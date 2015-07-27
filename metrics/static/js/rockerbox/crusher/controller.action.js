@@ -28,8 +28,9 @@ RB.crusher.controller.action = (function(action) {
         .send(
           "DELETE",
           function(err, rawData){
-            crusher.cache.actionData = crusher.cache.actionData.filter(function(x){return x.action_id != action.action_id})
-            
+            crusher.cache.actionData = crusher.cache.actionData.filter(function(x){
+              return x.action_id != action.action_id
+            })
           }
         ); 
     },
@@ -54,10 +55,20 @@ RB.crusher.controller.action = (function(action) {
             var resp = JSON.parse(rawData.response)
             data['action_id'] = resp['response']['action_id']
             obj.filter(function(){return this}).datum(data)
+            RB.routes.navigation.back()
+            RB.routes.navigation.forward({
+              "name": "View Existing Actions",
+              "push_state":"/crusher/action/existing",
+              "skipRender": true,
+              "values_key":"action_name"
+            })
+            RB.routes.navigation.forward(data)
+
           }
         );                    
     },
     get: function(action,callback) {
+      // this is getting all of the data associated with the pattern
       var domains = []
   
       action.all.length && crusher.cache.urls_wo_qs && crusher.cache.urls_wo_qs.map(function(d){
@@ -70,18 +81,30 @@ RB.crusher.controller.action = (function(action) {
       var obj = {"urls": domains}
   
       if (domains.length && !action.visits_data)
-        d3.xhr(visitUID)
+        var URL = visitUID
+        console.log(action)
+        URL = "/crusher/api/timeseries?advertiser=" + source + "&search=" + action.url_pattern[0] + "&format=json"
+
+        /*
+        // TODO: need to make this handle multiple url_patterns
+        // URL = "/crusher/api/timeseries?advertiser=" + source + 
+        //  "&search=" + action.url_pattern.join("|") + "&format=json"
+        */
+
+        
+        d3.xhr(URL)
           .header("Content-Type", "application/json")
-          .post(
-            JSON.stringify(obj),
+          .get(
             function(err, rawData){
               var dd = JSON.parse(rawData.response)
-              action.visits_data = dd
-              action.uids = dd.map(function(x){return x.uid})
-              action.count = dd.length 
+              //debugger
+              action.visits_data = dd.counts
+              //action.uids = dd.map(function(x){return x.uid}) // these are all the uids
+              //action.count = dd.length // this is the count of the urls + dates that matched
               if (callback) callback()
             }
           );
+       
 
       return obj
     }

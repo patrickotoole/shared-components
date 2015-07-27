@@ -9,7 +9,7 @@ RB.crusher.controller.lookalike = (function(lookalike) {
   var crusher = RB.crusher
   var source = crusher.api.source 
 
-  controller.lookalike = {
+  lookalike = {
     save: function(data,obj) {
       var type = obj['campaign'] ? "PUT" : "POST"
       var URL = ((type == "PUT") && (obj['campaign']['id'])) ? 

@@ -97,6 +97,7 @@ RB.routes = (function(routes) {
     var current = 0
 
     navigation.forward = function(x) {
+      console.log("FORWARD",x)
       var path = window.location.pathname
       var shouldPush = (x.push_state) && (path != x.push_state)
       var emptyQueue = __back__.length == 0

@@ -8,7 +8,7 @@ RB.crusher.controller = (function(controller) {
   var crusher = RB.crusher
   var source = crusher.api.source 
 
-  controller.init = function(type,data){
+  controller.init = function(type,data) {
 
     var type = (type == "/crusher") ? "" : type
     var id = data ? data.funnel_id : false
@@ -27,6 +27,9 @@ RB.crusher.controller = (function(controller) {
       funnelRow.exit().remove()
     },
     "funnel/existing": function(funnel) {
+      debugger
+      console.log(funnel)
+      throw "asdf";
       var id = funnel ? funnel.funnel_id : false
 
       crusher.ui.funnel.buildBase() 
@@ -54,7 +57,7 @@ RB.crusher.controller = (function(controller) {
       RB.crusher.controller.funnel.new(target)
     },
     "action/existing": function(action) {
-
+      
       crusher.ui.action.buildBase()
 
       var target = d3.selectAll(".action-view-wrapper")
@@ -64,7 +67,7 @@ RB.crusher.controller = (function(controller) {
         crusher.ui.action.edit(target,controller.action.save)
       },"existing_edit",true,true)   
 
-      crusher.subscribe.add_subscriber(["actions","visits"] , function() {
+      crusher.subscribe.add_subscriber(["actions"] , function() {
         crusher.cache.actionData.map(function(x) { x.values = crusher.cache.urls_wo_qs })
         crusher.ui.action.view(target)
       },"existing_view",true,true)
@@ -159,7 +162,7 @@ RB.crusher.controller = (function(controller) {
       "funnel/new": [],
       "funnel/existing": ['funnels'],
       "action/existing": ['actions'],
-      "action/new": ['visits','actions'],
+      "action/new": [],//['visits','actions'],
       "": [{
           "name":"Actions",
           "push_state":"/crusher/action",
