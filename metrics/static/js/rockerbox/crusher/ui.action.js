@@ -38,6 +38,7 @@ RB.crusher.ui.action = (function(action) {
   }
 
   action.view = function(wrapper) {
+
     var actionView = wrapper.selectAll(".action-view")
       .data(function(x){return [x]},function(x){return x.action_id + x.action_name})
       
@@ -69,14 +70,16 @@ RB.crusher.ui.action = (function(action) {
 
     var with_data = info.filter(function(x){return x.visits_data})
 
-
     var timeseries = with_data.selectAll(".ts").data(function(data){
       var nested = d3.nest()
         .key(function(x){return x.timestamp})
-        .rollup(function(x){ return {
-            "visits": d3.sum(x.map(function(x){return x.visits})),
-            "uniques": x.length
+        .rollup(function(x){ 
+          
+          return {
+            "visits": x[0].num_visits,
+            "uniques": x[0].num_users
           }
+         
         })
         .entries(data.visits_data).map(function(x){
           x.date = x.key
@@ -99,6 +102,7 @@ RB.crusher.ui.action = (function(action) {
     timeseries.exit().remove()
     var newTs = timeseries.enter().append("div").classed("ts",true)
 
+    //debugger
 
     if (newTs.length && newTs.data()[0]) {
       var tsData = newTs.datum()
@@ -109,9 +113,6 @@ RB.crusher.ui.action = (function(action) {
 
     //var svg = timeseries.selectAll("svg").data(function(x){return [x]})
     //svg.enter().append("svg")
-
-    
-
 
   }
 
@@ -339,27 +340,6 @@ RB.crusher.ui.action = (function(action) {
 
     actionsRow.exit().remove()
      
-/*
-    var action_wrapper = actionsRow
-      .append("div")
-      .classed("action-list-wrapper col-md-6",true)
-
-    action_wrapper
-      .append("h5").text("Advertiser Actions")
-
-    action_wrapper
-      .append("div").classed("list-group action-wrapper",true)
-
-    action_wrapper
-      .append("div").classed("add-action-wrapper",true) 
-
-    action_wrapper
-      .append("h5").text("Recommended Actions")
-
-    action_wrapper
-      .append("div").classed("list-group action-recommended-wrapper",true)
-*/
-
   }
 
   return action

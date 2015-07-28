@@ -6,25 +6,14 @@ RB.crusher.controller = (function(controller) {
   // requires: api.js, d3.js
 
   var crusher = RB.crusher
-  
-
   var source = crusher.api.source 
-  var actionURL = "/crusher/funnel/action?format=json&advertiser=" + source
-  var visitURL = "/crusher/visit_urls?format=json&source=" + source
-  var visitUID = "/crusher/visit_uids?format=json&url="
-  var visitDomains = "/crusher/visit_domains?format=json&kind=domains"
-  var funnelURL = "/crusher/funnel?format=json&advertiser=" + source
-  var lookalikeURL = "/crusher/funnel/lookalike?format=json&advertiser=" + source
-  
-  var filterRecommended = function(x){
-    var actions = crusher.cache.actionData.filter(function(z){
-      if (!z.url_pattern) return false
-      var matched = z.url_pattern.filter(function(q){
-        return (q.indexOf(x.key) > -1) || (x.key.indexOf(q) > -1
-      )})
-      return matched.length
-    })
-    return actions.length == 0 
+
+  controller.init = function(type,data) {
+
+    var type = (type == "/crusher") ? "" : type
+    var id = data ? data.funnel_id : false
+     
+    if (type.length) controller.initializers[type](id)
   }
 
   controller.initializers = {
@@ -36,10 +25,11 @@ RB.crusher.controller = (function(controller) {
 
       d3_updateable(funnelRow,"h5","h5").text("about this page and why its here")
       funnelRow.exit().remove()
-
- 
     },
     "funnel/existing": function(funnel) {
+      debugger
+      console.log(funnel)
+      throw "asdf";
       var id = funnel ? funnel.funnel_id : false
 
       crusher.ui.funnel.buildBase() 
@@ -67,7 +57,7 @@ RB.crusher.controller = (function(controller) {
       RB.crusher.controller.funnel.new(target)
     },
     "action/existing": function(action) {
-
+      
       crusher.ui.action.buildBase()
 
       var target = d3.selectAll(".action-view-wrapper")
@@ -77,7 +67,7 @@ RB.crusher.controller = (function(controller) {
         crusher.ui.action.edit(target,controller.action.save)
       },"existing_edit",true,true)   
 
-      crusher.subscribe.add_subscriber(["actions","visits"] , function() {
+      crusher.subscribe.add_subscriber(["actions"] , function() {
         crusher.cache.actionData.map(function(x) { x.values = crusher.cache.urls_wo_qs })
         crusher.ui.action.view(target)
       },"existing_view",true,true)
@@ -98,251 +88,32 @@ RB.crusher.controller = (function(controller) {
 
   controller.get_bloodhound = function(cb) {
 
-    crusher.subscribe.add_subscriber(["visits"], function(visits){
+    var compare = function(a,b) {
+      return (a.count < b.count) ? -1 : 1
+    }
 
-      controller.bloodhound = controller.bloodhound || new Bloodhound({
-        datumTokenizer: function(x){return x.split(/\/|-/)}, 
-        queryTokenizer: Bloodhound.tokenizers.whitespace,
-        local: crusher.cache.urls_wo_qs 
-      }); 
+    controller.bloodhound = controller.bloodhound || new Bloodhound({
+      datumTokenizer: Bloodhound.tokenizers.whitespace,
+      queryTokenizer: Bloodhound.tokenizers.whitespace,
+      remote: { 
+        url: "/crusher/api/urls?advertiser=" + source + "&search=%QUERY&format=json&logic=must&timeout=4",
+        wildcard: "%QUERY",
+        prepare: function(x,settings) {
+          var q = x.split(" ").join(","),
+            split = settings.url.split("%QUERY")
 
-      cb(controller.bloodhound)
+          settings.url = split[0] + q + split[1]
+          return settings
+        }
+      },
+      sorter:compare
+    }); 
 
-    },"bloodhound",true,true)
+    cb(controller.bloodhound)
  
   }
 
-  controller.get_tf_idf = function() {
-    d3.json("/admin/api?table=reporting.pop_domain&format=json", function(dd){
-      crusher.pop_domains = {}
-      dd.map(function(x){
-        crusher.pop_domains[x.domain] = x.idf
-      })
-    })
-  }
-
-
-  controller.init = function(type,data){
-    var type = (type == "/crusher") ? "" : type
-    var id = data ? data.funnel_id : false
-     
-    if (type.length) controller.initializers[type](id)
-  }
-
-  controller.campaign = {
-    save: function(data,obj) {
-      var type = obj['campaign'] ? "PUT" : "POST"
-      var URL = ((type == "PUT") && (obj['campaign']['id'])) ? 
-        "/crusher/funnel/campaign?format=json&id=" + obj['campaign']['id'] : 
-        "/crusher/funnel/campaign?format=json"
-
-      d3.xhr(URL)
-        .header("Content-Type", "application/json")
-        .send(type, JSON.stringify(data),function(err,raw){
-          var json = JSON.parse(raw.response)
-          if (json.error) console.log(json.error)
-          obj.campaign = json.campaign
-        });
-    }
-  }
-
-  controller.lookalike = {
-    save: function(data,obj) {
-      var type = obj['campaign'] ? "PUT" : "POST"
-      var URL = ((type == "PUT") && (obj['campaign']['id'])) ? 
-        "/crusher/funnel/lookalike_campaign?format=json&id=" + obj['campaign']['id'] : 
-        "/crusher/funnel/lookalike_campaign?format=json"
-
-      d3.xhr(URL)
-        .header("Content-Type", "application/json")
-        .send(type, JSON.stringify(data),function(err,raw){
-          var json = JSON.parse(raw.response)
-          if (json.error) console.log(json.error)
-          obj.campaign = json.campaign
-        });
-    }
-  }
-
-  controller.funnel = {
-    new: function(target) {
-      crusher.subscribe.add_subscriber(["actions"],function(actions){
-        var actions = crusher.cache.actionData
-        crusher.ui.funnel.add_funnel(target,actions)
-      },"new_funnel",true,true)
-    },
-    save: function(data,callback) {
-      crusher.subscribe.add_subscriber(["funnels","tf_idf"], function(){ 
-        var d = {
-          "advertiser": source,
-          "owner": "owner",
-          "funnel_id":data.funnel_id,
-          "funnel_name": data.funnel_name,
-          "actions":data.actions.map(function(x){return {"action_id":x.action_id}})
-        }
-
-        var cdata = JSON.parse(JSON.stringify(d)),
-          type = data['funnel_id'] ? "PUT" : "POST";
-
-        d3.xhr(funnelURL)
-          .header("Content-Type", "application/json")
-          .send(type, JSON.stringify(cdata), function(err, rawData){
-            var resp = JSON.parse(rawData.response).response
-            data['funnel_name'] = resp.funnel_name
-            data['funnel_id'] = resp.funnel_id
-            crusher.cache.funnelData.push(data)
-            callback(crusher.cache.funnelData)
-          });
-      },"save_funnel",true,true)
-    },
-    delete: function(data,parent_data,funnel) {
-      d3.xhr(funnelURL + "&funnel_id=" + data.funnel_id)
-        .header("Content-Type", "application/json")
-        .send("DELETE", function(err, rawData){
-
-          var funnel_ids = parent_data
-            .filter(function(x,i){
-              x.pos = i; 
-              return x.funnel_id == data.funnel_id 
-            })
-
-          parent_data.splice(funnel_ids[0].pos,1)
-
-          crusher.cache.funnelData = parent_data
-          funnel.remove()
-          console.log(rawData)
-        }); 
-    },
-    show: function() {
-     
-      var funnel = crusher.ui.funnel.buildShow()
-      var data = funnel.datum()
-
-      var uids = "uids_" + data.funnel_id,
-        avails = "avails_" + data.funnel_id,
-        domains = "domains_" + data.funnel_id
-
-      crusher.ui.funnel.wait(funnel)
-      crusher.subscribe.add_subscriber(["tf_idf","visits"], function() {
-
-        crusher.subscribe.add_subscriber([uids],function(){
-          crusher.ui.funnel.show(funnel)
-
-          crusher.subscribe.add_subscriber(
-            [domains],
-            function(x) {
-              crusher.ui.funnel.show.component.domains.bind(false,funnel)(x)
-              crusher.ui.funnel.show.component.lookalike(funnel)
-            },"domains",true,true,
-            data
-          )
-          
-          crusher.subscribe.add_subscriber(
-            [avails],
-            function(x) {
-              var exchanges = funnel.selectAll(".exchange-summary .exchange")
-            
-              crusher.ui.funnel.show.component.avails(exchanges)
-              crusher.ui.funnel.show.component.campaign(funnel)
-            },"show_me_the_money",true,true,
-            data
-          )
-
-        },"show",true,true,data)
-
-      },"show_requirements", true, true)
-
-    },
-    show_domains: function(data,callback) {
-      crusher.subscribe.add_subscriber(["UIDsToDomains"], callback, "show_domains",true,true,data)
-    },
-    show_avails: function(data,callback) {
-      var q = queue(5)
-      data.actions.map(function(action) { 
-        crusher.api.actionToAvails(function(){},action,q)
-      })
-      q.awaitAll(callback)
-      
-    }
-  }
-
-  controller.action = {
-    new: function(expandTarget,options,override) {
-      var defaultAction = [{"values":options}]
-
-      crusher.cache.actionData = crusher.cache.actionData.filter(function(x){return x.action_id})
-      expandTarget.datum(override || defaultAction[0])
-      crusher.ui.action.edit(expandTarget,controller.action.save)
-      crusher.ui.action.view(expandTarget)
-      crusher.ui.action.select({})
-    },
-    delete: function(action){
-      d3.xhr(actionURL + "&action_id=" + action.action_id)
-        .header("Content-Type", "application/json")
-        .send(
-          "DELETE",
-          function(err, rawData){
-            crusher.cache.actionData = crusher.cache.actionData.filter(function(x){return x.action_id != action.action_id})
-            /*
-            var resp = JSON.parse(rawData.response)
-            data['action_id'] = resp['response']['action_id']
-            obj.filter(function(){return this}).datum(data)
-            */
-          }
-        ); 
-    },
-    save: function(data, obj) {
-      var cdata = JSON.parse(JSON.stringify(data)),
-        type = data['action_id'] ? "PUT" : "POST";
-
-      delete cdata['values'];
-      delete cdata['rows']
-      delete cdata['count']
-      delete cdata['uids']
-      delete cdata['visits_data']
-      delete cdata['name']
-
-      cdata['advertiser'] = source
-
-      d3.xhr(actionURL)
-        .header("Content-Type", "application/json")
-        .send(type,
-          JSON.stringify(cdata),
-          function(err, rawData){
-            var resp = JSON.parse(rawData.response)
-            data['action_id'] = resp['response']['action_id']
-            obj.filter(function(){return this}).datum(data)
-          }
-        );                    
-    },
-    get: function(action,callback) {
-      var domains = []
   
-      action.all.length && crusher.cache.urls_wo_qs && crusher.cache.urls_wo_qs.map(function(d){
-        if (action.url_pattern)
-          action.url_pattern.map(function(x){
-            if (d.indexOf(x) > -1) domains.push(d)
-          })
-      })
-  
-      var obj = {"urls": domains}
-  
-      if (domains.length && !action.visits_data)
-        d3.xhr(visitUID)
-          .header("Content-Type", "application/json")
-          .post(
-            JSON.stringify(obj),
-            function(err, rawData){
-              var dd = JSON.parse(rawData.response)
-              action.visits_data = dd
-              action.uids = dd.map(function(x){return x.uid})
-              action.count = dd.length 
-              if (callback) callback()
-            }
-          );
-
-      return obj
-    }
-  }
 
   controller.routes = {
     roots: [{
@@ -365,6 +136,17 @@ RB.crusher.controller = (function(controller) {
       },
       "action/new": function(menu_obj){
 
+        var filterRecommended = function(x){
+          var actions = crusher.cache.actionData.filter(function(z){
+            if (!z.url_pattern) return false
+            var matched = z.url_pattern.filter(function(q){
+              return (q.indexOf(x.key) > -1) || (x.key.indexOf(q) > -1
+            )})
+            return matched.length
+          })
+          return actions.length == 0 
+        }
+
         crusher.cache.actionData.map(function(x) { x.values = crusher.cache.urls_wo_qs })
         crusher.cache.recommendedActionData = crusher.cache.uris.filter(filterRecommended)
           .slice(0,10)
@@ -380,7 +162,7 @@ RB.crusher.controller = (function(controller) {
       "funnel/new": [],
       "funnel/existing": ['funnels'],
       "action/existing": ['actions'],
-      "action/new": ['visits','actions'],
+      "action/new": [],//['visits','actions'],
       "": [{
           "name":"Actions",
           "push_state":"/crusher/action",
