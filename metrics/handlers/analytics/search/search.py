@@ -7,9 +7,6 @@ from twisted.internet import defer
 from lib.helpers import decorators
 from lib.helpers import *
 
-
-QUERY = "SELECT {} FROM rockerbox.visit_uids_lucene "
-
 class SearchHandler(SearchBase):
 
     LOGIC = {
@@ -22,7 +19,6 @@ class SearchHandler(SearchBase):
         self.db = db
         self.cassandra = cassandra
         self.limit = None
-        self.query = QUERY
         self.TYPE = {
             "uids": self.get_uids,
             "count": self.get_count,
@@ -66,5 +62,6 @@ class SearchHandler(SearchBase):
             terms = terms.split(',')
 
         fn = self.TYPE.get(api_type,self.invalid)
-
         fn(advertiser, terms, date_clause, logic=logic, timeout=int(timeout))
+
+

@@ -7,7 +7,6 @@ from ...base import BaseHandler
 
 from twisted.internet import defer
 from lib.helpers import *
-
 from cassandra import OperationTimedOut
 
 QUERY  = """SELECT %(what)s FROM rockerbox.visit_uids_lucene %(where)s"""
@@ -27,9 +26,9 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
         filters = ','.join(filter_list)
         lucene = LUCENE % {"filters": filters, "logic": logic}
         where = WHERE % {"advertiser":advertiser, "lucene":lucene}
+        query = QUERY % {"what":selects, "where": where}
 
-        q = QUERY % {"what":selects, "where": where}
-        self.logging.info(q) 
+        self.logging.info(query) 
         
         try:
             data = self.cassandra.execute(q,None,timeout=timeout)
@@ -124,7 +123,3 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
             response['summary']['num_users'] = len(response['results'])
 
         self.write_json(response)
-    
-
-
-
