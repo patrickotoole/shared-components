@@ -315,3 +315,12 @@ WHERE
     pixel_source_name="{}" AND
     deleted=0
 """
+
+TOP_URLS = """
+SELECT %(fields)s
+FROM reporting.pixel_url_analytics 
+WHERE %(where)s 
+GROUP BY %(groups)s 
+ORDER BY views DESC
+LIMIT %(limit)s
+"""
