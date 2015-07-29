@@ -9,7 +9,7 @@ from twisted.internet import defer
 from lib.helpers import *
 from cassandra import OperationTimedOut
 
-QUERY  = """SELECT %(what)s FROM rockerbox.visit_uids_lucene %(where)s"""
+QUERY  = """SELECT %(what)s FROM rockerbox.visit_uids_lucene_timestamp %(where)s"""
 WHERE  = """WHERE source='%(advertiser)s' and lucene='%(lucene)s'"""
 LUCENE = """{ filter: { type: "boolean", %(logic)s: [%(filters)s]}}"""
 FILTER = """{ type:"wildcard", field: "url", value: "*%(pattern)s*"}"""
@@ -31,7 +31,7 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
         self.logging.info(query) 
         
         try:
-            data = self.cassandra.execute(q,None,timeout=timeout)
+            data = self.cassandra.execute(query,None,timeout=timeout)
             return pandas.DataFrame(data)
         except OperationTimedOut:
             return False
@@ -56,16 +56,16 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
 
     @defer.inlineCallbacks
     def get_timeseries(self, advertiser, terms, date_clause, logic="should",timeout=60):
-        PARAMS = "timestamp, url, uid"
+        PARAMS = "date, url, uid"
 
         response = self.default_response(terms,logic)
         
         df = yield self.defer_execute(PARAMS, advertiser, terms, date_clause, logic)
         
         if len(df) > 0:
-            # Get the user counts for each timestamp, timestamp/url
-            users = self.group_and_count(df, ["timestamp"], "uid", "num_users")
-            visits = self.group_and_count(df, ["timestamp","url"], "uid", "num_visits")
+            # Get the user counts for each date, date/url
+            users = self.group_and_count(df, ["date"], "uid", "num_users")
+            visits = self.group_and_count(df, ["date","url"], "uid", "num_visits")
 
             # Get the total number of visits, users
             response['summary']['num_visits'] = visits.num_visits.sum()
@@ -73,11 +73,11 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
             
             # Make a timeseries for each unique url visits
             del visits["url"] # get rid of string since we dont need the name
-            visits_ts = visits.groupby("timestamp").sum().sort().reset_index()
+            visits_ts = visits.groupby("date").sum().sort().reset_index()
             
-            # Combine the users/visits counts for each timestamp
-            results = visits_ts.set_index("timestamp")
-            results = results.join(users.set_index("timestamp")).reset_index()
+            # Combine the users/visits counts for each date
+            results = visits_ts.set_index("date")
+            results = results.join(users.set_index("date")).reset_index()
             results = Convert.df_to_values(results)
 
             response['results'] = results
@@ -106,7 +106,7 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
 
         response["results"] = Convert.df_to_values(counts)
         response["summary"]["num_urls"] = len(counts)
-        response["summary"]["num_users"] = df.uid.value_counts()
+        response["summary"]["num_users"] = len(set(df.uid.values))
        
             
         self.write_json(response)

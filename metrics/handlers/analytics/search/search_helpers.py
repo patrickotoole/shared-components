@@ -11,7 +11,7 @@ from lib.helpers import *
 
 class SearchHelpers(object):
 
-    def default_response(self,terms,logic):
+    def default_response(self,terms,logic,no_results=False):
  
         response = {
             "search": terms, 
@@ -19,6 +19,8 @@ class SearchHelpers(object):
             "results": [],
             "summary": {}
         }
+
+        if no_results: del response['results']
 
         return response
 
