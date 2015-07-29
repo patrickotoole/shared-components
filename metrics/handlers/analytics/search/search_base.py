@@ -16,6 +16,8 @@ FILTER = """{ type:"wildcard", field: "url", value: "*%(pattern)s*"}"""
 
 class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
 
+    # TODO: add in the page_view counts
+
     @decorators.deferred
     def defer_execute(self, selects, advertiser, pattern, date_clause, logic, 
                       timeout=60):
