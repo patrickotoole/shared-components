@@ -7,13 +7,9 @@ from lib.helpers import decorators
 from lib.helpers import *
 
 #from cassandra import ReadTimeout
-from cassandra import OperationTimedOut
 
-QUERY = "SELECT {} FROM rockerbox.visit_uids_lucene "
-LUCENE = """{ filter: { type: "boolean", %(logic)s: [%(filters)s]}}"""
-FILTER = """{ type:"wildcard", field: "url", value: "*%(pattern)s*"}"""
 
-class SearchBaseHelpers(object):
+class SearchHelpers(object):
 
     def default_response(self,terms,logic):
  
@@ -40,27 +36,6 @@ class SearchBaseHelpers(object):
             }
         ]
         self.write_json(response)
-
-    @decorators.deferred
-    def defer_execute(self, selects, advertiser, pattern, date_clause, logic, 
-                      timeout=60):
-        if not pattern:
-            raise Exception("Must specify search term using search=")
-
-        filters = ','.join([FILTER % {"pattern": p} for p in pattern])
-        lucene = LUCENE % {"filters": filters, "logic": logic}
-        where = "WHERE source='{}' and lucene='{}'".format(advertiser, lucene)
-
-        q = QUERY.format(selects) + where
-        print q
-        
-        try:
-            data = self.cassandra.execute(q,None,timeout=timeout)
-        except OperationTimedOut:
-            return False
-
-        df = pandas.DataFrame(data)
-        return df
 
     def group_and_count(self, df, groups, value, colname):
         cols = groups + [value]

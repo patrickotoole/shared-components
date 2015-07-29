@@ -3,16 +3,48 @@ import logging
 
 from search_helpers import SearchHelpers
 from ..analytics_base import AnalyticsBase
+from ...base import BaseHandler
+
 from twisted.internet import defer
 from lib.helpers import *
 
-class SearchBase(SearchHelpers,AnalyticsBase):
+from cassandra import OperationTimedOut
+
+QUERY  = """SELECT %(what)s FROM rockerbox.visit_uids_lucene %(where)s"""
+WHERE  = """WHERE source='%(advertiser)s' and lucene='%(lucene)s'"""
+LUCENE = """{ filter: { type: "boolean", %(logic)s: [%(filters)s]}}"""
+FILTER = """{ type:"wildcard", field: "url", value: "*%(pattern)s*"}"""
+
+class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
+
+    @decorators.deferred
+    def defer_execute(self, selects, advertiser, pattern, date_clause, logic, 
+                      timeout=60):
+        if not pattern:
+            raise Exception("Must specify search term using search=")
+
+        filter_list = [FILTER % {"pattern": p} for p in pattern]
+        filters = ','.join(filter_list)
+        lucene = LUCENE % {"filters": filters, "logic": logic}
+        where = WHERE % {"advertiser":advertiser, "lucene":lucene}
+
+        q = QUERY % {"what":selects, "where": where}
+        self.logging.info(q) 
+        
+        try:
+            data = self.cassandra.execute(q,None,timeout=timeout)
+            return pandas.DataFrame(data)
+        except OperationTimedOut:
+            return False
+
+        
 
     @defer.inlineCallbacks
     def get_count(self, advertiser, terms, date_clause, logic="should",timeout=60):
         PARAMS = "uid"
 
         response = self.default_response(terms,logic)
+        del response['results'] # there are no results, only summary 
         response['summary']['num_users'] = 0
 
         df = yield self.defer_execute(PARAMS, advertiser, terms, date_clause, logic)
@@ -21,7 +53,6 @@ class SearchBase(SearchHelpers,AnalyticsBase):
             uids = df.uid.value_counts()
             response['summary']['num_users'] = len(uids)
 
-        del response['results'] # there are no results for this API
         self.write_json(response)
 
     @defer.inlineCallbacks
@@ -58,25 +89,28 @@ class SearchBase(SearchHelpers,AnalyticsBase):
     def get_urls(self, advertiser, terms, date_clause, logic="should", timeout=60):
         PARAMS = "url, uid"
         response = self.default_response(terms,logic)
+        response["timeout"] = timeout
 
         df = yield self.defer_execute(PARAMS, advertiser, terms, 
                                        date_clause, logic, timeout=timeout)
 
         if df is False:
             self.write_timeout(terms, logic, timeout)
-        elif len(df) == 0:
-            self.write_json([])
-        else:
+            return
+        
+        counts = pandas.DataFrame([])
+        uid_counts = 0
+
+        if len(df) > 0:
             counts = self.group_and_count(df, ["url"], "uid", "count")
+            uid_counts = df.uid.value_counts()
+
+        response["results"] = Convert.df_to_values(counts)
+        response["summary"]["num_urls"] = len(counts)
+        response["summary"]["num_users"] = df.uid.value_counts()
+       
             
-            response = {
-                "search": terms, 
-                "logic": logic, 
-                "timeout": timeout,
-                "results": Convert.df_to_values(counts)
-                }
-            
-            self.write_json(response)
+        self.write_json(response)
 
     @defer.inlineCallbacks
     def get_uids(self, advertiser, terms, date_clause, logic="should", timeout=60):
