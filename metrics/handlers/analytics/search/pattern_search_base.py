@@ -21,6 +21,7 @@ class PatternSearchBase(SearchBase,PatternSearchHelpers):
 
         terms, remaining_terms = self.head_and_tail(pattern_terms)
         
+        # PUSH all the data into one dataframe
         df = yield self.defer_execute(PARAMS, advertiser, terms, date_clause, "must")
         df['terms'] = ",".join(terms)
 
@@ -33,9 +34,11 @@ class PatternSearchBase(SearchBase,PatternSearchHelpers):
 
         df = df.reset_index()
 
+        # APPLY "and" logic if necessary
         if logic == "and":
             df = self.pattern_and(df,pattern_terms)
 
+        # PREPARE the final version of the data for response
         if len(df) > 0:
             response['results'] = list(set(df.uid.values))
             response['summary']['num_users'] = len(response['results'])
@@ -55,6 +58,8 @@ class PatternSearchBase(SearchBase,PatternSearchHelpers):
 
         terms, remaining_terms = self.head_and_tail(pattern_terms)
         
+
+        # PUSH all the data into one dataframe AND count view
         df = yield self.defer_execute(PARAMS, advertiser, terms, date_clause, "must")
         df = self.group_count_view(df,terms,indices) 
 
@@ -62,15 +67,18 @@ class PatternSearchBase(SearchBase,PatternSearchHelpers):
             df2 = yield self.defer_execute(PARAMS, advertiser, terms, date_clause, "must")
             df2 = self.group_count_view(df2,terms,indices)
 
-            # append and get rid of duplicates...
             df = df.append(df2)
             df = df.reset_index().drop_duplicates(indices).set_index(indices)
 
         df = df.reset_index()
 
+
+        # APPLY "and" logic if necessary
         if logic == "and":
             df = self.pattern_and(df,pattern_terms)
 
+
+        # PREPARE the final version of the data for response
         if len(df) > 0:
             stats = df.groupby("date").apply(self.calc_stats)
 
