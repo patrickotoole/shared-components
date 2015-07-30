@@ -71,6 +71,8 @@ class AdvertiserRoutes(Routes):
         return [
             (r'/visit_urls', analytics.VisitUrlsHandler, self.connectors),
             (r'/visit_uids', analytics.VisitUidsHandler, self.connectors),
+            (r'/search/(.*?)', analytics.SearchHandler, self.connectors),
+            (r'/pattern_search/(.*?)', analytics.PatternSearchHandler, self.connectors),
             (r'/visit_domains', analytics.VisitDomainsHandler, self.connectors),
             (r'/visit_avails', analytics.VisitAvailsHandler, self.connectors),
             (r'/funnel/campaign', funnel.FunnelCampaignHandler, self.connectors),
@@ -82,8 +84,7 @@ class AdvertiserRoutes(Routes):
             (r'/funnel', funnel.FunnelHandler, self.connectors),
             (r'/?', funnel.FunnelHandler, self.connectors),
             (r'/funnel/(.*?)', funnel.FunnelHandler, self.connectors)
-        ]
-     
+        ]     
 
     @connectors("reporting_db","api")
     def client_pixel_routes(self):

@@ -5,3 +5,4 @@ from visit_uids import VisitUidsHandler
 from visit_domains import VisitDomainsHandler
 from domains import DomainsMongoHandler
 from visit_avails import VisitAvailsHandler
+from search import *

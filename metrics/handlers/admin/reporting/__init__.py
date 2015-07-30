@@ -13,6 +13,7 @@ from advertiser.click import ClickCheckHandler
 from advertiser.click_imps import ClickImpsHandler
 from advertiser.hoverboard import HoverboardHandler
 from advertiser.hoverboard_v2 import HoverboardHandlerV2
+from advertiser.pixel_url import PixelUrlHandler
 from advertiser.client import AdminClientReportingHandler
 
 from advertiser.visits import VisitsHandler

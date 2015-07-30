@@ -92,6 +92,16 @@ class AdvertiserReportingRoutes(Routes):
             ('/reporting/+(meta|help)?/?(.*?)', reporting.HoverboardHandlerV2, self.connectors)
         ]    
 
+    @namespace("/admin/advertiser/pixel_url")
+    @connectors("reporting_db")
+    def pixel_url_reporting(self):
+        import handlers.admin.reporting as reporting
+
+        return [
+            ('/reporting/?', reporting.PixelUrlHandler, self.connectors), 
+            ('/reporting/+(meta|help)?/?(.*?)', reporting.PixelUrlHandler, self.connectors)
+        ]
+
     @namespace("/admin/advertiser/visits")
     @connectors("hive", "spark_sql")
     def visits_reporting(self):
