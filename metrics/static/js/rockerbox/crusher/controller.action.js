@@ -83,8 +83,14 @@ RB.crusher.controller.action = (function(action) {
       if (domains.length && !action.visits_data)
         var URL = visitUID
         if (action.url_pattern) {
-          URL = "/crusher/search/timeseries?advertiser=" + 
-            source + "&search=" + action.url_pattern.join(",") + "&format=json&logic=" + action.operator
+          var actionPatterns = action.url_pattern.map(function(x){return x.split(" ").join(",")}).join("|")
+          URL = "/crusher/pattern_search/timeseries?advertiser=" + source + 
+            "&search=" + actionPatterns + 
+            "&format=json&logic=or" 
+
+          // NOTE:
+          // action.operator // removed from the UI since UX use case covered
+            
 
           d3.xhr(URL)
             .header("Content-Type", "application/json")

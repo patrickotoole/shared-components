@@ -161,14 +161,14 @@ RB.crusher.ui.action = (function(action) {
       .classed("operator form-control",true)
 
     var options = operator.selectAll("option")
-      .data(["and","or"])
+      .data(["or"])
       .enter()
         .append("option")
 
     options 
       .text(String)
       .attr("selected",function(x){
-        return x.operator
+        return "or"//x.operator
       })
 
     var patterns = newEdit.selectAll(".action-patterns")
