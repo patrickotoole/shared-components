@@ -72,10 +72,11 @@ RB.crusher.ui.action = (function(action) {
 
     var timeseries = with_data.selectAll(".ts").data(function(data){
       var nested = d3.nest()
-        .key(function(x){return x.timestamp})
+        .key(function(x){return x.date})
         .rollup(function(x){ 
           
           return {
+            "views": x[0].num_views,
             "visits": x[0].num_visits,
             "uniques": x[0].num_users
           }
@@ -83,6 +84,7 @@ RB.crusher.ui.action = (function(action) {
         })
         .entries(data.visits_data).map(function(x){
           x.date = x.key
+          x.views = x.values.views
           x.visits = x.values.visits
           x.uniques = x.values.uniques
           x.url_pattern = data.url_pattern
@@ -106,6 +108,7 @@ RB.crusher.ui.action = (function(action) {
 
     if (newTs.length && newTs.data()[0]) {
       var tsData = newTs.datum()
+      RB.rho.ui.buildTimeseries(newTs,tsData,"qasdf",["views"])
       RB.rho.ui.buildTimeseries(newTs,tsData,"asdf",["visits"])
       RB.rho.ui.buildTimeseries(newTs,tsData,"sdf",["uniques"])
 

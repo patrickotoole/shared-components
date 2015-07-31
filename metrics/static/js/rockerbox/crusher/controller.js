@@ -96,8 +96,11 @@ RB.crusher.controller = (function(controller) {
       datumTokenizer: Bloodhound.tokenizers.whitespace,
       queryTokenizer: Bloodhound.tokenizers.whitespace,
       remote: { 
-        url: "/crusher/api/urls?advertiser=" + source + "&search=%QUERY&format=json&logic=must&timeout=4",
+        url: "/crusher/search/urls?advertiser=" + source + "&search=%QUERY&format=json&logic=and&timeout=4",
         wildcard: "%QUERY",
+        transform: function(resp) {
+          return resp.results
+        },
         prepare: function(x,settings) {
           var q = x.split(" ").join(","),
             split = settings.url.split("%QUERY")
