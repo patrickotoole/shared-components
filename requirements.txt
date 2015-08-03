@@ -22,3 +22,4 @@ pymongo
 tldextract
 slackclient
 dnspython
+boto
