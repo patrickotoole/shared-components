@@ -1,3 +1,4 @@
+from lib.helpers import Convert
 import boto
 from boto.s3.connection import S3Connection
 
@@ -140,7 +141,9 @@ where media_trader_slack_name is not null and running=1
 """
 
 # advertiser_ids = [a["id"] for a in advertisers if a["state"] == "active"]
-advertisers = mysql.select_dataframe(query).to_dict()
+advertisers = Convert.df_to_values(mysql.select_dataframe(query))
+
+print advertisers
 
 for a in advertisers:
     advertiser_name = a["advertiser_name"]
@@ -171,7 +174,7 @@ for a in advertisers:
         continue
     
     message = "The following campaigns for `%s` have abnormally high potential daily budgets:\n" % advertiser_name \
-                + get_messages(bad_campaigns.to_dict())
+                + get_messages(Convert.df_to_values(bad_campaigns))
         
     print "Sending message to %s: \n%s\n" % (slack_name, message)
     sc.api_call("chat.postMessage",channel=slack_uid,text=message,as_user=True)
