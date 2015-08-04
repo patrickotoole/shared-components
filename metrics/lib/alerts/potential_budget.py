@@ -85,7 +85,7 @@ def format_msg(c):
     else:
         return "spend,%(daily_budget).0f,%(id)s,%(name)s" % c
 
-def get_messages(campaigns):
+def get_message(campaigns):
     messages = []
     
     spend_rows = [
@@ -115,6 +115,19 @@ def get_messages(campaigns):
     
     return '\n'.join(messages)
 
+def get_message_totals(totals):
+    message = []
+    message.append("*SUMMARY*: Your advertisers have the following total potential daily budgets.")
+    message.append("```\nadvertiser,total_potential_budget\n")
+    for total in totals:
+        m = "%s,%.0f" % (total[0], total[1])
+        message.append(m)
+
+    message.append("\nYou may want to adjust daily budgets on your campaigns if you "
+                   "would not be comfortable spending the above amount in a single "
+                   "day.\n```")
+    return '\n'.join(message)
+
 cols = [
     "name",
     "id",
@@ -142,6 +155,8 @@ where media_trader_slack_name is not null and running=1
 
 # advertiser_ids = [a["id"] for a in advertisers if a["state"] == "active"]
 advertisers = Convert.df_to_values(mysql.select_dataframe(query))
+
+totals = {}
 
 print advertisers
 
@@ -173,8 +188,23 @@ for a in advertisers:
         print "No campaigns with high daily potential budgets for advertiser %s" % advertiser_name
         continue
     
-    message = "The following campaigns for `%s` have abnormally high potential daily budgets:\n" % advertiser_name \
-                + get_messages(Convert.df_to_values(bad_campaigns))
+    message = "*WARNING*: The following campaigns for `%s` have abnormally high potential daily budgets:\n" % advertiser_name \
+                + get_message(Convert.df_to_values(bad_campaigns))
         
     print "Sending message to %s: \n%s\n" % (slack_name, message)
+    sc.api_call("chat.postMessage",channel=slack_uid,text=message,as_user=True)
+
+    total_potential = df.potential_imps_budget.sum() + df.daily_budget.sum()
+
+    if slack_uid not in totals:
+        totals[slack_uid] = []
+
+    totals[slack_uid].append((advertiser_name, total_potential))
+
+    print "Total potential daily budget for %s: %s" % (advertiser_name, total_potential)
+
+
+for slack_uid in totals:
+    message = get_message_totals(totals[slack_uid])
+    print "Sending message to %s: \n%s\n" % (slack_uid, message)
     sc.api_call("chat.postMessage",channel=slack_uid,text=message,as_user=True)
