@@ -61,7 +61,7 @@ def get_broken_apps():
         for i in bucket.list():
             filename = str(i)
             last_modified = i.last_modified
-            if time_since(last_modified, kind="hours") < 1:
+            if time_since(last_modified, kind="hours") < 2:
                 source = get_source(filename)
                 if source in active_apps[f]:
                     active_apps[f].remove(source)
@@ -78,7 +78,7 @@ filter_key = {
 
 MESSAGE = (
     "*WARNING*: Data has not been written to the `%s` S3 bucket for at "
-    "least 1 hour for the following advertisers: `%s`. You should check "
+    "least 2 hours for the following advertisers: `%s`. You should check "
     "https://console.aws.amazon.com/s3/home?region=us-east-1#&bucket=%s to confirm."
 )
 
