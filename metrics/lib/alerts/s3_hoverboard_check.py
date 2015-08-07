@@ -33,7 +33,7 @@ def get_source(filename):
             return directory.split("=")[1]
     return None
 
-def get_broken_apps():
+def get_broken_apps(default_times=dict()):
     filters = {
         "hoverboard-syphon-imps-v2": "imps-flume",
         "hoverboard-events": "visits-flume",
@@ -61,19 +61,26 @@ def get_broken_apps():
         for i in bucket.list():
             filename = str(i)
             last_modified = i.last_modified
-            if time_since(last_modified, kind="hours") < 2:
-                source = get_source(filename)
+            source = get_source(filename)
+            if source in default_times:
+                hours = default_times[source]
+            else:
+                hours = 2
+            if time_since(last_modified, kind="hours") < hours:
                 if source in active_apps[f]:
                     active_apps[f].remove(source)
 
     return active_apps
 
-apps = get_broken_apps()
-
 filter_key = {
     "imps-flume": "hoverboard-syphon-imps-v2",
     "visits-flume": "hoverboard-events",
     "conversions-flume": "hoverboard-conv"
+}
+
+default_times = {
+    "hotsy_totsy": 5,
+    "gazelle": 5
 }
 
 MESSAGE = (
@@ -83,6 +90,8 @@ MESSAGE = (
 )
 
 sc = get_slack()
+
+apps = get_broken_apps(default_times)
 
 for app,advertisers in apps.iteritems():
     bucket = filter_key[app]
