@@ -41,7 +41,7 @@ class PixelStatusHandler(AnalyticsBase, BaseHandler):
     def get_segments(self, advertiser, segment):
         df = yield self.defer_execute(advertiser, segment)
         extras = yield run_mysql_deferred(self.db, MYSQL_QUERY)
-        print extras
+
         df = df.set_index("segment").join(extras.set_index("segment")).reset_index()
         response = self.format_response(df)
         self.get_content(response)
