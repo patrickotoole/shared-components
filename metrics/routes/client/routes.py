@@ -27,6 +27,8 @@ class AdvertiserRoutes(Routes):
             (r'/reporting.*',reporting.ReportingHandler, self.connectors),
             (r'/creative/reporting.*', reporting.CreativeReportingHandler, self.connectors),
             (r'/domain/reporting.*', reporting.DomainReportingHandler, self.connectors), 
+            
+
             (r'/conversion/reporting.*', reporting.ConversionReportingHandler, self.connectors),  
 
             (r'/intraweek.*',reporting.InsertionOrderHandler, self.connectors),
@@ -69,6 +71,7 @@ class AdvertiserRoutes(Routes):
         import handlers.funnel as funnel
 
         return [
+            (r'/domain/idf.*', analytics.DomainIDFHandler, self.connectors), 
             (r'/visit_urls', analytics.VisitUrlsHandler, self.connectors),
             (r'/visit_uids', analytics.VisitUidsHandler, self.connectors),
             (r'/search/(.*?)', analytics.SearchHandler, self.connectors),
