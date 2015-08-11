@@ -9,3 +9,4 @@ redis
 maxminddb
 hive_utils
 twisted
+py-pretty

@@ -41,7 +41,7 @@ class AdvertiserRoutes(Routes):
         import handlers.hoverboard as hoverboard
 
         return [
-             (r'/hoverboard', hoverboard.HoverboardHandler, self.connectors),   
+             (r'/hoverboard', hoverboard.HoverboardHandler, self.connectors),
         ]
 
     @connectors("db","api","cassandra", "mongo")
@@ -59,7 +59,9 @@ class AdvertiserRoutes(Routes):
             (r'/location.*', appnexus.AppnexusHandler, self.connectors),
             (r'/viewability', analytics.ViewabilityHandler, self.connectors),
             (r'/availability', analytics.AvailabilityHandler, self.connectors),
-            (r'/domains', analytics.DomainsMongoHandler, self.connectors)
+            (r'/domains', analytics.DomainsMongoHandler, self.connectors),
+            (r'/pixel/status', analytics.PixelStatusHandler, self.connectors),
+            (r'/pixel/lookup', analytics.PixelLookupHandler, self.connectors)
         ]
 
     @namespace("/crusher")
