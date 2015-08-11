@@ -20,7 +20,7 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
 
     @decorators.deferred
     def defer_execute(self, selects, advertiser, pattern, date_clause, logic, 
-                      timeout=60, numdays=7):
+                      timeout=60, numdays=9):
         if not pattern:
             raise Exception("Must specify search term using search=")
 

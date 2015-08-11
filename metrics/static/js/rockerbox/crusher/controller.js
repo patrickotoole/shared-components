@@ -29,7 +29,6 @@ RB.crusher.controller = (function(controller) {
     "funnel/existing": function(funnel) {
       debugger
       console.log(funnel)
-      throw "asdf";
       var id = funnel ? funnel.funnel_id : false
 
       crusher.ui.funnel.buildBase() 
