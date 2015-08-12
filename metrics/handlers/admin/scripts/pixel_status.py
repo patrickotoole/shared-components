@@ -6,8 +6,8 @@ import logging
 import pretty
 from datetime import datetime
 
-from ..base import BaseHandler
-from analytics_base import AnalyticsBase
+from handlers.base import BaseHandler
+from handlers.analytics.analytics_base import AnalyticsBase
 from twisted.internet import defer
 from lib.helpers import decorators
 from lib.helpers import *

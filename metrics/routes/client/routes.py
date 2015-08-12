@@ -59,9 +59,7 @@ class AdvertiserRoutes(Routes):
             (r'/location.*', appnexus.AppnexusHandler, self.connectors),
             (r'/viewability', analytics.ViewabilityHandler, self.connectors),
             (r'/availability', analytics.AvailabilityHandler, self.connectors),
-            (r'/domains', analytics.DomainsMongoHandler, self.connectors),
-            (r'/pixel/status', analytics.PixelStatusHandler, self.connectors),
-            (r'/pixel/lookup', analytics.PixelLookupHandler, self.connectors)
+            (r'/domains', analytics.DomainsMongoHandler, self.connectors)
         ]
 
     @namespace("/crusher")

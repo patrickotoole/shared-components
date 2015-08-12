@@ -1,7 +1,20 @@
 import boto
+from link import lnk
 from datetime import datetime
 from boto.s3.connection import S3Connection
 from slackclient import SlackClient
+
+def get_marathon():
+    return lnk.api.marathon
+
+def get_cassandra():
+    return lnk.dbs.cassandra
+
+def get_mysql():
+    return lnk.dbs.rockerbox
+
+def get_rockerbox():
+    return lnk.api.rockerbox
 
 def get_s3():
     conn = S3Connection('AKIAIVMCHBYD327UXDVA', 'fjdNMx6Pw3iD19z+79n83UMes0zhiMDEmknZCAlO')
