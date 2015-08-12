@@ -87,7 +87,7 @@ class S3HoverboardAlert:
         for app,advertisers in self.active_apps.iteritems():
             bucket = self.filter_key[app]
             if advertisers:
-                m = MESSAGE % (bucket, ', '.join(advertisers), bucket)
-                sc.api_call("chat.postMessage", channel="#production-alerts", text=m)
+                m = self.MESSAGE % (bucket, ', '.join(advertisers), bucket)
+                self.sc.api_call("chat.postMessage", channel="#production-alerts", text=m)
 
 s = S3HoverboardAlert()
