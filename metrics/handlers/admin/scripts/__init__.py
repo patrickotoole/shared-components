@@ -14,6 +14,8 @@ from imps import ImpsHandler
 from viewable import ViewabilityHandler
 from logins import LoginsHandler
 from editable_base import EditableBaseHandler
+from pixel_status import PixelStatusHandler
+from pixel_lookup import PixelLookupHandler
 import appnexus
 import bidder
 import opt

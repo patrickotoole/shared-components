@@ -8,6 +8,7 @@ from segment import SegmentRoutes
 from logging import LoggingRoutes
 from bidder import BidderRoutes
 from treefilter import TreeFilterRoutes
+from pixel import PixelRoutes
 
 class ServiceRoutes(
     TreeFilterRoutes,
@@ -16,7 +17,8 @@ class ServiceRoutes(
     CampaignCheckRoutes,
     AdvertiserRoutes,
     SegmentRoutes,
-    LoggingRoutes
+    LoggingRoutes,
+    PixelRoutes
 ):
 
     @namespace("/admin/pixel")
