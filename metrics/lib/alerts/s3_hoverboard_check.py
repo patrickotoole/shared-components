@@ -1,29 +1,7 @@
-import boto
-from boto.s3.connection import S3Connection
-
-from datetime import datetime
-from slackclient import SlackClient
 from link import lnk
+from helpers import *
 
 m = lnk.api.marathon
-
-conn = S3Connection('AKIAIVMCHBYD327UXDVA', 'fjdNMx6Pw3iD19z+79n83UMes0zhiMDEmknZCAlO')
-
-def get_slack():
-    token = "xoxb-6465676919-uuZ6eLwx0fjJ5JTxTa3yAvMD"
-    sc = SlackClient(token)
-
-    sc.rtm_connect()
-    return sc
-
-def time_since(t, format_str="%Y-%m-%dT%H:%M:%S.000Z", kind="hours"):
-    diff = datetime.now() - datetime.strptime(t, format_str)
-    if kind == "hours":
-        return (diff.days * 24) + (diff.seconds / 60.0 / 60.0)
-    elif kind == "minutes":
-        return (diff.days * 24 * 60) + (diff.seconds / 60.0)
-    elif kind == "seconds":
-        return (diff.days * 24 * 60 * 60) + diff.seconds
 
 def get_source(filename):
     bucket, path = str(filename).split(",")
@@ -33,7 +11,7 @@ def get_source(filename):
             return directory.split("=")[1]
     return None
 
-def get_broken_apps(default_times=dict()):
+def get_broken_apps(s3_conn, default_times=dict()):
     filters = {
         "hoverboard-syphon-imps-v2": "imps-flume",
         "hoverboard-events": "visits-flume",
@@ -56,7 +34,7 @@ def get_broken_apps(default_times=dict()):
 
     # For each bucket
     for b in filters:
-        bucket = conn.get_bucket(b)
+        bucket = s3_conn.get_bucket(b)
         f = filters[bucket.name]
         for i in bucket.list():
             filename = str(i)
@@ -90,8 +68,9 @@ MESSAGE = (
 )
 
 sc = get_slack()
+conn = get_s3()
 
-apps = get_broken_apps(default_times)
+apps = get_broken_apps(conn, default_times)
 
 for app,advertisers in apps.iteritems():
     bucket = filter_key[app]
