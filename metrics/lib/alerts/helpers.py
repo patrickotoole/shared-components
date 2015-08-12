@@ -61,3 +61,9 @@ def get_advertisers(mysql):
     advertisers = Convert.df_to_values(df)
     return advertisers
 
+def advertiser_to_media_trader(mysql):
+    key = {}
+    advertisers = get_advertisers(mysql)
+    for a in advertisers:
+        key[a["pixel_source_name"]] = a["media_trader_slack_name"]
+    return key
