@@ -164,6 +164,7 @@ RB.crusher.api = (function(api) {
   api.URL = {
     source: qs.advertiser,
     actionURL: "/crusher/funnel/action?format=json&advertiser=" + source,
+    actionUIDs: "/crusher/pattern_search/uids?advertiser=" + source + "&search=",
     visitURL: "/crusher/visit_urls?format=json&source=" + source,
     visitUID: "/crusher/visit_uids?format=json&url=",
     visitDomains: "/crusher/visit_domains?format=json&kind=domains",
@@ -184,7 +185,29 @@ RB.crusher.api = (function(api) {
 
     
     var apis = {
-      tf_idf: new genericQueuedAPI(function(cb,deferred_cb) {
+      tf_idf_funnel: genericQueuedAPIWithData(function(data,cb,deferred_cb) {
+        var domains = data.funnel_domains.map(function(x){return x.domain})
+        if (domains) {
+          d3.json("/crusher/domain/idf?domains=" + domains.join(","), function(dd){
+            var keyed = d3.nest()
+              .key(function(x){return x.domain})
+              .rollup(function(x){return x[0]})
+              .map(dd)
+
+            data.funnel_domains.map(function(x) {
+              idf_dict = keyed[x.domain] || {}
+              x.idf = idf_dict.idf || 12
+              x.category_name = idf_dict.category_name || "NA"
+              x.wuid =  Math.exp(x.idf) * Math.log(x.uid)
+
+            })
+            deferred_cb(null,cb)
+          }) 
+        } else {
+          deferred_cb(null,cb)
+        }
+      }),
+      tf_idf: genericQueuedAPIWithData(function(cb,deferred_cb) {
         if (!crusher.pop_domains) {
           d3.json("/admin/api?table=reporting.pop_domain_with_category&format=json", function(dd){
             crusher.pop_domains = {}
@@ -318,22 +341,19 @@ RB.crusher.api = (function(api) {
         var obj = {}
         obj.urls = helpers.matchDomains(action.url_pattern)
 
-        
+        var pattern_str = action.url_pattern.join("|")
 
-        if ((obj.urls.length) > 0 && (!action.visits_data)) {
+        if (!action.visits_data) {
 
           console.debug("GETTING DATA FOR: ", action)
-          d3.xhr(api.URL.visitUID)
+          d3.xhr(api.URL.actionUIDs + pattern_str)
             .header("Content-Type", "application/json")
-            .post(
-              JSON.stringify(obj),
+            .get(
               function(err, rawData){
                 var dd = JSON.parse(rawData.response)
                 action.visits_data = dd
-                action.matches = obj.urls
-
-                action.uids = helpers.visitsToUIDs(action.visits_data) 
-                action.count = dd.length 
+                action.uids = dd.results
+                action.count = dd.summary.num_users
                 deferred_cb(null,action)
               }
             );
@@ -351,7 +371,7 @@ RB.crusher.api = (function(api) {
               JSON.stringify(data),
               function(err, rawData){
                 var resp = JSON.parse(rawData.response)
-                deferred_cb(null,resp)
+                deferred_cb(null,cb.bind(false,resp))
               }
             );
         } else {

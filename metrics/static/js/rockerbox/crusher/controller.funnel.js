@@ -70,34 +70,28 @@ RB.crusher.controller.funnel = (function(funnel) {
         domains = "domains_" + data.funnel_id
 
       crusher.ui.funnel.wait(funnel)
-      crusher.subscribe.add_subscriber(["tf_idf","visits"], function() {
 
-        crusher.subscribe.add_subscriber([uids],function(){
-          crusher.ui.funnel.show(funnel)
+      crusher.subscribe.add_subscriber([uids],function(){
 
-          crusher.subscribe.add_subscriber(
-            [domains],
-            function(x) {
-              crusher.ui.funnel.show.component.domains.bind(false,funnel)(x)
-              crusher.ui.funnel.show.component.lookalike(funnel)
-            },"domains",true,true,
-            data
-          )
-          
-          crusher.subscribe.add_subscriber(
-            [avails],
-            function(x) {
-              var exchanges = funnel.selectAll(".exchange-summary .exchange")
-            
-              crusher.ui.funnel.show.component.avails(exchanges)
-              crusher.ui.funnel.show.component.campaign(funnel)
-            },"show_me_the_money",true,true,
-            data
-          )
+        crusher.ui.funnel.show(funnel)
 
-        },"show",true,true,data)
+        crusher.subscribe.add_subscriber([domains], function(x) {
+          data.funnel_domains = x
+          crusher.subscribe.add_subscriber(["tf_idf_funnel"], function(x) {
+            crusher.ui.funnel.show.component.domains.bind(false,funnel)(x)
+            crusher.ui.funnel.show.component.lookalike(funnel)
+          },"idf",true,true,data)
+        },"domains",true,true, data)
+        
+        crusher.subscribe.add_subscriber([avails], function(x) {
+          var exchanges = funnel.selectAll(".exchange-summary .exchange")
+        
+          crusher.ui.funnel.show.component.avails(exchanges)
+          crusher.ui.funnel.show.component.campaign(funnel)
+        },"show_me_the_money",true,true, data)
 
-      },"show_requirements", true, true)
+      },"show",true,true,data)
+
 
     },
     show_domains: function(data,callback) {

@@ -268,7 +268,9 @@ RB.crusher.ui.funnel = (function(funnel) {
       var x = d3.scale.linear().range([0, width-150]);
       
       var chart = funnels.selectAll("svg.domain-chart-svg")
-          .data([data])
+          .data(function(x){
+            return [x.funnel_domains.sort(function(x,y){return y.wuid - x.wuid}).filter(function(x) {return x.domain != "NA"}).slice(0,20)]
+          })
 
       chart
           .enter()
@@ -276,9 +278,9 @@ RB.crusher.ui.funnel = (function(funnel) {
             .attr("class","domain-chart-svg")
             .attr("width", width);
 
-      x.domain([0, d3.max(data, function(d) { return d.uid; })]);
+      x.domain([0, d3.max(chart.datum(), function(d) { return d.uid; })]);
     
-      chart.attr("height", barHeight * data.length);
+      chart.attr("height", barHeight * chart.data()[0].length);
     
       var bar = chart.selectAll("g")
           .data(function(x){return x})
@@ -304,7 +306,7 @@ RB.crusher.ui.funnel = (function(funnel) {
           .attr("x", function(d) { return x(d.uid) + 3; })
           .attr("y", barHeight / 2)
           .attr("dy", ".35em")
-          .text(function(d) { return d.domain + " (" + d.uid + ")"; }); 
+          .text(function(d) { return d.domain + " (" + d.uid + ")" + d.idf }); 
 
     },
     category_chart: function(funnels,data) {
@@ -360,15 +362,13 @@ RB.crusher.ui.funnel = (function(funnel) {
 
     },
     domains: function(funnels,data) {
-      var data = data.map(function(x){
-        var pop_domain = RB.crusher.pop_domains[x.domain] || {}
-        var idf = pop_domain.idf || 12
-        x.wuid =  Math.exp(idf) * Math.log(x.uid)
-        return x
-      }).sort(function(x,y){
-        return y.wuid - x.wuid
-      }).slice(0,20)
-
+      funnels.data(function(d) {
+        d.funnel_domains = d.funnel_domains.sort(function(x,y) {
+          return y.wuid - x.wuid
+        })
+        return [d]
+      })
+      
       var cat = d3.nest()
         .key(function(x) {
           return RB.crusher.cat_domains[x.domain] || "NA"

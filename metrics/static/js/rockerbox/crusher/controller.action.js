@@ -82,28 +82,27 @@ RB.crusher.controller.action = (function(action) {
   
       if (domains.length && !action.visits_data)
         var URL = visitUID
-        console.log(action)
-        URL = "/crusher/api/timeseries?advertiser=" + source + "&search=" + action.url_pattern[0] + "&format=json"
+        if (action.url_pattern) {
+          var actionPatterns = action.url_pattern.map(function(x){return x.split(" ").join(",")}).join("|")
+          URL = "/crusher/pattern_search/timeseries?advertiser=" + source + 
+            "&search=" + actionPatterns + 
+            "&format=json&logic=or" 
 
-        /*
-        // TODO: need to make this handle multiple url_patterns
-        // URL = "/crusher/api/timeseries?advertiser=" + source + 
-        //  "&search=" + action.url_pattern.join("|") + "&format=json"
-        */
+          // NOTE:
+          // action.operator // removed from the UI since UX use case covered
+            
 
-        
-        d3.xhr(URL)
-          .header("Content-Type", "application/json")
-          .get(
-            function(err, rawData){
-              var dd = JSON.parse(rawData.response)
-              //debugger
-              action.visits_data = dd.counts
-              //action.uids = dd.map(function(x){return x.uid}) // these are all the uids
-              //action.count = dd.length // this is the count of the urls + dates that matched
-              if (callback) callback()
-            }
-          );
+          d3.xhr(URL)
+            .header("Content-Type", "application/json")
+            .get(
+              function(err, rawData){
+                var dd = JSON.parse(rawData.response)
+                action.visits_data = dd.results
+
+                if (callback) callback()
+              }
+            );
+        }
        
 
       return obj

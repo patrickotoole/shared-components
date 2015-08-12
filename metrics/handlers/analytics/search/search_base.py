@@ -9,7 +9,7 @@ from twisted.internet import defer
 from lib.helpers import *
 from cassandra import OperationTimedOut
 
-QUERY  = """SELECT %(what)s FROM rockerbox.visit_uids_lucene_timestamp %(where)s"""
+QUERY  = """SELECT %(what)s FROM rockerbox.visit_uids_lucene_timestamp_clustered %(where)s"""
 WHERE  = """WHERE source='%(advertiser)s' and lucene='%(lucene)s'"""
 LUCENE = """{ filter: { type: "boolean", %(logic)s: [%(filters)s]}}"""
 FILTER = """{ type:"wildcard", field: "url", value: "*%(pattern)s*"}"""
@@ -20,7 +20,7 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
 
     @decorators.deferred
     def defer_execute(self, selects, advertiser, pattern, date_clause, logic, 
-                      timeout=60):
+                      timeout=60, numdays=9):
         if not pattern:
             raise Exception("Must specify search term using search=")
 
@@ -31,10 +31,32 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
         query = QUERY % {"what":selects, "where": where}
 
         self.logging.info(query) 
+
+        import datetime
         
+        base = datetime.datetime.today()
+        date_list = [base - datetime.timedelta(days=x) for x in range(0, numdays)]
+        dates = map(lambda x: str(x).split(" ")[0] + " 00:00:00",date_list)
         try:
-            data = self.cassandra.execute(query,None,timeout=timeout)
-            return pandas.DataFrame(data)
+
+            # build a list of futures
+            futures = []
+            for date in dates:
+                self.logging.info(date)
+                date_str = " and date='%s'" % date
+                futures.append(self.cassandra.execute_async(query + date_str))
+            
+            l = []
+            # wait for them to complete and use the results
+            for future in futures:
+                rows = future.result()
+                l += rows
+            import datetime
+            print datetime.datetime.now()
+            
+            df = pandas.DataFrame(l)
+            
+            return df
         except OperationTimedOut:
             return False
 
