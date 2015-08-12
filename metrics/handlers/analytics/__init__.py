@@ -5,5 +5,7 @@ from visit_uids import VisitUidsHandler
 from visit_domains import VisitDomainsHandler
 from domains import DomainsMongoHandler
 from visit_avails import VisitAvailsHandler
+from pixel_status import PixelStatusHandler
+from pixel_lookup import PixelLookupHandler
 from search import *
 from domain_idf import DomainIDFHandler
