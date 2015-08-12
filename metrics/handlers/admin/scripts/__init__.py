@@ -16,6 +16,7 @@ from logins import LoginsHandler
 from editable_base import EditableBaseHandler
 from pixel_status import PixelStatusHandler
 from pixel_lookup import PixelLookupHandler
+from pixel_alerts import PixelAlertsHandler
 import appnexus
 import bidder
 import opt

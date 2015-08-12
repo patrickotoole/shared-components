@@ -31,7 +31,9 @@ class IndexHandler(BaseHandler):
             ("/admin/segment/scrubbed", "Scrubbed Segments Tool"),
             ("/admin/batch_request/new", "Batch Request Tool"),
             ("/admin/appnexus/campaign", "Mass edit (by campaign)"),
-            ("/admin/advertiser/logins", "Advertiser Admin Logins")
+            ("/admin/advertiser/logins", "Advertiser Admin Logins"),
+            ("/admin/pixel/alerts", "Pixel Alerts Settings"),
+            ("/admin/pixel/status", "Pixel Status")
         ]
 
         opt_tools = [
