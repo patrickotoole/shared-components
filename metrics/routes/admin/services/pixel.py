@@ -10,5 +10,6 @@ class PixelRoutes(Routes):
 
         return [
             (r'/lookup', scripts.PixelLookupHandler, self.connectors),
-            (r'/status', scripts.PixelStatusHandler, self.connectors)
+            (r'/status', scripts.PixelStatusHandler, self.connectors),
+            (r'/alerts', scripts.PixelAlertsHandler, self.connectors),
         ]
