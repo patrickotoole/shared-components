@@ -1,8 +1,6 @@
 from lib.helpers import Convert
-import boto
-from boto.s3.connection import S3Connection
+from helpers import *
 
-import ujson
 from datetime import datetime
 from slackclient import SlackClient
 from link import lnk
@@ -13,22 +11,7 @@ api = lnk.api.console
 m = lnk.api.marathon
 mysql = lnk.dbs.rockerbox
 
-conn = S3Connection('AKIAIVMCHBYD327UXDVA', 'fjdNMx6Pw3iD19z+79n83UMes0zhiMDEmknZCAlO')
-
-def get_slack():
-    token = "xoxb-6465676919-uuZ6eLwx0fjJ5JTxTa3yAvMD"
-    sc = SlackClient(token)
-
-    sc.rtm_connect()
-    return sc
-
-def get_slack_user(name, sc, cache={}):
-    did = cache.get(name,False)
-    if not did:
-        uid = [i['id'] for i in ujson.loads(sc.api_call("users.list"))['members'] if i['name'] == name][0]
-        did = ujson.loads(sc.api_call("im.open",user=uid))['channel']['id']
-        cache[name] = did
-    return did
+conn = get_s3()
 
 def rate_limited(func):
     def inner(*args, **kwargs):
@@ -140,25 +123,11 @@ cols = [
     "advertiser_id"
 ]
     
+totals = {}
 users = {}
 sc = get_slack()
 
-query = """
-select 
-    advertiser_name,
-    external_advertiser_id, 
-    media_trader_slack_name, 
-    pixel_source_name 
-from advertiser 
-where media_trader_slack_name is not null and running=1
-"""
-
-# advertiser_ids = [a["id"] for a in advertisers if a["state"] == "active"]
-advertisers = Convert.df_to_values(mysql.select_dataframe(query))
-
-totals = {}
-
-print advertisers
+advertisers = get_advertisers(mysql)
 
 for a in advertisers:
     advertiser_name = a["advertiser_name"]
