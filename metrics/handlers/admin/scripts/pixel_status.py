@@ -56,7 +56,7 @@ class PixelStatusHandler(AnalyticsBase, BaseHandler):
         now = datetime.now()
         ts = datetime.strptime(timestamp, format_str)
         delta = now - ts
-        return delta.seconds
+        return int(delta.total_seconds())
         
     def format_response(self, df):
         if len(df) == 0:
