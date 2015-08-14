@@ -10,6 +10,9 @@ class BaseHandler(tornado.web.RequestHandler):
     def get_current_advertiser(self):
         return self.get_secure_cookie("advertiser")
 
+    def get_current_permissions(self):
+        return self.get_secure_cookie("permissions")
+
     @property
     def current_advertiser(self):
         if not hasattr(self, "_current_advertiser"):

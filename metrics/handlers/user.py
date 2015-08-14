@@ -2,11 +2,31 @@ import tornado.web
 import logging
 import sys
 import ujson
+from lib.helpers import *
+from base import BaseHandler
 import lib.password_hash as password_hash
 
 logger = logging.getLogger('tcpserver')
 
-USER_QUERY = "SELECT id, username, advertiser_id, password from user where username = '%s'"
+PERMISSIONS_QUERY = """
+SELECT 
+    pixel_source_name, 
+    external_advertiser_id, 
+    advertiser_name
+FROM user a JOIN user_permissions b on (a.id = b.user_id) 
+    JOIN permissions_advertiser USING (permissions_id) 
+    JOIN advertiser USING (external_advertiser_id) 
+WHERE a.username = '%s'
+"""
+
+USER_QUERY = """
+SELECT DISTINCT 
+    id, 
+    username, 
+    advertiser_id, 
+    password
+FROM user
+WHERE username = '%s'"""
 
 pw_hash = password_hash.PasswordHash()
 
@@ -93,4 +113,41 @@ class SignupHandler(tornado.web.RequestHandler):
         except:
             self.write("failure")
 
+class AccountPermissionsHandler(BaseHandler):
+    def initialize(self,db=None):
+        self.db = db
 
+    def get_user_permissions(self, username):
+        df = self.db.select_dataframe(PERMISSIONS_QUERY % username)
+        permissions = Convert.df_to_values(df)
+        return permissions
+
+    @tornado.web.authenticated
+    def get(self):
+        advertiser = self.get_argument("advertiser_id", False)
+        u = self.get_current_user()
+        
+        permissions = self.get_user_permissions(u)
+
+        self.write(ujson.dumps({"results": permissions}))
+
+    @tornado.web.authenticated
+    def post(self):
+        posted = ujson.loads(self.request.body)
+        advertiser = str(posted["advertiser_id"])
+
+        u = self.get_current_user()
+
+        permissions = self.get_user_permissions(u)
+
+        # If the user specified an advertiser to switch to, make sure they have
+        # permissions for that advertiser and then change their cookie
+        if advertiser:
+            print advertiser
+            print permissions, advertiser
+            if [p for p in permissions 
+                if str(p['external_advertiser_id']) == str(advertiser)]:
+                self.set_secure_cookie("advertiser", advertiser)
+            else:
+                self.write("{\"error\": \"no permissions found\"}")
+        self.finish()
