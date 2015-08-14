@@ -1,6 +1,7 @@
 import tornado.web
 import ujson
 import pandas
+from handlers.base import BaseHandler
 
 from lib.helpers import Convert
 from MYSQL_FUNNEL import *
@@ -41,7 +42,7 @@ class FunnelHelpers(object):
 
         return  g2d
  
-class FunnelBase(tornado.web.RequestHandler):
+class FunnelBase(BaseHandler):
 
     def update_funnel_actions(self,cur,to_update,funnel_id):
         excludes = ["funnel_id","action_id"]

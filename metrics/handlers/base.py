@@ -1,5 +1,6 @@
 import tornado.web
 from link import lnk
+from lib.query.MYSQL import *
 #from ..lib.hive import Hive
 
 class BaseHandler(tornado.web.RequestHandler):
@@ -10,14 +11,21 @@ class BaseHandler(tornado.web.RequestHandler):
     def get_current_advertiser(self):
         return self.get_secure_cookie("advertiser")
 
-    def get_current_permissions(self):
-        return self.get_secure_cookie("permissions")
-
     @property
     def current_advertiser(self):
         if not hasattr(self, "_current_advertiser"):
             self._current_advertiser = self.get_current_advertiser()
         return self._current_advertiser
+
+    @property
+    def current_advertiser_name(self):
+        q = ADVERTISER_ID_TO_NAME % self.current_advertiser
+        df = self.db.select_dataframe(q)
+
+        if len(df) > 0:            
+            return df.name[0]
+        else:
+            return None
 
     def initialize(self):
         #self.db = lnk.dbs.mysql
