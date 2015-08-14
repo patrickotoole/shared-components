@@ -21,11 +21,14 @@ WHERE a.username = '%s'
 
 USER_QUERY = """
 SELECT DISTINCT 
-    id, 
+    user.id as id, 
     username, 
-    advertiser_id, 
-    password
-FROM user
+    advertiser_id as external_advertiser_id,
+    password,
+    advertiser_name, 
+    pixel_source_name
+FROM user 
+    JOIN advertiser ON (user.advertiser_id = advertiser.external_advertiser_id)
 WHERE username = '%s'"""
 
 pw_hash = password_hash.PasswordHash()
@@ -67,7 +70,7 @@ class LoginHandler(tornado.web.RequestHandler):
         if not df.empty:
             dict_ = df.to_dict(outtype='records')[0]
             pw = dict_.get('password')
-            aid = dict_.get('advertiser_id')
+            aid = dict_.get('external_advertiser_id')
             if self._check_password(password, pw):
                 self.set_secure_cookie("advertiser",str(aid))
                 self.set_secure_cookie("user",username)
@@ -119,15 +122,35 @@ class AccountPermissionsHandler(BaseHandler):
 
     def get_user_permissions(self, username):
         df = self.db.select_dataframe(PERMISSIONS_QUERY % username)
-        permissions = Convert.df_to_values(df)
-        return permissions
+        
+        # If this user doesn't have permissions, default to the advertiser
+        # assigned to them in the USER table
+        if len(df) > 0:
+            permissions = Convert.df_to_values(df)
+            return permissions
+        else:
+            df = self.db.select_dataframe(USER_QUERY % username)
+            cols = [
+                "external_advertiser_id",
+                "pixel_source_name",
+                "advertiser_name"
+            ]
+            df = df[cols]
+            return Convert.df_to_values(df)
 
     @tornado.web.authenticated
     def get(self):
         advertiser = self.get_argument("advertiser_id", False)
         u = self.get_current_user()
+        current_advertiser = self.current_advertiser
         
         permissions = self.get_user_permissions(u)
+
+        for p in permissions:
+            if str(p["external_advertiser_id"]) == str(current_advertiser):
+                p["selected"] = True
+            else:
+                p["selected"] = False
 
         self.write(ujson.dumps({"results": permissions}))
 
@@ -149,5 +172,5 @@ class AccountPermissionsHandler(BaseHandler):
                 if str(p['external_advertiser_id']) == str(advertiser)]:
                 self.set_secure_cookie("advertiser", advertiser)
             else:
-                self.write("{\"error\": \"no permissions found\"}")
+                self.write("{\"error\": \"not permitted to switch to this advertiser\"}")
         self.finish()

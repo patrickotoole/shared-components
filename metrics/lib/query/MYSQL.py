@@ -316,6 +316,14 @@ WHERE
     deleted=0
 """
 
+ADVERTISER_ID_TO_NAME = """
+SELECT pixel_source_name as name
+FROM rockerbox.advertiser
+WHERE 
+    external_advertiser_id=%s AND
+    deleted=0
+"""
+
 TOP_URLS = """
 SELECT %(fields)s
 FROM reporting.pixel_url_analytics 

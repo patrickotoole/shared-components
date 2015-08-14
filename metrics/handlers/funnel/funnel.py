@@ -19,11 +19,13 @@ class FunnelHandler(FunnelBase,FunnelHelpers):
             "owner"
         ]
 
+    @tornado.web.authenticated
     def get(self,*args):
-        advertiser = self.get_argument("advertiser", False)
+        advertiser = self.current_advertiser_name
+
         format = self.get_argument("format",False)
         if format == "json":
-            _id = self.get_argument("id", False) 
+            _id = self.get_argument("id", False)
             if advertiser:
                 results = self.get_advertiser_funnels(advertiser)
             elif _id:
@@ -53,7 +55,7 @@ class FunnelHandler(FunnelBase,FunnelHelpers):
             self.write(as_json)
             self.finish()
         else:
-            self.render("analysis/visit_urls.html",data="{}")
+            self.render("analysis/visit_urls.html",data="{}", advertiser=advertiser)
 
         
 
