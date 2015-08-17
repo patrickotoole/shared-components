@@ -93,8 +93,9 @@ class MultiPatternSearchBase(SearchBase,PatternSearchHelpers):
             masked = funnel_data[mask]
             step = { 
                 "step":step_num,
-                "uids":len(masked['uid'].tolist() )
+                "uids":masked['uid'].tolist()
             } 
+            step['count'] = len(step['uids'])
             gs.append(step)
 
         return gs 
