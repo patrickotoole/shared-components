@@ -293,39 +293,8 @@ box-shadow: inset 0px 0px 5px 0px #CCC;
 		var extUserID =  {{ advertiser_id }};
 
 		$.getJSON("/api?table=advertiser&external_advertiser_id=" + extUserID, function(data){
-		  $.getJSON("/account/permissions", function(permissions) {
-		    console.log(permissions);
-		    if ("error" in permissions){
-		      return;
-		    }
-		// NEED TO GET THE DROPDOWN NOT TO SHOW UP WHEN THE USER HAS NO PERMISSIONS
 		    var advertiser_name = data[0].advertiser_name.toLowerCase();
-		    var dropdown = $('<div class="btn-group" id="advertiser" />');
-		    dropdown.append('<button class="btn btn-default btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">' + data[0].advertiser_name + '<span class="caret"></span></button>')
-	            var ul = $('<ul class="dropdown-menu" />');
-		    var p = permissions["results"]
-
-		    // Create dropdown
-		    for (var val in p) {
-		      if (p[val]["advertiser_name"] != data[0].advertiser_name){
-		          $('<li><a href="#" class="change-advertiser" value="'+ p[val]["external_advertiser_id"] + '">' + p[val]["advertiser_name"] + '</a></li>').appendTo(ul);
-		      }
-		    };
-	            dropdown.append(ul);
-		    dropdown.prependTo("#header #right-align");
-		    //$('#header #right-align #user-name').text(advertiser_name);
-
-		    // Listen for changes in the dropdown...
-		    $(".change-advertiser").click(function() {
-		      var id = $(this).attr("value");
-		      var payload = "{\"advertiser_id\":" + id + "}"
-
-		      $.post("/account/permissions", payload, function() {
-		        location.reload();
-		        console.log(id);
-		      });
-		    });
-		  });
+		    $('#header #right-align #user-name').text(advertiser_name);
 		});
  
 
