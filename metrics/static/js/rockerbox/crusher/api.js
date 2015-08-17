@@ -189,21 +189,22 @@ RB.crusher.api = (function(api) {
       tf_idf_funnel: genericQueuedAPIWithData(function(data,cb,deferred_cb) {
         var domains = data.funnel_domains.map(function(x){return x.domain})
         if (domains) {
-          d3.json("/crusher/domain/idf?domains=" + domains.join(","), function(dd){
-            var keyed = d3.nest()
-              .key(function(x){return x.domain})
-              .rollup(function(x){return x[0]})
-              .map(dd)
+          d3.xhr("/crusher/domain/idf")
+            .post(JSON.stringify({"domains":domains}), function(err,dd){
+              var keyed = d3.nest()
+                .key(function(x){return x.domain})
+                .rollup(function(x){return x[0]})
+                .map(dd)
 
-            data.funnel_domains.map(function(x) {
-              idf_dict = keyed[x.domain] || {}
-              x.idf = idf_dict.idf || 12
-              x.category_name = idf_dict.category_name || "NA"
-              x.wuid =  Math.exp(x.idf) * Math.log(x.uid)
+              data.funnel_domains.map(function(x) {
+                idf_dict = keyed[x.domain] || {}
+                x.idf = idf_dict.idf || 12
+                x.category_name = idf_dict.category_name || "NA"
+                x.wuid =  Math.exp(x.idf) * Math.log(x.uid)
 
-            })
-            deferred_cb(null,cb)
-          }) 
+              })
+              deferred_cb(null,cb)
+            }) 
         } else {
           deferred_cb(null,cb)
         }
