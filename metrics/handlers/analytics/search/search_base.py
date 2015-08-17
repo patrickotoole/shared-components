@@ -43,7 +43,7 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
             futures = []
             for date in dates:
                 self.logging.info(date)
-                date_str = " and date='%s'" % date
+                date_str = " and date='%s'" % date # this needs to be parameterized to use different tables
                 futures.append(self.cassandra.execute_async(query + date_str))
             
             l = []
@@ -51,13 +51,14 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
             for future in futures:
                 rows = future.result()
                 l += rows
-            import datetime
+            
             print datetime.datetime.now()
             
             df = pandas.DataFrame(l)
             
             return df
-        except OperationTimedOut:
+        except OperationTimedOut as exp:
+            import ipdb; ipdb.set_trace()
             return False
 
         

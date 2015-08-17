@@ -125,14 +125,16 @@ RB.crusher.ui.funnel = (function(funnel) {
       // this is where we get all the UID stuff
 
       var q = queue(5)
-      var newSteps = data.actions.filter(function(action){
+      crusher.api.funnelUIDs(data.actions,q)
+      /*var newSteps = data.actions.filter(function(action){
         crusher.api.actionToUIDs(action,q)
         return !action.visits_data
-      })
+      })*/
 
-      if (newSteps.length > 0) {
+      //if (newSteps.length > 0) {
+      if (true) {
         q.awaitAll(function(){
-          crusher.ui.funnel.methods.compute_uniques(data.actions)
+          //crusher.ui.funnel.methods.compute_uniques(data.actions)
           cb.apply(false,arguments)
         })
       } else {

@@ -165,6 +165,7 @@ RB.crusher.api = (function(api) {
     source: qs.advertiser,
     actionURL: "/crusher/funnel/action?format=json&advertiser=" + source,
     actionUIDs: "/crusher/pattern_search/uids?advertiser=" + source + "&search=",
+    funnelUIDs: "/crusher/multi_pattern_search/uids?advertiser=" + source + "&search=",
     visitURL: "/crusher/visit_urls?format=json&source=" + source,
     visitUID: "/crusher/visit_uids?format=json&url=",
     visitDomains: "/crusher/visit_domains?format=json&kind=domains",
@@ -188,21 +189,22 @@ RB.crusher.api = (function(api) {
       tf_idf_funnel: genericQueuedAPIWithData(function(data,cb,deferred_cb) {
         var domains = data.funnel_domains.map(function(x){return x.domain})
         if (domains) {
-          d3.json("/crusher/domain/idf?domains=" + domains.join(","), function(dd){
-            var keyed = d3.nest()
-              .key(function(x){return x.domain})
-              .rollup(function(x){return x[0]})
-              .map(dd)
+          d3.xhr("/crusher/domain/idf")
+            .post(JSON.stringify({"domains":domains}), function(err,dd){
+              var keyed = d3.nest()
+                .key(function(x){return x.domain})
+                .rollup(function(x){return x[0]})
+                .map(dd)
 
-            data.funnel_domains.map(function(x) {
-              idf_dict = keyed[x.domain] || {}
-              x.idf = idf_dict.idf || 12
-              x.category_name = idf_dict.category_name || "NA"
-              x.wuid =  Math.exp(x.idf) * Math.log(x.uid)
+              data.funnel_domains.map(function(x) {
+                idf_dict = keyed[x.domain] || {}
+                x.idf = idf_dict.idf || 12
+                x.category_name = idf_dict.category_name || "NA"
+                x.wuid =  Math.exp(x.idf) * Math.log(x.uid)
 
-            })
-            deferred_cb(null,cb)
-          }) 
+              })
+              deferred_cb(null,cb)
+            }) 
         } else {
           deferred_cb(null,cb)
         }
@@ -334,6 +336,27 @@ RB.crusher.api = (function(api) {
         } else {
           deferred_cb(null,cb)
         }
+      }),
+      funnelUIDs: genericQueuedAPI(function(funnel_actions,deferred_cb) {
+        var patterns = funnel_actions.map(function(action) { return action.url_pattern })
+        var action_strings = patterns.map(function(pattern){
+          return pattern.map(function(p){ return p.split(" ").join(",") })
+        })
+        var pattern_strings = action_strings.join("|")
+        var funnel_string = action_strings.join(">")
+
+        d3.json(api.URL.funnelUIDs + funnel_string,function(dd){
+          var previous = false
+          funnel_actions.map(function(action,i){
+            action.uids = dd.results[i].uids
+            action.funnel_uids = dd.results[i].uids
+            action.funnel_count = dd.results[i].count
+            action.funnel_percent = (previous === false) ? 1 : action.funnel_count/previous
+            previous = action.funnel_count
+          })
+          deferred_cb(null,funnel_actions)
+        })
+        
       }),
       actionToUIDs: genericQueuedAPI(function(action,deferred_cb) {
 
