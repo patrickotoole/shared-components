@@ -26,12 +26,11 @@ class FunnelHandler(FunnelBase,FunnelHelpers):
         format = self.get_argument("format",False)
         if format == "json":
             _id = self.get_argument("id", False)
-            if advertiser:
-                results = self.get_advertiser_funnels(advertiser)
-            elif _id:
-                results = self.get_funnel_by_id(_id) 
+
+            if _id:
+                results = self.get_funnel_by_id(_id)
             else:
-                results = self.get_all()
+                results = self.get_advertiser_funnels(advertiser)
 
             results = results.fillna(0)
             results['action_id'] = results['action_id'].map(int)
