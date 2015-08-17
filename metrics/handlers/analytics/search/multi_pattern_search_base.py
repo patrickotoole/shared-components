@@ -4,12 +4,13 @@ import logging
 
 from search_base import SearchBase
 from pattern_search_helpers import PatternSearchHelpers
+from ..visit_domains import VisitDomainBase
 from twisted.internet import defer
 from lib.helpers import decorators
 from lib.helpers import *
 
 
-class MultiPatternSearchBase(SearchBase,PatternSearchHelpers):
+class MultiPatternSearchBase(VisitDomainBase,SearchBase,PatternSearchHelpers):
 
     def build_deferred_list(self,steps,logic,advertiser,date_clause,PARAMS):
 
@@ -117,7 +118,7 @@ class MultiPatternSearchBase(SearchBase,PatternSearchHelpers):
 
 
     @defer.inlineCallbacks
-    def get_uids(self, advertiser, terms, date_clause, timeout=60):
+    def defer_get_uids(self, advertiser, terms, date_clause, timeout=60):
         PARAMS = "uid"
         indices = [PARAMS]
         response = self.default_response(terms,terms['logic'])
@@ -134,59 +135,37 @@ class MultiPatternSearchBase(SearchBase,PatternSearchHelpers):
         
         response['results'] = self.funnel_response(funnel_data,len(terms['steps']))
         
-        
-        self.write_json(response)
-
-
+        defer.returnValue(response)
 
     @defer.inlineCallbacks
-    def get_generic(self, advertiser, pattern_terms, date_clause, logic="or",timeout=60,timeseries=False):
-        PARAMS = "date, url, uid"
-        indices = PARAMS.split(", ")
-
-        response = self.default_response(pattern_terms,logic,no_results=True)
-        response['summary']['num_users'] = 0
-
-        terms, remaining_terms = self.head_and_tail(pattern_terms)
+    def get_uids(self, advertiser, terms, date_clause, timeout=60):
         
-
-        # PUSH all the data into one dataframe AND count view
-        df = yield self.defer_execute(PARAMS, advertiser, terms, date_clause, "must")
-        df = self.group_count_view(df,terms,indices) 
-
-        for terms in remaining_terms:
-            df2 = yield self.defer_execute(PARAMS, advertiser, terms, date_clause, "must")
-            df2 = self.group_count_view(df2,terms,indices)
-
-            df = df.append(df2)
-            df = df.reset_index().drop_duplicates(indices).set_index(indices)
-
-        df = df.reset_index()
-
-
-        # APPLY "and" logic if necessary
-        if logic == "and":
-            df = self.pattern_and(df,pattern_terms)
-
-
-        # PREPARE the final version of the data for response
-        if len(df) > 0:
-            stats = df.groupby("date").apply(self.calc_stats)
-
-            response['summary']['num_users'] = len(set(df.uid.values))
-            response['summary']['num_views'] = stats.num_views.sum()
-            response['summary']['num_visits'] = stats.num_visits.sum()
-            
-            if timeseries:
-                results = Convert.df_to_values(stats.reset_index())
-                response['results'] = results
-        
+        response = yield self.defer_get_uids(advertiser, terms, date_clause, timeout=timeout)
         self.write_json(response)
 
+    @defer.inlineCallbacks
+    def get_count(self, advertiser, terms, date_clause, timeout=60):
+        
+        response = yield self.defer_get_uids(advertiser, terms, date_clause, timeout=timeout)
+        for step in response['results']:
+            del step['uids']
 
-    def get_count(self, advertiser, pattern_terms, date_clause, logic="or",timeout=60):
-        self.get_generic(advertiser, pattern_terms, date_clause, logic, timeout)
+        self.write_json(response)
 
-    def get_domains(self, advertiser, pattern_terms, date_clause, logic="or",timeout=60):
-        self.get_generic(advertiser, pattern_terms, date_clause, logic, timeout)
+    @defer.inlineCallbacks
+    def get_domains(self, advertiser, terms, date_clause, timeout=60):
+        response = yield self.defer_get_uids(advertiser, terms, date_clause, timeout=timeout)
+        defs = [self.defer_get_domains(step['uids'],date_clause) for step in response['results']]
+
+        dl = defer.DeferredList(defs)
+        step_domains = yield dl
+
+        for i,domains in enumerate(step_domains):
+            del response['results'][i]['uids']
+            counts = domains[1].groupby("domain").agg({"uid":lambda x: len(set(x))})
+            counts = counts.reset_index().T.to_dict().values()
+            response['results'][i]['domains'] = counts
+
+        self.write_json(response)
+
 
