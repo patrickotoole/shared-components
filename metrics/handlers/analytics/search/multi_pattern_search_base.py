@@ -1,6 +1,7 @@
 import tornado.web
 import pandas
 import logging
+import time
 
 from search_base import SearchBase
 from pattern_search_helpers import PatternSearchHelpers
@@ -10,7 +11,23 @@ from lib.helpers import decorators
 from lib.helpers import *
 
 
+
+class CacheSingleton(dict):
+
+    _instance = None
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super(CacheSingleton, cls).__new__(
+                                cls, *args, **kwargs)
+        return cls._instance
+
+SHITTY_CACHE = CacheSingleton()
+SHITTY_CACHE['LAST'] = 0
+
+
 class MultiPatternSearchBase(VisitDomainBase,SearchBase,PatternSearchHelpers):
+
+
 
     def build_deferred_list(self,steps,logic,advertiser,date_clause,PARAMS):
 
@@ -141,6 +158,14 @@ class MultiPatternSearchBase(VisitDomainBase,SearchBase,PatternSearchHelpers):
     def get_uids(self, advertiser, terms, date_clause, timeout=60):
         
         response = yield self.defer_get_uids(advertiser, terms, date_clause, timeout=timeout)
+        epoch_time = int(time.time())
+
+        if epoch_time - SHITTY_CACHE['LAST'] > 30:
+            for key in SHITTY_CACHE.keys():
+                del SHITTY_CACHE[key]
+        SHITTY_CACHE['LAST'] = epoch_time 
+        SHITTY_CACHE["%s %s %s" % (advertiser, terms, date_clause)] = response
+ 
         self.write_json(response)
 
     @defer.inlineCallbacks
@@ -154,7 +179,15 @@ class MultiPatternSearchBase(VisitDomainBase,SearchBase,PatternSearchHelpers):
 
     @defer.inlineCallbacks
     def get_domains(self, advertiser, terms, date_clause, timeout=60):
-        response = yield self.defer_get_uids(advertiser, terms, date_clause, timeout=timeout)
+
+        response = False
+        epoch_time = int(time.time())
+
+        if epoch_time - SHITTY_CACHE['LAST'] < 30:
+            response = SHITTY_CACHE.get("%s %s %s" % (advertiser, terms, date_clause),False)
+
+        if response is False:
+            response = yield self.defer_get_uids(advertiser, terms, date_clause, timeout=timeout)
         defs = [self.defer_get_domains(step['uids'],date_clause) for step in response['results']]
 
         dl = defer.DeferredList(defs)
