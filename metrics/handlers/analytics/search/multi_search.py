@@ -2,12 +2,12 @@ import tornado.web
 import pandas
 import logging
 
-from multi_pattern_search_base import MultiPatternSearchBase
+from multi_search_base import MultiSearchBase
 from twisted.internet import defer
 from lib.helpers import decorators
 from lib.helpers import *
 
-class MultiPatternSearchHandler(MultiPatternSearchBase):
+class MultiSearchHandler(MultiSearchBase):
 
     LOGIC = {
         "funnel":"intersection",

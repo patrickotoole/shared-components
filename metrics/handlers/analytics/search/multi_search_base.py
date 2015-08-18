@@ -25,7 +25,7 @@ SHITTY_CACHE = CacheSingleton()
 SHITTY_CACHE['LAST'] = 0
 
 
-class MultiPatternSearchBase(VisitDomainBase,SearchBase,PatternSearchHelpers):
+class MultiSearchBase(VisitDomainBase,SearchBase,PatternSearchHelpers):
 
 
 
