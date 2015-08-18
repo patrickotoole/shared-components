@@ -57,15 +57,17 @@ class MultiSearchHandler(MultiSearchBase):
 
 
 
+    @tornado.web.authenticated
     @tornado.web.asynchronous
     def get(self, api_type):
+        advertiser = self.current_advertiser_name
+
         _logic = self.get_argument("logic", "or")
         terms = self.get_argument("search", False)
         formatted = self.get_argument("format", False)
         start_date = self.get_argument("start_date", "")
         end_date = self.get_argument("end_date", "")
         date = self.get_argument("date", "")
-        advertiser = self.get_argument("advertiser", "")
         timeout = self.get_argument("timeout", 60)
 
         date_clause = self.make_date_clause("timestamp", date, start_date, end_date)
