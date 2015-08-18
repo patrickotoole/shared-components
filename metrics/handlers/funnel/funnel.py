@@ -14,7 +14,6 @@ class FunnelHandler(FunnelBase,FunnelHelpers,FunnelAuth):
         self.api = api
 
         self.required_cols = [
-            "advertiser",
             "funnel_name",
             "actions",
             "owner"
@@ -140,6 +139,8 @@ class FunnelHandler(FunnelBase,FunnelHelpers,FunnelAuth):
                 advertiser_id = self.db.select_dataframe(Q % obj['advertiser']).values[0][0]
             else:
                 advertiser_id = self.current_advertiser
+                obj['advertiser'] = self.current_advertiser
+           
 
             URL = "/segment?advertiser_id=%s" % str(advertiser_id)
             seg_obj = {
@@ -173,6 +174,7 @@ class FunnelHandler(FunnelBase,FunnelHelpers,FunnelAuth):
 
         except Exception as e:
             print e
+            import ipdb; ipdb.set_trace()
             conn.rollback()
             raise e
         finally:
