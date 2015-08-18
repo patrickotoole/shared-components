@@ -56,9 +56,9 @@ class FunnelHandler(FunnelBase,FunnelHelpers):
         else:
             self.render("analysis/visit_urls.html",data="{}", advertiser=advertiser)
 
-        
-
     def make_to_update(self,body):
+        if "advertiser" not in obj:
+            obj["advertiser"] = self.current_advertiser_name
 
         obj = ujson.loads(body)
         obj['pixel_source_name'] = obj['advertiser']
@@ -71,7 +71,9 @@ class FunnelHandler(FunnelBase,FunnelHelpers):
             cur = conn.cursor()
 
             excludes = ["actions","funnel_id"]
-            funnel_fields = ", ".join(["%s=\"%s\"" % (i,j) for i,j in obj.items() if not (i in excludes)]) 
+            funnel_fields = ", ".join(["%s=\"%s\"" % (i,j) 
+                                       for i,j in obj.items() 
+                                       if not (i in excludes)]) 
 
             to_update = {
                 "funnel_id": funnel_id,
@@ -129,8 +131,14 @@ class FunnelHandler(FunnelBase,FunnelHelpers):
             conn = self.db.create_connection()
             cur = conn.cursor()
 
-            Q = "select external_advertiser_id from advertiser where pixel_source_name = '%s'" 
-            advertiser_id = self.db.select_dataframe(Q % obj['advertiser']).values[0][0]
+            # If the user doesn't specify an advertiser, use the logged-in
+            # advertiser as a default
+            if "advertiser" in obj:
+                Q = "select external_advertiser_id from advertiser where pixel_source_name = '%s'" 
+                advertiser_id = self.db.select_dataframe(Q % obj['advertiser']).values[0][0]
+            else:
+                advertiser_id = self.current_advertiser
+
             URL = "/segment?advertiser_id=%s" % str(advertiser_id)
             seg_obj = {
                 "segment": {
@@ -170,6 +178,51 @@ class FunnelHandler(FunnelBase,FunnelHelpers):
 
         return obj
 
+    def funnel_to_advertiser(self, funnel_id):
+        query = "SELECT pixel_source_name FROM rockerbox.funnel WHERE funnel_id=%s" % funnel_id
+        df = self.db.select_dataframe(query)
+        if len(df) < 1:
+            return Exception("No funnel found")
+        else:
+            return df.pixel_source_name[0]
+
+    def check_auth_GET(self):
+        funnel = self.get_argument("id",False)
+        if not funnel:
+            return self.get_secure_cookie("user")
+
+        requested_advertiser = self.funnel_to_advertiser(funnel)
+        logged_in_advertiser = self.current_advertiser_name
+        
+        if (logged_in_advertiser == requested_advertiser):
+            return self.get_secure_cookie("user")
+        else:
+            raise Exception("No funnel found")
+
+    def check_auth_PUT_POST(self):
+        body = ujson.loads(self.request.body)
+        if "advertiser" not in body:
+            return self.get_secure_cookie("user")
+
+        # Check that this user has access to the advertiser they're trying to
+        # create a funnel for
+        requested_advertiser = body["advertiser"]
+        logged_in_advertiser = self.current_advertiser_name
+        
+        if (logged_in_advertiser == requested_advertiser):
+            return self.get_secure_cookie("user")
+        else:
+            raise Exception(("The specified advertiser either doesn't exist or"
+                             " you do not have access to it"))
+        return self.get_secure_cookie("user")
+
+    def get_current_user(self):
+        if self.request.method == "GET":
+            return self.check_auth_GET()
+        elif self.request.method in ["POST", "PUT"]:
+            return self.check_auth_PUT_POST()
+
+    @tornado.web.authenticated
     def put(self):
         try:
             if "funnel_id" not in self.request.body:
@@ -180,7 +233,7 @@ class FunnelHandler(FunnelBase,FunnelHelpers):
             print e
             self.write(ujson.dumps({"response": str(e), "status": "error"}))
  
-
+    @tornado.web.authenticated
     def post(self):
         try:
             data = self.make_to_insert(self.request.body)
@@ -189,6 +242,7 @@ class FunnelHandler(FunnelBase,FunnelHelpers):
             print e
             self.write(ujson.dumps({"response": str(e), "status": "error"}))
 
+    @tornado.web.authenticated
     def delete(self):
         funnel_id = self.get_argument("funnel_id",False)
 
