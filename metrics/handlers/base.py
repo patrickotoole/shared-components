@@ -22,10 +22,15 @@ class BaseHandler(tornado.web.RequestHandler):
         q = ADVERTISER_ID_TO_NAME % self.current_advertiser
         df = self.db.select_dataframe(q)
 
+    @property
+    def authorized_advertisers(self):
+        q = PERMISSIONS_QUERY % self.get_secure_cookie("user")
+        df = self.db.select_dataframe(q)
+
         if len(df) > 0:            
-            return df.name[0]
+            return df.pixel_source_name.tolist()
         else:
-            return None
+            return [self.current_advertiser_name]
 
     def initialize(self):
         #self.db = lnk.dbs.mysql

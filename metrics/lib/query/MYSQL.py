@@ -332,3 +332,26 @@ GROUP BY %(groups)s
 ORDER BY views DESC
 LIMIT %(limit)s
 """
+
+PERMISSIONS_QUERY = """
+SELECT DISTINCT
+    pixel_source_name,
+    external_advertiser_id,
+    advertiser_name
+FROM user a JOIN user_permissions b on (a.id = b.user_id)
+    JOIN permissions_advertiser USING (permissions_id)
+    JOIN advertiser USING (external_advertiser_id)
+WHERE a.username = '%s'
+"""
+
+USER_QUERY = """
+SELECT DISTINCT
+    user.id as id,
+    username,
+    advertiser_id as external_advertiser_id,
+    password,
+    advertiser_name,
+    pixel_source_name
+FROM user
+    JOIN advertiser ON (user.advertiser_id = advertiser.external_advertiser_id)
+WHERE username = '%s'"""
