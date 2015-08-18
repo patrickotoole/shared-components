@@ -9,7 +9,7 @@ RB.crusher.controller.action = (function(action) {
   var crusher = RB.crusher
 
   var source = crusher.api.source 
-  var actionURL = "/crusher/funnel/action?format=json&advertiser=" + source
+  var actionURL = "/crusher/funnel/action?format=json"
   var visitUID = "/crusher/visit_uids?format=json&url="
 
   action = {

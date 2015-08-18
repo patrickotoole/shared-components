@@ -129,7 +129,7 @@ RB.crusher.api = (function(api) {
     lookalikeCampaigns: "/crusher/funnel/lookalike_campaign?advertiser=" + source,
     lookalikes: "/crusher/funnel/lookalike?format=json&advertiser=" + source,
 
-    funnelURL: "/crusher/funnel?format=json&advertiser=" + source,
+    funnelURL: "/crusher/funnel?format=json",
     current: addParam(window.location.pathname + window.location.search,"format=json")
   }
 

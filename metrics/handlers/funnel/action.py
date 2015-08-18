@@ -115,6 +115,9 @@ class ActionHandler(FunnelBase):
         action = ujson.loads(body)
         action = dict(action.items() + [("start_date","0"),("end_date","0")])
 
+        if "advertiser" not in action:
+            action["advertiser"] = self.current_advertiser
+
         try:
             
             self.db.autocommit = False
@@ -235,8 +238,6 @@ class ActionHandler(FunnelBase):
     @tornado.web.authenticated
     def post(self):
         body = self.request.body
-        if "advertiser" not in body:
-            body["advertiser"] = self.current_advertiser
 
         try:
             print body
