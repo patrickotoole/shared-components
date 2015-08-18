@@ -3,6 +3,7 @@ from money import MoneyHandler
 from profile import ProfileHandler
 from advertiser import AdvertiserHandler
 from api import APIHandler
+from api_v2 import APIHandlerV2
 from pixel import PixelHandler
 from intraweek import IntraWeekHandler
 from batch import BatchRequestsHandler

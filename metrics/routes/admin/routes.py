@@ -34,7 +34,8 @@ class AdminRoutes(
             
             (r'/optimization/domain/?', optimization.DomainListHandler, self.connectors),
             (r'/intraweek.*', scripts.IntraWeekHandler, self.connectors),
-            (r'/api.*', scripts.APIHandler, self.connectors),
+            (r'/api/v2.*', scripts.APIHandlerV2, self.connectors),
+            (r'/api.*', scripts.APIHandler, self.connectors)
         ]
          
   
