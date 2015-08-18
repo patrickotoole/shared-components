@@ -10,10 +10,14 @@ RB.crusher.controller = (function(controller) {
 
   controller.init = function(type,data) {
 
-    var type = (type == "/crusher") ? "" : type
+    //var type = (type == "/crusher") ? "" : type
     var id = data ? data.funnel_id : false
      
-    if (type.length) controller.initializers[type](id)
+    var state = controller.states[type]
+    if (state) {
+      RB.routes.navigation.forward(state)
+    }
+    //if (type.length) controller.initializers[type](id)
   }
 
   controller.initializers = {
@@ -27,6 +31,7 @@ RB.crusher.controller = (function(controller) {
       funnelRow.exit().remove()
     },
     "funnel/existing": function(funnel) {
+      
       var id = funnel ? funnel.funnel_id : false
 
       crusher.ui.funnel.buildBase() 
@@ -194,6 +199,16 @@ RB.crusher.controller = (function(controller) {
         }]
     }
   }
+  
+  controller.states = {}  
+
+  Object.keys(controller.routes.apis).map(function(k){
+    if (controller.routes.apis[k].length > 0 && typeof(controller.routes.apis[k][0]) == "object") {
+      controller.routes.apis[k].map(function(state) {
+        controller.states[state.push_state] = state
+      })
+    }
+  })
 
   RB.routes.register(controller.routes)
 
