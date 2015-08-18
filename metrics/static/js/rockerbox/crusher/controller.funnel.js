@@ -76,7 +76,7 @@ RB.crusher.controller.funnel = (function(funnel) {
         crusher.ui.funnel.show(funnel)
 
         crusher.subscribe.add_subscriber([domains], function(x) {
-          data.funnel_domains = x
+          data.funnel_domains = data.actions[data.actions.length-1].funnel_domains
           crusher.subscribe.add_subscriber(["tf_idf_funnel"], function(x) {
             crusher.ui.funnel.show.component.domains.bind(false,funnel)(x)
             crusher.ui.funnel.show.component.lookalike(funnel)
