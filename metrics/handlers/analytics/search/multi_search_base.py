@@ -90,13 +90,20 @@ class MultiSearchBase(VisitDomainBase,SearchBase,MultiSearchHelpers):
         dl = defer.DeferredList(defs)
         step_domains = yield dl
 
+        uids = []
         for i,domains in enumerate(step_domains):
+            uids += [response['results'][i]['uids']]
             del response['results'][i]['uids']
             counts = domains[1].groupby("domain").agg({"uid":lambda x: len(set(x))})
             counts = counts.reset_index().T.to_dict().values()
             response['results'][i]['domains'] = counts
 
         self.write_json(response)
+
+        for i,domains in enumerate(step_domains):
+            response['results'][i]['uids'] = uids[i]
+
+
 
     @defer.inlineCallbacks
     def get_avails(self, advertiser, terms, date_clause, timeout=60):
@@ -110,12 +117,17 @@ class MultiSearchBase(VisitDomainBase,SearchBase,MultiSearchHelpers):
 
         dl = defer.DeferredList(defs)
         step_domains = yield dl
-
+        
+        uids = []
         for i,domains in enumerate(step_domains):
+            uids += [response['results'][i]['uids']]
             del response['results'][i]['uids']
             counts = domains[1].groupby("uid").first()
             response['results'][i]['avails'] = len(counts)
 
         self.write_json(response)
+
+        for i,domains in enumerate(step_domains):
+            response['results'][i]['uids'] = uids[i]
 
 

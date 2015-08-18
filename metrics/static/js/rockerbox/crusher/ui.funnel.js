@@ -134,21 +134,20 @@ RB.crusher.ui.funnel = (function(funnel) {
 
       // this is where we get all the availability info
 
-      var p = queue(5)
-      data.actions.map(function(action) { 
-        crusher.api.actionToAvails(function(){},action,p)
-      })
-      p.awaitAll(function(){
-        cb(data.actions)
-      })
+      var q = queue(5)
+      crusher.api.funnelAvails(data.actions,q)
+      q.awaitAll(function(){ cb.apply(false,arguments) })
+      
     })
 
     crusher.subscribe.register_publisher(domains,function(cb,data){
 
       //this is where we get all the domains from the UIDs
 
-      var last = data.actions[data.actions.length - 1].funnel_uids
-      crusher.api.UIDsToDomains(cb,last)
+      var q = queue(5)
+      crusher.api.funnelDomains(data.actions,q)
+      q.awaitAll(function(){ cb.apply(false,arguments) })
+
     })
 
 
