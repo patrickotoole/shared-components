@@ -296,8 +296,8 @@ RB.crusher.api = (function(api) {
         var action_strings = patterns.map(function(pattern){
           return pattern.map(function(p){ return p.split(" ").join(",") })
         })
-        var pattern_strings = action_strings.join("|")
-        var funnel_string = action_strings.join(">")
+        var pattern_strings = action_strings.map(function(patterns){ return patterns.join("|")})
+        var funnel_string = pattern_strings.join(">")
 
         d3.json(api.URL.funnelUIDs + funnel_string,function(dd){
           var previous = false
@@ -317,8 +317,8 @@ RB.crusher.api = (function(api) {
         var action_strings = patterns.map(function(pattern){
           return pattern.map(function(p){ return p.split(" ").join(",") })
         })
-        var pattern_strings = action_strings.join("|")
-        var funnel_string = action_strings.join(">")
+        var pattern_strings = action_strings.map(function(patterns){ return patterns.join("|")})
+        var funnel_string = pattern_strings.join(">")
 
         d3.json(api.URL.funnelDomains + funnel_string,function(dd){
           funnel_actions.map(function(action,i){
@@ -333,8 +333,8 @@ RB.crusher.api = (function(api) {
         var action_strings = patterns.map(function(pattern){
           return pattern.map(function(p){ return p.split(" ").join(",") })
         })
-        var pattern_strings = action_strings.join("|")
-        var funnel_string = action_strings.join(">")
+        var pattern_strings = action_strings.map(function(patterns){ return patterns.join("|")})
+        var funnel_string = pattern_strings.join(">")
 
         d3.json(api.URL.funnelAvails + funnel_string,function(dd){
           funnel_actions.map(function(action,i){

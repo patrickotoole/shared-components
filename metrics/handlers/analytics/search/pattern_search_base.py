@@ -77,6 +77,14 @@ class PatternSearchBase(SearchBase,PatternSearchHelpers):
         
         self.write_json(response)
 
+    def build_deferred_list(self, terms_list, params, advertiser, date_clause, logic="must"):
+        dl = []
+        for terms in terms_list:
+            dl += [self.defer_execute(params, advertiser, terms, date_clause, logic)]
+
+        
+        return defer.DeferredList(dl)
+
 
 
     @defer.inlineCallbacks
@@ -87,22 +95,27 @@ class PatternSearchBase(SearchBase,PatternSearchHelpers):
         response = self.default_response(pattern_terms,logic,no_results=True)
         response['summary']['num_users'] = 0
 
-        terms, remaining_terms = self.head_and_tail(pattern_terms)
+        frames = yield self.build_deferred_list(pattern_terms, PARAMS, advertiser, date_clause)
+        dfs = []
+
+        for terms, result in zip(pattern_terms,frames):
+            df = (yield result)[1]
+            if len(df) > 0: 
+                dfs += [self.group_count_view(df,terms,indices)]
         
+        if len(dfs):
 
-        # PUSH all the data into one dataframe AND count view
-        df = yield self.defer_execute(PARAMS, advertiser, terms, date_clause, "must")
-        df = self.group_count_view(df,terms,indices) 
+            df, tail = self.head_and_tail(dfs)
 
-        for terms in remaining_terms:
-            df2 = yield self.defer_execute(PARAMS, advertiser, terms, date_clause, "must")
-            df2 = self.group_count_view(df2,terms,indices)
+            for df2 in tail:
+                df = df.append(df2)
+                df = df.reset_index().drop_duplicates(indices).set_index(indices)
 
-            df = df.append(df2)
-            df = df.reset_index().drop_duplicates(indices).set_index(indices)
+            df = df.reset_index()
 
-        df = df.reset_index()
-
+        else:
+            df = pandas.DataFrame([[0,0,0]],columns=["uid","num_views","date"]).ix[1:]
+            response['results'] = []
 
         # APPLY "and" logic if necessary
         if logic == "and":
