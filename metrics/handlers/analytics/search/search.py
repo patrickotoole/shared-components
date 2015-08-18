@@ -43,7 +43,7 @@ class SearchHandler(SearchBase):
     def get(self, api_type):
         advertiser = self.current_advertiser_name
 
-        _logic = self.get_argument("logic", "or")
+        _logic = self.get_argument("logic", "and")
         terms = self.get_argument("search", False)
         formatted = self.get_argument("format", False)
         start_date = self.get_argument("start_date", "")
