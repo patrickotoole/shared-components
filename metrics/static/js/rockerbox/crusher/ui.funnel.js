@@ -122,22 +122,11 @@ RB.crusher.ui.funnel = (function(funnel) {
 
     crusher.subscribe.register_publisher(uids,function(cb,data){
 
-      // this is where we get all the UID stuff
+      // this is where we get all the UID information to display the funnel
 
       var q = queue(5)
-      var newSteps = data.actions.filter(function(action){
-        crusher.api.actionToUIDs(action,q)
-        return !action.visits_data
-      })
-
-      if (newSteps.length > 0) {
-        q.awaitAll(function(){
-          crusher.ui.funnel.methods.compute_uniques(data.actions)
-          cb.apply(false,arguments)
-        })
-      } else {
-        q.awaitAll(cb)
-      }
+      crusher.api.funnelUIDs(data.actions,q)
+      q.awaitAll(function(){ cb.apply(false,arguments) })
 
     })
 

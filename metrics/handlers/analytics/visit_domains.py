@@ -14,46 +14,41 @@ DEFAULT_INTERVAL = "minute"
 
 QUERY = "SELECT * FROM rockerbox.visitor_domains "
 
-class VisitDomainsHandler(BaseHandler, AnalyticsBase):
-    def initialize(self, db=None, cassandra=None, **kwargs):
-        self.logging = logging
-        self.db = db
-        self.cassandra = cassandra
-        self.limit = None
-        self.query = QUERY
-
-    @decorators.formattable
-    def get_content(self, data):
-        def default(self, data):
-            df = Convert.df_to_json(data)
-            self.render("analysis/visit_urls.html", data=df)
-        yield default, (data,)
-
-
-    @defer.inlineCallbacks
-    def get_domains(self, uid, date_clause, kind):
-        df = yield self.defer_get_domains(uid, date_clause)
-
-        if len(df) > 0:
-            if kind == "domains":
-                df = df.groupby("domain").uid.nunique().reset_index()
-
-        self.get_content(df)
-
+class VisitDomainBase(object):
+    
     @decorators.deferred
-    def defer_get_domains(self, uid, date_clause):
+    def defer_get_domains(self, uids, date_clause):
         where = []
-
-        if not uid:
-            raise Exception("Must specify url using url=")
-
-        uids = uid.split(",")
-
-        xx = self.get_w_in(uids, date_clause)
-
-        df = pandas.DataFrame(self.get_w_in(uids, date_clause))
+        xx = self.paginate_get_w_in(uids, date_clause)
+        df = pandas.DataFrame(xx)
 
         return df
+
+    def future_get_w_in(self,uids,date_clause):
+        where = 'where uid IN {}'
+        if date_clause:
+            where = where + " and {}".format(date_clause)
+        in_clause = self.make_in_clause(uids)
+        WHERE = where.format(in_clause)
+        logging.info("Started domains request for %s uids..." % len(uids))
+
+        query = QUERY + WHERE
+
+        return self.cassandra.execute_async(query)
+ 
+
+    def paginate_get_w_in(self, uids, date_clause):
+        futures = []
+        n = len(uids)/10
+        for i in xrange(0, len(uids), n):
+            futures.append(self.future_get_w_in(uids[i:i+n],date_clause))
+
+        l = []
+        for future in futures:
+            rows = future.result()
+            l += rows
+
+        return l
 
     def get_w_in(self, uids, date_clause):
         where = 'where uid IN {}'
@@ -61,12 +56,38 @@ class VisitDomainsHandler(BaseHandler, AnalyticsBase):
             where = where + " and {}".format(date_clause)
         in_clause = self.make_in_clause(uids)
         WHERE = where.format(in_clause)
-        #logging.info(self.query + WHERE)
-        logging.info("Started domains request...")
+        logging.info("Started domains request for %s uids..." % len(uids))
 
-        results = self.query + WHERE
+        query = QUERY + WHERE
 
-        return self.cassandra.execute(results)
+        return self.cassandra.execute(query)
+
+class VisitDomainsHandler(BaseHandler, AnalyticsBase,VisitDomainBase):
+
+    def initialize(self, db=None, cassandra=None, **kwargs):
+        self.logging = logging
+        self.db = db
+        self.cassandra = cassandra
+        self.limit = None
+        self.query = QUERY
+
+    @defer.inlineCallbacks
+    def get_domains(self, uid, date_clause, kind):
+        uids = uid.split(",")
+        df = yield self.defer_get_domains(uids, date_clause)
+
+        if len(df) > 0:
+            if kind == "domains":
+                df = df.groupby("domain").uid.nunique().reset_index()
+
+        self.get_content(df)
+
+    @decorators.formattable
+    def get_content(self, data):
+        def default(self, data):
+            df = Convert.df_to_json(data)
+            self.render("analysis/visit_urls.html", data=df)
+        yield default, (data,)
 
     @tornado.web.asynchronous
     def get(self):

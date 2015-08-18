@@ -2,16 +2,16 @@ import tornado.web
 import pandas
 import logging
 
-from search_base import SearchBase
+from multi_search_base import MultiSearchBase
 from twisted.internet import defer
 from lib.helpers import decorators
 from lib.helpers import *
 
-class SearchHandler(SearchBase):
+class MultiSearchHandler(MultiSearchBase):
 
     LOGIC = {
-        "or":"should",
-        "and":"must"
+        "funnel":"intersection",
+        "union":"union"
     }
 
     def initialize(self, db=None, cassandra=None, **kwargs):
@@ -22,8 +22,8 @@ class SearchHandler(SearchBase):
         self.TYPE = {
             "uids": self.get_uids,
             "count": self.get_count,
-            "timeseries": self.get_timeseries,
-            "urls": self.get_urls
+            "domains": self.get_domains,
+            "avails": self.get_avails
         }
 
     @decorators.formattable
@@ -38,12 +38,32 @@ class SearchHandler(SearchBase):
     def invalid(self,*args,**kwargs):
         raise Exception("Invalid api call")
 
+    def parse_pattern(self,s,logic="must"):
+        return {
+            "patterns":s.split(","),
+            "logic": logic
+        }
+
+    def parse_pattern_group(self,s,logic="union"):
+        return {
+            "pattern_groups":[self.parse_pattern(p) for p in s.split("|")],
+            "logic": logic
+        }
+
+    def parse_multi_pattern(self,s,logic="funnel"):
+        return {
+            "steps":[self.parse_pattern_group(g) for g in s.split(">")],
+            "logic": logic
+        }
+
+
+
     @tornado.web.authenticated
     @tornado.web.asynchronous
     def get(self, api_type):
         advertiser = self.current_advertiser_name
 
-        _logic = self.get_argument("logic", "and")
+        _logic = self.get_argument("logic", "or")
         terms = self.get_argument("search", False)
         formatted = self.get_argument("format", False)
         start_date = self.get_argument("start_date", "")
@@ -53,17 +73,12 @@ class SearchHandler(SearchBase):
 
         date_clause = self.make_date_clause("timestamp", date, start_date, end_date)
 
-        logic = self.LOGIC.get(_logic,"should")
+        logic = self.LOGIC.get(_logic,"intersection")
         
-        if not formatted:
-            # short circuit for now... should just remove in the future
-            self.get_content(pandas.DataFrame(), advertiser)
-            return         
-
         if terms:
-            terms = terms.split(',')
+            terms = self.parse_multi_pattern(terms,logic)
 
         fn = self.TYPE.get(api_type,self.invalid)
-        fn(advertiser, terms, date_clause, logic=logic, timeout=int(timeout))
+        fn(advertiser, terms, date_clause, timeout=int(timeout))
 
 

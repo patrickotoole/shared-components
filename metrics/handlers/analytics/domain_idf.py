@@ -81,3 +81,10 @@ class DomainIDFHandler(BaseHandler,DomainIDFDB):
         domains = self.get_argument("domains", "")
 
         self.get_data(domains.split(","))
+
+    @tornado.web.authenticated
+    @tornado.web.asynchronous  
+    def post(self):
+
+        domains = ujson.loads(self.request.body)['domains']
+        self.get_data(domains)

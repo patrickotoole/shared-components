@@ -38,6 +38,37 @@ class PatternSearchBase(SearchBase,PatternSearchHelpers):
         if logic == "and":
             df = self.pattern_and(df,pattern_terms)
 
+        
+
+ 
+
+    @defer.inlineCallbacks
+    def get_uids(self, advertiser, pattern_terms, date_clause, logic="or",timeout=60):
+        PARAMS = "uid"
+        indices = [PARAMS]
+
+        response = self.default_response(pattern_terms,logic)
+        response['summary']['num_users'] = 0
+
+        terms, remaining_terms = self.head_and_tail(pattern_terms)
+        
+        # PUSH all the data into one dataframe
+        df = yield self.defer_execute(PARAMS, advertiser, terms, date_clause, "must")
+        df['terms'] = ",".join(terms)
+
+        for terms in remaining_terms:
+            df2 = yield self.defer_execute(PARAMS, advertiser, terms, date_clause, "must")
+            df2['terms'] = ",".join(terms)
+
+            df = df.append(df2)
+            df = df.drop_duplicates()
+
+        df = df.reset_index()
+
+        # APPLY "and" logic if necessary
+        if logic == "and":
+            df = self.pattern_and(df,pattern_terms)
+
         # PREPARE the final version of the data for response
         if len(df) > 0:
             response['results'] = list(set(df.uid.values))
