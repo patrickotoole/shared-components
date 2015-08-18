@@ -39,7 +39,8 @@ VALUES (2,0,0,"and","will","wills_action")
 
 class ActionTest(AsyncHTTPTestCase):
 
-    def get_app(self):
+    # same as in test_creative_reporting.py
+    def get_app(self):        
         self.db = lnk.dbs.test
 
         self.db.execute(CREATE_ACTION_TABLE) 
@@ -54,18 +55,28 @@ class ActionTest(AsyncHTTPTestCase):
           template_path="../../../templates"
         )
 
+        action.ActionHandler.authorized_advertisers = mock.Mock(return_value=["alan", "will"])
+        action.ActionHandler.current_advertiser = mock.Mock(return_value=123456)
+        action.ActionHandler.current_advertiser_name = mock.Mock(return_value="alan")
+
+        action.ActionHandler.get_current_user = mock.Mock()
+        action.ActionHandler.get_current_user.return_value = "test_user"
+
         return self.app
 
     def tearDown(self):
         self.db.execute("DROP TABLE action")
         self.db.execute("DROP TABLE action_patterns")
-
+        
     def test_get(self):
         
         _a = ujson.loads(self.fetch("/?format=json&advertiser=alan",method="GET").body)
-        _b = ujson.loads(self.fetch("/?format=json&",method="GET").body)
+        _b = ujson.loads(self.fetch("/?format=json&advertiser=will",method="GET").body)
+
+        print _a
+        print _b
         self.assertEqual(len(_a),1)
-        self.assertEqual(len(_b),2)
+        self.assertEqual(len(_b),1)
 
     def test_post(self):
         action_json = """{
@@ -99,8 +110,6 @@ class ActionTest(AsyncHTTPTestCase):
 
         self.assertEqual(ujson.loads(action_string)['action_name'],action_get_json[0]['action_name'])
         self.assertEqual(ujson.loads(action_string)['url_pattern'],action_get_json[0]['url_pattern']) 
-
-
         
         action_json = ujson.loads(action_string)
         action_json['action_name'] = "NEW NAME" 
@@ -134,7 +143,3 @@ class ActionTest(AsyncHTTPTestCase):
 
         df = self.db.select_dataframe(Q % action_get_json[0]['action_id']) 
         self.assertEqual(len(df),1)
-          
-        
-        
-

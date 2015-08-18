@@ -58,11 +58,11 @@ class FunnelHandler(FunnelBase,FunnelHelpers):
         else:
             self.render("analysis/visit_urls.html",data="{}", advertiser=advertiser)
 
-    def make_to_update(self,body):
+    def make_to_update(self,obj):
         if "advertiser" not in obj:
             obj["advertiser"] = self.current_advertiser_name
 
-        obj = ujson.loads(body)
+        obj = ujson.loads(obj)
         obj['pixel_source_name'] = obj['advertiser']
         del obj['advertiser']
         funnel_id = obj['funnel_id'] 

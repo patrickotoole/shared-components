@@ -155,6 +155,13 @@ class FunnelTest(AsyncHTTPTestCase):
           template_path="../../../templates"
         )
 
+        funnel.FunnelHandler.authorized_advertisers = mock.Mock(return_value=["baublebar"])
+        funnel.FunnelHandler.current_advertiser = mock.Mock(return_value=123456)
+        funnel.FunnelHandler.current_advertiser_name = mock.Mock(return_value="baublebar")
+
+        funnel.FunnelHandler.get_current_user = mock.Mock()
+        funnel.FunnelHandler.get_current_user.return_value = "test_user"
+
         return self.app
 
     def tearDown(self):
@@ -164,12 +171,7 @@ class FunnelTest(AsyncHTTPTestCase):
         self.db.execute("DROP TABLE action")
         self.db.execute("DROP TABLE action_patterns") 
 
-    @mock.patch.object(funnel.FunnelHandler, 'get_current_user', autospec=True)
-    @mock.patch.object(funnel.FunnelHandler, 'get_current_advertiser', autospec=True)
-    def test_get(self, mock_get_current_advertiser, mock_get_current_user):
-        mock_get_current_user.return_value = "test_user"
-        mock_get_current_advertiser.return_value = 302568
-
+    def test_get(self):
         body = self.fetch("/?format=json&advertiser=baublebar", method="GET").body
 
         expected = [{"owner":"waikiki","advertiser":"baublebar","funnel_name":"landing+earings","actions":[{"url_pattern":["alans_pattern","alans_pattern2"],"action_name":"alans_action","action_id":1,"order":1},{"order":2,"url_pattern":["wills_pattern","wills_pattern_again"],"action_name":"wills_action","action_id":2}],"funnel_id":1},{"owner":"makiki","advertiser":"baublebar","funnel_name":"other","actions":[],"funnel_id":2}]
@@ -180,12 +182,7 @@ class FunnelTest(AsyncHTTPTestCase):
         self.assertEqual(actual,expected)
 
 
-    @mock.patch.object(funnel.FunnelHandler, 'get_current_user', autospec=True)
-    @mock.patch.object(funnel.FunnelHandler, 'get_current_advertiser', autospec=True)
-    def test_post(self, mock_get_current_advertiser, mock_get_current_user):
-        mock_get_current_user.return_value = "test_user"
-        mock_get_current_advertiser.return_value = 302568
-
+    def test_post(self):
         to_post = """{"owner":"waikiki","advertiser":"baublebar","funnel_name":"landing+earings","actions":[{"url_pattern":["wills_pattern","wills_pattern_again"],"action_name":"wills_action","action_id":2},{"url_pattern":["alans_pattern","alans_pattern2"],"action_name":"alans_action","action_id":1}]}"""
         
         from_post = self.fetch("/?format=json", method="POST",body=to_post)
@@ -205,12 +202,7 @@ class FunnelTest(AsyncHTTPTestCase):
         self.assertEqual([2,1],action_ids)
 
 
-    @mock.patch.object(funnel.FunnelHandler, 'get_current_user', autospec=True)
-    @mock.patch.object(funnel.FunnelHandler, 'get_current_advertiser', autospec=True)
-    def test_put_action_order(self, mock_get_current_advertiser, mock_get_current_user):
-        mock_get_current_user.return_value = "test_user"
-        mock_get_current_advertiser.return_value = 302568
-
+    def test_put_action_order(self):
         obj = ujson.loads(POST_FIXTURE)
 
         from_get = self.fetch("/?format=json&id=%s" % 1, method="GET")
@@ -237,12 +229,7 @@ class FunnelTest(AsyncHTTPTestCase):
         self.assertEqual([2,1],action_ids)
         self.assertEqual(set(original_action_ids),set(action_ids))
 
-    @mock.patch.object(funnel.FunnelHandler, 'get_current_user', autospec=True)
-    @mock.patch.object(funnel.FunnelHandler, 'get_current_advertiser', autospec=True)
-    def test_put_add_remove_action(self, mock_get_current_advertiser, mock_get_current_user):
-        mock_get_current_user.return_value = "test_user"
-        mock_get_current_advertiser.return_value = 302568
-
+    def test_put_add_remove_action(self):
         obj = ujson.loads(POST_FIXTURE)
 
         from_get = self.fetch("/?format=json&id=%s" % 1, method="GET")
@@ -287,5 +274,4 @@ class FunnelTest(AsyncHTTPTestCase):
 
         df = self.db.select_dataframe("select * from funnel_actions where funnel_id = 1")
         self.assertEqual(len(df),2)
-         
   
