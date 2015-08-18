@@ -22,7 +22,8 @@ class MultiSearchHandler(MultiSearchBase):
         self.TYPE = {
             "uids": self.get_uids,
             "count": self.get_count,
-            "domains": self.get_domains
+            "domains": self.get_domains,
+            "avails": self.get_avails
         }
 
     @decorators.formattable

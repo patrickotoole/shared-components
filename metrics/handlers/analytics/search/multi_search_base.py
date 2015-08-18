@@ -201,4 +201,27 @@ class MultiSearchBase(VisitDomainBase,SearchBase,PatternSearchHelpers):
 
         self.write_json(response)
 
+    @defer.inlineCallbacks
+    def get_avails(self, advertiser, terms, date_clause, timeout=60):
+
+        response = False
+        epoch_time = int(time.time())
+
+        if epoch_time - SHITTY_CACHE['LAST'] < 30:
+            response = SHITTY_CACHE.get("%s %s %s" % (advertiser, terms, date_clause),False)
+
+        if response is False:
+            response = yield self.defer_get_uids(advertiser, terms, date_clause, timeout=timeout)
+        defs = [self.defer_get_domains(step['uids'],date_clause) for step in response['results']]
+
+        dl = defer.DeferredList(defs)
+        step_domains = yield dl
+
+        for i,domains in enumerate(step_domains):
+            del response['results'][i]['uids']
+            counts = domains[1].groupby("uid").first()
+            response['results'][i]['avails'] = len(counts)
+
+        self.write_json(response)
+
 
