@@ -2,6 +2,7 @@ import tornado.web
 import ujson
 import pandas
 from lib.helpers import Convert
+from funnel_base import FunnelBase, FunnelHelpers
 
 GET = """
 SELECT * from action where %(where)s
@@ -42,7 +43,7 @@ DELETE FROM action_patterns where action_id = %(action_id)s
  
 
 
-class ActionHandler(tornado.web.RequestHandler):
+class ActionHandler(FunnelBase):
 
     def initialize(self, db=None, **kwargs):
         self.db = db 
@@ -78,10 +79,13 @@ class ActionHandler(tornado.web.RequestHandler):
         except:
             return pandas.DataFrame()
          
-   
-
+    @tornado.web.authenticated
     def get(self):
         advertiser = self.get_argument("advertiser", False)
+
+        if not advertiser:
+            advertiser = self.current_advertiser_name
+
         format = self.get_argument("format",False)
         if format == "json":
             if advertiser:
@@ -191,6 +195,7 @@ class ActionHandler(tornado.web.RequestHandler):
 
         return action
 
+    @tornado.web.authenticated
     def put(self):
         try:
             print self.request.body
@@ -201,6 +206,7 @@ class ActionHandler(tornado.web.RequestHandler):
             print e
             self.write(ujson.dumps({"response": str(e), "status": "error"}))
 
+    @tornado.web.authenticated
     def delete(self):
         action_id = self.get_argument("action_id",False)
         if not action_id:
@@ -226,19 +232,90 @@ class ActionHandler(tornado.web.RequestHandler):
         self.write("ok")
         self.finish()
 
-                     
-
-
+    @tornado.web.authenticated
     def post(self):
+        body = self.request.body
+        if "advertiser" not in body:
+            body["advertiser"] = self.current_advertiser
+
         try:
-            print self.request.body
-            if "action_id" in self.request.body:
+            print body
+            if "action_id" in body:
                 raise Exception("Can't post and include an action_id")
             else:
-                data = self.make_to_insert(self.request.body)
+                data = self.make_to_insert(body)
             as_json = data
             self.write(ujson.dumps({"response": as_json, "status": "ok"}))
         except Exception, e:
             print e
             self.write(ujson.dumps({"response": str(e), "status": "error"}))
 
+    def check_auth_GET(self):
+        action = self.get_argument("id",False)
+        advertiser = self.get_argument("advertiser", False)
+
+        # If neither is specified, we don't need to return anything
+        if not action and not advertiser:
+            return self.get_secure_cookie("user")
+
+        # If they specified a action_id, check that they have access to
+        # its advertiser
+        if action:
+            requested_advertiser = self.action_to_advertiser(action)
+            exception_message = "Action not found"
+        else:
+            requested_advertiser = advertiser
+            exception_message = ("The specified advertiser either doesn't exist"
+                                 " or you do not have access to it")
+
+        if (requested_advertiser in self.authorized_advertisers):
+            return self.get_secure_cookie("user")
+        else:
+            raise Exception(exception_message)
+
+    def check_auth_PUT_POST(self):
+        body = ujson.loads(self.request.body)
+        if "advertiser" not in body:
+            return self.get_secure_cookie("user")
+
+        # Check that this user has access to the advertiser they're trying to
+        # create a action for
+        requested_advertiser = body["advertiser"]
+
+        if (requested_advertiser in self.authorized_advertisers):
+            return self.get_secure_cookie("user")
+        else:
+            raise Exception(("The specified advertiser either doesn't exist or"
+                             " you do not have access to it"))
+        return self.get_secure_cookie("user")
+
+    def check_auth_DELETE(self):
+        action = self.get_argument("id",False)
+
+        # If neither is specified, we don't need to return anything
+        if not action:
+            return self.get_secure_cookie("user")
+
+        requested_advertiser = self.action_to_advertiser(action)
+        exception_message = "Action not found"
+
+        if (requested_advertiser in self.authorized_advertisers):
+            return self.get_secure_cookie("user")
+        else:
+            raise Exception(exception_message)
+
+    def action_to_advertiser(self, action_id):
+        query = "SELECT pixel_source_name FROM rockerbox.action WHERE action_id=%s" % action_id
+        df = self.db.select_dataframe(query)
+        if len(df) < 1:
+            return Exception("No action found")
+        else:
+            return df.pixel_source_name[0]
+
+    def get_current_user(self):
+        if self.request.method == "GET":
+            return self.check_auth_GET()
+        elif self.request.method in ["POST", "PUT"]:
+            return self.check_auth_PUT_POST()
+        elif self.request.method == "DELETE":
+            return self.check_auth_DELETE()

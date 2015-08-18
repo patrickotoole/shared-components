@@ -121,7 +121,6 @@ class FunnelHandler(FunnelBase,FunnelHelpers):
         return obj
 
     def make_to_insert(self,body):
-
         obj = ujson.loads(body)
         all_cols = [ i for i in self.required_cols if i in obj.keys() ]
         
@@ -180,6 +179,49 @@ class FunnelHandler(FunnelBase,FunnelHelpers):
 
         return obj
 
+    @tornado.web.authenticated
+    def put(self):
+        try:
+            if "funnel_id" not in self.request.body:
+                raise Exception("must contain a funnel_id in json to update")
+            data = self.make_to_update(self.request.body)
+            self.write(ujson.dumps({"response": data, "status": "ok"}))
+        except Exception, e:
+            print e
+            self.write(ujson.dumps({"response": str(e), "status": "error"}))
+ 
+    @tornado.web.authenticated
+    def post(self):
+        try:
+            data = self.make_to_insert(self.request.body)
+            self.write(ujson.dumps({"response": data, "status": "ok"}))
+        except Exception, e:
+            print e
+            self.write(ujson.dumps({"response": str(e), "status": "error"}))
+
+    @tornado.web.authenticated
+    def delete(self):
+        funnel_id = self.get_argument("funnel_id",False)
+
+        if funnel_id:
+            obj = {"funnel_id": funnel_id}
+
+            try:
+                self.db.autocommit = False
+                conn = self.db.create_connection()
+                cur = conn.cursor()
+                
+                cur.execute(DELETE_FUNNEL % obj)
+                cur.execute(DELETE_FUNNEL_ACTION_BY_ID % obj)
+
+                conn.commit()
+                self.write("{'status':'removed'}") 
+            except Exception as e:
+                self.write("{'status':'%s'}" % e) 
+            finally:
+                self.db.autocommit = True
+                self.finish() 
+            
     def funnel_to_advertiser(self, funnel_id):
         query = "SELECT pixel_source_name FROM rockerbox.funnel WHERE funnel_id=%s" % funnel_id
         df = self.db.select_dataframe(query)
@@ -227,52 +269,25 @@ class FunnelHandler(FunnelBase,FunnelHelpers):
                              " you do not have access to it"))
         return self.get_secure_cookie("user")
 
+    def check_auth_DELETE(self):
+        funnel = self.get_argument("id",False)
+
+        # If neither is specified, we don't need to return anything
+        if not funnel:
+            return self.get_secure_cookie("user")
+
+        requested_advertiser = self.funnel_to_advertiser(funnel)
+        exception_message = "Funnel not found"
+
+        if (requested_advertiser in self.authorized_advertisers):
+            return self.get_secure_cookie("user")
+        else:
+            raise Exception(exception_message)
+
     def get_current_user(self):
         if self.request.method == "GET":
             return self.check_auth_GET()
         elif self.request.method in ["POST", "PUT"]:
             return self.check_auth_PUT_POST()
-
-    @tornado.web.authenticated
-    def put(self):
-        try:
-            if "funnel_id" not in self.request.body:
-                raise Exception("must contain a funnel_id in json to update")
-            data = self.make_to_update(self.request.body)
-            self.write(ujson.dumps({"response": data, "status": "ok"}))
-        except Exception, e:
-            print e
-            self.write(ujson.dumps({"response": str(e), "status": "error"}))
- 
-    @tornado.web.authenticated
-    def post(self):
-        try:
-            data = self.make_to_insert(self.request.body)
-            self.write(ujson.dumps({"response": data, "status": "ok"}))
-        except Exception, e:
-            print e
-            self.write(ujson.dumps({"response": str(e), "status": "error"}))
-
-    @tornado.web.authenticated
-    def delete(self):
-        funnel_id = self.get_argument("funnel_id",False)
-
-        if funnel_id:
-            obj = {"funnel_id": funnel_id}
-
-            try:
-                self.db.autocommit = False
-                conn = self.db.create_connection()
-                cur = conn.cursor()
-                
-                cur.execute(DELETE_FUNNEL % obj)
-                cur.execute(DELETE_FUNNEL_ACTION_BY_ID % obj)
-
-                conn.commit()
-                self.write("{'status':'removed'}") 
-            except Exception as e:
-                self.write("{'status':'%s'}" % e) 
-            finally:
-                self.db.autocommit = True
-                self.finish() 
-            
+        elif self.request.method == "DELETE":
+            return self.check_auth_DELETE()
