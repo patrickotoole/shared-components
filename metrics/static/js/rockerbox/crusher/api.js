@@ -206,7 +206,7 @@ RB.crusher.api = (function(api) {
       }),
       campaigns: new genericQueuedAPI(function(cb,deferred_cb) {
 
-        if (!cache.actionData) {
+        if (!cache.actionData || !cache.campaign_map) {
           d3.json(api.URL.campaigns,function(campaigns){
             cache.campaigns = campaigns 
             cache.campaign_map = d3.nest()
