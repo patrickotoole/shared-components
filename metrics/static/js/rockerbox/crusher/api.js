@@ -55,57 +55,6 @@ RB.crusher.api = (function(api) {
     }
   }
 
-  /*var genericQueuedAPI = function(fn) {
-
-    var serviceQueue = function() {
-      this.callback_queue = []
-      this.get_queue = function() {
-        if (!this.__queue__) this.__queue__ = queue()
-        return this.__queue__ 
-      }
-      this.set_queue = function(q) {
-        this.__queue__ = this.__queue__ || q
-        return this.__queue__
-      }
-      this.remove_queue = function() { 
-        this.__queue__ = undefined
-      }
-
-      this.run_callbacks = function() {
-        var args = arguments
-        this.callback_queue.map(function(cb){
-          if (typeof(cb) == "function") cb.apply(null,args)
-        })
-        this.remove_queue()
-        this.clear_callbacks()
-      }
-
-      this.clear_callbacks = function() {
-        this.callback_queue = []
-      }
-    } 
-
-    var self = new serviceQueue()
-
-    return function(cb,extq) {
-      
-      var q = (extq) ? self.set_queue(extq) : self.get_queue()   
-      self.callback_queue.push(cb)
-
-      console.log(self.callback_queue,q)
-
-      if (self.callback_queue.length == 1) { 
-        var bound = fn.bind(false,self.run_callbacks)
-        var d =  q.defer(bound)   
-      } 
-
-      if (!extq) return q.await(function(err,cb1){ cb1() })
-      else return q
-
-    }
-  }  
-  */
-
   api.helpers = {
     attachCampaigns: function(){
       crusher.cache.funnelData.map(function(x){
@@ -163,11 +112,11 @@ RB.crusher.api = (function(api) {
 
   api.URL = {
     source: qs.advertiser,
-    actionURL: "/crusher/funnel/action?format=json&advertiser=" + source,
-    actionUIDs: "/crusher/pattern_search/uids?advertiser=" + source + "&search=",
-    funnelUIDs: "/crusher/multi_pattern_search/uids?advertiser=" + source + "&search=",
-    visitURL: "/crusher/visit_urls?format=json&source=" + source,
-    visitUID: "/crusher/visit_uids?format=json&url=",
+    actionURL: "/crusher/funnel/action?format=json",
+    actionUIDs: "/crusher/pattern_search/uids?search=",
+    funnelUIDs: "/crusher/multi_search/uids?search=",
+    //visitURL: "/crusher/visit_urls?format=json&source=" + source, // TODO: TEST IF THIS BEING USED
+    //visitUID: "/crusher/visit_uids?format=json&url=",
     visitDomains: "/crusher/visit_domains?format=json&kind=domains",
     visitAvails: "/crusher/visit_avails?format=json",
 
