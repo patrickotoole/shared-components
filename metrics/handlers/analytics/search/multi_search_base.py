@@ -54,8 +54,13 @@ class MultiSearchBase(VisitDomainBase,SearchBase,MultiSearchHelpers):
         funnel_frames = self.build_funnel_groups(frames,meta)
         funnel_frame_sizes = [len(i) for i in funnel_frames]
         funnel_data = self.reshape_funnel_groups(funnel_frames)
-        
+
+
         response['results'] = self.funnel_response(funnel_data,len(terms['steps']),funnel_frame_sizes)
+        response['summary'] = {
+            "union_size":len(funnel_data),
+            "intersection_size": response['results'][-1]["count"]
+        }
         
         defer.returnValue(response)
 

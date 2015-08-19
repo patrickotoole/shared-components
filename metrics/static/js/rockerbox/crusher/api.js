@@ -291,7 +291,8 @@ RB.crusher.api = (function(api) {
           deferred_cb(null,cb)
         }
       }),
-      funnelUIDs: genericQueuedAPI(function(funnel_actions,deferred_cb) {
+      funnelUIDs: genericQueuedAPI(function(funnel,deferred_cb) {
+        var funnel_actions = funnel.actions
         var patterns = funnel_actions.map(function(action) { return action.url_pattern })
         var action_strings = patterns.map(function(pattern){
           return pattern.map(function(p){ return p.split(" ").join(",") })
@@ -301,6 +302,9 @@ RB.crusher.api = (function(api) {
 
         d3.json(api.URL.funnelUIDs + funnel_string,function(dd){
           var previous = false
+          funnel.union_size = dd.summary.union_size
+          funnel.intersection_size = dd.summary.intersection_size
+          
           funnel_actions.map(function(action,i){
             action.uids = dd.results[i].uids
             action.funnel_uids = dd.results[i].uids

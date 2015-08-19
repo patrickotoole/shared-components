@@ -78,15 +78,8 @@ RB.crusher.ui.funnel = (function(funnel) {
       d3_updateable(summary,".union-size","div")
         .classed("union-size",true)
         .text(function(x){
-
-          var users = x.actions.reduce(function(p,c){
-            c.uids.map(function(u){
-              p[u] = true
-            })
-            return p
-          },{})
-
-          return "Union Size: " + d3.format(",")(Object.keys(users).length)
+          
+          return "Union Size: " + d3.format(",")(x.union_size)
         })
 
       d3_updateable(summary,".intersection-size","div")
