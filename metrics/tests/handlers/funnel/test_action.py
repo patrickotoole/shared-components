@@ -114,19 +114,21 @@ class ActionTest(AsyncHTTPTestCase):
         action_json = ujson.loads(action_string)
         action_json['action_name'] = "NEW NAME" 
         action_put = self.fetch("/?format=json&",method="PUT",body=ujson.dumps(action_json)).body
-        action_put_json = ujson.loads(action_put)['response']
+        
+        action_put_json = ujson.loads(action_put)['error']
 
-        self.assertEqual(action_put_json,"Need action_id to update action")
+        self.assertEqual(action_put_json,"Missing the following parameters: action_id")
 
 
         action_json['action_id'] = action_get_json[0]['action_id']
         action_post = self.fetch("/?format=json&",method="POST",body=ujson.dumps(action_json)).body
-        action_post_json = ujson.loads(action_put)['response']
+        action_post_json = ujson.loads(action_put)['error']
 
-        self.assertEqual(action_put_json,"Need action_id to update action") 
+        self.assertEqual(action_put_json,"Missing the following parameters: action_id") 
 
 
         action_put = self.fetch("/?format=json&",method="PUT",body=ujson.dumps(action_json)).body
+        import ipdb; ipdb.set_trace()
         action_put_json = ujson.loads(action_put)['response']
 
         self.assertEqual(action_put_json['action_name'],"NEW NAME") 

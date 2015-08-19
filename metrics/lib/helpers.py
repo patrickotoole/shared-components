@@ -236,6 +236,30 @@ class Parse:
 class decorators:
 
     @staticmethod
+    def multi_commit_cursor(func):
+
+        def inner(self,*args,**kwargs):
+
+            try:
+                self.db.autocommit = False
+                conn = self.db.create_connection()
+                cur = conn.cursor()
+                kwargs['cur'] = cur
+
+                result = func(self,*args,**kwargs)
+
+                conn.commit()
+            except Exception as e:
+                conn.rollback()
+                raise e
+            finally:
+                self.db.autocommit = True
+
+            return result
+                
+        return inner
+
+    @staticmethod
     def meta_enabled(func):
         def inner(self, *args, **kwargs):
             include = self.get_argument("include","").split(",")

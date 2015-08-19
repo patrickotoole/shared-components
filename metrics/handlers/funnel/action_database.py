@@ -1,5 +1,6 @@
 import pandas
 import ujson
+from lib.helper import decorators
 
 GET = """
 SELECT * from action where %(where)s
@@ -82,7 +83,7 @@ class ActionDatabase(object):
 
         action = ujson.loads(body)
         action = dict(action.items() + [("start_date","0"),("end_date","0")])
-        self.ensure_missing(action,["action_id"])
+        self.assert_not_present(action,["action_id"])
 
         if "advertiser" not in action:
             action["advertiser"] = self.current_advertiser_name
@@ -93,7 +94,7 @@ class ActionDatabase(object):
             conn = self.db.create_connection()
             cur = conn.cursor()
 
-            self.check_required(action,self.required_cols) 
+            self.assert_required(action,self.required_cols) 
             
             cur.execute(INSERT_ACTION % action)
             action_id = cur.lastrowid
@@ -127,19 +128,23 @@ class ActionDatabase(object):
         }
 
     def get_pattern_diff(self,action):
-        # calculates how the action patterns differ from the database patterns associated with the action
+        # calculates how the action patterns differ from the database patterns for action
         where = "action_id = %s" % action['action_id']
         existing_df = self.db.select_dataframe(GET_PATTERNS % {"where":where})
+        existing_patterns = existing_df.url_pattern.tolist()
 
-        to_remove = existing_df[~existing_df.url_pattern.isin(action["url_pattern"])].url_pattern.tolist()
-        to_add = [url for url in action["url_pattern"] if str(url) not in existing_df.url_pattern.tolist()] 
+        to_remove_df = existing_df[~existing_df.url_pattern.isin(action["url_pattern"])]
+        to_remove = to_remove_df.url_pattern.tolist()
+
+        to_add = [url for url in action["url_pattern"] if str(url) not in existing_patterns]
 
         return (to_add,to_remove)
 
+    
     def perform_update(self,body):
 
         action = ujson.loads(body)
-        self.check_required_params(action,["action_id"]) 
+        self.assert_required_params(["action_id"]) 
 
         try:
             
@@ -172,7 +177,7 @@ class ActionDatabase(object):
         return action
 
     def perform_delete(self):
-        self.check_required_params(action,["action_id"])
+        self.assert_required_params(["action_id"])
 
         action_id = self.get_argument("action_id",False)
         action = {"action_id":action_id}
