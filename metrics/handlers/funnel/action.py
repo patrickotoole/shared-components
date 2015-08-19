@@ -49,5 +49,4 @@ class ActionHandler(FunnelBase,ActionAuth,APIHelpers,ActionDatabase):
         else:
             results = self.get_advertiser_actions(advertiser)
 
-        data = Convert.df_to_values(results)
-        self.write(ujson.dumps(data))
+        self.write_response(Convert.df_to_values(results))

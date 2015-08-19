@@ -225,7 +225,7 @@ RB.crusher.api = (function(api) {
 
         if (!cache.actionData) {
           d3.json(api.URL.actionURL,function(actions){
-            cache.actionData = actions
+            cache.actionData = actions.response
             if (cache.urls_wo_qs) cache.actionData.map(function(x) { x.values = cache.urls_wo_qs })
             deferred_cb(null,cb)
           })

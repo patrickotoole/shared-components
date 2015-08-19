@@ -73,10 +73,10 @@ class ActionTest(AsyncHTTPTestCase):
         _a = ujson.loads(self.fetch("/?format=json&advertiser=alan",method="GET").body)
         _b = ujson.loads(self.fetch("/?format=json&advertiser=will",method="GET").body)
 
-        print _a
-        print _b
-        self.assertEqual(len(_a),1)
-        self.assertEqual(len(_b),1)
+        
+        
+        self.assertEqual(len(_a["response"]),1)
+        self.assertEqual(len(_b["response"]),1)
 
     def test_post(self):
         action_json = """{
@@ -105,7 +105,7 @@ class ActionTest(AsyncHTTPTestCase):
         """
 
         action_posted = self.fetch("/?format=json&",method="POST",body=action_string).body
-        action_get_json = ujson.loads(self.fetch("/?format=json&advertiser=baublebar",method="GET").body)
+        action_get_json = ujson.loads(self.fetch("/?format=json&advertiser=baublebar",method="GET").body)['response']
 
         self.assertEqual(ujson.loads(action_string)['action_name'],action_get_json[0]['action_name'])
         self.assertEqual(ujson.loads(action_string)['url_pattern'],action_get_json[0]['url_pattern']) 
