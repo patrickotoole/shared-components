@@ -34,7 +34,7 @@ class FunnelDatabase(FunnelHelpers):
         return self.format_funnel(results)
 
     def get_funnel(self, funnel_id):            
-        results = self.get_funnel_by_id(_id)
+        results = self.get_funnel_by_id(funnel_id)
         return self.format_funnel(results)
 
     def make_to_update(self,obj):
@@ -146,4 +146,3 @@ class FunnelDatabase(FunnelHelpers):
         obj["funnel_id"] = funnel_id
 
         # TODO: need to make the segment associated with the funnel
-        
