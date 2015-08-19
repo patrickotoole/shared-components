@@ -3,7 +3,7 @@ import ujson
 from lib.helpers import decorators
 
 GET = """
-SELECT * from action where %(where)s
+SELECT pixel_source_name as advertiser, action_name, action_id from action where %(where)s
 """
 
 GET_PATTERNS = """

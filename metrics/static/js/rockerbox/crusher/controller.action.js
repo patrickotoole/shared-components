@@ -55,14 +55,17 @@ RB.crusher.controller.action = (function(action) {
             var resp = JSON.parse(rawData.response)
             data['action_id'] = resp['response']['action_id']
             obj.filter(function(){return this}).datum(data)
+
             RB.routes.navigation.back()
-            RB.routes.navigation.forward({
-              "name": "View Existing Actions",
-              "push_state":"/crusher/action/existing",
-              "skipRender": true,
-              "values_key":"action_name"
-            })
-            RB.routes.navigation.forward(data)
+            setTimeout(function(){
+              RB.routes.navigation.forward({
+                "name": "View Existing Actions",
+                "push_state":"/crusher/action/existing",
+                "skipRender": true,
+                "values_key":"action_name"
+              })
+              RB.routes.navigation.forward(data)
+            },1)
 
           }
         );                    
