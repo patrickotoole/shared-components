@@ -305,6 +305,7 @@ RB.crusher.api = (function(api) {
             action.uids = dd.results[i].uids
             action.funnel_uids = dd.results[i].uids
             action.funnel_count = dd.results[i].count
+            action.total_count = dd.results[i].total_count
             action.funnel_percent = (previous === false) ? 1 : action.funnel_count/previous
             previous = action.funnel_count
           })
