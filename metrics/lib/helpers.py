@@ -250,6 +250,8 @@ class decorators:
 
                 conn.commit()
             except Exception as e:
+                import traceback
+                traceback.print_exc()
                 conn.rollback()
                 raise e
             finally:
@@ -517,7 +519,8 @@ class APIHelpers(object):
         if code == "200":
             obj["response"] = response
             obj["status"] = "ok"
-        elif code == "ERR":
+        else:
+            print code
             obj["error"] = response
             obj["status"] = "error"
 

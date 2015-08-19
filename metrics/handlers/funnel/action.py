@@ -21,7 +21,7 @@ class ActionHandler(FunnelBase,ActionAuth,APIHelpers,ActionDatabase):
             data = self.perform_delete()
             self.write_response(data)
         except Exception, e:
-            self.write_response(str(e),"ERR")
+            self.write_response(str(e),e)
 
     @tornado.web.authenticated
     def post(self):
@@ -29,7 +29,7 @@ class ActionHandler(FunnelBase,ActionAuth,APIHelpers,ActionDatabase):
             data = self.perform_insert(self.request.body)
             self.write_response(data)
         except Exception, e:
-            self.write_response(str(e),"ERR")
+            self.write_response(str(e),e)
 
     @tornado.web.authenticated
     def put(self):
@@ -37,16 +37,19 @@ class ActionHandler(FunnelBase,ActionAuth,APIHelpers,ActionDatabase):
             data = self.perform_update(self.request.body)
             self.write_response(data)
         except Exception, e:
-            self.write_response(str(e),"ERR")
+            self.write_response(str(e),e)
 
     @tornado.web.authenticated
     def get(self):
         advertiser = self.get_argument("advertiser", self.current_advertiser_name)
         action_id = self.get_argument("action_id",False)
 
-        if action_id:
-            results = self.get_advertiser_action(advertiser,action_id)
-        else:
-            results = self.get_advertiser_actions(advertiser)
+        try:
+            if action_id:
+                results = self.get_advertiser_action(advertiser,action_id)
+            else:
+                results = self.get_advertiser_actions(advertiser)
 
-        self.write_response(Convert.df_to_values(results))
+            self.write_response(Convert.df_to_values(results))
+        except Exception, e:
+            self.write_response(str(e),e)
