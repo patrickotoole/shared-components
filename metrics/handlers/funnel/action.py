@@ -1,14 +1,16 @@
 import tornado.web
 import ujson
 import pandas
+
+from handlers.base import BaseHandler
 from lib.helpers import Convert
-from funnel_base import FunnelBase, FunnelHelpers
+
 from action_auth import ActionAuth
 from action_database import ActionDatabase
 from ..api_helpers import APIHelpers
 
  
-class ActionHandler(FunnelBase,ActionAuth,APIHelpers,ActionDatabase):
+class ActionHandler(BaseHandler,ActionAuth,APIHelpers,ActionDatabase):
 
     def initialize(self, db=None, **kwargs):
         self.db = db 
