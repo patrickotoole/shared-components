@@ -155,9 +155,9 @@ class FunnelTest(AsyncHTTPTestCase):
           template_path="../../../templates"
         )
 
-        funnel.FunnelHandler.authorized_advertisers = mock.Mock(return_value=["baublebar"])
-        funnel.FunnelHandler.current_advertiser = mock.Mock(return_value=123456)
-        funnel.FunnelHandler.current_advertiser_name = mock.Mock(return_value="baublebar")
+        funnel.FunnelHandler.authorized_advertisers = mock.PropertyMock(return_value=["baublebar"])
+        funnel.FunnelHandler.current_advertiser = mock.PropertyMock(return_value=123456)
+        funnel.FunnelHandler.current_advertiser_name = mock.PropertyMock(return_value="baublebar")
 
         funnel.FunnelHandler.get_current_user = mock.Mock()
         funnel.FunnelHandler.get_current_user.return_value = "test_user"
@@ -182,6 +182,15 @@ class FunnelTest(AsyncHTTPTestCase):
         self.assertEqual(actual,expected)
 
 
+    def test_get_logged_in(self):
+        body = self.fetch("/?format=json", method="GET").body
+        expected = [{"owner":"waikiki","advertiser":"baublebar","funnel_name":"landing+earings","actions":[{"url_pattern":["alans_pattern","alans_pattern2"],"action_name":"alans_action","action_id":1,"order":1},{"order":2,"url_pattern":["wills_pattern","wills_pattern_again"],"action_name":"wills_action","action_id":2}],"funnel_id":1},{"owner":"makiki","advertiser":"baublebar","funnel_name":"other","actions":[],"funnel_id":2}]
+
+        actual = ujson.loads(body)
+        
+        self.assertEqual(len(actual), 2)
+        self.assertEqual(actual, expected)
+
     def test_post(self):
         to_post = """{"owner":"waikiki","advertiser":"baublebar","funnel_name":"landing+earings","actions":[{"url_pattern":["wills_pattern","wills_pattern_again"],"action_name":"wills_action","action_id":2},{"url_pattern":["alans_pattern","alans_pattern2"],"action_name":"alans_action","action_id":1}]}"""
         
@@ -200,7 +209,27 @@ class FunnelTest(AsyncHTTPTestCase):
         action_ids = map(lambda x: x['action_id'], from_get_json['actions'])
 
         self.assertEqual([2,1],action_ids)
+        
+    def test_post_no_advertiser(self):
+        to_post = """{"owner":"waikiki","funnel_name":"landing+earings_two","actions":[{"url_pattern":["wills_pattern","wills_pattern_again"],"action_name":"wills_action","action_id":2},{"url_pattern":["alans_pattern","alans_pattern2"],"action_name":"alans_action","action_id":1}]}"""
+        
+        from_post = self.fetch("/?format=json", method="POST",body=to_post)
+        from_post_json = ujson.loads(from_post.body)
 
+        print from_post_json
+
+        funnel_id = from_post_json["response"]["funnel_id"]
+        Q = "select * from funnel_actions where funnel_id = %s" % funnel_id
+        funnel_actions = self.db.select_dataframe(Q)
+        
+        self.assertEqual(funnel_actions.order.sum(),(len(funnel_actions)*(len(funnel_actions)+1))/2)
+
+        from_get = self.fetch("/?format=json&id=%s" % funnel_id, method="GET")
+        from_get_json = ujson.loads(from_get.body)[0]
+
+        action_ids = map(lambda x: x['action_id'], from_get_json['actions'])
+
+        self.assertEqual([2,1],action_ids)
 
     def test_put_action_order(self):
         obj = ujson.loads(POST_FIXTURE)
@@ -209,12 +238,12 @@ class FunnelTest(AsyncHTTPTestCase):
         from_get_json = ujson.loads(from_get.body)[0]
         original_action_ids = map(lambda x: x['action_id'], from_get_json['actions'])
 
-        self.assertEqual([1,2],original_action_ids) 
+        self.assertEqual([1,2],original_action_ids)
 
         # testing required field
         from_put = self.fetch("/?format=json", method="PUT",body=ujson.dumps(obj))
         self.assertTrue("must contain a funnel_id" in from_put.body)
-        
+
         # changing order of funnel 
         obj['funnel_id'] = 1
         from_put = self.fetch("/?format=json", method="PUT",body=ujson.dumps(obj))
