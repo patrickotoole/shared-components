@@ -38,7 +38,7 @@ RB.crusher.controller.funnel = (function(funnel) {
             data['funnel_name'] = resp.funnel_name
             data['funnel_id'] = resp.funnel_id
             crusher.cache.funnelData.push(data)
-            callback(crusher.cache.funnelData)
+            callback(crusher.cache.funnelData,type)
           });
       },"save_funnel",true,true)
     },

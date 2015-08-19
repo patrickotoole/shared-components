@@ -61,13 +61,24 @@ RB.crusher.ui.funnel = (function(funnel) {
       var show = d3_updateable(this_funnel,".show","div").classed("show",true)
 
       data.funnel_name = this_funnel.selectAll("input.funnel-name").property("value")
-      crusher.controller.funnel.save(data,function(){})
+      crusher.controller.funnel.save(data,function(x,TYPE){
+        
+        funnel.register_publishers(show.datum()) // dont forget to register the funnel before showing it!
+        
+        RB.routes.navigation.back()
+        setTimeout(function(){
+          RB.routes.navigation.forward({
+            "name": "View Existing Funnels",
+            "push_state":"/crusher/funnel/existing",
+            "skipRender": true,
+            "values_key":"funnel_name"    
+          })
+          RB.routes.navigation.forward(data)
+        },1)
+        
+      })
 
-      crusher.controller.funnel.show(
-        show.datum(),
-        funnel.show.bind(false,show),
-        funnel.wait.bind(false,show)
-      )
+
 
     },
     compute_uniques: function(actions) {
