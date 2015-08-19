@@ -90,7 +90,6 @@ class ActionTest(AsyncHTTPTestCase):
 
         ajson = ujson.loads(_a)
         ojson = ujson.loads(action_json)
-        
         self.assertEqual(ajson['response']['action_name'],ojson['action_name'])
         self.assertEqual(ajson['response']['url_pattern'],ojson['url_pattern']) 
  
@@ -127,8 +126,7 @@ class ActionTest(AsyncHTTPTestCase):
         self.assertEqual(action_put_json,"Missing the following parameters: action_id") 
 
 
-        action_put = self.fetch("/?format=json&",method="PUT",body=ujson.dumps(action_json)).body
-        import ipdb; ipdb.set_trace()
+        action_put = self.fetch("/?format=json&action_id=%s" % action_json['action_id'],method="PUT",body=ujson.dumps(action_json)).body
         action_put_json = ujson.loads(action_put)['response']
 
         self.assertEqual(action_put_json['action_name'],"NEW NAME") 
@@ -138,7 +136,7 @@ class ActionTest(AsyncHTTPTestCase):
         self.assertEqual(len(df),2)
 
         action_json['url_pattern'] = ["only_one"]
-        action_put = self.fetch("/?format=json&",method="PUT",body=ujson.dumps(action_json)).body
+        action_put = self.fetch("/?format=json&action_id=%s" % action_json['action_id'],method="PUT",body=ujson.dumps(action_json)).body
         action_put_json = ujson.loads(action_put)['response']
 
         self.assertEqual(action_put_json['url_pattern'],["only_one"]) 

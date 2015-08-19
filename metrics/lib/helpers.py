@@ -244,7 +244,7 @@ class decorators:
                 self.db.autocommit = False
                 conn = self.db.create_connection()
                 cur = conn.cursor()
-                kwargs['cur'] = cur
+                kwargs['cursor'] = cur
 
                 result = func(self,*args,**kwargs)
 

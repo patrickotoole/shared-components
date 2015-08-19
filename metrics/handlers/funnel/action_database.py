@@ -1,6 +1,6 @@
 import pandas
 import ujson
-from lib.helper import decorators
+from lib.helpers import decorators
 
 GET = """
 SELECT * from action where %(where)s
@@ -79,40 +79,7 @@ class ActionDatabase(object):
             return pandas.DataFrame()
          
 
-    def perform_insert(self,body):
-
-        action = ujson.loads(body)
-        action = dict(action.items() + [("start_date","0"),("end_date","0")])
-        self.assert_not_present(action,["action_id"])
-
-        if "advertiser" not in action:
-            action["advertiser"] = self.current_advertiser_name
-
-        try:
-            
-            self.db.autocommit = False
-            conn = self.db.create_connection()
-            cur = conn.cursor()
-
-            self.assert_required(action,self.required_cols) 
-            
-            cur.execute(INSERT_ACTION % action)
-            action_id = cur.lastrowid
-
-            for url in action["url_pattern"]:
-                pattern = self.make_pattern_object(action_id,url)
-                cur.execute(INSERT_ACTION_PATTERNS % pattern)
-
-            action['action_id'] = action_id
-            conn.commit()
-
-        except Exception as e:
-            conn.rollback()
-            raise e
-        finally:
-            self.db.autocommit = True            
-
-        return action
+    
 
     def make_set_fields(self,action):
         # creates the update statement for an action
@@ -141,61 +108,58 @@ class ActionDatabase(object):
         return (to_add,to_remove)
 
     
-    def perform_update(self,body):
+    @decorators.multi_commit_cursor
+    def perform_update(self,body,cursor=None):
 
         action = ujson.loads(body)
         self.assert_required_params(["action_id"]) 
 
-        try:
-            
-            self.db.autocommit = False
-            conn = self.db.create_connection()
-            cur = conn.cursor()
+        action['fields'] = self.make_set_fields(action)
+        cursor.execute(UPDATE_ACTION % action)
 
-            action['fields'] = self.make_set_fields(action)
-            cur.execute(UPDATE_ACTION % action)
+        to_add, to_remove = self.get_pattern_diff(action)
 
-            to_add, to_remove = self.get_pattern_diff(action)
+        for url in to_add:
+            pattern = self.make_pattern_object(action["action_id"], url) 
+            cursor.execute(INSERT_ACTION_PATTERNS % pattern)
 
-
-            for url in to_add:
-                pattern = self.make_pattern_object(action["action_id"], url) 
-                cur.execute(INSERT_ACTION_PATTERNS % pattern)
-
-            for url in to_remove:
-                pattern = self.make_pattern_object(action["action_id"], url) 
-                cur.execute(DELETE_ACTION_PATTERNS % pattern)
+        for url in to_remove:
+            pattern = self.make_pattern_object(action["action_id"], url) 
+            cursor.execute(DELETE_ACTION_PATTERNS % pattern)
                  
-            conn.commit()
-
-        except Exception as e:
-            conn.rollback()
-            raise e
-        finally:
-            self.db.autocommit = True            
 
         return action
 
-    def perform_delete(self):
+    @decorators.multi_commit_cursor
+    def perform_delete(self,cursor=None):
         self.assert_required_params(["action_id"])
 
         action_id = self.get_argument("action_id",False)
         action = {"action_id":action_id}
-
-        try:
-            self.db.autocommit = False
-            conn = self.db.create_connection()
-            cur = conn.cursor()
             
-            cur.execute(DELETE_ACTION % action)
-            cur.execute(DELETE_ACTION_PATTERN % action) 
-                
-            conn.commit()
+        cursor.execute(DELETE_ACTION % action)
+        cursor.execute(DELETE_ACTION_PATTERN % action) 
 
-        except Exception as e:
-            conn.rollback()
-            raise e
-        finally:
-            self.db.autocommit = True        
+        return action
+
+    @decorators.multi_commit_cursor
+    def perform_insert(self,body,cursor=None):
+
+        action = ujson.loads(body)
+        action = dict(action.items() + [("start_date","0"),("end_date","0")])
+        self.assert_not_present(action,["action_id"])
+
+        action["advertiser"] = action.get("advertiser",self.current_advertiser_name)
+
+        self.assert_required(action,self.required_cols) 
+        
+        cursor.execute(INSERT_ACTION % action)
+        action_id = cursor.lastrowid
+
+        for url in action["url_pattern"]:
+            pattern = self.make_pattern_object(action_id,url)
+            cursor.execute(INSERT_ACTION_PATTERNS % pattern)
+
+        action['action_id'] = action_id
 
         return action
