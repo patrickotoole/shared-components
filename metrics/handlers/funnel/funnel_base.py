@@ -40,8 +40,6 @@ class FunnelHelpers(object):
             return [v for v in values if accepted(v)]
 
         return  g2d
- 
-class FunnelBase():
 
     def update_funnel_actions(self,cur,to_update,funnel_id):
         excludes = ["funnel_id","action_id"]
@@ -91,3 +89,4 @@ class FunnelBase():
     def get_funnel_by_id(self, _id):
         where = "a.funnel_id = '{}'".format(_id)
         return self.get_from_db(where)
+

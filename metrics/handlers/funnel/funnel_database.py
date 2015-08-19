@@ -33,7 +33,7 @@ class FunnelDatabase(FunnelHelpers):
         results = self.get_advertiser_funnels(advertiser)
         return self.format_funnel(results)
 
-    def get_funnel(self, funnel_id):            
+    def get_funnel(self, funnel_id):
         results = self.get_funnel_by_id(funnel_id)
         return self.format_funnel(results)
 
@@ -45,59 +45,8 @@ class FunnelDatabase(FunnelHelpers):
 
         obj['pixel_source_name'] = obj['advertiser']
         del obj['advertiser']
-        funnel_id = obj['funnel_id']
 
-        try:
-            self.db.autocommit = False
-            conn = self.db.create_connection()
-            cur = conn.cursor()
-
-            excludes = ["actions","funnel_id"]
-            funnel_fields = ", ".join(["%s=\"%s\"" % (i,j)
-                                       for i,j in obj.items()
-                                       if not (i in excludes)])
-
-            to_update = {
-                "funnel_id": funnel_id,
-                "fields":funnel_fields
-            }
-
-            cur.execute(UPDATE_FUNNEL % to_update)
-
-            actions_df = pandas.DataFrame(obj["actions"])
-            actions_df['order'] = actions_df.index + 1
-            actions_df = actions_df[["action_id","order"]]
-
-            existing_df = self.db.select_dataframe(GET_FUNNEL_ACTION % funnel_id)
-            existing_df = existing_df[['action_id','order']]
-
-            merged = actions_df.merge(existing_df,how="outer",suffixes=("","_old"),on="action_id")
-
-            to_add = merged[merged['order_old'].isnull()]
-            to_remove = merged[merged['order'].isnull()]
-
-            to_update = merged[
-                ~(merged["order"] == merged["order_old"]) &
-                ~(merged['order_old'].isnull()) &
-                ~(merged['order'].isnull())
-            ]
-
-            self.insert_funnel_actions(cur,to_add,funnel_id)
-            self.delete_funnel_actions(cur,to_remove,funnel_id)
-            self.update_funnel_actions(cur,to_update,funnel_id)
-
-            obj['advertiser'] = obj['pixel_source_name']
-            del obj['pixel_source_name']
-
-            conn.commit()
-
-        except Exception as e:
-            print e
-            conn.rollback()
-            raise e
-        finally:
-            self.autocommit = True
-
+        obj = self.perform_update(obj)
         return obj
 
     def make_to_insert(self,body):
@@ -107,7 +56,49 @@ class FunnelDatabase(FunnelHelpers):
         if len(all_cols) != len(self.required_cols):
             raise Exception("required_columns: {}".format(', '.join(self.required_cols)))
 
-        self.perform_insert(obj)
+        obj = self.perform_insert(obj)
+        return obj
+
+    @decorators.multi_commit_cursor
+    def perform_update(self, obj, cursor=None):
+        funnel_id = obj['funnel_id']
+        excludes = ["actions","funnel_id"]
+        funnel_fields = ", ".join(["%s=\"%s\"" % (i,j)
+                                   for i,j in obj.items()
+                                   if not (i in excludes)])
+
+        to_update = {
+            "funnel_id": funnel_id,
+            "fields":funnel_fields
+        }
+
+        cursor.execute(UPDATE_FUNNEL % to_update)
+        
+        actions_df = pandas.DataFrame(obj["actions"])
+        actions_df['order'] = actions_df.index + 1
+        actions_df = actions_df[["action_id","order"]]
+
+        existing_df = self.db.select_dataframe(GET_FUNNEL_ACTION % funnel_id)
+        existing_df = existing_df[['action_id','order']]
+        
+        merged = actions_df.merge(existing_df,how="outer",suffixes=("","_old"),on="action_id")
+
+        to_add = merged[merged['order_old'].isnull()]
+        to_remove = merged[merged['order'].isnull()]
+
+        to_update = merged[
+            ~(merged["order"] == merged["order_old"]) &
+            ~(merged['order_old'].isnull()) &
+            ~(merged['order'].isnull())
+        ]
+
+        self.insert_funnel_actions(cursor,to_add,funnel_id)
+        self.delete_funnel_actions(cursor,to_remove,funnel_id)
+        self.update_funnel_actions(cursor,to_update,funnel_id)
+
+        obj['advertiser'] = obj['pixel_source_name']
+        del obj['pixel_source_name']
+
         return obj
 
     @decorators.multi_commit_cursor
@@ -136,7 +127,7 @@ class FunnelDatabase(FunnelHelpers):
         for position, action in enumerate(obj["actions"]):
             action_id = action['action_id']
             
-                # TODO: should ensure actions belong to the same advertiser
+            # TODO: should ensure actions belong to the same advertiser
             cursor.execute(INSERT_FUNNEL_ACTIONS % {
                 "order":position + 1,
                 "action_id": action_id,
@@ -144,5 +135,5 @@ class FunnelDatabase(FunnelHelpers):
             })
 
         obj["funnel_id"] = funnel_id
-
+        return obj
         # TODO: need to make the segment associated with the funnel

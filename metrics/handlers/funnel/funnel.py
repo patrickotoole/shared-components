@@ -4,12 +4,12 @@ import pandas
 
 from lib.helpers import Convert
 from MYSQL_FUNNEL import *
-from funnel_base import FunnelBase, FunnelHelpers
+from funnel_base import FunnelHelpers
 from funnel_auth import FunnelAuth
 from funnel_database import FunnelDatabase
 from handlers.base import BaseHandler
 
-class FunnelHandler(BaseHandler, FunnelDatabase, FunnelBase, FunnelHelpers, FunnelAuth):
+class FunnelHandler(BaseHandler, FunnelDatabase, FunnelAuth):
 
     def initialize(self, db=None, api=None, **kwargs):
         self.db = db
@@ -82,6 +82,4 @@ class FunnelHandler(BaseHandler, FunnelDatabase, FunnelBase, FunnelHelpers, Funn
                 self.write("{'status':'%s'}" % e) 
             finally:
                 self.db.autocommit = True
-                self.finish() 
-            
-    
+                self.finish()
