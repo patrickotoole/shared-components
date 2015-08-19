@@ -78,15 +78,8 @@ RB.crusher.ui.funnel = (function(funnel) {
       d3_updateable(summary,".union-size","div")
         .classed("union-size",true)
         .text(function(x){
-
-          var users = x.actions.reduce(function(p,c){
-            c.uids.map(function(u){
-              p[u] = true
-            })
-            return p
-          },{})
-
-          return "Union Size: " + d3.format(",")(Object.keys(users).length)
+          
+          return "Union Size: " + d3.format(",")(x.union_size)
         })
 
       d3_updateable(summary,".intersection-size","div")
@@ -115,7 +108,7 @@ RB.crusher.ui.funnel = (function(funnel) {
       var steps = d3_splat(step_summary,".step","div",function(x){console.log(x);return x.actions},function(x){return x.action_id + ":" + x.pos})
         .classed("step",true)
         .text(function(x){
-          return d3.format("%")(x.funnel_uids.length/x.uids.length) + " of all \"" + x.action_name + "\" users (" + x.uids.length + ")"
+          return d3.format("%")(x.funnel_count/x.total_count) + " of all \"" + x.action_name + "\" users (" + x.uids.length + ")"
         })
 
       steps.sort(function(x,y) {return x.pos - y.pos})

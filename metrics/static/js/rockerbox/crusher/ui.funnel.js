@@ -136,7 +136,7 @@ RB.crusher.ui.funnel = (function(funnel) {
       // this is where we get all the UID information to display the funnel
 
       var q = queue(5)
-      crusher.api.funnelUIDs(data.actions,q)
+      crusher.api.funnelUIDs(data,q)
       q.awaitAll(function(){ cb.apply(false,arguments) })
 
     })

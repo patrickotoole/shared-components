@@ -89,7 +89,7 @@ class MultiSearchHelpers(PatternSearchHelpers):
         print data.head()
         return data
 
-    def funnel_response(self,funnel_data,num_steps):
+    def funnel_response(self,funnel_data,num_steps,step_sizes):
         steps = range(1,1+num_steps)
 
         gs = []
@@ -103,6 +103,7 @@ class MultiSearchHelpers(PatternSearchHelpers):
                 "uids":masked['uid'].tolist()
             } 
             step['count'] = len(step['uids'])
+            step['total_count'] = step_sizes[step_num-1]
             gs.append(step)
 
         return gs 
