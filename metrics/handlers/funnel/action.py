@@ -5,7 +5,7 @@ from lib.helpers import Convert
 from funnel_base import FunnelBase, FunnelHelpers
 from action_auth import ActionAuth
 from action_database import ActionDatabase
-from ..api_helpers import APIHelpers
+from lib.helpers import APIHelpers
 
  
 class ActionHandler(FunnelBase,ActionAuth,APIHelpers,ActionDatabase):
