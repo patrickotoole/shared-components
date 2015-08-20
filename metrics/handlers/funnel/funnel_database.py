@@ -37,27 +37,37 @@ class FunnelDatabase(FunnelHelpers):
         results = self.get_funnel_by_id(funnel_id)
         return self.format_funnel(results)
 
-    def make_to_update(self,obj):
-        obj = ujson.loads(obj)
+    def update_funnel(self,body):
+        funnel = ujson.loads(body)
+        self.assert_required_params(["funnel_id"])
+        self.assert_not_present(funnel, ["funnel_id"])
 
-        if "advertiser" not in obj:
-            obj["advertiser"] = self.current_advertiser_name
+        if "advertiser" not in funnel:
+            funnel["advertiser"] = self.current_advertiser_name
 
-        obj['pixel_source_name'] = obj['advertiser']
-        del obj['advertiser']
+        funnel['pixel_source_name'] = funnel['advertiser']
+        del funnel['advertiser']
 
-        obj = self.perform_update(obj)
-        return obj
+        return self.perform_update(funnel)
 
-    def make_to_insert(self,body):
-        obj = ujson.loads(body)
-        all_cols = [ i for i in self.required_cols if i in obj.keys() ]
+    def insert_funnel(self,body):
+        funnel = ujson.loads(body)
+        self.assert_not_present(funnel, ["funnel_id"])
+        self.assert_required(funnel, self.required_cols)
 
-        if len(all_cols) != len(self.required_cols):
-            raise Exception("required_columns: {}".format(', '.join(self.required_cols)))
+        funnel = self.perform_insert(funnel)
+        return funnel
 
-        obj = self.perform_insert(obj)
-        return obj
+    def delete_funnel(self):
+        self.assert_required_params(["funnel_id"])
+        funnel_id = self.get_argument("funnel_id",False)
+        self.perform_delete({"funnel_id": funnel_id})
+        return "Funnel id %s deleted successfully." % funnel_id
+
+    @decorators.multi_commit_cursor
+    def perform_delete(self, obj, cursor=None):
+        cursor.execute(DELETE_FUNNEL % obj)
+        cursor.execute(DELETE_FUNNEL_ACTION_BY_ID % obj)
 
     @decorators.multi_commit_cursor
     def perform_update(self, obj, cursor=None):

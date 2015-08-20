@@ -3,13 +3,14 @@ import ujson
 import pandas
 
 from lib.helpers import Convert
+from lib.helpers import APIHelpers
 from MYSQL_FUNNEL import *
 from funnel_base import FunnelHelpers
 from funnel_auth import FunnelAuth
 from funnel_database import FunnelDatabase
 from handlers.base import BaseHandler
 
-class FunnelHandler(BaseHandler, FunnelDatabase, FunnelAuth):
+class FunnelHandler(BaseHandler, FunnelDatabase, FunnelAuth, APIHelpers):
 
     def initialize(self, db=None, api=None, **kwargs):
         self.db = db
@@ -44,9 +45,7 @@ class FunnelHandler(BaseHandler, FunnelDatabase, FunnelAuth):
     @tornado.web.authenticated
     def put(self):
         try:
-            if "funnel_id" not in self.request.body:
-                raise Exception("must contain a funnel_id in json to update")
-            data = self.make_to_update(self.request.body)
+            data = self.update_funnel(self.request.body)
             self.write(ujson.dumps({"response": data, "status": "ok"}))
         except Exception, e:
             print e
@@ -55,7 +54,7 @@ class FunnelHandler(BaseHandler, FunnelDatabase, FunnelAuth):
     @tornado.web.authenticated
     def post(self):
         try:
-            data = self.make_to_insert(self.request.body)
+            data = self.insert_funnel(self.request.body)
             self.write(ujson.dumps({"response": data, "status": "ok"}))
         except Exception, e:
             print e
@@ -63,23 +62,9 @@ class FunnelHandler(BaseHandler, FunnelDatabase, FunnelAuth):
 
     @tornado.web.authenticated
     def delete(self):
-        funnel_id = self.get_argument("funnel_id",False)
-
-        if funnel_id:
-            obj = {"funnel_id": funnel_id}
-
-            try:
-                self.db.autocommit = False
-                conn = self.db.create_connection()
-                cur = conn.cursor()
-                
-                cur.execute(DELETE_FUNNEL % obj)
-                cur.execute(DELETE_FUNNEL_ACTION_BY_ID % obj)
-
-                conn.commit()
-                self.write("{'status':'removed'}") 
-            except Exception as e:
-                self.write("{'status':'%s'}" % e) 
-            finally:
-                self.db.autocommit = True
-                self.finish()
+        try:
+            data = self.delete_funnel()
+            self.write(ujson.dumps({"response": data, "status": "ok"}))
+        except Exception, e:
+            print e
+            self.write(ujson.dumps({"response": str(e), "status": "error"}))

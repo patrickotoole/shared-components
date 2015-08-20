@@ -31,7 +31,7 @@ RB.crusher.controller.funnel = (function(funnel) {
         var cdata = JSON.parse(JSON.stringify(d)),
           type = data['funnel_id'] ? "PUT" : "POST";
 
-        d3.xhr(funnelURL)
+        d3.xhr(funnelURL + "&funnel_id=" + data.funnel_id)
           .header("Content-Type", "application/json")
           .send(type, JSON.stringify(cdata), function(err, rawData){
             var resp = JSON.parse(rawData.response).response
