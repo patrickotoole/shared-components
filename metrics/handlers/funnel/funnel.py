@@ -5,7 +5,7 @@ import pandas
 from lib.helpers import Convert
 from lib.helpers import APIHelpers
 from MYSQL_FUNNEL import *
-from funnel_base import FunnelHelpers
+from funnel_helpers import FunnelHelpers
 from funnel_auth import FunnelAuth
 from funnel_database import FunnelDatabase
 from handlers.base import BaseHandler

@@ -3,7 +3,7 @@ import ujson
 
 from lib.helpers import Convert
 from lib.helpers import decorators
-from funnel_base import FunnelHelpers
+from funnel_helpers import FunnelHelpers
 from MYSQL_FUNNEL import *
 
 class FunnelDatabase(FunnelHelpers):
