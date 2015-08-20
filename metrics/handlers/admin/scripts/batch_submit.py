@@ -18,7 +18,12 @@ class BatchSubmitHandler(BatchLogHandler):
     @tornado.web.asynchronous
     def post(self):
         data = ujson.loads(self.request.body)
-        self.submit_batch_segments(data)
+        try:
+            self.submit_batch_segments(data)
+        except:
+            print "GOT ERROR"
+            self.write(ujson.dumps({"error": e}))
+            self.finish()
 
     @decorators.deferred
     @decorators.rate_limited
@@ -38,10 +43,19 @@ class BatchSubmitHandler(BatchLogHandler):
             job_info = response["batch_segment_upload_job"]
             job_url = job_info["upload_url"]
         else:
-            raise StandardError("Problem requesting job id: {}".format(r.json))
+            e = "Problem requesting job id: {}".format(r.json)
+            self.write(ujson.dumps({"error": e}))
+            self.finish()
+            raise StandardError(e)
 
         # Get unique number of user/segment combinations
         num_users = len(set(data["uids"]))
+        if num_users < 1:
+            e = "No users submitted"
+            self.write(ujson.dumps({"error": e}))
+            self.finish()
+            raise Exception(e)
+        
         body_str = '\n'.join(data["uids"])
 
         self.push_job_request(job_url, body_str, num_users)
