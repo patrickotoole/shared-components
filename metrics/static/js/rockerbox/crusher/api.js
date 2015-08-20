@@ -118,6 +118,7 @@ RB.crusher.api = (function(api) {
     funnelUIDs: "/crusher/multi_search/uids?search=",
     funnelAvails: "/crusher/multi_search/avails?search=",
     funnelDomains: "/crusher/multi_search/domains?search=",
+    recommendedActions: "/crusher/funnel/action/recommended",
 
 
     //visitURL: "/crusher/visit_urls?format=json&source=" + source, // TODO: TEST IF THIS BEING USED
@@ -234,22 +235,16 @@ RB.crusher.api = (function(api) {
           deferred_cb(null,cb)
         }
       }),
-      recommended_actions: function(cb,extq) {
-        console.log("in reccommended")
-        var q = extq || queue(2)
+      recommended_actions: new genericQueuedAPI(function(cb,deferred_cb) {
+        
+        if (!cache.recommendations) {
+          d3.json(api.URL.recommendedActions,function(recommendations){
+            cache.recommendations = recommendations
+            deferred_cb(null,cb)
+          })
+        }
 
-        endpoints.actions(function(){},q)
-        endpoints.visits(function(){},q)
-
-        console.log("just put two items on the queue")
-
-        if (extq) return extq
-        else q.awaitAll(function(err,cbs) {
-          cbs.map(function(fn){if (typeof(fn) == "function") fn()})
-          cb()
-        }) 
-
-      },
+      }),
       funnels: genericQueuedAPI(function(cb,deferred_cb) {
 
         if (!cache.funnelData) {

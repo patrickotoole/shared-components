@@ -58,7 +58,7 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
             
             return df
         except OperationTimedOut as exp:
-            import ipdb; ipdb.set_trace()
+            #import ipdb; ipdb.set_trace()
             return False
 
         

@@ -27,7 +27,37 @@ RB.crusher.controller = (function(controller) {
       var funnelRow = d3_splat(target,".row","div",[{"id":"about"}],function(x){return x.id})
         .classed("row funnels",true)
 
-      d3_updateable(funnelRow,"h5","h5").text("about this page and why its here")
+      d3_updateable(funnelRow,"h5.on-site","h5").text("What's happening on your site?")
+        .classed("on-site",true)
+
+      var db_wrapper = d3_updateable(funnelRow,"div.on-site","div")
+        .classed("on-site",true)
+
+      var left = d3_updateable(db_wrapper,".col-md-4.left","div")
+        .classed("left col-md-4",true)
+
+      d3_updateable(left,"h5","h5").text("Top on-site actions") 
+
+      var left_inner = d3_updateable(left,"div.inner","div").classed("inner",true) 
+      
+      d3_splat(left_inner,".row","div",[1,2,3])
+        .classed("row action",true)
+        .text(function(x){return x})
+
+
+      var right = d3_updateable(db_wrapper,".col-md-8.right","div")
+        .classed("right col-md-8",true)
+
+      d3_updateable(right,"h5","h5").text("Top off-site pages your users visit")
+
+
+
+
+
+
+
+      //d3_updateable(funnelRow,"h5","h5").text("about this page and why its here")
+
       funnelRow.exit().remove()
     },
     "funnel/existing": function(funnel) {
@@ -76,6 +106,17 @@ RB.crusher.controller = (function(controller) {
          
     },
     "action/new": function(action) {
+      crusher.ui.action.buildBase()
+
+      var target = d3.selectAll(".action-view-wrapper")
+
+      crusher.subscribe.add_subscriber(["actions"], function(actionsw){
+
+        var override = (action.action_name) ? action : false
+        controller.action.new(target,crusher.cache.urls_wo_qs, override)
+      }, "new",true,true)
+    },
+    "action/recommended": function(action) {
       crusher.ui.action.buildBase()
 
       var target = d3.selectAll(".action-view-wrapper")
@@ -139,24 +180,12 @@ RB.crusher.controller = (function(controller) {
         menu_obj.values = RB.crusher.cache.actionData
         RB.menu.methods.transform(menu_obj,menu_obj.values_key)
       },
-      "action/new": function(menu_obj){
+      "action/recommended": function(menu_obj){
 
-        var filterRecommended = function(x){
-          var actions = crusher.cache.actionData.filter(function(z){
-            if (!z.url_pattern) return false
-            var matched = z.url_pattern.filter(function(q){
-              return (q.indexOf(x.key) > -1) || (x.key.indexOf(q) > -1
-            )})
-            return matched.length
-          })
-          return actions.length == 0 
-        }
-
-        crusher.cache.actionData.map(function(x) { x.values = crusher.cache.urls_wo_qs })
-        crusher.cache.recommendedActionData = crusher.cache.uris.filter(filterRecommended)
-          .slice(0,10)
+        crusher.cache.recommendedActionData = crusher.cache.recommendations
+          .slice(0,20)
           .map(function(x){
-            return {"action_name":x.key,"url_pattern":[x.key]}
+            return {"action_name":x.first_word,"url_pattern":[x.first_word]}
           })
 
         menu_obj.values = RB.crusher.cache.recommendedActionData
@@ -167,7 +196,8 @@ RB.crusher.controller = (function(controller) {
       "funnel/new": [],
       "funnel/existing": ['funnels'],
       "action/existing": ['actions'],
-      "action/new": [],//['visits','actions'],
+      "action/new": [],
+      "action/recommended": ["recommended_actions"],
       "": [{
           "name":"Actions",
           "push_state":"/crusher/action",
@@ -189,6 +219,11 @@ RB.crusher.controller = (function(controller) {
       "action": [{
           "name": "Create New Action",
           "push_state":"/crusher/action/new",
+          "values_key": "action_name"
+        },
+        {
+          "name": "Recommmended Actions",
+          "push_state":"/crusher/action/recommended",
           "values_key": "action_name"
         },
         {
