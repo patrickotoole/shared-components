@@ -40,7 +40,7 @@ class FunnelDatabase(FunnelHelpers):
     def update_funnel(self,body):
         funnel = ujson.loads(body)
         self.assert_required_params(["funnel_id"])
-        self.assert_not_present(funnel, ["funnel_id"])
+        funnel_id = self.get_argument("funnel_id")
 
         if "advertiser" not in funnel:
             funnel["advertiser"] = self.current_advertiser_name
@@ -48,7 +48,7 @@ class FunnelDatabase(FunnelHelpers):
         funnel['pixel_source_name'] = funnel['advertiser']
         del funnel['advertiser']
 
-        return self.perform_update(funnel)
+        return self.perform_update(funnel, funnel_id)
 
     def insert_funnel(self,body):
         funnel = ujson.loads(body)
@@ -70,8 +70,7 @@ class FunnelDatabase(FunnelHelpers):
         cursor.execute(DELETE_FUNNEL_ACTION_BY_ID % obj)
 
     @decorators.multi_commit_cursor
-    def perform_update(self, obj, cursor=None):
-        funnel_id = obj['funnel_id']
+    def perform_update(self, obj, funnel_id, cursor=None):
         excludes = ["actions","funnel_id"]
         funnel_fields = ", ".join(["%s=\"%s\"" % (i,j)
                                    for i,j in obj.items()

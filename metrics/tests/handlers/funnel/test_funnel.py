@@ -108,8 +108,6 @@ POST_FIXTURE = """{"owner":"waikiki","advertiser":"baublebar","funnel_name":"lan
  
 ADVERTISER_FIXTURE = "INSERT INTO advertiser (external_advertiser_id,pixel_source_name) values (1,'baublebar')"
  
-
-
 class FunnelTest(AsyncHTTPTestCase):
 
     def get_app(self):
@@ -120,8 +118,6 @@ class FunnelTest(AsyncHTTPTestCase):
         self.db.execute("DROP TABLE IF EXISTS action")
         self.db.execute("DROP TABLE IF EXISTS action_patterns") 
         self.db.execute("DROP TABLE IF EXISTS advertiser") 
-
-         
 
         self.db.execute(CREATE_FUNNEL_ACTION_TABLE) 
         self.db.execute(CREATE_FUNNEL_TABLE)  
@@ -242,11 +238,13 @@ class FunnelTest(AsyncHTTPTestCase):
 
         # testing required field
         from_put = self.fetch("/?format=json", method="PUT",body=ujson.dumps(obj))
-        self.assertTrue("must contain a funnel_id" in from_put.body)
+
+        body = ujson.loads(from_put.body)
+        self.assertTrue("Missing the following parameters: funnel_id" in body["response"])
 
         # changing order of funnel 
         obj['funnel_id'] = 1
-        from_put = self.fetch("/?format=json", method="PUT",body=ujson.dumps(obj))
+        from_put = self.fetch("/?format=json&funnel_id=%s" % 1, method="PUT",body=ujson.dumps(obj))
         from_put_json = ujson.loads(str(from_put.body))
         
         self.assertEqual(from_put_json['response'],obj)
@@ -270,9 +268,8 @@ class FunnelTest(AsyncHTTPTestCase):
         stored_actions = obj['actions'] 
 
         # deleting action from funnel
-        obj['funnel_id'] = 1
         obj['actions'] = obj['actions'][:1]
-        from_put = self.fetch("/?format=json", method="PUT",body=ujson.dumps(obj))
+        from_put = self.fetch("/?format=json&funnel_id=%s" % 1, method="PUT",body=ujson.dumps(obj))
         from_put_json = ujson.loads(str(from_put.body))
         
         self.assertEqual(from_put_json['response'],obj)
@@ -288,9 +285,8 @@ class FunnelTest(AsyncHTTPTestCase):
         self.assertEqual(len(df),1)
 
         # adding action to funnel
-        obj['funnel_id'] = 1
         obj['actions'] = stored_actions
-        from_put = self.fetch("/?format=json", method="PUT",body=ujson.dumps(obj))
+        from_put = self.fetch("/?format=json&funnel_id=%s" % 1, method="PUT",body=ujson.dumps(obj))
         from_put_json = ujson.loads(str(from_put.body))
         
         self.assertEqual(from_put_json['response'],obj)
