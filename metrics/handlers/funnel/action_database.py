@@ -67,7 +67,7 @@ class ActionDatabase(object):
         except:
             return pandas.DataFrame()
 
-    def get_advertiser_action(self, advertiser, action):
+    def get_advertiser_action(self, advertiser, action_id):
         try:
             where = "pixel_source_name = '%s' and action_id = %s" % (advertiser,action_id)
             result = self.db.select_dataframe(GET % {"where":where})
@@ -76,10 +76,7 @@ class ActionDatabase(object):
 
             return joined.reset_index()
         except:
-            return pandas.DataFrame()
-         
-
-    
+            return pandas.DataFrame()    
 
     def make_set_fields(self,action):
         # creates the update statement for an action
@@ -110,9 +107,9 @@ class ActionDatabase(object):
     
     @decorators.multi_commit_cursor
     def perform_update(self,body,cursor=None):
-
         action = ujson.loads(body)
-        self.assert_required_params(["action_id"]) 
+        self.assert_required_params(["id"]) 
+        action_id = self.get_argument("id")
 
         action['fields'] = self.make_set_fields(action)
         cursor.execute(UPDATE_ACTION % action)
@@ -120,21 +117,20 @@ class ActionDatabase(object):
         to_add, to_remove = self.get_pattern_diff(action)
 
         for url in to_add:
-            pattern = self.make_pattern_object(action["action_id"], url) 
+            pattern = self.make_pattern_object(action_id, url) 
             cursor.execute(INSERT_ACTION_PATTERNS % pattern)
 
         for url in to_remove:
-            pattern = self.make_pattern_object(action["action_id"], url) 
+            pattern = self.make_pattern_object(action_id, url) 
             cursor.execute(DELETE_ACTION_PATTERNS % pattern)
-                 
 
         return action
 
     @decorators.multi_commit_cursor
     def perform_delete(self,cursor=None):
-        self.assert_required_params(["action_id"])
+        self.assert_required_params(["id"])
 
-        action_id = self.get_argument("action_id",False)
+        action_id = self.get_argument("id")
         action = {"action_id":action_id}
             
         cursor.execute(DELETE_ACTION % action)
@@ -151,7 +147,7 @@ class ActionDatabase(object):
 
         action["advertiser"] = action.get("advertiser",self.current_advertiser_name)
 
-        self.assert_required(action,self.required_cols) 
+        self.assert_required(action,self.required_cols)
         
         cursor.execute(INSERT_ACTION % action)
         action_id = cursor.lastrowid

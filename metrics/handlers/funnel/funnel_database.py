@@ -39,8 +39,8 @@ class FunnelDatabase(FunnelHelpers):
 
     def update_funnel(self,body):
         funnel = ujson.loads(body)
-        self.assert_required_params(["funnel_id"])
-        funnel_id = self.get_argument("funnel_id")
+        self.assert_required_params(["id"])
+        funnel_id = self.get_argument("id")
 
         if "advertiser" not in funnel:
             funnel["advertiser"] = self.current_advertiser_name
@@ -52,15 +52,15 @@ class FunnelDatabase(FunnelHelpers):
 
     def insert_funnel(self,body):
         funnel = ujson.loads(body)
-        self.assert_not_present(funnel, ["funnel_id"])
+        self.assert_not_present(funnel, ["id"])
         self.assert_required(funnel, self.required_cols)
 
         funnel = self.perform_insert(funnel)
         return funnel
 
     def delete_funnel(self):
-        self.assert_required_params(["funnel_id"])
-        funnel_id = self.get_argument("funnel_id",False)
+        self.assert_required_params(["id"])
+        funnel_id = self.get_argument("id",False)
         self.perform_delete({"funnel_id": funnel_id})
         return "Funnel id %s deleted successfully." % funnel_id
 

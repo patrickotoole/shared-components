@@ -44,7 +44,7 @@ class ActionHandler(BaseHandler,ActionAuth,APIHelpers,ActionDatabase):
     @tornado.web.authenticated
     def get(self):
         advertiser = self.get_argument("advertiser", self.current_advertiser_name)
-        action_id = self.get_argument("action_id",False)
+        action_id = self.get_argument("id",False)
 
         try:
             if action_id:

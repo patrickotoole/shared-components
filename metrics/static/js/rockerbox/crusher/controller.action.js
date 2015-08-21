@@ -23,7 +23,7 @@ RB.crusher.controller.action = (function(action) {
       crusher.ui.action.select({})
     },
     delete: function(action){
-      d3.xhr(actionURL + "&action_id=" + action.action_id)
+      d3.xhr(actionURL + "&id=" + action.action_id)
         .header("Content-Type", "application/json")
         .send(
           "DELETE",
@@ -47,7 +47,7 @@ RB.crusher.controller.action = (function(action) {
 
       cdata['advertiser'] = source
 
-      d3.xhr(actionURL)
+      d3.xhr(actionURL + "&id=" + data["action_id"])
         .header("Content-Type", "application/json")
         .send(type,
           JSON.stringify(cdata),

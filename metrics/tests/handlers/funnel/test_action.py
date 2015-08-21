@@ -116,17 +116,17 @@ class ActionTest(AsyncHTTPTestCase):
         
         action_put_json = ujson.loads(action_put)['error']
 
-        self.assertEqual(action_put_json,"Missing the following parameters: action_id")
+        self.assertEqual(action_put_json,"Missing the following parameters: id")
 
 
         action_json['action_id'] = action_get_json[0]['action_id']
         action_post = self.fetch("/?format=json&",method="POST",body=ujson.dumps(action_json)).body
         action_post_json = ujson.loads(action_put)['error']
 
-        self.assertEqual(action_put_json,"Missing the following parameters: action_id") 
+        self.assertEqual(action_put_json,"Missing the following parameters: id") 
 
 
-        action_put = self.fetch("/?format=json&action_id=%s" % action_json['action_id'],method="PUT",body=ujson.dumps(action_json)).body
+        action_put = self.fetch("/?format=json&id=%s" % action_json['action_id'],method="PUT",body=ujson.dumps(action_json)).body
         action_put_json = ujson.loads(action_put)['response']
 
         self.assertEqual(action_put_json['action_name'],"NEW NAME") 
@@ -136,7 +136,7 @@ class ActionTest(AsyncHTTPTestCase):
         self.assertEqual(len(df),2)
 
         action_json['url_pattern'] = ["only_one"]
-        action_put = self.fetch("/?format=json&action_id=%s" % action_json['action_id'],method="PUT",body=ujson.dumps(action_json)).body
+        action_put = self.fetch("/?format=json&id=%s" % action_json['action_id'],method="PUT",body=ujson.dumps(action_json)).body
         action_put_json = ujson.loads(action_put)['response']
 
         self.assertEqual(action_put_json['url_pattern'],["only_one"]) 

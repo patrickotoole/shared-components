@@ -240,11 +240,11 @@ class FunnelTest(AsyncHTTPTestCase):
         from_put = self.fetch("/?format=json", method="PUT",body=ujson.dumps(obj))
 
         body = ujson.loads(from_put.body)
-        self.assertTrue("Missing the following parameters: funnel_id" in body["response"])
+        self.assertTrue("Missing the following parameters: id" in body["response"])
 
         # changing order of funnel 
         obj['funnel_id'] = 1
-        from_put = self.fetch("/?format=json&funnel_id=%s" % 1, method="PUT",body=ujson.dumps(obj))
+        from_put = self.fetch("/?format=json&id=%s" % 1, method="PUT",body=ujson.dumps(obj))
         from_put_json = ujson.loads(str(from_put.body))
         
         self.assertEqual(from_put_json['response'],obj)
@@ -269,7 +269,7 @@ class FunnelTest(AsyncHTTPTestCase):
 
         # deleting action from funnel
         obj['actions'] = obj['actions'][:1]
-        from_put = self.fetch("/?format=json&funnel_id=%s" % 1, method="PUT",body=ujson.dumps(obj))
+        from_put = self.fetch("/?format=json&id=%s" % 1, method="PUT",body=ujson.dumps(obj))
         from_put_json = ujson.loads(str(from_put.body))
         
         self.assertEqual(from_put_json['response'],obj)
@@ -286,7 +286,7 @@ class FunnelTest(AsyncHTTPTestCase):
 
         # adding action to funnel
         obj['actions'] = stored_actions
-        from_put = self.fetch("/?format=json&funnel_id=%s" % 1, method="PUT",body=ujson.dumps(obj))
+        from_put = self.fetch("/?format=json&id=%s" % 1, method="PUT",body=ujson.dumps(obj))
         from_put_json = ujson.loads(str(from_put.body))
         
         self.assertEqual(from_put_json['response'],obj)

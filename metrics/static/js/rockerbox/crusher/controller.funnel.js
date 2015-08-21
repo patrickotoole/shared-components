@@ -31,7 +31,7 @@ RB.crusher.controller.funnel = (function(funnel) {
         var cdata = JSON.parse(JSON.stringify(d)),
           type = data['funnel_id'] ? "PUT" : "POST";
 
-        d3.xhr(funnelURL + "&funnel_id=" + data.funnel_id)
+        d3.xhr(funnelURL + "&id=" + data.funnel_id)
           .header("Content-Type", "application/json")
           .send(type, JSON.stringify(cdata), function(err, rawData){
             var resp = JSON.parse(rawData.response).response
@@ -43,7 +43,7 @@ RB.crusher.controller.funnel = (function(funnel) {
       },"save_funnel",true,true)
     },
     delete: function(data,parent_data,funnel) {
-      d3.xhr(funnelURL + "&funnel_id=" + data.funnel_id)
+      d3.xhr(funnelURL + "&id=" + data.funnel_id)
         .header("Content-Type", "application/json")
         .send("DELETE", function(err, rawData){
 
