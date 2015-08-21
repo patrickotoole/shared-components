@@ -53,7 +53,8 @@ class LoginHandler(tornado.web.RequestHandler):
                 self.write(ujson.dumps(from_db.T.to_dict().values()[0]))
                 self.finish()
                 return
-
+            logger.info(self.request)
+            logger.info(self.request.host)
             host = self.request.host
             if host == "crusher.getrockerbox.com":
                 self.redirect(self.get_argument("next", "/crusher", True))
