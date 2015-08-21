@@ -68,12 +68,9 @@ class ActionTest(AsyncHTTPTestCase):
         self.db.execute("DROP TABLE action")
         self.db.execute("DROP TABLE action_patterns")
         
-    def test_get(self):
-        
+    def test_get(self):        
         _a = ujson.loads(self.fetch("/?format=json&advertiser=alan",method="GET").body)
         _b = ujson.loads(self.fetch("/?format=json&advertiser=will",method="GET").body)
-
-        
         
         self.assertEqual(len(_a["response"]),1)
         self.assertEqual(len(_b["response"]),1)
@@ -92,6 +89,13 @@ class ActionTest(AsyncHTTPTestCase):
         ojson = ujson.loads(action_json)
         self.assertEqual(ajson['response']['action_name'],ojson['action_name'])
         self.assertEqual(ajson['response']['url_pattern'],ojson['url_pattern']) 
+
+    def test_put_param_check(self):
+        action_put = self.fetch("/?format=json", method="PUT", body=ujson.dumps("{}")).body
+        action_put_json = ujson.loads(action_put)["error"]
+
+        expected = "Missing the following parameters: id"
+        self.assertEqual(action_put_json, expected)
  
     def test_update(self):
         action_string = """
@@ -112,19 +116,9 @@ class ActionTest(AsyncHTTPTestCase):
         
         action_json = ujson.loads(action_string)
         action_json['action_name'] = "NEW NAME" 
-        action_put = self.fetch("/?format=json&",method="PUT",body=ujson.dumps(action_json)).body
-        
-        action_put_json = ujson.loads(action_put)['error']
-
-        self.assertEqual(action_put_json,"Missing the following parameters: id")
-
 
         action_json['action_id'] = action_get_json[0]['action_id']
         action_post = self.fetch("/?format=json&",method="POST",body=ujson.dumps(action_json)).body
-        action_post_json = ujson.loads(action_put)['error']
-
-        self.assertEqual(action_put_json,"Missing the following parameters: id") 
-
 
         action_put = self.fetch("/?format=json&id=%s" % action_json['action_id'],method="PUT",body=ujson.dumps(action_json)).body
         action_put_json = ujson.loads(action_put)['response']

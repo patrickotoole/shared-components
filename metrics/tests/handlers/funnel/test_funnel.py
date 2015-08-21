@@ -170,7 +170,41 @@ class FunnelTest(AsyncHTTPTestCase):
     def test_get(self):
         body = self.fetch("/?format=json&advertiser=baublebar", method="GET").body
 
-        expected = [{"owner":"waikiki","advertiser":"baublebar","funnel_name":"landing+earings","actions":[{"url_pattern":["alans_pattern","alans_pattern2"],"action_name":"alans_action","action_id":1,"order":1},{"order":2,"url_pattern":["wills_pattern","wills_pattern_again"],"action_name":"wills_action","action_id":2}],"funnel_id":1},{"owner":"makiki","advertiser":"baublebar","funnel_name":"other","actions":[],"funnel_id":2}]
+        expected = [
+            {
+                "actions": [
+                    {
+                        "action_id": 1, 
+                        "action_name": "alans_action", 
+                        "order": 1, 
+                        "url_pattern": [
+                            "alans_pattern", 
+                            "alans_pattern2"
+                            ]
+                        }, 
+                    {
+                        "action_id": 2, 
+                        "action_name": "wills_action", 
+                        "order": 2, 
+                        "url_pattern": [
+                            "wills_pattern", 
+                            "wills_pattern_again"
+                            ]
+                        }
+                    ], 
+                "advertiser": "baublebar", 
+                "funnel_id": 1, 
+                "funnel_name": "landing+earings", 
+                "owner": "waikiki"
+                }, 
+            {
+                "actions": [], 
+                "advertiser": "baublebar", 
+                "funnel_id": 2, 
+                "funnel_name": "other", 
+                "owner": "makiki"
+                }
+            ]
 
         actual = ujson.loads(body)
 
@@ -180,7 +214,41 @@ class FunnelTest(AsyncHTTPTestCase):
 
     def test_get_logged_in(self):
         body = self.fetch("/?format=json", method="GET").body
-        expected = [{"owner":"waikiki","advertiser":"baublebar","funnel_name":"landing+earings","actions":[{"url_pattern":["alans_pattern","alans_pattern2"],"action_name":"alans_action","action_id":1,"order":1},{"order":2,"url_pattern":["wills_pattern","wills_pattern_again"],"action_name":"wills_action","action_id":2}],"funnel_id":1},{"owner":"makiki","advertiser":"baublebar","funnel_name":"other","actions":[],"funnel_id":2}]
+        expected =[
+            {
+                "actions": [
+                    {
+                        "action_id": 1, 
+                        "action_name": "alans_action", 
+                        "order": 1, 
+                        "url_pattern": [
+                            "alans_pattern", 
+                            "alans_pattern2"
+                            ]
+                        }, 
+                    {
+                        "action_id": 2, 
+                        "action_name": "wills_action", 
+                        "order": 2, 
+                        "url_pattern": [
+                            "wills_pattern", 
+                            "wills_pattern_again"
+                            ]
+                        }
+                    ], 
+                "advertiser": "baublebar", 
+                "funnel_id": 1, 
+                "funnel_name": "landing+earings", 
+                "owner": "waikiki"
+                }, 
+            {
+                "actions": [], 
+                "advertiser": "baublebar", 
+                "funnel_id": 2, 
+                "funnel_name": "other", 
+                "owner": "makiki"
+                }
+            ]
 
         actual = ujson.loads(body)
         

@@ -54,7 +54,10 @@ class LoginHandler(tornado.web.RequestHandler):
                 self.finish()
                 return
 
-            if from_db['show_reporting'][0] == 0:
+            host = self.request.host
+            if host == "crusher.getrockerbox.com":
+                self.redirect(self.get_argument("next", "/crusher", True))
+            elif from_db['show_reporting'][0] == 0:
                 self.redirect(self.get_argument("next", "/advertiser", True))
             else:
                 self.redirect(self.get_argument("next", "/reporting", True))
