@@ -2,11 +2,34 @@ import tornado.web
 import logging
 import sys
 import ujson
+from lib.helpers import *
+from base import BaseHandler
 import lib.password_hash as password_hash
 
 logger = logging.getLogger('tcpserver')
 
-USER_QUERY = "SELECT id, username, advertiser_id, password from user where username = '%s'"
+PERMISSIONS_QUERY = """
+SELECT 
+    pixel_source_name, 
+    external_advertiser_id, 
+    advertiser_name
+FROM user a JOIN user_permissions b on (a.id = b.user_id) 
+    JOIN permissions_advertiser USING (permissions_id) 
+    JOIN advertiser USING (external_advertiser_id) 
+WHERE a.username = '%s'
+"""
+
+USER_QUERY = """
+SELECT DISTINCT 
+    user.id as id, 
+    username, 
+    advertiser_id as external_advertiser_id,
+    password,
+    advertiser_name, 
+    pixel_source_name
+FROM user 
+    JOIN advertiser ON (user.advertiser_id = advertiser.external_advertiser_id)
+WHERE username = '%s'"""
 
 pw_hash = password_hash.PasswordHash()
 
@@ -31,7 +54,10 @@ class LoginHandler(tornado.web.RequestHandler):
                 self.finish()
                 return
 
-            if from_db['show_reporting'][0] == 0:
+            host = self.request.host
+            if host == "crusher.getrockerbox.com":
+                self.redirect(self.get_argument("next", "/crusher", True))
+            elif from_db['show_reporting'][0] == 0:
                 self.redirect(self.get_argument("next", "/advertiser", True))
             else:
                 self.redirect(self.get_argument("next", "/reporting", True))
@@ -47,7 +73,7 @@ class LoginHandler(tornado.web.RequestHandler):
         if not df.empty:
             dict_ = df.to_dict(outtype='records')[0]
             pw = dict_.get('password')
-            aid = dict_.get('advertiser_id')
+            aid = dict_.get('external_advertiser_id')
             if self._check_password(password, pw):
                 self.set_secure_cookie("advertiser",str(aid))
                 self.set_secure_cookie("user",username)
@@ -93,4 +119,61 @@ class SignupHandler(tornado.web.RequestHandler):
         except:
             self.write("failure")
 
+class AccountPermissionsHandler(BaseHandler):
+    def initialize(self,db=None):
+        self.db = db
 
+    def get_user_permissions(self, username):
+        df = self.db.select_dataframe(PERMISSIONS_QUERY % username)
+        
+        # If this user doesn't have permissions, default to the advertiser
+        # assigned to them in the USER table
+        if len(df) > 0:
+            permissions = Convert.df_to_values(df)
+            return permissions
+        else:
+            df = self.db.select_dataframe(USER_QUERY % username)
+            cols = [
+                "external_advertiser_id",
+                "pixel_source_name",
+                "advertiser_name"
+            ]
+            df = df[cols]
+            return Convert.df_to_values(df)
+
+    @tornado.web.authenticated
+    def get(self):
+        advertiser = self.get_argument("advertiser_id", False)
+        u = self.get_current_user()
+        current_advertiser = self.current_advertiser
+        
+        permissions = self.get_user_permissions(u)
+
+        for p in permissions:
+            if str(p["external_advertiser_id"]) == str(current_advertiser):
+                p["selected"] = True
+            else:
+                p["selected"] = False
+
+        self.write(ujson.dumps({"results": permissions}))
+
+    @tornado.web.authenticated
+    def post(self):
+        posted = ujson.loads(self.request.body)
+        advertiser = str(posted["advertiser_id"])
+
+        u = self.get_current_user()
+
+        permissions = self.get_user_permissions(u)
+
+        # If the user specified an advertiser to switch to, make sure they have
+        # permissions for that advertiser and then change their cookie
+        if advertiser:
+            print advertiser
+            print permissions, advertiser
+            if [p for p in permissions 
+                if str(p['external_advertiser_id']) == str(advertiser)]:
+                self.set_secure_cookie("advertiser", advertiser)
+            else:
+                self.write("{\"error\": \"not permitted to switch to this advertiser\"}")
+        self.finish()

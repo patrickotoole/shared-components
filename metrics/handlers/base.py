@@ -1,5 +1,6 @@
 import tornado.web
 from link import lnk
+from lib.query.MYSQL import *
 #from ..lib.hive import Hive
 
 class BaseHandler(tornado.web.RequestHandler):
@@ -15,6 +16,26 @@ class BaseHandler(tornado.web.RequestHandler):
         if not hasattr(self, "_current_advertiser"):
             self._current_advertiser = self.get_current_advertiser()
         return self._current_advertiser
+
+    @property
+    def current_advertiser_name(self):
+        q = ADVERTISER_ID_TO_NAME % self.current_advertiser
+        df = self.db.select_dataframe(q)
+
+        if len(df) > 0:            
+            return df.name[0]
+        else:
+            return None
+
+    @property
+    def authorized_advertisers(self):
+        q = PERMISSIONS_QUERY % self.get_secure_cookie("user")
+        df = self.db.select_dataframe(q)
+
+        if len(df) > 0:            
+            return df.pixel_source_name.tolist()
+        else:
+            return [self.current_advertiser_name]
 
     def initialize(self):
         #self.db = lnk.dbs.mysql

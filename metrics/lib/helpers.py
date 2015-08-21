@@ -236,6 +236,32 @@ class Parse:
 class decorators:
 
     @staticmethod
+    def multi_commit_cursor(func):
+
+        def inner(self,*args,**kwargs):
+
+            try:
+                self.db.autocommit = False
+                conn = self.db.create_connection()
+                cur = conn.cursor()
+                kwargs['cursor'] = cur
+
+                result = func(self,*args,**kwargs)
+
+                conn.commit()
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                conn.rollback()
+                raise e
+            finally:
+                self.db.autocommit = True
+
+            return result
+                
+        return inner
+
+    @staticmethod
     def meta_enabled(func):
         def inner(self, *args, **kwargs):
             include = self.get_argument("include","").split(",")
@@ -464,3 +490,40 @@ class timeout:
 
 class TimeoutError(Exception):
         pass
+
+
+class APIHelpers(object):
+
+    def assert_not_present(self,obj,exclude):
+        has_cols = [ i for i in exclude if i in obj.keys() ]
+        
+        if len(has_cols) > 0:
+            raise Exception("Cannot contain the following: %s" % ', '.join(required) )
+
+
+    def assert_required(self,obj,required):
+        has_cols = [ i for i in required if i in obj.keys() ]
+        
+        if len(has_cols) != len(required):
+            raise Exception("required_columns: %s" % ', '.join(required) )
+
+    def assert_required_params(self,required):
+        missing = [key for key in required if self.get_argument(key,False) is False]
+        if len(missing) > 0:
+            raise Exception("Missing the following parameters: %s" % ",".join(missing) )
+           
+
+    def write_response(self,response, code="200"):
+        obj = { }
+
+        if code == "200":
+            obj["response"] = response
+            obj["status"] = "ok"
+        else:
+            print code
+            obj["error"] = response
+            obj["status"] = "error"
+
+        self.write(ujson.dumps(obj)) 
+        self.finish()
+

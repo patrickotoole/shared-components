@@ -9,7 +9,8 @@ class UserRoutes(Routes):
         return [
             (r'/', user.LoginHandler, self.connectors),
             (r'/login.*', user.LoginHandler, self.connectors),
-            (r'/signup*', user.SignupHandler, self.connectors)
+            (r'/signup*', user.SignupHandler, self.connectors),
+            (r'/account/permissions*', user.AccountPermissionsHandler, self.connectors)
         ]
  
 class AdvertiserRoutes(Routes):
@@ -76,9 +77,10 @@ class AdvertiserRoutes(Routes):
             (r'/visit_uids', analytics.VisitUidsHandler, self.connectors),
             (r'/search/(.*?)', analytics.SearchHandler, self.connectors),
             (r'/pattern_search/(.*?)', analytics.PatternSearchHandler, self.connectors),
-            (r'/multi_pattern_search/(.*?)', analytics.MultiPatternSearchHandler, self.connectors),
+            (r'/multi_search/(.*?)', analytics.MultiSearchHandler, self.connectors),
             (r'/visit_domains', analytics.VisitDomainsHandler, self.connectors),
             (r'/visit_avails', analytics.VisitAvailsHandler, self.connectors),
+            (r'/funnel/action/recommended', funnel.RecommendedActionHandler, self.connectors),
             (r'/funnel/campaign', funnel.FunnelCampaignHandler, self.connectors),
             (r'/funnel/lookalike_campaign', funnel.LookalikeCampaignHandler, self.connectors),
             (r'/funnel/action', funnel.ActionHandler, self.connectors),
@@ -87,6 +89,7 @@ class AdvertiserRoutes(Routes):
             (r'/funnel/lookalike/(.*?)', funnel.FunnelLookalikeHandler, self.connectors),
             (r'/funnel', funnel.FunnelHandler, self.connectors),
             (r'/?', funnel.FunnelHandler, self.connectors),
+            (r'/.*?', funnel.FunnelHandler, self.connectors),
             (r'/funnel/(.*?)', funnel.FunnelHandler, self.connectors)
         ]     
 

@@ -24,7 +24,7 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
         if not pattern:
             raise Exception("Must specify search term using search=")
 
-        filter_list = [FILTER % {"pattern": p} for p in pattern]
+        filter_list = [FILTER % {"pattern": p.lower()} for p in pattern]
         filters = ','.join(filter_list)
         lucene = LUCENE % {"filters": filters, "logic": logic}
         where = WHERE % {"advertiser":advertiser, "lucene":lucene}
@@ -58,7 +58,7 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
             
             return df
         except OperationTimedOut as exp:
-            import ipdb; ipdb.set_trace()
+            #import ipdb; ipdb.set_trace()
             return False
 
         

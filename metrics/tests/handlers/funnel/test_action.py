@@ -39,7 +39,8 @@ VALUES (2,0,0,"and","will","wills_action")
 
 class ActionTest(AsyncHTTPTestCase):
 
-    def get_app(self):
+    # same as in test_creative_reporting.py
+    def get_app(self):        
         self.db = lnk.dbs.test
 
         self.db.execute(CREATE_ACTION_TABLE) 
@@ -54,18 +55,25 @@ class ActionTest(AsyncHTTPTestCase):
           template_path="../../../templates"
         )
 
+        action.ActionHandler.authorized_advertisers = mock.Mock(return_value=["alan", "will"])
+        action.ActionHandler.current_advertiser = mock.Mock(return_value=123456)
+        action.ActionHandler.current_advertiser_name = mock.Mock(return_value="alan")
+
+        action.ActionHandler.get_current_user = mock.Mock()
+        action.ActionHandler.get_current_user.return_value = "test_user"
+
         return self.app
 
     def tearDown(self):
         self.db.execute("DROP TABLE action")
         self.db.execute("DROP TABLE action_patterns")
-
-    def test_get(self):
         
+    def test_get(self):        
         _a = ujson.loads(self.fetch("/?format=json&advertiser=alan",method="GET").body)
-        _b = ujson.loads(self.fetch("/?format=json&",method="GET").body)
-        self.assertEqual(len(_a),1)
-        self.assertEqual(len(_b),2)
+        _b = ujson.loads(self.fetch("/?format=json&advertiser=will",method="GET").body)
+        
+        self.assertEqual(len(_a["response"]),1)
+        self.assertEqual(len(_b["response"]),1)
 
     def test_post(self):
         action_json = """{
@@ -79,9 +87,15 @@ class ActionTest(AsyncHTTPTestCase):
 
         ajson = ujson.loads(_a)
         ojson = ujson.loads(action_json)
-        
         self.assertEqual(ajson['response']['action_name'],ojson['action_name'])
         self.assertEqual(ajson['response']['url_pattern'],ojson['url_pattern']) 
+
+    def test_put_param_check(self):
+        action_put = self.fetch("/?format=json", method="PUT", body=ujson.dumps("{}")).body
+        action_put_json = ujson.loads(action_put)["error"]
+
+        expected = "Missing the following parameters: id"
+        self.assertEqual(action_put_json, expected)
  
     def test_update(self):
         action_string = """
@@ -95,29 +109,18 @@ class ActionTest(AsyncHTTPTestCase):
         """
 
         action_posted = self.fetch("/?format=json&",method="POST",body=action_string).body
-        action_get_json = ujson.loads(self.fetch("/?format=json&advertiser=baublebar",method="GET").body)
+        action_get_json = ujson.loads(self.fetch("/?format=json&advertiser=baublebar",method="GET").body)['response']
 
         self.assertEqual(ujson.loads(action_string)['action_name'],action_get_json[0]['action_name'])
         self.assertEqual(ujson.loads(action_string)['url_pattern'],action_get_json[0]['url_pattern']) 
-
-
         
         action_json = ujson.loads(action_string)
         action_json['action_name'] = "NEW NAME" 
-        action_put = self.fetch("/?format=json&",method="PUT",body=ujson.dumps(action_json)).body
-        action_put_json = ujson.loads(action_put)['response']
-
-        self.assertEqual(action_put_json,"Need action_id to update action")
-
 
         action_json['action_id'] = action_get_json[0]['action_id']
         action_post = self.fetch("/?format=json&",method="POST",body=ujson.dumps(action_json)).body
-        action_post_json = ujson.loads(action_put)['response']
 
-        self.assertEqual(action_put_json,"Need action_id to update action") 
-
-
-        action_put = self.fetch("/?format=json&",method="PUT",body=ujson.dumps(action_json)).body
+        action_put = self.fetch("/?format=json&id=%s" % action_json['action_id'],method="PUT",body=ujson.dumps(action_json)).body
         action_put_json = ujson.loads(action_put)['response']
 
         self.assertEqual(action_put_json['action_name'],"NEW NAME") 
@@ -127,14 +130,10 @@ class ActionTest(AsyncHTTPTestCase):
         self.assertEqual(len(df),2)
 
         action_json['url_pattern'] = ["only_one"]
-        action_put = self.fetch("/?format=json&",method="PUT",body=ujson.dumps(action_json)).body
+        action_put = self.fetch("/?format=json&id=%s" % action_json['action_id'],method="PUT",body=ujson.dumps(action_json)).body
         action_put_json = ujson.loads(action_put)['response']
 
         self.assertEqual(action_put_json['url_pattern'],["only_one"]) 
 
         df = self.db.select_dataframe(Q % action_get_json[0]['action_id']) 
         self.assertEqual(len(df),1)
-          
-        
-        
-

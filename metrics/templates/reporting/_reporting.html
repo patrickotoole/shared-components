@@ -290,12 +290,13 @@ box-shadow: inset 0px 0px 5px 0px #CCC;
     addMixpanelEvent({{ advertiser_id }}, "{{ user_id }}", "load reporting");
   </script>
 	<script>					
-        
 		var extUserID =  {{ advertiser_id }};
 
 		$.getJSON("/api?table=advertiser&external_advertiser_id=" + extUserID, function(data){
-      $('#header #right-align #user-name').text(data[0].advertiser_name.toLowerCase());
-    })
+		    var advertiser_name = data[0].advertiser_name.toLowerCase();
+		    $('#header #right-align #user-name').text(advertiser_name);
+		});
+ 
 
     RB.portal.data.reporting(function(data){
 

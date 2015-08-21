@@ -31,19 +31,19 @@ RB.crusher.controller.funnel = (function(funnel) {
         var cdata = JSON.parse(JSON.stringify(d)),
           type = data['funnel_id'] ? "PUT" : "POST";
 
-        d3.xhr(funnelURL)
+        d3.xhr(funnelURL + "&id=" + data.funnel_id)
           .header("Content-Type", "application/json")
           .send(type, JSON.stringify(cdata), function(err, rawData){
             var resp = JSON.parse(rawData.response).response
             data['funnel_name'] = resp.funnel_name
             data['funnel_id'] = resp.funnel_id
             crusher.cache.funnelData.push(data)
-            callback(crusher.cache.funnelData)
+            callback(crusher.cache.funnelData,type)
           });
       },"save_funnel",true,true)
     },
     delete: function(data,parent_data,funnel) {
-      d3.xhr(funnelURL + "&funnel_id=" + data.funnel_id)
+      d3.xhr(funnelURL + "&id=" + data.funnel_id)
         .header("Content-Type", "application/json")
         .send("DELETE", function(err, rawData){
 
@@ -76,7 +76,7 @@ RB.crusher.controller.funnel = (function(funnel) {
         crusher.ui.funnel.show(funnel)
 
         crusher.subscribe.add_subscriber([domains], function(x) {
-          data.funnel_domains = x
+          data.funnel_domains = data.actions[data.actions.length-1].funnel_domains
           crusher.subscribe.add_subscriber(["tf_idf_funnel"], function(x) {
             crusher.ui.funnel.show.component.domains.bind(false,funnel)(x)
             crusher.ui.funnel.show.component.lookalike(funnel)

@@ -199,9 +199,10 @@ body {font-family:"ProximaNova",sans-serif; -webkit-font-smoothing: antialiased;
     console.log("// start things") 
     RB.init()  
 
-    var page = window.location.pathname.replace("/crusher/","")
-    RB.crusher.controller.init(page)
+    var page = window.location.pathname//.replace("/crusher/","")
+    
     RB.menu.render(d3.select("body"))
+    RB.crusher.controller.init(page)
 
     console.log("// finish things")
   })

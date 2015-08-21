@@ -9,7 +9,7 @@ RB.crusher.controller.action = (function(action) {
   var crusher = RB.crusher
 
   var source = crusher.api.source 
-  var actionURL = "/crusher/funnel/action?format=json&advertiser=" + source
+  var actionURL = "/crusher/funnel/action?format=json"
   var visitUID = "/crusher/visit_uids?format=json&url="
 
   action = {
@@ -23,7 +23,7 @@ RB.crusher.controller.action = (function(action) {
       crusher.ui.action.select({})
     },
     delete: function(action){
-      d3.xhr(actionURL + "&action_id=" + action.action_id)
+      d3.xhr(actionURL + "&id=" + action.action_id)
         .header("Content-Type", "application/json")
         .send(
           "DELETE",
@@ -47,7 +47,7 @@ RB.crusher.controller.action = (function(action) {
 
       cdata['advertiser'] = source
 
-      d3.xhr(actionURL)
+      d3.xhr(actionURL + "&id=" + data["action_id"])
         .header("Content-Type", "application/json")
         .send(type,
           JSON.stringify(cdata),
@@ -55,14 +55,17 @@ RB.crusher.controller.action = (function(action) {
             var resp = JSON.parse(rawData.response)
             data['action_id'] = resp['response']['action_id']
             obj.filter(function(){return this}).datum(data)
+
             RB.routes.navigation.back()
-            RB.routes.navigation.forward({
-              "name": "View Existing Actions",
-              "push_state":"/crusher/action/existing",
-              "skipRender": true,
-              "values_key":"action_name"
-            })
-            RB.routes.navigation.forward(data)
+            setTimeout(function(){
+              RB.routes.navigation.forward({
+                "name": "View Existing Actions",
+                "push_state":"/crusher/action/existing",
+                "skipRender": true,
+                "values_key":"action_name"
+              })
+              RB.routes.navigation.forward(data)
+            },1)
 
           }
         );                    

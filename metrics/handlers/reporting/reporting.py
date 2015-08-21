@@ -109,7 +109,6 @@ class ReportingHandler(BaseHandler,ReportingBase):
 
         yield default, (data,)
  
-
     @defer.inlineCallbacks 
     def get_data(self,_format,export):
 

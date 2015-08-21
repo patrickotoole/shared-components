@@ -24,3 +24,4 @@ slackclient
 dnspython
 boto
 py-pretty
+datadiff

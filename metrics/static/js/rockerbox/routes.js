@@ -1,13 +1,6 @@
 RB = window.RB || {}
 
 RB.routes = (function(routes) {
-  try {
-    var source = "advertiser=" + window.location.search.split("source=")[1].split("&")[0]
-  } catch(e) {
-    try {
-      var source = "advertiser=" + window.location.search.split("advertiser=")[1].split("&")[0]
-    } catch(e) {}
-  }
 
   routes.transforms = {}
   routes.apis = {}
@@ -109,7 +102,7 @@ RB.routes = (function(routes) {
           "name": x["name"]
         }
 
-        history[stateAction](state, x["name"],x.push_state + "?" + source)
+        history[stateAction](state, x["name"],x.push_state )
         __back__.push(x)
       }
 

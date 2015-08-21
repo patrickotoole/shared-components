@@ -55,57 +55,6 @@ RB.crusher.api = (function(api) {
     }
   }
 
-  /*var genericQueuedAPI = function(fn) {
-
-    var serviceQueue = function() {
-      this.callback_queue = []
-      this.get_queue = function() {
-        if (!this.__queue__) this.__queue__ = queue()
-        return this.__queue__ 
-      }
-      this.set_queue = function(q) {
-        this.__queue__ = this.__queue__ || q
-        return this.__queue__
-      }
-      this.remove_queue = function() { 
-        this.__queue__ = undefined
-      }
-
-      this.run_callbacks = function() {
-        var args = arguments
-        this.callback_queue.map(function(cb){
-          if (typeof(cb) == "function") cb.apply(null,args)
-        })
-        this.remove_queue()
-        this.clear_callbacks()
-      }
-
-      this.clear_callbacks = function() {
-        this.callback_queue = []
-      }
-    } 
-
-    var self = new serviceQueue()
-
-    return function(cb,extq) {
-      
-      var q = (extq) ? self.set_queue(extq) : self.get_queue()   
-      self.callback_queue.push(cb)
-
-      console.log(self.callback_queue,q)
-
-      if (self.callback_queue.length == 1) { 
-        var bound = fn.bind(false,self.run_callbacks)
-        var d =  q.defer(bound)   
-      } 
-
-      if (!extq) return q.await(function(err,cb1){ cb1() })
-      else return q
-
-    }
-  }  
-  */
-
   api.helpers = {
     attachCampaigns: function(){
       crusher.cache.funnelData.map(function(x){
@@ -163,19 +112,25 @@ RB.crusher.api = (function(api) {
 
   api.URL = {
     source: qs.advertiser,
-    actionURL: "/crusher/funnel/action?format=json&advertiser=" + source,
-    actionUIDs: "/crusher/pattern_search/uids?advertiser=" + source + "&search=",
-    funnelUIDs: "/crusher/multi_pattern_search/uids?advertiser=" + source + "&search=",
-    visitURL: "/crusher/visit_urls?format=json&source=" + source,
-    visitUID: "/crusher/visit_uids?format=json&url=",
-    visitDomains: "/crusher/visit_domains?format=json&kind=domains",
-    visitAvails: "/crusher/visit_avails?format=json",
+    actionURL: "/crusher/funnel/action?format=json",
+    actionUIDs: "/crusher/pattern_search/uids?search=",
+
+    funnelUIDs: "/crusher/multi_search/uids?search=",
+    funnelAvails: "/crusher/multi_search/avails?search=",
+    funnelDomains: "/crusher/multi_search/domains?search=",
+    recommendedActions: "/crusher/funnel/action/recommended",
+
+
+    //visitURL: "/crusher/visit_urls?format=json&source=" + source, // TODO: TEST IF THIS BEING USED
+    //visitUID: "/crusher/visit_uids?format=json&url=",
+    //visitDomains: "/crusher/visit_domains?format=json&kind=domains",
+    //visitAvails: "/crusher/visit_avails?format=json",
 
     campaigns: "/crusher/funnel/campaign?advertiser=" + source,
     lookalikeCampaigns: "/crusher/funnel/lookalike_campaign?advertiser=" + source,
     lookalikes: "/crusher/funnel/lookalike?format=json&advertiser=" + source,
 
-    funnelURL: "/crusher/funnel?format=json&advertiser=" + source,
+    funnelURL: "/crusher/funnel?format=json",
     current: addParam(window.location.pathname + window.location.search,"format=json")
   }
 
@@ -252,7 +207,7 @@ RB.crusher.api = (function(api) {
       }),
       campaigns: new genericQueuedAPI(function(cb,deferred_cb) {
 
-        if (!cache.actionData) {
+        if (!cache.actionData || !cache.campaign_map) {
           d3.json(api.URL.campaigns,function(campaigns){
             cache.campaigns = campaigns 
             cache.campaign_map = d3.nest()
@@ -271,7 +226,7 @@ RB.crusher.api = (function(api) {
 
         if (!cache.actionData) {
           d3.json(api.URL.actionURL,function(actions){
-            cache.actionData = actions
+            cache.actionData = actions.response
             if (cache.urls_wo_qs) cache.actionData.map(function(x) { x.values = cache.urls_wo_qs })
             deferred_cb(null,cb)
           })
@@ -280,22 +235,16 @@ RB.crusher.api = (function(api) {
           deferred_cb(null,cb)
         }
       }),
-      recommended_actions: function(cb,extq) {
-        console.log("in reccommended")
-        var q = extq || queue(2)
+      recommended_actions: new genericQueuedAPI(function(cb,deferred_cb) {
+        
+        if (!cache.recommendations) {
+          d3.json(api.URL.recommendedActions,function(recommendations){
+            cache.recommendations = recommendations
+            deferred_cb(null,cb)
+          })
+        }
 
-        endpoints.actions(function(){},q)
-        endpoints.visits(function(){},q)
-
-        console.log("just put two items on the queue")
-
-        if (extq) return extq
-        else q.awaitAll(function(err,cbs) {
-          cbs.map(function(fn){if (typeof(fn) == "function") fn()})
-          cb()
-        }) 
-
-      },
+      }),
       funnels: genericQueuedAPI(function(cb,deferred_cb) {
 
         if (!cache.funnelData) {
@@ -337,22 +286,63 @@ RB.crusher.api = (function(api) {
           deferred_cb(null,cb)
         }
       }),
-      funnelUIDs: genericQueuedAPI(function(funnel_actions,deferred_cb) {
+      funnelUIDs: genericQueuedAPI(function(funnel,deferred_cb) {
+        var funnel_actions = funnel.actions
         var patterns = funnel_actions.map(function(action) { return action.url_pattern })
         var action_strings = patterns.map(function(pattern){
           return pattern.map(function(p){ return p.split(" ").join(",") })
         })
-        var pattern_strings = action_strings.join("|")
-        var funnel_string = action_strings.join(">")
+        var pattern_strings = action_strings.map(function(patterns){ return patterns.join("|")})
+        var funnel_string = pattern_strings.join(">")
 
         d3.json(api.URL.funnelUIDs + funnel_string,function(dd){
           var previous = false
+          funnel.union_size = dd.summary.union_size
+          funnel.intersection_size = dd.summary.intersection_size
+          
           funnel_actions.map(function(action,i){
             action.uids = dd.results[i].uids
             action.funnel_uids = dd.results[i].uids
             action.funnel_count = dd.results[i].count
+            action.total_count = dd.results[i].total_count
             action.funnel_percent = (previous === false) ? 1 : action.funnel_count/previous
             previous = action.funnel_count
+          })
+          deferred_cb(null,funnel_actions)
+        })
+        
+      }),
+      funnelDomains: genericQueuedAPI(function(funnel_actions,deferred_cb) {
+        var patterns = funnel_actions.map(function(action) { return action.url_pattern })
+        var action_strings = patterns.map(function(pattern){
+          return pattern.map(function(p){ return p.split(" ").join(",") })
+        })
+        var pattern_strings = action_strings.map(function(patterns){ return patterns.join("|")})
+        var funnel_string = pattern_strings.join(">")
+
+        d3.json(api.URL.funnelDomains + funnel_string,function(dd){
+          funnel_actions.map(function(action,i){
+            action.funnel_domains = dd.results[i].domains
+          })
+          deferred_cb(null,funnel_actions)
+        })
+        
+      }),
+      funnelAvails: genericQueuedAPI(function(funnel_actions,deferred_cb) {
+        var patterns = funnel_actions.map(function(action) { return action.url_pattern })
+        var action_strings = patterns.map(function(pattern){
+          return pattern.map(function(p){ return p.split(" ").join(",") })
+        })
+        var pattern_strings = action_strings.map(function(patterns){ return patterns.join("|")})
+        var funnel_string = pattern_strings.join(">")
+
+        d3.json(api.URL.funnelAvails + funnel_string,function(dd){
+          funnel_actions.map(function(action,i){
+            action.avails_raw = {
+              "avails": dd.results[i].avails,
+              "total": dd.results[i].count
+            }
+            action.funnel_avails = dd.results[i].avails
           })
           deferred_cb(null,funnel_actions)
         })

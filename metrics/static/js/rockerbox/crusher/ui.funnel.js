@@ -61,13 +61,24 @@ RB.crusher.ui.funnel = (function(funnel) {
       var show = d3_updateable(this_funnel,".show","div").classed("show",true)
 
       data.funnel_name = this_funnel.selectAll("input.funnel-name").property("value")
-      crusher.controller.funnel.save(data,function(){})
+      crusher.controller.funnel.save(data,function(x,TYPE){
+        
+        funnel.register_publishers(show.datum()) // dont forget to register the funnel before showing it!
+        
+        RB.routes.navigation.back()
+        setTimeout(function(){
+          RB.routes.navigation.forward({
+            "name": "View Existing Funnels",
+            "push_state":"/crusher/funnel/existing",
+            "skipRender": true,
+            "values_key":"funnel_name"    
+          })
+          RB.routes.navigation.forward(data)
+        },1)
+        
+      })
 
-      crusher.controller.funnel.show(
-        show.datum(),
-        funnel.show.bind(false,show),
-        funnel.wait.bind(false,show)
-      )
+
 
     },
     compute_uniques: function(actions) {
@@ -122,24 +133,11 @@ RB.crusher.ui.funnel = (function(funnel) {
 
     crusher.subscribe.register_publisher(uids,function(cb,data){
 
-      // this is where we get all the UID stuff
+      // this is where we get all the UID information to display the funnel
 
       var q = queue(5)
-      crusher.api.funnelUIDs(data.actions,q)
-      /*var newSteps = data.actions.filter(function(action){
-        crusher.api.actionToUIDs(action,q)
-        return !action.visits_data
-      })*/
-
-      //if (newSteps.length > 0) {
-      if (true) {
-        q.awaitAll(function(){
-          //crusher.ui.funnel.methods.compute_uniques(data.actions)
-          cb.apply(false,arguments)
-        })
-      } else {
-        q.awaitAll(cb)
-      }
+      crusher.api.funnelUIDs(data,q)
+      q.awaitAll(function(){ cb.apply(false,arguments) })
 
     })
 
@@ -147,21 +145,20 @@ RB.crusher.ui.funnel = (function(funnel) {
 
       // this is where we get all the availability info
 
-      var p = queue(5)
-      data.actions.map(function(action) { 
-        crusher.api.actionToAvails(function(){},action,p)
-      })
-      p.awaitAll(function(){
-        cb(data.actions)
-      })
+      var q = queue(5)
+      crusher.api.funnelAvails(data.actions,q)
+      q.awaitAll(function(){ cb.apply(false,arguments) })
+      
     })
 
     crusher.subscribe.register_publisher(domains,function(cb,data){
 
       //this is where we get all the domains from the UIDs
 
-      var last = data.actions[data.actions.length - 1].funnel_uids
-      crusher.api.UIDsToDomains(cb,last)
+      var q = queue(5)
+      crusher.api.funnelDomains(data.actions,q)
+      q.awaitAll(function(){ cb.apply(false,arguments) })
+
     })
 
 
