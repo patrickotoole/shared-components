@@ -9,7 +9,7 @@ from twisted.internet import defer
 from lib.helpers import *
 from cassandra import OperationTimedOut
 
-QUERY  = """SELECT %(what)s FROM rockerbox.visit_uids_lucene_timestamp_clustered %(where)s"""
+QUERY  = """SELECT %(what)s FROM rockerbox.rick_test_u1 %(where)s"""
 WHERE  = """WHERE source='%(advertiser)s' and lucene='%(lucene)s'"""
 LUCENE = """{ filter: { type: "boolean", %(logic)s: [%(filters)s]}}"""
 FILTER = """{ type:"wildcard", field: "url", value: "*%(pattern)s*"}"""
@@ -60,30 +60,73 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
 
             # build a list of futures
             futures = []
+            queries = []
             self.logging.info(filters)
             prefixes = range(1,10)
             for i in prefixes:
-                f = filters + """,{ type:"prefix", field: "uid", value: "%s" }""" % i
+                f = filters #+ """,{ type:"prefix", field: "uid", value: "%s" }""" % i
                 lucene = LUCENE % {"filters": f, "logic": logic}
                 where = WHERE % {"advertiser":advertiser, "lucene":lucene}
                 query = QUERY % {"what":selects, "where": where}
 
                 for date in dates:
                     date_str = " and date='%s'" % date # this needs to be parameterized to use different tables
-                    future = self.cassandra.execute_async(query + date_str)
-                    futures.append(future)
-                    host = future._current_host.address
-                    future.add_callbacks(callback=fuck_python_results(host,l,total),errback=fuck_python_errs(host,errs,total))
+                    date_str += " and u1 = %s" % i
+                    #future = self.cassandra.execute_async(query + date_str)
+                    #futures.append(future)
+                    #host = future._current_host.address
+                    #future.add_callbacks(callback=fuck_python_results(host,l,total),errback=fuck_python_errs(host,errs,total))
+                    queries.append(query + date_str)
+
+            from itertools import count
+            from threading import Event
+            print queries[0]
+            
+            sentinel = object()
+            num_queries = len(queries)
+            num_started = count()
+            num_finished = count()
+            finished_event = Event()
+            hosts = {}
+            error_hosts = {}
+            
+            def insert_next(previous_result=sentinel,host="",l=l):
+                f = 0
+                if type(previous_result) is list or isinstance(previous_result, BaseException):
+                    if isinstance(previous_result, BaseException):
+                        self.logging.error("Error on : %r %r", previous_result, host)
+                        error_hosts[host] = error_hosts.get(host,0) + 1
+                    else:
+                        l += previous_result
+                    f = num_finished.next()
+                    if f >= num_queries:
+                        finished_event.set()
+            
+                c = num_started.next()
+                print c,num_queries,c <= num_queries, f
+                if c <= num_queries:
+                    future = self.cassandra.execute_async(queries[c-1])
+                    hosts[future._current_host.address] = hosts.get(future._current_host.address,0) + 1
+                    future.add_callbacks(lambda x: insert_next(x,future._current_host.address,l), lambda x: insert_next(x,future._current_host.address))
+
+            print num_queries
+            
+            for i in range(min(80, num_queries)):
+                insert_next()
+            
+            finished_event.wait()
+            print "finished"
+            #import ipdb; ipdb.set_trace()
                     
                     
             
             # wait for them to complete and use the results
-            print len(prefixes), len(dates)
-            while len(total) < len(prefixes)*len(dates):
-                time.sleep(1) # dont need this sleep but its nice to print progress
-                print len(total)
-                pass
-            print "finished"
+            #print len(prefixes), len(dates)
+            #while len(total) < len(prefixes)*len(dates):
+            #    time.sleep(1) # dont need this sleep but its nice to print progress
+            #    print len(total)
+            #    pass
+            #print "finished"
                 #l += rows
             self.logging.info(start - time.time()) 
             self.logging.info(len(l))

@@ -9,10 +9,13 @@ class PatternSearchHelpers(object):
         return (l[0], l[1:])
 
     def calc_stats(self,df):
+
+        series = df["url"] + df["uid"]
+        
         return pandas.Series({
-            "num_users":len(set(df.uid.values)),
-            "num_visits":len(df.groupby(["url","uid"])),
-            "num_views":df.num_views.sum()
+            "num_users":len(df.uid.unique()),
+            "num_visits":len(series.unique()),#len(df.groupby(["url","uid"])),
+            "num_views":len(df)#.num_views.sum()
         })
 
     def group_count_view(self,df,terms,indices):

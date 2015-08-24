@@ -1,6 +1,7 @@
 import tornado.web
 import pandas
 import logging
+import time
 
 from search_base import SearchBase
 from pattern_search_helpers import PatternSearchHelpers
@@ -101,7 +102,7 @@ class PatternSearchBase(SearchBase,PatternSearchHelpers):
         for terms, result in zip(pattern_terms,frames):
             df = (yield result)[1]
             if len(df) > 0: 
-                dfs += [self.group_count_view(df,terms,indices)]
+                dfs += [df]#[self.group_count_view(df,terms,indices)]
         
         if len(dfs):
 
