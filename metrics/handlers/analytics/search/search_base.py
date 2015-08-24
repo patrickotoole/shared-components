@@ -116,9 +116,7 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
             
             finished_event.wait()
             print "finished"
-            #import ipdb; ipdb.set_trace()
-                    
-                    
+            #import ipdb; ipdb.set_trace()                    
             
             # wait for them to complete and use the results
             #print len(prefixes), len(dates)
@@ -130,7 +128,14 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
                 #l += rows
             self.logging.info(start - time.time()) 
             self.logging.info(len(l))
+
             df = pandas.DataFrame(l)
+            
+            # If the query contains a capital letter, filter out any results 
+            # that don't exactly match the query (case sensitive)
+            if [c for c in pattern[0] if c.isupper()]:
+                df = df[df.url.str.contains(pattern[0])]
+
             print errs
             
             
