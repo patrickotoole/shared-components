@@ -9,7 +9,7 @@ from twisted.internet import defer
 from lib.helpers import *
 from cassandra import OperationTimedOut
 
-QUERY  = """SELECT %(what)s FROM rockerbox.visit_uids_lucene_timestamp_clustered %(where)s"""
+QUERY  = """SELECT %(what)s FROM rockerbox.visit_uids_lucene_timestamp_u2_clustered %(where)s"""
 WHERE  = """WHERE source='%(advertiser)s' and lucene='%(lucene)s'"""
 LUCENE = """{ filter: { type: "boolean", %(logic)s: [%(filters)s]}}"""
 FILTER = """{ type:"wildcard", field: "url", value: "*%(pattern)s*"}"""
@@ -25,36 +25,119 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
             raise Exception("Must specify search term using search=")
 
         filter_list = [FILTER % {"pattern": p.lower()} for p in pattern]
-        filters = ','.join(filter_list)
-        lucene = LUCENE % {"filters": filters, "logic": logic}
-        where = WHERE % {"advertiser":advertiser, "lucene":lucene}
-        query = QUERY % {"what":selects, "where": where}
-
-        self.logging.info(query) 
-
-        import datetime
+        filters = ','.join(filter_list) 
+        
+        import datetime, time
         
         base = datetime.datetime.today()
         date_list = [base - datetime.timedelta(days=x) for x in range(0, numdays)]
         dates = map(lambda x: str(x).split(" ")[0] + " 00:00:00",date_list)
+
+        l = []
+        errs = []
+        total = []
+
+        def handle_results(host,l,total,rows):
+            l += rows
+            total += [1]
+            #print host
+            #print "total: %s" % len(total)
+            
+        def handle_error(host,errs,total,rows):
+            errs += [1]
+            total += [1]
+            print "errs: %s %s" % (len(errs),host)
+
+        def fuck_python_results(host,l,total):
+            return lambda x: handle_results(host,l,total,x)
+
+        def fuck_python_errs(host,l,total):
+            return lambda x: handle_error(host,l,total,x)
+
+
+        start = time.time()
         try:
 
             # build a list of futures
             futures = []
-            for date in dates:
-                self.logging.info(date)
-                date_str = " and date='%s'" % date # this needs to be parameterized to use different tables
-                futures.append(self.cassandra.execute_async(query + date_str))
+            queries = []
+            self.logging.info(filters)
+            prefixes = range(0,100)
+            for i in prefixes:
+                f = filters #+ """,{ type:"prefix", field: "uid", value: "%s" }""" % i
+                lucene = LUCENE % {"filters": f, "logic": logic}
+                where = WHERE % {"advertiser":advertiser, "lucene":lucene}
+                query = QUERY % {"what":selects, "where": where}
+
+                for date in (dates[-2:-1] + dates[:-1]):
+                    date_str = " and date='%s'" % date # this needs to be parameterized to use different tables
+                    date_str += " and u2 = %s" % i
+                    #future = self.cassandra.execute_async(query + date_str)
+                    #futures.append(future)
+                    #host = future._current_host.address
+                    #future.add_callbacks(callback=fuck_python_results(host,l,total),errback=fuck_python_errs(host,errs,total))
+                    queries.append(query + date_str)
+
+            from itertools import count
+            from threading import Event
+            print queries[0]
             
-            l = []
+            sentinel = object()
+            num_queries = len(queries)
+            num_started = count()
+            num_finished = count()
+            finished_event = Event()
+            hosts = {}
+            error_hosts = {}
+            
+            def insert_next(previous_result=sentinel,host="",l=l):
+                f = 0
+                if type(previous_result) is list or isinstance(previous_result, BaseException):
+                    if isinstance(previous_result, BaseException):
+                        self.logging.error("Error on : %r %r", previous_result, host)
+                        error_hosts[host] = error_hosts.get(host,0) + 1
+                    else:
+                        l += previous_result
+                    f = num_finished.next()
+                    if f >= num_queries:
+                        finished_event.set()
+            
+                c = num_started.next()
+                print c,num_queries,c <= num_queries, f
+                if c <= num_queries:
+                    future = self.cassandra.execute_async(queries[c-1])
+                    hosts[future._current_host.address] = hosts.get(future._current_host.address,0) + 1
+                    future.add_callbacks(lambda x: insert_next(x,future._current_host.address,l), lambda x: insert_next(x,future._current_host.address))
+
+            print num_queries
+            
+            for i in range(min(160, num_queries)):
+                insert_next()
+            
+            finished_event.wait()
+            print "finished"
+            #import ipdb; ipdb.set_trace()                    
+            
             # wait for them to complete and use the results
-            for future in futures:
-                rows = future.result()
-                l += rows
-            
-            print datetime.datetime.now()
-            
+            #print len(prefixes), len(dates)
+            #while len(total) < len(prefixes)*len(dates):
+            #    time.sleep(1) # dont need this sleep but its nice to print progress
+            #    print len(total)
+            #    pass
+            #print "finished"
+                #l += rows
+            self.logging.info(start - time.time()) 
+            self.logging.info(len(l))
+
             df = pandas.DataFrame(l)
+            
+            # If the query contains a capital letter, filter out any results 
+            # that don't exactly match the query (case sensitive)
+            if [c for c in pattern[0] if c.isupper()]:
+                df = df[df.url.str.contains(pattern[0])]
+
+            print errs
+            
             
             return df
         except OperationTimedOut as exp:
