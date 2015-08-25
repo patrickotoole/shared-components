@@ -49,7 +49,7 @@ class FunnelSearchHandler(MultiSearchHandler, FunnelDatabase, FunnelAuth):
         end_date = self.get_argument("end_date", "")
         date = self.get_argument("date", "")
         timeout = self.get_argument("timeout", 60)
-        funnel_id = self.get_argument("funnel_id")
+        funnel_id = self.get_argument("id")
 
         date_clause = self.make_date_clause("timestamp", date, start_date, end_date)
 

@@ -170,7 +170,7 @@ class FunnelTest(AsyncHTTPTestCase):
     def test_get(self):
         body = self.fetch("/?format=json&advertiser=baublebar", method="GET").body
 
-        expected = [
+        expected = {"status": "ok", "response": [
             {
                 "actions": [
                     {
@@ -204,17 +204,16 @@ class FunnelTest(AsyncHTTPTestCase):
                 "funnel_name": "other", 
                 "owner": "makiki"
                 }
-            ]
+            ]}
 
         actual = ujson.loads(body)
 
         self.assertEqual(len(actual),2)
         self.assertEqual(actual,expected)
 
-
     def test_get_logged_in(self):
         body = self.fetch("/?format=json", method="GET").body
-        expected =[
+        expected ={"status": "ok", "response": [
             {
                 "actions": [
                     {
@@ -247,8 +246,7 @@ class FunnelTest(AsyncHTTPTestCase):
                 "funnel_id": 2, 
                 "funnel_name": "other", 
                 "owner": "makiki"
-                }
-            ]
+            }]}
 
         actual = ujson.loads(body)
         
@@ -268,7 +266,7 @@ class FunnelTest(AsyncHTTPTestCase):
         self.assertEqual(funnel_actions.order.sum(),(len(funnel_actions)*(len(funnel_actions)+1))/2) 
 
         from_get = self.fetch("/?format=json&id=%s" % funnel_id, method="GET")
-        from_get_json = ujson.loads(from_get.body)[0]
+        from_get_json = ujson.loads(from_get.body)["response"][0]
 
         action_ids = map(lambda x: x['action_id'], from_get_json['actions'])
 
@@ -289,7 +287,7 @@ class FunnelTest(AsyncHTTPTestCase):
         self.assertEqual(funnel_actions.order.sum(),(len(funnel_actions)*(len(funnel_actions)+1))/2)
 
         from_get = self.fetch("/?format=json&id=%s" % funnel_id, method="GET")
-        from_get_json = ujson.loads(from_get.body)[0]
+        from_get_json = ujson.loads(from_get.body)["response"][0]
 
         action_ids = map(lambda x: x['action_id'], from_get_json['actions'])
 
@@ -299,7 +297,7 @@ class FunnelTest(AsyncHTTPTestCase):
         obj = ujson.loads(POST_FIXTURE)
 
         from_get = self.fetch("/?format=json&id=%s" % 1, method="GET")
-        from_get_json = ujson.loads(from_get.body)[0]
+        from_get_json = ujson.loads(from_get.body)["response"][0]
         original_action_ids = map(lambda x: x['action_id'], from_get_json['actions'])
 
         self.assertEqual([1,2],original_action_ids)
@@ -308,7 +306,9 @@ class FunnelTest(AsyncHTTPTestCase):
         from_put = self.fetch("/?format=json", method="PUT",body=ujson.dumps(obj))
 
         body = ujson.loads(from_put.body)
-        self.assertTrue("Missing the following parameters: id" in body["response"])
+
+        self.assertTrue("error" in body)
+        self.assertTrue("Missing the following parameters: id" in body["error"])
 
         # changing order of funnel 
         obj['funnel_id'] = 1
@@ -318,7 +318,7 @@ class FunnelTest(AsyncHTTPTestCase):
         self.assertEqual(from_put_json['response'],obj)
 
         from_get = self.fetch("/?format=json&id=%s" % 1, method="GET")
-        from_get_json = ujson.loads(from_get.body)[0]
+        from_get_json = ujson.loads(from_get.body)["response"][0]
         action_ids = map(lambda x: x['action_id'], from_get_json['actions'])
 
         self.assertEqual([2,1],action_ids)
@@ -328,7 +328,7 @@ class FunnelTest(AsyncHTTPTestCase):
         obj = ujson.loads(POST_FIXTURE)
 
         from_get = self.fetch("/?format=json&id=%s" % 1, method="GET")
-        from_get_json = ujson.loads(from_get.body)[0]
+        from_get_json = ujson.loads(from_get.body)["response"][0]
         original_action_ids = map(lambda x: x['action_id'], from_get_json['actions'])
 
         self.assertEqual([1,2],original_action_ids) 
@@ -343,7 +343,7 @@ class FunnelTest(AsyncHTTPTestCase):
         self.assertEqual(from_put_json['response'],obj)
 
         from_get = self.fetch("/?format=json&id=%s" % 1, method="GET")
-        from_get_json = ujson.loads(from_get.body)[0]
+        from_get_json = ujson.loads(from_get.body)["response"][0]
         action_ids = map(lambda x: x['action_id'], from_get_json['actions'])
 
         self.assertEqual([2],action_ids) 
@@ -360,11 +360,10 @@ class FunnelTest(AsyncHTTPTestCase):
         self.assertEqual(from_put_json['response'],obj)
 
         from_get = self.fetch("/?format=json&id=%s" % 1, method="GET")
-        from_get_json = ujson.loads(from_get.body)[0]
+        from_get_json = ujson.loads(from_get.body)["response"][0]
         action_ids = map(lambda x: x['action_id'], from_get_json['actions'])
 
         self.assertEqual(set(original_action_ids),set(action_ids))
 
         df = self.db.select_dataframe("select * from funnel_actions where funnel_id = 1")
         self.assertEqual(len(df),2)
-  
