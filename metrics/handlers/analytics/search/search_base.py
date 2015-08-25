@@ -9,7 +9,7 @@ from twisted.internet import defer
 from lib.helpers import *
 from cassandra import OperationTimedOut
 
-QUERY  = """SELECT %(what)s FROM rockerbox.rick_test_u1 %(where)s"""
+QUERY  = """SELECT %(what)s FROM rockerbox.visit_uids_lucene_timestamp_u2_clustered %(where)s"""
 WHERE  = """WHERE source='%(advertiser)s' and lucene='%(lucene)s'"""
 LUCENE = """{ filter: { type: "boolean", %(logic)s: [%(filters)s]}}"""
 FILTER = """{ type:"wildcard", field: "url", value: "*%(pattern)s*"}"""
@@ -62,16 +62,16 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
             futures = []
             queries = []
             self.logging.info(filters)
-            prefixes = range(1,10)
+            prefixes = range(0,100)
             for i in prefixes:
                 f = filters #+ """,{ type:"prefix", field: "uid", value: "%s" }""" % i
                 lucene = LUCENE % {"filters": f, "logic": logic}
                 where = WHERE % {"advertiser":advertiser, "lucene":lucene}
                 query = QUERY % {"what":selects, "where": where}
 
-                for date in dates:
+                for date in (dates[-2:-1] + dates[:-1]):
                     date_str = " and date='%s'" % date # this needs to be parameterized to use different tables
-                    date_str += " and u1 = %s" % i
+                    date_str += " and u2 = %s" % i
                     #future = self.cassandra.execute_async(query + date_str)
                     #futures.append(future)
                     #host = future._current_host.address
@@ -111,7 +111,7 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
 
             print num_queries
             
-            for i in range(min(80, num_queries)):
+            for i in range(min(160, num_queries)):
                 insert_next()
             
             finished_event.wait()
