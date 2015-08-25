@@ -103,7 +103,7 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
                         finished_event.set()
             
                 c = num_started.next()
-                print c,num_queries,c <= num_queries, f
+                #print c,num_queries,c <= num_queries, f
                 if c <= num_queries:
                     future = self.cassandra.execute_async(queries[c-1])
                     hosts[future._current_host.address] = hosts.get(future._current_host.address,0) + 1

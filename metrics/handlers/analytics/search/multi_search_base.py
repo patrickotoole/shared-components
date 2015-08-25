@@ -10,9 +10,6 @@ from twisted.internet import defer
 from lib.helpers import decorators
 from lib.helpers import *
 
-
-
-
 class MultiSearchBase(VisitDomainBase,SearchBase,MultiSearchHelpers):
 
     def build_deferred_list(self,steps,logic,advertiser,date_clause,PARAMS):
@@ -33,10 +30,9 @@ class MultiSearchBase(VisitDomainBase,SearchBase,MultiSearchHelpers):
                     "group": i,
                     "group_logic": step['logic'],
                     "terms": ",".join(group['patterns']),
-                }] 
+                }]
 
         return (deferred_meta,defer.DeferredList(deferreds))
-
 
     @defer.inlineCallbacks
     def defer_get_uids(self, advertiser, terms, date_clause, timeout=60):
@@ -54,7 +50,6 @@ class MultiSearchBase(VisitDomainBase,SearchBase,MultiSearchHelpers):
         funnel_frames = self.build_funnel_groups(frames,meta)
         funnel_frame_sizes = [len(i) for i in funnel_frames]
         funnel_data = self.reshape_funnel_groups(funnel_frames)
-
 
         response['results'] = self.funnel_response(funnel_data,len(terms['steps']),funnel_frame_sizes)
         response['summary'] = {
@@ -108,8 +103,6 @@ class MultiSearchBase(VisitDomainBase,SearchBase,MultiSearchHelpers):
 
         for i,domains in enumerate(step_domains):
             response['results'][i]['uids'] = uids[i]
-
-
 
     @defer.inlineCallbacks
     def get_avails(self, advertiser, terms, date_clause, timeout=60):

@@ -78,6 +78,7 @@ class AdvertiserRoutes(Routes):
             (r'/search/(.*?)', analytics.SearchHandler, self.connectors),
             (r'/pattern_search/(.*?)', analytics.PatternSearchHandler, self.connectors),
             (r'/multi_search/(.*?)', analytics.MultiSearchHandler, self.connectors),
+            (r'/funnel_search/(.*?)', analytics.FunnelSearchHandler, self.connectors),
             (r'/visit_domains', analytics.VisitDomainsHandler, self.connectors),
             (r'/visit_avails', analytics.VisitAvailsHandler, self.connectors),
             (r'/funnel/action/recommended', funnel.RecommendedActionHandler, self.connectors),

@@ -26,7 +26,7 @@ class FunnelDatabase(FunnelHelpers):
         grouped_actions = grouped_actions if len(grouped_actions) > 0 else []
         funnel = pandas.DataFrame({"actions":grouped_actions}).reset_index()
 
-        as_json = Convert.df_to_json(funnel)
+        as_json = Convert.df_to_values(funnel)
         return as_json
 
     def get_funnels(self, advertiser):
@@ -62,7 +62,7 @@ class FunnelDatabase(FunnelHelpers):
         self.assert_required_params(["id"])
         funnel_id = self.get_argument("id",False)
         self.perform_delete({"funnel_id": funnel_id})
-        return "Funnel id %s deleted successfully." % funnel_id
+        return {"funnel_id": funnel_id}
 
     @decorators.multi_commit_cursor
     def perform_delete(self, obj, cursor=None):
