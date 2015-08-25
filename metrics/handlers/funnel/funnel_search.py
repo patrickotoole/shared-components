@@ -2,13 +2,14 @@ import tornado.web
 import pandas
 import logging
 
-from multi_search import MultiSearchHandler
+from handlers.analytics.search.multi_search import MultiSearchHandler
 from twisted.internet import defer
 from lib.helpers import decorators
 from lib.helpers import *
-from handlers.funnel.funnel_database import FunnelDatabase
+from funnel_database import FunnelDatabase
+from funnel_auth import FunnelAuth
 
-class FunnelSearchHandler(MultiSearchHandler, FunnelDatabase):
+class FunnelSearchHandler(MultiSearchHandler, FunnelDatabase, FunnelAuth):
 
     def funnel_to_search(self, funnel_id):
         '''Given a funnel ID, return a string that can be used to interact with
