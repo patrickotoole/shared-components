@@ -33,7 +33,6 @@ class MultiSearchHandler(MultiSearchBase):
             self.render("analysis/bloodhound_test.html", data=df, 
                         advertiser=advertiser)
         yield default, (data,)
-
     
     def invalid(self,*args,**kwargs):
         raise Exception("Invalid api call")
@@ -56,8 +55,6 @@ class MultiSearchHandler(MultiSearchBase):
             "logic": logic
         }
 
-
-
     @tornado.web.authenticated
     @tornado.web.asynchronous
     def get(self, api_type):
@@ -77,8 +74,6 @@ class MultiSearchHandler(MultiSearchBase):
         
         if terms:
             terms = self.parse_multi_pattern(terms,logic)
-
+            print "Terms: %s" % terms
         fn = self.TYPE.get(api_type,self.invalid)
         fn(advertiser, terms, date_clause, timeout=int(timeout))
-
-

@@ -35,9 +35,7 @@ class FunnelHandler(BaseHandler, FunnelDatabase, FunnelAuth, APIHelpers):
                 results = self.get_funnel(_id)
             else:
                 results = self.get_funnels(advertiser)
-
-            self.write(results)
-            self.finish()
+            self.write_response(results)
         else:
             self.render("analysis/visit_urls.html",data="{}", advertiser=advertiser)
 
@@ -45,25 +43,22 @@ class FunnelHandler(BaseHandler, FunnelDatabase, FunnelAuth, APIHelpers):
     def put(self):
         try:
             data = self.update_funnel(self.request.body)
-            self.write(ujson.dumps({"response": data, "status": "ok"}))
+            self.write_response(data)
         except Exception, e:
-            print e
-            self.write(ujson.dumps({"response": str(e), "status": "error"}))
+            self.write_response(str(e), e)
  
     @tornado.web.authenticated
     def post(self):
         try:
             data = self.insert_funnel(self.request.body)
-            self.write(ujson.dumps({"response": data, "status": "ok"}))
+            self.write_response(data)
         except Exception, e:
-            print e
-            self.write(ujson.dumps({"response": str(e), "status": "error"}))
+            self.write_response(str(e), e)
 
     @tornado.web.authenticated
     def delete(self):
         try:
             data = self.delete_funnel()
-            self.write(ujson.dumps({"response": data, "status": "ok"}))
+            self.write_response(data)
         except Exception, e:
-            print e
-            self.write(ujson.dumps({"response": str(e), "status": "error"}))
+            self.write_response(str(e), e)
