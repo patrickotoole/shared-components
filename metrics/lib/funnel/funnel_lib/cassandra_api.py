@@ -15,6 +15,7 @@ class FunnelAPI:
         self.c = lnk.dbs.cassandra
         self.db = lnk.dbs.rockerbox
         self.h = lnk.dbs.hive
+        self.rockerbox = lnk.api.rockerbox
         self.BAD_DOMAINS = [
             "-",
             "",
@@ -32,15 +33,19 @@ class FunnelAPI:
         pop.domains = pop.domains.apply(ast.literal_eval)
         return pop
     
+    def get_funnel_domains_v2(self, funnel_id):
+        '''Use the funnel_search handler functions rather than replicating the
+        functionality here.
+        '''
+        pass
+
     def get_funnel_domains(self, funnel_name, advertiser):
         patterns = self.get_patterns(funnel_name=funnel_name)
         advertiser_urls = self.get_urls(advertiser)
         
-        
         logger.info("PATTERNS: {}".format(patterns))
 
-        uids = self.get_uids_updated(patterns, advertiser_urls)
-        
+        uids = self.get_uids_updated(patterns, advertiser_urls)        
         logger.info("Number of uids: {}".format(len(uids)))
         
         domains = self.get_domains(uids)
