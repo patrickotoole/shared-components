@@ -35,11 +35,13 @@ def get_flumestats():
   y = json.loads(requests.get("http://localhost:34546/metrics").content)
   z = json.loads(requests.get("http://localhost:34547/metrics").content)
   w = json.loads(requests.get("http://localhost:34548/metrics").content)
+  v = json.loads(requests.get("http://localhost:34549/metrics").content)
+
 
 
 
   stats = []  
-  for h1 in [x,y,z,w]:
+  for h1 in [x,y,z,w,v]:
     for key1, h2 in h1.iteritems():
       for key2, value in h2.iteritems(): 
         try:
