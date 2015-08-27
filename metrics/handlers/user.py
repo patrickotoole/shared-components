@@ -19,6 +19,19 @@ FROM user a JOIN user_permissions b on (a.id = b.user_id)
 WHERE a.username = '%s'
 """
 
+FEATURES_QUERY = """
+SELECT 
+    pixel_source_name, 
+    external_advertiser_id, 
+    advertiser_name
+FROM user a JOIN user_permissions b on (a.id = b.user_id) 
+    JOIN permissions_app_features USING (permissions_id) 
+    JOIN app_features USING (app_feature_id) 
+WHERE a.username = '%s'
+"""
+
+
+
 USER_QUERY = """
 SELECT DISTINCT 
     user.id as id, 
@@ -141,6 +154,10 @@ class AccountPermissionsHandler(BaseHandler):
             ]
             df = df[cols]
             return Convert.df_to_values(df)
+
+    def get_user_feature_permissions(self, username):
+        #df = self.db.select_dataframe()
+        pass
 
     @tornado.web.authenticated
     def get(self):

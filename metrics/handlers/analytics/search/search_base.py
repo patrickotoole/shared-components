@@ -69,7 +69,7 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
                 where = WHERE % {"advertiser":advertiser, "lucene":lucene}
                 query = QUERY % {"what":selects, "where": where}
 
-                for date in (dates[-2:-1] + dates[:-1]):
+                for date in dates[0:9]:#(dates[-2:-1] + dates[:-1]):
                     date_str = " and date='%s'" % date # this needs to be parameterized to use different tables
                     date_str += " and u2 = %s" % i
                     #future = self.cassandra.execute_async(query + date_str)
@@ -107,7 +107,7 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
                 if c <= num_queries:
                     future = self.cassandra.execute_async(queries[c-1])
                     hosts[future._current_host.address] = hosts.get(future._current_host.address,0) + 1
-                    future.add_callbacks(lambda x: insert_next(x,future._current_host.address,l), lambda x: insert_next(x,future._current_host.address))
+                    future.add_callbacks(lambda x: insert_next(x,queries[c-1],l), lambda x: insert_next(x,queries[c-1]))
 
             print num_queries
             

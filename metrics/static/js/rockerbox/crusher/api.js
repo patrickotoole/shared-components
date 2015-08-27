@@ -146,10 +146,11 @@ RB.crusher.api = (function(api) {
         if (domains) {
           d3.xhr("/crusher/domain/idf")
             .post(JSON.stringify({"domains":domains}), function(err,dd){
+              var json = JSON.parse(dd.response)
               var keyed = d3.nest()
                 .key(function(x){return x.domain})
                 .rollup(function(x){return x[0]})
-                .map(dd)
+                .map(json)
 
               data.funnel_domains.map(function(x) {
                 idf_dict = keyed[x.domain] || {}

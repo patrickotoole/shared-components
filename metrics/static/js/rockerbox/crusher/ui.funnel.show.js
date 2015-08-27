@@ -145,7 +145,7 @@ RB.crusher.ui.funnel = (function(funnel) {
     campaign: function(funnels){
       var campaign = d3_updateable(funnels,".campaign-table","div")
         .classed("col-md-12 campaign-table",true)
-        .classed("hidden",false)
+        //.classed("hidden",false)
 
       d3_updateable(campaign,"h5","h5")
         .text("Funnel campaigns")
@@ -444,7 +444,7 @@ RB.crusher.ui.funnel = (function(funnel) {
     lookalike: function(funnels){
       var campaign = d3_updateable(funnels,".lookalike-table","div")
         .classed("col-md-12 lookalike-table",true)
-        .classed("hidden",false)
+        //.classed("hidden",false)
 
       d3_updateable(campaign,"h5","h5")
         .text("Funnel Convertor Look-a-like Campaigns")
