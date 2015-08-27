@@ -249,7 +249,7 @@ RB.crusher.api = (function(api) {
 
         if (!cache.funnelData) {
           d3.json(api.URL.funnelURL,function(dd){
-            cache.funnelData = dd 
+            cache.funnelData = dd.response
             deferred_cb(null,cb)
           })
         } else {
