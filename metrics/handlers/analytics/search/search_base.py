@@ -111,7 +111,7 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
 
             print num_queries
             
-            for i in range(min(160, num_queries)):
+            for i in range(min(80, num_queries)):
                 insert_next()
             
             finished_event.wait()

@@ -39,7 +39,7 @@ class VisitDomainBase(object):
 
     def paginate_get_w_in(self, uids, date_clause):
         futures = []
-        n = max(len(uids)/10,1)
+        n = 10#max(len(uids)/10,1)
         for i in xrange(0, len(uids), n):
             futures.append(self.future_get_w_in(uids[i:i+n],date_clause))
 
