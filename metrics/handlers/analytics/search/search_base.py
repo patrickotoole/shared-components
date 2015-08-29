@@ -69,14 +69,14 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
                 where = WHERE % {"advertiser":advertiser, "lucene":lucene}
                 query = QUERY % {"what":selects, "where": where}
 
-                for date in dates[0:9]:#(dates[-2:-1] + dates[:-1]):
+                for date in dates:#(dates[-2:-1] + dates[:-1]):
                     date_str = " and date='%s'" % date # this needs to be parameterized to use different tables
                     date_str += " and u2 = %s" % i
                     #future = self.cassandra.execute_async(query + date_str)
                     #futures.append(future)
                     #host = future._current_host.address
                     #future.add_callbacks(callback=fuck_python_results(host,l,total),errback=fuck_python_errs(host,errs,total))
-                    queries.append(query + date_str)
+                    queries.append(query + date_str )
 
             from itertools import count
             from threading import Event
@@ -103,11 +103,11 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
                         finished_event.set()
             
                 c = num_started.next()
-                #print c,num_queries,c <= num_queries, f
+                print c,num_queries,c <= num_queries, f
                 if c <= num_queries:
                     future = self.cassandra.execute_async(queries[c-1])
                     hosts[future._current_host.address] = hosts.get(future._current_host.address,0) + 1
-                    future.add_callbacks(lambda x: insert_next(x,queries[c-1],l), lambda x: insert_next(x,queries[c-1]))
+                    future.add_callbacks(lambda x: insert_next(x,queries[c-1],l), lambda x: insert_next(x,queries[c-1] + " : " + future._current_host.address))
 
             print num_queries
             
