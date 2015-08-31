@@ -65,62 +65,51 @@ RB.crusher.controller.funnel = (function(funnel) {
       var funnel = crusher.ui.funnel.buildShow()
       var data = funnel.datum()
 
-      var uids = "uids_" + data.funnel_id,
-        avails = "avails_" + data.funnel_id,
-        domains = "domains_" + data.funnel_id,
-        rendered_funnel = "rendered_funnel_" + data.funnel_id
+      var uids = "funnel_uids",
+          avails = "funnel_avails",
+          domains = "funnel_domains",
+          rendered_funnel = "funnel_rendered",
+          rendered_domains = "domains_rendered",
+          rendered_avails = "avails_rendered"
+
+      var is_lookalike = crusher.permissions.bind(false,"lookalike"),
+          is_retargeting = crusher.permissions.bind(false,"retargeting"),
+          render_lookalike = crusher.ui.funnel.show.component.lookalike.bind(false,funnel),
+          render_retargeting = crusher.ui.funnel.show.component.campaign.bind(false,funnel)
 
       crusher.ui.funnel.wait(funnel)
-
-
-      // Playing around with the idea of doing something like this...
-      // but i feel like its just obfuscating obvious callbacks and not making it simple
-      // leaving it here for now...
-      var dependencyChain = {
-        "subscriptions": [uids],
-        "callback": function() {},
-        "children": [
-          {
-            "subscriptions": [domains],
-            "callback": function() {},
-            "children": []
-          },
-          {
-            "subscriptions": [avails],
-            "callback": function() {},
-            "children": []
-          }
-        ]
-      }
-
+      
       crusher.subscribe.add_subscriber([uids],function(){
 
         crusher.ui.funnel.show(funnel)
-        // trigger "rendered_funnel_" + data.funnel_id
+        crusher.subscribe.publishers[rendered_funnel]("YO")
+        crusher.subscribe.publishers[domains](data)
+        crusher.subscribe.publishers[avails](data)
+
       },"show",true,true,data)
 
       crusher.subscribe.add_subscriber([rendered_funnel, domains], function(x) {
-        data.funnel_domains = data.actions[data.actions.length-1].funnel_domains
-        crusher.permissions(
-          "lookalike",
-          crusher.ui.funnel.show.component.lookalike.bind(false,funnel)
-        )
 
-        crusher.subscribe.add_subscriber(["tf_idf_funnel"], function(x) {
-          crusher.ui.funnel.show.component.domains.bind(false,funnel)(x)
-        },"idf",true,true,data)
-        
-      },"domains",true,true, data)
-      
+        data.funnel_domains = data.actions[data.actions.length-1].funnel_domains
+        is_lookalike(render_lookalike)
+        crusher.subscribe.publishers[rendered_domains](data)
+          
+      },"domains",false,true, data)
+
       crusher.subscribe.add_subscriber([rendered_funnel, avails], function(x) {
         var exchanges = funnel.selectAll(".exchange-summary .exchange")
       
+        is_retargeting(render_retargeting)
         crusher.ui.funnel.show.component.avails(exchanges)
-        crusher.permissions(
-          "retargeting",
-          crusher.ui.funnel.show.component.campaign.bind(false,funnel)
-        )
-      },"show_me_the_money",true,true, data)
+
+        
+      },"avails",false,true, data)
+
+      crusher.subscribe.add_subscriber([rendered_domains,"tf_idf_funnel"], function(x) {
+        crusher.ui.funnel.show.component.domains.bind(false,funnel)(x)
+      },"idf",false,true,data)
+      
+      
 
       
 

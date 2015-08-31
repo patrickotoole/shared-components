@@ -93,6 +93,11 @@ RB.crusher.subscribe = (function(subscribe) {
     subscribe.publishers[name] = publisher.call 
   }
 
+  subscribe.register_dummy_publisher = function(name) {
+    var accessor = function() {}
+    subscribe.register_publisher(name,accessor)
+  }
+
   
 
   subscribe.add_subscriber = function(subscriptions,callback,name,trigger,unpersist,data) {

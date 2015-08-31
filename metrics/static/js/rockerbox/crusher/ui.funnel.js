@@ -127,9 +127,18 @@ RB.crusher.ui.funnel = (function(funnel) {
   } 
 
   funnel.register_publishers = function(data) {
-    var uids = "uids_" + data.funnel_id
-    var avails = "avails_" + data.funnel_id 
-    var domains = "domains_" + data.funnel_id 
+    var uids = "funnel_uids",
+        avails = "funnel_avails",
+        domains = "funnel_domains",
+        rendered_funnel = "funnel_rendered",
+        rendered_domains = "domains_rendered",
+        rendered_avails = "avails_rendered"
+
+    crusher.subscribe.register_dummy_publisher(rendered_funnel)
+    crusher.subscribe.register_dummy_publisher(rendered_domains)
+    crusher.subscribe.register_dummy_publisher(rendered_avails)
+
+
 
     crusher.subscribe.register_publisher(uids,function(cb,data){
 
