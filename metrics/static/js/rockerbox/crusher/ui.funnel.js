@@ -6,6 +6,42 @@ RB.crusher.ui.funnel = (function(funnel) {
 
   var crusher = RB.crusher
 
+  funnel.events = {
+    "funnel_rendered":true,
+    "domains_rendered":true,
+    "avails_rendered":true
+  }
+
+  funnel.services = {
+    "funnel_uids": function(cb,data){
+      var q = queue(5) 
+      crusher.api.funnelUIDs(data,q) 
+      q.awaitAll(function(){ cb.apply(false,arguments) })
+    },                                                                                                                 
+    "funnel_avails": function(cb,data){
+      var q = queue(5)
+      crusher.api.funnelAvails(data.actions,q)
+      q.awaitAll(function(){ cb.apply(false,arguments) })
+    },                                                                                                                 
+    "funnel_domains": function(cb,data){
+      var q = queue(5)
+      crusher.api.funnelDomains(data.actions,q)
+      q.awaitAll(function(){ cb.apply(false,arguments) })
+    }
+  }
+
+  funnel.register_publishers = function() {
+
+    Object.keys(funnel.services).map(function(key){                                                                    
+      crusher.subscribe.register_publisher(key,funnel.services[key])                                                   
+    })              
+
+    Object.keys(funnel.events).map(function(key){                                                                    
+      crusher.subscribe.register_dummy_publisher(key)                                                   
+    })
+
+  }
+
 
   funnel.methods = {
     remove_action: function(actions,action) {
@@ -126,64 +162,19 @@ RB.crusher.ui.funnel = (function(funnel) {
     }
   } 
 
-  funnel.register_publishers = function(data) {
-    var uids = "funnel_uids",
-        avails = "funnel_avails",
-        domains = "funnel_domains",
-        rendered_funnel = "funnel_rendered",
-        rendered_domains = "domains_rendered",
-        rendered_avails = "avails_rendered"
+  
+    
 
-    crusher.subscribe.register_dummy_publisher(rendered_funnel)
-    crusher.subscribe.register_dummy_publisher(rendered_domains)
-    crusher.subscribe.register_dummy_publisher(rendered_avails)
-
-
-
-    crusher.subscribe.register_publisher(uids,function(cb,data){
-
-      // this is where we get all the UID information to display the funnel
-
-      var q = queue(5)
-      crusher.api.funnelUIDs(data,q)
-      q.awaitAll(function(){ cb.apply(false,arguments) })
-
-    })
-
-    crusher.subscribe.register_publisher(avails,function(cb,data){
-
-      // this is where we get all the availability info
-
-      var q = queue(5)
-      crusher.api.funnelAvails(data.actions,q)
-      q.awaitAll(function(){ cb.apply(false,arguments) })
-      
-    })
-
-    crusher.subscribe.register_publisher(domains,function(cb,data){
-
-      //this is where we get all the domains from the UIDs
-
-      var q = queue(5)
-      crusher.api.funnelDomains(data.actions,q)
-      q.awaitAll(function(){ cb.apply(false,arguments) })
-
-    })
-
-  }
+  
 
   funnel.build = function(funnel_data, action_data) {
-    var target = d3.selectAll(".funnel-wrapper")
     
+    var target = d3.selectAll(".funnel-wrapper")
     var data = funnel_data[0] ? [funnel_data[0]] : []
 
-    funnel.register_publishers(data[0])
+    funnel.register_publishers()
 
-    var funnels = target.selectAll(".funnel")
-      .data(data)
-
-    funnels.enter()
-      .append("div")
+    var funnels = d3_splat(target,".funnel","div",data)
       .classed("funnel",true)
 
     d3_updateable(funnels,"h5","h5")
@@ -196,8 +187,9 @@ RB.crusher.ui.funnel = (function(funnel) {
   funnel.buildBase = function() {
 
     var target = d3.selectAll(".container")
+    var rowData = [{"id":"funnel"}]
 
-    var funnelRow = d3_splat(target,".row","div",[{"id":"funnel"}],function(x){return x.id})
+    var funnelRow = d3_splat(target,".row","div",rowData,function(x){return x.id})
       .classed("row funnels",true)
 
     var viewWrapper = d3_updateable(funnelRow,".funnel-view-wrapper","div")
@@ -209,8 +201,7 @@ RB.crusher.ui.funnel = (function(funnel) {
     d3_updateable(funnelRow,".funnel-list-wrapper","div")
       .classed("funnel-list-wrapper col-md-6",true)
 
-    funnelRow
-      .exit().remove()
+    funnelRow.exit().remove()
     
   }
 

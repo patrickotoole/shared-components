@@ -82,7 +82,7 @@ RB.crusher.controller.funnel = (function(funnel) {
       crusher.subscribe.add_subscriber([uids],function(){
 
         crusher.ui.funnel.show(funnel)
-        crusher.subscribe.publishers[rendered_funnel]("YO")
+        crusher.subscribe.publishers[rendered_funnel]()
         crusher.subscribe.publishers[domains](data)
         crusher.subscribe.publishers[avails](data)
 
@@ -93,6 +93,7 @@ RB.crusher.controller.funnel = (function(funnel) {
         data.funnel_domains = data.actions[data.actions.length-1].funnel_domains
         is_lookalike(render_lookalike)
         crusher.subscribe.publishers[rendered_domains](data)
+        crusher.subscribe.publishers["tf_idf_funnel"](data)
           
       },"domains",false,true, data)
 
