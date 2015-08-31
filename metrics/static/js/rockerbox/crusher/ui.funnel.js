@@ -6,38 +6,123 @@ RB.crusher.ui.funnel = (function(funnel) {
 
   var crusher = RB.crusher
 
+  var FUNNEL_RENDERED  = "funnel_rendered",
+      DOMAINS_RENDERED = "domains_rendered",
+      AVAILS_RENDERED  = "avails_rendered",
+      FUNNEL_INIT      = "funnel_init",
+      FUNNEL_UIDS      = "funnel_uids",
+      FUNNEL_AVAILS    = "funnel_avails",
+      FUNNEL_DOMAINS   = "funnel_domains"
+
+
   funnel.events = {
-    "funnel_rendered":true,
-    "domains_rendered":true,
-    "avails_rendered":true
+    funnel_rendered: true,
+    domains_rendered: true,
+    avails_rendered: true,
+    funnel_init: true
   }
 
   funnel.services = {
-    "funnel_uids": function(cb,data){
+    funnel_uids: function(cb,data){
       var q = queue(5) 
       crusher.api.funnelUIDs(data,q) 
-      q.awaitAll(function(){ cb.apply(false,arguments) })
-    },                                                                                                                 
-    "funnel_avails": function(cb,data){
+      q.awaitAll(function(){ cb.apply(false,[data]) })
+    },
+    funnel_avails: function(cb,data){
       var q = queue(5)
       crusher.api.funnelAvails(data.actions,q)
-      q.awaitAll(function(){ cb.apply(false,arguments) })
-    },                                                                                                                 
-    "funnel_domains": function(cb,data){
+      q.awaitAll(function(){ cb.apply(false,[data]) })
+    },
+    funnel_domains: function(cb,data){
       var q = queue(5)
       crusher.api.funnelDomains(data.actions,q)
-      q.awaitAll(function(){ cb.apply(false,arguments) })
+      q.awaitAll(function(){ cb.apply(false,[data]) })
     }
+  }
+
+  funnel.subscriptions = [
+    {
+      "name":"init",
+      "subscribe": [FUNNEL_INIT],
+      "callback": function(data){
+        var funnel = crusher.ui.funnel.buildShow()
+
+        crusher.ui.funnel.wait(funnel)
+        crusher.subscribe.publishers[FUNNEL_UIDS](data)
+      }
+    },
+    {
+      "name": "show",
+      "subscribe": [FUNNEL_UIDS],
+      "callback": function(data){
+
+        var funnel = crusher.ui.funnel.buildShow()
+
+        crusher.ui.funnel.show(funnel)
+        crusher.subscribe.publishers[FUNNEL_RENDERED]()
+        crusher.subscribe.publishers[FUNNEL_DOMAINS](data)
+        crusher.subscribe.publishers[FUNNEL_AVAILS](data) 
+      }
+    },
+    {
+      "name": "show_domains",
+      "subscribe": [FUNNEL_RENDERED,FUNNEL_DOMAINS],
+      "callback": function(_,data) {
+        data.funnel_domains = data.actions[data.actions.length-1].funnel_domains
+
+        var funnel = crusher.ui.funnel.buildShow(),
+          is_lookalike = crusher.permissions.bind(false,"lookalike"),
+          render_lookalike = crusher.ui.funnel.show.component.lookalike.bind(false,funnel)
+
+        is_lookalike(render_lookalike)
+        crusher.subscribe.publishers[DOMAINS_RENDERED](data)
+        crusher.subscribe.publishers["tf_idf_funnel"](data)
+      }
+    },
+    {
+      "name": "show_avails",
+      "subscribe": [FUNNEL_RENDERED,FUNNEL_AVAILS],
+      "callback": function(_,data) {
+        var funnel = crusher.ui.funnel.buildShow()
+        var exchanges = funnel.selectAll(".exchange-summary .exchange")
+
+        var funnel = crusher.ui.funnel.buildShow(),
+          is_retargeting = crusher.permissions.bind(false,"retargeting"),
+          render_retargeting = crusher.ui.funnel.show.component.campaign.bind(false,funnel)
+      
+        is_retargeting(render_retargeting)
+        crusher.ui.funnel.show.component.avails(exchanges)
+      }
+    },
+    {
+      "name": "show_idf",
+      "subscribe": [DOMAINS_RENDERED,"tf_idf_funnel"],
+      "callback": function(_,data) {
+        var funnel = crusher.ui.funnel.buildShow()
+        crusher.ui.funnel.show.component.domains.bind(false,funnel)(data)
+      }
+    }
+  ]
+
+  funnel.register_subscribers = function() {
+    funnel.subscriptions.map(function(subscription){
+      crusher.subscribe.add_subscriber(
+        subscription.subscribe,
+        subscription.callback,
+        subscription.name,
+        false,false
+      )
+    })
   }
 
   funnel.register_publishers = function() {
 
-    Object.keys(funnel.services).map(function(key){                                                                    
-      crusher.subscribe.register_publisher(key,funnel.services[key])                                                   
-    })              
+    Object.keys(funnel.services).map(function(key){
+      crusher.subscribe.register_publisher(key,funnel.services[key])
+    })
 
-    Object.keys(funnel.events).map(function(key){                                                                    
-      crusher.subscribe.register_dummy_publisher(key)                                                   
+    Object.keys(funnel.events).map(function(key){
+      crusher.subscribe.register_dummy_publisher(key)
     })
 
   }
@@ -172,7 +257,9 @@ RB.crusher.ui.funnel = (function(funnel) {
     var target = d3.selectAll(".funnel-wrapper")
     var data = funnel_data[0] ? [funnel_data[0]] : []
 
+    
     funnel.register_publishers()
+    funnel.register_subscribers()
 
     var funnels = d3_splat(target,".funnel","div",data)
       .classed("funnel",true)

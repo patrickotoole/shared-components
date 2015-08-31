@@ -61,59 +61,9 @@ RB.crusher.controller.funnel = (function(funnel) {
         }); 
     },
     show: function() {
-     
       var funnel = crusher.ui.funnel.buildShow()
       var data = funnel.datum()
-
-      var uids = "funnel_uids",
-          avails = "funnel_avails",
-          domains = "funnel_domains",
-          rendered_funnel = "funnel_rendered",
-          rendered_domains = "domains_rendered",
-          rendered_avails = "avails_rendered"
-
-      var is_lookalike = crusher.permissions.bind(false,"lookalike"),
-          is_retargeting = crusher.permissions.bind(false,"retargeting"),
-          render_lookalike = crusher.ui.funnel.show.component.lookalike.bind(false,funnel),
-          render_retargeting = crusher.ui.funnel.show.component.campaign.bind(false,funnel)
-
-      crusher.ui.funnel.wait(funnel)
-      
-      crusher.subscribe.add_subscriber([uids],function(){
-
-        crusher.ui.funnel.show(funnel)
-        crusher.subscribe.publishers[rendered_funnel]()
-        crusher.subscribe.publishers[domains](data)
-        crusher.subscribe.publishers[avails](data)
-
-      },"show",true,true,data)
-
-      crusher.subscribe.add_subscriber([rendered_funnel, domains], function(x) {
-
-        data.funnel_domains = data.actions[data.actions.length-1].funnel_domains
-        is_lookalike(render_lookalike)
-        crusher.subscribe.publishers[rendered_domains](data)
-        crusher.subscribe.publishers["tf_idf_funnel"](data)
-          
-      },"domains",false,true, data)
-
-      crusher.subscribe.add_subscriber([rendered_funnel, avails], function(x) {
-        var exchanges = funnel.selectAll(".exchange-summary .exchange")
-      
-        is_retargeting(render_retargeting)
-        crusher.ui.funnel.show.component.avails(exchanges)
-
-        
-      },"avails",false,true, data)
-
-      crusher.subscribe.add_subscriber([rendered_domains,"tf_idf_funnel"], function(x) {
-        crusher.ui.funnel.show.component.domains.bind(false,funnel)(x)
-      },"idf",false,true,data)
-      
-      
-
-      
-
+      crusher.subscribe.publishers["funnel_init"](data)
 
     },
     show_domains: function(data,callback) {

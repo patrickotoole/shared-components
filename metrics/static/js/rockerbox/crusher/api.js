@@ -160,10 +160,10 @@ RB.crusher.api = (function(api) {
                 x.wuid =  Math.exp(x.idf) * Math.log(x.uid)
 
               })
-              deferred_cb(null,cb)
+              deferred_cb(null,cb.bind(false,data))
             }) 
         } else {
-          deferred_cb(null,cb)
+          deferred_cb(null,cb.bind(false,data))
         }
       }),
       tf_idf: genericQueuedAPIWithData(function(cb,deferred_cb) {
