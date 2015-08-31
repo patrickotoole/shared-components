@@ -63,7 +63,7 @@ RB.crusher.controller.funnel = (function(funnel) {
     show: function() {
       var funnel = crusher.ui.funnel.buildShow()
       var data = funnel.datum()
-      crusher.subscribe.publishers["funnel_init"](data)
+      crusher.subscribe.publishers["funnel_show"](data)
 
     },
     show_domains: function(data,callback) {

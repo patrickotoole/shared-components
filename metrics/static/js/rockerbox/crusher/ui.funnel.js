@@ -6,44 +6,43 @@ RB.crusher.ui.funnel = (function(funnel) {
 
   var crusher = RB.crusher
 
-  var FUNNEL_RENDERED  = "funnel_rendered",
+  var FUNNEL_ALL       = "funnel_all",
+      FUNNEL_RENDERED  = "funnel_rendered",
       DOMAINS_RENDERED = "domains_rendered",
       AVAILS_RENDERED  = "avails_rendered",
-      FUNNEL_INIT      = "funnel_init",
+      FUNNEL_SHOW      = "funnel_show",
       FUNNEL_UIDS      = "funnel_uids",
       FUNNEL_AVAILS    = "funnel_avails",
       FUNNEL_DOMAINS   = "funnel_domains"
 
+  funnel.events = {}
+  funnel.events[FUNNEL_RENDERED] = true
+  funnel.events[DOMAINS_RENDERED] = true
+  funnel.events[AVAILS_RENDERED] = true
+  funnel.events[FUNNEL_SHOW] = true
+  funnel.events[FUNNEL_ALL] = true
 
-  funnel.events = {
-    funnel_rendered: true,
-    domains_rendered: true,
-    avails_rendered: true,
-    funnel_init: true
+  funnel.services = {}
+  funnel.services[FUNNEL_UIDS] = function(cb,data){
+    var q = queue(5) 
+    crusher.api.funnelUIDs(data,q) 
+    q.awaitAll(function(){ cb.apply(false,[data]) })
   }
-
-  funnel.services = {
-    funnel_uids: function(cb,data){
-      var q = queue(5) 
-      crusher.api.funnelUIDs(data,q) 
-      q.awaitAll(function(){ cb.apply(false,[data]) })
-    },
-    funnel_avails: function(cb,data){
-      var q = queue(5)
-      crusher.api.funnelAvails(data.actions,q)
-      q.awaitAll(function(){ cb.apply(false,[data]) })
-    },
-    funnel_domains: function(cb,data){
-      var q = queue(5)
-      crusher.api.funnelDomains(data.actions,q)
-      q.awaitAll(function(){ cb.apply(false,[data]) })
-    }
+  funnel.services[FUNNEL_AVAILS] = function(cb,data){
+    var q = queue(5)
+    crusher.api.funnelAvails(data.actions,q)
+    q.awaitAll(function(){ cb.apply(false,[data]) })
+  }
+  funnel.services[FUNNEL_DOMAINS] = function(cb,data){
+    var q = queue(5)
+    crusher.api.funnelDomains(data.actions,q)
+    q.awaitAll(function(){ cb.apply(false,[data]) })
   }
 
   funnel.subscriptions = [
     {
-      "name":"init",
-      "subscribe": [FUNNEL_INIT],
+      "name":"show",
+      "subscribe": [FUNNEL_SHOW],
       "callback": function(data){
         var funnel = crusher.ui.funnel.buildShow()
 
@@ -52,7 +51,24 @@ RB.crusher.ui.funnel = (function(funnel) {
       }
     },
     {
-      "name": "show",
+      "name":"init",
+      "subscribe": [FUNNEL_ALL,"actions","funnels","campaigns","lookalikes","lookalikeCampaigns"],
+      "callback": function(funnel){
+        
+        crusher.permissions("retargeting",crusher.api.helpers.attachCampaigns)
+        crusher.permissions("lookalike",crusher.api.helpers.attachLookalikes)
+
+        var data = crusher.cache.funnelData 
+        if (funnel.funnel_id) {
+          data = data.filter(function(x){return x.funnel_id == funnel.funnel_id})
+        }
+
+        crusher.ui.funnel.buildEdit(data,crusher.cache.actionData)
+        crusher.controller.funnel.show() 
+      }
+    },
+    {
+      "name": "show_funnel",
       "subscribe": [FUNNEL_UIDS],
       "callback": function(data){
 
@@ -247,19 +263,10 @@ RB.crusher.ui.funnel = (function(funnel) {
     }
   } 
 
-  
-    
-
-  
-
-  funnel.build = function(funnel_data, action_data) {
+  funnel.buildEdit = function(funnel_data, action_data) {
     
     var target = d3.selectAll(".funnel-wrapper")
     var data = funnel_data[0] ? [funnel_data[0]] : []
-
-    
-    funnel.register_publishers()
-    funnel.register_subscribers()
 
     var funnels = d3_splat(target,".funnel","div",data)
       .classed("funnel",true)
@@ -272,6 +279,9 @@ RB.crusher.ui.funnel = (function(funnel) {
   }
 
   funnel.buildBase = function() {
+
+    funnel.register_publishers()
+    funnel.register_subscribers()
 
     var target = d3.selectAll(".container")
     var rowData = [{"id":"funnel"}]
