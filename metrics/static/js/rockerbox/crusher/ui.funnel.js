@@ -161,10 +161,6 @@ RB.crusher.ui.funnel = (function(funnel) {
 
     })
 
-
-
-    
-
   }
 
   funnel.build = function(funnel_data, action_data) {

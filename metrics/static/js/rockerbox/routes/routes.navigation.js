@@ -7,6 +7,12 @@ RB.routes.navigation = (function(navigation) {
   var __forward__ = []
 
   window.onpopstate = function(x) {
+    /*
+     * This handles all of the state changes when a person goes either forward or back.
+     * When a person goes either forward or backwards, the state object is is found.
+     * The state is then tested against the previous, or the next to determine which direction
+     * and how the page should be updated
+     */
     
     if (x.state) {
 

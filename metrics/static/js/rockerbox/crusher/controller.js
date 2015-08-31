@@ -62,20 +62,18 @@ RB.crusher.controller = (function(controller) {
     },
     "funnel/existing": function(funnel) {
       
-      var id = funnel ? funnel.funnel_id : false
-
       crusher.ui.funnel.buildBase() 
 
       var to_subscribe = ["actions","funnels","campaigns","lookalikes","lookalikeCampaigns"]
       crusher.subscribe.add_subscriber(to_subscribe, function(){
 
-        crusher.api.helpers.attachCampaigns()
-        crusher.api.helpers.attachLookalikes()
+        crusher.permissions("retargeting",crusher.api.helpers.attachCampaigns)
+        crusher.permissions("lookalike",crusher.api.helpers.attachLookalikes)
 
-
-        var data = (id) ? 
-          crusher.cache.funnelData.filter(function(x){return x.funnel_id == id}) : 
-          crusher.cache.funnelData
+        var data = crusher.cache.funnelData 
+        if (funnel.funnel_id) {
+          data = data.filter(function(x){return x.funnel_id == funnel.funnel_id})
+        }
 
         crusher.ui.funnel.build(data,crusher.cache.actionData)
         controller.funnel.show()

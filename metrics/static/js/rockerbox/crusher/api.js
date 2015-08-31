@@ -112,6 +112,7 @@ RB.crusher.api = (function(api) {
 
   api.URL = {
     source: qs.advertiser,
+    userPermissions: "/account/permissions",
     actionURL: "/crusher/funnel/action?format=json",
     actionUIDs: "/crusher/pattern_search/uids?search=",
 
@@ -245,6 +246,17 @@ RB.crusher.api = (function(api) {
           })
         }
 
+      }),
+      permissions: genericQueuedAPI(function(cb,deferred_cb) {
+
+        if (!cache.userPermissions) {
+          d3.json(api.URL.userPermissions,function(dd){
+            cache.userPermissions = dd.results
+            deferred_cb(null,cb)
+          })
+        } else {
+          deferred_cb(null,cb)
+        }
       }),
       funnels: genericQueuedAPI(function(cb,deferred_cb) {
 
