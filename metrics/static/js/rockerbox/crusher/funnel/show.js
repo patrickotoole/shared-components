@@ -15,6 +15,11 @@ RB.crusher.ui.funnel.show = (function(show,funnel,crusher) {
     return data
   }
 
+  funnel.events = (function(events) {
+    events["funnel_rendered"] = true
+    return events
+  })(funnel.events || {})
+
   funnel.components = (function(components) {
     return register(
       components,

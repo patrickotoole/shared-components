@@ -2,49 +2,13 @@ var RB = RB || {}
 RB.crusher = RB.crusher || {}
 RB.crusher.ui = RB.crusher.ui || {}
 
-RB.crusher.ui.funnel = (function(funnel) {
-
-  var crusher = RB.crusher
-
-  var FUNNEL_ALL       = "funnel_all",
-      FUNNEL_RENDERED  = "funnel_rendered",
-      DOMAINS_RENDERED = "domains_rendered",
-      AVAILS_RENDERED  = "avails_rendered",
-      FUNNEL_SHOW      = "funnel_show"
-
-  funnel.events = {}
-  funnel.events[FUNNEL_RENDERED] = true
-  funnel.events[DOMAINS_RENDERED] = true
-  funnel.events[AVAILS_RENDERED] = true
-  funnel.events[FUNNEL_SHOW] = true
-  funnel.events[FUNNEL_ALL] = true
-
-
-  funnel.subscriptions = [
-    {
-      "name":"init",
-      "subscribe": [FUNNEL_ALL,"actions","funnels","campaigns","lookalikes","lookalikeCampaigns"],
-      "callback": function(funnel){
-        
-        crusher.permissions("retargeting",crusher.api.helpers.attachCampaigns)
-        crusher.permissions("lookalike",crusher.api.helpers.attachLookalikes)
-
-        var data = crusher.cache.funnelData 
-        if (funnel.funnel_id) {
-          data = data.filter(function(x){return x.funnel_id == funnel.funnel_id})
-        }
-
-        crusher.ui.funnel.buildEdit(data,crusher.cache.actionData)
-        crusher.controller.funnel.show() 
-      }
-    }
-  ]
+RB.crusher.ui.funnel = (function(funnel,crusher) {
 
   funnel.register_subscribers = function() {
 
     var subs = Object.keys(funnel.components).map(function(c){
       return funnel.components[c]
-    }).concat(funnel.subscriptions)
+    })
 
     subs.map(function(subscription){
 
@@ -239,4 +203,4 @@ RB.crusher.ui.funnel = (function(funnel) {
    
 
   return funnel
-})(RB.crusher.ui.funnel || {})   
+})(RB.crusher.ui.funnel || {}, RB.crusher)   

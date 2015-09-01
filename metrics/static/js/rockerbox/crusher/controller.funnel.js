@@ -66,17 +66,17 @@ RB.crusher.controller.funnel = (function(funnel) {
       crusher.subscribe.publishers["funnel_show"](data)
 
     },
-    show_domains: function(data,callback) {
-      crusher.subscribe.add_subscriber(["UIDsToDomains"], callback, "show_domains",true,true,data)
-    },
-    show_avails: function(data,callback) {
-      var q = queue(5)
-      data.actions.map(function(action) { 
-        crusher.api.actionToAvails(function(){},action,q)
-      })
-      q.awaitAll(callback)
-      
-    }
+    //show_domains: function(data,callback) {
+    //  crusher.subscribe.add_subscriber(["UIDsToDomains"], callback, "show_domains",true,true,data)
+    //},
+    //show_avails: function(data,callback) {
+    //  var q = queue(5)
+    //  data.actions.map(function(action) { 
+    //    crusher.api.actionToAvails(function(){},action,q)
+    //  })
+    //  q.awaitAll(callback)
+    //  
+    //}
   }
 
   

@@ -20,6 +20,12 @@ RB.crusher.ui.funnel.domains = (function(domains,funnel,crusher) {
     return data
   }
 
+  funnel.events = (function(events) {
+    events["domains_rendered"] = true
+    return events
+  })(funnel.events || {})
+
+
   funnel.components = (function(components) {
     return register(
       components,

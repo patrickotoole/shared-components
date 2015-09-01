@@ -18,7 +18,7 @@ var register = function(components, name, subscriptions, callback, publish) {
 RB.crusher.ui.funnel.wait = (function(wait,funnel,crusher) {
 
   wait.NAME = "wait"
-  wait.SUBSCRIBE = ["funnel_show"]
+  wait.SUBSCRIBE = ["funnel_initialized"]
   wait.PUBLISH = ["funnelUIDs"]
 
   wait.subscription = function(data) {
