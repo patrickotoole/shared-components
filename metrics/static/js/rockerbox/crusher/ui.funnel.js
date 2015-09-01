@@ -4,40 +4,6 @@ RB.crusher.ui = RB.crusher.ui || {}
 
 RB.crusher.ui.funnel = (function(funnel,crusher) {
 
-  funnel.register_subscribers = function() {
-
-    var subs = Object.keys(funnel.components).map(function(c){
-      return funnel.components[c]
-    })
-
-    subs.map(function(subscription){
-
-      var cb = function() {
-        var response = subscription.callback.apply(false,arguments)
-        if (subscription.publish) 
-          subscription.publish.map(function(p) {
-            crusher.subscribe.publishers[p](response)
-          })
-      }      
-
-      crusher.subscribe.add_subscriber(
-        subscription.subscribe,
-        cb,
-        subscription.name,
-        false,false
-      )
-    })
-  }
-
-  funnel.register_publishers = function() {
-
-    Object.keys(funnel.events).map(function(key){
-      crusher.subscribe.register_dummy_publisher(key)
-    })
-
-  }
-
-
   funnel.methods = {
     remove_action: function(actions,action) {
       var data = actions.datum()
@@ -173,9 +139,6 @@ RB.crusher.ui.funnel = (function(funnel,crusher) {
   }
 
   funnel.buildBase = function() {
-
-    funnel.register_publishers()
-    funnel.register_subscribers()
 
     var target = d3.selectAll(".container")
     var rowData = [{"id":"funnel"}]

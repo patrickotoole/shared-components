@@ -8,6 +8,7 @@ RB.crusher.ui.funnel.avails = (function(avails,funnel,crusher) {
   avails.NAME = "avails"
   avails.SUBSCRIBE = ["funnel_rendered","funnelAvails"]
   avails.PUBLISH = ["avails_rendered"]
+  avails.EVENTS = ["avails_rendered"]
 
   avails.subscription = function(data) {
     var funnel = crusher.ui.funnel.buildShow()
@@ -22,20 +23,8 @@ RB.crusher.ui.funnel.avails = (function(avails,funnel,crusher) {
     return data
   }
 
-  funnel.events = (function(events) {
-    events["avails_rendered"] = true
-    return events
-  })(funnel.events || {})
-
-
-  funnel.components = (function(components) {
-    return register(
-      components,
-      avails.NAME,
-      avails.SUBSCRIBE, 
-      avails.subscription,
-      avails.PUBLISH
-    )
-  })(funnel.components || {})
+  return avails
 
 })(RB.crusher.ui.funnel.avails || {}, RB.crusher.ui.funnel,RB.crusher)
+
+RB.component.export(RB.crusher.ui.funnel.avails, RB.crusher.ui.funnel)

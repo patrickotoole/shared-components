@@ -8,6 +8,7 @@ RB.crusher.ui.funnel.domains = (function(domains,funnel,crusher) {
   domains.NAME = "domains"
   domains.SUBSCRIBE = ["funnel_rendered","funnelDomains"]
   domains.PUBLISH = ["domains_rendered","tf_idf_funnel"]
+  domains.EVENTS = ["domains_rendered"]
 
   domains.subscription = function(data) {
     data.funnel_domains = data.actions[data.actions.length-1].funnel_domains
@@ -20,20 +21,8 @@ RB.crusher.ui.funnel.domains = (function(domains,funnel,crusher) {
     return data
   }
 
-  funnel.events = (function(events) {
-    events["domains_rendered"] = true
-    return events
-  })(funnel.events || {})
-
-
-  funnel.components = (function(components) {
-    return register(
-      components,
-      domains.NAME,
-      domains.SUBSCRIBE, 
-      domains.subscription,
-      domains.PUBLISH
-    )
-  })(funnel.components || {})
+  return domains
 
 })(RB.crusher.ui.funnel.domains || {}, RB.crusher.ui.funnel,RB.crusher)
+
+RB.component.export(RB.crusher.ui.funnel.domains, RB.crusher.ui.funnel)
