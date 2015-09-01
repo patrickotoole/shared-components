@@ -299,7 +299,7 @@ RB.crusher.api = (function(api) {
           deferred_cb(null,cb)
         }
       }),
-      funnelUIDs: genericQueuedAPI(function(funnel,deferred_cb) {
+      funnelUIDs: genericQueuedAPIWithData(function(funnel,cb,deferred_cb) {
         var funnel_actions = funnel.actions
         var patterns = funnel_actions.map(function(action) { return action.url_pattern })
         var action_strings = patterns.map(function(pattern){
@@ -321,11 +321,12 @@ RB.crusher.api = (function(api) {
             action.funnel_percent = (previous === false) ? 1 : action.funnel_count/previous
             previous = action.funnel_count
           })
-          deferred_cb(null,funnel_actions)
+          deferred_cb(null,cb.bind(false,funnel))
         })
         
       }),
-      funnelDomains: genericQueuedAPI(function(funnel_actions,deferred_cb) {
+      funnelDomains: genericQueuedAPIWithData(function(funnel,cb,deferred_cb) {
+        var funnel_actions = funnel.actions
         var patterns = funnel_actions.map(function(action) { return action.url_pattern })
         var action_strings = patterns.map(function(pattern){
           return pattern.map(function(p){ return p.split(" ").join(",") })
@@ -337,11 +338,12 @@ RB.crusher.api = (function(api) {
           funnel_actions.map(function(action,i){
             action.funnel_domains = dd.results[i].domains
           })
-          deferred_cb(null,funnel_actions)
+          deferred_cb(null,cb.bind(false,funnel))
         })
         
       }),
-      funnelAvails: genericQueuedAPI(function(funnel_actions,deferred_cb) {
+      funnelAvails: genericQueuedAPIWithData(function(funnel,cb,deferred_cb) {
+        var funnel_actions = funnel.actions
         var patterns = funnel_actions.map(function(action) { return action.url_pattern })
         var action_strings = patterns.map(function(pattern){
           return pattern.map(function(p){ return p.split(" ").join(",") })
@@ -357,7 +359,7 @@ RB.crusher.api = (function(api) {
             }
             action.funnel_avails = dd.results[i].avails
           })
-          deferred_cb(null,funnel_actions)
+          deferred_cb(null,cb.bind(false,funnel))
         })
         
       }),

@@ -10,10 +10,7 @@ RB.crusher.ui.funnel = (function(funnel) {
       FUNNEL_RENDERED  = "funnel_rendered",
       DOMAINS_RENDERED = "domains_rendered",
       AVAILS_RENDERED  = "avails_rendered",
-      FUNNEL_SHOW      = "funnel_show",
-      FUNNEL_UIDS      = "funnel_uids",
-      FUNNEL_AVAILS    = "funnel_avails",
-      FUNNEL_DOMAINS   = "funnel_domains"
+      FUNNEL_SHOW      = "funnel_show"
 
   funnel.events = {}
   funnel.events[FUNNEL_RENDERED] = true
@@ -22,34 +19,8 @@ RB.crusher.ui.funnel = (function(funnel) {
   funnel.events[FUNNEL_SHOW] = true
   funnel.events[FUNNEL_ALL] = true
 
-  funnel.services = {}
-  funnel.services[FUNNEL_UIDS] = function(cb,data){
-    var q = queue(5) 
-    crusher.api.funnelUIDs(data,q) 
-    q.awaitAll(function(){ cb.apply(false,[data]) })
-  }
-  funnel.services[FUNNEL_AVAILS] = function(cb,data){
-    var q = queue(5)
-    crusher.api.funnelAvails(data.actions,q)
-    q.awaitAll(function(){ cb.apply(false,[data]) })
-  }
-  funnel.services[FUNNEL_DOMAINS] = function(cb,data){
-    var q = queue(5)
-    crusher.api.funnelDomains(data.actions,q)
-    q.awaitAll(function(){ cb.apply(false,[data]) })
-  }
 
   funnel.subscriptions = [
-    {
-      "name":"show",
-      "subscribe": [FUNNEL_SHOW],
-      "callback": function(data){
-        var funnel = crusher.ui.funnel.buildShow()
-
-        crusher.ui.funnel.wait(funnel)
-        crusher.subscribe.publishers[FUNNEL_UIDS](data)
-      }
-    },
     {
       "name":"init",
       "subscribe": [FUNNEL_ALL,"actions","funnels","campaigns","lookalikes","lookalikeCampaigns"],
@@ -66,65 +37,28 @@ RB.crusher.ui.funnel = (function(funnel) {
         crusher.ui.funnel.buildEdit(data,crusher.cache.actionData)
         crusher.controller.funnel.show() 
       }
-    },
-    {
-      "name": "show_funnel",
-      "subscribe": [FUNNEL_UIDS],
-      "callback": function(data){
-
-        var funnel = crusher.ui.funnel.buildShow()
-
-        crusher.ui.funnel.show(funnel)
-        crusher.subscribe.publishers[FUNNEL_RENDERED]()
-        crusher.subscribe.publishers[FUNNEL_DOMAINS](data)
-        crusher.subscribe.publishers[FUNNEL_AVAILS](data) 
-      }
-    },
-    {
-      "name": "show_domains",
-      "subscribe": [FUNNEL_RENDERED,FUNNEL_DOMAINS],
-      "callback": function(_,data) {
-        data.funnel_domains = data.actions[data.actions.length-1].funnel_domains
-
-        var funnel = crusher.ui.funnel.buildShow(),
-          is_lookalike = crusher.permissions.bind(false,"lookalike"),
-          render_lookalike = crusher.ui.funnel.show.component.lookalike.bind(false,funnel)
-
-        is_lookalike(render_lookalike)
-        crusher.subscribe.publishers[DOMAINS_RENDERED](data)
-        crusher.subscribe.publishers["tf_idf_funnel"](data)
-      }
-    },
-    {
-      "name": "show_avails",
-      "subscribe": [FUNNEL_RENDERED,FUNNEL_AVAILS],
-      "callback": function(_,data) {
-        var funnel = crusher.ui.funnel.buildShow()
-        var exchanges = funnel.selectAll(".exchange-summary .exchange")
-
-        var funnel = crusher.ui.funnel.buildShow(),
-          is_retargeting = crusher.permissions.bind(false,"retargeting"),
-          render_retargeting = crusher.ui.funnel.show.component.campaign.bind(false,funnel)
-      
-        is_retargeting(render_retargeting)
-        crusher.ui.funnel.show.component.avails(exchanges)
-      }
-    },
-    {
-      "name": "show_idf",
-      "subscribe": [DOMAINS_RENDERED,"tf_idf_funnel"],
-      "callback": function(_,data) {
-        var funnel = crusher.ui.funnel.buildShow()
-        crusher.ui.funnel.show.component.domains.bind(false,funnel)(data)
-      }
     }
   ]
 
   funnel.register_subscribers = function() {
-    funnel.subscriptions.map(function(subscription){
+
+    var subs = Object.keys(funnel.components).map(function(c){
+      return funnel.components[c]
+    }).concat(funnel.subscriptions)
+
+    subs.map(function(subscription){
+
+      var cb = function() {
+        var response = subscription.callback.apply(false,arguments)
+        if (subscription.publish) 
+          subscription.publish.map(function(p) {
+            crusher.subscribe.publishers[p](response)
+          })
+      }      
+
       crusher.subscribe.add_subscriber(
         subscription.subscribe,
-        subscription.callback,
+        cb,
         subscription.name,
         false,false
       )
@@ -132,10 +66,6 @@ RB.crusher.ui.funnel = (function(funnel) {
   }
 
   funnel.register_publishers = function() {
-
-    Object.keys(funnel.services).map(function(key){
-      crusher.subscribe.register_publisher(key,funnel.services[key])
-    })
 
     Object.keys(funnel.events).map(function(key){
       crusher.subscribe.register_dummy_publisher(key)
