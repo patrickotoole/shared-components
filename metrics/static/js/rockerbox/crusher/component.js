@@ -1,13 +1,25 @@
 var RB = RB || {}
 RB.crusher = RB.crusher || {}
+RB.crusher.subscribe = RB.crusher.subscribe || {}
 
-RB.component = (function(self,crusher) {
-  self.export = function(component,object) {
+RB.component = (function(self,subscribe) {
+
+  // this is dependent on the subscription module (pub/sub)
+  // note the inclusion of subscribe as an argument
+
+  self.export = function(component,container) {
   
+
     /*
-      Takes a component and component backbone.
-        - Adds events associated with component / events it will subscribe to
-        - Adds the component to subscribe to events that hit the backbone
+      Arguments:
+        component - this the component to register. it needs to contain specific fields in order 
+          to register itself as shown in the default fields below.
+        container - this is the container which will be assigned the component. it can be an empty
+          object but for organization it is recommend to have a standard container for components
+          of a similar type.
+      Description:
+        This function takes a component and an container on which to register the components
+        and adds these as subscriptions to the publisher subscribe backbone
     */
   
     var default_field = function(object,field,default_value) {
@@ -34,8 +46,8 @@ RB.component = (function(self,crusher) {
       return events
     }
   
-    object.components = register(
-      object.components || {},
+    container.components = register(
+      container.components || {},
       component.NAME,
       component.SUBSCRIBE,
       component.subscription,
@@ -43,33 +55,31 @@ RB.component = (function(self,crusher) {
     )
   
     component.EVENTS.map(function(name) {
-      object.events = define_event(
-        object.events || {}, 
+      container.events = define_event(
+        container.events || {}, 
         name
       )
     })
 
-    self.register_publishers(object)
-    self.register_subscribers(object)
+    self.register_publishers(container)
+    self.register_subscribers(container)
   
   }
 
-  self.register_subscribers = function(object) {
-    var subs = Object.keys(object.components).map(function(c){
-      return object.components[c]
-    })
+  self.register_subscribers = function(container) {
 
-    subs.map(function(subscription){
+    Object.keys(container.components).map(function(c){
 
+      var subscription = container.components[c]
       var cb = function() {
         var response = subscription.callback.apply(false,arguments)
         if (subscription.publish) 
           subscription.publish.map(function(p) {
-            crusher.subscribe.publishers[p](response)
+            subscribe.publishers[p](response)
           })
       }      
 
-      crusher.subscribe.add_subscriber(
+      subscribe.add_subscriber(
         subscription.subscribe,
         cb,
         subscription.name,
@@ -78,11 +88,11 @@ RB.component = (function(self,crusher) {
     })
   }
 
-  self.register_publishers = function(object) {
-    Object.keys(object.events).map(function(key){
-      crusher.subscribe.register_dummy_publisher(key)
+  self.register_publishers = function(container) {
+    Object.keys(container.events).map(function(key){
+      subscribe.register_dummy_publisher(key)
     })
   }
 
   return self 
-})(RB.component || {}, RB.crusher)
+})(RB.component || {}, RB.crusher.subscribe)
