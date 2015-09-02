@@ -50,37 +50,19 @@ RB.crusher.controller = (function(controller) {
 
       d3_updateable(right,"h5","h5").text("Top off-site pages your users visit")
 
-
-
-
-
-
-
       //d3_updateable(funnelRow,"h5","h5").text("about this page and why its here")
 
       funnelRow.exit().remove()
     },
     "funnel/existing": function(funnel) {
-      
-      var id = funnel ? funnel.funnel_id : false
+
+      var events = ["actions","funnels","campaigns","lookalikes","lookalikeCampaigns"]
 
       crusher.ui.funnel.buildBase() 
 
-      var to_subscribe = ["actions","funnels","campaigns","lookalikes","lookalikeCampaigns"]
-      crusher.subscribe.add_subscriber(to_subscribe, function(){
-
-        crusher.api.helpers.attachCampaigns()
-        crusher.api.helpers.attachLookalikes()
-
-
-        var data = (id) ? 
-          crusher.cache.funnelData.filter(function(x){return x.funnel_id == id}) : 
-          crusher.cache.funnelData
-
-        crusher.ui.funnel.build(data,crusher.cache.actionData)
-        controller.funnel.show()
-
-      },"funnel_view",true,true)
+      events.map(function(x){ crusher.subscribe.publishers[x]() })
+      crusher.subscribe.publishers["funnel_all"](funnel)
+      
     },
     "funnel/new": function(){
       crusher.ui.funnel.buildBase()

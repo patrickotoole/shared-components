@@ -112,6 +112,7 @@ RB.crusher.api = (function(api) {
 
   api.URL = {
     source: qs.advertiser,
+    userPermissions: "/account/permissions",
     actionURL: "/crusher/funnel/action?format=json",
     actionUIDs: "/crusher/pattern_search/uids?search=",
 
@@ -146,10 +147,11 @@ RB.crusher.api = (function(api) {
         if (domains) {
           d3.xhr("/crusher/domain/idf")
             .post(JSON.stringify({"domains":domains}), function(err,dd){
+              var json = JSON.parse(dd.response)
               var keyed = d3.nest()
                 .key(function(x){return x.domain})
                 .rollup(function(x){return x[0]})
-                .map(dd)
+                .map(json)
 
               data.funnel_domains.map(function(x) {
                 idf_dict = keyed[x.domain] || {}
@@ -158,10 +160,10 @@ RB.crusher.api = (function(api) {
                 x.wuid =  Math.exp(x.idf) * Math.log(x.uid)
 
               })
-              deferred_cb(null,cb)
+              deferred_cb(null,cb.bind(false,data))
             }) 
         } else {
-          deferred_cb(null,cb)
+          deferred_cb(null,cb.bind(false,data))
         }
       }),
       tf_idf: genericQueuedAPIWithData(function(cb,deferred_cb) {
@@ -245,6 +247,17 @@ RB.crusher.api = (function(api) {
         }
 
       }),
+      permissions: genericQueuedAPI(function(cb,deferred_cb) {
+
+        if (!cache.userPermissions) {
+          d3.json(api.URL.userPermissions,function(dd){
+            cache.userPermissions = dd.results
+            deferred_cb(null,cb)
+          })
+        } else {
+          deferred_cb(null,cb)
+        }
+      }),
       funnels: genericQueuedAPI(function(cb,deferred_cb) {
 
         if (!cache.funnelData) {
@@ -286,7 +299,7 @@ RB.crusher.api = (function(api) {
           deferred_cb(null,cb)
         }
       }),
-      funnelUIDs: genericQueuedAPI(function(funnel,deferred_cb) {
+      funnelUIDs: genericQueuedAPIWithData(function(funnel,cb,deferred_cb) {
         var funnel_actions = funnel.actions
         var patterns = funnel_actions.map(function(action) { return action.url_pattern })
         var action_strings = patterns.map(function(pattern){
@@ -308,11 +321,12 @@ RB.crusher.api = (function(api) {
             action.funnel_percent = (previous === false) ? 1 : action.funnel_count/previous
             previous = action.funnel_count
           })
-          deferred_cb(null,funnel_actions)
+          deferred_cb(null,cb.bind(false,funnel))
         })
         
       }),
-      funnelDomains: genericQueuedAPI(function(funnel_actions,deferred_cb) {
+      funnelDomains: genericQueuedAPIWithData(function(funnel,cb,deferred_cb) {
+        var funnel_actions = funnel.actions
         var patterns = funnel_actions.map(function(action) { return action.url_pattern })
         var action_strings = patterns.map(function(pattern){
           return pattern.map(function(p){ return p.split(" ").join(",") })
@@ -324,11 +338,12 @@ RB.crusher.api = (function(api) {
           funnel_actions.map(function(action,i){
             action.funnel_domains = dd.results[i].domains
           })
-          deferred_cb(null,funnel_actions)
+          deferred_cb(null,cb.bind(false,funnel))
         })
         
       }),
-      funnelAvails: genericQueuedAPI(function(funnel_actions,deferred_cb) {
+      funnelAvails: genericQueuedAPIWithData(function(funnel,cb,deferred_cb) {
+        var funnel_actions = funnel.actions
         var patterns = funnel_actions.map(function(action) { return action.url_pattern })
         var action_strings = patterns.map(function(pattern){
           return pattern.map(function(p){ return p.split(" ").join(",") })
@@ -344,7 +359,7 @@ RB.crusher.api = (function(api) {
             }
             action.funnel_avails = dd.results[i].avails
           })
-          deferred_cb(null,funnel_actions)
+          deferred_cb(null,cb.bind(false,funnel))
         })
         
       }),

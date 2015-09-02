@@ -6,8 +6,12 @@ RB.menu.selectbar = (function(selectbar) {
 
   selectbar.components = {
     wrapper: function(target,data) {
-      return d3_splat(target,".selectbar","div",data)
+      var bars = d3_splat(target,".selectbar","div",data)
         .classed("selectbar",true)
+
+      bars.exit().remove()
+
+      return bars
     },
     heading: function(target,has_back) {
       var h5 = d3_updateable(target,".heading","h5")
