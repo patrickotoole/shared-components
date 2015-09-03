@@ -162,21 +162,30 @@ var drawTree = function(data) {
     var tooltip = makeTooltip(function(values){
 
       var y = findParentLevelArray(x,[]);
-
+  
       var dp = data
       y.map(function(d){ dp = dp.children[d-1] })
       dp.children = dp.children || []
 
-      var node = {"node":{"pattern":values.pattern}}
+      if (values.json_id.length > 0) {
+        try {
+          var node = JSON.parse(values.json_id)
+        } catch(e) { }
 
-      if (values.segment_id != "")
-        node["node"]["segment"] = {"id":values.segment_id,"value":values.value,"duration":values.duration}
-
-      if (values.queue_id != "")
-        node["node"]["queue"] = {"id":values.queue_id}
-
-      if (values.label_name != "")
-        node["node"]["label"] = values.label_name
+      } else {
+  
+        var node = {"node":{"pattern":values.pattern}}
+  
+        if (values.segment_id != "")
+          node["node"]["segment"] = {"id":values.segment_id,"value":values.value,"duration":values.duration}
+  
+        if (values.queue_id != "")
+          node["node"]["queue"] = {"id":values.queue_id}
+  
+        if (values.label_name != "")
+          node["node"]["label"] = values.label_name
+  
+      }
 
       dp.children.push(node)
       pushTree(extractData(data))
@@ -212,103 +221,118 @@ var drawTree = function(data) {
 
 var makeTooltip = function(callback){
 
-
-var tooltip = d3.select("body")
-  .append("div")
-  .style("position", "absolute")
-  .style("z-index", "10")
-  .style("background-color","white")
-  .style("width","300px")
-  .style("height","140px")
-  .style("padding","10px")
-  .style("border","1px solid #ccc")
-  .style("font-family","Helvetica")
-  .style("font-size","12px")
-
-
-tooltip
-  .append("div")
-  .text("Add a node");
-
-var patlabel = tooltip.append("div")
-  .append("label")
-
-patlabel
-  .append("span")
-  .text("pattern")
-
-patlabel
-  .append("input")
-  .attr("id","pattern")
-
-
-var x = ["segment_id","duration","value"]
-
-var seglabel = tooltip.append("div")
-  .classed("segment",true).selectAll("label")
-  .data(x)
-  .enter()
+  var tooltip = d3.select("body")
     .append("div")
+    .style("position", "absolute")
+    .style("z-index", "10")
+    .style("background-color","white")
+    .style("width","300px")
+    .style("height","140px")
+    .style("padding","10px")
+    .style("border","1px solid #ccc")
+    .style("font-family","Helvetica")
+    .style("font-size","12px")
+  
+  
+  tooltip
+    .append("div")
+    .text("Add a node");
+  
+  var patlabel = tooltip.append("div")
     .append("label")
-
-
-seglabel
-  .append("span")
-  .text(function(i){return i})
-
-seglabel
-  .append("input")
-    .attr("id",function(x){return x})
-
-var queuelabel = tooltip.append("div")
-  .append("label")
-
-queuelabel
-  .append("span")
-  .text("queue")
-
-queuelabel
-  .append("input")
-  .attr("id","queue_id")
-
-
-var lablabel = tooltip.append("div")
-  .append("label")
-
-lablabel
-  .append("span")
-  .text("label")
-
-lablabel
-  .append("input")
-  .attr("id","label_name")
-
-tooltip.append("div")
-  .append("button")
-  .text("add")
-  .on("click",function(x){
+  
+  patlabel
+    .append("span")
+    .text("pattern")
+  
+  patlabel
+    .append("input")
+    .attr("id","pattern")
+  
+  
+  var x = ["segment_id","duration","value"]
+  
+  var seglabel = tooltip.append("div")
+    .classed("segment",true).selectAll("label")
+    .data(x)
+    .enter()
+      .append("div")
+      .append("label")
+  
+  
+  seglabel
+    .append("span")
+    .text(function(i){return i})
+  
+  seglabel
+    .append("input")
+      .attr("id",function(x){return x})
+  
+  var queuelabel = tooltip.append("div")
+    .append("label")
+  
+  queuelabel
+    .append("span")
+    .text("queue")
+  
+  queuelabel
+    .append("input")
+    .attr("id","queue_id")
+  
+  
+  var lablabel = tooltip.append("div")
+    .append("label")
+  
+  lablabel
+    .append("span")
+    .text("label")
+  
+  lablabel
+    .append("input")
+    .attr("id","label_name")
+  
+  
+  var jsonlabel = tooltip.append("div")
+    .append("label")
+  
+  jsonlabel
+    .append("span")
+    .text("json")
+  
+  jsonlabel
+    .append("input")
+    .attr("id","json_id")
+  
+  
+  
+  
+  
+  tooltip.append("div")
+    .append("button")
+    .text("add")
+    .on("click",function(x){
+      d3.event.preventDefault();
+      d3.event.stopPropagation();
+      var values = {}
+      tooltip.selectAll("input")[0].map(function(x){ values[x.id] = x.value})
+      callback(values)
+      return false
+    })
+  
+  tooltip.on("click",function(x){
     d3.event.preventDefault();
     d3.event.stopPropagation();
-    var values = {}
-    tooltip.selectAll("input")[0].map(function(x){ values[x.id] = x.value})
-    callback(values)
     return false
   })
-
-tooltip.on("click",function(x){
-  d3.event.preventDefault();
-  d3.event.stopPropagation();
-  return false
-})
-
-d3.select("body").on("click",function(x){
-  tooltip.remove()
-  window.tooltip_opened = 0
-})
-
-window.tooltip_opened = 1
-
-return tooltip
+  
+  d3.select("body").on("click",function(x){
+    tooltip.remove()
+    window.tooltip_opened = 0
+  })
+  
+  window.tooltip_opened = 1
+  
+  return tooltip
 
 }
 
