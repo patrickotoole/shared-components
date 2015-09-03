@@ -19,6 +19,17 @@ FROM user a JOIN user_permissions b on (a.id = b.user_id)
 WHERE a.username = '%s'
 """
 
+FEATURES_QUERY = """
+SELECT 
+    name
+FROM user a JOIN user_permissions b on (a.id = b.user_id) 
+    JOIN permissions_app_features USING (permissions_id) 
+    JOIN app_features USING (app_feature_id) 
+WHERE a.username = '%s';
+"""
+
+
+
 USER_QUERY = """
 SELECT DISTINCT 
     user.id as id, 
@@ -142,21 +153,33 @@ class AccountPermissionsHandler(BaseHandler):
             df = df[cols]
             return Convert.df_to_values(df)
 
+    def get_user_feature_permissions(self, username):
+        df = self.db.select_dataframe(FEATURES_QUERY % username)
+        return Convert.df_to_values(df)
+
     @tornado.web.authenticated
     def get(self):
         advertiser = self.get_argument("advertiser_id", False)
         u = self.get_current_user()
         current_advertiser = self.current_advertiser
         
-        permissions = self.get_user_permissions(u)
+        advertiser_permissions = self.get_user_permissions(u)
+        feature_permissions = self.get_user_feature_permissions(u)
 
-        for p in permissions:
+        for p in advertiser_permissions:
             if str(p["external_advertiser_id"]) == str(current_advertiser):
                 p["selected"] = True
             else:
                 p["selected"] = False
 
-        self.write(ujson.dumps({"results": permissions}))
+        obj = {
+            "results" : {
+                "advertisers": advertiser_permissions,
+                "feature_permissions": feature_permissions
+            }
+        }
+
+        self.write(ujson.dumps(obj))
 
     @tornado.web.authenticated
     def post(self):

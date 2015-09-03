@@ -37,7 +37,7 @@ RB.menu.navbar = (function(navbar) {
     },
     advertiser_switch: function(target) {
       $.getJSON("/account/permissions", function(perm) {
-	var permissions = perm["results"]
+	var permissions = perm["results"]['advertisers']
 	var current_advertiser = null
 
 	for (var i = 0; i < permissions.length; i++){

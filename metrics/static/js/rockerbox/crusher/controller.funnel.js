@@ -19,7 +19,7 @@ RB.crusher.controller.funnel = (function(funnel) {
       },"new_funnel",true,true)
     },
     save: function(data,callback) {
-      crusher.subscribe.add_subscriber(["funnels","tf_idf"], function(){ 
+      crusher.subscribe.add_subscriber(["funnels","tf_idf_funnel"], function(){ 
         var d = {
           "advertiser": source,
           "owner": "owner",
@@ -61,50 +61,22 @@ RB.crusher.controller.funnel = (function(funnel) {
         }); 
     },
     show: function() {
-     
       var funnel = crusher.ui.funnel.buildShow()
       var data = funnel.datum()
-
-      var uids = "uids_" + data.funnel_id,
-        avails = "avails_" + data.funnel_id,
-        domains = "domains_" + data.funnel_id
-
-      crusher.ui.funnel.wait(funnel)
-
-      crusher.subscribe.add_subscriber([uids],function(){
-
-        crusher.ui.funnel.show(funnel)
-
-        crusher.subscribe.add_subscriber([domains], function(x) {
-          data.funnel_domains = data.actions[data.actions.length-1].funnel_domains
-          crusher.subscribe.add_subscriber(["tf_idf_funnel"], function(x) {
-            crusher.ui.funnel.show.component.domains.bind(false,funnel)(x)
-            crusher.ui.funnel.show.component.lookalike(funnel)
-          },"idf",true,true,data)
-        },"domains",true,true, data)
-        
-        crusher.subscribe.add_subscriber([avails], function(x) {
-          var exchanges = funnel.selectAll(".exchange-summary .exchange")
-        
-          crusher.ui.funnel.show.component.avails(exchanges)
-          crusher.ui.funnel.show.component.campaign(funnel)
-        },"show_me_the_money",true,true, data)
-
-      },"show",true,true,data)
-
+      crusher.subscribe.publishers["funnel_show"](data)
 
     },
-    show_domains: function(data,callback) {
-      crusher.subscribe.add_subscriber(["UIDsToDomains"], callback, "show_domains",true,true,data)
-    },
-    show_avails: function(data,callback) {
-      var q = queue(5)
-      data.actions.map(function(action) { 
-        crusher.api.actionToAvails(function(){},action,q)
-      })
-      q.awaitAll(callback)
-      
-    }
+    //show_domains: function(data,callback) {
+    //  crusher.subscribe.add_subscriber(["UIDsToDomains"], callback, "show_domains",true,true,data)
+    //},
+    //show_avails: function(data,callback) {
+    //  var q = queue(5)
+    //  data.actions.map(function(action) { 
+    //    crusher.api.actionToAvails(function(){},action,q)
+    //  })
+    //  q.awaitAll(callback)
+    //  
+    //}
   }
 
   

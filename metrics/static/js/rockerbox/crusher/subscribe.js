@@ -4,6 +4,19 @@ RB.crusher = RB.crusher || {}
 RB.crusher.subscribe = (function(subscribe) {
 
   var Publisher = function(request, callback, name) {
+
+    /* 
+       Arguments:
+         request - function from which to get data
+         callback - event to trigger with data
+         name - name of the event (only used for logging)
+
+       Description:
+         This is a publisher object. We use this to request information multiple times, 
+         but trigger the event only once. This is implements with the lock.  When our request 
+         function is completed, we will trigger the bound event with the data to return.
+    */
+
     this.lock = false
 
     this.callback = function(data) {
@@ -67,12 +80,22 @@ RB.crusher.subscribe = (function(subscribe) {
     // adds the data object to the
     subscribe.dispatchers[name] = d3.dispatch(name)
 
+    // select the "push" event from the dispatcher
     var push = subscribe.dispatchers[name][name]
+
+    // bind the dispatcher and the event name to the event
     var bound = push.bind(subscribe.dispatchers[name],name)
 
     // the accessor needs to pass back the requested data
     var publisher = new Publisher(accessor,bound,name)
+
+    // make calling the publisher accesible
     subscribe.publishers[name] = publisher.call 
+  }
+
+  subscribe.register_dummy_publisher = function(name) {
+    var accessor = function(cb,data) {cb(data)}
+    subscribe.register_publisher(name,accessor)
   }
 
   
