@@ -36,25 +36,7 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
         l = []
         errs = []
         total = []
-
-        def handle_results(host,l,total,rows):
-            l += rows
-            total += [1]
-            #print host
-            #print "total: %s" % len(total)
-            
-        def handle_error(host,errs,total,rows):
-            errs += [1]
-            total += [1]
-            print "errs: %s %s" % (len(errs),host)
-
-        def fuck_python_results(host,l,total):
-            return lambda x: handle_results(host,l,total,x)
-
-        def fuck_python_errs(host,l,total):
-            return lambda x: handle_error(host,l,total,x)
-
-
+           
         start = time.time()
         try:
 
@@ -64,18 +46,14 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
             self.logging.info(filters)
             prefixes = range(0,100)
             for i in prefixes:
-                f = filters #+ """,{ type:"prefix", field: "uid", value: "%s" }""" % i
+                f = filters
                 lucene = LUCENE % {"filters": f, "logic": logic}
                 where = WHERE % {"advertiser":advertiser, "lucene":lucene}
                 query = QUERY % {"what":selects, "where": where}
 
-                for date in dates:#(dates[-2:-1] + dates[:-1]):
-                    date_str = " and date='%s'" % date # this needs to be parameterized to use different tables
+                for date in dates:
+                    date_str = " and date='%s'" % date 
                     date_str += " and u2 = %s" % i
-                    #future = self.cassandra.execute_async(query + date_str)
-                    #futures.append(future)
-                    #host = future._current_host.address
-                    #future.add_callbacks(callback=fuck_python_results(host,l,total),errback=fuck_python_errs(host,errs,total))
                     queries.append(query + date_str )
 
             from itertools import count
@@ -103,29 +81,20 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
                         finished_event.set()
             
                 c = num_started.next()
-                print c,num_queries,c <= num_queries, f
+
+                # pulls another entry off the queue to runs it
                 if c <= num_queries:
                     future = self.cassandra.execute_async(queries[c-1])
                     hosts[future._current_host.address] = hosts.get(future._current_host.address,0) + 1
                     future.add_callbacks(lambda x: insert_next(x,queries[c-1],l), lambda x: insert_next(x,queries[c-1] + " : " + future._current_host.address))
 
-            print num_queries
-            
+            # creates a batch of 80 request workers
             for i in range(min(80, num_queries)):
                 insert_next()
             
             finished_event.wait()
             print "finished"
-            #import ipdb; ipdb.set_trace()                    
             
-            # wait for them to complete and use the results
-            #print len(prefixes), len(dates)
-            #while len(total) < len(prefixes)*len(dates):
-            #    time.sleep(1) # dont need this sleep but its nice to print progress
-            #    print len(total)
-            #    pass
-            #print "finished"
-                #l += rows
             self.logging.info(start - time.time()) 
             self.logging.info(len(l))
 
@@ -141,7 +110,6 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
             
             return df
         except OperationTimedOut as exp:
-            #import ipdb; ipdb.set_trace()
             return False
 
         
