@@ -14,9 +14,26 @@ WHERE  = """WHERE source='%(advertiser)s' and lucene='%(lucene)s'"""
 LUCENE = """{ filter: { type: "boolean", %(logic)s: [%(filters)s]}}"""
 FILTER = """{ type:"wildcard", field: "url", value: "*%(pattern)s*"}"""
 
+INSERT_STATEMENT = "INSERT INTO rockerbox.action_occurrence (source,date,action,uid,url,occurrence) VALUES ('%(source)s','%(date)s','%(action)s','%(uid)s','%(url)s',%(occurrence)s)"
+
+class BatchedCassandra(object):
+    
+    def __init__(self,cassandra, batch_size=120):
+        self.cassandra = cassandra
+
+    def execute_many(self,queries,future_callback,final_callback):
+        futures = [] 
+
+        def run_next(previous_result,callback):
+            pass
+            
+    
+
 class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
 
     # TODO: add in the page_view counts
+
+    
 
     @decorators.deferred
     def defer_execute(self, selects, advertiser, pattern, date_clause, logic, 
@@ -37,7 +54,7 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
         errs = []
         total = []
            
-        start = time.time()
+        insert_queries = []
         try:
 
             # build a list of futures
@@ -48,8 +65,9 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
             for i in prefixes:
                 f = filters
                 lucene = LUCENE % {"filters": f, "logic": logic}
-                where = WHERE % {"advertiser":advertiser, "lucene":lucene}
-                query = QUERY % {"what":selects, "where": where}
+                #where = WHERE % {"advertiser":advertiser, "lucene":lucene}
+                where = "WHERE source='%(advertiser)s'" % {"advertiser":advertiser}
+                query = QUERY % {"what":"date,group_and_count(url,uid)", "where": where}
 
                 for date in dates:
                     date_str = " and date='%s'" % date 
@@ -68,44 +86,69 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
             hosts = {}
             error_hosts = {}
             
-            def insert_next(previous_result=sentinel,host="",l=l):
+            def insert_next(previous_result=sentinel,host="",l=l,pt=[0]):
                 f = 0
                 if type(previous_result) is list or isinstance(previous_result, BaseException):
                     if isinstance(previous_result, BaseException):
                         self.logging.error("Error on : %r %r", previous_result, host)
                         error_hosts[host] = error_hosts.get(host,0) + 1
                     else:
-                        l += previous_result
+                        start = time.time()
+                        res = previous_result[0]['rockerbox.group_and_count(url, uid)']
+                        for url_uid in res:
+                            x = url_uid.split(":")
+                            url = x[0]
+                            uid = x[1]
+                            count = res[url_uid]
+                            
+                            reconstructed = []
+                            
+                            for i in range(0,count):
+                                h = {"uid":uid,"date":previous_result[0]["date"],"url":url,"occurrence":i,"source":advertiser,"action":",".join(pattern)}
+                                reconstructed += [h]
+                                pt += [INSERT_STATEMENT % h]
+
+                            l += reconstructed
+                           
+                            
+ 
+                        #l += [{"uid":i,"date":previous_result[0]["date"],"url":j} for i in previous_result[0]['rockerbox.group_and_count(url, uid)'] for j in previous_result[0]['rockerbox.group_and_count(url, uid)'][i].split("|")]
+                        #l += [{"uid":i} for i in previous_result[0].keys() for j in previous_result[0][i]*[0]]
+ 
+
+                        #l += previous_result
                     f = num_finished.next()
                     if f >= num_queries:
                         finished_event.set()
             
                 c = num_started.next()
+                #if (~(c % 10)): print c
 
                 # pulls another entry off the queue to runs it
                 if c <= num_queries:
                     future = self.cassandra.execute_async(queries[c-1])
                     hosts[future._current_host.address] = hosts.get(future._current_host.address,0) + 1
-                    future.add_callbacks(lambda x: insert_next(x,queries[c-1],l), lambda x: insert_next(x,queries[c-1] + " : " + future._current_host.address))
+                    future.add_callbacks(lambda x: insert_next(x,queries[c-1],l,insert_queries), lambda x: insert_next(x,queries[c-1] + " : " + future._current_host.address,insert_queries))
 
             # creates a batch of 80 request workers
-            for i in range(min(80, num_queries)):
+            for i in range(min(900, num_queries)):
                 insert_next()
             
             finished_event.wait()
             print "finished"
+            print queries[0]
             
-            self.logging.info(start - time.time()) 
-            self.logging.info(len(l))
+            for insert in insert_queries:
+                future = self.cassandra.execute_async(insert)
 
             df = pandas.DataFrame(l)
             
             # If the query contains a capital letter, filter out any results 
             # that don't exactly match the query (case sensitive)
-            if [c for c in pattern[0] if c.isupper()]:
-                df = df[df.url.str.contains(pattern[0])]
+            #if [c for c in pattern[0] if c.isupper()]:
+            #df = df[df.url.str.contains(pattern[0])]
 
-            print errs
+            print "errors: %s" % len(errs)
             
             
             return df
