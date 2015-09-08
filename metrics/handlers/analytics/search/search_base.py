@@ -14,146 +14,197 @@ WHERE  = """WHERE source='%(advertiser)s' and lucene='%(lucene)s'"""
 LUCENE = """{ filter: { type: "boolean", %(logic)s: [%(filters)s]}}"""
 FILTER = """{ type:"wildcard", field: "url", value: "*%(pattern)s*"}"""
 
-INSERT_STATEMENT = "INSERT INTO rockerbox.action_occurrence (source,date,action,uid,url,occurrence) VALUES ('%(source)s','%(date)s','%(action)s','%(uid)s','%(url)s',%(occurrence)s)"
+INSERT_STATEMENT = "INSERT INTO rockerbox.action_occurrence_u1 (source,date,action,uid,u1,url,occurrence) VALUES ('%(source)s','%(date)s','%(action)s','%(uid)s', %(u1)s,'%(url)s',%(occurrence)s)"
 
-class BatchedCassandra(object):
-    
-    def __init__(self,cassandra, batch_size=120):
-        self.cassandra = cassandra
+def max_steps_event(max_steps):
+    # make an event that allows its callback to be called exactly X times before 
+    # notifying that it is complete
+    from itertools import count
+    from threading import Event
 
-    def execute_many(self,queries,future_callback,final_callback):
-        futures = [] 
+    finished_event = Event()
+    num_finished = count()
 
-        def run_next(previous_result,callback):
-            pass
+    def step():
+        finished = num_finished.next()
+        #print finished, max_steps
+        if finished == (max_steps-1):
+            finished_event.set()
+
+    return (finished_event,step)
+
+
+#def run_next(result,iterable,always,success,failure,*args):
+def run_next(result,iterable,run_future,always,success,*args):
+    """ 
+    """
+    def cb_with_result(result):
+        run_next(result,iterable,run_future,always,success,*args)
+        always()
+        return 
+
+    if type(result) is list:
+        success(result[0],*args)
+    else:
+        pass
+
+    try:
+        query = iterable.next()
+        future = run_future(query)
+        print future._current_host.address
+        future.add_callbacks(cb_with_result,cb_with_result)
+    except Exception as e:
+        #print e
+
+        pass
             
+def build_datelist(numdays):
+    import datetime
     
+    base = datetime.datetime.today()
+    date_list = [base - datetime.timedelta(days=x) for x in range(0, numdays)]
+    dates = map(lambda x: str(x).split(" ")[0] + " 00:00:00",date_list)
 
-class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
+    return dates
 
-    # TODO: add in the page_view counts
 
+class CassandraBoundStatement(object):
+
+    def __init__(self,session=None):
+        self.cassandra = session
+
+    def build_bound_statement(self):
+        what = "date, group_and_count(url,uid)"
+        where = "WHERE source = ? and date = ? and u2 = ?"
+        params = { "what": what, "where": where }
+        statement = self.cassandra.prepare(QUERY % params)
+        return statement
+
+    def build_bound_data(self,advertiser,dates,start,end):
+        prefixes = range(start,end)
+
+        return [[advertiser,date,i] for i in prefixes for date in dates]
+
+    def bind_and_execute(self,statement):
+
+        def execute(data):
+            bound = statement.bind(data)
+            return self.cassandra.execute_async(bound)
+
+        return execute
+
+
+class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraBoundStatement):
+
+
+
+    def build_queries(self,dates,advertiser,start=0,end=100): 
+        prefixes = range(start,end)
+        queries = []
+        where = "WHERE source='%(advertiser)s'" % {"advertiser":advertiser}
+        query = QUERY % {"what":"date,group_and_count(url,uid)", "where": where}
+
+        for i in prefixes:
+            for date in dates:
+                date_str = " and date='%s' and u2 = %s" % (date,i)
+                queries.append(query + date_str)
+
+        return queries
+
+    def run_range(self,pattern,statement,advertiser,dates,start=0,end=100,results=[]):
+
+        def select_callback(result,results,inserts,*args):
+            res = result['rockerbox.group_and_count(url, uid)']
+            date = result["date"]
+            for url_uid in res:
+                if url_uid == "__pattern__": 
+                    continue
+                else:
+                    url, uid = url_uid.split("[:]")
+                    reconstructed = []
+                    
+                    for i in range(0,int(res[url_uid])):
+                        h = { "uid":uid, "date":date, "url":url, "occurrence":i, "source":advertiser, "action":",".join(pattern), "u1":uid[-2:] }
+                        reconstructed += [h]
+                        inserts += [INSERT_STATEMENT % h]
+        
+                    if len(reconstructed) > 0: results += reconstructed
+
+
+        function_to_bind = self.bind_and_execute(statement)
+        data_to_bind = self.build_bound_data(advertiser,dates,start,end)
+        
+        data_len = len(data_to_bind)
+        iterable = iter(data_to_bind)
+        event, step = max_steps_event(data_len)
+        for i in range(min(300, data_len)):
+            run_next(False,iterable,function_to_bind,step,select_callback,results,[])
+        event.wait()
+        
+        return results
+ 
+        
+
+    def run_sample(self,pattern,statement,advertiser,dates,results):
+        
+        logging.info("starting sample")
+        results = self.run_range(pattern,statement,advertiser,dates,0,1,results)
+        logging.info("finished sample") 
+        
+        return results
+
+    def build_udf(self,pattern):
+        self.cassandra.execute("insert into full_replication.function_patterns (function,pattern) VALUES ('state_group_and_count','%s')" % pattern[0])
+        
     
-
     @decorators.deferred
     def defer_execute(self, selects, advertiser, pattern, date_clause, logic, 
-                      timeout=60, numdays=9):
-        if not pattern:
-            raise Exception("Must specify search term using search=")
+                      timeout=60, numdays=20):
 
-        filter_list = [FILTER % {"pattern": p.lower()} for p in pattern]
-        filters = ','.join(filter_list) 
+        assert(pattern, "Must specify search term using search=")
+
+        self.build_udf(pattern)
+        dates = build_datelist(numdays)
+        statement = self.build_bound_statement()
+
+        # if cache has pattern
+        # then pull the data from the cache
         
-        import datetime, time
+       
+        # else run a sample
+        results = []
+        results = self.run_sample(pattern,statement,advertiser,dates,results)
+
+        # determine if we have enough information for a good sample
+        # if not grab more info...
+        # check if the size was too small and increase the sample size
+        size, too_small = len(results), 300
+        if size < too_small:
+            logging.info("more results")
+            results = self.run_range(pattern,statement,advertiser,dates,1,5,results)
+
+        size, too_small = len(results), 300
+        if size < too_small:
+            logging.info("more results")
+            results = self.run_range(pattern,statement,advertiser,dates,5,100,results)
+
+
+
+        print "starting insert"
+        #insert_queries = insert_queries[:10]
+        if False and len(insert_queries) > 0 and False:
+            iterable = iter(insert_queries)
+            event, step = max_steps_event(len(insert_queries))
+            run_future = self.cassandra.execute_async
+            for i in range(min(300, len(insert_queries))):
+                run_next(False,iterable,run_future,step,lambda x: x)
+            
+            event.wait()
+        print "finishing insert"
+
+        df = pandas.DataFrame(results)
         
-        base = datetime.datetime.today()
-        date_list = [base - datetime.timedelta(days=x) for x in range(0, numdays)]
-        dates = map(lambda x: str(x).split(" ")[0] + " 00:00:00",date_list)
-
-        l = []
-        errs = []
-        total = []
-           
-        insert_queries = []
-        try:
-
-            # build a list of futures
-            futures = []
-            queries = []
-            self.logging.info(filters)
-            prefixes = range(0,100)
-            for i in prefixes:
-                f = filters
-                lucene = LUCENE % {"filters": f, "logic": logic}
-                #where = WHERE % {"advertiser":advertiser, "lucene":lucene}
-                where = "WHERE source='%(advertiser)s'" % {"advertiser":advertiser}
-                query = QUERY % {"what":"date,group_and_count(url,uid)", "where": where}
-
-                for date in dates:
-                    date_str = " and date='%s'" % date 
-                    date_str += " and u2 = %s" % i
-                    queries.append(query + date_str )
-
-            from itertools import count
-            from threading import Event
-            print queries[0]
-            
-            sentinel = object()
-            num_queries = len(queries)
-            num_started = count()
-            num_finished = count()
-            finished_event = Event()
-            hosts = {}
-            error_hosts = {}
-            
-            def insert_next(previous_result=sentinel,host="",l=l,pt=[0]):
-                f = 0
-                if type(previous_result) is list or isinstance(previous_result, BaseException):
-                    if isinstance(previous_result, BaseException):
-                        self.logging.error("Error on : %r %r", previous_result, host)
-                        error_hosts[host] = error_hosts.get(host,0) + 1
-                    else:
-                        start = time.time()
-                        res = previous_result[0]['rockerbox.group_and_count(url, uid)']
-                        for url_uid in res:
-                            x = url_uid.split(":")
-                            url = x[0]
-                            uid = x[1]
-                            count = res[url_uid]
-                            
-                            reconstructed = []
-                            
-                            for i in range(0,count):
-                                h = {"uid":uid,"date":previous_result[0]["date"],"url":url,"occurrence":i,"source":advertiser,"action":",".join(pattern)}
-                                reconstructed += [h]
-                                pt += [INSERT_STATEMENT % h]
-
-                            l += reconstructed
-                           
-                            
- 
-                        #l += [{"uid":i,"date":previous_result[0]["date"],"url":j} for i in previous_result[0]['rockerbox.group_and_count(url, uid)'] for j in previous_result[0]['rockerbox.group_and_count(url, uid)'][i].split("|")]
-                        #l += [{"uid":i} for i in previous_result[0].keys() for j in previous_result[0][i]*[0]]
- 
-
-                        #l += previous_result
-                    f = num_finished.next()
-                    if f >= num_queries:
-                        finished_event.set()
-            
-                c = num_started.next()
-                #if (~(c % 10)): print c
-
-                # pulls another entry off the queue to runs it
-                if c <= num_queries:
-                    future = self.cassandra.execute_async(queries[c-1])
-                    hosts[future._current_host.address] = hosts.get(future._current_host.address,0) + 1
-                    future.add_callbacks(lambda x: insert_next(x,queries[c-1],l,insert_queries), lambda x: insert_next(x,queries[c-1] + " : " + future._current_host.address,insert_queries))
-
-            # creates a batch of 80 request workers
-            for i in range(min(900, num_queries)):
-                insert_next()
-            
-            finished_event.wait()
-            print "finished"
-            print queries[0]
-            
-            for insert in insert_queries:
-                future = self.cassandra.execute_async(insert)
-
-            df = pandas.DataFrame(l)
-            
-            # If the query contains a capital letter, filter out any results 
-            # that don't exactly match the query (case sensitive)
-            #if [c for c in pattern[0] if c.isupper()]:
-            #df = df[df.url.str.contains(pattern[0])]
-
-            print "errors: %s" % len(errs)
-            
-            
-            return df
-        except OperationTimedOut as exp:
-            return False
+        return df
 
         
 
