@@ -80,6 +80,8 @@ class AdvertiserRoutes(Routes):
             (r'/multi_search/(.*?)', analytics.MultiSearchHandler, self.connectors),
             (r'/visit_domains', analytics.VisitDomainsHandler, self.connectors),
             (r'/visit_avails', analytics.VisitAvailsHandler, self.connectors),
+            (r'/stats/?', analytics.OnSiteStatsHandler, self.connectors),
+            (r'/stats/+(meta|help)?/?(.*?)', analytics.OnSiteStatsHandler, self.connectors),
             (r'/funnel/action/recommended', funnel.RecommendedActionHandler, self.connectors),
             (r'/funnel/campaign', funnel.FunnelCampaignHandler, self.connectors),
             (r'/funnel/lookalike_campaign', funnel.LookalikeCampaignHandler, self.connectors),

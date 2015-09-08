@@ -49,6 +49,7 @@ def get_dates():
     fmt = "%Y-%m-%d %H:%M:%S"
     today = datetime.utcnow().date().strftime(fmt)
     yesterday = (datetime.utcnow() - timedelta(days=1)).date().strftime(fmt)
+    two_days_ago = (datetime.utcnow() - timedelta(days=2)).date().strftime(fmt)
 
     return [today, yesterday]
 

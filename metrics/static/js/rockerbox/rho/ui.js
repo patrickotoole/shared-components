@@ -6,7 +6,64 @@ RB.rho.ui = (function(ui) {
 
   var rho = RB.rho
   
-  ui.buildTimeseries = function(target,data,title,series) {
+  ui.buildChart = function(target, data, label_col, value_col, title, description, type) {
+    type = type || "line";
+    var labels = []
+    var series = []
+    
+    data.map(function(d){
+      labels.push(d[label_col]);
+      series.push(d[value_col]);
+    })
+
+    var data = {
+      labels: labels,
+      series: [series]
+    };
+
+    var options = {
+      width: 350,
+      height: 300,
+      showArea: true,
+      horizontalBars: true,
+      axisX: {
+	showGrid: false,
+	showLabel: false
+      },
+      axisY: {
+	showGrid: true,
+	showLabel: true
+      }
+    };
+
+    $(target).append($("<div class='chart-wrapper'>"))
+
+    if(type === "line"){
+      new Chartist.Line(target + " .chart-wrapper", data, options);
+    }
+    else if(type === "bar"){
+      new Chartist.Bar(target + " .chart-wrapper", data, options);
+    }
+
+    // Add title if it doesn't exist already
+    if (!$(target + " .chart-title").length && title){
+      $(target).prepend($("<div class='chart-title'>").text(title));
+    };
+
+    // Add description if it doesn't exist already
+    if (!$(target + " .chart-description").length && description){
+      $(target).append($("<div class='chart-description'>").text(description));
+    };
+  }
+
+  ui.buildTimeseries = function(target,data,title,series,formatting) {
+    var default_formatting = {
+      "font_size": ".71em"
+    }
+    
+    var formatting = typeof formatting !== "undefined" ? formatting: default_formatting;
+
+    console.log(formatting)
 
     data.map(function(x){
       x.date = new Date(x.key)
@@ -64,7 +121,7 @@ RB.rho.ui = (function(ui) {
       .append("text")
       .attr("transform", "rotate(-90)")
       .attr("y", 6)
-      .attr("dy", ".71em")
+      .attr("dy", formatting.font_size)
       .style("text-anchor", "end")
       .classed("y-label",true)
       .text(series[0].toUpperCase());
@@ -267,5 +324,4 @@ RB.rho.ui = (function(ui) {
 
   return ui
 })(RB.rho.ui || {})
-
 
