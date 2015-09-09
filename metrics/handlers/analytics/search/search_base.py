@@ -40,27 +40,27 @@ def format(uid,date,url,occurrence,advertiser,pattern):
         "u1":uid[-2:] 
     }
 
+def select_callback(result,advertiser,pattern,results,*args):
+    result = result[0]
+    res = result['rockerbox.group_and_count(url, uid)']
+    date = result["date"]
+    for url_uid in res:
+        if "[:]" in url_uid:
+            url, uid = url_uid.split("[:]")
+            reconstructed = []
+            
+            for i in range(0,int(res[url_uid])):
+                h = format(uid,date,url,i,advertiser,pattern)
+                reconstructed += [h]
+
+            results += reconstructed
+
+
+
 class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraStatement):
 
-    def select_callback(self,result,advertiser,pattern,results,inserts,*args):
-        result = result[0]
-        res = result['rockerbox.group_and_count(url, uid)']
-        date = result["date"]
-        for url_uid in res:
-            if "[:]" in url_uid:
-                url, uid = url_uid.split("[:]")
-                reconstructed = []
-                
-                for i in range(0,int(res[url_uid])):
-                    h = format(uid,date,url,i,advertiser,pattern)
-                    reconstructed += [h]
-                inserts +=[[h['source'],h['date'],h['action'],h['uid'],int(h['uid'][-2:]),h['url'],h['occurrence']]]
-                #inserts +=[[h['source'],h['date'],h['action'],h['uid'],h['url'],h['occurrence']]]
-
-                results += reconstructed
-
-
-    def run(self,pattern,advertiser,dates,start=0,end=100,results=[],inserts=[]):
+    
+    def run(self,pattern,advertiser,dates,start=0,end=100,results=[]):
 
         self.build_udf(pattern)
 
@@ -68,49 +68,12 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraStatement):
         bound_statement = self.bind_and_execute(statement)
         data = self.build_bound_data([advertiser],dates,start,end)
 
-        callback = self.select_callback
-        callback_args = [advertiser,pattern,results,inserts]
-
-        _, _, results, inserts = FutureHelpers.future_queue(data,bound_statement,callback,200,*callback_args)
-                
-        return results, inserts
-
-    """
-    def run_cache_no_distribution(self,pattern,advertiser,dates,start=0,end=10,results=[]):
-
-        def callback(result,advertiser,pattern,results,*args):
-            result = result[0]
-            res = result['rockerbox.group_view_visit(uid, url, occurrence)']
-            date = result["date"]
-            for uid in res:
-                views, visits = res[uid].split(",")
-                reconstructed = []
-                
-                for url in range(0,int(visits)):
-                    h = format(uid,date,str(url),0,advertiser,pattern)
-                    reconstructed += [h]
-
-                extra = int(views) - int(visits)
-                #reconstructed += [h]*extra
-
-                results += reconstructed
-
-
-        query = "SELECT %(what)s from rockerbox.action_occurrence where %(where)s"
-        what = "date, uid, occurrence, rockerbox.truncate_10(url)"
-        what = "date, group_view_visit(uid, url, occurrence)"
-        where = "source=? and action=? and date=?"
-
-
-        statement = self.build_statement(query,what,where)
-        bound = self.bind_and_execute(statement)
-        data = [i[:-1] for i in self.build_bound_data([advertiser,pattern[0]],dates,start,end) if i[-1] == 0]
+        callback = select_callback
         callback_args = [advertiser,pattern,results]
 
-        _,_, results = FutureHelpers.future_queue(data,bound,callback,10,*callback_args)
-        
+        _, _, result = FutureHelpers.future_queue(data,bound_statement,callback,300,*callback_args)
+                
         return results
-    """ 
 
 
     def run_cache(self,pattern,advertiser,dates,start=0,end=10,results=[]):
@@ -118,53 +81,14 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraStatement):
         def callback_simple(result,advertiser,pattern,results,*args):
             extra = []
             for res in result:
-                extra = [res]*res['occurrence']
+                extra += [res]*res['occurrence']
 
             results += result
+            results += extra
 
-
-
-        def callback(result,advertiser,pattern,results,*args):
-            result = result[0]
-            res = result['rockerbox.group_view_visit(uid, url, occurrence)']
-            date = result["date"]
-            for uid in res:
-                views, visits = res[uid].split(",")
-                reconstructed = []
-                
-                for url in range(0,int(visits)):
-                    h = format(uid,date,str(url),0,advertiser,pattern)
-                    reconstructed += [h]
-
-                extra = int(views) - int(visits)
-                reconstructed += [h]*extra
-
-                results += reconstructed
-
-        def select_callback(result,advertiser,pattern,results,*args):
-            result = result[0]
-            res = result['rockerbox.group_and_count_simple(url, uid, occurrence)']
-            date = result["date"]
-            for url_uid in res:
-                if "[:]" in url_uid:
-                    url, uid = url_uid.split("[:]")
-                    reconstructed = []
-                    
-                    for i in range(0,int(res[url_uid])):
-                        h = format(uid,date,url,i,advertiser,pattern)
-                        reconstructed += [h]
-    
-                    results += reconstructed
-
-
-
-
+        
         query = "SELECT %(what)s from rockerbox.action_occurrence_u1 where %(where)s"
-        what = "date, uid, occurrence, url"
-        #what = "date, group_view_visit(uid, url, occurrence)"
-        #what = "date, group_and_count_simple(url, uid, occurrence)"
-
-
+        what = "date, uid, url, occurrence"
         where = "source=? and action=? and date=? and u1=?"
 
         statement = self.build_statement(query,what,where)
@@ -182,24 +106,30 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraStatement):
     
     @decorators.deferred
     def defer_execute(self, selects, advertiser, pattern, date_clause, logic, 
-                      timeout=60, numdays=20):
+                      allow_sample=True, timeout=60, numdays=20):
 
         dates = build_datelist(numdays)
         inserts, results = [], []
 
-        cache = False
-        cache = True
-        if cache:
-            results = self.run_cache(pattern,advertiser,dates,0,100,results)
-        else:
+        # first check the cache
+        sample = (0,5) if allow_sample else (0,100)
+        results = self.run_cache(pattern,advertiser,dates,sample[0],sample[1],results)
+
+        # if not in the cache, run a sampled query
+        if len(results) == 0:
+            logging.info("not cached")
             too_small = 300
-            sample_sizes = [(0,100),(1,5),(5,50),(50,100)]
+            sample_sizes = [(0,1),(1,2),(2,5),(5,50),(50,100)]
             for sample in sample_sizes:
                 logging.info("Grabbing sample %s, %s" % sample) 
-                results, inserts = self.run(pattern,advertiser,dates,sample[0],sample[1],results,inserts)
+                results = self.run(pattern,advertiser,dates,sample[0],sample[1],results)
                 if len(results) > too_small: break
+
+            # trigger cache job
+            # TODO: make this function
                 
         df = pandas.DataFrame(results)
+        self.sample_used = sample[1]
         
         return df
 
@@ -283,7 +213,7 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraStatement):
         PARAMS = "uid"
         response = self.default_response(terms,logic)
 
-        df = yield self.defer_execute(PARAMS, advertiser, terms, date_clause, logic)
+        df = yield self.defer_execute(PARAMS, advertiser, terms, date_clause, logic, false)
 
         if len(df) > 0:
             response['results'] = df.drop_duplicates().uid.tolist()
