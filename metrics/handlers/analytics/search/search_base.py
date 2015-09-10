@@ -1,4 +1,5 @@
 import tornado.web
+import tornado.ioloop
 import logging
 
 from search_helpers import SearchHelpers
@@ -107,11 +108,14 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
     def run_cache(self,pattern,advertiser,dates,start=0,end=10,results=[]):
 
         data = self.data_plus_values([[advertiser,pattern[0]]],dates)
-        callback_args = [advertiser,pattern,results]
+        cb_args = [advertiser,pattern,results]
+        cb_kwargs = {"statement":self.cache_statement}
+        
         is_suffice = sufficient_limit(300)
 
-        response, sample = self.run_sample(data,cache_callback,is_suffice,*callback_args,statement=self.cache_statement)
-        self.sample_used = sample
+
+        response = self.run_range(data,start,end,cache_callback,*cb_args,**cb_kwargs)
+        self.sample_used = end
 
         _,_, results = response
         
@@ -131,7 +135,7 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
         sample = (0,5) if allow_sample else (0,100)
         self.sample_used = sample[1]
 
-        #results = self.run_cache(pattern,advertiser,dates,sample[0],sample[1],results)
+        results = self.run_cache(pattern,advertiser,dates,sample[0],sample[1],results)
 
         if len(results) == 0:
             results = self.run(pattern,advertiser,dates,results)
