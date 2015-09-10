@@ -8,7 +8,7 @@ from ...base import BaseHandler
 from twisted.internet import defer
 from lib.helpers import *
 from cassandra import OperationTimedOut
-from lib.cassandra.range_query import CassandraRangeQuery
+from lib.cassandra_helpers.range_query import CassandraRangeQuery
 
 QUERY  = """SELECT %(what)s FROM rockerbox.visit_uids_lucene_timestamp_u2_clustered %(where)s"""
 WHAT   = "date, group_and_count(url,uid)"

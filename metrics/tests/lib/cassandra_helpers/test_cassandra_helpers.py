@@ -1,10 +1,10 @@
 import sys
 import mock
 import os
-sys.path.append("../../../../")
+sys.path.append("../../../")
 
 import unittest
-import metrics.lib.cassandra.range_query as range_query
+import metrics.lib.cassandra_helpers.range_query as range_query
 from cassandra.query import PreparedStatement, BoundStatement
 
 class CassandraTestCase(unittest.TestCase):
