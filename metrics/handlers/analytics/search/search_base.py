@@ -9,6 +9,7 @@ from twisted.internet import defer
 from lib.helpers import *
 from cassandra import OperationTimedOut
 from cassandra_helpers import *
+from cassandra_statement import CassandraStatement
 
 QUERY  = """SELECT %(what)s FROM rockerbox.visit_uids_lucene_timestamp_u2_clustered %(where)s"""
 WHAT   = "date, group_and_count(url,uid)"
