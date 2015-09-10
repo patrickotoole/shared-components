@@ -10,10 +10,16 @@ from lib.helpers import *
 from cassandra import OperationTimedOut
 from cassandra_helpers import *
 from cassandra_statement import CassandraStatement
+from cassandra_range_query import CassandraRangeQuery
 
 QUERY  = """SELECT %(what)s FROM rockerbox.visit_uids_lucene_timestamp_u2_clustered %(where)s"""
 WHAT   = "date, group_and_count(url,uid)"
 WHERE  = "WHERE source = ? and date = ? and u2 = ?"
+
+CACHE_QUERY = """SELECT %(what)s from rockerbox.action_occurrence_u1 where %(where)s"""
+CACHE_WHAT  = """date, uid, url, occurrence"""
+CACHE_WHERE = """source=? and action=? and date=? and u1=? """
+
 INSERT = """INSERT INTO rockerbox.action_occurrence_u1 (source,date,action,uid,u1,url,occurrence) VALUES (?,?,?,?,?,?,?) """
 INSERT_NO_DIST = """INSERT INTO rockerbox.action_occurrence (source,date,action,uid,url,occurrence) VALUES (?,?,?,?,?,?) """
 
@@ -56,48 +62,60 @@ def select_callback(result,advertiser,pattern,results,*args):
 
             results += reconstructed
 
+def cache_callback(result,advertiser,pattern,results,*args):
+    extra = []
+    for res in result:
+        extra += [res]*res['occurrence']
+
+    results += result
+    results += extra
+
+def sufficient_limit(size=300):
+
+    def suffices(x):
+        _, _, result = x
+        print len(result)
+        return len(result) > size
+
+    return suffices
+
+class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
 
 
-class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraStatement):
+    @property
+    def raw_statement(self):
+        return self.build_statement(QUERY,WHAT,WHERE)
 
+    @property
+    def cache_statement(self):
+        return self.build_statement(CACHE_QUERY,CACHE_WHAT,CACHE_WHERE)
     
-    def run(self,pattern,advertiser,dates,start=0,end=100,results=[]):
+    def run(self,pattern,advertiser,dates,results=[]):
 
         self.build_udf(pattern)
-
-        statement = self.build_statement(QUERY,WHAT,WHERE)
-        bound_statement = self.bind_and_execute(statement)
-        data = self.build_bound_data([advertiser],dates,start,end)
-
-        callback = select_callback
+        
+        data = self.data_plus_values([[advertiser]], dates)
         callback_args = [advertiser,pattern,results]
+        is_suffice = sufficient_limit()
 
-        _, _, result = FutureHelpers.future_queue(data,bound_statement,callback,300,*callback_args)
+        response, sample = self.run_sample(data,select_callback,is_suffice,*callback_args,statement=self.raw_statement)
+
+        self.sample_used = sample
+        _, _, result = response
                 
         return results
 
 
     def run_cache(self,pattern,advertiser,dates,start=0,end=10,results=[]):
 
-        def callback_simple(result,advertiser,pattern,results,*args):
-            extra = []
-            for res in result:
-                extra += [res]*res['occurrence']
-
-            results += result
-            results += extra
-
-        
-        query = "SELECT %(what)s from rockerbox.action_occurrence_u1 where %(where)s"
-        what = "date, uid, url, occurrence"
-        where = "source=? and action=? and date=? and u1=?"
-
-        statement = self.build_statement(query,what,where)
-        bound = self.bind_and_execute(statement)
-        data = self.build_bound_data([advertiser,pattern[0]],dates,start,end)
+        data = self.data_plus_values([[advertiser,pattern[0]]],dates)
         callback_args = [advertiser,pattern,results]
+        is_suffice = sufficient_limit(300)
 
-        _,_, results = FutureHelpers.future_queue(data,bound,callback_simple,300,*callback_args)
+        response, sample = self.run_sample(data,cache_callback,is_suffice,*callback_args,statement=self.cache_statement)
+        self.sample_used = sample
+
+        _,_, results = response
         
         return results
  
@@ -112,26 +130,18 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraStatement):
         dates = build_datelist(numdays)
         inserts, results = [], []
 
-        # first check the cache
         sample = (0,5) if allow_sample else (0,100)
-        results = self.run_cache(pattern,advertiser,dates,sample[0],sample[1],results)
+        self.sample_used = sample[1]
 
-        # if not in the cache, run a sampled query
+        #results = self.run_cache(pattern,advertiser,dates,sample[0],sample[1],results)
+
         if len(results) == 0:
-            logging.info("not cached")
-            too_small = 300
-            sample_sizes = [(0,1),(1,2),(2,5),(5,50),(50,100)]
-            for sample in sample_sizes:
-                logging.info("Grabbing sample %s, %s" % sample) 
-                results = self.run(pattern,advertiser,dates,sample[0],sample[1],results)
-                if len(results) > too_small: break
+            results = self.run(pattern,advertiser,dates,results)
 
-            # trigger cache job
-            # TODO: make this function
+            # TODO: make an external call to begin cache-ing function
                 
         df = pandas.DataFrame(results)
-        self.sample_used = sample[1]
-        
+                
         return df
 
         

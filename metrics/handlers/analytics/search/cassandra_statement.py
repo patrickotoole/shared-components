@@ -8,7 +8,12 @@ class CassandraStatement(object):
         statement = self.cassandra.prepare(query % params)
         return statement
 
+    def data_plus_values(self,data,values):
+        return [i + [j] for i in data for j in values]
+    
+
     def build_bound_data(self,fixed,dates,start,end):
+        # DEPRECATED: 
         prefixes = range(start,end)
 
         return [fixed + [date,i] for i in prefixes for date in dates]

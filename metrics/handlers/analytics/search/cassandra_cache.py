@@ -1,13 +1,11 @@
-from cassandra_range_query import CassandraRangeQuery
+from cassandra_range_query import CassandraRangeQuery, PreparedCassandraRangeQuery
 from cassandra_helper import FutureHelpers
 
 FUTURES    = 300
 NUM_DAYS   = 20
 INSERT_UDF = "insert into full_replication.function_patterns (function,pattern) VALUES ('state_group_and_count','%s')"
 
-
-
-class CassandraCache(CassandraRangeQuery):
+class CassandraCache(PreparedCassandraRangeQuery):
 
     def __init__(self,cassandra,query,fields,range_field,insert_query):
         self.cassandra = cassandra

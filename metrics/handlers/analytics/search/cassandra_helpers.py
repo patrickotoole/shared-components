@@ -37,13 +37,13 @@ class FutureHelpers:
         try:
             query = iterable.next()
             future = run_future(query)
-            logging.info(future._current_host.address)
+            #logging.info(future._current_host.address)
             import time
             start_time = time.time()
             def cb_with_result(result):
                 FutureHelpers.run_next(result,iterable,run_future,always,success,*args)
                 always()
-                logging.info("%s %s" % (future._current_host.address,start_time-time.time()))
+                #logging.info("%s %s" % (future._current_host.address,start_time-time.time()))
                 return 
     
 
