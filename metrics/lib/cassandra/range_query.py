@@ -1,6 +1,6 @@
 import logging
-from cassandra_statement import CassandraStatement
-from cassandra_helpers import FutureHelpers
+from statement import CassandraStatement
+from helpers import FutureHelpers
 
 class CassandraRangeQuery(CassandraStatement):
     
