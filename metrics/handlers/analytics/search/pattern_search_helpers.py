@@ -10,12 +10,14 @@ class PatternSearchHelpers(object):
 
     def calc_stats(self,df):
 
+        # THIS DOES THE SAMPLING TRANSFORMATION
+        multiplier = 100/self.sample_used if self.sample_used else 1
         series = df["url"] + df["uid"]
         
         return pandas.Series({
-            "num_users":len(df.uid.unique()),
-            "num_visits":len(series.unique()),#len(df.groupby(["url","uid"])),
-            "num_views":len(df)#.num_views.sum()
+            "num_users":len(df.uid.unique())*multiplier,
+            "num_visits":len(series.unique())*multiplier,#len(df.groupby(["url","uid"])),
+            "num_views":len(df)*multiplier#.num_views.sum()
         })
 
     def group_count_view(self,df,terms,indices):
