@@ -1,4 +1,5 @@
 import tornado.web
+import tornado.ioloop
 import logging
 
 from search_helpers import SearchHelpers
@@ -8,141 +9,142 @@ from ...base import BaseHandler
 from twisted.internet import defer
 from lib.helpers import *
 from cassandra import OperationTimedOut
+from lib.cassandra_helpers.range_query import CassandraRangeQuery
 
 QUERY  = """SELECT %(what)s FROM rockerbox.visit_uids_lucene_timestamp_u2_clustered %(where)s"""
-WHERE  = """WHERE source='%(advertiser)s' and lucene='%(lucene)s'"""
-LUCENE = """{ filter: { type: "boolean", %(logic)s: [%(filters)s]}}"""
-FILTER = """{ type:"wildcard", field: "url", value: "*%(pattern)s*"}"""
+WHAT   = "date, group_and_count(url,uid)"
+WHERE  = "WHERE source = ? and date = ? and u2 = ?"
 
-class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
+CACHE_QUERY = """SELECT %(what)s from rockerbox.action_occurrence_u1 where %(where)s"""
+CACHE_WHAT  = """date, uid, url, occurrence"""
+CACHE_WHERE = """source=? and action=? and date=? and u1=? """
 
-    # TODO: add in the page_view counts
+INSERT = """INSERT INTO rockerbox.action_occurrence_u1 (source,date,action,uid,u1,url,occurrence) VALUES (?,?,?,?,?,?,?) """
+INSERT_NO_DIST = """INSERT INTO rockerbox.action_occurrence (source,date,action,uid,url,occurrence) VALUES (?,?,?,?,?,?) """
 
+INSERT_CACHE = "INSERT INTO rockerbox.action_occurrence_u1 (source,date,action,uid,u1,url,occurrence) VALUES ('%(source)s','%(date)s','%(action)s','%(uid)s', %(u1)s,'%(url)s',%(occurrence)s)"
+
+INSERT_UDF = "insert into full_replication.function_patterns (function,pattern) VALUES ('state_group_and_count','%s')"
+
+def build_datelist(numdays):
+    import datetime
+    
+    base = datetime.datetime.today()
+    date_list = [base - datetime.timedelta(days=x) for x in range(0, numdays)]
+    dates = map(lambda x: str(x).split(" ")[0] + " 00:00:00",date_list)
+
+    return dates
+
+def format(uid,date,url,occurrence,advertiser,pattern):
+    return { 
+        "uid":uid, 
+        "date":date, 
+        "url":url, 
+        "occurrence":occurrence, 
+        "source":advertiser, 
+        "action":",".join(pattern), 
+        "u1":uid[-2:] 
+    }
+
+def select_callback(result,advertiser,pattern,results,*args):
+    result = result[0]
+    res = result['rockerbox.group_and_count(url, uid)']
+    date = result["date"]
+    for url_uid in res:
+        if "[:]" in url_uid:
+            url, uid = url_uid.split("[:]")
+            reconstructed = []
+            
+            for i in range(0,int(res[url_uid])):
+                h = format(uid,date,url,i,advertiser,pattern)
+                reconstructed += [h]
+
+            results += reconstructed
+
+def cache_callback(result,advertiser,pattern,results,*args):
+    extra = []
+    for res in result:
+        extra += [res]*res['occurrence']
+
+    results += result
+    results += extra
+
+def sufficient_limit(size=300):
+
+    def suffices(x):
+        _, _, result = x
+        print len(result)
+        return len(result) > size
+
+    return suffices
+
+class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
+
+
+    @property
+    def raw_statement(self):
+        return self.build_statement(QUERY,WHAT,WHERE)
+
+    @property
+    def cache_statement(self):
+        return self.build_statement(CACHE_QUERY,CACHE_WHAT,CACHE_WHERE)
+    
+    def run(self,pattern,advertiser,dates,results=[]):
+
+        self.build_udf(pattern)
+        
+        data = self.data_plus_values([[advertiser]], dates)
+        callback_args = [advertiser,pattern,results]
+        is_suffice = sufficient_limit()
+
+        response, sample = self.run_sample(data,select_callback,is_suffice,*callback_args,statement=self.raw_statement)
+
+        self.sample_used = sample
+        _, _, result = response
+                
+        return results
+
+
+    def run_cache(self,pattern,advertiser,dates,start=0,end=10,results=[]):
+
+        data = self.data_plus_values([[advertiser,pattern[0]]],dates)
+        cb_args = [advertiser,pattern,results]
+        cb_kwargs = {"statement":self.cache_statement}
+        
+        is_suffice = sufficient_limit(300)
+
+
+        response = self.run_range(data,start,end,cache_callback,*cb_args,**cb_kwargs)
+        self.sample_used = end
+
+        _,_, results = response
+        
+        return results
+ 
+    def build_udf(self,pattern):
+        self.cassandra.execute(INSERT_UDF % pattern[0])
+        
+    
     @decorators.deferred
     def defer_execute(self, selects, advertiser, pattern, date_clause, logic, 
-                      timeout=60, numdays=9):
-        if not pattern:
-            raise Exception("Must specify search term using search=")
+                      allow_sample=True, timeout=60, numdays=20):
 
-        filter_list = [FILTER % {"pattern": p.lower()} for p in pattern]
-        filters = ','.join(filter_list) 
-        
-        import datetime, time
-        
-        base = datetime.datetime.today()
-        date_list = [base - datetime.timedelta(days=x) for x in range(0, numdays)]
-        dates = map(lambda x: str(x).split(" ")[0] + " 00:00:00",date_list)
+        dates = build_datelist(numdays)
+        inserts, results = [], []
 
-        l = []
-        errs = []
-        total = []
+        sample = (0,5) if allow_sample else (0,100)
+        self.sample_used = sample[1]
 
-        def handle_results(host,l,total,rows):
-            l += rows
-            total += [1]
-            #print host
-            #print "total: %s" % len(total)
-            
-        def handle_error(host,errs,total,rows):
-            errs += [1]
-            total += [1]
-            print "errs: %s %s" % (len(errs),host)
+        results = self.run_cache(pattern,advertiser,dates,sample[0],sample[1],results)
 
-        def fuck_python_results(host,l,total):
-            return lambda x: handle_results(host,l,total,x)
+        if len(results) == 0:
+            results = self.run(pattern,advertiser,dates,results)
 
-        def fuck_python_errs(host,l,total):
-            return lambda x: handle_error(host,l,total,x)
-
-
-        start = time.time()
-        try:
-
-            # build a list of futures
-            futures = []
-            queries = []
-            self.logging.info(filters)
-            prefixes = range(0,100)
-            for i in prefixes:
-                f = filters #+ """,{ type:"prefix", field: "uid", value: "%s" }""" % i
-                lucene = LUCENE % {"filters": f, "logic": logic}
-                where = WHERE % {"advertiser":advertiser, "lucene":lucene}
-                query = QUERY % {"what":selects, "where": where}
-
-                for date in dates:#(dates[-2:-1] + dates[:-1]):
-                    date_str = " and date='%s'" % date # this needs to be parameterized to use different tables
-                    date_str += " and u2 = %s" % i
-                    #future = self.cassandra.execute_async(query + date_str)
-                    #futures.append(future)
-                    #host = future._current_host.address
-                    #future.add_callbacks(callback=fuck_python_results(host,l,total),errback=fuck_python_errs(host,errs,total))
-                    queries.append(query + date_str )
-
-            from itertools import count
-            from threading import Event
-            print queries[0]
-            
-            sentinel = object()
-            num_queries = len(queries)
-            num_started = count()
-            num_finished = count()
-            finished_event = Event()
-            hosts = {}
-            error_hosts = {}
-            
-            def insert_next(previous_result=sentinel,host="",l=l):
-                f = 0
-                if type(previous_result) is list or isinstance(previous_result, BaseException):
-                    if isinstance(previous_result, BaseException):
-                        self.logging.error("Error on : %r %r", previous_result, host)
-                        error_hosts[host] = error_hosts.get(host,0) + 1
-                    else:
-                        l += previous_result
-                    f = num_finished.next()
-                    if f >= num_queries:
-                        finished_event.set()
-            
-                c = num_started.next()
-                print c,num_queries,c <= num_queries, f
-                if c <= num_queries:
-                    future = self.cassandra.execute_async(queries[c-1])
-                    hosts[future._current_host.address] = hosts.get(future._current_host.address,0) + 1
-                    future.add_callbacks(lambda x: insert_next(x,queries[c-1],l), lambda x: insert_next(x,queries[c-1] + " : " + future._current_host.address))
-
-            print num_queries
-            
-            for i in range(min(80, num_queries)):
-                insert_next()
-            
-            finished_event.wait()
-            print "finished"
-            #import ipdb; ipdb.set_trace()                    
-            
-            # wait for them to complete and use the results
-            #print len(prefixes), len(dates)
-            #while len(total) < len(prefixes)*len(dates):
-            #    time.sleep(1) # dont need this sleep but its nice to print progress
-            #    print len(total)
-            #    pass
-            #print "finished"
-                #l += rows
-            self.logging.info(start - time.time()) 
-            self.logging.info(len(l))
-
-            df = pandas.DataFrame(l)
-            
-            # If the query contains a capital letter, filter out any results 
-            # that don't exactly match the query (case sensitive)
-            if [c for c in pattern[0] if c.isupper()]:
-                df = df[df.url.str.contains(pattern[0])]
-
-            print errs
-            
-            
-            return df
-        except OperationTimedOut as exp:
-            #import ipdb; ipdb.set_trace()
-            return False
+            # TODO: make an external call to begin cache-ing function
+                
+        df = pandas.DataFrame(results)
+                
+        return df
 
         
 
@@ -224,7 +226,7 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler):
         PARAMS = "uid"
         response = self.default_response(terms,logic)
 
-        df = yield self.defer_execute(PARAMS, advertiser, terms, date_clause, logic)
+        df = yield self.defer_execute(PARAMS, advertiser, terms, date_clause, logic, false)
 
         if len(df) > 0:
             response['results'] = df.drop_duplicates().uid.tolist()

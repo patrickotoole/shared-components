@@ -23,9 +23,14 @@ class CassandraDB(NoSqlConnectionWrapper):
         class which get's called in it's initializer
         """
         from cassandra.cluster import Cluster
+        from cassandra.policies import TokenAwarePolicy, RoundRobinPolicy, DCAwareRoundRobinPolicy
         from cassandra.query import dict_factory
 
-        session = Cluster(self.nodes).connect()
+        cluster = Cluster(
+            contact_points=self.nodes,
+            load_balancing_policy=TokenAwarePolicy(DCAwareRoundRobinPolicy()),
+        )
+        session = cluster.connect()
 
         # Don't return paged results
         session.default_fetch_size = self.default_fetch_size

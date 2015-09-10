@@ -1,4 +1,5 @@
 import tornado.web
+import tornado.gen
 import pandas
 import logging
 import time
@@ -8,6 +9,13 @@ from pattern_search_helpers import PatternSearchHelpers
 from twisted.internet import defer
 from lib.helpers import decorators
 from lib.helpers import *
+
+def callback(yo,*args):
+    print yo
+    import ipdb; ipdb.set_trace()
+    time.sleep(10)
+    print yo
+    return
 
 
 class PatternSearchBase(SearchBase,PatternSearchHelpers):
@@ -87,9 +95,15 @@ class PatternSearchBase(SearchBase,PatternSearchHelpers):
         return defer.DeferredList(dl)
 
 
-
+    @tornado.gen.coroutine
+    def counter(self, *args, **kwargs):
+        print 'hi'
+        time.sleep(10)
+        print "hi"
+        
     @defer.inlineCallbacks
     def get_generic(self, advertiser, pattern_terms, date_clause, logic="or",timeout=60,timeseries=False):
+        
         PARAMS = "date, url, uid"
         indices = PARAMS.split(", ")
 
