@@ -87,6 +87,41 @@ class CassandraCache(PreparedCassandraRangeQuery):
         results = FutureHelpers.future_queue(to_pull,to_bind,simple_append,FUTURES,[])
         results = results[0]
         return results
+
+    def run_url_counters(self,url_inserts,select,update,dimensions=[],to_count="",count_column=""):
+        """
+        SELECT_COUNTER = "SELECT * from rockerbox.action_occurrence_urls_counter where source = ? and date = ? and action = ?" 
+        UPDATE_COUNTER = "UPDATE rockerbox.action_occurrence_urls_counter set count = count + ? where source = ? and date = ? and action = ? and url = ?" 
+        dimensions = ["source","date","action"]
+        to_count = "url"
+
+        """
+
+        import pandas
+
+        cols = dimensions + [to_count]
+        cols_with_count = cols + [count_column]
+        
+    
+        df = pandas.DataFrame(url_inserts,columns=cols)
+        new_values = group_all_and_count(df,count_column)
+    
+        to_pull = new_values[dimensions].drop_duplicates().values.tolist()
+        results = self.pull_simple(to_pull,select)
+        
+        # determine what needs to be update and by how much
+        if len(results) > 0:
+            existing_values = pandas.DataFrame(results,columns=cols_with_count)
+            updates_df = compare_and_increment(new_values,existing_values)
+            to_update = updates_df.values.tolist()
+        else:
+            to_update = new_values[[count_column]+list(new_values.columns)[:-1]].values.tolist()
+            
+        print "updating: %s" % len(to_update)
+        statement = self.cassandra.prepare(update)
+        to_bind = self.bind_and_execute(statement)
+        FutureHelpers.future_queue(to_update,to_bind,simple_append,FUTURES,[]) 
+
         
         
 
@@ -123,37 +158,14 @@ def compare_and_increment(new,old):
     increments = increments[increments > 0].map(int)
     increments.name = "count"
 
-    return increments.reset_index()[["count"]+cols]
+    return increments.reset_index()[["count"]+indices]
 
     
-def group_all_and_count(df):
+def group_all_and_count(df,name="count"):
     counted = df.groupby(list(df.columns))["url"].count()
-    counted.name = "count" 
+    counted.name = name
     return counted.reset_index()
     
-def run_url_counters(url_inserts,cache,c):
-    import pandas
-    SELECT_COUNTER = "SELECT * from rockerbox.action_occurrence_urls_counter where source = ? and date = ? and action = ?" 
-    UPDATE_COUNTER = "UPDATE rockerbox.action_occurrence_urls_counter set count = count + ? where source = ? and date = ? and action = ? and url = ?"
-
-    df = pandas.DataFrame(url_inserts,columns=["source","date","action","url"])
-    new_values = group_all_and_count(df)
-
-    to_pull = new_values[["source","date","action"]].drop_duplicates().values.tolist()
-    results = cache.pull_simple(to_pull,SELECT_COUNTER)
-    
-
-    if len(results) > 0:
-        existing_values = pandas.DataFrame(results,columns=["source","date","action","url","count"])
-        updates_df = compare_and_increment(new_values,existing_values)
-        to_update = updates_df.values.tolist()
-    else:
-        to_update = new_values[["count"]+list(new_values.columns)[:-1]].values.tolist()
-        
-    # run updates
-    statement = c.prepare(UPDATE_COUNTER)
-    to_bind = cache.bind_and_execute(statement)
-    FutureHelpers.future_queue(to_update,to_bind,simple_append,FUTURES,[]) 
 
 def run(advertiser,pattern):
     from link import lnk
@@ -163,22 +175,25 @@ def run(advertiser,pattern):
     SELECT = "SELECT date, group_and_count(url,uid) FROM rockerbox.visit_uids_lucene_timestamp_u2_clustered"
     FIELDS = ["source","date"]
 
-    OCCURRENCE_0   = "INSERT INTO rockerbox.action_occurrence_u1 (source,date,action,uid,u1,url,occurrence) VALUES (?,?,?,?,?,?,?)"
+    CACHE_INSERT   = "INSERT INTO rockerbox.action_occurrence_u1 (source,date,action,uid,u1,url,occurrence) VALUES (?,?,?,?,?,?,?)"
     OCCURRENCE_1   = "INSERT INTO rockerbox.action_occurrence_users_u2 (source,date,action,uid,u2) VALUES (?,?,?,?,?)"
     
-    #OCCURRENCE_2 = "INSERT INTO rockerbox.action_occurrence_urls (source,date,action,url) VALUES (?,?,?,?)"
+    cache = CassandraCache(c,SELECT,FIELDS,"u2",CACHE_INSERT)
+    _, _, cache_insert, insert_1, url_inserts = cache.run_select(advertiser,pattern,select_callback,advertiser,pattern,[],[],[])
 
-    cache = CassandraCache(c,SELECT,FIELDS,"u2",OCCURRENCE_0)
-    _, _, insert_0, insert_1, url_inserts = cache.run_select(advertiser,pattern,select_callback,advertiser,pattern,[],[],[])
+    cache.run_inserts(cache_insert,CACHE_INSERT)
 
-    cache.run_inserts(insert_0,OCCURRENCE_0)
 
-    run_url_counters(url_inserts,cache,c)
+    SELECT_COUNTER = "SELECT * from rockerbox.action_occurrence_urls_counter where source = ? and date = ? and action = ?" 
+    UPDATE_COUNTER = "UPDATE rockerbox.action_occurrence_urls_counter set count = count + ? where source = ? and date = ? and action = ? and url = ?" 
+
+    dimensions = ["source","date","action"]
+    to_count = "url"
+    count_column = "count"
+
+    cache.run_url_counters(url_inserts,SELECT_COUNTER,UPDATE_COUNTER,dimensions,to_count,count_column)
     
         
-    #cache.run_inserts(insert_0,OCCURRENCE_0)
-    #cache.run_inserts(insert_1,OCCURRENCE_1)
-    #cache.run_inserts(insert_2,OCCURRENCE_2)
 
 
 
