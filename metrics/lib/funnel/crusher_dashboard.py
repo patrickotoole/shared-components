@@ -1,3 +1,4 @@
+from lib.cassandra_helpers.cache import CassandraCache
 from datetime import timedelta, datetime, date
 from link import lnk
 
@@ -22,6 +23,11 @@ def get_in_clause():
     in_clause = ','.join(["'%s'" % u for u in uids])
     return in_clause
 
+def get_offsite_stats(uids):
+    in_clause = "(%s)" % ','.join(["'%s'" % u for u in uids])
+    query = "SELECT * FROM rockerbox.visitor_domains WHERE uid IN %s" % in_clause
+    return c.select_dataframe(query)
+
 def get_advertiser_stats(advertiser, in_clause, date, engagement_threshold=5):
     params = {
         "in_clause": in_clause, 
@@ -36,6 +42,12 @@ def get_advertiser_stats(advertiser, in_clause, date, engagement_threshold=5):
         raise Exception("Query failed: %s" % q)
     if len(df) > 0:
         counts = df.uid.value_counts()
+        
+        uids = counts.index.tolist()
+        
+        offsite_df = get_offsite_stats(uids)
+        print offsite_df
+
         data = {
             "advertiser": advertiser,
             "date": date,
@@ -58,7 +70,6 @@ def insert_row(data):
     query = "REPLACE INTO reporting.advertiser_daily_stats (advertiser, date, views, visitors, engaged) VALUES ('%(advertiser)s', '%(date)s', %(views)s, %(visitors)s, %(engaged)s)"
     q = query % data
     db.execute(q)
-    
 
 advertisers = get_advertisers()
 in_clause = get_in_clause()
