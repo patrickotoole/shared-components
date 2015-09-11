@@ -31,7 +31,7 @@ def select_callback(result,*args):
         if "[:]" in url_uid:
             url, uid = url_uid.split("[:]")
             i1 += [[advertiser,date,pattern,uid,int(uid[-2:]),url,int(res[url_uid])]]
-            i2 += [[advertiser,date,pattern,uid]]
+            i2 += [[advertiser,date,pattern,uid,int(uid[-2:])]]
             i3 += [[advertiser,date,pattern,url]]
 
 
@@ -88,19 +88,24 @@ class CassandraCache(PreparedCassandraRangeQuery):
         results = results[0]
         return results
 
-    def run_url_counters(self,url_inserts,select,update,dimensions=[],to_count="",count_column=""):
+    def run_counter_updates(self,url_inserts,select,update,dimensions=[],to_count="",count_column=""):
         """
-        SELECT_COUNTER = "SELECT * from rockerbox.action_occurrence_urls_counter where source = ? and date = ? and action = ?" 
-        UPDATE_COUNTER = "UPDATE rockerbox.action_occurrence_urls_counter set count = count + ? where source = ? and date = ? and action = ? and url = ?" 
-        dimensions = ["source","date","action"]
-        to_count = "url"
-
+        Arguments:
+          url_inserts: data to update
+          select: select statement to use to check data
+          update: update statement to use to insert data
+          dimensions: dimensions that are fixed (and that we will use in the select)
+          to_count: the field that we want to count (like url)
+          count_column: the name of the database counter that we will update / increment
         """
 
         import pandas
 
         cols = dimensions + [to_count]
         cols_with_count = cols + [count_column]
+
+        select = select + self.__where_formatter__(dimensions)
+        update = update + self.__set_formatter__(count_column) + self.__where_formatter__(cols)
         
     
         df = pandas.DataFrame(url_inserts,columns=cols)
@@ -126,7 +131,7 @@ class CassandraCache(PreparedCassandraRangeQuery):
         
 
 def main(advertiser,pattern):
-    
+    # DEPRECATED 
     from link import lnk
     c = lnk.dbs.cassandra
     SELECT = "SELECT date, group_and_count(url,uid) FROM rockerbox.visit_uids_lucene_timestamp_u2_clustered"
@@ -175,23 +180,29 @@ def run(advertiser,pattern):
     SELECT = "SELECT date, group_and_count(url,uid) FROM rockerbox.visit_uids_lucene_timestamp_u2_clustered"
     FIELDS = ["source","date"]
 
-    CACHE_INSERT   = "INSERT INTO rockerbox.action_occurrence_u1 (source,date,action,uid,u1,url,occurrence) VALUES (?,?,?,?,?,?,?)"
-    OCCURRENCE_1   = "INSERT INTO rockerbox.action_occurrence_users_u2 (source,date,action,uid,u2) VALUES (?,?,?,?,?)"
-    
-    cache = CassandraCache(c,SELECT,FIELDS,"u2",CACHE_INSERT)
-    _, _, cache_insert, insert_1, url_inserts = cache.run_select(advertiser,pattern,select_callback,advertiser,pattern,[],[],[])
+    cache = CassandraCache(c,SELECT,FIELDS,"u2","")
+    _, _, cache_insert, uid_values, url_values = cache.run_select(advertiser,pattern,select_callback,advertiser,pattern,[],[],[])
 
+
+    # UPDATE ACTION TO RAW DATA
+    CACHE_INSERT   = "INSERT INTO rockerbox.action_occurrence_u1 (source,date,action,uid,u1,url,occurrence) VALUES (?,?,?,?,?,?,?)"
     cache.run_inserts(cache_insert,CACHE_INSERT)
 
 
-    SELECT_COUNTER = "SELECT * from rockerbox.action_occurrence_urls_counter where source = ? and date = ? and action = ?" 
-    UPDATE_COUNTER = "UPDATE rockerbox.action_occurrence_urls_counter set count = count + ? where source = ? and date = ? and action = ? and url = ?" 
+    # UPDATE ACTION TO UID TABLE
+    UID_INSERT     = "INSERT INTO rockerbox.action_occurrence_users_u2 (source,date,action,uid,u2) VALUES (?,?,?,?,?)"
+    cache.run_inserts(uid_values,UID_INSERT)
 
-    dimensions = ["source","date","action"]
-    to_count = "url"
-    count_column = "count"
 
-    cache.run_url_counters(url_inserts,SELECT_COUNTER,UPDATE_COUNTER,dimensions,to_count,count_column)
+    # UPDATE URL COUNTER TABLE
+    SELECT_COUNTER = "SELECT * from rockerbox.action_occurrence_urls_counter" 
+    UPDATE_COUNTER = "UPDATE rockerbox.action_occurrence_urls_counter" 
+
+    dimensions     = ["source","date","action"]
+    to_count       = "url"
+    count_column   = "count"
+
+    cache.run_counter_updates(url_values,SELECT_COUNTER,UPDATE_COUNTER,dimensions,to_count,count_column)
     
         
 
