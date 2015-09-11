@@ -3,8 +3,9 @@ from lib.cassandra_helpers.helpers import FutureHelpers
 
 FUTURES    = 60
 NUM_DAYS   = 1
-INSERT_UDF = "insert into full_replication.function_patterns (function,pattern) VALUES ('state_group_and_count','%s')"
 INSERT = "INSERT INTO rockerbox.action_occurrence_u1 (source,date,action,uid,u1,url,occurrence) VALUES (?,?,?,?,?,?,?)"
+INSERT_UDF = "insert into full_replication.function_patterns (function,pattern) VALUES ('state_group_and_count','%s')"
+
 
 def build_datelist(numdays):
     import datetime
@@ -15,10 +16,11 @@ def build_datelist(numdays):
 
     return dates
 
-
+def simple_append(result,results,*args):
+    results += result
 
 def select_callback(result,*args):
-    advertiser, pattern, inserts = args
+    advertiser, pattern, i1, i2, i3 = args
     
     result = result[0]
     res = result['rockerbox.group_and_count(url, uid)']
@@ -28,22 +30,25 @@ def select_callback(result,*args):
     for url_uid in res:
         if "[:]" in url_uid:
             url, uid = url_uid.split("[:]")
-            inserts += [[advertiser,date,pattern,uid,int(uid[-2:]),url,int(res[url_uid])]]
+            i1 += [[advertiser,date,pattern,uid,int(uid[-2:]),url,int(res[url_uid])]]
+            i2 += [[advertiser,date,pattern,uid]]
+            i3 += [[advertiser,date,pattern,url]]
+
 
 
 class CassandraCache(PreparedCassandraRangeQuery):
 
-    def __init__(self,cassandra,query,fields,range_field,insert_query):
+    def __init__(self,cassandra,query,fields,range_field,insert_query,num_days=NUM_DAYS,num_futures=FUTURES):
         self.cassandra = cassandra
         self.query = query
         self.fields = fields
         self.range_field = range_field
         self.insert_query = insert_query
+        self.num_days = num_days
+        self.num_futures = num_futures
 
     def build_udf(self,pattern):
-        print "build udf"
         self.cassandra.execute(INSERT_UDF % pattern)
-
    
     def build_cache(self,advertiser,pattern,callback,*args):
         _, _, inserts = self.run_select(advertiser,pattern,callback,*args)
@@ -57,22 +62,33 @@ class CassandraCache(PreparedCassandraRangeQuery):
 
         self.build_udf(pattern)
 
-        dates = build_datelist(NUM_DAYS)
+        dates = build_datelist(self.num_days)
         data = self.build_bound_data([advertiser],dates,0,100)
 
-        return FutureHelpers.future_queue(data,self.execute,callback,FUTURES,*args)
-        
+        return FutureHelpers.future_queue(data,self.execute,callback,self.num_futures,*args)
 
-    def run_inserts(self,inserts):
+
+    def run_inserts(self,inserts,insert_query=None):
+        insert_query = insert_query or self.insert_query
         import random 
         print "starting insert"
         if len(inserts) > 0:
-            insert_statement = self.build_statement(INSERT,"","")
+            insert_statement = self.build_statement(insert_query,"","")
             bound_insert = self.bind_and_execute(insert_statement)
             def cb(x):
                 print x
             random.shuffle(inserts)
-            FutureHelpers.future_queue(inserts,bound_insert,cb,FUTURES)
+            FutureHelpers.future_queue(inserts,bound_insert,cb,self.num_futures)
+
+    def pull_simple(self,to_pull,query):
+        statement = self.cassandra.prepare(query)
+        to_bind = self.bind_and_execute(statement)
+
+        results = FutureHelpers.future_queue(to_pull,to_bind,simple_append,FUTURES,[])
+        results = results[0]
+        return results
+        
+        
 
 def main(advertiser,pattern):
     
@@ -85,10 +101,90 @@ def main(advertiser,pattern):
     cache = CassandraCache(c,SELECT,FIELDS,"u2",INSERT)
     cache.build_cache(advertiser,pattern,select_callback,advertiser,pattern,[])
 
+def compare_and_increment(new,old):
+    """
+    from a dataframe with new values 
+    and a dataframe with old values
+    produces the increments to make the old look like the new
+    """
+
+    assert(list(old.columns) == list(new.columns))
+
+    cols = list(old.columns)
+    incrementor = cols[-1]
+    indices = cols[:-1]
+
+    _old = old.set_index(indices)
+    _new = new.set_index(indices)
+
+    joined = _new.join(_old,rsuffix="_old",how="outer")
+
+    increments = joined[incrementor] - joined[incrementor + "_old"]
+    increments = increments[increments > 0].map(int)
+    increments.name = "count"
+
+    return increments.reset_index()[["count"]+cols]
+
+    
+def group_all_and_count(df):
+    counted = df.groupby(list(df.columns))["url"].count()
+    counted.name = "count" 
+    return counted.reset_index()
+    
+def run_url_counters(url_inserts,cache,c):
+    import pandas
+    SELECT_COUNTER = "SELECT * from rockerbox.action_occurrence_urls_counter where source = ? and date = ? and action = ?" 
+    UPDATE_COUNTER = "UPDATE rockerbox.action_occurrence_urls_counter set count = count + ? where source = ? and date = ? and action = ? and url = ?"
+
+    df = pandas.DataFrame(url_inserts,columns=["source","date","action","url"])
+    new_values = group_all_and_count(df)
+
+    to_pull = new_values[["source","date","action"]].drop_duplicates().values.tolist()
+    results = cache.pull_simple(to_pull,SELECT_COUNTER)
+    
+
+    if len(results) > 0:
+        existing_values = pandas.DataFrame(results,columns=["source","date","action","url","count"])
+        updates_df = compare_and_increment(new_values,existing_values)
+        to_update = updates_df.values.tolist()
+    else:
+        to_update = new_values[["count"]+list(new_values.columns)[:-1]].values.tolist()
+        
+    # run updates
+    statement = c.prepare(UPDATE_COUNTER)
+    to_bind = cache.bind_and_execute(statement)
+    FutureHelpers.future_queue(to_update,to_bind,simple_append,FUTURES,[]) 
+
+def run(advertiser,pattern):
+    from link import lnk
+    import pandas
+
+    c = lnk.dbs.cassandra
+    SELECT = "SELECT date, group_and_count(url,uid) FROM rockerbox.visit_uids_lucene_timestamp_u2_clustered"
+    FIELDS = ["source","date"]
+
+    OCCURRENCE_0   = "INSERT INTO rockerbox.action_occurrence_u1 (source,date,action,uid,u1,url,occurrence) VALUES (?,?,?,?,?,?,?)"
+    OCCURRENCE_1   = "INSERT INTO rockerbox.action_occurrence_users_u2 (source,date,action,uid,u2) VALUES (?,?,?,?,?)"
+    
+    #OCCURRENCE_2 = "INSERT INTO rockerbox.action_occurrence_urls (source,date,action,url) VALUES (?,?,?,?)"
+
+    cache = CassandraCache(c,SELECT,FIELDS,"u2",OCCURRENCE_0)
+    _, _, insert_0, insert_1, url_inserts = cache.run_select(advertiser,pattern,select_callback,advertiser,pattern,[],[],[])
+
+    cache.run_inserts(insert_0,OCCURRENCE_0)
+
+    run_url_counters(url_inserts,cache,c)
+    
+        
+    #cache.run_inserts(insert_0,OCCURRENCE_0)
+    #cache.run_inserts(insert_1,OCCURRENCE_1)
+    #cache.run_inserts(insert_2,OCCURRENCE_2)
+
+
 
 if __name__ == "__main__":
     import sys
     print sys.argv
     advertiser, pattern = sys.argv[1:]
 
-    main(advertiser, pattern)
+    run(advertiser, pattern)
