@@ -2,8 +2,7 @@ from lib.cassandra_helpers.range_query import CassandraRangeQuery, PreparedCassa
 from lib.cassandra_helpers.helpers import FutureHelpers
 
 FUTURES    = 60
-NUM_DAYS   = 1
-INSERT = "INSERT INTO rockerbox.action_occurrence_u1 (source,date,action,uid,u1,url,occurrence) VALUES (?,?,?,?,?,?,?)"
+NUM_DAYS   = 2
 INSERT_UDF = "insert into full_replication.function_patterns (function,pattern) VALUES ('state_group_and_count','%s')"
 
 
@@ -130,17 +129,6 @@ class CassandraCache(PreparedCassandraRangeQuery):
         
         
 
-def main(advertiser,pattern):
-    # DEPRECATED 
-    from link import lnk
-    c = lnk.dbs.cassandra
-    SELECT = "SELECT date, group_and_count(url,uid) FROM rockerbox.visit_uids_lucene_timestamp_u2_clustered"
-    FIELDS = ["source","date"]
-    INSERT = "INSERT INTO rockerbox.action_occurrence_u1 (source,date,action,uid,u1,url,occurrence) VALUES (?,?,?,?,?,?,?)"
-
-    cache = CassandraCache(c,SELECT,FIELDS,"u2",INSERT)
-    cache.build_cache(advertiser,pattern,select_callback,advertiser,pattern,[])
-
 def compare_and_increment(new,old):
     """
     from a dataframe with new values 
@@ -172,7 +160,7 @@ def group_all_and_count(df,name="count"):
     return counted.reset_index()
     
 
-def run(advertiser,pattern):
+def run(advertiser,pattern,days):
     from link import lnk
     import pandas
 
@@ -180,7 +168,7 @@ def run(advertiser,pattern):
     SELECT = "SELECT date, group_and_count(url,uid) FROM rockerbox.visit_uids_lucene_timestamp_u2_clustered"
     FIELDS = ["source","date"]
 
-    cache = CassandraCache(c,SELECT,FIELDS,"u2","")
+    cache = CassandraCache(c,SELECT,FIELDS,"u2","",days)
     _, _, cache_insert, uid_values, url_values = cache.run_select(advertiser,pattern,select_callback,advertiser,pattern,[],[],[])
 
 
@@ -211,6 +199,8 @@ def run(advertiser,pattern):
 if __name__ == "__main__":
     import sys
     print sys.argv
-    advertiser, pattern = sys.argv[1:]
-
-    run(advertiser, pattern)
+    advertiser, pattern, days = sys.argv[1:]
+    import time
+    start = time.time()
+    run(advertiser, pattern, int(days))
+    print time.time() - start
