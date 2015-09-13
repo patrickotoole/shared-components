@@ -137,12 +137,17 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
 
         results = self.run_cache(pattern,advertiser,dates,sample[0],sample[1],results)
 
+        #import ipdb; ipdb.set_trace()
         if len(results) == 0:
             results = self.run(pattern,advertiser,dates,results)
 
             # TODO: make an external call to begin cache-ing function
                 
         df = pandas.DataFrame(results)
+
+        import work_queue
+        import lib.cassandra_helpers.cache as cache
+        work_queue.work_queue.put((cache.run,[advertiser,pattern[0],20,0]))
                 
         return df
 

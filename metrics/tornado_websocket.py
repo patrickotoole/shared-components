@@ -95,6 +95,21 @@ if __name__ == '__main__':
         for queue,buf in connectors["buffers"].items():
             reactor.callInThread(connectors[queue],buf,streaming.BufferControl())
 
+    import work_queue
+
+    q = work_queue.work_queue
+    def x(y,*args):
+        logging.info(y)
+
+    def test_thread():
+        import time
+        while True:
+            time.sleep(1)
+            q.put((x,"asdf"))
+
+    #reactor.callInThread(test_thread)
+    reactor.callInThread(work_queue.WorkQueue(q))
+
     server = tornado.httpserver.HTTPServer(app)
     server.listen(options.port)
     sig_handler = sig_wrap(reactor,server)
