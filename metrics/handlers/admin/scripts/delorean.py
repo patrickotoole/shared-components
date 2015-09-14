@@ -22,8 +22,8 @@ class DeloreanHandler(FilterHandler):
         return response
 
     @defer.inlineCallbacks
-    def edit_tree(self, filter_label, edits, replace=False):
-        host,port = yield self.defer_get_available()
+    def edit_tree(self, filter_label, edits, replace=False, filter_type="imps"):
+        host,port = yield self.defer_get_available(filter_type)
         self.server = "http://{}:{}".format(host, port)
 
         tree = yield self.defer_get_tree()
@@ -85,12 +85,13 @@ class DeloreanHandler(FilterHandler):
         label = self.get_argument("label")
         replace = self.get_argument("replace", False)
         delete = self.get_argument("delete", False)
+        filter_type = self.get_argument("type", False)
 
         payload = tornado.escape.json_decode(self.request.body)
 
         if delete and delete.lower() == "true":
             self.delete_from_tree(label, payload)
         elif replace and replace.lower() == "true":
-            self.edit_tree(label, payload, replace=True)
+            self.edit_tree(label, payload, replace=True, filter_type=filter_type)
         else:
-            self.edit_tree(label, payload, replace=False)
+            self.edit_tree(label, payload, replace=False, filter_type=filter_type)

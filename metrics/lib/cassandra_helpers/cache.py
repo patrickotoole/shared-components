@@ -2,7 +2,7 @@ from lib.cassandra_helpers.range_query import CassandraRangeQuery, PreparedCassa
 from lib.cassandra_helpers.helpers import FutureHelpers
 
 FUTURES    = 60
-NUM_DAYS   = 20
+NUM_DAYS   = 1
 INSERT_UDF = "insert into full_replication.function_patterns (function,pattern) VALUES ('state_group_and_count','%s')"
 INSERT = "INSERT INTO rockerbox.action_occurrence_u1 (source,date,action,uid,u1,url,occurrence) VALUES (?,?,?,?,?,?,?)"
 

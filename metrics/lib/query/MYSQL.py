@@ -355,3 +355,16 @@ SELECT DISTINCT
 FROM user
     JOIN advertiser ON (user.advertiser_id = advertiser.external_advertiser_id)
 WHERE username = '%s'"""
+
+ONSITE_STATS = """
+SELECT
+    advertiser,
+    CAST(DATE(date) AS CHAR) AS date,
+    engaged/visitors as engagement,
+    views/visitors as views_per_user,
+    views,
+    visitors,
+    engaged
+FROM reporting.advertiser_daily_stats
+WHERE %s
+"""

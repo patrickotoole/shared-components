@@ -36,7 +36,7 @@ class Runner:
 
         self.mongo_api.rules_to_query(advertiser, funnel_name, funnel_id)
 
-funnel_ids = [111]
+funnel_ids = []
 
 runner = Runner()
 
