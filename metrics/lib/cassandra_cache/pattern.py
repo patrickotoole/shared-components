@@ -1,6 +1,7 @@
 import logging
 from cache import CassandraCache
 from helpers import *
+from lib.helpers import *
 
 def build_cache(days,offset):
     from link import lnk
@@ -19,11 +20,33 @@ def select(cache,*args):
 
     return (cache_insert, uid_values, url_values)
 
+def update_tree(db):
+    from lib.funnel import actions_to_delorean
+
+    df = db.select_dataframe("select * from pattern_cache")
+    advertiser_nodes = []
+
+    import ipdb; ipdb.set_trace()
+
+    for i in df.pixel_source_name.unique():
+        actions = Convert.df_to_values(df[df.pixel_source_name == advertiser])
+        for action in actions:
+            node = actions_to_delorean.create_action_node(action)
+            nodes.append(node)
+        advertiser_node = actions_to_delorean.create_node('"source": "%s' % advertiser, children=nodes)
+        advertiser_nodes.append(advertiser_node)
+
+    print advertiser_nodes
+    
+
 
 def run(advertiser,pattern,days,offset):
 
     from link import lnk
     db = lnk.dbs.rockerbox
+
+    update_tree(db)
+    return
 
     ACTIVE = "SELECT * FROM pattern_cache where pixel_source_name = '%s' and url_pattern = '%s' and completed = 0" % (advertiser,pattern)
     if len(db.select_dataframe(ACTIVE)) > 0:
@@ -38,26 +61,32 @@ def run(advertiser,pattern,days,offset):
 
     cache_insert, uid_values, url_values = select(cache,*select_args)
 
-        
     # ACTION => RAW DATA CACHE
     logging.info("Cacheing: %s => %s occurences raw" % (advertiser,pattern))
 
-    CACHE_INSERT   = "INSERT INTO rockerbox.action_occurrence_u1 (source,date,action,uid,u1,url,occurrence) VALUES (?,?,?,?,?,?,?)"
-    cache.run_inserts(cache_insert,CACHE_INSERT)
 
+    SELECT_COUNTER = "SELECT * from rockerbox.pattern_occurrence_u2_counter"
+    UPDATE_COUNTER = "UPDATE rockerbox.pattern_occurrence_u2_counter"
+
+    dimensions     = ["source","date","action","uid","u2"]
+    to_count       = "url"
+    count_column   = "occurrence"
+
+    cache.run_counter_updates(cache_insert,SELECT_COUNTER,UPDATE_COUNTER,dimensions,to_count,count_column,True)
+    
 
     # ACTION => UIDS
     logging.info("Cacheing: %s => %s occurence uuids" % (advertiser,pattern))
 
-    UID_INSERT     = "INSERT INTO rockerbox.action_occurrence_users_u2 (source,date,action,uid,u2) VALUES (?,?,?,?,?)"
+    UID_INSERT     = "INSERT INTO rockerbox.pattern_occurrence_users_u2 (source,date,action,uid,u2) VALUES (?,?,?,?,?)"
     cache.run_inserts(uid_values,UID_INSERT)
 
 
     # ACTION => PAGE_URLS
     logging.info("Cacheing: %s => %s occurence urls" % (advertiser,pattern))
 
-    SELECT_COUNTER = "SELECT * from rockerbox.action_occurrence_urls_counter" 
-    UPDATE_COUNTER = "UPDATE rockerbox.action_occurrence_urls_counter" 
+    SELECT_COUNTER = "SELECT * from rockerbox.pattern_occurrence_urls_counter" 
+    UPDATE_COUNTER = "UPDATE rockerbox.pattern_occurrence_urls_counter" 
 
     dimensions     = ["source","date","action"]
     to_count       = "url"
@@ -70,7 +99,7 @@ def run(advertiser,pattern,days,offset):
     logging.info("Cacheing: %s => %s occurance domains" % (advertiser,pattern))
     
     DOMAIN_SELECT = "select * from rockerbox.visitor_domains where uid = ?"
-    DOMAIN_INSERT = "INSERT INTO rockerbox.action_occurrence_domains (source,date,action,domain) VALUES (?,?,?,?)"
+    DOMAIN_INSERT = "INSERT INTO rockerbox.pattern_occurrence_domains (source,date,action,domain) VALUES (?,?,?,?)"
     cache.run_uids_to_domains(uid_values,DOMAIN_SELECT,DOMAIN_INSERT)
     
 
