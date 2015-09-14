@@ -1,4 +1,5 @@
 from link import lnk
+from lib.helpers import Convert
 import json
 import logging
 formatter = '%(asctime)s:%(levelname)s - %(message)s'
@@ -29,7 +30,7 @@ def create_node(pattern, segment_id=None, value=0, duration=10080, query=None):
         node["node"]["segment"] = {
             "id":str(segment_id),
             "value":str(value),
-            "duration":str(duration)        
+            "duration":str(duration)
         }
 
     if query:
@@ -37,9 +38,9 @@ def create_node(pattern, segment_id=None, value=0, duration=10080, query=None):
 
     return node
 
-def create_edits(segment_targets):
+def create_edits(nodes):
     edits = {"children": []}
-    edits["children"].extend([create_node(i[1], i[0]) for i in segment_targets])
+    edits["children"].extend(nodes)
     return edits
 
 def push_edits(edits):
@@ -57,9 +58,17 @@ console = lnk.api.console
 api = lnk.api.rockerbox
 db = lnk.dbs.rockerbox
 
-actions = get_actions(db)
+actions = Convert.df_to_values(get_actions(db))
+
+nodes = []
+# for action in actions:
+#     node = create_node(action["url_pattern"])
+#     nodes.append(node)
+
+edits = create_edits(nodes)
+push_edits(edits)
 
 if len(actions) > 0:
-    print actions.url_pattern
+    pass
 else:
-    logger.info("Didn't find any active campaigns. Exiting...")
+    logger.info("Didn't find any actions. Exiting...")

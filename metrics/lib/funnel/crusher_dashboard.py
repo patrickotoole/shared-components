@@ -43,10 +43,10 @@ def get_advertiser_stats(advertiser, in_clause, date, engagement_threshold=5):
     if len(df) > 0:
         counts = df.uid.value_counts()
         
-        uids = counts.index.tolist()
+        # uids = counts.index.tolist()
         
-        offsite_df = get_offsite_stats(uids)
-        print offsite_df
+        # offsite_df = get_offsite_stats(uids)
+        # print offsite_df
 
         data = {
             "advertiser": advertiser,
@@ -54,6 +54,9 @@ def get_advertiser_stats(advertiser, in_clause, date, engagement_threshold=5):
             "views": len(df),
             "visitors": len(counts),
             "engaged": len(counts[counts >= engagement_threshold])
+            # advertising oppurtuntities
+            # top domains (offset by tfidf)
+            # top categories (offset by tfidf)
         }
         insert_row(data)
 
@@ -62,8 +65,12 @@ def get_dates():
     today = datetime.utcnow().date().strftime(fmt)
     yesterday = (datetime.utcnow() - timedelta(days=1)).date().strftime(fmt)
     two_days_ago = (datetime.utcnow() - timedelta(days=2)).date().strftime(fmt)
+    three_days_ago = (datetime.utcnow() - timedelta(days=3)).date().strftime(fmt)
 
-    return [today, yesterday]
+    return [
+        today, 
+        yesterday
+        ]
 
 def insert_row(data):
     print data
