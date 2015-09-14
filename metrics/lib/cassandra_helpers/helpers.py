@@ -65,7 +65,9 @@ class FutureHelpers:
 
         for i in range(min(queue_size,length)):
             FutureHelpers.run_next(False,iterable,bound,step,callback,*args)
-        event.wait()
+
+        if length > 0: 
+            event.wait()
 
         return args
         

@@ -30,6 +30,14 @@ class PreparedCassandraRangeQuery(CassandraRangeQuery):
         self.query = query
         self.fields = fields
         self.range_field = range_field
+
+    def __where_formatter__(self,fields):
+        where = " WHERE "
+        where += " and ".join(["%s = ?" % f for f in fields])
+        return where
+
+    def __set_formatter__(self,field):
+        return " set %s = %s + ? " % (field,field)
     
     def __where__(self):
         where = " WHERE "

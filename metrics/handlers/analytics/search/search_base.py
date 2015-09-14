@@ -137,12 +137,18 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
 
         results = self.run_cache(pattern,advertiser,dates,sample[0],sample[1],results)
 
+        logging.info("Results in cache: %s" % len(results))
+        
         if len(results) == 0:
             results = self.run(pattern,advertiser,dates,results)
 
-            # TODO: make an external call to begin cache-ing function
+            import work_queue
+            import lib.cassandra_cache.main as cache
+            work_queue.work_queue.put((cache.run,[advertiser,pattern[0],numdays,0]))
                 
         df = pandas.DataFrame(results)
+
+        
                 
         return df
 

@@ -9,6 +9,10 @@ from analytics_base import AnalyticsBase
 from twisted.internet import defer
 from lib.helpers import decorators
 from lib.helpers import *
+from lib.cassandra_helpers.helpers import FutureHelpers
+from lib.cassandra_cache.helpers import *
+
+
 
 DEFAULT_INTERVAL = "minute"
 
@@ -38,17 +42,18 @@ class VisitDomainBase(object):
  
 
     def paginate_get_w_in(self, uids, date_clause):
-        futures = []
-        n = 1#max(len(uids)/30,1)
-        for i in xrange(0, len(uids), n):
-            futures.append(self.future_get_w_in(uids[i:i+n],date_clause))
 
-        l = []
-        for future in futures:
-            rows = future.result()
-            l += rows
+        DOMAIN_SELECT = "select * from rockerbox.visitor_domains where uid = ?"
+        statement = self.cassandra.prepare(DOMAIN_SELECT)
+        def execute(data):
+            bound = statement.bind(data)
+            return self.cassandra.execute_async(bound)
+        
+        prepped = [[u] for u in uids]
+        results = FutureHelpers.future_queue(prepped,execute,simple_append,60,[])
+        results = results[0]
 
-        return l
+        return results
 
     def get_w_in(self, uids, date_clause):
         where = 'where uid IN {}'

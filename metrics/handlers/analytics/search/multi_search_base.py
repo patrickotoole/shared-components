@@ -24,7 +24,7 @@ class MultiSearchBase(VisitDomainBase,SearchBase,MultiSearchHelpers):
                 terms = group['patterns']
                 logic = group['logic']
                     
-                deferreds += [self.defer_execute(PARAMS, advertiser, terms, date_clause, logic)]
+                deferreds += [self.defer_execute(PARAMS, advertiser, terms, date_clause, logic, numdays=7, allow_sample=False)]
                 deferred_meta += [{
                     "step": step_key,
                     "group": i,
@@ -86,7 +86,9 @@ class MultiSearchBase(VisitDomainBase,SearchBase,MultiSearchHelpers):
 
         response = self.check_cache(cache_string) or (yield self.defer_get_uids(*arguments))
 
-        defs = [self.defer_get_domains(step['uids'],date_clause) for step in response['results']]
+        # TODO: UNDO HACK -- limiting this to 5k users for domain search
+        # Want to make this useda cached version of the domains / intersected actions
+        defs = [self.defer_get_domains(step['uids'][:5000],date_clause) for step in response['results']]
 
         dl = defer.DeferredList(defs)
         step_domains = yield dl
@@ -112,7 +114,7 @@ class MultiSearchBase(VisitDomainBase,SearchBase,MultiSearchHelpers):
 
         response = self.check_cache(cache_string) or (yield self.defer_get_uids(*arguments))
         
-        defs = [self.defer_get_domains(step['uids'],date_clause) for step in response['results']]
+        defs = [self.defer_get_domains(step['uids'][:5000],date_clause) for step in response['results']]
 
         dl = defer.DeferredList(defs)
         step_domains = yield dl
