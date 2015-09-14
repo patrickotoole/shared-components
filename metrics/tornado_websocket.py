@@ -96,19 +96,13 @@ if __name__ == '__main__':
             reactor.callInThread(connectors[queue],buf,streaming.BufferControl())
 
     import work_queue
+    import threading
 
+    lock = threading.Lock()
     q = work_queue.work_queue
-    def x(y,*args):
-        logging.info(y)
 
-    def test_thread():
-        import time
-        while True:
-            time.sleep(1)
-            q.put((x,"asdf"))
-
-    #reactor.callInThread(test_thread)
-    reactor.callInThread(work_queue.WorkQueue(q))
+    for _ in range(0,4):
+        reactor.callInThread(work_queue.WorkQueue(q,lock))
 
     server = tornado.httpserver.HTTPServer(app)
     server.listen(options.port)

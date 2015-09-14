@@ -14,12 +14,15 @@ work_queue = SingleQueue()
 
 class WorkQueue(object):
 
-    def __init__(self,queue):
+    def __init__(self,queue,lock):
         self.queue = queue
+        self.lock = lock
 
     def __call__(self):
         while True:
+            self.lock.acquire()
             fn, args = self.queue.get()
+            self.lock.release()
             logging.info("starting queue %s %s" % (str(fn),str(args)))
             fn(*args) 
             logging.info("finished queue %s %s" % (str(fn),str(args)))
