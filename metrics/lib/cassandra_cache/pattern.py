@@ -2,6 +2,10 @@ import logging
 from cache import CassandraCache
 from helpers import *
 from lib.helpers import *
+formatter = '%(asctime)s:%(levelname)s - %(message)s'
+logging.basicConfig(level=logging.INFO, format=formatter)
+
+logger = logging.getLogger()
 
 def build_cache(days,offset):
     from link import lnk
@@ -20,39 +24,50 @@ def select(cache,*args):
 
     return (cache_insert, uid_values, url_values)
 
-def update_tree(db):
+def update_tree(db,api):
     from lib.funnel import actions_to_delorean
 
     df = db.select_dataframe("select * from pattern_cache")
     advertiser_nodes = []
 
-    import ipdb; ipdb.set_trace()
+    USER = "INSERT INTO rockerbox.pattern_occurrence_users_u2 (source, date, action, uid, u2) VALUES ('${source}', '${date}', '%(url_pattern)s', '${adnxs_uid}', ${u2});"
+    RAW = "UPDATE rockerbox.pattern_occurrence_u2_counter set occurrence= occurrence + 1 where source = '${source}' and date = '${date}' and  url = '${referrer}' and uid = '${adnxs_uid}' and u2 = ${u2} and action = '%(url_pattern)s';"
+    DOMAIN = "UPDATE rockerbox.pattern_occurrence_urls_counter set count= count + 1 where source = '${source}' and date = '${date}' and  url = '${referrer}' and action = '%(url_pattern)s';"
 
     for i in df.pixel_source_name.unique():
+        nodes = []
         actions = Convert.df_to_values(df[df.pixel_source_name == advertiser])
         for action in actions:
-            node = actions_to_delorean.create_action_node(action)
+            node = actions_to_delorean.create_action_node(action,RAW % action)
             nodes.append(node)
+            node = actions_to_delorean.create_action_node(action,USER % action)
+            nodes.append(node)
+            node = actions_to_delorean.create_action_node(action,DOMAIN % action)
+            nodes.append(node)
+
         advertiser_node = actions_to_delorean.create_node('"source": "%s' % advertiser, children=nodes)
         advertiser_nodes.append(advertiser_node)
 
-    print advertiser_nodes
+    edits = actions_to_delorean.create_edits(advertiser_nodes)
+    actions_to_delorean.push_edits(api,edits, label="_patterns", filter_type="visits")
+
+    
     
 
 
-def run(advertiser,pattern,days,offset):
+def run(advertiser,pattern,days,offset,force=False):
 
     from link import lnk
     db = lnk.dbs.rockerbox
-
-    update_tree(db)
-    return
+    api = lnk.api.rockerbox
 
     ACTIVE = "SELECT * FROM pattern_cache where pixel_source_name = '%s' and url_pattern = '%s' and completed = 0" % (advertiser,pattern)
-    if len(db.select_dataframe(ACTIVE)) > 0:
+    if not force and len(db.select_dataframe(ACTIVE)) > 0:
         return 
 
     db.execute("INSERT INTO pattern_cache (url_pattern,pixel_source_name,num_days) VALUES ('%s','%s',%s)" % (pattern,advertiser,days))
+
+    update_tree(db,api)
 
     logging.info("Cacheing: %s => %s begin" % (advertiser,pattern))
 
@@ -114,8 +129,8 @@ def run(advertiser,pattern,days,offset):
 if __name__ == "__main__":
     import sys, time
     print sys.argv
-    advertiser, pattern, days, offset = sys.argv[1:]
+    advertiser, pattern, days, offset, force = sys.argv[1:]
     start = time.time()
-    run(advertiser, pattern, int(days), int(offset))
+    run(advertiser, pattern, int(days), int(offset), bool(force))
 
     print time.time() - start
