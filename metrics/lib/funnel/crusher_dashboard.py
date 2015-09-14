@@ -1,8 +1,12 @@
-from lib.cassandra_helpers.cache import CassandraCache
+from lib.cassandra_helpers.statement import CassandraStatement
+from lib.cassandra_helpers.helpers import FutureHelpers
+from lib.cassandra_cache.helpers import simple_append
 from datetime import timedelta, datetime, date
+import pandas as pd
 from link import lnk
 
 c = lnk.dbs.cassandra
+st = CassandraStatement(c)
 db = lnk.dbs.rockerbox
 
 base_query = """
@@ -14,6 +18,13 @@ where
     uid2 IN (%(in_clause)s)
 """
 
+replace_query = """
+REPLACE INTO reporting.advertiser_daily_stats 
+    (advertiser, date, views, visitors, engaged, advertising_ops) 
+VALUES 
+    ('%(advertiser)s', '%(date)s', %(views)s, %(visitors)s, %(engaged)s, %(advertising_ops)s)
+"""
+
 def get_advertisers():
     query = "select pixel_source_name from rockerbox.advertiser where deleted=0 and active=1"
     return db.select_dataframe(query).pixel_source_name.tolist()
@@ -23,14 +34,29 @@ def get_in_clause():
     in_clause = ','.join(["'%s'" % u for u in uids])
     return in_clause
 
+def run_uids_to_domains(uids, select):
+    statement = c.prepare(select)
+    to_bind = st.bind_and_execute(statement)
+    
+    print "Unique user ids :%s" % len(uids)
+    # uids needs to be like [[u1],[u2]], not [u1, u2]
+    results = FutureHelpers.future_queue([[u] for u in uids],to_bind,simple_append,60,[])
+    results = results[0]
+    
+    df = pd.DataFrame(results)
+
+    print "Number of results: %s" % len(df)
+    
+    return df
+
 def get_offsite_stats(uids):
-    in_clause = "(%s)" % ','.join(["'%s'" % u for u in uids])
-    query = "SELECT * FROM rockerbox.visitor_domains WHERE uid IN %s" % in_clause
-    return c.select_dataframe(query)
+    # uid date domain timestamp
+    DOMAIN_SELECT = "select * from rockerbox.visitor_domains where uid = ?"
+    return run_uids_to_domains(uids, DOMAIN_SELECT)
 
 def get_advertiser_stats(advertiser, in_clause, date, engagement_threshold=5):
     params = {
-        "in_clause": in_clause, 
+        "in_clause": in_clause,
         "advertiser": advertiser,
         "date": date
         }
@@ -42,19 +68,16 @@ def get_advertiser_stats(advertiser, in_clause, date, engagement_threshold=5):
         raise Exception("Query failed: %s" % q)
     if len(df) > 0:
         counts = df.uid.value_counts()
-        
-        # uids = counts.index.tolist()
-        
-        # offsite_df = get_offsite_stats(uids)
-        # print offsite_df
+        uids = counts.index.tolist()
+        offsite_df = get_offsite_stats(uids)
 
         data = {
             "advertiser": advertiser,
             "date": date,
             "views": len(df),
             "visitors": len(counts),
-            "engaged": len(counts[counts >= engagement_threshold])
-            # advertising oppurtuntities
+            "engaged": len(counts[counts >= engagement_threshold]),
+            "advertising_ops": len(offsite_df)
             # top domains (offset by tfidf)
             # top categories (offset by tfidf)
         }
@@ -66,16 +89,27 @@ def get_dates():
     yesterday = (datetime.utcnow() - timedelta(days=1)).date().strftime(fmt)
     two_days_ago = (datetime.utcnow() - timedelta(days=2)).date().strftime(fmt)
     three_days_ago = (datetime.utcnow() - timedelta(days=3)).date().strftime(fmt)
+    four_days_ago = (datetime.utcnow() - timedelta(days=4)).date().strftime(fmt)
+    five_days_ago = (datetime.utcnow() - timedelta(days=5)).date().strftime(fmt)
+    six_days_ago = (datetime.utcnow() - timedelta(days=6)).date().strftime(fmt)
+    seven_days_ago = (datetime.utcnow() - timedelta(days=7)).date().strftime(fmt)
+    eight_days_ago = (datetime.utcnow() - timedelta(days=8)).date().strftime(fmt)
 
     return [
-        today, 
-        yesterday
+        two_days_ago,
+        three_days_ago,
+        today,
+        yesterday,
+        four_days_ago,
+        five_days_ago,
+        six_days_ago,
+        seven_days_ago,
+        eight_days_ago
         ]
 
 def insert_row(data):
     print data
-    query = "REPLACE INTO reporting.advertiser_daily_stats (advertiser, date, views, visitors, engaged) VALUES ('%(advertiser)s', '%(date)s', %(views)s, %(visitors)s, %(engaged)s)"
-    q = query % data
+    q = replace_query % data
     db.execute(q)
 
 advertisers = get_advertisers()
@@ -83,6 +117,8 @@ in_clause = get_in_clause()
 dates = get_dates()
 
 print dates
+
+advertisers = ["baublebar", "bigstock", "jackthreads"]
 
 for a in advertisers:
     for date in dates:

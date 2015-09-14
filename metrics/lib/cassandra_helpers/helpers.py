@@ -45,11 +45,10 @@ class FutureHelpers:
                 always()
                 #logging.info("%s %s" % (future._current_host.address,start_time-time.time()))
                 return 
-    
 
             future.add_callbacks(cb_with_result,cb_with_result)
         except Exception as e:
-            #logging.error(e)
+            print "Exception: %s" % e
             pass
 
 
@@ -60,6 +59,7 @@ class FutureHelpers:
         after all the futures have responded.
         """
         length = len(data)
+        
         iterable = iter(data)
         event, step = FutureHelpers.max_steps_event(length)
 

@@ -39,6 +39,9 @@ RB.crusher.controller = (function(controller) {
       description = "This is the ratio of visitors who are considered to be engaged users"
       RB.rho.ui.buildChart('.ct-chart#engagement', data, "date", "engagement", title="ENGAGEMENT", description=description);
       
+      description = "This is the number of advertising opportunities Rockerbox has seen for your users"
+      RB.rho.ui.buildChart('.ct-chart#advertising-ops', data, "date", "advertising_ops", title="AD OPPORTUNITIES", description=description);
+      
       description = "This is the average number of pageviews per visitor to your site"
       RB.rho.ui.buildChart(
 	'.ct-chart#views-per-user',
