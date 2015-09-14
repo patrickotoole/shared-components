@@ -8,7 +8,7 @@ logging.basicConfig(level=logging.INFO, format=formatter)
 logger = logging.getLogger()
 
 QUERY = """
-SELECT * 
+SELECT DISTINCT pixel_source_name, url_pattern 
 FROM rockerbox.action JOIN 
      rockerbox.action_patterns 
 USING (action_id)
@@ -18,12 +18,13 @@ def get_actions(db):
     actions = db.select_dataframe(QUERY)
     return actions
 
-def create_node(pattern, segment_id=None, value=0, duration=10080, query=None):
+def create_node(pattern, segment_id=None, value=0, duration=10080, query=None, children=[]):
     node = {
         "node": {
             "label":"",
             "pattern": pattern
-        }
+        },
+        "children": children
     }
 
     if segment_id:
@@ -38,13 +39,30 @@ def create_node(pattern, segment_id=None, value=0, duration=10080, query=None):
 
     return node
 
+def create_action_node(action, query=None):
+    # If this action contains multiple patterns
+    if "," in action["url_pattern"]:
+        patterns = action["url_pattern"].split(',')
+        head = create_node(patterns[0])
+        last = head
+        for p in patterns[1:]:
+            n = create_node(p)
+            last["children"] = [n]
+            last = n
+        
+        # Only add the query to the last pattern to match
+        last["node"]["query"] = query
+        return head
+    else:
+        return create_node(action["url_pattern"], query=query)
+
 def create_edits(nodes):
     edits = {"children": []}
     edits["children"].extend(nodes)
     return edits
 
-def push_edits(edits):
-    url = "/delorean/edit/?label=_actions&replace=true"
+def push_edits(edits, label="_actions", filter_type="imps"):
+    url = "/delorean/edit/?label=%s&replace=true&type=%s" % (label, filter_type)
     logger.info("Submitting edits: {}".format(edits))    
     r = api.post(url, data=json.dumps(edits))
 
@@ -54,19 +72,27 @@ def push_edits(edits):
     else:
         logging.info("Sucessfully submitted. Exiting.")
 
-console = lnk.api.console
 api = lnk.api.rockerbox
 db = lnk.dbs.rockerbox
 
-actions = Convert.df_to_values(get_actions(db))
+df = get_actions(db)
 
-nodes = []
-# for action in actions:
-#     node = create_node(action["url_pattern"])
-#     nodes.append(node)
+advertiser_nodes = []
+advertisers = df.pixel_source_name.value_counts().index.tolist()
 
-edits = create_edits(nodes)
-push_edits(edits)
+for advertiser in advertisers:
+    nodes = []
+    actions = Convert.df_to_values(df[df.pixel_source_name == advertiser])
+    
+    for action in actions:
+        node = create_action_node(action)
+        nodes.append(node)
+
+    advertiser_node = create_node('"source": "%s' % advertiser, children=nodes)
+    advertiser_nodes.append(advertiser_node)
+
+edits = create_edits(advertiser_nodes)
+push_edits(edits, label="_actions", filter_type="visits")
 
 if len(actions) > 0:
     pass
