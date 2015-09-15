@@ -364,7 +364,8 @@ SELECT
     views/visitors as views_per_user,
     views,
     visitors,
-    engaged
+    engaged,
+    advertising_ops
 FROM reporting.advertiser_daily_stats
 WHERE %s
 """
