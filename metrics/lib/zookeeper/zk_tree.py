@@ -102,3 +102,13 @@ class ZKTree(ZKBase):
         for child in self.tree['children']:
             if child['node']['label'] == label:
                 return child
+
+if __name__ == "__main__":
+
+    # EXAMPLE
+    zk_tree = ZKTree(tree_name="for_play")
+    node = zk_tree.find_node_by_label("_actions")
+    node['children'] = []
+    
+    tree = zk_tree.set_tree()
+    zk_tree.stop()
