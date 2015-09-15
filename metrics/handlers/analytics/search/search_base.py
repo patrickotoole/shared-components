@@ -15,14 +15,11 @@ QUERY  = """SELECT %(what)s FROM rockerbox.visit_uids_lucene_timestamp_u2_cluste
 WHAT   = "date, group_and_count(url,uid)"
 WHERE  = "WHERE source = ? and date = ? and u2 = ?"
 
-CACHE_QUERY = """SELECT %(what)s from rockerbox.action_occurrence_u1 where %(where)s"""
+CACHE_QUERY = """SELECT %(what)s from rockerbox.pattern_occurrence_u2_counter where %(where)s"""
 CACHE_WHAT  = """date, uid, url, occurrence"""
-CACHE_WHERE = """source=? and action=? and date=? and u1=? """
+CACHE_WHERE = """source=? and action=? and date=? and u2=? """
 
-INSERT = """INSERT INTO rockerbox.action_occurrence_u1 (source,date,action,uid,u1,url,occurrence) VALUES (?,?,?,?,?,?,?) """
-INSERT_NO_DIST = """INSERT INTO rockerbox.action_occurrence (source,date,action,uid,url,occurrence) VALUES (?,?,?,?,?,?) """
 
-INSERT_CACHE = "INSERT INTO rockerbox.action_occurrence_u1 (source,date,action,uid,u1,url,occurrence) VALUES ('%(source)s','%(date)s','%(action)s','%(uid)s', %(u1)s,'%(url)s',%(occurrence)s)"
 
 INSERT_UDF = "insert into full_replication.function_patterns (function,pattern) VALUES ('state_group_and_count','%s')"
 
@@ -135,16 +132,24 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
         sample = (0,5) if allow_sample else (0,100)
         self.sample_used = sample[1]
 
-        results = self.run_cache(pattern,advertiser,dates,sample[0],sample[1],results)
+        # check if the cache has enough days in it
+        # if not, skip the cache and go direct
+        from link import lnk
+        df = lnk.dbs.rockerbox.select_dataframe("select * from pattern_cache where pixel_source_name = '%s' and url_pattern = '%s'" % (advertiser,pattern[0]))
 
-        logging.info("Results in cache: %s" % len(results))
+        if len(df[df.num_days > 7]) > 0:
+            results = self.run_cache(pattern,advertiser,dates,sample[0],sample[1],results)
+            logging.info("Results in cache: %s" % len(results))
         
         if len(results) == 0:
             results = self.run(pattern,advertiser,dates,results)
 
             import work_queue
-            import lib.cassandra_cache.main as cache
-            work_queue.work_queue.put((cache.run,[advertiser,pattern[0],numdays,0]))
+            import lib.cassandra_cache.pattern as cache
+            args = [advertiser,pattern[0],20,0,work_queue.work_queue.put]
+            work = (cache.run_cascade,args)
+
+            work_queue.work_queue.put(work)
                 
         df = pandas.DataFrame(results)
 

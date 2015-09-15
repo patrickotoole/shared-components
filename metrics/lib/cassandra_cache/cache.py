@@ -3,7 +3,7 @@ from lib.cassandra_helpers.helpers import FutureHelpers
 from lib.cassandra_cache.helpers import *
 import logging
 
-FUTURES    = 60
+FUTURES    = 120
 NUM_DAYS   = 2
 INSERT_UDF = "insert into full_replication.function_patterns (function,pattern) VALUES ('state_group_and_count','%s')"
 
@@ -51,7 +51,7 @@ class CassandraCache(PreparedCassandraRangeQuery):
         statement = self.cassandra.prepare(query)
         to_bind = self.bind_and_execute(statement)
 
-        results = FutureHelpers.future_queue(to_pull,to_bind,simple_append,FUTURES,[])
+        results = FutureHelpers.future_queue(to_pull,to_bind,simple_append,self.num_futures,[])
         results = results[0]
         return results
 
@@ -95,7 +95,7 @@ class CassandraCache(PreparedCassandraRangeQuery):
         print "updating: %s" % len(to_update)
         statement = self.cassandra.prepare(update)
         to_bind = self.bind_and_execute(statement)
-        FutureHelpers.future_queue(to_update,to_bind,simple_append,FUTURES,[]) 
+        FutureHelpers.future_queue(to_update,to_bind,simple_append,self.num_futures,[]) 
 
     def run_uids_to_domains(self,uid_inserts,select,insert):
         import pandas
@@ -108,7 +108,7 @@ class CassandraCache(PreparedCassandraRangeQuery):
         uids = [[j] for j in list(set([i[-2] for i in uid_inserts]))]
 
         logging.info("Unique user ids :%s" % len(uids))
-        results = FutureHelpers.future_queue(uids,to_bind,simple_append,60,[])
+        results = FutureHelpers.future_queue(uids,to_bind,simple_append,self.num_futures,[])
         results = results[0]
 
         df = pandas.DataFrame(results)
@@ -129,7 +129,7 @@ class CassandraCache(PreparedCassandraRangeQuery):
         to_bind = self.bind_and_execute(statement)
 
         inserts = df[['source','date','action','domain']].values.tolist()
-        results = FutureHelpers.future_queue(inserts,to_bind,simple_append,60,[])
+        results = FutureHelpers.future_queue(inserts,to_bind,simple_append,self.num_futures,[])
         
         
         

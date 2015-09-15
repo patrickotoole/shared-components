@@ -34,7 +34,7 @@ def update_tree(db,api):
     RAW = "UPDATE rockerbox.pattern_occurrence_u2_counter set occurrence= occurrence + 1 where source = '${source}' and date = '${date}' and  url = '${referrer}' and uid = '${adnxs_uid}' and u2 = ${u2} and action = '%(url_pattern)s';"
     DOMAIN = "UPDATE rockerbox.pattern_occurrence_urls_counter set count= count + 1 where source = '${source}' and date = '${date}' and  url = '${referrer}' and action = '%(url_pattern)s';"
 
-    for i in df.pixel_source_name.unique():
+    for advertiser in df.pixel_source_name.unique():
         nodes = []
         actions = Convert.df_to_values(df[df.pixel_source_name == advertiser])
         for action in actions:
@@ -52,6 +52,31 @@ def update_tree(db,api):
     actions_to_delorean.push_edits(api,edits, label="_patterns", filter_type="visits")
 
     
+def run_cascade(advertiser,pattern,days,offset,callback):
+
+    base = [advertiser,pattern]
+    cascade = {
+        0: base + [1,0, callback],
+        1: base + [2,1, callback],
+        3: base + [2,3, callback],
+        5: base + [2,5, callback],
+        7: base + [2,7, callback],
+        9: base + [6,9, callback],
+        15: base + [5,15, callback]
+
+    }
+
+    to_run = base + [1,offset,callback] if offset != days else False
+
+
+    if to_run is not False:
+
+        run(*to_run)
+        offset = to_run[2]+to_run[3]
+        work = (run_cascade,base + [days,offset,callback])
+
+        callback(work)
+    
     
 
 
@@ -61,13 +86,15 @@ def run(advertiser,pattern,days,offset,force=False):
     db = lnk.dbs.rockerbox
     api = lnk.api.rockerbox
 
-    ACTIVE = "SELECT * FROM pattern_cache where pixel_source_name = '%s' and url_pattern = '%s' and completed = 0" % (advertiser,pattern)
-    if not force and len(db.select_dataframe(ACTIVE)) > 0:
+    SKIP = "SELECT * FROM pattern_cache where pixel_source_name = '%s' and url_pattern = '%s' and (num_days >= %s or completed = 0)" 
+
+    skip = db.select_dataframe(SKIP % (advertiser,pattern,days+offset))
+    if force is not True and len(skip) > 0:
         return 
 
-    db.execute("INSERT INTO pattern_cache (url_pattern,pixel_source_name,num_days) VALUES ('%s','%s',%s)" % (pattern,advertiser,days))
+    db.execute("INSERT INTO pattern_cache (url_pattern,pixel_source_name,num_days) VALUES ('%s','%s',%s)" % (pattern,advertiser,days+offset))
 
-    update_tree(db,api)
+    #update_tree(db,api)
 
     logging.info("Cacheing: %s => %s begin" % (advertiser,pattern))
 
