@@ -187,16 +187,17 @@ body {font-family:"ProximaNova",sans-serif; -webkit-font-smoothing: antialiased;
         .table>tbody+tbody, .table>tbody>tr>td { border-top:1px solid #f0f0f0 !important}
 
         .ct-chart {
-            width: 400px;
-            height: 450px;
-            float: left;
+            /*width: 400px;
+            height: 450px;*/
             border-style: solid;
             border-width: 1px;
-            border-color: #C0C0C0;
-            margin: 5px;
+            border-color: #f0f0f0;
             text-align: center;
-            padding-top: 10px;
+            padding-left:20px;
+            padding-right:20px;
+            padding-top: 20px;
             background-color: #FFFFFF;
+            margin-bottom:30px
         }
 
         .ct-chart svg {
@@ -205,17 +206,33 @@ body {font-family:"ProximaNova",sans-serif; -webkit-font-smoothing: antialiased;
 
         .ct-chart .chart-title {
             width: 100%;
-            font-size: 28px;
+            font-size: 16px;
+            font-weight:bold;
             color: #5A5A5A;
-            text-align: center;
+            text-align: left;
+        }
+
+        .ct-chart .chart-total {
+            width: 100%;
+            padding:10px;padding-left:0px;
+            font-size: 24px;
+            font-weight:bold;
+            color: #5A5A5A;
+            text-align: left;
         }
 
         .ct-chart .chart-description {
             width: 100%;
-            font-size: 16px;
+            font-size: 14px;
             color: #5A5A5A;
-            text-align: center;
+            text-align: left;
         }
+        .chart-wrapper {
+            padding-top:20px
+        }
+
+        .ct-line { stroke-width:3px }
+        .ct-point { stroke-width: 8px }
 
         .ct-series-a .ct-line {
             stroke: #428bca;
@@ -268,16 +285,6 @@ body {font-family:"ProximaNova",sans-serif; -webkit-font-smoothing: antialiased;
     </div>
   </div>
   <div class="container" style="width:inherit;margin-left:420px">
-  </div>
-
-  <div class="dashboard" style="width:100%;height:100%;margin-left:440px">
-    <div class="ct-chart" id="views"></div>
-    <div class="ct-chart" id="visitors"></div>
-    <div class="ct-chart" id="engaged"></div>
-    <div class="ct-chart" id="engagement" style="clear:left"></div>
-    <div class="ct-chart" id="views-per-user"></div>
-    <div class="ct-chart" id="actions"></div>
-    <div class="ct-chart" id="advertising-ops" style="clear:left"></div>
   </div>
 
 </body>

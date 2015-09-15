@@ -60,7 +60,7 @@ RB.crusher.ui.funnel = (function(funnel,crusher) {
       data.funnel_name = this_funnel.selectAll("input.funnel-name").property("value")
       crusher.controller.funnel.save(data,function(x,TYPE){
         
-        funnel.register_publishers(show.datum()) // dont forget to register the funnel before showing it!
+        //funnel.register_publishers(show.datum()) // dont forget to register the funnel before showing it!
         
         RB.routes.navigation.back()
         setTimeout(function(){

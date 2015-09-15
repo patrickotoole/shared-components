@@ -48,7 +48,8 @@ class FutureHelpers:
 
             future.add_callbacks(cb_with_result,cb_with_result)
         except Exception as e:
-            print "Exception: %s" % e
+            if len(str(e)) > 0: print e
+            #logging.error(e)
             pass
 
 

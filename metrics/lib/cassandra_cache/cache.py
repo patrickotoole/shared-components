@@ -3,7 +3,7 @@ from lib.cassandra_helpers.helpers import FutureHelpers
 from lib.cassandra_cache.helpers import *
 import logging
 
-FUTURES    = 60
+FUTURES    = 120
 NUM_DAYS   = 2
 INSERT_UDF = "insert into full_replication.function_patterns (function,pattern) VALUES ('state_group_and_count','%s')"
 
@@ -51,11 +51,11 @@ class CassandraCache(PreparedCassandraRangeQuery):
         statement = self.cassandra.prepare(query)
         to_bind = self.bind_and_execute(statement)
 
-        results = FutureHelpers.future_queue(to_pull,to_bind,simple_append,FUTURES,[])
+        results = FutureHelpers.future_queue(to_pull,to_bind,simple_append,self.num_futures,[])
         results = results[0]
         return results
 
-    def run_counter_updates(self,url_inserts,select,update,dimensions=[],to_count="",count_column=""):
+    def run_counter_updates(self,url_inserts,select,update,dimensions=[],to_count="",count_column="",counter_value=False):
         """
         Arguments:
           url_inserts: data to update
@@ -74,9 +74,12 @@ class CassandraCache(PreparedCassandraRangeQuery):
         select = select + self.__where_formatter__(dimensions)
         update = update + self.__set_formatter__(count_column) + self.__where_formatter__(cols)
         
-    
-        df = pandas.DataFrame(url_inserts,columns=cols)
-        new_values = group_all_and_count(df,count_column)
+        # if the count is part of the dataset, no need to group and count
+        if counter_value:
+            new_values = pandas.DataFrame(url_inserts,columns=cols_with_count)
+        else:
+            df = pandas.DataFrame(url_inserts,columns=cols)
+            new_values = group_all_and_count(df,count_column)
     
         to_pull = new_values[dimensions].drop_duplicates().values.tolist()
         results = self.pull_simple(to_pull,select)
@@ -92,7 +95,7 @@ class CassandraCache(PreparedCassandraRangeQuery):
         print "updating: %s" % len(to_update)
         statement = self.cassandra.prepare(update)
         to_bind = self.bind_and_execute(statement)
-        FutureHelpers.future_queue(to_update,to_bind,simple_append,FUTURES,[]) 
+        FutureHelpers.future_queue(to_update,to_bind,simple_append,self.num_futures,[]) 
 
     def run_uids_to_domains(self,uid_inserts,select,insert):
         import pandas
@@ -105,7 +108,7 @@ class CassandraCache(PreparedCassandraRangeQuery):
         uids = [[j] for j in list(set([i[-2] for i in uid_inserts]))]
 
         logging.info("Unique user ids :%s" % len(uids))
-        results = FutureHelpers.future_queue(uids,to_bind,simple_append,60,[])
+        results = FutureHelpers.future_queue(uids,to_bind,simple_append,self.num_futures,[])
         results = results[0]
 
         df = pandas.DataFrame(results)
@@ -126,7 +129,7 @@ class CassandraCache(PreparedCassandraRangeQuery):
         to_bind = self.bind_and_execute(statement)
 
         inserts = df[['source','date','action','domain']].values.tolist()
-        results = FutureHelpers.future_queue(inserts,to_bind,simple_append,60,[])
+        results = FutureHelpers.future_queue(inserts,to_bind,simple_append,self.num_futures,[])
         
         
         

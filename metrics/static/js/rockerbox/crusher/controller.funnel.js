@@ -19,7 +19,7 @@ RB.crusher.controller.funnel = (function(funnel) {
       },"new_funnel",true,true)
     },
     save: function(data,callback) {
-      crusher.subscribe.add_subscriber(["funnels","tf_idf_funnel"], function(){ 
+      crusher.subscribe.add_subscriber(["funnels"], function(){ 
         var d = {
           "advertiser": source,
           "owner": "owner",

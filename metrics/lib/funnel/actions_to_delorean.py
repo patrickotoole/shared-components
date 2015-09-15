@@ -61,7 +61,7 @@ def create_edits(nodes):
     edits["children"].extend(nodes)
     return edits
 
-def push_edits(edits, label="_actions", filter_type="imps"):
+def push_edits(api, edits, label="_actions", filter_type="imps"):
     url = "/delorean/edit/?label=%s&replace=true&type=%s" % (label, filter_type)
     logger.info("Submitting edits: {}".format(edits))    
     r = api.post(url, data=json.dumps(edits))
@@ -72,29 +72,30 @@ def push_edits(edits, label="_actions", filter_type="imps"):
     else:
         logging.info("Sucessfully submitted. Exiting.")
 
-api = lnk.api.rockerbox
-db = lnk.dbs.rockerbox
-
-df = get_actions(db)
-
-advertiser_nodes = []
-advertisers = df.pixel_source_name.value_counts().index.tolist()
-
-for advertiser in advertisers:
-    nodes = []
-    actions = Convert.df_to_values(df[df.pixel_source_name == advertiser])
+if __name__ == "__main__":
+    api = lnk.api.rockerbox
+    db = lnk.dbs.rockerbox
     
-    for action in actions:
-        node = create_action_node(action)
-        nodes.append(node)
-
-    advertiser_node = create_node('"source": "%s' % advertiser, children=nodes)
-    advertiser_nodes.append(advertiser_node)
-
-edits = create_edits(advertiser_nodes)
-push_edits(edits, label="_actions", filter_type="visits")
-
-if len(actions) > 0:
-    pass
-else:
-    logger.info("Didn't find any actions. Exiting...")
+    df = get_actions(db)
+    
+    advertiser_nodes = []
+    advertisers = df.pixel_source_name.value_counts().index.tolist()
+    
+    for advertiser in advertisers:
+        nodes = []
+        actions = Convert.df_to_values(df[df.pixel_source_name == advertiser])
+        
+        for action in actions:
+            node = create_action_node(action)
+            nodes.append(node)
+    
+        advertiser_node = create_node('"source": "%s' % advertiser, children=nodes)
+        advertiser_nodes.append(advertiser_node)
+    
+    edits = create_edits(advertiser_nodes)
+    push_edits(api, edits, label="_actions", filter_type="visits")
+    
+    if len(actions) > 0:
+        pass
+    else:
+        logger.info("Didn't find any actions. Exiting...")

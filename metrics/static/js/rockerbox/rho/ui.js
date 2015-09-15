@@ -6,8 +6,10 @@ RB.rho.ui = (function(ui) {
 
   var rho = RB.rho
   
-  ui.buildChart = function(target, data, label_col, value_col, title, description, type) {
+  ui.buildChart = function(target, data, label_col, value_col, title, description, type, summary, format, height, paddingLeft) {
     type = type || "line";
+    summary = summary || "sum";
+    format = format || d3.format(",")
     var labels = []
     var series = []
     
@@ -16,14 +18,18 @@ RB.rho.ui = (function(ui) {
       series.push(d[value_col]);
     })
 
+    
+    var total = data.reduce(function(p,c){return p + c[value_col]},0)
+    if (summary == "average") total = total/data.length
+ 
     var data = {
       labels: labels,
       series: [series]
     };
 
     var options = {
-      width: 350,
-      height: 300,
+      width: d3.select(target).style("width") - 10,
+      height: height || 130,
       showArea: true,
       horizontalBars: true,
       axisX: {
@@ -33,6 +39,10 @@ RB.rho.ui = (function(ui) {
       axisY: {
 	showGrid: true,
 	showLabel: true
+      },
+      fullWidth: true,
+      chartPadding: {
+        left: paddingLeft || 15 
       }
     };
 
@@ -45,15 +55,22 @@ RB.rho.ui = (function(ui) {
       new Chartist.Bar(target + " .chart-wrapper", data, options);
     }
 
+    if (!$(target + " .chart-description").length && description){
+      $(target).prepend($("<div class='chart-description'>").text(description));
+    };
+
+    if (!$(target + " .chart-total").length && total){
+      $(target).prepend($("<div class='chart-total'>").text(format(total)));
+    };
+    
     // Add title if it doesn't exist already
     if (!$(target + " .chart-title").length && title){
       $(target).prepend($("<div class='chart-title'>").text(title));
     };
 
-    // Add description if it doesn't exist already
-    if (!$(target + " .chart-description").length && description){
-      $(target).append($("<div class='chart-description'>").text(description));
-    };
+    
+
+    
   }
 
   ui.buildTimeseries = function(target,data,title,series,formatting) {

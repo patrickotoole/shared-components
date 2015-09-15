@@ -46,14 +46,6 @@ def run(advertiser,pattern,days,offset):
     cache.run_inserts(cache_insert,CACHE_INSERT)
 
 
-    # ACTION => DOMAINS
-    logging.info("Cacheing: %s => %s occurance domains" % (advertiser,pattern))
-    
-    DOMAIN_SELECT = "select * from rockerbox.visitor_domains where uid = ?"
-    DOMAIN_INSERT = "INSERT INTO rockerbox.action_occurrence_domains (source,date,action,domain) VALUES (?,?,?,?)"
-    cache.run_uids_to_domains(uid_values,DOMAIN_SELECT,DOMAIN_INSERT)
-
-
     # ACTION => UIDS
     logging.info("Cacheing: %s => %s occurence uuids" % (advertiser,pattern))
 
@@ -72,7 +64,17 @@ def run(advertiser,pattern,days,offset):
     count_column   = "count"
 
     cache.run_counter_updates(url_values,SELECT_COUNTER,UPDATE_COUNTER,dimensions,to_count,count_column)
+
+
+    # ACTION => DOMAINS
+    logging.info("Cacheing: %s => %s occurance domains" % (advertiser,pattern))
     
+    DOMAIN_SELECT = "select * from rockerbox.visitor_domains where uid = ?"
+    DOMAIN_INSERT = "INSERT INTO rockerbox.action_occurrence_domains (source,date,action,domain) VALUES (?,?,?,?)"
+    cache.run_uids_to_domains(uid_values,DOMAIN_SELECT,DOMAIN_INSERT)
+    
+
+
     logging.info("Cacheing: %s => %s end" % (advertiser,pattern))
 
     db.execute("UPDATE pattern_cache set completed = 1 where pixel_source_name = '%s' and url_pattern = '%s'" % (advertiser,pattern))
