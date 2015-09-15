@@ -22,7 +22,18 @@ RB.crusher.controller = (function(controller) {
     $.getJSON("/crusher/funnel/action/recommended", function(data) {
       data = data.slice(0,10)
       console.log(data)
-      RB.rho.ui.buildChart(".ct-chart#actions", data, "first_word", "views", title="Top actions", description=null, type="bar");
+      var description = "This actions are the most popular on your site"
+      RB.rho.ui.buildChart(
+        ".ct-chart#actions",
+        data,
+        "first_word",
+        "views",
+        title="Top actions",
+        description=description,
+        type="bar",
+        false,
+        false,
+        250);
     })
     
     $.getJSON("/crusher/stats?format=json", function(data) {

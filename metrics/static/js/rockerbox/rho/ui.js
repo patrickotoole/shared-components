@@ -6,7 +6,7 @@ RB.rho.ui = (function(ui) {
 
   var rho = RB.rho
   
-  ui.buildChart = function(target, data, label_col, value_col, title, description, type, summary, format) {
+  ui.buildChart = function(target, data, label_col, value_col, title, description, type, summary, format, height) {
     type = type || "line";
     summary = summary || "sum";
     format = format || d3.format(",")
@@ -29,7 +29,7 @@ RB.rho.ui = (function(ui) {
 
     var options = {
       width: d3.select(target).style("width") - 10,
-      height: 130,
+      height: height || 130,
       showArea: true,
       horizontalBars: true,
       axisX: {
