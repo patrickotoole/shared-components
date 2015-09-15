@@ -1,7 +1,7 @@
 class CassandraStatement(object):
 
-    def __init__(self,session=None):
-        self.cassandra = session
+    def __init__(self,cassandra=None):
+        self.cassandra = cassandra 
 
     def build_statement(self,query,what,where):
         params = { "what": what, "where": where }
