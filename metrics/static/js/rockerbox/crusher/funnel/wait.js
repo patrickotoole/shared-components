@@ -13,6 +13,7 @@ RB.crusher.ui.funnel.wait = (function(wait,funnel,crusher) {
   wait.EVENTS = ["funnel_initialized"]
 
   wait.subscription = function(data) {
+    console.log("Y:", data.funnel_name)
     var funnel = crusher.ui.funnel.buildShow()
     crusher.ui.funnel.wait(funnel)
     return data

@@ -6,7 +6,7 @@ RB.rho.ui = (function(ui) {
 
   var rho = RB.rho
   
-  ui.buildChart = function(target, data, label_col, value_col, title, description, type, summary, format, height) {
+  ui.buildChart = function(target, data, label_col, value_col, title, description, type, summary, format, height, paddingLeft) {
     type = type || "line";
     summary = summary || "sum";
     format = format || d3.format(",")
@@ -41,6 +41,9 @@ RB.rho.ui = (function(ui) {
 	showLabel: true
       },
       fullWidth: true,
+      chartPadding: {
+        left: paddingLeft || 15 
+      }
     };
 
     $(target).append($("<div class='chart-wrapper'>"))

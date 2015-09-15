@@ -121,6 +121,7 @@ RB.crusher.api = (function(api) {
     funnelDomains: "/crusher/multi_search/domains?search=",
     recommendedActions: "/crusher/funnel/action/recommended",
 
+    statsURL: "/crusher/stats?format=json",
 
     //visitURL: "/crusher/visit_urls?format=json&source=" + source, // TODO: TEST IF THIS BEING USED
     //visitUID: "/crusher/visit_uids?format=json&url=",
@@ -242,8 +243,10 @@ RB.crusher.api = (function(api) {
         if (!cache.recommendations) {
           d3.json(api.URL.recommendedActions,function(recommendations){
             cache.recommendations = recommendations
-            deferred_cb(null,cb)
+            deferred_cb(null,cb.bind(false,recommendations))
           })
+        } else {
+          deferred_cb(null,cb.bind(false,cache.recommendations))
         }
 
       }),
@@ -300,6 +303,7 @@ RB.crusher.api = (function(api) {
         }
       }),
       funnelUIDs: genericQueuedAPIWithData(function(funnel,cb,deferred_cb) {
+        console.log("F:",funnel.funnel_name)
         var funnel_actions = funnel.actions
         var patterns = funnel_actions.map(function(action) { return action.url_pattern })
         var action_strings = patterns.map(function(pattern){
@@ -439,7 +443,12 @@ RB.crusher.api = (function(api) {
         } else {
           deferred_cb(null,action)
         } 
-      })
+      }),
+      dashboardStats: new genericQueuedAPI(function(cb,deferred_cb) {
+        d3.json(api.URL.statsURL,function(data){
+          deferred_cb(null,cb.bind(false,data))
+        })
+      }),
     } 
 
     return apis

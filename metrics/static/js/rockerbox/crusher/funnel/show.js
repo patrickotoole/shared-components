@@ -11,6 +11,7 @@ RB.crusher.ui.funnel.show = (function(show,funnel,crusher) {
   show.EVENTS = ["funnel_rendered"]
 
   show.subscription = function(data) {
+    console.log("S:",data.funnel_name) 
     var funnel = crusher.ui.funnel.buildShow()
     crusher.ui.funnel.show(funnel)
     return data
