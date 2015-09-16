@@ -44,20 +44,24 @@ def format(uid,date,url,occurrence,advertiser,pattern):
         "u1":uid[-2:] 
     }
 
-def select_callback(result,advertiser,pattern,results,*args):
-    result = result[0]
-    res = result['rockerbox.group_and_count(url, uid)']
-    date = result["date"]
-    for url_uid in res:
-        if "[:]" in url_uid:
-            url, uid = url_uid.split("[:]")
-            reconstructed = []
-            
-            for i in range(0,int(res[url_uid])):
-                h = format(uid,date,url,i,advertiser,pattern)
-                reconstructed += [h]
+def wrapped_select_callback(field):
 
-            results += reconstructed
+    def select_callback(result,advertiser,pattern,results,*args):
+        result = result[0]
+        res = result["rockerbox." +field]
+        date = result["date"]
+        for url_uid in res:
+            if "[:]" in url_uid:
+                url, uid = url_uid.split("[:]")
+                reconstructed = []
+                
+                for i in range(0,int(res[url_uid])):
+                    h = format(uid,date,url,i,advertiser,pattern)
+                    reconstructed += [h]
+    
+                results += reconstructed
+
+    return select_callback
 
 def cache_callback(result,advertiser,pattern,results,*args):
     extra = []
@@ -94,6 +98,7 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
 
             udf_name = lock.get_parent()
             state, udf = udf_name.split("|")
+            udf = udf.replace(",",", ")
 
             logging.info("state: %s, udf: %s" % (state, udf))
 
@@ -105,7 +110,7 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
 
             stmt = self.build_statement(QUERY,"date, %s" % udf,WHERE)
 
-            response, sample = self.run_sample(data,select_callback,is_suffice,*callback_args,statement=stmt)
+            response, sample = self.run_sample(data,wrapped_select_callback(udf),is_suffice,*callback_args,statement=stmt)
 
             self.sample_used = sample
             _, _, result = response

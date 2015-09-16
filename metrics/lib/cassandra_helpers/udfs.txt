@@ -1,0 +1,132 @@
+
+CREATE OR REPLACE FUNCTION state_group_and_count_1( state map<text, text>, url text, uid text )
+CALLED ON NULL INPUT
+RETURNS map<text, text>
+LANGUAGE java AS '
+
+String pattern = (String) state.get("__pattern__");
+if (pattern == null) {
+  String q = "SELECT * from full_replication.function_patterns where function=''state_group_and_count_1'' ";
+  org.apache.cassandra.cql3.UntypedResultSet rows = org.apache.cassandra.cql3.QueryProcessor.executeInternal(q);
+  pattern = rows.one().getString("pattern");
+  state.put("__pattern__",pattern);
+
+}
+
+if (url.contains(pattern)) {
+  String key = url + "[:]" + uid;
+
+  String strcount = (String) state.get(key);  
+  Integer count = 0;
+  if (strcount == null) count = 1; 
+  else count = Integer.parseInt(strcount) + 1;
+  state.put(key, Integer.toString(count)); 
+}
+return state; 
+' ;
+
+drop AGGREGATE group_and_count_1;
+CREATE OR REPLACE AGGREGATE group_and_count_1(text, text) 
+SFUNC state_group_and_count_1 
+STYPE map<text, text> 
+INITCOND {};
+
+
+CREATE OR REPLACE FUNCTION state_group_and_count_2( state map<text, text>, url text, uid text )
+CALLED ON NULL INPUT
+RETURNS map<text, text>
+LANGUAGE java AS '
+
+String pattern = (String) state.get("__pattern__");
+if (pattern == null) {
+  String q = "SELECT * from full_replication.function_patterns where function=''state_group_and_count_2'' ";
+  org.apache.cassandra.cql3.UntypedResultSet rows = org.apache.cassandra.cql3.QueryProcessor.executeInternal(q);
+  pattern = rows.one().getString("pattern");
+  state.put("__pattern__",pattern);
+
+}
+
+if (url.contains(pattern)) {
+  String key = url + "[:]" + uid;
+
+  String strcount = (String) state.get(key);  
+  Integer count = 0;
+  if (strcount == null) count = 1; 
+  else count = Integer.parseInt(strcount) + 1;
+  state.put(key, Integer.toString(count)); 
+}
+return state; 
+' ;
+
+drop AGGREGATE group_and_count_2;
+CREATE OR REPLACE AGGREGATE group_and_count_2(text, text) 
+SFUNC state_group_and_count_2 
+STYPE map<text, text> 
+INITCOND {};
+
+
+CREATE OR REPLACE FUNCTION state_group_and_count_3( state map<text, text>, url text, uid text )
+CALLED ON NULL INPUT
+RETURNS map<text, text>
+LANGUAGE java AS '
+
+String pattern = (String) state.get("__pattern__");
+if (pattern == null) {
+  String q = "SELECT * from full_replication.function_patterns where function=''state_group_and_count_3'' ";
+  org.apache.cassandra.cql3.UntypedResultSet rows = org.apache.cassandra.cql3.QueryProcessor.executeInternal(q);
+  pattern = rows.one().getString("pattern");
+  state.put("__pattern__",pattern);
+
+}
+
+if (url.contains(pattern)) {
+  String key = url + "[:]" + uid;
+
+  String strcount = (String) state.get(key);  
+  Integer count = 0;
+  if (strcount == null) count = 1; 
+  else count = Integer.parseInt(strcount) + 1;
+  state.put(key, Integer.toString(count)); 
+}
+return state; 
+' ;
+
+drop AGGREGATE group_and_count_3;
+CREATE OR REPLACE AGGREGATE group_and_count_3(text, text) 
+SFUNC state_group_and_count_3 
+STYPE map<text, text> 
+INITCOND {};
+
+
+CREATE OR REPLACE FUNCTION state_group_and_count_4( state map<text, text>, url text, uid text )
+CALLED ON NULL INPUT
+RETURNS map<text, text>
+LANGUAGE java AS '
+
+String pattern = (String) state.get("__pattern__");
+if (pattern == null) {
+  String q = "SELECT * from full_replication.function_patterns where function=''state_group_and_count_4'' ";
+  org.apache.cassandra.cql3.UntypedResultSet rows = org.apache.cassandra.cql3.QueryProcessor.executeInternal(q);
+  pattern = rows.one().getString("pattern");
+  state.put("__pattern__",pattern);
+
+}
+
+if (url.contains(pattern)) {
+  String key = url + "[:]" + uid;
+
+  String strcount = (String) state.get(key);  
+  Integer count = 0;
+  if (strcount == null) count = 1; 
+  else count = Integer.parseInt(strcount) + 1;
+  state.put(key, Integer.toString(count)); 
+}
+return state; 
+' ;
+
+drop AGGREGATE group_and_count_4;
+CREATE OR REPLACE AGGREGATE group_and_count_4(text, text) 
+SFUNC state_group_and_count_4 
+STYPE map<text, text> 
+INITCOND {};
+
