@@ -5,6 +5,8 @@ sys.path.append("../../")
 
 import unittest
 import metrics.lib.zookeeper.zk_tree as zk_tree
+import metrics.lib.zookeeper.zk_base as zk_base
+
 
 class ZKTreeTestCase(unittest.TestCase):
     """
@@ -15,7 +17,7 @@ class ZKTreeTestCase(unittest.TestCase):
         pass
 
     # replace the code that interfaces externally
-    @mock.patch("metrics.lib.zookeeper.zk_tree.KazooClient") 
+    @mock.patch("metrics.lib.zookeeper.zk_base.KazooClient") 
     def test_internal_get(self,mock):
 
         mock_instance = mock()
@@ -24,7 +26,7 @@ class ZKTreeTestCase(unittest.TestCase):
         zk = zk_tree.ZKBase()
         self.assertEqual(zk.get_path("path"),"GOTTEN path")
 
-    @mock.patch("metrics.lib.zookeeper.zk_tree.KazooClient") 
+    @mock.patch("metrics.lib.zookeeper.zk_base.KazooClient") 
     def test_internal_create_or_update(self,mock):
 
         mock_instance = mock()

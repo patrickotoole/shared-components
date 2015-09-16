@@ -10,6 +10,7 @@ from twisted.internet import defer
 from lib.helpers import *
 from cassandra import OperationTimedOut
 from lib.cassandra_helpers.range_query import CassandraRangeQuery
+from lib.zookeeper.zk_lock import ZKLock
 
 QUERY  = """SELECT %(what)s FROM rockerbox.visit_uids_lucene_timestamp_u2_clustered %(where)s"""
 WHAT   = "date, group_and_count(url,uid)"
@@ -21,7 +22,7 @@ CACHE_WHERE = """source=? and action=? and date=? and u2=? """
 
 
 
-INSERT_UDF = "insert into full_replication.function_patterns (function,pattern) VALUES ('state_group_and_count','%s')"
+INSERT_UDF = "insert into full_replication.function_patterns (function,pattern) VALUES ('%s','%s')"
 
 def build_datelist(numdays):
     import datetime
@@ -88,16 +89,26 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
     
     def run(self,pattern,advertiser,dates,results=[]):
 
-        self.build_udf(pattern)
+        zk_lock = ZKLock()
+        with zk_lock.get_lock() as lock:
+
+            udf_name = lock.get_parent()
+            state, udf = udf_name.split("|")
+
+            logging.info("state: %s, udf: %s" % (state, udf))
+
+            self.build_udf(state,pattern)
         
-        data = self.data_plus_values([[advertiser]], dates)
-        callback_args = [advertiser,pattern,results]
-        is_suffice = sufficient_limit()
+            data = self.data_plus_values([[advertiser]], dates)
+            callback_args = [advertiser,pattern,results]
+            is_suffice = sufficient_limit()
 
-        response, sample = self.run_sample(data,select_callback,is_suffice,*callback_args,statement=self.raw_statement)
+            stmt = self.build_statement(QUERY,"date, %s" % udf,WHERE)
 
-        self.sample_used = sample
-        _, _, result = response
+            response, sample = self.run_sample(data,select_callback,is_suffice,*callback_args,statement=stmt)
+
+            self.sample_used = sample
+            _, _, result = response
                 
         return results
 
@@ -118,8 +129,8 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
         
         return results
  
-    def build_udf(self,pattern):
-        self.cassandra.execute(INSERT_UDF % pattern[0])
+    def build_udf(self,udf_name,pattern):
+        self.cassandra.execute(INSERT_UDF % (udf_name,pattern[0]))
         
     
     @decorators.deferred
