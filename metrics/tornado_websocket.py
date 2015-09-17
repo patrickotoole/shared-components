@@ -101,7 +101,7 @@ if __name__ == '__main__':
     lock = threading.Lock()
     q = work_queue.work_queue
 
-    for _ in range(0,4):
+    for _ in range(0,2):
         reactor.callInThread(work_queue.WorkQueue(q,lock))
 
     server = tornado.httpserver.HTTPServer(app)
