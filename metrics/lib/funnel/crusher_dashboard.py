@@ -12,10 +12,7 @@ db = lnk.dbs.rockerbox
 base_query = """
 select * 
 from rockerbox.advertiser_uids
-where 
-    source='%(advertiser)s' and 
-    date='%(date)s' and 
-    uid2 IN (%(in_clause)s)
+where source = ? and date = ? and uid2 = ?
 """
 
 replace_query = """
@@ -54,18 +51,29 @@ def get_offsite_stats(uids):
     DOMAIN_SELECT = "select * from rockerbox.visitor_domains_2 where uid = ?"
     return run_uids_to_domains(uids, DOMAIN_SELECT)
 
-def get_advertiser_stats(advertiser, in_clause, date, engagement_threshold=5):
-    params = {
-        "in_clause": in_clause,
-        "advertiser": advertiser,
-        "date": date
-        }
-    q = base_query % params
-    try:
-        df = c.select_dataframe(q)
-    except Exception as e:
-        print e
-        raise Exception("Query failed: %s" % q)
+def get_onsite_stats(advertiser, date):
+    statement = c.prepare(base_query)
+    to_bind = st.bind_and_execute(statement)
+
+    uids = ['0' + str(i) for i in range(0, 10)] + [str(i) for i in range(10, 100)]
+
+    # uids needs to be like [[u1],[u2]], not [u1, u2]
+    results = FutureHelpers.future_queue(
+        [[advertiser, date, u] for u in uids],
+        to_bind,
+        simple_append,
+        100,
+        []
+    )
+    results = results[0]
+    
+    df = pd.DataFrame(results)
+    return df
+
+def get_advertiser_stats(advertiser, date, engagement_threshold=5):
+    df = get_onsite_stats(advertiser, date)
+    print "Number of results: %s" % len(df)
+
     if len(df) > 0:
         counts = df.uid.value_counts()
         uids = counts.index.tolist()
@@ -99,7 +107,7 @@ def insert_row(data):
     db.execute(q)
 
 advertisers = get_advertisers()
-in_clause = get_in_clause()
+
 dates = get_dates()
 
 print dates
@@ -108,4 +116,4 @@ print dates
 
 for a in advertisers:
     for date in dates:
-        get_advertiser_stats(a, in_clause, date)
+        get_advertiser_stats(a, date)
