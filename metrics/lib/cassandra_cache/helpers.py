@@ -12,6 +12,27 @@ def build_datelist(numdays,offset=0):
 def simple_append(result,results,*args):
     results += result
 
+def wrapped_select_callback(field):
+
+    def select_callback(result,*args):
+        advertiser, pattern, i1, i2, i3 = args
+        
+        result = result[0]
+        res = result['rockerbox.' + field]
+        
+        date = result["date"]
+        for url_uid in res:
+            if "[:]" in url_uid:
+                url, uid = url_uid.split("[:]")
+                i1 += [[advertiser,date,pattern,uid,int(uid[-2:]),url,int(res[url_uid])]]
+                i2 += [[advertiser,date,pattern,uid,int(uid[-2:])]]
+                i3 += [[advertiser,date,pattern,url]]
+                if (len(i1) % 5000) == 0: logging.info("Cache %s => %s raw results: %s" % (advertiser,pattern,len(i1)))
+
+    return select_callback
+
+
+
 def select_callback(result,*args):
     advertiser, pattern, i1, i2, i3 = args
     

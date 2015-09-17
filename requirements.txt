@@ -25,3 +25,4 @@ dnspython
 boto
 py-pretty
 datadiff
+kazoo
