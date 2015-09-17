@@ -114,6 +114,8 @@ class CassandraCache(PreparedCassandraRangeQuery):
         df = pandas.DataFrame(results)
 
         print df.groupby("uid").count()['domain'].describe()
+        df['date'] = df.timestamp.map(lambda x: x.split(" ")[0] + "00:00:00")
+
 
         domain_date = df.groupby(["domain","date"])["uid"].count()
         domain_date.name = "count"

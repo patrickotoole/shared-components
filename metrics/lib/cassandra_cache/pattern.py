@@ -106,7 +106,7 @@ def run(advertiser,pattern,days,offset,force=False):
     zk_lock = ZKPool()
     with zk_lock.get_lock() as lock:
 
-        udf_name = lock.get_parent()
+        udf_name = lock.get()
         state, udf = udf_name.split("|")
         udf = udf.replace(",",", ")
 
@@ -155,7 +155,7 @@ def run(advertiser,pattern,days,offset,force=False):
     # ACTION => DOMAINS
     logging.info("Cacheing: %s => %s occurance domains" % (advertiser,pattern))
     
-    DOMAIN_SELECT = "select * from rockerbox.visitor_domains where uid = ?"
+    DOMAIN_SELECT = "select * from rockerbox.visitor_domains_2 where uid = ?"
     DOMAIN_INSERT = "INSERT INTO rockerbox.pattern_occurrence_domains (source,date,action,domain) VALUES (?,?,?,?)"
 
     if len(uid_values):
@@ -167,6 +167,7 @@ def run(advertiser,pattern,days,offset,force=False):
 
     db.execute("UPDATE pattern_cache set completed = 1 where pixel_source_name = '%s' and url_pattern = '%s'" % (advertiser,pattern))
 
+    zk_lock.stop()
 
     cache.cassandra.cluster.shutdown()
 

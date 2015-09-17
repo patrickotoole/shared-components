@@ -33,10 +33,6 @@ class ZKSimpleLock:
     def get(self):
         return self.zk.get(self.path)[0]
 
-    def get_parent(self):
-        parent = "/".join(self.path.split("/")[:-1])
-        return self.zk.get(parent)[0]
-
     def destroy(self):
         self.zk.delete(self.lock_path)
 

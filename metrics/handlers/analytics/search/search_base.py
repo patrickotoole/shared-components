@@ -96,7 +96,7 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
         zk_lock = ZKPool()
         with zk_lock.get_lock() as lock:
 
-            udf_name = lock.get_parent()
+            udf_name = lock.get()
             state, udf = udf_name.split("|")
             udf = udf.replace(",",", ")
 
@@ -114,6 +114,8 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
 
             self.sample_used = sample
             _, _, result = response
+
+        zk_lock.stop()
                 
         return results
 
