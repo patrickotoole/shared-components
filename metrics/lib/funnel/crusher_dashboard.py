@@ -51,7 +51,7 @@ def run_uids_to_domains(uids, select):
 
 def get_offsite_stats(uids):
     # uid date domain timestamp
-    DOMAIN_SELECT = "select * from rockerbox.visitor_domains where uid = ?"
+    DOMAIN_SELECT = "select * from rockerbox.visitor_domains_2 where uid = ?"
     return run_uids_to_domains(uids, DOMAIN_SELECT)
 
 def get_advertiser_stats(advertiser, in_clause, date, engagement_threshold=5):
@@ -87,12 +87,8 @@ def get_dates():
     fmt = "%Y-%m-%d %H:%M:%S"
     today = datetime.utcnow().date().strftime(fmt)
     yesterday = (datetime.utcnow() - timedelta(days=1)).date().strftime(fmt)
-    two_days_ago = (datetime.utcnow() - timedelta(days=2)).date().strftime(fmt)
-    three_days_ago = (datetime.utcnow() - timedelta(days=3)).date().strftime(fmt)
 
     return [
-        two_days_ago,
-        three_days_ago,
         today,
         yesterday
         ]
