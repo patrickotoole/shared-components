@@ -1,7 +1,10 @@
 import Queue
 import logging
+from kazoo.client import KazooClient
+import kazoo
+import pickle
 
-class SingleQueue(Queue.Queue):
+class SingleQueue(kazoo.recipe.queue.Queue):
 
     _instance = None
     def __new__(cls, *args, **kwargs):
@@ -10,7 +13,9 @@ class SingleQueue(Queue.Queue):
                                 cls, *args, **kwargs)
         return cls._instance
 
-work_queue = SingleQueue() 
+client = KazooClient(hosts="zk1:2181")
+client.start()
+work_queue = SingleQueue(client,"/python_queue") 
 
 class WorkQueue(object):
 
@@ -21,10 +26,14 @@ class WorkQueue(object):
     def __call__(self):
         while True:
             self.lock.acquire()
-            fn, args = self.queue.get()
+            data = self.queue.get()
             self.lock.release()
-            logging.info("starting queue %s %s" % (str(fn),str(args)))
-            fn(*args) 
-            logging.info("finished queue %s %s" % (str(fn),str(args)))
+            if data is not None:
+               
+                fn, args = pickle.loads(data)
+
+                logging.info("starting queue %s %s" % (str(fn),str(args)))
+                fn(*args) 
+                logging.info("finished queue %s %s" % (str(fn),str(args)))
 
 

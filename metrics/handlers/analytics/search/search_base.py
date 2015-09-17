@@ -164,10 +164,12 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
 
             import work_queue
             import lib.cassandra_cache.pattern as cache
-            args = [advertiser,pattern[0],20,0,work_queue.work_queue.put]
+            import pickle
+            args = [advertiser,pattern[0],20,0,""]#work_queue.work_queue.put]
             work = (cache.run_cascade,args)
 
-            work_queue.work_queue.put(work)
+            work_queue.work_queue.put(pickle.dumps(work))
+
                 
         df = pandas.DataFrame(results)
 

@@ -59,6 +59,8 @@ def update_tree(db,api):
     
 def run_cascade(advertiser,pattern,days,offset,callback):
 
+    from metrics.work_queue import work_queue
+
     base = [advertiser,pattern]
     cascade = {
         0: base + [1,0, callback],
@@ -78,10 +80,12 @@ def run_cascade(advertiser,pattern,days,offset,callback):
 
         run(*to_run)
         offset = to_run[2]+to_run[3]
-        work = (run_cascade,base + [days,offset,callback])
+        work = (run_cascade,base + [days,offset,""])
 
-        callback(work)
-    
+        import pickle 
+        pickled = pickle.dumps(work)
+        work_queue.put(pickled)
+
     
 
 

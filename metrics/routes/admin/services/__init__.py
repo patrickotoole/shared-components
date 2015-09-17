@@ -56,3 +56,12 @@ class ServiceRoutes(
             (r'/delorean/edit/?(.*?)', delorean.DeloreanHandler, self.connectors)
         ]
  
+    @namespace("/admin")
+    @connectors("db")
+    def delorean_scripts(self):
+        import handlers.admin.work_queue as work_queue 
+        
+        return [
+            (r'/work_queue/?', work_queue.WorkQueueHandler, self.connectors)
+        ]
+ 
