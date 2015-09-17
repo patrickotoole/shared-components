@@ -89,22 +89,12 @@ def get_dates():
     yesterday = (datetime.utcnow() - timedelta(days=1)).date().strftime(fmt)
     two_days_ago = (datetime.utcnow() - timedelta(days=2)).date().strftime(fmt)
     three_days_ago = (datetime.utcnow() - timedelta(days=3)).date().strftime(fmt)
-    four_days_ago = (datetime.utcnow() - timedelta(days=4)).date().strftime(fmt)
-    five_days_ago = (datetime.utcnow() - timedelta(days=5)).date().strftime(fmt)
-    six_days_ago = (datetime.utcnow() - timedelta(days=6)).date().strftime(fmt)
-    seven_days_ago = (datetime.utcnow() - timedelta(days=7)).date().strftime(fmt)
-    eight_days_ago = (datetime.utcnow() - timedelta(days=8)).date().strftime(fmt)
 
     return [
         two_days_ago,
         three_days_ago,
         today,
-        yesterday,
-        four_days_ago,
-        five_days_ago,
-        six_days_ago,
-        seven_days_ago,
-        eight_days_ago
+        yesterday
         ]
 
 def insert_row(data):
@@ -118,7 +108,7 @@ dates = get_dates()
 
 print dates
 
-advertisers = ["baublebar", "bigstock", "jackthreads"]
+#advertisers = ["baublebar", "bigstock", "jackthreads"]
 
 for a in advertisers:
     for date in dates:
