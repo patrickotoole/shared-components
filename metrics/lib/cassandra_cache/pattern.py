@@ -2,24 +2,29 @@ import logging
 from cache import CassandraCache
 from helpers import *
 from lib.helpers import *
+from lib.zookeeper.zk_lock import ZKLock
 formatter = '%(asctime)s:%(levelname)s - %(message)s'
 logging.basicConfig(level=logging.INFO, format=formatter)
 
 logger = logging.getLogger()
 
-def build_cache(days,offset):
+def build_cache(days,offset,udf_name):
     from link import lnk
     import pandas
 
+
     c = lnk.dbs.cassandra
-    SELECT = "SELECT date, group_and_count(url,uid) FROM rockerbox.visit_uids_lucene_timestamp_u2_clustered"
+    SELECT = "SELECT date, %s FROM rockerbox.visit_uids_lucene_timestamp_u2_clustered" % udf_name
     FIELDS = ["source","date"]
 
     cache = CassandraCache(c,SELECT,FIELDS,"u2","",days,offset) 
     return cache
     
-def select(cache,*args):
+def select(cache,udf_name,*args):
     logging.info("Cacheing: selecting %s => %s" % (args[0],args[1]))
+
+    cache.build_udf(udf_name,args[1])
+    logging.info("Cache using UDF: %s" % udf_name)
     _, _, cache_insert, uid_values, url_values = cache.run_select(*args)
 
     return (cache_insert, uid_values, url_values)
@@ -98,10 +103,17 @@ def run(advertiser,pattern,days,offset,force=False):
 
     logging.info("Cacheing: %s => %s begin" % (advertiser,pattern))
 
-    cache = build_cache(days,offset)
-    select_args = [advertiser,pattern,select_callback,advertiser,pattern,[],[],[]]
+    zk_lock = ZKLock()
+    with zk_lock.get_lock() as lock:
 
-    cache_insert, uid_values, url_values = select(cache,*select_args)
+        udf_name = lock.get_parent()
+        state, udf = udf_name.split("|")
+        udf = udf.replace(",",", ")
+
+        cache = build_cache(days,offset,udf)
+        select_args = [advertiser,pattern,wrapped_select_callback(udf),advertiser,pattern,[],[],[]]
+
+        cache_insert, uid_values, url_values = select(cache,state,*select_args)
 
     # ACTION => RAW DATA CACHE
     logging.info("Cacheing: %s => %s occurences raw" % (advertiser,pattern))
@@ -114,14 +126,16 @@ def run(advertiser,pattern,days,offset,force=False):
     to_count       = "url"
     count_column   = "occurrence"
 
-    cache.run_counter_updates(cache_insert,SELECT_COUNTER,UPDATE_COUNTER,dimensions,to_count,count_column,True)
+    if len(cache_insert):
+        cache.run_counter_updates(cache_insert,SELECT_COUNTER,UPDATE_COUNTER,dimensions,to_count,count_column,True)
     
 
     # ACTION => UIDS
     logging.info("Cacheing: %s => %s occurence uuids" % (advertiser,pattern))
 
     UID_INSERT     = "INSERT INTO rockerbox.pattern_occurrence_users_u2 (source,date,action,uid,u2) VALUES (?,?,?,?,?)"
-    cache.run_inserts(uid_values,UID_INSERT)
+    if len(uid_values):
+        cache.run_inserts(uid_values,UID_INSERT)
 
 
     # ACTION => PAGE_URLS
@@ -134,7 +148,8 @@ def run(advertiser,pattern,days,offset,force=False):
     to_count       = "url"
     count_column   = "count"
 
-    cache.run_counter_updates(url_values,SELECT_COUNTER,UPDATE_COUNTER,dimensions,to_count,count_column)
+    if len(url_values):
+        cache.run_counter_updates(url_values,SELECT_COUNTER,UPDATE_COUNTER,dimensions,to_count,count_column)
 
 
     # ACTION => DOMAINS
@@ -142,7 +157,9 @@ def run(advertiser,pattern,days,offset,force=False):
     
     DOMAIN_SELECT = "select * from rockerbox.visitor_domains where uid = ?"
     DOMAIN_INSERT = "INSERT INTO rockerbox.pattern_occurrence_domains (source,date,action,domain) VALUES (?,?,?,?)"
-    cache.run_uids_to_domains(uid_values,DOMAIN_SELECT,DOMAIN_INSERT)
+
+    if len(uid_values):
+        cache.run_uids_to_domains(uid_values,DOMAIN_SELECT,DOMAIN_INSERT)
     
 
 

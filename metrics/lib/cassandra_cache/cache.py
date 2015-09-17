@@ -5,7 +5,7 @@ import logging
 
 FUTURES    = 120
 NUM_DAYS   = 2
-INSERT_UDF = "insert into full_replication.function_patterns (function,pattern) VALUES ('state_group_and_count','%s')"
+INSERT_UDF = "insert into full_replication.function_patterns (function,pattern) VALUES ('%s','%s')"
 
 class CassandraCache(PreparedCassandraRangeQuery):
 
@@ -19,8 +19,8 @@ class CassandraCache(PreparedCassandraRangeQuery):
         self.num_offset = num_offset
         self.num_futures = num_futures
 
-    def build_udf(self,pattern):
-        self.cassandra.execute(INSERT_UDF % pattern)
+    def build_udf(self,udf_name,pattern):
+        self.cassandra.execute(INSERT_UDF % (udf_name,pattern))
    
     def execute(self,data):
         bound = self.default_statement.bind(data)
@@ -28,7 +28,7 @@ class CassandraCache(PreparedCassandraRangeQuery):
 
     def run_select(self,advertiser,pattern,callback,*args):
 
-        self.build_udf(pattern)
+        #self.build_udf(pattern)
 
         dates = build_datelist(self.num_days,self.num_offset)
         data = self.build_bound_data([advertiser],dates,0,100)
