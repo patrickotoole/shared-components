@@ -10,7 +10,7 @@ from twisted.internet import defer
 from lib.helpers import *
 from cassandra import OperationTimedOut
 from lib.cassandra_helpers.range_query import CassandraRangeQuery
-from lib.zookeeper.zk_lock import ZKLock
+from lib.zookeeper.zk_pool import ZKPool
 
 QUERY  = """SELECT %(what)s FROM rockerbox.visit_uids_lucene_timestamp_u2_clustered %(where)s"""
 WHAT   = "date, group_and_count(url,uid)"
@@ -93,7 +93,7 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
     
     def run(self,pattern,advertiser,dates,results=[]):
 
-        zk_lock = ZKLock()
+        zk_lock = ZKPool()
         with zk_lock.get_lock() as lock:
 
             udf_name = lock.get_parent()

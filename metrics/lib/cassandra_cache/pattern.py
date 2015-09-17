@@ -2,7 +2,7 @@ import logging
 from cache import CassandraCache
 from helpers import *
 from lib.helpers import *
-from lib.zookeeper.zk_lock import ZKLock
+from lib.zookeeper.zk_pool import ZKPool
 formatter = '%(asctime)s:%(levelname)s - %(message)s'
 logging.basicConfig(level=logging.INFO, format=formatter)
 
@@ -103,7 +103,7 @@ def run(advertiser,pattern,days,offset,force=False):
 
     logging.info("Cacheing: %s => %s begin" % (advertiser,pattern))
 
-    zk_lock = ZKLock()
+    zk_lock = ZKPool()
     with zk_lock.get_lock() as lock:
 
         udf_name = lock.get_parent()
