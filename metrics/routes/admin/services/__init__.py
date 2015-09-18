@@ -58,7 +58,7 @@ class ServiceRoutes(
  
     @namespace("/admin")
     @connectors("db")
-    def delorean_scripts(self):
+    def work_queue_scripts(self):
         import handlers.admin.work_queue as work_queue 
         
         return [
