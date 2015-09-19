@@ -79,14 +79,14 @@ def run_cascade(zk,advertiser,pattern,days,offset,callback):
     if to_run is not False:
 
         run(*to_run)
-        offset = to_run[2]+to_run[3]
-        work = (run_cascade,base + [days,offset,""])
+        #offset = to_run[2]+to_run[3]
+        #work = (run_cascade,base + [days,offset,""])
 
-        import pickle 
-        pickled = pickle.dumps(work)
-        
-        queue = work_queue.SingleQueue(zk,"/python_queue")
-        queue.put(pickled)
+        #import pickle 
+        #pickled = pickle.dumps(work)
+        #
+        #queue = work_queue.SingleQueue(zk,"/python_queue")
+        #queue.put(pickled)
 
     
 
@@ -97,7 +97,9 @@ def run(advertiser,pattern,days,offset,force=False):
     db = lnk.dbs.rockerbox
     api = lnk.api.rockerbox
 
-    SKIP = "SELECT * FROM pattern_cache where pixel_source_name = '%s' and url_pattern = '%s' and (num_days >= %s or completed = 0)" 
+    days_offset = days + offset
+
+    SKIP = "SELECT * FROM pattern_cache where pixel_source_name = '%s' and url_pattern = '%s' and num_days = %s" 
 
     skip = db.select_dataframe(SKIP % (advertiser,pattern,days+offset))
     if force is not True and len(skip) > 0:
@@ -174,6 +176,7 @@ def run(advertiser,pattern,days,offset,force=False):
     db.execute("UPDATE pattern_cache set completed = 1 where pixel_source_name = '%s' and url_pattern = '%s'" % (advertiser,pattern))
 
     zk_lock.stop()
+    logging.info("Lock stopped")
 
     cache.cassandra.cluster.shutdown()
 

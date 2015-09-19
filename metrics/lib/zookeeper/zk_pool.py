@@ -1,6 +1,6 @@
 import logging
 from zk_base import ZKBase
-from zk_lock import ZKSimpleLock
+from zk_lock import ZKSimpleLock, ZKMultiLock
 
 formatter = '%(asctime)s:%(levelname)s - %(message)s'
 logging.basicConfig(level=logging.INFO, format=formatter)
@@ -42,23 +42,27 @@ class ZKPool(ZKBase):
         to_clear = []
         best_pos = 100
         best_lock = None
+
+        locks = [ZKSimpleLock(self.zk,path) for path in self.pool]
+        return ZKMultiLock(locks)
         
-        for path in self.pool:
-            lock = ZKSimpleLock(self.zk,path)
+        #for path in self.pool:
+        #    lock = ZKSimpleLock(self.zk,path)
 
-            if min(lock.pos,best_pos) == lock.pos:
-                best_pos = lock.pos
-                to_clear += [best_lock] if best_lock else []
-                best_lock = lock 
-            else:
-                to_clear += [lock]
+        #    if min(lock.pos,best_pos) == lock.pos:
+        #        best_pos = lock.pos
+        #        to_clear += [best_lock] if best_lock else []
+        #        best_lock = lock 
+        #    else:
+        #        to_clear += [lock]
 
-            if lock.pos == 0: break
+        #    if lock.pos == 0: break
 
-        for _lock in to_clear:
-            _lock.destroy()
+        #for _lock in to_clear:
+        #    _lock.destroy()
 
-        return best_lock
+        #print best_lock.lock_path
+        #return best_lock
 
 
 if __name__ == "__main__":
