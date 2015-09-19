@@ -41,6 +41,12 @@ define("skip_conversion_events", default=False,type=bool)
 define("skip_visit_events", default=False,type=bool)      
 define("skip_spark_sql", default=False,type=bool)      
 define("skip_cassandra", default=False,type=bool)      
+define("skip_mongo", default=False,type=bool)      
+define("skip_marathon", default=False,type=bool)      
+define("skip_zookeeper", default=False,type=bool)      
+
+
+
 
 
 define("no_internet",default=False, help="turns off things that require internet connection",type=bool)
@@ -73,7 +79,11 @@ if __name__ == '__main__':
         options.no_internet or options.skip_conversion_events, 
         options.no_internet or options.skip_visit_events,
         options.no_internet or options.skip_spark_sql,
-        options.no_internet or options.skip_cassandra
+        options.no_internet or options.skip_cassandra,
+        options.no_internet or options.skip_mongo,
+        options.no_internet or options.skip_marathon,
+        options.no_internet or options.skip_zookeeper
+
     ).connectors
 
     routes = [r for r in options.routes.split(",") if len(r)]
@@ -96,13 +106,9 @@ if __name__ == '__main__':
             reactor.callInThread(connectors[queue],buf,streaming.BufferControl())
 
     import work_queue
-    import threading
 
-    lock = threading.Lock()
-    q = work_queue.work_queue
-
-    for _ in range(0,4):
-        reactor.callInThread(work_queue.WorkQueue(q,lock))
+    #for _ in range(0,2):
+    #    reactor.callInThread(work_queue.WorkQueue(connectors['zookeeper']))
 
     server = tornado.httpserver.HTTPServer(app)
     server.listen(options.port)

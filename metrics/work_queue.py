@@ -1,7 +1,11 @@
 import Queue
 import logging
+from kazoo.client import KazooClient
+from kazoo.client import KazooState
+import kazoo
+import pickle
 
-class SingleQueue(Queue.Queue):
+class SingleQueue(kazoo.recipe.queue.Queue):
 
     _instance = None
     def __new__(cls, *args, **kwargs):
@@ -10,21 +14,29 @@ class SingleQueue(Queue.Queue):
                                 cls, *args, **kwargs)
         return cls._instance
 
-work_queue = SingleQueue() 
+
 
 class WorkQueue(object):
 
-    def __init__(self,queue,lock):
-        self.queue = queue
-        self.lock = lock
+    def __init__(self,client):
+        self.client = client
+        self.queue = SingleQueue(client,"/python_queue")
 
     def __call__(self):
         while True:
-            self.lock.acquire()
-            fn, args = self.queue.get()
-            self.lock.release()
-            logging.info("starting queue %s %s" % (str(fn),str(args)))
-            fn(*args) 
-            logging.info("finished queue %s %s" % (str(fn),str(args)))
+            logging.debug("Asking for next queue item")
+            data = self.queue.get()
+            if data is not None:
+                logging.debug("Received next queue item")
+               
+                fn, args = pickle.loads(data)
 
+                logging.info("starting queue %s %s" % (str(fn),str(args)))
+                fn(self.client,*args) 
+                logging.info("finished queue %s %s" % (str(fn),str(args)))
 
+            else:
+                import time
+                time.sleep(1)
+                logging.debug("No data in queue")
+            logging.debug("Moving on to next queue item")

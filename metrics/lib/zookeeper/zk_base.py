@@ -5,9 +5,12 @@ class ZKBase(object):
 
     MAGIC_PATH = "/%s"
     
-    def __init__(self,host='zk1:2181'):
-        self.zk = KazooClient(hosts=host)
-        self.start()
+    def __init__(self,host='zk1:2181',zk=None):
+        if zk:
+            self.zk = zk
+        else:
+            self.zk = KazooClient(hosts=host)
+            self.start()
     
     def get_path(self,path):
         """

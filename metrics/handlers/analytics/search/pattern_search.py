@@ -6,10 +6,11 @@ from pattern_search_base import PatternSearchBase
 
 class PatternSearchHandler(PatternSearchBase):
 
-    def initialize(self, db=None, cassandra=None, **kwargs):
+    def initialize(self, db=None, cassandra=None, zookeeper=None, **kwargs):
         self.logging = logging
         self.db = db
         self.cassandra = cassandra
+        self.zookeeper = zookeeper
         self.limit = None
         self.TYPE = {
             "uids": self.get_uids,

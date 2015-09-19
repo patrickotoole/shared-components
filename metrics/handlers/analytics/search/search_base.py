@@ -93,7 +93,7 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
     
     def run(self,pattern,advertiser,dates,results=[]):
 
-        zk_lock = ZKPool()
+        zk_lock = ZKPool(zk=self.zookeeper)
         with zk_lock.get_lock() as lock:
 
             udf_name = lock.get()
@@ -115,7 +115,7 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
             self.sample_used = sample
             _, _, result = response
 
-        zk_lock.stop()
+        #zk_lock.stop()
                 
         return results
 
@@ -164,10 +164,12 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
 
             import work_queue
             import lib.cassandra_cache.pattern as cache
-            args = [advertiser,pattern[0],20,0,work_queue.work_queue.put]
+            import pickle
+            args = [advertiser,pattern[0],20,0,""]
             work = (cache.run_cascade,args)
 
-            work_queue.work_queue.put(work)
+            work_queue.SingleQueue(self.zookeeper,"python_queue").put(pickle.dumps(work))
+
                 
         df = pandas.DataFrame(results)
 

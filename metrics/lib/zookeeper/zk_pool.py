@@ -17,9 +17,10 @@ class ZKPool(ZKBase):
     """
 
     
-    def __init__(self,pool_path="/udf_locks/group_count",hosts='zk1:2181'):
+    def __init__(self,pool_path="/udf_locks/group_count",host='zk1:2181',zk=None):
         self.pool_path = pool_path
-        super(ZKPool, self).__init__(hosts)
+        kwargs = {"zk":zk,"host":host}
+        super(ZKPool, self).__init__(**kwargs)
 
     def __getitems__(self):
         _path = self.path(self.pool_path)
