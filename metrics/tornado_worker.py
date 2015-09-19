@@ -67,10 +67,8 @@ if __name__ == '__main__':
 
     import work_queue
 
-    q = work_queue.work_queue
-
     for _ in range(0,2):
-        reactor.callInThread(work_queue.WorkQueue(q))
+        reactor.callInThread(work_queue.WorkQueue(connectors['zookeeper']))
 
 
     server = tornado.httpserver.HTTPServer(app)
@@ -81,3 +79,4 @@ if __name__ == '__main__':
     signal.signal(signal.SIGINT, sig_handler)
 
     tornado.ioloop.IOLoop.instance().start()
+

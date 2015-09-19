@@ -14,10 +14,11 @@ class SearchHandler(SearchBase):
         "and":"must"
     }
 
-    def initialize(self, db=None, cassandra=None, **kwargs):
+    def initialize(self, db=None, cassandra=None, zookeeper=None, **kwargs):
         self.logging = logging
         self.db = db
         self.cassandra = cassandra
+        self.zookeeper = zookeeper
         self.limit = None
         self.TYPE = {
             "uids": self.get_uids,

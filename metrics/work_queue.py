@@ -14,45 +14,29 @@ class SingleQueue(kazoo.recipe.queue.Queue):
                                 cls, *args, **kwargs)
         return cls._instance
 
-client = KazooClient(hosts="zk1:2181")
-
-
-def my_listener(state):
-    if state == KazooState.LOST:
-        print "CONNECTION LOST"
-    elif state == KazooState.SUSPENDED:
-        print "CONNECTION SUS"
-    else:
-        print "CONNECTING"
-        # Handle being connected/reconnected to Zookeeper
-
-client.add_listener(my_listener)
-
-client.start()
-work_queue = SingleQueue(client,"/python_queue") 
-
 
 
 class WorkQueue(object):
 
-    def __init__(self,queue,lock=None):
-        self.queue = queue
+    def __init__(self,client):
+        self.client = client
+        self.queue = SingleQueue(client,"/python_queue")
 
     def __call__(self):
         while True:
-            logging.info("Asking for next queue item")
+            logging.debug("Asking for next queue item")
             data = self.queue.get()
             if data is not None:
-                logging.info("Received next queue item")
+                logging.debug("Received next queue item")
                
                 fn, args = pickle.loads(data)
 
                 logging.info("starting queue %s %s" % (str(fn),str(args)))
-                fn(*args) 
+                fn(self.client,*args) 
                 logging.info("finished queue %s %s" % (str(fn),str(args)))
 
             else:
                 import time
                 time.sleep(1)
-                logging.info("No data in queue")
-            logging.info("Moving on to next queue item")
+                logging.debug("No data in queue")
+            logging.debug("Moving on to next queue item")

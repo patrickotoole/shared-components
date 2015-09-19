@@ -3,6 +3,7 @@ from cache import CassandraCache
 from helpers import *
 from lib.helpers import *
 from lib.zookeeper.zk_pool import ZKPool
+from kazoo.client import KazooClient
 formatter = '%(asctime)s:%(levelname)s - %(message)s'
 logging.basicConfig(level=logging.INFO, format=formatter)
 
@@ -57,9 +58,9 @@ def update_tree(db,api):
     actions_to_delorean.push_edits(api,edits, label="_patterns", filter_type="visits")
 
     
-def run_cascade(advertiser,pattern,days,offset,callback):
+def run_cascade(zk,advertiser,pattern,days,offset,callback):
 
-    from metrics.work_queue import work_queue
+    import metrics.work_queue as work_queue
 
     base = [advertiser,pattern]
     cascade = {
@@ -70,7 +71,6 @@ def run_cascade(advertiser,pattern,days,offset,callback):
         7: base + [2,7, callback],
         9: base + [6,9, callback],
         15: base + [5,15, callback]
-
     }
 
     to_run = base + [1,offset,callback] if offset != days else False
@@ -84,7 +84,9 @@ def run_cascade(advertiser,pattern,days,offset,callback):
 
         import pickle 
         pickled = pickle.dumps(work)
-        work_queue.put(pickled)
+        
+        queue = work_queue.SingleQueue(zk,"/python_queue")
+        queue.put(pickled)
 
     
 
