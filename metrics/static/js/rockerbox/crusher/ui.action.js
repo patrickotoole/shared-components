@@ -108,9 +108,17 @@ RB.crusher.ui.action = (function(action) {
 
     if (newTs.length && newTs.data()[0]) {
       var tsData = newTs.datum()
-      RB.rho.ui.buildTimeseries(newTs,tsData,"qasdf",["views"])
-      RB.rho.ui.buildTimeseries(newTs,tsData,"asdf",["visits"])
-      RB.rho.ui.buildTimeseries(newTs,tsData,"sdf",["uniques"])
+      RB.rho.ui.buildTimeseriesSummary(newTs,tsData,"Views",["views"], undefined, "This is the number of page views per day")
+      RB.rho.ui.buildTimeseriesSummary(newTs,tsData,"Visits",["visits"], undefined, "This is the number of unique page views per day")
+      RB.rho.ui.buildTimeseriesSummary(newTs,tsData,"Uniques",["uniques"], undefined, "This is the number of unique visitors per day")
+
+      d3.select(window).on("resize",function(){
+        RB.rho.ui.buildTimeseriesSummary(newTs,tsData,"Views",["views"], undefined, "This is the number of page views per day")
+        RB.rho.ui.buildTimeseriesSummary(newTs,tsData,"Visits",["visits"], undefined, "This is the number of unique page views per day")
+        RB.rho.ui.buildTimeseriesSummary(newTs,tsData,"Uniques",["uniques"], undefined, "This is the number of unique visitors per day")
+
+
+      })
 
     }
 
