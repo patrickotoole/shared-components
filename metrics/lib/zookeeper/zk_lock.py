@@ -40,6 +40,7 @@ class ZKSimpleLock:
 
     @property
     def min_lock(self):
+        print "LOCKS: %s" % ",".join(map(str,self.locks))
         padded = self.__pad__(self.locks[0])
         return self.path + "/lock-" + padded
 
@@ -83,7 +84,7 @@ class ZKMultiLock:
             if lock.pos == 0:
                 self.acquired_lock = lock
                 event.set()
-            else:
+            elif not event.is_set(): # prevent this from running if we know that were already going to destroy the locks
                 lock.zk.exists(lock.min_lock,self.acquired(event,lock))
 
         return execute
