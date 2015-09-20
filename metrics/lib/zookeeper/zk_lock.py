@@ -17,23 +17,45 @@ class ZKSimpleLock:
     def create(self):
         _path = self.path + "/lock-"
         lock_path = self.zk.create(_path, ephemeral=True, sequence=True)
-        lock_num = self.__get_lnum__(lock_path)
+        self.lock_num = self.__get_lnum__(lock_path)
 
-        all_locks = self.zk.get_children(self.path)
-        self.pos = len([i for i in all_locks if self.__get_lnum__(i) < lock_num])
-
+        self.refresh()
         return lock_path
+
+    def refresh(self):
+        all_locks = self.zk.get_children(self.path)
+        self.locks = sorted([self.__get_lnum__(i) for i in all_locks])
+
+        for i,lock in enumerate(self.locks):
+            if self.lock_num == lock:
+                self.pos = i
+
+        return self.pos
+
+
+    def __pad__(self,integer):
+        pad_by = 10 - len(str(integer))
+        padding = "0"*pad_by 
+        return padding + str(integer)
+
+    @property
+    def min_lock(self):
+        print "LOCKS: %s" % ",".join(map(str,self.locks))
+        padded = self.__pad__(self.locks[0])
+        return self.path + "/lock-" + padded
+
 
     def acquire(self):
         import threading
         event = threading.Event()
-        self.zk.exists(self.path,event.set)
+        self.zk.exists(self.min_lock,event.set)
         event.wait()
         
     def get(self):
         return self.zk.get(self.path)[0]
 
     def destroy(self):
+        print self.lock_path
         self.zk.delete(self.lock_path)
 
     def __enter__(self):
@@ -42,6 +64,55 @@ class ZKSimpleLock:
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.destroy()
+
+class ZKMultiLock:
+    """
+    Takes a list of locks and waits for the first one to return
+    After it receives the first lock, it destorys the rest of the locks
+    """
+
+    def __init__(self,locks):
+        self.locks = locks
+
+    def available(self):
+        return [lock for lock in self.locks if lock.pos == 0]
+
+    def acquired(self,event,lock):
+        
+        def execute(*args):
+            lock.refresh()
+            if lock.pos == 0:
+                self.acquired_lock = lock
+                event.set()
+            elif not event.is_set(): # prevent this from running if we know that were already going to destroy the locks
+                lock.zk.exists(lock.min_lock,self.acquired(event,lock))
+
+        return execute
+
+    def acquire_one(self):
+
+        import threading
+        event = threading.Event()
+        
+        for lock in self.locks:
+            self.acquired(event,lock)()
+            
+        event.wait()
+
+        for _l in self.locks:
+            if _l != self.acquired_lock: _l.destroy()
+         
+
+        return self.acquired_lock
+
+    def __enter__(self):
+        lock = self.acquire_one()
+        #print self.locks, lock
+        return lock
+        
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.acquired_lock.destroy()
         
 
 if __name__ == "__main__":

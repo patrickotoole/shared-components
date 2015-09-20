@@ -67,7 +67,7 @@ if __name__ == '__main__':
 
     import work_queue
 
-    for _ in range(0,2):
+    for _ in range(0,1):
         reactor.callInThread(work_queue.WorkQueue(connectors['zookeeper']))
 
 

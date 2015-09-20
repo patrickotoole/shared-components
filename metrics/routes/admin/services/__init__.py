@@ -57,7 +57,7 @@ class ServiceRoutes(
         ]
  
     @namespace("/admin")
-    @connectors("db")
+    @connectors("db","zookeeper")
     def work_queue_scripts(self):
         import handlers.admin.work_queue as work_queue 
         

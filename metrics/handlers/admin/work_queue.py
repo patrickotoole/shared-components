@@ -9,8 +9,9 @@ from twisted.internet import defer
 from lib.helpers import * 
 
 class WorkQueueHandler(tornado.web.RequestHandler):
-    def initialize(self, *args, **kwargs):
-        pass
+
+    def initialize(self, zookeeper=None, *args, **kwargs):
+        self.zookeeper = zookeeper
 
     @decorators.formattable
     def get_content(self,data):
@@ -26,9 +27,9 @@ class WorkQueueHandler(tornado.web.RequestHandler):
     def get_data(self):
         import pickle
 
-        path_queue = [c for c in metrics.work_queue.client.get_children("/python_queue") ]
+        path_queue = [c for c in self.zookeeper.get_children("/python_queue") ]
         def parse(x):
-            values = pickle.loads(metrics.work_queue.client.get("/python_queue/" + path)[0])
+            values = pickle.loads(self.zookeeper.get("/python_queue/" + path)[0])
             print values
             return values[1]
 
