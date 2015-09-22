@@ -104,6 +104,27 @@ RB.crusher.controller.action = (function(action) {
                 action.visits_data = dd.results
                 action.urls = dd.urls
                 action.domains = dd.domains
+                /*
+                action.params = {}
+                action.params_single = {}
+
+                action.urls.map(function(x){
+                  console.log(x.url, x.occurrence)
+                  var split = x.url.split("?")
+                  if (split.length > 1)
+                  split[1].split("&").map(function(y){ 
+                    var splitted = y.split("=")
+
+                    action.params[splitted[0]] = action.params[splitted[0]] || {}
+                    action.params[splitted[0]][splitted.slice(1,splitted.length).join("=")] = action.params[splitted[0]][splitted.slice(1,splitted.length).join("=")] || 0
+                    action.params[splitted[0]][splitted.slice(1,splitted.length).join("=")] = x.occurrence
+
+                  })
+                })
+                
+                console.log(action.params)
+                */
+
                 RB.crusher.api.tf_idf_action(callback,action)
 
 

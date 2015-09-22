@@ -148,6 +148,8 @@ RB.crusher.ui.action = (function(action) {
       RB.rho.ui.buildBarSummary(newTs,urlData,"On-site pages",["url"], undefined, "Top on-site pages that match the action")
       RB.rho.ui.buildBarSummary(newTs,domainData,"Off-site opportunities",["domain"], undefined, "Top off-site opportunities for users who have engaged in this on-site action")
 
+      debugger
+
      
 
     }

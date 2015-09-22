@@ -152,6 +152,8 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers):
                 results = Convert.df_to_values(stats.reset_index())
                 response['results'] = results
 
+            df['occurrence'] = df['occurrence'].map(lambda x: 1 if x == 0 else x)
+
             url_list = df.groupby("url")['occurrence'].sum().reset_index().sort_index(by="occurrence",ascending=False).T.to_dict().values()
             response['urls'] = url_list
             defs = [self.defer_get_domains(list(set(df.uid.values))[:1000],date_clause)]
