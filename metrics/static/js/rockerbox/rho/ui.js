@@ -120,7 +120,7 @@ RB.rho.ui = (function(ui) {
     var x = d3.scale.linear().range([0, width-150]);
 
     var chart = target.selectAll("svg.domain-chart-svg")
-      .data(function(x) { return [[{"uid":10,"domain":"first","idf":11},{"uid":20,"domain":"second","idf":10}]] })
+      .data(function(x) { return [data.sort(function(x,y){return y.occurrence - x.occurrence}).slice(0,30) ] })
 
     chart
         .enter()
@@ -128,7 +128,7 @@ RB.rho.ui = (function(ui) {
           .attr("class","domain-chart-svg")
           .attr("width", width);
 
-    x.domain([0, d3.max(chart.datum(), function(d) { return d.uid; })]);
+    x.domain([0, d3.max(chart.datum(), function(d) { return d.occurrence; })]);
     
     chart.attr("height", barHeight * chart.data()[0].length);
     
@@ -146,18 +146,17 @@ RB.rho.ui = (function(ui) {
         .append("rect")
     rect
         .attr("class","bar")
-        .attr("width", function(d) { return x(d.uid || 0); })
+        .attr("width", function(d) { return x(d.occurrence || 0); })
         .attr("height", barHeight - 1);
     
     var text = bar.selectAll("text").data(function(x){return [x]})
     text.enter()
         .append("text")
     text
-        .attr("x", function(d) { return x(d.uid) + 3; })
+        .attr("x", function(d) { return x(d.occurrence) + 3; })
         .attr("y", barHeight / 2)
         .attr("dy", ".35em")
-        .text(function(d) { return d.domain + " (" + d.uid + ")" + d.idf })
-        .text(function(d) { return d.domain + " (" + d.uid + ")" });//+ " (" + d.uid + ")" + d.idf }); 
+        .text(function(d) { return d.url.split(".com")[1] + " (" + d.occurrence+ ")" });//+ " (" + d.uid + ")" + d.idf }); 
 
 
 
