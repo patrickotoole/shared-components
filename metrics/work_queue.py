@@ -32,8 +32,12 @@ class WorkQueue(object):
                 fn, args = pickle.loads(data)
 
                 logging.info("starting queue %s %s" % (str(fn),str(args)))
-                fn(self.client,*args) 
-                logging.info("finished queue %s %s" % (str(fn),str(args)))
+                try:
+                    fn(self.client,*args) 
+                    logging.info("finished queue %s %s" % (str(fn),str(args)))
+                except:
+                    logging.info("ERROR: queue %s %s" % (str(fn),str(args)))
+ 
 
             else:
                 import time

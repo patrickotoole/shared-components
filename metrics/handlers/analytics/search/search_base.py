@@ -142,7 +142,7 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
     
     @decorators.deferred
     def defer_execute(self, selects, advertiser, pattern, date_clause, logic, 
-                      allow_sample=True, timeout=60, numdays=20):
+                      allow_sample=True, timeout=60, numdays=20, should_cache=True):
 
         dates = build_datelist(numdays)
         inserts, results = [], []
@@ -162,14 +162,15 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
         if len(results) == 0:
             results = self.run(pattern,advertiser,dates,results)
 
-            import work_queue
-            import lib.cassandra_cache.pattern as cache
-            import pickle
-            for i in range(0,20):
-                args = [advertiser,pattern[0],20,i,""]
-                work = (cache.run_cascade,args)
+            if should_cache:
+                import work_queue
+                import lib.cassandra_cache.pattern as cache
+                import pickle
+                for i in range(0,20):
+                    args = [advertiser,pattern[0],20,i,""]
+                    work = (cache.run_cascade,args)
 
-                work_queue.SingleQueue(self.zookeeper,"python_queue").put(pickle.dumps(work))
+                    work_queue.SingleQueue(self.zookeeper,"python_queue").put(pickle.dumps(work))
 
                 
         df = pandas.DataFrame(results)
@@ -233,7 +234,7 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
         response["timeout"] = timeout
 
         df = yield self.defer_execute(PARAMS, advertiser, terms, 
-                                       date_clause, logic, timeout=timeout)
+                       date_clause, logic, timeout=timeout, should_cache=False, numdays=7)
 
         if df is False:
             self.write_timeout(terms, logic, timeout)
