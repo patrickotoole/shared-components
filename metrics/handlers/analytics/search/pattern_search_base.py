@@ -9,6 +9,8 @@ from pattern_search_helpers import PatternSearchHelpers
 from twisted.internet import defer
 from lib.helpers import decorators
 from lib.helpers import *
+from ..visit_domains import VisitDomainBase
+
 
 def callback(yo,*args):
     print yo
@@ -18,7 +20,7 @@ def callback(yo,*args):
     return
 
 
-class PatternSearchBase(SearchBase,PatternSearchHelpers):
+class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers):
 
     @defer.inlineCallbacks
     def get_uids(self, advertiser, pattern_terms, date_clause, logic="or",timeout=60):
@@ -152,6 +154,13 @@ class PatternSearchBase(SearchBase,PatternSearchHelpers):
 
             url_list = df.groupby("url")['occurrence'].sum().reset_index().sort_index(by="occurrence",ascending=False).T.to_dict().values()
             response['urls'] = url_list
+            defs = [self.defer_get_domains(set(df.uid.values),date_clause)]
+            dl = defer.DeferredList(defs)
+            dom = yield dl
+            df = dom[0][1].groupby("domain")['uid'].count()
+   
+            domains = df.reset_index().T.to_dict().values()
+            response['domains'] = domains
         
         self.write_json(response)
 
