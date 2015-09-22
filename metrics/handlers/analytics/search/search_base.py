@@ -170,7 +170,7 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
                     args = [advertiser,pattern[0],20,i,""]
                     work = (cache.run_cascade,args)
 
-                    work_queue.SingleQueue(self.zookeeper,"python_queue").put(pickle.dumps(work))
+                    work_queue.SingleQueue(self.zookeeper,"python_queue").put(pickle.dumps(work),i)
 
                 
         df = pandas.DataFrame(results)
