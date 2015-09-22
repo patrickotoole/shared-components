@@ -143,6 +143,30 @@ RB.crusher.api = (function(api) {
 
     
     var apis = {
+      tf_idf_action: genericQueuedAPIWithData(function(data,cb,deferred_cb) {
+        var domains = data.domains.map(function(x){return x.domain})
+        if (domains) {
+          d3.xhr("/crusher/domain/idf")
+            .post(JSON.stringify({"domains":domains}), function(err,dd){
+              var json = JSON.parse(dd.response)
+              var keyed = d3.nest()
+                .key(function(x){return x.domain})
+                .rollup(function(x){return x[0]})
+                .map(json)
+
+              data.domains.map(function(x) {
+                idf_dict = keyed[x.domain] || {}
+                x.idf = idf_dict.idf || 12
+                x.category_name = idf_dict.category_name || "NA"
+                x.weighted =  x.domain == "NA" ? 0 : Math.exp(x.idf) * Math.log(x.occurrence)
+
+              })
+              deferred_cb(null,cb.bind(false,data))
+            }) 
+        } else {
+          deferred_cb(null,cb.bind(false,data))
+        }
+      }),
       tf_idf_funnel: genericQueuedAPIWithData(function(data,cb,deferred_cb) {
         var domains = data.funnel_domains.map(function(x){return x.domain})
         if (domains) {

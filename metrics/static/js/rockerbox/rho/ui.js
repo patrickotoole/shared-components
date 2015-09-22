@@ -114,7 +114,7 @@ RB.rho.ui = (function(ui) {
     })
 
     var targetWidth = target.style("width").replace("px",""),
-      width = targetWidth,
+      width = targetWidth - 50,
       barHeight = 15;
 
     var x = d3.scale.linear().range([0, width-150]);
@@ -133,7 +133,10 @@ RB.rho.ui = (function(ui) {
     })
 
     var chart = target.selectAll("svg.domain-chart-svg")
-      .data(function(x) { return [data.sort(function(x,y){return y.occurrence - x.occurrence}).slice(0,30) ] })
+      .data(function(x) { 
+        var field = (data[0].weighted !== undefined) ? "weighted" : "occurrence"
+        return [data.sort(function(x,y){return y[field] - x[field] }).slice(0,30) ] 
+      })
 
     chart
         .enter()

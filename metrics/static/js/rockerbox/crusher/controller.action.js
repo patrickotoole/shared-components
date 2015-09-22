@@ -104,9 +104,10 @@ RB.crusher.controller.action = (function(action) {
                 action.visits_data = dd.results
                 action.urls = dd.urls
                 action.domains = dd.domains
+                RB.crusher.api.tf_idf_action(callback,action)
 
 
-                if (callback) callback()
+                //if (callback) callback()
               }
             );
         }
