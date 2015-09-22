@@ -9,6 +9,11 @@ from pattern_search_helpers import PatternSearchHelpers
 from twisted.internet import defer
 from lib.helpers import decorators
 from lib.helpers import *
+
+from lib.cassandra_helpers.helpers import FutureHelpers
+from lib.cassandra_cache.helpers import *
+
+
 from ..visit_domains import VisitDomainBase
 
 
@@ -18,6 +23,17 @@ def callback(yo,*args):
     time.sleep(10)
     print yo
     return
+
+def build_datelist(numdays):
+    import datetime
+    
+    base = datetime.datetime.today()
+    date_list = [base - datetime.timedelta(days=x) for x in range(0, numdays)]
+    dates = map(lambda x: str(x).split(" ")[0] + " 00:00:00",date_list)
+
+    return dates
+
+
 
 
 class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers):
@@ -152,11 +168,35 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers):
                 results = Convert.df_to_values(stats.reset_index())
                 response['results'] = results
 
-            df['occurrence'] = df['occurrence'].map(lambda x: 1 if x == 0 else x)
-            grouped_urls = df.groupby("url")['occurrence'].sum()
 
-            url_list = grouped_urls.reset_index().sort_index(by="occurrence",ascending=False).T.to_dict().values()
-            response['urls'] = url_list
+            # GET URLS
+
+
+            DOMAIN_SELECT = "select * from rockerbox.action_occurrence_urls_counter where source = ? and action = ? and date = ?"
+            statement = self.cassandra.prepare(DOMAIN_SELECT)
+            def execute(data):
+                bound = statement.bind(data)
+                return self.cassandra.execute_async(bound)
+           
+            dates = build_datelist(20) 
+            prepped = [[advertiser,pattern_terms[0][0],date] for date in dates]
+
+            urls = FutureHelpers.future_queue(prepped,execute,simple_append,60,[])
+            urls = urls[0]
+
+            response['urls'] = urls
+            for url in response['urls']:
+                url['occurrence'] = url['count']
+
+            if len(urls) == 0:
+
+                df['occurrence'] = df['occurrence'].map(lambda x: 1 if x == 0 else x)
+                grouped_urls = df.groupby("url")['occurrence'].sum()
+                url_list = grouped_urls.reset_index().sort_index(by="occurrence",ascending=False).T.to_dict().values()
+                response['urls'] = url_list
+
+
+            # GET DOMAINS (from cache)
             defs = [self.defer_get_domains_with_cache(advertiser,pattern_terms[0][0],list(set(df.uid.values))[:1000],date_clause)]
             dl = defer.DeferredList(defs)
             dom = yield dl
