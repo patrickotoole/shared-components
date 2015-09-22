@@ -130,27 +130,29 @@ RB.crusher.ui.action = (function(action) {
 
     if (newTs.length && newTs.data()[0]) {
       var tsData = newTs.datum()
+      var urlData = info.datum().urls
+      var domainData = info.datum().domains
+
+
       RB.rho.ui.buildTimeseriesSummary(newTs,tsData,"Views",["views"], undefined, "This is the number of page views per day")
       RB.rho.ui.buildTimeseriesSummary(newTs,tsData,"Visits",["visits"], undefined, "This is the number of unique page views per day")
       RB.rho.ui.buildTimeseriesSummary(newTs,tsData,"Uniques",["uniques"], undefined, "This is the number of unique visitors per day")
+
+      RB.rho.ui.buildBarSummary(newTs,urlData,"On-site pages",["url"], undefined, "Top on-site pages that match the action")
+      RB.rho.ui.buildBarSummary(newTs,domainData,"Off-site opportunities",["domain"], undefined, "Top off-site opportunities for users who have engaged in this on-site action")
+
+
 
       d3.select(window).on("resize",function(){
         RB.rho.ui.buildTimeseriesSummary(newTs,tsData,"Views",["views"], undefined, "This is the number of page views per day")
         RB.rho.ui.buildTimeseriesSummary(newTs,tsData,"Visits",["visits"], undefined, "This is the number of unique page views per day")
         RB.rho.ui.buildTimeseriesSummary(newTs,tsData,"Uniques",["uniques"], undefined, "This is the number of unique visitors per day")
 
+        RB.rho.ui.buildBarSummary(newTs,urlData,"On-site pages",["url"], undefined, "Top on-site pages that match the action")
+        RB.rho.ui.buildBarSummary(newTs,domainData,"Off-site opportunities",["domain"], undefined, "Top off-site opportunities for users who have engaged in this on-site action")
 
       })
 
-      var urlData = info.datum().urls
-      var domainData = info.datum().domains
-
-      RB.rho.ui.buildBarSummary(newTs,urlData,"On-site pages",["url"], undefined, "Top on-site pages that match the action")
-      RB.rho.ui.buildBarSummary(newTs,domainData,"Off-site opportunities",["domain"], undefined, "Top off-site opportunities for users who have engaged in this on-site action")
-
-      debugger
-
-     
 
     }
 

@@ -42,6 +42,10 @@ RB.crusher.controller.action = (function(action) {
       delete cdata['rows']
       delete cdata['count']
       delete cdata['uids']
+      delete cdata['domains']
+      delete cdata['urls']
+
+
       delete cdata['visits_data']
       delete cdata['name']
 
@@ -69,6 +73,7 @@ RB.crusher.controller.action = (function(action) {
 
           }
         );                    
+      d3.select(".action-view").classed("hidden",false)
     },
     get: function(action,callback) {
       // this is getting all of the data associated with the pattern
