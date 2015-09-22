@@ -9,6 +9,8 @@ from pattern_search_helpers import PatternSearchHelpers
 from twisted.internet import defer
 from lib.helpers import decorators
 from lib.helpers import *
+from ..visit_domains import VisitDomainBase
+
 
 def callback(yo,*args):
     print yo
@@ -18,7 +20,7 @@ def callback(yo,*args):
     return
 
 
-class PatternSearchBase(SearchBase,PatternSearchHelpers):
+class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers):
 
     @defer.inlineCallbacks
     def get_uids(self, advertiser, pattern_terms, date_clause, logic="or",timeout=60):
@@ -141,6 +143,7 @@ class PatternSearchBase(SearchBase,PatternSearchHelpers):
         if len(df) > 0:
             stats = df.groupby("date").apply(self.calc_stats)
 
+            response['summary']['num_urls'] = len(set(df.url.values))
             response['summary']['num_users'] = len(set(df.uid.values))
             response['summary']['num_views'] = stats.num_views.sum()
             response['summary']['num_visits'] = stats.num_visits.sum()
@@ -148,6 +151,18 @@ class PatternSearchBase(SearchBase,PatternSearchHelpers):
             if timeseries:
                 results = Convert.df_to_values(stats.reset_index())
                 response['results'] = results
+
+            df['occurrence'] = df['occurrence'].map(lambda x: 1 if x == 0 else x)
+
+            url_list = df.groupby("url")['occurrence'].sum().reset_index().sort_index(by="occurrence",ascending=False).T.to_dict().values()
+            response['urls'] = url_list
+            defs = [self.defer_get_domains(list(set(df.uid.values))[:1000],date_clause)]
+            dl = defer.DeferredList(defs)
+            dom = yield dl
+            df = dom[0][1].groupby("domain")['uid'].agg(lambda x: len(set(x)))
+   
+            domains = df.reset_index().rename(columns={"uid":"occurrence"}).T.to_dict().values()
+            response['domains'] = domains
         
         self.write_json(response)
 

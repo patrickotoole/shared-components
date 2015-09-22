@@ -16,7 +16,7 @@ from lib.cassandra_cache.helpers import *
 
 DEFAULT_INTERVAL = "minute"
 
-QUERY = "SELECT * FROM rockerbox.visitor_domains "
+QUERY = "SELECT * FROM rockerbox.visitor_domains_2 "
 
 class VisitDomainBase(object):
     
@@ -43,7 +43,7 @@ class VisitDomainBase(object):
 
     def paginate_get_w_in(self, uids, date_clause):
 
-        DOMAIN_SELECT = "select * from rockerbox.visitor_domains where uid = ?"
+        DOMAIN_SELECT = "select * from rockerbox.visitor_domains_2 where uid = ?"
         statement = self.cassandra.prepare(DOMAIN_SELECT)
         def execute(data):
             bound = statement.bind(data)

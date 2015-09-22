@@ -5,6 +5,7 @@ RB.rho.ui = RB.rho.ui || {}
 RB.rho.ui = (function(ui) {
 
   var rho = RB.rho
+
   
   ui.buildChart = function(target, data, label_col, value_col, title, description, type, summary, format, height, paddingLeft) {
     type = type || "line";
@@ -68,12 +69,146 @@ RB.rho.ui = (function(ui) {
       $(target).prepend($("<div class='chart-title'>").text(title));
     };
 
-    
+  }
 
+  ui.buildBarSummary = function(target,data,title,series,formatting,description) {
+
+    var wrapper = d3_updateable(target,".series-wrapper." + series,"div",[data])
+      .classed("series-wrapper col-md-6 " + series,true)
+
+    var newTarget = d3_updateable(wrapper,".series." + series,"div",[data])
+      .classed("bar series " + series,true)
+
+    d3_updateable(newTarget,".title","div",[title],function(x){return x})
+      .classed("title",true)
+      .text(String)
+
+    var value = data.reduce(function(p,c) {return p + c[series]},0)
+
+    d3_updateable(newTarget,".value","div",[value],function(x){return x})
+      .classed("value",true)
+
+    d3_updateable(newTarget,".description","div",[description],function(x){return x})
+      .classed("description",true)
+      .text(String)
+
+    ui.buildBar(newTarget,data,title,series,formatting)
+
+    //ui.buildTimeseries(newTarget,data,title,series,formatting)
+
+
+  }
+
+  ui.buildBar = function(target,data,title,series,formatting) {
+
+    var default_formatting = {
+      "font_size": ".71em"
+    }
     
+    var formatting = typeof formatting !== "undefined" ? formatting: default_formatting;
+
+    data.map(function(x){
+      x.date = new Date(x.key)
+      for (var i in x.value) 
+        x[i] = x.value[i]
+    })
+
+    var targetWidth = target.style("width").replace("px",""),
+      width = targetWidth - 50,
+      barHeight = 15;
+
+    var x = d3.scale.linear().range([0, width-150]);
+
+
+    data.map(function(d){
+
+      var splitQ = d[series].split("?")[0]
+      var split = splitQ.split("/")
+      d.url_short = split[split.length-1]
+
+      if (split.length > 1 && d.url_short.length < 15) d.url_short = split[split.length-2] + "/" + d.url_short
+      if (split.length > 2 && d.url_short.length < 15) d.url_short = split[split.length-3] + "/" + d.url_short
+
+      return d
+    })
+
+    var chart = target.selectAll("svg.domain-chart-svg")
+      .data(function(x) { 
+        var field = (data[0].weighted !== undefined) ? "weighted" : "occurrence"
+        return [data.sort(function(x,y){return y[field] - x[field] }).slice(0,30) ] 
+      })
+
+    chart
+        .enter()
+          .append("svg")
+          .attr("class","domain-chart-svg")
+          .attr("width", width);
+
+    x.domain([0, d3.max(chart.datum(), function(d) { return d.occurrence; })]);
+    
+    chart.attr("height", barHeight * chart.data()[0].length);
+    
+    var bar = chart.selectAll("g")
+        .data(function(x){return x})
+
+    bar
+      .enter().append("g")
+        .attr("transform", function(d, i) { return "translate(0," + i * barHeight + ")"; });
+
+    bar.exit().remove()
+    
+    var rect = bar.selectAll("rect.bar").data(function(x){return [x]})
+    rect.enter()
+        .append("rect")
+    rect
+        .attr("class","bar")
+        .attr("width", function(d) { return x(d.occurrence || 0); })
+        .attr("height", barHeight - 1);
+    
+    var text = bar.selectAll("text").data(function(x){return [x]})
+    text.enter()
+        .append("text")
+    text
+        .attr("x", function(d) { return x(d.occurrence) + 3; })
+        .attr("y", barHeight / 2)
+        .attr("dy", ".35em")
+        .text(function(d) { return d.url_short + " (" + d.occurrence+ ")" });//+ " (" + d.uid + ")" + d.idf }); 
+
+
+
+
+  }  
+
+  ui.buildTimeseriesSummary = function(target,data,title,series,formatting,description) {
+
+    var wrapper = d3_updateable(target,".series-wrapper." + series,"div",[data])
+      .classed("series-wrapper col-md-4 " + series,true)
+
+    var newTarget = d3_updateable(wrapper,".series." + series,"div",[data])
+      .classed("series " + series,true)
+
+    d3_updateable(newTarget,".title","div",[title],function(x){return x})
+      .classed("title",true)
+      .text(String)
+
+    var value = data.reduce(function(p,c) {return p + c[series]},0)
+
+    d3_updateable(newTarget,".value","div",[value],function(x){return x})
+      .classed("value",true)
+      .text(d3.format(",.3r"))
+
+    d3_updateable(newTarget,".description","div",[description],function(x){return x})
+      .classed("description",true)
+      .text(String)
+
+
+
+    ui.buildTimeseries(newTarget,data,title,series,formatting)
+
   }
 
   ui.buildTimeseries = function(target,data,title,series,formatting) {
+    console.log(arguments)
     var default_formatting = {
       "font_size": ".71em"
     }
@@ -90,16 +225,20 @@ RB.rho.ui = (function(ui) {
 
     var targetWidth = target.style("width").replace("px","")
 
-    var margin = {top: 20, right: 20, bottom: 30, left: 50},
+    var margin = {top: 20, right: 50, bottom: 30, left: 50},
       width = targetWidth - margin.left - margin.right,
-      height = 200 - margin.top - margin.bottom;
+      height = 150 - margin.top - margin.bottom;
   
     var parseDate = d3.time.format("%D-%b-%y %H:%M").parse;
   
     var x = d3.time.scale().range([0, width]); 
     var y = d3.scale.linear().range([height, 0]); 
-    var xAxis = d3.svg.axis().scale(x).orient("bottom"); 
-    var yAxis = d3.svg.axis().scale(y).orient("left");
+    var xAxis = d3.svg.axis().scale(x).orient("bottom")
+      .ticks(d3.time.days, width < 300 ? 5 : 2)
+
+    var yAxis = d3.svg.axis().scale(y).orient("left")
+      .tickSize(-width, 0, 0)
+      .ticks(height < 200 ? 3 : 5)
   
     
 
@@ -110,10 +249,12 @@ RB.rho.ui = (function(ui) {
       .enter()
         .append("svg")
         .attr("class",title)
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
         .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    svg
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+
   
     x.domain(d3.extent(data, function(d) { return d.date; }));
     y.domain([0,d3.max(data, function(d) { return d[series[0]]; })]);
@@ -136,17 +277,29 @@ RB.rho.ui = (function(ui) {
     svg.select(".y.axis")
       .call(yAxis)
       .append("text")
-      .attr("transform", "rotate(-90)")
-      .attr("y", 6)
+      //.attr("transform", "rotate(-90)")
+      .attr("y", -10)
+      .attr("x", 0)
       .attr("dy", formatting.font_size)
-      .style("text-anchor", "end")
+      .style("text-anchor", "start")
       .classed("y-label",true)
-      .text(series[0].toUpperCase());
+      //.text(series[0].toUpperCase());
+
+    svg.select(".y.axis") 
+      .selectAll(".tick > text")
+      .attr("x",-10)
+
+
   
     series.map(function(series){
       var line = d3.svg.line()
         .x(function(d) { return x(d.date); })
         .y(function(d) { return y(d[series]); });
+
+      var area = d3.svg.area()
+        .x(function(d) { return x(d.date); })
+        .y0(height)
+        .y1(function(d) { return y(d[series]); });
      
       newSvg.append("path")
         .attr("class", series + " line")
@@ -154,7 +307,33 @@ RB.rho.ui = (function(ui) {
       svg.select(".line")// + series)
         .datum(data)
         .attr("d", line); 
+
+      newSvg.append("path")
+        .attr("class", "area")
+
+      svg.select(".area")
+        .datum(data)
+        
+        .attr("d", area);
+ 
+      var points = svg.selectAll(".point")
+        .data(data,function(d){return d.date})
+
+      points
+        .enter().append("svg:circle")
+        .attr("class","point")
+
+      points.exit().remove()
+
+      points
+         .attr("fill", function(d, i) { return "steelblue" })
+         .attr("cx", function(d, i) { return x(d.date) + 50 })
+         .attr("cy", function(d, i) { return y(d[series]) + 20})
+         .attr("r", function(d, i) { return 3 })
+      
     })
+
+    
 
   }
 
