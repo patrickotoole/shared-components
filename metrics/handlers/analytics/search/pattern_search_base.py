@@ -154,12 +154,12 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers):
 
             url_list = df.groupby("url")['occurrence'].sum().reset_index().sort_index(by="occurrence",ascending=False).T.to_dict().values()
             response['urls'] = url_list
-            defs = [self.defer_get_domains(set(df.uid.values),date_clause)]
+            defs = [self.defer_get_domains(list(set(df.uid.values))[:1000],date_clause)]
             dl = defer.DeferredList(defs)
             dom = yield dl
-            df = dom[0][1].groupby("domain")['uid'].count()
+            df = dom[0][1].groupby("domain")['uid'].agg(lambda x: len(set(x)))
    
-            domains = df.reset_index().T.to_dict().values()
+            domains = df.reset_index().rename(columns={"uid":"occurrence"}).T.to_dict().values()
             response['domains'] = domains
         
         self.write_json(response)

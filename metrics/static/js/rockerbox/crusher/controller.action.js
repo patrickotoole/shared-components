@@ -103,6 +103,8 @@ RB.crusher.controller.action = (function(action) {
                 var dd = JSON.parse(rawData.response)
                 action.visits_data = dd.results
                 action.urls = dd.urls
+                action.domains = dd.domains
+
 
                 if (callback) callback()
               }
@@ -116,4 +118,4 @@ RB.crusher.controller.action = (function(action) {
 
   return action
 
-})(RB.crusher.controller.action || {}) 
+url})(RB.crusher.controller.action || {}) 

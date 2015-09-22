@@ -119,15 +119,15 @@ RB.rho.ui = (function(ui) {
 
     var x = d3.scale.linear().range([0, width-150]);
 
+
     data.map(function(d){
 
-      var splitQ = d.url.split("?")[0]
-      console.log(splitQ)
+      var splitQ = d[series].split("?")[0]
       var split = splitQ.split("/")
       d.url_short = split[split.length-1]
 
-      if (d.url_short.length < 15) d.url_short = split[split.length-2] + "/" + d.url_short
-      if (d.url_short.length < 15) d.url_short = split[split.length-3] + "/" + d.url_short
+      if (split.length > 1 && d.url_short.length < 15) d.url_short = split[split.length-2] + "/" + d.url_short
+      if (split.length > 2 && d.url_short.length < 15) d.url_short = split[split.length-3] + "/" + d.url_short
 
       return d
     })
