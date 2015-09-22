@@ -119,6 +119,19 @@ RB.rho.ui = (function(ui) {
 
     var x = d3.scale.linear().range([0, width-150]);
 
+    data.map(function(d){
+
+      var splitQ = d.url.split("?")[0]
+      console.log(splitQ)
+      var split = splitQ.split("/")
+      d.url_short = split[split.length-1]
+
+      if (d.url_short.length < 15) d.url_short = split[split.length-2] + "/" + d.url_short
+      if (d.url_short.length < 15) d.url_short = split[split.length-3] + "/" + d.url_short
+
+      return d
+    })
+
     var chart = target.selectAll("svg.domain-chart-svg")
       .data(function(x) { return [data.sort(function(x,y){return y.occurrence - x.occurrence}).slice(0,30) ] })
 
@@ -156,7 +169,7 @@ RB.rho.ui = (function(ui) {
         .attr("x", function(d) { return x(d.occurrence) + 3; })
         .attr("y", barHeight / 2)
         .attr("dy", ".35em")
-        .text(function(d) { return d.url.split(".com")[1] + " (" + d.occurrence+ ")" });//+ " (" + d.uid + ")" + d.idf }); 
+        .text(function(d) { return d.url_short + " (" + d.occurrence+ ")" });//+ " (" + d.uid + ")" + d.idf }); 
 
 
 
