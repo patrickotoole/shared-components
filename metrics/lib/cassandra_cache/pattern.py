@@ -166,8 +166,18 @@ def run(advertiser,pattern,days,offset,force=False):
     DOMAIN_SELECT = "select * from rockerbox.visitor_domains_2 where uid = ?"
     DOMAIN_INSERT = "INSERT INTO rockerbox.pattern_occurrence_domains (source,date,action,domain) VALUES (?,?,?,?)"
 
+    SELECT_COUNTER = "SELECT * from rockerbox.pattern_occurrence_domains_counter"
+    UPDATE_COUNTER = "UPDATE rockerbox.pattern_occurrence_domains_counter"
+    dimensions     = ["source","date","action"]
+    to_count       = "domain"
+    count_column   = "count"
+
+    
+
     if len(uid_values):
-        cache.run_uids_to_domains(uid_values,DOMAIN_SELECT,DOMAIN_INSERT)
+        domain_values = cache.get_domains_from_uids(uid_values,DOMAIN_SELECT)
+        domain_values = domain_values[["source","date","action","domain","count"]].values.tolist()
+        cache.run_counter_updates(domain_values,SELECT_COUNTER,UPDATE_COUNTER,dimensions,to_count,count_column,True)
     
 
 

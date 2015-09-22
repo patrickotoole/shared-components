@@ -3,7 +3,7 @@ from lib.cassandra_helpers.helpers import FutureHelpers
 from lib.cassandra_cache.helpers import *
 import logging
 
-FUTURES    = 120
+FUTURES    = 60
 NUM_DAYS   = 2
 INSERT_UDF = "insert into full_replication.function_patterns (function,pattern) VALUES ('%s','%s')"
 
@@ -94,8 +94,42 @@ class CassandraCache(PreparedCassandraRangeQuery):
             
         print "updating: %s" % len(to_update)
         statement = self.cassandra.prepare(update)
+        print update
+
         to_bind = self.bind_and_execute(statement)
         FutureHelpers.future_queue(to_update,to_bind,simple_append,self.num_futures,[]) 
+
+    def get_domains_from_uids(self,uid_inserts,select):
+        import pandas
+
+        statement = self.cassandra.prepare(select)
+        to_bind = self.bind_and_execute(statement)
+        uids = [[j] for j in list(set([i[-2] for i in uid_inserts]))]
+
+        logging.info("Unique user ids :%s" % len(uids))
+        results = FutureHelpers.future_queue(uids,to_bind,simple_append,self.num_futures,[])
+        results = results[0]
+
+        df = pandas.DataFrame(results)
+
+        print df.groupby("uid").count()['domain'].describe()
+        df['date'] = df.timestamp.map(lambda x: x.split(" ")[0] + "00:00:00")
+
+
+        domain_date = df.groupby(["domain","date"])["uid"].count()
+        domain_date.name = "count"
+        df = domain_date.reset_index()
+
+        df["source"] = uid_inserts[0][0]
+        df["action"] = uid_inserts[0][2]
+
+       
+        return df
+       
+        
+
+
+ 
 
     def run_uids_to_domains(self,uid_inserts,select,insert):
         import pandas
@@ -134,13 +168,6 @@ class CassandraCache(PreparedCassandraRangeQuery):
         results = FutureHelpers.future_queue(inserts,to_bind,simple_append,self.num_futures,[])
         
         
-        
-
-        
-        
-
-   
-
 
 
 
