@@ -94,6 +94,7 @@ RB.crusher.controller.action = (function(action) {
           // NOTE:
           // action.operator // removed from the UI since UX use case covered
             
+          //URL = URL.replace("timeseries","urls")
 
           d3.xhr(URL)
             .header("Content-Type", "application/json")
@@ -101,6 +102,7 @@ RB.crusher.controller.action = (function(action) {
               function(err, rawData){
                 var dd = JSON.parse(rawData.response)
                 action.visits_data = dd.results
+                action.urls = dd.urls
 
                 if (callback) callback()
               }

@@ -5,6 +5,7 @@ RB.rho.ui = RB.rho.ui || {}
 RB.rho.ui = (function(ui) {
 
   var rho = RB.rho
+
   
   ui.buildChart = function(target, data, label_col, value_col, title, description, type, summary, format, height, paddingLeft) {
     type = type || "line";
@@ -69,6 +70,99 @@ RB.rho.ui = (function(ui) {
     };
 
   }
+
+  ui.buildBarSummary = function(target,data,title,series,formatting,description) {
+
+    var wrapper = d3_updateable(target,".series-wrapper." + series,"div",[data])
+      .classed("series-wrapper col-md-6 " + series,true)
+
+    var newTarget = d3_updateable(wrapper,".series." + series,"div",[data])
+      .classed("bar series " + series,true)
+
+    d3_updateable(newTarget,".title","div",[title],function(x){return x})
+      .classed("title",true)
+      .text(String)
+
+    var value = data.reduce(function(p,c) {return p + c[series]},0)
+
+    d3_updateable(newTarget,".value","div",[value],function(x){return x})
+      .classed("value",true)
+
+    d3_updateable(newTarget,".description","div",[description],function(x){return x})
+      .classed("description",true)
+      .text(String)
+
+    ui.buildBar(newTarget,data,title,series,formatting)
+
+    //ui.buildTimeseries(newTarget,data,title,series,formatting)
+
+
+  }
+
+  ui.buildBar = function(target,data,title,series,formatting) {
+
+    var default_formatting = {
+      "font_size": ".71em"
+    }
+    
+    var formatting = typeof formatting !== "undefined" ? formatting: default_formatting;
+
+    data.map(function(x){
+      x.date = new Date(x.key)
+      for (var i in x.value) 
+        x[i] = x.value[i]
+    })
+
+    var targetWidth = target.style("width").replace("px",""),
+      width = targetWidth,
+      barHeight = 15;
+
+    var x = d3.scale.linear().range([0, width-150]);
+
+    var chart = target.selectAll("svg.domain-chart-svg")
+      .data(function(x) { return [[{"uid":10,"domain":"first","idf":11},{"uid":20,"domain":"second","idf":10}]] })
+
+    chart
+        .enter()
+          .append("svg")
+          .attr("class","domain-chart-svg")
+          .attr("width", width);
+
+    x.domain([0, d3.max(chart.datum(), function(d) { return d.uid; })]);
+    
+    chart.attr("height", barHeight * chart.data()[0].length);
+    
+    var bar = chart.selectAll("g")
+        .data(function(x){return x})
+
+    bar
+      .enter().append("g")
+        .attr("transform", function(d, i) { return "translate(0," + i * barHeight + ")"; });
+
+    bar.exit().remove()
+    
+    var rect = bar.selectAll("rect.bar").data(function(x){return [x]})
+    rect.enter()
+        .append("rect")
+    rect
+        .attr("class","bar")
+        .attr("width", function(d) { return x(d.uid || 0); })
+        .attr("height", barHeight - 1);
+    
+    var text = bar.selectAll("text").data(function(x){return [x]})
+    text.enter()
+        .append("text")
+    text
+        .attr("x", function(d) { return x(d.uid) + 3; })
+        .attr("y", barHeight / 2)
+        .attr("dy", ".35em")
+        .text(function(d) { return d.domain + " (" + d.uid + ")" + d.idf })
+        .text(function(d) { return d.domain + " (" + d.uid + ")" });//+ " (" + d.uid + ")" + d.idf }); 
+
+
+
+
+  }  
 
   ui.buildTimeseriesSummary = function(target,data,title,series,formatting,description) {
 

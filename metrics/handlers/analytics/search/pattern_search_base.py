@@ -141,6 +141,7 @@ class PatternSearchBase(SearchBase,PatternSearchHelpers):
         if len(df) > 0:
             stats = df.groupby("date").apply(self.calc_stats)
 
+            response['summary']['num_urls'] = len(set(df.url.values))
             response['summary']['num_users'] = len(set(df.uid.values))
             response['summary']['num_views'] = stats.num_views.sum()
             response['summary']['num_visits'] = stats.num_visits.sum()
@@ -148,6 +149,9 @@ class PatternSearchBase(SearchBase,PatternSearchHelpers):
             if timeseries:
                 results = Convert.df_to_values(stats.reset_index())
                 response['results'] = results
+
+            url_list = df.groupby("url")['occurrence'].sum().reset_index().sort_index(by="occurrence",ascending=False).T.to_dict().values()
+            response['urls'] = url_list
         
         self.write_json(response)
 

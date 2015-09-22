@@ -45,12 +45,28 @@ RB.crusher.ui.action = (function(action) {
     actionView.enter()
       .append("div")
       .classed("action-view",true)
+      .classed("hidden",function(x){return !x.action_id})
 
     actionView.exit().remove()
 
     var h5 = actionView.selectAll("h5").data(function(x){return [x.action_name]})
-    h5.enter().append("h5").text("Action details")
+    h5.enter().append("h5").text(function(x) { return "Action > " + x } )
+      .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-30px;margin-right:-30px")
+      .classed("heading",true)
     h5.exit().remove()
+
+    var edit = d3_updateable(h5,".pull-right.edit","a")
+      .classed("pull-right edit btn btn-default btn-sm", true)
+      .style("margin-right","30px")
+      .style("margin-top","20px")
+
+     
+      
+
+    edit.text("Edit")
+      .on("click",function(){
+        d3.select(".action").classed("hidden",false)
+      })
 
     var info = actionView.selectAll(".urls").data(function(x){
 
@@ -65,6 +81,12 @@ RB.crusher.ui.action = (function(action) {
 
     info.enter()
       .append("div").classed("urls",true)
+
+    d3_updateable(info,".description","div")
+      .classed("description",true)
+      .text(function(x){
+        return "These are the analytics details associated with the " + x.action_name + ". Below we summarize on-site and off-site activity."
+      })
 
     info.filter(function(x){console.log(x); return !x.action_id}).remove()
 
@@ -104,7 +126,7 @@ RB.crusher.ui.action = (function(action) {
     timeseries.exit().remove()
     var newTs = timeseries.enter().append("div").classed("ts",true)
 
-    //debugger
+    
 
     if (newTs.length && newTs.data()[0]) {
       var tsData = newTs.datum()
@@ -119,6 +141,11 @@ RB.crusher.ui.action = (function(action) {
 
 
       })
+
+      RB.rho.ui.buildBarSummary(newTs,tsData,"On-site pages",["onsite"], undefined, "Top on-site pages that match the action")
+      RB.rho.ui.buildBarSummary(newTs,tsData,"Off-site opportunities",["offsite"], undefined, "Top off-site opportunities for users who have engaged in this on-site action")
+
+     
 
     }
 
@@ -135,6 +162,7 @@ RB.crusher.ui.action = (function(action) {
     var newEdit = edits.enter()
       .append("div")
       .classed("action",true)
+      .classed("hidden",function(x){return x.action_id})
 
     edits.exit()
       .remove()
@@ -143,6 +171,9 @@ RB.crusher.ui.action = (function(action) {
       .text(function(x){
         return x.action_id ? "Edit an action" : "Create an action"
       })
+      .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-30px;margin-right:-30px")
+      .classed("heading",true)
+
 
     var group = newEdit.append("div")
       .classed("input-group input-group-sm",true)
