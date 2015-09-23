@@ -200,9 +200,13 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers):
             defs = [self.defer_get_domains_with_cache(advertiser,pattern_terms[0][0],list(set(df.uid.values))[:1000],date_clause)]
             dl = defer.DeferredList(defs)
             dom = yield dl
-            df = dom[0][1].groupby("domain")['uid'].agg(lambda x: len(set(x)))
-   
-            domains = df.reset_index().rename(columns={"uid":"occurrence"}).T.to_dict().values()
+
+            if hasattr(dom[0][1],"uid"):
+                df = dom[0][1].groupby("domain")['uid'].agg(lambda x: len(set(x)))
+                domains = df.reset_index().rename(columns={"uid":"occurrence"}).T.to_dict().values()
+            else:
+                domains = dom[0][1].reset_index().T.to_dict().values()
+           
             response['domains'] = domains
         
         self.write_json(response)

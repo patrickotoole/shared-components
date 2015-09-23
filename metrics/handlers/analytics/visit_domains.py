@@ -34,16 +34,25 @@ class VisitDomainBase(object):
     def defer_get_domains_with_cache(self, source, pattern, uids, date_clause):
 
         xx = self.cache_select(source, pattern, date_clause)
+
         if len(xx) == 0:
             xx = self.paginate_get_w_in(uids, date_clause)
+        else:
+            print "ASDF"
+
         df = pandas.DataFrame(xx)
+        try:
+            df['occurrence'] = df['count']
+            df = df.groupby("domain")[["occurrence"]].sum().reset_index().sort_index(by="occurrence",ascending=False).head(100)
+        except:
+            pass
 
         return df
 
 
     def cache_select(self, source, pattern, date_clause):
 
-        DOMAIN_SELECT = "select * from rockerbox.action_occurrence_domains where source = ? and action = ? and date = ?"
+        DOMAIN_SELECT = "select * from rockerbox.pattern_occurrence_domains_counter where source = ? and action = ? and date = ?"
         statement = self.cassandra.prepare(DOMAIN_SELECT)
         def execute(data):
             bound = statement.bind(data)
@@ -54,9 +63,6 @@ class VisitDomainBase(object):
         
         results = FutureHelpers.future_queue(prepped,execute,simple_append,60,[])
         results = results[0]
-
-        for i in results:
-            i['uid'] = 1
 
         return results
 

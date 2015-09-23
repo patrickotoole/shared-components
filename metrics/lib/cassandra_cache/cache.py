@@ -3,7 +3,7 @@ from lib.cassandra_helpers.helpers import FutureHelpers
 from lib.cassandra_cache.helpers import *
 import logging
 
-FUTURES    = 60
+FUTURES    = 120
 NUM_DAYS   = 2
 INSERT_UDF = "insert into full_replication.function_patterns (function,pattern) VALUES ('%s','%s')"
 
@@ -112,11 +112,21 @@ class CassandraCache(PreparedCassandraRangeQuery):
 
         df = pandas.DataFrame(results)
 
+        _temp = df.groupby("uid").count()
+        bad_users = _temp[_temp.sort_index(by="domain").domain > 2000].index.tolist()
+        
         print df.groupby("uid").count()['domain'].describe()
-        df['date'] = df.timestamp.map(lambda x: x.split(" ")[0] + "00:00:00")
+
+        df = df[~df.uid.isin(bad_users)]
+
+        print "Users with more than 2000 datapoints: %s" % len(bad_users)
+        print df.groupby("uid").count()['domain'].describe()
+        df['date'] = df.timestamp.map(lambda x: x.split(" ")[0] + " 00:00:00")
 
 
-        domain_date = df.groupby(["domain","date"])["uid"].count()
+        #domain_date = df.groupby(["domain","date"])["uid"].count()
+        domain_date = df.groupby(["domain","date"]).agg({"uid":lambda x: len(set(x))})['uid']
+
         domain_date.name = "count"
         df = domain_date.reset_index()
 
@@ -151,7 +161,7 @@ class CassandraCache(PreparedCassandraRangeQuery):
         df['date'] = df.timestamp.map(lambda x: x.split(" ")[0] + "00:00:00")
 
 
-        domain_date = df.groupby(["domain","date"])["uid"].count()
+        domain_date = df.groupby(["domain","date"])["uid"].agg({"uid": lambda x: len(set(x))})
         domain_date.name = "count"
         df = domain_date.reset_index()
 
