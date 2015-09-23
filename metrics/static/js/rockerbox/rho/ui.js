@@ -71,10 +71,12 @@ RB.rho.ui = (function(ui) {
 
   }
 
-  ui.buildBarSummary = function(target,data,title,series,formatting,description) {
+  ui.buildBarSummary = function(target,data,title,series,formatting,description,multi_select) {
+
+    formatting = formatting || "col-md-6"
 
     var wrapper = d3_updateable(target,".series-wrapper." + series,"div",[data])
-      .classed("series-wrapper col-md-6 " + series,true)
+      .classed("series-wrapper " + formatting + " " + series,true)
 
     var newTarget = d3_updateable(wrapper,".series." + series,"div",[data])
       .classed("bar series " + series,true)
@@ -92,7 +94,34 @@ RB.rho.ui = (function(ui) {
       .classed("description",true)
       .text(String)
 
-    ui.buildBar(newTarget,data,title,series,formatting)
+
+    if (multi_select) {
+
+      var transformed_data = d3.nest()
+        .key(function(x){return x.key})
+        .rollup(function(x){return x[0].values})
+        .map(data)
+
+      var selector = d3_updateable(newTarget,".selector","select",[data],function(x){return x})
+        .classed("selector",true)
+        .on("change",function(x){
+          var newData = transformed_data[this.value]
+          ui.buildBar(newTarget,newData,title,series,formatting)
+
+        })
+
+      var option = d3_splat(selector,".selector","option",function(x){return x[0]},function(x){return x.key})
+        .classed("option",true).text(function(x){return x.key})
+
+      if (data.length) ui.buildBar(newTarget,data[0].values,title,series,formatting)
+
+
+    } else {
+      ui.buildBar(newTarget,data,title,series,formatting)
+    }
+ 
+
+    return newTarget
 
     //ui.buildTimeseries(newTarget,data,title,series,formatting)
 
@@ -130,11 +159,32 @@ RB.rho.ui = (function(ui) {
       if (split.length > 2 && d.url_short.length < 15) d.url_short = split[split.length-3] + "/" + d.url_short
 
       return d
-    })
+    }).filter(function(d){return d[series] != "NA" })
+
+    if (data[0].weighted === undefined && data[0].key === undefined) {
+      data = d3.nest()
+        .key(function(x){
+          return x.url_short
+        })                                                                          
+        .rollup(function(x){
+          return x.reduce(function(p,c){                                                             
+            return p + c.occurrence                                                                                      
+          },0)
+        })
+        .entries(data)
+
+      data = data.map(function(x){                                                                                    
+          x["url_short"] = x.key
+          return x
+        })                                                                                                            
+     }
+
+    var field = (data[0].weighted !== undefined) ? "weighted" : 
+                (data[0].occurrence !== undefined) ? "occurrence" : "values"
 
     var chart = target.selectAll("svg.domain-chart-svg")
       .data(function(x) { 
-        var field = (data[0].weighted !== undefined) ? "weighted" : "occurrence"
+        
         return [data.sort(function(x,y){return y[field] - x[field] }).slice(0,30) ] 
       })
 
@@ -144,7 +194,7 @@ RB.rho.ui = (function(ui) {
           .attr("class","domain-chart-svg")
           .attr("width", width);
 
-    x.domain([0, d3.max(chart.datum(), function(d) { return d.occurrence; })]);
+    x.domain([0, d3.max(chart.datum(), function(d) { return d.occurrence || d.values; })]);
     
     chart.attr("height", barHeight * chart.data()[0].length);
     
@@ -162,17 +212,17 @@ RB.rho.ui = (function(ui) {
         .append("rect")
     rect
         .attr("class","bar")
-        .attr("width", function(d) { return x(d.occurrence || 0); })
+        .attr("width", function(d) { return x(d.occurrence || d.values || 0); })
         .attr("height", barHeight - 1);
     
     var text = bar.selectAll("text").data(function(x){return [x]})
     text.enter()
         .append("text")
     text
-        .attr("x", function(d) { return x(d.occurrence) + 3; })
+        .attr("x", function(d) { return x(d.occurrence || d.values) + 3; })
         .attr("y", barHeight / 2)
         .attr("dy", ".35em")
-        .text(function(d) { return d.url_short + " (" + d.occurrence+ ")" });//+ " (" + d.uid + ")" + d.idf }); 
+        .text(function(d) { return d.url_short + " (" + (d.occurrence || d.values)+ ")" });//+ " (" + d.uid + ")" + d.idf }); 
 
 
 
