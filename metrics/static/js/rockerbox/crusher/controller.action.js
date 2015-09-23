@@ -109,26 +109,37 @@ RB.crusher.controller.action = (function(action) {
                 action.visits_data = dd.results
                 action.urls = dd.urls
                 action.domains = dd.domains
-                /*
-                action.params = {}
-                action.params_single = {}
+
+                action.param_list = []
 
                 action.urls.map(function(x){
-                  console.log(x.url, x.occurrence)
                   var split = x.url.split("?")
-                  if (split.length > 1)
-                  split[1].split("&").map(function(y){ 
-                    var splitted = y.split("=")
+                  if (split.length > 1) {
+                    split[1].split("&").map(function(y){ 
+                      var splitted = y.split("=")
+                      var name = splitted[0]
+                      var value = splitted.slice(1,splitted.length).join("=")
 
-                    action.params[splitted[0]] = action.params[splitted[0]] || {}
-                    action.params[splitted[0]][splitted.slice(1,splitted.length).join("=")] = action.params[splitted[0]][splitted.slice(1,splitted.length).join("=")] || 0
-                    action.params[splitted[0]][splitted.slice(1,splitted.length).join("=")] = x.occurrence
+                      action.param_list.push({"name":name,"value":value,"occurrence":x.occurrence})
 
-                  })
+                    })
+                  }
                 })
                 
-                console.log(action.params)
-                */
+                console.log("PARAMETERS")
+
+                action.param_rolled = d3.nest()
+                  .key(function(x) {return x.name})
+                  .key(function(x) {return x.value})
+                  .rollup(function(x) { return x.reduce(function(p,c){return p + c.occurrence},0)})
+                  .entries(action.param_list)
+                  .map(function(x) {
+                    x.occurrence = x.values.reduce(function(p,c){return p + c.values},0)
+                    return x
+                  }).sort(function(y,x) {return x.occurrence - y.occurrence })
+
+                console.log(action.param_rolled)
+                
 
                 RB.crusher.api.tf_idf_action(callback,action)
 
