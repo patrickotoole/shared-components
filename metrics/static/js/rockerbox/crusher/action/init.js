@@ -115,7 +115,7 @@ RB.component.export(RB.crusher.ui.action.domains, RB.crusher.ui.action)
 RB.crusher.ui.action.resize = (function(resize,action,crusher) {
 
   resize.NAME = "action.resize"
-  resize.SUBSCRIBE = ["resize","tf_idf_action","actionTimeseries"]
+  resize.SUBSCRIBE = ["resize"]
   resize.PUBLISH = []
   resize.EVENTS = ["resize"]
 
@@ -147,7 +147,7 @@ RB.crusher.ui.action.last = (function(last,action,crusher) {
   last.EVENTS = []
 
   last.subscription = function(data) {
-    RB.component.export(RB.crusher.ui.funnel.show, RB.crusher.ui.funnel)
+    RB.component.export(RB.crusher.ui.action.show, RB.crusher.ui.action)
   }
 
   return last
