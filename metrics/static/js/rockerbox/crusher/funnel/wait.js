@@ -7,7 +7,7 @@ RB.crusher.ui.funnel = RB.crusher.ui.funnel || {}
 
 RB.crusher.ui.funnel.wait = (function(wait,funnel,crusher) {
 
-  wait.NAME = "wait"
+  wait.NAME = "funnel.wait"
   wait.SUBSCRIBE = ["funnel_initialized"]
   wait.PUBLISH = ["funnelUIDs"]
   wait.EVENTS = ["funnel_initialized"]

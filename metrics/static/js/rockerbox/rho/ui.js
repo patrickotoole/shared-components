@@ -149,7 +149,7 @@ RB.rho.ui = (function(ui) {
     var x = d3.scale.linear().range([0, width-150]);
 
 
-    data.map(function(d){
+    data = data.map(function(d){
 
       var splitQ = d[series].split("?")[0]
       var split = splitQ.split("/")
@@ -197,7 +197,38 @@ RB.rho.ui = (function(ui) {
     x.domain([0, d3.max(chart.datum(), function(d) { return d.occurrence || d.values; })]);
     
     chart.attr("height", barHeight * chart.data()[0].length);
-    
+
+    ui.barShow(chart, barHeight, x)
+    ui.barExpand(target, data, field, barHeight, x, 30)
+
+  }  
+
+  ui.barExpand = function(target, data, field, barHeight, x, limit) {
+    if (data.length > limit) {
+
+      var expand = d3_updateable(target,".expand","div")
+        .classed("expand btn btn-sm btn-default",true)
+        .text("Expand Results")
+        .on("click",function(){
+          var chart = target.selectAll("svg.domain-chart-svg")
+            .data(function(x) {
+              return [data.sort(function(x,y){return y[field] - x[field] }).slice(0,limit*2) ]
+            })
+
+          x.domain([0, d3.max(chart.datum(), function(d) { return d.occurrence || d.values; })]);
+     
+          ui.barShow(chart, barHeight, x)
+          chart.attr("height", barHeight * chart.data()[0].length);
+          ui.barExpand(target, data, field, barHeight, x, limit*2)
+
+        })
+    } else {
+      target.selectAll(".expand").remove()
+    }
+  }
+
+  ui.barShow = function(chart, barHeight, x) {
+
     var bar = chart.selectAll("g")
         .data(function(x){return x})
 
@@ -223,11 +254,7 @@ RB.rho.ui = (function(ui) {
         .attr("y", barHeight / 2)
         .attr("dy", ".35em")
         .text(function(d) { return d.url_short + " (" + (d.occurrence || d.values)+ ")" });//+ " (" + d.uid + ")" + d.idf }); 
-
-
-
-
-  }  
+  }
 
   ui.buildTimeseriesSummary = function(target,data,title,series,formatting,description) {
 
