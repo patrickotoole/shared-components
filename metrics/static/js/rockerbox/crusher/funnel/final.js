@@ -11,7 +11,6 @@ RB.crusher.ui.funnel.last = (function(last,funnel,crusher) {
   last.EVENTS = []
 
   last.subscription = function(data) {
-    alert("HERE")
     RB.component.export(RB.crusher.ui.funnel.show, RB.crusher.ui.funnel)
 
   }
