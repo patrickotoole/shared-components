@@ -47,6 +47,14 @@ def get_slack_user(name, sc, cache={}):
         cache[name] = did
     return did
 
+def get_slack_channel(name, sc, cache={}):
+    did = cache.get(name,False)
+    if not did:
+        did = [i['id'] for i in ujson.loads(sc.api_call("channels.list"))['channels'] if i['name'] == name][0]
+        cache[name] = did
+    return did
+
+
 def time_since(t, format_str="%Y-%m-%dT%H:%M:%S.000Z", kind="hours"):
     diff = datetime.now() - datetime.strptime(t, format_str)
     if kind == "hours":
