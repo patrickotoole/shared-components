@@ -18,6 +18,11 @@ RB.crusher.controller = (function(controller) {
       RB.routes.navigation.forward(state)
     }
     //if (type.length) controller.initializers[type](id)
+
+    d3.select(window).on("resize",function(){
+      crusher.subscribe.publishers["resize"]()
+    })
+
     
     
   }
@@ -178,22 +183,16 @@ RB.crusher.controller = (function(controller) {
       RB.crusher.controller.funnel.new(target)
     },
     "action/existing": function(action) {
+
       RB.component.export(RB.crusher.ui.funnel.show, RB.crusher.ui.funnel)
+      RB.component.export(RB.crusher.ui.action.show, RB.crusher.ui.action)
+
  
       crusher.ui.action.buildBase()
 
-      var target = d3.selectAll(".action-view-wrapper")
-      target.datum(action)
-      
-      crusher.subscribe.add_subscriber(["actions"], function(){
-        crusher.ui.action.edit(target,controller.action.save)
-      },"existing_edit",true,true)   
-
-      crusher.subscribe.add_subscriber(["actions"] , function() {
-        crusher.cache.actionData.map(function(x) { x.values = crusher.cache.urls_wo_qs })
-        crusher.ui.action.view(target)
-      },"existing_view",true,true)
-         
+      crusher.subscribe.publishers["actions"]()
+      crusher.subscribe.publishers["action_all"](action)
+       
     },
     "action/new": function(action) {
       crusher.ui.action.buildBase()

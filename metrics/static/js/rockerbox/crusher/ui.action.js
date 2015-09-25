@@ -37,8 +37,7 @@ RB.crusher.ui.action = (function(action) {
 
   }
 
-  action.view = function(wrapper) {
-
+  action.preview = function(wrapper) {
     var actionView = wrapper.selectAll(".action-view")
       .data(function(x){return [x]},function(x){return x.action_id + x.action_name})
       
@@ -72,7 +71,7 @@ RB.crusher.ui.action = (function(action) {
 
       if (!x.visits_data) {
         x.all = [x]
-        crusher.controller.action.get(x,action.view.bind(false,wrapper))
+        //crusher.controller.action.get(x,action.view.bind(false,wrapper))
         delete x['all']
       }
 
@@ -89,6 +88,27 @@ RB.crusher.ui.action = (function(action) {
       })
 
     info.filter(function(x){console.log(x); return !x.action_id}).remove()
+
+
+  }
+
+  action.wait = function(wrapper) {
+    var info = wrapper.selectAll(".urls")
+
+    d3_updateable(info,".loading","div")
+      .classed("loading",true)
+      .text(function(x){
+        return "Your data is loading..."
+      }).style("display","block")
+
+
+  }
+
+  action.view = function(wrapper) {
+
+    var info = wrapper.selectAll(".urls")
+
+    info.selectAll(".loading").remove()
 
     var with_data = info.filter(function(x){return x.visits_data})
 
@@ -126,56 +146,46 @@ RB.crusher.ui.action = (function(action) {
     timeseries.exit().remove()
     var newTs = timeseries.enter().append("div").classed("ts",true)
 
+  }
+
+  action.show_timeseries = function(wrapper) {
+    var newTs = wrapper.selectAll(".ts")
+    var tsData = newTs.datum()
+    var urlData = wrapper.datum().urls
+
+    RB.rho.ui.buildTimeseriesSummary(
+      newTs,tsData,"Views",["views"], undefined, 
+      "This is the number of page views per day"
+    )
+    RB.rho.ui.buildTimeseriesSummary(
+      newTs,tsData,"Visits",["visits"], undefined, 
+      "This is the number of unique page views per day"
+    )
+    RB.rho.ui.buildTimeseriesSummary(
+      newTs,tsData,"Uniques",["uniques"], undefined, 
+      "This is the number of unique visitors per day"
+    )
+
     
+    var pull_left = d3_updateable(newTs,".on-page-wrapper", "div")
+      .classed("on-page-wrapper col-md-6",true)
 
-    if (newTs.length && newTs.data()[0]) {
-      var tsData = newTs.datum()
-      var urlData = info.datum().urls
-      var domainData = info.datum().domains
+    RB.rho.ui.buildBarSummary(
+      pull_left,urlData,"On-site pages",["url"], " ", 
+      "Top on-site pages that match the action"
+    )
+    RB.rho.ui.buildBarSummary(
+      pull_left,wrapper.datum().param_rolled,"On-site tracking parameters",["key"], " ", 
+      "Top tracking parameters",true
+    )
+  }
 
-
-      RB.rho.ui.buildTimeseriesSummary(newTs,tsData,"Views",["views"], undefined, "This is the number of page views per day")
-      RB.rho.ui.buildTimeseriesSummary(newTs,tsData,"Visits",["visits"], undefined, "This is the number of unique page views per day")
-      RB.rho.ui.buildTimeseriesSummary(newTs,tsData,"Uniques",["uniques"], undefined, "This is the number of unique visitors per day")
-
-      
-      var pull_left = d3_updateable(newTs,".on-page-wrapper", "div")
-        .classed("on-page-wrapper col-md-6",true)
-
-      RB.rho.ui.buildBarSummary(pull_left,urlData,"On-site pages",["url"], " ", "Top on-site pages that match the action")
-
-
-
-      RB.rho.ui.buildBarSummary(pull_left,info.datum().param_rolled,"On-site tracking parameters",["key"], " ", "Top tracking parameters",true)
+  action.show_domains = function(wrapper) {
+    var newTs = wrapper.selectAll(".ts")
+    var domainData = wrapper.datum().domains
 
 
-      RB.rho.ui.buildBarSummary(newTs,domainData,"Off-site opportunities",["domain"], undefined, "Top off-site opportunities for users who have engaged in this on-site action")
-
-      
-
-
-
-      d3.select(window).on("resize",function(){
-        RB.rho.ui.buildTimeseriesSummary(newTs,tsData,"Views",["views"], undefined, "This is the number of page views per day")
-        RB.rho.ui.buildTimeseriesSummary(newTs,tsData,"Visits",["visits"], undefined, "This is the number of unique page views per day")
-        RB.rho.ui.buildTimeseriesSummary(newTs,tsData,"Uniques",["uniques"], undefined, "This is the number of unique visitors per day")
-
-
-        RB.rho.ui.buildBarSummary(pull_left,urlData,"On-site pages",["url"], " ", "Top on-site pages that match the action")
-
-        RB.rho.ui.buildBarSummary(pull_left,info.datum().param_rolled,"On-site tracking parameters",["key"], " ", "Top tracking parameters",true)
-
-
-        RB.rho.ui.buildBarSummary(newTs,domainData,"Off-site opportunities",["domain"], undefined, "Top off-site opportunities for users who have engaged in this on-site action")
-
-      })
-
-
-    }
-
-    //var svg = timeseries.selectAll("svg").data(function(x){return [x]})
-    //svg.enter().append("svg")
-
+    RB.rho.ui.buildBarSummary(newTs,domainData,"Off-site opportunities",["domain"], undefined, "Top off-site opportunities for users who have engaged in this on-site action")
   }
 
   action.edit = function(edit,onSave) {

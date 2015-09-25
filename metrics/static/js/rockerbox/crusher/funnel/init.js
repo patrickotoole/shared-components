@@ -5,7 +5,7 @@ RB.crusher.ui.funnel = RB.crusher.ui.funnel || {}
 
 RB.crusher.ui.funnel.init = (function(init,funnel,crusher) {
 
-  init.NAME = "init"
+  init.NAME = "funnel.init"
   init.SUBSCRIBE = ["funnel_all","actions","funnels","campaigns","lookalikes","lookalikeCampaigns"]
   init.PUBLISH = ["funnel_initialized"]
   init.EVENTS = ["funnel_all","funnel_initialized"]

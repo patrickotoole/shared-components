@@ -9,7 +9,6 @@ RB.component = (function(self,subscribe) {
 
   self.export = function(component,container) {
   
-
     /*
       Arguments:
         component - this the component to register. it needs to contain specific fields in order 

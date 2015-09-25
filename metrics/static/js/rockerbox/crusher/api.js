@@ -115,6 +115,7 @@ RB.crusher.api = (function(api) {
     userPermissions: "/account/permissions",
     actionURL: "/crusher/funnel/action?format=json",
     actionUIDs: "/crusher/pattern_search/uids?search=",
+    actionTimeseries: "/crusher/pattern_search/timeseries?search=",
 
     funnelUIDs: "/crusher/multi_search/uids?search=",
     funnelAvails: "/crusher/multi_search/avails?search=",
@@ -390,6 +391,54 @@ RB.crusher.api = (function(api) {
           deferred_cb(null,cb.bind(false,funnel))
         })
         
+      }),
+
+      actionTimeseries: genericQueuedAPIWithData(function(action,cb,deferred_cb) {
+        d3.xhr(api.URL.actionTimeseries + action.action_string)
+          .header("Content-Type","application/json")
+          .get(function(err,rawData){
+            var dd = JSON.parse(rawData.response)
+            action.visits_data = dd.results
+            action.urls = dd.urls
+            action.domains = dd.domains
+
+            action.param_list = []
+
+            action.urls.map(function(x){
+              var split = x.url.split("?")
+              if (split.length > 1) {
+                split[1].split("&").map(function(y){ 
+                  var splitted = y.split("=")
+                  var name = splitted[0]
+                  var value = splitted.slice(1,splitted.length).join("=")
+
+                  action.param_list.push({"name":name,"value":value,"occurrence":x.occurrence})
+
+                })
+              }
+            })
+            
+            console.log("PARAMETERS")
+
+            action.param_rolled = d3.nest()
+              .key(function(x) {return x.name})
+              .key(function(x) {return x.value})
+              .rollup(function(x) { return x.reduce(function(p,c){return p + c.occurrence},0)})
+              .entries(action.param_list)
+              .map(function(x) {
+                x.occurrence = x.values.reduce(function(p,c){return p + c.values},0)
+                return x
+              }).sort(function(y,x) {return x.occurrence - y.occurrence })
+
+            console.log(action.param_rolled)
+
+            //var fn = function(){deferred_cb(null,cb.bind(false,action))}
+            deferred_cb(null,cb.bind(false,action))
+            //RB.crusher.api.tf_idf_action(fn,action)
+            
+
+
+          })
       }),
       actionToUIDs: genericQueuedAPI(function(action,deferred_cb) {
 
