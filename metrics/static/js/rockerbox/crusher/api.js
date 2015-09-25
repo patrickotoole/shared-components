@@ -394,6 +394,11 @@ RB.crusher.api = (function(api) {
       }),
 
       actionTimeseries: genericQueuedAPIWithData(function(action,cb,deferred_cb) {
+
+        if (action.visits_data) {
+          deferred_cb(null,cb.bind(false,action))
+          return 
+        }
         d3.xhr(api.URL.actionTimeseries + action.action_string)
           .header("Content-Type","application/json")
           .get(function(err,rawData){

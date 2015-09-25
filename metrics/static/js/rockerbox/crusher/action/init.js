@@ -136,3 +136,24 @@ RB.crusher.ui.action.resize = (function(resize,action,crusher) {
 RB.component.export(RB.crusher.ui.action.resize, RB.crusher.ui.action)
 
 
+
+
+
+RB.crusher.ui.action.last = (function(last,action,crusher) {
+
+  last.NAME = "action.last"
+  last.SUBSCRIBE = ["tf_idf_action","actionTimeseries"]
+  last.PUBLISH = []
+  last.EVENTS = []
+
+  last.subscription = function(data) {
+    RB.component.export(RB.crusher.ui.funnel.show, RB.crusher.ui.funnel)
+  }
+
+  return last
+
+})(RB.crusher.ui.action.last || {}, RB.crusher.ui.action,RB.crusher)
+
+RB.component.export(RB.crusher.ui.action.last, RB.crusher.ui.action)
+
+
