@@ -134,6 +134,7 @@ for a in advertisers:
     advertiser_id = a["external_advertiser_id"]
     slack_name = a["media_trader_slack_name"]
     slack_uid = get_slack_user(slack_name, sc, users)
+
     
     print "ADVERTISER: {}".format(advertiser_name)
     
@@ -163,6 +164,9 @@ for a in advertisers:
     print "Sending message to %s: \n%s\n" % (slack_name, message)
     sc.api_call("chat.postMessage",channel=slack_uid,text=message,as_user=True)
 
+    slack_channel = get_slack_channel("client-campaigns", sc, users)
+    sc.api_call("chat.postMessage",channel=slack_channel,text=message,as_user=True)
+
     total_potential = df.potential_imps_budget.sum() + df.daily_budget.sum()
 
     if slack_uid not in totals:
@@ -177,3 +181,6 @@ for slack_uid in totals:
     message = get_message_totals(totals[slack_uid])
     print "Sending message to %s: \n%s\n" % (slack_uid, message)
     sc.api_call("chat.postMessage",channel=slack_uid,text=message,as_user=True)
+
+    slack_channel = get_slack_channel("client-campaigns", sc, users)
+    sc.api_call("chat.postMessage",channel=slack_channel,text=message,as_user=True)
