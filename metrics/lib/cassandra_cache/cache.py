@@ -68,7 +68,9 @@ class CassandraCache(PreparedCassandraRangeQuery):
 
         import pandas
 
-        cols = dimensions + [to_count]
+        cols = dimensions
+        if to_count not in dimensions:
+            cols += [to_count]
         cols_with_count = cols + [count_column]
 
         select = select + self.__where_formatter__(dimensions)
@@ -76,10 +78,12 @@ class CassandraCache(PreparedCassandraRangeQuery):
         
         # if the count is part of the dataset, no need to group and count
         if counter_value:
+       
             new_values = pandas.DataFrame(url_inserts,columns=cols_with_count)
         else:
             df = pandas.DataFrame(url_inserts,columns=cols)
             new_values = group_all_and_count(df,count_column)
+        
     
         to_pull = new_values[dimensions].drop_duplicates().values.tolist()
         results = self.pull_simple(to_pull,select)
@@ -91,6 +95,7 @@ class CassandraCache(PreparedCassandraRangeQuery):
             to_update = updates_df.values.tolist()
         else:
             to_update = new_values[[count_column]+list(new_values.columns)[:-1]].values.tolist()
+
             
         print "updating: %s" % len(to_update)
         statement = self.cassandra.prepare(update)
@@ -116,6 +121,9 @@ class CassandraCache(PreparedCassandraRangeQuery):
         bad_users = _temp[_temp.sort_index(by="domain").domain > 2000].index.tolist()
         
         print df.groupby("uid").count()['domain'].describe()
+        import math
+        counts, bins = pandas.np.histogram(df.groupby("uid").count()['domain'].map(lambda x: math.log(x,10)))
+        print pandas.Series(counts, index=map(lambda x: 10**x,bins[:-1]))
 
         df = df[~df.uid.isin(bad_users)]
 

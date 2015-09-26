@@ -123,6 +123,52 @@ def run(advertiser,pattern,days,offset,force=False):
 
         cache_insert, uid_values, url_values = select(cache,state,*select_args)
 
+
+    # ACTION => VIEWS COUNTER CACHE
+    logging.info("Cacheing: %s => %s views" % (advertiser,pattern))
+
+    SELECT_COUNTER = "SELECT * from rockerbox.pattern_occurrence_views_counter"
+    UPDATE_COUNTER = "UPDATE rockerbox.pattern_occurrence_views_counter"
+
+    dimensions     = ["source","date","action"]
+    to_count       = "action"
+    count_column   = "count"
+    
+    all_columns = dimensions + ["uid","u2","url","count"]
+
+    if len(cache_insert):
+        series = pandas.DataFrame(cache_insert,columns=all_columns).groupby(dimensions)['count'].sum()
+        series.name = "count"
+
+        values = series.reset_index().values.tolist()
+        cache.run_counter_updates(values,SELECT_COUNTER,UPDATE_COUNTER,dimensions,to_count,count_column,True)
+
+
+
+    # ACTION => VISITS
+    logging.info("Cacheing: %s => %s occurence uniques" % (advertiser,pattern))
+
+    UID_INSERT     = "INSERT INTO rockerbox.pattern_occurrence_visits (source,date,action,count) VALUES (?,?,?,?)"
+    if len(cache_insert):
+        
+        values = [cache_insert[0][:3] + [len(cache_insert)]]
+        cache.run_inserts(values,UID_INSERT)
+
+
+
+    # ACTION => UNIQUES
+    logging.info("Cacheing: %s => %s occurence uniques" % (advertiser,pattern))
+
+    UID_INSERT     = "INSERT INTO rockerbox.pattern_occurrence_uniques (source,date,action,count) VALUES (?,?,?,?)"
+    if len(uid_values):
+        length = len(pandas.DataFrame(uid_values).groupby(3))
+        values = [uid_values[0][:3] + [length]]
+        cache.run_inserts(values,UID_INSERT)
+
+
+
+
+
     # ACTION => RAW DATA CACHE
     logging.info("Cacheing: %s => %s occurences raw" % (advertiser,pattern))
 
