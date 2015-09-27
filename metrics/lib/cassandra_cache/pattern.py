@@ -138,7 +138,6 @@ def run(advertiser,pattern,days,offset,force=False):
 
     if len(cache_insert):
         series = pandas.DataFrame(cache_insert,columns=all_columns).groupby(dimensions)['count'].sum()
-        series.name = "count"
 
         values = series.reset_index().values.tolist()
         cache.run_counter_updates(values,SELECT_COUNTER,UPDATE_COUNTER,dimensions,to_count,count_column,True)
@@ -151,7 +150,12 @@ def run(advertiser,pattern,days,offset,force=False):
     UID_INSERT     = "INSERT INTO rockerbox.pattern_occurrence_visits (source,date,action,count) VALUES (?,?,?,?)"
     if len(cache_insert):
         
-        values = [cache_insert[0][:3] + [len(cache_insert)]]
+        series = pandas.DataFrame(cache_insert,columns=all_columns).groupby(dimensions + ["uid","url"])['count'].count()
+        reset = series.reset_index()
+
+        dims = reset.groupby(dimensions)['count'].count()
+        values = dims.reset_index().values.tolist()
+
         cache.run_inserts(values,UID_INSERT)
 
 
@@ -161,8 +165,13 @@ def run(advertiser,pattern,days,offset,force=False):
 
     UID_INSERT     = "INSERT INTO rockerbox.pattern_occurrence_uniques (source,date,action,count) VALUES (?,?,?,?)"
     if len(uid_values):
-        length = len(pandas.DataFrame(uid_values).groupby(3))
-        values = [uid_values[0][:3] + [length]]
+
+        series = pandas.DataFrame(cache_insert,columns=all_columns).groupby(dimensions + ["uid"])['count'].count()
+        reset = series.reset_index()
+
+        dims = reset.groupby(dimensions)['count'].count()
+        values = dims.reset_index().values.tolist()
+       
         cache.run_inserts(values,UID_INSERT)
 
 

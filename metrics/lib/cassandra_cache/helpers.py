@@ -69,6 +69,8 @@ def compare_and_increment(new,old):
 
     increments = joined[incrementor] - joined[incrementor + "_old"]
     increments = increments[increments > 0].map(int)
+    
+    increments = increments.append(joined[joined[incrementor + "_old"].isnull()][incrementor])
     increments.name = "count"
 
     return increments.reset_index()[["count"]+indices]
