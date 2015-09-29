@@ -115,28 +115,36 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
             stats_df = self.get_stats(*args)
 
             assert(len(stats_df) >= 4)
+            print start - time.time()
 
             domains_df = self.get_domains_from_cache(*args, formatter=build_dict_dataframe("domains"))
             urls_df = self.get_urls_from_cache(*args, formatter=build_dict_dataframe("urls"))
-            #uids_df = self.get_uids_from_cache(*args, formatter=build_dict_dataframe("uids"))
 
             df = stats_df.join(domains_df).join(urls_df)
-
             summarized = stats_df.sum()
 
             response['summary']['users'] = summarized.uniques
             response['summary']['views'] = summarized.views
             response['summary']['visits'] = summarized.visits
 
-
             if timeseries:
                 results = Convert.df_to_values(stats_df.reset_index())
                 response['results'] = results
 
-            
-            response['urls'] = Convert.df_to_values(urls_df.ix[:1])[0]['urls']
-            response['domains'] = Convert.df_to_values(domains_df.ix[:1])[0]['domains']
+            import itertools
 
+            print start - time.time()
+
+            urls_df_no_ts = pandas.DataFrame(list(itertools.chain.from_iterable(urls_df['urls'].values)))
+            domains_df_no_ts = pandas.DataFrame(list(itertools.chain.from_iterable(domains_df['domains'].values)))
+
+            print start - time.time()
+
+            response['urls'] = Convert.df_to_values(urls_df_no_ts.groupby("url").sum().reset_index())
+            print start - time.time()
+
+            response['domains'] = Convert.df_to_values(domains_df_no_ts.groupby("domain").sum().reset_index())
+            print start - time.time()
 
         except Exception as e:
 

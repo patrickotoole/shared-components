@@ -14,7 +14,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
   
   endpoints.tf_idf_action = api.helpers.genericQueuedAPIWithData(function(data,cb,deferred_cb) {
         var domains = data.domains.map(function(x){return x.domain})
-        if (domains) {
+        if (domains && (data.domains[0].idf === undefined)) {
           d3.xhr("/crusher/domain/idf")
             .post(JSON.stringify({"domains":domains}), function(err,dd){
               var json = JSON.parse(dd.response)

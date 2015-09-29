@@ -272,7 +272,7 @@ RB.rho.ui = (function(ui) {
 
     d3_updateable(newTarget,".value","div",[value],function(x){return x})
       .classed("value",true)
-      .text(d3.format(",.3r"))
+      .text(d3.format(",.r"))
 
     d3_updateable(newTarget,".description","div",[description],function(x){return x})
       .classed("description",true)
