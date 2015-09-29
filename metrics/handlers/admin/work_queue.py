@@ -24,6 +24,16 @@ class WorkQueueHandler(tornado.web.RequestHandler):
 
         yield default, (data,)
 
+    def clear_queue(self):
+        self.zookeeper.delete("/python_queue",recursive=True)
+        self.zookeeper.ensure_path("/python_queue")
+        self.redirect("/admin/work_queue")
+
+    def clear_active(self):
+        self.zookeeper.delete("/active_pattern_cache",recursive=True)
+        self.zookeeper.ensure_path("/active_pattern_cache")
+        self.redirect("/admin/work_queue/active")
+
     def get_data(self):
         import pickle
 
@@ -39,6 +49,23 @@ class WorkQueueHandler(tornado.web.RequestHandler):
         self.get_content(df)
          
 
+    def get_current(self):
+        import pickle
+
+        in_queue = [c for c in self.zookeeper.get_children("/active_pattern_cache") ]
+
+        df = pandas.DataFrame(in_queue)
+        self.get_content(df)
+     
+
     @tornado.web.asynchronous
-    def get(self):
-        self.get_data()
+    def get(self,action=""):
+        print action
+        if action == "":
+            self.get_data()
+        elif action == "clear":
+            self.clear_queue()
+        elif "active/clear" in action:
+            self.clear_active()
+        elif "active" in action:
+            self.get_current()

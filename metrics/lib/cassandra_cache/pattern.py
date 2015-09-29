@@ -63,34 +63,14 @@ def run_cascade(zk,advertiser,pattern,days,offset,callback):
     import metrics.work_queue as work_queue
 
     base = [advertiser,pattern]
-    cascade = {
-        0: base + [1,0, callback],
-        1: base + [2,1, callback],
-        3: base + [2,3, callback],
-        5: base + [2,5, callback],
-        7: base + [2,7, callback],
-        9: base + [6,9, callback],
-        15: base + [5,15, callback]
-    }
-
     to_run = base + [1,offset,callback] if offset != days else False
 
-
-    if to_run is not False:
-
+    if to_run is not False: 
         run(*to_run)
-        #offset = to_run[2]+to_run[3]
-        #work = (run_cascade,base + [days,offset,""])
+    else: 
+        zk.delete(("/active_pattern_cache/" + pattern,recursive=True)
 
-        #import pickle 
-        #pickled = pickle.dumps(work)
-        #
-        #queue = work_queue.SingleQueue(zk,"/python_queue")
-        #queue.put(pickled)
-
-    
-
-
+        
 def run(advertiser,pattern,days,offset,force=False):
 
     from link import lnk
