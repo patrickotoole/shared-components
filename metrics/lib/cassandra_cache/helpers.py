@@ -9,6 +9,15 @@ def build_datelist(numdays,offset=0):
 
     return dates
 
+def sorted_append(index):
+
+    def append(result,results,*args):
+        if len(result):
+            results[result[0][index]] = results.get(result[0][index],[])
+            results[result[0][index]] += [{i:j for i,j in r.items() if i != index} for r in result]
+
+    return append
+
 def simple_append(result,results,*args):
     results += result
 
@@ -69,6 +78,8 @@ def compare_and_increment(new,old):
 
     increments = joined[incrementor] - joined[incrementor + "_old"]
     increments = increments[increments > 0].map(int)
+    
+    increments = increments.append(joined[joined[incrementor + "_old"].isnull()][incrementor])
     increments.name = "count"
 
     return increments.reset_index()[["count"]+indices]

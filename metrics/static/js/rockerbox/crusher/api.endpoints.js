@@ -14,7 +14,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
   
   endpoints.tf_idf_action = api.helpers.genericQueuedAPIWithData(function(data,cb,deferred_cb) {
         var domains = data.domains.map(function(x){return x.domain})
-        if (domains) {
+        if (domains && (data.domains[0].idf === undefined)) {
           d3.xhr("/crusher/domain/idf")
             .post(JSON.stringify({"domains":domains}), function(err,dd){
               var json = JSON.parse(dd.response)
@@ -27,7 +27,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
                 idf_dict = keyed[x.domain] || {}
                 x.idf = idf_dict.idf || 12
                 x.category_name = idf_dict.category_name || "NA"
-                x.weighted =  x.domain == "NA" ? 0 : Math.exp(x.idf) * Math.log(x.occurrence)
+                x.weighted =  x.domain == "NA" ? 0 : Math.exp(x.idf) * Math.log(x.count)
 
               })
               deferred_cb(null,cb.bind(false,data))
@@ -285,7 +285,8 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
                   var name = splitted[0]
                   var value = splitted.slice(1,splitted.length).join("=")
 
-                  action.param_list.push({"name":name,"value":value,"occurrence":x.occurrence})
+                  console.log(x.count)
+                  action.param_list.push({"name":name,"value":value,"count":x.count})
 
                 })
               }
@@ -296,12 +297,12 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
             action.param_rolled = d3.nest()
               .key(function(x) {return x.name})
               .key(function(x) {return x.value})
-              .rollup(function(x) { return x.reduce(function(p,c){return p + c.occurrence},0)})
+              .rollup(function(x) { return x.reduce(function(p,c){return p + c.count},0)})
               .entries(action.param_list)
               .map(function(x) {
-                x.occurrence = x.values.reduce(function(p,c){return p + c.values},0)
+                x.count = x.values.reduce(function(p,c){return p + c.values},0)
                 return x
-              }).sort(function(y,x) {return x.occurrence - y.occurrence })
+              }).sort(function(y,x) {return x.count - y.count })
 
             console.log(action.param_rolled)
 
