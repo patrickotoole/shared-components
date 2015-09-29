@@ -118,9 +118,9 @@ RB.crusher.ui.action = (function(action) {
         .rollup(function(x){ 
           
           return {
-            "views": x[0].num_views,
-            "visits": x[0].num_visits,
-            "uniques": x[0].num_users
+            "views": x[0].views,
+            "visits": x[0].visits,
+            "uniques": x[0].uniques
           }
          
         })

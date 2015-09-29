@@ -9,6 +9,15 @@ def build_datelist(numdays,offset=0):
 
     return dates
 
+def sorted_append(index):
+
+    def append(result,results,*args):
+        if len(result):
+            results[result[0][index]] = results.get(result[0][index],[])
+            results[result[0][index]] += [{i:j for i,j in r.items() if i != index} for r in result]
+
+    return append
+
 def simple_append(result,results,*args):
     results += result
 

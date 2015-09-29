@@ -168,7 +168,7 @@ RB.rho.ui = (function(ui) {
         })                                                                          
         .rollup(function(x){
           return x.reduce(function(p,c){                                                             
-            return p + c.occurrence                                                                                      
+            return p + c.count                                                                                      
           },0)
         })
         .entries(data)
@@ -180,7 +180,7 @@ RB.rho.ui = (function(ui) {
      }
 
     var field = (data[0].weighted !== undefined) ? "weighted" : 
-                (data[0].occurrence !== undefined) ? "occurrence" : "values"
+                (data[0].count !== undefined) ? "count" : "values"
 
     var chart = target.selectAll("svg.domain-chart-svg")
       .data(function(x) { 
@@ -194,7 +194,7 @@ RB.rho.ui = (function(ui) {
           .attr("class","domain-chart-svg")
           .attr("width", width);
 
-    x.domain([0, d3.max(chart.datum(), function(d) { return d.occurrence || d.values; })]);
+    x.domain([0, d3.max(chart.datum(), function(d) { return d.count || d.values; })]);
     
     chart.attr("height", barHeight * chart.data()[0].length);
 
@@ -215,7 +215,7 @@ RB.rho.ui = (function(ui) {
               return [data.sort(function(x,y){return y[field] - x[field] }).slice(0,limit*2) ]
             })
 
-          x.domain([0, d3.max(chart.datum(), function(d) { return d.occurrence || d.values; })]);
+          x.domain([0, d3.max(chart.datum(), function(d) { return d.count || d.values; })]);
      
           ui.barShow(chart, barHeight, x)
           chart.attr("height", barHeight * chart.data()[0].length);
@@ -243,17 +243,17 @@ RB.rho.ui = (function(ui) {
         .append("rect")
     rect
         .attr("class","bar")
-        .attr("width", function(d) { return x(d.occurrence || d.values || 0); })
+        .attr("width", function(d) { return x(d.count || d.values || 0); })
         .attr("height", barHeight - 1);
     
     var text = bar.selectAll("text").data(function(x){return [x]})
     text.enter()
         .append("text")
     text
-        .attr("x", function(d) { return x(d.occurrence || d.values) + 3; })
+        .attr("x", function(d) { return x(d.count || d.values) + 3; })
         .attr("y", barHeight / 2)
         .attr("dy", ".35em")
-        .text(function(d) { return d.url_short + " (" + (d.occurrence || d.values)+ ")" });//+ " (" + d.uid + ")" + d.idf }); 
+        .text(function(d) { return d.url_short + " (" + (d.count || d.values)+ ")" });//+ " (" + d.uid + ")" + d.idf }); 
   }
 
   ui.buildTimeseriesSummary = function(target,data,title,series,formatting,description) {

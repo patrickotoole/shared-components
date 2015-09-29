@@ -15,9 +15,9 @@ class PatternSearchHelpers(object):
         series = df["url"] + df["uid"]
         
         return pandas.Series({
-            "num_users":len(df.uid.unique())*multiplier,
-            "num_visits":len(series.unique())*multiplier,#len(df.groupby(["url","uid"])),
-            "num_views":len(df)*multiplier#.num_views.sum()
+            "uniques":len(df.uid.unique())*multiplier,
+            "visits":len(series.unique())*multiplier,#len(df.groupby(["url","uid"])),
+            "views":len(df)*multiplier#.num_views.sum()
         })
 
     def group_count_view(self,df,terms,indices):
