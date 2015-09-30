@@ -114,7 +114,6 @@ class SignupHandler(tornado.web.RequestHandler):
             to_create["password"] = pw_hash.hash_password(to_create["password"])
 
             self.db.execute(self.INSERT_QUERY % to_create)
-            self.db.commit()
             return to_create["username"]
         else:
             raise Exception
@@ -128,7 +127,8 @@ class SignupHandler(tornado.web.RequestHandler):
             created = self.create(body)
             self.login(created)
             self.write("success")
-        except:
+        except Exception as e:
+            print e
             self.write("failure")
 
 class AccountPermissionsHandler(BaseHandler):
