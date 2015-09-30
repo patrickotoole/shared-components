@@ -61,8 +61,14 @@ class ReportingBase(object):
 
     @decorators.deferred
     def pull_advertiser_export(self,advertiser_id):
-        params = {"advertiser_id": advertiser_id}
-        q = IMPS_CONVERSIONS_EXPORT_QUERY % params
+        #params = {"advertiser_id": advertiser_id}
+        #q = IMPS_CONVERSIONS_EXPORT_QUERY % params
+        #return self.db.select_dataframe(q)
+        start_date = self.get_argument("start_date",False)
+        params = {"advertiser_id": advertiser_id,"date":""}
+            
+        q = MATERIALIZED_VIEW % params
+        print q
         return self.db.select_dataframe(q)
 
     def pull_hive_campaigns(self,campaign_ids):
