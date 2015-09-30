@@ -174,8 +174,9 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
                 if pattern[0].replace("/","|") in children:
                     pass
                 else:
-                    self.zookeeper.create("/active_pattern_cache/" + pattern[0].replace("/","|"))
-                    for i in range(0,20):
+                    self.zookeeper.create("/active_pattern_cache/" + advertiser + "=" + pattern[0].replace("/","|"))
+                    self.zookeeper.create("/complete_pattern_cache/" + advertiser + "=" + pattern[0].replace("/","|"))
+                    for i in range(0,21):
                         args = [advertiser,pattern[0],20,i,""]
                         work = (cache.run_cascade,args)
 
