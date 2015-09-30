@@ -117,6 +117,8 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
             assert(len(stats_df) >= 4)
             print start - time.time()
 
+            args[-1] = build_datelist(7)
+
             domains_df = self.get_domains_from_cache(*args, formatter=build_dict_dataframe("domains"))
             urls_df = self.get_urls_from_cache(*args, formatter=build_dict_dataframe("urls"))
 
@@ -140,10 +142,10 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
 
             print start - time.time()
 
-            response['urls'] = Convert.df_to_values(urls_df_no_ts.groupby("url").sum().reset_index())
+            response['urls'] = Convert.df_to_values(urls_df_no_ts.groupby("url").sum().reset_index().sort_index(by="count",ascending=False).head(3000))
             print start - time.time()
 
-            response['domains'] = Convert.df_to_values(domains_df_no_ts.groupby("domain").sum().reset_index())
+            response['domains'] = Convert.df_to_values(domains_df_no_ts.groupby("domain").sum().reset_index().sort_index(by="count",ascending=False).head(3000))
             print start - time.time()
 
         except Exception as e:
@@ -151,6 +153,7 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
             frames = yield self.build_deferred_list(pattern_terms, PARAMS, advertiser, date_clause)
             dfs = []
 
+            print frames
             for terms, result in zip(pattern_terms,frames):
                 df = (yield result)[1]
                 if len(df) > 0: 
@@ -227,9 +230,17 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
 
     def get_stats(self, *args):
 
+        start = time.time()
+
         visits_df  = self.get_visits_from_cache(*args, formatter=build_count_dataframe("visits"))
+        print start - time.time()
+
+
         views_df   = self.get_views_from_cache(*args, formatter=build_count_dataframe("views"))
+        print start - time.time()
+
         uniques_df = self.get_uniques_from_cache(*args, formatter=build_count_dataframe("uniques"))
+        print start - time.time()
 
         df = views_df.join(visits_df).join(uniques_df)
 

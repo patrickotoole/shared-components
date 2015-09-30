@@ -171,10 +171,10 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
                 import pickle
 
                 children = self.zookeeper.get_children("/active_pattern_cache")
-                if pattern[0] in children:
+                if pattern[0].replace("/","|") in children:
                     pass
                 else:
-                    self.zookeeper.ensure_path("/active_pattern_cache/" + pattern[0])
+                    self.zookeeper.create("/active_pattern_cache/" + pattern[0].replace("/","|"))
                     for i in range(0,20):
                         args = [advertiser,pattern[0],20,i,""]
                         work = (cache.run_cascade,args)

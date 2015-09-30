@@ -39,13 +39,22 @@ class PatternSearchCache(object):
     This handles all of the cacheing for the pattern-search for historically cached data
     """
 
+    PREPPED = {}
+
     def prepare_query(self,query):
+
+        prepped_executor = self.PREPPED.get(query,False)
+
+        if prepped_executor:
+            return prepped_executor
 
         statement = self.cassandra.prepare(query)
 
         def execute(data):
             bound = statement.bind(data)
             return self.cassandra.execute_async(bound)
+
+        self.PREPPED[query] = execute
 
         return execute
 

@@ -1,4 +1,5 @@
 import logging
+import time
 from cache import CassandraCache
 from helpers import *
 from lib.helpers import *
@@ -68,7 +69,7 @@ def run_cascade(zk,advertiser,pattern,days,offset,callback):
     if to_run is not False: 
         run(*to_run)
     else: 
-        zk.delete(("/active_pattern_cache/" + pattern,recursive=True)
+        zk.delete("/active_pattern_cache/" + pattern,recursive=True)
 
         
 def run(advertiser,pattern,days,offset,force=False):
@@ -76,6 +77,8 @@ def run(advertiser,pattern,days,offset,force=False):
     from link import lnk
     db = lnk.dbs.rockerbox
     api = lnk.api.rockerbox
+
+    start = time.time()
 
     days_offset = days + offset
 
@@ -218,7 +221,9 @@ def run(advertiser,pattern,days,offset,force=False):
 
     logging.info("Cacheing: %s => %s end" % (advertiser,pattern))
 
-    db.execute("UPDATE pattern_cache set completed = 1 where pixel_source_name = '%s' and url_pattern = '%s'" % (advertiser,pattern))
+    elapsed = int(time.time() - start)
+
+    db.execute("UPDATE pattern_cache set completed = 1, seconds = %s where pixel_source_name = '%s' and url_pattern = '%s' and num_days = %s " % (elapsed,advertiser,pattern,days_offset))
 
     zk_lock.stop()
     logging.info("Lock stopped")
