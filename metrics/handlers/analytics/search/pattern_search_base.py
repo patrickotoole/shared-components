@@ -114,7 +114,7 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
         try:
             stats_df = self.get_stats(*args)
 
-            assert(len(stats_df) >= 4)
+            assert(len(stats_df) >= 14)
             print start - time.time()
 
             args[-1] = build_datelist(7)
@@ -153,7 +153,7 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
             frames = yield self.build_deferred_list(pattern_terms, PARAMS, advertiser, date_clause)
             dfs = []
 
-            print frames
+            
             for terms, result in zip(pattern_terms,frames):
                 df = (yield result)[1]
                 if len(df) > 0: 
@@ -198,14 +198,12 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
                 for l in urls.values():
                     response['urls'] += l
 
-                for url in response['urls']:
-                    url['occurrence'] = url['count']
 
                 if len(urls) == 0:
 
-                    df['occurrence'] = df['occurrence'].map(lambda x: 1 if x == 0 else x)
-                    grouped_urls = df.groupby("url")['occurrence'].sum()
-                    url_list = grouped_urls.reset_index().sort_index(by="occurrence",ascending=False).T.to_dict().values()
+                    df['count'] = df['occurrence'].map(lambda x: 1 if x == 0 else x)
+                    grouped_urls = df.groupby("url")['count'].sum()
+                    url_list = grouped_urls.reset_index().sort_index(by="count",ascending=False).T.to_dict().values()
                     response['urls'] = url_list
 
 
@@ -217,7 +215,7 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
                     df = dom[0][1].groupby("domain")['uid'].agg(lambda x: len(set(x)))
                     domains = df.reset_index().rename(columns={"uid":"count"}).T.to_dict().values()
                 else:
-                    domains = dom[0][1].reset_index().T.to_dict().values()
+                    domains = dom[0][1].reset_index().rename(columns={"occurrence":"count"}).T.to_dict().values()
                
                 response['domains'] = domains
         
