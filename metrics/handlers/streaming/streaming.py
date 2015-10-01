@@ -12,6 +12,21 @@ from ..base import BaseHandler
 from streaming_base import StreamingBase
 from lib.query.MYSQL import BRAND_QUERY
 
+import maxminddb
+import redis
+import os
+
+maxmind_path = os.environ.get("MAXMIND_PATH",False)
+if maxmind_path:
+    reader = maxminddb.Reader(maxmind_path)
+else:
+    reader = dict()
+
+from lib.buffered_socket.maxmind import MaxmindLookup
+
+lookup = MaxmindLookup(reader)
+
+
 class ClientSingleton(dict):
 
     _instance = None
@@ -48,6 +63,9 @@ class IndexHandler(BaseHandler):
 
 
 class StreamingHandler(StreamingBase,tornado.websocket.WebSocketHandler):
+
+    def check_origin(self, origin):
+        return True
   
     def initialize(self,db=None,buffers={}):
         self.time_interval = 1
@@ -69,9 +87,22 @@ class StreamingHandler(StreamingBase,tornado.websocket.WebSocketHandler):
                 for key, df in base.iteritems() 
                 if type(df) is not pandas.DataFrame and key in streams
             }
+
+               
+            
             for key, df in base.iteritems():
                  if type(df) is pandas.DataFrame and key in streams:
                      dicts[key] = self.mask_select_convert(df,masks,key)
+
+            try:
+                dicts["served_imps"] = [ 
+                    dict(imp.items() + lookup.get(imp['ip_address']).items()) 
+                    for imp in dicts["served_imps"]
+                ]
+            except:
+                print "EXCEPT"
+                pass
+             
             
             json = ujson.dumps(dicts,ensure_ascii=True)
 

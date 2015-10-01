@@ -4,7 +4,7 @@ var socketWrapper = function(params,on_init) {
 
   this.createSocket = function(params){
     // should be window.location.host
-    this.socket = new WebSocket("ws://portal.getrockerbox.com/websocket?id=" + this.id);
+    this.socket = new WebSocket("ws://" + window.location.host + "/websocket?id=" + this.id);
 
     this.socket.onopen = function() {
       self.sendMessage("initialize")
@@ -51,12 +51,12 @@ socket.onMessage = function(x){
 
     this.dimensions = {
         position: this.crs.dimension(function(x){ return x.position }),
-        data: this.crs.dimension(function(x){ return !$.isEmptyObject(x.result) ? x.result : 0 }),
-        domain_data: this.crs.dimension(function(x){ return x.result.domain }),
-        uniques_data: this.crs.dimension(function(x){ return x.result.uid }),
-        campaign_data: this.crs.dimension(function(x){ return x.result.campaign_bucket }),
-        location_data: this.crs.dimension(function(x){ return [x.result.city, x.result.state, x.result.country] }),
-        latlong_location_data: this.crs.dimension(function(x){ return [x.result.city, x.result.state, x.result.country, x.result.latitude, x.result.longitude] }),
+        data: this.crs.dimension(function(x){ return !$.isEmptyObject(x) ? x : 0 }),
+        domain_data: this.crs.dimension(function(x){ return x.domain }),
+        uniques_data: this.crs.dimension(function(x){ return x.uid }),
+        campaign_data: this.crs.dimension(function(x){ return x.campaign_bucket }),
+        location_data: this.crs.dimension(function(x){ return [x.city, x.state, x.country] }),
+        latlong_location_data: this.crs.dimension(function(x){ return [x.city, x.state, x.country, x.latitude, x.longitude] }),
     }
   
     this.dimensions.data.filter(function(d){ return d == 0; })
@@ -69,15 +69,15 @@ socket.onMessage = function(x){
         domain_data: this.dimensions.domain_data.group().reduce(
             function(p,v) { 
                 ++p.imps;
-                p.uids[v.result.uid] = p.uids[v.result.uid] + 1 || 1;
+                p.uids[v.uid] = p.uids[v.uid] + 1 || 1;
                 p.uid_count = Object.keys(p.uids).length;
                 return p 
             },
             function(p,v) { 
                 --p.imps;
-                p.uids[v.result.uid] = p.uids[v.result.uid] - 1;
-                if (p.uids[v.result.uid] == 0) {
-                  delete p.uids[v.result.uid];
+                p.uids[v.uid] = p.uids[v.uid] - 1;
+                if (p.uids[v.uid] == 0) {
+                  delete p.uids[v.uid];
                 }
                 p.uid_count = Object.keys(p.uids).length;
                 return p 
@@ -93,15 +93,15 @@ socket.onMessage = function(x){
         campaign_data: this.dimensions.campaign_data.group().reduce(
             function(p,v) { 
                 ++p.imps;
-                p.uids[v.result.uid] = p.uids[v.result.uid] + 1 || 1;
+                p.uids[v.uid] = p.uids[v.uid] + 1 || 1;
                 p.uid_count = Object.keys(p.uids).length;
                 return p 
             },
             function(p,v) { 
                 --p.imps;
-                p.uids[v.result.uid] = p.uids[v.result.uid] - 1;
-                if (p.uids[v.result.uid] == 0) {
-                  delete p.uids[v.result.uid];
+                p.uids[v.uid] = p.uids[v.uid] - 1;
+                if (p.uids[v.uid] == 0) {
+                  delete p.uids[v.uid];
                 }
                 p.uid_count = Object.keys(p.uids).length;
                 return p 
@@ -117,15 +117,15 @@ socket.onMessage = function(x){
         location_data: this.dimensions.location_data.group().reduce(
             function(p,v) { 
                 ++p.imps;
-                p.uids[v.result.uid] = p.uids[v.result.uid] + 1 || 1;
+                p.uids[v.uid] = p.uids[v.uid] + 1 || 1;
                 p.uid_count = Object.keys(p.uids).length;
                 return p 
             },
             function(p,v) { 
                 --p.imps;
-                 p.uids[v.result.uid] = p.uids[v.result.uid] - 1;
-                 if (p.uids[v.result.uid] == 0) {
-                  delete p.uids[v.result.uid];
+                 p.uids[v.uid] = p.uids[v.uid] - 1;
+                 if (p.uids[v.uid] == 0) {
+                  delete p.uids[v.uid];
                 }
                 p.uid_count = Object.keys(p.uids).length;
                 return p 
@@ -141,15 +141,15 @@ socket.onMessage = function(x){
         latlong_location_data: this.dimensions.latlong_location_data.group().reduce(
             function(p,v) { 
                 ++p.imps;
-                p.uids[v.result.uid] = p.uids[v.result.uid] + 1 || 1;
+                p.uids[v.uid] = p.uids[v.uid] + 1 || 1;
                 p.uid_count = Object.keys(p.uids).length;
                 return p 
             },
             function(p,v) { 
                 --p.imps;
-                 p.uids[v.result.uid] = p.uids[v.result.uid] - 1;
-                 if (p.uids[v.result.uid] == 0) {
-                  delete p.uids[v.result.uid];
+                 p.uids[v.uid] = p.uids[v.uid] - 1;
+                 if (p.uids[v.uid] == 0) {
+                  delete p.uids[v.uid];
                 }
                 p.uid_count = Object.keys(p.uids).length;
                 return p 
@@ -310,14 +310,15 @@ socket.onMessage = function(x){
   }
 
   this.add = function(json) {
-    var results = json['track']
+    console.log(json)
+    var results = json['served_imps']
     results = results.map(function(x) {
       x['position'] = self.tracker
-      var campaignBucket = typeof buckets[x['result']['campaign_id']] !== "undefined" ? buckets[x['result']['campaign_id']] : "Default campaign";
-      x['result']['campaign_bucket'] = campaignBucket;
-       
-      if(x['result']['domain'] != 0){
-        x['result']['domain'] = x['result']['domain'].replace("www.", "");
+      var campaignBucket = typeof buckets[x['campaign_id']] !== "undefined" ? buckets[x['campaign_id']] : "Default campaign";
+      x['campaign_bucket'] = campaignBucket;
+      x['domain'] = x['referrer'] 
+      if(x['domain'] != 0){
+        x['domain'] = x['domain'].replace("www.", "");
       }
         
       return x

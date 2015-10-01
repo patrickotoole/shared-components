@@ -246,12 +246,19 @@ RB.portal.UI = (function(UI){
         .style("position","absolute")
         .style("width","inherit")
 
-      graphPanel.append("h5")
+      var h5 = graphPanel.append("h5")
         .style("padding-top","18px")
         .style("padding-bottom","8px")
         .classed("col-md-12 main-header",true)
         .text(function(d){return "Campaign Performance" })
 
+      h5.append("a")
+        .classed("pull-right btn btn-default btn-sm",true)
+        .style("margin-top","-10px")
+        .style("margin-right","-10px")
+        .text("Export CSV")
+        .property("href","/reporting?format=csv&export=true")
+        
 
       var graphRow = graphPanel.append("div")
         .classed("graph-row row",true)
