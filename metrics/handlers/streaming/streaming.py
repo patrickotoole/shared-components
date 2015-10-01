@@ -100,6 +100,8 @@ class StreamingHandler(StreamingBase,tornado.websocket.WebSocketHandler):
                     for imp in dicts["served_imps"]
                 ]
             except:
+                print lookup
+                print reader
                 print "EXCEPT"
                 pass
              
