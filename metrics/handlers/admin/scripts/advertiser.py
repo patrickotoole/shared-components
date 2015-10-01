@@ -450,8 +450,20 @@ class AdvertiserHandler(tornado.web.RequestHandler,Advertiser):
     def initialize(self, db, api):
         self.db = db 
         self.api = api
-  
 
+    def put(self,advertiser_id):
+        json = ujson.loads(self.request.body)
+        
+        update_string = ", ".join(["`%s`='%s'" % (i,j) for i,j in json.items()])
+
+        query = "UPDATE advertiser set %s WHERE external_advertiser_id = %s" % (update_string,advertiser_id)
+        print query
+
+        self.db.execute(query)
+        self.write("1")
+        self.finish()
+  
+    
     def create_segments(self,advertiser_id,advertiser_name,_segment_names=[],conversion_pixels={}): 
         segment_names = _segment_names + ["Creative Viewed", "Creative Clicked", "Test Segment"] 
 
