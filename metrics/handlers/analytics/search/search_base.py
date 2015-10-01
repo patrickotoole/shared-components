@@ -171,7 +171,7 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
                 import pickle
 
                 children = self.zookeeper.get_children("/active_pattern_cache")
-                if pattern[0].replace("/","|") in children:
+                if (advertiser + "=" + pattern[0].replace("/","|")) in children:
                     pass
                 else:
                     self.zookeeper.create("/active_pattern_cache/" + advertiser + "=" + pattern[0].replace("/","|"))
