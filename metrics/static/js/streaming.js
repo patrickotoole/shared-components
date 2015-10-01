@@ -310,14 +310,15 @@ socket.onMessage = function(x){
   }
 
   this.add = function(json) {
-    var results = json['track']
+    console.log(json)
+    var results = json['served_imps']
     results = results.map(function(x) {
       x['position'] = self.tracker
-      var campaignBucket = typeof buckets[x['result']['campaign_id']] !== "undefined" ? buckets[x['result']['campaign_id']] : "Default campaign";
-      x['result']['campaign_bucket'] = campaignBucket;
-       
-      if(x['result']['domain'] != 0){
-        x['result']['domain'] = x['result']['domain'].replace("www.", "");
+      var campaignBucket = typeof buckets[x['campaign_id']] !== "undefined" ? buckets[x['campaign_id']] : "Default campaign";
+      x['campaign_bucket'] = campaignBucket;
+      x['domain'] = x['referrer'] 
+      if(x['domain'] != 0){
+        x['domain'] = x['domain'].replace("www.", "");
       }
         
       return x
