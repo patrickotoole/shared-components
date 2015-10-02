@@ -17,6 +17,18 @@ having length(first_word) > 3
 order by views 
 desc limit 100
 """
+
+QUERY = """
+select 
+    keyword as first_word,
+    views 
+from 
+    reporting.pixel_keyword_analytics
+where
+    advertiser = "%(advertiser)s"
+order by views desc
+limit 100
+"""
  
 class RecommendedActionHandler(BaseHandler,APIHelpers):
 

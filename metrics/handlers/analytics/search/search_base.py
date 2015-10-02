@@ -155,6 +155,9 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
         from link import lnk
         df = lnk.dbs.rockerbox.select_dataframe("select * from pattern_cache where pixel_source_name = '%s' and url_pattern = '%s'" % (advertiser,pattern[0]))
 
+        #import ipdb; ipdb.set_trace()
+
+
         if len(df[df.num_days > 7]) > 0:
             results = self.run_cache(pattern,advertiser,dates,sample[0],sample[1],results)
             logging.info("Results in cache: %s" % len(results))
@@ -166,11 +169,18 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
                 import work_queue
                 import lib.cassandra_cache.pattern as cache
                 import pickle
-                for i in range(0,20):
-                    args = [advertiser,pattern[0],20,i,""]
-                    work = (cache.run_cascade,args)
 
-                    work_queue.SingleQueue(self.zookeeper,"python_queue").put(pickle.dumps(work),i)
+                children = self.zookeeper.get_children("/active_pattern_cache")
+                if (advertiser + "=" + pattern[0].replace("/","|")) in children:
+                    pass
+                else:
+                    self.zookeeper.create("/active_pattern_cache/" + advertiser + "=" + pattern[0].replace("/","|"))
+                    self.zookeeper.create("/complete_pattern_cache/" + advertiser + "=" + pattern[0].replace("/","|"))
+                    for i in range(0,21):
+                        args = [advertiser,pattern[0],20,i,""]
+                        work = (cache.run_cascade,args)
+
+                        work_queue.SingleQueue(self.zookeeper,"python_queue").put(pickle.dumps(work),i)
 
                 
         df = pandas.DataFrame(results)

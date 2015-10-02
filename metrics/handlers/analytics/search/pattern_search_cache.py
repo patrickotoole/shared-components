@@ -1,6 +1,21 @@
 from lib.cassandra_cache.helpers import *
 from lib.cassandra_helpers.helpers import FutureHelpers
 
+def QueryU2(query):
+
+    def wrapped(fn):
+
+        INDEX = "source = ? and action = ? and date = ? and u2 = ? "
+        def run(*args,**kwargs):
+            kwargs['query'] = query + " WHERE " + INDEX
+            return fn(*args,**kwargs)
+
+        return run
+
+    return wrapped
+
+
+
 def Query(query):
 
     def wrapped(fn):
@@ -31,6 +46,16 @@ def formattable(fn):
         return result
 
     return run
+
+def today():
+    import datetime
+    base = datetime.datetime.today()
+    return str(base).split(" ")[0] + " 00:00:00"
+
+def padded_range(x,y,padding=2):
+    for i in range(0,99):
+        yield str(i) if len(str(i)) == 2 else "0" + str(i)
+    
         
 
 
@@ -39,13 +64,22 @@ class PatternSearchCache(object):
     This handles all of the cacheing for the pattern-search for historically cached data
     """
 
+    PREPPED = {}
+
     def prepare_query(self,query):
+
+        prepped_executor = self.PREPPED.get(query,False)
+
+        if prepped_executor:
+            return prepped_executor
 
         statement = self.cassandra.prepare(query)
 
         def execute(data):
             bound = statement.bind(data)
             return self.cassandra.execute_async(bound)
+
+        self.PREPPED[query] = execute
 
         return execute
 
@@ -60,7 +94,7 @@ class PatternSearchCache(object):
 
     def get_from_u2_cache(self,query,advertiser,pattern,dates):
         execute = self.prepare_query(query)
-        prepped = [[advertiser, pattern] + [date] for date in dates]
+        prepped = [[advertiser, pattern] + [date,u2] for date in dates for u2 in range(0,100)]
 
         data, _ = FutureHelpers.future_queue(prepped,execute,simple_append,60,[],None)
 
@@ -114,7 +148,8 @@ class PatternSearchCache(object):
     @Query("SELECT date, count FROM rockerbox.pattern_occurrence_visits ")
     def get_visits_from_cache(self,advertiser,pattern,dates = [], **kwargs):
         query = kwargs.get("query")
-        data = self.get_from_cache(query,advertiser, pattern,dates)
+        data = self.get_from_cache(query,advertiser, pattern, [d for d in dates if d != today()])
+        data += self.get_visits_today(advertiser,pattern)
         return data
 
 
@@ -122,8 +157,32 @@ class PatternSearchCache(object):
     @Query("SELECT date, count FROM rockerbox.pattern_occurrence_uniques ")
     def get_uniques_from_cache(self,advertiser,pattern,dates = [], **kwargs):
         query = kwargs.get("query")
-        data = self.get_from_cache(query,advertiser, pattern,dates)
+        data = self.get_from_cache(query,advertiser, pattern, [d for d in dates if d != today()])
+        data += self.get_uniques_today(advertiser,pattern)
         return data
+
+
+    @QueryU2("SELECT count_simple(uid) FROM rockerbox.pattern_occurrence_u2_counter ")
+    def get_visits_today(self,advertiser,pattern, **kwargs):
+        query = kwargs.get("query")
+        dates = [today()]
+        data = self.get_from_u2_cache(query, advertiser, pattern,dates)
+        count = [{
+            "count":reduce(lambda p,c: p + c['rockerbox.count_simple(uid)'].get("count",0), data, 0),
+            "date": dates[0]
+        }]
+        return count
+
+    @QueryU2("SELECT count_simple(uid) FROM rockerbox.pattern_occurrence_users_u2 ")
+    def get_uniques_today(self,advertiser,pattern, **kwargs):
+        query = kwargs.get("query")
+        dates = [today()]
+        data = self.get_from_u2_cache(query, advertiser, pattern,dates)
+        count = [{
+            "count":reduce(lambda p,c: p + c['rockerbox.count_simple(uid)'].get("count",0), data, 0),
+            "date": dates[0]
+        }]
+        return count
 
 
 

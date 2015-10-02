@@ -62,6 +62,6 @@ class ServiceRoutes(
         import handlers.admin.work_queue as work_queue 
         
         return [
-            (r'/work_queue/?', work_queue.WorkQueueHandler, self.connectors)
+            (r'/work_queue/?(.*?)', work_queue.WorkQueueHandler, self.connectors)
         ]
  

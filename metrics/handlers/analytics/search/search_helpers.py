@@ -25,8 +25,7 @@ class SearchHelpers(object):
         return response
 
     def write_json(self, data):
-        self.write(ujson.dumps(data))
-        self.finish()
+        Render.compressWrite(self,ujson.dumps(data))
 
     def write_timeout(self, terms, logic, timeout):
         response = [

@@ -45,6 +45,11 @@ RB.crusher.controller.action = (function(action) {
       delete cdata['domains']
       delete cdata['urls']
 
+      delete cdata["param_list"]
+      delete cdata["action_string"]
+      delete cdata["param_rolled"]
+
+
 
       delete cdata['visits_data']
       delete cdata['name']

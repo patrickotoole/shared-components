@@ -3,7 +3,7 @@ from lib.cassandra_helpers.helpers import FutureHelpers
 from lib.cassandra_cache.helpers import *
 import logging
 
-FUTURES    = 120
+FUTURES    = 60
 NUM_DAYS   = 2
 INSERT_UDF = "insert into full_replication.function_patterns (function,pattern) VALUES ('%s','%s')"
 

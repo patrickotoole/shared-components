@@ -1,4 +1,5 @@
 import logging
+import time
 from cache import CassandraCache
 from helpers import *
 from lib.helpers import *
@@ -33,12 +34,14 @@ def select(cache,udf_name,*args):
 def update_tree(db,api):
     from lib.funnel import actions_to_delorean
 
-    df = db.select_dataframe("select * from pattern_cache")
+    df = db.select_dataframe("select distinct url_pattern, pixel_source_name from pattern_cache")
     advertiser_nodes = []
 
     USER = "INSERT INTO rockerbox.pattern_occurrence_users_u2 (source, date, action, uid, u2) VALUES ('${source}', '${date}', '%(url_pattern)s', '${adnxs_uid}', ${u2});"
     RAW = "UPDATE rockerbox.pattern_occurrence_u2_counter set occurrence= occurrence + 1 where source = '${source}' and date = '${date}' and  url = '${referrer}' and uid = '${adnxs_uid}' and u2 = ${u2} and action = '%(url_pattern)s';"
-    DOMAIN = "UPDATE rockerbox.pattern_occurrence_urls_counter set count= count + 1 where source = '${source}' and date = '${date}' and  url = '${referrer}' and action = '%(url_pattern)s';"
+    URL = "UPDATE rockerbox.pattern_occurrence_urls_counter set count= count + 1 where source = '${source}' and date = '${date}' and  url = '${referrer}' and action = '%(url_pattern)s';"
+    VIEW = "UPDATE rockerbox.pattern_occurrence_views_counter set count= count + 1 where source = '${source}' and date = '${date}' and action = '%(url_pattern)s';"
+
 
     for advertiser in df.pixel_source_name.unique():
         nodes = []
@@ -48,8 +51,11 @@ def update_tree(db,api):
             nodes.append(node)
             node = actions_to_delorean.create_action_node(action,USER % action)
             nodes.append(node)
-            node = actions_to_delorean.create_action_node(action,DOMAIN % action)
+            node = actions_to_delorean.create_action_node(action,URL % action)
             nodes.append(node)
+            node = actions_to_delorean.create_action_node(action,VIEW % action)
+            nodes.append(node)
+
 
         advertiser_node = actions_to_delorean.create_node('"source": "%s' % advertiser, children=nodes)
         advertiser_nodes.append(advertiser_node)
@@ -63,39 +69,33 @@ def run_cascade(zk,advertiser,pattern,days,offset,callback):
     import metrics.work_queue as work_queue
 
     base = [advertiser,pattern]
-    cascade = {
-        0: base + [1,0, callback],
-        1: base + [2,1, callback],
-        3: base + [2,3, callback],
-        5: base + [2,5, callback],
-        7: base + [2,7, callback],
-        9: base + [6,9, callback],
-        15: base + [5,15, callback]
-    }
-
     to_run = base + [1,offset,callback] if offset != days else False
 
+    path = "/active_pattern_cache/" + advertiser + "=" + pattern.replace("/","|")
+    path_plus = path + "/days=" + str(days) + ",offset=" + str(offset)
 
-    if to_run is not False:
 
-        run(*to_run)
-        #offset = to_run[2]+to_run[3]
-        #work = (run_cascade,base + [days,offset,""])
-
-        #import pickle 
-        #pickled = pickle.dumps(work)
-        #
-        #queue = work_queue.SingleQueue(zk,"/python_queue")
-        #queue.put(pickled)
-
+    complete_path = "/complete" + path[:7]
+    complete_path_plus = "/complete" + path_plus[7:]
     
 
+    if to_run is not False: 
+        zk.create(path_plus)
+        run(*to_run)
+        zk.delete(path_plus,recursive=True)
+        zk.create(complete_path_plus)
+    
+        if len(zk.get_children(complete_path)) == days:
+            zk.delete(path,recursive=True)
 
+        
 def run(advertiser,pattern,days,offset,force=False):
 
     from link import lnk
     db = lnk.dbs.rockerbox
     api = lnk.api.rockerbox
+
+    start = time.time()
 
     days_offset = days + offset
 
@@ -107,7 +107,8 @@ def run(advertiser,pattern,days,offset,force=False):
 
     db.execute("INSERT INTO pattern_cache (url_pattern,pixel_source_name,num_days) VALUES ('%s','%s',%s)" % (pattern,advertiser,days+offset))
 
-    #update_tree(db,api)
+    if offset == 0: 
+        update_tree(db,api)
 
     logging.info("Cacheing: %s => %s begin" % (advertiser,pattern))
 
@@ -238,7 +239,9 @@ def run(advertiser,pattern,days,offset,force=False):
 
     logging.info("Cacheing: %s => %s end" % (advertiser,pattern))
 
-    db.execute("UPDATE pattern_cache set completed = 1 where pixel_source_name = '%s' and url_pattern = '%s'" % (advertiser,pattern))
+    elapsed = int(time.time() - start)
+
+    db.execute("UPDATE pattern_cache set completed = 1, seconds = %s where pixel_source_name = '%s' and url_pattern = '%s' and num_days = %s " % (elapsed,advertiser,pattern,days_offset))
 
     zk_lock.stop()
     logging.info("Lock stopped")
