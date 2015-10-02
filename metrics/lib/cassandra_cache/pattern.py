@@ -34,12 +34,14 @@ def select(cache,udf_name,*args):
 def update_tree(db,api):
     from lib.funnel import actions_to_delorean
 
-    df = db.select_dataframe("select * from pattern_cache")
+    df = db.select_dataframe("select distinct url_pattern, pixel_source_name from pattern_cache")
     advertiser_nodes = []
 
     USER = "INSERT INTO rockerbox.pattern_occurrence_users_u2 (source, date, action, uid, u2) VALUES ('${source}', '${date}', '%(url_pattern)s', '${adnxs_uid}', ${u2});"
     RAW = "UPDATE rockerbox.pattern_occurrence_u2_counter set occurrence= occurrence + 1 where source = '${source}' and date = '${date}' and  url = '${referrer}' and uid = '${adnxs_uid}' and u2 = ${u2} and action = '%(url_pattern)s';"
-    DOMAIN = "UPDATE rockerbox.pattern_occurrence_urls_counter set count= count + 1 where source = '${source}' and date = '${date}' and  url = '${referrer}' and action = '%(url_pattern)s';"
+    URL = "UPDATE rockerbox.pattern_occurrence_urls_counter set count= count + 1 where source = '${source}' and date = '${date}' and  url = '${referrer}' and action = '%(url_pattern)s';"
+    VIEW = "UPDATE rockerbox.pattern_occurrence_views_counter set count= count + 1 where source = '${source}' and date = '${date}' and action = '%(url_pattern)s';"
+
 
     for advertiser in df.pixel_source_name.unique():
         nodes = []
@@ -49,8 +51,11 @@ def update_tree(db,api):
             nodes.append(node)
             node = actions_to_delorean.create_action_node(action,USER % action)
             nodes.append(node)
-            node = actions_to_delorean.create_action_node(action,DOMAIN % action)
+            node = actions_to_delorean.create_action_node(action,URL % action)
             nodes.append(node)
+            node = actions_to_delorean.create_action_node(action,VIEW % action)
+            nodes.append(node)
+
 
         advertiser_node = actions_to_delorean.create_node('"source": "%s' % advertiser, children=nodes)
         advertiser_nodes.append(advertiser_node)
@@ -102,7 +107,8 @@ def run(advertiser,pattern,days,offset,force=False):
 
     db.execute("INSERT INTO pattern_cache (url_pattern,pixel_source_name,num_days) VALUES ('%s','%s',%s)" % (pattern,advertiser,days+offset))
 
-    #update_tree(db,api)
+    if offset == 0: 
+        update_tree(db,api)
 
     logging.info("Cacheing: %s => %s begin" % (advertiser,pattern))
 
