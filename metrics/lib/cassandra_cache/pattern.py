@@ -32,6 +32,19 @@ def select(cache,udf_name,*args):
 
     return (cache_insert, uid_values, url_values)
 
+def run_daily(db):
+    import pickle
+    import work_queue
+
+    df = db.select_dataframe("select distinct url_pattern, pixel_source_name from pattern_cache") 
+    zk = KazooClient(hosts="zk1:2181")
+
+    for i,row in df.iterrows():
+        args = [row.pixel_source_name,row.url_pattern,1,1,True]
+        work = (run,args)
+
+        work_queue.SingleQueue(zk,"python_queue").put(pickle.dumps(work),21)
+
 def update_tree(db,api):
     from lib.funnel import actions_to_delorean
 
@@ -89,8 +102,12 @@ def run_cascade(zk,advertiser,pattern,days,offset,callback):
         if len(zk.get_children(complete_path)) == days:
             zk.delete(path,recursive=True)
 
+def run_force(zk,advertiser,pattern,days,offset,force=False):
+    run(advertiser,pattern,days,offset,force)
         
 def run(advertiser,pattern,days,offset,force=False):
+
+    print advertiser,pattern,days,offset,force
 
     from link import lnk
     db = lnk.dbs.rockerbox
