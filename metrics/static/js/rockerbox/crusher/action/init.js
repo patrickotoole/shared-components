@@ -71,7 +71,7 @@ RB.crusher.ui.action.status = (function(status,action,crusher) {
 
   status.subscription = function(data) {
 
-    var target = d3.selectAll(".action-view-wrapper")
+    var target = d3.selectAll(".action-view-wrapper").selectAll(".action-view")
     crusher.ui.action.status(target)
     
     return data

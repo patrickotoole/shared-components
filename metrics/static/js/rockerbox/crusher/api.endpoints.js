@@ -323,7 +323,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
                   var name = splitted[0]
                   var value = splitted.slice(1,splitted.length).join("=")
 
-                  console.log(x.count)
+                  
                   action.param_list.push({"name":name,"value":value,"count":x.count})
 
                 })

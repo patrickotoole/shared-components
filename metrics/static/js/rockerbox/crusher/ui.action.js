@@ -103,7 +103,22 @@ RB.crusher.ui.action = (function(action) {
       return values
     },function(x){return x.key})
       .classed("missing",true)
-      .text(JSON.stringify)
+      .style("min-height","30px")
+
+    d3_updateable(missing,".btn","a")
+      .classed("btn btn-danger btn-xs pull-right",true)
+      .text("Re-run")
+      .attr("href",function(x){return "/crusher/pattern?pattern=" + x.url_pattern + "&num_days=" + x.num_days })
+      .on("click",function(x){
+        console.log(this.href)
+        d3.event.preventDefault()
+        return false
+      })
+
+    d3_updateable(missing,".btn-label","div")
+      .classed("btn-label",true)
+      .text(function(x){return x.key })
+
 
 
   }
