@@ -12,16 +12,35 @@ RB.crusher.cache = (function(cache) {
 RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
 
-  endpoint.action_status = api.helpers.genericQueuedAPIWithData(function(data,cb,deferred_cb) {
-    var pattern = data.url_pattern(function(x){return x.url_pattern})
-    
-    debugger
+  endpoints.pattern_status = api.helpers.genericQueuedAPIWithData(function(data,cb,deferred_cb) {
+    var pattern = data.url_pattern[0]
     
     if (pattern) {
-      d3.json("/crusher/pattern/status?pattern=" + pattern[0],function(err,dd){
-        var json = JSON.parse(dd.response)
+      d3.json("/crusher/pattern/status?pattern=" + pattern,function(err,dd){
+        
+        var json = dd.response.map(function(x){
+          var date = new Date(x.timestamp*1000 - x.num_days*24*60*60*1000)
+          var hour = date.getUTCHours();
+          var min = date.getUTCMinutes();
+          var sec = date.getUTCSeconds();
+          var secs = hour*60*60 + min*60 + sec
 
-        debugger
+          x.key = new Date(date.getTime() - secs*1000)
+
+          return x
+        }).sort(function(x,y){return y.key - x.key})
+
+        var complete = json.filter(function(x){return x.completed})
+
+        data.pattern_stats = {
+          completed: complete.length,
+          percent_complete: complete.length/json.length,
+          total_time: json.map(function(x){return x.seconds}).reduce(function(p,c){return p + c},0),
+          average_time: json.map(function(x){return x.seconds}).reduce(function(p,c){return p + c},0)/json.length,
+          missing: json.filter(function(x){return x.completed == false}),
+          raw: json
+        }
+
         deferred_cb(null,cb.bind(false,data))
 
       })

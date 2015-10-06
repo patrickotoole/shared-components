@@ -37,6 +37,77 @@ RB.crusher.ui.action = (function(action) {
 
   }
 
+  action.status = function(wrapper) {
+
+
+    var status = d3_updateable(wrapper,".action-status","div")
+      .classed("action-status",true)
+
+    var wrapper = d3_updateable(status,".status-wrapper","div")
+      .classed("status-wrapper col-md-6",true)
+
+    var series = d3_updateable(wrapper,".series","div")
+      .classed("series",true)
+
+    d3_updateable(series,".title","div")
+      .classed("title",true)
+      .text("Cache stats")
+
+    var percent_bar = d3_updateable(series,".percent-bar","div")
+      .classed("percent-bar",true)
+
+    d3_updateable(percent_bar,".value","div")
+      .classed("value",true)
+      .text(function(x){return x.pattern_stats.completed + " days"})
+
+    d3_updateable(percent_bar,".description.percent","div")
+      .classed("description percent",true)
+      .text(function(x){return "Percent complete: " + d3.format("%")(x.pattern_stats.percent_complete)})
+      .style("color","#000")
+
+    var progress = d3_updateable(percent_bar,".progress","div")
+      .classed("progress",true)
+      .style("height","12px")
+      .style("margin-top","5px")
+
+
+    d3_updateable(progress,".progress-bar-striped","div")
+      .classed("progress-bar progress-bar-striped",true)
+      .attr("role","progressbar")
+      .attr("aria-valuenow",function(x){return 100*x.pattern_stats.percent_complete}) 
+      .attr("aria-valuemin","0")
+      .attr("aria-valuemax","100") 
+      .style("width",function(x){return (x.pattern_stats.percent_complete*100) + "%"})
+
+
+    d3_updateable(series,".description.timeseries","div")
+      .classed("description timeseries",true)
+      .text("Time to complete cache days")
+
+
+
+    var newTs = d3_updateable(series,".values","div")
+      .classed("values",true)
+
+
+    var ts = RB.rho.ui.buildTimeseries(newTs,newTs.datum().pattern_stats.raw,"Seconds",["seconds"], undefined)
+    
+    newTs.selectAll("circle").filter(function(x){return x.completed == 0 }).attr("fill","red")
+
+
+    var missingWrapper = d3_updateable(series,".missing-wrapper","div")
+      .classed("missing-wrapper",true)
+
+    var missing = d3_splat(missingWrapper,".missing","div",function(x){
+      var values = x.pattern_stats.raw.filter(function(y){return y.completed == 0 })
+      return values
+    },function(x){return x.key})
+      .classed("missing",true)
+      .text(JSON.stringify)
+
+
+  }
+
   action.preview = function(wrapper) {
     var actionView = wrapper.selectAll(".action-view")
       .data(function(x){return [x]},function(x){return x.action_id + x.action_name})

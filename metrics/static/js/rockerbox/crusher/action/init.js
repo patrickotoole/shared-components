@@ -62,11 +62,36 @@ RB.component.export(RB.crusher.ui.action.wait, RB.crusher.ui.action)
 
 
 
+RB.crusher.ui.action.status = (function(status,action,crusher) {
+
+  status.NAME = "action.status"
+  status.SUBSCRIBE = ["pattern_status"]
+  status.PUBLISH = []
+  status.EVENTS = []
+
+  status.subscription = function(data) {
+
+    var target = d3.selectAll(".action-view-wrapper")
+    crusher.ui.action.status(target)
+    
+    return data
+  }
+
+  return status
+
+})(RB.crusher.ui.action.status || {}, RB.crusher.ui.action,RB.crusher)
+
+RB.component.export(RB.crusher.ui.action.status, RB.crusher.ui.action)
+
+
+
+
+
 RB.crusher.ui.action.show = (function(show,action,crusher) {
 
   show.NAME = "action.show"
   show.SUBSCRIBE = ["actionTimeseries"]
-  show.PUBLISH = ["tf_idf_action"]
+  show.PUBLISH = ["tf_idf_action","pattern_status"]
   show.EVENTS = []
 
   show.subscription = function(data) {
