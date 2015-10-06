@@ -284,6 +284,7 @@ RB.crusher.ui.action = (function(action) {
     spans.enter().append("span")
     spans.text(function(x){ return x.action_name })
 
+/*
     h5.selectAll(".edit").data(function(x){return [x]}).enter()
       .append("button")
       .classed("edit btn  btn-xs pull-right",true)
@@ -297,11 +298,11 @@ RB.crusher.ui.action = (function(action) {
         expandTarget.datum(data)
         action.edit(expandTarget,onSave)
         action.view(expandTarget)
-      }) 
+      }) */
 
     h5.selectAll(".remove").data(function(x){return [x]}).enter() 
       .append("button")
-      .classed("remove btn btn-danger btn-xs pull-right",true)
+      .classed("remove btn btn-danger btn-sm ",true)
       .text("remove")
       .on("click",function(){
         var edit = d3.select(this.parentNode.parentNode)
