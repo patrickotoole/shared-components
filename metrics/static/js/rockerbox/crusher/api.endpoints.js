@@ -11,6 +11,25 @@ RB.crusher.cache = (function(cache) {
 
 RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
+
+  endpoint.action_status = api.helpers.genericQueuedAPIWithData(function(data,cb,deferred_cb) {
+    var pattern = data.url_pattern(function(x){return x.url_pattern})
+    
+    debugger
+    
+    if (pattern) {
+      d3.json("/crusher/pattern/status?pattern=" + pattern[0],function(err,dd){
+        var json = JSON.parse(dd.response)
+
+        debugger
+        deferred_cb(null,cb.bind(false,data))
+
+      })
+        
+    } else {
+      deferred_cb(null,cb.bind(false,data))
+    }
+  })
   
   endpoints.tf_idf_action = api.helpers.genericQueuedAPIWithData(function(data,cb,deferred_cb) {
         var domains = data.domains.map(function(x){return x.domain})

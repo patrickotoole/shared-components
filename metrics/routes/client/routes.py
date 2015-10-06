@@ -90,6 +90,10 @@ class AdvertiserRoutes(Routes):
             (r'/funnel/lookalike', funnel.FunnelLookalikeHandler, self.connectors),
             (r'/funnel/lookalike/(.*?)', funnel.FunnelLookalikeHandler, self.connectors),
             (r'/funnel/search/(.*?)', funnel.FunnelSearchHandler, self.connectors),
+
+            (r'/pattern/status/?', funnel.PatternStatusHandler, self.connectors),
+
+
             (r'/funnel', funnel.FunnelHandler, self.connectors),
             (r'/?', funnel.FunnelHandler, self.connectors),
             (r'/.*?', funnel.FunnelHandler, self.connectors),
