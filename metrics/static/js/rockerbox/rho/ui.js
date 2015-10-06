@@ -505,7 +505,7 @@ RB.rho.ui = (function(ui) {
 
     //ui.buildTitle(filters)
 
-    ui.buildTimeseries(d3.select("#graphable").select(".col-md-9"),data,summary,series || ['imps'])
+    ui.buildTimeseries(d3.select("#graphable").select(".col-md-9"),data,"yo",series || ['imps'])
     ui.selectSeries(d3.select("#seriesable"),['imps','eap','ecp']) 
     
     var min_date = 0
