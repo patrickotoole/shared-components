@@ -123,7 +123,13 @@ def run(advertiser,pattern,days,offset,force=False):
     if force is not True and len(skip) > 0:
         return 
 
-    db.execute("INSERT INTO pattern_cache (url_pattern,pixel_source_name,num_days) VALUES ('%s','%s',%s)" % (pattern,advertiser,days+offset))
+
+    import datetime 
+
+    now = datetime.datetime.now()
+    cache_date = now - datetime.timedelta(days=days+offset)
+
+    db.execute("INSERT INTO pattern_cache (url_pattern,pixel_source_name,num_days,cache_date) VALUES ('%s','%s',%s,'%s')" % (pattern,advertiser,days+offset,cache_date))
 
     if offset == 0: 
         update_tree(db,api)
@@ -158,7 +164,17 @@ def run(advertiser,pattern,days,offset,force=False):
 
     elapsed = int(time.time() - start)
 
-    db.execute("UPDATE pattern_cache set completed = 1, seconds = %s where pixel_source_name = '%s' and url_pattern = '%s' and num_days = %s " % (elapsed,advertiser,pattern,days_offset))
+    
+
+    cache_date_max = (cache_date + datetime.timedelta(days=1)).date()
+    cache_date_min = cache_date.date()
+
+    UPDATE = "UPDATE pattern_cache set deleted = 1, seconds = 0 where pixel_source_name = '%s' and url_pattern = '%s' and cache_date >= '%s' and cache_date < '%s' "
+    UPDATE2 = "UPDATE pattern_cache set deleted = 0, completed = 1, seconds = %s where pixel_source_name = '%s' and url_pattern = '%s' and num_days = %s and cache_date = '%s'"
+    
+    db.execute(UPDATE % (advertiser,pattern,cache_date_min,cache_date_max))
+    db.execute(UPDATE2 % (elapsed,advertiser,pattern,days_offset,cache_date.strftime("%Y-%m-%d %H:%M:%S")))
+
 
     zk_lock.stop()
     logging.info("Lock stopped")

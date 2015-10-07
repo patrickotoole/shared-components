@@ -25,7 +25,7 @@ class PatternStatusHandler(BaseHandler,APIHelpers):
         advertiser = self.get_argument("advertiser", self.current_advertiser_name)
         pattern = self.get_argument("pattern",False)
 
-        SQL = "SELECT * FROM pattern_cache where url_pattern =  '%s' and pixel_source_name = '%s'"
+        SQL = "SELECT * FROM pattern_cache where url_pattern =  '%s' and pixel_source_name = '%s' and deleted = 0"
 
         try:
             results = self.db.select_dataframe(SQL % (pattern,advertiser))
@@ -36,16 +36,20 @@ class PatternStatusHandler(BaseHandler,APIHelpers):
     def run_pattern(self):
         advertiser = self.get_argument("advertiser", self.current_advertiser_name)
         pattern = self.get_argument("pattern",False)
-        index_num = int(self.get_argument("num_days",0))
+        _cache_date = self.get_argument("cache_date",False)
 
-        SQL = "SELECT * FROM pattern_cache where url_pattern =  '%s' and pixel_source_name = '%s' and num_days = %s"
+        cache_date = datetime.datetime.strptime(_cache_date,"%Y-%m-%d")
+        cache_date_max = cache_date + datetime.timedelta(days=1)
+        SQL = """
+            SELECT * from pattern_cache 
+            where url_pattern = '%s' and pixel_source_name ='%s' and cache_date >= '%s' and cache_date < '%s'
+        """ 
 
         try:
-            results = self.db.select_dataframe(SQL % (pattern,advertiser,index_num))
-            first = results.iloc[0]
-            date_to_run = first.timestamp.to_datetime() - datetime.timedelta(days=index_num+1)
-            delta = datetime.datetime.now() - date_to_run
-            args = [advertiser,pattern,1,delta.days,True]
+            results = self.db.select_dataframe(SQL % (pattern,advertiser,cache_date,cache_date_max))
+            
+            delta = datetime.datetime.now() - cache_date
+            args = [advertiser,pattern,1,delta.days -1,True]
             work = (cache.run_force,args)
 
             work_queue.SingleQueue(self.zk,"python_queue").put(pickle.dumps(work),0)
