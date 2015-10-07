@@ -108,16 +108,21 @@ RB.crusher.ui.action = (function(action) {
     d3_updateable(missing,".btn","a")
       .classed("btn btn-danger btn-xs pull-right",true)
       .text("Re-run")
-      .attr("href",function(x){return "/crusher/pattern?pattern=" + x.url_pattern + "&num_days=" + x.num_days })
+      .attr("href",function(x){return "/crusher/pattern?pattern=" + x.url_pattern + "&cache_date=" + (new Date(x.cache_date*1000)).toISOString().split("T")[0] })
       .on("click",function(x){
-        console.log(this.href)
+        var self = this
+        d3.json(this.href,function(err,dd){
+          d3.select(self).attr("disabled",true)
+          console.log(dd)
+          return dd
+        })
         d3.event.preventDefault()
         return false
       })
 
     d3_updateable(missing,".btn-label","div")
       .classed("btn-label",true)
-      .text(function(x){return x.key })
+      .text(function(x){return (new Date(x.cache_date*1000)).toISOString().split("T")[0] })
 
 
 
