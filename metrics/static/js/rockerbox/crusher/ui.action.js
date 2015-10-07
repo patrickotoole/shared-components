@@ -137,6 +137,46 @@ RB.crusher.ui.action = (function(action) {
       .text(function(x){return (new Date(x.cache_date*1000)).toISOString().split("T")[0] })
 
 
+    var activeWrapper = d3_updateable(series,".active-wrapper","div")
+      .classed("active-wrapper",true)
+
+    var activeDescription = d3_splat(activeWrapper,".description","div",function(x){
+      var values = x.pattern_stats.raw.filter(function(y){return y.active })
+      return values.length ? [true] : []
+    },function(x){return x.key})
+      .classed("description",true)
+      .style("padding-top","10px")
+      .style("padding-bottom","15px")
+      .style("color","#000")
+      .text("The following dates are actively being cached")
+
+    activeDescription.exit().remove()
+
+    var active = d3_splat(activeWrapper,".active","div",function(x){
+      var values = x.pattern_stats.raw.filter(function(y){return y.active })
+      return values
+    },function(x){return x.key})
+      .classed("active",true)
+      .style("min-height","30px")
+
+    d3_updateable(active,".btn","a")
+      .classed("btn btn-danger btn-xs pull-right",true)
+      .text("Restart")
+      .attr("href",function(x){return "/crusher/pattern?pattern=" + x.url_pattern + "&cache_date=" + (new Date(x.cache_date*1000)).toISOString().split("T")[0] })
+      .on("click",function(x){
+        var self = this
+    
+        d3.event.preventDefault()
+        return false
+      })
+
+    d3_updateable(active,".btn-label","div")
+      .classed("btn-label",true)
+      .text(function(x){return (new Date(x.cache_date*1000)).toISOString().split("T")[0] })
+
+
+
+
 
   }
 
