@@ -98,6 +98,18 @@ RB.crusher.ui.action = (function(action) {
     var missingWrapper = d3_updateable(series,".missing-wrapper","div")
       .classed("missing-wrapper",true)
 
+    var missingDescription = d3_splat(missingWrapper,".description","div",function(x){
+      var values = x.pattern_stats.raw.filter(function(y){return y.completed == 0 })
+      return values.length ? [true] : []
+    },function(x){return x.key})
+      .classed("description",true)
+      .style("padding-top","10px")
+      .style("padding-bottom","15px")
+      .style("color","#000")
+      .text("The following dates were not properly cached or are actively running")
+
+    missingDescription.exit().remove()
+
     var missing = d3_splat(missingWrapper,".missing","div",function(x){
       var values = x.pattern_stats.raw.filter(function(y){return y.completed == 0 })
       return values
