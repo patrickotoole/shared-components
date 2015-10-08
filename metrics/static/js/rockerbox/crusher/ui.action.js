@@ -162,7 +162,7 @@ RB.crusher.ui.action = (function(action) {
     d3_updateable(active,".btn","a")
       .classed("btn btn-danger btn-xs pull-right",true)
       .text("Restart")
-      .attr("href",function(x){return "/crusher/pattern?pattern=" + x.url_pattern + "&cache_date=" + (new Date(x.cache_date*1000)).toISOString().split("T")[0] })
+      .attr("href",function(x){return "/crusher/pattern/reset?pattern=" + x.url_pattern + "&cache_date=" + (new Date(x.cache_date*1000)).toISOString().split("T")[0] })
       .on("click",function(x){
         var self = this
     
@@ -174,6 +174,43 @@ RB.crusher.ui.action = (function(action) {
       .classed("btn-label",true)
       .text(function(x){return (new Date(x.cache_date*1000)).toISOString().split("T")[0] })
 
+
+    var queuedWrapper = d3_updateable(series,".queued-wrapper","div")
+      .classed("queued-wrapper",true)
+
+    var queuedDescription = d3_splat(queuedWrapper,".description","div",function(x){
+      var values = x.pattern_stats.raw.filter(function(y){return y.queued })
+      return values.length ? [true] : []
+    },function(x){return x.key})
+      .classed("description",true)
+      .style("padding-top","10px")
+      .style("padding-bottom","15px")
+      .style("color","#000")
+      .text("The following dates are queued")
+
+    queuedDescription.exit().remove()
+
+    var queued = d3_splat(queuedWrapper,".queued","div",function(x){
+      var values = x.pattern_stats.raw.filter(function(y){return y.queued })
+      return values
+    },function(x){return x.key})
+      .classed("queued",true)
+      .style("min-height","30px")
+
+    d3_updateable(queued,".btn","a")
+      .classed("btn btn-danger btn-xs pull-right",true)
+      .text("Restart")
+      .attr("href",function(x){return "/crusher/pattern/reset?pattern=" + x.url_pattern + "&cache_date=" + (new Date(x.cache_date*1000)).toISOString().split("T")[0] })
+      .on("click",function(x){
+        var self = this
+    
+        d3.event.preventDefault()
+        return false
+      })
+
+    d3_updateable(queued,".btn-label","div")
+      .classed("btn-label",true)
+      .text(function(x){return (new Date(x.cache_date*1000)).toISOString().split("T")[0] })
 
 
 
