@@ -120,7 +120,7 @@ RB.crusher.ui.action = (function(action) {
     d3_updateable(missing,".btn","a")
       .classed("btn btn-danger btn-xs pull-right",true)
       .text("Re-run")
-      .attr("href",function(x){return "/crusher/pattern?pattern=" + x.url_pattern + "&cache_date=" + (new Date(x.cache_date*1000)).toISOString().split("T")[0] })
+      .attr("href",function(x){return "/crusher/pattern/run?pattern=" + x.url_pattern + "&cache_date=" + (new Date(x.cache_date*1000)).toISOString().split("T")[0] })
       .on("click",function(x){
         var self = this
         d3.json(this.href,function(err,dd){
@@ -161,11 +161,15 @@ RB.crusher.ui.action = (function(action) {
 
     d3_updateable(active,".btn","a")
       .classed("btn btn-danger btn-xs pull-right",true)
-      .text("Restart")
+      .text("Stop")
       .attr("href",function(x){return "/crusher/pattern/reset?pattern=" + x.url_pattern + "&cache_date=" + (new Date(x.cache_date*1000)).toISOString().split("T")[0] })
       .on("click",function(x){
         var self = this
-    
+        d3.json(this.href,function(err,dd){
+          d3.select(self).attr("disabled",true)
+          console.log(dd)
+          return dd
+        })   
         d3.event.preventDefault()
         return false
       })
@@ -199,11 +203,18 @@ RB.crusher.ui.action = (function(action) {
 
     d3_updateable(queued,".btn","a")
       .classed("btn btn-danger btn-xs pull-right",true)
-      .text("Restart")
-      .attr("href",function(x){return "/crusher/pattern/reset?pattern=" + x.url_pattern + "&cache_date=" + (new Date(x.cache_date*1000)).toISOString().split("T")[0] })
+      .text("Dequeue")
+      .attr("href",function(x){
+        return "/crusher/pattern/clear?pattern=" + 
+          x.url_pattern + "&cache_date=" + (new Date(x.cache_date*1000)).toISOString().split("T")[0] 
+      })
       .on("click",function(x){
         var self = this
-    
+        d3.json(this.href,function(err,dd){
+          d3.select(self).attr("disabled",true)
+          console.log(dd)
+          return dd
+        })
         d3.event.preventDefault()
         return false
       })

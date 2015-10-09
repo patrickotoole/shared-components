@@ -1,4 +1,5 @@
 import datetime 
+import pandas
 
 class ZKCacheHelpers(object):
     """
@@ -37,6 +38,9 @@ class ZKCacheHelpers(object):
     @property
     def complete_path(self):
         return "%s/%s=%s" % (self._complete_path,self.advertiser,self.pattern)
+
+    def destroy_active(self):
+        self.zk.delete(self.active_path + "/" + str(self.identifier),recursive=True)
 
     def __enter__(self):
 
@@ -119,28 +123,43 @@ class ZKCacheHelpers(object):
         else:
             return pandas.DataFrame([])
 
-    def queue_stats(self):
-        queued_pickle = [self.zk.get(self._queue + "/" + i) for i in self.zk.get_children(self._queue)]
+    def get_queued(self,name):
+        v1, v2 = self.zk.get(self._queue + "/" + name)
+        return name, v1, v2
 
+    def queue_stats(self):
+        queued_pickle = [self.get_queued(i) for i in self.zk.get_children(self._queue)]
         queued_items = []
 
-        import pickle
-        for pick,stats in queued_pickle:
+        import pickle, pandas
+
+        for name,pick,stats in queued_pickle:
             unpickled = pickle.loads(pick) 
-            queued_items += [[str(unpickled[0]), datetime.datetime.fromtimestamp(stats.mtime/1000), unpickled[1], unpickled[1][0], unpickled[1][1]]]
+            ts = datetime.datetime.fromtimestamp(stats.mtime/1000)
+            queued_items += [[name,str(unpickled[0]), ts, unpickled[1], unpickled[1][0], unpickled[1][1]]]
 
-        import pandas
-
-        return pandas.DataFrame(queued_items,columns=["function","queue_date","params","advertiser","pattern"])
+        try:
+            assert(len(queued_items) > 0)
+            cols = ["name","function","queue_date","params","advertiser","pattern"]
+            return pandas.DataFrame(queued_items,columns=cols)
+        except:
+            return pandas.DataFrame([])
 
     def advertiser_queue_stats(self):
         df = self.queue_stats()
-        return df[df['advertiser'] == self.advertiser]
+        try:
+            assert(len(df) > 0)
+            return df[df['advertiser'] == self.advertiser]
+        except:
+            return pandas.DataFrame([])
 
     def pattern_queue_stats(self):
         df = self.advertiser_queue_stats()
-
-        return df[df['pattern'] == self.pattern]
+        try:
+            assert(len(df) > 0)
+            return df[df['pattern'] == self.pattern]
+        except:
+            return pandas.DataFrame([])
 
         
 

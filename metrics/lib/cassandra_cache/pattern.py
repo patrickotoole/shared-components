@@ -103,7 +103,7 @@ def run_cascade(zk,advertiser,pattern,days,offset,callback):
             zk.delete(path,recursive=True)
 
 
-def run_force(zk,advertiser,pattern,days,offset,force=False,path_plus=False):
+def run_one(zk,advertiser,pattern,days,offset,force=False,identifier=""):
 
     cache = zk_helpers.ZKCacheHelpers(zk,advertiser,pattern,identifier)
     with cache:
