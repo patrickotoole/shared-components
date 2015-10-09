@@ -102,15 +102,13 @@ def run_cascade(zk,advertiser,pattern,days,offset,callback):
         if len(zk.get_children(complete_path)) == days:
             zk.delete(path,recursive=True)
 
+
 def run_force(zk,advertiser,pattern,days,offset,force=False,path_plus=False):
-    if not path_plus:
+
+    cache = zk_helpers.ZKCacheHelpers(zk,advertiser,pattern,identifier)
+    with cache:
         run(advertiser,pattern,days,offset,force)
-    else:
-        zk.create(path_plus)
-        run(advertiser,pattern,days,offset,force)
-        import ipdb; ipdb.set_trace()
-        zk.delete(path_plus,recursive=True)
-        zk.create(path_plus.replace("/active_","/complete_"))
+
         
 def run(advertiser,pattern,days,offset,force=False):
 

@@ -1,6 +1,15 @@
 import datetime 
 
 class ZKCacheHelpers(object):
+    """
+    This is a collection of helpers to be used with the ZKCache runner. 
+
+    It provides two main pieces of functionality (which later should be split):
+      - a with block for running a job. this handles the proper setup and tear-down of the class
+      - stats functions for pulling information about the queued cache
+
+    """
+
 
     def __init__(self,zk,advertiser,pattern,identifier):
 
@@ -13,6 +22,13 @@ class ZKCacheHelpers(object):
         self.advertiser = advertiser
         self.pattern = pattern
         self.identifier = identifier
+
+    def add_work(self,work):
+        self.zk.ensure_path(self._queue)
+        self.zk.ensure_path("%s/%s=%s" % (self._queue,self.advertiser,self.pattern))
+
+        self.zk.create(identifier,work)
+ 
 
     @property
     def active_path(self):
@@ -95,13 +111,16 @@ class ZKCacheHelpers(object):
             active_stats += [(i,j,ts,i.split("=")[0],i.split("=")[1])]
 
         import pandas
-            
-        active = pandas.DataFrame(active_stats,columns=["index","identifier","date","advertiser","pattern"]).set_index("index")
+        if len(active_stats):
+            cols = ["index","identifier","date","advertiser","pattern"]
+            active = pandas.DataFrame(active_stats,columns=cols).set_index("index")
 
-        return active[active.pattern == self.pattern]
+            return active[active.pattern == self.pattern]
+        else:
+            return pandas.DataFrame([])
 
     def queue_stats(self):
-        queued_pickle = [zk.get(self._queue + "/" + i) for i in self.zk.get_children(self._queue)]
+        queued_pickle = [self.zk.get(self._queue + "/" + i) for i in self.zk.get_children(self._queue)]
 
         queued_items = []
 
