@@ -123,9 +123,12 @@ class PatternCache(object):
         count_column   = "count"
 
         if len(self.uid_values):
-            domain_values = self.cache.get_domains_from_uids(self.uid_values,DOMAIN_SELECT)
-            domain_values = domain_values[["source","date","action","domain","count"]].values.tolist()
-            self.cache.run_counter_updates(domain_values,SELECT_COUNTER,UPDATE_COUNTER,dimensions,to_count,count_column,True)
+            try:
+                domain_values = self.cache.get_domains_from_uids(self.uid_values,DOMAIN_SELECT)
+                domain_values = domain_values[["source","date","action","domain","count"]].values.tolist()
+                self.cache.run_counter_updates(domain_values,SELECT_COUNTER,UPDATE_COUNTER,dimensions,to_count,count_column,True)
+            except:
+                pass
     
 
 

@@ -47,18 +47,20 @@ class ZKCacheHelpers(object):
         # setup the heirarchy of paths to account for the active item
         self.zk.ensure_path(self._active_path)
         self.zk.ensure_path(self.active_path)
-        self.zk.ensure_path(self.active_path + self.identifier)
+        self.zk.ensure_path(self.active_path + "/" + self.identifier)
 
     def __exit__(self, exc_type, exc_value, traceback):
 
         # destroy the active path reference
-        self.zk.delete(self.active_path + self.identifier,recursive=True)
+        self.zk.delete(self.active_path + "/" + self.identifier,recursive=True)
         if len(self.zk.get_children(self.active_path)) == 0:
             self.zk.delete(self.active_path, recursive=True)
         
         # add the completed path reference
         self.zk.ensure_path(self._complete_path)
-        self.zk.create(self.complete_path)
+        self.zk.ensure_path(self.complete_path)
+        self.zk.ensure_path(self.complete_path + "/" + self.identifier)
+
 
 
     def stats(self):

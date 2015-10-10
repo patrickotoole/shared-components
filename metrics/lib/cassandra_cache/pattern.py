@@ -1,5 +1,6 @@
 import logging
 import time
+import zk_helpers
 from cache import CassandraCache
 from pattern_cache import PatternCache
 from helpers import *
@@ -104,7 +105,6 @@ def run_cascade(zk,advertiser,pattern,days,offset,callback):
 
 
 def run_one(zk,advertiser,pattern,days,offset,force=False,identifier=""):
-
     cache = zk_helpers.ZKCacheHelpers(zk,advertiser,pattern,identifier)
     with cache:
         run(advertiser,pattern,days,offset,force)

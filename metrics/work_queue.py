@@ -35,7 +35,7 @@ class WorkQueue(object):
                 try:
                     fn(self.client,*args) 
                     logging.info("finished queue %s %s" % (str(fn),str(args)))
-                except:
+                except Exception as e:
                     logging.info("ERROR: queue %s %s" % (str(fn),str(args)))
  
 
