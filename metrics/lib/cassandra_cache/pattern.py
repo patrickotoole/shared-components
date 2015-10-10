@@ -1,6 +1,8 @@
 import logging
 import time
+import zk_helpers
 from cache import CassandraCache
+from pattern_cache import PatternCache
 from helpers import *
 from lib.helpers import *
 from lib.zookeeper.zk_pool import ZKPool
@@ -30,6 +32,19 @@ def select(cache,udf_name,*args):
     _, _, cache_insert, uid_values, url_values = cache.run_select(*args)
 
     return (cache_insert, uid_values, url_values)
+
+def run_daily(db):
+    import pickle
+    import work_queue
+
+    df = db.select_dataframe("select distinct url_pattern, pixel_source_name from pattern_cache") 
+    zk = KazooClient(hosts="zk1:2181")
+
+    for i,row in df.iterrows():
+        args = [row.pixel_source_name,row.url_pattern,1,1,True]
+        work = (run,args)
+
+        work_queue.SingleQueue(zk,"python_queue").put(pickle.dumps(work),21)
 
 def update_tree(db,api):
     from lib.funnel import actions_to_delorean
@@ -88,8 +103,16 @@ def run_cascade(zk,advertiser,pattern,days,offset,callback):
         if len(zk.get_children(complete_path)) == days:
             zk.delete(path,recursive=True)
 
+
+def run_one(zk,advertiser,pattern,days,offset,force=False,identifier=""):
+    cache = zk_helpers.ZKCacheHelpers(zk,advertiser,pattern,identifier)
+    with cache:
+        run(advertiser,pattern,days,offset,force)
+
         
 def run(advertiser,pattern,days,offset,force=False):
+
+    print advertiser,pattern,days,offset,force
 
     from link import lnk
     db = lnk.dbs.rockerbox
@@ -105,7 +128,13 @@ def run(advertiser,pattern,days,offset,force=False):
     if force is not True and len(skip) > 0:
         return 
 
-    db.execute("INSERT INTO pattern_cache (url_pattern,pixel_source_name,num_days) VALUES ('%s','%s',%s)" % (pattern,advertiser,days+offset))
+
+    import datetime 
+
+    now = datetime.datetime.now()
+    cache_date = now - datetime.timedelta(days=days+offset)
+
+    db.execute("INSERT INTO pattern_cache (url_pattern,pixel_source_name,num_days,cache_date) VALUES ('%s','%s',%s,'%s')" % (pattern,advertiser,days+offset,cache_date))
 
     if offset == 0: 
         update_tree(db,api)
@@ -124,124 +153,33 @@ def run(advertiser,pattern,days,offset,force=False):
 
         cache_insert, uid_values, url_values = select(cache,state,*select_args)
 
+    pattern_cache = PatternCache(cache,advertiser,pattern,cache_insert,uid_values,url_values)
 
-    # ACTION => VIEWS COUNTER CACHE
-    logging.info("Cacheing: %s => %s views" % (advertiser,pattern))
+    pattern_cache.cache_views()
+    pattern_cache.cache_visits()
+    pattern_cache.cache_uniques()
+    pattern_cache.cache_raw()
 
-    SELECT_COUNTER = "SELECT * from rockerbox.pattern_occurrence_views_counter"
-    UPDATE_COUNTER = "UPDATE rockerbox.pattern_occurrence_views_counter"
-
-    dimensions     = ["source","date","action"]
-    to_count       = "action"
-    count_column   = "count"
-    
-    all_columns = dimensions + ["uid","u2","url","count"]
-
-    if len(cache_insert):
-        series = pandas.DataFrame(cache_insert,columns=all_columns).groupby(dimensions)['count'].sum()
-
-        values = series.reset_index().values.tolist()
-        cache.run_counter_updates(values,SELECT_COUNTER,UPDATE_COUNTER,dimensions,to_count,count_column,True)
-
-
-
-    # ACTION => VISITS
-    logging.info("Cacheing: %s => %s occurence uniques" % (advertiser,pattern))
-
-    UID_INSERT     = "INSERT INTO rockerbox.pattern_occurrence_visits (source,date,action,count) VALUES (?,?,?,?)"
-    if len(cache_insert):
-        
-        series = pandas.DataFrame(cache_insert,columns=all_columns).groupby(dimensions + ["uid","url"])['count'].count()
-        reset = series.reset_index()
-
-        dims = reset.groupby(dimensions)['count'].count()
-        values = dims.reset_index().values.tolist()
-
-        cache.run_inserts(values,UID_INSERT)
-
-
-
-    # ACTION => UNIQUES
-    logging.info("Cacheing: %s => %s occurence uniques" % (advertiser,pattern))
-
-    UID_INSERT     = "INSERT INTO rockerbox.pattern_occurrence_uniques (source,date,action,count) VALUES (?,?,?,?)"
-    if len(uid_values):
-
-        series = pandas.DataFrame(cache_insert,columns=all_columns).groupby(dimensions + ["uid"])['count'].count()
-        reset = series.reset_index()
-
-        dims = reset.groupby(dimensions)['count'].count()
-        values = dims.reset_index().values.tolist()
-       
-        cache.run_inserts(values,UID_INSERT)
-
-
-
-
-
-    # ACTION => RAW DATA CACHE
-    logging.info("Cacheing: %s => %s occurences raw" % (advertiser,pattern))
-
-
-    SELECT_COUNTER = "SELECT * from rockerbox.pattern_occurrence_u2_counter"
-    UPDATE_COUNTER = "UPDATE rockerbox.pattern_occurrence_u2_counter"
-
-    dimensions     = ["source","date","action","uid","u2"]
-    to_count       = "url"
-    count_column   = "occurrence"
-
-    if len(cache_insert):
-        cache.run_counter_updates(cache_insert,SELECT_COUNTER,UPDATE_COUNTER,dimensions,to_count,count_column,True)
-    
-
-    # ACTION => UIDS
-    logging.info("Cacheing: %s => %s occurence uuids" % (advertiser,pattern))
-
-    UID_INSERT     = "INSERT INTO rockerbox.pattern_occurrence_users_u2 (source,date,action,uid,u2) VALUES (?,?,?,?,?)"
-    if len(uid_values):
-        cache.run_inserts(uid_values,UID_INSERT)
-
-
-    # ACTION => PAGE_URLS
-    logging.info("Cacheing: %s => %s occurence urls" % (advertiser,pattern))
-
-    SELECT_COUNTER = "SELECT * from rockerbox.pattern_occurrence_urls_counter" 
-    UPDATE_COUNTER = "UPDATE rockerbox.pattern_occurrence_urls_counter" 
-
-    dimensions     = ["source","date","action"]
-    to_count       = "url"
-    count_column   = "count"
-
-    if len(url_values):
-        cache.run_counter_updates(url_values,SELECT_COUNTER,UPDATE_COUNTER,dimensions,to_count,count_column)
-
-
-    # ACTION => DOMAINS
-    logging.info("Cacheing: %s => %s occurance domains" % (advertiser,pattern))
-    
-    DOMAIN_SELECT = "select * from rockerbox.visitor_domains_2 where uid = ?"
-    DOMAIN_INSERT = "INSERT INTO rockerbox.pattern_occurrence_domains (source,date,action,domain) VALUES (?,?,?,?)"
-
-    SELECT_COUNTER = "SELECT * from rockerbox.pattern_occurrence_domains_counter"
-    UPDATE_COUNTER = "UPDATE rockerbox.pattern_occurrence_domains_counter"
-    dimensions     = ["source","date","action"]
-    to_count       = "domain"
-    count_column   = "count"
+    pattern_cache.cache_uids()
+    pattern_cache.cache_urls()
+    pattern_cache.cache_domains()
 
     
-
-    if len(uid_values):
-        domain_values = cache.get_domains_from_uids(uid_values,DOMAIN_SELECT)
-        domain_values = domain_values[["source","date","action","domain","count"]].values.tolist()
-        cache.run_counter_updates(domain_values,SELECT_COUNTER,UPDATE_COUNTER,dimensions,to_count,count_column,True)
-    
-
-
     logging.info("Cacheing: %s => %s end" % (advertiser,pattern))
 
     elapsed = int(time.time() - start)
 
-    db.execute("UPDATE pattern_cache set completed = 1, seconds = %s where pixel_source_name = '%s' and url_pattern = '%s' and num_days = %s " % (elapsed,advertiser,pattern,days_offset))
+    
+
+    cache_date_max = (cache_date + datetime.timedelta(days=1)).date()
+    cache_date_min = cache_date.date()
+
+    UPDATE = "UPDATE pattern_cache set deleted = 1, seconds = 0 where pixel_source_name = '%s' and url_pattern = '%s' and cache_date >= '%s' and cache_date < '%s' "
+    UPDATE2 = "UPDATE pattern_cache set deleted = 0, completed = 1, seconds = %s where pixel_source_name = '%s' and url_pattern = '%s' and num_days = %s and cache_date = '%s'"
+    
+    db.execute(UPDATE % (advertiser,pattern,cache_date_min,cache_date_max))
+    db.execute(UPDATE2 % (elapsed,advertiser,pattern,days_offset,cache_date.strftime("%Y-%m-%d %H:%M:%S")))
+
 
     zk_lock.stop()
     logging.info("Lock stopped")

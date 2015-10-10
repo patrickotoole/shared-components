@@ -11,6 +11,44 @@ RB.crusher.cache = (function(cache) {
 
 RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
+
+  endpoints.pattern_status = api.helpers.genericQueuedAPIWithData(function(data,cb,deferred_cb) {
+    var pattern = data.url_pattern[0]
+    
+    if (pattern) {
+      d3.json("/crusher/pattern/status?pattern=" + pattern,function(err,dd){
+        
+        var json = dd.response.map(function(x){
+          var date = new Date(x.timestamp*1000 - x.num_days*24*60*60*1000)
+          var hour = date.getUTCHours();
+          var min = date.getUTCMinutes();
+          var sec = date.getUTCSeconds();
+          var secs = hour*60*60 + min*60 + sec
+
+          x.key = new Date(date.getTime() - secs*1000)
+
+          return x
+        }).sort(function(x,y){return y.key - x.key})
+
+        var complete = json.filter(function(x){return x.completed})
+
+        data.pattern_stats = {
+          completed: complete.length,
+          percent_complete: complete.length/json.length,
+          total_time: json.map(function(x){return x.seconds}).reduce(function(p,c){return p + c},0),
+          average_time: json.map(function(x){return x.seconds}).reduce(function(p,c){return p + c},0)/json.length,
+          missing: json.filter(function(x){return x.completed == false}),
+          raw: json
+        }
+
+        deferred_cb(null,cb.bind(false,data))
+
+      })
+        
+    } else {
+      deferred_cb(null,cb.bind(false,data))
+    }
+  })
   
   endpoints.tf_idf_action = api.helpers.genericQueuedAPIWithData(function(data,cb,deferred_cb) {
         var domains = data.domains.map(function(x){return x.domain})
@@ -285,7 +323,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
                   var name = splitted[0]
                   var value = splitted.slice(1,splitted.length).join("=")
 
-                  console.log(x.count)
+                  
                   action.param_list.push({"name":name,"value":value,"count":x.count})
 
                 })

@@ -48,16 +48,23 @@ class WorkQueueHandler(tornado.web.RequestHandler):
         df = pandas.DataFrame(in_queue)
         self.get_content(df)
          
+    def get_complete(self,q):
+        try:
+            return len(self.zookeeper.get_children("/complete_pattern_cache/" + q))
+        except:
+            return 0
 
     def get_current(self):
         import pickle
 
         in_queue = [c for c in self.zookeeper.get_children("/active_pattern_cache") ]
         len_queue = [len(self.zookeeper.get_children("/active_pattern_cache/" + q)) for q in in_queue]
-        complete_queue = [len(self.zookeeper.get_children("/complete_pattern_cache/" + q)) for q in in_queue]
+        complete_queue = [self.get_complete(q) for q in in_queue]
+
 
 
         df = pandas.DataFrame({"queue":in_queue,"active":len_queue,"complete":complete_queue})
+        df = df[df['active'] > 0]
         self.get_content(df)
      
 

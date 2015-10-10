@@ -37,6 +37,197 @@ RB.crusher.ui.action = (function(action) {
 
   }
 
+  action.status = function(wrapper) {
+
+
+    var status = d3_updateable(wrapper,".action-status","div")
+      .classed("action-status",true)
+
+    var wrapper = d3_updateable(status,".status-wrapper","div")
+      .classed("status-wrapper col-md-6",true)
+
+    var series = d3_updateable(wrapper,".series","div")
+      .classed("series",true)
+
+    d3_updateable(series,".title","div")
+      .classed("title",true)
+      .text("Cache stats")
+
+    var percent_bar = d3_updateable(series,".percent-bar","div")
+      .classed("percent-bar",true)
+
+    d3_updateable(percent_bar,".value","div")
+      .classed("value",true)
+      .text(function(x){return x.pattern_stats.completed + " days"})
+
+    d3_updateable(percent_bar,".description.percent","div")
+      .classed("description percent",true)
+      .text(function(x){return "Percent complete: " + d3.format("%")(x.pattern_stats.percent_complete)})
+      .style("color","#000")
+
+    var progress = d3_updateable(percent_bar,".progress","div")
+      .classed("progress",true)
+      .style("height","12px")
+      .style("margin-top","5px")
+
+
+    d3_updateable(progress,".progress-bar-striped","div")
+      .classed("progress-bar progress-bar-striped",true)
+      .attr("role","progressbar")
+      .attr("aria-valuenow",function(x){return 100*x.pattern_stats.percent_complete}) 
+      .attr("aria-valuemin","0")
+      .attr("aria-valuemax","100") 
+      .style("width",function(x){return (x.pattern_stats.percent_complete*100) + "%"})
+
+
+    d3_updateable(series,".description.timeseries","div")
+      .classed("description timeseries",true)
+      .text("Time to complete cache days")
+
+
+
+    var newTs = d3_updateable(series,".values","div")
+      .classed("values",true)
+
+
+    var ts = RB.rho.ui.buildTimeseries(newTs,newTs.datum().pattern_stats.raw,"Seconds",["seconds"], undefined)
+    
+    newTs.selectAll("circle").filter(function(x){return x.completed == 0 }).attr("fill","red")
+
+
+    var missingWrapper = d3_updateable(series,".missing-wrapper","div")
+      .classed("missing-wrapper",true)
+
+    var missingDescription = d3_splat(missingWrapper,".description","div",function(x){
+      var values = x.pattern_stats.raw.filter(function(y){return y.completed == 0 })
+      return values.length ? [true] : []
+    },function(x){return x.key})
+      .classed("description",true)
+      .style("padding-top","10px")
+      .style("padding-bottom","15px")
+      .style("color","#000")
+      .text("The following dates were not properly cached or are actively running")
+
+    missingDescription.exit().remove()
+
+    var missing = d3_splat(missingWrapper,".missing","div",function(x){
+      var values = x.pattern_stats.raw.filter(function(y){return y.completed == 0 })
+      return values
+    },function(x){return x.key})
+      .classed("missing",true)
+      .style("min-height","30px")
+
+    d3_updateable(missing,".btn","a")
+      .classed("btn btn-danger btn-xs pull-right",true)
+      .text("Re-run")
+      .attr("href",function(x){return "/crusher/pattern/run?pattern=" + x.url_pattern + "&cache_date=" + (new Date(x.cache_date*1000)).toISOString().split("T")[0] })
+      .on("click",function(x){
+        var self = this
+        d3.json(this.href,function(err,dd){
+          d3.select(self).attr("disabled",true)
+          console.log(dd)
+          return dd
+        })
+        d3.event.preventDefault()
+        return false
+      })
+
+    d3_updateable(missing,".btn-label","div")
+      .classed("btn-label",true)
+      .text(function(x){return (new Date(x.cache_date*1000)).toISOString().split("T")[0] })
+
+
+    var activeWrapper = d3_updateable(series,".active-wrapper","div")
+      .classed("active-wrapper",true)
+
+    var activeDescription = d3_splat(activeWrapper,".description","div",function(x){
+      var values = x.pattern_stats.raw.filter(function(y){return y.active })
+      return values.length ? [true] : []
+    },function(x){return x.key})
+      .classed("description",true)
+      .style("padding-top","10px")
+      .style("padding-bottom","15px")
+      .style("color","#000")
+      .text("The following dates are actively being cached")
+
+    activeDescription.exit().remove()
+
+    var active = d3_splat(activeWrapper,".active","div",function(x){
+      var values = x.pattern_stats.raw.filter(function(y){return y.active })
+      return values
+    },function(x){return x.key})
+      .classed("active",true)
+      .style("min-height","30px")
+
+    d3_updateable(active,".btn","a")
+      .classed("btn btn-danger btn-xs pull-right",true)
+      .text("Stop")
+      .attr("href",function(x){return "/crusher/pattern/reset?pattern=" + x.url_pattern + "&cache_date=" + (new Date(x.cache_date*1000)).toISOString().split("T")[0] })
+      .on("click",function(x){
+        var self = this
+        d3.json(this.href,function(err,dd){
+          d3.select(self).attr("disabled",true)
+          console.log(dd)
+          return dd
+        })   
+        d3.event.preventDefault()
+        return false
+      })
+
+    d3_updateable(active,".btn-label","div")
+      .classed("btn-label",true)
+      .text(function(x){return (new Date(x.cache_date*1000)).toISOString().split("T")[0] })
+
+
+    var queuedWrapper = d3_updateable(series,".queued-wrapper","div")
+      .classed("queued-wrapper",true)
+
+    var queuedDescription = d3_splat(queuedWrapper,".description","div",function(x){
+      var values = x.pattern_stats.raw.filter(function(y){return y.queued })
+      return values.length ? [true] : []
+    },function(x){return x.key})
+      .classed("description",true)
+      .style("padding-top","10px")
+      .style("padding-bottom","15px")
+      .style("color","#000")
+      .text("The following dates are queued")
+
+    queuedDescription.exit().remove()
+
+    var queued = d3_splat(queuedWrapper,".queued","div",function(x){
+      var values = x.pattern_stats.raw.filter(function(y){return y.queued })
+      return values
+    },function(x){return x.key})
+      .classed("queued",true)
+      .style("min-height","30px")
+
+    d3_updateable(queued,".btn","a")
+      .classed("btn btn-danger btn-xs pull-right",true)
+      .text("Dequeue")
+      .attr("href",function(x){
+        return "/crusher/pattern/clear?pattern=" + 
+          x.url_pattern + "&cache_date=" + (new Date(x.cache_date*1000)).toISOString().split("T")[0] 
+      })
+      .on("click",function(x){
+        var self = this
+        d3.json(this.href,function(err,dd){
+          d3.select(self).attr("disabled",true)
+          console.log(dd)
+          return dd
+        })
+        d3.event.preventDefault()
+        return false
+      })
+
+    d3_updateable(queued,".btn-label","div")
+      .classed("btn-label",true)
+      .text(function(x){return (new Date(x.cache_date*1000)).toISOString().split("T")[0] })
+
+
+
+
+  }
+
   action.preview = function(wrapper) {
     var actionView = wrapper.selectAll(".action-view")
       .data(function(x){return [x]},function(x){return x.action_id + x.action_name})
@@ -284,6 +475,7 @@ RB.crusher.ui.action = (function(action) {
     spans.enter().append("span")
     spans.text(function(x){ return x.action_name })
 
+/*
     h5.selectAll(".edit").data(function(x){return [x]}).enter()
       .append("button")
       .classed("edit btn  btn-xs pull-right",true)
@@ -297,11 +489,11 @@ RB.crusher.ui.action = (function(action) {
         expandTarget.datum(data)
         action.edit(expandTarget,onSave)
         action.view(expandTarget)
-      }) 
+      }) */
 
     h5.selectAll(".remove").data(function(x){return [x]}).enter() 
       .append("button")
-      .classed("remove btn btn-danger btn-xs pull-right",true)
+      .classed("remove btn btn-danger btn-sm ",true)
       .text("remove")
       .on("click",function(){
         var edit = d3.select(this.parentNode.parentNode)
