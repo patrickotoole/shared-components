@@ -153,10 +153,8 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
         # check if the cache has enough days in it
         # if not, skip the cache and go direct
         from link import lnk
-        df = lnk.dbs.rockerbox.select_dataframe("select * from pattern_cache where pixel_source_name = '%s' and url_pattern = '%s'" % (advertiser,pattern[0]))
-
-        #import ipdb; ipdb.set_trace()
-
+        URL = "select * from pattern_cache where pixel_source_name = '%s' and url_pattern = '%s'"
+        df = lnk.dbs.rockerbox.select_dataframe(URL % (advertiser,pattern[0]))
 
         if len(df[df.num_days > 7]) > 0:
             results = self.run_cache(pattern,advertiser,dates,sample[0],sample[1],results)
@@ -169,18 +167,27 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
                 import work_queue
                 import lib.cassandra_cache.pattern as cache
                 import pickle
+                import datetime
 
+                today = datetime.datetime.now()
                 children = self.zookeeper.get_children("/active_pattern_cache")
-                if (advertiser + "=" + pattern[0].replace("/","|")) in children:
+                child = advertiser + "=" + pattern[0].replace("/","|")
+
+                if child in children:
                     pass
                 else:
-                    self.zookeeper.create("/active_pattern_cache/" + advertiser + "=" + pattern[0].replace("/","|"))
-                    self.zookeeper.create("/complete_pattern_cache/" + advertiser + "=" + pattern[0].replace("/","|"))
-                    for i in range(0,21):
-                        args = [advertiser,pattern[0],20,i,""]
-                        work = (cache.run_cascade,args)
+                    self.zookeeper.ensure_path("/active_pattern_cache/" + child)
 
-                        work_queue.SingleQueue(self.zookeeper,"python_queue").put(pickle.dumps(work),i)
+                    for i in range(0,21):
+                        delta = datetime.timedelta(days=i)
+                        _cache_date = datetime.datetime.strftime(today - delta,"%Y-%m-%d")
+
+                        work = pickle.dumps((
+                            cache.run_one,
+                            [advertiser,pattern[0],1,i,True,_cache_date]
+                        ))
+
+                        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,i)
 
                 
         df = pandas.DataFrame(results)
