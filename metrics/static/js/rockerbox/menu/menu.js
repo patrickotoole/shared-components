@@ -27,7 +27,7 @@ RB.menu = (function(menu) {
     var aside = d3_splat(target,"aside","aside",[menu.routes.roots])
 
     var navbar_selectors = menu.navbar.render(aside)
-    var bound_selectbar = menu.selectbar.render(aside,{"name":"Y","values":[]})
+    var bound_selectbar = menu.selectbar.render(aside,{"name":"","values":[]})
 
     navbar_selectors(bound_selectbar) 
 

@@ -16,9 +16,14 @@ RB.crusher.controller = (function(controller) {
     var state = controller.states[type]
     if (state) {
       RB.routes.navigation.forward(state)
+    } else {
+      RB.routes.navigation.forward(controller.states["/crusher/home"])
     }
+    
     //if (type.length) controller.initializers[type](id)
 
+
+    // INIT RESIZE CALLBACK
     d3.select(window).on("resize",function(){
       crusher.subscribe.publishers["resize"]()
     })
@@ -28,6 +33,51 @@ RB.crusher.controller = (function(controller) {
   }
 
   controller.initializers = {
+    "home": function(){
+      var target = d3.selectAll(".container")
+
+      var funnelRow = d3_splat(target,".row","div",[{"id":"home"}],function(x){return x.id})
+        .classed("row funnels",true)
+
+      funnelRow.exit().remove()
+
+
+
+      var heading = d3_updateable(funnelRow,".heading","h5")
+
+      heading.text("Welcome to Crusher")
+        .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-15px")
+        .classed("heading",true)
+
+      var info = d3_updateable(funnelRow,".col-md-12","div")
+
+      info.attr("style","padding-bottom:15px;padding-top:5px")
+        .classed("col-md-12 row",true)
+
+      d3_updateable(info,".crusher-description","div")
+        .classed("crusher-description",true)
+        .text("Crusher is a tool to help advertisers understand the off-site interests and opportunities to advertise to users in your audience.")
+
+      d3_updateable(info,".pixel-description","div")
+        .classed("pixel-description",true)
+        .style("margin-top","15px")
+        .html("If this is your first time logging in, make sure that you have completed pixel implementation. Below we show the last time your pixel has fired: ")
+
+      var pixelBox = d3_updateable(funnelRow,".pixel-box","div")
+        .classed("pixel-box col-md-9",true)
+
+      var innerPixelBox = d3_updateable(pixelBox,".ct-chart","div")
+        .classed("ct-chart",true)
+        .style("text-align","left")
+
+      innerPixelBox.text("asdf")
+
+
+      
+
+
+
+    },
     "action": function(){
 
       var target = d3.selectAll(".container")
@@ -297,7 +347,11 @@ RB.crusher.controller = (function(controller) {
         {
           "name":"Funnels",
           "push_state":"/crusher/funnel",
-        }] ,
+        }],
+      "home": [{
+          "name":"",
+          "push_state":"/crusher/home"
+        }],
       "funnel": [{
           "name":"Create New Funnel",
           "push_state":"/crusher/funnel/new",
