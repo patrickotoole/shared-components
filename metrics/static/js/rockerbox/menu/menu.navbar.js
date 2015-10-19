@@ -29,7 +29,7 @@ RB.menu.navbar = (function(navbar) {
         .attr("src",LOGO_URL).style("max-height","70px")
     },
     items: function(target,selectbar) {
-      return d3_splat( target, ".menu-item","a")
+      return d3_splat( target, ".menu-item","a", function(x){return x},function(x) {return x.name})
         .classed("menu-item",true)
         .text(function(x){return x.name})
         .on("click", navbar.methods.pushState.bind(this,selectbar)) 

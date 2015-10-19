@@ -33,7 +33,7 @@ RB.crusher.controller = (function(controller) {
   }
 
   controller.initializers = {
-    "home": function(){
+    "settings/pixel": function() {
       var target = d3.selectAll(".container")
 
       var funnelRow = d3_splat(target,".row","div",[{"id":"home"}],function(x){return x.id})
@@ -42,87 +42,12 @@ RB.crusher.controller = (function(controller) {
       funnelRow.exit().remove()
 
 
-
-      var heading = d3_updateable(funnelRow,".welcome-heading","h5")
-
-      heading.text("Welcome to Crusher")
-        .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-15px")
-        .classed("welcome-heading heading",true)
-
-      var info = d3_updateable(funnelRow,".row","div")
-
-      info.attr("style","padding-bottom:15px;padding-top:5px")
-        .classed("row",true)
-
-      var descriptionWrap = d3_updateable(info,".crusher-about","div")
-        .classed("crusher-about col-md-6",true)
-
-      var description = d3_updateable(descriptionWrap,".ct-chart","div")
-        .classed("ct-chart",true)
-        .style("padding-bottom","15px")
-
-      d3_updateable(description,".about-heading","")
-        .classed("about-heading chart-title",true)
-        .text("What is Crusher?")
-
-      d3_updateable(description,".about-description","div")
-        .classed("about-description chart-description",true)
-        .html(
-          "<br>We built crusher because we believe that understanding what you audience does when they are not on your site is the is the best way to craft relevant, meaningful advertisements." + 
-          "<br><br>Crusher is a tool to help you understand the off-site interests and opportunities to advertise to users in your audience based on differences in on-site user activity."
-        )
-
-      var descriptionWrap = d3_updateable(info,".crusher-how","div")
-        .classed("crusher-how col-md-6",true)
-
-      var description = d3_updateable(descriptionWrap,".ct-chart","div")
-        .classed("ct-chart",true)
-        .style("padding-bottom","15px")
-
-      d3_updateable(description,".about-heading","")
-        .classed("about-heading chart-title",true)
-        .text("How to use Crusher")
-
-      d3_updateable(description,".about-description","div")
-        .classed("about-description chart-description",true)
-        .html(
-          "<br>Crusher data provides a better understanding of your audience which can be used to: <br><br>" +
-          "<ul><li>provide demographic insight about your audience</li><li>influence creative development</li><li>recommend topics for content marketing</li><li>highlight opportunities for direct advertising deals</li><li>make programmatic buys similar to your current audience</li></ul>"
-        )
-
-      var descriptionWrap = d3_updateable(info,".crusher-tutorial","div")
-        .classed("crusher-tutorial col-md-6",true)
-
-      var description = d3_updateable(descriptionWrap,".ct-chart","div")
-
-        .classed("crusher-tutorial ct-chart",true)
-        .style("padding-bottom","15px")
-
-      d3_updateable(description,".tutorial-heading","")
-        .classed("tutorial-heading chart-title",true)
-        .text("Getting started with Crusher")
-
-      d3_updateable(description,".tutorial-description","div")
-        .classed("tutorial-description chart-description",true)
-        .html(
-          "<br>To start using Crusher, you need to implement the Rockerbox pixel on your website. " + 
-          "<br><br>After pixels are implemented, you need to create \"on-site actions\" to model user activity. (We provide some recommended actions to get you started). " +
-          "<br><br>After you have created an action, you can start exploring the off-site activity associated with the on-site modeled behavior"
-
-        )
-
-
-
-      
-
-      
-
       crusher.subscribe.add_subscriber(["pixel_status","advertiser","an_uid"], function(status_data,advertiser_data,uid){
 
-        var heading = d3_updateable(funnelRow,".pixel-heading","h5")
+        var heading = d3_updateable(funnelRow,".heading","h5")
 
         heading.text(advertiser_data.advertiser_name + " Pixel Status")
-          .attr("style","padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-15px")
+          .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-15px")
           .classed("heading pixel-heading",true)
 
 
@@ -241,7 +166,94 @@ RB.crusher.controller = (function(controller) {
 
 
                   
-      },"home",true,true)
+      },"settings",true,true)
+
+    },
+    "home": function(){
+      var target = d3.selectAll(".container")
+
+      var funnelRow = d3_splat(target,".row","div",[{"id":"home"}],function(x){return x.id})
+        .classed("row funnels",true)
+
+      funnelRow.exit().remove()
+
+
+
+      var heading = d3_updateable(funnelRow,".welcome-heading","h5")
+
+      heading.text("Welcome to Crusher")
+        .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-15px")
+        .classed("welcome-heading heading",true)
+
+      var info = d3_updateable(funnelRow,".row","div")
+
+      info.attr("style","padding-bottom:15px;padding-top:5px")
+        .classed("row",true)
+
+      var descriptionWrap = d3_updateable(info,".crusher-about","div")
+        .classed("crusher-about col-md-6",true)
+
+      var description = d3_updateable(descriptionWrap,".ct-chart","div")
+        .classed("ct-chart",true)
+        .style("padding-bottom","15px")
+
+      d3_updateable(description,".about-heading","")
+        .classed("about-heading chart-title",true)
+        .text("What is Crusher?")
+
+      d3_updateable(description,".about-description","div")
+        .classed("about-description chart-description",true)
+        .html(
+          "<br>We built crusher because we believe that understanding what you audience does when they are not on your site is the is the best way to craft relevant, meaningful advertisements." + 
+          "<br><br>Crusher is a tool to help you understand the off-site interests and opportunities to advertise to users in your audience based on differences in on-site user activity."
+        )
+
+      var descriptionWrap = d3_updateable(info,".crusher-how","div")
+        .classed("crusher-how col-md-6",true)
+
+      var description = d3_updateable(descriptionWrap,".ct-chart","div")
+        .classed("ct-chart",true)
+        .style("padding-bottom","15px")
+
+      d3_updateable(description,".about-heading","")
+        .classed("about-heading chart-title",true)
+        .text("How to use Crusher")
+
+      d3_updateable(description,".about-description","div")
+        .classed("about-description chart-description",true)
+        .html(
+          "<br>Crusher data provides a better understanding of your audience which can be used to: <br><br>" +
+          "<ul><li>provide demographic insight about your audience</li><li>influence creative development</li><li>recommend topics for content marketing</li><li>highlight opportunities for direct advertising deals</li><li>make programmatic buys similar to your current audience</li></ul>"
+        )
+
+      var descriptionWrap = d3_updateable(info,".crusher-tutorial","div")
+        .classed("crusher-tutorial col-md-6",true)
+
+      var description = d3_updateable(descriptionWrap,".ct-chart","div")
+
+        .classed("crusher-tutorial ct-chart",true)
+        .style("padding-bottom","15px")
+
+      d3_updateable(description,".tutorial-heading","")
+        .classed("tutorial-heading chart-title",true)
+        .text("Getting started with Crusher")
+
+      d3_updateable(description,".tutorial-description","div")
+        .classed("tutorial-description chart-description",true)
+        .html(
+          "<br>To start using Crusher, you need to implement the Rockerbox pixel on your website. " + 
+          "<br><br>After pixels are implemented, you need to create \"on-site actions\" to model user activity. (We provide some recommended actions to get you started). " +
+          "<br><br>After you have created an action, you can start exploring the off-site activity associated with the on-site modeled behavior"
+
+        )
+
+
+
+      
+
+      
+
+      
 
       
 
@@ -474,6 +486,9 @@ RB.crusher.controller = (function(controller) {
     roots: [{
       "name":"On-page Analytics",
       "push_state": "/crusher/"
+    },{
+      "name":"Settings",
+      "push_state": "/crusher/settings"
     }],
     renderers: controller.initializers,
     transforms: {
@@ -518,6 +533,11 @@ RB.crusher.controller = (function(controller) {
           "name":"Funnels",
           "push_state":"/crusher/funnel",
         }],
+      "settings": [
+        {
+          "name":"Pixel Settings",
+          "push_state":"/crusher/settings/pixel",
+        }],
       "home": [{
           "name":"Quick Links",
           "push_state":"/crusher/home"
@@ -527,8 +547,8 @@ RB.crusher.controller = (function(controller) {
           "push_state":"/crusher/action",
         },
         {
-          "name":"Pixel Settings",
-          "push_state":"/crusher/pixel",
+          "name":"Settings",
+          "push_state":"/crusher/settings",
         }],
       "funnel": [{
           "name":"Create New Funnel",
