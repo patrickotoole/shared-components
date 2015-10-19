@@ -43,33 +43,101 @@ RB.crusher.controller = (function(controller) {
 
 
 
-      var heading = d3_updateable(funnelRow,".heading","h5")
+      var heading = d3_updateable(funnelRow,".welcome-heading","h5")
 
       heading.text("Welcome to Crusher")
         .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-15px")
-        .classed("heading",true)
+        .classed("welcome-heading heading",true)
 
-      var info = d3_updateable(funnelRow,".col-md-12","div")
+      var info = d3_updateable(funnelRow,".row","div")
 
       info.attr("style","padding-bottom:15px;padding-top:5px")
-        .classed("col-md-12 row",true)
+        .classed("row",true)
 
-      d3_updateable(info,".crusher-description","div")
-        .classed("crusher-description",true)
-        .text("Crusher is a tool to help advertisers understand the off-site interests and opportunities to advertise to users in your audience.")
+      var descriptionWrap = d3_updateable(info,".crusher-about","div")
+        .classed("crusher-about col-md-6",true)
 
-      d3_updateable(info,".pixel-description","div")
-        .classed("pixel-description",true)
-        .style("margin-top","15px")
-        .html("If this is your first time logging in, make sure that you have completed pixel implementation. Below we show the last time your pixel has fired: ")
+      var description = d3_updateable(descriptionWrap,".ct-chart","div")
+        .classed("ct-chart",true)
+        .style("padding-bottom","15px")
 
-      var pixelBox = d3_updateable(funnelRow,".pixel-box","div")
-        .classed("pixel-box",true)
+      d3_updateable(description,".about-heading","")
+        .classed("about-heading chart-title",true)
+        .text("What is Crusher?")
+
+      d3_updateable(description,".about-description","div")
+        .classed("about-description chart-description",true)
+        .html(
+          "<br>We built crusher because we believe that understanding what you audience does when they are not on your site is the is the best way to craft relevant, meaningful advertisements." + 
+          "<br><br>Crusher is a tool to help you understand the off-site interests and opportunities to advertise to users in your audience based on differences in on-site user activity."
+        )
+
+      var descriptionWrap = d3_updateable(info,".crusher-how","div")
+        .classed("crusher-how col-md-6",true)
+
+      var description = d3_updateable(descriptionWrap,".ct-chart","div")
+        .classed("ct-chart",true)
+        .style("padding-bottom","15px")
+
+      d3_updateable(description,".about-heading","")
+        .classed("about-heading chart-title",true)
+        .text("How to use Crusher")
+
+      d3_updateable(description,".about-description","div")
+        .classed("about-description chart-description",true)
+        .html(
+          "<br>Crusher data provides a better understanding of your audience which can be used to: <br><br>" +
+          "<ul><li>provide demographic insight about your audience</li><li>influence creative development</li><li>recommend topics for content marketing</li><li>highlight opportunities for direct advertising deals</li><li>make programmatic buys similar to your current audience</li></ul>"
+        )
+
+      var descriptionWrap = d3_updateable(info,".crusher-tutorial","div")
+        .classed("crusher-tutorial col-md-6",true)
+
+      var description = d3_updateable(descriptionWrap,".ct-chart","div")
+
+        .classed("crusher-tutorial ct-chart",true)
+        .style("padding-bottom","15px")
+
+      d3_updateable(description,".tutorial-heading","")
+        .classed("tutorial-heading chart-title",true)
+        .text("Getting started with Crusher")
+
+      d3_updateable(description,".tutorial-description","div")
+        .classed("tutorial-description chart-description",true)
+        .html(
+          "<br>To start using Crusher, you need to implement the Rockerbox pixel on your website. " + 
+          "<br><br>After pixels are implemented, you need to create \"on-site actions\" to model user activity. (We provide some recommended actions to get you started). " +
+          "<br><br>After you have created an action, you can start exploring the off-site activity associated with the on-site modeled behavior"
+
+        )
+
+
+
+      
 
       
 
       crusher.subscribe.add_subscriber(["pixel_status","advertiser","an_uid"], function(status_data,advertiser_data,uid){
 
+        var heading = d3_updateable(funnelRow,".pixel-heading","h5")
+
+        heading.text(advertiser_data.advertiser_name + " Pixel Status")
+          .attr("style","padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-15px")
+          .classed("heading pixel-heading",true)
+
+
+
+        
+
+        var pixelBox = d3_updateable(funnelRow,".pixel-box","div")
+          .classed("pixel-box",true)
+
+        d3_updateable(pixelBox,".pixel-description","div")
+          .classed("pixel-description",true)
+          .style("margin-top","15px")
+          .style("margin-bottom","15px")
+
+          .html("If this is your first time logging in, make sure that you have completed pixel implementation. Below we show the last time your pixel has fired: ")
 
         var statusByID = d3.nest()
           .key(function(x){return x.segment_id})
@@ -77,9 +145,12 @@ RB.crusher.controller = (function(controller) {
        
         var active_segments = advertiser_data.segments.filter(function(x){return x.segment_implemented != ""})
 
-        active_segments.map(function(seg){
+        active_segments = active_segments.map(function(seg){
           var status = statusByID[seg.external_segment_id]
           seg.status = (status && status.length) ? status[0] : {}
+          return seg
+        }).sort(function(p,c){
+          return (p.status.last_fired_seconds || 1000000) - (c.status.last_fired_seconds || 1000000)
         })
 
         var class_name = (active_segments.length > 2) ? "col-md-4" : "col-md-" + (12/active_segments.length) ;
@@ -136,9 +207,10 @@ RB.crusher.controller = (function(controller) {
                 .style("padding-left","0px")
 
               var rightRow = d3_updateable(current.select(".pixel-row") ,".pixel-data","div")
-                .classed("col-md-8 pull-right",true)
+                .classed("pixel-data col-md-8 pull-right",true)
                 .style("white-space","pre")
                 .style("text-align","left")
+                .style("overflow","scroll")
 
               d3_updateable(rightRow,".chart-title","div")
                 .classed("name chart-title",true)
