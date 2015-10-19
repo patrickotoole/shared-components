@@ -64,14 +64,62 @@ RB.crusher.controller = (function(controller) {
         .html("If this is your first time logging in, make sure that you have completed pixel implementation. Below we show the last time your pixel has fired: ")
 
       var pixelBox = d3_updateable(funnelRow,".pixel-box","div")
-        .classed("pixel-box col-md-9",true)
+        .classed("pixel-box",true)
 
-      var innerPixelBox = d3_updateable(pixelBox,".ct-chart","div")
-        .classed("ct-chart",true)
-        .style("text-align","left")
+      
 
-      innerPixelBox.text("asdf")
+      crusher.subscribe.add_subscriber(["pixel_status","advertiser"], function(status_data,advertiser_data){
 
+        var statusByID = d3.nest()
+          .key(function(x){return x.segment_id})
+          .map(status_data)
+       
+        var active_segments = advertiser_data.segments.filter(function(x){return x.segment_implemented != ""})
+
+        active_segments.map(function(seg){
+          var status = statusByID[seg.external_segment_id]
+          seg.status = (status && status.length) ? status[0] : {}
+        })
+
+        var class_name = (active_segments.length > 2) ? "col-md-4" : "col-md-" + (12/active_segments.length) ;
+
+        var wrapper = d3_splat(pixelBox,".pixel-wrapper","div",active_segments,function(x){return x.external_segment_id})
+          .classed("pixel-wrapper " + class_name,true)
+
+        var row = d3_updateable(wrapper,".pixel-row","div")
+          .classed("pixel-row ct-chart",true)
+          .style("padding-bottom","20px")
+
+        d3_updateable(row,".time-ago-icon","span")
+          .classed("glyphicon time-ago-icon chart-description pull-right",true)
+          .classed("glyphicon-warning-sign",function(x){return x.status.last_fired_pretty === undefined })
+          .classed("glyphicon-ok-circle",function(x){return x.status.last_fired_pretty !== undefined })
+          .style("color",function(x){return (x.status.last_fired_pretty === undefined) ? "red" : "green" })
+          .style("font-size","18px")
+          .style("width","24px")
+          .style("height","24px")
+          .style("margin","-5px")
+
+
+
+        d3_updateable(row,".name","div")
+          .classed("name chart-title",true)
+          .text(function(x){return x.segment_name })
+
+        d3_updateable(row,".time-ago","div")
+          .classed("time-ago chart-description",true)
+          .text(function(x){return "Last fired: " + x.status.last_fired_pretty })
+
+        
+
+        d3_updateable(row,".segment-id","div")
+          .classed("segment-id chart-description",true)
+          .text(function(x){return "(" + x.external_segment_id + ")"})
+
+
+
+          
+      },"home",true,true)
 
       
 
@@ -349,8 +397,16 @@ RB.crusher.controller = (function(controller) {
           "push_state":"/crusher/funnel",
         }],
       "home": [{
-          "name":"",
+          "name":"Quick Links",
           "push_state":"/crusher/home"
+        },
+        {
+          "name":"Actions",
+          "push_state":"/crusher/action",
+        },
+        {
+          "name":"Pixel Settings",
+          "push_state":"/crusher/pixel",
         }],
       "funnel": [{
           "name":"Create New Funnel",

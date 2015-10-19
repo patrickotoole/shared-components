@@ -11,6 +11,24 @@ RB.crusher.cache = (function(cache) {
 
 RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
+  endpoints.pixel_status = new api.helpers.genericQueuedAPI(function(cb,deferred_cb) {
+    d3.json("/pixel/status?format=json", function(dd){
+      deferred_cb(null,cb.bind(false,dd))
+    })
+  })
+
+  endpoints.advertiser = new api.helpers.genericQueuedAPI(function(cb,deferred_cb) {
+
+    if (!cache.advertiserData) {
+      d3.json(api.URL.advertiser + "?format=json", function(dd){
+        cache.advertiserData = dd[0]
+        
+        deferred_cb(null,cb.bind(false,cache.advertiserData))
+      })
+    } else {
+      deferred_cb(null,cb.bind(false,cache.advertiserData))
+    }
+  })
 
   endpoints.pattern_status = api.helpers.genericQueuedAPIWithData(function(data,cb,deferred_cb) {
     var pattern = data.url_pattern[0]
