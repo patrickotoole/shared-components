@@ -11,6 +11,25 @@ RB.crusher.cache = (function(cache) {
 
 RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
+  endpoints.an_uid = new api.helpers.genericQueuedAPI(function(cb,deferred_cb) {
+      var img = new Image()
+      img.src = "http://ib.adnxs.com/getuid?" + window.location.origin + "/pixel/cookie?uid=$UID"
+
+      var uuid = document.cookie.split("an_uuid=")[1].split(";")[0]
+      cache.uuid = uuid 
+      deferred_cb(null,cb.bind(false,uuid))
+            
+  })
+
+  endpoints.segment_pixel_status = api.helpers.genericQueuedAPIWithData(function(segment,cb,deferred_cb) {
+
+    var path = "/pixel/status/lookup?format=json&segment="
+    d3.json(path + segment.external_segment_id + "&uid=" + segment.uuid, function(dd){
+      deferred_cb(null,cb.bind(false,dd))
+    })
+
+  })
+
   endpoints.pixel_status = new api.helpers.genericQueuedAPI(function(cb,deferred_cb) {
     d3.json("/pixel/status?format=json", function(dd){
       deferred_cb(null,cb.bind(false,dd))

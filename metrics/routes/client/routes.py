@@ -64,6 +64,7 @@ class AdvertiserRoutes(Routes):
             (r'/viewability', analytics.ViewabilityHandler, self.connectors),
             (r'/availability', analytics.AvailabilityHandler, self.connectors),
             (r'/domains', analytics.DomainsMongoHandler, self.connectors),
+            (r'/pixel/cookie', pixel_status.CookieHandler, self.connectors),
             (r'/pixel/status', pixel_status.PixelHandler, self.connectors),
             (r'/pixel/status/lookup', pixel_status.LookupHandler, self.connectors)
 

@@ -68,7 +68,8 @@ RB.crusher.controller = (function(controller) {
 
       
 
-      crusher.subscribe.add_subscriber(["pixel_status","advertiser"], function(status_data,advertiser_data){
+      crusher.subscribe.add_subscriber(["pixel_status","advertiser","an_uid"], function(status_data,advertiser_data,uid){
+
 
         var statusByID = d3.nest()
           .key(function(x){return x.segment_id})
@@ -86,9 +87,12 @@ RB.crusher.controller = (function(controller) {
         var wrapper = d3_splat(pixelBox,".pixel-wrapper","div",active_segments,function(x){return x.external_segment_id})
           .classed("pixel-wrapper " + class_name,true)
 
-        var row = d3_updateable(wrapper,".pixel-row","div")
-          .classed("pixel-row ct-chart",true)
+        var outerRow = d3_updateable(wrapper,".pixel-row","div")
+          .classed("row pixel-row ct-chart",true)
           .style("padding-bottom","20px")
+
+        var row = d3_updateable(outerRow,".pixel-row-inner","div")
+          .classed("pixel-row-inner",true)
 
         d3_updateable(row,".time-ago-icon","span")
           .classed("glyphicon time-ago-icon chart-description pull-right",true)
@@ -110,15 +114,61 @@ RB.crusher.controller = (function(controller) {
           .classed("time-ago chart-description",true)
           .text(function(x){return "Last fired: " + x.status.last_fired_pretty })
 
-        
+        d3_updateable(row,".gear","span")
+          .classed("glyphicon glyphicon-cog gear chart-description pull-right",true)
+          .style("color","lightgrey")
+          .style("font-size","18px")
+          .style("width","24px")
+          .style("height","24px")
+          .style("margin","-5px")
+          .style("margin-top","5px")
+          .on("click",function(x){
+            x.uuid = uid
+            var self = this
+            crusher.subscribe.add_subscriber(["segment_pixel_status"], function(resp){
+              var current = wrapper.filter(function(y) {return x == y })
+              current
+                .classed(class_name,false)
+                .classed("col-md-12",true)
+              
+              current.select(".pixel-row-inner").classed("col-md-4",true)
+                .style("padding-right","45px")
+                .style("padding-left","0px")
+
+              var rightRow = d3_updateable(current.select(".pixel-row") ,".pixel-data","div")
+                .classed("col-md-8 pull-right",true)
+                .style("white-space","pre")
+                .style("text-align","left")
+
+              d3_updateable(rightRow,".chart-title","div")
+                .classed("name chart-title",true)
+                .text("Your users recent activity")
+
+
+              d3_updateable(rightRow,".chart-total","div")
+                .classed("chart-total",true)
+                .text(resp.length + " events")
+
+
+
+              d3_updateable(rightRow,".details","code")
+                .classed("details code",true)
+                .style("white-space","pre")
+                .text(JSON.stringify(resp.map(function(z){ return JSON.parse(z.json_body)}),null,2))
+
+
+            },"specific_pixel",true,false,x)
+
+          })
+
+
 
         d3_updateable(row,".segment-id","div")
           .classed("segment-id chart-description",true)
           .text(function(x){return "(" + x.external_segment_id + ")"})
 
 
-
-          
+                  
       },"home",true,true)
 
       

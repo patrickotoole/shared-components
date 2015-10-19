@@ -44,3 +44,12 @@ class LookupHandler(PixelLookupHandler):
         uid = self.get_argument("uid", False)
 
         self.get_segments(advertiser, segment, uid)
+
+class CookieHandler(PixelLookupHandler):
+
+    @tornado.web.authenticated
+    def get(self):
+        uid = self.get_argument("uid", False)
+
+        self.set_cookie("an_uuid",uid)
+        self.finish()
