@@ -33,7 +33,44 @@ RB.crusher.controller = (function(controller) {
   }
 
   controller.initializers = {
-    "settings/pixel": function() {
+    "settings/pixel_setup": function() {
+      var target = d3.selectAll(".container")
+
+      var funnelRow = d3_splat(target,".row","div",[{"id":"setup"}],function(x){return x.id})
+        .classed("row funnels",true)
+
+      funnelRow.exit().remove()
+
+      crusher.subscribe.add_subscriber(["advertiser","an_uid"], function(advertiser_data,uid){
+
+        var heading = d3_updateable(funnelRow,".heading","h5")
+
+        heading.text(advertiser_data.advertiser_name + " Pixel Setup")
+          .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-15px")
+          .classed("heading pixel-heading",true)
+
+        
+        var pixelBox = d3_updateable(funnelRow,".pixel-box-wrapper","div")
+          .classed("pixel-box-wrapper",true)
+
+        d3_updateable(pixelBox,".pixel-description","div")
+          .classed("pixel-description",true)
+          .style("margin-top","15px")
+          .style("margin-bottom","15px")
+
+          .html("If this is your first time logging in, make sure that you have completed pixel implementation. Below we show the last time your pixel has fired: ")
+
+               
+        var active_segments = advertiser_data.segments.filter(function(x){return x.segment_implemented != ""})
+
+        buildSegments(pixelBox.datum({"segments":active_segments}),"Pixel Implementation Guide",true)
+
+      },"setup",true,true)
+
+
+
+    },
+    "settings/pixel_status": function() {
       var target = d3.selectAll(".container")
 
       var funnelRow = d3_splat(target,".row","div",[{"id":"home"}],function(x){return x.id})
@@ -49,10 +86,6 @@ RB.crusher.controller = (function(controller) {
         heading.text(advertiser_data.advertiser_name + " Pixel Status")
           .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-15px")
           .classed("heading pixel-heading",true)
-
-
-
-        
 
         var pixelBox = d3_updateable(funnelRow,".pixel-box","div")
           .classed("pixel-box",true)
@@ -312,7 +345,7 @@ RB.crusher.controller = (function(controller) {
       },"actionDashboard",true,true)
 
     },
-    "": function(){
+    "analytics": function(){
       var target = d3.selectAll(".container")
 
       var funnelRow = d3_splat(target,".row","div",[{"id":"analytics_overview"}],function(x){return x.id})
@@ -485,10 +518,12 @@ RB.crusher.controller = (function(controller) {
   controller.routes = {
     roots: [{
       "name":"On-page Analytics",
-      "push_state": "/crusher/"
+      "push_state": "/crusher/analytics",
+      "class": "glyphicon glyphicon-stats"
     },{
       "name":"Settings",
-      "push_state": "/crusher/settings"
+      "push_state": "/crusher/settings",
+      "class": "glyphicon glyphicon-cog"
     }],
     renderers: controller.initializers,
     transforms: {
@@ -522,9 +557,9 @@ RB.crusher.controller = (function(controller) {
       "action/existing": ['actions'],
       "action/new": [],
       "action/recommended": ["recommended_actions"],
-      "": [{
+      "analytics": [{
           "name":"Overview",
-          "push_state":"/crusher/",
+          "push_state":"/crusher/analytics",
         },{
           "name":"Actions",
           "push_state":"/crusher/action",
@@ -535,8 +570,12 @@ RB.crusher.controller = (function(controller) {
         }],
       "settings": [
         {
-          "name":"Pixel Settings",
-          "push_state":"/crusher/settings/pixel",
+          "name":"Pixel Setup",
+          "push_state":"/crusher/settings/pixel_setup",
+        },
+        {
+          "name":"Pixel Status",
+          "push_state":"/crusher/settings/pixel_status",
         }],
       "home": [{
           "name":"Quick Links",
