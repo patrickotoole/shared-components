@@ -15,9 +15,20 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
       var img = new Image()
       img.src = "http://ib.adnxs.com/getuid?" + window.location.origin + "/crusher/pixel/cookie?uid=$UID"
 
-      var uuid = document.cookie.split("an_uuid=")[1].split(";")[0]
-      cache.uuid = uuid 
-      deferred_cb(null,cb.bind(false,uuid))
+      var run_uid = function(){
+
+        try {
+          var uuid = document.cookie.split("an_uuid=")[1].split(";")[0]
+          cache.uuid = uuid 
+          deferred_cb(null,cb.bind(false,uuid))
+        } catch(e) {
+          setTimeout(run_uid,1000)
+        }
+      }
+
+      run_uid()
+
+      
             
   })
 
