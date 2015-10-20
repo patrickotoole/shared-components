@@ -33,6 +33,180 @@ RB.crusher.controller = (function(controller) {
   }
 
   controller.initializers = {
+
+    "settings/subscription": function() {
+      var target = d3.selectAll(".container")
+
+      var funnelRow = d3_splat(target,".row","div",[{"id":"subscription"}],function(x){return x.id})
+        .classed("row funnels",true)
+
+      funnelRow.exit().remove()
+
+      var heading = d3_updateable(funnelRow,".heading","h5")
+
+      heading.text("Manage Subscription")
+        .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-15px")
+        .classed("heading heading",true)
+
+      d3_updateable(funnelRow,".pixel-description","div")
+        .classed("pixel-description",true)
+        .style("margin-top","15px")
+        .style("margin-bottom","15px")
+        .html("Shown below is your current subscription plan")
+
+      var mainWrapper = d3_updateable(funnelRow,".subscription-overview","div")
+        .classed("subscription-overview col-md-12",true)
+
+      var row = d3_updateable(mainWrapper,".account-row","div")
+        .classed("row account-row ct-chart",true)
+        .style("padding-bottom","20px")
+
+      d3_updateable(row,".name","div")
+        .classed("name chart-title",true)
+        .text("Subscription Plan")
+
+      var desc = d3_updateable(row,".description","div")
+        .classed("description chart-description",true)
+
+      d3_updateable(desc,".segments","div")
+        .style("margin-top","10px")
+        .classed("segments",true)
+        .text("Type: Pilot Partner")
+
+
+
+    },
+    "settings": function() {
+      var target = d3.selectAll(".container")
+
+      var funnelRow = d3_splat(target,".row","div",[{"id":"settings"}],function(x){return x.id})
+        .classed("row funnels",true)
+
+      funnelRow.exit().remove()
+
+      var heading = d3_updateable(funnelRow,".heading","h5")
+
+      heading.text("Account Overview")
+        .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-15px")
+        .classed("heading heading",true)
+
+      d3_updateable(funnelRow,".pixel-description","div")
+        .classed("pixel-description",true)
+        .style("margin-top","15px")
+        .style("margin-bottom","15px")
+        .html("Below is a summary of the settings associated with your account.")
+
+
+      crusher.subscribe.add_subscriber(["advertiser","actions", "funnels"], function(advertiser_data,action_data,funnel_data){
+
+        var mainWrapper = d3_updateable(funnelRow,".advertiser-overview","div")
+          .classed("advertiser-overview col-md-4",true)
+          .datum(advertiser_data)
+
+        var row = d3_updateable(mainWrapper,".account-row","div")
+          .classed("row account-row ct-chart",true)
+          .style("padding-bottom","20px")
+
+        d3_updateable(row,".name","div")
+          .classed("name chart-title",true)
+          .text("Advertiser Summary")
+
+        var desc = d3_updateable(row,".description","div")
+          .classed("description chart-description",true)
+
+        d3_updateable(desc,".status","div")
+          .style("margin-top","10px")
+          .classed("status",true)
+          .text(function(x){ return "Status: " + (x.active ? "Active" : "Inactive" )})
+
+        d3_updateable(desc,".name","div")
+          .classed("name",true)
+          .text(function(x){ return "Source name: " + x.pixel_source_name })
+
+
+        d3_updateable(desc,".actions","div")
+          .style("margin-top","10px")
+          .classed("actions",true)
+          .text(function(x){ return "Actions: " + crusher.cache.actionData.length })
+
+        d3_updateable(desc,".funnels","div")
+          .classed("funnels",true)
+          .text(function(x){ return "Funnels: " + crusher.cache.funnelData.length })
+
+
+
+
+
+        var mainWrapper = d3_updateable(funnelRow,".pixel-overview","div")
+          .classed("pixel-overview col-md-4",true)
+          .datum(advertiser_data)
+
+        var row = d3_updateable(mainWrapper,".account-row","div")
+          .classed("row account-row ct-chart",true)
+          .style("padding-bottom","20px")
+
+        d3_updateable(row,".name","div")
+          .classed("name chart-title",true)
+          .text("Pixel Summary")
+
+        var desc = d3_updateable(row,".description","div")
+          .classed("description chart-description",true)
+
+        d3_updateable(desc,".segments","div")
+          .style("margin-top","10px")
+          .classed("segments",true)
+          .text(function(x){ return "Segment pixels: " + x.segments.length})
+
+        d3_updateable(desc,".implemented","div")
+          .classed("implemented",true)
+          .text(function(x){ return "Implemented pixels: " + x.segments.filter(function(x){return x.segment_implemented}).length})
+
+
+        var mainWrapper = d3_updateable(funnelRow,".subscription-overview","div")
+          .classed("subscription-overview col-md-4",true)
+          .datum(advertiser_data)
+
+        var row = d3_updateable(mainWrapper,".account-row","div")
+          .classed("row account-row ct-chart",true)
+          .style("padding-bottom","20px")
+
+        d3_updateable(row,".name","div")
+          .classed("name chart-title",true)
+          .text("Subscription Plan")
+
+        var desc = d3_updateable(row,".description","div")
+          .classed("description chart-description",true)
+
+        d3_updateable(desc,".segments","div")
+          .style("margin-top","10px")
+          .classed("segments",true)
+          .text("Type: Beta Partner")
+
+
+
+
+
+
+      },"overview",true,false)
+
+
+
+    },
+    "settings/advertiser": function() {
+      var target = d3.selectAll(".container")
+
+      var funnelRow = d3_splat(target,".row","div",[{"id":"setup"}],function(x){return x.id})
+        .classed("row funnels",true)
+
+      funnelRow.exit().remove()
+
+      var heading = d3_updateable(funnelRow,".heading","h5")
+
+      heading.text("Advertiser Settings")
+        .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-15px")
+        .classed("heading heading",true)
+
+    },
     "settings/pixel/setup": function() {
       var target = d3.selectAll(".container")
 
@@ -41,7 +215,8 @@ RB.crusher.controller = (function(controller) {
 
       funnelRow.exit().remove()
 
-      crusher.subscribe.add_subscriber(["advertiser","an_uid"], function(advertiser_data,uid){
+     // crusher.subscribe.add_subscriber(["advertiser","an_uid"], function(advertiser_data,uid){
+      crusher.subscribe.add_subscriber(["pixel_status","advertiser","an_uid"], function(status_data,advertiser_data,uid){
 
         var heading = d3_updateable(funnelRow,".heading","h5")
 
@@ -50,7 +225,7 @@ RB.crusher.controller = (function(controller) {
           .classed("heading heading",true)
 
         
-        var pixelBox = d3_updateable(funnelRow,".pixel-box-wrapper","div")
+        var implementPixel = pixelBox = d3_updateable(funnelRow,".pixel-box-wrapper","div")
           .classed("pixel-box-wrapper",true)
 
         d3_updateable(pixelBox,".pixel-description","div")
@@ -111,14 +286,14 @@ RB.crusher.controller = (function(controller) {
           .style("margin-bottom","15px")
           .html("For a custom conversion integration, click here to see advanced instructions for adding conversion pixel pixelss")
           .on("click",function(x){
-            pixelBox.select(".advanced-pixels").classed("hidden",false)
+            implementPixel.select(".advanced-pixels").classed("hidden",false)
             pixel_show_wrapper.classed("hidden",true)
           })
 
         var active_segments = advertiser_data.segments.filter(function(x){return x.segment_implemented != "" && x.segment_name.indexOf("All") == -1})
 
         var advanced = d3_updateable(pixelBox,".advanced-pixels","div")
-          .classed("advanced-pixels hidden",true)
+          .classed("row advanced-pixels hidden",true)
 
         var wrapper = d3_splat(advanced,".pixel-wrapper","div",active_segments,function(x){return x.external_segment_id})
           .classed("pixel-wrapper " + class_name,true)
@@ -158,12 +333,12 @@ RB.crusher.controller = (function(controller) {
 
 
         
-
+    /*
 
       },"setup",true,true)
 
 
-
+    
     },
     "settings/pixel/status": function() {
       var target = d3.selectAll(".container")
@@ -173,14 +348,14 @@ RB.crusher.controller = (function(controller) {
 
       funnelRow.exit().remove()
 
+    */
+      
 
-      crusher.subscribe.add_subscriber(["pixel_status","advertiser","an_uid"], function(status_data,advertiser_data,uid){
-
-        var heading = d3_updateable(funnelRow,".heading","h5")
+        var heading = d3_updateable(funnelRow,".pixel-heading","h5")
 
         heading.text(advertiser_data.advertiser_name + " Pixel Status")
-          .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-15px")
-          .classed("heading ",true)
+          .attr("style","margin-top:45px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-15px")
+          .classed("pixel-heading heading ",true)
 
         var pixelBox = d3_updateable(funnelRow,".pixel-box","div")
           .classed("pixel-box",true)
@@ -222,7 +397,7 @@ RB.crusher.controller = (function(controller) {
           .classed("glyphicon time-ago-icon chart-description pull-right",true)
           .classed("glyphicon-warning-sign",function(x){return x.status.last_fired_pretty === undefined })
           .classed("glyphicon-ok-circle",function(x){return x.status.last_fired_pretty !== undefined })
-          .style("color",function(x){return (x.status.last_fired_pretty === undefined) ? "#ff0066" : "lightgreen" })
+          .style("color",function(x){return (x.status.last_fired_pretty === undefined) ? "red" : "green" })
           .style("font-size","24px")
           .style("width","36px")
           .style("height","36px")
@@ -716,22 +891,18 @@ RB.crusher.controller = (function(controller) {
         }],
       "settings": [
         {
-          "name":"Advertiser Settings",
+          "name":"Advertiser Setup",
           "push_state":"/crusher/settings/advertiser",
         },
-        {
-          "name":"Pixel Settings",
-          "push_state":"/crusher/settings/pixel",
-        }],
-      "settings/pixel": [
         {
           "name":"Pixel Setup",
           "push_state":"/crusher/settings/pixel/setup",
         },
+        
         {
-          "name":"Pixel Status",
-          "push_state":"/crusher/settings/pixel/status",
-        } 
+          "name":"Subscription",
+          "push_state":"/crusher/settings/subscription",
+        }
       ],
       "home": [{
           "name":"Home",
