@@ -33,6 +33,46 @@ RB.crusher.controller = (function(controller) {
   }
 
   controller.initializers = {
+    "settings/advertiser": function() {
+      var target = d3.selectAll(".container")
+
+      var funnelRow = d3_splat(target,".row","div",[{"id":"advertiser"}],function(x){return x.id})
+        .classed("row funnels",true)
+
+      funnelRow.exit().remove()
+
+      var heading = d3_updateable(funnelRow,".heading","h5")
+
+      heading.text("Manage Advertiser")
+        .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-15px")
+        .classed("heading heading",true)
+
+      d3_updateable(funnelRow,".pixel-description","div")
+        .classed("pixel-description",true)
+        .style("margin-top","15px")
+        .style("margin-bottom","15px")
+        .html("Shown below are settings specific to your advertiser")
+
+      var mainWrapper = d3_updateable(funnelRow,".advertiser-overview","div")
+        .classed("advertiser-overview col-md-12",true)
+
+      var row = d3_updateable(mainWrapper,".account-row","div")
+        .classed("row account-row ct-chart",true)
+        .style("padding-bottom","20px")
+
+      d3_updateable(row,".name","div")
+        .classed("name chart-title",true)
+        .text("Advertiser Permissions")
+
+      var desc = d3_updateable(row,".description","div")
+        .classed("description chart-description",true)
+
+      d3_updateable(desc,".segments","div")
+        .style("margin-top","10px")
+        .classed("segments",true)
+        .text("All features enabled")
+
+    },
 
     "settings/subscription": function() {
       var target = d3.selectAll(".container")
@@ -72,8 +112,6 @@ RB.crusher.controller = (function(controller) {
         .style("margin-top","10px")
         .classed("segments",true)
         .text("Type: Pilot Partner")
-
-
 
     },
     "settings": function() {
@@ -190,21 +228,6 @@ RB.crusher.controller = (function(controller) {
       },"overview",true,false)
 
 
-
-    },
-    "settings/advertiser": function() {
-      var target = d3.selectAll(".container")
-
-      var funnelRow = d3_splat(target,".row","div",[{"id":"setup"}],function(x){return x.id})
-        .classed("row funnels",true)
-
-      funnelRow.exit().remove()
-
-      var heading = d3_updateable(funnelRow,".heading","h5")
-
-      heading.text("Advertiser Settings")
-        .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-15px")
-        .classed("heading heading",true)
 
     },
     "settings/pixel/setup": function() {
@@ -891,14 +914,13 @@ RB.crusher.controller = (function(controller) {
         }],
       "settings": [
         {
-          "name":"Advertiser Setup",
-          "push_state":"/crusher/settings/advertiser",
-        },
-        {
           "name":"Pixel Setup",
           "push_state":"/crusher/settings/pixel/setup",
         },
-        
+        {
+          "name":"Advertiser Setup",
+          "push_state":"/crusher/settings/advertiser",
+        },
         {
           "name":"Subscription",
           "push_state":"/crusher/settings/subscription",
