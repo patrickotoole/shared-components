@@ -42,7 +42,10 @@ class PixelStatusHandler(AnalyticsBase, BaseHandler):
         df = yield self.defer_execute(advertiser, segment)
         extras = yield run_mysql_deferred(self.db, MYSQL_QUERY)
 
-        df = df.set_index("segment").join(extras.set_index("segment")).reset_index()
+        try:
+            df = df.set_index("segment").join(extras.set_index("segment")).reset_index()
+        except:
+            df = pandas.DataFrame([])
         response = self.format_response(df)
         self.get_content(response)
 
@@ -60,7 +63,7 @@ class PixelStatusHandler(AnalyticsBase, BaseHandler):
         
     def format_response(self, df):
         if len(df) == 0:
-            return []
+            return df
 
         df["last_fired"] = df.timestamp
         df["segment_id"] = df.segment

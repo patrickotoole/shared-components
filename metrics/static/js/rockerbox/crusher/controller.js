@@ -57,13 +57,108 @@ RB.crusher.controller = (function(controller) {
           .classed("pixel-description",true)
           .style("margin-top","15px")
           .style("margin-bottom","15px")
-
           .html("If this is your first time logging in, make sure that you have completed pixel implementation. Below we show the last time your pixel has fired: ")
 
                
-        var active_segments = advertiser_data.segments.filter(function(x){return x.segment_implemented != ""})
+        var all_pages_segments = advertiser_data.segments.filter(function(x){return x.segment_implemented != "" && x.segment_name.indexOf("All") > -1})
+        var class_name = "col-md-12"
 
-        buildSegments(pixelBox.datum({"segments":active_segments}),"Pixel Implementation Guide",true)
+        var wrapper = d3_splat(pixelBox,".pixel-wrapper","div",all_pages_segments,function(x){return x.external_segment_id})
+          .classed("pixel-wrapper " + class_name,true)
+
+        var outerRow = d3_updateable(wrapper,".pixel-row","div")
+          .classed("row pixel-row ct-chart",true)
+          .style("padding-bottom","20px")
+
+        var row = d3_updateable(outerRow,".pixel-row-inner","div")
+          .classed("pixel-row-inner",true)
+
+        d3_updateable(row,".gear","span")
+          .classed("glyphicon glyphicon-cog gear chart-description pull-right",true)
+          .style("color","lightgrey")
+          .style("font-size","18px")
+          .style("width","24px")
+          .style("height","24px")
+          .style("margin","-5px")
+
+        d3_updateable(row,".name","div")
+          .classed("name chart-title",true)
+          .text(function(x){return x.segment_name })
+
+        d3_updateable(row,".description","div")
+          .classed("description",true)
+          .style("text-align","left")
+          .style("padding-top","10px")
+          .style("padding-bottom","10px")
+          .text("Paste the following snippet before the closing </head> tag on each page of your site.")
+          //.html(function(x){ return x.segment_description})
+
+
+
+        d3_updateable(row,".tag","div")
+          .classed("tag well",true)
+          .style("white-space","pre")
+          .style("text-align","left")
+          .text(function(x){return x.segment_implemented })
+
+        var pixel_show_wrapper = d3_updateable(pixelBox,".pixel-show-wrapper","div")
+          .style("text-align","center")
+          .classed("pixel-show-wrapper",true)
+
+        d3_updateable(pixel_show_wrapper,".pixel-show-more","a")
+          .classed("btn btn-sm btn-default pixel-show-more",true)
+          .style("margin-top","-15px")
+          .style("margin-bottom","15px")
+          .html("For a custom conversion integration, click here to see advanced instructions for adding conversion pixel pixelss")
+          .on("click",function(x){
+            pixelBox.select(".advanced-pixels").classed("hidden",false)
+            pixel_show_wrapper.classed("hidden",true)
+          })
+
+        var active_segments = advertiser_data.segments.filter(function(x){return x.segment_implemented != "" && x.segment_name.indexOf("All") == -1})
+
+        var advanced = d3_updateable(pixelBox,".advanced-pixels","div")
+          .classed("advanced-pixels hidden",true)
+
+        var wrapper = d3_splat(advanced,".pixel-wrapper","div",active_segments,function(x){return x.external_segment_id})
+          .classed("pixel-wrapper " + class_name,true)
+
+
+        var outerRow = d3_updateable(wrapper,".pixel-row","div")
+          .classed("row pixel-row ct-chart",true)
+          .style("padding-bottom","20px")
+
+        var row = d3_updateable(outerRow,".pixel-row-inner","div")
+          .classed("pixel-row-inner",true)
+
+        d3_updateable(row,".gear","span")
+          .classed("glyphicon glyphicon-cog gear chart-description pull-right",true)
+          .style("color","lightgrey")
+          .style("font-size","18px")
+          .style("width","24px")
+          .style("height","24px")
+          .style("margin","-5px")
+
+        d3_updateable(row,".name","div")
+          .classed("name chart-title",true)
+          .text(function(x){return x.segment_name })
+
+        d3_updateable(row,".description","div")
+          .classed("description",true)
+          .style("text-align","left")
+          .style("padding-top","10px")
+          .style("padding-bottom","10px")
+          .html(function(x){ return x.segment_description})
+
+        d3_updateable(row,".tag","div")
+          .classed("tag well",true)
+          .style("white-space","pre")
+          .style("text-align","left")
+          .text(function(x){return x.segment_implemented })
+
+
+        
+
 
       },"setup",true,true)
 
@@ -127,11 +222,13 @@ RB.crusher.controller = (function(controller) {
           .classed("glyphicon time-ago-icon chart-description pull-right",true)
           .classed("glyphicon-warning-sign",function(x){return x.status.last_fired_pretty === undefined })
           .classed("glyphicon-ok-circle",function(x){return x.status.last_fired_pretty !== undefined })
-          .style("color",function(x){return (x.status.last_fired_pretty === undefined) ? "red" : "green" })
-          .style("font-size","18px")
-          .style("width","24px")
-          .style("height","24px")
-          .style("margin","-5px")
+          .style("color",function(x){return (x.status.last_fired_pretty === undefined) ? "#ff0066" : "lightgreen" })
+          .style("font-size","24px")
+          .style("width","36px")
+          .style("height","36px")
+          .style("margin","-14px")
+          .style("margin-top","-8px")
+
 
 
 
@@ -237,8 +334,8 @@ RB.crusher.controller = (function(controller) {
       d3_updateable(description,".about-description","div")
         .classed("about-description chart-description",true)
         .html(
-          "<br>We built crusher because we believe that understanding what you audience does when they are not on your site is the is the best way to craft relevant, meaningful advertisements." + 
-          "<br><br>Crusher is a tool to help you understand the off-site interests and opportunities to advertise to users in your audience based on differences in on-site user activity."
+          "<br>Crusher is a tool to help you understand the off-site interests and opportunities to advertise to users in your audience based on differences in on-site user activity." + 
+          "<br><br>We built crusher because we believe that understanding what you audience does when they are not on your site is the is the best way to craft relevant, meaningful advertisements."
         )
 
       var descriptionWrap = d3_updateable(info,".crusher-how","div")
@@ -260,7 +357,7 @@ RB.crusher.controller = (function(controller) {
         )
 
       var descriptionWrap = d3_updateable(info,".crusher-tutorial","div")
-        .classed("crusher-tutorial col-md-6",true)
+        .classed("crusher-tutorial col-md-12",true)
 
       var description = d3_updateable(descriptionWrap,".ct-chart","div")
 
@@ -271,16 +368,66 @@ RB.crusher.controller = (function(controller) {
         .classed("tutorial-heading chart-title",true)
         .text("Getting started with Crusher")
 
-      d3_updateable(description,".tutorial-description","div")
+      var tutDesc = d3_updateable(description,".tutorial-description","div")
         .classed("tutorial-description chart-description",true)
-        .html(
-          "<br>To start using Crusher, you need to implement the Rockerbox pixel on your website. " + 
-          "<br><br>After pixels are implemented, you need to create \"on-site actions\" to model user activity. (We provide some recommended actions to get you started). " +
-          "<br><br>After you have created an action, you can start exploring the off-site activity associated with the on-site modeled behavior"
 
-        )
+      crusher.subscribe.add_subscriber(["pixel_status","advertiser","actions"], function(status_data,advertiser_data,actions){
+
+        var item1 = d3_updateable(tutDesc,".item-1","div")
+          .classed("item-1",true)
+          .style("margin-top","10px")
+
+        d3_updateable(item1,".status","span")
+          .classed("glyphicon status",true)
+          .style("font-size","24px")
+          .style("float","left")
+          .classed("glyphicon-ok-circle green",function(x) {
+            return status_data.filter(function(x){return x.last_fired_seconds != undefined}).length 
+          })
+          .classed("glyphicon-remove-circle red",function(x) {
+            return status_data.filter(function(x){return x.last_fired_seconds == undefined}).length 
+          })
+
+        d3_updateable(item1,".desc","a")
+          .classed("desc",true)
+          .style("line-height","24px")
+          .style("text-align","center")
+          .style("color","rgb(90, 90, 90)")
+          .style("padding-left","10px")
+          .html("Implement the Rockerbox pixel on your website. ")
+          .on("click",function(){
+            RB.routes.navigation.forward(controller.states["/crusher/settings/pixel_setup"])  
+          })
+
+        var item2 = d3_updateable(tutDesc,".item-2","div")
+          .classed("item-2",true)
+          .style("margin-top","10px")
+
+        d3_updateable(item2,".status","span")
+          .classed("glyphicon status",true)
+          .style("font-size","24px")
+          .style("float","left")
+          .classed("glyphicon-ok-circle green",function(x) {
+            return crusher.cache.actionData.length 
+          })
+          .classed("glyphicon-remove-circle red",function(x) {
+            return crusher.cache.actionData.length == 0 
+          })
+
+        d3_updateable(item2,".desc","a")
+          .classed("desc",true)
+          .style("line-height","24px")
+          .style("text-align","center")
+          .style("color","rgb(90, 90, 90)")
+          .style("padding-left","10px")
+          .html("Implement your first action")
+          .on("click",function(){
+            RB.routes.navigation.forward(controller.states["/crusher/action"])  
+          })
 
 
+         
+      },"home",true,false)
 
       
 
@@ -578,7 +725,7 @@ RB.crusher.controller = (function(controller) {
           "push_state":"/crusher/settings/pixel_status",
         }],
       "home": [{
-          "name":"Quick Links",
+          "name":"Home",
           "push_state":"/crusher/home"
         },
         {
