@@ -33,7 +33,7 @@ RB.crusher.controller = (function(controller) {
   }
 
   controller.initializers = {
-    "settings/pixel_setup": function() {
+    "settings/pixel/setup": function() {
       var target = d3.selectAll(".container")
 
       var funnelRow = d3_splat(target,".row","div",[{"id":"setup"}],function(x){return x.id})
@@ -47,7 +47,7 @@ RB.crusher.controller = (function(controller) {
 
         heading.text(advertiser_data.advertiser_name + " Pixel Setup")
           .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-15px")
-          .classed("heading pixel-heading",true)
+          .classed("heading heading",true)
 
         
         var pixelBox = d3_updateable(funnelRow,".pixel-box-wrapper","div")
@@ -165,7 +165,7 @@ RB.crusher.controller = (function(controller) {
 
 
     },
-    "settings/pixel_status": function() {
+    "settings/pixel/status": function() {
       var target = d3.selectAll(".container")
 
       var funnelRow = d3_splat(target,".row","div",[{"id":"home"}],function(x){return x.id})
@@ -180,7 +180,7 @@ RB.crusher.controller = (function(controller) {
 
         heading.text(advertiser_data.advertiser_name + " Pixel Status")
           .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-15px")
-          .classed("heading pixel-heading",true)
+          .classed("heading ",true)
 
         var pixelBox = d3_updateable(funnelRow,".pixel-box","div")
           .classed("pixel-box",true)
@@ -300,6 +300,8 @@ RB.crusher.controller = (function(controller) {
 
     },
     "home": function(){
+      d3.select("body").classed("hide-select",true)
+
       var target = d3.selectAll(".container")
 
       var funnelRow = d3_splat(target,".row","div",[{"id":"home"}],function(x){return x.id})
@@ -705,9 +707,6 @@ RB.crusher.controller = (function(controller) {
       "action/new": [],
       "action/recommended": ["recommended_actions"],
       "analytics": [{
-          "name":"Overview",
-          "push_state":"/crusher/analytics",
-        },{
           "name":"Actions",
           "push_state":"/crusher/action",
         },
@@ -717,13 +716,23 @@ RB.crusher.controller = (function(controller) {
         }],
       "settings": [
         {
+          "name":"Advertiser Settings",
+          "push_state":"/crusher/settings/advertiser",
+        },
+        {
+          "name":"Pixel Settings",
+          "push_state":"/crusher/settings/pixel",
+        }],
+      "settings/pixel": [
+        {
           "name":"Pixel Setup",
-          "push_state":"/crusher/settings/pixel_setup",
+          "push_state":"/crusher/settings/pixel/setup",
         },
         {
           "name":"Pixel Status",
-          "push_state":"/crusher/settings/pixel_status",
-        }],
+          "push_state":"/crusher/settings/pixel/status",
+        } 
+      ],
       "home": [{
           "name":"Home",
           "push_state":"/crusher/home"
