@@ -21,29 +21,28 @@ RB.menu.navbar = (function(navbar) {
       return d3_updateable(target,".side-navbar","nav")
         .classed("side-navbar",true)
     },
-    logo: function(target) {
+    logo: function(target,selectbar) {
       var logo_wrapper = d3_updateable(target,".logo","a")
         .classed("logo",true)
+        .datum({"push_state":"/crusher/home","name":"Home"})
         
       return d3_updateable(logo_wrapper,"img","img") 
         .attr("src",LOGO_URL).style("max-height","70px")
+        .on("click", navbar.methods.pushState.bind(this,selectbar)) 
+
     },
     items: function(target,selectbar) {
       var items = d3_splat( target, ".menu-item","a", function(x){return x},function(x) {return x.name})
         .classed("menu-item",true)
-                .on("click", navbar.methods.pushState.bind(this,selectbar)) 
+        .on("click", navbar.methods.pushState.bind(this,selectbar)) 
 
       d3_updateable(items,".icon","span")
         .attr("class",function(x) {return "icon " + (x.class || "")})
         .style("padding-right","21px")
-        
 
       d3_updateable(items,".text","span")
         .classed("text",true)
         .text(function(x){return x.name})
-
-
-
 
       return items
            
@@ -145,7 +144,7 @@ RB.menu.navbar = (function(navbar) {
     //var selectbar = menu.selectbar.render(target) 
     navbar.components.advertiser_switch(wrapper)
     //navbar.components.logout(wrapper)
-    navbar.components.logo(wrapper)
+    navbar.components.logo(wrapper,menu.selectbar.render.bind(false,target))
     navbar.components.items(wrapper,menu.selectbar.render.bind(false,target))
 
     return navbar.components.items.bind(false,wrapper)

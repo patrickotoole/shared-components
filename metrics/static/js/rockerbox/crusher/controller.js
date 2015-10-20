@@ -385,7 +385,7 @@ RB.crusher.controller = (function(controller) {
             return status_data.filter(function(x){return x.last_fired_seconds != undefined}).length 
           })
           .classed("glyphicon-remove-circle red",function(x) {
-            return status_data.filter(function(x){return x.last_fired_seconds == undefined}).length 
+            return status_data.filter(function(x){return x.last_fired_seconds != undefined}).length == 0 
           })
 
         d3_updateable(item1,".desc","a")
