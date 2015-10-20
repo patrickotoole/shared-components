@@ -20,6 +20,7 @@ RB.crusher.api = (function(api, crusher) {
 
   api.URL = {
     //source: qs.advertiser,
+    advertiser: "/advertiser",
     userPermissions: "/account/permissions",
     actionURL: "/crusher/funnel/action?format=json",
     actionUIDs: "/crusher/pattern_search/uids?search=",

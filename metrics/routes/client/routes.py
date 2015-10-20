@@ -54,6 +54,7 @@ class AdvertiserRoutes(Routes):
         import handlers.creative as creative
         import handlers.appnexus as appnexus
         import handlers.analytics as analytics
+        
 
         return [
             (r'/campaign', campaign.YoshiCampaignHandler, self.connectors),
@@ -63,6 +64,7 @@ class AdvertiserRoutes(Routes):
             (r'/viewability', analytics.ViewabilityHandler, self.connectors),
             (r'/availability', analytics.AvailabilityHandler, self.connectors),
             (r'/domains', analytics.DomainsMongoHandler, self.connectors)
+            
         ]
 
     @namespace("/crusher")
@@ -70,6 +72,7 @@ class AdvertiserRoutes(Routes):
     def crusher_routes(self):
         import handlers.analytics as analytics
         import handlers.funnel as funnel
+        import handlers.pixel_status as pixel_status
 
         return [
             (r'/domain/idf.*', analytics.DomainIDFHandler, self.connectors), 
@@ -92,6 +95,10 @@ class AdvertiserRoutes(Routes):
             (r'/funnel/search/(.*?)', funnel.FunnelSearchHandler, self.connectors),
             (r'/pattern/?', funnel.PatternStatusHandler, self.connectors),
             (r'/pattern/(.*?)', funnel.PatternStatusHandler, self.connectors),
+
+            (r'/pixel/cookie', pixel_status.CookieHandler, self.connectors),
+            (r'/pixel/status', pixel_status.PixelHandler, self.connectors),
+            (r'/pixel/status/lookup', pixel_status.LookupHandler, self.connectors),
 
 
             (r'/funnel', funnel.FunnelHandler, self.connectors),

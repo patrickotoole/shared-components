@@ -11,6 +11,43 @@ RB.crusher.cache = (function(cache) {
 
 RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
+  endpoints.an_uid = new api.helpers.genericQueuedAPI(function(cb,deferred_cb) {
+      var img = new Image()
+      img.src = "http://ib.adnxs.com/getuid?" + window.location.origin + "/crusher/pixel/cookie?uid=$UID"
+
+      var uuid = document.cookie.split("an_uuid=")[1].split(";")[0]
+      cache.uuid = uuid 
+      deferred_cb(null,cb.bind(false,uuid))
+            
+  })
+
+  endpoints.segment_pixel_status = api.helpers.genericQueuedAPIWithData(function(segment,cb,deferred_cb) {
+
+    var path = "/crusher/pixel/status/lookup?format=json&segment="
+    d3.json(path + segment.external_segment_id + "&uid=" + segment.uuid, function(dd){
+      deferred_cb(null,cb.bind(false,dd))
+    })
+
+  })
+
+  endpoints.pixel_status = new api.helpers.genericQueuedAPI(function(cb,deferred_cb) {
+    d3.json("/crusher/pixel/status?format=json", function(dd){
+      deferred_cb(null,cb.bind(false,dd))
+    })
+  })
+
+  endpoints.advertiser = new api.helpers.genericQueuedAPI(function(cb,deferred_cb) {
+
+    if (!cache.advertiserData) {
+      d3.json(api.URL.advertiser + "?format=json", function(dd){
+        cache.advertiserData = dd[0]
+        
+        deferred_cb(null,cb.bind(false,cache.advertiserData))
+      })
+    } else {
+      deferred_cb(null,cb.bind(false,cache.advertiserData))
+    }
+  })
 
   endpoints.pattern_status = api.helpers.genericQueuedAPIWithData(function(data,cb,deferred_cb) {
     var pattern = data.url_pattern[0]

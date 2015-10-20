@@ -21,18 +21,30 @@ RB.menu.navbar = (function(navbar) {
       return d3_updateable(target,".side-navbar","nav")
         .classed("side-navbar",true)
     },
-    logo: function(target) {
+    logo: function(target,selectbar) {
       var logo_wrapper = d3_updateable(target,".logo","a")
         .classed("logo",true)
+        .datum({"push_state":"/crusher/home","name":"Home"})
         
       return d3_updateable(logo_wrapper,"img","img") 
         .attr("src",LOGO_URL).style("max-height","70px")
+        .on("click", navbar.methods.pushState.bind(this,selectbar)) 
+
     },
     items: function(target,selectbar) {
-      return d3_splat( target, ".menu-item","a")
+      var items = d3_splat( target, ".menu-item","a", function(x){return x},function(x) {return x.name})
         .classed("menu-item",true)
-        .text(function(x){return x.name})
         .on("click", navbar.methods.pushState.bind(this,selectbar)) 
+
+      d3_updateable(items,".icon","span")
+        .attr("class",function(x) {return "icon " + (x.class || "")})
+        .style("padding-right","21px")
+
+      d3_updateable(items,".text","span")
+        .classed("text",true)
+        .text(function(x){return x.name})
+
+      return items
            
     },
     advertiser_switch: function(target) {
@@ -49,13 +61,11 @@ RB.menu.navbar = (function(navbar) {
 
 	var group_wrapper = d3_updateable(target, ".btn-toolbar", "div")
 	  .classed("btn-toolbar", true)
-	  .style("text-align", "center")
 	
 	var dropdown_wrapper = d3_updateable(group_wrapper, ".btn-group", "div")
 	  .classed("btn-group dropup", true)
 	  .attr("id", "advertiser")
           .style("bottom","20px")
-	  .style("left", "45px")
           .style("position","absolute")
           .style("width","100%")
 	
@@ -67,14 +77,26 @@ RB.menu.navbar = (function(navbar) {
 	  .attr("data-toggle", "dropdown")
 	  .attr("aria-haspopup", "true")
 	  .attr("aria-expanded", "false")
-	  .text(current_advertiser["advertiser_name"])
 	  .style("display", "block")
 	  .style("margin", "0 auto")
 	  .style("width", "100px")
+          .style("background-color","transparent")
+          .style("border","none")
+          .style("color","rgba(255,255,255,0.66)")
 
-	
+        d3_updateable(button,".icon","span")
+          .style("margin-left","12px")
+          .style("padding-right","24px")
+          .classed("icon glyphicon glyphicon-user",true)
+
+        d3_updateable(button,".advertiser","span")
+          .classed("advertiser",true)
+          .text(current_advertiser["advertiser_name"])
+
+        	
 	d3_updateable(button, ".caret", "span")
 	  .classed("caret", true)
+          .style("margin-left","5px")
 
 	var ul = d3_updateable(dropdown_wrapper, ".dropdown-menu", "ul")
 	  .classed("dropdown-menu", true)
@@ -122,7 +144,7 @@ RB.menu.navbar = (function(navbar) {
     //var selectbar = menu.selectbar.render(target) 
     navbar.components.advertiser_switch(wrapper)
     //navbar.components.logout(wrapper)
-    navbar.components.logo(wrapper)
+    navbar.components.logo(wrapper,menu.selectbar.render.bind(false,target))
     navbar.components.items(wrapper,menu.selectbar.render.bind(false,target))
 
     return navbar.components.items.bind(false,wrapper)
