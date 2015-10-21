@@ -59,6 +59,21 @@ class PatternStatusHandler(BaseHandler,APIHelpers,PatternDatabase):
         self.write_response(Convert.df_to_values(results))
             
 
+    def run_domains(self,advertiser,pattern,cache_date):
+        
+        delta = datetime.datetime.now() - cache_date
+        _cache_date = datetime.datetime.strftime(cache_date,"%Y-%m-%d")
+
+        work = pickle.dumps((
+            cache.run_domain_cache,
+            [advertiser,pattern,1,delta.days -1,True,_cache_date + " domain_cache"]
+        ))
+
+        work_queue.SingleQueue(self.zookeeper,self.queue).put(work,0)
+        df = pandas.DataFrame([])
+        self.write_response(Convert.df_to_values(df))
+
+
 
     def run_pattern(self,advertiser,pattern,cache_date):
         
@@ -108,6 +123,8 @@ class PatternStatusHandler(BaseHandler,APIHelpers,PatternDatabase):
             self.get_stats(advertiser,pattern)
         elif argument == "run":
             self.run_pattern(advertiser,pattern,cache_date)
+        elif argument == "run_domains":
+            self.run_domains(advertiser,pattern,cache_date)
         elif argument == "clear":
             self.remove_queue(advertiser,pattern,cache_date)
         elif argument == "reset":

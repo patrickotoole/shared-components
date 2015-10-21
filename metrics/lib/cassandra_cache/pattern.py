@@ -1,4 +1,5 @@
 import logging
+import datetime
 import time
 import zk_helpers
 from cache import CassandraCache
@@ -109,6 +110,66 @@ def run_one(zk,advertiser,pattern,days,offset,force=False,identifier=""):
     with cache:
         run(advertiser,pattern,days,offset,force)
 
+def run_domains(zk,advertiser,pattern,days,offset,force=False,identifier="test"):
+    cache = zk_helpers.ZKCacheHelpers(zk,advertiser,pattern,identifier)
+    INSERT = "INSERT INTO pattern_domain_cache (url_pattern,pixel_source_name,cache_date) VALUES ('%s','%s','%s')"
+    with cache:
+
+        print advertiser,pattern,days,offset,force
+
+        from link import lnk
+        db = lnk.dbs.rockerbox
+        api = lnk.api.rockerbox
+
+        start = time.time()
+        now = datetime.datetime.now()
+
+        days_offset = days + offset
+        cache_date = now - datetime.timedelta(days=days+offset)
+        
+        db.execute(INSERT % (pattern,advertiser,cache_date))
+
+        logging.info("Cacheing: %s => %s begin" % (advertiser,pattern))
+
+        cache = build_cache(days,offset,"")
+        Q = "select uid from rockerbox.pattern_occurrence_users_u2 where source = ? and date = ? and action = ? and u2 = ?"
+        statement = cache.cassandra.prepare(Q)
+        to_bind = cache.bind_and_execute(statement)
+
+        to_update = [[advertiser,str(cache_date).split(" ")[0] + " 00:00:00",pattern,i] for i in range(0,100)]
+
+
+        from lib.cassandra_helpers.helpers import FutureHelpers
+
+        uid_values, _ = FutureHelpers.future_queue(to_update,to_bind,simple_append,60,[],False) 
+        cache_insert = []
+        url_values = []
+
+        uid_values = [[advertiser,i['uid'],pattern] for i in uid_values]
+        pattern_cache = PatternCache(cache,advertiser,pattern,cache_insert,uid_values,url_values)
+        pattern_cache.cache_domains()
+
+        
+        logging.info("Cacheing: %s => %s end" % (advertiser,pattern))
+
+        elapsed = int(time.time() - start)
+
+        
+
+        cache_date_max = (cache_date + datetime.timedelta(days=1)).date()
+        cache_date_min = cache_date.date()
+
+        UPDATE = "UPDATE pattern_domain_cache set deleted = 1, seconds = 0 where pixel_source_name = '%s' and url_pattern = '%s' and cache_date >= '%s' and cache_date < '%s' "
+        UPDATE2 = "UPDATE pattern_domain_cache set deleted = 0, completed = 1, seconds = %s where pixel_source_name = '%s' and url_pattern = '%s' and cache_date = '%s'"
+        
+        db.execute(UPDATE % (advertiser,pattern,cache_date_min,cache_date_max))
+        db.execute(UPDATE2 % (elapsed,advertiser,pattern,cache_date.strftime("%Y-%m-%d %H:%M:%S")))
+
+
+        cache.cassandra.cluster.shutdown()
+
+
+
         
 def run(advertiser,pattern,days,offset,force=False):
 
@@ -134,7 +195,8 @@ def run(advertiser,pattern,days,offset,force=False):
     now = datetime.datetime.now()
     cache_date = now - datetime.timedelta(days=days+offset)
 
-    db.execute("INSERT INTO pattern_cache (url_pattern,pixel_source_name,num_days,cache_date) VALUES ('%s','%s',%s,'%s')" % (pattern,advertiser,days+offset,cache_date))
+    INSERT = "INSERT INTO pattern_cache (url_pattern,pixel_source_name,num_days,cache_date) VALUES ('%s','%s',%s,'%s')"
+    db.execute(INSERT % (pattern,advertiser,days+offset,cache_date))
 
     if offset == 0: 
         update_tree(db,api)
@@ -191,6 +253,8 @@ if __name__ == "__main__":
     print sys.argv
     advertiser, pattern, days, offset, force = sys.argv[1:]
     start = time.time()
-    run(advertiser, pattern, int(days), int(offset), bool(force))
+    zk = KazooClient(hosts="zk1:2181")
+    zk.start()
+    run_domains(zk,advertiser, pattern, int(days), int(offset), bool(force))
 
     print time.time() - start

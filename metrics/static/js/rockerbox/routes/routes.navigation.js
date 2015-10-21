@@ -21,9 +21,11 @@ RB.routes.navigation = (function(navigation) {
 
       //console.debug("BEFORE: ", __back__, __forward__, previous.name, x.state.name, next.name)
 
+
       if (previous.name == x.state.name) { // back in history
         __forward__.push(__back__.pop())
         navigation.subscribed(previous)
+        navigation.forward(previous)
       } else if (next.name == x.state.name) { // forward in history
         __forward__.pop()
         __back__.push(next)
@@ -61,6 +63,11 @@ RB.routes.navigation = (function(navigation) {
   var current = 0
 
   navigation.forward = function(x) {
+
+    // HACK
+    d3.select("body").classed("hide-select",false)
+
+
     console.log("FORWARD",x)
     var path = window.location.pathname
     var shouldPush = (x.push_state) && (path != x.push_state)
@@ -114,6 +121,9 @@ RB.routes.navigation = (function(navigation) {
   }
 
   navigation.back = function(x) {
+    // HACK
+    d3.select("body").classed("hide-select",false)
+
     if (__back__.length > 1) history.back()
   }
 
