@@ -2,6 +2,7 @@ from lib.cassandra_cache.helpers import *
 from lib.cassandra_helpers.helpers import FutureHelpers
 
 def QueryU2(query):
+    # Decorator for running a query with standard partitioning and u2 parameter strategy
 
     def wrapped(fn):
 
@@ -17,6 +18,7 @@ def QueryU2(query):
 
 
 def Query(query):
+    # Decorator for running a query with standard partitioning strategy
 
     def wrapped(fn):
 
@@ -152,6 +154,30 @@ class PatternSearchCache(object):
         data += self.get_visits_today(advertiser,pattern)
         return data
 
+    @formattable
+    @QueryU2("SELECT date, count_simple(uid) FROM rockerbox.pattern_occurrence_u2_counter ")
+    def get_visits_from_cache(self,advertiser,pattern,dates = [], **kwargs):
+
+        # this should probably only be used for dates that are blank since it takes more time...
+
+        query = kwargs.get("query")
+        data = self.get_from_u2_cache(query, advertiser, pattern,dates)
+
+        import pandas
+        dtrans = [
+            {"date":i['date'], "count":i['rockerbox.count_simple(uid)']['count'] } 
+            for i in data if i['date']
+        ]
+
+        df = pandas.DataFrame(dtrans)
+        df = df.groupby("date").sum()['count'].reset_index()
+        assert(len(df.columns) == 2)
+
+        count = df.T.to_dict().values()
+
+        return count
+
+
 
     @formattable
     @Query("SELECT date, count FROM rockerbox.pattern_occurrence_uniques ")
@@ -160,6 +186,32 @@ class PatternSearchCache(object):
         data = self.get_from_cache(query,advertiser, pattern, [d for d in dates if d != today()])
         data += self.get_uniques_today(advertiser,pattern)
         return data
+
+
+    @formattable
+    @QueryU2("SELECT date, count_simple(uid) FROM rockerbox.pattern_occurrence_users_u2 ")
+    def get_uniques_from_cache(self,advertiser,pattern,dates = [], **kwargs):
+
+        # this should probably only be used for dates that are blank...
+
+        query = kwargs.get("query")
+        data = self.get_from_u2_cache(query, advertiser, pattern,dates)
+
+        import pandas
+        dtrans = [
+            {"date":i['date'], "count":i['rockerbox.count_simple(uid)']['count'] } 
+            for i in data if i['date']
+        ]
+
+        df = pandas.DataFrame(dtrans)
+        df = df.groupby("date").sum()['count'].reset_index()
+        assert(len(df.columns) == 2)
+
+        count = df.T.to_dict().values()
+
+        return count
+
+
 
 
     @QueryU2("SELECT count_simple(uid) FROM rockerbox.pattern_occurrence_u2_counter ")
