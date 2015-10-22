@@ -29,11 +29,12 @@ RB.menu.selectbar = (function(selectbar) {
       return h5
     },
     items: function(target) {
+      
       var items = d3_splat(target, "a.item","a",
           function(x){return x ? x.values : []},
           function(x){return x.name + x.push_state}
         )
-        .classed("item",true)
+        .classed("item item-" + (target.datum().values_key || target.datum().name.toLowerCase()),true)
         .text(function(x){
           return x.name
         })
