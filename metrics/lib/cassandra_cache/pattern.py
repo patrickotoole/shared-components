@@ -5,6 +5,7 @@ import zk_helpers
 
 from pattern_cache import PatternCache
 from pattern_helpers import *
+from pattern_tree import *
 from helpers import *
 from lib.helpers import *
 from lib.zookeeper.zk_pool import ZKPool
@@ -30,30 +31,6 @@ def run_daily(db):
         work_queue.SingleQueue(zk,"python_queue").put(pickle.dumps(work),21)
 
     
-def run_cascade(zk,advertiser,pattern,days,offset,callback):
-
-    import metrics.work_queue as work_queue
-
-    base = [advertiser,pattern]
-    to_run = base + [1,offset,callback] if offset != days else False
-
-    path = "/active_pattern_cache/" + advertiser + "=" + pattern.replace("/","|")
-    path_plus = path + "/days=" + str(days) + ",offset=" + str(offset)
-
-
-    complete_path = "/complete" + path[:7]
-    complete_path_plus = "/complete" + path_plus[7:]
-    
-
-    if to_run is not False: 
-        zk.create(path_plus)
-        run(*to_run)
-        zk.delete(path_plus,recursive=True)
-        zk.create(complete_path_plus)
-    
-        if len(zk.get_children(complete_path)) == days:
-            zk.delete(path,recursive=True)
-
 
 def run_one(zk,advertiser,pattern,days,offset,force=False,identifier=""):
     cache = zk_helpers.ZKCacheHelpers(zk,advertiser,pattern,identifier)
@@ -147,6 +124,7 @@ if __name__ == "__main__":
     start = time.time()
     zk = KazooClient(hosts="zk1:2181")
     zk.start()
-    run_domains(zk,advertiser, pattern, int(days), int(offset), bool(force))
+    #run_domains(zk,advertiser, pattern, int(days), int(offset), bool(force))
+    run_one(zk,advertiser, pattern, int(days), int(offset), bool(force),"test")
 
     print time.time() - start

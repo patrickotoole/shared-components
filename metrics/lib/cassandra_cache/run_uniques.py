@@ -11,11 +11,11 @@ logging.basicConfig(level=logging.INFO, format=formatter)
 logger = logging.getLogger()
 
 
-INSERT = "INSERT INTO pattern_domain_cache (url_pattern,pixel_source_name,cache_date) VALUES ('%s','%s','%s')"
-UPDATE = "UPDATE pattern_domain_cache set deleted = 1, seconds = 0 where pixel_source_name = '%s' and url_pattern = '%s' and cache_date >= '%s' and cache_date < '%s' "
-UPDATE2 = "UPDATE pattern_domain_cache set deleted = 0, completed = 1, seconds = %s where pixel_source_name = '%s' and url_pattern = '%s' and cache_date = '%s'"
+INSERT = "INSERT INTO pattern_unique_cache (url_pattern,pixel_source_name,cache_date) VALUES ('%s','%s','%s')"
+UPDATE = "UPDATE pattern_unique_cache set deleted = 1, seconds = 0 where pixel_source_name = '%s' and url_pattern = '%s' and cache_date >= '%s' and cache_date < '%s' "
+UPDATE2 = "UPDATE pattern_unique_cache set deleted = 0, completed = 1, seconds = %s where pixel_source_name = '%s' and url_pattern = '%s' and cache_date = '%s'"
 
-Q = "select uid from rockerbox.pattern_occurrence_users_u2 where source = ? and date = ? and action = ? and u2 = ?"
+Q = "select uid from rockerbox.pattern_occurrence_u2_counter where source = ? and date = ? and action = ? and u2 = ?"
 
 
 # HELPERS
@@ -56,7 +56,7 @@ def get_uids(cache,cache_date,advertiser,pattern):
     return formatted 
     
 
-def run_domains(zk,advertiser,pattern,days,offset,force=False,identifier="test"):
+def run_uniques(zk,advertiser,pattern,days,offset,force=False,identifier="test"):
     import time 
     from link import lnk
     db = lnk.dbs.rockerbox
