@@ -185,7 +185,7 @@ RB.rho.ui = (function(ui) {
     var chart = target.selectAll("svg.domain-chart-svg")
       .data(function(x) { 
         
-        return [data.sort(function(x,y){return y[field] - x[field] }).slice(0,30) ] 
+        return [data.sort(function(x,y){return y[field] - x[field] }).slice(0,20) ] 
       })
 
     chart
@@ -199,7 +199,7 @@ RB.rho.ui = (function(ui) {
     chart.attr("height", barHeight * chart.data()[0].length);
 
     ui.barShow(chart, barHeight, x)
-    ui.barExpand(target, data, field, barHeight, x, 30)
+    ui.barExpand(target, data, field, barHeight, x, 20)
 
   }  
 

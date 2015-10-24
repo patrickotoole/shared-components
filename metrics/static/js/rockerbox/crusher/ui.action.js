@@ -449,7 +449,7 @@ RB.crusher.ui.action = (function(action) {
     
     var bag = {}, relations = {}, inverse_bag = {}
     
-    kw_counts = urlData.map(function(x){return {"keywords":parse(x.url),"count":x.count}}).sort(function(x,y){return y.count - x.count}).slice(0,20)
+    kw_counts = urlData.map(function(x){return {"keywords":parse(x.url),"count":x.count}}).sort(function(x,y){return y.count - x.count}).slice(0,40)
     kw_counts.map(function(x) { return x.keywords.map(function(y){ increment_and_add(bag,inverse_bag,y) }) })
     
     
@@ -510,7 +510,7 @@ RB.crusher.ui.action = (function(action) {
 
 
     var width = parseInt(wrapper.style("width").replace("px","") - 30),
-    height = 350;
+    height = 370;
 
 var color = d3.scale.category20();
 
