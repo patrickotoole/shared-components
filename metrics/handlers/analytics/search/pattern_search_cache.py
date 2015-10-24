@@ -156,7 +156,7 @@ class PatternSearchCache(object):
 
     @formattable
     @QueryU2("SELECT date, count_simple(uid) FROM rockerbox.pattern_occurrence_u2_counter ")
-    def get_visits_from_cache(self,advertiser,pattern,dates = [], **kwargs):
+    def get_visits_from_cache_new(self,advertiser,pattern,dates = [], **kwargs):
 
         # this should probably only be used for dates that are blank since it takes more time...
 
@@ -190,7 +190,7 @@ class PatternSearchCache(object):
 
     @formattable
     @QueryU2("SELECT date, count_simple(uid) FROM rockerbox.pattern_occurrence_users_u2 ")
-    def get_uniques_from_cache(self,advertiser,pattern,dates = [], **kwargs):
+    def get_uniques_from_cache_new(self,advertiser,pattern,dates = [], **kwargs):
 
         # this should probably only be used for dates that are blank...
 
