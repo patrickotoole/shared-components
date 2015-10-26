@@ -257,7 +257,11 @@ RB.crusher.ui.action = (function(action) {
 
     edit.text("Edit")
       .on("click",function(){
-        d3.select(".action").classed("hidden",false)
+        var current = d3.select(".action").classed("hidden")
+        d3.select(".action").classed("hidden",!current)
+        var current_text = d3.select(this).text()
+
+        d3.select(this).text(current_text == "Edit" ? "Close" : "Edit")
       })
 
     var info = actionView.selectAll(".urls").data(function(x){
@@ -732,7 +736,7 @@ fn(data)
     h5.selectAll(".remove").data(function(x){return [x]}).enter() 
       .append("button")
       .classed("remove btn btn-danger btn-sm ",true)
-      .text("remove")
+      .text("Remove Action")
       .on("click",function(){
         var edit = d3.select(this.parentNode.parentNode)
         edit.remove()

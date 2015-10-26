@@ -2162,7 +2162,8 @@
             },
             select: function select($selectable) {
                 var data = this.menu.getSelectableData($selectable);
-                if (data && !this.eventBus.before("select", data.obj)) {
+                // HACK
+                if (false && data && !this.eventBus.before("select", data.obj)) {
                     this.input.setQuery(data.val, true);
                     this.eventBus.trigger("select", data.obj);
                     this.close();
