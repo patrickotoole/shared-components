@@ -139,6 +139,25 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
     def build_udf(self,udf_name,pattern):
         self.cassandra.execute(INSERT_UDF % (udf_name,pattern[0]))
         
+    def run_uniques(self, advertiser, pattern, dates):
+        import datetime
+        import pickle
+        import work_queue
+
+        import lib.cassandra_cache.run_uniques as unique_cache
+
+        for cache_date in dates:
+            delta = datetime.datetime.now() - cache_date
+            _cache_date = datetime.datetime.strftime(cache_date,"%Y-%m-%d")
+
+            work = pickle.dumps((
+                unique_cache.run_uniques,
+                [advertiser,pattern,1,delta.days -1,True,_cache_date + " unique_cache"]
+            ))
+
+            work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,0)
+    
+    
     
     @decorators.deferred
     def defer_execute(self, selects, advertiser, pattern, date_clause, logic, 

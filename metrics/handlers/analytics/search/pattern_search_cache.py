@@ -103,6 +103,8 @@ class PatternSearchCache(object):
         return data
 
     def get_from_cache_sorted(self,query,advertiser,pattern,dates,sortby="date"):
+        # this should be named grouped...
+        # it just performs a simple grouping bases on the sortby column and saves time later
         execute = self.prepare_query(query)
         prepped = [[advertiser, pattern] + [date] for date in dates]
 
