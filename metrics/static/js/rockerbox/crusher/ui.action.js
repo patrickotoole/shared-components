@@ -39,191 +39,193 @@ RB.crusher.ui.action = (function(action) {
 
   action.status = function(wrapper) {
 
-
-    var status = d3_updateable(wrapper,".action-status","div")
-      .classed("action-status",true)
-
-    var wrapper = d3_updateable(status,".status-wrapper","div")
-      .classed("status-wrapper col-md-6",true)
-
-    var series = d3_updateable(wrapper,".series","div")
-      .classed("series",true)
-
-    d3_updateable(series,".title","div")
-      .classed("title",true)
-      .text("Cache stats")
-
-    var percent_bar = d3_updateable(series,".percent-bar","div")
-      .classed("percent-bar",true)
-
-    d3_updateable(percent_bar,".value","div")
-      .classed("value",true)
-      .text(function(x){return x.pattern_stats.completed + " days"})
-
-    d3_updateable(percent_bar,".description.percent","div")
-      .classed("description percent",true)
-      .text(function(x){return "Percent complete: " + d3.format("%")(x.pattern_stats.percent_complete)})
-      .style("color","#000")
-
-    var progress = d3_updateable(percent_bar,".progress","div")
-      .classed("progress",true)
-      .style("height","12px")
-      .style("margin-top","5px")
-
-
-    d3_updateable(progress,".progress-bar-striped","div")
-      .classed("progress-bar progress-bar-striped",true)
-      .attr("role","progressbar")
-      .attr("aria-valuenow",function(x){return 100*x.pattern_stats.percent_complete}) 
-      .attr("aria-valuemin","0")
-      .attr("aria-valuemax","100") 
-      .style("width",function(x){return (x.pattern_stats.percent_complete*100) + "%"})
-
-
-    d3_updateable(series,".description.timeseries","div")
-      .classed("description timeseries",true)
-      .text("Time to complete cache days")
-
-
-
-    var newTs = d3_updateable(series,".values","div")
-      .classed("values",true)
-
-
-    var ts = RB.rho.ui.buildTimeseries(newTs,newTs.datum().pattern_stats.raw,"Seconds",["seconds"], undefined)
     
-    newTs.selectAll("circle").filter(function(x){return x.completed == 0 }).attr("fill","red")
 
 
-    var missingWrapper = d3_updateable(series,".missing-wrapper","div")
-      .classed("missing-wrapper",true)
-
-    var missingDescription = d3_splat(missingWrapper,".description","div",function(x){
-      var values = x.pattern_stats.raw.filter(function(y){return y.completed == 0 })
-      return values.length ? [true] : []
-    },function(x){return x.key})
-      .classed("description",true)
-      .style("padding-top","10px")
-      .style("padding-bottom","15px")
-      .style("color","#000")
-      .text("The following dates were not properly cached or are actively running")
-
-    missingDescription.exit().remove()
-
-    var missing = d3_splat(missingWrapper,".missing","div",function(x){
-      var values = x.pattern_stats.raw.filter(function(y){return y.completed == 0 })
-      return values
-    },function(x){return x.key})
-      .classed("missing",true)
-      .style("min-height","30px")
-
-    d3_updateable(missing,".btn","a")
-      .classed("btn btn-danger btn-xs pull-right",true)
-      .text("Re-run")
-      .attr("href",function(x){return "/crusher/pattern/run?pattern=" + x.url_pattern + "&cache_date=" + (new Date(x.cache_date*1000)).toISOString().split("T")[0] })
-      .on("click",function(x){
-        var self = this
-        d3.json(this.href,function(err,dd){
-          d3.select(self).attr("disabled",true)
-          console.log(dd)
-          return dd
+      var status = d3_updateable(wrapper,".action-status","div")
+        .classed("action-status",true)
+  
+      var wrapper = d3_updateable(status,".status-wrapper","div")
+        .classed("status-wrapper col-md-6",true)
+  
+      var series = d3_updateable(wrapper,".series","div")
+        .classed("series",true)
+  
+      d3_updateable(series,".title","div")
+        .classed("title",true)
+        .text("Cache stats")
+  
+      var percent_bar = d3_updateable(series,".percent-bar","div")
+        .classed("percent-bar",true)
+  
+      d3_updateable(percent_bar,".value","div")
+        .classed("value",true)
+        .text(function(x){return x.pattern_stats.completed + " days"})
+  
+      d3_updateable(percent_bar,".description.percent","div")
+        .classed("description percent",true)
+        .text(function(x){return "Percent complete: " + d3.format("%")(x.pattern_stats.percent_complete)})
+        .style("color","#000")
+  
+      var progress = d3_updateable(percent_bar,".progress","div")
+        .classed("progress",true)
+        .style("height","12px")
+        .style("margin-top","5px")
+  
+  
+      d3_updateable(progress,".progress-bar-striped","div")
+        .classed("progress-bar progress-bar-striped",true)
+        .attr("role","progressbar")
+        .attr("aria-valuenow",function(x){return 100*x.pattern_stats.percent_complete}) 
+        .attr("aria-valuemin","0")
+        .attr("aria-valuemax","100") 
+        .style("width",function(x){return (x.pattern_stats.percent_complete*100) + "%"})
+  
+  
+      d3_updateable(series,".description.timeseries","div")
+        .classed("description timeseries",true)
+        .text("Time to complete cache days")
+  
+  
+  
+      var newTs = d3_updateable(series,".values","div")
+        .classed("values",true)
+  
+  
+      var ts = RB.rho.ui.buildTimeseries(newTs,newTs.datum().pattern_stats.raw,"Seconds",["seconds"], undefined)
+      
+      newTs.selectAll("circle").filter(function(x){return x.completed == 0 }).attr("fill","red")
+  
+  
+      var missingWrapper = d3_updateable(series,".missing-wrapper","div")
+        .classed("missing-wrapper",true)
+  
+      var missingDescription = d3_splat(missingWrapper,".description","div",function(x){
+        var values = x.pattern_stats.raw.filter(function(y){return y.completed == 0 })
+        return values.length ? [true] : []
+      },function(x){return x.key})
+        .classed("description",true)
+        .style("padding-top","10px")
+        .style("padding-bottom","15px")
+        .style("color","#000")
+        .text("The following dates were not properly cached or are actively running")
+  
+      missingDescription.exit().remove()
+  
+      var missing = d3_splat(missingWrapper,".missing","div",function(x){
+        var values = x.pattern_stats.raw.filter(function(y){return y.completed == 0 })
+        return values
+      },function(x){return x.key})
+        .classed("missing",true)
+        .style("min-height","30px")
+  
+      d3_updateable(missing,".btn","a")
+        .classed("btn btn-danger btn-xs pull-right",true)
+        .text("Re-run")
+        .attr("href",function(x){return "/crusher/pattern/run?pattern=" + x.url_pattern + "&cache_date=" + (new Date(x.cache_date*1000)).toISOString().split("T")[0] })
+        .on("click",function(x){
+          var self = this
+          d3.json(this.href,function(err,dd){
+            d3.select(self).attr("disabled",true)
+            console.log(dd)
+            return dd
+          })
+          d3.event.preventDefault()
+          return false
         })
-        d3.event.preventDefault()
-        return false
-      })
-
-    d3_updateable(missing,".btn-label","div")
-      .classed("btn-label",true)
-      .text(function(x){return (new Date(x.cache_date*1000)).toISOString().split("T")[0] })
-
-
-    var activeWrapper = d3_updateable(series,".active-wrapper","div")
-      .classed("active-wrapper",true)
-
-    var activeDescription = d3_splat(activeWrapper,".description","div",function(x){
-      var values = x.pattern_stats.raw.filter(function(y){return y.active })
-      return values.length ? [true] : []
-    },function(x){return x.key})
-      .classed("description",true)
-      .style("padding-top","10px")
-      .style("padding-bottom","15px")
-      .style("color","#000")
-      .text("The following dates are actively being cached")
-
-    activeDescription.exit().remove()
-
-    var active = d3_splat(activeWrapper,".active","div",function(x){
-      var values = x.pattern_stats.raw.filter(function(y){return y.active })
-      return values
-    },function(x){return x.key})
-      .classed("active",true)
-      .style("min-height","30px")
-
-    d3_updateable(active,".btn","a")
-      .classed("btn btn-danger btn-xs pull-right",true)
-      .text("Stop")
-      .attr("href",function(x){return "/crusher/pattern/reset?pattern=" + x.url_pattern + "&cache_date=" + (new Date(x.cache_date*1000)).toISOString().split("T")[0] })
-      .on("click",function(x){
-        var self = this
-        d3.json(this.href,function(err,dd){
-          d3.select(self).attr("disabled",true)
-          console.log(dd)
-          return dd
-        })   
-        d3.event.preventDefault()
-        return false
-      })
-
-    d3_updateable(active,".btn-label","div")
-      .classed("btn-label",true)
-      .text(function(x){return (new Date(x.cache_date*1000)).toISOString().split("T")[0] })
-
-
-    var queuedWrapper = d3_updateable(series,".queued-wrapper","div")
-      .classed("queued-wrapper",true)
-
-    var queuedDescription = d3_splat(queuedWrapper,".description","div",function(x){
-      var values = x.pattern_stats.raw.filter(function(y){return y.queued })
-      return values.length ? [true] : []
-    },function(x){return x.key})
-      .classed("description",true)
-      .style("padding-top","10px")
-      .style("padding-bottom","15px")
-      .style("color","#000")
-      .text("The following dates are queued")
-
-    queuedDescription.exit().remove()
-
-    var queued = d3_splat(queuedWrapper,".queued","div",function(x){
-      var values = x.pattern_stats.raw.filter(function(y){return y.queued })
-      return values
-    },function(x){return x.key})
-      .classed("queued",true)
-      .style("min-height","30px")
-
-    d3_updateable(queued,".btn","a")
-      .classed("btn btn-danger btn-xs pull-right",true)
-      .text("Dequeue")
-      .attr("href",function(x){
-        return "/crusher/pattern/clear?pattern=" + 
-          x.url_pattern + "&cache_date=" + (new Date(x.cache_date*1000)).toISOString().split("T")[0] 
-      })
-      .on("click",function(x){
-        var self = this
-        d3.json(this.href,function(err,dd){
-          d3.select(self).attr("disabled",true)
-          console.log(dd)
-          return dd
+  
+      d3_updateable(missing,".btn-label","div")
+        .classed("btn-label",true)
+        .text(function(x){return (new Date(x.cache_date*1000)).toISOString().split("T")[0] })
+  
+  
+      var activeWrapper = d3_updateable(series,".active-wrapper","div")
+        .classed("active-wrapper",true)
+  
+      var activeDescription = d3_splat(activeWrapper,".description","div",function(x){
+        var values = x.pattern_stats.raw.filter(function(y){return y.active })
+        return values.length ? [true] : []
+      },function(x){return x.key})
+        .classed("description",true)
+        .style("padding-top","10px")
+        .style("padding-bottom","15px")
+        .style("color","#000")
+        .text("The following dates are actively being cached")
+  
+      activeDescription.exit().remove()
+  
+      var active = d3_splat(activeWrapper,".active","div",function(x){
+        var values = x.pattern_stats.raw.filter(function(y){return y.active })
+        return values
+      },function(x){return x.key})
+        .classed("active",true)
+        .style("min-height","30px")
+  
+      d3_updateable(active,".btn","a")
+        .classed("btn btn-danger btn-xs pull-right",true)
+        .text("Stop")
+        .attr("href",function(x){return "/crusher/pattern/reset?pattern=" + x.url_pattern + "&cache_date=" + (new Date(x.cache_date*1000)).toISOString().split("T")[0] })
+        .on("click",function(x){
+          var self = this
+          d3.json(this.href,function(err,dd){
+            d3.select(self).attr("disabled",true)
+            console.log(dd)
+            return dd
+          })   
+          d3.event.preventDefault()
+          return false
         })
-        d3.event.preventDefault()
-        return false
-      })
+  
+      d3_updateable(active,".btn-label","div")
+        .classed("btn-label",true)
+        .text(function(x){return (new Date(x.cache_date*1000)).toISOString().split("T")[0] })
+  
+  
+      var queuedWrapper = d3_updateable(series,".queued-wrapper","div")
+        .classed("queued-wrapper",true)
+  
+      var queuedDescription = d3_splat(queuedWrapper,".description","div",function(x){
+        var values = x.pattern_stats.raw.filter(function(y){return y.queued })
+        return values.length ? [true] : []
+      },function(x){return x.key})
+        .classed("description",true)
+        .style("padding-top","10px")
+        .style("padding-bottom","15px")
+        .style("color","#000")
+        .text("The following dates are queued")
+  
+      queuedDescription.exit().remove()
+  
+      var queued = d3_splat(queuedWrapper,".queued","div",function(x){
+        var values = x.pattern_stats.raw.filter(function(y){return y.queued })
+        return values
+      },function(x){return x.key})
+        .classed("queued",true)
+        .style("min-height","30px")
+  
+      d3_updateable(queued,".btn","a")
+        .classed("btn btn-danger btn-xs pull-right",true)
+        .text("Dequeue")
+        .attr("href",function(x){
+          return "/crusher/pattern/clear?pattern=" + 
+            x.url_pattern + "&cache_date=" + (new Date(x.cache_date*1000)).toISOString().split("T")[0] 
+        })
+        .on("click",function(x){
+          var self = this
+          d3.json(this.href,function(err,dd){
+            d3.select(self).attr("disabled",true)
+            console.log(dd)
+            return dd
+          })
+          d3.event.preventDefault()
+          return false
+        })
+  
+      d3_updateable(queued,".btn-label","div")
+        .classed("btn-label",true)
+        .text(function(x){return (new Date(x.cache_date*1000)).toISOString().split("T")[0] })
 
-    d3_updateable(queued,".btn-label","div")
-      .classed("btn-label",true)
-      .text(function(x){return (new Date(x.cache_date*1000)).toISOString().split("T")[0] })
-
-
+    
 
 
   }
@@ -361,22 +363,258 @@ RB.crusher.ui.action = (function(action) {
     var pull_left = d3_updateable(newTs,".on-page-wrapper", "div")
       .classed("on-page-wrapper col-md-6",true)
 
+    action.show_cloud(pull_left,urlData)
+
     RB.rho.ui.buildBarSummary(
       pull_left,urlData,"On-site pages",["url"], " ", 
       "Top on-site pages that match the action"
     )
-    RB.rho.ui.buildBarSummary(
-      pull_left,wrapper.datum().param_rolled,"On-site tracking parameters",["key"], " ", 
-      "Top tracking parameters",true
-    )
+
+    crusher.permissions("cache_stats", function(){
+      RB.rho.ui.buildBarSummary(
+        pull_left,wrapper.datum().param_rolled,"On-site tracking parameters",["key"], " ", 
+        "Top tracking parameters",true
+      )
+    })
+
+    
+
+
+  }
+
+  action.show_cloud = function(wrapper,urlData) {
+
+    var swrap = d3_updateable(wrapper,".cloud","div")
+      .classed("cloud series-wrapper",true)
+
+    var series = d3_updateable(swrap,".series","div")
+      .classed("series cloud",true)
+
+    d3_updateable(series,".title","div")
+      .classed("title",true)
+      .text("On-site Keywords")
+
+    d3_updateable(series,".value","div")
+      .classed("value",true)
+
+    d3_updateable(series,".description","div")
+      .classed("description",true)
+      .text("These are the keywords associated with on-site pages")
+
+
+
+    wrapper = series
+
+    function parse(url) {
+      try {
+    
+        var kws = url.split(".com")[1].replace(/_/g,"-").replace(/\//g,"-").split(".")[0].split("-").filter(function(x){
+          return x.length > 2
+        }).map(function(x){return x.toLowerCase() }).filter(function(x){
+          return x.indexOf("=") == -1
+        })
+    
+        return kws
+      } catch(e) {return []}
+    }
+    
+    
+    function increment_and_add(bag,inverse_bag,word) {
+      if (! bag[word]) 
+      bag[word] = Object.keys(bag).length
+      inverse_bag[bag[word]] = word
+    }
+    
+    function build_relations(relations, word1, word2, value) {
+      var h = relations[word1] || {}
+      h[word2] = (h[word2] || 0) + value
+      relations[word1] = h
+    }
+    
+    function combinations(head, tail, results) {
+    	
+    	if (tail.length == 0) {
+    	    return results
+    	}
+    
+     	if (head == undefined) {
+     	    head = tail[0]
+     	    tail = tail.slice(1,tail.length)
+     	}
+    
+        Array.prototype.push.apply(results,tail.map(function(x){return [x,head]}))
+    
+        head = tail[0]
+     	tail = tail.slice(1,tail.length)
+    
+    	return combinations(head, tail, results)
+    }
+    
+    
+    var bag = {}, relations = {}, inverse_bag = {}
+    
+    kw_counts = urlData.map(function(x){return {"keywords":parse(x.url),"count":x.count}}).sort(function(x,y){return y.count - x.count}).slice(0,40)
+    kw_counts.map(function(x) { return x.keywords.map(function(y){ increment_and_add(bag,inverse_bag,y) }) })
+    
+    
+    kw_counts.map(function(item) {
+      var combos = combinations(undefined,item.keywords,[])
+      combos.map(function(combo){
+        build_relations(relations,combo[0],combo[1],item.count)
+      })
+    })
+    
+    var groups = Object.keys(bag).map(function(key){
+      return {"name":key,"group":bag[key]}
+    })
+    
+    var links = []
+    Object.keys(relations).map(function(first){
+      var values = Object.keys(relations[first]).map(function(second){
+        return {"target":bag[first],"source":bag[second],"value":relations[first][second]}
+      })
+      Array.prototype.push.apply(links, values)
+    })
+
+    var popular = {}
+    links.map(function(x) {
+      popular[x.source] = (popular[x.source] || 0) + 1
+      popular[x.target] = (popular[x.target] || 0) + 1
+    })
+    
+    var top100 = Object.keys(popular).map(function(x){
+      return {"key":x,"value":popular[x]}
+    })
+    .sort(function(x,y){return y.value - x.value})
+    .filter(function(x){
+      return parseInt(inverse_bag[x.key]) != inverse_bag[x.key].replace(/ /,"")
+    })
+    .slice(0,30).map(function(x){ return parseInt(x.key) })
+
+
+
+    var max_link_value = 0
+
+    var new_links = links.filter(function(x){
+      
+      if ((top100.indexOf(x.target) != -1) && (top100.indexOf(x.source) != -1) ) {
+        console.log(x.target, x.source, top100.indexOf(x.target), top100.indexOf(x.source))
+        max_link_value = Math.max(max_link_value,x.value)
+        return true
+      } else {
+        return false
+      }
+    })
+
+    var new_groups = groups.filter(function(x){
+      return top100.indexOf(x.group) != -1
+    })
+
+    var data = {'links': links, 'nodes': groups}
+
+
+    var width = parseInt(wrapper.style("width").replace("px","") - 30),
+    height = 370;
+
+var color = d3.scale.category20();
+
+var force = d3.layout.force()
+    .charge(-150)
+    .linkDistance(75)
+    .size([width-50, height-30]);
+
+var svg = d3_updateable(wrapper,".svg-cloud","svg")
+    .classed("svg-cloud",true)
+    .attr("width", width)
+    .attr("height", height);
+
+
+
+var fn = function(graph) {
+
+
+  force
+      .nodes(graph.nodes)
+      .links(graph.links)
+      .start();
+
+  var link = svg.selectAll(".link")
+      .data(graph.links)
+    .enter().append("line")
+      .attr("class", "link")
+      .style("stroke-width", function(d) { return Math.sqrt(d.value/max_link_value*200); });
+
+
+link.filter(function(x){
+  return x.target.weight < 2 || x.source.weight < 2
+}).remove()
+
+
+
+var gnodes = svg.selectAll('g.gnode')
+  .data(graph.nodes)
+  .enter()
+  .append('g')
+  .classed('gnode', true);
+
+gnodes.filter(function(x){
+  return x.weight < 2
+}).remove()
+
+// Add one circle in each group
+var node = gnodes.append("circle")
+  .attr("class", "node")
+  .attr("r", function(x) {
+    return x.name == "convertor" ? 30 : Math.max(Math.log(x.weight)*3.9,5)
+  })
+  .style("fill", function(d) { return color(d.group); })
+  .call(force.drag);
+
+// Append the labels to each group
+var labels = gnodes.append("text")
+  .text(function(d) { return d.name; });
+
+
+  node.append("title")
+      .text(function(d) { return d.name; });
+
+ force.on("tick", function() {
+    link.attr("x1", function(d) { return d.source.x; })
+        .attr("y1", function(d) { return d.source.y; })
+        .attr("x2", function(d) { return d.target.x; })
+        .attr("y2", function(d) { return d.target.y; });
+
+    gnodes.attr("transform", function(d) { 
+        return 'translate(' + [d.x, d.y] + ')'; 
+    });
+      
+    
+      
+  });
+
+  
+};
+
+fn(data)
+
+    
+
   }
 
   action.show_domains = function(wrapper) {
     var newTs = wrapper.selectAll(".ts")
     var domainData = wrapper.datum().domains
 
+    var categoryData = d3.nest()
+      .key(function(x){return x.category_name})
+      .rollup(function(x){
+        return d3.sum(x.map(function(y){return y.count}))
+      }) 
+      .entries(domainData)
 
     RB.rho.ui.buildBarSummary(newTs,domainData,"Off-site opportunities",["domain"], undefined, "Top off-site opportunities for users who have engaged in this on-site action")
+    RB.rho.ui.buildBarSummary(newTs,categoryData,"Off-site categories",["key"], undefined, "Top off-site categories users visit")
+
   }
 
   action.edit = function(edit,onSave) {

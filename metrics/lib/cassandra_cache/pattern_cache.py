@@ -25,7 +25,6 @@ class PatternCache(object):
         count_column   = "count"
         
         all_columns = dimensions + ["uid","u2","url","count"]
-        import ipdb; ipdb.set_trace()
 
         if len(self.cache_insert):
             series = pandas.DataFrame(self.cache_insert,columns=all_columns).groupby(dimensions)['count'].sum()

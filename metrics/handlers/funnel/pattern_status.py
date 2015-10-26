@@ -9,6 +9,8 @@ from lib.helpers import APIHelpers
 
 import work_queue
 import lib.cassandra_cache.pattern as cache
+import lib.cassandra_cache.run_domains as domain_cache
+import lib.cassandra_cache.run_uniques as unique_cache
 import lib.cassandra_cache.zk_helpers as zk_helpers
 
 import pickle
@@ -65,13 +67,29 @@ class PatternStatusHandler(BaseHandler,APIHelpers,PatternDatabase):
         _cache_date = datetime.datetime.strftime(cache_date,"%Y-%m-%d")
 
         work = pickle.dumps((
-            cache.run_domain_cache,
+            domain_cache.run_domains,
             [advertiser,pattern,1,delta.days -1,True,_cache_date + " domain_cache"]
         ))
 
         work_queue.SingleQueue(self.zookeeper,self.queue).put(work,0)
         df = pandas.DataFrame([])
         self.write_response(Convert.df_to_values(df))
+
+    def run_uniques(self,advertiser,pattern,cache_date):
+        
+        delta = datetime.datetime.now() - cache_date
+        _cache_date = datetime.datetime.strftime(cache_date,"%Y-%m-%d")
+
+        work = pickle.dumps((
+            unique_cache.run_uniques,
+            [advertiser,pattern,1,delta.days -1,True,_cache_date + " unique_cache"]
+        ))
+
+        work_queue.SingleQueue(self.zookeeper,self.queue).put(work,0)
+        df = pandas.DataFrame([])
+        self.write_response(Convert.df_to_values(df))
+
+
 
 
 
@@ -125,6 +143,8 @@ class PatternStatusHandler(BaseHandler,APIHelpers,PatternDatabase):
             self.run_pattern(advertiser,pattern,cache_date)
         elif argument == "run_domains":
             self.run_domains(advertiser,pattern,cache_date)
+        elif argument == "run_uniques":
+            self.run_uniques(advertiser,pattern,cache_date)
         elif argument == "clear":
             self.remove_queue(advertiser,pattern,cache_date)
         elif argument == "reset":

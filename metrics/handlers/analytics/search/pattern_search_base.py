@@ -114,7 +114,7 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
         try:
             stats_df = self.get_stats(*args)
 
-            assert(len(stats_df) >= 14)
+            assert(len(stats_df) >= 14) # wants atleast 14 days worth of data before using cache...
             print start - time.time()
 
             args[-1] = build_datelist(7)
@@ -139,13 +139,14 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
 
             urls_df_no_ts = pandas.DataFrame(list(itertools.chain.from_iterable(urls_df['urls'].values)))
             domains_df_no_ts = pandas.DataFrame(list(itertools.chain.from_iterable(domains_df['domains'].values)))
-
             print start - time.time()
 
-            response['urls'] = Convert.df_to_values(urls_df_no_ts.groupby("url").sum().reset_index().sort_index(by="count",ascending=False).head(3000))
+            urls = urls_df_no_ts.groupby("url").sum().reset_index().sort_index(by="count",ascending=False)
+            response['urls'] = Convert.df_to_values(urls.head(3000))
             print start - time.time()
 
-            response['domains'] = Convert.df_to_values(domains_df_no_ts.groupby("domain").sum().reset_index().sort_index(by="count",ascending=False).head(3000))
+            domains = domains_df_no_ts.groupby("domain").sum().reset_index().sort_index(by="count",ascending=False)
+            response['domains'] = Convert.df_to_values(domains.head(3000))
             print start - time.time()
 
         except Exception as e:
@@ -230,15 +231,27 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
 
         start = time.time()
 
-        visits_df  = self.get_visits_from_cache(*args, formatter=build_count_dataframe("visits"))
+        views_df   = self.get_views_from_cache(*args, formatter=build_count_dataframe("views"))
         print start - time.time()
 
-
-        views_df   = self.get_views_from_cache(*args, formatter=build_count_dataframe("views"))
+        visits_df  = self.get_visits_from_cache(*args, formatter=build_count_dataframe("visits"))
         print start - time.time()
 
         uniques_df = self.get_uniques_from_cache(*args, formatter=build_count_dataframe("uniques"))
         print start - time.time()
+
+        import datetime
+        missing_dates = [
+            datetime.datetime.strptime(i,"%Y-%m-%d %H:%M:%S") for i in views_df.index 
+            if i not in visits_df.index
+        ]
+
+        if missing_dates:
+            
+            self.run_uniques(args[0],args[1],missing_dates)
+            visits_df = self.get_visits_from_cache_new(*args, formatter=build_count_dataframe("visits"))
+            uniques_df = self.get_uniques_from_cache_new(*args, formatter=build_count_dataframe("uniques"))
+
 
         df = views_df.join(visits_df).join(uniques_df)
 

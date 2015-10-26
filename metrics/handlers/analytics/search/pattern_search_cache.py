@@ -103,6 +103,8 @@ class PatternSearchCache(object):
         return data
 
     def get_from_cache_sorted(self,query,advertiser,pattern,dates,sortby="date"):
+        # this should be named grouped...
+        # it just performs a simple grouping bases on the sortby column and saves time later
         execute = self.prepare_query(query)
         prepped = [[advertiser, pattern] + [date] for date in dates]
 
@@ -156,7 +158,7 @@ class PatternSearchCache(object):
 
     @formattable
     @QueryU2("SELECT date, count_simple(uid) FROM rockerbox.pattern_occurrence_u2_counter ")
-    def get_visits_from_cache(self,advertiser,pattern,dates = [], **kwargs):
+    def get_visits_from_cache_new(self,advertiser,pattern,dates = [], **kwargs):
 
         # this should probably only be used for dates that are blank since it takes more time...
 
@@ -190,7 +192,7 @@ class PatternSearchCache(object):
 
     @formattable
     @QueryU2("SELECT date, count_simple(uid) FROM rockerbox.pattern_occurrence_users_u2 ")
-    def get_uniques_from_cache(self,advertiser,pattern,dates = [], **kwargs):
+    def get_uniques_from_cache_new(self,advertiser,pattern,dates = [], **kwargs):
 
         # this should probably only be used for dates that are blank...
 

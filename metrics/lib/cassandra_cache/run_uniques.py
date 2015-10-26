@@ -15,7 +15,8 @@ INSERT = "INSERT INTO pattern_unique_cache (url_pattern,pixel_source_name,cache_
 UPDATE = "UPDATE pattern_unique_cache set deleted = 1, seconds = 0 where pixel_source_name = '%s' and url_pattern = '%s' and cache_date >= '%s' and cache_date < '%s' "
 UPDATE2 = "UPDATE pattern_unique_cache set deleted = 0, completed = 1, seconds = %s where pixel_source_name = '%s' and url_pattern = '%s' and cache_date = '%s'"
 
-Q = "select uid from rockerbox.pattern_occurrence_u2_counter where source = ? and date = ? and action = ? and u2 = ?"
+Q = "select * from rockerbox.pattern_occurrence_u2_counter where source = ? and date = ? and action = ? and u2 = ?"
+
 
 
 # HELPERS
@@ -43,7 +44,7 @@ def update_pattern_log(db,pattern,advertiser,cache_date,elapsed):
 
 # DATA PULL
 
-def get_uids(cache,cache_date,advertiser,pattern):
+def get_raw(cache,cache_date,advertiser,pattern):
     from lib.cassandra_helpers.helpers import FutureHelpers
 
     statement = cache.cassandra.prepare(Q)
@@ -51,10 +52,12 @@ def get_uids(cache,cache_date,advertiser,pattern):
     to_update = [[advertiser,str(cache_date).split(" ")[0] + " 00:00:00",pattern,i] for i in range(0,100)]
 
     uid_values, _ = FutureHelpers.future_queue(to_update,to_bind,simple_append,60,[],False) 
-    formatted = [[advertiser,i['uid'],pattern] for i in uid_values]
+    # schema: [advertiser, date, pattern, uid, u2, url, count]
+
+    formatted = [[advertiser,i['date'],pattern,i['uid'],int(i['uid'][-2:]),i['url'],i['occurrence']] for i in uid_values]
 
     return formatted 
-    
+ 
 
 def run_uniques(zk,advertiser,pattern,days,offset,force=False,identifier="test"):
     import time 
@@ -78,9 +81,15 @@ def run_uniques(zk,advertiser,pattern,days,offset,force=False,identifier="test")
         # run cache
         cache = build_cache(days,offset,"")
 
-        uid_values = get_uids(cache,cache_date,advertiser,pattern)
-        pattern_cache = PatternCache(cache,advertiser,pattern,[],uid_values,[])
-        pattern_cache.cache_domains()
+        # schema: [advertiser, date, pattern, uid, u2, url, count]
+        cache_insert = get_raw(cache,cache_date,advertiser,pattern)
+        
+        pattern_cache = PatternCache(cache,advertiser,pattern,cache_insert,[],[])
+        pattern_cache.cache_views()
+        pattern_cache.cache_uniques()
+        pattern_cache.cache_visits()
+
+        #pattern_cache.cache_domains()
         
         # log end
         elapsed = int(time.time() - start)
@@ -100,6 +109,6 @@ if __name__ == "__main__":
     logging.info("Parameters: %s" % str(sys.argv))
 
     advertiser, pattern, days, offset, force = sys.argv[1:]
-    run_domains(zk,advertiser, pattern, int(days), int(offset), bool(force))
+    run_uniques(zk,advertiser, pattern, int(days), int(offset), bool(force))
 
     logging.info("Elapsed:  %s " % (time.time() - start))
