@@ -85,6 +85,7 @@ def run_uniques(zk,advertiser,pattern,days,offset,force=False,identifier="test")
         cache_insert = get_raw(cache,cache_date,advertiser,pattern)
         
         pattern_cache = PatternCache(cache,advertiser,pattern,cache_insert,[],[])
+        pattern_cache.cache_views()
         pattern_cache.cache_uniques()
         pattern_cache.cache_visits()
 
