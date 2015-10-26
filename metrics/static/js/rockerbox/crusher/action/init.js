@@ -71,8 +71,10 @@ RB.crusher.ui.action.status = (function(status,action,crusher) {
 
   status.subscription = function(data) {
 
-    var target = d3.selectAll(".action-view-wrapper").selectAll(".action-view")
-    crusher.ui.action.status(target)
+    crusher.permissions("cache_stats", function(){
+      var target = d3.selectAll(".action-view-wrapper").selectAll(".action-view")
+      crusher.ui.action.status(target)
+    })
     
     return data
   }

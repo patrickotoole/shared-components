@@ -39,7 +39,7 @@ RB.crusher.ui.action = (function(action) {
 
   action.status = function(wrapper) {
 
-    crusher.permissions("cache_stats", function(){
+    
 
 
       var status = d3_updateable(wrapper,".action-status","div")
@@ -225,7 +225,7 @@ RB.crusher.ui.action = (function(action) {
         .classed("btn-label",true)
         .text(function(x){return (new Date(x.cache_date*1000)).toISOString().split("T")[0] })
 
-    })
+    
 
 
   }
