@@ -605,21 +605,7 @@ fn(data)
 
   }
 
-  action.show_domains = function(wrapper) {
-    var newTs = wrapper.selectAll(".ts")
-    var domainData = wrapper.datum().domains
-
-    var categoryData = d3.nest()
-      .key(function(x){return x.category_name})
-      .rollup(function(x){
-        return d3.sum(x.map(function(y){return y.count}))
-      }) 
-      .entries(domainData)
-
-    RB.rho.ui.buildBarSummary(newTs,domainData,"Off-site opportunities",["domain"], undefined, "Top off-site opportunities for users who have engaged in this on-site action")
-    RB.rho.ui.buildBarSummary(newTs,categoryData,"Off-site categories",["key"], undefined, "Top off-site categories users visit")
-
-  }
+  
 
   action.edit = function(edit,onSave) {
 

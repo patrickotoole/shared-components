@@ -71,8 +71,7 @@ RB.rho.ui = (function(ui) {
 
   }
 
-  ui.buildBarSummary = function(target,data,title,series,formatting,description,multi_select) {
-
+  ui.buildSeriesWrapper = function(target, title, series, data, formatting, description) {
     formatting = formatting || "col-md-6"
 
     var wrapper = d3_updateable(target,".series-wrapper." + series,"div",[data])
@@ -93,6 +92,14 @@ RB.rho.ui = (function(ui) {
     d3_updateable(newTarget,".description","div",[description],function(x){return x})
       .classed("description",true)
       .text(String)
+    
+    return newTarget
+
+  }
+
+  ui.buildBarSummary = function(target,data,title,series,formatting,description,multi_select) {
+
+    var newTarget = ui.buildSeriesWrapper(target, title, series, data, formatting, description)
 
 
     if (multi_select) {
@@ -126,6 +133,203 @@ RB.rho.ui = (function(ui) {
     //ui.buildTimeseries(newTarget,data,title,series,formatting)
 
 
+  }
+
+  ui.dataPrep = function(data, series) {
+
+    data.map(function(x){
+      x.date = new Date(x.key)
+      for (var i in x.value) 
+        x[i] = x.value[i]
+    })
+
+    var data = data.map(function(d){
+
+      var splitQ = d[series].split("?")[0]
+      var split = splitQ.split("/")
+      d.url_short = split[split.length-1]
+
+      if (split.length > 1 && d.url_short.length < 15) d.url_short = split[split.length-2] + "/" + d.url_short
+      if (split.length > 2 && d.url_short.length < 15) d.url_short = split[split.length-3] + "/" + d.url_short
+
+      return d
+    }).filter(function(d){return d[series] != "NA" })
+
+    if (data[0].weighted === undefined && data[0].key === undefined) {
+      data = d3.nest()
+        .key(function(x){
+          return x.url_short
+        })                                                                          
+        .rollup(function(x){
+          return x.reduce(function(p,c){                                                             
+            return p + c.count                                                                                      
+          },0)
+        })
+        .entries(data)
+
+      data = data.map(function(x){                                                                                    
+          x["url_short"] = x.key
+          return x
+        })                                                                                                            
+     }
+
+     return data
+
+  }
+
+  ui.buildBarTable = function(target,data,title,series,formatting) {
+
+    var showNumber = 20,
+      maxBarWidth = 100,
+      maxNumericWidth = 105 
+    
+    var data = ui.dataPrep(data,series)
+    var field = (data[0].weighted !== undefined) ? "weighted" : 
+                (data[0].count !== undefined) ? "count" : "values"
+
+    data = data.sort(function(x,y){return y[field] - x[field] }).map(function(x,i){
+      x.index = i+1; 
+      return x
+    })
+
+    var default_formatting = { "font_size": ".71em" }
+    
+    var formatting = typeof formatting !== "undefined" ? formatting: default_formatting;
+
+    var targetWidth = target.style("width").replace("px",""),
+      width = targetWidth - 50,
+      barHeight = 15;
+
+    var maxItems = parseInt(targetWidth / (maxNumericWidth+40))
+
+
+    var items = [
+      {"header":"","field":"","type":"bar"},
+      {"header":"Domain","field":"url_short","type":"text"},
+      {"header":"Category","field":"category_name","type":"text"},
+      {"header":"Unique Users","field":"count","type":"numeric"},
+      {"header":"Rank (Today)","field":"index","type":"numeric"},
+      //{"header":"(Change)","field":"index","type":"numeric"},
+    ].slice(0,maxItems)
+
+    var headers = items.map(function(x){return x.header}),
+      fields = items.map(function(x){return x.field}),
+      types = items.map(function(x){return x.type})
+
+    var typeToOffset = function(t) {
+      return (t == "bar") ? maxBarWidth + 5: 
+             (t == "numeric") ? maxNumericWidth : 0
+    }
+
+    var offsets = types.map(function(t){
+      return typeToOffset(t)
+    })
+
+    offsets.push(typeToOffset(types[types.length-1]))
+
+    var numToOffset = offsets.filter(function(o) {return o == 0}).length
+    var textWidth = (parseInt(targetWidth) - d3.sum(offsets))/numToOffset
+
+    var running = 0
+    offsets = offsets.map(function(x){
+      var val = running
+      running += x == 0 ? textWidth : x
+      return val
+    })
+
+
+    var x = d3.scale.log().range([0, maxBarWidth]);
+
+    var chart = target.selectAll("svg.domain-chart-svg")
+      .data(function(x) { return [data.slice(0,showNumber) ] })
+
+    chart.enter()
+      .append("svg")
+      .attr("class","domain-chart-svg")
+      
+
+    x.domain([1, d3.max(chart.datum(), function(d) { return d.count || d.values; })]);
+    
+    chart
+      .attr("height", barHeight * chart.data()[0].length + barHeight*0.3)
+      .attr("width", width);
+
+    ui.barRowHeaders(chart, barHeight, x, maxBarWidth, headers, offsets)
+
+    ui.barRow(chart, barHeight, x, maxBarWidth, fields, offsets)
+    ui.barExpandRow(target, data, field, barHeight, x, showNumber, maxBarWidth, fields, offsets)
+  }
+
+  ui.barRowHeaders = function(chart, barHeight, x, maxBarWidth, headers, offsets) {
+
+    var bar = d3_updateable(chart,".bar-row-header","g")
+      .classed("bar-row-header",true)
+      .datum(headers)
+
+    bar.exit().remove()
+
+    
+
+    var text = d3_splat(bar,"text","text",function(x){return x}, function(x){return x})
+      .attr("x", function(d,i) { return offsets[i] })
+      .attr("y", barHeight / 2)
+      .attr("dy", ".35em")
+      .text(function(d) { return d});
+
+    text.exit().remove()
+  }
+
+  ui.barRow = function(chart, barHeight, x, maxBarWidth, fields, offsets) {
+
+    var colors = d3.scale.category20c()
+
+    var bar = d3_splat(chart,".bar-row","g", function(x){return x},function(x){return x.url_short})
+      .attr("transform", function(d, i) { return "translate(0," + (i+1.3) * barHeight + ")"; })
+      .classed("bar-row",true)
+
+    bar.exit().remove()
+    
+    var rect = d3_updateable(bar,".bar","rect")
+      .attr("class","bar")
+      .attr("width", function(d) { return x(d.count || d.values || 0); })
+      .attr("x", function(d) { return maxBarWidth - x(d.count || d.values || 0); })
+      .attr("height", barHeight - 1)
+      .style("fill",function(x){return x.category_name == "NA" ? "#888" : colors(x.category_name) })
+      
+    
+    var text = d3_splat(bar,"text","text",function(x){
+        var values = fields.map(function(y){return x[y]})
+        values.push("&#13;") 
+        return values
+      })
+      .attr("x", function(d,i) { return offsets[i]})
+      .attr("y", barHeight / 2)
+      .attr("dy", ".35em")
+      .html(function(d) { return d });
+  }
+
+  ui.barExpandRow = function(target, data, field, barHeight, x, limit, maxBarWidth, fields, offsets) {
+    if (data.length > limit) {
+
+      var expand = d3_updateable(target,".expand","div")
+        .classed("expand btn btn-sm btn-default",true)
+        .text("Expand Results")
+        .on("click",function(){
+          var chart = target.selectAll("svg.domain-chart-svg")
+            .data(function(x) {
+              return [data.slice(0,limit*2) ]
+            })
+
+          x.domain([1, d3.max(chart.datum(), function(d) { return d.count || d.values; })]);
+     
+          ui.barRow(chart, barHeight, x, maxBarWidth, fields, offsets)
+          chart.attr("height", barHeight * chart.data()[0].length + barHeight*0.3);
+          ui.barExpandRow(target, data, field, barHeight, x, limit*2, maxBarWidth, fields, offsets)
+
+        })
+    } else {
+      target.selectAll(".expand").remove()
+    }
   }
 
   ui.buildBar = function(target,data,title,series,formatting) {
