@@ -42,6 +42,7 @@ RB.crusher.ui.action.pattern = (function(pattern) {
       .on("click",function(){
         action.pattern.remove.bind(this.parentNode.parentNode)()
       })
+      .classed("hidden",true)
 
     crusher.controller.get_bloodhound(function(bloodhound){
   

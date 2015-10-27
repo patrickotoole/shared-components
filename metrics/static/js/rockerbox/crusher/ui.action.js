@@ -233,7 +233,7 @@ RB.crusher.ui.action = (function(action) {
   action.preview = function(wrapper) {
     var actionView = wrapper.selectAll(".action-view")
       .data(function(x){return [x]},function(x){return x.action_id + x.action_name})
-      
+
     actionView.enter()
       .append("div")
       .classed("action-view",true)
@@ -641,9 +641,12 @@ fn(data)
       .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-30px;margin-right:-30px")
       .classed("heading",true)
 
+    newEdit.append("div")
+      .classed("description",true)
+      .text("Enter a pattern below to create an action")
 
     var group = newEdit.append("div")
-      .classed("input-group input-group-sm",true)
+      .classed("hidden input-group input-group-sm",true)
 
     group.append("span")
       .classed("input-group-addon",true)
@@ -656,7 +659,7 @@ fn(data)
       .attr("value",function(x){return x.action_name})
 
     var operatorGroup = newEdit.append("div")
-      .classed("input-group input-group-sm",true)
+      .classed("hidden input-group input-group-sm",true)
     
     operatorGroup.append("span")
       .classed("input-group-addon",true)
@@ -693,6 +696,9 @@ fn(data)
         .classed("action-patterns",true)
 
     if (newPatterns.length) action.pattern.add.bind(newPatterns)(false)
+    
+    if (!patterns.datum().rows.length) action.pattern.add.bind(newPatterns)(true)
+
 
     newEdit.append("div")
       .style("padding","10px")
@@ -701,6 +707,7 @@ fn(data)
       .classed("bottom btn btn-primary btn-sm pull-right",true)
       .text("Add Pattern")
       .on("click", action.pattern.add.bind(newPatterns))
+      .classed("hidden",true)
 
     newEdit.append("a")
       .text(function(x) {return x.action_id ? "Update Action" : "Define Action"})

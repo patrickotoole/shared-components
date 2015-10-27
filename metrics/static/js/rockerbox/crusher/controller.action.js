@@ -53,6 +53,8 @@ RB.crusher.controller.action = (function(action) {
 
       delete cdata['visits_data']
       delete cdata['name']
+      
+      cdata["action_name"] = cdata.action_name.length > 0 ? cdata.action_name : cdata.url_pattern.join(" -> ") 
 
       cdata['advertiser'] = source
 
