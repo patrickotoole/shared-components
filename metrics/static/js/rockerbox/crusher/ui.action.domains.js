@@ -23,6 +23,28 @@ RB.crusher.ui.action = (function(action) {
     action.domain_table(newTs,domainData)
     action.category_table(newTs,categoryData)
 
+    var pull_left = d3_updateable(newTs,".on-page-wrapper", "div")
+      .classed("on-page-wrapper col-md-6",true)
+
+    var urlData = wrapper.datum().urls
+
+
+    action.show_cloud(pull_left,urlData)
+
+    RB.rho.ui.buildBarSummary(
+      pull_left,urlData,"On-site pages",["url"], " ", 
+      "Top on-site pages that match the action"
+    )
+
+    crusher.permissions("cache_stats", function(){
+      RB.rho.ui.buildBarSummary(
+        pull_left,wrapper.datum().param_rolled,"On-site tracking parameters",["key"], " ", 
+        "Top tracking parameters",true
+      )
+    })
+
+
+
 
   }
 
