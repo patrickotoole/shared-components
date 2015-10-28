@@ -114,7 +114,7 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
         try:
             stats_df = self.get_stats(*args)
 
-            assert(len(stats_df) >= 14) # wants atleast 14 days worth of data before using cache...
+            assert(len(stats_df) >= 7) # wants atleast 14 days worth of data before using cache...
             print start - time.time()
 
             args[-1] = build_datelist(7)
