@@ -71,7 +71,7 @@ RB.rho.ui = (function(ui) {
 
   }
 
-  ui.buildSeriesWrapper = function(target, title, series, data, formatting, description) {
+  ui.buildSeriesWrapper = function(target, title, series, data, formatting, description, button) {
     formatting = formatting || "col-md-6"
 
     var wrapper = d3_updateable(target,".series-wrapper." + series,"div",[data])
@@ -79,6 +79,14 @@ RB.rho.ui = (function(ui) {
 
     var newTarget = d3_updateable(wrapper,".series." + series,"div",[data])
       .classed("bar series " + series,true)
+
+    if (button) {
+      
+      d3_updateable(newTarget,button.class_name,"a")
+        .classed(button.class_name + " pull-right btn btn-sm btn-default", true)
+        .text(button.name)
+        .on("click",button.click)
+    }
 
     d3_updateable(newTarget,".title","div",[title],function(x){return x})
       .classed("title",true)
@@ -92,6 +100,8 @@ RB.rho.ui = (function(ui) {
     d3_updateable(newTarget,".description","div",[description],function(x){return x})
       .classed("description",true)
       .text(String)
+
+    
     
     return newTarget
 
