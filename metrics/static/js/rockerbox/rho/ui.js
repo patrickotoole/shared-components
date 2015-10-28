@@ -181,7 +181,7 @@ RB.rho.ui = (function(ui) {
 
     var showNumber = 20,
       maxBarWidth = 100,
-      maxNumericWidth = 105 
+      maxNumericWidth = 65 
     
     var data = ui.dataPrep(data,series)
     var field = (data[0].weighted !== undefined) ? "weighted" : 
@@ -207,8 +207,8 @@ RB.rho.ui = (function(ui) {
       {"header":"","field":"","type":"bar"},
       {"header":"Domain","field":"url_short","type":"text"},
       {"header":"Category","field":"category_name","type":"text"},
-      {"header":"Unique Users","field":"count","type":"numeric"},
-      {"header":"Rank (Today)","field":"index","type":"numeric"},
+      {"header":"Users","field":"count","type":"numeric"},
+      {"header":"Rank","field":"index","type":"numeric"},
       //{"header":"(Change)","field":"index","type":"numeric"},
     ].slice(0,maxItems)
 
@@ -295,6 +295,17 @@ RB.rho.ui = (function(ui) {
       .attr("x", function(d) { return maxBarWidth - x(d.count || d.values || 0); })
       .attr("height", barHeight - 1)
       .style("fill",function(x){return x.category_name == "NA" ? "#888" : colors(x.category_name) })
+      .on("mouseover",function(x) {
+        var selected = bar.filter(function(y){return x.category_name == y.category_name})
+        bar.style("opacity",".5").style("font-weight",undefined)
+        selected.style("opacity","1")
+        selected.filter(function(y){return x == y}).style("font-weight","600")
+      })
+
+    chart
+      .on("mouseout",function(x) {
+        //bar.style("opacity","1").style("font-weight","normal")
+      })
       
     
     var text = d3_splat(bar,"text","text",function(x){
