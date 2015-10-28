@@ -233,7 +233,7 @@ RB.crusher.ui.action = (function(action) {
   action.preview = function(wrapper) {
     var actionView = wrapper.selectAll(".action-view")
       .data(function(x){return [x]},function(x){return x.action_id + x.action_name})
-      
+
     actionView.enter()
       .append("div")
       .classed("action-view",true)
@@ -257,7 +257,11 @@ RB.crusher.ui.action = (function(action) {
 
     edit.text("Edit")
       .on("click",function(){
-        d3.select(".action").classed("hidden",false)
+        var current = d3.select(".action").classed("hidden")
+        d3.select(".action").classed("hidden",!current)
+        var current_text = d3.select(this).text()
+
+        d3.select(this).text(current_text == "Edit" ? "Close" : "Edit")
       })
 
     var info = actionView.selectAll(".urls").data(function(x){
@@ -360,23 +364,6 @@ RB.crusher.ui.action = (function(action) {
     )
 
     
-    var pull_left = d3_updateable(newTs,".on-page-wrapper", "div")
-      .classed("on-page-wrapper col-md-6",true)
-
-    action.show_cloud(pull_left,urlData)
-
-    RB.rho.ui.buildBarSummary(
-      pull_left,urlData,"On-site pages",["url"], " ", 
-      "Top on-site pages that match the action"
-    )
-
-    crusher.permissions("cache_stats", function(){
-      RB.rho.ui.buildBarSummary(
-        pull_left,wrapper.datum().param_rolled,"On-site tracking parameters",["key"], " ", 
-        "Top tracking parameters",true
-      )
-    })
-
     
 
 
@@ -601,21 +588,7 @@ fn(data)
 
   }
 
-  action.show_domains = function(wrapper) {
-    var newTs = wrapper.selectAll(".ts")
-    var domainData = wrapper.datum().domains
-
-    var categoryData = d3.nest()
-      .key(function(x){return x.category_name})
-      .rollup(function(x){
-        return d3.sum(x.map(function(y){return y.count}))
-      }) 
-      .entries(domainData)
-
-    RB.rho.ui.buildBarSummary(newTs,domainData,"Off-site opportunities",["domain"], undefined, "Top off-site opportunities for users who have engaged in this on-site action")
-    RB.rho.ui.buildBarSummary(newTs,categoryData,"Off-site categories",["key"], undefined, "Top off-site categories users visit")
-
-  }
+  
 
   action.edit = function(edit,onSave) {
 
@@ -637,9 +610,12 @@ fn(data)
       .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-30px;margin-right:-30px")
       .classed("heading",true)
 
+    newEdit.append("div")
+      .classed("description",true)
+      .text("Enter a pattern below to create an action")
 
     var group = newEdit.append("div")
-      .classed("input-group input-group-sm",true)
+      .classed("hidden input-group input-group-sm",true)
 
     group.append("span")
       .classed("input-group-addon",true)
@@ -652,7 +628,7 @@ fn(data)
       .attr("value",function(x){return x.action_name})
 
     var operatorGroup = newEdit.append("div")
-      .classed("input-group input-group-sm",true)
+      .classed("hidden input-group input-group-sm",true)
     
     operatorGroup.append("span")
       .classed("input-group-addon",true)
@@ -689,6 +665,9 @@ fn(data)
         .classed("action-patterns",true)
 
     if (newPatterns.length) action.pattern.add.bind(newPatterns)(false)
+    
+    if (!patterns.datum().rows.length) action.pattern.add.bind(newPatterns)(true)
+
 
     newEdit.append("div")
       .style("padding","10px")
@@ -697,6 +676,7 @@ fn(data)
       .classed("bottom btn btn-primary btn-sm pull-right",true)
       .text("Add Pattern")
       .on("click", action.pattern.add.bind(newPatterns))
+      .classed("hidden",true)
 
     newEdit.append("a")
       .text(function(x) {return x.action_id ? "Update Action" : "Define Action"})
@@ -732,7 +712,7 @@ fn(data)
     h5.selectAll(".remove").data(function(x){return [x]}).enter() 
       .append("button")
       .classed("remove btn btn-danger btn-sm ",true)
-      .text("remove")
+      .text("Remove Action")
       .on("click",function(){
         var edit = d3.select(this.parentNode.parentNode)
         edit.remove()

@@ -810,6 +810,7 @@ RB.crusher.controller = (function(controller) {
       crusher.ui.action.buildBase()
 
       var target = d3.selectAll(".action-view-wrapper")
+      target.selectAll(".action-view").remove()
 
       crusher.subscribe.add_subscriber(["actions"], function(actionsw){
 
