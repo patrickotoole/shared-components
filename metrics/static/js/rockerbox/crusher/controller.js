@@ -864,11 +864,22 @@ RB.crusher.controller = (function(controller) {
   
 
   controller.routes = {
-    roots: [{
+    roots: [
+    {
+      "name":"Actions",
+      "push_state": "/crusher/action",
+      "class": "glyphicon glyphicon-signal"
+    },{
+      "name":"Funnels",
+      "push_state": "/crusher/funnel",
+      "class": "glyphicon glyphicon-filter"
+    },
+    /*{
       "name":"On-page Analytics",
       "push_state": "/crusher/analytics",
       "class": "glyphicon glyphicon-stats"
-    },{
+    },*/
+    {
       "name":"Settings",
       "push_state": "/crusher/settings",
       "class": "glyphicon glyphicon-cog"
