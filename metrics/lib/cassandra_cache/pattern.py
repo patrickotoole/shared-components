@@ -68,7 +68,8 @@ def run(advertiser,pattern,days,offset,force=False):
     db.execute(INSERT % (pattern,advertiser,days+offset,cache_date))
 
     if offset == 0: 
-        update_tree(db,api)
+        # update_tree(db,api)
+        pass
 
     logging.info("Cacheing: %s => %s begin" % (advertiser,pattern))
 

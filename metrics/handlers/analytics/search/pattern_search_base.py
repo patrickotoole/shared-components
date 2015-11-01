@@ -35,7 +35,10 @@ def build_datelist(numdays):
     return dates
 
 def build_count_dataframe(field):
-    return lambda data: pandas.DataFrame(data).rename(columns={"count":field}).set_index("date")
+    def build(data):
+        return pandas.DataFrame(data).rename(columns={"count":field}).set_index("date")
+
+    return build
 
 def build_dict_dataframe(field):
 
@@ -60,6 +63,101 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
         
         return defer.DeferredList(dl)
 
+    @defer.inlineCallbacks
+    def get_uid_domains(self, advertiser, pattern_terms, date_clause, logic="or",timeout=60, numdays=5):
+        PARAMS = "uid"
+        indices = [PARAMS]
+
+        response = self.default_response(pattern_terms,logic)
+        response['summary']['num_users'] = 0
+
+        terms, remaining_terms = self.head_and_tail(pattern_terms)
+        df = yield self.defer_execute(PARAMS, advertiser, terms, date_clause, "must", False, numdays=2)
+
+
+        if len(df) > 0:
+            uids = list(set(df.uid.values))
+            response['results'] = uids
+            response['summary']['num_users'] = len(response['results'])
+
+        defs = [self.defer_get_uid_domains(advertiser,pattern_terms[0][0],uids[:10000],date_clause)]
+
+        dl = defer.DeferredList(defs)
+        dom = yield dl
+        dom
+
+        prepped = dom[0][1].unstack(1).fillna(0)
+
+        #mT = prepped.T.as_matrix()
+        #m = prepped.as_matrix()
+
+        #sim = pandas.DataFrame(pandas.np.dot(mT,m),columns=prepped.columns,index=prepped.columns)
+
+        sentences = dom[0][1].reset_index().groupby("uid")['domain'].agg(lambda x: list(x)).values
+        from gensim.models import Word2Vec
+
+        model = Word2Vec(sentences,min_count=4)
+        
+
+        logging.info("got data")
+        import sklearn.cluster
+
+        km = sklearn.cluster.KMeans(n_clusters=len(prepped.columns)/70)
+        idx = km.fit_predict(model.syn0)
+        
+        df = pandas.DataFrame([dict(zip(model.index2word,idx))]).T
+        cluster_domains = df.reset_index().groupby(0)['index'].agg(lambda x: list(x)).to_dict()
+
+
+        #mat = prepped.as_matrix()
+        #km = sklearn.cluster.KMeans(n_clusters=5)
+        #km.fit(mat)
+        #labels = km.labels_
+        #_df = pandas.DataFrame([prepped.index,map(int,labels)]).T.rename(columns={0:"uid",1:"cluster"}).set_index("uid")
+
+
+        #_df2 = dom[0][1].reset_index().groupby("uid")['domain'].agg(lambda x: list(set(x)) )
+        #_df3 = pandas.DataFrame(_df).join(pandas.DataFrame(_df2)).reset_index().rename(columns={0:"domains"})
+        #response['uid_domains'] = _df3.T.to_dict().values()
+
+        #clusters = list(prepped.join(_df).groupby("cluster"))
+        #cluster_dict = {}
+        #for c, df in clusters:
+        #    summed = df.sum()
+        #    summed = summed[summed > 0].map(int)
+        #    cluster_dict[c] = {
+        #        "domains":len(summed),
+        #        "users": len(df),
+        #        "imps": df.sum().sum()
+        #    }
+        summed = prepped.sum()
+        cluster_user_stats = []
+        for i,j in cluster_domains.items():
+            obj = {}
+
+            relevant = prepped[j]
+            users = relevant[relevant.T.sum() > 0]
+            num_users = len(users)
+            num_domains = len(j)
+
+            obj["num_users"] = num_users
+            obj["num_domains"] = num_domains
+            obj['users_per_domain'] = num_users/num_domains
+
+            obj['users'] = list(users.index)
+            obj['domains'] = cluster_domains[i]
+            cluster_user_stats.append(obj)
+            
+        cluster_user_stats = sorted(cluster_user_stats,key=lambda x: x['users_per_domain'])
+
+        response['clusters'] = cluster_user_stats
+
+
+        logging.info("finished cluster")
+
+        
+        self.write_json(response)
+
 
     @defer.inlineCallbacks
     def get_uids(self, advertiser, pattern_terms, date_clause, logic="or",timeout=60):
@@ -72,7 +170,7 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
         terms, remaining_terms = self.head_and_tail(pattern_terms)
         
         # PUSH all the data into one dataframe
-        df = yield self.defer_execute(PARAMS, advertiser, terms, date_clause, "must")
+        df = yield self.defer_execute(PARAMS, advertiser, terms, date_clause, "must", False, numdays=5)
         df['terms'] = ",".join(terms)
 
         for terms in remaining_terms:

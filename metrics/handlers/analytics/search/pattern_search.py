@@ -13,6 +13,7 @@ class PatternSearchHandler(PatternSearchBase):
         self.zookeeper = zookeeper
         self.limit = None
         self.TYPE = {
+            "uid_domains": self.get_uid_domains,
             "uids": self.get_uids,
             "count": self.get_count,
             "timeseries": self.get_timeseries

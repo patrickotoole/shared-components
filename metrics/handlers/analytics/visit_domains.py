@@ -4,6 +4,8 @@ import pandas
 import StringIO
 import logging
 
+import re
+
 from ..base import BaseHandler
 from analytics_base import AnalyticsBase
 from twisted.internet import defer
@@ -29,6 +31,26 @@ DEFAULT_INTERVAL = "minute"
 QUERY = "SELECT * FROM rockerbox.visitor_domains_2 "
 
 class VisitDomainBase(object):
+
+    @decorators.deferred
+    def defer_get_uid_domains(self, source, pattern, uids, date_clause):
+
+        xx = self.paginate_get_w_in(uids, date_clause)
+        df = pandas.DataFrame(xx)
+
+        df['domain'] = df.domain.map(lambda x: re.sub("^m\.","",x.lower()))
+
+        domain_counts = df.groupby("domain").count()
+        domains = list(domain_counts[domain_counts.uid > 15].index)
+
+        df = df[df.domain.isin(domains) & (df.domain != "na")]
+        df = df.groupby(["uid","domain"])["domain"].agg(lambda x: len(x))
+        df.name = "exists"
+
+
+        return df
+
+
 
     @decorators.deferred
     def defer_get_domains_with_cache(self, source, pattern, uids, date_clause):
@@ -98,7 +120,7 @@ class VisitDomainBase(object):
             return self.cassandra.execute_async(bound)
         
         prepped = [[u] for u in uids]
-        results = FutureHelpers.future_queue(prepped,execute,simple_append,60,[])
+        results = FutureHelpers.future_queue(prepped,execute,simple_append,300,[])
         results = results[0]
 
         return results

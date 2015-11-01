@@ -11,6 +11,8 @@ import work_queue
 import lib.cassandra_cache.pattern as cache
 import lib.cassandra_cache.run_domains as domain_cache
 import lib.cassandra_cache.run_uniques as unique_cache
+import lib.cassandra_cache.run_clear as cache_clear
+
 import lib.cassandra_cache.zk_helpers as zk_helpers
 
 import pickle
@@ -90,8 +92,35 @@ class PatternStatusHandler(BaseHandler,APIHelpers,PatternDatabase):
         self.write_response(Convert.df_to_values(df))
 
 
+    def delete_cache(self,advertiser,pattern,cache_date):
+        
+        delta = datetime.datetime.now() - cache_date
+        _cache_date = datetime.datetime.strftime(cache_date,"%Y-%m-%d")
 
+        work = pickle.dumps((
+            cache_clear.run_clear,
+            [advertiser,pattern,1,delta.days -1,True,_cache_date + " delete_cache"]
+        ))
 
+        work_queue.SingleQueue(self.zookeeper,self.queue).put(work,0)
+        df = pandas.DataFrame([])
+        self.write_response(Convert.df_to_values(df))
+
+    def delete_cache_all(self,advertiser,pattern,dates):
+
+        for cache_date in dates:
+            delta = datetime.datetime.now() - cache_date
+            _cache_date = datetime.datetime.strftime(cache_date,"%Y-%m-%d")
+
+            work = pickle.dumps((
+                cache_clear.run_clear,
+                [advertiser,pattern,1,delta.days -1,True,_cache_date + " delete_cache"]
+            ))
+
+            work_queue.SingleQueue(self.zookeeper,self.queue).put(work,0)
+            df = pandas.DataFrame([])
+
+        self.write_response(Convert.df_to_values(df))
 
     def run_pattern(self,advertiser,pattern,cache_date):
         
@@ -145,6 +174,14 @@ class PatternStatusHandler(BaseHandler,APIHelpers,PatternDatabase):
             self.run_domains(advertiser,pattern,cache_date)
         elif argument == "run_uniques":
             self.run_uniques(advertiser,pattern,cache_date)
+        elif argument == "delete":
+            self.delete_cache(advertiser,pattern,cache_date)
+        elif argument == "delete/all":
+            
+            base = datetime.datetime.today()
+            date_list = [base - datetime.timedelta(days=x) for x in range(0, 30)]
+
+            self.delete_cache_all(advertiser,pattern,date_list)
         elif argument == "clear":
             self.remove_queue(advertiser,pattern,cache_date)
         elif argument == "reset":
