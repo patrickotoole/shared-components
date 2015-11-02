@@ -1,11 +1,9 @@
 import sys
 sys.path.append("../../bidder/")
 sys.path.append("../opt_script/")
-
 sys.path.append("../../")
 import buffering_smtp_handler
 import logging
-
 from options import define, options, parse_command_line, options_to_dict
 import pandas as pd
 import datasource 
@@ -21,7 +19,7 @@ import time
 class Runner():
 
     def __init__(self, params):
-                
+
         self.start_date = params['start_date']
         self.end_date = params['end_date']
         self.external_adv_id = params['external_advertiser_id']     
@@ -95,11 +93,20 @@ if __name__ == "__main__":
                 params[param] = command_line_args[param]
 
         logger.info("Starting prospecting_bid_opt with %s" %config_name)
-        logger.info(pprint.pformat(params))
-        runner = Runner(params)
-        runner.run()
+        # logger.info(pprint.pformat(params))
+        logger.info(params)
 
-        logger.info("prospecting_bid_opt FINISHED SUCCESSFULLY with config %s\n\n\n" %config_name)
-        time.sleep(120)
+        try:
+
+            runner = Runner(params)
+            runner.run()
+            logger.info("prospecting_bid_opt FINISHED SUCCESSFULLY with config %s\n\n\n" %config_name)
+            time.sleep(120)
+        except:
+            e = sys.exc_info()[0]
+            logger.error(e)
+
+            
+        
 
 
