@@ -25,6 +25,8 @@ RB.crusher.api = (function(api, crusher) {
     actionURL: "/crusher/funnel/action?format=json",
     actionUIDs: "/crusher/pattern_search/uids?search=",
     actionTimeseries: "/crusher/pattern_search/timeseries?search=",
+    actionClusters: "/crusher/pattern_search/uid_domains?search=",
+
 
     funnelUIDs: "/crusher/multi_search/uids?search=",
     funnelAvails: "/crusher/multi_search/avails?search=",

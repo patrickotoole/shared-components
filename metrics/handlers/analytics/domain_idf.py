@@ -7,7 +7,7 @@ from twisted.internet import defer
 from ..base import BaseHandler
 from lib.helpers import *
 
-QUERY = "SELECT * from reporting.pop_domain_with_category where domain in (%(domains)s)"
+QUERY = "select p.*, c.parent_category_name from reporting.pop_domain_with_category p join category c using (category_name) where domain in (%(domains)s)"
 
 
 

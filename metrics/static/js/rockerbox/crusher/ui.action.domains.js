@@ -21,6 +21,11 @@ RB.crusher.ui.action = (function(action) {
     //RB.rho.ui.buildBarSummary(newTs,domainData,"Off-site opportunities",["domain"], undefined, "Top off-site opportunities for users who have engaged in this on-site action")
     
     action.domain_table(newTs,domainData)
+
+    d3_updateable(newTs,".clusters","div")
+      .classed("series-wrapper col-md-12 clusters",true)
+
+
     action.category_table(newTs,categoryData)
 
     var pull_left = d3_updateable(newTs,".on-page-wrapper", "div")

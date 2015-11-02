@@ -80,7 +80,7 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
             response['results'] = uids
             response['summary']['num_users'] = len(response['results'])
 
-        defs = [self.defer_get_uid_domains(advertiser,pattern_terms[0][0],uids[:10000],date_clause)]
+        defs = [self.defer_get_uid_domains(advertiser,pattern_terms[0][0],uids[:1000],date_clause)]
 
         dl = defer.DeferredList(defs)
         dom = yield dl
@@ -102,7 +102,7 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
         logging.info("got data")
         import sklearn.cluster
 
-        km = sklearn.cluster.KMeans(n_clusters=len(prepped.columns)/70)
+        km = sklearn.cluster.KMeans(n_clusters=len(prepped.columns)/50)
         idx = km.fit_predict(model.syn0)
         
         df = pandas.DataFrame([dict(zip(model.index2word,idx))]).T
@@ -146,6 +146,7 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
 
             obj['users'] = list(users.index)
             obj['domains'] = cluster_domains[i]
+            obj['cluster'] = i
             cluster_user_stats.append(obj)
             
         cluster_user_stats = sorted(cluster_user_stats,key=lambda x: x['users_per_domain'])
