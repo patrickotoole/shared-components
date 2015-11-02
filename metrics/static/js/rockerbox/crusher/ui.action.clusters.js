@@ -181,7 +181,7 @@ RB.crusher.ui.action = (function(action) {
     var bubble = d3.layout.pack()
         .sort(null)
         .size([300, diameter])
-        .padding(1.5);
+        .padding(3.5);
     
     var svg = d3_updateable(category,".bubble-chart","svg")
         .attr("width", 300)

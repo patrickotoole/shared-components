@@ -80,7 +80,8 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
             response['results'] = uids
             response['summary']['num_users'] = len(response['results'])
 
-        defs = [self.defer_get_uid_domains(advertiser,pattern_terms[0][0],uids[:1000],date_clause)]
+        defs = [self.defer_get_uid_domains(advertiser,pattern_terms[0][0],uids[:10000],date_clause)]
+
 
         dl = defer.DeferredList(defs)
         dom = yield dl
