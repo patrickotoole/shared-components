@@ -21,9 +21,10 @@ RB.crusher.ui.action = (function(action) {
   
   
   var increment_and_add = function increment_and_add(bag,inverse_bag,word) {
-    if (! bag[word]) 
-    bag[word] = Object.keys(bag).length
-    inverse_bag[bag[word]] = word
+    if (bag[word] == undefined) {
+      bag[word] = Object.keys(bag).length
+      inverse_bag[bag[word]] = word
+    }
   }
   
   function build_relations(relations, word1, word2, value) {
