@@ -113,6 +113,8 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
                 idf_dict = keyed[x.domain] || {}
                 x.idf = idf_dict.idf || 12
                 x.category_name = idf_dict.category_name || "NA"
+                x.parent_category_name = idf_dict.parent_category_name || "NA"
+
                 x.weighted =  x.domain == "NA" ? 0 : Math.exp(x.idf) * Math.log(x.count)
 
               })
@@ -345,6 +347,23 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
           deferred_cb(null,cb.bind(false,funnel))
         })
         
+      })
+
+  endpoints.actionClusters = api.helpers.genericQueuedAPIWithData(function(action,cb,deferred_cb) {
+
+        if (action.clusters) {
+          deferred_cb(null,cb.bind(false,action))
+          return 
+        }
+        d3.xhr(api.URL.actionClusters + action.action_string)
+          .header("Content-Type","application/json")
+          .get(function(err,rawData){
+            var dd = JSON.parse(rawData.response)
+            action.clusters = dd.clusters
+            
+            deferred_cb(null,cb.bind(false,action))
+
+          })
       })
 
   endpoints.actionTimeseries = api.helpers.genericQueuedAPIWithData(function(action,cb,deferred_cb) {

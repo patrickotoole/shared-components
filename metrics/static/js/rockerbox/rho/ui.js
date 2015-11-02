@@ -71,14 +71,22 @@ RB.rho.ui = (function(ui) {
 
   }
 
-  ui.buildSeriesWrapper = function(target, title, series, data, formatting, description) {
+  ui.buildSeriesWrapper = function(target, title, series, data, formatting, description, button) {
     formatting = formatting || "col-md-6"
 
-    var wrapper = d3_updateable(target,".series-wrapper." + series,"div",[data])
+    var wrapper = d3_updateable(target,".series-wrapper." + series,"div")
       .classed("series-wrapper " + formatting + " " + series,true)
 
     var newTarget = d3_updateable(wrapper,".series." + series,"div",[data])
       .classed("bar series " + series,true)
+
+    if (button) {
+      
+      d3_updateable(newTarget,button.class_name,"a")
+        .classed(button.class_name + " pull-right btn btn-sm btn-default", true)
+        .text(button.name)
+        .on("click",button.click)
+    }
 
     d3_updateable(newTarget,".title","div",[title],function(x){return x})
       .classed("title",true)
@@ -92,6 +100,8 @@ RB.rho.ui = (function(ui) {
     d3_updateable(newTarget,".description","div",[description],function(x){return x})
       .classed("description",true)
       .text(String)
+
+    
     
     return newTarget
 
@@ -177,9 +187,9 @@ RB.rho.ui = (function(ui) {
 
   }
 
-  ui.buildBarTable = function(target,data,title,series,formatting) {
+  ui.buildBarTable = function(target,data,title,series,formatting,showNumber) {
 
-    var showNumber = 20,
+    var showNumber = showNumber || 20,
       maxBarWidth = 100,
       maxNumericWidth = 65 
     
@@ -251,7 +261,7 @@ RB.rho.ui = (function(ui) {
     x.domain([1, d3.max(chart.datum(), function(d) { return d.count || d.values; })]);
     
     chart
-      .attr("height", barHeight * chart.data()[0].length + barHeight*0.3)
+      .attr("height", barHeight * chart.data()[0].length + barHeight*0.3 + barHeight)
       .attr("width", width);
 
     ui.barRowHeaders(chart, barHeight, x, maxBarWidth, headers, offsets)

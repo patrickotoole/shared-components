@@ -23,6 +23,8 @@ CACHE_WHERE = """source=? and action=? and date=? and u2=? """
 
 
 INSERT_UDF = "insert into full_replication.function_patterns (function,pattern) VALUES ('%s','%s')"
+SELECT_UDF = "select * from full_replication.function_patterns where function = '%s' "
+
 
 def build_datelist(numdays):
     import datetime
@@ -138,6 +140,8 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
  
     def build_udf(self,udf_name,pattern):
         self.cassandra.execute(INSERT_UDF % (udf_name,pattern[0]))
+        self.cassandra.select_dataframe(SELECT_UDF % (udf_name))
+
         
     def run_uniques(self, advertiser, pattern, dates):
         import datetime
@@ -211,8 +215,6 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
                 
         df = pandas.DataFrame(results)
 
-        
-                
         return df
 
         

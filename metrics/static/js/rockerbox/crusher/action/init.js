@@ -120,14 +120,14 @@ RB.crusher.ui.action.domains = (function(domains,action,crusher) {
 
   domains.NAME = "action.domains"
   domains.SUBSCRIBE = ["tf_idf_action"]
-  domains.PUBLISH = []
+  domains.PUBLISH = ["actionClusters"]
   domains.EVENTS = []
 
   domains.subscription = function(data) {
 
     var target = d3.selectAll(".action-view-wrapper")
-    
     crusher.ui.action.show_domains(target)
+
 
     return data
   }
@@ -137,6 +137,30 @@ RB.crusher.ui.action.domains = (function(domains,action,crusher) {
 })(RB.crusher.ui.action.domains || {}, RB.crusher.ui.action,RB.crusher)
 
 RB.component.export(RB.crusher.ui.action.domains, RB.crusher.ui.action)
+
+
+
+RB.crusher.ui.action.clusters = (function(clusters,action,crusher) {
+
+  clusters.NAME = "action.clusters"
+  clusters.SUBSCRIBE = ["actionClusters"]
+  clusters.PUBLISH = []
+  clusters.EVENTS = []
+
+  clusters.subscription = function(data) {
+
+    var target = d3.selectAll(".action-view-wrapper")
+    crusher.ui.action.show_clusters(target)
+    
+    return data
+  }
+
+  return clusters
+
+})(RB.crusher.ui.action.clusters || {}, RB.crusher.ui.action,RB.crusher)
+
+RB.component.export(RB.crusher.ui.action.clusters, RB.crusher.ui.action)
+
 
 
 RB.crusher.ui.action.resize = (function(resize,action,crusher) {

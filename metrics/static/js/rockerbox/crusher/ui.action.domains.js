@@ -21,6 +21,11 @@ RB.crusher.ui.action = (function(action) {
     //RB.rho.ui.buildBarSummary(newTs,domainData,"Off-site opportunities",["domain"], undefined, "Top off-site opportunities for users who have engaged in this on-site action")
     
     action.domain_table(newTs,domainData)
+
+    d3_updateable(newTs,".clusters","div")
+      .classed("series-wrapper col-md-12 clusters",true)
+
+
     action.category_table(newTs,categoryData)
 
     var pull_left = d3_updateable(newTs,".on-page-wrapper", "div")
@@ -55,7 +60,28 @@ RB.crusher.ui.action = (function(action) {
       formatting = "col-md-12",
       description = "Top off-site opportunities for users who have engaged in this on-site action"
 
-    var target = RB.rho.ui.buildSeriesWrapper(newTs, title, series, domainData, formatting, description)
+    var button = {
+      class_name: "export",
+      name: "Export",
+      click: function(x) {
+        var csvContent = "data:text/csv;charset=utf-8,";
+        var data = x[0].sort(function(a,b) {return a.index - b.index})
+        csvContent += Object.keys(data[0]) + "\n"
+
+        data.map(function(infoArray, index){
+           dataString = Object.keys(infoArray).map(function(x){return infoArray[x]}).join(",");
+           csvContent += dataString+ "\n" 
+        });
+        
+        var encodedUri = encodeURI(csvContent);
+        window.open(encodedUri);
+
+      }
+    }
+
+    var target = RB.rho.ui.buildSeriesWrapper(newTs, title, series, domainData, formatting, description, button)
+
+     
 
     RB.rho.ui.buildBarTable(target, domainData, title, series, formatting)
 
