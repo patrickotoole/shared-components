@@ -35,26 +35,26 @@ RB.crusher.controller.action = (function(action) {
         ); 
     },
     save: function(data, obj) {
-      var cdata = JSON.parse(JSON.stringify(data)),
+
+      
+      
+      var intermediate = {
+        "action_name": data['action_name'],
+        "operator": data['operator'],
+        "action_id": data['action_id'],
+        "url_pattern": data['url_pattern']
+      }
+
+      var cdata = JSON.parse(JSON.stringify(intermediate)),
         type = data['action_id'] ? "PUT" : "POST";
 
-      delete cdata['values'];
-      delete cdata['rows']
-      delete cdata['count']
-      delete cdata['uids']
-      delete cdata['domains']
-      delete cdata['urls']
-
-      delete cdata["param_list"]
-      delete cdata["action_string"]
-      delete cdata["param_rolled"]
-
-
-
-      delete cdata['visits_data']
-      delete cdata['name']
-      
-      cdata["action_name"] = cdata.action_name.length > 0 ? cdata.action_name : cdata.url_pattern.join(" -> ") 
+            
+      if (cdata.action_name.length == 0) {
+        cdata["action_name"] = cdata.url_pattern.join(" -> ") 
+        data["action_name"] = cdata.url_pattern.join(" -> ") 
+      } else {
+        // 
+      }
 
       cdata['advertiser'] = source
 
