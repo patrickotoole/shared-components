@@ -167,6 +167,7 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
     def defer_execute(self, selects, advertiser, pattern, date_clause, logic, 
                       allow_sample=True, timeout=60, numdays=20, should_cache=True):
 
+
         dates = build_datelist(numdays)
         inserts, results = [], []
 
@@ -179,7 +180,7 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
         URL = "select * from pattern_cache where pixel_source_name = '%s' and url_pattern = '%s'"
         df = lnk.dbs.rockerbox.select_dataframe(URL % (advertiser,pattern[0]))
 
-        if len(df[df.num_days > 7]) > 0:
+        if len(df[df.num_days > 5]) > 0:
             results = self.run_cache(pattern,advertiser,dates,sample[0],sample[1],results)
             logging.info("Results in cache: %s" % len(results))
         
