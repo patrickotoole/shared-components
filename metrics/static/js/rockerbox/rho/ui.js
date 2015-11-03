@@ -568,6 +568,10 @@ RB.rho.ui = (function(ui) {
       .attr("transform", "translate(0," + height + ")")
       .call(xAxis);
 
+    svg.select(".x.axis").selectAll("text").filter(function(x){return this.innerHTML.length > 6})
+      .attr("y",20)
+
+
   
     newSvg.append("g")
       .attr("class", "y axis")
