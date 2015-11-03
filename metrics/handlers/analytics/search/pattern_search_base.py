@@ -93,8 +93,8 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
         #m = prepped.as_matrix()
 
         #sim = pandas.DataFrame(pandas.np.dot(mT,m),columns=prepped.columns,index=prepped.columns)
-
-        sentences = dom[0][1].reset_index().groupby("uid")['domain'].agg(lambda x: list(x)).values
+        sentence_df = dom[0][1].reset_index().groupby("uid")['domain'].agg(lambda x: list(x))
+        sentences = sentence_df.values
         from gensim.models import Word2Vec
 
         model = Word2Vec(sentences,min_count=4)
@@ -103,7 +103,7 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
         logging.info("got data")
         import sklearn.cluster
 
-        km = sklearn.cluster.KMeans(n_clusters=len(prepped.columns)/50)
+        km = sklearn.cluster.KMeans(n_clusters=max(2,len(prepped.columns)/50) )
         idx = km.fit_predict(model.syn0)
         
         df = pandas.DataFrame([dict(zip(model.index2word,idx))]).T
@@ -199,7 +199,7 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
             
     @defer.inlineCallbacks
     def get_generic(self, advertiser, pattern_terms, date_clause, logic="or",timeout=60,timeseries=False):
-        
+
         PARAMS = "date, url, uid"
         indices = PARAMS.split(", ")
 

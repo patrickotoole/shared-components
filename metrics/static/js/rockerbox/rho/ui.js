@@ -82,7 +82,7 @@ RB.rho.ui = (function(ui) {
 
     if (button) {
       
-      d3_updateable(newTarget,button.class_name,"a")
+      d3_updateable(newTarget,"."+button.class_name,"a")
         .classed(button.class_name + " pull-right btn btn-sm btn-default", true)
         .text(button.name)
         .on("click",button.click)
@@ -257,8 +257,7 @@ RB.rho.ui = (function(ui) {
       .append("svg")
       .attr("class","domain-chart-svg")
       
-
-    x.domain([1, d3.max(chart.datum(), function(d) { return d.count || d.values; })]);
+    x.domain([.1, d3.max(chart.datum(), function(d) { return d.count || d.values; })]);
     
     chart
       .attr("height", barHeight * chart.data()[0].length + barHeight*0.3 + barHeight)
@@ -319,14 +318,15 @@ RB.rho.ui = (function(ui) {
       
     
     var text = d3_splat(bar,"text","text",function(x){
-        var values = fields.map(function(y){return x[y]})
-        values.push("&#13;") 
+        var values = fields.map(function(y){return {"key":y,"value":x[y]} })
         return values
+      },function(x){
+        return x.key
       })
       .attr("x", function(d,i) { return offsets[i]})
       .attr("y", barHeight / 2)
       .attr("dy", ".35em")
-      .html(function(d) { return d });
+      .html(function(d) { return d.value });
   }
 
   ui.barExpandRow = function(target, data, field, barHeight, x, limit, maxBarWidth, fields, offsets) {

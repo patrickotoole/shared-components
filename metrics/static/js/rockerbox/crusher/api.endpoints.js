@@ -111,9 +111,10 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
               data.domains.map(function(x) {
                 idf_dict = keyed[x.domain] || {}
-                x.idf = idf_dict.idf || 12
+                
                 x.category_name = idf_dict.category_name || "NA"
                 x.parent_category_name = idf_dict.parent_category_name || "NA"
+                x.idf = idf_dict.idf || ( x.category_name == "NA" ? 3 : 12)
 
                 x.weighted =  x.domain == "NA" ? 0 : Math.exp(x.idf) * Math.log(x.count)
 
