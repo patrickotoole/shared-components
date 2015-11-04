@@ -257,7 +257,7 @@ RB.portal.UI = (function(UI){
         .style("margin-top","-10px")
         .style("margin-right","-10px")
         .text("Export CSV")
-        .property("href","/reporting?format=csv&export=true")
+        .property("href","/reporting?format=csv&export=true&download=true")
         
 
       var graphRow = graphPanel.append("div")

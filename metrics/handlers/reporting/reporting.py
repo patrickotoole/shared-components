@@ -67,9 +67,8 @@ class ReportingBase(object):
         start_date = self.get_argument("start_date",False)
         params = {"advertiser_id": advertiser_id,"date":""}
             
-        q = MATERIALIZED_VIEW % params
-        print q
-        return self.db.select_dataframe(q)
+        q = EXPORT_MATERIALIZED_VIEW % params
+        return self.db.select_dataframe(q).set_index("date").fillna(0)
 
     def pull_hive_campaigns(self,campaign_ids):
         """

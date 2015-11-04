@@ -45,7 +45,7 @@ RB.portal.data = (function(data){
     API.getReporting(function(json){
 
       var transformed = json.map(reportingTransform)
-      transformed.map(function(i){ db.imps.add(i) })
+      transformed.map(function(i){ db.imps.put(i) })
       
       callback(transformed)
     })
@@ -54,15 +54,21 @@ RB.portal.data = (function(data){
   var get_reporting = function(callback) {
 
     API.getAdvertiser(function(x) {
+      
+
       var name = x[0].pixel_source_name
 
       getDB(name);
 
       db.imps.orderBy("dd").uniqueKeys(function(dd){
-        var max_date = dd.map(function(y){ return +new Date(y)}).reduce(function(p,c){return Math.max(p,c)},0);
-        var yesterday = +new Date(new Date() - 11*3600000)
+
+        // REMOVING CACHE FOR NOW
+        /*var max_date = dd.map(function(y){ return +new Date(y)}).reduce(function(p,c){return Math.max(p,c)},0);
+        var yesterday = +new Date(new Date() - 8*600000)
 
         if (yesterday > max_date) {
+        */
+        if (true) {
           console.log("pulling data...")
           set_reporting(name,callback)
         } else {
