@@ -133,7 +133,9 @@ RB.crusher.ui.action = (function(action) {
 
     var slices = d3_updateable(svg,".slices","g").classed("slices",true),
       labels = d3_updateable(svg,".labels","g").classed("labels",true),
-      lines = d3_updateable(svg,".lines","g").classed("lines",true)
+      lines = d3_updateable(svg,".lines","g").classed("lines",true),
+      desc = d3_updateable(svg,".desc","g").classed("desc",true)
+
 
     var width = target.style("width").replace("px","").split(".")[0],
       height = width,
@@ -160,6 +162,63 @@ RB.crusher.ui.action = (function(action) {
     slices.attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
     labels.attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
     lines.attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+    desc.attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
+      .style("fill","black")
+
+    var drawDesc = function(y) {
+
+      d3_updateable(desc,".num-domains","text")
+        .classed("num-domains",true)
+        .attr("dy","-.35em")
+        .style("text-anchor","middle")
+        .style("font-size","28px")
+        .style("font-weight","bold")
+        .text(function(x) {
+          var selected = y ? y.data.label : true
+          var domains = x[0].filter(function(z){return selected === true ? true : z.parent_category_name == selected})
+          return domains.length
+        })
+
+      d3_updateable(desc,".domain-desc","text")
+        .classed("domain-desc",true)
+        .attr("dy",".35em")
+        .style("text-anchor","middle")
+        .style("font-weight","500")
+        .text("domains")
+
+      var num_users = d3_updateable(desc,".num-users","g")
+        .classed("num-users",true)
+        .attr("dy","1.35em")
+        .style("text-anchor","middle")
+        .style("font-size","22px")
+        .style("font-weight","bold")
+        
+
+      d3_updateable(num_users,".num","text")
+        .classed("num",true)
+        .attr("dy","1.35em")
+        .text(function(x) {
+          var selected = y ? y.data.label : true
+          var domains = x[0].filter(function(z){return selected === true ? true : z.parent_category_name == selected})
+          return domains.reduce(function(p,c){return p + c.count},0)
+        })
+
+      var user_text = d3_updateable(num_users,".desc","text")
+        .classed("desc",true)
+        .attr("dy","1.85em")
+        .style("font-weight","normal")
+        .style("padding-left","5px")
+
+      d3_updateable(user_text,"tspan","tspan")
+        .style("font-size","11px")
+        .text("uniques")
+    }
+
+    drawDesc()
+
+
+
+
 
     var key = function(d){ return d.data.label };
  
@@ -200,6 +259,7 @@ RB.crusher.ui.action = (function(action) {
                     text.filter(function(y) {return x.data.label == y.data.label}).classed("hidden",false)
                     polyline.filter(function(y) {return x.data.label == y.data.label}).classed("hidden",false)
                     hover(x)
+                    drawDesc(x)
 
                 })
 

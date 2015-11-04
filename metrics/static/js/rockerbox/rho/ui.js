@@ -200,7 +200,8 @@ RB.rho.ui = (function(ui) {
                 (data[0].count !== undefined) ? "count" : "values"
 
     data = data.sort(function(x,y){return y[field] - x[field] }).map(function(x,i){
-      if (x.index == undefined) x.index = i+1; 
+      //if (x.index == undefined) x.index = i+1; 
+      x.index = i+1
       return x
     })
 
