@@ -99,7 +99,7 @@ RB.rho.ui = (function(ui) {
 
     d3_updateable(newTarget,".description","div",[description],function(x){return x})
       .classed("description",true)
-      .text(String)
+      .html(String)
 
     
     
@@ -165,7 +165,9 @@ RB.rho.ui = (function(ui) {
       return d
     }).filter(function(d){return d[series] != "NA" })
 
-    if (data[0].weighted === undefined && data[0].key === undefined) {
+    var total_weight = data.reduce(function(p,c){return p + (!!c.weighted)},0)
+
+    if (total_weight == 0 && data[0].key === undefined) {
       data = d3.nest()
         .key(function(x){
           return x.url_short
@@ -187,18 +189,18 @@ RB.rho.ui = (function(ui) {
 
   }
 
-  ui.buildBarTable = function(target,data,title,series,formatting,showNumber) {
+  ui.buildBarTable = function(target,data,title,series,formatting,showNumber, colors) {
 
-    var showNumber = showNumber || 20,
+    var showNumber = showNumber || 15,
       maxBarWidth = 100,
       maxNumericWidth = 65 
-    
+
     var data = ui.dataPrep(data,series)
     var field = (data[0].weighted !== undefined) ? "weighted" : 
                 (data[0].count !== undefined) ? "count" : "values"
 
     data = data.sort(function(x,y){return y[field] - x[field] }).map(function(x,i){
-      x.index = i+1; 
+      if (x.index == undefined) x.index = i+1; 
       return x
     })
 
@@ -214,11 +216,13 @@ RB.rho.ui = (function(ui) {
 
 
     var items = [
-      {"header":"","field":"","type":"bar"},
+      {"header":"Uniques","field":"","type":"bar"},
+      {"header":"","field":"index","type":25},
       {"header":"Domain","field":"url_short","type":"text"},
       {"header":"Category","field":"category_name","type":"text"},
-      {"header":"Users","field":"count","type":"numeric"},
-      {"header":"Rank","field":"index","type":"numeric"},
+
+      //{"header":"Users","field":"count","type":"numeric"},
+      
       //{"header":"(Change)","field":"index","type":"numeric"},
     ].slice(0,maxItems)
 
@@ -228,14 +232,15 @@ RB.rho.ui = (function(ui) {
 
     var typeToOffset = function(t) {
       return (t == "bar") ? maxBarWidth + 5: 
-             (t == "numeric") ? maxNumericWidth : 0
+             (t == "numeric") ? maxNumericWidth : 
+             (typeof(t) == "number") ? t : 0
     }
 
     var offsets = types.map(function(t){
       return typeToOffset(t)
     })
 
-    offsets.push(typeToOffset(types[types.length-1]))
+    //offsets.push(typeToOffset(types[types.length-1]))
 
     var numToOffset = offsets.filter(function(o) {return o == 0}).length
     var textWidth = (parseInt(targetWidth) - d3.sum(offsets))/numToOffset
@@ -264,9 +269,8 @@ RB.rho.ui = (function(ui) {
       .attr("width", width);
 
     ui.barRowHeaders(chart, barHeight, x, maxBarWidth, headers, offsets)
-
-    ui.barRow(chart, barHeight, x, maxBarWidth, fields, offsets)
-    ui.barExpandRow(target, data, field, barHeight, x, showNumber, maxBarWidth, fields, offsets)
+    ui.barRow(chart, barHeight, x, maxBarWidth, fields, offsets, colors)
+    ui.barExpandRow(target, data, field, barHeight, x, showNumber, maxBarWidth, fields, offsets, colors)
   }
 
   ui.barRowHeaders = function(chart, barHeight, x, maxBarWidth, headers, offsets) {
@@ -280,17 +284,17 @@ RB.rho.ui = (function(ui) {
     
 
     var text = d3_splat(bar,"text","text",function(x){return x}, function(x){return x})
-      .attr("x", function(d,i) { return offsets[i] })
+      .attr("x", function(d,i) { return i == 0 ? (offsets[i+1] - 5) : offsets[i] })
       .attr("y", barHeight / 2)
       .attr("dy", ".35em")
+      .style("text-anchor",function(d,i){return i == 0 ? "end" : undefined})
       .text(function(d) { return d});
 
     text.exit().remove()
   }
 
-  ui.barRow = function(chart, barHeight, x, maxBarWidth, fields, offsets) {
-
-    var colors = d3.scale.category20c()
+  ui.barRow = function(chart, barHeight, x, maxBarWidth, fields, offsets, colors) {
+    //var colors = d3.scale.category20c()
 
     var bar = d3_splat(chart,".bar-row","g", function(x){return x},function(x){return x.url_short})
       .attr("transform", function(d, i) { return "translate(0," + (i+1.3) * barHeight + ")"; })
@@ -303,12 +307,12 @@ RB.rho.ui = (function(ui) {
       .attr("width", function(d) { return x(d.count || d.values || 0); })
       .attr("x", function(d) { return maxBarWidth - x(d.count || d.values || 0); })
       .attr("height", barHeight - 1)
-      .style("fill",function(x){return x.category_name == "NA" ? "#888" : colors(x.category_name) })
+      .style("fill",function(x){return x.parent_category_name == "NA" ? "#888" : colors(x.parent_category_name) })
       .on("mouseover",function(x) {
         var selected = bar.filter(function(y){return x.category_name == y.category_name})
-        bar.style("opacity",".5").style("font-weight",undefined)
-        selected.style("opacity","1")
-        selected.filter(function(y){return x == y}).style("font-weight","600")
+        //bar.style("opacity",".5").style("font-weight",undefined)
+        //selected.style("opacity","1")
+        //selected.filter(function(y){return x == y}).style("font-weight","600")
       })
 
     chart
@@ -316,7 +320,6 @@ RB.rho.ui = (function(ui) {
         //bar.style("opacity","1").style("font-weight","normal")
       })
       
-    
     var text = d3_splat(bar,"text","text",function(x){
         var values = fields.map(function(y){return {"key":y,"value":x[y]} })
         return values
@@ -329,10 +332,16 @@ RB.rho.ui = (function(ui) {
       .html(function(d) { return d.value });
   }
 
-  ui.barExpandRow = function(target, data, field, barHeight, x, limit, maxBarWidth, fields, offsets) {
+  ui.barExpandRow = function(target, data, field, barHeight, x, limit, maxBarWidth, fields, offsets, colors) {
     if (data.length > limit) {
 
-      var expand = d3_updateable(target,".expand","div")
+      var expand_row = d3_updateable(target,".expand-row","div")
+        .classed("expand-row row",true)
+        .style("padding-top","10px")
+        .style("text-align","center")
+
+
+      var expand = d3_updateable(expand_row,".expand","div")
         .classed("expand btn btn-sm btn-default",true)
         .text("Expand Results")
         .on("click",function(){
@@ -341,11 +350,11 @@ RB.rho.ui = (function(ui) {
               return [data.slice(0,limit*2) ]
             })
 
-          x.domain([1, d3.max(chart.datum(), function(d) { return d.count || d.values; })]);
+          x.domain([.1, d3.max(chart.datum(), function(d) { return d.count || d.values; })]);
      
-          ui.barRow(chart, barHeight, x, maxBarWidth, fields, offsets)
+          ui.barRow(chart, barHeight, x, maxBarWidth, fields, offsets, colors)
           chart.attr("height", barHeight * chart.data()[0].length + barHeight*0.3);
-          ui.barExpandRow(target, data, field, barHeight, x, limit*2, maxBarWidth, fields, offsets)
+          ui.barExpandRow(target, data, field, barHeight, x, limit*2, maxBarWidth, fields, offsets, colors)
 
         })
     } else {
@@ -407,10 +416,11 @@ RB.rho.ui = (function(ui) {
     var field = (data[0].weighted !== undefined) ? "weighted" : 
                 (data[0].count !== undefined) ? "count" : "values"
 
+    var DEFAULT_ROWS = 15
+
     var chart = target.selectAll("svg.domain-chart-svg")
       .data(function(x) { 
-        
-        return [data.sort(function(x,y){return y[field] - x[field] }).slice(0,20) ] 
+        return [data.sort(function(x,y){return y[field] - x[field] }).slice(0,DEFAULT_ROWS) ] 
       })
 
     chart
@@ -419,12 +429,12 @@ RB.rho.ui = (function(ui) {
           .attr("class","domain-chart-svg")
           .attr("width", width);
 
-    x.domain([0, d3.max(chart.datum(), function(d) { return d.count || d.values; })]);
+    x.domain([.1, d3.max(chart.datum(), function(d) { return d.count || d.values; })]);
     
     chart.attr("height", barHeight * chart.data()[0].length);
 
     ui.barShow(chart, barHeight, x)
-    ui.barExpand(target, data, field, barHeight, x, 20)
+    ui.barExpand(target, data, field, barHeight, x, DEFAULT_ROWS)
 
   }  
 
@@ -440,7 +450,7 @@ RB.rho.ui = (function(ui) {
               return [data.sort(function(x,y){return y[field] - x[field] }).slice(0,limit*2) ]
             })
 
-          x.domain([0, d3.max(chart.datum(), function(d) { return d.count || d.values; })]);
+          x.domain([.1, d3.max(chart.datum(), function(d) { return d.count || d.values; })]);
      
           ui.barShow(chart, barHeight, x)
           chart.attr("height", barHeight * chart.data()[0].length);

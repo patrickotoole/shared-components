@@ -29,7 +29,7 @@ RB.crusher.ui.action = (function(action) {
             try {
               return domain_dict[y][0]
             } catch(e) {
-              return {"category_name":"NA","parent_category_name":"NA","domain":y}
+              return {"category_name":"NA","parent_category_name":"NA","domain":y,"count":1,"weighted":0}
             }
           })
 
@@ -106,18 +106,16 @@ RB.crusher.ui.action = (function(action) {
     }
 
     var buildCurrent = function(current_dom,data) {
-      RB.rho.ui.buildBarTable(current_dom,data,"asdf","domain",false,12)
+      RB.rho.ui.buildBarTable(current_dom,data,"asdf","domain",false,12,action.category_colors)
 
     }
 
-    setTimeout(function() {
       dom.map(function(x){
         var current_dom = d3.select(x[0])
         var data = x[0].parentNode.__data__.domains_with_category
  
         buildCurrent(current_dom,data)
       })
-    },1)
 
     //d3_splat(dom,".domain-row","div",function(x){return x},function(x){return x.domain})
       //.classed("domain-row",true)
@@ -136,13 +134,13 @@ RB.crusher.ui.action = (function(action) {
           .text(HOVER_TEXT)
           .style("font-weight",undefined)
 
-        action.bubbles(current_cat,filterCat)
+        action.bubbles(current_cat,filterCat,action.category_colors)
 
         var current = this.parentNode
         var current_dom = dom.filter(function(){return this.parentNode == current.parentNode})
         var data = current_dom.datum()
   
-        buildCurrent(current_dom,data) 
+        buildCurrent(current_dom,data,action.category_colors) 
         
       })
 
@@ -153,7 +151,7 @@ RB.crusher.ui.action = (function(action) {
       .style("font-size","12px")
       .text(HOVER_TEXT)
 
-    action.bubbles(cat,filterCat)
+    action.bubbles(cat,filterCat,action.category_colors)
 
      
 
@@ -173,10 +171,9 @@ RB.crusher.ui.action = (function(action) {
     
   }
 
-  action.bubbles = function(category,onHover) {
+  action.bubbles = function(category,onHover,color) {
     var diameter = 250,
-        format = d3.format(",d"),
-        color = d3.scale.category20c();
+        format = d3.format(",d");
     
     var bubble = d3.layout.pack()
         .sort(null)
