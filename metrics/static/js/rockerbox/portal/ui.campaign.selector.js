@@ -94,11 +94,41 @@ RB.portal.UI.selector = (function(selector){
       .text("Date Range: ")
 
     currentInterval.append("span") 
-      .classed("interval-span",true)
+      .classed("metric-span interval-span end",true)
         .style("font-size","11px")
         .style("font-weight","normal")
-        .style("line-height","25px")
+        .style("line-height","35px")
         .style("padding-left","12px")
+        .attr("data-type","date")
+        .text("End date")
+
+
+    currentInterval.append("span") 
+      .classed("metric-span interval-span start",true)
+        .style("font-size","11px")
+        .style("font-weight","normal")
+        .style("line-height","35px")
+        .style("padding-left","12px")
+        .attr("data-type","date")
+        .text("Start date")
+
+    setTimeout(function(){
+
+      $('.interval-span').editable({
+        placement: 'right',
+        format: 'yyyy-mm-dd',    
+        viewformat: 'yyyy-mm-dd',    
+        datepicker: {
+          weekStart: 1
+        },
+        success: function(x,date){
+          
+        }
+      });
+
+    },1)
+
+    
   }
 
   selector.series = function(wrapper,selectMetric) {
@@ -151,7 +181,6 @@ RB.portal.UI.selector = (function(selector){
       .style("padding-bottom","6px")
       .attr("id",function(x,i){return "interval-chart-"+i})
             
-  
   }
 
   return selector

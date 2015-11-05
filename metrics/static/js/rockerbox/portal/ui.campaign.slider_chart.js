@@ -6,6 +6,15 @@ RB.portal.UI.slider_chart = (function(slider_chart) {
 
   slider_chart.build = function(id,CRS,target) {
 
+    var intervalBox = dc.customDataBox('.interval-span.start', "interval-group")
+        .valueAccessor(function(d){ return d3.time.format("%Y-%m-%d")(d.date_min) })
+        .group(CRS.groups.all)
+
+    var intervalBox = dc.customDataBox('.interval-span.end', "interval-group")
+        .valueAccessor(function(d){ return d3.time.format("%Y-%m-%d")(d.date_max) })
+        .group(CRS.groups.all)
+
+
     var target = target || d3.select(".active-row")
 
     return dc.lineChart(id, "slider-group") 

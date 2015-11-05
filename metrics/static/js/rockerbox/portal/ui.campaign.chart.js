@@ -51,6 +51,7 @@ RB.portal.UI.chart = (function(chart) {
         var anchor = e.anchor();
         var campaign = d3.select(anchor).data()[0].campaign_bucket 
 
+
         campaign == "Campaign total" ?
           CRS.dimensions.total_campaign_bucket.filterAll() :
           CRS.dimensions.total_campaign_bucket.filter(function(f){return f == campaign});
@@ -77,7 +78,6 @@ RB.portal.UI.chart = (function(chart) {
           t.filter(filters)
           t.redraw()
         }
-
         UI.campaign_selector.update_row_data(CRS)
         
       });
