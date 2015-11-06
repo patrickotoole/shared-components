@@ -6,6 +6,8 @@ RB.crusher.ui.action = (function(action) {
 
   var crusher = RB.crusher
 
+  action.category_colors = d3.scale.category20c()
+
   action.save = function(callback) {
 
     var data = this.selectAll(".action-pattern .tt-input")[0].map(function(x){return x.value}) 
