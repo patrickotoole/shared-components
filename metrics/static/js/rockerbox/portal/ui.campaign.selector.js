@@ -120,7 +120,6 @@ RB.portal.UI.selector = (function(selector){
       $('.interval-span.start').datepicker({
         format: 'yyyy-mm-dd',
         immediateUpdates: true,
-        todayBtn: true,
         weekStart: 1,
         autoclose: true,
         todayHighlight: true
@@ -132,7 +131,6 @@ RB.portal.UI.selector = (function(selector){
       $('.interval-span.end').datepicker({
         format: 'yyyy-mm-dd',
         immediateUpdates: true,
-        todayBtn: true,
         weekStart: 1,
         autoclose: true,
         todayHighlight: true
