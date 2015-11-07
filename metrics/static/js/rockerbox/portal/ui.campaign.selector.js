@@ -85,7 +85,7 @@ RB.portal.UI.selector = (function(selector){
           })   
   }
 
-  selector.dateHeader = function(wrapper) {
+  selector.dateHeader = function(wrapper,selectDateRange) {
     var currentInterval = wrapper.append("h5")
       .classed("row",true)
       .attr("style","border-bottom: 1px solid #ccc; line-height: 35px; margin-top: 0px; padding-left: 10px;")
@@ -93,40 +93,54 @@ RB.portal.UI.selector = (function(selector){
     currentInterval.append("span")
       .text("Date Range: ")
 
-    currentInterval.append("span") 
+    currentInterval.append("input") 
       .classed("metric-span interval-span end",true)
         .style("font-size","11px")
         .style("font-weight","normal")
         .style("line-height","35px")
-        .style("padding-left","12px")
+        .style("padding-right","15px")
+        .style("width","80px")
         .attr("data-type","date")
-        .text("End date")
+        .style("border","none")
+        .text(function(){ })
 
 
-    currentInterval.append("span") 
+
+    currentInterval.append("input") 
       .classed("metric-span interval-span start",true)
         .style("font-size","11px")
         .style("font-weight","normal")
         .style("line-height","35px")
-        .style("padding-left","12px")
+        .style("padding-right","15px")
+        .style("width","80px")
         .attr("data-type","date")
-        .text("Start date")
+        .style("border","none")
+        .text(function(){ })
 
-    setTimeout(function(){
-
-      $('.interval-span').editable({
-        placement: 'right',
-        format: 'yyyy-mm-dd',    
-        viewformat: 'yyyy-mm-dd',    
-        datepicker: {
-          weekStart: 1
-        },
-        success: function(x,date){
-          
-        }
+      $('.interval-span.start').datepicker({
+        format: 'yyyy-mm-dd',
+        immediateUpdates: true,
+        todayBtn: true,
+        weekStart: 1,
+        autoclose: true,
+        todayHighlight: true
+      }).on('changeDate', function (x) {
+        var end = new Date(d3.select('.interval-span.end').property("value") || new Date())
+        selectDateRange(x.date,end)
       });
 
-    },1)
+      $('.interval-span.end').datepicker({
+        format: 'yyyy-mm-dd',
+        immediateUpdates: true,
+        todayBtn: true,
+        weekStart: 1,
+        autoclose: true,
+        todayHighlight: true
+      }).on('changeDate', function (x) {
+        var start = new Date(d3.select('.interval-span.start').property("value") || new Date())
+        selectDateRange(start,x.date)
+      });
+
 
     
   }
@@ -167,11 +181,11 @@ RB.portal.UI.selector = (function(selector){
       })
   }
 
-  selector.build = function(wrapper,selectMetric) {
+  selector.build = function(wrapper,selectMetric,selectDateRange) {
     wrapper.classed("selector-legend",true)
     selector.header(wrapper,selectMetric)
     selector.series(wrapper,selectMetric)
-    selector.dateHeader(wrapper) 
+    selector.dateHeader(wrapper,selectDateRange) 
     wrapper.append("div")
       .classed("col-md-12",true)
       .style("height","10px")              

@@ -68,7 +68,7 @@ RB.portal.data = (function(data){
 
         if (yesterday > max_date) {
         */
-        if (true) {
+        if (false) {
           console.log("pulling data...")
           set_reporting(name,callback)
         } else {
