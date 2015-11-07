@@ -6,6 +6,24 @@ RB.portal.UI.slider_chart = (function(slider_chart) {
 
   slider_chart.build = function(id,CRS,target) {
 
+    var summary = CRS.groups.all.summary()
+
+    d3.select('.interval-span.end').property("value",d3.time.format("%Y-%m-%d")(summary.date_max))
+    d3.select('.interval-span.start').property("value",d3.time.format("%Y-%m-%d")(summary.date_min))
+
+    //var intervalBox = dc.customDataBox('.interval-span.start', "interval-group")
+    //    .valueAccessor(function(d){ 
+    //      return d3.time.format("%Y-%m-%d")(d.date_min) 
+    //    })
+    //    .group(CRS.groups.all)
+
+    //var intervalBox = dc.customDataBox('.interval-span.end', "interval-group")
+    //    .valueAccessor(function(d){ 
+    //      return d3.time.format("%Y-%m-%d")(d.date_max) 
+    //    })
+    //    .group(CRS.groups.all)
+
+
     var target = target || d3.select(".active-row")
 
     return dc.lineChart(id, "slider-group") 
@@ -29,6 +47,7 @@ RB.portal.UI.slider_chart = (function(slider_chart) {
           CRS.groups.all.summary().date_max
       ]))
       .on("preRedraw", function(e){
+
         var anchor = e.anchor();
         var campaign = d3.select(anchor).data()[0].campaign_bucket
 
@@ -36,10 +55,32 @@ RB.portal.UI.slider_chart = (function(slider_chart) {
           CRS.dimensions.total_campaign_bucket.filterAll() :
           CRS.dimensions.total_campaign_bucket.filter(function(f){return f == campaign});
 
-        dc.redrawAll("interval-group")
-         
+        //dc.redrawAll("interval-group")
+        dc.redrawAll("main-group")
+        dc.redrawAll("table-group")
+
+        var summary = CRS.groups.all.summary()
+
+        d3.select('.interval-span.end')
+          .property("value",d3.time.format("%Y-%m-%d")(summary.date_max))
+
+        $('.interval-span.end').datepicker('update')
+
+        d3.select('.interval-span.start')
+          .property("value",d3.time.format("%Y-%m-%d")(summary.date_min))
+
+        $('.interval-span.start').datepicker('update')
+
+
+
+
+
+        //var values = e.data()[0].values.map(function(x){return x.x})
+        //var max = d3.max(values)
+        //var min = d3.min(values)
+
+
         CRS.dimensions.datetime.filterAll();
-        
 
       }) 
       .on("postRender",function(e){

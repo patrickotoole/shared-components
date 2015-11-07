@@ -118,6 +118,29 @@ RB.portal.UI = (function(UI){
       dc.renderAll("infocus-group")
     }
 
+    campaign_bucket.selectDateRange = function(start,end) {
+      console.log(start,end)
+      var range = dc.filters.RangedFilter(start,end)
+      CRS.dimensions.datetime.filter(range)
+      
+      for (var sid in slider_charts) {
+        slider_charts[sid]
+          .filterAll() 
+          .filter(range)
+      }
+
+      //dc.redrawAll("infocus-group") 
+      //dc.redrawAll("main-group") 
+      dc.redrawAll("slider-group") 
+
+      
+      CRS.dimensions.datetime.filterAll()
+
+
+
+
+    }
+
     campaign_bucket.selectMetric = function(metric_name, metric_type) {
       var accessor = function(d) {
         var costMultiplier = (
@@ -218,7 +241,8 @@ RB.portal.UI = (function(UI){
 
       UI.selector.build(
         expansionLeft,
-        UI.campaign_bucket.selectMetric
+        UI.campaign_bucket.selectMetric,
+        UI.campaign_bucket.selectDateRange
       )
 
       slider_charts["#interval-chart-0"] = UI.slider_chart.build(
@@ -257,7 +281,7 @@ RB.portal.UI = (function(UI){
         .style("margin-top","-10px")
         .style("margin-right","-10px")
         .text("Export CSV")
-        .property("href","/reporting?format=csv&export=true")
+        .property("href","/reporting?format=csv&export=true&download=true")
         
 
       var graphRow = graphPanel.append("div")

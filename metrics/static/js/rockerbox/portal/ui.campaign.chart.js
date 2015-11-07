@@ -1,4 +1,3 @@
-var RB = RB || {}
 RB.portal = RB.portal || {}
 RB.portal.UI = RB.portal.UI || {}
 
@@ -10,7 +9,7 @@ RB.portal.UI.chart = (function(chart) {
 
     var target = target || d3.select(".active-row");
   
-    var main_chart = dc.lineChart(id)
+    var main_chart = dc.lineChart(id,"main-group")
       .dimension(CRS.dimensions.daily)
       .group(CRS.groups.daily)
       .tooltipType("daily")
@@ -51,12 +50,13 @@ RB.portal.UI.chart = (function(chart) {
         var anchor = e.anchor();
         var campaign = d3.select(anchor).data()[0].campaign_bucket 
 
+
         campaign == "Campaign total" ?
           CRS.dimensions.total_campaign_bucket.filterAll() :
           CRS.dimensions.total_campaign_bucket.filter(function(f){return f == campaign});
 
       })
-      .on("postRender", function(e) {
+      .on("postRedraw", function(e) {
         var anchor = d3.select(e.anchor())
         anchor.selectAll(".y.axis")
           .attr("class","y axis dc-axis placed")
@@ -77,7 +77,6 @@ RB.portal.UI.chart = (function(chart) {
           t.filter(filters)
           t.redraw()
         }
-
         UI.campaign_selector.update_row_data(CRS)
         
       });

@@ -9,7 +9,8 @@
 	<link href="/static/css/dc.css" type="text/css" rel="stylesheet" media="screen">
   <style>
   /* selectorLegend */
-
+.icon-arrow-left:before{content:"\003c"}
+.icon-arrow-right:before{content:"\003e"}
   .selector-legend .header {
     border-bottom: 1px solid #ccc;
     line-height: 35px;
@@ -287,6 +288,14 @@ box-shadow: inset 0px 0px 5px 0px #CCC;
 	<script src="/static/js/dc.mod.js"></script>
 	<script src="/static/js/reporting.js"></script>
 	<script src="/static/js/reporting-functions.js"></script>
+
+<link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css" rel="stylesheet"/>
+<script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
+
+
+<!--<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.5.0/js/bootstrap-datepicker.js"></script>
+-->
+
   <script src="/static/js/mixpanel.js"></script>
   <script>
     addMixpanelEvent({{ advertiser_id }}, "{{ user_id }}", "load reporting");
@@ -309,9 +318,7 @@ box-shadow: inset 0px 0px 5px 0px #CCC;
       RB.portal.UI.campaign_bucket.buildPanel(CRS,d3.select("#wrapper"))
       
       // This should be moved inside at somepoint...
-      var intervalBox = dc.customDataBox('.interval-span', "interval-group")
-        .valueAccessor(function(d){ return formatDate(d.date_min) + " - " + formatDate(d.date_max) })
-        .group(CRS.groups.all)
+      
       
       //mainGraph.focus([ioStartDate, CRS.groups.all.summary().date_max])
 
