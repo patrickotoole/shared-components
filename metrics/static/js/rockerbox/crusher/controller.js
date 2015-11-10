@@ -307,7 +307,7 @@ RB.crusher.controller = (function(controller) {
           .classed("btn btn-sm btn-default pixel-show-more",true)
           .style("margin-top","-15px")
           .style("margin-bottom","15px")
-          .html("For a custom conversion integration, click here to see advanced instructions for adding conversion pixel pixelss")
+          .html("For a custom conversion integration, click here to see advanced instructions for adding conversion pixels")
           .on("click",function(x){
             implementPixel.select(".advanced-pixels").classed("hidden",false)
             pixel_show_wrapper.classed("hidden",true)
