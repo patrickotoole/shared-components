@@ -376,7 +376,7 @@ RB.crusher.ui.action = (function(action) {
   
 
   action.edit = function(edit,onSave) {
-
+    alert(x.action_id);
     var edits = edit.selectAll(".action")
       .data(function(x){return [x]},function(x){return x.action_id + x.action_name})
 

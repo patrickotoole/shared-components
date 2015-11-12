@@ -497,6 +497,324 @@ RB.crusher.controller = (function(controller) {
       },"settings",true,true)
 
     },
+    "gettingstarted": function() {
+      d3.select("body").classed("hide-select",true)
+
+      var target = d3.selectAll(".container")
+
+      var row = d3_splat(target,".row","div",[{"id":"gettingstarted"}],function(x){return x.id})
+        .classed("row funnels",true)
+
+      row.exit().remove()
+
+      /* Header */
+      var heading = d3_updateable(row,".welcome-heading","h5")
+
+      heading.text("Welcome to Crusher, let's first set-up some things")
+        .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-15px")
+        .classed("welcome-heading heading", true)
+
+
+      /* Progress Indicator */
+      var progress_indicatorWrap = d3_updateable(row,".progress-indicator","section")
+        .classed('progress-indicator', true)
+        .style("width", "800px")
+        .style("position", "relative")
+        .style("margin", "0 auto")
+        .style("margin-top", "80px")
+        .style("margin-bottom", "40px")
+
+      var hr = d3_updateable(progress_indicatorWrap,".progress-indicator-hr","hr")
+        .style("margin", "0")
+        .style("border-top", "solid 2px #CCC")
+        .style("width", "66.66%")
+        .style("margin-left", "16.66%")
+
+      var progress_indicator = d3_updateable(progress_indicatorWrap,".progress-indicator","ol")
+        .style("margin", "0")
+        .style("padding", "0")
+
+
+      /* Progress Steps */
+      var progress_indicator_steps = [
+        d3_updateable(progress_indicator,".progress-indicator-step1","li")
+          .html("<span>Pixel Implementation</span>")
+          .style("display", "inline-block")
+          .style("width", "33.33333%")
+          .style("text-align", "center")
+          .style("padding-top", "10px")
+          .style("color", "#777")
+          .style("text-transform", "uppercase")
+          .style("font-size", "10px")
+          .style("color", "#AAA")
+          .style("font-weight", "bold"),
+
+        d3_updateable(progress_indicator,".progress-indicator-step2","li")
+          .html("<span>Create Action</span>")
+          .style("display", "inline-block")
+          .style("width", "33.33333%")
+          .style("text-align", "center")
+          .style("padding-top", "10px")
+          .style("color", "#777")
+          .style("text-transform", "uppercase")
+          .style("font-size", "10px")
+          .style("color", "#AAA")
+          .style("font-weight", "bold"),
+
+        d3_updateable(progress_indicator,".progress-indicator-step3","li")
+          .html("<span>Finish</span>")
+          .style("display", "inline-block")
+          .style("width", "33.33333%")
+          .style("text-align", "center")
+          .style("padding-top", "10px")
+          .style("color", "#777")
+          .style("text-transform", "uppercase")
+          .style("font-size", "10px")
+          .style("color", "#AAA")
+          .style("font-weight", "bold")
+      ];
+
+
+      /* Progress Steps Bullets */
+      var progress_indicator_bullets = [
+        d3_updateable(progress_indicator_steps[0],".progress-indicator-bullet","div")
+          .style("border", "solid 2px #CCC")
+          .style("border-radius", "50%")
+          .style("width", "10px")
+          .style("height", "10px")
+          .style("position", "absolute")
+          .style("top", "-4px")
+          .style("left", "calc(16.66% - 4px)")
+          .style("background-color", "#CCC"),
+
+        d3_updateable(progress_indicator_steps[1],".progress-indicator-bullet","div")
+          .style("border", "solid 2px #CCC")
+          .style("border-radius", "50%")
+          .style("width", "10px")
+          .style("height", "10px")
+          .style("position", "absolute")
+          .style("top", "-4px")
+          .style("left", "calc(50% - 4px)")
+          .style("background-color", "#f8f8f8"),
+
+        d3_updateable(progress_indicator_steps[2],".progress-indicator-bullet","div")
+          .style("border", "solid 2px #CCC")
+          .style("border-radius", "50%")
+          .style("width", "10px")
+          .style("height", "10px")
+          .style("position", "absolute")
+          .style("top", "-4px")
+          .style("right", "calc(16.66% - 4px)")
+          .style("background-color", "#f8f8f8")
+      ];
+
+
+      /* Onboarding Steps Wrappers */
+      var onboarding_steps_wrappers = [
+        d3_updateable(row, ".onboarding-step1", "div")
+          .classed("ct-chart col-md-6", true)
+          .style("transform", "translate(-50%)")
+          .style("left", "50%"),
+
+        d3_updateable(row, ".onboarding-step2", "div")
+          .classed("ct-chart col-md-6", true)
+          .style("transform", "translate(-50%)")
+          .style("left", "50%")
+          .style("display", "none"),
+
+        d3_updateable(row, ".onboarding-step3", "div")
+          .classed("ct-chart col-md-3", true)
+          .style("transform", "translate(-50%)")
+          .style("left", "50%")
+          .style("display", "none")
+      ];
+
+      /* Onboarding Step 1 */
+      d3_updateable(onboarding_steps_wrappers[0], ".onboarding-step", "")
+          .classed("chart-title", true)
+          .style("padding-bottom", "15px")
+          .html("Implement the RockerBox pixel on your website")
+
+      var onboarding_step1 = d3_updateable(onboarding_steps_wrappers[0], ".onboarding-step", "div")
+        .classed("chart-description pixel-code", true)
+        .style("padding-bottom", "15px")
+        .html(
+          "<div id=\"all-pages-pixel-code\"><p>Paste the following snippet before the closing &lt;head&gt;-tag on every page.</p>" +
+          "<pre class=\"language-markup\"><code class=\"language-markup\" style=\"overflow-x: scroll;\">"+
+          "Loading..." +
+          "</code></pre></div>" +
+          "<div><span>Website URL:</span> <input type=\"text\" value=\"http://\" style=\"border: solid 1px #EEE; outline:none; padding: 5px; width: 300px;\"/></div><hr/>" +
+          "<div><input type=\"checkbox\"/> Also set a conversion pixel</div>" +
+
+          "<div id=\"conversion-pixel-code\" style=\"padding-top:10px;margin-top:10px; display:none;\"><p>Paste the following snippet before the closing &lt;head&gt;-tag on just the conversion page.</p>" +
+          "<pre class=\"language-markup\"><code class=\"language-markup\" style=\"overflow-x: scroll;\">"+
+          "Loading..." +
+          "</code></pre><p>In order to validate the conversion pixel and continue to the next step, you have to place an order.</p></div>" +
+          "<iframe style=\"border: none; height: 1px; width: 0px;\"></iframe>"
+        )
+
+        crusher.subscribe.add_subscriber(["advertiser"], function(advertiser_data){
+          var all_pages_segments = advertiser_data.segments.filter(function(x){return x.segment_implemented != "" && x.segment_name.indexOf("All") > -1})
+          var all_pages_segments_code = all_pages_segments[0].segment_implemented
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+
+          var conversion_segments = advertiser_data.segments.filter(function(x){return x.segment_implemented != "" && x.segment_name.indexOf("Conversion") > -1})
+          var conversion_segments_code = conversion_segments[0].segment_implemented
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+
+          $("#all-pages-pixel-code code").html(all_pages_segments_code);
+          $("#conversion-pixel-code code").html(conversion_segments_code);
+          Prism.highlightAll();
+        }, 'pixel-code-fetching', true, true);
+
+        var onboarding_step1_check = d3_updateable(onboarding_step1,".about-check","a")
+          .classed("btn btn-default btn-sm",true)
+          .style("margin-right", "30px")
+          .style("margin-top", "10px")
+          .html("Continue to creating action")
+          .on("click",function(x) {
+            onboarding_step1_check.html("Validating...");
+
+            // Checks existence of different pixels
+            var pixel_count = {
+              allpages: 0,
+              conversion: 0
+            }
+
+            $('.pixel-code iframe').attr('src', $('.pixel-code input[type="text"]').val());
+            $('.pixel-code iframe').on('load', function(e) {
+              crusher.subscribe.add_subscriber(["pixel_status"], function(status_data) {
+                status_data.forEach(function(pixel) {
+                  // Check which pixels are active
+                  if(pixel.segment_name.indexOf("All Pages") >=0 ) {
+                    pixel_count.allpages++;
+                  } else if(pixel.segment_name.indexOf("Conversion") >=0 ) {
+                    pixel_count.conversion++;
+                  }
+                });
+
+                var validated = true;
+                if( $(".pixel-code input[type='checkbox']").is(':checked') ) {
+                  if(!pixel_count.conversion) {
+                    validated = false;
+                  }
+                }
+
+                if(!pixel_count.allpages) {
+                  validated = false;
+                }
+
+                if(validated) {
+                  progress_indicator_bullets[1].style("background-color", "#CCC");
+                  onboarding_steps_wrappers[0].style("display", "none");
+                  onboarding_steps_wrappers[1].style("display", "block");
+                } else {
+                  onboarding_step1_check.html("Continue to creating action")
+                  alert('Pixel has not been implemented yet');
+                }
+              },"gettingstarted",true,false)
+            });
+          });
+
+
+        /* Onboarding Step 2 */
+        d3_updateable(onboarding_steps_wrappers[1], ".onboarding-step", "")
+          .classed("chart-title", true)
+          .style("padding-bottom", "15px")
+          .html("Create your first action")
+
+        var onboarding_step2 = d3_updateable(onboarding_steps_wrappers[1], ".onboarding-step", "div")
+          .classed("chart-description", true)
+          .style("padding-bottom", "15px")
+          .html(
+            "<p>Some description will be shown right here.</p>"  +
+            "<input class=\"bloodhound typeahead form-control tt-input first-action\" autocomplete=\"off\" spellcheck=\"false\" dir=\"auto\" style=\"position: relative; vertical-align: top; background-color: transparent;\" value=\"all pages\">"
+          )
+
+        $(".pixel-code input[type='checkbox']").on('change', function(e) {
+          if($(this).is(':checked')) {
+            $('div#conversion-pixel-code').fadeIn(100);
+          } else {
+            $('div#conversion-pixel-code').fadeOut(100);
+          }
+        });
+
+        d3_updateable(onboarding_step2,".about-check","a")
+          .classed("btn btn-default btn-sm",true)
+          .style("margin-right", "30px")
+          .style("margin-top", "10px")
+          .html("Continue")
+          .on("click",function(x) {
+            var first_action = $('input.first-action').val();
+
+            var data = {
+              'action_id': undefined,
+              'action_name': first_action,
+              'action_string': first_action,
+              'domains': undefined,
+              'name': first_action,
+              'operator': "or",
+              'param_list': [],
+              'rows': [{
+                'url_pattern': first_action,
+                'values': undefined
+              }],
+              'url_pattern': [
+                first_action
+              ],
+              'urls': undefined,
+              'values': undefined,
+              'visits_data': []
+            }
+
+            RB.crusher.controller.action.save(data, false);
+
+            progress_indicator_bullets[2].style("background-color", "#CCC");
+            onboarding_steps_wrappers[1].style("display", "none");
+            onboarding_steps_wrappers[2].style("display", "block");
+          },"gettingstarted",true,false)
+
+
+        /* Onboarding Step 3 */
+        d3_updateable(onboarding_steps_wrappers[2], ".onboarding-step", "")
+          .classed("chart-title", true)
+          .style("padding-bottom", "15px")
+          .html("Congratulations, you're ready to use RockerBox!")
+
+        var onboarding_step3 = d3_updateable(onboarding_steps_wrappers[2], ".onboarding-step", "div")
+          .classed("chart-description onboarding-step3", true)
+          .style("padding-bottom", "15px")
+          .html(
+            "<p>You can now create your next action, or your first funnel.</p>"  +
+            "<ol style=\"padding:0; margin-top: 20px;\">" +
+              "<li class=\"create-action\" style=\"display: inline-block; text-align: center; width:50%; cursor: pointer;\">" +
+                "<span class=\"icon glyphicon glyphicon-signal\" style=\"font-size: 32px;\"></span>" +
+                "<span style=\"display: block; margin-top: 10px;\">Create Action</span>" +
+              "</li>" +
+              "<li class=\"create-funnel\" style=\"display: inline-block; text-align: center; width:50%; cursor: pointer;\">" +
+                "<span class=\"icon glyphicon glyphicon-filter\" style=\"font-size: 32px;\"></span>" +
+                "<span style=\"display: block; margin-top: 10px;\">Create Funnel</span>" +
+              "</li>" +
+            "<ol>"
+          )
+
+        $('li.create-action').on('click', function(e) {
+          RB.routes.navigation.forward(controller.states["/crusher/action/new"])
+        });
+
+        $('li.create-funnel').on('click', function(e) {
+          RB.routes.navigation.forward(controller.states["/crusher/funnel/new"])
+        });
+
+    },
     "home": function(){
       d3.select("body").classed("hide-select",true)
 
@@ -535,7 +853,8 @@ RB.crusher.controller = (function(controller) {
         .classed("about-description chart-description",true)
         .html(
           "<br>Crusher is a tool to help you understand the off-site interests and opportunities to advertise to users in your audience based on differences in on-site user activity." + 
-          "<br><br>We built crusher because we believe that understanding what you audience does when they are not on your site is the is the best way to craft relevant, meaningful advertisements."
+          "<br><br>We built crusher because we believe that understanding what you audience does when they are not on your site is the is the best way to craft relevant, meaningful advertisements." +
+          "<a href=\"/crusher/gettingstarted\">Go to onboarding</a>"
         )
 
       var descriptionWrap = d3_updateable(info,".crusher-how","div")
@@ -625,20 +944,48 @@ RB.crusher.controller = (function(controller) {
             RB.routes.navigation.forward(controller.states["/crusher/action"])  
           })
 
+          // Pixel implementation
+          var pixel_implementation = d3_updateable(funnelRow,".row","div")
 
-         
-      },"home",true,false)
+          pixel_implementation.attr("style","padding-bottom:15px;padding-top:5px")
+            .classed("row",true)
 
-      
+          var descriptionWrap = d3_updateable(pixel_implementation,".crusher-pixelcode","div")
+            .classed("crusher-pixelcode col-md-12",true)
 
-      
+          var description = d3_updateable(descriptionWrap,".ct-chart","div")
+            .classed("ct-chart",true)
+            .style("padding-bottom","15px")
 
-      
+          d3_updateable(description,".about-heading","")
+            .classed("about-heading chart-title",true)
+            .text("Implement the Rockerbox pixel on your website")
+          d3_updateable(description,".about-description","div")
+            .classed("about-description chart-description",true)
+            .html(
+              "<p>Paste the following snippet before the closing &lt;/head&gt; tag on each page of your site.</p>" +
+              "<pre class=\"language-markup\"><code class=\"language-markup\" style=\"overflow-x: scroll;\">"+
+              "&lt;!-- Journelle All Pages Segment Pixel --&gt;<br/>" +
+              "&lt;script src=\"https://getrockerbox.com/pixel?source=journelle&type=imp&an_seg=1358830\" type=\"text/javascript\">&lt;/script><br/>" +
+              "&lt;!-- End of Segment Pixel --&gt;" +
+              "</code></pre>")
 
-      
-
-
-
+            d3_updateable(description,".about-check","a")
+              .classed("btn btn-default btn-sm",true)
+              .style("margin-right", "30px")
+              .style("margin-top", "10px")
+              .html("Check")
+              .on("click",function(x) {
+                $("iframe#pixel-check-frame").attr("src", "http://nu.nl");
+                $("iframe#pixel-check-frame").on("load", function(e) {
+                  if(status_data.filter(function(x){return x.last_fired_seconds != undefined}).length) {
+                    alert('Pixel has been succesfully implemented');
+                  } else {
+                    alert('Pixel has NOT been implemented yet');
+                  }
+                });
+              });
+        },"home",true,false)
     },
     "action": function(){
 
@@ -938,6 +1285,10 @@ RB.crusher.controller = (function(controller) {
           "push_state":"/crusher/settings/subscription",
         }
       ],
+      "gettingstarted": [{
+          "name":"Getting Started",
+          "push_state":"/crusher/gettingstarted"
+        }],
       "home": [{
           "name":"Home",
           "push_state":"/crusher/home"
