@@ -103,7 +103,7 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
         logging.info("got data")
         import sklearn.cluster
 
-        km = sklearn.cluster.KMeans(n_clusters=max(2,len(prepped.columns)/50) )
+        km = sklearn.cluster.KMeans(n_clusters=min(15,max(2,len(prepped.columns)/50)) )
         idx = km.fit_predict(model.syn0)
         
         df = pandas.DataFrame([dict(zip(model.index2word,idx))]).T
