@@ -849,7 +849,6 @@ RB.crusher.controller = (function(controller) {
       RB.component.export(RB.crusher.ui.funnel.show, RB.crusher.ui.funnel)
       RB.component.export(RB.crusher.ui.action.show, RB.crusher.ui.action)
 
- 
       crusher.ui.action.buildBase()
 
       crusher.subscribe.publishers["action_show"]()

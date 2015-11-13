@@ -37,16 +37,13 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
             "Action name": x.action_name,
             "views":x.views,
             "visits":x.visits,
-            "uniques":x.uniques
+            "uniques":x.uniques,
+            "__proto__": x
           }
           return obj
         })
 
-      var missing_data = odata.slice(0,10).filter(function(x){return !x.visits_data})
-      var action = missing_data[0];
-      action.action_string = action.url_pattern.map(function(x){return x.split(" ").join(",")}).join("|") + "&num_days=2"
-
-
+      
       
       var title = "Top existing actions",
         description = "These are the keywords that are most popular on your site"
@@ -58,24 +55,48 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
         .style("font-size","14px")
         .style("margin-top","15px")
 
-      crusher.subscribe.add_subscriber(["actionTimeseries"],function(d) { 
-        var bool = funnelRow.datum().id == d3.select(".container div").datum().id
-        if (!d.views && bool) {
-          d.views = d.visits_data[0].views
-          d.visits = d.visits_data[0].visits
-          d.uniques = d.visits_data[0].uniques
+    
 
-          // should make sure were still on the right page...
-          setTimeout(dashboard.current,1,funnelRow,odata)
-        }
+      
+      var missing_data = odata.slice(0,10).filter(function(x){return !x.visits_data})
 
-        console.log(d)
-      },"get_action",true,true,action)
+      if (missing_data.length) {
+
+        var action = missing_data[0];
+        action.action_string = action.url_pattern.map(function(x){return x.split(" ").join(",")}).join("|") 
+        action.action_string = action.action_string + "&num_days=2"
+
+        crusher.subscribe.add_subscriber(["actionTimeseries"],function(d) { 
+
+          // make sure were still on the same page otherwise it will break
+          var bool = funnelRow.datum().id == d3.select(".container div").datum().id
+          if (!d.views && bool) {
+            d.views = d.visits_data[0].views
+            d.visits = d.visits_data[0].visits
+            d.uniques = d.visits_data[0].uniques
+
+            setTimeout(dashboard.current,1,funnelRow,odata)
+          }
+
+          console.log(d)
+        },"get_action",true,true,action)
+
+
+      }
 
       table.select("tbody").selectAll("tr")
         .sort(function(x,y){
           return y.views - x.views
         })
+        .style("cursor","pointer")
+        .on("click",function(x){
+          var action = x.__proto__
+          var xx = JSON.parse(JSON.stringify(RB.crusher.controller.states["/crusher/action/existing"]))
+          RB.routes.navigation.forward(xx)
+          RB.routes.navigation.forward(action)
+
+        })
+
 
     }
 
