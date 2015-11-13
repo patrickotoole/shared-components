@@ -719,36 +719,14 @@ RB.crusher.controller = (function(controller) {
           .on("click",function(){
             RB.routes.navigation.forward(controller.states["/crusher/action"])  
           })
+         
+      },"home",true,false)
 
-          // Pixel implementation
-          var pixel_implementation = d3_updateable(funnelRow,".row","div")
-
-          pixel_implementation.attr("style","padding-bottom:15px;padding-top:5px")
-            .classed("row",true)
-
-          var descriptionWrap = d3_updateable(pixel_implementation,".crusher-pixelcode","div")
-            .classed("crusher-pixelcode col-md-12",true)
-
-          var description = d3_updateable(descriptionWrap,".ct-chart","div")
-            .classed("ct-chart",true)
-            .style("padding-bottom","15px")
-
-          d3_updateable(description,".about-heading","")
-            .classed("about-heading chart-title",true)
-            .text("Implement the Rockerbox pixel on your website")
-          d3_updateable(description,".about-description","div")
-            .classed("about-description chart-description",true)
-            .html(
-              "<p>Paste the following snippet before the closing &lt;/head&gt; tag on each page of your site.</p>" +
-              "<pre class=\"language-markup\"><code class=\"language-markup\" style=\"overflow-x: scroll;\">"+
-              "&lt;!-- Journelle All Pages Segment Pixel --&gt;<br/>" +
-              "&lt;script src=\"https://getrockerbox.com/pixel?source=journelle&type=imp&an_seg=1358830\" type=\"text/javascript\">&lt;/script><br/>" +
-              "&lt;!-- End of Segment Pixel --&gt;" +
-              "</code></pre>")
-
-        },"home",true,false)
     },
     "action": function(){
+
+      RB.component.export(RB.crusher.ui.funnel.show, RB.crusher.ui.funnel)
+      RB.component.export(RB.crusher.ui.action.show, RB.crusher.ui.action)
 
       var target = d3.selectAll(".container")
 

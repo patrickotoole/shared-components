@@ -23,13 +23,14 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
     }
 
     dashboard.current = function(funnelRow,data) {
+      var funnelRow = funnelRow
       var odata = data
 
       var data = data.slice(0,10)
         .map(function(x){
-          x.views = 0
-          x.visits = 0
-          x.uniques = 0
+          x.views = x.visits_data ? x.visits_data[0].views : 0
+          x.visits = x.visits_data ? x.visits_data[0].visits : 0
+          x.uniques = x.visits_data ? x.visits_data[0].uniques : 0
           return x
         }).map(function(x){
           obj = {
@@ -41,34 +42,51 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
           return obj
         })
 
-      var action = odata[0];
-      action.action_string = action.url_pattern.map(function(x){return x.split(" ").join(",")}).join("|")
+      var missing_data = odata.slice(0,10).filter(function(x){return !x.visits_data})
+      var action = missing_data[0];
+      action.action_string = action.url_pattern.map(function(x){return x.split(" ").join(",")}).join("|") + "&num_days=2"
 
 
-      crusher.subscribe.add_subscriber(["actionTimeseries"],function(data) { 
-        debugger
-        console.log(data)
-      },"get_action")
-
-      crusher.subscribe.publishers["actionTimeseries"](action)
-
+      
       var title = "Top existing actions",
         description = "These are the keywords that are most popular on your site"
 
       var target = RB.rho.ui.buildSeriesWrapper(funnelRow, title, "current-actions", data, "col-md-6", description)
-      var table = make_table(target,data)
+      var table = make_table(target,data,["Action name"])
 
       table.classed("table-condensed table-hover",true)
         .style("font-size","14px")
         .style("margin-top","15px")
 
+      crusher.subscribe.add_subscriber(["actionTimeseries"],function(d) { 
+        var bool = funnelRow.datum().id == d3.select(".container div").datum().id
+        if (!d.views && bool) {
+          d.views = d.visits_data[0].views
+          d.visits = d.visits_data[0].visits
+          d.uniques = d.visits_data[0].uniques
+
+          // should make sure were still on the right page...
+          setTimeout(dashboard.current,1,funnelRow,odata)
+        }
+
+        console.log(d)
+      },"get_action",true,true,action)
+
+      table.select("tbody").selectAll("tr")
+        .sort(function(x,y){
+          return y.views - x.views
+        })
 
     }
 
     dashboard.recommended = function(funnelRow,data) {
       var data = data.slice(0,10).map(function(x){
-        x.create = ""
-        return x
+        obj = {
+          "Pattern": x.first_word,
+          "views": x.views,
+          "create":""
+        }
+        return obj
       })
 
       var title = "Recommended actions",

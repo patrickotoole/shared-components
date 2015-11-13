@@ -55,12 +55,12 @@ var make_table = function(target,data,index) {
 
   var item = d3_splat(rows,"td","td",function(x){
       var values = headers.map(function(y){
-        return x[y.name]
+        return {"key":y.name,"value":x[y.name]}
       })
       return values
-    },function(x,i){return x + i})
+    },function(x){return x.key})
 
-  var fields = item.text(function(x) {return x})
+  var fields = item.text(function(x) {return x.value})
 
   return table
 }

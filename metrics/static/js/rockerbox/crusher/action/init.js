@@ -6,7 +6,7 @@ RB.crusher.ui.action = RB.crusher.ui.action || {}
 RB.crusher.ui.action.init = (function(init,action,crusher) {
 
   init.NAME = "action.init"
-  init.SUBSCRIBE = ["action_show","action_all","actions"]
+  init.SUBSCRIBE = ["action_all","actions","action_show"]
   init.PUBLISH = ["action_initialized"]
   init.EVENTS = ["action_show","action_all","action_initialized"]
 
