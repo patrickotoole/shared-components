@@ -120,12 +120,38 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
         .style("font-size","14px")
         .style("margin-top","15px")
 
+      table.selectAll("tbody").selectAll("tr")
+        .style("cursor","pointer")
+        .on("mouseover",function(){
+          d3.select(this).selectAll(".btn").classed("hidden",false)
+        })
+        .on("mouseout",function(){
+          d3.select(this).selectAll(".btn").classed("hidden",true)
+        })
+        .on("click",function(x){
+          obj = {
+            action_name: x["Pattern"],
+            url_pattern: [x["Pattern"]],
+            name: x["Pattern"]
+          }
+          var xx = JSON.parse(JSON.stringify(RB.crusher.controller.states["/crusher/action/recommended"]))
+          RB.routes.navigation.forward(xx)
+          RB.routes.navigation.forward(obj)
+        })
+        
+
+      table.selectAll("tr").filter(function(x,i){return i == 0 })
+        .selectAll("th").filter(function(x,i){return i == 2 })
+        .text("")
+
+
       var button_td = table.selectAll("tr").selectAll("td").filter(function(x,i){return i == 2})
         .style("padding-top","3px")
         .style("padding-bottom","2px")
+        .style("width","80px")
 
       d3_updateable(button_td,".btn","div")
-        .classed("btn btn-default btn-xs btn-success",true)
+        .classed("hidden btn btn-default btn-xs btn-success",true)
         .text("Create")
 
     }

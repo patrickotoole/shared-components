@@ -870,6 +870,7 @@ RB.crusher.controller = (function(controller) {
       }, "new",true,true)
     },
     "action/recommended": function(action) {
+
       crusher.ui.action.buildBase()
 
       var target = d3.selectAll(".action-view-wrapper")
