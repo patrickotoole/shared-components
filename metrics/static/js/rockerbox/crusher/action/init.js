@@ -6,9 +6,9 @@ RB.crusher.ui.action = RB.crusher.ui.action || {}
 RB.crusher.ui.action.init = (function(init,action,crusher) {
 
   init.NAME = "action.init"
-  init.SUBSCRIBE = ["action_all","actions"]
+  init.SUBSCRIBE = ["action_show","action_all","actions"]
   init.PUBLISH = ["action_initialized"]
-  init.EVENTS = ["action_all","action_initialized"]
+  init.EVENTS = ["action_show","action_all","action_initialized"]
 
   init.subscription = function(action) {
 
@@ -92,7 +92,7 @@ RB.component.export(RB.crusher.ui.action.status, RB.crusher.ui.action)
 RB.crusher.ui.action.show = (function(show,action,crusher) {
 
   show.NAME = "action.show"
-  show.SUBSCRIBE = ["actionTimeseries"]
+  show.SUBSCRIBE = ["action_initialized","actionTimeseries"]
   show.PUBLISH = ["tf_idf_action","pattern_status"]
   show.EVENTS = []
 

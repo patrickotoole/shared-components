@@ -757,10 +757,9 @@ RB.crusher.controller = (function(controller) {
 
       funnelRow.exit().remove()
 
+      crusher.subscribe.add_subscriber(["recommended_actions","actions"],function(reccomended,existing) {
 
-      crusher.subscribe.add_subscriber(["recommended_actions"],function(data) {
-
-        RB.crusher.ui.action.dashboard.show(funnelRow,data)
+        RB.crusher.ui.action.dashboard.show(funnelRow,reccomended,existing)
         
       },"actionDashboard",true,true)
 
@@ -874,6 +873,8 @@ RB.crusher.controller = (function(controller) {
 
  
       crusher.ui.action.buildBase()
+
+      crusher.subscribe.publishers["action_show"]()
 
       crusher.subscribe.publishers["actions"]()
       crusher.subscribe.publishers["action_all"](action)
