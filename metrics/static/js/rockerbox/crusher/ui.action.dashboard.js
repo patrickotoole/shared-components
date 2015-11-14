@@ -48,7 +48,7 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
       var title = "Top existing actions",
         description = "These are the keywords that are most popular on your site"
 
-      var target = RB.rho.ui.buildSeriesWrapper(funnelRow, title, "current-actions", data, "col-md-6", description)
+      var target = RB.rho.ui.buildSeriesWrapper(funnelRow, title, "current-actions", data, "col-md-12", description)
       var table = make_table(target,data,["Action name"])
 
       table.classed("table-condensed table-hover",true)
@@ -113,7 +113,7 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
       var title = "Recommended actions",
         description = "These are the keywords that are most popular on your site"
 
-      var target = RB.rho.ui.buildSeriesWrapper(funnelRow, title, "actions", data, "col-md-6", description)
+      var target = RB.rho.ui.buildSeriesWrapper(funnelRow, title, "actions", data, "col-md-12", description)
       var table = make_table(target,data)
 
       table.classed("table-condensed table-hover",true)

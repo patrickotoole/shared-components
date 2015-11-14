@@ -849,12 +849,17 @@ RB.crusher.controller = (function(controller) {
       RB.component.export(RB.crusher.ui.funnel.show, RB.crusher.ui.funnel)
       RB.component.export(RB.crusher.ui.action.show, RB.crusher.ui.action)
 
-      crusher.ui.action.buildBase()
+      if (action) {
 
-      crusher.subscribe.publishers["action_show"]()
+        crusher.ui.action.buildBase()
 
-      crusher.subscribe.publishers["actions"]()
-      crusher.subscribe.publishers["action_all"](action)
+        crusher.subscribe.publishers["action_show"]()
+
+        crusher.subscribe.publishers["actions"]()
+        crusher.subscribe.publishers["action_all"](action)
+      } else {
+        
+      }
        
     },
     "action/new": function(action) {
@@ -919,10 +924,18 @@ RB.crusher.controller = (function(controller) {
     roots: [
     {
       "name":"Actions",
-      "push_state": "/crusher/action",
-      "class": "glyphicon glyphicon-signal"
+      "push_state": "/crusher/action/existing",
+      "class": "glyphicon glyphicon-signal",
+      "values_key": "action_name"
+
     },{
-      "name":"Funnels",
+      "name":"Create Action",
+      "push_state": "/crusher/action/recommended",
+      "class": "glyphicon glyphicon-plus",
+      "values_key": "action_name"
+
+    },{
+      "name":"Funnels (alpha)",
       "push_state": "/crusher/funnel",
       "class": "glyphicon glyphicon-filter"
     },
@@ -1024,20 +1037,19 @@ RB.crusher.controller = (function(controller) {
         }],
       "action": [{
           "name": "Create New Action",
-          "push_state":"/crusher/action/new",
+          "push_state":"/crusher/action/recommended",
           "values_key": "action_name"
-        },
-        {
+        },{
           "name": "Recommmended Actions",
           "push_state":"/crusher/action/recommended",
           "values_key": "action_name"
-        },
-        {
+        },{
           "name": "View Existing Actions",
           "push_state":"/crusher/action/existing",
           "skipRender": true,
           "values_key":"action_name"
-        }]
+        }
+      ]
     }
   }
   
