@@ -19,12 +19,13 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 		}
 
 		// Wrapper
-		var progress_indicator_wrap = d3_updateable(row, 'progress-indicator-wrap','section')
-			.classed('progress-indicator', true)
+		var progress_indicator_wrap = d3_updateable(row, '.progress-indicator-wrap','section')
+			.classed('progress-indicator-wrap progress-indicator', true)
 			.html('<hr/>');
 
 		// Steps list
-		var progress_indicator_steps = d3_updateable(progress_indicator_wrap, 'progress-indicator-steps','ol')
+		var progress_indicator_steps = d3_updateable(progress_indicator_wrap, '.progress-indicator-steps','ol')
+			.classed('progress-indicator-steps', true);
 		// Individual steps
 		d3_splat(progress_indicator_steps, 'progress-indicator-step', 'li', progress_indicator.steps, function(x, i) {
 			return x.title;
@@ -42,11 +43,11 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 	gettingstarted.step1 = function(row) {
 		gettingstarted.progress_indicator(row, 1);
 		
-		var step_wrapper = d3_updateable(row, 'step-wrapper', 'section')
-			.classed('ct-chart col-md-6 gettingstarted-step', true)
+		var step_wrapper = d3_updateable(row, '.step-wrapper', 'section')
+			.classed('ct-chart col-md-6 gettingstarted-step step-wrapper', true)
 
-		var step = d3_updateable(step_wrapper, 'onboarding-step', 'div')
-			.classed('chart-description pixel-code', true)
+		var step = d3_updateable(step_wrapper, '.onboarding-step', 'div')
+			.classed('chart-description pixel-code onboarding-step', true)
 			.style('padding-bottom', '15px')
 			.text('Paste the following snippet before the closing <head>-tag on every page.')
 
@@ -60,11 +61,12 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 			/*
 				All pages pixel
 			*/
-			var code1 = d3_updateable(step, 'pixel-code-allpages','pre')
+			var code1 = d3_updateable(step, '.pixel-code-allpages','pre')
 				.html('<code>' + pixel_code.all_pages + '</code>')
-				.classed('language-markup pixel-code', true);
+				.classed('language-markup pixel-code pixel-code-allpages', true);
 
-			var test_iframe = d3_updateable(step, 'pixel-test-iframe','iframe')
+			var test_iframe = d3_updateable(step, '.pixel-test-iframe','iframe')
+				.classed('pixel-test-iframe', true)
 				.style('border', 'none')
 				.style('height', '1px')
 				.style('width', '0px')
@@ -107,18 +109,21 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 				})
 
 			// Input field for URL to check
-			var url_check_row = d3_updateable(step, 'url-check-row','div')
+			var url_check_row = d3_updateable(step, '.url-check-row','div')
+				.classed('url-check-row', true)
 				.style('padding', '10px 0')
 				.html('<span>Website URL: </span>');
-			url_check = d3_updateable(url_check_row, 'url-check','input')
+			url_check = d3_updateable(url_check_row, '.url-check','input')
 				.classed('url-check', true)
 				.attr('type', 'text')
 				.attr('value', 'http://')
 
-			var conversion_pixel_optin_row = d3_updateable(step, 'conversion-pixel-optin','div')
+			var conversion_pixel_optin_row = d3_updateable(step, '.conversion-pixel-optin-wrapper','div')
+				.classed('conversion-pixel-optin-wrapper', true)
 				.style('padding', '5px 0')
 
-			var conversion_pixel_optin = d3_updateable(conversion_pixel_optin_row, 'conversion-pixel-optin','input')
+			var conversion_pixel_optin = d3_updateable(conversion_pixel_optin_row, '.conversion-pixel-optin','input')
+				.classed('conversion-pixel-optin', true)
 				.attr('type', 'checkbox')
 				.style('margin-right', '5px')
 				.on('click', function() {
@@ -129,35 +134,41 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 					}
 				});
 
-			d3_updateable(conversion_pixel_optin_row, 'conversion-pixel-optin','span')
+			d3_updateable(conversion_pixel_optin_row, '.conversion-pixel-optin-description','span')
+				.classed('conversion-pixel-optin-description', true)
 				.text('Also set a conversion pixel')
 
 
 			/*
 				Conversion pixel
 			*/
-			var code2_wrapper = d3_updateable(step, 'pixel-code-conversion','div')
+			var code2_wrapper = d3_updateable(step, '.pixel-code-conversion','div')
+				.classed('pixel-code-conversion', true)
 				.style('display', 'none');
 
-			d3_updateable(code2_wrapper, 'pixel-code-conversion','hr')
+			d3_updateable(code2_wrapper, '.pixel-code-conversion-hr','hr')
+				.classed('pixel-code-conversion-hr', true)
 
-			var code2_title = d3_updateable(code2_wrapper, 'pixel-code-conversion','p')
+			var code2_title = d3_updateable(code2_wrapper, '.conversion-pixel-title','p')
+				.classed('conversion-pixel-title', true)
 				.text('Paste the following snippet before the closing <head>-tag on just the conversion page.')
 
-			var code2 = d3_updateable(code2_wrapper, 'pixel-code-conversion','pre')
+			var code2 = d3_updateable(code2_wrapper, '.conversion-pixel','pre')
 				.html('<code>' + pixel_code.conversion + '</code>')
-				.classed('language-markup', true)
+				.classed('language-markup conversion-pixel', true)
 
-			var code2_description = d3_updateable(code2_wrapper, 'pixel-code-conversion','p')
+			var code2_description = d3_updateable(code2_wrapper, '.conversion-pixel-description','p')
+				.classed('conversion-pixel-description', true)
 				.text('In order to validate the conversion pixel and continue to the next step, you have to place an order.')
 
 			setTimeout(function() {
 				Prism.highlightAll()
 
-				var url_check_button_wrapper = d3_updateable(step,".about-check","div")
+				var url_check_button_wrapper = d3_updateable(step,".url-check-button-wrapper","div")
+					.classed('url-check-button-wrapper', true)
 
-				var url_check_button = d3_updateable(url_check_button_wrapper,".about-check","a")
-					.classed("btn btn-default btn-sm", true)
+				var url_check_button = d3_updateable(url_check_button_wrapper,".url-check-button","a")
+					.classed("btn btn-default btn-sm url-check-button", true)
 					.style("margin-right", "30px")
 					.style("margin-top", "10px")
 					.html("Continue to creating action")
@@ -174,23 +185,23 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 	gettingstarted.step2 = function(row) {
 		gettingstarted.progress_indicator(row, 2);
 
-		var step_wrapper = d3_updateable(row, 'step-wrapper', 'section')
-			.classed('ct-chart col-md-6 gettingstarted-step', true)
+		var step_wrapper = d3_updateable(row, '.step-wrapper', 'section')
+			.classed('ct-chart col-md-6 gettingstarted-step step-wrapper', true)
 
-		var step = d3_updateable(step_wrapper, 'onboarding-step', 'div')
-			.classed('chart-description pixel-code', true)
+		var step = d3_updateable(step_wrapper, '.onboarding-step', 'div')
+			.classed('chart-description pixel-code onboarding-step', true)
 			.style('padding-bottom', '15px')
 			.text('Create your first action')
 
-		var input = d3_updateable(step, 'onboarding-step', 'input')
+		var input = d3_updateable(step, '.first-action', 'input')
 			.classed('bloodhound typeahead form-control tt-input first-action', true)
 			.attr('value', 'all pages')
 			.style('position', 'relative')
 			.style('vertical-align', 'top')
 			.style('background-color', 'transparent')
 
-		d3_updateable(step,"create-action-button","a")
-			.classed('btn btn-default btn-sm',true)
+		d3_updateable(step,".create-action-button","a")
+			.classed('btn btn-default btn-sm create-action-button',true)
 			.style('margin-right', '30px')
 			.style('margin-top', '10px')
 			.text('Continue')
@@ -237,14 +248,14 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 			}
 		];
 
-		var step_wrapper = d3_updateable(row, 'step-wrapper', 'section')
-			.classed('ct-chart col-md-6 gettingstarted-step', true)
+		var step_wrapper = d3_updateable(row, '.step-wrapper', 'section')
+			.classed('ct-chart col-md-6 gettingstarted-step step-wrapper', true)
 
-		var step = d3_updateable(step_wrapper, 'onboarding-step', 'div')
-			.classed('chart-description pixel-code', true)
+		var step = d3_updateable(step_wrapper, '.onboarding-step', 'div')
+			.classed('chart-description pixel-code onboarding-step', true)
 			.style('padding-bottom', '15px')
 
-		d3_updateable(step, ".onboarding-step", "")
+		d3_updateable(step, ".chart-title", "")
 			.classed("chart-title", true)
 			.style("padding-bottom", "15px")
 			.html("Congratulations, you're ready to use RockerBox!")
