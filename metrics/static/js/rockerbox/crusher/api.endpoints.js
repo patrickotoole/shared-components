@@ -213,11 +213,11 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
           d3.json(api.URL.actionURL,function(actions){
             cache.actionData = actions.response
             if (cache.urls_wo_qs) cache.actionData.map(function(x) { x.values = cache.urls_wo_qs })
-            deferred_cb(null,cb)
+            deferred_cb(null,cb.bind(false,cache.actionData))
           })
         } else {
           if (cache.urls_wo_qs) cache.actionData.map(function(x) { x.values = cache.urls_wo_qs })
-          deferred_cb(null,cb)
+          deferred_cb(null,cb.bind(false,cache.actionData))
         }
       })
   endpoints.recommended_actions = new api.helpers.genericQueuedAPI(function(cb,deferred_cb) {
@@ -373,7 +373,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
           deferred_cb(null,cb.bind(false,action))
           return 
         }
-        d3.xhr(api.URL.actionTimeseries + action.action_string)
+        return d3.xhr(api.URL.actionTimeseries + action.action_string)
           .header("Content-Type","application/json")
           .get(function(err,rawData){
             var dd = JSON.parse(rawData.response)

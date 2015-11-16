@@ -56,10 +56,10 @@ def build_dict_dataframe(field):
 class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, PatternSearchCache):
 
 
-    def build_deferred_list(self, terms_list, params, advertiser, date_clause, logic="must"):
+    def build_deferred_list(self, terms_list, params, advertiser, date_clause, logic="must", numdays=20):
         dl = []
         for terms in terms_list:
-            dl += [self.defer_execute(params, advertiser, terms, date_clause, logic)]
+            dl += [self.defer_execute(params, advertiser, terms, date_clause, logic, numdays=numdays)]
         
         return defer.DeferredList(dl)
 
@@ -103,7 +103,7 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
         logging.info("got data")
         import sklearn.cluster
 
-        km = sklearn.cluster.KMeans(n_clusters=max(2,len(prepped.columns)/50) )
+        km = sklearn.cluster.KMeans(n_clusters=min(15,max(2,len(prepped.columns)/50)) )
         idx = km.fit_predict(model.syn0)
         
         df = pandas.DataFrame([dict(zip(model.index2word,idx))]).T
@@ -198,7 +198,7 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
 
             
     @defer.inlineCallbacks
-    def get_generic(self, advertiser, pattern_terms, date_clause, logic="or",timeout=60,timeseries=False):
+    def get_generic(self, advertiser, pattern_terms, num_days, logic="or",timeout=60,timeseries=False):
 
         PARAMS = "date, url, uid"
         indices = PARAMS.split(", ")
@@ -208,7 +208,7 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
 
         import time
         start = time.time()
-        dates = build_datelist(20)
+        dates = build_datelist(num_days)
         args = [advertiser,pattern_terms[0][0],dates]
 
         try:
@@ -251,7 +251,7 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
 
         except Exception as e:
 
-            frames = yield self.build_deferred_list(pattern_terms, PARAMS, advertiser, date_clause)
+            frames = yield self.build_deferred_list(pattern_terms, PARAMS, advertiser, num_days, numdays=num_days)
             dfs = []
 
             
@@ -309,7 +309,7 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
 
 
                 # GET DOMAINS (from cache)
-                defs = [self.defer_get_domains_with_cache(advertiser,pattern_terms[0][0],list(set(df.uid.values))[:1000],date_clause)]
+                defs = [self.defer_get_domains_with_cache(advertiser,pattern_terms[0][0],list(set(df.uid.values))[:1000],num_days)]
                 dl = defer.DeferredList(defs)
                 dom = yield dl
                 if hasattr(dom[0][1],"uid"):

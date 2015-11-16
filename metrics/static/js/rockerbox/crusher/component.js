@@ -71,16 +71,17 @@ RB.component = (function(self,subscribe) {
 
       var subscription = container.components[c]
       var cb = function() {
-        var response = subscription.callback.apply(false,arguments)
-        if (subscription.publish) 
-          subscription.publish.map(function(p) {
-            subscribe.publishers[p](response)
-          })
+          var response = subscription.callback.apply(false,arguments)
+          if ((response !== false) && subscription.publish) 
+            subscription.publish.map(function(p) {
+              subscribe.publishers[p](response)
+            })
+        
       }      
 
       subscribe.add_subscriber(
         subscription.subscribe,
-        cb,
+        cb.bind([subscription.subscribe, cb, subscription.name]),
         subscription.name,
         false,false
       )

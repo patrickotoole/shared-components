@@ -18,10 +18,11 @@ RB.crusher.subscribe = (function(subscribe) {
     */
 
     this.lock = false
+    this.skip_callback = false
 
     this.callback = function(data) {
       console.log("publisher finished",name, data) 
-      callback(data || true) 
+      if (!self.skip_callback) callback(data || true) 
       console.log("finished callback for",name)
       self.lock = false 
     }
@@ -31,7 +32,7 @@ RB.crusher.subscribe = (function(subscribe) {
     this.call = function(data) {
       if (self.lock == false) { 
         self.lock = true
-        request(self.callback,data)
+        self.request = request(self.callback,data)
       }
     }
   }
@@ -74,6 +75,8 @@ RB.crusher.subscribe = (function(subscribe) {
   subscribe.dispatchers = {}
 
   subscribe.publishers = {}
+  subscribe.publisher_raw = {}
+
 
   subscribe.register_publisher = function(name,accessor) {
 
@@ -91,6 +94,8 @@ RB.crusher.subscribe = (function(subscribe) {
 
     // make calling the publisher accesible
     subscribe.publishers[name] = publisher.call 
+    subscribe.publisher_raw[name] = publisher
+
   }
 
   subscribe.register_dummy_publisher = function(name) {
