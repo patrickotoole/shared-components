@@ -565,6 +565,34 @@ RB.crusher.controller = (function(controller) {
       });
     },
     "home": function(){
+      // Check if the getting started page needs to be shown
+      var pixel_count = {
+        allpages: 0,
+        conversion: 0
+      }
+
+      crusher.subscribe.add_subscriber(["pixel_status", "actions"], function(status_data, actions) {
+        status_data.forEach(function(pixel) {
+          if(pixel.segment_name.indexOf("All Pages") >=0 ) {
+            pixel_count.allpages++;
+          } else if(pixel.segment_name.indexOf("Conversion") >=0 ) {
+            pixel_count.conversion++;
+          }
+        });
+
+        var no_actions = false;
+        if(crusher.cache.actionData.length == 0) {
+          no_actions = true;
+        }
+
+        if(!pixel_count.allpages) {
+          RB.routes.navigation.forward(controller.states["/crusher/gettingstarted"])
+        } else if (no_actions) {
+          RB.routes.navigation.forward(controller.states["/crusher/gettingstarted/step2"])
+        }
+      },"gettingstarted",true,false)
+
+
       d3.select("body").classed("hide-select",true)
 
       var target = d3.selectAll(".container")
