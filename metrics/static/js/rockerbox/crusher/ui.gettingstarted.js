@@ -255,7 +255,7 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 			.classed('chart-description pixel-code onboarding-step', true)
 			.style('padding-bottom', '15px')
 
-		d3_updateable(step, ".chart-title", "")
+		d3_updateable(step, ".chart-title", "p")
 			.classed("chart-title", true)
 			.style("padding-bottom", "15px")
 			.html("Congratulations, you're ready to use RockerBox!")
@@ -271,6 +271,7 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 				return '<span class="icon glyphicon glyphicon-' + x.icon + '" style="font-size: 32px;"></span>' +
 					'<span style="display: block; margin-top: 10px;">' + x.title + '</span>';
 			})
+			.classed('final-steps')
 			.on('click', function() {
 				var i = $(this).closest('div').index();
 				switch(i) {
