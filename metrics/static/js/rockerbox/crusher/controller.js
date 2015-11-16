@@ -630,8 +630,7 @@ RB.crusher.controller = (function(controller) {
         .classed("about-description chart-description",true)
         .html(
           "<br>Crusher is a tool to help you understand the off-site interests and opportunities to advertise to users in your audience based on differences in on-site user activity." + 
-          "<br><br>We built crusher because we believe that understanding what you audience does when they are not on your site is the is the best way to craft relevant, meaningful advertisements." +
-          "<a href=\"/crusher/gettingstarted\">Go to onboarding</a>"
+          "<br><br>We built crusher because we believe that understanding what you audience does when they are not on your site is the is the best way to craft relevant, meaningful advertisements."
         )
 
       var descriptionWrap = d3_updateable(info,".crusher-how","div")
@@ -747,21 +746,6 @@ RB.crusher.controller = (function(controller) {
               "&lt;!-- End of Segment Pixel --&gt;" +
               "</code></pre>")
 
-            d3_updateable(description,".about-check","a")
-              .classed("btn btn-default btn-sm",true)
-              .style("margin-right", "30px")
-              .style("margin-top", "10px")
-              .html("Check")
-              .on("click",function(x) {
-                $("iframe#pixel-check-frame").attr("src", "http://nu.nl");
-                $("iframe#pixel-check-frame").on("load", function(e) {
-                  if(status_data.filter(function(x){return x.last_fired_seconds != undefined}).length) {
-                    alert('Pixel has been succesfully implemented');
-                  } else {
-                    alert('Pixel has NOT been implemented yet');
-                  }
-                });
-              });
         },"home",true,false)
     },
     "action": function(){
