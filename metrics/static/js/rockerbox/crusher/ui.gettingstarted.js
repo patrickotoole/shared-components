@@ -52,7 +52,7 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 		try {
 			return advertiser_data.segments.filter(function(x){return x.segment_implemented != "" && x.segment_name.indexOf(filter_string) > -1})[0].segment_implemented.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 		} catch(e) {
-			return '';
+			return null;
 		}
 	}
 
@@ -136,6 +136,10 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 			var conversion_pixel_optin_row = d3_updateable(step, '.conversion-pixel-optin-wrapper','div')
 				.classed('conversion-pixel-optin-wrapper', true)
 				.style('padding', '5px 0')
+
+			if(pixel_code.conversion === null) {
+				conversion_pixel_optin_row.style('display', 'none');
+			}
 
 			var conversion_pixel_optin = d3_updateable(conversion_pixel_optin_row, '.conversion-pixel-optin','input')
 				.classed('conversion-pixel-optin', true)
