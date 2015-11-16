@@ -17,7 +17,7 @@ sendgrid
 premailer
 pyyaml
 kafka-python==0.9.4
-cassandra-driver
+cassandra-driver==2.5.1
 pymongo
 tldextract
 slackclient
