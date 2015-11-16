@@ -1,6 +1,6 @@
 paramiko
 tornado
-mock
+mock==1.0.1
 vincent
 bcrypt
 pandas
