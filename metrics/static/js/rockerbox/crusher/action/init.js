@@ -123,7 +123,7 @@ RB.component.export(RB.crusher.ui.action.show, RB.crusher.ui.action)
 RB.crusher.ui.action.domains = (function(domains,action,crusher) {
 
   domains.NAME = "action.domains"
-  domains.SUBSCRIBE = ["tf_idf_action"]
+  domains.SUBSCRIBE = ["action_initialized","tf_idf_action"]
   domains.PUBLISH = ["actionClusters"]
   domains.EVENTS = []
 

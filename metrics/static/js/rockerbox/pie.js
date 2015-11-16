@@ -84,7 +84,7 @@ RB.component.pie = (function(pie) {
     var desc = d3_updateable(svg,".desc","g").classed("desc",true)
 
     desc.attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
-      .style("fill","black")
+      .style("fill","#5A5A5A")
 
     var drawDesc = function(y) {
 
@@ -92,7 +92,7 @@ RB.component.pie = (function(pie) {
         .classed("num-domains",true)
         .attr("dy","-.35em")
         .style("text-anchor","middle")
-        .style("font-size","28px")
+        .style("font-size","2.3em")
         .style("font-weight","bold")
         .text(function(x) {
           var selected = y ? y.data.label : true
@@ -113,7 +113,7 @@ RB.component.pie = (function(pie) {
         .classed("num-users",true)
         .attr("dy","1.35em")
         .style("text-anchor","middle")
-        .style("font-size","22px")
+        .style("font-size","1.83em")
         .style("font-weight","bold")
         
 
@@ -125,7 +125,7 @@ RB.component.pie = (function(pie) {
           var domains = x.domains.filter(function(z){
             return selected === true ? true : z.parent_category_name == selected
           })
-          return domains.reduce(function(p,c){return p + c.count},0)
+          return d3.format(",")(domains.reduce(function(p,c){return p + c.count},0))
         })
 
       var user_text = d3_updateable(num_users,".desc","text")
@@ -135,7 +135,7 @@ RB.component.pie = (function(pie) {
         .style("padding-left","5px")
 
       d3_updateable(user_text,"tspan","tspan")
-        .style("font-size","11px")
+        .style("font-size","0.5em")
         .text("uniques")
     }
 
@@ -149,7 +149,7 @@ RB.component.pie = (function(pie) {
 
       slice.enter()
         .insert("path")
-        .style("fill", function(d) { return colors(d.data.label); })
+        .style("fill", function(d) { return d.data.label == "NA" ? "#f6f6f6" : colors(d.data.label); })
         .attr("class", "slice");
 
       slice    

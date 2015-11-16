@@ -46,16 +46,64 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
       
       
       var title = "Top existing actions",
-        description = "These are the keywords that are most popular on your site"
+        description = "These are the keywords that are most popular on your site",
+        button = {
+          "class_name": "gear glyphicon-cog glyphicon",
+          "name": "",
+          "click": function(x){
+            RB.routes.navigation.forward(x)
+            d3.select(".edit").on("click")()
+          }
+        }
 
-      var target = RB.rho.ui.buildWrappers(
-        funnelRow, 
+      var target = RB.rho.ui.buildWrappers(funnelRow, 
         function(x){return x['Action name']}, 
-        "views", 
-        data, 
-        "col-md-4", 
-        function(x){return x.description}
+        "views", data, "col-md-4", 
+        function(x){return x.description}, button
       )
+
+      target.on("mouseover",function(x){
+        d3.select(this).selectAll(".gear").classed("hidden",false)
+      }).on("mouseout",function(x){
+        d3.select(this).selectAll(".gear").classed("hidden",true)
+      })
+ 
+      target.selectAll(".gear")
+        .classed("btn btn-sm btn-default",false)
+        .classed("hidden",true)
+        .style("color","#ccc")
+        .style("text-decoration","none")
+        .style("font-size","16px")
+        .style("line-height","20px")
+
+
+      target.selectAll(".value").html(function(x){
+        return x.views ? d3.format(",")(x.views) + " <span style='font-size:.7em'>views</span>" : ""
+      }).style("font-size","18px")
+
+      target.selectAll(".title")
+        .style("font-size","20px")
+        .style("cursor","pointer")
+        .style("border-bottom",function(x) {
+          return x.views ? "1px solid #ccc" : undefined
+        })
+        .on("click",function(x){
+          RB.routes.navigation.forward(x)
+        })
+        .html(function(x){
+  
+          function capitalize(s) {
+            return s && s[0].toUpperCase() + s.slice(1);
+          }
+          // Doing this just to make it vimium friendly for nav :)
+          var has_data = "<a style='color:#5a5a5a;text-decoration:none'>" + 
+            this.innerText.replace(/\//g," ").split(" ").map(capitalize).join(" ") + 
+            "</a>"
+
+          var no_data = "<div style='height:30px;background-color:#f6f6f6'></div>"
+
+          return x.views ? has_data : no_data
+        })
 
       var missing_data = odata.slice(0,3).filter(function(x){return !x.visits_data})
 
@@ -67,41 +115,58 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
 
         crusher.subscribe.add_subscriber(["actionTimeseries"],function(d) { 
 
-          // make sure were still on the same page otherwise it will break
-          var bool = funnelRow.datum().id == d3.select(".container div").datum().id
-          if (!d.views && bool) {
-            d.views = d.visits_data[0].views
-            d.visits = d.visits_data[0].visits
-            d.uniques = d.visits_data[0].uniques
+          crusher.subscribe.add_subscriber(["tf_idf_action"],function(d) { 
 
-            setTimeout(dashboard.widgets,1,funnelRow,odata)
-          }
+            // make sure were still on the same page otherwise it will break
+            var bool = funnelRow.datum().id == d3.select(".container div").datum().id
+            if (!d.views && bool) {
+              d.views = d.visits_data[0].views
+              d.visits = d.visits_data[0].visits
+              d.uniques = d.visits_data[0].uniques
 
-          console.log(d)
+              setTimeout(dashboard.widgets,1,funnelRow,odata)
+            }
+
+            console.log(d)
+          },"get_action_idf",true,true,action)
+
         },"get_action",true,true,action)
 
 
       }
 
+      var ddd = [{"key":"NA","values":1}]
+
       var category_pie = target.selectAll(".pie")
-        .text("PIE GOES HERE")
+        .classed("row",function(x){
+          x.parentCategoryData = ddd
+          if (x.domains) {
+            var parentCategoryData = d3.nest()
+              .key(function(x){return x.parent_category_name})
+              .rollup(function(x){ return x.reduce(function(p,c){return p + c.count},0) })
+              .entries(x.domains)
+              .sort(function(x,y){return y.values - x.values})
+              .filter(function(x){return x.key != "NA"})
+              .slice(0,15)   
 
-    // var domainData = wrapper.datum().domains
+            x.parentCategoryData = parentCategoryData
 
-    // var categoryData = d3.nest()
-    //   .key(function(x){return x.category_name})
-    //   .rollup(function(x){
-    //     return d3.sum(x.map(function(y){return y.count}))
-    //   }) 
-    //   .entries(domainData)
+          }
+          return true
+        })
+        .style("margin-top","-10px")
+        .style("margin-bottom","-20px")
+        .style("font-size","11px")
 
 
+    RB.crusher.ui.action.category_pie(
+      category_pie, [], RB.crusher.ui.action.category_colors, "row col-md-12", 
+      function(cb,x){ return cb(x) }
+    )
 
-    //var category_pie = target.selectAll(".pie")
-
-    //RB.crusher.ui.action.category_pie(
-    //  category_pie, categoryData, RB.crusher.ui.action.category_colors, function(){}
-    //)
+    category_pie.selectAll(".table-title")
+      //.text("Visitor off-site activity")
+      .classed("hidden",true)
 
 
     }

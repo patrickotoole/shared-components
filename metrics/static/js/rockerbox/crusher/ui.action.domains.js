@@ -93,10 +93,11 @@ RB.crusher.ui.action = (function(action) {
 
   }
 
-  action.category_pie = function(targetRow,domainData,colors) {
+  action.category_pie = function(targetRow,domainData,colors,formatter, hover) {
 
     var target = d3_updateable(targetRow,".category-pie","div")
-      .classed("category-pie col-md-4 col-sm-12 pull-right",true)
+      .classed("category-pie ",true)
+      .classed(formatter || "col-md-4 col-sm-12 pull-right",true)
 
     d3_updateable(target,".table-title","div")
       .classed("table-title",true) 
@@ -113,21 +114,29 @@ RB.crusher.ui.action = (function(action) {
     RB.component.pie.base(target)
 
     var drawDesc = RB.component.pie.desc(target)
-    drawDesc()
+    try {
+      drawDesc()
+    } catch(e) {}
 
-    var hover = function(x) {
-      var data = domainData.filter(function(y){return y.parent_category_name == x.data.label})
+
+    var hover = hover || function(drawDesc,x) {
+      var data = x ? domainData.filter(function(y){return y.parent_category_name == x.data.label}) : domainData
       drawDesc(x)
       action.domain_table(targetRow,data)
     }
+
 
     RB.component.pie.draw(
       target,
       function(x){ return formatData(x.parentCategoryData) },
       function(d){ return d.data.label },
-      hover,
+      hover.bind(false,drawDesc),
       colors
     )
+
+    target.selectAll("svg").on("click",function(x){
+      hover(drawDesc)
+    })
 
 
     
