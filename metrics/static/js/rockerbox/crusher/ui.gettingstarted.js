@@ -40,6 +40,22 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 			})
 	}
 
+	gettingstarted.getPixelCode = function(advertiser_data, type) {
+		switch(type) {
+			case 'allpages':
+				var filter_string = 'All';
+				break;
+			case 'conversion':
+				var filter_string = 'Conversion';
+				break;
+		}
+		try {
+			return advertiser_data.segments.filter(function(x){return x.segment_implemented != "" && x.segment_name.indexOf(filter_string) > -1})[0].segment_implemented.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+		} catch(e) {
+			return '';
+		}
+	}
+
 	gettingstarted.step1 = function(row, actions) {
 		gettingstarted.progress_indicator(row, 1);
 		
@@ -54,8 +70,8 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 		// Fetch and display pixels
 		crusher.subscribe.add_subscriber(["advertiser"], function(advertiser_data) {
 			var pixel_code = {
-				all_pages: advertiser_data.segments.filter(function(x){return x.segment_implemented != "" && x.segment_name.indexOf("All") > -1})[0].segment_implemented.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;'),
-				conversion: advertiser_data.segments.filter(function(x){return x.segment_implemented != "" && x.segment_name.indexOf("Conversion") > -1})[0].segment_implemented.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+				all_pages: gettingstarted.getPixelCode(advertiser_data, 'allpages'),
+				conversion: gettingstarted.getPixelCode(advertiser_data, 'conversion')
 			};
 
 			/*
