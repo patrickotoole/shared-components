@@ -40,7 +40,7 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 			})
 	}
 
-	gettingstarted.step1 = function(row) {
+	gettingstarted.step1 = function(row, actions) {
 		gettingstarted.progress_indicator(row, 1);
 		
 		var step_wrapper = d3_updateable(row, '.step-wrapper', 'section')
@@ -99,8 +99,7 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 						}
 
 						if(validated) {
-							window.location.href = '/crusher/gettingstarted/step2';
-							// RB.routes.navigation.forward(controller.states["/crusher/gettingstarted/step2"])
+							actions.continue();
 						} else {
 							url_check_button.html("Continue to creating action")
 							alert('Pixel has not been implemented yet');
@@ -182,7 +181,7 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 
 	}
 
-	gettingstarted.step2 = function(row) {
+	gettingstarted.step2 = function(row, actions) {
 		gettingstarted.progress_indicator(row, 2);
 
 		var step_wrapper = d3_updateable(row, '.step-wrapper', 'section')
@@ -229,12 +228,11 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 				}
 				RB.crusher.controller.action.save(data, false);
 
-				window.location.href = '/crusher/gettingstarted/step3';
-				// RB.routes.navigation.forward(controller.states["/crusher/gettingstarted/step3"])
+				actions.continue();
 			},'gettingstarted',true,false)
 	}
 
-	gettingstarted.step3 = function(row) {
+	gettingstarted.step3 = function(row, actions) {
 		gettingstarted.progress_indicator(row, 3);
 
 		var final_actions = [
@@ -271,17 +269,15 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 				return '<span class="icon glyphicon glyphicon-' + x.icon + '" style="font-size: 32px;"></span>' +
 					'<span style="display: block; margin-top: 10px;">' + x.title + '</span>';
 			})
-			.classed('final-steps')
+			.classed('final-steps', true)
 			.on('click', function() {
 				var i = $(this).closest('div').index();
 				switch(i) {
 					case 1:
-						// RB.routes.navigation.forward(controller.states["/crusher/action/new"])
-						window.location.href = '/crusher/action/new';
+						actions.goToAction();
 						break;
 					case 2:
-						// RB.routes.navigation.forward(controller.states["/crusher/funnel/new"])
-						window.location.href = '/crusher/funnel/new';
+						actions.goToFunnel();
 						break;
 				}
 			});

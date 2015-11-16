@@ -515,7 +515,9 @@ RB.crusher.controller = (function(controller) {
       heading.text("Welcome to Crusher, let's first set-up some things")
         .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-15px")
         .classed("welcome-heading heading", true)
-      RB.crusher.ui.gettingstarted.step1(row);
+      RB.crusher.ui.gettingstarted.step1(row, {
+        continue: RB.routes.navigation.forward.bind(false, RB.crusher.controller.states["/crusher/gettingstarted/step2"])
+      });
     },
     "gettingstarted/step2": function() {
       d3.select("body")
@@ -535,7 +537,9 @@ RB.crusher.controller = (function(controller) {
       heading.text("Welcome to Crusher, let's first set-up some things")
         .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-15px")
         .classed("welcome-heading heading", true)
-      RB.crusher.ui.gettingstarted.step2(row);
+      RB.crusher.ui.gettingstarted.step2(row, {
+        continue: RB.routes.navigation.forward.bind(false, RB.crusher.controller.states["/crusher/gettingstarted/step3"])
+      });
     },
     "gettingstarted/step3": function() {
       d3.select("body")
@@ -555,7 +559,10 @@ RB.crusher.controller = (function(controller) {
       heading.text("Welcome to Crusher, let's first set-up some things")
         .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-15px")
         .classed("welcome-heading heading", true)
-      RB.crusher.ui.gettingstarted.step3(row);
+      RB.crusher.ui.gettingstarted.step3(row, {
+        goToAction: RB.routes.navigation.forward.bind(false, RB.crusher.controller.states["/crusher/action/new"]),
+        goToFunnel: RB.routes.navigation.forward.bind(false, RB.crusher.controller.states["/crusher/funnel/new"])
+      });
     },
     "home": function(){
       d3.select("body").classed("hide-select",true)
