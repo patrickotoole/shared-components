@@ -497,7 +497,102 @@ RB.crusher.controller = (function(controller) {
       },"settings",true,true)
 
     },
+    "gettingstarted": function() {
+      d3.select("body")
+        .classed("hide-select",true)
+
+      var target = d3.selectAll(".container")
+        .style("min-height", "100%")
+
+      var row = d3_splat(target,".row","div",[{"id":"gettingstarted"}],function(x){return x.id})
+        .classed("row gettingstarted",true)
+
+      row.exit().remove()
+
+      /* Header */
+      var heading = d3_updateable(row,".welcome-heading","h5")
+
+      heading.text("Welcome to Crusher, let's first set-up some things")
+        .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-15px")
+        .classed("welcome-heading heading", true)
+      RB.crusher.ui.gettingstarted.step1(row, {
+        continue: RB.routes.navigation.forward.bind(false, RB.crusher.controller.states["/crusher/gettingstarted/step2"])
+      });
+    },
+    "gettingstarted/step2": function() {
+      d3.select("body")
+        .classed("hide-select",true)
+
+      var target = d3.selectAll(".container")
+        .style("min-height", "100%")
+
+      var row = d3_splat(target,".row","div",[{"id":"gettingstarted2"}],function(x){return x.id})
+        .classed("row gettingstarted",true)
+
+      row.exit().remove()
+
+      /* Header */
+      var heading = d3_updateable(row,".welcome-heading","h5")
+
+      heading.text("Welcome to Crusher, let's first set-up some things")
+        .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-15px")
+        .classed("welcome-heading heading", true)
+      RB.crusher.ui.gettingstarted.step2(row, {
+        continue: RB.routes.navigation.forward.bind(false, RB.crusher.controller.states["/crusher/gettingstarted/step3"])
+      });
+    },
+    "gettingstarted/step3": function() {
+      d3.select("body")
+        .classed("hide-select",true)
+
+      var target = d3.selectAll(".container")
+        .style("min-height", "100%")
+
+      var row = d3_splat(target,".row","div",[{"id":"gettingstarted3"}],function(x){return x.id})
+        .classed("row gettingstarted",true)
+
+      row.exit().remove()
+
+      /* Header */
+      var heading = d3_updateable(row,".welcome-heading","h5")
+
+      heading.text("Welcome to Crusher, let's first set-up some things")
+        .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-15px")
+        .classed("welcome-heading heading", true)
+      RB.crusher.ui.gettingstarted.step3(row, {
+        goToAction: RB.routes.navigation.forward.bind(false, RB.crusher.controller.states["/crusher/action/new"]),
+        goToFunnel: RB.routes.navigation.forward.bind(false, RB.crusher.controller.states["/crusher/funnel/new"])
+      });
+    },
     "home": function(){
+      // Check if the getting started page needs to be shown
+      var pixel_count = {
+        allpages: 0,
+        conversion: 0
+      }
+
+      crusher.subscribe.add_subscriber(["pixel_status", "actions"], function(status_data, actions) {
+        status_data.forEach(function(pixel) {
+          if(pixel.segment_name.indexOf("All Pages") >=0 ) {
+            pixel_count.allpages++;
+          } else if(pixel.segment_name.indexOf("Conversion") >=0 ) {
+            pixel_count.conversion++;
+          }
+        });
+
+        var no_actions = false;
+        if(crusher.cache.actionData.length == 0) {
+          no_actions = true;
+        }
+
+        if(!pixel_count.allpages) {
+          RB.routes.navigation.forward(controller.states["/crusher/gettingstarted"])
+        } else if (no_actions) {
+          RB.routes.navigation.forward(controller.states["/crusher/gettingstarted/step2"])
+        }
+      },"gettingstarted",true,false)
+
+
       d3.select("body").classed("hide-select",true)
 
       var target = d3.selectAll(".container")
@@ -625,20 +720,33 @@ RB.crusher.controller = (function(controller) {
             RB.routes.navigation.forward(controller.states["/crusher/action"])  
           })
 
+          // Pixel implementation
+          var pixel_implementation = d3_updateable(funnelRow,".row","div")
 
-         
-      },"home",true,false)
+          pixel_implementation.attr("style","padding-bottom:15px;padding-top:5px")
+            .classed("row",true)
 
-      
+          var descriptionWrap = d3_updateable(pixel_implementation,".crusher-pixelcode","div")
+            .classed("crusher-pixelcode col-md-12",true)
 
-      
+          var description = d3_updateable(descriptionWrap,".ct-chart","div")
+            .classed("ct-chart",true)
+            .style("padding-bottom","15px")
 
-      
+          d3_updateable(description,".about-heading","")
+            .classed("about-heading chart-title",true)
+            .text("Implement the Rockerbox pixel on your website")
+          d3_updateable(description,".about-description","div")
+            .classed("about-description chart-description",true)
+            .html(
+              "<p>Paste the following snippet before the closing &lt;/head&gt; tag on each page of your site.</p>" +
+              "<pre class=\"language-markup\"><code class=\"language-markup\" style=\"overflow-x: scroll;\">"+
+              "&lt;!-- Journelle All Pages Segment Pixel --&gt;<br/>" +
+              "&lt;script src=\"https://getrockerbox.com/pixel?source=journelle&type=imp&an_seg=1358830\" type=\"text/javascript\">&lt;/script><br/>" +
+              "&lt;!-- End of Segment Pixel --&gt;" +
+              "</code></pre>")
 
-      
-
-
-
+        },"home",true,false)
     },
     "action": function(){
 
@@ -938,6 +1046,16 @@ RB.crusher.controller = (function(controller) {
           "push_state":"/crusher/settings/subscription",
         }
       ],
+      "gettingstarted": [{
+          "name":"Getting Started",
+          "push_state":"/crusher/gettingstarted"
+        }, {
+          "name":"Getting Started Step 2",
+          "push_state":"/crusher/gettingstarted/step2"
+        }, {
+          "name":"Getting Started Step 3",
+          "push_state":"/crusher/gettingstarted/step3"
+        }],
       "home": [{
           "name":"Home",
           "push_state":"/crusher/home"
