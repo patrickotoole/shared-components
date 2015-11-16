@@ -48,18 +48,7 @@ RB.crusher.controller = (function(controller) {
   }
 
   controller.initializers = {
-    "settings/advertiser": function() {
 
-      var funnelRow = build_header({"id":"settings/advertiser","name":"Manage Advertiser"})
-      crusher.ui.settings.advertiser(funnelRow)
-
-    },
-    "settings/subscription": function() {
-
-      var funnelRow = build_header({"id":"settings/subscription","name":"Manage Subscription"})
-      crusher.ui.settings.subscription(funnelRow)
-
-    },
     "settings": function() {
       
       var funnelRow = build_header({
@@ -72,6 +61,18 @@ RB.crusher.controller = (function(controller) {
         crusher.ui.settings.main(funnelRow,advertiser,actions,funnels)
       }
       crusher.subscribe.add_subscriber(["advertiser","actions", "funnels"], subscription, "settings",true,true)
+
+    },
+    "settings/advertiser": function() {
+
+      var funnelRow = build_header({"id":"settings/advertiser","name":"Manage Advertiser"})
+      crusher.ui.settings.advertiser(funnelRow)
+
+    },
+    "settings/subscription": function() {
+
+      var funnelRow = build_header({"id":"settings/subscription","name":"Manage Subscription"})
+      crusher.ui.settings.subscription(funnelRow)
 
     },
     "settings/pixel/setup": function() {
@@ -154,6 +155,7 @@ RB.crusher.controller = (function(controller) {
         goToFunnel: RB.routes.navigation.forward.bind(false, RB.crusher.controller.states["/crusher/funnel/new"])
       });
     },
+
     "home": function(){
       // Check if the getting started page needs to be shown
       var pixel_count = {
@@ -194,17 +196,6 @@ RB.crusher.controller = (function(controller) {
       crusher.subscribe.add_subscriber(["pixel_status","advertiser","actions"],subscription,"home",true,false)
 
     },
-    "action": function(){
-
-      RB.component.export(RB.crusher.ui.funnel.show, RB.crusher.ui.funnel)
-      RB.component.export(RB.crusher.ui.action.show, RB.crusher.ui.action)
-
-      var funnelRow = build_header({"id":"action_about","name":"Action Dashboard"})
-      var subscription = RB.crusher.ui.action.dashboard.show.bind(false,funnelRow)
-
-      crusher.subscribe.add_subscriber(["recommended_actions","actions"],subscription ,"actionDashboard",true,true)
-
-    },
     "analytics": function(){
 
       var funnelRow = build_header({"id":"analytics_overview","name":"Dashboard"})
@@ -212,6 +203,10 @@ RB.crusher.controller = (function(controller) {
 
       crusher.subscribe.add_subscriber(["dashboardStats"],subscription,"dashboard",true,true)
 
+    },
+
+    "funnel": function(funnel){
+      // this will be spec'd out for the actual funnel display
     },
     "funnel/existing": function(funnel) {
 
@@ -231,21 +226,55 @@ RB.crusher.controller = (function(controller) {
 
       RB.crusher.controller.funnel.new(target)
     },
+
+
+    "action": function(){
+
+      RB.component.export(RB.crusher.ui.funnel.show, RB.crusher.ui.funnel)
+      RB.component.export(RB.crusher.ui.action.show, RB.crusher.ui.action)
+
+      var funnelRow = build_header({"id":"action_about","name":"Action Dashboard"})
+      var subscription = RB.crusher.ui.action.dashboard.show.bind(false,funnelRow)
+
+      //crusher.subscribe.add_subscriber(["recommended_actions","actions"],subscription ,"actionDashboard",true,true)
+
+    },
     "action/existing": function(action) {
 
       RB.component.export(RB.crusher.ui.funnel.show, RB.crusher.ui.funnel)
       RB.component.export(RB.crusher.ui.action.show, RB.crusher.ui.action)
 
-      if (action.id) {
+      
+      if (action.action_id) {
+
+        // exisiting action...
+
+
+        // Need a teardown when navigating from each page/section
+        // this is a teardown from the dashboard...
+        var e = "actionTimeseries"
+        crusher.subscribe.publisher_raw[e].skip_callback = true
+        crusher.subscribe.register_publisher(e,crusher.api.endpoints[e])
+        RB.component.export(RB.crusher.ui.action.show_timeseries, RB.crusher.ui.action)
+
+
+        // This should clear all the outstanding publishers so that it doesnt interfere
+        // and trigger existing callbacks
 
         crusher.ui.action.buildBase()
 
         crusher.subscribe.publishers["action_show"]()
-
         crusher.subscribe.publishers["actions"]()
         crusher.subscribe.publishers["action_all"](action)
+
       } else {
-        
+
+        // existing dashboard...
+        var funnelRow = build_header({"id":"action_about","name":"Action Dashboard"})
+        var subscription = RB.crusher.ui.action.dashboard.widgets.bind(false,funnelRow)
+  
+        crusher.subscribe.add_subscriber(["actions"],subscription ,"actionDashboard",true,true)
+
       }
        
     },
@@ -433,7 +462,7 @@ RB.crusher.controller = (function(controller) {
         },{
           "name": "View Existing Actions",
           "push_state":"/crusher/action/existing",
-          "skipRender": true,
+          //"skipRender": true,
           "values_key":"action_name"
         }
       ]

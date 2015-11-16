@@ -96,9 +96,13 @@ RB.crusher.ui.action.show = (function(show,action,crusher) {
   show.PUBLISH = ["tf_idf_action","pattern_status"]
   show.EVENTS = []
 
-  show.subscription = function(data) {
+  show.subscription = function(data,ts) {
 
     var target = d3.selectAll(".action-view-wrapper")
+
+    if (data.action_id != ts.action_id) {
+      throw "YO"
+    }
     
     crusher.ui.action.view(target)
     crusher.ui.action.show(target)

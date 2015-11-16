@@ -373,7 +373,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
           deferred_cb(null,cb.bind(false,action))
           return 
         }
-        d3.xhr(api.URL.actionTimeseries + action.action_string)
+        return d3.xhr(api.URL.actionTimeseries + action.action_string)
           .header("Content-Type","application/json")
           .get(function(err,rawData){
             var dd = JSON.parse(rawData.response)

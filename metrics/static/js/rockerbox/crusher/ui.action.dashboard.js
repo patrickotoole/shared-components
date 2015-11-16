@@ -22,6 +22,90 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
 
     }
 
+    dashboard.widgets = function(funnelRow,data) {
+
+      var funnelRow = funnelRow
+      var odata = data
+
+      var data = data.slice(0,3)
+        .map(function(x){
+          x.views = x.views || ""
+          return x
+        }).map(function(x){
+          obj = {
+            "key": x.action_name,
+            "Action name": x.action_name,
+            "views":x.views,
+            "visits":x.visits,
+            "uniques":x.uniques,
+            "__proto__": x
+          }
+          return obj
+        })
+
+      
+      
+      var title = "Top existing actions",
+        description = "These are the keywords that are most popular on your site"
+
+      var target = RB.rho.ui.buildWrappers(
+        funnelRow, 
+        function(x){return x['Action name']}, 
+        "views", 
+        data, 
+        "col-md-4", 
+        function(x){return x.description}
+      )
+
+      var missing_data = odata.slice(0,3).filter(function(x){return !x.visits_data})
+
+      if (missing_data.length) {
+
+        var action = missing_data[0];
+        action.action_string = action.url_pattern.map(function(x){return x.split(" ").join(",")}).join("|") 
+        action.action_string = action.action_string + "&num_days=2"
+
+        crusher.subscribe.add_subscriber(["actionTimeseries"],function(d) { 
+
+          // make sure were still on the same page otherwise it will break
+          var bool = funnelRow.datum().id == d3.select(".container div").datum().id
+          if (!d.views && bool) {
+            d.views = d.visits_data[0].views
+            d.visits = d.visits_data[0].visits
+            d.uniques = d.visits_data[0].uniques
+
+            setTimeout(dashboard.widgets,1,funnelRow,odata)
+          }
+
+          console.log(d)
+        },"get_action",true,true,action)
+
+
+      }
+
+      var category_pie = target.selectAll(".pie")
+        .text("PIE GOES HERE")
+
+    // var domainData = wrapper.datum().domains
+
+    // var categoryData = d3.nest()
+    //   .key(function(x){return x.category_name})
+    //   .rollup(function(x){
+    //     return d3.sum(x.map(function(y){return y.count}))
+    //   }) 
+    //   .entries(domainData)
+
+
+
+    //var category_pie = target.selectAll(".pie")
+
+    //RB.crusher.ui.action.category_pie(
+    //  category_pie, categoryData, RB.crusher.ui.action.category_colors, function(){}
+    //)
+
+
+    }
+
     dashboard.current = function(funnelRow,data) {
       var funnelRow = funnelRow
       var odata = data
@@ -54,9 +138,6 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
       table.classed("table-condensed table-hover",true)
         .style("font-size","14px")
         .style("margin-top","15px")
-
-    
-
       
       var missing_data = odata.slice(0,10).filter(function(x){return !x.visits_data})
 
@@ -97,7 +178,6 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
 
         })
 
-
     }
 
     dashboard.recommended = function(funnelRow,data) {
@@ -134,7 +214,7 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
             url_pattern: [x["Pattern"]],
             name: x["Pattern"]
           }
-          var xx = JSON.parse(JSON.stringify(RB.crusher.controller.states["/crusher/action/recommended"]))
+          var xx = RB.crusher.controller.states["/crusher/action/recommended"]
           RB.routes.navigation.forward(xx)
           RB.routes.navigation.forward(obj)
         })
