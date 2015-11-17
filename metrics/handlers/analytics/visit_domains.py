@@ -62,7 +62,7 @@ class VisitDomainBase(object):
 
         df = pandas.DataFrame(xx)
         df['date'] = df['timestamp'].map(lambda x: x.split(" ")[0] + " 00:00:00")
-        df = df.groupby(["domain","date"])['uid'].count().reset_index().rename(columns={"uid":"count"})
+        df = df.groupby(["domain","date"])['uid'].agg({"count":lambda x: len(set(x)),"views": len}).reset_index()
         
 
         return df
