@@ -130,6 +130,13 @@ class SearchCassandra(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuer
 
 class SearchBase(SearchCassandra):
 
+    def build_deferred_list(self, terms_list, params, advertiser, date_clause, logic="must", numdays=20):
+        dl = []
+        for terms in terms_list:
+            dl += [self.defer_execute(params, advertiser, terms, date_clause, logic, numdays=numdays)]
+        
+        return defer.DeferredList(dl)
+
     @decorators.deferred
     def defer_execute(self, selects, advertiser, pattern, date_clause, logic, 
                       allow_sample=True, timeout=60, numdays=20, should_cache=True):

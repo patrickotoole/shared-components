@@ -1,7 +1,32 @@
 import pandas
 import logging
 
-from search_base import SearchBase
+def build_datelist(numdays):
+    import datetime
+    
+    base = datetime.datetime.today()
+    date_list = [base - datetime.timedelta(days=x) for x in range(0, numdays)]
+    dates = map(lambda x: str(x).split(" ")[0] + " 00:00:00",date_list)
+
+    return dates
+
+def build_count_dataframe(field):
+    def build(data):
+        return pandas.DataFrame(data).rename(columns={"count":field}).set_index("date")
+
+    return build
+
+def build_dict_dataframe(field):
+
+    def formatter(data):
+        keys = data.keys()
+        df = pandas.DataFrame({field:keys},index=keys)
+        for date, dl in data.iteritems():
+            df.T[date][field] = dl
+        return df
+
+    return formatter
+
 
 class PatternSearchHelpers(object):
 
@@ -11,6 +36,7 @@ class PatternSearchHelpers(object):
     def calc_stats(self,df):
 
         # THIS DOES THE SAMPLING TRANSFORMATION
+        # HACK: see (self.sample_used)
         multiplier = 100/self.sample_used if self.sample_used else 1
         series = df["url"] + df["uid"]
         

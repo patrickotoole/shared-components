@@ -4,9 +4,8 @@ import pandas
 import logging
 import time
 
-from search_base import SearchBase
-from pattern_search_helpers import PatternSearchHelpers
-from pattern_search_cache import PatternSearchCache
+import itertools
+
 from twisted.internet import defer
 from lib.helpers import decorators
 from lib.helpers import *
@@ -14,54 +13,18 @@ from lib.helpers import *
 from lib.cassandra_helpers.helpers import FutureHelpers
 from lib.cassandra_cache.helpers import *
 
+import model
+from ...visit_domains import VisitDomainBase
+from ..search_base import SearchBase
+from ..cache.pattern_search_cache import PatternSearchCache
 
-from ..visit_domains import VisitDomainBase
-
-
-def callback(yo,*args):
-    print yo
-    import ipdb; ipdb.set_trace()
-    time.sleep(10)
-    print yo
-    return
-
-def build_datelist(numdays):
-    import datetime
-    
-    base = datetime.datetime.today()
-    date_list = [base - datetime.timedelta(days=x) for x in range(0, numdays)]
-    dates = map(lambda x: str(x).split(" ")[0] + " 00:00:00",date_list)
-
-    return dates
-
-def build_count_dataframe(field):
-    def build(data):
-        return pandas.DataFrame(data).rename(columns={"count":field}).set_index("date")
-
-    return build
-
-def build_dict_dataframe(field):
-
-    def formatter(data):
-        keys = data.keys()
-        df = pandas.DataFrame({field:keys},index=keys)
-        for date, dl in data.iteritems():
-            df.T[date][field] = dl
-        return df
-
-    return formatter
- 
+from helpers import PatternSearchHelpers
+from stats import PatternStatsBase
+from response import PatternSearchResponse
 
 
-class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, PatternSearchCache):
+class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, PatternStatsBase, PatternSearchResponse):
 
-
-    def build_deferred_list(self, terms_list, params, advertiser, date_clause, logic="must", numdays=20):
-        dl = []
-        for terms in terms_list:
-            dl += [self.defer_execute(params, advertiser, terms, date_clause, logic, numdays=numdays)]
-        
-        return defer.DeferredList(dl)
 
     @defer.inlineCallbacks
     def get_uid_domains(self, advertiser, pattern_terms, date_clause, logic="or",timeout=60, numdays=5):
@@ -85,78 +48,11 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
 
         dl = defer.DeferredList(defs)
         dom = yield dl
-        dom
 
-        prepped = dom[0][1].unstack(1).fillna(0)
+        _domains = dom[0][1]
+        prepped = _domains.unstack(1).fillna(0)
 
-        #mT = prepped.T.as_matrix()
-        #m = prepped.as_matrix()
-
-        #sim = pandas.DataFrame(pandas.np.dot(mT,m),columns=prepped.columns,index=prepped.columns)
-        sentence_df = dom[0][1].reset_index().groupby("uid")['domain'].agg(lambda x: list(x))
-        sentences = sentence_df.values
-        from gensim.models import Word2Vec
-
-        model = Word2Vec(sentences,min_count=4)
-        
-
-        logging.info("got data")
-        import sklearn.cluster
-
-        km = sklearn.cluster.KMeans(n_clusters=min(15,max(2,len(prepped.columns)/50)) )
-        idx = km.fit_predict(model.syn0)
-        
-        df = pandas.DataFrame([dict(zip(model.index2word,idx))]).T
-        cluster_domains = df.reset_index().groupby(0)['index'].agg(lambda x: list(x)).to_dict()
-
-
-        #mat = prepped.as_matrix()
-        #km = sklearn.cluster.KMeans(n_clusters=5)
-        #km.fit(mat)
-        #labels = km.labels_
-        #_df = pandas.DataFrame([prepped.index,map(int,labels)]).T.rename(columns={0:"uid",1:"cluster"}).set_index("uid")
-
-
-        #_df2 = dom[0][1].reset_index().groupby("uid")['domain'].agg(lambda x: list(set(x)) )
-        #_df3 = pandas.DataFrame(_df).join(pandas.DataFrame(_df2)).reset_index().rename(columns={0:"domains"})
-        #response['uid_domains'] = _df3.T.to_dict().values()
-
-        #clusters = list(prepped.join(_df).groupby("cluster"))
-        #cluster_dict = {}
-        #for c, df in clusters:
-        #    summed = df.sum()
-        #    summed = summed[summed > 0].map(int)
-        #    cluster_dict[c] = {
-        #        "domains":len(summed),
-        #        "users": len(df),
-        #        "imps": df.sum().sum()
-        #    }
-        summed = prepped.sum()
-        cluster_user_stats = []
-        for i,j in cluster_domains.items():
-            obj = {}
-
-            relevant = prepped[j]
-            users = relevant[relevant.T.sum() > 0]
-            num_users = len(users)
-            num_domains = len(j)
-
-            obj["num_users"] = num_users
-            obj["num_domains"] = num_domains
-            obj['users_per_domain'] = num_users/num_domains
-
-            obj['users'] = list(users.index)
-            obj['domains'] = cluster_domains[i]
-            obj['cluster'] = i
-            cluster_user_stats.append(obj)
-            
-        cluster_user_stats = sorted(cluster_user_stats,key=lambda x: x['users_per_domain'])
-
-        response['clusters'] = cluster_user_stats
-
-
-        logging.info("finished cluster")
-
+        response['clusters'] = model.cluster(_domains, prepped)
         
         self.write_json(response)
 
@@ -200,6 +96,8 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
     @defer.inlineCallbacks
     def get_generic(self, advertiser, pattern_terms, num_days, logic="or",timeout=60,timeseries=False):
 
+        REQUIRED_CACHE_DAYS = num_days if num_days < 7 else 7
+
         PARAMS = "date, url, uid"
         indices = PARAMS.split(", ")
 
@@ -214,40 +112,31 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
         try:
             stats_df = self.get_stats(*args)
 
-            assert(len(stats_df) >= 7) # wants atleast 14 days worth of data before using cache...
-            print start - time.time()
+            self.response_summary(response,stats_df)
+            if timeseries: 
+                self.response_timeseries(response,stats_df)
 
-            args[-1] = build_datelist(7)
+            domain_stats_df = yield self.get_domain_stats(*args)
+            url_stats_df = self.get_url_stats(*args)
 
-            domains_df = self.get_domains_from_cache(*args, formatter=build_dict_dataframe("domains"))
-            urls_df = self.get_urls_from_cache(*args, formatter=build_dict_dataframe("urls"))
-
-            df = stats_df.join(domains_df).join(urls_df)
-            summarized = stats_df.sum()
-
-            response['summary']['users'] = summarized.uniques
-            response['summary']['views'] = summarized.views
-            response['summary']['visits'] = summarized.visits
-
-            if timeseries:
-                results = Convert.df_to_values(stats_df.reset_index())
-                response['results'] = results
-
-            import itertools
+            stats_df = stats_df.join(domain_stats_df).join(url_stats_df)
 
             print start - time.time()
 
-            urls_df_no_ts = pandas.DataFrame(list(itertools.chain.from_iterable(urls_df['urls'].values)))
-            domains_df_no_ts = pandas.DataFrame(list(itertools.chain.from_iterable(domains_df['domains'].values)))
-            print start - time.time()
-
+            urls_df_no_ts = pandas.DataFrame(list(itertools.chain.from_iterable(url_stats_df['urls'].values)))
             urls = urls_df_no_ts.groupby("url").sum().reset_index().sort_index(by="count",ascending=False)
             response['urls'] = Convert.df_to_values(urls.head(3000))
+
             print start - time.time()
 
+            domains_df_no_ts = pandas.DataFrame(list(itertools.chain.from_iterable(domain_stats_df['domains'].values)))
             domains = domains_df_no_ts.groupby("domain").sum().reset_index().sort_index(by="count",ascending=False)
-            response['domains'] = Convert.df_to_values(domains.head(3000))
-            print start - time.time()
+
+            domains = domains.sort_index(by="count",ascending=False)
+            response['domains'] = Convert.df_to_values(domains)#.head(3000))
+           
+
+
 
         except Exception as e:
 
@@ -326,36 +215,6 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
     def get_count(self, advertiser, pattern_terms, date_clause, logic="or",timeout=60):
         self.get_generic(advertiser, pattern_terms, date_clause, logic, timeout)
 
-
-    def get_stats(self, *args):
-
-        start = time.time()
-
-        views_df   = self.get_views_from_cache(*args, formatter=build_count_dataframe("views"))
-        print start - time.time()
-
-        visits_df  = self.get_visits_from_cache(*args, formatter=build_count_dataframe("visits"))
-        print start - time.time()
-
-        uniques_df = self.get_uniques_from_cache(*args, formatter=build_count_dataframe("uniques"))
-        print start - time.time()
-
-        import datetime
-        missing_dates = [
-            datetime.datetime.strptime(i,"%Y-%m-%d %H:%M:%S") for i in views_df.index 
-            if i not in visits_df.index
-        ]
-
-        if missing_dates:
-            
-            self.run_uniques(args[0],args[1],missing_dates)
-            visits_df = self.get_visits_from_cache_new(*args, formatter=build_count_dataframe("visits"))
-            uniques_df = self.get_uniques_from_cache_new(*args, formatter=build_count_dataframe("uniques"))
-
-
-        df = views_df.join(visits_df).join(uniques_df)
-
-        return df
 
 
 

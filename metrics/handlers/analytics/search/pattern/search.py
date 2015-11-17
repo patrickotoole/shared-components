@@ -2,7 +2,7 @@ import tornado.web
 import pandas
 import logging
 
-from pattern_search_base import PatternSearchBase
+from base import PatternSearchBase
 
 class PatternSearchHandler(PatternSearchBase):
 
