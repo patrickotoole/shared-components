@@ -74,7 +74,7 @@ RB.rho.ui = (function(ui) {
   ui.buildWrappers = function(target, title, series, data, formatting, description, button) {
     formatting = formatting || "col-md-4"
 
-    var wrapper = d3_splat(target,".series-wrapper." + series,"div",data, function(x){return x.key})
+    var wrapper = d3_splat(target,".series-wrapper." + series,"div",data,function(x){return x.key})
       .classed("series-wrapper " + formatting + " " + series,true)
 
     var newTarget = d3_updateable(wrapper,".series." + series,"div")
@@ -109,10 +109,6 @@ RB.rho.ui = (function(ui) {
 
     d3_updateable(newTarget,".description","div")
       .classed("description",true)
-      .html(description)
-
-    var category_pie = d3_updateable(newTarget,".pie","div")
-      .classed("pie",true)
       .html(description)
 
 

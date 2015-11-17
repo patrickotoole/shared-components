@@ -34,7 +34,7 @@ RB.crusher.controller = (function(controller) {
     var heading = d3_updateable(funnelRow,".heading","h5")
 
     heading.text(function(x){return x.name})
-      .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-15px")
+      .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-15px;margin-right:-15px;margin-bottom:30px")
       .classed("heading heading",true)
 
     d3_updateable(funnelRow,".pixel-description","div")
@@ -270,7 +270,7 @@ RB.crusher.controller = (function(controller) {
       } else {
 
         // existing dashboard...
-        var funnelRow = build_header({"id":"action_about","name":"Action Dashboard","description":"asdf"})
+        var funnelRow = build_header({"id":"action_about","name":"Action Dashboard"})
         var subscription = RB.crusher.ui.action.dashboard.widgets.bind(false,funnelRow)
   
         crusher.subscribe.add_subscriber(["actions"],subscription ,"actionDashboard",true,true)

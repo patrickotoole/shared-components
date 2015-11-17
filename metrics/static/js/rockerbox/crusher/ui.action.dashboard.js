@@ -145,10 +145,15 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
 
       var ddd = [{"key":"NA","values":1}]
 
+      var category_pie = d3_updateable(target,".pie","div")
+        .classed("pie",true)
+
+
+
       var category_pie = target.selectAll(".pie")
         .classed("row",function(x){
           x.parentCategoryData = ddd
-          if (x.domains) {
+          if (x.domains && (x.parentCategoryData == ddd)) {
             var parentCategoryData = d3.nest()
               .key(function(x){return x.parent_category_name})
               .rollup(function(x){ return x.reduce(function(p,c){return p + c.count},0) })
@@ -159,12 +164,11 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
 
             x.parentCategoryData = parentCategoryData
 
+          } else {
+            x.parentCategoryData = ddd
           }
           return true
         })
-        .style("margin-top","-10px")
-        .style("margin-bottom","-20px")
-        .style("font-size","11px")
 
 
       RB.crusher.ui.action.category_pie(
