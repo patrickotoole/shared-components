@@ -57,10 +57,14 @@ RB.component.pie = (function(pie) {
     var slices = d3_updateable(svg,".slices","g").classed("slices",true),
       labels = d3_updateable(svg,".labels","g").classed("labels",true),
       lines = d3_updateable(svg,".lines","g").classed("lines",true)
+      circles = d3_updateable(svg,".circles","g").classed("circles",true)
+
 
     slices.attr("transform", translateCenter);
     labels.attr("transform", translateCenter);
     lines.attr("transform", translateCenter);
+    circles.attr("transform", translateCenter);
+
 
     
 
@@ -96,10 +100,10 @@ RB.component.pie = (function(pie) {
         .style("font-weight","bold")
         .text(function(x) {
           var selected = y ? y.data.label : true
-          var domains = x.domains.filter(function(z){
+          var domains = x.domains ? x.domains.filter(function(z){
             return selected === true ? true : z.parent_category_name == selected
-          })
-          return domains.length
+          }) : []
+          return domains.length ? d3.format(",")(domains.length) : ""
         })
 
       d3_updateable(desc,".domain-desc","text")
@@ -107,13 +111,13 @@ RB.component.pie = (function(pie) {
         .attr("dy",".35em")
         .style("text-anchor","middle")
         .style("font-weight","500")
-        .text("domains")
+        .text(function(x) {return x.domains ? "domains" : ""})
 
       var num_users = d3_updateable(desc,".num-users","g")
         .classed("num-users",true)
         .attr("dy","1.35em")
         .style("text-anchor","middle")
-        .style("font-size","1.83em")
+        .style("font-size","1.75em")
         .style("font-weight","bold")
         
 
@@ -122,10 +126,10 @@ RB.component.pie = (function(pie) {
         .attr("dy","1.35em")
         .text(function(x) {
           var selected = y ? y.data.label : true
-          var domains = x.domains.filter(function(z){
+          var domains = x.domains ? x.domains.filter(function(z){
             return selected === true ? true : z.parent_category_name == selected
-          })
-          return d3.format(",")(domains.reduce(function(p,c){return p + c.count},0))
+          }) : []
+          return domains.length ? d3.format(",")(domains.reduce(function(p,c){return p + c.count},0)) : ""
         })
 
       var user_text = d3_updateable(num_users,".desc","text")
@@ -136,7 +140,7 @@ RB.component.pie = (function(pie) {
 
       d3_updateable(user_text,"tspan","tspan")
         .style("font-size","0.5em")
-        .text("uniques")
+        .text(function(x) {return x.domains ? "uniques" : ""})
     }
 
     pie.draw = function (target,format,key,hover,colors) {
@@ -144,6 +148,24 @@ RB.component.pie = (function(pie) {
       var colors, hover;
 
       var svg = d3_updateable(target,"svg","svg");
+
+      var innerCircle = d3_updateable(svg.select(".circles"),".inner-circle","circle")
+        .classed("inner-circle",true)
+        .style("fill", "none")
+        .style("stroke", "black")
+        .style("stroke-width", ".6")
+        .style("stroke-opacity", function(x){return x.domains ? "0.25" : "0"})
+        .attr("r", function(x){return x.dimensions.radius * 0.4 + .3});
+
+      var outerCircle = d3_updateable(svg.select(".circles"),".outer-circle","circle")
+        .classed("outer-circle",true)
+        .style("fill", "none")
+        .style("stroke", "black")
+        .style("stroke-width", ".6")
+        .style("stroke-opacity", function(x){return x.domains ? "0.25" : "0"})
+        .attr("r", function(x){return x.dimensions.radius * 0.8 - .3});
+
+
       var slice = svg.select(".slices").selectAll("path.slice")
         .data(function(x){ return x.dimensions.pie(format(x)) }, key);
 
@@ -185,7 +207,7 @@ RB.component.pie = (function(pie) {
       text.enter()
         .append("text")
         .attr("dy", "-.35em")
-        .style("fill", "black")
+        .style("fill", "#5a5a5a")
         .classed("hidden",true)
         .text(key);
         

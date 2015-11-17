@@ -270,7 +270,7 @@ RB.crusher.controller = (function(controller) {
       } else {
 
         // existing dashboard...
-        var funnelRow = build_header({"id":"action_about","name":"Action Dashboard"})
+        var funnelRow = build_header({"id":"action_about","name":"Action Dashboard","description":"asdf"})
         var subscription = RB.crusher.ui.action.dashboard.widgets.bind(false,funnelRow)
   
         crusher.subscribe.add_subscriber(["actions"],subscription ,"actionDashboard",true,true)

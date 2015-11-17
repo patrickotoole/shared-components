@@ -93,7 +93,7 @@ RB.rho.ui = (function(ui) {
       .text(title)
 
     var missing = "background-color: #eee;opacity:.5;width: 50%;" + 
-      "line-height: 28px;height: 32px;margin-top: 10px;margin-bottom: 10px;"
+      "margin-top: 10px;margin-bottom: 10px;"
 
     d3_updateable(newTarget,".value","div")
       .classed("value",true)
@@ -102,9 +102,10 @@ RB.rho.ui = (function(ui) {
       })
       .attr("style",function(x){
         var style = (!x[series]) ? missing : undefined
-        
         return style
       })
+      .style("line-height","28px")
+
 
     d3_updateable(newTarget,".description","div")
       .classed("description",true)
