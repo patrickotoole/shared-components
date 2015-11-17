@@ -369,7 +369,9 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
   endpoints.actionTimeseries = api.helpers.genericQueuedAPIWithData(function(action,cb,deferred_cb) {
 
-        if (action.visits_data) {
+        var days = parseInt(action.action_string.split("num_days=")[1] || 3)
+
+        if (action.visits_data && (action.visits_data.length >= days)) {
           deferred_cb(null,cb.bind(false,action))
           return 
         }
