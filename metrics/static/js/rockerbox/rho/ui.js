@@ -71,6 +71,53 @@ RB.rho.ui = (function(ui) {
 
   }
 
+  ui.buildWrappers = function(target, title, series, data, formatting, description, button) {
+    formatting = formatting || "col-md-4"
+
+    var wrapper = d3_splat(target,".series-wrapper." + series,"div",data,function(x){return x.key})
+      .classed("series-wrapper " + formatting + " " + series,true)
+
+    var newTarget = d3_updateable(wrapper,".series." + series,"div")
+      .classed("bar series " + series,true)
+
+    if (button) {
+      
+      d3_updateable(newTarget,"."+button.class_name.split(" ").join("."),"a")
+        .classed(button.class_name + " pull-right btn btn-sm btn-default", true)
+        .text(button.name)
+        .on("click",button.click)
+    }
+
+    d3_updateable(newTarget,".title","div")
+      .classed("title",true)
+      .text(title)
+
+    var missing = "background-color: #eee;opacity:.5;width: 50%;" + 
+      "margin-top: 10px;margin-bottom: 10px;"
+
+    d3_updateable(newTarget,".value","div")
+      .classed("value",true)
+      .text(function(x){
+        return x[series]
+      })
+      .attr("style",function(x){
+        var style = (!x[series]) ? missing : undefined
+        return style
+      })
+      .style("line-height","28px")
+
+
+    d3_updateable(newTarget,".description","div")
+      .classed("description",true)
+      .html(description)
+
+
+
+    
+    return newTarget
+
+  }
+
   ui.buildSeriesWrapper = function(target, title, series, data, formatting, description, button) {
     formatting = formatting || "col-md-6"
 
@@ -100,8 +147,6 @@ RB.rho.ui = (function(ui) {
     d3_updateable(newTarget,".description","div",[description],function(x){return x})
       .classed("description",true)
       .html(String)
-
-    
     
     return newTarget
 

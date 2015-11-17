@@ -32,6 +32,8 @@
 
   <script src="/static/js/rockerbox/crusher/permissions.js"></script> 
   <script src="/static/js/rockerbox/crusher/component.js"></script> 
+  <script src="/static/js/rockerbox/pie.js"></script> 
+
   
   <script src="/static/js/rockerbox/crusher/action/init.js"></script> 
 
@@ -50,10 +52,18 @@
   <script src="/static/js/rockerbox/crusher/controller.campaign.js"></script>   
   <script src="/static/js/rockerbox/crusher/controller.lookalike.js"></script>   
   
+  <script src="/static/js/rockerbox/crusher/ui.gettingstarted.js"></script>
   <script src="/static/js/rockerbox/crusher/ui.js"></script>   
+  <script src="/static/js/rockerbox/crusher/ui.settings.js"></script>   
+  <script src="/static/js/rockerbox/crusher/ui.pixel.js"></script>   
+  <script src="/static/js/rockerbox/crusher/ui.home.js"></script>   
+
+
+
   <script src="/static/js/rockerbox/crusher/ui.action.js"></script>    
   <script src="/static/js/rockerbox/crusher/ui.action.keywords.js"></script>    
 
+  <script src="/static/js/rockerbox/crusher/ui.action.dashboard.js"></script>    
   <script src="/static/js/rockerbox/crusher/ui.action.domains.js"></script>    
   <script src="/static/js/rockerbox/crusher/ui.action.clusters.js"></script>    
 
@@ -90,6 +100,9 @@
   <link href="/static/js/typeahead.js/typeahead.css" rel="stylesheet">
   <script type="text/javascript" src="/static/js/chartist.min.js"></script>
   <link rel="stylesheet" href="/static/css/chartist.min.css">
+
+  <script type="text/javascript" src="/static/js/prism.js" data-default-language="markup"></script>
+  <link rel="stylesheet" href="/static/css/prism.css">
 
   
   <style>
@@ -382,7 +395,76 @@ polyline{
 	stroke-width: 1px;
 	fill: none;
 }
+.row.pie {
+  margin-top: -10px; margin-bottom: -20px; font-size: 11px;
+}
+</style>
 
+<style type="text/css">
+  /*
+    Progress Indicator
+  */
+  .progress-indicator {
+    position: relative;
+    width: 800px;
+    margin: 80px auto 40px auto;
+  }
+
+    .progress-indicator hr {
+      margin: 0 0 0 16.66%;
+      border-top: solid 2px #CCC;
+      width: 66.66%;
+    }
+
+    .progress-indicator ol {
+      margin: 0;
+      padding: 0;
+    }
+
+      .progress-indicator ol li {
+        display: inline-block;
+        width: 33.33333%;
+        text-align: center;
+        padding-top: 10px;
+        text-transform: uppercase;
+        font-size: 10px;
+        color: #AAA;
+        font-weight: bold;
+      }
+
+      .progress-indicator ol li .bullet {
+        border: solid 2px #CCC;
+        border-radius: 50%;
+        width: 10px;
+        height: 10px;
+        position: absolute;
+        top: -4px;
+        background-color: #f8f8f8;
+      }
+
+      .progress-indicator ol li:nth-child(1) .bullet {
+        left: calc(16.66% - 4px);
+      }
+
+      .progress-indicator ol li:nth-child(2) .bullet {
+        left: calc(50% - 4px);
+      }
+
+      .progress-indicator ol li:nth-child(3) .bullet {
+        right: calc(16.66% - 4px);
+      }
+
+      .progress-indicator ol li .bullet.active {
+        background-color: #CCC;
+      }
+
+  /*
+    Getting Started
+  */
+  .gettingstarted-step {
+    transform: translate(-50%);
+    left: 50%;
+  }
 </style>
   
   <script> 

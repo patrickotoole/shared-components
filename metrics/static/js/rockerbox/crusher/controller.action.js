@@ -35,7 +35,7 @@ RB.crusher.controller.action = (function(action) {
         ); 
     },
     save: function(data, obj) {
-
+      var obj = obj;
       
       
       var intermediate = {
@@ -65,19 +65,21 @@ RB.crusher.controller.action = (function(action) {
           function(err, rawData){
             var resp = JSON.parse(rawData.response)
             data['action_id'] = resp['response']['action_id']
-            obj.filter(function(){return this}).datum(data)
 
-            RB.routes.navigation.back()
-            setTimeout(function(){
-              RB.routes.navigation.forward({
-                "name": "View Existing Actions",
-                "push_state":"/crusher/action/existing",
-                "skipRender": true,
-                "values_key":"action_name"
-              })
-              RB.routes.navigation.forward(data)
-            },1)
+            if(obj) {
+              obj.filter(function(){return this}).datum(data)
 
+              RB.routes.navigation.back()
+              setTimeout(function(){
+                RB.routes.navigation.forward({
+                  "name": "View Existing Actions",
+                  "push_state":"/crusher/action/existing",
+                  "skipRender": true,
+                  "values_key":"action_name"
+                })
+                RB.routes.navigation.forward(data)
+              },1)
+            }
           }
         );                    
       d3.select(".action-view").classed("hidden",false)

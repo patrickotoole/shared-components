@@ -6,9 +6,9 @@ RB.crusher.ui.action = RB.crusher.ui.action || {}
 RB.crusher.ui.action.init = (function(init,action,crusher) {
 
   init.NAME = "action.init"
-  init.SUBSCRIBE = ["action_all","actions"]
+  init.SUBSCRIBE = ["action_all","actions","action_show"]
   init.PUBLISH = ["action_initialized"]
-  init.EVENTS = ["action_all","action_initialized"]
+  init.EVENTS = ["action_show","action_all","action_initialized"]
 
   init.subscription = function(action) {
 
@@ -92,13 +92,17 @@ RB.component.export(RB.crusher.ui.action.status, RB.crusher.ui.action)
 RB.crusher.ui.action.show = (function(show,action,crusher) {
 
   show.NAME = "action.show"
-  show.SUBSCRIBE = ["actionTimeseries"]
+  show.SUBSCRIBE = ["action_initialized","actionTimeseries"]
   show.PUBLISH = ["tf_idf_action","pattern_status"]
   show.EVENTS = []
 
-  show.subscription = function(data) {
+  show.subscription = function(data,ts) {
 
     var target = d3.selectAll(".action-view-wrapper")
+
+    if (data.action_id != ts.action_id) {
+      throw "YO"
+    }
     
     crusher.ui.action.view(target)
     crusher.ui.action.show(target)
@@ -119,7 +123,7 @@ RB.component.export(RB.crusher.ui.action.show, RB.crusher.ui.action)
 RB.crusher.ui.action.domains = (function(domains,action,crusher) {
 
   domains.NAME = "action.domains"
-  domains.SUBSCRIBE = ["tf_idf_action"]
+  domains.SUBSCRIBE = ["action_initialized","tf_idf_action"]
   domains.PUBLISH = ["actionClusters"]
   domains.EVENTS = []
 
