@@ -43,6 +43,12 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
           return obj
         })
 
+      data.push({
+        "key": "new",
+        "Action name": "ASDF",
+        "views":""
+      })
+
       
       
       var title = "Top existing actions",
@@ -76,13 +82,15 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
         .style("font-size","16px")
         .style("line-height","20px")
 
-
       target.selectAll(".value").html(function(x){
         return x.views ? d3.format(",")(x.views) + " <span style='font-size:.7em'>views</span>" : ""
-      }).style("font-size","18px")
+      }).style("font-size","16px")
+        .style("font-weight","lighter")
 
       target.selectAll(".title")
-        .style("font-size","20px")
+        .style("font-size","18px")
+        .style("font-weight","bold")
+
         .style("cursor","pointer")
         .style("border-bottom",function(x) {
           return x.views ? "1px solid #ccc" : undefined
@@ -137,10 +145,15 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
 
       var ddd = [{"key":"NA","values":1}]
 
+      var category_pie = d3_updateable(target,".pie","div")
+        .classed("pie",true)
+
+
+
       var category_pie = target.selectAll(".pie")
         .classed("row",function(x){
           x.parentCategoryData = ddd
-          if (x.domains) {
+          if (x.domains && (x.parentCategoryData == ddd)) {
             var parentCategoryData = d3.nest()
               .key(function(x){return x.parent_category_name})
               .rollup(function(x){ return x.reduce(function(p,c){return p + c.count},0) })
@@ -151,22 +164,62 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
 
             x.parentCategoryData = parentCategoryData
 
+          } else {
+            x.parentCategoryData = ddd
           }
           return true
         })
-        .style("margin-top","-10px")
-        .style("margin-bottom","-20px")
-        .style("font-size","11px")
 
 
-    RB.crusher.ui.action.category_pie(
-      category_pie, [], RB.crusher.ui.action.category_colors, "row col-md-12", 
-      function(cb,x){ return cb(x) }
-    )
+      RB.crusher.ui.action.category_pie(
+        category_pie, [], RB.crusher.ui.action.category_colors, "row col-md-12", 
+        function(cb,x){ return cb(x) }
+      )
 
-    category_pie.selectAll(".table-title")
-      //.text("Visitor off-site activity")
-      .classed("hidden",true)
+      category_pie.selectAll(".table-title")
+        .classed("hidden",true)
+      
+      var newAction = funnelRow.selectAll(".series-wrapper")
+        .filter(function(x){return x.key == "new"})
+        .style("position","relative")
+
+      var newActionSeries = newAction.selectAll(".series")
+        .style("border","1px dashed #ccc")
+        .on("mouseover",function(){
+          d3.event.stopPropagation()
+          return false
+        })
+
+      newActionSeries.selectAll(".slice")
+        .on("mouseover",function(){
+          d3.event.stopPropagation()
+          return false
+        })
+
+      var new_overlay = d3_updateable(newActionSeries,".new-overlay","div")
+        .classed("new-overlay",true)
+        .style("width","100%")
+        .style("margin-left","-36px")
+        .style("height","200px")
+        .style("position","absolute")
+        .style("top","0px")
+        
+
+      var new_button = d3_updateable(new_overlay,".new-button","div")
+        .classed("btn btn-default new-button",true)
+        .style("margin-left","auto")
+        .style("margin-right","auto")
+        .style("margin-top","150px")
+        .style("display","block")
+        .style("width","150px")
+        .text("Create new action")
+        .on("click",function(x){
+          var xx = RB.crusher.controller.states["/crusher/action/recommended"]
+          RB.routes.navigation.forward(xx)
+         
+        })
+
+
 
 
     }
