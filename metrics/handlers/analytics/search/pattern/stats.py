@@ -50,11 +50,14 @@ class PatternStatsBase(PatternSearchCache):
         views_df, visits_df, uniques_df = self.get_stats_cached(*args)
 
         missing_dates = [
-            datetime.strptime(i,"%Y-%m-%d %H:%M:%S") for i in views_df.index 
+            datetime.strptime(i,"%Y-%m-%d %H:%M:%S") for i in args[2]
             if i not in visits_df.index
         ]
 
         if missing_dates:
+            for d in args[2]:
+                if d not in views_df.index:
+                    views_df.ix[d] = 0
             self.run_uniques(args[0],args[1],missing_dates) 
             visits_df, uniques_df = self.get_stats_missing(missing_dates,*args)
 

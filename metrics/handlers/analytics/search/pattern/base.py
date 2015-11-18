@@ -171,6 +171,9 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
             # PREPARE the final version of the data for response
             if len(df) > 0:
                 stats = df.groupby("date").apply(self.calc_stats)
+                for d in dates:
+                    if d not in stats.index:
+                        stats.ix[d] = 0
 
                 response['summary']['num_urls'] = len(set(df.url.values))
                 response['summary']['num_users'] = len(set(df.uid.values))
