@@ -136,6 +136,11 @@ RB.routes.navigation = (function(navigation) {
     }
     else if (x.values) navigation.subscribed(x)
 
+    try {
+      d3.event.preventDefault()
+      return false
+    } catch(e) {}
+
   }
 
   navigation.back = function(x) {
