@@ -40,7 +40,7 @@ RB.crusher.ui.action = (function(action) {
     action.domain_table(targetRow, domainData)
 
     
-    action.show_other(wrapper,newTs,categoryData,urlData)
+    //action.show_other(wrapper,newTs,categoryData,urlData)
 
   }
 
