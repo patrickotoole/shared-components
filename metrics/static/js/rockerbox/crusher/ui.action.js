@@ -599,10 +599,12 @@ RB.crusher.ui.action = (function(action) {
     
   }
 
-  action.buildBase = function() {
+  action.buildBase = function(id) {
+
+    var id = id || "action"
     var target = d3.selectAll(".container")
 
-    var actionsRow = d3_splat(target,".row","div",[{"id":"action"}],function(x){return x.id})
+    var actionsRow = d3_splat(target,".row","div",[{"id":id}],function(x){return x.id})
       .classed("row actions",true)
 
     var viewWrapper = d3_updateable(actionsRow,".action-view-wrapper","div")

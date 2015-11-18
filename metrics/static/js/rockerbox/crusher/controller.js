@@ -312,14 +312,16 @@ RB.crusher.controller = (function(controller) {
     },
     "action/recommended": function(action) {
 
-      crusher.ui.action.buildBase()
+      crusher.ui.action.buildBase("action_recommended")
 
       var target = d3.selectAll(".action-view-wrapper")
 
+
       crusher.subscribe.add_subscriber(["actions"], function(actionsw){
 
+        target.selectAll(".action-view").remove()
         var override = (action.action_name) ? action : false
-        controller.action.new(target,crusher.cache.urls_wo_qs, override)
+        controller.action.new(target, crusher.cache.urls_wo_qs, override)
       }, "new",true,true)
     }
   }
