@@ -2,7 +2,10 @@ import tornado.web
 import tornado.ioloop
 import logging
 
-from search_helpers import SearchHelpers
+from search_helpers import SearchHelpers, SearchCassandraHelpers
+
+helpers = SearchCassandraHelpers
+
 from ..analytics_base import AnalyticsBase
 from ...base import BaseHandler
 
@@ -12,18 +15,6 @@ from cassandra import OperationTimedOut
 from lib.cassandra_helpers.range_query import CassandraRangeQuery
 from lib.zookeeper.zk_pool import ZKPool
 
-QUERY  = """SELECT %(what)s FROM rockerbox.visit_uids_lucene_timestamp_u2_clustered %(where)s"""
-WHAT   = "date, group_and_count(url,uid)"
-WHERE  = "WHERE source = ? and date = ? and u2 = ?"
-
-CACHE_QUERY = """SELECT %(what)s from rockerbox.pattern_occurrence_u2_counter where %(where)s"""
-CACHE_WHAT  = """date, uid, url, occurrence"""
-CACHE_WHERE = """source=? and action=? and date=? and u2=? """
-
-
-
-INSERT_UDF = "insert into full_replication.function_patterns (function,pattern) VALUES ('%s','%s')"
-SELECT_UDF = "select * from full_replication.function_patterns where function = '%s' "
 
 
 def build_datelist(numdays):
@@ -35,90 +26,70 @@ def build_datelist(numdays):
 
     return dates
 
-def format(uid,date,url,occurrence,advertiser,pattern):
-    return { 
-        "uid":uid, 
-        "date":date, 
-        "url":url, 
-        "occurrence":occurrence, 
-        "source":advertiser, 
-        "action":",".join(pattern), 
-        "u1":uid[-2:] 
-    }
 
-def wrapped_select_callback(field):
 
-    def select_callback(result,advertiser,pattern,results,*args):
-        result = result[0]
-        res = result["rockerbox." +field]
-        date = result["date"]
-        for url_uid in res:
-            if "[:]" in url_uid:
-                url, uid = url_uid.split("[:]")
-                reconstructed = []
-                
-                for i in range(0,int(res[url_uid])):
-                    h = format(uid,date,url,i,advertiser,pattern)
-                    reconstructed += [h]
-    
-                results += reconstructed
+class SearchCassandra(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
 
-    return select_callback
+    def get_udf(self,lock):
+        udf_name = lock.get()
+        state, udf = udf_name.split("|")
+        udf = udf.replace(",",", ")
 
-def cache_callback(result,advertiser,pattern,results,*args):
-    extra = []
-    for res in result:
-        extra += [res]*res['occurrence']
+        logging.info("state: %s, udf: %s" % (state, udf))
 
-    results += result
-    results += extra
+        return state, udf
 
-def sufficient_limit(size=300):
+    def build_udf(self,udf_name,pattern):
+        INSERT_UDF = "insert into full_replication.function_patterns (function,pattern) VALUES ('%s','%s')"
+        SELECT_UDF = "select * from full_replication.function_patterns where function = '%s' "
 
-    def suffices(x):
-        _, _, result = x
-        print len(result)
-        return len(result) > size
+        self.cassandra.execute(INSERT_UDF % (udf_name,pattern[0]))
+        self.cassandra.select_dataframe(SELECT_UDF % (udf_name))
 
-    return suffices
+    def udf_statement(self,udf):
+        QUERY  = """SELECT %(what)s FROM rockerbox.visit_uids_lucene_timestamp_u2_clustered %(where)s"""
+        WHAT   = """date, %s""" % udf
+        WHERE  = """WHERE source = ? and date = ? and u2 = ?"""
 
-class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
-
+        return self.build_statement(QUERY,WHAT,WHERE)
 
     @property
     def raw_statement(self):
+        QUERY  = """SELECT %(what)s FROM rockerbox.visit_uids_lucene_timestamp_u2_clustered %(where)s"""
+        WHAT   = """date, group_and_count(url,uid)"""
+        WHERE  = """WHERE source = ? and date = ? and u2 = ?"""
+
         return self.build_statement(QUERY,WHAT,WHERE)
 
     @property
     def cache_statement(self):
+        CACHE_QUERY = """SELECT %(what)s from rockerbox.pattern_occurrence_u2_counter where %(where)s"""
+        CACHE_WHAT  = """date, uid, url, occurrence"""
+        CACHE_WHERE = """source=? and action=? and date=? and u2=? """
+
         return self.build_statement(CACHE_QUERY,CACHE_WHAT,CACHE_WHERE)
     
     def run(self,pattern,advertiser,dates,results=[]):
+        # run SAMPLE
 
         zk_lock = ZKPool(zk=self.zookeeper)
         with zk_lock.get_lock() as lock:
 
-            udf_name = lock.get()
-            state, udf = udf_name.split("|")
-            udf = udf.replace(",",", ")
-
-            logging.info("state: %s, udf: %s" % (state, udf))
-
-            self.build_udf(state,pattern)
+            udf_func, udf_selector = self.get_udf(lock)
+            self.build_udf(udf_func,pattern)
         
             data = self.data_plus_values([[advertiser]], dates)
             callback_args = [advertiser,pattern,results]
-            is_suffice = sufficient_limit()
+            is_suffice = helpers.sufficient_limit()
 
-            stmt = self.build_statement(QUERY,"date, %s" % udf,WHERE)
+            stmt = self.udf_statement(udf_selector)
+            cb = helpers.wrapped_select_callback(udf_selector)
 
-            response, sample = self.run_sample(data,wrapped_select_callback(udf),is_suffice,*callback_args,statement=stmt)
+            response, sample = self.run_sample(data,cb,is_suffice,*callback_args,statement=stmt)
 
-            self.sample_used = sample
+            self.sample_used = sample # NOTE: this is a hack used to scale up the data
             _, _, result = response
 
-        #zk_lock.stop()
-                
         return results
 
 
@@ -128,19 +99,14 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
         cb_args = [advertiser,pattern,results]
         cb_kwargs = {"statement":self.cache_statement}
         
-        is_suffice = sufficient_limit(300)
+        is_suffice = helpers.sufficient_limit()
 
-
-        response = self.run_range(data,start,end,cache_callback,*cb_args,**cb_kwargs)
+        response = self.run_range(data,start,end,helpers.cache_callback,*cb_args,**cb_kwargs)
         self.sample_used = end
 
         _,_, results = response
         
         return results
- 
-    def build_udf(self,udf_name,pattern):
-        self.cassandra.execute(INSERT_UDF % (udf_name,pattern[0]))
-        self.cassandra.select_dataframe(SELECT_UDF % (udf_name))
 
         
     def run_uniques(self, advertiser, pattern, dates):
@@ -161,8 +127,16 @@ class SearchBase(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
 
             work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,0)
     
-    
-    
+
+class SearchBase(SearchCassandra):
+
+    def build_deferred_list(self, terms_list, params, advertiser, date_clause, logic="must", numdays=20):
+        dl = []
+        for terms in terms_list:
+            dl += [self.defer_execute(params, advertiser, terms, date_clause, logic, numdays=numdays)]
+        
+        return defer.DeferredList(dl)
+
     @decorators.deferred
     def defer_execute(self, selects, advertiser, pattern, date_clause, logic, 
                       allow_sample=True, timeout=60, numdays=20, should_cache=True):

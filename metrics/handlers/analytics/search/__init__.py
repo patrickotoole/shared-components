@@ -1,3 +1,3 @@
 from search import SearchHandler
-from pattern_search import PatternSearchHandler
-from multi_search import MultiSearchHandler
+from pattern.search import PatternSearchHandler
+from multi.multi_search import MultiSearchHandler

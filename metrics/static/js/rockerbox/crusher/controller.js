@@ -206,12 +206,36 @@ RB.crusher.controller = (function(controller) {
     },
 
     "funnel": function(funnel){
-      // this will be spec'd out for the actual funnel display
+
+      RB.component.export(RB.crusher.ui.funnel.show, RB.crusher.ui.funnel)
+      RB.component.export(RB.crusher.ui.action.show, RB.crusher.ui.action)
+
+
+      var funnelRow = build_header({"id":"funnel_dashboard","name":"Funnel Dashboard"})
+      var subscription = crusher.ui.home.dashboard.bind(false,funnelRow)
+
+      var main_wrapper = d3_updateable(funnelRow,".main-wrapper","div")
+        .classed("main-wrapper",true)
+
+
+      var desc = "Funnels allow you to model the behavior between actions. " + 
+        "For instance, you can look at a user who comes to a landing page and then proceeds to checkout." +
+        ""
+
+      RB.rho.ui.buildWrappers(main_wrapper,"About Funnels","none",[{}],"col-md-6",desc)
+
+      main_wrapper.selectAll(".value").style("height","1px")
+        .style("line-height","1px")
+        .style("padding","0px")
+
+
     },
     "funnel/existing": function(funnel) {
 
       var events = ["actions","funnels","campaigns","lookalikes","lookalikeCampaigns"]
       RB.component.export(RB.crusher.ui.funnel.show, RB.crusher.ui.funnel)
+      RB.component.export(RB.crusher.ui.action.show, RB.crusher.ui.action)
+
 
       crusher.ui.funnel.buildBase() 
 
@@ -220,6 +244,8 @@ RB.crusher.controller = (function(controller) {
     },
     "funnel/new": function(){
       RB.component.export(RB.crusher.ui.funnel.show, RB.crusher.ui.funnel)
+      RB.component.export(RB.crusher.ui.action.show, RB.crusher.ui.action)
+
 
       crusher.ui.funnel.buildBase()
       var target = d3.selectAll(".funnel-view-wrapper").selectAll(".funnel-wrapper")
@@ -292,14 +318,16 @@ RB.crusher.controller = (function(controller) {
     },
     "action/recommended": function(action) {
 
-      crusher.ui.action.buildBase()
+      crusher.ui.action.buildBase("action_recommended")
 
       var target = d3.selectAll(".action-view-wrapper")
 
+
       crusher.subscribe.add_subscriber(["actions"], function(actionsw){
 
+        target.selectAll(".action-view").remove()
         var override = (action.action_name) ? action : false
-        controller.action.new(target,crusher.cache.urls_wo_qs, override)
+        controller.action.new(target, crusher.cache.urls_wo_qs, override)
       }, "new",true,true)
     }
   }

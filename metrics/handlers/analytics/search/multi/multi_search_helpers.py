@@ -1,5 +1,5 @@
 import time
-from pattern_search_helpers import PatternSearchHelpers
+from ..pattern.helpers import PatternSearchHelpers
 
 class CacheSingleton(dict):
 

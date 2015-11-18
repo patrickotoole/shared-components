@@ -50,13 +50,37 @@ class VisitDomainBase(object):
 
         return df
 
+ 
+    @decorators.deferred
+    def defer_get_domains_by_date(self, source, pattern, uids, date_clause):
+
+        xx = self.cache_select(source, pattern, date_clause)
+        if len(xx) == 0:
+            xx = self.paginate_get_w_in(uids, date_clause)
+        else:
+            print "ASDF"
+
+        df = pandas.DataFrame(xx)
+        df['date'] = df['timestamp'].map(lambda x: x.split(" ")[0] + " 00:00:00")
+
+        uids = df.groupby("uid")["uid"].count()
+        bad_uids = list(uids[uids > 1000].index)
+
+
+        df = df[~df.uid.isin(bad_uids)].groupby(["domain","date"])['uid'].agg( {
+            "count":lambda x: len(set(x)),
+            "views": len
+        }).reset_index()
+        
+
+        return df
+
 
 
     @decorators.deferred
     def defer_get_domains_with_cache(self, source, pattern, uids, date_clause):
 
         xx = self.cache_select(source, pattern, date_clause)
-
         if len(xx) == 0:
             xx = self.paginate_get_w_in(uids, date_clause)
         else:
@@ -118,10 +142,13 @@ class VisitDomainBase(object):
         def execute(data):
             bound = statement.bind(data)
             return self.cassandra.execute_async(bound)
-        
+
+        logging.info("AXY")
+
         prepped = [[u] for u in uids]
-        results = FutureHelpers.future_queue(prepped,execute,simple_append,300,[])
-        results = results[0]
+        results, _ = FutureHelpers.future_queue(prepped,execute,simple_append,120,[],"DUMMY_VAR")
+
+        logging.info("ASDF")
 
         return results
 

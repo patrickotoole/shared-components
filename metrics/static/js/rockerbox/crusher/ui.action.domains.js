@@ -7,6 +7,7 @@ RB.crusher.ui.action = (function(action) {
   var crusher = RB.crusher
 
   action.show_domains = function(wrapper) {
+
     var newTs = wrapper.selectAll(".ts")
 
     var data = wrapper.datum()
