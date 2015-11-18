@@ -77,17 +77,22 @@ class PatternStatsBase(PatternSearchCache):
         def get_uids(arr):
             return list(set([i['uid'] for i in arr]))
         
-        logging.info("START UIDS")
+        start = time.time()
+        logging.info("Pattern %s | get_domain_stats_missing uids: start" % args[1])
 
         _args = [args[0],args[1],args[2][:2]]
         uids = self.get_uids_from_cache(*_args, formatter=get_uids)
-        logging.info("END UIDS")
+        logging.info("Pattern %s | get_domain_stats_missing uids: end" % args[1])
+        logging.info("Pattern %s | get_domain_stats_missing uids time: %s" % (args[1],(time.time() - start)))
 
-        logging.info("START DOMAINS")
+
         logging.info("LEN UIDS: %s" % len(uids))
         uids = uids[:1000]
         logging.info("USING UIDS: %s" % len(uids))
 
+
+        start = time.time()
+        logging.info("Pattern %s | get_domain_stats_missing domains: start" % args[1])
 
         advertiser = args[0]
         pattern = args[1]
@@ -96,7 +101,10 @@ class PatternStatsBase(PatternSearchCache):
         defs = [self.defer_get_domains_by_date(advertiser,pattern,uids,num_days)]
         dl = defer.DeferredList(defs)
         dom = yield dl
-        logging.info("END DOMAINS")
+
+        logging.info("Pattern %s | get_domain_stats_missing uids: end" % args[1])
+        logging.info("Pattern %s | get_domain_stats_missing uids time: %s" % (args[1],(time.time() - start)))
+
 
         domains = dom[0][1]
         domains = domains.groupby("date").apply(lambda x: list(x[['count','domain']].T.to_dict().values()))

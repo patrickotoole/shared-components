@@ -116,7 +116,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
                 x.parent_category_name = idf_dict.parent_category_name || "NA"
                 x.idf = idf_dict.idf || ( x.category_name == "NA" ? 3 : 12)
 
-                x.weighted =  x.domain == "NA" ? 0 : Math.exp(x.idf) * Math.log(x.count)
+                x.weighted =  x.domain == "NA" ? 0 : Math.exp(x.idf) * Math.log(Math.sqrt(x.count))
 
               })
               deferred_cb(null,cb.bind(false,data))

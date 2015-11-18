@@ -62,7 +62,15 @@ class VisitDomainBase(object):
 
         df = pandas.DataFrame(xx)
         df['date'] = df['timestamp'].map(lambda x: x.split(" ")[0] + " 00:00:00")
-        df = df.groupby(["domain","date"])['uid'].agg({"count":lambda x: len(set(x)),"views": len}).reset_index()
+
+        uids = df.groupby("uid")["uid"].count()
+        bad_uids = list(uids[uids > 1000].index)
+
+
+        df = df[~df.uid.isin(bad_uids)].groupby(["domain","date"])['uid'].agg( {
+            "count":lambda x: len(set(x)),
+            "views": len
+        }).reset_index()
         
 
         return df
