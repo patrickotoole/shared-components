@@ -244,7 +244,9 @@ RB.crusher.ui.action = (function(action) {
     actionView.exit().remove()
 
     var h5 = actionView.selectAll("h5").data(function(x){return [x.action_name]})
-    h5.enter().append("h5").text(function(x) { return "Action > " + x } )
+    h5.enter().append("h5")
+
+    h5.text(function(x) { return "Action > " + x } )
       .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-30px;margin-right:-30px")
       .classed("heading",true)
     h5.exit().remove()
@@ -253,6 +255,8 @@ RB.crusher.ui.action = (function(action) {
       .classed("pull-right edit btn btn-default btn-sm", true)
       .style("margin-right","30px")
       .style("margin-top","20px")
+
+    edit.exit().remove()
 
      
       
@@ -293,6 +297,7 @@ RB.crusher.ui.action = (function(action) {
 
   action.wait = function(wrapper) {
     var info = wrapper.selectAll(".urls")
+
 
     d3_updateable(info,".loading","div")
       .classed("loading",true)
@@ -466,10 +471,25 @@ RB.crusher.ui.action = (function(action) {
       .text(function(x) {return x.action_id ? "Update Action" : "Define Action"})
       .classed("save btn btn-success btn-sm",true)
       .on("click", action.save.bind(newEdit,onSave))
+
+    var remove = newEdit.selectAll(".remove").data(function(x){return [x]})
+    remove.enter() 
+      .append("button")
+    remove.exit().remove()
+
+    remove
+      .classed("remove btn btn-danger btn-sm ",true)
+      .text("Remove Action")
+      .on("click",function(){
+        var edit = d3.select(this.parentNode.parentNode)
+        edit.remove()
+        crusher.controller.action.delete(edit.datum())
+      })  
   }
 
   action.show = function(target,onSave,expandTarget) {
 
+/*
     var h5 = target.selectAll("div").data(function(x){return [x]})
     h5.enter().append("div").classed("",true)
 
@@ -477,7 +497,6 @@ RB.crusher.ui.action = (function(action) {
     spans.enter().append("span")
     spans.text(function(x){ return x.action_name })
 
-/*
     h5.selectAll(".edit").data(function(x){return [x]}).enter()
       .append("button")
       .classed("edit btn  btn-xs pull-right",true)
@@ -493,15 +512,7 @@ RB.crusher.ui.action = (function(action) {
         action.view(expandTarget)
       }) */
 
-    h5.selectAll(".remove").data(function(x){return [x]}).enter() 
-      .append("button")
-      .classed("remove btn btn-danger btn-sm ",true)
-      .text("Remove Action")
-      .on("click",function(){
-        var edit = d3.select(this.parentNode.parentNode)
-        edit.remove()
-        crusher.controller.action.delete(edit.datum())
-      })  
+    
 
       
   }
