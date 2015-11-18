@@ -206,7 +206,12 @@ RB.crusher.controller = (function(controller) {
     },
 
     "funnel": function(funnel){
-      var funnelRow = build_header({"id":"funnel","name":"Funnel Dashboard"})
+
+      RB.component.export(RB.crusher.ui.funnel.show, RB.crusher.ui.funnel)
+      RB.component.export(RB.crusher.ui.action.show, RB.crusher.ui.action)
+
+
+      var funnelRow = build_header({"id":"funnel_dashboard","name":"Funnel Dashboard"})
       var subscription = crusher.ui.home.dashboard.bind(false,funnelRow)
 
       var main_wrapper = d3_updateable(funnelRow,".main-wrapper","div")
@@ -224,14 +229,13 @@ RB.crusher.controller = (function(controller) {
         .style("padding","0px")
 
 
-      //crusher.subscribe.add_subscriber(["dashboardStats"],subscription,"dashboard",true,true)
-
-      // this will be spec'd out for the actual funnel display
     },
     "funnel/existing": function(funnel) {
 
       var events = ["actions","funnels","campaigns","lookalikes","lookalikeCampaigns"]
       RB.component.export(RB.crusher.ui.funnel.show, RB.crusher.ui.funnel)
+      RB.component.export(RB.crusher.ui.action.show, RB.crusher.ui.action)
+
 
       crusher.ui.funnel.buildBase() 
 
@@ -240,6 +244,8 @@ RB.crusher.controller = (function(controller) {
     },
     "funnel/new": function(){
       RB.component.export(RB.crusher.ui.funnel.show, RB.crusher.ui.funnel)
+      RB.component.export(RB.crusher.ui.action.show, RB.crusher.ui.action)
+
 
       crusher.ui.funnel.buildBase()
       var target = d3.selectAll(".funnel-view-wrapper").selectAll(".funnel-wrapper")
