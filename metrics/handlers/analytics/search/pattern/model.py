@@ -1,9 +1,5 @@
 import pandas
-import sklearn.cluster
 import logging
-
-from gensim.models import Word2Vec
-
 
 def build_sentences(df,group,column):
     _df = df.reset_index()
@@ -41,6 +37,9 @@ def summarize_model(prepped,cluster_domains):
     return cluster_user_stats
 
 def cluster(_domains, prepped):
+
+    import sklearn.cluster
+    from gensim.models import Word2Vec
 
     logging.info("Word2Vec model started")
 
