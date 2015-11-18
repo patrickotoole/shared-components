@@ -450,7 +450,7 @@ RB.crusher.ui.action = (function(action) {
 
     if (newPatterns.length) action.pattern.add.bind(newPatterns)(false)
     
-    if (!patterns.datum().rows.length) action.pattern.add.bind(newPatterns)(true)
+    if (patterns.length && !patterns.datum().rows.length) action.pattern.add.bind(newPatterns)(true)
 
 
     newEdit.append("div")
