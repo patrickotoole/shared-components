@@ -385,20 +385,22 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
             action.param_list = []
 
-            action.urls.map(function(x){
-              var split = x.url.split("?")
-              if (split.length > 1) {
-                split[1].split("&").map(function(y){ 
-                  var splitted = y.split("=")
-                  var name = splitted[0]
-                  var value = splitted.slice(1,splitted.length).join("=")
+            if (action.urls) {
+              action.urls.map(function(x){
+                var split = x.url.split("?")
+                if (split.length > 1) {
+                  split[1].split("&").map(function(y){ 
+                    var splitted = y.split("=")
+                    var name = splitted[0]
+                    var value = splitted.slice(1,splitted.length).join("=")
 
-                  
-                  action.param_list.push({"name":name,"value":value,"count":x.count})
+                    
+                    action.param_list.push({"name":name,"value":value,"count":x.count})
 
-                })
-              }
-            })
+                  })
+                }
+              })
+            }
             
             console.log("PARAMETERS")
 

@@ -28,9 +28,20 @@ RB.crusher.controller.action = (function(action) {
         .send(
           "DELETE",
           function(err, rawData){
+            RB.component.export(RB.crusher.ui.action.show, RB.crusher.ui.action)
+
             crusher.cache.actionData = crusher.cache.actionData.filter(function(x){
               return x.action_id != action.action_id
             })
+            RB.routes.navigation.back()
+            setTimeout(function(){
+              RB.routes.navigation.forward({
+                "name": "View Existing Actions",
+                "push_state":"/crusher/action/existing",
+                "values_key":"action_name"
+              })
+            },1)
+
           }
         ); 
     },

@@ -16,6 +16,7 @@ RB.crusher.ui.action.init = (function(init,action,crusher) {
     target.datum(action)
 
     crusher.ui.action.edit(target,RB.crusher.controller.action.save)
+    crusher.ui.action.show(target)
     crusher.cache.actionData.map(function(x) { x.values = crusher.cache.urls_wo_qs })
     crusher.ui.action.preview(target)
     
@@ -105,7 +106,7 @@ RB.crusher.ui.action.show = (function(show,action,crusher) {
     }
     
     crusher.ui.action.view(target)
-    crusher.ui.action.show(target)
+    
     crusher.ui.action.show_timeseries(target)
     
 
