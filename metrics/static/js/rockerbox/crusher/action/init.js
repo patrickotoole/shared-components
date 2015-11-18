@@ -12,6 +12,7 @@ RB.crusher.ui.action.init = (function(init,action,crusher) {
 
   init.subscription = function(action) {
 
+
     var target = d3.selectAll(".action-view-wrapper")
     target.datum(action)
 

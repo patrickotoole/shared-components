@@ -496,7 +496,7 @@ polyline{
     console.log("// start things") 
     RB.init()  
 
-    var page = window.location.pathname//.replace("/crusher/","")
+    var page = window.location.pathname + window.location.search//.replace("/crusher/","")
     
     RB.menu.render(d3.select("body"))
     RB.crusher.controller.init(page)

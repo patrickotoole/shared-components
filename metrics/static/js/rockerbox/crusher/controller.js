@@ -10,10 +10,25 @@ RB.crusher.controller = (function(controller) {
 
   controller.init = function(type,data) {
 
-    var id = data ? data.funnel_id : false
+    var id = type.split("id=")[1]
+    if (id && id.length) {
+      id = decodeURI(id)
+    }
+
+    var type = type.split("?")[0]
     var state = controller.states[type] || controller.states["/crusher/home"]
 
-    RB.routes.navigation.forward(state)
+    state = JSON.parse(JSON.stringify(state))
+    if (id) state.skipRender = true
+    
+    var callback = id ? function(data,x){
+      var xx = data.filter(function(y){return y[x.values_key] == id })
+
+      RB.routes.navigation.forward(xx[0])
+    } : false
+
+
+    RB.routes.navigation.forward(state,callback)
     
     // INIT RESIZE CALLBACK
     d3.select(window).on("resize",function(){
@@ -376,8 +391,8 @@ RB.crusher.controller = (function(controller) {
       "name":"Create Action",
       "push_state": "/crusher/action/recommended",
       "class": "glyphicon glyphicon-plus",
-      "values_key": "action_name"
-
+      "values_key": "action_name",
+      "hide_href": true
     },{
       "name":"Funnels (alpha)",
       "push_state": "/crusher/funnel",
@@ -484,9 +499,10 @@ RB.crusher.controller = (function(controller) {
           "push_state":"/crusher/action/recommended",
           "values_key": "action_name"
         },{
-          "name": "Recommmended Actions",
+          "name": "Recommended Actions",
           "push_state":"/crusher/action/recommended",
-          "values_key": "action_name"
+          "values_key": "action_name",
+          "hide_href": true
         },{
           "name": "View Existing Actions",
           "push_state":"/crusher/action/existing",
