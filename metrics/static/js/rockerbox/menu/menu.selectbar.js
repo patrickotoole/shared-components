@@ -35,6 +35,9 @@ RB.menu.selectbar = (function(selectbar) {
           function(x){return x.name + x.push_state}
         )
         .classed("item item-" + (target.datum().values_key || target.datum().name.toLowerCase()),true)
+        .attr("href",function(x){
+          return target.datum().values_key ? window.location.pathname + "?id=" + x[target.datum().values_key] : undefined 
+        })
         .text(function(x){
           return x.name
         })
