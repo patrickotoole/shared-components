@@ -10,10 +10,21 @@ RB.crusher.controller = (function(controller) {
 
   controller.init = function(type,data) {
 
-    var id = data ? data.funnel_id : false
+    var id = type.split("id=")[1]
+    var type = type.split("?")[0]
     var state = controller.states[type] || controller.states["/crusher/home"]
 
-    RB.routes.navigation.forward(state)
+    state = JSON.parse(JSON.stringify(state))
+    if (id) state.skipRender = true
+    
+    var callback = id ? function(data,x){
+      var xx = data.filter(function(y){return y[x.values_key] == id })
+
+      RB.routes.navigation.forward(xx[0])
+    } : false
+
+
+    RB.routes.navigation.forward(state,callback)
     
     // INIT RESIZE CALLBACK
     d3.select(window).on("resize",function(){
