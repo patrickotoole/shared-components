@@ -391,8 +391,8 @@ RB.crusher.controller = (function(controller) {
       "name":"Create Action",
       "push_state": "/crusher/action/recommended",
       "class": "glyphicon glyphicon-plus",
-      "values_key": "action_name"
-
+      "values_key": "action_name",
+      "hide_href": true
     },{
       "name":"Funnels (alpha)",
       "push_state": "/crusher/funnel",
@@ -499,9 +499,10 @@ RB.crusher.controller = (function(controller) {
           "push_state":"/crusher/action/recommended",
           "values_key": "action_name"
         },{
-          "name": "Recommmended Actions",
+          "name": "Recommended Actions",
           "push_state":"/crusher/action/recommended",
-          "values_key": "action_name"
+          "values_key": "action_name",
+          "hide_href": true
         },{
           "name": "View Existing Actions",
           "push_state":"/crusher/action/existing",
