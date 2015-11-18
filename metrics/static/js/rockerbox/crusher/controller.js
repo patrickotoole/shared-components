@@ -11,7 +11,9 @@ RB.crusher.controller = (function(controller) {
   controller.init = function(type,data) {
 
     var id = type.split("id=")[1]
-    if (id) id = decodeURI(id)
+    if (id && id.length) {
+      id = decodeURI(id)
+    }
 
     var type = type.split("?")[0]
     var state = controller.states[type] || controller.states["/crusher/home"]

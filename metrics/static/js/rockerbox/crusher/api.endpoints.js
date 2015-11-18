@@ -126,7 +126,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
         }
       })
   endpoints.tf_idf_funnel = api.helpers.genericQueuedAPIWithData(function(data,cb,deferred_cb) {
-        var domains = data.funnel_domains.map(function(x){return x.domain})
+        var domains = data.funnel_domains ? data.funnel_domains.map(function(x){return x.domain}) : []
         if (domains) {
           d3.xhr("/crusher/domain/idf")
             .post(JSON.stringify({"domains":domains}), function(err,dd){
@@ -248,10 +248,10 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
         if (!cache.funnelData) {
           d3.json(api.URL.funnelURL,function(dd){
             cache.funnelData = dd.response
-            deferred_cb(null,cb)
+            deferred_cb(null,cb.bind(false,cache.funnelData))
           })
         } else {
-          deferred_cb(null,cb)
+          deferred_cb(null,cb.bind(false,cache.funnelData))
         }
       })
   endpoints.lookalikes = api.helpers.genericQueuedAPI(function(cb,deferred_cb) {

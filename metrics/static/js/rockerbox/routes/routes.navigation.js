@@ -87,7 +87,7 @@ RB.routes.navigation = (function(navigation) {
     var prev_list = __back__.filter(function(x){return x.push_state}),
       prev = prev_list[prev_list.length -1]
 
-    if ((shouldPush == false) && (x[__back__[0].values_key]) && !from_back) {
+    if ((shouldPush == false) && (x[prev.values_key]) && !from_back) {
       var stateAction = "pushState"
       var state = { "name": x["name"] }
       
@@ -116,7 +116,8 @@ RB.routes.navigation = (function(navigation) {
           if (transform) transform(x)
           if (now == current) navigation.subscribed(x) 
 
-          if (callback) {
+          console.log(typeof(callback))
+          if (callback && (typeof(callback) == "function")) {
             setTimeout(callback.bind(this,data,x),1)
           }
         },"menu",true,true)
