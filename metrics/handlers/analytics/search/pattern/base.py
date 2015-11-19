@@ -50,9 +50,9 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
         dom = yield dl
 
         _domains = dom[0][1]
-        prepped = _domains.unstack(1).fillna(0)
 
         if len(_domains) > 100:
+            prepped = _domains.unstack(1).fillna(0)
             response['clusters'] = model.cluster(_domains, prepped)
         
         self.write_json(response)
