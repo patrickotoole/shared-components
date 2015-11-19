@@ -112,6 +112,7 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
 
         try:
             stats_df = self.get_stats(*args)
+            assert(stats_df.applymap(lambda x: x > 0).sum().sum() > 3)
 
             self.response_summary(response,stats_df)
             if timeseries: 
@@ -141,10 +142,10 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
 
         except Exception as e:
 
+
             frames = yield self.build_deferred_list(pattern_terms, PARAMS, advertiser, num_days, numdays=num_days)
             dfs = []
 
-            
             for terms, result in zip(pattern_terms,frames):
                 df = (yield result)[1]
                 if len(df) > 0: 
