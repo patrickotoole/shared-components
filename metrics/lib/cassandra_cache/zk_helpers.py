@@ -1,5 +1,6 @@
 import datetime 
 import pandas
+import time
 
 class ZKCacheHelpers(object):
     """
@@ -23,6 +24,8 @@ class ZKCacheHelpers(object):
         self.advertiser = advertiser
         self.pattern = pattern
         self.identifier = identifier
+
+        self._start = time.time()
 
     def add_work(self,work):
         self.zk.ensure_path(self._queue)
@@ -51,6 +54,7 @@ class ZKCacheHelpers(object):
 
     def __exit__(self, exc_type, exc_value, traceback):
 
+        logging.info("Time: " % self._start - time.time() )
         # destroy the active path reference
         self.zk.delete(self.active_path + "/" + self.identifier,recursive=True)
         if len(self.zk.get_children(self.active_path)) == 0:
@@ -60,7 +64,6 @@ class ZKCacheHelpers(object):
         self.zk.ensure_path(self._complete_path)
         self.zk.ensure_path(self.complete_path)
         self.zk.ensure_path(self.complete_path + "/" + self.identifier)
-
 
 
     def stats(self):
