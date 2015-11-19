@@ -58,7 +58,7 @@ RB.crusher.ui.action = (function(action) {
       name: "Export",
       click: function(x) {
         var csvContent = "data:text/csv;charset=utf-8,";
-        var data = x[0].sort(function(a,b) {return a.index - b.index})
+        var data = x.domains.sort(function(a,b) {return a.index - b.index})
         csvContent += Object.keys(data[0]) + "\n"
 
         data.map(function(infoArray, index){
