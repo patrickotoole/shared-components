@@ -95,7 +95,7 @@ RB.crusher.ui.action.show = (function(show,action,crusher) {
 
   show.NAME = "action.show"
   show.SUBSCRIBE = ["action_initialized","actionTimeseries"]
-  show.PUBLISH = ["tf_idf_action","pattern_status"]
+  show.PUBLISH = ["tf_idf_action"]//,"pattern_status"]
   show.EVENTS = []
 
   show.subscription = function(data,ts) {
