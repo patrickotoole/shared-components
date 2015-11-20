@@ -80,13 +80,19 @@ def run_backfill(advertiser,pattern,cache_date,identifier="test",connectors=Fals
         
         INSERT_UDF = "insert into full_replication.function_patterns (function,pattern) VALUES ('%s','%s')"
         SELECT_UDF = "select * from full_replication.function_patterns where function = '%s' "
-        cassandra.execute(INSERT_UDF % (udf,pattern))
-        cassandra.select_dataframe(SELECT_UDF % (udf_name))
+        cassandra.execute(INSERT_UDF % (state,pattern))
+        cassandra.select_dataframe(SELECT_UDF % (state))
 
         with cache:
     
             _, _, raw_data, uid_values, url_values = get_backfill(cassandra,advertiser,pattern,cache_date,udf)
-    
+
+            logging.info("Raw data for %s %s: %s" % (advertiser,pattern,len(raw_data)))
+            logging.info("UID data for %s %s: %s" % (advertiser,pattern,len(uid_values)))
+            logging.info("URL data for %s %s: %s" % (advertiser,pattern,len(url_values)))
+
+
+
             pattern_cache = PatternCache(cassandra,advertiser,pattern,raw_data,uid_values,url_values)
     
             # cache raw
