@@ -54,7 +54,6 @@ class ZKCacheHelpers(object):
 
     def __exit__(self, exc_type, exc_value, traceback):
 
-        logging.info("Time: " % self._start - time.time() )
         # destroy the active path reference
         self.zk.delete(self.active_path + "/" + self.identifier,recursive=True)
         if len(self.zk.get_children(self.active_path)) == 0:
