@@ -8,13 +8,13 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 		/* Progress Indicator */
 		progress_indicator = {
 			steps: [{
-					title: 'Pixel Implementation'
+					title: '1) Pixel Implementation'
 				},
 				{
-					title: 'Create Action'
+					title: '2) Create Action'
 				},
 				{
-					title: 'Finish'
+					title: '3) Finish'
 			}]
 		}
 
@@ -60,12 +60,12 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 		gettingstarted.progress_indicator(row, 1);
 		
 		var step_wrapper = d3_updateable(row, '.step-wrapper', 'section')
-			.classed('ct-chart col-md-6 gettingstarted-step step-wrapper', true)
+			.classed('ct-chart col-md-9 gettingstarted-step step-wrapper', true)
 
 		var step = d3_updateable(step_wrapper, '.onboarding-step', 'div')
 			.classed('chart-description pixel-code onboarding-step', true)
 			.style('padding-bottom', '15px')
-			.text('Paste the following snippet before the closing <head>-tag on every page.')
+			.html('<h3>Installation instructions</h3><p>Paste the following snippet before the closing <head> tag on every page.</p><p>Ensure that the pixel above is firing on ​<strong>all</strong>​ pages on your site. This includes conversion pages.</p>')
 
 		// Fetch and display pixels
 		crusher.subscribe.add_subscriber(["advertiser"], function(advertiser_data) {
@@ -117,7 +117,7 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 						if(validated) {
 							actions.continue();
 						} else {
-							url_check_button.html("Continue to creating action")
+							url_check_button.html("Verifiy Pixel Has Been Placed")
 							alert('Pixel has not been implemented yet');
 						}
 					},"gettingstarted",true,false)
@@ -170,7 +170,7 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 
 			var code2_title = d3_updateable(code2_wrapper, '.conversion-pixel-title','p')
 				.classed('conversion-pixel-title', true)
-				.text('Paste the following snippet before the closing <head>-tag on just the conversion page.')
+				.text('Paste the following snippet before the closing <head> tag on just the conversion page.')
 
 			var code2 = d3_updateable(code2_wrapper, '.conversion-pixel','pre')
 				.html('<code>' + pixel_code.conversion + '</code>')
@@ -190,7 +190,7 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 					.classed("btn btn-default btn-sm url-check-button", true)
 					.style("margin-right", "30px")
 					.style("margin-top", "10px")
-					.html("Continue to creating action")
+					.html("Verifiy Pixel Has Been Placed")
 					.on("click",function(x) {
 						url_check_button.html("Validating...");
 
@@ -205,7 +205,7 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 		gettingstarted.progress_indicator(row, 2);
 
 		var step_wrapper = d3_updateable(row, '.step-wrapper', 'section')
-			.classed('ct-chart col-md-6 gettingstarted-step step-wrapper', true)
+			.classed('ct-chart col-md-9 gettingstarted-step step-wrapper', true)
 
 		var step = d3_updateable(step_wrapper, '.onboarding-step', 'div')
 			.classed('chart-description pixel-code onboarding-step', true)
@@ -267,7 +267,7 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 		];
 
 		var step_wrapper = d3_updateable(row, '.step-wrapper', 'section')
-			.classed('ct-chart col-md-6 gettingstarted-step step-wrapper', true)
+			.classed('ct-chart col-md-9 gettingstarted-step step-wrapper', true)
 
 		var step = d3_updateable(step_wrapper, '.onboarding-step', 'div')
 			.classed('chart-description pixel-code onboarding-step', true)
