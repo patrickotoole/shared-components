@@ -375,97 +375,331 @@ RB.crusher.ui.action = (function(action) {
 
   
 
-  action.edit = function(edit,onSave) {
-    var edits = edit.selectAll(".action")
+  action.edit = function(wrapper,onSave) {
+    var client_sld;
+
+    crusher.subscribe.add_subscriber(["advertiser"], function(advertiser_data) {
+       client_sld = advertiser_data.client_sld;
+      var client_sld_wrappers = wrapper.selectAll(".client_sld")
+        .text(advertiser_data.client_sld)
+    }, 'advertiser-domain', true, true);
+
+
+
+    var search = {
+      results: {
+        'contains_keyword': [],
+        'matches_keyword': [],
+        'starts_with_keyword': [],
+        'ends_with_keyword': []
+      },
+      query: '',
+      filters: [
+        {
+          id: 1,
+          title: "Contains Keyword",
+          url: "/*<span class=\"search_query\"></span>*",
+          visits: 590,
+          active: true
+        },
+        {
+          id: 2,
+          title: "Matches Keyword",
+          url: "/<span class=\"search_query\"></span>",
+          visits: 315,
+          active: false
+        },
+        {
+          id: 3,
+          title: "Starts With Keyword",
+          url: "/<span class=\"search_query\"></span>*",
+          visits: 420,
+          active: false
+        },
+        {
+          id: 4,
+          title: "Ends With Keyword",
+          url: "/*<span class=\"search_query\"></span>",
+          visits: 126,
+          active: false
+        }
+      ],
+      filter: 1,
+
+      buildResults: function() {
+        // todo : d3-ifiy this
+        $('.matched-domain').remove();
+
+        switch(search.filter) {
+          case 1:
+            var domains = search.results.contains_keyword;
+            break;
+          case 2:
+            var domains = search.results.matches_keyword;
+            break;
+          case 3:
+            var domains = search.results.starts_with_keyword;
+            break;
+          case 4:
+            var domains = search.results.ends_with_keyword;
+            break;
+        }
+        d3_splat(wrapper.selectAll(".matched_domains"), '.matched-domain', 'li', domains, function(x, i) {
+          return x.url;
+        })
+          .html(function(x) {
+            return '<span>' + x.url + '</span>';
+            // return '<span class="icon glyphicon glyphicon-' + x.icon + '" style="font-size: 32px;"></span>' +
+            //   '<span style="display: block; margin-top: 10px;">' + x.title + '</span>';
+          })
+          .classed('matched-domain', true)
+      },
+
+      buildFilters: function() {
+        $(".filters li").remove();
+
+        search.filters[0].visits = search.results.contains_keyword.length;
+        search.filters[1].visits = search.results.matches_keyword.length;
+        search.filters[2].visits = search.results.starts_with_keyword.length;
+        search.filters[3].visits = search.results.ends_with_keyword.length;
+
+        filter_options = d3_splat(filters, ".filter-option", "li", search.filters, function(x, i) {
+          return x.title;
+        })
+          .on("click", function(filter) {
+            search.switchFilter(filter.id);
+          })
+          .classed("active", function(x) {
+            return x.active;
+          })
+          .html(function(x) {
+            return "<h3>" + x.title + "</h3>" +
+            "<p><span class=\"client_sld\"></span>" + x.url + "</p>" +
+            "<p>" + x.visits + " visits</p>";
+          });
+
+        var search_query_wrappers = wrapper.selectAll(".search_query")
+          .text(search.query)
+      },
+
+      switchFilter: function(filter) {
+        search.filter = filter;
+
+        search.buildFilters();
+
+        // TODO: D3-ify this
+        $(".filters li").removeClass("active");
+        $(".filters li:nth-child(" + filter + ")").addClass("active");
+
+        search.buildResults();
+      },
+
+      perform: function(query) {
+        if(query.length) {
+          wrapper.selectAll(".filters_wrapper, .matched_domains_wrapper")
+            .style("display", "block")
+
+          d3.json("/crusher/search/urls?search=" + query + "&format=json&logic=and&timeout=4", function(error, response) {
+            search.results = {
+              'contains_keyword': [],
+              'matches_keyword': [],
+              'starts_with_keyword': [],
+              'ends_with_keyword': []
+            }
+
+            if(response.results.length) {
+              response.results.forEach(function(result) {
+                var domain_result = {
+                  url: result.url,
+                  visits: result.count,
+                  importance: (result.count/564)
+                };
+
+                // Refresh matched domains
+                var search_query_wrappers = wrapper.selectAll(".search_query")
+                  .text(query)
+
+
+                // Get domain and remove slashes from query if necessary
+                var test_domain = result.url.split(client_sld + "/")[1];
+                if(test_domain[0] == '/') {
+                  test_domain = test_domain.substring(1);
+                }
+                if(test_domain[test_domain.length - 1] == '/') {
+                  test_domain = test_domain.slice(0, -1);
+                }
+
+                // Get query and remove slashes from query if necessary
+                if(query[0] == '/') {
+                  var test_query = query.substring(1);
+                } else {
+                  var test_query = query;
+                }
+                if(query[query.length - 1] == '/') {
+                  test_query = test_query.slice(0, -1);
+                }
+
+
+                // Add to array of all URL's (contains keyword)
+                search.results.contains_keyword.push(domain_result);
+
+
+                // Check for urls exactly matching keyword
+                if(test_query == test_domain) {
+                  search.results.matches_keyword.push(domain_result);
+                }
+
+
+                // Check for urls starting with keyword
+                if(test_domain.indexOf(test_query) == 0) {
+                  search.results.starts_with_keyword.push(domain_result);
+                }
+
+
+                // Check for urls ending with keyword
+                if(typeof test_domain[test_domain.indexOf(test_query) + test_query.length] === typeof undefined) {
+                  search.results.ends_with_keyword.push(domain_result);
+                }
+              });
+
+              // Modify counts
+
+            } else {
+              console.log('No search results');
+            }
+
+
+            if(error) {
+              alert("Something went wrong, please try again");
+            } else {
+              search.buildFilters();
+              search.buildResults();
+            }
+          });
+        } else {
+          wrapper.selectAll(".filters_wrapper, .matched_domains_wrapper")
+            .style("display", "none")
+        }
+      }
+    }
+
+
+
+    /*
+      Header
+    */
+
+    var edits = wrapper.selectAll(".action")
       .data(function(x){return [x]},function(x){return x.action_id + x.action_name})
 
-    var newEdit = edits.enter()
+    var editWrapper = edits.enter()
       .append("div")
       .classed("action",true)
       .classed("hidden",function(x){return x.action_id})
+      .style("min-height", "100%")
 
     edits.exit()
       .remove()
 
-    newEdit.append("h5") 
+    editWrapper.append("h5") 
       .text(function(x){
         return x.action_id ? "Edit an action" : "Create an action"
       })
       .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-30px;margin-right:-30px")
       .classed("heading",true)
 
-    newEdit.append("div")
-      .classed("description",true)
-      .text("Enter a pattern below to create an action")
 
-    var group = newEdit.append("div")
-      .classed("hidden input-group input-group-sm",true)
+    /*
+      Search
+    */
 
-    group.append("span")
-      .classed("input-group-addon",true)
-      .text("Action name")
+    var search_wrapper = d3_updateable(editWrapper,".search_wrapper","section")
+      .classed("search_wrapper", true)
 
-    group
-      .append("input")
-      .classed("form-control",true)
-      .attr("placeholder","e.g., Landing pages")
-      .attr("value",function(x){return x.action_name})
+    var search_interval;
 
-    var operatorGroup = newEdit.append("div")
-      .classed("hidden input-group input-group-sm",true)
-    
-    operatorGroup.append("span")
-      .classed("input-group-addon",true)
-      .text("Boolean operator")
-       
-    var operator = operatorGroup
-      .append("select")
-      .classed("operator form-control",true)
+    var search_input = d3_updateable(search_wrapper,".search_input","input")
+      .classed("search_input", true)
+      .attr("placeholder", "Type in an action or select a recommended action from the sidebar...")
+      .attr("type", "text")
+      .on('keyup', function(e) {
+        search.query = this.value;
+        window.clearInterval(search_interval);
 
-    var options = operator.selectAll("option")
-      .data(["or"])
-      .enter()
-        .append("option")
-
-    options 
-      .text(String)
-      .attr("selected",function(x){
-        return "or"//x.operator
+        search_interval = setInterval(function() {
+          window.clearInterval(search_interval);
+          search.perform(search.query);
+          // action.search(editWrapper, search.query);
+        }, 500);
       })
 
-    var patterns = newEdit.selectAll(".action-patterns")
-      .data(function(x){
-        if (x.url_pattern) {
-          x.rows = x.url_pattern.map(function(y){
-            return {"url_pattern":y,"values":x.values}
-          })
+    var create_action_button = d3_updateable(search_wrapper,".create_action","div")
+      .classed("create_action btn btn-sm btn-success", true)
+      .html("<span class=\"icon glyphicon glyphicon-plus\" style=\"padding-right: 21px;\"></span> Create an Action")
+      .on("click", function(e) {
+        var data = {
+          'action_id': undefined,
+          'action_name': search.query,
+          'action_string': search.query,
+          'domains': undefined,
+          'name': search.query,
+          'operator': 'or',
+          'param_list': [],
+          'rows': [{
+            'url_pattern': search.query,
+            'values': undefined
+          }],
+          'url_pattern': [
+            search.query
+          ],
+          'urls': undefined,
+          'values': undefined,
+          'visits_data': []
         }
-        return [x]
+        RB.crusher.controller.action.save(data, false);
+
+        window.location.href = '/crusher/action/existing?id=' + search.query;
       })
 
-    var newPatterns = patterns
-      .enter()
-        .append("div")
-        .classed("action-patterns",true)
 
-    if (newPatterns.length) action.pattern.add.bind(newPatterns)(false)
-    
-    if (!patterns.datum().rows.length) action.pattern.add.bind(newPatterns)(true)
+    /*
+      Filters
+    */
+
+    var filters_wrapper = d3_updateable(editWrapper, ".filters_wrapper", "section")
+      .classed("filters_wrapper", true)
+      .style("display", "none")
+
+    var filters = d3_updateable(filters_wrapper, ".filters", "ol")
+      .classed("filters", true)
+
+    var filter_options = d3_splat(filters, ".filter-option", "li", search.filters, function(x, i) {
+      return x.title;
+    })
+      .on("click", function(filter) {
+        search.switchFilter(filter.id);
+      })
+      .classed("active", function(x) {
+        return x.active;
+      })
+      .html(function(x) {
+        return "<h3>" + x.title + "</h3>" +
+        "<p><span class=\"client_sld\"></span>" + x.url + "</p>" +
+        "<p>" + x.visits + " visits</p>";
+      });
 
 
-    newEdit.append("div")
-      .style("padding","10px")
-      .style("padding-top","0px") 
-      .append("a")
-      .classed("bottom btn btn-primary btn-sm pull-right",true)
-      .text("Add Pattern")
-      .on("click", action.pattern.add.bind(newPatterns))
-      .classed("hidden",true)
+    // Matched Domains
+    var matched_domains_wrapper = d3_updateable(editWrapper, ".matched_domains_wrapper", "section")
+      .classed("matched_domains_wrapper ct-chart", true)
+      .style("display", "none")
+    var matched_domains_title = d3_updateable(matched_domains_wrapper, ".matched_domains_title", "div")
+      .classed("matched_domains_title chart-title", true)
+      .text("This action will include visits to these URLs:")
+      // .text("Matched URLs (" + domains_contains_keyword.length + ")")
 
-    newEdit.append("a")
-      .text(function(x) {return x.action_id ? "Update Action" : "Define Action"})
-      .classed("save btn btn-success btn-sm",true)
-      .on("click", action.save.bind(newEdit,onSave))
+    var matched_domains = d3_updateable(matched_domains_wrapper, ".matched_domains", "ol")
+      .classed("matched_domains", true)
   }
 
   action.show = function(target,onSave,expandTarget) {
