@@ -2,7 +2,7 @@ import tornado.web
 import pandas
 import logging
 
-from handlers.analytics.search.multi_search import MultiSearchHandler
+from handlers.analytics.search.multi.multi_search import MultiSearchHandler
 from twisted.internet import defer
 from lib.helpers import decorators
 from lib.helpers import *

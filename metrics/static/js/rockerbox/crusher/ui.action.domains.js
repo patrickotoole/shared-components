@@ -7,6 +7,7 @@ RB.crusher.ui.action = (function(action) {
   var crusher = RB.crusher
 
   action.show_domains = function(wrapper) {
+
     var newTs = wrapper.selectAll(".ts")
 
     var data = wrapper.datum()
@@ -39,7 +40,7 @@ RB.crusher.ui.action = (function(action) {
     action.domain_table(targetRow, domainData)
 
     
-    action.show_other(wrapper,newTs,categoryData,urlData)
+    //action.show_other(wrapper,newTs,categoryData,urlData)
 
   }
 
@@ -57,7 +58,7 @@ RB.crusher.ui.action = (function(action) {
       name: "Export",
       click: function(x) {
         var csvContent = "data:text/csv;charset=utf-8,";
-        var data = x[0].sort(function(a,b) {return a.index - b.index})
+        var data = x.domains.sort(function(a,b) {return a.index - b.index})
         csvContent += Object.keys(data[0]) + "\n"
 
         data.map(function(infoArray, index){

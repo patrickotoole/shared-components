@@ -57,7 +57,7 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
           "class_name": "gear glyphicon-cog glyphicon",
           "name": "",
           "click": function(x){
-            RB.routes.navigation.forward(x)
+            RB.routes.navigation.forward(x.__proto__)
             d3.select(".edit").on("click")()
           }
         }
@@ -96,7 +96,7 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
           return x.views ? "1px solid #ccc" : undefined
         })
         .on("click",function(x){
-          RB.routes.navigation.forward(x)
+          RB.routes.navigation.forward(x.__proto__)
         })
         .html(function(x){
   

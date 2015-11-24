@@ -116,7 +116,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
                 x.parent_category_name = idf_dict.parent_category_name || "NA"
                 x.idf = idf_dict.idf || ( x.category_name == "NA" ? 3 : 12)
 
-                x.weighted =  x.domain == "NA" ? 0 : Math.exp(x.idf) * Math.log(x.count)
+                x.weighted =  x.domain == "NA" ? 0 : Math.exp(x.idf) * Math.log(Math.sqrt(x.count))
 
               })
               deferred_cb(null,cb.bind(false,data))
@@ -126,7 +126,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
         }
       })
   endpoints.tf_idf_funnel = api.helpers.genericQueuedAPIWithData(function(data,cb,deferred_cb) {
-        var domains = data.funnel_domains.map(function(x){return x.domain})
+        var domains = data.funnel_domains ? data.funnel_domains.map(function(x){return x.domain}) : []
         if (domains) {
           d3.xhr("/crusher/domain/idf")
             .post(JSON.stringify({"domains":domains}), function(err,dd){
@@ -248,10 +248,10 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
         if (!cache.funnelData) {
           d3.json(api.URL.funnelURL,function(dd){
             cache.funnelData = dd.response
-            deferred_cb(null,cb)
+            deferred_cb(null,cb.bind(false,cache.funnelData))
           })
         } else {
-          deferred_cb(null,cb)
+          deferred_cb(null,cb.bind(false,cache.funnelData))
         }
       })
   endpoints.lookalikes = api.helpers.genericQueuedAPI(function(cb,deferred_cb) {
@@ -369,7 +369,9 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
   endpoints.actionTimeseries = api.helpers.genericQueuedAPIWithData(function(action,cb,deferred_cb) {
 
-        if (action.visits_data) {
+        var days = parseInt(action.action_string.split("num_days=")[1] || 3)
+
+        if (action.visits_data && (action.visits_data.length >= days)) {
           deferred_cb(null,cb.bind(false,action))
           return 
         }
@@ -383,20 +385,22 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
             action.param_list = []
 
-            action.urls.map(function(x){
-              var split = x.url.split("?")
-              if (split.length > 1) {
-                split[1].split("&").map(function(y){ 
-                  var splitted = y.split("=")
-                  var name = splitted[0]
-                  var value = splitted.slice(1,splitted.length).join("=")
+            if (action.urls) {
+              action.urls.map(function(x){
+                var split = x.url.split("?")
+                if (split.length > 1) {
+                  split[1].split("&").map(function(y){ 
+                    var splitted = y.split("=")
+                    var name = splitted[0]
+                    var value = splitted.slice(1,splitted.length).join("=")
 
-                  
-                  action.param_list.push({"name":name,"value":value,"count":x.count})
+                    
+                    action.param_list.push({"name":name,"value":value,"count":x.count})
 
-                })
-              }
-            })
+                  })
+                }
+              })
+            }
             
             console.log("PARAMETERS")
 

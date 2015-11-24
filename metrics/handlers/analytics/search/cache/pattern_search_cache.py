@@ -1,5 +1,7 @@
 from lib.cassandra_cache.helpers import *
 from lib.cassandra_helpers.helpers import FutureHelpers
+from lib.helpers import *
+
 
 def QueryU2(query):
     # Decorator for running a query with standard partitioning and u2 parameter strategy
@@ -119,6 +121,8 @@ class PatternSearchCache(object):
         data = self.get_from_cache_sorted(query,advertiser, pattern,dates)
         return data
 
+
+    @decorators.deferred
     @formattable
     @Query("SELECT domain, date, count FROM rockerbox.pattern_occurrence_domains_counter ")
     def get_domains_from_cache(self,advertiser,pattern,dates = [], **kwargs):
@@ -127,10 +131,10 @@ class PatternSearchCache(object):
         return data
 
     @formattable
-    @Query("SELECT * FROM rockerbox.pattern_occurrence_users_u2 ")
+    @QueryU2("SELECT * FROM rockerbox.pattern_occurrence_users_u2 ")
     def get_uids_from_cache(self,advertiser,pattern,dates = [], **kwargs):
         query = kwargs.get("query")
-        data = self.get_from_cache(query,advertiser, pattern,dates)
+        data = self.get_from_u2_cache(query,advertiser, pattern,dates)
         return data
 
     @formattable

@@ -3,9 +3,9 @@ import pandas
 import logging
 import time
 
-from search_base import SearchBase
+from ..search_base import SearchBase
 from multi_search_helpers import MultiSearchHelpers
-from ..visit_domains import VisitDomainBase
+from ...visit_domains import VisitDomainBase
 from twisted.internet import defer
 from lib.helpers import decorators
 from lib.helpers import *

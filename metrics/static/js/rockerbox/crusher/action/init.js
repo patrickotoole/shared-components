@@ -12,10 +12,12 @@ RB.crusher.ui.action.init = (function(init,action,crusher) {
 
   init.subscription = function(action) {
 
+
     var target = d3.selectAll(".action-view-wrapper")
     target.datum(action)
 
     crusher.ui.action.edit(target,RB.crusher.controller.action.save)
+    crusher.ui.action.show(target)
     crusher.cache.actionData.map(function(x) { x.values = crusher.cache.urls_wo_qs })
     crusher.ui.action.preview(target)
     
@@ -93,7 +95,7 @@ RB.crusher.ui.action.show = (function(show,action,crusher) {
 
   show.NAME = "action.show"
   show.SUBSCRIBE = ["action_initialized","actionTimeseries"]
-  show.PUBLISH = ["tf_idf_action","pattern_status"]
+  show.PUBLISH = ["tf_idf_action"]//,"pattern_status"]
   show.EVENTS = []
 
   show.subscription = function(data,ts) {
@@ -105,7 +107,7 @@ RB.crusher.ui.action.show = (function(show,action,crusher) {
     }
     
     crusher.ui.action.view(target)
-    crusher.ui.action.show(target)
+    
     crusher.ui.action.show_timeseries(target)
     
 
