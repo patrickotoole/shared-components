@@ -104,7 +104,10 @@ def run_backfill(advertiser,pattern,cache_date,identifier="test",connectors=Fals
             pattern_cache.cache_views()
             pattern_cache.cache_visits()
             pattern_cache.cache_uniques()
+
+            # cache hll
             pattern_cache.cache_domains()
+            pattern_cache.cache_hll_domains(cache_date)
             
 
             elapsed = int(time.time() - start)

@@ -82,6 +82,66 @@ class CacheBase(PreparedCassandraRangeQuery):
             random.shuffle(inserts)
             FutureHelpers.future_queue(inserts,bound_insert,cb,self.num_futures)
 
+    def get_domain_hll_from_uids(self,uid_inserts,select):
+        import pandas
+        import hyperloglog
+
+        def build_hll(uids):
+            hll = hyperloglog.HyperLogLog(0.04)
+            for uid in uids:
+                hll.add(uid)
+            return bytearray(hll.M)
+
+        statement = self.cassandra.prepare(select)
+        to_bind = self.bind_and_execute(statement)
+        uids = [[j] for j in list(set([i[-2] for i in uid_inserts]))]
+
+        logging.info("Unique user ids :%s" % len(uids))
+        results = FutureHelpers.future_queue(uids,to_bind,simple_append,self.num_futures,[])
+        results = results[0]
+
+        df = pandas.DataFrame(results)
+
+        _temp = df.groupby("uid").count()
+        bad_users = _temp[_temp.sort_index(by="domain").domain > 2000].index.tolist()
+        
+        print df.groupby("uid").count()['domain'].describe()
+        import math
+        counts, bins = pandas.np.histogram(df.groupby("uid").count()['domain'].map(lambda x: math.log(x,10)))
+        print pandas.Series(counts, index=map(lambda x: 10**x,bins[:-1]))
+
+        def filter_fraud(df):
+        
+            uids = df.groupby("uid")["uid"].count()
+            bad_uids = list(uids[uids > 1000].index)
+        
+            bad_domain_uids = list(set(df[(df.domain == "pennlive.com") | (df.domain == "nola.com") | (df.domain == "palmbeachpost.com")].uid))
+            df = df[~df.uid.isin(bad_uids) & ~df.uid.isin(bad_domain_uids)]
+        
+            return df
+
+        df = filter_fraud(df)
+
+
+        df = df[~df.uid.isin(bad_users)]
+
+        print "Users with more than 2000 datapoints: %s" % len(bad_users)
+        print df.groupby("uid").count()['domain'].describe()
+        df['date'] = df.timestamp.map(lambda x: x.split(" ")[0] + " 00:00:00")
+
+        #domain_date = df.groupby(["domain","date"])["uid"].count()
+        domain_date = df.groupby(["domain","date"])["uid"].agg({"count":lambda x: len(set(x)), "hll":build_hll})
+
+        df = domain_date.reset_index()
+
+        df["source"] = uid_inserts[0][0]
+        df["action"] = uid_inserts[0][2]
+
+       
+        return df
+
+
+
     def get_domains_from_uids(self,uid_inserts,select):
         import pandas
 
@@ -102,6 +162,20 @@ class CacheBase(PreparedCassandraRangeQuery):
         import math
         counts, bins = pandas.np.histogram(df.groupby("uid").count()['domain'].map(lambda x: math.log(x,10)))
         print pandas.Series(counts, index=map(lambda x: 10**x,bins[:-1]))
+
+        def filter_fraud(df):
+        
+            uids = df.groupby("uid")["uid"].count()
+            bad_uids = list(uids[uids > 1000].index)
+        
+            bad_domain_uids = list(set(df[(df.domain == "pennlive.com") | (df.domain == "nola.com") | (df.domain == "palmbeachpost.com")].uid))
+            df = df[~df.uid.isin(bad_uids) & ~df.uid.isin(bad_domain_uids)]
+        
+            return df
+
+        df = filter_fraud(df)
+
+
 
         df = df[~df.uid.isin(bad_users)]
 
@@ -252,4 +326,23 @@ class PatternCache(CacheBase):
                 pass
     
 
+    def cache_hll_domains(self,*args,**kwargs):
+        logging.info("Cacheing: %s => %s occurance domains" % (self.advertiser,self.pattern))
+        
+        DOMAIN_SELECT = "select * from rockerbox.visitor_domains_2 where uid = ?"
+        INSERT = "INSERT INTO rockerbox.pattern_occurrence_domains_hll (source,date,action,action_date,domain,hll) VALUES (?,?,?,?,?,?)"
 
+
+
+        if len(self.uid_values):
+            try:
+                domain_values = self.get_domain_hll_from_uids(self.uid_values,DOMAIN_SELECT)
+
+                values = [[di['source'],di['date'],di['action'],args[0] + " 00:00:00",di['domain'],di['hll']] for di in domain_values.T.to_dict().values()]
+
+                self.run_inserts(values,INSERT)
+            
+                pass
+            except:
+                pass
+ 
