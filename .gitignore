@@ -4,3 +4,4 @@
 *.swo
 *.csv
 *.tags
+.DS_Store
