@@ -3,7 +3,6 @@ import logging
 import zk_helpers
 
 from pattern_cache import PatternCache
-from pattern_helpers import *
 from helpers import simple_append, wrapped_select_callback
 
 from lib.zookeeper.zk_pool import ZKPool
@@ -91,25 +90,12 @@ def run_backfill(advertiser,pattern,cache_date,identifier="test",connectors=Fals
             logging.info("UID data for %s %s: %s" % (advertiser,pattern,len(uid_values)))
             logging.info("URL data for %s %s: %s" % (advertiser,pattern,len(url_values)))
 
-
             pattern_cache = PatternCache(cassandra,advertiser,pattern,raw_data,uid_values,url_values)
     
-            # cache raw
             pattern_cache.cache_raw()
             pattern_cache.cache_uids()
             pattern_cache.cache_urls()
-
-            # cache recurring
-            # pattern_cache.cache_views()
-            # pattern_cache.cache_visits()
-            # pattern_cache.cache_uniques()
-
-            # pattern_cache.cache_domains()
-            # pattern_cache.cache_hll_domains(cache_date)
-
-            # when backfilling is complete...
-            # we need to add a new job to kick off a one time domain fill for the date, if the date is within 7 days of today...
-            
+           
 
             elapsed = int(time.time() - start)
 
