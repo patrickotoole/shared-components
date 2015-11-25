@@ -385,7 +385,8 @@ RB.crusher.ui.action = (function(action) {
       var edits = wrapper.selectAll(".action")
         .data(function(x){return [x]},function(x){
           search.query = x.action_name;
-          search.perform(search.query).buildResults();
+          search.perform(search.query)
+          search.buildResults();
         });
     }, 1);
   
@@ -440,9 +441,6 @@ RB.crusher.ui.action = (function(action) {
       filter: 1,
 
       buildResults: function() {
-        // todo : d3-ifiy this
-        $('.matched-domain').remove();
-
         switch(search.filter) {
           case 1:
             var domains = search.results.contains_keyword;
@@ -457,7 +455,7 @@ RB.crusher.ui.action = (function(action) {
             var domains = search.results.ends_with_keyword;
             break;
         }
-        d3_splat(wrapper.selectAll(".matched_domains"), '.matched-domain', 'li', domains, function(x, i) {
+        var matched_domains = d3_splat(wrapper.selectAll(".matched_domains"), '.matched-domain', 'li', domains, function(x, i) {
           return x.url;
         })
           .html(function(x) {
@@ -467,50 +465,54 @@ RB.crusher.ui.action = (function(action) {
           })
           .classed('matched-domain', true)
 
+        // todo: sort based on visits
+        matched_domains.exit().remove();
+
         search_loading_indicator.style("display", "none")
       },
 
       buildFilters: function() {
-        $(".filters li").remove();
-
         search.filters[0].visits = search.results.contains_keyword.length;
         search.filters[1].visits = search.results.matches_keyword.length;
         search.filters[2].visits = search.results.starts_with_keyword.length;
         search.filters[3].visits = search.results.ends_with_keyword.length;
 
-        filter_options = d3_splat(filters, ".filter-option", "li", search.filters, function(x, i) {
+        var filter_options = d3_splat(wrapper.selectAll("ol.filters"), ".filter-option", "li", search.filters, function(x, i) {
           return x.title;
         })
           .on("click", function(filter) {
-            search.switchFilter(filter.id);
+            search.switchFilter.bind(this)(filter.id,filter_options);
           })
-          .classed("active", function(x) {
-            return x.active;
-          })
+          .classed("filter-option", true)
           .html(function(x) {
             return "<h3>" + x.title + "</h3>" +
             "<p><span class=\"client_sld\"></span>" + x.url + "</p>" +
             "<p>" + x.visits + " visits</p>";
           });
 
+        if(!wrapper.selectAll("ol.filters li.active").size()) {
+          wrapper.selectAll("ol.filters li:first-child").classed("active", true);
+        }
+        filter_options.exit().remove();
+
         var search_query_wrappers = wrapper.selectAll(".search_query")
           .text(search.query)
       },
 
-      switchFilter: function(filter) {
+      switchFilter: function(filter, filter_options) {
         search.filter = filter;
 
+        console.log(filter_options)
+
+        filter_options.classed("active", false);
+        d3.select(this).classed("active", true);
+
         search.buildFilters();
-
-        // TODO: D3-ify this
-        $(".filters li").removeClass("active");
-        $(".filters li:nth-child(" + filter + ")").addClass("active");
-
         search.buildResults();
       },
 
       perform: function(query) {
-        if(query.length) {
+        if(typeof query !== typeof undefined && query.length) {
           wrapper.selectAll(".filters_wrapper, .matched_domains_wrapper")
             .style("display", "block")
 
@@ -697,21 +699,6 @@ RB.crusher.ui.action = (function(action) {
 
     var filters = d3_updateable(filters_wrapper, ".filters", "ol")
       .classed("filters", true)
-
-    var filter_options = d3_splat(filters, ".filter-option", "li", search.filters, function(x, i) {
-      return x.title;
-    })
-      .on("click", function(filter) {
-        search.switchFilter(filter.id);
-      })
-      .classed("active", function(x) {
-        return x.active;
-      })
-      .html(function(x) {
-        return "<h3>" + x.title + "</h3>" +
-        "<p><span class=\"client_sld\"></span>" + x.url + "</p>" +
-        "<p>" + x.visits + " visits</p>";
-      });
 
 
     // Matched Domains
