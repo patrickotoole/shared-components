@@ -92,7 +92,6 @@ def run_backfill(advertiser,pattern,cache_date,identifier="test",connectors=Fals
             logging.info("URL data for %s %s: %s" % (advertiser,pattern,len(url_values)))
 
 
-
             pattern_cache = PatternCache(cassandra,advertiser,pattern,raw_data,uid_values,url_values)
     
             # cache raw
@@ -101,13 +100,15 @@ def run_backfill(advertiser,pattern,cache_date,identifier="test",connectors=Fals
             pattern_cache.cache_urls()
 
             # cache recurring
-            pattern_cache.cache_views()
-            pattern_cache.cache_visits()
-            pattern_cache.cache_uniques()
+            # pattern_cache.cache_views()
+            # pattern_cache.cache_visits()
+            # pattern_cache.cache_uniques()
 
-            # cache hll
-            pattern_cache.cache_domains()
-            pattern_cache.cache_hll_domains(cache_date)
+            # pattern_cache.cache_domains()
+            # pattern_cache.cache_hll_domains(cache_date)
+
+            # when backfilling is complete...
+            # we need to add a new job to kick off a one time domain fill for the date, if the date is within 7 days of today...
             
 
             elapsed = int(time.time() - start)
@@ -131,14 +132,18 @@ def run_recurring(advertiser,pattern,cache_date,identifier="test",connectors=Fal
     with cache:
 
         raw_data = get_recurring(cassandra,advertiser,pattern,cache_date)
+        uid_values = [[i[3],False] for i in raw_data]
 
-        pattern_cache = PatternCache(cassandra,advertiser,pattern,raw_data,[],[])
+        pattern_cache = PatternCache(cassandra,advertiser,pattern,raw_data,uid_values,[])
 
         # cache recurring
         pattern_cache.cache_views()
         pattern_cache.cache_uniques()
         pattern_cache.cache_visits()
+
         pattern_cache.cache_domains()
+        pattern_cache.cache_hll_domains(cache_date)
+
         
         elapsed = int(time.time() - start)
 
@@ -153,13 +158,18 @@ if __name__ == "__main__":
 
     logging.info("Parameters: %s" % str(sys.argv))
 
-    advertiser, pattern, cache_date = sys.argv[1:]
+    advertiser, pattern, cache_date, backfill = sys.argv[1:]
     connectors = {
         "zk": zk,
         "db": lnk.dbs.rockerbox,
         "cassandra": lnk.dbs.cassandra 
     }
 
-    run_backfill(advertiser, pattern, cache_date, connectors=connectors)
+
+    if backfill == "true":
+        run_backfill(advertiser, pattern, cache_date, connectors=connectors)
+    else:
+        run_recurring(advertiser, pattern, cache_date, connectors=connectors)
+
 
     logging.info("Elapsed:  %s " % (time.time() - start))
