@@ -493,8 +493,17 @@ polyline{
     Create Action
   */
   section.search_wrapper {
+    position: relative;
     margin-top: 30px;
     overflow: auto;
+  }
+
+  section.search_wrapper img.search_loading_indicator {
+    top: 20px;
+    right: 215px;
+    position: absolute;
+    opacity: .4;
+    display: none;
   }
 
   section.search_wrapper input[type="text"].search_input {

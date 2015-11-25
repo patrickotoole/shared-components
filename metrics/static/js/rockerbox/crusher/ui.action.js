@@ -381,6 +381,14 @@ RB.crusher.ui.action = (function(action) {
   
 
   action.edit = function(wrapper,onSave) {
+    setTimeout(function() {
+      var edits = wrapper.selectAll(".action")
+        .data(function(x){return [x]},function(x){
+          search.query = x.action_name;
+          search.perform(search.query).buildResults();
+        });
+    }, 1);
+  
     var client_sld;
 
     crusher.subscribe.add_subscriber(["advertiser"], function(advertiser_data) {
@@ -404,28 +412,28 @@ RB.crusher.ui.action = (function(action) {
           id: 1,
           title: "Contains Keyword",
           url: "/*<span class=\"search_query\"></span>*",
-          visits: 590,
+          visits: 0,
           active: true
         },
         {
           id: 2,
           title: "Matches Keyword",
           url: "/<span class=\"search_query\"></span>",
-          visits: 315,
+          visits: 0,
           active: false
         },
         {
           id: 3,
           title: "Starts With Keyword",
           url: "/<span class=\"search_query\"></span>*",
-          visits: 420,
+          visits: 0,
           active: false
         },
         {
           id: 4,
           title: "Ends With Keyword",
           url: "/*<span class=\"search_query\"></span>",
-          visits: 126,
+          visits: 0,
           active: false
         }
       ],
@@ -458,6 +466,8 @@ RB.crusher.ui.action = (function(action) {
             //   '<span style="display: block; margin-top: 10px;">' + x.title + '</span>';
           })
           .classed('matched-domain', true)
+
+        search_loading_indicator.style("display", "none")
       },
 
       buildFilters: function() {
@@ -573,6 +583,10 @@ RB.crusher.ui.action = (function(action) {
               console.log('No search results');
             }
 
+            setTimeout(function() {
+              search_loading_indicator.style("display", "none")
+            }, 3000)
+
 
             if(error) {
               alert("Something went wrong, please try again");
@@ -621,6 +635,10 @@ RB.crusher.ui.action = (function(action) {
     var search_wrapper = d3_updateable(editWrapper,".search_wrapper","section")
       .classed("search_wrapper", true)
 
+    var search_loading_indicator = d3_updateable(search_wrapper,".search_loading_indicator","img")
+      .classed("search_loading_indicator", true)
+      .attr("src", "/static/img/general/ajax-loader.gif")
+
     var search_interval;
 
     var search_input = d3_updateable(search_wrapper,".search_input","input")
@@ -630,10 +648,12 @@ RB.crusher.ui.action = (function(action) {
       .on('keyup', function(e) {
         search.query = this.value;
         window.clearInterval(search_interval);
+        search_loading_indicator
+          .style("display", "block")
 
         search_interval = setInterval(function() {
           window.clearInterval(search_interval);
-          search.perform(search.query);
+          search.perform(search.query)
           // action.search(editWrapper, search.query);
         }, 500);
       })
