@@ -83,6 +83,11 @@ def run_backfill(advertiser,pattern,cache_date,identifier="test",connectors=Fals
         cassandra.select_dataframe(SELECT_UDF % (state))
 
         with cache:
+            
+            INSERT_PATTERN_CACHE = "INSERT INTO rockerbox.pattern_cache (url_pattern,pixel_source_name,cache_date) VALUES ('%s','%s','%s')" 
+            UPDATE_PATTERN_CACHE = "UPDATE rockerbox.pattern_cache SET completed=1, seconds=%s where url_pattern = '%s' and pixel_source_name = '%s' and cache_date = '%s'"
+
+            db.execute(INSERT_PATTERN_CACHE % (pattern,advertiser,cache_date))
     
             _, _, raw_data, uid_values, url_values = get_backfill(cassandra,advertiser,pattern,cache_date,udf)
 
@@ -95,9 +100,13 @@ def run_backfill(advertiser,pattern,cache_date,identifier="test",connectors=Fals
             pattern_cache.cache_raw()
             pattern_cache.cache_uids()
             pattern_cache.cache_urls()
-           
+
 
             elapsed = int(time.time() - start)
+            db.execute(UPDATE_PATTERN_CACHE % (elapsed,pattern,advertiser,cache_date))
+
+           
+
 
 def run_recurring(advertiser,pattern,cache_date,identifier="test",connectors=False):
     """
