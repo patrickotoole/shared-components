@@ -515,7 +515,7 @@ RB.crusher.ui.action = (function(action) {
           wrapper.selectAll(".filters_wrapper, .matched_domains_wrapper")
             .style("display", "block")
 
-          d3.json("/crusher/search/urls?search=" + query + "&format=json&logic=and&timeout=4", function(error, response) {
+          var data_fetching = d3.json("/crusher/search/urls?search=" + query + "&format=json&logic=and&timeout=4", function(error, response) {
             search.results = {
               'contains_keyword': [],
               'matches_keyword': [],
@@ -584,10 +584,6 @@ RB.crusher.ui.action = (function(action) {
               console.log('No search results');
             }
 
-            setTimeout(function() {
-              search_loading_indicator.style("display", "none")
-            }, 3000)
-
 
             if(error) {
               alert("Something went wrong, please try again");
@@ -596,6 +592,12 @@ RB.crusher.ui.action = (function(action) {
               search.buildResults();
             }
           });
+
+          
+          setTimeout(function() {
+            data_fetching.abort();
+            search_loading_indicator.style("display", "none");
+          }, 4000);
         } else {
           wrapper.selectAll(".filters_wrapper, .matched_domains_wrapper")
             .style("display", "none")
