@@ -385,6 +385,7 @@ RB.crusher.ui.action = (function(action) {
       var edits = wrapper.selectAll(".action")
         .data(function(x){return [x]},function(x){
           search.query = x.action_name;
+          search_input.attr("value", search.query);
           search.perform(search.query).buildResults();
         });
     }, 1);
