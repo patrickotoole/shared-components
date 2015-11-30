@@ -126,6 +126,11 @@ def run_recurring(advertiser,pattern,cache_date,identifier="test",connectors=Fal
 
     with cache:
 
+        INSERT_PATTERN_CACHE = "INSERT INTO rockerbox.pattern_domain_cache (url_pattern,pixel_source_name,cache_date) VALUES ('%s','%s','%s')" 
+        UPDATE_PATTERN_CACHE = "UPDATE rockerbox.pattern_domain_cache SET completed=1, seconds=%s where url_pattern = '%s' and pixel_source_name = '%s' and cache_date = '%s'"
+
+        db.execute(INSERT_PATTERN_CACHE % (pattern,advertiser,cache_date))
+
         raw_data = get_recurring(cassandra,advertiser,pattern,cache_date)
         uid_values = [[i[3],False] for i in raw_data]
 
@@ -139,8 +144,10 @@ def run_recurring(advertiser,pattern,cache_date,identifier="test",connectors=Fal
         pattern_cache.cache_domains()
         pattern_cache.cache_hll_domains(cache_date)
 
-        
         elapsed = int(time.time() - start)
+
+        db.execute(UPDATE_PATTERN_CACHE % (elapsed,pattern,advertiser,cache_date))
+
 
 
 if __name__ == "__main__":

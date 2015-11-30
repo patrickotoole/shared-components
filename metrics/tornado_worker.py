@@ -55,6 +55,7 @@ if __name__ == '__main__':
         True
     ).connectors
 
+    connectors['zk'] = connectors['zookeeper']
     routes = ["work_queue_scripts"] 
 
     app = tornado.web.Application(
@@ -68,7 +69,7 @@ if __name__ == '__main__':
     import work_queue
 
     for _ in range(0,1):
-        reactor.callInThread(work_queue.WorkQueue(connectors['zookeeper']))
+        reactor.callInThread(work_queue.WorkQueue(connectors['zookeeper'],connectors))
 
 
     server = tornado.httpserver.HTTPServer(app)

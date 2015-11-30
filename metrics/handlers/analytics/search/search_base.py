@@ -163,7 +163,7 @@ class SearchBase(SearchCassandra):
 
             if should_cache:
                 import work_queue
-                import lib.cassandra_cache.pattern as cache
+                import lib.cassandra_cache.run as cache
                 import pickle
                 import datetime
 
@@ -181,8 +181,8 @@ class SearchBase(SearchCassandra):
                         _cache_date = datetime.datetime.strftime(today - delta,"%Y-%m-%d")
 
                         work = pickle.dumps((
-                            cache.run_one,
-                            [advertiser,pattern[0],1,i,True,_cache_date]
+                            cache.run_backfill,
+                            [advertiser,pattern[0],_cache_date,_cache_date + " backfill"]
                         ))
 
                         work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,i)

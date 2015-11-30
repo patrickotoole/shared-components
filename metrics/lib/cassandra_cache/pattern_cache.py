@@ -12,6 +12,18 @@ class CacheBase(PreparedCassandraRangeQuery):
 
     num_futures = 60
 
+    def max_ttl(self,cache_date,max_days=7):
+        from datetime import date, datetime
+        cache_time = datetime.strptime(cache_date,"%Y-%m-%d") 
+        _today = date.today()
+        today = datetime.fromordinal(_today.toordinal())
+        diff = today - cache_time
+
+        seconds = diff.total_seconds()
+        return 60*60*24*max_days - seconds
+
+        
+
     def pull_simple(self,to_pull,query):
         statement = self.cassandra.prepare(query)
         to_bind = self.bind_and_execute(statement)
@@ -329,16 +341,18 @@ class PatternCache(CacheBase):
     def cache_hll_domains(self,*args,**kwargs):
         logging.info("Cacheing: %s => %s occurance domains" % (self.advertiser,self.pattern))
         
+        ttl = self.max_ttl(args[0])
+
         DOMAIN_SELECT = "select * from rockerbox.visitor_domains_2 where uid = ?"
-        INSERT = "INSERT INTO rockerbox.pattern_occurrence_domains_hll (source,date,action,action_date,domain,hll) VALUES (?,?,?,?,?,?)"
-
-
+        INSERT = "INSERT INTO rockerbox.pattern_occurrence_domains_hll (source,date,action,action_date,domain,hll) VALUES (?,?,?,?,?,?) USING TTL %s " % ttl
 
         if len(self.uid_values):
             try:
                 domain_values = self.get_domain_hll_from_uids(self.uid_values,DOMAIN_SELECT)
-
-                values = [[di['source'],di['date'],di['action'],args[0] + " 00:00:00",di['domain'],di['hll']] for di in domain_values.T.to_dict().values()]
+                values = [
+                    [di['source'],di['date'],di['action'],args[0] + " 00:00:00",di['domain'],di['hll']] 
+                    for di in domain_values.T.to_dict().values()
+                ]
 
                 self.run_inserts(values,INSERT)
             
