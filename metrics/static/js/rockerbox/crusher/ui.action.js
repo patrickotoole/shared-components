@@ -384,9 +384,12 @@ RB.crusher.ui.action = (function(action) {
     setTimeout(function() {
       var edits = wrapper.selectAll(".action")
         .data(function(x){return [x]},function(x){
-          search.query = x.action_name;
-          search_input.attr("value", search.query);
-          search.perform(search.query).buildResults();
+          if(typeof x.action_name !== typeof undefined) {
+            search.query = x.action_name;
+            search_input.attr("value", search.query);
+            search.perform(search.query);
+            search.buildResults();
+          }
         });
     }, 1);
   
@@ -441,9 +444,7 @@ RB.crusher.ui.action = (function(action) {
       filter: 1,
 
       buildResults: function() {
-        // todo : d3-ifiy this
-        $('.matched-domain').remove();
-
+        matched_domains_loading.style("display", "none");
         switch(search.filter) {
           case 1:
             var domains = search.results.contains_keyword;
@@ -512,8 +513,6 @@ RB.crusher.ui.action = (function(action) {
 
       perform: function(query) {
         if(query.length) {
-          wrapper.selectAll(".filters_wrapper, .matched_domains_wrapper")
-            .style("display", "block")
 
           var data_fetching = d3.json("/crusher/search/urls?search=" + query + "&format=json&logic=and&timeout=4", function(error, response) {
             search.results = {
@@ -580,8 +579,6 @@ RB.crusher.ui.action = (function(action) {
 
               // Modify counts
 
-            } else {
-              console.log('No search results');
             }
 
 
@@ -597,9 +594,15 @@ RB.crusher.ui.action = (function(action) {
           setTimeout(function() {
             data_fetching.abort();
             search_loading_indicator.style("display", "none");
+            matched_domains_loading.style("display", "none");
+            if(!wrapper.selectAll(".matched-domain").size()) {
+              matched_domains_nothing_found.style("display", "block");
+            }
           }, 4000);
         } else {
-          wrapper.selectAll(".filters_wrapper, .matched_domains_wrapper")
+          matched_domains_wrapper.style("display", "none");
+          search_loading_indicator.style("display", "none");
+          wrapper.selectAll(".filters_wrapper")
             .style("display", "none")
         }
       }
@@ -653,6 +656,16 @@ RB.crusher.ui.action = (function(action) {
         window.clearInterval(search_interval);
         search_loading_indicator
           .style("display", "block")
+
+        /*
+          Uncomment this line when backend is ready for filters
+        */
+        // filters_wrapper.style("display", "block")
+        matched_domains_wrapper.style("display", "block")
+        matched_domains_loading.style("display", "block");
+        matched_domains_nothing_found.style("display", "none");
+
+        $('.matched-domain').remove();
 
         search_interval = setInterval(function() {
           window.clearInterval(search_interval);
@@ -728,6 +741,15 @@ RB.crusher.ui.action = (function(action) {
 
     var matched_domains = d3_updateable(matched_domains_wrapper, ".matched_domains", "ol")
       .classed("matched_domains", true)
+
+    var matched_domains_loading = d3_updateable(matched_domains_wrapper, ".matched_domains_loading", "ol")
+      .classed("matched_domains_loading", true)
+      .html("<li></li><li></li><li></li><li></li><li></li><li></li>")
+
+    var matched_domains_nothing_found = d3_updateable(matched_domains_wrapper, ".matched_domains_nothing_found", "p")
+      .classed("matched_domains_nothing_found", true)
+      .text("No results were found...")
+      .style("display", "none")
   }
 
   action.show = function(target,onSave,expandTarget) {
