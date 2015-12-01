@@ -11,6 +11,8 @@
   <script src="/static/js/jquery.min.js"></script>
   <script src="/static/js/crossfilter.min.js"></script> 
   <script src="/static/js/bootstrap.min.js"></script>
+  <script src="/static/js/jquery.toast.js"></script>
+  <link href="/static/css/jquery.toast.css" rel="stylesheet" type="text/css"></script>
 
   <script src="/static/js/rockerbox/routes/routes.js"></script> 
   <script src="/static/js/rockerbox/routes/routes.navigation.js"></script> 
@@ -646,6 +648,38 @@ polyline{
     console.log("// finish things")
   })
 
+  </script>
+  <script type="text/javascript">
+    $(function() {
+      var Toast = {
+        init: function() {
+          try {
+            var toast = document.cookie.split("toast=")[1].split(";")[0];
+
+            switch(toast) {
+              case 'new-action':
+                $.toast({
+                  heading: 'Success',
+                  text: 'You have succesfully created a new action!',
+                  position: 'bottom-right'
+                })
+                break;
+            }
+
+            Toast.forget();
+          } catch(err) {
+            console.log('No toast');
+          }
+        },
+
+        forget: function() {
+          document.cookie = 'toast=;expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+        }
+      };
+
+      
+      Toast.init();
+    });
   </script>
 
 </head>

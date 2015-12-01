@@ -679,6 +679,7 @@ RB.crusher.ui.action = (function(action) {
       .classed("create_action btn btn-sm btn-success", true)
       .html("<span class=\"icon glyphicon glyphicon-plus\" style=\"padding-right: 21px;\"></span> Create an Action")
       .on("click", function(e) {
+        document.cookie="toast=new-action";
         var data = {
           'action_id': undefined,
           'action_name': search.query,
@@ -719,7 +720,7 @@ RB.crusher.ui.action = (function(action) {
     // Matched Domains
     var matched_domains_wrapper = d3_updateable(editWrapper, ".matched_domains_wrapper", "section")
       .classed("matched_domains_wrapper ct-chart", true)
-      .style("display", "none")
+      // .style("display", "none")
     var matched_domains_title = d3_updateable(matched_domains_wrapper, ".matched_domains_title", "div")
       .classed("matched_domains_title chart-title", true)
       .text("This action will include visits to these URLs:")
