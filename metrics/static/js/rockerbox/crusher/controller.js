@@ -499,7 +499,7 @@ RB.crusher.controller = (function(controller) {
           "push_state":"/crusher/action/recommended",
           "values_key": "action_name"
         },{
-          "name": "Recommended Actions",
+          "name": "Create Action",
           "push_state":"/crusher/action/recommended",
           "values_key": "action_name",
           "hide_href": true
