@@ -1,6 +1,12 @@
 import pandas
 import logging
 
+def group_sum_sort_np_array(arr,key,sortby="count"):
+    import itertools
+
+    df = pandas.DataFrame(list(itertools.chain.from_iterable(arr)))
+    return df.groupby(key).sum().reset_index().sort_index(by=sortby,ascending=False)
+
 def build_datelist(numdays):
     import datetime
     

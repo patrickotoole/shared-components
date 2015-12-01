@@ -18,7 +18,7 @@ from ...visit_domains import VisitDomainBase
 from ..search_base import SearchBase
 from ..cache.pattern_search_cache import PatternSearchCache
 
-from helpers import PatternSearchHelpers
+from helpers import PatternSearchHelpers, group_sum_sort_np_array
 from stats import PatternStatsBase
 from response import PatternSearchResponse
 
@@ -53,7 +53,10 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
 
         if len(_domains) > 100:
             prepped = _domains.unstack(1).fillna(0)
-            response['clusters'] = model.cluster(_domains, prepped)
+            try:
+                response['clusters'] = model.cluster(_domains, prepped)
+            except:
+                pass
         
         self.write_json(response)
 
@@ -99,48 +102,35 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
 
         REQUIRED_CACHE_DAYS = num_days if num_days < 7 else 7
 
-        PARAMS = "date, url, uid"
-        indices = PARAMS.split(", ")
-
         response = self.default_response(pattern_terms,logic,no_results=True)
-        response['summary']['num_users'] = 0
 
         start = time.time()
         dates = build_datelist(num_days)
         args = [advertiser,pattern_terms[0][0],dates]
 
         try:
-            stats_df = yield self.get_stats(*args) # 
-            
-            assert(stats_df.applymap(lambda x: x > 0).sum().sum() > 3)
-
+            stats_df        = yield self.get_stats(*args)
             domain_stats_df = yield self.get_domain_stats(*args)
-            url_stats_df = yield self.get_url_stats(*args)
+            url_stats_df    = yield self.get_url_stats(*args)
 
-            stats_df = stats_df.join(domain_stats_df).join(url_stats_df)
+            assert(stats_df.applymap(lambda x: x > 0).sum().sum() > REQUIRED_CACHE_DAYS)
 
-            print start - time.time()
 
-            urls_df_no_ts = pandas.DataFrame(list(itertools.chain.from_iterable(url_stats_df['urls'].values)))
-            urls = urls_df_no_ts.groupby("url").sum().reset_index().sort_index(by="count",ascending=False)
-
-            print start - time.time()
-
-            domains_df_no_ts = pandas.DataFrame(list(itertools.chain.from_iterable(domain_stats_df['domains'].values)))
-            domains = domains_df_no_ts.groupby("domain").sum().reset_index().sort_index(by="count",ascending=False)
-
-            domains = domains.sort_index(by="count",ascending=False)
+            stats   = stats_df.join(domain_stats_df).join(url_stats_df)
+            urls    = group_sum_sort_np_array(url_stats_df['urls'].values,"url")
+            domains = group_sum_sort_np_array(domain_stats_df['domains'].values,"domain")
 
             response = self.response_urls(response,urls)
             response = self.response_domains(response,domains)
-            response = self.response_summary(response,stats_df)
-            response = self.response_timeseries(response,stats_df) if timeseries else response
+            response = self.response_summary(response,stats)
+            response = self.response_timeseries(response,stats) if timeseries else response
            
 
 
 
         except Exception as e:
-
+            PARAMS = "date, url, uid"
+            indices = PARAMS.split(", ")
 
             frames = yield self.build_deferred_list(pattern_terms, PARAMS, advertiser, num_days, numdays=num_days)
             dfs = []

@@ -18,14 +18,14 @@ class PatternSearchResponse:
         return response
 
     def response_domains(self,response,domains_df):
-        results = Convert,df_to_values(domains_df)
-        response['domains']
+        results = Convert.df_to_values(domains_df)
+        response['domains'] = results
 
         return response
 
     def response_urls(self,response,urls_df):
-        results = Convert,df_to_values(urls_df.head(1000))
-        response['urls']
+        results = Convert.df_to_values(urls_df.head(1000))
+        response['urls'] = results
 
         return response
 
