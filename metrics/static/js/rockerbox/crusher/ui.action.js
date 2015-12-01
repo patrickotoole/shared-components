@@ -465,7 +465,7 @@ RB.crusher.ui.action = (function(action) {
           matched_domains_loading.style("display", "none");
         })
           .html(function(x) {
-            var formatted_url = x.url;
+            var formatted_url = x.url.replace(search.query, '<strong style="font-size:1.2em;">' + search.query + '</strong>');
             return '<span>' + formatted_url + '</span>';
             // return '<span class="icon glyphicon glyphicon-' + x.icon + '" style="font-size: 32px;"></span>' +
             //   '<span style="display: block; margin-top: 10px;">' + x.title + '</span>';
