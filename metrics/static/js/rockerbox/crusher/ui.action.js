@@ -384,9 +384,14 @@ RB.crusher.ui.action = (function(action) {
     setTimeout(function() {
       var edits = wrapper.selectAll(".action")
         .data(function(x){return [x]},function(x){
-          search.query = x.action_name;
-          search.perform(search.query)
-          search.buildResults();
+          if(typeof x.action_name !== typeof undefined) {
+            matched_domains_wrapper.style("display", "block")
+            matched_domains_loading.style("display", "block");
+            search.query = x.action_name;
+            search_input.attr("value", search.query);
+            search.perform(search.query);
+            search.buildResults();
+          }
         });
     }, 1);
   
@@ -457,9 +462,11 @@ RB.crusher.ui.action = (function(action) {
         }
         var matched_domains = d3_splat(wrapper.selectAll(".matched_domains"), '.matched-domain', 'li', domains, function(x, i) {
           return x.url;
+          matched_domains_loading.style("display", "none");
         })
           .html(function(x) {
-            return '<span>' + x.url + '</span>';
+            var formatted_url = x.url.replace(search.query, '<strong style="font-size:1.2em;">' + search.query + '</strong>');
+            return '<span>' + formatted_url + '</span>';
             // return '<span class="icon glyphicon glyphicon-' + x.icon + '" style="font-size: 32px;"></span>' +
             //   '<span style="display: block; margin-top: 10px;">' + x.title + '</span>';
           })
@@ -513,10 +520,10 @@ RB.crusher.ui.action = (function(action) {
 
       perform: function(query) {
         if(typeof query !== typeof undefined && query.length) {
-          wrapper.selectAll(".filters_wrapper, .matched_domains_wrapper")
+          wrapper.selectAll(".matched_domains_wrapper")
             .style("display", "block")
 
-          d3.json("/crusher/search/urls?search=" + query + "&format=json&logic=and&timeout=4", function(error, response) {
+          var data_fetching = d3.json("/crusher/search/urls?search=" + query + "&format=json&logic=and&timeout=4", function(error, response) {
             search.results = {
               'contains_keyword': [],
               'matches_keyword': [],
@@ -524,82 +531,78 @@ RB.crusher.ui.action = (function(action) {
               'ends_with_keyword': []
             }
 
-            if(response.results.length) {
-              response.results.forEach(function(result) {
-                var domain_result = {
-                  url: result.url,
-                  visits: result.count,
-                  importance: (result.count/564)
-                };
+            response.results.forEach(function(result) {
+              var domain_result = {
+                url: result.url,
+                visits: result.count,
+                importance: (result.count/564)
+              };
 
-                // Refresh matched domains
-                var search_query_wrappers = wrapper.selectAll(".search_query")
-                  .text(query)
-
-
-                // Get domain and remove slashes from query if necessary
-                var test_domain = result.url.split(client_sld + "/")[1];
-                if(test_domain[0] == '/') {
-                  test_domain = test_domain.substring(1);
-                }
-                if(test_domain[test_domain.length - 1] == '/') {
-                  test_domain = test_domain.slice(0, -1);
-                }
-
-                // Get query and remove slashes from query if necessary
-                if(query[0] == '/') {
-                  var test_query = query.substring(1);
-                } else {
-                  var test_query = query;
-                }
-                if(query[query.length - 1] == '/') {
-                  test_query = test_query.slice(0, -1);
-                }
+              // Refresh matched domains
+              var search_query_wrappers = wrapper.selectAll(".search_query")
+                .text(query)
 
 
-                // Add to array of all URL's (contains keyword)
-                search.results.contains_keyword.push(domain_result);
+              // Get domain and remove slashes from query if necessary
+              var test_domain = result.url.split(client_sld + "/")[1];
+              if(test_domain[0] == '/') {
+                test_domain = test_domain.substring(1);
+              }
+              if(test_domain[test_domain.length - 1] == '/') {
+                test_domain = test_domain.slice(0, -1);
+              }
+
+              // Get query and remove slashes from query if necessary
+              if(query[0] == '/') {
+                var test_query = query.substring(1);
+              } else {
+                var test_query = query;
+              }
+              if(query[query.length - 1] == '/') {
+                test_query = test_query.slice(0, -1);
+              }
 
 
-                // Check for urls exactly matching keyword
-                if(test_query == test_domain) {
-                  search.results.matches_keyword.push(domain_result);
-                }
+              // Add to array of all URL's (contains keyword)
+              search.results.contains_keyword.push(domain_result);
 
 
-                // Check for urls starting with keyword
-                if(test_domain.indexOf(test_query) == 0) {
-                  search.results.starts_with_keyword.push(domain_result);
-                }
+              // Check for urls exactly matching keyword
+              if(test_query == test_domain) {
+                search.results.matches_keyword.push(domain_result);
+              }
 
 
-                // Check for urls ending with keyword
-                if(typeof test_domain[test_domain.indexOf(test_query) + test_query.length] === typeof undefined) {
-                  search.results.ends_with_keyword.push(domain_result);
-                }
-              });
+              // Check for urls starting with keyword
+              if(test_domain.indexOf(test_query) == 0) {
+                search.results.starts_with_keyword.push(domain_result);
+              }
 
-              // Modify counts
 
-            } else {
-              console.log('No search results');
-            }
-
-            setTimeout(function() {
-              search_loading_indicator.style("display", "none")
-            }, 3000)
-
+              // Check for urls ending with keyword
+              if(typeof test_domain[test_domain.indexOf(test_query) + test_query.length] === typeof undefined) {
+                search.results.ends_with_keyword.push(domain_result);
+              }
+            });
 
             if(error) {
               alert("Something went wrong, please try again");
             } else {
               search.buildFilters();
               search.buildResults();
+              matched_domains_loading.style("display", "none");
             }
           });
-        } else {
-          wrapper.selectAll(".filters_wrapper, .matched_domains_wrapper")
-            .style("display", "none")
+
+          
+          setTimeout(function() {
+            data_fetching.abort();
+            search_loading_indicator.style("display", "none");
+            matched_domains_loading.style("display", "none");
+            if(!wrapper.selectAll(".matched-domain").size()) {
+              matched_domains_nothing_found.style("display", "block");
+            }
+          }, 4000);
         }
       }
     }
@@ -648,22 +651,35 @@ RB.crusher.ui.action = (function(action) {
       .attr("placeholder", "Type in an action or select a recommended action from the sidebar...")
       .attr("type", "text")
       .on('keyup', function(e) {
-        search.query = this.value;
-        window.clearInterval(search_interval);
-        search_loading_indicator
-          .style("display", "block")
-
-        search_interval = setInterval(function() {
+        if(search.query != this.value) {
+          search.query = this.value;
           window.clearInterval(search_interval);
-          search.perform(search.query)
-          // action.search(editWrapper, search.query);
-        }, 500);
+          search_loading_indicator
+            .style("display", "block")
+
+          /*
+            Uncomment this line when backend is ready for filters
+          */
+          // filters_wrapper.style("display", "block")
+          matched_domains_wrapper.style("display", "block")
+          matched_domains_loading.style("display", "block");
+          matched_domains_nothing_found.style("display", "none");
+
+          $('.matched-domain').remove();
+
+          search_interval = setInterval(function() {
+            window.clearInterval(search_interval);
+            search.perform(search.query)
+            // action.search(editWrapper, search.query);
+          }, 500);
+        }
       })
 
     var create_action_button = d3_updateable(search_wrapper,".create_action","div")
       .classed("create_action btn btn-sm btn-success", true)
       .html("<span class=\"icon glyphicon glyphicon-plus\" style=\"padding-right: 21px;\"></span> Create an Action")
       .on("click", function(e) {
+        document.cookie="toast=new-action";
         var data = {
           'action_id': undefined,
           'action_name': search.query,
@@ -704,7 +720,7 @@ RB.crusher.ui.action = (function(action) {
     // Matched Domains
     var matched_domains_wrapper = d3_updateable(editWrapper, ".matched_domains_wrapper", "section")
       .classed("matched_domains_wrapper ct-chart", true)
-      .style("display", "none")
+      // .style("display", "none")
     var matched_domains_title = d3_updateable(matched_domains_wrapper, ".matched_domains_title", "div")
       .classed("matched_domains_title chart-title", true)
       .text("This action will include visits to these URLs:")
@@ -712,6 +728,15 @@ RB.crusher.ui.action = (function(action) {
 
     var matched_domains = d3_updateable(matched_domains_wrapper, ".matched_domains", "ol")
       .classed("matched_domains", true)
+
+    var matched_domains_loading = d3_updateable(matched_domains_wrapper, ".matched_domains_loading", "ol")
+      .classed("matched_domains_loading", true)
+      .html("<li></li><li></li><li></li><li></li><li></li><li></li>")
+
+    var matched_domains_nothing_found = d3_updateable(matched_domains_wrapper, ".matched_domains_nothing_found", "p")
+      .classed("matched_domains_nothing_found", true)
+      .text("No results were found...")
+      .style("display", "none")
   }
 
   action.show = function(target,onSave,expandTarget) {

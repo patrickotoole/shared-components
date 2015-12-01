@@ -240,6 +240,7 @@ class SearchBase(SearchCassandra):
         
         self.write_json(response)
 
+    # todo: make the results limit programable again
     @defer.inlineCallbacks
     def get_urls(self, advertiser, terms, date_clause, logic="should", timeout=60):
         PARAMS = "url, uid"
@@ -247,7 +248,7 @@ class SearchBase(SearchCassandra):
         response["timeout"] = timeout
 
         df = yield self.defer_execute(PARAMS, advertiser, terms, 
-                       date_clause, logic, timeout=timeout, should_cache=False, numdays=7)
+                       date_clause, logic, timeout=timeout, should_cache=False, numdays=2)
 
         if df is False:
             self.write_timeout(terms, logic, timeout)
@@ -260,7 +261,7 @@ class SearchBase(SearchCassandra):
             counts = self.group_and_count(df, ["url"], "uid", "count")
             uid_counts = df.uid.value_counts()
 
-        response["results"] = Convert.df_to_values(counts)
+        response["results"] = Convert.df_to_values(counts.head(10))
         response["summary"]["num_urls"] = len(counts)
         response["summary"]["num_users"] = len(set(df.uid.values))
        
