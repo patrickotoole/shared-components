@@ -7,6 +7,8 @@ from datetime import datetime
 from twisted.internet import defer
 from ..cache.pattern_search_cache import PatternSearchCache
 from helpers import build_datelist, build_count_dataframe, build_dict_dataframe
+from lib.helpers import *
+
 
 
 
@@ -46,11 +48,12 @@ class PatternStatsBase(PatternSearchCache):
 
     def get_missing_dates(self,all_dates,some_dates):
         missing_dates = [
-            datetime.strptime(i,"%Y-%m-%d %H:%M:%S") for i in all_dates
+            u"%s" % datetime.strptime(i,"%Y-%m-%d %H:%M:%S") for i in all_dates
             if i not in some_dates
         ] 
         return missing_dates
 
+    @decorators.deferred
     def get_stats(self, *args):
 
         views_df, visits_df, uniques_df = self.get_stats_cached(*args)
@@ -66,6 +69,8 @@ class PatternStatsBase(PatternSearchCache):
 
         return df
 
+
+    @decorators.deferred 
     def get_url_stats(self,*args):
         start = time.time()
 

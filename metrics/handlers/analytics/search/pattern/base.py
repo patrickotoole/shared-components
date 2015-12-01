@@ -105,21 +105,17 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
         response = self.default_response(pattern_terms,logic,no_results=True)
         response['summary']['num_users'] = 0
 
-        import time
         start = time.time()
         dates = build_datelist(num_days)
         args = [advertiser,pattern_terms[0][0],dates]
 
         try:
-            stats_df = self.get_stats(*args)
+            stats_df = yield self.get_stats(*args) # 
+            
             assert(stats_df.applymap(lambda x: x > 0).sum().sum() > 3)
 
-            self.response_summary(response,stats_df)
-            if timeseries: 
-                self.response_timeseries(response,stats_df)
-
             domain_stats_df = yield self.get_domain_stats(*args)
-            url_stats_df = self.get_url_stats(*args)
+            url_stats_df = yield self.get_url_stats(*args)
 
             stats_df = stats_df.join(domain_stats_df).join(url_stats_df)
 
@@ -127,7 +123,6 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
 
             urls_df_no_ts = pandas.DataFrame(list(itertools.chain.from_iterable(url_stats_df['urls'].values)))
             urls = urls_df_no_ts.groupby("url").sum().reset_index().sort_index(by="count",ascending=False)
-            response['urls'] = Convert.df_to_values(urls.head(3000))
 
             print start - time.time()
 
@@ -135,7 +130,11 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
             domains = domains_df_no_ts.groupby("domain").sum().reset_index().sort_index(by="count",ascending=False)
 
             domains = domains.sort_index(by="count",ascending=False)
-            response['domains'] = Convert.df_to_values(domains)#.head(3000))
+
+            response = self.response_urls(response,urls)
+            response = self.response_domains(response,domains)
+            response = self.response_summary(response,stats_df)
+            response = self.response_timeseries(response,stats_df) if timeseries else response
            
 
 
