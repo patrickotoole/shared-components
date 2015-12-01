@@ -30,16 +30,16 @@ class WorkQueue(object):
             if data is not None:
                 logging.debug("Received next queue item")
                
-                fn, args = pickle.loads(data)
-
-                args.append(self.connectors)
-
-                logging.info("starting queue %s %s" % (str(fn),str(args)))
+                
                 try:
+                    fn, args = pickle.loads(data)
+                    args.append(self.connectors)
+
+                    logging.info("starting queue %s %s" % (str(fn),str(args)))
                     fn(*args) 
                     logging.info("finished queue %s %s" % (str(fn),str(args)))
                 except Exception as e:
-                    logging.info("ERROR: queue %s %s" % (str(fn),str(args)))
+                    logging.info("ERROR: queue %s " % e)
  
 
             else:

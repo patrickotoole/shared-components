@@ -12,7 +12,13 @@ def build_datelist(numdays):
 
 def build_count_dataframe(field):
     def build(data):
-        return pandas.DataFrame(data).rename(columns={"count":field}).set_index("date")
+        try:
+            return pandas.DataFrame(data).rename(columns={"count":field}).set_index("date")
+        except:
+            # hack: for the null case build an empty df
+            df = pandas.DataFrame([[0,0]],columns=[field,"date"]).set_index("date")
+            df = df[df[field] > 0]
+            return df
 
     return build
 
