@@ -7,10 +7,33 @@ from datetime import datetime
 from twisted.internet import defer
 from ..cache.pattern_search_cache import PatternSearchCache
 from helpers import build_datelist, build_count_dataframe, build_dict_dataframe
+from lib.helpers import *
+
 
 
 
 class PatternStatsBase(PatternSearchCache):
+
+
+    @defer.inlineCallbacks
+    def get_all_stats(self,*args):
+
+
+        # for some reason, these requests are blocking eachother...
+        # deferreds = [
+        #     self.get_stats(*args), 
+        #     self.get_domain_stats(*args), 
+        #     self.get_url_stats(*args)
+        # ]
+
+        # dl = defer.DeferredList(deferreds)
+        # xx = yield dl
+
+        stats_df        = yield self.get_stats(*args)
+        domain_stats_df = yield self.get_domain_stats(*args)
+        url_stats_df    = yield self.get_url_stats(*args) 
+
+        defer.returnValue([stats_df,domain_stats_df,url_stats_df])
 
     def get_stats_cached(self, *args):
         assert(len(args) >= 3)
@@ -44,27 +67,31 @@ class PatternStatsBase(PatternSearchCache):
 
         return [visits_df,uniques_df]
 
+    def get_missing_dates(self,all_dates,some_dates):
+        missing_dates = [
+            u"%s" % datetime.strptime(i,"%Y-%m-%d %H:%M:%S") for i in all_dates
+            if i not in some_dates
+        ] 
+        return missing_dates
 
+    @decorators.deferred
     def get_stats(self, *args):
 
         views_df, visits_df, uniques_df = self.get_stats_cached(*args)
+        missing_dates = self.get_missing_dates(args[2],visits_df.index)
 
-        missing_dates = [
-            datetime.strptime(i,"%Y-%m-%d %H:%M:%S") for i in args[2]
-            if i not in visits_df.index
-        ]
+        for d in missing_dates:
+            views_df.ix[d] = 0
 
         if missing_dates:
-            for d in args[2]:
-                if d not in views_df.index:
-                    views_df.ix[d] = 0
-            self.run_uniques(args[0],args[1],missing_dates) 
             visits_df, uniques_df = self.get_stats_missing(missing_dates,*args)
 
         df = views_df.join(visits_df).join(uniques_df)
 
         return df
 
+
+    @decorators.deferred 
     def get_url_stats(self,*args):
         start = time.time()
 

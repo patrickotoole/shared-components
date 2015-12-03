@@ -3,6 +3,9 @@ class CassandraStatement(object):
     def __init__(self,cassandra=None):
         self.cassandra = cassandra 
 
+    def prepare(self,query):
+        return self.cassandra.prepare(query)
+
     def build_statement(self,query,what,where):
         params = { "what": what, "where": where }
         statement = self.cassandra.prepare(query % params)
@@ -25,5 +28,3 @@ class CassandraStatement(object):
             return self.cassandra.execute_async(bound)
 
         return execute
-
-

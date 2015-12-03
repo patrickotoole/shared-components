@@ -8,10 +8,7 @@ from lib.helpers import Convert
 from lib.helpers import APIHelpers
 
 import work_queue
-import lib.cassandra_cache.pattern as cache
-import lib.cassandra_cache.run_domains as domain_cache
-import lib.cassandra_cache.run_uniques as unique_cache
-import lib.cassandra_cache.run_clear as cache_clear
+import lib.cassandra_cache.run as cache
 
 import lib.cassandra_cache.zk_helpers as zk_helpers
 
@@ -52,7 +49,7 @@ class PatternStatusHandler(BaseHandler,APIHelpers,PatternDatabase):
 
         try:
             queued = zk_stats.pattern_queue_stats()
-            queued_params = queued[queued['function'] == str(cache.run_one)].params
+            queued_params = queued[queued['function'] == str(cache.run_backfill)].params
             queued_dates = queued_params.map(lambda x: str(x[-1]).split()[0])
             queued_fn = lambda x: str(x).split()[0] in queued_dates.values
             
@@ -64,13 +61,15 @@ class PatternStatusHandler(BaseHandler,APIHelpers,PatternDatabase):
             
 
     def run_domains(self,advertiser,pattern,cache_date):
+        # this runs the domains and uniques
+        # this is what should be automatically run each day
         
         delta = datetime.datetime.now() - cache_date
         _cache_date = datetime.datetime.strftime(cache_date,"%Y-%m-%d")
 
         work = pickle.dumps((
-            domain_cache.run_domains,
-            [advertiser,pattern,1,delta.days -1,True,_cache_date + " domain_cache"]
+            cache.run_recurring,
+            [advertiser,pattern,_cache_date, _cache_date + " domain_cache"]
         ))
 
         work_queue.SingleQueue(self.zookeeper,self.queue).put(work,0)
@@ -78,13 +77,15 @@ class PatternStatusHandler(BaseHandler,APIHelpers,PatternDatabase):
         self.write_response(Convert.df_to_values(df))
 
     def run_uniques(self,advertiser,pattern,cache_date):
+        # this is the same as run domains
         
         delta = datetime.datetime.now() - cache_date
         _cache_date = datetime.datetime.strftime(cache_date,"%Y-%m-%d")
 
         work = pickle.dumps((
-            unique_cache.run_uniques,
-            [advertiser,pattern,1,delta.days -1,True,_cache_date + " unique_cache"]
+            cache.run_recurring,
+            [advertiser,pattern,_cache_date, _cache_date + " domain_cache"]
+
         ))
 
         work_queue.SingleQueue(self.zookeeper,self.queue).put(work,0)
@@ -92,44 +93,15 @@ class PatternStatusHandler(BaseHandler,APIHelpers,PatternDatabase):
         self.write_response(Convert.df_to_values(df))
 
 
-    def delete_cache(self,advertiser,pattern,cache_date):
-        
-        delta = datetime.datetime.now() - cache_date
-        _cache_date = datetime.datetime.strftime(cache_date,"%Y-%m-%d")
-
-        work = pickle.dumps((
-            cache_clear.run_clear,
-            [advertiser,pattern,1,delta.days -1,True,_cache_date + " delete_cache"]
-        ))
-
-        work_queue.SingleQueue(self.zookeeper,self.queue).put(work,0)
-        df = pandas.DataFrame([])
-        self.write_response(Convert.df_to_values(df))
-
-    def delete_cache_all(self,advertiser,pattern,dates):
-
-        for cache_date in dates:
-            delta = datetime.datetime.now() - cache_date
-            _cache_date = datetime.datetime.strftime(cache_date,"%Y-%m-%d")
-
-            work = pickle.dumps((
-                cache_clear.run_clear,
-                [advertiser,pattern,1,delta.days -1,True,_cache_date + " delete_cache"]
-            ))
-
-            work_queue.SingleQueue(self.zookeeper,self.queue).put(work,0)
-            df = pandas.DataFrame([])
-
-        self.write_response(Convert.df_to_values(df))
-
+    
     def run_pattern(self,advertiser,pattern,cache_date):
         
         delta = datetime.datetime.now() - cache_date
         _cache_date = datetime.datetime.strftime(cache_date,"%Y-%m-%d")
 
         work = pickle.dumps((
-            cache.run_one,
-            [advertiser,pattern,1,delta.days -1,True,_cache_date]
+            cache.run_backfill,
+            [advertiser,pattern,_cache_date,_cache_date + " backfill"]
         ))
 
         work_queue.SingleQueue(self.zookeeper,self.queue).put(work,0)
