@@ -37,7 +37,8 @@ class PatternSearchSample(SearchBase, PatternSearchHelpers):
         dom = yield dl
 
         if hasattr(dom[0][1],"uid"):
-            df = dom[0][1].groupby("domain")['uid'].agg(lambda x: len(set(x)))
+            dom[0][1]['date'] = dom[0][1].timestamp.map(lambda x: x.split(" ")[0] + " 00:00:00")
+            df = dom[0][1].groupby(["date","domain"])['uid'].agg(lambda x: len(set(x)))
             domains = df.reset_index().rename(columns={"uid":"count"})
         else:
             domains = dom[0][1].reset_index().rename(columns={"occurrence":"count"})
@@ -47,7 +48,6 @@ class PatternSearchSample(SearchBase, PatternSearchHelpers):
                 {"domain":i,"count":j} for i,j in 
                 (x.groupby("domain")['count'].sum() + 1).T.to_dict().items()
             ]
-
 
         domain_stats_df = domains.groupby("date").apply(transform_domains)
         domain_stats_df.name = "domains"

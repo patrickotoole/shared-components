@@ -76,6 +76,7 @@ class PatternStatsBase(PatternSearchCache):
 
     @decorators.deferred
     def get_stats(self, *args):
+        import ipdb; ipdb.set_trace()
 
         views_df, visits_df, uniques_df = self.get_stats_cached(*args)
         missing_dates = self.get_missing_dates(args[2],visits_df.index)

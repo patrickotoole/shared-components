@@ -247,6 +247,8 @@ class SearchBase(SearchCassandra):
         response = self.default_response(terms,logic)
         response["timeout"] = timeout
 
+        terms = [terms[0].split(" ")[0]]
+
         df = yield self.defer_execute(PARAMS, advertiser, terms, 
                        date_clause, logic, timeout=timeout, should_cache=False, numdays=2)
 

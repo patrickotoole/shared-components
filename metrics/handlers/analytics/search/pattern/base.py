@@ -114,7 +114,7 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
         df, stats_df, url_stats_df = yield self.sample_stats_onsite(*sample_args)
 
         uids = list(set(df.uid.values))[:1000]
-        domain_stats_df = yield self.sample_stats_offsite(advertiser, terms, uids, num_days) 
+        domain_stats_df = yield self.sample_stats_offsite(advertiser, term, uids, num_days) 
 
         defer.returnValue([stats_df, domain_stats_df, url_stats_df])
             
