@@ -1,5 +1,9 @@
 import pandas
 import logging
+from lib.helpers import *
+from twisted.internet import defer
+
+
 
 def group_sum_sort_np_array(arr,key,sortby="count"):
     import itertools
@@ -41,6 +45,43 @@ def build_dict_dataframe(field):
 
 
 class PatternSearchHelpers(object):
+
+    @defer.inlineCallbacks
+    def deferred_reformat_stats(self,domain_stats_df,url_stats_df):
+        deferred_list = defer.DeferredList([
+            self.url_stats_to_urls(url_stats_df),
+            self.domain_stats_to_domains(domain_stats_df)
+        ])
+
+        results = yield deferred_list
+        urls    = results[0][1]
+        domains = results[1][1]
+
+        defer.returnValue([urls,domains])
+
+
+
+        
+
+    @decorators.deferred
+    def url_stats_to_urls(self,url_stats_df):
+        import time
+        start = time.time()
+        df = group_sum_sort_np_array(url_stats_df['urls'].values,"url")
+        print start - time.time()
+        return df
+
+
+    @decorators.deferred
+    def domain_stats_to_domains(self,domain_stats_df):
+        import time
+        start = time.time()
+        df = group_sum_sort_np_array(domain_stats_df['domains'].values,"domain")
+        print start - time.time()
+        return df
+
+
+
 
     def head_and_tail(self,l):
         return (l[0], l[1:])

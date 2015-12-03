@@ -14,6 +14,27 @@ from lib.helpers import *
 
 class PatternStatsBase(PatternSearchCache):
 
+
+    @defer.inlineCallbacks
+    def get_all_stats(self,*args):
+
+
+        # for some reason, these requests are blocking eachother...
+        # deferreds = [
+        #     self.get_stats(*args), 
+        #     self.get_domain_stats(*args), 
+        #     self.get_url_stats(*args)
+        # ]
+
+        # dl = defer.DeferredList(deferreds)
+        # xx = yield dl
+
+        stats_df        = yield self.get_stats(*args)
+        domain_stats_df = yield self.get_domain_stats(*args)
+        url_stats_df    = yield self.get_url_stats(*args) 
+
+        defer.returnValue([stats_df,domain_stats_df,url_stats_df])
+
     def get_stats_cached(self, *args):
         assert(len(args) >= 3)
 

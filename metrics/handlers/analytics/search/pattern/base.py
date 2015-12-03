@@ -21,9 +21,10 @@ from ..cache.pattern_search_cache import PatternSearchCache
 from helpers import PatternSearchHelpers, group_sum_sort_np_array
 from stats import PatternStatsBase
 from response import PatternSearchResponse
+from sample import PatternSearchSample
 
 
-class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, PatternStatsBase, PatternSearchResponse):
+class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, PatternSearchResponse):
 
 
     @defer.inlineCallbacks
@@ -54,7 +55,8 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
         if len(_domains) > 100:
             prepped = _domains.unstack(1).fillna(0)
             try:
-                response['clusters'] = model.cluster(_domains, prepped)
+                #response['clusters'] = model.cluster(_domains, prepped)
+                response['clusters'] = []
             except:
                 pass
         
@@ -102,6 +104,9 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
 
         REQUIRED_CACHE_DAYS = num_days if num_days < 7 else 7
 
+        def check_required(df):
+            assert(df.applymap(lambda x: x > 0).sum().sum() > REQUIRED_CACHE_DAYS)
+
         response = self.default_response(pattern_terms,logic,no_results=True)
 
         start = time.time()
@@ -109,101 +114,58 @@ class PatternSearchBase(VisitDomainBase, SearchBase,PatternSearchHelpers, Patter
         args = [advertiser,pattern_terms[0][0],dates]
 
         try:
-            stats_df        = yield self.get_stats(*args)
-            domain_stats_df = yield self.get_domain_stats(*args)
-            url_stats_df    = yield self.get_url_stats(*args)
 
-            assert(stats_df.applymap(lambda x: x > 0).sum().sum() > REQUIRED_CACHE_DAYS)
-
-
+            raise Exception("YO")
+            # pull daily data
+            stats_df, domain_stats_df, url_stats_df = yield self.get_all_stats(*args)
             stats   = stats_df.join(domain_stats_df).join(url_stats_df)
-            urls    = group_sum_sort_np_array(url_stats_df['urls'].values,"url")
-            domains = group_sum_sort_np_array(domain_stats_df['domains'].values,"domain")
+
+            check_required(stats_df)
+
+            # reformat daily into summary
+            urls, domains = yield self.deferred_reformat_stats(url_stats_df,domain_stats_df)
 
             response = self.response_urls(response,urls)
             response = self.response_domains(response,domains)
             response = self.response_summary(response,stats)
             response = self.response_timeseries(response,stats) if timeseries else response
-           
-
 
 
         except Exception as e:
-            PARAMS = "date, url, uid"
-            indices = PARAMS.split(", ")
+            response = yield self.get_generic_missing(advertiser, pattern_terms, num_days, logic,timeout,timeseries)
 
-            frames = yield self.build_deferred_list(pattern_terms, PARAMS, advertiser, num_days, numdays=num_days)
-            dfs = []
-
-            for terms, result in zip(pattern_terms,frames):
-                df = (yield result)[1]
-                if len(df) > 0: 
-                    dfs += [df]
-            
-            if len(dfs):
-
-                df, tail = self.head_and_tail(dfs)
-
-                for df2 in tail:
-                    df = df.append(df2)
-                    df = df.reset_index().drop_duplicates(indices).set_index(indices)
-
-                df = df.reset_index()
-
-            else:
-                df = pandas.DataFrame([[0,0,0]],columns=["uid","num_views","date"]).ix[1:]
-                response['results'] = []
-
-            # APPLY "and" logic if necessary
-            if logic == "and":
-                df = self.pattern_and(df,pattern_terms)
-
-
-            # PREPARE the final version of the data for response
-            if len(df) > 0:
-                stats = df.groupby("date").apply(self.calc_stats)
-                for d in dates:
-                    if d not in stats.index:
-                        stats.ix[d] = 0
-
-                response['summary']['num_urls'] = len(set(df.url.values))
-                response['summary']['num_users'] = len(set(df.uid.values))
-                response['summary']['num_views'] = stats.views.sum()
-                response['summary']['num_visits'] = stats.visits.sum()
-                
-                if timeseries:
-                    results = Convert.df_to_values(stats.reset_index())
-                    response['results'] = results
-
-
-                urls = self.get_urls_from_cache(advertiser,pattern_terms[0][0],build_datelist(20))
-
-                response['urls'] = []
-                for l in urls.values():
-                    response['urls'] += l
-
-
-                if len(urls) == 0:
-
-                    df['count'] = df['occurrence'].map(lambda x: 1 if x == 0 else x)
-                    grouped_urls = df.groupby("url")['count'].sum()
-                    url_list = grouped_urls.reset_index().sort_index(by="count",ascending=False).T.to_dict().values()
-                    response['urls'] = url_list
-
-
-                # GET DOMAINS (from cache)
-                defs = [self.defer_get_domains_with_cache(advertiser,pattern_terms[0][0],list(set(df.uid.values))[:1000],num_days)]
-                dl = defer.DeferredList(defs)
-                dom = yield dl
-                if hasattr(dom[0][1],"uid"):
-                    df = dom[0][1].groupby("domain")['uid'].agg(lambda x: len(set(x)))
-                    domains = df.reset_index().rename(columns={"uid":"count"}).T.to_dict().values()
-                else:
-                    domains = dom[0][1].reset_index().rename(columns={"occurrence":"count"}).T.to_dict().values()
-               
-                response['domains'] = domains
         
         self.write_json(response)
+
+    @defer.inlineCallbacks
+    def get_generic_missing(self, advertiser, pattern_terms, num_days, logic="or",timeout=60,timeseries=False):
+        PARAMS = "date, url, uid"
+        indices = PARAMS.split(", ")
+
+        response = self.default_response(pattern_terms,logic,no_results=True)
+
+        start = time.time()
+        dates = build_datelist(num_days)
+        terms = pattern_terms[0][0]
+        args = [terms,PARAMS,advertiser,dates,num_days]
+
+
+        df, stats_df, url_stats_df = yield self.sample_stats_onsite(*args)
+        uids = list(set(df.uid.values))[:1000]
+        domain_stats_df = yield self.sample_stats_offsite(advertiser, terms, uids, num_days)
+        stats   = stats_df.join(domain_stats_df).join(url_stats_df).fillna(0)
+
+        urls, domains = yield self.deferred_reformat_stats(domain_stats_df,url_stats_df)
+
+        response = self.response_urls(response,urls)
+        response = self.response_domains(response,domains)
+        response = self.response_summary(response,stats)
+        response = self.response_timeseries(response,stats) if timeseries else response
+
+
+        defer.returnValue(response)
+
+
 
 
     def get_count(self, advertiser, pattern_terms, date_clause, logic="or",timeout=60):
