@@ -98,25 +98,36 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
         
         self.write_json(response)
 
+    @defer.inlineCallbacks
+    def get_generic_cached(self,advertiser,term,dates,num_days):
+        args = [advertiser,term,dates]
+
+        stats_df, domain_stats_df, url_stats_df = yield self.get_all_stats(*args)
+        check_required_days(stats_df,num_days)
+
+        defer.returnValue([stats_df, domain_stats_df, url_stats_df])
+
+    @defer.inlineCallbacks
+    def get_generic_sampled(self,advertiser,term,dates,num_days):
+        sample_args = [term,"",advertiser,dates,num_days]
+
+        df, stats_df, url_stats_df = yield self.sample_stats_onsite(*sample_args)
+
+        uids = list(set(df.uid.values))[:1000]
+        domain_stats_df = yield self.sample_stats_offsite(advertiser, terms, uids, num_days) 
+
+        defer.returnValue([stats_df, domain_stats_df, url_stats_df])
             
     @defer.inlineCallbacks
     def get_generic(self, advertiser, pattern_terms, num_days, logic="or",timeout=60,timeseries=False):
 
         dates = build_datelist(num_days)
+        args = [advertiser,pattern_terms[0][0],dates,num_days]
 
-        try: # try cache
-
-            args = [advertiser,pattern_terms[0][0],dates]
-            stats_df, domain_stats_df, url_stats_df = yield self.get_all_stats(*args)
-            check_required_days(stats_df,num_days)
-
-        except: # use sample
-
-            sample_args = [terms,PARAMS,advertiser,dates,num_days]
-            df, stats_df, url_stats_df = yield self.sample_stats_onsite(*sample_args)
-
-            uids = list(set(df.uid.values))[:1000]
-            domain_stats_df = yield self.sample_stats_offsite(advertiser, terms, uids, num_days)
+        try: 
+            stats_df, domain_stats_df, url_stats_df = yield self.get_generic_cached(*args)
+        except: 
+            stats_df, domain_stats_df, url_stats_df = yield self.get_generic_sampled(*args)
 
 
         stats = stats_df.join(domain_stats_df).join(url_stats_df).fillna(0)
