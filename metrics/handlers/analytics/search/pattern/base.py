@@ -18,7 +18,7 @@ from ...visit_domains import VisitDomainBase
 from ..search_base import SearchBase
 from ..cache.pattern_search_cache import PatternSearchCache
 
-from helpers import PatternSearchHelpers, group_sum_sort_np_array
+from helpers import PatternSearchHelpers, group_sum_sort_np_array, check_required_days
 from stats import PatternStatsBase
 from response import PatternSearchResponse
 from sample import PatternSearchSample
@@ -102,79 +102,39 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
     @defer.inlineCallbacks
     def get_generic(self, advertiser, pattern_terms, num_days, logic="or",timeout=60,timeseries=False):
 
-        REQUIRED_CACHE_DAYS = num_days if num_days < 7 else 7
-
-        def check_required(df):
-            assert(df.applymap(lambda x: x > 0).sum().sum() > REQUIRED_CACHE_DAYS)
-
-        response = self.default_response(pattern_terms,logic,no_results=True)
-
-        start = time.time()
         dates = build_datelist(num_days)
-        args = [advertiser,pattern_terms[0][0],dates]
 
-        try:
+        try: # try cache
 
-            raise Exception("YO")
-            # pull daily data
+            args = [advertiser,pattern_terms[0][0],dates]
             stats_df, domain_stats_df, url_stats_df = yield self.get_all_stats(*args)
-            stats   = stats_df.join(domain_stats_df).join(url_stats_df)
+            check_required_days(stats_df,num_days)
 
-            check_required(stats_df)
+        except: # use sample
 
-            # reformat daily into summary
-            urls, domains = yield self.deferred_reformat_stats(url_stats_df,domain_stats_df)
+            sample_args = [terms,PARAMS,advertiser,dates,num_days]
+            df, stats_df, url_stats_df = yield self.sample_stats_onsite(*sample_args)
 
-            response = self.response_urls(response,urls)
-            response = self.response_domains(response,domains)
-            response = self.response_summary(response,stats)
-            response = self.response_timeseries(response,stats) if timeseries else response
+            uids = list(set(df.uid.values))[:1000]
+            domain_stats_df = yield self.sample_stats_offsite(advertiser, terms, uids, num_days)
 
 
-        except Exception as e:
-            response = yield self.get_generic_missing(advertiser, pattern_terms, num_days, logic,timeout,timeseries)
+        stats = stats_df.join(domain_stats_df).join(url_stats_df).fillna(0)
+        urls, domains = yield self.deferred_reformat_stats(domain_stats_df,url_stats_df)
 
-        
-        self.write_json(response)
-
-    @defer.inlineCallbacks
-    def get_generic_missing(self, advertiser, pattern_terms, num_days, logic="or",timeout=60,timeseries=False):
-        PARAMS = "date, url, uid"
-        indices = PARAMS.split(", ")
 
         response = self.default_response(pattern_terms,logic,no_results=True)
-
-        start = time.time()
-        dates = build_datelist(num_days)
-        terms = pattern_terms[0][0]
-        args = [terms,PARAMS,advertiser,dates,num_days]
-
-
-        df, stats_df, url_stats_df = yield self.sample_stats_onsite(*args)
-        uids = list(set(df.uid.values))[:1000]
-        domain_stats_df = yield self.sample_stats_offsite(advertiser, terms, uids, num_days)
-        stats   = stats_df.join(domain_stats_df).join(url_stats_df).fillna(0)
-
-        urls, domains = yield self.deferred_reformat_stats(domain_stats_df,url_stats_df)
 
         response = self.response_urls(response,urls)
         response = self.response_domains(response,domains)
         response = self.response_summary(response,stats)
         response = self.response_timeseries(response,stats) if timeseries else response
 
-
-        defer.returnValue(response)
-
-
+        self.write_json(response)
 
 
     def get_count(self, advertiser, pattern_terms, date_clause, logic="or",timeout=60):
         self.get_generic(advertiser, pattern_terms, date_clause, logic, timeout)
 
-
-
-
     def get_timeseries(self, advertiser, pattern_terms, date_clause, logic="or",timeout=60):
         self.get_generic(advertiser, pattern_terms, date_clause, logic, timeout, True)
-
-

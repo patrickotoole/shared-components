@@ -3,7 +3,9 @@ import logging
 from lib.helpers import *
 from twisted.internet import defer
 
-
+def check_required(df,num_days):
+    REQUIRED_CACHE_DAYS = num_days if num_days < 7 else 7
+    assert(df.applymap(lambda x: x > 0).sum().sum() > REQUIRED_CACHE_DAYS) 
 
 def group_sum_sort_np_array(arr,key,sortby="count"):
     import itertools
