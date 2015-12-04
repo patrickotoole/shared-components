@@ -25,7 +25,7 @@ class PatternSearchSample(SearchBase, PatternSearchHelpers):
 
     @defer.inlineCallbacks
     def sample_stats_onsite(self, term, params, advertiser, date_clause, numdays=20):
-        df = yield self.defer_execute(params, advertiser, term, date_clause, "must", numdays=numdays)
+        df = yield self.defer_execute(params, advertiser, [term], date_clause, "must", numdays=numdays)
         stats_df, url_stats_df = self.raw_to_stats(df,date_clause)
         defer.returnValue([df,stats_df,url_stats_df])
 

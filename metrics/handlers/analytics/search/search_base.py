@@ -44,7 +44,7 @@ class SearchCassandra(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuer
         SELECT_UDF = "select * from full_replication.function_patterns where function = '%s' "
 
         self.cassandra.execute(INSERT_UDF % (udf_name,pattern[0]))
-        self.cassandra.select_dataframe(SELECT_UDF % (udf_name))
+        print self.cassandra.select_dataframe(SELECT_UDF % (udf_name))
 
     def udf_statement(self,udf):
         QUERY  = """SELECT %(what)s FROM rockerbox.visit_uids_lucene_timestamp_u2_clustered %(where)s"""
