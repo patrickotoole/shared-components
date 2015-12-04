@@ -11,7 +11,7 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 					title: '1) Pixel Implementation'
 				},
 				{
-					title: '2) Create Action'
+					title: '2) Create Segment'
 				},
 				{
 					title: '3) Finish'
@@ -258,7 +258,7 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 		var final_actions = [
 			{
 				icon: 'signal',
-				title: 'Create Action'
+				title: 'Create Segment'
 			},
 			{
 				icon: 'filter',

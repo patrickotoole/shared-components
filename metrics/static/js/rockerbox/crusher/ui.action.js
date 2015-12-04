@@ -627,7 +627,7 @@ RB.crusher.ui.action = (function(action) {
 
     editWrapper.append("h5") 
       .text(function(x){
-        return x.action_id ? "Edit an action" : "Create an action"
+        return x.action_id ? "Edit a segment" : "Create a segment"
       })
       .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-30px;margin-right:-30px")
       .classed("heading",true)
@@ -677,7 +677,7 @@ RB.crusher.ui.action = (function(action) {
 
     var create_action_button = d3_updateable(search_wrapper,".create_action","div")
       .classed("create_action btn btn-sm btn-success", true)
-      .html("<span class=\"icon glyphicon glyphicon-plus\" style=\"padding-right: 21px;\"></span> Create an Action")
+      .html("<span class=\"icon glyphicon glyphicon-plus\" style=\"padding-right: 21px;\"></span> Create a Segment")
       .on("click", function(e) {
         document.cookie="toast=new-action";
         var data = {
