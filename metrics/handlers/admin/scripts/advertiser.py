@@ -44,7 +44,8 @@ INSERT INTO advertiser (
     email,
     advertiser_name,
     pixel_source_name,
-    client_goals 
+    client_goals,
+    client_sld
 ) 
 VALUES (
     '%(contact_name)s', 
@@ -52,7 +53,8 @@ VALUES (
     '%(email)s', 
     '%(advertiser_name)s' , 
     '%(pixel_source_name)s',
-    '%(client_goals)s'
+    '%(client_goals)s',
+    '%(client_sld)s'
 )
 """
 
@@ -115,7 +117,8 @@ class Advertiser(object):
             "email": self.get_argument('contact_email'),
             "advertiser_name": advertiser_name,
             "pixel_source_name": self.get_argument("pixel_source_name"),
-            "client_goals" : self.get_argument("advertiser_details")
+            "client_goals" : self.get_argument("advertiser_details"),
+            "client_sld" : self.get_argument("client_sld")
         }
         query = INSERT_ADVERTISER % params
         self.db.execute(query)            
