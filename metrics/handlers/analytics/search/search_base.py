@@ -44,7 +44,7 @@ class SearchCassandra(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuer
         SELECT_UDF = "select * from full_replication.function_patterns where function = '%s' "
 
         self.cassandra.execute(INSERT_UDF % (udf_name,pattern[0]))
-        self.cassandra.select_dataframe(SELECT_UDF % (udf_name))
+        print self.cassandra.select_dataframe(SELECT_UDF % (udf_name))
 
     def udf_statement(self,udf):
         QUERY  = """SELECT %(what)s FROM rockerbox.visit_uids_lucene_timestamp_u2_clustered %(where)s"""
@@ -154,7 +154,7 @@ class SearchBase(SearchCassandra):
         URL = "select * from pattern_cache where pixel_source_name = '%s' and url_pattern = '%s'"
         df = lnk.dbs.rockerbox.select_dataframe(URL % (advertiser,pattern[0]))
 
-        if len(df[df.num_days > 5]) > 0:
+        if (len(df[df.num_days > 5]) > 0):
             results = self.run_cache(pattern,advertiser,dates,sample[0],sample[1],results)
             logging.info("Results in cache: %s" % len(results))
         
@@ -163,7 +163,7 @@ class SearchBase(SearchCassandra):
 
             if should_cache:
                 import work_queue
-                import lib.cassandra_cache.pattern as cache
+                import lib.cassandra_cache.run as cache
                 import pickle
                 import datetime
 
@@ -181,8 +181,8 @@ class SearchBase(SearchCassandra):
                         _cache_date = datetime.datetime.strftime(today - delta,"%Y-%m-%d")
 
                         work = pickle.dumps((
-                            cache.run_one,
-                            [advertiser,pattern[0],1,i,True,_cache_date]
+                            cache.run_backfill,
+                            [advertiser,pattern[0],_cache_date,_cache_date + " backfill"]
                         ))
 
                         work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,i)
@@ -246,6 +246,8 @@ class SearchBase(SearchCassandra):
         PARAMS = "url, uid"
         response = self.default_response(terms,logic)
         response["timeout"] = timeout
+
+        terms = [terms[0].split(" ")[0]]
 
         df = yield self.defer_execute(PARAMS, advertiser, terms, 
                        date_clause, logic, timeout=timeout, should_cache=False, numdays=2)

@@ -23,7 +23,15 @@ def build_datelist(numdays):
 
     return dates
 
+def filter_fraud(df):
 
+    uids = df.groupby("uid")["uid"].count()
+    bad_uids = list(uids[uids > 1000].index)
+
+    bad_domain_uids = list(set(df[df.domain == "pennlive.com"].uid))
+    df = df[~df.uid.isin(bad_uids) & ~df.uid.isin(bad_domain_uids)]
+
+    return df
 
 
 DEFAULT_INTERVAL = "minute"
@@ -44,6 +52,8 @@ class VisitDomainBase(object):
         domains = list(domain_counts[domain_counts.uid > 15].index)
 
         df = df[df.domain.isin(domains) & (df.domain != "na")]
+        df = filter_fraud(df)
+        
         df = df.groupby(["uid","domain"])["domain"].agg(lambda x: len(x))
         df.name = "exists"
 
@@ -63,11 +73,9 @@ class VisitDomainBase(object):
         df = pandas.DataFrame(xx)
         df['date'] = df['timestamp'].map(lambda x: x.split(" ")[0] + " 00:00:00")
 
-        uids = df.groupby("uid")["uid"].count()
-        bad_uids = list(uids[uids > 1000].index)
+        df = filter_fraud(df)
 
-
-        df = df[~df.uid.isin(bad_uids)].groupby(["domain","date"])['uid'].agg( {
+        df = df.groupby(["domain","date"])['uid'].agg( {
             "count":lambda x: len(set(x)),
             "views": len
         }).reset_index()
@@ -88,6 +96,8 @@ class VisitDomainBase(object):
 
         df = pandas.DataFrame(xx)
         try:
+            df = filter_fraud(df)
+
             df['occurrence'] = df['count']
             df = df.groupby("domain")[["occurrence"]].sum().reset_index().sort_index(by="occurrence",ascending=False).head(100)
         except:

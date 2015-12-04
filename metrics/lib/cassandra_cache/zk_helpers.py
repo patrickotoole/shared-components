@@ -1,5 +1,6 @@
 import datetime 
 import pandas
+import time
 
 class ZKCacheHelpers(object):
     """
@@ -23,6 +24,8 @@ class ZKCacheHelpers(object):
         self.advertiser = advertiser
         self.pattern = pattern
         self.identifier = identifier
+
+        self._start = time.time()
 
     def add_work(self,work):
         self.zk.ensure_path(self._queue)
@@ -60,7 +63,6 @@ class ZKCacheHelpers(object):
         self.zk.ensure_path(self._complete_path)
         self.zk.ensure_path(self.complete_path)
         self.zk.ensure_path(self.complete_path + "/" + self.identifier)
-
 
 
     def stats(self):
