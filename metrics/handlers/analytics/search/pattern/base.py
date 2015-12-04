@@ -133,7 +133,6 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
         stats = stats_df.join(domain_stats_df).join(url_stats_df).fillna(0)
         urls, domains = yield self.deferred_reformat_stats(domain_stats_df,url_stats_df)
 
-
         response = self.default_response(pattern_terms,logic,no_results=True)
 
         response = self.response_urls(response,urls)
