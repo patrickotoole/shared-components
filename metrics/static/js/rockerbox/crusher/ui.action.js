@@ -21,8 +21,8 @@ RB.crusher.ui.action = (function(action) {
 
     delete objectData['visits_data']
 
-    this.select("h5").text("Edit an action")
-    this.select(".save").text("Update action")  
+    this.select("h5").text("Edit a segment")
+    this.select(".save").text("Update segment")  
 
     var actions = crusher.cache.actionData // this should really be in the controller
 
@@ -246,7 +246,7 @@ RB.crusher.ui.action = (function(action) {
     var h5 = actionView.selectAll("h5").data(function(x){return [x.action_name]})
     h5.enter().append("h5")
 
-    h5.text(function(x) { return "Action > " + x } )
+    h5.text(function(x) { return "Segment > " + x } )
       .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-30px;margin-right:-30px")
       .classed("heading",true)
     h5.exit().remove()
@@ -650,7 +650,7 @@ RB.crusher.ui.action = (function(action) {
 
     var search_input = d3_updateable(search_wrapper,".search_input","input")
       .classed("search_input", true)
-      .attr("placeholder", "Type in an action or select a recommended action from the sidebar...")
+      .attr("placeholder", "Type in a segment or select a recommended segment from the sidebar...")
       .attr("type", "text")
       .on('keyup', function(e) {
         if(search.query != this.value) {
@@ -725,7 +725,7 @@ RB.crusher.ui.action = (function(action) {
       // .style("display", "none")
     var matched_domains_title = d3_updateable(matched_domains_wrapper, ".matched_domains_title", "div")
       .classed("matched_domains_title chart-title", true)
-      .text("This action will include visits to these URLs:")
+      .text("This segment will include visits to these URLs:")
       // .text("Matched URLs (" + domains_contains_keyword.length + ")")
 
     var matched_domains = d3_updateable(matched_domains_wrapper, ".matched_domains", "ol")
