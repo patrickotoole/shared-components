@@ -2,7 +2,7 @@ var RB = RB || {}
 RB.crusher = RB.crusher || {}
 RB.crusher.ui = RB.crusher.ui || {}
 
-RB.crusher.ui.pixel = (function(pixel) {
+RB.crusher.ui.pixel = (function(pixel, crusher) {
 
   pixel.setup = function(funnelRow,status_data,advertiser_data,uid) {
         var heading = d3_updateable(funnelRow,".heading","h5")
@@ -240,4 +240,4 @@ RB.crusher.ui.pixel = (function(pixel) {
   }
 
   return pixel
-})(RB.crusher.ui.pixel || {})  
+})(RB.crusher.ui.pixel || {}, RB.crusher)  

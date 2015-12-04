@@ -1,5 +1,17 @@
 import pandas
 import logging
+from lib.helpers import *
+from twisted.internet import defer
+
+def check_required_days(df,num_days):
+    REQUIRED_CACHE_DAYS = num_days if num_days < 7 else 7
+    assert(df.applymap(lambda x: x > 0).sum().sum() > REQUIRED_CACHE_DAYS) 
+
+def group_sum_sort_np_array(arr,key,sortby="count"):
+    import itertools
+
+    df = pandas.DataFrame(list(itertools.chain.from_iterable(arr)))
+    return df.groupby(key).sum().reset_index().sort_index(by=sortby,ascending=False)
 
 def build_datelist(numdays):
     import datetime
@@ -12,7 +24,13 @@ def build_datelist(numdays):
 
 def build_count_dataframe(field):
     def build(data):
-        return pandas.DataFrame(data).rename(columns={"count":field}).set_index("date")
+        try:
+            return pandas.DataFrame(data).rename(columns={"count":field}).set_index("date")
+        except:
+            # hack: for the null case build an empty df
+            df = pandas.DataFrame([[0,0]],columns=[field,"date"]).set_index("date")
+            df = df[df[field] > 0]
+            return df
 
     return build
 
@@ -29,6 +47,43 @@ def build_dict_dataframe(field):
 
 
 class PatternSearchHelpers(object):
+
+    @defer.inlineCallbacks
+    def deferred_reformat_stats(self,domain_stats_df,url_stats_df):
+        deferred_list = defer.DeferredList([
+            self.url_stats_to_urls(url_stats_df),
+            self.domain_stats_to_domains(domain_stats_df)
+        ])
+
+        results = yield deferred_list
+        urls    = results[0][1]
+        domains = results[1][1]
+
+        defer.returnValue([urls,domains])
+
+
+
+        
+
+    @decorators.deferred
+    def url_stats_to_urls(self,url_stats_df):
+        import time
+        start = time.time()
+        df = group_sum_sort_np_array(url_stats_df['urls'].values,"url")
+        print start - time.time()
+        return df
+
+
+    @decorators.deferred
+    def domain_stats_to_domains(self,domain_stats_df):
+        import time
+        start = time.time()
+        df = group_sum_sort_np_array(domain_stats_df['domains'].values,"domain")
+        print start - time.time()
+        return df
+
+
+
 
     def head_and_tail(self,l):
         return (l[0], l[1:])

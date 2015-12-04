@@ -381,19 +381,21 @@ RB.crusher.ui.action = (function(action) {
   
 
   action.edit = function(wrapper,onSave) {
-    setTimeout(function() {
-      var edits = wrapper.selectAll(".action")
-        .data(function(x){return [x]},function(x){
-          if(typeof x.action_name !== typeof undefined) {
-            matched_domains_wrapper.style("display", "block")
-            matched_domains_loading.style("display", "block");
-            search.query = x.action_name;
-            search_input.attr("value", search.query);
-            search.perform(search.query);
-            search.buildResults();
-          }
-        });
-    }, 1);
+    if (window.location.pathname.indexOf("exisiting") > -1) {
+      setTimeout(function() {
+        var edits = wrapper.selectAll(".action")
+          .data(function(x){return [x]},function(x){
+            if(typeof x.action_name !== typeof undefined) {
+              matched_domains_wrapper.style("display", "block")
+              matched_domains_loading.style("display", "block");
+              search.query = x.action_name;
+              search_input.attr("value", search.query);
+              search.perform(search.query);
+              search.buildResults();
+            }
+          });
+      }, 1);
+    }
   
     var client_sld;
 
