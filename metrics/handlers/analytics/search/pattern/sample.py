@@ -38,12 +38,17 @@ class PatternSearchSample(SearchBase, PatternSearchHelpers):
             defer.returnValue([df,sdf,udf])
 
     @defer.inlineCallbacks
+    def sample_offsite_domains(self, advertiser, term, uids, num_days=2):
+        deferreds = [self.defer_get_domains_with_cache(advertiser,term,uids,num_days)]
+        dl = defer.DeferredList(deferreds)
+
+        dom = yield dl
+        defer.returnValue(dom)
+
+    @defer.inlineCallbacks
     def sample_stats_offsite(self, advertiser, term, uids, num_days=2):
         if len(uids):
-            deferreds = [self.defer_get_domains_with_cache(advertiser,term,uids,num_days)]
-            dl = defer.DeferredList(deferreds)
-
-            dom = yield dl
+            dom = yield self.sample_offsite_domains(advertiser, term, uids, num_days)
 
             if hasattr(dom[0][1],"uid"):
                 dom[0][1]['date'] = dom[0][1].timestamp.map(lambda x: x.split(" ")[0] + " 00:00:00")

@@ -63,40 +63,56 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
         self.write_json(response)
 
 
+
+
+    @defer.inlineCallbacks
+    def get_users_sampled(self,advertiser,term,dates,num_days):
+        sample_args = [term,"",advertiser,dates,num_days]
+
+        df, stats_df, url_stats_df = yield self.sample_stats_onsite(*sample_args)
+
+        uids = list(set(df.uid.values))[:5000]
+        defer.returnValue([uids])
+
     @defer.inlineCallbacks
     def get_uids(self, advertiser, pattern_terms, date_clause, logic="or",timeout=60):
         PARAMS = "uid"
         indices = [PARAMS]
+        term = pattern_terms[0][0]
 
         response = self.default_response(pattern_terms,logic)
         response['summary']['num_users'] = 0
 
-        terms, remaining_terms = self.head_and_tail(pattern_terms)
+        num_days = 1
         
-        # PUSH all the data into one dataframe
-        df = yield self.defer_execute(PARAMS, advertiser, terms, date_clause, "must", False, numdays=5)
-        df['terms'] = ",".join(terms)
+        uids = yield self.get_users_sampled(advertiser,term,build_datelist(num_days),num_days) 
 
-        for terms in remaining_terms:
-            df2 = yield self.defer_execute(PARAMS, advertiser, terms, date_clause, "must")
-            df2['terms'] = ",".join(terms)
+        uids = uids[0]
+        dom = yield self.sample_offsite_domains(advertiser, term, uids, num_days) 
+        domain_stats_df  = dom[0][1]
+       
+        urls = yield self.defer_get_uid_domains(advertiser,uids,term)
 
-            df = df.append(df2)
-            df = df.drop_duplicates()
+        domains = domain_stats_df.groupby("uid").apply(lambda x: x[['timestamp','domain']].sort_index(by="timestamp").to_dict(outtype="records") )
 
-        df = df.reset_index()
+        domains = domains.ix[urls.index]
+        domains = domains[~domains.isnull()]
 
-        # APPLY "and" logic if necessary
-        if logic == "and":
-            df = self.pattern_and(df,pattern_terms)
+        urls = urls.ix[domains.index]
+        urls = urls[~urls.isnull()]
 
-        # PREPARE the final version of the data for response
-        if len(df) > 0:
-            response['results'] = list(set(df.uid.values))
+        if len(uids) > 0:
+            response['results'] = uids
+            response['domains'] = domains.T.to_dict()
+            response['actions_events'] = urls.T.to_dict()
+
+
             response['summary']['num_users'] = len(response['results'])
-            
         
         self.write_json(response)
+
+
+
 
     @defer.inlineCallbacks
     def get_generic_cached(self,advertiser,term,dates,num_days):
@@ -129,7 +145,6 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
         except: 
             stats_df, domain_stats_df, url_stats_df = yield self.get_generic_sampled(*args)
 
-
         stats = stats_df.join(domain_stats_df).join(url_stats_df).fillna(0)
         urls, domains = yield self.deferred_reformat_stats(domain_stats_df,url_stats_df)
 
@@ -142,9 +157,14 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
 
         self.write_json(response)
 
-
     def get_count(self, advertiser, pattern_terms, date_clause, logic="or",timeout=60):
         self.get_generic(advertiser, pattern_terms, date_clause, logic, timeout)
 
     def get_timeseries(self, advertiser, pattern_terms, date_clause, logic="or",timeout=60):
         self.get_generic(advertiser, pattern_terms, date_clause, logic, timeout, True)
+
+
+    # THE FOLLOWING SHOULD BE ITS OWN ENDPOINT...
+
+
+
