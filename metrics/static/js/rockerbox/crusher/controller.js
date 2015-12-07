@@ -166,7 +166,7 @@ RB.crusher.controller = (function(controller) {
         .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-15px")
         .classed("welcome-heading heading", true)
       RB.crusher.ui.gettingstarted.step3(row, {
-        goToAction: RB.routes.navigation.forward.bind(false, RB.crusher.controller.states["/crusher/action/new"]),
+        goToAction: RB.routes.navigation.forward.bind(false, RB.crusher.controller.states["/crusher/action/existing"]),
         goToFunnel: RB.routes.navigation.forward.bind(false, RB.crusher.controller.states["/crusher/funnel/new"])
       });
     },
@@ -233,7 +233,7 @@ RB.crusher.controller = (function(controller) {
         .classed("main-wrapper",true)
 
 
-      var desc = "Funnels allow you to model the behavior between actions. " + 
+      var desc = "Funnels allow you to model the behavior between segments. " + 
         "For instance, you can look at a user who comes to a landing page and then proceeds to checkout." +
         ""
 
@@ -311,7 +311,7 @@ RB.crusher.controller = (function(controller) {
       } else {
 
         // existing dashboard...
-        var funnelRow = build_header({"id":"action_about","name":"Action Dashboard"})
+        var funnelRow = build_header({"id":"action_about","name":"Segments Dashboard"})
         var subscription = RB.crusher.ui.action.dashboard.widgets.bind(false,funnelRow)
   
         crusher.subscribe.add_subscriber(["actions"],subscription ,"actionDashboard",true,true)
@@ -382,13 +382,13 @@ RB.crusher.controller = (function(controller) {
   controller.routes = {
     roots: [
     {
-      "name":"Actions",
+      "name":"Segments",
       "push_state": "/crusher/action/existing",
       "class": "glyphicon glyphicon-signal",
       "values_key": "action_name"
 
     },{
-      "name":"Create Action",
+      "name":"Create Segment",
       "push_state": "/crusher/action/recommended",
       "class": "glyphicon glyphicon-plus",
       "values_key": "action_name",
@@ -441,7 +441,7 @@ RB.crusher.controller = (function(controller) {
       "action/new": [],
       "action/recommended": ["recommended_actions"],
       "analytics": [{
-          "name":"Actions",
+          "name":"Segments",
           "push_state":"/crusher/action",
         },
         {
@@ -477,7 +477,7 @@ RB.crusher.controller = (function(controller) {
           "push_state":"/crusher/home"
         },
         {
-          "name":"Actions",
+          "name":"Segments",
           "push_state":"/crusher/action",
         },
         {
@@ -495,16 +495,16 @@ RB.crusher.controller = (function(controller) {
           "values_key":"funnel_name"    
         }],
       "action": [{
-          "name": "Create New Action",
+          "name": "Create Segment",
           "push_state":"/crusher/action/recommended",
           "values_key": "action_name"
         },{
-          "name": "Create Action",
+          "name": "Create Segment",
           "push_state":"/crusher/action/recommended",
           "values_key": "action_name",
           "hide_href": true
         },{
-          "name": "View Existing Actions",
+          "name": "View Existing Segments",
           "push_state":"/crusher/action/existing",
           //"skipRender": true,
           "values_key":"action_name"
