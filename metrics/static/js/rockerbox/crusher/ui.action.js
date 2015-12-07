@@ -547,43 +547,49 @@ RB.crusher.ui.action = (function(action) {
 
               // Get domain and remove slashes from query if necessary
               var test_domain = result.url.split(client_sld + "/")[1];
-              if(test_domain[0] == '/') {
-                test_domain = test_domain.substring(1);
-              }
-              if(test_domain[test_domain.length - 1] == '/') {
-                test_domain = test_domain.slice(0, -1);
-              }
 
-              // Get query and remove slashes from query if necessary
-              if(query[0] == '/') {
-                var test_query = query.substring(1);
+              if(typeof test_domain !== typeof undefined) {
+                if(test_domain[0] == '/') {
+                  test_domain = test_domain.substring(1);
+                }
+                if(test_domain[test_domain.length - 1] == '/') {
+                  test_domain = test_domain.slice(0, -1);
+                }
+
+                // Get query and remove slashes from query if necessary
+                if(query[0] == '/') {
+                  var test_query = query.substring(1);
+                } else {
+                  var test_query = query;
+                }
+                if(query[query.length - 1] == '/') {
+                  test_query = test_query.slice(0, -1);
+                }
+
+
+                // Add to array of all URL's (contains keyword)
+                search.results.contains_keyword.push(domain_result);
+
+
+                // Check for urls exactly matching keyword
+                if(test_query == test_domain) {
+                  search.results.matches_keyword.push(domain_result);
+                }
+
+
+                // Check for urls starting with keyword
+                if(test_domain.indexOf(test_query) == 0) {
+                  search.results.starts_with_keyword.push(domain_result);
+                }
+
+
+                // Check for urls ending with keyword
+                if(typeof test_domain[test_domain.indexOf(test_query) + test_query.length] === typeof undefined) {
+                  search.results.ends_with_keyword.push(domain_result);
+                }
               } else {
-                var test_query = query;
-              }
-              if(query[query.length - 1] == '/') {
-                test_query = test_query.slice(0, -1);
-              }
-
-
-              // Add to array of all URL's (contains keyword)
-              search.results.contains_keyword.push(domain_result);
-
-
-              // Check for urls exactly matching keyword
-              if(test_query == test_domain) {
-                search.results.matches_keyword.push(domain_result);
-              }
-
-
-              // Check for urls starting with keyword
-              if(test_domain.indexOf(test_query) == 0) {
-                search.results.starts_with_keyword.push(domain_result);
-              }
-
-
-              // Check for urls ending with keyword
-              if(typeof test_domain[test_domain.indexOf(test_query) + test_query.length] === typeof undefined) {
-                search.results.ends_with_keyword.push(domain_result);
+                // Something is wrong with the client_sld, just push to the "contains keyword" array for now
+                search.results.contains_keyword.push(domain_result);
               }
             });
 
