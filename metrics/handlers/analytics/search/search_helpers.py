@@ -97,7 +97,7 @@ class SearchCassandraHelpers(object):
         results += extra
     
     @staticmethod
-    def sufficient_limit(size=1000):
+    def sufficient_limit(size=1500):
     
         def suffices(x):
             _, _, result = x

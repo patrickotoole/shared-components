@@ -48,7 +48,7 @@ class VisitDomainBase(object):
 
         df = df[df.url.map(lambda x: term in x)]
 
-        df = df.groupby("uid").apply(lambda x: x[['timestamp','url']].sort_index(by="timestamp").to_dict(outtype="records") )
+        
         
         return df
 
