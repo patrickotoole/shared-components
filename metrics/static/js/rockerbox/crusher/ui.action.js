@@ -381,7 +381,7 @@ RB.crusher.ui.action = (function(action) {
   
 
   action.edit = function(wrapper,onSave) {
-    if (window.location.pathname.indexOf("exisiting") > -1) {
+    if (window.location.pathname.indexOf("existing") > -1 || window.location.pathname.indexOf("recommended") > -1) {
       setTimeout(function() {
         var edits = wrapper.selectAll(".action")
           .data(function(x){return [x]},function(x){
