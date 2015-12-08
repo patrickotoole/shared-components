@@ -93,7 +93,7 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
         dom = yield self.sample_offsite_domains(advertiser, term, uids, num_days) 
         domain_stats_df  = dom[0][1]
        
-        urls = yield self.defer_get_uid_domains(advertiser,uids,term)
+        urls = yield self.defer_get_uid_visits(advertiser,uids,term)
 
         def time_groups(delta):
             minutes = [5,15,25,35,45,60,75,90,105,120,135,150,180,210,240,300,360,420,480,540,720,1080,1440,2880,4320,10080]

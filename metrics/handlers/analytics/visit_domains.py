@@ -41,15 +41,33 @@ QUERY = "SELECT * FROM rockerbox.visitor_domains_2 "
 class VisitDomainBase(object):
 
     @decorators.deferred
-    def defer_get_uid_domains(self, source, uids, term):
+    def defer_get_uid_visits(self, source, uids, term):
 
         xx = self.paginate_get_visits(uids, source)
         df = pandas.DataFrame(xx)
 
         df = df[df.url.map(lambda x: term in x)]
 
+        return df
+
+    @decorators.deferred
+    def defer_get_uid_domains(self, source, pattern, uids, date_clause):
+
+        xx = self.paginate_get_w_in(uids, date_clause)
+        df = pandas.DataFrame(xx)
+
+        df['domain'] = df.domain.map(lambda x: re.sub("^m\.","",x.lower()))
+
+        domain_counts = df.groupby("domain").count()
+        domains = list(domain_counts[domain_counts.uid > 15].index)
+
+        df = df[df.domain.isin(domains) & (df.domain != "na")]
+        df = filter_fraud(df)
         
-        
+        df = df.groupby(["uid","domain"])["domain"].agg(lambda x: len(x))
+        df.name = "exists"
+
+
         return df
 
  
