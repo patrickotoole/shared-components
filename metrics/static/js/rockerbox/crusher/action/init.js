@@ -179,6 +179,12 @@ RB.crusher.ui.action.behavior = (function(behavior,action,crusher) {
   behavior.subscription = function(data) {
 
     var target = d3.selectAll(".action-view-wrapper")
+    d3_updateable(target.selectAll(".urls"),".action-body","div")
+      .classed("action-body",true)
+      .style("margin-left","-15px")
+      .style("margin-right","-15px")
+
+
     crusher.ui.action.show_behavior(target)
     
     return data

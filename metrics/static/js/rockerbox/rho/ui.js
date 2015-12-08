@@ -124,8 +124,13 @@ RB.rho.ui = (function(ui) {
     var wrapper = d3_updateable(target,".series-wrapper." + series,"div")
       .classed("series-wrapper " + formatting + " " + series,true)
 
-    var newTarget = d3_updateable(wrapper,".series." + series,"div",[data])
-      .classed("bar series " + series,true)
+    var d;
+    if (data) d = [data]
+
+    
+
+    var newTarget = d3_updateable(wrapper,".series." + series,"div",d)
+      .classed("bar-series series " + series,true)
 
     if (button) {
       
@@ -139,7 +144,7 @@ RB.rho.ui = (function(ui) {
       .classed("title",true)
       .text(String)
 
-    var value = data.reduce(function(p,c) {return p + c[series]},0)
+    var value = data ? data.reduce(function(p,c) {return p + c[series]},0) : [false]
 
     d3_updateable(newTarget,".value","div",[value],function(x){return x})
       .classed("value",true)

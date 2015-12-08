@@ -106,6 +106,7 @@ RB.crusher.ui.action = (function(action) {
     }
 
     var buildCurrent = function(current_dom,data) {
+
       RB.rho.ui.buildBarTable(current_dom,data,"asdf","domain",false,12,action.category_colors)
 
     }
