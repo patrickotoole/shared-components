@@ -1,473 +1,151 @@
-{% autoescape None %}
-{% block content %}
+{% extends "base.html" %}
+{% block scripts_top %}
+<script type="text/javascript" src="/static/js/d3.js" charset="utf-8"></script>
+<script src="/static/js/queue.js"></script>
+<script src="/static/js/jquery.min.js"></script>
+<script src="/static/js/crossfilter.min.js"></script>
+<script src="/static/js/bootstrap.min.js"></script>
+<script src="/static/js/jquery.toast.js"></script>
+<link href="/static/css/jquery.toast.css" rel="stylesheet" type="text/css"></script>
 
-<head>
-    <script type="text/javascript">
-      window.heap=window.heap||[],heap.load=function(e,t){window.heap.appid=e,window.heap.config=t=t||{};var n=t.forceSSL||"https:"===document.location.protocol,a=document.createElement("script");a.type="text/javascript",a.async=!0,a.src=(n?"https:":"http:")+"//cdn.heapanalytics.com/js/heap-"+e+".js";var o=document.getElementsByTagName("script")[0];o.parentNode.insertBefore(a,o);for(var r=function(e){return function(){heap.push([e].concat(Array.prototype.slice.call(arguments,0)))}},p=["clearEventProperties","identify","setEventProperties","track","unsetEventProperty"],c=0;c<p.length;c++)heap[p[c]]=r(p[c])};
-      heap.load("3770633966");
-    </script>
-  <script type="text/javascript" src="/static/js/d3.js" charset="utf-8"></script>
-  <script src="/static/js/queue.js"></script>
-  <script src="/static/js/jquery.min.js"></script>
-  <script src="/static/js/crossfilter.min.js"></script> 
-  <script src="/static/js/bootstrap.min.js"></script>
-  <script src="/static/js/jquery.toast.js"></script>
-  <link href="/static/css/jquery.toast.css" rel="stylesheet" type="text/css"></script>
+<script src="/static/js/rockerbox/routes/routes.js"></script>
+<script src="/static/js/rockerbox/routes/routes.navigation.js"></script>
 
-  <script src="/static/js/rockerbox/routes/routes.js"></script> 
-  <script src="/static/js/rockerbox/routes/routes.navigation.js"></script> 
+<script src="/static/js/rockerbox/menu/menu.js"></script>
+<script src="/static/js/rockerbox/menu/menu.navbar.js"></script>
+<script src="/static/js/rockerbox/menu/menu.selectbar.js"></script>
+<script src="/static/js/rockerbox/helper.js"></script>
 
-  <script src="/static/js/rockerbox/menu/menu.js"></script>    
-  <script src="/static/js/rockerbox/menu/menu.navbar.js"></script>    
-  <script src="/static/js/rockerbox/menu/menu.selectbar.js"></script>    
-  <script src="/static/js/rockerbox/helper.js"></script>    
-  
-  <script src="/static/js/rockerbox/crusher/subscribe.js"></script> 
+<script src="/static/js/rockerbox/crusher/subscribe.js"></script>
 
+<script src="/static/js/rockerbox/crusher/api.helpers.js"></script>
+<script src="/static/js/rockerbox/crusher/api.endpoints.js"></script>
+<script src="/static/js/rockerbox/crusher/api.js"></script>
 
-  <script src="/static/js/rockerbox/crusher/api.helpers.js"></script> 
-  <script src="/static/js/rockerbox/crusher/api.endpoints.js"></script> 
-  <script src="/static/js/rockerbox/crusher/api.js"></script> 
+<script src="/static/js/advertiser/info.js"></script>
 
-  <script src="/static/js/advertiser/info.js"></script>
+<script src="/static/js/rockerbox/crusher/permissions.js"></script>
+<script src="/static/js/rockerbox/crusher/component.js"></script>
+<script src="/static/js/rockerbox/pie.js"></script>
 
+<script src="/static/js/rockerbox/crusher/action/init.js"></script>
+<script src="/static/js/rockerbox/crusher/funnel/wait.js"></script>
+<script src="/static/js/rockerbox/crusher/funnel/show.js"></script>
+<script src="/static/js/rockerbox/crusher/funnel/domains.js"></script>
+<script src="/static/js/rockerbox/crusher/funnel/avails.js"></script>
+<script src="/static/js/rockerbox/crusher/funnel/idf.js"></script>
+<script src="/static/js/rockerbox/crusher/funnel/init.js"></script>
+<script src="/static/js/rockerbox/crusher/funnel/final.js"></script>
 
-  <script src="/static/js/rockerbox/crusher/permissions.js"></script> 
-  <script src="/static/js/rockerbox/crusher/component.js"></script> 
-  <script src="/static/js/rockerbox/pie.js"></script> 
+<script src="/static/js/rockerbox/crusher/controller.js"></script>
+<script src="/static/js/rockerbox/crusher/controller.funnel.js"></script>
+<script src="/static/js/rockerbox/crusher/controller.action.js"></script>
+<script src="/static/js/rockerbox/crusher/controller.campaign.js"></script>
+<script src="/static/js/rockerbox/crusher/controller.lookalike.js"></script>
 
-  
-  <script src="/static/js/rockerbox/crusher/action/init.js"></script> 
+<script src="/static/js/rockerbox/crusher/ui.gettingstarted.js"></script>
+<script src="/static/js/rockerbox/crusher/ui.js"></script>
+<script src="/static/js/rockerbox/crusher/ui.settings.js"></script>
+<script src="/static/js/rockerbox/crusher/ui.pixel.js"></script>
+<script src="/static/js/rockerbox/crusher/ui.home.js"></script>
 
-  <script src="/static/js/rockerbox/crusher/funnel/wait.js"></script> 
-  <script src="/static/js/rockerbox/crusher/funnel/show.js"></script> 
-  <script src="/static/js/rockerbox/crusher/funnel/domains.js"></script> 
-  <script src="/static/js/rockerbox/crusher/funnel/avails.js"></script> 
-  <script src="/static/js/rockerbox/crusher/funnel/idf.js"></script> 
-  <script src="/static/js/rockerbox/crusher/funnel/init.js"></script> 
-  <script src="/static/js/rockerbox/crusher/funnel/final.js"></script> 
+<script src="/static/js/rockerbox/crusher/ui.action.js"></script>
+<script src="/static/js/rockerbox/crusher/ui.action.keywords.js"></script>
 
-  
-  <script src="/static/js/rockerbox/crusher/controller.js"></script>   
-  <script src="/static/js/rockerbox/crusher/controller.funnel.js"></script>   
-  <script src="/static/js/rockerbox/crusher/controller.action.js"></script>   
-  <script src="/static/js/rockerbox/crusher/controller.campaign.js"></script>   
-  <script src="/static/js/rockerbox/crusher/controller.lookalike.js"></script>   
-  
-  <script src="/static/js/rockerbox/crusher/ui.gettingstarted.js"></script>
-  <script src="/static/js/rockerbox/crusher/ui.js"></script>   
-  <script src="/static/js/rockerbox/crusher/ui.settings.js"></script>   
-  <script src="/static/js/rockerbox/crusher/ui.pixel.js"></script>   
-  <script src="/static/js/rockerbox/crusher/ui.home.js"></script>   
+<script src="/static/js/rockerbox/crusher/ui.action.dashboard.js"></script>
+<script src="/static/js/rockerbox/crusher/ui.action.domains.js"></script>
+<script src="/static/js/rockerbox/crusher/ui.action.clusters.js"></script>
 
+<script src="/static/js/rockerbox/crusher/ui.funnel.js"></script>
+<script src="/static/js/rockerbox/crusher/ui.funnel.action.js"></script>
 
+<script src="/static/js/rockerbox/crusher/ui.funnel.show.js"></script>
+<script src="/static/js/rockerbox/crusher/ui.funnel.edit.js"></script>
 
-  <script src="/static/js/rockerbox/crusher/ui.action.js"></script>    
-  <script src="/static/js/rockerbox/crusher/ui.action.keywords.js"></script>    
+<script src="/static/js/rockerbox/crusher/ui.funnel.campaign.js"></script>
+<script src="/static/js/rockerbox/crusher/ui.funnel.campaign.lookalike.js"></script>
+<script src="/static/js/rockerbox/crusher/ui.action.pattern.js"></script>
 
-  <script src="/static/js/rockerbox/crusher/ui.action.dashboard.js"></script>    
-  <script src="/static/js/rockerbox/crusher/ui.action.domains.js"></script>    
-  <script src="/static/js/rockerbox/crusher/ui.action.clusters.js"></script>    
+<script src="/static/js/rockerbox/rho/ui.js"></script>
+<script src="/static/js/rockerbox/rho/ui.filter.js"></script>
 
+<script src="/static/js/rockerbox/visit_urls.js"></script>
+<script src="/static/js/bootstrap-switch.js"></script>
+<script src="/static/js/jquery.serialize-object.js"></script>
+<script src="/static/js/bootstrap-select.js"></script>
 
-  <script src="/static/js/rockerbox/crusher/ui.funnel.js"></script>     
-  <script src="/static/js/rockerbox/crusher/ui.funnel.action.js"></script>     
-  
-  <script src="/static/js/rockerbox/crusher/ui.funnel.show.js"></script>     
-  <script src="/static/js/rockerbox/crusher/ui.funnel.edit.js"></script>     
-  
-  <script src="/static/js/rockerbox/crusher/ui.funnel.campaign.js"></script>
-  <script src="/static/js/rockerbox/crusher/ui.funnel.campaign.lookalike.js"></script>
-  <script src="/static/js/rockerbox/crusher/ui.action.pattern.js"></script> 
-  
-  <script src="/static/js/rockerbox/rho/ui.js"></script>    
-  <script src="/static/js/rockerbox/rho/ui.filter.js"></script>  
-  
-  <script src="/static/js/rockerbox/visit_urls.js"></script>
-  <script src="/static/js/bootstrap-switch.js"></script>
-  <script src="/static/js/jquery.serialize-object.js"></script>
-  <script src="/static/js/bootstrap-select.js"></script>
-  
-  <script src="/static/js/typeahead.js/typeahead.bundle.js"></script>
-  <script type="text/javascript" src="/static/js/chosen/chosen.jquery.min.js"> </script>
+<script src="/static/js/typeahead.js/typeahead.bundle.js"></script>
+<script type="text/javascript" src="/static/js/chosen/chosen.jquery.min.js"> </script>
 
-  <link href="/static/js/chosen/chosen.min.css" rel="stylesheet"> 
-  <link href="/static/css/bootstrap.css" rel="stylesheet"> 
-  <link href="/static/css/bootstrap.min.css" rel="stylesheet">
-  <link href="/static/css/fonts.css" rel="stylesheet">
+<link href="/static/js/chosen/chosen.min.css" rel="stylesheet">
+<link href="/static/css/bootstrap.css" rel="stylesheet">
+<link href="/static/css/bootstrap.min.css" rel="stylesheet">
+<link href="/static/css/fonts.css" rel="stylesheet">
 
-  <link href="/static/css/bootstrap-switch.css" rel="stylesheet">
-  <link href="/static/css/bootstrap-select.css" rel="stylesheet">
+<link href="/static/css/bootstrap-switch.css" rel="stylesheet">
+<link href="/static/css/bootstrap-select.css" rel="stylesheet">
 
-  <link href="/static/js/typeahead.js/typeahead.css" rel="stylesheet">
-  <script type="text/javascript" src="/static/js/chartist.min.js"></script>
-  <link rel="stylesheet" href="/static/css/chartist.min.css">
+<link href="/static/js/typeahead.js/typeahead.css" rel="stylesheet">
+<script type="text/javascript" src="/static/js/chartist.min.js"></script>
+<link rel="stylesheet" href="/static/css/chartist.min.css">
 
-  <script type="text/javascript" src="/static/js/prism.js" data-default-language="markup"></script>
-  <link rel="stylesheet" href="/static/css/prism.css">
-  <link rel="stylesheet" href="/static/css/style.css">
-  
-  <style>
-.statistic .item {
-  line-height:15px;
-  padding-left:10px
-}
-.funnel h5 { margin-top:18px }
-.bootstrap-switch .bootstrap-switch-handle-on, .bootstrap-switch .bootstrap-switch-handle-off, .bootstrap-switch .bootstrap-switch-label { font-size:12px}
-.estimate, .statistic {line-height:30px}
-.twitter-typeahead {width:100%}
+<script type="text/javascript" src="/static/js/prism.js" data-default-language="markup"></script>
+<link rel="stylesheet" href="/static/css/prism.css">
+<link rel="stylesheet" href="/static/css/style.css">
+<script>
+$(document).ready(function(){
+  console.log("// start things")
+  RB.init()
 
-    .bs-select-hidden {display:none}
-    .compute-funnel-wrapper {
-      /*padding-top: 8px;*/
-      padding-bottom: 8px;
-    }
-    .list-group-item .remove-funnel {
-      float:right
-    }
-    .list-group-item.active, .list-group-item.active:focus, .list-group-item.active:hover {
-      z-index: 2;
-      color: #fff;
-      background-color: #337ab7;
-      border-color: #337ab7;
-    }
+  var page = window.location.pathname + window.location.search//.replace("/crusher/","")
 
-    .filter-wrapper h5 {font-size:13px}
-    .container {padding-top:15px}
-    input[type="checkbox"]:disabled + label{ color: #ccc; }
-    .loading { display: none; } 
-    body { font: 10px sans-serif; }
-    body { font-size: 12px; font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;}
-    .list-group-item .btn {margin-top:-4px}
-    .axis {opacity:.4}
-    .axis path,
-    .axis line { fill: none; shape-rendering: crispEdges; }
-    .y.axis .tick line {stroke-dasharray:2; stroke: rgb(51,51,51)}
-    .y.axis .domain {stroke:none}
-    .x.axis path { display: none; }
-    .line { fill: none; stroke: steelblue; stroke-width: 1.5px; }
-    .line { fill: none; stroke: steelblue; stroke-width: 2px; }
+  RB.menu.render(d3.select("body"))
+  RB.crusher.controller.init(page)
 
-    .area {    fill-opacity: .5; fill: lightsteelblue; }
-    .and {float: right; margin-right: -26px; font-size: 12px; line-height:30px}
-    .filter-wrapper .filter:last-of-type .and {display:none}
-    .filter-wrapper .col-md-4 span:first-of-type {display:none}  
-    .filter-wrapper .filter:first-of-type .col-md-4:first-of-type span:last-of-type {display:none}
-    .filter-wrapper .filter:first-of-type .col-md-4:first-of-type span:first-of-type {display:inline} 
-    a {cursor:pointer}
-    /*.filter-wrapper {background:grey}*/
-    .chosen-container {margin-top:2.5px}
-    #seriesable, #filterable {
-      padding-top:5px;padding-bottom:5px;
-      margin-left:-25px; 
-      margin-right:-25px;
-      padding-right:25px;
-      padding-left:25px; 
-      background-color:#ddd
-    }
-    .action-patterns, .action-steps {
-      padding:10px
-    }
+  console.log("// finish things")
+})
 
-    .bar { fill: steelblue; } 
-    .bar:hover { fill: brown; } 
-    .axis { font: 10px sans-serif; } 
-    .axis path, .axis line { fill: none; stroke: #000; shape-rendering: crispEdges; } 
-    .x.axis path { display: none; }
-    .container {background-color: #f8f8f8;}
-    .heading {background-color:white}
-    .bar.series { padding-bottom:20px }
-    .domain-chart-svg {margin-top:20px}
+</script>
+<script type="text/javascript">
+  $(function() {
+    var Toast = {
+      init: function() {
+        try {
+          var toast = document.cookie.split("toast=")[1].split(";")[0];
 
-    .action {margin-bottom:30px}
-
-
-    .axis path,
-    .axis line { fill: none; stroke: #000; shape-rendering: crispEdges; }
-    .x.axis path { display: none; }
-    .line { fill: none; stroke: steelblue; stroke-width: 1.5px; }
-    .and {float: right; margin-right: -26px; font-size: 12px; line-height:30px}
-    .filter-wrapper .filter:last-of-type .and {display:none}
-    .filter-wrapper .col-md-4 span:first-of-type {display:none}  
-    .filter-wrapper .filter:first-of-type .col-md-4:first-of-type span:last-of-type {display:none}
-    .filter-wrapper .filter:first-of-type .col-md-4:first-of-type span:first-of-type {display:inline} 
-  </style>
-
-  <style>
-body {font-family:"ProximaNova",sans-serif; -webkit-font-smoothing: antialiased;}
-        .block-quote {
-          padding: 20px;
-          margin: 20px 0;
-          border: 1px solid #eee;
-          border-left-width: 5px;
-          border-radius: 3px;
-        }
-        .side-navbar {
-          top:0px;
-          left:0px;
-          position:fixed;
-          width:210px;
-          border-right:1px solid #f0f0f0;
-          height:100%;
-          /*background-color:#002632;*/
-          background-color:#192a39;
-          color:rgba(255,255,255,0.66);
-          font-size:14px
-        }
-        .side-navbar .logo {
-          line-height:70px;
-          box-shadow:0 1px rgba(255,255,255,0.08),0 -1px rgba(0,0,0,0.55) inset;width:100%;text-align:center;display:block
-        }
-        .side-navbar .logo img {
-          width:150px;margin-top:-5px;padding-right:20px;padding-left:0px;margin-left:auto;margin-right:auto;
-          margin-top:25px;margin-bottom:25px;
-        }
-        .logout-item {text-align:center}
-        .side-navbar a.logout-item, .side-navbar a.menu-item {
-          display:block;line-height:60px;padding-left:25px;padding-right:25px;color:rgba(255,255,255,0.66);text-decoration:none;cursor:pointer
-        }
-        .selectbar {
-          top:0px;left:210px;position:fixed;width:210px;overflow-x:hidden;overflow-wrap:break-word;border-right:1px solid #f0f0f0;height:100%;
-          font-size:14px
-        }
-        .selectbar a {display:block; color:#333;padding-left:10px;padding-bottom:2px;padding-top:5px;text-decoration:none;cursor:pointer}
-        .selectbar a:hover {
-          color:#007196
-        }
-        .selectbar h5.heading {
-          display:block;width:100%;border-bottom:1px solid #f0f0f0;height:70px;overflow-x:hidden;line-height:70px;text-align:center;margin:0px
-        }
-        .selectbar div {}
-        .panel-default>.panel-heading {height:70px;line-height:70px;background-color:white;border-top:0px;border-bottom:1px solid #f0f0f0}
-        .panel-default > .panel-heading > h3 {line-height:50px}
-        .panel-default {border:0px}
-        .wrapper {padding:0px}
-        .row {margin:0px}
-        .list-group-item {border-width: 1px 0;border-radius: 0;border-color:#f0f0f0}
-        .list-group-item:first-child {border-radius:0; border-width: 0px}
-        .chzn-single {line-height:34px !important;height:34px !important}
-        .table>tbody+tbody, .table>tbody>tr>td { border-top:1px solid #f0f0f0 !important}
-
-        .ct-chart {
-            /*width: 400px;
-            height: 450px;*/
-            border-style: solid;
-            border-width: 1px;
-            border-color: #f0f0f0;
-            text-align: center;
-            padding-left:20px;
-            padding-right:20px;
-            padding-top: 20px;
-            background-color: #FFFFFF;
-            margin-bottom:30px
-        }
-
-        .ct-chart svg {
-            float: center;
-        }
-
-        .ct-chart .chart-title {
-            width: 100%;
-            font-size: 16px;
-            font-weight:bold;
-            color: #5A5A5A;
-            text-align: left;
-        }
-
-        .ct-chart .chart-total {
-            width: 100%;
-            padding:10px;padding-left:0px;
-            font-size: 24px;
-            font-weight:bold;
-            color: #5A5A5A;
-            text-align: left;
-        }
-
-        .ct-chart .chart-description {
-            width: 100%;
-            font-size: 14px;
-            color: #5A5A5A;
-            text-align: left;
-        }
-        .chart-wrapper {
-            padding-top:20px
-        }
-
-        .ct-line { stroke-width:3px }
-        .ct-point { stroke-width: 8px }
-
-        .ct-series-a .ct-line {
-            stroke: #428bca;
-        }
-
-        .ct-series-a .ct-area {
-            fill: #428bca;
-        }
-
-        .ct-series-a .ct-point {
-            stroke: #428bca; 
-        }
-
-        .ct-series-a .ct-bar {
-            stroke: #428bca; 
-        }
-
-        .ct-label {
-            font-size: 12px;
-        }
-        .series .title {
-            width: 100%;
-            font-size: 16px;
-            font-weight: bold;
-            color: #5A5A5A;
-            text-align: left;
-        }
-        .series .value {
-            width: 100%;
-            padding: 10px;
-            padding-left: 0px;
-            font-size: 24px;
-            font-weight: bold;
-            color: #5A5A5A;
-            text-align: left;
-        }
-        .series {
-            border-style: solid;
-            border-width: 1px;
-            border-color: #f0f0f0;
-            padding-left: 20px;
-            padding-right: 20px;
-            padding-top: 20px;
-            background-color: #FFFFFF;
-            margin-bottom: 30px;
-        }
-        .action-view .ts {margin-right: -15px; margin-left: -15px;}
-        .action-view > .urls > .description {padding-top:10px; padding-bottom:20px}
-        .domain-chart-svg text {fill:#000}
-        .green {color:green}
-        .red {color:red}
-
-        body > .container {margin-left:420px}
-        body.hide-select > aside > .selectbar {display:none}
-        body.hide-select > .container {margin-left:210px}
-        .bar-row-header text {font-size:13px; font-weight:bold}
-        .bar-row text {display:inline-block}
-
-
-  </style>
-<style>
-svg.svg-cloud {
-  font-size:10px;
-  font-family: helvetica
-}
-
-svg.svg-cloud text {
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-}
-
-.node {
-  stroke: #fff;
-  stroke-width: 1.5px;
-}
-
-.link {
-  stroke: #999;
-  stroke-opacity: .6;
-}
-
-svg.bubble-chart {
-  fill:black;
-}
-.bubble-chart .node {
-  stroke: none;
-}
-.table-title {
-  color:#333;
-  font-weight:bold;
-  font-size:13px;
-  padding-top:10px;
-  margin-left:-15px;
-  margin-right:-15px
-}
-polyline{
-	opacity: .3;
-	stroke: black;
-	stroke-width: 1px;
-	fill: none;
-}
-.row.pie {
-  margin-top: -10px; margin-bottom: -20px; font-size: 11px;
-}
-</style>
-  
-  <script> 
-    
-
-  $(document).ready(function(){
-    console.log("// start things") 
-    RB.init()  
-
-    var page = window.location.pathname + window.location.search//.replace("/crusher/","")
-    
-    RB.menu.render(d3.select("body"))
-    RB.crusher.controller.init(page)
-
-    console.log("// finish things")
-  })
-
-  </script>
-  <script type="text/javascript">
-    $(function() {
-      var Toast = {
-        init: function() {
-          try {
-            var toast = document.cookie.split("toast=")[1].split(";")[0];
-
-            switch(toast) {
-              case 'new-action':
-                $.toast({
-                  heading: 'Success',
-                  text: 'You have succesfully created a new action!',
-                  position: 'bottom-right'
-                })
-                break;
-            }
-
-            Toast.forget();
-          } catch(err) {
-            console.log('No toast');
+          switch(toast) {
+            case 'new-action':
+              $.toast({
+                heading: 'Success',
+                text: 'You have succesfully created a new action!',
+                position: 'bottom-right'
+              })
+              break;
           }
-        },
 
-        forget: function() {
-          document.cookie = 'toast=;expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+          Toast.forget();
+        } catch(err) {
+          console.log('No toast');
         }
-      };
+      },
 
-      
-      Toast.init();
-    });
-  </script>
-
-</head>
-
-<body>
-
-  <div class="hidden" style="position:fixed;width:200px;top:0px;left:0px;height:100%;background:black">
-    <div class="row col-md-12">
-      <a href="/crusher/funnel/action?source=baublebar">Action</a> 
-    </div>
-    <div class="row col-md-12"> 
-      <a href="/crusher/funnel?source=baublebar">Funnel</a>
-    </div>
+      forget: function() {
+        document.cookie = 'toast=;expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+      }
+    };
+    Toast.init();
+  });
+</script>
+{% end %}
+{% block scripts_bottom %}{% end %}
+{% block content %}
+<div class="hidden" style="position:fixed;width:200px;top:0px;left:0px;height:100%;background:black">
+  <div class="row col-md-12">
+    <a href="/crusher/funnel/action?source=baublebar">Action</a>
   </div>
-  <div class="container" style="width:inherit">
+  <div class="row col-md-12">
+    <a href="/crusher/funnel?source=baublebar">Funnel</a>
   </div>
-
-</body>
-
-
-{% end %}   
+</div>
+<div class="container" style="width:inherit"></div>
+{% end %}
