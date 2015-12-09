@@ -69,18 +69,24 @@ class PatternSearchHelpers(object):
     def url_stats_to_urls(self,url_stats_df):
         import time
         start = time.time()
-        df = group_sum_sort_np_array(url_stats_df['urls'].values,"url")
-        print start - time.time()
-        return df
+        if len(url_stats_df):
+            df = group_sum_sort_np_array(url_stats_df['urls'].values,"url")
+            print start - time.time()
+            return df
+        else:
+            return pandas.DataFrame()
 
 
     @decorators.deferred
     def domain_stats_to_domains(self,domain_stats_df):
         import time
         start = time.time()
-        df = group_sum_sort_np_array(domain_stats_df['domains'].values,"domain")
-        print start - time.time()
-        return df
+        if len(domain_stats_df):
+            df = group_sum_sort_np_array(domain_stats_df['domains'].values,"domain")
+            print start - time.time()
+            return df
+        else:
+            return pandas.DataFrame()
 
 
 

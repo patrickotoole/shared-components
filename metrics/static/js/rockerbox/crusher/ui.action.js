@@ -445,6 +445,7 @@ RB.crusher.ui.action = (function(action) {
         }
       ],
       filter: 1,
+      data_fetching: null,
 
       buildResults: function() {
         switch(search.filter) {
@@ -520,11 +521,11 @@ RB.crusher.ui.action = (function(action) {
       },
 
       perform: function(query) {
-        if(typeof query !== typeof undefined && query.length) {
+        if(typeof query !== typeof undefined && query != "") {
           wrapper.selectAll(".matched_domains_wrapper")
             .style("display", "block")
 
-          var data_fetching = d3.json("/crusher/search/urls?search=" + query + "&format=json&logic=and&timeout=4", function(error, response) {
+          search.data_fetching = d3.json("/crusher/search/urls?search=" + query + "&format=json&logic=and&timeout=4", function(error, response) {
             search.results = {
               'contains_keyword': [],
               'matches_keyword': [],
@@ -603,13 +604,20 @@ RB.crusher.ui.action = (function(action) {
 
 
           setTimeout(function() {
-            data_fetching.abort();
+            search.data_fetching.abort();
             search_loading_indicator.style("display", "none");
             matched_domains_loading.style("display", "none");
             if(!wrapper.selectAll(".matched-domain").size()) {
               matched_domains_nothing_found.style("display", "block");
             }
           }, 4000);
+        } else {
+          search.data_fetching.abort();
+          search_loading_indicator.style("display", "none");
+          matched_domains_loading.style("display", "none");
+          if(!wrapper.selectAll(".matched-domain").size()) {
+            matched_domains_nothing_found.style("display", "block");
+          }
         }
       }
     }
@@ -686,32 +694,41 @@ RB.crusher.ui.action = (function(action) {
       .classed("create_action btn btn-sm btn-success", true)
       .html("<span class=\"icon glyphicon glyphicon-plus\" style=\"padding-right: 21px;\"></span> Create a Segment")
       .on("click", function(e) {
-        Intercom('trackEvent', 'Create Segment', {
-          'segment': search.query
-        });
-        document.cookie="toast=new-action";
-        var data = {
-          'action_id': undefined,
-          'action_name': search.query,
-          'action_string': search.query,
-          'domains': undefined,
-          'name': search.query,
-          'operator': 'or',
-          'param_list': [],
-          'rows': [{
-            'url_pattern': search.query,
-            'values': undefined
-          }],
-          'url_pattern': [
-            search.query
-          ],
-          'urls': undefined,
-          'values': undefined,
-          'visits_data': []
-        }
-        RB.crusher.controller.action.save(data, false);
+        if(search.query.length) {
+          Intercom('trackEvent', 'Create Segment', {
+            'segment': search.query
+          });
+          document.cookie="toast=new-action";
+          var data = {
+            'action_id': undefined,
+            'action_name': search.query,
+            'action_string': search.query,
+            'domains': undefined,
+            'name': search.query,
+            'operator': 'or',
+            'param_list': [],
+            'rows': [{
+              'url_pattern': search.query,
+              'values': undefined
+            }],
+            'url_pattern': [
+              search.query
+            ],
+            'urls': undefined,
+            'values': undefined,
+            'visits_data': []
+          }
+          RB.crusher.controller.action.save(data, false);
 
-        window.location.href = '/crusher/action/existing?id=' + search.query;
+          window.location.href = '/crusher/action/existing?id=' + search.query;
+        } else {
+          $.toast({
+            heading: "Something went wrong",
+            text: "You can't create a segment without specifying a search pattern",
+            position: "bottom-right",
+            icon: "error"
+          })
+        }
       })
 
 

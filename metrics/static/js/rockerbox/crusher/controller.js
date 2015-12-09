@@ -452,7 +452,7 @@ RB.crusher.controller = (function(controller) {
           .map(function(x){
             return {"action_name":x.first_word,"url_pattern":[x.first_word]}
           })
-
+        menu_obj.name = "Recommended Segments";
         menu_obj.values = RB.crusher.cache.recommendedActionData
         RB.menu.methods.transform(menu_obj,menu_obj.values_key)
       }
@@ -518,11 +518,7 @@ RB.crusher.controller = (function(controller) {
           "values_key":"funnel_name"
         }],
       "action": [{
-          "name": "Create Segment",
-          "push_state":"/crusher/action/recommended",
-          "values_key": "action_name"
-        },{
-          "name": "Create Segment",
+          "name": "Recommended Segments",
           "push_state":"/crusher/action/recommended",
           "values_key": "action_name",
           "hide_href": true

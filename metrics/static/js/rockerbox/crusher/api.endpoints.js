@@ -350,6 +350,27 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
         
       })
 
+  endpoints.actionBeforeAndAfter = api.helpers.genericQueuedAPIWithData(function(action,cb,deferred_cb) {
+
+        if (action.before) {
+          deferred_cb(null,cb.bind(false,action))
+          return 
+        }
+        d3.xhr(api.URL.actionBeforeAndAfter + action.action_string)
+          .header("Content-Type","application/json")
+          .get(function(err,rawData){
+            var dd = JSON.parse(rawData.response)
+            action.before = {
+              categories: dd.before_categories,
+              domains: dd.before_domains
+            }
+            
+            deferred_cb(null,cb.bind(false,action))
+
+          })
+      })
+
+
   endpoints.actionClusters = api.helpers.genericQueuedAPIWithData(function(action,cb,deferred_cb) {
 
         if (action.clusters) {
