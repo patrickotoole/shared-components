@@ -9,10 +9,9 @@ RB.crusher.ui.action = (function(action) {
   action.category_colors = d3.scale.category20c()
 
   action.save = function(callback) {
+    var data = this.selectAll(".action-pattern .tt-input")[0].map(function(x){return x.value})
 
-    var data = this.selectAll(".action-pattern .tt-input")[0].map(function(x){return x.value}) 
-
-    var d = data 
+    var d = data
     var objectData = this.datum()
     objectData.url_pattern = d
     objectData.action_name = this.selectAll("input").node().value
@@ -22,7 +21,7 @@ RB.crusher.ui.action = (function(action) {
     delete objectData['visits_data']
 
     this.select("h5").text("Edit a segment")
-    this.select(".save").text("Update segment")  
+    this.select(".save").text("Update segment")
 
     var actions = crusher.cache.actionData // this should really be in the controller
 
@@ -41,67 +40,67 @@ RB.crusher.ui.action = (function(action) {
 
   action.status = function(wrapper) {
 
-    
+
 
 
       var status = d3_updateable(wrapper,".action-status","div")
         .classed("action-status",true)
-  
+
       var wrapper = d3_updateable(status,".status-wrapper","div")
         .classed("status-wrapper col-md-6",true)
-  
+
       var series = d3_updateable(wrapper,".series","div")
         .classed("series",true)
-  
+
       d3_updateable(series,".title","div")
         .classed("title",true)
         .text("Cache stats")
-  
+
       var percent_bar = d3_updateable(series,".percent-bar","div")
         .classed("percent-bar",true)
-  
+
       d3_updateable(percent_bar,".value","div")
         .classed("value",true)
         .text(function(x){return x.pattern_stats.completed + " days"})
-  
+
       d3_updateable(percent_bar,".description.percent","div")
         .classed("description percent",true)
         .text(function(x){return "Percent complete: " + d3.format("%")(x.pattern_stats.percent_complete)})
         .style("color","#000")
-  
+
       var progress = d3_updateable(percent_bar,".progress","div")
         .classed("progress",true)
         .style("height","12px")
         .style("margin-top","5px")
-  
-  
+
+
       d3_updateable(progress,".progress-bar-striped","div")
         .classed("progress-bar progress-bar-striped",true)
         .attr("role","progressbar")
-        .attr("aria-valuenow",function(x){return 100*x.pattern_stats.percent_complete}) 
+        .attr("aria-valuenow",function(x){return 100*x.pattern_stats.percent_complete})
         .attr("aria-valuemin","0")
-        .attr("aria-valuemax","100") 
+        .attr("aria-valuemax","100")
         .style("width",function(x){return (x.pattern_stats.percent_complete*100) + "%"})
-  
-  
+
+
       d3_updateable(series,".description.timeseries","div")
         .classed("description timeseries",true)
         .text("Time to complete cache days")
-  
-  
-  
+
+
+
       var newTs = d3_updateable(series,".values","div")
         .classed("values",true)
-  
-  
+
+
       var ts = RB.rho.ui.buildTimeseries(newTs,newTs.datum().pattern_stats.raw,"Seconds",["seconds"], undefined)
-      
+
       newTs.selectAll("circle").filter(function(x){return x.completed == 0 }).attr("fill","red")
-  
-  
+
+
       var missingWrapper = d3_updateable(series,".missing-wrapper","div")
         .classed("missing-wrapper",true)
-  
+
       var missingDescription = d3_splat(missingWrapper,".description","div",function(x){
         var values = x.pattern_stats.raw.filter(function(y){return y.completed == 0 })
         return values.length ? [true] : []
@@ -111,16 +110,16 @@ RB.crusher.ui.action = (function(action) {
         .style("padding-bottom","15px")
         .style("color","#000")
         .text("The following dates were not properly cached or are actively running")
-  
+
       missingDescription.exit().remove()
-  
+
       var missing = d3_splat(missingWrapper,".missing","div",function(x){
         var values = x.pattern_stats.raw.filter(function(y){return y.completed == 0 })
         return values
       },function(x){return x.key})
         .classed("missing",true)
         .style("min-height","30px")
-  
+
       d3_updateable(missing,".btn","a")
         .classed("btn btn-danger btn-xs pull-right",true)
         .text("Re-run")
@@ -135,15 +134,15 @@ RB.crusher.ui.action = (function(action) {
           d3.event.preventDefault()
           return false
         })
-  
+
       d3_updateable(missing,".btn-label","div")
         .classed("btn-label",true)
         .text(function(x){return (new Date(x.cache_date*1000)).toISOString().split("T")[0] })
-  
-  
+
+
       var activeWrapper = d3_updateable(series,".active-wrapper","div")
         .classed("active-wrapper",true)
-  
+
       var activeDescription = d3_splat(activeWrapper,".description","div",function(x){
         var values = x.pattern_stats.raw.filter(function(y){return y.active })
         return values.length ? [true] : []
@@ -153,16 +152,16 @@ RB.crusher.ui.action = (function(action) {
         .style("padding-bottom","15px")
         .style("color","#000")
         .text("The following dates are actively being cached")
-  
+
       activeDescription.exit().remove()
-  
+
       var active = d3_splat(activeWrapper,".active","div",function(x){
         var values = x.pattern_stats.raw.filter(function(y){return y.active })
         return values
       },function(x){return x.key})
         .classed("active",true)
         .style("min-height","30px")
-  
+
       d3_updateable(active,".btn","a")
         .classed("btn btn-danger btn-xs pull-right",true)
         .text("Stop")
@@ -173,19 +172,19 @@ RB.crusher.ui.action = (function(action) {
             d3.select(self).attr("disabled",true)
             console.log(dd)
             return dd
-          })   
+          })
           d3.event.preventDefault()
           return false
         })
-  
+
       d3_updateable(active,".btn-label","div")
         .classed("btn-label",true)
         .text(function(x){return (new Date(x.cache_date*1000)).toISOString().split("T")[0] })
-  
-  
+
+
       var queuedWrapper = d3_updateable(series,".queued-wrapper","div")
         .classed("queued-wrapper",true)
-  
+
       var queuedDescription = d3_splat(queuedWrapper,".description","div",function(x){
         var values = x.pattern_stats.raw.filter(function(y){return y.queued })
         return values.length ? [true] : []
@@ -195,22 +194,22 @@ RB.crusher.ui.action = (function(action) {
         .style("padding-bottom","15px")
         .style("color","#000")
         .text("The following dates are queued")
-  
+
       queuedDescription.exit().remove()
-  
+
       var queued = d3_splat(queuedWrapper,".queued","div",function(x){
         var values = x.pattern_stats.raw.filter(function(y){return y.queued })
         return values
       },function(x){return x.key})
         .classed("queued",true)
         .style("min-height","30px")
-  
+
       d3_updateable(queued,".btn","a")
         .classed("btn btn-danger btn-xs pull-right",true)
         .text("Dequeue")
         .attr("href",function(x){
-          return "/crusher/pattern/clear?pattern=" + 
-            x.url_pattern + "&cache_date=" + (new Date(x.cache_date*1000)).toISOString().split("T")[0] 
+          return "/crusher/pattern/clear?pattern=" +
+            x.url_pattern + "&cache_date=" + (new Date(x.cache_date*1000)).toISOString().split("T")[0]
         })
         .on("click",function(x){
           var self = this
@@ -222,12 +221,12 @@ RB.crusher.ui.action = (function(action) {
           d3.event.preventDefault()
           return false
         })
-  
+
       d3_updateable(queued,".btn-label","div")
         .classed("btn-label",true)
         .text(function(x){return (new Date(x.cache_date*1000)).toISOString().split("T")[0] })
 
-    
+
 
 
   }
@@ -258,8 +257,8 @@ RB.crusher.ui.action = (function(action) {
 
     edit.exit().remove()
 
-     
-      
+
+
 
     edit.text("Edit")
       .on("click",function(){
@@ -319,14 +318,14 @@ RB.crusher.ui.action = (function(action) {
     var timeseries = with_data.selectAll(".ts").data(function(data){
       var nested = d3.nest()
         .key(function(x){return x.date})
-        .rollup(function(x){ 
-          
+        .rollup(function(x){
+
           return {
             "views": x[0].views,
             "visits": x[0].visits,
             "uniques": x[0].uniques
           }
-         
+
         })
         .entries(data.visits_data).map(function(x){
           x.date = x.key
@@ -358,27 +357,27 @@ RB.crusher.ui.action = (function(action) {
     var urlData = wrapper.datum().urls
 
     RB.rho.ui.buildTimeseriesSummary(
-      newTs,tsData,"Views",["views"], undefined, 
+      newTs,tsData,"Views",["views"], undefined,
       "This is the number of page views per day"
     )
     RB.rho.ui.buildTimeseriesSummary(
-      newTs,tsData,"Visits",["visits"], undefined, 
+      newTs,tsData,"Visits",["visits"], undefined,
       "This is the number of unique page views per day"
     )
     RB.rho.ui.buildTimeseriesSummary(
-      newTs,tsData,"Uniques",["uniques"], undefined, 
+      newTs,tsData,"Uniques",["uniques"], undefined,
       "This is the number of unique visitors per day"
     )
 
-    
-    
+
+
 
 
   }
 
-  
 
-  
+
+
 
   action.edit = function(wrapper,onSave) {
     if (window.location.pathname.indexOf("existing") > -1 || window.location.pathname.indexOf("recommended") > -1) {
@@ -396,7 +395,7 @@ RB.crusher.ui.action = (function(action) {
           });
       }, 1);
     }
-  
+
     var client_sld;
 
     crusher.subscribe.add_subscriber(["advertiser"], function(advertiser_data) {
@@ -602,7 +601,7 @@ RB.crusher.ui.action = (function(action) {
             }
           });
 
-          
+
           setTimeout(function() {
             data_fetching.abort();
             search_loading_indicator.style("display", "none");
@@ -633,7 +632,7 @@ RB.crusher.ui.action = (function(action) {
     edits.exit()
       .remove()
 
-    editWrapper.append("h5") 
+    editWrapper.append("h5")
       .text(function(x){
         return x.action_id ? "Edit a segment" : "Create a segment"
       })
@@ -687,6 +686,9 @@ RB.crusher.ui.action = (function(action) {
       .classed("create_action btn btn-sm btn-success", true)
       .html("<span class=\"icon glyphicon glyphicon-plus\" style=\"padding-right: 21px;\"></span> Create a Segment")
       .on("click", function(e) {
+        Intercom('trackEvent', 'Create Segment', {
+          'segment': search.query
+        });
         document.cookie="toast=new-action";
         var data = {
           'action_id': undefined,
@@ -772,9 +774,9 @@ RB.crusher.ui.action = (function(action) {
         action.view(expandTarget)
       }) */
 
-    
 
-      
+
+
   }
 
   action.showAll = function(actions,onSave,urls) {
@@ -787,7 +789,7 @@ RB.crusher.ui.action = (function(action) {
 
     var expandTarget = d3.selectAll(".action-view-wrapper")
 
-    action.show(selected,onSave,expandTarget) 
+    action.show(selected,onSave,expandTarget)
     action.add_action(urls)
 
   }
@@ -802,7 +804,7 @@ RB.crusher.ui.action = (function(action) {
 
     var expandTarget = d3.selectAll(".action-view-wrapper")
 
-    action.show(selected,onSave,expandTarget) 
+    action.show(selected,onSave,expandTarget)
 
     selected.selectAll(".remove").remove()
     selected.selectAll(".edit").text("build")
@@ -827,12 +829,12 @@ RB.crusher.ui.action = (function(action) {
       .classed("active",false)
       .filter(function(x) { return x == data })
       .classed("active",true)
-    
+
   }
 
   action.add_action = function(dd) {
     var wrapper = d3.selectAll(".add-action-wrapper")
-    var action_wrapper = d3.selectAll(".action-view-wrapper") 
+    var action_wrapper = d3.selectAll(".action-view-wrapper")
 
     wrapper.selectAll(".button-wrapper")
       .data([{}])
@@ -863,11 +865,11 @@ RB.crusher.ui.action = (function(action) {
 
     var newEdit = edit
       .enter()
-      .append("div").classed("row",true) 
+      .append("div").classed("row",true)
       .append("div").classed("action",true)
 
     action.edit(newEdit,onSave)
-    
+
   }
 
   action.buildBase = function(id) {
@@ -882,8 +884,8 @@ RB.crusher.ui.action = (function(action) {
       .classed("action-view-wrapper col-md-12",true)
 
     actionsRow.exit().remove()
-     
+
   }
 
   return action
-})(RB.crusher.ui.action || {})  
+})(RB.crusher.ui.action || {})
