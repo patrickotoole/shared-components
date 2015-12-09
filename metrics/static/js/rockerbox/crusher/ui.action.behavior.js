@@ -10,13 +10,13 @@ RB.crusher.ui.action = (function(action) {
     var data = data.map(function(x){
 
       x.summed = x.values.reduce(function(p,c){
-        p.y = p.y + c.y*c.groups
+        p.y = p.y + c.y*c.time_bucket
         return p
       },{ y: 0 })
   
       x.name = x.key
       x.values = x.values.map(function(y){
-        var time = y.groups*60*1000
+        var time = y.time_bucket*60*1000
         y.date = new Date(+now - time)
         y.y = y.count
         return y
