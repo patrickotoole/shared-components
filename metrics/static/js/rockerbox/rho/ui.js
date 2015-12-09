@@ -220,7 +220,7 @@ RB.rho.ui = (function(ui) {
     if (total_weight == 0 && data[0].key === undefined) {
       data = d3.nest()
         .key(function(x){
-          return x.url_short
+          return [x.url_short, x.parent_category_name]
         })                                                                          
         .rollup(function(x){
           return x.reduce(function(p,c){                                                             
@@ -230,7 +230,9 @@ RB.rho.ui = (function(ui) {
         .entries(data)
 
       data = data.map(function(x){                                                                                    
-          x["url_short"] = x.key
+          x["url_short"] = x.key.split(",")[0]
+          x["parent_category_name"] = x.key.split(",").slice(1).join(",")
+
           return x
         })                                                                                                            
      }
@@ -268,12 +270,11 @@ RB.rho.ui = (function(ui) {
 
     var items = [
       {"header":"Uniques","field":"","type":"bar"},
-      {"header":"","field":"index","type":25},
+      //{"header":"","field":"index","type":25},
       {"header":"Domain","field":"url_short","type":"text"},
       {"header":"Category","field":"category_name","type":"text"},
 
       //{"header":"Users","field":"count","type":"numeric"},
-      
       //{"header":"(Change)","field":"index","type":"numeric"},
     ].slice(0,maxItems)
 
@@ -358,7 +359,10 @@ RB.rho.ui = (function(ui) {
       .attr("width", function(d) { return x(d.count || d.values || 0); })
       .attr("x", function(d) { return maxBarWidth - x(d.count || d.values || 0); })
       .attr("height", barHeight - 1)
-      .style("fill",function(x){return x.parent_category_name == "NA" ? "#888" : colors(x.parent_category_name) })
+      .style("fill",function(x){
+        debugger
+        return x.parent_category_name == "NA" ? "#888" : colors(x.parent_category_name) 
+      })
       .on("mouseover",function(x) {
         var selected = bar.filter(function(y){return x.category_name == y.category_name})
         //bar.style("opacity",".5").style("font-weight",undefined)

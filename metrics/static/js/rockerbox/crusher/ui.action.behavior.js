@@ -130,7 +130,7 @@ RB.crusher.ui.action = (function(action) {
 
 
     var w = target.style("width").split(".")[0].replace("px","") || 700, 
-        h = 370;
+        h = 340;
     
     var margin = {top: 40, right: 40, bottom: 30, left: 10},
       width = w - margin.left - margin.right,
@@ -189,9 +189,7 @@ RB.crusher.ui.action = (function(action) {
   action.build_behavior = function(svg,rhs_target){
 
     var data = svg.datum().categories
-
-    var color = d3.scale.category20c();
-    color.domain(data.map(function(x){return x.key}) );
+    var color = action.category_colors
 
     var inflection = svg.datum().inflection
 
@@ -291,7 +289,7 @@ RB.crusher.ui.action = (function(action) {
          .attr("transform", function(d) { return "translate(" + (d.width - d.margin.right - 50 - d.margin.left) + "," + (-25) + ")"; })
          .attr("dy", ".35em")
          .style("text-anchor","middle")
-         .text(function(d) { return "Visit" })
+         //.text(function(d) { return "Visit" })
 
   }
 
@@ -424,10 +422,11 @@ RB.crusher.ui.action = (function(action) {
             var data = d.all[((now - d.d )/60/1000)].sort(function(p,c){return c.uid - p.uid})
               .map(function(x) {
                 x.count = x.uid
+                x.category_name = ""
                 return x
               })
 
-            RB.rho.ui.buildBarTable(target,data,"asdf","domain",false,12,action.category_colors)
+            RB.rho.ui.buildBarTable(target,data,"asdf","domain",false,18,action.category_colors)
 
             //RB.rho.ui.buildBarTable(target,data,"",["uid"])
 
