@@ -41,6 +41,16 @@ QUERY = "SELECT * FROM rockerbox.visitor_domains_2 "
 class VisitDomainBase(object):
 
     @decorators.deferred
+    def defer_get_uid_visits(self, source, uids, term):
+
+        xx = self.paginate_get_visits(uids, source)
+        df = pandas.DataFrame(xx)
+
+        df = df[df.url.map(lambda x: term in x)]
+
+        return df
+
+    @decorators.deferred
     def defer_get_uid_domains(self, source, pattern, uids, date_clause):
 
         xx = self.paginate_get_w_in(uids, date_clause)
@@ -82,6 +92,23 @@ class VisitDomainBase(object):
         
 
         return df
+
+    @decorators.deferred
+    def defer_get_visits(self, source, pattern, uids, date_clause):
+
+        xx = self.paginate_get_w_in(uids, date_clause)
+
+        df = pandas.DataFrame(xx)
+        try:
+            df = filter_fraud(df)
+
+            df['occurrence'] = df['count']
+            df = df.groupby("domain")[["occurrence"]].sum().reset_index().sort_index(by="occurrence",ascending=False).head(100)
+        except:
+            pass
+
+        return df
+
 
 
 
@@ -144,6 +171,24 @@ class VisitDomainBase(object):
 
         return self.cassandra.execute_async(query)
  
+    def paginate_get_visits(self, uids, source):
+
+        DOMAIN_SELECT = "select * from rockerbox.visit_events_source_uid_date_url where source = ? and uid = ?"
+        statement = self.cassandra.prepare(DOMAIN_SELECT)
+        def execute(data):
+            bound = statement.bind(data)
+            return self.cassandra.execute_async(bound)
+
+        logging.info("AXY")
+
+        prepped = [[source, u] for u in uids]
+        results, _ = FutureHelpers.future_queue(prepped,execute,simple_append,120,[],"DUMMY_VAR")
+
+        logging.info("ASDF")
+
+        return results
+
+
 
     def paginate_get_w_in(self, uids, date_clause):
 
