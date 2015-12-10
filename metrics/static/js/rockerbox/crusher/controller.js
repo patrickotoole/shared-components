@@ -1,14 +1,51 @@
-var RB = RB || {}
-RB.crusher = RB.crusher || {}
+var RB = RB || {};
+RB.crusher = RB.crusher || {};
 
 RB.crusher.controller = (function(controller) {
 
   // requires: api.js, d3.js
 
   var crusher = RB.crusher
-  var source = crusher.api.source 
+  var source = crusher.api.source
 
   controller.init = function(type,data) {
+    window.heap=window.heap||[],heap.load=function(e,t){window.heap.appid=e,window.heap.config=t=t||{};var n=t.forceSSL||"https:"===document.location.protocol,a=document.createElement("script");a.type="text/javascript",a.async=!0,a.src=(n?"https:":"http:")+"//cdn.heapanalytics.com/js/heap-"+e+".js";var o=document.getElementsByTagName("script")[0];o.parentNode.insertBefore(a,o);for(var r=function(e){return function(){heap.push([e].concat(Array.prototype.slice.call(arguments,0)))}},p=["clearEventProperties","identify","setEventProperties","track","unsetEventProperty"],c=0;c<p.length;c++)heap[p[c]]=r(p[c])};
+
+      crusher.subscribe.add_subscriber(["advertiser"], function(advertiser_data) {
+        var user_type = document.cookie.split("user_type=")[1].split(";")[0];
+        switch(user_type) {
+          case 'rockerbox':
+            heap.load("3611187932");
+            heap.identify({
+              handler: 'Rockerbox',
+              name: 'Rockerbox',
+              email: 'support@rockerbox.com'
+            });
+
+            window.intercomSettings = {app_id: "rvo8kuih",name: "Rockerbox",email: "support@rockerbox.com",created_at: 1312182000};
+            (function(){var w=window;var ic=w.Intercom;if(typeof ic==="function"){ic('reattach_activator');ic('update',intercomSettings);}else{var d=document;var i=function(){i.c(arguments)};i.q=[];i.c=function(args){i.q.push(args)};w.Intercom=i;function l(){var s=d.createElement('script');s.type='text/javascript';s.async=true;s.src='https://widget.intercom.io/widget/kbtc5999';var x=d.getElementsByTagName('script')[0];x.parentNode.insertBefore(s,x);}if(w.attachEvent){w.attachEvent('onload',l);}else{l(false)}}})()
+            break;
+          case 'client':
+            setTimeout(function() {
+              var user = {
+                'id': advertiser_data.id,
+                'name': advertiser_data.contact_name,
+                'email': advertiser_data.email
+              };
+
+              heap.load("1793449886");
+              heap.identify({
+                handler: user.id,
+                name: user.name,
+                email: user.email
+              });
+
+              window.intercomSettings = {app_id: "o6ats3cn",name: user.name,email: user.email,created_at: 1312182000};
+              (function(){var w=window;var ic=w.Intercom;if(typeof ic==="function"){ic('reattach_activator');ic('update',intercomSettings);}else{var d=document;var i=function(){i.c(arguments)};i.q=[];i.c=function(args){i.q.push(args)};w.Intercom=i;function l(){var s=d.createElement('script');s.type='text/javascript';s.async=true;s.src='https://widget.intercom.io/widget/xu33kr1z';var x=d.getElementsByTagName('script')[0];x.parentNode.insertBefore(s,x);}if(w.attachEvent){w.attachEvent('onload',l);}else{l(false)}}})()
+            }, 1000)
+            break;
+        }
+      }, 'advertiser-name-email', true, false);
 
     var id = type.split("id=")[1]
     if (id && id.length) {
@@ -20,7 +57,7 @@ RB.crusher.controller = (function(controller) {
 
     state = JSON.parse(JSON.stringify(state))
     if (id) state.skipRender = true
-    
+
     var callback = id ? function(data,x){
       var xx = data.filter(function(y){return y[x.values_key] == id })
 
@@ -29,16 +66,16 @@ RB.crusher.controller = (function(controller) {
 
 
     RB.routes.navigation.forward(state,callback)
-    
+
     // INIT RESIZE CALLBACK
     d3.select(window).on("resize",function(){
       crusher.subscribe.publishers["resize"]()
     })
-    
+
   }
 
   var build_header = function(obj) {
-    
+
     var target = d3.selectAll(".container")
 
     var funnelRow = d3_splat(target,".row","div",[obj],function(x){return x.id})
@@ -65,13 +102,13 @@ RB.crusher.controller = (function(controller) {
   controller.initializers = {
 
     "settings": function() {
-      
+
       var funnelRow = build_header({
         "id":"settings",
         "name":"Account Overview",
         "description":"Below is a summary of the settings associated with your account."
       })
-      
+
       var subscription = function (advertiser,actions,funnels) {
         crusher.ui.settings.main(funnelRow,advertiser,actions,funnels)
       }
@@ -95,7 +132,7 @@ RB.crusher.controller = (function(controller) {
       var funnelRow = build_header({"id":"setup","name":"Pixel Setup"})
 
       crusher.subscribe.add_subscriber(
-        ["pixel_status","advertiser","an_uid"], 
+        ["pixel_status","advertiser","an_uid"],
         function(status_data,advertiser_data,uid){
           crusher.ui.pixel.setup(funnelRow,status_data,advertiser_data,uid)
         },
@@ -204,7 +241,7 @@ RB.crusher.controller = (function(controller) {
 
       var funnelRow = build_header({"id":"home","name":"Welcome to Crusher"})
       crusher.ui.home.main(funnelRow)
-      
+
       var wrapper = funnelRow.selectAll(".tutorial-description")
       var subscription = crusher.ui.home.status.bind(false,wrapper)
 
@@ -233,7 +270,7 @@ RB.crusher.controller = (function(controller) {
         .classed("main-wrapper",true)
 
 
-      var desc = "Funnels allow you to model the behavior between segments. " + 
+      var desc = "Funnels allow you to model the behavior between segments. " +
         "For instance, you can look at a user who comes to a landing page and then proceeds to checkout." +
         ""
 
@@ -252,7 +289,7 @@ RB.crusher.controller = (function(controller) {
       RB.component.export(RB.crusher.ui.action.show, RB.crusher.ui.action)
 
 
-      crusher.ui.funnel.buildBase() 
+      crusher.ui.funnel.buildBase()
 
       events.map(function(x){ crusher.subscribe.publishers[x]() })
       crusher.subscribe.publishers["funnel_all"](funnel)
@@ -285,7 +322,7 @@ RB.crusher.controller = (function(controller) {
       RB.component.export(RB.crusher.ui.funnel.show, RB.crusher.ui.funnel)
       RB.component.export(RB.crusher.ui.action.show, RB.crusher.ui.action)
 
-      
+
       if (action.action_id) {
 
         // exisiting action...
@@ -313,11 +350,11 @@ RB.crusher.controller = (function(controller) {
         // existing dashboard...
         var funnelRow = build_header({"id":"action_about","name":"Segments Dashboard"})
         var subscription = RB.crusher.ui.action.dashboard.widgets.bind(false,funnelRow)
-  
+
         crusher.subscribe.add_subscriber(["actions"],subscription ,"actionDashboard",true,true)
 
       }
-       
+
     },
     "action/new": function(action) {
       crusher.ui.action.buildBase()
@@ -356,7 +393,7 @@ RB.crusher.controller = (function(controller) {
     controller.bloodhound = controller.bloodhound || new Bloodhound({
       datumTokenizer: Bloodhound.tokenizers.whitespace,
       queryTokenizer: Bloodhound.tokenizers.whitespace,
-      remote: { 
+      remote: {
         url: "/crusher/search/urls?advertiser=" + source + "&search=%QUERY&format=json&logic=and&timeout=4",
         wildcard: "%QUERY",
         transform: function(resp) {
@@ -371,13 +408,13 @@ RB.crusher.controller = (function(controller) {
         }
       },
       sorter:compare
-    }); 
+    });
 
     cb(controller.bloodhound)
- 
+
   }
 
-  
+
 
   controller.routes = {
     roots: [
@@ -492,7 +529,7 @@ RB.crusher.controller = (function(controller) {
           "name": "View Existing Funnels",
           "push_state":"/crusher/funnel/existing",
           "skipRender": true,
-          "values_key":"funnel_name"    
+          "values_key":"funnel_name"
         }],
       "action": [{
           "name": "Recommended Segments",
@@ -508,8 +545,8 @@ RB.crusher.controller = (function(controller) {
       ]
     }
   }
-  
-  controller.states = {}  
+
+  controller.states = {}
 
   Object.keys(controller.routes.apis).map(function(k){
     if (controller.routes.apis[k].length > 0 && typeof(controller.routes.apis[k][0]) == "object") {
@@ -525,4 +562,4 @@ RB.crusher.controller = (function(controller) {
 
   return controller
 
-})(RB.crusher.controller || {}) 
+})(RB.crusher.controller || {})

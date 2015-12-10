@@ -7,8 +7,8 @@
     <title>Rockerbox / Login</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-    <meta name="author" content="Julian Laval" /> 
-    <meta name="description" content="" /> 
+    <meta name="author" content="Julian Laval" />
+    <meta name="description" content="" />
     <meta name="keywords" content="" />
     <link rel="icon" type="image/png" href="https://s3.amazonaws.com/getrockerbox.com/Fav_icon.png">
     <!-- FONTS -->
@@ -25,13 +25,13 @@
             ga('create', 'UA-50457693-1', 'rockerbox.com');
             ga('require', 'displayfeatures');
             ga('send', 'pageview');
-        </script>   
+        </script>
         <!-- start Mixpanel --><script type="text/javascript">(function(f,b){if(!b.__SV){var a,e,i,g;window.mixpanel=b;b._i=[];b.init=function(a,e,d){function f(b,h){var a=h.split(".");2==a.length&&(b=b[a[0]],h=a[1]);b[h]=function(){b.push([h].concat(Array.prototype.slice.call(arguments,0)))}}var c=b;"undefined"!==typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var a="mixpanel";"mixpanel"!==d&&(a+="."+d);b||(a+=" (stub)");return a};c.people.toString=function(){return c.toString(1)+".people (stub)"};i="disable track track_pageview track_links track_forms register register_once alias unregister identify name_tag set_config people.set people.set_once people.increment people.append people.track_charge people.clear_charges people.delete_user".split(" ");
 for(g=0;g<i.length;g++)f(c,i[g]);b._i.push([a,e,d])};b.__SV=1.2;a=f.createElement("script");a.type="text/javascript";a.async=!0;a.src="//cdn.mxpnl.com/libs/mixpanel-2-latest.min.js";e=f.getElementsByTagName("script")[0];e.parentNode.insertBefore(a,e)}})(document,window.mixpanel||[]);
         mixpanel.init("aa0178efc52a2d246ee37d8d1df5e31c");</script><!-- end Mixpanel -->
     </head>
     <body>
-      <form id="signin" action="javascript:$('#signin').trigger('click')"> 
+      <form id="signin" action="javascript:$('#signin').trigger('click')">
         <a href="http://rockerbox.com">
           <img src="http://rockerbox.com/assets/img/general/logo-white.png" alt="Rockerbox logo" />
         </a>
@@ -51,6 +51,12 @@ for(g=0;g<i.length;g++)f(c,i[g]);b._i.push([a,e,d])};b.__SV=1.2;a=f.createElemen
       $('#signin').click(function(e){
         var obj = JSON.stringify($(e.target).parents('form').serializeObject())
         $.post("/login",obj).done(function(e){
+          if(JSON.parse(obj).username.substring(0,2) == "a_") {
+            document.cookie = "user_type=rockerbox";
+          } else {
+            document.cookie = "user_type=client";
+          }
+
           if (parseInt(e) > 0) location.reload()
         })
         e.preventDefault()
