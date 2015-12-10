@@ -1,5 +1,5 @@
-var RB = RB || {}
-RB.crusher = RB.crusher || {}
+var RB = RB || {};
+RB.crusher = RB.crusher || {};
 
 RB.crusher.controller = (function(controller) {
 
