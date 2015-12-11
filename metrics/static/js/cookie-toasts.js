@@ -11,7 +11,7 @@ $(function() {
           case 'new-action':
             $.toast({
               heading: 'Success',
-              text: 'You have succesfully created a new action!',
+              text: 'You have succesfully created a new segment!',
               position: 'bottom-right'
             })
             break;

@@ -24,7 +24,7 @@ RB.crusher.ui.home = (function(home, crusher) {
     d3_updateable(description,".about-description","div")
       .classed("about-description chart-description",true)
       .html(
-        "<br>Crusher is a tool to help you understand the off-site interests and opportunities to advertise to users in your audience based on differences in on-site user activity." + 
+        "<br>Crusher is a tool to help you understand the off-site interests and opportunities to advertise to users in your audience based on differences in on-site user activity." +
         "<br><br>We built crusher because we believe that understanding what you audience does when they are not on your site is the is the best way to craft relevant, meaningful advertisements."
       )
 
@@ -72,10 +72,10 @@ RB.crusher.ui.home = (function(home, crusher) {
           .style("font-size","24px")
           .style("float","left")
           .classed("glyphicon-ok-circle green",function(x) {
-            return status_data.filter(function(x){return x.last_fired_seconds != undefined}).length 
+            return status_data.filter(function(x){return x.last_fired_seconds != undefined}).length
           })
           .classed("glyphicon-remove-circle red",function(x) {
-            return status_data.filter(function(x){return x.last_fired_seconds != undefined}).length == 0 
+            return status_data.filter(function(x){return x.last_fired_seconds != undefined}).length == 0
           })
 
         d3_updateable(item1,".desc","a")
@@ -86,7 +86,7 @@ RB.crusher.ui.home = (function(home, crusher) {
           .style("padding-left","10px")
           .html("Implement the Rockerbox pixel on your website. ")
           .on("click",function(){
-            RB.routes.navigation.forward(controller.states["/crusher/settings/pixel_setup"])  
+            RB.routes.navigation.forward(controller.states["/crusher/settings/pixel_setup"])
           })
 
         var item2 = d3_updateable(tutDesc,".item-2","div")
@@ -98,10 +98,10 @@ RB.crusher.ui.home = (function(home, crusher) {
           .style("font-size","24px")
           .style("float","left")
           .classed("glyphicon-ok-circle green",function(x) {
-            return crusher.cache.actionData.length 
+            return crusher.cache.actionData.length
           })
           .classed("glyphicon-remove-circle red",function(x) {
-            return crusher.cache.actionData.length == 0 
+            return crusher.cache.actionData.length == 0
           })
 
         d3_updateable(item2,".desc","a")
@@ -110,9 +110,9 @@ RB.crusher.ui.home = (function(home, crusher) {
           .style("text-align","center")
           .style("color","rgb(90, 90, 90)")
           .style("padding-left","10px")
-          .html("Implement your first action")
+          .html("Implement your first segment")
           .on("click",function(){
-            RB.routes.navigation.forward(controller.states["/crusher/action"])  
+            RB.routes.navigation.forward(controller.states["/crusher/action"])
           })
   }
 
@@ -190,4 +190,4 @@ RB.crusher.ui.home = (function(home, crusher) {
   }
 
   return home
-})(RB.crusher.ui.home || {}, RB.crusher)  
+})(RB.crusher.ui.home || {}, RB.crusher)
