@@ -859,7 +859,7 @@ RB.crusher.ui.action = (function(action) {
         .append("div").classed("button-wrapper",true)
         .append("button")
         .classed("btn btn-xs",true)
-        .text("New action")
+        .text("New segment")
         .on("click",crusher.controller.action.new.bind(this,action_wrapper,dd))
   }
 
