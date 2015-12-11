@@ -49,8 +49,8 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
         "views":""
       })
 
-      
-      
+
+
       var title = "Top existing actions",
         description = "These are the keywords that are most popular on your site",
         button = {
@@ -62,9 +62,9 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
           }
         }
 
-      var target = RB.rho.ui.buildWrappers(funnelRow, 
-        function(x){return x['Action name']}, 
-        "views", data, "col-md-4", 
+      var target = RB.rho.ui.buildWrappers(funnelRow,
+        function(x){return x['Action name']},
+        "views", data, "col-md-4",
         function(x){return x.description}, button
       )
 
@@ -73,7 +73,7 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
       }).on("mouseout",function(x){
         d3.select(this).selectAll(".gear").classed("hidden",true)
       })
- 
+
       target.selectAll(".gear")
         .classed("btn btn-sm btn-default",false)
         .classed("hidden",true)
@@ -99,13 +99,13 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
           RB.routes.navigation.forward(x.__proto__)
         })
         .html(function(x){
-  
+
           function capitalize(s) {
             return s && s[0].toUpperCase() + s.slice(1);
           }
           // Doing this just to make it vimium friendly for nav :)
-          var has_data = "<a style='color:#5a5a5a;text-decoration:none'>" + 
-            this.innerText.replace(/\//g," ").split(" ").map(capitalize).join(" ") + 
+          var has_data = "<a style='color:#5a5a5a;text-decoration:none'>" +
+            this.innerText.replace(/\//g," ").split(" ").map(capitalize).join(" ") +
             "</a>"
 
           var no_data = "<div style='height:30px;background-color:#f6f6f6'></div>"
@@ -118,12 +118,12 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
       if (missing_data.length) {
 
         var action = missing_data[0];
-        action.action_string = action.url_pattern.map(function(x){return x.split(" ").join(",")}).join("|") 
+        action.action_string = action.url_pattern.map(function(x){return x.split(" ").join(",")}).join("|")
         action.action_string = action.action_string + "&num_days=2"
 
-        crusher.subscribe.add_subscriber(["actionTimeseries"],function(d) { 
+        crusher.subscribe.add_subscriber(["actionTimeseries"],function(d) {
 
-          crusher.subscribe.add_subscriber(["tf_idf_action"],function(d) { 
+          crusher.subscribe.add_subscriber(["tf_idf_action"],function(d) {
 
             // make sure were still on the same page otherwise it will break
             var bool = funnelRow.datum().id == d3.select(".container div").datum().id
@@ -160,7 +160,7 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
               .entries(x.domains)
               .sort(function(x,y){return y.values - x.values})
               .filter(function(x){return x.key != "NA"})
-              .slice(0,15)   
+              .slice(0,15)
 
             x.parentCategoryData = parentCategoryData
 
@@ -172,13 +172,13 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
 
 
       RB.crusher.ui.action.category_pie(
-        category_pie, [], RB.crusher.ui.action.category_colors, "row col-md-12", 
+        category_pie, [], RB.crusher.ui.action.category_colors, "row col-md-12",
         function(cb,x){ return cb(x) }
       )
 
       category_pie.selectAll(".table-title")
         .classed("hidden",true)
-      
+
       var newAction = funnelRow.selectAll(".series-wrapper")
         .filter(function(x){return x.key == "new"})
         .style("position","relative")
@@ -203,7 +203,7 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
         .style("height","200px")
         .style("position","absolute")
         .style("top","0px")
-        
+
 
       var new_button = d3_updateable(new_overlay,".new-button","div")
         .classed("btn btn-default new-button",true)
@@ -212,11 +212,11 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
         .style("margin-top","150px")
         .style("display","block")
         .style("width","150px")
-        .text("Create new action")
+        .text("Create new segment")
         .on("click",function(x){
           var xx = RB.crusher.controller.states["/crusher/action/recommended"]
           RB.routes.navigation.forward(xx)
-         
+
         })
 
 
@@ -245,8 +245,8 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
           return obj
         })
 
-      
-      
+
+
       var title = "Top existing actions",
         description = "These are the keywords that are most popular on your site"
 
@@ -256,16 +256,16 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
       table.classed("table-condensed table-hover",true)
         .style("font-size","14px")
         .style("margin-top","15px")
-      
+
       var missing_data = odata.slice(0,10).filter(function(x){return !x.visits_data})
 
       if (missing_data.length) {
 
         var action = missing_data[0];
-        action.action_string = action.url_pattern.map(function(x){return x.split(" ").join(",")}).join("|") 
+        action.action_string = action.url_pattern.map(function(x){return x.split(" ").join(",")}).join("|")
         action.action_string = action.action_string + "&num_days=2"
 
-        crusher.subscribe.add_subscriber(["actionTimeseries"],function(d) { 
+        crusher.subscribe.add_subscriber(["actionTimeseries"],function(d) {
 
           // make sure were still on the same page otherwise it will break
           var bool = funnelRow.datum().id == d3.select(".container div").datum().id
@@ -336,7 +336,7 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
           RB.routes.navigation.forward(xx)
           RB.routes.navigation.forward(obj)
         })
-        
+
 
       table.selectAll("tr").filter(function(x,i){return i == 0 })
         .selectAll("th").filter(function(x,i){return i == 2 })
@@ -356,4 +356,4 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
 
     return dashboard
 
-})(RB.crusher.ui.action.dashboard || {}, RB.crusher)  
+})(RB.crusher.ui.action.dashboard || {}, RB.crusher)
