@@ -49,7 +49,7 @@ RB.crusher.ui.action = (function(action) {
   action.opportunities_header = function(newTs,domains) {
 
     var title = "Advertising opportunities",
-      series = ["domain"],
+      series = "domain",
       formatting = "col-md-12",
       description = ""
 
@@ -72,7 +72,7 @@ RB.crusher.ui.action = (function(action) {
       }
     }
 
-    var target = RB.rho.ui.buildWrappers(newTs, title, series, domains, formatting, description, button)
+    var target = RB.rho.ui.buildWrappers(newTs, title, false, domains, formatting, description, button)
 
     return target
   }

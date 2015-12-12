@@ -79,7 +79,9 @@ def groupby_timedifference(df):
     assert("domain" in df.columns)
     assert("uid" in df.columns)
 
-    df['time_bucket'] = df.time_difference.map(lambda x: -x / pandas.np.timedelta64(60, 's')).map(time_groups)
+    zero = pandas.np.timedelta64(0, 's')
+
+    df['time_bucket'] = df.time_difference.map(lambda x: x / pandas.np.timedelta64(60, 's') * (- 1 if x < zero else 1)).map(time_groups)
     grouped = df.groupby("time_bucket")
     grouped = grouped.apply(lambda x: x[['domain','uid']].drop_duplicates().groupby("domain")['uid'].count())
     return grouped.reset_index()

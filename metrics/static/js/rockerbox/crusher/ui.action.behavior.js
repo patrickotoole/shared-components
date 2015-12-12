@@ -86,10 +86,6 @@ RB.crusher.ui.action = (function(action) {
 
   var stackDates = function(data,all_data,x) {
 
-    // HACK: need to share this object
-
-
-
     var stacked_dates = data[0].values
       .sort(function(p,c){return p.date - c.date})
       .map(function(d,i){ return { y:x(d.date), x:0, d: d.date } })
@@ -107,121 +103,210 @@ RB.crusher.ui.action = (function(action) {
 
   action.show_behavior = function(wrapper) {
 
-    var title = "Before and After",
+    var title = "",
       series = ["before","after"],
       formatting = "col-md-12",
-      description = "What happens to user activity before and after visiting this segment",
+      description = "", //"What happens to user activity before and after visiting this segment",
       ts = wrapper.selectAll(".action-body")
 
     var wrap = RB.rho.ui.buildSeriesWrapper(ts, title, series, false, formatting, description)
       .classed("row",true)
 
-    var target = d3_updateable(wrap,".col-md-8","div")
-      .classed("col-md-8",true)
-
-    var rhs_target = d3_updateable(wrap,".col-md-4","div")
-      .classed("col-md-4",true)
-
- 
-
-    var stack = d3.layout.stack()
-      .offset("silhouette")
-      .values(function(d) { return d.values; });
+    wrap.selectAll(".title").remove()
+    wrap.selectAll(".value").remove()
 
 
-    var w = target.style("width").split(".")[0].replace("px","") || 700, 
+    var w = parseInt(wrap.style("width").split(".")[0].replace("px","")) || 700, 
         h = 340;
-    
-    var margin = {top: 40, right: 40, bottom: 30, left: 10},
+
+    w = w/12*8 - 50 // this is to make it fit with col-md-9
+
+    var margin = {top: 40, right: 10, bottom: 30, left: 10},
       width = w - margin.left - margin.right,
       height = h - margin.top - margin.bottom;
 
-        
+    var before_after_data = function(d,is_before){
 
-    var before_wrapper = d3_splat(target,".before-wrapper","div",
+      var key       = is_before ? "before" : "after",
+        orientation = is_before ? "left" : "right";
+
+      var leftOffset, rightOffset;
+
+      if (is_before) {
+        leftOffset = 0
+        rightOffset = 140
+      } else {
+        leftOffset = 140
+        rightOffset = 0
+      }
+
+      var x = d3.time.scale().range([leftOffset, width-rightOffset]);
+      var y = d3.scale.linear().range([height, 0]);
+
+      var stack = d3.layout.stack()
+        .offset("silhouette")
+        .values(function(d) { return d.values; });
+
+      var area = d3.svg.area()
+        .interpolate("cardinal")
+        .x(function(d) { return x(d.date); })
+        .y0(function(d) { return y(d.y0); })
+        .y1(function(d) { return y(d.y0 + d.y); });
+
+      var transformed_categories = transformData(d[key].categories);
+
+      transformed_categories.map(function(x) {
+        if (key == "after") {
+
+          x.values.map(function(y){
+            var time = y.time_bucket*60*1000
+            y.date = new Date(+now + time)
+          })
+        
+        }
+      })
+
+      var first = transformed_categories[0],
+        inflection_pos = calcInflection(transformed_categories),
+        inflection = first.values[key == "after" ? inflection_pos : first.values.length - inflection_pos -1],
+        dates = first.values.map(function(d){return d.date})
+
+      x.domain(d3.extent(dates, function(d) { return d; }));
+
+      return {
+        key: key,
+        stacked: stack(transformed_categories),
+        categories: transformed_categories,
+        inflection: inflection,
+        stacked_dates: stackDates(transformed_categories,d[key].domains,x),
+        orientation: orientation,
+        area: area, x: x, y: y,                       // functions
+        width: width, height: height, margin: margin, // dimensions
+        leftOffset: leftOffset,
+        rightOffset: rightOffset
+      }
+
+    }
+
+    var before_wrapper = d3_splat(wrap,".before-wrapper","div",
       function(d){ 
 
-        var x = d3.time.scale().range([0, width-100]);
-        var y = d3.scale.linear().range([height, 0]);
+        var before = before_after_data(d,true)
+        var after = before_after_data(d,false)
 
-        var area = d3.svg.area()
-            .interpolate("cardinal")
-            .x(function(d) { return x(d.date); })
-            .y0(function(d) { return y(d.y0); })
-            .y1(function(d) { return y(d.y0 + d.y); });
+        var data = [before,after]
 
-        var transformed_categories = transformData(d.before.categories),
-          first = transformed_categories[0],
-          inflection_pos = calcInflection(transformed_categories),
-          inflection = first.values[first.values.length - inflection_pos -1],
-          dates = first.values.map(function(d){return d.date})
-
-        x.domain(d3.extent(dates, function(d) { return d; }));
-
-        var data = [{
-          stacked: stack(transformed_categories),
-          categories: transformed_categories,
-          inflection: inflection,
-          stacked_dates: stackDates(transformed_categories,d.before.domains,x),
-
-          area: area, x: x, y: y,                      // functions
-          width: width, height: height, margin: margin // dimensions
-        }]
         return data
       },
-      function(x){ return x}
+      function(x){ return x.key }
     ).classed("before-wrapper",true)
       .style("margin-left","-15px")
 
-    var svg = before_wrapper.append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
+    
+
+    action.build_behavior(before_wrapper)
+    
+  }
+
+  action.build_behavior = function(wrapper){
+
+
+    d3_updateable(wrapper,".title","div")
+      .classed("title col-md-12",true)
+      .html(function(d){
+        return d.key == "before" ?
+          "Activity Before Visiting" : 
+          "<br>Activity After Visiting" 
+      })
+
+    d3_updateable(wrapper,".value","div")
+      .classed("value col-md-12",true)
+
+
+
+    d3_updateable(wrapper,".description","div")
+      .classed("description col-md-12",true)
+      .style("margin-bottom","10px")
+      .text(function(d){
+        return d.key == "before" ?
+          "Below shows the change in categories that a user visits before they take part in this action" : 
+          "Below shows the change in categories that a user visits after they take part in this action" 
+      })
+
+
+    var lhs_target = d3_updateable(wrapper,".col-md-8","div")
+      .classed("col-md-8",true)
+      .classed("pull-right",function(d){return d.key == "after"})
+
+    var rhs_target = d3_updateable(wrapper,".col-md-3","div")
+      .classed("col-md-4",true)
+
+    var svg = lhs_target.append("svg")
+        .attr("width", function(d){ return d.width + d.margin.left + d.margin.right} )
+        .attr("height", function(d){ return d.height + d.margin.top + d.margin.bottom} )
       .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+        .attr("transform", function(d) {return "translate(" + d.margin.left + "," + d.margin.top + ")" })
         .classed("behavior",true)
 
 
 
-    action.build_behavior(svg,rhs_target)
-    
-  }
+    var path_wrapper = d3_updateable(svg,".path-wrapper","g")
+      .classed("path-wrapper",true)
 
-  action.build_behavior = function(svg,rhs_target){
+    var browser = d3_splat( path_wrapper,".stack","g",
+        function(x){ return x.stacked },
+        function(x){ return x.key }
+      ).attr("class", "stack");
 
-    var data = svg.datum().categories
-    var color = action.category_colors
-
-    var inflection = svg.datum().inflection
-
-    var browser = svg.selectAll(".browser")
-      .data(function(x){ return x.stacked })
-      .enter()
-        .append("g")
-        .attr("class", "browser");
-
-    browser.append("path")
+    d3_updateable(browser,".area","path")
       .attr("class", "area")
       .attr("d", function(d) { 
-        var area = d3.select(this.parentNode.parentNode).datum().area
+        var parent = d3.select(this.parentNode.parentNode).datum()
+        
+        var area = parent.area
+        var orient = (parent.orientation == "left")
         return area(d.values); 
       })
-      .style("fill", function(d) { return color(d.name); });
+      .style("fill", function(d) { return action.category_colors(d.name); });
 
+    
 
-    browser.append("text")
-      .datum(function(d) { return {name: d.name, value: d.values[d.values.length - 1]}; })
-      .attr("transform", function(d) { 
-        var x = d3.select(this.parentNode.parentNode).datum().x
-        var y = d3.select(this.parentNode.parentNode).datum().y 
-        return "translate(" + (x(d.value.date) + 5) + "," + y(d.value.y0 + d.value.y / 2) + ")"; 
+    d3_splat(path_wrapper,".label","text",
+        function(x){ return x.stacked },
+        function(x){ return x.key }
+      ).attr("class","label")
+      .datum(function(d) { 
+        var parent = d3.select(this.parentNode.parentNode).datum()
+        d.orient = parent.orientation == "left"
+
+        return {
+          name: d.name, 
+          value: d.values[d.orient ? (d.values.length - 1) : 0 ], 
+          percent_diff: d.percent_diff,
+          orient: d.orient,
+          leftOffset: parent.leftOffset
+        }; 
       })
-      .attr("x", 6)
+      .attr("transform", function(d) { 
+        var parent = d3.select(this.parentNode.parentNode).datum()
+        var y = parent.y 
+        var width = parent.width
+
+        var yPos = y(d.value.y0 + d.value.y / 2)
+        var xPos = d.orient ? (width - parent.rightOffset + 5) : 0
+
+        return "translate(" + xPos + "," + yPos + ")"; 
+      })
+      .attr("x", function(d){ return d.orient ? 6: (d.leftOffset -6) })
       .attr("dy", ".35em")
       .attr("style", "font-size:.9em")
+      .attr("style", function(d){ 
+        return d.orient ? 
+          "text-anchor:start;font-size:.9em": 
+          "text-anchor:end;font-size:.9em"
+      })
       .text(function(d) { 
           
-          d.percent_diff = d3.select(this.parentElement).datum().percent_diff
-
           var x = d3.format("%")(d.percent_diff)
           x += (d.percent_diff > 0) ?  "↑" : "↓"
 
@@ -230,7 +315,9 @@ RB.crusher.ui.action = (function(action) {
 
           return result
       })
-      .attr("class",function(d){ return d.value.y < .02 ? "hidden" : "" })
+      .attr("class",function(d){ 
+        return d.value.y < .03 ? "hidden" : "" 
+      })
 
     action.behavior_inflection(svg)
     action.behavior_visit(svg)
@@ -267,7 +354,10 @@ RB.crusher.ui.action = (function(action) {
           .style("text-anchor","start")
           .classed("time start",true)
           .text(function(d) { 
-              return parseInt((now - d.inflection.date)/60/1000) + " mins before"
+              var num = parseInt((now - d.inflection.date)/60/1000)
+              var preposition = num > 0 ? "before" : "after"
+              num = num > 0 ? num : -num
+              return  num + " mins " + preposition
           })
 
   }
@@ -295,78 +385,33 @@ RB.crusher.ui.action = (function(action) {
 
   action.behavior_axis = function(svg) {
 
-    var topRow = svg.append("g"),
-      typical = topRow.append("g").classed("typical-behavior",true),
-      intent = topRow.append("g").classed("intent-behavior",function(d) {
-        d.intent_middle_point = d.x(d.inflection.date) + ((d.width -50 - d.margin.right - d.margin.left) - d.x(d.inflection.date))/2
-        return true
-      })
+    var topRow = svg.append("g")
 
-    
-    typical.append("line")
-        .attr("x1", function(d){ return d.x(d.inflection.date)/2 - 55 } )  
-        .attr("y1", 0)
-        .attr("x2", 5)  
-        .attr("y2", 0)
-        .attr("stroke-dasharray","1, 5")
-        .style("stroke-width", 1)
-        .style("stroke", "grey")
-        .style("fill", "none");
+     
 
-    typical.append("text")
-        .attr("transform", function(d) { return "translate(" + (d.x(d.inflection.date)/2) + "," + 0 + ")"; })
-          .attr("dy", ".35em")
-          .style("text-anchor","middle")
-          .text(function(d) { return "Typical behavior" })
-
-    typical.append("line")
-        .attr("x1", function(d){ return d.x(d.inflection.date) - 5 })  
-        .attr("y1", 0)
-        .attr("x2", function(d){ return d.x(d.inflection.date)/2 + 55 })  
-        .attr("y2", 0)
-        .attr("stroke-dasharray","1, 5")
-        .style("stroke-width", 1)
-        .style("stroke", "grey")
-        .style("fill", "none");
-
-    
-
-    intent.append("line")
-        .attr("x1", function(d){return d.intent_middle_point - 20})  
-        .attr("y1", 0)
-        .attr("x2", function(d) {return d.x(d.inflection.date) + 5})  
-        .attr("y2", 0)
-        .attr("stroke-dasharray","1, 5")
-        .style("stroke-width", 1)
-        .style("stroke", "grey")
-        .style("fill", "none");
-    
-    intent.append("text")
-        .attr("transform", function(d) { return "translate(" + d.intent_middle_point + "," + 0 + ")"; })
-          .attr("dy", ".35em")
-          .style("text-anchor","middle")
-          .text(function(d) { return "Intent" })
-
-    intent.append("line")
-        .attr("x1", function(d){return d.width - d.margin.right - 60})  
-        .attr("y1", 0)
-        .attr("x2", function(d){return d.intent_middle_point + 20}) 
-        .attr("y2", 0)
-        .attr("stroke-dasharray","1, 5")
-        .style("stroke-width", 1)
-        .style("stroke", "grey")
-        .style("fill", "none");
+    var leftLine = labelWithDottedLine(svg)
+      .width(function(d){return d.x(d.inflection.date) - d.leftOffset })
+      .x(function(d) {return d.leftOffset })
+      .classname("typical")
+      .text(function(d){
+        return d.orientation == "left" ? "Typical behavior" : "Intent"
+      })()
 
 
+    var rightLine = labelWithDottedLine(svg)
+      .width(function(d){return  d.width - d.x(d.inflection.date) - d.rightOffset})
+      .x(function(d) {return d.x(d.inflection.date) })
+      .classname("intent")
+      .text(function(d){
+        return d.orientation == "left" ? "Intent" : "Typical behavior" 
+      })()
 
 
-    topRow.append("text")
-      .attr("transform", function(d) { return "translate(" + (d.width - 50 + (d.margin.left)/2 ) + "," + 0 + ")"; })
-      .attr("x", 6)
-      .attr("dy", ".35em")
-      .style("text-anchor","middle")
-      .text(function(d) { return "During visit" })
-
+    // var rightLine = labelWithDottedLine(svg)
+    //   .width(function(d){return  d.leftOffset + d.rightOffset})
+    //   .x(function(d) {return d.leftOffset + d.width - d.rightOffset})
+    //   .classname("visit")
+    //   .text("During visit")()
 
 
     var bottomRow = svg.append("g")
@@ -391,7 +436,10 @@ RB.crusher.ui.action = (function(action) {
     
   action.behavior_hover = function(svg,target) {
 
-    var date_rects = svg.selectAll("dates")
+    var date_wrapper = d3_updateable(svg,'.date-wrapper',"g")
+      .classed("date-wrapper",true)
+
+    var date_rects = date_wrapper.selectAll("dates")
         .data(function(x){return x.stacked_dates})
         .enter().append("g")
         .attr("class", "dates");
@@ -412,21 +460,25 @@ RB.crusher.ui.action = (function(action) {
         .on("mouseover",function(d){
             var d = d;
 
+            var parentNode = d3.select(this.parentElement.parentElement.parentElement)
+
             d3.selectAll(".time").classed("hidden",true)
             d3.select(this.parentNode).select("text").classed("hidden",false)
             
             d3.select(this.parentElement.parentElement).selectAll("rect").attr("opacity",".2")
             d3.select(this).attr("opacity","0")
 
+            var time_bucket = ((now - d.d )/60/1000)
+            time_bucket = time_bucket > 0 ? time_bucket : -1*time_bucket
 
-            var data = d.all[((now - d.d )/60/1000)].sort(function(p,c){return c.uid - p.uid})
+            var data = d.all[time_bucket].sort(function(p,c){return c.uid - p.uid})
               .map(function(x) {
                 x.count = x.uid
                 x.category_name = ""
                 return x
               })
-
-            RB.rho.ui.buildBarTable(target,data,"asdf","domain",false,18,action.category_colors)
+            var filtered = target.filter(function(d){ return d == parentNode.datum()})
+            RB.rho.ui.buildBarTable(filtered,data,"asdf","domain",false,15,action.category_colors)
 
             //RB.rho.ui.buildBarTable(target,data,"",["uid"])
 
@@ -447,7 +499,11 @@ RB.crusher.ui.action = (function(action) {
         } )
         .classed("time hidden",true)
         .text(function(d){
-            return parseInt((now - d.d)/60/1000) + " mins before"
+          var num = parseInt((now - d.d)/60/1000)
+          var preposition = num > 0 ? "before" : "after"
+          num = num > 0 ? num : -num
+          return  num + " mins " + preposition
+
         }) 
 
 
