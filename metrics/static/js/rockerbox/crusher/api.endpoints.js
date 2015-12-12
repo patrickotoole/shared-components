@@ -364,10 +364,30 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
               categories: dd.before_categories,
               domains: dd.before_domains
             }
+            action.after = {
+              categories: dd.after_categories,
+              domains: dd.after_domains
+            }
+
             
             deferred_cb(null,cb.bind(false,action))
 
           })
+
+        // dd = window.mock
+        // action.before = {
+        //   categories: dd.before_categories,
+        //   domains: dd.before_domains
+        // }
+        // action.after = {
+        //   categories: dd.after_categories,
+        //   domains: dd.after_domains
+        // }
+        // 
+        // deferred_cb(null,cb.bind(false,action))
+
+
+
       })
 
 

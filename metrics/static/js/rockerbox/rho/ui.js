@@ -101,7 +101,7 @@ RB.rho.ui = (function(ui) {
         return x[series]
       })
       .attr("style",function(x){
-        var style = (!x[series]) ? missing : undefined
+        var style = (!x[series] && series) ? missing : undefined
         return style
       })
       .style("line-height","28px")
@@ -360,7 +360,6 @@ RB.rho.ui = (function(ui) {
       .attr("x", function(d) { return maxBarWidth - x(d.count || d.values || 0); })
       .attr("height", barHeight - 1)
       .style("fill",function(x){
-        debugger
         return x.parent_category_name == "NA" ? "#888" : colors(x.parent_category_name) 
       })
       .on("mouseover",function(x) {
