@@ -6,7 +6,7 @@ RB.crusher.ui.action = (function(action) {
 
   var now = new Date()
 
-  var transformData = function(data) {
+  var transformData = function(data,is_before) {
     var data = data.map(function(x){
 
       x.summed = x.values.reduce(function(p,c){
@@ -61,6 +61,12 @@ RB.crusher.ui.action = (function(action) {
     data = data
       .sort(function(c,p){return (p.values[p.values.length-1].y) - (c.values[c.values.length-1].y)})
       .slice(0,8)
+
+    if (!is_before) {
+      data.map(function(x) {
+        x.values.map(function(y){ y.date = new Date(+now + y.time_bucket*60*1000) })
+      })
+    }
 
     return data
   }
@@ -119,63 +125,56 @@ RB.crusher.ui.action = (function(action) {
     return wrap
   }
 
-  action.show_behavior = function(wrapper) {
+  action.build_behavior_transform = function(wrap) {
 
-    var wrap = action.build_behavior_wrapper(wrapper)
+    // Consider the current element and then make a function that computers 
+    // the appropriate sizes and transforms the data for what we want
 
     function elementToWidth(elem) {
       var num = wrap.style("width").split(".")[0].replace("px","") 
       return parseInt(num)
     }
 
-    var w = elementToWidth(wrap) || 700, 
-        h = 340;
+    var w = elementToWidth(wrap) || 700, h = 340;
 
     w = w/12*8 - 50 // this is to make it fit with col-md-8
 
     var margin = {top: 40, right: 10, bottom: 30, left: 10},
-      width = w - margin.left - margin.right,
-      height = h - margin.top - margin.bottom;
+        width  = w - margin.left - margin.right,
+        height = h - margin.top - margin.bottom;
 
-    var transform_before_after_data = function(d,is_before){
+    var transform = function(d,is_before){
 
-      var key       = is_before ? "before" : "after",
-        orientation = is_before ? "left" : "right";
+      var LABEL_WIDTH = 140; 
 
-      var leftOffset, rightOffset;
+      var key         = is_before ? "before" : "after",
+          orientation = is_before ? "left" : "right",
+          leftOffset  = (orientation == "left") ? 0 : LABEL_WIDTH,
+          rightOffset = (orientation == "left") ? LABEL_WIDTH : 0,
 
-      var transformed_categories = transformData(d[key].categories);
+          // d3 variables
+          x = d3.time.scale().range([leftOffset, width-rightOffset]),
+          y = d3.scale.linear().range([height, 0]),
 
-      if (is_before) {
-        leftOffset = 0
-        rightOffset = 140
-      } else {
-        leftOffset = 140
-        rightOffset = 0
+          stack = d3.layout.stack()
+            .offset("silhouette")
+            .values(function(d) { return d.values; }),
 
-        transformed_categories.map(function(x) {
-          if (key == "after") x.values.map(function(y){ y.date = new Date(+now + y.time_bucket*60*1000) })
-        })
-      }
+          area = d3.svg.area()
+            .interpolate("cardinal")
+            .x(function(d) { return x(d.date); })
+            .y0(function(d) { return y(d.y0); })
+            .y1(function(d) { return y(d.y0 + d.y); }),
 
-      var x = d3.time.scale().range([leftOffset, width-rightOffset]);
-      var y = d3.scale.linear().range([height, 0]);
+          // data transformations
+          transformed_categories = transformData(d[key].categories,is_before);
+          first = transformed_categories[0],
+          dates = first.values.map(function(d){return d.date}),
 
-      var stack = d3.layout.stack()
-        .offset("silhouette")
-        .values(function(d) { return d.values; });
-
-      var area = d3.svg.area()
-        .interpolate("cardinal")
-        .x(function(d) { return x(d.date); })
-        .y0(function(d) { return y(d.y0); })
-        .y1(function(d) { return y(d.y0 + d.y); });
-      
-
-      var first = transformed_categories[0],
-        inflection_pos = calcInflection(transformed_categories),
-        inflection = first.values[key == "after" ? inflection_pos : first.values.length - inflection_pos -1],
-        dates = first.values.map(function(d){return d.date})
+          inflection_val = calcInflection(transformed_categories),
+          inflection_pos = key == "after" ? inflection_val : first.values.length - inflection_val -1
+          inflection = first.values[inflection_pos],
+          
 
       x.domain(d3.extent(dates, function(d) { return d; }));
 
@@ -194,23 +193,15 @@ RB.crusher.ui.action = (function(action) {
 
     }
 
-    var before_wrapper = d3_splat(wrap,".before-wrapper","div",
-      function(d){ 
+    return transform 
+  }
 
-        var before = transform_before_after_data(d,true)
-        var after = transform_before_after_data(d,false)
+  action.show_behavior = function(wrapper) {
 
-        var data = [before,after]
+    var wrap = action.build_behavior_wrapper(wrapper)
+    var transform = action.build_behavior_transform(wrap)
 
-        return data
-      },
-      function(x){ return x.key }
-    ).classed("before-wrapper",true)
-      .style("margin-left","-15px")
-
-    
-
-    action.build_behavior(before_wrapper)
+    action.build_behavior(wrapper,transform)
     
   }
 
@@ -231,7 +222,18 @@ RB.crusher.ui.action = (function(action) {
   }
 
 
-  action.build_behavior = function(wrapper){
+  action.build_behavior = function(wrap,transform){
+
+   var wrapper = d3_splat(wrap,".before-wrapper","div",
+      function(d){ 
+        return [true,false].map(function(is_before) {
+          return transform(d,is_before)
+        })
+      },
+      function(x){ return x.key }
+    ).classed("before-wrapper",true)
+      .style("margin-left","-15px") 
+    
 
     /*
       Headers
