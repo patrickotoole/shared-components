@@ -23,6 +23,8 @@ from stats import PatternStatsBase
 from response import PatternSearchResponse
 from sample import PatternSearchSample
 
+from temporal import *
+
 
 class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, PatternSearchResponse):
 
@@ -91,80 +93,53 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
 
         uids = uids[0]
         dom = yield self.sample_offsite_domains(advertiser, term, uids, num_days) 
-        domain_stats_df  = dom[0][1]
+        domains = dom[0][1]
        
         urls = yield self.defer_get_uid_visits(advertiser,uids,term)
 
-        def time_groups(delta):
-            minutes = [5,15,25,35,45,60,75,90,105,120,135,150,180,210,240,300,360,420,480,540,720,1080,1440,2880,4320,10080]
-
-            for _min in minutes:
-                if delta < _min:
-                    return _min
+        joined = url_domain_intersection(urls,domains)
+        before, after = before_and_after(joined)
 
 
-        url_uids = set(urls.uid)
-        domain_uids = set(domain_stats_df.uid)
+        # before
+        before_grouped = groupby_timedifference(before)
+        idf = get_idf(self.db,set(before_grouped.domain))
 
-        uids = url_uids.intersection(domain_uids)
+        merged = before_grouped.merge(idf,on="domain")
+        before_domains = time_bucket_domains(merged)
+        before_categories = category_time_buckets(merged).to_dict()
 
-        urls = urls[urls.uid.isin(uids)].drop_duplicates("uid")
-        domain_stats_df = domain_stats_df[domain_stats_df.uid.isin(uids)]
+        before_categories = [{"key":k,"values":v} for k,v in before_categories.items()]
 
-        before_after_join = domain_stats_df.merge(urls,on="uid",how="left",suffixes=["_domain","_event"]).dropna()
 
-        before_after_join['time_difference'] = pandas.to_datetime(before_after_join.timestamp_domain) - pandas.to_datetime(before_after_join.timestamp_event)
-        after = before_after_join[before_after_join.time_difference > pandas.np.timedelta64(0,'ns')]
-        before = before_after_join[before_after_join.time_difference <= pandas.np.timedelta64(0,'ns')]
+        # after
+        after_grouped = groupby_timedifference(after)
+        idf = get_idf(self.db,set(after_grouped.domain))
 
-        before['groups'] = before.time_difference.map(lambda x: -x / pandas.np.timedelta64(60, 's')).map(time_groups)
-        grouped = before.groupby("groups")
-        grouped = grouped.apply(lambda x: x[['domain','uid']].drop_duplicates().groupby("domain")['uid'].count())
-        grouped = grouped.reset_index()
+        merged = after_grouped.merge(idf,on="domain")
+        after_domains = time_bucket_domains(merged)
+        after_categories = category_time_buckets(merged).to_dict()
 
-        QUERY = "select p.*, c.parent_category_name from reporting.pop_domain_with_category p join category c using (category_name) where domain in (%(domains)s)"
-        domains = "'" + "','".join(set(grouped.domain)) + "'"
-        idf = self.db.select_dataframe(QUERY % {"domains":domains})
-
-        merged = grouped.merge(idf,on="domain")
-        merged
-        before_category = merged.groupby(["groups","parent_category_name"])['uid'].sum()
-
-        before_category = before_category.unstack("parent_category_name").fillna(0).stack()
-        before_category = (before_category.unstack("parent_category_name").T / before_category.unstack("parent_category_name").T.sum()).T.stack("parent_category_name")
-        before_category.name = "count"
-
-        def run_this(x):
-            values = x[["groups","count"]].T.to_dict().values()
-            return values
-
-        before_categories = before_category.reset_index().groupby("parent_category_name").apply(run_this).to_dict()
-        before_categories = [{"key":k,"values":v} for k,v in zip(before_categories.keys(),before_categories.values())]
-
-        before_domains = merged.groupby("groups").apply(lambda x: x.groupby(['domain','parent_category_name'])[['uid']].sum().reset_index().T.rename(columns={"uid":"count"}).to_dict().values())
+        after_categories = [{"key":k,"values":v} for k,v in after_categories.items()]
 
 
 
 
-        urls = urls.groupby("uid").apply(lambda x: x[['timestamp','url']].sort_index(by="timestamp").to_dict(outtype="records") )
 
-        domains = domain_stats_df.groupby("uid").apply(lambda x: x[['timestamp','domain']].sort_index(by="timestamp").to_dict(outtype="records") )
+        url_ts, domain_ts = url_domain_intersection_ts(urls,domains)
 
-        domains = domains.ix[urls.index]
-        domains = domains[~domains.isnull()]
-
-        urls = urls.ix[domains.index]
-        urls = urls[~urls.isnull()]
-
-        #joined = urls.join(domains)
 
         if len(uids) > 0:
             response['before_categories'] = before_categories
             response['before_domains'] = before_domains.T.to_dict()
 
+            response['after_categories'] = after_categories
+            response['after_domains'] = after_domains.T.to_dict()
+
+
             response['results'] = uids
-            response['domains'] = domains.T.to_dict()
-            response['actions_events'] = urls.T.to_dict()
+            response['domains'] = domain_ts.T.to_dict()
+            response['actions_events'] = url_ts.T.to_dict()
 
 
             response['summary']['num_users'] = len(response['results'])

@@ -54,6 +54,8 @@
 <script type="text/javascript" src="/static/js/rockerbox/crusher/ui.action.dashboard.js"></script>
 <script type="text/javascript" src="/static/js/rockerbox/crusher/ui.action.domains.js"></script>
 <script type="text/javascript" src="/static/js/rockerbox/crusher/ui.action.clusters.js"></script>
+<script type="text/javascript" src="/static/js/rockerbox/crusher/ui.action.behavior.js"></script>
+
 <script type="text/javascript" src="/static/js/rockerbox/crusher/ui.funnel.js"></script>
 <script type="text/javascript" src="/static/js/rockerbox/crusher/ui.funnel.action.js"></script>
 <script type="text/javascript" src="/static/js/rockerbox/crusher/ui.funnel.show.js"></script>
@@ -63,6 +65,7 @@
 <script type="text/javascript" src="/static/js/rockerbox/crusher/ui.action.pattern.js"></script>
 <script type="text/javascript" src="/static/js/rockerbox/rho/ui.js"></script>
 <script type="text/javascript" src="/static/js/rockerbox/rho/ui.filter.js"></script>
+<script type="text/javascript" src="/static/js/rockerbox/crusher/ui.helpers.js"></script>
 <script type="text/javascript" src="/static/js/rockerbox/visit_urls.js"></script>
 <script type="text/javascript" src="/static/js/bootstrap-switch.js"></script>
 <script type="text/javascript" src="/static/js/jquery.serialize-object.js"></script>
@@ -96,6 +99,16 @@ $(function() {
   ga('create', 'UA-50457693-2', 'auto');
   ga('send', 'pageview');
 </script>
+<style>
+.bar-series, .bar.series { padding-bottom:20px }
+.behavior .area {
+  fill-opacity: 1;
+  fill: none;
+}
+.before-wrapper .bar-row-header text {
+  font-weight:normal; font-size:12px
+}
+</style>
 {% end %}
 {% block scripts_bottom %}{% end %}
 {% block content %}
