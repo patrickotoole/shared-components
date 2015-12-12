@@ -101,7 +101,7 @@ RB.crusher.ui.action = (function(action) {
     return stacked_dates
   }
 
-  action.show_behavior = function(wrapper) {
+  action.build_behavior_wrapper = function(wrapper) {
 
     var title = "",
       series = ["before","after"],
@@ -116,21 +116,35 @@ RB.crusher.ui.action = (function(action) {
     wrap.selectAll(".value").remove()
 
 
-    var w = parseInt(wrap.style("width").split(".")[0].replace("px","")) || 700, 
+    return wrap
+  }
+
+  action.show_behavior = function(wrapper) {
+
+    var wrap = action.build_behavior_wrapper(wrapper)
+
+    function elementToWidth(elem) {
+      var num = wrap.style("width").split(".")[0].replace("px","") 
+      return parseInt(num)
+    }
+
+    var w = elementToWidth(wrap) || 700, 
         h = 340;
 
-    w = w/12*8 - 50 // this is to make it fit with col-md-9
+    w = w/12*8 - 50 // this is to make it fit with col-md-8
 
     var margin = {top: 40, right: 10, bottom: 30, left: 10},
       width = w - margin.left - margin.right,
       height = h - margin.top - margin.bottom;
 
-    var before_after_data = function(d,is_before){
+    var transform_before_after_data = function(d,is_before){
 
       var key       = is_before ? "before" : "after",
         orientation = is_before ? "left" : "right";
 
       var leftOffset, rightOffset;
+
+      var transformed_categories = transformData(d[key].categories);
 
       if (is_before) {
         leftOffset = 0
@@ -138,6 +152,10 @@ RB.crusher.ui.action = (function(action) {
       } else {
         leftOffset = 140
         rightOffset = 0
+
+        transformed_categories.map(function(x) {
+          if (key == "after") x.values.map(function(y){ y.date = new Date(+now + y.time_bucket*60*1000) })
+        })
       }
 
       var x = d3.time.scale().range([leftOffset, width-rightOffset]);
@@ -152,19 +170,7 @@ RB.crusher.ui.action = (function(action) {
         .x(function(d) { return x(d.date); })
         .y0(function(d) { return y(d.y0); })
         .y1(function(d) { return y(d.y0 + d.y); });
-
-      var transformed_categories = transformData(d[key].categories);
-
-      transformed_categories.map(function(x) {
-        if (key == "after") {
-
-          x.values.map(function(y){
-            var time = y.time_bucket*60*1000
-            y.date = new Date(+now + time)
-          })
-        
-        }
-      })
+      
 
       var first = transformed_categories[0],
         inflection_pos = calcInflection(transformed_categories),
@@ -191,8 +197,8 @@ RB.crusher.ui.action = (function(action) {
     var before_wrapper = d3_splat(wrap,".before-wrapper","div",
       function(d){ 
 
-        var before = before_after_data(d,true)
-        var after = before_after_data(d,false)
+        var before = transform_before_after_data(d,true)
+        var after = transform_before_after_data(d,false)
 
         var data = [before,after]
 
@@ -208,31 +214,45 @@ RB.crusher.ui.action = (function(action) {
     
   }
 
+  action.behavior = {
+
+    title: function(d,i){
+      var str = i ? "" : "<br>"
+      str += "Activity " + d.key.capitalize() + " Visiting"
+      return str
+    },
+    description: function(d){
+      var str = "Below shows the change in categories that a user visits "
+      str += d.key
+      str += " they take part in this action"
+
+      return str
+    }
+  }
+
+
   action.build_behavior = function(wrapper){
 
+    /*
+      Headers
+     */
 
     d3_updateable(wrapper,".title","div")
       .classed("title col-md-12",true)
-      .html(function(d){
-        return d.key == "before" ?
-          "Activity Before Visiting" : 
-          "<br>Activity After Visiting" 
-      })
+      .html(action.behavior.title)
 
     d3_updateable(wrapper,".value","div")
       .classed("value col-md-12",true)
 
-
-
     d3_updateable(wrapper,".description","div")
       .classed("description col-md-12",true)
       .style("margin-bottom","10px")
-      .text(function(d){
-        return d.key == "before" ?
-          "Below shows the change in categories that a user visits before they take part in this action" : 
-          "Below shows the change in categories that a user visits after they take part in this action" 
-      })
+      .text(action.behavior.description)
 
+
+    /*
+      Body
+    */
 
     var lhs_target = d3_updateable(wrapper,".col-md-8","div")
       .classed("col-md-8",true)
@@ -240,6 +260,11 @@ RB.crusher.ui.action = (function(action) {
 
     var rhs_target = d3_updateable(wrapper,".col-md-3","div")
       .classed("col-md-4",true)
+
+
+    /*
+      Chart
+    */
 
     var svg = lhs_target.append("svg")
         .attr("width", function(d){ return d.width + d.margin.left + d.margin.right} )
@@ -249,6 +274,43 @@ RB.crusher.ui.action = (function(action) {
         .classed("behavior",true)
 
 
+     var mouseover = function(d){
+       var d = d,
+         time_bucket = ((now - d.d )/60/1000)
+         parentNode = d3.select(this.parentElement.parentElement.parentElement)
+
+       d3.selectAll(".time").classed("hidden",true)
+       d3.select(this.parentNode).select("text").classed("hidden",false)
+       
+       d3.select(this.parentElement.parentElement).selectAll("rect").attr("opacity",".2")
+       d3.select(this).attr("opacity","0")
+
+       time_bucket = time_bucket > 0 ? time_bucket : -1*time_bucket
+
+       var data = d.all[time_bucket].sort(function(p,c){return c.uid - p.uid})
+         .map(function(x) {
+           x.count = x.uid
+           x.category_name = ""
+           return x
+         })
+
+       var filtered = rhs_target.filter(function(d){ return d == parentNode.datum()})
+       RB.rho.ui.buildBarTable(filtered,data,"asdf","domain",false,15,action.category_colors)
+
+    }   
+
+    
+    action.behavior_paths(svg)
+    action.behavior_labels(svg)
+    action.behavior_inflection(svg)
+    action.behavior_visit(svg)
+    action.behavior_axis(svg)
+    action.behavior_hover(svg,mouseover)
+
+  }
+
+  action.behavior_paths = function(svg) {
+    /* Path Wrapper */
 
     var path_wrapper = d3_updateable(svg,".path-wrapper","g")
       .classed("path-wrapper",true)
@@ -269,9 +331,15 @@ RB.crusher.ui.action = (function(action) {
       })
       .style("fill", function(d) { return action.category_colors(d.name); });
 
-    
+  }
 
-    d3_splat(path_wrapper,".label","text",
+  action.behavior_labels = function(svg) {
+    /* Label Wrapper */
+
+    var label_wrapper = d3_updateable(svg,".label-wrapper","g")
+      .classed("label-wrapper",true)
+
+    d3_splat(label_wrapper,".label","text",
         function(x){ return x.stacked },
         function(x){ return x.key }
       ).attr("class","label")
@@ -318,12 +386,6 @@ RB.crusher.ui.action = (function(action) {
       .attr("class",function(d){ 
         return d.value.y < .03 ? "hidden" : "" 
       })
-
-    action.behavior_inflection(svg)
-    action.behavior_visit(svg)
-    action.behavior_axis(svg)
-    action.behavior_hover(svg,rhs_target)
-
   }
 
   action.behavior_inflection = function(svg) {
@@ -434,7 +496,7 @@ RB.crusher.ui.action = (function(action) {
 
   }
     
-  action.behavior_hover = function(svg,target) {
+  action.behavior_hover = function(svg,mouseover) {
 
     var date_wrapper = d3_updateable(svg,'.date-wrapper',"g")
       .classed("date-wrapper",true)
@@ -457,37 +519,8 @@ RB.crusher.ui.action = (function(action) {
         .attr("height", function(d){
           return d3.select(this.parentNode.parentNode).datum().height
         })
-        .on("mouseover",function(d){
-            var d = d;
-
-            var parentNode = d3.select(this.parentElement.parentElement.parentElement)
-
-            d3.selectAll(".time").classed("hidden",true)
-            d3.select(this.parentNode).select("text").classed("hidden",false)
-            
-            d3.select(this.parentElement.parentElement).selectAll("rect").attr("opacity",".2")
-            d3.select(this).attr("opacity","0")
-
-            var time_bucket = ((now - d.d )/60/1000)
-            time_bucket = time_bucket > 0 ? time_bucket : -1*time_bucket
-
-            var data = d.all[time_bucket].sort(function(p,c){return c.uid - p.uid})
-              .map(function(x) {
-                x.count = x.uid
-                x.category_name = ""
-                return x
-              })
-            var filtered = target.filter(function(d){ return d == parentNode.datum()})
-            RB.rho.ui.buildBarTable(filtered,data,"asdf","domain",false,15,action.category_colors)
-
-            //RB.rho.ui.buildBarTable(target,data,"",["uid"])
-
-        })
-        .on("mouseout",function(d){
-            //d3.selectAll(".time").classed("hidden",true)
-            //d3.selectAll(".time.start").classed("hidden",false)
-            //d3.select(this).attr("opacity",".2")
-        })
+        .on("mouseover",mouseover)
+        .on("mouseout",function(d){})
 
     date_rects
         .append("text")
