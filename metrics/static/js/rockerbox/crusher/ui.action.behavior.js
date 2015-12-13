@@ -6,6 +6,30 @@ RB.crusher.ui.action = (function(action) {
 
   var now = new Date()
 
+  var transformKey = function(d,key){
+
+      var is_before = (key == "before"),
+
+        transformed_categories = transformData(d[key].categories,is_before);
+        first = transformed_categories[0].values,
+        dates = first.map(function(d){return d.date}),
+
+        inflection_val = calcInflection(transformed_categories),
+        inflection_pos = is_before ? first.length - inflection_val -1 : inflection_val,
+        inflection = first[inflection_pos];
+          
+
+      return {
+        key: key,
+        dates: dates,
+        orientation: is_before ? "left" : "right",
+        categories: transformed_categories,
+        domains: d[key].domains,
+        inflection: inflection
+      }
+
+    }
+
   var transformData = function(data,is_before) {
     var data = data.map(function(x){
 
@@ -29,7 +53,7 @@ RB.crusher.ui.action = (function(action) {
       z.date = new Date( time + 15*60*1000)
   
       x.values.push(z)
-      x.values = x.values.slice(6-x.values.length)
+      x.values = x.values.slice(6-x.values.length) // remove the first 6 points (since its so long...
 
 
       // add to the end
@@ -73,16 +97,19 @@ RB.crusher.ui.action = (function(action) {
 
   var calcInflection = function(data) {
     return data.reverse().map(function(x) {
+      // cumulative average
       return x.values.reduce(function(p,c){
         p.push( ((p[p.length-1]*p.length || 0) + c.y)/(p.length + 1))
         return p
       },[])
     }).reverse().reduce(function(p,c){
+      // sum across series by value at date i
       c.map(function(x,i){
         p[i] = (p[i] || 0) + x
       })
       return p
     },[]).reverse().reduce(function(p,c){
+      // find the min point in this series
       if (p[1] === undefined) return [0,c]
       if (c < p[1]) return [p[0] + 1,c]
       return p
@@ -107,23 +134,7 @@ RB.crusher.ui.action = (function(action) {
     return stacked_dates
   }
 
-  action.build_behavior_wrapper = function(wrapper) {
-
-    var title = "",
-      series = ["before","after"],
-      formatting = "col-md-12",
-      description = "", //"What happens to user activity before and after visiting this segment",
-      ts = wrapper.selectAll(".action-body")
-
-    var wrap = RB.rho.ui.buildSeriesWrapper(ts, title, series, false, formatting, description)
-      .classed("row",true)
-
-    wrap.selectAll(".title").remove()
-    wrap.selectAll(".value").remove()
-
-
-    return wrap
-  }
+  
 
   action.build_behavior_transform = function(wrap) {
 
@@ -143,16 +154,15 @@ RB.crusher.ui.action = (function(action) {
         width  = w - margin.left - margin.right,
         height = h - margin.top - margin.bottom;
 
-    var transform = function(d,is_before){
+    
+
+    var transform = function(d){
 
       var LABEL_WIDTH = 140; 
 
-      var key         = is_before ? "before" : "after",
-          orientation = is_before ? "left" : "right",
-          leftOffset  = (orientation == "left") ? 0 : LABEL_WIDTH,
-          rightOffset = (orientation == "left") ? LABEL_WIDTH : 0,
+      var leftOffset  = (d.orientation == "left") ? 0 : LABEL_WIDTH,
+          rightOffset = (d.orientation == "left") ? LABEL_WIDTH : 0,
 
-          // d3 variables
           x = d3.time.scale().range([leftOffset, width-rightOffset]),
           y = d3.scale.linear().range([height, 0]),
 
@@ -164,29 +174,25 @@ RB.crusher.ui.action = (function(action) {
             .interpolate("cardinal")
             .x(function(d) { return x(d.date); })
             .y0(function(d) { return y(d.y0); })
-            .y1(function(d) { return y(d.y0 + d.y); }),
+            .y1(function(d) { return y(d.y0 + d.y); });
 
-          // data transformations
-          transformed_categories = transformData(d[key].categories,is_before);
-          first = transformed_categories[0],
-          dates = first.values.map(function(d){return d.date}),
-
-          inflection_val = calcInflection(transformed_categories),
-          inflection_pos = key == "after" ? inflection_val : first.values.length - inflection_val -1
-          inflection = first.values[inflection_pos],
           
 
-      x.domain(d3.extent(dates, function(d) { return d; }));
+      x.domain(d3.extent(d.dates, function(d) { return d; }));
 
       return {
-        key: key,
-        stacked: stack(transformed_categories),
-        categories: transformed_categories,
-        inflection: inflection,
-        stacked_dates: stackDates(transformed_categories,d[key].domains,x),
-        orientation: orientation,
-        area: area, x: x, y: y,                       // functions
-        width: width, height: height, margin: margin, // dimensions
+        key: d.key,
+        categories: d.categories,
+        inflection: d.inflection,
+        orientation: d.orientation,
+        domains: d.domains,
+
+
+        stacked: stack(d.categories),
+        stacked_dates: stackDates(d.categories,d.domains,x),
+        area: area, x: x, y: y,
+
+        width: width, height: height, margin: margin, 
         leftOffset: leftOffset,
         rightOffset: rightOffset
       }
@@ -201,8 +207,33 @@ RB.crusher.ui.action = (function(action) {
     var wrap = action.build_behavior_wrapper(wrapper)
     var transform = action.build_behavior_transform(wrap)
 
-    action.build_behavior(wrapper,transform)
+    action.build_behavior(wrap,transform)
     
+  }
+
+  action.build_behavior_wrapper = function(wrapper) {
+
+    var title = "",
+      series = ["before","after"],
+      formatting = "col-md-12",
+      description = "", //"What happens to user activity before and after visiting this segment",
+      ts = wrapper.selectAll(".action-body")
+
+    var wrap = RB.rho.ui.buildSeriesWrapper(ts, title, series, false, formatting, description)
+      .classed("row",true)
+
+    wrap.selectAll(".title").remove()
+    wrap.selectAll(".value").remove()
+
+    wrap.datum(function(d) {
+      d.before_and_after = ["before","after"].map(function(y){
+        return transformKey(d,y)
+      })
+      return d
+    })
+
+
+    return wrap
   }
 
   action.behavior = {
@@ -226,9 +257,8 @@ RB.crusher.ui.action = (function(action) {
 
    var wrapper = d3_splat(wrap,".before-wrapper","div",
       function(d){ 
-        return [true,false].map(function(is_before) {
-          return transform(d,is_before)
-        })
+        var data = d.before_and_after.map(transform)
+        return data
       },
       function(x){ return x.key }
     ).classed("before-wrapper",true)
