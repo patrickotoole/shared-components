@@ -16,8 +16,8 @@ RB.crusher.controller = (function(controller) {
           var user_type = document.cookie.split("user_type=")[1].split(";")[0];
           switch(user_type) {
             case 'rockerbox':
-              window.heap.load("3611187932");
-              window.heap.identify({
+              heap.load("3611187932");
+              heap.identify({
                 handler: 'Rockerbox',
                 name: 'Rockerbox',
                 email: 'support@rockerbox.com'
@@ -34,8 +34,8 @@ RB.crusher.controller = (function(controller) {
                 'email': advertiser_data.email
               };
 
-              window.heap.load("1793449886");
-              window.heap.identify({
+              heap.load("1793449886");
+              heap.identify({
                 handler: user.id,
                 name: user.name,
                 email: user.email
