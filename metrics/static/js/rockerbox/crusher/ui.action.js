@@ -725,7 +725,7 @@ RB.crusher.ui.action = (function(action) {
           $.toast({
             heading: "Something went wrong",
             text: "You can't create a segment without specifying a search pattern",
-            position: "bottom-right",
+            position: "top-right",
             icon: "error"
           })
         }
