@@ -9,14 +9,11 @@ RB.crusher.controller = (function(controller) {
   var source = crusher.api.source
 
   controller.init = function(type,data) {
-    window.heap=window.heap||[],heap.load=function(e,t){window.heap.appid=e,window.heap.config=t=t||{};var n=t.forceSSL||"https:"===document.location.protocol,a=document.createElement("script");a.type="text/javascript",a.async=!0,a.src=(n?"https:":"http:")+"//cdn.heapanalytics.com/js/heap-"+e+".js";var o=document.getElementsByTagName("script")[0];o.parentNode.insertBefore(a,o);for(var r=function(e){return function(){heap.push([e].concat(Array.prototype.slice.call(arguments,0)))}},p=["clearEventProperties","identify","setEventProperties","track","unsetEventProperty"],c=0;c<p.length;c++)heap[p[c]]=r(p[c])};
-
       crusher.subscribe.add_subscriber(["advertiser"], function(advertiser_data) {
         setTimeout(function() {
           var user_type = document.cookie.split("user_type=")[1].split(";")[0];
           switch(user_type) {
             case 'rockerbox':
-              heap.load("3611187932");
               heap.identify({
                 handler: 'Rockerbox',
                 name: 'Rockerbox',
@@ -27,14 +24,12 @@ RB.crusher.controller = (function(controller) {
               (function(){var w=window;var ic=w.Intercom;if(typeof ic==="function"){ic('reattach_activator');ic('update',intercomSettings);}else{var d=document;var i=function(){i.c(arguments)};i.q=[];i.c=function(args){i.q.push(args)};w.Intercom=i;function l(){var s=d.createElement('script');s.type='text/javascript';s.async=true;s.src='https://widget.intercom.io/widget/kbtc5999';var x=d.getElementsByTagName('script')[0];x.parentNode.insertBefore(s,x);}if(w.attachEvent){w.attachEvent('onload',l);}else{l(false)}}})()
               break;
             case 'client':
-              console.log('ADVERTISER DATA', advertiser_data);
               var user = {
                 'id': advertiser_data.external_advertiser_id,
                 'name': advertiser_data.contact_name,
                 'email': advertiser_data.email
               };
 
-              heap.load("1793449886");
               heap.identify({
                 handler: user.id,
                 name: user.name,
