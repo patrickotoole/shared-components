@@ -12,7 +12,7 @@ $(function() {
             $.toast({
               heading: 'Success',
               text: 'You have succesfully created a new segment!',
-              position: 'bottom-right'
+              position: 'top-right'
             })
             break;
         }
