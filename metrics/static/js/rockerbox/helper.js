@@ -24,6 +24,10 @@ var d3_splat = function(target,selector,type,data,joiner) {
   return updateable
 }
 
+String.prototype.capitalize = function() {
+  return this.charAt(0).toUpperCase() + this.slice(1);
+}
+
 var make_table = function(target,data,index) {
 
   var headers = Object.keys(data[0]).map(function(x){return {name: x} })
