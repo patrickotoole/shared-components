@@ -1,8 +1,14 @@
 import pandas 
 
-def time_groups(delta):
-    minutes = [5,15,25,35,45,60,75,90,105,120,135,150,180,210,240,300,360,420,480,540,720,1080,1440,2880,4320,10080]
+minutes = [5,15,25,35,45,60,75,90,105,120,135,150,180,210,240,300,360,420,480,540,720,1080,1440,2880,4320,10080]
 
+def calc_duration(x):
+    previous = 0 
+    for _min in minutes:
+        if x == _min:
+            return previous - _min
+
+def time_groups(delta):
     for _min in minutes:
         if delta < _min:
             return _min
@@ -83,7 +89,7 @@ def groupby_timedifference(df):
 
     df['time_bucket'] = df.time_difference.map(lambda x: x / pandas.np.timedelta64(60, 's') * (- 1 if x < zero else 1)).map(time_groups)
     grouped = df.groupby("time_bucket")
-    grouped = grouped.apply(lambda x: x[['domain','uid']].drop_duplicates().groupby("domain")['uid'].count())
+    grouped = grouped.apply(lambda x: x[['domain','uid']].drop_duplicates().groupby("domain")['uid'].agg(lambda x: len(set(x)) ))
     return grouped.reset_index()
 
 
@@ -98,15 +104,21 @@ def category_time_buckets(merged):
     # fill in missing time,category information
     bucket_df = bucket_df.unstack("parent_category_name").fillna(0).stack()
     category_totals = bucket_df.unstack("parent_category_name").T.sum()
+    category_totals.name = "num"
 
     bucket_df = (bucket_df.unstack("parent_category_name").T / category_totals).T.stack("parent_category_name")
     bucket_df.name = "count"
     
     def run_this(x):
-        values = x[["time_bucket","count"]].T.to_dict().values()
+        values = x[["time_bucket","count","num"]].T.to_dict().values()
         return values
-    
-    bucket_categories = bucket_df.reset_index().groupby("parent_category_name").apply(run_this)
+
+    bucket_df = bucket_df.reset_index().set_index("time_bucket")
+
+    bucket_df['num'] = category_totals
+    bucket_df = bucket_df.reset_index()
+
+    bucket_categories = bucket_df.groupby("parent_category_name").apply(run_this)
     return bucket_categories
 
 
@@ -117,9 +129,10 @@ def time_bucket_domains(merged):
     assert("time_bucket" in merged.columns)
 
     def run_this(x):
-        summed = x.groupby(['domain','parent_category_name'])[['uid']].sum()
+        x['duration'] = -calc_duration(x.time_bucket.iloc[0])
+        summed = x.groupby(['domain','parent_category_name','idf','duration'])[['uid']].sum()
         return summed.reset_index().T.rename(columns={"uid":"count"}).to_dict().values()
-        
+    
     before_domains = merged.groupby("time_bucket").apply(run_this)
     return before_domains
 

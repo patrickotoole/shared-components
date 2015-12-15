@@ -134,27 +134,48 @@ RB.crusher.ui.action = (function(action) {
     return stacked_dates
   }
 
-  
-
-  action.build_behavior_transform = function(wrap) {
-
-    // Consider the current element and then make a function that computers 
-    // the appropriate sizes and transforms the data for what we want
+  function autoSize(wrap,adjustWidth,adjustHeight) {
 
     function elementToWidth(elem) {
       var num = wrap.style("width").split(".")[0].replace("px","") 
       return parseInt(num)
     }
 
-    var w = elementToWidth(wrap) || 700, h = 340;
+    function elementToHeight(elem) {
+      var num = wrap.style("height").split(".")[0].replace("px","") 
+      return parseInt(num)
+    }
 
-    w = w/12*8 - 50 // this is to make it fit with col-md-8
+    var w = elementToWidth(wrap) || 700, 
+      h = elementToHeight(wrap) || 340;
+
+    w = adjustWidth(w)
+    h = adjustHeight(h)
 
     var margin = {top: 40, right: 10, bottom: 30, left: 10},
         width  = w - margin.left - margin.right,
         height = h - margin.top - margin.bottom;
 
-    
+    return {
+      margin: margin,
+      width: width,
+      height: height
+    }
+  } 
+
+  action.build_behavior_transform = function(wrap) {
+
+    // Consider the current element and then make a function that computers 
+    // the appropriate sizes and transforms the data for what we want
+
+    var adjustWidth = function(w) { return w/12*8 - 50 },
+      adjustHeight = function(h) { return 370 };
+
+    var _sizes = autoSize(wrap,adjustWidth,adjustHeight),
+      width = _sizes.width,
+      height = _sizes.height,
+      margin = _sizes.margin;
+
 
     var transform = function(d){
 
@@ -208,7 +229,605 @@ RB.crusher.ui.action = (function(action) {
     var transform = action.build_behavior_transform(wrap)
 
     action.build_behavior(wrap,transform)
+    action.build_intent(wrap)
+    //action.build_domain_intent(wrap)
     
+  }
+
+  action.build_domain_intent = function(wrap) {
+
+
+    var wrapper = d3_updateable(wrap,"div.domain-intent-wrapper","div")
+      .classed("domain-intent-wrapper",true)
+      .style("margin-left","-15px")
+      .style("margin-right","-15px")
+      .datum(function(d){
+        
+        var binflection = function(x) { return x.time_bucket <= d.before_and_after[0].inflection.time_bucket},
+          ainflection = function(x) {return x.time_bucket <= d.before_and_after[1].inflection.time_bucket};
+
+        var before_cat = d.before_and_after[0].categories,
+          after_cat = d.before_and_after[1].categories
+
+        var before = before_cat.map(function(x){return {key:x.key,values:x.values.filter(binflection)} })
+        var after = after_cat.map(function(x){return {key:x.key,values:x.values.filter(ainflection)} })
+
+        var nbefore = before_cat.map(function(x){
+          return {
+            key:x.key,
+            values:x.values.filter(function(x) {return !binflection(x)}) 
+          }
+        })
+        var nafter = after_cat.map(function(x){
+          return {
+            key:x.key,
+            values:x.values.filter(function(x) {return !ainflection(x)}) 
+          }
+        })
+
+        var intent = []
+        intent.push.apply(intent,before)
+        intent.push.apply(intent,after)
+
+        var category_intent = intent.reduce(function(p,c){
+          p[c.key] = c.values.reduce(function(q,r){return q + r.count*r.num},0)
+          p[c.key] = p[c.key]/c.values.length
+
+          return p
+        },{})
+
+
+        var non_intent = []
+        non_intent.push.apply(intent,nbefore)
+        non_intent.push.apply(intent,nafter)
+
+        var category_non_intent = intent.reduce(function(p,c){
+          p[c.key] = c.values.reduce(function(q,r){return q + r.count*r.num},0)
+          p[c.key] = p[c.key]/c.values.length
+
+          return p
+        },{})
+
+        var category_diff = Object.keys(category_intent).reduce(function(p,cat){
+          p[cat] = (category_intent[cat] - category_non_intent[cat]) / category_non_intent[cat]
+          p[cat] = p[cat] == Infinity ? 0 : p[cat]
+          return p
+        },{})
+
+        var category_change = Object.keys(category_diff).map(function(x){
+          return {"name":x,"value": category_diff[x]} 
+        })
+
+        
+
+        // domain
+        var before_bucket = d.before_and_after[0].inflection.time_bucket 
+        var after_bucket = d.before_and_after[1].inflection.time_bucket 
+
+        var before_domains = d.before_and_after[0].domains
+        var after_domains = d.before_and_after[1].domains
+
+
+        var x = []
+        x.push.apply(x,
+          Object.keys(before_domains).reduce(function(p,c){
+            if (c <= before_bucket) p.push.apply(p,before_domains[c])
+            return p
+          },[])
+        )
+        x.push.apply(x,
+          Object.keys(after_domains).reduce(function(p,c){
+            if (c <= after_bucket) p.push.apply(p,after_domains[c])
+            return p
+          },[])
+        )
+
+        var intent_domains = d3.nest()
+          .key(function(x){return x.domain})
+          .rollup(function(x){return d3.sum(x.map(function(y){return y.uid / y.idf})) })
+          .map(x)
+
+
+        var x = []
+        x.push.apply(x,
+          Object.keys(before_domains).reduce(function(p,c){
+            if (c > before_bucket) p.push.apply(p,before_domains[c])
+            return p
+          },[])
+        )
+        x.push.apply(x,
+          Object.keys(after_domains).reduce(function(p,c){
+            if (c > after_bucket) p.push.apply(p,after_domains[c])
+            return p
+          },[])
+        )
+
+        var non_intent_domains = d3.nest()
+          .key(function(x){return x.domain})
+          .rollup(function(x){return d3.sum(x.map(function(y){return y.uid / y.idf})) })
+          .map(x)
+
+        var total_intent = Object.keys(intent_domains).reduce(function(p,c){return p + intent_domains[c]},0)
+        var total_non_intent = Object.keys(non_intent_domains).reduce(function(p,c){return p + non_intent_domains[c]},0)
+
+        var domains = {}
+
+        Object.keys(intent_domains).map(function(x){
+          domains[x] = 0
+        })
+        Object.keys(non_intent_domains).map(function(x){
+          domains[x] = 0
+        })
+
+        var domains_diff = Object.keys(domains).map(function(x){
+          if (!(intent_domains[x] && non_intent_domains[x])) return { name: x, value: 0}
+
+          console.log(intent_domains[x]/total_intent, non_intent_domains[x]/total_non_intent, intent_domains[x], non_intent_domains[x])
+
+          return {
+            name: x,
+            value: (intent_domains[x]/total_intent - non_intent_domains[x]/total_non_intent)/(non_intent_domains[x]/total_non_intent + intent_domains[x]/total_intent ),
+            intent: intent_domains[x],
+            non_intent: non_intent_domains[x]
+          }
+        }).sort(function(p,c) {return c.value - p.value})
+
+        
+        var terms = d3.max(Object.keys(non_intent_domains).map(function(x) {return non_intent_domains[x]}))
+
+        var idf = {}
+        Object.keys(non_intent_domains).map(function(x){return idf[x] = Math.log(2*terms/(non_intent_domains[x] + (intent_domains[x] || 0) ) ) })
+        Object.keys(intent_domains).map(function(x){return idf[x] = Math.log(2*terms/( (non_intent_domains[x] || 0) + (intent_domains[x] || 0) ) ) })
+
+
+        var tfidf = Object.keys(intent_domains).map(function(x){
+          return {"key":x,"value":intent_domains[x],"idf":idf[x],"tf_idf":intent_domains[x]*idf[x]}
+        }).sort(function(p,c){return p.tf_idf - c.tf_idf})
+
+        tfidf = tfidf.filter(function(x){return x.tf_idf < 10})
+
+        var x = d3.scale.linear()
+          .range([-1,1])
+          .domain([tfidf[0].tf_idf, tfidf[tfidf.length-1].tf_idf])
+
+        tfidf.map(function(y){
+          y.name = y.key
+          y.value = x(y.tf_idf)
+        })
+
+        var xx = tfidf.slice(0,10)
+        xx.push.apply(xx,tfidf.slice(-10))
+
+
+        return xx
+      })
+
+    /*
+     Headers
+    */
+
+    d3_updateable(wrapper,".title","div")
+      .classed("title col-md-12",true)
+      .html("<br>During Intent Window")
+
+    d3_updateable(wrapper,".value","div")
+      .classed("value col-md-12",true)
+
+    d3_updateable(wrapper,".description","div")
+      .classed("description col-md-12",true)
+      .style("margin-bottom","10px")
+      .text("Below we show what happens during the window of intent as it compares to before and after visiting")
+
+
+    /*
+      Body
+    */
+
+    var lhs_target = d3_updateable(wrapper,".col-md-6","div")
+      .classed("col-md-6",true)
+      .classed("pull-right",function(d){return d.key == "after"})
+
+    var _sizes = autoSize(lhs_target,function(d){return d -50}, function(d){return 300}),
+      margin = _sizes.margin,
+      width = _sizes.width,
+      height = _sizes.height
+
+    var x = d3.scale.linear()
+        .range([0, width]);
+
+    var y = d3.scale.ordinal()
+        .rangeRoundBands([0, height], .2);
+    
+    var xAxis = d3.svg.axis()
+        .scale(x)
+        .orient("top");
+    
+    var svg = lhs_target.append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+        .attr("transform", "translate(" + margin.left + "," + 0 + ")");
+
+    var data = lhs_target.datum().sort(function(p,c){return c.value - p.value})
+
+
+    var values = data.map(function(x){ return x.value })
+
+    x.domain(d3.extent([d3.min(values)-.1,d3.max(values)+.1,-d3.min(values)+.1,-d3.max(values)-.1],function(x) { return x})).nice();
+
+    y.domain(data.map(function(d) { return d.name; }));
+
+    svg.selectAll(".bar")
+        .data(data)
+      .enter().append("rect")
+        .attr("class", function(d) { return d.value < 0 ? "bar negative" : "bar positive"; })
+        .attr("x", function(d) { return x(Math.min(0, d.value)); })
+        .attr("y", function(d) { return y(d.name); })
+        .attr("width", function(d) { return Math.abs(x(d.value) - x(0)); })
+        .attr("height", y.rangeBand());
+
+    svg.selectAll(".label")
+        .data(data)
+      .enter().append("text")
+        .attr("x", function(d) { return d.value < 0 ? x(0) + 6: x(0) -6; })
+        .attr("style", function(d) { return d.value < 0 ? "text-anchor:start;dominant-baseline: middle;" : "text-anchor:end;dominant-baseline: middle;"; })
+        .attr("y", function(d) { return y(d.name) + y.rangeBand()/2 + 1; })
+        .text(function(d) { return d.name; })
+
+    svg.selectAll(".label")
+        .data(data)
+      .enter().append("text")
+        .attr("x", function(d) { return d.value < 0 ? 
+          x(d.value) - 35:
+          x(d.value) + 35; 
+        })
+        .attr("style", function(d) { return d.value < 0 ? "text-anchor:start;dominant-baseline: middle;font-size:.9em" : "text-anchor:end;dominant-baseline: middle;font-size:.9em"; })
+        .attr("y", function(d) { return y(d.name) + y.rangeBand()/2 + 1; })
+        .text(function(d) { 
+          var v = d3.format("%")(d.value); 
+          var x = (d.value > 0) ?  "↑" : "↓"
+
+
+          return "(" + v + x  + ")"
+        })
+
+
+
+
+    // svg.append("g")
+    //     .attr("class", "x axis")
+    //     .call(xAxis);
+
+    svg.append("g")
+        .attr("class", "y axis")
+      .append("line")
+        .attr("x1", x(0))
+        .attr("x2", x(0))
+        .attr("y2", height);
+    
+
+
+  }
+
+  action.build_intent = function(wrap) {
+
+
+    var wrapper = d3_updateable(wrap,"div.intent-wrapper","div")
+      .classed("intent-wrapper",true)
+      .style("margin-left","-15px")
+      .style("margin-right","-15px")
+      .datum(function(d){
+        
+        var binflection = function(x) { return x.time_bucket <= d.before_and_after[0].inflection.time_bucket},
+          ainflection = function(x) {return x.time_bucket <= d.before_and_after[1].inflection.time_bucket};
+
+        var before_cat = d.before_and_after[0].categories,
+          after_cat = d.before_and_after[1].categories
+
+        var before = before_cat.map(function(x){return {key:x.key,values:x.values.filter(binflection)} })
+        var after = after_cat.map(function(x){return {key:x.key,values:x.values.filter(ainflection)} })
+
+        var nbefore = before_cat.map(function(x){
+          return {
+            key:x.key,
+            values:x.values.filter(function(x) {return !binflection(x)}) 
+          }
+        })
+        var nafter = after_cat.map(function(x){
+          return {
+            key:x.key,
+            values:x.values.filter(function(x) {return !ainflection(x)}) 
+          }
+        })
+
+        var intent = []
+        intent.push.apply(intent,before)
+        intent.push.apply(intent,after)
+
+        var category_intent = intent.reduce(function(p,c){
+          p[c.key] = c.values.reduce(function(q,r){return q + r.count*r.num},0)
+          p[c.key] = p[c.key]/c.values.length
+
+          return p
+        },{})
+
+
+        var non_intent = []
+        non_intent.push.apply(intent,nbefore)
+        non_intent.push.apply(intent,nafter)
+
+        var category_non_intent = intent.reduce(function(p,c){
+          p[c.key] = c.values.reduce(function(q,r){return q + r.count*r.num},0)
+          p[c.key] = p[c.key]/c.values.length
+
+          return p
+        },{})
+
+        var category_diff = Object.keys(category_intent).reduce(function(p,cat){
+          p[cat] = (category_intent[cat] - category_non_intent[cat]) / category_non_intent[cat]
+          p[cat] = p[cat] == Infinity ? 0 : p[cat]
+          return p
+        },{})
+
+        var category_change = Object.keys(category_diff).map(function(x){
+          return {"name":x,"value": category_diff[x]} 
+        })
+
+        
+
+        // domain
+        var before_bucket = d.before_and_after[0].inflection.time_bucket 
+        var after_bucket = d.before_and_after[1].inflection.time_bucket 
+
+        var before_domains = d.before_and_after[0].domains
+        var after_domains = d.before_and_after[1].domains
+
+
+        var x = []
+        x.push.apply(x,
+          Object.keys(before_domains).reduce(function(p,c){
+            if (c <= before_bucket) p.push.apply(p,before_domains[c])
+            return p
+          },[])
+        )
+        x.push.apply(x,
+          Object.keys(after_domains).reduce(function(p,c){
+            if (c <= after_bucket) p.push.apply(p,after_domains[c])
+            return p
+          },[])
+        )
+
+        var intent_domains = d3.nest()
+          .key(function(x){return x.domain})
+          .rollup(function(x){return d3.sum(x.map(function(y){return y.uid / y.idf})) })
+          .map(x)
+
+
+        var x = []
+        x.push.apply(x,
+          Object.keys(before_domains).reduce(function(p,c){
+            if (c > before_bucket) p.push.apply(p,before_domains[c])
+            return p
+          },[])
+        )
+        x.push.apply(x,
+          Object.keys(after_domains).reduce(function(p,c){
+            if (c > after_bucket) p.push.apply(p,after_domains[c])
+            return p
+          },[])
+        )
+
+        var non_intent_domains = d3.nest()
+          .key(function(x){return x.domain})
+          .rollup(function(x){return d3.sum(x.map(function(y){return y.uid / y.idf})) })
+          .map(x)
+
+        var total_intent = Object.keys(intent_domains).reduce(function(p,c){return p + intent_domains[c]},0)
+        var total_non_intent = Object.keys(non_intent_domains).reduce(function(p,c){return p + non_intent_domains[c]},0)
+
+        var domains = {}
+
+        Object.keys(intent_domains).map(function(x){
+          domains[x] = 0
+        })
+        Object.keys(non_intent_domains).map(function(x){
+          domains[x] = 0
+        })
+
+        var domains_diff = Object.keys(domains).map(function(x){
+          if (!(intent_domains[x] && non_intent_domains[x])) return { name: x, value: 0}
+
+          console.log(intent_domains[x]/total_intent, non_intent_domains[x]/total_non_intent, intent_domains[x], non_intent_domains[x])
+
+          return {
+            name: x,
+            value: (intent_domains[x]/total_intent - non_intent_domains[x]/total_non_intent)/(non_intent_domains[x]/total_non_intent + intent_domains[x]/total_intent ),
+            intent: intent_domains[x],
+            non_intent: non_intent_domains[x]
+          }
+        }).sort(function(p,c) {return c.value - p.value})
+
+        
+        var terms = d3.max(Object.keys(non_intent_domains).map(function(x) {return non_intent_domains[x]}))
+
+        var idf = {}
+        Object.keys(non_intent_domains).map(function(x){return idf[x] = Math.log(2*terms/(non_intent_domains[x] + (intent_domains[x] || 0) ) ) })
+        Object.keys(intent_domains).map(function(x){return idf[x] = Math.log(2*terms/( (non_intent_domains[x] || 0) + (intent_domains[x] || 0) ) ) })
+
+
+        var tfidf = Object.keys(intent_domains).map(function(x){
+          return {"key":x,"value":intent_domains[x],"idf":idf[x],"tf_idf":intent_domains[x]*idf[x]}
+        }).sort(function(p,c){return p.tf_idf - c.tf_idf})
+
+        var x = d3.scale.linear()
+          .range([-1,1])
+          .domain([tfidf[0].tf_idf, tfidf[tfidf.length-1].tf_idf])
+
+
+        tfidf.map(function(y){
+          y.name = y.key
+          y.value = x(y.tf_idf)
+        })
+
+        var xx = tfidf.slice(0,10)
+        xx.push.apply(xx,tfidf.slice(-10))
+
+        var x = []
+        x.push.apply(x,
+          Object.keys(before_domains).reduce(function(p,c){
+            if (c <= before_bucket) p.push.apply(p,before_domains[c])
+            return p
+          },[])
+        )
+        x.push.apply(x,
+          Object.keys(after_domains).reduce(function(p,c){
+            if (c <= after_bucket) p.push.apply(p,after_domains[c])
+            return p
+          },[])
+        )
+
+        var domain_to_category = d3.nest()
+          .key(function(x){return x.domain})
+          .rollup(function(x){return x[0].parent_category_name})
+          .map(x)
+
+        var ds = d3.nest()
+          .key(function(y){return domain_to_category[y.name] })
+          .key(function(y){return y.name})
+          .rollup(function(y){return y[0].value})
+          .entries(tfidf)
+
+
+        return {category: category_change, domains: ds}
+      })
+
+    /*
+     Headers
+    */
+
+    d3_updateable(wrapper,".title","div")
+      .classed("title col-md-12",true)
+      .html("<br>During Intent Window")
+
+    d3_updateable(wrapper,".value","div")
+      .classed("value col-md-12",true)
+
+    d3_updateable(wrapper,".description","div")
+      .classed("description col-md-12",true)
+      .style("margin-bottom","10px")
+      .text("Below we show what happens during the window of intent as it compares to before and after visiting")
+
+
+    /*
+      Body
+    */
+
+    var lhs_target = d3_updateable(wrapper,".col-md-6","div")
+      .classed("col-md-6",true)
+      .classed("pull-right",function(d){return d.key == "after"})
+
+    var rhs_target = d3_updateable(wrapper,".rhs.col-md-6","div")
+      .classed("col-md-6 rhs",true)
+      .classed("pull-right",function(d){return d.key == "after"})
+
+
+    var _sizes = autoSize(lhs_target,function(d){return d -50}, function(d){return 300}),
+      margin = _sizes.margin,
+      width = _sizes.width,
+      height = _sizes.height
+
+    var x = d3.scale.linear()
+        .range([0, width]);
+
+    var y = d3.scale.ordinal()
+        .rangeRoundBands([0, height], .2);
+    
+    var xAxis = d3.svg.axis()
+        .scale(x)
+        .orient("top");
+    
+    var svg = lhs_target.append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+
+        .datum(function(x){return x.category})
+      .append("g")
+        .attr("transform", "translate(" + margin.left + "," + (margin.top-20) + ")")
+
+    var data = svg.datum().sort(function(p,c){return c.value - p.value})
+
+
+    var values = data.map(function(x){ return x.value })
+
+    x.domain(d3.extent([d3.min(values)-.1,d3.max(values)+.1,-d3.min(values)+.1,-d3.max(values)-.1],function(x) { return x})).nice();
+
+    y.domain(data.map(function(d) { return d.name; }));
+
+    svg.selectAll(".bar")
+        .data(data)
+      .enter().append("rect")
+        .attr("class", function(d) { return d.value < 0 ? "bar negative" : "bar positive"; })
+        .attr("x", function(d) { return x(Math.min(0, d.value)); })
+        .attr("y", function(d) { return y(d.name); })
+        .attr("width", function(d) { return Math.abs(x(d.value) - x(0)); })
+        .attr("height", y.rangeBand())
+        .on("mouseover",function(z){
+          var domains = this.parentElement.parentElement.parentElement.__data__.domains
+          var data = domains.filter(function(y){return y.key == z.name})[0].values
+            .map(function(x) {
+              x.count = x.values + 1 
+              x.domain = x.key
+              x.category_name = z.name
+              x.parent_category_name = z.name
+              return x
+            })
+
+          var filtered = rhs_target
+          RB.rho.ui.buildBarTable(filtered,data,"asdf","domain",false,15,action.category_colors)
+
+        })
+
+    svg.selectAll(".label")
+        .data(data)
+      .enter().append("text")
+        .attr("x", function(d) { return d.value < 0 ? x(0) + 6: x(0) -6; })
+        .attr("style", function(d) { return d.value < 0 ? "text-anchor:start;dominant-baseline: middle;" : "text-anchor:end;dominant-baseline: middle;"; })
+        .attr("y", function(d) { return y(d.name) + y.rangeBand()/2 + 1; })
+        .text(function(d) { return d.name; })
+
+    svg.selectAll(".label")
+        .data(data)
+      .enter().append("text")
+        .attr("x", function(d) { return d.value < 0 ? 
+          x(d.value) - 35:
+          x(d.value) + 35; 
+        })
+        .attr("style", function(d) { return d.value < 0 ? "text-anchor:start;dominant-baseline: middle;font-size:.9em" : "text-anchor:end;dominant-baseline: middle;font-size:.9em"; })
+        .attr("y", function(d) { return y(d.name) + y.rangeBand()/2 + 1; })
+        .text(function(d) { 
+          var v = d3.format("%")(d.value); 
+          var x = (d.value > 0) ?  "↑" : "↓"
+
+
+          return "(" + v + x  + ")"
+        })
+
+
+
+
+    // svg.append("g")
+    //     .attr("class", "x axis")
+    //     .call(xAxis);
+
+    svg.append("g")
+        .attr("class", "y axis")
+      .append("line")
+        .attr("x1", x(0))
+        .attr("x2", x(0))
+        .attr("y2", height);
+    
+
+
   }
 
   action.build_behavior_wrapper = function(wrapper) {
@@ -408,10 +1027,10 @@ RB.crusher.ui.action = (function(action) {
       .text(function(d) { 
           
           var x = d3.format("%")(d.percent_diff)
-          x += (d.percent_diff > 0) ?  "↑" : "↓"
+          //x += (d.percent_diff > 0) ?  "↑" : "↓"
 
           var result = d.name
-          result += (d.percent_diff != Infinity) ? " (" + x + ")" : ""
+          //result += (d.percent_diff != Infinity) ? " (" + x + ")" : ""
 
           return result
       })
