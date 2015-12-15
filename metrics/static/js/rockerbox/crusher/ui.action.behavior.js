@@ -230,7 +230,7 @@ RB.crusher.ui.action = (function(action) {
 
     action.build_behavior(wrap,transform)
     action.build_intent(wrap)
-    //action.build_domain_intent(wrap)
+    action.build_domain_intent(wrap)
     
   }
 
@@ -308,14 +308,14 @@ RB.crusher.ui.action = (function(action) {
         var after_domains = d.before_and_after[1].domains
 
 
-        var x = []
-        x.push.apply(x,
+        var intent_x = []
+        intent_x.push.apply(intent_x,
           Object.keys(before_domains).reduce(function(p,c){
             if (c <= before_bucket) p.push.apply(p,before_domains[c])
             return p
           },[])
         )
-        x.push.apply(x,
+        intent_x.push.apply(intent_x,
           Object.keys(after_domains).reduce(function(p,c){
             if (c <= after_bucket) p.push.apply(p,after_domains[c])
             return p
@@ -325,17 +325,17 @@ RB.crusher.ui.action = (function(action) {
         var intent_domains = d3.nest()
           .key(function(x){return x.domain})
           .rollup(function(x){return d3.sum(x.map(function(y){return y.uid / y.idf})) })
-          .map(x)
+          .map(intent_x)
 
 
-        var x = []
-        x.push.apply(x,
+        var non_intent_x = []
+        non_intent_x.push.apply(non_intent_x,
           Object.keys(before_domains).reduce(function(p,c){
             if (c > before_bucket) p.push.apply(p,before_domains[c])
             return p
           },[])
         )
-        x.push.apply(x,
+        non_intent_x.push.apply(non_intent_x,
           Object.keys(after_domains).reduce(function(p,c){
             if (c > after_bucket) p.push.apply(p,after_domains[c])
             return p
@@ -345,7 +345,7 @@ RB.crusher.ui.action = (function(action) {
         var non_intent_domains = d3.nest()
           .key(function(x){return x.domain})
           .rollup(function(x){return d3.sum(x.map(function(y){return y.uid / y.idf})) })
-          .map(x)
+          .map(non_intent_x)
 
         var total_intent = Object.keys(intent_domains).reduce(function(p,c){return p + intent_domains[c]},0)
         var total_non_intent = Object.keys(non_intent_domains).reduce(function(p,c){return p + non_intent_domains[c]},0)
@@ -398,6 +398,8 @@ RB.crusher.ui.action = (function(action) {
         var xx = tfidf.slice(0,10)
         xx.push.apply(xx,tfidf.slice(-10))
 
+
+        debugger
 
         return xx
       })

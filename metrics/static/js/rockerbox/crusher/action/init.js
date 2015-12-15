@@ -107,8 +107,16 @@ RB.crusher.ui.action.show = (function(show,action,crusher) {
     }
     
     crusher.ui.action.view(target)
-    
     crusher.ui.action.show_timeseries(target)
+
+    crusher.ui.tabs.build(target)
+
+    d3_updateable(target,".action-body","div")
+      .classed("action-body row",true)
+      .style("margin-left","-15px")
+      .style("margin-right","-15px")
+
+
     
 
     return data
@@ -179,7 +187,7 @@ RB.crusher.ui.action.behavior = (function(behavior,action,crusher) {
   behavior.subscription = function(data) {
 
     var target = d3.selectAll(".action-view-wrapper")
-    d3_updateable(target.selectAll(".urls"),".action-body","div")
+    d3_updateable(target,".action-body","div")
       .classed("action-body",true)
       .style("margin-left","-15px")
       .style("margin-right","-15px")

@@ -19,7 +19,9 @@ RB.crusher.ui.action = (function(action) {
       .key(function(x){return x.domain})
       .map(domains)
 
-    var target = RB.rho.ui.buildSeriesWrapper(wrapper.selectAll(".ts"), title, series, [wrapper.datum()], formatting, description)
+    var target = RB.rho.ui.buildSeriesWrapper(wrapper.selectAll(".action-body"), title, series, [wrapper.datum()], formatting, description)
+
+    d3.select(target.node().parentNode).classed("action-clusters",true)
 
     
     var clusters = d3_splat(target,".cluster","div",

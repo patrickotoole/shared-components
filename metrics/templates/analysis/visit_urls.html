@@ -55,6 +55,8 @@
 <script type="text/javascript" src="/static/js/rockerbox/crusher/ui.action.domains.js"></script>
 <script type="text/javascript" src="/static/js/rockerbox/crusher/ui.action.clusters.js"></script>
 <script type="text/javascript" src="/static/js/rockerbox/crusher/ui.action.behavior.js"></script>
+<script type="text/javascript" src="/static/js/rockerbox/crusher/ui.action.tabs.js"></script>
+
 
 <script type="text/javascript" src="/static/js/rockerbox/crusher/ui.funnel.js"></script>
 <script type="text/javascript" src="/static/js/rockerbox/crusher/ui.funnel.action.js"></script>
@@ -116,6 +118,33 @@ $(function() {
 .bar.negative {
   fill:rgb(230, 85, 13)
 }
+.item.selected {
+        font-weight:bold;
+}
+.item.selected:after, .item.selected:before {
+	top: 95%;
+	left: 50%;
+	border: solid transparent;
+	content: " ";
+	height: 0;
+	width: 0;
+	position: absolute;
+	pointer-events: none;
+}
+
+.item.selected:after {
+	border-color: rgba(255, 255, 255, 0);
+	border-top-color: #fff;
+	border-width: 10px;
+	margin-left: -10px;
+}
+.item.selected:before {
+	border-color: rgba(240, 240, 240, 0);
+	border-top-color: #f0f0f0;
+	border-width: 11px;
+	margin-left: -11px;
+}
+
 </style>
 {% end %}
 {% block scripts_bottom %}{% end %}
