@@ -8,7 +8,7 @@ RB.crusher.ui.action = (function(action) {
 
     var title = "User Clusters",
       series = ["clusters"],
-      formatting = "col-md-12",
+      formatting = ".col-md-12.action-clusters",
       description = "Top user clusters"
 
     console.log(wrapper.datum())
@@ -21,7 +21,7 @@ RB.crusher.ui.action = (function(action) {
 
     var target = RB.rho.ui.buildSeriesWrapper(wrapper.selectAll(".action-body"), title, series, [wrapper.datum()], formatting, description)
 
-    d3.select(target.node().parentNode).classed("action-clusters",true)
+    //d3.select(target.node().parentNode).classed("action-clusters",true)
 
     
     var clusters = d3_splat(target,".cluster","div",

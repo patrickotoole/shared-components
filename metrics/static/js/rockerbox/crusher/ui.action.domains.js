@@ -50,7 +50,7 @@ RB.crusher.ui.action = (function(action) {
 
     var title = "Advertising opportunities",
       series = "domain",
-      formatting = "col-md-12",
+      formatting = ".col-md-12.advertiser-opportunities",
       description = ""
 
     var button = {
@@ -73,7 +73,7 @@ RB.crusher.ui.action = (function(action) {
     }
 
     var target = RB.rho.ui.buildWrappers(newTs, title, false, domains, formatting, description, button)
-    d3.select(target.node().parentNode).classed("advertising-opportunities",true)
+    //d3.select(target.node().parentNode).classed("advertising-opportunities",true)
 
     return target
   }

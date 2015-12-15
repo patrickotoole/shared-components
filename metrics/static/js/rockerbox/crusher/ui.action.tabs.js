@@ -12,10 +12,10 @@ RB.crusher.ui.tabs = (function(tabs) {
       "name":"Opportunities",
       "class":""
     },{
-      "name":"Timing",
+      "name":"Before and After",
       "class":""
     },{
-      "name":"Before and After",
+      "name":"Timing",
       "class":""
     },{
       "name":"Clusters",
