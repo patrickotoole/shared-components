@@ -4,6 +4,27 @@ import lib.password_hash
 
 def select(query):
 
+
+    if "advertiser_id as external_advertiser_id" in query and "username = '" in query: # login
+        username = query.split(" username = '")[1].split("'")[0]
+        pw_hash = lib.password_hash.PasswordHash()
+        password = pw_hash.hash_password("admin")
+        return pandas.DataFrame([
+            {"username": username,"password":password,"show_reporting":0, "external_advertiser_id": 302568}
+        ])
+
+
+    if "select user.id, user.advertiser_id, user.username" in query:  # advertiser
+
+        username = query.split(" username = '")[1].split("'")[0]
+        pw_hash = lib.password_hash.PasswordHash()
+        password = pw_hash.hash_password("admin")
+        return pandas.DataFrame([
+            {"username": username,"password":password,"show_reporting":0, "advertiser_id": 302568}
+        ])
+
+
+
     if "select * from advertiser where " in query:
         l = [{'media_trader': 'jenny', 'pixel_source_name': 'baublebar', 'advertiser_name': 'Baublebar', 'client_sld': 'baublebar.com', 'deleted': 0, 'client_goals': '10', 'min_report_date': '2015-07-01 00:00:00', 'owner': 'jenny', 'email': 'becca@baublebar.com', 'last_activity': '2015-11-19 22:52:25', 'running': 1, 'client_type': 'direct', 'media_trader_slack_name': 'jenny', 'advertiser_goal': 3.2, 'contact_name': 'Becca', 'monthly_budget': 25000, 'active': 1, 'id': 11, 'reporting_type': 'internal', 'external_advertiser_id': 302568}]
         return pandas.DataFrame(l)
@@ -32,13 +53,6 @@ def select(query):
         return pandas.DataFrame(l)
 
 
-
-    if " username = '" in query:  # login
-
-        username = query.split(" username = '")[1].split("'")[0]
-        pw_hash = lib.password_hash.PasswordHash()
-        password = pw_hash.hash_password("admin")
-        return pandas.DataFrame([{"username": username,"password":password,"show_reporting":0}])
 
 
     
