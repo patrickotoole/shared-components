@@ -6,10 +6,10 @@ import StringIO
 import mock
 import time
 
-from lib.helpers import *  
+from lib.helpers import *
 
 CONVERSION_PIXEL = """<!-- Rockerbox - %(segment_name)s -->
-<script src="https://secure.adnxs.com/px?id=%(pixel_id)s&seg=%(segment_id)s&t=1&order_id=[variable_holder]" type="text/javascript"></script> 
+<script src="https://secure.adnxs.com/px?id=%(pixel_id)s&seg=%(segment_id)s&t=1&order_id=[variable_holder]" type="text/javascript"></script>
 <script src="https://getrockerbox.com/pixel?source=%(pixel_source_name)s&type=conv&id=%(pixel_id)s&seg=%(segment_id)s&order_type=[variable_holder]" type="text/javascript"></script>
 <!-- End of Segment Pixel -->"""
 
@@ -36,22 +36,22 @@ INCLUDES = {
     "insertion_orders": "insertion_order",
     "hourly_served_estimate":"reporting.advertiser_served_hourly"
 }
- 
+
 INSERT_ADVERTISER = """
 INSERT INTO advertiser (
-    contact_name, 
-    external_advertiser_id, 
+    contact_name,
+    external_advertiser_id,
     email,
     advertiser_name,
     pixel_source_name,
     client_goals,
     client_sld
-) 
+)
 VALUES (
-    '%(contact_name)s', 
-    %(advertiser_id)s, 
-    '%(email)s', 
-    '%(advertiser_name)s' , 
+    '%(contact_name)s',
+    %(advertiser_id)s,
+    '%(email)s',
+    '%(advertiser_name)s' ,
     '%(pixel_source_name)s',
     '%(client_goals)s',
     '%(client_sld)s'
@@ -60,18 +60,18 @@ VALUES (
 
 INSERT_PIXEL = """
 INSERT INTO advertiser_pixel (
-    external_advertiser_id, 
+    external_advertiser_id,
     pixel_id,
     pixel_display_name,
     pixel_name,
     pc_window_hours,
     pv_window_hours
-) 
+)
 VALUES (
-    '%(external_advertiser_id)s', 
-    '%(pixel_id)s', 
-    '%(pixel_display_name)s', 
-    '%(pixel_name)s' , 
+    '%(external_advertiser_id)s',
+    '%(pixel_id)s',
+    '%(pixel_display_name)s',
+    '%(pixel_name)s' ,
     '%(pc_window_hours)s',
     '%(pv_window_hours)s'
 )
@@ -85,11 +85,11 @@ INSERT INTO advertiser_segment (
     segment_name,
     segment_implemented,
     segment_description
-) 
+)
 VALUES (
-    '%(external_advertiser_id)s', 
-    '%(external_member_id)s', 
-    '%(external_segment_id)s', 
+    '%(external_advertiser_id)s',
+    '%(external_member_id)s',
+    '%(external_segment_id)s',
     '%(segment_name)s',
     '%(segment_implemented)s',
     '%(segment_description)s'
@@ -100,14 +100,14 @@ INSERT INTO advertiser_email (
     external_advertiser_id,
     contact_name,
     email
-) 
+)
 VALUES (
-    '%(external_advertiser_id)s', 
-    '%(contact_name)s', 
+    '%(external_advertiser_id)s',
+    '%(contact_name)s',
     '%(email)s'
 )
 """
- 
+
 class Advertiser(object):
 
     def insert_advertiser(self,advertiser_id,advertiser_name):
@@ -118,10 +118,10 @@ class Advertiser(object):
             "advertiser_name": advertiser_name,
             "pixel_source_name": self.get_argument("pixel_source_name"),
             "client_goals" : self.get_argument("advertiser_details"),
-            "client_sld" : self.get_argument("client_sld")
+            "client_sld" : self.get_argument("advertiser_domain")
         }
         query = INSERT_ADVERTISER % params
-        self.db.execute(query)            
+        self.db.execute(query)
         #self.db.commit()
         df = self.db.select_dataframe(
             "select id from advertiser where external_advertiser_id = %s" % advertiser_id
@@ -138,7 +138,7 @@ class Advertiser(object):
             "pv_window_hours": pvt
         }
         query = INSERT_PIXEL % params
-        self.db.execute(query)            
+        self.db.execute(query)
         #self.db.commit()
 
     def insert_segment(self,segment_id,segment_name,advertiser_id,member_id,segment_implemented,segment_description):
@@ -153,9 +153,9 @@ class Advertiser(object):
         }
         query = INSERT_SEGMENT % params
         print query
-        self.db.execute(query)            
+        self.db.execute(query)
         #self.db.commit()
- 
+
     def insert_emails(self,advertiser_id):
         params = {
             "external_advertiser_id": advertiser_id,
@@ -164,9 +164,9 @@ class Advertiser(object):
         }
         query = INSERT_EMAIL % params
         print query
-        self.db.execute(query)            
+        self.db.execute(query)
         #self.db.commit()
- 
+
         if self.get_argument('contact_name_2') != "":
             params = {
                 "external_advertiser_id": advertiser_id,
@@ -175,9 +175,9 @@ class Advertiser(object):
             }
             query = INSERT_EMAIL % params
             print query
-            self.db.execute(query)            
+            self.db.execute(query)
             #self.db.commit()
-              
+
     def create_advertiser(self,advertiser_name):
         data = {"advertiser": {"name": advertiser_name, "state": "active"} }
         response = self.api.post('/advertiser',data=ujson.dumps(data)).json
@@ -198,12 +198,12 @@ class Advertiser(object):
         }
 
         if conversion_pixel is not None:
-            formatted_pixel = CONVERSION_PIXEL % params 
+            formatted_pixel = CONVERSION_PIXEL % params
         elif "Creative" not in segment_name and "Test" not in segment_name:
             formatted_pixel = SEGMENT_PIXEL % params
         else:
             formatted_pixel = ""
- 
+
         self.insert_segment(
             response["response"]["segment"]["id"],
             advertiser_name + " - " + segment_name,
@@ -211,20 +211,20 @@ class Advertiser(object):
             2024,
             formatted_pixel,
             SEGMENT_DESCRIPTIONS.get(segment_name,"")
-        ) 
+        )
         return response["response"]["segment"]["id"]
-   
+
     def create_pixel(self,advertiser_id,advertiser_name,pixel_name,pct,pvt):
         data = {
-            "pixel": { 
-                "name": "%s - %s" % (advertiser_name,pixel_name), 
-                "post_view_expire_mins": 720*60, 
-                "post_click_expire_mins": 720*60, 
-                "post_view_value": 1, 
-                "state": "active", 
-                "trigger_type": "hybrid" 
-            } 
-        } 
+            "pixel": {
+                "name": "%s - %s" % (advertiser_name,pixel_name),
+                "post_view_expire_mins": 720*60,
+                "post_click_expire_mins": 720*60,
+                "post_view_value": 1,
+                "state": "active",
+                "trigger_type": "hybrid"
+            }
+        }
         URL = "/pixel?advertiser_id=%s" % advertiser_id
         response = self.api.post(URL,data=ujson.dumps(data)).json
         if pixel_name == "Signup Conversion Pixel":
@@ -255,12 +255,12 @@ class Advertiser(object):
         response_pub = self.api.post(URL,data=ujson.dumps(data)).json
         publisher_id = response_pub["response"]["publisher"]["id"]
         #Making base payment rule
-        data = { 
-                "payment-rule":{ 
-                    "name": "Base Rule", 
-                    "pricing_type": "revshare", 
-                    "revshare": "1", 
-                    "state": "active" 
+        data = {
+                "payment-rule":{
+                    "name": "Base Rule",
+                    "pricing_type": "revshare",
+                    "revshare": "1",
+                    "state": "active"
                 }
             }
         URL = "/payment-rule?publisher_id=%s" % publisher_id
@@ -293,7 +293,7 @@ class Advertiser(object):
                 "state": "active",
                 "revenue_type": "cpa",
                 "pixels": [ {"id":_id, "post_click_revenue":0} for name, _id in pixel_dict.iteritems() ]
-                
+
             }
         }
         URL = "/line-item?advertiser_id=%s" % advertiser_id
@@ -315,7 +315,7 @@ class Advertiser(object):
         URL = "/campaign?advertiser_id=%s&line_item=%s" % (advertiser_id,line_item_id)
         response = self.api.post(URL,data=ujson.dumps(data)).json
         print response
-        return response["response"]["campaign"]["id"] 
+        return response["response"]["campaign"]["id"]
 
     def set_managed_target(self,advertiser_id,campaign_id,placement_id):
         data = {
@@ -327,7 +327,7 @@ class Advertiser(object):
             }
         }
 
-        URL = "/profile?advertiser_id=%s&campaign_id=%s" % (advertiser_id,campaign_id) 
+        URL = "/profile?advertiser_id=%s&campaign_id=%s" % (advertiser_id,campaign_id)
         response = self.api.post(URL,data=ujson.dumps(data)).json
         print response
         return response["response"]["profile"]["id"]
@@ -363,7 +363,7 @@ class Advertiser(object):
         URL = "/campaign?advertiser_id=%s&line_item=%s" % (advertiser_id,line_item_id)
         response = self.api.post(URL,data=ujson.dumps(data)).json
         print response
-        return response["response"]["campaign"]["id"] 
+        return response["response"]["campaign"]["id"]
 
     def set_live_target(self,advertiser_id,campaign_id,segment_id):
         data = {
@@ -371,7 +371,7 @@ class Advertiser(object):
                 "segment_targets": [{"id":segment_id}]
             }
         }
-        URL = "/profile?advertiser_id=%s&campaign_id=%s" % (advertiser_id,campaign_id) 
+        URL = "/profile?advertiser_id=%s&campaign_id=%s" % (advertiser_id,campaign_id)
         response = self.api.post(URL,data=ujson.dumps(data)).json
         print response
         return response["response"]["profile"]["id"]
@@ -416,7 +416,7 @@ class Advertiser(object):
                  "use_operating_system_extended_targeting": true
             }
         }
-        URL = "/profile?advertiser_id=%s&campaign_id=%s" % (advertiser_id,campaign_id) 
+        URL = "/profile?advertiser_id=%s&campaign_id=%s" % (advertiser_id,campaign_id)
         response = self.api.post(URL,data=ujson.dumps(data)).json
         print response
 
@@ -432,8 +432,8 @@ class Advertiser(object):
         response = self.api.put(URL,data=ujson.dumps(data)).json
 
         return response
-         
-     
+
+
 
     def get_default_placement(self,publisher_id,count=0):
         URL = "/placement?publisher_id=%s" % publisher_id
@@ -447,16 +447,16 @@ class Advertiser(object):
             time.sleep(5*count)
             return self.get_default_placement(publisher_id,count + 1)
         return placement
- 
+
 
 class AdvertiserHandler(tornado.web.RequestHandler,Advertiser):
     def initialize(self, db, api):
-        self.db = db 
+        self.db = db
         self.api = api
 
     def put(self,advertiser_id):
         json = ujson.loads(self.request.body)
-        
+
         update_string = ", ".join(["`%s`='%s'" % (i,j) for i,j in json.items()])
 
         query = "UPDATE advertiser set %s WHERE external_advertiser_id = %s" % (update_string,advertiser_id)
@@ -465,10 +465,10 @@ class AdvertiserHandler(tornado.web.RequestHandler,Advertiser):
         self.db.execute(query)
         self.write("1")
         self.finish()
-  
-    
-    def create_segments(self,advertiser_id,advertiser_name,_segment_names=[],conversion_pixels={}): 
-        segment_names = _segment_names + ["Creative Viewed", "Creative Clicked", "Test Segment"] 
+
+
+    def create_segments(self,advertiser_id,advertiser_name,_segment_names=[],conversion_pixels={}):
+        segment_names = _segment_names + ["Creative Viewed", "Creative Clicked", "Test Segment"]
 
         if self.get_argument('all_pages_pixel_checkbox') == "true":
             segment_names.append("All Pages Segment")
@@ -476,8 +476,8 @@ class AdvertiserHandler(tornado.web.RequestHandler,Advertiser):
         if self.get_argument('logged_in_pixel_checkbox') == "true":
             segment_names.append("Logged In Segment")
 
-        segment_dict = { 
-            segment_name: self.create_segment(advertiser_id,advertiser_name,segment_name,conversion_pixels.get(segment_name,None)) 
+        segment_dict = {
+            segment_name: self.create_segment(advertiser_id,advertiser_name,segment_name,conversion_pixels.get(segment_name,None))
                 for segment_name in segment_names
         }
 
@@ -488,7 +488,7 @@ class AdvertiserHandler(tornado.web.RequestHandler,Advertiser):
         pixel_names = []
         if self.get_argument('signup_conversion_checkbox') == "true":
             pixel_names.append("Signup Conversion Pixel")
-            
+
         if self.get_argument('purchase_conversion_checkbox') == "true":
             pixel_names.append("Purchase Conversion Pixel")
         pct = 1
@@ -498,7 +498,7 @@ class AdvertiserHandler(tornado.web.RequestHandler,Advertiser):
             pixel_name: self.create_pixel(advertiser_id, advertiser_name, pixel_name, pct, pvt)
                 for pixel_name in pixel_names
         }
-        
+
         return pixel_dict
 
 
@@ -511,11 +511,11 @@ class AdvertiserHandler(tornado.web.RequestHandler,Advertiser):
 
         pixel_dict = self.create_pixels(advertiser_id,advertiser_name)
         segment_dict = self.create_segments(advertiser_id,advertiser_name,pixel_dict.keys(),pixel_dict)
-    
+
         publisher_id = self.create_publisher(advertiser_name)
         #time.sleep(10)
         placement_id = self.get_default_placement(publisher_id)
-        self.set_default_placement_reselling(placement_id) 
+        self.set_default_placement_reselling(placement_id)
 
         # Managed test
         line_item_id = self.create_managed_line_item(pixel_dict,advertiser_id)
@@ -533,17 +533,17 @@ class AdvertiserHandler(tornado.web.RequestHandler,Advertiser):
         segment_id = segment_dict["Test Segment"]
         profile_id = self.set_live_target(advertiser_id, campaign_id, segment_id)
         self.set_campaign_profile_id(advertiser_id,campaign_id,profile_id)
-        self.write(ujson.dumps(advertiser_id)) 
+        self.write(ujson.dumps(advertiser_id))
 
     @decorators.formattable
     def get_content(self,data,advertiser_id):
-        
+
         def default(self,data):
             o = Convert.df_to_json(data)
             if advertiser_id:
                 self.render("../templates/admin/advertiser/%s.html" % self.page,data=o)
             else:
-                self.render("../templates/admin/advertiser/%s.html" % self.page,data=o) 
+                self.render("../templates/admin/advertiser/%s.html" % self.page,data=o)
 
         yield default, (data,)
 
@@ -568,7 +568,7 @@ class AdvertiserHandler(tornado.web.RequestHandler,Advertiser):
                   df[include] = idf.groupby("external_advertiser_id").apply(Convert.df_to_values)
 
         self.get_content(df.reset_index(),advertiser_id)
-        
+
 
     @tornado.web.asynchronous
     def get(self,arg=False):
@@ -580,7 +580,7 @@ class AdvertiserHandler(tornado.web.RequestHandler,Advertiser):
         elif "streaming" in arg:
             a = arg.replace("streaming","").replace("/","")
             self.page = "streaming"
-            self.get_data(False) if len(a) == 0 else self.get_data(a) 
+            self.get_data(False) if len(a) == 0 else self.get_data(a)
         elif "info" in arg:
             a = arg.replace("info","").replace("/","")
             self.page = "info"
