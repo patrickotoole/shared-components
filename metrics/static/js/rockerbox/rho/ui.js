@@ -74,8 +74,10 @@ RB.rho.ui = (function(ui) {
   ui.buildWrappers = function(target, title, series, data, formatting, description, button) {
     var formatting = formatting || ".col-md-4"
 
-    var wrapper = d3_splat(target,".series-wrapper." + series + formatting,"div",data,function(x){return x.key})
-      .classed("series-wrapper " + formatting.replace(/\./g," ") + " " + series,true)
+    var series_string = typeof(series) == "object" ? series.join("-and-") : series
+
+    var wrapper = d3_splat(target,".series-wrapper." + series_string + formatting,"div",data,function(x){return x.key})
+      .classed("series-wrapper " + formatting.replace(/\./g," ") + " " + series_string,true)
 
     var newTarget = d3_updateable(wrapper,".series." + series,"div")
       .classed("bar series " + series,true)

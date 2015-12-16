@@ -841,7 +841,7 @@ RB.crusher.ui.action = (function(action) {
       ts = wrapper.selectAll(".action-body")
 
     var wrap = RB.rho.ui.buildSeriesWrapper(ts, title, series, false, formatting, description)
-      .classed("row",true)
+      .classed("row hidden",true)
 
     wrap.selectAll(".title").remove()
     wrap.selectAll(".value").remove()
