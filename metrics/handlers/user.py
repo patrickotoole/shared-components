@@ -86,6 +86,7 @@ class LoginHandler(tornado.web.RequestHandler):
             dict_ = df.to_dict(outtype='records')[0]
             pw = dict_.get('password')
             aid = dict_.get('external_advertiser_id')
+            import ipdb; ipdb.set_trace()
             if self._check_password(password, pw):
                 self.set_secure_cookie("advertiser",str(aid))
                 self.set_secure_cookie("user",username)

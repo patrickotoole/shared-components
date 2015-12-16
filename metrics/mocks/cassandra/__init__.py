@@ -23,6 +23,13 @@ def execute(query):
         json = ujson.loads(uids)
         value = json
 
+    elif "rockerbox.source_segment_timestamp" in query:
+        uids = open(path + "/mocks/cassandra/pixel.json","r").read()
+        json = ujson.loads(uids)
+        value = json
+
+
+
     return value
 
 def select_dataframe(query):
