@@ -47,7 +47,7 @@
             .RdYlGn .q10-11{fill:rgb(0,104,55)}
 				</style>
 		</head>
-   <body data-spy="scroll" data-target=".navbar" data-offset="150"> 
+   <body data-spy="scroll" data-target=".navbar" data-offset="150">
    <div class="navbar-wrapper">
 	 	 <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
 					<div class="navbar-header">
@@ -66,7 +66,7 @@
  							<li><a href="#technology">Tech</a></li>
 	            <li><a href="#team">Team</a></li>
 							 <li><a href="#contact">Contact</a></li>
-	           
+
 	            <!-- <li><a href="demo.html">Demo</a></li> -->
 	          </ul>
 	        </div><!--/.nav-collapse -->
@@ -97,11 +97,11 @@
                  <textarea rows=6  class="form-control" id="advertiser_details" placeholder="Enter one paragraph on the clients goals. CPAs. Conversion types. "></textarea>
 
                  <br>
-                
+
                 <label><b>Points of Contact</b><br></label>
                 <br>                Include contacts from the client that should be receiving campaign update reports every monday.
                 <div id="" style="margin-left:20px">
-             
+
                 <br>                Contact #1 Name (Required)
                 <input  class="form-control" id="advertiser_contact" placeholder="(e.g. Tyler)">
                 <br>                Contact #1 E-Mail Address (Required)
@@ -112,7 +112,7 @@
                 <input  class="form-control" id="second_advertiser_contact_email" placeholder="(e.g. tyler@baublebar.com)">
               </div>
             </label>
-          
+
 
               </div>
               <label><b>General Segment Pixels</b><br></label>
@@ -121,7 +121,7 @@
                 <input type="checkbox" id="logged_in_pixel_checkbox" checked="yes"> Create "Logged In" pixel (pixel fired for logged-in users on all pages)<br>
               </div>
 
-              <br>                  
+              <br>
               <b>Conversion Pixels</b><br>
               <div id="conversion_pixels_div" style="margin-left:20px">
 
@@ -145,7 +145,7 @@
 
                   Username<input type="text" id="username_login" placeholder="Make it Unique!"> (e.g. rjacob1)
                   <br>
-                  Password <input type="text" id="password_login" placeholder=""> 
+                  Password <input type="text" id="password_login" placeholder="">
                 <br>
 
               <br>
@@ -186,6 +186,7 @@
       event.preventDefault();
       a = $("#main_form")
       advertiser_name = $("#advertiser_name").val();
+      client_sld = $("#client_sld").val();
       contact_name = $("#advertiser_contact").val();
       contact_email = $("#advertiser_contact_email").val();
       pixel_source_name = $("#advertiser_name").val().replace(" ","_").replace(/\W/g,"").toLowerCase()
@@ -195,7 +196,7 @@
       all_pages_pixel_checkbox = false;
       logged_in_pixel_checkbox = false;
       signup_conversion_checkbox = false;
-      purchase_conversion_checkbox = false;       
+      purchase_conversion_checkbox = false;
       signup_conversion_checkbox_pc = 0;
       signup_conversion_checkbox_pv = 0;
       purchase_conversion_checkbox_pc = 0;
@@ -205,59 +206,59 @@
       {
          all_pages_pixel_checkbox = true;
       }
-      if ($("#logged_in_pixel_checkbox").is(':checked') == true)                        
-      {         
-         logged_in_pixel_checkbox = true;                                               
-      } 
-      if ($("#signup_conversion_checkbox").is(':checked') == true)                        
-      {         
-         signup_conversion_checkbox = true;                                               
+      if ($("#logged_in_pixel_checkbox").is(':checked') == true)
+      {
+         logged_in_pixel_checkbox = true;
+      }
+      if ($("#signup_conversion_checkbox").is(':checked') == true)
+      {
+         signup_conversion_checkbox = true;
          signup_conversion_checkbox_pc = $("#signup_post_click_input").val();
          signup_conversion_checkbox_pv = $("#signup_post_view_input").val();
-      } 
-      if ($("#purchase_conversion_checkbox").is(':checked') == true)                        
-      {         
-         purchase_conversion_checkbox = true;                                               
+      }
+      if ($("#purchase_conversion_checkbox").is(':checked') == true)
+      {
+         purchase_conversion_checkbox = true;
          purchase_conversion_checkbox_pc = $("#purchase_post_click_input").val();
          purchase_conversion_checkbox_pv = $("#purchase_post_view_input").val();
- 
-      }       
-            $.ajax({ 
+
+      }
+            $.ajax({
               type: "POST",
-              url: '/admin/advertiser/new', 
-              data: { advertiser_name: advertiser_name,contact_name:contact_name,contact_email:contact_email,all_pages_pixel_checkbox:all_pages_pixel_checkbox,logged_in_pixel_checkbox:logged_in_pixel_checkbox,signup_conversion_checkbox:signup_conversion_checkbox,purchase_conversion_checkbox:purchase_conversion_checkbox,signup_conversion_checkbox_pc:signup_conversion_checkbox_pc,signup_conversion_checkbox_pv:signup_conversion_checkbox_pv,purchase_conversion_checkbox_pc:purchase_conversion_checkbox_pc,purchase_conversion_checkbox_pc:purchase_conversion_checkbox_pc,purchase_conversion_checkbox_pv:purchase_conversion_checkbox_pv, pixel_source_name:pixel_source_name,contact_name_2:contact_name_2,contact_email_2:contact_email_2,advertiser_details:advertiser_details }, 
-              success: function (data) { 
+              url: '/admin/advertiser/new',
+              data: { advertiser_name: advertiser_name,client_sld: client_sld,contact_name:contact_name,contact_email:contact_email,all_pages_pixel_checkbox:all_pages_pixel_checkbox,logged_in_pixel_checkbox:logged_in_pixel_checkbox,signup_conversion_checkbox:signup_conversion_checkbox,purchase_conversion_checkbox:purchase_conversion_checkbox,signup_conversion_checkbox_pc:signup_conversion_checkbox_pc,signup_conversion_checkbox_pv:signup_conversion_checkbox_pv,purchase_conversion_checkbox_pc:purchase_conversion_checkbox_pc,purchase_conversion_checkbox_pc:purchase_conversion_checkbox_pc,purchase_conversion_checkbox_pv:purchase_conversion_checkbox_pv, pixel_source_name:pixel_source_name,contact_name_2:contact_name_2,contact_email_2:contact_email_2,advertiser_details:advertiser_details },
+              success: function (data) {
                   username_login=$("#username_login").val();
                   password_login=$("#password_login").val();
- 
-                  $.ajax({ 
+
+                  $.ajax({
                     type: "POST",
-                    url: '/signup', 
-                    data: JSON.stringify({ username: username_login,password:password_login,show_reporting:0,advertiser:data}), 
-                    success: function (data) { 
+                    url: '/signup',
+                    data: JSON.stringify({ username: username_login,password:password_login,show_reporting:0,advertiser:data}),
+                    success: function (data) {
                     $("#spinny_wheel").css('visibility','hidden')
                     alert('Advertiser Added')
-                    }, 
-                    cache: false 
+                    },
+                    cache: false
                     });
 
                   admin_username = "a_" + $("#advertiser_name").val().split(" ")[0].replace(/\W/g,"").toLowerCase();
-                  $.ajax({ 
+                  $.ajax({
                     type: "POST",
-                    url: '/signup', 
-                    data: JSON.stringify({ username: admin_username,password:"admin",show_reporting:0,advertiser:data}), 
-                    success: function (data) { 
+                    url: '/signup',
+                    data: JSON.stringify({ username: admin_username,password:"admin",show_reporting:0,advertiser:data}),
+                    success: function (data) {
                     $("#spinny_wheel").css('visibility','hidden')
                     alert('Admin Login for Advertiser Added')
-                    }, 
-                    cache: false 
+                    },
+                    cache: false
                     });
-                            
-              }, 
-              cache: false 
+
+              },
+              cache: false
             });
 
-       
+
     });
 
   });

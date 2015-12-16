@@ -118,7 +118,7 @@ class Advertiser(object):
             "advertiser_name": advertiser_name,
             "pixel_source_name": self.get_argument("pixel_source_name"),
             "client_goals" : self.get_argument("advertiser_details"),
-            "client_sld" : self.get_argument("advertiser_domain")
+            "client_sld" : self.get_argument("client_sld")
         }
         query = INSERT_ADVERTISER % params
         self.db.execute(query)
