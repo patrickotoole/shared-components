@@ -4,6 +4,14 @@ import lib.password_hash
 
 def select(query):
 
+    if "from action " in query and "SELECT" in query:
+        l = [{'advertiser': 'learnvest', 'action_id': 364, 'action_name': 'Home Page'}, {'advertiser': 'learnvest', 'action_id': 381, 'action_name': 'mylv'}, {'advertiser': 'learnvest', 'action_id': 530, 'action_name': 'Optimized -- How to Budget'}, {'advertiser': 'learnvest', 'action_id': 529, 'action_name': 'Organic -- How to Budget'}, {'advertiser': 'learnvest', 'action_id': 571, 'action_name': 'Outbrain -- How to Budget'}, {'advertiser': 'learnvest', 'action_id': 570, 'action_name': 'Taboola -- How to Budget'}]
+        return pandas.DataFrame(l)
+        
+    if "from action_patterns" in query and "SELECT" in query:
+        l = [{'url_pattern': 'learnvest.com', 'action_id': 364}, {'url_pattern': 'learnvest.com/mylv', 'action_id': 381}, {'url_pattern': 'https://www.learnvest.com/lp/how-to-budget-your-money-with-the-502030-guideline/', 'action_id': 529}, {'url_pattern': 'http://www.learnvest.com/knowledge-center/your-ultimate-budget-guideline-the-502030-rule/', 'action_id': 530}, {'url_pattern': 'https://www.learnvest.com/lp/how-to-budget-your-money-with-the-502030-guideline/?utm_source=taboola', 'action_id': 570}, {'url_pattern': 'https://www.learnvest.com/lp/how-to-budget-your-money-with-the-502030-guideline/?utm_source=outbrain', 'action_id': 571}]
+        return pandas.DataFrame(l)
+     
 
     if "advertiser_id as external_advertiser_id" in query and "username = '" in query: # login
         username = query.split(" username = '")[1].split("'")[0]
