@@ -21,7 +21,7 @@ class ConnectorConfig(object):
 
         self.connectors = {}
 
-        self.connectors["db"] = lnk.dbs.rockerbox if not skip_db else mocks.yoshi.API
+        self.connectors["db"] = lnk.dbs.rockerbox if not skip_db else mocks.mysql.DB
         self.connectors["reporting_db"] = lnk.dbs.reporting if not skip_reporting_db else None
 
         self.connectors["api"] = lnk.api.console if not skip_console_api else mocks.yoshi.API
@@ -42,7 +42,7 @@ class ConnectorConfig(object):
         self.connectors["mongo"] = lnk.dbs.mongo if not skip_mongo else None
         self.connectors["zookeeper"] = KazooClient(hosts="zk1:2181")  if not skip_zookeeper else None
 
-        self.connectors["zookeeper"].start()
+        self.connectors["zookeeper"].start() if not skip_zookeeper else None
  
 
         if not skip_buffers:

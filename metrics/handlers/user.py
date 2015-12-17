@@ -86,6 +86,7 @@ class LoginHandler(tornado.web.RequestHandler):
             dict_ = df.to_dict(outtype='records')[0]
             pw = dict_.get('password')
             aid = dict_.get('external_advertiser_id')
+            
             if self._check_password(password, pw):
                 self.set_secure_cookie("advertiser",str(aid))
                 self.set_secure_cookie("user",username)
@@ -161,6 +162,7 @@ class AccountPermissionsHandler(BaseHandler):
     def get(self):
         advertiser = self.get_argument("advertiser_id", False)
         u = self.get_current_user()
+
         current_advertiser = self.current_advertiser
         
         advertiser_permissions = self.get_user_permissions(u)

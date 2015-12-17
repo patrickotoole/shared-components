@@ -49,15 +49,12 @@ RB.menu.navbar = (function(navbar) {
     },
     advertiser_switch: function(target) {
       $.getJSON("/account/permissions", function(perm) {
-	var permissions = perm["results"]['advertisers']
-	var current_advertiser = null
 
-	for (var i = 0; i < permissions.length; i++){
-	  if (permissions[i]["selected"]){
-	    current_advertiser = permissions[i]
-	    permissions.splice(i, 1)
-	  }
-	}
+
+	var permissions = perm["results"]['advertisers']
+	var current_advertiser = permissions.filter(function(item){
+          return item.selected
+        })[0]
 
 	var group_wrapper = d3_updateable(target, ".btn-toolbar", "div")
 	  .classed("btn-toolbar", true)
@@ -101,11 +98,7 @@ RB.menu.navbar = (function(navbar) {
 	var ul = d3_updateable(dropdown_wrapper, ".dropdown-menu", "ul")
 	  .classed("dropdown-menu", true)
 
-	d3_splat( ul, 
-		  ".advertiser", 
-		  "li", 
-		  permissions, 
-		  function(x){return x.external_advertiser_id})
+	d3_splat( ul, ".advertiser", "li", permissions, function(x){return x.external_advertiser_id})
 	  .classed("advertiser", true)
 	  .append("a")
 	  .text(function(x){return x["advertiser_name"]})
