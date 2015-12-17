@@ -57,8 +57,8 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
         if len(_domains) > 100:
             prepped = _domains.unstack(1).fillna(0)
             try:
-                #response['clusters'] = model.cluster(_domains, prepped)
-                response['clusters'] = []
+                response['clusters'] = model.cluster(_domains, prepped)
+                # response['clusters'] = []
             except:
                 pass
         
