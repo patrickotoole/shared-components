@@ -237,7 +237,7 @@ RB.crusher.ui.action = (function(action) {
 
     actionView.enter()
       .append("div")
-      .classed("action-view",true)
+      .classed("action-view row",true)
       .classed("hidden",function(x){return !x.action_id})
 
     actionView.exit().remove()

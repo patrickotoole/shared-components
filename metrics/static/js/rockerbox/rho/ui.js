@@ -72,10 +72,12 @@ RB.rho.ui = (function(ui) {
   }
 
   ui.buildWrappers = function(target, title, series, data, formatting, description, button) {
-    formatting = formatting || "col-md-4"
+    var formatting = formatting || ".col-md-4"
 
-    var wrapper = d3_splat(target,".series-wrapper." + series,"div",data,function(x){return x.key})
-      .classed("series-wrapper " + formatting + " " + series,true)
+    var series_string = typeof(series) == "object" ? series.join("-and-") : series
+
+    var wrapper = d3_splat(target,".series-wrapper." + series_string + formatting,"div",data,function(x){return x.key})
+      .classed("series-wrapper " + formatting.replace(/\./g," ") + " " + series_string,true)
 
     var newTarget = d3_updateable(wrapper,".series." + series,"div")
       .classed("bar series " + series,true)
@@ -106,23 +108,21 @@ RB.rho.ui = (function(ui) {
       })
       .style("line-height","28px")
 
-
     d3_updateable(newTarget,".description","div")
       .classed("description",true)
       .html(description)
-
-
-
     
     return newTarget
 
   }
 
   ui.buildSeriesWrapper = function(target, title, series, data, formatting, description, button) {
-    formatting = formatting || "col-md-6"
+    formatting = formatting || ".col-md-6"
 
-    var wrapper = d3_updateable(target,".series-wrapper." + series,"div")
-      .classed("series-wrapper " + formatting + " " + series,true)
+    var series_string = typeof(series) == "object" ? series.join("-and-") : series
+
+    var wrapper = d3_updateable(target,".series-wrapper." + series_string + formatting,"div")
+      .classed("series-wrapper " + formatting.replace(/\./g," ") + " " + series_string,true)
 
     var d;
     if (data) d = [data]

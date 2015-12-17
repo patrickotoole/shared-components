@@ -8,7 +8,7 @@ RB.crusher.ui.action = (function(action) {
 
   action.show_domains = function(wrapper) {
 
-    var newTs = wrapper.selectAll(".ts")
+    var newTs = wrapper.selectAll(".action-body")
 
     var data = wrapper.datum()
     var domainData = data.domains
@@ -50,7 +50,7 @@ RB.crusher.ui.action = (function(action) {
 
     var title = "Advertising opportunities",
       series = "domain",
-      formatting = "col-md-12",
+      formatting = ".col-md-12.advertiser-opportunities",
       description = ""
 
     var button = {
@@ -73,6 +73,22 @@ RB.crusher.ui.action = (function(action) {
     }
 
     var target = RB.rho.ui.buildWrappers(newTs, title, false, domains, formatting, description, button)
+
+
+    var parentNode = newTs.selectAll(".advertiser-opportunities")
+    parentNode.selectAll(".loading-icon").remove()
+
+    parentNode.classed("hidden",false)
+      .style("visibility","hidden")
+
+    setTimeout(function(){
+      parentNode.classed("hidden",!parentNode.classed("selected"))
+        .style("visibility",undefined)
+
+    },1)
+
+    
+    //d3.select(target.node().parentNode).classed("advertising-opportunities",true)
 
     return target
   }
