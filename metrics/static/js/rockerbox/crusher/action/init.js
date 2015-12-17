@@ -116,26 +116,60 @@ RB.crusher.ui.action.show = (function(show,action,crusher) {
       .style("margin-left","-15px")
       .style("margin-right","-15px")
 
-    d3_updateable(abody,".advertiser-opportunities","div")
-      .classed("series-wrapper col-md-12 advertiser-opportunities false selected",true)
+
+
+    var opp = d3_updateable(abody,".advertiser-opportunities","div")
+      .classed("series-wrapper col-md-12 advertiser-opportunities false",true)
+
+    opp.classed("selected",opp.classed("selected"))
+    opp.classed("hidden",!opp.classed("selected"))
+
+    opp
       .append("div").classed("bar series loading-icon",true)
       .html('<img src="/static/img/general/logo-small.gif" alt="Logo loader"> Loading opportunity data... ')
 
-    d3_updateable(abody,".action-clusters","div")
-      .classed("series-wrapper col-md-12 action-clusters clusters hidden",true)
+
+
+    var cluster = d3_updateable(abody,".action-clusters","div")
+      .classed("series-wrapper col-md-12 action-clusters clusters",true)
+
+    cluster.classed("selected",cluster.classed("selected"))
+    cluster.classed("hidden",!cluster.classed("selected"))
+
+    cluster
       .append("div").classed("bar series loading-icon",true)
       .html('<img src="/static/img/general/logo-small.gif" alt="Logo loader"> Loading cluster data...')
 
 
-    d3_updateable(abody,".before-and-after","div")
-      .classed("series-wrapper col-md-12 before-and-after hidden",true)
+
+    var timing = d3_updateable(abody,".action-timing","div")
+      .classed("series-wrapper col-md-12 action-timing timing",true)
+
+    timing.classed("selected",timing.classed("selected"))
+    timing.classed("hidden",!timing.classed("selected"))
+
+    timing
+      .append("div").classed("bar series loading-icon",true)
+      .html('Coming soon...')
+
+
+
+    var before = d3_updateable(abody,".before-and-after","div")
+      .classed("series-wrapper col-md-12 before-and-after",true)
+
+    before.classed("selected",before.classed("selected"))
+    before.classed("hidden",!before.classed("selected"))
+
+
+    before
       .append("div").classed("bar series loading-icon",true)
       .html('<img src="/static/img/general/logo-small.gif" alt="Logo loader"> Loading before and after...')
 
 
-
-
-
+    if (abody.selectAll(".selected").size() == 0) {
+      opp.classed("selected",true)
+      opp.classed("hidden",false)
+    }
 
 
     

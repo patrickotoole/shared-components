@@ -399,8 +399,6 @@ RB.crusher.ui.action = (function(action) {
         xx.push.apply(xx,tfidf.slice(-10))
 
 
-        debugger
-
         return xx
       })
 
@@ -898,6 +896,8 @@ RB.crusher.ui.action = (function(action) {
       function(x){ return x.key }
     ).classed("before-wrapper row",true)
       .style("margin-left","-15px") 
+      .style("margin-top","-15px") 
+
     
 
     /*

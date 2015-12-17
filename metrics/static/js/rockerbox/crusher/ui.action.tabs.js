@@ -15,11 +15,11 @@ RB.crusher.ui.tabs = (function(tabs) {
       "name":"Before and After",
       "class":"before-and-after"
     },{
-      "name":"Timing",
-      "class":""
-    },{
       "name":"Clusters",
       "class":"clusters"
+    },{
+      "name":"Timing",
+      "class":"timing"
     }]
 
     var action_tabs = d3_updateable(wrapper,".action-tabs","div")
@@ -35,6 +35,7 @@ RB.crusher.ui.tabs = (function(tabs) {
       .datum(data)
     
     var items = d3_splat(tabs,".item","a",function(x){return x}, function(x){return x.name})
+      .attr("href",function(x){return "#" + x.class})
       .classed("item col-md-3",true)
       .classed("selected",function(x,i){return i == 0})
       .style("color","#5a5a5a")
@@ -46,7 +47,9 @@ RB.crusher.ui.tabs = (function(tabs) {
       .on("click",function(x){
         items.classed("selected",false)
         items.filter(function(y){return y == x }).classed("selected",true)
-        d3.selectAll(".action-body").selectAll(".series-wrapper").classed("hidden",true)
+        d3.selectAll(".action-body").selectAll(".series-wrapper")
+          .classed("hidden",true)
+          .classed("selected",false)
         d3.selectAll(".action-body").selectAll("." + x.class)
           .classed("hidden",false)
           .classed("selected",true)
