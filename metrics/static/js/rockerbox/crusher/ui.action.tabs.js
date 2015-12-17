@@ -33,9 +33,6 @@ RB.crusher.ui.tabs = (function(tabs) {
       .style("height","40px")
       .style("line-height","40px")
       .datum(data)
-
-
-
     
     var items = d3_splat(tabs,".item","a",function(x){return x}, function(x){return x.name})
       .classed("item col-md-3",true)
@@ -50,7 +47,6 @@ RB.crusher.ui.tabs = (function(tabs) {
         items.classed("selected",false)
         items.filter(function(y){return y == x }).classed("selected",true)
       })
-    
     
   }
 

@@ -119,8 +119,10 @@ RB.rho.ui = (function(ui) {
   ui.buildSeriesWrapper = function(target, title, series, data, formatting, description, button) {
     formatting = formatting || ".col-md-6"
 
-    var wrapper = d3_updateable(target,".series-wrapper." + series + formatting,"div")
-      .classed("series-wrapper " + formatting.replace(/\./g," ") + " " + series,true)
+    var series_string = typeof(series) == "object" ? series.join("-and-") : series
+
+    var wrapper = d3_updateable(target,".series-wrapper." + series_string + formatting,"div")
+      .classed("series-wrapper " + formatting.replace(/\./g," ") + " " + series_string,true)
 
     var d;
     if (data) d = [data]

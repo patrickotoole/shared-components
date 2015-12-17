@@ -238,7 +238,7 @@ RB.crusher.ui.action = (function(action) {
 
 
     var wrapper = d3_updateable(wrap,"div.domain-intent-wrapper","div")
-      .classed("domain-intent-wrapper",true)
+      .classed("domain-intent-wrapper row",true)
       .style("margin-left","-15px")
       .style("margin-right","-15px")
       .datum(function(d){
@@ -515,7 +515,7 @@ RB.crusher.ui.action = (function(action) {
 
 
     var wrapper = d3_updateable(wrap,"div.intent-wrapper","div")
-      .classed("intent-wrapper",true)
+      .classed("intent-wrapper row",true)
       .style("margin-left","-15px")
       .style("margin-right","-15px")
       .datum(function(d){
@@ -836,12 +836,11 @@ RB.crusher.ui.action = (function(action) {
 
     var title = "",
       series = ["before","after"],
-      formatting = "col-md-12",
+      formatting = ".col-md-12",
       description = "", //"What happens to user activity before and after visiting this segment",
       ts = wrapper.selectAll(".action-body")
 
     var wrap = RB.rho.ui.buildSeriesWrapper(ts, title, series, false, formatting, description)
-      .classed("row hidden",true)
 
     wrap.selectAll(".title").remove()
     wrap.selectAll(".value").remove()
@@ -882,7 +881,7 @@ RB.crusher.ui.action = (function(action) {
         return data
       },
       function(x){ return x.key }
-    ).classed("before-wrapper",true)
+    ).classed("before-wrapper row",true)
       .style("margin-left","-15px") 
     
 
