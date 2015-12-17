@@ -842,6 +842,21 @@ RB.crusher.ui.action = (function(action) {
 
     var wrap = RB.rho.ui.buildSeriesWrapper(ts, title, series, false, formatting, description)
 
+    var parentNode = ts.selectAll(".before-and-after")
+    parentNode.selectAll(".loading-icon").remove()
+
+    parentNode.classed("hidden",false)
+      .style("visibility","hidden")
+
+    setTimeout(function(){
+      parentNode.classed("hidden",!parentNode.classed("selected"))
+        .style("visibility",undefined)
+
+    },1)
+
+
+
+
     wrap.selectAll(".title").remove()
     wrap.selectAll(".value").remove()
 

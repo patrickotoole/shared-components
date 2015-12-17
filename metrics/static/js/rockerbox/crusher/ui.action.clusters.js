@@ -21,7 +21,20 @@ RB.crusher.ui.action = (function(action) {
 
     var target = RB.rho.ui.buildSeriesWrapper(wrapper.selectAll(".action-body"), title, series, [wrapper.datum()], formatting, description)
 
-    //d3.select(target.node().parentNode).classed("hidden",true)
+    var parentNode = wrapper.selectAll(".action-body").selectAll(".clusters")
+    parentNode.selectAll(".loading-icon").remove()
+
+    parentNode.classed("hidden",false)
+      .style("visibility","hidden")
+
+
+    setTimeout(function(){
+      parentNode.classed("hidden",!parentNode.classed("selected"))
+        .style("visibility",undefined)
+
+    },1)
+
+
 
     
     var clusters = d3_splat(target,".cluster","div",

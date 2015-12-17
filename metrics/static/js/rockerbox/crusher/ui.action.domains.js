@@ -73,6 +73,21 @@ RB.crusher.ui.action = (function(action) {
     }
 
     var target = RB.rho.ui.buildWrappers(newTs, title, false, domains, formatting, description, button)
+
+
+    var parentNode = newTs.selectAll(".advertiser-opportunities")
+    parentNode.selectAll(".loading-icon").remove()
+
+    parentNode.classed("hidden",false)
+      .style("visibility","hidden")
+
+    setTimeout(function(){
+      parentNode.classed("hidden",!parentNode.classed("selected"))
+        .style("visibility",undefined)
+
+    },1)
+
+    
     //d3.select(target.node().parentNode).classed("advertising-opportunities",true)
 
     return target

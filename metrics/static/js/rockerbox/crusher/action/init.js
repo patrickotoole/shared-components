@@ -117,20 +117,20 @@ RB.crusher.ui.action.show = (function(show,action,crusher) {
       .style("margin-right","-15px")
 
     d3_updateable(abody,".advertiser-opportunities","div")
-      .classed("series-wrapper col-md-12 advertiser-opportunities false ",true)
-      .append("div").classed("loading-icon",true)
-      .html('<img src="/static/img/general/logo-small.gif" alt="Logo loader">')
+      .classed("series-wrapper col-md-12 advertiser-opportunities false selected",true)
+      .append("div").classed("bar series loading-icon",true)
+      .html('<img src="/static/img/general/logo-small.gif" alt="Logo loader"> Loading opportunity data... ')
 
     d3_updateable(abody,".action-clusters","div")
-      .classed("series-wrapper col-md-12 action-clusters clusters ",true)
-      .append("div").classed("loading-icon",true)
-      .html('<img src="/static/img/general/logo-small.gif" alt="Logo loader">')
+      .classed("series-wrapper col-md-12 action-clusters clusters hidden",true)
+      .append("div").classed("bar series loading-icon",true)
+      .html('<img src="/static/img/general/logo-small.gif" alt="Logo loader"> Loading cluster data...')
 
 
     d3_updateable(abody,".before-and-after","div")
-      .classed("series-wrapper col-md-12 before-and-after ",true)
-      .append("div").classed("loading-icon",true)
-      .html('<img src="/static/img/general/logo-small.gif" alt="Logo loader">')
+      .classed("series-wrapper col-md-12 before-and-after hidden",true)
+      .append("div").classed("bar series loading-icon",true)
+      .html('<img src="/static/img/general/logo-small.gif" alt="Logo loader"> Loading before and after...')
 
 
 

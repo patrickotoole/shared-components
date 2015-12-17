@@ -10,16 +10,16 @@ RB.crusher.ui.tabs = (function(tabs) {
 
     var data = [{
       "name":"Opportunities",
-      "class":""
+      "class":"advertiser-opportunities"
     },{
       "name":"Before and After",
-      "class":""
+      "class":"before-and-after"
     },{
       "name":"Timing",
       "class":""
     },{
       "name":"Clusters",
-      "class":""
+      "class":"clusters"
     }]
 
     var action_tabs = d3_updateable(wrapper,".action-tabs","div")
@@ -46,6 +46,11 @@ RB.crusher.ui.tabs = (function(tabs) {
       .on("click",function(x){
         items.classed("selected",false)
         items.filter(function(y){return y == x }).classed("selected",true)
+        d3.selectAll(".action-body").selectAll(".series-wrapper").classed("hidden",true)
+        d3.selectAll(".action-body").selectAll("." + x.class)
+          .classed("hidden",false)
+          .classed("selected",true)
+
       })
     
   }
