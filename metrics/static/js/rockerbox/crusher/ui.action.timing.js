@@ -71,7 +71,7 @@ RB.crusher.ui.action = (function(action) {
         x.domain(data.map(function(d) { return d.hour; }));
         y.domain([0, d3.max(data, function(d) { return Math.sqrt(d.visits); })]);
 
-        svg.selectAll(".bar")
+        svg.selectAll(".timing-bar")
             .data(data)
           .enter().append("rect")
             .attr("class", "timing-bar")
@@ -120,10 +120,10 @@ RB.crusher.ui.action = (function(action) {
         x.domain(data.map(function(d) { return d.hour; }));
         y.domain([0, d3.max(data, function(d) { return d.visits; })]);
 
-        svg.selectAll(".bar")
+        svg.selectAll(".timing-bar")
             .data(data)
           .enter().append("rect")
-            .attr("class", "bar")
+            .attr("class", "timing-bar")
             .attr("x", function(d) { return (d.hour - 1) * gridSize; ; })
             .attr("width", gridSize)
             .attr("y", function(d) { return 0; })
@@ -165,10 +165,10 @@ RB.crusher.ui.action = (function(action) {
 
 
 
-        svg.selectAll(".bar")
+        svg.selectAll(".timing-bar")
             .data(data)
           .enter().append("rect")
-            .attr("class", "bar")
+            .attr("class", "timing-bar")
             .attr("x", 0)
             .attr("width", function(d) { return w(Math.sqrt(d.frequency)); })
             .attr("y", function(d) { return (d.pos ) * gridSize; ; })
@@ -329,8 +329,7 @@ RB.crusher.ui.action = (function(action) {
 
                 //console.log(d.hour,d.parent_category_name,xx,_category_data.map(function(x){return x.frequency}))
                 
-                debugger
-                barChart(_offsite_data,"Off-site activity",colorScale)
+                barChart(_offsite_data,"Off-site activity",colorScale,_svg)
                 verticalBarChart(_category_data,_svg,colorScale)
 
               })
