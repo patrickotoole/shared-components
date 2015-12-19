@@ -368,6 +368,10 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
               categories: dd.after_categories,
               domains: dd.after_domains
             }
+            action.hourly = {
+              categories: dd.hourly_domains,
+              onsite: dd.hourly_visits
+            }
 
             
             deferred_cb(null,cb.bind(false,action))

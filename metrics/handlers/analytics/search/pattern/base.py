@@ -95,7 +95,7 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
         dom = yield self.sample_offsite_domains(advertiser, term, uids, num_days) 
         domains = dom[0][1]
        
-        urls = yield self.defer_get_uid_visits(advertiser,uids,term)
+        urls, raw_urls = yield self.defer_get_uid_visits(advertiser,uids,term)
 
         joined = url_domain_intersection(urls,domains)
         before, after = before_and_after(joined)
@@ -122,7 +122,16 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
 
         after_categories = [{"key":k,"values":v} for k,v in after_categories.items()]
 
+        # hourly
+        domains_with_cat = domains.merge(idf,on="domain")
+        domains_with_cat['hour'] = domains_with_cat.timestamp.map(lambda x: x.split(" ")[1].split(":")[0])
 
+        category_visits_uniques = domains_with_cat.groupby(["parent_category_name","hour"])['uid'].agg({"visits":lambda x: len(x), "uniques": lambda x: len(set(x)) })
+        category_hourly = category_visits_uniques.reset_index()
+
+        raw_urls['hour'] = raw_urls.timestamp.map(lambda x: x.split(" ")[1].split(":")[0])
+        
+        visits_hourly = raw_urls.groupby("hour")['uid'].agg({"visits":lambda x: len(x), "uniques": lambda x : len(set(x))}).reset_index()
 
 
 
@@ -135,6 +144,10 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
 
             response['after_categories'] = after_categories
             response['after_domains'] = after_domains.T.to_dict()
+
+            response['hourly_visits'] = visits_hourly.T.to_dict().values()
+            response['hourly_domains'] = category_hourly.T.to_dict().values()
+
 
 
             response['results'] = uids
