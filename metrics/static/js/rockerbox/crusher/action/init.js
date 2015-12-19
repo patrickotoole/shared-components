@@ -249,6 +249,8 @@ RB.crusher.ui.action.behavior = (function(behavior,action,crusher) {
 
 
     crusher.ui.action.show_behavior(target)
+    crusher.ui.action.show_timing(target)
+
     
     return data
   }

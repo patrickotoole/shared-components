@@ -56,6 +56,8 @@
 <script type="text/javascript" src="/static/js/rockerbox/crusher/ui.action.clusters.js"></script>
 <script type="text/javascript" src="/static/js/rockerbox/crusher/ui.action.behavior.js"></script>
 <script type="text/javascript" src="/static/js/rockerbox/crusher/ui.action.tabs.js"></script>
+<script type="text/javascript" src="/static/js/rockerbox/crusher/ui.action.timing.js"></script>
+
 
 
 <script type="text/javascript" src="/static/js/rockerbox/crusher/ui.funnel.js"></script>
@@ -65,7 +67,7 @@
 <script type="text/javascript" src="/static/js/rockerbox/crusher/ui.funnel.campaign.js"></script>
 <script type="text/javascript" src="/static/js/rockerbox/crusher/ui.funnel.campaign.lookalike.js"></script>
 <script type="text/javascript" src="/static/js/rockerbox/crusher/ui.action.pattern.js"></script>
-<script type="text/javascript" src="/static/js/rockerbox/crusher/mock.json"></script>
+<!--<script type="text/javascript" src="/static/js/rockerbox/crusher/mock.json"></script>-->
 
 <script type="text/javascript" src="/static/js/rockerbox/rho/ui.js"></script>
 <script type="text/javascript" src="/static/js/rockerbox/rho/ui.filter.js"></script>
@@ -144,6 +146,24 @@ $(function() {
 	border-width: 11px;
 	margin-left: -11px;
 }
+rect.bordered {
+  stroke: #fff;
+  stroke-width:1.5px;   
+}
+
+text.mono {
+  font-size: 7.5pt;
+  fill: #aaa;
+}
+
+text.axis-workweek {
+  fill: #000;
+}
+
+text.axis-worktime {
+  fill: #000;
+}
+.timing .axis {opacity:1}
 
 </style>
 {% end %}

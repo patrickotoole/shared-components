@@ -46,9 +46,9 @@ class VisitDomainBase(object):
         xx = self.paginate_get_visits(uids, source)
         df = pandas.DataFrame(xx)
 
-        df = df[df.url.map(lambda x: term in x)]
+        filtered = df[df.url.map(lambda x: term in x)]
 
-        return df
+        return (filtered, df)
 
     @decorators.deferred
     def defer_get_uid_domains(self, source, pattern, uids, date_clause):
