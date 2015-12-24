@@ -122,6 +122,7 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
 
         after_categories = [{"key":k,"values":v} for k,v in after_categories.items()]
 
+
         # hourly
         domains_with_cat = domains.merge(idf,on="domain")
         domains_with_cat['hour'] = domains_with_cat.timestamp.map(lambda x: x.split(" ")[1].split(":")[0])
@@ -134,6 +135,79 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
         visits_hourly = raw_urls.groupby("hour")['uid'].agg({"visits":lambda x: len(x), "uniques": lambda x : len(set(x))}).reset_index()
 
 
+        # sessions
+        users = raw_urls
+        users['ts'] = users.timestamp.map(pandas.to_datetime)
+        summary = users.groupby(["uid","date","hour"]).ts.describe().unstack(3)
+
+        def session_per_day(x): 
+
+            date = x.date.iloc[0].split(" ")[0]
+            x = x[[i for i in x.columns if i not in ["uid","date"]]].iloc[0]
+
+            session_start = []
+            session_end = []
+            session_visits = []
+
+            i = 0
+            for value in "|".join(map(str,x)).split("nan"):
+                if len(value.replace("|","")) > 0:
+
+                    session_start += [i]
+                    i += len(value[1:-1].split("|")) 
+
+                    session_end += [i-1]
+
+                    start = 1 if value[0] == "|" else None
+                    end = -1 if value[-1] == "|" else None
+
+                    values = map(int,value[start:end].split("|"))
+                    session_visits += [sum(values)]
+                i += 1
+
+            results = []
+            for i,start in enumerate(session_start):
+                end = session_end[i]
+                results += [{
+                    "session_start": date + " " + str(start) + ":00:00",
+                    "session_end": date + " " + str(end) + ":00:00",
+                    "start_hour": start,
+                    "session_length": int(end) - int(start),
+                    "visits": session_visits[i]
+                }]
+
+
+            df = pandas.DataFrame(results)
+
+            return df
+
+        
+        vv = summary['count'].unstack("hour").reset_index()
+        sessions = vv.groupby(["uid","date"]).apply(session_per_day).reset_index().set_index("uid")[["session_start","session_end","session_length","start_hour","visits"]]
+
+
+        def uid_summary(x):
+            bucket_sessions = sessions.ix[list(set(x))]
+
+            start_hours = bucket_sessions.groupby("start_hour")['visits'].agg({"sessions":len,"visits":sum}).reset_index().T.to_dict().values()
+            session_length = bucket_sessions.groupby("session_length")['visits'].agg({"sessions":len,"visits":sum}).reset_index().T.to_dict().values()
+            session_visits = bucket_sessions.groupby("visits")['visits'].agg({"sessions":len,"total_visits":sum}).reset_index().T.to_dict().values()
+
+
+            return [{
+                "session_starts":start_hours,
+                "session_length": session_length,
+                "session_visits": session_visits
+            }]
+            
+
+        xx = domains_with_cat.groupby(["parent_category_name","hour"])['uid'].agg({
+            "visits":lambda x: len(x), 
+            "uniques": lambda x: len(set(x)), 
+            "on_site": uid_summary
+        })
+
+        xx['on_site'] = xx['on_site'].map(lambda x: x[0])
 
         url_ts, domain_ts = url_domain_intersection_ts(urls,domains)
 
@@ -146,7 +220,7 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
             response['after_domains'] = after_domains.T.to_dict()
 
             response['hourly_visits'] = visits_hourly.T.to_dict().values()
-            response['hourly_domains'] = category_hourly.T.to_dict().values()
+            response['hourly_domains'] = xx.reset_index().T.to_dict().values()
 
 
 

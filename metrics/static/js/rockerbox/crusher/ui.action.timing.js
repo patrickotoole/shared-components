@@ -10,7 +10,7 @@ RB.crusher.ui.action = (function(action) {
 
       var margin = { top: maxTop, right: 100, bottom: 100, left: margin_left },
           width = maxWidth - margin.left - margin.right,
-          height = 430 - margin.top - margin.bottom,
+          height = 730 - margin.top - margin.bottom,
           gridSize = Math.floor(width / 24),
           legendElementWidth = gridSize*2,
           buckets = 9,
@@ -18,7 +18,272 @@ RB.crusher.ui.action = (function(action) {
           days = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
           times = ["1a", "2a", "3a", "4a", "5a", "6a", "7a", "8a", "9a", "10a", "11a", "12a", "1p", "2p", "3p", "4p", "5p", "6p", "7p", "8p", "9p", "10p", "11p", "12p"];
 
-      
+      var sesssionVisitVerticalBarChart = function(data,svg,title,_colors) {
+
+        var margin = {top: 500, right: 10, bottom: 0, left: 670},
+            width = 720 - margin.left - margin.right,
+            height = 50  - margin.bottom;
+
+        
+
+        var l = Array.apply(null, Array(data.length)).map(function (_, i) {return i+1;});
+
+        var w = d3.scale.linear()
+            .domain([0, d3.max(data, function(d) { return Math.sqrt(d.frequency); })])
+            .range([0,height]);
+
+        var svg = svg.selectAll("g.session-visit-vertical").data([data],function(x){ return JSON.stringify(x) })
+
+          svg.enter().append("g")
+            .attr("class","session-visit-vertical")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+          svg.exit().remove()
+
+        var colorScale = d3.scale.quantile()
+              .domain([0, d3.max(data, function (d) { return d.frequency; })])
+              .range(colors);
+
+        colorScale = _colors || colorScale
+
+
+        var _title = svg.selectAll("text").data([0],function(x){ return x })
+
+        _title.enter()
+            .append("text").text(title)
+            .attr("transform", "translate(" + ( -6) + "," + (0) + ")")
+            .style("text-anchor","middle")
+            .style("font-weight","bold")
+            .style("font-family", "helvetica")
+
+        _title.exit().remove()
+
+        svg.selectAll(".bar")
+            .data(data,function(x){return x.key})
+          .enter().append("rect")
+            .attr("class", "timing-bar")
+            .attr("x", 0)
+            .attr("width", function(d) { return w(Math.sqrt(d.frequency)); })
+            .attr("y", function(d) { return (d.pos ) * gridSize; ; })
+            .attr("fill",function(x) { return colorScale(x.frequency) } )
+            .attr("stroke","white")
+            .attr("stroke-width","2px")
+            .attr("height", gridSize);
+
+        var dayLabels = svg.selectAll(".dayLabel")
+            .data(data,function(x){return x.key})
+            .enter().append("text")
+              .text(function (d) { return d.key; })
+              .attr("x", 0)
+              .attr("y", function (d, i) { return (d.pos ) * gridSize; })
+              .style("text-anchor", "end")
+              .attr("transform", "translate(-6," + gridSize / 1.5 + ")")
+              .attr("class", function (d, i) { return ((i >= 0 && i <= 4) ? "dayLabel mono axis axis-workweek" : "dayLabel mono axis axis-workweek"); });
+        
+      }
+
+      var sesssionTimeVerticalBarChart = function(data,svg,title,_colors) {
+
+        var margin = {top: 500, right: 10, bottom: 0, left: 420},
+            width = 720 - margin.left - margin.right,
+            height = 50  - margin.bottom;
+
+        
+
+        var l = Array.apply(null, Array(data.length)).map(function (_, i) {return i+1;});
+
+        var w = d3.scale.linear()
+            .domain([0, d3.max(data, function(d) { return Math.sqrt(d.frequency); })])
+            .range([0,height]);
+
+        var svg = svg.selectAll("g.session-time-vertical").data([data],function(x){ return JSON.stringify(x) })
+
+          svg.enter().append("g")
+            .attr("class","session-time-vertical")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+          svg.exit().remove()
+
+        var colorScale = d3.scale.quantile()
+              .domain([0, d3.max(data, function (d) { return d.frequency; })])
+              .range(colors);
+
+        colorScale = _colors || colorScale
+
+
+        var _title = svg.selectAll("text").data([0],function(x){ return x })
+
+        _title.enter()
+            .append("text").text(title)
+            .attr("transform", "translate(" + ( -6) + "," + (0) + ")")
+            .style("text-anchor","middle")
+            .style("font-weight","bold")
+            .style("font-family", "helvetica")
+
+        _title.exit().remove()
+
+        svg.selectAll(".bar")
+            .data(data)
+          .enter().append("rect")
+            .attr("class", "timing-bar")
+            .attr("x", 0)
+            .attr("width", function(d) { return w(Math.sqrt(d.frequency)); })
+            .attr("y", function(d) { return (d.pos ) * gridSize; ; })
+            .attr("fill",function(x) { return colorScale(x.frequency) } )
+            .attr("stroke","white")
+            .attr("stroke-width","2px")
+            .attr("height", gridSize);
+
+        var dayLabels = svg.selectAll(".dayLabel")
+            .data(data)
+            .enter().append("text")
+              .text(function (d) { return d.key; })
+              .attr("x", 0)
+              .attr("y", function (d, i) { return (d.pos ) * gridSize; })
+              .style("text-anchor", "end")
+              .attr("transform", "translate(-6," + gridSize / 1.5 + ")")
+              .attr("class", function (d, i) { return ((i >= 0 && i <= 4) ? "dayLabel mono axis axis-workweek" : "dayLabel mono axis axis-workweek"); });
+        
+      }
+
+      var sesssionVerticalBarChart = function(data,svg,title,_colors) {
+
+        var margin = {top: 500, right: 10, bottom: 0, left: 170},
+            width = 400 - margin.left - margin.right,
+            height = 50  - margin.bottom;
+
+        
+
+        var l = Array.apply(null, Array(data.length)).map(function (_, i) {return i+1;});
+
+        var w = d3.scale.linear()
+            .domain([0, d3.max(data, function(d) { return Math.sqrt(d.frequency); })])
+            .range([0,height]);
+
+        var svg = svg.selectAll("g.session-vertical").data([data],function(x){ return JSON.stringify(x) })
+
+          svg.enter().append("g")
+            .attr("class","session-vertical")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+          svg.exit().remove()
+
+        var colorScale = d3.scale.quantile()
+              .domain([0, d3.max(data, function (d) { return d.frequency; })])
+              .range(colors);
+
+        colorScale = _colors || colorScale
+
+
+        var _title = svg.selectAll("text").data([0],function(x){ return x })
+
+        _title.enter()
+            .append("text").text(title)
+            .attr("transform", "translate(" + ( -6) + "," + (0) + ")")
+            .style("text-anchor","middle")
+            .style("font-weight","bold")
+            .style("font-family", "helvetica")
+
+        _title.exit().remove()
+
+        svg.selectAll(".bar")
+            .data(data)
+          .enter().append("rect")
+            .attr("class", "timing-bar")
+            .attr("x", 0)
+            .attr("width", function(d) { return w(Math.sqrt(d.frequency)); })
+            .attr("y", function(d) { return (d.pos ) * gridSize; ; })
+            .attr("fill",function(x) { return colorScale(x.frequency) } )
+            .attr("stroke","white")
+            .attr("stroke-width","2px")
+            .attr("height", gridSize);
+
+        var dayLabels = svg.selectAll(".dayLabel")
+            .data(data)
+            .enter().append("text")
+              .text(function (d) { return d.key; })
+              .attr("x", 0)
+              .attr("y", function (d, i) { return (d.pos ) * gridSize; })
+              .style("text-anchor", "end")
+              .attr("transform", "translate(-6," + gridSize / 1.5 + ")")
+              .attr("class", function (d, i) { return ((i >= 0 && i <= 4) ? "dayLabel mono axis axis-workweek" : "dayLabel mono axis axis-workweek"); });
+        
+      }
+
+
+
+      var sessionStartChart = function(data,title,_colors,_base) {
+
+        // schema [{"frequency":1,"hour":1}]
+        // debugger
+
+        var margin = {top: 420, right: 10, bottom: 0, left: margin_left},
+            width = maxWidth - margin.left - margin.right,
+            height = 470 - margin.top - margin.bottom;
+
+        var l = Array.apply(null, Array(Object.keys(times).length)).map(function (_, i) {return i+1;});
+        var x = d3.scale.ordinal().range(l);
+        var y = d3.scale.linear().range([height, 0]);
+
+        var colorScale = d3.scale.quantile()
+          .domain([0, d3.max(data, function (d) { return d.frequency; })])
+          .range(colors);
+
+        colorScale = _colors || colorScale
+
+        var _base = _base || d3.select("#chart")
+
+        var _svg = _base.selectAll(".bar-session").data([0],function(x){ return x })
+
+        _svg.enter().append("svg")
+          .attr("class","bar-session")
+          .attr("width", width + margin.left + margin.right)
+          .attr("height", height + margin.top + margin.bottom)
+
+        _svg.exit().remove()
+
+        var svg = _svg.selectAll("g.bar-bottom").data([data],function(x){ return JSON.stringify(x) })
+
+        svg.enter()
+            .append("g")
+            .attr("class","bar-bottom")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        svg.exit().remove()
+
+        var _title = _svg.selectAll("text").data([0],function(x){ return x })
+
+        _title.enter()
+            .append("text").text(title)
+            .attr("transform", "translate(" + (margin.left -12) + "," + (margin.top + height - 5) + ")")
+            .style("text-anchor","end")
+            .style("font-weight","bold")
+            .style("font-family", "helvetica")
+
+        _title.exit().remove()
+
+
+        x.domain(data.map(function(d) { return d.hour; }));
+        y.domain([0, d3.max(data, function(d) { return Math.sqrt(d.frequency); })]);
+
+        console.log(data)
+        
+
+        svg.selectAll(".bar")
+            .data(data)
+          .enter().append("rect")
+            .attr("class", "timing-bar")
+            .attr("x", function(d) { return (d.hour - 1) * gridSize; ; })
+            .attr("width", gridSize)
+            .attr("y", function(d) { return y(Math.sqrt(d.frequency)); })
+            .attr("fill","#aaa")
+            .attr("fill",function(x) { return colorScale(x.frequency) } )
+            .attr("stroke","white")
+            .attr("stroke-width","2px")
+            .attr("height", function(d) { return height - y(Math.sqrt(d.frequency)); });
+
+
+      }      
 
       var barChart = function(data,title,_colors,_base) {
 
@@ -200,8 +465,13 @@ RB.crusher.ui.action = (function(action) {
           /* Main: section */
           
           var _svg = base.append("svg")
-              .attr("width", width + margin.left + margin.right)
+              .attr("width", width + margin.left + margin.right + 10)
               .attr("height", height + margin.top + margin.bottom)
+              .style("margin-left","auto")
+              .style("margin-right","auto")
+              .style("display","block")
+
+
 
           barChart(_offsite_data,"Off-site activity",false,_svg)
 
@@ -331,6 +601,120 @@ RB.crusher.ui.action = (function(action) {
                 
                 barChart(_offsite_data,"Off-site activity",colorScale,_svg)
                 verticalBarChart(_category_data,_svg,colorScale)
+
+                var session_start_times = d.on_site.session_starts.map(function(x){
+
+                  var start_hour = (x.start_hour - 5 + 24) % 24 + 1,
+                    until = (start_hour - d.hour + 24) % 24 ;
+
+                  until = until < 12 ? until : (until - 24)
+
+                  return {
+                    hour: start_hour, 
+                    time_until: until,
+                    visits: x.visits,
+                    frequency: x.sessions
+                  } 
+                })
+
+                
+
+                //sessionStartChart(session_start_times,"Begin visiting site",false,_svg)
+
+                var as_text = d.hour < 13 ? d.hour+"am" : (d.hour - 12) + "pm"
+                
+
+                var xx = [];
+                var prev = -13;
+                [-12,-8,-4,-1,0,1,4,8,12].map(function(h,i) {
+
+                  //debugger
+
+                  var sessions = session_start_times.reduce(function(p,c){
+                    if ( (h >= c.time_until) && (prev < c.time_until) ) return p + c.frequency
+                    else return p
+                  },0)
+                  
+                  if (prev >= -12)
+                  xx.push({
+                    "pos":i,
+                    "key": h == -1 ? 
+                      "1 hour before" : h == 1 ?
+                      "1 hour after" : h == 0 ? 
+                      ("at " + as_text) :h < 0 ? 
+                        (h*-1) + " to " + (prev*-1) + " hours before" : 
+                        prev + " to " + h + " hours after",
+                    "frequency":sessions
+                  })
+                  prev = h;
+
+                })
+
+                 
+                d.on_site.session_length
+
+                d.on_site.session_length.map(function(x,i){
+                  x.pos = i + 1;
+                  x.key = "< " + (x.session_length +1) + " hours"; 
+                  x.frequency = x.sessions; 
+                  return x 
+                })
+
+                var overall_title = "For users who visit a " + d.parent_category_name + " site @ " + as_text + "..."
+
+                var second_title = _svg.selectAll("text.second-title").data(
+                  [{"key":1,"value":""}],
+                  function(x){return x.key}
+                )
+
+                second_title.enter()
+                  .append("text")
+                  .attr("class","second-title")
+                  .attr("y","450")
+                  .attr("x",margin.left-12)
+                  .style("text-anchor","end")
+                  .style("font-weight","bold")
+                  .style("font-family","helvetica")
+
+                second_title
+                  .text(function(x){return x.value})
+
+                var third_title = svg.selectAll("text.second-title").data(
+                  [{"key":1,"value":overall_title}],
+                  function(x){return x.key}
+                )
+
+                third_title.enter()
+                  .append("text")
+                  .attr("class","second-title")
+                  .attr("y","350")
+                  .attr("x",12*gridSize)
+                  .style("text-anchor","middle")
+                  .style("font-weight","bold")
+                  .style("font-family","helvetica")
+
+                third_title
+                  .text(function(x){return x.value})
+
+                
+
+                
+
+                sesssionVerticalBarChart(xx,_svg,"When do they visit?",colorScale)
+                sesssionTimeVerticalBarChart(d.on_site.session_length,_svg,"How long do they browse?",colorScale)
+
+
+                var zz = []
+                d.on_site.session_visits.map(function(x){
+                  if (x.visits == 1) zz.push({key:"1 view", "frequency": x.sessions, "pos":1})
+                  else if (x.visits <= 3) zz.push({key:"3 views or less", "frequency": x.sessions, "pos":2})
+                  else if (x.visits <= 5) zz.push({key:"5 views or less", "frequency": x.sessions, "pos":3})
+                  else if (x.visits <= 10) zz.push({key:"10 views or less", "frequency": x.sessions, "pos":4})
+                  else if (x.visits <= 15) zz.push({key:"15 views or less", "frequency": x.sessions, "pos":5})
+                  else if (x.visits > 15) zz.push({key:"more than 15 views", "frequency": x.sessions, "pos":6})
+              
+                })
+                sesssionVisitVerticalBarChart(zz,_svg,"How much do they view?",colorScale)
 
               })
           _svg.on("mouseout",function(d){
