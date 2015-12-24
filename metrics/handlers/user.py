@@ -9,36 +9,36 @@ import lib.password_hash as password_hash
 logger = logging.getLogger('tcpserver')
 
 PERMISSIONS_QUERY = """
-SELECT 
-    pixel_source_name, 
-    external_advertiser_id, 
+SELECT
+    pixel_source_name,
+    external_advertiser_id,
     advertiser_name
-FROM user a JOIN user_permissions b on (a.id = b.user_id) 
-    JOIN permissions_advertiser USING (permissions_id) 
-    JOIN advertiser USING (external_advertiser_id) 
+FROM user a JOIN user_permissions b on (a.id = b.user_id)
+    JOIN permissions_advertiser USING (permissions_id)
+    JOIN advertiser USING (external_advertiser_id)
 WHERE a.username = '%s'
 """
 
 FEATURES_QUERY = """
-SELECT 
+SELECT
     name
-FROM user a JOIN user_permissions b on (a.id = b.user_id) 
-    JOIN permissions_app_features USING (permissions_id) 
-    JOIN app_features USING (app_feature_id) 
+FROM user a JOIN user_permissions b on (a.id = b.user_id)
+    JOIN permissions_app_features USING (permissions_id)
+    JOIN app_features USING (app_feature_id)
 WHERE a.username = '%s';
 """
 
 
 
 USER_QUERY = """
-SELECT DISTINCT 
-    user.id as id, 
-    username, 
+SELECT DISTINCT
+    user.id as id,
+    username,
     advertiser_id as external_advertiser_id,
     password,
-    advertiser_name, 
+    advertiser_name,
     pixel_source_name
-FROM user 
+FROM user
     JOIN advertiser ON (user.advertiser_id = advertiser.external_advertiser_id)
 WHERE username = '%s'"""
 
@@ -53,7 +53,7 @@ class LoginHandler(tornado.web.RequestHandler):
         return pw_hash.check_password(submitted,stored)
 
     def get(self):
-  
+
         if self.get_secure_cookie("user"):
             user = self.get_secure_cookie("user")
             Q = "select user.id, user.advertiser_id, user.username, user.show_reporting, CASE WHEN ae.email like '' THEN user.username ELSE (CASE WHEN user.username not like 'a_%%' THEN ae.email ELSE user.username END) END as email from user left join (select external_advertiser_id, email from advertiser_email group by external_advertiser_id) ae on user.advertiser_id = ae.external_advertiser_id where username = '%s'" % user
@@ -80,13 +80,19 @@ class LoginHandler(tornado.web.RequestHandler):
         body = ujson.loads(self.request.body)
         username = body["username"]
         password = body.get("password","")
-        df = self.db.select_dataframe(USER_QUERY % username)
+
+        by_username = self.db.select_dataframe(USER_QUERY % username)
+        if by_username.empty:
+            by_email = self.db.select_dataframe(USER_EMAIL_QUERY % username)
+            df = by_email
+        else:
+            df = by_username
 
         if not df.empty:
             dict_ = df.to_dict(outtype='records')[0]
             pw = dict_.get('password')
             aid = dict_.get('external_advertiser_id')
-            
+
             if self._check_password(password, pw):
                 self.set_secure_cookie("advertiser",str(aid))
                 self.set_secure_cookie("user",username)
@@ -97,7 +103,7 @@ class LoginHandler(tornado.web.RequestHandler):
 
 class SignupHandler(tornado.web.RequestHandler):
 
-    INSERT_QUERY = "insert into user (username, advertiser_id, password, show_reporting) values ('%(username)s' ,'%(advertiser)s', '%(password)s', '%(show_reporting)s')"
+    INSERT_QUERY = "insert into user (username, advertiser_id, password, show_reporting, first_name, last_name, email) values ('%(username)s' ,'%(advertiser)s', '%(password)s', '%(show_reporting)s, '%(first_name)s', '%(last_name)s', '%(email)s'')"
 
     def initialize(self,db=None):
         self.db = db
@@ -138,7 +144,7 @@ class AccountPermissionsHandler(BaseHandler):
 
     def get_user_permissions(self, username):
         df = self.db.select_dataframe(PERMISSIONS_QUERY % username)
-        
+
         # If this user doesn't have permissions, default to the advertiser
         # assigned to them in the USER table
         if len(df) > 0:
@@ -164,7 +170,7 @@ class AccountPermissionsHandler(BaseHandler):
         u = self.get_current_user()
 
         current_advertiser = self.current_advertiser
-        
+
         advertiser_permissions = self.get_user_permissions(u)
         feature_permissions = self.get_user_feature_permissions(u)
 
@@ -197,7 +203,7 @@ class AccountPermissionsHandler(BaseHandler):
         if advertiser:
             print advertiser
             print permissions, advertiser
-            if [p for p in permissions 
+            if [p for p in permissions
                 if str(p['external_advertiser_id']) == str(advertiser)]:
                 self.set_secure_cookie("advertiser", advertiser)
             else:

@@ -507,7 +507,7 @@ class AdvertiserHandler(tornado.web.RequestHandler,Advertiser):
 
         advertiser_id = self.create_advertiser(advertiser_name)
         internal_id = self.insert_advertiser(advertiser_id,advertiser_name)
-        self.insert_emails(advertiser_id)
+        # self.insert_emails(advertiser_id)
 
         pixel_dict = self.create_pixels(advertiser_id,advertiser_name)
         segment_dict = self.create_segments(advertiser_id,advertiser_name,pixel_dict.keys(),pixel_dict)

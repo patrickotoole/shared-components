@@ -1,266 +1,373 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="utf-8">
-				<script src="http://mbostock.github.com/d3/d3.v2.js"></script>
-				<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
-				<script src="http://getbootstrap.com/dist/js/bootstrap.min.js"></script>
-				<script src="http://metrics.getrockerbox.com/assets/bar.js"></script>
-				<link href="http://rockerbox.com/css/bootstrap.css" rel="stylesheet">
-				<link href="http://getbootstrap.com/examples/dashboard/dashboard.css" rel="stylesheet">
-				<style>
-						td {max-width:200px;max-height:40px;overflow:hidden}
-						path { stroke: steelblue; stroke-width: 1; fill: none; }
-						.axis {font-size:8px}
-						.bar { fill: steelblue; }
-						.bar:hover { fill: brown; }
-						.axis { font: 10px sans-serif; }
-						.axis path,
-						.axis line { fill: none; stroke: #ddd; shape-rendering: crispEdges; }
-						.x.axis path { display: none; }
-            .x.axis text { }
-            body {
-              shape-rendering: crispEdges;
-            }
+<head>
+  <meta charset="utf-8">
+  <script src="http://mbostock.github.com/d3/d3.v2.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+  <script src="http://getbootstrap.com/dist/js/bootstrap.min.js"></script>
+  <script src="http://metrics.getrockerbox.com/assets/bar.js"></script>
+  <link href="http://rockerbox.com/css/bootstrap.css" rel="stylesheet">
+  <link href="http://getbootstrap.com/examples/dashboard/dashboard.css" rel="stylesheet">
+  <style>
+    td {
+      max-width: 200px;
+      max-height: 40px;
+      overflow: hidden
+    }
 
-            .day {
-              fill: #fff;
-              stroke: #ccc;
-            }
+    path {
+      stroke: steelblue;
+      stroke-width: 1;
+      fill: none;
+    }
 
-            .month {
-              fill: none;
-              stroke: #000;
-              stroke-width: 2px;
-            }
+    .axis {
+      font-size: 8px
+    }
 
-            .RdYlGn .q0-11{fill:rgb(165,0,38)}
-            .RdYlGn .q1-11{fill:rgb(215,48,39)}
-            .RdYlGn .q2-11{fill:rgb(244,109,67)}
-            .RdYlGn .q3-11{fill:rgb(253,174,97)}
-            .RdYlGn .q4-11{fill:rgb(254,224,139)}
-            .RdYlGn .q5-11{fill:rgb(255,255,191)}
-            .RdYlGn .q6-11{fill:rgb(217,239,139)}
-            .RdYlGn .q7-11{fill:rgb(166,217,106)}
-            .RdYlGn .q8-11{fill:rgb(102,189,99)}
-            .RdYlGn .q9-11{fill:rgb(26,152,80)}
-            .RdYlGn .q10-11{fill:rgb(0,104,55)}
-				</style>
-		</head>
-   <body data-spy="scroll" data-target=".navbar" data-offset="150">
-   <div class="navbar-wrapper">
-	 	 <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
-					<div class="navbar-header">
-						<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-	            <span class="sr-only">Toggle navigation</span>
-	            <span class="icon-bar"></span>
-	            <span class="icon-bar"></span>
-	          </button>
-	          <a class="navbar-brand" href="#">
-				      <img src="http://rockerbox.com/img/logo.png" width="150px" style="margin-top:-5px">
-	          </a>
-	        </div>
-	        <div class="navbar-collapse collapse">
-	          <ul class="nav navbar-nav">
-	            <li><a href="#about">About</a></li>
- 							<li><a href="#technology">Tech</a></li>
-	            <li><a href="#team">Team</a></li>
-							 <li><a href="#contact">Contact</a></li>
+    .bar {
+      fill: steelblue;
+    }
 
-	            <!-- <li><a href="demo.html">Demo</a></li> -->
-	          </ul>
-	        </div><!--/.nav-collapse -->
-	    </nav>
-    </div>
-    <div class="container-fluid">
-      <div class="row">
-        <div class="col-sm-4 col-md-2 sidebar">
-          <ul class="nav nav-sidebar">
-            <li><a href="/streaming">Streaming</a></li>
-            <!--            <li><a href="/debug">Arbitrage</a></li> -->
-            <!--            <li><a href="/lookback">Lookback</a></li> -->
-            <li class="active"><a href="/advertiser">Add Advertiser</a></li>
-            <li><a href="/money">Money</a></li>
-          </ul>
-        </div>
-        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
-          <div class="col-md-6">
-            <h3 class="page-header" >Advertiser Creator</h3>
-            <form role="form" id="main_form">
+    .bar:hover {
+      fill: brown;
+    }
+
+    .axis {
+      font: 10px sans-serif;
+    }
+
+    .axis path,
+    .axis line {
+      fill: none;
+      stroke: #ddd;
+      shape-rendering: crispEdges;
+    }
+
+    .x.axis path {
+      display: none;
+    }
+
+    .x.axis text {}
+
+    body {
+      shape-rendering: crispEdges;
+    }
+
+    .day {
+      fill: #fff;
+      stroke: #ccc;
+    }
+
+    .month {
+      fill: none;
+      stroke: #000;
+      stroke-width: 2px;
+    }
+
+    .RdYlGn .q0-11 {
+      fill: rgb(165, 0, 38)
+    }
+
+    .RdYlGn .q1-11 {
+      fill: rgb(215, 48, 39)
+    }
+
+    .RdYlGn .q2-11 {
+      fill: rgb(244, 109, 67)
+    }
+
+    .RdYlGn .q3-11 {
+      fill: rgb(253, 174, 97)
+    }
+
+    .RdYlGn .q4-11 {
+      fill: rgb(254, 224, 139)
+    }
+
+    .RdYlGn .q5-11 {
+      fill: rgb(255, 255, 191)
+    }
+
+    .RdYlGn .q6-11 {
+      fill: rgb(217, 239, 139)
+    }
+
+    .RdYlGn .q7-11 {
+      fill: rgb(166, 217, 106)
+    }
+
+    .RdYlGn .q8-11 {
+      fill: rgb(102, 189, 99)
+    }
+
+    .RdYlGn .q9-11 {
+      fill: rgb(26, 152, 80)
+    }
+
+    .RdYlGn .q10-11 {
+      fill: rgb(0, 104, 55)
+    }
+
+    .background {
+      fill: #fff;
+    }
+
+    line {
+      stroke: none;
+    }
+
+    text.active {
+      fill: red;
+    }
+
+    svg {
+      font: 8px sans-serif;
+      font-size: 10px
+    }
+
+    section div div.form-group {
+      margin-left: 15px;
+    }
+
+    section div div.form-group label {
+      font-weight: normal;
+    }
+  </style>
+</head>
+<body data-spy="scroll" data-target=".navbar" data-offset="150">
+  <div class="navbar-wrapper">
+    <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#">
+          <img src="http://rockerbox.com/img/logo.png" width="150px" style="margin-top:-5px">
+        </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="#about">About</a></li>
+          <li><a href="#technology">Tech</a></li>
+          <li><a href="#team">Team</a></li>
+          <li><a href="#contact">Contact</a></li>
+          <!-- <li><a href="demo.html">Demo</a></li> -->
+        </ul>
+      </div>
+      <!--/.nav-collapse -->
+    </nav>
+  </div>
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-sm-4 col-md-2 sidebar">
+        <ul class="nav nav-sidebar">
+          <li><a href="/streaming">Streaming</a></li>
+          <!--            <li><a href="/debug">Arbitrage</a></li> -->
+          <!--            <li><a href="/lookback">Lookback</a></li> -->
+          <li class="active"><a href="/advertiser">Add Advertiser</a></li>
+          <li><a href="/money">Money</a></li>
+        </ul>
+      </div>
+      <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+        <div class="col-md-6">
+          <h3 class="page-header">Advertiser Creator</h3>
+          <form role="form" id="main_form">
+            <section>
+              <h4>Advertiser</h4>
               <div class="form-group">
-                Advertiser Name
-                <input  class="form-control" id="advertiser_name" placeholder="(e.g. Baublebar)">
-                <br/>
-                Advertiser Domain
-                <input  class="form-control" id="client_sld" placeholder="(e.g. baublebar.com)">
-                      <br>                Client Goals
-                 <textarea rows=6  class="form-control" id="advertiser_details" placeholder="Enter one paragraph on the clients goals. CPAs. Conversion types. "></textarea>
-
-                 <br>
-
-                <label><b>Points of Contact</b><br></label>
-                <br>                Include contacts from the client that should be receiving campaign update reports every monday.
-                <div id="" style="margin-left:20px">
-
-                <br>                Contact #1 Name (Required)
-                <input  class="form-control" id="advertiser_contact" placeholder="(e.g. Tyler)">
-                <br>                Contact #1 E-Mail Address (Required)
-                <input  class="form-control" id="advertiser_contact_email" placeholder="(e.g. tyler@baublebar.com)">
-                 <br>               Contact #2 Name (Optional)
-                <input  class="form-control" id="second_advertiser_contact" placeholder="(e.g. Tyler)">
-                <br>                Contact #2 E-Mail Address (Optional)
-                <input  class="form-control" id="second_advertiser_contact_email" placeholder="(e.g. tyler@baublebar.com)">
+                <label for="advertiser_name">Advertiser Name</label>
+                <input class="form-control" id="advertiser_name" placeholder="(e.g. Stark Industries)">
               </div>
-            </label>
-
-
+              <div class="form-group">
+                <label for="advertiser_domain">Advertiser Domain</label>
+                <input class="form-control" id="advertiser_domain" placeholder="(e.g. starkindustries.com)">
               </div>
-              <label><b>General Segment Pixels</b><br></label>
-              <div id="segment_pixels_div" style="margin-left:20px">
-                <input type="checkbox" id="all_pages_pixel_checkbox" checked="yes" > Create "All Pages" Pixel (pixel fired for all users on all pages)<br>
-                <input type="checkbox" id="logged_in_pixel_checkbox" checked="yes"> Create "Logged In" pixel (pixel fired for logged-in users on all pages)<br>
+              <div class="form-group">
+                <label for="advertiser_details">Client Goals</label>
+                <textarea rows=6 class="form-control" id="advertiser_details" placeholder="Enter one paragraph on the clients goals. CPAs. Conversion types. "></textarea>
               </div>
-
-              <br>
-              <b>Conversion Pixels</b><br>
-              <div id="conversion_pixels_div" style="margin-left:20px">
-
-                <input type="checkbox" id="signup_conversion_checkbox" checked="yes"> Signup Conversion</input> <br>
-                <div style="margin-left:20px">
-                  Post Click Hours <input type="text" id="signup_post_click_input" placeholder="Post Click Hours"> (e.g. 30 days = 720 hours)<br>
-                  Post View Hours <input type="text" id="signup_post_view_input" placeholder="Post View Hours"> (e.g. 2 days = 24 hours)
+            </section>
+            <hr>
+            <section>
+              <h4>Point of Contact</h4>
+              <p>Include contact from the client who should be receiving campaign update reports every monday.</p>
+              <div class="form-group">
+                <label for="user_firstname">First Name</label>
+                <input class="form-control" id="user_firstname" placeholder="(e.g. Tony)">
+              </div>
+              <div class="form-group">
+                <label for="user_lastname">Last Name</label>
+                <input class="form-control" id="user_lastname" placeholder="(e.g. Stark)">
+              </div>
+              <div class="form-group">
+                <label for="user_email">E-mail</label>
+                <input class="form-control" id="user_email" placeholder="(e.g. tonystark@starkindustries.com)">
+              </div>
+              <div class="form-group">
+                <label for="user_username">Username</label>
+                <input class="form-control" id="user_username" placeholder="(e.g. tonystark)">
+              </div>
+              <div class="form-group">
+                <label for="user_email">Password</label>
+                <input class="form-control" id="user_password" placeholder="">
+              </div>
+            </section>
+            <hr>
+            <section>
+              <h4>General Segment Pixels</h4>
+              <div class="checkbox">
+                <label for="all_pages_pixel_checkbox">Create "All Pages" Pixel (pixel fired for all users on all pages)</label>
+                <input type="checkbox" id="all_pages_pixel_checkbox" checked="yes">
+              </div>
+              <div class="checkbox">
+                <label for="logged_in_pixel_checkbox">Create "Logged In" pixel (pixel fired for logged-in users on all pages)</label>
+                <input type="checkbox" id="logged_in_pixel_checkbox" checked="yes">
+              </div>
+            </section>
+            <hr>
+            <section>
+              <h4>Conversion Pixels</h4>
+              <div>
+                <input type="checkbox" id="signup_conversion_checkbox" checked="yes" />
+                <label for="signup_conversion_checkbox">Signup Conversion</label>
+                <div class="form-group">
+                  <label for="signup_post_click_input">Post Click Hours</label>
+                  <input class="form-control" type="text" id="signup_post_click_input" placeholder="(e.g. 30 days = 720 hours)">
                 </div>
-                <br>
-                <input type="checkbox" id="purchase_conversion_checkbox" checked="yes"> Purchase Conversion<br>
-                <div style="margin-left:20px">
-                  Post Click Hours <input type="text" id="purchase_post_click_input" placeholder="Post Click Hours"> (e.g. 30 days = 720 hours)<br>
-                  Post View Hours <input type="text" id="purchase_post_view_input" placeholder="Post View Hours"> (e.g. 2 days = 24 hours)
+                <div class="form-group">
+                  <label for="signup_post_view_input">Post View Hours</label>
+                  <input class="form-control" type="text" id="signup_post_view_input" placeholder="(e.g. 2 days = 24 hours)">
                 </div>
-              </label>
-
-            </div>
-            <br>
-            <b>Username // Password (for login)</b><br>
-              <div id="username_div" style="margin-left:20px">
-
-                  Username<input type="text" id="username_login" placeholder="Make it Unique!"> (e.g. rjacob1)
-                  <br>
-                  Password <input type="text" id="password_login" placeholder="">
-                <br>
-
-              <br>
-              <button type="submit" id="create_advertiser_button" class="btn btn-default">Create Advertiser</button>
-            </form>
-            <img id="spinny_wheel" src="http://rockerbox.com/img/spinny_wheel.gif" style="height:50px;visibility:hidden">
-          </div>
+              </div>
+              <div>
+                <input type="checkbox" id="purchase_conversion_checkbox" checked="yes" />
+                <label for="purchase_conversion_checkbox">Purchase Conversion</label>
+                <div class="form-group">
+                  <label for="purchase_post_click_input">Post Click Hours</label>
+                  <input class="form-control" type="text" id="purchase_post_click_input" placeholder="(e.g. 30 days = 720 hours)">
+                </div>
+                <div class="form-group">
+                  <label for="purchase_post_view_input">Post View Hours</label>
+                  <input class="form-control" type="text" id="purchase_post_view_input" placeholder="(e.g. 2 days = 24 hours)">
+                </div>
+              </div>
+            </section>
+            <button type="submit" id="create_advertiser_button" class="btn btn-default">Create Advertiser</button>
+          </form>
+          <img id="spinny_wheel" src="http://rockerbox.com/img/spinny_wheel.gif" style="height:50px;visibility:hidden">
         </div>
       </div>
-		</div>
-    </body>
-  <style>
+    </div>
+  </div>
+  <script type="text/javascript">
+  $(function() {
 
-  svg {
-    font: 8px sans-serif;
-  }
+    $('form#main_form').on('submit', function(e) {
+      e.preventDefault();
 
-  .background {
-    fill: #fff;
-  }
+      $("#spinny_wheel").css('visibility', 'visible');
 
-  line {
-    stroke: none;
-  }
+      var form = $(this);
 
-  text.active {
-    fill: red;
-  }
-  svg {
-    font-size:10px
-  }
+      var advertiser = {
+        name: form.find('input#advertiser_name').val(),
+        domain: form.find('input#advertiser_domain').val(),
+        goals: form.find('textarea#advertiser_details').val(),
+        user: {
+          first_name: form.find('input#user_firstname').val(),
+          last_name: form.find('input#user_lastname').val(),
+          email: form.find('input#user_email').val(),
+          username: form.find('input#user_username').val(),
+          password: form.find('input#user_password').val()
+        },
+        pixels: {
+          general: {
+            all_pages: form.find('input#all_pages_pixel_checkbox').prop('checked'),
+            logged_in: form.find('input#logged_in_pixel_checkbox').prop('checked')
+          },
+          signup: {
+            enabled: form.find('input#signup_conversion_checkbox').prop('checked'),
+            post_click: parseInt(form.find('input#signup_post_click_input').val()),
+            post_view: parseInt(form.find('input#signup_post_view_input').val())
+          },
+          conversion: {
+            enabled: form.find('input#purchase_conversion_checkbox').prop('checked'),
+            post_click: parseInt(form.find('input#purchase_post_click_input').val()),
+            post_view: parseInt(form.find('input#purchase_post_view_input').val())
+          }
+        }
+      };
 
-</style>
-<script>
-  $(document).ready(function () {
-    $("#create_advertiser_button" ).click(function() {
-      $("#spinny_wheel").css('visibility','');
-      event.preventDefault();
-      a = $("#main_form")
-      advertiser_name = $("#advertiser_name").val();
-      client_sld = $("#client_sld").val();
-      contact_name = $("#advertiser_contact").val();
-      contact_email = $("#advertiser_contact_email").val();
-      pixel_source_name = $("#advertiser_name").val().replace(" ","_").replace(/\W/g,"").toLowerCase()
-      contact_name_2=$("#second_advertiser_contact").val();
-      contact_email_2=$("#second_advertiser_contact_email").val();
-      advertiser_details=$("#advertiser_details").val();
-      all_pages_pixel_checkbox = false;
-      logged_in_pixel_checkbox = false;
-      signup_conversion_checkbox = false;
-      purchase_conversion_checkbox = false;
-      signup_conversion_checkbox_pc = 0;
-      signup_conversion_checkbox_pv = 0;
-      purchase_conversion_checkbox_pc = 0;
-      purchase_conversion_checkbox_pv = 0;
+      console.log('NEW ADVERTISER OBJECT WHICH WILL BE SENT', advertiser);
 
-      if ($("#all_pages_pixel_checkbox").is(':checked') == true)
-      {
-         all_pages_pixel_checkbox = true;
-      }
-      if ($("#logged_in_pixel_checkbox").is(':checked') == true)
-      {
-         logged_in_pixel_checkbox = true;
-      }
-      if ($("#signup_conversion_checkbox").is(':checked') == true)
-      {
-         signup_conversion_checkbox = true;
-         signup_conversion_checkbox_pc = $("#signup_post_click_input").val();
-         signup_conversion_checkbox_pv = $("#signup_post_view_input").val();
-      }
-      if ($("#purchase_conversion_checkbox").is(':checked') == true)
-      {
-         purchase_conversion_checkbox = true;
-         purchase_conversion_checkbox_pc = $("#purchase_post_click_input").val();
-         purchase_conversion_checkbox_pv = $("#purchase_post_view_input").val();
+      $.ajax({
+        type: "POST",
+        url: '/admin/advertiser/new',
+        cache: false,
+        data: {
+          advertiser_name: advertiser.name,
+          client_sld: advertiser.domain,
+          all_pages_pixel_checkbox: advertiser.pixels.general.all_pages,
+          logged_in_pixel_checkbox: advertiser.pixels.general.logged_in,
+          signup_conversion_checkbox: advertiser.pixels.signup.enabled,
+          purchase_conversion_checkbox: advertiser.pixels.conversion.enabled,
+          signup_conversion_checkbox_pc: advertiser.pixels.signup.post_click,
+          signup_conversion_checkbox_pv: advertiser.pixels.signup.post_view,
+          purchase_conversion_checkbox_pc: advertiser.pixels.conversion.post_click,
+          purchase_conversion_checkbox_pv: advertiser.pixels.conversion.post_view,
+          pixel_source_name: advertiser.name.replace(" ","_").replace(/\W/g,"").toLowerCase(),
+          advertiser_details: advertiser.goals
+        },
+        success: function(response) {
+          $.ajax({
+            type: "POST",
+            url: '/signup',
+            data: JSON.stringify({
+              username: advertiser.user.username,
+              password: advertiser.user.password,
+              show_reporting: 0,
+              advertiser: response,
+              first_name: advertiser.user.first_name,
+              last_name: advertiser.user.last_name,
+              email: advertiser.user.email
+            }),
+            success: function(data) {
+              $("#spinny_wheel").css('visibility', 'hidden');
+              alert('Advertiser Added')
+            },
+            cache: false
+          });
 
-      }
-            $.ajax({
-              type: "POST",
-              url: '/admin/advertiser/new',
-              data: { advertiser_name: advertiser_name,client_sld: client_sld,contact_name:contact_name,contact_email:contact_email,all_pages_pixel_checkbox:all_pages_pixel_checkbox,logged_in_pixel_checkbox:logged_in_pixel_checkbox,signup_conversion_checkbox:signup_conversion_checkbox,purchase_conversion_checkbox:purchase_conversion_checkbox,signup_conversion_checkbox_pc:signup_conversion_checkbox_pc,signup_conversion_checkbox_pv:signup_conversion_checkbox_pv,purchase_conversion_checkbox_pc:purchase_conversion_checkbox_pc,purchase_conversion_checkbox_pc:purchase_conversion_checkbox_pc,purchase_conversion_checkbox_pv:purchase_conversion_checkbox_pv, pixel_source_name:pixel_source_name,contact_name_2:contact_name_2,contact_email_2:contact_email_2,advertiser_details:advertiser_details },
-              success: function (data) {
-                  username_login=$("#username_login").val();
-                  password_login=$("#password_login").val();
+          $("#spinny_wheel").css('visibility', 'visible');
 
-                  $.ajax({
-                    type: "POST",
-                    url: '/signup',
-                    data: JSON.stringify({ username: username_login,password:password_login,show_reporting:0,advertiser:data}),
-                    success: function (data) {
-                    $("#spinny_wheel").css('visibility','hidden')
-                    alert('Advertiser Added')
-                    },
-                    cache: false
-                    });
-
-                  admin_username = "a_" + $("#advertiser_name").val().split(" ")[0].replace(/\W/g,"").toLowerCase();
-                  $.ajax({
-                    type: "POST",
-                    url: '/signup',
-                    data: JSON.stringify({ username: admin_username,password:"admin",show_reporting:0,advertiser:data}),
-                    success: function (data) {
-                    $("#spinny_wheel").css('visibility','hidden')
-                    alert('Admin Login for Advertiser Added')
-                    },
-                    cache: false
-                    });
-
-              },
-              cache: false
-            });
-
+          var admin_username = "a_" + $("#advertiser_name").val().split(" ")[0].replace(/\W/g, "").toLowerCase();
+          $.ajax({
+            type: "POST",
+            url: '/signup',
+            data: JSON.stringify({
+              username: admin_username,
+              password: "admin",
+              show_reporting: 0,
+              advertiser: response,
+              first_name: advertiser.user.first_name,
+              last_name: advertiser.user.last_name,
+              email: advertiser.user.email
+            }),
+            success: function(data) {
+              $("#spinny_wheel").css('visibility', 'hidden');
+              alert('Admin Login for Advertiser Added')
+            },
+            cache: false
+          });
+        }
+      });
 
     });
 
   });
-</script>
+  </script>
+</body>
 </html>
