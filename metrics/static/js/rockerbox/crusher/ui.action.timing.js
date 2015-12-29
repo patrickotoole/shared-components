@@ -10,7 +10,7 @@ RB.crusher.ui.action = (function(action) {
 
       var margin = { top: maxTop, right: 100, bottom: 100, left: margin_left },
           width = maxWidth - margin.left - margin.right,
-          height = 730 - margin.top - margin.bottom,
+          height = 1430 - margin.top - margin.bottom,
           gridSize = Math.floor(width / 24),
           legendElementWidth = gridSize*2,
           buckets = 9,
@@ -568,7 +568,7 @@ RB.crusher.ui.action = (function(action) {
           .attr("class", function(d,i) {return d.day + '-' + d.hour + "-" + d.sum + " hour bordered " + vals(d.day) })
           .attr("width", gridSize)
           .attr("height", gridSize)
-          .attr("fill",function(x) { return colorScale(x.value) })
+          .attr("fill",function(x) { return x.value ? colorScale(x.value) : "#fff" })
           .on("mouseover",function(d){})
         
         cards.exit().remove()
