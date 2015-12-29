@@ -134,6 +134,15 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
         
         visits_hourly = raw_urls.groupby("hour")['uid'].agg({"visits":lambda x: len(x), "uniques": lambda x : len(set(x))}).reset_index()
 
+        _df = self.db.select_dataframe("SELECT * from action_with_patterns where pixel_source_name = '%s'" % self.current_advertiser_name)
+
+        _xx = {}
+        for url in set(raw_urls.url):
+            _xx[url] = list(_df.url_pattern[_df.url_pattern.map(lambda x: x in url)])
+
+        url_to_action = pandas.DataFrame(pandas.Series(_xx),columns=["actions"])
+        url_to_action.index.name = "url"
+
 
         # sessions
         users = raw_urls
@@ -183,21 +192,31 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
 
         
         vv = summary['count'].unstack("hour").reset_index()
-        sessions = vv.groupby(["uid","date"]).apply(session_per_day).reset_index().set_index("uid")[["session_start","session_end","session_length","start_hour","visits"]]
+        cols = ["session_start","session_end","session_length","start_hour","visits"]
+        sessions = vv.groupby(["uid","date"]).apply(session_per_day).reset_index().set_index("uid")[cols]
 
+        hours = [str(i) if len(str(i)) > 1 else "0" + str(i) for i in range(0,24)]
+        
 
         def uid_summary(x):
             bucket_sessions = sessions.ix[list(set(x))]
+            urls = raw_urls[raw_urls.uid.isin(list(set(x)))]
+            merged = urls.merge(url_to_action.reset_index(),on="url",how="left")
 
-            start_hours = bucket_sessions.groupby("start_hour")['visits'].agg({"sessions":len,"visits":sum}).reset_index().T.to_dict().values()
-            session_length = bucket_sessions.groupby("session_length")['visits'].agg({"sessions":len,"visits":sum}).reset_index().T.to_dict().values()
-            session_visits = bucket_sessions.groupby("visits")['visits'].agg({"sessions":len,"total_visits":sum}).reset_index().T.to_dict().values()
+            actions_by_hour = merged.groupby("hour")['actions'].apply(lambda x: pandas.DataFrame(pandas.Series([j for i in x for j in i ]),columns=["action"]).groupby("action")['action'].count() ).unstack("hour")
+            actions_by_hour = actions_by_hour.T.ix[hours].fillna(0).T
+
+
+            start_hours    = bucket_sessions.groupby("start_hour")['visits'].agg({"sessions":len,"visits":sum})
+            session_length = bucket_sessions.groupby("session_length")['visits'].agg({"sessions":len,"visits":sum})
+            session_visits = bucket_sessions.groupby("visits")['visits'].agg({"sessions":len,"total_visits":sum})
 
 
             return [{
-                "session_starts":start_hours,
-                "session_length": session_length,
-                "session_visits": session_visits
+                "session_starts": start_hours.reset_index().T.to_dict().values(),
+                "session_length": session_length.reset_index().T.to_dict().values(),
+                "session_visits": session_visits.reset_index().T.to_dict().values(),
+                "actions": [{"key":i,"values":j} for i,j in actions_by_hour.T.reset_index().to_dict().items()]
             }]
             
 
