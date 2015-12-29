@@ -216,7 +216,7 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
                 "session_starts": start_hours.reset_index().T.to_dict().values(),
                 "session_length": session_length.reset_index().T.to_dict().values(),
                 "session_visits": session_visits.reset_index().T.to_dict().values(),
-                "actions": [{"key":i,"values":j} for i,j in actions_by_hour.T.reset_index().to_dict().items()]
+                "actions": [{"key":i,"values":j} for i,j in actions_by_hour.T.reset_index().to_dict().items() if i != "index"]
             }]
             
 

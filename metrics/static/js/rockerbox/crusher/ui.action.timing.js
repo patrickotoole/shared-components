@@ -505,8 +505,14 @@ RB.crusher.ui.action = (function(action) {
           return c.sum - p.sum
         }).slice(0,30)
 
+        var dataAccessor = function(i) {
+          try {
+            return data[i].sum
+          } catch(e) {return 0}
+        }
+
         var dayLabels = svg.selectAll(".dayLabel")
-          .data(data.map(function(x){ return x.key }), function(x,i){ return x + data[i].sum + ":" + i})
+          .data(data.map(function(x){ return x.key }), function(x,i){ return x + dataAccessor(i) + ":" + i})
 
         dayLabels
           .enter().append("text")
