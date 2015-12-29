@@ -10,13 +10,13 @@ RB.crusher.ui.action = (function(action) {
 
       var margin = { top: maxTop, right: 100, bottom: 100, left: margin_left },
           width = maxWidth - margin.left - margin.right,
-          height = 730 - margin.top - margin.bottom,
+          height = 1430 - margin.top - margin.bottom,
           gridSize = Math.floor(width / 24),
           legendElementWidth = gridSize*2,
           buckets = 9,
           colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"], // alternatively colorbrewer.YlGnBu[9]
           days = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
-          times = ["1a", "2a", "3a", "4a", "5a", "6a", "7a", "8a", "9a", "10a", "11a", "12a", "1p", "2p", "3p", "4p", "5p", "6p", "7p", "8p", "9p", "10p", "11p", "12p"];
+          times = ["1a", "2a", "3a", "4a", "5a", "6a", "7a", "8a", "9a", "10a", "11a", "12p", "1p", "2p", "3p", "4p", "5p", "6p", "7p", "8p", "9p", "10p", "11p", "12a"];
 
       var sesssionVisitVerticalBarChart = function(data,svg,title,_colors) {
 
@@ -445,6 +445,148 @@ RB.crusher.ui.action = (function(action) {
       }
 
 
+      var onsiteHeatmap = function(data, base, d) {
+
+        // assertions
+        typeof(data[0].key) == "string"
+        Object.keys(data[0].values).length == 24
+        typeof(data[0].values[0]) == "number"
+
+        // d = {
+        //   parent_category_name : "",
+        //   hour: 0
+        // }
+        
+
+
+
+        var svg = base.selectAll("g.on-site").data([data])
+        svg.enter().append("g").attr("class","on-site")
+
+        svg.attr("transform", "translate(" + margin.left + "," + (margin.top+660) + ")");
+
+        var as_text = d.hour < 13 ? d.hour+"am" : (d.hour - 12) + "pm"
+
+        var overall_title = "On-site activity for users who visit a " + d.parent_category_name + " site @ " + as_text + "..."
+
+        var third_title = svg.selectAll("text.second-title").data(
+          [{"key":1,"value":overall_title}],
+          function(x){return x.key}
+        )
+
+        third_title.enter()
+          .append("text")
+          .attr("class","second-title")
+          .attr("y","-40")
+          .attr("x",12*gridSize)
+          .style("text-anchor","middle")
+          .style("font-weight","bold")
+          .style("font-family","helvetica")
+
+        third_title
+          .text(function(x){return x.value})
+
+        var timeLabels = svg.selectAll(".timeLabel")
+            .data(times)
+            .enter().append("text")
+              .text(function(d) { return d; })
+              .attr("x", function(d, i) { return i * gridSize; })
+              .attr("y", 0)
+              .style("text-anchor", "middle")
+              .attr("transform", "translate(" + gridSize / 2 + ", -6)")
+              .attr("class", function(d, i) { return ((i >= 7 && i <= 16) ? "timeLabel mono axis axis-worktime" : "timeLabel mono axis"); });
+
+        
+        data = data.map(function(x){
+          x.sum = d3.sum(Object.keys(x.values).map(function(q){return x.values[q]}))
+          
+          return x
+        }).sort(function(p,c){
+          return c.sum - p.sum
+        }).slice(0,30)
+
+        var dataAccessor = function(i) {
+          try {
+            return data[i].sum
+          } catch(e) {return 0}
+        }
+
+        var dayLabels = svg.selectAll(".dayLabel")
+          .data(data.map(function(x){ return x.key }), function(x,i){ return x + dataAccessor(i) + ":" + i})
+
+        dayLabels
+          .enter().append("text")
+
+        dayLabels
+            .text(function (d) { return d; })
+            .attr("x", 0)
+            .attr("y", function (d, i) { return i * gridSize; })
+            .style("text-anchor", "end")
+            .attr("transform", "translate(-6," + gridSize / 1.5 + ")")
+            .attr("class", function (d, i) { return ((i >= 0 && i <= 4) ? "dayLabel mono axis axis-workweek" : "dayLabel mono axis axis-workweek"); });
+
+        dayLabels
+          .exit().remove()
+
+ 
+
+        var days = data.map(function(x){ return x.key })
+        var l15 = Array.apply(null, Array(data.length)).map(function (_, i) {return i+1;});
+
+        var d = []
+
+        data.forEach(function(x){
+          Object.keys(x.values).map(function(hour){
+            d.push({
+              day: x.key,
+              hour: ((+hour - 5 + 24) % 24),
+              value: x.values[hour],
+              sum: x.sum
+            })  
+          })
+          
+        })
+
+        data = d
+
+        
+        var vals = d3.scale.ordinal()
+          .domain(days)
+          .range(l15)
+
+        var colorScale = d3.scale.quantile()
+          .domain([0, buckets - 1, d3.max(data, function (d) { return d.value; })])
+          .range(colors);
+
+        var filteredData = data.filter(function(x){ return days.indexOf(x.day) > -1 })
+
+        var cards = svg.selectAll(".hour")
+          .data(data, function(d,i) {return vals(d.day) + ':' + d.hour + d.sum });
+
+        
+        cards.enter().append("rect")
+
+        cards
+          .attr("x", function(d) { return (d.hour) * gridSize; })
+          .attr("y", function(d) { return (vals(d.day) - 1) * gridSize; })
+          .attr("rx", 0)
+          .attr("ry", 0)
+          .attr("class", function(d,i) {return d.day + '-' + d.hour + "-" + d.sum + " hour bordered " + vals(d.day) })
+          .attr("width", gridSize)
+          .attr("height", gridSize)
+          .attr("fill",function(x) { return x.value ? colorScale(x.value) : "#fff" })
+          .on("mouseover",function(d){})
+        
+        cards.exit().remove()
+
+        //_svg.on("mouseout",function(d){})
+
+        //console.log(vals("index"),d3.select(".index-1-276").attr("class"))
+
+
+
+      }
+
 
       var heatmapChart = function(data, onsite, base) {
 
@@ -558,7 +700,8 @@ RB.crusher.ui.action = (function(action) {
           var cards = svg.selectAll(".hour")
               .data(filteredData, function(d) {return d.day+':'+d.hour;});
 
-          
+          var hoverDisabled = false;
+
           cards.enter().append("rect")
               .attr("x", function(d) { return (d.hour - 1) * gridSize; })
               .attr("y", function(d) { return (vals(d.day) - 1) * gridSize; })
@@ -568,7 +711,12 @@ RB.crusher.ui.action = (function(action) {
               .attr("width", gridSize)
               .attr("height", gridSize)
               .style("fill", "white")
+              .on("click",function(d){
+                hoverDisabled = !hoverDisabled
+                d3.select(this).on("mouseover").bind(this)(d)
+              })
               .on("mouseover",function(d){
+                if (hoverDisabled) return
 
                 d3.select(this.parentElement).selectAll("rect").style("opacity",".5")
                 d3.select(this.parentElement).selectAll("rect").filter(function(x){return (x.day == d.day) || (x.hour == d.hour) }).style("opacity","1")
@@ -715,9 +863,11 @@ RB.crusher.ui.action = (function(action) {
               
                 })
                 sesssionVisitVerticalBarChart(zz,_svg,"How much do they view?",colorScale)
+                onsiteHeatmap(d.on_site.actions,_svg,d)
 
               })
           _svg.on("mouseout",function(d){
+            if (hoverDisabled) return
             d3.select(this).selectAll("rect").style("opacity","1")
             barChart(_offsite_data,"Off-site activity")
             verticalBarChart(_category_data,_svg)
@@ -790,7 +940,7 @@ RB.crusher.ui.action = (function(action) {
 
   action.show_timing = function(wrapper) {
 
-    var title = "Timing",
+    var title = "User Activity Timing",
       series = ["timing"],
       formatting = ".col-md-12",
       description = "", 
