@@ -39,18 +39,14 @@ INCLUDES = {
 
 INSERT_ADVERTISER = """
 INSERT INTO advertiser (
-    contact_name,
     external_advertiser_id,
-    email,
     advertiser_name,
     pixel_source_name,
     client_goals,
     client_sld
 )
 VALUES (
-    '%(contact_name)s',
     %(advertiser_id)s,
-    '%(email)s',
     '%(advertiser_name)s' ,
     '%(pixel_source_name)s',
     '%(client_goals)s',
@@ -113,8 +109,6 @@ class Advertiser(object):
     def insert_advertiser(self,advertiser_id,advertiser_name):
         params = {
             "advertiser_id": advertiser_id,
-            "contact_name": self.get_argument('contact_name'),
-            "email": self.get_argument('contact_email'),
             "advertiser_name": advertiser_name,
             "pixel_source_name": self.get_argument("pixel_source_name"),
             "client_goals" : self.get_argument("advertiser_details"),
@@ -441,7 +435,7 @@ class Advertiser(object):
         if count==10:
             raise Exception("Fucked")
         try:
-            placement =  response["response"]["placements"][0]["id"]
+            placement = response["response"]["placements"][0]["id"]
         except KeyError:
             import time
             time.sleep(5*count)
@@ -504,7 +498,6 @@ class AdvertiserHandler(tornado.web.RequestHandler,Advertiser):
 
     def post(self,arg="new"):
         advertiser_name = self.get_argument('advertiser_name')
-
         advertiser_id = self.create_advertiser(advertiser_name)
         internal_id = self.insert_advertiser(advertiser_id,advertiser_name)
         # self.insert_emails(advertiser_id)

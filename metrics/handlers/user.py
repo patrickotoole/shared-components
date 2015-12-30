@@ -103,7 +103,9 @@ class LoginHandler(tornado.web.RequestHandler):
 
 class SignupHandler(tornado.web.RequestHandler):
 
-    INSERT_QUERY = "insert into user (username, advertiser_id, password, show_reporting, first_name, last_name, email) values ('%(username)s' ,'%(advertiser)s', '%(password)s', '%(show_reporting)s, '%(first_name)s', '%(last_name)s', '%(email)s'')"
+    INSERT_QUERY = "insert into user (advertiser_id, username, password, show_reporting, first_name, last_name, email) values ('%(advertiser)s', '%(username)s', '%(password)s', %(show_reporting)s, '%(first_name)s', '%(last_name)s', '%(email)s')"
+
+
 
     def initialize(self,db=None):
         self.db = db
