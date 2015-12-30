@@ -147,6 +147,325 @@ RB.crusher.controller = (function(controller) {
       )
 
     },
+    "comparison": function(funnel) {
+      var segments = ['Wishlist','Cart'];
+
+      var main_wrapper = d3.selectAll('.container')
+        .style('padding', '0');
+
+      var heading = d3_updateable(main_wrapper, '.comparison-header', 'header')
+        .classed('comparison-header', true)
+        .style('background-color', '#FAFAFA')
+        .style('border-bottom', '1px solid #f0f0f0')
+        .style('padding', '40px')
+        .style('min-height', '350px')
+
+      var segments_list_wrapper = d3_updateable(heading, '.segments-list-wrapper', 'div')
+        .style('display', 'inline-block')
+        .classed('segments-list-wrapper', true)
+
+      var segments_list = d3_updateable(segments_list_wrapper, '.segments-list', 'div')
+        .style('display', 'inline-block')
+        .classed('segments-list', true)
+
+      var segments_list_items = d3_splat(segments_list, '.segment-list-item', 'input', segments, function(x, i) {
+        return x;
+      })
+        .attr('type', 'text')
+        .attr('value', function(x){
+          return x;
+        })
+        .classed('segment-list-item', true)
+        .on('keyup', function(x){
+          if(segments_list_items[0][0].value != segments[0] || segments_list_items[0][1].value != segments[1]) {
+            segments_list_save.style('display', 'inline-block');
+          } else {
+            segments_list_save.style('display', 'none');
+          }
+        })
+
+      var segments_list_save = d3_updateable(segments_list_wrapper, '.segments-list-save', 'a')
+        .style('display', 'none')
+        .text('Save')
+        .classed('segments-list-save btn btn-success', true)
+
+
+
+        // 100% = 175
+        // 1.9% =
+        // 15 = minimum
+
+        // 943
+
+        var x1 = 175,
+          y1 = 175,
+          x2 = 350,
+          y2 = 175,
+          r1 = 175;
+          r2 = 15;
+
+        var svg = d3_updateable(heading, '.comparison-svg', 'svg')
+          .attr('style', 'width: calc(100% - 300px); height: 350px;')
+          .classed('comparison-svg', true)
+
+        svg.append('circle')
+          .attr('cx', x1)
+          .attr('cy', y1)
+          .attr('r', r1)
+          .style('fill', 'steelblue')
+          .on('click', function(){
+            alert('SEGMENT ONE');
+          });
+
+        svg.append('circle')
+          .attr('cx', x2)
+          .attr('cy', y2)
+          .attr('r', r2)
+          .style('fill', 'orange')
+          .on('click', function(){
+            alert('SEGMENT TWO');
+          });
+
+        var interPoints = intersection(x1, y1, r1, x2, y2, r2);
+
+        svg.append("g")
+          .append("path")
+          .attr("d", function() {
+            return "M" + interPoints[0] + "," + interPoints[2] + "A" + r2 + "," + r2 +
+              " 0 0,1 " + interPoints[1] + "," + interPoints[3]+ "A" + r1 + "," + r1 +
+              " 0 0,1 " + interPoints[0] + "," + interPoints[2];
+          })
+          .style('fill', 'red')
+          .on('click', function(){
+            alert('INTERSECTION');
+          });
+
+        function intersection(x0, y0, r0, x1, y1, r1) {
+          var a, dx, dy, d, h, rx, ry;
+          var x2, y2;
+
+          /* dx and dy are the vertical and horizontal distances between
+           * the circle centers.
+           */
+          dx = x1 - x0;
+          dy = y1 - y0;
+
+          /* Determine the straight-line distance between the centers. */
+          d = Math.sqrt((dy * dy) + (dx * dx));
+
+          /* Check for solvability. */
+          if (d > (r0 + r1)) {
+            /* no solution. circles do not intersect. */
+            return false;
+          }
+          if (d < Math.abs(r0 - r1)) {
+            /* no solution. one circle is contained in the other */
+            return false;
+          }
+
+          /* 'point 2' is the point where the line through the circle
+           * intersection points crosses the line between the circle
+           * centers.
+           */
+
+          /* Determine the distance from point 0 to point 2. */
+          a = ((r0 * r0) - (r1 * r1) + (d * d)) / (2.0 * d);
+
+          /* Determine the coordinates of point 2. */
+          x2 = x0 + (dx * a / d);
+          y2 = y0 + (dy * a / d);
+
+          /* Determine the distance from point 2 to either of the
+           * intersection points.
+           */
+          h = Math.sqrt((r0 * r0) - (a * a));
+
+          /* Now determine the offsets of the intersection points from
+           * point 2.
+           */
+          rx = -dy * (h / d);
+          ry = dx * (h / d);
+
+          /* Determine the absolute intersection points. */
+          var xi = x2 + rx;
+          var xi_prime = x2 - rx;
+          var yi = y2 + ry;
+          var yi_prime = y2 - ry;
+
+          return [xi, xi_prime, yi, yi_prime];
+        }
+
+        var page_tabs_wrapper = d3_updateable(main_wrapper, '.page-tabs-wrapper', 'nav')
+          .classed('page-tabs-wrapper', true)
+
+        var page_tabs = [
+          {
+            id: 1,
+            title: 'Domains'
+          },
+          {
+            id: 2,
+            title: 'Categories'
+          }
+        ];
+
+        var page_tabs_items = d3_splat(page_tabs_wrapper, '.page_tabs_item', 'div', page_tabs, function(x, i) {
+          return x.title;
+        })
+          .text(function(x) {
+            return x.title;
+          })
+          .attr('class', function(x) {
+            var classes = 'page_tabs_item';
+
+            if(x.id === 1) {
+              classes += ' active'
+            }
+
+            return classes;
+          })
+          .on('click', function(x, i) {
+            d3.selectAll(".page_tabs_item.active").classed('active', false);
+            d3.selectAll(".page_tabs_item:nth-child(" + (i + 1) + ")").classed('active', true);
+            // this.classed('active', true);
+          });
+
+      var column1 = d3_updateable(main_wrapper, '.comparison-column1', 'div')
+        .classed('comparison-column1 comparison-column', true)
+
+      var column2 = d3_updateable(main_wrapper, '.comparison-column2', 'div')
+        .classed('comparison-column2 comparison-column', true)
+
+      // var domainsA = ['people.com', 'collective-exchange.com', 'pillsbury.com', 'youtube.com', 'msn.com', 'harpersbazaar.com',
+      //                'overstock.com', 'yelp.com', 'food.com', 'foodnetwork.com', 'allrecipes.com', 'ebay.com', 'weather.com',
+      //                'm.viralands.com', 'boredpanda.com', 'boxes.mysubscriptionaddiction.com', 'cars.com', 'cbssports.com',
+      //                'celebritybabies.people.com', 'chinanews.com', 'chinatimes.com', 'chowhound.com', 'cn.dealmoon.com',
+      //                'cnn.com', '163.com', 'cooks.com', 'cracked.com', 'cruisecritic.com', 'dailymail.co.uk', 'dealcatcher.com',
+      //                'dealmoon.com', 'decorpad.com', 'denverpost.com', 'dropdeadgorgeousdaily.com', 'ebags.com', 'accuweather.com',
+      //                'ehow.com', 'ent.163.com', 'ent.ifeng.com', 'eonline.com'];
+      // var hitsA = [6,9,6,4,4,9,3,1,7,3,1,5,9,10,8,7,10,2,4,7,5,9,7,9,5,2,7,7,3,8,4,3,1,8,1,5,2,3,7,10];
+      // var hitsB = [2,7,6,8,3,5,3,5,4,5,9,6,3,3,10,5,2,9,5,1,1,1,7,7,10,1,1,2,6,5,6,4,8,8,3,1,7,3,8,3];
+
+
+
+
+      /*
+        Create a function that adds bar graph
+        function horizontalBarGraph(left/right, domains, hits)
+      */
+
+
+
+
+
+
+
+
+      var segmentA= ['', 'people.com', 'collective-exchange.com', 'pillsbury.com', 'youtube.com', 'msn.com', 'harpersbazaar.com',
+                     'overstock.com', 'yelp.com', 'food.com', 'foodnetwork.com', 'allrecipes.com', 'ebay.com', 'weather.com',
+                     'm.viralands.com', 'boredpanda.com', 'boxes.mysubscriptionaddiction.com', 'cars.com', 'cbssports.com',
+                     'celebritybabies.people.com', 'chinanews.com', 'chinatimes.com', 'chowhound.com', 'cn.dealmoon.com',
+                     'cnn.com', '163.com', 'cooks.com', 'cracked.com', 'cruisecritic.com', 'dailymail.co.uk', 'dealcatcher.com',
+                     'dealmoon.com', 'decorpad.com', 'denverpost.com', 'dropdeadgorgeousdaily.com', 'ebags.com', 'accuweather.com',
+                     'ehow.com', 'ent.163.com', 'ent.ifeng.com', 'eonline.com'];
+
+  		var segmentA_hits = [6,9,6,4,4,9,3,1,7,3,1,5,9,10,8,7,10,2,4,7,5,9,7,9,5,2,7,7,3,8,4,3,1,8,1,5,2,3,7,10];
+
+  		var colors = ['steelblue'];
+
+  		var grid = d3.range(25).map(function(i){
+  			return {'x1':0,'y1':0,'x2':0,'y2':1000};
+  		});
+
+  		var xscale = d3.scale.linear()
+  						.domain([0,10])
+  						.range([0,10]);
+
+  		var yscale = d3.scale.linear()
+  						.domain([0,segmentA.length])
+  						.range([0,1000]);
+
+  		var colorScale = d3.scale.quantize()
+  						.domain([0,segmentA.length])
+  						.range(colors);
+
+  		var canvas = column1
+  						.append('svg')
+  						.attr({'width':'100%','height':1200});
+
+  		var grids = canvas.append('g')
+  						  .attr('id','grid')
+  						  .attr('transform','translate(150,10)')
+  						  .selectAll('line')
+  						  .data(grid)
+  						  .enter()
+  						  .append('line')
+  						  .attr({'x1':function(d,i){ return i*30; },
+  								 'y1':function(d){ return d.y1; },
+  								 'x2':function(d,i){ return i*30; },
+  								 'y2':function(d){ return d.y2; },
+  							})
+  						  .style({'stroke':'#adadad','stroke-width':'1px'});
+
+  		var	xAxis = d3.svg.axis();
+  			xAxis
+  				.orient('bottom')
+  				.scale(xscale)
+
+  		var	yAxis = d3.svg.axis();
+  			yAxis
+  				.orient('left')
+  				.scale(yscale)
+  				.tickSize(2)
+  				.tickFormat(function(d,i){ return segmentA[i]; })
+  				.tickValues(d3.range(segmentA.length));
+
+  		var y_xis = canvas.append('g')
+  						  .attr("transform", "translate(150,0)")
+  						  .attr('id','yaxis')
+  						  .call(yAxis);
+
+  		var x_xis = canvas.append('g')
+  						  .attr("transform", "translate(150,480)")
+  						  .attr('id','xaxis')
+  						  .call(xAxis);
+
+  		var chart = canvas.append('g')
+  							.attr("transform", "translate(150,0)")
+  							.attr('id','bars')
+  							.selectAll('rect')
+  							.data(segmentA_hits)
+  							.enter()
+  							.append('rect')
+  							.attr('height',19)
+  							.attr({'x':0,'y':function(d,i){ return yscale(i)+19; }})
+  							.style('fill',function(d,i){ return colorScale(i); })
+                .attr('width',function(d){ return d / Math.max.apply(Math, segmentA_hits) * 100 + '%'; });
+  							// .attr('width',function(d){ return (parseInt(d)/Math.max.apply(segmentA_hits) * 100) + '%'; });
+
+  		var transit = d3.select("svg").selectAll("rect")
+  						    .data(segmentA_hits)
+  						    .transition()
+  						    .duration(1000)
+  						    .attr("width", function(d) {return d; });
+
+  		var transitext = d3.select('#bars')
+  							.selectAll('text')
+  							.data(segmentA_hits)
+  							.enter()
+  							.append('text')
+  							.attr({'x':function(d) {return xscale(d); },'y':function(d,i){ return yscale(i)+35; }})
+  							.text(function(d){ return d; }).style({'fill':'#000','font-size':'14px'});
+
+
+
+
+
+
+
+
+
+    },
     "gettingstarted": function() {
       d3.select("body")
         .classed("hide-select",true)
@@ -431,13 +750,22 @@ RB.crusher.controller = (function(controller) {
       "class": "glyphicon glyphicon-signal",
       "values_key": "action_name"
 
-    },{
+    },
+    {
       "name":"Create Segment",
       "push_state": "/crusher/action/recommended",
       "class": "glyphicon glyphicon-plus",
       "values_key": "action_name",
       "hide_href": true
-    },{
+    },
+    {
+      "name":"Comparison",
+      "push_state": "/crusher/comparison",
+      "class": "glyphicon glyphicon-adjust",
+      "values_key": "action_name"
+
+    },
+    {
       "name":"Funnels (alpha)",
       "push_state": "/crusher/funnel",
       "class": "glyphicon glyphicon-filter"
@@ -479,6 +807,7 @@ RB.crusher.controller = (function(controller) {
       }
     },
     apis: {
+      "comparison": ['funnels'],
       "funnel/new": [],
       "funnel/existing": ['funnels'],
       "action/existing": ['actions'],
@@ -515,6 +844,10 @@ RB.crusher.controller = (function(controller) {
         }, {
           "name":"Getting Started Step 3",
           "push_state":"/crusher/gettingstarted/step3"
+        }],
+      "comparison": [{
+          "name": "Comparison",
+          "push_state": "/crusher/comparison"
         }],
       "home": [{
           "name":"Home",
