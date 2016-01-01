@@ -4,11 +4,13 @@ RB.crusher.ui = RB.crusher.ui || {}
 
 RB.crusher.ui.action = (function(action) {
 
-  var buildKMeansPlot = function(miserables,base) {
+  var buildKMeansPlot = function(miserables,base,_mo) {
+
+    
   
-    var margin = {top: 0, right: 0, bottom: 10, left: 80},
-        width = 360,
-        height = 360;
+    var margin = {top: 20, right: 20, bottom: 10, left: 20},
+        width = parseInt(base.style("width").replace("px","")) - margin.left - margin.right,
+        height = width;
   
     var x = d3.scale.ordinal().rangeBands([0, width]),
       y = d3.scale.ordinal().rangeBands([0, height])
@@ -18,10 +20,11 @@ RB.crusher.ui.action = (function(action) {
     var svg = base.append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
-        .style("margin-left", -margin.left + "px")
+        .style("margin-left", margin.left + "px")
+        .style("margin-right", margin.right + "px")
       .style("fill", "#fff")
       .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        .attr("transform", "translate(" + 0 + "," + margin.top + ")");
   
   
     var matrix = [],
@@ -46,9 +49,6 @@ RB.crusher.ui.action = (function(action) {
       
     });
   
-    
-  
-  
   
     // Convert links to matrix; count character occurrences.
     var group_domains = {},
@@ -66,10 +66,6 @@ RB.crusher.ui.action = (function(action) {
       group_uids[uid_group][link.target] = group_uids[uid_group][link.target] || 0
       group_uids[uid_group][link.target] += link.value
     });
-  
-  
-  
-    // debugger
   
   
     x.domain(d3.range(m).map(function(x){return x +n }))
@@ -126,7 +122,9 @@ RB.crusher.ui.action = (function(action) {
       
       //console.log(uid_dict, domain_dict)
   
-      console.log( Object.keys(domain_dict).map(function(x){return {"key":x,"value":domain_dict[x]}}) )
+      var data = Object.keys(domain_dict).map(function(x){return {"key":x,"value":domain_dict[x]}})
+      _mo(data)
+      
   
     }
   
@@ -215,10 +213,34 @@ RB.crusher.ui.action = (function(action) {
     },1)
 
     var uid_cluster = d3_updateable(target,".uid-cluster","div")
-      .classed("uid-cluster",true)
+      .classed("uid-cluster row",true)
+
+    var left = d3_updateable(uid_cluster,".left","div")
+      .classed("left col-md-6",true)
+
+    var right = d3_updateable(uid_cluster,".right","div")
+      .classed("right col-md-6",true)
 
     uid_cluster.each(function(x){
-      buildKMeansPlot(x[0][0].uid_clusters,d3.select(this))
+      buildKMeansPlot(x[0][0].uid_clusters,d3.select(this).selectAll(".left"),function(data){
+        data = data.map(function(x){
+          try {
+            var cat = JSON.parse(JSON.stringify(domain_dict[x.key][0]))
+          } catch(e) {
+            var cat = {"category_name":"NA","parent_category_name":"NA","domain":"","count":1,"weighted":0}
+          }
+
+          cat.domain = x.key
+          cat.count = x.value
+
+          return cat
+        })
+
+
+        RB.rho.ui.buildBarTable(right,data,"asdf","domain",false,12,action.category_colors)
+
+        //make_table(right,data,["key"])
+      })
     })
 
     
