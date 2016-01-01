@@ -419,7 +419,9 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
           .get(function(err,rawData){
             var dd = JSON.parse(rawData.response)
             action.clusters = dd.clusters
-
+            action.uid_clusters = dd.uid_clusters
+            action.similarity = dd.similarity
+            
             deferred_cb(null,cb.bind(false,action))
 
           })

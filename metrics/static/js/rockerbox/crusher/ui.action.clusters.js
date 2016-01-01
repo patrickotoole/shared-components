@@ -4,6 +4,186 @@ RB.crusher.ui = RB.crusher.ui || {}
 
 RB.crusher.ui.action = (function(action) {
 
+  var buildKMeansPlot = function(miserables,base) {
+  
+    var margin = {top: 0, right: 0, bottom: 10, left: 80},
+        width = 360,
+        height = 360;
+  
+    var x = d3.scale.ordinal().rangeBands([0, width]),
+      y = d3.scale.ordinal().rangeBands([0, height])
+        z = d3.scale.linear().domain([0, 1]).clamp(true),
+        c = d3.scale.category10().domain(d3.range(10));
+  
+    var svg = base.append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .style("margin-left", -margin.left + "px")
+      .style("fill", "#fff")
+      .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+  
+  
+    var matrix = [],
+        nodes = miserables.nodes,
+        n = nodes.filter(function(x){return x.name}).length,
+        m = nodes.filter(function(x){return x.uid}).length;
+  
+    // Compute index per node.
+    nodes.slice(0,n).forEach(function(node, i) {
+          
+      matrix[i] = d3.range(m).map(function(j) { 
+        
+        return {
+          x: nodes[j+n].node, 
+          y: node.node, 
+          z: 0, 
+          group: node.group, 
+          uid_group: nodes[j+n].group 
+        }
+  
+      });
+      
+    });
+  
+    
+  
+  
+  
+    // Convert links to matrix; count character occurrences.
+    var group_domains = {},
+      group_uids = {}
+  
+    miserables.links.forEach(function(link) {
+      matrix[link.source][link.target-n].z += link.value;
+      var domain_group = nodes[link.source].group
+      group_domains[domain_group] = group_domains[domain_group] || {}
+      group_domains[domain_group][link.source] = group_domains[domain_group][link.source] || 0
+      group_domains[domain_group][link.source] += link.value
+  
+    var uid_group = nodes[link.target].group
+      group_uids[uid_group] = group_uids[uid_group] || {}
+      group_uids[uid_group][link.target] = group_uids[uid_group][link.target] || 0
+      group_uids[uid_group][link.target] += link.value
+    });
+  
+  
+  
+    // debugger
+  
+  
+    x.domain(d3.range(m).map(function(x){return x +n }))
+    y.domain(d3.range(n))
+  
+    svg.append("rect")
+        .attr("class", "background")
+        .attr("width", width)
+        .attr("height", height);
+  
+  
+    var row = svg.selectAll(".row")
+        .data(matrix)
+      .enter().append("g")
+        .attr("class", function (x,i) { return "row" })
+        .attr("transform", function(d, i) { return "translate(0," + y(d[0].y) + ")"; })
+        .each(row);
+  
+    
+  
+    function row(row) {
+      
+      var cell = d3.select(this).selectAll(".cell")
+          .data(row.filter(function(d) { return d.z; }))
+        .enter().append("circle")
+          .attr("class", function(x) { 
+            return "cell " + nodes[x.x].group + " " + nodes[x.y].group + " " + JSON.stringify(nodes[x.y].name) + " " + JSON.stringify(nodes[x.x].uid)  
+          })
+          .attr("x", function(d) { return x(d.x); })
+          .attr("r", x.rangeBand()*3)
+          .attr("cx", function(d) { return x(d.x); })
+          .attr("width", x.rangeBand()*3)
+          .attr("height", x.rangeBand()*3)
+          //.style("fill-opacity", function(d) { return z(d.z); })
+          //.style("fill", function(d) { return nodes[d.x].group == nodes[d.y].group ? c(nodes[d.x].group) : "black"; })
+          .style("fill-opacity", function(d) { return nodes[d.x].group == nodes[d.y].group ? .5 : .1; })
+          .style("fill", function(d) { return c(nodes[d.x].group) })
+          .on("mouseover", mouseover)
+    }
+  
+    function mouseover(p) {
+      var domains = group_domains[p.group]
+      var uids = group_uids[p.uid_group]
+  
+      var domain_dict = {}
+      var uid_dict = {}
+  
+      var domain_indices = Object.keys(domains).map(function(x){
+        domain_dict[nodes[x].name] = domains[x]
+      })
+      var uid_indices = Object.keys(uids).map(function(x){
+        uid_dict[nodes[x].uid] = uids[x]
+      })
+      
+      //console.log(uid_dict, domain_dict)
+  
+      console.log( Object.keys(domain_dict).map(function(x){return {"key":x,"value":domain_dict[x]}}) )
+  
+    }
+  
+    
+    function order(value) {
+      
+  
+      var t = svg.transition();
+  
+    var uids = nodes.slice(n)
+      .sort(function(p,c){ 
+        try{
+          return p.group*1000 + group_uids[p.group][p.node]  - c.group*1000 - group_uids[c.group][c.node]
+        } catch(e) {
+          return 0
+        }
+        //return p.group - c.group
+      })
+      .map(function(x){ return x.node })
+  
+  
+    var domains = nodes.slice(0,n)
+      .sort(function(p,c){ 
+        try{
+          return p.group*1000 + group_domains[p.group][p.node]  - c.group*1000 - group_domains[c.group][c.node]
+        } catch(e) {
+          return 0
+        }
+        //return p.group - c.group
+       })
+      .map(function(x){ return x.node })
+  
+  
+  
+      x.domain(uids);
+      y.domain(domains);
+  
+      // debugger
+  
+      t.selectAll(".row")    
+           .delay(function(d, i) { return y(d[0].y) * 4; })
+          .attr("transform", function(d, i) { return "translate(0," + y(d[0].y) + ")"; })
+        .selectAll(".cell")
+          .delay(function(d) { return x(d.x) * 4; })
+          .attr("x", function(d) { return x(d.x); })
+          .attr("cx", function(d) { return x(d.x); })
+  
+      
+    }
+  
+    var timeout = setTimeout(function() {
+      order();
+    }, 1000);
+    
+  }
+
+
   action.show_clusters = function(wrapper) {
 
     var title = "User Clusters",
@@ -34,7 +214,12 @@ RB.crusher.ui.action = (function(action) {
 
     },1)
 
+    var uid_cluster = d3_updateable(target,".uid-cluster","div")
+      .classed("uid-cluster",true)
 
+    uid_cluster.each(function(x){
+      buildKMeansPlot(x[0][0].uid_clusters,d3.select(this))
+    })
 
     
     var clusters = d3_splat(target,".cluster","div",
