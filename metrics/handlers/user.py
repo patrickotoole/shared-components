@@ -56,7 +56,7 @@ class LoginHandler(tornado.web.RequestHandler):
 
         if self.get_secure_cookie("user"):
             user = self.get_secure_cookie("user")
-            Q = "select user.id, user.advertiser_id, user.username, user.show_reporting, CASE WHEN ae.email like '' THEN user.username ELSE (CASE WHEN user.username not like 'a_%%' THEN ae.email ELSE user.username END) END as email from user left join (select external_advertiser_id, email from advertiser_email group by external_advertiser_id) ae on user.advertiser_id = ae.external_advertiser_id where username = '%s'" % user
+            Q = "select user.id, user.advertiser_id, user.username, user.show_reporting, user.first_name, user.last_name, user.email as user_email, CASE WHEN ae.email like '' THEN user.username ELSE (CASE WHEN user.username not like 'a_%%' THEN ae.email ELSE user.username END) END as email from user left join (select external_advertiser_id, email from advertiser_email group by external_advertiser_id) ae on user.advertiser_id = ae.external_advertiser_id where username = '%s'" % user
             print Q
             from_db = self.db.select_dataframe(Q )
             print from_db
