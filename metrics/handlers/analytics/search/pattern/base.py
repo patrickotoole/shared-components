@@ -31,6 +31,9 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
 
     @defer.inlineCallbacks
     def get_uid_domains(self, advertiser, pattern_terms, date_clause, logic="or",timeout=60, numdays=5):
+        self.set_header("Access-Control-Allow-Origin","null")
+        self.set_header("Access-Control-Allow-Credentials","true")
+
         PARAMS = "uid"
         indices = [PARAMS]
 
@@ -57,7 +60,13 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
         if len(_domains) > 100:
             prepped = _domains.unstack(1).fillna(0)
             try:
-                response['clusters'] = model.cluster(_domains, prepped)
+                clusters, similarity, uid_clusters = model.cluster(_domains, prepped)
+
+                response['clusters'] = clusters
+                response['similarity'] = similarity
+
+                response['uid_clusters'] = uid_clusters 
+
                 # response['clusters'] = []
             except:
                 pass
