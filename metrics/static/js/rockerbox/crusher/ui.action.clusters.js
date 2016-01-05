@@ -4,6 +4,123 @@ RB.crusher.ui = RB.crusher.ui || {}
 
 RB.crusher.ui.action = (function(action) {
 
+  var buildCooccurence = function(miserables,base,_mo) {
+
+    
+  
+    var margin = {top: 20, right: 20, bottom: 10, left: 20},
+        width = parseInt(base.style("width").replace("px","")) - margin.left - margin.right,
+        height = width;
+  
+    var x = d3.scale.ordinal().rangeBands([0, width]),
+      y = d3.scale.ordinal().rangeBands([0, height])
+        z = d3.scale.linear().domain([0, 1]).clamp(true),
+        c = d3.scale.category10().domain(d3.range(10));
+  
+    var svg = base.append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .style("margin-left", margin.left + "px")
+        .style("margin-right", margin.right + "px")
+      .style("fill", "#fff")
+      .append("g")
+        .attr("transform", "translate(" + 0 + "," + margin.top + ")");
+
+    var matrix = [],
+      nodes = miserables.nodes,
+      n = nodes.length;
+
+    // Compute index per node.
+    nodes.forEach(function(node, i) {
+      node.index = i;
+      node.count = 0;
+      matrix[i] = d3.range(n).map(function(j) { return {x: j, y: i, z: 0, group: node.group}; });
+    });
+
+    // Convert links to matrix; count character occurrences.
+    miserables.links.forEach(function(link) {
+      matrix[link.source][link.target].z += link.value;
+      matrix[link.target][link.source].z += link.value;
+      matrix[link.source][link.source].z += link.value;
+      matrix[link.target][link.target].z += link.value;
+      nodes[link.source].count += link.value;
+      nodes[link.target].count += link.value;
+    });
+
+    // Precompute the orders.
+    var orders = {
+      name: d3.range(n).sort(function(a, b) { return d3.ascending(nodes[a].name, nodes[b].name); }),
+      count: d3.range(n).sort(function(a, b) { return nodes[b].count - nodes[a].count; }),
+      group: d3.range(n).sort(function(a, b) { return nodes[b].group - nodes[a].group; })
+    };
+
+    // The default sort order.
+    x.domain(orders.name);
+
+    svg.append("rect")
+        .attr("class", "background")
+        .attr("width", width)
+        .attr("height", height);
+
+    var row = svg.selectAll(".row")
+        .data(matrix)
+      .enter().append("g")
+        .attr("class", function(d){ return "row " + d[0].group })
+        .attr("transform", function(d, i) { return "translate(0," + x(i) + ")"; })
+        .each(row);
+
+    function row(row) {
+      var cell = d3.select(this).selectAll(".cell")
+          .data(row.filter(function(d) { return d.z && (d.x !== d.y); }))
+        .enter().append("rect")
+          .attr("class", "cell")
+          .attr("x", function(d) { return x(d.x); })
+          .attr("width", x.rangeBand())
+          .attr("height", x.rangeBand())
+          .style("fill-opacity", function(d) { return z(d.z); })
+          .style("fill", function(d) { return nodes[d.x].group == nodes[d.y].group ? c(nodes[d.x].group) : null; })
+          .on("mouseover", mouseover)
+          .on("mouseout", mouseout);
+    }
+
+    function mouseover(p) {
+      var d = miserables.nodes.filter(function(x){return x.group == p.group})
+      _mo(d)
+    }
+
+    function mouseout() {
+      //d3.selectAll("text").classed("active", false);
+    }
+
+    d3.select("#order").on("change", function() {
+      clearTimeout(timeout);
+      order(this.value);
+    });
+
+    function order(value) {
+      x.domain(orders[value]);
+
+      var t = svg.transition();
+
+      t.selectAll(".row")
+          .delay(function(d, i) { return x(i) * 4; })
+          .attr("transform", function(d, i) { return "translate(0," + x(i) + ")"; })
+        .selectAll(".cell")
+          .delay(function(d) { return x(d.x) * 4; })
+          .attr("x", function(d) { return x(d.x); });
+
+      t.selectAll(".column")
+          .delay(function(d, i) { return x(i) * 4; })
+          .attr("transform", function(d, i) { return "translate(" + x(i) + ")rotate(-90)"; });
+    }
+
+    var timeout = setTimeout(function() {
+      order("group");
+      //d3.select("#order").property("selectedIndex", 2).node().focus();
+    }, 1000);
+ 
+  }
+
   var buildKMeansPlot = function(miserables,base,_mo) {
 
     
@@ -222,6 +339,7 @@ RB.crusher.ui.action = (function(action) {
       .classed("right col-md-6",true)
 
     uid_cluster.each(function(x){
+      var that = this;
       buildKMeansPlot(x[0][0].uid_clusters,d3.select(this).selectAll(".left"),function(data){
         data = data.map(function(x){
           try {
@@ -237,11 +355,59 @@ RB.crusher.ui.action = (function(action) {
         })
 
 
-        RB.rho.ui.buildBarTable(right,data,"asdf","domain",false,12,action.category_colors)
+        RB.rho.ui.buildBarTable(d3.select(that).selectAll(".right"),data,"asdf","domain",false,20,action.category_colors)
 
         //make_table(right,data,["key"])
       })
     })
+
+   d3_updateable(target,".similarity-cluster-title","div")
+      .classed("similarity-cluster-title title",true)
+       .text("Domain Similarity")
+       .style("margin-top","20px")
+
+   d3_updateable(target,".similarity-cluster-value","div")
+      .classed("similarity-cluster-value value",true)
+
+   d3_updateable(target,".similarity-cluster-description","div")
+      .classed("similarity-cluster-description description",true)
+      .text("Similary between domains based on domain co-visiting by users")
+
+
+
+    var similarity_cluster = d3_updateable(target,".similarity-cluster","div")
+      .classed("similarity-cluster row",true)
+
+    var left = d3_updateable(similarity_cluster,".left","div")
+      .classed("left col-md-6",true)
+
+    var right = d3_updateable(similarity_cluster,".right","div")
+      .classed("right col-md-6",true)
+
+    similarity_cluster.each(function(x){
+      var that = this;
+
+      buildCooccurence(x[0][0].similarity,d3.select(this).selectAll(".right"),function(data){
+        data = data.map(function(x){
+          try {
+            var cat = JSON.parse(JSON.stringify(domain_dict[x.name][0]))
+          } catch(e) {
+            var cat = {"category_name":"NA","parent_category_name":"NA","domain":"","count":1,"weighted":0}
+          }
+
+          cat.domain = x.name
+          cat.count = x.count
+
+          return cat
+        })
+
+
+        RB.rho.ui.buildBarTable(d3.select(that).selectAll(".left"),data,"asdf","domain",false,20,action.category_colors)
+
+      })
+    })
+
+
 
     
     var clusters = d3_splat(target,".cluster","div",

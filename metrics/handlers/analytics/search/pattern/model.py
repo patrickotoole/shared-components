@@ -116,8 +116,8 @@ def cluster(_domains, prepped):
     nodes = []
 
     for domain in sq.columns:
-        if domain_dict.get(domain,False):
-            nodes += [{"node":i, "name":domain, "group":domain_dict.get(domain,0) }]
+        if domain_dict.get(domain,False) is not False:
+            nodes += [{"node":i, "name":domain, "group": ( domain_dict.get(domain,0) + 1 ) }]
             i = i + 1
 
     
