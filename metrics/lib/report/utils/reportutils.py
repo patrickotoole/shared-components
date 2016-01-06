@@ -123,6 +123,15 @@ def get_unique_keys(con, table_name):
     query = SELECT_UNIQUE_KEY_QUERY.format(table_name=table_name)
     return set(list(con.select_dataframe(query)['column_name']))
 
+
 def write_mysql(frame, table=None, con=None):
     key = get_unique_keys(con, table)
-    return _sql._write_mysql(frame, table, list(frame.columns), con, key=key)
+    length = len(frame)
+    batches = max(1,int(length / 50)+1)
+    logging.info("Rows to insert: %s" % length)
+    logging.info("Batches to insert: %s" % batches)
+    for b in range(0,batches):
+        logging.info("Inserting batch: %s" % b)
+        to_insert = frame.ix[b*50:(b+1)*50+1]
+        if len(to_insert) > 0:
+            _sql._write_mysql(to_insert, table, list(frame.columns), con, key=key)
