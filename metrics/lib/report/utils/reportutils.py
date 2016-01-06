@@ -77,7 +77,7 @@ def get_advertiser_ids():
     df = DEFAULT_DB().select_dataframe(q);
     active_in_db = set(df.external_advertiser_id)
 
-    return active_in_db & active_on_appnexus
+    return active_in_db
 
 
 def get_db(name='test'):
