@@ -19,7 +19,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
         try {
           var uuid = document.cookie.split("an_uuid=")[1].split(";")[0]
-          cache.uuid = uuid 
+          cache.uuid = uuid
           deferred_cb(null,cb.bind(false,uuid))
         } catch(e) {
           setTimeout(run_uid,1000)
@@ -27,9 +27,6 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
       }
 
       run_uid()
-
-      
-            
   })
 
   endpoints.segment_pixel_status = api.helpers.genericQueuedAPIWithData(function(segment,cb,deferred_cb) {
@@ -52,7 +49,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
     if (!cache.advertiserData) {
       d3.json(api.URL.advertiser + "?format=json", function(dd){
         cache.advertiserData = dd[0]
-        
+
         deferred_cb(null,cb.bind(false,cache.advertiserData))
       })
     } else {
@@ -60,12 +57,33 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
     }
   })
 
+  endpoints.comparison = new api.helpers.genericQueuedAPIWithData(function(input,cb,deferred_cb) {
+    d3.json("/crusher/pattern_search/timeseries?search=" + input.segmentA, function(segmentA_data) {
+      d3.json("/crusher/pattern_search/timeseries?search=" + input.segmentB, function(segmentB_data) {
+        d3.json("/crusher/multi_search/uids?search=" + input.segmentA + '>' + input.segmentB, function(intersection_data) {
+
+          comparisonData = {
+            segmentA: segmentA_data.domains.slice(0,40),
+            segmentB: segmentB_data.domains.slice(0,40),
+            intersection_data: {
+              segmentA: intersection_data.results[0].total_count,
+              segmentB: intersection_data.results[1].total_count,
+              intersection: intersection_data.summary.intersection_size
+            }
+          };
+          console.log('Comparison data....yo...', comparisonData);
+          deferred_cb(null,cb.bind(false,comparisonData));
+        });
+      });
+    });
+  })
+
   endpoints.pattern_status = api.helpers.genericQueuedAPIWithData(function(data,cb,deferred_cb) {
     var pattern = data.url_pattern[0]
-    
+
     if (pattern) {
       d3.json("/crusher/pattern/status?pattern=" + pattern,function(err,dd){
-        
+
         var json = dd.response.map(function(x){
           var date = new Date(x.timestamp*1000 - x.num_days*24*60*60*1000)
           var hour = date.getUTCHours();
@@ -92,12 +110,12 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
         deferred_cb(null,cb.bind(false,data))
 
       })
-        
+
     } else {
       deferred_cb(null,cb.bind(false,data))
     }
   })
-  
+
   endpoints.tf_idf_action = api.helpers.genericQueuedAPIWithData(function(data,cb,deferred_cb) {
         var domains = data.domains.map(function(x){return x.domain})
         if (domains && (data.domains[0].idf === undefined)) {
@@ -111,7 +129,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
               data.domains.map(function(x) {
                 idf_dict = keyed[x.domain] || {}
-                
+
                 x.category_name = idf_dict.category_name || "NA"
                 x.parent_category_name = idf_dict.parent_category_name || "NA"
                 x.idf = idf_dict.idf || ( x.category_name == "NA" ? 3 : 12)
@@ -120,7 +138,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
               })
               deferred_cb(null,cb.bind(false,data))
-            }) 
+            })
         } else {
           deferred_cb(null,cb.bind(false,data))
         }
@@ -144,7 +162,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
               })
               deferred_cb(null,cb.bind(false,data))
-            }) 
+            })
         } else {
           deferred_cb(null,cb.bind(false,data))
         }
@@ -160,7 +178,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
             })
             deferred_cb(null,cb)
-          }) 
+          })
         } else {
           deferred_cb(null,cb)
         }
@@ -174,7 +192,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
             cache.urls_wo_qs = api.helpers.set(cache.urls)
             if (cache.actionData) cache.actionData.map(function(x) { x.values = cache.urls_wo_qs })
 
-            
+
             cache.uris = d3.nest()
               .key(function(x){return x.url.split("?")[0].split(".com")[1]})
               .rollup(function(x){
@@ -182,7 +200,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
               })
               .entries(dd)
               .sort(function(x,y){return y.values -  x.values })
- 
+
             deferred_cb(null,cb)
           })
         } else {
@@ -194,7 +212,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
         if (!cache.actionData || !cache.campaign_map) {
           d3.json(api.URL.campaigns,function(campaigns){
-            cache.campaigns = campaigns 
+            cache.campaigns = campaigns
             cache.campaign_map = d3.nest()
               .key(function(x){return x.funnel_id})
               .key(function(x){return x.order})
@@ -221,7 +239,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
         }
       })
   endpoints.recommended_actions = new api.helpers.genericQueuedAPI(function(cb,deferred_cb) {
-        
+
         if (!cache.recommendations) {
           d3.json(api.URL.recommendedActions,function(recommendations){
             cache.recommendations = recommendations
@@ -258,7 +276,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
         if (!cache.lookalikeData) {
           d3.json(api.URL.lookalikes,function(dd){
-            cache.lookalikeData = dd 
+            cache.lookalikeData = dd
             cache.lookalikeFunnel = d3.nest()
               .key(function(x){return x.funnel_id})
               .rollup(function(x){return x})
@@ -273,7 +291,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
         if (!cache.lookalikeCampaigns) {
           d3.json(api.URL.lookalikeCampaigns,function(dd){
-            cache.lookalikeCampaigns = dd 
+            cache.lookalikeCampaigns = dd
             cache.lookalikeCampaignsByIdentifier = d3.nest()
               .key(function(x){return x.identifier})
               .rollup(function(x){return x})
@@ -298,7 +316,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
           var previous = false
           funnel.union_size = dd.summary.union_size
           funnel.intersection_size = dd.summary.intersection_size
-          
+
           funnel_actions.map(function(action,i){
             action.uids = dd.results[i].uids
             action.funnel_uids = dd.results[i].uids
@@ -309,7 +327,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
           })
           deferred_cb(null,cb.bind(false,funnel))
         })
-        
+
       })
   endpoints.funnelDomains = api.helpers.genericQueuedAPIWithData(function(funnel,cb,deferred_cb) {
         var funnel_actions = funnel.actions
@@ -326,7 +344,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
           })
           deferred_cb(null,cb.bind(false,funnel))
         })
-        
+
       })
   endpoints.funnelAvails = api.helpers.genericQueuedAPIWithData(function(funnel,cb,deferred_cb) {
         var funnel_actions = funnel.actions
@@ -347,14 +365,14 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
           })
           deferred_cb(null,cb.bind(false,funnel))
         })
-        
+
       })
 
   endpoints.actionBeforeAndAfter = api.helpers.genericQueuedAPIWithData(function(action,cb,deferred_cb) {
 
         if (action.before) {
           deferred_cb(null,cb.bind(false,action))
-          return 
+          return
         }
         d3.xhr(api.URL.actionBeforeAndAfter + action.action_string)
           .header("Content-Type","application/json")
@@ -364,7 +382,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
               categories: dd.before_categories,
               domains: dd.before_domains
             }
-            
+
             deferred_cb(null,cb.bind(false,action))
 
           })
@@ -375,14 +393,14 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
         if (action.clusters) {
           deferred_cb(null,cb.bind(false,action))
-          return 
+          return
         }
         d3.xhr(api.URL.actionClusters + action.action_string)
           .header("Content-Type","application/json")
           .get(function(err,rawData){
             var dd = JSON.parse(rawData.response)
             action.clusters = dd.clusters
-            
+
             deferred_cb(null,cb.bind(false,action))
 
           })
@@ -394,7 +412,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
         if (action.visits_data && (action.visits_data.length >= days)) {
           deferred_cb(null,cb.bind(false,action))
-          return 
+          return
         }
         return d3.xhr(api.URL.actionTimeseries + action.action_string)
           .header("Content-Type","application/json")
@@ -410,19 +428,19 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
               action.urls.map(function(x){
                 var split = x.url.split("?")
                 if (split.length > 1) {
-                  split[1].split("&").map(function(y){ 
+                  split[1].split("&").map(function(y){
                     var splitted = y.split("=")
                     var name = splitted[0]
                     var value = splitted.slice(1,splitted.length).join("=")
 
-                    
+
                     action.param_list.push({"name":name,"value":value,"count":x.count})
 
                   })
                 }
               })
             }
-            
+
             console.log("PARAMETERS")
 
             action.param_rolled = d3.nest()
@@ -440,7 +458,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
             //var fn = function(){deferred_cb(null,cb.bind(false,action))}
             deferred_cb(null,cb.bind(false,action))
             //RB.crusher.api.tf_idf_action(fn,action)
-            
+
 
 
           })
@@ -486,7 +504,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
             );
         } else {
           deferred_cb(null,[])
-        } 
+        }
       })
   endpoints.UIDsToDomainsNoQueue = function(cb,uids) {
         var data = { "uids":uids }
@@ -503,7 +521,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
             );
         } else {
           cb([])
-        } 
+        }
       }
   endpoints.actionToAvails = api.helpers.genericQueuedAPIWithData(function(action,cb,deferred_cb) {
         var data = { "uids":action.funnel_uids }
@@ -520,18 +538,15 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
             );
         } else {
           deferred_cb(null,action)
-        } 
+        }
       })
   endpoints.dashboardStats = new api.helpers.genericQueuedAPI(function(cb,deferred_cb) {
         d3.json(api.URL.statsURL,function(data){
           deferred_cb(null,cb.bind(false,data))
         })
       })
-    
+
 
   return endpoints
 
 })(RB.crusher.api.endpoints || {}, RB.crusher.api, RB.crusher, RB.crusher.cache)
-
-
-

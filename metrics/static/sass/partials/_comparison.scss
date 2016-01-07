@@ -19,14 +19,28 @@
   input:first-child {
     border-bottom: dashed 1px rgb(240, 240, 240);
   }
+
+  select {
+    width: 300px;
+    outline: none;
+    border: none;
+    background: #FFF;
+    height: 45px;
+    cursor: pointer;
+  }
 }
 
 .segments-list-save {
   margin-top: 10px;
 }
 
+.comparison-columns {
+  text-align: center;
+  background-color: #FFF;
+}
+
 .comparison-column {
-  width: 50%;
+  width: 400px;
   min-height: 50px;
   display: inline-block;
   background-color: #FFF;
