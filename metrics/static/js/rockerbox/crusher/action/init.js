@@ -20,13 +20,13 @@ RB.crusher.ui.action.init = (function(init,action,crusher) {
     crusher.ui.action.show(target)
     crusher.cache.actionData.map(function(x) { x.values = crusher.cache.urls_wo_qs })
     crusher.ui.action.preview(target)
-    
+
 
     return action
   }
 
   return init
-  
+
 })(RB.crusher.ui.action.init || {}, RB.crusher.ui.action,RB.crusher);
 
 RB.component.export(RB.crusher.ui.action.init, RB.crusher.ui.action)
@@ -48,7 +48,7 @@ RB.crusher.ui.action.wait = (function(wait,action,crusher) {
   wait.subscription = function(action) {
 
     var target = d3.selectAll(".action-view-wrapper")
-    
+
     crusher.ui.action.wait(target)
     prepAction(action)
 
@@ -77,7 +77,7 @@ RB.crusher.ui.action.status = (function(status,action,crusher) {
       var target = d3.selectAll(".action-view-wrapper").selectAll(".action-view")
       crusher.ui.action.status(target)
     })
-    
+
     return data
   }
 
@@ -105,7 +105,7 @@ RB.crusher.ui.action.show = (function(show,action,crusher) {
     if (data.action_id != ts.action_id) {
       throw "YO"
     }
-    
+
     crusher.ui.action.view(target)
     crusher.ui.action.show_timeseries(target)
 
@@ -154,6 +154,18 @@ RB.crusher.ui.action.show = (function(show,action,crusher) {
 
 
 
+    var comparison = d3_updateable(abody,".action-comparison","div")
+      .classed("series-wrapper col-md-12 action-comparison comparison",true)
+
+    comparison.classed("selected",comparison.classed("selected"))
+    comparison.classed("hidden",!comparison.classed("selected"))
+
+    comparison
+      .append("div").classed("bar series loading-icon",true)
+      .html('<img src="/static/img/general/logo-small.gif" alt="Logo loader"> Loading comparison data...')
+
+
+
     var before = d3_updateable(abody,".before-and-after","div")
       .classed("series-wrapper col-md-12 before-and-after",true)
 
@@ -172,7 +184,7 @@ RB.crusher.ui.action.show = (function(show,action,crusher) {
     }
 
 
-    
+
 
     return data
   }
@@ -220,7 +232,7 @@ RB.crusher.ui.action.clusters = (function(clusters,action,crusher) {
 
     var target = d3.selectAll(".action-view-wrapper")
     crusher.ui.action.show_clusters(target)
-    
+
     return data
   }
 
@@ -229,6 +241,27 @@ RB.crusher.ui.action.clusters = (function(clusters,action,crusher) {
 })(RB.crusher.ui.action.clusters || {}, RB.crusher.ui.action,RB.crusher)
 
 RB.component.export(RB.crusher.ui.action.clusters, RB.crusher.ui.action)
+
+
+
+RB.crusher.ui.action.comparison = (function(comparison,action,crusher) {
+  comparison.NAME = "action.comparison"
+  comparison.SUBSCRIBE = ["action_initialized","actionTimeseries", "actions"]
+  comparison.PUBLISH = []
+  comparison.EVENTS = []
+  comparison.subscription = function(data, actionTimeseries, actions) {
+    var target = d3.selectAll(".action-view-wrapper")
+    crusher.ui.action.show_comparison(target, actions)
+    return data;
+  }
+
+  return comparison
+
+})(RB.crusher.ui.action.comparison || {}, RB.crusher.ui.action,RB.crusher)
+
+RB.component.export(RB.crusher.ui.action.comparison, RB.crusher.ui.action)
+
+
 
 
 
@@ -251,7 +284,7 @@ RB.crusher.ui.action.behavior = (function(behavior,action,crusher) {
     crusher.ui.action.show_behavior(target)
     crusher.ui.action.show_timing(target)
 
-    
+
     return data
   }
 
@@ -274,7 +307,7 @@ RB.crusher.ui.action.resize = (function(resize,action,crusher) {
   resize.subscription = function(data) {
 
     var target = d3.selectAll(".action-view-wrapper")
-    
+
     crusher.ui.action.show_domains(target)
     crusher.ui.action.show_timeseries(target)
 
@@ -307,5 +340,3 @@ RB.crusher.ui.action.last = (function(last,action,crusher) {
 })(RB.crusher.ui.action.last || {}, RB.crusher.ui.action,RB.crusher)
 
 RB.component.export(RB.crusher.ui.action.last, RB.crusher.ui.action)
-
-
