@@ -76,6 +76,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
         });
       });
     });
+  });
 
   endpoints.current_user = new api.helpers.genericQueuedAPI(function(cb,deferred_cb) {
     if (!cache.current_user) {
