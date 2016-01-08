@@ -147,10 +147,11 @@ RB.crusher.controller = (function(controller) {
       )
 
     },
-    "comparison": function(funnel) {
+    "comparison": function() {
       d3.select("body")
-        .classed("hide-select",true)
-      var segments = ['/wishlist','cart'];
+        .classed("hide-select", true)
+
+      var segments = ['/wishlist', 'cart'];
 
       var main_wrapper = d3.selectAll('.container')
         .style('padding', '0');
@@ -161,6 +162,12 @@ RB.crusher.controller = (function(controller) {
         .style('border-bottom', '1px solid #f0f0f0')
         .style('padding', '40px')
         .style('min-height', '350px')
+
+      /*
+      **
+      **  Display list of segments that are being compared
+      **
+      */
 
       var segments_list_wrapper = d3_updateable(heading, '.segments-list-wrapper', 'div')
         .style('display', 'inline-block')
@@ -182,173 +189,176 @@ RB.crusher.controller = (function(controller) {
           renderComparison();
         });
 
-        crusher.subscribe.add_subscriber(["actions"],function(all_segments) {
-          console.log('ACTIONS', all_segments);
-          var segments_list_items = d3_splat(current_segment_select, '.segment-list-item-select-option', 'option', all_segments, function(x, i) {
+      crusher.subscribe.add_subscriber(["actions"], function(all_segments) {
+        var segments_list_items = d3_splat(current_segment_select, '.segment-list-item-select-option', 'option', all_segments, function(x, i) {
             return x.action_name;
           })
-            .text(function(x) {
-              console.log('X', x);
-              if(x.action_name != '') {
-                return x.action_name;
-              } else {
-                return 'All Pages';
-              }
-            });
-        },"comparison-data",true,false);
+          .text(function(x) {
+            if (x.action_name != '') {
+              return x.action_name;
+            } else {
+              return 'All Pages';
+            }
+          });
+      }, "comparison-data", true, false);
 
       var segments_list_save = d3_updateable(segments_list_wrapper, '.segments-list-save', 'a')
         .style('display', 'none')
         .text('Save')
         .classed('segments-list-save btn btn-success', true)
 
-        function drawIntersection(segmentA, segmentB, intersect) {
 
-          // // var max_segment = Math.max(segmentA, segmentB);
-          var max_segment = Math.max(segmentA, segmentB);
-          console.log('MAX SEGMENT', segmentA, segmentB, max_segment, intersect);
-          var x1 = 0,
-            y1 = 175,
-            x2 = 350,
-            y2 = 175,
-            r1 = Math.round(segmentA/max_segment * 175);
-            r2 = Math.round(segmentB/max_segment * 175);
+      /*
+      **
+      **  Draw intersection circles
+      **
+      */
 
-          x1 = r1;
-          // x2 = ((r1*2) + r2 + (r1)) - ((intersect/r1) * r1)
-          var intersect_size = ((175/max_segment)*intersect);
-          if(intersect_size/x1 < 0.15) {
-            intersect_size = 0.15 * x1;
-          }
-          x2 = ((r1 * 2) + r2) - intersect_size;
-          console.log('INTERSECT SIZE', intersect_size, 'SEGMENT A', x1);
+      function drawIntersection(segmentA, segmentB, intersect) {
+        var max_segment = Math.max(segmentA, segmentB);
+        var r1 = Math.round(segmentA / max_segment * 175),
+          r2 = Math.round(segmentB / max_segment * 175),
+          x1 = r1,
+          y1 = 175,
+          x2 = 350,
+          y2 = 175;
 
-          var svg = d3_updateable(heading, '.comparison-svg', 'svg')
-            .attr('style', 'width: calc(100% - 300px); height: 350px;')
-            .classed('comparison-svg', true)
+        var intersect_size = ((175 / max_segment) * intersect) * 2;
+        if (intersect_size / x1 < 0.15) {
+          intersect_size = 0.15 * x1;
+        }
+        x2 = ((r1 * 2) + r2) - intersect_size;
 
-          svg.append('circle')
+        var svg = d3_updateable(heading, '.comparison-svg', 'svg')
+          .attr('style', 'width: calc(100% - 300px); height: 350px;')
+          .classed('comparison-svg', true)
+
+        svg.exit().remove()
+
+          d3_updateable(svg, '.circleA', 'circle')
+            .classed('circleA', true)
             .attr('cx', x1)
             .attr('cy', y1)
             .attr('r', r1)
             .style('fill', 'steelblue')
-            .on('click', function(){
+            .on('click', function() {
               alert('SEGMENT ONE');
             });
 
-          svg.append('circle')
+          d3_updateable(svg, '.circleB', 'circle')
+            .classed('circleB', true)
             .attr('cx', x2)
             .attr('cy', y2)
             .attr('r', r2)
             .style('fill', 'orange')
-            .on('click', function(){
+            .on('click', function() {
               alert('SEGMENT TWO');
             });
 
-          var interPoints = intersection(x1, y1, r1, x2, y2, r2);
+        var interPoints = intersection(x1, y1, r1, x2, y2, r2);
 
-          svg.append("g")
-            .append("path")
-            .attr("d", function() {
-              return "M" + interPoints[0] + "," + interPoints[2] + "A" + r2 + "," + r2 +
-                " 0 0,1 " + interPoints[1] + "," + interPoints[3]+ "A" + r1 + "," + r1 +
-                " 0 0,1 " + interPoints[0] + "," + interPoints[2];
-            })
-            .style('fill', 'red')
-            .on('click', function(){
-              alert('INTERSECTION');
-            });
+        var intersection_object = d3_updateable(svg, '.intersection_object', 'g')
+          .classed('intersection_object', true)
 
-          function intersection(x0, y0, r0, x1, y1, r1) {
-            var a, dx, dy, d, h, rx, ry;
-            var x2, y2;
+        var intersection_object_path = d3_updateable(svg, '.intersection_object_path', 'path')
+          .classed('intersection_object_path', true)
+          .attr("d", function() {
+            return "M" + interPoints[0] + "," + interPoints[2] + "A" + r2 + "," + r2 +
+              " 0 0,1 " + interPoints[1] + "," + interPoints[3] + "A" + r1 + "," + r1 +
+              " 0 0,1 " + interPoints[0] + "," + interPoints[2];
+          })
+          .style('fill', 'red')
+          .on('click', function() {
+            alert('INTERSECTION');
+          });
 
-            /* dx and dy are the vertical and horizontal distances between
-             * the circle centers.
-             */
-            dx = x1 - x0;
-            dy = y1 - y0;
+        function intersection(x0, y0, r0, x1, y1, r1) {
+          var a, dx, dy, d, h, rx, ry;
+          var x2, y2;
 
-            /* Determine the straight-line distance between the centers. */
-            d = Math.sqrt((dy * dy) + (dx * dx));
+          /* dx and dy are the vertical and horizontal distances between
+           * the circle centers.
+           */
+          dx = x1 - x0;
+          dy = y1 - y0;
 
-            /* Check for solvability. */
-            if (d > (r0 + r1)) {
-              /* no solution. circles do not intersect. */
-              return false;
-            }
-            if (d < Math.abs(r0 - r1)) {
-              /* no solution. one circle is contained in the other */
-              return false;
-            }
+          /* Determine the straight-line distance between the centers. */
+          d = Math.sqrt((dy * dy) + (dx * dx));
 
-            /* 'point 2' is the point where the line through the circle
-             * intersection points crosses the line between the circle
-             * centers.
-             */
-
-            /* Determine the distance from point 0 to point 2. */
-            a = ((r0 * r0) - (r1 * r1) + (d * d)) / (2.0 * d);
-
-            /* Determine the coordinates of point 2. */
-            x2 = x0 + (dx * a / d);
-            y2 = y0 + (dy * a / d);
-
-            /* Determine the distance from point 2 to either of the
-             * intersection points.
-             */
-            h = Math.sqrt((r0 * r0) - (a * a));
-
-            /* Now determine the offsets of the intersection points from
-             * point 2.
-             */
-            rx = -dy * (h / d);
-            ry = dx * (h / d);
-
-            /* Determine the absolute intersection points. */
-            var xi = x2 + rx;
-            var xi_prime = x2 - rx;
-            var yi = y2 + ry;
-            var yi_prime = y2 - ry;
-
-            return [xi, xi_prime, yi, yi_prime];
+          /* Check for solvability. */
+          if (d > (r0 + r1)) {
+            /* no solution. circles do not intersect. */
+            return false;
           }
+          if (d < Math.abs(r0 - r1)) {
+            /* no solution. one circle is contained in the other */
+            return false;
+          }
+
+          /* 'point 2' is the point where the line through the circle
+           * intersection points crosses the line between the circle
+           * centers.
+           */
+
+          /* Determine the distance from point 0 to point 2. */
+          a = ((r0 * r0) - (r1 * r1) + (d * d)) / (2.0 * d);
+
+          /* Determine the coordinates of point 2. */
+          x2 = x0 + (dx * a / d);
+          y2 = y0 + (dy * a / d);
+
+          /* Determine the distance from point 2 to either of the
+           * intersection points.
+           */
+          h = Math.sqrt((r0 * r0) - (a * a));
+
+          /* Now determine the offsets of the intersection points from
+           * point 2.
+           */
+          rx = -dy * (h / d);
+          ry = dx * (h / d);
+
+          /* Determine the absolute intersection points. */
+          var xi = x2 + rx;
+          var xi_prime = x2 - rx;
+          var yi = y2 + ry;
+          var yi_prime = y2 - ry;
+
+          return [xi, xi_prime, yi, yi_prime];
         }
+      }
 
-        var page_tabs_wrapper = d3_updateable(main_wrapper, '.page-tabs-wrapper', 'nav')
-          .classed('page-tabs-wrapper', true)
+      var page_tabs_wrapper = d3_updateable(main_wrapper, '.page-tabs-wrapper', 'nav')
+        .classed('page-tabs-wrapper', true)
 
-        var page_tabs = [
-          {
-            id: 1,
-            title: 'Domains'
-          },
-          {
-            id: 2,
-            title: 'Categories'
-          }
-        ];
+      var page_tabs = [{
+        id: 1,
+        title: 'Domains'
+      }, {
+        id: 2,
+        title: 'Categories'
+      }];
 
-        var page_tabs_items = d3_splat(page_tabs_wrapper, '.page_tabs_item', 'div', page_tabs, function(x, i) {
+      var page_tabs_items = d3_splat(page_tabs_wrapper, '.page_tabs_item', 'div', page_tabs, function(x, i) {
           return x.title;
         })
-          .text(function(x) {
-            return x.title;
-          })
-          .attr('class', function(x) {
-            var classes = 'page_tabs_item';
+        .text(function(x) {
+          return x.title;
+        })
+        .attr('class', function(x) {
+          var classes = 'page_tabs_item';
 
-            if(x.id === 1) {
-              classes += ' active'
-            }
+          if (x.id === 1) {
+            classes += ' active'
+          }
 
-            return classes;
-          })
-          .on('click', function(x, i) {
-            d3.selectAll(".page_tabs_item.active").classed('active', false);
-            d3.selectAll(".page_tabs_item:nth-child(" + (i + 1) + ")").classed('active', true);
-            // this.classed('active', true);
-          });
+          return classes;
+        })
+        .on('click', function(x, i) {
+          d3.selectAll(".page_tabs_item.active").classed('active', false);
+          d3.selectAll(".page_tabs_item:nth-child(" + (i + 1) + ")").classed('active', true);
+          // this.classed('active', true);
+        });
 
       var comparison_columns = d3_updateable(main_wrapper, '.comparison-columns', 'div')
         .classed('comparison-columns', true)
@@ -359,44 +369,32 @@ RB.crusher.controller = (function(controller) {
       var column2 = d3_updateable(comparison_columns, '.comparison-column2', 'div')
         .classed('comparison-column2 comparison-column', true)
 
-      // var domainsA = ['people.com', 'collective-exchange.com', 'pillsbury.com', 'youtube.com', 'msn.com', 'harpersbazaar.com',
-      //                'overstock.com', 'yelp.com', 'food.com', 'foodnetwork.com', 'allrecipes.com', 'ebay.com', 'weather.com',
-      //                'm.viralands.com', 'boredpanda.com', 'boxes.mysubscriptionaddiction.com', 'cars.com', 'cbssports.com',
-      //                'celebritybabies.people.com', 'chinanews.com', 'chinatimes.com', 'chowhound.com', 'cn.dealmoon.com',
-      //                'cnn.com', '163.com', 'cooks.com', 'cracked.com', 'cruisecritic.com', 'dailymail.co.uk', 'dealcatcher.com',
-      //                'dealmoon.com', 'decorpad.com', 'denverpost.com', 'dropdeadgorgeousdaily.com', 'ebags.com', 'accuweather.com',
-      //                'ehow.com', 'ent.163.com', 'ent.ifeng.com', 'eonline.com'];
-      // var hitsA = [6,9,6,4,4,9,3,1,7,3,1,5,9,10,8,7,10,2,4,7,5,9,7,9,5,2,7,7,3,8,4,3,1,8,1,5,2,3,7,10];
-      // var hitsB = [2,7,6,8,3,5,3,5,4,5,9,6,3,3,10,5,2,9,5,1,1,1,7,7,10,1,1,2,6,5,6,4,8,8,3,1,7,3,8,3];
-
-
-
-
-      /*
-        Create a function that adds bar graph
-        function horizontalBarGraph(left/right, domains, hits)
-      */
 
       function horizontalBarGraph(orientation, domains, hits, max_hits) {
         var column_width = 400;
         var colors = ['steelblue'];
-        var grid = d3.range(25).map(function(i){
-          return {'x1':0,'y1':0,'x2':0,'y2':1000};
+        var grid = d3.range(25).map(function(i) {
+          return {
+            'x1': 0,
+            'y1': 0,
+            'x2': 0,
+            'y2': 1000
+          };
         });
 
         var xscale = d3.scale.linear()
-                .domain([0,10])
-                .range([0,10]);
+          .domain([0, 10])
+          .range([0, 10]);
 
         var yscale = d3.scale.linear()
-                .domain([0,domains.length])
-                .range([0,900])
+          .domain([0, domains.length])
+          .range([0, 900])
 
         var colorScale = d3.scale.quantize()
-                .domain([0,domains.length])
-                .range(colors);
+          .domain([0, domains.length])
+          .range(colors);
 
-        switch(orientation) {
+        switch (orientation) {
           case 'left':
             var column = column1;
             var opposite_orientation = 'right';
@@ -406,27 +404,51 @@ RB.crusher.controller = (function(controller) {
             var opposite_orientation = 'left';
             break;
         }
-        var canvas = column
-                .append('svg')
-                .attr({'width':'100%','height': (domains.length * 24)});
 
-          var xAxis = d3.svg.axis();
-          xAxis
-            .orient('bottom')
-            .scale(xscale)
+        var canvas = d3_updateable(column, '.bar-graph-' + orientation, 'svg')
+          .classed('bar-graph-' + orientation, true)
+          .attr({
+            'width': '100%',
+            'height': (domains.length * 24)
+          });
 
-          var yAxis = d3.svg.axis();
-          yAxis
-            .orient(orientation)
-            .scale(yscale)
-            .tickSize(1)
-            .tickFormat(function(d,i){ return domains[i]; })
-            .tickValues(d3.range(domains.length));
+        var xAxis = d3.svg.axis();
+        xAxis
+          .orient('bottom')
+          .scale(xscale)
 
-        var y_xis = canvas.append('g')
+        var yAxis = d3.svg.axis();
+        yAxis
+          .orient(orientation)
+          .scale(yscale)
+          .tickSize(1)
+          .tickFormat(function(d, i) {
+            if(typeof hits[i-1] !== typeof undefined) {
+              switch(orientation) {
+                case 'left':
+                  return domains[i] + ' - ' + hits[i-1];
+                  break;
+                case 'right':
+                  return hits[i-1] + ' - ' + domains[i];
+                  break;
+              }
+            }
+          })
+          .tickValues(d3.range(domains.length));
+
+        switch(orientation) {
+          case 'left':
+            yAxis.tickSize(1)
+            break;
+          case 'right':
+            yAxis.tickSize(0)
+            break;
+        }
+
+        var y_xis = d3_updateable(canvas, '.y_xis-' + orientation, 'g')
           .style('fill', '#666')
-          .attr("transform", function(){
-            switch(orientation) {
+          .attr("transform", function() {
+            switch (orientation) {
               case 'left':
                 return "translate(400,10)";
                 break;
@@ -435,64 +457,45 @@ RB.crusher.controller = (function(controller) {
                 break;
             }
           })
-          .attr('id','yaxis')
+          .attr('id', 'yaxis')
+          .classed('y_xis-' + orientation, true)
           .call(yAxis);
 
-          var chart = canvas.append('g')
-            .attr("transform", function() {
-              if(orientation == 'right') {
-                return "translate(200,0)";
-              } else {
-                return "translate('right',0)";
-              }
-            })
-            .attr('id','bars')
-            .selectAll('rect')
-            .data(hits)
-            .enter()
-            .append('rect')
-            .attr('height',19)
-            .attr({
-              'x': function(d, i) {
-                if(orientation == 'left') {
-                  // return ((d / Math.max.apply(Math, hits)) * 100)
-                  return 200 - (((d/max_hits) * 180) + 20);
-                } else {
-                  return 0;
-                }
-              },
-              'y': function(d,i) {
-                return yscale(i)+19;
-              }
-            })
-            .style('fill',function(d,i){ return colorScale(i); })
-            .attr('width',function(d) {
-              return (d / max_hits * 180) + 20;
-            });
-                  // .attr('width',function(d){ return (parseInt(d)/Math.max.apply(hits) * 100) + '%'; });
+        var chart = d3_updateable(canvas, '.chart-bars-' + orientation, 'g')
+          .classed('chart-bars-' + orientation, true)
+          .attr("transform", function() {
+            if (orientation == 'right') {
+              return "translate(200,0)";
+            } else {
+              return "translate(0,0)";
+            }
+          })
+          // .selectAll('rect')
+          // .data(hits)
+          // .enter()
 
-        switch(orientation) {
-          case 'left':
-            var transitext = d3.select('.comparison-column1 #bars')
-              .selectAll('text')
-              .data(hits)
-              .enter()
-              .append('text')
-              .attr({'x': function(d) {
-                return 185 - (d.toString().length * 4);
-              },'y':function(d,i){ return yscale(i)+35; }})
-              .text(function(d){ return d; }).style({'fill':'#000','font-size':'14px'})
-            break;
-          case 'right':
-            var transitext = d3.select('.comparison-column2 #bars')
-              .selectAll('text')
-              .data(hits)
-              .enter()
-              .append('text')
-              .attr({'x': 8,'y':function(d,i){ return yscale(i)+35; }})
-              .text(function(d){ return d; }).style({'fill':'#000','font-size':'14px'})
-            break;
-        }
+        var chart_rows = d3_splat(chart,".chart-row","rect",hits,function(x, i){return i})
+          .classed("chart-row",true)
+          .attr('height', 19)
+          .attr({
+            'x': function(d, i) {
+              if (orientation == 'left') {
+                // return ((d / Math.max.apply(Math, hits)) * 100)
+                return 200 - (((d / max_hits) * 180) + 20);
+              } else {
+                return 0;
+              }
+            },
+            'y': function(d, i) {
+              return yscale(i) + 19;
+            }
+          })
+          .style('fill', function(d, i) {
+            return colorScale(i);
+          })
+          .attr('width', function(d) {
+            return (d / max_hits * 180) + 20;
+          });
       }
 
       function renderComparison() {
@@ -501,19 +504,19 @@ RB.crusher.controller = (function(controller) {
           segmentB: segments[1]
         };
 
-        var segmentA= [''];
+        var segmentA = [''];
         var segmentA_hits = [];
 
-        var segmentB= [''];
+        var segmentB = [''];
         var segmentB_hits = [];
 
-        crusher.subscribe.add_subscriber(["comparison"],function(comparison_data) {
-          comparison_data.segmentA.forEach(function(domain, i){
+        crusher.subscribe.add_subscriber(["comparison"], function(comparison_data) {
+          comparison_data.segmentA.forEach(function(domain, i) {
             segmentA.push(domain.domain);
             segmentA_hits.push(domain.count);
           });
 
-          comparison_data.segmentB.forEach(function(domain, i){
+          comparison_data.segmentB.forEach(function(domain, i) {
             segmentB.push(domain.domain);
             segmentB_hits.push(domain.count);
           });
@@ -524,22 +527,8 @@ RB.crusher.controller = (function(controller) {
           drawIntersection(comparison_data.intersection_data.segmentA, comparison_data.intersection_data.segmentB, comparison_data.intersection_data.intersection)
           horizontalBarGraph('left', segmentA, segmentA_hits, max_hits)
           horizontalBarGraph('right', segmentB, segmentB_hits, max_hits)
-        },"comparison-data",true,false, input_data);
+        }, "comparison-data", true, false, input_data);
       }
-
-
-
-
-
-
-
-      // main_wrapper.exit().remove()
-
-
-
-
-
-
 
     },
     "gettingstarted": function() {
