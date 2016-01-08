@@ -8,7 +8,7 @@ RB.crusher.ui.action = (function(action) {
 
     var title = "User Clusters",
       series = ["clusters"],
-      formatting = "col-md-12",
+      formatting = ".col-md-12.action-clusters",
       description = "Top user clusters"
 
     console.log(wrapper.datum())
@@ -19,7 +19,22 @@ RB.crusher.ui.action = (function(action) {
       .key(function(x){return x.domain})
       .map(domains)
 
-    var target = RB.rho.ui.buildSeriesWrapper(wrapper.selectAll(".ts"), title, series, [wrapper.datum()], formatting, description)
+    var target = RB.rho.ui.buildSeriesWrapper(wrapper.selectAll(".action-body"), title, series, [wrapper.datum()], formatting, description)
+
+    var parentNode = wrapper.selectAll(".action-body").selectAll(".clusters")
+    parentNode.selectAll(".loading-icon").remove()
+
+    parentNode.classed("hidden",false)
+      .style("visibility","hidden")
+
+
+    setTimeout(function(){
+      parentNode.classed("hidden",!parentNode.classed("selected"))
+        .style("visibility",undefined)
+
+    },1)
+
+
 
     
     var clusters = d3_splat(target,".cluster","div",

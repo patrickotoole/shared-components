@@ -54,6 +54,12 @@
 <script type="text/javascript" src="/static/js/rockerbox/crusher/ui.action.dashboard.js"></script>
 <script type="text/javascript" src="/static/js/rockerbox/crusher/ui.action.domains.js"></script>
 <script type="text/javascript" src="/static/js/rockerbox/crusher/ui.action.clusters.js"></script>
+<script type="text/javascript" src="/static/js/rockerbox/crusher/ui.action.behavior.js"></script>
+<script type="text/javascript" src="/static/js/rockerbox/crusher/ui.action.tabs.js"></script>
+<script type="text/javascript" src="/static/js/rockerbox/crusher/ui.action.timing.js"></script>
+
+
+
 <script type="text/javascript" src="/static/js/rockerbox/crusher/ui.funnel.js"></script>
 <script type="text/javascript" src="/static/js/rockerbox/crusher/ui.funnel.action.js"></script>
 <script type="text/javascript" src="/static/js/rockerbox/crusher/ui.funnel.show.js"></script>
@@ -61,8 +67,11 @@
 <script type="text/javascript" src="/static/js/rockerbox/crusher/ui.funnel.campaign.js"></script>
 <script type="text/javascript" src="/static/js/rockerbox/crusher/ui.funnel.campaign.lookalike.js"></script>
 <script type="text/javascript" src="/static/js/rockerbox/crusher/ui.action.pattern.js"></script>
+<!--<script type="text/javascript" src="/static/js/rockerbox/crusher/mock.json"></script>-->
+
 <script type="text/javascript" src="/static/js/rockerbox/rho/ui.js"></script>
 <script type="text/javascript" src="/static/js/rockerbox/rho/ui.filter.js"></script>
+<script type="text/javascript" src="/static/js/rockerbox/crusher/ui.helpers.js"></script>
 <script type="text/javascript" src="/static/js/rockerbox/visit_urls.js"></script>
 <script type="text/javascript" src="/static/js/bootstrap-switch.js"></script>
 <script type="text/javascript" src="/static/js/jquery.serialize-object.js"></script>
@@ -96,6 +105,67 @@ $(function() {
   ga('create', 'UA-50457693-2', 'auto');
   ga('send', 'pageview');
 </script>
+<style>
+.bar-series, .bar.series { padding-bottom:20px }
+.behavior .area {
+  fill-opacity: 1;
+  fill: none;
+}
+.before-wrapper .bar-row-header text {
+  font-weight:normal; font-size:12px
+}
+.bar.positive {
+  fill:rgb(49, 163, 84)
+}
+.bar.negative {
+  fill:rgb(230, 85, 13)
+}
+.item.selected {
+        font-weight:bold;
+}
+.item.selected:after, .item.selected:before {
+	top: 95%;
+	left: 50%;
+	border: solid transparent;
+	content: " ";
+	height: 0;
+	width: 0;
+	position: absolute;
+	pointer-events: none;
+}
+
+.item.selected:after {
+	border-color: rgba(255, 255, 255, 0);
+	border-top-color: #fff;
+	border-width: 10px;
+	margin-left: -10px;
+}
+.item.selected:before {
+	border-color: rgba(240, 240, 240, 0);
+	border-top-color: #f0f0f0;
+	border-width: 11px;
+	margin-left: -11px;
+}
+rect.bordered {
+  stroke: #fff;
+  stroke-width:1.5px;   
+}
+
+text.mono {
+  font-size: 7.5pt;
+  fill: #aaa;
+}
+
+text.axis-workweek {
+  fill: #000;
+}
+
+text.axis-worktime {
+  fill: #000;
+}
+.timing .axis {opacity:1}
+
+</style>
 {% end %}
 {% block scripts_bottom %}{% end %}
 {% block content %}

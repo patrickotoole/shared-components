@@ -237,7 +237,7 @@ RB.crusher.ui.action = (function(action) {
 
     actionView.enter()
       .append("div")
-      .classed("action-view",true)
+      .classed("action-view row",true)
       .classed("hidden",function(x){return !x.action_id})
 
     actionView.exit().remove()
@@ -725,7 +725,7 @@ RB.crusher.ui.action = (function(action) {
           $.toast({
             heading: "Something went wrong",
             text: "You can't create a segment without specifying a search pattern",
-            position: "bottom-right",
+            position: "top-right",
             icon: "error"
           })
         }

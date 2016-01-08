@@ -85,7 +85,7 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 
 	gettingstarted.step1 = function(row, actions) {
 		gettingstarted.progress_indicator(row, 1);
-		
+
 		var step_wrapper = d3_updateable(row, '.step-wrapper', 'section')
 			.classed('ct-chart col-md-9 gettingstarted-step step-wrapper', true)
 
@@ -133,7 +133,7 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 					$.toast({
 						heading: 'Success',
 						text: 'Pixel has been succesfully setup!',
-						position: 'bottom-right',
+						position: 'top-right',
 						icon: 'success',
 						stack: 1
 					});
@@ -142,7 +142,7 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 					$.toast({
 						heading: 'Setup your pixel',
 						text: 'Pixel has not been setup yet. Please setup your pixel and click on the verification button.',
-						position: 'bottom-right',
+						position: 'top-right',
 						stack: 1
 					});
 				}
@@ -267,7 +267,7 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 									$.toast({
 										heading: 'Something went wrong',
 										text: toast_message,
-										position: 'bottom-right',
+										position: 'top-right',
 										icon: 'error',
 										hideAfter: false,
 										stack: 1
@@ -394,9 +394,9 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 						break;
 				}
 			});
-		
+
 	}
-	
+
 	return gettingstarted;
 
 })(RB.crusher.ui.gettingstarted || {}, RB.crusher );
