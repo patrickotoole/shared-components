@@ -4,3 +4,15 @@
 		height: 100%;
 	}
 }
+
+.page_tabs_item {
+	padding: 20px 30px;
+	display: inline-block;
+	border-right: solid 1px rgb(240, 240, 240);
+	cursor: pointer;
+}
+
+.page_tabs_item.active {
+	background-color: #FFF;
+	font-weight: bold;
+}
