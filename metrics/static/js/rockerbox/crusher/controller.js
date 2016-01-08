@@ -9,7 +9,7 @@ RB.crusher.controller = (function(controller) {
   var source = crusher.api.source
 
   controller.init = function(type,data) {
-    crusher.subscribe.add_subscriber(["advertiser"], function(advertiser_data) {
+    crusher.subscribe.add_subscriber(["advertiser", "current_user"], function(advertiser_data, current_user) {
       setTimeout(function() {
         var user_type = document.cookie.split("user_type=")[1].split(";")[0];
         switch(user_type) {
@@ -25,9 +25,9 @@ RB.crusher.controller = (function(controller) {
             break;
           case 'client':
             var user = {
-              'id': advertiser_data.external_advertiser_id,
-              'name': advertiser_data.contact_name,
-              'email': advertiser_data.email
+              'id': current_user.advertiser_id,
+              'name': advertiser_data.advertiser_name + ' (' + current_user.firstname + ' ' + current_user.last_name + ')',
+              'email': current_user.user_email
             };
 
             heap.identify({

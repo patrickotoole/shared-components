@@ -2,16 +2,16 @@ BRAND_QUERY = "select external_id id, external_advertiser_id advertiser_id from 
 
 MATERIALIZED_VIEW = "SELECT * from reporting.bucket_reporting where external_advertiser_id = %(advertiser_id)s"
 EXPORT_MATERIALIZED_VIEW = """
-SELECT 
-    date, 
+SELECT
+    date,
     sum(imps) imps,
     sum(visible) views,
     sum(visits) visits ,
     sum(clicks) clicks,
     sum(is_valid) conversions,
     sum(media_cost) media_cost
-from reporting.bucket_reporting 
-where external_advertiser_id = %(advertiser_id)s 
+from reporting.bucket_reporting
+where external_advertiser_id = %(advertiser_id)s
 group by date
 """
 
@@ -19,9 +19,9 @@ ADMIN_MATERIALIZED_VIEW = "SELECT * from reporting.bucket_reporting_admin where 
 
 
 IMPS_QUERY = """
-select 
+select
     a.bucket_name,
-    a.date, 
+    a.date,
     a.campaign_id,
     a.imps,
     a.clicks,
@@ -42,9 +42,9 @@ from (
         sum(case when v4.cpm_multiplier is null then 0 else v4.media_cost*v4.cpm_multiplier end) as media_cost
     from
         reporting.v4_reporting v4
-    left 
+    left
         join campaign_bucket cb
-    on 
+    on
         v4.campaign_id = cb.campaign_id
     where
         (
@@ -61,9 +61,9 @@ from (
     group by 1,4
 ) a
 
-left join 
-    reporting.campaign_bucket_viewability cbv 
-on 
+left join
+    reporting.campaign_bucket_viewability cbv
+on
     cbv.bucket = a.bucket_name and
     cbv.datetime = a.date and
     cbv.external_advertiser_id = a.external_advertiser_id
@@ -276,10 +276,10 @@ WHERE
 """
 
 ADMIN_LOGINS= """
-SELECT 
+SELECT
     a.advertiser_name,
     u.username,'admin' as password,
-    external_advertiser_id as advertiser_id 
+    external_advertiser_id as advertiser_id
 FROM rockerbox.advertiser a LEFT JOIN rockerbox.user u ON a.external_advertiser_id=u.advertiser_id 
 WHERE u.username like 'a\_%' and a.deleted=0
 """
@@ -325,7 +325,7 @@ LIMIT %(limit)s
 ADVERTISER_NAME_TO_ID = """
 SELECT external_advertiser_id
 FROM rockerbox.advertiser
-WHERE 
+WHERE
     pixel_source_name="{}" AND
     deleted=0
 """
@@ -333,16 +333,16 @@ WHERE
 ADVERTISER_ID_TO_NAME = """
 SELECT pixel_source_name as name
 FROM rockerbox.advertiser
-WHERE 
+WHERE
     external_advertiser_id=%s AND
     deleted=0
 """
 
 TOP_URLS = """
 SELECT %(fields)s
-FROM reporting.pixel_url_analytics 
-WHERE %(where)s 
-GROUP BY %(groups)s 
+FROM reporting.pixel_url_analytics
+WHERE %(where)s
+GROUP BY %(groups)s
 ORDER BY views DESC
 LIMIT %(limit)s
 """

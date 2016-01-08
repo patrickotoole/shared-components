@@ -76,6 +76,18 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
         });
       });
     });
+
+  endpoints.current_user = new api.helpers.genericQueuedAPI(function(cb,deferred_cb) {
+    if (!cache.current_user) {
+      d3.json("/login?format=json", function(dd){
+        // console.log('THIS IS THE LOGIN ENDPOINT', dd)
+        cache.current_user = dd
+
+        deferred_cb(null,cb.bind(false,cache.current_user))
+      })
+    } else {
+      deferred_cb(null,cb.bind(false,cache.current_user))
+    }
   })
 
   endpoints.pattern_status = api.helpers.genericQueuedAPIWithData(function(data,cb,deferred_cb) {
@@ -423,6 +435,8 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
           .get(function(err,rawData){
             var dd = JSON.parse(rawData.response)
             action.clusters = dd.clusters
+            action.uid_clusters = dd.uid_clusters
+            action.similarity = dd.similarity
 
             deferred_cb(null,cb.bind(false,action))
 
