@@ -20,6 +20,9 @@ RB.crusher.ui.tabs = (function(tabs) {
     },{
       "name":"Timing",
       "class":"timing"
+    },{
+      "name":"Comparison",
+      "class":"comparison"
     }]
 
     var action_tabs = d3_updateable(wrapper,".action-tabs","div")
@@ -33,10 +36,10 @@ RB.crusher.ui.tabs = (function(tabs) {
       .style("height","40px")
       .style("line-height","40px")
       .datum(data)
-    
+
     var items = d3_splat(tabs,".item","a",function(x){return x}, function(x){return x.name})
       .attr("href",function(x){return "#" + x.class})
-      .classed("item col-md-3",true)
+      .classed("item col-sm-2",true)
       .classed("selected",function(x,i){return i == 0})
       .style("color","#5a5a5a")
       .style("text-decoration","none")
@@ -55,11 +58,11 @@ RB.crusher.ui.tabs = (function(tabs) {
           .classed("selected",true)
 
       })
-    
+
   }
 
   tabs.item = function(wrapper) {
-    
+
   }
 
   return tabs

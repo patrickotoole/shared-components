@@ -27,9 +27,6 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
       }
 
       run_uid()
-
-
-
   })
 
   endpoints.segment_pixel_status = api.helpers.genericQueuedAPIWithData(function(segment,cb,deferred_cb) {
@@ -59,6 +56,26 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
       deferred_cb(null,cb.bind(false,cache.advertiserData))
     }
   })
+
+  endpoints.comparison = new api.helpers.genericQueuedAPIWithData(function(input,cb,deferred_cb) {
+    d3.json("/crusher/pattern_search/timeseries?search=" + input.segmentA, function(segmentA_data) {
+      d3.json("/crusher/pattern_search/timeseries?search=" + input.segmentB, function(segmentB_data) {
+        d3.json("/crusher/multi_search/uids?search=" + input.segmentA + '>' + input.segmentB, function(intersection_data) {
+
+          comparisonData = {
+            segmentA: segmentA_data.domains.slice(0,40),
+            segmentB: segmentB_data.domains.slice(0,40),
+            intersection_data: {
+              segmentA: intersection_data.results[0].total_count,
+              segmentB: intersection_data.results[1].total_count,
+              intersection: intersection_data.summary.intersection_size
+            }
+          };
+          console.log('Comparison data....yo...', comparisonData);
+          deferred_cb(null,cb.bind(false,comparisonData));
+        });
+      });
+    });
 
   endpoints.current_user = new api.helpers.genericQueuedAPI(function(cb,deferred_cb) {
     if (!cache.current_user) {
@@ -386,7 +403,6 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
               onsite: dd.hourly_visits
             }
 
-
             deferred_cb(null,cb.bind(false,action))
 
           })
@@ -421,7 +437,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
             action.clusters = dd.clusters
             action.uid_clusters = dd.uid_clusters
             action.similarity = dd.similarity
-            
+
             deferred_cb(null,cb.bind(false,action))
 
           })
