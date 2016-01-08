@@ -821,13 +821,6 @@ RB.crusher.controller = (function(controller) {
       "hide_href": true
     },
     {
-      "name":"Comparison",
-      "push_state": "/crusher/comparison",
-      "class": "glyphicon glyphicon-adjust",
-      "values_key": "action_name"
-
-    },
-    {
       "name":"Funnels (alpha)",
       "push_state": "/crusher/funnel",
       "class": "glyphicon glyphicon-filter"
