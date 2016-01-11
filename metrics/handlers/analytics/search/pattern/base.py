@@ -209,6 +209,9 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
 
         def uid_summary(x):
             bucket_sessions = sessions.ix[list(set(x))]
+            if len(bucket_sessions[~bucket_sessions.visits.isnull()]) == 0:
+                return [{}]
+
             urls = raw_urls[raw_urls.uid.isin(list(set(x)))]
             merged = urls.merge(url_to_action.reset_index(),on="url",how="left")
 
@@ -221,16 +224,19 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
             session_visits = bucket_sessions.groupby("visits")['visits'].agg({"sessions":len,"total_visits":sum})
 
 
-            return [{
+            ll = [{
                 "session_starts": start_hours.reset_index().T.to_dict().values(),
                 "session_length": session_length.reset_index().T.to_dict().values(),
                 "session_visits": session_visits.reset_index().T.to_dict().values(),
                 "actions": [{"key":i,"values":j} for i,j in actions_by_hour.T.reset_index().to_dict().items() if i != "index"]
             }]
+
+            return ll
             
 
+
         xx = domains_with_cat.groupby(["parent_category_name","hour"])['uid'].agg({
-            "visits":lambda x: len(x), 
+            "visits":  lambda x: len(x), 
             "uniques": lambda x: len(set(x)), 
             "on_site": uid_summary
         })
