@@ -57,6 +57,7 @@ RB.crusher.ui.action = (function(action) {
 
     var current_segment = d3_updateable(segments_list, '.segments-list-item', 'input')
       .classed('segments-list-item', true)
+      .attr('disabled', true)
       .attr('value', segments[0])
 
     var current_segment_select = d3_updateable(segments_list, '.segments-list-item-select', 'select')
@@ -201,6 +202,10 @@ RB.crusher.ui.action = (function(action) {
         var comparison_columns = d3_updateable(target, '.comparison-columns', 'div')
           .classed('comparison-columns', true)
 
+        var comparison_loading_indicator = d3_updateable(comparison_columns, '.loading-indicator', 'div')
+          .classed('loading-indicator', true)
+          .html('<img src="/static/img/general/ajax-loader.gif"><p>Loading comparison data...</p>');
+
         var column1 = d3_updateable(comparison_columns, '.comparison-column1', 'div')
           .classed('comparison-column1 comparison-column', true)
 
@@ -337,6 +342,7 @@ RB.crusher.ui.action = (function(action) {
         }
 
         function renderComparison() {
+          comparison_columns.classed('loading-comparison', true);
           var input_data = {
             segmentA: segments[0],
             segmentB: segments[1]
@@ -365,6 +371,8 @@ RB.crusher.ui.action = (function(action) {
             drawIntersection(comparison_data.intersection_data.segmentA, comparison_data.intersection_data.segmentB, comparison_data.intersection_data.intersection)
             horizontalBarGraph('left', segmentA, segmentA_hits, max_hits)
             horizontalBarGraph('right', segmentB, segmentB_hits, max_hits)
+
+            comparison_columns.classed('loading-comparison', false);
           }, "comparison-data", true, false, input_data);
         }
 

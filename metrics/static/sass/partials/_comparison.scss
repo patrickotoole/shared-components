@@ -37,6 +37,22 @@
 .comparison-columns {
   text-align: center;
   background-color: #FFF;
+
+  .loading-indicator {
+    padding: 20px;
+    opacity: .7;
+    display: none;
+  }
+}
+
+.loading-comparison {
+  .loading-indicator {
+    display: block !important;
+  }
+
+  .comparison-column {
+    display: none;
+  }
 }
 
 .comparison-column {
@@ -44,4 +60,12 @@
   min-height: 50px;
   display: inline-block;
   background-color: #FFF;
+}
+
+.bar-series.comparison {
+  padding: 0;
+
+  .title, .value, .description {
+    display: none;
+  }
 }
