@@ -251,7 +251,7 @@ RB.crusher.ui.action.comparison = (function(comparison,action,crusher) {
   comparison.EVENTS = []
   comparison.subscription = function(data, actionTimeseries, actions) {
     var target = d3.selectAll(".action-view-wrapper")
-    crusher.ui.action.show_comparison(target, actions)
+    crusher.ui.action.show_comparison(target, actions, data)
     return data;
   }
 
