@@ -8,7 +8,7 @@ logging.basicConfig(level=logging.INFO, format=formatter)
 
 logger = logging.getLogger()
 
-class seg_cache:
+class ActionCache:
 
 	def __init__(self, username, password):
 		self.username = username
