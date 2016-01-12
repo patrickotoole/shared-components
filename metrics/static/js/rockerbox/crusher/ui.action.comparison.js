@@ -220,9 +220,9 @@ RB.crusher.ui.action = (function(action) {
         var comparison_columns = d3_updateable(target, '.comparison-columns', 'div')
           .classed('comparison-columns', true)
 
-        var comparison_loading_indicator = d3_updateable(comparison_columns, '.loading-indicator', 'div')
-          .classed('loading-indicator', true)
-          .html('<img src="/static/img/general/ajax-loader.gif"><p>Loading comparison data...</p>');
+        var comparison_loading_indicator = d3_updateable(comparison_columns, '.loading-icon', 'div')
+          .classed('loading-icon', true)
+          .html('<img src="/static/img/general/logo-small.gif" alt="Logo loader"> Loading comparison...');
 
         var column1 = d3_updateable(comparison_columns, '.comparison-column1', 'div')
           .classed('comparison-column1 comparison-column', true)
@@ -367,7 +367,9 @@ RB.crusher.ui.action = (function(action) {
         }
 
         function renderComparison() {
+          comparison_wrapper.classed('loading-comparison', true);
           comparison_columns.classed('loading-comparison', true);
+
           var input_data = {
             segmentA: segments[0],
             segmentB: segments[1]
@@ -397,6 +399,7 @@ RB.crusher.ui.action = (function(action) {
             horizontalBarGraph('left', segmentA, segmentA_hits, max_hits)
             horizontalBarGraph('right', segmentB, segmentB_hits, max_hits)
 
+            comparison_wrapper.classed('loading-comparison', false);
             comparison_columns.classed('loading-comparison', false);
           }, "comparison-data", true, false, input_data);
         }
