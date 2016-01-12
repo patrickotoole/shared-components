@@ -3,9 +3,7 @@ RB.crusher = RB.crusher || {}
 RB.crusher.ui = RB.crusher.ui || {}
 
 RB.crusher.ui.action = (function(action) {
-
-  action.show_comparison = function(wrapper, all_segments) {
-
+  action.show_comparison = function(wrapper, all_segments, data) {
     var title = "Comparison",
       series = ["comparison"],
       formatting = ".col-md-12.action-comparison",
@@ -29,7 +27,7 @@ RB.crusher.ui.action = (function(action) {
 
     },1)
 
-    var segments = ['/wishlist', 'cart'];
+    var segments = [data.action_name];
 
     var comparison_wrapper = d3_updateable(target, '.comparison-wrapper', 'div')
       .classed('comparison-wrapper', true)
@@ -113,7 +111,7 @@ RB.crusher.ui.action = (function(action) {
               .attr('r', r1)
               .style('fill', 'steelblue')
               .on('click', function() {
-                alert('SEGMENT ONE');
+                // alert('SEGMENT ONE');
               });
 
             d3_updateable(svg, '.circleB', 'circle')
@@ -123,7 +121,7 @@ RB.crusher.ui.action = (function(action) {
               .attr('r', r2)
               .style('fill', 'orange')
               .on('click', function() {
-                alert('SEGMENT TWO');
+                // alert('SEGMENT TWO');
               });
 
           var interPoints = intersection(x1, y1, r1, x2, y2, r2);
@@ -140,7 +138,7 @@ RB.crusher.ui.action = (function(action) {
             })
             .style('fill', 'red')
             .on('click', function() {
-              alert('INTERSECTION');
+              // alert('INTERSECTION');
             });
 
           function intersection(x0, y0, r0, x1, y1, r1) {
