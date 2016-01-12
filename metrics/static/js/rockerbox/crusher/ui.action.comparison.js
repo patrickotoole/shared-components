@@ -64,8 +64,30 @@ RB.crusher.ui.action = (function(action) {
         renderComparison();
       });
 
+      var initial_comparing_segment_found = false;
       var segments_list_items = d3_splat(current_segment_select, '.segment-list-item-select-option', 'option', all_segments, function(x, i) {
           return x.action_name;
+        })
+        .attr('selected', function(x, i) {
+          if(all_segments.length >= 3) {
+            if(i === 0 && x.action_name != '' && x.action_name != segments[1]) {
+              segments[1] = x.action_name;
+              initial_comparing_segment_found = true;
+              return true;
+            }
+
+            if(initial_comparing_segment_found !== true && i === 1 && x.action_name != '' && x.action_name != segments[1]) {
+              segments[1] = x.action_name;
+              initial_comparing_segment_found = true;
+              return true;
+            }
+
+            if(initial_comparing_segment_found !== true && i === 2 && x.action_name != '' && x.action_name != segments[1]) {
+              segments[1] = x.action_name;
+              initial_comparing_segment_found = true;
+              return true;
+            }
+          }
         })
         .text(function(x) {
           if (x.action_name != '') {
@@ -378,6 +400,8 @@ RB.crusher.ui.action = (function(action) {
             comparison_columns.classed('loading-comparison', false);
           }, "comparison-data", true, false, input_data);
         }
+
+        renderComparison();
 
   }
   return action
