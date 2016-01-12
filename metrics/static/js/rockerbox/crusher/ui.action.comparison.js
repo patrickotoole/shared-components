@@ -9,8 +9,6 @@ RB.crusher.ui.action = (function(action) {
       formatting = ".col-md-12.action-comparison",
       description = "Compare this segment to another segment"
 
-    console.log(wrapper.datum())
-
     var domains = wrapper.datum().domains
 
     var target = RB.rho.ui.buildSeriesWrapper(wrapper.selectAll(".action-body"), title, series, [wrapper.datum()], formatting, description)
@@ -212,6 +210,13 @@ RB.crusher.ui.action = (function(action) {
 
 
         function horizontalBarGraph(orientation, domains, hits, max_hits) {
+          // Remove NA
+          var indexOfNA = domains.indexOf('NA');
+          if(indexOfNA > -1) {
+            domains.splice(indexOfNA, 1)
+            hits.splice(indexOfNA, 1)
+          }
+
           var column_width = 400;
           var colors = ['steelblue'];
           var grid = d3.range(25).map(function(i) {
