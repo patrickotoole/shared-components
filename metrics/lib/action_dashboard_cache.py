@@ -56,7 +56,7 @@ class ActionCache:
 			df = json_normalize(data['data'])
 			logging.info("API returned %s records and converted to dataframe for segment %s for advertiser %s" % (len(df), url_pattern, self.username))
 		except:
-			logging.error("Error with data response for advertiser %s segment %s, text from response is %s" % (advertiser, action_name, results.text()))
+			logging.error("Error with data response for advertiser username %s segment %s, text from response is %s" % (self.username, action_name, df))
 		return df
 
 
@@ -69,7 +69,7 @@ class ActionCache:
 				to_insert = frame.ix[batch*50+1:(batch+1)*50]	
 			if len(to_insert)>0:
 				self.sql_query(to_insert, table_name, columns, con, keys)
-				logging.info("inserted %s records for advertiser %s" % (len(to_insert), self.username))
+				logging.info("inserted %s records for advertiser username (includes a_) %s" % (len(to_insert), self.username))
 
 	def seg_loop(self, segments, advertiser):
 		for seg in segments:
@@ -96,7 +96,8 @@ if __name__ == "__main__":
 		segs = ActionCache(advert[0], advert[1], lnk.dbs.rockerbox)
 		segs.auth()
 		s=segs.get_segments()
-		segs.seg_loop(s, advert[0].replace("a_",""))
+		advertiser_name = str(advert[0].replace("a_",""))
+		segs.seg_loop(s, advertiser_name)
 
 
 
