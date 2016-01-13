@@ -28,20 +28,24 @@ class ActionCache:
 	def get_segments(self):
 		url = "http://crusher.getrockerbox.com/crusher/funnel/action?format=json"
 		results = self.req.get(url,cookies=self.cookie)
-		raw_results = results.json()['response']
-		segments = []
-		for result in raw_results:
-			single_seg = {"url_pattern": result['url_pattern'], "action_name":result['action_name'], "action_id":result['action_id']}
-			segments.append(single_seg)
-		logging.info("returned %s segments for advertiser %s" % (len(segments), self.username))
+		try:	
+			raw_results = results.json()['response']
+			segments = []
+			for result in raw_results:
+				single_seg = {"url_pattern": result['url_pattern'], "action_name":result['action_name'], "action_id":result['action_id']}
+				segments.append(single_seg)
+			logging.info("returned %s segments for advertiser %s" % (len(segments), self.username))
+		except:
+			logging.error("error getting cookie for advertise with username: %s" % self.username)
 		return segments
 
 	def make_request(self, url_pattern, advertiser, action_name, action_id):
-		logging.info("calling segment %s" % url_pattern[0])
-		url = "http://crusher.getrockerbox.com/crusher/pattern_search/timeseries?search=%s&num_days=2" % url_pattern[0]
-		results = self.req.get(url, cookies=self.cookie)
 		df = pandas.DataFrame()
-		try:	
+		try:
+			logging.info("calling segment %s" % url_pattern[0])
+			url = "http://crusher.getrockerbox.com/crusher/pattern_search/timeseries?search=%s&num_days=2" % url_pattern[0]
+			results = self.req.get(url, cookies=self.cookie)
+			df = pandas.DataFrame()
 			resultsAsJson = results.json()['domains']
 			data = {}
 			data['data'] = []
