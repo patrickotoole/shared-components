@@ -75,6 +75,7 @@ class AdvertiserRoutes(Routes):
         import handlers.pixel_status as pixel_status
 
         return [
+            (r'/dashboard_cache', analytics.ActionDashboardHandler, self.connectors),
             (r'/domain/idf.*', analytics.DomainIDFHandler, self.connectors), 
             (r'/visit_urls', analytics.VisitUrlsHandler, self.connectors),
             (r'/visit_uids', analytics.VisitUidsHandler, self.connectors),
@@ -104,7 +105,8 @@ class AdvertiserRoutes(Routes):
             (r'/funnel', funnel.FunnelHandler, self.connectors),
             (r'/?', funnel.FunnelHandler, self.connectors),
             (r'/.*?', funnel.FunnelHandler, self.connectors),
-            (r'/funnel/(.*?)', funnel.FunnelHandler, self.connectors)
+            (r'/funnel/(.*?)', funnel.FunnelHandler, self.connectors),
+
         ]     
 
     @connectors("reporting_db","api")
