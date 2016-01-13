@@ -96,7 +96,7 @@ if __name__ == "__main__":
 		segs = ActionCache(advert[0], advert[1], lnk.dbs.rockerbox)
 		segs.auth()
 		s=segs.get_segments()
-		segs.seg_loop(s, advert[0])
+		segs.seg_loop(s, advert[0].replace("a_",""))
 
 
 
