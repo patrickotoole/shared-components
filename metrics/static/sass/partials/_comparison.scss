@@ -38,15 +38,34 @@
   text-align: center;
   background-color: #FFF;
 
-  .loading-indicator {
+  .loading-icon {
     padding: 20px;
-    opacity: .7;
+    display: none;
+    position: relative;
+    top: -210px;
+  }
+}
+
+// header.loading-comparison {
+//   background-color: #FFF;
+// }
+
+.loading-comparison {
+  header {
+    background: #FFF !important;
+    -webkit-transition: background-color .3s, -webkit-transform .3s;
+    transition: background-color .3s, transform .3s;
+  }
+
+  .comparison-svg {
     display: none;
   }
 }
 
-.loading-comparison {
-  .loading-indicator {
+.loading-comparison.comparison-columns {
+  height: 0;
+
+  .loading-icon {
     display: block !important;
   }
 
