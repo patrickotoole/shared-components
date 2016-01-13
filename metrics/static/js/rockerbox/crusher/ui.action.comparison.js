@@ -231,13 +231,15 @@ RB.crusher.ui.action = (function(action) {
           .classed('comparison-column2 comparison-column', true)
 
 
-        function horizontalBarGraph(orientation, domains, hits, max_hits) {
+        function horizontalBarGraph(orientation, domains, hits, max_hits, categories) {
           // Remove NA
           var indexOfNA = domains.indexOf('NA');
           if(indexOfNA > -1) {
             domains.splice(indexOfNA, 1)
             hits.splice(indexOfNA, 1)
           }
+
+          domains.slice(0,40)
 
           var column_width = 400;
           var colors = ['steelblue'];
@@ -359,7 +361,12 @@ RB.crusher.ui.action = (function(action) {
               }
             })
             .style('fill', function(d, i) {
-              return colorScale(i);
+              // console.log('CATEGORIES', categories[i], )
+              if(typeof categories !== typeof undefined) {
+                return action.category_colors(categories[i]);
+              } else {
+                return '#000';
+              }
             })
             .attr('width', function(d) {
               return (d / max_hits * 180) + 20;
@@ -371,33 +378,38 @@ RB.crusher.ui.action = (function(action) {
           comparison_columns.classed('loading-comparison', true);
 
           var input_data = {
+            segmentA_data: data.domains,
             segmentA: segments[0],
             segmentB: segments[1]
           };
 
           var segmentA = [''];
           var segmentA_hits = [];
+          var segmentA_categories = [];
 
           var segmentB = [''];
           var segmentB_hits = [];
+          var segmentB_categories = [];
 
           RB.crusher.subscribe.add_subscriber(["comparison"], function(comparison_data) {
             comparison_data.segmentA.forEach(function(domain, i) {
               segmentA.push(domain.domain);
               segmentA_hits.push(domain.count);
+              segmentA_categories.push(domain.parent_category_name);
             });
 
             comparison_data.segmentB.forEach(function(domain, i) {
               segmentB.push(domain.domain);
               segmentB_hits.push(domain.count);
+              segmentB_categories.push(domain.parent_category_name);
             });
 
             // var max_hits = [Math.max.apply(segmentA_hits), Math.max(segmentB_hits)];
             var max_hits = Math.max(segmentA_hits[0], segmentB_hits[0])
 
             drawIntersection(comparison_data.intersection_data.segmentA, comparison_data.intersection_data.segmentB, comparison_data.intersection_data.intersection)
-            horizontalBarGraph('left', segmentA, segmentA_hits, max_hits)
-            horizontalBarGraph('right', segmentB, segmentB_hits, max_hits)
+            horizontalBarGraph('left', segmentA, segmentA_hits, max_hits, segmentA_categories)
+            horizontalBarGraph('right', segmentB, segmentB_hits, max_hits, segmentB_categories)
 
             comparison_wrapper.classed('loading-comparison', false);
             comparison_columns.classed('loading-comparison', false);

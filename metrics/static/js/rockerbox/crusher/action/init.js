@@ -246,10 +246,10 @@ RB.component.export(RB.crusher.ui.action.clusters, RB.crusher.ui.action)
 
 RB.crusher.ui.action.comparison = (function(comparison,action,crusher) {
   comparison.NAME = "action.comparison"
-  comparison.SUBSCRIBE = ["action_initialized","actionTimeseries", "actions"]
+  comparison.SUBSCRIBE = ["action_initialized","actionTimeseries", "actions", "tf_idf_action"]
   comparison.PUBLISH = []
   comparison.EVENTS = []
-  comparison.subscription = function(data, actionTimeseries, actions) {
+  comparison.subscription = function(data, actionTimeseries, actions, idf) {
     var target = d3.selectAll(".action-view-wrapper")
     crusher.ui.action.show_comparison(target, actions, data)
     return data;

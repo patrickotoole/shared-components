@@ -58,22 +58,20 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
   })
 
   endpoints.comparison = new api.helpers.genericQueuedAPIWithData(function(input,cb,deferred_cb) {
-    d3.json("/crusher/pattern_search/timeseries?search=" + input.segmentA, function(segmentA_data) {
-      d3.json("/crusher/pattern_search/timeseries?search=" + input.segmentB, function(segmentB_data) {
-        d3.json("/crusher/multi_search/uids?search=" + input.segmentA + '>' + input.segmentB, function(intersection_data) {
-
-          comparisonData = {
-            segmentA: segmentA_data.domains.slice(0,40),
-            segmentB: segmentB_data.domains.slice(0,40),
-            intersection_data: {
-              segmentA: intersection_data.results[0].total_count,
-              segmentB: intersection_data.results[1].total_count,
-              intersection: intersection_data.summary.intersection_size
-            }
-          };
-          console.log('Comparison data....yo...', comparisonData);
-          deferred_cb(null,cb.bind(false,comparisonData));
-        });
+    d3.json("/crusher/pattern_search/timeseries?search=" + input.segmentB, function(segmentB_data) {
+      d3.json("/crusher/multi_search/uids?search=" + input.segmentA + '>' + input.segmentB, function(intersection_data) {
+          crusher.subscribe.add_subscriber(["tf_idf_action"],function(d) {
+            comparisonData = {
+              segmentA: input.segmentA_data.slice(0,41),
+              segmentB: segmentB_data.domains.slice(0,41),
+              intersection_data: {
+                segmentA: intersection_data.results[0].total_count,
+                segmentB: intersection_data.results[1].total_count,
+                intersection: intersection_data.summary.intersection_size
+              }
+            };
+            deferred_cb(null,cb.bind(false,comparisonData));
+          },"get_action_idf",true,true,segmentB_data);
       });
     });
   });

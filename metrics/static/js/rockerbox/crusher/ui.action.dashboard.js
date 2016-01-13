@@ -120,10 +120,10 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
         var action = missing_data[0];
         action.action_string = action.url_pattern.map(function(x){return x.split(" ").join(",")}).join("|")
         action.action_string = action.action_string + "&num_days=2"
-
         crusher.subscribe.add_subscriber(["actionTimeseries"],function(d) {
-
           crusher.subscribe.add_subscriber(["tf_idf_action"],function(d) {
+
+
 
             // make sure were still on the same page otherwise it will break
             var bool = funnelRow.datum().id == d3.select(".container div").datum().id
@@ -134,8 +134,6 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
 
               setTimeout(dashboard.widgets,1,funnelRow,odata)
             }
-
-            console.log(d)
           },"get_action_idf",true,true,action)
 
         },"get_action",true,true,action)
