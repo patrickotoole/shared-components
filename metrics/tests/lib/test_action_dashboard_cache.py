@@ -88,20 +88,20 @@ class ActionCacheTestCase(unittest.TestCase):
 
 	def test_insert_success_one_record(self):
 		df = pandas.DataFrame(JSON_FIXTURE_1)
-		i = self.instance.insert(df, "table_name", df.columns, "con", df.columns)
+		i = self.instance.insert(df, "table_name", "con", df.columns)
 		self.assertEquals(len(df), len(pandas.concat(self.futureFrames)))
 
 	def test_insert_success_multiple_records(self):
 		df = pandas.DataFrame(JSON_FIXTURE_2)
-		i = self.instance.insert(df, "table_name", df.columns, "con", df.columns)
+		i = self.instance.insert(df, "table_name", "con", df.columns)
 		self.assertEquals(len(df), len(pandas.concat(self.futureFrames)))
 
         def test_insert_failuree_no_data(self):
                 df = pandas.DataFrame(JSON_FIXTURE_3)
-                i = self.instance.insert(df, "table_name", df.columns, "con", df.columns)
+                i = self.instance.insert(df, "table_name", "con", df.columns)
                 self.assertEquals(len(pandas.concat(self.futureFrames)),1)
 
         def test_insert_failure_empty_set_response(self):
                 df = pandas.DataFrame(JSON_FIXTURE_4)
-                i = self.instance.insert(df, "table_name", df.columns, "con", df.columns)
+                i = self.instance.insert(df, "table_name", "con", df.columns)
                 self.assertEquals(len(self.futureFrames),0)
