@@ -22,7 +22,7 @@ class ActionDashboardHandler(BaseHandler):
 		q1 = SQL_QUERY_1 % (advertiser, number)
 		segments = self.db.select_dataframe(q1)
 		data = {'domains':[]}
-		for current_segment in segments.ix[:number].iterrows():
+		for current_segment in segments.ix[:int(number)].iterrows():
 			c_seg = current_segment[1]["action_name"]
 			q2 = SQL_QUERY_3 % (advertiser, c_seg)
 			seg_data = self.db.select_dataframe(q2)
