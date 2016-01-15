@@ -18,7 +18,7 @@ RB.crusher.ui.action = (function(action) {
       .key(function(x){return x.category_name})
       .rollup(function(x){
         return d3.sum(x.map(function(y){return y.count}))
-      }) 
+      })
       .entries(domainData)
 
     var parentCategoryData = d3.nest()
@@ -27,7 +27,7 @@ RB.crusher.ui.action = (function(action) {
       .entries(domainData)
       .sort(function(x,y){return y.values - x.values})
       .filter(function(x){return x.key != "NA"})
-      .slice(0,15)   
+      .slice(0,15)
 
     data.parentCategoryData = parentCategoryData;
 
@@ -39,7 +39,7 @@ RB.crusher.ui.action = (function(action) {
     action.category_pie(targetRow, domainData, action.category_colors)
     action.domain_table(targetRow, domainData)
 
-    
+
     //action.show_other(wrapper,newTs,categoryData,urlData)
 
   }
@@ -63,9 +63,9 @@ RB.crusher.ui.action = (function(action) {
 
         data.map(function(infoArray, index){
            dataString = Object.keys(infoArray).map(function(x){return infoArray[x]}).join(",");
-           csvContent += dataString+ "\n" 
+           csvContent += dataString+ "\n"
         });
-        
+
         var encodedUri = encodeURI(csvContent);
         window.open(encodedUri);
 
@@ -87,7 +87,7 @@ RB.crusher.ui.action = (function(action) {
 
     },1)
 
-    
+
     //d3.select(target.node().parentNode).classed("advertising-opportunities",true)
 
     return target
@@ -97,7 +97,7 @@ RB.crusher.ui.action = (function(action) {
 
     var domain_table = d3_updateable(targetRow,".domain-table","div",function(x){return x.domains})
       .classed("domain-table col-md-8 col-sm-12",true)
-     
+
     d3_updateable(domain_table,".table-title","div")
       .classed("table-title",true)
       .text("Domains ranked by importance")
@@ -117,11 +117,11 @@ RB.crusher.ui.action = (function(action) {
       .classed(formatter || "col-md-4 col-sm-12 pull-right",true)
 
     d3_updateable(target,".table-title","div")
-      .classed("table-title",true) 
+      .classed("table-title",true)
       .text("Percentage of user visits by category")
 
 
-    
+
     var formatData = function(data){
       return data.map(function(d){
         return { label: d.key, value: d.values }
@@ -156,10 +156,10 @@ RB.crusher.ui.action = (function(action) {
     })
 
 
-    
 
 
-    
+
+
   }
 
   action.category_table = function(newTs,categoryData) {
@@ -179,13 +179,13 @@ RB.crusher.ui.action = (function(action) {
     action.show_cloud(pull_left,urlData)
 
     RB.rho.ui.buildBarSummary(
-      pull_left,urlData,"On-site pages",["url"], " ", 
+      pull_left,urlData,"On-site pages",["url"], " ",
       "Top on-site pages that match the action"
     )
 
     crusher.permissions("cache_stats", function(){
       RB.rho.ui.buildBarSummary(
-        pull_left,wrapper.datum().param_rolled,"On-site tracking parameters",["key"], " ", 
+        pull_left,wrapper.datum().param_rolled,"On-site tracking parameters",["key"], " ",
         "Top tracking parameters",true
       )
     })
@@ -193,4 +193,4 @@ RB.crusher.ui.action = (function(action) {
 
   return action
 
-})(RB.crusher.ui.action || {})  
+})(RB.crusher.ui.action || {})

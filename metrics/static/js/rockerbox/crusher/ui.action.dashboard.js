@@ -22,22 +22,40 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
 
     }
 
-    dashboard.widgets = function(funnelRow,data) {
+    dashboard.widgets = function(funnelRow, data, cached_data) {
+      var funnelRow = funnelRow;
+      var odata = data;
+      var ocached_data = cached_data;
+      var segment_counts = [];
 
-      var funnelRow = funnelRow
-      var odata = data
+      cached_data.domains.forEach(function(segment, i) {
+        segment_counts.push({
+          title: segment.key,
+          domains: segment.values.length,
+          categories: []
+        });
+
+        segment.values.forEach(function(item) {
+          segment_counts[i].views = segment_counts[i].views + item.count;
+
+          if(typeof segment_counts[i].categories[item.parent_category_name] === typeof undefined) {
+            // Create category, doesn't exist yet
+            segment_counts[i].categories[item.parent_category_name] = item.count;
+          } else {
+            segment_counts[i].categories[item.parent_category_name] = segment_counts[i].categories[item.parent_category_name] + item.count;
+          }
+        });
+      });
 
       var data = data.slice(0,3)
         .map(function(x){
           x.views = x.views || ""
           return x
-        }).map(function(x){
+        }).map(function(x, i){
           obj = {
-            "key": x.action_name,
-            "Action name": x.action_name,
-            "views":x.views,
-            "visits":x.visits,
-            "uniques":x.uniques,
+            "key": segment_counts[i].title,
+            "Action name": segment_counts[i].title,
+            "views":segment_counts[i].views,
             "__proto__": x
           }
           return obj
@@ -48,8 +66,6 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
         "Action name": "ASDF",
         "views":""
       })
-
-
 
       var title = "Top existing actions",
         description = "These are the keywords that are most popular on your site",
@@ -64,7 +80,7 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
 
       var target = RB.rho.ui.buildWrappers(funnelRow,
         function(x){return x['Action name']},
-        "views", data, "col-md-4",
+        "views", data, "col-md-4 max-width-340  ",
         function(x){return x.description}, button
       )
 
@@ -115,67 +131,48 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
 
       var missing_data = odata.slice(0,3).filter(function(x){return !x.visits_data})
 
-      if (missing_data.length) {
-
-        var action = missing_data[0];
-        action.action_string = action.url_pattern.map(function(x){return x.split(" ").join(",")}).join("|")
-        action.action_string = action.action_string + "&num_days=2"
-        crusher.subscribe.add_subscriber(["actionTimeseries"],function(d) {
-          crusher.subscribe.add_subscriber(["tf_idf_action"],function(d) {
-
-
-
-            // make sure were still on the same page otherwise it will break
-            var bool = funnelRow.datum().id == d3.select(".container div").datum().id
-            if (!d.views && bool) {
-              d.views = d.visits_data[0].views
-              d.visits = d.visits_data[0].visits
-              d.uniques = d.visits_data[0].uniques
-
-              setTimeout(dashboard.widgets,1,funnelRow,odata)
-            }
-          },"get_action_idf",true,true,action)
-
-        },"get_action",true,true,action)
-
-
-      }
-
       var ddd = [{"key":"NA","values":1}]
 
       var category_pie = d3_updateable(target,".pie","div")
         .classed("pie",true)
+        pie_iterator = 0;
+        var category_pie = target.selectAll(".pie")
+          .classed("row",function(x){
+            if(pie_iterator < 3) {
+              // x.domains = x.values;
+              x.domains = ocached_data.domains[pie_iterator].values;
 
-
-
-      var category_pie = target.selectAll(".pie")
-        .classed("row",function(x){
-          x.parentCategoryData = ddd
-          if (x.domains && (x.parentCategoryData == ddd)) {
-            var parentCategoryData = d3.nest()
-              .key(function(x){return x.parent_category_name})
-              .rollup(function(x){ return x.reduce(function(p,c){return p + c.count},0) })
-              .entries(x.domains)
-              .sort(function(x,y){return y.values - x.values})
-              .filter(function(x){return x.key != "NA"})
-              .slice(0,15)
-
-            x.parentCategoryData = parentCategoryData
-
-          } else {
+            }
             x.parentCategoryData = ddd
-          }
-          return true
-        })
+            if (x.domains && (x.parentCategoryData == ddd)) {
+              var parentCategoryData = d3.nest()
+                .key(function(x){return x.parent_category_name})
+                .rollup(function(x){ return x.reduce(function(p,c){return p + c.count},0) })
+                .entries(x.domains)
+                .sort(function(x,y){return y.domains - x.domains})
+                .filter(function(x){return x.key != "NA"})
+                .slice(0,15)
+
+              x.parentCategoryData = parentCategoryData
+
+            } else {
+              x.parentCategoryData = ddd
+            }
+            pie_iterator++;
+            return true
+          })
 
 
-      RB.crusher.ui.action.category_pie(
-        category_pie, [], RB.crusher.ui.action.category_colors, "row col-md-12",
-        function(cb,x){ return cb(x) }
-      )
+        RB.crusher.ui.action.category_pie(
+          category_pie, [], RB.crusher.ui.action.category_colors, "row col-md-12",
+          function(cb,x){ return cb(x) }
+        )
 
-      category_pie.selectAll(".table-title")
-        .classed("hidden",true)
+        category_pie.selectAll(".table-title")
+          .classed("hidden",true)
+
+      funnelRow.selectAll(".series-wrapper")
+        .classed("max-width-300", true)
 
       var newAction = funnelRow.selectAll(".series-wrapper")
         .filter(function(x){return x.key == "new"})
@@ -214,11 +211,7 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
         .on("click",function(x){
           var xx = RB.crusher.controller.states["/crusher/action/recommended"]
           RB.routes.navigation.forward(xx)
-
         })
-
-
-
 
     }
 

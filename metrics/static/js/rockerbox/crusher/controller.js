@@ -734,13 +734,10 @@ RB.crusher.controller = (function(controller) {
         crusher.subscribe.publishers["action_all"](action)
 
       } else {
-
         // existing dashboard...
         var funnelRow = build_header({"id":"action_about","name":"Segments Dashboard"})
         var subscription = RB.crusher.ui.action.dashboard.widgets.bind(false,funnelRow)
-
-        crusher.subscribe.add_subscriber(["actions"],subscription ,"actionDashboard",true,true)
-
+        crusher.subscribe.add_subscriber(["actions", "dashboard_cached"], subscription, 'dashboard_cached', true, true);
       }
 
     },
