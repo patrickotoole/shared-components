@@ -27,8 +27,10 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
       var odata = data;
       var ocached_data = cached_data;
       var segment_counts = [];
+      var segment_names = [];
 
       cached_data.domains.forEach(function(segment, i) {
+        segment_names.push(segment.key);
         segment_counts.push({
           title: segment.key,
           domains: segment.values.length,
@@ -39,24 +41,27 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
 
         segment.values.forEach(function(item) {
           segment_counts[i].views = segment_counts[i].views + item.count;
-
-          if(typeof segment_counts[i].categories[item.parent_category_name] === typeof undefined) {
-            // Create category, doesn't exist yet
-            segment_counts[i].categories[item.parent_category_name] = item.count;
-          } else {
-            segment_counts[i].categories[item.parent_category_name] = segment_counts[i].categories[item.parent_category_name] + item.count;
-          }
         });
       });
 
-      var data = data.slice(0,3)
+      var data = data
+        .filter(function(x){
+          if(segment_names.indexOf(x.url_pattern[0]) != -1) {
+            var response = true;
+          } else {
+            var response = false;
+          }
+
+          return response;
+        })
         .map(function(x){
           x.views = x.views || ""
           return x
         }).map(function(x, i){
+          console.log('THIS IS THE FIXED X', x);
           obj = {
-            "key": segment_counts[i].title,
-            "Action name": segment_counts[i].title,
+            "key": x.action_name,
+            "Action name": x.action_name,
             "views":segment_counts[i].views,
             "__proto__": x
           }
@@ -75,9 +80,10 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
           "class_name": "gear glyphicon-cog glyphicon",
           "name": "",
           "click": function(x){
-            // RB.routes.navigation.forward(x.__proto__)
-            // d3.select(".edit").on("click")()
-            window.location.href = '/crusher/action/existing?id=' + x.key;
+            RB.routes.navigation.forward(x.__proto__)
+            setTimeout(function() {
+              d3.select(".edit").on("click")()
+            }, 100);
           }
         }
 
@@ -116,8 +122,7 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
           return x.views ? "1px solid #ccc" : undefined
         })
         .on("click",function(x){
-          // RB.routes.navigation.forward(x.__proto__)
-          window.location.href = '/crusher/action/existing?id=' + x.key;
+          RB.routes.navigation.forward(x.__proto__)
         })
         .html(function(x){
 
