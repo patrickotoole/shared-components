@@ -20,4 +20,7 @@
 
 .max-width-340 {
 	width: 340px;
+	.bar.series.views {
+		min-height: 315px;
+	}
 }
