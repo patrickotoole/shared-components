@@ -104,6 +104,7 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
         return x.views ? d3.format(",")(x.views) + " <span style='font-size:.7em'>views</span>" : ""
       }).style("font-size","16px")
         .style("font-weight","lighter")
+        .style("display", "none") // Temporary disabled until we have the correct data
 
       target.selectAll(".title")
         .style("font-size","18px")
