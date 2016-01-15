@@ -117,21 +117,25 @@ def run_advertiser(user, password):
 	advertiser_name = str(options.username.replace("a_",""))
 	segs.seg_loop(s,advertiser_name)
 
+def select_segment(segment_name, json_data):
+	segment = []
+	for result in json_data:
+		if(result['url_pattern'] == segment_name):
+			single_seg = {"url_pattern": result['url_pattern'], "action_name":result['action_name'], "action_id":result['action_id']}
+			segment.append(single_seg)
+	return segment
 
-def run_advertiser_segment(user, password, segment):
-	segs = ActionCache(options.username, options.password, lnk.dbs.rockerbox)
+def run_advertiser_segment(user, password, conn, segment):
+	segs = ActionCache(user, password, conn)
 	segs.auth()
 	s = segs.get_segments()
-	advertiser_name = str(options.username.replace("a_",""))
+	advertiser_name = str(user.replace("a_",""))
 	url = "http://crusher.getrockerbox.com/crusher/funnel/action?format=json"
-	results = self.req.get(url,cookies=self.cookie)
+	results = segs.req.get(url,cookies=segs.cookie)
 	segment = []
 	try:
 		raw_results = results.json()['response']
-		for result in raw_results:
-			if(result['url_pattern'][0] == segment):
-				single_seg = {"url_pattern": result['url_pattern'], "action_name":result['action_name'], "action_id":result['action_id']}
-				segment.append(single_seg)
+		segment = select_segment(segment, raw_results)
 		df = segs.make_request(segment[0]["url_pattern"], advertiser_name, segment[0]["action_name"], segment[0]["action_id"])
 		insert(df,"action_dashboard_cache", segs.con, ['advertiser', 'action_id', 'domain'])
 	except:
@@ -159,7 +163,7 @@ if __name__ == "__main__":
 		if options.segment == False:
 			run_advertiser(options.username, options.password)
 		else:
-			run_advertiser_segment(options.username, options.password, options.segment)
+			run_advertiser_segment(options.username, options.password, lnk.dbs.rockerbox, options.segment)
 
 	if options.remove_old == True:
 		lnk.dbs.rockerbox.excute(SQL_REMOVE_OLD % options.remove_seconds)

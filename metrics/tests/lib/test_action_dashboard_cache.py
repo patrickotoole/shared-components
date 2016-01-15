@@ -6,14 +6,20 @@ JSON_FIXTURE_1 = {'domains':[{"domain":"", "count":""}]}
 JSON_FIXTURE_2 = {'domains':[{"domain":"", "count":""}, {"domain":"","count":""},{"domain":"", "count":""}]}
 JSON_FIXTURE_3 = {'domains':[""]}
 JSON_FIXTURE_4 = {}
+JSON_FIXTURE_5 = {"response":[{"url_pattern":"", "action_name":"", "action_id":""}]} 
+JSON_FIXTURE_6 = {"response":[]}
+JSON_FIXTURE_7 = {}
+JSON_FIXTURE_8 = ""
 
-#FIXTURES = [{'domains':[{"domain":"", "count":""}]}, {'domains':[{"domain":"", "count":""}, {"domain":"","count":""},{"domain":"", "count":""}]}, {'domains':[""]}, {}]
 
-def get_helper1(url, cookies=None):
-	response = mock.MagicMock()
-	if(url=="http://crusher.getrockerbox.com/crusher/funnel/action?format=json"):
-		response.json.side_effect = lambda : {"response":[{"url_pattern":"", "action_name":"", "action_id":""}]}
+def buildHelper1(fix):
+	
+	def get_helper1(url, cookies=None):
+		response = mock.MagicMock()
+		response.json.side_effect = lambda : fix
 		return response
+
+	return get_helper1
 
 def post_helper(url, data):
 	response = mock.MagicMock()
@@ -43,7 +49,7 @@ class ActionCacheTestCase(unittest.TestCase):
 		self.instance = adc.ActionCache("username" ,"password", mock.MagicMock())
 		self.instance.req = mock.MagicMock()
 		self.instance.req.post.side_effect = post_helper
-		self.instance.req.get.side_effect = get_helper1
+		#self.instance.req.get.side_effect = get_helper1
 		self.futureFrames = []
 		self.instance.sql_query = mock.MagicMock(side_effect=buildSQLQuery(self.futureFrames))
 
@@ -53,10 +59,23 @@ class ActionCacheTestCase(unittest.TestCase):
 
 	def test_segments_query(self):
 		self.instance.auth()
+		self.instance.req.get.side_effect = mock.MagicMock(side_effect=buildHelper(JSON_FIXTURE_5))
 		segments = self.instance.get_segments()
 		self.assertIs(type(segments), list)
 		self.assertTrue(len(segments)>=1)
 		return segments
+
+	def test_segments_failure1(self):
+		self.instance.auth()
+		self.instance.req.get.side_effect = mock.MagicMock(side_effect=buildHelper1(JSON_FIXTURE_6))
+		segments = self.instance.get_segments()
+		return segments
+
+        def test_segments_failure1(self):
+                self.instance.auth()
+                self.instance.req.get.side_effect = mock.MagicMock(side_effect=buildHelper1(JSON_FIXTURE_7))
+		segments = self.instance.get_segments()
+                return segments
 
 	def test_request_succes_one_record(self):
 		self.instance.auth()
@@ -105,3 +124,5 @@ class ActionCacheTestCase(unittest.TestCase):
                 df = pandas.DataFrame(JSON_FIXTURE_4)
                 i = self.instance.insert(df, "table_name", "con", df.columns)
                 self.assertEquals(len(self.futureFrames),0)
+
+
