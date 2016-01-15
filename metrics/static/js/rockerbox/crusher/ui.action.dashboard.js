@@ -32,6 +32,8 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
         segment_counts.push({
           title: segment.key,
           domains: segment.values.length,
+          views: 0,
+          uniques: 0,
           categories: []
         });
 
