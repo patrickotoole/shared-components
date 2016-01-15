@@ -5,16 +5,16 @@ class IndexHandler(BaseHandler):
 
     def initialize(self, db=None):
         self.db = db
- 
+
     def get(self):
         advertiser_id = self.get_argument("advertiser_id", False)
-        pixel_source_name = self.get_argument("advertiser", False) 
+        pixel_source_name = self.get_argument("advertiser", False)
 
         if pixel_source_name:
             Q = "select external_advertiser_id from advertiser where pixel_source_name = '%s' "
             advertiser_id = str(self.db.select_dataframe(Q % pixel_source_name).external_advertiser_id[0])
 
-        if advertiser_id: 
+        if advertiser_id:
             self.set_secure_cookie( "advertiser",advertiser_id )
 
         production_links = [
@@ -45,8 +45,8 @@ class IndexHandler(BaseHandler):
             ("/admin/filter/domains","Delorean Domain"),
             ("/admin/filter","Delorean Filter Tool"),
 
-            ("/admin/filter/streaming","Delorean Monitoring -- Bubbles"), 
-            ("/admin/filter/sankey","Delorean Monitoring -- Sankey"),  
+            ("/admin/filter/streaming","Delorean Monitoring -- Bubbles"),
+            ("/admin/filter/sankey","Delorean Monitoring -- Sankey"),
 
         ]
 
@@ -54,7 +54,7 @@ class IndexHandler(BaseHandler):
             ("/admin/advertiser", "Advertiser Index"),
             ("/admin/advertiser/streaming", "Streaming Dashboard"),
             ("/admin/advertiser/streaming?limited=true", "Streaming Dashboard (limited)"),
-            ("/admin/trello", "Trello Dashboard") 
+            ("/admin/trello", "Trello Dashboard")
         ]
 
         hoverboard_links = [
@@ -99,25 +99,25 @@ class IndexHandler(BaseHandler):
             ("/admin/census/age_gender", "Age/Gender Census Data"),
             ("/admin/census/race", "Race Census Data")
         ]
-        
+
         datapipeline_links = [
-            ("http://graphite.getrockerbox.com/dashboard", "Graphite (Engineering)")
+            ("http://graphite.getrockerbox.com/dashboard/#will", "Graphite (Engineering)")
         ]
 
         deprecated = [
             ("/admin/advertiser/domain_list/reporting", "Domain List Impressions Available"),
             ("/admin/advertiser/segment", "Segment"),
-            ("/admin/advertiser/reporting", "[ALPHA] Reporting (unified)"), 
+            ("/admin/advertiser/reporting", "[ALPHA] Reporting (unified)"),
             ("/admin/money", "Money Tool"),
             ("/admin/segment/reporting", "Segment Avails Reporting"),
             ("/admin/viewable", "Viewability Analysis"),
             ("/admin/imps/", "Segment/DMA Analysis"),
             ("/admin/intraweek", "Intraweek Tool")
         ]
-        
+
         self.render(
-            '../templates/admin/index.html', 
-            production_links=production_links, 
+            '../templates/admin/index.html',
+            production_links=production_links,
             datapipeline_links=datapipeline_links,
             dashboard_links=dashboard_links,
             advertiser_viewability_links=advertiser_viewability_links,
