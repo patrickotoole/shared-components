@@ -3,7 +3,7 @@ import ujson
 from lib.helpers import decorators
 
 GET = """
-SELECT pixel_source_name as advertiser, action_name, action_id from action where %(where)s
+SELECT pixel_source_name as advertiser, action_name, action_id, action_type from action where %(where)s
 """
 
 GET_PATTERNS = """
@@ -56,10 +56,21 @@ class ActionDatabase(object):
 
         return joined.reset_index()
 
+    def get_vendor_actions(self, advertiser, vendor):
+        try:
+            where = "pixel_source_name = '%s' and action_type = '%s'" % (format(advertiser), format(vendor))
+            result = self.db.select_dataframe(GET % {"where":where})
+            patterns = self.get_patterns(result.action_id.tolist())
+            joined = result.set_index("action_id").join(patterns)
+            return joined.reset_index()
+        except: 
+            return pandas.DataFrame()
+
     def get_advertiser_actions(self, advertiser):
         try:
             where = "pixel_source_name = '{}'".format(advertiser)
             result = self.db.select_dataframe(GET % {"where":where})
+            import ipdb; ipdb.set_trace()
             patterns = self.get_patterns(result.action_id.tolist())
             joined = result.set_index("action_id").join(patterns)
 

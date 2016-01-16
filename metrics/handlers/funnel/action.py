@@ -45,10 +45,13 @@ class ActionHandler(BaseHandler,ActionAuth,APIHelpers,ActionDatabase):
     def get(self):
         advertiser = self.get_argument("advertiser", self.current_advertiser_name)
         action_id = self.get_argument("id",False)
-
+        action_type = self.get_argument("action_type",False)
+        
         try:
             if action_id:
                 results = self.get_advertiser_action(advertiser,action_id)
+            if action_type:
+                results = self.get_vendor_actions(advertiser, action_type)
             else:
                 results = self.get_advertiser_actions(advertiser)
 
