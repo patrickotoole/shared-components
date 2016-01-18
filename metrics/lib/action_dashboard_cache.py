@@ -73,7 +73,7 @@ class ActionCache:
 
 	def insert(self, frame, table_name, con, keys):
                 batch_num = int(len(frame) / 50)+1
-                for batch in range(0, batch_num):
+		for batch in range(0, batch_num):
 			if batch==0:
                         	to_insert = frame.ix[0:50]
 				to_insert['update_date'] = [current_datetime] * len(to_insert)
@@ -81,7 +81,11 @@ class ActionCache:
 				to_insert = frame.ix[batch*50+1:(batch+1)*50]
 				to_insert['update_date'] = [current_datetime] * len(to_insert)
 			if len(to_insert)>0:
-				self.sql_query(to_insert, table_name, list(to_insert.columns), con, keys)
+				try:
+					to_insert['domain'] = to_insert['domain'].map(lambda x : x.encode('utf-8'))
+					self.sql_query(to_insert, table_name, list(to_insert.columns), con, keys)
+				except:
+					logging.info("error with df %s" % str(to_insert))
 				logging.info("inserted %s records for advertiser username (includes a_) %s" % (len(to_insert), self.username))
 
 	def seg_loop(self, segments, advertiser):
@@ -120,12 +124,17 @@ def run_advertiser(user, password):
 def select_segment(segment_name, json_data):
 	segment = []
 	for result in json_data:
-		if(result['url_pattern'] == segment_name):
-			single_seg = {"url_pattern": result['url_pattern'], "action_name":result['action_name'], "action_id":result['action_id']}
-			segment.append(single_seg)
+		try:
+			if(result['url_pattern'][0] == segment_name):
+				single_seg = {"url_pattern": result['url_pattern'], "action_name":result['action_name'], "action_id":result['action_id']}
+				segment.append(single_seg)
+		except:
+			if(result['url_pattern'] == segment_name):
+                                single_seg = {"url_pattern": result['url_pattern'], "action_name":result['action_name'], "action_id":result['action_id']}
+                                segment.append(single_seg)
 	return segment
 
-def run_advertiser_segment(user, password, conn, segment):
+def run_advertiser_segment(user, password, conn, segment_name):
 	segs = ActionCache(user, password, conn)
 	segs.auth()
 	s = segs.get_segments()
@@ -135,11 +144,11 @@ def run_advertiser_segment(user, password, conn, segment):
 	segment = []
 	try:
 		raw_results = results.json()['response']
-		segment = select_segment(segment, raw_results)
+		segment = select_segment(segment_name, raw_results)
 		df = segs.make_request(segment[0]["url_pattern"], advertiser_name, segment[0]["action_name"], segment[0]["action_id"])
-		insert(df,"action_dashboard_cache", segs.con, ['advertiser', 'action_id', 'domain'])
+		segs.insert(df,"action_dashboard_cache", conn, ["advertiser", "action_id", "domain"])
 	except:
-		logging.error("Error with advertiser segment run for advertiser username %s and segment %s" % (user, segment))
+		logging.error("Error with advertiser segment run for advertiser username %s and segment %s" % (user, segment_name))
 
 if __name__ == "__main__":
 	from lib.report.utils.loggingutils import basicConfig
