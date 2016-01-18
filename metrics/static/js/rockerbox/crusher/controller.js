@@ -144,6 +144,393 @@ RB.crusher.controller = (function(controller) {
       )
 
     },
+    "vendors": function(obj) {
+      crusher.subscribe.add_subscriber(["actions"], function(segments) {
+        console.log('Segments', segments);
+      }, "vendors-data", true, false);
+
+      var visitor_data = [{
+        "key": "2015-12-30 00:00:00",
+        "values": {
+          "views": 10700,
+          "visits": 10100,
+          "uniques": 4900
+        },
+        "date": "2015-12-30 00:00:00",
+        "views": 10700,
+        "visits": 10100,
+        "uniques": 4900,
+        "url_pattern": ["necklace"]
+      }, {
+        "key": "2015-12-31 00:00:00",
+        "values": {
+          "views": 14500,
+          "visits": 13600,
+          "uniques": 5400
+        },
+        "date": "2015-12-31 00:00:00",
+        "views": 14500,
+        "visits": 13600,
+        "uniques": 5400,
+        "url_pattern": ["necklace"]
+      }, {
+        "key": "2016-01-01 00:00:00",
+        "values": {
+          "views": 18500,
+          "visits": 16000,
+          "uniques": 6100
+        },
+        "date": "2016-01-01 00:00:00",
+        "views": 18500,
+        "visits": 16000,
+        "uniques": 6100,
+        "url_pattern": ["necklace"]
+      }, {
+        "key": "2016-01-02 00:00:00",
+        "values": {
+          "views": 15100,
+          "visits": 14000,
+          "uniques": 4700
+        },
+        "date": "2016-01-02 00:00:00",
+        "views": 15100,
+        "visits": 14000,
+        "uniques": 4700,
+        "url_pattern": ["necklace"]
+      }, {
+        "key": "2016-01-03 00:00:00",
+        "values": {
+          "views": 17100,
+          "visits": 14200,
+          "uniques": 4300
+        },
+        "date": "2016-01-03 00:00:00",
+        "views": 17100,
+        "visits": 14200,
+        "uniques": 4300,
+        "url_pattern": ["necklace"]
+      }, {
+        "key": "2016-01-04 00:00:00",
+        "values": {
+          "views": 35400,
+          "visits": 29500,
+          "uniques": 9300
+        },
+        "date": "2016-01-04 00:00:00",
+        "views": 35400,
+        "visits": 29500,
+        "uniques": 9300,
+        "url_pattern": ["necklace"]
+      }, {
+        "key": "2016-01-05 00:00:00",
+        "values": {
+          "views": 21600,
+          "visits": 19000,
+          "uniques": 6200
+        },
+        "date": "2016-01-05 00:00:00",
+        "views": 21600,
+        "visits": 19000,
+        "uniques": 6200,
+        "url_pattern": ["necklace"]
+      }, {
+        "key": "2016-01-06 00:00:00",
+        "values": {
+          "views": 16600,
+          "visits": 15200,
+          "uniques": 4300
+        },
+        "date": "2016-01-06 00:00:00",
+        "views": 16600,
+        "visits": 15200,
+        "uniques": 4300,
+        "url_pattern": ["necklace"]
+      }, {
+        "key": "2016-01-07 00:00:00",
+        "values": {
+          "views": 10100,
+          "visits": 9100,
+          "uniques": 3400
+        },
+        "date": "2016-01-07 00:00:00",
+        "views": 10100,
+        "visits": 9100,
+        "uniques": 3400,
+        "url_pattern": ["necklace"]
+      }, {
+        "key": "2016-01-08 00:00:00",
+        "values": {
+          "views": 16900,
+          "visits": 14600,
+          "uniques": 5400
+        },
+        "date": "2016-01-08 00:00:00",
+        "views": 16900,
+        "visits": 14600,
+        "uniques": 5400,
+        "url_pattern": ["necklace"]
+      }, {
+        "key": "2016-01-09 00:00:00",
+        "values": {
+          "views": 7600,
+          "visits": 7500,
+          "uniques": 3000
+        },
+        "date": "2016-01-09 00:00:00",
+        "views": 7600,
+        "visits": 7500,
+        "uniques": 3000,
+        "url_pattern": ["necklace"]
+      }, {
+        "key": "2016-01-10 00:00:00",
+        "values": {
+          "views": 11800,
+          "visits": 11000,
+          "uniques": 3600
+        },
+        "date": "2016-01-10 00:00:00",
+        "views": 11800,
+        "visits": 11000,
+        "uniques": 3600,
+        "url_pattern": ["necklace"]
+      }, {
+        "key": "2016-01-11 00:00:00",
+        "values": {
+          "views": 20300,
+          "visits": 18200,
+          "uniques": 6900
+        },
+        "date": "2016-01-11 00:00:00",
+        "views": 20300,
+        "visits": 18200,
+        "uniques": 6900,
+        "url_pattern": ["necklace"]
+      }, {
+        "key": "2016-01-12 00:00:00",
+        "values": {
+          "views": 23700,
+          "visits": 21700,
+          "uniques": 7200
+        },
+        "date": "2016-01-12 00:00:00",
+        "views": 23700,
+        "visits": 21700,
+        "uniques": 7200,
+        "url_pattern": ["necklace"]
+      }, {
+        "key": "2016-01-13 00:00:00",
+        "values": {
+          "views": 20900,
+          "visits": 18600,
+          "uniques": 5900
+        },
+        "date": "2016-01-13 00:00:00",
+        "views": 20900,
+        "visits": 18600,
+        "uniques": 5900,
+        "url_pattern": ["necklace"]
+      }, {
+        "key": "2016-01-14 00:00:00",
+        "values": {
+          "views": 19300,
+          "visits": 18500,
+          "uniques": 5200
+        },
+        "date": "2016-01-14 00:00:00",
+        "views": 19300,
+        "visits": 18500,
+        "uniques": 5200,
+        "url_pattern": ["necklace"]
+      }, {
+        "key": "2016-01-15 00:00:00",
+        "values": {
+          "views": 22500,
+          "visits": 19700,
+          "uniques": 6600
+        },
+        "date": "2016-01-15 00:00:00",
+        "views": 22500,
+        "visits": 19700,
+        "uniques": 6600,
+        "url_pattern": ["necklace"]
+      }, {
+        "key": "2016-01-16 00:00:00",
+        "values": {
+          "views": 12200,
+          "visits": 11600,
+          "uniques": 3800
+        },
+        "date": "2016-01-16 00:00:00",
+        "views": 12200,
+        "visits": 11600,
+        "uniques": 3800,
+        "url_pattern": ["necklace"]
+      }, {
+        "key": "2016-01-17 00:00:00",
+        "values": {
+          "views": 11400,
+          "visits": 10100,
+          "uniques": 3600
+        },
+        "date": "2016-01-17 00:00:00",
+        "views": 11400,
+        "visits": 10100,
+        "uniques": 3600,
+        "url_pattern": ["necklace"]
+      }, {
+        "key": "2016-01-18 00:00:00",
+        "values": {
+          "views": 18600,
+          "visits": 16200,
+          "uniques": 4400
+        },
+        "date": "2016-01-18 00:00:00",
+        "views": 18600,
+        "visits": 16200,
+        "uniques": 4400,
+        "url_pattern": ["necklace"]
+      }];
+
+      var target = d3.selectAll(".container")
+
+      var main_wrapper = d3_splat(target,".row","div",[obj],function(x){return x.name})
+        .classed("row funnels",true)
+        .style('padding-top', '80px');
+
+      main_wrapper.exit().remove()
+
+      var page_header = d3_updateable(main_wrapper, '.page-header', 'h5')
+        .classed('page-header', true)
+        .text('Vendor Analysis')
+
+      var vendors_list_card = d3_updateable(main_wrapper, '.vendors-list-card', 'section')
+        .classed('vendors-list-card bar series col-md-12', true)
+
+      var vendors_list_card_title = d3_updateable(vendors_list_card, '.vendors-list-card-title', 'header')
+        .classed('vendors-list-card-title title', true)
+        .text('Advertising Vendor Summary')
+
+      var vendors_data = [
+        {
+          name: 'Facebook',
+          visitors: {
+            views: [],
+            visits: [],
+            uniques: []
+          },
+          pie_data: {}
+        },
+        {
+          name: 'Google',
+          visitors: {
+            views: [],
+            visits: [],
+            uniques: []
+          },
+          pie_data: {}
+        },
+        {
+          name: 'Twitter',
+          visitors: {
+            views: [],
+            visits: [],
+            uniques: []
+          },
+          pie_data: {}
+        }
+      ];
+
+      var vendors_list = d3_updateable(vendors_list_card, '.vendors-list', 'ul')
+        .classed('vendors-list', true)
+
+      var vendors_list_items = d3_splat(vendors_list, '.vendors-list-item', 'li', vendors_data, function(x) {
+        return x.name;
+      })
+        .classed('vendors-list-item', true)
+
+      /*
+        Each individual vendor
+      */
+
+      // vendor-status
+      // vendor-name
+      // vendor-visitor-graphs
+      // vendor-domains-pie
+      // vendor-expand
+
+
+      var vendor_status = d3_updateable(vendors_list_items, '.vendor-status', 'div')
+        .classed('vendor-status', true)
+        .html(function(x) {
+          if(x.name != 'Twitter') {
+            return '<i class="glyphicon status glyphicon-ok-circle green"/>'
+          } else {
+            return '<i class="glyphicon status glyphicon-ok-circle grey"/>'
+          }
+        });
+
+      var vendor_name = d3_updateable(vendors_list_items, '.vendor-name', 'div')
+        .classed('col-md-2 vendor-name', true)
+        .html(function(x) {
+          return '<h2>' + x.name + '</h2>';
+        });
+
+      var vendor_visitor_graphs = d3_updateable(vendors_list_items, '.vendor-visitor-graphs', 'div')
+        .classed('col-md-6 vendor-visitor-graphs', true)
+
+        var vendor_visitor_graphs_rows = d3_splat(vendor_visitor_graphs, '.vendor-visitor-graphs-row', 'div', ['views', 'visitor','uniques'], function(y) {
+          return y;
+        })
+          .classed('vendor-visitor-graphs-row', true)
+
+        var vendor_visitor_graph_type = d3_updateable(vendor_visitor_graphs_rows, '.vendor-visitor-graph-type', 'div')
+          .classed('col-md-2 vendor-visitor-graph-type', true)
+          .html(function(y) {
+            return y;
+          });
+
+        var vendor_visitor_graph_chart = d3_updateable(vendor_visitor_graphs_rows, '.vendor-visitor-graph-chart', 'div')
+          .classed('col-md-6 vendor-visitor-graph-chart', true)
+
+        var visitor_chart = RB.rho.ui.buildTimeseries(
+          vendor_visitor_graph_chart,visitor_data,"Views",["views"], undefined,true, 120
+        )
+
+        var vendor_visitor_graph_numbers = d3_updateable(vendor_visitor_graphs_rows, '.vendor-visitor-graph-numbers', 'div')
+          .classed('col-md-4 vendor-visitor-graph-numbers', true)
+          .html(function(y) {
+            return 1234 + ' ' + y;
+          });
+
+      var vendor_domains_pie = d3_updateable(vendors_list_items, '.vendor-domains-pie', 'div')
+        .classed('col-md-2 vendor-domains-pie', true)
+        .html(function(x) {
+          return 'Domains Pie';
+        });
+
+      var vendor_expand = d3_updateable(vendors_list_items, '.vendor-expand', 'div')
+        .classed('col-md-1 vendor-expand', true)
+
+      var vendor_expand_button = d3_updateable(vendor_expand, '.vendor-expand-button', 'div')
+        .classed('vendor-expand-button btn btn-sm btn-default pull-right', true)
+        .text('View More')
+
+      // var vendor_item_state = d3_updateable(vendors_list_items, 'vendor-list-title', 'i')
+      //   .attr('class', function(x) {
+      //     if(x.name != 'Twitter') {
+      //       return 'glyphicon status glyphicon-ok-circle grey';
+      //     } else {
+      //       return 'glyphicon status glyphicon-ok-circle green';
+      //     }
+      //   });
+      //
+      // var vendor_item_title = d3_updateable(vendors_list_items, 'vendor-list-title', 'h2')
+      //   .classed('vendor-list-title', true)
+      //   .text(function(x) {
+      //     return x.name
+      //   });
+
+    },
     "comparison": function() {
       d3.select("body")
         .classed("hide-select", true)
@@ -804,6 +1191,13 @@ RB.crusher.controller = (function(controller) {
   controller.routes = {
     roots: [
     {
+      "name":"Vendors",
+      "push_state": "/crusher/vendors",
+      "class": "glyphicon glyphicon-th-large",
+      "values_key": "action_name"
+
+    },
+    {
       "name":"Segments",
       "push_state": "/crusher/action/existing",
       "class": "glyphicon glyphicon-signal",
@@ -860,6 +1254,7 @@ RB.crusher.controller = (function(controller) {
     },
     apis: {
       "comparison": ['funnels'],
+      "vendors": [],
       "funnel/new": [],
       "funnel/existing": ['funnels'],
       "action/existing": ['actions'],
@@ -900,6 +1295,10 @@ RB.crusher.controller = (function(controller) {
       "comparison": [{
           "name": "Comparison",
           "push_state": "/crusher/comparison"
+        }],
+      "vendors": [{
+          "name": "Vendors",
+          "push_state": "/crusher/vendors"
         }],
       "home": [{
           "name":"Home",

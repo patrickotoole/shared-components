@@ -58,7 +58,6 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
           x.views = x.views || ""
           return x
         }).map(function(x, i){
-          console.log('THIS IS THE FIXED X', x);
           obj = {
             "key": x.action_name,
             "Action name": x.action_name,

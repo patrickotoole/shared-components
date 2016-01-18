@@ -1,26 +1,38 @@
+.page-header {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  background-color: #FFF;
+	margin-top: 0px;
+  padding-left: 20px;
+  height: 70px;
+  line-height: 70px;
+  border-bottom: 1px solid #f0f0f0;
+  box-shadow: 0px 2px 2px 0px rgba(248,248,248,.9);
+  margin-left: -15px;
+  margin-right: -15px;
+  margin-bottom: 30px;
+  z-index: 100;
+}
 .selectbar {
-	h5 a {
-		padding: 0 0 0 10px;
-		height: 100%;
-	}
+  h5 a {
+    padding: 0 0 0 10px;
+    height: 100%;
+  }
 }
-
 .page_tabs_item {
-	padding: 20px 30px;
-	display: inline-block;
-	border-right: solid 1px rgb(240, 240, 240);
-	cursor: pointer;
+  padding: 20px 30px;
+  display: inline-block;
+  border-right: solid 1px rgb(240, 240, 240);
+  cursor: pointer;
 }
-
 .page_tabs_item.active {
-	background-color: #FFF;
-	font-weight: bold;
+  background-color: #FFF;
+  font-weight: bold;
 }
-
-
 .max-width-340 {
-	width: 340px;
-	.bar.series.views {
-		min-height: 315px;
-	}
+  width: 340px;
+  .bar.series.views {
+    min-height: 315px;
+  }
 }

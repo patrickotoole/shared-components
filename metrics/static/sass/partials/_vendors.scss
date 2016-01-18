@@ -1,0 +1,57 @@
+ul.vendors-list {
+  padding: 0;
+  margin: 0;
+
+  li {
+    list-style-type: none;
+    border-top: solid 1px #eee;
+    padding: 15px 0;
+    overflow: auto;
+    min-height: 150px;
+  }
+
+  li:first-child {
+    border: none;
+    margin-top: 15px;
+  }
+
+  .vendor-status {
+    // display: flex;
+    // float: left;
+    // width: 22px;
+    padding-right: 10px;
+
+    i {
+      font-size: 22px;
+      line-height: 32px;
+      // float: left;
+    }
+  }
+
+  .vendor-name h2 {
+    font-size: 22px;
+    margin: 0;
+    line-height: 36px;
+    font-weight: bold;
+  }
+
+  .vendor-visitor-graphs-row {
+    height: 120px;
+  }
+
+  .vendor-visitor-graph-chart {
+    height: 100px;
+  }
+
+  .vendor-visitor-graph-type {
+    text-transform: capitalize;
+    font-weight: bold;
+    font-size: 18px;
+  }
+
+  .vendor-visitor-graph-numbers {
+    font-size: 18px;
+    font-weight: bold;
+  }
+
+}
