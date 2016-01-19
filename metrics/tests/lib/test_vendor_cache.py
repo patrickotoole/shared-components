@@ -8,9 +8,9 @@ import lib.caching.vendor_patterns as vps
 import lib.caching.vendor_dashboard as vdb
 import lib.caching.action_dashboard_cache as adc
 
-URL_1 = "http://randomsite.com/refer=kfkf&source=nothing&utm_source=MySource&somethingelse"
+URL_1 = "randomsite/refer=kfkf&source=nothing&utm_source=MySource&somethingelse"
 JSON_FIXTURE_1 = {}
-DA = {"url_patterns":["test"],"vendor":["vendor"]}
+DA = {"url_patterns":["arandompatternorstring"],"vendor":["vendor"]}
 
 class VendorTests(unittest.TestCase):
 
