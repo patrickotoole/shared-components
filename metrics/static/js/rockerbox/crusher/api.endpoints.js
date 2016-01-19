@@ -78,7 +78,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
   endpoints.dashboard_cached = new api.helpers.genericQueuedAPI(function(cb,deferred_cb) {
     if (!cache.dashboard_cached) {
-      d3.json("/crusher/dashboard_cached?limit=3", function(json_output){
+      d3.json("/crusher/dashboard_cached?limit=4", function(json_output){
         cache.dashboard_cached = json_output;
         deferred_cb(null,cb.bind(false,cache.dashboard_cached));
       })

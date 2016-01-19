@@ -695,8 +695,8 @@ RB.crusher.ui.action = (function(action) {
       .html("<span class=\"icon glyphicon glyphicon-plus\" style=\"padding-right: 21px;\"></span> Create a Segment")
       .on("click", function(e) {
         if(search.query.length) {
-          
-          try { 
+
+          try {
             Intercom('trackEvent', 'Create Segment', { 'segment': search.query });
           } catch(e) {}
           document.cookie="toast=new-action";

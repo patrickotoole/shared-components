@@ -6,23 +6,23 @@ RB.rho.ui = (function(ui) {
 
   var rho = RB.rho
 
-  
+
   ui.buildChart = function(target, data, label_col, value_col, title, description, type, summary, format, height, paddingLeft) {
     type = type || "line";
     summary = summary || "sum";
     format = format || d3.format(",")
     var labels = []
     var series = []
-    
+
     data.map(function(d){
       labels.push(d[label_col]);
       series.push(d[value_col]);
     })
 
-    
+
     var total = data.reduce(function(p,c){return p + c[value_col]},0)
     if (summary == "average") total = total/data.length
- 
+
     var data = {
       labels: labels,
       series: [series]
@@ -43,7 +43,7 @@ RB.rho.ui = (function(ui) {
       },
       fullWidth: true,
       chartPadding: {
-        left: paddingLeft || 15 
+        left: paddingLeft || 15
       }
     };
 
@@ -63,7 +63,7 @@ RB.rho.ui = (function(ui) {
     if (!$(target + " .chart-total").length && total){
       $(target).prepend($("<div class='chart-total'>").text(format(total)));
     };
-    
+
     // Add title if it doesn't exist already
     if (!$(target + " .chart-title").length && title){
       $(target).prepend($("<div class='chart-title'>").text(title));
@@ -83,7 +83,7 @@ RB.rho.ui = (function(ui) {
       .classed("bar series " + series,true)
 
     if (button) {
-      
+
       d3_updateable(newTarget,"."+button.class_name.split(" ").join("."),"a")
         .classed(button.class_name + " pull-right btn btn-sm btn-default", true)
         .text(button.name)
@@ -94,7 +94,7 @@ RB.rho.ui = (function(ui) {
       .classed("title",true)
       .text(title)
 
-    var missing = "background-color: #eee;opacity:.5;width: 50%;" + 
+    var missing = "background-color: #eee;opacity:.5;width: 50%;" +
       "margin-top: 10px;margin-bottom: 10px;"
 
     d3_updateable(newTarget,".value","div")
@@ -111,7 +111,7 @@ RB.rho.ui = (function(ui) {
     d3_updateable(newTarget,".description","div")
       .classed("description",true)
       .html(description)
-    
+
     return newTarget
 
   }
@@ -127,13 +127,13 @@ RB.rho.ui = (function(ui) {
     var d;
     if (data) d = [data]
 
-    
+
 
     var newTarget = d3_updateable(wrapper,".series." + series,"div",d)
       .classed("bar-series series " + series,true)
 
     if (button) {
-      
+
       d3_updateable(newTarget,"."+button.class_name,"a")
         .classed(button.class_name + " pull-right btn btn-sm btn-default", true)
         .text(button.name)
@@ -152,7 +152,7 @@ RB.rho.ui = (function(ui) {
     d3_updateable(newTarget,".description","div",[description],function(x){return x})
       .classed("description",true)
       .html(String)
-    
+
     return newTarget
 
   }
@@ -186,7 +186,7 @@ RB.rho.ui = (function(ui) {
     } else {
       ui.buildBar(newTarget,data,title,series,formatting)
     }
- 
+
 
     return newTarget
 
@@ -199,7 +199,7 @@ RB.rho.ui = (function(ui) {
 
     data.map(function(x){
       x.date = new Date(x.key)
-      for (var i in x.value) 
+      for (var i in x.value)
         x[i] = x.value[i]
     })
 
@@ -221,20 +221,20 @@ RB.rho.ui = (function(ui) {
       data = d3.nest()
         .key(function(x){
           return [x.url_short, x.parent_category_name]
-        })                                                                          
+        })
         .rollup(function(x){
-          return x.reduce(function(p,c){                                                             
-            return p + c.count                                                                                      
+          return x.reduce(function(p,c){
+            return p + c.count
           },0)
         })
         .entries(data)
 
-      data = data.map(function(x){                                                                                    
+      data = data.map(function(x){
           x["url_short"] = x.key.split(",")[0]
           x["parent_category_name"] = x.key.split(",").slice(1).join(",")
 
           return x
-        })                                                                                                            
+        })
      }
 
      return data
@@ -245,20 +245,20 @@ RB.rho.ui = (function(ui) {
 
     var showNumber = showNumber || 15,
       maxBarWidth = 100,
-      maxNumericWidth = 65 
+      maxNumericWidth = 65
 
     var data = ui.dataPrep(data,series)
-    var field = (data[0].weighted !== undefined) ? "weighted" : 
+    var field = (data[0].weighted !== undefined) ? "weighted" :
                 (data[0].count !== undefined) ? "count" : "values"
 
     data = data.sort(function(x,y){return y[field] - x[field] }).map(function(x,i){
-      //if (x.index == undefined) x.index = i+1; 
+      //if (x.index == undefined) x.index = i+1;
       x.index = i+1
       return x
     })
 
     var default_formatting = { "font_size": ".71em" }
-    
+
     var formatting = typeof formatting !== "undefined" ? formatting: default_formatting;
 
     var targetWidth = target.style("width").replace("px",""),
@@ -283,8 +283,8 @@ RB.rho.ui = (function(ui) {
       types = items.map(function(x){return x.type})
 
     var typeToOffset = function(t) {
-      return (t == "bar") ? maxBarWidth + 5: 
-             (t == "numeric") ? maxNumericWidth : 
+      return (t == "bar") ? maxBarWidth + 5:
+             (t == "numeric") ? maxNumericWidth :
              (typeof(t) == "number") ? t : 0
     }
 
@@ -313,9 +313,9 @@ RB.rho.ui = (function(ui) {
     chart.enter()
       .append("svg")
       .attr("class","domain-chart-svg")
-      
+
     x.domain([.1, d3.max(chart.datum(), function(d) { return d.count || d.values; })]);
-    
+
     chart
       .attr("height", barHeight * chart.data()[0].length + barHeight*0.3 + barHeight)
       .attr("width", width);
@@ -333,7 +333,7 @@ RB.rho.ui = (function(ui) {
 
     bar.exit().remove()
 
-    
+
 
     var text = d3_splat(bar,"text","text",function(x){return x}, function(x){return x})
       .attr("x", function(d,i) { return i == 0 ? (offsets[i+1] - 5) : offsets[i] })
@@ -353,14 +353,14 @@ RB.rho.ui = (function(ui) {
       .classed("bar-row",true)
 
     bar.exit().remove()
-    
+
     var rect = d3_updateable(bar,".bar","rect")
       .attr("class","bar")
       .attr("width", function(d) { return x(d.count || d.values || 0); })
       .attr("x", function(d) { return maxBarWidth - x(d.count || d.values || 0); })
       .attr("height", barHeight - 1)
       .style("fill",function(x){
-        return x.parent_category_name == "NA" ? "#888" : colors(x.parent_category_name) 
+        return x.parent_category_name == "NA" ? "#888" : colors(x.parent_category_name)
       })
       .on("mouseover",function(x) {
         var selected = bar.filter(function(y){return x.category_name == y.category_name})
@@ -373,7 +373,7 @@ RB.rho.ui = (function(ui) {
       .on("mouseout",function(x) {
         //bar.style("opacity","1").style("font-weight","normal")
       })
-      
+
     var text = d3_splat(bar,"text","text",function(x){
         var values = fields.map(function(y){return {"key":y,"value":x[y]} })
         return values
@@ -405,7 +405,7 @@ RB.rho.ui = (function(ui) {
             })
 
           x.domain([.1, d3.max(chart.datum(), function(d) { return d.count || d.values; })]);
-     
+
           ui.barRow(chart, barHeight, x, maxBarWidth, fields, offsets, colors)
           chart.attr("height", barHeight * chart.data()[0].length + barHeight*0.3);
           ui.barExpandRow(target, data, field, barHeight, x, limit*2, maxBarWidth, fields, offsets, colors)
@@ -421,12 +421,12 @@ RB.rho.ui = (function(ui) {
     var default_formatting = {
       "font_size": ".71em"
     }
-    
+
     var formatting = typeof formatting !== "undefined" ? formatting: default_formatting;
 
     data.map(function(x){
       x.date = new Date(x.key)
-      for (var i in x.value) 
+      for (var i in x.value)
         x[i] = x.value[i]
     })
 
@@ -453,28 +453,28 @@ RB.rho.ui = (function(ui) {
       data = d3.nest()
         .key(function(x){
           return x.url_short
-        })                                                                          
+        })
         .rollup(function(x){
-          return x.reduce(function(p,c){                                                             
-            return p + c.count                                                                                      
+          return x.reduce(function(p,c){
+            return p + c.count
           },0)
         })
         .entries(data)
 
-      data = data.map(function(x){                                                                                    
+      data = data.map(function(x){
           x["url_short"] = x.key
           return x
-        })                                                                                                            
+        })
      }
 
-    var field = (data[0].weighted !== undefined) ? "weighted" : 
+    var field = (data[0].weighted !== undefined) ? "weighted" :
                 (data[0].count !== undefined) ? "count" : "values"
 
     var DEFAULT_ROWS = 15
 
     var chart = target.selectAll("svg.domain-chart-svg")
-      .data(function(x) { 
-        return [data.sort(function(x,y){return y[field] - x[field] }).slice(0,DEFAULT_ROWS) ] 
+      .data(function(x) {
+        return [data.sort(function(x,y){return y[field] - x[field] }).slice(0,DEFAULT_ROWS) ]
       })
 
     chart
@@ -484,13 +484,13 @@ RB.rho.ui = (function(ui) {
           .attr("width", width);
 
     x.domain([.1, d3.max(chart.datum(), function(d) { return d.count || d.values; })]);
-    
+
     chart.attr("height", barHeight * chart.data()[0].length);
 
     ui.barShow(chart, barHeight, x)
     ui.barExpand(target, data, field, barHeight, x, DEFAULT_ROWS)
 
-  }  
+  }
 
   ui.barExpand = function(target, data, field, barHeight, x, limit) {
     if (data.length > limit) {
@@ -505,7 +505,7 @@ RB.rho.ui = (function(ui) {
             })
 
           x.domain([.1, d3.max(chart.datum(), function(d) { return d.count || d.values; })]);
-     
+
           ui.barShow(chart, barHeight, x)
           chart.attr("height", barHeight * chart.data()[0].length);
           ui.barExpand(target, data, field, barHeight, x, limit*2)
@@ -526,7 +526,7 @@ RB.rho.ui = (function(ui) {
         .attr("transform", function(d, i) { return "translate(0," + i * barHeight + ")"; });
 
     bar.exit().remove()
-    
+
     var rect = bar.selectAll("rect.bar").data(function(x){return [x]})
     rect.enter()
         .append("rect")
@@ -534,7 +534,7 @@ RB.rho.ui = (function(ui) {
         .attr("class","bar")
         .attr("width", function(d) { return x(d.count || d.values || 0); })
         .attr("height", barHeight - 1);
-    
+
     var text = bar.selectAll("text").data(function(x){return [x]})
     text.enter()
         .append("text")
@@ -542,7 +542,7 @@ RB.rho.ui = (function(ui) {
         .attr("x", function(d) { return x(d.count || d.values) + 3; })
         .attr("y", barHeight / 2)
         .attr("dy", ".35em")
-        .text(function(d) { return d.url_short + " (" + (d.count || d.values)+ ")" });//+ " (" + d.uid + ")" + d.idf }); 
+        .text(function(d) { return d.url_short + " (" + (d.count || d.values)+ ")" });//+ " (" + d.uid + ")" + d.idf });
   }
 
   ui.buildTimeseriesSummary = function(target,data,title,series,formatting,description) {
@@ -578,14 +578,14 @@ RB.rho.ui = (function(ui) {
     var default_formatting = {
       "font_size": ".71em"
     }
-    
+
     var formatting = typeof formatting !== "undefined" ? formatting: default_formatting;
 
     console.log(formatting)
 
     data.map(function(x){
       x.date = new Date(x.key)
-      for (var i in x.value) 
+      for (var i in x.value)
         x[i] = x.value[i]
     })
 
@@ -594,19 +594,19 @@ RB.rho.ui = (function(ui) {
     var margin = {top: 20, right: 50, bottom: 30, left: 50},
       width = targetWidth - margin.left - margin.right,
       height = 150 - margin.top - margin.bottom;
-  
+
     var parseDate = d3.time.format("%D-%b-%y %H:%M").parse;
-  
-    var x = d3.time.scale().range([0, width]); 
-    var y = d3.scale.linear().range([height, 0]); 
+
+    var x = d3.time.scale().range([0, width]);
+    var y = d3.scale.linear().range([height, 0]);
     var xAxis = d3.svg.axis().scale(x).orient("bottom")
       .ticks(d3.time.days, width < 300 ? 5 : 2)
 
     var yAxis = d3.svg.axis().scale(y).orient("left")
       .tickSize(-width, 0, 0)
       .ticks(height < 200 ? 3 : 5)
-  
-    
+
+
 
     var svg = target.selectAll("svg." + title)
       .data([data])
@@ -621,10 +621,10 @@ RB.rho.ui = (function(ui) {
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
 
-  
+
     x.domain(d3.extent(data, function(d) { return d.date; }));
     y.domain([0,d3.max(data, function(d) { return d[series[0]]; })]);
-  
+
     newSvg.append("g")
       .attr("class", "x axis")
 
@@ -636,11 +636,11 @@ RB.rho.ui = (function(ui) {
       .attr("y",20)
 
 
-  
+
     newSvg.append("g")
       .attr("class", "y axis")
 
-    svg.select(".y.axis") 
+    svg.select(".y.axis")
       .selectAll("text.y-label")
       .remove()
 
@@ -655,12 +655,12 @@ RB.rho.ui = (function(ui) {
       .classed("y-label",true)
       //.text(series[0].toUpperCase());
 
-    svg.select(".y.axis") 
+    svg.select(".y.axis")
       .selectAll(".tick > text")
       .attr("x",-10)
 
 
-  
+
     series.map(function(series){
       var line = d3.svg.line()
         .x(function(d) { return x(d.date); })
@@ -670,22 +670,22 @@ RB.rho.ui = (function(ui) {
         .x(function(d) { return x(d.date); })
         .y0(height)
         .y1(function(d) { return y(d[series]); });
-     
+
       newSvg.append("path")
         .attr("class", series + " line")
 
       svg.select(".line")// + series)
         .datum(data)
-        .attr("d", line); 
+        .attr("d", line);
 
       newSvg.append("path")
         .attr("class", "area")
 
       svg.select(".area")
         .datum(data)
-        
+
         .attr("d", area);
- 
+
       var points = svg.selectAll(".point")
         .data(data,function(d){return d.date})
 
@@ -700,10 +700,10 @@ RB.rho.ui = (function(ui) {
          .attr("cx", function(d, i) { return x(d.date) + 50 })
          .attr("cy", function(d, i) { return y(d[series]) + 20})
          .attr("r", function(d, i) { return 3 })
-      
+
     })
 
-    
+
 
   }
 
@@ -736,7 +736,7 @@ RB.rho.ui = (function(ui) {
         .append("option")
         .text(String)
         .property("selected",function(x,i){return i == 0})
-        .property("disabled",function(x,i){return i == 0}) 
+        .property("disabled",function(x,i){return i == 0})
 
   }
 
@@ -768,7 +768,7 @@ RB.rho.ui = (function(ui) {
       .enter()
         .append("option")
         .text(String)
-     
+
 
     h5.append("span")
       .text("Show Series ")
@@ -789,56 +789,56 @@ RB.rho.ui = (function(ui) {
         .text(String)
 
   }
-  
+
   ui.build = function(target,filters,data,callback,key,summary,series,selected_range){
     ui.filter.build(target,filters,callback,key)
     ui.selectFilter(target,['domain','seller','tag','size'])
-    
+
     var target = d3.select("#graphable").select(".col-md-9")
 
     //ui.buildTitle(filters)
 
     ui.buildTimeseries(d3.select("#graphable").select(".col-md-9"),data,"yo",series || ['imps'])
-    ui.selectSeries(d3.select("#seriesable"),['imps','eap','ecp']) 
-    
+    ui.selectSeries(d3.select("#seriesable"),['imps','eap','ecp'])
+
     var min_date = 0
     var max_date = 30*60
 
     console.log(selected_range)
 
     ui.buildLegend(summary,{"selected":selected_range})
-   
-  } 
+
+  }
 
   ui.buildLegend = function(total,date_selection) {
     var summary = ""
     var format = d3.format(",.2")
-    
+
     for (var k in total) {
       summary += k + " " + format(d3.round(total[k],2)) + "<br/>"
     }
 
     var legend = d3.select(".legend")
-    
+
     var h2 = legend.selectAll("h5")
       .data([0])
 
-    var text = "Availability Summary <br>" + 
-      "<div style='font-weight:normal;margin-top:5px;margin-left:5px;font-size:13px'>" + 
+    var text = "Availability Summary <br>" +
+      "<div style='font-weight:normal;margin-top:5px;margin-left:5px;font-size:13px'>" +
         summary
 
-    var d = 
-      date_selection.selected.max_date - 
+    var d =
+      date_selection.selected.max_date -
       date_selection.selected.min_date
 
     var minutes = d/60/1000
 
-    text += "<br/>imps/min: "  + format(d3.round(total.imps/minutes)) + "<br/>" 
-    text += "cost/min: " + format(d3.round(total.imps*total.eap/minutes/1000,2))  + "<br/>"  
+    text += "<br/>imps/min: "  + format(d3.round(total.imps/minutes)) + "<br/>"
+    text += "cost/min: " + format(d3.round(total.imps*total.eap/minutes/1000,2))  + "<br/>"
 
     text += "</div>"
     /*text += "<br/> Date Interval <br>"
-    text += "<div style='font-weight:normal;margin-top:5px;margin-left:5px;font-size:13px'>" +  
+    text += "<div style='font-weight:normal;margin-top:5px;margin-left:5px;font-size:13px'>" +
       "<select>"+
       "<option>Past hour</option>" +
       "<option>Past day</option>" +
@@ -847,19 +847,19 @@ RB.rho.ui = (function(ui) {
       */
     text += "<br/> Sampled Data?"
     text += "<div style='font-weight:normal;margin-top:5px;margin-left:5px;font-size:13px'>Unknown Sample</div>"
-    
+
 
     h2.enter().append("h5")
     h2.html(text)
-      .style("margin-top","20px") 
+      .style("margin-top","20px")
 
-   
 
-     
+
+
   }
 
   ui.buildTitle = function(filters) {
-    var target = d3.select("#graphable").select(".col-md-9") 
+    var target = d3.select("#graphable").select(".col-md-9")
 
     var h5 = target.selectAll("h5")
       .data([0])
@@ -874,9 +874,9 @@ RB.rho.ui = (function(ui) {
       showing_arr.push(" all data ")
     } else {
       filters.map(function(kv){
-        var joined = (kv.value.length > 4 ? kv.value.slice(0,4).join(",") + "... " : kv.value.join(",")) 
+        var joined = (kv.value.length > 4 ? kv.value.slice(0,4).join(",") + "... " : kv.value.join(","))
         showing_arr.push(" " + kv.key + "s: " + joined)
-      
+
       })
     }
 
@@ -885,9 +885,8 @@ RB.rho.ui = (function(ui) {
     h5.text(showing)
       .style("margin-top","20px")
 
-    
+
   }
 
   return ui
 })(RB.rho.ui || {})
-
