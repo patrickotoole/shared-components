@@ -44,6 +44,7 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
         });
       });
 
+
       var data = data
         .filter(function(x){
           if(segment_names.indexOf(x.url_pattern[0]) != -1) {
@@ -58,9 +59,8 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
           x.views = x.views || ""
           return x
         }).map(function(x, i){
-          console.log('THIS IS THE FIXED X', x);
           obj = {
-            "key": x.action_name,
+            "key": x.action_id,
             "Action name": x.action_name,
             "views":segment_counts[i].views,
             "__proto__": x
@@ -163,10 +163,16 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
                 .filter(function(x){return x.key != "NA"})
                 .slice(0,15)
 
-              x.parentCategoryData = parentCategoryData
+              x.parentCategoryData = parentCategoryData.sort(function(x, y) {
+                return x.values < y.values;
+              })
+
+              console.log('CATEGORY DATAAAAA', parentCategoryData);
 
             } else {
-              x.parentCategoryData = ddd
+              x.parentCategoryData = ddd.sort(function(x, y) {
+                return x.values < y.values;
+              })
             }
             pie_iterator++;
             return true
