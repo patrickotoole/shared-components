@@ -2,7 +2,7 @@ import requests, pandas, logging
 from link import lnk
 import action_dashboard_cache as adc
 
-API_URL = "http://192.168.99.100:8888/crusher/pattern_search/timeseries?search={}&num_days=7"
+API_URL = "http://crusher.getrockerbox.com/crusher/pattern_search/timeseries?search={}&num_days=7"
 
 SQL_QUERY = "insert into vendor_patterns (url_patterns, vendor) values ( '{}','{}')"
 
