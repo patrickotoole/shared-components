@@ -70,7 +70,7 @@ class ActionDatabase(object):
         try:
             where = "pixel_source_name = '{}'".format(advertiser)
             result = self.db.select_dataframe(GET % {"where":where})
-            import ipdb; ipdb.set_trace()
+            #import ipdb; ipdb.set_trace()
             patterns = self.get_patterns(result.action_id.tolist())
             joined = result.set_index("action_id").join(patterns)
 
