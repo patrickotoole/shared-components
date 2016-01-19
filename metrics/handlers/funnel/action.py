@@ -14,7 +14,7 @@ class ActionHandler(BaseHandler,ActionAuth,APIHelpers,ActionDatabase):
 
     def initialize(self, db=None, **kwargs):
         self.db = db 
-        self.required_cols = ["advertiser", "action_name", "operator"]
+        self.required_cols = ["advertiser", "action_name"]
     
 
     @tornado.web.authenticated
@@ -51,7 +51,7 @@ class ActionHandler(BaseHandler,ActionAuth,APIHelpers,ActionDatabase):
             if action_id:
                 results = self.get_advertiser_action(advertiser,action_id)
             if action_type:
-                results = self.get_vendor_actions(advertiser, action_type)
+		results = self.get_vendor_actions(advertiser, action_type)
             else:
                 results = self.get_advertiser_actions(advertiser)
 

@@ -70,7 +70,6 @@ class ActionDatabase(object):
         try:
             where = "pixel_source_name = '{}'".format(advertiser)
             result = self.db.select_dataframe(GET % {"where":where})
-            #import ipdb; ipdb.set_trace()
             patterns = self.get_patterns(result.action_id.tolist())
             joined = result.set_index("action_id").join(patterns)
 
@@ -154,10 +153,13 @@ class ActionDatabase(object):
 
         action = ujson.loads(body)
         action = dict(action.items() + [("start_date","0"),("end_date","0")])
+        if action.get("operator") is None:
+            action = dict(action.items() + [("operator", "or")])
+        
         self.assert_not_present(action,["action_id"])
 
         action["advertiser"] = action.get("advertiser",self.current_advertiser_name)
-
+        
         self.assert_required(action,self.required_cols)
         
         cursor.execute(INSERT_ACTION % action)

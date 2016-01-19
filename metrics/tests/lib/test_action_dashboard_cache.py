@@ -1,6 +1,7 @@
 import mock, pandas, json
 import unittest
-import lib.action_dashboard_cache as adc
+
+import lib.caching.action_dashboard_cache as adc
 
 JSON_FIXTURE_1 = {'domains':[{"domain":"", "count":""}]}
 JSON_FIXTURE_2 = {'domains':[{"domain":"", "count":""}, {"domain":"","count":""},{"domain":"", "count":""}]}
@@ -42,16 +43,14 @@ def buildHelper(fix):
                 return response
 
 	return get_helper2
-
 class ActionCacheTestCase(unittest.TestCase):
-
-	def setUp(self):
-		self.instance = adc.ActionCache("username" ,"password", mock.MagicMock())
-		self.instance.req = mock.MagicMock()
-		self.instance.req.post.side_effect = post_helper
-		#self.instance.req.get.side_effect = get_helper1
-		self.futureFrames = []
-		self.instance.sql_query = mock.MagicMock(side_effect=buildSQLQuery(self.futureFrames))
+    
+    def setUp(self):
+        self.instance = adc.ActionCache("username" ,"password", mock.MagicMock())
+        self.instance.req = mock.MagicMock()
+        self.instance.req.post.side_effect = post_helper
+        self.futureFrames = []
+        self.instance.sql_query = mock.MagicMock(side_effect=buildSQLQuery(self.futureFrames))
 
 	def test_auth(self):
 		self.instance.auth()
@@ -108,7 +107,8 @@ class ActionCacheTestCase(unittest.TestCase):
 	def test_insert_success_one_record(self):
 		df = pandas.DataFrame(JSON_FIXTURE_1)
 		i = self.instance.insert(df, "table_name", "con", df.columns)
-		self.assertEquals(len(df), len(pandas.concat(self.futureFrames)))
+		import ipdb; ipdb.set_trace()
+        self.assertEquals(len(df), len(pandas.concat(self.futureFrames)))
 
 	def test_insert_success_multiple_records(self):
 		df = pandas.DataFrame(JSON_FIXTURE_2)
