@@ -146,8 +146,112 @@ RB.crusher.controller = (function(controller) {
     },
     "vendors": function(obj) {
       crusher.subscribe.add_subscriber(["actions"], function(segments) {
-        console.log('Segments', segments);
-      }, "vendors-data", true, false);
+        var vendors = segments.filter(function(x) {
+          return x.action_type == 'vendor';
+        })
+
+        var vendors_data = [
+          {
+            name: 'Facebook',
+            visitors: {
+              views: [],
+              visits: [],
+              uniques: []
+            },
+            pie_data: {}
+          },
+          {
+            name: 'Google',
+            visitors: {
+              views: [],
+              visits: [],
+              uniques: []
+            },
+            pie_data: {}
+          },
+          {
+            name: 'Twitter',
+            visitors: {
+              views: [],
+              visits: [],
+              uniques: []
+            },
+            pie_data: {}
+          }
+        ];
+
+        var vendors_list = d3_updateable(vendors_list_card, '.vendors-list', 'ul')
+          .classed('vendors-list', true)
+        var vendors_list_items = d3_splat(vendors_list, '.vendors-list-item', 'li', vendors, function(x) {
+          console.log('THIS, IS, X!!!', x);
+          return x.action_name;
+        })
+          .classed('vendors-list-item', true)
+
+        /*
+          Each individual vendor
+        */
+
+        // vendor-status
+        // vendor-name
+        // vendor-visitor-graphs
+        // vendor-domains-pie
+        // vendor-expand
+
+
+        var vendor_status = d3_updateable(vendors_list_items, '.vendor-status', 'div')
+          .classed('vendor-status col-md-1', true)
+          .html(function(x) {
+            if(x.name != 'Twitter') {
+              return '<i class="glyphicon status glyphicon-ok-circle green"/>'
+            } else {
+              return '<i class="glyphicon status glyphicon-ok-circle grey"/>'
+            }
+          });
+
+        var vendor_name = d3_updateable(vendors_list_items, '.vendor-name', 'div')
+          .classed('col-md-2 vendor-name', true)
+          .html(function(x) {
+            return '<h2>' + x.action_name + '</h2>';
+          });
+
+        var vendor_visitor_graphs = d3_updateable(vendors_list_items, '.vendor-visitor-graphs', 'div')
+          .classed('col-md-4 vendor-visitor-graphs', true)
+
+          var vendor_visitor_graphs_rows = d3_splat(vendor_visitor_graphs, '.vendor-visitor-graphs-row', 'div', ['views', 'visitor','uniques'], function(y) {
+            return y;
+          })
+            .classed('vendor-visitor-graphs-row row', true)
+
+          var vendor_visitor_graph_type = d3_updateable(vendor_visitor_graphs_rows, '.vendor-visitor-graph-type', 'div')
+            .classed('col-md-3 vendor-visitor-graph-type', true)
+            .html(function(y) {
+              return '<span class="type-name">' + y + '</span><span class="type-amount">' + 1234 + '</span>';
+            });
+
+          var vendor_visitor_graph_chart = d3_updateable(vendor_visitor_graphs_rows, '.vendor-visitor-graph-chart', 'div')
+            .classed('col-md-9 vendor-visitor-graph-chart', true)
+
+          var visitor_chart = RB.rho.ui.buildTimeseries(
+            vendor_visitor_graph_chart,visitor_data,"Views",["views"], undefined,true, 85
+          )
+
+
+        var vendor_domains_pie = d3_updateable(vendors_list_items, '.vendor-domains-pie', 'div')
+          .classed('col-md-3 vendor-domains-pie', true)
+          .html(function(x) {
+            return 'Domains Pie';
+          });
+
+        var vendor_expand = d3_updateable(vendors_list_items, '.vendor-expand', 'div')
+          .classed('col-md-1 vendor-expand', true)
+
+        var vendor_expand_button = d3_updateable(vendor_expand, '.vendor-expand-button', 'div')
+          .classed('vendor-expand-button btn btn-sm btn-default pull-right', true)
+          .text('View More')
+
+        console.log('Segments', vendors);
+      }, "vendors-data", true, true);
 
       var visitor_data = [{
         "key": "2015-12-30 00:00:00",
@@ -409,127 +513,6 @@ RB.crusher.controller = (function(controller) {
       var vendors_list_card_title = d3_updateable(vendors_list_card, '.vendors-list-card-title', 'header')
         .classed('vendors-list-card-title title', true)
         .text('Advertising Vendor Summary')
-
-      var vendors_data = [
-        {
-          name: 'Facebook',
-          visitors: {
-            views: [],
-            visits: [],
-            uniques: []
-          },
-          pie_data: {}
-        },
-        {
-          name: 'Google',
-          visitors: {
-            views: [],
-            visits: [],
-            uniques: []
-          },
-          pie_data: {}
-        },
-        {
-          name: 'Twitter',
-          visitors: {
-            views: [],
-            visits: [],
-            uniques: []
-          },
-          pie_data: {}
-        }
-      ];
-
-      var vendors_list = d3_updateable(vendors_list_card, '.vendors-list', 'ul')
-        .classed('vendors-list', true)
-
-      var vendors_list_items = d3_splat(vendors_list, '.vendors-list-item', 'li', vendors_data, function(x) {
-        return x.name;
-      })
-        .classed('vendors-list-item', true)
-
-      /*
-        Each individual vendor
-      */
-
-      // vendor-status
-      // vendor-name
-      // vendor-visitor-graphs
-      // vendor-domains-pie
-      // vendor-expand
-
-
-      var vendor_status = d3_updateable(vendors_list_items, '.vendor-status', 'div')
-        .classed('vendor-status', true)
-        .html(function(x) {
-          if(x.name != 'Twitter') {
-            return '<i class="glyphicon status glyphicon-ok-circle green"/>'
-          } else {
-            return '<i class="glyphicon status glyphicon-ok-circle grey"/>'
-          }
-        });
-
-      var vendor_name = d3_updateable(vendors_list_items, '.vendor-name', 'div')
-        .classed('col-md-2 vendor-name', true)
-        .html(function(x) {
-          return '<h2>' + x.name + '</h2>';
-        });
-
-      var vendor_visitor_graphs = d3_updateable(vendors_list_items, '.vendor-visitor-graphs', 'div')
-        .classed('col-md-6 vendor-visitor-graphs', true)
-
-        var vendor_visitor_graphs_rows = d3_splat(vendor_visitor_graphs, '.vendor-visitor-graphs-row', 'div', ['views', 'visitor','uniques'], function(y) {
-          return y;
-        })
-          .classed('vendor-visitor-graphs-row', true)
-
-        var vendor_visitor_graph_type = d3_updateable(vendor_visitor_graphs_rows, '.vendor-visitor-graph-type', 'div')
-          .classed('col-md-2 vendor-visitor-graph-type', true)
-          .html(function(y) {
-            return y;
-          });
-
-        var vendor_visitor_graph_chart = d3_updateable(vendor_visitor_graphs_rows, '.vendor-visitor-graph-chart', 'div')
-          .classed('col-md-6 vendor-visitor-graph-chart', true)
-
-        var visitor_chart = RB.rho.ui.buildTimeseries(
-          vendor_visitor_graph_chart,visitor_data,"Views",["views"], undefined,true, 120
-        )
-
-        var vendor_visitor_graph_numbers = d3_updateable(vendor_visitor_graphs_rows, '.vendor-visitor-graph-numbers', 'div')
-          .classed('col-md-4 vendor-visitor-graph-numbers', true)
-          .html(function(y) {
-            return 1234 + ' ' + y;
-          });
-
-      var vendor_domains_pie = d3_updateable(vendors_list_items, '.vendor-domains-pie', 'div')
-        .classed('col-md-2 vendor-domains-pie', true)
-        .html(function(x) {
-          return 'Domains Pie';
-        });
-
-      var vendor_expand = d3_updateable(vendors_list_items, '.vendor-expand', 'div')
-        .classed('col-md-1 vendor-expand', true)
-
-      var vendor_expand_button = d3_updateable(vendor_expand, '.vendor-expand-button', 'div')
-        .classed('vendor-expand-button btn btn-sm btn-default pull-right', true)
-        .text('View More')
-
-      // var vendor_item_state = d3_updateable(vendors_list_items, 'vendor-list-title', 'i')
-      //   .attr('class', function(x) {
-      //     if(x.name != 'Twitter') {
-      //       return 'glyphicon status glyphicon-ok-circle grey';
-      //     } else {
-      //       return 'glyphicon status glyphicon-ok-circle green';
-      //     }
-      //   });
-      //
-      // var vendor_item_title = d3_updateable(vendors_list_items, 'vendor-list-title', 'h2')
-      //   .classed('vendor-list-title', true)
-      //   .text(function(x) {
-      //     return x.name
-      //   });
-
     },
     "comparison": function() {
       d3.select("body")

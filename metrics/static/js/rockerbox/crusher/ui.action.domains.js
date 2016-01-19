@@ -120,8 +120,6 @@ RB.crusher.ui.action = (function(action) {
       .classed("table-title",true)
       .text("Percentage of user visits by category")
 
-
-
     var formatData = function(data){
       return data.map(function(d){
         return { label: d.key, value: d.values }

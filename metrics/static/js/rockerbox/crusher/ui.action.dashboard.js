@@ -44,8 +44,10 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
         });
       });
 
+      console.log('segment_names', segment_names);
       var data = data
         .filter(function(x){
+          console.log('URL PATTERN', x.url_pattern[0]);
           if(segment_names.indexOf(x.url_pattern[0]) != -1) {
             var response = true;
           } else {
@@ -59,7 +61,7 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
           return x
         }).map(function(x, i){
           obj = {
-            "key": x.action_name,
+            "key": x.action_id,
             "Action name": x.action_name,
             "views":segment_counts[i].views,
             "__proto__": x

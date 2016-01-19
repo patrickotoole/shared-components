@@ -27,9 +27,10 @@ RB.rho.ui = (function(ui) {
       labels: labels,
       series: [series]
     };
-
+    // width: d3.select(target).style("width") - 10,
+// alert('yay');
     var options = {
-      width: d3.select(target).style("width") - 10,
+      width: 100,
       height: height || 130,
       showArea: true,
       horizontalBars: true,
@@ -596,7 +597,7 @@ RB.rho.ui = (function(ui) {
 
     var targetWidth = target.style("width").replace("px","")
 
-    var margin = {top: 20, right: 50, bottom: 30, left: 50},
+    var margin = {top: 10, right: 50, bottom: 30, left: 50},
       width = targetWidth - margin.left - margin.right,
       height = height - margin.top - margin.bottom;
 
@@ -638,7 +639,7 @@ RB.rho.ui = (function(ui) {
       .call(xAxis);
 
     svg.select(".x.axis").selectAll("text").filter(function(x){return this.innerHTML.length > 6})
-      .attr("y",20)
+      .attr("y",10)
 
 
 
@@ -703,7 +704,7 @@ RB.rho.ui = (function(ui) {
       points
          .attr("fill", function(d, i) { return "steelblue" })
          .attr("cx", function(d, i) { return x(d.date) + 50 })
-         .attr("cy", function(d, i) { return y(d[series]) + 20})
+         .attr("cy", function(d, i) { return y(d[series]) + 10})
          .attr("r", function(d, i) { return 3 })
 
     })
@@ -861,7 +862,7 @@ RB.rho.ui = (function(ui) {
 
     h2.enter().append("h5")
     h2.html(text)
-      .style("margin-top","20px")
+      .style("margin-top","10px")
 
 
 
@@ -893,7 +894,7 @@ RB.rho.ui = (function(ui) {
     showing += showing_arr.join(" and ")
 
     h5.text(showing)
-      .style("margin-top","20px")
+      .style("margin-top","10px")
 
 
   }
