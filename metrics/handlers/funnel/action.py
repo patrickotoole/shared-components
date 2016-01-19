@@ -51,10 +51,9 @@ class ActionHandler(BaseHandler,ActionAuth,APIHelpers,ActionDatabase):
             if action_id:
                 results = self.get_advertiser_action(advertiser,action_id)
             if action_type:
-		results = self.get_vendor_actions(advertiser, action_type)
+                results = self.get_vendor_actions(advertiser, action_type)
             else:
                 results = self.get_advertiser_actions(advertiser)
-
             self.write_response(Convert.df_to_values(results))
         except Exception, e:
             self.write_response(str(e),e)
