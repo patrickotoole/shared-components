@@ -167,8 +167,6 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
                 return x.values < y.values;
               })
 
-              console.log('CATEGORY DATAAAAA', parentCategoryData);
-
             } else {
               x.parentCategoryData = ddd.sort(function(x, y) {
                 return x.values < y.values;
