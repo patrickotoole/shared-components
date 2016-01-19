@@ -174,8 +174,7 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
 
 
         RB.crusher.ui.action.category_pie(
-          category_pie, [], RB.crusher.ui.action.category_colors, "row col-md-12",
-          function(cb,x){ return cb(x) }
+          category_pie, [], RB.crusher.ui.action.category_colors, "row col-md-12", false
         )
 
         category_pie.selectAll(".table-title")
