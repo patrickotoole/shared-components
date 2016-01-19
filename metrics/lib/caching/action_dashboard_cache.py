@@ -16,79 +16,78 @@ SQL_REMOVE_OLD = "DELETE FROM action_dashboard_cache where update_time < (UNIX_T
 current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 class ActionCache:
+    def __init__(self, username, password, con):
+        self.username = username
+        self.password = password
+        self.con = con
+        self.req = requests
+        self.sql_query = _sql._write_mysql
 
-	def __init__(self, username, password, con):
-		self.username = username
-		self.password = password
-		self.con = con
-		self.req = requests
-		self.sql_query = _sql._write_mysql
+    def auth(self):
+        data = {"username":self.username,"password":self.password}
+        auth_data = json.dumps(data)
+        resp = self.req.post("http://crusher.getrockerbox.com/login", data=auth_data)
+        self.cookie = dict(resp.cookies)
+        logging.info("cookie received for advertiser  username: %s" % self.username)
+        logging.info("cookie is %s" % self.cookie)
 
-	def auth(self):
-		data = {"username":self.username,"password":self.password}
-		auth_data = json.dumps(data)
-		resp = self.req.post("http://crusher.getrockerbox.com/login", data=auth_data)
-		self.cookie = dict(resp.cookies)
-		logging.info("cookie received for advertiser  username: %s" % self.username)
-		logging.info("cookie is %s" % self.cookie)
+    def get_segments(self):
+        url = "http://crusher.getrockerbox.com/crusher/funnel/action?format=json"
+        results = self.req.get(url,cookies=self.cookie)
+        segments = []
+        try:	
+            raw_results = results.json()['response']
+            for result in raw_results:
+                single_seg = {"url_pattern": result['url_pattern'], "action_name":result['action_name'], "action_id":result['action_id']}
+                segments.append(single_seg)
+            logging.info("returned %s segments for advertiser %s" % (len(segments), self.username))
+        except:
+            logging.error("error getting cookie for advertise with username: %s" % self.username)
+        return segments
 
-	def get_segments(self):
-		url = "http://crusher.getrockerbox.com/crusher/funnel/action?format=json"
-		results = self.req.get(url,cookies=self.cookie)
-		segments = []
-		try:	
-			raw_results = results.json()['response']
-			for result in raw_results:
-				single_seg = {"url_pattern": result['url_pattern'], "action_name":result['action_name'], "action_id":result['action_id']}
-				segments.append(single_seg)
-			logging.info("returned %s segments for advertiser %s" % (len(segments), self.username))
-		except:
-			logging.error("error getting cookie for advertise with username: %s" % self.username)
-		return segments
-
-	def make_request(self, url_pattern, advertiser, action_name, action_id):
-		df = pandas.DataFrame()
-		try:
-			logging.info("calling segment %s" % url_pattern[0])
-			url = "http://crusher.getrockerbox.com/crusher/pattern_search/timeseries?search=%s&num_days=2" % url_pattern[0]
-			results = self.req.get(url, cookies=self.cookie)
-			df = pandas.DataFrame()
-			resultsAsJson = results.json()['domains']
-			data = {}
-			data['data'] = []
-			for item in resultsAsJson:
-				record = {}
-				record['advertiser']=advertiser
-				record['action_id']=int(action_id)
-				record['action_name'] = action_name
-				record['domain'] = item['domain']
-				record['count'] = item['count']
-				data['data'].append(record)
-			df = json_normalize(data['data'])
-			logging.info("API returned %s records and converted to dataframe for segment %s for advertiser %s" % (len(df), url_pattern, self.username))
-		except:
-			logging.error("Error with data response for advertiser username %s segment %s, text from response is %s" % (self.username, action_name, df))
-		return df
+    def make_request(self, url_pattern, advertiser, action_name, action_id):
+        df = pandas.DataFrame()
+        try:
+            logging.info("calling segment %s" % url_pattern[0])
+            url = "http://crusher.getrockerbox.com/crusher/pattern_search/timeseries?search=%s&num_days=2" % url_pattern[0]
+            results = self.req.get(url, cookies=self.cookie)
+            df = pandas.DataFrame()
+            resultsAsJson = results.json()['domains']
+            data = {}
+            data['data'] = []
+            for item in resultsAsJson:
+                record = {}
+                record['advertiser']=advertiser
+                record['action_id']=int(action_id)
+                record['action_name'] = action_name
+                record['domain'] = item['domain']
+                record['count'] = item['count']
+                data['data'].append(record)
+            df = json_normalize(data['data'])
+            logging.info("API returned %s records and converted to dataframe for segment %s for advertiser %s" % (len(df), url_pattern, self.username))
+        except:
+            logging.error("Error with data response for advertiser username %s segment %s, text from response is %s" % (self.username, action_name, df))
+        return df
 
 
-	def insert(self, frame, table_name, con, keys):
-                batch_num = int(len(frame) / 50)+1
-		for batch in range(0, batch_num):
-			if batch==0:
-                        	to_insert = frame.ix[0:50]
-				to_insert['update_date'] = [current_datetime] * len(to_insert)
-			else:
-				to_insert = frame.ix[batch*50+1:(batch+1)*50]
-				to_insert['update_date'] = [current_datetime] * len(to_insert)
-			if len(to_insert)>0:
-				try:
-					to_insert['domain'] = to_insert['domain'].map(lambda x : x.encode('utf-8'))
-					self.sql_query(to_insert, table_name, list(to_insert.columns), con, keys)
-				except:
-					logging.info("error with df %s" % str(to_insert))
-				logging.info("inserted %s records for advertiser username (includes a_) %s" % (len(to_insert), self.username))
+    def insert(self, frame, table_name, con, keys):
+        batch_num = int(len(frame) / 50)+1
+        for batch in range(0, batch_num):
+            if batch==0:
+                to_insert = frame.ix[0:50]
+                to_insert['update_date'] = [current_datetime] * len(to_insert)
+            else:
+                to_insert = frame.ix[batch*50+1:(batch+1)*50]
+                to_insert['update_date'] = [current_datetime] * len(to_insert)
+            if len(to_insert)>0:
+                try:
+                    to_insert['domain'] = to_insert['domain'].map(lambda x : x.encode('utf-8'))
+                    self.sql_query(to_insert, table_name, list(to_insert.columns), con, keys)
+                except:
+                    logging.info("error with df %s" % str(to_insert))
+                logging.info("inserted %s records for advertiser username (includes a_) %s" % (len(to_insert), self.username))
 
-	def seg_loop(self, segments, advertiser):
+    def seg_loop(self, segments, advertiser):
 		for seg in segments:
 			res = self.make_request(seg["url_pattern"],advertiser,seg["action_name"], seg["action_id"])
 			if(len(res)>=1):
