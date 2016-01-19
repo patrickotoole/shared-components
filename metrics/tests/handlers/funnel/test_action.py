@@ -16,6 +16,7 @@ CREATE TABLE `action` (
   `operator` enum('and','or') NOT NULL,
   `pixel_source_name` varchar(250) DEFAULT NULL,
   `action_name` varchar(100) DEFAULT NULL,
+  `action_type` enum('segment','vendor') DEFAULT 'segment',
   PRIMARY KEY (`action_id`)
 )
 """
@@ -28,13 +29,13 @@ CREATE TABLE `action_patterns` (
 """
 
 ACTION_FIXTURE_1 = """
-INSERT INTO action (`action_id`,`start_date`,`end_date`, `operator`, `pixel_source_name`, `action_name`) 
-VALUES (1,0,0,"and","alan","alans_action")
+INSERT INTO action (`action_id`,`start_date`,`end_date`, `operator`, `pixel_source_name`, `action_name`, `action_type`) 
+VALUES (1,0,0,"and","alan","alans_action","segment")
 """
 
 ACTION_FIXTURE_2 = """
-INSERT INTO action (`action_id`,`start_date`,`end_date`, `operator`, `pixel_source_name`, `action_name`) 
-VALUES (2,0,0,"and","will","wills_action") 
+INSERT INTO action (`action_id`,`start_date`,`end_date`, `operator`, `pixel_source_name`, `action_name`, `action_type`) 
+VALUES (2,0,0,"and","will","wills_action", "segment") 
 """
 
 class ActionTest(AsyncHTTPTestCase):
@@ -71,7 +72,7 @@ class ActionTest(AsyncHTTPTestCase):
     def test_get(self):        
         _a = ujson.loads(self.fetch("/?format=json&advertiser=alan",method="GET").body)
         _b = ujson.loads(self.fetch("/?format=json&advertiser=will",method="GET").body)
-        
+        #import ipdb; ipdb.set_trace()
         self.assertEqual(len(_a["response"]),1)
         self.assertEqual(len(_b["response"]),1)
 
@@ -110,7 +111,6 @@ class ActionTest(AsyncHTTPTestCase):
 
         action_posted = self.fetch("/?format=json&",method="POST",body=action_string).body
         action_get_json = ujson.loads(self.fetch("/?format=json&advertiser=baublebar",method="GET").body)['response']
-
         self.assertEqual(ujson.loads(action_string)['action_name'],action_get_json[0]['action_name'])
         self.assertEqual(ujson.loads(action_string)['url_pattern'],action_get_json[0]['url_pattern']) 
         
