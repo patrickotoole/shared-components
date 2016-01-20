@@ -4,7 +4,7 @@ import action_dashboard_cache as adc
 
 VENDOR_QUERY = "select url_patterns, vendor from vendor_patterns"
 
-json_obj = {"action_name": "","url_pattern": "", "segment":"vendor"}
+json_obj = {"action_name": "","url_pattern": "", "segment":"vendor", "operator":"or"}
 INSERT_URL = "http://crusher.getrockerbox.com/crusher/funnel/action?format=json"
 PATTERN_URL = "http://crusher.getrockerbox.com/crusher/pattern_search/timeseries?search={}&num_days=7"
 
