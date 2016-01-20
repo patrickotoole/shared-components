@@ -89,7 +89,7 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
 
       var target = RB.rho.ui.buildWrappers(funnelRow,
         function(x){return x['Action name']},
-        "views", data, "col-md-4 max-width-340  ",
+        "views", data, "col-md-4 max-width-330  ",
         function(x){return x.description}, button
       )
 
@@ -186,7 +186,7 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
           .classed("hidden",true)
 
       funnelRow.selectAll(".series-wrapper")
-        .classed("max-width-300", true)
+        .classed("max-width-330", true)
 
       var newAction = funnelRow.selectAll(".series-wrapper")
         .filter(function(x){return x.key == "new"})
