@@ -80,23 +80,31 @@ RB.crusher.controller = (function(controller) {
 
   var build_header = function(obj) {
 
-    var target = d3.selectAll(".container")
+    var target = d3.selectAll('.container')
 
-    var funnelRow = d3_splat(target,".row","div",[obj],function(x){return x.id})
-      .classed("row funnels",true)
+    var funnelRow = d3_splat(target,'.row','div',[obj],function(x){return x.id})
+      .classed('row funnels',true)
 
     funnelRow.exit().remove()
 
-    var heading = d3_updateable(funnelRow,".heading","h5")
+    var heading = d3_updateable(funnelRow,'page-header','header')
+      .text(function(x) {
+        return x.name;
+      })
+      .attr('class', function(x) {
+        var classes = ['page-header'];
 
-    heading.text(function(x){return x.name})
-      .attr("style","margin-top:-15px; padding-left:20px; height: 70px; line-height:70px; border-bottom:1px solid #f0f0f0; margin-left:-15px; margin-right:-15px; margin-bottom:30px;")
-      .classed("heading heading",true)
+        if(!d3.select('body')[0][0].classList.contains('hide-select')) {
+          classes.push('with-sidebar')
+        }
 
-    d3_updateable(funnelRow,".pixel-description","div")
-      .classed("pixel-description",true)
-      .style("margin-top","15px")
-      .style("margin-bottom","15px")
+        return classes.join(' ')
+      })
+
+    d3_updateable(funnelRow,'.pixel-description','div')
+      .classed('pixel-description',true)
+      .style('margin-top','15px')
+      .style('margin-bottom','15px')
       .html(function(x){return x.description})
 
     return funnelRow
@@ -766,7 +774,26 @@ RB.crusher.controller = (function(controller) {
         var override = (action.action_name) ? action : false
         controller.action.new(target, crusher.cache.urls_wo_qs, override)
       }, "new",true,true)
+    },
+    "vendors": function() {
+      RB.component.export(RB.crusher.ui.funnel.show, RB.crusher.ui.funnel)
+      RB.component.export(RB.crusher.ui.action.show, RB.crusher.ui.action)
+
+      d3.select("body").classed("hide-select", true)
+
+      var funnelRow = build_header({
+        "id": "vendors",
+        "name": "Vendor Analysis"
+      });
+
+      var main_wrapper = d3_updateable(funnelRow,".main-wrapper","div")
+        .classed("main-wrapper",true)
+
+      var vendors_card = card()
+          .title('Test')
     }
+
+
   }
 
   controller.get_bloodhound = function(cb) {
@@ -804,11 +831,16 @@ RB.crusher.controller = (function(controller) {
   controller.routes = {
     roots: [
     {
+      "name":"Vendors",
+      "push_state": "/crusher/vendors",
+      "class": "glyphicon glyphicon-th-large",
+      "values_key": "action_name"
+    },
+    {
       "name":"Segments",
       "push_state": "/crusher/action/existing",
       "class": "glyphicon glyphicon-signal",
       "values_key": "action_name"
-
     },
     {
       "name":"Create Segment",
@@ -900,6 +932,10 @@ RB.crusher.controller = (function(controller) {
       "comparison": [{
           "name": "Comparison",
           "push_state": "/crusher/comparison"
+        }],
+      "vendors": [{
+          "name": "Vendors",
+          "push_state": "/crusher/vendors"
         }],
       "home": [{
           "name":"Home",

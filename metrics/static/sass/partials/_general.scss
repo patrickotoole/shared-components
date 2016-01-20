@@ -1,3 +1,24 @@
+body {
+	padding-top: 70px;
+}
+
+header.page-header {
+	position: fixed;
+	right: 0px;
+	height: 70px;
+	line-height: 70px;
+	border-bottom: 1px solid #f0f0f0;
+	top: 0px;
+	left: 210px;
+	padding-left: 20px;
+	background-color: #FFF;
+	margin: 0;
+	z-index: 99;
+}
+header.page-header.with-sidebar {
+	left: 420px !important;
+}
+
 .selectbar {
 	h5 a {
 		padding: 0 0 0 10px;
