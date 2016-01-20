@@ -2,7 +2,7 @@ from link import lnk
 import requests, json, logging
 import action_dashboard_cache as adc
 
-VENDOR_QUERY = "select url_patterns, vendor from vendor_patterns"
+VENDOR_QUERY = "select url_patterns, vendor from vendor_patterns where medium is not null and medium_type is not null"
 
 json_obj = {"action_name": "","url_pattern": "", "segment":"vendor", "operator":"or"}
 INSERT_URL = "http://crusher.getrockerbox.com/crusher/funnel/action?format=json"
