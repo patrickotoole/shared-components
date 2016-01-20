@@ -68,4 +68,3 @@ var make_table = function(target,data,index) {
 
   return table
 }
-

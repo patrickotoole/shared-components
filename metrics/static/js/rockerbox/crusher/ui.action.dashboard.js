@@ -61,7 +61,7 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
         }).map(function(x, i){
           obj = {
             "key": x.action_id,
-            "Action name": x.action_name,
+            "action_name": x.action_name,
             "views":segment_counts[i].views,
             "__proto__": x
           }
@@ -70,7 +70,7 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
 
       data.push({
         "key": "new",
-        "Action name": "ASDF",
+        "action_name": "ASDF",
         "views":""
       })
 
@@ -88,7 +88,7 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
         }
 
       var target = RB.rho.ui.buildWrappers(funnelRow,
-        function(x){return x['Action name']},
+        function(x){return x['action_name']},
         "views", data, "col-md-4 max-width-330  ",
         function(x){return x.description}, button
       )
@@ -163,13 +163,13 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
                 .filter(function(x){return x.key != "NA"})
                 .slice(0,15)
 
-              x.parentCategoryData = parentCategoryData.sort(function(x, y) {
-                return x.values < y.values;
+              x.parentCategoryData = parentCategoryData.sort(function(y,x) {
+                return x.values - y.values;
               })
 
             } else {
-              x.parentCategoryData = ddd.sort(function(x, y) {
-                return x.values < y.values;
+              x.parentCategoryData = ddd.sort(function(y,x) {
+                return x.values - y.values;
               })
             }
             pie_iterator++;
@@ -241,7 +241,7 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
           return x
         }).map(function(x){
           obj = {
-            "Action name": x.action_name,
+            "action_name": x.action_name,
             "views":x.views,
             "visits":x.visits,
             "uniques":x.uniques,
@@ -256,7 +256,7 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
         description = "These are the keywords that are most popular on your site"
 
       var target = RB.rho.ui.buildSeriesWrapper(funnelRow, title, "current-actions", data, "col-md-12", description)
-      var table = make_table(target,data,["Action name"])
+      var table = make_table(target,data,["action_name"])
 
       table.classed("table-condensed table-hover",true)
         .style("font-size","14px")

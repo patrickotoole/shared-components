@@ -76,7 +76,10 @@ RB.rho.ui = (function(ui) {
 
     var series_string = typeof(series) == "object" ? series.join("-and-") : series
 
-    var wrapper = d3_splat(target,".series-wrapper." + series_string + formatting,"div",data,function(x){return x.key})
+    target.datum(data)
+    var wrapper = d3_splat(target, ".series-wrapper." + series_string + formatting,"div", null, function(x) {
+      return x.key;
+    })
       .classed("series-wrapper " + formatting.replace(/\./g," ") + " " + series_string,true)
 
     var newTarget = d3_updateable(wrapper,".series." + series,"div")
