@@ -24,6 +24,7 @@ class SearchHandler(SearchBase):
             "uids": self.get_uids,
             "count": self.get_count,
             "timeseries": self.get_timeseries,
+            "timeseries_only": self.get_timeseries_only,
             "urls": self.get_urls
         }
 
