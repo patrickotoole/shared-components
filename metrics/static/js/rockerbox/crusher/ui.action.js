@@ -355,7 +355,7 @@ RB.crusher.ui.action = (function(action) {
     var newTs = wrapper.selectAll(".ts")
     var tsData = newTs.datum()
     var urlData = wrapper.datum().urls
-
+    // console.log('newTs', JSON.stringify(tsData));
     RB.rho.ui.buildTimeseriesSummary(
       newTs,tsData,"Views",["views"], undefined,
       "This is the number of page views per day"

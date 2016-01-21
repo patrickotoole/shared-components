@@ -18,26 +18,22 @@ header.page-header {
 header.page-header.with-sidebar {
 	left: 420px !important;
 }
-
 .selectbar {
-	h5 a {
-		padding: 0 0 0 10px;
-		height: 100%;
-	}
+  h5 a {
+    padding: 0 0 0 10px;
+    height: 100%;
+  }
 }
-
 .page_tabs_item {
-	padding: 20px 30px;
-	display: inline-block;
-	border-right: solid 1px rgb(240, 240, 240);
-	cursor: pointer;
+  padding: 20px 30px;
+  display: inline-block;
+  border-right: solid 1px rgb(240, 240, 240);
+  cursor: pointer;
 }
-
 .page_tabs_item.active {
-	background-color: #FFF;
-	font-weight: bold;
+  background-color: #FFF;
+  font-weight: bold;
 }
-
 
 .max-width-330 {
 	width: 330px;

@@ -152,6 +152,108 @@ RB.crusher.controller = (function(controller) {
       )
 
     },
+    "vendors": function(obj) {
+      RB.component.export(RB.crusher.ui.funnel.show, RB.crusher.ui.funnel);
+      RB.component.export(RB.crusher.ui.action.show, RB.crusher.ui.action);
+
+      d3.select('body').classed('hide-select', true);
+
+      var funnelRow = build_header({
+        'id': 'vendors',
+        'name': 'Vendor Analysis'
+      });
+
+      var vendors_list_card = d3_updateable(funnelRow, '.vendors-list-card', 'section')
+        .classed('vendors-list-card bar series col-md-12', true);
+
+      var vendors_list_card_title = d3_updateable(vendors_list_card, '.vendors-list-card-title', 'header')
+        .classed('vendors-list-card-title title', true)
+        .text('Advertising Vendor Summary');
+
+      crusher.subscribe.add_subscriber(["actions"], function(segments) {
+        var vendors = segments.filter(function(x) {
+          return x.action_type == 'vendor';
+        })
+
+        /* Vendor List */
+        var vendors_list = d3_updateable(vendors_list_card, '.vendors-list', 'ul')
+          .classed('vendors-list', true);
+
+        /* Vendor List Items */
+        var vendors_list_items = d3_splat(vendors_list, '.vendors-list-item', 'li', vendors, function(x) {
+          return x.action_name;
+        })
+          .classed('vendors-list-item', true);
+
+        // Vendor List Item : Status
+        var vendor_status = d3_updateable(vendors_list_items, '.vendor-status', 'div')
+          .classed('vendor-status col-md-1', true)
+          .html(function(x) {
+            if(x.action_name !== 'email') {
+              return '<i class="glyphicon status glyphicon-ok-circle green"/>'
+            } else {
+              return '<i class="glyphicon status glyphicon-ok-circle grey"/>'
+            }
+          });
+
+        // Vendor List Item : Name
+        var vendor_name = d3_updateable(vendors_list_items, '.vendor-name', 'div')
+          .classed('col-md-2 vendor-name', true)
+          .html(function(x) {
+            return '<h2>' + x.action_name + '</h2>';
+          });
+
+        // Vendor List Item : Graphs
+        var vendor_visitor_graphs = d3_updateable(vendors_list_items, '.vendor-visitor-graphs', 'div')
+          .classed('col-md-4 vendor-visitor-graphs', true);
+
+        var vendor_visitor_graphs_rows = d3_splat(vendor_visitor_graphs, '.vendor-visitor-graphs-row', 'div', ['views', 'visitor','uniques'], function(y) {
+          return y;
+        })
+          .classed('vendor-visitor-graphs-row row', true);
+
+        var vendor_visitor_graph_type = d3_updateable(vendor_visitor_graphs_rows, '.vendor-visitor-graph-type', 'div')
+          .classed('col-md-3 vendor-visitor-graph-type', true)
+          .html(function(y) {
+            return '<span class="type-name">' + y + '</span><span class="type-amount">' + 1234 + '</span>';
+          });
+
+        var vendor_visitor_graph_chart = d3_updateable(vendor_visitor_graphs_rows, '.vendor-visitor-graph-chart', 'div')
+          .classed('col-md-9 vendor-visitor-graph-chart', true);
+
+        var subscriber_input = {
+          action_name: 'bing',
+          action_string: 'bing',
+          action_type: 'segment',
+          advertiser: 'advertiser',
+          name: 'bing',
+          url_pattern: ['bing']
+        };
+        crusher.subscribe.add_subscriber(["actionTimeseriesOnly"], function(actionTimeseries) {
+          console.log('! ACTION TIMESERIES', actionTimeseries)
+
+          actionTimeseries.visits_data.forEach(function(actionTimeserie) {
+            actionTimeserie.key = actionTimeserie.date;
+          })
+          var visitor_chart = RB.rho.ui.buildTimeseries(vendor_visitor_graph_chart, actionTimeseries.visits_data, "Views", ["views"], undefined, true, 85);
+
+          var vendor_domains_pie = d3_updateable(vendors_list_items, '.vendor-domains-pie', 'div')
+            .classed('col-md-3 vendor-domains-pie', true)
+            .html(function(x) {
+              return 'Domains Pie';
+            });
+        }, "vendor-timeseries", true, true, subscriber_input);
+        // Vendor List Item : Domains Pie
+
+        // Vendor List Item : Expand Button
+        var vendor_expand = d3_updateable(vendors_list_items, '.vendor-expand', 'div')
+          .classed('col-md-1 vendor-expand', true)
+
+        var vendor_expand_button = d3_updateable(vendor_expand, '.vendor-expand-button', 'div')
+          .classed('vendor-expand-button btn btn-sm btn-default pull-right', true)
+          .text('View More')
+      }, "vendors-data", true, true);
+    },
     "comparison": function() {
       d3.select("body")
         .classed("hide-select", true)
@@ -774,26 +876,7 @@ RB.crusher.controller = (function(controller) {
         var override = (action.action_name) ? action : false
         controller.action.new(target, crusher.cache.urls_wo_qs, override)
       }, "new",true,true)
-    },
-    "vendors": function() {
-      RB.component.export(RB.crusher.ui.funnel.show, RB.crusher.ui.funnel)
-      RB.component.export(RB.crusher.ui.action.show, RB.crusher.ui.action)
-
-      d3.select("body").classed("hide-select", true)
-
-      var funnelRow = build_header({
-        "id": "vendors",
-        "name": "Vendor Analysis"
-      });
-
-      var main_wrapper = d3_updateable(funnelRow,".main-wrapper","div")
-        .classed("main-wrapper",true)
-
-      var vendors_card = card()
-          .title('Test')
     }
-
-
   }
 
   controller.get_bloodhound = function(cb) {
@@ -892,6 +975,7 @@ RB.crusher.controller = (function(controller) {
     },
     apis: {
       "comparison": ['funnels'],
+      "vendors": [],
       "funnel/new": [],
       "funnel/existing": ['funnels'],
       "action/existing": ['actions'],

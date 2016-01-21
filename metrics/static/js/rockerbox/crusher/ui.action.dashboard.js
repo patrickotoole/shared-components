@@ -44,9 +44,9 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
         });
       });
 
-
       var data = data
         .filter(function(x){
+          console.log('URL PATTERN', x.url_pattern[0]);
           if(segment_names.indexOf(x.url_pattern[0]) != -1) {
             var response = true;
           } else {
