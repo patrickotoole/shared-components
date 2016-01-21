@@ -175,9 +175,7 @@ class ActionDatabase(object):
             action['action_id'] = action_id
             return action
         except Exception:
-            import ipdb; ipdb.set_trace()
             next_auto = cursor.execute(GET_MAX_ACTION_PLUS_1)
             cursor.execute(RESET_AUTO_INCR_ACTION % next_auto)
-            import ipdb; ipdb.set_trace()
             raise
 
