@@ -15,7 +15,6 @@ PATTERN_URL = "http://crusher.getrockerbox.com/crusher/pattern_search/timeseries
 def buildIter(AC,advertiser):
     def iter_vendors(series):
         logging.info("making request for %s" % series.url_patterns)
-        #import ipdb; ipdb.set_trace()
         if len(series.url_patterns[0])>1:
             rr = requests.get(PATTERN_URL.format(series.url_patterns[0]), cookies=AC.cookie)
         else:
@@ -23,13 +22,12 @@ def buildIter(AC,advertiser):
         logging.info("received data for advertiser %s and pattern %s" % (advertiser, series.url_patterns))
         existing_urls ={"urls":[]}
         exists = requests.get(INSERT_URL, cookies=AC.cookie)
-        for e in exists.json()['response']:
-            existing_urls['urls'].append(e["action_name"])
         try:
+            for e in exists.json()['response']:
+                existing_urls['urls'].append(e["action_name"])
             if len(rr.json()['results'][0]['domains'])>0 and series.vendor not in existing_urls["urls"]:
                 json_obj["action_name"] = series.url_patterns
                 json_obj["url_pattern"] = [series.url_patterns]
-                #import ipdb; ipdb.set_trace()
                 r = requests.post(INSERT_URL, data = json.dumps(json_obj), cookies=AC.cookie)
                 logging.info("status from response was %s and response was %s" % (r.status_code, r.json()))
             else:
