@@ -13,29 +13,42 @@ SQL_QUERY_1 = "select a.action_name, sum(count), action_type from action_dashboa
 
 SQL_QUERY_3 = "select a.domain, a.count, c.parent_category_name from action_dashboard_cache a left join domain_category b on a.domain=b.domain and a.advertiser='%s' and action_name like '%s' inner join category c on b.category_name = c.category_name"
 
+SQL_QUERY_4 = "select action_type from action where action_name = '%s'"
+
 class ActionDashboardHandler(BaseHandler):
     def initialize(self, db=None, **kwargs):
         self.db = db
 
     @decorators.deferred
-    def defer_get_actions(self, advertiser, number, action_type):
-        q1 = SQL_QUERY_1 % (advertiser, action_type, number)
-        segments = self.db.select_dataframe(q1)
-        data = {'domains':[]}
-        for current_segment in segments.ix[:int(number)].iterrows():
-            c_seg = current_segment[1]["action_name"]
-            q2 = SQL_QUERY_3 % (advertiser, c_seg)
+    def defer_get_actions(self, advertiser, number, action_type, url_pattern):
+        if not url_pattern:
+            q1 = SQL_QUERY_1 % (advertiser, action_type, number)
+            segments = self.db.select_dataframe(q1)
+            data = {'domains':[]}
+            for current_segment in segments.ix[:int(number)].iterrows():
+                c_seg = current_segment[1]["action_name"]
+                q2 = SQL_QUERY_3 % (advertiser, c_seg)
+                seg_data = self.db.select_dataframe(q2)
+                seg_data = seg_data.fillna(0)
+                current_data = seg_data.T.to_dict().values()
+                to_append = {"key":current_segment[1]["action_name"], "action_type": current_segment[1]["action_type"], "values":current_data}
+                data['domains'].append(to_append)
+            return data
+        else:
+            data = {'domains':[]}
+            q2 = SQL_QUERY_3 % (advertiser, url_pattern)
+            a_type = self.db.select_dataframe(SQL_QUERY_4 % url_pattern)
             seg_data = self.db.select_dataframe(q2)
             seg_data = seg_data.fillna(0)
             current_data = seg_data.T.to_dict().values()
-            to_append = {"key":current_segment[1]["action_name"], "action_type": current_segment[1]["action_type"], "values":current_data}
+            to_append = {"key":url_pattern, "action_type" : a_type.ix[0]["action_type"], "values":current_data}
             data['domains'].append(to_append)
-        return data
+            return data
 
     @defer.inlineCallbacks
-    def get_actions(self, advertiser, number, action_type):
+    def get_actions(self, advertiser, number, action_type, url_pattern):
         try:
-            actions = yield self.defer_get_actions(advertiser,number, action_type)
+            actions = yield self.defer_get_actions(advertiser,number, action_type,url_pattern)
             self.write(ujson.dumps(actions))
             self.finish()
         except:
@@ -46,5 +59,6 @@ class ActionDashboardHandler(BaseHandler):
         ad = self.current_advertiser_name
         limit = self.get_argument("limit", 5)
         action_type = self.get_argument("action_type", "segment")
-        self.get_actions(ad,limit, action_type)
+        url_pattern = self.get_argument("url_pattern", False)
+        self.get_actions(ad,limit, action_type, url_pattern)
 	
