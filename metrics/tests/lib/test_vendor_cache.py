@@ -9,12 +9,9 @@ import lib.caching.action_dashboard_cache as adc
 URL_1 = "randomsite/refer=kfkf&source=nothing&utm_source=MySource&somethingelse"
 JSON_FIXTURE_1 = {}
 DA = {"url_patterns":"arandompatternorstring","vendor":["vendor"]}
-RESPONSE_1 = dict({'response':[{'url_pattern':['url']}]})
 
 mock_response = mock.MagicMock()
-mock_response2 = mock.MagicMock()
-mock_response2.__iter__ = mock.Mock(return_value = "url")
-mock_response.json.side_effect = mock_response2
+mock_response.json.side_effect = lambda : {"response": [{"action_name":"url"}]}
 
 class VendorTests(unittest.TestCase):
 
