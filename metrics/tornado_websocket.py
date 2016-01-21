@@ -88,6 +88,7 @@ if __name__ == '__main__':
 
     routes = [r for r in options.routes.split(",") if len(r)]
 
+
     if options.show_routes:
         AllRoutes().__mock_all__(routes)
         os._exit(1)
