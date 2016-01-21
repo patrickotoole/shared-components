@@ -30,7 +30,7 @@ def buildIter(AC,advertiser):
         try:
             if len(rr.json()['results'][0]['domains'])>0 and series.vendor not in existing_urls["urls"]:
                 import ipdb; ipdb.set_trace()
-                json_obj["action_name"] = series.vendor
+                json_obj["action_name"] = series.url_patterns
                 json_obj["url_pattern"] = [series.url_patterns]
                 import ipdb; ipdb.set_trace()
                 r = requests.post(INSERT_URL, data = json.dumps(json_obj), cookies=AC.cookie)
