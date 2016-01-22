@@ -39,6 +39,10 @@ DELETE_ACTION_PATTERN = """
 DELETE FROM action_patterns where action_id = %(action_id)s
 """
 
+GET_MAX_ACTION_PLUS_1 = "select max(action_id)+1 from action"
+
+RESET_AUTO_INCR_ACTION = "alter table action auto_increment = %s"
+
 class ActionDatabase(object):
     
     def get_patterns(self,ids):
@@ -162,13 +166,16 @@ class ActionDatabase(object):
         
         self.assert_required(action,self.required_cols)
         
-        cursor.execute(INSERT_ACTION % action)
-        action_id = cursor.lastrowid
+        try:
+            cursor.execute(INSERT_ACTION % action)
+            action_id = cursor.lastrowid
+            for url in action["url_pattern"]:
+                pattern = self.make_pattern_object(action_id,url)
+                cursor.execute(INSERT_ACTION_PATTERNS % pattern)
+            action['action_id'] = action_id
+            return action
+        except Exception:
+            next_auto = cursor.execute(GET_MAX_ACTION_PLUS_1)
+            cursor.execute(RESET_AUTO_INCR_ACTION % next_auto)
+            raise
 
-        for url in action["url_pattern"]:
-            pattern = self.make_pattern_object(action_id,url)
-            cursor.execute(INSERT_ACTION_PATTERNS % pattern)
-
-        action['action_id'] = action_id
-
-        return action
