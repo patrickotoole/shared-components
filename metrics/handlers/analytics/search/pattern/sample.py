@@ -49,23 +49,25 @@ class PatternSearchSample(SearchBase, PatternSearchHelpers):
     def sample_stats_offsite(self, advertiser, term, uids, num_days=2):
         if len(uids):
             dom = yield self.sample_offsite_domains(advertiser, term, uids, num_days)
+            if len(dom[0][1])>0:
+                #Check if pattern has on site domains and off site domains
+                #If len(dom[0][1]) ==0 then pattern matches onsites but no offsites
+                if hasattr(dom[0][1],"uid"):
+                    dom[0][1]['date'] = dom[0][1].timestamp.map(lambda x: x.split(" ")[0] + " 00:00:00")
+                    df = dom[0][1].groupby(["date","domain"])['uid'].agg(lambda x: len(set(x)))
+                    domains = df.reset_index().rename(columns={"uid":"count"})
+                else:
+                    domains = dom[0][1].reset_index().rename(columns={"occurrence":"count"})
 
-            if hasattr(dom[0][1],"uid"):
-                dom[0][1]['date'] = dom[0][1].timestamp.map(lambda x: x.split(" ")[0] + " 00:00:00")
-                df = dom[0][1].groupby(["date","domain"])['uid'].agg(lambda x: len(set(x)))
-                domains = df.reset_index().rename(columns={"uid":"count"})
-            else:
-                domains = dom[0][1].reset_index().rename(columns={"occurrence":"count"})
-
-            def transform_domains(x):
-                return [
-                    {"domain":i,"count":j} for i,j in 
-                    (x.groupby("domain")['count'].sum() + 1).T.to_dict().items()
-                ]
-
-            domain_stats_df = domains.groupby("date").apply(transform_domains)
-            domain_stats_df.name = "domains"
-
-            defer.returnValue(pandas.DataFrame(domain_stats_df))
+                def transform_domains(x):
+                    return [
+                        {"domain":i,"count":j} for i,j in 
+                        (x.groupby("domain")['count'].sum() + 1).T.to_dict().items()
+                    ]
+                domain_stats_df = domains.groupby("date").apply(transform_domains) 
+                domain_stats_df.name = "domains"
+                #import ipdb; ipdb.set_trace()
+                defer.returnValue(pandas.DataFrame(domain_stats_df))
+            else: defer.returnValue(pandas.DataFrame(index=[],columns=["domains"]))
         else:
             defer.returnValue(pandas.DataFrame(index=[],columns=["domains"]))

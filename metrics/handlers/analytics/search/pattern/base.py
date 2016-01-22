@@ -282,12 +282,10 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
     @defer.inlineCallbacks
     def get_generic_sampled(self,advertiser,term,dates,num_days):
         sample_args = [term,"",advertiser,dates,num_days]
-
         df, stats_df, url_stats_df = yield self.sample_stats_onsite(*sample_args)
-
         uids = list(set(df.uid.values))
+        uids = list(set(df.uid.values))[:1000]
         domain_stats_df = yield self.sample_stats_offsite(advertiser, term, uids, num_days) 
-
         defer.returnValue([stats_df, domain_stats_df, url_stats_df])
 
 
@@ -332,7 +330,6 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
             
     @defer.inlineCallbacks
     def get_generic(self, advertiser, pattern_terms, num_days, logic="or",timeout=60,timeseries=False):
-
         dates = build_datelist(num_days)
         args = [advertiser,pattern_terms[0][0],dates,num_days]
 
@@ -341,7 +338,6 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
         except: 
             logging.info("Cache not present -- sampling instead")
             stats_df, domain_stats_df, url_stats_df = yield self.get_generic_sampled(*args)
-
         stats = stats_df.join(domain_stats_df).join(url_stats_df).fillna(0)
         urls, domains = yield self.deferred_reformat_stats(domain_stats_df,url_stats_df)
 
