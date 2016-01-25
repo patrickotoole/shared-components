@@ -11,7 +11,6 @@ INSERT_URL = "http://crusher.getrockerbox.com/crusher/funnel/action?format=json"
 #PATTERN_URL="http://192.168.99.100:8888/crusher/pattern_search/timeseries?search={}&num_days=3"
 PATTERN_URL = "http://crusher.getrockerbox.com/crusher/pattern_search/timeseries?search={}&num_days=7"
 
-
 def buildIter(AC,advertiser):
     def iter_vendors(series):
         logging.info("making request for %s" % series.url_patterns)
@@ -22,9 +21,9 @@ def buildIter(AC,advertiser):
         logging.info("received data for advertiser %s and pattern %s" % (advertiser, series.url_patterns))
         existing_urls ={"urls":[]}
         exists = requests.get(INSERT_URL, cookies=AC.cookie)
-        for e in exists.json()['response']:
-            existing_urls['urls'].append(e["action_name"])
         try:
+            for e in exists.json()['response']:
+                existing_urls['urls'].append(e["action_name"])
             if len(rr.json()['results'][0]['domains'])>0 and series.vendor not in existing_urls["urls"]:
                 json_obj["action_name"] = series.url_patterns
                 json_obj["url_pattern"] = [series.url_patterns]
