@@ -9,7 +9,7 @@ RAW = "UPDATE rockerbox.pattern_occurrence_u2_counter set occurrence= occurrence
 URL = "UPDATE rockerbox.pattern_occurrence_urls_counter set count= count + 1 where source = '${source}' and date = '${date}' and  url = '${referrer}' and action = '%(url_pattern)s';"
 VIEW = "UPDATE rockerbox.pattern_occurrence_views_counter set count= count + 1 where source ='${source}' and date = '${date}' and action = '%(url_pattern)s';"
 
-SQL_QUERY ="select distinct url_pattern, pixel_source_name from pattern_cache"
+SQL_QUERY ="select distinct url_pattern, pixel_source_name from action_with_patterns where action_id is not null"
 
 class ZKEndpoint(ZKTree):
 
@@ -19,18 +19,10 @@ class ZKEndpoint(ZKTree):
         self.tree_name = tree_name
         self.start()
 
-
-    def label_exists(self,label_name):
-        exists = self.find_node_by_label(label_name)
-        if exists is None:
-            return False
-        else:
-            return True
-
     def find_label_all_levels(self,label_name):
         lst = []
         head = 0
-        lst.append(zk.tree)
+        lst.append(self.tree)
         while True:
             try:
                 if lst[head]["node"]["label"] == label_name:
@@ -44,14 +36,11 @@ class ZKEndpoint(ZKTree):
             except:
                 return False
 
-    def create_node(self,label=False, pattern=False, query=False, children=[]):
-        node = {"node":{"pattern":"","label":""},"children":[]}
-        if label:
-            node["node"]["label"]= label
-        if pattern:
-            node["node"]["pattern"]=pattern
-        if len(children)>0:
-            node["children"] = children
+    def create_node(self,label="", pattern="", query=False, children=[]):
+        node = {"node":{"pattern":pattern,"label":label},"children":children}
+        query_node = {"node":{"pattern":pattern,"label":label, "query":query},"children":children}
+        if query:
+            node = query_node    
         return node
 
     def construct_example_tree(self):
@@ -60,16 +49,82 @@ class ZKEndpoint(ZKTree):
         sample_tree["patternTree"]["children"].append(self.create_node(label="_pattern", children=[self.create_node()]))
         return sample_tree
 
+    def df_to_values(self,df):
+        # this is way faster than the built in .to_dict method
+        #from metrics/lib/helpers.py
+        _df = df.fillna(0)
+        return list((dict(zip(_df.columns,j)) for j in _df.values))
+
+    def find_label_child_num(self,label):
+        children = self.tree["patternTree"]["children"]
+        returnChildIndex = -1
+        index = 0
+        for child in children:
+            if child["node"]["label"] == label:
+                returnChildIndex = index
+            index = index+1
+        return returnChildIndex
+
+    def find_advertiser_child_num(self, advertiser):
+        children = self.tree["patternTree"]["children"][self.find_label_child_num("_pattern")]["children"]
+        match_string = '"source":"{}'
+        returnChildIndex=-1
+        index =0
+        for child in children:
+            if child["node"]["pattern"] == match_string.format(advertiser):
+                returnChildIndex = index
+            index = index + 1
+        return returnChildIndex
+
+    def add_advertiser(self, advertiser):
+        num1 = self.find_label_child_num("_pattern")
+        num2 = self.find_advertiser_child_num(advertiser)
+        match_string = '"source" : "{}'
+        children = self.tree["patternTree"]["children"][num1]["children"]
+        found = False
+        for child in children:
+            if child["node"]["pattern"] == advertiser:
+                found = True
+        if found == False:
+            self.tree["patternTree"]["children"][num1]["children"].append(self.create_node(label=match_string.format(advertiser)))
+            self.set_tree()
+        return found
+
     def construct_from_db(self, con):
         df = self.conn.select_dataframe(SQL_QUERY)
+        finalTree={"patternTree":{"node":{"pattern":"","label":""},"children":[{"node":{"pattern":"","label":"_patterns"},"children":[]}]}}
         for advertiser in df.pixel_source_name.unique():
             nodes = []
-            actions = Convert.df_to_values(df[df.pixel_source_name == advertiser])
+            actions = self.df_to_values(df[df.pixel_source_name == advertiser])
+            ad_node = self.create_node(pattern='"source":"{}'.format(advertiser))
+            nodes = []
             for action in actions:
-                self.create_node(query=X, pattern=Y)
+                nodes.append(self.create_node(pattern=action['url_pattern'], query=USER % action))
+                nodes.append(self.create_node(pattern=action['url_pattern'], query=RAW % action))
+                nodes.append(self.create_node(pattern=action['url_pattern'], query=VIEW % action))
+                nodes.append(self.create_node(pattern=action['url_pattern'], query=URL % action))
+            ad_node["children"] = nodes
+            finalTree["patternTree"]["children"][0]["children"].append(ad_node)
+        self.set_tree(finalTree)
+        return self.tree_name
 
+    def add_advertiser_pattern(self, advertiser, url_pattern):
+        childNum = self.find_advertiser_child_num(advertiser)
+        advertiserChildren = self.tree["patternTree"]["children"][self.find_label_child_num("_patterns")]["children"][childNum]["children"]
+        found = False
+        for child in advertiserChildren:
+            if child["node"]["pattern"] == url_pattern:
+                found = True
+        if found ==False:
+            action = {"url_pattern":url_pattern}
+            self.tree["patternTree"]["children"][self.find_label_child_num("_patterns")]["children"][childNum]["children"].append(self.create_node(pattern=url_pattern,query=USER % action))
+            self.tree["patternTree"]["children"][self.find_label_child_num("_patterns")]["children"][childNum]["children"].append(self.create_node(pattern=url_pattern,query=RAW % action))
+            self.tree["patternTree"]["children"][self.find_label_child_num("_patterns")]["children"][childNum]["children"].append(self.create_node(pattern=url_pattern,query=VIEW % action))
+            self.tree["patternTree"]["children"][self.find_label_child_num("_patterns")]["children"][childNum]["children"].append(self.create_node(pattern=url_pattern,query=URL % action))
+            self.set_tree()
+        return found
 
 zk = ZKEndpoint(tree_name="for_play")
 import ipdb; ipdb.set_trace()
-print zk.get_tree()
-zk.stop()
+#zk.stop()
+#["pattrenTree"]
