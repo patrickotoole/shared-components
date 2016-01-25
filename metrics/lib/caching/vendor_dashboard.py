@@ -11,7 +11,6 @@ INSERT_URL = "http://crusher.getrockerbox.com/crusher/funnel/action?format=json"
 #PATTERN_URL="http://192.168.99.100:8888/crusher/pattern_search/timeseries?search={}&num_days=3"
 PATTERN_URL = "http://crusher.getrockerbox.com/crusher/pattern_search/timeseries?search={}&num_days=7"
 
-
 def buildIter(AC,advertiser):
     def iter_vendors(series):
         logging.info("making request for %s" % series.url_patterns)
