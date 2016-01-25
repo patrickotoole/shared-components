@@ -22,9 +22,9 @@ def buildIter(AC,advertiser):
         logging.info("received data for advertiser %s and pattern %s" % (advertiser, series.url_patterns))
         existing_urls ={"urls":[]}
         exists = requests.get(INSERT_URL, cookies=AC.cookie)
-        for e in exists.json()['response']:
-            existing_urls['urls'].append(e["action_name"])
         try:
+            for e in exists.json()['response']:
+                existing_urls['urls'].append(e["action_name"])
             if len(rr.json()['results'][0]['domains'])>0 and series.vendor not in existing_urls["urls"]:
                 json_obj["action_name"] = series.url_patterns
                 json_obj["url_pattern"] = [series.url_patterns]
