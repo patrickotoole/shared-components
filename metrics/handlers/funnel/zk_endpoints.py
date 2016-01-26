@@ -13,9 +13,10 @@ class ZKHandler(BaseHandler, ActionAuth,APIHelpers):
 
     def initialize(self, db=None, **kwargs):
         self.db = db
-
+    
     @tornado.web.authenticated
-        def post(self):
+    def post(self):
+        try:
             data = self.request.body
             found = zk.find_advertiser_child_num(data["advertiser"])
             if(found >=0):
@@ -25,8 +26,8 @@ class ZKHandler(BaseHandler, ActionAuth,APIHelpers):
                 if data["pattern"]:
                     zk.add_advertiser_pattern(data["advertiser"],data["pattern"])
             self.write_response(True)
-            except Exception, e:
-                self.write_response(str(e),e)
+        except Exception, e:
+            self.write_response(str(e),e)
 
     @tornado.web.authenticated
     def get(self):
