@@ -2,8 +2,21 @@ ul.vendors-list {
   padding: 0;
   margin: 0;
 
+  .vendor-domains-pie {
+    position: relative;
+    left: 50%;
+    margin-left: -110px;
+  }
+
+  .vendor-views-column svg {
+    text {
+      fill: #000 !important;
+    }
+  }
+
   > li:first-child {
     border-top: none;
+    padding-top: 0;
   }
 
   > li {
@@ -13,12 +26,17 @@ ul.vendors-list {
     overflow: auto;
     min-height: 110px;
 
+    div {
+      padding: 0 !important;
+    }
+
     h2 {
       margin: 0;
       text-transform: capitalize;
       font-weight: bold;
       font-size: 18px;
       line-height: 22px;
+      color: #5A5A5A;
     }
 
     h3 {
@@ -29,6 +47,17 @@ ul.vendors-list {
       text-transform: uppercase;
       color: #888;
       letter-spacing: .05em;
+    }
+
+    h4 {
+      color: #5A5A5A;
+      font-size: 24px;
+      font-weight:bold;
+    }
+
+    p.chart-description {
+      margin-bottom: 10px;
+      padding-top: 13px;
     }
   }
 
