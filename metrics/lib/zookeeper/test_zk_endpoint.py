@@ -40,6 +40,4 @@ class ZKTreeTestCase(unittest.TestCase):
         check = classinstance.find_advertiser_child("test",DICT_3)
         self.assertEqual(check,DICT_1)
 
-    def test_add_advertiser_pattern(self):
-        classinstance = self.instance("","","")
 

@@ -80,14 +80,14 @@ class ZKEndpoint(ZKTree):
         returnChild = self.iterate_tree("label", label, children, parentkeyname="node")
         return returnChild
 
-    def add_advertiser(self, advertiseri, tree_struct):
+    def add_advertiser(self, advertiser, tree_struct):
         match_string = '"source":"{}'
         children = self.find_label_child("_patterns", tree_struct)["children"]
         foundChild = self.iterate_tree("pattern", match_string.format(advertiser), children, parentkeyname="node")
         if foundChild == {}:
             children.append(self.create_node(pattern=match_string.format(advertiser)))
             self.set_tree()
-        return found
+        return foundChild
 
     def construct_from_db(self, con):
         df = self.conn.select_dataframe(SQL_QUERY)
@@ -99,33 +99,45 @@ class ZKEndpoint(ZKTree):
             ad_node = self.create_node(pattern='"source":"{}'.format(advertiser))
             nodes = []
             for action in actions:
-                #change to function pattern
-                nodes.append(self.create_node(pattern=action['url_pattern'], query=USER % action))
-                nodes.append(self.create_node(pattern=action['url_pattern'], query=RAW % action))
-                nodes.append(self.create_node(pattern=action['url_pattern'], query=VIEW % action))
-                nodes.append(self.create_node(pattern=action['url_pattern'], query=URL % action))
+                query_list = [USER, RAW, VIEW, URL]
+                parameter_list = [{
+                                    "query": q % action,
+                                    "pattern":action["url_pattern"],
+                                    "label":"",
+                                    "children":[]
+                                 } for q in query_list]
+                action_nodes = map(lambda x : self.create_node(**x), parameter_list)
+                map(nodes.append, action_nodes)
             ad_node["children"] = nodes
             childrenLocation.append(ad_node)
-        self.set_tree(finalTree)
-        return self.tree_name
+        return finalTree
 
     def add_advertiser_pattern(self, advertiser, url_pattern, tree_struct):
         advertiserChildren = self.find_advertiser_child(advertiser, tree_struct)
         if advertiserChildren =={}:
-            self.add_advertiser(advertiser)
-            advertiserChildren = self.find_advertiser_child(advertiser)
+            self.add_advertiser(advertiser, tree_struct)
+            advertiserChildren = self.find_advertiser_child(advertiser, tree_struct)
         foundChild = self.iterate_tree("pattern", url_pattern, advertiserChildren, parentkeyname="node")
         if foundChild =={}:
-            #Change to functional pattern
             action = {"url_pattern":url_pattern}
-            pattern_list = [url_pattern] * 4
-            query_list = [USER % action, RAW % action , VIEW % action, URL % action]
-            #map(advertiserChildren["children".append, map(self.create_node, pattern_list, query_list))
-            advertiserChildren["children"].append(self.create_node(pattern=url_pattern,query=USER % action))
-            advertiserChildren["children"].append(self.create_node(pattern=url_pattern,query=RAW % action))
-            advertiserChildren["children"].append(self.create_node(pattern=url_pattern,query=VIEW % action))
-            advertiserChildren["children"].append(self.create_node(pattern=url_pattern,query=URL % action))
-            self.set_tree()
-        return advertiserChildren["children"]
+            query_list = [USER, RAW, VIEW, URL]
+            parameter_list = [{
+                                "query": q % action,
+                                "pattern":url_pattern,
+                                "label":"",
+                                "children":[]
+                            } for q in query_list]
+            nodes = map(lambda x : self.create_node(**x), parameter_list)
+            map(advertiserChildren["children"].append, nodes)
+        return tree_struct
 
-#["pattrenTree"]
+
+if __name__ == "__main__":
+    #import ipdb; ipdb.set_trace()
+    zk = ZKEndpoint()
+    tree = zk.construct_from_db(lnk.dbs.rockerbox)
+    zk.set_tree(tree)
+    #print zk.get_tree()
+
+    zk.add_advertiser_pattern("test advertiser", "/", zk.tree)
+    #print zk.get_tree()
