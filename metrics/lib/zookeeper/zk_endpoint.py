@@ -13,33 +13,9 @@ SQL_QUERY ="select distinct url_pattern, pixel_source_name from action_with_patt
 
 TREE = {"patternTree":{"node":{"pattern":"","label":""},"children":[{"node":{"pattern":"","label":"_patterns"},"children":[]}]}}
 
-class ZKEndpoint(ZKTree):
-
-    def __init__(self,host='zk1:2181',tree_name="for_play", con=lnk.dbs.rockerbox):
-        self.conn = con
-        self.zk = KazooClient(hosts=host)
-        self.tree_name = tree_name
-        self.start()
-
-    def create_node(self,label="", pattern="", query=False, children=[]):
-        node = {
-                    "node":{
-                        "pattern":pattern,
-                        "label":label
-                    },
-                    "children":children
-                }
-        
-        if query:
-            node["node"]["query"] = query 
-        return node
-
-    def construct_example_tree(self):
-        sample_tree = {"patternTree":self.create_node()}
-        sample_tree["patternTree"]["children"].append(self.create_node())
-        sample_tree["patternTree"]["children"].append(self.create_node(label="_patterns", children=[self.create_node()]))
-        return sample_tree
-
+class ZKHelper():
+    
+    @classmethod
     def _check_parentkey_tree(self,parentkeyname, subkeyname, subkeyval, subtree):
         result ={}
         try:
@@ -49,12 +25,14 @@ class ZKEndpoint(ZKTree):
             pass
         return result
 
+    @classmethod
     def _check_nonparentkey_tree(self,keyname, keyval, subtree):
         result = {}
-        if subtree[keyname] == keyval:
+        if subtree.get(keyname) == keyval:
                 result =  subtree
         return result
-    
+
+    @classmethod
     def iterate_tree(self,keyname, keyval, subtree_array, parentkeyname=False):
         returnTree = {}
         if parentkeyname:
@@ -67,19 +45,51 @@ class ZKEndpoint(ZKTree):
                 returnTree = self._check_nonparentkey_tree(keyname, keyval, child)
                 if returnTree != {}:
                     break
-        return returnTree
+        return returnTree 
 
+    @classmethod
     def find_advertiser_child(self, advertiser, tree_struct):
         children = self.find_label_child("_patterns", tree_struct)["children"]
         match_string = '"source":"{}'
         returnChild = self.iterate_tree("pattern", match_string.format(advertiser), children, parentkeyname="node")
         return returnChild
 
+    @classmethod
     def find_label_child(self,label, tree_struct):
         children = tree_struct["patternTree"]["children"]
         returnChild = self.iterate_tree("label", label, children, parentkeyname="node")
         return returnChild
 
+    @classmethod
+    def create_node(self,label="", pattern="", query=False, children=[]):
+        node = {
+                    "node":{
+                        "pattern":pattern,
+                        "label":label
+                    },
+                    "children":children
+                }
+
+        if query:
+            node["node"]["query"] = query
+        return node
+
+class ZKEndpoint(ZKTree, ZKHelper):
+
+    def __init__(self,host='zk1:2181',tree_name="for_play", con=lnk.dbs.rockerbox):
+        self.conn = con
+        self.zk = KazooClient(hosts=host)
+        self.tree_name = tree_name
+        self.start()
+
+    @classmethod
+    def construct_example_tree(self):
+        sample_tree = {"patternTree":self.create_node()}
+        sample_tree["patternTree"]["children"].append(self.create_node())
+        sample_tree["patternTree"]["children"].append(self.create_node(label="_patterns", children=[self.create_node()]))
+        return sample_tree
+
+    @classmethod
     def add_advertiser(self, advertiser, tree_struct):
         match_string = '"source":"{}'
         children = self.find_label_child("_patterns", tree_struct)["children"]
@@ -89,8 +99,9 @@ class ZKEndpoint(ZKTree):
             self.set_tree()
         return foundChild
 
+    @classmethod
     def construct_from_db(self, con):
-        df = self.conn.select_dataframe(SQL_QUERY)
+        df = con.select_dataframe(SQL_QUERY)
         finalTree = TREE.copy()
         childrenLocation = finalTree["patternTree"]["children"][0]["children"]
         for advertiser in df.pixel_source_name.unique():
@@ -112,6 +123,7 @@ class ZKEndpoint(ZKTree):
             childrenLocation.append(ad_node)
         return finalTree
 
+    @classmethod
     def add_advertiser_pattern(self, advertiser, url_pattern, tree_struct):
         advertiserChildren = self.find_advertiser_child(advertiser, tree_struct)
         if advertiserChildren =={}:
@@ -137,7 +149,7 @@ if __name__ == "__main__":
     zk = ZKEndpoint()
     tree = zk.construct_from_db(lnk.dbs.rockerbox)
     zk.set_tree(tree)
-    #print zk.get_tree()
+    print zk.get_tree()
 
     zk.add_advertiser_pattern("test advertiser", "/", zk.tree)
-    #print zk.get_tree()
+    print zk.get_tree()
