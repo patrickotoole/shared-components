@@ -4,8 +4,22 @@ from helpers import PatternSearchHelpers
 
 from twisted.internet import defer
 
-class PatternSearchSample(SearchBase, PatternSearchHelpers):
+def transform_domains(x):
+    return [
+        {"domain":i,"count":j} for i,j in 
+        (x.groupby("domain")['count'].sum() + 1).T.to_dict().items()
+    ]
+
+
+def dom_to_domains(dom):
+    if hasattr(dom[0][1],"uid"):
+        dom[0][1]['date'] = dom[0][1].timestamp.map(lambda x: x.split(" ")[0] + " 00:00:00")
+        df = dom[0][1].groupby(["date","domain"])['uid'].agg(lambda x: len(set(x)))
+        return df.reset_index().rename(columns={"uid":"count"})
+    else:
+        return dom[0][1].reset_index().rename(columns={"occurrence":"count"})
     
+class PatternSearchSample(SearchBase, PatternSearchHelpers):
     def raw_to_stats(self,df,dates):
         stats_df = df.groupby("date").apply(self.calc_stats)
         for d in dates:
@@ -47,25 +61,18 @@ class PatternSearchSample(SearchBase, PatternSearchHelpers):
 
     @defer.inlineCallbacks
     def sample_stats_offsite(self, advertiser, term, uids, num_days=2):
+        
+        finalValue = pandas.DataFrame(index=[],columns=["domains"])
+        dom = False
+        
         if len(uids):
             dom = yield self.sample_offsite_domains(advertiser, term, uids, num_days)
-
-            if hasattr(dom[0][1],"uid"):
-                dom[0][1]['date'] = dom[0][1].timestamp.map(lambda x: x.split(" ")[0] + " 00:00:00")
-                df = dom[0][1].groupby(["date","domain"])['uid'].agg(lambda x: len(set(x)))
-                domains = df.reset_index().rename(columns={"uid":"count"})
-            else:
-                domains = dom[0][1].reset_index().rename(columns={"occurrence":"count"})
-
-            def transform_domains(x):
-                return [
-                    {"domain":i,"count":j} for i,j in 
-                    (x.groupby("domain")['count'].sum() + 1).T.to_dict().items()
-                ]
-
-            domain_stats_df = domains.groupby("date").apply(transform_domains)
+        
+        if dom and (len(dom[0][1]) > 0):
+            domains = dom_to_domains(dom)
+            domain_stats_df = domains.groupby("date").apply(transform_domains) 
             domain_stats_df.name = "domains"
+            
+            finalValue = pandas.DataFrame(domain_stats_df)
 
-            defer.returnValue(pandas.DataFrame(domain_stats_df))
-        else:
-            defer.returnValue(pandas.DataFrame(index=[],columns=["domains"]))
+        defer.returnValue(finalValue)
