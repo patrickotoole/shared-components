@@ -256,7 +256,17 @@ RB.crusher.controller = (function(controller) {
                 pp.colors(RB.crusher.ui.action.category_colors)
                 // pp.width(150);
                 pp.data(
-                      function(x){return x.parentCategoryData },
+                      function(x){
+                        // debugger;
+                        x.parentCategoryData.filter(function(x){
+                          return x.label != 'NA';
+                        })
+
+                        x.parentCategoryData.sort(function(a,b){
+                          return b.value - a.value;
+                        })
+                        return x.parentCategoryData
+                      },
                       function(d){ return d.data.label }
                     )
                 pp.draw()
@@ -294,7 +304,8 @@ RB.crusher.controller = (function(controller) {
       crusher.subscribe.add_subscriber(["actions"], function(segments) {
         var vendors = segments.filter(function(x) {
           return x.action_type == 'vendor';
-        }).slice(0,3)
+        })
+        // .slice(0,3)
 
         /* Vendor List */
         var vendors_list = d3_updateable(vendors_list_card, '.vendors-list', 'ul')
