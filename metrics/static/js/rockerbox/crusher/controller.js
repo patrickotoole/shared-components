@@ -184,22 +184,27 @@ RB.crusher.controller = (function(controller) {
           /*
           **  Column 1
           */
-          vendor.views_sum = vendor.visits_data.reduce(function(p,c) {
-            return p + c.views;
+          vendor.visits_sum = vendor.visits_data.reduce(function(p,c) {
+            return p + c.visits;
           },0)
 
           var vendor_views_column = d3_updateable(vendors_list_items, '.vendor-views-column', 'div')
             .classed('vendor-views-column col-md-3', true)
             .html(function(x) {
-              if(typeof x.views_sum !== typeof undefined) {
-                return '<h3>Views</h3><h4 style="font-size: 24px;">'+x.views_sum+'</h4><p style="margin-bottom: 25px;">This is the number of page views per day.</p>'
+              if(typeof x.visits_sum !== typeof undefined) {
+                return '<h3>Visits</h3><h4 style="font-size: 24px;">'+x.visits_sum+'</h4><p style="margin-bottom: 25px;">This is the number of page views per day.</p>'
               }
             });
 
           vendor_views_column.each(function(x){
             if(typeof x.visits_data !== typeof undefined) {
               var toDraw = d3.select(this);
-              var visitor_chart = RB.rho.ui.buildTimeseries(toDraw, x.visits_data, "Views", ["views"], undefined, true, 95);
+              // console.log('x',JSON.serialize(x));
+              x.visits_data.sort(function(a,b) {
+                return (new Date(a.key) - new Date(b.key));
+              });
+
+              var visitor_chart = RB.rho.ui.buildTimeseries(toDraw, x.visits_data, "Views", ["visits"], undefined, true, 95);
             }
           });
 
@@ -249,6 +254,8 @@ RB.crusher.controller = (function(controller) {
                       function(d){ return d.data.label }
                     )
                 pp.draw()
+                d3.selectAll('svg g.desc')
+                  .style('font-size', '0.9em');
               }
             });
 
