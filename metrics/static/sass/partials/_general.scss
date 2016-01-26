@@ -1,26 +1,48 @@
-.selectbar {
-	h5 a {
-		padding: 0 0 0 10px;
-		height: 100%;
-	}
+body {
+	padding-top: 70px;
 }
 
-.page_tabs_item {
-	padding: 20px 30px;
-	display: inline-block;
-	border-right: solid 1px rgb(240, 240, 240);
-	cursor: pointer;
-}
-
-.page_tabs_item.active {
+header.page-header {
+	position: fixed;
+	right: 0px;
+	height: 70px;
+	line-height: 70px;
+	border-bottom: 1px solid #f0f0f0;
+	top: 0px;
+	left: 210px;
+	padding-left: 20px;
 	background-color: #FFF;
-	font-weight: bold;
+	margin: 0;
+	z-index: 99;
 }
-
+header.page-header.with-sidebar {
+	left: 420px !important;
+}
+.selectbar {
+  h5 a {
+    padding: 0 0 0 10px;
+    height: 100%;
+  }
+}
+.page_tabs_item {
+  padding: 20px 30px;
+  display: inline-block;
+  border-right: solid 1px rgb(240, 240, 240);
+  cursor: pointer;
+}
+.page_tabs_item.active {
+  background-color: #FFF;
+  font-weight: bold;
+}
 
 .max-width-330 {
 	width: 330px;
 	.bar.series.views {
 		min-height: 305px;
 	}
+}
+
+// Segment page header fix
+.action-view-wrapper .heading {
+	margin-top: -85px !important;
 }

@@ -44,9 +44,9 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
         });
       });
 
-
       var data = data
         .filter(function(x){
+          console.log('URL PATTERN', x.url_pattern[0]);
           if(segment_names.indexOf(x.url_pattern[0]) != -1) {
             var response = true;
           } else {
@@ -178,8 +178,7 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
 
 
         RB.crusher.ui.action.category_pie(
-          category_pie, [], RB.crusher.ui.action.category_colors, "row col-md-12",
-          function(cb,x){ return cb(x) }
+          category_pie, [], RB.crusher.ui.action.category_colors, "row col-md-12", false
         )
 
         category_pie.selectAll(".table-title")

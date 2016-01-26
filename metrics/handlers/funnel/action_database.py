@@ -12,7 +12,7 @@ SELECT *  from action_patterns where %(where)s
 
 INSERT_ACTION = """
 INSERT INTO action
-    (start_date, end_date, operator, pixel_source_name, action_name) 
+    (start_date, end_date, operator, pixel_source_name, action_name)
 VALUES
     ("%(start_date)s", "%(end_date)s", "%(operator)s", "%(advertiser)s", "%(action_name)s")
 """
@@ -44,13 +44,13 @@ GET_MAX_ACTION_PLUS_1 = "select max(action_id)+1 from action"
 RESET_AUTO_INCR_ACTION = "alter table action auto_increment = %s"
 
 class ActionDatabase(object):
-    
+
     def get_patterns(self,ids):
         where = "action_id in (%s)" % ",".join(map(str,ids))
         patterns = self.db.select_dataframe(GET_PATTERNS % {"where":where})
         grouped = patterns.groupby("action_id").agg(lambda x: x.T.to_dict().values())
         return grouped
-   
+
     def get_all(self):
         # this is no longer a thing...
         where = "1=1"
@@ -67,7 +67,7 @@ class ActionDatabase(object):
             patterns = self.get_patterns(result.action_id.tolist())
             joined = result.set_index("action_id").join(patterns)
             return joined.reset_index()
-        except: 
+        except:
             return pandas.DataFrame()
 
     def get_advertiser_actions(self, advertiser):
@@ -90,12 +90,12 @@ class ActionDatabase(object):
 
             return joined.reset_index()
         except:
-            return pandas.DataFrame()    
+            return pandas.DataFrame()
 
     def make_set_fields(self,action):
         # creates the update statement for an action
         excludes = ["action_id","url_pattern","advertiser"]
-        fields = ", ".join(["%s=\"%s\"" % (i,j) for i,j in action.items() if not (i in excludes)]) 
+        fields = ", ".join(["%s=\"%s\"" % (i,j) for i,j in action.items() if not (i in excludes)])
 
         return fields
 
@@ -118,11 +118,11 @@ class ActionDatabase(object):
 
         return (to_add,to_remove)
 
-    
+
     @decorators.multi_commit_cursor
     def perform_update(self,body,cursor=None):
         action = ujson.loads(body)
-        self.assert_required_params(["id"]) 
+        self.assert_required_params(["id"])
         action_id = self.get_argument("id")
 
         action['fields'] = self.make_set_fields(action)
@@ -131,11 +131,11 @@ class ActionDatabase(object):
         to_add, to_remove = self.get_pattern_diff(action)
 
         for url in to_add:
-            pattern = self.make_pattern_object(action_id, url) 
+            pattern = self.make_pattern_object(action_id, url)
             cursor.execute(INSERT_ACTION_PATTERNS % pattern)
 
         for url in to_remove:
-            pattern = self.make_pattern_object(action_id, url) 
+            pattern = self.make_pattern_object(action_id, url)
             cursor.execute(DELETE_ACTION_PATTERNS % pattern)
 
         return action
@@ -146,9 +146,9 @@ class ActionDatabase(object):
 
         action_id = self.get_argument("id")
         action = {"action_id":action_id}
-            
+
         cursor.execute(DELETE_ACTION % action)
-        cursor.execute(DELETE_ACTION_PATTERN % action) 
+        cursor.execute(DELETE_ACTION_PATTERN % action)
 
         return action
 
@@ -159,13 +159,13 @@ class ActionDatabase(object):
         action = dict(action.items() + [("start_date","0"),("end_date","0")])
         if action.get("operator") is None:
             action = dict(action.items() + [("operator", "or")])
-        
+
         self.assert_not_present(action,["action_id"])
 
         action["advertiser"] = action.get("advertiser",self.current_advertiser_name)
-        
+
         self.assert_required(action,self.required_cols)
-        
+
         try:
             cursor.execute(INSERT_ACTION % action)
             action_id = cursor.lastrowid
@@ -174,8 +174,7 @@ class ActionDatabase(object):
                 cursor.execute(INSERT_ACTION_PATTERNS % pattern)
             action['action_id'] = action_id
             return action
-        except Exception:
+        except Exception as e:
             next_auto = cursor.execute(GET_MAX_ACTION_PLUS_1)
             cursor.execute(RESET_AUTO_INCR_ACTION % next_auto)
-            raise
-
+            raise e

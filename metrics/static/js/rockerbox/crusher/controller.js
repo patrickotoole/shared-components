@@ -80,23 +80,31 @@ RB.crusher.controller = (function(controller) {
 
   var build_header = function(obj) {
 
-    var target = d3.selectAll(".container")
+    var target = d3.selectAll('.container')
 
-    var funnelRow = d3_splat(target,".row","div",[obj],function(x){return x.id})
-      .classed("row funnels",true)
+    var funnelRow = d3_splat(target,'.row','div',[obj],function(x){return x.id})
+      .classed('row funnels',true)
 
     funnelRow.exit().remove()
 
-    var heading = d3_updateable(funnelRow,".heading","h5")
+    var heading = d3_updateable(funnelRow,'page-header','header')
+      .text(function(x) {
+        return x.name;
+      })
+      .attr('class', function(x) {
+        var classes = ['page-header'];
 
-    heading.text(function(x){return x.name})
-      .attr("style","margin-top:-15px; padding-left:20px; height: 70px; line-height:70px; border-bottom:1px solid #f0f0f0; margin-left:-15px; margin-right:-15px; margin-bottom:30px;")
-      .classed("heading heading",true)
+        if(!d3.select('body')[0][0].classList.contains('hide-select')) {
+          classes.push('with-sidebar')
+        }
 
-    d3_updateable(funnelRow,".pixel-description","div")
-      .classed("pixel-description",true)
-      .style("margin-top","15px")
-      .style("margin-bottom","15px")
+        return classes.join(' ')
+      })
+
+    d3_updateable(funnelRow,'.pixel-description','div')
+      .classed('pixel-description',true)
+      .style('margin-top','15px')
+      .style('margin-bottom','15px')
       .html(function(x){return x.description})
 
     return funnelRow
@@ -143,6 +151,230 @@ RB.crusher.controller = (function(controller) {
         "pixel_settings",true,true
       )
 
+    },
+    "vendors": function(obj) {
+      RB.component.export(RB.crusher.ui.funnel.show, RB.crusher.ui.funnel);
+      RB.component.export(RB.crusher.ui.action.show, RB.crusher.ui.action);
+
+      d3.select('body').classed('hide-select', true);
+
+      function insertGraphs(vendors_list_items) {
+        var vendors_filtered = vendors_list_items.filter(function(x) {
+          return typeof x.visits_data === typeof undefined;
+        });
+
+        console.log('vendors_list_items', vendors_list_items);
+        var vendor = vendors_list_items.data()
+          .filter(function(x) {
+            return typeof x.visits_data === typeof undefined;
+          })[0];
+
+        var vendor_not_missing_data = (typeof vendor === typeof undefined);
+
+        if(vendor_not_missing_data) {
+          vendor = vendors_list_items.datum();
+        }
+
+        crusher.subscribe.add_subscriber(["actionTimeseriesOnly", "pattern_domains_cached"], function(timeseries_data, domains_data) {
+
+          vendor.visits_data.forEach(function(vendor_timeseries_item) {
+            vendor_timeseries_item.key = vendor_timeseries_item.date;
+          });
+
+          /*
+          **  Column 1
+          */
+          vendor.visits_sum = vendor.visits_data.reduce(function(p,c) {
+            return p + c.visits;
+          },0)
+
+          var vendor_views_column = d3_updateable(vendors_list_items, '.vendor-views-column', 'div')
+            .classed('vendor-views-column col-md-3', true)
+            .html(function(x) {
+              if(typeof x.visits_sum !== typeof undefined) {
+                return '<h3>Visits</h3><h4 style="font-size: 24px;">'+x.visits_sum+'</h4><p style="margin-bottom: 25px;">This is the number of page views per day.</p>'
+              }
+            });
+
+          vendor_views_column.each(function(x){
+            if(typeof x.visits_data !== typeof undefined) {
+              var toDraw = d3.select(this);
+              // console.log('x',JSON.serialize(x));
+              x.visits_data.sort(function(a,b) {
+                return (new Date(a.key) - new Date(b.key));
+              });
+
+              var visitor_chart = RB.rho.ui.buildTimeseries(toDraw, x.visits_data, "Views", ["visits"], undefined, true, 95);
+            }
+          });
+
+          /*
+          ** Column 2
+          */
+
+          // Vendor List Item : Domains Pie
+          var vendor_domains_pie_column = d3_updateable(vendors_list_items, '.vendor-domains-pie-column', 'div')
+            .classed('vendor-domains-pie-column col-md-3', true)
+
+          var vendor_domains_pie = d3_updateable(vendor_domains_pie_column, '.vendor-domains-pie', 'div')
+            .classed('col-md-12 vendor-domains-pie', true)
+            .style('width', '220px')
+            .html('<h3>Off-site</h3>');
+
+            var category_data = {};
+            vendor.domains.forEach(function(domain) {
+              if(typeof category_data[domain.parent_category_name] === typeof undefined) {
+                category_data[domain.parent_category_name] = domain.count;
+              } else {
+                category_data[domain.parent_category_name] += domain.count;
+              }
+            })
+
+            var parentCategoryData = d3.entries(category_data).map(function(x) {
+              return {
+                label: x.key,
+                value: x.value
+              }
+            });
+
+            vendor_domains_pie.datum(function(x) {
+              if(vendor.action_id === x.action_id) {
+                x.parentCategoryData = parentCategoryData;
+              }
+                return x;
+            })
+
+            vendor_domains_pie.each(function(y){
+              if(typeof y.parentCategoryData !== typeof undefined) {
+                var pp = pie.pie(d3.select(this))
+                pp.colors(RB.crusher.ui.action.category_colors)
+                // pp.width(150);
+                pp.data(
+                      function(x){return x.parentCategoryData },
+                      function(d){ return d.data.label }
+                    )
+                pp.draw()
+                d3.selectAll('svg g.desc')
+                  .style('font-size', '0.9em');
+              }
+            });
+
+            /*
+            **  3rd Column
+            */
+            var vendor_onsite_column = d3_updateable(vendors_list_items, '.vendor-onsite-column', 'div')
+              .classed('vendor-onsite-column col-md-3', true)
+              .html('<h3>On-site</h3><span>(coming soon)</span>');
+
+          setTimeout(function() {
+            if(!vendor_not_missing_data) {
+              insertGraphs(vendors_list_items);
+            }
+          }, 1);
+        }, 'vendor-timeseries-domains', true, true, vendor);
+      }
+
+      var funnelRow = build_header({
+        'id': 'vendors',
+        'name': 'Vendor Analysis'
+      });
+
+      var vendors_list_card = d3_updateable(funnelRow, '.vendors-list-card', 'section')
+        .classed('vendors-list-card bar series col-md-12', true);
+
+      var vendors_list_card_title = d3_updateable(vendors_list_card, '.vendors-list-card-title', 'header')
+        .classed('vendors-list-card-title title', true)
+        .text('Advertising Vendor Summary');
+
+      crusher.subscribe.add_subscriber(["actions"], function(segments) {
+        var vendors = segments.filter(function(x) {
+          return x.action_type == 'vendor';
+        }).slice(0,3)
+
+        /* Vendor List */
+        var vendors_list = d3_updateable(vendors_list_card, '.vendors-list', 'ul')
+          .classed('vendors-list', true);
+
+        /* Vendor List Items */
+        var vendors_list_items = d3_splat(vendors_list, '.vendors-list-item', 'li', vendors, function(x) {
+          return x.action_name;
+        })
+          .datum(function(x) {
+            return x;
+          })
+          .classed('vendors-list-item', true);
+
+          /*
+          **  1st Column
+          */
+          var vendor_name_column = d3_updateable(vendors_list_items, '.vendor-name-column', 'div')
+            .classed('vendor-name-column col-md-3', true)
+
+            var vendor_name = d3_updateable(vendor_name_column, '.vendor-name', 'div')
+              .classed('col-md-12 vendor-name', true)
+              .html(function(x) {
+                return '<h2>' + x.action_name + '</h2>';
+              });
+
+            // Vendor List Item : Expand Button
+            var vendor_expand = d3_updateable(vendor_name_column, '.vendor-expand', 'div')
+              .classed('col-md-12 vendor-expand', true)
+
+
+            var navigation_items = [{
+                title: 'Opportunities',
+                url: 'advertiser-opportunities'
+              }, {
+                title: 'Before and After',
+                url: 'before-and-after'
+              }, {
+                title: 'Clusters',
+                url: 'clusters'
+              }, {
+                title: 'Timing',
+                url: 'timing'
+              }, {
+                title: 'Comparison',
+                url: 'comparison'
+              }]
+
+            var vendor_navigation_list = d3_updateable(vendor_name_column, '.vendor-navigation-list', 'ul')
+              .classed('col-md-12 vendor-navigation-list', true)
+              .each(function(y) {
+                y.navigation_items = JSON.parse(JSON.stringify(navigation_items)).map(function(x){
+                  x.action_name = y.action_name
+                  return x;
+                })
+                return y;
+              })
+
+            var vendor_navigation_items = d3_splat(vendor_navigation_list, '.vendors-list-item', 'li', function(x) {
+              return x.navigation_items;
+            },
+            function(x) {
+              return x.title;
+            })
+            .classed('vendors-list-item', true);
+
+            d3_updateable(vendor_navigation_items, 'a', 'a')
+              .attr('href', function(x) {
+                return '/crusher/action/existing?id=/' + x.action_name + '#' + x.url;
+              })
+              .text(function(x) { return x.title; })
+              .on('click', function(x) {
+                RB.routes.navigation.forward({
+                  "name": "View Existing Actions",
+                  "push_state":"/crusher/action/existing",
+                  "skipRender": true,
+                  "values_key":"action_name"
+                })
+                RB.routes.navigation.forward(d3.select(this.parentElement.parentElement).datum())
+
+                d3.event().preventDefault();
+              })
+
+          insertGraphs(vendors_list_items);
+      }, "vendors-data", true, true);
     },
     "comparison": function() {
       d3.select("body")
@@ -804,11 +1036,16 @@ RB.crusher.controller = (function(controller) {
   controller.routes = {
     roots: [
     {
+      "name":"Vendors",
+      "push_state": "/crusher/vendors",
+      "class": "glyphicon glyphicon-th-large",
+      "values_key": "action_name"
+    },
+    {
       "name":"Segments",
       "push_state": "/crusher/action/existing",
       "class": "glyphicon glyphicon-signal",
       "values_key": "action_name"
-
     },
     {
       "name":"Create Segment",
@@ -860,6 +1097,7 @@ RB.crusher.controller = (function(controller) {
     },
     apis: {
       "comparison": ['funnels'],
+      "vendors": [],
       "funnel/new": [],
       "funnel/existing": ['funnels'],
       "action/existing": ['actions'],
@@ -900,6 +1138,10 @@ RB.crusher.controller = (function(controller) {
       "comparison": [{
           "name": "Comparison",
           "push_state": "/crusher/comparison"
+        }],
+      "vendors": [{
+          "name": "Vendors",
+          "push_state": "/crusher/vendors"
         }],
       "home": [{
           "name":"Home",

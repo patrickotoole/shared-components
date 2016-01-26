@@ -24,7 +24,7 @@ class SearchHandler(SearchBase):
             "uids": self.get_uids,
             "count": self.get_count,
             "timeseries": self.get_timeseries,
-            "timeseries_only": self.get_timeseries_only,
+            # "timeseries_only": self.get_timeseries_only,
             "urls": self.get_urls
         }
 
@@ -32,11 +32,11 @@ class SearchHandler(SearchBase):
     def get_content(self, data, advertiser):
         def default(self, data):
             df = Convert.df_to_json(data)
-            self.render("analysis/bloodhound_test.html", data=df, 
+            self.render("analysis/bloodhound_test.html", data=df,
                         advertiser=advertiser)
         yield default, (data,)
 
-    
+
     def invalid(self,*args,**kwargs):
         raise Exception("Invalid api call")
 
@@ -56,16 +56,14 @@ class SearchHandler(SearchBase):
         date_clause = self.make_date_clause("timestamp", date, start_date, end_date)
 
         logic = self.LOGIC.get(_logic,"should")
-        
+
         if not formatted:
             # short circuit for now... should just remove in the future
             self.get_content(pandas.DataFrame(), advertiser)
-            return         
+            return
 
         if terms:
             terms = terms.split(',')
 
         fn = self.TYPE.get(api_type,self.invalid)
         fn(advertiser, terms, date_clause, logic=logic, timeout=int(timeout))
-
-

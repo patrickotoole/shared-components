@@ -36,7 +36,13 @@ RB.crusher.ui.action = (function(action) {
     var targetRow = d3_updateable(target,".row","div")
       .classed("row",true)
 
-    action.category_pie(targetRow, domainData, action.category_colors)
+    var hover = function(x) {
+      var data = x ? domainData.filter(function(y){return y.parent_category_name == x.data.label}) : domainData
+      this._drawDesc(x)
+      action.domain_table(targetRow,data)
+    }
+
+    action.category_pie(targetRow, domainData, action.category_colors, false, hover)
     action.domain_table(targetRow, domainData)
 
 
@@ -112,6 +118,8 @@ RB.crusher.ui.action = (function(action) {
 
   action.category_pie = function(targetRow,domainData,colors,formatter, hover) {
 
+    var hover;
+
     var target = d3_updateable(targetRow,".category-pie","div")
       .classed("category-pie ",true)
       .classed(formatter || "col-md-4 col-sm-12 pull-right",true)
@@ -120,39 +128,26 @@ RB.crusher.ui.action = (function(action) {
       .classed("table-title",true)
       .text("Percentage of user visits by category")
 
-
-
     var formatData = function(data){
       return data.map(function(d){
         return { label: d.key, value: d.values }
       });
     }
 
-    RB.component.pie.base(target)
+    var pp = pie.pie(target)
 
-    var drawDesc = RB.component.pie.desc(target)
-    try {
-      drawDesc()
-    } catch(e) {}
-
-
-    var hover = hover || function(drawDesc,x) {
-      var data = x ? domainData.filter(function(y){return y.parent_category_name == x.data.label}) : domainData
-      drawDesc(x)
-      action.domain_table(targetRow,data)
-    }
-
-
-    RB.component.pie.draw(
-      target,
+    pp.hover(hover)
+    pp.colors(colors)
+    pp.data(
       function(x){ return formatData(x.parentCategoryData) },
-      function(d){ return d.data.label },
-      hover.bind(false,drawDesc),
-      colors
+      function(d){ return d.data.label }
     )
 
+    pp.draw()
+
     target.selectAll("svg").on("click",function(x){
-      hover(drawDesc)
+      pp._hover()
+      pp.draw()
     })
 
 

@@ -27,9 +27,10 @@ RB.rho.ui = (function(ui) {
       labels: labels,
       series: [series]
     };
-
+    // width: d3.select(target).style("width") - 10,
+// alert('yay');
     var options = {
-      width: d3.select(target).style("width") - 10,
+      width: 100,
       height: height || 130,
       showArea: true,
       horizontalBars: true,
@@ -576,8 +577,13 @@ RB.rho.ui = (function(ui) {
 
   }
 
-  ui.buildTimeseries = function(target,data,title,series,formatting) {
+  ui.buildTimeseries = function(target,data,title,series,formatting,hide_axis, height) {
     console.log(arguments)
+    // debugger;
+    if(typeof height === typeof undefined) {
+      var height = 150;
+    }
+
     var default_formatting = {
       "font_size": ".71em"
     }
@@ -594,9 +600,15 @@ RB.rho.ui = (function(ui) {
 
     var targetWidth = target.style("width").replace("px","")
 
-    var margin = {top: 20, right: 50, bottom: 30, left: 50},
-      width = targetWidth - margin.left - margin.right,
-      height = 150 - margin.top - margin.bottom;
+    if(hide_axis) {
+      var margin = {top: 10, right: 10, bottom: 10, left: 10},
+        width = targetWidth - margin.left - margin.right,
+        height = height - margin.top - margin.bottom;
+    } else {
+      var margin = {top: 10, right: 50, bottom: 30, left: 50},
+        width = targetWidth - margin.left - margin.right,
+        height = height - margin.top - margin.bottom;
+    }
 
     var parseDate = d3.time.format("%D-%b-%y %H:%M").parse;
 
@@ -636,9 +648,7 @@ RB.rho.ui = (function(ui) {
       .call(xAxis);
 
     svg.select(".x.axis").selectAll("text").filter(function(x){return this.innerHTML.length > 6})
-      .attr("y",20)
-
-
+      .attr("y",10)
 
     newSvg.append("g")
       .attr("class", "y axis")
@@ -701,12 +711,21 @@ RB.rho.ui = (function(ui) {
       points
          .attr("fill", function(d, i) { return "steelblue" })
          .attr("cx", function(d, i) { return x(d.date) + 50 })
-         .attr("cy", function(d, i) { return y(d[series]) + 20})
+         .attr("cy", function(d, i) { return y(d[series]) + 10})
          .attr("r", function(d, i) { return 3 })
+
+      if(hide_axis) {
+        points
+          .attr("cx", function(d, i) { return x(d.date) + 10 })
+          .attr("cy", function(d, i) { return y(d[series]) + 10})
+      }
 
     })
 
-
+    if(typeof hide_axis !== typeof undefined && hide_axis == true) {
+      svg.select(".x.axis").style('display', 'none')
+      svg.select(".y.axis").selectAll("text").style('display', 'none')
+    }
 
   }
 
@@ -854,7 +873,7 @@ RB.rho.ui = (function(ui) {
 
     h2.enter().append("h5")
     h2.html(text)
-      .style("margin-top","20px")
+      .style("margin-top","10px")
 
 
 
@@ -886,8 +905,7 @@ RB.rho.ui = (function(ui) {
     showing += showing_arr.join(" and ")
 
     h5.text(showing)
-      .style("margin-top","20px")
-
+      .style("margin-top","10px")
 
   }
 

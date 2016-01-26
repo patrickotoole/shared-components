@@ -42,16 +42,16 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 	}
 
 	gettingstarted.getPixelCode = function(advertiser_data, type) {
-		switch(type) {
-			case 'allpages':
-				var filter_string = 'All';
-				break;
-			case 'conversion':
-				var filter_string = 'Conversion';
-				break;
-		}
 		try {
-			return advertiser_data.segments.filter(function(x){return x.segment_implemented != "" && x.segment_name.indexOf(filter_string) > -1})[0].segment_implemented.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+			switch(type) {
+				case 'allpages':
+					return advertiser_data.segments.filter(function(x){return x.segment_name == '/'})[0];
+					break;
+				case 'conversion':
+					var filter_string = 'Conversion';
+					return advertiser_data.segments.filter(function(x){return x.segment_implemented != "" && x.segment_name.indexOf(filter_string) > -1})[0].segment_implemented.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+					break;
+			}
 		} catch(e) {
 			return null;
 		}
@@ -230,7 +230,7 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 						setTimeout(function() {
 							url_check_button.html("Validating...");
 
-							var all_pages_segment = advertiser_data.segments.filter(function(x){return x.segment_implemented != "" && x.segment_name.indexOf('All Pages') > -1})[0];
+							var all_pages_segment = advertiser_data.segments.filter(function(x){return x.segment_implemented != "" && x.segment_name == '/'})[0];
 							all_pages_segment.uuid = uid;	// 2512143178804115692
 							crusher.subscribe.add_subscriber(["segment_pixel_status"], function(segment_pixel_status_data) {
 								validation_popup.close();
@@ -317,7 +317,7 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 				.style('margin-top', '10px')
 				.text('Continue')
 				.on('click',function(x) {
-					var first_action = 'all pages'
+					var first_action = '/'
 
 					var data = {
 						'action_id': undefined,
