@@ -128,5 +128,4 @@ class ZKEndpoint(ZKTree):
             self.set_tree()
         return advertiserChildren["children"]
 
-import ipdb; ipdb.set_trace()
 #["pattrenTree"]

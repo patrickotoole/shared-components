@@ -20,10 +20,26 @@ class ZKTreeTestCase(unittest.TestCase):
         self.instance.__init__ = mock.MagicMock()
         self.instance.__init__.side_effect = lambda x,y,z : None
 
+    def test_find_label(self):
+        classinstance = self.instance("","","")
+        check = classinstance.find_label_child("_patterns",DICT_3)
+        self.assertEqual(check, DICT_2)
+
     def test_iterate_tree(self):
         classinstance = self.instance("","","")
+        check = classinstance.iterate_tree("pattern",'"source":"test',DICT_2["children"],"node")
+        self.assertEqual(check,DICT_1)
+
+    def test_create_node(self):
+        classinstance = self.instance("","","")
+        node = classinstance.create_node(pattern = '"source":"test')
+        self.assertEqual(node, DICT_1)
 
     def test_find_advertiser(self):
         classinstance = self.instance("","","")
         check = classinstance.find_advertiser_child("test",DICT_3)
         self.assertEqual(check,DICT_1)
+
+    def test_add_advertiser_pattern(self):
+        classinstance = self.instance("","","")
+
