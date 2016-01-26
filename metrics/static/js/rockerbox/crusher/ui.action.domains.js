@@ -139,7 +139,7 @@ RB.crusher.ui.action = (function(action) {
     pp.hover(hover)
     pp.colors(colors)
     pp.data(
-      function(x){ return formatData(x.parentCategoryData) },
+      function(x){ console.log('THIS IS THE DATA', formatData(x.parentCategoryData)); return formatData(x.parentCategoryData) },
       function(d){ return d.data.label }
     )
 

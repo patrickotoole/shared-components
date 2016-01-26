@@ -16,7 +16,8 @@ class PatternSearchHandler(PatternSearchBase):
             "uid_domains": self.get_uid_domains,
             "uids": self.get_uids,
             "count": self.get_count,
-            "timeseries": self.get_timeseries
+            "timeseries": self.get_timeseries,
+            "timeseries_only": self.get_timeseries_only
         }
 
     def invalid(self,*args,**kwargs):
@@ -40,11 +41,9 @@ class PatternSearchHandler(PatternSearchBase):
         date_clause = self.make_date_clause("timestamp", date, start_date, end_date)
 
         logic = _logic
-        
+
         if terms:
             pattern_terms = [p.split(",") for p in terms.split('|')]
 
         fn = self.TYPE.get(api_type,self.invalid)
         fn(advertiser, pattern_terms, int(num_days), logic=logic, timeout=int(timeout))
-
-

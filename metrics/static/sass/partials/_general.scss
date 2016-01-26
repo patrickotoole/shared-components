@@ -41,3 +41,8 @@ header.page-header.with-sidebar {
 		min-height: 305px;
 	}
 }
+
+// Segment page header fix
+.action-view-wrapper .heading {
+	margin-top: -85px !important;
+}

@@ -158,6 +158,115 @@ RB.crusher.controller = (function(controller) {
 
       d3.select('body').classed('hide-select', true);
 
+      function insertGraphs(vendors_list_items) {
+        var vendors_filtered = vendors_list_items.filter(function(x) {
+          return typeof x.visits_data === typeof undefined;
+        });
+
+        console.log('vendors_list_items', vendors_list_items);
+        var vendor = vendors_list_items.data()
+          .filter(function(x) {
+            return typeof x.visits_data === typeof undefined;
+          })[0];
+
+        var vendor_not_missing_data = (typeof vendor === typeof undefined);
+
+        if(vendor_not_missing_data) {
+          vendor = vendors_list_items.datum();
+        }
+
+        crusher.subscribe.add_subscriber(["actionTimeseriesOnly", "pattern_domains_cached"], function(timeseries_data, domains_data) {
+
+          vendor.visits_data.forEach(function(vendor_timeseries_item) {
+            vendor_timeseries_item.key = vendor_timeseries_item.date;
+          });
+
+          /*
+          **  Column 1
+          */
+          vendor.views_sum = vendor.visits_data.reduce(function(p,c) {
+            return p + c.views;
+          },0)
+
+          var vendor_views_column = d3_updateable(vendors_list_items, '.vendor-views-column', 'div')
+            .classed('vendor-views-column col-md-3', true)
+            .html(function(x) {
+              if(typeof x.views_sum !== typeof undefined) {
+                return '<h3>Views</h3><h4 style="font-size: 24px;">'+x.views_sum+'</h4><p style="margin-bottom: 25px;">This is the number of page views per day.</p>'
+              }
+            });
+
+          vendor_views_column.each(function(x){
+            if(typeof x.visits_data !== typeof undefined) {
+              var toDraw = d3.select(this);
+              var visitor_chart = RB.rho.ui.buildTimeseries(toDraw, x.visits_data, "Views", ["views"], undefined, true, 95);
+            }
+          });
+
+          /*
+          ** Column 2
+          */
+
+          // Vendor List Item : Domains Pie
+          var vendor_domains_pie_column = d3_updateable(vendors_list_items, '.vendor-domains-pie-column', 'div')
+            .classed('vendor-domains-pie-column col-md-3', true)
+
+          var vendor_domains_pie = d3_updateable(vendor_domains_pie_column, '.vendor-domains-pie', 'div')
+            .classed('col-md-12 vendor-domains-pie', true)
+            .style('width', '220px')
+            .html('<h3>Off-site</h3>');
+
+            var category_data = {};
+            vendor.domains.forEach(function(domain) {
+              if(typeof category_data[domain.parent_category_name] === typeof undefined) {
+                category_data[domain.parent_category_name] = domain.count;
+              } else {
+                category_data[domain.parent_category_name] += domain.count;
+              }
+            })
+
+            var parentCategoryData = d3.entries(category_data).map(function(x) {
+              return {
+                label: x.key,
+                value: x.value
+              }
+            });
+
+            vendor_domains_pie.datum(function(x) {
+              if(vendor.action_id === x.action_id) {
+                x.parentCategoryData = parentCategoryData;
+              }
+                return x;
+            })
+
+            vendor_domains_pie.each(function(y){
+              if(typeof y.parentCategoryData !== typeof undefined) {
+                var pp = pie.pie(d3.select(this))
+                pp.colors(RB.crusher.ui.action.category_colors)
+                // pp.width(150);
+                pp.data(
+                      function(x){return x.parentCategoryData },
+                      function(d){ return d.data.label }
+                    )
+                pp.draw()
+              }
+            });
+
+            /*
+            **  3rd Column
+            */
+            var vendor_onsite_column = d3_updateable(vendors_list_items, '.vendor-onsite-column', 'div')
+              .classed('vendor-onsite-column col-md-3', true)
+              .html('<h3>On-site</h3><span>(coming soon)</span>');
+
+          setTimeout(function() {
+            if(!vendor_not_missing_data) {
+              insertGraphs(vendors_list_items);
+            }
+          }, 1);
+        }, 'vendor-timeseries-domains', true, true, vendor);
+      }
+
       var funnelRow = build_header({
         'id': 'vendors',
         'name': 'Vendor Analysis'
@@ -173,7 +282,7 @@ RB.crusher.controller = (function(controller) {
       crusher.subscribe.add_subscriber(["actions"], function(segments) {
         var vendors = segments.filter(function(x) {
           return x.action_type == 'vendor';
-        })
+        }).slice(0,3)
 
         /* Vendor List */
         var vendors_list = d3_updateable(vendors_list_card, '.vendors-list', 'ul')
@@ -183,75 +292,81 @@ RB.crusher.controller = (function(controller) {
         var vendors_list_items = d3_splat(vendors_list, '.vendors-list-item', 'li', vendors, function(x) {
           return x.action_name;
         })
+          .datum(function(x) {
+            return x;
+          })
           .classed('vendors-list-item', true);
 
-        // Vendor List Item : Status
-        var vendor_status = d3_updateable(vendors_list_items, '.vendor-status', 'div')
-          .classed('vendor-status col-md-1', true)
-          .html(function(x) {
-            if(x.action_name !== 'email') {
-              return '<i class="glyphicon status glyphicon-ok-circle green"/>'
-            } else {
-              return '<i class="glyphicon status glyphicon-ok-circle grey"/>'
-            }
-          });
+          /*
+          **  1st Column
+          */
+          var vendor_name_column = d3_updateable(vendors_list_items, '.vendor-name-column', 'div')
+            .classed('vendor-name-column col-md-3', true)
 
-        // Vendor List Item : Name
-        var vendor_name = d3_updateable(vendors_list_items, '.vendor-name', 'div')
-          .classed('col-md-2 vendor-name', true)
-          .html(function(x) {
-            return '<h2>' + x.action_name + '</h2>';
-          });
+            var vendor_name = d3_updateable(vendor_name_column, '.vendor-name', 'div')
+              .classed('col-md-12 vendor-name', true)
+              .html(function(x) {
+                return '<h2>' + x.action_name + '</h2>';
+              });
 
-        // Vendor List Item : Graphs
-        var vendor_visitor_graphs = d3_updateable(vendors_list_items, '.vendor-visitor-graphs', 'div')
-          .classed('col-md-4 vendor-visitor-graphs', true);
+            // Vendor List Item : Expand Button
+            var vendor_expand = d3_updateable(vendor_name_column, '.vendor-expand', 'div')
+              .classed('col-md-12 vendor-expand', true)
 
-        var vendor_visitor_graphs_rows = d3_splat(vendor_visitor_graphs, '.vendor-visitor-graphs-row', 'div', ['views', 'visitor','uniques'], function(y) {
-          return y;
-        })
-          .classed('vendor-visitor-graphs-row row', true);
 
-        var vendor_visitor_graph_type = d3_updateable(vendor_visitor_graphs_rows, '.vendor-visitor-graph-type', 'div')
-          .classed('col-md-3 vendor-visitor-graph-type', true)
-          .html(function(y) {
-            return '<span class="type-name">' + y + '</span><span class="type-amount">' + 1234 + '</span>';
-          });
+            var navigation_items = [{
+                title: 'Opportunities',
+                url: 'advertiser-opportunities'
+              }, {
+                title: 'Before and After',
+                url: 'before-and-after'
+              }, {
+                title: 'Clusters',
+                url: 'clusters'
+              }, {
+                title: 'Timing',
+                url: 'timing'
+              }, {
+                title: 'Comparison',
+                url: 'comparison'
+              }]
 
-        var vendor_visitor_graph_chart = d3_updateable(vendor_visitor_graphs_rows, '.vendor-visitor-graph-chart', 'div')
-          .classed('col-md-9 vendor-visitor-graph-chart', true);
+            var vendor_navigation_list = d3_updateable(vendor_name_column, '.vendor-navigation-list', 'ul')
+              .classed('col-md-12 vendor-navigation-list', true)
+              .each(function(y) {
+                y.navigation_items = JSON.parse(JSON.stringify(navigation_items)).map(function(x){
+                  x.action_name = y.action_name
+                  return x;
+                })
+                return y;
+              })
 
-        var subscriber_input = {
-          action_name: 'bing',
-          action_string: 'bing',
-          action_type: 'segment',
-          advertiser: 'advertiser',
-          name: 'bing',
-          url_pattern: ['bing']
-        };
-        crusher.subscribe.add_subscriber(["actionTimeseriesOnly"], function(actionTimeseries) {
-          console.log('! ACTION TIMESERIES', actionTimeseries)
+            var vendor_navigation_items = d3_splat(vendor_navigation_list, '.vendors-list-item', 'li', function(x) {
+              return x.navigation_items;
+            },
+            function(x) {
+              return x.title;
+            })
+            .classed('vendors-list-item', true);
 
-          actionTimeseries.visits_data.forEach(function(actionTimeserie) {
-            actionTimeserie.key = actionTimeserie.date;
-          })
-          var visitor_chart = RB.rho.ui.buildTimeseries(vendor_visitor_graph_chart, actionTimeseries.visits_data, "Views", ["views"], undefined, true, 85);
+            d3_updateable(vendor_navigation_items, 'a', 'a')
+              .attr('href', function(x) {
+                return '/crusher/action/existing?id=/' + x.action_name + '#' + x.url;
+              })
+              .text(function(x) { return x.title; })
+              .on('click', function(x) {
+                RB.routes.navigation.forward({
+                  "name": "View Existing Actions",
+                  "push_state":"/crusher/action/existing",
+                  "skipRender": true,
+                  "values_key":"action_name"
+                })
+                RB.routes.navigation.forward(d3.select(this.parentElement.parentElement).datum())
 
-          var vendor_domains_pie = d3_updateable(vendors_list_items, '.vendor-domains-pie', 'div')
-            .classed('col-md-3 vendor-domains-pie', true)
-            .html(function(x) {
-              return 'Domains Pie';
-            });
-        }, "vendor-timeseries", true, true, subscriber_input);
-        // Vendor List Item : Domains Pie
+                d3.event().preventDefault();
+              })
 
-        // Vendor List Item : Expand Button
-        var vendor_expand = d3_updateable(vendors_list_items, '.vendor-expand', 'div')
-          .classed('col-md-1 vendor-expand', true)
-
-        var vendor_expand_button = d3_updateable(vendor_expand, '.vendor-expand-button', 'div')
-          .classed('vendor-expand-button btn btn-sm btn-default pull-right', true)
-          .text('View More')
+          insertGraphs(vendors_list_items);
       }, "vendors-data", true, true);
     },
     "comparison": function() {

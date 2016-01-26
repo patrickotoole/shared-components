@@ -143,7 +143,7 @@ RB.component.pie = (function(pie) {
         .text(function(x) {return x.domains ? "uniques" : ""})
     }
 
-    
+
 
     return drawDesc
 

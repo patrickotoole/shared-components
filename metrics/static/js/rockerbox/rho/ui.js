@@ -579,6 +579,7 @@ RB.rho.ui = (function(ui) {
 
   ui.buildTimeseries = function(target,data,title,series,formatting,hide_axis, height) {
     console.log(arguments)
+    // debugger;
     if(typeof height === typeof undefined) {
       var height = 150;
     }
@@ -599,9 +600,15 @@ RB.rho.ui = (function(ui) {
 
     var targetWidth = target.style("width").replace("px","")
 
-    var margin = {top: 10, right: 50, bottom: 30, left: 50},
-      width = targetWidth - margin.left - margin.right,
-      height = height - margin.top - margin.bottom;
+    if(hide_axis) {
+      var margin = {top: 10, right: 10, bottom: 10, left: 10},
+        width = targetWidth - margin.left - margin.right,
+        height = height - margin.top - margin.bottom;
+    } else {
+      var margin = {top: 10, right: 50, bottom: 30, left: 50},
+        width = targetWidth - margin.left - margin.right,
+        height = height - margin.top - margin.bottom;
+    }
 
     var parseDate = d3.time.format("%D-%b-%y %H:%M").parse;
 
@@ -706,6 +713,12 @@ RB.rho.ui = (function(ui) {
          .attr("cx", function(d, i) { return x(d.date) + 50 })
          .attr("cy", function(d, i) { return y(d[series]) + 10})
          .attr("r", function(d, i) { return 3 })
+
+      if(hide_axis) {
+        points
+          .attr("cx", function(d, i) { return x(d.date) + 10 })
+          .attr("cy", function(d, i) { return y(d[series]) + 10})
+      }
 
     })
 

@@ -46,14 +46,15 @@
 
 
     var slice = svg.select(".slices").selectAll("path.slice")
-      .data(function(x){ return x.dimensions.pie(format(x)) }, key);
+      .data(function(x){
+        return x.dimensions.pie(format(x)) }, key);
 
     slice.enter()
       .insert("path")
       .style("fill", function(d) { return d.data.label == "NA" ? "#f6f6f6" : colors(d.data.label); })
       .attr("class", "slice");
 
-    slice    
+    slice
       .transition().duration(1000)
       .attrTween("d", function(d) {
         this._current = this._current || d;
@@ -91,8 +92,8 @@
 
     text
       .classed("hidden",true)
-      
-    
+
+
     function midAngle(d){
       return d.startAngle + (d.endAngle - d.startAngle)/2;
     }
@@ -132,7 +133,7 @@
 
     var polyline = svg.select(".lines").selectAll("polyline")
       .data(function(x){ return x.dimensions.pie(format(x)) }, key);
-    
+
     polyline.enter().append("polyline");
     polyline.classed("hidden",true)
 
@@ -150,9 +151,9 @@
           var pos = outerArc.centroid(d2);
           pos[0] = radius * 0.95 * (midAngle(d2) < Math.PI ? 1 : -1);
           return [arc.centroid(d2), outerArc.centroid(d2), pos];
-        };      
+        };
       });
-    
+
     polyline.exit()
       .remove();
 
@@ -201,7 +202,7 @@
         .style("text-anchor","middle")
         .style("font-size","1.75em")
         .style("font-weight","bold")
-        
+
 
       d3_updateable(num_users,".num","text")
         .classed("num",true)
@@ -225,7 +226,7 @@
         .text(function(x) {return x.domains ? "uniques" : ""})
     }
 
-    
+
 
     return drawDesc
 
@@ -266,7 +267,7 @@
     circles.attr("transform", translateCenter);
 
 
-    
+
 
     return {
       svg: svg,
@@ -289,7 +290,7 @@
     var arc = d3.svg.arc()
     	.outerRadius(radius * 0.8)
     	.innerRadius(radius * 0.4);
-    
+
     var outerArc = d3.svg.arc()
     	.innerRadius(radius * 0.9)
     	.outerRadius(radius * 0.9);

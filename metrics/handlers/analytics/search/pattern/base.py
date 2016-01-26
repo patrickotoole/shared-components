@@ -65,12 +65,12 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
                 response['clusters'] = clusters
                 response['similarity'] = similarity
 
-                response['uid_clusters'] = uid_clusters 
+                response['uid_clusters'] = uid_clusters
 
                 # response['clusters'] = []
             except:
                 pass
-        
+
         self.write_json(response)
 
 
@@ -97,13 +97,13 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
         response['summary']['num_users'] = 0
 
         num_days = 2
-        
-        uids = yield self.get_users_sampled(advertiser,term,build_datelist(num_days),num_days) 
+
+        uids = yield self.get_users_sampled(advertiser,term,build_datelist(num_days),num_days)
 
         uids = uids[0]
-        dom = yield self.sample_offsite_domains(advertiser, term, uids, num_days) 
+        dom = yield self.sample_offsite_domains(advertiser, term, uids, num_days)
         domains = dom[0][1]
-       
+
         urls, raw_urls = yield self.defer_get_uid_visits(advertiser,uids,term)
 
         joined = url_domain_intersection(urls,domains)
@@ -140,7 +140,7 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
         category_hourly = category_visits_uniques.reset_index()
 
         raw_urls['hour'] = raw_urls.timestamp.map(lambda x: x.split(" ")[1].split(":")[0])
-        
+
         visits_hourly = raw_urls.groupby("hour")['uid'].agg({"visits":lambda x: len(x), "uniques": lambda x : len(set(x))}).reset_index()
 
         _df = self.db.select_dataframe("SELECT * from action_with_patterns where pixel_source_name = '%s'" % self.current_advertiser_name)
@@ -158,7 +158,7 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
         users['ts'] = users.timestamp.map(pandas.to_datetime)
         summary = users.groupby(["uid","date","hour"]).ts.describe().unstack(3)
 
-        def session_per_day(x): 
+        def session_per_day(x):
 
             date = x.date.iloc[0].split(" ")[0]
             x = x[[i for i in x.columns if i not in ["uid","date"]]].iloc[0]
@@ -172,7 +172,7 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
                 if len(value.replace("|","")) > 0:
 
                     session_start += [i]
-                    i += len(value[1:-1].split("|")) 
+                    i += len(value[1:-1].split("|"))
 
                     session_end += [i-1]
 
@@ -199,13 +199,13 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
 
             return df
 
-        
+
         vv = summary['count'].unstack("hour").reset_index()
         cols = ["session_start","session_end","session_length","start_hour","visits"]
         sessions = vv.groupby(["uid","date"]).apply(session_per_day).reset_index().set_index("uid")[cols]
 
         hours = [str(i) if len(str(i)) > 1 else "0" + str(i) for i in range(0,24)]
-        
+
 
         def uid_summary(x):
             bucket_sessions = sessions.ix[list(set(x))]
@@ -232,12 +232,12 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
             }]
 
             return ll
-            
+
 
 
         xx = domains_with_cat.groupby(["parent_category_name","hour"])['uid'].agg({
-            "visits":  lambda x: len(x), 
-            "uniques": lambda x: len(set(x)), 
+            "visits":  lambda x: len(x),
+            "uniques": lambda x: len(set(x)),
             "on_site": uid_summary
         })
 
@@ -264,7 +264,7 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
 
 
             response['summary']['num_users'] = len(response['results'])
-        
+
         self.write_json(response)
 
 
@@ -286,7 +286,7 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
         df, stats_df, url_stats_df = yield self.sample_stats_onsite(*sample_args)
 
         uids = list(set(df.uid.values))
-        domain_stats_df = yield self.sample_stats_offsite(advertiser, term, uids, num_days) 
+        domain_stats_df = yield self.sample_stats_offsite(advertiser, term, uids, num_days)
 
         defer.returnValue([stats_df, domain_stats_df, url_stats_df])
 
@@ -316,29 +316,30 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
         dates = build_datelist(num_days)
         args = [advertiser,pattern_terms[0][0],dates,num_days]
 
-        try: 
+        try:
             stats_df, url_stats_df = yield self.get_ts_cached(*args)
-        except: 
+        except:
             logging.info("Cache not present -- sampling instead")
             stats_df, url_stats_df = yield self.get_ts_sampled(*args)
 
         stats = stats_df.join(url_stats_df).fillna(0)
 
         response = self.default_response(pattern_terms,logic,no_results=True)
+        response = self.response_summary(response,stats)
         response = self.response_timeseries(response,stats)
 
         self.write_json(response)
 
-            
+
     @defer.inlineCallbacks
     def get_generic(self, advertiser, pattern_terms, num_days, logic="or",timeout=60,timeseries=False):
 
         dates = build_datelist(num_days)
         args = [advertiser,pattern_terms[0][0],dates,num_days]
 
-        try: 
+        try:
             stats_df, domain_stats_df, url_stats_df = yield self.get_generic_cached(*args)
-        except: 
+        except:
             logging.info("Cache not present -- sampling instead")
             stats_df, domain_stats_df, url_stats_df = yield self.get_generic_sampled(*args)
 
@@ -362,10 +363,3 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
 
     def get_timeseries_only(self, advertiser, pattern_terms, date_clause, logic="or",timeout=60):
         self.get_ts_only(advertiser, pattern_terms, date_clause, logic, timeout, True)
-
-
-
-    # THE FOLLOWING SHOULD BE ITS OWN ENDPOINT...
-
-
-
