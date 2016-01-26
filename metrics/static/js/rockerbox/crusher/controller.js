@@ -159,6 +159,9 @@ RB.crusher.controller = (function(controller) {
       d3.select('body').classed('hide-select', true);
 
       function insertGraphs(vendors_list_items) {
+        var vendor_data_columns = d3_updateable(vendors_list_items, '.vendor-data-column', 'div')
+          .classed('vendor-data-column col-lg-10 col-md-12', true)
+
         var vendors_filtered = vendors_list_items.filter(function(x) {
           return typeof x.visits_data === typeof undefined;
         });
@@ -188,11 +191,12 @@ RB.crusher.controller = (function(controller) {
             return p + c.visits;
           },0)
 
-          var vendor_views_column = d3_updateable(vendors_list_items, '.vendor-views-column', 'div')
-            .classed('vendor-views-column col-md-3', true)
+          var vendor_views_column = d3_updateable(vendor_data_columns, '.vendor-views-column', 'div')
+            .classed('vendor-views-column col-lg-4 col-md-6', true)
             .html(function(x) {
               if(typeof x.visits_sum !== typeof undefined) {
-                return '<h3>Visits</h3><h4 style="font-size: 24px;">'+x.visits_sum+'</h4><p style="margin-bottom: 25px;">This is the number of page views per day.</p>'
+                var comma_formatter = d3.format(',')
+                return '<h3>Visits</h3><h4>'+comma_formatter(x.visits_sum)+'</h4><p style="margin-bottom: 25px;">This is the number of page views per day.</p>'
               }
             });
 
@@ -203,8 +207,9 @@ RB.crusher.controller = (function(controller) {
               x.visits_data.sort(function(a,b) {
                 return (new Date(a.key) - new Date(b.key));
               });
+              var visitor_chart = RB.rho.ui.buildTimeseries(toDraw, x.visits_data, "Views", ["visits"], undefined, false, 95);
 
-              var visitor_chart = RB.rho.ui.buildTimeseries(toDraw, x.visits_data, "Views", ["visits"], undefined, true, 95);
+
             }
           });
 
@@ -213,13 +218,14 @@ RB.crusher.controller = (function(controller) {
           */
 
           // Vendor List Item : Domains Pie
-          var vendor_domains_pie_column = d3_updateable(vendors_list_items, '.vendor-domains-pie-column', 'div')
-            .classed('vendor-domains-pie-column col-md-3', true)
+          var vendor_domains_pie_column = d3_updateable(vendor_data_columns, '.vendor-domains-pie-column', 'div')
+            .classed('vendor-domains-pie-column col-lg-4 col-md-6', true)
+            .html('<h3>Off-site</h3><p class="chart-description">A category breakdown for off-site activity.</p>');
 
           var vendor_domains_pie = d3_updateable(vendor_domains_pie_column, '.vendor-domains-pie', 'div')
-            .classed('col-md-12 vendor-domains-pie', true)
+            .classed('col-md-12 row vendor-domains-pie', true)
             .style('width', '220px')
-            .html('<h3>Off-site</h3>');
+            .style('padding', '0px')
 
             var category_data = {};
             vendor.domains.forEach(function(domain) {
@@ -262,13 +268,16 @@ RB.crusher.controller = (function(controller) {
             /*
             **  3rd Column
             */
-            var vendor_onsite_column = d3_updateable(vendors_list_items, '.vendor-onsite-column', 'div')
-              .classed('vendor-onsite-column col-md-3', true)
+            var vendor_onsite_column = d3_updateable(vendor_data_columns, '.vendor-onsite-column', 'div')
+              .classed('vendor-onsite-column col-lg-4 col-md-6', true)
               .html('<h3>On-site</h3><span>(coming soon)</span>');
 
           setTimeout(function() {
             if(!vendor_not_missing_data) {
               insertGraphs(vendors_list_items);
+              crusher.subscribe.add_subscriber(["resize"], function(output) {
+                insertGraphs(vendors_list_items);
+              }, 'timeseries-resize' , true, false);
             }
           }, 1);
         }, 'vendor-timeseries-domains', true, true, vendor);
@@ -281,10 +290,6 @@ RB.crusher.controller = (function(controller) {
 
       var vendors_list_card = d3_updateable(funnelRow, '.vendors-list-card', 'section')
         .classed('vendors-list-card bar series col-md-12', true);
-
-      var vendors_list_card_title = d3_updateable(vendors_list_card, '.vendors-list-card-title', 'header')
-        .classed('vendors-list-card-title title', true)
-        .text('Advertising Vendor Summary');
 
       crusher.subscribe.add_subscriber(["actions"], function(segments) {
         var vendors = segments.filter(function(x) {
@@ -308,7 +313,7 @@ RB.crusher.controller = (function(controller) {
           **  1st Column
           */
           var vendor_name_column = d3_updateable(vendors_list_items, '.vendor-name-column', 'div')
-            .classed('vendor-name-column col-md-3', true)
+            .classed('vendor-name-column col-lg-2 col-md-6', true)
 
             var vendor_name = d3_updateable(vendor_name_column, '.vendor-name', 'div')
               .classed('col-md-12 vendor-name', true)
