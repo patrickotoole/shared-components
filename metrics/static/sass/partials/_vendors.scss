@@ -2,6 +2,11 @@ ul.vendors-list {
   padding: 0;
   margin: 0;
 
+  .vendor-loading {
+    line-height: 200px;
+    text-align: center;
+  }
+
   .coming-soon-box {
     border: dashed 2px #CCC;
     text-align: center;
