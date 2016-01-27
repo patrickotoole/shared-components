@@ -150,7 +150,7 @@ RB.crusher.ui.action.show = (function(show,action,crusher) {
 
     timing
       .append("div").classed("bar series loading-icon",true)
-      .html('Coming soon...')
+      .html('<img src="/static/img/general/logo-small.gif" alt="Logo loader"> Loading timing data...')
 
 
 
