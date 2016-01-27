@@ -46,9 +46,9 @@ RESET_AUTO_INCR_ACTION = "alter table action auto_increment = %s"
 
 SQL_PATTERN_QUERY = "select url_pattern from action_patterns where action_id = '{}'"
 
-SQL_NAME_QUERY "select pixel_source_name from action where action_id = '{}'"
+SQL_NAME_QUERY= "select pixel_source_name from action where action_id = '{}'"
 
-SQL_ACTION_QUERY = "select a.action_id, a.pixel_source_name from action a join on action_patterns b where b.url_pattern = '{}' and a.pixel_source_name = '{}'"
+SQL_ACTION_QUERY = "select a.action_id, a.pixel_source_name from action a join action_patterns b on a.action_id=b.action_id where b.url_pattern = '{}' and a.pixel_source_name = '{}'"
 
 class ActionDatabase(object):
 
@@ -155,17 +155,18 @@ class ActionDatabase(object):
         action = {"action_id":action_id}
         action["zookeeper_tree"] = action.get("zookeeper_tree","for_play")
 
-        zk = ZKEndpoint(zookeeper,tree_name=action["zookeeper_tree"])
+        zk = zke.ZKEndpoint(zookeeper,tree_name=action["zookeeper_tree"])
 
         urls = self.db.select_dataframe(SQL_PATTERN_QUERY.format(action_id))
-        urls = urls.ix[0][0]
         advertiser = self.db.select_dataframe(SQL_NAME_QUERY.format(action_id))
-        advertiser = advertiser.ix[0][0]
+        if len(urls) >0 and len(advertiser) > 0:
+            urls = urls.ix[0][0]
+            advertiser = advertiser.ix[0][0]
+            advertiser_ids = self.db.select_dataframe(SQL_ACTION_QUERY.format(urls, advertiser))
 
-        advertiser_ids = self.db.select_dataframe(SQL_ACTION_QUERY.format(urls, advertiser))
-
-        if lens(advertiser_ids)==1:
+        if len(advertiser_ids)==1:
             zk.remove_advertiser_children_pattern(advertiser, zk.tree, [urls])
+            zk.set_tree()
         
         cursor.execute(DELETE_ACTION % action)
         cursor.execute(DELETE_ACTION_PATTERN % action)
