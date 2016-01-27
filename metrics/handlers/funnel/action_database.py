@@ -187,10 +187,7 @@ class ActionDatabase(object):
 
         self.assert_required(action,self.required_cols)
 
-<<<<<<< 09dfdf368b32a0f6cc173adc329a7468cc9e9065
-=======
         action["zookeeper_tree"] = action.get("zookeeper_tree","for_play")
->>>>>>> update zookeeper class and update endpoint handlers
         try:
             zk = zke.ZKEndpoint(zookeeper,tree_name=action["zookeeper_tree"])
             for url in action["url_pattern"]:
@@ -204,15 +201,7 @@ class ActionDatabase(object):
                 cursor.execute(INSERT_ACTION_PATTERNS % pattern)
             action['action_id'] = action_id
             return action
-<<<<<<< 09dfdf368b32a0f6cc173adc329a7468cc9e9065
         except Exception as e:
             next_auto = cursor.execute(GET_MAX_ACTION_PLUS_1)
             cursor.execute(RESET_AUTO_INCR_ACTION % next_auto)
             raise e
-=======
-        except Exception, e:
-            next_auto = cursor.execute(GET_MAX_ACTION_PLUS_1)
-            cursor.execute(RESET_AUTO_INCR_ACTION % next_auto)
-            raise e
-
->>>>>>> update zookeeper class and update endpoint handlers
