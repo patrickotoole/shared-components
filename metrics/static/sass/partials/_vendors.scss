@@ -2,6 +2,18 @@ ul.vendors-list {
   padding: 0;
   margin: 0;
 
+  .coming-soon-box {
+    border: dashed 2px #CCC;
+    text-align: center;
+    line-height: 220px;
+    min-width: 220px;
+    max-width: 330px;
+    margin-top: 12px;
+    font-weight: bold;
+    font-size: 14px;
+    color: #CCC;
+  }
+
   .vendor-domains-pie {
     position: relative;
     left: 50%;
