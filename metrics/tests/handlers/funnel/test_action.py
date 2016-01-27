@@ -44,8 +44,8 @@ class ActionTest(AsyncHTTPTestCase):
     def get_app(self):        
         self.db = lnk.dbs.test
 
-        self.db.execute(CREATE_ACTION_TABLE) 
-        self.db.execute(CREATE_PATTERN_TABLE)  
+        #self.db.execute(CREATE_ACTION_TABLE) 
+        #self.db.execute(CREATE_PATTERN_TABLE)  
         self.db.execute(ACTION_FIXTURE_1)
         self.db.execute(ACTION_FIXTURE_2)
 
