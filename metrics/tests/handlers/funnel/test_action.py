@@ -63,6 +63,10 @@ class ActionTest(AsyncHTTPTestCase):
         action.ActionHandler.get_current_user = mock.Mock()
         action.ActionHandler.get_current_user.return_value = "test_user"
 
+        #self.zookeeper = mock.MagicMock()
+        self.zookeeper.start = mock.MagicMock()
+        #action.ActionHandler.zke = mock.MagicMock()
+
         return self.app
 
     def tearDown(self):
