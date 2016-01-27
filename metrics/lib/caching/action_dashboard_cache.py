@@ -150,29 +150,30 @@ def run_advertiser_segment(user, password, conn, segment_name):
 		logging.error("Error with advertiser segment run for advertiser username %s and segment %s" % (user, segment_name))
 
 if __name__ == "__main__":
-	from lib.report.utils.loggingutils import basicConfig
-	from lib.report.utils.options import define
-	from lib.report.utils.options import options
-	from lib.report.utils.options import parse_command_line
+    from lib.report.utils.loggingutils import basicConfig
+    from lib.report.utils.options import define
+    from lib.report.utils.options import options
+    from lib.report.utils.options import parse_command_line
 
-	define("chronos",default=True)
-	define("remove_old", default=False)
-	define("remove_seconds", default="17280")
-	define("username",  default="")
-	define("password", default="")
-	define("segment", default = False)
+    define("chronos",default=True)
+    define("remove_old", default=False)
+    define("remove_seconds", default="17280")
+    define("username",  default="")
+    define("password", default="")
+    define("segment", default = False)
 
-	basicConfig(options={})
-	parse_command_line()
-
-	if options.chronos ==True:
+    basicConfig(options={})
+    
+    parse_command_line()
+    
+    if options.chronos ==True:
 		run_all()
-	else:
-		if options.segment == False:
-			run_advertiser(options.username, options.password)
-		else:
-			run_advertiser_segment(options.username, options.password, lnk.dbs.rockerbox, options.segment)
-
-	if options.remove_old == True:
-		lnk.dbs.rockerbox.excute(SQL_REMOVE_OLD % options.remove_seconds)
+    else:
+        if options.segment == False:
+            run_advertiser(options.username, options.password)
+        else:
+            run_advertiser_segment(options.username, options.password, lnk.dbs.rockerbox, options.segment)
+    
+    if options.remove_old == True:
+        lnk.dbs.rockerbox.excute(SQL_REMOVE_OLD % options.remove_seconds)
 

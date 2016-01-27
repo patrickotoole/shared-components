@@ -11,7 +11,7 @@ VIEW = "UPDATE rockerbox.pattern_occurrence_views_counter set count= count + 1 w
 
 SQL_QUERY ="select distinct url_pattern, pixel_source_name from action_with_patterns where action_id is not null"
 
-TREE = {"patternTree":{"node":{"pattern":"","label":""},"children":[{"node":{"pattern":"","label":"_patterns"},"children":[]}]}}
+TREE = {"node":{"pattern":"","label":""},"children":[{"node":{"pattern":"","label":"_patterns"},"children":[]}]}
 
 class ZKHelper():
     
@@ -50,13 +50,13 @@ class ZKHelper():
     @classmethod
     def find_advertiser_child(self, advertiser, tree_struct):
         children = self.find_label_child("_patterns", tree_struct)["children"]
-        match_string = '"source":"{}'
+        match_string = '"source": "{}'
         returnChild = self.iterate_tree("pattern", match_string.format(advertiser), children, parentkeyname="node")
         return returnChild
 
     @classmethod
     def find_label_child(self,label, tree_struct):
-        children = tree_struct["patternTree"]["children"]
+        children = tree_struct["children"]
         returnChild = self.iterate_tree("label", label, children, parentkeyname="node")
         return returnChild
 
@@ -74,24 +74,70 @@ class ZKHelper():
             node["node"]["query"] = query
         return node
 
+    @classmethod
+    def remove_label_node(self, label, tree_struct):
+        current_label = self.find_label_child(label, tree_struct)
+        all_labels = tree_struct["children"]
+        updated_labels=[]
+        if current_label != {}:
+            for child in all_labels:
+                if child["node"]["label"] != label:
+                    updated_labels.append(child)
+        tree_struct["children"] = updated_labels
+        return tree_struct
+
+    @classmethod
+    def remove_advertiser_node(self, advertiser, tree_struct):
+        current_advertiser = self.find_advertiser_child(advertiser, tree_struct)
+        all_advertisers = self.find_label_child("_patterns", tree_struct)["children"]
+        updated_advertisers = []
+        if current_advertiser != {}:
+            for child in all_advertisers:
+                if child["node"]["pattern"] != advertiser:
+                    update_advertisers.append(child)
+        self.find_label_child("_patterns", tree_struct)["children"] = updated_advertisers
+        return updated_advertisers
+
+    @classmethod
+    def remove_advertiser_children(self, advertiser, tree_struct, children_to_remove=[]):
+        children = self.find_advertiser_child(advertiser, tree_struct)["children"]
+        updated_children = []
+        for child in children:
+            if child not in children_to_remove:
+                updated_children.append(child)
+        self.find_advertiser_child(advertiser, tree_struct)["children"] = updated_children
+        return updated_children
+
+    @classmethod
+    def remove_advertiser_children_pattern(self, advertiser, tree_struct, children_patterns_to_remove=[]):
+        children = self.find_advertiser_child(advertiser, tree_struct)["children"]
+        updated_children = []
+        for child in children:
+            if child["node"]["pattern"] not in children_patterns_to_remove:
+                updated_children.append(child) 
+        self.find_advertiser_child(advertiser, tree_struct)["children"] = updated_children
+        return updated_children
+
 class ZKEndpoint(ZKTree, ZKHelper):
 
-    def __init__(self,host='zk1:2181',tree_name="for_play", con=lnk.dbs.rockerbox):
+    #def __init__(self,host='zk1:2181',tree_name="for_play", con=lnk.dbs.rockerbox):
+    def __init__(self, kazooclient, tree_name="for_play", con = lnk.dbs.rockerbox):
         self.conn = con
-        self.zk = KazooClient(hosts=host)
+        #self.zk = KazooClient(hosts=host)
+        self.zk = kazooclient
         self.tree_name = tree_name
         self.start()
 
     @classmethod
     def construct_example_tree(self):
-        sample_tree = {"patternTree":self.create_node()}
-        sample_tree["patternTree"]["children"].append(self.create_node())
-        sample_tree["patternTree"]["children"].append(self.create_node(label="_patterns", children=[self.create_node()]))
+        sample_tree = self.create_node()
+        sample_tree["children"].append(self.create_node())
+        sample_tree["children"].append(self.create_node(label="_patterns", children=[self.create_node()]))
         return sample_tree
 
     @classmethod
     def add_advertiser(self, advertiser, tree_struct):
-        match_string = '"source":"{}'
+        match_string = '"source": "{}'
         children = self.find_label_child("_patterns", tree_struct)["children"]
         foundChild = self.iterate_tree("pattern", match_string.format(advertiser), children, parentkeyname="node")
         if foundChild == {}:
@@ -103,7 +149,7 @@ class ZKEndpoint(ZKTree, ZKHelper):
     def construct_from_db(self, con):
         df = con.select_dataframe(SQL_QUERY)
         finalTree = TREE.copy()
-        childrenLocation = finalTree["patternTree"]["children"][0]["children"]
+        childrenLocation = finalTree["children"][0]["children"]
         for advertiser in df.pixel_source_name.unique():
             nodes = []
             actions = Convert.df_to_values(df[df.pixel_source_name == advertiser])
@@ -145,11 +191,11 @@ class ZKEndpoint(ZKTree, ZKHelper):
 
 
 if __name__ == "__main__":
-    #import ipdb; ipdb.set_trace()
-    zk = ZKEndpoint()
-    tree = zk.construct_from_db(lnk.dbs.rockerbox)
-    zk.set_tree(tree)
-    print zk.get_tree()
+    import ipdb; ipdb.set_trace()
+    zk = ZKEndpoint(KazooClient(hosts="zk1:2181"))
+    #tree = zk.construct_from_db(lnk.dbs.rockerbox)
+    #zk.set_tree(tree)
+    #print zk.get_tree()
 
-    zk.add_advertiser_pattern("test advertiser", "/", zk.tree)
-    print zk.get_tree()
+    #zk.add_advertiser_pattern("test advertiser", "/", zk.tree)
+    #print zk.get_tree()

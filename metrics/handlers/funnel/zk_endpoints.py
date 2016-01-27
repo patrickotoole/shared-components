@@ -8,11 +8,9 @@ from lib.helpers import APIHelpers
 
 class ZKHandler(BaseHandler, ActionAuth,APIHelpers):
 
-    def initialize(self, db=None, **kwargs):
-            self.db = db
-
-    def initialize(self, db=None, **kwargs):
+    def initialize(self, db=None, zookeeper=None, **kwargs):
         self.db = db
+        self.zookeeper = zookeeper
     
     @tornado.web.authenticated
     def post(self):
@@ -32,7 +30,7 @@ class ZKHandler(BaseHandler, ActionAuth,APIHelpers):
     @tornado.web.authenticated
     def get(self):
         try:
-            self.write_response(zk.zk.get_tree())
+            self.write_response(zk.ZKEndpoint(self.zookeeper).get_tree())
             #self.write_response(Convert.df_to_values(results))
         except Exception, e:
             self.write_response(str(e),e)
