@@ -8,10 +8,10 @@ RB.crusher.cache = (function(cache) {
 
 RB.crusher.api = (function(api, crusher) {
 
-  var addParam = function(u,p) { 
-    return u.indexOf("?") >= 0 ? 
+  var addParam = function(u,p) {
+    return u.indexOf("?") >= 0 ?
       u + "&" + p:
-      u + "?" + p 
+      u + "?" + p
   }
 
   var source = ""
@@ -51,8 +51,20 @@ RB.crusher.api = (function(api, crusher) {
   }
 
   var endpoints = api.endpoints
+  crusher.pubsub = new turnip.system()
+
+  RB.crusher.pubsub.publisher("helloworld")
+    .producer(function(cb){
+      setTimeout(function(x){
+        cb({"some":"data"})
+      },2000)
+    })
 
   Object.keys(endpoints).map(function(e) {
+
+    RB.crusher.pubsub.publisher(e)
+      .producer(endpoints[e])
+
     crusher.subscribe.register_publisher(e,endpoints[e])
     api[e] = endpoints[e]
   })
@@ -60,6 +72,3 @@ RB.crusher.api = (function(api, crusher) {
   return api
 
 })(RB.crusher.api || {}, RB.crusher)
-
-
-

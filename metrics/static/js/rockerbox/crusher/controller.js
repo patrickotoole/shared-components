@@ -8,6 +8,7 @@ RB.crusher.controller = (function(controller) {
   var crusher = RB.crusher
   var source = crusher.api.source
 
+
   controller.init = function(type,data) {
     crusher.subscribe.add_subscriber(["advertiser", "current_user"], function(advertiser_data, current_user) {
       setTimeout(function() {

@@ -6,6 +6,7 @@ RB.crusher.ui.vendors = (function(vendors) {
 
   var crusher = RB.crusher
   var funnelRow;
+  var pubsub = crusher.pubsub
 
   vendors.show = function(funnelRow) {
     funnelRow = funnelRow;
@@ -126,6 +127,15 @@ RB.crusher.ui.vendors = (function(vendors) {
     if(vendor_not_missing_data) {
       vendor = vendors_list_items.datum();
     }
+
+    var subscription = pubsub.subscriber("vendor-timeseries-domains-stuff",["actions"])
+      .run(function(x){
+        console.log(x);
+        debugger
+      })
+      .data(vendor)
+      .unpersist(true)
+      .trigger()
 
     crusher.subscribe.add_subscriber(["actionTimeseriesOnly", "pattern_domains_cached"], function(timeseries_data, domains_data) {
       var data_columns_with_data = vendor_data_columns.filter(function(x) {
