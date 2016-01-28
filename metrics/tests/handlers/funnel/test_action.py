@@ -5,8 +5,9 @@ import mock
 import mocks.yoshi as mocks
 import ujson
 from link import lnk 
-
+import logging
 import handlers.funnel.action as action
+import lib.zookeeper.zk_endpoint as zke
 
 CREATE_ACTION_TABLE = """
 CREATE TABLE `action` (
@@ -40,12 +41,21 @@ VALUES (2,0,0,"and","will","wills_action", "segment")
 
 class ActionTest(AsyncHTTPTestCase):
 
+    
     # same as in test_creative_reporting.py
     def get_app(self):        
         self.db = lnk.dbs.test
 
-        #self.db.execute(CREATE_ACTION_TABLE) 
-        #self.db.execute(CREATE_PATTERN_TABLE)  
+        
+        len_check = self.db.execute("show tables like 'action_patterns'")
+        if len(len_check.as_dataframe())>0:
+            self.db.execute("DROP TABLE action_patterns")
+        len_check2 = self.db.execute("show tables like 'action'")
+        if len(len_check2.as_dataframe())>0:
+            self.db.execute("DROP TABLE action")
+
+        self.db.execute(CREATE_ACTION_TABLE) 
+        self.db.execute(CREATE_PATTERN_TABLE)  
         self.db.execute(ACTION_FIXTURE_1)
         self.db.execute(ACTION_FIXTURE_2)
 
@@ -63,9 +73,8 @@ class ActionTest(AsyncHTTPTestCase):
         action.ActionHandler.get_current_user = mock.Mock()
         action.ActionHandler.get_current_user.return_value = "test_user"
 
-        #self.zookeeper = mock.MagicMock()
-        self.zookeeper.start = mock.MagicMock()
-        #action.ActionHandler.zke = mock.MagicMock()
+        zke.ZKEndpoint = mock.MagicMock()
+        zke.ZKEndpoint.add_advertiser_pattern.side_effect = lambda x : x
 
         return self.app
 
@@ -96,7 +105,7 @@ class ActionTest(AsyncHTTPTestCase):
         self.assertEqual(ajson['response']['url_pattern'],ojson['url_pattern']) 
 
     def test_put_param_check(self):
-        action_put = self.fetch("/?format=json", method="PUT", body=ujson.dumps("{}")).body
+        action_put = self.fetch("/?format=json", method="PUT", body=ujson.dumps({})).body
         action_put_json = ujson.loads(action_put)["error"]
 
         expected = "Missing the following parameters: id"

@@ -37,7 +37,7 @@ class ActionHandler(BaseHandler,ActionAuth,APIHelpers,ActionDatabase):
     @tornado.web.authenticated
     def put(self):
         try:
-            data = self.perform_update(self.request.body, self.zookeeper)
+            data = self.perform_update(self.request.body)
             self.write_response(data)
         except Exception, e:
             self.write_response(str(e),e)
