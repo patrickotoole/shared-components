@@ -4,7 +4,7 @@ import action_dashboard_cache as adc
 
 VENDOR_QUERY = "select url_patterns, vendor from vendor_patterns where medium is not null and medium_type is not null"
 
-json_obj = {"action_name": "","url_pattern": "", "segment":"vendor", "operator":"or"}
+json_obj = {"action_name": "","url_pattern": "", "action_type":"vendor", "operator":"or"}
 
 #INSERT_URL = "http://192.168.99.100:8888/crusher/funnel/action?format=json"
 INSERT_URL = "http://crusher.getrockerbox.com/crusher/funnel/action?format=json"
