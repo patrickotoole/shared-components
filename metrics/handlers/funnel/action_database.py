@@ -102,7 +102,6 @@ class ActionDatabase(object):
     def make_set_fields(self,action):
         # creates the update statement for an action
         excludes = ["action_id","url_pattern","advertiser"]
-        import ipdb; ipdb.set_trace()
         fields = ", ".join(["%s=\"%s\"" % (i,j) for i,j in action.items() if not (i in excludes)])
 
         return fields
@@ -130,7 +129,6 @@ class ActionDatabase(object):
     @decorators.multi_commit_cursor
     def perform_update(self,body,cursor=None):
         action = ujson.loads(body)
-        import ipdb; ipdb.set_trace()
         self.assert_required_params(["id"])
         action_id = self.get_argument("id")
 
