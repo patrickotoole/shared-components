@@ -3,6 +3,7 @@ from kazoo.client import KazooClient
 from zk_tree import ZKTree
 from link import lnk
 from lib.helpers import *
+from zk_helper import ZKHelper
 
 USER = "INSERT INTO rockerbox.pattern_occurrence_users_u2 (source, date, action, uid, u2) VALUES ('${source}','${date}', '%(url_pattern)s', '${adnxs_uid}', ${u2});"
 RAW = "UPDATE rockerbox.pattern_occurrence_u2_counter set occurrence= occurrence + 1 where source = '${source}'and date = '${date}' and  url = '${referrer}' and uid = '${adnxs_uid}' and u2 = ${u2} and action ='%(url_pattern)s';"
@@ -11,7 +12,7 @@ VIEW = "UPDATE rockerbox.pattern_occurrence_views_counter set count= count + 1 w
 
 SQL_QUERY ="select distinct url_pattern, pixel_source_name from action_with_patterns where action_id is not null"
 
-class ZKEndpoint(ZKHelper):
+class ZKEndpoint(ZKTree, ZKHelper):
 
     #def __init__(self,host='zk1:2181',tree_name="for_play", con=lnk.dbs.rockerbox):
     def __init__(self, kazooclient, tree_name="for_play", con = lnk.dbs.rockerbox):
@@ -81,6 +82,45 @@ class ZKEndpoint(ZKHelper):
             nodes = map(lambda x : self.create_node(**x), parameter_list)
             map(advertiserChildren["children"].append, nodes)
         return tree_struct
+
+    @classmethod
+    def find_advertiser_child(self, advertiser, tree_struct):
+        children = self.find_label_child("_patterns", tree_struct)["children"]
+        match_string = '"source": "{}'
+        returnChild = self.iterate_tree("pattern", match_string.format(advertiser), children, parentkeyname="node")
+        return returnChild
+
+    @classmethod
+    def remove_advertiser_node(self, advertiser, tree_struct):
+        current_advertiser = self.find_advertiser_child(advertiser, tree_struct)
+        all_advertisers = self.find_label_child("_patterns", tree_struct)["children"]
+        updated_advertisers = []
+        if current_advertiser != {}:
+            for child in all_advertisers:
+                if child["node"]["pattern"] != advertiser:
+                    update_advertisers.append(child)
+        self.find_label_child("_patterns", tree_struct)["children"] = updated_advertisers
+        return updated_advertisers
+
+    @classmethod
+    def remove_advertiser_children(self, advertiser, tree_struct, children_to_remove=[]):
+        children = self.find_advertiser_child(advertiser, tree_struct)["children"]
+        updated_children = []
+        for child in children:
+            if child not in children_to_remove:
+                updated_children.append(child)
+        self.find_advertiser_child(advertiser, tree_struct)["children"] = updated_children
+        return updated_children
+
+    @classmethod
+    def remove_advertiser_children_pattern(self, advertiser, tree_struct, children_patterns_to_remove=[]):
+        children = self.find_advertiser_child(advertiser, tree_struct)["children"]
+        updated_children = []
+        for child in children:
+            if child["node"]["pattern"] not in children_patterns_to_remove:
+                updated_children.append(child)
+        self.find_advertiser_child(advertiser, tree_struct)["children"] = updated_children
+        return updated_children
 
 
 if __name__ == "__main__":
