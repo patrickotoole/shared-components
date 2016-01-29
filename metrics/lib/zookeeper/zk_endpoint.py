@@ -32,13 +32,12 @@ class ZKEndpoint(ZKHelper, ZKTree):
     def add_advertiser(self, advertiser, tree_struct):
         match_string = '"source": "{}'
         search_object = [{"label":False,"pattern":False},{"label":False,"pattern":"_patterns"},{"label":match_string.format(advertiser),"pattern":False}]
-        children = self.search_tree(search_object, self.tree)
-        if children == []:
+        children = self.search_tree_node(search_object, tree_struct)
+        if children == {}:
             search_label_object = [{"label":False,"pattern":False},{"label":False,"pattern":"_patterns"}]
-            label_children = self.search_tree(search_label_object, self.tree)
+            label_children = self.search_tree_children(search_label_object, tree_struct)
             label_children.append(self.create_node(pattern=match_string.format(advertiser)))
-            self.set_tree()
-        return children[0]
+        return label_children
 
     @classmethod
     def construct_from_db(self, con):
@@ -69,10 +68,10 @@ class ZKEndpoint(ZKHelper, ZKTree):
     def add_advertiser_pattern(self, advertiser, url_pattern, tree_struct):
         match_string = '"source": "{}'
         search_object =[{"label":False,"pattern":False},{"label":False,"pattern":"_patterns"},{"label":match_string.format(advertiser),"pattern":False}]
-        advertiserChildren = self.search_tree(search_object, tree_Struct)
+        advertiserChildren = self.search_tree_children(search_object, tree_Struct)
         if advertiserChildren ==[]:
             self.add_advertiser(advertiser, tree_struct)
-            advertiserChildren = self.search_tree(search_object, tree_struct)
+            advertiserChildren = self.search_tree_children(search_object, tree_struct)
         found = False
         for child in advertiserChildren:
             if child["node"]["pattern"] == url_pattern:
@@ -139,6 +138,7 @@ class ZKEndpoint(ZKHelper, ZKTree):
 if __name__ == "__main__":
     import ipdb; ipdb.set_trace()
     zk = ZKEndpoint(KazooClient(hosts="zk1:2181"))
+    tr = zk.add_advertiser("test_advertiser", zk.tree)
     #tree = zk.construct_from_db(lnk.dbs.rockerbox)
     #zk.set_tree(tree)
     #print zk.get_tree()

@@ -10,14 +10,19 @@ class ZKHelper():
 
     @classmethod
     def _assert_valid(self,subtree_array):
-        for child in subtree_array:
+        for subtree in subtree_array:
             assert subtree.get("node")
             assert subtree.get("children")
 
     @classmethod
+    def _assert_valid_node(self, tree):
+        assert "node" in tree
+        assert "children" in tree
+
+    @classmethod
     def _validate_boolean(self, validate, subtree, key):
-        assert validate.get("pattern")
-        assert validate.get("label")
+        assert "pattern" in validate.keys()
+        assert "label" in validate.keys()
         returnBool = False
         if validate[key] ==True and len(subtree.get("node",{}).get(key,""))>1:
             returnBool = True
@@ -28,12 +33,11 @@ class ZKHelper():
         return returnBool
 
     @classmethod
-    def _validate_condition(self, validate, subtree):
+    def _validate_condition(self, validate, subtree_array):
         returnArray = []
-        for child in subtree:
-            self._assert_valid(subtree)
-            if self._validate_boolean(validate, child, "label") and self._validate_boolean(validate, child,"pattern"):
-                returnArray.append(child["children"])
+        for tree in subtree_array:
+            if self._validate_boolean(validate, tree, "label") and self._validate_boolean(validate, tree,"pattern"):
+                returnArray = tree["children"]
         return returnArray
 
     @classmethod
@@ -45,11 +49,11 @@ class ZKHelper():
 
     @classmethod
     def _validate_condition_node(self, validate, subtree):
-        returnTree = {}
+        returnTree = {"children":[]}
         #returns first instance
         for child in subtree:
-            self._assert_valid(subtree)
-            if self._validate_boolean(validate, subtree, "label") and self._validate_boolean(validate, subtree,"pattern"):
+            self._assert_valid_node(child)
+            if self._validate_boolean(validate, child, "label") and self._validate_boolean(validate, child,"pattern"):
                 if returnTree == {}:
                     returnTree = child
                 else:
@@ -61,6 +65,10 @@ class ZKHelper():
         childtree = subtree
         for child in validation_list:
             childtree = self._validate_condition_node(child, childtree["children"])
+        try:
+            self._assert_valid(childtree)
+        except:
+            childtree = {}
         return childtree
     
     @classmethod
@@ -143,3 +151,6 @@ class ZKHelper():
                     updated_labels.append(child)
         tree_struct["children"] = updated_labels
         return tree_struct
+
+if __name__ == "__main__":
+    import ipdb; ipdb.set_trace()
