@@ -55,6 +55,8 @@ class VisitUrlsHandler(BaseHandler):
 
 
         df = pandas.DataFrame(self.cassandra.execute(QUERY,None,60))
+        df['source'] = df.source.map(lambda x: x.encode('utf-8'))
+        df['url'] = df.url.map(lambda x: x.encode('utf-8'))
 
         return df
 
