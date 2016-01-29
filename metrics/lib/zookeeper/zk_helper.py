@@ -4,15 +4,14 @@ from zk_tree import ZKTree
 from link import lnk
 from lib.helpers import *
 
-TREE = {"node":{"pattern":"","label":""},"children":[{"node":{"pattern":"","label":"_patterns"},"children":[]}]}
-
 class ZKHelper():
 
     @classmethod
     def _assert_valid(self,subtree_array):
-        for subtree in subtree_array:
-            assert subtree.get("node")
-            assert subtree.get("children")
+        if subtree_array:
+            for subtree in subtree_array:
+                assert subtree.get("node")
+                assert subtree.get("children")
 
     @classmethod
     def _assert_valid_node(self, tree):
@@ -34,7 +33,7 @@ class ZKHelper():
 
     @classmethod
     def _validate_condition(self, validate, subtree_array):
-        returnArray = []
+        returnArray = False
         for tree in subtree_array:
             if self._validate_boolean(validate, tree, "label") and self._validate_boolean(validate, tree,"pattern"):
                 returnArray = tree["children"]
@@ -44,6 +43,7 @@ class ZKHelper():
     def search_tree_children(self, validation_list, subtree):
         children_array = [subtree]
         for child in validation_list:
+            import ipdb; ipdb.set_trace()
             children_array = self._validate_condition(child, children_array)
         return children_array
 
@@ -66,9 +66,10 @@ class ZKHelper():
         for child in validation_list:
             childtree = self._validate_condition_node(child, childtree["children"])
         try:
-            self._assert_valid(childtree)
+            #self._assert_valid(childtree)
+            self._assert_valid(childtree["children"])
         except:
-            childtree = {}
+            childtree = False
         return childtree
     
     @classmethod
@@ -124,11 +125,6 @@ class ZKHelper():
         return node
 
     @classmethod
-    def remove_label_node_children(self, label, tree_struct):
-        label_search = [{"label":False,"pattern":False},{"label":label, "pattern":False}]
-        label_node = self.search_tree_node(label_search, tree_struct)
-        label_node["children"] = []
-
     def remove_label_node_children(self, label, tree_struct):
         label_search = [{"label":False,"pattern":False}]
         children = self.search_tree_childnre(label_search, tree_struct)
