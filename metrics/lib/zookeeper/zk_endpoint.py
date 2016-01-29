@@ -19,7 +19,6 @@ class ZKEndpoint(ZKHelper, ZKTree):
         self.conn = con
         self.zk = kazooclient
         self.tree_name = tree_name
-        self.start()
 
     @classmethod
     def construct_example_tree(self):
@@ -137,7 +136,7 @@ class ZKEndpoint(ZKHelper, ZKTree):
 
 if __name__ == "__main__":
     import ipdb; ipdb.set_trace()
-    zk = ZKEndpoint(KazooClient(hosts="zk1:2181"))
+    zk = ZKEndpoint(KazooClient(hosts="zk1:2181").start())
     tr = zk.add_advertiser("test_advertiser", zk.tree)
     #tree = zk.construct_from_db(lnk.dbs.rockerbox)
     #zk.set_tree(tree)
