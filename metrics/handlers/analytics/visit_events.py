@@ -113,6 +113,8 @@ class VisitEventsHandler(BaseHandler, AnalyticsBase,VisitEventBase):
             if kind == "domains":
                 df = df.groupby("domain").uid.nunique().reset_index()
 
+        df['url'] = df.url.map(lambda x: x.encode("utf-8"))
+
         self.get_content(df)
 
     @decorators.formattable
