@@ -4,7 +4,7 @@ from zk_tree import ZKTree
 from link import lnk
 from lib.helpers import *
 from zk_helper import ZKHelper
-from zk_tree import ZKTree
+from zk_tree import ZkTree
 
 USER = "INSERT INTO rockerbox.pattern_occurrence_users_u2 (source, date, action, uid, u2) VALUES ('${source}','${date}', '%(url_pattern)s', '${adnxs_uid}', ${u2});"
 RAW = "UPDATE rockerbox.pattern_occurrence_u2_counter set occurrence= occurrence + 1 where source = '${source}'and date = '${date}' and  url = '${referrer}' and uid = '${adnxs_uid}' and u2 = ${u2} and action ='%(url_pattern)s';"
@@ -31,18 +31,15 @@ class ZKEndpoint(ZKHelper, ZKTree):
     @classmethod
     def add_advertiser(self, advertiser, tree_struct):
         match_string = '"source": "{}'
-        search_object = [{"label":False,"pattern":False},{"label":False,"pattern":"_patterns"},{"label":match_string.format(advertiser),"pattern":False}]
-        children = self.search_tree(search_object, self.tree)
-        if children == []:
-            search_label_object = [{"label":False,"pattern":False},{"label":False,"pattern":"_patterns"}]
-            label_children = self.search_tree(search_label_object, self.tree)
-            label_children.append(self.create_node(pattern=match_string.format(advertiser)))
+        children = self.find_label_child("_patterns", tree_struct)["children"]
+        foundChild = self.iterate_tree("pattern", match_string.format(advertiser), children, parentkeyname="node")
+        if foundChild == {}:
+            children.append(self.create_node(pattern=match_string.format(advertiser)))
             self.set_tree()
-        return children[0]
+        return foundChild
 
     @classmethod
     def construct_from_db(self, con):
-        #Still using old functions
         df = con.select_dataframe(SQL_QUERY)
         finalTree = TREE.copy()
         childrenLocation = finalTree["children"][0]["children"]
@@ -67,17 +64,12 @@ class ZKEndpoint(ZKHelper, ZKTree):
 
     @classmethod
     def add_advertiser_pattern(self, advertiser, url_pattern, tree_struct):
-        match_string = '"source": "{}'
-        search_object =[{"label":False,"pattern":False},{"label":False,"pattern":"_patterns"},{"label":match_string.format(advertiser),"pattern":False}]
-        advertiserChildren = self.search_tree(search_object, tree_Struct)
-        if advertiserChildren ==[]:
+        advertiserChildren = self.find_advertiser_child(advertiser, tree_struct)
+        if advertiserChildren =={}:
             self.add_advertiser(advertiser, tree_struct)
-            advertiserChildren = self.search_tree(search_object, tree_struct)
-        found = False
-        for child in advertiserChildren:
-            if child["node"]["pattern"] == url_pattern:
-                found = True
-        if not found:
+            advertiserChildren = self.find_advertiser_child(advertiser, tree_struct)
+        foundChild = self.iterate_tree("pattern", url_pattern, advertiserChildren, parentkeyname="node")
+        if foundChild =={}:
             action = {"url_pattern":url_pattern}
             query_list = [USER, RAW, VIEW, URL]
             parameter_list = [{
@@ -87,52 +79,46 @@ class ZKEndpoint(ZKHelper, ZKTree):
                                 "children":[]
                             } for q in query_list]
             nodes = map(lambda x : self.create_node(**x), parameter_list)
-            map(advertiserChildren.append, nodes)
+            map(advertiserChildren["children"].append, nodes)
         return tree_struct
-
 
     @classmethod
     def find_advertiser_child(self, advertiser, tree_struct):
+        children = self.find_label_child("_patterns", tree_struct)["children"]
         match_string = '"source": "{}'
-        search_obj = [{"label":False,"pattern":False},{"label":"_patterns","pattern":False},{"label":False,"pattern":match_string.format(advertiser)}]
-        returnChild = self.search_tree_children(search_obj, tree_struct)
+        returnChild = self.iterate_tree("pattern", match_string.format(advertiser), children, parentkeyname="node")
         return returnChild
 
     @classmethod
     def remove_advertiser_node(self, advertiser, tree_struct):
-        children = self.find_label_child("_patterns", tree_struct)
-        match_string = '"source": "{}'
-        updated_children = []
-        for child in children:
-            if child["pattern"] != match_string.format(advertiser):
-                updated_children.append(child)
-        children = updated_children
-        return updated_children
+        current_advertiser = self.find_advertiser_child(advertiser, tree_struct)
+        all_advertisers = self.find_label_child("_patterns", tree_struct)["children"]
+        updated_advertisers = []
+        if current_advertiser != {}:
+            for child in all_advertisers:
+                if child["node"]["pattern"] != advertiser:
+                    update_advertisers.append(child)
+        self.find_label_child("_patterns", tree_struct)["children"] = updated_advertisers
+        return updated_advertisers
 
     @classmethod
     def remove_advertiser_children(self, advertiser, tree_struct, children_to_remove=[]):
-        children = self.find_advertiser_child(advertiser, tree_struct)
+        children = self.find_advertiser_child(advertiser, tree_struct)["children"]
         updated_children = []
         for child in children:
             if child not in children_to_remove:
                 updated_children.append(child)
-        children = updated_children
+        self.find_advertiser_child(advertiser, tree_struct)["children"] = updated_children
         return updated_children
-    
-    @classmethod
-    def remove_advertiser_all_children(self, advertiser, tree_struct):
-        children = self.find_advertiser_child(advertiser, tree_struct)
-        children = []
-        return tree_struct
 
     @classmethod
     def remove_advertiser_children_pattern(self, advertiser, tree_struct, children_patterns_to_remove=[]):
-        children = self.find_advertiser_child(advertiser, tree_struct)
+        children = self.find_advertiser_child(advertiser, tree_struct)["children"]
         updated_children = []
         for child in children:
             if child["node"]["pattern"] not in children_patterns_to_remove:
                 updated_children.append(child)
-        children = updated_children
+        self.find_advertiser_child(advertiser, tree_struct)["children"] = updated_children
         return updated_children
 
 
