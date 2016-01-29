@@ -130,8 +130,7 @@ RB.crusher.ui.vendors = (function(vendors) {
 
     var subscription = pubsub.subscriber("vendor-timeseries-domains-stuff",["actions"])
       .run(function(x){
-        console.log(x);
-        debugger
+        console.log("SUBSCRIBED ACTIONS DATA: ",x);
       })
       .data(vendor)
       .unpersist(true)
