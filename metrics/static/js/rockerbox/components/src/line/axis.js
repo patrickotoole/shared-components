@@ -11,7 +11,9 @@ export default function(target) {
     .attr("class", "x axis")
     .attr("transform", function(x) { return "translate(0," + x.options.canvas.height + ")"})
     .call(function(x){
-      x.axis.x.bind(this)(x)
+      x.each(function(d) {
+        d.axis.x.bind(this)(d3.select(this))
+      })
     });
 
   xAxis.selectAll("text").filter(function(x){return this.innerHTML.length > 6})
@@ -24,7 +26,9 @@ export default function(target) {
 
   yAxis
     .call(function(x){
-      x.axis.x.bind(this)(x)
+      x.each(function(d) {
+        d.axis.y.bind(this)(d3.select(this))
+      })
     })
     .append("text")
     .attr("x",-10)

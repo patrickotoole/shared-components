@@ -34,6 +34,7 @@ function data(cb, key) {
 
 Line.prototype = {
   draw: function() {
+    axis.bind(this)(this._target)
     return draw.bind(this)(this._target)
   },
   dimensions: dimensions,

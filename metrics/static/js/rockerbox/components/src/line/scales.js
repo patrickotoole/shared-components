@@ -17,7 +17,7 @@ export default function(target) {
                   .range([0, x.options.canvas.width])
                  .domain(d3.extent(data, function(d) { return d.key; })),
             y: d3.time.scale()
-                 .range([0, x.options.canvas.height])
+                 .range([x.options.canvas.height, 0])
                  .domain([0,d3.max(data, function(d) { return d.value; })])
           }
           x.axis = {
@@ -26,6 +26,7 @@ export default function(target) {
             y: d3.svg.axis().scale(x.scales.y).orient("left")
                  .tickSize(-x.options.canvas.width, 0, 0)
                  .ticks(x.options.canvas.height < 200 ? 3 : 5)
+                 .tickFormat(d3.format(",.0f"))
           }
           x.line = d3.svg.line()
 	    .x(function(d) { return x.scales.x(d.key); })
