@@ -36,18 +36,9 @@ function draw(target) {
       return y(d.value) 
     })
     .attr("r", function(d, i) { return 3 })
-
-   
-    
-
       
-  if (false && hover) points.on("mouseover",hover)
+  if (this.hover()) point.on("mouseover",this.hover())
 
-  if(false) {
-    points
-      .attr("cx", function(d, i) { return x(d.key) + 10 })
-      .attr("cy", function(d, i) { return y(d.value) + 10})
-  }
 
   if(false && typeof hide_axis !== typeof undefined && hide_axis == true) {
     svg.select(".x.axis").style('display', 'none')

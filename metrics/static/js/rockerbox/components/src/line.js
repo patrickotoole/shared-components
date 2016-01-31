@@ -24,7 +24,9 @@ function line(target){
 }
 
 function hover(cb) {
-  this._hover = (cb !== undefined && cb) ? cb : this._drawDesc
+  if ((cb == undefined) && (typeof(cb) == "function")) {
+    return accessor.bind(this)("hover",cb)
+  }
 }
 
 function data(cb, key) {
