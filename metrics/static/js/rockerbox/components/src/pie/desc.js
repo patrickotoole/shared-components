@@ -1,4 +1,6 @@
-import d3_updateable from './d3_updateable'
+import d3_updateable from '../d3_updateable'
+import d3 from 'd3'
+
 export default function(target) {
 
   var dimensions = this.dimensions(target)

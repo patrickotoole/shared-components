@@ -134,7 +134,7 @@ RB.crusher.ui.action = (function(action) {
       });
     }
 
-    var pp = pie.pie(target)
+    var pp = components.pie(target)
 
     pp.hover(hover)
     pp.colors(colors)
