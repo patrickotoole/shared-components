@@ -1,5 +1,5 @@
 import d3_updateable from '../d3_updateable'
-import {default as dims} from '../dimensions'
+import {default as dims} from './dimensions'
 
 function base(target) {
 

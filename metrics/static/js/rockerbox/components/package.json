@@ -2,7 +2,7 @@
   "name": "components",
   "version": "0.0.1",
   "description": "make the reusablecomponents for charts here",
-  "main": "index.js",
+  "main": "build/components.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -14,6 +14,7 @@
     "prepublish": "npm run test && uglifyjs build/components.js -c -m -o build/components.min.js && rm -f build/components.zip && zip -j build/components.zip -- LICENSE README.md build/components.js build/components.min.js"
   },
   "devDependencies": {
+    "d3": "3.5.12",
     "faucet": "0.0",
     "rollup": "0.20.5",
     "jsdom": "7",
