@@ -24,7 +24,7 @@ function line(target){
 }
 
 function hover(cb) {
-  if ((cb == undefined) && (typeof(cb) == "function")) {
+  if ((cb == undefined) || (typeof(cb) == "function")) {
     return accessor.bind(this)("hover",cb)
   }
 }
