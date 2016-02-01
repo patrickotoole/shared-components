@@ -29,6 +29,8 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
       var segment_counts = [];
       var segment_names = [];
 
+      funnelRow.selectAll('.loading-indicator').remove();
+
       cached_data.domains.forEach(function(segment, i) {
         segment_names.push(segment.key);
         segment_counts.push({

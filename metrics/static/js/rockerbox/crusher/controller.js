@@ -751,6 +751,13 @@ RB.crusher.controller = (function(controller) {
         // existing dashboard...
         var funnelRow = build_header({"id":"action_about","name":"Segments Dashboard"})
         var subscription = RB.crusher.ui.action.dashboard.widgets.bind(false,funnelRow)
+
+        var loading_indicator = d3_updateable(funnelRow, '.loading-indicator', 'div')
+          .classed('loading-indicator', true)
+          .style('text-align', 'center')
+          .style('margin', '80px 0 100px 0')
+          .html('<img src="/static/img/general/logo-small.gif" alt="Logo loader"> Loading vendor data...');
+
         crusher.subscribe.add_subscriber(["actions", "dashboard_cached"], subscription, 'dashboard_cached', true, true);
       }
 
