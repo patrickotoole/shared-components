@@ -75,6 +75,7 @@ class AdvertiserRoutes(Routes):
         import handlers.pixel_status as pixel_status
 
         return [
+            (r'/zk_endpoint', funnel.ZKHandler, self.connectors),
             (r'/dashboard_cached', analytics.ActionDashboardHandler, self.connectors),
             (r'/domain/idf.*', analytics.DomainIDFHandler, self.connectors),
             (r'/visit_urls', analytics.VisitUrlsHandler, self.connectors),
