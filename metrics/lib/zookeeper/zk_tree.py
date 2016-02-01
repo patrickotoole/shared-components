@@ -73,9 +73,10 @@ if __name__ == "__main__":
 
     # EXAMPLE
     zk_tree = ZKTree(tree_name="for_play")
+    import ipdb; ipdb.set_trace()
     node = zk_tree.find_node_by_label("_actions")
-    node['children'] = []
     
+    node['children'] = []
     tree = zk_tree.set_tree()
     zk_tree.stop()
 

@@ -3,7 +3,7 @@ import unittest
 from mock import patch
 import requests
 import lib.caching.vendor_patterns as vps
-import lib.caching.vendor_dashboard as vdb
+import lib.caching.vendor_to_action as vdb
 import lib.caching.action_dashboard_cache as adc
 
 URL_1 = "randomsite/refer=kfkf&source=nothing&utm_source=MySource&somethingelse"

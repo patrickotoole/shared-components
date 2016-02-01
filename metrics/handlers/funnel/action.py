@@ -12,15 +12,16 @@ from lib.helpers import APIHelpers
  
 class ActionHandler(BaseHandler,ActionAuth,APIHelpers,ActionDatabase):
 
-    def initialize(self, db=None, **kwargs):
+    def initialize(self, db=None, zookeeper=None, **kwargs):
         self.db = db 
+        self.zookeeper = zookeeper
         self.required_cols = ["advertiser", "action_name"]
     
 
     @tornado.web.authenticated
     def delete(self):
         try:
-            data = self.perform_delete()
+            data = self.perform_delete(self.zookeeper)
             self.write_response(data)
         except Exception, e:
             self.write_response(str(e),e)
@@ -28,7 +29,7 @@ class ActionHandler(BaseHandler,ActionAuth,APIHelpers,ActionDatabase):
     @tornado.web.authenticated
     def post(self):
         try:
-            data = self.perform_insert(self.request.body)
+            data = self.perform_insert(self.request.body, self.zookeeper)
             self.write_response(data)
         except Exception, e:
             self.write_response(str(e),e)
