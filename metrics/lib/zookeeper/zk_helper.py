@@ -105,12 +105,6 @@ class ZKHelper():
         return returnTree
 
     @classmethod
-    def find_label_child(self,label, tree_struct):
-        children = tree_struct["children"]
-        returnChild = self.iterate_tree("label", label, children, parentkeyname="node")
-        return returnChild
-
-    @classmethod
     def create_node(self,label="", pattern="", query=False, children=[]):
         node = {
                     "node":{
