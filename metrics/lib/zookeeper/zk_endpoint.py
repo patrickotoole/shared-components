@@ -109,26 +109,25 @@ class ZKEndpoint(ZKHelper, ZKTree):
         match_string = '"source": "{}'
         updated_children = []
         for child in children:
-            if child["node"]["pattern"] != match_string.format(advertiser):
-                updated_children.append(child)
-        children = updated_children
-        return updated_children
+            if child["node"]["pattern"] == match_string.format(advertiser):
+                children.remove(child)
+        return children
 
     @classmethod
     def remove_advertiser_children(self, advertiser, tree_struct, children_to_remove=[]):
         children = self.find_advertiser_child(advertiser, tree_struct)
         updated_children = []
         for child in children:
-            if child not in children_to_remove:
-                updated_children.append(child)
-        children = updated_children
-        return updated_children
+            if child in children_to_remove:
+                children.remove(child)
+        return children
     
     @classmethod
     def remove_advertiser_all_children(self, advertiser, tree_struct):
         children = self.find_advertiser_child(advertiser, tree_struct)
-        children = []
-        return tree_struct
+        for child in children[:]:
+            children.remove(child)
+        return children
 
     @classmethod
     def remove_advertiser_children_pattern(self, advertiser, to_remove, tree_struct):
