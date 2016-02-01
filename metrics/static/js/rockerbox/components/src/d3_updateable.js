@@ -1,3 +1,5 @@
+import d3 from 'd3'
+
 export default function(target,selector,type,data,joiner) {
   var type = type || "div"
   var updateable = target.selectAll(selector).data(

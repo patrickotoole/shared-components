@@ -1,7 +1,7 @@
-import base from './base'
+import base from './pie/base'
 import dimensions from './dimensions'
-import desc from './desc'
-import draw from './draw'
+import desc from './pie/desc'
+import draw from './pie/draw'
 
 export function Pie(target) {
   this._target = target
@@ -28,7 +28,7 @@ function colors(cb) {
 }
 
 function data(cb, key) {
-  this._dataFunc = cb
+  this._dataFunc = (typeof(cb) == "function") ? cb : function() {return cb};
   this._keyFunc = key ? key : function(x) {return x}
 }
 

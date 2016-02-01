@@ -205,7 +205,7 @@ RB.crusher.ui.vendors = (function(vendors) {
       vendor_domains_pie.each(function(y){
         if(typeof y.parentCategoryData !== typeof undefined) {
           var target = d3.select(this);
-          var pp = pie.pie(target)
+          var pp = components.pie(target)
           pp.colors(RB.crusher.ui.action.category_colors)
           // pp.width(150);
           pp.data(
