@@ -1,6 +1,7 @@
 import pandas
 import ujson
 from lib.helpers import decorators
+import lib.zookeeper.zk_endpoint as zke
 
 GET = """
 SELECT pixel_source_name as advertiser, action_name, action_id, action_type from action where %(where)s
@@ -42,6 +43,12 @@ DELETE FROM action_patterns where action_id = %(action_id)s
 GET_MAX_ACTION_PLUS_1 = "select max(action_id)+1 from action"
 
 RESET_AUTO_INCR_ACTION = "alter table action auto_increment = %s"
+
+SQL_PATTERN_QUERY = "select url_pattern from action_patterns where action_id = '{}'"
+
+SQL_NAME_QUERY= "select pixel_source_name from action where action_id = '{}'"
+
+SQL_ACTION_QUERY = "select a.action_id, a.pixel_source_name from action a join action_patterns b on a.action_id=b.action_id where b.url_pattern = '{}' and a.pixel_source_name = '{}'"
 
 class ActionDatabase(object):
 
@@ -141,20 +148,34 @@ class ActionDatabase(object):
         return action
 
     @decorators.multi_commit_cursor
-    def perform_delete(self,cursor=None):
+    def perform_delete(self,zookeeper,cursor=None):
         self.assert_required_params(["id"])
 
         action_id = self.get_argument("id")
         action = {"action_id":action_id}
+        action["zookeeper_tree"] = action.get("zookeeper_tree","for_play")
 
+        zk = zke.ZKEndpoint(zookeeper,tree_name=action["zookeeper_tree"])
+
+        urls = self.db.select_dataframe(SQL_PATTERN_QUERY.format(action_id))
+        advertiser = self.db.select_dataframe(SQL_NAME_QUERY.format(action_id))
+        if len(urls) >0 and len(advertiser) > 0:
+            urls = urls.ix[0][0]
+            advertiser = advertiser.ix[0][0]
+            advertiser_ids = self.db.select_dataframe(SQL_ACTION_QUERY.format(urls, advertiser))
+
+        if len(advertiser_ids)==1:
+            zk.remove_advertiser_children_pattern(advertiser, zk.tree, [urls])
+            zk.set_tree()
+        
         cursor.execute(DELETE_ACTION % action)
         cursor.execute(DELETE_ACTION_PATTERN % action)
 
         return action
 
     @decorators.multi_commit_cursor
-    def perform_insert(self,body,cursor=None):
-
+    def perform_insert(self, body, zookeeper,cursor=None):
+        
         action = ujson.loads(body)
         action = dict(action.items() + [("start_date","0"),("end_date","0")])
         if action.get("operator") is None:
@@ -166,7 +187,13 @@ class ActionDatabase(object):
 
         self.assert_required(action,self.required_cols)
 
+        action["zookeeper_tree"] = action.get("zookeeper_tree","for_play")
         try:
+            zk = zke.ZKEndpoint(zookeeper,tree_name=action["zookeeper_tree"])
+            for url in action["url_pattern"]:
+                updated_tree = zk.add_advertiser_pattern(action["advertiser"],url, zk.tree)
+                zk.set_tree(updated_tree)
+
             cursor.execute(INSERT_ACTION % action)
             action_id = cursor.lastrowid
             for url in action["url_pattern"]:

@@ -498,7 +498,7 @@ class APIHelpers(object):
         has_cols = [ i for i in exclude if i in obj.keys() ]
         
         if len(has_cols) > 0:
-            raise Exception("Cannot contain the following: %s" % ', '.join(required) )
+            raise Exception("Cannot contain the following: %s" % ', '.join(exclude) )
 
 
     def assert_required(self,obj,required):
