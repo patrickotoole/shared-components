@@ -20,6 +20,7 @@ class ZKHelper():
 
     @classmethod
     def _validate_boolean(self, validate, subtree, key):
+        assert type(validate) == dict
         assert "pattern" in validate.keys()
         assert "label" in validate.keys()
         returnBool = False
@@ -34,16 +35,18 @@ class ZKHelper():
     @classmethod
     def _validate_condition(self, validate, subtree_array):
         returnArray = False
-        for tree in subtree_array:
-            if self._validate_boolean(validate, tree, "label") and self._validate_boolean(validate, tree,"pattern"):
-                returnArray = tree["children"]
+        try:
+            for tree in subtree_array:
+                if self._validate_boolean(validate, tree, "label") and self._validate_boolean(validate, tree,"pattern"):
+                    returnArray = tree["children"]
+        except:
+            returnArray = False
         return returnArray
 
     @classmethod
     def search_tree_children(self, validation_list, subtree):
         children_array = [subtree]
         for child in validation_list:
-            import ipdb; ipdb.set_trace()
             children_array = self._validate_condition(child, children_array)
         return children_array
 
@@ -121,7 +124,7 @@ class ZKHelper():
     @classmethod
     def remove_label_node_children(self, label, tree_struct):
         label_search = [{"label":False,"pattern":False}]
-        children = self.search_tree_childnre(label_search, tree_struct)
+        children = self.search_tree_children(label_search, tree_struct)
         update_children = []
         for child in children:
             if child["node"]["label"] != label:
@@ -131,8 +134,8 @@ class ZKHelper():
 
     @classmethod
     def remove_label_node(self, label, tree_struct):
-        #based on older functions (iterate tree & find label child)
-        current_label = self.find_label_child(label, tree_struct)
+        label_search = [{"label":False,"pattern":False}]
+        current_label = self.search_tree_children(label_search, tree_struct)
         all_labels = tree_struct["children"]
         updated_labels=[]
         if current_label != {}:
