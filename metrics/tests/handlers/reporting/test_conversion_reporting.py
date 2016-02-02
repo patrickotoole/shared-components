@@ -34,8 +34,8 @@ INSERT_PIXEL = "INSERT INTO test.advertiser_pixel select * from rockerbox.advert
 DROP_CONVERSION = "drop table test.conversion_reporting;"
 DROP_PIXEL = "drop table test.advertiser_pixel;" 
 
-DROP_CHECK_CONV = "drop table test.conversion_reporting if exists"
-DROP_CHECK_PIXEL = "drop table test.advertiser_pixel if exists"
+DROP_CHECK_CONV = "drop table if exists test.conversion_reporting"
+DROP_CHECK_PIXEL = "drop table if exists test.advertiser_pixel"
 
 class CreativeReportingTest(AsyncHTTPTestCase):
     
