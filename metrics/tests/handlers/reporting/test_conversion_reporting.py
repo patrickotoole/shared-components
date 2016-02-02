@@ -41,10 +41,10 @@ class CreativeReportingTest(AsyncHTTPTestCase):
     
     def get_app(self):
         
+        self.db = lnk.dbs.test
         self.db.execute(DROP_CHECK_CONV)
         self.db.execute(DROP_CHECK_PIXEL)
         
-        self.db = lnk.dbs.test
         self.db.execute(CREATE_CONVERSION)
         self.db.execute(CREATE_PIXEL)
         self.db.execute(INSERT_CONVERSION)
