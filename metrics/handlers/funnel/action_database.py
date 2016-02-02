@@ -156,7 +156,8 @@ class ActionDatabase(object):
             for url in action["url_pattern"]:
                 updated_tree = zk.add_advertiser_pattern(action["advertiser"],url,zk.tree)
                 zk.set_tree()
-
+        except:
+            logging.error("could not add updated pattern to zookeeper try on put %s" % action)
         #Database Update
         action['fields'] = self.make_set_fields(action)
         cursor.execute(UPDATE_ACTION % action)
