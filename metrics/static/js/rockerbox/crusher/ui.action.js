@@ -288,7 +288,7 @@ RB.crusher.ui.action = (function(action) {
     d3_updateable(info,".description","div")
       .classed("description",true)
       .text(function(x){
-        return "These are the analytics details associated with the " + x.action_name + ". Below we summarize on-site and off-site activity."
+        return "These are the analytics details associated with the segment " + x.action_name + ". Below we summarize on-site and off-site activity."
       })
 
     info.filter(function(x){console.log(x); return !x.action_id}).remove()

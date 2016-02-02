@@ -1,9 +1,11 @@
-import d3_updateable from './d3_updateable'
+import d3_updateable from '../d3_updateable'
+import d3 from 'd3'
+
 export default function(target) {
 
   var dimensions = this.dimensions(target)
   var width = dimensions.width,
-    height = dimensions.height,
+    height = dimensions.width,
     radius = dimensions.radius
 
   var svg = d3_updateable(target,"svg","svg");

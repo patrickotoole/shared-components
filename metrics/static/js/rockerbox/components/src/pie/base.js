@@ -1,7 +1,9 @@
-import d3_updateable from './d3_updateable'
+import d3_updateable from '../d3_updateable'
+import {default as dims} from './dimensions'
+
 function base(target) {
 
-  var dimensions = this.dimensions(target);
+  var dimensions = dims.bind(this)(target);
   var width = dimensions.width,
     height = dimensions.height,
     radius = dimensions.radius,

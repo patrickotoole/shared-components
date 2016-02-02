@@ -1,6 +1,11 @@
+import dimensions from '../dimensions'
+import d3 from 'd3'
+
 export default function(target) {
-  var width = target.style("width").replace("px","").split(".")[0],
-    height = width,
+
+  var stddim = dimensions.bind(this)(target),
+    width = stddim.width,
+    height = stddim.width, 
     radius = Math.min(height, width) / 2;
 
   var _pie = d3.layout.pie()
@@ -21,6 +26,6 @@ export default function(target) {
     radius: Math.min(height, width) / 2,
     pie: _pie,
     arc: arc,
-    outerArc: outerArc
+    outerArc: outerArc 
   }
 }
