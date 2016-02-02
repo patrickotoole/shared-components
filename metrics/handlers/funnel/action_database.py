@@ -134,7 +134,7 @@ class ActionDatabase(object):
         action_id = self.get_argument("id")
 
         #Delete record from tree and then insert with update
-        treeName = self.get_argument("zookeeper_tree","for_play"
+        treeName = self.get_argument("zookeeper_tree","for_play")
         zk = zke.ZKEndpoint(zookeeper, treeName)
         #Delete
         urls = self.db.select_dataframe(SQL_PATTERN_QUERY.format(action_id))
