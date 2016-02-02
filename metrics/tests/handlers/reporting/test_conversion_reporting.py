@@ -8,6 +8,7 @@ from tornado.testing import AsyncHTTPTestCase
 from tornado.web import Application, RequestHandler
 from tornado.escape import to_unicode, json_decode, json_encode 
 from link import lnk
+import logging
 
 import unittest
 import ujson
@@ -33,10 +34,16 @@ INSERT_PIXEL = "INSERT INTO test.advertiser_pixel select * from rockerbox.advert
 DROP_CONVERSION = "drop table test.conversion_reporting;"
 DROP_PIXEL = "drop table test.advertiser_pixel;" 
 
+DROP_CHECK_CONV = "if OBJECT_ID(test.conversion_reporting) is not null drop table test.conversion_reporting"
+DROP_CHECK_PIXEL = "if OBECT_ID(test.advertiser_pixel) is not null drop table test.advertiser_pixel"
 
 class CreativeReportingTest(AsyncHTTPTestCase):
     
     def get_app(self):
+        
+        self.db.execute(DROP_CHECK_CONV)
+        self.db.execute(DROP_CHECK_PIXEL)
+        
         self.db = lnk.dbs.test
         self.db.execute(CREATE_CONVERSION)
         self.db.execute(CREATE_PIXEL)
