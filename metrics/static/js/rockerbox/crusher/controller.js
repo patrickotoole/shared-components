@@ -553,17 +553,13 @@ RB.crusher.controller = (function(controller) {
       var target = d3.selectAll(".container")
         .style("min-height", "100%")
 
-      var row = d3_splat(target,".row","div",[{"id":"gettingstarted"}],function(x){return x.id})
-        .classed("row gettingstarted",true)
+      var row = build_header({
+        'id': 'gettingstarted',
+        'name': 'Welcome to Crusher, let\'s first set-up some things'
+      });
 
       row.exit().remove()
 
-      /* Header */
-      var heading = d3_updateable(row,".welcome-heading","h5")
-
-      heading.text("Welcome to Crusher, let's first set-up some things")
-        .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-15px")
-        .classed("welcome-heading heading", true)
       RB.crusher.ui.gettingstarted.step1(row, {
         continue: RB.routes.navigation.forward.bind(false, RB.crusher.controller.states["/crusher/gettingstarted/step2"])
       });
@@ -755,6 +751,13 @@ RB.crusher.controller = (function(controller) {
         // existing dashboard...
         var funnelRow = build_header({"id":"action_about","name":"Segments Dashboard"})
         var subscription = RB.crusher.ui.action.dashboard.widgets.bind(false,funnelRow)
+
+        var loading_indicator = d3_updateable(funnelRow, '.loading-indicator', 'div')
+          .classed('loading-indicator', true)
+          .style('text-align', 'center')
+          .style('margin', '80px 0 100px 0')
+          .html('<img src="/static/img/general/logo-small.gif" alt="Logo loader"> Loading vendor data...');
+
         crusher.subscribe.add_subscriber(["actions", "dashboard_cached"], subscription, 'dashboard_cached', true, true);
       }
 
