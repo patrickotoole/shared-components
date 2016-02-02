@@ -133,8 +133,31 @@ class ActionDatabase(object):
         self.assert_required_params(["id"])
         action_id = self.get_argument("id")
 
-        #action
+        #Delete record from tree and then insert with update
+        treeName = self.get_argument("zookeeper_tree","for_play"
+        zk = zke.ZKEndpoint(zookeeper, treeName)
+        #Delete
+        urls = self.db.select_dataframe(SQL_PATTERN_QUERY.format(action_id))
+        advertiser = self.db.select_dataframe(SQL_NAME_QUERY.format(action_id))
+        if len(urls) >0 and len(advertiser) > 0:
+            urls = urls.ix[0][0]
+            advertiser = advertiser.ix[0][0]
+            advertiser_ids = self.db.select_dataframe(SQL_ACTION_QUERY.format(urls, advertiser))
+        try:
+            if len(advertiser_ids)==1:
+                zk.remove_advertiser_children_pattern(advertiser, zk.tree, [urls])
+                zk.set_tree()
+        except:
+            logging.error("url not in tree for advertiser %s" % ( advertiser))
 
+        #insert
+        try:
+            zk = zke.ZKEndpoint(zookeeper,tree_name=action["zookeeper_tree"])
+            for url in action["url_pattern"]:
+                updated_tree = zk.add_advertiser_pattern(action["advertiser"],url,zk.tree)
+                zk.set_tree()
+
+        #Database Update
         action['fields'] = self.make_set_fields(action)
         cursor.execute(UPDATE_ACTION % action)
 
@@ -190,7 +213,7 @@ class ActionDatabase(object):
 
         self.assert_required(action,self.required_cols)
 
-        action["zookeeper_tree"] = action.get("zookeeper_tree","for_play")
+        action["zookeeper_tree"] = self.get_argument("zookeeper_tree","for_play")
         try:
             zk = zke.ZKEndpoint(zookeeper,tree_name=action["zookeeper_tree"])
             for url in action["url_pattern"]:
