@@ -35,7 +35,7 @@ DROP_CONVERSION = "drop table test.conversion_reporting;"
 DROP_PIXEL = "drop table test.advertiser_pixel;" 
 
 DROP_CHECK_CONV = "if OBJECT_ID(test.conversion_reporting) is not null drop table test.conversion_reporting"
-DROP_CHECK_PIXEL = "if OBECT_ID(test.advertiser_pixel) is not null drop table test.advertiser_pixel"
+DROP_CHECK_PIXEL = "if OBJECT_ID(test.advertiser_pixel) is not null drop table test.advertiser_pixel"
 
 class CreativeReportingTest(AsyncHTTPTestCase):
     
