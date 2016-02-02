@@ -2,6 +2,8 @@ var RB = RB || {}
 RB.crusher = RB.crusher || {}
 RB.crusher.ui = RB.crusher.ui || {}
 
+var pubsub = RB.crusher.pubsub;
+
 RB.crusher.ui.action = (function(action) {
   action.show_comparison = function(wrapper, all_segments, data) {
     var title = "Comparison",
@@ -391,29 +393,33 @@ RB.crusher.ui.action = (function(action) {
           var segmentB_hits = [];
           var segmentB_categories = [];
 
-          RB.crusher.subscribe.add_subscriber(["comparison"], function(comparison_data) {
-            comparison_data.segmentA.forEach(function(domain, i) {
-              segmentA.push(domain.domain);
-              segmentA_hits.push(domain.count);
-              segmentA_categories.push(domain.parent_category_name);
-            });
+          pubsub.subscriber("comparison-data",["comparison"])
+            .run(function(comparison_data) {
+              comparison_data.segmentA.forEach(function(domain, i) {
+                segmentA.push(domain.domain);
+                segmentA_hits.push(domain.count);
+                segmentA_categories.push(domain.parent_category_name);
+              });
 
-            comparison_data.segmentB.forEach(function(domain, i) {
-              segmentB.push(domain.domain);
-              segmentB_hits.push(domain.count);
-              segmentB_categories.push(domain.parent_category_name);
-            });
+              comparison_data.segmentB.forEach(function(domain, i) {
+                segmentB.push(domain.domain);
+                segmentB_hits.push(domain.count);
+                segmentB_categories.push(domain.parent_category_name);
+              });
 
-            // var max_hits = [Math.max.apply(segmentA_hits), Math.max(segmentB_hits)];
-            var max_hits = Math.max(segmentA_hits[0], segmentB_hits[0])
+              // var max_hits = [Math.max.apply(segmentA_hits), Math.max(segmentB_hits)];
+              var max_hits = Math.max(segmentA_hits[0], segmentB_hits[0])
 
-            drawIntersection(comparison_data.intersection_data.segmentA, comparison_data.intersection_data.segmentB, comparison_data.intersection_data.intersection)
-            horizontalBarGraph('left', segmentA, segmentA_hits, max_hits, segmentA_categories)
-            horizontalBarGraph('right', segmentB, segmentB_hits, max_hits, segmentB_categories)
+              drawIntersection(comparison_data.intersection_data.segmentA, comparison_data.intersection_data.segmentB, comparison_data.intersection_data.intersection)
+              horizontalBarGraph('left', segmentA, segmentA_hits, max_hits, segmentA_categories)
+              horizontalBarGraph('right', segmentB, segmentB_hits, max_hits, segmentB_categories)
 
-            comparison_wrapper.classed('loading-comparison', false);
-            comparison_columns.classed('loading-comparison', false);
-          }, "comparison-data", true, false, input_data);
+              comparison_wrapper.classed('loading-comparison', false);
+              comparison_columns.classed('loading-comparison', false);
+            })
+              .data(input_data)
+              .unpersist(false)
+              .trigger()
         }
 
         renderComparison();

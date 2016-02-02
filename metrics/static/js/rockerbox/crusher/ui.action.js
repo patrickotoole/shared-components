@@ -2,6 +2,8 @@ var RB = RB || {}
 RB.crusher = RB.crusher || {}
 RB.crusher.ui = RB.crusher.ui || {}
 
+var pubsub = RB.crusher.pubsub;
+
 RB.crusher.ui.action = (function(action) {
 
   var crusher = RB.crusher
@@ -398,13 +400,14 @@ RB.crusher.ui.action = (function(action) {
 
     var client_sld;
 
-    crusher.subscribe.add_subscriber(["advertiser"], function(advertiser_data) {
-       client_sld = advertiser_data.client_sld;
-      var client_sld_wrappers = wrapper.selectAll(".client_sld")
-        .text(advertiser_data.client_sld)
-    }, 'advertiser-domain', true, true);
-
-
+    pubsub.subscriber("advertiser-domain",["advertiser"])
+      .run(function(advertiser_data) {
+        client_sld = advertiser_data.client_sld;
+          var client_sld_wrappers = wrapper.selectAll(".client_sld")
+            .text(advertiser_data.client_sld)
+      })
+        .unpersist(true)
+        .trigger()
 
     var search = {
       results: {

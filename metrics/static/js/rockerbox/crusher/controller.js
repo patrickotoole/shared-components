@@ -7,50 +7,54 @@ RB.crusher.controller = (function(controller) {
 
   var crusher = RB.crusher
   var source = crusher.api.source
+  var pubsub = crusher.pubsub
 
 
   controller.init = function(type,data) {
-    crusher.subscribe.add_subscriber(["advertiser", "current_user"], function(advertiser_data, current_user) {
-      setTimeout(function() {
-        var user_type = document.cookie.split("user_type=")[1].split(";")[0];
-        switch(user_type) {
-          case 'rockerbox':
-            heap.identify({
-              handler: 'Rockerbox',
-              name: 'Rockerbox',
-              email: 'support@rockerbox.com'
-            });
+    pubsub.subscriber("advertiser-name-email",["advertiser", "current_user"])
+      .run(function(advertiser_data, current_user) {
+        setTimeout(function() {
+          var user_type = document.cookie.split("user_type=")[1].split(";")[0];
+          switch(user_type) {
+            case 'rockerbox':
+              heap.identify({
+                handler: 'Rockerbox',
+                name: 'Rockerbox',
+                email: 'support@rockerbox.com'
+              });
 
-            window.intercomSettings = {app_id: "rvo8kuih",name: "Rockerbox",email: "support@rockerbox.com",created_at: 1312182000};
-            (function(){var w=window;var ic=w.Intercom;if(typeof ic==="function"){ic('reattach_activator');ic('update',intercomSettings);}else{var d=document;var i=function(){i.c(arguments)};i.q=[];i.c=function(args){i.q.push(args)};w.Intercom=i;function l(){var s=d.createElement('script');s.type='text/javascript';s.async=true;s.src='https://widget.intercom.io/widget/kbtc5999';var x=d.getElementsByTagName('script')[0];x.parentNode.insertBefore(s,x);}if(w.attachEvent){w.attachEvent('onload',l);}else{l(false)}}})()
-            break;
-          case 'client':
-            var user = {
-              'id': current_user.advertiser_id,
-              'name': advertiser_data.advertiser_name + ' (' + current_user.firstname + ' ' + current_user.last_name + ')',
-              'email': current_user.user_email
-            };
+              window.intercomSettings = {app_id: "rvo8kuih",name: "Rockerbox",email: "support@rockerbox.com",created_at: 1312182000};
+              (function(){var w=window;var ic=w.Intercom;if(typeof ic==="function"){ic('reattach_activator');ic('update',intercomSettings);}else{var d=document;var i=function(){i.c(arguments)};i.q=[];i.c=function(args){i.q.push(args)};w.Intercom=i;function l(){var s=d.createElement('script');s.type='text/javascript';s.async=true;s.src='https://widget.intercom.io/widget/kbtc5999';var x=d.getElementsByTagName('script')[0];x.parentNode.insertBefore(s,x);}if(w.attachEvent){w.attachEvent('onload',l);}else{l(false)}}})()
+              break;
+            case 'client':
+              var user = {
+                'id': current_user.advertiser_id,
+                'name': advertiser_data.advertiser_name + ' (' + current_user.firstname + ' ' + current_user.last_name + ')',
+                'email': current_user.user_email
+              };
 
-            heap.identify({
-              handler: user.id,
-              name: user.name,
-              email: user.email
-            });
+              heap.identify({
+                handler: user.id,
+                name: user.name,
+                email: user.email
+              });
 
-            window.intercomSettings = {
-              app_id: "o6ats3cn",
-              user_id: user.id,
-              name: user.name,
-              email: user.email,
-              created_at: 1312182000
-            };
-            (function(){var w=window;var ic=w.Intercom;if(typeof ic==="function"){ic('reattach_activator');ic('update',intercomSettings);}else{var d=document;var i=function(){i.c(arguments)};i.q=[];i.c=function(args){i.q.push(args)};w.Intercom=i;function l(){var s=d.createElement('script');s.type='text/javascript';s.async=true;s.src='https://widget.intercom.io/widget/xu33kr1z';var x=d.getElementsByTagName('script')[0];x.parentNode.insertBefore(s,x);}if(w.attachEvent){w.attachEvent('onload',l);}else{l(false)}}})()
-            break;
-        }
+              window.intercomSettings = {
+                app_id: "o6ats3cn",
+                user_id: user.id,
+                name: user.name,
+                email: user.email,
+                created_at: 1312182000
+              };
+              (function(){var w=window;var ic=w.Intercom;if(typeof ic==="function"){ic('reattach_activator');ic('update',intercomSettings);}else{var d=document;var i=function(){i.c(arguments)};i.q=[];i.c=function(args){i.q.push(args)};w.Intercom=i;function l(){var s=d.createElement('script');s.type='text/javascript';s.async=true;s.src='https://widget.intercom.io/widget/xu33kr1z';var x=d.getElementsByTagName('script')[0];x.parentNode.insertBefore(s,x);}if(w.attachEvent){w.attachEvent('onload',l);}else{l(false)}}})()
+              break;
+          }
 
-        Intercom('trackEvent', 'Page Load', {'url': window.location.href});
-      }, 2000)
-    }, 'advertiser-name-email', true, false);
+          Intercom('trackEvent', 'Page Load', {'url': window.location.href});
+        }, 2000)
+      })
+        .unpersist(false)
+        .trigger()
 
     var id = type.split("id=")[1]
     if (id && id.length) {
@@ -73,8 +77,23 @@ RB.crusher.controller = (function(controller) {
     RB.routes.navigation.forward(state,callback)
 
     // INIT RESIZE CALLBACK
+    var resize_last_ts = 0;
+    var resize_publisher = pubsub.publisher("resize")
+      .producer(function(cb){
+        var current = + new Date();
+        var temp = resize_last_ts;
+        resize_last_ts = + new Date();
+
+        if(temp - current >= -100) {
+          var fire_event = setTimeout(function(){
+            cb(true);
+          }, 100);
+        } else {
+          cb(true);
+        }
+      });
     d3.select(window).on("resize",function(){
-      crusher.subscribe.publishers["resize"]()
+      pubsub.publishers.resize();
     })
 
   }
@@ -125,7 +144,11 @@ RB.crusher.controller = (function(controller) {
       var subscription = function (advertiser,actions,funnels) {
         crusher.ui.settings.main(funnelRow,advertiser,actions,funnels)
       }
-      crusher.subscribe.add_subscriber(["advertiser","actions", "funnels"], subscription, "settings",true,true)
+
+      pubsub.subscriber("settings",["advertiser", "actions", "funnels"])
+        .run(subscription)
+          .unpersist(true)
+          .trigger()
 
     },
     "settings/advertiser": function() {
@@ -144,13 +167,12 @@ RB.crusher.controller = (function(controller) {
 
       var funnelRow = build_header({"id":"setup","name":"Pixel Setup"})
 
-      crusher.subscribe.add_subscriber(
-        ["pixel_status","advertiser","an_uid"],
-        function(status_data,advertiser_data,uid){
+      pubsub.subscriber("pixel_settings",["pixel_status","advertiser","an_uid"])
+        .run(function(status_data,advertiser_data,uid){
           crusher.ui.pixel.setup(funnelRow,status_data,advertiser_data,uid)
-        },
-        "pixel_settings",true,true
-      )
+        })
+          .unpersist(true)
+          .trigger()
 
     },
     "vendors": function(obj) {
@@ -205,18 +227,21 @@ RB.crusher.controller = (function(controller) {
           renderComparison();
         });
 
-      crusher.subscribe.add_subscriber(["actions"], function(all_segments) {
-        var segments_list_items = d3_splat(current_segment_select, '.segment-list-item-select-option', 'option', all_segments, function(x, i) {
-            return x.action_name;
-          })
-          .text(function(x) {
-            if (x.action_name != '') {
+      pubsub.subscriber("comparison-data",["actions"])
+        .run(function(all_segments) {
+          var segments_list_items = d3_splat(current_segment_select, '.segment-list-item-select-option', 'option', all_segments, function(x, i) {
               return x.action_name;
-            } else {
-              return 'All Pages';
-            }
-          });
-      }, "comparison-data", true, false);
+            })
+            .text(function(x) {
+              if (x.action_name != '') {
+                return x.action_name;
+              } else {
+                return 'All Pages';
+              }
+            });
+        })
+          .unpersist(false)
+          .trigger();
 
       var segments_list_save = d3_updateable(segments_list_wrapper, '.segments-list-save', 'a')
         .style('display', 'none')

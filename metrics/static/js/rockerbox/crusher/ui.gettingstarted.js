@@ -3,6 +3,8 @@ RB.crusher = RB.crusher || {}
 RB.crusher.ui = RB.crusher.ui || {}
 RB.routes.navigation = RB.routes.navigation || {}
 
+var pubsub = RB.crusher.pubsub;
+
 RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 	gettingstarted.progress_indicator = function(row, step) {
 		/* Progress Indicator */
@@ -58,29 +60,32 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 	}
 
 	gettingstarted.validatePixel = function() {
-		crusher.subscribe.add_subscriber(["pixel_status"], function(status_data) {
-			// Checks existence of different pixels
-			var pixel_count = {
-				allpages: 0,
-				conversion: 0
-			}
-
-			status_data.forEach(function(pixel) {
-				// Check which pixels are active
-				if(pixel.segment_name.indexOf("All Pages") >=0 ) {
-					pixel_count.allpages++;
-				} else if(pixel.segment_name.indexOf("Conversion") >=0 ) {
-					pixel_count.conversion++;
+		pubsub.subscriber("gettingstarted",["pixel_status"])
+		  .run(function(status_data) {
+				// Checks existence of different pixels
+				var pixel_count = {
+					allpages: 0,
+					conversion: 0
 				}
-			});
 
-			var validated = true;
-			if(!pixel_count.allpages) {
-				validated = false;
-			}
+				status_data.forEach(function(pixel) {
+					// Check which pixels are active
+					if(pixel.segment_name.indexOf("All Pages") >=0 ) {
+						pixel_count.allpages++;
+					} else if(pixel.segment_name.indexOf("Conversion") >=0 ) {
+						pixel_count.conversion++;
+					}
+				});
 
-			return validated;
-		},"gettingstarted",true,false)
+				var validated = true;
+				if(!pixel_count.allpages) {
+					validated = false;
+				}
+
+				return validated;
+		  })
+		    .unpersist(false)
+		    .trigger()
 	}
 
 	gettingstarted.step1 = function(row, actions) {

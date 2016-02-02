@@ -2,6 +2,9 @@ var RB = RB || {}
 RB.crusher = RB.crusher || {}
 RB.crusher.ui = RB.crusher.ui || {}
 
+var crusher = RB.crusher
+var pubsub = crusher.pubsub
+
 RB.crusher.ui.pixel = (function(pixel, crusher) {
 
   pixel.setup = function(funnelRow,status_data,advertiser_data,uid) {
@@ -11,7 +14,7 @@ RB.crusher.ui.pixel = (function(pixel, crusher) {
           .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-15px")
           .classed("heading heading",true)
 
-        
+
         var implementPixel = pixelBox = d3_updateable(funnelRow,".pixel-box-wrapper","div")
           .classed("pixel-box-wrapper",true)
 
@@ -21,7 +24,7 @@ RB.crusher.ui.pixel = (function(pixel, crusher) {
           .style("margin-bottom","15px")
           .html("If this is your first time logging in, make sure that you have completed pixel implementation. Below we show the last time your pixel has fired: ")
 
-               
+
         var all_pages_segments = advertiser_data.segments.filter(function(x){return x.segment_implemented != "" && x.segment_name.indexOf("All") > -1})
         var class_name = "col-md-12"
 
@@ -138,7 +141,7 @@ RB.crusher.ui.pixel = (function(pixel, crusher) {
         var statusByID = d3.nest()
           .key(function(x){return x.segment_id})
           .map(status_data)
-       
+
         var active_segments = advertiser_data.segments.filter(function(x){return x.segment_implemented != ""})
 
         active_segments = active_segments.map(function(seg){
@@ -194,41 +197,40 @@ RB.crusher.ui.pixel = (function(pixel, crusher) {
           .on("click",function(x){
             x.uuid = uid
             var self = this
-            crusher.subscribe.add_subscriber(["segment_pixel_status"], function(resp){
-              var current = wrapper.filter(function(y) {return x == y })
-              current
-                .classed(class_name,false)
-                .classed("col-md-12",true)
-              
-              current.select(".pixel-row-inner").classed("col-md-4",true)
-                .style("padding-right","45px")
-                .style("padding-left","0px")
+            pubsub.subscriber("specific_pixel",["segment_pixel_status"])
+              .run(function(resp) {
 
-              var rightRow = d3_updateable(current.select(".pixel-row") ,".pixel-data","div")
-                .classed("pixel-data col-md-8 pull-right",true)
-                .style("white-space","pre")
-                .style("text-align","left")
-                .style("overflow","scroll")
+                var current = wrapper.filter(function(y) {return x == y })
+                current
+                  .classed(class_name,false)
+                  .classed("col-md-12",true)
 
-              d3_updateable(rightRow,".chart-title","div")
-                .classed("name chart-title",true)
-                .text("Your users recent activity")
+                current.select(".pixel-row-inner").classed("col-md-4",true)
+                  .style("padding-right","45px")
+                  .style("padding-left","0px")
 
+                var rightRow = d3_updateable(current.select(".pixel-row") ,".pixel-data","div")
+                  .classed("pixel-data col-md-8 pull-right",true)
+                  .style("white-space","pre")
+                  .style("text-align","left")
+                  .style("overflow","scroll")
 
-              d3_updateable(rightRow,".chart-total","div")
-                .classed("chart-total",true)
-                .text(resp.length + " events")
+                d3_updateable(rightRow,".chart-title","div")
+                  .classed("name chart-title",true)
+                  .text("Your users recent activity")
 
+                d3_updateable(rightRow,".chart-total","div")
+                  .classed("chart-total",true)
+                  .text(resp.length + " events")
 
-
-              d3_updateable(rightRow,".details","code")
-                .classed("details code",true)
-                .style("white-space","pre")
-                .text(JSON.stringify(resp.map(function(z){ return JSON.parse(z.json_body)}),null,2))
-
-
-            },"specific_pixel",true,false,x)
-
+                d3_updateable(rightRow,".details","code")
+                  .classed("details code",true)
+                  .style("white-space","pre")
+                  .text(JSON.stringify(resp.map(function(z){ return JSON.parse(z.json_body)}),null,2))
+              })
+            .data(x)
+            .unpersist(false)
+            .trigger()
           })
 
 
@@ -240,4 +242,4 @@ RB.crusher.ui.pixel = (function(pixel, crusher) {
   }
 
   return pixel
-})(RB.crusher.ui.pixel || {}, RB.crusher)  
+})(RB.crusher.ui.pixel || {}, RB.crusher)
