@@ -5,8 +5,8 @@ export default function(target) {
 
   var stddim = dimensions.bind(this)(target),
     width = stddim.width,
-    height = stddim.height, 
-    radius = stddim.radius;
+    height = stddim.width, 
+    radius = Math.min(height, width) / 2;
 
   var _pie = d3.layout.pie()
     .sort(null)
