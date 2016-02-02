@@ -128,10 +128,12 @@ class ActionDatabase(object):
 
 
     @decorators.multi_commit_cursor
-    def perform_update(self,body,cursor=None):
+    def perform_update(self,body,zookeeper,cursor=None):
         action = ujson.loads(body)
         self.assert_required_params(["id"])
         action_id = self.get_argument("id")
+
+        #action
 
         action['fields'] = self.make_set_fields(action)
         cursor.execute(UPDATE_ACTION % action)
@@ -154,7 +156,7 @@ class ActionDatabase(object):
 
         action_id = self.get_argument("id")
         action = {"action_id":action_id}
-        action["zookeeper_tree"] = action.get("zookeeper_tree","for_play")
+        action["zookeeper_tree"] = self.get_argument("zookeeper_tree","for_play")
 
         zk = zke.ZKEndpoint(zookeeper,tree_name=action["zookeeper_tree"])
 
