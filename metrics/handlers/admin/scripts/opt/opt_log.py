@@ -14,6 +14,12 @@ FROM opt_log
 WHERE value_group_id={}
 """
 
+GET_ID2 = """
+SELECT value_group_id, rule_group_id, last_modified, object_modified, campaign_id, profile_id, domain_list_id, field_name, field_old_value, field_new_value 
+FROM opt_log 
+WHERE value_group_id={}
+"""
+
 GET_RULE = """
 SELECT rule_group_id
 FROM opt_rules
@@ -22,7 +28,7 @@ WHERE rule_group_id={}
 
 INSERT = """
 INSERT INTO opt_log 
-    (rule_group_id, object_modified, campaign_id, profile_id, domain_list_id, field_name, field_old_value, field_new_value) 
+    (rule_group_id, object_modified, campaign_id, profile_id, domain_list_id, field_name, field_old_value,field_new_value) 
 VALUES 
     (%(rule_group_id)s, "%(object_modified)s", %(campaign_id)s, %(profile_id)s, %(domain_list_id)s, "%(field_name)s", "%(field_old_value)s", "%(field_new_value)s")
 """
@@ -43,6 +49,10 @@ DELETE_VALUES = """
 DELETE FROM opt_values
 WHERE value_group_id={}
 """
+
+INSERT_FILTER_NAME = "insert into opt_filter_log (column_name, max, min, filter_name, submit_date) values ('%s', %s, %s, '%s','%s')"
+
+CHECK_FILTER = "select * from opt_filter_log where %s = '%s'"
 
 class OptLogHandler(tornado.web.RequestHandler):
 
@@ -98,7 +108,7 @@ class OptLogHandler(tornado.web.RequestHandler):
         url = "/campaign?id={}".format(campaign_id)
         r = self.api.put(url, data=ujson.dumps({"campaign": data}))
         return r.json
-
+    
     @decorators.deferred
     @decorators.rate_limited
     def edit_profile(self, profile_id, data):
@@ -173,6 +183,22 @@ class OptLogHandler(tornado.web.RequestHandler):
         if not (obj[field] == value):
             raise Exception("current field value in AppNexus does not match " +
                             "field_old_value. {} != {}".format(str(obj[field]), str(value)))
+    
+    def _in_filter_table(self, item, key):
+        df = self.db.select_dataframe(CHECK_FILTER % (key, item))
+        if len(df)>=1:
+            return True
+        else:
+            return False
+    
+    def _insert_filter(self, obj):
+        if "filter_columns" in obj.keys():
+            for record in obj["filter_columns"]:
+                if not self._in_filter_table(obj["name"], "name") and not self._in_filter_table(obj["submit_date"],"submit_date"):
+                    self.db.execute(INSERT_FILTER_NAME % (record["name"], record["min"],record["max"],obj["filter_name"],obj["submit_date"]))
+            return True
+        else:
+            return False
 
     def log_changes(self, obj):
         # Pull out metric values
@@ -191,7 +217,11 @@ class OptLogHandler(tornado.web.RequestHandler):
                 raise Exception("Value Query failed during execution: {}".format(e))
         else:
             raise Exception("Query {} failed during execution".format(INSERT % obj))
-
+        contains_filter_columns = self._insert_filter(obj)
+        if contains_filter_columns:
+            new_log = self.db.select_dataframe(GET_ID2.format(value_group_id))
+        else:
+            new_log = self.db.select_dataframe(GET_ID.format(value_group_id))
         new_log = self.db.select_dataframe(GET_ID.format(value_group_id))
         as_dict = Convert.df_to_values(new_log)
         self.get_content(as_dict)
