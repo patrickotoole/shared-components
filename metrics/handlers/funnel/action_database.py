@@ -192,7 +192,7 @@ class ActionDatabase(object):
             zk = zke.ZKEndpoint(zookeeper,tree_name=action["zookeeper_tree"])
             for url in action["url_pattern"]:
                 updated_tree = zk.add_advertiser_pattern(action["advertiser"],url, zk.tree)
-                zk.set_tree(updated_tree)
+                zk.set_tree()
 
             cursor.execute(INSERT_ACTION % action)
             action_id = cursor.lastrowid
