@@ -25,12 +25,18 @@ SELECT rule_group_id
 FROM opt_rules
 WHERE rule_group_id={} 
 """
-
 INSERT = """
 INSERT INTO opt_log 
     (rule_group_id, object_modified, campaign_id, profile_id, domain_list_id, field_name, field_old_value,field_new_value) 
 VALUES 
-    (%(rule_group_id)s, "%(object_modified)s", %(campaign_id)s, %(profile_id)s, %(domain_list_id)s, "%(field_name)s", "%(field_old_value)s", "%(field_new_value)s")
+    (%(rule_group_id)s, "%(object_modified)s", %(campaign_id)s, %(profile_id)s, %(domain_list_id)s,"%(field_name)s", "%(field_old_value)s", "%(field_new_value)s")
+"""
+
+INSERT_UPDATE = """
+INSERT INTO opt_log 
+    (rule_group_id, object_modified, campaign_id, profile_id, domain_list_id, field_name, field_old_value,field_new_value, filter_name, submit_time) 
+VALUES 
+    (%(rule_group_id)s, "%(object_modified)s", %(campaign_id)s, %(profile_id)s, %(domain_list_id)s, "%(field_name)s", "%(field_old_value)s", "%(field_new_value)s", "%(filter_name)s", %(submit_time)s)
 """
 
 INSERT_VALUE = """
@@ -192,20 +198,19 @@ class OptLogHandler(tornado.web.RequestHandler):
             return False
     
     def _insert_filter(self, obj):
-        if "filter_columns" in obj.keys():
-            for record in obj["filter_columns"]:
-                if not self._in_filter_table(obj["name"], "name") and not self._in_filter_table(obj["submit_date"],"submit_date"):
-                    self.db.execute(INSERT_FILTER_NAME % (record["name"], record["min"],record["max"],obj["filter_name"],obj["submit_date"]))
-            return True
-        else:
-            return False
+        for record in obj["filter_columns"]:
+            if not self._in_filter_table(obj["name"], "name") and not self._in_filter_table(obj["submit_date"],"submit_date"):
+                self.db.execute(INSERT_FILTER_NAME % (record["name"], record["min"],record["max"],obj["filter_name"],obj["submit_date"]))
 
     def log_changes(self, obj):
         # Pull out metric values
         values = obj["metric_values"]
 
         # Try to insert the log data. If it succeeds, insert the values data
-        value_group_id = self.db.execute(INSERT % obj)
+        if "filter_columns" in obj.keys():
+            value_group_id = self.db.execute(INSERT_UPDATE % obj)
+        else:
+            value_group_id = self.db.execute(INSERT % obj)
 
         if value_group_id:
             try:
@@ -217,12 +222,12 @@ class OptLogHandler(tornado.web.RequestHandler):
                 raise Exception("Value Query failed during execution: {}".format(e))
         else:
             raise Exception("Query {} failed during execution".format(INSERT % obj))
-        contains_filter_columns = self._insert_filter(obj)
-        if contains_filter_columns:
-            new_log = self.db.select_dataframe(GET_ID2.format(value_group_id))
-        else:
+        
+        if "filter_columns" in obj.keys():
+            self._insert_filter(obj)
             new_log = self.db.select_dataframe(GET_ID.format(value_group_id))
-        new_log = self.db.select_dataframe(GET_ID.format(value_group_id))
+        else:
+            new_log = self.db.select_dataframe(GET_ID2.format(value_group_id))
         as_dict = Convert.df_to_values(new_log)
         self.get_content(as_dict)
 
