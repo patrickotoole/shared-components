@@ -13,7 +13,8 @@ RB.crusher.ui.vendors = (function(vendors) {
     var vendors_list_card = d3_updateable(funnelRow, '.vendors-list-card', 'section')
       .classed('vendors-list-card bar series col-md-12', true);
 
-    crusher.subscribe.add_subscriber(["actions"], function(segments) {
+    pubsub.subscriber("vendors-data",["actions"])
+      .run(function(segments){
       var vendors = segments.filter(function(x) {
         return x.action_type == 'vendor';
       })
@@ -98,7 +99,10 @@ RB.crusher.ui.vendors = (function(vendors) {
             })
 
         RB.crusher.ui.vendors.render_row(vendors_list_items);
-    }, "vendors-data", true, true);
+
+      })
+      .unpersist(true)
+      .trigger()
   }
 
   vendors.render_row = function(vendors_list_items) {
@@ -128,50 +132,49 @@ RB.crusher.ui.vendors = (function(vendors) {
       vendor = vendors_list_items.datum();
     }
 
-    var subscription = pubsub.subscriber("vendor-timeseries-domains-stuff",["actions"])
-      .run(function(x){
-        console.log("SUBSCRIBED ACTIONS DATA: ",x);
+    pubsub.subscriber("vendor-timeseries-domains",["actionTimeseriesOnly", "pattern_domains_cached"])
+      .run(function(timeseries_data, domains_data){
+        var data_columns_with_data = vendor_data_columns.filter(function(x) {
+          return typeof x.visits_data !== typeof undefined;
+        })
+
+        data_columns_with_data.select('.vendor-loading').remove();
+
+        vendor.visits_data.forEach(function(vendor_timeseries_item) {
+          vendor_timeseries_item.key = vendor_timeseries_item.date;
+        });
+
+        RB.crusher.ui.vendors.add_visits_chart(vendor, vendor_data_columns);
+
+        RB.crusher.ui.vendors.add_domains_pie(vendor, vendor_data_columns);
+
+        /*
+        **  3rd Column
+        */
+        var vendor_onsite_column = d3_updateable(vendor_data_columns, '.vendor-onsite-column', 'div')
+          .classed('vendor-onsite-column col-lg-4 col-md-6', true)
+          .html(function(x) {
+            if(typeof x.timeseries_data !== typeof undefined) {
+              return '<h3>On-site</h3><div class="coming-soon-box">(coming soon)</div>';
+            }
+          });
+
+        setTimeout(function() {
+          if(!vendor_not_missing_data) {
+            RB.crusher.ui.vendors.render_row(vendors_list_items);
+            pubsub.subscriber("timeseries-resize",["resize"])
+              .run(function(output){
+                RB.crusher.ui.vendors.add_visits_chart(vendor, vendor_data_columns);
+              })
+              .unpersist(false)
+              .trigger()
+          }
+        }, 1);
       })
       .data(vendor)
       .unpersist(true)
       .trigger()
-
-    crusher.subscribe.add_subscriber(["actionTimeseriesOnly", "pattern_domains_cached"], function(timeseries_data, domains_data) {
-      var data_columns_with_data = vendor_data_columns.filter(function(x) {
-        return typeof x.visits_data !== typeof undefined;
-      })
-
-      data_columns_with_data.select('.vendor-loading').remove();
-
-      vendor.visits_data.forEach(function(vendor_timeseries_item) {
-        vendor_timeseries_item.key = vendor_timeseries_item.date;
-      });
-
-      RB.crusher.ui.vendors.add_visits_chart(vendor, vendor_data_columns);
-
-      RB.crusher.ui.vendors.add_domains_pie(vendor, vendor_data_columns);
-
-      /*
-      **  3rd Column
-      */
-      var vendor_onsite_column = d3_updateable(vendor_data_columns, '.vendor-onsite-column', 'div')
-        .classed('vendor-onsite-column col-lg-4 col-md-6', true)
-        .html(function(x) {
-          if(typeof x.timeseries_data !== typeof undefined) {
-            return '<h3>On-site</h3><div class="coming-soon-box">(coming soon)</div>';
-          }
-        });
-
-      setTimeout(function() {
-        if(!vendor_not_missing_data) {
-          RB.crusher.ui.vendors.render_row(vendors_list_items);
-          crusher.subscribe.add_subscriber(["resize"], function(output) {
-            RB.crusher.ui.vendors.render_row(vendors_list_items);
-          }, 'timeseries-resize' , true, false);
-        }
-      }, 1);
-    }, 'vendor-timeseries-domains', true, true, vendor);
-  }
+    }
 
   vendors.add_domains_pie = function(vendor, vendor_data_columns) {
     // Vendor List Item : Domains Pie

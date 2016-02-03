@@ -112,16 +112,18 @@ RB.routes.navigation = (function(navigation) {
         x.values = x.values || [{"name":"Loading..."}]
         navigation.subscribed(x)
 
-        RB.crusher.subscribe.add_subscriber(api, function(data) {
-          if (transform) transform(x)
-          if (now == current) navigation.subscribed(x)
+        pubsub.subscriber("menu",[api])
+          .run(function(data) {
+            if (transform) transform(x)
+            if (now == current) navigation.subscribed(x)
 
-          console.log(typeof(callback))
-          if (callback && (typeof(callback) == "function")) {
-            setTimeout(callback.bind(this,data,x),1)
-          }
-        },"menu",true,true)
-
+            console.log(typeof(callback))
+            if (callback && (typeof(callback) == "function")) {
+              setTimeout(callback.bind(this,data,x),1)
+            }
+          })
+          .unpersist(true)
+          .trigger()
       } else if (api && (typeof(api) == "object")) {
         x.values = api
         navigation.subscribed(x)

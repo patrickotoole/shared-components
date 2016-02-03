@@ -102,191 +102,204 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 			.html('<h3>Installation instructions</h3><p>Paste the following snippet before the closing &lt;head&gt; tag on every page.</p><p>Ensure that the pixel above is firing on ​<strong>all</strong>​ pages on your site. This includes conversion pages.</p>')
 
 		// Fetch and display pixels
-		crusher.subscribe.add_subscriber(["advertiser", "an_uid"], function(advertiser_data, uid) {
-			/*
-				Check if pixel is already setup and if we can continue to step 2
-			*/
-			var all_pages_segment = advertiser_data.segments.filter(function(x){return x.segment_implemented != "" && x.segment_name.indexOf('All Pages') > -1})[0];
-			all_pages_segment.uuid = uid;	// 2512143178804115692
-			crusher.subscribe.add_subscriber(["segment_pixel_status"], function(segment_pixel_status_data) {
+		pubsub.subscriber("pixel-code-fetching",["advertiser", "an_uid"])
+			.run(function(advertiser_data, uid){
 				/*
-					If length is 0, error: Pixel not set up at all
-					If length is not 0, but refferer not same as sld, error: Pixel is implemented, but on the wrong site
+					Check if pixel is already setup and if we can continue to step 2
 				*/
+				var all_pages_segment = advertiser_data.segments.filter(function(x){return x.segment_implemented != "" && x.segment_name.indexOf('All Pages') > -1})[0];
+				all_pages_segment.uuid = uid;	// 2512143178804115692
 
-				var valid = true;
+				pubsub.subscriber("specific_pixel",["segment_pixel_status"])
+					.run(function(segment_pixel_status_data){
+						/*
+							If length is 0, error: Pixel not set up at all
+							If length is not 0, but refferer not same as sld, error: Pixel is implemented, but on the wrong site
+						*/
 
-				// Check if pixel is set at all
-				if(segment_pixel_status_data.length == 0) {
-					valid = false;
-					var toast_message = "We couldn't find the pixel on your website " + advertiser_data.client_sld + ". Please make sure you have placed it before the closing &lt;head&gt; tag on every page and try again.";
-				} else {
-					// Pixel is set, but check if any hits are coming from the right domain
-					var correct_domain_found = 0;
-					segment_pixel_status_data.forEach(function(item){
-						if(JSON.parse(item.json_body).referrer.indexOf(advertiser_data.client_sld) > -1) {
-							correct_domain_found++;
+						var valid = true;
+
+						// Check if pixel is set at all
+						if(segment_pixel_status_data.length == 0) {
+							valid = false;
+							var toast_message = "We couldn't find the pixel on your website " + advertiser_data.client_sld + ". Please make sure you have placed it before the closing &lt;head&gt; tag on every page and try again.";
+						} else {
+							// Pixel is set, but check if any hits are coming from the right domain
+							var correct_domain_found = 0;
+							segment_pixel_status_data.forEach(function(item){
+								if(JSON.parse(item.json_body).referrer.indexOf(advertiser_data.client_sld) > -1) {
+									correct_domain_found++;
+								}
+							});
+
+							if(!correct_domain_found) {
+								valid = false;
+
+								var toast_message = "Pixel has been setup, but it's on the wrong page. Please make sure you have placed it on http://" + advertiser_data.client_sld + " and try again.";
+							}
+						}
+
+						if(valid) {
+							$.toast({
+								heading: 'Success',
+								text: 'Pixel has been succesfully setup!',
+								position: 'top-right',
+								icon: 'success',
+								stack: 1
+							});
+							actions.continue();
+						} else {
+							$.toast({
+								heading: 'Setup your pixel',
+								text: 'Pixel has not been setup yet. Please setup your pixel and click on the verification button.',
+								position: 'top-right',
+								stack: 1
+							});
+						}
+					})
+					.data(all_pages_segment)
+					.unpersist(false)
+					.trigger()
+
+
+				var pixel_code = {
+					all_pages: gettingstarted.getPixelCode(advertiser_data, 'allpages'),
+					conversion: gettingstarted.getPixelCode(advertiser_data, 'conversion')
+				};
+
+				/*
+					All pages pixel
+				*/
+				var code1 = d3_updateable(step, '.pixel-code-allpages','pre')
+					.html('<code>' + pixel_code.all_pages + '</code>')
+					.classed('language-markup pixel-code pixel-code-allpages', true);
+
+				var conversion_pixel_optin_row = d3_updateable(step, '.conversion-pixel-optin-wrapper','div')
+					.classed('conversion-pixel-optin-wrapper', true)
+					.style('padding', '5px 0')
+
+				// Remove conversion pixel stuff for now
+				// if(pixel_code.conversion === null) {
+					conversion_pixel_optin_row.style('display', 'none');
+				// }
+
+				var conversion_pixel_optin = d3_updateable(conversion_pixel_optin_row, '.conversion-pixel-optin','input')
+					.classed('conversion-pixel-optin', true)
+					.attr('type', 'checkbox')
+					.style('margin-right', '5px')
+					.on('click', function() {
+						if($(this).is(':checked')) {
+							code2_wrapper.style('display', 'block');
+						} else {
+							code2_wrapper.style('display', 'none');
 						}
 					});
 
-					if(!correct_domain_found) {
-						valid = false;
-
-						var toast_message = "Pixel has been setup, but it's on the wrong page. Please make sure you have placed it on http://" + advertiser_data.client_sld + " and try again.";
-					}
-				}
-
-				if(valid) {
-					$.toast({
-						heading: 'Success',
-						text: 'Pixel has been succesfully setup!',
-						position: 'top-right',
-						icon: 'success',
-						stack: 1
-					});
-					actions.continue();
-				} else {
-					$.toast({
-						heading: 'Setup your pixel',
-						text: 'Pixel has not been setup yet. Please setup your pixel and click on the verification button.',
-						position: 'top-right',
-						stack: 1
-					});
-				}
-			},"specific_pixel",true,false,all_pages_segment)
+				d3_updateable(conversion_pixel_optin_row, '.conversion-pixel-optin-description','span')
+					.classed('conversion-pixel-optin-description', true)
+					.text('Also set a conversion pixel')
 
 
-			var pixel_code = {
-				all_pages: gettingstarted.getPixelCode(advertiser_data, 'allpages'),
-				conversion: gettingstarted.getPixelCode(advertiser_data, 'conversion')
-			};
+				/*
+					Conversion pixel
+				*/
+				var code2_wrapper = d3_updateable(step, '.pixel-code-conversion','div')
+					.classed('pixel-code-conversion', true)
+					.style('display', 'none');
 
-			/*
-				All pages pixel
-			*/
-			var code1 = d3_updateable(step, '.pixel-code-allpages','pre')
-				.html('<code>' + pixel_code.all_pages + '</code>')
-				.classed('language-markup pixel-code pixel-code-allpages', true);
+				d3_updateable(code2_wrapper, '.pixel-code-conversion-hr','hr')
+					.classed('pixel-code-conversion-hr', true)
 
-			var conversion_pixel_optin_row = d3_updateable(step, '.conversion-pixel-optin-wrapper','div')
-				.classed('conversion-pixel-optin-wrapper', true)
-				.style('padding', '5px 0')
+				var code2_title = d3_updateable(code2_wrapper, '.conversion-pixel-title','p')
+					.classed('conversion-pixel-title', true)
+					.text('Paste the following snippet before the closing <head> tag on just the conversion page.')
 
-			// Remove conversion pixel stuff for now
-			// if(pixel_code.conversion === null) {
-				conversion_pixel_optin_row.style('display', 'none');
-			// }
+				var code2 = d3_updateable(code2_wrapper, '.conversion-pixel','pre')
+					.html('<code>' + pixel_code.conversion + '</code>')
+					.classed('language-markup conversion-pixel', true)
 
-			var conversion_pixel_optin = d3_updateable(conversion_pixel_optin_row, '.conversion-pixel-optin','input')
-				.classed('conversion-pixel-optin', true)
-				.attr('type', 'checkbox')
-				.style('margin-right', '5px')
-				.on('click', function() {
-					if($(this).is(':checked')) {
-						code2_wrapper.style('display', 'block');
-					} else {
-						code2_wrapper.style('display', 'none');
-					}
-				});
+				var code2_description = d3_updateable(code2_wrapper, '.conversion-pixel-description','p')
+					.classed('conversion-pixel-description', true)
+					.text('In order to validate the conversion pixel and continue to the next step, you have to place an order.')
 
-			d3_updateable(conversion_pixel_optin_row, '.conversion-pixel-optin-description','span')
-				.classed('conversion-pixel-optin-description', true)
-				.text('Also set a conversion pixel')
+				setTimeout(function() {
+					Prism.highlightAll()
 
+					var url_check_button_wrapper = d3_updateable(step,".url-check-button-wrapper","div")
+						.classed('url-check-button-wrapper', true)
 
-			/*
-				Conversion pixel
-			*/
-			var code2_wrapper = d3_updateable(step, '.pixel-code-conversion','div')
-				.classed('pixel-code-conversion', true)
-				.style('display', 'none');
+					var url_check_button_info = d3_updateable(url_check_button_wrapper,".url-check-button-info","p")
+						.classed("url-check-button-info", true)
+						.style("margin", "5px 0 10px 0")
+						.text("After clicking on the verification button, your website will open in a popup to simulate a page view. This way we can see if the pixel is setup correctly on your website and if it's firing.")
 
-			d3_updateable(code2_wrapper, '.pixel-code-conversion-hr','hr')
-				.classed('pixel-code-conversion-hr', true)
+					var url_check_button = d3_updateable(url_check_button_wrapper,".url-check-button","a")
+						.classed("btn btn-default btn-sm url-check-button", true)
+						.style("margin-right", "30px")
+						.html("Verifiy Pixel Has Been Placed")
+						.on("click",function(x) {
+							var validation_popup = window.open('http://' + advertiser_data.client_sld, "validation_popup", "status=1, width=50, height=50,right=50,bottom=50,titlebar=no,toolbar=no,menubar=no,location=no,directories=no,status=no");
 
-			var code2_title = d3_updateable(code2_wrapper, '.conversion-pixel-title','p')
-				.classed('conversion-pixel-title', true)
-				.text('Paste the following snippet before the closing <head> tag on just the conversion page.')
+							setTimeout(function() {
+								url_check_button.html("Validating...");
 
-			var code2 = d3_updateable(code2_wrapper, '.conversion-pixel','pre')
-				.html('<code>' + pixel_code.conversion + '</code>')
-				.classed('language-markup conversion-pixel', true)
+								var all_pages_segment = advertiser_data.segments.filter(function(x){return x.segment_implemented != "" && x.segment_name.indexOf('All Pages') !== -1})[0];
+								all_pages_segment.uuid = uid;	// 2512143178804115692
 
-			var code2_description = d3_updateable(code2_wrapper, '.conversion-pixel-description','p')
-				.classed('conversion-pixel-description', true)
-				.text('In order to validate the conversion pixel and continue to the next step, you have to place an order.')
+								pubsub.subscriber("specific_pixel",["segment_pixel_status"])
+									.run(function(segment_pixel_status_data){
+										validation_popup.close();
+										/*
+											If length is 0, error: Pixel not set up at all
+											If length is not 0, but refferer not same as sld, error: Pixel is implemented, but on the wrong site
+										*/
 
-			setTimeout(function() {
-				Prism.highlightAll()
+										var valid = true;
 
-				var url_check_button_wrapper = d3_updateable(step,".url-check-button-wrapper","div")
-					.classed('url-check-button-wrapper', true)
+										// Check if pixel is set at all
+										if(segment_pixel_status_data.length == 0) {
+											valid = false;
+											var toast_message = "We couldn't find the pixel on your website " + advertiser_data.client_sld + ". Please make sure you have placed it before the closing &lt;head&gt; tag on every page and try again.";
+										} else {
+											// Pixel is set, but check if any hits are coming from the right domain
+											var correct_domain_found = 0;
+											segment_pixel_status_data.forEach(function(item){
+												if(JSON.parse(item.json_body).referrer.indexOf(advertiser_data.client_sld) > -1) {
+													correct_domain_found++;
+												}
+											});
 
-				var url_check_button_info = d3_updateable(url_check_button_wrapper,".url-check-button-info","p")
-					.classed("url-check-button-info", true)
-					.style("margin", "5px 0 10px 0")
-					.text("After clicking on the verification button, your website will open in a popup to simulate a page view. This way we can see if the pixel is setup correctly on your website and if it's firing.")
+											if(!correct_domain_found) {
+												valid = false;
 
-				var url_check_button = d3_updateable(url_check_button_wrapper,".url-check-button","a")
-					.classed("btn btn-default btn-sm url-check-button", true)
-					.style("margin-right", "30px")
-					.html("Verifiy Pixel Has Been Placed")
-					.on("click",function(x) {
-						var validation_popup = window.open('http://' + advertiser_data.client_sld, "validation_popup", "status=1, width=50, height=50,right=50,bottom=50,titlebar=no,toolbar=no,menubar=no,location=no,directories=no,status=no");
-
-						setTimeout(function() {
-							url_check_button.html("Validating...");
-
-							var all_pages_segment = advertiser_data.segments.filter(function(x){return x.segment_implemented != "" && x.segment_name.indexOf('All Pages') !== -1})[0];
-							all_pages_segment.uuid = uid;	// 2512143178804115692
-							crusher.subscribe.add_subscriber(["segment_pixel_status"], function(segment_pixel_status_data) {
-								validation_popup.close();
-								/*
-									If length is 0, error: Pixel not set up at all
-									If length is not 0, but refferer not same as sld, error: Pixel is implemented, but on the wrong site
-								*/
-
-								var valid = true;
-
-								// Check if pixel is set at all
-								if(segment_pixel_status_data.length == 0) {
-									valid = false;
-									var toast_message = "We couldn't find the pixel on your website " + advertiser_data.client_sld + ". Please make sure you have placed it before the closing &lt;head&gt; tag on every page and try again.";
-								} else {
-									// Pixel is set, but check if any hits are coming from the right domain
-									var correct_domain_found = 0;
-									segment_pixel_status_data.forEach(function(item){
-										if(JSON.parse(item.json_body).referrer.indexOf(advertiser_data.client_sld) > -1) {
-											correct_domain_found++;
+												var toast_message = "Pixel has been setup, but it's on the wrong page. Please make sure you have placed it on http://" + advertiser_data.client_sld + " and try again.";
+											}
 										}
-									});
 
-									if(!correct_domain_found) {
-										valid = false;
+										if(valid) {
+											actions.continue();
+										} else {
+											$.toast({
+												heading: 'Something went wrong',
+												text: toast_message,
+												position: 'top-right',
+												icon: 'error',
+												hideAfter: false,
+												stack: 1
+											});
+										}
 
-										var toast_message = "Pixel has been setup, but it's on the wrong page. Please make sure you have placed it on http://" + advertiser_data.client_sld + " and try again.";
-									}
-								}
-
-								if(valid) {
-									actions.continue();
-								} else {
-									$.toast({
-										heading: 'Something went wrong',
-										text: toast_message,
-										position: 'top-right',
-										icon: 'error',
-										hideAfter: false,
-										stack: 1
-									});
-								}
-
-								validation_popup.close();
-							},"specific_pixel",true,false,all_pages_segment)
-						}, 3000);
-					});
-			}, 0);
-		}, 'pixel-code-fetching', true, true);
+										validation_popup.close();
+									})
+									.data(all_pages_segment)
+									.unpersist(false)
+									.trigger();
+							}, 3000);
+						});
+				}, 0);
+			})
+			.unpersist(true)
+			.trigger()
 
 	}
 
@@ -309,47 +322,51 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 			.style('padding-bottom', '10px')
 			.text('A segment is a collection of pages with a given keyword in the URL. The first segment we are creating here is the All Pages segment, which contains every single page.')
 
-		crusher.subscribe.add_subscriber(["advertiser"], function(advertiser_data) {
-			var input = d3_updateable(step, '.first-action', 'input')
-				.classed('bloodhound typeahead form-control tt-input first-action', true)
-				.attr('value', 'http://' + advertiser_data.client_sld)
-				.attr('disabled', '')
-				.style('position', 'relative')
-				.style('vertical-align', 'top')
-				.style('background-color', 'transparent')
 
-			d3_updateable(step,".create-action-button","a")
-				.classed('btn btn-default btn-sm create-action-button',true)
-				.style('margin-right', '30px')
-				.style('margin-top', '10px')
-				.text('Continue')
-				.on('click',function(x) {
-					var first_action = '/'
+		pubsub.subscriber("pixel-code-fetching",["advertiser"])
+			.run(function(advertiser_data){
+				var input = d3_updateable(step, '.first-action', 'input')
+					.classed('bloodhound typeahead form-control tt-input first-action', true)
+					.attr('value', 'http://' + advertiser_data.client_sld)
+					.attr('disabled', '')
+					.style('position', 'relative')
+					.style('vertical-align', 'top')
+					.style('background-color', 'transparent')
 
-					var data = {
-						'action_id': undefined,
-						'action_name': first_action,
-						'action_string': first_action,
-						'domains': undefined,
-						'name': first_action,
-						'operator': 'or',
-						'param_list': [],
-						'rows': [{
-							'url_pattern': first_action,
-							'values': undefined
-						}],
-						'url_pattern': [
-							first_action
-						],
-						'urls': undefined,
-						'values': undefined,
-						'visits_data': []
-					}
-					RB.crusher.controller.action.save(data, false);
+				d3_updateable(step,".create-action-button","a")
+					.classed('btn btn-default btn-sm create-action-button',true)
+					.style('margin-right', '30px')
+					.style('margin-top', '10px')
+					.text('Continue')
+					.on('click',function(x) {
+						var first_action = '/'
 
-					actions.continue();
-				},'gettingstarted',true,false)
-		}, 'pixel-code-fetching', true, true);
+						var data = {
+							'action_id': undefined,
+							'action_name': first_action,
+							'action_string': first_action,
+							'domains': undefined,
+							'name': first_action,
+							'operator': 'or',
+							'param_list': [],
+							'rows': [{
+								'url_pattern': first_action,
+								'values': undefined
+							}],
+							'url_pattern': [
+								first_action
+							],
+							'urls': undefined,
+							'values': undefined,
+							'visits_data': []
+						}
+						RB.crusher.controller.action.save(data, false);
+
+						actions.continue();
+					},'gettingstarted',true,false)
+			})
+			.unpersist(true)
+			.trigger()
 	}
 
 	gettingstarted.step3 = function(row, actions) {
