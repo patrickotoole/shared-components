@@ -41,11 +41,13 @@ class ZKEndpoint(ZKHelper, ZKTree):
         return children
 
     @classmethod
-    def construct_from_db(self, con):
+    def construct_from_db(self, con, tree_struct):
         #Still using old functions
         df = con.select_dataframe(SQL_QUERY)
-        finalTree = TREE.copy()
-        childrenLocation = finalTree["children"][0]["children"]
+        search_obj = [{"label":False,"pattern":False},{"label":"_patterns","pattern":False}]
+        children = self.search_tree_children(search_obj, tree_struct)
+        children[:] = []
+        #childrenLocation = finalTree["children"][0]["children"]
         for advertiser in df.pixel_source_name.unique():
             nodes = []
             actions = Convert.df_to_values(df[df.pixel_source_name == advertiser])
@@ -62,8 +64,8 @@ class ZKEndpoint(ZKHelper, ZKTree):
                 action_nodes = map(lambda x : self.create_node(**x), parameter_list)
                 map(nodes.append, action_nodes)
             ad_node["children"] = nodes
-            childrenLocation.append(ad_node)
-        return finalTree
+            children.append(ad_node)
+        return children
 
     @classmethod
     def add_advertiser_pattern(self, advertiser, url_pattern, tree_struct):
