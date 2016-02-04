@@ -6,10 +6,8 @@ VENDOR_QUERY = "select url_patterns, vendor from vendor_patterns where medium is
 
 json_obj = {"action_name": "","url_pattern": "", "action_type":"vendor", "operator":"or"}
 
-#INSERT_URL = "http://192.168.99.100:8888/crusher/funnel/action?format=json"
-INSERT_URL = "http://crusher.getrockerbox.com/crusher/funnel/action?format=json"
-#PATTERN_URL="http://192.168.99.100:8888/crusher/pattern_search/timeseries?search={}&num_days=3"
-PATTERN_URL = "http://crusher.getrockerbox.com/crusher/pattern_search/timeseries?search={}&num_days=7"
+INSERT_URL = "http://beta.crusher.getrockerbox.com/crusher/funnel/action?format=json"
+PATTERN_URL = "http://beta.crusher.getrockerbox.com/crusher/pattern_search/timeseries?search={}&num_days=7"
 
 def buildIter(AC,advertiser):
     def iter_vendors(series):
