@@ -97,7 +97,7 @@ class ZKEndpoint(ZKHelper, ZKTree):
 
     @classmethod
     def find_advertiser_child(self, advertiser, tree_struct):
-        match_string = '"source": "{}'
+        match_string = '"source":"{}'
         search_obj = [{"label":False,"pattern":False},{"label":"_patterns","pattern":False},{"label":False,"pattern":match_string.format(advertiser)}]
         returnChild = self.search_tree_children(search_obj, tree_struct)
         return returnChild
@@ -131,14 +131,12 @@ class ZKEndpoint(ZKHelper, ZKTree):
         return tree_struct
 
     @classmethod
-    def remove_advertiser_children_pattern(self, advertiser, tree_struct, children_patterns_to_remove=[]):
+    def remove_advertiser_children_pattern(self, advertiser, to_remove, tree_struct):
         children = self.find_advertiser_child(advertiser, tree_struct)
-        updated_children = []
         for child in children:
-            if child["node"]["pattern"] not in children_patterns_to_remove:
-                updated_children.append(child)
-        children = updated_children
-        return updated_children
+            if child["node"]["pattern"] == to_remove:
+                children.remove(child)
+        return children
 
 
 if __name__ == "__main__":
