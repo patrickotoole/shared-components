@@ -1,7 +1,7 @@
 import logging
 import tornado.web
 import ujson
-import time, datetime
+import time
 from twisted.internet import defer
 
 from lib.helpers import *
