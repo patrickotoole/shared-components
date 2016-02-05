@@ -56,7 +56,7 @@ DELETE FROM opt_values
 WHERE value_group_id={}
 """
 
-INSERT_FILTER_NAME = "insert into opt_filter_log (column_name, max, min, filter_name, submit_time) values ('%s',%s,%s,'%s','%s')"
+INSERT_FILTER_NAME = "insert into opt_filter_log (column_name, min, max, filter_name, submit_time) values ('%s',%s,%s,'%s','%s')"
 
 CHECK_FILTER = "select * from opt_filter_log where %s = '%s'"
 
