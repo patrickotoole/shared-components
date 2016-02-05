@@ -203,7 +203,7 @@ class OptLogHandler(tornado.web.RequestHandler):
             record_list = [record["name"], record["min"], record["max"], obj["filter_name"], obj["submit_time"]]
             record_list = [None if x == "" else x
                 for x in record_list]
-            self.db.execute(INSERT_FILTER_NAME % (record_list[0], record_list[1], record_list[2], record_list[3], record_list[4]))
+            self.db.execute(INSERT_FILTER_NAME % tuple(record_list))
 
     def log_changes(self, obj):
         # Pull out metric values
