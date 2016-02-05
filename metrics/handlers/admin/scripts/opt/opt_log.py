@@ -199,8 +199,8 @@ class OptLogHandler(tornado.web.RequestHandler):
     
     def _insert_filter(self, obj):
         for record in obj["filter_columns"]:
-            if not self._in_filter_table(record["name"], "name") and not self._in_filter_table(obj["submit_date"],"submit_date"):
-                self.db.execute(INSERT_FILTER_NAME % (record["name"], record["min"],record["max"],obj["filter_name"],obj["submit_date"]))
+            #if not self._in_filter_table(record["name"], "name") and not self._in_filter_table(obj["submit_date"],"submit_date"):
+            self.db.execute(INSERT_FILTER_NAME % (record["name"], record["min"],record["max"],obj["filter_name"],obj["submit_date"]))
 
     def log_changes(self, obj):
         # Pull out metric values
