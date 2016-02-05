@@ -36,7 +36,7 @@ INSERT_UPDATE = """
 INSERT INTO opt_log 
     (rule_group_id, object_modified, campaign_id, profile_id, domain_list_id, field_name, field_old_value,field_new_value, filter_name, submit_time) 
 VALUES 
-    (%(rule_group_id)s, "%(object_modified)s", %(campaign_id)s, %(profile_id)s, %(domain_list_id)s, "%(field_name)s", "%(field_old_value)s", "%(field_new_value)s", "%(filter_name)s", from_unixtime%(submit_time)s)
+    (%(rule_group_id)s, "%(object_modified)s", %(campaign_id)s, %(profile_id)s, %(domain_list_id)s, "%(field_name)s", "%(field_old_value)s", "%(field_new_value)s", "%(filter_name)s", from_unixtime( %(submit_time)s ))
 """
 
 INSERT_VALUE = """
