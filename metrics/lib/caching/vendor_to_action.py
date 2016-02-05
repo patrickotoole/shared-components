@@ -36,11 +36,32 @@ def buildIter(AC,advertiser):
 
 
 if __name__ == "__main__":
-    sql = lnk.dbs.rockerbox
-    vendors = sql.select_dataframe(VENDOR_QUERY)
-    advertisers = adc.get_all_advertisers()
-    for advertiser in advertisers:
-        AC = adc.ActionCache(advertiser[0], advertiser[1],sql)
+    from lib.report.utils.loggingutils import basicConfig
+    from lib.report.utils.options import define
+    from lib.report.utils.options import options
+    from lib.report.utils.options import parse_command_line
+
+    define("username",default=False)
+    define("password",default=False)
+
+    basicConfig(options={})
+    parse_command_line()
+
+    if not options.username:
+        sql = lnk.dbs.rockerbox
+        vendors = sql.select_dataframe(VENDOR_QUERY)
+        advertisers = adc.get_all_advertisers()
+        for advertiser in advertisers:
+            AC = adc.ActionCache(advertiser[0], advertiser[1],sql)
+            AC.auth()
+            logging.info("populating action table for vendors for advertiser %s" % advertiser)
+            vendors.T.apply(buildIter(AC,advertiser))
+    else:
+        sql = lnk.dbs.rockerbox
+        vendors = sql.select_dataframe(VENDOR_QUERY)
+        AC = adc.ActionCache(options.username, options.password,sql)
         AC.auth()
+        advertiser = options.username.replace("a_","")
         logging.info("populating action table for vendors for advertiser %s" % advertiser)
         vendors.T.apply(buildIter(AC,advertiser))
+

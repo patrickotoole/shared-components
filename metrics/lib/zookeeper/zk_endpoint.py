@@ -51,7 +51,7 @@ class ZKEndpoint(ZKHelper, ZKTree):
         for advertiser in df.pixel_source_name.unique():
             nodes = []
             actions = Convert.df_to_values(df[df.pixel_source_name == advertiser])
-            ad_node = self.create_node(pattern='"source":"{}'.format(advertiser))
+            ad_node = self.create_node(pattern='"source": "{}'.format(advertiser))
             nodes = []
             for action in actions:
                 query_list = [USER, RAW, VIEW, URL]
@@ -97,7 +97,7 @@ class ZKEndpoint(ZKHelper, ZKTree):
 
     @classmethod
     def find_advertiser_child(self, advertiser, tree_struct):
-        match_string = '"source":"{}'
+        match_string = '"source": "{}'
         search_obj = [{"label":False,"pattern":False},{"label":"_patterns","pattern":False},{"label":False,"pattern":match_string.format(advertiser)}]
         returnChild = self.search_tree_children(search_obj, tree_struct)
         return returnChild
