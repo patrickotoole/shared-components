@@ -41,15 +41,17 @@ class ZKEndpoint(ZKHelper, ZKTree):
         return children
 
     @classmethod
-    def construct_from_db(self, con):
+    def construct_from_db(self, con, tree_struct):
         #Still using old functions
         df = con.select_dataframe(SQL_QUERY)
-        finalTree = TREE.copy()
-        childrenLocation = finalTree["children"][0]["children"]
+        search_obj = [{"label":False,"pattern":False},{"label":"_patterns","pattern":False}]
+        children = self.search_tree_children(search_obj, tree_struct)
+        children[:] = []
+        #childrenLocation = finalTree["children"][0]["children"]
         for advertiser in df.pixel_source_name.unique():
             nodes = []
             actions = Convert.df_to_values(df[df.pixel_source_name == advertiser])
-            ad_node = self.create_node(pattern='"source":"{}'.format(advertiser))
+            ad_node = self.create_node(pattern='"source": "{}'.format(advertiser))
             nodes = []
             for action in actions:
                 query_list = [USER, RAW, VIEW, URL]
@@ -62,8 +64,8 @@ class ZKEndpoint(ZKHelper, ZKTree):
                 action_nodes = map(lambda x : self.create_node(**x), parameter_list)
                 map(nodes.append, action_nodes)
             ad_node["children"] = nodes
-            childrenLocation.append(ad_node)
-        return finalTree
+            children.append(ad_node)
+        return children
 
     @classmethod
     def add_advertiser_pattern(self, advertiser, url_pattern, tree_struct):
@@ -129,14 +131,12 @@ class ZKEndpoint(ZKHelper, ZKTree):
         return tree_struct
 
     @classmethod
-    def remove_advertiser_children_pattern(self, advertiser, tree_struct, children_patterns_to_remove=[]):
+    def remove_advertiser_children_pattern(self, advertiser, to_remove, tree_struct):
         children = self.find_advertiser_child(advertiser, tree_struct)
-        updated_children = []
         for child in children:
-            if child["node"]["pattern"] not in children_patterns_to_remove:
-                updated_children.append(child)
-        children = updated_children
-        return updated_children
+            if child["node"]["pattern"] == to_remove:
+                children.remove(child)
+        return children
 
 
 if __name__ == "__main__":

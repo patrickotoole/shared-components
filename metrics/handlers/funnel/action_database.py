@@ -165,7 +165,7 @@ class ActionDatabase(object):
             advertiser_ids = self.db.select_dataframe(SQL_ACTION_QUERY.format(urls, advertiser))
 
         if len(advertiser_ids)==1:
-            zk.remove_advertiser_children_pattern(advertiser, zk.tree, [urls])
+            zk.remove_advertiser_children_pattern(advertiser, urls, zk.tree)
             zk.set_tree()
         
         cursor.execute(DELETE_ACTION % action)
