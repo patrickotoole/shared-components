@@ -2,6 +2,7 @@ import pandas
 import ujson
 from lib.helpers import decorators
 import lib.zookeeper.zk_endpoint as zke
+import logging
 
 GET = """
 SELECT pixel_source_name as advertiser, action_name, action_id, action_type from action where %(where)s
@@ -127,11 +128,38 @@ class ActionDatabase(object):
 
 
     @decorators.multi_commit_cursor
-    def perform_update(self,body,cursor=None):
+    def perform_update(self,body,zookeeper,cursor=None):
         action = ujson.loads(body)
         self.assert_required_params(["id"])
         action_id = self.get_argument("id")
 
+        #Delete record from tree and then insert with update
+        #treeName = self.get_argument("zookeeper_tree","for_play")
+        treeName = self.get_argument("zookeeper_tree","/kafka-filter/tree/visit_events_tree")
+        zk = zke.ZKEndpoint(zookeeper, treeName)
+        #Delete
+        urls = self.db.select_dataframe(SQL_PATTERN_QUERY.format(action_id))
+        advertiser = self.db.select_dataframe(SQL_NAME_QUERY.format(action_id))
+        if len(urls) >0 and len(advertiser) > 0:
+            urls = urls.ix[0][0]
+            advertiser = advertiser.ix[0][0]
+            advertiser_ids = self.db.select_dataframe(SQL_ACTION_QUERY.format(urls, advertiser))
+        try:
+            if len(advertiser_ids)==1:
+                zk.remove_advertiser_children_pattern(advertiser, zk.tree, [urls])
+                zk.set_tree()
+        except:
+            logging.error("url not in tree for advertiser %s" % ( advertiser))
+
+        #insert
+        try:
+            zk = zke.ZKEndpoint(zookeeper,tree_name=action["zookeeper_tree"])
+            for url in action["url_pattern"]:
+                updated_tree = zk.add_advertiser_pattern(action["advertiser"],url,zk.tree)
+                zk.set_tree()
+        except:
+            logging.error("could not add updated pattern to zookeeper try on put %s" % action)
+        #Database Update
         action['fields'] = self.make_set_fields(action)
         cursor.execute(UPDATE_ACTION % action)
 
@@ -153,7 +181,8 @@ class ActionDatabase(object):
 
         action_id = self.get_argument("id")
         action = {"action_id":action_id}
-        action["zookeeper_tree"] = action.get("zookeeper_tree","for_play")
+        #action["zookeeper_tree"] = self.get_argument("zookeeper_tree","for_play")
+        action["zookeeper_tree"] = self.get_argument("zookeeper_tree","/kafka-filter/tree/visit_events_tree")
 
         zk = zke.ZKEndpoint(zookeeper,tree_name=action["zookeeper_tree"])
 
@@ -187,7 +216,8 @@ class ActionDatabase(object):
 
         self.assert_required(action,self.required_cols)
 
-        action["zookeeper_tree"] = action.get("zookeeper_tree","for_play")
+        action["zookeeper_tree"] = self.get_argument("zookeeper_tree","/kafka-filter/tree/visit_events_tree")
+        #action["zookeeper_tree"] = self.get_argument("zookeeper_tree","for_play")
         try:
             zk = zke.ZKEndpoint(zookeeper,tree_name=action["zookeeper_tree"])
             for url in action["url_pattern"]:

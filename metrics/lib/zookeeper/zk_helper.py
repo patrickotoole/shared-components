@@ -64,18 +64,6 @@ class ZKHelper():
         return returnTree
 
     @classmethod
-    def search_tree_node(self,validation_list,subtree):
-        childtree = subtree
-        for child in validation_list:
-            childtree = self._validate_condition_node(child, childtree["children"])
-        try:
-            #self._assert_valid(childtree)
-            self._assert_valid(childtree["children"])
-        except:
-            childtree = False
-        return childtree
-    
-    @classmethod
     def _check_parentkey_tree(self,parentkeyname, subkeyname, subkeyval, subtree):
         result ={}
         try:

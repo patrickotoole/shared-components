@@ -25,14 +25,18 @@ INSERT_REPORTING = "insert into test.v3_reporting select * from reporting.v4_rep
 INSERT_CONVERSION = "insert into test.conversion_reporting select * from reporting.v2_conversion_reporting where creative_id = %s limit 10;" % CREATIVE_ID
 INSERT_ATTRIBUTE = "insert into test.creative select * from rockerbox.creative where external_id = %s limit 10;" % CREATIVE_ID 
 
-DROP_REPORTING = "drop table test.conversion_reporting;" 
-DROP_CONVERSION = "drop table test.v3_reporting;"
-DROP_ATTRIBUTE = "drop table test.creative;"
+DROP_REPORTING = "drop table if exists test.conversion_reporting;" 
+DROP_CONVERSION = "drop table if exists test.v3_reporting;"
+DROP_ATTRIBUTE = "drop table if exists test.creative;"
 
 class CreativeReportingTest(AsyncHTTPTestCase):
     
     def get_app(self):
         self.db = lnk.dbs.test
+        self.db.execute(DROP_REPORTING)
+        self.db.execute(DROP_CONVERSION)
+        self.db.execute(DROP_ATTRIBUTE)
+
         self.db.execute(CREATE_REPORTING)
         self.db.execute(CREATE_CONVERSION)
         self.db.execute(CREATE_ATTRIBUTE) 

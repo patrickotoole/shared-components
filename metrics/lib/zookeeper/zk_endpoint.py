@@ -109,26 +109,25 @@ class ZKEndpoint(ZKHelper, ZKTree):
         match_string = '"source": "{}'
         updated_children = []
         for child in children:
-            if child["node"]["pattern"] != match_string.format(advertiser):
-                updated_children.append(child)
-        children = updated_children
-        return updated_children
+            if child["node"]["pattern"] == match_string.format(advertiser):
+                children.remove(child)
+        return children
 
     @classmethod
     def remove_advertiser_children(self, advertiser, tree_struct, children_to_remove=[]):
         children = self.find_advertiser_child(advertiser, tree_struct)
         updated_children = []
         for child in children:
-            if child not in children_to_remove:
-                updated_children.append(child)
-        children = updated_children
-        return updated_children
+            if child in children_to_remove:
+                children.remove(child)
+        return children
     
     @classmethod
     def remove_advertiser_all_children(self, advertiser, tree_struct):
         children = self.find_advertiser_child(advertiser, tree_struct)
-        children = []
-        return tree_struct
+        for child in children[:]:
+            children.remove(child)
+        return children
 
     @classmethod
     def remove_advertiser_children_pattern(self, advertiser, to_remove, tree_struct):
@@ -143,9 +142,9 @@ if __name__ == "__main__":
     import ipdb; ipdb.set_trace()
     zk = ZKEndpoint(KazooClient(hosts="zk1:2181"))
     zk.start()
-    tr = zk.tree.copy()
-    zk.find_advertiser_child("baublebar", tr)
-    zk.add_advertiser("test_advertiser", tr)
+    #tr = zk.tree.copy()
+    #zk.find_advertiser_child("baublebar", tr)
+    #zk.add_advertiser("test_advertiser", tr)
     #tree = zk.construct_from_db(lnk.dbs.rockerbox)
     #zk.set_tree(tree)
     #print zk.get_tree()

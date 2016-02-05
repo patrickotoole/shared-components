@@ -314,7 +314,7 @@ class OptLogTest(AsyncHTTPTestCase):
             "field_name": "domains",
             "value_group_id": 4
             }
-
+        
         # Don't want to check the last_modified time
         response["response"][0] = {k:v for k,v 
                                    in response["response"][0].iteritems() 

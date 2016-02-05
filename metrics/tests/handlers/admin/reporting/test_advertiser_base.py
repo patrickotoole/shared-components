@@ -51,13 +51,14 @@ VALUES
     )
   
 """ 
-DROP_DASH = "drop table test.daily_dash;"
+DROP_DASH = "drop table if exists test.daily_dash;"
 
 
 class CreativeReportingTest(AsyncHTTPTestCase):
     
     def get_app(self):
         self.db = lnk.dbs.test
+        self.db.execute(DROP_DASH)
         self.db.execute(CREATE_DASH)
         #print INSERT_DASH % {"range":"yesterday","advertiser_id":ADVERTISER_ID}
         self.db.execute(INSERT_DASH % {"range":"yesterday","advertiser_id":ADVERTISER_ID})
