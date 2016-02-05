@@ -201,7 +201,7 @@ class OptLogHandler(tornado.web.RequestHandler):
         for record in obj["filter_columns"]:
             #if not self._in_filter_table(record["name"], "name") and not self._in_filter_table(obj["submit_time"],"submit_time"):
             record_list = [record["name"], record["min"], record["max"], obj["filter_name"], obj["submit_time"]]
-            record_list = [None if x == "" else x
+            record_list = ['NULL' if x == "" else x
                 for x in record_list]
             self.db.execute(INSERT_FILTER_NAME % tuple(record_list))
 
