@@ -56,7 +56,7 @@ DELETE FROM opt_values
 WHERE value_group_id={}
 """
 
-INSERT_FILTER_NAME = "insert into opt_filter_log (column_name, min, max, filter_name, submit_time) values ('%s',%s,%s,'%s','%s')"
+INSERT_FILTER_NAME = "insert into opt_filter_log (column_name, min, max, filter_name, submit_time) values ('%s',%s,%s,'%s',from_unixtime(%s))"
 
 CHECK_FILTER = "select * from opt_filter_log where %s = '%s'"
 
@@ -200,8 +200,7 @@ class OptLogHandler(tornado.web.RequestHandler):
     def _insert_filter(self, obj):
         for record in obj["filter_columns"]:
             #if not self._in_filter_table(record["name"], "name") and not self._in_filter_table(obj["submit_time"],"submit_time"):
-            submit_time_datetime = datetime.datetime.fromtimestamp(int(obj["submit_time"])).strftime('%Y-%m-%d %H:%M:%S')
-            self.db.execute(INSERT_FILTER_NAME % (record["name"],record["min"],record["max"],obj["filter_name"],submite_time_datetime))
+            self.db.execute(INSERT_FILTER_NAME % (record["name"],record["min"],record["max"],obj["filter_name"],obj["submit_time"]))
 
     def log_changes(self, obj):
         # Pull out metric values
