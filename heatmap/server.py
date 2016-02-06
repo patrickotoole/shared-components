@@ -22,6 +22,8 @@ from autobahn.asyncio.websocket import WebSocketServerProtocol, \
 from pykafka import KafkaClient
 import json
 
+global consumer
+
 with open('zipcodes.json') as data_file:
     zipcodes = json.load(data_file)
 
@@ -47,11 +49,7 @@ class MyServerProtocol(WebSocketServerProtocol):
         print("WebSocket connection closed: {0}".format(reason))
 
     def initKafka(self):
-        client = KafkaClient(hosts="zk1:2181/v0_8_1")
-        topic = client.topics['lg_imps']
-        consumer = topic.get_simple_consumer(
-            reset_offset_on_start=True
-        )
+        
         for message in consumer:
             if message is not None:
                 try:
@@ -80,17 +78,22 @@ class MyServerProtocol(WebSocketServerProtocol):
 
 if __name__ == '__main__':
 
+    client = KafkaClient(hosts="zk1:2181/v0_8_1")
+    topic = client.topics['lg_imps']
+    consumer = topic.get_simple_consumer(
+        reset_offset_on_start=True
+    )
     try:
         import asyncio
     except ImportError:
         # Trollius >= 0.3 was renamed
         import trollius as asyncio
 
-    factory = WebSocketServerFactory(u"ws://127.0.0.1:9000", debug=False)
+    factory = WebSocketServerFactory(debug=False)
     factory.protocol = MyServerProtocol
 
     loop = asyncio.get_event_loop()
-    coro = loop.create_server(factory, '0.0.0.0', 9000)
+    coro = loop.create_server(factory, '0.0.0.0', 9001)
     server = loop.run_until_complete(coro)
 
     try:
