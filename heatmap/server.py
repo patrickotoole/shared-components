@@ -46,34 +46,30 @@ class MyServerProtocol(WebSocketServerProtocol):
         self.sendMessage(payload, isBinary)
 
     def onClose(self, wasClean, code, reason):
+        self.skip = True
         print("WebSocket connection closed: {0}".format(reason))
 
     def initKafka(self):
         
-        for message in consumer:
-            if message is not None:
-                try:
-                    # payload = int(message.offset)
-                    message_object = json.loads(message.value)
-                    payload = {
-                        'offset': message.offset,
-                        'time': message_object['bid_request']['timestamp'],
-                        'location': {
-                            'latitude': zipcodes.get(message_object.get('bid_request', {}).get('bid_info', {}).get('postal_code', {}), {}).get('latitude', {}),
-                            'longitude': zipcodes.get(message_object.get('bid_request', {}).get('bid_info', {}).get('postal_code', {}), {}).get('longitude', {}),
-                        }
+        loop = asyncio.get_event_loop()
+        loop.call_later(0,self.initKafka)
+        message = consumer.consume()
+        if message is not None:
+            try:
+                message_object = json.loads(message.value)
+                payload = {
+                    'offset': message.offset,
+                    'time': message_object['bid_request']['timestamp'],
+                    'location': {
+                        'latitude': zipcodes.get(message_object.get('bid_request', {}).get('bid_info', {}).get('postal_code', {}), {}).get('latitude', {}),
+                        'longitude': zipcodes.get(message_object.get('bid_request', {}).get('bid_info', {}).get('postal_code', {}), {}).get('longitude', {}),
                     }
-                    payload = json.dumps(payload)
-                    self.sendMessage(payload, 0)
-                except e:
-                    print e
-                # message_object = json.loads(message.value)
-        #         package = {
-        #             'time': message_object['bid_request']['timestamp'],
-        #             'zipcode': message_object['bid_request']['bid_info']['postal_code']
-        #         }
-                print 'Sent message with offset %s' % message.offset
-                # self.sendMessage(json.dumps(package), 1)
+                }
+                payload = json.dumps(payload)
+                self.sendMessage(payload, 0)
+            except e:
+                print e
+            print 'Sent message with offset %s' % message.offset
 
 
 if __name__ == '__main__':
