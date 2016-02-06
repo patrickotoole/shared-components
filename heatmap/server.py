@@ -63,7 +63,11 @@ class MyServerProtocol(WebSocketServerProtocol):
                     'location': {
                         'latitude': zipcodes.get(message_object.get('bid_request', {}).get('bid_info', {}).get('postal_code', {}), {}).get('latitude', {}),
                         'longitude': zipcodes.get(message_object.get('bid_request', {}).get('bid_info', {}).get('postal_code', {}), {}).get('longitude', {}),
-                    }
+                    },
+                    'url': message_object.get('bid_request', {}).get('bid_info', {}).get('url'),
+                    'uid': message_object.get('bid_request', {}).get('bid_info', {}).get('user_id_64'),
+                    'hit': message_object.get('branches',0)
+
                 }
                 payload = json.dumps(payload)
                 self.sendMessage(payload, 0)
@@ -77,7 +81,7 @@ if __name__ == '__main__':
     client = KafkaClient(hosts="zk1:2181/v0_8_1")
     topic = client.topics['lg_imps']
     consumer = topic.get_simple_consumer(
-        reset_offset_on_start=True
+        reset_offset_on_start=True 
     )
     try:
         import asyncio
