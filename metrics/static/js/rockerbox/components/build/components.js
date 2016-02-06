@@ -596,11 +596,260 @@
 	  }
 	}
 
+	function dims$2(target) {
+	  var dimensions = parent_dimension.bind(this)(target)
+	  var margin = this.margins()
+
+	  var canvasHeight = dimensions.height || undefined,
+	      canvasWidth = dimensions.width || undefined;
+
+	  var width = (dimensions.width|| 100) - margin.left - margin.right,
+	      height = (dimensions.height|| 100) - margin.top - margin.bottom;
+
+	  return {
+	    svg: { width: canvasWidth, height: canvasHeight },
+	    canvas: { width: width, height: height },
+	    margin: margin,
+	    
+	  }
+	  
+	}
+
+	function base$2(target) {
+
+	    var margin = this.margins()
+	    var dimensions = dims$2.bind(this)
+
+	    var svg = d3_splat(target,"." + this._class, "svg",function(x){return x},function(x){return x.key ? x.key : x})
+	      .classed(this._class,true)
+	      .datum(function(x) {
+	        if (typeof(x) !== "object") throw "wrong data type. requires object";
+	        x.options = dimensions(d3.select(this.parentNode))
+	        return x
+	      })
+
+	    svg
+	      .attr("width", function(d){ return d.options.svg.width })
+	      .attr("height", function(d){ return d.options.svg.height})
+
+	    var g = d3_updateable(svg,"g.canvas","g")
+	      .attr("class","canvas")
+	      .attr("transform", function(x) {
+	        return "translate(" + x.options.margin.left + "," + (x.options.canvas.height/2 + x.options.margin.top) + ")"
+	      });
+
+	}
+
+	function scales$1(target) {
+
+	    var series = this._series;
+
+	    var canvas = target.selectAll("svg").selectAll("g.canvas")
+
+	    canvas
+	      .datum(function(x) {
+	        if (x.values) {
+	          var data = x.values 
+
+	          x.unit_size = 1
+	          var min_key = d3.min(data, function(d) { return d.key; })
+	          var max_key = d3.max(data, function(d) { return d.key; })
+
+	          var units = (max_key - min_key)/x.unit_size
+	          x.unit_width = (x.options.canvas.width/(units+1))
+
+	          x.scales = {
+	            x: d3.time.scale()
+	                 .range([x.unit_width/2, x.options.canvas.width - x.unit_width/2 ])
+	                 .domain(d3.extent(data, function(d) { return d.key; })),
+	            x_left: d3.time.scale()
+	                 .range([0, x.options.canvas.width - x.unit_width ])
+	                 .domain(d3.extent(data, function(d) { return d.key; })),
+
+	            y: d3.scale.linear()
+	                 .range([x.options.canvas.height/2,-x.options.canvas.height/2])
+	                 .domain([
+	                   d3.min(data, function(d) { return d3.min(series,function(q){return d[q]}) }),
+	                   d3.max(data, function(d) { return d3.max(series,function(q){return d[q]}) })
+	                 ])
+	          }
+	          
+	          x.axis = {
+	            x: d3.svg.axis().scale(x.scales.x).orient("bottom")
+	                 .ticks(d3.time.days, x.options.canvas.width < 300 ? 5 : 2),
+	            y: d3.svg.axis().scale(x.scales.y).orient("left")
+	                 .tickSize(-x.options.canvas.width, 0, 0)
+	                 .ticks(x.options.canvas.height < 200 ? 3 : 5)
+	                 .tickFormat(d3.format(",.0f"))
+	          }
+
+	        }
+	        return x
+	      })
+
+	}
+
+	function axis$1(target) {
+
+	  var canvas = target.selectAll("svg > g")
+
+	  var xAxis = d3_updateable(canvas,".x.axis","g")
+	    .attr("class", "x axis")
+	    .attr("transform", function(x) { return "translate(0," + x.scales.y(0) + ")"})
+	    .call(function(x){
+	      x.each(function(d) {
+	        d.axis.x.bind(this)(d3.select(this))
+	      })
+	    });
+
+	  xAxis.selectAll("text").filter(function(x){return this.innerHTML.length > 6})
+	    .attr("y",10)
+
+	  var yAxis = d3_updateable(canvas,".y.axis","g")
+	    .attr("class", "y axis")
+
+	  yAxis.selectAll("text.y-label").remove()
+
+	  yAxis
+	    .call(function(x){
+	      x.each(function(d) {
+	        d.axis.y.bind(this)(d3.select(this))
+	      })
+	    })
+	    .append("text")
+	    .attr("x",-10)
+	    .attr("x", 0)
+	    .attr("dy", ".71em")
+	    .style("text-anchor", "start")
+	    .classed("y-label",true)
+
+	  yAxis.selectAll(".tick > text")
+	    .attr("x",-10)
+
+	}
+
+	function draw$2(target) {
+
+	  var self = this;
+	  var canvas = target.selectAll(".canvas")
+
+	  this._series.map(function(series) {
+
+	    var bars = d3_updateable(canvas,".bars." + series,"g")
+	      .attr("class","bars " + series)
+
+	    var point = d3_splat(bars,".bar","rect",function(x){ return x.values},function(x){return x.key})
+	      .attr("class","bar")
+	      .attr("x", function(d, i) {
+	        var x = this.parentNode.__data__.scales.x
+	        var width = this.parentNode.__data__.unit_width
+
+	        return x(d.key) - width/2
+	      })
+	      .attr("y", function(d, i) {
+	        var y = this.parentNode.__data__.scales.y
+	        return Math.min(y(d[series]), y(0))
+	      })
+	      .attr("width",function(d){
+	        var width = this.parentNode.__data__.unit_width
+	        return Math.max(width,5)
+	      })
+	      .attr("height", function(d) { 
+	        var y = this.parentNode.__data__.scales.y
+	        return Math.abs(y(d[series]) - y(0)); 
+	      })
+	      
+
+	    //var points= d3_updateable(canvas,".points." + series,"g")
+	    //  .attr("class","points " + series)
+
+	    //var point = d3_splat(points,".point","svg:circle",function(x){ return x.values},function(x){return x.key})
+	    //  .attr("class","point")
+	    // 
+	    //point.exit().remove()
+
+	    //point
+	    //  .attr("fill", function(d, i) { return d.action ? "red" : "steelblue" })
+	    //  .attr("cx", function(d, i) { 
+	    //    var x = this.parentNode.__data__.scales.x
+	    //    return x(d.key) 
+	    //  })
+	    //  .attr("cy", function(d, i) { 
+	    //    var y = this.parentNode.__data__.scales.y
+	    //    return y(d[series]) 
+	    //  })
+	    //  .attr("r", function(d, i) { return 3 })
+	        
+	    if (self.hover()) point.on("mouseover", self.hover())
+
+
+	  })
+
+
+	}
+
+	function Bar(target) {
+	  this._target = target
+	  this._class = "timeseries"
+
+	  this._dataFunc = function(x) { return x }
+	  this._keyFunc = function(x) { return x }
+	  this._margin = {top: 10, right: 50, bottom: 30, left: 50}
+
+	  this._series = ["value"]
+
+	  this._base = this.base(target)
+	}
+
+	function bar(target){
+	  return new Bar(target)
+	}
+
+	function hover$3(cb) {
+	  if ((cb == undefined) || (typeof(cb) == "function")) {
+	    return accessor.bind(this)("hover",cb)
+	  }
+	}
+
+	function data$3(cb, key) {
+	  this._dataFunc = (typeof(cb) == "function") ? cb : function() {return cb};
+	  this._keyFunc = key ? key : function(x) {return x}
+	}
+
+	Bar.prototype = {
+	  draw: function() {
+
+	    scales$1.bind(this)(this._target)
+	    axis$1.bind(this)(this._target)
+	    return draw$2.bind(this)(this._target)
+	  },
+	  series: function(x) {
+	    return accessor.bind(this,"series")(x)
+	  },
+	  dimensions: parent_dimension,
+	  base: base$2,
+	  hover: hover$3,
+	  data: data$3,
+	  margins: function(x) { 
+
+	    var current = accessor.bind(this)("margin")
+	    if (x === undefined) return current;
+	    if ( (typeof(x) !== "object") && (x !== undefined) ) throw "wrong type";
+
+	    Object.keys(current).map(function(k){
+	      current[k] = x[k] || current[k]
+	    })
+
+	    return accessor.bind(this)("margin",current) 
+	  }
+	}
+
 	var version = "0.0.1";
 
 	exports.version = version;
 	exports.pie = pie;
 	exports.line = line;
+	exports.bar = bar;
 	exports.accessor = accessor;
 
 }));
