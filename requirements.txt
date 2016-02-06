@@ -28,4 +28,4 @@ datadiff
 kazoo
 autobahn
 pykafka
-asyncio
+trollius
