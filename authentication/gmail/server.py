@@ -48,7 +48,7 @@ class CallbackHandler(web.RequestHandler):
         else:
          
             code = self.get_argument("code","")
-            creds = gmail_auth.get_credentials(code,"logged_in")
+            creds = gmail_auth.get_credentials(code,"logged_in","http://portal.getrockerbox.com/callback")
             json_creds = creds.to_json()
 
             self.set_secure_cookie("gmail",json_creds)

@@ -71,7 +71,7 @@ def store_credentials(user_id, credentials):
   print user_id, credentials
 
 
-def exchange_code(authorization_code):
+def exchange_code(authorization_code,uri=False):
   """Exchange an authorization code for OAuth 2.0 credentials.
 
   Args:
@@ -83,10 +83,8 @@ def exchange_code(authorization_code):
     CodeExchangeException: an error occurred.
   """
   flow = flow_from_clientsecrets(CLIENTSECRETS_LOCATION, ' '.join(SCOPES))
-  flow.redirect_uri = REDIRECT_URI
+  flow.redirect_uri = uri or REDIRECT_URI
   try:
-
-    store = oauth2client.file.Storage("/root/.credentials/creds.json")
     credentials = flow.step2_exchange(authorization_code)
     return credentials
   except FlowExchangeError, error:
@@ -135,7 +133,7 @@ def get_authorization_url(email_address, state, redirect_uri=False):
   return flow.step1_get_authorize_url(redirect_uri or REDIRECT_URI)
 
 
-def get_credentials(authorization_code, state):
+def get_credentials(authorization_code, state, uri=False):
   """Retrieve credentials using the provided authorization code.
 
   This function exchanges the authorization code for an access token and queries
@@ -159,7 +157,7 @@ def get_credentials(authorization_code, state):
   """
   email_address = ''
   try:
-    credentials = exchange_code(authorization_code)
+    credentials = exchange_code(authorization_code,uri)
     user_info = get_user_info(credentials)
     email_address = user_info.get('email')
     user_id = user_info.get('id')
