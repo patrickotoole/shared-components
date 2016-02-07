@@ -27,7 +27,7 @@ class IndexHandler(web.RequestHandler):
             self.finish()
             return
 
-        host = self.request.headers.get('X-Real-Host',self.host)
+        host = self.request.headers.get('X-Real-Host',self.request.host)
         uri = self.request.headers.get('X-Real-Host',self.request.uri)
 
         if ":" in host:
