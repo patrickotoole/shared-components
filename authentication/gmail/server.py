@@ -24,9 +24,9 @@ class IndexHandler(web.RequestHandler):
 
         if ":" in self.request.host:
             redirect = "urn:ietf:wg:oauth:2.0:oob"
-            redirect = "http://localhost" + self.request.uri + "/callback"
+            redirect = "http://localhost" + self.request.uri + "callback"
         else:
-            redirect = "http://" + self.request.host + self.request.uri + "/callback"
+            redirect = "http://" + self.request.host + self.request.uri + "callback"
 
         url = gmail_auth.get_authorization_url("","hello",redirect)
         self.redirect(url)
