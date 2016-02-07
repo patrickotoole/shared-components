@@ -156,30 +156,18 @@ def get_credentials(authorization_code, state, uri=False):
                              available sources.
   """
   email_address = ''
-  try:
-    credentials = exchange_code(authorization_code,uri)
-    user_info = get_user_info(credentials)
-    email_address = user_info.get('email')
-    user_id = user_info.get('id')
-    if credentials.refresh_token is not None:
-      store_credentials(user_id, credentials)
+
+  credentials = exchange_code(authorization_code,uri)
+  user_info = get_user_info(credentials)
+  email_address = user_info.get('email')
+  user_id = user_info.get('id')
+  if credentials.refresh_token is not None:
+    store_credentials(user_id, credentials)
+    return credentials
+  else:
+    credentials = get_stored_credentials(user_id)
+    if credentials and credentials.refresh_token is not None:
       return credentials
-    else:
-      credentials = get_stored_credentials(user_id)
-      if credentials and credentials.refresh_token is not None:
-        return credentials
-  except CodeExchangeException, error:
-    logging.error('An error occurred during code exchange.')
-    # Drive apps should try to retrieve the user and credentials for the current
-    # session.
-    # If none is available, redirect the user to the authorization URL.
-    error.authorization_url = get_authorization_url(email_address, state)
-    raise error
-  except NoUserIdException:
-    logging.error('No user ID could be retrieved.')
-  # No refresh token has been retrieved.
-  authorization_url = get_authorization_url(email_address, state)
-  raise NoRefreshTokenException(authorization_url)
 
 
 if __name__ == "__main__":
