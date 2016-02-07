@@ -83,7 +83,9 @@ def exchange_code(authorization_code,uri=False):
     CodeExchangeException: an error occurred.
   """
   flow = flow_from_clientsecrets(CLIENTSECRETS_LOCATION, ' '.join(SCOPES))
-  print uri, REDIRECT_URI, authorization_code
+  logging.info(uri)
+  logging.info(REDIRECT_URI)
+  logging.info(authorization_code)
   flow.redirect_uri = uri or REDIRECT_URI
   try:
     credentials = flow.step2_exchange(authorization_code)
