@@ -34,7 +34,7 @@ class IndexHandler(web.RequestHandler):
             redirect = "urn:ietf:wg:oauth:2.0:oob"
             redirect = "http://localhost" + uri + "callback"
         else:
-            redirect = "http://" + host + uri + "callback"
+            redirect = "http://" + host + uri + "/callback"
 
         url = gmail_auth.get_authorization_url("","hello",redirect)
         self.redirect(url)
