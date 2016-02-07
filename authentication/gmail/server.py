@@ -27,11 +27,14 @@ class IndexHandler(web.RequestHandler):
             self.finish()
             return
 
-        if ":" in self.request.host:
+        host = self.request.headers.get('X-Real-Host',self.host)
+        uri = self.request.headers.get('X-Real-Host',self.request.uri)
+
+        if ":" in host:
             redirect = "urn:ietf:wg:oauth:2.0:oob"
-            redirect = "http://localhost" + self.request.uri + "callback"
+            redirect = "http://localhost" + uri + "callback"
         else:
-            redirect = "http://" + self.request.host + self.request.uri + "callback"
+            redirect = "http://" + host + uri + "callback"
 
         url = gmail_auth.get_authorization_url("","hello",redirect)
         self.redirect(url)
