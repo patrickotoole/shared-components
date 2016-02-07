@@ -14,6 +14,11 @@ class IndexHandler(web.RequestHandler):
     def get(self):
         refresh = self.get_argument("refresh",False)
         creds = self.get_secure_cookie("gmail")
+
+        logging.info(self.request)
+        logging.info(self.request.host)
+        logging.info(self.request.headers)
+        
         if not refresh and creds:
             
             creds = oauth2client.client.OAuth2Credentials.new_from_json(creds)
