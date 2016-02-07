@@ -28,7 +28,7 @@ class IndexHandler(web.RequestHandler):
             return
 
         host = self.request.headers.get('X-Real-Host',self.request.host)
-        uri = self.request.headers.get('X-Real-Host',self.request.uri)
+        uri = self.request.headers.get('X-Real-Uri',self.request.uri)
 
         if ":" in host:
             redirect = "urn:ietf:wg:oauth:2.0:oob"
