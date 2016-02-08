@@ -246,6 +246,7 @@ class VisitDomainsHandler(BaseHandler, AnalyticsBase,VisitDomainBase):
             self.render("analysis/visit_urls.html", data=df)
         yield default, (data,)
 
+    @tornado.web.authenticated
     @tornado.web.asynchronous
     def get(self):
         formatted = self.get_argument("format", False)
@@ -266,7 +267,8 @@ class VisitDomainsHandler(BaseHandler, AnalyticsBase,VisitDomainBase):
 
         else:
             self.get_content(pandas.DataFrame())
-
+    
+    @tornado.web.authenticated
     @tornado.web.asynchronous
     def post(self):
         #print tornado.escape.json_decode(self.request.body)

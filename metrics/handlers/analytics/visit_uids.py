@@ -101,7 +101,8 @@ class VisitUidsHandler(BaseHandler, AnalyticsBase):
             queries.append(self.query + WHERE)
         
         return self.batch_execute(queries)
-
+    
+    @tornado.web.authenticated
     @tornado.web.asynchronous
     def get(self):
         formatted = self.get_argument("format", False)
@@ -120,6 +121,7 @@ class VisitUidsHandler(BaseHandler, AnalyticsBase):
         else:
             self.get_content(pandas.DataFrame())
 
+    @tornado.web.authenticated
     @tornado.web.asynchronous
     def post(self):
         formatted = self.get_argument("format", False)

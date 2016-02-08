@@ -60,6 +60,7 @@ class VisitUrlsHandler(BaseHandler):
 
         return df
 
+    @tornado.web.authenticated
     @tornado.web.asynchronous
     def get(self):
         formatted = self.get_argument("format", False)
