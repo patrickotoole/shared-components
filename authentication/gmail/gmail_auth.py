@@ -174,7 +174,7 @@ def get_credentials(authorization_code, state, uri=False):
 
 
 if __name__ == "__main__":
-    url = get_authorization_url("rick@rockerbox.com","hello")
+    url = get_authorization_url("rick@rockerbox.com","hello",REDIRECT_URI)
     code = ''
     import ipdb; ipdb.set_trace()
 
