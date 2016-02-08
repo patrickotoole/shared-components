@@ -17,7 +17,7 @@ RB.crusher.ui.action = (function(action) {
         inflection_val = calcInflection(transformed_categories),
         inflection_pos = is_before ? first.length - inflection_val -1 : inflection_val,
         inflection = first[inflection_pos];
-          
+
 
       return {
         key: key,
@@ -37,7 +37,7 @@ RB.crusher.ui.action = (function(action) {
         p.y = p.y + c.y*c.time_bucket
         return p
       },{ y: 0 })
-  
+
       x.name = x.key
       x.values = x.values.map(function(y){
         var time = y.time_bucket*60*1000
@@ -45,13 +45,13 @@ RB.crusher.ui.action = (function(action) {
         y.y = y.count
         return y
       }).sort(function(p,c){return p.date - c.date})
-  
-  
+
+
       // add to the beginning
       var z = JSON.parse(JSON.stringify(x.values[x.values.length-1]))
       var time = +new Date(z.date)
       z.date = new Date( time + 15*60*1000)
-  
+
       x.values.push(z)
       x.values = x.values.slice(6-x.values.length) // remove the first 6 points (since its so long...
 
@@ -59,7 +59,7 @@ RB.crusher.ui.action = (function(action) {
       // add to the end
       var z = JSON.parse(JSON.stringify(x.values[0]))
       z.date = new Date(+new Date(x.values[1].date) - 20*60*1000)
-  
+
       x.values = x.values.slice(1-x.values.length)
       x.values.splice(0,0,z)
 
@@ -68,17 +68,17 @@ RB.crusher.ui.action = (function(action) {
       var z = JSON.parse(JSON.stringify(z))
       z.y = z.y
       z.date = new Date(+new Date(z.date) - 30*60*1000)
-  
+
       x.values.splice(0,0,z)
       x.values = x.values.sort(function(p,c){return p.date - c.date})
 
 
-      
+
       x.final = x.values[x.values.length-1].y
       x.initial = x.values[0].y
-  
+
       x.percent_diff = (x.final - x.initial)/x.initial
-  
+
       return x
     })
 
@@ -128,7 +128,7 @@ RB.crusher.ui.action = (function(action) {
       d.y0 = previous
       previous = d.y
       d.all = all_data
-     
+
       return d
     }).reverse()
     return stacked_dates
@@ -137,16 +137,16 @@ RB.crusher.ui.action = (function(action) {
   function autoSize(wrap,adjustWidth,adjustHeight) {
 
     function elementToWidth(elem) {
-      var num = wrap.style("width").split(".")[0].replace("px","") 
+      var num = wrap.style("width").split(".")[0].replace("px","")
       return parseInt(num)
     }
 
     function elementToHeight(elem) {
-      var num = wrap.style("height").split(".")[0].replace("px","") 
+      var num = wrap.style("height").split(".")[0].replace("px","")
       return parseInt(num)
     }
 
-    var w = elementToWidth(wrap) || 700, 
+    var w = elementToWidth(wrap) || 700,
       h = elementToHeight(wrap) || 340;
 
     w = adjustWidth(w)
@@ -161,11 +161,11 @@ RB.crusher.ui.action = (function(action) {
       width: width,
       height: height
     }
-  } 
+  }
 
   action.build_behavior_transform = function(wrap) {
 
-    // Consider the current element and then make a function that computers 
+    // Consider the current element and then make a function that computers
     // the appropriate sizes and transforms the data for what we want
 
     var adjustWidth = function(w) { return w/12*8 - 50 },
@@ -179,7 +179,7 @@ RB.crusher.ui.action = (function(action) {
 
     var transform = function(d){
 
-      var LABEL_WIDTH = 140; 
+      var LABEL_WIDTH = 140;
 
       var leftOffset  = (d.orientation == "left") ? 0 : LABEL_WIDTH,
           rightOffset = (d.orientation == "left") ? LABEL_WIDTH : 0,
@@ -197,7 +197,7 @@ RB.crusher.ui.action = (function(action) {
             .y0(function(d) { return y(d.y0); })
             .y1(function(d) { return y(d.y0 + d.y); });
 
-          
+
 
       x.domain(d3.extent(d.dates, function(d) { return d; }));
 
@@ -213,14 +213,14 @@ RB.crusher.ui.action = (function(action) {
         stacked_dates: stackDates(d.categories,d.domains,x),
         area: area, x: x, y: y,
 
-        width: width, height: height, margin: margin, 
+        width: width, height: height, margin: margin,
         leftOffset: leftOffset,
         rightOffset: rightOffset
       }
 
     }
 
-    return transform 
+    return transform
   }
 
   action.show_behavior = function(wrapper) {
@@ -231,7 +231,7 @@ RB.crusher.ui.action = (function(action) {
     action.build_behavior(wrap,transform)
     action.build_intent(wrap)
     action.build_domain_intent(wrap)
-    
+
   }
 
   action.build_domain_intent = function(wrap) {
@@ -242,7 +242,7 @@ RB.crusher.ui.action = (function(action) {
       .style("margin-left","-15px")
       .style("margin-right","-15px")
       .datum(function(d){
-        
+
         var binflection = function(x) { return x.time_bucket <= d.before_and_after[0].inflection.time_bucket},
           ainflection = function(x) {return x.time_bucket <= d.before_and_after[1].inflection.time_bucket};
 
@@ -255,13 +255,13 @@ RB.crusher.ui.action = (function(action) {
         var nbefore = before_cat.map(function(x){
           return {
             key:x.key,
-            values:x.values.filter(function(x) {return !binflection(x)}) 
+            values:x.values.filter(function(x) {return !binflection(x)})
           }
         })
         var nafter = after_cat.map(function(x){
           return {
             key:x.key,
-            values:x.values.filter(function(x) {return !ainflection(x)}) 
+            values:x.values.filter(function(x) {return !ainflection(x)})
           }
         })
 
@@ -295,14 +295,14 @@ RB.crusher.ui.action = (function(action) {
         },{})
 
         var category_change = Object.keys(category_diff).map(function(x){
-          return {"name":x,"value": category_diff[x]} 
+          return {"name":x,"value": category_diff[x]}
         })
 
-        
+
 
         // domain
-        var before_bucket = d.before_and_after[0].inflection.time_bucket 
-        var after_bucket = d.before_and_after[1].inflection.time_bucket 
+        var before_bucket = d.before_and_after[0].inflection.time_bucket
+        var after_bucket = d.before_and_after[1].inflection.time_bucket
 
         var before_domains = d.before_and_after[0].domains
         var after_domains = d.before_and_after[1].domains
@@ -372,7 +372,7 @@ RB.crusher.ui.action = (function(action) {
           }
         }).sort(function(p,c) {return c.value - p.value})
 
-        
+
         var terms = d3.max(Object.keys(non_intent_domains).map(function(x) {return non_intent_domains[x]}))
 
         var idf = {}
@@ -437,11 +437,11 @@ RB.crusher.ui.action = (function(action) {
 
     var y = d3.scale.ordinal()
         .rangeRoundBands([0, height], .2);
-    
+
     var xAxis = d3.svg.axis()
         .scale(x)
         .orient("top");
-    
+
     var svg = lhs_target.append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
@@ -477,14 +477,14 @@ RB.crusher.ui.action = (function(action) {
     svg.selectAll(".label")
         .data(data)
       .enter().append("text")
-        .attr("x", function(d) { return d.value < 0 ? 
+        .attr("x", function(d) { return d.value < 0 ?
           x(d.value) - 35:
-          x(d.value) + 35; 
+          x(d.value) + 35;
         })
         .attr("style", function(d) { return d.value < 0 ? "text-anchor:start;dominant-baseline: middle;font-size:.9em" : "text-anchor:end;dominant-baseline: middle;font-size:.9em"; })
         .attr("y", function(d) { return y(d.name) + y.rangeBand()/2 + 1; })
-        .text(function(d) { 
-          var v = d3.format("%")(d.value); 
+        .text(function(d) {
+          var v = d3.format("%")(d.value);
           var x = (d.value > 0) ?  "↑" : "↓"
 
 
@@ -504,7 +504,7 @@ RB.crusher.ui.action = (function(action) {
         .attr("x1", x(0))
         .attr("x2", x(0))
         .attr("y2", height);
-    
+
 
 
   }
@@ -517,7 +517,7 @@ RB.crusher.ui.action = (function(action) {
       .style("margin-left","-15px")
       .style("margin-right","-15px")
       .datum(function(d){
-        
+
         var binflection = function(x) { return x.time_bucket <= d.before_and_after[0].inflection.time_bucket},
           ainflection = function(x) {return x.time_bucket <= d.before_and_after[1].inflection.time_bucket};
 
@@ -530,13 +530,13 @@ RB.crusher.ui.action = (function(action) {
         var nbefore = before_cat.map(function(x){
           return {
             key:x.key,
-            values:x.values.filter(function(x) {return !binflection(x)}) 
+            values:x.values.filter(function(x) {return !binflection(x)})
           }
         })
         var nafter = after_cat.map(function(x){
           return {
             key:x.key,
-            values:x.values.filter(function(x) {return !ainflection(x)}) 
+            values:x.values.filter(function(x) {return !ainflection(x)})
           }
         })
 
@@ -570,14 +570,14 @@ RB.crusher.ui.action = (function(action) {
         },{})
 
         var category_change = Object.keys(category_diff).map(function(x){
-          return {"name":x,"value": category_diff[x]} 
+          return {"name":x,"value": category_diff[x]}
         })
 
-        
+
 
         // domain
-        var before_bucket = d.before_and_after[0].inflection.time_bucket 
-        var after_bucket = d.before_and_after[1].inflection.time_bucket 
+        var before_bucket = d.before_and_after[0].inflection.time_bucket
+        var after_bucket = d.before_and_after[1].inflection.time_bucket
 
         var before_domains = d.before_and_after[0].domains
         var after_domains = d.before_and_after[1].domains
@@ -647,7 +647,7 @@ RB.crusher.ui.action = (function(action) {
           }
         }).sort(function(p,c) {return c.value - p.value})
 
-        
+
         var terms = d3.max(Object.keys(non_intent_domains).map(function(x) {return non_intent_domains[x]}))
 
         var idf = {}
@@ -741,11 +741,11 @@ RB.crusher.ui.action = (function(action) {
 
     var y = d3.scale.ordinal()
         .rangeRoundBands([0, height], .2);
-    
+
     var xAxis = d3.svg.axis()
         .scale(x)
         .orient("top");
-    
+
     var svg = lhs_target.append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
@@ -775,7 +775,7 @@ RB.crusher.ui.action = (function(action) {
           var domains = this.parentElement.parentElement.parentElement.__data__.domains
           var data = domains.filter(function(y){return y.key == z.name})[0].values
             .map(function(x) {
-              x.count = x.values + 1 
+              x.count = x.values + 1
               x.domain = x.key
               x.category_name = z.name
               x.parent_category_name = z.name
@@ -798,14 +798,14 @@ RB.crusher.ui.action = (function(action) {
     svg.selectAll(".label")
         .data(data)
       .enter().append("text")
-        .attr("x", function(d) { return d.value < 0 ? 
+        .attr("x", function(d) { return d.value < 0 ?
           x(d.value) - 35:
-          x(d.value) + 35; 
+          x(d.value) + 35;
         })
         .attr("style", function(d) { return d.value < 0 ? "text-anchor:start;dominant-baseline: middle;font-size:.9em" : "text-anchor:end;dominant-baseline: middle;font-size:.9em"; })
         .attr("y", function(d) { return y(d.name) + y.rangeBand()/2 + 1; })
-        .text(function(d) { 
-          var v = d3.format("%")(d.value); 
+        .text(function(d) {
+          var v = d3.format("%")(d.value);
           var x = (d.value > 0) ?  "↑" : "↓"
 
 
@@ -825,7 +825,7 @@ RB.crusher.ui.action = (function(action) {
         .attr("x1", x(0))
         .attr("x2", x(0))
         .attr("y2", height);
-    
+
 
 
   }
@@ -889,16 +889,16 @@ RB.crusher.ui.action = (function(action) {
   action.build_behavior = function(wrap,transform){
 
    var wrapper = d3_splat(wrap,".before-wrapper","div",
-      function(d){ 
+      function(d){
         var data = d.before_and_after.map(transform)
         return data
       },
       function(x){ return x.key }
     ).classed("before-wrapper row",true)
-      .style("margin-left","-15px") 
-      .style("margin-top","-15px") 
+      .style("margin-left","-15px")
+      .style("margin-top","-15px")
 
-    
+
 
     /*
       Headers
@@ -948,7 +948,7 @@ RB.crusher.ui.action = (function(action) {
 
        d3.selectAll(".time").classed("hidden",true)
        d3.select(this.parentNode).select("text").classed("hidden",false)
-       
+
        d3.select(this.parentElement.parentElement).selectAll("rect").attr("opacity",".2")
        d3.select(this).attr("opacity","0")
 
@@ -964,9 +964,9 @@ RB.crusher.ui.action = (function(action) {
        var filtered = rhs_target.filter(function(d){ return d == parentNode.datum()})
        RB.rho.ui.buildBarTable(filtered,data,"asdf","domain",false,15,action.category_colors)
 
-    }   
+    }
 
-    
+
     action.behavior_paths(svg)
     action.behavior_labels(svg)
     action.behavior_inflection(svg)
@@ -989,12 +989,12 @@ RB.crusher.ui.action = (function(action) {
 
     d3_updateable(browser,".area","path")
       .attr("class", "area")
-      .attr("d", function(d) { 
+      .attr("d", function(d) {
         var parent = d3.select(this.parentNode.parentNode).datum()
-        
+
         var area = parent.area
         var orient = (parent.orientation == "left")
-        return area(d.values); 
+        return area(d.values);
       })
       .style("fill", function(d) { return action.category_colors(d.name); });
 
@@ -1010,38 +1010,38 @@ RB.crusher.ui.action = (function(action) {
         function(x){ return x.stacked },
         function(x){ return x.key }
       ).attr("class","label")
-      .datum(function(d) { 
+      .datum(function(d) {
         var parent = d3.select(this.parentNode.parentNode).datum()
         d.orient = parent.orientation == "left"
 
         return {
-          name: d.name, 
-          value: d.values[d.orient ? (d.values.length - 1) : 0 ], 
+          name: d.name,
+          value: d.values[d.orient ? (d.values.length - 1) : 0 ],
           percent_diff: d.percent_diff,
           orient: d.orient,
           leftOffset: parent.leftOffset
-        }; 
+        };
       })
-      .attr("transform", function(d) { 
+      .attr("transform", function(d) {
         var parent = d3.select(this.parentNode.parentNode).datum()
-        var y = parent.y 
+        var y = parent.y
         var width = parent.width
 
         var yPos = y(d.value.y0 + d.value.y / 2)
         var xPos = d.orient ? (width - parent.rightOffset + 5) : 0
 
-        return "translate(" + xPos + "," + yPos + ")"; 
+        return "translate(" + xPos + "," + yPos + ")";
       })
       .attr("x", function(d){ return d.orient ? 6: (d.leftOffset -6) })
       .attr("dy", ".35em")
       .attr("style", "font-size:.9em")
-      .attr("style", function(d){ 
-        return d.orient ? 
-          "text-anchor:start;font-size:.9em": 
+      .attr("style", function(d){
+        return d.orient ?
+          "text-anchor:start;font-size:.9em":
           "text-anchor:end;font-size:.9em"
       })
-      .text(function(d) { 
-          
+      .text(function(d) {
+
           var x = d3.format("%")(d.percent_diff)
           //x += (d.percent_diff > 0) ?  "↑" : "↓"
 
@@ -1050,8 +1050,8 @@ RB.crusher.ui.action = (function(action) {
 
           return result
       })
-      .attr("class",function(d){ 
-        return d.value.y < .03 ? "hidden" : "" 
+      .attr("class",function(d){
+        return d.value.y < .03 ? "hidden" : ""
       })
   }
 
@@ -1063,7 +1063,7 @@ RB.crusher.ui.action = (function(action) {
         .attr("transform", function(d) { return "translate(" + (d.x(d.inflection.date)) + "," + (-25) + ")"; })
           .attr("dy", ".35em")
           .style("text-anchor","middle")
-          .text(function(d) { 
+          .text(function(d) {
               return "Behavioral change"
           })
 
@@ -1082,7 +1082,7 @@ RB.crusher.ui.action = (function(action) {
           .attr("dy", ".35em")
           .style("text-anchor","start")
           .classed("time start",true)
-          .text(function(d) { 
+          .text(function(d) {
               var num = parseInt((now - d.inflection.date)/60/1000)
               var preposition = num > 0 ? "before" : "after"
               num = num > 0 ? num : -num
@@ -1116,7 +1116,7 @@ RB.crusher.ui.action = (function(action) {
 
     var topRow = svg.append("g")
 
-     
+
 
     var leftLine = labelWithDottedLine(svg)
       .width(function(d){return d.x(d.inflection.date) - d.leftOffset })
@@ -1132,7 +1132,7 @@ RB.crusher.ui.action = (function(action) {
       .x(function(d) {return d.x(d.inflection.date) })
       .classname("intent")
       .text(function(d){
-        return d.orientation == "left" ? "Intent" : "Typical behavior" 
+        return d.orientation == "left" ? "Intent" : "Typical behavior"
       })()
 
 
@@ -1162,7 +1162,7 @@ RB.crusher.ui.action = (function(action) {
         .text(function(d) { return "> 8 hours before visit" })
 
   }
-    
+
   action.behavior_hover = function(svg,mouseover) {
 
     var date_wrapper = d3_updateable(svg,'.date-wrapper',"g")
@@ -1179,8 +1179,8 @@ RB.crusher.ui.action = (function(action) {
         .attr("y", 0)
         .attr("fill","#fff")
         .attr("opacity",".2")
-        .attr("width", function(d){    
-            if ((d.y0 - d.y) > 0) return d.y0 - d.y 
+        .attr("width", function(d){
+            if ((d.y0 - d.y) > 0) return d.y0 - d.y
             return 0
         })
         .attr("height", function(d){
@@ -1204,7 +1204,7 @@ RB.crusher.ui.action = (function(action) {
           num = num > 0 ? num : -num
           return  num + " mins " + preposition
 
-        }) 
+        })
 
 
 
@@ -1212,4 +1212,4 @@ RB.crusher.ui.action = (function(action) {
 
   return action
 
-})(RB.crusher.ui.action || {})  
+})(RB.crusher.ui.action || {})

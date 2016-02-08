@@ -94,8 +94,80 @@ ul.vendors-list {
 
 ul.vendor-navigation-list {
   padding: 0;
+
   li {
     list-style-type: none;
     line-height: 28px;
+  }
+}
+
+
+section.vendors-list-table {
+  div.vendors-header-row {
+    // div {
+    //   -ms-transform: rotate(-60deg);
+    //   -webkit-transform: rotate(-60deg);
+    //   transform: rotate(-45deg);
+    //   transform-origin: 0% 50%;
+    //   -webkit-transform-origin: 0% 50%;
+    //   -ms-transform-origin: 0% 50%;
+    //   position: relative;
+    //   text-align: left;
+    //   top: 10px;
+    //   left: 30px;
+    // }
+
+    div.vendors-header-row div:first-child {
+      float: left;
+      left: 10px;
+      text-align: left;
+    }
+
+    div.vendor-metrics {
+      float: right;
+
+      div.vendor-metrics-header-item {
+        display: inline-block;
+        width: 35px;
+
+        span {
+          transform: rotate(-65deg);
+          display: block;
+          width: 140px;
+          text-align: left;
+        }
+      }
+    }
+  }
+
+  div.vendors-row {
+    border-top: solid 1px #eee;
+    line-height: 40px;
+
+    div.vendor-title {
+      font-weight: bold;
+      text-transform: capitalize;
+      display: inline-block;
+    }
+
+    div.vendor-domain-categories {
+      display: inline-block;
+      float: right;
+
+      div {
+        display: inline-block;
+        line-height: 40px;
+        width: 60px;
+        text-align: center;
+
+        width: 60px;
+        display: inline-block;
+        line-height: 40px;
+      }
+    }
+  }
+
+  div.vendors-row:first-child {
+    border-top: none;
   }
 }

@@ -281,8 +281,10 @@ RB.crusher.ui.action.behavior = (function(behavior,action,crusher) {
       .style("margin-right","-15px")
 
 
+      setTimeout(function() {
     crusher.ui.action.show_behavior(target)
     crusher.ui.action.show_timing(target)
+      },1)
 
 
     return data
