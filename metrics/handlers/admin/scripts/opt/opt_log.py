@@ -208,6 +208,12 @@ class OptLogHandler(tornado.web.RequestHandler):
     def log_changes(self, obj):
         # Pull out metric values
         values = obj["metric_values"]
+        
+        #divide epoch time by 1000
+        try:
+            obj["submit_time"] = int(obj["submit_time"]) / 1000
+        except Exception as e:
+            raise e
 
         # Try to insert the log data. If it succeeds, insert the values data
         if "filter_columns" in obj.keys():
