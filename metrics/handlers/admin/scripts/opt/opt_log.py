@@ -211,8 +211,6 @@ class OptLogHandler(tornado.web.RequestHandler):
         
         # Try to insert the log data. If it succeeds, insert the values data
         if "filter_columns" in obj.keys():
-            #divide time by 1000 if submit time in keys 
-            obj["submit_time"] = int(obj["submit_time"]) / 1000
             value_group_id = self.db.execute(INSERT_UPDATE % obj)
         else:
             value_group_id = self.db.execute(INSERT % obj)
