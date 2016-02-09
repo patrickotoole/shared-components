@@ -108,7 +108,7 @@ class VisitEventsHandler(BaseHandler, AnalyticsBase,VisitEventBase):
     def get_events(self, uid, source, kind):
         uids = uid.split(",")
         df = yield self.defer_get_visits(uids, source)
-
+        #import ipdb; ipdb.set_trace()
         if len(df) > 0:
             if kind == "domains":
                 df = df.groupby("domain").uid.nunique().reset_index()
@@ -124,6 +124,7 @@ class VisitEventsHandler(BaseHandler, AnalyticsBase,VisitEventBase):
             self.render("analysis/visit_urls.html", data=df)
         yield default, (data,)
 
+    @tornado.web.authenticated
     @tornado.web.asynchronous
     def get(self):
         formatted = self.get_argument("format", False)
@@ -132,7 +133,8 @@ class VisitEventsHandler(BaseHandler, AnalyticsBase,VisitEventBase):
         end_date = self.get_argument("end_date", "")
         date = self.get_argument("date", "")
         kind = self.get_argument("kind", "")
-        source = self.get_argument("source","")
+        #source = self.get_argument("source","")
+        source = self.current_advertiser_name
 
         date_clause = self.make_date_clause("date", date, start_date, end_date)
 
@@ -146,6 +148,7 @@ class VisitEventsHandler(BaseHandler, AnalyticsBase,VisitEventBase):
         else:
             self.get_content(pandas.DataFrame())
 
+    @tornado.web.authenticated
     @tornado.web.asynchronous
     def post(self):
         #print tornado.escape.json_decode(self.request.body)
@@ -159,7 +162,8 @@ class VisitEventsHandler(BaseHandler, AnalyticsBase,VisitEventBase):
         end_date = self.get_argument("end_date", "")
         date = self.get_argument("date", "")
         kind = self.get_argument("kind", "")
-        source = self.get_argument("source","")
+        #source = self.get_argument("source","")
+        source = self.current_advertiser_name
 
         date_clause = self.make_date_clause("date", date, start_date, end_date)
 

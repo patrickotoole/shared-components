@@ -154,7 +154,7 @@ class VisitDomainBase(object):
     @decorators.deferred
     def defer_get_domains(self, uids, date_clause, source=None):
         where = []
-        xx = self.paginate_get_w_in(uids, date_clause, source)
+        xx = self.paginate_get_w_in(uids, date_clause)
         df = pandas.DataFrame(xx)
 
         return df
@@ -190,11 +190,9 @@ class VisitDomainBase(object):
 
 
 
-    def paginate_get_w_in(self, uids, date_clause, source=None):
-        if source:
-            DOMAIN_SELECT = "select * from rockerbox.visitor_domains_2 where uid = ? and source = ?"
-        else:
-            DOMAIN_SELECT = "select * from rockerbox.visitor_domains_2 where uid = ?"
+    def paginate_get_w_in(self, uids, date_clause):
+        
+        DOMAIN_SELECT = "select * from rockerbox.visitor_domains_2 where uid = ?"
         statement = self.cassandra.prepare(DOMAIN_SELECT)
         def execute(data):
             bound = statement.bind(data)
@@ -202,10 +200,7 @@ class VisitDomainBase(object):
 
         logging.info("AXY")
 
-        if source:
-            prepped = [[u, source] for u in uids]
-        else:
-            prepped = [[u] for u in uids]
+        prepped = [[u] for u in uids]
 
         results, _ = FutureHelpers.future_queue(prepped,execute,simple_append,120,[],"DUMMY_VAR")
 
@@ -235,9 +230,9 @@ class VisitDomainsHandler(BaseHandler, AnalyticsBase,VisitDomainBase):
         self.query = QUERY
 
     @defer.inlineCallbacks
-    def get_domains(self, uid, date_clause, kind, source):
+    def get_domains(self, uid, date_clause, kind):
         uids = uid.split(",")
-        df = yield self.defer_get_domains(uids, date_clause, source)
+        df = yield self.defer_get_domains(uids, date_clause)
 
         if len(df) > 0:
             if kind == "domains":
@@ -261,7 +256,6 @@ class VisitDomainsHandler(BaseHandler, AnalyticsBase,VisitDomainBase):
         end_date = self.get_argument("end_date", "")
         date = self.get_argument("date", "")
         kind = self.get_argument("kind", "")
-        source = self.current_advertiser_name
 
         date_clause = self.make_date_clause("date", date, start_date, end_date)
 
@@ -269,8 +263,7 @@ class VisitDomainsHandler(BaseHandler, AnalyticsBase,VisitDomainBase):
             self.get_domains(
                 uid,
                 date_clause,
-                kind,
-                source
+                kind
             )
 
         else:
@@ -290,7 +283,6 @@ class VisitDomainsHandler(BaseHandler, AnalyticsBase,VisitDomainBase):
         end_date = self.get_argument("end_date", "")
         date = self.get_argument("date", "")
         kind = self.get_argument("kind", "")
-        source = self.current_advertiser_name
 
         date_clause = self.make_date_clause("date", date, start_date, end_date)
 
@@ -300,8 +292,7 @@ class VisitDomainsHandler(BaseHandler, AnalyticsBase,VisitDomainBase):
             self.get_domains(
                 uid,
                 date_clause,
-                kind,
-                source
+                kind
                 )
         
         else:
