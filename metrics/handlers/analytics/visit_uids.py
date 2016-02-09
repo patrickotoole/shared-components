@@ -73,7 +73,7 @@ class VisitUidsHandler(BaseHandler, AnalyticsBase):
             logging.info("Cassandra read timeout...")
             return []
 
-    def get_w_in_multiple(self,urls, date_clause):
+    def get_w_in_multiple(self, urls, date_clause, source):
         size = 1#min(100,len(urls))
         batch = len(urls) / size
         queries = []
@@ -81,7 +81,10 @@ class VisitUidsHandler(BaseHandler, AnalyticsBase):
             b = urls[i*batch:(i+1)*batch]
             where = 'where url IN {}'
             if date_clause:
-                where = where + " and {}".format(date_clause)
+                #where = where + " and {}".format(date_clause)
+                where = where + " and source = {} and {}".format(source, date_clause)
+            else:
+                where = where + " and source = {}".format(source)
             in_clause = self.make_in_clause(b)
             WHERE = where.format(in_clause)
             QUERY = self.query + WHERE 
@@ -110,13 +113,15 @@ class VisitUidsHandler(BaseHandler, AnalyticsBase):
         start_date = self.get_argument("start_date", "")
         end_date = self.get_argument("end_date", "")
         date = self.get_argument("date", "")
+        source = self.current_advertiser_name 
 
         date_clause = self.make_date_clause("timestamp", date, start_date, end_date)
 
         if formatted:
             self.get_uids(
                 url,
-                date_clause
+                date_clause,
+                source
             )
         else:
             self.get_content(pandas.DataFrame())
@@ -128,6 +133,7 @@ class VisitUidsHandler(BaseHandler, AnalyticsBase):
         start_date = self.get_argument("start_date", "")
         end_date = self.get_argument("end_date", "")
         date = self.get_argument("date", "")
+        source = self.current_advertiser_name
 
         date_clause = self.make_date_clause("timestamp", date, start_date, end_date)
 
@@ -137,7 +143,8 @@ class VisitUidsHandler(BaseHandler, AnalyticsBase):
         if formatted:
             self.get_uids(
                 url,
-                date_clause
+                date_clause,
+                source
             )
         else:
             self.get_content(pandas.DataFrame()) 

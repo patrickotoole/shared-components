@@ -64,11 +64,11 @@ class VisitUrlsHandler(BaseHandler):
     @tornado.web.asynchronous
     def get(self):
         formatted = self.get_argument("format", False)
-        source = self.get_argument("source", False)
 
         if formatted:
             self.get_urls(
-                self.get_arguments("source", [])
+                #self.get_arguments("source", [])
+                [self.current_advertiser_name]
             )
         else:
             self.get_content(pandas.DataFrame())
