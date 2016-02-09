@@ -152,7 +152,7 @@ class VisitDomainBase(object):
 
     
     @decorators.deferred
-    def defer_get_domains(self, uids, date_clause, source=None):
+    def defer_get_domains(self, uids, date_clause):
         where = []
         xx = self.paginate_get_w_in(uids, date_clause)
         df = pandas.DataFrame(xx)
