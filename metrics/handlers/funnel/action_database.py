@@ -231,32 +231,33 @@ class ActionDatabase(object):
                 cursor.execute(INSERT_ACTION_PATTERNS % pattern)
             action['action_id'] = action_id
 
-            #add to work queue to conduct backfill
-            import work_queue
-            import lib.cassandra_cache.run as cache
-            import pickle
-            import datetime
+            if zookeeper:
+                #add to work queue to conduct backfill
+                import work_queue
+                import lib.cassandra_cache.run as cache
+                import pickle
+                import datetime
 
-            #added to previous code from pattern search end point search_base
-            pattern = action["url_pattern"]
+                #added to previous code from pattern search end point search_base
+                pattern = action["url_pattern"]
 
-            today = datetime.datetime.now()
-            children = zookeeper.get_children("/active_pattern_cache")
-            child = action["advertiser"] + "=" + pattern[0].replace("/","|")
+                today = datetime.datetime.now()
+                children = zookeeper.get_children("/active_pattern_cache")
+                child = action["advertiser"] + "=" + pattern[0].replace("/","|")
 
-            if child in children:
-                pass
-            else:
-                self.zookeeper.ensure_path("/active_pattern_cache/" + child)
+                if child in children:
+                    pass
+                else:
+                    self.zookeeper.ensure_path("/active_pattern_cache/" + child)
 
-                for i in range(0,21):
-                    delta = datetime.timedelta(days=i)
-                    _cache_date = datetime.datetime.strftime(today - delta,"%Y-%m-%d")
-                    work = pickle.dumps((
-                            cache.run_backfill,
-                            [action["advertiser"],pattern[0],_cache_date,_cache_date + " backfill"]
-                        ))
-                    work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,i)
+                    for i in range(0,21):
+                        delta = datetime.timedelta(days=i)
+                        _cache_date = datetime.datetime.strftime(today - delta,"%Y-%m-%d")
+                        work = pickle.dumps((
+                                cache.run_backfill,
+                                [action["advertiser"],pattern[0],_cache_date,_cache_date + " backfill"]
+                            ))
+                        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,i)
 
             return action
         except Exception as e:
