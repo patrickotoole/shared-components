@@ -241,8 +241,8 @@ class ActionDatabase(object):
             pattern = action["url_pattern"]
 
             today = datetime.datetime.now()
-            children = self.zookeeper.get_children("/active_pattern_cache")
-            child = advertiser + "=" + pattern[0].replace("/","|")
+            children = zookeeper.get_children("/active_pattern_cache")
+            child = action["advertiser"] + "=" + pattern[0].replace("/","|")
 
             if child in children:
                 pass
@@ -254,7 +254,7 @@ class ActionDatabase(object):
                     _cache_date = datetime.datetime.strftime(today - delta,"%Y-%m-%d")
                     work = pickle.dumps((
                             cache.run_backfill,
-                            [advertiser,pattern[0],_cache_date,_cache_date + " backfill"]
+                            [action["advertiser"],pattern[0],_cache_date,_cache_date + " backfill"]
                         ))
                     work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,i)
 
