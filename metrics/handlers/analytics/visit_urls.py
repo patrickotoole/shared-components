@@ -67,7 +67,6 @@ class VisitUrlsHandler(BaseHandler):
 
         if formatted:
             self.get_urls(
-                #self.get_arguments("source", [])
                 [self.current_advertiser_name]
             )
         else:
