@@ -1,6 +1,7 @@
 import json
 import pandas
-from link.wrappers import APIRequestWrapper, APIResponseWrapper
+from link.wrappers import APIRequestWrapper
+from link.wrappers import APIResponseWrapper
 import requests
 from requests.auth import AuthBase
 
@@ -18,7 +19,6 @@ class CrusherAPIRequestWrapper(APIRequestWrapper):
         data = {"username":self.user,"password":self.password}
         auth_data = json.dumps(data)
         self._wrapped = requests.session()
-        #resp = requests.post("http://crusher.getrockerbox.com/login", data=auth_data, auth=None)
         auth_data = self.post("/login", data = auth_data, auth=None)
         _token = dict(auth_data.cookies)
         self._token = _token
@@ -30,6 +30,19 @@ class CrusherAPIRequestWrapper(APIRequestWrapper):
             self._token= self.authenticate().token
         return self._token
 
+    def switch_user(self, username):
+        user_perms = self.get("/account/permissions", cookies = self._token, auth=None)
+        users = user_perms.json["results"]["advertisers"]
+        advertiser_id = None
+        for u in users:
+            if u["pixel_source_name"] == username:
+                advertiser_id = u["external_advertiser_id"]
+        if advertiser_id:
+            data = {"advertiser_id": advertiser_id}
+            new_perm = self.post("/account/permissions", data = json.dumps(data), cookies = self._token, auth=None)
+            _token = new_perm.cookies
+            self._token = _token
+        return advertiser_id
 
 class CrusherAuth(AuthBase):
 
