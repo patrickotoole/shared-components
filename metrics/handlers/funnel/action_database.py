@@ -230,6 +230,34 @@ class ActionDatabase(object):
                 pattern = self.make_pattern_object(action_id,url)
                 cursor.execute(INSERT_ACTION_PATTERNS % pattern)
             action['action_id'] = action_id
+
+            #add to work queue to conduct backfill
+            import work_queue
+            import lib.cassandra_cache.run as cache
+            import pickle
+            import datetime
+
+            #added to previous code from pattern search end point search_base
+            pattern = action["url_pattern"]
+
+            today = datetime.datetime.now()
+            children = self.zookeeper.get_children("/active_pattern_cache")
+            child = advertiser + "=" + pattern[0].replace("/","|")
+
+            if child in children:
+                pass
+            else:
+                self.zookeeper.ensure_path("/active_pattern_cache/" + child)
+
+                for i in range(0,21):
+                    delta = datetime.timedelta(days=i)
+                    _cache_date = datetime.datetime.strftime(today - delta,"%Y-%m-%d")
+                    work = pickle.dumps((
+                            cache.run_backfill,
+                            [advertiser,pattern[0],_cache_date,_cache_date + " backfill"]
+                        ))
+                    work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,i)
+
             return action
         except Exception as e:
             next_auto = cursor.execute(GET_MAX_ACTION_PLUS_1)
