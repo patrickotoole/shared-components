@@ -73,7 +73,7 @@ class VisitUidsHandler(BaseHandler, AnalyticsBase):
             logging.info("Cassandra read timeout...")
             return []
 
-    def get_w_in_multiple(self,urls, date_clause):
+    def get_w_in_multiple(self, urls, date_clause):
         size = 1#min(100,len(urls))
         batch = len(urls) / size
         queries = []
@@ -82,6 +82,7 @@ class VisitUidsHandler(BaseHandler, AnalyticsBase):
             where = 'where url IN {}'
             if date_clause:
                 where = where + " and {}".format(date_clause)
+            
             in_clause = self.make_in_clause(b)
             WHERE = where.format(in_clause)
             QUERY = self.query + WHERE 
@@ -101,7 +102,8 @@ class VisitUidsHandler(BaseHandler, AnalyticsBase):
             queries.append(self.query + WHERE)
         
         return self.batch_execute(queries)
-
+    
+    @tornado.web.authenticated
     @tornado.web.asynchronous
     def get(self):
         formatted = self.get_argument("format", False)
@@ -120,6 +122,7 @@ class VisitUidsHandler(BaseHandler, AnalyticsBase):
         else:
             self.get_content(pandas.DataFrame())
 
+    @tornado.web.authenticated
     @tornado.web.asynchronous
     def post(self):
         formatted = self.get_argument("format", False)

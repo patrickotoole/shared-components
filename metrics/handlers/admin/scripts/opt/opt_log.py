@@ -208,7 +208,7 @@ class OptLogHandler(tornado.web.RequestHandler):
     def log_changes(self, obj):
         # Pull out metric values
         values = obj["metric_values"]
-
+        
         # Try to insert the log data. If it succeeds, insert the values data
         if "filter_columns" in obj.keys():
             value_group_id = self.db.execute(INSERT_UPDATE % obj)

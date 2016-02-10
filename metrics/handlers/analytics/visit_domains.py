@@ -191,7 +191,7 @@ class VisitDomainBase(object):
 
 
     def paginate_get_w_in(self, uids, date_clause):
-
+        
         DOMAIN_SELECT = "select * from rockerbox.visitor_domains_2 where uid = ?"
         statement = self.cassandra.prepare(DOMAIN_SELECT)
         def execute(data):
@@ -201,6 +201,7 @@ class VisitDomainBase(object):
         logging.info("AXY")
 
         prepped = [[u] for u in uids]
+
         results, _ = FutureHelpers.future_queue(prepped,execute,simple_append,120,[],"DUMMY_VAR")
 
         logging.info("ASDF")
@@ -246,6 +247,7 @@ class VisitDomainsHandler(BaseHandler, AnalyticsBase,VisitDomainBase):
             self.render("analysis/visit_urls.html", data=df)
         yield default, (data,)
 
+    @tornado.web.authenticated
     @tornado.web.asynchronous
     def get(self):
         formatted = self.get_argument("format", False)
@@ -266,7 +268,8 @@ class VisitDomainsHandler(BaseHandler, AnalyticsBase,VisitDomainBase):
 
         else:
             self.get_content(pandas.DataFrame())
-
+    
+    @tornado.web.authenticated
     @tornado.web.asynchronous
     def post(self):
         #print tornado.escape.json_decode(self.request.body)
