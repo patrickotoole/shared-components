@@ -119,7 +119,6 @@ class ServedEventsHandler(BaseHandler, AnalyticsBase, ServedEventBase):
         end_date = self.get_argument("end_date", "")
         date = self.get_argument("date", "")
         kind = self.get_argument("kind", "")
-        #source = self.get_argument("source","")
         source = self.current_advertiser_name
 
         date_clause = self.make_date_clause("date", date, start_date, end_date)
@@ -148,7 +147,6 @@ class ServedEventsHandler(BaseHandler, AnalyticsBase, ServedEventBase):
         end_date = self.get_argument("end_date", "")
         date = self.get_argument("date", "")
         kind = self.get_argument("kind", "")
-        #source = self.get_argument("source","")
         source = self.current_advertiser_name
 
         date_clause = self.make_date_clause("date", date, start_date, end_date)
