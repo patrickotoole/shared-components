@@ -154,7 +154,7 @@ class ActionDatabase(object):
         child = action["advertiser"] + "=" + pattern[0].replace("/","|")
 
         if child in children:
-            pass
+            logging.info("already exists")
         else:
             self.zookeeper.ensure_path("/active_pattern_cache/" + child)
 
