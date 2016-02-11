@@ -17,7 +17,6 @@ from lib.buffered_socket.domain import DomainLookup
 
 from streaming import BufferControl
 
-#_redis = redis.StrictRedis(host='162.243.123.240', port=6379, db=1)
 _redis = redis.StrictRedis(host='10.128.201.81', port=6379, db=1)
 
 served_buffer = [] 
