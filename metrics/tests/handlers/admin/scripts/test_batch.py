@@ -63,9 +63,9 @@ DOMAIN_LIST_PARAMS = ("domain_list", CONTENT, OWNER, TARGET_SEGMENT, TARGET_WIND
 INSERT_DOMAIN_REQUEST = INSERT_BATCH_REQUEST.format( *DOMAIN_LIST_PARAMS )
 
 # Initilization Steps
-CREATE_REQUEST_TABLE = "CREATE TABLE batch_request (id int NOT NULL AUTO_INCREMENT, type varchar(100) NOT NULL, content varchar(5000) NOT NULL, owner varchar(100) NOT NULL, target_segment varchar(100) NOT NULL, target_window int, expiration int NOT NULL, active int(1) NOT NULL, comment varchar(5000) NOT NULL, requested_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`))"
+CREATE_REQUEST_TABLE = "CREATE TABLE if not exists batch_request (id int NOT NULL AUTO_INCREMENT, type varchar(100) NOT NULL, content varchar(5000) NOT NULL, owner varchar(100) NOT NULL, target_segment varchar(100) NOT NULL, target_window int, expiration int NOT NULL, active int(1) NOT NULL, comment varchar(5000) NOT NULL, requested_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`))"
 
-CREATE_DOMAIN_LIST_TABLE = '''CREATE TABLE domain_list (
+CREATE_DOMAIN_LIST_TABLE = '''CREATE TABLE if not exists domain_list (
   id int(11) NOT NULL AUTO_INCREMENT,
   log varchar(100) DEFAULT NULL,
   pattern varchar(100) DEFAULT NULL,

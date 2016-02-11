@@ -6,10 +6,8 @@ VENDOR_QUERY = "select url_patterns, vendor from vendor_patterns where medium is
 
 json_obj = {"action_name": "","url_pattern": "", "action_type":"vendor", "operator":"or"}
 
-#INSERT_URL = "http://192.168.99.100:8888/crusher/funnel/action?format=json"
-INSERT_URL = "http://crusher.getrockerbox.com/crusher/funnel/action?format=json"
-#PATTERN_URL="http://192.168.99.100:8888/crusher/pattern_search/timeseries?search={}&num_days=3"
-PATTERN_URL = "http://crusher.getrockerbox.com/crusher/pattern_search/timeseries?search={}&num_days=7"
+INSERT_URL = "http://beta.crusher.getrockerbox.com/crusher/funnel/action?format=json"
+PATTERN_URL = "http://beta.crusher.getrockerbox.com/crusher/pattern_search/timeseries?search={}&num_days=7"
 
 def buildIter(AC,advertiser):
     def iter_vendors(series):
@@ -38,11 +36,32 @@ def buildIter(AC,advertiser):
 
 
 if __name__ == "__main__":
-    sql = lnk.dbs.rockerbox
-    vendors = sql.select_dataframe(VENDOR_QUERY)
-    advertisers = adc.get_all_advertisers()
-    for advertiser in advertisers:
-        AC = adc.ActionCache(advertiser[0], advertiser[1],sql)
+    from lib.report.utils.loggingutils import basicConfig
+    from lib.report.utils.options import define
+    from lib.report.utils.options import options
+    from lib.report.utils.options import parse_command_line
+
+    define("username",default=False)
+    define("password",default=False)
+
+    basicConfig(options={})
+    parse_command_line()
+
+    if not options.username:
+        sql = lnk.dbs.rockerbox
+        vendors = sql.select_dataframe(VENDOR_QUERY)
+        advertisers = adc.get_all_advertisers()
+        for advertiser in advertisers:
+            AC = adc.ActionCache(advertiser[0], advertiser[1],sql)
+            AC.auth()
+            logging.info("populating action table for vendors for advertiser %s" % advertiser)
+            vendors.T.apply(buildIter(AC,advertiser))
+    else:
+        sql = lnk.dbs.rockerbox
+        vendors = sql.select_dataframe(VENDOR_QUERY)
+        AC = adc.ActionCache(options.username, options.password,sql)
         AC.auth()
+        advertiser = options.username.replace("a_","")
         logging.info("populating action table for vendors for advertiser %s" % advertiser)
         vendors.T.apply(buildIter(AC,advertiser))
+

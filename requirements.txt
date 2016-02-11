@@ -26,3 +26,6 @@ boto
 py-pretty
 datadiff
 kazoo
+autobahn
+pykafka
+trollius
