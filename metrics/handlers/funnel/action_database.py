@@ -126,6 +126,47 @@ class ActionDatabase(object):
 
         return (to_add,to_remove)
 
+    def _insert_zookeeper_tree(self, zookeeper, action):
+        zk = zke.ZKEndpoint(zookeeper,tree_name=action["zookeeper_tree"])
+        for url in action["url_pattern"]:
+            updated_tree = zk.add_advertiser_pattern(action["advertiser"],url,zk.tree)
+        zk.set_tree()
+
+    def _insert_database(self, action, cursor):
+        cursor.execute(INSERT_ACTION % action)
+        action_id = cursor.lastrowid
+        for url in action["url_pattern"]:
+            pattern = self.make_pattern_object(action_id,url)
+            cursor.execute(INSERT_ACTION_PATTERNS % pattern)
+        action['action_id'] = action_id
+
+    def _insert_work_queue(self, action, zookeeper):
+        import work_queue
+        import lib.cassandra_cache.run as cache
+        import pickle
+        import datetime
+
+        #added to previous code from pattern search end point search_base
+        pattern = action["url_pattern"]
+
+        today = datetime.datetime.now()
+        children = zookeeper.get_children("/active_pattern_cache")
+        child = action["advertiser"] + "=" + pattern[0].replace("/","|")
+
+        if child in children:
+            logging.info("already exists")
+        else:
+            self.zookeeper.ensure_path("/active_pattern_cache/" + child)
+
+            for i in range(0,21):
+                delta = datetime.timedelta(days=i)
+                _cache_date = datetime.datetime.strftime(today - delta,"%Y-%m-%d")
+                work = pickle.dumps((
+                        cache.run_backfill,
+                        [action["advertiser"],pattern[0],_cache_date,_cache_date + " backfill"]
+                        ))
+                work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,i)
+
 
     @decorators.multi_commit_cursor
     def perform_update(self,body,zookeeper,cursor=None):
@@ -219,17 +260,12 @@ class ActionDatabase(object):
         action["zookeeper_tree"] = self.get_argument("zookeeper_tree","/kafka-filter/tree/visit_events_tree")
         #action["zookeeper_tree"] = self.get_argument("zookeeper_tree","for_play")
         try:
-            zk = zke.ZKEndpoint(zookeeper,tree_name=action["zookeeper_tree"])
-            for url in action["url_pattern"]:
-                updated_tree = zk.add_advertiser_pattern(action["advertiser"],url, zk.tree)
-                zk.set_tree()
+            self._insert_zookeeper_tree(zookeeper, action)
+            self._insert_database(action, cursor)
 
-            cursor.execute(INSERT_ACTION % action)
-            action_id = cursor.lastrowid
-            for url in action["url_pattern"]:
-                pattern = self.make_pattern_object(action_id,url)
-                cursor.execute(INSERT_ACTION_PATTERNS % pattern)
-            action['action_id'] = action_id
+            if zookeeper:
+                self._insert_work_queue(action,zookeeper)
+            
             return action
         except Exception as e:
             next_auto = cursor.execute(GET_MAX_ACTION_PLUS_1)
