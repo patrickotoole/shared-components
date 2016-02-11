@@ -26,13 +26,13 @@ class ActionCache:
     def auth(self):
         data = {"username":self.username,"password":self.password}
         auth_data = json.dumps(data)
-        resp = self.req.post("http://crusher.getrockerbox.com/login", data=auth_data)
+        resp = self.req.post("http://beta.crusher.getrockerbox.com/login", data=auth_data)
         self.cookie = dict(resp.cookies)
         logging.info("cookie received for advertiser  username: %s" % self.username)
         logging.info("cookie is %s" % self.cookie)
 
     def get_segments(self):
-        url = "http://crusher.getrockerbox.com/crusher/funnel/action?format=json"
+        url = "http://beta.crusher.getrockerbox.com/crusher/funnel/action?format=json"
         results = self.req.get(url,cookies=self.cookie)
         segments = []
         try:	
@@ -49,7 +49,7 @@ class ActionCache:
         df = pandas.DataFrame()
         try:
             logging.info("calling segment %s" % url_pattern[0])
-            url = "http://crusher.getrockerbox.com/crusher/pattern_search/timeseries?search=%s&num_days=2" % url_pattern[0]
+            url = "http://beta.crusher.getrockerbox.com/crusher/pattern_search/timeseries?search=%s&num_days=2" % url_pattern[0]
             results = self.req.get(url, cookies=self.cookie)
             df = pandas.DataFrame()
             resultsAsJson = results.json()['domains']
@@ -138,7 +138,7 @@ def run_advertiser_segment(user, password, conn, segment_name):
 	segs.auth()
 	s = segs.get_segments()
 	advertiser_name = str(user.replace("a_",""))
-	url = "http://crusher.getrockerbox.com/crusher/funnel/action?format=json"
+	url = "http://beta.crusher.getrockerbox.com/crusher/funnel/action?format=json"
 	results = segs.req.get(url,cookies=segs.cookie)
 	segment = []
 	try:
