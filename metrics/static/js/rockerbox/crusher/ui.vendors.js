@@ -65,14 +65,6 @@ RB.crusher.ui.vendors = (function(vendors) {
         .classed('vendor-title', true)
         .text('Vendor')
 
-      d3_splat(vendor_header, '.vendor-category-header-item', 'div', table_categories, function(x) {
-        return x.key;
-      })
-        .classed('vendor-category-header-item', true)
-        .html(function(x) {
-          return '<span>' + x.key + '</span>';
-        })
-
       var timeseries_header = d3_updateable(vendor_header, '.timeseries-header', 'div')
         .classed('timeseries-header', true)
 
@@ -82,6 +74,14 @@ RB.crusher.ui.vendors = (function(vendors) {
         .classed('timeseries-header-item', true)
         .text(function(x) {
           return x;
+        })
+
+      d3_splat(vendor_header, '.vendor-category-header-item', 'div', table_categories, function(x) {
+        return x.key;
+      })
+        .classed('vendor-category-header-item', true)
+        .html(function(x) {
+          return '<span>' + x.key + '</span>';
         })
     }
 
@@ -129,8 +129,27 @@ RB.crusher.ui.vendors = (function(vendors) {
               .classed('vendors-row vendors-row-' + unhandled_vendor.action_id, true);
 
             d3_updateable(row, '.vendor-' + unhandled_vendor.action_id + '-column-title', 'div')
+              .style('cursor', 'pointer')
               .classed('vendor-column', true)
-              .text(unhandled_vendor.action_name);
+              .text(unhandled_vendor.action_name)
+              .on('click', function() {
+                // debugger;
+                var xx = RB.crusher.controller.states["/crusher/action/existing"]
+                RB.routes.navigation.forward(xx)
+                RB.routes.navigation.forward(unhandled_vendor);
+              });
+
+            d3_updateable(row, '.vendor-' + unhandled_vendor.action_id + '-column-uniques', 'div')
+              .classed('vendor-column', true)
+              .text(unhandled_vendor.uniques);
+
+            d3_updateable(row, '.vendor-' + unhandled_vendor.action_id + '-column-views', 'div')
+              .classed('vendor-column', true)
+              .text(unhandled_vendor.views);
+
+            d3_updateable(row, '.vendor-' + unhandled_vendor.action_id + '-column-visits', 'div')
+              .classed('vendor-column', true)
+              .text(unhandled_vendor.visits);
 
             d3_splat(row, '.vendor-column-item', 'div', table_categories, function(x) {
               return x.key;
@@ -156,18 +175,6 @@ RB.crusher.ui.vendors = (function(vendors) {
                 // return vendor_domain_percentages[x.key];
                 // return '<span>' + x.key + '</span>';
               })
-
-              d3_updateable(row, '.vendor-' + unhandled_vendor.action_id + '-column-uniques', 'div')
-                .classed('vendor-column', true)
-                .text(unhandled_vendor.uniques);
-
-              d3_updateable(row, '.vendor-' + unhandled_vendor.action_id + '-column-views', 'div')
-                .classed('vendor-column', true)
-                .text(unhandled_vendor.views);
-
-              d3_updateable(row, '.vendor-' + unhandled_vendor.action_id + '-column-visits', 'div')
-                .classed('vendor-column', true)
-                .text(unhandled_vendor.visits);
 
             // Remove this vendor from the queue and move on
             vendors.unhandled.splice(0,1);
