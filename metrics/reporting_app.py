@@ -26,7 +26,8 @@ define("port", default=8081, help="run on the given port", type=int)
 
 db = lnk.dbs.mysql
 hive = Hive().hive
-_redis = redis.StrictRedis(host='162.243.123.240', port=6379, db=1)
+#_redis = redis.StrictRedis(host='162.243.123.240', port=6379, db=1)
+_redis = redis.StrictRedis(host='10.128.201.81', port=6379, db=1)
 
 app = tornado.web.Application([
     (r'/reporting.*',ReportingHandler, dict(db=db,api=None,hive=hive))

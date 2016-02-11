@@ -113,7 +113,7 @@ class BufferedSocketFactory(protocol.Factory):
 
 
 socket_buffer = []
-redis_server = redis.StrictRedis(host='162.243.123.240', port=6379, db=0)
-redis_server_2 = redis.StrictRedis(host='108.60.150.34', port=6379, db=0)
- 
+#redis_server = redis.StrictRedis(host='162.243.123.240', port=6379, db=0)
+#redis_server_2 = redis.StrictRedis(host='108.60.150.34', port=6379, db=0)
+redis_server = redis.StrictRedis(host='10.128.201.81', port=6379, db=0) 
 
