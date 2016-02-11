@@ -1,3 +1,13 @@
+/*
+  Table view
+*/
+
+section.vendors-list-card {
+  .vendor-loading {
+    margin-top: 20px;
+  }
+}
+
 section.vendors-list-table {
   div.vendors-header-row {
     height: 170px;
@@ -61,6 +71,109 @@ section.vendors-list-table {
       width: 50px;
       line-height: 50px;
       text-align: center;
+    }
+  }
+}
+
+/*
+  Expanded View
+*/
+
+ul.vendors-list {
+  padding: 0;
+  margin: 0;
+
+  > li.vendors-list-item:first-child {
+    border-top: none;
+    padding-top: 0;
+  }
+
+  > li.vendors-list-item {
+    list-style-type: none;
+    border-top: solid 1px #eee;
+    padding: 15px 0;
+    overflow: auto;
+    min-height: 110px;
+
+    div {
+      padding: 0 !important;
+    }
+
+    div.vendor-name-column {
+      div.vendor-name {
+        margin-bottom: 10px;
+
+        h2 {
+          margin: 0;
+          text-transform: capitalize;
+          font-weight: bold;
+          font-size: 18px;
+          line-height: 22px;
+          color: #5A5A5A;
+        }
+      }
+
+      ul.vendor-navigation-list {
+        padding: 0;
+
+        li {
+          list-style-type: none;
+          line-height: 28px;
+        }
+      }
+    }
+
+    h3 {
+      margin: 0;
+      font-weight: bold;
+      font-size: 14px;
+      line-height: 22px;
+      text-transform: uppercase;
+      color: #888;
+      letter-spacing: .05em;
+    }
+
+    h4 {
+      color: #5A5A5A;
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    p.chart-description {
+      margin-bottom: 10px;
+      padding-top: 13px;
+    }
+
+    .vendor-domains-pie {
+      position: relative;
+      left: 50%;
+      margin-left: -110px;
+    }
+
+    .coming-soon-box {
+      border: dashed 2px #CCC;
+      text-align: center;
+      line-height: 220px;
+      min-width: 220px;
+      max-width: 330px;
+      margin-top: 12px;
+      font-weight: bold;
+      font-size: 14px;
+      color: #CCC;
+    }
+
+    .vendor-loading {
+      line-height: 200px;
+      text-align: center;
+
+      img {
+        width: 16px;
+        margin-right: 5px;
+      }
+    }
+
+    .vendor-views-column svg text {
+      fill: #000 !important;
     }
   }
 }

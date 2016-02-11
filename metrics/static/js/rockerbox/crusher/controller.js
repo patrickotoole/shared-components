@@ -175,15 +175,20 @@ RB.crusher.controller = (function(controller) {
           .trigger()
 
     },
-    "vendors": function(obj) {
+    "vendors": function(obj, not_table) {
       d3.select('body').classed('hide-select', true);
 
       var funnelRow = build_header({
-        'id': 'vendors',
-        'name': 'Vendor Analysis'
+        'id': 'vendors-' + (not_table ? 'expanded' : 'table'),
+        'name': 'Vendor Analysis',
       });
+      funnelRow.exit().remove();
 
-      RB.crusher.ui.vendors.show(funnelRow);
+      if(not_table) {
+        RB.crusher.ui.vendors.show(funnelRow, obj);
+      } else {
+        RB.crusher.ui.vendors.table(funnelRow, obj);
+      }
     },
     "vendors/table": function(obj) {
       d3.select('body').classed('hide-select', true);
@@ -884,12 +889,6 @@ RB.crusher.controller = (function(controller) {
       "values_key": "action_name"
     },
     {
-      "name":"Vendors",
-      "push_state": "/crusher/vendors/table",
-      "class": "glyphicon glyphicon-th-large",
-      "values_key": "action_name"
-    },
-    {
       "name":"Segments",
       "push_state": "/crusher/action/existing",
       "class": "glyphicon glyphicon-signal",
@@ -993,7 +992,7 @@ RB.crusher.controller = (function(controller) {
           "push_state": "/crusher/vendors"
         },
         {
-          "name": "Vendors",
+          "name": "Vendors Table",
           "push_state": "/crusher/vendors/table"
         }],
       "home": [{

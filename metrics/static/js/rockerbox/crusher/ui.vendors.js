@@ -9,7 +9,14 @@ RB.crusher.ui.vendors = (function(vendors) {
   var pubsub = crusher.pubsub
   var comma_formatter = d3.format(',');
 
-  vendors.table = function(funnelRow) {
+  vendors.table = function(funnelRow, obj) {
+    var controls = d3_updateable(funnelRow,'.page-header-controls','div')
+      .classed('page-header-controls', true)
+      .text('View expanded')
+      .on('click', function() {
+        RB.crusher.controller.initializers.vendors(obj,true)
+      });
+
     var vendors_list_card = d3_updateable(funnelRow, '.vendors-list-card', 'section')
       .classed('vendors-list-card bar series col-md-12', true);
 
@@ -50,16 +57,6 @@ RB.crusher.ui.vendors = (function(vendors) {
       table_categories = d3.entries(vendor_categories).sort(function(x, y) {
         return y.value - x.value;
       }).slice(0,13);
-
-      // table_categories = table_categories.concat({
-      //   key: 'Uniques'
-      // },
-      // {
-      //   key: 'Views'
-      // },
-      // {
-      //   key: 'Visits'
-      // })
 
       vendor_header = d3_updateable(vendors_list_table, '.vendors-header-row', 'div')
         .classed('vendors-header-row', true);
@@ -181,7 +178,7 @@ RB.crusher.ui.vendors = (function(vendors) {
             }
           })
             .data(unhandled_vendor)
-            .unpersist(true)
+            .unpersist(false)
             .trigger();
       }, 1);
     }
@@ -208,7 +205,14 @@ RB.crusher.ui.vendors = (function(vendors) {
       .trigger();
   }
 
-  vendors.show = function(funnelRow) {
+  vendors.show = function(funnelRow, obj) {
+    var controls = d3_updateable(funnelRow,'.page-header-controls','div')
+      .classed('page-header-controls', true)
+      .text('View as table')
+      .on('click', function() {
+        RB.crusher.controller.initializers.vendors(obj,false)
+      });
+
     funnelRow = funnelRow;
     var vendors_list_card = d3_updateable(funnelRow, '.vendors-list-card', 'section')
       .classed('vendors-list-card bar series col-md-12', true);
