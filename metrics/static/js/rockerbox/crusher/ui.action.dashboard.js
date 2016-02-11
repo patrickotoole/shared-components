@@ -153,7 +153,9 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
           .classed("row",function(x){
             if(pie_iterator < 3) {
               // x.domains = x.values;
-              x.domains = ocached_data.domains[pie_iterator].values;
+              if(typeof ocached_data.domains[pie_iterator] !== typeof undefined) {
+                x.domains = ocached_data.domains[pie_iterator].values;
+              }
 
             }
             x.parentCategoryData = ddd
