@@ -1,173 +1,66 @@
-ul.vendors-list {
-  padding: 0;
-  margin: 0;
-
-  .vendor-loading {
-    line-height: 200px;
-    text-align: center;
-  }
-
-  .coming-soon-box {
-    border: dashed 2px #CCC;
-    text-align: center;
-    line-height: 220px;
-    min-width: 220px;
-    max-width: 330px;
-    margin-top: 12px;
-    font-weight: bold;
-    font-size: 14px;
-    color: #CCC;
-  }
-
-  .vendor-domains-pie {
-    position: relative;
-    left: 50%;
-    margin-left: -110px;
-  }
-
-  .vendor-views-column svg {
-    text {
-      fill: #000 !important;
-    }
-  }
-
-  > li:first-child {
-    border-top: none;
-    padding-top: 0;
-  }
-
-  > li {
-    list-style-type: none;
-    border-top: solid 1px #eee;
-    padding: 15px 0;
-    overflow: auto;
-    min-height: 110px;
-
-    div {
-      padding: 0 !important;
-    }
-
-    h2 {
-      margin: 0;
-      text-transform: capitalize;
-      font-weight: bold;
-      font-size: 18px;
-      line-height: 22px;
-      color: #5A5A5A;
-    }
-
-    h3 {
-      margin: 0;
-      font-weight: bold;
-      font-size: 14px;
-      line-height: 22px;
-      text-transform: uppercase;
-      color: #888;
-      letter-spacing: .05em;
-    }
-
-    h4 {
-      color: #5A5A5A;
-      font-size: 24px;
-      font-weight:bold;
-    }
-
-    p.chart-description {
-      margin-bottom: 10px;
-      padding-top: 13px;
-    }
-  }
-
-  div.vendor-name-column {
-    padding: 0;
-
-    div.vendor-name {
-      padding: 0;
-      margin-bottom: 10px;
-    }
-
-    div.vendor-expand {
-      padding: 0;
-    }
-  }
-}
-
-ul.vendor-navigation-list {
-  padding: 0;
-
-  li {
-    list-style-type: none;
-    line-height: 28px;
-  }
-}
-
-
 section.vendors-list-table {
   div.vendors-header-row {
-    // div {
-    //   -ms-transform: rotate(-60deg);
-    //   -webkit-transform: rotate(-60deg);
-    //   transform: rotate(-45deg);
-    //   transform-origin: 0% 50%;
-    //   -webkit-transform-origin: 0% 50%;
-    //   -ms-transform-origin: 0% 50%;
-    //   position: relative;
-    //   text-align: left;
-    //   top: 10px;
-    //   left: 30px;
-    // }
+    height: 170px;
 
-    div.vendors-header-row div:first-child {
-      float: left;
-      left: 10px;
+    div.vendor-title {
+      display: inline-block;
+      font-weight: bold;
+      width: 100px;
+    }
+
+    div.timeseries-header {
+      display: inline-block;
+      margin-left: 20px;
+
+      div.timeseries-header-item {
+        display: inline-block;
+        width: 80px;
+        font-weight: bold;
+        text-align: center;
+      }
+    }
+  }
+
+  div.vendor-category-header-item {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 150px;
+
+    span {
+      transform: rotate(-65deg);
+      display: block;
+      position: absolute;
+      bottom: 70px;
+      width: 160px;
+      font-weight: bold;
+    }
+  }
+
+  .vendors-row {
+    div.vendor-column {
+      display: inline-block;
+      text-align: center;
+      text-transform: capitalize;
+    }
+
+    div.vendor-column:first-child {
+      width:120px;
       text-align: left;
     }
 
-    div.vendor-metrics {
-      float: right;
-
-      div.vendor-metrics-header-item {
-        display: inline-block;
-        width: 35px;
-
-        span {
-          transform: rotate(-65deg);
-          display: block;
-          width: 140px;
-          text-align: left;
-        }
-      }
-    }
-  }
-
-  div.vendors-row {
-    border-top: solid 1px #eee;
-    line-height: 40px;
-
-    div.vendor-title {
-      font-weight: bold;
-      text-transform: capitalize;
+    div.vendor-column:not(:first-child) {
       display: inline-block;
+      width: 80px;
+      line-height: 50px;
     }
 
-    div.vendor-domain-categories {
+    .vendor-column-item {
+      position: relative;
       display: inline-block;
-      float: right;
-
-      div {
-        display: inline-block;
-        line-height: 40px;
-        width: 60px;
-        text-align: center;
-
-        width: 60px;
-        display: inline-block;
-        line-height: 40px;
-      }
+      width: 50px;
+      line-height: 50px;
+      text-align: center;
     }
-  }
-
-  div.vendors-row:first-child {
-    border-top: none;
   }
 }

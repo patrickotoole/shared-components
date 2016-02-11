@@ -19,150 +19,190 @@ RB.crusher.ui.vendors = (function(vendors) {
     var vendor_loading = d3_updateable(vendors_list_card, '.vendor-loading', 'div')
       .classed('vendor-loading loading-icon col-md-12', true)
       .style('text-align', 'center')
-      .html('<img src="/static/img/general/logo-small.gif" alt="Logo loader" width="16px"> Loading vendor data...')
+      .html('<img src="/static/img/general/logo-small.gif" alt="Logo loader" width="16px"> Loading vendor data...');
 
-    var unhandled_vendors,
-        vendor_header;
+    var table_categories,
+        table_data;
 
-    /*
-      Publisher for adding a row
-    */
+    var vendors = {
+      'all': [],
+      'unhandled': []
+    };
+
     pubsub.publisher("vendors-add-row")
       .producer(function(cb) {
-        var next_unhandled_vendor = unhandled_vendors[0];
+        var next_unhandled_vendor = vendors.unhandled[0];
         render_row(next_unhandled_vendor);
         cb({})
       })
 
-    var render_row = function(vendor) {
-      unhandled_vendors.splice(0,1);
+    var render_header = function(unhandled_vendor) {
+      var vendor_categories = {};
+      // debugger;
+      unhandled_vendor.domains.forEach(function(domain) {
+        if(typeof vendor_categories[domain.parent_category_name] === typeof undefined) {
+          vendor_categories[domain.parent_category_name] = 0;
+        }
 
-      if(unhandled_vendors.length > 0) {
-        setTimeout(function() {
-          // debugger;
+        vendor_categories[domain.parent_category_name] += domain.count;
+      });
 
+      table_categories = d3.entries(vendor_categories).sort(function(x, y) {
+        return y.value - x.value;
+      }).slice(0,13);
 
-          pubsub.subscriber("vendor-timeseries-domains",["actionTimeseriesOnly", "pattern_domains_cached"])
-            .run(function(vendor_raw_data, domains_data) {
+      // table_categories = table_categories.concat({
+      //   key: 'Uniques'
+      // },
+      // {
+      //   key: 'Views'
+      // },
+      // {
+      //   key: 'Visits'
+      // })
 
-              var vendor_data = {
-                uniques: 0,
-                views: 0,
-                visits: 0,
-                domains: []
-              }
+      vendor_header = d3_updateable(vendors_list_table, '.vendors-header-row', 'div')
+        .classed('vendors-header-row', true);
 
-              var category_data = {};
-              vendor.domains.forEach(function(domain) {
-                if(typeof category_data[domain.parent_category_name] === typeof undefined) {
-                  category_data[domain.parent_category_name] = domain.count;
-                } else {
-                  category_data[domain.parent_category_name] += domain.count;
-                }
-              })
+      var header_title = d3_updateable(vendor_header, '.vendor-title', 'div')
+        .classed('vendor-title', true)
+        .text('Vendor')
 
-              // Create the header titles while we're here anyway
-              Object.keys(category_data).forEach(function(x, y) {
-                vendor_data.domains.push({
-                  category: x,
-                  count: category_data[x]
-                });
-              });
+      d3_splat(vendor_header, '.vendor-category-header-item', 'div', table_categories, function(x) {
+        return x.key;
+      })
+        .classed('vendor-category-header-item', true)
+        .html(function(x) {
+          return '<span>' + x.key + '</span>';
+        })
 
+      var timeseries_header = d3_updateable(vendor_header, '.timeseries-header', 'div')
+        .classed('timeseries-header', true)
 
-
-
-
-
-              if(vendor_header == null) {
-                  vendor_header = d3_updateable(vendors_list_table, '.vendors-header-row', 'div')
-                    .classed('vendors-header-row', true)
-                    .style('text-align', 'right')
-                    .style('height', '150px');
-
-                  var header_title = d3_updateable(vendor_header, '.vendor-title', 'div')
-                    .classed('vendor-title', true)
-                    .text('Vendor')
-
-                  var header_metrics = d3_updateable(vendor_header, '.vendor-metrics', 'div')
-                    .classed('vendor-metrics', true)
-
-
-                var metrics_header_splat = d3_splat(header_metrics, '.vendor-metrics-header-item', 'div', vendor_data.domains, function(x) {
-                  return x.category;
-                })
-                  .classed('vendor-metrics-header-item', true)
-                  .html(function(x) {
-                    return '<span>' + x.category + '</span>';
-                  })
-
-                // console.log('!!!! THIS', category_data)
-              }
-
-
-
-
-
-
-              console.log(vendor_data);
-
-              JSON.parse(JSON.stringify(vendor_raw_data.visits_data)).forEach(function(x) {
-                vendor_data.uniques += x.uniques;
-                vendor_data.views += x.views;
-                vendor_data.visits += x.visits;
-              });
-              console.log(vendor_data);
-
-              // JSON.parse(JSON.stringify(vendor_raw_data.visits_data)).foreach(function(x) {
-              //   debugger;
-              //   vendor_data.uniques += x.uniques;
-              //   vendor_data.views += x.views;
-              //   vendor_data.visits += x.visits;
-              // });
-
-              var vendor_row = d3_updateable(vendors_list_table, '.vendors-row-' + vendor.action_id, 'div')
-                .classed('vendors-row vendors-row-'+vendor.action_id, true)
-
-              var vendor_title = d3_updateable(vendor_row, '.vendor-title', 'div')
-                .classed('vendor-title', true)
-                .text(vendor.action_name);
-
-              var vendor_domain_categories = d3_updateable(vendor_row, '.vendor-domain-categories', 'div')
-                .classed('vendor-domain-categories', true)
-
-              var visit_data_splat = d3_splat(vendor_domain_categories, '.vendors-list-item', 'div', ['uniques', 'views', 'visits'], function(x) {
-                return x;
-              })
-                .text(function(x) {
-                  return comma_formatter(vendor_data[x]);
-                })
-
-              // var vendor_domain_category = d3_updateable(vendor_domain_categories, '.vendor-domain-category', 'div')
-              //   .classed('vendor-domain-category', true)
-              //   .text('2')
-              // debugger;
-              pubsub.publishers['vendors-add-row']();
-            })
-            .data(vendor)
-            .unpersist(true)
-            .trigger();
-
-        }, 1)
-      } else {
-        vendor_loading.remove()
-      }
+      d3_splat(timeseries_header, '.timeseries-header-item', 'div', ['Uniques', 'Views', 'Visits'], function(x) {
+        return x;
+      })
+        .classed('timeseries-header-item', true)
+        .text(function(x) {
+          return x;
+        })
     }
 
-    /*
-      Fetch list of vendors
-    */
+    var render_row = function(unhandled_vendor) {
+      setTimeout(function() {
+        pubsub.subscriber("vendor-timeseries-domains",["actionTimeseriesOnly", "pattern_domains_cached"])
+          .run(function(vendor_raw_data, domains_data) {
+            // Check if we first have to render a header
+            if(vendors['all'].length === vendors['unhandled'].length) {
+              render_header(unhandled_vendor)
+            }
+
+            unhandled_vendor.timeseries_data.forEach(function(data_point) {
+              unhandled_vendor.uniques = (
+                (typeof unhandled_vendor.uniques === typeof undefined) ?
+                  (data_point.uniques) :
+                  (unhandled_vendor.uniques + data_point.uniques)
+              );
+              unhandled_vendor.visits = (
+                (typeof unhandled_vendor.visits === typeof undefined) ?
+                  (data_point.visits) :
+                  (unhandled_vendor.visits + data_point.visits)
+              );
+              unhandled_vendor.views = (
+                (typeof unhandled_vendor.views === typeof undefined) ?
+                  (data_point.views) :
+                  (unhandled_vendor.views + data_point.views)
+              );
+            });
+
+            var vendor_domain_percentages = {};
+            unhandled_vendor.total_domains = 0;
+            unhandled_vendor.domains.forEach(function(domain) {
+              if(typeof vendor_domain_percentages[domain.parent_category_name] === typeof undefined) {
+                vendor_domain_percentages[domain.parent_category_name] = 0;
+              }
+
+              vendor_domain_percentages[domain.parent_category_name] += domain.count;
+              unhandled_vendor.total_domains += domain.count;
+            });
+
+            console.log('!!vendor_domain_percentages', vendor_domain_percentages);
+
+            var row = d3_updateable(vendors_list_table, '.vendors-row-' + unhandled_vendor.action_id, 'div')
+              .classed('vendors-row vendors-row-' + unhandled_vendor.action_id, true);
+
+            d3_updateable(row, '.vendor-' + unhandled_vendor.action_id + '-column-title', 'div')
+              .classed('vendor-column', true)
+              .text(unhandled_vendor.action_name);
+
+            d3_splat(row, '.vendor-column-item', 'div', table_categories, function(x) {
+              return x.key;
+            })
+              .style('background-color', function(x) {
+                if(typeof vendor_domain_percentages[x.key] !== typeof undefined) {
+                  var transparancy_ratio = Math.round((vendor_domain_percentages[x.key]/unhandled_vendor.total_domains) * 1000)/10;
+                } else {
+                  var transparancy_ratio = 0;
+                }
+
+                var color_ratio = d3.scale.log().domain([1,50]).range([0.05,0.8]);
+
+                return 'rgba(70,130,180,' + color_ratio(transparancy_ratio) + ')';
+              })
+              .classed('vendor-column-item', true)
+              .text(function(x) {
+                if(typeof vendor_domain_percentages[x.key] !== typeof undefined) {
+                  return Math.round((vendor_domain_percentages[x.key]/unhandled_vendor.total_domains) * 1000)/10 + '%';
+                } else {
+                  return '0%';
+                }
+                // return vendor_domain_percentages[x.key];
+                // return '<span>' + x.key + '</span>';
+              })
+
+              d3_updateable(row, '.vendor-' + unhandled_vendor.action_id + '-column-uniques', 'div')
+                .classed('vendor-column', true)
+                .text(unhandled_vendor.uniques);
+
+              d3_updateable(row, '.vendor-' + unhandled_vendor.action_id + '-column-views', 'div')
+                .classed('vendor-column', true)
+                .text(unhandled_vendor.views);
+
+              d3_updateable(row, '.vendor-' + unhandled_vendor.action_id + '-column-visits', 'div')
+                .classed('vendor-column', true)
+                .text(unhandled_vendor.visits);
+
+            // Remove this vendor from the queue and move on
+            vendors.unhandled.splice(0,1);
+            if(vendors.unhandled.length > 0) {
+              pubsub.publishers['vendors-add-row']();
+            } else {
+              vendor_loading.remove();
+            }
+          })
+            .data(unhandled_vendor)
+            .unpersist(true)
+            .trigger();
+      }, 1);
+    }
+
     pubsub.subscriber("vendors-data",["actions"])
       .run(function(segments) {
-        unhandled_vendors = segments.filter(function(x) {
+        var filtered_segments = segments.filter(function(x) {
           return (x.action_type === 'vendor');
         })
 
-        pubsub.publishers['vendors-add-row']();
+        // Save the filtered segments
+        vendors['all'] = filtered_segments;
+        vendors['unhandled'] = JSON.parse(JSON.stringify(filtered_segments));
+
+        // Initiate vendor processing, or show message in case no vendors were found
+        if(vendors.unhandled.length > 0) {
+          pubsub.publishers['vendors-add-row']();
+        } else {
+          // Show "no vendor data" message
+          console.log('No vendors were found');
+        }
       })
       .unpersist(true)
       .trigger();
