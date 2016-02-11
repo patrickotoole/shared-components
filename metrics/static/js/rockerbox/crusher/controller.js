@@ -7,49 +7,54 @@ RB.crusher.controller = (function(controller) {
 
   var crusher = RB.crusher
   var source = crusher.api.source
+  var pubsub = crusher.pubsub
+
 
   controller.init = function(type,data) {
-    crusher.subscribe.add_subscriber(["advertiser", "current_user"], function(advertiser_data, current_user) {
-      setTimeout(function() {
-        var user_type = document.cookie.split("user_type=")[1].split(";")[0];
-        switch(user_type) {
-          case 'rockerbox':
-            heap.identify({
-              handler: 'Rockerbox',
-              name: 'Rockerbox',
-              email: 'support@rockerbox.com'
-            });
+    pubsub.subscriber("advertiser-name-email",["advertiser", "current_user"])
+      .run(function(advertiser_data, current_user) {
+        setTimeout(function() {
+          var user_type = document.cookie.split("user_type=")[1].split(";")[0];
+          switch(user_type) {
+            case 'rockerbox':
+              heap.identify({
+                handler: 'Rockerbox',
+                name: 'Rockerbox',
+                email: 'support@rockerbox.com'
+              });
 
-            window.intercomSettings = {app_id: "rvo8kuih",name: "Rockerbox",email: "support@rockerbox.com",created_at: 1312182000};
-            (function(){var w=window;var ic=w.Intercom;if(typeof ic==="function"){ic('reattach_activator');ic('update',intercomSettings);}else{var d=document;var i=function(){i.c(arguments)};i.q=[];i.c=function(args){i.q.push(args)};w.Intercom=i;function l(){var s=d.createElement('script');s.type='text/javascript';s.async=true;s.src='https://widget.intercom.io/widget/kbtc5999';var x=d.getElementsByTagName('script')[0];x.parentNode.insertBefore(s,x);}if(w.attachEvent){w.attachEvent('onload',l);}else{l(false)}}})()
-            break;
-          case 'client':
-            var user = {
-              'id': current_user.advertiser_id,
-              'name': advertiser_data.advertiser_name + ' (' + current_user.firstname + ' ' + current_user.last_name + ')',
-              'email': current_user.user_email
-            };
+              window.intercomSettings = {app_id: "rvo8kuih",name: "Rockerbox",email: "support@rockerbox.com",created_at: 1312182000};
+              (function(){var w=window;var ic=w.Intercom;if(typeof ic==="function"){ic('reattach_activator');ic('update',intercomSettings);}else{var d=document;var i=function(){i.c(arguments)};i.q=[];i.c=function(args){i.q.push(args)};w.Intercom=i;function l(){var s=d.createElement('script');s.type='text/javascript';s.async=true;s.src='https://widget.intercom.io/widget/kbtc5999';var x=d.getElementsByTagName('script')[0];x.parentNode.insertBefore(s,x);}if(w.attachEvent){w.attachEvent('onload',l);}else{l(false)}}})()
+              break;
+            case 'client':
+              var user = {
+                'id': current_user.advertiser_id,
+                'name': advertiser_data.advertiser_name + ' (' + current_user.firstname + ' ' + current_user.last_name + ')',
+                'email': current_user.user_email
+              };
 
-            heap.identify({
-              handler: user.id,
-              name: user.name,
-              email: user.email
-            });
+              heap.identify({
+                handler: user.id,
+                name: user.name,
+                email: user.email
+              });
 
-            window.intercomSettings = {
-              app_id: "o6ats3cn",
-              user_id: user.id,
-              name: user.name,
-              email: user.email,
-              created_at: 1312182000
-            };
-            (function(){var w=window;var ic=w.Intercom;if(typeof ic==="function"){ic('reattach_activator');ic('update',intercomSettings);}else{var d=document;var i=function(){i.c(arguments)};i.q=[];i.c=function(args){i.q.push(args)};w.Intercom=i;function l(){var s=d.createElement('script');s.type='text/javascript';s.async=true;s.src='https://widget.intercom.io/widget/xu33kr1z';var x=d.getElementsByTagName('script')[0];x.parentNode.insertBefore(s,x);}if(w.attachEvent){w.attachEvent('onload',l);}else{l(false)}}})()
-            break;
-        }
+              window.intercomSettings = {
+                app_id: "o6ats3cn",
+                user_id: user.id,
+                name: user.name,
+                email: user.email,
+                created_at: 1312182000
+              };
+              (function(){var w=window;var ic=w.Intercom;if(typeof ic==="function"){ic('reattach_activator');ic('update',intercomSettings);}else{var d=document;var i=function(){i.c(arguments)};i.q=[];i.c=function(args){i.q.push(args)};w.Intercom=i;function l(){var s=d.createElement('script');s.type='text/javascript';s.async=true;s.src='https://widget.intercom.io/widget/xu33kr1z';var x=d.getElementsByTagName('script')[0];x.parentNode.insertBefore(s,x);}if(w.attachEvent){w.attachEvent('onload',l);}else{l(false)}}})()
+              break;
+          }
 
-        Intercom('trackEvent', 'Page Load', {'url': window.location.href});
-      }, 2000)
-    }, 'advertiser-name-email', true, false);
+          Intercom('trackEvent', 'Page Load', {'url': window.location.href});
+        }, 2000)
+      })
+        .unpersist(false)
+        .trigger()
 
     var id = type.split("id=")[1]
     if (id && id.length) {
@@ -72,8 +77,23 @@ RB.crusher.controller = (function(controller) {
     RB.routes.navigation.forward(state,callback)
 
     // INIT RESIZE CALLBACK
+    var resize_last_ts = 0;
+    var resize_publisher = pubsub.publisher("resize")
+      .producer(function(cb){
+        var current = + new Date();
+        var temp = resize_last_ts;
+        resize_last_ts = + new Date();
+
+        if(temp - current >= -100) {
+          var fire_event = setTimeout(function(){
+            cb(true);
+          }, 100);
+        } else {
+          cb(true);
+        }
+      });
     d3.select(window).on("resize",function(){
-      crusher.subscribe.publishers["resize"]()
+      pubsub.publishers.resize();
     })
 
   }
@@ -124,7 +144,11 @@ RB.crusher.controller = (function(controller) {
       var subscription = function (advertiser,actions,funnels) {
         crusher.ui.settings.main(funnelRow,advertiser,actions,funnels)
       }
-      crusher.subscribe.add_subscriber(["advertiser","actions", "funnels"], subscription, "settings",true,true)
+
+      pubsub.subscriber("settings",["advertiser", "actions", "funnels"])
+        .run(subscription)
+          .unpersist(true)
+          .trigger()
 
     },
     "settings/advertiser": function() {
@@ -143,16 +167,30 @@ RB.crusher.controller = (function(controller) {
 
       var funnelRow = build_header({"id":"setup","name":"Pixel Setup"})
 
-      crusher.subscribe.add_subscriber(
-        ["pixel_status","advertiser","an_uid"],
-        function(status_data,advertiser_data,uid){
+      pubsub.subscriber("pixel_settings",["pixel_status","advertiser","an_uid"])
+        .run(function(status_data,advertiser_data,uid){
           crusher.ui.pixel.setup(funnelRow,status_data,advertiser_data,uid)
-        },
-        "pixel_settings",true,true
-      )
+        })
+          .unpersist(true)
+          .trigger()
 
     },
-    "vendors": function(obj) {
+    "vendors": function(obj, not_table) {
+      d3.select('body').classed('hide-select', true);
+
+      var funnelRow = build_header({
+        'id': 'vendors-' + (not_table ? 'expanded' : 'table'),
+        'name': 'Vendor Analysis',
+      });
+      funnelRow.exit().remove();
+
+      if(not_table) {
+        RB.crusher.ui.vendors.show(funnelRow, obj);
+      } else {
+        RB.crusher.ui.vendors.table(funnelRow, obj);
+      }
+    },
+    "vendors/table": function(obj) {
       d3.select('body').classed('hide-select', true);
 
       var funnelRow = build_header({
@@ -160,7 +198,7 @@ RB.crusher.controller = (function(controller) {
         'name': 'Vendor Analysis'
       });
 
-      RB.crusher.ui.vendors.show(funnelRow);
+      RB.crusher.ui.vendors.table(funnelRow);
     },
     "comparison": function() {
       d3.select("body")
@@ -204,18 +242,21 @@ RB.crusher.controller = (function(controller) {
           renderComparison();
         });
 
-      crusher.subscribe.add_subscriber(["actions"], function(all_segments) {
-        var segments_list_items = d3_splat(current_segment_select, '.segment-list-item-select-option', 'option', all_segments, function(x, i) {
-            return x.action_name;
-          })
-          .text(function(x) {
-            if (x.action_name != '') {
+      pubsub.subscriber("comparison-data",["actions"])
+        .run(function(all_segments) {
+          var segments_list_items = d3_splat(current_segment_select, '.segment-list-item-select-option', 'option', all_segments, function(x, i) {
               return x.action_name;
-            } else {
-              return 'All Pages';
-            }
-          });
-      }, "comparison-data", true, false);
+            })
+            .text(function(x) {
+              if (x.action_name != '') {
+                return x.action_name;
+              } else {
+                return 'All Pages';
+              }
+            });
+        })
+          .unpersist(false)
+          .trigger();
 
       var segments_list_save = d3_updateable(segments_list_wrapper, '.segments-list-save', 'a')
         .style('display', 'none')
@@ -525,24 +566,29 @@ RB.crusher.controller = (function(controller) {
         var segmentB = [''];
         var segmentB_hits = [];
 
-        crusher.subscribe.add_subscriber(["comparison"], function(comparison_data) {
-          comparison_data.segmentA.forEach(function(domain, i) {
-            segmentA.push(domain.domain);
-            segmentA_hits.push(domain.count);
-          });
 
-          comparison_data.segmentB.forEach(function(domain, i) {
-            segmentB.push(domain.domain);
-            segmentB_hits.push(domain.count);
-          });
+        pubsub.subscriber("comparison-data",["comparison"])
+          .run(function(comparison_data){
+            comparison_data.segmentA.forEach(function(domain, i) {
+              segmentA.push(domain.domain);
+              segmentA_hits.push(domain.count);
+            });
 
-          // var max_hits = [Math.max.apply(segmentA_hits), Math.max(segmentB_hits)];
-          var max_hits = Math.max(segmentA_hits[0], segmentB_hits[0])
+            comparison_data.segmentB.forEach(function(domain, i) {
+              segmentB.push(domain.domain);
+              segmentB_hits.push(domain.count);
+            });
 
-          drawIntersection(comparison_data.intersection_data.segmentA, comparison_data.intersection_data.segmentB, comparison_data.intersection_data.intersection)
-          horizontalBarGraph('left', segmentA, segmentA_hits, max_hits)
-          horizontalBarGraph('right', segmentB, segmentB_hits, max_hits)
-        }, "comparison-data", true, false, input_data);
+            // var max_hits = [Math.max.apply(segmentA_hits), Math.max(segmentB_hits)];
+            var max_hits = Math.max(segmentA_hits[0], segmentB_hits[0])
+
+            drawIntersection(comparison_data.intersection_data.segmentA, comparison_data.intersection_data.segmentB, comparison_data.intersection_data.intersection)
+            horizontalBarGraph('left', segmentA, segmentA_hits, max_hits)
+            horizontalBarGraph('right', segmentB, segmentB_hits, max_hits)
+          })
+          .data(input_data)
+          .unpersist(false)
+          .trigger();
       }
 
     },
@@ -617,27 +663,29 @@ RB.crusher.controller = (function(controller) {
         conversion: 0
       }
 
-      crusher.subscribe.add_subscriber(["pixel_status", "actions"], function(status_data, actions) {
-        status_data.forEach(function(pixel) {
-          if(pixel.segment_name.indexOf("All Pages") >=0 ) {
-            pixel_count.allpages++;
-          } else if(pixel.segment_name.indexOf("Conversion") >=0 ) {
-            pixel_count.conversion++;
+      pubsub.subscriber("gettingstarted",["pixel_status", "actions"])
+        .run(function(status_data, actions){
+          status_data.forEach(function(pixel) {
+            if(pixel.segment_name.indexOf("All Pages") >=0 ) {
+              pixel_count.allpages++;
+            } else if(pixel.segment_name.indexOf("Conversion") >=0 ) {
+              pixel_count.conversion++;
+            }
+          });
+
+          var no_actions = false;
+          if(crusher.cache.actionData.length == 0) {
+            no_actions = true;
           }
-        });
 
-        var no_actions = false;
-        if(crusher.cache.actionData.length == 0) {
-          no_actions = true;
-        }
-
-        if(!pixel_count.allpages) {
-          RB.routes.navigation.forward(controller.states["/crusher/gettingstarted"])
-        } else if (no_actions) {
-          RB.routes.navigation.forward(controller.states["/crusher/gettingstarted/step2"])
-        }
-      },"gettingstarted",true,false)
-
+          if(!pixel_count.allpages) {
+            RB.routes.navigation.forward(controller.states["/crusher/gettingstarted"])
+          } else if (no_actions) {
+            RB.routes.navigation.forward(controller.states["/crusher/gettingstarted/step2"])
+          }
+        })
+        .unpersist(false)
+        .trigger()
 
       d3.select("body").classed("hide-select",true)
 
@@ -647,16 +695,20 @@ RB.crusher.controller = (function(controller) {
       var wrapper = funnelRow.selectAll(".tutorial-description")
       var subscription = crusher.ui.home.status.bind(false,wrapper)
 
-      crusher.subscribe.add_subscriber(["pixel_status","advertiser","actions"],subscription,"home",true,false)
-
+      pubsub.subscriber("home",["pixel_status","advertiser","actions"])
+        .run(subscription)
+        .unpersist(false)
+        .trigger()
     },
     "analytics": function(){
 
       var funnelRow = build_header({"id":"analytics_overview","name":"Dashboard"})
       var subscription = crusher.ui.home.dashboard.bind(false,funnelRow)
 
-      crusher.subscribe.add_subscriber(["dashboardStats"],subscription,"dashboard",true,true)
-
+      pubsub.subscriber("dashboard",["dashboardStats"])
+        .run(subscription)
+        .unpersist(true)
+        .trigger()
     },
 
     "funnel": function(funnel){
@@ -756,9 +808,12 @@ RB.crusher.controller = (function(controller) {
           .classed('loading-indicator', true)
           .style('text-align', 'center')
           .style('margin', '80px 0 100px 0')
-          .html('<img src="/static/img/general/logo-small.gif" alt="Logo loader"> Loading vendor data...');
+          .html('<img src="/static/img/general/logo-small.gif" alt="Logo loader"> Loading segment data...');
 
-        crusher.subscribe.add_subscriber(["actions", "dashboard_cached"], subscription, 'dashboard_cached', true, true);
+        pubsub.subscriber("dashboard_cached",["actions", "dashboard_cached"])
+          .run(subscription)
+          .unpersist(true)
+          .trigger()
       }
 
     },
@@ -768,11 +823,13 @@ RB.crusher.controller = (function(controller) {
       var target = d3.selectAll(".action-view-wrapper")
       target.selectAll(".action-view").remove()
 
-      crusher.subscribe.add_subscriber(["actions"], function(actionsw){
-
-        var override = (action.action_name) ? action : false
-        controller.action.new(target,crusher.cache.urls_wo_qs, override)
-      }, "new",true,true)
+      pubsub.subscriber("new",["actions"])
+        .run(function(actionsw){
+          var override = (action.action_name) ? action : false
+          controller.action.new(target,crusher.cache.urls_wo_qs, override)
+        })
+        .unpersist(true)
+        .trigger()
     },
     "action/recommended": function(action) {
 
@@ -780,13 +837,14 @@ RB.crusher.controller = (function(controller) {
 
       var target = d3.selectAll(".action-view-wrapper")
 
-
-      crusher.subscribe.add_subscriber(["actions"], function(actionsw){
-
-        target.selectAll(".action-view").remove()
-        var override = (action.action_name) ? action : false
-        controller.action.new(target, crusher.cache.urls_wo_qs, override)
-      }, "new",true,true)
+      pubsub.subscriber("new",["actions"])
+        .run(function(actionsw){
+          target.selectAll(".action-view").remove()
+          var override = (action.action_name) ? action : false
+          controller.action.new(target, crusher.cache.urls_wo_qs, override)
+        })
+        .unpersist(true)
+        .trigger()
     }
   }
 
@@ -887,6 +945,7 @@ RB.crusher.controller = (function(controller) {
     apis: {
       "comparison": ['funnels'],
       "vendors": [],
+      "vendors/table": [],
       "funnel/new": [],
       "funnel/existing": ['funnels'],
       "action/existing": ['actions'],
@@ -931,6 +990,10 @@ RB.crusher.controller = (function(controller) {
       "vendors": [{
           "name": "Vendors",
           "push_state": "/crusher/vendors"
+        },
+        {
+          "name": "Vendors Table",
+          "push_state": "/crusher/vendors/table"
         }],
       "home": [{
           "name":"Home",

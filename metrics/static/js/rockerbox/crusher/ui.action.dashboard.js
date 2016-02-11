@@ -3,6 +3,8 @@ RB.crusher = RB.crusher || {}
 RB.crusher.ui = RB.crusher.ui || {}
 RB.crusher.ui.action = RB.crusher.ui.action || {}
 
+var crusher = RB.crusher;
+var pubsub = crusher.pubsub;
 
 RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
 
@@ -48,7 +50,6 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
 
       var data = data
         .filter(function(x){
-          console.log('URL PATTERN', x.url_pattern[0]);
           if(segment_names.indexOf(x.url_pattern[0]) != -1) {
             var response = true;
           } else {
@@ -271,22 +272,23 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
         action.action_string = action.url_pattern.map(function(x){return x.split(" ").join(",")}).join("|")
         action.action_string = action.action_string + "&num_days=2"
 
-        crusher.subscribe.add_subscriber(["actionTimeseries"],function(d) {
+        pubsub.subscriber("get_action",["actionTimeseries"])
+          .run(function(d) {
+            // make sure were still on the same page otherwise it will break
+            var bool = funnelRow.datum().id == d3.select(".container div").datum().id
+            if (!d.views && bool) {
+              d.views = d.visits_data[0].views
+              d.visits = d.visits_data[0].visits
+              d.uniques = d.visits_data[0].uniques
 
-          // make sure were still on the same page otherwise it will break
-          var bool = funnelRow.datum().id == d3.select(".container div").datum().id
-          if (!d.views && bool) {
-            d.views = d.visits_data[0].views
-            d.visits = d.visits_data[0].visits
-            d.uniques = d.visits_data[0].uniques
+              setTimeout(dashboard.current,1,funnelRow,odata)
+            }
 
-            setTimeout(dashboard.current,1,funnelRow,odata)
-          }
-
-          console.log(d)
-        },"get_action",true,true,action)
-
-
+            console.log(d)
+          })
+            .data(action)
+            .unpersist(true)
+            .trigger();
       }
 
       table.select("tbody").selectAll("tr")

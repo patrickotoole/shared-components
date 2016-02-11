@@ -47,3 +47,24 @@ header.page-header.with-sidebar {
 .action-view-wrapper .heading {
 	margin-top: -85px !important;
 }
+
+.page-header-controls {
+	display: inline-block;
+	float: right;
+	padding: 10px 15px 8px 15px;
+	border: solid 2px;
+	line-height: 14px;
+	border-radius: 21px;
+	font-weight: bold;
+	text-transform: uppercase;
+	font-size: 12px;
+	margin: 0 0 30px 0;
+	border-color: #AAA;
+	color: #AAA;
+	cursor: pointer;
+}
+
+.page-header-controls:hover {
+	border-color: #888;
+	color: #888;
+}

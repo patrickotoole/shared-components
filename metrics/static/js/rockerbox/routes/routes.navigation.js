@@ -13,7 +13,7 @@ RB.routes.navigation = (function(navigation) {
      * The state is then tested against the previous, or the next to determine which direction
      * and how the page should be updated
      */
-    
+
     if (x.state) {
 
       var previous = navigation.get_previous()
@@ -33,7 +33,7 @@ RB.routes.navigation = (function(navigation) {
         __back__.push(next)
         navigation.forward(next,false,true)
       } else {
-        console.debug("BAD", __back__, __forward__, previous.name, x.state.name, next.name) 
+        console.debug("BAD", __back__, __forward__, previous.name, x.state.name, next.name)
       }
 
       //console.debug("AFTER: ", __back__, __forward__, previous.name, x.state.name, next.name)
@@ -57,8 +57,8 @@ RB.routes.navigation = (function(navigation) {
     navigation.subscribed = bound
   }
 
-  navigation.reset = function() { 
-    __back__ = [] 
+  navigation.reset = function() {
+    __back__ = []
     __forward__ = []
   }
 
@@ -74,7 +74,7 @@ RB.routes.navigation = (function(navigation) {
     var path = window.location.pathname
     var shouldPush = (!!x.push_state) && (path != x.push_state)
     var emptyQueue = __back__.length == 0
-    current += 1 
+    current += 1
 
     if (shouldPush || emptyQueue) {
       var stateAction = emptyQueue ? "replaceState" : "pushState"
@@ -90,14 +90,14 @@ RB.routes.navigation = (function(navigation) {
     if ((shouldPush == false) && (x[prev.values_key]) && !from_back) {
       var stateAction = "pushState"
       var state = { "name": x["name"] }
-      
+
       history[stateAction](state, x["name"],prev.push_state + "?id=" + x[prev.values_key] )
-      __back__.push(x) 
+      __back__.push(x)
     }
 
 
-    var page = x.push_state ? 
-      x.push_state.replace("/crusher/","") : 
+    var page = x.push_state ?
+      x.push_state.replace("/crusher/","") :
       path.replace("/crusher/","")
 
     var api = routes.apis[page],
@@ -107,21 +107,23 @@ RB.routes.navigation = (function(navigation) {
 
     if (x.push_state && (api || render)) {
       if (api && (typeof(api) == "object") && (typeof(api[0]) == "string")) {
-        
+
         var now = parseInt(String(current))
-        x.values = x.values || [{"name":"Loading..."}] 
+        x.values = x.values || [{"name":"Loading..."}]
         navigation.subscribed(x)
 
-        RB.crusher.subscribe.add_subscriber(api, function(data) {
-          if (transform) transform(x)
-          if (now == current) navigation.subscribed(x) 
+        pubsub.subscriber("menu",[api])
+          .run(function(data) {
+            if (transform) transform(x)
+            if (now == current) navigation.subscribed(x)
 
-          console.log(typeof(callback))
-          if (callback && (typeof(callback) == "function")) {
-            setTimeout(callback.bind(this,data,x),1)
-          }
-        },"menu",true,true)
-
+            console.log(typeof(callback))
+            if (callback && (typeof(callback) == "function")) {
+              setTimeout(callback.bind(this,data,x),1)
+            }
+          })
+          .unpersist(true)
+          .trigger()
       } else if (api && (typeof(api) == "object")) {
         x.values = api
         navigation.subscribed(x)
@@ -150,9 +152,6 @@ RB.routes.navigation = (function(navigation) {
     if (__back__.length > 1) history.back()
   }
 
-  return navigation 
+  return navigation
 
 })(RB.routes.navigation || {})
-
-
-
