@@ -29,7 +29,7 @@ class VendorTests(unittest.TestCase):
 
     @mock.patch('requests.get', mock.MagicMock(side_effect = lambda x,cookies: mock_response))
     def test_iter_vendors(self):
-        AC = adc.ActionCache("username", "password", mock.MagicMock())
+        AC = adc.ActionCache("username", "password", mock.MagicMock(), mock.MagicMock())
         AC.cookie = {}
         df2 = pandas.DataFrame(DA)
         df2.T.apply(vdb.buildIter(AC,"test"))
