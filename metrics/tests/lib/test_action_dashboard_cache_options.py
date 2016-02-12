@@ -11,6 +11,8 @@ class ActionCacheRunTest(unittest.TestCase):
     def setUp(self):
         adc.ActionCache.make_request = mock.MagicMock()
         adc.ActionCache.make_request.side_effect = lambda x :""
+        adc.ActionCache.zookeeper = mock.MagicMock()
+        adc.ActionCache.zookeeper.start.side_effect = lambda: ""
         adc.ActionCache.get_segments = mock.MagicMock()
         adc.ActionCache.get_segments.side_effect = lambda : ""
         adc.ActionCache.req = mock.MagicMock()
