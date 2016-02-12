@@ -20,12 +20,16 @@ section.vendors-list-table {
       display: inline-block;
       width: 100px;
       text-transform: uppercase;
+      line-height:46px;
+      border-bottom: 1px solid #ccc;
 
     }
 
     div.timeseries-header {
       display: inline-block;
-      margin-left: 20px;
+      padding-left: 20px;
+      line-height:46px;
+      border-bottom: 1px solid #ccc;
 
       div.timeseries-header-item {
         display: inline-block;

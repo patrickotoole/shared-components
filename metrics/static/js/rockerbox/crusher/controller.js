@@ -901,12 +901,12 @@ RB.crusher.controller = (function(controller) {
       "values_key": "action_name",
       "hide_href": true
     },
-    {
+    /*{
       "name":"Funnels (alpha)",
       "push_state": "/crusher/funnel",
       "class": "glyphicon glyphicon-filter"
     },
-    /*{
+    {
       "name":"On-page Analytics",
       "push_state": "/crusher/analytics",
       "class": "glyphicon glyphicon-stats"
