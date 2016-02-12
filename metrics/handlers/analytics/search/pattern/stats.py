@@ -38,7 +38,7 @@ class PatternStatsBase(PatternSearchCache):
 
         logging.info("Pattern %s | get_stats: start" % args[1])
         
-	views_df   = self.get_views_from_cache(*args, formatter=build_count_dataframe("views"))
+        views_df   = self.get_views_from_cache(*args, formatter=build_count_dataframe("views"))
         visits_df  = self.get_visits_from_cache(*args, formatter=build_count_dataframe("visits"))
         uniques_df = self.get_uniques_from_cache(*args, formatter=build_count_dataframe("uniques"))
 
