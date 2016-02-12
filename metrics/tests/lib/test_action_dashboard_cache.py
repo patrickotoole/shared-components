@@ -47,6 +47,7 @@ class ActionCacheTestCase(unittest.TestCase):
         self.instance.req = mock.MagicMock()
         self.instance.req.post.side_effect = post_helper
         self.futureFrames = []
+        self.instance.zookeeper = mock.MagicMock()
         self.instance.sql_query = mock.MagicMock(side_effect=buildSQLQuery(self.futureFrames))
 
 	def test_auth(self):
