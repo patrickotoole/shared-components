@@ -1,27 +1,35 @@
-import requests, json, logging, pandas
+import requests, json, logging, pandas, pickle, work_queue
 from pandas.io.json import json_normalize
 from link import lnk
 from lib.pandas_sql import s as _sql
 import datetime
+import lib.cassandra_cache.run as cassandra_functions
+from kazoo.client import KazooClient
 
 formatter = '%(asctime)s:%(levelname)s - %(message)s'
 logging.basicConfig(level=logging.INFO, format=formatter)
 
 logger = logging.getLogger()
 
-SQL_QUERY = "select pixel_source_name from advertiser where active=1 and deleted=0 and running=1"
+SQL_QUERY = "select pixel_source_name from advertiser where crusher=1 and deleted=0"
 
 SQL_REMOVE_OLD = "DELETE FROM action_dashboard_cache where update_time < (UNIX_TIMESTAMP() - %s)"
 
 current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 class ActionCache:
-    def __init__(self, username, password, con):
+    def __init__(self, username, password, con, zookeeper=None):
         self.username = username
         self.password = password
         self.con = con
         self.req = requests
         self.sql_query = _sql._write_mysql
+        if not zookeeper:
+            self.zookeeper =KazooClient(hosts="zk1:2181")
+            self.zookeeper.start()
+        else:
+            self.zookeeper = zookeeper
+            self.zookeeper.start()
 
     def auth(self):
         data = {"username":self.username,"password":self.password}
@@ -88,10 +96,19 @@ class ActionCache:
                 logging.info("inserted %s records for advertiser username (includes a_) %s" % (len(to_insert), self.username))
 
     def seg_loop(self, segments, advertiser):
-		for seg in segments:
-			res = self.make_request(seg["url_pattern"],advertiser,seg["action_name"], seg["action_id"])
-			if(len(res)>=1):
-				self.insert(res, "action_dashboard_cache", self.con, ['advertiser', 'action_id', 'domain'])
+        for seg in segments:
+            res = self.make_request(seg["url_pattern"],advertiser,seg["action_name"], seg["action_id"]) 
+            yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
+            _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
+            work = pickle.dumps((
+                    cassandra_functions.run_recurring,
+                    [advertiser,seg["url_pattern"][0],_cache_yesterday,_cache_yesterday + "recurring"]
+                    ))
+            work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,1)
+            logging.info("added to work queueu")
+
+            if(len(res)>=1):
+                self.insert(res, "action_dashboard_cache", self.con, ['advertiser', 'action_id', 'domain'])
 
 
 def get_all_advertisers():
