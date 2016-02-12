@@ -121,21 +121,20 @@ def get_all_advertisers():
 		advertiser_list.append([username,password])
 	return advertiser_list
 
-def run_all():
+def run_all(connect):
 	advertiser_list = get_all_advertisers()
 	for advert in advertiser_list:
-		segs = ActionCache(advert[0], advert[1], lnk.dbs.rockerbox)
+		segs = ActionCache(advert[0], advert[1], connect)
 		segs.auth()
 		s=segs.get_segments()
 		advertiser_name = str(advert[0].replace("a_",""))
 		segs.seg_loop(s, advertiser_name)
 
-def run_advertiser(user, password):
-	segs = ActionCache(user, password, lnk.dbs.rockerbox)
-	segs.auth()
-	s = segs.get_segments()
+def run_advertiser(ac, username):
+	ac.auth()
+	s = ac.get_segments()
 	advertiser_name = str(options.username.replace("a_",""))
-	segs.seg_loop(s,advertiser_name)
+	ac.seg_loop(s,advertiser_name)
 
 def select_segment(segment_name, json_data):
 	segment = []
@@ -150,21 +149,20 @@ def select_segment(segment_name, json_data):
                                 segment.append(single_seg)
 	return segment
 
-def run_advertiser_segment(user, password, conn, segment_name):
-	segs = ActionCache(user, password, conn)
-	segs.auth()
-	s = segs.get_segments()
-	advertiser_name = str(user.replace("a_",""))
+def run_advertiser_segment(ac, username, segment_name):
+	ac.auth()
+	s = ac.get_segments()
+	advertiser_name = str(username.replace("a_",""))
 	url = "http://beta.crusher.getrockerbox.com/crusher/funnel/action?format=json"
-	results = segs.req.get(url,cookies=segs.cookie)
+	results = ac.req.get(url,cookies=ac.cookie)
 	segment = []
 	try:
 		raw_results = results.json()['response']
 		segment = select_segment(segment_name, raw_results)
-		df = segs.make_request(segment[0]["url_pattern"], advertiser_name, segment[0]["action_name"], segment[0]["action_id"])
+		df = ac.make_request(segment[0]["url_pattern"], advertiser_name, segment[0]["action_name"], segment[0]["action_id"])
 		segs.insert(df,"action_dashboard_cache", conn, ["advertiser", "action_id", "domain"])
 	except:
-		logging.error("Error with advertiser segment run for advertiser username %s and segment %s" % (user, segment_name))
+		logging.error("Error with advertiser segment run for advertiser username %s and segment %s" % (username, segment_name))
 
 if __name__ == "__main__":
     from lib.report.utils.loggingutils import basicConfig
@@ -183,13 +181,15 @@ if __name__ == "__main__":
     
     parse_command_line()
     
-    if options.chronos ==True:
-		run_all()
+    if options.chronos ==True: 
+		run_all(lnk.dbs.rockerbox)
     else:
         if options.segment == False:
-            run_advertiser(options.username, options.password)
+            ac = ActionCache(options.username, options.password, lnk.dbs.rockerbox)
+            run_advertiser(ac, options.username)
         else:
-            run_advertiser_segment(options.username, options.password, lnk.dbs.rockerbox, options.segment)
+            ac = ActionCache(options.username, options.password, lnk.dbs.rockerbox)
+            run_advertiser_segment(ac, options.username, options.segment)
     
     if options.remove_old == True:
         lnk.dbs.rockerbox.excute(SQL_REMOVE_OLD % options.remove_seconds)
