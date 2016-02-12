@@ -37,8 +37,8 @@ class PatternStatsBase(PatternSearchCache):
         start = time.time()
 
         logging.info("Pattern %s | get_stats: start" % args[1])
-
-        views_df   = self.get_views_from_cache(*args, formatter=build_count_dataframe("views"))
+        
+	views_df   = self.get_views_from_cache(*args, formatter=build_count_dataframe("views"))
         visits_df  = self.get_visits_from_cache(*args, formatter=build_count_dataframe("visits"))
         uniques_df = self.get_uniques_from_cache(*args, formatter=build_count_dataframe("uniques"))
 
@@ -72,12 +72,15 @@ class PatternStatsBase(PatternSearchCache):
 
     @decorators.deferred
     def get_stats(self, *args):
-
         views_df, visits_df, uniques_df = self.get_stats_cached(*args)
         missing_dates = self.get_missing_dates(args[2],visits_df.index)
 
         for d in missing_dates:
-            views_df.ix[d] = 0
+            try:
+                value = views_df.ix[d].views
+            except:
+                value = 0
+            views_df.ix[d] = value
 
         if missing_dates:
             visits_df, uniques_df = self.get_stats_missing(missing_dates,*args)
