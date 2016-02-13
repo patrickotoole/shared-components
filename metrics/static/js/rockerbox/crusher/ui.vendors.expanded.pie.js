@@ -9,8 +9,11 @@ RB.crusher.ui.vendors = (function(vendors) {
   var pubsub = crusher.pubsub
   var comma_formatter = d3.format(',');
 
-  vendors.add_domains_pie = function(vendor, vendor_data_columns) {
-    // Vendor List Item : Domains Pie
+
+
+
+  vendors.add_domains_pie = function(vendor_data_columns) {
+
     var vendor_domains_pie_column = d3_updateable(vendor_data_columns, '.vendor-domains-pie-column', 'div')
       .classed('vendor-domains-pie-column col-lg-4 col-md-6', true)
       .html(function(x) {
@@ -24,26 +27,29 @@ RB.crusher.ui.vendors = (function(vendors) {
       .style('width', '220px')
       .style('padding', '0px')
 
-      var category_data = {};
-      vendor.domains.forEach(function(domain) {
-        if(typeof category_data[domain.parent_category_name] === typeof undefined) {
-          category_data[domain.parent_category_name] = domain.count;
-        } else {
-          category_data[domain.parent_category_name] += domain.count;
-        }
-      })
-
-      var parentCategoryData = d3.entries(category_data).map(function(x) {
-        return {
-          label: x.key,
-          value: x.value
-        }
-      });
+      
 
       vendor_domains_pie.datum(function(x) {
-        if(vendor.action_id === x.action_id) {
-          x.parentCategoryData = parentCategoryData;
+
+        if (x.parentCategoryData == undefined && x.domains) {
+          var vendor = x
+
+          var category_data = {};
+          vendor.domains.forEach(function(domain) {
+            if(typeof category_data[domain.parent_category_name] === typeof undefined) {
+              category_data[domain.parent_category_name] = domain.count;
+            } else {
+              category_data[domain.parent_category_name] += domain.count;
+            }
+          })
+
+          var parentCategoryData = d3.entries(category_data).map(function(x) {
+            return { label: x.key, value: x.value }
+          });
+          x.parentCategoryData = parentCategoryData
+
         }
+
           return x;
       })
 
@@ -78,5 +84,6 @@ RB.crusher.ui.vendors = (function(vendors) {
       });
   }
 
+  
   return vendors
 })(RB.crusher.ui.vendors || {})

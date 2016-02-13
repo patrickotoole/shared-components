@@ -30,6 +30,7 @@ RB.crusher.ui.vendors = (function(vendors) {
 
   vendors.expanded_nav  = function(items) {
 
+
     var vendor_name_column = d3_updateable(items, '.vendor-name-column', 'div')
       .classed('vendor-name-column col-lg-2 col-md-6', true)
 
@@ -46,21 +47,12 @@ RB.crusher.ui.vendors = (function(vendors) {
 
     var vendor_navigation_list = d3_updateable(vendor_name_column, '.vendor-navigation-list', 'ul')
       .classed('col-md-12 vendor-navigation-list', true)
-      .each(function(y) {
-        y.navigation_items = JSON.parse(JSON.stringify(navigation_items)).map(function(x){
-          x.action_name = y.action_name
-          return x;
-        })
-        return y;
-      })
 
-    var vendor_navigation_items = d3_splat(vendor_navigation_list, '.vendors-list-item', 'li', function(x) {
-      return x.navigation_items;
-    },
-    function(x) {
-      return x.title;
-    })
-    .classed('vendors-list-item', true);
+    var vendor_navigation_items = d3_splat(vendor_navigation_list, '.nav-list-item', 'li',
+      navigation_items,
+      function(x) { return x.title }
+    )
+    .classed('nav-list-item', true);
 
     d3_updateable(vendor_navigation_items, 'a', 'a')
       .attr('href', function(x) {

@@ -19,7 +19,7 @@ RB.crusher.ui.vendors = (function(vendors) {
     var draw = function(timeseries_data, domains_data, skip){
 
       var items = vendors_list.selectAll(".vendors-list-item")
-      vendors.render_row(vendors_list)
+      vendors.render_row(items)
 
       if (!skip) run_missing_data(vendors_list.datum())
     }
@@ -65,10 +65,13 @@ RB.crusher.ui.vendors = (function(vendors) {
         var vs = segments.filter(function(x) { return x.action_type == 'vendor' })
         vendors_list.datum(vs)
 
-        var items = d3_splat(vendors_list, '.vendors-list-item', 'li', false, function(x) { return x.action_name; })
+
+        var rows = d3_splat(vendors_list, '.vendors-list-item', 'li', false, function(x) { return x.action_name; })
           .classed('vendors-list-item', true);
+
+        rows.exit().remove()
         
-        vendors.render_row(items)
+        vendors.render_row(rows)
         run_missing_data(vs,true)
 
       })
@@ -79,39 +82,31 @@ RB.crusher.ui.vendors = (function(vendors) {
     
   }
 
-  vendors.render_row = function(items) {
+  vendors.render_row = function(rows) {
 
-    vendors.expanded_nav(items)
+    vendors.expanded_nav(rows)
 
-    var vendor_data_columns = d3_updateable(items, '.vendor-data-column', 'div')
+    var vendor_data_columns = d3_updateable(rows, '.vendor-data-column', 'div')
       .classed('vendor-data-column col-lg-10 col-md-12', true)
 
-    var data_columns_without_data = vendor_data_columns.filter(function(x) {
-      return typeof x.visits_data === typeof undefined;
-    })
+    var data_columns_without_data = vendor_data_columns.filter(function(x) { return !x.views_data })
 
-    var vendor_loading = d3_updateable(data_columns_without_data, '.vendor-loading', 'div')
+    d3_updateable(data_columns_without_data, '.vendor-loading', 'div')
       .classed('vendor-loading loading-icon col-md-12', true)
       .html('<img src="/static/img/general/logo-small.gif" alt="Logo loader"> Loading vendor data...')
 
-    var data_columns_with_data = vendor_data_columns
-      .filter(function(x) { return typeof x.visits_data !== typeof undefined })
+    rows.selectAll(".vendor-loading").filter(function(x){return x.timeseries_data || x.domains}).remove()
 
-    vendor_data_columns
-      .selectAll('.vendor-loading')
-      .filter(function(x){return !!x.visits_data})
-      .remove()
+    RB.crusher.ui.vendors.add_views_chart(rows.selectAll('.vendor-data-column'));
+    RB.crusher.ui.vendors.add_domains_pie(rows.selectAll('.vendor-data-column'));
 
-    RB.crusher.ui.vendors.add_visits_chart(vendor_data_columns);
-    //RB.crusher.ui.vendors.add_domains_pie(vendor_data_columns);
-
-    //var vendor_onsite_column = d3_updateable(vendor_data_columns, '.vendor-onsite-column', 'div')
-    //  .classed('vendor-onsite-column col-lg-4 col-md-6', true)
-    //  .html(function(x) {
-    //    if(typeof x.timeseries_data !== typeof undefined) {
-    //      return '<h3>On-site</h3><div class="coming-soon-box">(coming soon)</div>';
-    //    }
-    //  });
+    var vendor_onsite_column = d3_updateable(vendor_data_columns, '.vendor-onsite-column', 'div')
+      .classed('vendor-onsite-column col-lg-4 col-md-6', true)
+      .html(function(x) {
+        if(typeof x.timeseries_data !== typeof undefined) {
+          return '<h3>On-site</h3><div class="coming-soon-box">(coming soon)</div>';
+        }
+      });
 
 
   }

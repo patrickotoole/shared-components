@@ -87,7 +87,7 @@ RB.crusher.ui.vendors = (function(vendors) {
         var vendors_with_data = vendors.filter(function(x){ return x.timeseries_data != undefined })
 
         return vendors_with_data.map(function(vendor) {
-          if (vendor.views || vendor.visits || vendor.uniques) return vendor
+          if ((vendor.vendor_domain_percentages) && (vendor.views || vendor.visits || vendor.uniques)) return vendor
 
           vendor.timeseries_data.forEach(function(data_point) {
 
@@ -109,18 +109,20 @@ RB.crusher.ui.vendors = (function(vendors) {
             );
           });
 
-          var vendor_domain_percentages = {};
-          vendor.total_domains = 0;
-          vendor.domains.forEach(function(domain) {
-            if(typeof vendor_domain_percentages[domain.parent_category_name] === typeof undefined) {
-              vendor_domain_percentages[domain.parent_category_name] = 0;
-            }
+          if (!vendor.vendor_domain_percentages && vendor.domains) {
+            var vendor_domain_percentages = {};
+            vendor.total_domains = 0;
+            vendor.domains.forEach(function(domain) {
+              if(typeof vendor_domain_percentages[domain.parent_category_name] === typeof undefined) {
+                vendor_domain_percentages[domain.parent_category_name] = 0;
+              }
 
-            vendor_domain_percentages[domain.parent_category_name] += domain.count;
-            vendor.total_domains += domain.count;
-          });
+              vendor_domain_percentages[domain.parent_category_name] += domain.count;
+              vendor.total_domains += domain.count;
+            });
 
-          vendor.vendor_domain_percentages = vendor_domain_percentages;
+            vendor.vendor_domain_percentages = vendor_domain_percentages;
+          }
           return vendor;
 
         })
@@ -132,6 +134,12 @@ RB.crusher.ui.vendors = (function(vendors) {
       .classed('vendor-column vendor-column-title', true)
       .text(function(x){ return x.action_name })
       .on('click', function(x) {
+        RB.routes.navigation.forward({
+          "name": "View Existing Actions",
+          "push_state":"/crusher/action/existing",
+          "skipRender": true,
+          "values_key":"action_name"
+        })
         setTimeout(RB.routes.navigation.forward,1,x)
       });
 

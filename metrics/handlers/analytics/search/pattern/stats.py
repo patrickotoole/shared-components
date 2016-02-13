@@ -82,7 +82,7 @@ class PatternStatsBase(PatternSearchCache):
                 value = 0
             views_df.ix[d] = value
 
-        if missing_dates:
+        if missing_dates > 3 and len(views_df) < 2:
             visits_df, uniques_df = self.get_stats_missing(missing_dates,*args)
 
         df = views_df.join(visits_df).join(uniques_df)
