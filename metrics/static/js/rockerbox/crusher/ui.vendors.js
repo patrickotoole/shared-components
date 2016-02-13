@@ -274,6 +274,7 @@ RB.crusher.ui.vendors = (function(vendors) {
         x.visits_data.sort(function(a,b) {
           return (new Date(a.key) - new Date(b.key));
         });
+        
         var visitor_chart = RB.rho.ui.buildTimeseries(toDraw, x.visits_data, "Views", ["visits"], undefined, false, 95);
 
 
