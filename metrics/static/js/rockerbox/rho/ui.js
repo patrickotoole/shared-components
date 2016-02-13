@@ -578,7 +578,7 @@ RB.rho.ui = (function(ui) {
   }
 
   ui.buildTimeseries = function(target,data,title,series,formatting,hide_axis, height) {
-    console.log(arguments)
+    //console.log(arguments)
     // debugger;
     if(typeof height === typeof undefined) {
       var height = 150;
@@ -590,7 +590,7 @@ RB.rho.ui = (function(ui) {
 
     var formatting = typeof formatting !== "undefined" ? formatting: default_formatting;
 
-    console.log(formatting)
+    //console.log(formatting)
 
     data.map(function(x){
       x.date = new Date(x.key)

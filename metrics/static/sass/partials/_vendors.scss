@@ -9,26 +9,34 @@ section.vendors-list-card {
 }
 
 section.vendors-list-table {
+
+  margin-left:10px;
+
   div.vendors-header-row {
     height: 170px;
     margin-top: -50px;
 
     div.vendor-title {
       display: inline-block;
-      font-weight: bold;
       width: 100px;
+      text-transform: uppercase;
+      line-height:46px;
+      border-bottom: 1px solid #ccc;
+
     }
 
     div.timeseries-header {
       display: inline-block;
-      margin-left: 20px;
+      padding-left: 20px;
+      line-height:46px;
+      border-bottom: 1px solid #ccc;
 
       div.timeseries-header-item {
         display: inline-block;
         width: 80px;
-        font-weight: bold;
         text-align: center;
         text-transform: uppercase;
+        font-size:.9em;
       }
     }
   }
@@ -60,17 +68,20 @@ section.vendors-list-table {
       display: inline-block;
       text-align: center;
       text-transform: capitalize;
+      border-bottom:1px solid #ddd;
+      line-height: 50px;
     }
 
     div.vendor-column:first-child {
+      font-size:13px;
       width:120px;
       text-align: left;
+      font-weight:bold;
     }
 
     div.vendor-column:not(:first-child) {
       display: inline-block;
       width: 80px;
-      line-height: 50px;
     }
 
     .vendor-column-item {
@@ -82,6 +93,7 @@ section.vendors-list-table {
 
       border-bottom: 1px solid #fbfbfb;
       border-right: 1px solid #fbfbfb;
+
     }
   }
 }
