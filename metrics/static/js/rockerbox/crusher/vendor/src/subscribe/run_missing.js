@@ -8,7 +8,7 @@ function missing(data) {
 }
 
 function should_trigger(datum) {
-  return ((!!datum.timeseries_data) && (!!datum.domains)) 
+  return ((!datum.timeseries_data) && (!datum.domains)) 
 }
 
 function trigger(datum) {
@@ -27,8 +27,9 @@ export default function(data, force) {
 
   var missing_data = missing(data)
 
-  if ((missing_data.length == 0) && !should_trigger(missing_data[0]) ) return draw(false,false,true)
+  if ((missing_data.length == 0)) return this.draw(false,false,true)
+  if (should_trigger(missing_data[0]) ) return trigger(missing_data[0])
 
-  trigger(missing_data[0])
+  return
 
 }

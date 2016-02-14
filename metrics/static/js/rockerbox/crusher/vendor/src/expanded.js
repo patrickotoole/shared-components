@@ -1,3 +1,4 @@
+import initialize from './subscribe/initialize'
 import subscribe from './subscribe/subscribe'
 import unsubscribe from './subscribe/unsubscribe'
 import run_missing from './subscribe/run_missing'
@@ -50,6 +51,7 @@ function vendor_expanded(target){
 }
 
 Expanded.prototype = {
+  initialize: initialize,
   subscribe: subscribe,
   unsubscribe: unsubscribe,
   run_missing: run_missing,
