@@ -17,10 +17,11 @@ export function Expanded(target) {
   this._target = target
   this._wrapper = this.render_wrapper(target)
   this._data = []
+  this._on = {}
 }
 
 function datum(d) {
-  if (!!d) {
+  if (d !== undefined) {
     this._data = d
     this._wrapper.datum(d)
     return this
@@ -30,16 +31,15 @@ function datum(d) {
 }
 
 
-
-function draw(_d1, _d2, skip) {
+function draw(_d1, _d2, skip_missing) {
 
   if ( (this._wrapper.datum().length ) && 
        (this._data !== this._wrapper.datum()) ) return this
 
   var items = this.render_list(this._wrapper)
-
   this.render_row(items)
-  if (!skip) this.run_missing(items.data())
+
+  if (!skip_missing) this.run_missing(items.data())
 
   return this
   
@@ -58,6 +58,7 @@ Expanded.prototype = {
 
   draw: draw,
   datum: datum,
+  on: function(x,y) { this._on[x] = y; return this },
 
   render_button: render_button,
   render_wrapper: render_wrapper,

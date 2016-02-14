@@ -5,11 +5,6 @@ RB.crusher.ui = RB.crusher.ui || {}
 RB.crusher.ui.vendors = (function(vendors) {
 
   var crusher = RB.crusher
-  var funnelRow;
-  var pubsub = crusher.pubsub
-  var comma_formatter = d3.format(',');
-
-  vendors.first = true
 
 
   vendors.show = function(funnelRow, obj) {
@@ -17,10 +12,11 @@ RB.crusher.ui.vendors = (function(vendors) {
     var xx = window.vendors.vendor_expanded(funnelRow)
       .subscribe()
       .initialize() // if you set .datum(DATA), there is no initial subscription
+      .on('click',function() {
+        RB.crusher.controller.initializers.vendors(obj,false)
+      })
     
   }
-
-
 
   return vendors
 })(RB.crusher.ui.vendors || {})

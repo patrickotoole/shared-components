@@ -4,5 +4,9 @@ export default function() {
     .run(this.draw.bind(this))
     .unpersist(false)
 
+  pubsub.subscriber("vendor-timeseries-domains-resize",["resize"])
+    .run(this.draw.bind(this))
+    .unpersist(false)
+
   return this
 }
