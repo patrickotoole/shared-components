@@ -24,12 +24,7 @@ class ActionCache:
         self.con = con
         self.req = requests
         self.sql_query = _sql._write_mysql
-        if not zookeeper:
-            self.zookeeper =KazooClient(hosts="zk1:2181")
-            self.zookeeper.start()
-        else:
-            self.zookeeper = zookeeper
-            self.zookeeper.start()
+        self.zookeeper = zookeeper
 
     def auth(self):
         data = {"username":self.username,"password":self.password}
@@ -95,25 +90,28 @@ class ActionCache:
                     logging.info("error with df %s" % str(to_insert))
                 logging.info("inserted %s records for advertiser username (includes a_) %s" % (len(to_insert), self.username))
 
+    def request_and_write(self,segment, advertiser ):
+        res = self.make_request(segment["url_pattern"],advertiser,segment["action_name"], segment["action_id"])
+        if(len(res)>=1):
+            self.insert(res, "action_dashboard_cache", self.con, ['advertiser', 'action_id', 'domain'])
+
+    def add_to_work_queue(self, segment, advertiser):
+        yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
+        _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
+        work = pickle.dumps((
+                cassandra_functions.run_recurring,
+                [advertiser,segment["url_pattern"][0],_cache_yesterday,_cache_yesterday + "recurring"]
+                ))
+        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,1)
+        logging.info("added to work queue %s for %s" %(segment["url_pattern"][0],advertiser))
+
     def seg_loop(self, segments, advertiser):
         for seg in segments:
-            res = self.make_request(seg["url_pattern"],advertiser,seg["action_name"], seg["action_id"]) 
-            yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
-            _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
-            work = pickle.dumps((
-                    cassandra_functions.run_recurring,
-                    [advertiser,seg["url_pattern"][0],_cache_yesterday,_cache_yesterday + "recurring"]
-                    ))
-            work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,1)
-            logging.info("added to work queueu")
+            self.request_and_write(seg, advertiser)
+            self.add_to_work_queue(seg, advertiser)
 
-            if(len(res)>=1):
-                self.insert(res, "action_dashboard_cache", self.con, ['advertiser', 'action_id', 'domain'])
-
-
-def get_all_advertisers():
-	connect = lnk.dbs.rockerbox
-	ad_df = connect.select_dataframe(SQL_QUERY)
+def get_all_advertisers(db_con):
+	ad_df = db_con.select_dataframe(SQL_QUERY)
 	advertiser_list = []
 	for index, ad in ad_df.iterrows():
 		username = "a_%s" % str(ad[0])
@@ -121,10 +119,10 @@ def get_all_advertisers():
 		advertiser_list.append([username,password])
 	return advertiser_list
 
-def run_all(connect):
-	advertiser_list = get_all_advertisers()
+def run_all(db_connect, zk):
+	advertiser_list = get_all_advertisers(db_connect)
 	for advert in advertiser_list:
-		segs = ActionCache(advert[0], advert[1], connect)
+		segs = ActionCache(advert[0], advert[1], db_connect,zk)
 		segs.auth()
 		s=segs.get_segments()
 		advertiser_name = str(advert[0].replace("a_",""))
@@ -181,8 +179,10 @@ if __name__ == "__main__":
     
     parse_command_line()
     
-    if options.chronos ==True: 
-		run_all(lnk.dbs.rockerbox)
+    if options.chronos ==True:
+        zookeeper =KazooClient(hosts="zk1:2181")
+        zookeeper.start()
+        run_all(lnk.dbs.rockerbox, zookeeper)
     else:
         if options.segment == False:
             ac = ActionCache(options.username, options.password, lnk.dbs.rockerbox)
