@@ -47,19 +47,22 @@ if __name__ == "__main__":
     basicConfig(options={})
     parse_command_line()
 
+    zookeeper = KazooClient(hosts="zk1:2181")
+    zookeeper.start()
+
     if not options.username:
         sql = lnk.dbs.rockerbox
         vendors = sql.select_dataframe(VENDOR_QUERY)
         advertisers = adc.get_all_advertisers()
         for advertiser in advertisers:
-            AC = adc.ActionCache(advertiser[0], advertiser[1],sql)
+            AC = adc.ActionCache(advertiser[0], advertiser[1],sql, zookeeper)
             AC.auth()
             logging.info("populating action table for vendors for advertiser %s" % advertiser)
             vendors.T.apply(buildIter(AC,advertiser))
     else:
         sql = lnk.dbs.rockerbox
         vendors = sql.select_dataframe(VENDOR_QUERY)
-        AC = adc.ActionCache(options.username, options.password,sql)
+        AC = adc.ActionCache(options.username, options.password,sql,zookeeper)
         AC.auth()
         advertiser = options.username.replace("a_","")
         logging.info("populating action table for vendors for advertiser %s" % advertiser)
