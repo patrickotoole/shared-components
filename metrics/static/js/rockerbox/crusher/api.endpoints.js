@@ -332,6 +332,24 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
     }
   })
 
+  endpoints.vendors = api.helpers.genericQueuedAPIWithData(function(data, cb, deferred_cb) {
+
+    if (!cache.actionData) {
+      d3.json(api.URL.actionURL, function(actions) {
+        cache.actionData = actions.response
+        if (cache.urls_wo_qs) cache.actionData.map(function(x) {
+          x.values = cache.urls_wo_qs
+        })
+        deferred_cb(null, cb.bind(false, cache.actionData.filter(function(x) { return x.action_type == 'vendor' })))
+      })
+    } else {
+      if (cache.urls_wo_qs) cache.actionData.map(function(x) {
+        x.values = cache.urls_wo_qs
+      })
+      deferred_cb(null, cb.bind(false, cache.actionData.filter(function(x) { return x.action_type == 'vendor' })))
+    }
+  })
+
   endpoints.recommended_actions = api.helpers.genericQueuedAPIWithData(function(data, cb, deferred_cb) {
     if (!cache.recommendations) {
       d3.json(api.URL.recommendedActions, function(recommendations) {

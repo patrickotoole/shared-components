@@ -84,10 +84,10 @@ RB.crusher.ui.vendors = (function(vendors) {
 
 
     var row = d3_splat(tableWrapper, '.vendors-row', 'div', function(vendors) {
-        var vendors_with_data = vendors.filter(function(x){ return x.timeseries_data != undefined })
+        var vendors_with_data = vendors.filter(function(x){ return (x.timeseries_data != undefined) && (x.domains) })
 
         return vendors_with_data.map(function(vendor) {
-          if ((vendor.vendor_domain_percentages) && (vendor.views || vendor.visits || vendor.uniques)) return vendor
+          if ((vendor.total_domains) && (vendor.views || vendor.visits || vendor.uniques)) return vendor
 
           vendor.timeseries_data.forEach(function(data_point) {
 
@@ -109,7 +109,7 @@ RB.crusher.ui.vendors = (function(vendors) {
             );
           });
 
-          if (!vendor.vendor_domain_percentages && vendor.domains) {
+          if (!vendor.vendor_domain_percentages && !!vendor.domains) {
             var vendor_domain_percentages = {};
             vendor.total_domains = 0;
             vendor.domains.forEach(function(domain) {
