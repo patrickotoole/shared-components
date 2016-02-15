@@ -185,10 +185,14 @@ if __name__ == "__main__":
         run_all(lnk.dbs.rockerbox, zookeeper)
     else:
         if options.segment == False:
-            ac = ActionCache(options.username, options.password, lnk.dbs.rockerbox)
+            zookeeper =KazooClient(hosts="zk1:2181")
+            zookeeper.start()
+            ac = ActionCache(options.username, options.password, lnk.dbs.rockerbox, zookeeper)
             run_advertiser(ac, options.username)
         else:
-            ac = ActionCache(options.username, options.password, lnk.dbs.rockerbox)
+            zookeeper =KazooClient(hosts="zk1:2181")
+            zookeeper.start()
+            ac = ActionCache(options.username, options.password, lnk.dbs.rockerbox,zookeeper)
             run_advertiser_segment(ac, options.username, options.segment)
     
     if options.remove_old == True:
