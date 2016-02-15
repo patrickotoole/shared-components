@@ -1,27 +1,30 @@
-import requests, json, logging, pandas
+import requests, json, logging, pandas, pickle, work_queue
 from pandas.io.json import json_normalize
 from link import lnk
 from lib.pandas_sql import s as _sql
 import datetime
+import lib.cassandra_cache.run as cassandra_functions
+from kazoo.client import KazooClient
 
 formatter = '%(asctime)s:%(levelname)s - %(message)s'
 logging.basicConfig(level=logging.INFO, format=formatter)
 
 logger = logging.getLogger()
 
-SQL_QUERY = "select pixel_source_name from advertiser where active=1 and deleted=0 and running=1"
+SQL_QUERY = "select pixel_source_name from advertiser where crusher=1 and deleted=0"
 
 SQL_REMOVE_OLD = "DELETE FROM action_dashboard_cache where update_time < (UNIX_TIMESTAMP() - %s)"
 
 current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 class ActionCache:
-    def __init__(self, username, password, con):
+    def __init__(self, username, password, con, zookeeper=None):
         self.username = username
         self.password = password
         self.con = con
         self.req = requests
         self.sql_query = _sql._write_mysql
+        self.zookeeper = zookeeper
 
     def auth(self):
         data = {"username":self.username,"password":self.password}
@@ -87,16 +90,28 @@ class ActionCache:
                     logging.info("error with df %s" % str(to_insert))
                 logging.info("inserted %s records for advertiser username (includes a_) %s" % (len(to_insert), self.username))
 
+    def request_and_write(self,segment, advertiser ):
+        res = self.make_request(segment["url_pattern"],advertiser,segment["action_name"], segment["action_id"])
+        if(len(res)>=1):
+            self.insert(res, "action_dashboard_cache", self.con, ['advertiser', 'action_id', 'domain'])
+
+    def add_to_work_queue(self, segment, advertiser):
+        yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
+        _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
+        work = pickle.dumps((
+                cassandra_functions.run_recurring,
+                [advertiser,segment["url_pattern"][0],_cache_yesterday,_cache_yesterday + "recurring"]
+                ))
+        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,1)
+        logging.info("added to work queue %s for %s" %(segment["url_pattern"][0],advertiser))
+
     def seg_loop(self, segments, advertiser):
-		for seg in segments:
-			res = self.make_request(seg["url_pattern"],advertiser,seg["action_name"], seg["action_id"])
-			if(len(res)>=1):
-				self.insert(res, "action_dashboard_cache", self.con, ['advertiser', 'action_id', 'domain'])
+        for seg in segments:
+            self.request_and_write(seg, advertiser)
+            self.add_to_work_queue(seg, advertiser)
 
-
-def get_all_advertisers():
-	connect = lnk.dbs.rockerbox
-	ad_df = connect.select_dataframe(SQL_QUERY)
+def get_all_advertisers(db_con):
+	ad_df = db_con.select_dataframe(SQL_QUERY)
 	advertiser_list = []
 	for index, ad in ad_df.iterrows():
 		username = "a_%s" % str(ad[0])
@@ -104,21 +119,20 @@ def get_all_advertisers():
 		advertiser_list.append([username,password])
 	return advertiser_list
 
-def run_all():
-	advertiser_list = get_all_advertisers()
+def run_all(db_connect, zk):
+	advertiser_list = get_all_advertisers(db_connect)
 	for advert in advertiser_list:
-		segs = ActionCache(advert[0], advert[1], lnk.dbs.rockerbox)
+		segs = ActionCache(advert[0], advert[1], db_connect,zk)
 		segs.auth()
 		s=segs.get_segments()
 		advertiser_name = str(advert[0].replace("a_",""))
 		segs.seg_loop(s, advertiser_name)
 
-def run_advertiser(user, password):
-	segs = ActionCache(user, password, lnk.dbs.rockerbox)
-	segs.auth()
-	s = segs.get_segments()
+def run_advertiser(ac, username):
+	ac.auth()
+	s = ac.get_segments()
 	advertiser_name = str(options.username.replace("a_",""))
-	segs.seg_loop(s,advertiser_name)
+	ac.seg_loop(s,advertiser_name)
 
 def select_segment(segment_name, json_data):
 	segment = []
@@ -133,21 +147,20 @@ def select_segment(segment_name, json_data):
                                 segment.append(single_seg)
 	return segment
 
-def run_advertiser_segment(user, password, conn, segment_name):
-	segs = ActionCache(user, password, conn)
-	segs.auth()
-	s = segs.get_segments()
-	advertiser_name = str(user.replace("a_",""))
+def run_advertiser_segment(ac, username, segment_name):
+	ac.auth()
+	s = ac.get_segments()
+	advertiser_name = str(username.replace("a_",""))
 	url = "http://beta.crusher.getrockerbox.com/crusher/funnel/action?format=json"
-	results = segs.req.get(url,cookies=segs.cookie)
+	results = ac.req.get(url,cookies=ac.cookie)
 	segment = []
 	try:
 		raw_results = results.json()['response']
 		segment = select_segment(segment_name, raw_results)
-		df = segs.make_request(segment[0]["url_pattern"], advertiser_name, segment[0]["action_name"], segment[0]["action_id"])
+		df = ac.make_request(segment[0]["url_pattern"], advertiser_name, segment[0]["action_name"], segment[0]["action_id"])
 		segs.insert(df,"action_dashboard_cache", conn, ["advertiser", "action_id", "domain"])
 	except:
-		logging.error("Error with advertiser segment run for advertiser username %s and segment %s" % (user, segment_name))
+		logging.error("Error with advertiser segment run for advertiser username %s and segment %s" % (username, segment_name))
 
 if __name__ == "__main__":
     from lib.report.utils.loggingutils import basicConfig
@@ -167,12 +180,20 @@ if __name__ == "__main__":
     parse_command_line()
     
     if options.chronos ==True:
-		run_all()
+        zookeeper =KazooClient(hosts="zk1:2181")
+        zookeeper.start()
+        run_all(lnk.dbs.rockerbox, zookeeper)
     else:
         if options.segment == False:
-            run_advertiser(options.username, options.password)
+            zookeeper =KazooClient(hosts="zk1:2181")
+            zookeeper.start()
+            ac = ActionCache(options.username, options.password, lnk.dbs.rockerbox, zookeeper)
+            run_advertiser(ac, options.username)
         else:
-            run_advertiser_segment(options.username, options.password, lnk.dbs.rockerbox, options.segment)
+            zookeeper =KazooClient(hosts="zk1:2181")
+            zookeeper.start()
+            ac = ActionCache(options.username, options.password, lnk.dbs.rockerbox,zookeeper)
+            run_advertiser_segment(ac, options.username, options.segment)
     
     if options.remove_old == True:
         lnk.dbs.rockerbox.excute(SQL_REMOVE_OLD % options.remove_seconds)

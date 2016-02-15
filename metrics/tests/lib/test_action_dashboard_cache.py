@@ -43,7 +43,9 @@ def buildHelper(fix):
 class ActionCacheTestCase(unittest.TestCase):
     
     def setUp(self):
-        self.instance = adc.ActionCache("username" ,"password", mock.MagicMock())
+        mock_zk = mock.MagicMock()
+        mock_zk.start.side_effect = lambda : ""
+        self.instance = adc.ActionCache("username" ,"password", mock.MagicMock(), zookeeper=mock_zk)
         self.instance.req = mock.MagicMock()
         self.instance.req.post.side_effect = post_helper
         self.futureFrames = []
