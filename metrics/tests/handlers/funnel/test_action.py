@@ -94,7 +94,8 @@ class ActionTest(AsyncHTTPTestCase):
           "advertiser": "homie",
           "action_name" : "yo homie",
           "url_pattern": ["a","b","c"],
-          "operator": "and"
+          "operator": "and",
+          "action_type":"segment"
         }"""
 
         _a = self.fetch("/?format=json&",method="POST",body=action_json).body
@@ -118,7 +119,8 @@ class ActionTest(AsyncHTTPTestCase):
                 "action_name":"0",
                 "operator":"and",
                 "url_pattern":["http://www.baublebar.com/necklaces.html","http://www.baublebar.com/checkout/cart"],
-                "advertiser":"baublebar"
+                "advertiser":"baublebar",
+                "action_type":"segment"
             }
         """
 
