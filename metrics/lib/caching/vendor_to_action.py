@@ -1,6 +1,7 @@
 from link import lnk
 import requests, json, logging
 import action_dashboard_cache as adc
+from kazoo.client import KazooClient
 
 VENDOR_QUERY = "select url_patterns, vendor from vendor_patterns where medium is not null and medium_type is not null"
 
@@ -47,19 +48,22 @@ if __name__ == "__main__":
     basicConfig(options={})
     parse_command_line()
 
+    zookeeper = KazooClient(hosts="zk1:2181")
+    zookeeper.start()
+
     if not options.username:
         sql = lnk.dbs.rockerbox
         vendors = sql.select_dataframe(VENDOR_QUERY)
-        advertisers = adc.get_all_advertisers()
+        advertisers = adc.get_all_advertisers(sql)
         for advertiser in advertisers:
-            AC = adc.ActionCache(advertiser[0], advertiser[1],sql)
+            AC = adc.ActionCache(advertiser[0], advertiser[1],sql, zookeeper)
             AC.auth()
             logging.info("populating action table for vendors for advertiser %s" % advertiser)
             vendors.T.apply(buildIter(AC,advertiser))
     else:
         sql = lnk.dbs.rockerbox
         vendors = sql.select_dataframe(VENDOR_QUERY)
-        AC = adc.ActionCache(options.username, options.password,sql)
+        AC = adc.ActionCache(options.username, options.password,sql,zookeeper)
         AC.auth()
         advertiser = options.username.replace("a_","")
         logging.info("populating action table for vendors for advertiser %s" % advertiser)
