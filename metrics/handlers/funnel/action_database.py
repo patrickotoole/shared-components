@@ -14,9 +14,9 @@ SELECT *  from action_patterns where %(where)s
 
 INSERT_ACTION = """
 INSERT INTO action
-    (start_date, end_date, operator, pixel_source_name, action_name)
+    (start_date, end_date, operator, pixel_source_name, action_name, action_type)
 VALUES
-    ("%(start_date)s", "%(end_date)s", "%(operator)s", "%(advertiser)s", "%(action_name)s")
+    ("%(start_date)s", "%(end_date)s", "%(operator)s", "%(advertiser)s", "%(action_name)s", "%(action_type)s")
 """
 
 INSERT_ACTION_PATTERNS = """
