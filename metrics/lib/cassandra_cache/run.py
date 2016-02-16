@@ -126,8 +126,8 @@ def run_recurring(advertiser,pattern,cache_date,identifier="test",connectors=Fal
 
     with cache:
 
-        INSERT_PATTERN_CACHE = "INSERT INTO rockerbox.pattern_domain_cache (url_pattern,pixel_source_name,cache_date) VALUES ('%s','%s','%s')" 
-        UPDATE_PATTERN_CACHE = "UPDATE rockerbox.pattern_domain_cache SET completed=1, seconds=%s where url_pattern = '%s' and pixel_source_name = '%s' and cache_date = '%s'"
+        INSERT_PATTERN_CACHE = "INSERT INTO rockerbox.pattern_unique_cache (url_pattern,pixel_source_name,cache_date) VALUES ('%s','%s','%s')" 
+        UPDATE_PATTERN_CACHE = "UPDATE rockerbox.pattern_unique_cache SET completed=1, seconds=%s where url_pattern = '%s' and pixel_source_name = '%s' and cache_date = '%s'"
 
         db.execute(INSERT_PATTERN_CACHE % (pattern,advertiser,cache_date))
 
@@ -141,8 +141,8 @@ def run_recurring(advertiser,pattern,cache_date,identifier="test",connectors=Fal
         pattern_cache.cache_uniques()
         pattern_cache.cache_visits()
 
-        pattern_cache.cache_domains()
-        pattern_cache.cache_hll_domains(cache_date)
+        #pattern_cache.cache_domains()
+        #pattern_cache.cache_hll_domains(cache_date)
 
         elapsed = int(time.time() - start)
 
