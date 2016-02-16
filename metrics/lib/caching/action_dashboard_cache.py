@@ -4,7 +4,6 @@ from link import lnk
 from lib.pandas_sql import s as _sql
 import datetime
 import lib.cassandra_cache.run as cassandra_functions
-import work_queue_caching as adc_runner
 from kazoo.client import KazooClient
 
 formatter = '%(asctime)s:%(levelname)s - %(message)s'
@@ -108,12 +107,15 @@ class ActionCache:
         logging.info("added to work queue %s for %s" %(segment["url_pattern"][0],advertiser))
 
     def add_db_to_work_queue(self, segment, advertiser):
+        import lib.caching.work_queue_caching as adc_runner
+        yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
+        _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
         work = pickle.dumps((
                 adc_runner.run_domains_cache,
-                [advertiser,segment["url_pattern"][0]]
+                [advertiser,segment["url_pattern"][0], _cache_yesterday,_cache_yesterday + "domaincache"]
                 ))
-        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,0)
-        logging.info("added to work queue %s for %s" %(segment["url_pattern"][0],advertiser)) 
+        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,1)
+        logging.info("added to DB work queue %s for %s" %(segment["url_pattern"][0],advertiser)) 
 
     def seg_loop(self, segments, advertiser):
         for seg in segments:
@@ -136,7 +138,6 @@ def run_all(db_connect, zk):
 		segs.auth()
 		s=segs.get_segments()
 		advertiser_name = str(advert[0].replace("a_",""))
-        #work = pickle.dumps(()) work_queue.SingleQueue(self.zookeeper, "python_queue").put(work,0)
 		segs.seg_loop(s, advertiser_name)
 
 def run_advertiser(ac, username):
@@ -146,16 +147,16 @@ def run_advertiser(ac, username):
 	ac.seg_loop(s,advertiser_name)
 
 def select_segment(segment_name, json_data):
-	segment = []
-	for result in json_data:
-		try:
-			if(result['url_pattern'][0] == segment_name):
-				single_seg = {"url_pattern": result['url_pattern'], "action_name":result['action_name'], "action_id":result['action_id']}
-				segment.append(single_seg)
-		except:
-			if(result['url_pattern'] == segment_name):
-                                single_seg = {"url_pattern": result['url_pattern'], "action_name":result['action_name'], "action_id":result['action_id']}
-                                segment.append(single_seg)
+    segment = []
+    for result in json_data:
+        try:
+            if(result['url_pattern'][0] == segment_name):
+                single_seg = {"url_pattern": result['url_pattern'], "action_name":result['action_name'], "action_id":result['action_id']}
+                segment.append(single_seg)
+        except:
+            if(result['url_pattern'] == segment_name):
+                single_seg = {"url_pattern": result['url_pattern'], "action_name":result['action_name'], "action_id":result['action_id']}
+                segment.append(single_seg)
 	return segment
 
 def run_advertiser_segment(ac, username, segment_name):
