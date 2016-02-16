@@ -4,6 +4,7 @@ from link import lnk
 from lib.pandas_sql import s as _sql
 import datetime
 import lib.cassandra_cache.run as cassandra_functions
+import work_queue_caching as adc_runner
 from kazoo.client import KazooClient
 
 formatter = '%(asctime)s:%(levelname)s - %(message)s'
@@ -65,6 +66,7 @@ class ActionCache:
                 record['action_name'] = action_name
                 record['domain'] = item['domain']
                 record['count'] = item['count']
+                record['url_pattern'] = url_pattern[0]
                 data['data'].append(record)
             df = json_normalize(data['data'])
             logging.info("API returned %s records and converted to dataframe for segment %s for advertiser %s" % (len(df), url_pattern, self.username))
@@ -102,12 +104,20 @@ class ActionCache:
                 cassandra_functions.run_recurring,
                 [advertiser,segment["url_pattern"][0],_cache_yesterday,_cache_yesterday + "recurring"]
                 ))
-        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,1)
+        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,0)
         logging.info("added to work queue %s for %s" %(segment["url_pattern"][0],advertiser))
+
+    def add_db_to_work_queue(self, segment, advertiser):
+        work = pickle.dumps((
+                adc_runner.run_domains_cache,
+                [advertiser,segment["url_pattern"][0]]
+                ))
+        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,0)
+        logging.info("added to work queue %s for %s" %(segment["url_pattern"][0],advertiser)) 
 
     def seg_loop(self, segments, advertiser):
         for seg in segments:
-            self.request_and_write(seg, advertiser)
+            self.add_db_to_work_queue(seg, advertiser)
             self.add_to_work_queue(seg, advertiser)
 
 def get_all_advertisers(db_con):
@@ -126,6 +136,7 @@ def run_all(db_connect, zk):
 		segs.auth()
 		s=segs.get_segments()
 		advertiser_name = str(advert[0].replace("a_",""))
+        #work = pickle.dumps(()) work_queue.SingleQueue(self.zookeeper, "python_queue").put(work,0)
 		segs.seg_loop(s, advertiser_name)
 
 def run_advertiser(ac, username):
@@ -158,9 +169,10 @@ def run_advertiser_segment(ac, username, segment_name):
 		raw_results = results.json()['response']
 		segment = select_segment(segment_name, raw_results)
 		df = ac.make_request(segment[0]["url_pattern"], advertiser_name, segment[0]["action_name"], segment[0]["action_id"])
-		segs.insert(df,"action_dashboard_cache", conn, ["advertiser", "action_id", "domain"])
+		ac.insert(df,"action_dashboard_cache", ac.con, ["advertiser", "action_id", "domain"])
 	except:
 		logging.error("Error with advertiser segment run for advertiser username %s and segment %s" % (username, segment_name))
+
 
 if __name__ == "__main__":
     from lib.report.utils.loggingutils import basicConfig
