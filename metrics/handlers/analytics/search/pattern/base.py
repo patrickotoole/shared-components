@@ -60,7 +60,7 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
         if len(_domains) > 100:
             prepped = _domains.unstack(1).fillna(0)
             try:
-                clusters, similarity, uid_clusters = model.cluster(_domains, prepped)
+                clusters, similarity, uid_clusters = yield model.cluster(_domains, prepped)
 
                 response['clusters'] = clusters
                 response['similarity'] = similarity
@@ -326,6 +326,34 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
         response = self.response_timeseries(response,stats)
 
         self.write_json(response)
+
+    @defer.inlineCallbacks
+    def get_uids_only(self, advertiser, pattern_terms, num_days, logic="or",timeout=60):
+
+        dates = build_datelist(num_days)
+        args = [advertiser,pattern_terms[0][0],dates]
+
+
+
+        uids = yield self.get_uids_from_cache(*args)
+        uids = list(set([u['uid'] for u in uids]))
+
+        urls, raw_urls = yield self.defer_get_uid_visits(advertiser,uids,"adsf")
+        df = raw_urls.groupby(["uid","date"])['source'].count().reset_index().groupby("uid")['source'].apply(lambda x: x.to_dict() )
+
+        o1 = raw_urls.groupby(["uid"]).apply(lambda x: x.groupby("date")[['source']].count().rename(columns={"source":"visits"}).reset_index().to_dict("records") )
+        #o2 = raw_urls.groupby(["uid","date"])['source'].count().reset_index().groupby("uid").apply(lambda x: x.rename(columns={"source":"visits"}).set_index("uid").to_dict("records") ) 
+        #import ipdb; ipdb.set_trace()
+        _results = o1.reset_index().set_index("uid").rename(columns={0:"sessions"})
+        _results['count'] = _results.sessions.map(lambda x: len(x))
+        results = _results.to_dict()
+
+        response = self.default_response(pattern_terms,logic)
+        response['results'] = results
+
+        self.write_json(response)
+
+
 
 
     @defer.inlineCallbacks
