@@ -159,7 +159,7 @@ def run_advertiser_segment(ac, username, segment_name):
 		raw_results = results.json()['response']
 		segment = select_segment(segment_name, raw_results)
 		df = ac.make_request(segment[0]["url_pattern"], advertiser_name, segment[0]["action_name"], segment[0]["action_id"])
-		segs.insert(df,"action_dashboard_cache", conn, ["advertiser", "action_id", "domain"])
+		ac.insert(df,"action_dashboard_cache", ac.con, ["advertiser", "action_id", "domain"])
 	except:
 		logging.error("Error with advertiser segment run for advertiser username %s and segment %s" % (username, segment_name))
 
