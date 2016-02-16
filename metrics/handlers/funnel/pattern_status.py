@@ -9,6 +9,7 @@ from lib.helpers import APIHelpers
 
 import work_queue
 import lib.cassandra_cache.run as cache
+import lib.caching.action_dashboard_cache as adc
 
 import lib.cassandra_cache.zk_helpers as zk_helpers
 
@@ -68,8 +69,8 @@ class PatternStatusHandler(BaseHandler,APIHelpers,PatternDatabase):
         _cache_date = datetime.datetime.strftime(cache_date,"%Y-%m-%d")
 
         work = pickle.dumps((
-            cache.run_recurring,
-            [advertiser,pattern,_cache_date, _cache_date + " domain_cache"]
+            adc.run_domains_cache,
+            [advertiser, pattern]
         ))
 
         work_queue.SingleQueue(self.zookeeper,self.queue).put(work,0)

@@ -163,6 +163,28 @@ def run_advertiser_segment(ac, username, segment_name):
 	except:
 		logging.error("Error with advertiser segment run for advertiser username %s and segment %s" % (username, segment_name))
 
+def get_connectors():
+    from link import lnk
+    return {
+        "db": lnk.dbs.rockerbox,
+        "zk": {},
+        "cassandra": lnk.dbs.cassandra
+    }
+
+def run_domains_cache(advertiser,pattern,connectors=False):
+    connectors = connectors or get_connectors()
+    
+    db = connectors['db']
+    zk = connectors['zk']
+    
+    user_format = "a_{}"
+    username = user_format.format(advertiser)
+    AC = ActionCache(username, "admin",db, zk)
+    logging.info("Action Cache class instance created and initiated")
+    run_advertiser_segment(AC,username, pattern)
+    logging.info("ran run advertiser segment for %s and %s" % (advertiser, pattern))
+
+
 if __name__ == "__main__":
     from lib.report.utils.loggingutils import basicConfig
     from lib.report.utils.options import define
