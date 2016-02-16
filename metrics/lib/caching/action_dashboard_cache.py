@@ -65,6 +65,7 @@ class ActionCache:
                 record['action_name'] = action_name
                 record['domain'] = item['domain']
                 record['count'] = item['count']
+                record['url_pattern'] = url_pattern[0]
                 data['data'].append(record)
             df = json_normalize(data['data'])
             logging.info("API returned %s records and converted to dataframe for segment %s for advertiser %s" % (len(df), url_pattern, self.username))
