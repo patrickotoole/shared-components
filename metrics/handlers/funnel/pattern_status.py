@@ -9,7 +9,7 @@ from lib.helpers import APIHelpers
 
 import work_queue
 import lib.cassandra_cache.run as cache
-import lib.caching.action_dashboard_cache as adc
+import lib.caching.work_queue_caching as adc_runner
 
 import lib.cassandra_cache.zk_helpers as zk_helpers
 
@@ -69,7 +69,7 @@ class PatternStatusHandler(BaseHandler,APIHelpers,PatternDatabase):
         _cache_date = datetime.datetime.strftime(cache_date,"%Y-%m-%d")
 
         work = pickle.dumps((
-            adc.run_domains_cache,
+            adc_runner.run_domains_cache,
             [advertiser, pattern]
         ))
 
