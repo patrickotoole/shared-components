@@ -9,7 +9,7 @@ def get_connectors():
         "cassandra": lnk.dbs.cassandra
     }
 
-def run_domains_cache(advertiser,pattern,connectors=False):
+def run_domains_cache(advertiser,pattern,cache_date, indentifiers="test", connectors=False):
     connectors = connectors or get_connectors()
 
     db = connectors['db']
