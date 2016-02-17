@@ -21,6 +21,7 @@ def get_idf(db,domain_set):
         WHERE domain in (%(domains)s)
     """
 
+    domain_set = [i.encode("utf-8") for i in domain_set]
     domains = domains = "'" + "','".join(domain_set) + "'"
 
     return db.select_dataframe(QUERY % {"domains":domains})
