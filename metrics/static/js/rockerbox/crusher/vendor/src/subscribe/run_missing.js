@@ -2,20 +2,20 @@ function missing(data) {
 
   var missing_data = data.filter(function(action){
     return (action.timeseries_data == undefined) || (action.domains == undefined)
-  }) 
+  })
 
   return missing_data
 }
 
 function should_trigger(datum) {
-  return ((!datum.timeseries_data) && (!datum.domains)) 
+  return ((!datum.timeseries_data) && (!datum.domains))
 }
 
 function trigger(datum) {
   setTimeout(function(){
     pubsub.publishers.actionTimeseriesOnly(datum)
     pubsub.publishers.pattern_domains_cached(datum)
-  },1) 
+  },1)
 }
 
 export default function(data, force) {

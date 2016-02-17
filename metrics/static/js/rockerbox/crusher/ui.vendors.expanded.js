@@ -15,7 +15,7 @@ RB.crusher.ui.vendors = (function(vendors) {
       .on('click',function() {
         RB.crusher.controller.initializers.vendors(obj,false)
       })
-    
+
   }
 
   return vendors

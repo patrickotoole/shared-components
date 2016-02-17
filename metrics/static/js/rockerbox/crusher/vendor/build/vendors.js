@@ -230,20 +230,20 @@
 
     var missing_data = data.filter(function(action){
       return (action.timeseries_data == undefined) || (action.domains == undefined)
-    }) 
+    })
 
     return missing_data
   }
 
   function should_trigger(datum) {
-    return ((!datum.timeseries_data) && (!datum.domains)) 
+    return ((!datum.timeseries_data) && (!datum.domains))
   }
 
   function trigger(datum) {
     setTimeout(function(){
       pubsub.publishers.actionTimeseriesOnly(datum)
       pubsub.publishers.pattern_domains_cached(datum)
-    },1) 
+    },1)
   }
 
   function run_missing(data, force) {
@@ -270,9 +270,9 @@
       .run(this.draw.bind(this))
       .unpersist(false)
 
-    pubsub.subscriber("vendor-timeseries-domains-resize",["resize"])
-      .run(this.draw.bind(this))
-      .unpersist(false)
+    // pubsub.subscriber("vendor-timeseries-domains-resize",["resize"])
+    //   .run(this.draw.bind(this))
+    //   .unpersist(false)
 
     return this
   }
@@ -312,14 +312,13 @@
       return this
     }
     return this._wrapper.datum()
-
   }
 
 
   function draw(_d1, _d2, skip_missing) {
 
-    if ( (this._wrapper.datum().length ) && 
-         (this._data !== this._wrapper.datum()) ) return this
+    if ( (this._wrapper.datum().length ) && (this._data !== this._wrapper.datum()) )
+      return this
 
     var items = this.render_list(this._wrapper)
     this.render_row(items)
@@ -327,7 +326,7 @@
     if (!skip_missing) this.run_missing(items.data())
 
     return this
-    
+
   }
 
 
@@ -352,12 +351,309 @@
     render_nav: render_nav,
     render_pie: render_pie,
     render_visits: render_visits
-    
+  }
+
+  function render_categories(row, table_categories) {
+
+    d3_splat(row, '.vendor-column-item', 'div', table_categories, function(x) {
+        return x.key;
+      })
+      .style('background-color', function(x) {
+
+        var unhandled_vendor = this.parentNode.__data__
+        var vendor_domain_percentages = unhandled_vendor.vendor_domain_percentages
+
+        if (typeof vendor_domain_percentages[x.key] !== typeof undefined) {
+          var transparancy_ratio = Math.round((vendor_domain_percentages[x.key] / unhandled_vendor.total_domains) * 1000) / 10;
+        } else {
+          var transparancy_ratio = 0;
+        }
+
+        var color_ratio = d3.scale.log().domain([1, 50]).range([0.05, 0.8]);
+
+        return 'rgba(70,130,180,' + color_ratio(transparancy_ratio) + ')';
+      })
+      .classed('vendor-column-item', true)
+      .text(function(x) {
+        var unhandled_vendor = this.parentNode.__data__
+        var vendor_domain_percentages = unhandled_vendor.vendor_domain_percentages
+
+
+        if (typeof vendor_domain_percentages[x.key] !== typeof undefined) {
+          return Math.round((vendor_domain_percentages[x.key] / unhandled_vendor.total_domains) * 1000) / 10 + '%';
+        } else {
+          return '0%';
+        }
+      });
+
+  }
+
+  function render_views_metrics(row) {
+    var comma_formatter = d3.format(',');
+
+    d3_updateable(row, '.vendor-column-views', 'div')
+      .classed('vendor-column vendor-column-views', true)
+      .text(function(x) {
+        return comma_formatter(x.views)
+      });
+
+    d3_updateable(row, '.vendor-column-visits', 'div')
+      .classed('vendor-column vendor-column-visits', true)
+      .text(function(x) {
+        return comma_formatter(x.visits)
+      });
+
+    d3_updateable(row, '.vendor-column-uniques', 'div')
+      .classed('vendor-column vendor-column-uniques', true)
+      .text(function(x) {
+        return comma_formatter(x.uniques)
+      });
+  }
+
+  function render_title(row) {
+    d3_updateable(row, '.vendor-column-title', 'div')
+      .style('cursor', 'pointer')
+      .classed('vendor-column vendor-column-title', true)
+      .text(function(x){ return x.action_name })
+      .on('click', function(x) {
+        RB.routes.navigation.forward({
+          "name": "View Existing Actions",
+          "push_state": "/crusher/action/existing",
+          "skipRender": true,
+          "values_key": "action_name"
+        })
+        setTimeout(RB.routes.navigation.forward,1,x)
+      });
+  }
+
+  function render_header(target, table_categories) {
+    var vendor_header = d3_updateable(target, '.vendors-header-row', 'div')
+      .classed('vendors-header-row', true);
+
+    var header_title = d3_updateable(vendor_header, '.vendor-title', 'div')
+      .classed('vendor-title', true)
+      .text('Vendor')
+
+    var timeseries_header = d3_updateable(vendor_header, '.timeseries-header', 'div')
+      .classed('timeseries-header', true)
+
+    var _ = ['Views', 'Visits', 'Uniques']
+
+    d3_splat(timeseries_header, '.timeseries-header-item', 'div', _, function(x) {
+        return x;
+      })
+      .classed('timeseries-header-item', true)
+      .text(String)
+
+    d3_splat(vendor_header, '.vendor-category-header-item', 'div', table_categories, function(x) {
+        return x.key;
+      })
+      .classed('vendor-category-header-item', true)
+      .html(function(x) {
+        return '<span>' + x.key + '</span>';
+      })
+  }
+
+  function render_rows(table_categories, list) {
+    var row = this.render_row(list);
+
+    this.render_title(row);
+    this.render_views_metrics(row);
+    this.render_categories(row, table_categories);
+
+    var rows_with_data = list.datum()
+      .filter(function(x) {
+        return ((!!x.timeseries_data) && (!!x.domains));
+      });
+
+    var rows_without_data = list.datum()
+      .filter(function(x) {
+        return !((!!x.timeseries_data) && (!!x.domains));
+      });
+
+    if (rows_without_data.length > 0) {
+      var vendor_loading = d3_updateable(list, '.vendor-loading', 'div')
+        .classed('vendor-loading loading-icon col-md-12', true)
+        .style('text-align', 'center')
+        .html('<img src="/static/img/general/logo-small.gif" alt="Logo loader" width="16px"> Loading vendor data...');
+    } else {
+      d3.select('.vendor-loading').remove();
+    }
+
+    if (rows_with_data.length === 0 && rows_without_data.length === 0) {
+      d3_updateable(list, '.vendor-empty', 'div')
+        .classed('vendor-empty col-md-12', true)
+        .style('text-align', 'center')
+        .text('No vendor data could be found.')
+    }
+    return row;
+  }
+
+  function render_row$1(list) {
+    var row = d3_splat(list, '.vendors-row', 'div', function(vendors) {
+        var vendors_with_data = vendors.filter(function(x) {
+          return (x.timeseries_data != undefined) && (x.domains)
+        })
+
+        return vendors_with_data.map(function(vendor) {
+          if ((vendor.total_domains) && (vendor.views || vendor.visits || vendor.uniques)) return vendor
+
+          vendor.timeseries_data.forEach(function(data_point) {
+            vendor.views = (
+              (typeof vendor.views === typeof undefined) ?
+              (data_point.views) :
+              (vendor.views + data_point.views)
+            );
+
+            vendor.visits = (
+              (typeof vendor.visits === typeof undefined) ?
+              (data_point.visits) :
+              (vendor.visits + data_point.visits)
+            );
+
+            vendor.uniques = (
+              (typeof vendor.uniques === typeof undefined) ?
+              (data_point.uniques) :
+              (vendor.uniques + data_point.uniques)
+            );
+          });
+
+          if (!vendor.vendor_domain_percentages && !!vendor.domains) {
+            var vendor_domain_percentages = {};
+            vendor.total_domains = 0;
+            vendor.domains.forEach(function(domain) {
+              if (typeof vendor_domain_percentages[domain.parent_category_name] === typeof undefined) {
+                vendor_domain_percentages[domain.parent_category_name] = 0;
+              }
+
+              vendor_domain_percentages[domain.parent_category_name] += domain.count;
+              vendor.total_domains += domain.count;
+            });
+
+            vendor.vendor_domain_percentages = vendor_domain_percentages;
+          }
+          return vendor;
+
+        })
+      }, function(x) {
+        return x.action_id;
+      })
+      .classed('vendors-row', true);
+
+    return row;
+  }
+
+  function render_wrapper$1(target) {
+
+    var vendors_list_card = d3_updateable(target, '.vendors-list-table', 'section')
+      .classed('vendors-list-table bar series col-md-12 show-loading', true);
+
+    var controls = d3_updateable(vendors_list_card, '.page-header-controls', 'div')
+      .classed('page-header-controls', true)
+      .text('View expanded')
+      .on('click', function(x) {
+        RB.crusher.controller.initializers.vendors(x,true)
+      }.bind(this) )
+
+    return vendors_list_card;
+
+  }
+
+  function Table(target) {
+    this._target = target;
+    this._wrapper = this.render_wrapper(target);
+    this._data = [];
+    this._on = {};
+  }
+
+  function datum$1(d) {
+    if (d !== undefined) {
+      this._data = d
+      this._wrapper.datum(d)
+      return this
+    }
+    return this._wrapper.datum()
+
+  }
+
+  var buildCategories = function(vendor) {
+    var vendor_categories = {};
+    vendor.domains.forEach(function(domain) {
+      if (typeof vendor_categories[domain.parent_category_name] === typeof undefined) {
+        vendor_categories[domain.parent_category_name] = 0;
+      }
+      vendor_categories[domain.parent_category_name] += domain.count;
+    });
+
+    return d3.entries(vendor_categories).sort(function(x, y) {
+      return y.value - x.value;
+    }).slice(0, 13);
+  }
+
+  var check_missing_header = function(tableWrapper) {
+    var has_header = tableWrapper.selectAll('.vendors-header-row')[0].length > 0
+
+    var unhandled_vendor = tableWrapper.datum()[0]
+    try {
+      var table_categories = buildCategories(unhandled_vendor)
+      if (!has_header) {
+        render_header(tableWrapper, JSON.parse(JSON.stringify(table_categories)))
+      }
+    } catch (e) {
+      console.log('ERROR', e);
+    }
+
+    return table_categories
+  }
+
+  function draw$1(_d1, _d2, skip_missing) {
+
+    if ((this._wrapper.datum().length) &&
+      (this._data !== this._wrapper.datum())) return this;
+
+    var table_categories = check_missing_header(this._wrapper)
+
+
+    var row = this.render_rows(table_categories, this._wrapper)
+      // this.render_row(items)
+    // this.render_categories(row, table_categories)
+
+    if (!skip_missing) this.run_missing(this._data)
+
+    return this
+
+  }
+
+  function vendor_table(target) {
+    return new Table(target)
+  }
+
+  Table.prototype = {
+    initialize: initialize,
+    subscribe: subscribe,
+    unsubscribe: unsubscribe,
+    run_missing: run_missing,
+
+    datum: datum$1,
+    draw: draw$1,
+    on: function(x, y) {
+      this._on[x] = y;
+      return this
+    },
+
+    render_wrapper: render_wrapper$1,
+    render_row: render_row$1,
+    render_rows: render_rows,
+    render_header: render_header,
+    render_title: render_title,
+    render_views_metrics: render_views_metrics,
+    render_categories: render_categories
   }
 
   var version = "0.0.1";
 
   exports.version = version;
   exports.vendor_expanded = vendor_expanded;
+  exports.vendor_table = vendor_table;
 
 }));

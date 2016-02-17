@@ -12,7 +12,6 @@ import render_nav from './expanded/render/nav'
 import render_pie from './expanded/render/pie'
 import render_visits from './expanded/render/visits'
 
-
 export function Expanded(target) {
   this._target = target
   this._wrapper = this.render_wrapper(target)
@@ -27,14 +26,13 @@ function datum(d) {
     return this
   }
   return this._wrapper.datum()
-
 }
 
 
 function draw(_d1, _d2, skip_missing) {
 
-  if ( (this._wrapper.datum().length ) && 
-       (this._data !== this._wrapper.datum()) ) return this
+  if ( (this._wrapper.datum().length ) && (this._data !== this._wrapper.datum()) )
+    return this
 
   var items = this.render_list(this._wrapper)
   this.render_row(items)
@@ -42,7 +40,7 @@ function draw(_d1, _d2, skip_missing) {
   if (!skip_missing) this.run_missing(items.data())
 
   return this
-  
+
 }
 
 
@@ -67,7 +65,6 @@ Expanded.prototype = {
   render_nav: render_nav,
   render_pie: render_pie,
   render_visits: render_visits
-  
 }
 
 export default vendor_expanded
