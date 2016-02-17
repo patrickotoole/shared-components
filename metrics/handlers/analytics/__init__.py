@@ -5,7 +5,7 @@ from visit_uids import VisitUidsHandler
 from visit_domains import VisitDomainsHandler
 from visit_events import VisitEventsHandler
 from served_events import ServedEventsHandler
-
+from visit_domains_full  import VisitDomainsFullHandler
 
 from domains import DomainsMongoHandler
 from visit_avails import VisitAvailsHandler
