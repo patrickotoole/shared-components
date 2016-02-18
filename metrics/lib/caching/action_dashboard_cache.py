@@ -70,7 +70,7 @@ class ActionCache:
             df = pandas.DataFrame(data['data'])
             logging.info("API returned %s records and converted to dataframe for segment %s for advertiser %s" % (len(df), url_pattern, self.username))
         except:
-            logging.error("Error with data response for advertiser %s segment %s, text from response is %s" % (username, action_name, df))
+            logging.error("Error with data response for advertiser %s segment %s" % (username, action_name))
         return df
 
 
