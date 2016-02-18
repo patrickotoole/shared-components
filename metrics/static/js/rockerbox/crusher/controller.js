@@ -182,7 +182,7 @@ RB.crusher.controller = (function(controller) {
         'id': 'vendors-' + (not_table ? 'expanded' : 'table'),
         'name': 'Vendor Analysis',
       });
-      funnelRow.exit().remove();
+
 
       if(not_table) {
         RB.crusher.ui.vendors.show(funnelRow, obj);
