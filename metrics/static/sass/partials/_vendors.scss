@@ -2,15 +2,16 @@
   Table view
 */
 
-section.vendors-list-card {
-  .vendor-loading {
-    margin-top: 20px;
-  }
-}
-
 section.vendors-list-table {
-
   margin-left:10px;
+  padding: 30px;
+  width: calc(100% - 30px);
+  box-sizing: border-box;
+
+  .vendor-loading {
+    position: absolute;
+    bottom: 20px;
+  }
 
   div.vendors-header-row {
     height: 170px;
@@ -93,9 +94,12 @@ section.vendors-list-table {
 
       border-bottom: 1px solid #fbfbfb;
       border-right: 1px solid #fbfbfb;
-
     }
   }
+}
+
+section.vendors-list-table.show-loading {
+  padding-bottom: 60px !important;
 }
 
 /*
