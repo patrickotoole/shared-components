@@ -18,7 +18,6 @@ RB.crusher.ui.vendors = (function(vendors) {
         RB.crusher.controller.initializers.vendors(obj,false)
       });
 
-    funnelRow = funnelRow;
     var vendors_list_card = d3_updateable(funnelRow, '.vendors-list-card', 'section')
       .classed('vendors-list-card bar series col-md-12', true);
 
