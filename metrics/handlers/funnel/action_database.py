@@ -254,6 +254,7 @@ class ActionDatabase(object):
         self.assert_not_present(action,["action_id"])
 
         action["advertiser"] = action.get("advertiser",self.current_advertiser_name)
+        action["action_type"] = action.get("action_type", "segment")
 
         self.assert_required(action,self.required_cols)
 
