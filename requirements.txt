@@ -3,7 +3,7 @@ tornado
 mock==1.0.1
 vincent
 bcrypt
-pandas=0.14.1
+pandas==0.14.1
 https://github.com/dhrod5/link/archive/master.zip
 ujson
 redis
