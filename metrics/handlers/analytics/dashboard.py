@@ -13,7 +13,7 @@ SQL_QUERY_1 = "select a.url_pattern, sum(count), action_type from action_dashboa
 
 SQL_QUERY_3 = "select a.domain, a.count, c.parent_category_name from action_dashboard_cache a left join domain_category b on a.domain=b.domain and a.advertiser='%s' and url_pattern like '%s' inner join category c on b.category_name = c.category_name"
 
-SQL_QUERY_4 = "select action_type from action where url_pattern = '%s'"
+
 
 class ActionDashboardHandler(BaseHandler):
     def initialize(self, db=None, **kwargs):
@@ -37,11 +37,10 @@ class ActionDashboardHandler(BaseHandler):
         else:
             data = {'domains':[]}
             q2 = SQL_QUERY_3 % (advertiser, url_pattern)
-            a_type = self.db.select_dataframe(SQL_QUERY_4 % url_pattern)
             seg_data = self.db.select_dataframe(q2)
             seg_data = seg_data.fillna(0)
             current_data = seg_data.T.to_dict().values()
-            to_append = {"key":url_pattern, "action_type" : a_type.ix[0]["action_type"], "values":current_data}
+            to_append = {"key":url_pattern, "values":current_data}
             data['domains'].append(to_append)
             return data
 

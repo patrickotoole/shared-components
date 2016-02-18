@@ -1,5 +1,5 @@
 import requests, json, logging, pandas, pickle, work_queue
-from pandas.io.json import json_normalize
+
 from link import lnk
 from lib.pandas_sql import s as _sql
 import datetime
@@ -48,13 +48,13 @@ class ActionCache:
             logging.error("error getting cookie for advertise with username: %s" % self.username)
         return segments
 
-    def make_request(self, url_pattern, advertiser, action_name, action_id):
-        df = pandas.DataFrame()
+    def make_request(self, url_pattern, action_name, action_id,username):
+        advertiser = self.username.replace("a_","")
         try:
             logging.info("calling segment %s" % url_pattern[0])
             url = "http://beta.crusher.getrockerbox.com/crusher/pattern_search/timeseries?search=%s&num_days=2" % url_pattern[0]
             results = self.req.get(url, cookies=self.cookie)
-            df = pandas.DataFrame()
+            logging.info("results for segment %s where %s" % (url_pattern[0], results))
             resultsAsJson = results.json()['domains']
             data = {}
             data['data'] = []
@@ -67,10 +67,10 @@ class ActionCache:
                 record['count'] = item['count']
                 record['url_pattern'] = url_pattern[0]
                 data['data'].append(record)
-            df = json_normalize(data['data'])
+            df = pandas.DataFrame(data['data'])
             logging.info("API returned %s records and converted to dataframe for segment %s for advertiser %s" % (len(df), url_pattern, self.username))
         except:
-            logging.error("Error with data response for advertiser username %s segment %s, text from response is %s" % (self.username, action_name, df))
+            logging.error("Error with data response for advertiser %s segment %s, text from response is %s" % (username, action_name, df))
         return df
 
 
@@ -148,31 +148,35 @@ def run_advertiser(ac, username):
 
 def select_segment(segment_name, json_data):
     segment = []
-    for result in json_data:
-        try:
-            if(result['url_pattern'][0] == segment_name):
-                single_seg = {"url_pattern": result['url_pattern'], "action_name":result['action_name'], "action_id":result['action_id']}
-                segment.append(single_seg)
-        except:
-            if(result['url_pattern'] == segment_name):
-                single_seg = {"url_pattern": result['url_pattern'], "action_name":result['action_name'], "action_id":result['action_id']}
-                segment.append(single_seg)
-	return segment
+    single_seg ={}
+    for res in json_data:
+        if 'url_pattern' in res.keys() and type(res['url_pattern']) == list and res['url_pattern'][0] == segment_name:
+            single_seg["url_pattern"] = res['url_pattern']
+            single_seg["action_name"] = res['action_name']
+            single_seg["action_id"] = res['action_id']
+            segment.append(single_seg)
+    return segment
 
-def run_advertiser_segment(ac, username, segment_name):
-	ac.auth()
-	s = ac.get_segments()
-	advertiser_name = str(username.replace("a_",""))
-	url = "http://beta.crusher.getrockerbox.com/crusher/funnel/action?format=json"
-	results = ac.req.get(url,cookies=ac.cookie)
-	segment = []
-	try:
-		raw_results = results.json()['response']
-		segment = select_segment(segment_name, raw_results)
-		df = ac.make_request(segment[0]["url_pattern"], advertiser_name, segment[0]["action_name"], segment[0]["action_id"])
-		ac.insert(df,"action_dashboard_cache", ac.con, ["advertiser", "action_id", "domain"])
-	except:
-		logging.error("Error with advertiser segment run for advertiser username %s and segment %s" % (username, segment_name))
+
+def run_advertiser_segment(ac, segment_name):
+    ac.auth()
+    s = ac.get_segments()
+    url = "http://beta.crusher.getrockerbox.com/crusher/funnel/action?format=json"
+    results = ac.req.get(url,cookies=ac.cookie)
+    segment = []
+    try:
+        logging.info("seg issue")
+        logging.info("segments %s" % results)
+        logging.info(results.text)
+        logging.info(results.json())
+        raw_results = results.json()['response']
+        segment = select_segment(segment_name, raw_results)
+        logging.info("selected segment about to make request")
+        df = ac.make_request(segment[0]["url_pattern"],segment[0]["action_name"], segment[0]["action_id"], ac.username)
+        logging.info("request made for %s" % segment[0]["url_pattern"])
+        ac.insert(df,"action_dashboard_cache", ac.con, ["advertiser", "action_id", "domain"])
+    except:
+		logging.error("Error with advertiser segment run for advertiser username %s and segment %s" % (ac.username, segment_name))
 
 
 if __name__ == "__main__":
@@ -186,18 +190,19 @@ if __name__ == "__main__":
     define("remove_seconds", default="17280")
     define("username",  default="")
     define("password", default="")
-    define("segment", default = False)
+    define("segment", default=False)
 
     basicConfig(options={})
     
     parse_command_line()
+
     
     if options.chronos ==True:
         zookeeper =KazooClient(hosts="zk1:2181")
         zookeeper.start()
         run_all(lnk.dbs.rockerbox, zookeeper)
     else:
-        if options.segment == False:
+        if not options.segment:
             zookeeper =KazooClient(hosts="zk1:2181")
             zookeeper.start()
             ac = ActionCache(options.username, options.password, lnk.dbs.rockerbox, zookeeper)
@@ -206,7 +211,7 @@ if __name__ == "__main__":
             zookeeper =KazooClient(hosts="zk1:2181")
             zookeeper.start()
             ac = ActionCache(options.username, options.password, lnk.dbs.rockerbox,zookeeper)
-            run_advertiser_segment(ac, options.username, options.segment)
+            run_advertiser_segment(ac, options.segment)
     
     if options.remove_old == True:
         lnk.dbs.rockerbox.excute(SQL_REMOVE_OLD % options.remove_seconds)

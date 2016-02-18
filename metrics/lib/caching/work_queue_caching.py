@@ -19,6 +19,6 @@ def run_domains_cache(advertiser,pattern,cache_date, indentifiers="test", connec
     username = user_format.format(advertiser)
     AC = adc.ActionCache(username, "admin",db, zk)
     logging.info("Action Cache class instance created and initiated")
-    adc.run_advertiser_segment(AC,username, pattern)
+    adc.run_advertiser_segment(AC,pattern)
     logging.info("ran run advertiser segment for %s and %s" % (advertiser, pattern))
 
