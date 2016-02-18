@@ -50,6 +50,7 @@ class ActionCache:
 
     def make_request(self, url_pattern, action_name, action_id,username):
         advertiser = self.username.replace("a_","")
+        df = pandas.DataFrame()
         try:
             logging.info("calling segment %s" % url_pattern[0])
             url = "http://beta.crusher.getrockerbox.com/crusher/pattern_search/timeseries?search=%s&num_days=2" % url_pattern[0]
