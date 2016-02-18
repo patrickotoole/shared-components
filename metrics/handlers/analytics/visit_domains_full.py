@@ -54,8 +54,11 @@ class VisitDomainsFullHandler(BaseHandler,AnalyticsBase):
         logging.info(DOMAIN_SELECT2 % uids_split)
         results = self.db.select_dataframe(DOMAIN_SELECT2 % uids_split)
         #results = results.groupby(["url"]).apply(lambda x: pandas.Series({'num_uids':len(x['uid'].unique())}))
-        df = results.groupby(["url"]).count()
-        results = pandas.Series([df.index, df["uid"]])
+        def aggDF(row):
+            return {"count":len(row), "uniques":len(set(row))}
+        df = results.groupby(["url"])["uid"].apply(aggDF)
+        import ipdb; ipdb.set_trace()
+        results = df.unstack(1).reset_index()
         logging.info("QAggCassFull")
 
         return results 
