@@ -20,14 +20,14 @@ class ActionCacheRunTest(unittest.TestCase):
         
     def testSegmentRunSizeOne(self):
         mock_ac = mock.MagicMock()
-        adc.run_advertiser_segment(mock_ac, "user","")
+        adc.run_advertiser_segment(mock_ac, "")
         selected_seg = adc.select_segment("segment", JSON_1['response'])
         self.assertEquals(len(selected_seg), 1)
         self.assertEquals(selected_seg[0]["url_pattern"][0], "segment")
 
     def testSegmentRunSizeTwo(self):
         mock_ac = mock.MagicMock()
-        adc.run_advertiser_segment(mock_ac,"user", "")
+        adc.run_advertiser_segment(mock_ac, "")
         selected_seg = adc.select_segment("segment", JSON_2['response'])
         self.assertEquals(len(selected_seg),1)
         self.assertEquals(selected_seg[0]["url_pattern"][0], "segment")
