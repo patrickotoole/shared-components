@@ -46,22 +46,23 @@ class VisitDomainsFullHandler(BaseHandler,AnalyticsBase):
 
     def full_get_w_agg_in(self, uids, date_clause):
         DOMAIN_SELECT2 = "select * from full_domain_test where uid in (%s)"
-
+        import ipdb; ipdb.set_trace()
         str_uids = [str(u) for u in uids]
         uids_split = "'" + "','".join(str_uids)+"'"
         logging.info("Visit domains full prepping statement")
-
         logging.info(DOMAIN_SELECT2 % uids_split)
         results = self.db.select_dataframe(DOMAIN_SELECT2 % uids_split)
         #results = results.groupby(["url"]).apply(lambda x: pandas.Series({'num_uids':len(x['uid'].unique())}))
         def aggDF(row):
             return {"count":len(row), "uniques":len(set(row))}
-        df = results.groupby(["url"])["uid"].apply(aggDF)
-        import ipdb; ipdb.set_trace()
-        results = df.unstack(1).reset_index()
-        logging.info("QAggCassFull")
+        if len(results)>0:
+            df = results.groupby(["url"])["uid"].apply(aggDF)
+            final_results = df.unstack(1).reset_index()
+            logging.info("QAggCassFull")
+        else:
+            final_results = pandas.DataFrame()
 
-        return results 
+        return final_results 
 
     @decorators.deferred
     def defer_get_domains_full(self, uids, date_clause,aggregate):
@@ -141,16 +142,17 @@ class VisitDomainsFullHandler(BaseHandler,AnalyticsBase):
         end_date = self.get_argument("end_date", "")
         date = self.get_argument("date", "")
         kind = self.get_argument("kind", "")
+        aggregate = self.get_argument("aggregate", False)
 
         date_clause = self.make_date_clause("date", date, start_date, end_date)
-
         uid = ','.join(payload["uids"])
 
         if formatted:
             self.get_domains_full(
                 uid,
                 date_clause,
-                kind
+                kind,
+                aggregate
                 )
         else:
             self.get_content(pandas.DataFrame())
