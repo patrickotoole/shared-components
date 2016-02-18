@@ -38,7 +38,7 @@ class ActionCache:
         url = "http://beta.crusher.getrockerbox.com/crusher/funnel/action?format=json"
         results = self.req.get(url,cookies=self.cookie)
         segments = []
-        try:	
+        try:
             raw_results = results.json()['response']
             for result in raw_results:
                 single_seg = {"url_pattern": result['url_pattern'], "action_name":result['action_name'], "action_id":result['action_id']}
@@ -124,13 +124,13 @@ class ActionCache:
             self.add_to_work_queue(seg, advertiser)
 
 def get_all_advertisers(db_con):
-	ad_df = db_con.select_dataframe(SQL_QUERY)
-	advertiser_list = []
-	for index, ad in ad_df.iterrows():
-		username = "a_%s" % str(ad[0])
-		password = "admin"
-		advertiser_list.append([username,password])
-	return advertiser_list
+    ad_df = db_con.select_dataframe(SQL_QUERY)
+    advertiser_list = []
+    for index, ad in ad_df.iterrows():
+        username = "a_%s" % str(ad[0])
+        password = "admin"
+        advertiser_list.append([username,password])
+    return advertiser_list
 
 def run_all(db_connect, zk):
 	advertiser_list = get_all_advertisers(db_connect)
