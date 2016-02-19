@@ -46,7 +46,6 @@ class VisitDomainsFullHandler(BaseHandler,AnalyticsBase):
 
     def full_get_w_agg_in(self, uids, date_clause):
         DOMAIN_SELECT2 = "select * from full_domain_test where uid in (%s)"
-        import ipdb; ipdb.set_trace()
         str_uids = [str(u) for u in uids]
         uids_split = "'" + "','".join(str_uids)+"'"
         logging.info("Visit domains full prepping statement")
