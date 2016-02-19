@@ -37,7 +37,6 @@ class VisitDomainsFullHandler(BaseHandler,AnalyticsBase):
         uids_split = "'" + "','".join(str_uids)+"'"
         logging.info("Visit domains full prepping statement")
         
-        logging.info(DOMAIN_SELECT2 % uids_split)
         results = self.db.select_dataframe(DOMAIN_SELECT2 % uids_split)
 
         logging.info("QCassFull")
@@ -49,7 +48,6 @@ class VisitDomainsFullHandler(BaseHandler,AnalyticsBase):
         str_uids = [str(u) for u in uids]
         uids_split = "'" + "','".join(str_uids)+"'"
         logging.info("Visit domains full prepping statement")
-        logging.info(DOMAIN_SELECT2 % uids_split)
         results = self.db.select_dataframe(DOMAIN_SELECT2 % uids_split)
         #results = results.groupby(["url"]).apply(lambda x: pandas.Series({'num_uids':len(x['uid'].unique())}))
         def aggDF(row):

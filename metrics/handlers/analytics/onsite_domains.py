@@ -7,6 +7,7 @@ import logging
 import re
 
 from link import lnk
+from visit_domains_full import VisitDomainsFullHandler
 from ..base import BaseHandler
 from analytics_base import AnalyticsBase
 from twisted.internet import defer
@@ -16,7 +17,7 @@ from lib.cassandra_helpers.helpers import FutureHelpers
 from lib.cassandra_cache.helpers import *
 from search.cache.pattern_search_cache import PatternSearchCache
 
-class OnsiteDomainsHandler(BaseHandler, AnalyticsBase, PatternSearchCache):
+class OnsiteDomainsHandler(PatternSearchCache,VisitDomainsFullHandler):
 
     def initialize(self, db=None, cassandra=None, **kwargs):
         self.logging = logging
@@ -33,22 +34,18 @@ class OnsiteDomainsHandler(BaseHandler, AnalyticsBase, PatternSearchCache):
 
     @decorators.deferred
     def defer_get_onsite_domains(self, date, advertiser, pattern):
+        
         dates = build_datelist(7)
         args = [advertiser,pattern,dates]
         
         uids = self.get_uids_from_cache(*args)
         uids = list(set([u['uid'] for u in uids]))
-        
-        crusher_api = lnk.api.crusher
-        crusher_api.user="a_"+advertiser
-        crusher_api.password="admin"
-        crusher_api.base_url="http://192.168.99.100:8888"
-        crusher_api.authenticate()
-        
-        data_obj = {"uids":uids}
-        response_data = crusher_api.post('/crusher/visit_domains_full?format=json&aggregate=True', data = ujson.dumps(data_obj))
-        
-        return response_data.text
+        date_clause = self.make_date_clause("date",date,"","")
+
+        results = self.full_get_w_agg_in(uids, date_clause)
+        df = pandas.DataFrame(results)
+
+        return df
 
 
     @defer.inlineCallbacks
@@ -56,8 +53,7 @@ class OnsiteDomainsHandler(BaseHandler, AnalyticsBase, PatternSearchCache):
         
         response_data = yield self.defer_get_onsite_domains(date, advertiser, pattern)
         
-        df = pandas.DataFrame(ujson.loads(response_data))
-        self.get_content(df)
+        self.get_content(response_data)
 
     def make_date_clause(self, variable, date, start_date, end_date):
         params = locals()
