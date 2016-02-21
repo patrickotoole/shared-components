@@ -8,16 +8,18 @@ class Trello(object):
     BOARDS = [
         "Sales -- Qualified"
     ]
-    TOKEN = "?key=dace821409b7d5329f7eaea1fcfd6291&token=1c30fdfe663da661294e8b35e00f79863df4de6af14fc751bf71d20401a50ace"
+    TOKEN = "?key=dace821409b7d5329f7eaea1fcfd6291&token=8438a68450d300dd283a6823849025b9064831f7f26385bb1e7f1312837de742"
+    #"1c30fdfe663da661294e8b35e00f79863df4de6af14fc751bf71d20401a50ace"
 
     def __init__(self,token=TOKEN,boards=BOARDS):
         self.token = token
         self.lists = {}
 
-
-    def post(self,uri,params={}):
-        resp = requests.post("https://api.trello.com/1/" + uri + self.token,params=params)
-        return resp
+    def post(self,uri,params={},data="",headers=False):
+        headers = headers or {'Content-type': 'application/json', 'Accept': 'text/plain'}
+        
+        resp = requests.post("https://api.trello.com/1/" + uri + self.token,params=params,data=data,headers=headers)
+        return resp.json()
 
     def get(self,uri,params=""):
         resp = requests.get("https://api.trello.com/1/" + uri + self.token + params)
