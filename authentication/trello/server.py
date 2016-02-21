@@ -8,7 +8,54 @@ import logging
 import os
 import trello
 
+def modify(j,board):
+
+    split = j['name'].split("(")
+    if (len(split) > 1):
+        opp = split[1].replace(")","")
+        ab = split[0].split("-")
+    else:
+        opp = ""
+
+        ab = split[0].split("-")
+        
+    if (len(ab) > 1):
+        agency = ab[0]
+        brand = ab[1]
+    else:
+        agency = ""
+        brand = ab[0]
+        
+    split_opp = opp.split("-")
+    if len(split_opp) > 1:
+        opportunity = "-".join(split_opp[:-1])
+        timing = split_opp[-1]
+    else:
+        opportunity = ""
+        timing = ""
+
+    from datetime import datetime  
+    
+    return {
+        "agency": agency.strip(),
+        "brand" : brand.strip(),
+        "opportunity" : opportunity.strip(),
+        "timing" : timing.strip(),
+        "board" : board,
+        "trello_id": j.id,
+        "last_modified": j.dateLastActivity,
+        "created_at": datetime.fromtimestamp(int(j.id[0:8],16))
+    }
+
+def process(card):
+    import pandas
+    advertisers = [ modify(card,card['actions'][0]['data']['list']['name']) ]
+    return pandas.DataFrame(advertisers)
+
 class WebhookHandler(web.RequestHandler):
+
+    def initialize(self,db):
+        self.db = db
 
     def post(self):
         logging.info(self.request.body)
@@ -18,6 +65,12 @@ class WebhookHandler(web.RequestHandler):
         tr = trello.Trello()
         logging.info("cards/%s" % _id)
         card = tr.get("cards/%s" % _id)
+
+        df = process(card)
+
+        import insert_df as s
+        sql_query = s._write_mysql
+        sql_query(df, "prospect", list(df.columns), lnk.dbs.rockerbox, ["trello_id"])
 
         self.write(_j)
         logging.info(card)
@@ -34,7 +87,7 @@ class WebhookHandler(web.RequestHandler):
 
 class WebApp(web.Application):
 
-    def __init__(self):
+    def __init__(self,db):
         handlers = [
             (r"/webhook", WebhookHandler),
         ]
@@ -50,7 +103,10 @@ class WebApp(web.Application):
 def main():
     
     logging.basicConfig(level=logging.INFO)
-    app = WebApp()
+
+    from link import lnk
+
+    app = WebApp(lnk.dbs.rockerbox)
     server = httpserver.HTTPServer(app)
     server.listen(9001, '0.0.0.0')
     logging.info("Serving at http://0.0.0.0:9001")
