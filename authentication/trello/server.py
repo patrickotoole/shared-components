@@ -6,12 +6,20 @@ import httplib2
 import json
 import logging
 import os
+import trello
 
 class WebhookHandler(web.RequestHandler):
 
     def post(self):
         logging.info(self.request.body)
-        self.write("1")
+        _j = json.loads(self.request.body)
+        _id = _j['action']['data']['card']['id']
+
+        tr = trello.Trello()
+        card = tr.get("cards/" + _id)
+
+        self.write(_j)
+        self.write(card)
         self.finish()
 
     def head(self):
