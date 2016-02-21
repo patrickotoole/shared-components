@@ -47,9 +47,11 @@ def modify(j,board):
         "created_at": datetime.fromtimestamp(int(j.id[0:8],16))
     }
 
-def process(card):
+def process(action):
     import pandas
-    advertisers = [ modify(card,card['actions'][0]['data']['list']['name']) ]
+    c = action['data']['card']
+    list_name = action['data']['list']['name']
+    advertisers = [ modify(c,list_name) ]
     return pandas.DataFrame(advertisers)
 
 class WebhookHandler(web.RequestHandler):
@@ -63,8 +65,7 @@ class WebhookHandler(web.RequestHandler):
         _id = _j['action']['data']['card']['id']
 
         tr = trello.Trello()
-        logging.info("cards/%s" % _id)
-        card = tr.get("cards/%s" % _id)
+        card = tr.get("cards/%s/actions" % _id,"&filter=all")[0]
 
         logging.info(card)
         df = process(card)
