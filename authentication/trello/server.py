@@ -14,6 +14,9 @@ class WebhookHandler(web.RequestHandler):
         self.write("1")
         self.finish()
 
+    def head(self):
+        self.finish()
+
     def get(self):
 
         self.write("1")
