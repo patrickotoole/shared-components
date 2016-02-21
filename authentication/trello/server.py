@@ -54,7 +54,7 @@ def process(card):
 
 class WebhookHandler(web.RequestHandler):
 
-    def initialize(self,db):
+    def initialize(self,db=None):
         self.db = db
 
     def post(self):
@@ -89,7 +89,7 @@ class WebApp(web.Application):
 
     def __init__(self,db):
         handlers = [
-            (r"/webhook", WebhookHandler, db),
+            (r"/webhook", WebhookHandler, {"db":db}),
         ]
 
         settings = dict(
