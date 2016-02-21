@@ -89,7 +89,7 @@ class WebApp(web.Application):
 
     def __init__(self,db):
         handlers = [
-            (r"/webhook", WebhookHandler),
+            (r"/webhook", WebhookHandler, db),
         ]
 
         settings = dict(
