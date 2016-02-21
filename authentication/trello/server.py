@@ -66,6 +66,7 @@ class WebhookHandler(web.RequestHandler):
         logging.info("cards/%s" % _id)
         card = tr.get("cards/%s" % _id)
 
+        logging.info(card)
         df = process(card)
 
         import insert_df as s
@@ -73,7 +74,6 @@ class WebhookHandler(web.RequestHandler):
         sql_query(df, "prospect", list(df.columns), self.db, ["trello_id"])
 
         self.write(_j)
-        logging.info(card)
         self.finish()
 
     def head(self):
