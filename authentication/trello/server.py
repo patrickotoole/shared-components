@@ -70,7 +70,7 @@ class WebhookHandler(web.RequestHandler):
 
         import insert_df as s
         sql_query = s._write_mysql
-        sql_query(df, "prospect", list(df.columns), lnk.dbs.rockerbox, ["trello_id"])
+        sql_query(df, "prospect", list(df.columns), self.db, ["trello_id"])
 
         self.write(_j)
         logging.info(card)
