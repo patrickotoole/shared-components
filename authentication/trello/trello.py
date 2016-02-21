@@ -14,14 +14,6 @@ class Trello(object):
         self.token = token
         self.lists = {}
 
-        self.board_data_list = [(board,self.get_board_checklists(board)) for board in boards]
-
-        self.board_data_df = self.board_data_list[0][1].copy()
-        for i,j in self.board_data_list[1:]:
-            self.board_data_df = self.board_data_df.append(j)
-
-        del self.board_data_df['nameData']
-        self.board_data_df['date'] = datetime.date.today()
 
     def post(self,uri,params={}):
         resp = requests.post("https://api.trello.com/1/" + uri + self.token,params=params)
