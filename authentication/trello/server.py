@@ -16,7 +16,8 @@ class WebhookHandler(web.RequestHandler):
         _id = _j['action']['data']['card']['id']
 
         tr = trello.Trello()
-        card = tr.get("cards/" + _id)
+        print "cards/%s" % _id
+        card = tr.get("cards/%s" % _id)
 
         self.write(_j)
         self.write(card)
