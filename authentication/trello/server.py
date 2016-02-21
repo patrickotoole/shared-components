@@ -8,7 +8,7 @@ import logging
 import os
 import trello
 
-def modify(j,board):
+def modify(j,board,ts):
 
     split = j['name'].split("(")
     if (len(split) > 1):
@@ -42,16 +42,17 @@ def modify(j,board):
         "opportunity" : opportunity.strip(),
         "timing" : timing.strip(),
         "board" : board,
-        "trello_id": j.id,
-        "last_modified": j.dateLastActivity,
-        "created_at": datetime.fromtimestamp(int(j.id[0:8],16))
+        "trello_id": j['id'],
+        "last_modified": ts,
+        "created_at": datetime.fromtimestamp(int(j['id'][0:8],16))
     }
 
 def process(action):
     import pandas
     c = action['data']['card']
     list_name = action['data']['list']['name']
-    advertisers = [ modify(c,list_name) ]
+    ts = action['date']
+    advertisers = [ modify(c,list_name,ts) ]
     return pandas.DataFrame(advertisers)
 
 class WebhookHandler(web.RequestHandler):
