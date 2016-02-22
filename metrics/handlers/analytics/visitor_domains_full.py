@@ -17,7 +17,7 @@ from lib.cassandra_helpers.helpers import FutureHelpers
 from lib.cassandra_cache.helpers import *
 from search.cache.pattern_search_cache import PatternSearchCache
 
-class OnsiteDomainsHandler(PatternSearchCache,VisitDomainsFullHandler):
+class VisitorDomainsHandler(PatternSearchCache,VisitDomainsFullHandler):
 
     def initialize(self, db=None, cassandra=None, **kwargs):
         self.logging = logging
@@ -37,7 +37,6 @@ class OnsiteDomainsHandler(PatternSearchCache,VisitDomainsFullHandler):
         
         dates = build_datelist(7)
         args = [advertiser,pattern,dates]
-        
         uids = self.get_uids_from_cache(*args)
         uids = list(set([u['uid'] for u in uids]))
         date_clause = self.make_date_clause("date",date,"","")
@@ -84,7 +83,6 @@ class OnsiteDomainsHandler(PatternSearchCache,VisitDomainsFullHandler):
         user = self.current_advertiser_name
 
         date_clause = self.make_date_clause("date", date, start_date, end_date)
-
         if formatted:
             self.get_onsite_domains(
                 date_clause,

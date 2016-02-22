@@ -87,8 +87,8 @@ class AdvertiserRoutes(Routes):
             (r'/visit_events', analytics.VisitEventsHandler, self.connectors),
             (r'/served_events', analytics.ServedEventsHandler, self.connectors),
             (r'/visit_domains_full', analytics.VisitDomainsFullHandler, self.connectors),
-            (r'/onsite_domains_full', analytics.OnsiteDomainsHandler, self.connectors),
-            (r'/onsite_domains_run', analytics.FullURLCache, self.connectors),
+            (r'/domains_visitor_full', analytics.VisitorDomainsHandler, self.connectors),
+            #(r'/onsite_domains_run', analytics.FullURLCache, self.connectors),
 
 
             (r'/visit_avails', analytics.VisitAvailsHandler, self.connectors),

@@ -8,13 +8,14 @@ import re
 
 from ..base import BaseHandler
 from analytics_base import AnalyticsBase
+from visit_domains import VisitDomainBase
 from twisted.internet import defer
 from lib.helpers import decorators
 from lib.helpers import *
 from lib.cassandra_helpers.helpers import FutureHelpers
 from lib.cassandra_cache.helpers import *
 
-class VisitDomainsFullHandler(BaseHandler,AnalyticsBase):
+class VisitDomainsFullHandler(BaseHandler,AnalyticsBase, VisitDomainBase):
 
     def initialize(self, db=None, cassandra=None, **kwargs):
         self.logging = logging
@@ -37,8 +38,9 @@ class VisitDomainsFullHandler(BaseHandler,AnalyticsBase):
         uids_split = "'" + "','".join(str_uids)+"'"
         logging.info("Visit domains full prepping statement")
         
-        results = self.db.select_dataframe(DOMAIN_SELECT2 % uids_split)
-
+        #results = self.db.select_dataframe(DOMAIN_SELECT2 % uids_split)
+        urls = self.paginate_get_w_in(uids, date_clause)
+        results = pandas.DataFrame(urls)
         logging.info("QCassFull")
 
         return results
@@ -48,12 +50,15 @@ class VisitDomainsFullHandler(BaseHandler,AnalyticsBase):
         str_uids = [str(u) for u in uids]
         uids_split = "'" + "','".join(str_uids)+"'"
         logging.info("Visit domains full prepping statement")
-        results = self.db.select_dataframe(DOMAIN_SELECT2 % uids_split)
+        urls = self.paginate_get_w_in(uids, date_clause)
+        results = pandas.DataFrame(urls)
+        #results = self.db.select_dataframe(DOMAIN_SELECT2 % uids_split)
         #results = results.groupby(["url"]).apply(lambda x: pandas.Series({'num_uids':len(x['uid'].unique())}))
         def aggDF(row):
             return {"count":len(row), "uniques":len(set(row))}
         if len(results)>0:
-            df = results.groupby(["url"])["uid"].apply(aggDF)
+            #df = results.groupby(["url"])["uid"].apply(aggDF)
+            df = results.groupby(["domain"])["uid"].apply(aggDF)
             final_results = df.unstack(1).reset_index()
             logging.info("QAggCassFull")
         else:
