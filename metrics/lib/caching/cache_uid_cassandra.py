@@ -5,6 +5,7 @@ from lib.pandas_sql import s as _sql
 import datetime
 import lib.cassandra_cache.run as cassandra_functions
 from kazoo.client import KazooClient
+import pickle
 
 QUERY ="INSERT INTO full_domain_cache_test (advertiser, url, count, uniques) VALUES ('{}', '{}',{}, {})"
 CASSQUERY=""
@@ -22,13 +23,24 @@ class CacheFullURL():
         advertiser = api_wrapper.user.replace("a_", "")
         self.db.execute(QUERY.format(advertiser, url["url"], url["count"],url["uniques"]))
 
-    def endpoint(self, pattern):
+    def make_request(self, pattern):
         url_pattern = '/crusher/onsite_domains_full?format=json&url_pattern={}'
         urls = self.api.get(url_pattern.format(pattern))
-        for item in urls.json:
-            #ADD to work queue
-            self.add_to_table(item)
+        return urls
 
+    def run_on_work_queue(self, advertiser, pattern):
+        import lib.caching.cassandra_uid_wrapper as cc
+        #ADD to work queue
+        work = pickle.dumps((
+            cc.run_wrapper,
+            [advertiser,pattern]
+            ))
+        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,0)
+
+    def run_local(self, advertiser, pattern):
+        items  = self.make_request(pattern)
+        for url in items:
+            self.add_to_table(url)
 
 if __name__ == "__main__":
     from lib.report.utils.loggingutils import basicConfig
@@ -38,7 +50,6 @@ if __name__ == "__main__":
 
     define("username",  default="")
     define("password", default="")
-    define("base_url", default="http://192.168.99.100:8888")
     define("pattern", default="")
 
     basicConfig(options={})
@@ -50,7 +61,6 @@ if __name__ == "__main__":
     api_wrapper = lnk.api.crusher
     api_wrapper.user = options.username
     api_wrapper.password = options.password
-    api_wrapper.base_url = options.base_url
     api_wrapper.authenticate()
     cfu = CacheFullURL(api_wrapper, connectors)
-    cfu.endpoint(options.pattern)
+    cfu.endpoint(options.username, options.pattern)
