@@ -90,7 +90,6 @@ class AdvertiserRoutes(Routes):
             (r'/domains_visitor_full', analytics.VisitorDomainsHandler, self.connectors),
             (r'/cached_visitor_domains', analytics.VisitorDomainsCacheHandler, self.connectors),
             (r'/search_visitor_domains', analytics.SearchVisitorDomainsHandler, self.connectors),
-            #(r'/onsite_domains_run', analytics.FullURLCache, self.connectors),
 
 
             (r'/visit_avails', analytics.VisitAvailsHandler, self.connectors),
