@@ -145,7 +145,6 @@ RB.crusher.ui.action = (function(action) {
       }
 
       var sesssionVerticalBarChart = function(data,svg,title,_colors) {
-        debugger;
         var margin = {top: 500, right: 10, bottom: 0, left: 170},
             width = 400 - margin.left - margin.right,
             height = 50  - margin.bottom;
