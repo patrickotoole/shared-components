@@ -16,11 +16,11 @@ class CacheFullURL():
         self.connectors = connectors
 
     def run_local(self, advertiser, pattern):
-        import cache_uid_wrapper as cc
+        import full_url_cache as cc
         cc.run_wrapper(advertiser,pattern,self.connectors)
 
     def run_on_work_queue(self, advertiser, pattern):
-        import lib.caching.cache_uid_wrapper as cc
+        import lib.caching.full_url_cache as cc
         work = pickle.dumps((
             cc.run_wrapper,
             [advertiser,pattern]

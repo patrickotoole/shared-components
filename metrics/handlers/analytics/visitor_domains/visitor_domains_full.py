@@ -8,16 +8,16 @@ import re
 
 from link import lnk
 from visit_domains_full import VisitDomainsFullHandler
-from ..base import BaseHandler
-from analytics_base import AnalyticsBase
+from handlers.base import BaseHandler
+from ..analytics_base import AnalyticsBase
 from twisted.internet import defer
 from lib.helpers import decorators
 from lib.helpers import *
 from lib.cassandra_helpers.helpers import FutureHelpers
 from lib.cassandra_cache.helpers import *
-from search.cache.pattern_search_cache import PatternSearchCache
+from ..search.cache.pattern_search_cache import PatternSearchCache
 
-class SearchVisitorDomainsHandler(PatternSearchCache,VisitDomainsFullHandler):
+class VisitorDomainsHandler(PatternSearchCache,VisitDomainsFullHandler):
 
     def initialize(self, db=None, cassandra=None, **kwargs):
         self.logging = logging
@@ -52,35 +52,7 @@ class SearchVisitorDomainsHandler(PatternSearchCache,VisitDomainsFullHandler):
         
         response_data = yield self.defer_get_onsite_domains(date, advertiser, pattern)
         
-        subset_response = pandas.DataFrame()
-        tree_struct =[{}]
-        for i in range(0,len(response_data)):
-            subtext = response_data["domain"][i]
-            split_subtext = list(subtext)
-            for i in range(0,len(split_subtext)):
-                if len(tree_struct) >= i+1:
-                    if "".join(split_subtext[:i+1]) in tree_struct[i].keys():
-                        tree_struct[i]["".join(split_subtext[:i+1])] = tree_struct[i]["".join(split_subtext[:i+1])]+1
-                    else:
-                        tree_struct[i]["".join(split_subtext[:i+1])] = 1
-                else:
-                    tree_struct.append({})
-                    tree_struct[i]["".join(split_subtext[:i+1])] = 1
-        
-        import operator
-        max_val = []
-        for i in range(3,len(tree_struct)-1):
-            if len(max_val)<2:
-                max_val = sorted(tree_struct[i].items(), key=operator.itemgetter(1), reverse=True)[:3]
-            else:
-                if max(tree_struct[i].values()) > max_val[2][1]:
-                    sort_level = sorted(tree_struct[i].items(), key=operator.itemgetter(1), reverse=True)[:3]
-                    max_val.extend(sort_level)
-                    max_val = max_val[:3]
-
-        sample_response = dict(max_val)
-        test_response = pandas.DataFrame({"phrase":sample_response.keys(), "count":sample_response.values()})
-        self.get_content(test_response)
+        self.get_content(response_data)
 
     def make_date_clause(self, variable, date, start_date, end_date):
         params = locals()

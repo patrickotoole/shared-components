@@ -40,6 +40,9 @@ QUERY = "SELECT * FROM rockerbox.visitor_domains_2 "
 
 class VisitDomainBase(object):
 
+    def __init__(self):
+        self.DOMAIN_SELECT = "select * from rockerbox.visitor_domains_2 where uid = ?"
+
     @decorators.deferred
     def defer_get_uid_visits(self, source, uids, term):
 
@@ -192,8 +195,7 @@ class VisitDomainBase(object):
 
     def paginate_get_w_in(self, uids, date_clause):
         
-        DOMAIN_SELECT = "select * from rockerbox.visitor_domains_2 where uid = ?"
-        statement = self.cassandra.prepare(DOMAIN_SELECT)
+        statement = self.cassandra.prepare(self.DOMAIN_SELECT)
         def execute(data):
             bound = statement.bind(data)
             return self.cassandra.execute_async(bound)

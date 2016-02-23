@@ -4,7 +4,7 @@ from link import lnk
 from handlers.analytics.search.cache.pattern_search_cache import PatternSearchCacheWithConnector
 from handlers.analytics.visit_domains_full import VisitDomainsFullHandler
 
-QUERY ="INSERT INTO full_domain_cache_test (advertiser, url, count, uniques, pattern) VALUES ('{}', '{}',{}, {}, '{}')"
+QUERY ="INSERT INTO full_domain_cache_test (advertiser, url, count, uniques, url_pattern) VALUES ('{}', '{}',{}, {}, '{}')"
 CASSQUERY=""
 
 
@@ -19,7 +19,8 @@ def make_request(advertiser,pattern):
 
 def add_to_table(advertiser_name, pattern, url, sql):
     #self.cassandra.execute(CASSQUERY)
-    sql.execute(QUERY.format(advertiser_name, url["url"], url["count"],url["uniques"], pattern))
+    if int(url['uniques']) >1:
+        sql.execute(QUERY.format(advertiser_name, url["domain"], url["count"],url["uniques"], pattern))
 
 def run_wrapper(advertiser_name, pattern, connectors):
     urls = make_request(advertiser_name, pattern)
