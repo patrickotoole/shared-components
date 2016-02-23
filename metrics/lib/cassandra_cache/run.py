@@ -100,7 +100,9 @@ def run_backfill(advertiser,pattern,cache_date,identifier="test",connectors=Fals
             pattern_cache.cache_raw()
             pattern_cache.cache_uids()
             pattern_cache.cache_urls()
-
+            pattern_cache.cache_views()
+            pattern_cache.cache_uniques()
+            pattern_cache.cache_visits()
 
             elapsed = int(time.time() - start)
             db.execute(UPDATE_PATTERN_CACHE % (elapsed,pattern,advertiser,cache_date))
