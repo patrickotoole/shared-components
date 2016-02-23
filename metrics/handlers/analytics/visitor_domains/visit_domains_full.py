@@ -31,13 +31,11 @@ class VisitDomainsFullHandler(BaseHandler,AnalyticsBase, VisitDomainBase):
         yield default, (data,)
 
     def full_get_w_in(self, uids, date_clause):
-        DOMAIN_SELECT = "select * from full_domain_test"
-        DOMAIN_SELECT2 = "select * from full_domain_test where uid in (%s)" 
 
         str_uids = [str(u) for u in uids]
         uids_split = "'%s'" % "','".join(str_uids)
         logging.info("Visit domains full prepping statement")
-        
+        self.DOMAIN_SELECT="select * from rockerbox.visitor_domains_full where uid = ?"        
         urls = self.paginate_get_w_in(uids, date_clause)
         results = pandas.DataFrame(urls)
         logging.info("QCassFull")
@@ -45,19 +43,19 @@ class VisitDomainsFullHandler(BaseHandler,AnalyticsBase, VisitDomainBase):
         return results
 
     def full_get_w_agg_in(self, uids, date_clause):
-        DOMAIN_SELECT2 = "select * from full_domain_test where uid in (%s)"
+        
         str_uids = [str(u) for u in uids]
         uids_split = "'%s'" % "','".join(str_uids)
         logging.info("Visit domains full prepping statement")
+        self.DOMAIN_SELECT="select * from rockerbox.visitor_domains_full where uid = ?"
         urls = self.paginate_get_w_in(uids, date_clause)
         results = pandas.DataFrame(urls)
-        
         def aggDF(row):
             return {"count":len(row), "uniques":len(set(row))}
         
         if len(results)>0:
-            #df = results.groupby(["url"])["uid"].apply(aggDF)
-            df = results.groupby(["domain"])["uid"].apply(aggDF)
+            df = results.groupby(["url"])["uid"].apply(aggDF)
+            #df = results.groupby(["domain"])["uid"].apply(aggDF)
             final_results = df.unstack(1).reset_index()
             logging.info("QAggCassFull")
         else:

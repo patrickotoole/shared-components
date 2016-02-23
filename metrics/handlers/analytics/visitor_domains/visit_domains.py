@@ -40,9 +40,6 @@ QUERY = "SELECT * FROM rockerbox.visitor_domains_2 "
 
 class VisitDomainBase(object):
 
-    def __init__(self):
-        self.DOMAIN_SELECT = "select * from rockerbox.visitor_domains_2 where uid = ?"
-
     @decorators.deferred
     def defer_get_uid_visits(self, source, uids, term):
 

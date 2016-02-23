@@ -14,7 +14,7 @@ from lib.cassandra_helpers.helpers import FutureHelpers
 from lib.cassandra_cache.helpers import *
 
 import model
-from ...visit_domains import VisitDomainBase
+from handlers.analytics.visitor_domains.visit_domains import VisitDomainBase
 from ..search_base import SearchBase
 from ..cache.pattern_search_cache import PatternSearchCache
 

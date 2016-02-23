@@ -41,7 +41,8 @@ class VisitorDomainsHandler(PatternSearchCache,VisitDomainsFullHandler):
         uids = list(set([u['uid'] for u in uids]))
         date_clause = self.make_date_clause("date",date,"","")
 
-        results = self.full_get_w_agg_in(uids, date_clause)
+        unsorted_results = self.full_get_w_agg_in(uids, date_clause)
+        results = unsorted_results.sort(columns=["uniques","count"], ascending=False)
         df = pandas.DataFrame(results)
 
         return df

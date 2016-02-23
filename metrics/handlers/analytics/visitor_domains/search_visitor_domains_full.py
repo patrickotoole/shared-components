@@ -50,8 +50,8 @@ class SearchVisitorDomainsHandler(PatternSearchCache,VisitDomainsFullHandler):
         def split_url(x):
             return x.replace("-","/").split("/")
         
-        GROUPS = ["domain","uniques"]
-        EXPAND_BY = "domain"
+        GROUPS = ["url","uniques"]
+        EXPAND_BY = "url"
         def grouping_function(x):
             # want to return a series (or dataframe) that has our new expanded series as the index
             the_grouped = x[EXPAND_BY].iloc[0]
@@ -65,7 +65,14 @@ class SearchVisitorDomainsHandler(PatternSearchCache,VisitDomainsFullHandler):
         obj3 = pandas.DataFrame(obj2["unique"].sum())
         full_url_response = obj3.reset_index().sort(columns=["unique"], ascending=False)
         full_url_response.columns = ["url", "uniques"]
-        self.get_content(full_url_response)
+
+        mask1 = ~full_url_response['url'].str.contains("http")
+        mask2 = ~full_url_response['url'].str.contains(".co")
+        mask3 = ~full_url_response['url'].str.contains(".org")
+        
+        filtered_df = full_url_response[mask1 & mask2 & mask3]
+
+        self.get_content(filtered_df)
 
     @tornado.web.authenticated
     @tornado.web.asynchronous
