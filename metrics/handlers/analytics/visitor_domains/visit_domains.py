@@ -226,6 +226,7 @@ class VisitDomainsHandler(BaseHandler, AnalyticsBase,VisitDomainBase):
         self.cassandra = cassandra
         self.limit = None
         self.query = QUERY
+        self.DOMAIN_SELECT="select * from rockerbox.visitor_domains_2 where uid = ?"
 
     @defer.inlineCallbacks
     def get_domains(self, uid, date_clause, kind):

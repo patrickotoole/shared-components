@@ -103,6 +103,7 @@ class VisitEventsHandler(BaseHandler, AnalyticsBase,VisitEventBase):
         self.cassandra = cassandra
         self.limit = None
         self.query = QUERY
+        self.DOMAIN_SELECT="select * from rockerbox.visitor_domains_full where uid = ?"
 
     @defer.inlineCallbacks
     def get_events(self, uid, source, kind):
