@@ -5,7 +5,7 @@ import time
 
 from ..search_base import SearchBase
 from multi_search_helpers import MultiSearchHelpers
-from ...visit_domains import VisitDomainBase
+from handlers.analytics.visitor_domains.visit_domains import VisitDomainBase
 from twisted.internet import defer
 from lib.helpers import decorators
 from lib.helpers import *

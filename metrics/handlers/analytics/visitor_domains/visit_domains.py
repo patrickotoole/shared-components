@@ -6,8 +6,8 @@ import logging
 
 import re
 
-from ..base import BaseHandler
-from analytics_base import AnalyticsBase
+from handlers.base import BaseHandler
+from ..analytics_base import AnalyticsBase
 from twisted.internet import defer
 from lib.helpers import decorators
 from lib.helpers import *
@@ -192,8 +192,7 @@ class VisitDomainBase(object):
 
     def paginate_get_w_in(self, uids, date_clause):
         
-        DOMAIN_SELECT = "select * from rockerbox.visitor_domains_2 where uid = ?"
-        statement = self.cassandra.prepare(DOMAIN_SELECT)
+        statement = self.cassandra.prepare(self.DOMAIN_SELECT)
         def execute(data):
             bound = statement.bind(data)
             return self.cassandra.execute_async(bound)
@@ -205,7 +204,6 @@ class VisitDomainBase(object):
         results, _ = FutureHelpers.future_queue(prepped,execute,simple_append,120,[],"DUMMY_VAR")
 
         logging.info("ASDF")
-
         return results
 
     def get_w_in(self, uids, date_clause):
@@ -228,6 +226,7 @@ class VisitDomainsHandler(BaseHandler, AnalyticsBase,VisitDomainBase):
         self.cassandra = cassandra
         self.limit = None
         self.query = QUERY
+        self.DOMAIN_SELECT="select * from rockerbox.visitor_domains_2 where uid = ?"
 
     @defer.inlineCallbacks
     def get_domains(self, uid, date_clause, kind):

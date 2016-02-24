@@ -12,6 +12,7 @@ class PatternSearchHandler(PatternSearchBase):
         self.cassandra = cassandra
         self.zookeeper = zookeeper
         self.limit = None
+        self.DOMAIN_SELECT = "SELECT * FROM rockerbox.visitor_domains_2 where uid = ?"
         self.TYPE = {
             "uid_domains": self.get_uid_domains,
             "uids": self.get_uids,

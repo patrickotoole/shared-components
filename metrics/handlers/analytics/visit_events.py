@@ -103,6 +103,7 @@ class VisitEventsHandler(BaseHandler, AnalyticsBase,VisitEventBase):
         self.cassandra = cassandra
         self.limit = None
         self.query = QUERY
+        self.DOMAIN_SELECT="select * from rockerbox.visitor_domains_full where uid = ?"
 
     @defer.inlineCallbacks
     def get_events(self, uid, source, kind):
@@ -111,7 +112,6 @@ class VisitEventsHandler(BaseHandler, AnalyticsBase,VisitEventBase):
         if len(df) > 0:
             if kind == "domains":
                 df = df.groupby("domain").uid.nunique().reset_index()
-
         df['url'] = df.url.map(lambda x: x.encode("utf-8"))
 
         self.get_content(df)

@@ -73,6 +73,7 @@ class AdvertiserRoutes(Routes):
         import handlers.analytics as analytics
         import handlers.funnel as funnel
         import handlers.pixel_status as pixel_status
+        import handlers.analytics.visitor_domains as visitors
 
         return [
             (r'/zk_endpoint', funnel.ZKHandler, self.connectors),
@@ -83,9 +84,13 @@ class AdvertiserRoutes(Routes):
             (r'/search/(.*?)', analytics.SearchHandler, self.connectors),
             (r'/pattern_search/(.*?)', analytics.PatternSearchHandler, self.connectors),
             (r'/multi_search/(.*?)', analytics.MultiSearchHandler, self.connectors),
-            (r'/visit_domains', analytics.VisitDomainsHandler, self.connectors),
+            (r'/visit_domains', visitors.VisitDomainsHandler, self.connectors),
             (r'/visit_events', analytics.VisitEventsHandler, self.connectors),
             (r'/served_events', analytics.ServedEventsHandler, self.connectors),
+            (r'/visit_domains_full', visitors.VisitDomainsFullHandler, self.connectors),
+            (r'/domains_visitor_full', visitors.VisitorDomainsHandler, self.connectors),
+            (r'/cached_visitor_domains', visitors.VisitorDomainsCacheHandler, self.connectors),
+            (r'/search_visitor_domains', visitors.SearchVisitorDomainsHandler, self.connectors),
 
 
             (r'/visit_avails', analytics.VisitAvailsHandler, self.connectors),
