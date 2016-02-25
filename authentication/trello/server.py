@@ -126,17 +126,53 @@ class WebhookHandler(web.RequestHandler):
         if df.brand_trello_id.iloc[0] is None or len(df.brand_trello_id.iloc[0]) == 0:
             logging.info("HERE")
             brand_trello = self.get_or_create_brand(df.brand.iloc[0],df.agency.iloc[0])
-            self.db.execute("UPDATE prospect set brand_trello_id = %s where trello_id = %s" % (brand_trello,trello_id))
+            self.db.execute("UPDATE prospect set brand_trello_id = '%s' where trello_id = '%s'" % (brand_trello,trello_id))
 
     def get_or_create_agency(self,agency):
+
+        from run_agency import find_related, build_links, build_card, SELECT, INSERT
+
+        Q = "SELECT * FROM prospect_agency where agency = '%s'"
+        df = self.db.select_dataframe(Q % agency)
+
+        if (len(df) == 0):
+            all_entries = self.db.select_dataframe(SELECT)
+ 
+            boards = self.tr.get_board_lists("Accounts").set_index("name")
+            _id = boards.ix["Agency"].id
+
+            related = find_related(agency,all_entries)
+            related_links = build_links(related)
+
+            name = "%s" % (agency)
+
+            card = build_card(_id,name,related_links)
+
+            j = json.dumps(card)
+            tr_card = self.tr.post("cards",data=j)
+
+            from datetime import datetime
+            trello_id = tr_card['id']
+            obj = {
+                "board": "Agency",
+                "trello_id": trello_id,
+                "agency": agency,
+                "created_at": datetime.fromtimestamp(int(trello_id[0:8],16))
+            }
+            self.db.execute(INSERT % obj)
+        else:
+            trello_id = df.iloc[0].trello_id
+
+        return trello_id
+
+
         return 1
 
     def insert_agency(self,trello_id):
         df = self.db.select_dataframe("select * from prospect where trello_id = '%s'" % trello_id)
-        if len(df.agency_trello_id.iloc[0]) == 0:
-            #agency_trello = self.get_or_create_agency(df.agency.iloc[0])
-            #self.db.execute("UPDATE prospect set agency_trello_id = %s where trello_id = %s" % (agency_trello,trello_id))
-            pass
+        if df.agency_trello_id.iloc[0] is None or len(df.agency_trello_id.iloc[0]) == 0:
+            agency_trello = self.get_or_create_agency(df.agency.iloc[0])
+            self.db.execute("UPDATE prospect set agency_trello_id = %s where trello_id = %s" % (agency_trello,trello_id))
 
 
 
@@ -158,6 +194,8 @@ class WebhookHandler(web.RequestHandler):
         self.insert_details(df.trello_id[0])
         self.insert_tracking(df.trello_id[0])
         self.insert_brand(df.trello_id[0])
+        self.insert_agency(df.trello_id[0])
+
 
 
 
