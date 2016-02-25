@@ -341,9 +341,7 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
         df = raw_urls.groupby(["uid","date"])['source'].count().reset_index().groupby("uid")['source'].apply(lambda x: x.to_dict() )
 
         o1 = raw_urls.groupby(["uid"]).apply(lambda x: x.groupby("date")[['source']].count().rename(columns={"source":"visits"}).reset_index().to_dict("records") )
-        #o2 = raw_urls.groupby(["uid","date"])['source'].count().reset_index().groupby("uid").apply(lambda x: x.rename(columns={"source":"visits"}).set_index("uid").to_dict("records") ) 
         _results = o1.reset_index().set_index("uid").rename(columns={0:"sessions"})
-        _results['count'] = _results.sessions.map(lambda x: len(x))
         results = _results.to_dict()
 
         response = self.default_response(pattern_terms,logic)
