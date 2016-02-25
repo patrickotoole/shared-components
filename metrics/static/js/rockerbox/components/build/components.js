@@ -1,12 +1,12 @@
 (function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('d3')) :
-	typeof define === 'function' && define.amd ? define('components', ['exports', 'd3'], factory) :
-	factory((global.components = {}),global.d3);
-}(this, function (exports,d3) { 'use strict';
+	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('d3'), require('d3_updateable')) :
+	typeof define === 'function' && define.amd ? define('components', ['exports', 'd3', 'd3_updateable'], factory) :
+	factory((global.components = {}),global.d3,global.d3_updateable);
+}(this, function (exports,d3,d3_updateable) { 'use strict';
 
 	d3 = 'default' in d3 ? d3['default'] : d3;
 
-	function d3_updateable(target,selector,type,data,joiner) {
+	function d3_updateable$1(target,selector,type,data,joiner) {
 	  var type = type || "div"
 	  var updateable = target.selectAll(selector).data(
 	    function(x){return data ? [data] : [x]},
@@ -29,10 +29,10 @@
 
 	  this._hover = hover ? hover: this._hover;
 
-	  var svg = d3_updateable(target,"svg","svg");
+	  var svg = d3_updateable$1(target,"svg","svg");
 	  var that = this;
 
-	  var innerCircle = d3_updateable(svg.select(".circles"),".inner-circle","circle")
+	  var innerCircle = d3_updateable$1(svg.select(".circles"),".inner-circle","circle")
 	    .classed("inner-circle",true)
 	    .style("fill", "none")
 	    .style("stroke", "black")
@@ -40,7 +40,7 @@
 	    .style("stroke-opacity", function(x){return x.domains ? "0.25" : "0"})
 	    .attr("r", function(x){return x.dimensions.radius * 0.4 + .3});
 
-	  var outerCircle = d3_updateable(svg.select(".circles"),".outer-circle","circle")
+	  var outerCircle = d3_updateable$1(svg.select(".circles"),".outer-circle","circle")
 	    .classed("outer-circle",true)
 	    .style("fill", "none")
 	    .style("stroke", "black")
@@ -170,15 +170,15 @@
 	    height = dimensions.width,
 	    radius = dimensions.radius
 
-	  var svg = d3_updateable(target,"svg","svg");
-	  var desc = d3_updateable(svg,".desc","g").classed("desc",true)
+	  var svg = d3_updateable$1(target,"svg","svg");
+	  var desc = d3_updateable$1(svg,".desc","g").classed("desc",true)
 
 	  desc.attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
 	    .style("fill","#5A5A5A")
 
 	  var drawDesc = function(y) {
 
-	    d3_updateable(desc,".num-domains","text")
+	    d3_updateable$1(desc,".num-domains","text")
 	      .classed("num-domains",true)
 	      .attr("dy","-.35em")
 	      .style("text-anchor","middle")
@@ -192,14 +192,14 @@
 	        return domains.length ? d3.format(",")(domains.length) : ""
 	      })
 
-	    d3_updateable(desc,".domain-desc","text")
+	    d3_updateable$1(desc,".domain-desc","text")
 	      .classed("domain-desc",true)
 	      .attr("dy",".35em")
 	      .style("text-anchor","middle")
 	      .style("font-weight","500")
 	      .text(function(x) {return x.domains ? "domains" : ""})
 
-	    var num_users = d3_updateable(desc,".num-users","g")
+	    var num_users = d3_updateable$1(desc,".num-users","g")
 	      .classed("num-users",true)
 	      .attr("dy","1.35em")
 	      .style("text-anchor","middle")
@@ -207,7 +207,7 @@
 	      .style("font-weight","bold")
 	      
 
-	    d3_updateable(num_users,".num","text")
+	    d3_updateable$1(num_users,".num","text")
 	      .classed("num",true)
 	      .attr("dy","1.35em")
 	      .text(function(x) {
@@ -218,13 +218,13 @@
 	        return domains.length ? d3.format(",")(domains.reduce(function(p,c){return p + c.count},0)) : ""
 	      })
 
-	    var user_text = d3_updateable(num_users,".desc","text")
+	    var user_text = d3_updateable$1(num_users,".desc","text")
 	      .classed("desc",true)
 	      .attr("dy","1.85em")
 	      .style("font-weight","normal")
 	      .style("padding-left","5px")
 
-	    d3_updateable(user_text,"tspan","tspan")
+	    d3_updateable$1(user_text,"tspan","tspan")
 	      .style("font-size","0.5em")
 	      .text(function(x) {return x.domains ? "uniques" : ""})
 	  }
@@ -287,7 +287,7 @@
 	    arc = dimensions.arc,
 	    outerArc = dimensions.outerArc
 
-	  var svg = d3_updateable(target,"svg","svg");
+	  var svg = d3_updateable$1(target,"svg","svg");
 	  svg.classed("",function(x){ x.dimensions = dimensions })
 
 
@@ -300,10 +300,10 @@
 	    .attr("width",function(x){return x.dimensions.width})
 	    .attr("height",function(x){return x.dimensions.height})
 
-	  var slices = d3_updateable(svg,".slices","g").classed("slices",true),
-	    labels = d3_updateable(svg,".labels","g").classed("labels",true),
-	    lines = d3_updateable(svg,".lines","g").classed("lines",true),
-	    circles = d3_updateable(svg,".circles","g").classed("circles",true)
+	  var slices = d3_updateable$1(svg,".slices","g").classed("slices",true),
+	    labels = d3_updateable$1(svg,".labels","g").classed("labels",true),
+	    lines = d3_updateable$1(svg,".lines","g").classed("lines",true),
+	    circles = d3_updateable$1(svg,".circles","g").classed("circles",true)
 
 
 	  slices.attr("transform", translateCenter);
@@ -410,7 +410,7 @@
 	      .attr("width", function(d){ return d.options.svg.width })
 	      .attr("height", function(d){ return d.options.svg.height})
 
-	    var g = d3_updateable(svg,"g.canvas","g")
+	    var g = d3_updateable$1(svg,"g.canvas","g")
 	      .attr("class","canvas")
 	      .attr("transform", function(x) {
 	        return "translate(" + x.options.margin.left + "," + x.options.margin.top + ")"
@@ -468,7 +468,7 @@
 
 	  var canvas = target.selectAll("svg > g")
 
-	  var xAxis = d3_updateable(canvas,".x.axis","g")
+	  var xAxis = d3_updateable$1(canvas,".x.axis","g")
 	    .attr("class", "x axis")
 	    .attr("transform", function(x) { return "translate(0," + x.options.canvas.height + ")"})
 	    .call(function(x){
@@ -480,7 +480,7 @@
 	  xAxis.selectAll("text").filter(function(x){return this.innerHTML.length > 6})
 	    .attr("y",10)
 
-	  var yAxis = d3_updateable(canvas,".y.axis","g")
+	  var yAxis = d3_updateable$1(canvas,".y.axis","g")
 	    .attr("class", "y axis")
 
 	  yAxis.selectAll("text.y-label").remove()
@@ -507,16 +507,16 @@
 
 	  var canvas = target.selectAll(".canvas")
 
-	  var line = d3_updateable(canvas,".line","path")
+	  var line = d3_updateable$1(canvas,".line","path")
 	    .attr("class","line")
 	    .attr("d",function(x) { return x.line(x.values) })
 
-	  var area = d3_updateable(canvas,".area","path")
+	  var area = d3_updateable$1(canvas,".area","path")
 	    .attr("class","area")
 
 	    .attr("d",function(x) { return x.area(x.values) })
 
-	  var points= d3_updateable(canvas,".points","g")
+	  var points= d3_updateable$1(canvas,".points","g")
 	    .attr("class","points")
 
 	  var point = d3_splat(points,".point","svg:circle",function(x){ return x.values},function(x){return x.key})
@@ -632,7 +632,7 @@
 	      .attr("width", function(d){ return d.options.svg.width })
 	      .attr("height", function(d){ return d.options.svg.height})
 
-	    var g = d3_updateable(svg,"g.canvas","g")
+	    var g = d3_updateable$1(svg,"g.canvas","g")
 	      .attr("class","canvas")
 	      .attr("transform", function(x) {
 	        return "translate(" + x.options.margin.left + "," + (x.options.canvas.height/2 + x.options.margin.top) + ")"
@@ -693,7 +693,7 @@
 
 	  var canvas = target.selectAll("svg > g")
 
-	  var xAxis = d3_updateable(canvas,".x.axis","g")
+	  var xAxis = d3_updateable$1(canvas,".x.axis","g")
 	    .attr("class", "x axis")
 	    .attr("transform", function(x) { return "translate(0," + x.scales.y(0) + ")"})
 	    .call(function(x){
@@ -705,7 +705,7 @@
 	  xAxis.selectAll("text").filter(function(x){return this.innerHTML.length > 6})
 	    .attr("y",10)
 
-	  var yAxis = d3_updateable(canvas,".y.axis","g")
+	  var yAxis = d3_updateable$1(canvas,".y.axis","g")
 	    .attr("class", "y axis")
 
 	  yAxis.selectAll("text.y-label").remove()
@@ -735,7 +735,7 @@
 
 	  this._series.map(function(series) {
 
-	    var bars = d3_updateable(canvas,".bars." + series,"g")
+	    var bars = d3_updateable$1(canvas,".bars." + series,"g")
 	      .attr("class","bars " + series)
 
 	    var point = d3_splat(bars,".bar","rect",function(x){ return x.values},function(x){return x.key})
@@ -844,12 +844,105 @@
 	  }
 	}
 
+	function draw$3() {
+	  // Set color range and create a get function
+	  var colors = ['#9ecae1','#6baed6','#4292c6',
+	                '#2171b5','#08519c','#08306b'];
+	  var get_color = d3.scale.quantile()
+	    .domain([0, d3.max(this._dataFunc(), function (d) { return d.value; })])
+	    .range(colors);
+
+
+	  // Set height and max width if necessary
+	  var bar_height = bar_height || 20;
+	  var max_width = max_width || 70;
+	  var bar_width = d3.scale.linear()
+	    .domain([0, d3.max(this._dataFunc(), function(d) {
+	      return Math.sqrt(d.value);
+	    })])
+	    .range([0, max_width]);
+
+	  // Add bars to the svg
+	  this._base.svg.selectAll('.bar')
+	    .data(this._dataFunc(), function(x) {
+	      return x.key
+	    })
+	    .enter().append('rect')
+	      .attr('class', 'bar')
+	      .attr('x', 75)
+	      .attr('width', function(d) {
+	        return bar_width(Math.sqrt(d.value));
+	      })
+	      .attr('y', function(d, i) {
+	        return bar_height * i;
+	      })
+	      .attr('fill',function(x) {
+	        return get_color(x.value);
+	      })
+	      .attr('stroke','white')
+	      .attr('stroke-width','2px')
+	      .attr('height', bar_height);
+
+	  this._base.svg.selectAll('.label')
+	    .data(this._dataFunc(), function(x) {
+	      return x.key;
+	    })
+	    .enter().append('text')
+	      .text(function (d) { return d.title; })
+	      .attr('x', '0px')
+	      .attr('y', function(d, i) {
+	        return 14 + (bar_height * i);
+	      })
+	      .attr('width', function(d) {
+	        return 75;
+	      })
+	      .attr('line-height', bar_height)
+	      .style('color', '#000');
+	}
+
+	function base$3(target) {
+	  var svg = d3_updateable$1(target, '.vendor-histogram', 'svg')
+	    .classed('vendor-histogram', true)
+	    .style('width', '100%');
+
+	  svg.exit().remove()
+
+	  return {
+	    svg: svg
+	  };
+	}
+
+	function Histogram(target) {
+	  this._target = target;
+	  this._base = this.base(target);
+	  this._dataFunc = function(x) { return x };
+	  this._keyFunc = function(x) { return x };
+	}
+
+	function data$4(cb, key) {
+	  this._dataFunc = (typeof(cb) == "function") ? cb : function() {return cb};
+	  this._keyFunc = key ? key : function(x) {return x}
+
+	  return this;
+	}
+
+	Histogram.prototype = {
+	  base: base$3,
+	  data: data$4,
+	  draw: draw$3
+	}
+
+	function histogram(target) {
+	  return new Histogram(target);
+	}
+
 	var version = "0.0.1";
 
 	exports.version = version;
 	exports.pie = pie;
 	exports.line = line;
 	exports.bar = bar;
+	exports.histogram = histogram;
 	exports.accessor = accessor;
 
 }));
