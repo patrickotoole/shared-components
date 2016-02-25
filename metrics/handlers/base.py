@@ -9,7 +9,10 @@ class BaseHandler(tornado.web.RequestHandler):
         return self.get_secure_cookie("user")
 
     def get_current_advertiser(self):
-        return self.get_secure_cookie("advertiser")
+        advertiser = self.get_secure_cookie("advertiser")
+        if advertiser == "0": self.redirect("/beta")
+
+        return advertiser
 
     @property
     def current_advertiser(self):

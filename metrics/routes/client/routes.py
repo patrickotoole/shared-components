@@ -8,6 +8,7 @@ class UserRoutes(Routes):
 
         return [
             (r'/', user.LoginHandler, self.connectors),
+            (r'/beta', user.LoginAdvertiserHandler, self.connectors),
             (r'/login.*', user.LoginHandler, self.connectors),
             (r'/signup*', user.SignupHandler, self.connectors),
             (r'/account/permissions*', user.AccountPermissionsHandler, self.connectors)

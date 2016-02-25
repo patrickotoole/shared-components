@@ -39,10 +39,35 @@ SELECT DISTINCT
     advertiser_name,
     pixel_source_name
 FROM user
-    JOIN advertiser ON (user.advertiser_id = advertiser.external_advertiser_id)
+    LEFT JOIN advertiser ON (user.advertiser_id = advertiser.external_advertiser_id)
 WHERE username = '%s'"""
 
 pw_hash = password_hash.PasswordHash()
+
+from base import BaseHandler
+
+class LoginAdvertiserHandler(BaseHandler):
+
+    def initialize(self,db=None):
+        self.db = db
+
+    @tornado.web.authenticated
+    def post(self):
+
+        user = self.current_user
+        body = ujson.loads(self.request.body)
+        advertiser_id = body["access_code"]
+        df = self.db.select_dataframe("SELECT * FROM advertiser where external_advertiser_id = %s" % advertiser_id)
+
+        if len(df):
+            self.set_secure_cookie("advertiser",advertiser_id)
+            self.db.execute("UPDATE user set advertiser_id = %s where username = '%s'" % (advertiser_id,user))
+            self.write("success")
+        self.finish()
+   
+
+    def get(self):
+        self.render("_make_advertiser.html")
 
 class LoginHandler(tornado.web.RequestHandler):
 
@@ -127,6 +152,8 @@ class SignupHandler(tornado.web.RequestHandler):
 
     def login(self,username):
         self.set_secure_cookie("user",username)
+        self.set_secure_cookie("advertiser","0")
+
 
     def post(self):
         try:
