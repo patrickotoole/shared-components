@@ -7,7 +7,7 @@ import logging
 import re
 
 from handlers.base import BaseHandler
-from ..analytics_base import AnalyticsBase
+from handlers.analytics.analytics_base import AnalyticsBase
 from link import lnk
 from twisted.internet import defer
 from lib.helpers import decorators
