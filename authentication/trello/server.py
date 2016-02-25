@@ -172,7 +172,7 @@ class WebhookHandler(web.RequestHandler):
         df = self.db.select_dataframe("select * from prospect where trello_id = '%s'" % trello_id)
         if df.agency_trello_id.iloc[0] is None or len(df.agency_trello_id.iloc[0]) == 0:
             agency_trello = self.get_or_create_agency(df.agency.iloc[0])
-            self.db.execute("UPDATE prospect set agency_trello_id = %s where trello_id = %s" % (agency_trello,trello_id))
+            self.db.execute("UPDATE prospect set agency_trello_id = '%s' where trello_id = '%s'" % (agency_trello,trello_id))
 
 
 
