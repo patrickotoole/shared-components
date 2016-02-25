@@ -64,15 +64,30 @@ class UIDSCache():
 
 if __name__ == "__main__":
 
+    from lib.report.utils.loggingutils import basicConfig
+    from lib.report.utils.options import define
+    from lib.report.utils.options import options
+    from lib.report.utils.options import parse_command_line
+
+    define("username",  default="")
+    define("password", default="")
+    define("base_url", default="")
+    define("segment", default="")
+
+    basicConfig(options={})
+
+    parse_command_line()
+
+
     sql = lnk.dbs.rockerbox
     crusher = lnk.api.crusher
-    crusher.user="a_littlebits"
-    crusher.password="admin"
-    crusher.base_url="http://192.168.99.100:8888"
+    crusher.user= "a_{}".format(options.username)
+    crusher.password= options.password
+    crusher.base_url= options.base_url
     crusher.authenticate()
-    uidsc  = UIDSCache(sql, "littlebits", crusher)
-    data = uidsc.make_request("google")
+    uidsc  = UIDSCache(sql, options.username, crusher)
+    data = uidsc.make_request(options.segment)
     for i in range(0, len(data["visits"])):
-        uidsc.write_to_table_visits("littlebits", "google", data["visits"].ix[i])
+        uidsc.write_to_table_visits(options.username, options.segment, data["visits"].ix[i])
     for i in range(0, len(data["sessions"])):
-        uidsc.write_to_table_sessions("littlebits", "google", data["sessions"].ix[i])
+        uidsc.write_to_table_sessions(options.username, options.segment, data["sessions"].ix[i])
