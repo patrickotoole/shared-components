@@ -334,7 +334,6 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
         args = [advertiser,pattern_terms[0][0],dates]
 
 
-
         uids = yield self.get_uids_from_cache(*args)
         uids = list(set([u['uid'] for u in uids]))
 
@@ -343,7 +342,6 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
 
         o1 = raw_urls.groupby(["uid"]).apply(lambda x: x.groupby("date")[['source']].count().rename(columns={"source":"visits"}).reset_index().to_dict("records") )
         #o2 = raw_urls.groupby(["uid","date"])['source'].count().reset_index().groupby("uid").apply(lambda x: x.rename(columns={"source":"visits"}).set_index("uid").to_dict("records") ) 
-        #import ipdb; ipdb.set_trace()
         _results = o1.reset_index().set_index("uid").rename(columns={0:"sessions"})
         _results['count'] = _results.sessions.map(lambda x: len(x))
         results = _results.to_dict()

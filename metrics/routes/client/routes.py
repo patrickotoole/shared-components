@@ -92,6 +92,7 @@ class AdvertiserRoutes(Routes):
             (r'/domains_visitor_full', visitors.VisitorDomainsHandler, self.connectors),
             (r'/cached_visitor_domains', visitors.VisitorDomainsCacheHandler, self.connectors),
             (r'/search_visitor_domains', visitors.SearchVisitorDomainsHandler, self.connectors),
+            (r'/uids_only_cache', visitors.UidsCacheHandler, self.connectors),
 
 
             (r'/visit_avails', analytics.VisitAvailsHandler, self.connectors),
