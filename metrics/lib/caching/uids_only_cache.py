@@ -10,84 +10,47 @@ logger = logging.getLogger()
 SQL_QUERY1 = "insert into uids_only_visits_cache (advertiser, pattern, num_visits, visit_user_count) values ('{}', '{}', {}, {})"
 SQL_QUERY2 = "insert into uids_only_sessions_cache (advertiser, pattern, num_sessions, sessions_user_count) values ('{}', '{}', {}, {})"
 
-class UIDSCache():
     
-    def __init__(self, db, user, crusher_api=False):
-        self.query1 = SQL_QUERY1
-        self.query2 = SQL_QUERY2
-        self.db = db
-        self.user = user
-        if crusher_api:
-            self.crusher_api = crusher_api
-        else:
-            self.crusher_api = self.connect_to_api()
+def make_request(advertiser, pattern, base_url):
 
-    def connect_to_api(self):
-        return ""
-
-    def make_request(self, pattern):
-        url = "/crusher/pattern_search/uids_only?search={}"
-        response = self.crusher_api.get(url.format(pattern))
-        
-        #from IPython import embed; embed(); import ipdb; ipdb.set_trace()
-        #data_for_df = {"sessions":[], "visits":[]}
-        #for item in response.json["results"]["sessions"].values():
-        #data_for_df["sessions"].append(len(item))
-        #for i in item:
-        #data_for_df["visits"].append(i["visits"])
-
-        d1 = response.json["results"]["sessions"]
-        df = pandas.DataFrame(d1.items())
-        df.columns = ["col1", "col2"]
-        df2 = df.groupby("col1").apply(lambda x: pandas.DataFrame(x["col2"].iloc[0]).set_index('date'))
-        
-        df3 = df2.groupby(level=0).apply(lambda x: pandas.Series({"sessions":len(x), "visits":sum(x["visits"])}))
-        
-        agg_visits = df3.groupby("visits").count()
-        final_agg_visits = agg_visits.reset_index()
-        final_agg_visits.columns = ["visits", "users_count"]
-
-        agg_sessions = df3.groupby("sessions").count()
-        final_agg_sessions = agg_sessions.reset_index()
-        final_agg_sessions.columns = ["sessions", "users_count"]
-
-        data = {"visits" : final_agg_visits, "sessions": final_agg_sessions}
-
-        return data
-
-    def write_to_table_visits(self,advertiser, pattern, data):
-        self.db.execute(self.query1.format(advertiser, pattern, data["visits"], data["users_count"]))
-
-    def write_to_table_sessions(self,advertiser, pattern, data):
-        self.db.execute(self.query2.format(advertiser, pattern, data["sessions"], data["users_count"]))
-
-
-if __name__ == "__main__":
-
-    from lib.report.utils.loggingutils import basicConfig
-    from lib.report.utils.options import define
-    from lib.report.utils.options import options
-    from lib.report.utils.options import parse_command_line
-
-    define("username",  default="")
-    define("password", default="")
-    define("base_url", default="")
-    define("segment", default="")
-
-    basicConfig(options={})
-
-    parse_command_line()
-
-
-    sql = lnk.dbs.rockerbox
     crusher = lnk.api.crusher
-    crusher.user= "a_{}".format(options.username)
-    crusher.password= options.password
-    crusher.base_url= options.base_url
+    crusher.user = "a_"+advertiser
+    crusher.password="admin"
+    crusher.base_url = base_url
     crusher.authenticate()
-    uidsc  = UIDSCache(sql, options.username, crusher)
-    data = uidsc.make_request(options.segment)
+
+    url = "/crusher/pattern_search/uids_only?search={}"
+    response = crusher.get(url.format(pattern))
+    import ipdb; ipdb.set_trace()
+    d1 = response.json["results"]["sessions"]
+    df = pandas.DataFrame(d1.items())
+    df.columns = ["col1", "col2"]
+    df2 = df.groupby("col1").apply(lambda x: pandas.DataFrame(x["col2"].iloc[0]).set_index('date'))
+        
+    df3 = df2.groupby(level=0).apply(lambda x: pandas.Series({"sessions":len(x), "visits":sum(x["visits"])}))
+        
+    agg_visits = df3.groupby("visits").count()
+    final_agg_visits = agg_visits.reset_index()
+    final_agg_visits.columns = ["visits", "users_count"]
+
+    agg_sessions = df3.groupby("sessions").count()
+    final_agg_sessions = agg_sessions.reset_index()
+    final_agg_sessions.columns = ["sessions", "users_count"]
+
+    data = {"visits" : final_agg_visits, "sessions": final_agg_sessions}
+
+    return data
+
+def write_to_table_visits(advertiser, pattern, data,db):
+    db.execute(SQL_QUERY1.format(advertiser, pattern, data["visits"], data["users_count"]))
+
+def write_to_table_sessions(advertiser, pattern, data,db):
+    db.execute(SQL_QUERY2.format(advertiser, pattern, data["sessions"], data["users_count"]))
+
+
+def run_all(advertiser, pattern, base_url, connectors):
+    data = make_request(advertiser, pattern, base_url)
     for i in range(0, len(data["visits"])):
-        uidsc.write_to_table_visits(options.username, options.segment, data["visits"].ix[i])
+        write_to_table_visits(advertiser, pattern, data["visits"].ix[i], connectors['db'])
     for i in range(0, len(data["sessions"])):
-        uidsc.write_to_table_sessions(options.username, options.segment, data["sessions"].ix[i])
+        write_to_table_sessions(advertiser, pattern, data["sessions"].ix[i], connectors['db'])
