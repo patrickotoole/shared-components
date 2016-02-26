@@ -19,12 +19,10 @@ RB.crusher.ui.action = (function(action) {
           times = ["1a", "2a", "3a", "4a", "5a", "6a", "7a", "8a", "9a", "10a", "11a", "12p", "1p", "2p", "3p", "4p", "5p", "6p", "7p", "8p", "9p", "10p", "11p", "12a"];
 
       var sesssionVisitVerticalBarChart = function(data,svg,title,_colors) {
-
         var margin = {top: 500, right: 10, bottom: 0, left: 670},
             width = 720 - margin.left - margin.right,
             height = 50  - margin.bottom;
 
-        
 
         var l = Array.apply(null, Array(data.length)).map(function (_, i) {return i+1;});
 
@@ -79,7 +77,7 @@ RB.crusher.ui.action = (function(action) {
               .style("text-anchor", "end")
               .attr("transform", "translate(-6," + gridSize / 1.5 + ")")
               .attr("class", function (d, i) { return ((i >= 0 && i <= 4) ? "dayLabel mono axis axis-workweek" : "dayLabel mono axis axis-workweek"); });
-        
+
       }
 
       var sesssionTimeVerticalBarChart = function(data,svg,title,_colors) {
@@ -88,7 +86,7 @@ RB.crusher.ui.action = (function(action) {
             width = 720 - margin.left - margin.right,
             height = 50  - margin.bottom;
 
-        
+
 
         var l = Array.apply(null, Array(data.length)).map(function (_, i) {return i+1;});
 
@@ -143,16 +141,15 @@ RB.crusher.ui.action = (function(action) {
               .style("text-anchor", "end")
               .attr("transform", "translate(-6," + gridSize / 1.5 + ")")
               .attr("class", function (d, i) { return ((i >= 0 && i <= 4) ? "dayLabel mono axis axis-workweek" : "dayLabel mono axis axis-workweek"); });
-        
+
       }
 
       var sesssionVerticalBarChart = function(data,svg,title,_colors) {
-
         var margin = {top: 500, right: 10, bottom: 0, left: 170},
             width = 400 - margin.left - margin.right,
             height = 50  - margin.bottom;
 
-        
+
 
         var l = Array.apply(null, Array(data.length)).map(function (_, i) {return i+1;});
 
@@ -207,7 +204,7 @@ RB.crusher.ui.action = (function(action) {
               .style("text-anchor", "end")
               .attr("transform", "translate(-6," + gridSize / 1.5 + ")")
               .attr("class", function (d, i) { return ((i >= 0 && i <= 4) ? "dayLabel mono axis axis-workweek" : "dayLabel mono axis axis-workweek"); });
-        
+
       }
 
 
@@ -267,7 +264,7 @@ RB.crusher.ui.action = (function(action) {
         y.domain([0, d3.max(data, function(d) { return Math.sqrt(d.frequency); })]);
 
         console.log(data)
-        
+
 
         svg.selectAll(".bar")
             .data(data)
@@ -283,7 +280,7 @@ RB.crusher.ui.action = (function(action) {
             .attr("height", function(d) { return height - y(Math.sqrt(d.frequency)); });
 
 
-      }      
+      }
 
       var barChart = function(data,title,_colors,_base) {
 
@@ -397,7 +394,7 @@ RB.crusher.ui.action = (function(action) {
             .attr("stroke-width","2px")
             .attr("_hour", function(d) { return d.hour })
             .attr("height", function(d) { return 100 - y(d.visits); });
-      
+
       }
 
       var verticalBarChart = function(data,svg,_colors) {
@@ -406,7 +403,7 @@ RB.crusher.ui.action = (function(action) {
             width = maxWidth - margin.left - margin.right,
             height = 50  - margin.bottom;
 
-        
+
 
         var l = Array.apply(null, Array(data.length)).map(function (_, i) {return i+1;});
 
@@ -441,7 +438,7 @@ RB.crusher.ui.action = (function(action) {
             .attr("stroke","white")
             .attr("stroke-width","2px")
             .attr("height", gridSize);
-        
+
       }
 
 
@@ -456,7 +453,7 @@ RB.crusher.ui.action = (function(action) {
         //   parent_category_name : "",
         //   hour: 0
         // }
-        
+
 
 
 
@@ -496,10 +493,10 @@ RB.crusher.ui.action = (function(action) {
               .attr("transform", "translate(" + gridSize / 2 + ", -6)")
               .attr("class", function(d, i) { return ((i >= 7 && i <= 16) ? "timeLabel mono axis axis-worktime" : "timeLabel mono axis"); });
 
-        
+
         data = data.map(function(x){
           x.sum = d3.sum(Object.keys(x.values).map(function(q){return x.values[q]}))
-          
+
           return x
         }).sort(function(p,c){
           return c.sum - p.sum
@@ -528,7 +525,7 @@ RB.crusher.ui.action = (function(action) {
         dayLabels
           .exit().remove()
 
- 
+
 
         var days = data.map(function(x){ return x.key })
         var l15 = Array.apply(null, Array(data.length)).map(function (_, i) {return i+1;});
@@ -542,14 +539,14 @@ RB.crusher.ui.action = (function(action) {
               hour: ((+hour - 5 + 24) % 24),
               value: x.values[hour],
               sum: x.sum
-            })  
+            })
           })
-          
+
         })
 
         data = d
 
-        
+
         var vals = d3.scale.ordinal()
           .domain(days)
           .range(l15)
@@ -563,7 +560,7 @@ RB.crusher.ui.action = (function(action) {
         var cards = svg.selectAll(".hour")
           .data(data, function(d,i) {return vals(d.day) + ':' + d.hour + d.sum });
 
-        
+
         cards.enter().append("rect")
 
         cards
@@ -576,7 +573,7 @@ RB.crusher.ui.action = (function(action) {
           .attr("height", gridSize)
           .attr("fill",function(x) { return x.value ? colorScale(x.value) : "#fff" })
           .on("mouseover",function(d){})
-        
+
         cards.exit().remove()
 
         //_svg.on("mouseout",function(d){})
@@ -601,11 +598,11 @@ RB.crusher.ui.action = (function(action) {
 
 
           var _offsite_data = buildOffsiteData(data)
-          
+
 
 
           /* Main: section */
-          
+
           var _svg = base.append("svg")
               .attr("width", width + margin.left + margin.right + 10)
               .attr("height", height + margin.top + margin.bottom)
@@ -630,7 +627,7 @@ RB.crusher.ui.action = (function(action) {
 
 
 
-          
+
           var timeLabels = svg.selectAll(".timeLabel")
               .data(times)
               .enter().append("text")
@@ -746,7 +743,7 @@ RB.crusher.ui.action = (function(action) {
                 })
 
                 //console.log(d.hour,d.parent_category_name,xx,_category_data.map(function(x){return x.frequency}))
-                
+
                 barChart(_offsite_data,"Off-site activity",colorScale,_svg)
                 verticalBarChart(_category_data,_svg,colorScale)
 
@@ -758,19 +755,19 @@ RB.crusher.ui.action = (function(action) {
                   until = until < 12 ? until : (until - 24)
 
                   return {
-                    hour: start_hour, 
+                    hour: start_hour,
                     time_until: until,
                     visits: x.visits,
                     frequency: x.sessions
-                  } 
+                  }
                 })
 
-                
+
 
                 //sessionStartChart(session_start_times,"Begin visiting site",false,_svg)
 
                 var as_text = d.hour < 13 ? d.hour+"am" : (d.hour - 12) + "pm"
-                
+
 
                 var xx = [];
                 var prev = -13;
@@ -782,15 +779,15 @@ RB.crusher.ui.action = (function(action) {
                     if ( (h >= c.time_until) && (prev < c.time_until) ) return p + c.frequency
                     else return p
                   },0)
-                  
+
                   if (prev >= -12)
                   xx.push({
                     "pos":i,
-                    "key": h == -1 ? 
+                    "key": h == -1 ?
                       "1 hour before" : h == 1 ?
-                      "1 hour after" : h == 0 ? 
-                      ("at " + as_text) :h < 0 ? 
-                        (h*-1) + " to " + (prev*-1) + " hours before" : 
+                      "1 hour after" : h == 0 ?
+                      ("at " + as_text) :h < 0 ?
+                        (h*-1) + " to " + (prev*-1) + " hours before" :
                         prev + " to " + h + " hours after",
                     "frequency":sessions
                   })
@@ -798,14 +795,14 @@ RB.crusher.ui.action = (function(action) {
 
                 })
 
-                 
+
                 d.on_site.session_length
 
                 d.on_site.session_length.map(function(x,i){
                   x.pos = i + 1;
-                  x.key = "< " + (x.session_length +1) + " hours"; 
-                  x.frequency = x.sessions; 
-                  return x 
+                  x.key = "< " + (x.session_length +1) + " hours";
+                  x.frequency = x.sessions;
+                  return x
                 })
 
                 var overall_title = "For users who visit a " + d.parent_category_name + " site @ " + as_text + "..."
@@ -844,9 +841,9 @@ RB.crusher.ui.action = (function(action) {
                 third_title
                   .text(function(x){return x.value})
 
-                
 
-                
+
+
 
                 sesssionVerticalBarChart(xx,_svg,"When do they visit?",colorScale)
                 sesssionTimeVerticalBarChart(d.on_site.session_length,_svg,"How long do they browse?",colorScale)
@@ -860,7 +857,7 @@ RB.crusher.ui.action = (function(action) {
                   else if (x.visits <= 10) zz.push({key:"10 views or less", "frequency": x.sessions, "pos":4})
                   else if (x.visits <= 15) zz.push({key:"15 views or less", "frequency": x.sessions, "pos":5})
                   else if (x.visits > 15) zz.push({key:"more than 15 views", "frequency": x.sessions, "pos":6})
-              
+
                 })
                 sesssionVisitVerticalBarChart(zz,_svg,"How much do they view?",colorScale)
                 onsiteHeatmap(d.on_site.actions,_svg,d)
@@ -872,26 +869,26 @@ RB.crusher.ui.action = (function(action) {
             barChart(_offsite_data,"Off-site activity")
             verticalBarChart(_category_data,_svg)
           })
-              // .attr("class", function(d) { 
-                
+              // .attr("class", function(d) {
+
               //   return [d.day,d.hour,d.value,colorScale(d.value),vals(d.day)].join("-")
               // });
 
           cards.transition().duration(1000)
               .style("fill", function(d) { return colorScale(d.value); });
 
-          // cards.select("title").text(function(d) { return d.value; });          
+          // cards.select("title").text(function(d) { return d.value; });
           cards.exit().remove();
 
-          
-          
+
+
           var _data = buildCategoryData(xx)
           var _category_data = _data[0]
           var _position_data = _data[1]
 
           verticalBarChart(_category_data,_svg)
-          
-          
+
+
 
       }
 
@@ -916,10 +913,10 @@ RB.crusher.ui.action = (function(action) {
 
         var _category_data = Object.keys(xx).map(function(x,i) {
           return {"frequency":xx[x],"key":x}
-        }).sort(function(p,c) { 
-          return p.frequency - c.frequency 
+        }).sort(function(p,c) {
+          return p.frequency - c.frequency
         }).slice(-15)
-        
+
         var newData = []
         var categoryPositions = {}
 
@@ -943,7 +940,7 @@ RB.crusher.ui.action = (function(action) {
     var title = "User Activity Timing",
       series = ["timing"],
       formatting = ".col-md-12",
-      description = "", 
+      description = "",
       ts = wrapper.selectAll(".action-body")
 
     var wrap = RB.rho.ui.buildSeriesWrapper(ts, title, series, false, formatting, description)
@@ -967,9 +964,9 @@ RB.crusher.ui.action = (function(action) {
       heatmapChart(d.hourly.categories,d.hourly.onsite,d3.select(this))
     })
 
-    
+
   }
 
   return action
 
-})(RB.crusher.ui.action || {})  
+})(RB.crusher.ui.action || {})

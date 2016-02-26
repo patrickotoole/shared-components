@@ -15,15 +15,9 @@ export default function(rows) {
 
   rows.selectAll(".vendor-loading").filter(function(x){return x.timeseries_data || x.domains}).remove()
 
-  vendors.render_visits(rows.selectAll('.vendor-data-column'));
-  vendors.render_pie(rows.selectAll('.vendor-data-column'));
-
-  var vendor_onsite_column = d3_updateable(vendor_data_columns, '.vendor-onsite-column', 'div')
-    .classed('vendor-onsite-column col-lg-4 col-md-6', true)
-    .html(function(x) {
-      if(typeof x.timeseries_data !== typeof undefined) {
-        return '<h3>On-site</h3><div class="coming-soon-box">(coming soon)</div>';
-      }
-    });
+  var column = rows.selectAll('.vendor-data-column');
+  vendors.render_visits(vendor_data_columns);
+  vendors.render_pie(vendor_data_columns);
+  vendors.render_onsite(vendor_data_columns);
 
 }

@@ -42,9 +42,6 @@ RB.crusher.ui.action = (function(action) {
 
   action.status = function(wrapper) {
 
-
-
-
       var status = d3_updateable(wrapper,".action-status","div")
         .classed("action-status",true)
 

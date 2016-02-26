@@ -16,6 +16,7 @@ class PatternSearchHandler(PatternSearchBase):
         self.TYPE = {
             "uid_domains": self.get_uid_domains,
             "uids": self.get_uids,
+            "uids_only": self.get_uids_only,
             "count": self.get_count,
             "timeseries": self.get_timeseries,
             "timeseries_only": self.get_timeseries_only
