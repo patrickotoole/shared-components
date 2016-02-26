@@ -10,7 +10,15 @@ logger = logging.getLogger()
 SQL_QUERY1 = "insert into uids_only_visits_cache (advertiser, pattern, num_visits, visit_user_count) values ('{}', '{}', {}, {})"
 SQL_QUERY2 = "insert into uids_only_sessions_cache (advertiser, pattern, num_sessions, sessions_user_count) values ('{}', '{}', {}, {})"
 
-    
+def get_connectors():
+    from link import lnk
+    return {
+        "db": lnk.dbs.rockerbox,
+        "zk": {},
+        "cassandra": lnk.dbs.cassandra
+        }
+
+
 def make_request(advertiser, pattern, base_url):
 
     crusher = lnk.api.crusher
@@ -21,7 +29,7 @@ def make_request(advertiser, pattern, base_url):
 
     url = "/crusher/pattern_search/uids_only?search={}"
     response = crusher.get(url.format(pattern))
-    import ipdb; ipdb.set_trace()
+    
     d1 = response.json["results"]["sessions"]
     df = pandas.DataFrame(d1.items())
     df.columns = ["col1", "col2"]
@@ -48,7 +56,10 @@ def write_to_table_sessions(advertiser, pattern, data,db):
     db.execute(SQL_QUERY2.format(advertiser, pattern, data["sessions"], data["users_count"]))
 
 
-def run_all(advertiser, pattern, base_url, connectors):
+def run_all(advertiser, pattern, base_url, cache_date, indentifiers="test", connectors=False):
+    connectors = connectors or get_connectors()
+
+    db = connectors['db']
     data = make_request(advertiser, pattern, base_url)
     for i in range(0, len(data["visits"])):
         write_to_table_visits(advertiser, pattern, data["visits"].ix[i], connectors['db'])

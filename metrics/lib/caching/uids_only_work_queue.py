@@ -20,11 +20,12 @@ class CacheUIDS():
 
     def run_on_work_queue(self, advertiser, pattern, base_url):
         import lib.caching.uids_only_cache as uoc
+        yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
+        _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
         work = pickle.dumps((
             uoc.run_all,
-            [advertiser,pattern, base_url]
+            [advertiser,pattern, base_url, _cache_yesterday, _cache_yesterday + "uids_only"]
             ))
-        import ipdb; ipdb.set_trace()
         work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,1)
 
 
@@ -48,7 +49,7 @@ if __name__ == "__main__":
     parse_command_line()
 
     zk = KazooClient(hosts="zk1:2181")
-
+    zk.start()
     if options.run_local and not options.run_all:
         sql = lnk.dbs.rockerbox
         cuid = CacheUIDS({'db':sql,'zk':zk})
