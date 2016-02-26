@@ -13,10 +13,7 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 					title: '1. Pixel Implementation'
 				},
 				{
-					title: '2. Create Segment'
-				},
-				{
-					title: '3. Finish'
+					title: '2. Finish'
 			}]
 		}
 
@@ -24,7 +21,7 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 		var progress_indicator_wrap = d3_updateable(row, '.progress-indicator-wrap','section')
 			.classed('progress-indicator-wrap progress-indicator', true)
 			.attr('data-step', step)
-			.html('<hr/><hr/>');
+			.html('<hr/>');
 
 		// Steps list
 		var progress_indicator_steps = d3_updateable(progress_indicator_wrap, '.progress-indicator-steps','ol')
@@ -303,7 +300,7 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 
 	}
 
-	gettingstarted.step2 = function(row, actions) {
+	gettingstarted.step2_old = function(row, actions) {
 		gettingstarted.progress_indicator(row, 2);
 
 		var step_wrapper = d3_updateable(row, '.step-wrapper', 'section')
@@ -369,8 +366,31 @@ RB.crusher.ui.gettingstarted = (function(gettingstarted, crusher) {
 			.trigger()
 	}
 
-	gettingstarted.step3 = function(row, actions) {
+	gettingstarted.step2 = function(row, actions) {
 		gettingstarted.progress_indicator(row, 3);
+
+			var first_action = '/'
+
+			var data = {
+				'action_name': 'All Pages',
+				'action_string': 'All Pages',
+				'action_type': 'segment',
+				'domains': undefined,
+				'name': 'All Pages',
+				'operator': 'or',
+				'param_list': [],
+				'rows': [{
+					'url_pattern': first_action,
+					'values': undefined
+				}],
+				'url_pattern': [
+					first_action
+				],
+				'urls': undefined,
+				'values': undefined,
+				'visits_data': []
+			}
+			RB.crusher.controller.action.save(data, false);
 
 		var final_actions = [
 			{
