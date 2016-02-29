@@ -75,6 +75,7 @@ class WorkQueueHandler(tornado.web.RequestHandler):
                 print values
                 return values[1]
             except:
+                print "Error parsing pickle job"
                 return False
 
         in_queue = [parse(path) for path in path_queue]

@@ -1,11 +1,12 @@
 import requests, json, logging, pandas, pickle, work_queue
-from pandas.io.json import json_normalize
 from link import lnk
-from lib.pandas_sql import s as _sql
 import datetime
-import lib.cassandra_cache.run as cassandra_functions
 from kazoo.client import KazooClient
-import pickle
+formatter = '%(asctime)s:%(levelname)s - %(message)s'
+logging.basicConfig(level=logging.INFO, format=formatter)
+
+logger = logging.getLogger()
+current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 QUERY ="INSERT INTO full_domain_cache_test (advertiser, url, count, uniques) VALUES ('{}', '{}',{}, {})"
 CASSQUERY=""
@@ -14,19 +15,23 @@ class CacheFullURL():
     
     def __init__(self, connectors):
         self.connectors = connectors
+        self.zookeeper = connectors['zk']
 
-    def run_local(self, advertiser, pattern):
+    def run_local(self, advertiser, pattern, base_url):
         import full_url_cache as cc
-        cc.run_wrapper(advertiser,pattern,self.connectors)
+        cc.run_wrapper(advertiser,pattern,base_url,"test",connectors=self.connectors)
 
-    def run_on_work_queue(self, advertiser, pattern):
-        import lib.caching.full_url_cache as cc
+    def run_on_work_queue(self,advertiser, pattern):
+        import lib.caching.full_url_cache as furc
+        yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
+        _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
         work = pickle.dumps((
-            cc.run_wrapper,
-            [advertiser,pattern]
-            ))
-        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,0)
-
+                furc.run_wrapper,
+                [advertiser,pattern, _cache_yesterday, _cache_yesterday+"full_url"]
+                ))
+        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,1)
+        logging.info("added to work queue %s for %s" %(pattern,advertiser))
+        
 
 if __name__ == "__main__":
     from lib.report.utils.loggingutils import basicConfig
@@ -36,12 +41,19 @@ if __name__ == "__main__":
 
     define("advertiser",  default="")
     define("pattern", default="")
+    define("run_local", default=False)
+    define("base_url", "http://beta.crusher.getrockerbox.com")
 
     basicConfig(options={})
 
     parse_command_line() 
 
     zk = KazooClient(hosts="zk1:2181")
+    zk.start()
     connectors = {'db':lnk.dbs.rockerbox, 'zk':zk, 'cassandra':''}
     cfu = CacheFullURL(connectors)
-    cfu.run_local(options.advertiser, options.pattern)
+    if options.run_local:
+        cfu.run_local(options.advertiser, options.pattern,options.base_url)
+    else:
+        cfu.run_on_work_queue(options.advertiser, options.pattern)
+
