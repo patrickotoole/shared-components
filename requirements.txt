@@ -1,3 +1,4 @@
+pyhs2
 paramiko
 tornado
 mock==1.0.1

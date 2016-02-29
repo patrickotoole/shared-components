@@ -21,6 +21,8 @@ RUN mkdir /root/rockerbox-metrics && cd /root/rockerbox-metrics && git clone git
 
 RUN mkdir /root/datacell  && cd /root/datacell && git clone git@datacell:rockerbox/datacell.git .
 
+RUN apt-get install libsasl2-dev
+
 RUN easy_install pip && cd /root/rockerbox-metrics && pip install -r requirements.txt
 
 RUN cd /root/datacell && pip install -r requirements.txt 
