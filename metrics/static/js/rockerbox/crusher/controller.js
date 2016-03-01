@@ -656,6 +656,15 @@ RB.crusher.controller = (function(controller) {
       });
     },
 
+    "full_url_ranking": function() {
+      var row = build_header({
+        'id': 'full_url_ranking',
+        'name': 'Full URL Ranking'
+      });
+
+      RB.crusher.ui.full_url_ranking.show(row)
+    },
+
     "home": function(){
       // Check if the getting started page needs to be shown
       var pixel_count = {
@@ -901,6 +910,13 @@ RB.crusher.controller = (function(controller) {
       "values_key": "action_name",
       "hide_href": true
     },
+    {
+      "name":"Full URL Table",
+      "push_state": "/crusher/full_url_ranking",
+      "class": "glyphicon glyphicon-plus",
+      "values_key": "action_name",
+      "hide_href": true
+    },
     /*{
       "name":"Funnels (alpha)",
       "push_state": "/crusher/funnel",
@@ -994,6 +1010,10 @@ RB.crusher.controller = (function(controller) {
         {
           "name": "Vendors Table",
           "push_state": "/crusher/vendors/table"
+        }],
+      "full_url_ranking": [{
+          "name": "Full URL Ranking",
+          "push_state": "/crusher/full_url_ranking"
         }],
       "home": [{
           "name":"Home",
