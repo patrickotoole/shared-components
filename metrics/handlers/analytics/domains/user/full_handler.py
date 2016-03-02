@@ -36,7 +36,7 @@ class VisitDomainsFullHandler(BaseHandler, AnalyticsBase, VisitDomainBase):
         uids_split = "'%s'" % "','".join(str_uids)
         logging.info("Visit domains full prepping statement")
         self.DOMAIN_SELECT="select * from rockerbox.visitor_domains_full where uid = ?"        
-        urls = self.paginate_get_w_in(uids, date_clause)
+        urls = self.get_domains_use_futures(uids, date_clause)
         results = pandas.DataFrame(urls)
         logging.info("QCassFull")
 
@@ -48,7 +48,7 @@ class VisitDomainsFullHandler(BaseHandler, AnalyticsBase, VisitDomainBase):
         uids_split = "'%s'" % "','".join(str_uids)
         logging.info("Visit domains full prepping statement")
         self.DOMAIN_SELECT="select * from rockerbox.visitor_domains_full where uid = ?"
-        urls = self.paginate_get_w_in(uids, date_clause)
+        urls = self.get_domains_use_futures(uids, date_clause)
         results = pandas.DataFrame(urls)
         def aggDF(row):
             return {"count":len(row), "uniques":len(set(row))}

@@ -68,6 +68,26 @@ class AdvertiserRoutes(Routes):
 
         ]
 
+    @namespace("/crusher/v1")
+    @connectors("db","api","cassandra", "mongo", "zookeeper")
+    def v1_crusher_routes(self):
+        import handlers.analytics as analytics
+        import handlers.funnel as funnel
+        import handlers.pixel_status as pixel_status
+        import handlers.analytics.domains.user as user
+        import handlers.analytics.domains.visitor as visitor
+
+
+        return [
+            (r'/user/domains', user.handler.VisitDomainsHandler, self.connectors),
+            (r'/user/domains_full', visitor.full_handler.VisitDomainsFullHandler, self.connectors),
+            (r'/visitor/domains', visitor.handler.SearchVisitorDomainsHandler, self.connectors),
+            (r'/visitor/domains_full', visitor.full_handler.VisitorDomainsHandler, self.connectors),
+            (r'/visitor/domains/cache', visitor.cache_handler.VisitorDomainsCacheHandler, self.connectors)
+        ]
+
+
+
     @namespace("/crusher")
     @connectors("db","api","cassandra", "mongo", "zookeeper")
     def crusher_routes(self):
