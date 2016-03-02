@@ -127,6 +127,9 @@ class PatternStatsBase(PatternSearchCache):
         pattern = args[1]
         num_days = len(args[2])
 
+        if len(uids) == 0:
+            raise Exception("No user ids were found in cache")
+
         defs = [self.defer_get_domains_by_date(advertiser,pattern,uids,num_days)]
         dl = defer.DeferredList(defs)
         dom = yield dl

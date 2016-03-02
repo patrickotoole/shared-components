@@ -34,51 +34,32 @@ def filter_fraud(df):
     return df
 
 
-DEFAULT_INTERVAL = "minute"
-
-QUERY = "SELECT * FROM rockerbox.visitor_domains_2 "
 
 class ServedEventBase(object):
 
     @decorators.deferred
-    def defer_get_uid_visits(self, source, uids, term):
-
-        xx = self.paginate_get_visits(uids, source)
-        df = pandas.DataFrame(xx)
-
-        filtered = df[df.url.map(lambda x: term in x)]
-
-        return (filtered, df)
-
-
-        
-    @decorators.deferred
     def defer_get_served(self, uids, source):
-        where = []
         xx = self.paginate_get_served(uids, source)
         df = pandas.DataFrame(xx)
-
         return df
 
  
     def paginate_get_served(self, uids, source):
-
         DOMAIN_SELECT = "select * from rockerbox.served_uids where uid = ? and date = ? and source = ?"
-
         statement = self.cassandra.prepare(DOMAIN_SELECT)
 
         def execute(data):
             bound = statement.bind(data)
             return self.cassandra.execute_async(bound)
 
-        logging.info("AXY")
+        logging.info("Start get served from futures:")
 
         dates = build_datelist(30)
 
         prepped = [[u, d, source] for u in uids for d in dates]
         results, _ = FutureHelpers.future_queue(prepped,execute,simple_append,120,[],"DUMMY_VAR")
 
-        logging.info("ASDF")
+        logging.info("End get served from futures.")
 
         return results
 

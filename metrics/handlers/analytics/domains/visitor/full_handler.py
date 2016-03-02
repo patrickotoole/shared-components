@@ -7,15 +7,15 @@ import logging
 import re
 
 from link import lnk
-from visit_domains_full import VisitDomainsFullHandler
+from ..user.full_handler import VisitDomainsFullHandler
 from handlers.base import BaseHandler
-from ..analytics_base import AnalyticsBase
+from ...analytics_base import AnalyticsBase
 from twisted.internet import defer
 from lib.helpers import decorators
 from lib.helpers import *
 from lib.cassandra_helpers.helpers import FutureHelpers
 from lib.cassandra_cache.helpers import *
-from ..search.cache.pattern_search_cache import PatternSearchCache
+from ...search.cache.pattern_search_cache import PatternSearchCache
 
 class VisitorDomainsHandler(PatternSearchCache,VisitDomainsFullHandler):
 
@@ -36,8 +36,8 @@ class VisitorDomainsHandler(PatternSearchCache,VisitDomainsFullHandler):
     def defer_get_onsite_domains(self, date, advertiser, pattern):
         
         dates = build_datelist(7)
-        args = [advertiser,pattern,dates]
-        uids = self.get_uids_from_cache(*args)
+        _args = [advertiser,pattern,dates]
+        uids = self.get_uids_from_cache(*_args)
         uids = list(set([u['uid'] for u in uids]))
         date_clause = self.make_date_clause("date",date,"","")
 

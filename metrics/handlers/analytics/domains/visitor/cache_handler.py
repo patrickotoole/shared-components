@@ -7,15 +7,15 @@ import logging
 import re
 
 from link import lnk
-from visit_domains_full import VisitDomainsFullHandler
+from ..user.full_handler import VisitDomainsFullHandler
 from handlers.base import BaseHandler
-from ..analytics_base import AnalyticsBase
+from ...analytics_base import AnalyticsBase
 from twisted.internet import defer
 from lib.helpers import decorators
 from lib.helpers import *
 from lib.cassandra_helpers.helpers import FutureHelpers
 from lib.cassandra_cache.helpers import *
-from ..search.cache.pattern_search_cache import PatternSearchCache
+from ...search.cache.pattern_search_cache import PatternSearchCache
 
 QUERY = "select * from full_domain_cache_test where advertiser = '{}' and url_pattern = '{}'"
 

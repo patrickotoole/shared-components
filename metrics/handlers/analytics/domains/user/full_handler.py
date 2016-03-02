@@ -7,15 +7,15 @@ import logging
 import re
 
 from handlers.base import BaseHandler
-from ..analytics_base import AnalyticsBase
-from visit_domains import VisitDomainBase
+from ...analytics_base import AnalyticsBase
+from ..base import VisitDomainBase
 from twisted.internet import defer
 from lib.helpers import decorators
 from lib.helpers import *
 from lib.cassandra_helpers.helpers import FutureHelpers
 from lib.cassandra_cache.helpers import *
 
-class VisitDomainsFullHandler(BaseHandler,AnalyticsBase, VisitDomainBase):
+class VisitDomainsFullHandler(BaseHandler, AnalyticsBase, VisitDomainBase):
 
     def initialize(self, db=None, cassandra=None, **kwargs):
         self.logging = logging
