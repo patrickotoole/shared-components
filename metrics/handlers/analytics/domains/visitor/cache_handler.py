@@ -1,52 +1,63 @@
 import tornado.web
 import ujson
 import pandas
-import StringIO
 import logging
+import StringIO
 
-import re
-
-from link import lnk
-from ..user.full_handler import VisitDomainsFullHandler
 from handlers.base import BaseHandler
-from ...analytics_base import AnalyticsBase
+
 from twisted.internet import defer
 from lib.helpers import decorators
-from lib.helpers import *
-from lib.cassandra_helpers.helpers import FutureHelpers
-from lib.cassandra_cache.helpers import *
-from ...search.cache.pattern_search_cache import PatternSearchCache
 
-QUERY = "select * from full_domain_cache_test where advertiser = '{}' and url_pattern = '{}'"
+SQL_QUERY_1 = "select a.url_pattern, sum(count), action_type from action_dashboard_cache a join action b on a.action_id=b.action_id where advertiser = '%s' and b.action_type = '%s' group by url_pattern order by sum(count) desc limit %s"
 
-class VisitorDomainsCacheHandler(PatternSearchCache,VisitDomainsFullHandler):
+SQL_QUERY_3 = "select a.domain, a.count, c.parent_category_name from action_dashboard_cache a left join domain_category b on a.domain=b.domain and a.advertiser='%s' and url_pattern like '%s' inner join category c on b.category_name = c.category_name"
+
+
+
+class ActionDashboardHandler(BaseHandler):
+    def initialize(self, db=None, **kwargs):
+        self.db = db
 
     @decorators.deferred
-    def defer_get_onsite_cache(self, advertiser, pattern):
-
-        sql = lnk.dbs.rockerbox
-
-        results  = sql.select_dataframe(QUERY.format(advertiser, pattern))
-
-        df = pandas.DataFrame(results)
-        return df
+    def defer_get_actions(self, advertiser, number, action_type, url_pattern):
+        if not url_pattern:
+            q1 = SQL_QUERY_1 % (advertiser, action_type, number)
+            segments = self.db.select_dataframe(q1)
+            data = {'domains':[]}
+            for current_segment in segments.ix[:int(number)].iterrows():
+                c_seg = current_segment[1]["url_pattern"]
+                q2 = SQL_QUERY_3 % (advertiser, c_seg)
+                seg_data = self.db.select_dataframe(q2)
+                seg_data = seg_data.fillna(0)
+                current_data = seg_data.T.to_dict().values()
+                to_append = {"key":current_segment[1]["url_pattern"], "action_type": current_segment[1]["action_type"], "values":current_data}
+                data['domains'].append(to_append)
+            return data
+        else:
+            data = {'domains':[]}
+            q2 = SQL_QUERY_3 % (advertiser, url_pattern)
+            seg_data = self.db.select_dataframe(q2)
+            seg_data = seg_data.fillna(0)
+            current_data = seg_data.T.to_dict().values()
+            to_append = {"key":url_pattern, "values":current_data}
+            data['domains'].append(to_append)
+            return data
 
     @defer.inlineCallbacks
-    def get_cache_domains(self, advertiser, pattern):
-        response_data = yield self.defer_get_onsite_cache( advertiser, pattern)
-        self.get_content(response_data)
-    
+    def get_actions(self, advertiser, number, action_type, url_pattern):
+        try:
+            actions = yield self.defer_get_actions(advertiser,number, action_type,url_pattern)
+            self.write(ujson.dumps(actions))
+            self.finish()
+        except:
+            self.finish()
     @tornado.web.authenticated
     @tornado.web.asynchronous
     def get(self):
-        formatted = self.get_argument("format", False)
-        url_pattern = self.get_argument("url_pattern", "")
-        user = self.current_advertiser_name
-
-        if formatted:
-            self.get_cache_domains(
-                user,
-                url_pattern
-                )
-        else:
-            self.get_content(pandas.DataFrame())
+        ad = self.current_advertiser_name
+        limit = self.get_argument("limit", 5)
+        action_type = self.get_argument("action_type", "segment")
+        url_pattern = self.get_argument("url_pattern", False)
+        self.get_actions(ad,limit, action_type, url_pattern)
+	

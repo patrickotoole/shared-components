@@ -42,7 +42,7 @@ class PatternSearchBase(VisitDomainBase,PatternSearchSample,PatternStatsBase,Pat
         response['summary']['num_users'] = 0
 
         terms, remaining_terms = self.head_and_tail(pattern_terms)
-        df = yield self.defer_execute(PARAMS, advertiser, terms, date_clause, "must", False, numdays=2)
+        df = yield self.defer_execute(PARAMS, advertiser, terms, date_clause, "must", False, numdays=1)
 
 
         if len(df) > 0:

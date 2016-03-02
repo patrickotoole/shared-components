@@ -81,9 +81,12 @@ class AdvertiserRoutes(Routes):
         return [
             (r'/user/domains', user.handler.VisitDomainsHandler, self.connectors),
             (r'/user/domains_full', visitor.full_handler.VisitDomainsFullHandler, self.connectors),
+         
             (r'/visitor/domains', visitor.handler.SearchVisitorDomainsHandler, self.connectors),
+            (r'/visitor/domains/cache', visitor.cache_handler.ActionDashboardHandler, self.connectors),
+
             (r'/visitor/domains_full', visitor.full_handler.VisitorDomainsHandler, self.connectors),
-            (r'/visitor/domains/cache', visitor.cache_handler.VisitorDomainsCacheHandler, self.connectors)
+            (r'/visitor/domains_full/cache',visitor.full_cache_handler.VisitorDomainsFullCacheHandler,self.connectors)
         ]
 
 
@@ -112,7 +115,7 @@ class AdvertiserRoutes(Routes):
             (r'/served_events', analytics.ServedEventsHandler, self.connectors),
             (r'/visit_domains_full', visitor.full_handler.VisitDomainsFullHandler, self.connectors),
             (r'/domains_visitor_full', visitor.full_handler.VisitorDomainsHandler, self.connectors),
-            (r'/cached_visitor_domains', visitor.cache_handler.VisitorDomainsCacheHandler, self.connectors),
+            (r'/cached_visitor_domains', visitor.full_cache_handler.VisitorDomainsFullCacheHandler, self.connectors),
             (r'/search_visitor_domains', visitor.handler.SearchVisitorDomainsHandler, self.connectors),
             (r'/uids_only_cache', analytics.UidsCacheHandler, self.connectors),
 
