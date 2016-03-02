@@ -21,6 +21,9 @@ RB.crusher.ui.tabs = (function(tabs) {
       "name":"Timing",
       "class":"timing"
     },{
+      "name":"Top Articles",
+      "class":"full_url"
+    },{
       "name":"Comparison",
       "class":"comparison"
     }]
