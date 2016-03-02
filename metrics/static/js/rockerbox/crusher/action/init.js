@@ -300,6 +300,24 @@ RB.component.export(RB.crusher.ui.action.full_url, RB.crusher.ui.action)
 
 
 
+RB.crusher.ui.action.top_keywords = (function(top_keywords,action,crusher) {
+  top_keywords.NAME = "action.top_keywords"
+  top_keywords.SUBSCRIBE = ["action_initialized","actionTimeseries"]
+  top_keywords.PUBLISH = []
+  top_keywords.EVENTS = []
+  top_keywords.subscription = function(action) {
+    var target = d3.selectAll(".action-view-wrapper")
+    crusher.ui.action.show_top_keywords(target, action)
+  }
+
+  return top_keywords;
+
+})(RB.crusher.ui.action.top_keywords || {}, RB.crusher.ui.action,RB.crusher)
+
+RB.component.export(RB.crusher.ui.action.top_keywords, RB.crusher.ui.action)
+
+
+
 
 
 RB.crusher.ui.action.behavior = (function(behavior,action,crusher) {

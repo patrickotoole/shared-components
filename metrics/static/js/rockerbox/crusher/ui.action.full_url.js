@@ -43,6 +43,9 @@ RB.crusher.ui.action = (function(action) {
           .sort(function(x, y) {
             return y.count - x.count
           })
+          .sort(function(x, y) {
+            return y.uniques - x.uniques
+          })
           .filter(function(x) {
             if (x.url.substr(-5) === '.com/' || x.url.substr(-4) === '.com' ||
               x.url.substr(-5) === '.net/' || x.url.substr(-4) === '.net' ||
