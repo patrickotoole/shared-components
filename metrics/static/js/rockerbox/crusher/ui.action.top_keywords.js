@@ -19,6 +19,7 @@ RB.crusher.ui.action = (function(action) {
 
     parentNode.selectAll('div.value').remove();
 
+<<<<<<< cbcc5edd3efda107514394a5968e394d9e03c13f
 <<<<<<< dbd069963193d8e3a917e7a0431dc981c6cbc084
     pubsub.subscriber("visitor_keywords_cache",["visitor_keywords_cache"])
       .run(function(keywords){
@@ -40,6 +41,10 @@ RB.crusher.ui.action = (function(action) {
     // pubsub.subscriber("cached_visitor_domains",["cached_visitor_domains"])
     //   .run(function(cached_visitor_domains){
 >>>>>>> First version of keywords table
+=======
+    // pubsub.subscriber("cached_visitor_domains",["cached_visitor_domains"])
+    //   .run(function(cached_visitor_domains){
+>>>>>>> First version of keywords table
         var table_data = {
           header: [
             {
@@ -47,6 +52,7 @@ RB.crusher.ui.action = (function(action) {
               title: 'Keyword'
             },
             {
+<<<<<<< cbcc5edd3efda107514394a5968e394d9e03c13f
 <<<<<<< dbd069963193d8e3a917e7a0431dc981c6cbc084
               key: 'count',
               title: 'Unique Articles'
@@ -56,6 +62,8 @@ RB.crusher.ui.action = (function(action) {
         };
 
 =======
+=======
+>>>>>>> First version of keywords table
               key: 'articles',
               title: 'Unique Articles'
             },
@@ -94,22 +102,31 @@ RB.crusher.ui.action = (function(action) {
         //   });
         // });
 
+<<<<<<< cbcc5edd3efda107514394a5968e394d9e03c13f
+>>>>>>> First version of keywords table
+=======
 >>>>>>> First version of keywords table
         setTimeout(function() {
           var table = components.table(target)
             .data(table_data)
             .draw();
         }, 1);
+<<<<<<< cbcc5edd3efda107514394a5968e394d9e03c13f
 <<<<<<< dbd069963193d8e3a917e7a0431dc981c6cbc084
       })
       .data(segment)
       .unpersist(true)
       .trigger()
 =======
+=======
+>>>>>>> First version of keywords table
       // })
       // .data(segment)
       // .unpersist(true)
       // .trigger()
+<<<<<<< cbcc5edd3efda107514394a5968e394d9e03c13f
+>>>>>>> First version of keywords table
+=======
 >>>>>>> First version of keywords table
   }
 
