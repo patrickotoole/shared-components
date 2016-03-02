@@ -6,7 +6,6 @@ var pubsub = RB.crusher.pubsub;
 
 RB.crusher.ui.action = (function(action) {
   action.show_full_url = function(wrapper, segment) {
-    // debugger;
     var title = "",
       series = ["full_url"],
       formatting = ".col-md-12.action-full_url",
@@ -24,7 +23,6 @@ RB.crusher.ui.action = (function(action) {
 
     pubsub.subscriber("cached_visitor_domains",["cached_visitor_domains"])
       .run(function(cached_visitor_domains){
-        // var table_data = cached_visitor_domains.slice(0, 10);
         var table_data = {
           header: [
             {
@@ -84,9 +82,8 @@ RB.crusher.ui.action = (function(action) {
       .data(segment)
       .unpersist(true)
       .trigger()
-
   }
-  // alert('test')
+
   return action;
 
 })(RB.crusher.ui.action || {})
