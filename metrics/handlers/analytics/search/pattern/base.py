@@ -67,6 +67,7 @@ class PatternSearchBase(VisitDomainBase,PatternSearchSample,PatternStatsBase,Pat
 
         prepped = _domains.unstack(1).fillna(0)
         try:
+            if len(_domains) < 100: raise "Error"
             clusters, similarity, uid_clusters = model.cluster(_domains, prepped)
 
             response['clusters'] = clusters
