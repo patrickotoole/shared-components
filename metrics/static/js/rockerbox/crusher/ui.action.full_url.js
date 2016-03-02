@@ -8,7 +8,7 @@ RB.crusher.ui.action = (function(action) {
   action.show_full_url = function(wrapper, segment) {
     var title = "",
       series = ["full_url"],
-      formatting = ".col-md-12.action-full_url",
+      formatting = ".col-md-12.action-full_url.hidden",
       description = "See below for the most popular articles for users within the " + segment.action_name + " segment."
 
     var target = RB.rho.ui.buildSeriesWrapper(wrapper.selectAll(".action-body"), title, series, [wrapper.datum()], formatting, description)
@@ -18,8 +18,6 @@ RB.crusher.ui.action = (function(action) {
     parentNode.selectAll(".loading-icon").remove()
 
     parentNode.selectAll('div.value').remove();
-
-    parentNode.classed("hidden",false)
 
     pubsub.subscriber("cached_visitor_domains",["cached_visitor_domains"])
       .run(function(cached_visitor_domains){
