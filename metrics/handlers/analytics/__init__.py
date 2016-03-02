@@ -11,4 +11,4 @@ from visit_avails import VisitAvailsHandler
 from search import *
 from domain_idf import DomainIDFHandler
 from onsite_stats import OnSiteStatsHandler
-from dashboard import ActionDashboardHandler
+from domains.visitor.cache_handler import ActionDashboardHandler
