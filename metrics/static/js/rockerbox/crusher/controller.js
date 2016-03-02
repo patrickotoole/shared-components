@@ -656,15 +656,6 @@ RB.crusher.controller = (function(controller) {
       });
     },
 
-    "full_url_ranking": function() {
-      var row = build_header({
-        'id': 'full_url_ranking',
-        'name': 'Full URL Ranking'
-      });
-
-      RB.crusher.ui.full_url_ranking.show(row)
-    },
-
     "home": function(){
       // Check if the getting started page needs to be shown
       var pixel_count = {
