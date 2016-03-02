@@ -910,13 +910,6 @@ RB.crusher.controller = (function(controller) {
       "values_key": "action_name",
       "hide_href": true
     },
-    {
-      "name":"Full URL Table",
-      "push_state": "/crusher/full_url_ranking",
-      "class": "glyphicon glyphicon-plus",
-      "values_key": "action_name",
-      "hide_href": true
-    },
     /*{
       "name":"Funnels (alpha)",
       "push_state": "/crusher/funnel",
