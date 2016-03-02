@@ -17,20 +17,23 @@ from lib.cassandra_helpers.helpers import FutureHelpers
 from lib.cassandra_cache.helpers import *
 from ...search.cache.pattern_search_cache import PatternSearchCache
 
-QUERY = "select * from full_domain_cache_test where advertiser = '{}' and url_pattern = '{}'"
+QUERY = "select advertiser, url_pattern, uniques, count, url from full_domain_cache_test where advertiser = '{}' and url_pattern = '{}'"
 
 class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler):
 
     @decorators.deferred
-    def defer_get_onsite_cache(self, advertiser, pattern):
+    def defer_get_onsite_cache(self, advertiser, pattern, top_count):
 
         sql = lnk.dbs.rockerbox
         results  = sql.select_dataframe(QUERY.format(advertiser, pattern))
-        return pandas.DataFrame(results)
+        sort_results = results.sort(["uniques", "count"], ascending=False)
+        results_no_NA = sort_results[sort_results["url"] != "NA"]
+        df = pandas.DataFrame(results_no_NA.iloc[:int(top_count)])
+        return df
 
     @defer.inlineCallbacks
-    def get_cache_domains(self, advertiser, pattern):
-        response_data = yield self.defer_get_onsite_cache( advertiser, pattern)
+    def get_cache_domains(self, advertiser, pattern, top_count):
+        response_data = yield self.defer_get_onsite_cache( advertiser, pattern, top_count)
         self.get_content(response_data)
     
     @tornado.web.authenticated
@@ -39,11 +42,9 @@ class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler)
         formatted = self.get_argument("format", False)
         url_pattern = self.get_argument("url_pattern", "")
         user = self.current_advertiser_name
+        top_count = self.get_argument("top", 50)
 
         if formatted:
-            self.get_cache_domains(
-                user,
-                url_pattern
-                )
+            self.get_cache_domains( user, url_pattern, top_count)
         else:
             self.get_content(pandas.DataFrame())

@@ -39,6 +39,8 @@ class VisitorDomainsHandler(PatternSearchCache,VisitDomainsFullHandler):
         _args = [advertiser,pattern,dates]
         uids = self.get_uids_from_cache(*_args)
         uids = list(set([u['uid'] for u in uids]))
+        uids = uids[:10000]
+
         date_clause = self.make_date_clause("date",date,"","")
 
         unsorted_results = self.full_get_w_agg_in(uids, date_clause)
