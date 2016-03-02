@@ -93,7 +93,7 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
       var target = RB.rho.ui.buildWrappers(funnelRow,
         function(x){return x['action_name']},
         "views", data, "col-md-4 max-width-330  ",
-        function(x){return x.description}, button
+        function(x){return x.description}, false//button
       )
 
       target.on("mouseover",function(x){

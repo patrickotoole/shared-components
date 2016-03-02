@@ -249,24 +249,24 @@ RB.crusher.ui.action = (function(action) {
       .classed("heading",true)
     h5.exit().remove()
 
-    var edit = d3_updateable(h5,".pull-right.edit","a")
-      .classed("pull-right edit btn btn-default btn-sm", true)
-      .style("margin-right","30px")
-      .style("margin-top","20px")
+   // var edit = d3_updateable(h5,".pull-right.edit","a")
+   //   .classed("pull-right edit btn btn-default btn-sm", true)
+   //   .style("margin-right","30px")
+   //   .style("margin-top","20px")
 
-    edit.exit().remove()
-
-
+   // edit.exit().remove()
 
 
-    edit.text("Edit")
-      .on("click",function(){
-        var current = d3.select(".action").classed("hidden")
-        d3.select(".action").classed("hidden",!current)
-        var current_text = d3.select(this).text()
 
-        d3.select(this).text(current_text == "Edit" ? "Close" : "Edit")
-      })
+
+   // edit.text("Edit")
+   //   .on("click",function(){
+   //     var current = d3.select(".action").classed("hidden")
+   //     d3.select(".action").classed("hidden",!current)
+   //     var current_text = d3.select(this).text()
+
+   //     d3.select(this).text(current_text == "Edit" ? "Close" : "Edit")
+   //   })
 
     var info = actionView.selectAll(".urls").data(function(x){
 
