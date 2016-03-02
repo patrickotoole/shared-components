@@ -1,5 +1,6 @@
 import d3 from 'd3'
 import d3_updateable from '../d3_updateable'
+import d3_splat from '../d3_splat'
 
 function draw() {
   // Get data
@@ -38,16 +39,8 @@ function draw() {
     .classed('table_body_column', true)
     .html(function(x, i) {
       var row_data = d3.select(this.parentElement).data()[0];
-      // debugger;
-
-      // if(row_data[x.key].length > 100) {
-      //   var column_value = row_data[x.key].slice(0,100) + '...';
-      // } else {
-      //   var column_value = row_data[x.key]
-      // }
       var column_value = row_data[x.key];
 
-      // debugger;
       if(typeof x.href !== typeof undefined && x.href == true) {
         if(row_data[x.key].length > 100) {
           column_value = '<a href="' + column_value + '" target="_blank">' + column_value.slice(0,100) + '...</a>';
@@ -57,26 +50,7 @@ function draw() {
       }
 
       return column_value;
-
-      // if(row_data[x.key].length > 200) {
-      //   return row_data[x.key].slice(0,200) + '...';
-      // } else {
-      //   return row_data[x.key]
-      // }
     });
-
-
-
-  console.log('This is the data', this._dataFunc())
-  // table_head_wrapper
-
-  // Draw body
-
-  // console.log('TARGETss', this._base);
-  // var table = d3_updateable(target, '.table', 'table')
-  //   .classed('table', true);
-  //
-  // return table;
 }
 
 export default draw
