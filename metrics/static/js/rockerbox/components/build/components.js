@@ -362,7 +362,7 @@
 	  data: data$1
 	}
 
-	function d3_splat$1(target,selector,type,data,joiner) {
+	function d3_splat(target,selector,type,data,joiner) {
 	  var type = type || "div"
 	  var updateable = target.selectAll(selector).data(
 	    data || function(x){return x},
@@ -398,7 +398,7 @@
 	    var margin = this.margins()
 	    var dimensions = dims$1.bind(this)
 
-	    var svg = d3_splat$1(target,"." + this._class, "svg",function(x){return x},function(x){return x.key ? x.key : x})
+	    var svg = d3_splat(target,"." + this._class, "svg",function(x){return x},function(x){return x.key ? x.key : x})
 	      .classed(this._class,true)
 	      .datum(function(x) {
 	        if (typeof(x) !== "object") throw "wrong data type. requires object";
@@ -519,7 +519,7 @@
 	  var points= d3_updateable(canvas,".points","g")
 	    .attr("class","points")
 
-	  var point = d3_splat$1(points,".point","svg:circle",function(x){ return x.values},function(x){return x.key})
+	  var point = d3_splat(points,".point","svg:circle",function(x){ return x.values},function(x){return x.key})
 	    .attr("class","point")
 	   
 	  point.exit().remove()
@@ -620,7 +620,7 @@
 	    var margin = this.margins()
 	    var dimensions = dims$2.bind(this)
 
-	    var svg = d3_splat$1(target,"." + this._class, "svg",function(x){return x},function(x){return x.key ? x.key : x})
+	    var svg = d3_splat(target,"." + this._class, "svg",function(x){return x},function(x){return x.key ? x.key : x})
 	      .classed(this._class,true)
 	      .datum(function(x) {
 	        if (typeof(x) !== "object") throw "wrong data type. requires object";
@@ -738,7 +738,7 @@
 	    var bars = d3_updateable(canvas,".bars." + series,"g")
 	      .attr("class","bars " + series)
 
-	    var point = d3_splat$1(bars,".bar","rect",function(x){ return x.values},function(x){return x.key})
+	    var point = d3_splat(bars,".bar","rect",function(x){ return x.values},function(x){return x.key})
 	      .attr("class","bar")
 	      .attr("x", function(d, i) {
 	        var x = this.parentNode.__data__.scales.x
@@ -973,16 +973,8 @@
 	    .classed('table_body_column', true)
 	    .html(function(x, i) {
 	      var row_data = d3.select(this.parentElement).data()[0];
-	      // debugger;
-
-	      // if(row_data[x.key].length > 100) {
-	      //   var column_value = row_data[x.key].slice(0,100) + '...';
-	      // } else {
-	      //   var column_value = row_data[x.key]
-	      // }
 	      var column_value = row_data[x.key];
 
-	      // debugger;
 	      if(typeof x.href !== typeof undefined && x.href == true) {
 	        if(row_data[x.key].length > 100) {
 	          column_value = '<a href="' + column_value + '" target="_blank">' + column_value.slice(0,100) + '...</a>';
@@ -992,26 +984,7 @@
 	      }
 
 	      return column_value;
-
-	      // if(row_data[x.key].length > 200) {
-	      //   return row_data[x.key].slice(0,200) + '...';
-	      // } else {
-	      //   return row_data[x.key]
-	      // }
 	    });
-
-
-
-	  console.log('This is the data', this._dataFunc())
-	  // table_head_wrapper
-
-	  // Draw body
-
-	  // console.log('TARGETss', this._base);
-	  // var table = d3_updateable(target, '.table', 'table')
-	  //   .classed('table', true);
-	  //
-	  // return table;
 	}
 
 	function base$4(target) {
