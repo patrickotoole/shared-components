@@ -16,7 +16,7 @@ RB.crusher.ui.action.init = (function(init,action,crusher) {
     var target = d3.selectAll(".action-view-wrapper")
     target.datum(action)
 
-    crusher.ui.action.edit(target,RB.crusher.controller.action.save)
+    //crusher.ui.action.edit(target,RB.crusher.controller.action.save)
     crusher.ui.action.show(target)
     crusher.cache.actionData.map(function(x) { x.values = crusher.cache.urls_wo_qs })
     crusher.ui.action.preview(target)

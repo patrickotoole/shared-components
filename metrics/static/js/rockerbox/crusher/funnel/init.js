@@ -20,7 +20,7 @@ RB.crusher.ui.funnel.init = (function(init,funnel,crusher) {
       data = data.filter(function(x){return x.funnel_id == funnel.funnel_id})
     }
 
-    crusher.ui.funnel.buildEdit(data,crusher.cache.actionData)
+    //crusher.ui.funnel.buildEdit(data,crusher.cache.actionData)
     var funnel = crusher.ui.funnel.buildShow()
     var data = funnel.datum()
 
