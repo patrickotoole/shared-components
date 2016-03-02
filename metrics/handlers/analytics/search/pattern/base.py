@@ -60,7 +60,7 @@ class PatternSearchBase(VisitDomainBase,PatternSearchSample,PatternStatsBase,Pat
 
         response['summary']['num_domains'] = len(set(_domains.reset_index().domain))
         response['domains'] = list(_domains.reset_index().domain)
-        response['summary']['num_points'] = len(set(_domains.reset_index().domain))
+        response['summary']['num_points'] = len(_domains.reset_index().domain)
         response['summary']['num_users_with_domains'] = len(set(_domains.reset_index().uid))
 
 
