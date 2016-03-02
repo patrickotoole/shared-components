@@ -11,7 +11,10 @@ function draw() {
   var table_head_wrapper = d3_updateable(this._base, '.table_head', 'thead')
     .classed('table_head', true);
 
-  var table_head_columns = d3_splat(table_head_wrapper, '.table_head_column', 'th', data['header'], function(x){ return x.key })
+  var table_head_row = d3_updateable(table_head_wrapper, '.table_head_row', 'tr')
+    .classed('table_head_row', true);
+
+  var table_head_columns = d3_splat(table_head_row, '.table_head_column', 'th', data['header'], function(x){ return x.key })
     .classed('table_head_column', true)
     .text(function(x) {
       return x.title;
@@ -33,14 +36,33 @@ function draw() {
   // Loop through columns
   var table_body_columns = d3_splat(table_body_rows, '.table_body_column', 'td', data['header'], function(x){ return x.key })
     .classed('table_body_column', true)
-    .text(function(x, i) {
+    .html(function(x, i) {
       var row_data = d3.select(this.parentElement).data()[0];
-      return row_data[x.key]
-      // TO DO: Can this be done cleaner?
-      // var row_data = d3.select(this.parentElement).data()[0];
-      // console.log('DATA OF THIS ROW', x, i, d3.select(this.parentElement).data()[0]);
-  //     // return data['head'][y]['title'];
-  //     console.log('HEAD', data['header'][y]['title']);
+      // debugger;
+
+      // if(row_data[x.key].length > 100) {
+      //   var column_value = row_data[x.key].slice(0,100) + '...';
+      // } else {
+      //   var column_value = row_data[x.key]
+      // }
+      var column_value = row_data[x.key];
+
+      // debugger;
+      if(typeof x.href !== typeof undefined && x.href == true) {
+        if(row_data[x.key].length > 100) {
+          column_value = '<a href="' + column_value + '" target="_blank">' + column_value.slice(0,100) + '...</a>';
+        } else {
+          column_value = '<a href="' + column_value + '" target="_blank">' + column_value + '</a>';
+        }
+      }
+
+      return column_value;
+
+      // if(row_data[x.key].length > 200) {
+      //   return row_data[x.key].slice(0,200) + '...';
+      // } else {
+      //   return row_data[x.key]
+      // }
     });
 
 

@@ -45,6 +45,12 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
     })
   })
 
+  endpoints.cached_visitor_domains = api.helpers.genericQueuedAPIWithData(function(data, cb, deferred_cb) {
+    d3.json("/crusher/cached_visitor_domains?format=json&url_pattern=" + data['url_pattern'][0], function(dd) {
+      deferred_cb(null, cb.bind(false, dd))
+    })
+  })
+
   endpoints.advertiser = api.helpers.genericQueuedAPIWithData(function(data, cb, deferred_cb) {
 
     if (!cache.advertiserData) {

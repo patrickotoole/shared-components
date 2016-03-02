@@ -67,13 +67,65 @@ RB.crusher.ui.full_url_ranking = (function(full_url_ranking) {
       ]
     };
 
-    console.log('TARGET', target)
 
-    var table = components.table(target)
-      .data(table_data)
-      .draw();
 
-    console.log('TABLE', table);
+    // var table = components.table(target)
+    //   .data(table_data)
+    //   .draw();
+
+    pubsub.subscriber("cached_visitor_domains",["cached_visitor_domains"])
+      .run(function(cached_visitor_domains){
+        // var table_data = cached_visitor_domains.slice(0, 10);
+        var table_data = {
+          header: [
+            {
+              key: 'key',
+              title: 'Rank'
+            },
+            {
+              key: 'url',
+              title: 'URL'
+            },
+            {
+              key: 'uniques',
+              title: 'Uniques'
+            },
+            {
+              key: 'count',
+              title: 'Count'
+            }
+          ],
+          body: []
+        };
+
+        var raw_table_data = cached_visitor_domains
+          .sort(function(x, y) {
+            return y.count - x.count
+          })
+          .slice(0, 30);
+
+        raw_table_data.forEach(function(item, i) {
+          table_data['body'].push({
+            key: (i + 1),
+            url: item.url,
+            uniques: item.uniques,
+            count: item.count
+          });
+        });
+
+        console.log('TABLE DATA', table_data)
+
+        setTimeout(function() {
+          console.log('!!!!!!!!!!!!', table_data)
+          var table = components.table(target)
+            .data(table_data)
+            .draw();
+        }, 1);
+      })
+      .data({
+      })
+      .unpersist(true)
+      .trigger()
 
   };
 

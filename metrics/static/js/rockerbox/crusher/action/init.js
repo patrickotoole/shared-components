@@ -166,6 +166,19 @@ RB.crusher.ui.action.show = (function(show,action,crusher) {
 
 
 
+
+    var full_url = d3_updateable(abody,".action-full_url","div")
+      .classed("series-wrapper col-md-12 action-full_url full_url",true)
+
+    full_url.classed("selected",full_url.classed("selected"))
+    full_url.classed("hidden",!full_url.classed("selected"))
+
+    full_url
+      .append("div").classed("bar series loading-icon",true)
+      .html('<img src="/static/img/general/logo-small.gif" alt="Logo loader"> Loading full URL data...')
+
+
+
     var before = d3_updateable(abody,".before-and-after","div")
       .classed("series-wrapper col-md-12 before-and-after",true)
 
@@ -260,6 +273,34 @@ RB.crusher.ui.action.comparison = (function(comparison,action,crusher) {
 })(RB.crusher.ui.action.comparison || {}, RB.crusher.ui.action,RB.crusher)
 
 RB.component.export(RB.crusher.ui.action.comparison, RB.crusher.ui.action)
+
+
+
+
+
+RB.crusher.ui.action.full_url = (function(full_url,action,crusher) {
+  full_url.NAME = "action.full_url"
+  full_url.SUBSCRIBE = ["action_initialized","actionTimeseries", "actions", "tf_idf_action"]
+  full_url.PUBLISH = []
+  full_url.EVENTS = []
+  full_url.subscription = function(action) {
+    setTimeout(function() {
+      var target = d3.selectAll(".action-view-wrapper")
+      crusher.ui.action.show_full_url(target, action)
+    },100);
+  }
+  //
+  // debugger;
+  // setTimeout(function() {
+    // crusher.ui.action.show_full_url()
+  // }, 100)
+  // debugger;
+
+  return full_url
+
+})(RB.crusher.ui.action.full_url || {}, RB.crusher.ui.action,RB.crusher)
+
+RB.component.export(RB.crusher.ui.action.full_url, RB.crusher.ui.action)
 
 
 
