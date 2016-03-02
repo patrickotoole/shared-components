@@ -280,23 +280,15 @@ RB.component.export(RB.crusher.ui.action.comparison, RB.crusher.ui.action)
 
 RB.crusher.ui.action.full_url = (function(full_url,action,crusher) {
   full_url.NAME = "action.full_url"
-  full_url.SUBSCRIBE = ["action_initialized","actionTimeseries", "actions", "tf_idf_action"]
+  full_url.SUBSCRIBE = ["action_initialized","actionTimeseries"]
   full_url.PUBLISH = []
   full_url.EVENTS = []
   full_url.subscription = function(action) {
-    setTimeout(function() {
-      var target = d3.selectAll(".action-view-wrapper")
-      crusher.ui.action.show_full_url(target, action)
-    },100);
+    var target = d3.selectAll(".action-view-wrapper")
+    crusher.ui.action.show_full_url(target, action)
   }
-  //
-  // debugger;
-  // setTimeout(function() {
-    // crusher.ui.action.show_full_url()
-  // }, 100)
-  // debugger;
 
-  return full_url
+  return full_url;
 
 })(RB.crusher.ui.action.full_url || {}, RB.crusher.ui.action,RB.crusher)
 
