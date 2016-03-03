@@ -39,7 +39,7 @@ def summarize_model(prepped,cluster_domains):
     cluster_user_stats = sorted(cluster_user_stats,key=lambda x: x['users_per_domain'])
     return cluster_user_stats
 
-
+@decorators.deferred
 def cluster(_domains, prepped):
 
     import sklearn.cluster
@@ -152,4 +152,4 @@ def cluster(_domains, prepped):
 
     logging.info("Model summary complete")
 
-    return (summarize_model(prepped,cluster_domains), obj, uid_clusters)
+    return defer.returnValue(summarize_model(prepped,cluster_domains), obj, uid_clusters)

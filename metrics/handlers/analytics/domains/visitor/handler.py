@@ -39,14 +39,8 @@ class SearchVisitorDomainsHandler(PatternSearchCache,VisitDomainsFullHandler):
 
         return df
 
-
-    @defer.inlineCallbacks
-    def get_onsite_domains(self, date, kind, advertiser, pattern, num_keyword):
-        
-        response_data = yield self.defer_get_onsite_domains(date, advertiser, pattern)
-        
-        subset_response = pandas.DataFrame()
-        
+    @decorators.deferred
+    def process_visitor_domains(self, response_data):
         def split_url(x):
             return x.replace("-","/").split("/")
         
@@ -73,6 +67,21 @@ class SearchVisitorDomainsHandler(PatternSearchCache,VisitDomainsFullHandler):
         filtered_df = full_url_response[mask1 & mask2 & mask3]
 
         self.get_content(filtered_df)
+
+
+    @defer.inlineCallbacks
+    def get_onsite_domains(self, date, kind, advertiser, pattern, num_keyword):
+        
+        logging.info("Requesting visitor domains...")
+        response_data = yield self.defer_get_onsite_domains(date, advertiser, pattern)
+        logging.info("Received visitor domains.")
+
+        logging.info("Processing visitor domains...")
+        visitor_domains = yield self.process_visitor_domains(response_data)
+        logging.info("Finished processing visitor domains...")
+
+        
+        
 
     @tornado.web.authenticated
     @tornado.web.asynchronous
