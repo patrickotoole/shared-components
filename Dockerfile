@@ -21,15 +21,15 @@ RUN mkdir /root/rockerbox-metrics && cd /root/rockerbox-metrics && git clone git
 
 RUN mkdir /root/datacell  && cd /root/datacell && git clone git@datacell:rockerbox/datacell.git .
 
-RUN apt-get -y install sasl2-bin
+RUN apt-get install -y sasl2-bin
 
-RUN apt-get install libsasl2-dev
+RUN apt-get install -y libsasl2-dev
 
-RUN easy_install pip && cd /root/rockerbox-metrics && pip install -r requirements.txt
+RUN apt-get install -y curl && curl -sL https://deb.nodesource.com/setup_5.x | sudo -E bash - && sudo apt-get install -y nodejs
+
+RUN easy_install pip && pip install gitpython && cd /root/rockerbox-metrics && pip install -r requirements.txt
 
 RUN cd /root/datacell && pip install -r requirements.txt 
-
-RUN pip install gitpython
 
 ADD ./docker/hosts /etc/workaround-docker-2267/
 
