@@ -33,7 +33,7 @@ for(g=0;g<i.length;g++)f(c,i[g]);b._i.push([a,e,d])};b.__SV=1.2;a=f.createElemen
     </style>
     </head>
     <body>
-      <form id="signin" >
+      <form id="signin" onsubmit="d3.select('#show-signin').on('click')()">
         <a href="http://rockerbox.com">
           <img src="http://rockerbox.com/assets/img/general/logo-white.png" alt="Rockerbox logo" />
         </a>
@@ -45,7 +45,7 @@ for(g=0;g<i.length;g++)f(c,i[g]);b._i.push([a,e,d])};b.__SV=1.2;a=f.createElemen
         <span style="color:white;font-family:helvetica neue;opacity:.7"> Don't have an account? </span><a style="font-family:helvetica neue;color:white;opacity:1" href="#" id="show-signup">Signup &rarr;</a>
       </form>
 
-      <form id="signup" class="hidden" style="margin-top:-194px">
+      <form id="signup" class="hidden" style="margin-top:-194px" onsubmit="d3.select('#show-signin').on('click')()">
         <a href="http://rockerbox.com">
           <img src="http://rockerbox.com/assets/img/general/logo-white.png" alt="Rockerbox logo" />
         </a>
