@@ -1,38 +1,58 @@
-import pickle, pandas, json
-from handlers.analytics.search.cache.pattern_search_cache import PatternSearchCacheWithConnector
-from handlers.analytics.visitor_domains.visit_domains_full import VisitDomainsFullHandler
+import requests, json, logging, pandas, pickle, work_queue
+from link import lnk
+import datetime
+from kazoo.client import KazooClient
+formatter = '%(asctime)s:%(levelname)s - %(message)s'
+logging.basicConfig(level=logging.INFO, format=formatter)
 
-QUERY ="INSERT INTO keyword_crusher_cache (advertiser, url_pattern, keyword, count, uniques) VALUES ('{}', '{}','{}', {}, {})"
+logger = logging.getLogger()
+current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-def get_connectors():
-    from link import lnk
-    return {
-        "db": lnk.dbs.rockerbox,
-        "zk": {},
-        "cassandra": lnk.dbs.cassandra
-    }
+QUERY ="INSERT INTO keyword_crusher_cache (advertiser, url_pattern, keyword, count, uniques) VALUES ('{}', '{}','{}',{}, {})"
 
-def make_request(advertiser,pattern, base_url):
-    crusher = lnk.api.crusher
-    crusher.user = "a_"+advertiser
-    crusher.password="admin"
-    crusher.base_url = base_url
-    crusher.authenticate()
-    urls = crusher.get('/crusher/search_visitor_domains?format=json&search_type=nltk&url_pattern={}'.format(pattern))
-    return urls.json
+class CacheKeywords():
+    
+    def __init__(self, connectors):
+        self.connectors = connectors
+        self.zookeeper = connectors['zk']
 
-def add_to_table(advertiser_name, pattern, url, sql):
-    #self.cassandra.execute(CASSQUERY)
-    if int(url['uniques']) >1:
-        sql.execute(QUERY.format(advertiser_name, pattern, url["keyword"], url["count"]))
+    def run_local(self, advertiser, pattern, base_url):
+        import keyword_cache as kc
+        kc.run_wrapper(advertiser,pattern,base_url,"test",connectors=self.connectors)
 
-def run_wrapper(advertiser_name, pattern, base_url, cache_date, indentifiers="test", connectors=False):
-    from link import lnk
-    connectors = connectors or get_connectors()
+    def run_on_work_queue(self,advertiser, pattern):
+        import lib.caching.keyword_cache as kc
+        yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
+        _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
+        work = pickle.dumps((
+                kc.run_wrapper,
+                [advertiser,pattern, _cache_yesterday, _cache_yesterday+"full_url"]
+                ))
+        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,1)
+        logging.info("added to work queue %s for %s" %(pattern,advertiser))
+        
 
-    db = connectors['db']
+if __name__ == "__main__":
+    from lib.report.utils.loggingutils import basicConfig
+    from lib.report.utils.options import define
+    from lib.report.utils.options import options
+    from lib.report.utils.options import parse_command_line
 
-    urls = make_request(advertiser_name, pattern, base_url)
-    for url in urls:
-        add_to_table(advertiser_name, pattern, url, db)
+    define("advertiser",  default="")
+    define("pattern", default="")
+    define("run_local", default=False)
+    define("base_url", "http://beta.crusher.getrockerbox.com")
+
+    basicConfig(options={})
+
+    parse_command_line() 
+
+    zk = KazooClient(hosts="zk1:2181")
+    zk.start()
+    connectors = {'db':lnk.dbs.rockerbox, 'zk':zk, 'cassandra':''}
+    ckw = CacheKeywords(connectors)
+    if options.run_local:
+        ckw.run_local(options.advertiser, options.pattern,options.base_url)
+    else:
+        ckw.run_on_work_queue(options.advertiser, options.pattern, options.base_url)
 

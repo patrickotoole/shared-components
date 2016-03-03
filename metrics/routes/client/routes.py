@@ -64,7 +64,7 @@ class AdvertiserRoutes(Routes):
             (r'/location.*', appnexus.AppnexusHandler, self.connectors),
             (r'/viewability', analytics.ViewabilityHandler, self.connectors),
             (r'/availability', analytics.AvailabilityHandler, self.connectors),
-            (r'/domains', analytics.DomainsMongoHandler, self.connectors)
+            #(r'/domains', analytics.DomainsMongoHandler, self.connectors)
 
         ]
 
@@ -123,6 +123,7 @@ class AdvertiserRoutes(Routes):
             (r'/cached_visitor_domains', visitor.full_cache_handler.VisitorDomainsFullCacheHandler, self.connectors),
             (r'/search_visitor_domains', visitor.keyword_handler.VisitorKeywordsHandler, self.connectors),
             (r'/uids_only_cache', analytics.UidsCacheHandler, self.connectors),
+            (r'/cache_domain_keywords', analytics.KeywordCacheHandler, self.connectors),
 
 
             (r'/visit_avails', analytics.VisitAvailsHandler, self.connectors),

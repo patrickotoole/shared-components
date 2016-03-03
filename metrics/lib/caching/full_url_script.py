@@ -55,5 +55,5 @@ if __name__ == "__main__":
     if options.run_local:
         cfu.run_local(options.advertiser, options.pattern,options.base_url)
     else:
-        cfu.run_on_work_queue(options.advertiser, options.pattern)
+        cfu.run_on_work_queue(options.advertiser, options.pattern, options.base_url)
 
