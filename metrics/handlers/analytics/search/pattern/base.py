@@ -42,7 +42,7 @@ class PatternSearchBase(VisitDomainBase,PatternSearchSample,PatternStatsBase,Pat
         response['summary']['num_users'] = 0
 
         terms, remaining_terms = self.head_and_tail(pattern_terms)
-        df = yield self.defer_execute(PARAMS, advertiser, terms, date_clause, "must", False, numdays=1)
+        df = yield self.defer_execute(PARAMS, advertiser, terms, date_clause, "must", False, numdays=2)
 
 
         if len(df) > 0:
@@ -67,7 +67,7 @@ class PatternSearchBase(VisitDomainBase,PatternSearchSample,PatternStatsBase,Pat
 
         prepped = _domains.unstack(1).fillna(0)
         try:
-            if len(_domains) < 100: raise "Error"
+            #if len(_domains) < 100: raise "Error"
             clusters, similarity, uid_clusters = model.cluster(_domains, prepped)
 
             response['clusters'] = clusters
