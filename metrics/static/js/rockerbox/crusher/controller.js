@@ -28,8 +28,9 @@ RB.crusher.controller = (function(controller) {
               break;
             case 'client':
               var user = {
-                'id': current_user.advertiser_id,
-                'name': advertiser_data.advertiser_name + ' (' + current_user.firstname + ' ' + current_user.last_name + ')',
+                'id': current_user.id,
+                'advertiser': advertiser_data.advertiser_name,
+                'name': '(' + current_user.first_name + ' ' + current_user.last_name + ')',
                 'email': current_user.user_email
               };
 
