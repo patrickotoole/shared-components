@@ -8,7 +8,7 @@ RB.crusher.controller.action = (function(action) {
 
   var crusher = RB.crusher
 
-  var source = crusher.api.source 
+  var source = crusher.api.source
   var actionURL = "/crusher/funnel/action?format=json"
   var visitUID = "/crusher/visit_uids?format=json&url="
 
@@ -33,22 +33,13 @@ RB.crusher.controller.action = (function(action) {
             crusher.cache.actionData = crusher.cache.actionData.filter(function(x){
               return x.action_id != action.action_id
             })
-            RB.routes.navigation.back()
-            setTimeout(function(){
-              RB.routes.navigation.forward({
-                "name": "View Existing Actions",
-                "push_state":"/crusher/action/existing",
-                "values_key":"action_name"
-              })
-            },1)
-
           }
-        ); 
+        );
     },
     save: function(data, obj) {
       var obj = obj;
-      
-      
+
+
       var intermediate = {
         "action_name": data['action_name'],
         "operator": data['operator'],
@@ -59,12 +50,12 @@ RB.crusher.controller.action = (function(action) {
       var cdata = JSON.parse(JSON.stringify(intermediate)),
         type = data['action_id'] ? "PUT" : "POST";
 
-            
+
       if (cdata.action_name.length == 0) {
-        cdata["action_name"] = cdata.url_pattern.join(" -> ") 
-        data["action_name"] = cdata.url_pattern.join(" -> ") 
+        cdata["action_name"] = cdata.url_pattern.join(" -> ")
+        data["action_name"] = cdata.url_pattern.join(" -> ")
       } else {
-        // 
+        //
       }
 
       cdata['advertiser'] = source
@@ -92,33 +83,33 @@ RB.crusher.controller.action = (function(action) {
               },1)
             }
           }
-        );                    
+        );
       d3.select(".action-view").classed("hidden",false)
     },
     get: function(action,callback) {
       // this is getting all of the data associated with the pattern
       var domains = []
-  
+
       action.all.length && crusher.cache.urls_wo_qs && crusher.cache.urls_wo_qs.map(function(d){
         if (action.url_pattern)
           action.url_pattern.map(function(x){
             if (d.indexOf(x) > -1) domains.push(d)
           })
       })
-  
+
       var obj = {"urls": domains}
-  
+
       if (domains.length && !action.visits_data)
         var URL = visitUID
         if (action.url_pattern) {
           var actionPatterns = action.url_pattern.map(function(x){return x.split(" ").join(",")}).join("|")
-          URL = "/crusher/pattern_search/timeseries?advertiser=" + source + 
-            "&search=" + actionPatterns + 
-            "&format=json&logic=or" 
+          URL = "/crusher/pattern_search/timeseries?advertiser=" + source +
+            "&search=" + actionPatterns +
+            "&format=json&logic=or"
 
           // NOTE:
           // action.operator // removed from the UI since UX use case covered
-            
+
           //URL = URL.replace("timeseries","urls")
 
           d3.xhr(URL)
@@ -135,7 +126,7 @@ RB.crusher.controller.action = (function(action) {
                 action.urls.map(function(x){
                   var split = x.url.split("?")
                   if (split.length > 1) {
-                    split[1].split("&").map(function(y){ 
+                    split[1].split("&").map(function(y){
                       var splitted = y.split("=")
                       var name = splitted[0]
                       var value = splitted.slice(1,splitted.length).join("=")
@@ -145,7 +136,7 @@ RB.crusher.controller.action = (function(action) {
                     })
                   }
                 })
-                
+
                 console.log("PARAMETERS")
 
                 action.param_rolled = d3.nest()
@@ -159,7 +150,7 @@ RB.crusher.controller.action = (function(action) {
                   }).sort(function(y,x) {return x.occurrence - y.occurrence })
 
                 console.log(action.param_rolled)
-                
+
 
                 RB.crusher.api.tf_idf_action(callback,action)
 
@@ -168,7 +159,7 @@ RB.crusher.controller.action = (function(action) {
               }
             );
         }
-       
+
 
       return obj
     }
@@ -176,4 +167,4 @@ RB.crusher.controller.action = (function(action) {
 
   return action
 
-url})(RB.crusher.controller.action || {}) 
+url})(RB.crusher.controller.action || {})

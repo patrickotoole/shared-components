@@ -231,8 +231,13 @@ RB.crusher.ui.action = (function(action) {
   }
 
   action.preview = function(wrapper) {
+    var segment;
+
     var actionView = wrapper.selectAll(".action-view")
-      .data(function(x){return [x]},function(x){return x.action_id + x.action_name})
+      .data(function(x){return [x]},function(x){
+        segment = x;
+        return x.action_id + x.action_name;
+      })
 
     actionView.enter()
       .append("div")
@@ -247,6 +252,22 @@ RB.crusher.ui.action = (function(action) {
     h5.text(function(x) { return "Segment > " + x } )
       .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-30px;margin-right:-30px")
       .classed("heading",true)
+
+    var remove_button = d3_updateable(h5, '.btn', 'a')
+      .text('Remove Segment')
+      .classed('btn btn-default pull-right',true)
+      .style('margin', '16px 16px 0 0')
+      .on('click', function(e) {
+        if(confirm('Are you sure you want to delete this segment?')) {
+          try{
+            RB.crusher.controller.action.delete(segment)
+
+            var xx = RB.crusher.controller.states["/crusher/action/existing"];
+            RB.routes.navigation.forward(xx);
+          }
+        }
+      });
+
     h5.exit().remove()
 
    // var edit = d3_updateable(h5,".pull-right.edit","a")
