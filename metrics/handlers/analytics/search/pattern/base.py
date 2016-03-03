@@ -67,8 +67,8 @@ class PatternSearchBase(VisitDomainBase,PatternSearchSample,PatternStatsBase,Pat
 
         prepped = _domains.unstack(1).fillna(0)
         try:
-            #if len(_domains) < 100: raise "Error"
-            clusters, similarity, uid_clusters = model.cluster(_domains, prepped)
+            if len(_domains) < 100: raise "Error: too few domains"
+            clusters, similarity, uid_clusters = yield model.cluster(_domains, prepped)
 
             response['clusters'] = clusters
             response['similarity'] = similarity
@@ -76,10 +76,11 @@ class PatternSearchBase(VisitDomainBase,PatternSearchSample,PatternStatsBase,Pat
             response['uid_clusters'] = uid_clusters
 
             # response['clusters'] = []
-        except:
+        except Exception as e:
+            logging.info("Issue building the model", e)
             pass
 
-        self.write_json(response)
+        x = yield self.write_json_deferred(response)
 
 
 
@@ -93,26 +94,9 @@ class PatternSearchBase(VisitDomainBase,PatternSearchSample,PatternStatsBase,Pat
         uids = list(set(df.uid.values))[:5000]
         defer.returnValue([uids])
 
-    @defer.inlineCallbacks
-    def get_uids(self, advertiser, pattern_terms, date_clause, logic="or",timeout=60):
-        self.set_header("Access-Control-Allow-Origin","null")
-        self.set_header("Access-Control-Allow-Credentials","true")
-        PARAMS = "uid"
-        indices = [PARAMS]
-        term = pattern_terms[0][0]
-
-        response = self.default_response(pattern_terms,logic)
-        response['summary']['num_users'] = 0
-
-        num_days = 2
-
-        uids = yield self.get_users_sampled(advertiser,term,build_datelist(num_days),num_days)
-
-        uids = uids[0]
-        dom = yield self.sample_offsite_domains(advertiser, term, uids, num_days)
-        domains = dom[0][1]
-
-        urls, raw_urls = yield self.defer_get_uid_visits(advertiser,uids,term)
+    
+    @decorators.deferred
+    def process_uids(self,uids,urls,raw_urls,domains,response):
 
         joined = url_domain_intersection(urls,domains)
         before, after = before_and_after(joined)
@@ -272,6 +256,35 @@ class PatternSearchBase(VisitDomainBase,PatternSearchSample,PatternStatsBase,Pat
 
 
             response['summary']['num_users'] = len(response['results'])
+
+        return defer.returnValue(response)
+        
+
+    @defer.inlineCallbacks
+    def get_uids(self, advertiser, pattern_terms, date_clause, logic="or",timeout=60):
+        self.set_header("Access-Control-Allow-Origin","null")
+        self.set_header("Access-Control-Allow-Credentials","true")
+        PARAMS = "uid"
+        indices = [PARAMS]
+        term = pattern_terms[0][0]
+
+        response = self.default_response(pattern_terms,logic)
+        response['summary']['num_users'] = 0
+
+        num_days = 2
+
+        uids = yield self.get_users_sampled(advertiser,term,build_datelist(num_days),num_days)
+
+        uids = uids[0]
+        dom = yield self.sample_offsite_domains(advertiser, term, uids, num_days)
+        domains = dom[0][1]
+
+        urls, raw_urls = yield self.defer_get_uid_visits(advertiser,uids,term)
+
+        logging.info("Processing uids...")
+        response = yield self.process_uids(uids,urls,raw_urls,domains,response)
+        logging.info("Processed uids.")
+
 
         self.write_json(response)
 

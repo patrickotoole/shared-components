@@ -27,6 +27,12 @@ class SearchHelpers(object):
     def write_json(self, data):
         Render.compressWrite(self,ujson.dumps(data))
 
+    @decorators.deferred
+    def write_json_deferred(self, data):
+        Render.compressWrite(self,ujson.dumps(data))
+
+
+
     def write_timeout(self, terms, logic, timeout):
         response = [
             {

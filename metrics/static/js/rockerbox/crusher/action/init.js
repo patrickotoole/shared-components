@@ -244,7 +244,11 @@ RB.crusher.ui.action.clusters = (function(clusters,action,crusher) {
   clusters.subscription = function(data) {
 
     var target = d3.selectAll(".action-view-wrapper")
-    crusher.ui.action.show_clusters(target)
+    try {
+      crusher.ui.action.show_clusters(target)
+    } catch(e) {
+      console.log("Failed to load clusters for action", e)
+    }
 
     return data
   }
