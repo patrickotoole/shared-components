@@ -320,7 +320,7 @@ class PatternCache(CacheBase):
     def cache_domains(self,*args,**kwargs):
         logging.info("Cacheing: %s => %s occurance domains" % (self.advertiser,self.pattern))
         
-        DOMAIN_SELECT = "select * from rockerbox.visitor_domains_2 where uid = ?"
+        DOMAIN_SELECT = "select * from rockerbox.visitor_domains_full where uid = ?"
         DOMAIN_INSERT = "INSERT INTO rockerbox.pattern_occurrence_domains (source,date,action,domain) VALUES (?,?,?,?)"
 
         SELECT_COUNTER = "SELECT * from rockerbox.pattern_occurrence_domains_counter"
@@ -343,7 +343,7 @@ class PatternCache(CacheBase):
         
         ttl = self.max_ttl(args[0])
 
-        DOMAIN_SELECT = "select * from rockerbox.visitor_domains_2 where uid = ?"
+        DOMAIN_SELECT = "select * from rockerbox.visitor_domains_full where uid = ?"
         INSERT = "INSERT INTO rockerbox.pattern_occurrence_domains_hll (source,date,action,action_date,domain,hll) VALUES (?,?,?,?,?,?) USING TTL %s " % ttl
 
         if len(self.uid_values):
