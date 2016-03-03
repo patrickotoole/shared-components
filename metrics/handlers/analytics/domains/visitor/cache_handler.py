@@ -4,7 +4,7 @@ import pandas
 import logging
 import StringIO
 
-from ..base import BaseHandler
+from handlers.base import BaseHandler
 
 from twisted.internet import defer
 from lib.helpers import decorators

@@ -7,15 +7,15 @@ import logging
 import re
 
 from handlers.base import BaseHandler
-from ..analytics_base import AnalyticsBase
-from visit_domains import VisitDomainBase
+from ...analytics_base import AnalyticsBase
+from ..base import VisitDomainBase
 from twisted.internet import defer
 from lib.helpers import decorators
 from lib.helpers import *
 from lib.cassandra_helpers.helpers import FutureHelpers
 from lib.cassandra_cache.helpers import *
 
-class VisitDomainsFullHandler(BaseHandler,AnalyticsBase, VisitDomainBase):
+class VisitDomainsFullHandler(BaseHandler, AnalyticsBase, VisitDomainBase):
 
     def initialize(self, db=None, cassandra=None, **kwargs):
         self.logging = logging
@@ -36,7 +36,7 @@ class VisitDomainsFullHandler(BaseHandler,AnalyticsBase, VisitDomainBase):
         uids_split = "'%s'" % "','".join(str_uids)
         logging.info("Visit domains full prepping statement")
         self.DOMAIN_SELECT="select * from rockerbox.visitor_domains_full where uid = ?"        
-        urls = self.paginate_get_w_in(uids, date_clause)
+        urls = self.get_domains_use_futures(uids, date_clause)
         results = pandas.DataFrame(urls)
         logging.info("QCassFull")
 
@@ -48,7 +48,7 @@ class VisitDomainsFullHandler(BaseHandler,AnalyticsBase, VisitDomainBase):
         uids_split = "'%s'" % "','".join(str_uids)
         logging.info("Visit domains full prepping statement")
         self.DOMAIN_SELECT="select * from rockerbox.visitor_domains_full where uid = ?"
-        urls = self.paginate_get_w_in(uids, date_clause)
+        urls = self.get_domains_use_futures(uids, date_clause)
         results = pandas.DataFrame(urls)
         def aggDF(row):
             return {"count":len(row), "uniques":len(set(row))}

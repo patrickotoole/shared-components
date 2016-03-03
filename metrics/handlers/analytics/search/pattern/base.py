@@ -14,7 +14,7 @@ from lib.cassandra_helpers.helpers import FutureHelpers
 from lib.cassandra_cache.helpers import *
 
 import model
-from handlers.analytics.visitor_domains.visit_domains import VisitDomainBase
+from handlers.analytics.domains.base import VisitDomainBase
 from ..search_base import SearchBase
 from ..cache.pattern_search_cache import PatternSearchCache
 
@@ -22,11 +22,12 @@ from helpers import PatternSearchHelpers, group_sum_sort_np_array, check_require
 from stats import PatternStatsBase
 from response import PatternSearchResponse
 from sample import PatternSearchSample
+from ...visit_events import VisitEventBase
 
 from temporal import *
 
 
-class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, PatternSearchResponse):
+class PatternSearchBase(VisitDomainBase,PatternSearchSample,PatternStatsBase,PatternSearchResponse,VisitEventBase):
 
 
     @defer.inlineCallbacks
@@ -41,7 +42,7 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
         response['summary']['num_users'] = 0
 
         terms, remaining_terms = self.head_and_tail(pattern_terms)
-        df = yield self.defer_execute(PARAMS, advertiser, terms, date_clause, "must", False, numdays=2)
+        df = yield self.defer_execute(PARAMS, advertiser, terms, date_clause, "must", False, numdays=1)
 
 
         if len(df) > 0:
@@ -57,19 +58,26 @@ class PatternSearchBase(VisitDomainBase, PatternSearchSample, PatternStatsBase, 
 
         _domains = dom[0][1]
 
-        if len(_domains) > 100:
-            prepped = _domains.unstack(1).fillna(0)
-            try:
-                clusters, similarity, uid_clusters = yield model.cluster(_domains, prepped)
+        response['summary']['num_domains'] = len(set(_domains.reset_index().domain))
+        response['domains'] = list(_domains.reset_index().domain)
+        response['summary']['num_points'] = len(_domains.reset_index().domain)
+        response['summary']['num_users_with_domains'] = len(set(_domains.reset_index().uid))
 
-                response['clusters'] = clusters
-                response['similarity'] = similarity
 
-                response['uid_clusters'] = uid_clusters
 
-                # response['clusters'] = []
-            except:
-                pass
+        prepped = _domains.unstack(1).fillna(0)
+        try:
+            if len(_domains) < 100: raise "Error"
+            clusters, similarity, uid_clusters = model.cluster(_domains, prepped)
+
+            response['clusters'] = clusters
+            response['similarity'] = similarity
+
+            response['uid_clusters'] = uid_clusters
+
+            # response['clusters'] = []
+        except:
+            pass
 
         self.write_json(response)
 

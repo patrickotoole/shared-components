@@ -3,11 +3,11 @@ import pandas
 import logging
 
 from handlers.base import BaseHandler
-from ..analytics_base import AnalyticsBase
+from ...analytics_base import AnalyticsBase
 from twisted.internet import defer
 from lib.helpers import decorators
 from lib.helpers import *
-from visit_domains_base import VisitDomainBase
+from ..base import VisitDomainBase
 
 
 class VisitDomainsHandler(BaseHandler, AnalyticsBase, VisitDomainBase):
