@@ -264,6 +264,8 @@ RB.crusher.ui.action = (function(action) {
 
             var xx = RB.crusher.controller.states["/crusher/action/existing"];
             RB.routes.navigation.forward(xx);
+          } catch(e) {
+            
           }
         }
       });
