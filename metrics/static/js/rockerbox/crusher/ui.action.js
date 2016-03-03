@@ -254,7 +254,7 @@ RB.crusher.ui.action = (function(action) {
       .classed("heading",true)
 
     var remove_button = d3_updateable(h5, '.btn', 'a')
-      .text('Remove Segment')
+      .text('Delete Segment')
       .classed('btn btn-default pull-right',true)
       .style('margin', '16px 16px 0 0')
       .on('click', function(e) {
@@ -262,11 +262,10 @@ RB.crusher.ui.action = (function(action) {
           try{
             RB.crusher.controller.action.delete(segment)
 
+            RB.crusher.cache.actionData.splice(RB.crusher.cache.actionData.indexOf(segment), 1);
             var xx = RB.crusher.controller.states["/crusher/action/existing"];
             RB.routes.navigation.forward(xx);
-          } catch(e) {
-            
-          }
+          } catch(e) {}
         }
       });
 
