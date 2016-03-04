@@ -21,14 +21,15 @@ class KeywordUserHandler(BaseHandler, AnalyticsBase, VisitDomainBase):
     def initialize(self, db=None, cassandra=None, **kwargs):
         self.logging = logging
         self.db = db
+        self.DOMAIN_SELECT = "select uid, domain, timestamp from rockerbox.visitor_domains_full where uid = ?"
         self.cassandra = cassandra
         self.limit = None
 
     @decorators.deferred
     def defer_get_onsite_domains(self, date, advertiser, uids):
-        
+        import ipdb; ipdb.set_trace() 
         date_clause = self.make_date_clause("date",date,"","")
-        results = self.defer_get_domains(uids, date_clause)
+        results = self.get_domains_use_futures(uids, date_clause)
         df = pandas.DataFrame(results)
 
         return df
@@ -37,14 +38,15 @@ class KeywordUserHandler(BaseHandler, AnalyticsBase, VisitDomainBase):
     def process_visitor_domains(self, response_data):
         def split_url(x):
             return x.replace("-","/").split("/")
-        
-        GROUPS = ["url","uniques"]
-        EXPAND_BY = "url"
+
+        import ipdb; ipdb.set_trace()
+        GROUPS = ["domain", "uid"]
+        EXPAND_BY = "domain"
         def grouping_function(x):
             # want to return a series (or dataframe) that has our new expanded series as the index
             the_grouped = x[EXPAND_BY].iloc[0]
             split_version = split_url(the_grouped)
-            values = x["uniques"].values[0]
+            values = x["uid"].count()
             return pandas.DataFrame(values,columns=["unique"],index=split_version)
         
         obj1 = response_data.groupby(GROUPS).apply(grouping_function)
@@ -89,13 +91,12 @@ class KeywordUserHandler(BaseHandler, AnalyticsBase, VisitDomainBase):
         user = self.current_advertiser_name
         num_keywords = self.get_argument("num_keywords", 3)
 
-        uids = uid.split(",")
-
         try:
             keywords = int(num_keywords) - 1
         except:
             keywords = 3
 
+        uids = uid.split(",")
 
         date_clause = self.make_date_clause("date", date, start_date, end_date)
         if formatted:
@@ -103,8 +104,8 @@ class KeywordUserHandler(BaseHandler, AnalyticsBase, VisitDomainBase):
                 date_clause,
                 kind,
                 user,
-                uids,
-                keywords
+                keywords,
+                uids
                 )
         else:
             self.get_content(pandas.DataFrame())
