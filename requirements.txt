@@ -1,4 +1,5 @@
 pyhs2
+scikit-learn
 paramiko
 tornado
 mock==1.0.1
