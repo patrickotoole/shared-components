@@ -152,4 +152,4 @@ def cluster(_domains, prepped):
 
     logging.info("Model summary complete")
 
-    return defer.returnValue(summarize_model(prepped,cluster_domains), obj, uid_clusters)
+    return (summarize_model(prepped,cluster_domains), obj, uid_clusters)
