@@ -1,4 +1,5 @@
 pyhs2
+scipy
 scikit-learn
 paramiko
 tornado
