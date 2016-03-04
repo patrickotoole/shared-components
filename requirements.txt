@@ -1,4 +1,5 @@
 pyhs2
+gensim
 scipy
 scikit-learn
 paramiko
