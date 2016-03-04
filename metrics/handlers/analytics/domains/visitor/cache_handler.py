@@ -13,7 +13,7 @@ SQL_QUERY_1 = "select a.url_pattern, sum(count), action_type from action_dashboa
 
 SQL_QUERY_3 = "select a.domain, a.count, c.parent_category_name from action_dashboard_cache a left join domain_category b on a.domain=b.domain and a.advertiser='%s' and url_pattern like '%s' inner join category c on b.category_name = c.category_name"
 
-SQL_QUERY_4 = "SELECT a.domain, a.count, c.parent_category_name FROM domain_category b right join (SELECT domain, count FROM action_dashboard_cache WHERE url_pattern = '%s' and advertiser = '%s') a ON a.domain = b.domain LEFT JOIN category c ON c.category_name = b.category_name"
+SQL_QUERY_4 = "SELECT a.domain, a.count, c.parent_category_name FROM domain_category b right join (SELECT domain, count FROM action_dashboard_cache WHERE url_pattern = '%s' and advertiser = '%s') a ON a.domain = b.domain INNER JOIN category c ON c.category_name = b.category_name"
 
 
 
@@ -29,7 +29,8 @@ class ActionDashboardHandler(BaseHandler):
             data = {'domains':[]}
             for current_segment in segments.ix[:int(number)].iterrows():
                 c_seg = current_segment[1]["url_pattern"]
-                q2 = SQL_QUERY_4 % (advertiser, c_seg)
+                q2 = SQL_QUERY_4 % (c_seg, advertiser)
+                #q2 = SQL_QUERY_3 % (advertiser,c_seg)
                 seg_data = self.db.select_dataframe(q2)
                 seg_data = seg_data.fillna(0)
                 current_data = seg_data.T.to_dict().values()
