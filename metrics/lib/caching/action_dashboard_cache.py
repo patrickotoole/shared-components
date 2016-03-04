@@ -95,7 +95,7 @@ class ActionCache:
     def request_and_write(self,segment, advertiser ):
         res = self.make_request(segment["url_pattern"],advertiser,segment["action_name"], segment["action_id"])
         if(len(res)>=1):
-            self.insert(res, "action_dashboard_cache", self.con, ['advertiser', 'action_id', 'domain'])
+            self.insert(res, "action_dashboard_cache2", self.con, ['advertiser', 'action_id', 'domain'])
 
     def add_to_work_queue(self, segment, advertiser):
         yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
@@ -118,10 +118,34 @@ class ActionCache:
         work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,1)
         logging.info("added to DB work queue %s for %s" %(segment["url_pattern"][0],advertiser)) 
 
+    def add_keyword_to_work_queue(self, segment, advertiser):
+        import lib.caching.keyword_cache as adc_runner
+        yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
+        _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
+        work = pickle.dumps((
+                adc_runner.run_wrapper,
+                [advertiser,segment["url_pattern"][0], "http://beta.crusher.getrockerbox.com", _cache_yesterday,_cache_yesterday + "keywordcache"]
+                ))
+        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,1)
+        logging.info("added to DB work queue %s for %s" %(segment["url_pattern"][0],advertiser))
+
+    def add_full_url_to_work_queue(self, segment, advertiser):
+        import lib.caching.full_url_cache as adc_runner
+        yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
+        _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
+        work = pickle.dumps((
+                adc_runner.run_wrapper,
+                [advertiser,segment["url_pattern"][0], "http://beta.crusher.getrockerbox.com", _cache_yesterday,_cache_yesterday + "fullurlcache"]
+                ))
+        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,1)
+        logging.info("added to DB work queue %s for %s" %(segment["url_pattern"][0],advertiser))
+
     def seg_loop(self, segments, advertiser):
         for seg in segments:
             self.add_db_to_work_queue(seg, advertiser)
             self.add_to_work_queue(seg, advertiser)
+            self.add_full_url_to_work_queue(seg, advertiser)
+            self.add_keyword_to_work_queue(seg, advertiser)
 
 def get_all_advertisers(db_con):
     ad_df = db_con.select_dataframe(SQL_QUERY)
@@ -175,7 +199,7 @@ def run_advertiser_segment(ac, segment_name):
         logging.info("selected segment about to make request")
         df = ac.make_request(segment[0]["url_pattern"],segment[0]["action_name"], segment[0]["action_id"], ac.username)
         logging.info("request made for %s" % segment[0]["url_pattern"])
-        ac.insert(df,"action_dashboard_cache", ac.con, ["advertiser", "action_id", "domain"])
+        ac.insert(df,"action_dashboard_cache2", ac.con, ["advertiser", "action_id", "domain"])
     except:
 		logging.error("Error with advertiser segment run for advertiser username %s and segment %s" % (ac.username, segment_name))
 
