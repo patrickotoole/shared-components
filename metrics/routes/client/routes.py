@@ -81,6 +81,7 @@ class AdvertiserRoutes(Routes):
         return [
             (r'/user/domains', user.handler.VisitDomainsHandler, self.connectors),
             (r'/user/domains_full', visitor.full_handler.VisitDomainsFullHandler, self.connectors),
+            (r'/user/keyword', user.KeywordUserHandler, self.connectors),
          
             (r'/visitor/domains', visitor.handler.VisitorDomainsHandler, self.connectors),
             (r'/visitor/domains/cache', visitor.cache_handler.ActionDashboardHandler, self.connectors),

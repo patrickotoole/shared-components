@@ -7,7 +7,6 @@ import logging
 import re
 
 from link import lnk
-from ..user.full_handler import VisitDomainsFullHandler
 from handlers.base import BaseHandler
 from ...analytics_base import AnalyticsBase
 from twisted.internet import defer
@@ -15,7 +14,7 @@ from lib.helpers import decorators
 from lib.helpers import *
 from lib.cassandra_helpers.helpers import FutureHelpers
 from lib.cassandra_cache.helpers import *
-from ...search.cache.pattern_search_cache import PatternSearchCache
+from ..base import VisitDomainBase
 
 class KeywordUserHandler(BaseHandler, AnalyticsBase, VisitDomainBase):
 
@@ -26,15 +25,10 @@ class KeywordUserHandler(BaseHandler, AnalyticsBase, VisitDomainBase):
         self.limit = None
 
     @decorators.deferred
-    def defer_get_onsite_domains(self, date, advertiser, pattern):
+    def defer_get_onsite_domains(self, date, advertiser, uids):
         
-        dates = build_datelist(7)
-        args = [advertiser,pattern,dates]
-        uids = self.get_uids_from_cache(*args)
-        uids = list(set([u['uid'] for u in uids]))
         date_clause = self.make_date_clause("date",date,"","")
-
-        results = self.full_get_w_agg_in(uids, date_clause)
+        results = self.defer_get_domains(uids, date_clause)
         df = pandas.DataFrame(results)
 
         return df
@@ -70,10 +64,10 @@ class KeywordUserHandler(BaseHandler, AnalyticsBase, VisitDomainBase):
 
 
     @defer.inlineCallbacks
-    def get_onsite_domains(self, date, kind, advertiser, pattern, num_keyword):
+    def get_onsite_domains(self, date, kind, advertiser, num_keyword, uids):
         
         logging.info("Requesting visitor domains...")
-        response_data = yield self.defer_get_onsite_domains(date, advertiser, pattern)
+        response_data = yield self.defer_get_onsite_domains(date, advertiser, uids)
         logging.info("Received visitor domains.")
 
         logging.info("Processing visitor domains...")
