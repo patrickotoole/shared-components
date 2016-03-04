@@ -151,7 +151,7 @@ def select_segment(segment_name, json_data):
     segment = []
     single_seg ={}
     for res in json_data:
-        if 'url_pattern' in res.keys() and type(res['url_pattern']) == list and res['url_pattern'][0] == segment_name:
+        if 'url_pattern' in res.keys() and type(res['url_pattern']) == list and res['action_name'].lower() == segment_name.lower():
             single_seg["url_pattern"] = res['url_pattern']
             single_seg["action_name"] = res['action_name']
             single_seg["action_id"] = res['action_id']
