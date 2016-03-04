@@ -226,6 +226,9 @@ RB.crusher.ui.action = (function(action) {
   action.show_behavior = function(wrapper) {
 
     var wrap = action.build_behavior_wrapper(wrapper)
+
+    if (!wrap.before_and_after) return
+
     var transform = action.build_behavior_transform(wrap)
 
     action.build_behavior(wrap,transform)
@@ -859,9 +862,11 @@ RB.crusher.ui.action = (function(action) {
     wrap.selectAll(".value").remove()
 
     wrap.datum(function(d) {
-      d.before_and_after = ["before","after"].map(function(y){
-        return transformKey(d,y)
-      })
+      try {
+        d.before_and_after = ["before","after"].map(function(y){ return transformKey(d,y) })
+      } catch(e) {
+        console.log("Befor after failed to create, missing data", d)
+      }
       return d
     })
 

@@ -46,7 +46,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
   })
 
   endpoints.cached_visitor_domains = api.helpers.genericQueuedAPIWithData(function(data, cb, deferred_cb) {
-    d3.json("/crusher/cached_visitor_domains?format=json&top=500&url_pattern=" + data['url_pattern'][0], function(dd) {
+    d3.json("/crusher/v1/visitor/domains_full/cache?format=json&top=500&url_pattern=" + data['url_pattern'][0], function(dd) {
       deferred_cb(null, cb.bind(false, dd))
     })
   })
@@ -90,7 +90,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
   endpoints.dashboard_cached = api.helpers.genericQueuedAPIWithData(function(data, cb, deferred_cb) {
     if (!cache.dashboard_cached) {
-      d3.json("/crusher/dashboard_cached?limit=3", function(json_output) {
+      d3.json("/crusher/v1/visitor/domains/cache?limit=3", function(json_output) {
         cache.dashboard_cached = json_output;
         deferred_cb(null, cb.bind(false, cache.dashboard_cached));
       })
@@ -101,7 +101,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
   endpoints.pattern_domains_cached = new api.helpers.genericQueuedAPIWithData(function(vendor, cb, deferred_cb) {
     if (!vendor.domains_raw) {
-      d3.json("/crusher/dashboard_cached?url_pattern=" + vendor.url_pattern[0], function(json_output) {
+      d3.json("/crusher/v1/visitor/domains/cache?url_pattern=" + vendor.url_pattern[0], function(json_output) {
         vendor.domains_raw = json_output;
         vendor.domains = json_output.domains[0].values;
 

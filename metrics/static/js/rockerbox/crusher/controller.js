@@ -789,6 +789,9 @@ RB.crusher.controller = (function(controller) {
         crusher.subscribe.publisher_raw[e].skip_callback = true
         crusher.subscribe.register_publisher(e,crusher.api.endpoints[e])
         RB.component.export(RB.crusher.ui.action.show_timeseries, RB.crusher.ui.action)
+        RB.component.export(RB.crusher.ui.action.clusters, RB.crusher.ui.action)
+        RB.component.export(RB.crusher.ui.action.clusters, RB.crusher.ui.action)
+        RB.component.export(RB.crusher.ui.action.behavior, RB.crusher.ui.action)  
 
 
         // This should clear all the outstanding publishers so that it doesnt interfere

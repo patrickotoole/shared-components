@@ -68,7 +68,7 @@ class DomainIDFHandler(BaseHandler,DomainIDFDB):
     def get_data(self,domains):
 
         try:
-            data = yield self.deferred_get_domains(domains)
+            data = yield self.deferred_get_domains( map(lambda x: x.encode("utf-8"), domains) )
         except:
             data = pandas.DataFrame([])
 
