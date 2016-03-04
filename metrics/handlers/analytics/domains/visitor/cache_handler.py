@@ -35,13 +35,16 @@ class ActionDashboardHandler(BaseHandler):
                 data['domains'].append(to_append)
             return data
         else:
-            data = {'domains':[]}
-            q2 = SQL_QUERY_3 % (advertiser, url_pattern)
-            seg_data = self.db.select_dataframe(q2)
-            seg_data = seg_data.fillna(0)
-            current_data = seg_data.T.to_dict().values()
-            to_append = {"key":url_pattern, "values":current_data}
-            data['domains'].append(to_append)
+            seg_data = self.db.select_dataframe(SQL_QUERY_3 % (advertiser, url_pattern)).fillna(0)
+            data = {
+                "domains": [
+                    {
+                        "key":url_pattern,
+                        "values":seg_data.to_dict("records")
+                    }
+                ]
+            }
+
             return data
 
     @defer.inlineCallbacks
