@@ -25,9 +25,10 @@ class KeywordUserHandler(BaseHandler, AnalyticsBase, VisitDomainBase):
         self.cassandra = cassandra
         self.limit = None
 
+
+
     @decorators.deferred
     def defer_get_onsite_domains(self, date, advertiser, uids):
-        import ipdb; ipdb.set_trace() 
         date_clause = self.make_date_clause("date",date,"","")
         results = self.get_domains_use_futures(uids, date_clause)
         df = pandas.DataFrame(results)
@@ -39,7 +40,6 @@ class KeywordUserHandler(BaseHandler, AnalyticsBase, VisitDomainBase):
         def split_url(x):
             return x.replace("-","/").split("/")
 
-        import ipdb; ipdb.set_trace()
         GROUPS = ["domain", "uid"]
         EXPAND_BY = "domain"
         def grouping_function(x):
@@ -99,6 +99,42 @@ class KeywordUserHandler(BaseHandler, AnalyticsBase, VisitDomainBase):
         uids = uid.split(",")
 
         date_clause = self.make_date_clause("date", date, start_date, end_date)
+        if formatted:
+            self.get_onsite_domains(
+                date_clause,
+                kind,
+                user,
+                keywords,
+                uids
+                )
+        else:
+            self.get_content(pandas.DataFrame())
+
+    @tornado.web.authenticated
+    @tornado.web.asynchronous
+    def post(self):
+
+        formatted = self.get_argument("format", False)
+        start_date = self.get_argument("start_date", "")
+        end_date = self.get_argument("end_date", "")
+        date = self.get_argument("date", "")
+        kind = self.get_argument("kind", "")
+        user = self.current_advertiser_name
+        num_keywords = self.get_argument("num_keywords", 3)
+
+        try:
+            keywords = int(num_keywords) - 1
+        except:
+            keywords = 3
+ 
+        if "uids" not in payload:
+            raise Exception("Please submit a json object containing a list of uids called 'uids'")
+
+
+        date_clause = self.make_date_clause("date", date, start_date, end_date)
+
+        uid = ','.join(payload["uids"])
+
         if formatted:
             self.get_onsite_domains(
                 date_clause,
