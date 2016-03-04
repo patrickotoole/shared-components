@@ -154,15 +154,15 @@ RB.crusher.ui.action.show = (function(show,action,crusher) {
 
 
 
-    var comparison = d3_updateable(abody,".action-comparison","div")
-      .classed("series-wrapper col-md-12 action-comparison comparison",true)
+    //var comparison = d3_updateable(abody,".action-comparison","div")
+    //  .classed("series-wrapper col-md-12 action-comparison comparison",true)
 
-    comparison.classed("selected",comparison.classed("selected"))
-    comparison.classed("hidden",!comparison.classed("selected"))
+    //comparison.classed("selected",comparison.classed("selected"))
+    //comparison.classed("hidden",!comparison.classed("selected"))
 
-    comparison
-      .append("div").classed("bar series loading-icon",true)
-      .html('<img src="/static/img/general/logo-small.gif" alt="Logo loader"> Loading comparison data...')
+    //comparison
+    //  .append("div").classed("bar series loading-icon",true)
+    //  .html('<img src="/static/img/general/logo-small.gif" alt="Logo loader"> Loading comparison data...')
 
 
 
@@ -268,7 +268,7 @@ RB.crusher.ui.action.comparison = (function(comparison,action,crusher) {
   comparison.EVENTS = []
   comparison.subscription = function(data, actionTimeseries, actions, idf) {
     var target = d3.selectAll(".action-view-wrapper")
-    crusher.ui.action.show_comparison(target, actions, data)
+    //crusher.ui.action.show_comparison(target, actions, data)
     return data;
   }
 

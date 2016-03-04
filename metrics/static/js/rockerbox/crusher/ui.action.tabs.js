@@ -23,9 +23,9 @@ RB.crusher.ui.tabs = (function(tabs) {
     },{
       "name":"Top Articles",
       "class":"full_url"
-    },{
-      "name":"Comparison",
-      "class":"comparison"
+    //},{
+    //  "name":"Comparison",
+    //  "class":"comparison"
     }]
 
     var action_tabs = d3_updateable(wrapper,".action-tabs","div")
