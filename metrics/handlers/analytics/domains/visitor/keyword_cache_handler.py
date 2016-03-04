@@ -17,7 +17,8 @@ from lib.cassandra_helpers.helpers import FutureHelpers
 from lib.cassandra_cache.helpers import *
 from ...search.cache.pattern_search_cache import PatternSearchCache
 
-QUERY = "select advertiser, url_pattern, keyword, uniques, count from keyword_crusher_cache where advertiser = '{}' and url_pattern = '{}'"
+#QUERY = "select advertiser, url_pattern, keyword, uniques, count from keyword_crusher_cache where advertiser = '{}' and url_pattern = '{}'"
+QUERY = "select advertiser, url_pattern, keyword, count from keyword_crusher_cache where advertiser = '{}' and url_pattern = '{}'"
 
 class KeywordCacheHandler(PatternSearchCache,VisitDomainsFullHandler):
 
@@ -26,8 +27,8 @@ class KeywordCacheHandler(PatternSearchCache,VisitDomainsFullHandler):
 
         sql = lnk.dbs.rockerbox
         results  = sql.select_dataframe(QUERY.format(advertiser, pattern))
-        sort_results = results.sort(["uniques", "count"], ascending=False)
-        results_no_NA = sort_results[sort_results["url"] != " "]
+        sort_results = results.sort(["count"], ascending=False)
+        results_no_NA = sort_results[sort_results["keyword"] != " "]
         df = pandas.DataFrame(results_no_NA.iloc[:int(top_count)])
         return df
 

@@ -1,11 +1,10 @@
 import pickle, pandas, json
-from handlers.analytics.search.cache.pattern_search_cache import PatternSearchCacheWithConnector
-from handlers.analytics.visitor_domains.visit_domains_full import VisitDomainsFullHandler
+from link import lnk
 
-QUERY ="INSERT INTO keyword_crusher_cache (advertiser, url_pattern, keyword, count, uniques) VALUES ('{}', '{}','{}', {}, {})"
+#QUERY ="INSERT INTO keyword_crusher_cache (advertiser, url_pattern, keyword, count, uniques) VALUES ('{}', '{}','{}', {}, {})"
+QUERY ="INSERT INTO keyword_crusher_cache (advertiser, url_pattern, keyword, count) VALUES ('{}', '{}','{}',{})"
 
 def get_connectors():
-    from link import lnk
     return {
         "db": lnk.dbs.rockerbox,
         "zk": {},
@@ -22,11 +21,11 @@ def make_request(advertiser,pattern, base_url):
     return urls.json
 
 def add_to_table(advertiser_name, pattern, url, sql):
-    if int(url['uniques']) >1:
-        sql.execute(QUERY.format(advertiser_name, pattern, url["keyword"], url["count"]))
+    if int(url['uniques']) >1 and url['url'] != " ":
+        #sql.execute(QUERY.format(advertiser_name, pattern, url["keyword"], url["count"]))
+        sql.execute(QUERY.format(advertiser_name, pattern, url["url"].replace("'","").replace("+","").encode('utf-8'), url["uniques"]))
 
 def run_wrapper(advertiser_name, pattern, base_url, cache_date, indentifiers="test", connectors=False):
-    from link import lnk
     connectors = connectors or get_connectors()
 
     db = connectors['db']

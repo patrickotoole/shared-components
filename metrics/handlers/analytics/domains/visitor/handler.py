@@ -27,7 +27,7 @@ class VisitorDomainsHandler(PatternSearchHandler):
         self.limit = None
         self.DOMAIN_SELECT = "SELECT uid, domain, timestamp FROM rockerbox.visitor_domains_full where uid = ?"
         self.fn = self.get_domains
-
+        
     @tornado.web.authenticated
     @tornado.web.asynchronous
     def get(self):
