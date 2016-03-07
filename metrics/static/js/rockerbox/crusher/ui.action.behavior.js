@@ -227,7 +227,7 @@ RB.crusher.ui.action = (function(action) {
 
     var wrap = action.build_behavior_wrapper(wrapper)
 
-    if (!wrap.before_and_after) return
+    if (!wrap.datum().before_and_after) return
 
     var transform = action.build_behavior_transform(wrap)
 
