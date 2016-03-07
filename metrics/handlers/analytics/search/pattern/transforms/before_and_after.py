@@ -3,7 +3,7 @@ from temporal import *
 from lib.helpers import decorators
 
 @decorators.time_log
-def process_before_and_after(idf,urls,domains,response):
+def process_before_and_after(idf=None,urls=None,domains=None,response=None,**kwargs):
 
     joined = url_domain_intersection(urls,domains)
     before, after = before_and_after(joined)

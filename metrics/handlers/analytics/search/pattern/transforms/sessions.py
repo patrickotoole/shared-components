@@ -77,13 +77,13 @@ def action_hour_grouper(x):
 
     #return df.groupby("actions")['actions'].count()
 
-@decorators.time_log
+#@decorators.time_log
 def category_action_by_hour(subset):
     actions_by_hour = subset.groupby("hour")['actions'].apply(action_hour_grouper).unstack("hour")
     actions_by_hour = actions_by_hour.T.ix[HOURS].fillna(0).T
     return actions_by_hour
 
-@decorators.time_log
+#@decorators.time_log
 def category_session_stats(bucket_sessions):
 
     BY = "visits"
@@ -141,9 +141,12 @@ def process_session_buckets(sessions,merged,domains_with_cat):
     return xx
     
 
-def process_timing(domains_with_cat,users,urls,url_to_action,response):
+#def process_timing(domains_with_cat,users,urls,url_to_action,response):
+def process_timing(category_domains=None,uid_urls=None,urls=None,url_to_action=None,response=None,**kwargs):
 
-    raw_urls = users
+    domains_with_cat = category_domains
+    raw_urls = uid_urls
+
     
     sessions = process_sessions(raw_urls) # 17 seconds
     merged = process_action_merge(raw_urls,url_to_action)
@@ -154,13 +157,4 @@ def process_timing(domains_with_cat,users,urls,url_to_action,response):
     return response
 
 
-@decorators.time_log
-def process_domain_intersection(urls,domains,response):
 
-    url_ts, domain_ts = url_domain_intersection_ts(urls,domains)
-
-    response['domains'] = domain_ts.T.to_dict()
-    response['actions_events'] = url_ts.T.to_dict()
-
-    return response
-    

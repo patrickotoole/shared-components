@@ -25,10 +25,11 @@ from response import PatternSearchResponse
 from sample import PatternSearchSample
 from ...visit_events import VisitEventBase
 
-from temporal import *
-from sessions import *
-from timing import *
-from before_and_after import *
+from transforms.temporal import *
+from transforms.sessions import *
+from transforms.timing import *
+from transforms.before_and_after import *
+from transforms.domain_intersection import *
 
 
 class PatternSearchBase(VisitDomainBase,PatternSearchSample,PatternStatsBase,PatternSearchResponse,VisitEventBase):
@@ -132,18 +133,18 @@ class PatternSearchBase(VisitDomainBase,PatternSearchSample,PatternStatsBase,Pat
             "uid_urls": raw_urls,
             "domains": domains,
             "category_domains": domains_with_cat,
-            "url_to_action": url_to_action
+            "url_to_action": url_to_action,
+            "response": response
         }
 
 
         # lets do this stuff in parallel! woo threads!!
 
         _dl = [
-            threads.deferToThread(process_before_and_after,*[idf,urls,domains,response],**{}),
-            threads.deferToThread(process_hourly,*[domains_with_cat,raw_urls,response],**{}),
-            threads.deferToThread(process_timing,*[domains_with_cat,raw_urls,urls,url_to_action,response],**{}),
-            threads.deferToThread(process_domain_intersection,*[urls,domains,response],**{})
-
+            threads.deferToThread(process_before_and_after,*[],**kwargs),
+            threads.deferToThread(process_hourly,*[],**kwargs),
+            threads.deferToThread(process_timing,*[],**kwargs),
+            threads.deferToThread(process_domain_intersection,*[],**kwargs)
         ]
 
         dl = defer.DeferredList(_dl)

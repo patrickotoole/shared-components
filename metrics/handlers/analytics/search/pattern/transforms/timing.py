@@ -1,10 +1,12 @@
 import logging
-import logging
 from temporal import *
 from lib.helpers import decorators
 
 @decorators.time_log
-def process_hourly(domains_with_cat,raw_urls,response):
+def process_hourly(uid_urls=None, category_domains=None, response=None, **kwargs):
+
+    raw_urls = uid_urls
+    domains_with_cat = category_domains
 
     _fn = {"visits":lambda x: len(x), "uniques": lambda x : len(set(x))}
     
