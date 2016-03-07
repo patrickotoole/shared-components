@@ -237,13 +237,18 @@ class PatternSearchBase(VisitDomainBase,PatternSearchSample,PatternStatsBase,Pat
         dates = build_datelist(num_days)
         args = [advertiser,pattern_terms[0][0],dates,num_days]
 
+        #try:
+        #    stats_df, url_stats_df = yield self.get_ts_cached(*args)
+        #except:
+        #    logging.info("Cache not present -- sampling instead")
+        #    stats_df, url_stats_df = yield self.get_ts_sampled(*args)
+
         try:
-            stats_df, url_stats_df = yield self.get_ts_cached(*args)
+            stats_df = yield self.get_stats(*args[:-1])
         except:
-            logging.info("Cache not present -- sampling instead")
             stats_df, url_stats_df = yield self.get_ts_sampled(*args)
 
-        stats = stats_df.join(url_stats_df).fillna(0)
+        stats = stats_df#.join(url_stats_df).fillna(0)
 
         response = self.default_response(pattern_terms,logic,no_results=True)
         response = self.response_summary(response,stats)

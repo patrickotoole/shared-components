@@ -38,7 +38,7 @@ RB.crusher.ui.action.wait = (function(wait,action,crusher) {
 
   wait.NAME = "action.wait"
   wait.SUBSCRIBE = ["action_initialized"]
-  wait.PUBLISH = ["actionTimeseries"]
+  wait.PUBLISH = ["actionTimeseriesOnly"]
   wait.EVENTS = ["action_initialized"]
 
   var prepAction = function(action) {
@@ -94,8 +94,8 @@ RB.component.export(RB.crusher.ui.action.status, RB.crusher.ui.action)
 RB.crusher.ui.action.show = (function(show,action,crusher) {
 
   show.NAME = "action.show"
-  show.SUBSCRIBE = ["action_initialized","actionTimeseries"]
-  show.PUBLISH = ["tf_idf_action"]//,"pattern_status"]
+  show.SUBSCRIBE = ["action_initialized","actionTimeseriesOnly"]
+  show.PUBLISH = ["cached_visitor_domains_only"]//,"pattern_status"]
   show.EVENTS = []
 
   show.subscription = function(data,ts) {
@@ -213,7 +213,7 @@ RB.component.export(RB.crusher.ui.action.show, RB.crusher.ui.action)
 RB.crusher.ui.action.domains = (function(domains,action,crusher) {
 
   domains.NAME = "action.domains"
-  domains.SUBSCRIBE = ["action_initialized","tf_idf_action"]
+  domains.SUBSCRIBE = ["action_initialized","cached_visitor_domains_only"]
   domains.PUBLISH = ["actionClusters","actionBeforeAndAfter"]
   domains.EVENTS = []
 
@@ -263,7 +263,7 @@ RB.component.export(RB.crusher.ui.action.clusters, RB.crusher.ui.action)
 
 RB.crusher.ui.action.comparison = (function(comparison,action,crusher) {
   comparison.NAME = "action.comparison"
-  comparison.SUBSCRIBE = ["action_initialized","actionTimeseries", "actions", "tf_idf_action"]
+  comparison.SUBSCRIBE = ["action_initialized","actionTimeseriesOnly", "actions"]
   comparison.PUBLISH = []
   comparison.EVENTS = []
   comparison.subscription = function(data, actionTimeseries, actions, idf) {
@@ -284,7 +284,7 @@ RB.component.export(RB.crusher.ui.action.comparison, RB.crusher.ui.action)
 
 RB.crusher.ui.action.full_url = (function(full_url,action,crusher) {
   full_url.NAME = "action.full_url"
-  full_url.SUBSCRIBE = ["action_initialized","actionTimeseries"]
+  full_url.SUBSCRIBE = ["action_initialized","actionTimeseriesOnly"]
   full_url.PUBLISH = []
   full_url.EVENTS = []
   full_url.subscription = function(action) {
@@ -366,7 +366,7 @@ RB.component.export(RB.crusher.ui.action.resize, RB.crusher.ui.action)
 RB.crusher.ui.action.last = (function(last,action,crusher) {
 
   last.NAME = "action.last"
-  last.SUBSCRIBE = ["tf_idf_action","actionTimeseries"]
+  last.SUBSCRIBE = ["actionTimeseriesOnly","cached_visitor_domains_only"]
   last.PUBLISH = []
   last.EVENTS = []
 

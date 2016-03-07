@@ -224,7 +224,7 @@ RB.rho.ui = (function(ui) {
     if (total_weight == 0 && data[0].key === undefined) {
       data = d3.nest()
         .key(function(x){
-          return [x.url_short, x.parent_category_name]
+          return [x.url_short, x.parent_category_name, x.category_name]
         })
         .rollup(function(x){
           return x.reduce(function(p,c){
@@ -235,7 +235,9 @@ RB.rho.ui = (function(ui) {
 
       data = data.map(function(x){
           x["url_short"] = x.key.split(",")[0]
-          x["parent_category_name"] = x.key.split(",").slice(1).join(",")
+          x["parent_category_name"] = x.key.split(",").slice(1,2).join(",")
+          x["category_name"] = x.key.split(",").slice(2).join(",")
+
 
           return x
         })
