@@ -356,10 +356,10 @@ class decorators:
         import time
 
         def wrap(*args,**kwargs):
-            logging.info("Start %s: %s" % (fn.__name__,str(args)))
+            logging.info("Start %s" % (fn.__name__))
             start = time.time()
             _return = fn(*args,**kwargs)
-            logging.info("Finished %s in %.2fs" % (fn.__name__,(time.time() - start)))
+            logging.info("Finished %s in %.4fs" % (fn.__name__,(time.time() - start)))
             return _return
 
         return wrap

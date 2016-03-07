@@ -98,7 +98,20 @@ class PatternSearchBase(VisitDomainBase,PatternSearchSample,PatternStatsBase,Pat
         uids = list(set(df.uid.values))[:5000]
         defer.returnValue([uids])
 
-    
+    def urls_to_actions(self,patterns,urls):
+
+        def check(url):
+            def _run(x):
+                return x in url
+            return _run
+
+        p = patterns.url_pattern
+        exist = { url: list(p[p.map(check(url))]) for url in urls }
+
+        url_to_action = pandas.DataFrame(pandas.Series(exist),columns=["actions"])
+        url_to_action.index.name = "url"
+
+        return url_to_action
     
       
     @defer.inlineCallbacks
@@ -108,21 +121,29 @@ class PatternSearchBase(VisitDomainBase,PatternSearchSample,PatternStatsBase,Pat
         idf = get_idf(self.db,set(domains.domain))
         domains_with_cat = domains.merge(idf,on="domain")
 
+        Q = "SELECT * from action_with_patterns where pixel_source_name = '%s'"
+        _df = self.db.select_dataframe(Q % self.current_advertiser_name)
 
-        _df = self.db.select_dataframe("SELECT * from action_with_patterns where pixel_source_name = '%s'" % self.current_advertiser_name)
-        _xx = {}
-        for url in set(raw_urls.url):
-            _xx[url] = list(_df.url_pattern[_df.url_pattern.map(lambda x: x in url)])
+        url_to_action = self.urls_to_actions(_df,set(raw_urls.url))
 
-        url_to_action = pandas.DataFrame(pandas.Series(_xx),columns=["actions"])
-        url_to_action.index.name = "url"
+        kwargs = {
+            "idf": idf,
+            "urls": urls,
+            "uid_urls": raw_urls,
+            "domains": domains,
+            "category_domains": domains_with_cat,
+            "url_to_action": url_to_action
+        }
 
 
-        # lets do this stuff in parallel! woo threads!
+        # lets do this stuff in parallel! woo threads!!
+
         _dl = [
-            threads.deferToThread(process_before_and_after,*[self.db,urls,domains,response],**{}),
+            threads.deferToThread(process_before_and_after,*[idf,urls,domains,response],**{}),
             threads.deferToThread(process_hourly,*[domains_with_cat,raw_urls,response],**{}),
-            threads.deferToThread(process_sessions,*[domains,domains_with_cat,raw_urls,urls,url_to_action,response],**{})
+            threads.deferToThread(process_timing,*[domains_with_cat,raw_urls,urls,url_to_action,response],**{}),
+            threads.deferToThread(process_domain_intersection,*[urls,domains,response],**{})
+
         ]
 
         dl = defer.DeferredList(_dl)
@@ -160,10 +181,10 @@ class PatternSearchBase(VisitDomainBase,PatternSearchSample,PatternStatsBase,Pat
         dom = yield self.sample_offsite_domains(advertiser, term, uids, num_days)
         domains = dom[0][1]
 
-        urls, raw_urls = yield self.defer_get_uid_visits(advertiser,uids,term)
+        urls, uid_urls = yield self.defer_get_uid_visits(advertiser,uids,term)
 
         logging.info("Processing uids...")
-        response = yield self.process_uids(uids,urls,raw_urls,domains,response)
+        response = yield self.process_uids(uids,urls,uid_urls,domains,response)
         logging.info("Processed uids.")
 
 

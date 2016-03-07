@@ -101,6 +101,8 @@ if __name__ == '__main__':
         cookie_secret="rickotoole",
         login_url="/login"
     )
+    reactor.suggestThreadPoolSize(100)
+
     if not options.skip_buffers and not options.show_routes:
         # startup the buffers
         for queue,buf in connectors["buffers"].items():
