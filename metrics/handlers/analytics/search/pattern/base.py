@@ -283,9 +283,10 @@ class PatternSearchBase(VisitDomainBase,PatternSearchSample,PatternStatsBase,Pat
 
         try:
             stats_df, domain_stats_df, url_stats_df = yield self.get_generic_cached(*args)
-        except:
-            logging.info("Cache not present -- sampling instead")
+        except Exception as e:
+            logging.info("Cache not present -- sampling instead: %s" % e)
             stats_df, domain_stats_df, url_stats_df = yield self.get_generic_sampled(*args)
+
         stats = stats_df.join(domain_stats_df).join(url_stats_df).fillna(0)
         urls, domains = yield self.deferred_reformat_stats(domain_stats_df,url_stats_df)
 
