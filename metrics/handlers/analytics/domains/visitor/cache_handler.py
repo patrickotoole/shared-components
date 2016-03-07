@@ -25,7 +25,7 @@ class ActionDashboardHandler(BaseHandler):
 
     def get_one(self,url_pattern,advertiser):
         seg_data = self.db.select_dataframe(DOMAINS % (url_pattern,advertiser))
-        domains = "'%s'" % "','".join(list(set(seg_data.domain)))
+        domains = "'%s'" % "','".join(map(lambda x: x.replace("'",""), list(set(seg_data.domain)) ) )
         categories = self.db.select_dataframe(CATEGORIES % domains)
 
         joined = seg_data.merge(categories,on="domain")

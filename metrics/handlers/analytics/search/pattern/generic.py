@@ -127,30 +127,16 @@ class GenericSearchBase(VisitDomainBase,PatternSearchSample,PatternStatsBase,Pat
 
 
     @defer.inlineCallbacks
-    def get_uids(self, advertiser, pattern_terms, date_clause, logic="or",timeout=60):
-        self.set_header("Access-Control-Allow-Origin","null")
-        self.set_header("Access-Control-Allow-Credentials","true")
-        PARAMS = "uid"
-        indices = [PARAMS]
-        term = pattern_terms[0][0]
-
-        response = self.default_response(pattern_terms,logic)
-        response['summary']['num_users'] = 0
+    def get_uids(self, advertiser, pattern_terms, *args, **kwargs):
 
         NUM_DAYS = 2
-        args = [advertiser,term,build_datelist(NUM_DAYS),NUM_DAYS,response]
+
+        response = self.default_response(pattern_terms)
+        args = [advertiser,pattern_terms[0][0],build_datelist(NUM_DAYS),NUM_DAYS,response]
 
         now = time.time()
 
-        logging.info("start build arguments for uid processing...")
         kwargs = yield self.build_arguments(*args)
-        logging.info("finished building arguments: %s" % (now - time.time()) )
-
         response = yield self.process_uids(**kwargs)
 
-
         self.write_json(response)
-
-
-
-
