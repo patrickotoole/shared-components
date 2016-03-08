@@ -248,7 +248,7 @@ class PatternCache(CacheBase):
         dimensions  = ["source","date","action"]
         dim_plus    = dimensions + ["uid","url"]
         all_columns = dimensions + ["uid","u2","url","count"]
-
+        
         if len(self.cache_insert):
             series = pandas.DataFrame(self.cache_insert,columns=all_columns).groupby(dim_plus)['count'].count()
             reset = series.reset_index()

@@ -44,7 +44,6 @@ class VisitorKeywordsHandler(PatternSearchCache,VisitDomainsFullHandler):
     def process_visitor_domains(self, response_data):
         def split_url(x):
             return x.replace("-","/").split("/")
-        
         GROUPS = ["url","uniques"]
         EXPAND_BY = "url"
         def grouping_function(x):

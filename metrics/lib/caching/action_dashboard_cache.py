@@ -53,7 +53,7 @@ class ActionCache:
         df = pandas.DataFrame()
         try:
             logging.info("calling segment %s" % url_pattern[0])
-            url = "http://beta.crusher.getrockerbox.com/crusher/pattern_search/timeseries?search=%s&num_days=2" % url_pattern[0]
+            url = "http://beta.crusher.getrockerbox.com/crusher/pattern_search/timeseries?search=%s&num_days=20" % url_pattern[0]
             results = self.req.get(url, cookies=self.cookie)
             logging.info("results for segment %s where %s" % (url_pattern[0], results))
             resultsAsJson = results.json()['domains']
@@ -227,16 +227,16 @@ if __name__ == "__main__":
         zookeeper.start()
         run_all(lnk.dbs.rockerbox, zookeeper)
     else:
-        if not options.segment:
-            zookeeper =KazooClient(hosts="zk1:2181")
-            zookeeper.start()
-            ac = ActionCache(options.username, options.password, lnk.dbs.rockerbox, zookeeper)
-            run_advertiser(ac, options.username)
-        else:
-            zookeeper =KazooClient(hosts="zk1:2181")
-            zookeeper.start()
-            ac = ActionCache(options.username, options.password, lnk.dbs.rockerbox,zookeeper)
-            run_advertiser_segment(ac, options.segment)
+        #if options.segment:
+        zookeeper =KazooClient(hosts="zk1:2181")
+        zookeeper.start()
+        ac = ActionCache(options.username, options.password, lnk.dbs.rockerbox, zookeeper)
+        run_advertiser(ac, options.username)
+        #else:
+        #zookeeper =KazooClient(hosts="zk1:2181")
+        #zookeeper.start()
+        #ac = ActionCache(options.username, options.password, lnk.dbs.rockerbox,zookeeper)
+        #run_advertiser_segment(ac, options.segment)
     
     if options.remove_old == True:
         lnk.dbs.rockerbox.excute(SQL_REMOVE_OLD % options.remove_seconds)
