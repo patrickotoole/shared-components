@@ -362,6 +362,7 @@ class decorators:
             logging.info("Finished %s in %.4fs" % (fn.__name__,(time.time() - start)))
             return _return
 
+        wrap.__name__ = fn.__name__
         return wrap
 
     @staticmethod

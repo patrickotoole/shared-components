@@ -23,9 +23,12 @@ from transforms.timing import *
 from transforms.before_and_after import *
 from transforms.domain_intersection import *
 
+DEFAULT_FUNCS = [process_before_and_after, process_hourly, process_sessions, process_domain_intersection]
+
 
 class GenericSearchBase(VisitDomainBase,PatternSearchSample,PatternStatsBase,PatternSearchResponse,VisitEventBase):
 
+    DEFAULT_FUNCS = DEFAULT_FUNCS
 
     @defer.inlineCallbacks
     def get_users_sampled(self,advertiser,term,dates,num_days):
@@ -60,15 +63,9 @@ class GenericSearchBase(VisitDomainBase,PatternSearchSample,PatternStatsBase,Pat
         return pixel_df
       
     @defer.inlineCallbacks
-    def process_uids(self,**kwargs):
+    def process_uids(self,funcs=DEFAULT_FUNCS,**kwargs):
 
-        _dl = [
-            threads.deferToThread(process_before_and_after,*[],**kwargs),
-            threads.deferToThread(process_hourly,*[],**kwargs),
-            threads.deferToThread(process_timing,*[],**kwargs),
-            threads.deferToThread(process_domain_intersection,*[],**kwargs)
-        ]
-
+        _dl = [threads.deferToThread(fn,*[],**kwargs) for fn in funcs]
         dl = defer.DeferredList(_dl)
         responses = yield dl
 
@@ -112,6 +109,7 @@ class GenericSearchBase(VisitDomainBase,PatternSearchSample,PatternStatsBase,Pat
 
         uid_urls['hour'] = uid_urls.timestamp.map(lambda x: x.split(" ")[1].split(":")[0])
         domains_with_cat = domains.merge(idf,on="domain")
+        domains_with_cat['hour'] = domains_with_cat.timestamp.map(lambda x: x.split(" ")[1].split(":")[0])
 
         url_to_action = yield threads.deferToThread(self.urls_to_actions,*[pixel_df,set(uid_urls.url)],**{})
 
@@ -127,16 +125,24 @@ class GenericSearchBase(VisitDomainBase,PatternSearchSample,PatternStatsBase,Pat
 
 
     @defer.inlineCallbacks
-    def get_uids(self, advertiser, pattern_terms, *args, **kwargs):
+    def get_uids(self, advertiser, pattern_terms, process=False, *args, **kwargs):
 
         NUM_DAYS = 2
 
-        response = self.default_response(pattern_terms)
+        response = self.default_response(pattern_terms,"and")
         args = [advertiser,pattern_terms[0][0],build_datelist(NUM_DAYS),NUM_DAYS,response]
 
         now = time.time()
 
         kwargs = yield self.build_arguments(*args)
-        response = yield self.process_uids(**kwargs)
+
+        if process:
+            response = yield self.process_uids(funcs=process, **kwargs)
+        elif type(process) == type([]):
+            response = yield self.process_uids(funcs=[], **kwargs)
+        else:
+            response = yield self.process_uids(**kwargs)
+
+        
 
         self.write_json(response)

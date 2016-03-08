@@ -53,7 +53,7 @@ def process_action_merge(raw_urls,url_to_action):
     return raw_urls.merge(url_to_action.reset_index(),on="url",how="left")
 
 @decorators.time_log
-def process_sessions(users):
+def get_sessions(users):
     users['ts'] = users.timestamp.map(pandas.to_datetime)
     summary = users.groupby(["uid","date","hour"]).ts.describe().unstack(3)
 
@@ -141,14 +141,13 @@ def process_session_buckets(sessions,merged,domains_with_cat):
     return xx
     
 
-#def process_timing(domains_with_cat,users,urls,url_to_action,response):
-def process_timing(category_domains=None,uid_urls=None,urls=None,url_to_action=None,response=None,**kwargs):
+def process_sessions(category_domains=None,uid_urls=None,urls=None,url_to_action=None,response=None,**kwargs):
 
     domains_with_cat = category_domains
     raw_urls = uid_urls
 
     
-    sessions = process_sessions(raw_urls) # 17 seconds
+    sessions = get_sessions(raw_urls) # 17 seconds
     merged = process_action_merge(raw_urls,url_to_action)
     hourly_domains  = process_session_buckets(sessions,merged,domains_with_cat) # 24 seconds
 
