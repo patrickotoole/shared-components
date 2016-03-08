@@ -119,7 +119,7 @@ class PatternSearchBase(GenericSearchBase):
         _dl = [
             threads.deferToThread(process_before_and_after,*[],**kwargs),
             threads.deferToThread(process_hourly,*[],**kwargs),
-            threads.deferToThread(process_timing,*[],**kwargs),
+            threads.deferToThread(process_sessions,*[],**kwargs),
             threads.deferToThread(process_domain_intersection,*[],**kwargs)
         ]
 
