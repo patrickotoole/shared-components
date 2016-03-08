@@ -1,16 +1,16 @@
 import logging
 from temporal import *
+from lib.helpers import decorators
 
-def process_before_and_after(db,urls,domains,response):
-
-    logging.info("Started before and after...")
+@decorators.time_log
+def process_before_and_after(idf=None,urls=None,domains=None,response=None,**kwargs):
 
     joined = url_domain_intersection(urls,domains)
     before, after = before_and_after(joined)
 
     # before
     before_grouped = groupby_timedifference(before)
-    idf = get_idf(db,set(before_grouped.domain))
+    #idf = get_idf(db,set(before_grouped.domain))
 
     merged = before_grouped.merge(idf,on="domain")
     before_domains = time_bucket_domains(merged)
@@ -20,7 +20,7 @@ def process_before_and_after(db,urls,domains,response):
 
     # after
     after_grouped = groupby_timedifference(after)
-    idf = get_idf(db,set(after_grouped.domain))
+    #idf = get_idf(db,set(after_grouped.domain))
 
     merged = after_grouped.merge(idf,on="domain")
     after_domains = time_bucket_domains(merged)
@@ -34,7 +34,5 @@ def process_before_and_after(db,urls,domains,response):
 
     response['after_categories'] = after_categories
     response['after_domains'] = after_domains.T.to_dict()
-
-    logging.info("Finished before and after.")
 
     return response

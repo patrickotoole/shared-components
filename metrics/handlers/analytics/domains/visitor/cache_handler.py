@@ -13,13 +13,25 @@ SQL_QUERY_1 = "select a.url_pattern, sum(count), action_type from action_dashboa
 
 SQL_QUERY_3 = "select a.domain, a.count, c.parent_category_name from action_dashboard_cache a left join domain_category b on a.domain=b.domain and a.advertiser='%s' and url_pattern like '%s' inner join category c on b.category_name = c.category_name"
 
-SQL_QUERY_4 = "SELECT a.domain, a.count, c.parent_category_name FROM domain_category b right join (SELECT domain, count FROM action_dashboard_cache WHERE url_pattern = '%s' and advertiser = '%s') a ON a.domain = b.domain INNER JOIN category c ON c.category_name = b.category_name"
+SQL_QUERY_4 = "SELECT a.domain, a.count, c.category_name, c.parent_category_name FROM domain_category b right join (SELECT domain, count FROM action_dashboard_cache WHERE url_pattern = '%s' and advertiser = '%s') a ON a.domain = b.domain INNER JOIN category c ON c.category_name = b.category_name"
 
+DOMAINS = "SELECT domain, count FROM action_dashboard_cache WHERE url_pattern = '%s' and advertiser = '%s'"
+CATEGORIES = "SELECT c.domain, c.category_name, p.parent_category_name FROM domain_category c JOIN category p ON c.category_name = p.category_name where c.domain in (%s)"
 
 
 class ActionDashboardHandler(BaseHandler):
     def initialize(self, db=None, **kwargs):
         self.db = db
+
+    def get_one(self,url_pattern,advertiser):
+        seg_data = self.db.select_dataframe(DOMAINS % (url_pattern,advertiser))
+        domains = "'%s'" % "','".join(map(lambda x: x.replace("'",""), list(set(seg_data.domain)) ) )
+        categories = self.db.select_dataframe(CATEGORIES % domains)
+
+        joined = seg_data.merge(categories,on="domain")
+
+        seg_data = joined.fillna(0)
+        return seg_data
 
     @decorators.deferred
     def defer_get_actions(self, advertiser, number, action_type, url_pattern):
@@ -30,10 +42,9 @@ class ActionDashboardHandler(BaseHandler):
             logging.info("Starting domain cache with limit %s..." % int(number))
             for current_segment in segments.ix[:int(number)].iterrows():
                 c_seg = current_segment[1]["url_pattern"]
-                q2 = SQL_QUERY_4 % (c_seg, advertiser)
-                #q2 = SQL_QUERY_3 % (advertiser,c_seg)
-                seg_data = self.db.select_dataframe(q2)
-                seg_data = seg_data.fillna(0)
+
+                seg_data = self.get_one(c_seg, advertiser)
+
                 current_data = seg_data.T.to_dict().values()
                 to_append = {"key":current_segment[1]["url_pattern"], "action_type": current_segment[1]["action_type"], "values":current_data}
                 data['domains'].append(to_append)
@@ -41,8 +52,8 @@ class ActionDashboardHandler(BaseHandler):
 
             return data
         else:
-            print SQL_QUERY_4 % (advertiser, url_pattern)
-            seg_data = self.db.select_dataframe(SQL_QUERY_4 % (url_pattern,advertiser)).fillna(0)
+            seg_data = self.get_one(url_pattern, advertiser)
+
             data = {
                 "domains": [
                     {
