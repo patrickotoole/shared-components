@@ -17,12 +17,10 @@ from lib.cassandra_cache.helpers import *
 import model
 
 from helpers import check_required_days
-from generic import *
+from timeseries import TimeseriesBase
 
 
-
-class PatternSearchBase(GenericSearchBase):
-
+class PatternSearchBase(TimeseriesBase):
 
     @defer.inlineCallbacks
     def get_uid_domains(self, advertiser, pattern_terms, date_clause, logic="or",timeout=60, numdays=5):
@@ -227,76 +225,6 @@ class PatternSearchBase(GenericSearchBase):
         defer.returnValue([stats_df, domain_stats_df, url_stats_df])
 
 
-    @defer.inlineCallbacks
-    def get_ts_cached(self,advertiser,term,dates,num_days):
-        args = [advertiser,term,dates]
-
-        stats_df, url_stats_df = yield self.get_page_stats(*args)
-        check_required_days(stats_df,num_days)
-
-        defer.returnValue([stats_df, url_stats_df])
-
-    @defer.inlineCallbacks
-    def get_ts_sampled(self,advertiser,term,dates,num_days,allow_sample=True):
-        sample_args = [term,"",advertiser,dates,num_days,allow_sample]
-
-        df, stats_df, url_stats_df, full_df = yield self.sample_stats_onsite(*sample_args)
-
-
-        defer.returnValue([stats_df, url_stats_df, full_df])
-
-    @decorators.deferred
-    def get_filter_checker(self,filter_id):
-        Q = "SELECT * FROM action_filters WHERE action_id = %s and active = 1 and deleted = 0"
-        df = self.db.select_dataframe(Q % filter_id)
-
-        import lib.aho as aho
-        checker = aho.AhoCorasick(list(df.filter_pattern)).has_match
-        return checker
-        
-    
-
-    @defer.inlineCallbacks
-    def get_ts_only(self, advertiser,pattern_terms,num_days,logic="or",timeout=60,timeseries=False,filter_id=False):
-
-        dates = build_datelist(num_days)
-        args = [advertiser,pattern_terms[0][0],dates,num_days]
-
-        #try:
-        #    stats_df, url_stats_df = yield self.get_ts_cached(*args)
-        #except:
-        #    logging.info("Cache not present -- sampling instead")
-        #    stats_df, url_stats_df = yield self.get_ts_sampled(*args)
-
-        if not filter_id:
-            try:
-                stats_df = yield self.get_stats(*args[:-1])
-            except:
-                stats_df, url_stats_df, full_df = yield self.get_ts_sampled(*args)
-        else:
-            #args.append(False)
-            
-            logging.info("starting")
-            stats_df, url_stats_df, full_df = yield self.get_ts_sampled(*args)
-            aho_filter = yield self.get_filter_checker(filter_id)
-            logging.info("constructed aho")
-            value = { i: aho_filter(i.split("?")[1]) for i in set(full_df.url) }
-            logging.info("ran aho")
-            df = full_df[full_df.url.map(lambda x: value[x] )]
-            logging.info("ran mask")
-            stats_df = df.groupby("date").apply(self.calc_stats)
-            logging.info("ran groupby")
-
-           
-
-
-        stats = stats_df#.join(url_stats_df).fillna(0)
-
-        response = self.default_response(pattern_terms,logic,no_results=True)
-        response = self.response_summary(response,stats)
-        response = self.response_timeseries(response,stats)
-
-        self.write_json(response)
 
     @defer.inlineCallbacks
     def get_uids_only(self, advertiser, pattern_terms, num_days, logic="or",timeout=60):
@@ -364,5 +292,3 @@ class PatternSearchBase(GenericSearchBase):
     def get_timeseries(self, advertiser, pattern_terms, date_clause, logic="or",timeout=60):
         self.get_generic(advertiser, pattern_terms, date_clause, logic, timeout, True)
 
-    def get_timeseries_only(self, advertiser, pattern_terms, date_clause, logic="or",timeout=60,filter_id=False):
-        self.get_ts_only(advertiser, pattern_terms, date_clause, logic, timeout, True, filter_id)
