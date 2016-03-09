@@ -19,14 +19,14 @@ class CacheFullURL():
 
     def run_local(self, advertiser, pattern, base_url):
         import full_url_cache as cc
-        cc.run_wrapper(advertiser,pattern,base_url,"test",connectors=self.connectors)
+        cc.runner(advertiser,pattern,base_url,"test",connectors=self.connectors)
 
     def run_on_work_queue(self,advertiser, pattern):
         import lib.caching.full_url_cache as furc
         yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
         _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
         work = pickle.dumps((
-                furc.run_wrapper,
+                furc.runner,
                 [advertiser,pattern, _cache_yesterday, _cache_yesterday+"full_url"]
                 ))
         work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,1)

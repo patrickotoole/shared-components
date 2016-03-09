@@ -25,7 +25,7 @@ def add_to_table(advertiser_name, pattern, url, sql):
         #sql.execute(QUERY.format(advertiser_name, pattern, url["keyword"], url["count"]))
         sql.execute(QUERY.format(advertiser_name, pattern, url["url"].replace("'","").replace("+","").encode('utf-8'), url["uniques"]))
 
-def run_wrapper(advertiser_name, pattern, base_url, cache_date, indentifiers="test", connectors=False):
+def runner(advertiser_name, pattern, base_url, cache_date, indentifiers="test", connectors=False):
     connectors = connectors or get_connectors()
 
     db = connectors['db']

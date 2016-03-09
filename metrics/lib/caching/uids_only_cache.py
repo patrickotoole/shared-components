@@ -56,7 +56,7 @@ def write_to_table_sessions(advertiser, pattern, data,db):
     db.execute(SQL_QUERY2.format(advertiser, pattern, data["sessions"], data["users_count"]))
 
 
-def run_all(advertiser, pattern, base_url, cache_date, indentifiers="test", connectors=False):
+def runner(advertiser, pattern, base_url, cache_date, indentifiers="test", connectors=False):
     connectors = connectors or get_connectors()
 
     db = connectors['db']

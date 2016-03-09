@@ -41,7 +41,6 @@ class ActionCache:
     def add_to_work_queue(self, segment, advertiser):
         yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
         _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
-        import ipdb; ipdb.set_trace()
         work = pickle.dumps((
                 cassandra_functions.run_recurring,
                 [advertiser,segment["url_pattern"][0],_cache_yesterday,_cache_yesterday + "recurring"]

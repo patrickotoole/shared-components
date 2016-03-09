@@ -2,34 +2,17 @@ import pandas
 import logging
 from lib.pandas_sql import s as _sql
 
+from cache_runner_base import BaseRunner
+
 import datetime
-INSERT_SQL = "INSERT INTO action_dashboard_cache (advertiser, count, domain) values ('{}', {}, '{}')" 
+
 current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-class AdvertiserActionRunner():
+class AdvertiserActionRunner(BaseRunner):
 
     def __init__(self, connectors):
         self.connectors =connectors
         self.validation_data = False
-
-    @staticmethod
-    def get_connectors(self):
-        from link import lnk
-        return {
-            "db": lnk.dbs.rockerbox,
-            "zk": {},
-            "cassandra": lnk.dbs.cassandra
-        }
-
-    def get_crusher_obj(self, advertiser, base_url):
-        from link import lnk
-        crusher = lnk.api.crusher
-        crusher.user = "a_{}".format(advertiser)
-        crusher.password= "admin"
-        crusher.base_url = base_url
-        crusher.authenticate()
-        logging.info(crusher._token)
-        return crusher
 
     def make_request(self,crusher, pattern):
         url = "/crusher/v1/visitor/domains?format=json&url_pattern=%s" % pattern
@@ -48,9 +31,6 @@ class AdvertiserActionRunner():
                 self.url_pattern = segment['url_pattern'][0]
                 valid = True
         return valid
-
-    def generic_insert(self, data, advertiser, db):
-        db.execute(SQL.format(data))
 
     def insert(self, df, advertiser, segment_name, db):
         table_name ="action_dashboard_cache"

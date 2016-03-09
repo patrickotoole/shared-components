@@ -18,14 +18,14 @@ class CacheKeywords():
 
     def run_local(self, advertiser, pattern, base_url):
         import keyword_cache as kc
-        kc.run_wrapper(advertiser,pattern,base_url,"test",connectors=self.connectors)
+        kc.runner(advertiser,pattern,base_url,"test",connectors=self.connectors)
 
     def run_on_work_queue(self,advertiser, pattern):
         import lib.caching.keyword_cache as kc
         yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
         _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
         work = pickle.dumps((
-                kc.run_wrapper,
+                kc.runner,
                 [advertiser,pattern, _cache_yesterday, _cache_yesterday+"full_url"]
                 ))
         work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,1)
