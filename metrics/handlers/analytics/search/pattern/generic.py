@@ -58,7 +58,7 @@ class GenericSearchBase(FilterBase,VisitDomainBase,PatternSearchSample,PatternSt
 
     @defer.inlineCallbacks
     def get_sampled(self,advertiser,term,dates,num_days,allow_sample=True,filter_id=False):
-        sample_args = [term,"",advertiser,dates,num_days,False if filter_id else allow_sample]
+        sample_args = [term,"",advertiser,dates,num_days,allow_sample]
 
         full_df, stats_df, url_stats_df, _ = yield self.sample_stats_onsite(*sample_args)
 

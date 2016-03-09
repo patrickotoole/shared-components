@@ -54,8 +54,17 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
   endpoints.cached_visitor_domains_only = api.helpers.genericQueuedAPIWithData(function(data, cb, deferred_cb) {
     if (!!data.domains) deferred_cb(null, cb.bind(false, data))
 
-    d3.json("/crusher/v1/visitor/domains/cache?format=json&url_pattern=" + data['url_pattern'][0], function(dd) {
-      data.domains = dd.domains[0].values
+    var URL = "/crusher/v1/visitor/domains/cache?format=json&url_pattern=" + data['url_pattern'][0]
+
+    if (data.has_filter) URL = "/crusher/v1/visitor/domains?format=json&url_pattern=" + data['url_pattern'][0] + "&filter_id=" + data.action_id
+
+    d3.json(URL, function(dd) {
+      
+      if (data.has_filter) {
+        data.domains = dd.domains
+      } else {
+        data.domains = dd.domains[0].values
+      }
 
       deferred_cb(null, cb.bind(false, dd))
     })
