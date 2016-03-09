@@ -82,12 +82,12 @@ class AdvertiserRoutes(Routes):
             (r'/user/domains', user.handler.VisitDomainsHandler, self.connectors),
             (r'/user/domains_full', visitor.full_handler.VisitDomainsFullHandler, self.connectors),
          
-            (r'/visitor/domains', visitor.handler.SearchVisitorDomainsHandler, self.connectors),
+            (r'/visitor/domains', visitor.handler.VisitorDomainsHandler, self.connectors),
             (r'/visitor/domains/cache', visitor.cache_handler.ActionDashboardHandler, self.connectors),
 
-            (r'/visitor/domains_full', visitor.full_handler.VisitorDomainsHandler, self.connectors),
+            (r'/visitor/domains_full', visitor.full_handler.VisitorDomainsFullHandler, self.connectors),
             (r'/visitor/domains_full/cache',visitor.full_cache_handler.VisitorDomainsFullCacheHandler,self.connectors),
-            (r'/visitor/keywords', visitor.handler.SearchVisitorDomainsHandler, self.connectors),
+            (r'/visitor/keywords', visitor.keyword_handler.VisitorKeywordsHandler, self.connectors),
             (r'/visitor/(.*?)', visitor.transform_handler.VisitorTransformHandler, self.connectors),
 
 
@@ -119,9 +119,9 @@ class AdvertiserRoutes(Routes):
             (r'/visit_events', analytics.VisitEventsHandler, self.connectors),
             (r'/served_events', analytics.ServedEventsHandler, self.connectors),
             (r'/visit_domains_full', visitor.full_handler.VisitDomainsFullHandler, self.connectors),
-            (r'/domains_visitor_full', visitor.full_handler.VisitorDomainsHandler, self.connectors),
+            (r'/domains_visitor_full', visitor.full_handler.VisitorDomainsFullHandler, self.connectors),
             (r'/cached_visitor_domains', visitor.full_cache_handler.VisitorDomainsFullCacheHandler, self.connectors),
-            (r'/search_visitor_domains', visitor.handler.SearchVisitorDomainsHandler, self.connectors),
+            (r'/search_visitor_domains', visitor.keyword_handler.VisitorKeywordsHandler, self.connectors),
             (r'/uids_only_cache', analytics.UidsCacheHandler, self.connectors),
 
 

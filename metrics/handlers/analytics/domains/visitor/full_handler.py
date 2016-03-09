@@ -17,7 +17,7 @@ from lib.cassandra_helpers.helpers import FutureHelpers
 from lib.cassandra_cache.helpers import *
 from ...search.cache.pattern_search_cache import PatternSearchCache
 
-class VisitorDomainsHandler(PatternSearchCache,VisitDomainsFullHandler):
+class VisitorDomainsFullHandler(PatternSearchCache,VisitDomainsFullHandler):
 
     def initialize(self, db=None, cassandra=None, **kwargs):
         self.logging = logging

@@ -69,7 +69,7 @@ class SearchCassandra(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuer
 
         return self.build_statement(CACHE_QUERY,CACHE_WHAT,CACHE_WHERE)
     
-    def run(self,pattern,advertiser,dates,results=[]):
+    def run(self,pattern,advertiser,dates,results=[],limit=1500):
         # run SAMPLE
 
         zk_lock = ZKPool(zk=self.zookeeper)
@@ -80,7 +80,7 @@ class SearchCassandra(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuer
         
             data = self.data_plus_values([[advertiser]], dates)
             callback_args = [advertiser,pattern,results]
-            is_suffice = helpers.sufficient_limit()
+            is_suffice = helpers.sufficient_limit(limit)
 
             stmt = self.udf_statement(udf_selector)
             cb = helpers.wrapped_select_callback(udf_selector)
@@ -139,8 +139,7 @@ class SearchBase(SearchCassandra):
 
     @decorators.deferred
     def defer_execute(self, selects, advertiser, pattern, date_clause, logic, 
-                      allow_sample=True, timeout=60, numdays=20, should_cache=True):
-
+                      allow_sample=True, timeout=60, numdays=20, force_cache=True):
 
         dates = build_datelist(numdays)
         inserts, results = [], []
@@ -154,7 +153,7 @@ class SearchBase(SearchCassandra):
         URL = "select * from pattern_cache where pixel_source_name = '%s' and url_pattern = '%s'"
         df = lnk.dbs.rockerbox.select_dataframe(URL % (advertiser,pattern[0]))
 
-        if (len(df[df.num_days > 5]) > 0):
+        if force_cache or (len(df[df.num_days > 5]) > 0):
             results = self.run_cache(pattern,advertiser,dates,sample[0],sample[1],results)
             logging.info("Results in cache: %s" % len(results))
         

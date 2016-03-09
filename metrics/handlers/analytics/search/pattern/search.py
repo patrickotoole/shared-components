@@ -36,6 +36,7 @@ class PatternSearchHandler(PatternSearchBase):
         start_date = self.get_argument("start_date", "")
         end_date = self.get_argument("end_date", "")
         num_days = self.get_argument("num_days", 20)
+        filter_id = self.get_argument("filter_id",False)
 
         date = self.get_argument("date", "")
         timeout = self.get_argument("timeout", 60)
@@ -48,4 +49,8 @@ class PatternSearchHandler(PatternSearchBase):
             pattern_terms = [p.split(",") for p in terms.split('|')]
 
         fn = self.TYPE.get(api_type,self.invalid)
-        fn(advertiser, pattern_terms, int(num_days), logic=logic, timeout=int(timeout))
+        if filter_id:
+            fn(advertiser, pattern_terms, int(num_days), logic=logic, timeout=int(timeout), filter_id=filter_id)
+        else:
+            fn(advertiser, pattern_terms, int(num_days), logic=logic, timeout=int(timeout))
+
