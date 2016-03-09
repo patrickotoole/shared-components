@@ -20,7 +20,7 @@ def process_model(uid_urls=None,domains=None,response=None,**kwargs):
 
     prepped = _domains.unstack(1).fillna(0)
     try:
-        if len(_domains) < 100: raise "Error: too few domains"
+        if len(_domains) < 50: raise Exception("Error: too few domains")
         clusters, similarity, uid_clusters = cluster(_domains, prepped)
 
         response['clusters'] = clusters
@@ -28,7 +28,8 @@ def process_model(uid_urls=None,domains=None,response=None,**kwargs):
         response['uid_clusters'] = uid_clusters
 
     except Exception as e:
-        logging.info("Issue building the model", e)
+        logging.info("Issue building the model")
+        logging.info(e)
         pass
 
     return response
