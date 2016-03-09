@@ -59,7 +59,7 @@ var check_missing_header = function(tableWrapper) {
   return table_categories
 }
 
-function draw(_d1, _d2, skip_missing) {
+function draw(_d1, _d2, _d3, skip_missing) {
 
   if ((this._wrapper.datum().length) &&
     (this._data !== this._wrapper.datum())) return this;
