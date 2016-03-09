@@ -24,6 +24,6 @@ class VisitorTransformHandler(GenericSearchBase):
         process = filter(lambda x: ("process_" + api_type) in x.__name__, self.DEFAULT_FUNCS)
 
         if len(process):
-            self.get_uids(advertiser,[[terms]],process=process)
+            self.get_uids(advertiser,[[terms]],20,process=process)
         else:
-            self.get_uids(advertiser,[[terms]],process=[])
+            self.get_uids(advertiser,[[terms]],20,process=[])

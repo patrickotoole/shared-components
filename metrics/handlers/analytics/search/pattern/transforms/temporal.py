@@ -13,19 +13,6 @@ def time_groups(delta):
         if delta < _min:
             return _min
 
-def get_idf(db,domain_set):
-    QUERY = """
-        SELECT p.*, c.parent_category_name 
-        FROM reporting.pop_domain_with_category p 
-        JOIN category c using (category_name) 
-        WHERE domain in (%(domains)s)
-    """
-
-    domain_set = [i.encode("utf-8") for i in domain_set]
-    domains = domains = "'" + "','".join(domain_set) + "'"
-
-    return db.select_dataframe(QUERY % {"domains":domains})
-
 
 def url_domain_intersection(urls,domains):
 
