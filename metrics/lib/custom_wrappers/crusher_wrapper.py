@@ -1,5 +1,6 @@
 import json
 import pandas
+from crusher_response_wrapper import CrusherResponseWrapper
 from link.wrappers import APIRequestWrapper
 from link.wrappers import APIResponseWrapper
 import requests
@@ -13,7 +14,7 @@ class CrusherAPIRequestWrapper(APIRequestWrapper):
                                                         base_url=base_url,
                                                         user=user,
                                                         password=password,
-                                                        response_wrapper=APIResponseWrapper)
+                                                        response_wrapper=CrusherResponseWrapper)
 
     def authenticate(self):
         data = {"username":self.user,"password":self.password}

@@ -18,7 +18,7 @@ def make_request(advertiser,pattern, base_url):
     crusher.password="admin"
     crusher.base_url = base_url
     crusher.authenticate()
-    urls = crusher.get('/crusher/domains_visitor_full?format=json&url_pattern={}'.format(pattern))
+    urls = crusher.get('/crusher/domains_visitor_full?format=json&url_pattern={}'.format(pattern), timeout=91)
     return urls.json
 
 def add_to_table(advertiser_name, pattern, url, sql):

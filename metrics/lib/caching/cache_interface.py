@@ -48,38 +48,38 @@ class CacheInterface:
         work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,0)
         logging.info("added to work queue %s for %s" %(segment["url_pattern"][0],advertiser))
 
-    def add_db_to_work_queue(self, segment, advertiser):
+    def add_db_to_work_queue(self, segment, advertiser, base_url):
         import lib.caching.action_dashboard_runner as adc_runner
         yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
         _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
         work = pickle.dumps((
                 adc_runner.runner,
-                [advertiser,segment["url_pattern"][0], _cache_yesterday,_cache_yesterday + "domaincache"]
+                [advertiser,segment["url_pattern"][0], base_url, _cache_yesterday,_cache_yesterday + "domaincache"]
                 ))
-        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,1)
+        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,0)
         logging.info("added to DB work queue %s for %s" %(segment["url_pattern"][0],advertiser)) 
 
-    def add_keyword_to_work_queue(self, segment, advertiser):
+    def add_keyword_to_work_queue(self, segment, advertiser, base_url):
         import lib.caching.keyword_cache as adc_runner
         yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
         _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
         work = pickle.dumps((
-                adc_runner.run_wrapper,
-                [advertiser,segment["url_pattern"][0], "http://beta.crusher.getrockerbox.com", _cache_yesterday,_cache_yesterday + "keywordcache"]
+                adc_runner.runner,
+                [advertiser,segment["url_pattern"][0], base_url, _cache_yesterday,_cache_yesterday + "keywordcache"]
                 ))
-        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,1)
-        logging.info("added to DB work queue %s for %s" %(segment["url_pattern"][0],advertiser))
+        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,0)
+        logging.info("added to keyword work queue %s for %s" %(segment["url_pattern"][0],advertiser))
 
-    def add_full_url_to_work_queue(self, segment, advertiser):
+    def add_full_url_to_work_queue(self, segment, advertiser, base_url):
         import lib.caching.full_url_cache as adc_runner
         yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
         _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
         work = pickle.dumps((
-                adc_runner.run_wrapper,
-                [advertiser,segment["url_pattern"][0], "http://beta.crusher.getrockerbox.com", _cache_yesterday,_cache_yesterday + "fullurlcache"]
+                adc_runner.runner,
+                [advertiser,segment["url_pattern"][0], base_url , _cache_yesterday,_cache_yesterday + "fullurlcache"]
                 ))
-        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,1)
-        logging.info("added to DB work queue %s for %s" %(segment["url_pattern"][0],advertiser))
+        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,0)
+        logging.info("added to full domain work queue %s for %s" %(segment["url_pattern"][0],advertiser))
 
     def add_uids_to_work_queue(self, segment, advertiser, base_url):
         import lib.caching.uids_only_cache as uids
@@ -109,7 +109,7 @@ def get_all_advertisers(db_con):
         advertiser_list.append([username,password])
     return advertiser_list
 
-def run_all(db, zk):
+def run_all(db, zk, base_url):
     advertiser_list = get_all_advertisers(db)
     for advert in advertiser_list:
         crusher_api = lnk.api.crusher
@@ -119,15 +119,15 @@ def run_all(db, zk):
         logging.info("received token for advertiser %s, token is %s" % (advert[0], crusher_api._token))
         advertiser_instance = ActionCache(advert[0], crusher_api, db,zk)
         advertiser_segments=advertiser_instance.get_segments()
-        advertiser_instance.seg_loop(advertiser_segments, advert[0])
+        advertiser_instance.seg_loop(advertiser_segments, advert[0], base_url)
 
-def run_advertiser(ac, advertiser_name):
+def run_advertiser(ac, advertiser_name, base_url):
 	s = ac.get_segments()
-	ac.seg_loop(s,advertiser_name)
+	ac.seg_loop(s,advertiser_name, base_url)
 
-def run_advertiser_segment(ac, advertiser, segment_name):
+def run_advertiser_segment(ac, advertiser, segment_name, base_url):
     segments = [segment_name]
-    ac.seg_loop(segments, advertiser)
+    ac.seg_loop(segments, advertiser, base_url)
 
 if __name__ == "__main__":
     from lib.report.utils.loggingutils import basicConfig
@@ -141,6 +141,7 @@ if __name__ == "__main__":
     define("username",  default="")
     define("password", default="")
     define("segment", default=False)
+    define("base_url", default="http://beta.crusher.getrockerbox.com")
 
     basicConfig(options={})
     
@@ -150,18 +151,18 @@ if __name__ == "__main__":
     if options.chronos ==True:
         zookeeper =KazooClient(hosts="zk1:2181")
         zookeeper.start()
-        run_all(lnk.dbs.rockerbox, zookeeper)
+        run_all(lnk.dbs.rockerbox, zookeeper, options.base_url)
     else:
         if not options.segment:
             zookeeper =KazooClient(hosts="zk1:2181")
             zookeeper.start()
             ac = ActionCache(options.username, options.password, lnk.dbs.rockerbox, zookeeper)
-            run_advertiser(ac, options.username)
+            run_advertiser(ac, options.username, options.base_url)
         else:
             zookeeper =KazooClient(hosts="zk1:2181")
             zookeeper.start()
             ac = ActionCache(options.username, options.password, lnk.dbs.rockerbox,zookeeper)
-            run_advertiser_segment(ac, options.segment)
+            run_advertiser_segment(ac, options.segment, options.base_url)
     
     if options.remove_old == True:
         lnk.dbs.rockerbox.excute(SQL_REMOVE_OLD % options.remove_seconds)

@@ -18,7 +18,7 @@ class AdvertiserActionRunner(BaseRunner):
 
     def make_request(self,crusher, pattern):
         url = "/crusher/v1/visitor/domains?format=json&url_pattern=%s" % pattern
-        resp = crusher.get(url)
+        resp = crusher.get(url, timeout=91)
         return resp.json['domains']
 
     def validation(self, action_name, crusher):
@@ -59,10 +59,9 @@ class AdvertiserActionRunner(BaseRunner):
                 try:
                     to_insert['domain'] = to_insert['domain'].map(lambda x : x.encode('utf-8'))
                     _sql._write_mysql(to_insert, table_name, list(to_insert.columns), db, keys)
-                    print "inserted %s records for advertiser username (includes a_) %s" % (len(to_insert), advertiser)
+                    logging.info("inserted %s records for advertiser username (includes a_) %s" % (len(to_insert), advertiser))
                 except:
                     logging.info("error with df for %s and %s" % (segment_name, advertiser))
-                logging.info("inserted %s records for advertiser  %s" % (len(to_insert), advertiser))
 
     def pre_process(self, advertiser, segment_name, base_url):
         crusher = self.get_crusher_obj(advertiser, base_url)
