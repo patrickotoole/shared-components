@@ -24,12 +24,11 @@ from base_visitors import VisitorBase
 class PatternSearchBase(TimeseriesBase,VisitorBase):
 
     @defer.inlineCallbacks
-    def get_uid_domains(self, advertiser, pattern_terms, date_clause, logic="or",timeout=60, numdays=5):
+    def get_uid_domains(self, advertiser, pattern_terms, date_clause, process=False, filter_id=False, logic="or",timeout=60, numdays=5):
         self.set_header("Access-Control-Allow-Origin","null")
         self.set_header("Access-Control-Allow-Credentials","true")
 
         PARAMS = "uid"
-        indices = [PARAMS]
 
         response = self.default_response(pattern_terms,logic)
         response['summary']['num_users'] = 0
@@ -45,6 +44,10 @@ class PatternSearchBase(TimeseriesBase,VisitorBase):
 
         defs = [self.defer_get_uid_domains(advertiser,pattern_terms[0][0],uids[:10000],date_clause)]
 
+        # need uids, domains
+
+        kwargs = yield 
+
 
         dl = defer.DeferredList(defs)
         dom = yield dl
@@ -57,11 +60,11 @@ class PatternSearchBase(TimeseriesBase,VisitorBase):
         response['summary']['num_users_with_domains'] = len(set(_domains.reset_index().uid))
 
 
-
         prepped = _domains.unstack(1).fillna(0)
         try:
             if len(_domains) < 100: raise "Error: too few domains"
-            clusters, similarity, uid_clusters = yield model.cluster(_domains, prepped)
+            
+            clusters, similarity, uid_clusters = yield threads.deferToThread(model.cluster,*[_domains, prepped])
 
             response['clusters'] = clusters
             response['similarity'] = similarity
@@ -74,7 +77,6 @@ class PatternSearchBase(TimeseriesBase,VisitorBase):
             pass
 
         x = yield self.write_json_deferred(response)
-
 
 
     @defer.inlineCallbacks

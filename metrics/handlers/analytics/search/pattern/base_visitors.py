@@ -9,9 +9,10 @@ from transforms.sessions import *
 from transforms.timing import *
 from transforms.before_and_after import *
 from transforms.domain_intersection import *
+from model import process_model
 from generic import GenericSearchBase
 
-DEFAULT_FUNCS = [process_before_and_after, process_hourly, process_sessions, process_domain_intersection]
+DEFAULT_FUNCS = [process_before_and_after, process_hourly, process_sessions, process_domain_intersection, process_model]
 
 
 class VisitorBase(GenericSearchBase):

@@ -2,9 +2,9 @@ import tornado.web
 import pandas
 import logging
 
-from ...search.pattern.generic import GenericSearchBase
+from ...search.pattern.base_visitors import VisitorBase
 
-class VisitorTransformHandler(GenericSearchBase):
+class VisitorTransformHandler(VisitorBase):
 
     def initialize(self, db=None, cassandra=None, zookeeper=None, **kwargs):
         self.logging = logging
