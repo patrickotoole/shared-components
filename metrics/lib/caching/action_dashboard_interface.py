@@ -25,16 +25,16 @@ class ActionCache:
         import lib.caching.action_dashboard_runner as adc_runner
         adc_runner.runner(advertiser,segment, base_url, connectors=connectors)
 
-    def add_db_to_work_queue(self, segment, advertiser):
+    def add_db_to_work_queue(self, advertiser, segment, base_url):
         import lib.caching.action_dashboard_runner as adc_runner
         yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
         _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
         work = pickle.dumps((
                 adc_runner.runner,
-                [advertiser,segment, _cache_yesterday,_cache_yesterday + "domaincache"]
+                [advertiser,segment, base_url, _cache_yesterday,_cache_yesterday + "domaincache"]
                 ))
         work_queue.SingleQueue(self.connectors['zk'],"python_queue").put(work,1)
-        logging.info("added to DB work queue %s for %s" %(segment["url_pattern"][0],advertiser)) 
+        logging.info("added to DB work queue %s for %s" %(segment,advertiser)) 
 
 
 if __name__ == "__main__":
@@ -60,5 +60,5 @@ if __name__ == "__main__":
     if options.run_local:
         ckw.run_local(options.advertiser, options.pattern,options.base_url, connectors)
     else:
-        ckw.add_db_to_work_queue(options.advertiser, options.pattern)
+        ckw.add_db_to_work_queue(options.advertiser, options.pattern, options.base_url)
 

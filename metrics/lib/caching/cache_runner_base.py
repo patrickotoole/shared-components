@@ -12,7 +12,7 @@ class BaseRunner():
         self.connectors =connectors
 
     @staticmethod
-    def get_connectors(self):
+    def get_connectors():
         from link import lnk
         return {
             "db": lnk.dbs.rockerbox,

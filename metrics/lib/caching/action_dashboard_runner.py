@@ -17,7 +17,7 @@ class AdvertiserActionRunner(BaseRunner):
     def make_request(self,crusher, pattern):
         url = "/crusher/v1/visitor/domains?format=json&url_pattern=%s" % pattern
         resp = crusher.get(url)
-        return resp.json
+        return resp.json['domains']
 
     def validation(self, action_name, crusher):
         valid = False
@@ -38,7 +38,6 @@ class AdvertiserActionRunner(BaseRunner):
 
         batch_num = int(len(df) / 50)+1
         for batch in range(0, batch_num):
-            print current_datetime
             if batch==0:
                 to_insert = df.ix[0:50]
                 to_insert['update_date'] = [current_datetime] * len(to_insert)
@@ -55,13 +54,12 @@ class AdvertiserActionRunner(BaseRunner):
                 to_insert['advertiser'] = [advertiser] * len(to_insert)
             if len(to_insert)>0:
                 try:
-                    to_insert['url'] = to_insert['url'].map(lambda x : x.encode('utf-8'))
-                    to_insert.columns = [u'count', u'domain', u'update_date', u'action_name', u'action_id', u'url_pattern', u'advertiser' ]
+                    to_insert['domain'] = to_insert['domain'].map(lambda x : x.encode('utf-8'))
                     _sql._write_mysql(to_insert, table_name, list(to_insert.columns), db, keys)
                     print "inserted %s records for advertiser username (includes a_) %s" % (len(to_insert), advertiser)
                 except:
-                    logging.info("error with df %s" % str(to_insert))
-                logging.info("inserted %s records for advertiser username (includes a_) %s" % (len(to_insert), advertiser))
+                    logging.info("error with df for %s and %s" % (segment_name, advertiser))
+                logging.info("inserted %s records for advertiser  %s" % (len(to_insert), advertiser))
 
     def pre_process(self, advertiser, segment_name, base_url):
         crusher = self.get_crusher_obj(advertiser, base_url)
@@ -89,7 +87,7 @@ def runner(advertiser,pattern, base_url, cache_date="", indentifiers="test", con
     db = connectors['db']
     zk = connectors['zk']
     data = AAR.pre_process(advertiser, pattern, base_url)
-    
+
     executed = False
     if len(data)>0:
         executed = AAR.execute(data, advertiser, pattern, db)
