@@ -23,10 +23,12 @@ class VisitorBase(GenericSearchBase):
     @defer.inlineCallbacks
     def process_uids(self,funcs=DEFAULT_FUNCS,**kwargs):
 
+        logging.info("Started process_uids...")
         _dl = [threads.deferToThread(fn,*[],**kwargs) for fn in funcs]
         dl = defer.DeferredList(_dl)
         responses = yield dl
 
+        logging.info("Finished process_uids.")
 
         logging.info("Started transform...")
         response = kwargs.get("response")

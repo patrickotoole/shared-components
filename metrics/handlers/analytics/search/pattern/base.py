@@ -46,8 +46,6 @@ class PatternSearchBase(TimeseriesBase,VisitorBase):
 
         # need uids, domains
 
-        kwargs = yield 
-
 
         dl = defer.DeferredList(defs)
         dom = yield dl
@@ -61,6 +59,7 @@ class PatternSearchBase(TimeseriesBase,VisitorBase):
 
 
         prepped = _domains.unstack(1).fillna(0)
+
         try:
             if len(_domains) < 100: raise "Error: too few domains"
             

@@ -532,6 +532,12 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
       .header("Content-Type", "application/json")
       .get(function(err, rawData) {
         var dd = JSON.parse(rawData.response)
+
+        action.clusters = dd.clusters
+        action.uid_clusters = dd.uid_clusters
+        action.similarity = dd.similarity
+
+
         action.before = {
           categories: dd.before_categories,
           domains: dd.before_domains

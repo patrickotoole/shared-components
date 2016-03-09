@@ -19,6 +19,7 @@ def process_model(uid_urls=None,domains=None,response=None,**kwargs):
     response['summary']['num_users_with_domains'] = len(set(_domains.reset_index().uid))
 
     prepped = _domains.unstack(1).fillna(0)
+    
     try:
         if len(_domains) < 50: raise Exception("Error: too few domains")
         clusters, similarity, uid_clusters = cluster(_domains, prepped)
@@ -71,7 +72,9 @@ def summarize_model(prepped,cluster_domains):
     return cluster_user_stats
 
 def cluster(_domains, prepped):
-    _unique_uids = _domains.reset_index().uid.unique()
+
+
+    _unique_uids = list(_domains.reset_index().uid.unique())
 
     _uids = list(set(_unique_uids[:250] + _unique_uids[-250:]))
     _domains = _domains.ix[_uids]
