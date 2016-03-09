@@ -7,15 +7,18 @@
   function render_onsite(vendor_data_columns) {
     var vendor_onsite_column = d3_updateable(vendor_data_columns, '.vendor-onsite-column', 'div')
       .classed('vendor-onsite-column col-lg-4 col-md-6', true)
-      .html('<h3 style="margin-bottom: 10px;">On-site</h3>');
+      .html('<h3 style="margin-bottom: 10px;">On-site</h3>')
+      .style('display', 'none');
 
     var vendor_sessions_per_day = d3_updateable(vendor_onsite_column, '.vendor-sessions-per-day', 'div')
       .classed('vendor-sessions-per-day col-lg-6 col-md-6', true)
-      .html('<h4># of sessions</h4>');
+      .html('<h4># of sessions</h4>')
+      .style('display', 'none');
 
     var vendor_visits_per_user = d3_updateable(vendor_onsite_column, '.vendor-visits-per-user', 'div')
       .classed('vendor-visits-per-user col-lg-6 col-md-6', true)
-      .html('<h4># of views per user</h4>');
+      .html('<h4># of views per user</h4>')
+      .style('display', 'none');
 
     var slice_segments = function(items) {
       var items_chunk_size = Math.ceil(items.length / 10);
@@ -40,6 +43,9 @@
 
     vendor_visits_per_user.each(function(row) {
       if (row.onsite != undefined) {
+        d3.select(this).style('display', 'block');
+        d3.select(d3.select(this).node().parentNode).style('display', 'block');
+
         var views = slice_segments(row.onsite.response.visits);
 
         views.map(function(x, i) {
@@ -69,6 +75,9 @@
 
     vendor_sessions_per_day.each(function(row) {
       if (row.onsite != undefined) {
+        d3.select(this).style('display', 'block');
+        d3.select(d3.select(this).node().parentNode).style('display', 'block');
+
         var sessions = slice_segments(row.onsite.response.sessions);
         sessions.map(function(x, i) {
           x.key = i;
