@@ -19,6 +19,7 @@ def sumResults(results_list):
 def buildIter(AC,advertiser):
     def iter_vendors(series):
         logging.info("making request for %s" % series.url_patterns)
+        import ipdb; ipdb.set_trace()
         if len(series.url_patterns[0])>1:
             rr = requests.get(PATTERN_URL.format(series.url_patterns[0]), cookies=AC.cookie)
         else:
@@ -28,7 +29,7 @@ def buildIter(AC,advertiser):
         existing_urls ={"urls":[]}
         exists = requests.get(INSERT_URL, cookies=AC.cookie)
         try:
-            for e in exists.json()['response']:
+            for e in exists.json['response']:
                 existing_urls['urls'].append(e["action_name"])
             if results_count>0 and series.vendor not in existing_urls["urls"]:
                 json_obj["action_name"] = series.url_patterns
@@ -63,15 +64,21 @@ if __name__ == "__main__":
         vendors = sql.select_dataframe(VENDOR_QUERY)
         advertisers = adc.get_all_advertisers(sql)
         for advertiser in advertisers:
-            AC = adc.ActionCache(advertiser[0], advertiser[1],sql, zookeeper)
-            AC.auth()
+            crusher = lnk.api.crusher
+            crusher.base_url = "http://beta.crusher.getrockerbox.com"
+            crusher.user = "a_{}".format(advertiser[0])
+            crusher.password = advertiser[1]
+            crusher.authenticate()
             logging.info("populating action table for vendors for advertiser %s" % advertiser)
             vendors.T.apply(buildIter(AC,advertiser))
     else:
         sql = lnk.dbs.rockerbox
         vendors = sql.select_dataframe(VENDOR_QUERY)
-        AC = adc.ActionCache(options.username, options.password,sql,zookeeper)
-        AC.auth()
+        crusher = lnk.api.crusher
+        crusher.user = options.username
+        crusher.base_url = "http://beta.crusher.getrockerbox.com"
+        crusher.password = options.password
+        crusher.authenticate()
         advertiser = options.username.replace("a_","")
         logging.info("populating action table for vendors for advertiser %s" % advertiser)
         vendors.T.apply(buildIter(AC,advertiser))

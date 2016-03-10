@@ -27,10 +27,10 @@ class VendorTests(unittest.TestCase):
         df.T.apply(self.instance.applyRefer)
         self.assertEquals(self.instance.data['test'][0], "MySource")
 
-    @mock.patch('requests.get', mock.MagicMock(side_effect = lambda x,cookies: mock_response))
+    #@mock.patch('requests.get', mock.MagicMock(side_effect = lambda x,cookies: mock_response))
     def test_iter_vendors(self):
-        AC = adc.ActionCache("username", "password", mock.MagicMock(), mock.MagicMock())
-        AC.cookie = {}
+        crusher = mock.MagicMock()
+        crusher.get.side_effect = ""
         df2 = pandas.DataFrame(DA)
-        df2.T.apply(vdb.buildIter(AC,"test"))
+        df2.T.apply(vdb.buildIter(crusher,"test"))
         self.assertEquals(len(df2),1)
