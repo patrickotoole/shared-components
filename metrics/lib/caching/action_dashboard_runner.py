@@ -13,6 +13,7 @@ class AdvertiserActionRunner(BaseRunner):
     def __init__(self, connectors):
         self.connectors =connectors
         self.validation_data = False
+        self.sql_query = _sql._write_mysql
 
     def make_request(self,crusher, pattern):
         url = "/crusher/v1/visitor/domains?format=json&url_pattern=%s" % pattern
