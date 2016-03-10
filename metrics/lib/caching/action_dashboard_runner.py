@@ -33,20 +33,21 @@ class AdvertiserActionRunner(BaseRunner):
         return valid
 
     def insert(self, df, advertiser, segment_name, db):
+        df_filtered = df.filter(['domain', 'count'])
         table_name ="action_dashboard_cache"
         keys = ['advertiser', 'action_id', 'domain']
 
-        batch_num = int(len(df) / 50)+1
+        batch_num = int(len(df_filtered) / 50)+1
         for batch in range(0, batch_num):
             if batch==0:
-                to_insert = df.ix[0:50]
+                to_insert = df_filtered.ix[0:50]
                 to_insert['update_date'] = [current_datetime] * len(to_insert)
                 to_insert['action_name'] = [segment_name] * len(to_insert)
                 to_insert['action_id'] = [self.action_id] * len(to_insert)
                 to_insert['url_pattern'] = [self.url_pattern] * len(to_insert)
                 to_insert['advertiser'] = [advertiser] * len(to_insert)
             else:
-                to_insert = df.ix[batch*50+1:(batch+1)*50]
+                to_insert = df_filtered.ix[batch*50+1:(batch+1)*50]
                 to_insert['update_date'] = [current_datetime] * len(to_insert)
                 to_insert['action_name'] = [segment_name] * len(to_insert)
                 to_insert['action_id'] = [self.action_id] * len(to_insert)
