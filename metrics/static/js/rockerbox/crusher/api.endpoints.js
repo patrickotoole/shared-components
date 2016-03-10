@@ -54,10 +54,9 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
     d3.json(URL, function(dd) {
 
       if (data.has_filter) {
-        debugger
-        data.domains_full = dd.domains_full
+        data.domains_full = dd
       } else {
-        data.domains = dd.domains[0].values
+        data.domains_full = dd
       }
 
       deferred_cb(null, cb.bind(false, dd))
@@ -73,6 +72,11 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
     d3.json(URL, function(dd) {
       
+      if (data.has_filter) {
+        data.domains = dd.domains
+      } else {
+        data.domains = dd.domains[0].values
+      }
 
       deferred_cb(null, cb.bind(false, dd))
     })
