@@ -17,7 +17,7 @@ SQL_REMOVE_OLD = "DELETE FROM action_dashboard_cache where update_time < (UNIX_T
 
 current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-class ActionCache:
+class CacheInterface:
     def __init__(self, advertiser, crusher, db, zookeeper=None):
         self.advertiser = advertiser
         self.db = db
@@ -81,12 +81,24 @@ class ActionCache:
         work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,1)
         logging.info("added to DB work queue %s for %s" %(segment["url_pattern"][0],advertiser))
 
-    def seg_loop(self, segments, advertiser):
+    def add_uids_to_work_queue(self, segment, advertiser, base_url):
+        import lib.caching.uids_only_cache as uids
+        yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
+        _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
+        work = pickle.dumps((
+                uids.runner,
+                [advertiser,segment["url_pattern"][0], base_url , _cache_yesterday,_cache_yesterday + "uids"]
+                ))
+        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,0)
+        logging.info("added uids work queue %s for %s" %(segment["url_pattern"][0],advertiser))
+
+    def seg_loop(self, segments, advertiser, base_url):
         for seg in segments:
-            self.add_db_to_work_queue(seg, advertiser)
+            self.add_db_to_work_queue(seg, advertiser, base_url)
             self.add_to_work_queue(seg, advertiser)
-            self.add_full_url_to_work_queue(seg, advertiser)
-            self.add_keyword_to_work_queue(seg, advertiser)
+            self.add_full_url_to_work_queue(seg, advertiser, base_url)
+            self.add_keyword_to_work_queue(seg, advertiser, base_url)
+            self.add_uids_to_work_queue(seg, advertiser, base_url)
 
 def get_all_advertisers(db_con):
     ad_df = db_con.select_dataframe(SQL_QUERY)

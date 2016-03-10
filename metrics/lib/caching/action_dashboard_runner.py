@@ -12,6 +12,7 @@ class AdvertiserActionRunner(BaseRunner):
 
     def __init__(self, connectors):
         self.connectors =connectors
+        self.sql_query = _sql._write_mysql
         self.validation_data = False
         self.sql_query = _sql._write_mysql
 
