@@ -8,7 +8,13 @@ VENDOR_QUERY = "select url_patterns, vendor from vendor_patterns where medium is
 json_obj = {"action_name": "","url_pattern": "", "action_type":"vendor", "operator":"or"}
 
 INSERT_URL = "http://beta.crusher.getrockerbox.com/crusher/funnel/action?format=json"
-PATTERN_URL = "http://beta.crusher.getrockerbox.com/crusher/pattern_search/timeseries?search={}&num_days=7"
+PATTERN_URL = "http://beta.crusher.getrockerbox.com/crusher/pattern_search/timeseries_only?search={}&num_days=7"
+
+def sumResults(results_list):
+    sum_list = []
+    for i in results_list:
+        sum_list.append(i['visits'])
+    return sum(sum_list)
 
 def buildIter(AC,advertiser):
     def iter_vendors(series):
@@ -16,14 +22,15 @@ def buildIter(AC,advertiser):
         if len(series.url_patterns[0])>1:
             rr = requests.get(PATTERN_URL.format(series.url_patterns[0]), cookies=AC.cookie)
         else:
-            rr = requests.get(PATTERN_URL.format(series.url_patterns), cookies=AC.cookie)
+            rr = crusher.get(PATTERN_URL.format(series.url_patterns))
+        results_count = sumResults(rr['results'])
         logging.info("received data for advertiser %s and pattern %s" % (advertiser, series.url_patterns))
         existing_urls ={"urls":[]}
         exists = requests.get(INSERT_URL, cookies=AC.cookie)
         try:
             for e in exists.json()['response']:
                 existing_urls['urls'].append(e["action_name"])
-            if len(rr.json()['results'][0]['domains'])>0 and series.vendor not in existing_urls["urls"]:
+            if results_count>0 and series.vendor not in existing_urls["urls"]:
                 json_obj["action_name"] = series.url_patterns
                 json_obj["url_pattern"] = [series.url_patterns]
                 r = requests.post(INSERT_URL, data = json.dumps(json_obj), cookies=AC.cookie)
