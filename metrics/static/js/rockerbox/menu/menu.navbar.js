@@ -25,6 +25,23 @@ RB.menu.navbar = (function(navbar) {
       var logo_wrapper = d3_updateable(target,".logo","a")
         .classed("logo",true)
         .datum({"push_state":"/crusher/home","name":"Home"})
+
+      d3_updateable(logo_wrapper,".logo-float","div")
+        .classed("logo-float pull-right",true)
+        .style("width","0px")
+        .style("margin-left","-35px")
+        .style("margin-right","35px")
+
+
+      window.HW_config = {
+        selector: ".logo-float", // CSS selector where to inject the badge
+        account: "o7LZqy" // your account ID
+      };
+
+      d3_updateable(d3.select("head"),".widget-script","script")
+        .classed("widget-script",true)
+        .attr("type","text/javascript")
+        .attr("src","https://cdn.headwayapp.co/widget.js")
         
       return d3_updateable(logo_wrapper,"img","img") 
         .attr("src",LOGO_URL).style("max-height","70px")
