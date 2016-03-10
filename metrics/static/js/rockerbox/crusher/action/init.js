@@ -302,7 +302,7 @@ RB.component.export(RB.crusher.ui.action.full_url, RB.crusher.ui.action)
 
 RB.crusher.ui.action.top_keywords = (function(top_keywords,action,crusher) {
   top_keywords.NAME = "action.top_keywords"
-  top_keywords.SUBSCRIBE = ["action_initialized","actionTimeseries"]
+  top_keywords.SUBSCRIBE = ["action_initialized","actionTimeseriesOnly"]
   top_keywords.PUBLISH = []
   top_keywords.EVENTS = []
   top_keywords.subscription = function(action) {
