@@ -6,3 +6,4 @@ from visitor.cache_handler import *
 from visitor.full_cache_handler import *
 from visitor.transform_handler import *
 from visitor.keyword_handler import *
+from visitor.keyword_cache_handler import *
