@@ -46,11 +46,10 @@ class TimeseriesBase(GenericSearchBase):
             
 
         stats = stats_df
-
+        stats_filtered = stats.fillna(0)
         response = self.default_response(pattern_terms,"filtered",no_results=True)
-        response = self.response_summary(response,stats)
-        response = self.response_timeseries(response,stats)
-
+        response = self.response_summary(response,stats_filtered)
+        response = self.response_timeseries(response,stats_filtered)
         self.write_json(response)
 
 
