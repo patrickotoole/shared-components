@@ -46,7 +46,20 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
   })
 
   endpoints.cached_visitor_domains = api.helpers.genericQueuedAPIWithData(function(data, cb, deferred_cb) {
-    d3.json("/crusher/v1/visitor/domains_full/cache?format=json&top=500&url_pattern=" + data['url_pattern'][0], function(dd) {
+
+    var URL = "/crusher/v1/visitor/domains_full/cache?format=json&url_pattern=" + data['url_pattern'][0]
+
+    if (data.has_filter) URL = "/crusher/v1/visitor/domains_full?format=json&url_pattern=" + data['url_pattern'][0] + "&filter_id=" + data.action_id
+
+    d3.json(URL, function(dd) {
+
+      if (data.has_filter) {
+        debugger
+        data.domains_full = dd.domains_full
+      } else {
+        data.domains = dd.domains[0].values
+      }
+
       deferred_cb(null, cb.bind(false, dd))
     })
   })
@@ -54,8 +67,12 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
   endpoints.cached_visitor_domains_only = api.helpers.genericQueuedAPIWithData(function(data, cb, deferred_cb) {
     if (!!data.domains) deferred_cb(null, cb.bind(false, data))
 
-    d3.json("/crusher/v1/visitor/domains/cache?format=json&url_pattern=" + data['url_pattern'][0], function(dd) {
-      data.domains = dd.domains[0].values
+    var URL = "/crusher/v1/visitor/domains/cache?format=json&url_pattern=" + data['url_pattern'][0]
+
+    if (data.has_filter) URL = "/crusher/v1/visitor/domains?format=json&url_pattern=" + data['url_pattern'][0] + "&filter_id=" + data.action_id
+
+    d3.json(URL, function(dd) {
+      
 
       deferred_cb(null, cb.bind(false, dd))
     })
@@ -528,10 +545,16 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
       deferred_cb(null, cb.bind(false, action))
       return
     }
-    d3.xhr(api.URL.actionBeforeAndAfter + action.action_string)
+    d3.xhr(api.URL.actionBeforeAndAfter + action.action_string + (action.has_filter ? "&filter_id=" + action.action_id: "") )
       .header("Content-Type", "application/json")
       .get(function(err, rawData) {
         var dd = JSON.parse(rawData.response)
+
+        action.clusters = dd.clusters
+        action.uid_clusters = dd.uid_clusters
+        action.similarity = dd.similarity
+
+
         action.before = {
           categories: dd.before_categories,
           domains: dd.before_domains
@@ -567,7 +590,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
       deferred_cb(null, cb.bind(false, action))
       return
     }
-    d3.xhr(api.URL.actionClusters + action.action_string)
+    d3.xhr(api.URL.actionClusters + action.action_string+ (action.has_filter ? "&filter_id=" + action.action_id: ""))
       .header("Content-Type", "application/json")
       .get(function(err, rawData) {
         var dd = JSON.parse(rawData.response)
@@ -649,7 +672,9 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
   endpoints.actionTimeseriesOnly = api.helpers.genericQueuedAPIWithData(function(action, cb, deferred_cb) {
     console.log('list_items_data', action);
-    var endpoint_url = '/crusher/pattern_search/timeseries_only?search=' + action.url_pattern[0];
+    var endpoint_url = '/crusher/pattern_search/timeseries_only?'
+    if (action.has_filter) endpoint_url += "filter_id=" + action.action_id + "&"
+    endpoint_url += 'search=' + action.url_pattern[0];
 
     if (action.visits_data) {
       deferred_cb(null, cb.bind(false, action))

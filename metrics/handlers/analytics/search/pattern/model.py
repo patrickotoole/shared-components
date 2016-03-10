@@ -4,6 +4,38 @@ import logging
 from lib.helpers import decorators
 from twisted.internet import defer
 
+def process_model(uid_urls=None,domains=None,response=None,**kwargs):
+
+    uids = list(set(uid_urls.uid.values))
+    response['results'] = uids
+    response['summary']['num_users'] = len(response['results'])
+
+    _domains = domains.groupby(["uid","domain"])['timestamp'].count()
+    _domains.name = "exists"
+
+    response['summary']['num_domains'] = len(set(_domains.reset_index().domain))
+    response['domains'] = list(_domains.reset_index().domain)
+    response['summary']['num_points'] = len(_domains.reset_index().domain)
+    response['summary']['num_users_with_domains'] = len(set(_domains.reset_index().uid))
+
+    prepped = _domains.unstack(1).fillna(0)
+    
+    try:
+        if len(_domains) < 50: raise Exception("Error: too few domains")
+        clusters, similarity, uid_clusters = cluster(_domains, prepped)
+
+        response['clusters'] = clusters
+        response['similarity'] = similarity
+        response['uid_clusters'] = uid_clusters
+
+    except Exception as e:
+        logging.info("Issue building the model")
+        logging.info(e)
+        pass
+
+    return response
+
+
 def build_sentences(df,group,column):
     _df = df.reset_index()
 
@@ -39,9 +71,13 @@ def summarize_model(prepped,cluster_domains):
     cluster_user_stats = sorted(cluster_user_stats,key=lambda x: x['users_per_domain'])
     return cluster_user_stats
 
-@decorators.deferred
 def cluster(_domains, prepped):
 
+
+    _unique_uids = list(_domains.reset_index().uid.unique())
+
+    _uids = list(set(_unique_uids[:250] + _unique_uids[-250:]))
+    _domains = _domains.ix[_uids]
     import sklearn.cluster
 
     from gensim.models import Word2Vec
@@ -80,7 +116,6 @@ def cluster(_domains, prepped):
         return pandas.Series(l,index=["cluster","value"])
 
     cluster_eval = _domains.unstack(1).T.apply(cluster).T
-
 
     j = 0
     _nodes = []

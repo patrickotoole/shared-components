@@ -214,7 +214,7 @@ RB.crusher.ui.action.domains = (function(domains,action,crusher) {
 
   domains.NAME = "action.domains"
   domains.SUBSCRIBE = ["action_initialized","cached_visitor_domains_only"]
-  domains.PUBLISH = ["actionClusters","actionBeforeAndAfter"]
+  domains.PUBLISH = ["actionBeforeAndAfter"]
   domains.EVENTS = []
 
   domains.subscription = function(data) {
@@ -322,6 +322,13 @@ RB.crusher.ui.action.behavior = (function(behavior,action,crusher) {
     crusher.ui.action.show_behavior(target)
     crusher.ui.action.show_timing(target)
       },1)
+
+    var target = d3.selectAll(".action-view-wrapper")
+    try {
+      crusher.ui.action.show_clusters(target)
+    } catch(e) {
+      console.log("Failed to load clusters for action", e)
+    }
 
 
     return data

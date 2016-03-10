@@ -50,7 +50,7 @@ class PatternSearchHandler(PatternSearchBase):
 
         fn = self.TYPE.get(api_type,self.invalid)
         if filter_id:
-            fn(advertiser, pattern_terms, int(num_days), logic=logic, timeout=int(timeout), filter_id=filter_id)
+            fn(advertiser, pattern_terms, int(num_days), logic=logic, timeout=int(timeout), filter_id=filter_id, process=False)
         else:
-            fn(advertiser, pattern_terms, int(num_days), logic=logic, timeout=int(timeout))
+            fn(advertiser, pattern_terms, int(num_days), logic=logic, timeout=int(timeout), process=False)
 

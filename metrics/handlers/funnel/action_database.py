@@ -12,6 +12,10 @@ GET_PATTERNS = """
 SELECT *  from action_patterns where %(where)s
 """
 
+HAS_FILTER = """
+SELECT distinct action_id, 1 has_filter from action_filters where %(where)s
+"""
+
 INSERT_ACTION = """
 INSERT INTO action
     (start_date, end_date, operator, pixel_source_name, action_name, action_type)
@@ -59,12 +63,19 @@ class ActionDatabase(object):
         grouped = patterns.groupby("action_id").agg(lambda x: x.T.to_dict().values())
         return grouped
 
+    def has_filter(self,ids):
+        where = "action_id in (%s)" % ",".join(map(str,ids))
+        patterns = self.db.select_dataframe(HAS_FILTER % {"where":where}).set_index("action_id")
+        return patterns
+
     def get_all(self):
         # this is no longer a thing...
         where = "1=1"
         result = self.db.select_dataframe(GET % {"where":where})
         patterns = self.get_patterns(result.action_id.tolist())
-        joined = result.set_index("action_id").join(patterns)
+        filters = self.has_filter(result.action_id.tolist())
+
+        joined = result.set_index("action_id").join(patterns).join(filters)
 
         return joined.reset_index()
 
@@ -84,7 +95,14 @@ class ActionDatabase(object):
             result = self.db.select_dataframe(GET % {"where":where})
             patterns = self.get_patterns(result.action_id.tolist())
             joined = result.set_index("action_id").join(patterns)
+            try:
+                filters = self.has_filter(result.action_id.tolist())
+                joined = joined.join(filters)
+            except:
+                pass
 
+
+            
             return joined.reset_index()
         except:
             return pandas.DataFrame()

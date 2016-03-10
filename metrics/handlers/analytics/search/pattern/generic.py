@@ -17,78 +17,64 @@ from response import PatternSearchResponse
 from sample import PatternSearchSample
 from ...visit_events import VisitEventBase
 
-from transforms.temporal import *
-from transforms.sessions import *
-from transforms.timing import *
-from transforms.before_and_after import *
-from transforms.domain_intersection import *
-
-DEFAULT_FUNCS = [process_before_and_after, process_hourly, process_sessions, process_domain_intersection]
+from lib.aho import AhoCorasick
 
 
-class GenericSearchBase(VisitDomainBase,PatternSearchSample,PatternStatsBase,PatternSearchResponse,VisitEventBase):
+class FilterBase:
 
-    DEFAULT_FUNCS = DEFAULT_FUNCS
+    def get_filter(self,filter_id):
+        Q = "SELECT * FROM action_filters WHERE action_id = %s and active = 1 and deleted = 0"
+        return self.db.select_dataframe(Q % filter_id) 
+
+    @decorators.deferred
+    def get_filter_checker(self,filter_id):
+        df = self.get_filter(filter_id)
+        checker = AhoCorasick(list(df.filter_pattern)).has_match
+
+        logging.info("constructed aho")
+        return checker
+
+    def run_filter_url(self,aho_filter,urls):
+        truth_dict = { i: aho_filter(i.split("?")[1]) for i in urls }
+        logging.info("ran aho filter on %s domains" % len(urls))
+        return truth_dict
+
 
     @defer.inlineCallbacks
-    def get_users_sampled(self,advertiser,term,dates,num_days):
-        sample_args = [term,"",advertiser,dates,num_days]
+    def filter_and_build(self,full_df,dates,filter_id):
+        aho_filter = yield self.get_filter_checker(filter_id)
+        urls = set(full_df.url)
+        value = self.run_filter_url(aho_filter,urls)
 
-        df, stats_df, url_stats_df = yield self.sample_stats_onsite(*sample_args)
+        df = full_df[full_df.url.map(lambda x: value[x] )]
+        to_return = self.raw_to_stats(df,dates)
 
-        uids = list(set(df.uid.values))[:5000]
-        defer.returnValue([uids])
-
-    def urls_to_actions(self,patterns,urls):
-
-        def check(url):
-            def _run(x):
-                return x in url
-            return _run
-
-        p = patterns.url_pattern
-        exist = { url: list(p[p.map(check(url))]) for url in urls }
-
-        url_to_action = pandas.DataFrame(pandas.Series(exist),columns=["actions"])
-        url_to_action.index.name = "url"
-
-        return url_to_action
-    
-    def get_idf(self,domains):
-        return get_idf(self.db,domains)
-
-    def get_pixels(self):
-        Q = "SELECT * from action_with_patterns where pixel_source_name = '%s'"
-        pixel_df = self.db.select_dataframe(Q % self.current_advertiser_name)
-        return pixel_df
-      
-    @defer.inlineCallbacks
-    def process_uids(self,funcs=DEFAULT_FUNCS,**kwargs):
-
-        _dl = [threads.deferToThread(fn,*[],**kwargs) for fn in funcs]
-        dl = defer.DeferredList(_dl)
-        responses = yield dl
+        defer.returnValue(to_return)
 
 
-        logging.info("Started transform...")
-        response = kwargs.get("response")
 
-        if len(kwargs.get("uids",[])) > 0:
+class GenericSearchBase(FilterBase,VisitDomainBase,PatternSearchSample,PatternStatsBase,PatternSearchResponse,VisitEventBase):
 
-            response['results'] = uids
-            response['summary']['num_users'] = len(response['results'])
-
-        logging.info("Finished transform.")
-
-        defer.returnValue(response)
-        
 
     @defer.inlineCallbacks
-    def build_arguments(self,advertiser,term,dates,num_days,response):
-        args = [advertiser,term,build_datelist(num_days),num_days]
+    def get_sampled(self,advertiser,term,dates,num_days,allow_sample=True,filter_id=False):
+        sample_args = [term,"",advertiser,dates,num_days,allow_sample]
 
-        uids = yield self.get_users_sampled(*args)
-        uids = uids[0]
+        full_df, stats_df, url_stats_df, _ = yield self.sample_stats_onsite(*sample_args)
+
+        if filter_id:
+            stats_df, url_stats_df, full_df = yield self.filter_and_build(full_df,dates,filter_id)
+
+        defer.returnValue([full_df, stats_df, url_stats_df, full_df])
+
+
+
+    @defer.inlineCallbacks
+    def build_arguments(self,advertiser,term,dates,num_days,response,allow_sample=True,filter_id=False,max_users=5000):
+        args = [advertiser,term,build_datelist(num_days),num_days,allow_sample,filter_id]
+
+        full_df, _, _, _ = yield self.get_sampled(*args)
+        uids = list(set(full_df.uid.values))[:max_users]
 
         dom = yield self.sample_offsite_domains(advertiser, term, uids, num_days)
         domains = dom[0][1]
@@ -123,26 +109,3 @@ class GenericSearchBase(VisitDomainBase,PatternSearchSample,PatternStatsBase,Pat
             "response": response
         })
 
-
-    @defer.inlineCallbacks
-    def get_uids(self, advertiser, pattern_terms, process=False, *args, **kwargs):
-
-        NUM_DAYS = 2
-
-        response = self.default_response(pattern_terms,"and")
-        args = [advertiser,pattern_terms[0][0],build_datelist(NUM_DAYS),NUM_DAYS,response]
-
-        now = time.time()
-
-        kwargs = yield self.build_arguments(*args)
-
-        if process:
-            response = yield self.process_uids(funcs=process, **kwargs)
-        elif type(process) == type([]):
-            response = yield self.process_uids(funcs=[], **kwargs)
-        else:
-            response = yield self.process_uids(**kwargs)
-
-        
-
-        self.write_json(response)
