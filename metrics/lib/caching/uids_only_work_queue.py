@@ -16,14 +16,14 @@ class CacheUIDS():
 
     def run_local(self, advertiser, pattern, base_url):
         import uids_only_cache as uoc
-        uoc.run_all(advertiser,pattern,base_url,self.connectors)
+        uoc.runner(advertiser,pattern,base_url,self.connectors)
 
     def run_on_work_queue(self, advertiser, pattern, base_url):
         import lib.caching.uids_only_cache as uoc
         yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
         _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
         work = pickle.dumps((
-            uoc.run_all,
+            uoc.runner,
             [advertiser,pattern, base_url, _cache_yesterday, _cache_yesterday + "uids_only"]
             ))
         work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,1)

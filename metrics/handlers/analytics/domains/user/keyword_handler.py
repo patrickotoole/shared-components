@@ -7,7 +7,6 @@ import logging
 import re
 
 from link import lnk
-from ..user.full_handler import VisitDomainsFullHandler
 from handlers.base import BaseHandler
 from ...analytics_base import AnalyticsBase
 from twisted.internet import defer
@@ -15,27 +14,23 @@ from lib.helpers import decorators
 from lib.helpers import *
 from lib.cassandra_helpers.helpers import FutureHelpers
 from lib.cassandra_cache.helpers import *
-from ...search.cache.pattern_search_cache import PatternSearchCache
+from ..base import VisitDomainBase
 
-class VisitorKeywordsHandler(PatternSearchCache,VisitDomainsFullHandler):
+class KeywordUserHandler(BaseHandler, AnalyticsBase, VisitDomainBase):
 
-    def initialize(self, db=None, cassandra=None, zookeeper=None, **kwargs):
+    def initialize(self, db=None, cassandra=None, **kwargs):
         self.logging = logging
         self.db = db
+        self.DOMAIN_SELECT = "select uid, domain, timestamp from rockerbox.visitor_domains_full where uid = ?"
         self.cassandra = cassandra
         self.limit = None
-        self.zookeeper = zookeeper
+
+
 
     @decorators.deferred
-    def defer_get_onsite_domains(self, date, advertiser, pattern):
-        
-        dates = build_datelist(7)
-        args = [advertiser,pattern,dates]
-        uids = self.get_uids_from_cache(*args)
-        uids = list(set([u['uid'] for u in uids]))
+    def defer_get_onsite_domains(self, date, advertiser, uids):
         date_clause = self.make_date_clause("date",date,"","")
-
-        results = self.full_get_w_agg_in(uids, date_clause)
+        results = self.get_domains_use_futures(uids, date_clause)
         df = pandas.DataFrame(results)
 
         return df
@@ -44,13 +39,14 @@ class VisitorKeywordsHandler(PatternSearchCache,VisitDomainsFullHandler):
     def process_visitor_domains(self, response_data):
         def split_url(x):
             return x.replace("-","/").split("/")
-        GROUPS = ["url","uniques"]
-        EXPAND_BY = "url"
+
+        GROUPS = ["domain", "uid"]
+        EXPAND_BY = "domain"
         def grouping_function(x):
             # want to return a series (or dataframe) that has our new expanded series as the index
             the_grouped = x[EXPAND_BY].iloc[0]
             split_version = split_url(the_grouped)
-            values = x["uniques"].values[0]
+            values = x["uid"].count()
             return pandas.DataFrame(values,columns=["unique"],index=split_version)
         
         obj1 = response_data.groupby(GROUPS).apply(grouping_function)
@@ -70,10 +66,10 @@ class VisitorKeywordsHandler(PatternSearchCache,VisitDomainsFullHandler):
 
 
     @defer.inlineCallbacks
-    def get_onsite_domains(self, date, kind, advertiser, pattern, num_keyword):
+    def get_onsite_domains(self, date, kind, advertiser, num_keyword, uids):
         
         logging.info("Requesting visitor domains...")
-        response_data = yield self.defer_get_onsite_domains(date, advertiser, pattern)
+        response_data = yield self.defer_get_onsite_domains(date, advertiser, uids)
         logging.info("Received visitor domains.")
 
         logging.info("Processing visitor domains...")
@@ -91,22 +87,61 @@ class VisitorKeywordsHandler(PatternSearchCache,VisitDomainsFullHandler):
         end_date = self.get_argument("end_date", "")
         date = self.get_argument("date", "")
         kind = self.get_argument("kind", "")
-        url_pattern = self.get_argument("url_pattern", "")
+        uid = self.get_argument("uid", [])
         user = self.current_advertiser_name
         num_keywords = self.get_argument("num_keywords", 3)
 
         try:
             keywords = int(num_keywords) - 1
         except:
-            keyowrds = 3
+            keywords = 3
+
+        uids = uid.split(",")
+
         date_clause = self.make_date_clause("date", date, start_date, end_date)
         if formatted:
             self.get_onsite_domains(
                 date_clause,
                 kind,
                 user,
-                url_pattern,
-                keywords
+                keywords,
+                uids
+                )
+        else:
+            self.get_content(pandas.DataFrame())
+
+    @tornado.web.authenticated
+    @tornado.web.asynchronous
+    def post(self):
+
+        formatted = self.get_argument("format", False)
+        start_date = self.get_argument("start_date", "")
+        end_date = self.get_argument("end_date", "")
+        date = self.get_argument("date", "")
+        kind = self.get_argument("kind", "")
+        user = self.current_advertiser_name
+        num_keywords = self.get_argument("num_keywords", 3)
+
+        try:
+            keywords = int(num_keywords) - 1
+        except:
+            keywords = 3
+ 
+        if "uids" not in payload:
+            raise Exception("Please submit a json object containing a list of uids called 'uids'")
+
+
+        date_clause = self.make_date_clause("date", date, start_date, end_date)
+
+        uid = ','.join(payload["uids"])
+
+        if formatted:
+            self.get_onsite_domains(
+                date_clause,
+                kind,
+                user,
+                keywords,
+                uids
                 )
         else:
             self.get_content(pandas.DataFrame())

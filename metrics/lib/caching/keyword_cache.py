@@ -1,9 +1,8 @@
 import pickle, pandas, json
 from link import lnk
 
-INSERT_QUERY ="INSERT INTO full_domain_cache_test (advertiser, url, count, uniques, url_pattern) VALUES ('{}', '{}',{}, {}, '{}')"
-REPLACE_QUERY="REPLACE full_domain_cache_test (advertiser, url, count, uniques, url_pattern) VALUES ('{}', '{}',{}, {}, '{}')"
-CASSQUERY=""
+#QUERY ="INSERT INTO keyword_crusher_cache (advertiser, url_pattern, keyword, count, uniques) VALUES ('{}', '{}','{}', {}, {})"
+QUERY ="INSERT INTO keyword_crusher_cache (advertiser, url_pattern, keyword, count) VALUES ('{}', '{}','{}',{})"
 
 def get_connectors():
     return {
@@ -18,23 +17,20 @@ def make_request(advertiser,pattern, base_url):
     crusher.password="admin"
     crusher.base_url = base_url
     crusher.authenticate()
-    urls = crusher.get('/crusher/domains_visitor_full?format=json&url_pattern={}'.format(pattern))
+    urls = crusher.get('/crusher/search_visitor_domains?format=json&search_type=nltk&url_pattern={}'.format(pattern))
     return urls.json
 
 def add_to_table(advertiser_name, pattern, url, sql):
-    #self.cassandra.execute(CASSQUERY)
-    if int(url['uniques']) >1:
-        try:
-            sql.execute(INSERT_QUERY.format(advertiser_name, url["url"], url["count"],url["uniques"], pattern))
-        except:
-            sql.execute(REPLACE_QUERY.format(advertiser_name, url["url"], url["count"],url["uniques"], pattern))
+    if int(url['uniques']) >1 and url['url'] != " ":
+        #sql.execute(QUERY.format(advertiser_name, pattern, url["keyword"], url["count"]))
+        sql.execute(QUERY.format(advertiser_name, pattern, url["url"].replace("'","").replace("+","").encode('utf-8'), url["uniques"]))
 
 def runner(advertiser_name, pattern, base_url, cache_date, indentifiers="test", connectors=False):
     connectors = connectors or get_connectors()
 
     db = connectors['db']
+
     urls = make_request(advertiser_name, pattern, base_url)
     for url in urls:
         add_to_table(advertiser_name, pattern, url, db)
-
 

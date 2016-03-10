@@ -80,7 +80,8 @@ class AdvertiserRoutes(Routes):
 
         return [
             (r'/user/domains', user.handler.VisitDomainsHandler, self.connectors),
-            (r'/user/domains_full', visitor.full_handler.VisitDomainsFullHandler, self.connectors),
+            (r'/user/domains_full', user.full_handler.VisitDomainsFullHandler, self.connectors),
+            (r'/user/keyword', user.KeywordUserHandler, self.connectors),
          
             (r'/visitor/domains', visitor.handler.VisitorDomainsHandler, self.connectors),
             (r'/visitor/domains/cache', visitor.cache_handler.ActionDashboardHandler, self.connectors),
@@ -123,6 +124,7 @@ class AdvertiserRoutes(Routes):
             (r'/cached_visitor_domains', visitor.full_cache_handler.VisitorDomainsFullCacheHandler, self.connectors),
             (r'/search_visitor_domains', visitor.keyword_handler.VisitorKeywordsHandler, self.connectors),
             (r'/uids_only_cache', analytics.UidsCacheHandler, self.connectors),
+            (r'/cache_domain_keywords', analytics.KeywordCacheHandler, self.connectors),
 
 
             (r'/visit_avails', analytics.VisitAvailsHandler, self.connectors),

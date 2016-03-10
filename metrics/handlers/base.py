@@ -1,6 +1,7 @@
 import tornado.web
 from link import lnk
 from lib.query.MYSQL import *
+from lib.helpers import decorators
 #from ..lib.hive import Hive
 
 class BaseHandler(tornado.web.RequestHandler):
@@ -13,6 +14,13 @@ class BaseHandler(tornado.web.RequestHandler):
         if advertiser == "0": self.redirect("/beta")
 
         return advertiser
+
+    @decorators.formattable
+    def get_content(self, data):
+        def default(self, data):
+            df = Convert.df_to_json(data)
+            self.render("analysis/visit_urls.html", data=df)
+        yield default, (data,)
 
     @property
     def current_advertiser(self):
