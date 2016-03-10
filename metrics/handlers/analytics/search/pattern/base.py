@@ -141,6 +141,8 @@ class PatternSearchBase(TimeseriesBase,VisitorBase):
 
         self.write_json(response)
 
+    
+
 
     @defer.inlineCallbacks
     def get_generic(self, advertiser, pattern_terms, num_days, logic="or",timeout=60,timeseries=False):

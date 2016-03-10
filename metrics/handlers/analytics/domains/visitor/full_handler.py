@@ -10,37 +10,60 @@ from link import lnk
 from ..user.full_handler import VisitDomainsFullHandler
 from handlers.base import BaseHandler
 from ...analytics_base import AnalyticsBase
-from twisted.internet import defer
+from twisted.internet import defer, threads
 from lib.helpers import decorators
 from lib.helpers import *
 from lib.cassandra_helpers.helpers import FutureHelpers
 from lib.cassandra_cache.helpers import *
 from ...search.cache.pattern_search_cache import PatternSearchCache
+from ...search.pattern.base_visitors import VisitorBase
 
-class VisitorDomainsFullHandler(PatternSearchCache,VisitDomainsFullHandler):
+
+class VisitorDomainsFullHandler(VisitorBase):
 
     def initialize(self, db=None, cassandra=None, **kwargs):
         self.logging = logging
         self.db = db
         self.cassandra = cassandra
+
+        self.DOMAIN_SELECT="select * from rockerbox.visitor_domains_full where uid = ?"
         self.limit = None
+
+    def full_get_w_agg_in(self, uids, date_clause):
+        # DUPLICATED CODE FROOM VisitDomainsFullHandler but MRO FAILS
+        
+        str_uids = [str(u) for u in uids]
+        uids_split = "'%s'" % "','".join(str_uids)
+        logging.info("Visit domains full prepping statement")
+        urls = self.get_domains_use_futures(uids, date_clause)
+        results = pandas.DataFrame(urls)
+        def aggDF(row):
+            return {"count":len(row), "uniques":len(set(row))}
+        
+        if len(results)>0:
+            df = results.groupby(["url"])["uid"].apply(aggDF)
+            #df = results.groupby(["domain"])["uid"].apply(aggDF)
+            final_results = df.unstack(1).reset_index()
+            logging.info("QAggCassFull")
+        else:
+            final_results = pandas.DataFrame()
+
+        return final_results 
+
 
     @decorators.formattable
     def get_content(self, data):
         def default(self, data):
             df = Convert.df_to_json(data)
-            self.render("analysis/visit_urls.html", data=df)
+            self.write(df)
+            self.finish()
         yield default, (data,)    
 
     @decorators.deferred
-    def defer_get_onsite_domains(self, date, advertiser, pattern):
+    def defer_get_onsite_domains(self, date, uids):
         
         dates = build_datelist(7)
-        _args = [advertiser,pattern,dates]
-        uids = self.get_uids_from_cache(*_args)
-        uids = list(set([u['uid'] for u in uids]))
-        uids = uids[:10000]
-
+            
         date_clause = self.make_date_clause("date",date,"","")
 
         unsorted_results = self.full_get_w_agg_in(uids, date_clause)
@@ -52,8 +75,26 @@ class VisitorDomainsFullHandler(PatternSearchCache,VisitDomainsFullHandler):
 
     @defer.inlineCallbacks
     def get_onsite_domains(self, date, kind, advertiser, pattern):
+
+        filter_id = self.get_argument("filter_id",False)
+        NUM_DAYS = 2
+
+        if filter_id:
+            ALLOW_SAMPLE = False
+            response = {}
+            args = [advertiser,pattern,build_datelist(NUM_DAYS),NUM_DAYS,response,ALLOW_SAMPLE,filter_id]
+            kwargs = yield self.build_arguments(*args)
+            uids = list(set(kwargs['uid_urls'].uid))
+            
+        else:
+            dates = build_datelist(NUM_DAYS)
+            data = yield threads.deferToThread(self.get_uids_from_cache,*[advertiser,pattern,dates])
+            uids = list(set(pandas.DataFrame(data).uid))
+
+        uids = uids[:10000]
+
         
-        response_data = yield self.defer_get_onsite_domains(date, advertiser, pattern)
+        response_data = yield self.defer_get_onsite_domains(date, uids)
         
         self.get_content(response_data)
 
@@ -86,12 +127,4 @@ class VisitorDomainsFullHandler(PatternSearchCache,VisitDomainsFullHandler):
         user = self.current_advertiser_name
 
         date_clause = self.make_date_clause("date", date, start_date, end_date)
-        if formatted:
-            self.get_onsite_domains(
-                date_clause,
-                kind,
-                user,
-                url_pattern
-                )
-        else:
-            self.get_content(pandas.DataFrame())
+        self.get_onsite_domains( date_clause, kind, user, url_pattern)
