@@ -85,7 +85,6 @@ class ActionTest(AsyncHTTPTestCase):
     def test_get(self):        
         _a = ujson.loads(self.fetch("/?format=json&advertiser=alan",method="GET").body)
         _b = ujson.loads(self.fetch("/?format=json&advertiser=will",method="GET").body)
-        #import ipdb; ipdb.set_trace()
         self.assertEqual(len(_a["response"]),1)
         self.assertEqual(len(_b["response"]),1)
 

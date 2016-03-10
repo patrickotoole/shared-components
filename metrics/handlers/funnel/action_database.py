@@ -94,10 +94,15 @@ class ActionDatabase(object):
             where = "pixel_source_name = '{}'".format(advertiser)
             result = self.db.select_dataframe(GET % {"where":where})
             patterns = self.get_patterns(result.action_id.tolist())
-            filters = self.has_filter(result.action_id.tolist())
+            joined = result.set_index("action_id").join(patterns)
+            try:
+                filters = self.has_filter(result.action_id.tolist())
+                joined = joined.join(filters)
+            except:
+                pass
 
-            joined = result.set_index("action_id").join(patterns).join(filters)
 
+            
             return joined.reset_index()
         except:
             return pandas.DataFrame()
