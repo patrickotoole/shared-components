@@ -49,16 +49,16 @@ RB.menu.navbar = (function(navbar) {
         .datum({"push_state":"/crusher/home","name":"Home"})
 
 
-        
-      return d3_updateable(logo_img_wrapper,"img","img") 
+
+      return d3_updateable(logo_img_wrapper,"img","img")
         .attr("src",LOGO_URL).style("max-height","70px")
-        .on("click", navbar.methods.pushState.bind(this,selectbar)) 
+        .on("click", navbar.methods.pushState.bind(this,selectbar))
 
     },
     items: function(target,selectbar) {
       var items = d3_splat( target, ".menu-item","a", function(x){return x},function(x) {return x.name})
         .classed("menu-item",true)
-        .on("click", navbar.methods.pushState.bind(this,selectbar)) 
+        .on("click", navbar.methods.pushState.bind(this,selectbar))
         .on("mouseover",function(){
           d3.select(this).classed("active",true)
             .select(".text").style("display","block")
@@ -82,7 +82,7 @@ RB.menu.navbar = (function(navbar) {
         .text(function(x){return x.name})
 
       return items
-           
+
     },
     advertiser_switch: function(target) {
 
@@ -96,7 +96,7 @@ RB.menu.navbar = (function(navbar) {
         .classed("menu-item docs",true)
         .on("click", function() {
           window.open("https://rockerboxwiki.atlassian.net/wiki/display/RA/Recency+Analytics+Home","__blank__")
-        }) 
+        })
         .on("mouseover",function(){
           d3.select(this).classed("active",true)
             .select(".text").style("display","block")
@@ -121,7 +121,7 @@ RB.menu.navbar = (function(navbar) {
 
 
 
-      
+
 
       $.getJSON("/account/permissions", function(perm) {
 
@@ -134,12 +134,12 @@ RB.menu.navbar = (function(navbar) {
 	var group_wrapper = d3_updateable(lower_buttons, ".btn-toolbar", "div")
 	  .classed("btn-toolbar", true)
           .style("padding-top","10px")
-	
+
 	var dropdown_wrapper = d3_updateable(group_wrapper, ".btn-group", "div")
 	  .classed("btn-group dropup", true)
 	  .attr("id", "advertiser")
           .style("width","70px")
-	
+
 	var button_class = "btn btn-primary dropdown-toggle"
 
 	var button = d3_updateable(dropdown_wrapper, button_class, "button")
@@ -162,7 +162,7 @@ RB.menu.navbar = (function(navbar) {
           .classed("advertiser",true)
           //.text(current_advertiser["advertiser_name"])
 
-        	
+
 	//d3_updateable(button, ".caret", "span")
 	//  .classed("caret", true)
         //  .style("margin-left","5px")
@@ -206,7 +206,7 @@ RB.menu.navbar = (function(navbar) {
   navbar.render = function(target) {
 
     var wrapper = navbar.components.wrapper(target)
-    //var selectbar = menu.selectbar.render(target) 
+    //var selectbar = menu.selectbar.render(target)
     navbar.components.advertiser_switch(wrapper)
     //navbar.components.logout(wrapper)
     navbar.components.logo(wrapper,menu.selectbar.render.bind(false,target))

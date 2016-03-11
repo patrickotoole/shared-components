@@ -1,7 +1,7 @@
 @function as_px($i){
-  @return #{ ($i) + 'px'}; 
+  @return #{ ($i) + 'px'};
 }
-$navbar-width: 70; 
+$navbar-width: 70;
 $sidebar-width: 270;
 $header-height: 60;
 $total-sidebar: $navbar-width + $sidebar-width;
@@ -158,11 +158,11 @@ body {font-family:"ProximaNova",sans-serif; -webkit-font-smoothing: antialiased;
   margin-left:2px;
   width:70px;
 }
-.side-navbar a.menu-item .icon { 
+.side-navbar a.menu-item .icon {
   font-size:16px
 }
 
-.side-navbar a.menu-item.active { 
+.side-navbar a.menu-item.active {
   width:200px
 }
 
@@ -182,7 +182,7 @@ box-shadow: 0px 0px 10px 3px rgba(51,51,51,.5);
   text-decoration:none;
   cursor:pointer;
   margin-left:35px;
-  
+
 }
 
 .side-navbar a.menu-item .text {
@@ -219,7 +219,7 @@ box-shadow: 0px 0px 10px 3px rgba(51,51,51,.5);
 
 .selectbar a {
   background-color:$background-color;
-  display:block; 
+  display:block;
   color:#333;
   padding:15px;
   padding-top:9px;
@@ -233,7 +233,7 @@ box-shadow: 0px 0px 10px 3px rgba(51,51,51,.5);
   cursor:pointer
 }
 
-.selectbar a.active { 
+.selectbar a.active {
     border-left: 5px solid green;
     background-color: #F0F4F7;
     font-weight: bold;
