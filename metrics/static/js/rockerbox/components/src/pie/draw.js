@@ -39,7 +39,7 @@ export default function (target,format,key,hover,colors) {
     .style("fill", function(d) { return d.data.label == "NA" ? "#f6f6f6" : colors(d.data.label); })
     .attr("class", "slice");
 
-  slice    
+  slice
     .transition().duration(1000)
     .attrTween("d", function(d) {
       this._current = this._current || d;
@@ -77,8 +77,8 @@ export default function (target,format,key,hover,colors) {
 
   text
     .classed("hidden",true)
-    
-  
+
+
   function midAngle(d){
     return d.startAngle + (d.endAngle - d.startAngle)/2;
   }
@@ -118,7 +118,7 @@ export default function (target,format,key,hover,colors) {
 
   var polyline = svg.select(".lines").selectAll("polyline")
     .data(function(x){ return x.dimensions.pie(format(x)) }, key);
-  
+
   polyline.enter().append("polyline");
   polyline.classed("hidden",true)
 
@@ -136,9 +136,9 @@ export default function (target,format,key,hover,colors) {
         var pos = outerArc.centroid(d2);
         pos[0] = radius * 0.95 * (midAngle(d2) < Math.PI ? 1 : -1);
         return [arc.centroid(d2), outerArc.centroid(d2), pos];
-      };      
+      };
     });
-  
+
   polyline.exit()
     .remove();
 

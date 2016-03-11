@@ -39,6 +39,16 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
   })
 
+  endpoints.uids_only_cache = api.helpers.genericQueuedAPIWithData(function(segment, cb, deferred_cb) {
+    var path = "/crusher/uids_only_cache?url_pattern=";
+
+    d3.json(path + segment.url_pattern[0], function(dd) {
+      segment.onsite = dd
+      deferred_cb(null, cb.bind(false, dd))
+    })
+
+  })
+
   endpoints.pixel_status = api.helpers.genericQueuedAPIWithData(function(data, cb, deferred_cb) {
     d3.json("/crusher/pixel/status?format=json", function(dd) {
       deferred_cb(null, cb.bind(false, dd))
