@@ -92,6 +92,12 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
     })
   })
 
+  endpoints.visitor_keywords_cache = api.helpers.genericQueuedAPIWithData(function(data, cb, deferred_cb) {
+    d3.json("/crusher/v1/visitor/keywords/cache?format=json&url_pattern=" + data['url_pattern'][0], function(dd) {
+      deferred_cb(null, cb.bind(false, dd))
+    })
+  })
+
   endpoints.advertiser = api.helpers.genericQueuedAPIWithData(function(data, cb, deferred_cb) {
 
     if (!cache.advertiserData) {
