@@ -47,7 +47,6 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
           segment_counts[i].views = segment_counts[i].views + item.count;
         });
       });
-
       var data = data
         .filter(function(x){
           if(segment_names.indexOf(x.url_pattern[0]) != -1) {
@@ -62,11 +61,14 @@ RB.crusher.ui.action.dashboard = (function(dashboard,crusher) {
           x.views = x.views || ""
           return x
         }).map(function(x, i){
-          obj = {
-            "key": x.action_id,
-            "action_name": x.action_name,
-            "views":segment_counts[i].views,
-            "__proto__": x
+
+          if(segment_counts[i]) {
+            obj = {
+              "key": x.action_id,
+              "action_name": x.action_name,
+              "views": segment_counts[i].views,
+              "__proto__": x
+            }
           }
           return obj
         })
