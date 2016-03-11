@@ -8,6 +8,10 @@ $total-sidebar: $navbar-width + $sidebar-width;
 $background-color: #F8FAFB;
 $container-color: #F0F4F7;
 
+#HW_badge.HW_softHidden {
+  transform: scale(0.5) !important;
+}
+
 body {
 	padding-top: as_px($header-height);
 }
