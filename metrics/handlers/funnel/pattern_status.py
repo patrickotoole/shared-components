@@ -9,7 +9,6 @@ from lib.helpers import APIHelpers
 
 import work_queue
 import lib.cassandra_cache.run as cache
-import lib.caching.work_queue_caching as adc_runner
 
 import lib.cassandra_cache.zk_helpers as zk_helpers
 
@@ -64,16 +63,22 @@ class PatternStatusHandler(BaseHandler,APIHelpers,PatternDatabase):
     def run_domains(self,advertiser,pattern,cache_date):
         # this runs the domains and uniques
         # this is what should be automatically run each day
+        import lib.caching.cache_interface as ci
+        from link import lnk
+
+        zookeeper =KazooClient(hosts="zk1:2181")
+        zookeeper.start()
+
+        username = "a_{}".format(advertiser)
+        crusher = lnk.api.crusher
+        crusher.user = username
+        crusher.password="admin"
+        crusher.authenticate()
+        ac = ActionCache(advertiser, crusher, lnk.dbs.rockerbox, zookeeper)
         
-        delta = datetime.datetime.now() - cache_date
-        _cache_date = datetime.datetime.strftime(cache_date,"%Y-%m-%d")
+        ci.run_advertiser(ac, advertiser_name)
 
-        work = pickle.dumps((
-            adc_runner.run_domains_cache,
-            [advertiser, pattern]
-        ))
 
-        work_queue.SingleQueue(self.zookeeper,self.queue).put(work,0)
         df = pandas.DataFrame([])
         self.write_response(Convert.df_to_values(df))
 

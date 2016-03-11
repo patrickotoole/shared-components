@@ -1,6 +1,6 @@
 import requests, pandas, logging
 from link import lnk
-import action_dashboard_cache as adc
+import cache_interface as ci
 from kazoo.client import KazooClient
 
 API_URL = "http://beta.crusher.getrockerbox.com/crusher/pattern_search/timeseries?search={}&num_days=7"
@@ -31,15 +31,17 @@ class VendorPattern:
 
 if __name__ == "__main__":
     sql = lnk.dbs.rockerbox
-    advertisers = adc.get_all_advertisers(sql)
+    advertisers = ci.get_all_advertisers(sql)
     for advertiser in advertisers:
         logging.info("in loop for advertiser %s" % advertiser)
-        zookeeper = KazooClient(hosts="zk1:2181")
-        zookeeper.start()
-        AC = adc.ActionCache(advertiser[0], advertiser[1],sql, zookeeper)
+        
         advertiser_name = advertiser[0].replace("a_","")
-        AC.auth()
-        rrr = requests.get(API_URL.format("utm_source="), cookies=AC.cookie)
+        crusher = lnk.api.crusher
+        crusher.user = advertiser
+        crusher.password="admin"
+        crusher.authenticate()
+
+        rrr = crusher.get(API_URL.format("utm_source="))
         logging.info("requested utm_source pattern match for advertiser %s"  % advertiser_name)
         vp = VendorPattern({}, advertiser_name)
         try:

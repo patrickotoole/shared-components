@@ -4,7 +4,6 @@ from mock import patch
 import requests
 import lib.caching.vendor_patterns as vps
 import lib.caching.vendor_to_action as vdb
-import lib.caching.action_dashboard_cache as adc
 
 URL_1 = "randomsite/refer=kfkf&source=nothing&utm_source=MySource&somethingelse"
 JSON_FIXTURE_1 = {}
@@ -27,10 +26,10 @@ class VendorTests(unittest.TestCase):
         df.T.apply(self.instance.applyRefer)
         self.assertEquals(self.instance.data['test'][0], "MySource")
 
-    @mock.patch('requests.get', mock.MagicMock(side_effect = lambda x,cookies: mock_response))
+    #@mock.patch('requests.get', mock.MagicMock(side_effect = lambda x,cookies: mock_response))
     def test_iter_vendors(self):
-        AC = adc.ActionCache("username", "password", mock.MagicMock(), mock.MagicMock())
-        AC.cookie = {}
+        crusher = mock.MagicMock()
+        crusher.get.side_effect = lambda x : {"results":[]}
         df2 = pandas.DataFrame(DA)
-        df2.T.apply(vdb.buildIter(AC,"test"))
+        df2.T.apply(vdb.buildIter(crusher,"test"))
         self.assertEquals(len(df2),1)

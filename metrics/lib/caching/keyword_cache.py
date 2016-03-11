@@ -12,16 +12,17 @@ def get_connectors():
     }
 
 def make_request(advertiser,pattern, base_url):
+    import ipdb; ipdb.set_trace()
     crusher = lnk.api.crusher
     crusher.user = "a_"+advertiser
     crusher.password="admin"
     crusher.base_url = base_url
     crusher.authenticate()
-    urls = crusher.get('/crusher/search_visitor_domains?format=json&search_type=nltk&url_pattern={}'.format(pattern))
+    urls = crusher.get('/crusher/search_visitor_domains?format=json&search_type=nltk&url_pattern={}'.format(pattern), timeout=91)
     return urls.json
 
 def add_to_table(advertiser_name, pattern, url, sql):
-    if int(url['uniques']) >1 and url['url'] != " ":
+    if int(url['uniques']) >1:
         #sql.execute(QUERY.format(advertiser_name, pattern, url["keyword"], url["count"]))
         sql.execute(QUERY.format(advertiser_name, pattern, url["url"].replace("'","").replace("+","").encode('utf-8'), url["uniques"]))
 
@@ -31,6 +32,7 @@ def runner(advertiser_name, pattern, base_url, cache_date, indentifiers="test", 
     db = connectors['db']
 
     urls = make_request(advertiser_name, pattern, base_url)
+    import ipdb; ipdb.set_trace()
     for url in urls:
         add_to_table(advertiser_name, pattern, url, db)
 

@@ -10,6 +10,7 @@ class BaseRunner():
 
     def __init__(self, connectors):
         self.connectors =connectors
+        self.sql_query = _sql._write_mysql
 
     @staticmethod
     def get_connectors():
