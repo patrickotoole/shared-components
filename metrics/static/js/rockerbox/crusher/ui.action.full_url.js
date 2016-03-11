@@ -61,6 +61,7 @@ RB.crusher.ui.action = (function(action) {
             }
           })
           .slice(0, 50);
+          .slice(0, 100);
 
         raw_table_data.forEach(function(item, i) {
           table_data['body'].push({
