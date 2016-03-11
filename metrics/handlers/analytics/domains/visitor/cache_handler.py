@@ -23,11 +23,23 @@ class ActionDashboardHandler(BaseHandler):
     def initialize(self, db=None, **kwargs):
         self.db = db
 
+    def get_idf(self,db,domain_set):
+        QUERY = """
+            SELECT p.*, c.parent_category_name 
+            FROM reporting.pop_domain_with_category p 
+            JOIN category c using (category_name) 
+            WHERE domain in (%(domains)s)
+        """
+
+        domain_set = [i.encode("utf-8") for i in domain_set]
+        domains = domains = "'" + "','".join(domain_set) + "'"
+
+        return db.select_dataframe(QUERY % {"domains":domains})
+
+
     def get_one(self,url_pattern,advertiser):
         seg_data = self.db.select_dataframe(DOMAINS % (url_pattern,advertiser))
-        domains = "'%s'" % "','".join(map(lambda x: x.replace("'",""), list(set(seg_data.domain)) ) )
-        categories = self.db.select_dataframe(CATEGORIES % domains)
-
+        categories = self.get_idf(self.db, list(set(seg_data.domain)))
         joined = seg_data.merge(categories,on="domain")
 
         seg_data = joined.fillna(0)
@@ -55,12 +67,8 @@ class ActionDashboardHandler(BaseHandler):
             seg_data = self.get_one(url_pattern, advertiser)
 
             data = {
-                "domains": [
-                    {
-                        "key":url_pattern,
-                        "values":seg_data.to_dict("records")
-                    }
-                ]
+                "domains": 
+                    seg_data.to_dict("records")
             }
 
             return data
