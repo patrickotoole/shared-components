@@ -107,11 +107,7 @@ class LoginHandler(tornado.web.RequestHandler):
         password = body.get("password","")
 
         by_username = self.db.select_dataframe(USER_QUERY % username)
-        if by_username.empty:
-            by_email = self.db.select_dataframe(USER_EMAIL_QUERY % username)
-            df = by_email
-        else:
-            df = by_username
+        df = by_username
 
         if not df.empty:
             dict_ = df.to_dict(outtype='records')[0]
