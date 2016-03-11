@@ -47,13 +47,16 @@ RB.crusher.ui.action = (function(action) {
             return y.uniques - x.uniques
           })
           .filter(function(x) {
-            if (x.url.substr(-5) === '.com/' || x.url.substr(-4) === '.com' ||
-              x.url.substr(-5) === '.net/' || x.url.substr(-4) === '.net' ||
-              x.url.substr(-5) === '.org/' || x.url.substr(-4) === '.org' ||
-              x.url.substr(-4) === '.tv/' || x.url.substr(-3) === '.tv' ||
-              x.url.substr(-4) === '.me/' || x.url.substr(-3) === '.me' ||
-              x.url.substr(-18) === '.anonymous.google/' || x.url.substr(-17) === '.anonymous.google' ||
-              x.url == '' || x.url == 'document.referrer') {
+            var l = document.createElement("a");
+
+            // Make sure all urls have the http or https prefix
+            if(x.url.slice(0, 7) !== 'http://' && x.url.slice(0, 7) !== 'https:/') {
+              x.url = 'http://' + x.url;
+            }
+
+            l.href = x.url;
+
+            if(l.pathname.length < 10) {
               return false;
             } else {
               return true;
