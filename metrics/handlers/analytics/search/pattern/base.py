@@ -95,6 +95,7 @@ class PatternSearchBase(TimeseriesBase,VisitorBase):
         if filter_id:
             args = [advertiser,term,dates,num_days,True,filter_id]
             df, stats_df, url_stats_df, full_df = yield self.get_sampled(*args)
+
         else:
             df, stats_df, url_stats_df, full_df = yield self.sample_stats_onsite(*sample_args)
         uids = list(set(df.uid.values))[:1000]

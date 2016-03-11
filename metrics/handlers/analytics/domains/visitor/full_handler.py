@@ -21,10 +21,11 @@ from ...search.pattern.base_visitors import VisitorBase
 
 class VisitorDomainsFullHandler(VisitorBase):
 
-    def initialize(self, db=None, cassandra=None, **kwargs):
+    def initialize(self, db=None, cassandra=None, zookeeper=None, **kwargs):
         self.logging = logging
         self.db = db
         self.cassandra = cassandra
+        self.zookeeper = zookeeper
 
         self.DOMAIN_SELECT="select * from rockerbox.visitor_domains_full where uid = ?"
         self.limit = None

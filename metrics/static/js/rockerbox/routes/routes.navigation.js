@@ -68,6 +68,12 @@ RB.routes.navigation = (function(navigation) {
 
     // HACK
     d3.select("body").classed("hide-select",false)
+    var current = d3.select(".selectbar").selectAll(".item")
+      .classed("active",false)
+      .filter(function(f){
+        return f == x
+      })
+      .classed("active",true)
 
 
     console.log("FORWARD",x)

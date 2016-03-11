@@ -35,7 +35,7 @@ class FilterBase:
         return checker
 
     def run_filter_url(self,aho_filter,urls):
-        truth_dict = { i: aho_filter(i.split("?")[1]) for i in urls }
+        truth_dict = { i: aho_filter(i) for i in urls }
         logging.info("ran aho filter on %s domains" % len(urls))
         return truth_dict
 
@@ -61,10 +61,9 @@ class GenericSearchBase(FilterBase,VisitDomainBase,PatternSearchSample,PatternSt
         sample_args = [term,"",advertiser,dates,num_days,allow_sample]
 
         full_df, stats_df, url_stats_df, _ = yield self.sample_stats_onsite(*sample_args)
-
         if filter_id:
             stats_df, url_stats_df, full_df = yield self.filter_and_build(full_df,dates,filter_id)
-
+        
         defer.returnValue([full_df, stats_df, url_stats_df, full_df])
 
 

@@ -45,7 +45,12 @@ RB.menu.selectbar = (function(selectbar) {
         .text(function(x){
           return x.name
         })
-        .on("click", menu.navigation.forward)
+        .on("click", function(x){
+          d3.select(this.parentNode).selectAll(".item").classed("active",false)
+
+          d3.select(this).classed("active",true)
+          menu.navigation.forward.bind(this)(x)
+        })
 
       items.exit().remove()
 

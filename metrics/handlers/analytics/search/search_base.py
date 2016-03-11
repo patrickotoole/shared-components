@@ -139,7 +139,7 @@ class SearchBase(SearchCassandra):
 
     @decorators.deferred
     def defer_execute(self, selects, advertiser, pattern, date_clause, logic, 
-                      allow_sample=True, timeout=60, numdays=20, force_cache=True):
+                      allow_sample=True, should_cache=False, timeout=60, numdays=20, force_cache=True):
 
         dates = build_datelist(numdays)
         inserts, results = [], []

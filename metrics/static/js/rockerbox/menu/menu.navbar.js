@@ -7,7 +7,6 @@ RB.menu.navbar = (function(navbar) {
 
   navbar.methods = {
     pushState: function(selectbar,x) {
-
       menu.navigation.reset()
       menu.navigation.forward(x)
 
@@ -29,8 +28,10 @@ RB.menu.navbar = (function(navbar) {
       d3_updateable(logo_wrapper,".logo-float","div")
         .classed("logo-float pull-right",true)
         .style("width","0px")
-        .style("margin-left","-35px")
-        .style("margin-right","35px")
+        .style("margin-left","-28px")
+        .style("margin-right","28px")
+        .style("margin-top","-5px")
+
 
 
       window.HW_config = {
@@ -42,8 +43,14 @@ RB.menu.navbar = (function(navbar) {
         .classed("widget-script",true)
         .attr("type","text/javascript")
         .attr("src","https://cdn.headwayapp.co/widget.js")
+
+      var logo_img_wrapper = d3_updateable(logo_wrapper,".logo-wrapper","a")
+        .classed("logo-wrapper",true)
+        .datum({"push_state":"/crusher/home","name":"Home"})
+
+
         
-      return d3_updateable(logo_wrapper,"img","img") 
+      return d3_updateable(logo_img_wrapper,"img","img") 
         .attr("src",LOGO_URL).style("max-height","70px")
         .on("click", navbar.methods.pushState.bind(this,selectbar)) 
 
@@ -52,6 +59,18 @@ RB.menu.navbar = (function(navbar) {
       var items = d3_splat( target, ".menu-item","a", function(x){return x},function(x) {return x.name})
         .classed("menu-item",true)
         .on("click", navbar.methods.pushState.bind(this,selectbar)) 
+        .on("mouseover",function(){
+          d3.select(this).classed("active",true)
+            .select(".text").style("display","block")
+            .style("visibility",undefined)
+
+        })
+        .on("mouseout",function(){
+          d3.select(this).classed("active",false)
+            .select(".text").style("display",undefined)
+            .style("visibility","hidden")
+
+        })
 
       d3_updateable(items,".icon","span")
         .attr("class",function(x) {return "icon " + (x.class || "")})
@@ -59,6 +78,7 @@ RB.menu.navbar = (function(navbar) {
 
       d3_updateable(items,".text","span")
         .classed("text",true)
+        .style("visibility","hidden")
         .text(function(x){return x.name})
 
       return items
@@ -81,7 +101,7 @@ RB.menu.navbar = (function(navbar) {
 	  .attr("id", "advertiser")
           .style("bottom","20px")
           .style("position","absolute")
-          .style("width","100%")
+          .style("width","70px")
 	
 	var button_class = "btn btn-primary dropdown-toggle"
 
@@ -93,24 +113,22 @@ RB.menu.navbar = (function(navbar) {
 	  .attr("aria-expanded", "false")
 	  .style("display", "block")
 	  .style("margin", "0 auto")
-	  .style("width", "100px")
+	  .style("width", "70px")
           .style("background-color","transparent")
           .style("border","none")
           .style("color","rgba(255,255,255,0.66)")
 
         d3_updateable(button,".icon","span")
-          .style("margin-left","12px")
-          .style("padding-right","24px")
           .classed("icon glyphicon glyphicon-user",true)
 
         d3_updateable(button,".advertiser","span")
           .classed("advertiser",true)
-          .text(current_advertiser["advertiser_name"])
+          //.text(current_advertiser["advertiser_name"])
 
         	
-	d3_updateable(button, ".caret", "span")
-	  .classed("caret", true)
-          .style("margin-left","5px")
+	//d3_updateable(button, ".caret", "span")
+	//  .classed("caret", true)
+        //  .style("margin-left","5px")
 
 	var ul = d3_updateable(dropdown_wrapper, ".dropdown-menu", "ul")
 	  .classed("dropdown-menu", true)

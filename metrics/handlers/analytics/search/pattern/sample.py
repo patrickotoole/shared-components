@@ -29,8 +29,13 @@ class PatternSearchSample(SearchBase, PatternSearchHelpers):
 
     def raw_to_stats(self,df,dates):
         stats_df = df.groupby("date").apply(self.calc_stats)
+
+        if len(stats_df) == 0: 
+            stats_df = pandas.DataFrame(index=dates,columns=["uniques", "views", "visits"])
+            stats_df = stats_df.fillna(0)
+
         for d in dates:
-            if d not in stats_df.index:
+            if d not in stats_df.index and len(stats_df) > 0:
                 stats_df.ix[d] = 0
 
             
