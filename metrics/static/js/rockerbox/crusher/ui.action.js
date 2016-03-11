@@ -321,9 +321,11 @@ RB.crusher.ui.action = (function(action) {
 
     d3_updateable(info,".loading","div")
       .classed("loading",true)
-      .text(function(x){
-        return "Your data is loading..."
-      }).style("display","block")
+      .html('<img src="/static/img/general/logo-small.gif" alt="Logo loader"> Loading segment data... ')
+      .style("display","block")
+      .style("text-align","center")
+      .style("padding","50px")
+
 
 
   }
@@ -547,7 +549,7 @@ RB.crusher.ui.action = (function(action) {
           wrapper.selectAll(".matched_domains_wrapper")
             .style("display", "block")
 
-          search.data_fetching = d3.json("/crusher/search/urls?search=" + query + "&format=json&logic=and&timeout=4", function(error, response) {
+          search.data_fetching = d3.json("/crusher/search/urls?search=" + query + "&format=json&logic=and&timeout=15", function(error, response) {
             search.results = {
               'contains_keyword': [],
               'matches_keyword': [],
@@ -632,7 +634,7 @@ RB.crusher.ui.action = (function(action) {
             if(!wrapper.selectAll(".matched-domain").size()) {
               matched_domains_nothing_found.style("display", "block");
             }
-          }, 4000);
+          }, 15000);
         } else {
           search.data_fetching.abort();
           search_loading_indicator.style("display", "none");

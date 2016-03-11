@@ -91,7 +91,7 @@ class ActionDatabase(object):
 
     def get_advertiser_actions(self, advertiser):
         try:
-            where = "pixel_source_name = '{}'".format(advertiser)
+            where = "active = 1 and pixel_source_name = '{}'".format(advertiser)
             result = self.db.select_dataframe(GET % {"where":where})
             patterns = self.get_patterns(result.action_id.tolist())
             joined = result.set_index("action_id").join(patterns)

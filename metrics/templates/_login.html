@@ -79,6 +79,7 @@ for(g=0;g<i.length;g++)f(c,i[g]);b._i.push([a,e,d])};b.__SV=1.2;a=f.createElemen
 
 
       d3.select('#signup input[type="submit"]').on('click',function(e){
+        d3.event.preventDefault()
         var obj = {
           "username":d3.select("#signup > input[name='email']").property('value'),
           "email":d3.select("#signup > input[name='email']").property('value'),
@@ -108,6 +109,8 @@ for(g=0;g<i.length;g++)f(c,i[g]);b._i.push([a,e,d])};b.__SV=1.2;a=f.createElemen
       })
 
       d3.select('#signin input[type="submit"]').on('click',function(e){
+        d3.event.preventDefault()
+
         var obj = {
           "username":d3.select("#signin > input[name='username']").property('value'),
           "password":d3.select("#signin > input[name='password']").property('value')
