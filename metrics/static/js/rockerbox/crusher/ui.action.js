@@ -321,9 +321,11 @@ RB.crusher.ui.action = (function(action) {
 
     d3_updateable(info,".loading","div")
       .classed("loading",true)
-      .text(function(x){
-        return "Your data is loading..."
-      }).style("display","block")
+      .html('<img src="/static/img/general/logo-small.gif" alt="Logo loader"> Loading segment data... ')
+      .style("display","block")
+      .style("text-align","center")
+      .style("padding","50px")
+
 
 
   }
