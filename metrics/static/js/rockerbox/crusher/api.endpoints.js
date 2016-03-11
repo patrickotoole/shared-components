@@ -82,11 +82,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
     d3.json(URL, function(dd) {
 
-      if (data.has_filter) {
-        data.domains = dd.domains
-      } else {
-        data.domains = dd.domains[0].values
-      }
+      data.domains = dd.domains
 
       deferred_cb(null, cb.bind(false, dd))
     })
@@ -150,7 +146,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
     if (!vendor.domains_raw) {
       d3.json("/crusher/v1/visitor/domains/cache?url_pattern=" + vendor.url_pattern[0], function(json_output) {
         vendor.domains_raw = json_output;
-        vendor.domains = json_output.domains[0].values;
+        vendor.domains = json_output.domains;
 
         deferred_cb(null, cb.bind(false, json_output));
       })
