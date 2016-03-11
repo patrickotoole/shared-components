@@ -85,6 +85,44 @@ RB.menu.navbar = (function(navbar) {
            
     },
     advertiser_switch: function(target) {
+
+      var lower_buttons = d3_updateable(target, ".lower-buttons", "div")
+          .classed("lower-buttons", true)
+          .style("position","absolute")
+          .style("bottom","20px")
+
+
+      var documentation = d3_updateable(lower_buttons, ".menu-item.docs","a")
+        .classed("menu-item docs",true)
+        .on("click", function() {
+          window.open("https://rockerboxwiki.atlassian.net/wiki/display/RA/Recency+Analytics+Home","__blank__")
+        }) 
+        .on("mouseover",function(){
+          d3.select(this).classed("active",true)
+            .select(".text").style("display","block")
+            .style("visibility",undefined)
+
+        })
+        .on("mouseout",function(){
+          d3.select(this).classed("active",false)
+            .select(".text").style("display",undefined)
+            .style("visibility","hidden")
+
+        })
+
+      d3_updateable(documentation,".icon","span")
+        .attr("class",function(x) {return "icon " + "glyphicon glyphicon-book"})
+        .style("padding-right","21px")
+
+      d3_updateable(documentation,".text","span")
+        .classed("text",true)
+        .style("visibility","hidden")
+        .text("Documentation")
+
+
+
+      
+
       $.getJSON("/account/permissions", function(perm) {
 
 
@@ -93,14 +131,13 @@ RB.menu.navbar = (function(navbar) {
           return item.selected
         })[0]
 
-	var group_wrapper = d3_updateable(target, ".btn-toolbar", "div")
+	var group_wrapper = d3_updateable(lower_buttons, ".btn-toolbar", "div")
 	  .classed("btn-toolbar", true)
+          .style("padding-top","10px")
 	
 	var dropdown_wrapper = d3_updateable(group_wrapper, ".btn-group", "div")
 	  .classed("btn-group dropup", true)
 	  .attr("id", "advertiser")
-          .style("bottom","20px")
-          .style("position","absolute")
           .style("width","70px")
 	
 	var button_class = "btn btn-primary dropdown-toggle"
