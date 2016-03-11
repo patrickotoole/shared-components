@@ -39,6 +39,10 @@ RB.crusher.ui.action = (function(action) {
             {
               key: 'count',
               title: 'Count'
+            },
+            {
+              key: 'score',
+              title: 'Score'
             }
           ],
           body: []
@@ -60,15 +64,19 @@ RB.crusher.ui.action = (function(action) {
               return true;
             }
           })
-          .slice(0, 50);
           .slice(0, 100);
+        var max_count = d3.max(raw_table_data, function(x) { return x.count; });
+        var max_uniques = d3.max(raw_table_data, function(x) { return x.uniques; });
 
         raw_table_data.forEach(function(item, i) {
+          var score = (((item.uniques / max_uniques) * 2) + item.count / max_count) / 3;
+
           table_data['body'].push({
             key: (i + 1),
             url: item.url,
             uniques: item.uniques,
-            count: item.count
+            count: item.count,
+            score: parseFloat(score.toFixed(4))
           });
         });
 
