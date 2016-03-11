@@ -20,6 +20,37 @@ function draw() {
     .text(function(x) {
       return x.title;
     })
+    .style('cursor', 'pointer')
+    .on('click', function(e) {
+      if (e.key == data.sortColumn) {
+        data.sortDirection = !data.sortDirection;
+      }
+
+      data.sortColumn = e.key;
+
+      table_body_rows
+        .sort(function(x,y) {
+          // debugger;
+          if(typeof x[data.sortColumn] == typeof 0) {
+            if(data.sortDirection) {
+              return x[data.sortColumn] - y[data.sortColumn];
+            } else {
+              return y[data.sortColumn] - x[data.sortColumn];
+            }
+          } else {
+            if(data.sortDirection) {
+              return d3.ascending(y[data.sortColumn], x[data.sortColumn]);
+            } else {
+              return d3.descending(y[data.sortColumn], x[data.sortColumn]);
+            }
+          }
+        })
+        .datum(function(x){
+          return x;
+        });
+      // draw();
+      // debugger;
+    })
 
   /*
     Draw body

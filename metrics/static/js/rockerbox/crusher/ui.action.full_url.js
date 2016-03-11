@@ -19,28 +19,23 @@ RB.crusher.ui.action = (function(action) {
 
     parentNode.selectAll('div.value').remove();
 
-    pubsub.subscriber("cached_visitor_domains",["cached_visitor_domains"])
-      .run(function(cached_visitor_domains){
+    pubsub.subscriber("cached_visitor_domains", ["cached_visitor_domains"])
+      .run(function(cached_visitor_domains) {
         var table_data = {
-          header: [
-            {
-              key: 'key',
-              title: 'Rank'
-            },
-            {
-              key: 'url',
-              title: 'URL',
-              href: true
-            },
-            {
-              key: 'uniques',
-              title: 'Uniques'
-            },
-            {
-              key: 'count',
-              title: 'Count'
-            }
-          ],
+          header: [{
+            key: 'key',
+            title: 'Rank'
+          }, {
+            key: 'url',
+            title: 'URL',
+            href: true
+          }, {
+            key: 'uniques',
+            title: 'Uniques'
+          }, {
+            key: 'count',
+            title: 'Count'
+          }],
           body: []
         };
 
@@ -49,33 +44,50 @@ RB.crusher.ui.action = (function(action) {
             return y.count - x.count
           })
           .filter(function(x) {
-            if(x.url.substr(-5) === '.com/' || x.url.substr(-4) === '.com' ||
-               x.url.substr(-5) === '.net/' || x.url.substr(-4) === '.net' ||
-               x.url.substr(-4) === '.tv/' || x.url.substr(-3) === '.tv' ||
-               x.url.substr(-4) === '.me/' || x.url.substr(-3) === '.me' ||
-               x.url.substr(-18) === '.anonymous.google/' || x.url.substr(-17) === '.anonymous.google' ||
-               x.url == '') {
+            if (x.url.substr(-5) === '.com/' || x.url.substr(-4) === '.com' ||
+              x.url.substr(-5) === '.net/' || x.url.substr(-4) === '.net' ||
+              x.url.substr(-5) === '.org/' || x.url.substr(-4) === '.org' ||
+              x.url.substr(-4) === '.tv/' || x.url.substr(-3) === '.tv' ||
+              x.url.substr(-4) === '.me/' || x.url.substr(-3) === '.me' ||
+              x.url.substr(-18) === '.anonymous.google/' || x.url.substr(-17) === '.anonymous.google' ||
+              x.url == '' || x.url == 'document.referrer') {
               return false;
             } else {
               return true;
             }
           })
-          .slice(0, 50);
+          .slice(0, 100);
+        var max_count = d3.max(raw_table_data, function(x) {
+          return x.count;
+        });
+        var max_uniques = d3.max(raw_table_data, function(x) {
+          return x.uniques;
+        });
 
         raw_table_data.forEach(function(item, i) {
+          var score = (((item.uniques / max_uniques) * 2) + item.count / max_count) / 3;
+
           table_data['body'].push({
-            key: (i + 1),
+            key: i,
             url: item.url,
             uniques: item.uniques,
-            count: item.count
+            count: item.count,
+            score: parseFloat(score.toFixed(4))
           });
         });
 
-        setTimeout(function() {
-          var table = components.table(target)
-            .data(table_data)
-            .draw();
-        }, 1);
+        // TO-DO: Maybe a cleaner way to do this without an extra sort/loop
+        table_data.body.sort(function(x, y) {
+          return y.score - x.score;
+        });
+
+        table_data.body.forEach(function(item, i) {
+          return item.key = i + 1;
+        });
+
+        var table = components.table(target)
+          .data(table_data)
+          .draw();
       })
       .data(segment)
       .unpersist(true)
