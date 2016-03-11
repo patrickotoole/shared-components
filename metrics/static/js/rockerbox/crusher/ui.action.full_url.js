@@ -56,7 +56,7 @@ RB.crusher.ui.action = (function(action) {
 
             l.href = x.url;
 
-            if(l.pathname.length < 10) {
+            if(l.pathname.length < 12) {
               return false;
             } else {
               return true;
