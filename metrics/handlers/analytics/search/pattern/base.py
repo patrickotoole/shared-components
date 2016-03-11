@@ -103,7 +103,7 @@ class PatternSearchBase(TimeseriesBase,VisitorBase):
 
 
     @defer.inlineCallbacks
-    def get_uids_only(self, advertiser, pattern_terms, num_days, logic="or",timeout=60):
+    def get_uids_only(self, advertiser, pattern_terms, num_days, logic="or",timeout=60, **kwargs):
 
         dates = build_datelist(num_days)
         args = [advertiser,pattern_terms[0][0],dates]

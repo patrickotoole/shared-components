@@ -117,7 +117,7 @@ def run_all(db, zk, base_url):
         crusher_api.password = "admin"
         crusher_api.authenticate()
         logging.info("received token for advertiser %s, token is %s" % (advert[0], crusher_api._token))
-        advertiser_instance = ActionCache(advert[0], crusher_api, db,zk)
+        advertiser_instance = CacheInterface(advert[0], crusher_api, db,zk)
         advertiser_segments=advertiser_instance.get_segments()
         advertiser_instance.seg_loop(advertiser_segments, advert[0], base_url)
 
@@ -156,12 +156,12 @@ if __name__ == "__main__":
         if not options.segment:
             zookeeper =KazooClient(hosts="zk1:2181")
             zookeeper.start()
-            ac = ActionCache(options.username, options.password, lnk.dbs.rockerbox, zookeeper)
+            ac = CacheInterface(options.username, options.password, lnk.dbs.rockerbox, zookeeper)
             run_advertiser(ac, options.username, options.base_url)
         else:
             zookeeper =KazooClient(hosts="zk1:2181")
             zookeeper.start()
-            ac = ActionCache(options.username, options.password, lnk.dbs.rockerbox,zookeeper)
+            ac = CacheInterface(options.username, options.password, lnk.dbs.rockerbox,zookeeper)
             run_advertiser_segment(ac, options.segment, options.base_url)
     
     if options.remove_old == True:

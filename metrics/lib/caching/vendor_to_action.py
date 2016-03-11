@@ -19,7 +19,6 @@ def sumResults(results_list):
 def buildIter(crusher,advertiser):
     def iter_vendors(series):
         logging.info("making request for %s" % series.url_patterns)
-        import ipdb; ipdb.set_trace()
         if len(series.url_patterns[0])>1:
             rr = crusher.get(PATTERN_URL.format(series.url_patterns[0]))
         else:

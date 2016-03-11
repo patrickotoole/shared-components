@@ -38,7 +38,6 @@ class AdvertiserActionRunner(BaseRunner):
         df_filtered = df.filter(['domain', 'count'])
         table_name ="action_dashboard_cache"
         keys = ['advertiser', 'action_id', 'domain']
-
         batch_num = int(len(df_filtered) / 50)+1
         for batch in range(0, batch_num):
             if batch==0:
@@ -58,7 +57,7 @@ class AdvertiserActionRunner(BaseRunner):
             if len(to_insert)>0:
                 try:
                     to_insert['domain'] = to_insert['domain'].map(lambda x : x.encode('utf-8'))
-                    _sql._write_mysql(to_insert, table_name, list(to_insert.columns), db, keys)
+                    self.sql_query(to_insert, table_name, list(to_insert.columns), db, keys)
                     logging.info("inserted %s records for advertiser username (includes a_) %s" % (len(to_insert), advertiser))
                 except:
                     logging.info("error with df for %s and %s" % (segment_name, advertiser))

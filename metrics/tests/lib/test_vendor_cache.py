@@ -30,7 +30,7 @@ class VendorTests(unittest.TestCase):
     #@mock.patch('requests.get', mock.MagicMock(side_effect = lambda x,cookies: mock_response))
     def test_iter_vendors(self):
         crusher = mock.MagicMock()
-        crusher.get.side_effect = ""
+        crusher.get.side_effect = lambda x : {"results":[]}
         df2 = pandas.DataFrame(DA)
         df2.T.apply(vdb.buildIter(crusher,"test"))
         self.assertEquals(len(df2),1)
