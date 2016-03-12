@@ -66,15 +66,9 @@ RB.routes.navigation = (function(navigation) {
 
   navigation.forward = function(x,callback,from_back) {
 
-    // HACK
-    d3.select("body").classed("hide-select",false)
-    var current = d3.select(".selectbar").selectAll(".item")
-      .classed("active",false)
-      .filter(function(f){
-        return f == x
-      })
-      .classed("active",true)
+    if (navigation.callbacks.forward) navigation.callbacks.forward(x)
 
+    
 
     console.log("FORWARD",x)
     var path = window.location.pathname
@@ -108,7 +102,8 @@ RB.routes.navigation = (function(navigation) {
 
     var api = routes.apis[page],
       transform = routes.transforms[page],
-      render = routes.renderers[page]
+      render = routes.renderers[page],
+      selectbar_render = routes.selectbar_renderers[page]
 
 
     if (x.push_state && (api || render)) {
@@ -116,12 +111,14 @@ RB.routes.navigation = (function(navigation) {
 
         var now = parseInt(String(current))
         x.values = x.values || [{"name":"Loading..."}]
-        navigation.subscribed(x)
+        navigation.subscribed(x,selectbar_render)
 
         pubsub.subscriber("menu",[api])
           .run(function(data) {
+            selectbar_render
+
             if (transform) transform(x)
-            if (now == current) navigation.subscribed(x)
+            if (now == current) navigation.subscribed(x,selectbar_render)
 
             console.log(typeof(callback))
             if (callback && (typeof(callback) == "function")) {
@@ -152,10 +149,26 @@ RB.routes.navigation = (function(navigation) {
   }
 
   navigation.back = function(x) {
-    // HACK
-    d3.select("body").classed("hide-select",false)
-
+    
+    if (navigation.callbacks.back) navigation.callbacks.back(x)
     if (__back__.length > 1) history.back()
+
+  }
+
+  navigation.callbacks = {
+    back: function(x){
+      d3.select("body").classed("hide-select",false)
+    },
+    forward: function(x) {
+      d3.select("body").classed("hide-select",false)
+
+      var current = d3.select(".selectbar").selectAll(".item")
+        .classed("active",false)
+        .filter(function(f){
+          return f == x
+        })
+        .classed("active",true)
+    }
   }
 
   return navigation

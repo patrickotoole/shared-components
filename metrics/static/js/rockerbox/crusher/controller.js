@@ -920,6 +920,61 @@ RB.crusher.controller = (function(controller) {
       "push_state": "/crusher/settings",
       "class": "glyphicon glyphicon-cog"
     }],
+    selectbar_renderers: {
+      "action/existing": {
+        "heading": function(){},
+        "items": function(target,has_back){
+          
+          var classname = (target.datum().values_key),
+            should_show = (!!target.datum().values_key && !target.datum().hide_href )
+
+          if (!target.datum().values[0].action_classification) return
+
+          target.datum(function(d) {
+            return d3.nest()
+              .key(function(x){return x.action_classification})
+              .entries(d.values)
+          })
+
+          var section = d3_splat(target,".menu-section","section",false,function(x){return x.key})
+            .classed("menu-section",true)
+
+          d3_updateable(section,".heading","div")
+            .classed("heading",true)
+            .text(function(x){ return x.key })
+        
+
+          var dfn = function(x) { return x ? x.values : [] }
+          var kfn = function(x) { return x.name + x.push_state }
+
+          var menu = this;
+          debugger
+
+          var items = d3_splat(section, "a.item","a",dfn,kfn)
+            .classed("item item-" + classname,true)
+            .attr("href",function(x){
+              return should_show ? 
+                window.location.pathname + "?id=" + x[classname] : 
+                undefined 
+            })
+            .text(function(x){
+              return x.name
+            })
+            .on("click", function(x){
+
+              d3.event.preventDefault()
+              d3.select(this.parentNode).selectAll(".item").classed("active",false)
+              d3.select(this).classed("active",true)
+              debugger
+              
+              menu.navigation.forward.bind(this)(x)
+            })
+  
+          items.exit().remove()
+
+        } 
+      }
+    },
     renderers: controller.initializers,
     transforms: {
       "funnel/new": function(menu_obj){

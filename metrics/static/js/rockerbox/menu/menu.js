@@ -21,10 +21,19 @@ RB.menu = (function(menu) {
       })
     }
   }
+
+  menu.topbar = {
+    render: function(target) {
+      var topbar = d3_updateable(target,".topbar","div")
+        .classed("topbar",true)
+    }
+  }
   
   menu.render = function(target) {
 
     var aside = d3_splat(target,"aside","aside",[menu.routes.roots])
+
+    menu.topbar.render(target)
 
     var navbar_selectors = menu.navbar.render(aside)
     var bound_selectbar = menu.selectbar.render(aside,{"name":"","values":[]})
