@@ -45,7 +45,7 @@ class CacheInterface:
                 cassandra_functions.run_recurring,
                 [advertiser,segment["url_pattern"][0],_cache_yesterday,_cache_yesterday + "recurring"]
                 ))
-        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,0)
+        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,1)
         logging.info("added to work queue %s for %s" %(segment["url_pattern"][0],advertiser))
 
     def add_db_to_work_queue(self, segment, advertiser, base_url):
@@ -56,7 +56,7 @@ class CacheInterface:
                 adc_runner.runner,
                 [advertiser,segment["url_pattern"][0], base_url, _cache_yesterday,_cache_yesterday + "domaincache"]
                 ))
-        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,0)
+        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,20)
         logging.info("added to DB work queue %s for %s" %(segment["url_pattern"][0],advertiser)) 
 
     def add_keyword_to_work_queue(self, segment, advertiser, base_url):
@@ -67,7 +67,7 @@ class CacheInterface:
                 adc_runner.runner,
                 [advertiser,segment["url_pattern"][0], base_url, _cache_yesterday,_cache_yesterday + "keywordcache"]
                 ))
-        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,0)
+        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,40)
         logging.info("added to keyword work queue %s for %s" %(segment["url_pattern"][0],advertiser))
 
     def add_full_url_to_work_queue(self, segment, advertiser, base_url):
@@ -78,7 +78,7 @@ class CacheInterface:
                 adc_runner.runner,
                 [advertiser,segment["url_pattern"][0], base_url , _cache_yesterday,_cache_yesterday + "fullurlcache"]
                 ))
-        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,0)
+        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,30)
         logging.info("added to full domain work queue %s for %s" %(segment["url_pattern"][0],advertiser))
 
     def add_uids_to_work_queue(self, segment, advertiser, base_url):
@@ -89,7 +89,7 @@ class CacheInterface:
                 uids.runner,
                 [advertiser,segment["url_pattern"][0], base_url , _cache_yesterday,_cache_yesterday + "uids"]
                 ))
-        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,0)
+        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,50)
         logging.info("added uids work queue %s for %s" %(segment["url_pattern"][0],advertiser))
 
     def seg_loop(self, segments, advertiser, base_url):
