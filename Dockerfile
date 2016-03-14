@@ -25,6 +25,8 @@ RUN apt-get install -y sasl2-bin
 
 RUN apt-get install -y libsasl2-dev
 
+RUN cd /root/rockerbox-metrics/metrics/static/js/rockerbox/turnip && git clone http://github.com/rockerbox/turnip .
+
 RUN apt-get install -y curl && curl -sL https://deb.nodesource.com/setup_5.x | sudo -E bash - && sudo apt-get install -y nodejs
 
 RUN easy_install pip && pip install gitpython && cd /root/rockerbox-metrics && pip install -r requirements.txt
