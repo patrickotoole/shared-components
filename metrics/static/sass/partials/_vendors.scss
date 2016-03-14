@@ -222,3 +222,21 @@ ul.vendors-list {
     }
   }
 }
+
+@media only screen and (max-width: 800px) {
+  .vendor-category-header-item:nth-child(n+9) {
+      display: none !important;
+  }
+  .vendor-column-item:nth-child(n+9) {
+    display: none !important;
+  }
+}
+
+@media only screen and (max-width: 1100px) {
+  .vendor-category-header-item:nth-child(n+12) {
+      display: none !important;
+  }
+  .vendor-column-item:nth-child(n+12) {
+    display: none !important;
+  }
+}
