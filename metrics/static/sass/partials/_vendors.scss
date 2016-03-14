@@ -7,6 +7,12 @@ section.vendors-list-table {
   padding: 30px;
   width: calc(100% - 30px);
   box-sizing: border-box;
+  display: table;
+  padding-right: 140px;
+
+  .vendor-card-title {
+    position: absolute;
+  }
 
   .vendor-loading {
     position: absolute;
@@ -16,6 +22,7 @@ section.vendors-list-table {
   div.vendors-header-row {
     height: 170px;
     margin-top: -50px;
+    display: table-row;
 
     div.vendor-title {
       display: inline-block;
@@ -23,54 +30,55 @@ section.vendors-list-table {
       text-transform: uppercase;
       line-height:46px;
       border-bottom: 1px solid #ccc;
-
+      display: table-cell;
+      vertical-align: bottom;
     }
 
-    div.timeseries-header {
+    div.timeseries-header-item {
       display: inline-block;
-      padding-left: 20px;
-      line-height:46px;
+      line-height: 46px;
       border-bottom: 1px solid #ccc;
+      display: table-cell;
+      vertical-align: bottom;
 
-      div.timeseries-header-item {
-        display: inline-block;
-        width: 80px;
-        text-align: center;
-        text-transform: uppercase;
-        font-size:.9em;
-      }
+      width: 80px;
+      text-align: center;
+      text-transform: uppercase;
+      font-size:.9em;
+      display: table-cell;
     }
   }
 
   div.vendor-category-header-item {
     position: relative;
-    display: inline-block;
     width: 50px;
     height: 150px;
+    display: table-cell;
 
     span {
       transform: rotate(-45deg);
       display: block;
       position: absolute;
-      bottom: 23px;
+      bottom: 50px;
       width: 155px;
       text-transform: uppercase;
       font-size: .85em;
-      padding-left: 5px;
       font-weight: normal;
       border-bottom: solid 1px #DDD;
       line-height: 30px;
-      padding-top: 45px;
+      right: -120px;
     }
   }
 
   .vendors-row {
+    display: table-row;
+
     div.vendor-column {
-      display: inline-block;
       text-align: center;
       text-transform: capitalize;
       border-bottom:1px solid #ddd;
       line-height: 50px;
+      display: table-cell;
     }
 
     div.vendor-column:first-child {
@@ -83,11 +91,13 @@ section.vendors-list-table {
     div.vendor-column:not(:first-child) {
       display: inline-block;
       width: 80px;
+      display: table-cell;
     }
 
     .vendor-column-item {
       position: relative;
       display: inline-block;
+      display: table-cell;
       width: 50px;
       line-height: 50px;
       text-align: center;
