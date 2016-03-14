@@ -14,7 +14,8 @@ RB.menu.selectbar = (function(selectbar) {
       return bars
     },
     heading: function(target,has_back,override) {
-      if (override) override.apply(menu,arguments)
+      
+      if (override) return override.apply(menu,arguments)
 
       var h5 = d3_updateable(target,".heading","h5")
         .classed("heading",true)
@@ -72,8 +73,14 @@ RB.menu.selectbar = (function(selectbar) {
     var has_back = menu.navigation.get().length > 1 
 
     menu.navigation.register(bound)
-    selectbar.components.heading(target.datum(data),has_back,transforms.heading)
-    
+
+    var build_items = {
+      render: selectbar.components.items,
+      wrapper: wrapper,
+      transform: transforms.items
+    }
+
+    selectbar.components.heading(target.datum(data),has_back,transforms.heading,build_items)
     selectbar.components.items(wrapper,transforms.items)
 
     return selectbar.render.bind(false,target)

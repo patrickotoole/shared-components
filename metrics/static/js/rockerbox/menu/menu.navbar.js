@@ -10,7 +10,13 @@ RB.menu.navbar = (function(navbar) {
       menu.navigation.reset()
       menu.navigation.forward(x)
 
-      selectbar(x)
+      var page = x.push_state ?
+        x.push_state.replace("/crusher/","") :
+        path.replace("/crusher/","")
+
+      var selectbar_render = menu.routes.selectbar_renderers[page]
+
+      selectbar(x,selectbar_render)
       return false
     }
   }

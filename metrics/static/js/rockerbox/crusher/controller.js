@@ -922,22 +922,108 @@ RB.crusher.controller = (function(controller) {
     }],
     selectbar_renderers: {
       "action/existing": {
-        "heading": function(){},
+        "heading": function(target,has_back,self,items){
+
+          target.style("text-align","left")
+
+          var wrapper = d3_updateable(target,".heading","h5")
+            .classed("heading",true)
+            .style("overflow","visible")
+            .style("z-index","1")
+            .style("text-align","left")
+            .style("padding-left","10px")
+            .text("")
+
+          var filter_wrapper = d3_updateable(wrapper,".btn-group","div")
+            .classed("btn-group btn-small dropdown",true)
+
+          var btn = d3_updateable(filter_wrapper,"button","button")
+            .classed("btn btn-default dropdown-toggle btn-sm",true)
+            .attr("data-toggle","dropdown")
+	    .attr("aria-haspopup", "true")
+	    .attr("aria-expanded", "false")
+            .style("width","140px")
+            .style("border","0px")
+
+
+          var setText = function(text) {
+            var wrap = d3_updateable(btn,".caret-wrap","span")
+              .classed("caret-wrap",true)
+              .style("margin-left","5px")
+              .style("float","right")
+              .style("line-height","18px")
+              .style("width","15px")
+
+            d3_updateable(wrap,".caret","span")
+              .classed("caret",true)
+
+            d3_updateable(btn,".text","span")
+              .classed("text",true)
+              .style("width","100px")
+              .style("margin-bottom","-4px")
+              .style("overflow","hidden")
+              .style("display","inline-block")
+              .style("height","15px")
+              .text(text)
+
+          }
+
+          setText("All segments")
+
+          var dropdown = d3_updateable(filter_wrapper,"ul","ul")
+            .classed("dropdown-menu",true)
+
+          var all_filter = d3_updateable(dropdown,"li","li",{"key":"All Segments"}, function(x){ return 1})
+
+          d3_updateable(all_filter,"a","a")
+            .text(function(x) { return x.key })
+            .on("click",function(x){
+              var i = items.wrapper.datum(function(l){ return d3.select(this.parentNode).datum() })
+ 
+              items.render(i,items.transform)
+
+              setText(x.key)
+
+            })
+
+
+          var dropdown_items = d3_splat(dropdown,"li","li",function(x){return x.values},function(x){return x.key})
+          var dropdown_links = d3_updateable(dropdown_items,"a","a")
+            .text(function(x){ return x.key })
+            .on("click",function(x){
+
+              var i = items.wrapper.datum(function(l){
+                var parentData = d3.select(this.parentNode).datum().values
+                var filtered = parentData.filter(function(z){return x.key == z.key})
+                return {"values":filtered}
+              })
+ 
+              items.render(i,items.transform)
+
+              setText(x.key)
+            })
+
+          dropdown_items.filter(function(x){  return !x.key })
+            .text("")
+            .classed("divider",true)
+
+
+          return filter_wrapper
+        },
         "items": function(target,has_back){
           
           var classname = (target.datum().values_key),
             should_show = (!!target.datum().values_key && !target.datum().hide_href )
 
-          if (!target.datum().values[0].action_classification) return
-
           target.datum(function(d) {
-            return d3.nest()
-              .key(function(x){return x.action_classification})
-              .entries(d.values)
+            if (d.values[0].key) return d.values
+            return []//d.values
           })
 
           var section = d3_splat(target,".menu-section","section",false,function(x){return x.key})
             .classed("menu-section",true)
+
+          section.exit().remove()
 
           d3_updateable(section,".heading","div")
             .classed("heading",true)
@@ -945,10 +1031,9 @@ RB.crusher.controller = (function(controller) {
         
 
           var dfn = function(x) { return x ? x.values : [] }
-          var kfn = function(x) { return x.name + x.push_state }
+          var kfn = function(x) { return x.action_name + x.push_state }
 
           var menu = this;
-          debugger
 
           var items = d3_splat(section, "a.item","a",dfn,kfn)
             .classed("item item-" + classname,true)
@@ -958,14 +1043,14 @@ RB.crusher.controller = (function(controller) {
                 undefined 
             })
             .text(function(x){
-              return x.name
+              
+              return x.action_name
             })
             .on("click", function(x){
 
               d3.event.preventDefault()
               d3.select(this.parentNode).selectAll(".item").classed("active",false)
               d3.select(this).classed("active",true)
-              debugger
               
               menu.navigation.forward.bind(this)(x)
             })
@@ -986,8 +1071,14 @@ RB.crusher.controller = (function(controller) {
         RB.menu.methods.transform(menu_obj,menu_obj.values_key)
       },
       "action/existing": function(menu_obj){
-        menu_obj.values = RB.crusher.cache.actionData
-        RB.menu.methods.transform(menu_obj,menu_obj.values_key)
+
+        var data = d3.nest()
+          .key(function(x){return x.action_classification})
+          .entries(RB.crusher.cache.actionData)
+
+
+        menu_obj.values = data
+        //RB.menu.methods.transform(menu_obj,menu_obj.values_key)
       },
       "action/recommended": function(menu_obj){
 

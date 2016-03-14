@@ -1,3 +1,4 @@
+
 @function as_px($i){
   @return #{ ($i) + 'px'};
 }
@@ -226,7 +227,7 @@ box-shadow: 0px 0px 10px 3px rgba(51,51,51,.5);
 }
 
 .selectbar {
-  
+  padding-bottom:as_px($header-height*3);
   z-index:0;
   top:as_px($header-height*2);left:as_px($navbar-width);position:fixed;width:as_px($sidebar-width);overflow-x:hidden;overflow-wrap:break-word;border-right:1px solid #f0f0f0;height:100%;
   font-size:14px;
