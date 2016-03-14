@@ -71,7 +71,6 @@ class ServedEventsHandler(BaseHandler, AnalyticsBase, ServedEventBase):
         self.db = db
         self.cassandra = cassandra
         self.limit = None
-        self.query = QUERY
 
     @defer.inlineCallbacks
     def get_events(self, uid, source, kind):
