@@ -392,6 +392,11 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
     if (!cache.actionData) {
       d3.json(api.URL.actionURL, function(actions) {
         cache.actionData = actions.response
+        cache.actionData.map(function(action){
+          action.action_classification = action.action_name.indexOf(":") > -1 ? action.action_name.split(":")[0].replace(/y$/,"ie") + "s" : action.action_type == 'vendor' ? "Vendors" : "Other"
+          action.original_name = action.action_name
+          action.action_name = action.action_name.indexOf(":") > -1 ? action.action_name.split(":")[1] : action.action_name
+        })
         if (cache.urls_wo_qs) cache.actionData.map(function(x) {
           x.values = cache.urls_wo_qs
         })
