@@ -5,6 +5,8 @@ RB.routes = (function(routes) {
   routes.transforms = {}
   routes.apis = {}
   routes.renderers = {}
+  routes.selectbar_renderers = {}
+
 
   routes.roots = []
 
@@ -27,6 +29,12 @@ RB.routes = (function(routes) {
   routes.register_transforms = function(obj){
     Object.keys(obj).map(function(k) {
       routes.transforms[k] = obj[k]
+    })
+  }
+
+  routes.register_selectbar_renderers = function(obj){
+    Object.keys(obj).map(function(k) {
+      routes.selectbar_renderers[k] = obj[k]
     })
   }
 

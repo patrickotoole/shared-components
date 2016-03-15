@@ -13,7 +13,10 @@ RB.menu.selectbar = (function(selectbar) {
 
       return bars
     },
-    heading: function(target,has_back) {
+    heading: function(target,has_back,override) {
+      
+      if (override) return override.apply(menu,arguments)
+
       var h5 = d3_updateable(target,".heading","h5")
         .classed("heading",true)
 
@@ -28,7 +31,9 @@ RB.menu.selectbar = (function(selectbar) {
 
       return h5
     },
-    items: function(target) {
+    items: function(target,override) {
+
+      if (override) return override.apply(menu,arguments) 
 
       var items = d3_splat(target, "a.item","a",
           function(x){return x ? x.values : []},
@@ -59,7 +64,9 @@ RB.menu.selectbar = (function(selectbar) {
     }
   }
 
-  selectbar.render = function(target,data){
+  selectbar.render = function(target,data,transforms){
+
+    var transforms = transforms || {}
 
     var wrapper = selectbar.components.wrapper(target,[data])
     var bound = selectbar.render.bind(this,target)
@@ -67,8 +74,16 @@ RB.menu.selectbar = (function(selectbar) {
 
     menu.navigation.register(bound)
 
-    selectbar.components.heading(wrapper,has_back)
-    selectbar.components.items(wrapper)
+    var build_items = {
+      render: selectbar.components.items,
+      wrapper: wrapper,
+      transform: transforms.items
+    }
+
+    selectbar.components.heading(target.datum(data),has_back,transforms.heading,build_items)
+    selectbar.components.items(wrapper,transforms.items)
+
+    menu.bound_topbar(data,transforms.topbar,build_items)
 
     return selectbar.render.bind(false,target)
 

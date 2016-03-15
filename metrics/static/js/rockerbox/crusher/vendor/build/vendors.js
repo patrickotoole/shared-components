@@ -378,17 +378,19 @@
   function set_and_draw(segments) {
     this.datum(segments)
     this.draw()
-    this.run_missing(this._data,true)
+    this.run_missing(this.datum(),true)
   }
 
-  function initialize() {
+  function initialize(subscribe_to) {
+
+    var subscribe_to = subscribe_to || "vendors"
 
     if (this._data == this._wrapper.datum()) {
       // our current implementation never uses this
       return set_and_draw(this._data)
     }
 
-    pubsub.subscriber("vendors-data",["vendors"])
+    pubsub.subscriber("vendors-data",[subscribe_to])
       .run(set_and_draw.bind(this))
       .unpersist(true)
       .trigger()
@@ -675,11 +677,16 @@
 
   function datum$1(d) {
     if (d !== undefined) {
+
+      if (this._filter) d = d.filter(this._filter)
       this._data = d
+
       this._wrapper.datum(d)
       return this
     }
-    return this._wrapper.datum()
+    var d = this._wrapper.datum()
+    if (this._filter) d = d.filter(this._filter)
+    return d
 
   }
 
@@ -725,7 +732,9 @@
       // this.render_row(items)
     // this.render_categories(row, table_categories)
 
-    if (!skip_missing) this.run_missing(this._data)
+    var data = this.datum()
+
+    if (!skip_missing) this.run_missing(data)
 
     return this
 
@@ -743,6 +752,10 @@
 
     datum: datum$1,
     draw: draw$1,
+    filter: function(x) {
+      this._filter = x
+      return this
+    },
     on: function(x, y) {
       this._on[x] = y;
       return this

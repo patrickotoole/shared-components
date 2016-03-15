@@ -1,9 +1,10 @@
+
 @function as_px($i){
   @return #{ ($i) + 'px'};
 }
 $navbar-width: 70;
 $sidebar-width: 270;
-$header-height: 60;
+$header-height: 50;
 $total-sidebar: $navbar-width + $sidebar-width;
 $background-color: #F8FAFB;
 $container-color: #F0F4F7;
@@ -12,18 +13,53 @@ $container-color: #F0F4F7;
   transform: scale(0.5) !important;
 }
 
+.topbar .item {
+  background-color: #3f6a90;
+  color: white;
+  border-radius: 15px;
+  display:inline-block;
+  line-height: 30px;
+  margin-top: 10px;
+  margin-left:15px;
+  padding-right:15px;
+  padding-left:15px;
+  font-weight:bold;
+  font-size:13px;
+
+}
+
 body {
-	padding-top: as_px($header-height);
+    padding-top: as_px($header-height*2);
+}
+
+.topbar {
+    width: 100%;
+    height: 50px;
+    top: 0px;
+    position: fixed;
+    margin-left: 70px;
+    background-color: #5084b2;
+    box-shadow: 0 1px rgba(255,255,255,0.08),0 -1px rgba(0,0,0,0.15) inset;
+    z-index:100;
+}
+.menu-section .heading{
+    text-transform: uppercase;
+    font-size: .9em;
+    font-weight: bold;
+    opacity: .75;
+    padding: 15px;
 }
 
 header.page-header {
+        box-shadow: 0 -1px 0 0 rgba(255,255,255,0.08),0 1px 0 0 rgba(0,0,0,0.15) inset;
+
 	position: fixed;
 	font-size: 14px;
 	right: 0px;
 	height: as_px($header-height);
 	line-height: as_px($header-height);
 	border-bottom: 1px solid #f0f0f0;
-	top: 0px;
+	top: as_px($header-height);
 	left: as_px($navbar-width);
 	padding-left: 20px;
 	background-color: #FFF;
@@ -126,7 +162,7 @@ body {font-family:"ProximaNova",sans-serif; -webkit-font-smoothing: antialiased;
   border-radius: 3px;
 }
 .side-navbar {
-  z-index:1;
+  z-index:100;
   top:0px;
   left:0px;
   position:fixed;
@@ -142,11 +178,12 @@ body {font-family:"ProximaNova",sans-serif; -webkit-font-smoothing: antialiased;
 }
 .side-navbar .logo {
   /*line-height:as_px($navbar-width);*/
-  box-shadow:0 1px rgba(255,255,255,0.08),0 -1px rgba(0,0,0,0.55) inset;width:100%;text-align:center;display:block
+  box-shadow:0 1px rgba(255,255,255,0.08),0 -1px rgba(0,0,0,0.55) inset;
+  width:100%;text-align:center;display:block
 }
 .side-navbar .logo img {
   width:250px;margin-top:-5px;padding-right:20px;padding-left:0px;margin-left:auto;margin-right:auto;
-  margin-top:10px;margin-bottom:10px;
+  margin-top:4px;margin-bottom:6px;
 }
 .logout-item {text-align:center}
 .side-navbar a.logout-item, .side-navbar a.menu-item {
@@ -205,16 +242,19 @@ box-shadow: 0px 0px 10px 3px rgba(51,51,51,.5);
 }
 
 .selectbar {
+  padding-bottom:as_px($header-height*3);
   z-index:0;
-  top:0px;left:as_px($navbar-width);position:fixed;width:as_px($sidebar-width);overflow-x:hidden;overflow-wrap:break-word;border-right:1px solid #f0f0f0;height:100%;
+  top:as_px($header-height*2);left:as_px($navbar-width);position:fixed;width:as_px($sidebar-width);overflow-x:hidden;overflow-wrap:break-word;border-right:1px solid #f0f0f0;height:100%;
   font-size:14px;
   background-color: $background-color;
 }
 .selectbar .heading a {
-  background-color:white
+  background-color:white;
+  color:#333;
 }
 .selectbar > a:first-of-type {
   padding-top:15px
+
 }
 
 .selectbar a {
@@ -245,8 +285,10 @@ box-shadow: 0px 0px 10px 3px rgba(51,51,51,.5);
 .selectbar a:hover {
   color:#007196
 }
-.selectbar h5.heading {
-  display:block;width:100%;border-bottom:1px solid #f0f0f0;height:as_px($header-height);overflow-x:hidden;line-height:as_px($header-height);text-align:center;margin:0px
+aside h5.heading {
+  box-shadow: 0 -1px 0 0 rgba(255,255,255,0.08),0 1px 0 0 rgba(0,0,0,0.15) inset;
+  left:as_px($navbar-width);
+  display:block;width:as_px($sidebar-width);border-bottom:1px solid #f0f0f0;height:as_px($header-height);overflow-x:hidden;line-height:as_px($header-height);text-align:center;margin:0px;position:fixed;top:as_px($header-height);
 }
 .selectbar div {}
 .panel-default>.panel-heading {height:as_px($header-height);line-height:as_px($header-height);background-color:white;border-top:0px;border-bottom:1px solid #f0f0f0}

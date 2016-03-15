@@ -177,6 +177,7 @@ RB.crusher.controller = (function(controller) {
 
     },
     "vendors": function(obj, not_table) {
+
       d3.select('body').classed('hide-select', true);
 
       var funnelRow = build_header({
@@ -184,415 +185,13 @@ RB.crusher.controller = (function(controller) {
         'name': 'Vendor Analysis',
       });
 
-
       if(not_table) {
         RB.crusher.ui.vendors.show(funnelRow, obj);
       } else {
         RB.crusher.ui.vendors.table(funnelRow, obj);
       }
     },
-    "vendors/table": function(obj) {
-      d3.select('body').classed('hide-select', true);
-
-      var funnelRow = build_header({
-        'id': 'vendors',
-        'name': 'Vendor Analysis'
-      });
-
-      RB.crusher.ui.vendors.table(funnelRow);
-    },
-    "comparison": function() {
-      d3.select("body")
-        .classed("hide-select", true)
-
-      var segments = ['/wishlist', 'cart'];
-
-      var main_wrapper = d3.selectAll('.container')
-        .style('padding', '0');
-
-      var heading = d3_updateable(main_wrapper, '.comparison-header', 'header')
-        .classed('comparison-header', true)
-        .style('background-color', '#FAFAFA')
-        .style('border-bottom', '1px solid #f0f0f0')
-        .style('padding', '40px')
-        .style('min-height', '350px')
-
-      /*
-      **
-      **  Display list of segments that are being compared
-      **
-      */
-
-      var segments_list_wrapper = d3_updateable(heading, '.segments-list-wrapper', 'div')
-        .style('display', 'inline-block')
-        .classed('segments-list-wrapper', true)
-
-      var segments_list = d3_updateable(segments_list_wrapper, '.segments-list', 'div')
-        .style('display', 'inline-block')
-        .classed('segments-list', true);
-
-      var current_segment = d3_updateable(segments_list, '.segments-list-item', 'input')
-        .classed('segments-list-item', true)
-        .attr('value', segments[0])
-
-      var current_segment_select = d3_updateable(segments_list, '.segments-list-item-select', 'select')
-        .classed('segments-list-item-select', true)
-        .attr('value', segments[0])
-        .on('change', function() {
-          segments[1] = this.value;
-          renderComparison();
-        });
-
-      pubsub.subscriber("comparison-data",["actions"])
-        .run(function(all_segments) {
-          var segments_list_items = d3_splat(current_segment_select, '.segment-list-item-select-option', 'option', all_segments, function(x, i) {
-              return x.action_name;
-            })
-            .text(function(x) {
-              if (x.action_name != '') {
-                return x.action_name;
-              } else {
-                return 'All Pages';
-              }
-            });
-        })
-          .unpersist(false)
-          .trigger();
-
-      var segments_list_save = d3_updateable(segments_list_wrapper, '.segments-list-save', 'a')
-        .style('display', 'none')
-        .text('Save')
-        .classed('segments-list-save btn btn-success', true)
-
-
-      /*
-      **
-      **  Draw intersection circles
-      **
-      */
-
-      function drawIntersection(segmentA, segmentB, intersect) {
-        var max_segment = Math.max(segmentA, segmentB);
-        var r1 = Math.round(segmentA / max_segment * 175),
-          r2 = Math.round(segmentB / max_segment * 175),
-          x1 = r1,
-          y1 = 175,
-          x2 = 350,
-          y2 = 175;
-
-        var intersect_size = ((175 / max_segment) * intersect) * 2;
-        if (intersect_size / x1 < 0.15) {
-          intersect_size = 0.15 * x1;
-        }
-        x2 = ((r1 * 2) + r2) - intersect_size;
-
-        var svg = d3_updateable(heading, '.comparison-svg', 'svg')
-          .attr('style', 'width: calc(100% - 300px); height: 350px;')
-          .classed('comparison-svg', true)
-
-        svg.exit().remove()
-
-          d3_updateable(svg, '.circleA', 'circle')
-            .classed('circleA', true)
-            .attr('cx', x1)
-            .attr('cy', y1)
-            .attr('r', r1)
-            .style('fill', 'steelblue')
-            .on('click', function() {
-              alert('SEGMENT ONE');
-            });
-
-          d3_updateable(svg, '.circleB', 'circle')
-            .classed('circleB', true)
-            .attr('cx', x2)
-            .attr('cy', y2)
-            .attr('r', r2)
-            .style('fill', 'orange')
-            .on('click', function() {
-              alert('SEGMENT TWO');
-            });
-
-        var interPoints = intersection(x1, y1, r1, x2, y2, r2);
-
-        var intersection_object = d3_updateable(svg, '.intersection_object', 'g')
-          .classed('intersection_object', true)
-
-        var intersection_object_path = d3_updateable(svg, '.intersection_object_path', 'path')
-          .classed('intersection_object_path', true)
-          .attr("d", function() {
-            return "M" + interPoints[0] + "," + interPoints[2] + "A" + r2 + "," + r2 +
-              " 0 0,1 " + interPoints[1] + "," + interPoints[3] + "A" + r1 + "," + r1 +
-              " 0 0,1 " + interPoints[0] + "," + interPoints[2];
-          })
-          .style('fill', 'red')
-          .on('click', function() {
-            alert('INTERSECTION');
-          });
-
-        function intersection(x0, y0, r0, x1, y1, r1) {
-          var a, dx, dy, d, h, rx, ry;
-          var x2, y2;
-
-          /* dx and dy are the vertical and horizontal distances between
-           * the circle centers.
-           */
-          dx = x1 - x0;
-          dy = y1 - y0;
-
-          /* Determine the straight-line distance between the centers. */
-          d = Math.sqrt((dy * dy) + (dx * dx));
-
-          /* Check for solvability. */
-          if (d > (r0 + r1)) {
-            /* no solution. circles do not intersect. */
-            return false;
-          }
-          if (d < Math.abs(r0 - r1)) {
-            /* no solution. one circle is contained in the other */
-            return false;
-          }
-
-          /* 'point 2' is the point where the line through the circle
-           * intersection points crosses the line between the circle
-           * centers.
-           */
-
-          /* Determine the distance from point 0 to point 2. */
-          a = ((r0 * r0) - (r1 * r1) + (d * d)) / (2.0 * d);
-
-          /* Determine the coordinates of point 2. */
-          x2 = x0 + (dx * a / d);
-          y2 = y0 + (dy * a / d);
-
-          /* Determine the distance from point 2 to either of the
-           * intersection points.
-           */
-          h = Math.sqrt((r0 * r0) - (a * a));
-
-          /* Now determine the offsets of the intersection points from
-           * point 2.
-           */
-          rx = -dy * (h / d);
-          ry = dx * (h / d);
-
-          /* Determine the absolute intersection points. */
-          var xi = x2 + rx;
-          var xi_prime = x2 - rx;
-          var yi = y2 + ry;
-          var yi_prime = y2 - ry;
-
-          return [xi, xi_prime, yi, yi_prime];
-        }
-      }
-
-      var page_tabs_wrapper = d3_updateable(main_wrapper, '.page-tabs-wrapper', 'nav')
-        .classed('page-tabs-wrapper', true)
-
-      var page_tabs = [{
-        id: 1,
-        title: 'Domains'
-      }, {
-        id: 2,
-        title: 'Categories'
-      }];
-
-      var page_tabs_items = d3_splat(page_tabs_wrapper, '.page_tabs_item', 'div', page_tabs, function(x, i) {
-          return x.title;
-        })
-        .text(function(x) {
-          return x.title;
-        })
-        .attr('class', function(x) {
-          var classes = 'page_tabs_item';
-
-          if (x.id === 1) {
-            classes += ' active'
-          }
-
-          return classes;
-        })
-        .on('click', function(x, i) {
-          d3.selectAll(".page_tabs_item.active").classed('active', false);
-          d3.selectAll(".page_tabs_item:nth-child(" + (i + 1) + ")").classed('active', true);
-          // this.classed('active', true);
-        });
-
-      var comparison_columns = d3_updateable(main_wrapper, '.comparison-columns', 'div')
-        .classed('comparison-columns', true)
-
-      var column1 = d3_updateable(comparison_columns, '.comparison-column1', 'div')
-        .classed('comparison-column1 comparison-column', true)
-
-      var column2 = d3_updateable(comparison_columns, '.comparison-column2', 'div')
-        .classed('comparison-column2 comparison-column', true)
-
-
-      function horizontalBarGraph(orientation, domains, hits, max_hits) {
-        var column_width = 400;
-        var colors = ['steelblue'];
-        var grid = d3.range(25).map(function(i) {
-          return {
-            'x1': 0,
-            'y1': 0,
-            'x2': 0,
-            'y2': 1000
-          };
-        });
-
-        var xscale = d3.scale.linear()
-          .domain([0, 10])
-          .range([0, 10]);
-
-        var yscale = d3.scale.linear()
-          .domain([0, domains.length])
-          .range([0, 900])
-
-        var colorScale = d3.scale.quantize()
-          .domain([0, domains.length])
-          .range(colors);
-
-        switch (orientation) {
-          case 'left':
-            var column = column1;
-            var opposite_orientation = 'right';
-            break;
-          case 'right':
-            var column = column2;
-            var opposite_orientation = 'left';
-            break;
-        }
-
-        var canvas = d3_updateable(column, '.bar-graph-' + orientation, 'svg')
-          .classed('bar-graph-' + orientation, true)
-          .attr({
-            'width': '100%',
-            'height': (domains.length * 24)
-          });
-
-        var xAxis = d3.svg.axis();
-        xAxis
-          .orient('bottom')
-          .scale(xscale)
-
-        var yAxis = d3.svg.axis();
-        yAxis
-          .orient(orientation)
-          .scale(yscale)
-          .tickSize(1)
-          .tickFormat(function(d, i) {
-            if(typeof hits[i-1] !== typeof undefined) {
-              switch(orientation) {
-                case 'left':
-                  return domains[i] + ' - ' + hits[i-1];
-                  break;
-                case 'right':
-                  return hits[i-1] + ' - ' + domains[i];
-                  break;
-              }
-            }
-          })
-          .tickValues(d3.range(domains.length));
-
-        switch(orientation) {
-          case 'left':
-            yAxis.tickSize(1)
-            break;
-          case 'right':
-            yAxis.tickSize(0)
-            break;
-        }
-
-        var y_xis = d3_updateable(canvas, '.y_xis-' + orientation, 'g')
-          .style('fill', '#666')
-          .attr("transform", function() {
-            switch (orientation) {
-              case 'left':
-                return "translate(400,10)";
-                break;
-              case 'right':
-                return "translate(0,10)";
-                break;
-            }
-          })
-          .attr('id', 'yaxis')
-          .classed('y_xis-' + orientation, true)
-          .call(yAxis);
-
-        var chart = d3_updateable(canvas, '.chart-bars-' + orientation, 'g')
-          .classed('chart-bars-' + orientation, true)
-          .attr("transform", function() {
-            if (orientation == 'right') {
-              return "translate(200,0)";
-            } else {
-              return "translate(0,0)";
-            }
-          })
-          // .selectAll('rect')
-          // .data(hits)
-          // .enter()
-
-        var chart_rows = d3_splat(chart,".chart-row","rect",hits,function(x, i){return i})
-          .classed("chart-row",true)
-          .attr('height', 19)
-          .attr({
-            'x': function(d, i) {
-              if (orientation == 'left') {
-                // return ((d / Math.max.apply(Math, hits)) * 100)
-                return 200 - (((d / max_hits) * 180) + 20);
-              } else {
-                return 0;
-              }
-            },
-            'y': function(d, i) {
-              return yscale(i) + 19;
-            }
-          })
-          .style('fill', function(d, i) {
-            return colorScale(i);
-          })
-          .attr('width', function(d) {
-            return (d / max_hits * 180) + 20;
-          });
-      }
-
-      function renderComparison() {
-        var input_data = {
-          segmentA: segments[0],
-          segmentB: segments[1]
-        };
-
-        var segmentA = [''];
-        var segmentA_hits = [];
-
-        var segmentB = [''];
-        var segmentB_hits = [];
-
-
-        pubsub.subscriber("comparison-data",["comparison"])
-          .run(function(comparison_data){
-            comparison_data.segmentA.forEach(function(domain, i) {
-              segmentA.push(domain.domain);
-              segmentA_hits.push(domain.count);
-            });
-
-            comparison_data.segmentB.forEach(function(domain, i) {
-              segmentB.push(domain.domain);
-              segmentB_hits.push(domain.count);
-            });
-
-            // var max_hits = [Math.max.apply(segmentA_hits), Math.max(segmentB_hits)];
-            var max_hits = Math.max(segmentA_hits[0], segmentB_hits[0])
-
-            drawIntersection(comparison_data.intersection_data.segmentA, comparison_data.intersection_data.segmentB, comparison_data.intersection_data.intersection)
-            horizontalBarGraph('left', segmentA, segmentA_hits, max_hits)
-            horizontalBarGraph('right', segmentB, segmentB_hits, max_hits)
-          })
-          .data(input_data)
-          .unpersist(false)
-          .trigger();
-      }
-
-    },
+    "comparison": function() {},
     "gettingstarted": function() {
       d3.select("body")
         .classed("hide-select",true)
@@ -896,6 +495,7 @@ RB.crusher.controller = (function(controller) {
       "name":"Segments",
       "push_state": "/crusher/action/existing",
       "class": "glyphicon glyphicon-signal",
+      "selection": "All Segments",
       "values_key": "action_name"
     },
     {
@@ -920,6 +520,215 @@ RB.crusher.controller = (function(controller) {
       "push_state": "/crusher/settings",
       "class": "glyphicon glyphicon-cog"
     }],
+    selectbar_renderers: {
+      "action/existing": {
+        "topbar": function(target,data,items) {
+
+          var topbar = d3_updateable(target,".topbar","div")
+            .classed("topbar",true)
+
+          if (data.values[0] && data.values[0].key) { 
+            topbar.text("")
+            var dt = data.values.filter(function(x){return x.key != "Other"})
+            var total = d3.sum(data.values,function(z){z.count = z.values.length; return z.count })
+
+            dt.unshift({"key":"All Segments","count":total})
+
+            topbar.datum(dt)
+
+            var data = data
+            var menu = this
+
+            var items = d3_splat(topbar,".item","a",false,function(x){return x.key})
+              .classed("item",true)
+              .html(function(x){return x.key + " <span style='color:#ddd'>("+ x.count + ")</span>"})
+              .attr("style",function(x,i){ return (x.key == data.selection) ? undefined : "background:none" })
+              .on("click",function(x){
+                var self = this;
+                items.style("background","none")
+                items.filter(function(){ return this == self}).style("background",undefined)
+
+                data.selection = x.key
+
+                var obj = {
+                  "name":"Vendors",
+                  "push_state": "/crusher/vendors",
+                  "class": "glyphicon glyphicon-th-large",
+                  "values_key": "action_name",
+                  "filter": function(y){
+
+                    if (x.key == "All Segments") return true
+                    
+                    if (x.key == y.action_classification) {
+                      return true
+                    } else { 
+                      return false
+                    }
+                  }
+                }
+
+                menu.navigation.forward.bind(this)(obj,false)
+
+
+              })
+
+          }
+        },
+        "heading": function(target,has_back,self,items){
+
+          target.style("text-align","left")
+
+          var wrapper = d3_updateable(target,".heading","h5")
+            .classed("heading",true)
+            .style("overflow","visible")
+            .style("z-index","1")
+            .style("text-align","left")
+            .style("padding-left","10px")
+            .text("")
+
+          var filter_wrapper = d3_updateable(wrapper,".btn-group","div")
+            .classed("btn-group btn-small dropdown",true)
+
+          var btn = d3_updateable(filter_wrapper,"button","button")
+            .classed("btn btn-default dropdown-toggle btn-sm",true)
+            .attr("data-toggle","dropdown")
+	    .attr("aria-haspopup", "true")
+	    .attr("aria-expanded", "false")
+            .style("width","140px")
+            .style("border","0px")
+
+
+          var setText = function(text) {
+            var wrap = d3_updateable(btn,".caret-wrap","span")
+              .classed("caret-wrap",true)
+              .style("margin-left","5px")
+              .style("float","right")
+              .style("line-height","18px")
+              .style("width","15px")
+
+            d3_updateable(wrap,".caret","span")
+              .classed("caret",true)
+
+            d3_updateable(btn,".text","span")
+              .classed("text",true)
+              .style("width","100px")
+              .style("margin-bottom","-4px")
+              .style("overflow","hidden")
+              .style("display","inline-block")
+              .style("height","15px")
+              .text(text)
+
+          }
+
+
+          var data = target.datum()
+
+          if (data) setText(data.selection)
+
+          var dropdown = d3_updateable(filter_wrapper,"ul","ul")
+            .classed("dropdown-menu",true)
+
+          var all_filter = d3_updateable(dropdown,"li","li",{"key": this.state.action}, function(x){ return 1})
+
+          d3_updateable(all_filter,"a","a")
+            .text(function(x) { return x.key })
+            .on("click",function(x){
+
+              var i = items.wrapper.datum(function(l){ 
+                return d3.select(this.parentNode).datum() 
+              })
+ 
+              items.render(i,items.transform)
+              setText(x.key)
+
+            })
+
+          var menu = this;
+
+          var dropdown_items = d3_splat(dropdown,"li","li",function(x){return x.values},function(x){return x.key})
+          var dropdown_links = d3_updateable(dropdown_items,"a","a")
+            .text(function(x){ return x.key })
+            .on("click",function(x){
+
+              data.selection = x.key
+
+              var i = items.wrapper.datum(function(l){
+                var parentData = d3.select(this.parentNode).datum().values
+                var filtered = parentData.filter(function(z){return x.key == z.key})
+                return {"values":filtered}
+              })
+
+ 
+              items.render(i,items.transform)
+              setText(x.key)
+
+            })
+
+          dropdown_items.filter(function(x){  return !x.key })
+            .text("")
+            .classed("divider",true)
+
+
+
+
+          return filter_wrapper
+        },
+        "items": function(target,has_back){
+          
+          var menu = this
+          var classname = (target.datum().values_key),
+            should_show = (!!target.datum().values_key && !target.datum().hide_href )
+
+          target.datum(function(d) {
+            if (d.values[0].key) return d.values
+            return []
+          })
+
+          var data = d3.select(target.node().parentNode).datum()
+          console.log("YO",data)
+
+          var section = d3_splat(target,".menu-section","section",function(x) {
+              if (data.selection == "All Segments") return x
+              return x.filter(function(y) {return y.key == data.selection})
+            },function(x){return x.key})
+            .classed("menu-section",true)
+
+          section.exit().remove()
+
+          d3_updateable(section,".heading","div")
+            .classed("heading",true)
+            .text(function(x){ return x.key })
+        
+
+          var dfn = function(x) { return x ? x.values : [] }
+          var kfn = function(x) { return x.action_name + x.push_state }
+
+          var menu = this;
+
+          var items = d3_splat(section, "a.item","a",dfn,kfn)
+            .classed("item item-" + classname,true)
+            .attr("href",function(x){
+              return should_show ? 
+                window.location.pathname + "?id=" + x[classname] : 
+                undefined 
+            })
+            .text(function(x){
+              return x.action_name
+            })
+            .on("click", function(x){
+
+              d3.event.preventDefault()
+              d3.select(this.parentNode).selectAll(".item").classed("active",false)
+              d3.select(this).classed("active",true)
+              
+              menu.navigation.forward.bind(this)(x)
+            })
+  
+          items.exit().remove()
+
+        } 
+      }
+    },
     renderers: controller.initializers,
     transforms: {
       "funnel/new": function(menu_obj){
@@ -931,8 +740,14 @@ RB.crusher.controller = (function(controller) {
         RB.menu.methods.transform(menu_obj,menu_obj.values_key)
       },
       "action/existing": function(menu_obj){
-        menu_obj.values = RB.crusher.cache.actionData
-        RB.menu.methods.transform(menu_obj,menu_obj.values_key)
+
+        var data = d3.nest()
+          .key(function(x){return x.action_classification})
+          .entries(RB.crusher.cache.actionData)
+
+
+        menu_obj.values = data
+        //RB.menu.methods.transform(menu_obj,menu_obj.values_key)
       },
       "action/recommended": function(menu_obj){
 
@@ -1034,7 +849,8 @@ RB.crusher.controller = (function(controller) {
           "name": "View Existing Segments",
           "push_state":"/crusher/action/existing",
           //"skipRender": true,
-          "values_key":"action_name"
+          "values_key":"action_name",
+          "selection": "All Segments"
         }
       ]
     }

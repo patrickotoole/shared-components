@@ -246,17 +246,16 @@ RB.crusher.ui.action = (function(action) {
 
     actionView.exit().remove()
 
-    var h5 = actionView.selectAll("h5").data(function(x){return [x.action_name]})
-    h5.enter().append("h5")
+    var h5 = actionView.selectAll("header").data(function(x){return [x.action_name]})
+    h5.enter().append("header")
 
     h5.text(function(x) { return "Segment > " + x } )
-      .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-30px;margin-right:-30px")
-      .classed("heading",true)
+      .classed("page-header with-sidebar",true )
 
     var remove_button = d3_updateable(h5, '.btn', 'a')
-      .text('Delete Segment')
-      .classed('btn btn-default pull-right',true)
-      .style('margin', '16px 16px 0 0')
+      .html('<span class="icon glyphicon glyphicon-remove-circle" style="padding-right: 15px;top:2px"></span>' + ' Delete')
+      .classed('btn btn-default btn-sm pull-right',true)
+      .style('margin', '8px 16px 0 0')
       .on('click', function(e) {
         if(confirm('Are you sure you want to delete this segment?')) {
           try{
