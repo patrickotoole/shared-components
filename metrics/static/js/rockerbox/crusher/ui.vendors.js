@@ -25,7 +25,7 @@ RB.crusher.ui.vendors = (function(vendors) {
       .classed('vendors-list-card bar series col-md-12', true);
 
     pubsub.subscriber("vendors-data",["actions"])
-      .run(function(segments){
+      .run(function(segments) {
         var vendors = segments.filter(filter)
 
         /* Vendor List */

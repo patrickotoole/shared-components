@@ -210,63 +210,37 @@
     });
   }
 
-  var navigation_items = [
-      {
-        title: 'Opportunities',
-        url: 'advertiser-opportunities'
-      }, {
-        title: 'Before and After',
-        url: 'before-and-after'
-      }, {
-        title: 'Clusters',
-        url: 'clusters'
-      }, {
-        title: 'Timing',
-        url: 'timing'
-      }, {
-        title: 'Comparison',
-        url: 'comparison'
-      }
-    ]
-
   function render_nav(items) {
 
       var vendor_name_column = d3_updateable(items, '.vendor-name-column', 'div')
-        .classed('vendor-name-column col-lg-2 col-md-6', true)
+        .classed('vendor-name-column col-lg-12 col-md-12', true)
 
       var vendor_name = d3_updateable(vendor_name_column, '.vendor-name', 'div')
         .classed('col-md-12 vendor-name', true)
         .html(function(x) { return '<h2>' + x.action_name + '</h2>'; });
 
-      // Vendor List Item : Expand Button
-      var vendor_expand = d3_updateable(vendor_name_column, '.vendor-expand', 'div')
-        .classed('col-md-12 vendor-expand', true)
-
-      var vendor_navigation_list = d3_updateable(vendor_name_column, '.vendor-navigation-list', 'ul')
-        .classed('col-md-12 vendor-navigation-list', true)
-
-      var vendor_navigation_items = d3_splat(vendor_navigation_list, '.nav-list-item', 'li',
-        navigation_items,
-        function(x) { return x.title }
-      )
-      .classed('nav-list-item', true);
-
-      d3_updateable(vendor_navigation_items, 'a', 'a')
-        .attr('href', function(x) {
-          return '/crusher/action/existing?id=/' + x.action_name + '#' + x.url;
-        })
-        .text(function(x) { return x.title; })
-        .on('click', function(x) {
-          RB.routes.navigation.forward({
-            "name": "View Existing Actions",
-            "push_state":"/crusher/action/existing",
-            "skipRender": true,
-            "values_key":"action_name"
-          })
-          RB.routes.navigation.forward(d3.select(this.parentElement.parentElement).datum())
-
-          d3.event().preventDefault();
-        })
+      // var vendor_navigation_items = d3_splat(vendor_navigation_list, '.nav-list-item', 'li',
+      //   navigation_items,
+      //   function(x) { return x.title }
+      // )
+      // .classed('nav-list-item', true);
+      //
+      // d3_updateable(vendor_navigation_items, 'a', 'a')
+      //   .attr('href', function(x) {
+      //     return '/crusher/action/existing?id=/' + x.action_name + '#' + x.url;
+      //   })
+      //   .text(function(x) { return x.title; })
+      //   .on('click', function(x) {
+      //     RB.routes.navigation.forward({
+      //       "name": "View Existing Actions",
+      //       "push_state":"/crusher/action/existing",
+      //       "skipRender": true,
+      //       "values_key":"action_name"
+      //     })
+      //     RB.routes.navigation.forward(d3.select(this.parentElement.parentElement).datum())
+      //
+      //     d3.event().preventDefault();
+      //   })
 
   }
 
@@ -276,7 +250,7 @@
     vendors.render_nav(rows)
 
     var vendor_data_columns = d3_updateable(rows, '.vendor-data-column', 'div')
-      .classed('vendor-data-column col-lg-10 col-md-12', true)
+      .classed('vendor-data-column col-lg-12 col-md-12', true)
 
     var data_columns_without_data = vendor_data_columns.filter(function(x) { return !x.views_data })
 
@@ -296,22 +270,22 @@
   function render_list(list) {
 
     var rows = d3_splat(list, '.vendors-list-item', 'li', false, function(x) { return x.action_name; })
-      .classed('vendors-list-item', true);
+      .classed('vendors-list-item  series', true);
 
     rows.exit().remove()
-          
+
     return rows
   }
 
   function render_wrapper(target) {
 
-    var controls = d3_updateable(target,'.page-header-controls','div')
-      .classed('page-header-controls', true)
-      .text('View as table')
-      .on('click', function(x) { this._on.click(x) }.bind(this) )
+    // var controls = d3_updateable(target,'.page-header-controls','div')
+    //   .classed('page-header-controls', true)
+    //   .text('View as table')
+    //   .on('click', function(x) { this._on.click(x) }.bind(this) )
 
     var vendors_list_card = d3_updateable(target, '.vendors-list-card', 'section')
-      .classed('vendors-list-card bar series col-md-12', true);
+      .classed('vendors-list-card col-md-12', true);
 
     var vendors_list = d3_updateable(vendors_list_card, '.vendors-list', 'ul')
       .classed('vendors-list', true);
@@ -407,13 +381,18 @@
 
   function datum(d) {
     if (d !== undefined) {
+
+      if (this._filter) d = d.filter(this._filter)
       this._data = d
+
       this._wrapper.datum(d)
       return this
     }
-    return this._wrapper.datum()
-  }
+    var d = this._wrapper.datum()
+    if (this._filter) d = d.filter(this._filter)
+    return d
 
+  }
 
   function draw(_d1, _d2, _d3, skip_missing) {
     if ( (this._wrapper.datum().length ) && (this._data !== this._wrapper.datum()) )
@@ -442,6 +421,10 @@
     draw: draw,
     datum: datum,
     on: function(x,y) { this._on[x] = y; return this },
+    filter: function(x) {
+      this._filter = x
+      return this
+    },
 
     render_button: render_button,
     render_wrapper: render_wrapper,

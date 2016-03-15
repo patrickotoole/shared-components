@@ -667,7 +667,7 @@ RB.crusher.ui.action = (function(action) {
       .text(function(x){
         return x.action_id ? "Edit a segment" : "Create a segment"
       })
-      .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-30px;margin-right:-30px")
+      .attr("style","margin-top:-15px;padding-left:20px;height: 50px;line-height:50px;border-bottom:1px solid #f0f0f0;margin-left:-30px;margin-right:-30px;margin-top: -65px !important; font-size: 12px;    box-shadow: 0 -1px 0 0 rgba(255,255,255,0.08),0 1px 0 0 rgba(0,0,0,0.15) inset;")
       .classed("heading",true)
 
 

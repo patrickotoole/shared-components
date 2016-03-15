@@ -5,7 +5,7 @@ export default function(rows) {
   vendors.render_nav(rows)
 
   var vendor_data_columns = d3_updateable(rows, '.vendor-data-column', 'div')
-    .classed('vendor-data-column col-lg-10 col-md-12', true)
+    .classed('vendor-data-column col-lg-12 col-md-12', true)
 
   var data_columns_without_data = vendor_data_columns.filter(function(x) { return !x.views_data })
 

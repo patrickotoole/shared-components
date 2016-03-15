@@ -110,21 +110,19 @@ ul.vendors-list {
   padding: 0;
   margin: 0;
 
+  .vendor-onsite-column > div:first-of-type {
+    padding: 0;
+  }
+
   > li.vendors-list-item:first-child {
     border-top: none;
-    padding-top: 0;
   }
 
   > li.vendors-list-item {
     list-style-type: none;
-    border-top: solid 1px #eee;
-    padding: 15px 0;
+    padding: 20px 0;
     overflow: auto;
     min-height: 110px;
-
-    div {
-      padding: 0 !important;
-    }
 
     div.vendor-name-column {
       div.vendor-name {
