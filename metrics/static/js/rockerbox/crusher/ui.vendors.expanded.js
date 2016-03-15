@@ -9,9 +9,12 @@ RB.crusher.ui.vendors = (function(vendors) {
 
   vendors.show = function(funnelRow, obj) {
 
+    var subscribe_to = (obj.selection) ? "actions" : undefined
+    // debugger;
     var xx = window.vendors.vendor_expanded(funnelRow)
       .subscribe()
-      .initialize() // if you set .datum(DATA), there is no initial subscription
+      .filter(obj.filter)
+      .initialize(subscribe_to) // if you set .datum(DATA), there is no initial subscription
       .on('click',function() {
         RB.crusher.controller.initializers.vendors(obj,false)
       })

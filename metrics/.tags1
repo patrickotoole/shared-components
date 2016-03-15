@@ -13,12 +13,9 @@ l	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/
 i	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/controller.js	/^                  var i = function() {$/;"	function	line:94
 c	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/controller.js	/^                  i.c = function(args) {$/;"	function	line:98
 l	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/controller.js	/^                  function l() {$/;"	function	line:103
-build_header	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/controller.js	/^  var build_header = function(obj) {$/;"	function	line:173
-subscription	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/controller.js	/^      var subscription = function(advertiser, actions, funnels) {$/;"	function	line:220
-get_bloodhound	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/controller.js	/^  controller.get_bloodhound = function(cb) {$/;"	function	line:568
-compare	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/controller.js	/^    var compare = function(a, b) {$/;"	function	line:570
-transform	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/controller.js	/^        transform: function(resp) {$/;"	function	line:580
-prepare	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/controller.js	/^        prepare: function(x, settings) {$/;"	function	line:583
-setText	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/controller.js	/^          var setText = function(text) {$/;"	function	line:717
-dfn	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/controller.js	/^          var dfn = function(x) {$/;"	function	line:843
-kfn	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/controller.js	/^          var kfn = function(x) {$/;"	function	line:846
+build_header	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/controller.js	/^  var build_header = function(obj) {$/;"	function	line:174
+subscription	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/controller.js	/^      var subscription = function(advertiser, actions, funnels) {$/;"	function	line:221
+get_bloodhound	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/controller.js	/^  controller.get_bloodhound = function(cb) {$/;"	function	line:576
+compare	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/controller.js	/^    var compare = function(a, b) {$/;"	function	line:578
+transform	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/controller.js	/^        transform: function(resp) {$/;"	function	line:588
+prepare	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/controller.js	/^        prepare: function(x, settings) {$/;"	function	line:591

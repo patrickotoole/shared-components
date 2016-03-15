@@ -22,13 +22,18 @@ export function Expanded(target) {
 
 function datum(d) {
   if (d !== undefined) {
+
+    if (this._filter) d = d.filter(this._filter)
     this._data = d
+
     this._wrapper.datum(d)
     return this
   }
-  return this._wrapper.datum()
-}
+  var d = this._wrapper.datum()
+  if (this._filter) d = d.filter(this._filter)
+  return d
 
+}
 
 function draw(_d1, _d2, _d3, skip_missing) {
   if ( (this._wrapper.datum().length ) && (this._data !== this._wrapper.datum()) )
@@ -57,6 +62,10 @@ Expanded.prototype = {
   draw: draw,
   datum: datum,
   on: function(x,y) { this._on[x] = y; return this },
+  filter: function(x) {
+    this._filter = x
+    return this
+  },
 
   render_button: render_button,
   render_wrapper: render_wrapper,

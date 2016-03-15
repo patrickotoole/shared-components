@@ -8,7 +8,7 @@ RB.menu.action = {
     var topbar = d3_updateable(target,".topbar","div")
       .classed("topbar",true)
 
-    if (data.values[0] && data.values[0].key) { 
+    if (data.values[0] && data.values[0].key) {
       topbar.text("")
       var dt = data.values.filter(function(x){return x.key != "Other"})
       var total = d3.sum(data.values,function(z){z.count = z.values.length; return z.count })
@@ -33,7 +33,7 @@ RB.menu.action = {
 
           var obj = {
             "name":"Vendors",
-            "push_state": "/crusher/vendors",
+            "push_state": "/crusher/action/existing",
             "class": "glyphicon glyphicon-th-large",
             "values_key": "action_name",
             "filter": function(y){
@@ -108,8 +108,8 @@ RB.menu.action = {
       .text(function(x) { return x.key })
       .on("click",function(x){
 
-        var i = items.wrapper.datum(function(l){ 
-          return d3.select(this.parentNode).datum() 
+        var i = items.wrapper.datum(function(l){
+          return d3.select(this.parentNode).datum()
         })
 
         items.render(i,items.transform)
@@ -147,7 +147,7 @@ RB.menu.action = {
     return filter_wrapper
   },
   "items": function(target,data,has_back){
-    
+
     var menu = this
     var classname = (target.datum().values_key),
       should_show = (!!target.datum().values_key && !target.datum().hide_href )
@@ -170,7 +170,7 @@ RB.menu.action = {
     d3_updateable(section,".heading","div")
       .classed("heading",true)
       .text(function(x){ return x.key })
-  
+
 
     var dfn = function(x) { return x ? x.values : [] }
     var kfn = function(x) { return x.action_name + x.push_state }
@@ -180,9 +180,9 @@ RB.menu.action = {
     var items = d3_splat(section, "a.item","a",dfn,kfn)
       .classed("item item-" + classname,true)
       .attr("href",function(x){
-        return should_show ? 
-          window.location.pathname + "?id=" + x[classname] : 
-          undefined 
+        return should_show ?
+          window.location.pathname + "?id=" + x[classname] :
+          undefined
       })
       .text(function(x){
         return x.action_name
@@ -197,5 +197,5 @@ RB.menu.action = {
 
     items.exit().remove()
 
-  } 
+  }
 }
