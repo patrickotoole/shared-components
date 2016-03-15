@@ -872,7 +872,7 @@ RB.crusher.controller = (function(controller) {
 
         }
       }
-    ],
+    },
     selectbar_renderers: {
       "action/existing": RB.menu.action
     },
