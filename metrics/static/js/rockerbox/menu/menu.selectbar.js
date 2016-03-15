@@ -13,7 +13,7 @@ RB.menu.selectbar = (function(selectbar) {
 
       return bars
     },
-    heading: function(target,has_back,override) {
+    heading: function(target,data,has_back,override) {
       
       if (override) return override.apply(menu,arguments)
 
@@ -27,11 +27,12 @@ RB.menu.selectbar = (function(selectbar) {
           return backarr + name 
         })
 
+
       if (has_back) a.on("click",menu.navigation.back)
 
       return h5
     },
-    items: function(target,override) {
+    items: function(target,data,override) {
 
       if (override) return override.apply(menu,arguments) 
 
@@ -80,8 +81,8 @@ RB.menu.selectbar = (function(selectbar) {
       transform: transforms.items
     }
 
-    selectbar.components.heading(target.datum(data),has_back,transforms.heading,build_items)
-    selectbar.components.items(wrapper,transforms.items)
+    selectbar.components.heading(target.datum(data),data,has_back,transforms.heading,build_items)
+    selectbar.components.items(wrapper,data,transforms.items)
 
     menu.bound_topbar(data,transforms.topbar,build_items)
 
