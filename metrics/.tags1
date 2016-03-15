@@ -4,14 +4,26 @@
 !_TAG_PROGRAM_NAME	Exuberant Ctags	//
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.8	//
-html, body	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/sass/partials/_general.scss	/^html, body {$/;"	function	line:1
-body > .container	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/sass/partials/_general.scss	/^body > .container {$/;"	function	line:5
-.selectbar	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/sass/partials/_general.scss	/^.selectbar {$/;"	function	line:9
-h5 a	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/sass/partials/_general.scss	/^  h5 a {$/;"	function	line:10
-.page_tabs_item	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/sass/partials/_general.scss	/^.page_tabs_item {$/;"	function	line:15
-.page_tabs_item.active	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/sass/partials/_general.scss	/^.page_tabs_item.active {$/;"	function	line:21
-.max-width-330	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/sass/partials/_general.scss	/^.max-width-330 {$/;"	function	line:26
-.bar.series.views	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/sass/partials/_general.scss	/^	.bar.series.views {$/;"	function	line:28
-.action-view-wrapper .heading	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/sass/partials/_general.scss	/^.action-view-wrapper .heading {$/;"	function	line:34
-.page-header-controls	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/sass/partials/_general.scss	/^.page-header-controls {$/;"	function	line:38
-.page-header-controls:hover	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/sass/partials/_general.scss	/^.page-header-controls:hover {$/;"	function	line:54
+pubsub	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/ui.action.js	/^var pubsub = RB.crusher.pubsub;$/;"	variable	line:5
+save	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/ui.action.js	/^  action.save = function(callback) {$/;"	function	line:13
+status	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/ui.action.js	/^  action.status = function(wrapper) {$/;"	function	line:43
+preview	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/ui.action.js	/^  action.preview = function(wrapper) {$/;"	function	line:233
+wait	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/ui.action.js	/^  action.wait = function(wrapper) {$/;"	function	line:317
+view	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/ui.action.js	/^  action.view = function(wrapper) {$/;"	function	line:332
+show_timeseries	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/ui.action.js	/^  action.show_timeseries = function(wrapper) {$/;"	function	line:376
+edit	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/ui.action.js	/^  action.edit = function(wrapper,onSave) {$/;"	function	line:404
+setTimeout	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/ui.action.js	/^      setTimeout(function() {$/;"	function	line:406
+buildResults	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/ui.action.js	/^      buildResults: function() {$/;"	function	line:473
+switch	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/ui.action.js	/^        switch(search.filter) {$/;"	function	line:474
+buildFilters	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/ui.action.js	/^      buildFilters: function() {$/;"	function	line:506
+switchFilter	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/ui.action.js	/^      switchFilter: function(filter, filter_options) {$/;"	function	line:534
+perform	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/ui.action.js	/^      perform: function(query) {$/;"	function	line:546
+setTimeout	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/ui.action.js	/^          setTimeout(function() {$/;"	function	line:629
+show	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/ui.action.js	/^  action.show = function(target,onSave,expandTarget) {$/;"	function	line:793
+showAll	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/ui.action.js	/^  action.showAll = function(actions,onSave,urls) {$/;"	function	line:823
+showRecommended	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/ui.action.js	/^  action.showRecommended = function(actions,onSave,urls) {$/;"	function	line:838
+select	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/ui.action.js	/^  action.select = function(data) {$/;"	function	line:868
+add_action	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/ui.action.js	/^  action.add_action = function(dd) {$/;"	function	line:876
+showList	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/ui.action.js	/^  action.showList = function(target,actions) {$/;"	function	line:890
+buildEdit	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/ui.action.js	/^  action.buildEdit = function(target,data,onSave) {$/;"	function	line:902
+buildBase	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/js/rockerbox/crusher/ui.action.js	/^  action.buildBase = function(id) {$/;"	function	line:916
