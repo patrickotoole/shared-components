@@ -12,11 +12,13 @@ import render_title from './table/render/title'
 import render_views_metrics from './table/render/views_metrics'
 import render_categories from './table/render/categories'
 
-export function Table(target) {
+export function Table(target, title, cohort) {
   this._target = target;
   this._wrapper = this.render_wrapper(target);
   this._data = [];
   this._on = {};
+  this._title;
+  this._cohort;
 }
 
 function datum(d) {
@@ -55,7 +57,7 @@ var check_missing_header = function(tableWrapper) {
   try {
     var table_categories = buildCategories(unhandled_vendor)
     if (!has_header) {
-      render_header(tableWrapper, JSON.parse(JSON.stringify(table_categories)))
+      this.render_header(tableWrapper, JSON.parse(JSON.stringify(table_categories)))
     }
   } catch (e) {
     console.log('ERROR', e);
@@ -69,7 +71,7 @@ function draw(_d1, _d2, _d3, skip_missing) {
   if ((this._wrapper.datum().length) &&
     (this._data !== this._wrapper.datum())) return this;
 
-  var table_categories = check_missing_header(this._wrapper)
+  var table_categories = this.check_missing_header(this._wrapper)
 
 
   var row = this.render_rows(table_categories, this._wrapper)
@@ -84,8 +86,23 @@ function draw(_d1, _d2, _d3, skip_missing) {
 
 }
 
+function title(value) {
+  this._title = value;
+  d3.select('.vendor-card-title').text(value);
+  return this;
+}
+
+function cohort(value) {
+  this._cohort = value;
+  return this;
+}
+
 function vendor_table(target) {
-  return new Table(target)
+  var table = new Table(target)
+    .title('Vendor Audience Cohorts')
+    .cohort('Vendor');
+
+  return table;
 }
 
 Table.prototype = {
@@ -111,7 +128,11 @@ Table.prototype = {
   render_header: render_header,
   render_title: render_title,
   render_views_metrics: render_views_metrics,
-  render_categories: render_categories
+  render_categories: render_categories,
+  check_missing_header: check_missing_header,
+
+  title: title,
+  cohort: cohort
 }
 
 export default vendor_table;
