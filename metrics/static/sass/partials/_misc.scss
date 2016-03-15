@@ -13,6 +13,21 @@ $container-color: #F0F4F7;
   transform: scale(0.5) !important;
 }
 
+.topbar .item {
+  background-color: #3f6a90;
+  color: white;
+  border-radius: 15px;
+  display:inline-block;
+  line-height: 30px;
+  margin-top: 10px;
+  margin-left:15px;
+  padding-right:15px;
+  padding-left:15px;
+  font-weight:bold;
+  font-size:13px;
+
+}
+
 body {
     padding-top: as_px($header-height*2);
 }

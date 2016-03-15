@@ -83,6 +83,8 @@ RB.menu.selectbar = (function(selectbar) {
     selectbar.components.heading(target.datum(data),has_back,transforms.heading,build_items)
     selectbar.components.items(wrapper,transforms.items)
 
+    menu.bound_topbar(data,transforms.topbar,build_items)
+
     return selectbar.render.bind(false,target)
 
   }

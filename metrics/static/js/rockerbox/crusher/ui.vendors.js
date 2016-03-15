@@ -10,7 +10,10 @@ RB.crusher.ui.vendors = (function(vendors) {
   var comma_formatter = d3.format(',');
 
 
-  vendors.show = function(funnelRow, obj) {
+  vendors.show = function(funnelRow, obj, filter) {
+
+    var filter = filter || function(x) { return x.action_type == 'vendor'; }
+
     var controls = d3_updateable(funnelRow,'.page-header-controls','div')
       .classed('page-header-controls', true)
       .text('View as table')
@@ -23,9 +26,7 @@ RB.crusher.ui.vendors = (function(vendors) {
 
     pubsub.subscriber("vendors-data",["actions"])
       .run(function(segments){
-        var vendors = segments.filter(function(x) {
-          return x.action_type == 'vendor';
-        })
+        var vendors = segments.filter(filter)
 
         /* Vendor List */
         var vendors_list = d3_updateable(vendors_list_card, '.vendors-list', 'ul')
