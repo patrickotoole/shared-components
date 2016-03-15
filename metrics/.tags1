@@ -1,0 +1,17 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	0	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+html, body	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/sass/partials/_general.scss	/^html, body {$/;"	function	line:1
+body > .container	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/sass/partials/_general.scss	/^body > .container {$/;"	function	line:5
+.selectbar	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/sass/partials/_general.scss	/^.selectbar {$/;"	function	line:9
+h5 a	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/sass/partials/_general.scss	/^  h5 a {$/;"	function	line:10
+.page_tabs_item	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/sass/partials/_general.scss	/^.page_tabs_item {$/;"	function	line:15
+.page_tabs_item.active	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/sass/partials/_general.scss	/^.page_tabs_item.active {$/;"	function	line:21
+.max-width-330	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/sass/partials/_general.scss	/^.max-width-330 {$/;"	function	line:26
+.bar.series.views	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/sass/partials/_general.scss	/^	.bar.series.views {$/;"	function	line:28
+.action-view-wrapper .heading	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/sass/partials/_general.scss	/^.action-view-wrapper .heading {$/;"	function	line:34
+.page-header-controls	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/sass/partials/_general.scss	/^.page-header-controls {$/;"	function	line:38
+.page-header-controls:hover	/Users/farid/Projects/rockerbox/rockerbox-metrics/metrics/static/sass/partials/_general.scss	/^.page-header-controls:hover {$/;"	function	line:54

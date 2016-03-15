@@ -1,6 +1,10 @@
+html, body {
+  height: 100%;
+}
 
-
-
+body > .container {
+  min-height: 100%;
+}
 
 .selectbar {
   h5 a {
