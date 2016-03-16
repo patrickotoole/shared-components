@@ -14,7 +14,6 @@ RB.crusher.controller = (function(controller) {
     pubsub.subscriber("advertiser-name-email", ["advertiser", "current_user"])
       .run(function(advertiser_data, current_user) {
         setTimeout(function() {
-          if (true) return
           var user_type = document.cookie.split("user_type=")[1].split(";")[0];
           switch (user_type) {
             case 'rockerbox':
