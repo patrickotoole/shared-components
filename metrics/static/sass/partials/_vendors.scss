@@ -127,6 +127,7 @@ ul.vendors-list {
     div.vendor-name-column {
       div.vendor-name {
         margin-bottom: 10px;
+        cursor: pointer;
 
         h2 {
           margin: 0;
@@ -136,6 +137,10 @@ ul.vendors-list {
           line-height: 22px;
           color: #5A5A5A;
         }
+      }
+
+      div.vendor-name:hover {
+        text-decoration: underline;
       }
 
       ul.vendor-navigation-list {
