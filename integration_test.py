@@ -126,3 +126,24 @@ if __name__ == "__main__":
         print P['keys']
     if options.run_beta:
         run(api_beta, "/crusher/pattern_search/timeseries_only?search=%s" % PATTERN, "Beta")
+
+    Q=run(api_prod, "/crusher/pattern_search/uids_only?search=%s" % PATTERN, "Production")
+    R=run(api_local,"/crusher/pattern_search/uids_only?search=%s" % PATTERN, "Local")
+    if Q['keys'] == R['keys'] and ((Q['size']>0 and R['size']>0) or (Q['size']==0 and R['size']==0)):
+        print Q['keys'] == R['keys']
+    else:
+        print Q['keys']
+        print R['keys']
+    if options.run_beta:
+        run(api_beta, "/crusher/pattern_search/uids_only?search=%s" % PATTERN, "Beta")
+
+    S=run(api_prod, "/crusher/v1/visitor/onsite/cache?format=json&url_pattern=%s" % PATTERN, "Production")
+    T=run(api_local,"/crusher/v1/visitor/onsite/cache?format=json&url_pattern=%s" % PATTERN, "Local")
+    if S['keys'] == T['keys'] and ((S['size']>0 and T['size']>0) or (S['size']==0 and T['size']==0)):
+        print S['keys'] == T['keys']
+    else:
+        print S['keys']
+        print T['keys']
+    if options.run_beta:
+        run(api_beta, "/crusher/v1/visitor/onsite/cache?format=json&url_pattern=%s" % PATTERN, "Beta")
+
