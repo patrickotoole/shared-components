@@ -467,6 +467,11 @@ polyline{
   border-top-right-radius: 3px !important;
   border-bottom-right-radius: 3px !important;
 }
+
+.data-version-buttons a:hover {
+  background-color: #FDFDFF;
+}
+
 .data-version-buttons a.active,
 .data-version-buttons a.active:hover {
   background-color: #F4F8FA;
