@@ -280,6 +280,7 @@ RB.crusher.ui.action = (function(action) {
     var data_version_buttons = d3_updateable(h5, '.data-version-buttons', 'div')
       .classed('list-group data-version-buttons pull-right', true)
       .style('display', 'inline-block')
+      .style('display', 'none') // Remove this to make it visible again
       .style('margin', '0 10px 0 0')
 
     var data_version_options = [
