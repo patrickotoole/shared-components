@@ -86,7 +86,8 @@ class AdvertiserRoutes(Routes):
             (r'/visitor/domains', visitor.handler.VisitorDomainsHandler, self.connectors),
             (r'/visitor/domains/cache', visitor.cache_handler.ActionDashboardHandler, self.connectors),
 
-            (r'/visitor/onsite/cache', visitor.onsite_uids_handler.UidsCacheHandler, self.connectors),
+            (r'/visitor/onsite', visitor.onsite_uids_handler.UidsOnsiteHandler, self.connectors),
+            (r'/visitor/onsite/cache', visitor.onsite_uids_cache_handler.UidsCacheHandler, self.connectors),
 
             (r'/visitor/domains_full', visitor.full_handler.VisitorDomainsFullHandler, self.connectors),
             (r'/visitor/domains_full/cache',visitor.full_cache_handler.VisitorDomainsFullCacheHandler,self.connectors),

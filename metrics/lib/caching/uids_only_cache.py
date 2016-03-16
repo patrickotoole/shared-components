@@ -47,10 +47,16 @@ def make_request(advertiser, pattern, base_url):
     return data
 
 def write_to_table_visits(advertiser, pattern, data,db):
-    db.execute(SQL_QUERY1.format(advertiser, pattern, data["visits"], data["users_count"]))
+    try:
+        db.execute(SQL_QUERY1.format(advertiser, pattern, data["visits"], data["users_count"]))
+    except:
+        logging.info("duplicate entry -- visits")
 
 def write_to_table_sessions(advertiser, pattern, data,db):
-    db.execute(SQL_QUERY2.format(advertiser, pattern, data["sessions"], data["users_count"]))
+    try:
+        db.execute(SQL_QUERY2.format(advertiser, pattern, data["sessions"], data["users_count"]))
+    except:
+        logging.info("duplicate entry -- sessions")
 
 
 def runner(advertiser, pattern, base_url, cache_date, indentifiers="test", connectors=False):

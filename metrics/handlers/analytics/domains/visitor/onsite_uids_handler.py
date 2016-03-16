@@ -15,42 +15,39 @@ from lib.helpers import *
 from lib.cassandra_helpers.helpers import FutureHelpers
 from lib.cassandra_cache.helpers import *
 from lib.helpers import APIHelpers
+from handlers.analytics.visit_events import VisitEventBase
+from handlers.analytics.search.cache.pattern_search_cache import PatternSearchCache
+from handlers.analytics.search.search_helpers import SearchHelpers
 
 QUERY1 = "select distinct * from uids_only_sessions_cache where advertiser = '{}' and pattern = '{}'"
 QUERY2 = "select distinct * from uids_only_visits_cache where advertiser = '{}' and pattern = '{}'"
 
-class UidsCacheHandler(BaseHandler, AnalyticsBase, APIHelpers):
+class UidsOnsiteHandler(BaseHandler, AnalyticsBase, APIHelpers, VisitEventBase, PatternSearchCache,SearchHelpers):
 
     def initialize(self, db=None, cassandra=None, **kwargs):
         self.logging = logging
         self.db = db
         self.cassandra = cassandra
 
-    @decorators.formattable
-    def get_content(self, data):
-        def default(self, data):
-            df = Convert.df_to_json(data)
-            self.render("analysis/visit_urls.html", data=df)
-        yield default, (data,)
-
-    @decorators.deferred
-    def defer_get_uids_cache(self, advertiser, pattern):
-
-        sql = lnk.dbs.rockerbox
-
-        results1 = sql.select_dataframe(QUERY1.format(advertiser, pattern))
-        results2 = sql.select_dataframe(QUERY2.format(advertiser, pattern))
-        df = {"sessions":
-        ujson.loads(pandas.DataFrame(results1)[["num_sessions","sessions_user_count"]].to_json(orient='records')),"visits":ujson.loads(pandas.DataFrame(results2)[["num_visits","visit_user_count"]].to_json(orient='records'))}
-        temp = results1.set_index("num_sessions").to_dict()
-        return df
-
     @defer.inlineCallbacks
-    def get_cache_uids(self, advertiser, pattern):
-        response_data = yield self.defer_get_uids_cache( advertiser, pattern)
-        self.write_response(response_data)
-        #self.get_content(response_data)
-    
+    def get_uids_only(self, advertiser, pattern_terms, num_days, logic="or",timeout=60, **kwargs):
+
+        dates = build_datelist(num_days)
+        args = [advertiser,pattern_terms,dates]
+
+        uids = yield self.get_uids_from_cache(*args)
+        uids = list(set([u['uid'] for u in uids]))
+
+        urls, raw_urls = yield self.defer_get_uid_visits(advertiser,uids,"adsf")
+
+        df = raw_urls.groupby(["uid"])['date'].apply(lambda x: pandas.DataFrame( pandas.Series({"visits":len(x),"sessions": len(x.unique())} ) ).T )
+        results = df.reset_index()[['uid','sessions','visits']].to_dict('records')
+
+        response = self.default_response(pattern_terms,logic)
+        response['results'] = results
+
+        self.write_json(response)
+
     @tornado.web.authenticated
     @tornado.web.asynchronous
     def get(self):
@@ -58,9 +55,10 @@ class UidsCacheHandler(BaseHandler, AnalyticsBase, APIHelpers):
         user = self.current_advertiser_name
 
         try:
-            self.get_cache_uids(
+            self.get_uids_only(
                 user,
-                url_pattern
+                url_pattern,
+                3
                 )
         except:
             self.get_content(pandas.DataFrame())
