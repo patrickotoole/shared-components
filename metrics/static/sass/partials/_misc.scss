@@ -449,3 +449,27 @@ polyline{
 .row.pie {
   margin-top: -10px; margin-bottom: -20px; font-size: 11px;
 }
+
+.data-version-buttons a {
+  border-radius: 0 !important;
+}
+
+.data-version-buttons a:not(:first-child) {
+  border-left: none !important;
+}
+
+.data-version-buttons a:first-child {
+  border-top-left-radius: 3px !important;
+  border-bottom-left-radius: 3px !important;
+}
+
+.data-version-buttons a:last-child {
+  border-top-right-radius: 3px !important;
+  border-bottom-right-radius: 3px !important;
+}
+.data-version-buttons a.active,
+.data-version-buttons a.active:hover {
+  background-color: #F4F8FA;
+  box-shadow: inset 0 1px 1px 0 rgba(35,35,35,0.03);
+  color: #555;
+}

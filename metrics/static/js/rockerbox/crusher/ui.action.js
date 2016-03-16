@@ -253,9 +253,17 @@ RB.crusher.ui.action = (function(action) {
       .classed("page-header with-sidebar",true )
 
     var remove_button = d3_updateable(h5, '.btn', 'a')
-      .html('<span class="icon glyphicon glyphicon-remove-circle" style="padding-right: 15px;top:2px"></span>' + ' Delete')
+      .html('<span class="icon glyphicon glyphicon-remove" style="padding-right: 10px; font-size: 8px; top: 1px;"></span>' + ' Delete')
       .classed('btn btn-default btn-sm pull-right',true)
-      .style('margin', '8px 16px 0 0')
+      .style('margin', '11px 16px 0 0')
+      .style('color', '#fff')
+      .style('background-color', '#CD4B5B')
+      .style('font-weight', 'bold')
+      .style('font-size', '11px')
+      .style('border', 'none')
+      .style('text-transform', 'uppercase')
+      .style('line-height', '1')
+      .style('padding', '8px 10px')
       .on('click', function(e) {
         if(confirm('Are you sure you want to delete this segment?')) {
           try{
@@ -268,6 +276,60 @@ RB.crusher.ui.action = (function(action) {
         }
       });
 
+
+    var data_version_buttons = d3_updateable(h5, '.data-version-buttons', 'div')
+      .classed('list-group data-version-buttons pull-right', true)
+      .style('display', 'inline-block')
+      .style('margin', '0 20px 0 0')
+
+    var data_version_options = [
+      {
+        title: 'Sampled'
+      },
+      {
+        title: 'Cached',
+        active: true
+      },
+      {
+        title: 'Raw'
+      }
+    ];
+
+    var data_version_button = d3_splat(data_version_buttons, '.list-group-item', 'a', data_version_options, function(x, i) {
+      return x.title;
+    })
+      .text(function(x) {
+        return x.title;
+      })
+      .on('click', function(x, i) {
+        data_version_button.classed('active', false);
+
+        d3.select(this).classed('active', true);
+      })
+      .style('display', 'inline-block')
+      .style('line-height', '14px')
+      .style('padding', '6px 15px')
+      .style('border', 'solid 1px #f0f0f0')
+      .attr('class', function(x) {
+        var class_attr = 'list-group-item';
+
+        if(typeof x.active !== typeof undefined && x.active === true) {
+          class_attr += ' active';
+        }
+
+        return class_attr;
+      });
+
+
+// <div class="list-group">
+//   <a href="#" class="list-group-item active">
+//     Cras justo odio
+//   </a>
+//   <a href="#" class="list-group-item">Dapibus ac facilisis in</a>
+//   <a href="#" class="list-group-item">Morbi leo risus</a>
+//   <a href="#" class="list-group-item">Porta ac consectetur ac</a>
+//   <a href="#" class="list-group-item">Vestibulum at eros</a>
+// </div>
     h5.exit().remove()
 
    // var edit = d3_updateable(h5,".pull-right.edit","a")
