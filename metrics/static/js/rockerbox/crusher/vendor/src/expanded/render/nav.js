@@ -24,7 +24,18 @@ export default function(items) {
 
     var vendor_name = d3_updateable(vendor_name_column, '.vendor-name', 'div')
       .classed('col-md-12 vendor-name', true)
-      .html(function(x) { return '<h2>' + x.action_name + '</h2>'; });
+      .html(function(x) { return '<h2>' + x.action_name + '</h2>'; })
+      .on('click', function(e) {
+        RB.routes.navigation.forward({
+              "name": "View Existing Actions",
+              "push_state":"/crusher/action/existing",
+              "skipRender": true,
+              "values_key":"action_name"
+            })
+            RB.routes.navigation.forward(d3.select(this.parentElement.parentElement).datum())
+
+            d3.event().preventDefault();
+      });
 
     // var vendor_navigation_items = d3_splat(vendor_navigation_list, '.nav-list-item', 'li',
     //   navigation_items,
