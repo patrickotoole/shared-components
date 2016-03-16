@@ -959,6 +959,10 @@ RB.crusher.ui.action = (function(action) {
 
        time_bucket = time_bucket > 0 ? time_bucket : -1*time_bucket
 
+       if((String(time_bucket).replace('.','-') === String(time_bucket))) {
+         time_bucket = parseFloat(time_bucket + '.0');
+       }
+
        var data = d.all[time_bucket].sort(function(p,c){return c.uid - p.uid})
          .map(function(x) {
            x.count = x.uid
