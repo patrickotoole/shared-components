@@ -65,6 +65,7 @@ def parse_url(msg):
     omsg = msg
     try:
         import urlparse
+        import urllib
         import json
         space_split = msg.split(" ") 
         quote_split = msg.split("\"")
@@ -77,8 +78,12 @@ def parse_url(msg):
             # the other in request_referrer
             if "referrer" in storage:
                 storage['request_referrer'] = quote_split[1]
+                storage['referrer'] = urllib.unquote(storage['referrer'])
             else:
                 storage['referrer'] = quote_split[1]
+
+            if "action" in storage:
+                storage['referrer'] = storage['referrer'] + "&action=" + storage["action"]
             storage['user_agent'] = " ".join(quote_split[-1].split(" ")[:-1])
         except:
             pass
@@ -97,7 +102,7 @@ def parse_url(msg):
 
 if __name__ == "__main__":
     from itertools import takewhile, count
-    from sys import stdin
+    from sys import stdin, stderr, stdout
     from options import define, options, parse_command_line
 
     define("kafka_hosts",type=str,help="",metavar="IP:PORT,...,IP:PORT",default="slave17:9092")
@@ -129,6 +134,7 @@ if __name__ == "__main__":
     for i in input_stream:
         msg = i.replace("\n","")
         if not options.test:
+            print msg
             producer.send_message(msg)
         else:
             print parse_url(msg)

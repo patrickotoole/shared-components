@@ -79,7 +79,7 @@ rockerbox.vb = function(flashID,callback,pixelUrl,width,height,flashWrapper, par
 			"js_getstatus":"getSwfStatus",
 			"min_frame_rate": 25, 
 			"max_count": 120,
-			"dev_mode": false,
+			"dev_mode": true,
 			"track_interval": 250,
 			"global_index": 0
 		}
@@ -96,8 +96,8 @@ rockerbox.vb = function(flashID,callback,pixelUrl,width,height,flashWrapper, par
 			width = this.width;
 
 		(isIE) ?
-			this.createFlashIE(vis,params_str,flashID,"http://metrics.getrockerbox.com/getviewability.swf?"+this.params,2) :
-			this.createFlash(vis,params_str,flashID,"http://metrics.getrockerbox.com/getviewability.swf?"+this.params,2);
+			this.createFlashIE(vis,params_str,flashID,"https://metrics.getrockerbox.com/getviewability.swf?"+this.params,2) :
+			this.createFlash(vis,params_str,flashID,"https://metrics.getrockerbox.com/getviewability.swf?"+this.params,2);
 
 	    var dimensions = [(height * 0.5) - (swfSize * 0.5), (width * 0.5) - (swfSize * 0.5)];
 	    vis.setAttribute("style", "top:" + dimensions[0] + "px;left:" + dimensions[1] + "px;z-index:-1;position:absolute");
@@ -243,7 +243,7 @@ rockerbox.vb.prototype.defaultCallback = function(id,v1,action,frames,ts) {
   var origin = "&origin=" + encodeURIComponent(window.location.href) + "&parent=" + _parent
 
 	var params = rockerbox.serialize(creative) + origin + "&",
-		pixel = "http://metrics.getrockerbox.com/viewability?" + params,
+		pixel = "https://metrics.getrockerbox.com/viewability?" + params,
 		visible = new rockerbox.vb(callbackID,"handleVS",pixel,creative.width,creative.height,id, params);
   }
 })(window.rockerbox);
