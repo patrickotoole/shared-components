@@ -14,6 +14,7 @@ RB.crusher.controller = (function(controller) {
     pubsub.subscriber("advertiser-name-email", ["advertiser", "current_user"])
       .run(function(advertiser_data, current_user) {
         setTimeout(function() {
+          if (true) return
           var user_type = document.cookie.split("user_type=")[1].split(";")[0];
           switch (user_type) {
             case 'rockerbox':
@@ -650,7 +651,7 @@ RB.crusher.controller = (function(controller) {
 
 
         menu_obj.values = data
-          RB.menu.methods.transform(menu_obj,menu_obj.values_key)
+        RB.menu.methods.transform(menu_obj,menu_obj.values_key)
       },
       "action/recommended": function(menu_obj) {
 

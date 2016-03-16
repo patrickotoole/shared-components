@@ -31,19 +31,31 @@ function datum(d) {
   }
   var d = this._wrapper.datum()
   if (this._filter) d = d.filter(this._filter)
+
+  this._wrapper.datum(d)
+
   return d
 
 }
 
 function draw(_d1, _d2, _d3, skip_missing) {
-  if ( (this._wrapper.datum().length ) && (this._data !== this._wrapper.datum()) )
-    return this
+
+  var data = this.datum() // bind the new, filtered data...
+
+  console.log("DRAWING", skip_missing, data)
+  //debugger
+
+  //if ( (this._wrapper.datum().length ) && (this._data !== this._wrapper.datum()) ) return this
+
 
   var items = this.render_list(this._wrapper)
   this.render_row(items)
 
-  if (!skip_missing)
-    this.run_missing(items.data());
+
+  if (!skip_missing) this.run_missing(data);
+
+  
+
 
   return this
 }

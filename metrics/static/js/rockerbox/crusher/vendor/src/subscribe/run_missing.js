@@ -1,7 +1,7 @@
 function missing(data) {
 
   var missing_data = data.filter(function(action){
-    return (action.timeseries_data == undefined) || (action.domains == undefined) || (action.onsite == undefined)
+    return !action.timeseries_data || !action.domains || !action.onsite 
   })
 
   return missing_data

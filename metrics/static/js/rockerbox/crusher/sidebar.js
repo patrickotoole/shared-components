@@ -32,10 +32,11 @@ RB.menu.action = {
           data.selection = x.key
 
           var obj = {
-            "name":"Vendors",
+            "name":"Segments",
             "push_state": "/crusher/action/existing",
             "class": "glyphicon glyphicon-th-large",
             "values_key": "action_name",
+            "selection": data.selection,
             "filter": function(y){
               if (x.key == "All Segments") return true
               if (x.key == y.action_classification) return true
@@ -108,12 +109,16 @@ RB.menu.action = {
       .text(function(x) { return x.key })
       .on("click",function(x){
 
+        data.selection = x.key
+
         var i = items.wrapper.datum(function(l){
-          return d3.select(this.parentNode).datum()
+          var parentData = d3.select(this.parentNode).datum().values
+          return {"values":parentData}
         })
 
-        items.render(i,items.transform)
+        items.render(i,data,items.transform)
         setText(x.key)
+
 
       })
 
