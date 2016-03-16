@@ -255,7 +255,7 @@ RB.crusher.ui.action = (function(action) {
     var remove_button = d3_updateable(h5, '.btn', 'a')
       .html('<span class="icon glyphicon glyphicon-remove" style="padding-right: 10px; font-size: 8px; top: 1px;"></span>' + ' Delete')
       .classed('btn btn-default btn-sm pull-right',true)
-      .style('margin', '11px 16px 0 0')
+      .style('margin', '11px 10px 0 0')
       .style('color', '#fff')
       .style('background-color', '#CD4B5B')
       .style('font-weight', 'bold')
@@ -280,7 +280,7 @@ RB.crusher.ui.action = (function(action) {
     var data_version_buttons = d3_updateable(h5, '.data-version-buttons', 'div')
       .classed('list-group data-version-buttons pull-right', true)
       .style('display', 'inline-block')
-      .style('margin', '0 20px 0 0')
+      .style('margin', '0 10px 0 0')
 
     var data_version_options = [
       {
@@ -302,6 +302,21 @@ RB.crusher.ui.action = (function(action) {
         return x.title;
       })
       .on('click', function(x, i) {
+        // debugger;
+        d3.select('.info-popup').remove();
+        var info_popup = d3_updateable(d3.select(this), '.info-popup', 'div')
+          .classed('info-popup', true)
+          .style('margin-left', function(x) {
+            var margin = 100 - (x.title.length * 3)
+            return '-' + margin + 'px';
+          })
+          .on('click', function() {
+            setTimeout(function() {
+              d3.select('.info-popup').remove();
+            }, 1);
+          })
+          .html('<h3>Coming soon</h3><p>This feature is currently still being developed. Try again soon to see it in action!</p>')
+
         data_version_button.classed('active', false);
 
         d3.select(this).classed('active', true);

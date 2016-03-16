@@ -90,7 +90,7 @@ RB.rho.ui = (function(ui) {
 
       d3_updateable(newTarget,"."+button.class_name.split(" ").join("."),"a")
         .classed(button.class_name + " pull-right btn btn-sm btn-default", true)
-        .text(button.name)
+        .html(button.name)
         .on("click",button.click)
     }
 

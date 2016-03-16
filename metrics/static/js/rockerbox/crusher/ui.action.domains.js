@@ -61,7 +61,7 @@ RB.crusher.ui.action = (function(action) {
 
     var button = {
       class_name: "export",
-      name: "Export",
+      name: '<span class="icon glyphicon glyphicon-floppy-save" style="padding-right: 10px; font-size: 8px; top: 3px; font-size: 12px; margin-right: 3px;"></span> Export',
       click: function(x) {
         var csvContent = "data:text/csv;charset=utf-8,";
         var data = x.domains.sort(function(a,b) {return a.index - b.index})
@@ -73,7 +73,18 @@ RB.crusher.ui.action = (function(action) {
         });
 
         var encodedUri = encodeURI(csvContent);
-        window.open(encodedUri);
+        var download_element = document.createElement('a')
+
+
+        var format_date = d3.time.format('%Y-%m-%d (%H.%M)')
+        var now = new Date();
+
+
+        var file_name = format_date(now) + ' ' + x.action_name;
+
+        download_element.download = file_name + '.csv'
+        download_element.href = encodeURI(csvContent);
+        download_element.click();
 
       }
     }
