@@ -109,16 +109,13 @@ class PatternSearchBase(TimeseriesBase,VisitorBase):
         dates = build_datelist(num_days)
         args = [advertiser,pattern_terms[0][0],dates]
 
-
         uids = yield self.get_uids_from_cache(*args)
         uids = list(set([u['uid'] for u in uids]))
 
         urls, raw_urls = yield self.defer_get_uid_visits(advertiser,uids,"adsf")
-        df = raw_urls.groupby(["uid","date"])['source'].count().reset_index().groupby("uid")['source'].apply(lambda x: x.to_dict() )
 
-        o1 = raw_urls.groupby(["uid"]).apply(lambda x: x.groupby("date")[['source']].count().rename(columns={"source":"visits"}).reset_index().to_dict("records") )
-        _results = o1.reset_index().set_index("uid").rename(columns={0:"sessions"})
-        results = _results.to_dict()
+        df = raw_urls.groupby(["uid"])['date'].apply(lambda x: pandas.DataFrame( pandas.Series({"visits":len(x),"sessions": len(x.unique())} ) ).T )
+        results = df.reset_index()[['uid','sessions','visits']].to_dict('records')
 
         response = self.default_response(pattern_terms,logic)
         response['results'] = results
