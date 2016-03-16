@@ -10,7 +10,9 @@ RB.crusher.ui.vendors = (function(vendors) {
   vendors.show = function(funnelRow, obj) {
 
     var subscribe_to = (obj.selection) ? "actions" : undefined
-    // debugger;
+ 
+    console.log("SUBSCRIBE TO", subscribe_to)
+
     var xx = window.vendors.vendor_expanded(funnelRow)
       .subscribe()
       .filter(obj.filter)

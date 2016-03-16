@@ -68,8 +68,6 @@ RB.routes.navigation = (function(navigation) {
 
     if (navigation.callbacks.forward) navigation.callbacks.forward(x)
 
-    
-
     console.log("FORWARD",x)
     var path = window.location.pathname
     var shouldPush = (!!x.push_state) && (path != x.push_state)

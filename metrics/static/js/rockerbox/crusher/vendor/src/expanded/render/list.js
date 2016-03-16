@@ -5,5 +5,6 @@ export default function render_list(list) {
 
   rows.exit().remove()
 
+
   return rows
 }

@@ -32,10 +32,11 @@ RB.menu.action = {
           data.selection = x.key
 
           var obj = {
-            "name":"Vendors",
+            "name":"Segments",
             "push_state": "/crusher/action/existing",
             "class": "glyphicon glyphicon-th-large",
             "values_key": "action_name",
+            "selection": data.selection,
             "filter": function(y){
               if (x.key == "All Segments") return true
               if (x.key == y.action_classification) return true

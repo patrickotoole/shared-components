@@ -274,6 +274,7 @@
 
     rows.exit().remove()
 
+
     return rows
   }
 
@@ -284,10 +285,11 @@
     //   .text('View as table')
     //   .on('click', function(x) { this._on.click(x) }.bind(this) )
 
-    var vendors_list_card = d3_updateable(target, '.vendors-list-card', 'section')
+
+    var vendors_list_card = d3_updateable(target, '.vendors-list-card', 'section', false, function(x){return 1})
       .classed('vendors-list-card col-md-12', true);
 
-    var vendors_list = d3_updateable(vendors_list_card, '.vendors-list', 'ul')
+    var vendors_list = d3_updateable(vendors_list_card, '.vendors-list', 'ul',false, function(x){return 1})
       .classed('vendors-list', true);
 
 
@@ -300,7 +302,7 @@
   function missing(data) {
 
     var missing_data = data.filter(function(action){
-      return (action.timeseries_data == undefined) || (action.domains == undefined) || (action.onsite == undefined)
+      return !action.timeseries_data || !action.domains || !action.onsite 
     })
 
     return missing_data
@@ -360,12 +362,13 @@
     var subscribe_to = subscribe_to || "vendors"
 
     if (this._data == this._wrapper.datum()) {
-      // our current implementation never uses this
       return set_and_draw(this._data)
     }
 
+    var self = this;
+
     pubsub.subscriber("vendors-data",[subscribe_to])
-      .run(set_and_draw.bind(this))
+      .run(set_and_draw.bind(self))
       .unpersist(true)
       .trigger()
 
@@ -390,19 +393,31 @@
     }
     var d = this._wrapper.datum()
     if (this._filter) d = d.filter(this._filter)
+
+    this._wrapper.datum(d)
+
     return d
 
   }
 
   function draw(_d1, _d2, _d3, skip_missing) {
-    if ( (this._wrapper.datum().length ) && (this._data !== this._wrapper.datum()) )
-      return this
+
+    var data = this.datum() // bind the new, filtered data...
+
+    console.log("DRAWING", skip_missing, data)
+    //debugger
+
+    //if ( (this._wrapper.datum().length ) && (this._data !== this._wrapper.datum()) ) return this
+
 
     var items = this.render_list(this._wrapper)
     this.render_row(items)
 
-    if (!skip_missing)
-      this.run_missing(items.data());
+
+    if (!skip_missing) this.run_missing(data);
+
+    
+
 
     return this
   }
