@@ -29,7 +29,7 @@ def make_request(advertiser, pattern, base_url):
 
     url = "/crusher/pattern_search/uids_only?search={}"
     response = crusher.get(url.format(pattern))
-    
+    import ipdb; ipdb.set_trace()
     d1 = response.json["results"]["sessions"]
     df = pandas.DataFrame(d1.items())
     df.columns = ["col1", "col2"]
