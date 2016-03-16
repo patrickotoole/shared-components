@@ -76,11 +76,11 @@ RB.crusher.ui.action = (function(action) {
         var download_element = document.createElement('a')
 
 
-        var format_date = d3.time.format('%Y-%m-%d (%H.%M)')
+        var format_date = d3.time.format(' (%Y-%m-%d -- %H.%M)')
         var now = new Date();
 
 
-        var file_name = format_date(now) + ' ' + x.action_name;
+        var file_name = x.action_name + format_date(now);
 
         download_element.download = file_name + '.csv'
         download_element.href = encodeURI(csvContent);
