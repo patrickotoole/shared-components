@@ -64,6 +64,8 @@ if __name__ == "__main__":
     else:
         print C['keys']
         print D['keys']
+    if options.run_beta:
+        run(api_beta, "/crusher/v1/visitor/domains?url_pattern=%s&format=json" % PATTERN, "Beta")
 
     E=run(api_prod,"/crusher/v1/visitor/domains/cache?url_pattern=%s&format=json" % PATTERN, "Production")
     F=run(api_local,"/crusher/v1/visitor/domains/cache?url_pattern=%s&format=json" % PATTERN, "Local")
@@ -72,6 +74,8 @@ if __name__ == "__main__":
     else:
         print E['keys']
         print F['keys']
+    if options.run_beta:
+        run(api_beta, "/crusher/v1/visitor/domains/cache?url_pattern=%s&format=json" % PATTERN, "Beta")
 
     G=run(api_prod,"/crusher/v1/visitor/domains_full?url_pattern=%s&format=json" % PATTERN, "Production")
     H=run(api_local,"/crusher/v1/visitor/domains_full?url_pattern=%s&format=json" % PATTERN, "Local")
@@ -80,6 +84,8 @@ if __name__ == "__main__":
     else:
         print G['keys']
         print H['keys']
+    if options.run_beta:
+        run(api_beta, "/crusher/v1/visitor/domains_full?url_pattern=%s&format=json" % PATTERN, "Beta")
 
     I=run(api_prod,"/crusher/v1/visitor/domains_full/cache?url_pattern=%s&format=json" % PATTERN, "Production")
     J=run(api_local,"/crusher/v1/visitor/domains_full/cache?url_pattern=%s&format=json" % PATTERN, "Local")
@@ -88,6 +94,8 @@ if __name__ == "__main__":
     else:
         print I['keys']
         print J['keys']
+    if options.run_beta:
+        run(api_beta, "/crusher/v1/visitor/domains_full/cache?url_pattern=%s&format=json" % PATTERN, "Beta")
 
     K=run(api_prod,"/crusher/v1/visitor/keywords?url_pattern=%s&format=json" % PATTERN, "Production")
     L=run(api_local,"/crusher/v1/visitor/keywords?url_pattern=%s&format=json" % PATTERN, "Local")
@@ -96,6 +104,8 @@ if __name__ == "__main__":
     else:
         print K['keys']
         print L['keys']
+    if options.run_beta:
+        run(api_beta, "/crusher/v1/visitor/keywords?url_pattern=%s&format=json" % PATTERN, "Beta")
 
     M=run(api_prod,"/crusher/v1/visitor/keywords/cache?url_pattern=%s&format=json" % PATTERN, "Production")
     N=run(api_local,"/crusher/v1/visitor/keywords/cache?url_pattern=%s&format=json" % PATTERN, "Local")
@@ -104,6 +114,8 @@ if __name__ == "__main__":
     else:
         print M['keys']
         print N['keys']
+    if options.run_beta:
+        run(api_beta, "/crusher/v1/visitor/keywords/cache?url_pattern=%s&format=json" % PATTERN, "Beta")
 
     O=run(api_prod, "/crusher/pattern_search/timeseries_only?search=%s" % PATTERN, "Production")
     P=run(api_local,"/crusher/pattern_search/timeseries_only?search=%s" % PATTERN, "Local")
@@ -112,3 +124,5 @@ if __name__ == "__main__":
     else:
         print O['keys']
         print P['keys']
+    if options.run_beta:
+        run(api_beta, "/crusher/pattern_search/timeseries_only?search=%s" % PATTERN, "Beta")
