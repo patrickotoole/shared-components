@@ -147,3 +147,12 @@ if __name__ == "__main__":
     if options.run_beta:
         run(api_beta, "/crusher/v1/visitor/onsite/cache?format=json&url_pattern=%s" % PATTERN, "Beta")
 
+    U=run(api_prod, "/crusher/v1/visitor/onsite?format=json&url_pattern=%s" % PATTERN, "Production")
+    V=run(api_local,"/crusher/v1/visitor/onsite?format=json&url_pattern=%s" % PATTERN, "Local")
+    if U['keys'] == V['keys'] and ((U['size']>0 and V['size']>0) or (U['size']==0 and V['size']==0)):
+        print U['keys'] == V['keys']
+    else:
+        print U['keys']
+        print V['keys']
+    if options.run_beta:
+        run(api_beta, "/crusher/v1/visitor/onsite?format=json&url_pattern=%s" % PATTERN, "Beta")
