@@ -1,6 +1,7 @@
+
 export default function(vendor_data_columns) {
   var vendor_onsite_column = d3_updateable(vendor_data_columns, '.vendor-onsite-column', 'div')
-    .classed('vendor-onsite-column col-lg-4 col-md-6', true)
+    .classed('vendor-onsite-column col-lg-4 col-md-12', true)
     .html('<h3 style="margin-bottom: 10px;">On-site</h3>')
     .style('display', 'none');
 
@@ -46,11 +47,11 @@ export default function(vendor_data_columns) {
         x.key = i;
         if(x.items[0]) {
           if(x.items[0].num_visits == 1) {
-            x.title = '1 view'
+            x.title = '1'
           } else if(x.items[0].num_visits == x.items[x.items.length - 1].num_visits) {
-            x.title = x.items[0].num_visits + ' views';
+            x.title = x.items[0].num_visits;
           } else {
-            x.title = x.items[0].num_visits + ' - ' + x.items[x.items.length - 1].num_visits + ' views';
+            x.title = x.items[0].num_visits + ' - ' + x.items[x.items.length - 1].num_visits;
           }
         } else {
           x.title = '';
@@ -64,6 +65,10 @@ export default function(vendor_data_columns) {
       var histogram_visits = components.histogram(d3.select(this))
         .data(views)
         .draw();
+
+      // $(window).on('resize', function(e) {
+      //   histogram_visits.draw();
+      // })
     }
   });
 
@@ -78,11 +83,11 @@ export default function(vendor_data_columns) {
 
         if(x.items[0]) {
           if(x.items[0].num_sessions == 1) {
-            x.title = '1 time';
+            x.title = '1';
           } else if(x.items[0].num_sessions == x.items[x.items.length - 1].num_sessions) {
-            x.title = x.items[0].num_sessions + ' times';
+            x.title = x.items[0].num_sessions;
           } else {
-            x.title = x.items[0].num_sessions + ' - ' + x.items[x.items.length - 1].num_sessions + ' times';
+            x.title = x.items[0].num_sessions + ' - ' + x.items[x.items.length - 1].num_sessions;
           }
         } else {
           x.title = '';
