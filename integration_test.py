@@ -46,7 +46,7 @@ if __name__ == "__main__":
 
     now = time.time()
     
-    PATTERN = "google"
+    PATTERN = "bing"
     A = run(api_prod,"/crusher/pattern_search/uid_domains?search=%s" % PATTERN, "Production")
     B = run(api_local,"/crusher/pattern_search/uid_domains?search=%s" % PATTERN, "Local")
     if A['keys'] == B['keys'] and ((A['size']>0 and B['size']>0) or (A['size']==0 and B['size']==0)):
@@ -156,3 +156,43 @@ if __name__ == "__main__":
         print V['keys']
     if options.run_beta:
         run(api_beta, "/crusher/v1/visitor/onsite?format=json&url_pattern=%s" % PATTERN, "Beta")
+
+    W=run(api_prod, "/crusher/pattern_search/uids?search=%s" % PATTERN, "Production")
+    X=run(api_local, "/crusher/pattern_search/uids?search=%s" % PATTERN, "Local")
+    if W['keys'] == X['keys'] and ((W['size']>0 and X['keys']>0) or (W['size']==0 and X['size']==0)):
+        print W['keys'] == X['keys']
+    else:
+        print W['keys']
+        print X['keys']
+
+    Y=run(api_prod, "/crusher/v1/visitor/hourly?url_pattern=%s" % PATTERN, "Production")
+    Z=run(api_local, "/crusher/v1/visitor/hourly?url_pattern=%s" % PATTERN, "Local")
+    if Y['keys'] == Z['keys'] and ((Y['size']>0 and Z['size']>0) or (Y['size']==0 and Z['size']==0)):
+        print Y['keys'] == Z['keys']
+    else:
+        print Y['keys']
+        print Z['keys']
+
+    AA=run(api_prod, "/crusher/v1/visitor/sessions?url_pattern=%s" % PATTERN, "Production")
+    AB=run(api_local, "/crusher/v1/visitor/sessions?url_pattern=%s" % PATTERN, "Local")
+    if AA['keys'] == AB['keys'] and ((AA['size']>0 and AB['size']>0) or (AA['size']==0 and AB['size']==0)):
+        print AA['keys'] == AB['keys']
+    else:
+        print AA['keys']
+        print AB['keys']
+
+    AC=run(api_prod, "/crusher/v1/visitor/model?url_pattern=%s" % PATTERN, "Production")
+    AD=run(api_local, "/crusher/v1/visitor/model?url_pattern=%s" % PATTERN, "Local")
+    if AC['keys'] == AD['keys'] and ((AC['size']>0 and AD['size']>0) or (AC['size']==0 and AD['size']==0)):
+        print AC['keys'] == AD['keys']
+    else:
+        print AC['keys']
+        print AD['keys']
+
+    AE=run(api_prod, "/crusher/v1/visitor/before_and_after?url_pattern=%s" % PATTERN, "Production")
+    AF=run(api_local, "/crusher/v1/visitor/before_and_after?url_pattern=%s" % PATTERN, "Local")
+    if AE['keys'] == AF['keys'] and ((AE['size']>0 and AF['size']>0) or (AE['size']==0 and AF['size']==0)):
+        print AE['keys'] == AF['keys']
+    else:
+        print AE['keys']
+        print AF['keys']
