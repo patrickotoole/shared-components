@@ -98,7 +98,11 @@ def category_time_buckets(merged):
     bucket_df.name = "count"
     
     def run_this(x):
-        values = x[["time_bucket","count","num"]].T.to_dict().values()
+        values = x[["time_bucket","count","num"]]
+        values['time_bucket'] = values['time_bucket'].map(int)
+        values = values.T.to_dict().values()
+        for v in values:
+            v['time_bucket'] = int(v['time_bucket'])
         return values
 
     bucket_df = bucket_df.reset_index().set_index("time_bucket")
