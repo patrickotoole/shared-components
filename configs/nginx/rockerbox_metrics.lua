@@ -1,8 +1,8 @@
 module("rockerbox_metrics", package.seeall)
 
 function set_content_type (args)
-  if args["img"] or string.sub(ngx.var.uri,-4,-1) == ".gif"  then
-    ngx.header.content_type = "image/gif"
+  if args["img"] or string.sub(ngx.var.uri,-4,-1) == ".gif" or string.sub(ngx.req.get_headers()['Accept'],0,5) == "image" then
+    ngx.header["Content-Type"] = "image/gif"
   else
     ngx.header.content_type = "text/javascript"
   end
@@ -14,12 +14,21 @@ function send_pixel_response ()
   end
 end
 
+function redirect_with_debug (debug, url)
+  if debug then
+    ngx.header.content_type = "text/javascript"
+    ngx.say(url)
+  else
+    ngx.redirect(url)
+  end
+end
+
 function say_or_redirect_with_debug (debug, url)
   if debug then
     ngx.header.content_type = "text/javascript"
     ngx.say(url)
   else
-    local img_header = ngx.req.get_headers()['Accept'] == "image/webp,*/*;q=0.8"
+    local img_header = string.sub(ngx.req.get_headers()['Accept'],0,5) == "image" 
     if string.sub(ngx.var.uri,-4,-1) == ".gif" or img_header then
       ngx.header.content_type = "image/gif"
       if ngx.var.http_referer ~= nil and string.find(ngx.var.http_referer,"amazonaws") then
@@ -34,7 +43,7 @@ function say_or_redirect_with_debug (debug, url)
       end
     else
       ngx.header.content_type = "text/javascript"
-      ngx.say("var s = document.createElement('img');s.setAttribute('src','".. url .."');s.setAttribute('style','display:none');")
+      ngx.say("(function(){var s = document.createElement('img');s.setAttribute('src','".. url .."');s.setAttribute('style','display:none');})()")
       ngx.exit(ngx.HTTP_OK)
     end
     -- ngx.redirect(url)
