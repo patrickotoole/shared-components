@@ -38,7 +38,7 @@ body {
     top: 0px;
     position: fixed;
     margin-left: 70px;
-    background-color: #5084b2;
+    background-color: $color_blue;
     box-shadow: 0 1px rgba(255,255,255,0.08),0 -1px rgba(0,0,0,0.15) inset;
     z-index:100;
 }
@@ -528,7 +528,7 @@ polyline{
 }
 
 .btn.export {
-  background-color: #50b2af;
+  background-color: $color_green_blue;
   color: #fff;
   font-weight: bold;
   text-transform: uppercase;
