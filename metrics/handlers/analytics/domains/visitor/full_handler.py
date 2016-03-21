@@ -17,7 +17,7 @@ from lib.cassandra_helpers.helpers import FutureHelpers
 from lib.cassandra_cache.helpers import *
 from ...search.cache.pattern_search_cache import PatternSearchCache
 from ...search.pattern.base_visitors import VisitorBase
-
+import lib.helpers_callback as decorators_custom
 
 class VisitorDomainsFullHandler(VisitorBase):
 
@@ -74,7 +74,8 @@ class VisitorDomainsFullHandler(VisitorBase):
         return df
 
 
-    @defer.inlineCallbacks
+    #@defer.inlineCallbacks
+    @decorators_custom.inlineCallbacksErrors
     def get_onsite_domains(self, date, kind, advertiser, pattern):
 
         filter_id = self.get_argument("filter_id",False)
@@ -118,6 +119,7 @@ class VisitorDomainsFullHandler(VisitorBase):
     
     @tornado.web.authenticated
     @tornado.web.asynchronous
+    @decorators.error_handling
     def get(self):
         formatted = self.get_argument("format", False)
         start_date = self.get_argument("start_date", "")
