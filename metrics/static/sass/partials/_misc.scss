@@ -38,7 +38,7 @@ body {
     top: 0px;
     position: fixed;
     margin-left: 70px;
-    background-color: #5084b2;
+    background-color: $color_blue;
     box-shadow: 0 1px rgba(255,255,255,0.08),0 -1px rgba(0,0,0,0.15) inset;
     z-index:100;
 }
@@ -48,6 +48,10 @@ body {
     font-weight: bold;
     opacity: .75;
     padding: 15px;
+}
+
+.menu-section:not(:first-of-type) {
+  margin-top: 30px;
 }
 
 header.page-header {
@@ -448,4 +452,101 @@ polyline{
 }
 .row.pie {
   margin-top: -10px; margin-bottom: -20px; font-size: 11px;
+}
+
+.data-version-buttons a {
+  border-radius: 0 !important;
+}
+
+.data-version-buttons a:not(:first-child) {
+  border-left: none !important;
+}
+
+.data-version-buttons a:first-child {
+  border-top-left-radius: 3px !important;
+  border-bottom-left-radius: 3px !important;
+}
+
+.data-version-buttons a:last-child {
+  border-top-right-radius: 3px !important;
+  border-bottom-right-radius: 3px !important;
+}
+
+.data-version-buttons a:hover {
+  background-color: #FDFDFF;
+}
+
+.data-version-buttons a.active,
+.data-version-buttons a.active:hover {
+  background-color: #F4F8FA;
+  box-shadow: inset 0 1px 1px 0 rgba(35,35,35,0.03);
+  color: #555;
+}
+
+.info-popup {
+  position: fixed;
+  margin-top: 25px;
+  width: 200px;
+  background-color: #fff;
+  box-shadow: 0 0 25px 3px rgba(0,0,0,0.1);
+  z-index: 9999;
+  line-height: 22px;
+  cursor: default;
+  border-radius: 3px;
+
+  h3 {
+    color: #222c36;
+    margin: 0;
+    font-size: 18px;
+    font-weight: bold;
+    padding-bottom: 10px;
+    border-bottom: solid 1px #EEE;
+    margin-bottom: 0px;
+    padding: 20px;
+    text-align: center;
+  }
+
+  p {
+    padding: 20px 20px 20px 20px;
+    margin: 0;
+  }
+
+  .info-popup-close {
+    display: inline-block;
+    padding: 3px 12px;
+    background-color: #5084b2;
+    font-weight: bold;
+    color: #fff;
+    border-radius: 3px;
+    text-transform: uppercase;
+    font-size: 11px;
+    margin: 0px 20px 20px 70px;
+    cursor: pointer;
+  }
+}
+.info-popup {
+	position: fixed;
+	background: #fff;
+}
+.info-popup:after {
+	bottom: 100%;
+	left: 50%;
+	border: solid transparent;
+	content: " ";
+	height: 0;
+	width: 0;
+	position: absolute;
+	pointer-events: none;
+	border-color: rgba(255, 255, 255, 0);
+	border-bottom-color: #fff;
+	border-width: 15px;
+	margin-left: -15px;
+}
+
+.btn.export {
+  background-color: $color_green_blue;
+  color: #fff;
+  font-weight: bold;
+  text-transform: uppercase;
+  border: none;
 }
