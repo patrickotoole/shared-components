@@ -3,6 +3,7 @@ import pandas
 import logging
 
 from ...search.pattern.base_visitors import VisitorBase
+from lib.helpers import decorators
 
 class VisitorTransformHandler(VisitorBase):
 
@@ -17,6 +18,7 @@ class VisitorTransformHandler(VisitorBase):
 
     @tornado.web.authenticated
     @tornado.web.asynchronous
+    @decorators.error_handling
     def get(self, api_type):
         advertiser = self.current_advertiser_name
         terms = self.get_argument("url_pattern", False)

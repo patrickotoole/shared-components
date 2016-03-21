@@ -30,6 +30,7 @@ class VisitorDomainsHandler(PatternSearchHandler):
         
     @tornado.web.authenticated
     @tornado.web.asynchronous
+    @decorators.error_handling
     def get(self):
         advertiser = self.current_advertiser_name
         _logic = self.get_argument("logic", "or")
