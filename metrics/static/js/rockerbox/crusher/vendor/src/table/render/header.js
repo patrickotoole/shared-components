@@ -4,14 +4,14 @@ export default function(target, table_categories) {
 
   var header_title = d3_updateable(vendor_header, '.vendor-title', 'div')
     .classed('vendor-title', true)
-    .text('Vendor')
+    .text(this._cohort)
 
-  var timeseries_header = d3_updateable(vendor_header, '.timeseries-header', 'div')
-    .classed('timeseries-header', true)
+  // var timeseries_header = d3_updateable(vendor_header, '.timeseries-header', 'div')
+  //   .classed('timeseries-header', true)
 
   var _ = ['Views', 'Visits', 'Uniques']
 
-  d3_splat(timeseries_header, '.timeseries-header-item', 'div', _, function(x) {
+  d3_splat(vendor_header, '.timeseries-header-item', 'div', _, function(x) {
       return x;
     })
     .classed('timeseries-header-item', true)

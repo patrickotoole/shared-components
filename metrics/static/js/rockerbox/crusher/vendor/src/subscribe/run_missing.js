@@ -22,13 +22,13 @@ function trigger(datum) {
 export default function(data, force) {
 
   if (force) {
-    this.draw(false,false,false,true)
+    this.draw.bind(this)(false,false,false,true)
     return trigger(data[0])
   }
 
   var missing_data = missing(data)
 
-  if ((missing_data.length == 0)) return this.draw(false,false,false,true)
+  if ((missing_data.length == 0)) return this.draw.bind(this)(false,false,false,true)
   if (should_trigger(missing_data[0]) ) return trigger(missing_data[0])
 
   return

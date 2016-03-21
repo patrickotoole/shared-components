@@ -11,14 +11,14 @@ export default function(target) {
       .classed('vendors-list-table bar series col-md-12 show-loading', true)
 
     vendors_list_card.exit().remove();
-
     var title = d3_updateable(vendors_list_card, '.vendor-card-title', 'div')
       .classed('vendor-card-title', true)
-      .text('Vendor Audience Cohorts')
+      .text(this._title)
       .style('font-weight', 'bold')
       .style('font-size', '18px')
       .style('line-height', '22px')
       .style('color', '#5A5A5A');
+
   return vendors_list_card;
 
 }

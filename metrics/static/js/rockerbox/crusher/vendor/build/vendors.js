@@ -334,13 +334,13 @@
   function run_missing(data, force) {
 
     if (force) {
-      this.draw(false,false,false,true)
+      this.draw.bind(this)(false,false,false,true)
       return trigger(data[0])
     }
 
     var missing_data = missing(data)
 
-    if ((missing_data.length == 0)) return this.draw(false,false,false,true)
+    if ((missing_data.length == 0)) return this.draw.bind(this)(false,false,false,true)
     if (should_trigger(missing_data[0]) ) return trigger(missing_data[0])
 
     return
@@ -541,14 +541,14 @@
 
     var header_title = d3_updateable(vendor_header, '.vendor-title', 'div')
       .classed('vendor-title', true)
-      .text('Vendor')
+      .text(this._cohort)
 
-    var timeseries_header = d3_updateable(vendor_header, '.timeseries-header', 'div')
-      .classed('timeseries-header', true)
+    // var timeseries_header = d3_updateable(vendor_header, '.timeseries-header', 'div')
+    //   .classed('timeseries-header', true)
 
     var _ = ['Views', 'Visits', 'Uniques']
 
-    d3_splat(timeseries_header, '.timeseries-header-item', 'div', _, function(x) {
+    d3_splat(vendor_header, '.timeseries-header-item', 'div', _, function(x) {
         return x;
       })
       .classed('timeseries-header-item', true)
@@ -665,23 +665,25 @@
         .classed('vendors-list-table bar series col-md-12 show-loading', true)
 
       vendors_list_card.exit().remove();
-
       var title = d3_updateable(vendors_list_card, '.vendor-card-title', 'div')
         .classed('vendor-card-title', true)
-        .text('Vendor Audience Cohorts')
+        .text(this._title)
         .style('font-weight', 'bold')
         .style('font-size', '18px')
         .style('line-height', '22px')
         .style('color', '#5A5A5A');
+
     return vendors_list_card;
 
   }
 
-  function Table(target) {
+  function Table(target, title, cohort) {
     this._target = target;
     this._wrapper = this.render_wrapper(target);
     this._data = [];
     this._on = {};
+    this._title;
+    this._cohort;
   }
 
   function datum$1(d) {
@@ -720,7 +722,7 @@
     try {
       var table_categories = buildCategories(unhandled_vendor)
       if (!has_header) {
-        render_header(tableWrapper, JSON.parse(JSON.stringify(table_categories)))
+        this.render_header(tableWrapper, JSON.parse(JSON.stringify(table_categories)))
       }
     } catch (e) {
       console.log('ERROR', e);
@@ -734,7 +736,7 @@
     if ((this._wrapper.datum().length) &&
       (this._data !== this._wrapper.datum())) return this;
 
-    var table_categories = check_missing_header(this._wrapper)
+    var table_categories = this.check_missing_header(this._wrapper)
 
 
     var row = this.render_rows(table_categories, this._wrapper)
@@ -749,8 +751,23 @@
 
   }
 
+  function title(value) {
+    this._title = value;
+    d3.select('.vendor-card-title').text(value);
+    return this;
+  }
+
+  function cohort(value) {
+    this._cohort = value;
+    return this;
+  }
+
   function vendor_table(target) {
-    return new Table(target)
+    var table = new Table(target)
+      .title('Vendor Audience Cohorts')
+      .cohort('Vendor');
+
+    return table;
   }
 
   Table.prototype = {
@@ -776,7 +793,11 @@
     render_header: render_header,
     render_title: render_title,
     render_views_metrics: render_views_metrics,
-    render_categories: render_categories
+    render_categories: render_categories,
+    check_missing_header: check_missing_header,
+
+    title: title,
+    cohort: cohort
   }
 
   var version = "0.0.1";
