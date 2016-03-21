@@ -19,8 +19,13 @@ class BaseHandler(tornado.web.RequestHandler):
     def get_content(self, data):
         def default(self, data):
             df = Convert.df_to_json(data)
-            self.render("analysis/visit_urls.html", data=df)
-        yield default, (data,)
+            self.write(df)
+            self.finish()
+        if type(data) == type(Exception()):
+            self.write(ujson.dumps({"error":str(data)}))
+            self.finish()
+        else:
+            yield default, (data,)
 
     @property
     def current_advertiser(self):

@@ -8,6 +8,7 @@ import signal
 import time
 import random
 import sys
+import traceback
 
 import gzip
 import cStringIO
@@ -234,6 +235,16 @@ class Parse:
 
 
 class decorators:
+
+    @staticmethod
+    def error_handling(func): 
+        def inner(self, *args, **kwargs):
+            try:
+                func(self, *args, **kwargs)
+            except Exception as e:
+                self.write(ujson.dumps({"error":str(e)}))
+                self.finish()
+        return inner
 
     @staticmethod
     def multi_commit_cursor(func):
