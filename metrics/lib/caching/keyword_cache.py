@@ -12,7 +12,6 @@ def get_connectors():
     }
 
 def make_request(advertiser,pattern, base_url):
-    import ipdb; ipdb.set_trace()
     crusher = lnk.api.crusher
     crusher.user = "a_"+advertiser
     crusher.password="admin"
@@ -32,7 +31,6 @@ def runner(advertiser_name, pattern, base_url, cache_date, indentifiers="test", 
     db = connectors['db']
 
     urls = make_request(advertiser_name, pattern, base_url)
-    import ipdb; ipdb.set_trace()
     for url in urls:
         add_to_table(advertiser_name, pattern, url, db)
 

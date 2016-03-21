@@ -29,31 +29,34 @@ def make_request(advertiser, pattern, base_url):
 
     url = "/crusher/pattern_search/uids_only?search={}"
     response = crusher.get(url.format(pattern))
-    
-    d1 = response.json["results"]["sessions"]
-    df = pandas.DataFrame(d1.items())
-    df.columns = ["col1", "col2"]
-    df2 = df.groupby("col1").apply(lambda x: pandas.DataFrame(x["col2"].iloc[0]).set_index('date'))
-        
-    df3 = df2.groupby(level=0).apply(lambda x: pandas.Series({"sessions":len(x), "visits":sum(x["visits"])}))
-        
-    agg_visits = df3.groupby("visits").count()
+    d1 = response.json["results"]
+    df = pandas.DataFrame(d1)
+     
+    agg_visits = df.groupby("visits").count()
     final_agg_visits = agg_visits.reset_index()
-    final_agg_visits.columns = ["visits", "users_count"]
+    final_agg_visits_filter = final_agg_visits.filter(['visits', 'uid'])
+    final_agg_visits_filter.columns = ["visits", "users_count"]
 
-    agg_sessions = df3.groupby("sessions").count()
+    agg_sessions = df.groupby("sessions").count()
     final_agg_sessions = agg_sessions.reset_index()
-    final_agg_sessions.columns = ["sessions", "users_count"]
+    final_agg_sessions_filter = final_agg_sessions.filter(['sessions','uid'])
+    final_agg_sessions_filter.columns = ["sessions", "users_count"]
 
-    data = {"visits" : final_agg_visits, "sessions": final_agg_sessions}
+    data = {"visits" : final_agg_visits_filter, "sessions": final_agg_sessions_filter}
 
     return data
 
 def write_to_table_visits(advertiser, pattern, data,db):
-    db.execute(SQL_QUERY1.format(advertiser, pattern, data["visits"], data["users_count"]))
+    try:
+        db.execute(SQL_QUERY1.format(advertiser, pattern, data["visits"], data["users_count"]))
+    except:
+        logging.info("duplicate entry -- visits")
 
 def write_to_table_sessions(advertiser, pattern, data,db):
-    db.execute(SQL_QUERY2.format(advertiser, pattern, data["sessions"], data["users_count"]))
+    try:
+        db.execute(SQL_QUERY2.format(advertiser, pattern, data["sessions"], data["users_count"]))
+    except:
+        logging.info("duplicate entry -- sessions")
 
 
 def runner(advertiser, pattern, base_url, cache_date, indentifiers="test", connectors=False):
