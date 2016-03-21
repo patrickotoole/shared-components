@@ -280,7 +280,7 @@ RB.crusher.ui.action = (function(action) {
     var data_version_buttons = d3_updateable(h5, '.data-version-buttons', 'div')
       .classed('list-group data-version-buttons pull-right', true)
       .style('display', 'inline-block')
-      .style('display', 'none') // Remove this to make it visible again
+      // .style('display', 'none') // Remove this to make it visible again
       .style('margin', '0 10px 0 0')
 
     var data_version_options = [
@@ -304,19 +304,10 @@ RB.crusher.ui.action = (function(action) {
       })
       .on('click', function(x, i) {
         // debugger;
-        d3.select('.info-popup').remove();
-        var info_popup = d3_updateable(d3.select(this), '.info-popup', 'div')
-          .classed('info-popup', true)
-          .style('margin-left', function(x) {
-            var margin = 100 - (x.title.length * 3)
-            return '-' + margin + 'px';
-          })
-          .on('click', function() {
-            setTimeout(function() {
-              d3.select('.info-popup').remove();
-            }, 1);
-          })
-          .html('<h3>Coming soon</h3><p>This feature is currently still being developed. Try again soon to see it in action!</p>')
+        var popup = components.popup(d3.select(this))
+          .title('Coming soon')
+          .content('This feature is currently still being developed. Try again soon to see it in action!')
+          .draw();
 
         data_version_button.classed('active', false);
 

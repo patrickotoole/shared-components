@@ -1070,6 +1070,68 @@
 	  data: data$5
 	}
 
+	function draw$5() {
+	  var popup_title = d3_updateable(this._base, '.info-popup-title', 'h3')
+	    .classed('info-popup-title', true)
+	    .text(this._title);
+
+	  var popup_content = d3_updateable(this._base, '.info-popup-content', 'p')
+	    .classed('info-popup-content', true)
+	    .text(this._content)
+
+	  var popup_close = d3_updateable(this._base, '.info-popup-close', 'div')
+	    .classed('info-popup-close', true)
+	    .text('Close')
+	    .on('click', function(e) {
+	      setTimeout(function() {
+	        d3.select('.info-popup').remove();
+	      }, 1);
+	    });
+	}
+
+	function base$5(target) {
+	  d3.select('.info-popup').remove();
+
+	  var popup = d3_updateable(target, '.info-popup', 'div')
+	    .classed('info-popup', true)
+	    .style('margin-left', function(x) {
+	      var margin = 100 - (x.title.length * 3)
+	      return '-' + margin + 'px';
+	    })
+
+	  return popup;
+	}
+
+	function Popup(target) {
+	  this._target = target
+	  this._base = this.base(target)
+	  this._title = '';
+	  this._content = '';
+	}
+
+	function popup(target){
+	  return new Popup(target)
+	}
+
+	function title(value) {
+	  this._title = value;
+
+	  return this;
+	}
+
+	function content(value) {
+	  this._content = value;
+
+	  return this;
+	}
+
+	Popup.prototype = {
+	  base: base$5,
+	  draw: draw$5,
+	  title: title,
+	  content: content
+	}
+
 	var version = "0.0.1";
 
 	exports.version = version;
@@ -1079,5 +1141,6 @@
 	exports.histogram = histogram;
 	exports.accessor = accessor;
 	exports.table = table;
+	exports.popup = popup;
 
 }));
