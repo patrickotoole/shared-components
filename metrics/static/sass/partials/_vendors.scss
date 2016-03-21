@@ -224,19 +224,19 @@ ul.vendors-list {
 }
 
 @media only screen and (max-width: 800px) {
-  .vendor-category-header-item:nth-child(n+9) {
+  .vendor-category-header-item:nth-child(n+10) {
       display: none !important;
   }
-  .vendor-column-item:nth-child(n+9) {
+  .vendor-column-item:nth-child(n+10) {
     display: none !important;
   }
 }
 
-@media only screen and (max-width: 1100px) {
-  .vendor-category-header-item:nth-child(n+12) {
+@media only screen and (max-width: 1400px) {
+  .vendor-category-header-item:nth-child(n+16) {
       display: none !important;
   }
-  .vendor-column-item:nth-child(n+12) {
+  .vendor-column-item:nth-child(n+16) {
     display: none !important;
   }
 }
