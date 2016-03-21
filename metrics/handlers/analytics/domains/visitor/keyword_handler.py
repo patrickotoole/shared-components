@@ -13,6 +13,7 @@ from ...analytics_base import AnalyticsBase
 from twisted.internet import defer
 from lib.helpers import decorators
 from lib.helpers import *
+import lib.helpers_callback as decorators_custom
 from lib.cassandra_helpers.helpers import FutureHelpers
 from lib.cassandra_cache.helpers import *
 from ...search.cache.pattern_search_cache import PatternSearchCache
@@ -26,9 +27,25 @@ class VisitorKeywordsHandler(PatternSearchCache,VisitDomainsFullHandler):
         self.limit = None
         self.zookeeper = zookeeper
 
+
+    @decorators.formattable
+    def get_content(self, data):
+        def default(self, data):
+            df = Convert.df_to_json(data)
+            self.write(df)
+            self.finish()
+        if type(data) == type(Exception()):
+            self._reason(data)
+            self.set_status(404)
+            self.write(ujson.dumps({"error":str(data)}))
+            self.finish()
+        else:
+            yield default, (data,)
+
+
     @decorators.deferred
     def defer_get_onsite_domains(self, date, advertiser, pattern):
-        
+        #self.made()
         dates = build_datelist(7)
         args = [advertiser,pattern,dates]
         uids = self.get_uids_from_cache(*args)
@@ -42,6 +59,7 @@ class VisitorKeywordsHandler(PatternSearchCache,VisitDomainsFullHandler):
 
     @decorators.deferred
     def process_visitor_domains(self, response_data):
+        #self.made_up()
         def split_url(x):
             return x.replace("-","/").split("/")
         GROUPS = ["url","uniques"]
@@ -52,7 +70,7 @@ class VisitorKeywordsHandler(PatternSearchCache,VisitDomainsFullHandler):
             split_version = split_url(the_grouped)
             values = x["uniques"].values[0]
             return pandas.DataFrame(values,columns=["unique"],index=split_version)
-        
+            
         obj1 = response_data.groupby(GROUPS).apply(grouping_function)
         obj2 = obj1.groupby(level=2)
 
@@ -65,19 +83,19 @@ class VisitorKeywordsHandler(PatternSearchCache,VisitDomainsFullHandler):
         mask3 = ~full_url_response['url'].str.contains(".org")
         
         filtered_df = full_url_response[mask1 & mask2 & mask3]
-
-        self.get_content(filtered_df)
-
-
-    @defer.inlineCallbacks
-    def get_onsite_domains(self, date, kind, advertiser, pattern, num_keyword):
         
-        logging.info("Requesting visitor domains...")
-        response_data = yield self.defer_get_onsite_domains(date, advertiser, pattern)
-        logging.info("Received visitor domains.")
+        return filtered_df
 
+    @decorators_custom.inlineCallbacksErrors
+    def get_onsite_domains(self, date, kind, advertiser, pattern, num_keyword):
+        #self.made_up()
+        logging.info("Requesting onsite domains...")
+        response_data = yield self.defer_get_onsite_domains(date, advertiser, pattern)
+        logging.info("Received onsite domains.")
+        
         logging.info("Processing visitor domains...")
         visitor_domains = yield self.process_visitor_domains(response_data)
+        self.get_content(visitor_domains)
         logging.info("Finished processing visitor domains...")
 
         
@@ -85,7 +103,9 @@ class VisitorKeywordsHandler(PatternSearchCache,VisitDomainsFullHandler):
 
     @tornado.web.authenticated
     @tornado.web.asynchronous
+    @decorators.error_handling
     def get(self):
+        self.made()
         formatted = self.get_argument("format", False)
         start_date = self.get_argument("start_date", "")
         end_date = self.get_argument("end_date", "")
