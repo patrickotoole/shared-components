@@ -64,7 +64,8 @@ function draw() {
       .text(function(d) {
         return d.title;
       })
-      .attr('x', '0px')
+      .attr('x', '70px')
+      .attr('text-anchor', 'end')
       .attr('y', function(d, i) {
         return 14 + (bar_height * i);
       })
