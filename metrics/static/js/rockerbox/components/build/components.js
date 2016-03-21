@@ -1,10 +1,9 @@
 (function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('./src/table_heatmap'), require('d3')) :
-	typeof define === 'function' && define.amd ? define('components', ['exports', './src/table_heatmap', 'd3'], factory) :
-	factory((global.components = {}),global.__src_table_heatmap,global.d3);
-}(this, function (exports,__src_table_heatmap,d3) { 'use strict';
+	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('d3')) :
+	typeof define === 'function' && define.amd ? define('components', ['exports', 'd3'], factory) :
+	factory((global.components = {}),global.d3);
+}(this, function (exports,d3) { 'use strict';
 
-	__src_table_heatmap = 'default' in __src_table_heatmap ? __src_table_heatmap['default'] : __src_table_heatmap;
 	d3 = 'default' in d3 ? d3['default'] : d3;
 
 	function d3_updateable(target,selector,type,data,joiner) {
@@ -1144,6 +1143,5 @@
 	exports.accessor = accessor;
 	exports.table = table;
 	exports.popup = popup;
-	exports.table_heatmap = __src_table_heatmap;
 
 }));

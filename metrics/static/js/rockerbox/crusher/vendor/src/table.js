@@ -47,7 +47,7 @@ var buildCategories = function(vendor) {
 
   return d3.entries(vendor_categories).sort(function(x, y) {
     return y.value - x.value;
-  }).slice(0, 13);
+  }).slice(0, 20);
 }
 
 var check_missing_header = function(tableWrapper) {
