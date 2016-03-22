@@ -33,6 +33,333 @@ RB.crusher.ui.settings = (function(settings,crusher) {
   }
 
   settings.subscription = function(funnelRow) {
+
+    d3.select("body").classed("hide-select hide-top dark",true)
+
+    var node = d3.select(funnelRow.node().parentNode)
+
+    var section = d3_updateable(funnelRow,".section-dark-top","div")
+      .classed("section-dark-top",true)
+      .style("height","330px")
+      .style("margin-left","-15px")
+      .style("margin-right","-15px")
+      .style("margin-top","-30px")
+
+    d3_updateable(section,".top-space","section")
+      .classed("top-space",true)
+      .style("height","20px") // IF WE WANT THIS IN THE FUTURE
+      //.style("box-shadow", "0 1px rgba(255,255,255,0.08),0 -1px rgba(0,0,0,0.55) inset")
+
+    d3_updateable(section,".top-text","div")
+      .classed("top-text",true)
+      .text("Pricing Plans")
+
+    d3_updateable(section,".top-subtext","div")
+      .classed("top-subtext",true)
+      .html("Start integrating and developing with Rockerbox for free. <br> Upgrade when you're ready to engage and grow your audience.")
+
+    var section_bottom = d3_updateable(funnelRow,".section-bottom","div")
+      .classed("row section-bottom",true)
+
+    var table = d3_updateable(section_bottom,".pricingtable.first","div")
+      .classed("pricingtable first",true)
+
+    var row = d3_updateable(table,".pricingtable_row","div")
+      .classed("pricingtable_row row",true)
+
+    var data = [
+        {
+            title: "Startup"
+          , html: "<strong>Low-traffic</strong><br>Get started integrating<br>without breaking the bank."
+          , price: "Free"
+          , button: "Get Started"
+          , href: "#"
+          , features: [
+              {
+                  "name":"Up to 1000 profiles/month"
+                , "active":true 
+                , "bold":true 
+
+              }
+            , {
+                  "name":"Unlimited segment creation"
+                , "active":true 
+              }
+            , {
+                  "name":"Audience Overview"
+                , "active":true 
+              }
+            , {
+                  "name":"Before and After"
+                , "active":false 
+              }
+            , {
+                  "name":"Audience Cohorts"
+                , "active":false 
+              }
+            , {
+                  "name":"On-site to off-site Timing"
+                , "active":false 
+              }
+            , {
+                  "name":"Audience Articles"
+                , "active":false 
+              }
+            , {
+                  "name":"Audience Keywords"
+                , "active":false 
+              }
+            , {
+                  "name":"Audience Summaries"
+                , "active":false 
+              }
+            , {
+                  "name":"Standard support"
+                , "active":true 
+                , "bold":true 
+
+              }
+          ]
+        }
+      , {
+            title: "Business"
+          , html: "<strong>Expand your audience</strong><br>Unlock unique insights to<br>produce content that engages<br>your audience."
+          , price: "$499"
+          , button: "Get Started"
+          , href: "#"
+          , features: [
+              {
+                  "name":"Up to 1000 profiles/month"
+                , "active":true 
+                , "bold":true 
+
+              }
+            , {
+                  "name":"$2 per 100 profiles after 25k"
+                , "active":true 
+              }
+            , {
+                  "name":"Unlimited segment creation"
+                , "active":true 
+              }
+            , {
+                  "name":"Audience Overview"
+                , "active":true 
+              }
+            , {
+                  "name":"Before and After"
+                , "active":true 
+              }
+            , {
+                  "name":"Audience Cohorts"
+                , "active":true 
+              }
+            , {
+                  "name":"On-site to off-site Timing"
+                , "active":true 
+              }
+            , {
+                  "name":"Audience Articles"
+                , "active":true 
+              }
+            , {
+                  "name":"Audience Keywords"
+                , "active":true 
+              }
+            , {
+                  "name":"Audience Summaries"
+                , "active":false 
+              }
+            , {
+                  "name":"Custom integrations"
+                , "active":false 
+              }
+            , {
+                  "name":"Custom reporting"
+                , "active":false 
+              }
+            , {
+                  "name":"Standard support"
+                , "active":true 
+                , "bold":true 
+
+              }
+          ]
+        }
+      , {
+            title: "Enterprise"
+          , html: "<strong>Unlimited profiles</strong><br>For growing businesses with<br>custom needs. Get in touch."
+          , price: "Get a quote"
+          , button: "Contact sales"
+          , href: "#"
+          , features: [
+              {
+                  "name":"Unlimited profiles & segments"
+                , "active":true 
+              }
+            , {
+                  "name":"Audience Overview"
+                , "active":true 
+              }
+            , {
+                  "name":"Before and After"
+                , "active":true 
+              }
+            , {
+                  "name":"Audience Cohorts"
+                , "active":true 
+              }
+            , {
+                  "name":"On-site to off-site Timing"
+                , "active":true 
+              }
+            , {
+                  "name":"Audience Articles"
+                , "active":true 
+              }
+            , {
+                  "name":"Audience Keywords"
+                , "active":true 
+              }
+            , {
+                  "name":"Audience Summaries"
+                , "active":true 
+              }
+            , {
+                  "name":"Implementation consultant"
+                , "active":true 
+              }
+            , {
+                  "name":"Custom DMP integrations"
+                , "active":true 
+              }
+            , {
+                  "name":"Custom CRM integrations"
+                , "active":true 
+              }
+            , {
+                  "name":"Custom feature development"
+                , "active":true 
+              }
+            , {
+                  "name":"Standard support"
+                , "active":true 
+                , "bold":true 
+
+              }
+          ]
+        }
+    ]
+
+    var columns = d3_splat(row,".pricingtable_column","div",data,function(x,i){return x.title })
+      .classed("col-md-4 pricingtable_column",true)
+ 
+    var center = columns.filter(function(x,i){return i == 1})
+      .classed("pricingtable_column-center",true)
+
+    d3_updateable(center,".pricing_ribbon_pre","div")
+      .classed("pricingtable_ribbon_pre",true)
+      .attr("style","opacity: 1; transform: rotateX(0deg) rotateY(0deg) rotateZ(40deg); transition: opacity 700ms, transform 700ms;")
+      .html("BETA")
+    
+
+
+    d3_updateable(center,".pricing_ribbon","div")
+      .classed("pricingtable_ribbon",true)
+      .attr("style","opacity: 1; transform: translateX(0px) translateY(0px) translateZ(0px) rotateX(0deg) rotateY(0deg) rotateZ(40deg); transition: opacity 500ms, transform 700ms")
+      .html("<div>Limited Space</div>")
+    
+    d3_updateable(columns,".pricingtable_title","h2")
+      .classed("pricingtable_title",true)
+      .text(function(x){return x.title})
+
+    d3_updateable(columns,".pricingtable_text","p")
+      .classed("pricingtable_text",true)
+      .html(function(x){return x.html})
+
+    d3_updateable(center,".teaser","p")
+      .classed("pricingtable_trialtext teaser",true)
+      .text("starting at")
+
+    d3_updateable(columns,".pricingtable_price","div")
+      .classed("pricingtable_price",true)
+      .html(function(x){return x.price})
+
+    d3_updateable(columns,".pricingtable_trialtext.original","div")
+      .classed("pricingtable_trialtext original",true)
+      .html("&nbsp;")
+
+    center.selectAll(".pricingtable_price")
+      .classed("pricingtable_price-bold",true)
+
+    center.selectAll(".pricingtable_trialtext.original")
+      .classed("pricingtable_trialtext",true)
+      .text("per month")
+
+
+
+
+    d3_updateable(columns,".button","a")
+      .classed("w-button button button-blue pricingtable_button",true)
+      .attr("href","#")
+      .text(function(x){return x.button})
+
+
+
+    d3_updateable(columns,".button","a")
+      .classed("w-button button button-blue pricingtable_button",true)
+      .attr("href","#")
+      .text(function(x){return x.button})
+
+    var details_table = d3_updateable(section_bottom,".pricingtable.details","div")
+      .classed("pricingtable details",true)
+
+
+
+    var features = d3_updateable(details_table,".pricingfeatures_row","div")
+      .classed("pricingfeatures_row row",true)
+
+    var columns = d3_splat(features,".pricingfeatures_column","div",data,function(x,i){return x.title })
+      .classed("col-md-4 pricingfeatures_column",true)
+ 
+    var lists = d3_updateable(columns,".pricingfeatures_list","ul")
+      .classed("pricingfeatures_list",true)
+
+    var li = d3_splat(lists,".pricingfeatures_item","li",function(x){return x.features},function(x){return x.name})
+      .classed("pricingfeatures_item",true)
+
+    var check = d3_updateable(li.filter(function(x){return x.active}),".pricingfeatures_checkmark","img")
+      .classed("pricingfeatures_checkmark",true)
+      .attr("src","https://daks2k3a4ib2z.cloudfront.net/55b166a378d4b45545b92c1f/56b8a67406817e9a2bbb7a60_pricingfeatures_checkmark_icon_blue.svg")
+
+    var text = d3_updateable(li,".pricingfeatures_text","div")
+      .classed("pricingfeatures_text",true)
+      .text(function(x){return x.name})
+      .style("font-weight",function(x){ return x.bold ? "bold" : undefined })
+
+    text.filter(function(x){ return !x.active})
+      .classed("pricingfeatures_text-unavailable",true)
+
+
+
+
+    
+
+
+   
+
+
+
+  }
+
+  settings.subscription_old = function(funnelRow) {
+
+      d3_updateable(funnelRow,".pixel-description","div")
+        .classed("pixel-description",true)
+        .style("margin-top","15px")
+        .style("margin-bottom","15px")
+        .html("Shown below is your current subscription plan")
+
       d3_updateable(funnelRow,".pixel-description","div")
         .classed("pixel-description",true)
         .style("margin-top","15px")
