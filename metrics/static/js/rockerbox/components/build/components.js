@@ -1079,15 +1079,6 @@
 	  var popup_content = d3_updateable(this._base, '.info-popup-content', 'p')
 	    .classed('info-popup-content', true)
 	    .text(this._content)
-
-	  var popup_close = d3_updateable(this._base, '.info-popup-close', 'div')
-	    .classed('info-popup-close', true)
-	    .text('Close')
-	    .on('click', function(e) {
-	      setTimeout(function() {
-	        d3.select('.info-popup').remove();
-	      }, 1);
-	    });
 	}
 
 	function base$5(target) {
@@ -1100,6 +1091,15 @@
 	      return '-' + margin + 'px';
 	    })
 
+	  setTimeout(function() {
+	    d3.select('body').on('click', function(e) {
+	      if (d3.event.target.className !== 'info-popup' && d3.event.target.parentElement.className !== 'info-popup') {
+	        d3.select('.info-popup').remove();
+	        d3.select('body').on('click', null);
+	      }
+	    });
+	  }, 10);
+
 	  return popup;
 	}
 
@@ -1110,8 +1110,10 @@
 	  this._content = '';
 	}
 
-	function popup(target){
-	  return new Popup(target)
+	function popup(target) {
+	  if (d3.select('.info-popup')[0][0] == null) {
+	    return new Popup(target)
+	  }
 	}
 
 	function title(value) {
