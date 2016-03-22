@@ -11,6 +11,21 @@ function base(target) {
       return '-' + margin + 'px';
     })
 
+    setTimeout(function() {
+      d3.select('body').on('click', function(e) {
+        // debugger;
+        if(d3.event.target.className !== 'info-popup' && d3.event.target.parentElement.className !== 'info-popup') {
+          d3.select('.info-popup').remove();
+          d3.select('body').on('click', null);
+        }
+      });
+    }, 10);
+
+  // d3.select('.info-popup').on('click', function(a,b,c,d) {
+  //   alert('2')
+  //   d3.event.preventDefault();
+  // });
+
   return popup;
 }
 

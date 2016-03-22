@@ -1100,6 +1100,21 @@
 	      return '-' + margin + 'px';
 	    })
 
+	    setTimeout(function() {
+	      d3.select('body').on('click', function(e) {
+	        // debugger;
+	        if(d3.event.target.className !== 'info-popup' && d3.event.target.parentElement.className !== 'info-popup') {
+	          d3.select('.info-popup').remove();
+	          d3.select('body').on('click', null);
+	        }
+	      });
+	    }, 10);
+
+	  // d3.select('.info-popup').on('click', function(a,b,c,d) {
+	  //   alert('2')
+	  //   d3.event.preventDefault();
+	  // });
+
 	  return popup;
 	}
 
@@ -1111,7 +1126,9 @@
 	}
 
 	function popup(target){
-	  return new Popup(target)
+	  if (d3.select('.info-popup')[0][0] == null) {
+	    return new Popup(target)
+	  }
 	}
 
 	function title(value) {

@@ -1,5 +1,6 @@
 import base from './popup/base'
 import draw from './popup/draw'
+import d3 from 'd3'
 
 export function Popup(target) {
   this._target = target
@@ -9,7 +10,9 @@ export function Popup(target) {
 }
 
 function popup(target){
-  return new Popup(target)
+  if (d3.select('.info-popup')[0][0] == null) {
+    return new Popup(target)
+  }
 }
 
 function title(value) {
