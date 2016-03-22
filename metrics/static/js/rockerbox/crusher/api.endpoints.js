@@ -49,6 +49,83 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
   })
 
+  endpoints.visitor_model = api.helpers.genericQueuedAPIWithData(function(segment, cb, deferred_cb) {
+    var path = "/crusher/v1/visitor/model/cache?format=json&url_pattern=";
+
+    var process = function(dd) {
+      segment.clusters = dd.clusters
+      segment.uid_clusters = dd.uid_clusters
+      segment.similarity = dd.similarity
+
+      deferred_cb(null, cb.bind(false, dd))
+    }
+
+    d3.json(path + segment.url_pattern[0], process)
+      .on('error', function(e) {
+        d3.json(path.replace('/cache?', '?') + segment.url_pattern[0], process)
+      });
+
+  })
+
+  endpoints.visitor_before_and_after = api.helpers.genericQueuedAPIWithData(function(segment, cb, deferred_cb) {
+    var path = "/crusher/v1/visitor/before_and_after/cache?format=json&url_pattern=";
+
+    var process = function(dd) {
+      segment.before = {
+        categories: dd.before_categories,
+        domains: dd.before_domains
+      }
+      segment.after = {
+        categories: dd.after_categories,
+        domains: dd.after_domains
+      }
+      deferred_cb(null, cb.bind(false, dd))
+    }
+
+    d3.json(path + segment.url_pattern[0], process)
+      .on('error', function(e) {
+        d3.json(path.replace('/cache?', '?') + segment.url_pattern[0], process)
+      });
+
+  })
+
+  endpoints.visitor_sessions = api.helpers.genericQueuedAPIWithData(function(segment, cb, deferred_cb) {
+    var path = "/crusher/v1/visitor/sessions?format=json&url_pattern=";
+
+    var process = function(dd) {
+      if(typeof segment.hourly === typeof undefined) {
+        segment.hourly = {};
+      }
+
+      segment.hourly.onsite = dd.hourly_domains;
+      deferred_cb(null, cb.bind(false, dd))
+    }
+
+    d3.json(path + segment.url_pattern[0], process)
+      .on('error', function(e) {
+        d3.json(path.replace('/cache?', '?') + segment.url_pattern[0], process)
+      });
+  })
+
+  endpoints.visitor_hourly = api.helpers.genericQueuedAPIWithData(function(segment, cb, deferred_cb) {
+    var path = "/crusher/v1/visitor/hourly?format=json&url_pattern=";
+
+    var process = function(dd) {
+      if(typeof segment.hourly === typeof undefined) {
+        segment.hourly = {};
+      }
+
+      segment.hourly.categories = dd.hourly_visits;
+      deferred_cb(null, cb.bind(false, dd))
+    }
+
+    d3.json(path + segment.url_pattern[0], process)
+      .on('error', function(e) {
+        d3.json(path.replace('/cache?', '?') + segment.url_pattern[0], process)
+      });
+
+  })
+
   endpoints.pixel_status = api.helpers.genericQueuedAPIWithData(function(data, cb, deferred_cb) {
     d3.json("/crusher/pixel/status?format=json", function(dd) {
       deferred_cb(null, cb.bind(false, dd))
@@ -577,11 +654,6 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
       .get(function(err, rawData) {
         var dd = JSON.parse(rawData.response)
 
-        action.clusters = dd.clusters
-        action.uid_clusters = dd.uid_clusters
-        action.similarity = dd.similarity
-
-
         action.before = {
           categories: dd.before_categories,
           domains: dd.before_domains
@@ -589,10 +661,6 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
         action.after = {
           categories: dd.after_categories,
           domains: dd.after_domains
-        }
-        action.hourly = {
-          categories: dd.hourly_domains,
-          onsite: dd.hourly_visits
         }
 
         deferred_cb(null, cb.bind(false, action))
@@ -610,23 +678,6 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
     // }
     //
     // deferred_cb(null,cb.bind(false,action))
-  })
-
-  endpoints.actionClusters = api.helpers.genericQueuedAPIWithData(function(action, cb, deferred_cb) {
-    if (action.clusters) {
-      deferred_cb(null, cb.bind(false, action))
-      return
-    }
-    d3.xhr(api.URL.actionClusters + action.action_string+ (action.has_filter ? "&filter_id=" + action.action_id: ""))
-      .header("Content-Type", "application/json")
-      .get(function(err, rawData) {
-        var dd = JSON.parse(rawData.response)
-        action.clusters = dd.clusters
-        action.uid_clusters = dd.uid_clusters
-        action.similarity = dd.similarity
-
-        deferred_cb(null, cb.bind(false, action))
-      })
   })
 
   endpoints.actionTimeseries = api.helpers.genericQueuedAPIWithData(function(action, cb, deferred_cb) {
