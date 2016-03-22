@@ -2,6 +2,7 @@ import tornado.web
 from link import lnk
 from lib.query.MYSQL import *
 from lib.helpers import decorators
+import ujson
 #from ..lib.hive import Hive
 
 class BaseHandler(tornado.web.RequestHandler):
