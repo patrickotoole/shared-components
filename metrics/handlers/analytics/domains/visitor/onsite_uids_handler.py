@@ -18,6 +18,7 @@ from lib.helpers import APIHelpers
 from handlers.analytics.visit_events import VisitEventBase
 from handlers.analytics.search.cache.pattern_search_cache import PatternSearchCache
 from handlers.analytics.search.search_helpers import SearchHelpers
+import lib.custom_defer as custom_defer
 
 QUERY1 = "select distinct * from uids_only_sessions_cache where advertiser = '{}' and pattern = '{}'"
 QUERY2 = "select distinct * from uids_only_visits_cache where advertiser = '{}' and pattern = '{}'"
@@ -29,7 +30,7 @@ class UidsOnsiteHandler(BaseHandler, AnalyticsBase, APIHelpers, VisitEventBase, 
         self.db = db
         self.cassandra = cassandra
 
-    @defer.inlineCallbacks
+    @custom_defer.inlineCallbacks
     def get_uids_only(self, advertiser, pattern_terms, num_days, logic="or",timeout=60, **kwargs):
 
         dates = build_datelist(num_days)
@@ -50,6 +51,7 @@ class UidsOnsiteHandler(BaseHandler, AnalyticsBase, APIHelpers, VisitEventBase, 
 
     @tornado.web.authenticated
     @tornado.web.asynchronous
+    @decorators.error_handling
     def get(self):
         url_pattern = self.get_argument("url_pattern", "")
         user = self.current_advertiser_name

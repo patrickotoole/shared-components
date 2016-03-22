@@ -2,6 +2,7 @@ import tornado.web
 from link import lnk
 from lib.query.MYSQL import *
 from lib.helpers import decorators
+import ujson
 #from ..lib.hive import Hive
 
 class BaseHandler(tornado.web.RequestHandler):
@@ -19,8 +20,14 @@ class BaseHandler(tornado.web.RequestHandler):
     def get_content(self, data):
         def default(self, data):
             df = Convert.df_to_json(data)
-            self.render("analysis/visit_urls.html", data=df)
-        yield default, (data,)
+            self.write(df)
+            self.finish()
+        if type(data) == type(Exception()):
+            self.set_status(400)
+            self.write(ujson.dumps({"error":str(data)}))
+            self.finish()
+        else:
+            yield default, (data,)
 
     @property
     def current_advertiser(self):

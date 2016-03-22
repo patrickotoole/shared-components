@@ -13,6 +13,7 @@ from ...analytics_base import AnalyticsBase
 from twisted.internet import defer
 from lib.helpers import decorators
 from lib.helpers import *
+import lib.custom_defer as custom_defer
 from lib.cassandra_helpers.helpers import FutureHelpers
 from lib.cassandra_cache.helpers import *
 from ...search.cache.pattern_search_cache import PatternSearchCache
@@ -31,13 +32,14 @@ class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler)
         df = pandas.DataFrame(results_no_NA.iloc[:int(top_count)])
         return df
 
-    @defer.inlineCallbacks
+    @custom_defer.inlineCallbacksErrors
     def get_cache_domains(self, advertiser, pattern, top_count):
         response_data = yield self.defer_get_onsite_cache( advertiser, pattern, top_count)
         self.get_content(response_data)
     
     @tornado.web.authenticated
     @tornado.web.asynchronous
+    @decorators.error_handling
     def get(self):
         formatted = self.get_argument("format", False)
         url_pattern = self.get_argument("url_pattern", "")
