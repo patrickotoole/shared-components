@@ -50,22 +50,27 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
   })
 
   endpoints.visitor_model = api.helpers.genericQueuedAPIWithData(function(segment, cb, deferred_cb) {
-    var path = "/crusher/v1/visitor/model?format=json&url_pattern=";
+    var path = "/crusher/v1/visitor/model/cache?format=json&url_pattern=";
 
-    d3.json(path + segment.url_pattern[0], function(dd) {
+    var process = function(dd) {
       segment.clusters = dd.clusters
       segment.uid_clusters = dd.uid_clusters
       segment.similarity = dd.similarity
 
       deferred_cb(null, cb.bind(false, dd))
-    })
+    }
+
+    d3.json(path + segment.url_pattern[0], process)
+      .on('error', function(e) {
+        d3.json(path.replace('/cache?', '?') + segment.url_pattern[0], process)
+      });
 
   })
 
   endpoints.visitor_before_and_after = api.helpers.genericQueuedAPIWithData(function(segment, cb, deferred_cb) {
-    var path = "/crusher/v1/visitor/before_and_after?format=json&url_pattern=";
+    var path = "/crusher/v1/visitor/before_and_after/cache?format=json&url_pattern=";
 
-    d3.json(path + segment.url_pattern[0], function(dd) {
+    var process = function(dd) {
       segment.before = {
         categories: dd.before_categories,
         domains: dd.before_domains
@@ -75,35 +80,49 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
         domains: dd.after_domains
       }
       deferred_cb(null, cb.bind(false, dd))
-    })
+    }
+
+    d3.json(path + segment.url_pattern[0], process)
+      .on('error', function(e) {
+        d3.json(path.replace('/cache?', '?') + segment.url_pattern[0], process)
+      });
 
   })
 
   endpoints.visitor_sessions = api.helpers.genericQueuedAPIWithData(function(segment, cb, deferred_cb) {
     var path = "/crusher/v1/visitor/sessions?format=json&url_pattern=";
 
-    d3.json(path + segment.url_pattern[0], function(dd) {
+    var process = function(dd) {
       if(typeof segment.hourly === typeof undefined) {
         segment.hourly = {};
       }
 
       segment.hourly.onsite = dd.hourly_domains;
       deferred_cb(null, cb.bind(false, dd))
-    })
+    }
 
+    d3.json(path + segment.url_pattern[0], process)
+      .on('error', function(e) {
+        d3.json(path.replace('/cache?', '?') + segment.url_pattern[0], process)
+      });
   })
 
   endpoints.visitor_hourly = api.helpers.genericQueuedAPIWithData(function(segment, cb, deferred_cb) {
     var path = "/crusher/v1/visitor/hourly?format=json&url_pattern=";
 
-    d3.json(path + segment.url_pattern[0], function(dd) {
+    var process = function(dd) {
       if(typeof segment.hourly === typeof undefined) {
         segment.hourly = {};
       }
 
       segment.hourly.categories = dd.hourly_visits;
       deferred_cb(null, cb.bind(false, dd))
-    })
+    }
+
+    d3.json(path + segment.url_pattern[0], process)
+      .on('error', function(e) {
+        d3.json(path.replace('/cache?', '?') + segment.url_pattern[0], process)
+      });
 
   })
 
