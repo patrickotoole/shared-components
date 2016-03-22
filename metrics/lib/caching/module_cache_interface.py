@@ -42,7 +42,7 @@ if __name__ == "__main__":
     from lib.report.utils.options import parse_command_line
 
     define("advertiser",  default="")
-    define("pattern", default="")
+    define("pattern", default=False)
     define("run_local", default=False)
     define("endpoint", default=False)
     define("filter_id", default=0)
@@ -56,8 +56,12 @@ if __name__ == "__main__":
     zk.start()
     connectors = {'db':lnk.dbs.rockerbox, 'zk':zk, 'cassandra':''}
     MC = ModuleCache(connectors)
-    if options.run_local:
+    if options.run_local and options.pattern:
         MC.run_local(options.advertiser, options.pattern, options.endpoint, options.filter_id, options.base_url, connectors)
+    elif options.run_local and not options.pattern:
+        segments = connectors['db'].select_dataframe("select * from action_with_patterns where pixel_source_name = '{}'".format(options.advertiser))
+        for i,s in segments.iterrows():
+            MC.run_local(options.advertiser, s['url_pattern'], options.endpoint, s['action_id'], options.base_url, connectors)
     else:
         MC.add_db_to_work_queue(options.advertiser, options.pattern, options.endpoint, options.filter_id, options.base_url)
 

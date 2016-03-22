@@ -11,6 +11,7 @@ from transforms.before_and_after import *
 from transforms.domain_intersection import *
 from model import process_model
 from generic import GenericSearchBase
+import lib.custom_defer as custom_defer
 
 DEFAULT_FUNCS = [process_before_and_after, process_hourly, process_sessions, process_domain_intersection, process_model]
 
@@ -44,18 +45,18 @@ class VisitorBase(GenericSearchBase):
         
 
 
-    @defer.inlineCallbacks
+    @custom_defer.inlineCallbacksErrors
     def get_uids(self, advertiser, pattern_terms, num_days=20, process=False, filter_id=False, *args, **kwargs):
 
         NUM_DAYS = 2
         ALLOW_SAMPLE = True
-
         response = self.default_response(pattern_terms,"and")
         args = [advertiser,pattern_terms[0][0],build_datelist(NUM_DAYS),NUM_DAYS,response,ALLOW_SAMPLE,filter_id]
 
         now = time.time()
 
         kwargs = yield self.build_arguments(*args)
+
 
         if process:
             response = yield self.process_uids(funcs=process, **kwargs)
