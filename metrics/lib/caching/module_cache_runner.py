@@ -9,21 +9,21 @@ import zlib, codecs, sys
 
 current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-SQL_INSERT1 = "INSERT INTO before_and_after_cache (advertiser, url_pattern, filter_id, endpoint, zipped) values ('{}','{}',{},'{}',UNHEX({}))"
-SQL_REPLACE1=" REPLACE before_and_after_cache (advertiser, url_pattern, filter_id, endpoint, zipped) values ('{}','{}',{},'{}','{}')"
+SQL_INSERT1 = "INSERT INTO transform_before_and_after_cache (advertiser, url_pattern, filter_id, endpoint, zipped) values ('{}','{}',{},'{}',UNHEX({}))"
+SQL_REPLACE1=" REPLACE transform_before_and_after_cache (advertiser, url_pattern, filter_id, endpoint, zipped) values ('{}','{}',{},'{}','{}')"
 
-SQL_INSERT2 = "INSERT INTO hourly_cache (advertiser, url_pattern, filter_id, endpoint, zipped) values ('{}','{}',{},'{}',UNHEX({}))"
-SQL_REPLACE2=" REPLACE hourly_cache (advertiser, url_pattern, filter_id, endpoint, zipped) values ('{}','{}',{},'{}','{}')"
+SQL_INSERT2 = "INSERT INTO transform_hourly_cache (advertiser, url_pattern, filter_id, endpoint, zipped) values ('{}','{}',{},'{}',UNHEX({}))"
+SQL_REPLACE2=" REPLACE transform_hourly_cache (advertiser, url_pattern, filter_id, endpoint, zipped) values ('{}','{}',{},'{}','{}')"
 
-SQL_INSERT3 = "INSERT INTO sessions_cache (advertiser, url_pattern, filter_id, endpoint, zipped) values ('{}','{}',{},'{}',UNHEX({}))"
-SQL_REPLACE3=" REPLACE sessions_cache (advertiser, url_pattern, filter_id, endpoint, zipped) values ('{}','{}',{},'{}','{}')"
+SQL_INSERT3 = "INSERT INTO transform_sessions_cache (advertiser, url_pattern, filter_id, endpoint, zipped) values ('{}','{}',{},'{}',UNHEX({}))"
+SQL_REPLACE3=" REPLACE transform_sessions_cache (advertiser, url_pattern, filter_id, endpoint, zipped) values ('{}','{}',{},'{}','{}')"
 
-SQL_INSERT4 = "INSERT INTO model_cache (advertiser, url_pattern, filter_id, endpoint, zipped) values ('{}','{}',{},'{}',UNHEX({}))"
-SQL_REPLACE4=" REPLACE model_cache (advertiser, url_pattern, filter_id, endpoint, zipped) values ('{}','{}',{},'{}','{}')"
+SQL_INSERT4 = "INSERT INTO transform_model_cache (advertiser, url_pattern, filter_id, endpoint, zipped) values ('{}','{}',{},'{}',UNHEX({}))"
+SQL_REPLACE4=" REPLACE transform_model_cache (advertiser, url_pattern, filter_id, endpoint, zipped) values ('{}','{}',{},'{}','{}')"
 
 URL1 = "/crusher/v1/visitor/before_and_after?url_pattern={}"
 URL2 = "/crusher/v1/visitor/hourly?url_pattern={}"
-URL3 = "/crusher/v1/visitor/sessionsr?url_pattern={}"
+URL3 = "/crusher/v1/visitor/sessions?url_pattern={}"
 URL4 = "/crusher/v1/visitor/model?url_pattern={}"
 
 class ModuleRunner(BaseRunner):
