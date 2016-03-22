@@ -10,15 +10,6 @@ function draw() {
   var popup_content = d3_updateable(this._base, '.info-popup-content', 'p')
     .classed('info-popup-content', true)
     .text(this._content)
-
-  var popup_close = d3_updateable(this._base, '.info-popup-close', 'div')
-    .classed('info-popup-close', true)
-    .text('Close')
-    .on('click', function(e) {
-      setTimeout(function() {
-        d3.select('.info-popup').remove();
-      }, 1);
-    });
 }
 
 export default draw
