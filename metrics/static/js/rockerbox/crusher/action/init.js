@@ -213,8 +213,8 @@ RB.component.export(RB.crusher.ui.action.show, RB.crusher.ui.action)
 RB.crusher.ui.action.domains = (function(domains,action,crusher) {
 
   domains.NAME = "action.domains"
-  domains.SUBSCRIBE = ["action_initialized","cached_visitor_domains_only"]
-  domains.PUBLISH = ["actionBeforeAndAfter"]
+  domains.SUBSCRIBE = ["action_initialized", "cached_visitor_domains_only"]
+  domains.PUBLISH = ["visitor_before_and_after", "visitor_sessions", "visitor_hourly", "visitor_model"]
   domains.EVENTS = []
 
   domains.subscription = function(data) {
@@ -237,7 +237,7 @@ RB.component.export(RB.crusher.ui.action.domains, RB.crusher.ui.action)
 RB.crusher.ui.action.clusters = (function(clusters,action,crusher) {
 
   clusters.NAME = "action.clusters"
-  clusters.SUBSCRIBE = ["actionClusters"]
+  clusters.SUBSCRIBE = ["visitor_model"]
   clusters.PUBLISH = []
   clusters.EVENTS = []
 
@@ -323,7 +323,7 @@ RB.component.export(RB.crusher.ui.action.top_keywords, RB.crusher.ui.action)
 RB.crusher.ui.action.behavior = (function(behavior,action,crusher) {
 
   behavior.NAME = "action.behavior"
-  behavior.SUBSCRIBE = ["actionBeforeAndAfter"]
+  behavior.SUBSCRIBE = ["visitor_before_and_after"]
   behavior.PUBLISH = []
   behavior.EVENTS = []
 
@@ -335,11 +335,37 @@ RB.crusher.ui.action.behavior = (function(behavior,action,crusher) {
       .style("margin-left","-15px")
       .style("margin-right","-15px")
 
-
-      setTimeout(function() {
     crusher.ui.action.show_behavior(target)
-    crusher.ui.action.show_timing(target)
-      },1)
+
+    return data
+  }
+
+  return behavior
+
+})(RB.crusher.ui.action.behavior || {}, RB.crusher.ui.action,RB.crusher)
+
+RB.component.export(RB.crusher.ui.action.behavior, RB.crusher.ui.action)
+
+
+
+RB.crusher.ui.action.timing = (function(timing,action,crusher) {
+
+  timing.NAME = "action.timing"
+  timing.SUBSCRIBE = ["visitor_sessions", "visitor_hourly"]
+  timing.PUBLISH = []
+  timing.EVENTS = []
+
+  timing.subscription = function(data) {
+    var target = d3.selectAll(".action-view-wrapper")
+    d3_updateable(target,".action-body","div")
+      .classed("action-body",true)
+      .style("margin-left","-15px")
+      .style("margin-right","-15px")
+
+    setTimeout(function() {
+      crusher.ui.action.show_timing(target)
+      // crusher.ui.action.show_timing(target)
+    },1)
 
     var target = d3.selectAll(".action-view-wrapper")
     try {
@@ -352,11 +378,12 @@ RB.crusher.ui.action.behavior = (function(behavior,action,crusher) {
     return data
   }
 
-  return behavior
+  return timing
 
-})(RB.crusher.ui.action.behavior || {}, RB.crusher.ui.action,RB.crusher)
+})(RB.crusher.ui.action.timing || {}, RB.crusher.ui.action,RB.crusher)
 
-RB.component.export(RB.crusher.ui.action.behavior, RB.crusher.ui.action)
+RB.component.export(RB.crusher.ui.action.timing, RB.crusher.ui.action)
+
 
 
 
