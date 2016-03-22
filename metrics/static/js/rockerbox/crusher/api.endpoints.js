@@ -90,14 +90,14 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
   })
 
   endpoints.visitor_sessions = api.helpers.genericQueuedAPIWithData(function(segment, cb, deferred_cb) {
-    var path = "/crusher/v1/visitor/sessions?format=json&url_pattern=";
+    var path = "/crusher/v1/visitor/sessions/cache?format=json&url_pattern=";
 
     var process = function(dd) {
       if(typeof segment.hourly === typeof undefined) {
         segment.hourly = {};
       }
 
-      segment.hourly.onsite = dd.hourly_domains;
+      segment.hourly.categories = dd.hourly_domains;
       deferred_cb(null, cb.bind(false, dd))
     }
 
@@ -108,14 +108,14 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
   })
 
   endpoints.visitor_hourly = api.helpers.genericQueuedAPIWithData(function(segment, cb, deferred_cb) {
-    var path = "/crusher/v1/visitor/hourly?format=json&url_pattern=";
+    var path = "/crusher/v1/visitor/hourly/cache?format=json&url_pattern=";
 
     var process = function(dd) {
       if(typeof segment.hourly === typeof undefined) {
         segment.hourly = {};
       }
 
-      segment.hourly.categories = dd.hourly_visits;
+      segment.hourly.onsite = dd.hourly_visits;
       deferred_cb(null, cb.bind(false, dd))
     }
 

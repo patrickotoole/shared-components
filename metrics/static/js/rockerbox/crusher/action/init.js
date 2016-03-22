@@ -362,18 +362,7 @@ RB.crusher.ui.action.timing = (function(timing,action,crusher) {
       .style("margin-left","-15px")
       .style("margin-right","-15px")
 
-    setTimeout(function() {
-      crusher.ui.action.show_timing(target)
-      // crusher.ui.action.show_timing(target)
-    },1)
-
-    var target = d3.selectAll(".action-view-wrapper")
-    try {
-      crusher.ui.action.show_clusters(target)
-    } catch(e) {
-      console.log("Failed to load clusters for action", e)
-    }
-
+    crusher.ui.action.show_timing(target)
 
     return data
   }
