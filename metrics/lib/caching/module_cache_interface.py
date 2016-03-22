@@ -60,7 +60,6 @@ if __name__ == "__main__":
         MC.run_local(options.advertiser, options.pattern, options.endpoint, options.filter_id, options.base_url, connectors)
     elif options.run_local and not options.pattern:
         segments = connectors['db'].select_dataframe("select * from action_with_patterns where pixel_source_name = '{}'".format(options.advertiser))
-        import ipdb; ipdb.set_trace()
         for i,s in segments.iterrows():
             MC.run_local(options.advertiser, s['url_pattern'], options.endpoint, s['action_id'], options.base_url, connectors)
     else:

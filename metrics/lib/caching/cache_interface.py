@@ -92,6 +92,38 @@ class CacheInterface:
         work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,50)
         logging.info("added uids work queue %s for %s" %(segment["url_pattern"][0],advertiser))
 
+    def add_module_to_work_queue(self, segment, advertiser, base_url):
+        import lib.caching.module_cache_runner as runner
+        yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
+        _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
+        work = pickle.dumps((
+                runner.runner,
+                [advertiser,segment["url_pattern"][0], "before_and_after", segment["action_id"], base_url, _cache_yesterday,_cache_yesterday + "bnamodulecache"]
+                ))
+        work_queue.SingleQueue(self.connectors['zk'],"python_queue").put(work,35)
+        logging.info("added to MOdule work queue %s for %s" %(segment,advertiser))
+
+        work = pickle.dumps((
+                runner.runner,
+                [advertiser,segment["url_pattern"][0], "hourly", segment["action_id"], base_url, _cache_yesterday,_cache_yesterday + "hourmodulecache"]
+                ))
+        work_queue.SingleQueue(self.connectors['zk'],"python_queue").put(work,35)
+        logging.info("added to MOdule work queue %s for %s" %(segment,advertiser)) 
+
+        work = pickle.dumps((
+                runner.runner,
+                [advertiser,segment["url_pattern"][0], "sessions", segment["action_id"], base_url, _cache_yesterday,_cache_yesterday + "sessmodulecache"]
+                ))
+        work_queue.SingleQueue(self.connectors['zk'],"python_queue").put(work,35)
+        logging.info("added to MOdule work queue %s for %s" %(segment,advertiser)) 
+
+        work = pickle.dumps((
+                runner.runner,
+                [advertiser,segment["url_pattern"][0], "model", segment["action_id"], base_url, _cache_yesterday,_cache_yesterday + "modelmodulecache"]
+                ))
+        work_queue.SingleQueue(self.connectors['zk'],"python_queue").put(work,35)
+        logging.info("added to MOdule work queue %s for %s" %(segment,advertiser)) 
+
     def seg_loop(self, segments, advertiser, base_url):
         for seg in segments:
             self.add_db_to_work_queue(seg, advertiser, base_url)
@@ -99,6 +131,7 @@ class CacheInterface:
             self.add_full_url_to_work_queue(seg, advertiser, base_url)
             self.add_keyword_to_work_queue(seg, advertiser, base_url)
             self.add_uids_to_work_queue(seg, advertiser, base_url)
+            self.add_module_to_work_queue(seg, advertiser, base_url)
 
 def get_all_advertisers(db_con):
     ad_df = db_con.select_dataframe(SQL_QUERY)
