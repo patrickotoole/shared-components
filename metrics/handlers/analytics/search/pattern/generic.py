@@ -47,7 +47,6 @@ class FilterBase:
         value = self.run_filter_url(aho_filter,urls)
 
         df = full_df[full_df.url.map(lambda x: value[x] )]
-        #import ipdb; ipdb.set_trace()
         to_return = self.raw_to_stats(df,dates)
 
         defer.returnValue(to_return)
@@ -65,13 +64,12 @@ class GenericSearchBase(FilterBase,VisitDomainBase,PatternSearchSample,PatternSt
         if filter_id:
             stats_df, url_stats_df, full_df = yield self.filter_and_build(full_df,dates,filter_id)
 
-        if (stats_df.sum().sum() == 0) and allow_sample:
+        if (len(full_df.uid.unique()) == 1) or (stats_df.sum().sum() == 0) and allow_sample:
             logging.info("Didnt find anything in the sample! query all the data!")
             sample_args = [term,"",advertiser,dates,num_days,False]
             full_df, stats_df, url_stats_df, _ = yield self.sample_stats_onsite(*sample_args)
             if filter_id:
                 stats_df, url_stats_df, full_df = yield self.filter_and_build(full_df,dates,filter_id)
-
         defer.returnValue([full_df, stats_df, url_stats_df, full_df])
 
 
@@ -79,7 +77,6 @@ class GenericSearchBase(FilterBase,VisitDomainBase,PatternSearchSample,PatternSt
     @defer.inlineCallbacks
     def build_arguments(self,advertiser,term,dates,num_days,response,allow_sample=True,filter_id=False,max_users=5000):
         args = [advertiser,term,build_datelist(num_days),num_days,allow_sample,filter_id]
-
         full_df, _, _, _ = yield self.get_sampled(*args)
         uids = list(set(full_df.uid.values))[:max_users]
 

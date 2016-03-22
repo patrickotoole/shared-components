@@ -49,13 +49,13 @@ class VisitorBase(GenericSearchBase):
 
         NUM_DAYS = 2
         ALLOW_SAMPLE = True
-
         response = self.default_response(pattern_terms,"and")
         args = [advertiser,pattern_terms[0][0],build_datelist(NUM_DAYS),NUM_DAYS,response,ALLOW_SAMPLE,filter_id]
 
         now = time.time()
 
         kwargs = yield self.build_arguments(*args)
+
 
         if process:
             response = yield self.process_uids(funcs=process, **kwargs)

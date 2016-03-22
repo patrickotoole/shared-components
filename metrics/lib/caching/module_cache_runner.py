@@ -32,7 +32,7 @@ class ModuleRunner(BaseRunner):
         self.connectors =connectors
         self.selection_dict = {"before_and_after":{"Insert":SQL_INSERT1, "Replace":SQL_REPLACE1}, "hourly":{"Insert":SQL_INSERT2, "Replace":SQL_REPLACE2}, "sessions": {"Insert":SQL_INSERT3, "Replace":SQL_REPLACE3}, "model":{"Insert":SQL_INSERT4, "Replace":SQL_REPLACE4}}
 
-    def make_request(self,crusher, pattern, endpoint):
+    def make_request(self,crusher, pattern, endpoint, filter_id):
         if endpoint == "before_and_after":
             URL = URL1
         elif endpoint == "hourly":
@@ -44,7 +44,11 @@ class ModuleRunner(BaseRunner):
         else:
             print "Not a vavlid endpoint"
             sys.exit()
-        url = URL.format(pattern)
+        if filter_id !=0:
+            with_filter_id = "{}&filter_id={}"
+            url = URL.format(with_filter_id.format(pattern, filter_id))
+        else:
+            url = URL.format(pattern)
         resp = crusher.get(url, timeout=300)
         return resp.json
 
@@ -73,7 +77,7 @@ def runner(advertiser,pattern, endpoint, filter_id, base_url, cache_date="", ind
 
     db = connectors['db']
     zk = connectors['zk']
-    data = MR.make_request(crusher, pattern, endpoint)
+    data = MR.make_request(crusher, pattern, endpoint, filter_id)
 
     compress_data = MR.compress(ujson.dumps(data))
     try:
