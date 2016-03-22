@@ -27,13 +27,11 @@ from functools import wraps
 # Twisted imports
 from twisted.python.compat import cmp, comparable
 from twisted.python import lockfile, failure
-from twisted.logger import Logger
 from twisted.python.deprecate import warnAboutFunction, deprecated
 from twisted.python.versions import Version
 from twisted.internet.defer import *
 import twisted
 from twisted.internet.defer import _DefGen_Return
-log = Logger()
 
 def get_content(self, data):
     def default(self, data):
