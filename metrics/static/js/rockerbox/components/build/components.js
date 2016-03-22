@@ -1100,15 +1100,14 @@
 	      return '-' + margin + 'px';
 	    })
 
-	    setTimeout(function() {
-	      d3.select('body').on('click', function(e) {
-	        // debugger;
-	        if(d3.event.target.className !== 'info-popup' && d3.event.target.parentElement.className !== 'info-popup') {
-	          d3.select('.info-popup').remove();
-	          d3.select('body').on('click', null);
-	        }
-	      });
-	    }, 10);
+	  setTimeout(function() {
+	    d3.select('body').on('click', function(e) {
+	      if (d3.event.target.className !== 'info-popup' && d3.event.target.parentElement.className !== 'info-popup') {
+	        d3.select('.info-popup').remove();
+	        d3.select('body').on('click', null);
+	      }
+	    });
+	  }, 10);
 
 	  return popup;
 	}
@@ -1120,7 +1119,7 @@
 	  this._content = '';
 	}
 
-	function popup(target){
+	function popup(target) {
 	  if (d3.select('.info-popup')[0][0] == null) {
 	    return new Popup(target)
 	  }

@@ -9,7 +9,7 @@ export function Popup(target) {
   this._content = '';
 }
 
-function popup(target){
+function popup(target) {
   if (d3.select('.info-popup')[0][0] == null) {
     return new Popup(target)
   }
