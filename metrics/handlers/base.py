@@ -23,6 +23,7 @@ class BaseHandler(tornado.web.RequestHandler):
             self.write(df)
             self.finish()
         if type(data) == type(Exception()):
+            self.set_status(400)
             self.write(ujson.dumps({"error":str(data)}))
             self.finish()
         else:

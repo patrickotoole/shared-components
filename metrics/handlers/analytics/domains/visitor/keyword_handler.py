@@ -13,7 +13,7 @@ from ...analytics_base import AnalyticsBase
 from twisted.internet import defer
 from lib.helpers import decorators
 from lib.helpers import *
-import lib.helpers_callback as decorators_custom
+import lib.custom_defer as custom_defer
 from lib.cassandra_helpers.helpers import FutureHelpers
 from lib.cassandra_cache.helpers import *
 from ...search.cache.pattern_search_cache import PatternSearchCache
@@ -26,21 +26,6 @@ class VisitorKeywordsHandler(PatternSearchCache,VisitDomainsFullHandler):
         self.cassandra = cassandra
         self.limit = None
         self.zookeeper = zookeeper
-
-
-    @decorators.formattable
-    def get_content(self, data):
-        def default(self, data):
-            df = Convert.df_to_json(data)
-            self.write(df)
-            self.finish()
-        if type(data) == type(Exception()):
-            self._reason(data)
-            self.set_status(404)
-            self.write(ujson.dumps({"error":str(data)}))
-            self.finish()
-        else:
-            yield default, (data,)
 
 
     @decorators.deferred
@@ -86,7 +71,7 @@ class VisitorKeywordsHandler(PatternSearchCache,VisitDomainsFullHandler):
         
         return filtered_df
 
-    @decorators_custom.inlineCallbacksErrors
+    @custom_defer.inlineCallbacksErrors
     def get_onsite_domains(self, date, kind, advertiser, pattern, num_keyword):
         #self.made_up()
         logging.info("Requesting onsite domains...")

@@ -15,6 +15,7 @@ from lib.helpers import *
 from lib.cassandra_helpers.helpers import FutureHelpers
 from lib.cassandra_cache.helpers import *
 from lib.helpers import APIHelpers
+import lib.custom_defer as custom_defer
 
 QUERY1 = "select distinct * from uids_only_sessions_cache where advertiser = '{}' and pattern = '{}'"
 QUERY2 = "select distinct * from uids_only_visits_cache where advertiser = '{}' and pattern = '{}'"
@@ -45,7 +46,7 @@ class UidsCacheHandler(BaseHandler, AnalyticsBase, APIHelpers):
         temp = results1.set_index("num_sessions").to_dict()
         return df
 
-    @defer.inlineCallbacks
+    @custom_defer.inlineCallbacks
     def get_cache_uids(self, advertiser, pattern):
         response_data = yield self.defer_get_uids_cache( advertiser, pattern)
         self.write_response(response_data)
@@ -53,6 +54,7 @@ class UidsCacheHandler(BaseHandler, AnalyticsBase, APIHelpers):
     
     @tornado.web.authenticated
     @tornado.web.asynchronous
+    @decorators.error_handling
     def get(self):
         url_pattern = self.get_argument("url_pattern", "")
         user = self.current_advertiser_name

@@ -8,7 +8,7 @@ from lib.helpers import decorators
 import codecs
 import zlib
 import ujson
-import lib.helpers_callback as decorators_custom
+import lib.custom_defer as custom_defer
 from ...search.pattern.base_visitors import VisitorBase
 
 SQL_SELECT = "select zipped from transform_%s_cache where advertiser='%s' and url_pattern='%s' and filter_id=%s"
@@ -30,7 +30,7 @@ class VisitorTransformCacheHandler(VisitorBase):
 
         return decomp_data
 
-    @decorators_custom.inlineCallbacksErrors
+    @custom_defer.inlineCallbacksErrors
     def first_step(self, api_type, advertiser, pattern, filter_id):
         data = yield self.get_from_db(api_type, advertiser, pattern, filter_id)
         self.write(ujson.loads(data))
