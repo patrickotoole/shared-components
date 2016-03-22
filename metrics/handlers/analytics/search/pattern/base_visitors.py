@@ -45,7 +45,7 @@ class VisitorBase(GenericSearchBase):
         
 
 
-    @custom_defer.inlineCallbacksError
+    @custom_defer.inlineCallbacksErrors
     def get_uids(self, advertiser, pattern_terms, num_days=20, process=False, filter_id=False, *args, **kwargs):
 
         NUM_DAYS = 2
