@@ -21,11 +21,6 @@ function base(target) {
       });
     }, 10);
 
-  // d3.select('.info-popup').on('click', function(a,b,c,d) {
-  //   alert('2')
-  //   d3.event.preventDefault();
-  // });
-
   return popup;
 }
 
