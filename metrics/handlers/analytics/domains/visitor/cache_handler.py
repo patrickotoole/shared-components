@@ -5,7 +5,7 @@ import logging
 import StringIO
 
 from handlers.base import BaseHandler
-import lib.helpers_callback as decorators_custom
+import lib.custom_defer as custom_defer
 
 from twisted.internet import defer
 from lib.helpers import decorators
@@ -74,8 +74,7 @@ class ActionDashboardHandler(BaseHandler):
 
             return data
 
-    #@defer.inlineCallbacks
-    @decorators_custom.inlineCallbacksErrors
+    @custom_defer.inlineCallbacksErrors
     def get_actions(self, advertiser, number, action_type, url_pattern):
         try:
             actions = yield self.defer_get_actions(advertiser,number, action_type,url_pattern)
@@ -83,6 +82,7 @@ class ActionDashboardHandler(BaseHandler):
             self.finish()
         except:
             self.finish()
+    
     @tornado.web.authenticated
     @tornado.web.asynchronous
     @decorators.error_handling

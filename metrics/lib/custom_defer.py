@@ -66,15 +66,9 @@ def _inlineCallbacksErrors(result, g, deferred, self):
             # Send the last result back as the result of the yield expression.
             isFailure = isinstance(result, failure.Failure)
             if isFailure:
-                #import ipdb; ipdb.set_trace()
-                #import ipdb; ipdb.set_trace()
                 #bound = get_content.__get__(self, self.__class__)
                 #bound(Exception(str(result)))
-                #result = result.throwExceptionIntoGenerator(g)
                 self.get_content(Exception(str(result)))
-                #result = result
-                #raise StopIteration
-                result = result.throwExceptionIntoGenerator(g)
             else:
                 result = g.send(result)
         except StopIteration as e:

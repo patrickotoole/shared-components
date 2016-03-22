@@ -30,6 +30,7 @@ class ModuleRunner(BaseRunner):
 
     def __init__(self, connectors):
         self.connectors =connectors
+        self.selection_dict = {"before_and_after":{"Insert":SQL_INSERT1, "Replace":SQL_REPLACE1}, "hourly":{"Insert":SQL_INSERT2, "Replace":SQL_REPLACE2}, "sessions": {"Insert":SQL_INSERT3, "Replace":SQL_REPLACE3}, "model":{"Insert":SQL_INSERT4, "Replace":SQL_REPLACE4}}
 
     def make_request(self,crusher, pattern, endpoint):
         if endpoint == "before_and_after":
@@ -55,24 +56,13 @@ class ModuleRunner(BaseRunner):
 
     def insert(self, advertiser, pattern, endpoint,filter_id, compressed_data):
         try:
-            if endpoint == "before_and_after":
-                self.connectors['db'].execute(SQL_INSERT1.format(advertiser, pattern, filter_id, endpoint, compressed_data))
-            elif endpoint == "hourly":
-                self.connectors['db'].execute(SQL_INSERT2.format(advertiser, pattern, filter_id, endpoint, compressed_data))
-            elif endpoint == "sessions":
-                self.connectors['db'].execute(SQL_INSERT3.format(advertiser, pattern, filter_id, endpoint, compressed_data))
-            elif endpoint == "model":
-                self.connectors['db'].execute(SQL_INSERT4.format(advertiser, pattern, filter_id, endpoint, compressed_data))
+            Q = self.selection_dict.get(endpoint, False)['Insert']
+            if Q:
+                self.connectors['db'].execute(Q.format(advertiser, pattern, filter_id, endpoint, compressed_data))
         except:
-            if endpoint == "before_and_after":
-                self.connectors['db'].execute(SQL_REPLACE1.format(advertiser, pattern, filter_id, endpoint, compressed_data))
-            elif endpoint == "hourly":
-                self.connectors['db'].execute(SQL_REPLACE2.format(advertiser, pattern, filter_id, endpoint, compressed_data))
-            elif endpoint == "sessions":
-                self.connectors['db'].execute(SQL_REPLACE3.format(advertiser, pattern, filter_id, endpoint, compressed_data))
-            elif endpoint == "model":
-                self.connectors['db'].execute(SQL_REPLACE4.format(advertiser, pattern, filter_id, endpoint, compressed_data))
-
+            Q = self.selection_dict.get(endpoint, False)['Replace']
+            if Q:
+                self.connectors['db'].execute(Q.format(advertiser, pattern, filter_id, endpoint, compressed_data))
 
 def runner(advertiser,pattern, endpoint, filter_id, base_url, cache_date="", indentifiers="test", connectors=False):
 

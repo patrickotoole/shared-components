@@ -17,7 +17,7 @@ from lib.cassandra_helpers.helpers import FutureHelpers
 from lib.cassandra_cache.helpers import *
 from ...search.cache.pattern_search_cache import PatternSearchCache
 from ...search.pattern.base_visitors import VisitorBase
-import lib.helpers_callback as decorators_custom
+import lib.custom_defer as custom_defer
 
 class VisitorDomainsFullHandler(VisitorBase):
 
@@ -74,8 +74,7 @@ class VisitorDomainsFullHandler(VisitorBase):
         return df
 
 
-    #@defer.inlineCallbacks
-    @decorators_custom.inlineCallbacksErrors
+    @custom_defer.inlineCallbacksErrors
     def get_onsite_domains(self, date, kind, advertiser, pattern):
 
         filter_id = self.get_argument("filter_id",False)
