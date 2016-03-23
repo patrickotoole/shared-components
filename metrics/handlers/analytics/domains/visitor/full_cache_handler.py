@@ -34,7 +34,12 @@ class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler)
     @defer.inlineCallbacks
     def get_cache_domains(self, advertiser, pattern, top_count):
         response_data = yield self.defer_get_onsite_cache( advertiser, pattern, top_count)
-        self.get_content(response_data)
+        if len(response_data)>0:
+            self.get_content(response_data)
+        else:
+            self.set_status(400)
+            self.write(ujson.dumps({"error":str(Exception("No Data"))}))
+            self.finish()
     
     @tornado.web.authenticated
     @tornado.web.asynchronous
