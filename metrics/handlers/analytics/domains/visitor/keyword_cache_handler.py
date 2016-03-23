@@ -38,7 +38,12 @@ class KeywordCacheHandler(PatternSearchCache,VisitDomainsFullHandler):
         logging.info(self.request)
         response_data = yield self.defer_get_onsite_cache( advertiser, pattern, top_count)
         if len(response_data)>0:
-            self.get_content(response_data)
+            versioning = self.request.uri
+            if versioning.find('v1') >=0:
+                self.get_content_v1(response_data)
+            else:
+                summary = self.summarize(response_data)
+                self.get_content_v2(response_data, summary)
         else:
             self.set_status(400)
             self.write(ujson.dumps({"error":str(Exception("No Data"))}))
@@ -53,7 +58,4 @@ class KeywordCacheHandler(PatternSearchCache,VisitDomainsFullHandler):
         url_pattern = self.get_argument("url_pattern", "")
         user = self.current_advertiser_name
         top_count = self.get_argument("top", 50)
-        if formatted:
-            self.get_cache_domains( user, url_pattern, top_count)
-        else:
-            self.get_content(pandas.DataFrame())
+        self.get_cache_domains( user, url_pattern, top_count)

@@ -52,14 +52,6 @@ class VisitorDomainsFullHandler(VisitorBase):
         return final_results 
 
 
-    @decorators.formattable
-    def get_content(self, data):
-        def default(self, data):
-            df = Convert.df_to_json(data)
-            self.write(df)
-            self.finish()
-        yield default, (data,)    
-
     @decorators.deferred
     def defer_get_onsite_domains(self, date, uids):
         
@@ -94,10 +86,14 @@ class VisitorDomainsFullHandler(VisitorBase):
 
         uids = uids[:10000]
 
-        
         response_data = yield self.defer_get_onsite_domains(date, uids)
         
-        self.get_content(response_data)
+        versioning = self.request.uri
+        if versioning.find('v1') >=0:
+            self.get_content_v1(response_data)
+        else:
+            summary = self.summarize(response_data)
+            self.get_content_v2(response_data, summary)
 
     def make_date_clause(self, variable, date, start_date, end_date):
         params = locals()

@@ -66,25 +66,23 @@ class ActionDashboardHandler(BaseHandler):
             return data
         else:
             seg_data = self.get_one(url_pattern, advertiser)
-
-            data = {
-                "domains": 
-                    seg_data.to_dict("records")
-            }
-
-            return data
+            return seg_data
 
     @custom_defer.inlineCallbacksErrors
     def get_actions(self, advertiser, number, action_type, url_pattern):
         try:
             actions = yield self.defer_get_actions(advertiser,number, action_type,url_pattern)
-            if len(actions['domains']) ==0:
+            if len(actions) ==0:
                 self.set_status(400)
                 self.write(ujson.dumps({"error":str(Exception("No Data"))}))
                 self.finish()
             else:
-                self.write(ujson.dumps(actions))
-                self.finish()
+                versioning = self.request.uri
+                if versioning.find('v1') >=0:
+                    self.get_content_v1(actions)
+                else:
+                    summary = self.summarize(actions)
+                    self.get_content_v2(actions, summary)
         except:
             self.finish()
     

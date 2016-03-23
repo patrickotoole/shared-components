@@ -5,6 +5,7 @@ import urlparse
 import logging
 import signal
 
+import datetime
 import time
 import random
 import sys
@@ -239,6 +240,11 @@ class decorators:
     @staticmethod
     def error_handling(func): 
         def inner(self, *args, **kwargs):
+            try:
+                self.time[str(self.__hash__)] = datetime.datetime.now()
+            except:
+                self.time={}
+                self.time[str(self.__hash__)] = datetime.datetime.now()
             try:
                 func(self, *args, **kwargs)
             except Exception as e:
