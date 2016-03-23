@@ -26,9 +26,6 @@ RB.crusher.ui.tabs = (function(tabs) {
     },{
       "name":"Top Keywords",
       "class":"top_keywords"
-    },{
-      "name":"Comparison",
-      "class":"comparison"
     }]
 
     var action_tabs = d3_updateable(wrapper,".action-tabs","div")
