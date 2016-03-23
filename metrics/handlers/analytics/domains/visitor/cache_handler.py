@@ -78,8 +78,14 @@ class ActionDashboardHandler(BaseHandler):
     def get_actions(self, advertiser, number, action_type, url_pattern):
         try:
             actions = yield self.defer_get_actions(advertiser,number, action_type,url_pattern)
-            self.write(ujson.dumps(actions))
-            self.finish()
+            if len(actions['domains']) ==0:
+                import ipdb;ipdb.set_trace()
+                self.set_status(400)
+                self.write(ujson.dumps({"error":str(Exception("No Data"))}))
+                self.finish()
+            else:
+                self.write(ujson.dumps(actions))
+                self.finish()
         except:
             self.finish()
     
