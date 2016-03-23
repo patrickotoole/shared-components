@@ -23,13 +23,6 @@ class VisitDomainsFullHandler(BaseHandler, AnalyticsBase, VisitDomainBase):
         self.cassandra = cassandra
         self.limit = None
 
-    @decorators.formattable
-    def get_content(self, data):
-        def default(self, data):
-            df = Convert.df_to_json(data)
-            self.render("analysis/visit_urls.html", data=df)
-        yield default, (data,)
-
     def full_get_w_in(self, uids, date_clause):
 
         str_uids = [str(u) for u in uids]

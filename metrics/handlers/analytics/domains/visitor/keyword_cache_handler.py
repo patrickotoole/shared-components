@@ -53,7 +53,4 @@ class KeywordCacheHandler(PatternSearchCache,VisitDomainsFullHandler):
         url_pattern = self.get_argument("url_pattern", "")
         user = self.current_advertiser_name
         top_count = self.get_argument("top", 50)
-        if formatted:
-            self.get_cache_domains( user, url_pattern, top_count)
-        else:
-            self.get_content(pandas.DataFrame())
+        self.get_cache_domains( user, url_pattern, top_count)

@@ -66,13 +66,12 @@ class ActionDashboardHandler(BaseHandler):
             return data
         else:
             seg_data = self.get_one(url_pattern, advertiser)
-
-            data = {
-                "domains": 
-                    seg_data.to_dict("records")
-            }
-
-            return data
+            #data = {
+            #"domains": 
+            #seg_data.to_dict("records")
+            #}
+            #return data
+            return seg_data
 
     @custom_defer.inlineCallbacksErrors
     def get_actions(self, advertiser, number, action_type, url_pattern):

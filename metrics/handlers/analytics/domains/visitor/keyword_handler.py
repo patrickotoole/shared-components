@@ -80,7 +80,12 @@ class VisitorKeywordsHandler(PatternSearchCache,VisitDomainsFullHandler):
         
         logging.info("Processing visitor domains...")
         visitor_domains = yield self.process_visitor_domains(response_data)
-        self.get_content(visitor_domains)
+        summary = self.summarize(visitor_domains)
+        logging.info("SumMarizeD")
+        logging.info(self.request)
+        self.get_content(visitor_domains, summary)
+        
+        #self.get_content(visitor_domains, summary, {})
         logging.info("Finished processing visitor domains...")
 
         
@@ -105,13 +110,11 @@ class VisitorKeywordsHandler(PatternSearchCache,VisitDomainsFullHandler):
         except:
             keyowrds = 3
         date_clause = self.make_date_clause("date", date, start_date, end_date)
-        if formatted:
-            self.get_onsite_domains(
-                date_clause,
-                kind,
-                user,
-                url_pattern,
-                keywords
-                )
-        else:
-            self.get_content(pandas.DataFrame())
+
+        self.get_onsite_domains(
+            date_clause,
+            kind,
+            user,
+            url_pattern,
+            keywords
+            )
