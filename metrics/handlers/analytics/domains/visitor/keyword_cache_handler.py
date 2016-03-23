@@ -35,6 +35,7 @@ class KeywordCacheHandler(PatternSearchCache,VisitDomainsFullHandler):
 
     @custom_defer.inlineCallbacksErrors
     def get_cache_domains(self, advertiser, pattern, top_count):
+        logging.info(self.request)
         response_data = yield self.defer_get_onsite_cache( advertiser, pattern, top_count)
         self.get_content(response_data)
     
