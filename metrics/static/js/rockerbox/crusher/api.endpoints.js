@@ -163,12 +163,18 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
     if (data.has_filter) URL = "/crusher/v1/visitor/domains?format=json&url_pattern=" + data['url_pattern'][0] + "&filter_id=" + data.action_id
 
-    d3.json(URL, function(dd) {
-
+    var process = function(dd) {
       data.domains = dd.domains
 
       deferred_cb(null, cb.bind(false, dd))
-    })
+    }
+
+    d3.json(URL, process)
+      .on('error', function() {
+        var URL = "/crusher/v1/visitor/domains?format=json&url_pattern=" + data['url_pattern'][0]
+
+        d3.json(URL, process);
+      })
   })
 
   endpoints.visitor_keywords_cache = api.helpers.genericQueuedAPIWithData(function(data, cb, deferred_cb) {
