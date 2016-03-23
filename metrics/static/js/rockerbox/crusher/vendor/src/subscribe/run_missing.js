@@ -14,7 +14,7 @@ function should_trigger(datum) {
 function trigger(datum) {
   setTimeout(function(){
     pubsub.publishers.actionTimeseriesOnly(datum)
-    pubsub.publishers.pattern_domains_cached(datum)
+    pubsub.publishers.cached_visitor_domains_only(datum)
     pubsub.publishers.uids_only_cache(datum)
   },1)
 }

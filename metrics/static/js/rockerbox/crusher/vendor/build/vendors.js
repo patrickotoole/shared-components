@@ -330,7 +330,7 @@
   function trigger(datum) {
     setTimeout(function(){
       pubsub.publishers.actionTimeseriesOnly(datum)
-      pubsub.publishers.pattern_domains_cached(datum)
+      pubsub.publishers.cached_visitor_domains_only(datum)
       pubsub.publishers.uids_only_cache(datum)
     },1)
   }
@@ -355,7 +355,7 @@
 
   function subscribe() {
 
-    pubsub.subscriber("vendor-timeseries-domains",["actionTimeseriesOnly", "pattern_domains_cached", "uids_only_cache"])
+    pubsub.subscriber("vendor-timeseries-domains",["actionTimeseriesOnly", "cached_visitor_domains_only", "uids_only_cache"])
       .run(this.draw.bind(this))
       .unpersist(false)
 
