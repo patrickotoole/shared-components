@@ -141,7 +141,7 @@ RB.crusher.ui.vendors = (function(vendors) {
       vendor = vendors_list_items.datum();
     }
 
-    pubsub.subscriber("vendor-timeseries-domains",["actionTimeseriesOnly", "pattern_domains_cached"])
+    pubsub.subscriber("vendor-timeseries-domains",["actionTimeseriesOnly", "cached_visitor_domains_only"])
       .run(function(timeseries_data, domains_data){
         var data_columns_with_data = vendor_data_columns.filter(function(x) {
           return typeof x.visits_data !== typeof undefined;

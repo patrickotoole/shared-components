@@ -231,19 +231,19 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
     }
   })
 
-  endpoints.pattern_domains_cached = new api.helpers.genericQueuedAPIWithData(function(vendor, cb, deferred_cb) {
-    if (!vendor.domains_raw) {
-      d3.json("/crusher/v1/visitor/domains/cache?url_pattern=" + vendor.url_pattern[0], function(json_output) {
-        vendor.domains_raw = json_output;
-        vendor.domains = json_output.domains;
-
-
-        deferred_cb(null, cb.bind(false, json_output));
-      })
-    } else {
-      deferred_cb(null, cb.bind(false, vendor.domains_raw));
-    }
-  });
+  // endpoints.cached_visitor_domains_only = new api.helpers.genericQueuedAPIWithData(function(vendor, cb, deferred_cb) {
+  //   if (!vendor.domains_raw) {
+  //     d3.json("/crusher/v1/visitor/domains/cache?url_pattern=" + vendor.url_pattern[0], function(json_output) {
+  //       vendor.domains_raw = json_output;
+  //       vendor.domains = json_output.domains;
+  //
+  //
+  //       deferred_cb(null, cb.bind(false, json_output));
+  //     })
+  //   } else {
+  //     deferred_cb(null, cb.bind(false, vendor.domains_raw));
+  //   }
+  // });
 
   endpoints.current_user = api.helpers.genericQueuedAPIWithData(function(data, cb, deferred_cb) {
     if (!cache.current_user) {
