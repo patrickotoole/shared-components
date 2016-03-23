@@ -79,7 +79,6 @@ RB.crusher.ui.settings = (function(settings,crusher) {
                   "name":"Up to 1000 profiles/month"
                 , "active":true 
                 , "bold":true 
-
               }
             , {
                   "name":"Unlimited segment creation"
@@ -310,6 +309,10 @@ RB.crusher.ui.settings = (function(settings,crusher) {
       .classed("w-button button button-blue pricingtable_button",true)
       .attr("href","#")
       .text(function(x){return x.button})
+      .on("click",function(x){
+        console.log(x)
+        return x
+      })
 
     var details_table = d3_updateable(section_bottom,".pricingtable.details","div")
       .classed("pricingtable details",true)
@@ -342,13 +345,96 @@ RB.crusher.ui.settings = (function(settings,crusher) {
 
 
 
+    var envelope = d3_updateable(section_bottom,".envelope","div")
+      .classed("envelope",true)
+      .style("margin-top","50px")
+      .style("margin-bottom","100px")
 
-    
+    d3_updateable(envelope,".envelope_gradient","div")
+      .classed("envelope_gradient",true)
 
+    var form = d3_updateable(envelope,"form","form")
+      .classed("w-form envelope_form",true)
+      .attr("method","POST")
+      .attr("action","/subscription")
 
-   
+      .attr("id","payment-form")
+      .on("submit",function(x){
 
+        d3.select(this)
+          .selectAll(".button")
+          .property('disabled', true);
 
+        var $form = $(this);
+
+        Stripe.card.createToken($form,function(code,response){
+
+          if (response.error) {
+            // Show the errors on the form
+            $form.find('.payment-errors').text(response.error.message);
+            $form.find('button').prop('disabled', false);
+          } else {
+            // response contains id and card, which contains additional card details
+            var token = response.id;
+            // Insert the token into the form so it gets submitted to the server
+            $form.append($('<input type="hidden" name="stripeToken" />').val(token));
+            // and submit
+            $form.get(0).submit();
+          }
+          
+        })
+
+        d3.event.preventDefault()
+        return false
+      })
+
+    d3_updateable(form,"#payment-errors","span")
+      .attr("id","payment-errors")
+
+    var form_fields = [
+        {
+            "name":"Card Number"
+          , "stripe": "number"
+        }
+      , {
+            "name":"CVC"
+          , "stripe": "cvc"
+        }
+      , {
+            "name":"Expiration Month"
+          , "stripe": "exp-month"
+        }
+      , {
+            "name":"Expiration Year"
+          , "stripe": "exp-year"
+        }
+    ]
+
+    d3_updateable(form,".envelope_title","h3")
+      .classed("envelope_title",true)
+      .text("Monthly Subscription")
+
+    d3_updateable(form,".pricing_summary","div")
+      .classed("pricing_summary",true)
+      .text("$499")
+
+    Stripe.setPublishableKey('pk_test_ewNJnIanw83VNJ6iDrkiGXL6');
+
+    d3_splat(form,".form_input","input",form_fields,function(x){ return x.name })
+      .classed("w-input form_input",true)
+      .attr("name",function(x){ return x.stripe })
+      .attr("data-name",function(x){ return x.stripe })
+      .attr("data-stripe",function(x){ return x.stripe })
+      .attr("required","required")
+      .attr("placeholder",function(x){ return x.name })
+
+    var button = d3_updateable(form,".form_button","div")
+      .classed("form_button",true)
+
+    d3_updateable(button,".button","input")
+      .classed("w-button button button-blue",true)
+      .attr("type","submit")
+      .text("Subscribe")
 
   }
 

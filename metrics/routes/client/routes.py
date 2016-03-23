@@ -5,13 +5,15 @@ class UserRoutes(Routes):
     @connectors("db")
     def user_login(self):
         import handlers.user as user
+        import handlers.subscription as subscription
 
         return [
             (r'/', user.LoginHandler, self.connectors),
             (r'/beta', user.LoginAdvertiserHandler, self.connectors),
             (r'/login.*', user.LoginHandler, self.connectors),
             (r'/signup*', user.SignupHandler, self.connectors),
-            (r'/account/permissions*', user.AccountPermissionsHandler, self.connectors)
+            (r'/account/permissions*', user.AccountPermissionsHandler, self.connectors),
+            (r'/subscription', subscription.SubscriptionHandler, self.connectors)
         ]
 
 class AdvertiserRoutes(Routes):
