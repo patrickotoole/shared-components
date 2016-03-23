@@ -109,8 +109,8 @@ class AdminCampaignHandler(CampaignHandler):
                 "advertiser_id":  advertiser_id,
                 "line_item_id": line_item_id,
                 "inventory_type": "real_time",
-                "cpm_bid_type": "clearing",
-                "max_bid": 2,
+                "cpm_bid_type": "base",
+                "base_bid": bid_price,
                 "lifetime_budget_imps": 2000,
                 "daily_budget_imps": 10000,
                 "creatives":creatives
@@ -258,7 +258,7 @@ class YoshiCampaignHandler(AdminCampaignHandler,UserCampaignHandler):
     @defer.inlineCallbacks  
     def make_campaign(self,advertiser_id,profile,details,campaign):
 
-        price = 1
+        price = 0.5
         name = make_name(profile['domain_targets'], details['sizes'])
         is_admin = details.get('username','').startswith("a_")
 
