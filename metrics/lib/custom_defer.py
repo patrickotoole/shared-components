@@ -33,7 +33,7 @@ from twisted.internet.defer import *
 import twisted
 from twisted.internet.defer import _DefGen_Return
 
-def get_content(self, data):
+def get_content_v1(self, data):
     def default(self, data):
         df = Convert.df_to_json(data)
         self.write(df)
@@ -66,7 +66,7 @@ def _inlineCallbacksErrors(result, g, deferred, self):
             if isFailure:
                 #bound = get_content.__get__(self, self.__class__)
                 #bound(Exception(str(result)))
-                self.get_content(Exception(str(result)))
+                self.get_content_v1(Exception(str(result)))
             else:
                 result = g.send(result)
         except StopIteration as e:
@@ -226,7 +226,7 @@ def inlineCallbacksErrors(f):
         except:
             has_error = False
         if has_error:
-            args[0].get_content(Exception(rrr.result))
+            args[0].get_content_v1(Exception(rrr.result))
             raise StopIteration
         return rrr
     return unwindGenerator

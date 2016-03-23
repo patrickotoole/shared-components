@@ -46,8 +46,34 @@ class BaseHandler(tornado.web.RequestHandler):
         return details
 
     @decorators.formattable
-    def get_content(self, data, summary=False, details=False):
+    def get_content(self, data):
+        def default(self, data):
+            df = Convert.df_to_json(data)
+            self.write(df)
+            self.finish()
+        if type(data) == type(Exception()):
+            self.set_status(400)
+            self.write(ujson.dumps({"error":str(data)}))
+            self.finish()
+        else:
+            yield default, (data,)
 
+    @decorators.formattable
+    def get_content_v1(self, data):
+        def default(self, data):
+            df = Convert.df_to_json(data)
+            self.write(df)
+            self.finish()
+        if type(data) == type(Exception()):
+            self.set_status(400)
+            self.write(ujson.dumps({"error":str(data)}))
+            self.finish()
+        else:
+            yield default, (data,)
+
+
+    @decorators.formattable
+    def get_content_v2(self, data, summary=False, details=False):
         details = self.setDetails(details)
 
         def default(self, data):

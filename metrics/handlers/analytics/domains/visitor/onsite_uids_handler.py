@@ -56,11 +56,8 @@ class UidsOnsiteHandler(BaseHandler, AnalyticsBase, APIHelpers, VisitEventBase, 
         url_pattern = self.get_argument("url_pattern", "")
         user = self.current_advertiser_name
 
-        try:
-            self.get_uids_only(
-                user,
-                url_pattern,
-                3
-                )
-        except:
-            self.get_content(pandas.DataFrame())
+        self.get_uids_only(
+            user,
+            url_pattern,
+            3
+            )

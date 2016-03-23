@@ -80,10 +80,13 @@ class VisitorKeywordsHandler(PatternSearchCache,VisitDomainsFullHandler):
         
         logging.info("Processing visitor domains...")
         visitor_domains = yield self.process_visitor_domains(response_data)
-        summary = self.summarize(visitor_domains)
-        logging.info("SumMarizeD")
-        logging.info(self.request)
-        self.get_content(visitor_domains, summary)
+        versioning = self.request.uri
+        if versioning.find('v1')>=0:
+            self.get_content_v1(visitor_domains)
+        else:
+            summary = self.summarize(visitor_domains)
+            logging.info("SumMarizeD")
+            self.get_content_v2(visitor_domains, summary)
         
         #self.get_content(visitor_domains, summary, {})
         logging.info("Finished processing visitor domains...")
