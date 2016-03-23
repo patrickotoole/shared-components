@@ -90,7 +90,7 @@ class VisitorKeywordsHandler(PatternSearchCache,VisitDomainsFullHandler):
     @tornado.web.asynchronous
     @decorators.error_handling
     def get(self):
-        self.made()
+        #self.made()
         formatted = self.get_argument("format", False)
         start_date = self.get_argument("start_date", "")
         end_date = self.get_argument("end_date", "")
