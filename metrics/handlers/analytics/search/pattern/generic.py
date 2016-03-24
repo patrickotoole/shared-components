@@ -63,6 +63,7 @@ class GenericSearchBase(FilterBase,VisitDomainBase,PatternSearchSample,PatternSt
         full_df, stats_df, url_stats_df, _ = yield self.sample_stats_onsite(*sample_args)
         if filter_id:
             stats_df, url_stats_df, full_df = yield self.filter_and_build(full_df,dates,filter_id)
+      
 
         if (len(full_df.uid.unique()) == 1) or (stats_df.sum().sum() == 0) and allow_sample:
             logging.info("Didnt find anything in the sample! query all the data!")
@@ -77,8 +78,15 @@ class GenericSearchBase(FilterBase,VisitDomainBase,PatternSearchSample,PatternSt
     @defer.inlineCallbacks
     def build_arguments(self,advertiser,term,dates,num_days,response,allow_sample=True,filter_id=False,max_users=5000):
         args = [advertiser,term,build_datelist(num_days),num_days,allow_sample,filter_id]
+
         full_df, _, _, _ = yield self.get_sampled(*args)
         uids = list(set(full_df.uid.values))[:max_users]
+
+        if len(uids) < 300:
+            args[4] = False
+            args[3] = 7
+            full_df, _, _, _ = yield self.get_sampled(*args)
+            uids = list(set(full_df.uid.values))[:max_users]
 
         dom = yield self.sample_offsite_domains(advertiser, term, uids, num_days)
         domains = dom[0][1]
