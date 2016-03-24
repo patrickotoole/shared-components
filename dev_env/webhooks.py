@@ -35,9 +35,12 @@ class DevServer(web.RequestHandler):
     def sendToMarathon(self, jsonFile, branch_name):
         marathon = lnk.api.marathon
         logging.info("about to make request")
-        _resp = marathon.post('/v2/apps' ,data=jsonFile)
-        logging.info(_resp)
-        logging.info(_resp.text)
+        try:
+            _resp = marathon.post('/v2/apps' ,data=jsonFile)
+            logging.info(_resp)
+            logging.info(_resp.text)
+        except:
+            self.set_status(400)
         return True
 
 class WebApp(web.Application):
