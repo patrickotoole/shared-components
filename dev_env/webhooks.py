@@ -27,14 +27,16 @@ class DevServer(web.RequestHandler):
         f = open("newapp.json")
         ff = f.read()
         currentFile = ujson.loads(ff)
-        currentFile['id'] = currentFile['id'] % {'branch_name': branch_name}
+        currentFile['id'] = currentFile['id'] % {'branch_name': branch_name.replace("_","-")}
         currentFile['cmd'] = currentFile['cmd'] % {'branch_name': branch_name}
         logging.info(ujson.dumps(currentFile))
         return ujson.dumps(currentFile)
     
     def sendToMarathon(self, jsonFile, branch_name):
         marathon = lnk.api.marathon
+        logging.info("about to make request")
         _resp = marathon.post('/v2/apps' ,data=jsonFile)
+        logging.info(_resp)
         logging.info(_resp.text)
         return True
 
