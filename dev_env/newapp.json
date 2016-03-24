@@ -1,0 +1,28 @@
+{
+    "id": "/apps/crusher-%(branch_name)s",
+    "cmd": "/sbin/my_init --branch %(branch_name)s -- echo '10.128.248.211 zk1' > /etc/hosts; /bin/bash -c 'export PYTHONPATH=/root/rockerbox-metrics/metrics/:$PYTHONPATH; export LNK_DIR=/root/rockerbox-metrics/.link; echo $LNK_DIR; cd /root/rockerbox-metrics/metrics/static/js/rockerbox/turnip; npm install; npm run pretest; cd /root/rockerbox-metrics/metrics; python /root/rockerbox-metrics/metrics/tornado_websocket.py --port=8888 --skip_buffers --skip_spark_sql --routes=crusher_routes,user_login,misc_services,user_advertiser_routes,v1_crusher_routes,health'",
+    "container": {
+        "type": "DOCKER",
+        "docker": {
+            "image": "rickotoole/rockerbox-metrics:latest",
+            "network": "BRIDGE",
+            "portMappings": [
+                {
+                    "containerPort": 9999,
+                    "hostPort": 0,
+                    "servicePort": 19099,
+                    "protocol": "tcp"
+                }
+            ],
+            "forcePullImage": true,
+            "parameters": [
+                { "key":"add-host","value":"zk1:10.128.248.211" },
+                { "key": "dns-search", "value": "162.243.197.194" }
+            ],
+            "privileged": false
+        },
+        "volumes": [ ]
+    },
+    "cpus": 1,
+    "mem": 2048.0
+}
