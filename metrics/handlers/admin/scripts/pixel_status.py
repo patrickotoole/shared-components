@@ -50,14 +50,16 @@ class PixelStatusHandler(AnalyticsBase, BaseHandler):
         self.get_content(response)
 
     def pretty_timestamp(self, timestamp, format_str="%Y-%m-%d %H:%M:%S"):
-        now = datetime.now()
-        ts = datetime.strptime(timestamp, format_str)
+        import datetime as dt
+        now = dt.datetime.now()
+        ts = dt.datetime.strptime(timestamp, format_str)
         delta = now - ts
         return pretty.date(now - delta)
 
     def seconds_since(self, timestamp, format_str="%Y-%m-%d %H:%M:%S"):
-        now = datetime.now()
-        ts = datetime.strptime(timestamp, format_str)
+        import datetime as dt
+        now = dt.datetime.now()
+        ts = dt.datetime.strptime(timestamp, format_str)
         delta = now - ts
         return int(delta.total_seconds())
         

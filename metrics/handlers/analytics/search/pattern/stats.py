@@ -64,8 +64,9 @@ class PatternStatsBase(PatternSearchCache):
         return [visits_df,uniques_df]
 
     def get_missing_dates(self,all_dates,some_dates):
+        import datetime as dt
         missing_dates = [
-            u"%s" % datetime.strptime(i,"%Y-%m-%d %H:%M:%S") for i in all_dates
+            u"%s" % dt.datetime.strptime(i,"%Y-%m-%d %H:%M:%S") for i in all_dates
             if i not in some_dates
         ] 
         return missing_dates

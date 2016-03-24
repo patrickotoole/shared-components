@@ -51,6 +51,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
   endpoints.visitor_model = api.helpers.genericQueuedAPIWithData(function(segment, cb, deferred_cb) {
     var path = "/crusher/v1/visitor/model/cache?format=json&url_pattern=";
+    var append = (segment.has_filter) ? "&filter_id=" + segment.action_id : "";
 
     var process = function(dd) {
       segment.clusters = dd.clusters
@@ -60,15 +61,16 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
       deferred_cb(null, cb.bind(false, dd))
     }
 
-    d3.json(path + segment.url_pattern[0], process)
+    d3.json(path + segment.url_pattern[0] + append, process)
       .on('error', function(e) {
-        d3.json(path.replace('/cache?', '?') + segment.url_pattern[0], process)
+        d3.json(path.replace('/cache?', '?') + segment.url_pattern[0] + append, process)
       });
 
   })
 
   endpoints.visitor_before_and_after = api.helpers.genericQueuedAPIWithData(function(segment, cb, deferred_cb) {
     var path = "/crusher/v1/visitor/before_and_after/cache?format=json&url_pattern=";
+    var append = (segment.has_filter) ? "&filter_id=" + segment.action_id : "";
 
     var process = function(dd) {
       segment.before = {
@@ -82,15 +84,16 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
       deferred_cb(null, cb.bind(false, dd))
     }
 
-    d3.json(path + segment.url_pattern[0], process)
+    d3.json(path + segment.url_pattern[0] + append, process)
       .on('error', function(e) {
-        d3.json(path.replace('/cache?', '?') + segment.url_pattern[0], process)
+        d3.json(path.replace('/cache?', '?') + segment.url_pattern[0] + append, process)
       });
 
   })
 
   endpoints.visitor_sessions = api.helpers.genericQueuedAPIWithData(function(segment, cb, deferred_cb) {
     var path = "/crusher/v1/visitor/sessions/cache?format=json&url_pattern=";
+    var append = (segment.has_filter) ? "&filter_id=" + segment.action_id : "";
 
     var process = function(dd) {
       if(typeof segment.hourly === typeof undefined) {
@@ -101,14 +104,15 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
       deferred_cb(null, cb.bind(false, dd))
     }
 
-    d3.json(path + segment.url_pattern[0], process)
+    d3.json(path + segment.url_pattern[0] + append, process)
       .on('error', function(e) {
-        d3.json(path.replace('/cache?', '?') + segment.url_pattern[0], process)
+        d3.json(path.replace('/cache?', '?') + segment.url_pattern[0] + append, process)
       });
   })
 
   endpoints.visitor_hourly = api.helpers.genericQueuedAPIWithData(function(segment, cb, deferred_cb) {
     var path = "/crusher/v1/visitor/hourly/cache?format=json&url_pattern=";
+    var append = (segment.has_filter) ? "&filter_id=" + segment.action_id : "";
 
     var process = function(dd) {
       if(typeof segment.hourly === typeof undefined) {
@@ -119,9 +123,9 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
       deferred_cb(null, cb.bind(false, dd))
     }
 
-    d3.json(path + segment.url_pattern[0], process)
+    d3.json(path + segment.url_pattern[0] + append, process)
       .on('error', function(e) {
-        d3.json(path.replace('/cache?', '?') + segment.url_pattern[0], process)
+        d3.json(path.replace('/cache?', '?') + segment.url_pattern[0] + append, process)
       });
 
   })
@@ -135,6 +139,8 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
   endpoints.cached_visitor_domains = api.helpers.genericQueuedAPIWithData(function(data, cb, deferred_cb) {
 
     var URL = "/crusher/v1/visitor/domains_full/cache?format=json&top=400&url_pattern=" + data['url_pattern'][0]
+    if (data.has_filter) URL += "&filter_id=" + data.action_id
+
 
     var process = function(dd) {
       if (data.has_filter) {
@@ -149,8 +155,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
     d3.json(URL, process)
       .on('error', function() {
         var URL = "/crusher/v1/visitor/domains_full?format=json&top=400&url_pattern=" + data['url_pattern'][0]
-
-        if (data.has_filter) URL = "/crusher/v1/visitor/domains_full?format=json&top=400&url_pattern=" + data['url_pattern'][0] + "&filter_id=" + data.action_id
+        if (data.has_filter) URL += "&filter_id=" + data.action_id
 
         d3.json(URL, process);
       })
@@ -160,8 +165,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
     if (!!data.domains) deferred_cb(null, cb.bind(false, data))
 
     var URL = "/crusher/v1/visitor/domains/cache?format=json&url_pattern=" + data['url_pattern'][0]
-
-    if (data.has_filter) URL = "/crusher/v1/visitor/domains?format=json&url_pattern=" + data['url_pattern'][0] + "&filter_id=" + data.action_id
+    if (data.has_filter) URL += "&filter_id=" + data.action_id
 
     var process = function(dd) {
       data.domains = dd.domains
@@ -172,13 +176,18 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
     d3.json(URL, process)
       .on('error', function() {
         var URL = "/crusher/v1/visitor/domains?format=json&url_pattern=" + data['url_pattern'][0]
+        if (data.has_filter) URL += "&filter_id=" + data.action_id
 
         d3.json(URL, process);
       })
   })
 
   endpoints.visitor_keywords_cache = api.helpers.genericQueuedAPIWithData(function(data, cb, deferred_cb) {
-    d3.json("/crusher/v1/visitor/keywords/cache?format=json&url_pattern=" + data['url_pattern'][0], function(dd) {
+
+    var URL = "/crusher/v1/visitor/keywords/cache?format=json&url_pattern=" + data['url_pattern'][0]
+    if (data.has_filter) URL += "&filter_id=" + data.action_id
+
+    d3.json(URL, function(dd) {
       deferred_cb(null, cb.bind(false, dd))
     })
   })
