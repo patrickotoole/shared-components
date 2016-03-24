@@ -64,6 +64,9 @@ RB.menu.navbar = (function(navbar) {
     items: function(target,selectbar) {
       var items = d3_splat( target, ".menu-item","a", function(x){return x},function(x) {return x.name})
         .classed("menu-item",true)
+        .attr('href', function(x) {
+          return x.push_state
+        })
         .on("click", navbar.methods.pushState.bind(this,selectbar))
         .on("mouseover",function(){
           d3.select(this).classed("active",true)

@@ -607,14 +607,9 @@ RB.crusher.controller = (function(controller) {
 
   controller.routes = {
     roots: [{
-      "name": "Vendors",
-      "push_state": "/crusher/vendors",
-      "class": "glyphicon glyphicon-th-large",
-      "values_key": "action_name"
-    }, {
       "name": "Segments",
       "push_state": "/crusher/action/existing",
-      "class": "glyphicon glyphicon-signal",
+      "class": "fa fa-users",
       "selection": "All Segments",
       "values_key": "action_name"
     }, {
