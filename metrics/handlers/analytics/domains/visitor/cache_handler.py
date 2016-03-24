@@ -6,7 +6,7 @@ import StringIO
 
 from handlers.base import BaseHandler
 import lib.custom_defer as custom_defer
-
+from lib.helpers import Convert
 from twisted.internet import defer
 from lib.helpers import decorators
 
@@ -79,7 +79,13 @@ class ActionDashboardHandler(BaseHandler):
             else:
                 versioning = self.request.uri
                 if versioning.find('v1') >=0:
-                    self.get_content_v1(actions)
+                    import ipdb; ipdb.set_trace()
+                    if type(actions) == type(pandas.DataFrame()):
+                        seg_data = {"domains": Convert.df_to_values(actions)}
+                        self.write(ujson.dumps(seg_data))
+                        self.finish()
+                    else:
+                        self.get_content_v1(actions)
                 else:
                     summary = self.summarize(actions)
                     self.get_content_v2(actions, summary)
