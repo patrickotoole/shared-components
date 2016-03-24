@@ -42,9 +42,12 @@ class SubscriptionHandler(BaseHandler,SubscriptionDatabase):
 
         self.request
         
-        ujson.loads(self.request.body)
+        obj = ujson.loads(self.request.body)
 
+        token = obj['token']
         user_id = self.current_user
+
         token = yield self.save_token(user_id,token)
-        self.redirect("/crusher/settings/subscription")
+        self.write('{"success":true}')
+        self.finish()
 

@@ -379,7 +379,13 @@ RB.crusher.ui.settings = (function(settings,crusher) {
             // Insert the token into the form so it gets submitted to the server
             $form.append($('<input type="hidden" name="stripeToken" />').val(token));
             // and submit
-            $form.get(0).submit();
+            var href = form.attr("action")
+
+            d3.xhr(href)
+              .post(JSON.stringify({"token":token}),function(d){
+                console.log(d)
+                debugger
+              })
           }
           
         })
