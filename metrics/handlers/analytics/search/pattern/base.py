@@ -95,7 +95,6 @@ class PatternSearchBase(TimeseriesBase,VisitorBase):
         if filter_id:
             args = [advertiser,term,dates,num_days,True,filter_id]
             df, stats_df, url_stats_df, full_df = yield self.get_sampled(*args)
-
         else:
             df, stats_df, url_stats_df, full_df = yield self.sample_stats_onsite(*sample_args)
         uids = list(set(df.uid.values))[:1000]
@@ -130,9 +129,10 @@ class PatternSearchBase(TimeseriesBase,VisitorBase):
 
         stats_df, domain_stats_df, url_stats_df = yield self.get_generic_sampled(*args)
         domains = yield self.domain_stats_to_domains(domain_stats_df)
-        idf = yield self.get_idf(list(set(domains.domain)))
-      
-        domains = domains.merge(idf,on="domain")
+
+        if len(domains) > 0:
+            idf = yield self.get_idf(list(set(domains.domain)))
+            domains = domains.merge(idf,on="domain")
 
         response = self.default_response(pattern_terms,logic,no_results=True)
         response = self.response_domains(response,domains)
