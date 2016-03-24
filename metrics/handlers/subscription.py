@@ -21,6 +21,7 @@ class SubscriptionDatabase:
             ON DUPLICATE KEY UPDATE 
                 stripe_token = VALUES(stripe_token) and last_activity = VALUES(last_activity)
         """
+        import ipdb; ipdb.set_trace()
         self.db.execute(Q % (user_id,token,self.time_string()))
         return token
         
