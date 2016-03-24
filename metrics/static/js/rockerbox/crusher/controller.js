@@ -609,7 +609,7 @@ RB.crusher.controller = (function(controller) {
     roots: [{
       "name": "Segments",
       "push_state": "/crusher/action/existing",
-      "class": "glyphicon glyphicon-signal",
+      "class": "fa fa-users",
       "selection": "All Segments",
       "values_key": "action_name"
     }, {
