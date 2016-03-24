@@ -14,8 +14,8 @@ class DevServer(web.RequestHandler):
         try:
             g_data = ujson.loads(self.request.body)
             logging.info(self.request.body)
-            marathon_file = self.readAppFile(g_data['head']['ref'])
-            success = self.sendToMarathon(marathon_file, g_data['head']['ref'])
+            marathon_file = self.readAppFile(g_data['pull_request']['head']['ref'])
+            success = self.sendToMarathon(marathon_file, g_data['pull_request']['head']['ref'])
             if success:
                 self.write(ujson.dumps({"success":True}))
             else:
