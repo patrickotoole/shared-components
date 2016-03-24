@@ -79,7 +79,6 @@ class ActionDashboardHandler(BaseHandler):
             else:
                 versioning = self.request.uri
                 if versioning.find('v1') >=0:
-                    import ipdb; ipdb.set_trace()
                     if type(actions) == type(pandas.DataFrame()):
                         seg_data = {"domains": Convert.df_to_values(actions)}
                         self.write(ujson.dumps(seg_data))
