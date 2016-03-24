@@ -36,6 +36,7 @@ class DevServer(web.RequestHandler):
         marathon = lnk.api.marathon
         logging.info("about to make request")
         try:
+            marathon.headers['content-type']='application/json'
             _resp = marathon.post('/v2/apps' ,data=jsonFile)
             logging.info(_resp)
             logging.info(_resp.text)
