@@ -89,10 +89,10 @@ class SubscriptionDatabase:
 
         Q = insert_into_or_update(
             "user_stripe_customer_billing",
-            ["user_id","customer_token","billing_token","subscription_id","last_activity","status","amount_cents","response"],
+            ["user_id","customer_token","billing_token","subscription_id","last_activity","status","amount_cents","response","description"],
             ["user_id","customer_token","billing_token"]
         )
-        prepped = Q % (user_id,customer_id,billing_id,subscription_id,self.time_string(),billing.status,billing.amount,response_json)
+        prepped = Q % (user_id,customer_id,billing_id,subscription_id,self.time_string(),billing.status,billing.amount,response_json,"Subscription")
         logging.info(prepped)
         self.db.execute(prepped)
 
@@ -239,7 +239,20 @@ class SubscriptionHandler(BaseHandler,SubscriptionDatabase):
         self.write('{"success":true}')
         self.finish()
 
+    @defer.inlineCallbacks
+    def get_billing(self):
 
+        user_name = self.current_user
+        user_id = yield self.get_user_id(user_name)
+
+        df = self.db.select_dataframe("SELECT last_activity date, description, amount_cents FROM user_stripe_customer_billing where user_id = %s and status = 'succeeded' " % user_id)
+        self.write(ujson.dumps(df.to_dict('records')))
+        self.finish()
+
+    @tornado.web.authenticated
+    @tornado.web.asynchronous
+    def get(self):
+        self.get_billing()
 
     @tornado.web.authenticated
     @tornado.web.asynchronous

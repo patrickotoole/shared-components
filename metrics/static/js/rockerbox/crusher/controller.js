@@ -127,7 +127,15 @@ RB.crusher.controller = (function(controller) {
         "id": "settings/subscription",
         "name": "Manage Subscription"
       })
-      crusher.ui.settings.subscription(funnelRow)
+
+      d3.select("body").classed("hide-select hide-top dark",true)
+
+      pubsub.subscriber("subscription_settings", ["advertiser","permissions","billing"])
+        .run(function(advertiser,permissions,billing) {
+          crusher.ui.settings.subscription.render(funnelRow,advertiser,permissions,billing)
+        })
+        .unpersist(true)
+        .trigger() 
 
     },
     "settings/pixel/setup": function() {

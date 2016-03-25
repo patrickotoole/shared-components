@@ -130,6 +130,14 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
   })
 
+  endpoints.billing = api.helpers.genericQueuedAPIWithData(function(data, cb, deferred_cb) {
+    d3.json("/subscription?format=json", function(dd) {
+      deferred_cb(null, cb.bind(false, dd))
+    })
+  })
+
+
+
   endpoints.pixel_status = api.helpers.genericQueuedAPIWithData(function(data, cb, deferred_cb) {
     d3.json("/crusher/pixel/status?format=json", function(dd) {
       deferred_cb(null, cb.bind(false, dd))
@@ -522,10 +530,10 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
     if (!cache.userPermissions) {
       d3.json(api.URL.userPermissions, function(dd) {
         cache.userPermissions = dd.results
-        deferred_cb(null, cb)
+        deferred_cb(null, cb.bind(false,cache.userPermissions))
       })
     } else {
-      deferred_cb(null, cb)
+      deferred_cb(null, cb.bind(false,cache.userPermissions))
     }
   })
 
