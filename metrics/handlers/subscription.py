@@ -105,7 +105,8 @@ class SubscriptionDatabase:
     def create_permissions(self,user_name,user_id,subscription_id,cursor=None):
         Q = "SELECT permissions_id from permissions_subscription where subscription_id = %s"
         permissions_id = self.db.select_dataframe(Q % subscription_id).ix[0,'permissions_id']
-        if permissions_id:
+        logging.info("Found permissions: %s" % permissions_id)
+        if not permissions_id:
 
             pixel_source_name = self.current_advertiser_name
 
@@ -153,7 +154,7 @@ class SubscriptionDatabase:
         subscription_id = df.ix[0,"subscription_id"]
         active = df.ix[0,"active"]
 
-        if subscription_id and not active:
+        if not subscription_id or not active:
             pixel_source_name = self.current_advertiser_name
 
             Q = insert_into_or_update("subscription", ["name","owner_user_id","last_activity","amount_cents"])
@@ -163,7 +164,7 @@ class SubscriptionDatabase:
             subscription_id = cursor.lastrowid
             logging.info("Created / Updated subscription: %s" % subscription_id)
         else:
-            logging.info("Using previous subscription: %s" % permissions_id)
+            logging.info("Using previous subscription: %s" % subscription_id)
 
         permissions_id = self.create_permissions(user_name,user_id,subscription_id,cursor)
 
@@ -172,7 +173,7 @@ class SubscriptionDatabase:
 
     @decorators.deferred
     @decorators.multi_commit_cursor
-    def disable_plan(self,user_name,user_id,amount,cursor=None):
+    def disable_plan(self,user_name,user_id,cursor=None):
         Q = "SELECT subscription_id, active from subscription where owner_user_id = %s"
         df = self.db.select_dataframe(Q % user_id)
         subscription_id = df.ix[0,"subscription_id"]
@@ -230,11 +231,13 @@ class SubscriptionHandler(BaseHandler,SubscriptionDatabase):
  
     @defer.inlineCallbacks
     def unsubscribe(self):
-        obj = ujson.loads(self.request.body)
 
-        token = obj['token']
         user_name = self.current_user
-        self.disable_plan(user_name,user_id)
+        user_id = yield self.get_user_id(user_name)
+
+        subscription_id, active_subscription = yield self.disable_plan(user_name,user_id)
+        self.write('{"success":true}')
+        self.finish()
 
 
 

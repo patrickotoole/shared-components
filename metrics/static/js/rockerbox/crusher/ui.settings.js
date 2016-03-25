@@ -353,6 +353,19 @@ RB.crusher.ui.settings = (function(settings,crusher) {
     d3_updateable(envelope,".envelope_gradient","div")
       .classed("envelope_gradient",true)
 
+    d3_updateable(envelope,".delete","div")
+      .classed("delete button",true)
+      .text("delete")
+      .on("click",function(){
+        debugger
+        d3.xhr("/subscription")
+          .send("DELETE","",function(){
+            debugger
+          })
+      })
+
+
+
     var form = d3_updateable(envelope,"form","form")
       .classed("w-form envelope_form",true)
       .attr("method","POST")
@@ -384,7 +397,6 @@ RB.crusher.ui.settings = (function(settings,crusher) {
             d3.xhr(href)
               .post(JSON.stringify({"token":token,"amount_cents":49900}),function(d){
                 console.log(d)
-                debugger
               })
           }
           
