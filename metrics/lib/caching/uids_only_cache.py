@@ -13,7 +13,7 @@ SQL_QUERY2 = "insert into uids_only_sessions_cache (advertiser, pattern, num_ses
 def get_connectors():
     from link import lnk
     return {
-        "db": lnk.dbs.rockerbox,
+        "db": lnk.dbs.crushercache,
         "zk": {},
         "cassandra": lnk.dbs.cassandra
         }

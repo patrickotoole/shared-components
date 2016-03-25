@@ -6,7 +6,7 @@ QUERY ="INSERT INTO keyword_crusher_cache (advertiser, url_pattern, keyword, cou
 
 def get_connectors():
     return {
-        "db": lnk.dbs.rockerbox,
+        "db": lnk.dbs.crushercache,
         "zk": {},
         "cassandra": lnk.dbs.cassandra
     }

@@ -50,7 +50,7 @@ if __name__ == "__main__":
 
     zk = KazooClient(hosts="zk1:2181")
     zk.start()
-    connectors = {'db':lnk.dbs.rockerbox, 'zk':zk, 'cassandra':''}
+    connectors = {'db':lnk.dbs.crushercache, 'zk':zk, 'cassandra':''}
     cfu = CacheFullURL(connectors)
     if options.run_local:
         cfu.run_local(options.advertiser, options.pattern,options.base_url)

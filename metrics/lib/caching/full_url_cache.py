@@ -7,7 +7,7 @@ CASSQUERY=""
 
 def get_connectors():
     return {
-        "db": lnk.dbs.rockerbox,
+        "db": lnk.dbs.crushercache,
         "zk": {},
         "cassandra": lnk.dbs.cassandra
     }

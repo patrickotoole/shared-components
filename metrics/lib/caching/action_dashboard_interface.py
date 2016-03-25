@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO, format=formatter)
 
 logger = logging.getLogger()
 
-SQL_QUERY = "select pixel_source_name from advertiser where crusher=1 and deleted=0"
+SQL_QUERY = "select pixel_source_name from rockerbox.advertiser where crusher=1 and deleted=0"
 
 SQL_REMOVE_OLD = "DELETE FROM action_dashboard_cache where update_time < (UNIX_TIMESTAMP() - %s)"
 
@@ -55,7 +55,7 @@ if __name__ == "__main__":
 
     zk = KazooClient(hosts="zk1:2181")
     zk.start()
-    connectors = {'db':lnk.dbs.rockerbox, 'zk':zk, 'cassandra':''}
+    connectors = {'db':lnk.dbs.crushercache, 'zk':zk, 'cassandra':''}
     ckw = ActionCache(connectors)
     if options.run_local:
         ckw.run_local(options.advertiser, options.pattern,options.base_url, connectors)
