@@ -38,3 +38,4 @@ urllib3
 oauth2client
 bs4
 readability-lxml
+stripe

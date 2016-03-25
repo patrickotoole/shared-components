@@ -363,7 +363,7 @@ RB.crusher.ui.settings = (function(settings,crusher) {
 
         d3.select(this)
           .selectAll(".button")
-          .property('disabled', true);
+          //.property('disabled', true);
 
         var $form = $(this);
 
@@ -382,7 +382,7 @@ RB.crusher.ui.settings = (function(settings,crusher) {
             var href = form.attr("action")
 
             d3.xhr(href)
-              .post(JSON.stringify({"token":token}),function(d){
+              .post(JSON.stringify({"token":token,"amount_cents":49900}),function(d){
                 console.log(d)
                 debugger
               })
