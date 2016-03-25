@@ -38,7 +38,10 @@ class DomainsCacheRunner(BaseRunner):
         else:
             url = URL.format(pattern)
         resp = crusher.get(url, timeout=300)
-        return resp.json
+        try:
+            return resp.json
+        except:
+            return resp.text
 
     def compress(self, data):
         compressed = zlib.compress(data)
