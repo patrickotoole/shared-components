@@ -220,21 +220,20 @@ RB.crusher.controller = (function(controller) {
       var target = d3.selectAll(".container")
         .style("min-height", "100%")
 
-      var row = d3_splat(target, ".row", "div", [{
-          "id": "gettingstarted3"
-        }], function(x) {
-          return x.id
-        })
+      var row = d3_splat(target, ".row", "div", 
+          [{ "id": "gettingstarted3" }], 
+          function(x) { return x.id }
+        )
         .classed("row gettingstarted", true)
 
       row.exit().remove()
 
-      /* Header */
       var heading = d3_updateable(row, ".welcome-heading", "h5")
 
       heading.text("Welcome to Crusher, let's first set-up some things")
         .attr("style", "margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-15px")
         .classed("welcome-heading heading", true)
+
       RB.crusher.ui.gettingstarted.step3(row, {
         goToAction: RB.routes.navigation.forward.bind(false, RB.crusher.controller.states["/crusher/action/existing"]),
         goToFunnel: RB.routes.navigation.forward.bind(false, RB.crusher.controller.states["/crusher/funnel/new"])
