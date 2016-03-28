@@ -47,34 +47,36 @@ if __name__ == "__main__":
     basicConfig(options={})
 
     parse_command_line()
-
+    sql = lnk.dbs.rockerbox
+   
     zk = KazooClient(hosts="zk1:2181")
     zk.start()
+    connectors = {'crushercache':lnk.dbs.crushercache, 'db':sql,'zk':zk}
     if options.run_local and not options.run_all:
-        sql = lnk.dbs.rockerbox
-        cuid = CacheUIDS({'db':sql,'zk':zk})
+        sql = lnk.dbs.crushercache
+        cuid = CacheUIDS({'crushercache':lnk.dbs.crushercache, 'db':sql,'zk':zk})
         cuid.run_local(options.username, options.segment,options.base_url)
     
     elif options.run_local and options.run_all:
         sql = lnk.dbs.rockerbox
-        cuid = CacheUIDS({'db':sql, 'zk':zk})
-        all_advertiser = sql.select_dataframe("select pixel_source_name from advertiser where crusher = 1")
-        for advertiser in allPadvertiser:
-            segments = sql.select_dataframe("select url_pattern from action_with_patterns where pixel_source_name = '{}'".format(advertiser))
-            for pattern in segment:
-                cuid.run_local(advertiser, pattern,options.base_url, connectors)
+        cuid = CacheUIDS({'crushercache':lnk.dbs.crushercache, 'db':sql,'zk':zk})
+        all_advertiser = sql.select_dataframe("select pixel_source_name from rockerbox.advertiser where crusher = 1")
+        for advertiser in all_advertiser.iterrows():
+            segments = sql.select_dataframe("select url_pattern from rockerbox.action_with_patterns where pixel_source_name = '{}'".format(advertiser[1]['pixel_source_name']))
+            for pattern in segments.iterrows():
+                cuid.run_local(advertiser[1]['pixel_source_name'], pattern[1]['url_pattern'],options.base_url)
 
     elif not options.run_local and options.run_all:
         sql = lnk.dbs.rockerbox
-        cuid = CacheUIDS({'db':sql, 'zk':zk})
-        all_advertiser = sql.select_dataframe("select pixel_source_name from advertiser where crusher = 1")
+        cuid = CacheUIDS({'crushercache':lnk.dbs.crushercache, 'db':sql,'zk':zk})
+        all_advertiser = sql.select_dataframe("select pixel_source_name from rockerbox.advertiser where crusher = 1")
         for advertiser in allPadvertiser:
-            segments = sql.select_dataframe("select url_pattern from action_with_patterns where pixel_source_name = '{}'".format(advertiser))
+            segments = sql.select_dataframe("select url_pattern from rockerbox.action_with_patterns where pixel_source_name = '{}'".format(advertiser))
             for pattern in segment:
                 cuid.run_on_work_queue(advertiser, pattern,options.base_url)
 
     elif not options.run_local and not options.run_all:
         sql = lnk.dbs.rockerbox
-        cuid = CacheUIDS({'db':sql,'zk':zk})
+        cuid = CacheUIDS({'crushercache':lnk.dbs.crushercache, 'db':sql,'zk':zk})
         cuid.run_on_work_queue(options.username, options.segment,options.base_url) 
     

@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO, format=formatter)
 
 logger = logging.getLogger()
 
-SQL_QUERY = "select pixel_source_name from advertiser where crusher=1 and deleted=0"
+SQL_QUERY = "select pixel_source_name from rockerbox.advertiser where crusher=1 and deleted=0"
 
 SQL_REMOVE_OLD = "DELETE FROM action_dashboard_cache where update_time < (UNIX_TIMESTAMP() - %s)"
 
@@ -184,17 +184,17 @@ if __name__ == "__main__":
     if options.chronos ==True:
         zookeeper =KazooClient(hosts="zk1:2181")
         zookeeper.start()
-        run_all(lnk.dbs.rockerbox, zookeeper, options.base_url)
+        run_all(lnk.dbs.crushercache, zookeeper, options.base_url)
     else:
         if not options.segment:
             zookeeper =KazooClient(hosts="zk1:2181")
             zookeeper.start()
-            ac = CacheInterface(options.username, options.password, lnk.dbs.rockerbox, zookeeper)
+            ac = CacheInterface(options.username, options.password, lnk.dbs.crushercache, zookeeper)
             run_advertiser(ac, options.username, options.base_url)
         else:
             zookeeper =KazooClient(hosts="zk1:2181")
             zookeeper.start()
-            ac = CacheInterface(options.username, options.password, lnk.dbs.rockerbox,zookeeper)
+            ac = CacheInterface(options.username, options.password, lnk.dbs.crushercache,zookeeper)
             run_advertiser_segment(ac, options.segment, options.base_url)
     
     if options.remove_old == True:
