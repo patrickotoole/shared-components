@@ -273,21 +273,28 @@ RB.crusher.controller = (function(controller) {
         .unpersist(false)
         .trigger()
 
-      d3.select("body").classed("hide-select", true)
+      d3.select("body")
+        .classed("hide-select hide-top",true)
 
       var funnelRow = build_header({
         "id": "home",
         "name": "Welcome to Crusher"
       })
 
-      crusher.ui.home.main(funnelRow)
+      pubsub.subscriber("home", ["advertiser","an_uid"])
+        .run(function(advertiser,uid) {
 
-      var wrapper = funnelRow.selectAll(".tutorial-description")
-      var subscription = crusher.ui.home.status.bind(false,wrapper)
+          crusher.ui.home.main(funnelRow,advertiser,uid)
 
-      pubsub.subscriber("home",["pixel_status","advertiser","actions"])
-        .run(subscription)
-        .unpersist(false)
+          var wrapper = funnelRow.selectAll(".tutorial-description")
+          var subscription = crusher.ui.home.status.bind(false,wrapper)
+
+          pubsub.subscriber("home",["pixel_status","advertiser","actions"])
+            .run(subscription)
+            .unpersist(false)
+            .trigger()
+        })
+        .unpersist(true)
         .trigger()
     },
     "analytics": function() {
