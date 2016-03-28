@@ -13,7 +13,7 @@ SQL_QUERY2 = "insert into uids_only_sessions_cache (advertiser, pattern, num_ses
 def get_connectors():
     from link import lnk
     return {
-        "db": lnk.dbs.crushercache,
+        "crushercache": lnk.dbs.crushercache,
         "zk": {},
         }
 
@@ -64,7 +64,7 @@ def write_to_table_sessions(advertiser, pattern, data,db):
 def runner(advertiser, pattern, base_url, cache_date, indentifiers="test", connectors=False):
     connectors = connectors or get_connectors()
 
-    db = connectors['db']
+    db = connectors['crushercache']
     data = make_request(advertiser, pattern, base_url)
     if data =={}:
         return ""

@@ -54,12 +54,12 @@ if __name__ == "__main__":
 
     zk = KazooClient(hosts="zk1:2181")
     zk.start()
-    connectors = {'db':lnk.dbs.crushercache, 'zk':zk, 'cassandra':''}
+    connectors = {'db': lnk.dbs.rockerbox, 'crushercache':lnk.dbs.crushercache, 'zk':zk, 'cassandra':''}
     MC = ModuleCache(connectors)
     if options.run_local and options.pattern:
         MC.run_local(options.advertiser, options.pattern, options.endpoint, options.filter_id, options.base_url, connectors)
     elif options.run_local and not options.pattern:
-        segments = connectors['db'].select_dataframe("select * from rockerbox.action_with_patterns where pixel_source_name = '{}'".format(options.advertiser))
+        segments = connectors['db'].select_dataframe("select * from action_with_patterns where pixel_source_name = '{}'".format(options.advertiser))
         for i,s in segments.iterrows():
             MC.run_local(options.advertiser, s['url_pattern'], options.endpoint, s['action_id'], options.base_url, connectors)
     else:

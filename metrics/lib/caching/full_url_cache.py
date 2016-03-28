@@ -7,7 +7,7 @@ CASSQUERY=""
 
 def get_connectors():
     return {
-        "db": lnk.dbs.crushercache,
+        "crushercache": lnk.dbs.crushercache,
         "zk": {},
         "cassandra": lnk.dbs.cassandra
     }
@@ -32,7 +32,7 @@ def add_to_table(advertiser_name, pattern, url, sql):
 def runner(advertiser_name, pattern, base_url, cache_date, indentifiers="test", connectors=False):
     connectors = connectors or get_connectors()
 
-    db = connectors['db']
+    db = connectors['crushercache']
     urls = make_request(advertiser_name, pattern, base_url)
     for url in urls:
         add_to_table(advertiser_name, pattern, url, db)
