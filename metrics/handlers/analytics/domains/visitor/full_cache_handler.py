@@ -19,6 +19,7 @@ from lib.cassandra_cache.helpers import *
 from ...search.cache.pattern_search_cache import PatternSearchCache
 
 QUERY = "select advertiser, url_pattern, uniques, count, url from full_domain_cache_test where advertiser = '{}' and url_pattern = '{}'"
+QUERY2 = "select advertiser, url_pattern, uniques, count, url from crusher_cache.full_domain_cache_test where advertiser = '{}' and url_pattern = '{}' and action_id={}"
 
 class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler):
 
@@ -32,9 +33,22 @@ class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler)
         df = pandas.DataFrame(results_no_NA.iloc[:int(top_count)])
         return df
 
+    @decorators.deferred
+    def defer_get_onsite_cache_filter_id(self, advertiser, pattern, top_count, action_id):
+
+        sql = lnk.dbs.rockerbox
+        results  = sql.select_dataframe(QUERY.format(advertiser, pattern, action_id))
+        sort_results = results.sort(["uniques", "count"], ascending=False)
+        results_no_NA = sort_results[sort_results["url"] != "NA"]
+        df = pandas.DataFrame(results_no_NA.iloc[:int(top_count)])
+        return df
+
     @custom_defer.inlineCallbacksErrors
-    def get_cache_domains(self, advertiser, pattern, top_count):
-        response_data = yield self.defer_get_onsite_cache( advertiser, pattern, top_count)
+    def get_cache_domains(self, advertiser, pattern, top_count, filter_id):
+        if filter_id:
+            response_data = yield self.defer_get_onsite_cache( advertiser, pattern, top_count, filter_id)
+        else:
+            response_data = yield self.defer_get_onsite_cache( advertiser, pattern, top_count)
         if len(response_data)>0:
             versioning = self.request.uri
             if versioning.find('v1') >=0:
@@ -55,5 +69,6 @@ class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler)
         url_pattern = self.get_argument("url_pattern", "")
         user = self.current_advertiser_name
         top_count = self.get_argument("top", 50)
+        filter_id = self.get_argument("filter_id", False)
 
-        self.get_cache_domains( user, url_pattern, top_count)
+        self.get_cache_domains( user, url_pattern, top_count, filter_id)
