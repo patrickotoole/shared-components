@@ -53,11 +53,11 @@ class DomainsCacheRunner(BaseRunner):
         try:
             Q = self.selection_dict.get(endpoint, False)['Insert']
             if Q:
-                self.connectors['db'].execute(Q.format(advertiser, pattern, filter_id, compressed_data))
+                self.connectors['crushercache'].execute(Q.format(advertiser, pattern, filter_id, compressed_data))
         except:
             Q = self.selection_dict.get(endpoint, False)['Replace']
             if Q:
-                self.connectors['db'].execute(Q.format(advertiser, pattern, filter_id, compressed_data))
+                self.connectors['crushercache'].execute(Q.format(advertiser, pattern, filter_id, compressed_data))
 
 def runner(advertiser,pattern, endpoint, filter_id, base_url, cache_date="", indentifiers="test", connectors=False):
 
@@ -66,7 +66,7 @@ def runner(advertiser,pattern, endpoint, filter_id, base_url, cache_date="", ind
     DR = DomainsCacheRunner(connectors)
     crusher = DR.get_crusher_obj(advertiser, base_url)
 
-    db = connectors['db']
+    db = connectors['crushercache']
     zk = connectors['zk']
     data = DR.make_request(crusher, pattern, endpoint, filter_id)
 

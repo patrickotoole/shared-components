@@ -55,7 +55,7 @@ if __name__ == "__main__":
 
     zk = KazooClient(hosts="zk1:2181")
     zk.start()
-    connectors = {'db':lnk.dbs.crushercache, 'zk':zk, 'cassandra':''}
+    connectors = {'crushercache':lnk.dbs.crushercache, 'zk':zk, 'cassandra':''}
     ckw = ActionCache(connectors)
     if options.run_local:
         ckw.run_local(options.advertiser, options.pattern,options.base_url, connectors)

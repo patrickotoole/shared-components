@@ -85,7 +85,7 @@ def runner(advertiser,pattern, base_url, cache_date="", indentifiers="test", con
 
     AAR = AdvertiserActionRunner(connectors)
 
-    db = connectors['db']
+    db = connectors['crushercache']
     zk = connectors['zk']
     data = AAR.pre_process(advertiser, pattern, base_url)
 
