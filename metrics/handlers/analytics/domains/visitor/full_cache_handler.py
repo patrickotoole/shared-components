@@ -46,7 +46,7 @@ class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler)
     @custom_defer.inlineCallbacksErrors
     def get_cache_domains(self, advertiser, pattern, top_count, filter_id):
         if filter_id:
-            response_data = yield self.defer_get_onsite_cache( advertiser, pattern, top_count, filter_id)
+            response_data = yield self.defer_get_onsite_cache_filter_id(advertiser, pattern, top_count, filter_id)
         else:
             response_data = yield self.defer_get_onsite_cache( advertiser, pattern, top_count)
         if len(response_data)>0:
