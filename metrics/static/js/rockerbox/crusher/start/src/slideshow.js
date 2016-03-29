@@ -9,6 +9,8 @@ export function Slideshow(target) {
   this._target = target;
   this._wrapper = this._target;
 
+  this._viscount = 0
+
   return 1
 }
 
@@ -20,15 +22,78 @@ Slideshow.prototype = {
     draw: function() {
       this._target
 
-      d3_updateable(this._target,".slideshow","div")
+      this._wrapper = d3_updateable(this._target,".slideshow","div")
         .classed("slideshow",true)
 
-      this._slides = d3_splat(this._target,".slide","div",this._data,function(x,i){ return i })
+      var self = this;
+
+      this._slides = d3_splat(this._wrapper,".slide","div",this._data,function(x,i){ return i })
+        .attr("class",function(x,i) {
+          return (i == self._viscount) ? undefined : "hidden"
+        })
         .classed("slide",true)
 
       return this
     }
+  , next: function() {
 
+      var self = this;
+
+      var current = this._slides.filter(function(x){return !d3.select(this).classed("hidden")})
+      var h = -current.node().clientHeight
+
+      var t0 = current.transition()
+        .duration(500)
+
+      t0.style("margin-top",(h-15) + "px")
+        .transition()
+        .duration(500)
+
+        .each("end",function(){
+          current.style("margin-top",undefined)
+          d3.select(this).classed("hidden",true)
+        })
+
+
+      self._viscount += 1;
+      this._slides
+        .attr("class",function(x,i) { 
+          return (i == self._viscount) || ((i+1) == self._viscount) ? "slide" : "hidden slide" 
+        })
+        .classed("slide",true)
+      
+    }
+  , previous: function() {
+
+      var self = this;
+      self._viscount -= 1;
+
+      var previous = this._slides.filter(function(x,i){return i == self._viscount})
+        .style("position","absolute")
+        .style("top","-10000px")
+        .classed("hidden",false)
+
+      var h = -previous.node().clientHeight
+
+      previous
+        .style("position",undefined)
+        .style("top",undefined)
+        .classed("hidden",true)
+
+      previous.style("margin-top",(h) + "px")
+        .classed("hidden",false)
+
+      var t0 = previous.transition()
+        .duration(500)
+
+      t0.style("margin-top",0 + "px")
+        .each("end",function(){
+          previous.style("margin-top",undefined)
+          self._slides.filter(function(x,i){return (i-1) == self._viscount}).classed("hidden",true)
+        })
+
+      
+    }
   , data: function(val) { return accessor.bind(this)("data",val) }
   , title: function(val) { return accessor.bind(this)("title",val) }
   , slides: function(val) { return accessor.bind(this)("slides",val) }

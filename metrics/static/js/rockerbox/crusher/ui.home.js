@@ -78,11 +78,20 @@ RB.crusher.ui.home = (function(home, crusher) {
   home.main = function(funnelRow,advertiser,uid) {
 
     var show = start.slideshow(funnelRow)
-      .data([{}])
+      .data([{},{}])
       .draw()
 
-    show.slides().each(function(){
+    window._show = show;
+
+    show.slides().each(function(x,i){
+
       var d = d3.select(this)
+
+      if (i == 1) {
+        d3_updateable(d,".h2","h2")
+          .text("YO")
+        return
+      }
     
       var stage = start.stage(d)
         .draw()
