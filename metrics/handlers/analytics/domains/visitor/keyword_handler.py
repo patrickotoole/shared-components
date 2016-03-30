@@ -36,7 +36,7 @@ class VisitorKeywordsHandler(PatternSearchCache,VisitDomainsFullHandler):
         uids = self.get_uids_from_cache(*args)
         uids = list(set([u['uid'] for u in uids]))
         date_clause = self.make_date_clause("date",date,"","")
-        uids = uids[:5000]
+        uids = uids[:100]
         results = self.full_get_w_agg_in(uids, date_clause)
         df = pandas.DataFrame(results)
 
