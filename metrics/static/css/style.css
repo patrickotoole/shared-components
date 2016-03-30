@@ -1203,6 +1203,9 @@ pre {
   margin: 0px;
   color: #ababab; }
 
+.envelope.btn-env {
+  box-shadow: none; }
+
 body.dark .container {
   background-color: #40495c; }
 body.dark .section-dark-top {

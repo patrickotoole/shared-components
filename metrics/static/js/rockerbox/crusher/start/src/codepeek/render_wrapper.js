@@ -21,6 +21,7 @@ function render_wrapper() {
   var data = this.data()
 
   this._wrapper = make_wrap(row,data)
+  this._pane = this._wrapper.selectAll(".w-tab-pane")
   
 }
 export default render_wrapper;

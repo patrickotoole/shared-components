@@ -7,9 +7,26 @@ RB.crusher.ui.home = (function(home, crusher) {
   home.validated = function(row,data) { }
 
   var stop = false;
+  var content = [
+        {
+            "left": "<div class='codepeek_text'>Rockerbox uses the pixel to build an audience of your users<br><br>You can explore behavioral differences in your audience based on different on-site activities.</div>"
+          , "right": "<div class='codepeek_text'>To see how your users differ based on on-site behavior, create a segment. <br><br>Need Help? Use our <a>Segment Creation</a> guide to get started.</div>" 
+          , "center": "<img style='width:100%' src='/static/img/demos/search-products-crusher.png'></img>"
+        }
+      , {
+            "center": "<img style='width:100%' src='/static/img/demos/before-crusher.png'></img>" 
+          , "left": "<div class='codepeek_text'>YO</div>"
+          , "right": "<div class='codepeek_text'>YO</div>"
+        }
+      , {
+            "center": "<img style='width:100%' src='/static/img/demos/before-crusher.png'></img>" 
+          , "left": "<div class='codepeek_text'>YO</div>"
+          , "right": "<div class='codepeek_text'>YO</div>"
+        }
+    ]
 
   var validation = {
-      success: function(row,data) {
+      success: function(row,data,next) {
 
         var desc = "Your implementation appears to be successful. <br><br>We detected " + 
           data.length + 
@@ -19,6 +36,8 @@ RB.crusher.ui.home = (function(home, crusher) {
           .data(data)
           .description(desc)
           .title("congrats!")
+          .button("next")
+          .click(next)
           .draw()
 
         var to_hide = row.selectAll(".codepeek_content")
@@ -49,7 +68,7 @@ RB.crusher.ui.home = (function(home, crusher) {
       }
   }
 
-  home.codepeek_click = function(row,advertiser,uid) {
+  home.codepeek_click = function(row,advertiser,uid,next) {
 
     advertiser.uid = uid
 
@@ -63,7 +82,7 @@ RB.crusher.ui.home = (function(home, crusher) {
 
       pubsub.subscriber("validate", ["segment_pixel_status"])
         .run(function(data){
-          if (!!data.length) validation.success(row,data)
+          if (!!data.length) validation.success(row,data,next)
           else validation.failure(advertiser,all_pages)
         })
         .data(all_pages)
@@ -77,32 +96,74 @@ RB.crusher.ui.home = (function(home, crusher) {
 
   home.main = function(funnelRow,advertiser,uid) {
 
-    var show = start.slideshow(funnelRow)
-      .data([{},{}])
+    var slideshow = start.slideshow(funnelRow)
+      .data([
+          function slide1(){
+            var d = d3.select(this)
+            var stage = start.stage(d)
+              .draw()
+
+            var cp_row = stage._stage
+            var click = home.codepeek_click(cp_row,advertiser,uid,slideshow.next.bind(slideshow))
+
+            start.codepeek(cp_row)
+              .data(advertiser)
+              .button("check")
+              .click(click)
+              .draw()
+          }
+        , function slide2(){
+            var d = d3.select(this)
+
+            var stage = start.stage(d)
+              .title("Getting Started")
+              .subtitle("Rockerbox helps you understand your audience by understanding off-site activity and behavior.")
+              .left("")
+              .right("")
+              .draw()
+
+            var wrap = d3_updateable(stage._stage,".img","div")
+              .classed("img pull-left",true)
+              .style("width","50%")
+              .style("border","10px solid white")
+              .html("")
+
+            var current = 0;
+            var next = function() {
+              stage
+                .left(content[current].left)
+                .right(content[current].right)
+                .draw()
+
+              wrap.html(content[current].center)
+              current += 1;
+
+              if (content[current] == undefined) d.selectAll(".codepeek_row").selectAll(".button").classed("hidden",true)
+            }
+
+            var bw = d3_updateable(d.selectAll(".codepeek_row"),".button-wrap","div")
+              .classed("button-wrap",true)
+              .style("width","50%")
+              .style("float","left")
+
+
+            start.button(bw)
+              .button("next")
+              .click(next)
+              .draw()
+
+            next()
+
+            
+
+          }
+      ])
       .draw()
 
-    window._show = show;
+    window._show = slideshow;
 
-    show.slides().each(function(x,i){
-
-      var d = d3.select(this)
-
-      if (i == 1) {
-        d3_updateable(d,".h2","h2")
-          .text("YO")
-        return
-      }
-    
-      var stage = start.stage(d)
-        .draw()
-
-      var cp_row = stage._stage
-      var click = home.codepeek_click(cp_row,advertiser,uid)
-
-      start.codepeek(cp_row)
-        .data(advertiser)
-        .click(click)
-        .draw()
+    slideshow.slides().each(function(x,i){
+      return x.bind(this)(x,i)
     })
 
 

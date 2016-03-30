@@ -15,6 +15,16 @@ export function Stage(target) {
   this._wrapper = this._target;
   this._title = "Welcome to Rockerbox"
   this._subtitle = "Getting started is easy. Copy and paste the pixel below to the <head> section of your website."
+  this._left = "<div class='codepeek_text'>" + 
+      "Implementing Rockerbox is simple.<br><br>" + 
+      "<b>First,</b> place the pixel on all pages of your website.<br><br>" + 
+      "<b>Then,</b> click validate to ensure its collecting information from your site." + 
+    "</div>"
+  this._right = "<div class='codepeek_text'>" + 
+      "Create your first segment by following our <a >Quickstart Guide</a><br><br>" +
+      "Take a tour of our <a>Insights Modules</a> and start crafting content.<br/><br/>" + 
+      "Read through our <a>Implementation Guide</a> to track custom events and insights" + 
+    "</div>"
 
   return 1
 }
@@ -42,5 +52,8 @@ Stage.prototype = {
   , data: function(val) { return accessor.bind(this)("data",val) }
   , title: function(val) { return accessor.bind(this)("title",val) }
   , subtitle: function(val) { return accessor.bind(this)("subtitle",val) }
+  , left: function(val) { return accessor.bind(this)("left",val) }
+  , right: function(val) { return accessor.bind(this)("right",val) }
+
 
 }

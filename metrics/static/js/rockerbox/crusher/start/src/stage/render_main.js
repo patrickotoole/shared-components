@@ -16,17 +16,13 @@ function render_row() {
     .style("width","25%")
     .style("min-height","600px")
     .style("padding","25px")
-    .html("<div class='codepeek_text'>Implementing Rockerbox is simple.<br><br><b>First,</b> place the pixel on all pages of your website.<br><br><b>Then,</b> click validate to ensure its collecting information from your site.</div>")
+    .html(this._left)
 
   this._right_wrapper = d3_updateable(cp_row,".right","div")
     .classed("codepeek_aside right pull-right",true)
     .style("width","25%")
     .style("padding","25px")
-    .html("<div class='codepeek_text'>Create your first segment by following our <a >Quickstart Guide</a><br><br>" +
-      "Take a tour of our <a>Insights Modules</a> and start crafting content.<br/><br/>" + 
-      "Read through our <a>Implementation Guide</a> to track custom events and insights" + 
-      "</div>"
-    )
+    .html(this._right)
 
   this._stage = cp_row
 

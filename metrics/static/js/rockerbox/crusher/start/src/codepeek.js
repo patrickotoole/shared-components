@@ -1,7 +1,7 @@
 import render_bar from './codepeek/render_bar'
 import render_code from './codepeek/render_code'
 import render_wrapper from './codepeek/render_wrapper'
-import render_button from './codepeek/render_button'
+import render_button from './button/render_button'
 
 function accessor(attr, val) {
   if (val === undefined) return this["_" + attr]
@@ -43,5 +43,6 @@ Codepeek.prototype = {
   , code: function(val) { return accessor.bind(this)("code",val) }
   , button: function(val) { return accessor.bind(this)("button",val) }
   , click: function(val) { return accessor.bind(this)("click",val) }
+
 
 }
