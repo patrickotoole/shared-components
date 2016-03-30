@@ -56,6 +56,6 @@ class ViewabilityHandler(BaseHandler):
     def get(self):
         self.get_viewability(
             self.get_arguments("tag_id"),
-            self.get_arguments("size",[]),
-            self.get_arguments("domain",[])
+            self.get_arguments("size"),
+            self.get_arguments("domain")
         )
