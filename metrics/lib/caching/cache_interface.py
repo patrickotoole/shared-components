@@ -100,28 +100,28 @@ class CacheInterface:
                 runner.runner,
                 [advertiser,segment["url_pattern"][0], "before_and_after", segment["action_id"], base_url, _cache_yesterday,_cache_yesterday + "bnamodulecache"]
                 ))
-        work_queue.SingleQueue(self.connectors['zk'],"python_queue").put(work,35)
+        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,35)
         logging.info("added to MOdule work queue %s for %s" %(segment,advertiser))
 
         work = pickle.dumps((
                 runner.runner,
                 [advertiser,segment["url_pattern"][0], "hourly", segment["action_id"], base_url, _cache_yesterday,_cache_yesterday + "hourmodulecache"]
                 ))
-        work_queue.SingleQueue(self.connectors['zk'],"python_queue").put(work,35)
+        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,35)
         logging.info("added to MOdule work queue %s for %s" %(segment,advertiser)) 
 
         work = pickle.dumps((
                 runner.runner,
                 [advertiser,segment["url_pattern"][0], "sessions", segment["action_id"], base_url, _cache_yesterday,_cache_yesterday + "sessmodulecache"]
                 ))
-        work_queue.SingleQueue(self.connectors['zk'],"python_queue").put(work,35)
+        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,35)
         logging.info("added to MOdule work queue %s for %s" %(segment,advertiser)) 
 
         work = pickle.dumps((
                 runner.runner,
                 [advertiser,segment["url_pattern"][0], "model", segment["action_id"], base_url, _cache_yesterday,_cache_yesterday + "modelmodulecache"]
                 ))
-        work_queue.SingleQueue(self.connectors['zk'],"python_queue").put(work,35)
+        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,35)
         logging.info("added to MOdule work queue %s for %s" %(segment,advertiser)) 
 
     def seg_loop(self, segments, advertiser, base_url):
