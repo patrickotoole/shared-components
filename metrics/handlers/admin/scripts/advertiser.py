@@ -18,12 +18,16 @@ SEGMENT_PIXEL = """<!-- Rockerbox - %(segment_name)s -->
 <!-- End of Segment Pixel -->
 """
 
+GET_PIXEL_STRING = """select group_concat(pixel_source_name SEPARATOR '|') pixel_string from ( select pixel_source_name from advertiser where external_advertiser_id=%(advertiser_id)s union select external_segment_id from advertiser_segment where external_advertiser_id=%(advertiser_id)s and segment_name like '%%All Pages%%' union select concat(s.external_segment_id,":",ap.pixel_id) from advertiser_segment s join advertiser_pixel ap on s.external_advertiser_id=ap.external_Advertiser_id where s.external_advertiser_id=%(advertiser_id)s and segment_name like '%%Purchase%%' and ap.pixel_display_name='Purchase' union select concat(s.external_segment_id,":",ap.pixel_id) from advertiser_segment s join advertiser_pixel ap on s.external_advertiser_id=ap.external_Advertiser_id where s.external_advertiser_id=%(advertiser_id)s and segment_name like '%%Signup%%' and ap.pixel_display_name='Signup' union select external_segment_id from advertiser_segment where external_advertiser_id=%(advertiser_id)s and segment_name like '%%Logged%%') a;"""
+
 SEGMENT_DESCRIPTIONS = {
     "Purchase Conversion Pixel": "<b>Implementation Instructions :</b><div style=\"margin-left:20px\">The Purchase Conversion Pixel should be fired after a user executes a purchase.<br>The [variable_holder] field is used to pass purchase level information (e.g. order ID, purchase value, purchaser\\'s email) to Rockerbox. This information needs to be passed in <i>both</i> [variable_holder] locations.<br><br>Example :<ul><li><b>Order ID</b> : ....&amp;order_id=3454....&amp;order_type=3454</li><li><b>Purchaser\\'s Email :</b> ....&amp;order_id=test@test.com....&amp;order_type=test@test.com...</li></ul></div></div>",
     "Signup Conversion Pixel": "<b>Implementation Instructions :</b><div style=\"margin-left:20px\">The Signup Conversion Pixel should be fired after a user signs up / registers.<br>The [variable_holder] field is used to pass signup level information (e.g. user ID,  purchaser\\'s email) to Rockerbox. This information needs to be passed in <i>both</i> [variable_holder] locations.<br><br>Example :<ul><li><b>User ID</b> : ....&amp;order_id=432353....&amp;order_type=432353</li><li><b>Purchaser\\'s Email :</b> ....&amp;order_id=test@test.com....&amp;order_type=test@test.com...</li></ul></div></div>",
     "All Pages Segment": "<b>Implementation Instructions :</b><div style=\"margin-left:20px\">The All Pages Segment should be placed on <b>all</b> pages.</div>",
     "Logged In Segment": "<b>Implementation Instructions :</b><div style=\"margin-left:20px\">The Logged In Segment should be fired on <b>all</b> pages for visitors that are logged in. This allows Rockerbox to differentiate between new visitors and existing customrs.</div>"
 }
+
+UPDATE_PIXEL = "UPDATE advertiser_segment set segment_implemented = '%(implementation)s' WHERE external_segment_id = %(segment_id)s"
 
 
 API_QUERY = "select * from advertiser where %s "
@@ -495,6 +499,24 @@ class AdvertiserHandler(tornado.web.RequestHandler,Advertiser):
 
         return pixel_dict
 
+    def update_pixel(self,advertiser_id,segment_id):
+        df = self.db.select_dataframe(GET_PIXEL_STRING % {"advertiser_id": advertiser_id } )
+        pixel_string = df.pixel_string[0]
+
+
+        PX = """<!-- Rockerbox - Place on all pages -->
+<script type="text/javascript">
+(function(d,RB) {window.RB=RB;RB.queue=[];RB.track=RB.track||function(){RB.queue.push(Array.prototype.slice.call(arguments))};RB.initialize=function(s){RB.source=s};var a = d.createElement("script");  a.type="text/javascript"; a.async=!0; a.src="http://getrockerbox.com/assets/xyz.js"; f=d.getElementsByTagName("script")[0]; f.parentNode.insertBefore(a,f);})(document,window.RB || {});
+RB.initialize("%s");
+</script>
+<!-- Rockerbox -->""" % pixel_string.encode("base64").replace("\n","")
+        
+        self.db.execute(UPDATE_PIXEL % {"implementation": PX, "segment_id": segment_id})
+        
+        
+        
+        
+
 
     def post(self,arg="new"):
         advertiser_name = self.get_argument('advertiser_name')
@@ -504,6 +526,9 @@ class AdvertiserHandler(tornado.web.RequestHandler,Advertiser):
 
         pixel_dict = self.create_pixels(advertiser_id,advertiser_name)
         segment_dict = self.create_segments(advertiser_id,advertiser_name,pixel_dict.keys(),pixel_dict)
+
+        segment_id = segment_dict['All Pages Segment']
+        self.update_pixel(advertiser_id,segment_id)
 
         publisher_id = self.create_publisher(advertiser_name)
         #time.sleep(10)
