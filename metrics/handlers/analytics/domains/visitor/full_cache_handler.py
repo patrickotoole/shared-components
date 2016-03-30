@@ -2,7 +2,7 @@ import tornado.web
 import ujson
 import pandas
 import StringIO
-import logging
+import logging, codecs, zlib
 
 import re
 
@@ -19,6 +19,7 @@ from lib.cassandra_cache.helpers import *
 from ...search.cache.pattern_search_cache import PatternSearchCache
 
 QUERY = "select advertiser, url_pattern, uniques, count, url from full_domain_cache_test where advertiser = '{}' and url_pattern = '{}'"
+QUERY2 = "select zipped from crusher_cache.cache_domains_full_w_filter_id where filter_id={}"
 
 class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler):
 
@@ -32,20 +33,34 @@ class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler)
         df = pandas.DataFrame(results_no_NA.iloc[:int(top_count)])
         return df
 
+    @decorators.deferred
+    def defer_get_onsite_cache_filter_id(self, advertiser, pattern, top_count, action_id):
+
+        sql = lnk.dbs.rockerbox
+        results  = sql.execute(QUERY2.format(action_id))
+        compressed_results = codecs.decode(results.data[0][0], 'hex')
+        df = zlib.decompress(compressed_results)
+        return df
+
     @custom_defer.inlineCallbacksErrors
-    def get_cache_domains(self, advertiser, pattern, top_count):
-        response_data = yield self.defer_get_onsite_cache( advertiser, pattern, top_count)
-        if len(response_data)>0:
-            versioning = self.request.uri
-            if versioning.find('v1') >=0:
-                self.get_content_v1(response_data)
-            else:
-                summary = self.summarize(response_data)
-                self.get_content_v2(response_data, summary)
-        else:
-            self.set_status(400)
-            self.write(ujson.dumps({"error":str(Exception("No Data"))}))
+    def get_cache_domains(self, advertiser, pattern, top_count, filter_id):
+        if filter_id:
+            response_data = yield self.defer_get_onsite_cache_filter_id(advertiser, pattern, top_count, filter_id)
+            self.write(response_data)
             self.finish()
+        else:
+            response_data = yield self.defer_get_onsite_cache( advertiser, pattern, top_count)
+            if len(response_data)>0:
+                versioning = self.request.uri
+                if versioning.find('v1') >=0:
+                    self.get_content_v1(response_data)
+                else:
+                    summary = self.summarize(response_data)
+                    self.get_content_v2(response_data, summary)
+            else:
+                self.set_status(400)
+                self.write(ujson.dumps({"error":str(Exception("No Data"))}))
+                self.finish()
     
     @tornado.web.authenticated
     @tornado.web.asynchronous
@@ -55,5 +70,6 @@ class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler)
         url_pattern = self.get_argument("url_pattern", "")
         user = self.current_advertiser_name
         top_count = self.get_argument("top", 50)
+        filter_id = self.get_argument("filter_id", False)
 
-        self.get_cache_domains( user, url_pattern, top_count)
+        self.get_cache_domains( user, url_pattern, top_count, filter_id)

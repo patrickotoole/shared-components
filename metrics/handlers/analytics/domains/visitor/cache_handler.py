@@ -3,6 +3,7 @@ import ujson
 import pandas
 import logging
 import StringIO
+import zlib, codecs
 
 from handlers.base import BaseHandler
 import lib.custom_defer as custom_defer
@@ -17,6 +18,7 @@ SQL_QUERY_3 = "select a.domain, a.count, c.parent_category_name from action_dash
 SQL_QUERY_4 = "SELECT a.domain, a.count, c.category_name, c.parent_category_name FROM domain_category b right join (SELECT domain, count FROM action_dashboard_cache WHERE url_pattern = '%s' and advertiser = '%s') a ON a.domain = b.domain INNER JOIN category c ON c.category_name = b.category_name"
 
 DOMAINS = "SELECT domain, count FROM action_dashboard_cache WHERE url_pattern = '%s' and advertiser = '%s'"
+DOMAINS_FILTER = "SELECT zipped FROM crusher_cache.cache_domains_w_filter_id WHERE url_pattern = '%s' and advertiser = '%s' and filter_id = '%s'"
 CATEGORIES = "SELECT c.domain, c.category_name, p.parent_category_name FROM domain_category c JOIN category p ON c.category_name = p.category_name where c.domain in (%s)"
 
 
@@ -46,6 +48,12 @@ class ActionDashboardHandler(BaseHandler):
         seg_data = joined.fillna(0)
         return seg_data
 
+    def get_one_filter_id(self, url_pattern, advertiser, action_id):
+        zipped_data = self.db.select_dataframe(DOMAINS_FILTER % (url_pattern,advertiser, action_id))
+        decode_data = codecs.decode(zipped_data.ix[0]['zipped'], 'hex')
+        final_data =zlib.decompress(decode_data)
+        return final_data
+
     @decorators.deferred
     def defer_get_actions(self, advertiser, number, action_type, url_pattern):
         if not url_pattern:
@@ -69,25 +77,30 @@ class ActionDashboardHandler(BaseHandler):
             return seg_data
 
     @custom_defer.inlineCallbacksErrors
-    def get_actions(self, advertiser, number, action_type, url_pattern):
+    def get_actions(self, advertiser, number, action_type, url_pattern, action_id=False):
         try:
-            actions = yield self.defer_get_actions(advertiser,number, action_type,url_pattern)
-            if len(actions) ==0:
-                self.set_status(400)
-                self.write(ujson.dumps({"error":str(Exception("No Data"))}))
+            if action_id:
+                seg_data = self.get_one_filter_id(url_pattern, advertiser, action_id)
+                self.write(seg_data)
                 self.finish()
             else:
-                versioning = self.request.uri
-                if versioning.find('v1') >=0:
-                    if type(actions) == type(pandas.DataFrame()):
-                        seg_data = {"domains": Convert.df_to_values(actions)}
-                        self.write(ujson.dumps(seg_data))
-                        self.finish()
-                    else:
-                        self.get_content_v1(actions)
+                actions = yield self.defer_get_actions(advertiser,number, action_type,url_pattern)
+                if len(actions) ==0:
+                    self.set_status(400)
+                    self.write(ujson.dumps({"error":str(Exception("No Data"))}))
+                    self.finish()
                 else:
-                    summary = self.summarize(actions)
-                    self.get_content_v2(actions, summary)
+                    versioning = self.request.uri
+                    if versioning.find('v1') >=0:
+                        if type(actions) == type(pandas.DataFrame()):
+                            seg_data = {"domains": Convert.df_to_values(actions)}
+                            self.write(ujson.dumps(seg_data))
+                            self.finish()
+                        else:
+                            self.get_content_v1(actions)
+                    else:
+                        summary = self.summarize(actions)
+                        self.get_content_v2(actions, summary)
         except:
             self.finish()
     
@@ -99,5 +112,7 @@ class ActionDashboardHandler(BaseHandler):
         limit = self.get_argument("limit", 5)
         action_type = self.get_argument("action_type", "segment")
         url_pattern = self.get_argument("url_pattern", False)
-        self.get_actions(ad,limit, action_type, url_pattern)
+        filter_id = self.get_argument("filter_id", False)
+        
+        self.get_actions(ad,limit, action_type, url_pattern, filter_id)
 	
