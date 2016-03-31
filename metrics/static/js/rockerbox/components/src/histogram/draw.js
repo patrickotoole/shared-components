@@ -81,7 +81,6 @@ function draw() {
           .attr('y', function() {
             return -(bar_height + 5) + (i * bar_height);
           })
-          .attr('points', '75,75 91,75 83,85')
           .attr('points', a + ' ' + b + ' ' + c + ' ' + d + ' ' + e)
 
 
@@ -122,15 +121,16 @@ function draw() {
 
     tooltip
       .append('polygon')
-      .attr('fill', '#000')
+      .attr('fill', '#fff')
       .attr('width', '16')
       .attr('height', '10')
       .attr('fill-opacity', '.9')
+      .attr('style', 'stroke: black;')
 
     tooltip
       .append('text')
       .attr('x', '110')
-      .attr('fill', '#fff')
+      .attr('fill', '#000')
       .attr('text-anchor', 'middle')
       .text('4')
   }
