@@ -19,9 +19,10 @@ import model
 from helpers import check_required_days
 from base_timeseries import TimeseriesBase
 from base_visitors import VisitorBase
+from ...domains.base_helpers import *
+from ..search_helpers import SearchHelpers
 
-
-class PatternSearchBase(TimeseriesBase,VisitorBase):
+class PatternSearchBase(TimeseriesBase,VisitorBase, SearchHelpers):
 
     @defer.inlineCallbacks
     def get_uid_domains(self, advertiser, pattern_terms, date_clause, process=False, filter_id=False, logic="or",timeout=60, numdays=5):
@@ -116,9 +117,9 @@ class PatternSearchBase(TimeseriesBase,VisitorBase):
         df = raw_urls.groupby(["uid"])['date'].apply(lambda x: pandas.DataFrame( pandas.Series({"visits":len(x),"sessions": len(x.unique())} ) ).T )
         results = df.reset_index()[['uid','sessions','visits']].to_dict('records')
 
-        response = self.default_response(pattern_terms,logic)
+        response = default_response(pattern_terms,logic)
         response['results'] = results
-
+        
         self.write_json(response)
 
 
@@ -134,8 +135,8 @@ class PatternSearchBase(TimeseriesBase,VisitorBase):
             idf = yield self.get_idf(list(set(domains.domain)))
             domains = domains.merge(idf,on="domain")
 
-        response = self.default_response(pattern_terms,logic,no_results=True)
-        response = self.response_domains(response,domains)
+        response = default_response(pattern_terms,logic,no_results=True)
+        response = response_domains(response,domains)
 
         self.write_json(response)
 
