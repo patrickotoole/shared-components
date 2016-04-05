@@ -13,8 +13,9 @@ from lib.helpers import *
 from lib.cassandra_helpers.helpers import FutureHelpers
 from lib.cassandra_cache.helpers import *
 from generic import *
+from ...domains.base_domain_handler import BaseDomainHandler
 
-class TimeseriesBase(GenericSearchBase):
+class TimeseriesBase(GenericSearchBase, BaseDomainHandler):
 
 
     @defer.inlineCallbacks

@@ -2,6 +2,7 @@ import pandas
 import logging
 from lib.helpers import *
 from twisted.internet import defer
+from ...domains.base_domain_handler import BaseDomainHandler
 
 def get_idf(db,domain_set):
     QUERY = """
@@ -61,7 +62,7 @@ def build_dict_dataframe(field):
     return formatter
 
 
-class PatternSearchHelpers(object):
+class PatternSearchHelpers(BaseDomainHandler):
 
     @defer.inlineCallbacks
     def deferred_reformat_stats(self,domain_stats_df,url_stats_df):
@@ -89,33 +90,8 @@ class PatternSearchHelpers(object):
             return pandas.DataFrame()
 
 
-    @decorators.deferred
-    def domain_stats_to_domains(self,domain_stats_df):
-        import time
-        start = time.time()
-        if len(domain_stats_df):
-            df = group_sum_sort_np_array(domain_stats_df['domains'].values,"domain")
-            print start - time.time()
-            return df
-        else:
-            return pandas.DataFrame()
-
-
     def head_and_tail(self,l):
         return (l[0], l[1:])
-
-    def calc_stats(self,df):
-
-        # THIS DOES THE SAMPLING TRANSFORMATION
-        # HACK: see (self.sample_used)
-        multiplier = 100/self.sample_used if self.sample_used else 1
-        series = df["url"] + df["uid"]
-        
-        return pandas.Series({
-            "uniques":len(df.uid.unique())*multiplier,
-            "visits":len(series.unique())*multiplier,#len(df.groupby(["url","uid"])),
-            "views":len(df)*multiplier#.num_views.sum()
-        })
 
     def group_count_view(self,df,terms,indices):
         df = df.groupby(indices).agg({"uid":len})
@@ -147,9 +123,6 @@ class PatternSearchHelpers(object):
 
         return url_to_action
     
-    def get_idf(self,domains):
-        return get_idf(self.db,domains)
-
     def get_pixels(self):
         Q = "SELECT * from action_with_patterns where pixel_source_name = '%s'"
         pixel_df = self.db.select_dataframe(Q % self.current_advertiser_name)
