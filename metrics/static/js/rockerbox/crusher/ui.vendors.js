@@ -129,7 +129,6 @@ RB.crusher.ui.vendors = (function(vendors) {
       return typeof x.visits_data === typeof undefined;
     });
 
-    console.log('vendors_list_items', vendors_list_items);
     var vendor = vendors_list_items.data()
       .filter(function(x) {
         return typeof x.visits_data === typeof undefined;
@@ -270,7 +269,6 @@ RB.crusher.ui.vendors = (function(vendors) {
     vendor_views_column.each(function(x){
       if(typeof x.visits_data !== typeof undefined) {
         var toDraw = d3.select(this);
-        // console.log('x',JSON.serialize(x));
         x.visits_data.sort(function(a,b) {
           return (new Date(a.key) - new Date(b.key));
         });

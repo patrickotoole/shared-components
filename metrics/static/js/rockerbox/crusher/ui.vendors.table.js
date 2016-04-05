@@ -15,9 +15,9 @@ RB.crusher.ui.vendors = (function(vendors) {
       .subscribe()
       .filter(obj.filter)  // NOTE: order matters here (bad.)
       .initialize(subscribe_to) // if you set .datum(DATA), there is no initial subscription
-      .on('click',function() {
-        RB.crusher.controller.initializers.vendors(obj,false)
-      })
+      // .on('click',function() {
+      //   RB.crusher.controller.initializers.vendors(obj,false)
+      // })
 
   }
 

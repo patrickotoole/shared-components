@@ -25,6 +25,7 @@ RB.menu.action = {
         .html(function(x){return x.key + " <span style='color:#ddd'>("+ x.count + ")</span>"})
         .attr("style",function(x,i){ return (x.key == data.selection) ? undefined : "background:none" })
         .on("click",function(x){
+          d3.selectAll('.funnels').remove();
           var self = this;
           items.style("background","none")
           items.filter(function(){ return this == self}).style("background",undefined)
