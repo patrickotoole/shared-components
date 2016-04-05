@@ -1,4 +1,71 @@
 (function(d,w,RB) {
+
+  Array.prototype.map = Array.prototype.map || function(fn){
+    var y = []; var length = this.length; for (var i = 0; i < length; i++) { y.push(fn(this[i],i)); }
+    return y
+  }
+
+  Object.keys = Object.keys || function(obj) {
+    var theKeys = []; for (var name in obj) { theKeys.push(name); }
+    return theKeys
+  }
+
+  var base64 = {};
+  base64.PADCHAR = '=';
+  base64.ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+
+  base64.decode = function(s) {
+    s = '' + s;
+    var getbyte64 = function(s,i) {
+      var idx = base64.ALPHA.indexOf(s.charAt(i));
+      if (idx === -1) {
+          throw base64.makeDOMException();
+      }
+      return idx;
+    };
+    var pads, i, b10;
+    var imax = s.length
+    if (imax === 0) {
+      return s;
+    }
+
+    if (imax % 4 !== 0) {
+      throw base64.makeDOMException();
+    }
+
+    pads = 0
+    if (s.charAt(imax - 1) === base64.PADCHAR) {
+      pads = 1;
+      if (s.charAt(imax - 2) === base64.PADCHAR) {
+          pads = 2;
+      }
+      // either way, we want to ignore this last block
+      imax -= 4;
+    }
+
+    var x = [];
+    for (i = 0; i < imax; i += 4) {
+      b10 = (getbyte64(s,i) << 18) | (getbyte64(s,i+1) << 12) |
+          (getbyte64(s,i+2) << 6) | getbyte64(s,i+3);
+      x.push(String.fromCharCode(b10 >> 16, (b10 >> 8) & 0xff, b10 & 0xff));
+    }
+
+    switch (pads) {
+    case 1:
+        b10 = (getbyte64(s,i) << 18) | (getbyte64(s,i+1) << 12) | (getbyte64(s,i+2) << 6);
+        x.push(String.fromCharCode(b10 >> 16, (b10 >> 8) & 0xff));
+        break;
+    case 2:
+        b10 = (getbyte64(s,i) << 18) | (getbyte64(s,i+1) << 12);
+        x.push(String.fromCharCode(b10 >> 16));
+        break;
+    }
+    return x.join('');
+  }
+
+  var atob = atob || base64.decode;
+
+
   w.RB = RB;
   var sources = atob(RB.source).split("|")
     , RB = RB
