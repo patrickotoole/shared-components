@@ -3,8 +3,9 @@ import pandas
 import logging
 
 from base import PatternSearchBase
+from helpers import PatternSearchHelpers
 
-class PatternSearchHandler(PatternSearchBase):
+class PatternSearchHandler(PatternSearchBase, PatternSearchHelpers):
 
     def initialize(self, db=None, cassandra=None, zookeeper=None, **kwargs):
         self.logging = logging
