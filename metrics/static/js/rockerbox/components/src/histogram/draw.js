@@ -54,7 +54,46 @@ function draw() {
       })
       .attr('stroke', 'white')
       .attr('stroke-width', '2px')
-      .attr('height', bar_height);
+      .attr('height', bar_height)
+      .on('mouseenter', function(x, i, y, z) {
+        // debugger;
+        d3.select(d3.select(this)[0][0].parentElement).select('.histogram-tooltip')
+          .attr('display', 'block')
+
+        var a1 = 1;
+        var a2 = -25;
+        var b1 = 70;
+        var b2 = -25;
+        var c1 = 70;
+        var c2 = -5;
+        var d1 = 7;
+        var d2 = -5;
+        var e1 = 1;
+        var e2 = 2;
+
+        var a = (a1 + 75) + ',' + (a2 + (i * bar_height));
+        var b = (b1 + 75) + ',' + (b2 + (i * bar_height));
+        var c = (c1 + 75) + ',' + (c2 + (i * bar_height));
+        var d = (d1 + 75) + ',' + (d2 + (i * bar_height));
+        var e = (e1 + 75) + ',' + (e2 + (i * bar_height));
+
+        d3.select(d3.select(this)[0][0].parentElement).select('.histogram-tooltip polygon')
+          .attr('y', function() {
+            return -(bar_height + 5) + (i * bar_height);
+          })
+          .attr('points', a + ' ' + b + ' ' + c + ' ' + d + ' ' + e)
+
+
+        d3.select(d3.select(this)[0][0].parentElement).select('.histogram-tooltip text')
+          .attr('y', function() {
+            return -11 + (i * bar_height);
+          })
+          .text(x.value)
+      })
+      .on('mouseleave', function() {
+        d3.select(d3.select(this)[0][0].parentElement).select('.histogram-tooltip')
+          .attr('display', 'none')
+      });
 
     this._base.svg.selectAll('.label')
       .data(data, function(x) {
@@ -74,6 +113,26 @@ function draw() {
       })
       .attr('line-height', bar_height)
       .style('color', '#000');
+
+
+    var tooltip = d3.select(this._base.svg)[0][0].append('g')
+      .attr('display', 'none')
+      .attr('class', 'histogram-tooltip');
+
+    tooltip
+      .append('polygon')
+      .attr('fill', '#fff')
+      .attr('width', '16')
+      .attr('height', '10')
+      .attr('fill-opacity', '.9')
+      .attr('style', 'stroke: black;')
+
+    tooltip
+      .append('text')
+      .attr('x', '110')
+      .attr('fill', '#000')
+      .attr('text-anchor', 'middle')
+      .text('4')
   }
 }
 
