@@ -12,3 +12,4 @@ from search import *
 from domain_idf import DomainIDFHandler
 from onsite_stats import OnSiteStatsHandler
 from domains.visitor.cache_handler import ActionDashboardHandler
+from yoshi import YoshiHandler
