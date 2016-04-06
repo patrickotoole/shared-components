@@ -15,6 +15,7 @@ from lib.helpers import *
 import lib.cassandra_helpers.helpers
 from lib.cassandra_helpers.helpers import FutureHelpers
 from lib.cassandra_cache.helpers import *
+import lib.custom_defer as custom_defer
 from base import  VisitDomainBase
 from ..search.search_helpers import SearchHelpers, SearchCassandraHelpers
 
@@ -126,7 +127,8 @@ class BaseDomainHandler(BaseHandler, AnalyticsBase, CassandraRangeQuery, VisitDo
         url_stats_df.name = "urls"
 
         return (stats_df, pandas.DataFrame(url_stats_df),df)
-
+    
+    #@custom_defer.inlineCallbacksErrors
     @defer.inlineCallbacks
     def sample_stats_onsite(self, term, params, advertiser, date_clause, numdays=20,allow_sample=True):
 
