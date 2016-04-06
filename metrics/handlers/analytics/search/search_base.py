@@ -14,7 +14,7 @@ from lib.helpers import *
 from cassandra import OperationTimedOut
 from lib.cassandra_helpers.range_query import CassandraRangeQuery
 from lib.zookeeper.zk_pool import ZKPool
-
+from ..domains.base_domain_handler import BaseDomainHandler
 
 
 def build_datelist(numdays):
@@ -28,7 +28,7 @@ def build_datelist(numdays):
 
 
 
-class SearchCassandra(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuery):
+class SearchCassandra(BaseDomainHandler,SearchHelpers):
 
     def get_udf(self,lock):
         udf_name = lock.get()
@@ -93,22 +93,6 @@ class SearchCassandra(SearchHelpers,AnalyticsBase,BaseHandler,CassandraRangeQuer
         return results
 
 
-    def run_cache(self,pattern,advertiser,dates,start=0,end=10,results=[]):
-
-        data = self.data_plus_values([[advertiser,pattern[0]]],dates)
-        cb_args = [advertiser,pattern,results]
-        cb_kwargs = {"statement":self.cache_statement}
-        
-        is_suffice = helpers.sufficient_limit()
-
-        response = self.run_range(data,start,end,helpers.cache_callback,*cb_args,**cb_kwargs)
-        self.sample_used = end
-
-        _,_, results = response
-        
-        return results
-
-        
     def run_uniques(self, advertiser, pattern, dates):
         import datetime
         import pickle
@@ -137,34 +121,6 @@ class SearchBase(SearchCassandra):
         
         return defer.DeferredList(dl)
 
-    @decorators.deferred
-    def defer_execute(self, selects, advertiser, pattern, date_clause, logic, 
-                      allow_sample=True, should_cache=False, timeout=60, numdays=20, force_cache=True):
-
-        dates = build_datelist(numdays)
-        inserts, results = [], []
-
-        sample = (0,5) if allow_sample else (0,100)
-        self.sample_used = sample[1]
-
-        # check if the cache has enough days in it
-        # if not, skip the cache and go direct
-        from link import lnk
-        URL = "select * from pattern_cache where pixel_source_name = '%s' and url_pattern = '%s'"
-        df = lnk.dbs.rockerbox.select_dataframe(URL % (advertiser,pattern[0]))
-
-        if force_cache or (len(df[df.num_days > 5]) > 0):
-            results = self.run_cache(pattern,advertiser,dates,sample[0],sample[1],results)
-            logging.info("Results in cache: %s" % len(results))
-        
-        if len(results) == 0:
-            results = self.run(pattern,advertiser,dates,results)
-
-        df = pandas.DataFrame(results)
-
-        return df
-
-        
 
     @defer.inlineCallbacks
     def get_count(self, advertiser, terms, date_clause, logic="should",timeout=60):

@@ -10,69 +10,14 @@ from lib.helpers import *
 
 from lib.cassandra_cache.helpers import *
 
-from handlers.analytics.domains.base import VisitDomainBase
-
 from stats import PatternStatsBase
 from response import PatternSearchResponse
-from sample import PatternSearchSample
 from ...visit_events import VisitEventBase
-
+from helpers import PatternSearchHelpers
 from lib.aho import AhoCorasick
+from ..search_helpers import SearchHelpers
 
-
-class FilterBase:
-
-    def get_filter(self,filter_id):
-        Q = "SELECT * FROM action_filters WHERE action_id = %s and active = 1 and deleted = 0"
-        return self.db.select_dataframe(Q % filter_id) 
-
-    @decorators.deferred
-    def get_filter_checker(self,filter_id):
-        df = self.get_filter(filter_id)
-        checker = AhoCorasick(list(df.filter_pattern)).has_match
-
-        logging.info("constructed aho")
-        return checker
-
-    def run_filter_url(self,aho_filter,urls):
-        truth_dict = { i: aho_filter(i) for i in urls }
-        logging.info("ran aho filter on %s domains" % len(urls))
-        return truth_dict
-
-
-    @defer.inlineCallbacks
-    def filter_and_build(self,full_df,dates,filter_id):
-        aho_filter = yield self.get_filter_checker(filter_id)
-        urls = set(full_df.url)
-        value = self.run_filter_url(aho_filter,urls)
-
-        df = full_df[full_df.url.map(lambda x: value[x] )]
-        to_return = self.raw_to_stats(df,dates)
-
-        defer.returnValue(to_return)
-
-
-
-class GenericSearchBase(FilterBase,VisitDomainBase,PatternSearchSample,PatternStatsBase,PatternSearchResponse,VisitEventBase):
-
-
-    @defer.inlineCallbacks
-    def get_sampled(self,advertiser,term,dates,num_days,allow_sample=True,filter_id=False):
-        sample_args = [term,"",advertiser,dates,num_days,allow_sample]
-
-        full_df, stats_df, url_stats_df, _ = yield self.sample_stats_onsite(*sample_args)
-        if filter_id:
-            stats_df, url_stats_df, full_df = yield self.filter_and_build(full_df,dates,filter_id)
-      
-
-        if (len(full_df.uid.unique()) == 1) or (stats_df.sum().sum() == 0) and allow_sample:
-            logging.info("Didnt find anything in the sample! query all the data!")
-            sample_args = [term,"",advertiser,dates,num_days,False]
-            full_df, stats_df, url_stats_df, _ = yield self.sample_stats_onsite(*sample_args)
-            if filter_id:
-                stats_df, url_stats_df, full_df = yield self.filter_and_build(full_df,dates,filter_id)
-        defer.returnValue([full_df, stats_df, url_stats_df, full_df])
-
+class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,PatternSearchHelpers, SearchHelpers):
 
 
     @defer.inlineCallbacks

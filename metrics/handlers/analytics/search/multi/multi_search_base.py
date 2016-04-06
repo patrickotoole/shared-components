@@ -10,7 +10,7 @@ from twisted.internet import defer
 from lib.helpers import decorators
 from lib.helpers import *
 
-class MultiSearchBase(VisitDomainBase,SearchBase,MultiSearchHelpers):
+class MultiSearchBase(SearchBase,MultiSearchHelpers):
 
     def build_deferred_list(self,steps,logic,advertiser,date_clause,PARAMS):
 

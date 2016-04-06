@@ -12,11 +12,13 @@ from transforms.domain_intersection import *
 from model import process_model
 from generic import GenericSearchBase
 import lib.custom_defer as custom_defer
+from ...domains.base_domain_handler import BaseDomainHandler
+from ...domains.base_helpers import *
 
 DEFAULT_FUNCS = [process_before_and_after, process_hourly, process_sessions, process_domain_intersection, process_model]
 
 
-class VisitorBase(GenericSearchBase):
+class VisitorBase(GenericSearchBase, BaseDomainHandler):
 
     DEFAULT_FUNCS = DEFAULT_FUNCS
 
@@ -50,7 +52,7 @@ class VisitorBase(GenericSearchBase):
 
         NUM_DAYS = 2
         ALLOW_SAMPLE = True
-        response = self.default_response(pattern_terms,"and")
+        response = default_response(pattern_terms,"and")
         args = [advertiser,pattern_terms[0][0],build_datelist(NUM_DAYS),NUM_DAYS,response,ALLOW_SAMPLE,filter_id]
 
         now = time.time()
