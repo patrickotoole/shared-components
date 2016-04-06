@@ -4,21 +4,18 @@ import pandas
 import StringIO
 import logging
 import re
+from lib.zookeeper.zk_pool import ZKPool
 
 from link import lnk
-from user.full_handler import VisitDomainsFullHandler
 from handlers.base import BaseHandler
-from ..analytics_base import AnalyticsBase
 from twisted.internet import defer
 from lib.helpers import decorators
 from lib.helpers import *
-import lib.cassandra_helpers.helpers
-from lib.cassandra_helpers.helpers import FutureHelpers
 from lib.cassandra_cache.helpers import *
 import lib.custom_defer as custom_defer
 from base import  VisitDomainBase
-from ..search.search_helpers import SearchHelpers, SearchCassandraHelpers
 
+from ..search.search_helpers import SearchCassandraHelpers
 helpers = SearchCassandraHelpers
 
 from lib.aho import AhoCorasick
@@ -47,6 +44,29 @@ class BaseDomainHandler(BaseHandler, AnalyticsBase, CassandraRangeQuery, VisitDo
         logging.info("ran aho filter on %s domains" % len(urls))
         return truth_dict
 
+    def get_udf(self,lock):
+        udf_name = lock.get()
+        state, udf = udf_name.split("|")
+        udf = udf.replace(",",", ")
+
+        logging.info("state: %s, udf: %s" % (state, udf))
+
+        return state, udf
+
+    def build_udf(self,udf_name,pattern):
+        INSERT_UDF = "insert into full_replication.function_patterns (function,pattern) VALUES ('%s','%s')"
+        SELECT_UDF = "select * from full_replication.function_patterns where function = '%s' "
+
+        self.cassandra.execute(INSERT_UDF % (udf_name,pattern[0]))
+        print self.cassandra.select_dataframe(SELECT_UDF % (udf_name))
+
+    def udf_statement(self,udf):
+        QUERY  = """SELECT %(what)s FROM rockerbox.visit_uids_lucene_timestamp_u2_clustered %(where)s"""
+        WHAT   = """date, %s""" % udf
+        WHERE  = """WHERE source = ? and date = ? and u2 = ?"""
+
+        return self.build_statement(QUERY,WHAT,WHERE)
+
     @property
     def cache_statement(self):
         CACHE_QUERY = """SELECT %(what)s from rockerbox.pattern_occurrence_u2_counter where %(where)s"""
@@ -70,6 +90,30 @@ class BaseDomainHandler(BaseHandler, AnalyticsBase, CassandraRangeQuery, VisitDo
 
         return results
 
+    def run_uncache(self,pattern,advertiser,dates,results=[],limit=1500):
+        # run SAMPLE
+
+        zk_lock = ZKPool(zk=self.zookeeper)
+        with zk_lock.get_lock() as lock:
+
+            udf_func, udf_selector = self.get_udf(lock)
+            self.build_udf(udf_func,pattern)
+
+            data = self.data_plus_values([[advertiser]], dates)
+            callback_args = [advertiser,pattern,results]
+            is_suffice = helpers.sufficient_limit(limit)
+
+            stmt = self.udf_statement(udf_selector)
+            cb = helpers.wrapped_select_callback(udf_selector)
+
+            response, sample = self.run_sample(data,cb,is_suffice,*callback_args,statement=stmt)
+
+            self.sample_used = sample # NOTE: this is a hack used to scale up the data
+            _, _, result = response
+
+        return results
+
+
     @decorators.deferred
     def defer_execute(self, selects, advertiser, pattern, date_clause, logic,
                       allow_sample=True, should_cache=False, timeout=60, numdays=20, force_cache=True):
@@ -91,7 +135,7 @@ class BaseDomainHandler(BaseHandler, AnalyticsBase, CassandraRangeQuery, VisitDo
             logging.info("Results in cache: %s" % len(results))
 
         if len(results) == 0:
-            results = self.run(pattern,advertiser,dates,results)
+            results = self.run_uncache(pattern,advertiser,dates,results)
 
         df = pandas.DataFrame(results)
 

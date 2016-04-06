@@ -13,11 +13,11 @@ from lib.cassandra_cache.helpers import *
 from stats import PatternStatsBase
 from response import PatternSearchResponse
 from ...visit_events import VisitEventBase
-from ...domains.base_domain_handler import BaseDomainHandler
+from helpers import PatternSearchHelpers
 from lib.aho import AhoCorasick
+from ..search_helpers import SearchHelpers
 
-
-class GenericSearchBase(BaseDomainHandler,PatternStatsBase,PatternSearchResponse,VisitEventBase):
+class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,PatternSearchHelpers, SearchHelpers):
 
 
     @defer.inlineCallbacks
