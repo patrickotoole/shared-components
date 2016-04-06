@@ -26,6 +26,9 @@ class VisitorKeywordsHandler(PatternSearchCache,VisitDomainsFullHandler):
         self.db = db
         self.cassandra = cassandra
         self.limit = None
+        f = file("handlers/analytics/domains/visitor/training.json")
+        self.unigrams = ujson.loads(f.read())
+        self.numWords = len(self.unigrams)
         self.zookeeper = zookeeper
 
 
@@ -50,7 +53,10 @@ class VisitorKeywordsHandler(PatternSearchCache,VisitDomainsFullHandler):
             return x.replace("-","/").split("/")
 
         def split_nltk_url(x):
-            return model.addToSet(x, self.unigrams, self.numWords)
+            if x !="":
+                return model.addToSet(x, self.unigrams, self.numWords)
+            else:
+                return [""]
 
         GROUPS = ["url","uniques"]
         EXPAND_BY = "url"

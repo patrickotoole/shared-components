@@ -39,7 +39,7 @@ def addToSet(sentence, unigrams, numWords):
             if i == len(sentence):
                 valid = 1
             for j in range ((i+1),len(sentence)+1):
-                if isInDictionary(sentence[i:j]):
+                if isInDictionary(sentence[i:j], unigrams):
                     if (abs((unigrams[sentence[i:j]]/numWords)*values[backpointer[i-1]])) >= values[j-1]:
                         values[j-1] = abs(((unigrams[sentence[i:j]]/numWords)*values[backpointer[i-1]]))
                         backpointer[j-1] = i
