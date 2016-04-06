@@ -11,7 +11,7 @@ RB.crusher.controller = (function(controller) {
 
   controller.init = function(type, data) {
     pubsub.subscriber("advertiser-name-email", ["advertiser", "current_user"])
-      .run(RB.crusher.metrics)
+      .run(RB.crusher.metrics.init)
       .unpersist(true)
       .trigger()
 
@@ -365,6 +365,24 @@ RB.crusher.controller = (function(controller) {
       //crusher.subscribe.add_subscriber(["recommended_actions","actions"],subscription ,"actionDashboard",true,true)
 
     },
+    "action/dashboard": function(action) {
+
+      RB.component.export(RB.crusher.ui.funnel.show, RB.crusher.ui.funnel)
+      RB.component.export(RB.crusher.ui.action.show, RB.crusher.ui.action)
+
+
+      var funnelRow = build_header({
+        'id': 'action-dashboard',
+        'name': 'Action Dashboard'
+      });
+
+      
+      action.filter = function(x) {return x.featured }
+      action.selection = "actions"
+
+      RB.crusher.ui.vendors.show(funnelRow, action);
+      
+    },
     "action/existing": function(action) {
 
 
@@ -555,6 +573,7 @@ RB.crusher.controller = (function(controller) {
       "funnel/new": [],
       "funnel/existing": ['funnels'],
       "action/existing": ['actions'],
+      "action/dashboard": ['actions'],
       "action/new": [],
       "action/recommended": ["recommended_actions"],
       "analytics": [{
@@ -633,7 +652,9 @@ RB.crusher.controller = (function(controller) {
     }
   }
 
-  controller.states = {}
+  controller.states = {
+    "/crusher/action/dashboard":{name: "Dashboard", push_state: "/crusher/action/dashboard"}
+  }
 
   Object.keys(controller.routes.apis).map(function(k) {
     if (controller.routes.apis[k].length > 0 && typeof(controller.routes.apis[k][0]) == "object") {

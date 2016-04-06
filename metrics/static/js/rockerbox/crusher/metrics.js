@@ -3,6 +3,8 @@ RB.crusher = RB.crusher || {};
 RB.crusher.metrics = (function(metrics) {
 
   metrics.init = function(advertiser_data, current_user) {
+
+    setTimeout(function(){
       var user_type = document.cookie.split("user_type=")[1].split(";")[0];
       switch (user_type) {
         case 'rockerbox':
