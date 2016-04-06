@@ -9,133 +9,17 @@ RB.crusher.controller = (function(controller) {
   var source = crusher.api.source
   var pubsub = crusher.pubsub
 
-
   controller.init = function(type, data) {
     pubsub.subscriber("advertiser-name-email", ["advertiser", "current_user"])
-      .run(function(advertiser_data, current_user) {
-        setTimeout(function() {
-          var user_type = document.cookie.split("user_type=")[1].split(";")[0];
-          switch (user_type) {
-            case 'rockerbox':
-              heap.identify({
-                handler: 'Rockerbox',
-                name: 'Rockerbox',
-                email: 'support@rockerbox.com'
-              });
-
-              window.intercomSettings = {
-                app_id: "rvo8kuih",
-                name: "Rockerbox",
-                email: "support@rockerbox.com",
-                created_at: 1312182000
-              };
-              (function() {
-                var w = window;
-                var ic = w.Intercom;
-                if (typeof ic === "function") {
-                  ic('reattach_activator');
-                  ic('update', intercomSettings);
-                } else {
-                  var d = document;
-                  var i = function() {
-                    i.c(arguments)
-                  };
-                  i.q = [];
-                  i.c = function(args) {
-                    i.q.push(args)
-                  };
-                  w.Intercom = i;
-
-                  function l() {
-                    var s = d.createElement('script');
-                    s.type = 'text/javascript';
-                    s.async = true;
-                    s.src = 'https://widget.intercom.io/widget/kbtc5999';
-                    var x = d.getElementsByTagName('script')[0];
-                    x.parentNode.insertBefore(s, x);
-                  }
-                  if (w.attachEvent) {
-                    w.attachEvent('onload', l);
-                  } else {
-                    l(false)
-                  }
-                }
-              })()
-              break;
-            case 'client':
-              var user = {
-                'id': current_user.id,
-                'advertiser': advertiser_data.advertiser_name,
-                'name': '(' + current_user.first_name + ' ' + current_user.last_name + ')',
-                'email': current_user.user_email
-              };
-
-              heap.identify({
-                handler: user.id,
-                name: user.name,
-                email: user.email
-              });
-
-              window.intercomSettings = {
-                app_id: "o6ats3cn",
-                user_id: user.id,
-                name: user.name,
-                email: user.email,
-                created_at: 1312182000
-              };
-              (function() {
-                var w = window;
-                var ic = w.Intercom;
-                if (typeof ic === "function") {
-                  ic('reattach_activator');
-                  ic('update', intercomSettings);
-                } else {
-                  var d = document;
-                  var i = function() {
-                    i.c(arguments)
-                  };
-                  i.q = [];
-                  i.c = function(args) {
-                    i.q.push(args)
-                  };
-                  w.Intercom = i;
-
-                  function l() {
-                    var s = d.createElement('script');
-                    s.type = 'text/javascript';
-                    s.async = true;
-                    s.src = 'https://widget.intercom.io/widget/xu33kr1z';
-                    var x = d.getElementsByTagName('script')[0];
-                    x.parentNode.insertBefore(s, x);
-                  }
-                  if (w.attachEvent) {
-                    w.attachEvent('onload', l);
-                  } else {
-                    l(false)
-                  }
-                }
-              })()
-              break;
-          }
-
-          Intercom('trackEvent', 'Page Load', {
-            'url': window.location.href
-          });
-        }, 2000)
-      })
-      .unpersist(false)
+      .run(RB.crusher.metrics)
+      .unpersist(true)
       .trigger()
 
     var id = type.split("id=")[1]
-    if (id && id.length) {
-      id = decodeURI(id)
-    }
+    if (id && id.length) { id = decodeURI(id) }
 
     var type = type.split("?")[0]
-    // debugger;
     var state = controller.states[type] || controller.states["/crusher/home"]
-
-    // state = JSON.parse(JSON.stringify(state))
     if (id) state.skipRender = true
 
     var callback = id ? function(data, x) {
@@ -358,7 +242,9 @@ RB.crusher.controller = (function(controller) {
 
       pubsub.subscriber("gettingstarted", ["pixel_status", "actions"])
         .run(function(status_data, actions) {
-          status_data.forEach(function(pixel) {
+          console.log(actions.filter(function(x){ return x.featured }));
+
+          status_data.filter(function(x){ return x.segment_name }).forEach(function(pixel) {
             if (pixel.segment_name.indexOf("All Pages") >= 0) {
               pixel_count.allpages++;
             } else if (pixel.segment_name.indexOf("Conversion") >= 0) {
