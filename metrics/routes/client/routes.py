@@ -64,7 +64,8 @@ class AdvertiserRoutes(Routes):
             (r'/location.*', appnexus.AppnexusHandler, self.connectors),
             (r'/viewability', analytics.ViewabilityHandler, self.connectors),
             (r'/availability', analytics.AvailabilityHandler, self.connectors),
-            (r'/domains', analytics.DomainsMongoHandler, self.connectors)
+            (r'/domains', analytics.DomainsMongoHandler, self.connectors),
+            (r'/yoshi', analytics.YoshiHandler, self.connectors)
 
         ]
 
