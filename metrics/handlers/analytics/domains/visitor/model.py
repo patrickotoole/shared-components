@@ -19,6 +19,8 @@ def isInDictionary(word, unigrams):
     
 def addToSet(sentence, unigrams, numWords): 
     sentence=sentence.lower()
+    keywords=[]
+    sentence = sentence.replace("/","")
 
     backpointer = [-1] * (len(sentence))
     values = [-1] * (len(sentence))
@@ -60,6 +62,9 @@ def addToSet(sentence, unigrams, numWords):
     words = final.split()
 
     for word in words:
-        if len(word)>2 and word not in ("com","net","org","these","those","http") and unigrams[word] < 8000:
-            keywords.append(word)
+        try:
+            if len(word)>2 and word not in ("com","net","org","these","those","http") and unigrams[word] < 8000:
+                keywords.append(word)
+        except:
+                keywords = keywords
     return keywords
