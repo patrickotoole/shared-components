@@ -42,6 +42,8 @@ if __name__ == "__main__":
     define("pattern", default="")
     define("run_local", default=False)
     define("base_url", "http://beta.crusher.getrockerbox.com")
+    define("run_all", False)
+    define("run_all_all", False)
 
     basicConfig(options={})
 
@@ -52,7 +54,26 @@ if __name__ == "__main__":
     connectors = {'crushercache':lnk.dbs.crushercache, 'zk':zk, 'cassandra':''}
     ckw = CacheKeywords(connectors)
     if options.run_local:
-        ckw.run_local(options.advertiser, options.pattern,options.base_url)
+        if options.run_all_all:
+            rockerbox_db = lnk.dbs.rockerbox
+            adverts = rockerbox_db.select_dataframe("select distcint pixel_source_name from action_with_patterns")
+            for ad in adverts.iterrows():
+                segs = rockerbox_db.select_dataframe("select distinct url_pattern from action_with_patterns where pixel_source_name='{}'".format(ad[1]['pixel_source_name'))
+                for seg in segs.iterrows():
+                    try:
+                        cfu.run_local(options.advertiser, seg[1]['url_pattern'],options.base_url)
+                    except:
+                        print "error with {}".format(seg[1]['url_pattern'])
+        elif options.run_all:
+            rockerbox_db = lnk.dbs.rockerbox
+            segs = rockerbox_db.select_dataframe("select distinct url_pattern from action_with_patterns where pixel_source_name='{}'".format(options.advertiser))
+            for seg in segs.iterrows():
+                try:
+                    cfu.run_local(options.advertiser, seg[1]['url_pattern'],options.base_url)
+                except:
+                    print "error with {}".format(seg[1]['url_pattern'])
+        else:
+            ckw.run_local(options.advertiser, options.pattern,options.base_url)
     else:
         ckw.run_on_work_queue(options.advertiser, options.pattern, options.base_url)
 
