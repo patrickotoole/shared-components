@@ -17,6 +17,7 @@ import lib.custom_defer as custom_defer
 from lib.cassandra_helpers.helpers import FutureHelpers
 from lib.cassandra_cache.helpers import *
 from ...search.cache.pattern_search_cache import PatternSearchCache
+import model
 
 class VisitorKeywordsHandler(PatternSearchCache,VisitDomainsFullHandler):
 
@@ -25,6 +26,9 @@ class VisitorKeywordsHandler(PatternSearchCache,VisitDomainsFullHandler):
         self.db = db
         self.cassandra = cassandra
         self.limit = None
+        f = file("handlers/analytics/domains/visitor/training.json")
+        self.unigrams = ujson.loads(f.read())
+        self.numWords = len(self.unigrams)
         self.zookeeper = zookeeper
 
 
@@ -43,16 +47,27 @@ class VisitorKeywordsHandler(PatternSearchCache,VisitDomainsFullHandler):
         return df
 
     @decorators.deferred
-    def process_visitor_domains(self, response_data):
+    def process_visitor_domains(self, response_data, nltk):
         #self.made_up()
         def split_url(x):
             return x.replace("-","/").split("/")
+
+        def split_nltk_url(x):
+            if x !="":
+                return model.addToSet(x, self.unigrams, self.numWords)
+            else:
+                return [""]
+
         GROUPS = ["url","uniques"]
         EXPAND_BY = "url"
+        if nltk:
+            split_func = split_nltk_url
+        else:
+            split_func = split_url
         def grouping_function(x):
             # want to return a series (or dataframe) that has our new expanded series as the index
             the_grouped = x[EXPAND_BY].iloc[0]
-            split_version = split_url(the_grouped)
+            split_version = split_func(the_grouped)
             values = x["uniques"].values[0]
             return pandas.DataFrame(values,columns=["unique"],index=split_version)
             
@@ -72,14 +87,14 @@ class VisitorKeywordsHandler(PatternSearchCache,VisitDomainsFullHandler):
         return filtered_df
 
     @custom_defer.inlineCallbacksErrors
-    def get_onsite_domains(self, date, kind, advertiser, pattern, num_keyword):
+    def get_onsite_domains(self, date, kind, advertiser, pattern, num_keyword, nltk):
         #self.made_up()
         logging.info("Requesting onsite domains...")
         response_data = yield self.defer_get_onsite_domains(date, advertiser, pattern)
         logging.info("Received onsite domains.")
         
         logging.info("Processing visitor domains...")
-        visitor_domains = yield self.process_visitor_domains(response_data)
+        visitor_domains = yield self.process_visitor_domains(response_data, nltk)
         versioning = self.request.uri
         if versioning.find('v1')>=0:
             self.get_content_v1(visitor_domains)
@@ -107,6 +122,7 @@ class VisitorKeywordsHandler(PatternSearchCache,VisitDomainsFullHandler):
         url_pattern = self.get_argument("url_pattern", "")
         user = self.current_advertiser_name
         num_keywords = self.get_argument("num_keywords", 3)
+        nltk = self.get_argument("nltk", False)
 
         try:
             keywords = int(num_keywords) - 1
@@ -119,5 +135,6 @@ class VisitorKeywordsHandler(PatternSearchCache,VisitDomainsFullHandler):
             kind,
             user,
             url_pattern,
-            keywords
+            keywords,
+            nltk
             )
