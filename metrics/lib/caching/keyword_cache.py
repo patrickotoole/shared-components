@@ -17,7 +17,7 @@ def make_request(advertiser,pattern, base_url):
     crusher.password="admin"
     crusher.base_url = base_url
     crusher.authenticate()
-    urls = crusher.get('/crusher/search_visitor_domains?format=json&search_type=nltk&url_pattern={}'.format(pattern), timeout=91)
+    urls = crusher.get('/crusher/v1/visitor/keywords?format=json&url_pattern={}'.format(pattern), timeout=91)
     return urls.json
 
 def add_to_table(advertiser_name, pattern, url, sql):
@@ -29,7 +29,6 @@ def runner(advertiser_name, pattern, base_url, cache_date, indentifiers="test", 
     connectors = connectors or get_connectors()
 
     db = connectors['crushercache']
-
     urls = make_request(advertiser_name, pattern, base_url)
     for url in urls:
         add_to_table(advertiser_name, pattern, url, db)

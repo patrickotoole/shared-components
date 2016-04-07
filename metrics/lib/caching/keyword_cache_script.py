@@ -56,12 +56,13 @@ if __name__ == "__main__":
     if options.run_local:
         if options.run_all_all:
             rockerbox_db = lnk.dbs.rockerbox
-            adverts = rockerbox_db.select_dataframe("select distcint pixel_source_name from action_with_patterns")
+            adverts = rockerbox_db.select_dataframe("select distinct pixel_source_name from action_with_patterns")
             for ad in adverts.iterrows():
-                segs = rockerbox_db.select_dataframe("select distinct url_pattern from action_with_patterns where pixel_source_name='{}'".format(ad[1]['pixel_source_name'))
+                query = "select distinct url_pattern from action_with_patterns where pixel_source_name='{}'".format(ad[1]['pixel_source_name'])
+                segs = rockerbox_db.select_dataframe(query)
                 for seg in segs.iterrows():
                     try:
-                        cfu.run_local(options.advertiser, seg[1]['url_pattern'],options.base_url)
+                        ckw.run_local(ad[1]['pixel_source_name'], seg[1]['url_pattern'],options.base_url)
                     except:
                         print "error with {}".format(seg[1]['url_pattern'])
         elif options.run_all:
@@ -69,7 +70,7 @@ if __name__ == "__main__":
             segs = rockerbox_db.select_dataframe("select distinct url_pattern from action_with_patterns where pixel_source_name='{}'".format(options.advertiser))
             for seg in segs.iterrows():
                 try:
-                    cfu.run_local(options.advertiser, seg[1]['url_pattern'],options.base_url)
+                    ckw.run_local(options.advertiser, seg[1]['url_pattern'],options.base_url)
                 except:
                     print "error with {}".format(seg[1]['url_pattern'])
         else:
