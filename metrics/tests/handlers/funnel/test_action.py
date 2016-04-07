@@ -19,6 +19,7 @@ CREATE TABLE `action` (
   `action_name` varchar(100) DEFAULT NULL,
   `action_type` enum('segment','vendor') DEFAULT 'segment',
   `active` tinyint(1) DEFAULT '1',
+  `featured` tinyint(1) DEFAULT '1',
   PRIMARY KEY (`action_id`)
 )
 """
@@ -31,13 +32,13 @@ CREATE TABLE `action_patterns` (
 """
 
 ACTION_FIXTURE_1 = """
-INSERT INTO action (`action_id`,`start_date`,`end_date`, `operator`, `pixel_source_name`, `action_name`, `action_type`, `active`) 
-VALUES (1,0,0,"and","alan","alans_action","segment",1)
+INSERT INTO action (`action_id`,`start_date`,`end_date`, `operator`, `pixel_source_name`, `action_name`, `action_type`, `active`, `featured`) 
+VALUES (1,0,0,"and","alan","alans_action","segment",1,1)
 """
 
 ACTION_FIXTURE_2 = """
-INSERT INTO action (`action_id`,`start_date`,`end_date`, `operator`, `pixel_source_name`, `action_name`, `action_type`, `active`) 
-VALUES (2,0,0,"and","will","wills_action", "segment",1) 
+INSERT INTO action (`action_id`,`start_date`,`end_date`, `operator`, `pixel_source_name`, `action_name`, `action_type`, `active`, `featured`) 
+VALUES (2,0,0,"and","will","wills_action", "segment",1,1) 
 """
 
 class ActionTest(AsyncHTTPTestCase):
