@@ -57,13 +57,14 @@ export default function(target) {
     ]
 
     if (y.domains_full) {
-      var data = y.domains_full.map(function(x,i){x.key = i; return x})
+      var data = y.domains_full.map(function(x,i){return x})
         .filter(function(x) {
           var l = document.createElement("a");
           if(x.url.slice(0, 7) !== 'http://' && x.url.slice(0, 7) !== 'https:/') {
             x.url = 'http://' + x.url;
           }
           l.href = x.url;
+          x.key = l.host
           return (l.pathname.length >= 12) 
 
         })

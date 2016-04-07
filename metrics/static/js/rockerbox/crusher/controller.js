@@ -382,6 +382,8 @@ RB.crusher.controller = (function(controller) {
       action.filter = function(x) {return x.featured }
       action.selection = ["actions"]
       action.subscriptions = ["cached_visitor_domains"]
+      action.items = ["bar","table"]
+
 
       RB.crusher.ui.vendors.show(funnelRow, action);
       

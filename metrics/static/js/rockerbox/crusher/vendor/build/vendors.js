@@ -63,13 +63,14 @@
       ]
 
       if (y.domains_full) {
-        var data = y.domains_full.map(function(x,i){x.key = i; return x})
+        var data = y.domains_full.map(function(x,i){return x})
           .filter(function(x) {
             var l = document.createElement("a");
             if(x.url.slice(0, 7) !== 'http://' && x.url.slice(0, 7) !== 'https:/') {
               x.url = 'http://' + x.url;
             }
             l.href = x.url;
+            x.key = l.host
             return (l.pathname.length >= 12) 
 
           })
@@ -693,7 +694,7 @@
     this._wrapper = this.render_wrapper(target)
     this._data = []
     this._on = {}
-    this._render_items = ["bar","table"]
+    this._render_items = ["visits","pie","onsite"] //["bar","table"]
   }
 
   function datum(d) {
@@ -752,6 +753,11 @@
     on: function(x,y) { this._on[x] = y; return this },
     filter: function(x) {
       this._filter = x
+      return this
+    },
+    items: function(x) {
+      if (x === undefined) return this._render_items;
+      if (x) this._render_items = x;
       return this
     },
 

@@ -22,7 +22,7 @@ export function Expanded(target) {
   this._wrapper = this.render_wrapper(target)
   this._data = []
   this._on = {}
-  this._render_items = ["bar","table"]
+  this._render_items = ["visits","pie","onsite"] //["bar","table"]
 }
 
 function datum(d) {
@@ -81,6 +81,11 @@ Expanded.prototype = {
   on: function(x,y) { this._on[x] = y; return this },
   filter: function(x) {
     this._filter = x
+    return this
+  },
+  items: function(x) {
+    if (x === undefined) return this._render_items;
+    if (x) this._render_items = x;
     return this
   },
 

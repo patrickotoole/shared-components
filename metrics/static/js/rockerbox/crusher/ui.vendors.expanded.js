@@ -10,8 +10,10 @@ RB.crusher.ui.vendors = (function(vendors) {
 
     var subscribe_to = (obj.selection) ? "actions" : undefined;
     var subscriptions = obj.subscriptions || undefined;
+    var items = obj.items || false;
  
     var xx = window.vendors.vendor_expanded(funnelRow)
+      .items(items)
       .subscribe(subscriptions)
       .filter(obj.filter)
       .initialize(subscribe_to) // if you set .datum(DATA), there is no initial subscription
