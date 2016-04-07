@@ -22,10 +22,11 @@ QUERY2 = "select distinct * from uids_only_visits_cache where advertiser = '{}' 
 
 class UidsCacheHandler(BaseHandler, AnalyticsBase, APIHelpers):
 
-    def initialize(self, db=None, cassandra=None, **kwargs):
+    def initialize(self, db=None, cassandra=None, crushercache=None, **kwargs):
         self.logging = logging
         self.db = db
         self.cassandra = cassandra
+        self.crushercache = crushercache
 
     @decorators.formattable
     def get_content(self, data):
@@ -37,10 +38,9 @@ class UidsCacheHandler(BaseHandler, AnalyticsBase, APIHelpers):
     @decorators.deferred
     def defer_get_uids_cache(self, advertiser, pattern):
 
-        sql = lnk.dbs.rockerbox
 
-        results1 = sql.select_dataframe(QUERY1.format(advertiser, pattern))
-        results2 = sql.select_dataframe(QUERY2.format(advertiser, pattern))
+        results1 = self.crushercache.select_dataframe(QUERY1.format(advertiser, pattern))
+        results2 = self.crushercache.select_dataframe(QUERY2.format(advertiser, pattern))
         df = {"sessions":
         ujson.loads(pandas.DataFrame(results1)[["num_sessions","sessions_user_count"]].to_json(orient='records')),"visits":ujson.loads(pandas.DataFrame(results2)[["num_visits","visit_user_count"]].to_json(orient='records'))}
         temp = results1.set_index("num_sessions").to_dict()

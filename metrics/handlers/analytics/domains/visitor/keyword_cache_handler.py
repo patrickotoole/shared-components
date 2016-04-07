@@ -23,11 +23,14 @@ QUERY = "select advertiser, url_pattern, keyword, count from keyword_crusher_cac
 
 class KeywordCacheHandler(PatternSearchCache,VisitDomainsFullHandler):
 
+    def initialize(self, db=None, crushercache=None, **kwargs):
+        self.db = db
+        self.crushercache = crushercache
+
     @decorators.deferred
     def defer_get_onsite_cache(self, advertiser, pattern, top_count):
 
-        sql = lnk.dbs.rockerbox
-        results  = sql.select_dataframe(QUERY.format(advertiser, pattern))
+        results  = self.crushercache.select_dataframe(QUERY.format(advertiser, pattern))
         sort_results = results.sort(["count"], ascending=False)
         results_no_NA = sort_results[sort_results["keyword"] != " "]
         df = pandas.DataFrame(results_no_NA.iloc[:int(top_count)])

@@ -15,15 +15,16 @@ SQL_SELECT = "select zipped from transform_%s_cache where advertiser='%s' and ur
 
 class VisitorTransformCacheHandler(VisitorBase):
 
-    def initialize(self, db=None, **kwargs):
+    def initialize(self, db=None, crushercache=None, **kwargs):
         self.logging = logging
         self.db = db
+        self.crushercache = crushercache
 
     @decorators.deferred
     def get_from_db(self, api_type, advertiser, pattern, filter_id):
         QUERY = SQL_SELECT % (api_type, advertiser, pattern, filter_id)
         logging.info("Making query")
-        data = self.db.select_dataframe(QUERY)
+        data = self.crushercache.select_dataframe(QUERY)
         hex_data = codecs.decode(data.ix[0]['zipped'], 'hex')
         logging.info("Decoded")
         decomp_data = zlib.decompress(hex_data)

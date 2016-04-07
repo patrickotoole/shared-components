@@ -19,11 +19,14 @@ from lib.cassandra_cache.helpers import *
 from ...search.cache.pattern_search_cache import PatternSearchCache
 
 QUERY = "select advertiser, url_pattern, uniques, count, url from full_domain_cache_test where advertiser = '{}' and url_pattern = '{}'"
-QUERY2 = "select zipped from crusher_cache.cache_domains_full_w_filter_id where filter_id={}"
+QUERY2 = "select zipped from cache_domains_full_w_filter_id where filter_id={}"
 
 class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler):
 
-
+    def initialize(self, db=None, crushercache=None, **kwargs):
+        self.db = db
+        self.crushercache = crushercache
+    
     def get_idf(self,domain_set):
         QUERY = """
             SELECT p.*, c.parent_category_name 
@@ -41,8 +44,7 @@ class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler)
     @decorators.deferred
     def defer_get_onsite_cache(self, advertiser, pattern, top_count):
 
-        sql = lnk.dbs.rockerbox
-        results  = sql.select_dataframe(QUERY.format(advertiser, pattern))
+        results  = self.crushercache.select_dataframe(QUERY.format(advertiser, pattern))
         sort_results = results.sort(["uniques", "count"], ascending=False)
         results_no_NA = sort_results[sort_results["url"] != "NA"]
         df = pandas.DataFrame(results_no_NA.iloc[:int(top_count)])
@@ -51,8 +53,7 @@ class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler)
     @decorators.deferred
     def defer_get_onsite_cache_filter_id(self, advertiser, pattern, top_count, action_id):
 
-        sql = lnk.dbs.rockerbox
-        results  = sql.execute(QUERY2.format(action_id))
+        results  = self.crushercache.execute(QUERY2.format(action_id))
         compressed_results = codecs.decode(results.data[0][0], 'hex')
         df = zlib.decompress(compressed_results)
         return df
