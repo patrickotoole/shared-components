@@ -65,12 +65,28 @@ class VisitorDomainsFullHandler(VisitorBase):
 
         return df
 
+ 
+    def get_idf(self,domain_set):
+        QUERY = """
+            SELECT p.*, c.parent_category_name 
+            FROM reporting.pop_domain_with_category p 
+            JOIN category c using (category_name) 
+            WHERE domain in (%(domains)s)
+        """
+
+        domain_set = [i.encode("utf-8") for i in domain_set]
+        domains = domains = "'" + "','".join(domain_set) + "'"
+
+        return self.db.select_dataframe(QUERY % {"domains":domains})
+
+
 
     @custom_defer.inlineCallbacksErrors
     def get_onsite_domains(self, date, kind, advertiser, pattern):
 
         filter_id = self.get_argument("filter_id",False)
-        NUM_DAYS = 2
+        NUM_DAYS = int(self.get_argument("num_days",2))
+        NUM_USERS = int(self.get_argument("num_users",10000))
 
         if filter_id:
             ALLOW_SAMPLE = False
@@ -84,9 +100,16 @@ class VisitorDomainsFullHandler(VisitorBase):
             data = yield threads.deferToThread(self.get_uids_from_cache,*[advertiser,pattern,dates])
             uids = list(set(pandas.DataFrame(data).uid))
 
-        uids = uids[:10000]
+        uids = uids[:NUM_USERS]
 
         response_data = yield self.defer_get_onsite_domains(date, uids)
+        response_data['domain'] = response_data.url.map(lambda x: x.replace("http://","").replace("www.","").split("/")[0])
+
+        # BAD: BLOCKING PROCESS
+        idf = self.get_idf([i for i in set(list(response_data['domain'])) if len(i) < 25 ])
+        response_data = response_data.merge(idf,on="domain",how="left")
+
+
         
         versioning = self.request.uri
         if versioning.find('v1') >=0:

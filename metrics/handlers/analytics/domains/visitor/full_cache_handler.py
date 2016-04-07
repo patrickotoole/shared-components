@@ -23,6 +23,21 @@ QUERY2 = "select zipped from crusher_cache.cache_domains_full_w_filter_id where 
 
 class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler):
 
+
+    def get_idf(self,domain_set):
+        QUERY = """
+            SELECT p.*, c.parent_category_name 
+            FROM reporting.pop_domain_with_category p 
+            JOIN category c using (category_name) 
+            WHERE domain in (%(domains)s)
+        """
+
+        domain_set = [i.encode("utf-8") for i in domain_set]
+        domains = domains = "'" + "','".join(domain_set) + "'"
+
+        return self.db.select_dataframe(QUERY % {"domains":domains})
+
+
     @decorators.deferred
     def defer_get_onsite_cache(self, advertiser, pattern, top_count):
 
@@ -50,6 +65,13 @@ class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler)
             self.finish()
         else:
             response_data = yield self.defer_get_onsite_cache( advertiser, pattern, top_count)
+            response_data['domain'] = response_data.url.map(lambda x: x.replace("http://","").replace("www.","").split("/")[0])
+
+            # BAD: BLOCKING PROCESS
+            idf = self.get_idf(set(list(response_data['domain'])))
+            response_data = response_data.merge(idf,on="domain",how="left")
+
+
             if len(response_data)>0:
                 versioning = self.request.uri
                 if versioning.find('v1') >=0:

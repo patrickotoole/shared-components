@@ -7,6 +7,8 @@ function set_and_draw(segments) {
 export default function(subscribe_to) {
 
   var subscribe_to = subscribe_to || "vendors"
+  if (typeof(subscribe_to) == "string") subscribe_to = [subscribe_to]
+
 
   if (this._data == this._wrapper.datum()) {
     return set_and_draw(this._data)
@@ -14,7 +16,7 @@ export default function(subscribe_to) {
 
   var self = this;
 
-  pubsub.subscriber("vendors-data",[subscribe_to])
+  pubsub.subscriber("vendors-data",subscribe_to)
     .run(set_and_draw.bind(self))
     .unpersist(true)
     .trigger()

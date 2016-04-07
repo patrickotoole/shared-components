@@ -138,23 +138,21 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
   endpoints.cached_visitor_domains = api.helpers.genericQueuedAPIWithData(function(data, cb, deferred_cb) {
 
-    var URL = "/crusher/v1/visitor/domains_full/cache?format=json&top=400&url_pattern=" + data['url_pattern'][0]
+    var URL = "/crusher/v1/visitor/domains_full/cache?format=json&top=20000&url_pattern=" + data['url_pattern'][0]
+    //var URL = "/crusher/v1/visitor/domains_full?format=json&num_users=30000&num_days=7&url_pattern=" + data['url_pattern'][0]
+
     if (data.has_filter) URL += "&filter_id=" + data.action_id
 
-
     var process = function(dd) {
-      if (data.has_filter) {
-        data.domains_full = dd
-      } else {
-        data.domains_full = dd
-      }
-
+      data.domains_full = dd
       deferred_cb(null, cb.bind(false, dd))
     }
 
+    if (data.domains_full) deferred_cb(null, cb.bind(false, data.domains_full))
+
     d3.json(URL, process)
       .on('error', function() {
-        var URL = "/crusher/v1/visitor/domains_full?format=json&top=400&url_pattern=" + data['url_pattern'][0]
+        var URL = "/crusher/v1/visitor/domains_full?format=json&top=2000&url_pattern=" + data['url_pattern'][0]
         if (data.has_filter) URL += "&filter_id=" + data.action_id
 
         d3.json(URL, process);

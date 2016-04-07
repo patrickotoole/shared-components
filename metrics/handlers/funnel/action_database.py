@@ -5,7 +5,7 @@ import lib.zookeeper.zk_endpoint as zke
 import logging
 
 GET = """
-SELECT pixel_source_name as advertiser, action_name, action_id, action_type from action where %(where)s
+SELECT pixel_source_name as advertiser, action_name, action_id, action_type, featured from action where %(where)s
 """
 
 GET_PATTERNS = """

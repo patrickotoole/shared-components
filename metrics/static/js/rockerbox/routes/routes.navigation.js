@@ -155,10 +155,10 @@ RB.routes.navigation = (function(navigation) {
 
   navigation.callbacks = {
     back: function(x){
-      d3.select("body").classed("hide-select",false)
+      d3.select("body").classed("hide-select hide-top",false)
     },
     forward: function(x) {
-      d3.select("body").classed("hide-select",false)
+      d3.select("body").classed("hide-select hide-top",false)
 
       var current = d3.select(".selectbar").selectAll(".item")
         .classed("active",false)

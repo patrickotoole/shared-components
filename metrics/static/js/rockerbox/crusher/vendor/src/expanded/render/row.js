@@ -16,8 +16,10 @@ export default function(rows) {
   rows.selectAll(".vendor-loading").filter(function(x){return x.timeseries_data || x.domains}).remove()
 
   var column = rows.selectAll('.vendor-data-column');
-  vendors.render_visits(vendor_data_columns);
-  vendors.render_pie(vendor_data_columns);
-  vendors.render_onsite(vendor_data_columns);
+
+  this._render_items.map(function(item) {
+    vendors["render_" + item](vendor_data_columns)
+  })
+
 
 }
