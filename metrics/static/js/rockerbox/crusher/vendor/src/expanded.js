@@ -13,11 +13,16 @@ import render_pie from './expanded/render/pie'
 import render_visits from './expanded/render/visits'
 import render_onsite from './expanded/render/onsite'
 
+import render_bar from './expanded/render/bar'
+import render_table from './expanded/render/table'
+
+
 export function Expanded(target) {
   this._target = target
   this._wrapper = this.render_wrapper(target)
   this._data = []
   this._on = {}
+  this._render_items = ["bar","table"]
 }
 
 function datum(d) {
@@ -86,7 +91,10 @@ Expanded.prototype = {
   render_nav: render_nav,
   render_pie: render_pie,
   render_visits: render_visits,
-  render_onsite: render_onsite
+  render_onsite: render_onsite,
+  render_bar: render_bar,
+  render_table: render_table
+
 }
 
 export default vendor_expanded

@@ -367,6 +367,8 @@ RB.crusher.controller = (function(controller) {
     },
     "action/dashboard": function(action) {
 
+      d3.select("body").classed("hide-top hide-select",true)
+
       RB.component.export(RB.crusher.ui.funnel.show, RB.crusher.ui.funnel)
       RB.component.export(RB.crusher.ui.action.show, RB.crusher.ui.action)
 
@@ -378,7 +380,8 @@ RB.crusher.controller = (function(controller) {
 
       
       action.filter = function(x) {return x.featured }
-      action.selection = "actions"
+      action.selection = ["actions"]
+      action.subscriptions = ["cached_visitor_domains"]
 
       RB.crusher.ui.vendors.show(funnelRow, action);
       

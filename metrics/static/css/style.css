@@ -232,6 +232,15 @@ ol.matched_domains li span.visits {
 .action-full_url table {
   margin-top: 15px; }
 
+body.hide-select aside .heading {
+  display: none; }
+
+body.hide-top .topbar, body.hide-top .page-header {
+  display: none; }
+
+body.hide-top {
+  padding-top: 0px; }
+
 /*
   Progress Indicator
 */
