@@ -73,6 +73,8 @@ export default function(vendor_data_columns) {
     return x;
   })
 
+  var self = this;
+
   vendor_domains_bar.each(function(y){
 
     var target = d3.select(this)
@@ -84,8 +86,8 @@ export default function(vendor_data_columns) {
 
       var summed = d3.sum(target.datum(),function(x){return x.value})
       target.datum(function(x){
-        x.map(function(y){y.value = y.value/summed;}) 
-        return x
+        x.map(function(y){y.value = y.value/summed})
+        return x.filter(function(y){return y.value > .02})
       })
 
 
@@ -131,7 +133,11 @@ export default function(vendor_data_columns) {
           .attr("x", function(d) { return x(Math.min(0, d.value)); })
           .attr("y", function(d) { return y(d.label); })
           .attr("width", function(d) { return Math.abs(x(d.value) - x(0)); })
-          .attr("height", y.rangeBand());
+          .attr("height", y.rangeBand())
+          .style("cursor", "pointer")
+          .on("click", function(x) {
+            self._click.bind(this)(x,self)
+          })
 
       svg.selectAll(".label")
           .data(function(x){return x})
@@ -161,13 +167,8 @@ export default function(vendor_data_columns) {
           .text(function(d) {
             var v = d3.format("%")(d.value);
             var x = (d.value > 0) ?  "↑" : "↓"
-
-
             return "(" + v + x  + ")"
           })
-
-
-
 
       svg.append("g")
           .attr("class", "y axis")
@@ -175,8 +176,6 @@ export default function(vendor_data_columns) {
           .attr("x1", x(0))
           .attr("x2", x(0))
           .attr("y2", height);
-
-
 
       console.log("CAT",data)
 

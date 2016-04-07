@@ -23,6 +23,7 @@ export function Expanded(target) {
   this._data = []
   this._on = {}
   this._render_items = ["visits","pie","onsite"] //["bar","table"]
+  this._table_filter = function(e){return true}
 }
 
 function datum(d) {
@@ -88,6 +89,13 @@ Expanded.prototype = {
     if (x) this._render_items = x;
     return this
   },
+  click: function(x) {
+    if (x === undefined) return this._click;
+    if (x) this._click = x;
+    return this
+  },
+
+
 
   render_button: render_button,
   render_wrapper: render_wrapper,

@@ -6,6 +6,8 @@
 
   function render_table(target) {
 
+    var s = this;
+
     var table_column = d3_updateable(target, '.vendor-domains-table-column', 'div')
       .classed('vendor-domains-table-column col-lg-8 col-md-12', true)
 
@@ -62,6 +64,7 @@
       ]
 
       if (y.domains_full) {
+        
         var data = y.domains_full.map(function(x,i){return x})
           .filter(function(x) {
             var l = document.createElement("a");
@@ -70,10 +73,13 @@
             }
             l.href = x.url;
             x.key = l.host
-            return (l.pathname.length >= 12) 
+            //return true 
+            return (l.pathname.length >= 10) 
 
           })
+          .filter(s._table_filter)
 
+        target.html("")
         components.table(target)
           .data({"body":data,"header":header})
           .draw()
@@ -159,6 +165,8 @@
       return x;
     })
 
+    var self = this;
+
     vendor_domains_bar.each(function(y){
 
       var target = d3.select(this)
@@ -170,8 +178,8 @@
 
         var summed = d3.sum(target.datum(),function(x){return x.value})
         target.datum(function(x){
-          x.map(function(y){y.value = y.value/summed;}) 
-          return x
+          x.map(function(y){y.value = y.value/summed})
+          return x.filter(function(y){return y.value > .02})
         })
 
 
@@ -217,7 +225,11 @@
             .attr("x", function(d) { return x(Math.min(0, d.value)); })
             .attr("y", function(d) { return y(d.label); })
             .attr("width", function(d) { return Math.abs(x(d.value) - x(0)); })
-            .attr("height", y.rangeBand());
+            .attr("height", y.rangeBand())
+            .style("cursor", "pointer")
+            .on("click", function(x) {
+              self._click.bind(this)(x,self)
+            })
 
         svg.selectAll(".label")
             .data(function(x){return x})
@@ -247,13 +259,8 @@
             .text(function(d) {
               var v = d3.format("%")(d.value);
               var x = (d.value > 0) ?  "↑" : "↓"
-
-
               return "(" + v + x  + ")"
             })
-
-
-
 
         svg.append("g")
             .attr("class", "y axis")
@@ -261,8 +268,6 @@
             .attr("x1", x(0))
             .attr("x2", x(0))
             .attr("y2", height);
-
-
 
         console.log("CAT",data)
 
@@ -693,6 +698,7 @@
     this._data = []
     this._on = {}
     this._render_items = ["visits","pie","onsite"] //["bar","table"]
+    this._table_filter = function(e){return true}
   }
 
   function datum(d) {
@@ -758,6 +764,13 @@
       if (x) this._render_items = x;
       return this
     },
+    click: function(x) {
+      if (x === undefined) return this._click;
+      if (x) this._click = x;
+      return this
+    },
+
+
 
     render_button: render_button,
     render_wrapper: render_wrapper,

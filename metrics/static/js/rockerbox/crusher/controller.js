@@ -383,6 +383,14 @@ RB.crusher.controller = (function(controller) {
       action.selection = ["actions"]
       action.subscriptions = ["cached_visitor_domains"]
       action.items = ["bar","table"]
+      action.click = function(x,self) {
+        d3.select(this.parentNode).selectAll(".bar").style("fill","grey")
+        d3.select(this).style("fill",undefined)
+        //pubsub.publishers["category_switch"](x.label)
+        
+        self._table_filter = function(y) {return y.parent_category_name == x.label}
+        self.render_table(d3.select(self._wrapper.selectAll(".vendor-domains-table-column").node().parentNode))
+      }
 
 
       RB.crusher.ui.vendors.show(funnelRow, action);

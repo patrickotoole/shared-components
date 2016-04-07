@@ -1,5 +1,7 @@
 export default function(target) {
 
+  var s = this;
+
   var table_column = d3_updateable(target, '.vendor-domains-table-column', 'div')
     .classed('vendor-domains-table-column col-lg-8 col-md-12', true)
 
@@ -56,6 +58,7 @@ export default function(target) {
     ]
 
     if (y.domains_full) {
+      
       var data = y.domains_full.map(function(x,i){return x})
         .filter(function(x) {
           var l = document.createElement("a");
@@ -64,10 +67,13 @@ export default function(target) {
           }
           l.href = x.url;
           x.key = l.host
-          return (l.pathname.length >= 12) 
+          //return true 
+          return (l.pathname.length >= 10) 
 
         })
+        .filter(s._table_filter)
 
+      target.html("")
       components.table(target)
         .data({"body":data,"header":header})
         .draw()
