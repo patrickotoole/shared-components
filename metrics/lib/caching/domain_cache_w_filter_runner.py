@@ -17,6 +17,8 @@ SQL_REPLACE2=" REPLACE cache_domains_full_w_filter_id (advertiser, url_pattern, 
 
 URL1 = "/crusher/v1/visitor/domains?format=json&url_pattern={}"
 URL2 = "/crusher/v1/visitor/domains_full?format=json&url_pattern={}"
+URL11 = "/crusher/v1/visitor/domains_full?format=json&num_users=30000&num_days=7&url_pattern={}"
+URL22 = "/crusher/v1/visitor/domains_full?format=json&num_users=30000&num_days=7&url_pattern={}"
 
 class DomainsCacheRunner(BaseRunner):
 
@@ -24,11 +26,24 @@ class DomainsCacheRunner(BaseRunner):
         self.connectors =connectors
         self.selection_dict = {"domains":{"Insert":SQL_INSERT1, "Replace":SQL_REPLACE1}, "domains_full":{"Insert":SQL_INSERT2, "Replace":SQL_REPLACE2}}
 
-    def make_request(self,crusher, pattern, endpoint, filter_id):
+    def featured_seg(advertiser, segment):
+        sql = lnk.dbs.rockerbox
+        query = "select featured from action a join action_patterns b on a.action_id = b.action_id where b.url_pattern='{}' and a.pixel_source_name='{}'"
+        featured = sql.select_dataframe(query.format(segment, advertiser))
+        return featured['featured'][0] 
+
+
+    def make_request(self,crusher, pattern, endpoint, filter_id, featured):
         if endpoint == "domains":
-            URL = URL1
+            if int(featured)==1:
+                URL=URL11
+            else:
+                URL = URL1
         elif endpoint == "domains_full":
-            URL = URL2
+            if int(featured) ==1:
+                URL=URL22
+            else:
+                URL = URL2
         else:
             print "Not a vavlid endpoint"
             sys.exit()
@@ -68,7 +83,8 @@ def runner(advertiser,pattern, endpoint, filter_id, base_url, cache_date="", ind
 
     db = connectors['crushercache']
     zk = connectors['zk']
-    data = DR.make_request(crusher, pattern, endpoint, filter_id)
+    featured = DR.featured(advertiser, pattern)
+    data = DR.make_request(crusher, pattern, endpoint, filter_id, featured)
 
     compress_data = DR.compress(ujson.dumps(data))
     try:
