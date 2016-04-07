@@ -48,6 +48,7 @@ if __name__ == "__main__":
     define("pattern", default="")
     define("run_local", default=False)
     define("base_url", default="http://beta.crusher.getrockerbox.com")
+    define("run_all", default=False)
 
     basicConfig(options={})
 
@@ -58,7 +59,16 @@ if __name__ == "__main__":
     connectors = {'crushercache':lnk.dbs.crushercache, 'zk':zk, 'cassandra':''}
     ckw = ActionCache(connectors)
     if options.run_local:
-        ckw.run_local(options.advertiser, options.pattern,options.base_url, connectors)
+        if options.run_all:
+            rockerbox_db = lnk.dbs.rockerbox
+            segs = rockerbox_db.select_dataframe("select distinct action_name from action_with_patterns where pixel_source_name='{}'".format(options.advertiser))
+            for seg in segs.iterrows():
+                try:
+                    ckw.run_local(options.advertiser, seg[1]['action_name'],options.base_url, connectors)
+                except:
+                    print "issues with actions {}".format(seg[1]['action_name'])
+        else:
+            ckw.run_local(options.advertiser, options.pattern,options.base_url, connectors)
     else:
         ckw.add_db_to_work_queue(options.advertiser, options.pattern, options.base_url)
 
