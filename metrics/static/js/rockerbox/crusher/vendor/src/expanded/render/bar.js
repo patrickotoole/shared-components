@@ -48,7 +48,6 @@ export default function(vendor_data_columns) {
 
   var vendor_domains_bar = d3_updateable(vendor_domains_bar_column, '.vendor-domains-bar', 'div')
     .classed('col-md-12 row vendor-domains-bar', true)
-    .style('width', '220px')
     .style('padding', '0px')
 
   vendor_domains_bar.datum(function(x) {

@@ -11,18 +11,17 @@ export default function(target) {
     .style("display","inherit")
 
   d3_updateable(desc, "h3","h3")
-    .text("Domains")
+    .text("Top Sites")
 
-  d3_updateable(desc, ".chart-description","p")
-    .classed("chart-description",true)
-    .text("Top domains for your advertiser")
+  //d3_updateable(desc, ".chart-description","p")
+  //  .classed("chart-description",true)
+  //  .text("Top domains for your advertiser")
 
 
 
   var vendor_domains_table = d3_updateable(vendor_domains_table_column, '.vendor-domains-table', 'div')
     .classed('col-md-12 row vendor-domains-table', true)
-    .style('width', '220px')
-    .style('padding', '0px')
+    .style("padding","0px")
 
   vendor_domains_table.datum(function(x) {
 
