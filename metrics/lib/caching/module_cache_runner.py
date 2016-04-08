@@ -65,11 +65,11 @@ class ModuleRunner(BaseRunner):
         try:
             Q = self.selection_dict.get(endpoint, False)['Insert']
             if Q:
-                self.connectors['db'].execute(Q.format(advertiser, pattern, filter_id, endpoint, compressed_data))
+                self.connectors['crushercache'].execute(Q.format(advertiser, pattern, filter_id, endpoint, compressed_data))
         except:
             Q = self.selection_dict.get(endpoint, False)['Replace']
             if Q:
-                self.connectors['db'].execute(Q.format(advertiser, pattern, filter_id, endpoint, compressed_data))
+                self.connectors['crushercache'].execute(Q.format(advertiser, pattern, filter_id, endpoint, compressed_data))
 
 def runner(advertiser,pattern, endpoint, filter_id, base_url, cache_date="", indentifiers="test", connectors=False):
 

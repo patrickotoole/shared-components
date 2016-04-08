@@ -1,7 +1,7 @@
 import pandas
 import logging
 from lib.pandas_sql import s as _sql
-
+import logging
 from cache_runner_base import BaseRunner
 
 import datetime

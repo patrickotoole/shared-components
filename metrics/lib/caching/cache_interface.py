@@ -189,12 +189,22 @@ if __name__ == "__main__":
         if not options.segment:
             zookeeper =KazooClient(hosts="zk1:2181")
             zookeeper.start()
-            ac = CacheInterface(options.username, options.password, lnk.dbs.crushercache, zookeeper)
+            crusher = lnk.api.crusher
+            crusher.user = "a_{}".format(options.username)
+            crusher.password="admin"
+            crusher.base_url = options.base_url
+            crusher.authenticate()
+            ac = CacheInterface(options.username, crusher, lnk.dbs.crushercache, zookeeper)
             run_advertiser(ac, options.username, options.base_url)
         else:
             zookeeper =KazooClient(hosts="zk1:2181")
             zookeeper.start()
-            ac = CacheInterface(options.username, options.password, lnk.dbs.crushercache,zookeeper)
+            crusher = lnk.api.crusher
+            crusher.user = "a_{}".format(options.username)
+            crusher.password="admin"
+            crusher.base_url = options.base_url
+            crusher.authenticate()
+            ac = CacheInterface(options.username, crusher, lnk.dbs.crushercache,zookeeper)
             run_advertiser_segment(ac, options.segment, options.base_url)
     
     if options.remove_old == True:
