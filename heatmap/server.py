@@ -81,8 +81,8 @@ if __name__ == '__main__':
     import sys
     args = sys.argv
     stream = "lg_imps"
-    if len(args) > 0:
-        stream = args[0]
+    if len(args) > 1:
+        stream = args[1]
 
     client = KafkaClient(hosts="zk1:2181/v0_8_1")
     topic = client.topics[stream]
