@@ -49,6 +49,7 @@ export default function(vendor_data_columns) {
   var vendor_domains_bar = d3_updateable(vendor_domains_bar_column, '.vendor-domains-bar', 'div')
     .classed('col-md-12 row vendor-domains-bar', true)
     .style('padding', '0px')
+    .style("text-align","center")
 
   vendor_domains_bar.datum(function(x) {
 
@@ -178,6 +179,13 @@ export default function(vendor_data_columns) {
           .attr("y2", height);
 
       console.log("CAT",data)
+
+      var button = d3_updateable(target,".button","div")
+        .classed("button btn btn-success",true)
+        .text("All Categories")
+        .on("click",function(x) {
+          self._click.bind(this)(x,self)
+        })
 
     }
 
