@@ -70,7 +70,7 @@ class AdvertiserRoutes(Routes):
         ]
 
     @namespace("/crusher/v1")
-    @connectors("db","api","cassandra", "mongo", "zookeeper")
+    @connectors("db","api","cassandra", "mongo", "zookeeper", "crushercache")
     def v1_crusher_routes(self):
         import handlers.analytics as analytics
         import handlers.funnel as funnel
