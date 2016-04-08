@@ -58,7 +58,6 @@ export default function(target) {
     ]
 
     if (y.domains_full) {
-      
       var data = y.domains_full.map(function(x,i){return x})
         .filter(function(x) {
           var l = document.createElement("a");
@@ -67,11 +66,11 @@ export default function(target) {
           }
           l.href = x.url;
           x.key = l.host
-          //return true 
           return (l.pathname.length >= 10) 
 
         })
         .filter(s._table_filter)
+
 
       target.html("")
       components.table(target)

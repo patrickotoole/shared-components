@@ -64,7 +64,6 @@
       ]
 
       if (y.domains_full) {
-        
         var data = y.domains_full.map(function(x,i){return x})
           .filter(function(x) {
             var l = document.createElement("a");
@@ -73,11 +72,11 @@
             }
             l.href = x.url;
             x.key = l.host
-            //return true 
             return (l.pathname.length >= 10) 
 
           })
           .filter(s._table_filter)
+
 
         target.html("")
         components.table(target)
@@ -141,6 +140,7 @@
     var vendor_domains_bar = d3_updateable(vendor_domains_bar_column, '.vendor-domains-bar', 'div')
       .classed('col-md-12 row vendor-domains-bar', true)
       .style('padding', '0px')
+      .style("text-align","center")
 
     vendor_domains_bar.datum(function(x) {
 
@@ -270,6 +270,13 @@
             .attr("y2", height);
 
         console.log("CAT",data)
+
+        var button = d3_updateable(target,".button","div")
+          .classed("button btn btn-success",true)
+          .text("All Categories")
+          .on("click",function(x) {
+            self._click.bind(this)(x,self)
+          })
 
       }
 
