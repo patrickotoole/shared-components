@@ -78,8 +78,14 @@ class MyServerProtocol(WebSocketServerProtocol):
 
 if __name__ == '__main__':
 
+    import sys
+    args = sys.argv
+    stream = "lg_imps"
+    if len(args) > 0:
+        stream = args[0]
+
     client = KafkaClient(hosts="zk1:2181/v0_8_1")
-    topic = client.topics['lg_imps']
+    topic = client.topics[stream]
     consumer = topic.get_simple_consumer(
         reset_offset_on_start=True 
     )
