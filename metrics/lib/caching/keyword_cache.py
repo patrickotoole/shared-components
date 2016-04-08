@@ -23,7 +23,6 @@ def make_request(advertiser,pattern, base_url):
     return urls.json
 
 def insert(df, advertiser, segment_name, db):
-    import ipdb; ipdb.set_trace()
     df_filtered = df.filter(['uniques', 'url'])
     table_name ="keyword_crusher_cache"
     keys = []
