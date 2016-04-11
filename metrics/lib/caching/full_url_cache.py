@@ -50,8 +50,13 @@ class FullDomainRunner(BaseRunner):
 
     def featured_seg(self, advertiser, segment):
         query = "select featured from action a join action_patterns b on a.action_id = b.action_id where b.url_pattern='{}' and a.pixel_source_name='{}'"
-        featured = self.connectors['db'].select_dataframe(query.format(segment, advertiser))
-        return featured['featured'][0]
+        sql = lnk.dbs.rockerbox
+        featured = sql.select_dataframe(query.format(segment, advertiser))
+        try:
+            featured_value = featured['featured'][0]
+        except:
+            featured_value=0
+        return featured_value
 
     def add_to_table(self, advertiser_name, pattern, url, sql):
         #self.cassandra.execute(CASSQUERY)
@@ -65,9 +70,9 @@ def runner(advertiser_name, pattern, base_url, cache_date, indentifiers="test", 
     connectors = connectors or FullDomainRunner.get_connectors()
     
     FDR = FullDomainRunner(connectors)
-    FDR.accounting_entry_start(advertiser, pattern, "full_url_cache_runner")
+    #FDR.accounting_entry_start(advertiser_name, pattern, "full_url_cache_runner")
     featured = FDR.featured_seg(advertiser_name, pattern)
     urls = FDR.make_request(advertiser_name, pattern, base_url, featured)
     df = pandas.DataFrame(urls)
     FDR.insert(df, advertiser_name, pattern)
-    FDR.accounting_entry_end(advertiser, pattern, "full_url_cache_runner")
+    #FDR.accounting_entry_end(advertiser, pattern, "full_url_cache_runner")
