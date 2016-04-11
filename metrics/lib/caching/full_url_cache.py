@@ -35,7 +35,7 @@ def insert(df, advertiser, segment_name, db):
             to_insert['advertiser'] = [advertiser] * len(to_insert)
         if len(to_insert)>0:
             try:
-                to_insert['url'] = to_insert['url'].map(lambda x : x.encode('utf-8'))
+                to_insert['url'] = to_insert['url'].map(lambda x : x.encode('utf-8').replace("'",""))
                 _sql._write_mysql(to_insert, table_name, list(to_insert.columns), db, keys)
                 logging.info("inserted %s records for advertiser username (includes a_) %s" % (len(to_insert), advertiser))
             except:
