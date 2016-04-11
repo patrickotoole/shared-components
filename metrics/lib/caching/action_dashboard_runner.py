@@ -84,6 +84,7 @@ def runner(advertiser,pattern, base_url, cache_date="", indentifiers="test", con
     connectors = connectors or AdvertiserActionRunner.get_connectors()
 
     AAR = AdvertiserActionRunner(connectors)
+    AAR.accounting_entry_start(advertiser, pattern, "action_dashboard_runner")
 
     db = connectors['crushercache']
     zk = connectors['zk']
@@ -94,4 +95,4 @@ def runner(advertiser,pattern, base_url, cache_date="", indentifiers="test", con
         executed = AAR.execute(data, advertiser, pattern, db)
 
     AAR.post_validation(advertiser, pattern, executed)
-
+    AAR.accounting_entry_end(advertiser, pattern, "action_dashboard_runner")

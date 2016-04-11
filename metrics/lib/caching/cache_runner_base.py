@@ -6,6 +6,8 @@ import datetime
 SQL = "INSERT INTO action_dashboard_cache (advertiser, count, domain) values ('{}', {}, '{}')" 
 current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+SQLENTRY="insert into crusher_cache_accounting (advertiser, pattern, ts, start_or_end, script_name) values ('{}', '{}', '{}', '{}', '{}')"
+
 class BaseRunner():
 
     def __init__(self, connectors):
@@ -23,6 +25,14 @@ class BaseRunner():
 
     def generic_insert(self, data, advertiser, db):
         db.execute(SQL.format(data))
+
+    def accounting_entry_start(self, advertiser, pattern, name):
+        self.crushercache.execute(SQLENTRY.format(advertiser,pattern, current_datetime, "Start", name))
+        logging.info("start entry")
+
+    def accounting_entry_end(self, advertiser, pattern, name):
+        self.crushercache.execute(SQLENTRY.format(advertiser,pattern, current_datetime, "End", name))
+        logging.info("finish entry")
 
     def get_crusher_obj(self, advertiser, base_url):
         from link import lnk

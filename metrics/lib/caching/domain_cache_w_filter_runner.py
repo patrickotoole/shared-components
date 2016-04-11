@@ -79,6 +79,7 @@ def runner(advertiser,pattern, endpoint, filter_id, base_url, cache_date="", ind
     connectors = connectors or DR.get_connectors()
     
     DR = DomainsCacheRunner(connectors)
+    DR.accounting_entry_start(advertiser, pattern, "domain_cache_w_filter_id")
     crusher = DR.get_crusher_obj(advertiser, base_url)
 
     db = connectors['crushercache']
@@ -90,5 +91,7 @@ def runner(advertiser,pattern, endpoint, filter_id, base_url, cache_date="", ind
     try:
         DR.insert(advertiser, pattern, endpoint, filter_id, compress_data)
         logging.info("Data inserted")
+        DR.accounting_entry_end(advertiser, pattern, "domain_cache_w_filter_id")
     except:
         logging.info("Data not inserted")
+    
