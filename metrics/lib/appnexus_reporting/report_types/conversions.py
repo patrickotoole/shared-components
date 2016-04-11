@@ -4,6 +4,7 @@ from load import DataLoader
 from log import *
 
 import pandas
+import logging
 
 CONVERSIONS_FORM = """
 {
@@ -71,7 +72,7 @@ CONVERSIONS_FORM = """
 }
 """
 
-COLS = ["external_advertiser_id","pixel_id","pixel_name","line_item_id","line_item_name","campaign_id","campaign_name", "pc", "order_id", "user_id", "auction_id", "imp_time", "conversion_time"]
+COLS = ["external_advertiser_id","pixel_id","pixel_name","line_item_id","line_item_name","campaign_id","campaign_name", "pc", "order_id", "user_id", "auction_id", "imp_time", "conversion_time","creative_id","creative_name"]
 KEYS = ["pixel_id","line_item_id","campaign_id","creative_id","order_id","user_id","auction_id","conversion_time"]
 
 VALUES = [ v for v in COLS if v not in KEYS]
@@ -110,6 +111,12 @@ def transform(df,report_params):
 def run(api, db, table, advertiser_id, start_date, end_date):
 
     df, report_params = get_report(db,api,advertiser_id,start_date,end_date)
+    if len(df) == 0: 
+        report_params['processed_at'] = now()
+        log_processed(db,report_params)
+        logging.info("No row data found for %s conversion report: %s to %s" % (advertiser_id, start_date, end_date) )
+        return df
+
     grouped_df = transform(df, report_params)
 
     insert_report(db, table, grouped_df.reset_index(), report_params)

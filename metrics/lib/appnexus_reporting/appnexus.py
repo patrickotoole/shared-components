@@ -1,3 +1,5 @@
+import logging
+
 from log import *
 from timeutils import now
 
@@ -63,7 +65,7 @@ class AppnexusReport(object):
         if not url:
             retry += 1
             import math
-            print "Retry: %s, sleeping %s" % (retry, math.pow(2,retry) )
+            logging.info("Retry: %s, sleeping %s" % (retry, math.pow(2,retry) ))
             import time
             time.sleep(math.pow(2,retry))
             if (retry + 1) < max_retries:

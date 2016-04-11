@@ -4,6 +4,7 @@ from load import DataLoader
 from log import *
 
 import pandas
+import logging
 
 ANALYTICS_FORM = """
 {
@@ -85,6 +86,12 @@ def transform(df,report_params):
 def run(api, db, table, advertiser_id, start_date, end_date):
 
     df, report_params = get_report(db,api,advertiser_id,start_date,end_date)
+    if len(df) == 0: 
+        report_params['processed_at'] = now()
+        log_processed(db,report_params)
+        logging.info("No row data found for %s analytics report: %s to %s" % (advertiser_id, start_date, end_date) )
+        return df
+
     df = df.rename(columns={"hour":"date","advertiser_id":"external_advertiser_id"})
     
     grouped_df = transform(df,report_params)
