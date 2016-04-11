@@ -1,8 +1,9 @@
 from appnexus import AppnexusReport
-from load import DataLoader
-import pandas
-from log import *
 from timeutils import *
+from load import DataLoader
+from log import *
+
+import pandas
 
 ANALYTICS_FORM = """
 {
@@ -66,11 +67,8 @@ def insert_report(db, table, df, report_params):
 
     return df
 
-def run(api, db, table, advertiser_id, start_date, end_date):
+def transform(df,report_params):
 
-    df, report_params = get_report(db,api,advertiser_id,start_date,end_date)
-    df = df.rename(columns={"hour":"date","advertiser_id":"external_advertiser_id"})
-    
     adx = df[df.seller_member.map(lambda x: "(181)" in x)].groupby(KEYS)[VALUES].sum().reset_index()
     adx = adx.rename(columns={"media_cost":"adx_spend"})
     adx = adx.T.ix[COLS + ["adx_spend"]].T.fillna(0.0)
@@ -81,6 +79,15 @@ def run(api, db, table, advertiser_id, start_date, end_date):
     grouped_df = adx.append(non_adx).groupby(KEYS).sum()
     grouped_df['media_cost'] = grouped_df.media_cost + grouped_df.adx_spend
     grouped_df['source_report_id'] = report_params['report_id']
+
+    return grouped_df
+
+def run(api, db, table, advertiser_id, start_date, end_date):
+
+    df, report_params = get_report(db,api,advertiser_id,start_date,end_date)
+    df = df.rename(columns={"hour":"date","advertiser_id":"external_advertiser_id"})
+    
+    grouped_df = transform(df,report_params)
 
     return insert_report(db, table, grouped_df.reset_index(), report_params)
 

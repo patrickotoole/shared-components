@@ -9,12 +9,12 @@ def run(db, console, rockerbox, ids):
     advertisers = ids or get_advertisers(rockerbox)
 
     for advertiser_id in advertisers:
-        #try:
+        try:
             logging.info("Running: %s" % advertiser_id)
             r = Report(db,console,advertiser_id, start_date, end_date)
             r.run()
-        #except Exception as e:
-        #    raise e
+        except Exception as e:
+            raise e
     
 
 if __name__ == "__main__":

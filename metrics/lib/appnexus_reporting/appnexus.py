@@ -14,7 +14,7 @@ class AppnexusReport(object):
         self.advertiser_id = advertiser_id
         self.start_date = start_date
         self.end_date = end_date
-        self.report_name = "analytics"
+        self.report_name = report_name
 
         self.params = {
             "advertiser_id" : self.advertiser_id,
