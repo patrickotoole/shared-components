@@ -54,7 +54,7 @@ class AppnexusReport(object):
 
         return report_id
 
-    def get_report(self, report_id, retry=0, max_retries=10):
+    def get_report(self, report_id, retry=0, max_retries=7):
 
         resp = self.api.get("/report?id=%s" % report_id)
         response = resp.json.get("response")
@@ -62,9 +62,10 @@ class AppnexusReport(object):
 
         if not url:
             retry += 1
-            print "Retry: %s, sleeping %s" % (retry, retry*5)
+            import math
+            print "Retry: %s, sleeping %s" % (retry, math.pow(2,retry) )
             import time
-            time.sleep(retry*5)
+            time.sleep(math.pow(2,retry))
             if (retry + 1) < max_retries:
                 return self.get_report(report_id, retry, max_retries)
             raise Exception("no report url")
