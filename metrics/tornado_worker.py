@@ -35,6 +35,13 @@ def build_routes(connectors,override=[]):
 
 
 if __name__ == '__main__':
+
+    from lib.report.utils.loggingutils import basicConfig
+
+    define("exit_on_finish", default=False)
+
+    basicConfig(options={})
+
     parse_command_line()
 
     connectors = ConnectorConfig(
@@ -69,7 +76,7 @@ if __name__ == '__main__':
     import work_queue
 
     for _ in range(0,1):
-        reactor.callInThread(work_queue.WorkQueue(connectors['zookeeper'],connectors))
+        reactor.callInThread(work_queue.WorkQueue(options.exit_on_finish, connectors['zookeeper'],connectors))
 
 
     server = tornado.httpserver.HTTPServer(app)
