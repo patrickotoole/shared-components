@@ -40,18 +40,19 @@ def _write_mysql(frame, table, names, con, key=None):
     @param: key (list(unique_column_names)):
     @param: fn (function to transform the strings)
     """
+    if len(frame) == 0:
+        return
     key = key or []
     bracketed_names = ['`' + column + '`' for column in names]
     col_names = ','.join(bracketed_names)
     wildcards = '(' + ','.join([r"%s"] * len(names)) + ')'
-    updates = ','.join(['%s.`%s` = VALUES(%s.`%s`)' % (table,c,table,c)
+    updates = ','.join(['%s.`%s` = VALUES(%s.`%s`)' % ( table,con.escape_string(c),table,con.escape_string(c) )
                         for c in names if not c in key])
 
     _db = con.cursor()._get_db()
     values = ','.join([wildcards % tuple([_db.literal(_v) for _v in v])
                        for v in frame.values])
-    insert_query = "INSERT INTO %s (%s) VALUES %s ON DUPLICATE KEY UPDATE %s" % (
-        table, col_names, values, updates)
+    insert_query = "INSERT INTO %s (%s) VALUES %s ON DUPLICATE KEY UPDATE %s" % (table, col_names, values, updates)
 
     try:
         con.cursor().execute(insert_query)
