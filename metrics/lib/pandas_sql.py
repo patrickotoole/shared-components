@@ -46,6 +46,7 @@ def _write_mysql(frame, table, names, con, key=None):
     wildcards = '(' + ','.join([r"%s"] * len(names)) + ')'
     updates = ','.join(['%s.`%s` = VALUES(%s.`%s`)' % (table,c,table,c)
                         for c in names if not c in key])
+
     _db = con.cursor()._get_db()
     values = ','.join([wildcards % tuple([_db.literal(_v) for _v in v])
                        for v in frame.values])
@@ -53,7 +54,7 @@ def _write_mysql(frame, table, names, con, key=None):
         table, col_names, values, updates)
 
     try:
-        con.execute(insert_query)
+        con.cursor().execute(insert_query)
     except Exception as e:
         logging.exception("%s, query: %s" % (e, insert_query))
         raise
@@ -113,13 +114,13 @@ def write_frame(frame, name, con, flavor='sqlite', if_exists='fail', **kwargs):
     cur = con.cursor()
     # Replace spaces in DataFrame column names with _.
     safe_names = [s.replace(' ', '_').strip() for s in frame.columns]
-    flavor_picker = {'sqlite' : _write_sqlite,
+    flavor_picker = {#'sqlite' : _write_sqlite,
                      'mysql' : _write_mysql}
 
     func = flavor_picker.get(flavor, None)
     if func is None:
         raise NotImplementedError
-    func(frame, name, safe_names, cur, key=key)
+    func(frame, name, safe_names, con, key=key)
     cur.close()
     con.commit()
 
