@@ -2,7 +2,7 @@ import pickle, pandas, json
 from link import lnk
 from lib.pandas_sql import s as _sql
 import datetime
-import logging
+import logging, uuid
 from cache_runner_base import BaseRunner
 
 INSERT_QUERY ="INSERT INTO full_domain_cache_test (advertiser, url, count, uniques, url_pattern) VALUES ('{}', '{}',{}, {}, '{}')"
@@ -68,11 +68,11 @@ class FullDomainRunner(BaseRunner):
 
 def runner(advertiser_name, pattern, base_url, cache_date, indentifiers="test", connectors=False):
     connectors = connectors or FullDomainRunner.get_connectors()
-    
+    uuid_num = str(uuid.uuid4())
     FDR = FullDomainRunner(connectors)
-    #FDR.accounting_entry_start(advertiser_name, pattern, "full_url_cache_runner")
+    FDR.accounting_entry_start(advertiser_name, pattern, "full_url_cache_runner",  uuid_num)
     featured = FDR.featured_seg(advertiser_name, pattern)
     urls = FDR.make_request(advertiser_name, pattern, base_url, featured)
     df = pandas.DataFrame(urls)
     FDR.insert(df, advertiser_name, pattern)
-    #FDR.accounting_entry_end(advertiser, pattern, "full_url_cache_runner")
+    FDR.accounting_entry_end(advertiser_name, pattern, "full_url_cache_runner", uuid_num)

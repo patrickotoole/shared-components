@@ -1,9 +1,9 @@
 import requests, json, logging, pandas
 
 from link import lnk
-import datetime
+import datetime, uuid
 from kazoo.client import KazooClient
-
+from cache_runner_base import BaseRunner
 
 logger = logging.getLogger()
 
@@ -13,7 +13,7 @@ SQL_QUERY2 = "insert into uids_only_sessions_cache (advertiser, pattern, num_ses
 
 class OnsiteCacheRunner(BaseRunner):
 
-    def make_request(advertiser, pattern, base_url):
+    def make_request(self,advertiser, pattern, base_url):
 
         crusher = lnk.api.crusher
         crusher.user = "a_"+advertiser
@@ -43,13 +43,13 @@ class OnsiteCacheRunner(BaseRunner):
         except:
             return {}
 
-    def write_to_table_visits(advertiser, pattern, data,db):
+    def write_to_table_visits(self,advertiser, pattern, data,db):
         try:
             db.execute(SQL_QUERY1.format(advertiser, pattern, data["visits"], data["users_count"]))
         except:
             logging.info("duplicate entry -- visits")
 
-    def write_to_table_sessions(advertiser, pattern, data,db):
+    def write_to_table_sessions(self,advertiser, pattern, data,db):
         try:
             db.execute(SQL_QUERY2.format(advertiser, pattern, data["sessions"], data["users_count"]))
         except:
@@ -58,10 +58,11 @@ class OnsiteCacheRunner(BaseRunner):
 
 def runner(advertiser, pattern, base_url, cache_date, indentifiers="test", connectors=False):
     connectors = connectors or OnsiteCacheRunner.get_connectors()
-
+    
+    uuid_num = str(uuid.uuid4())
     OCR = OnsiteCacheRunner(connectors)
 
-    OCR.accounting_entry_start(advertiser, pattern, "onsite_cache_runner")
+    OCR.accounting_entry_start(advertiser, pattern, "onsite_cache_runner", uuid_num)
     data = OCR.make_request(advertiser, pattern, base_url)
     if data !={}:
         for i in range(0, len(data["visits"])):
@@ -69,4 +70,4 @@ def runner(advertiser, pattern, base_url, cache_date, indentifiers="test", conne
         for i in range(0, len(data["sessions"])):
             OCR.write_to_table_sessions(advertiser, pattern, data["sessions"].ix[i], connectors['db'])
 
-    OCR.accounting_entry_end(advertiser, pattern, "onsite_cache_runner")
+    OCR.accounting_entry_end(advertiser, pattern, "onsite_cache_runner", uuid_num)

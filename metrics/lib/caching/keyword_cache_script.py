@@ -66,6 +66,7 @@ if __name__ == "__main__":
                     except:
                         print "error with {}".format(seg[1]['url_pattern'])
         elif options.run_all:
+            import ipdb; ipdb.set_trace()
             rockerbox_db = lnk.dbs.rockerbox
             segs = rockerbox_db.select_dataframe("select distinct url_pattern from action_with_patterns where pixel_source_name='{}'".format(options.advertiser))
             for seg in segs.iterrows():

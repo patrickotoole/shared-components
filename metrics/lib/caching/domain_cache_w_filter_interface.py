@@ -28,7 +28,7 @@ class DomainFilterCache:
         _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
         work = pickle.dumps((
                 runner.runner,
-                [advertiser,segment, endpoint, fiter_id, base_url, _cache_yesterday,_cache_yesterday + "modulecache"]
+                [advertiser,segment, endpoint, filter_id, base_url, _cache_yesterday,_cache_yesterday + "modulecache"]
                 ))
         work_queue.SingleQueue(self.connectors['zk'],"python_queue").put(work,1)
         logging.info("added to MOdule work queue %s for %s" %(segment,advertiser)) 
@@ -51,7 +51,6 @@ if __name__ == "__main__":
     basicConfig(options={})
 
     parse_command_line()
-
     zk = KazooClient(hosts="zk1:2181")
     zk.start()
     connectors = {'db':lnk.dbs.rockerbox, 'zk':zk, 'cassandra':'', 'crushercache': lnk.dbs.crushercache}

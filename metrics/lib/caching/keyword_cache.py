@@ -1,7 +1,7 @@
 import pickle, pandas, json
 from link import lnk
 from lib.pandas_sql import s as _sql
-import logging
+import logging, uuid
 
 from cache_runner_base import BaseRunner
 
@@ -51,10 +51,11 @@ class KeywordRunner(BaseRunner):
 
 def runner(advertiser_name, pattern, base_url, cache_date, indentifiers="test", connectors=False):
     connectors = connectors or KeywordRunner.get_connectors()
-
+    
+    uuid_num = str(uuid.uuid4())
     KR = KeywordRunner(connectors)
-    KR.accounting_entry_start(advertiser, pattern, "keyword_cache_runner")
+    KR.accounting_entry_start(advertiser_name, pattern, "keyword_cache_runner", uuid_num)
     urls = KR.make_request(advertiser_name, pattern, base_url)
     df = pandas.DataFrame(urls)
     KR.insert(df, advertiser_name, pattern)
-    KR.accounting_entry_end(advertiser, pattern, "keyword_cache_runner")
+    KR.accounting_entry_end(advertiser_name, pattern, "keyword_cache_runner", uuid_num)

@@ -4,7 +4,7 @@ from lib.pandas_sql import s as _sql
 
 from cache_runner_base import BaseRunner
 
-import datetime, ujson
+import datetime, ujson, uuid
 import zlib, codecs, sys
 
 current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -74,10 +74,11 @@ class ModuleRunner(BaseRunner):
 def runner(advertiser,pattern, endpoint, filter_id, base_url, cache_date="", indentifiers="test", connectors=False):
 
     connectors = connectors or MR.get_connectors()
-    
+
+    uuid_num = str(uuid.uuid4())
     MR = ModuleRunner(connectors)
     script_name = "module_{}".format(endpoint)
-    MR.accounting_entry_start(advertiser, pattern, script_name)
+    MR.accounting_entry_start(advertiser, pattern, script_name, uuid_num)
     crusher = MR.get_crusher_obj(advertiser, base_url)
 
     db = connectors['crushercache']
@@ -88,6 +89,6 @@ def runner(advertiser,pattern, endpoint, filter_id, base_url, cache_date="", ind
     try:
         MR.insert(advertiser, pattern, endpoint, filter_id, compress_data)
         logging.info("Data inserted")
-        MR.accounting_entry_end(advertiser, pattern, script_name)
+        MR.accounting_entry_end(advertiser, pattern, script_name, uuid_num)
     except:
         logging.info("Data not inserted")

@@ -37,10 +37,10 @@ if __name__ == "__main__":
     from lib.report.utils.options import options
     from lib.report.utils.options import parse_command_line
 
-    define("username",  default="")
+    define("advertiser",  default="")
     define("password", default="")
     define("base_url", default="http://beta.crusher.getrockerbox.com")
-    define("segment", default="")
+    define("pattern", default="")
     define("run_local", default=False)
     define("run_all", default=False)
 
@@ -55,7 +55,7 @@ if __name__ == "__main__":
     if options.run_local and not options.run_all:
         sql = lnk.dbs.crushercache
         cuid = CacheUIDS({'crushercache':lnk.dbs.crushercache, 'db':sql,'zk':zk})
-        cuid.run_local(options.username, options.segment,options.base_url)
+        cuid.run_local(options.advertiser, options.pattern,options.base_url)
     
     elif options.run_local and options.run_all:
         sql = lnk.dbs.rockerbox
@@ -78,5 +78,5 @@ if __name__ == "__main__":
     elif not options.run_local and not options.run_all:
         sql = lnk.dbs.rockerbox
         cuid = CacheUIDS({'crushercache':lnk.dbs.crushercache, 'db':sql,'zk':zk})
-        cuid.run_on_work_queue(options.username, options.segment,options.base_url) 
+        cuid.run_on_work_queue(options.advertiser, options.pattern,options.base_url) 
     
