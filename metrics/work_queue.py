@@ -18,10 +18,11 @@ class SingleQueue(kazoo.recipe.queue.Queue):
 
 class WorkQueue(object):
 
-    def __init__(self,client,connectors):
+    def __init__(self,exit_on_finish, client,connectors):
         self.client = client
         self.queue = SingleQueue(client,"/python_queue")
         self.connectors = connectors
+        self.exit_on_finish = exit_on_finish
 
     def __call__(self):
         while True:
@@ -43,7 +44,11 @@ class WorkQueue(object):
  
 
             else:
-                import time
-                time.sleep(1)
-                logging.debug("No data in queue")
+                if self.exit_on_finish:
+                    logging.debug("No data in queue")
+                    self.connectors['sys_exit']()
+                else:
+                    import time
+                    time.sleep(5)
+                    logging.debug("No data in queue")
             logging.debug("Moving on to next queue item")
