@@ -34,8 +34,17 @@ def build_routes(connectors,override=[]):
     return routes(*(selected_routes or routes.all)) + static
 
 
-if __name__ == '__main__':
+class EX():
+    def __init__(self):
+        self.errored = False
+    def ext(self):
+        self.errored = True
+        import sys
+        sys.exit("Queue Empty")
 
+if __name__ == '__main__':
+    
+    exi = EX()
     from lib.report.utils.loggingutils import basicConfig
 
     define("exit_on_finish", default=False)
@@ -74,17 +83,29 @@ if __name__ == '__main__':
     )
 
     import work_queue
-
+    import sys
+    connectors['sys_exit'] = exi.ext
+    
     for _ in range(0,1):
         reactor.callInThread(work_queue.WorkQueue(options.exit_on_finish, connectors['zookeeper'],connectors))
-
-
+    
     server = tornado.httpserver.HTTPServer(app)
     server.listen(options.port)
+    
     sig_handler = sig_wrap(reactor,server)
-
+    
     signal.signal(signal.SIGTERM, sig_handler)
     signal.signal(signal.SIGINT, sig_handler)
-
-    tornado.ioloop.IOLoop.instance().start()
-
+    
+    t = tornado.ioloop.IOLoop.instance()
+    from shutdown import shutdown_wrap
+    t.add_callback(shutdown_wrap(reactor,server))
+    t.start()
+    if reactor._stopped:
+        reactor.crash()
+        reactor._stopThreadPool()
+        reactor.callInThread(sys.exit(1))
+        t.add_callback(sys.exit)
+        t._run_callback(sys.exit)
+        t.make_current()
+        t.clear_instance()

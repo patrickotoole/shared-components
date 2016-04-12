@@ -46,7 +46,7 @@ class WorkQueue(object):
             else:
                 if self.exit_on_finish:
                     logging.debug("No data in queue")
-                    sys.exit(0)
+                    self.connectors['sys_exit']()
                 else:
                     import time
                     time.sleep(5)
