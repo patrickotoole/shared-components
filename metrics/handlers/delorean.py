@@ -18,22 +18,59 @@ RIGHT JOIN delorean_segments s on s.id = p.delorean_segment_id
 LEFT JOIN delorean_value_types t on p.delorean_value_type = t.id
 """
 
-class DeloreanHandler(BaseHandler):
+class DeloreanDatabase(object):
+
+   def get_dataframe(self,domain=False):
+        R = Q
+        if domain: R += " where domain = '%s'" % domain
+
+        df = self.db.select_dataframe(R)
+        df = df.groupby(["id","domain","appnexus_segment_id"]).apply( lambda x: [ i for i in x[x.deleted == 0][["pattern_type","pattern","segment_value"]].to_dict("records") if i["pattern_type"] ] )
+
+        return df 
+
+    def create_segment(self,data):
+        Q = "INSERT INTO delorean_segments (domain, appnexus_segment_id, appnexus_name, delorean_name, delorean_type) VALUES (%s,%s,%s,%s,%s)"
+        return self.db.execute(Q,(data['domain'],data['appnexus_segment_id'],data['appnexus_name'],data['domain'],data['delorean_type']))
+
+    def get_patterns(self,delorean_id):
+        CHECK = "SELECT * from delorean_segment_patterns where delorean_segment_id = %s and deleted = 0"
+        df = self.db.select_dataframe(CHECK % (delorean_id))
+        return df
+
+    def insert_pattern(self,delorean_id,pattern):
+
+        QTYPE = "SELECT * FROM delorean_value_types"
+        pattern_type = self.db.select_dataframe(QTYPE).set_index("name")['id'].to_dict()
+
+        CHECK = "SELECT * from delorean_segment_patterns where delorean_segment_id = %s "
+        seg_value = self.db.select_dataframe(CHECK % delorean_id).segment_value.max() 
+        seg_value = seg_value if seg_value is not pandas.np.nan else 0
+
+        Q = "INSERT INTO delorean_segment_patterns (delorean_segment_id,pattern,delorean_value_type,segment_value) VALUES (%s,%s,%s,%s)"
+        self.db.execute(Q, (delorean_id,pattern['pattern'],1,pattern_type.get('pattern_type',seg_value + 1)) )
+ 
+
+    def create_patterns(self,delorean_id,patterns):
+
+        for pattern in patterns:
+            self.insert_pattern(delorean_id,pattern)
+            
+
+    def check_patterns(self,delorean_id,patterns):
+
+        stored_patterns = self.get_patterns(delorean_id)
+        new_patterns = [pattern for pattern in patterns if str(pattern['pattern']) not in list(stored_patterns.pattern)]
+
+        return new_patterns
+ 
+
+
+class DeloreanHandler(BaseHandler,DeloreanDatabase):
 
     def initialize(self, db=None, api=None, **kwargs):
         self.db = db 
         self.api = api
-
-    def get_dataframe(self,domain=False):
-        R = Q
-        if domain: R += " where domain = '%s'" % domain
-
-        print R
-
-        df = self.db.select_dataframe(R)
-        df = df.groupby(["id","domain","appnexus_segment_id"]).apply( lambda x: [ i for i in x[["pattern_type","pattern","segment_value"]].to_dict("records") if i["pattern_type"] ] )
-
-        return df
 
     def get_data(self,domain=False):
         df = self.get_dataframe(domain)
@@ -57,41 +94,7 @@ class DeloreanHandler(BaseHandler):
         return (_id, short_name)
 
 
-    def create_segment(self,data):
-        Q = "INSERT INTO delorean_segments (domain, appnexus_segment_id, appnexus_name, delorean_name, delorean_type) VALUES (%s,%s,%s,%s,%s)"
-        return self.db.execute(Q,(data['domain'],data['appnexus_segment_id'],data['appnexus_name'],data['domain'],data['delorean_type']))
-
-    def get_patterns(self,delorean_id):
-        CHECK = "SELECT * from delorean_segment_patterns where delorean_segment_id = %s "
-        df = self.db.select_dataframe(CHECK % (delorean_id))
-        return df
-
-    def insert_pattern(self,delorean_id,pattern):
-
-        QTYPE = "SELECT * FROM delorean_value_types"
-        pattern_type = self.db.select_dataframe(QTYPE).set_index("name")['id'].to_dict()
-
-        CHECK = "SELECT * from delorean_segment_patterns where delorean_segment_id = %s"
-        seg_value = self.db.select_dataframe(CHECK % delorean_id).segment_value.max() 
-        seg_value = seg_value if seg_value is not pandas.np.nan else 0
-
-        Q = "INSERT INTO delorean_segment_patterns (delorean_segment_id,pattern,delorean_value_type,segment_value) VALUES (%s,%s,%s,%s)"
-        self.db.execute(Q, (delorean_id,pattern['pattern'],1,pattern_type.get('pattern_type',seg_value + 1)) )
- 
-
-    def create_patterns(self,delorean_id,patterns):
-
-        for pattern in patterns:
-            self.insert_pattern(delorean_id,pattern)
-            
-
-    def check_patterns(self,delorean_id,patterns):
-
-        stored_patterns = self.get_patterns(delorean_id)
-        new_patterns = [pattern for pattern in patterns if str(pattern['pattern']) not in list(stored_patterns.pattern)]
-
-        return new_patterns
-            
+           
     @tornado.web.asynchronous
     def get(self):
         self.get_data(self.get_argument("domain",False))
@@ -140,6 +143,10 @@ class DeloreanHandler(BaseHandler):
             data['delorean_type'] = "DOMAIN"
 
         patterns = data['patterns']
+        override = self.get_argument("override",False)
+        if override:
+            self.db.execute("UPDATE delorean_segment_patterns set deleted = 1 where delorean_segment_id = %s" % delorean_id)
+
         new_patterns = self.check_patterns(delorean_id,patterns)
         self.create_patterns(delorean_id,new_patterns)
 
