@@ -25,7 +25,9 @@ class DeloreanDatabase(object):
         if domain: R += " where domain = '%s'" % domain
 
         df = self.db.select_dataframe(R)
-        df = df.groupby(["id","domain","appnexus_segment_id"]).apply( lambda x: [ i for i in x[x.deleted == 0][["pattern_type","pattern","segment_value"]].to_dict("records") if i["pattern_type"] ] )
+
+        func = lambda x: [ i for i in x[x.deleted == 0][["pattern_type","pattern","segment_value"]].to_dict("records") if i["pattern_type"] ]
+        df = df.groupby(["id","domain","appnexus_segment_id"]).apply(func)
 
         return df 
 
