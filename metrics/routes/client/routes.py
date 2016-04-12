@@ -36,6 +36,7 @@ class AdvertiserRoutes(Routes):
             (r'/intraweek.*',reporting.InsertionOrderHandler, self.connectors),
             (r'/api.*', reporting.APIHandler, self.connectors),
             (r'/advertiser', advertiser.AdvertiserHandler, self.connectors),
+
             (r'/sellers', seller.SellerHandler, self.connectors),
 
         ]
@@ -55,6 +56,7 @@ class AdvertiserRoutes(Routes):
         import handlers.creative as creative
         import handlers.appnexus as appnexus
         import handlers.analytics as analytics
+        import handlers.delorean as delorean
 
 
         return [
@@ -65,6 +67,7 @@ class AdvertiserRoutes(Routes):
             (r'/viewability', analytics.ViewabilityHandler, self.connectors),
             (r'/availability', analytics.AvailabilityHandler, self.connectors),
             (r'/domains', analytics.DomainsMongoHandler, self.connectors),
+            (r'/delorean', delorean.DeloreanHandler, self.connectors),
             (r'/yoshi', analytics.YoshiHandler, self.connectors)
 
         ]

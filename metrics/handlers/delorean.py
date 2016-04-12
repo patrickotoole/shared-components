@@ -1,0 +1,147 @@
+import tornado.web
+import ujson
+import pandas
+import StringIO
+import mock
+import time
+from base import BaseHandler
+
+from lib.helpers import *  
+
+Q = """
+select 
+    p.*, 
+    s.*, 
+    t.name as pattern_type 
+FROM delorean_segment_patterns p 
+RIGHT JOIN delorean_segments s on s.id = p.delorean_segment_id 
+LEFT JOIN delorean_value_types t on p.delorean_value_type = t.id
+"""
+
+class DeloreanHandler(BaseHandler):
+
+    def initialize(self, db=None, api=None, **kwargs):
+        self.db = db 
+        self.api = api
+
+    def get_dataframe(self,domain=False):
+        R = Q
+        if domain: R += " where domain = '%s'" % domain
+
+        print R
+
+        df = self.db.select_dataframe(R)
+        df = df.groupby(["id","domain","appnexus_segment_id"]).apply( lambda x: [ i for i in x[["pattern_type","pattern","segment_value"]].to_dict("records") if i["pattern_type"] ] )
+
+        return df
+
+    def get_data(self,domain=False):
+        df = self.get_dataframe(domain)
+        _dict = df.reset_index().rename(columns={0:"patterns"}).to_dict("records")
+
+        self.write(ujson.dumps({"response":_dict}))
+        self.finish()
+
+    def create_appnexus_segment(self,data):
+        short_name = "Delorean: %s" % data['domain']
+        obj = {
+            "segment": {
+                "member_id": 2024,
+                "short_name": short_name
+            }
+        }
+
+        resp = self.api.post("/segment?format=json", data=ujson.dumps(obj))
+        _id = resp.json['response']['id']
+
+        return (_id, short_name)
+
+
+    def create_segment(self,data):
+        Q = "INSERT INTO delorean_segments (domain, appnexus_segment_id, appnexus_name, delorean_name, delorean_type) VALUES (%s,%s,%s,%s,%s)"
+        return self.db.execute(Q,(data['domain'],data['appnexus_segment_id'],data['appnexus_name'],data['domain'],data['delorean_type']))
+
+    def get_patterns(self,delorean_id):
+        CHECK = "SELECT * from delorean_segment_patterns where delorean_segment_id = %s "
+        df = self.db.select_dataframe(CHECK % (delorean_id))
+        return df
+
+    def insert_pattern(self,delorean_id,pattern):
+
+        QTYPE = "SELECT * FROM delorean_value_types"
+        pattern_type = self.db.select_dataframe(QTYPE).set_index("name")['id'].to_dict()
+
+        CHECK = "SELECT * from delorean_segment_patterns where delorean_segment_id = %s"
+        seg_value = self.db.select_dataframe(CHECK % delorean_id).segment_value.max() 
+        seg_value = seg_value if seg_value is not pandas.np.nan else 0
+
+        Q = "INSERT INTO delorean_segment_patterns (delorean_segment_id,pattern,delorean_value_type,segment_value) VALUES (%s,%s,%s,%s)"
+        self.db.execute(Q, (delorean_id,pattern['pattern'],1,pattern_type.get('pattern_type',seg_value + 1)) )
+ 
+
+    def create_patterns(self,delorean_id,patterns):
+
+        for pattern in patterns:
+            self.insert_pattern(delorean_id,pattern)
+            
+
+    def check_patterns(self,delorean_id,patterns):
+
+        stored_patterns = self.get_patterns(delorean_id)
+        new_patterns = [pattern for pattern in patterns if str(pattern['pattern']) not in list(stored_patterns.pattern)]
+
+        return new_patterns
+            
+    @tornado.web.asynchronous
+    def get(self):
+        self.get_data(self.get_argument("domain",False))
+
+    @tornado.web.asynchronous
+    def post(self):
+        data = ujson.loads(self.request.body)
+        df = self.get_dataframe(data['domain'])
+        
+        if len(df) and df.map(len).sum():
+            _dict = df.reset_index().rename(columns={0:"patterns"}).to_dict("records")
+            self.write(ujson.dumps({"response":_dict,"error": "You have already created patterns. To update use PUT"}))
+            self.finish()
+            return
+
+        if len(df) > 0:
+            data['appnexus_segment_id'] = df.reset_index().ix[0,'appnexus_segment_id']
+
+            delorean_id = df.reset_index().ix[0,'id']
+            data['delorean_type'] = "DOMAIN"
+        else:
+            _id, name = self.create_appnexus_segment(data)
+
+            data['appnexus_segment_id'] = _id
+            data['appnexus_name'] = name
+            data['delorean_type'] = 'DOMAIN'
+
+            delorean_id = self.create_segment(data)
+
+        patterns = data['patterns']
+        self.create_patterns(delorean_id,patterns)
+
+        self.get_data(data['domain'])
+
+    @tornado.web.asynchronous
+    def put(self):
+        domain = self.get_argument("domain")
+
+        data = ujson.loads(self.request.body)
+        df = self.get_dataframe(domain)
+        
+        if len(df) > 0:
+            data['appnexus_segment_id'] = df.reset_index().ix[0,'appnexus_segment_id']
+
+            delorean_id = df.reset_index().ix[0,'id']
+            data['delorean_type'] = "DOMAIN"
+
+        patterns = data['patterns']
+        new_patterns = self.check_patterns(delorean_id,patterns)
+        self.create_patterns(delorean_id,new_patterns)
+
+        self.get_data(domain)
+
