@@ -5,6 +5,7 @@ import logging
 from cache_runner_base import BaseRunner
 
 import datetime
+import uuid
 
 current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -83,7 +84,9 @@ class AdvertiserActionRunner(BaseRunner):
 def runner(advertiser,pattern, base_url, cache_date="", indentifiers="test", connectors=False):
     connectors = connectors or AdvertiserActionRunner.get_connectors()
 
+    uuid_num = str(uuid.uuid4())
     AAR = AdvertiserActionRunner(connectors)
+    AAR.accounting_entry_start(advertiser, pattern, "action_dashboard_runner", uuid_num)
 
     db = connectors['crushercache']
     zk = connectors['zk']
@@ -94,4 +97,4 @@ def runner(advertiser,pattern, base_url, cache_date="", indentifiers="test", con
         executed = AAR.execute(data, advertiser, pattern, db)
 
     AAR.post_validation(advertiser, pattern, executed)
-
+    AAR.accounting_entry_end(advertiser, pattern, "action_dashboard_runner", uuid_num)

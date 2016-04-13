@@ -6,6 +6,9 @@ import datetime
 SQL = "INSERT INTO action_dashboard_cache (advertiser, count, domain) values ('{}', {}, '{}')" 
 current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+SQLENTRY="insert into crusher_cache_accounting (advertiser, pattern, ts, start_or_end, script_name, uuid) values ('{}', '{}', '{}', '{}', '{}', '{}')"
+SQLENTRYREPLACE = "replace into crusher_cache_accounting (advertiser, pattern, ts, start_or_end, script_name, uuid) values ('{}', '{}', '{}', '{}', '{}', '{}')"
+
 class BaseRunner():
 
     def __init__(self, connectors):
@@ -17,12 +20,29 @@ class BaseRunner():
         from link import lnk
         return {
             "db": lnk.dbs.rockerbox,
+            "crushercache":lnk.dbs.crushercache,
             "zk": {},
             "cassandra": lnk.dbs.cassandra
         }
 
     def generic_insert(self, data, advertiser, db):
         db.execute(SQL.format(data))
+
+    def accounting_entry_start(self, advertiser, pattern, name, uuid):
+        try:
+            self.connectors['crushercache'].execute(SQLENTRY.format(advertiser,pattern, current_datetime, "Start", name, uuid))
+            logging.info("start entry")
+        except:
+            self.connectors['crushercache'].execute(SQLENTRYREPLACE.format(advertiser,pattern, current_datetime, "Start", name, uuid))
+            logging.info("start entry")
+
+    def accounting_entry_end(self, advertiser, pattern, name, uuid):
+        try:
+            self.connectors['crushercache'].execute(SQLENTRY.format(advertiser,pattern, current_datetime, "End", name, uuid))
+            logging.info("finish entry")
+        except:
+            self.connectors['crushercache'].execute(SQLENTRYREPLACE.format(advertiser,pattern, current_datetime, "End", name, uuid))
+            logging.info("finish entry")
 
     def get_crusher_obj(self, advertiser, base_url):
         from link import lnk

@@ -45,7 +45,7 @@ if __name__ == "__main__":
     from lib.report.utils.options import parse_command_line
 
     define("advertiser",  default="")
-    define("pattern", default="")
+    define("segment", default="")
     define("run_local", default=False)
     define("base_url", default="http://beta.crusher.getrockerbox.com")
     define("run_all", default=False)

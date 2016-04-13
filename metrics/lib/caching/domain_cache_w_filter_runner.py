@@ -1,11 +1,15 @@
 import pandas
 import logging
 from lib.pandas_sql import s as _sql
-
+from link import lnk
 from cache_runner_base import BaseRunner
 
-import datetime, ujson
-import zlib, codecs, sys
+import datetime
+import ujson
+import uuid
+import zlib
+import codecs
+import sys
 
 current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -26,11 +30,15 @@ class DomainsCacheRunner(BaseRunner):
         self.connectors =connectors
         self.selection_dict = {"domains":{"Insert":SQL_INSERT1, "Replace":SQL_REPLACE1}, "domains_full":{"Insert":SQL_INSERT2, "Replace":SQL_REPLACE2}}
 
-    def featured_seg(advertiser, segment):
+    def featured_seg(self,advertiser, segment):
         sql = lnk.dbs.rockerbox
         query = "select featured from action a join action_patterns b on a.action_id = b.action_id where b.url_pattern='{}' and a.pixel_source_name='{}'"
         featured = sql.select_dataframe(query.format(segment, advertiser))
-        return featured['featured'][0] 
+        try:
+            featured_value = featured['featured'][0]
+        except:
+            featured_value = 0
+        return featured_value 
 
 
     def make_request(self,crusher, pattern, endpoint, filter_id, featured):
@@ -77,18 +85,28 @@ class DomainsCacheRunner(BaseRunner):
 def runner(advertiser,pattern, endpoint, filter_id, base_url, cache_date="", indentifiers="test", connectors=False):
 
     connectors = connectors or DR.get_connectors()
-    
+
+    uuid_num = str(uuid.uuid4()) 
     DR = DomainsCacheRunner(connectors)
+    if endpoint=='domains':
+        DR.accounting_entry_start(advertiser, pattern, "domains_cache_w_filter_id", uuid_num)
+    elif endpoint=='domains_full':
+        DR.accounting_entry_start(advertiser, pattern, "domains_full_cache_w_filter_id", uuid_num)
     crusher = DR.get_crusher_obj(advertiser, base_url)
 
     db = connectors['crushercache']
     zk = connectors['zk']
-    featured = DR.featured(advertiser, pattern)
+    featured = DR.featured_seg(advertiser, pattern)
     data = DR.make_request(crusher, pattern, endpoint, filter_id, featured)
 
     compress_data = DR.compress(ujson.dumps(data))
     try:
         DR.insert(advertiser, pattern, endpoint, filter_id, compress_data)
         logging.info("Data inserted")
+        if endpoint=='domains':
+            DR.accounting_entry_end(advertiser, pattern, "domains_cache_w_filter_id", uuid_num)
+        elif endpoint=='domains_full':
+            DR.accounting_entry_end(advertiser, pattern, "domains_full_cache_w_filter_id", uuid_num)
     except:
         logging.info("Data not inserted")
+    
