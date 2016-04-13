@@ -2,7 +2,8 @@ import pickle, pandas, json
 from link import lnk
 from lib.pandas_sql import s as _sql
 import datetime
-import logging, uuid
+import logging
+import uuid
 from cache_runner_base import BaseRunner
 
 INSERT_QUERY ="INSERT INTO full_domain_cache_test (advertiser, url, count, uniques, url_pattern) VALUES ('{}', '{}',{}, {}, '{}')"

@@ -1,7 +1,8 @@
 import pickle, pandas, json
 from link import lnk
 from lib.pandas_sql import s as _sql
-import logging, uuid
+import logging
+import uuid
 
 from cache_runner_base import BaseRunner
 

@@ -1,7 +1,8 @@
 import requests, json, logging, pandas
 
 from link import lnk
-import datetime, uuid
+import datetime
+import uuid
 from kazoo.client import KazooClient
 from cache_runner_base import BaseRunner
 
