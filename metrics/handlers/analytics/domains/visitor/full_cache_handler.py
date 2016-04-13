@@ -26,7 +26,17 @@ class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler)
     def initialize(self, db=None, crushercache=None, **kwargs):
         self.db = db
         self.crushercache = crushercache
-    
+
+    def getSummary(self, url_set):
+        QUERY = """
+            select title, summary, url
+            from full_url_summary
+            where url in (%(url)s)
+        """
+        url_set = [i.encode("utf-8") for i in url_set]
+        url = "'" + "','".join(url_set) + "'"
+        return self.crushercache.select_dataframe(QUERY % {"url":url})
+     
     def get_idf(self,domain_set):
         QUERY = """
             SELECT p.domain, max(p.num_users), p.idf, p.category_name, c.parent_category_name 
@@ -71,7 +81,10 @@ class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler)
             
             # BAD: BLOCKING PROCESS
             idf = self.get_idf(set(list(response_data['domain'])))
+            summary = self.getSummary(set(list(response_data['url'])))
             response_data = response_data.merge(idf,on="domain",how="left")
+            response_data = response_data.merge(summary, on="url", how="left")
+            
 
 
             if len(response_data)>0:
