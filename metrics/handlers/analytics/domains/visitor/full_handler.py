@@ -19,13 +19,16 @@ from ...search.cache.pattern_search_cache import PatternSearchCache
 from ...search.pattern.base_visitors import VisitorBase
 import lib.custom_defer as custom_defer
 
+QUERYFILTER = "select domain from filtered_out_domains where advertiser = '{}' or advertiser is NULL"
+
 class VisitorDomainsFullHandler(VisitorBase):
 
-    def initialize(self, db=None, cassandra=None, zookeeper=None, **kwargs):
+    def initialize(self, db=None, cassandra=None, zookeeper=None, crushercache=None, **kwargs):
         self.logging = logging
         self.db = db
         self.cassandra = cassandra
         self.zookeeper = zookeeper
+        self.crushercache = crushercache
 
         self.DOMAIN_SELECT="select * from rockerbox.visitor_domains_full where uid = ?"
         self.limit = None
@@ -110,6 +113,11 @@ class VisitorDomainsFullHandler(VisitorBase):
         response_data = response_data.merge(idf,on="domain",how="left")
         response_data['url'] = response_data.url.map(lambda x : x.encode('utf-8'))
 
+
+        filter_out = self.crushercache.select_dataframe(QUERYFILTER.format(advertiser))
+        remove_domains = set(filter_out.domain.tolist())
+        filter_domain = response_data.domain.map(lambda x : x not in remove_domains)
+        response_data = response_data[filter_domain]
         
         versioning = self.request.uri
         if versioning.find('v1') >=0:

@@ -19,6 +19,7 @@ from lib.cassandra_cache.helpers import *
 from ...search.cache.pattern_search_cache import PatternSearchCache
 
 QUERY = "select advertiser, url_pattern, uniques, count, url from full_domain_cache_test where advertiser = '{}' and url_pattern = '{}'"
+QUERYFILTER = "select domain from filtered_out_domains where advertiser = '{}' or advertiser is NULL"
 QUERY2 = "select zipped from cache_domains_full_w_filter_id where filter_id={}"
 
 class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler):
@@ -39,7 +40,7 @@ class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler)
      
     def get_idf(self,domain_set):
         QUERY = """
-            SELECT p.domain, max(p.num_users), p.idf, p.category_name, c.parent_category_name 
+            SELECT p.domain, max(p.num_users) as num_users, p.idf, p.category_name, c.parent_category_name 
             FROM reporting.pop_domain_with_category p 
             JOIN category c using (category_name) 
             WHERE domain in (%(domains)s)
@@ -85,7 +86,10 @@ class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler)
             response_data = response_data.merge(idf,on="domain",how="left")
             response_data = response_data.merge(summary, on="url", how="left")
             
-
+            filter_out = self.crushercache.select_dataframe(QUERYFILTER.format(advertiser))
+            remove_domains = set(filter_out.domain.tolist())
+            filter_domain = response_data.domain.map(lambda x : x not in remove_domains)
+            response_data = response_data[filter_domain]
 
             if len(response_data)>0:
                 versioning = self.request.uri
