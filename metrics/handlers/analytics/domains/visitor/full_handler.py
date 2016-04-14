@@ -108,7 +108,7 @@ class VisitorDomainsFullHandler(VisitorBase):
         # BAD: BLOCKING PROCESS
         idf = self.get_idf([i for i in set(list(response_data['domain'])) if len(i) < 25 ])
         response_data = response_data.merge(idf,on="domain",how="left")
-
+        response_data['url'] = response_data.url.map(lambda x : x.encode('utf-8'))
 
         
         versioning = self.request.uri
