@@ -46,6 +46,7 @@ class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler)
     def defer_get_onsite_cache(self, advertiser, pattern, top_count):
 
         results  = self.crushercache.select_dataframe(QUERY.format(advertiser, pattern))
+        results = results.fillna(0)
         sort_results = results.sort(["uniques", "count"], ascending=False)
         results_no_NA = sort_results[sort_results["url"] != "NA"]
         df = pandas.DataFrame(results_no_NA.iloc[:int(top_count)])
