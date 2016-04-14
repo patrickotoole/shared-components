@@ -14,7 +14,7 @@ class FullDomainRunner(BaseRunner):
 
     def insert(self, df, advertiser, segment_name):
         current_datetime = datetime.datetime.now()
-        df_filtered = df.filter(['url', 'count'])
+        df_filtered = df.filter(['url', 'count', 'uniques'])
         table_name ="full_domain_cache_test"
         keys = ['advertiser', 'url_pattern']
         batch_num = int(len(df_filtered) / 50)+1
@@ -46,7 +46,7 @@ class FullDomainRunner(BaseRunner):
         if int(featured) ==1:
             urls = crusher.get('/crusher/v1/visitor/domains_full?format=json&num_users=30000&num_days=7&url_pattern={}'.format(pattern), timeout=91)
         else:
-            urls = crusher.get('/crusher/v1/visitor/domains_full?format=json&url_pattern={}'.format(pattern), timeout=91)
+            urls = crusher.get('/crusher/v1/visitor/domains_full?format=json&url_pattern={}&num_days=7'.format(pattern), timeout=91)
         return urls.json
 
     def featured_seg(self, advertiser, segment):

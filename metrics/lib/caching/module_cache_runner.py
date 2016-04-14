@@ -13,16 +13,16 @@ import sys
 
 current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-SQL_INSERT1 = "INSERT INTO transform_before_and_after_cache (advertiser, url_pattern, filter_id, endpoint, zipped) values ('{}','{}',{},'{}',UNHEX({}))"
+SQL_INSERT1 = "INSERT INTO transform_before_and_after_cache (advertiser, url_pattern, filter_id, endpoint, zipped) values ('{}','{}',{},'{}','{}')"
 SQL_REPLACE1=" REPLACE transform_before_and_after_cache (advertiser, url_pattern, filter_id, endpoint, zipped) values ('{}','{}',{},'{}','{}')"
 
-SQL_INSERT2 = "INSERT INTO transform_hourly_cache (advertiser, url_pattern, filter_id, endpoint, zipped) values ('{}','{}',{},'{}',UNHEX({}))"
+SQL_INSERT2 = "INSERT INTO transform_hourly_cache (advertiser, url_pattern, filter_id, endpoint, zipped) values ('{}','{}',{},'{}','{}')"
 SQL_REPLACE2=" REPLACE transform_hourly_cache (advertiser, url_pattern, filter_id, endpoint, zipped) values ('{}','{}',{},'{}','{}')"
 
-SQL_INSERT3 = "INSERT INTO transform_sessions_cache (advertiser, url_pattern, filter_id, endpoint, zipped) values ('{}','{}',{},'{}',UNHEX({}))"
+SQL_INSERT3 = "INSERT INTO transform_sessions_cache (advertiser, url_pattern, filter_id, endpoint, zipped) values ('{}','{}',{},'{}','{}')"
 SQL_REPLACE3=" REPLACE transform_sessions_cache (advertiser, url_pattern, filter_id, endpoint, zipped) values ('{}','{}',{},'{}','{}')"
 
-SQL_INSERT4 = "INSERT INTO transform_model_cache (advertiser, url_pattern, filter_id, endpoint, zipped) values ('{}','{}',{},'{}',UNHEX({}))"
+SQL_INSERT4 = "INSERT INTO transform_model_cache (advertiser, url_pattern, filter_id, endpoint, zipped) values ('{}','{}',{},'{}','{}')"
 SQL_REPLACE4=" REPLACE transform_model_cache (advertiser, url_pattern, filter_id, endpoint, zipped) values ('{}','{}',{},'{}','{}')"
 
 URL1 = "/crusher/v1/visitor/before_and_after?url_pattern={}"
