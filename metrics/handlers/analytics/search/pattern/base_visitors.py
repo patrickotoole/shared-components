@@ -9,13 +9,14 @@ from transforms.sessions import *
 from transforms.timing import *
 from transforms.before_and_after import *
 from transforms.domain_intersection import *
+from transforms.raw import *
 from model import process_model
 from generic import GenericSearchBase
 import lib.custom_defer as custom_defer
 from ...domains.base_domain_handler import BaseDomainHandler
 from ...domains.base_helpers import *
 
-DEFAULT_FUNCS = [process_before_and_after, process_hourly, process_sessions, process_domain_intersection, process_model]
+DEFAULT_FUNCS = [process_before_and_after, process_hourly, process_sessions, process_domain_intersection, process_model, process_raw]
 
 
 class VisitorBase(GenericSearchBase, BaseDomainHandler):
