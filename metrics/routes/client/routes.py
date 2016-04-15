@@ -49,7 +49,7 @@ class AdvertiserRoutes(Routes):
              (r'/hoverboard', hoverboard.HoverboardHandler, self.connectors),
         ]
 
-    @connectors("db","api","cassandra", "mongo","zookeeper")
+    @connectors("db","api","zookeeper","redis")
     def delorean_routes(self):
         import handlers.delorean as delorean
 

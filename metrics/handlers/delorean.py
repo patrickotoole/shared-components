@@ -4,10 +4,11 @@ import pandas
 import StringIO
 import mock
 import time
+import logging
 from base import BaseHandler
 
 from lib.helpers import *  
-
+from twisted.internet import defer 
 from lib.zookeeper.zk_tree import ZKTreeWithConnection
 
 Q = """
@@ -20,11 +21,25 @@ RIGHT JOIN delorean_segments s on s.id = p.delorean_segment_id
 LEFT JOIN delorean_value_types t on p.delorean_value_type = t.id
 """
 
-class DeloreanRedis(object):
+import handlers.admin.scripts.filter as admin
 
+class DeloreanRedis(admin.FilterDatabaseHandler):
+
+    @decorators.deferred
+    def check_domain(self,domain):
+        df = self.db.select_dataframe("SELECT * from domain_list where segment = 'delorean:0' and log = 'delorean' and pattern = '%s'" % domain)
+        return len(df) > 0
+
+    @defer.inlineCallbacks
     def add_domain_to_redis(self,domain):
 
-        self.redis.add(domain)
+        has_domain = yield self.check_domain(domain)
+
+       	if not has_domain:
+            response = yield self.defer_post_domain(domain)
+            update = yield self.update_profile()
+        else:
+            logging.info("Found domain in domain list: %s" % domain)
 
 class DeloreanZookeeper(object):
 
@@ -138,12 +153,13 @@ class DeloreanDatabase(object):
  
 
 
-class DeloreanHandler(BaseHandler,DeloreanDatabase,DeloreanZookeeper):
+class DeloreanHandler(BaseHandler,DeloreanDatabase,DeloreanZookeeper,DeloreanRedis):
 
-    def initialize(self, db=None, api=None, zookeeper=None, **kwargs):
+    def initialize(self, db=None, api=None, zookeeper=None, redis=None, **kwargs):
         self.db = db 
         self.api = api
         self.zk = zookeeper
+        self.redis = redis
         self.tree = ZKTreeWithConnection(self.zk,"kafka-filter/tree/raw_imps_tree")
 
     def get_data(self,domain=False):
@@ -207,6 +223,7 @@ class DeloreanHandler(BaseHandler,DeloreanDatabase,DeloreanZookeeper):
 
         _domain_data = self.get_data(data['domain'])
         self.add_domain_to_tree(_domain_data[0])
+        self.add_domain_to_redis(data['domain'])
 
         self.write_data(_domain_data)
 
@@ -233,5 +250,6 @@ class DeloreanHandler(BaseHandler,DeloreanDatabase,DeloreanZookeeper):
 
         _domain_data = self.get_data(data['domain'])
         self.add_domain_to_tree(_domain_data[0])
+        self.add_domain_to_redis(data['domain'])
 
         self.write_data(_domain_data)
