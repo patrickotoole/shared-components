@@ -49,6 +49,15 @@ class AdvertiserRoutes(Routes):
              (r'/hoverboard', hoverboard.HoverboardHandler, self.connectors),
         ]
 
+    @connectors("db","api","cassandra", "mongo","zookeeper")
+    def delorean_routes(self):
+        import handlers.delorean as delorean
+
+        return [
+            (r'/delorean', delorean.DeloreanHandler, self.connectors),
+        ]
+
+
     @connectors("db","api","cassandra", "mongo")
     def yoshi_routes(self):
         import handlers.campaign as campaign
@@ -56,7 +65,6 @@ class AdvertiserRoutes(Routes):
         import handlers.creative as creative
         import handlers.appnexus as appnexus
         import handlers.analytics as analytics
-        import handlers.delorean as delorean
 
 
         return [
@@ -67,9 +75,7 @@ class AdvertiserRoutes(Routes):
             (r'/viewability', analytics.ViewabilityHandler, self.connectors),
             (r'/availability', analytics.AvailabilityHandler, self.connectors),
             (r'/domains', analytics.DomainsMongoHandler, self.connectors),
-            (r'/delorean', delorean.DeloreanHandler, self.connectors),
             (r'/yoshi', analytics.YoshiHandler, self.connectors)
-
         ]
 
     @namespace("/crusher/v1")

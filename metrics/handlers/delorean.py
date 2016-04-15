@@ -8,6 +8,8 @@ from base import BaseHandler
 
 from lib.helpers import *  
 
+from lib.zookeeper.zk_tree import ZKTreeWithConnection
+
 Q = """
 select 
     p.*, 
@@ -18,9 +20,77 @@ RIGHT JOIN delorean_segments s on s.id = p.delorean_segment_id
 LEFT JOIN delorean_value_types t on p.delorean_value_type = t.id
 """
 
+class DeloreanRedis(object):
+
+    def add_domain_to_redis(self,domain):
+
+        self.redis.add(domain)
+
+class DeloreanZookeeper(object):
+
+    def deloran_object_to_tree(self,delorean_object):
+
+        patterns = delorean_object["patterns"]
+        children = []
+
+        for pattern in patterns:
+            children.append({
+                "node": {
+                    "pattern": pattern['pattern'],
+                    "label":"",
+                    "segment": {
+                        "id": delorean_object['appnexus_segment_id'], 
+                        "value": pattern['segment_value'],
+                        "duration": 10080
+                    }
+                },
+                "children": []
+            })
+
+
+
+        return children
+
+    def add_domain_to_tree(self,delorean_object):
+
+        domain = delorean_object['domain']
+
+        sub_tree = self.tree.find_node_by_label("Domains")
+        if sub_tree is False:
+            self.tree.tree['children'].append({
+                "node":{
+                    "pattern": "",
+                    "label": "Domains"
+                },
+                "children": []
+            })
+        sub_tree = self.tree.find_node_by_label("Domains")
+        domain_tree = self.tree.find_node_by_label(domain,sub_tree)
+
+        if domain_tree is False:
+            sub_tree['children'].append({
+                "node":{
+                    "pattern": "",
+                    "label": domain
+                },
+                "children": []
+            })
+        domain_tree = self.tree.find_node_by_label(domain,sub_tree)
+
+
+        domain_tree['children'] = [
+            {"node":{"pattern":domain,"label":""},"children":self.deloran_object_to_tree(delorean_object)}
+        ]
+
+        self.tree.set_tree()
+
+
+        
+ 
+
 class DeloreanDatabase(object):
 
-   def get_dataframe(self,domain=False):
+    def get_dataframe(self,domain=False):
         R = Q
         if domain: R += " where domain = '%s'" % domain
 
@@ -68,15 +138,21 @@ class DeloreanDatabase(object):
  
 
 
-class DeloreanHandler(BaseHandler,DeloreanDatabase):
+class DeloreanHandler(BaseHandler,DeloreanDatabase,DeloreanZookeeper):
 
-    def initialize(self, db=None, api=None, **kwargs):
+    def initialize(self, db=None, api=None, zookeeper=None, **kwargs):
         self.db = db 
         self.api = api
+        self.zk = zookeeper
+        self.tree = ZKTreeWithConnection(self.zk,"kafka-filter/tree/raw_imps_tree")
 
     def get_data(self,domain=False):
         df = self.get_dataframe(domain)
         _dict = df.reset_index().rename(columns={0:"patterns"}).to_dict("records")
+
+        return _dict
+
+    def write_data(self,_dict):
 
         self.write(ujson.dumps({"response":_dict}))
         self.finish()
@@ -99,7 +175,7 @@ class DeloreanHandler(BaseHandler,DeloreanDatabase):
            
     @tornado.web.asynchronous
     def get(self):
-        self.get_data(self.get_argument("domain",False))
+        self.write_data(self.get_data(self.get_argument("domain",False)))
 
     @tornado.web.asynchronous
     def post(self):
@@ -129,7 +205,10 @@ class DeloreanHandler(BaseHandler,DeloreanDatabase):
         patterns = data['patterns']
         self.create_patterns(delorean_id,patterns)
 
-        self.get_data(data['domain'])
+        _domain_data = self.get_data(data['domain'])
+        self.add_domain_to_tree(_domain_data[0])
+
+        self.write_data(_domain_data)
 
     @tornado.web.asynchronous
     def put(self):
@@ -152,5 +231,7 @@ class DeloreanHandler(BaseHandler,DeloreanDatabase):
         new_patterns = self.check_patterns(delorean_id,patterns)
         self.create_patterns(delorean_id,new_patterns)
 
-        self.get_data(domain)
+        _domain_data = self.get_data(data['domain'])
+        self.add_domain_to_tree(_domain_data[0])
 
+        self.write_data(_domain_data)

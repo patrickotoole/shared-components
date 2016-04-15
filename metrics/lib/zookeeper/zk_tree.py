@@ -57,17 +57,29 @@ class ZKTree(ZKBase):
             
         return self.get_tree(tree_name)
     
-    def find_node_by_label(self,label):
+    def find_node_by_label(self,label,tree=False):
         """
         Args:
           label: the label associated with the top leve node you want to find
+          tree: option reference to the the tree or subtree to search
           
         Returns:
           the first node from the trees children with a matching label
         """
-        for child in self.tree['children']:
+        tree = tree or self.tree
+        for child in tree['children']:
             if child['node']['label'] == label:
                 return child
+
+        return False
+
+class ZKTreeWithConnection(ZKTree):
+
+    def __init__(self,zk,tree_name):
+        self.zk = zk
+        self.tree_name = tree_name
+
+
 
 if __name__ == "__main__":
 
