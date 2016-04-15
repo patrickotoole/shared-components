@@ -40,6 +40,7 @@ class CrusherAPIRequestWrapper(APIRequestWrapper):
         for k in return_dict.keys():
             if type(return_dict[k]) == dict:
                 return_dict[k] = pandas.DataFrame(return_dict[k])
+        return_dict['response'] ={}
         return return_dict
 
     def switch_user(self, username):
