@@ -10,15 +10,10 @@ QUERYFUNCTIONS = "select body from user_defined_functions where udf = '{}'"
 def userDefinedFunction(code_string):
     
     env = {}
-    code_string.replace("import", "raise Exception('user defined function error')")
+    code_string = code_string.replace("import", "raise Exception('user defined function error')")
+
     code = compile(code_string, '<string>','exec')
     exec code in env
-    #if fnc_name not in locals() and fnc_name not in globals():
-    #code_string.replace("import", "raise Exception('user defined function error')")
-    #for k in locals().keys():
-    #code_string.replace(k, "raise Exception('user defined function error')")
-    #for k in globals().keys():
-    #code_string.replace(k, "raise Exception('user defined function error')")
     return env 
 
 class VisitorTransformHandler(VisitorBase):
@@ -39,7 +34,6 @@ class VisitorTransformHandler(VisitorBase):
     def get(self, api_type):
         advertiser = self.current_advertiser_name
         terms = self.get_argument("url_pattern", False)
-        import ipdb; ipdb.set_trace()
         names = [x.__name__ for x in self.DEFAULT_FUNCS]
         api_name = "process_{}".format(api_type)
         if api_name not in names:
