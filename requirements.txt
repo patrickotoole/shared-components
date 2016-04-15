@@ -37,4 +37,4 @@ google-api-python-client
 urllib3
 oauth2client
 bs4
-readability
+readability-lxml
