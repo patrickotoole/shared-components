@@ -9,12 +9,7 @@ from dns import resolver
 from twisted.internet import defer 
 from lib.helpers import *
 
-class FilterHandler(tornado.web.RequestHandler):
-
-    def initialize(self, bidder=None,do=None,marathon=None, db=None, redis=None, reporting_db=None):
-        self.marathon = marathon
-        self.db = db
-        self.redis = redis
+class FilterDatabaseHandler(object):
 
     @decorators.deferred
     def defer_post_domain(self,domain):
@@ -37,6 +32,15 @@ class FilterHandler(tornado.web.RequestHandler):
     @decorators.deferred
     def defer_get_domains(self):
         return self.db.select_dataframe("SELECT * from domain_list where segment like 'delorean%%'")
+
+class FilterHandler(tornado.web.RequestHandler):
+
+    def initialize(self, bidder=None,do=None,marathon=None, db=None, redis=None, reporting_db=None):
+        self.marathon = marathon
+        self.db = db
+        self.redis = redis
+
+    
     
     def get_available(self, filter_type):
         server = "_{}.filter._tcp.marathon.mesos".format(filter_type)

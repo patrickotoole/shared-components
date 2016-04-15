@@ -36,6 +36,7 @@ class AdvertiserRoutes(Routes):
             (r'/intraweek.*',reporting.InsertionOrderHandler, self.connectors),
             (r'/api.*', reporting.APIHandler, self.connectors),
             (r'/advertiser', advertiser.AdvertiserHandler, self.connectors),
+
             (r'/sellers', seller.SellerHandler, self.connectors),
 
         ]
@@ -47,6 +48,15 @@ class AdvertiserRoutes(Routes):
         return [
              (r'/hoverboard', hoverboard.HoverboardHandler, self.connectors),
         ]
+
+    @connectors("db","api","zookeeper","redis")
+    def delorean_routes(self):
+        import handlers.delorean as delorean
+
+        return [
+            (r'/delorean', delorean.DeloreanHandler, self.connectors),
+        ]
+
 
     @connectors("db","api","cassandra", "mongo")
     def yoshi_routes(self):
@@ -66,7 +76,6 @@ class AdvertiserRoutes(Routes):
             (r'/availability', analytics.AvailabilityHandler, self.connectors),
             (r'/domains', analytics.DomainsMongoHandler, self.connectors),
             (r'/yoshi', analytics.YoshiHandler, self.connectors)
-
         ]
 
     @namespace("/crusher/v1")
