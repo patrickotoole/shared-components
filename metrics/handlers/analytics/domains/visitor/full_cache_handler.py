@@ -46,8 +46,8 @@ class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler)
             WHERE domain in (%(domains)s)
             group by domain
         """
-
-        domain_set = [i.encode("utf-8").replace("'","") for i in domain_set]
+        escape = self.db.escape_string  
+        domain_set = [escape(i) for i in domain_set][:10000]
         domains = domains = "'" + "','".join(domain_set) + "'"
 
         return self.db.select_dataframe(QUERY % {"domains":domains})
