@@ -73,11 +73,12 @@ function draw() {
       var column_value = row_data[x.key];
 
       if(typeof x.href !== typeof undefined && x.href == true) {
-        if(row_data[x.key].length > 100) {
-          column_value = '<a href="' + column_value + '" target="_blank">' + column_value.slice(0,100) + '...</a>';
-        } else {
-          column_value = '<a href="' + column_value + '" target="_blank">' + column_value + '</a>';
+
+        var text = (row_data[x.key].length > 100) ? column_value.slice(0,100) : column_value;
+        if (row_data.title) {
+          text = row_data.title;
         }
+        column_value = '<a href="' + column_value + '" target="_blank">' + text + '</a>';
       }
 
       return column_value;

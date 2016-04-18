@@ -36,12 +36,12 @@ def getTopFull(advertiser, pattern):
     crusher = lnk.api.crusher
     crusher.user = "a_{}".format(advertiser)
     crusher.password= "admin"
-    crusher.base_url = 'http://192.168.99.100:8888'
+    crusher.base_url = 'http://slave7:8888'
     crusher.authenticate()
-    results = crusher.get('/crusher/v1/visitor/domains_full/cache?format=json&url_pattern={}'.format(pattern))
+    results = crusher.get('/crusher/v1/visitor/domains_full/cache?format=json&top=10000&url_pattern={}'.format(pattern))
     datajs = results.json
     final_results = []
-    for i in datajs[:250]:
+    for i in datajs:
         if i['url']!=' ' and i['url']!='':
             final_results.append(i['url'])
     return final_results
@@ -56,11 +56,13 @@ def insert(data, db):
     except:
         db.execute(REPLACEQUERY.format(data['url'], summary, data['title'].encode('utf-8').replace("'","")))
 
-segments = getTopFull('fsastore', '/')
-db = lnk.dbs.crushercache
-for url in segments:
-    print url
-    data = checkURL(url)
-    if data != {}:
-        insert(data, db)
-        print data
+if __name__ == "__main__":
+    segments = getTopFull('fsastore', '/')
+    db = lnk.dbs.crushercache
+    for url in segments:
+        print url
+        if len(url.replace("://","")[:-1].split("/")) > 1:
+            data = checkURL(url)
+            if data != {}:
+                insert(data, db)
+                print data

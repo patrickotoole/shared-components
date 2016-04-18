@@ -102,6 +102,7 @@ class MysqlDB(DBConnectionWrapper):
         conn = MySQLdb.connect(host=self.host, user=self.user,
                                db=self.database, passwd=self.password,
                                conv=conv, port=self.port)
+        conn.set_character_set('utf8')
         if self.autocommit:
             conn.autocommit(True)
         return conn

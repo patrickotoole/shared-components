@@ -34,8 +34,10 @@ class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler)
             from full_url_summary
             where url in (%(url)s)
         """
-        url_set = [i.encode("utf-8") for i in url_set]
+        escape = self.db.escape_string
+        url_set = [escape(i) for i in url_set][:10000]
         url = "'" + "','".join(url_set) + "'"
+
         return self.crushercache.select_dataframe(QUERY % {"url":url})
      
     def get_idf(self,domain_set):
