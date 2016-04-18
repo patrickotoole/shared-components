@@ -48,7 +48,8 @@ class MarathonHive2DB(DBConnectionWrapper):
         if len(instances):
             import random
             instance = random.choice(instances)
-            self.host = "spark-sql-1.2.marathon.mesos" #instance['host']
+            self.host = instance['appId'][1:] + ".marathon.mesos"
+            #self.host = "spark-sql-1.2.marathon.mesos" #instance['host']
             self.port = instance['ports'][0]
         
     def create_connection(self):
