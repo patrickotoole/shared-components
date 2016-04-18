@@ -44,8 +44,9 @@ class DeloreanCampaignDatabase(DeloreanOperations):
         if reuse_lineitem:
             campaign['line_item_id'] = yoshi_campaign['line_item_id']
         else:
-            # go get / create a new line item
-            pass
+            line_items = self.api.get("/line-item?advertiser_id=%s" % advertiser_id).json['response']['line-items']
+            line_item_name = [line['name'] for line in line_items if line['id'] == yoshi_campaign['line_item_id']][0]
+            campaign['line_item_id'] = [line['id'] for line in line_items if (line_item_name in line['name']) and ("Delorean" in line['name'])][0]
 
         URL = "/profile?advertiser_id=%s" % advertiser_id
         resp_profile = self.api.post(URL,'{"profile":%s}' % ujson.dumps(profile)).json
@@ -59,10 +60,6 @@ class DeloreanCampaignDatabase(DeloreanOperations):
         return resp_campaign
 
         
-        
-
-        
-
     @decorators.deferred
     def find_delorean(self, domain, placements):
 
@@ -97,10 +94,8 @@ class DeloreanCampaignDatabase(DeloreanOperations):
             }
 
             self.update(yoshi_params['domain'], new_delorean)
+
         delorean_df = yield self.find_delorean(yoshi_params['domain'],yoshi_params['placements'])
-
-
-        reuse_lineitem = True    
         delorean_campaign = yield self.create_delorean(delorean_df,template_id,campaign_id,reuse_lineitem)
 
         self.write(ujson.dumps(delorean_campaign))
@@ -123,7 +118,9 @@ class DeloreanCampaignHandler(BaseHandler,DeloreanCampaignDatabase):
         data = ujson.loads(self.request.body)
         campaign_id = data['campaign_id']
         template_id = int(self.get_argument("template_id",1))
-        reuse_lineitem = self.get_argument("reuse_lineitem",True)
+        seperate_line = self.get_argument("seperate_line",False)
+
+        reuse_lineitem = False if seperate_line else True
 
         self.run_create_from_yoshi_campaign(campaign_id, template_id, reuse_lineitem)
 
