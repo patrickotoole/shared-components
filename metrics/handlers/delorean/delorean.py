@@ -5,7 +5,7 @@ import StringIO
 import mock
 import time
 import logging
-from base import BaseHandler
+from ..base import BaseHandler
 
 from lib.helpers import *  
 from twisted.internet import defer 
@@ -227,21 +227,15 @@ class DeloreanHandler(BaseHandler,DeloreanDatabase,DeloreanZookeeper,DeloreanRed
 
         self.write_data(_domain_data)
 
-    @tornado.web.asynchronous
-    def put(self):
-        domain = self.get_argument("domain")
-
-        data = ujson.loads(self.request.body)
+    def update(self, domain, data, override=False):
         df = self.get_dataframe(domain)
         
         if len(df) > 0:
             data['appnexus_segment_id'] = df.reset_index().ix[0,'appnexus_segment_id']
-
             delorean_id = df.reset_index().ix[0,'id']
             data['delorean_type'] = "DOMAIN"
 
         patterns = data['patterns']
-        override = self.get_argument("override",False)
         if override:
             self.db.execute("UPDATE delorean_segment_patterns set deleted = 1 where delorean_segment_id = %s" % delorean_id)
 
@@ -251,5 +245,15 @@ class DeloreanHandler(BaseHandler,DeloreanDatabase,DeloreanZookeeper,DeloreanRed
         _domain_data = self.get_data(data['domain'])
         self.add_domain_to_tree(_domain_data[0])
         self.add_domain_to_redis(data['domain'])
+
+        return _domain_data
+
+    @tornado.web.asynchronous
+    def put(self):
+        domain = self.get_argument("domain")
+        override = self.get_argument("override",False)
+        data = ujson.loads(self.request.body)
+
+        _domain_data = self.update(domain, data, override)
 
         self.write_data(_domain_data)
