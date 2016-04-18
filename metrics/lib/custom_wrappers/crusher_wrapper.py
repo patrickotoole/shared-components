@@ -31,6 +31,18 @@ class CrusherAPIRequestWrapper(APIRequestWrapper):
             self._token= self.authenticate().token
         return self._token
 
+    def get_udf_input(self, pattern):
+        if self._token == {}:
+            self.authenticate()
+        url = "/crusher/v1/visitor/raw?url_pattern={}".format(pattern)
+        _resp = self.get(url)
+        return_dict = _resp.json
+        for k in return_dict.keys():
+            if type(return_dict[k]) == dict:
+                return_dict[k] = pandas.DataFrame(return_dict[k])
+        return_dict['response'] ={}
+        return return_dict
+
     def switch_user(self, username):
         user_perms = self.get("/account/permissions", cookies = self._token, auth=None)
         users = user_perms.json["results"]["advertisers"]
