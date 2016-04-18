@@ -12,6 +12,14 @@ from twisted.internet import defer
 from delorean import DeloreanOperations
 from lib.zookeeper.zk_tree import ZKTreeWithConnection
 
+def now():
+   from datetime import datetime
+
+   today = datetime.today()
+   return str(today).split(".")[0] 
+
+
+
 class DeloreanCampaignDatabase(DeloreanOperations):
 
     @decorators.deferred
@@ -53,9 +61,12 @@ class DeloreanCampaignDatabase(DeloreanOperations):
         
         campaign['profile_id'] = resp_profile['response']['profile']['id']
         URL = "/campaign?advertiser_id=%s&line_item=%s" % (advertiser_id,campaign['line_item_id'])
-        resp_campaign = self.api.post(URL,'{"campaign":%s}' % ujson.dumps(campaign)).json
+        resp_campaign = self.api.post(URL,'{"campaign":%s}' % ujson.dumps(campaign)).json['response']['campaign']
 
         resp_campaign['profile'] = resp_profile
+
+        Q = "INSERT INTO delorean_campaigns (yoshi_campaign_id,delorean_campaign_id,updated_at) VALUES (%s,%s,%s)"
+        self.db.execute(Q, (campaign_id,resp_campaign['id'],now()))
 
         return resp_campaign
 
