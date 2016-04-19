@@ -32,7 +32,7 @@ class FullDomainRunner(BaseRunner):
             if len(to_insert)>0:
                 try:
                     to_insert['url'] = to_insert['url'].map(lambda x : x.encode('utf-8').replace("'",""))
-                    _sql._write_mysql(to_insert, table_name, list(to_insert.columns), self.connectors['crushercache'], keys)
+                    _sql._write_mysql(to_insert, table_name, list(to_insert.columns), self.connectors['crushercache'].create_connection(), keys)
                     logging.info("inserted %s records for advertiser username (includes a_) %s" % (len(to_insert), advertiser))
                 except:
                     logging.info("error with df for %s and %s" % (segment_name, advertiser))
