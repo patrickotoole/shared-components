@@ -112,6 +112,11 @@ class DeloreanCampaignDatabase(DeloreanOperations):
         self.write(ujson.dumps(delorean_campaign))
         self.finish()
 
+    def lookup_delorean_by_yoshi(self,yoshi_campaign_id):
+        Q = "SELECT * FROM delorean_campaigns where active = 1 and deleted = 0 and yoshi_campaign_id = %s"
+        df = self.db.select_dataframe(Q % yoshi_campaign_id)
+        return df
+
     
 
 class DeloreanCampaignHandler(BaseHandler,DeloreanCampaignDatabase):
@@ -128,6 +133,13 @@ class DeloreanCampaignHandler(BaseHandler,DeloreanCampaignDatabase):
     def post(self):
         data = ujson.loads(self.request.body)
         campaign_id = data['campaign_id']
+
+        df = self.lookup_delorean_by_yoshi(campaign_id)
+        if len(df) > 0 and not self.get_argument("force",False):
+            self.write('{"error":"campaign already exists"}')
+            self.finish()
+            return
+
         template_id = int(self.get_argument("template_id",1))
         seperate_line = self.get_argument("seperate_line",False)
 
@@ -136,5 +148,7 @@ class DeloreanCampaignHandler(BaseHandler,DeloreanCampaignDatabase):
         self.run_create_from_yoshi_campaign(campaign_id, template_id, reuse_lineitem)
 
     def get(self):
-        self.write("hi")
+        df = self.lookup_delorean_by_yoshi(self.get_argument("yoshi_id",0))
+        _dict = df.to_dict("records")
+        self.write(ujson.dumps(_dict))
         self.finish()
