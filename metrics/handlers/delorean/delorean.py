@@ -5,7 +5,7 @@ import StringIO
 import mock
 import time
 import logging
-from base import BaseHandler
+from ..base import BaseHandler
 
 from lib.helpers import *  
 from twisted.internet import defer 
@@ -150,17 +150,10 @@ class DeloreanDatabase(object):
         new_patterns = [pattern for pattern in patterns if str(pattern['pattern']) not in list(stored_patterns.pattern)]
 
         return new_patterns
- 
 
 
-class DeloreanHandler(BaseHandler,DeloreanDatabase,DeloreanZookeeper,DeloreanRedis):
 
-    def initialize(self, db=None, api=None, zookeeper=None, redis=None, **kwargs):
-        self.db = db 
-        self.api = api
-        self.zk = zookeeper
-        self.redis = redis
-        self.tree = ZKTreeWithConnection(self.zk,"kafka-filter/tree/raw_imps_tree")
+class DeloreanOperations(DeloreanDatabase,DeloreanZookeeper,DeloreanRedis):
 
     def get_data(self,domain=False):
         df = self.get_dataframe(domain)
@@ -168,10 +161,6 @@ class DeloreanHandler(BaseHandler,DeloreanDatabase,DeloreanZookeeper,DeloreanRed
 
         return _dict
 
-    def write_data(self,_dict):
-
-        self.write(ujson.dumps({"response":_dict}))
-        self.finish()
 
     def create_appnexus_segment(self,data):
         short_name = "Delorean: %s" % data['domain']
@@ -187,8 +176,54 @@ class DeloreanHandler(BaseHandler,DeloreanDatabase,DeloreanZookeeper,DeloreanRed
 
         return (_id, short_name)
 
+    def update(self, domain, data, override=False):
+        df = self.get_dataframe(domain)
+        
+        if len(df) > 0:
+            data['appnexus_segment_id'] = df.reset_index().ix[0,'appnexus_segment_id']
+            delorean_id = df.reset_index().ix[0,'id']
+            data['delorean_type'] = "DOMAIN"
+        else:
+            _id, name = self.create_appnexus_segment(data)
 
-           
+            data['appnexus_segment_id'] = _id
+            data['appnexus_name'] = name
+            data['delorean_type'] = 'DOMAIN'
+
+            delorean_id = self.create_segment(data)
+
+        patterns = data['patterns']
+        if override:
+            self.db.execute("UPDATE delorean_segment_patterns set deleted = 1 where delorean_segment_id = %s" % delorean_id)
+
+        new_patterns = self.check_patterns(delorean_id,patterns)
+        self.create_patterns(delorean_id,new_patterns)
+
+        _domain_data = self.get_data(data['domain'])
+        self.add_domain_to_tree(_domain_data[0])
+        self.add_domain_to_redis(data['domain'])
+
+        return _domain_data
+
+ 
+
+
+class DeloreanHandler(DeloreanOperations,BaseHandler):
+
+    def initialize(self, db=None, api=None, zookeeper=None, redis=None, **kwargs):
+        self.db = db 
+        self.api = api
+        self.zk = zookeeper
+        self.redis = redis
+        self.tree = ZKTreeWithConnection(self.zk,"kafka-filter/tree/raw_imps_tree")
+
+
+    def write_data(self,_dict):
+
+        self.write(ujson.dumps({"response":_dict}))
+        self.finish()
+
+               
     @tornado.web.asynchronous
     def get(self):
         self.write_data(self.get_data(self.get_argument("domain",False)))
@@ -204,52 +239,18 @@ class DeloreanHandler(BaseHandler,DeloreanDatabase,DeloreanZookeeper,DeloreanRed
             self.finish()
             return
 
-        if len(df) > 0:
-            data['appnexus_segment_id'] = df.reset_index().ix[0,'appnexus_segment_id']
-
-            delorean_id = df.reset_index().ix[0,'id']
-            data['delorean_type'] = "DOMAIN"
-        else:
-            _id, name = self.create_appnexus_segment(data)
-
-            data['appnexus_segment_id'] = _id
-            data['appnexus_name'] = name
-            data['delorean_type'] = 'DOMAIN'
-
-            delorean_id = self.create_segment(data)
-
-        patterns = data['patterns']
-        self.create_patterns(delorean_id,patterns)
-
-        _domain_data = self.get_data(data['domain'])
-        self.add_domain_to_tree(_domain_data[0])
-        self.add_domain_to_redis(data['domain'])
+        _domain_data = self.update(domain, data, override)
 
         self.write_data(_domain_data)
+
+    
 
     @tornado.web.asynchronous
     def put(self):
         domain = self.get_argument("domain")
-
-        data = ujson.loads(self.request.body)
-        df = self.get_dataframe(domain)
-        
-        if len(df) > 0:
-            data['appnexus_segment_id'] = df.reset_index().ix[0,'appnexus_segment_id']
-
-            delorean_id = df.reset_index().ix[0,'id']
-            data['delorean_type'] = "DOMAIN"
-
-        patterns = data['patterns']
         override = self.get_argument("override",False)
-        if override:
-            self.db.execute("UPDATE delorean_segment_patterns set deleted = 1 where delorean_segment_id = %s" % delorean_id)
+        data = ujson.loads(self.request.body)
 
-        new_patterns = self.check_patterns(delorean_id,patterns)
-        self.create_patterns(delorean_id,new_patterns)
-
-        _domain_data = self.get_data(data['domain'])
-        self.add_domain_to_tree(_domain_data[0])
-        self.add_domain_to_redis(data['domain'])
+        _domain_data = self.update(domain, data, override)
 
         self.write_data(_domain_data)

@@ -51,10 +51,15 @@ class AdvertiserRoutes(Routes):
 
     @connectors("db","api","zookeeper","redis")
     def delorean_routes(self):
-        import handlers.delorean as delorean
+        import handlers.delorean.delorean as delorean
+        import handlers.delorean.campaign as campaign
+
 
         return [
+
+            (r'/delorean/campaign', campaign.DeloreanCampaignHandler, self.connectors),
             (r'/delorean', delorean.DeloreanHandler, self.connectors),
+
         ]
 
 
