@@ -22,7 +22,7 @@ DEFAULT_FUNCS = [process_before_and_after, process_hourly, process_sessions, pro
 class VisitorBase(GenericSearchBase, BaseDomainHandler):
 
     DEFAULT_FUNCS = DEFAULT_FUNCS
-
+    DEFAULT_DATASETS = ['domains','domains_full','urls','idf','uid_urls', 'url_to_action', 'category_domains']
 
     @defer.inlineCallbacks
     def process_uids(self,funcs=DEFAULT_FUNCS,**kwargs):
@@ -48,12 +48,12 @@ class VisitorBase(GenericSearchBase, BaseDomainHandler):
 
 
     @custom_defer.inlineCallbacksErrors
-    def get_uids(self, advertiser, pattern_terms, num_days=20, process=False, filter_id=False, *args, **kwargs):
+    def get_uids(self, advertiser, pattern_terms, num_days=20, process=False, datasets=DEFAULT_DATASETS, filter_id=False, *args, **kwargs):
 
         NUM_DAYS = 2
         ALLOW_SAMPLE = True
         response = default_response(pattern_terms,"and")
-        args = [advertiser,pattern_terms[0][0],build_datelist(NUM_DAYS),NUM_DAYS,response,ALLOW_SAMPLE,filter_id]
+        args = [advertiser,pattern_terms[0][0],build_datelist(NUM_DAYS),NUM_DAYS,response,ALLOW_SAMPLE,filter_id,5000,datasets]
 
         now = time.time()
 

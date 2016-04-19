@@ -68,7 +68,7 @@ if __name__ == "__main__":
                 except:
                     print "issues with actions {}".format(seg[1]['action_name'])
         else:
-            ckw.run_local(options.advertiser, options.pattern,options.base_url, connectors)
+            ckw.run_local(options.advertiser, options.segment,options.base_url, connectors)
     else:
         ckw.add_db_to_work_queue(options.advertiser, options.pattern, options.base_url)
 
