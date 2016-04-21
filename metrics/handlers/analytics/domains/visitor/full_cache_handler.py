@@ -30,6 +30,11 @@ class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler)
         self.db = db
         self.crushercache = crushercache
 
+    def now(self):
+        from datetime import datetime
+        today = datetime.today()
+        return str(today).split(".")[0]
+
     def getSummary(self, url_set):
         QUERY = """
             select title, summary, url
@@ -56,20 +61,23 @@ class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler)
         return self.db.select_dataframe(QUERY % {"domains":domains})
 
 
+    def queryCache(self, advertiser, pattern, top_count, filter_date=False):
+        results = self.crushercache.select_dataframe(QUERY_DATE.format(advertiser, pattern, filter_date))
+        return results
+
+    def getRecentDate(self, pattern, advertiser):
+        datefallback = self.crushercache.select_dataframe(DATE_FALLBACK.format(pattern, advertiser))
+        now_date = str(datefallback['record_date'][0])
+        return now_date
+
     @decorators.deferred
     def defer_get_onsite_cache(self, advertiser, pattern, top_count, filter_date=False):
-        if filter_date:
-            results = self.crushercache.select_dataframe(QUERY_DATE.format(advertiser, pattern, filter_date))
-        else:
-            import datetime
-            now = datetime.datetime.now()- datetime.timedelta(days=1)
-            now_date = str(now.strftime('%Y-%m-%d'))
-            results = self.crushercache.select_dataframe(QUERY_DATE.format(advertiser, pattern, now_date))
-            if len(results)==0:
-                datefallback = self.crushercache.select_dataframe(DATE_FALLBACK.format(pattern, advertiser))
-                if len(datefallback) >0:
-                    now_date = str(datefallback['record_date'][0])
-                    results = self.crushercache.select_dataframe(QUERY_DATE.format(advertiser, pattern, now_date))
+        if not filter_date:
+            filter_date = self.now()
+        results = self.queryCache(advertiser, pattern, top_count, filter_date)
+        if len(results)==0:
+            filter_date = self.getRecentDate(pattern, advertiser)
+            results = self.queryCache(advertiser, pattern, top_count, filter_date)
         results = results.fillna(0)
         sort_results = results.sort(["uniques", "count"], ascending=False)
         results_no_NA = sort_results[sort_results["url"] != "NA"]
