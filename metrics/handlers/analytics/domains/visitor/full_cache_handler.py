@@ -64,12 +64,12 @@ class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler)
             import datetime
             now = datetime.datetime.now()- datetime.timedelta(days=1)
             now_date = now.strftime('%Y-%m-%d')
-            seg_data = self.crushercache.select_dataframe(DOMAINS_DATE % (url_pattern,advertiser, now_date))
+            seg_data = self.crushercache.select_dataframe(QUERY_DATE % (url_pattern,advertiser, now_date))
             if len(seg_data)==0:
                 datefallback = self.crushercache.select_dataframe(DATE_FALLBACK.format(url_pattern, advertiser))
                 if len(datefallback) >0:
                     now_date = str(datefallback['record_date'][0])
-                    seg_data = self.crushercache.select_dataframe(DOMAINS_DATE % (url_pattern,advertiser, now_date))
+                    seg_data = self.crushercache.select_dataframe(QUERY_DATE % (url_pattern,advertiser, now_date))
         results = results.fillna(0)
         sort_results = results.sort(["uniques", "count"], ascending=False)
         results_no_NA = sort_results[sort_results["url"] != "NA"]
