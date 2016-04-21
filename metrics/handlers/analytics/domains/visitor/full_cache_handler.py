@@ -19,8 +19,10 @@ from lib.cassandra_cache.helpers import *
 from ...search.cache.pattern_search_cache import PatternSearchCache
 
 QUERY = "select advertiser, url_pattern, uniques, count, url from full_domain_cache_test where advertiser = '{}' and url_pattern = '{}'"
+QUERY_DATE = "SELECT advertiser, url_pattern, uniques, count, url FROM domains_full_cache WHERE advertiser = '{}' and url_pattern = '{}' and record_date='{}'"
 QUERYFILTER = "select domain from filtered_out_domains where advertiser = '{}' or advertiser is NULL"
 QUERY2 = "select zipped from cache_domains_full_w_filter_id where filter_id={}"
+DATE_FALLBACK = "select distinct record_date from domains_full_cache where url_pattern='{}' and advertiser='{}' order by record_date DESC"
 
 class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler):
 
@@ -55,8 +57,19 @@ class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler)
 
 
     @decorators.deferred
-    def defer_get_onsite_cache(self, advertiser, pattern, top_count):
-        results  = self.crushercache.select_dataframe(QUERY.format(advertiser, pattern))
+    def defer_get_onsite_cache(self, advertiser, pattern, top_count, filter_date=False):
+        if filter_date:
+            results = self.crushercache.select_dataframe(QUERY_DATE.format(advertiser, pattern, filter_date))
+        else:
+            import datetime
+            now = datetime.datetime.now()- datetime.timedelta(days=1)
+            now_date = now.strftime('%Y-%m-%d')
+            seg_data = self.crushercache.select_dataframe(DOMAINS_DATE % (url_pattern,advertiser, now_date))
+            if len(seg_data)==0:
+                datefallback = self.crushercache.select_dataframe(DATE_FALLBACK.format(url_pattern, advertiser))
+                if len(datefallback) >0:
+                    now_date = str(datefallback['record_date'][0])
+                    seg_data = self.crushercache.select_dataframe(DOMAINS_DATE % (url_pattern,advertiser, now_date))
         results = results.fillna(0)
         sort_results = results.sort(["uniques", "count"], ascending=False)
         results_no_NA = sort_results[sort_results["url"] != "NA"]
@@ -72,13 +85,13 @@ class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler)
         return df
 
     @custom_defer.inlineCallbacksErrors
-    def get_cache_domains(self, advertiser, pattern, top_count, filter_id):
+    def get_cache_domains(self, advertiser, pattern, top_count, filter_id, filter_date):
         if filter_id:
             response_data = yield self.defer_get_onsite_cache_filter_id(advertiser, pattern, top_count, filter_id)
             self.write(response_data)
             self.finish()
         else:
-            response_data = yield self.defer_get_onsite_cache( advertiser, pattern, top_count)
+            response_data = yield self.defer_get_onsite_cache( advertiser, pattern, top_count, filter_date)
             response_data['domain'] = response_data.url.map(lambda x: x.replace("http://","").replace("www.","").split("/")[0])
             
             # BAD: BLOCKING PROCESS
@@ -113,5 +126,6 @@ class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler)
         user = self.current_advertiser_name
         top_count = self.get_argument("top", 50)
         filter_id = self.get_argument("filter_id", False)
+        filter_date = self.get_argument("date",False)
 
-        self.get_cache_domains( user, url_pattern, top_count, filter_id)
+        self.get_cache_domains( user, url_pattern, top_count, filter_id, filter_date)

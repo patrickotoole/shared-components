@@ -7,7 +7,7 @@ from cache_runner_base import BaseRunner
 import datetime
 import uuid
 
-current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+current_datetime = datetime.datetime.now().strftime("%Y-%m-%d")
 
 class AdvertiserActionRunner(BaseRunner):
 
@@ -37,7 +37,7 @@ class AdvertiserActionRunner(BaseRunner):
 
     def insert(self, df, advertiser, segment_name, db):
         df_filtered = df.filter(['domain', 'count'])
-        table_name ="action_dashboard_cache"
+        table_name ="domains_cache"
         keys = ['advertiser', 'action_id', 'domain']
         batch_num = int(len(df_filtered) / 50)+1
         for batch in range(0, batch_num):
@@ -48,6 +48,7 @@ class AdvertiserActionRunner(BaseRunner):
                 to_insert['action_id'] = [self.action_id] * len(to_insert)
                 to_insert['url_pattern'] = [self.url_pattern] * len(to_insert)
                 to_insert['advertiser'] = [advertiser] * len(to_insert)
+                to_insert['record_date'] = current_datetime
             else:
                 to_insert = df_filtered.ix[batch*50+1:(batch+1)*50]
                 to_insert['update_date'] = [current_datetime] * len(to_insert)
@@ -55,10 +56,11 @@ class AdvertiserActionRunner(BaseRunner):
                 to_insert['action_id'] = [self.action_id] * len(to_insert)
                 to_insert['url_pattern'] = [self.url_pattern] * len(to_insert)
                 to_insert['advertiser'] = [advertiser] * len(to_insert)
+                to_insert['record_date'] = current_datetime
             if len(to_insert)>0:
                 try:
                     to_insert['domain'] = to_insert['domain'].map(lambda x : x.encode('utf-8'))
-                    self.sql_query(to_insert, table_name, list(to_insert.columns), db, keys)
+                    self.sql_query(to_insert, table_name, list(to_insert.columns), db.create_connection(), keys)
                     logging.info("inserted %s records for advertiser username (includes a_) %s" % (len(to_insert), advertiser))
                 except:
                     logging.info("error with df for %s and %s" % (segment_name, advertiser))

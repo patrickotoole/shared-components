@@ -15,18 +15,18 @@ SQL_QUERY = "select pixel_source_name from rockerbox.advertiser where crusher=1 
 
 SQL_REMOVE_OLD = "DELETE FROM action_dashboard_cache where update_time < (UNIX_TIMESTAMP() - %s)"
 
-current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+current_datetime = datetime.datetime.now().strftime("%Y-%m-%d")
 
 class ActionCache:
     def __init__(self, connectors):
         self.connectors = connectors
 
     def run_local(self, advertiser, segment, base_url, connectors):
-        import lib.caching.action_dashboard_runner as adc_runner
+        import lib.caching.domain_cache_runner as adc_runner
         adc_runner.runner(advertiser,segment, base_url, connectors=connectors)
 
     def add_db_to_work_queue(self, advertiser, segment, base_url):
-        import lib.caching.action_dashboard_runner as adc_runner
+        import lib.caching.domain_cache_runner as adc_runner
         yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
         _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
         work = pickle.dumps((
