@@ -1,7 +1,7 @@
 import mock, pandas, json
 import unittest
 
-import lib.caching.domain_runner as adr
+import lib.caching.domain_cache_runner as adr
 
 JSON_FIXTURE_1 = {'domains':[{"domain":"test","count":0}]}
 JSON_FIXTURE_2 = {'domains':[{"domain":"blank", "count":"1"}, {"domain":"blank","count":"1"},{"domain":"blank","count":"1"}]}
@@ -31,12 +31,16 @@ class ActionCacheTestCase(unittest.TestCase):
 
     def test_insert_success_one_record(self):
         df = pandas.DataFrame(JSON_FIXTURE_1['domains'])
-        i = self.instance.insert(df, "table_name", mock.MagicMock(), df.columns)
+        mock_db = mock.MagicMock()
+        mock_db.create_connection.side_effect = lambda : ""
+        i = self.instance.insert(df, "advertiser", "segment", mock_db)
         self.assertEquals(len(df), len(pandas.concat(self.futureFrames)))
 
     def test_insert_success_multiple_records(self):
         df = pandas.DataFrame(JSON_FIXTURE_2['domains'])
-        i = self.instance.insert(df, "table_name", "con", df.columns)
+        mock_db = mock.MagicMock()
+        mock_db.create_connection.side_effect = lambda : ""
+        i = self.instance.insert(df, "advertiser", "segment", mock_db)
         self.assertEquals(len(df), len(pandas.concat(self.futureFrames)))
 
     def test_insert_failuree_no_data(self):
