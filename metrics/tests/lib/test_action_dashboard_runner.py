@@ -1,7 +1,7 @@
 import mock, pandas, json
 import unittest
 
-import lib.caching.action_dashboard_runner as adr
+import lib.caching.domain_runner as adr
 
 JSON_FIXTURE_1 = {'domains':[{"domain":"test","count":0}]}
 JSON_FIXTURE_2 = {'domains':[{"domain":"blank", "count":"1"}, {"domain":"blank","count":"1"},{"domain":"blank","count":"1"}]}
