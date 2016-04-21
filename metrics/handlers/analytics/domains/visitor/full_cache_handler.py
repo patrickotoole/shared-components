@@ -72,12 +72,13 @@ class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler)
 
     @decorators.deferred
     def defer_get_onsite_cache(self, advertiser, pattern, top_count, filter_date=False):
-        if not filter_date:
-            filter_date = self.now()
-        results = self.queryCache(advertiser, pattern, top_count, filter_date)
-        if len(results)==0:
-            filter_date = self.getRecentDate(pattern, advertiser)
-            results = self.queryCache(advertiser, pattern, top_count, filter_date)
+        now_date = filter_date
+        if not now_date:
+            now_date = self.now()
+        results = self.queryCache(advertiser, pattern, top_count, now_date)
+        if len(results)==0 and not filter_date:
+            now_date = self.getRecentDate(pattern, advertiser)
+            results = self.queryCache(advertiser, pattern, top_count, now_date)
         results = results.fillna(0)
         sort_results = results.sort(["uniques", "count"], ascending=False)
         results_no_NA = sort_results[sort_results["url"] != "NA"]
