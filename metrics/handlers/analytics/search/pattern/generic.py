@@ -104,7 +104,7 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
             pixel_df = responses[2][1]
             returnDFs['idf'] = idf
         elif 'urls' in datasets:
-            _dl=[elf.defer_get_uid_visits(*[advertiser,uids,term])]
+            _dl=[self.defer_get_uid_visits(*[advertiser,uids,term])]
             dl = defer.DeferredList(_dl)
             responses = yield dl
             urls = responses[0][1]
