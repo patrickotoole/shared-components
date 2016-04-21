@@ -17,9 +17,15 @@ DOMAINS_FILTER = "SELECT zipped FROM cache_domains_w_filter_id WHERE url_pattern
 DATE_FALLBACK = "select distinct record_date from domains_cache where url_pattern='{}' and advertiser='{}' order by record_date DESC"
 
 class ActionDashboardHandler(BaseHandler):
+
     def initialize(self, db=None, crushercache=None, **kwargs):
         self.db = db
         self.crushercache = crushercache
+
+    def now(self):
+        from datetime import datetime
+        today = datetime.today()
+        return str(today).split(".")[0]
 
     def get_idf(self,db,domain_set):
         QUERY = """
@@ -41,20 +47,24 @@ class ActionDashboardHandler(BaseHandler):
         final_data =zlib.decompress(decode_data)
         return final_data
 
+    def queryCache(self, advertiser, url_pattern, number, filter_date=False):
+        results = self.crushercache.select_dataframe(DOMAINS_DATE.format(url_pattern, advertiser, filter_date))
+        return results
+
+    def getRecentDate(self, url_pattern, advertiser):
+        datefallback = self.crushercache.select_dataframe(DATE_FALLBACK.format(url_pattern, advertiser))
+        now_date = str(datefallback['record_date'][0])
+        return now_date
+
     @decorators.deferred
     def defer_get_actions(self, advertiser, number, action_type, url_pattern, filter_date=False):
-        if filter_date:
-            results = self.crushercache.select_dataframe(DOMAINS_DATE.format(url_pattern,advertiser, filter_date))
-        else:
-            import datetime
-            now = datetime.datetime.now()- datetime.timedelta(days=1)
-            now_date = str(now.strftime('%Y-%m-%d'))
-            results = self.crushercache.select_dataframe(DOMAINS_DATE.format(url_pattern,advertiser, now_date))
-            if len(results)==0:
-                datefallback = self.crushercache.select_dataframe(DATE_FALLBACK.format(url_pattern, advertiser))
-                if len(datefallback) >0:
-                    now_date = str(datefallback['record_date'][0])
-                    results = self.crushercache.select_dataframe(DOMAINS_DATE.format(url_pattern,advertiser, now_date))
+        now_date = filter_date
+        if not filter_date:
+            now_date = self.now()
+        results = self.crushercache.select_dataframe(DOMAINS_DATE.format(url_pattern,advertiser, now_date))
+        if len(results) == 0 and not filter_date:
+            now_date = self.getRecentDate(url_pattern, advertiser)
+            results = self.queryCache(advertiser, url_pattern, number, now_date)        
         categories = self.get_idf(self.db, list(set(results.domain)))
         joined = results.merge(categories,on="domain")
         results = joined.fillna(0)
