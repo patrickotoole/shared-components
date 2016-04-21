@@ -22,7 +22,7 @@ class CacheFullURL():
         import domains_full_runner as cc
         cc.runner(advertiser,pattern,base_url,"test",connectors=self.connectors)
 
-    def run_on_work_queue(self,advertiser, pattern):
+    def run_on_work_queue(self,advertiser, pattern, base_url):
         import lib.caching.domains_full_runner as furc
         yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
         _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
