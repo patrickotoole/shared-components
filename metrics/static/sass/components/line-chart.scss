@@ -1,0 +1,49 @@
+.action-view .ts {
+  margin-right: -15px;
+  margin-left: -15px;
+}
+.action-view > .urls > .description {
+  padding-top: 10px;
+  padding-bottom: 20px;
+}
+.domain-chart-svg text {
+  fill: #000;
+}
+.green {
+  color: green;
+}
+.red {
+  color: red;
+}
+.axis {
+  opacity: 0.4;
+}
+.axis line,
+.axis path {
+  fill: none;
+  shape-rendering: crispEdges;
+}
+.y.axis .tick line {
+  stroke-dasharray: 2;
+  stroke: rgb(51,51,51);
+}
+.y.axis .domain {
+  stroke: none;
+}
+.x.axis path {
+  display: none;
+}
+.line {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}
+.line {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 2px;
+}
+.area {
+  fill-opacity: 0.5;
+  fill: lightsteelblue;
+}
