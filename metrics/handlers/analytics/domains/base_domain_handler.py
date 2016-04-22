@@ -227,11 +227,14 @@ class BaseDomainHandler(BaseHandler, AnalyticsBase, CassandraRangeQuery, VisitDo
         defer.returnValue([full_df, stats_df, url_stats_df, full_df])
 
     @defer.inlineCallbacks
-    def sample_offsite_domains(self, advertiser, term, uids, num_days=2):
+    def sample_offsite_domains(self, advertiser, term, uids, num_days=2, ds=False):
+        if ds:
+            self.DOMAIN_SELECT =ds
         deferreds = [self.defer_get_domains_with_cache(advertiser,term,uids,num_days)]
         dl = defer.DeferredList(deferreds)
 
         dom = yield dl
+        
         defer.returnValue(dom)
 
 
