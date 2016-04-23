@@ -65,12 +65,15 @@ export default function(target) {
             x.url = 'http://' + x.url;
           }
           l.href = x.url;
+          
+          x.href_text = x.title
           x.key = l.host
           return (l.pathname.length >= 10) 
 
         })
         .filter(s._table_filter)
 
+      debugger
 
       target.html("")
       components.table(target)
