@@ -40,7 +40,7 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
     @decorators.deferred
     def defer_domain_category(self, domains, idf):
         domains_with_cat = domains.merge(idf,on="domain")
-        domains_with_cat['hour'] = domains_with_cat.timestamp.map(lambda x: x.split(" ")[1].split(":")[0])
+        domains_with_cat['hour']=domains_with_cat.timestamp.map(lambda x: x.split(" ")[1].split(":")[0])
         return domains_with_cat
 
     @decorators.deferred
@@ -63,7 +63,7 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
                         "domains":["domains_full"],
                         "urls":["uid_urls"],
                         "url_to_action":["pixel", "uid_urls"],
-                        "category_domains":["domains"],
+                        "category_domains":["domains", "idf"],
                         "idf" : ["domains"],
                         "pixel": [],
                         "domains_full":[],
@@ -202,12 +202,12 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
             func = FUNCTION_MAP[fname]['func']
             cargs4 = [shared_dict[a] for a in FUNCTION_MAP[fname]["args"]]
             _dl_l4.append(func(*cargs4))
-        
+       
         if _dl_l4 !=[]:
             dl = defer.DeferredList(_dl_l4)
-            response = yield dl
+            responses = yield dl
             defer_responses = [r[1] for r in responses]
-
+            
             l4_dfs = dict(zip(l4_dfs, defer_responses))
             for k in l4_dfs.keys():
                 shared_dict[k] = l4_dfs[k]
@@ -217,7 +217,6 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
         returnDFs['response']=shared_dict['response']
         try:
             shared_dict['uid_urls']['hour'] = shared_dict['uid_urls'].timestamp.map(lambda x: x.split(" ")[1].split(":")[0])
-            import ipdb; ipdb.set_trace()
         except:
             shared_dict = shared_dict
         for k in needed_dfs:
