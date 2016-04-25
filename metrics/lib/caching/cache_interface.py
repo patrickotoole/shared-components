@@ -18,9 +18,10 @@ SQL_REMOVE_OLD = "DELETE FROM action_dashboard_cache where update_time < (UNIX_T
 current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 class CacheInterface:
-    def __init__(self, advertiser, crusher, db, zookeeper=None):
+    def __init__(self, advertiser, crusher, db, crusherdb, zookeeper=None):
         self.advertiser = advertiser
         self.db = db
+        self.crusherdb = crusherdb
         self.zookeeper = zookeeper
         self.crusher_api = crusher
 
@@ -92,6 +93,19 @@ class CacheInterface:
         work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,50)
         logging.info("added uids work queue %s for %s" %(segment["url_pattern"][0],advertiser))
 
+    def add_udf_to_work_queue(self, segment, advertiser, base_url):
+        import lib.caching.generic_udf_runner as gur
+        yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
+        _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
+        udfs = self.crusherdb.select_dataframe("select udf from user_defined_functions where advertiser='{}'".format(advertiser))
+        for uf in udfs.iterrows():
+            work = pickle.dumps((
+                    gur.runner,
+                    [advertiser, segment["url_pattern"][0], uf[1]['udf'], base_url, base_url, _cache_yesterday,_cache_yesterday + "udfcache"]
+                    ))
+            work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,25)
+            logging.info("added udf to work queue for %s %s" %(segment,advertiser))
+
     def add_module_to_work_queue(self, segment, advertiser, base_url):
         import lib.caching.module_cache_runner as runner
         yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
@@ -132,6 +146,7 @@ class CacheInterface:
             self.add_keyword_to_work_queue(seg, advertiser, base_url)
             self.add_uids_to_work_queue(seg, advertiser, base_url)
             self.add_module_to_work_queue(seg, advertiser, base_url)
+            self.add_udf_to_work_queue(seg, advertiser, base_url)
 
 def get_all_advertisers(db_con):
     ad_df = db_con.select_dataframe(SQL_QUERY)
@@ -142,7 +157,7 @@ def get_all_advertisers(db_con):
         advertiser_list.append([username,password])
     return advertiser_list
 
-def run_all(db, zk, base_url):
+def run_all(db, zk, cdb, base_url):
     advertiser_list = get_all_advertisers(db)
     for advert in advertiser_list:
         crusher_api = lnk.api.crusher
@@ -150,7 +165,7 @@ def run_all(db, zk, base_url):
         crusher_api.password = "admin"
         crusher_api.authenticate()
         logging.info("received token for advertiser %s, token is %s" % (advert[0], crusher_api._token))
-        advertiser_instance = CacheInterface(advert[0], crusher_api, db,zk)
+        advertiser_instance = CacheInterface(advert[0], crusher_api, db,cdb,zk)
         advertiser_segments=advertiser_instance.get_segments()
         advertiser_instance.seg_loop(advertiser_segments, advert[0], base_url)
 
@@ -184,7 +199,7 @@ if __name__ == "__main__":
     if options.chronos ==True:
         zookeeper =KazooClient(hosts="zk1:2181")
         zookeeper.start()
-        run_all(lnk.dbs.crushercache, zookeeper, options.base_url)
+        run_all(lnk.dbs.rockerbox, zookeeper, lnk.dbs.crushercache, options.base_url)
     else:
         if not options.segment:
             zookeeper =KazooClient(hosts="zk1:2181")
@@ -194,7 +209,7 @@ if __name__ == "__main__":
             crusher.password="admin"
             crusher.base_url = options.base_url
             crusher.authenticate()
-            ac = CacheInterface(options.username, crusher, lnk.dbs.crushercache, zookeeper)
+            ac = CacheInterface(options.username, crusher, lnk.dbs.rockerbox, lnk.dbs.crushercache, zookeeper)
             run_advertiser(ac, options.username, options.base_url)
         else:
             zookeeper =KazooClient(hosts="zk1:2181")
@@ -204,8 +219,8 @@ if __name__ == "__main__":
             crusher.password="admin"
             crusher.base_url = options.base_url
             crusher.authenticate()
-            ac = CacheInterface(options.username, crusher, lnk.dbs.crushercache,zookeeper)
-            run_advertiser_segment(ac, options.segment, options.base_url)
+            ac = CacheInterface(options.username, crusher, lnk.dbs.rockerbox, lnk.dbs.crushercache,zookeeper)
+            run_advertiser_segment(ac, options.username, options.segment, options.base_url)
     
     if options.remove_old == True:
         lnk.dbs.rockerbox.excute(SQL_REMOVE_OLD % options.remove_seconds)
