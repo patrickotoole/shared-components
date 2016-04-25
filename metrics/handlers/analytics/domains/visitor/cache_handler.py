@@ -11,10 +11,11 @@ from lib.helpers import Convert
 from twisted.internet import defer
 from lib.helpers import decorators
 
-DOMAINS = "SELECT domain, count FROM action_dashboard_cache WHERE url_pattern = '{}' and advertiser = '{}'"
-DOMAINS_DATE = "SELECT domain, count FROM domains_cache WHERE url_pattern = '{}' and advertiser = '{}' and record_date='{}'"
-DOMAINS_FILTER = "SELECT zipped FROM cache_domains_w_filter_id WHERE url_pattern = '{}' and advertiser = '{}' and filter_id = '{}'"
-DATE_FALLBACK = "select distinct record_date from domains_cache where url_pattern='{}' and advertiser='{}' order by record_date DESC"
+
+DOMAINS = "SELECT domain, count FROM action_dashboard_cache WHERE url_pattern = '%(url_pattern)s' and advertiser = '%(advertiser)s'"
+DOMAINS_DATE = "SELECT domain, count FROM domains_cache WHERE url_pattern = '%(url_pattern)s' and advertiser = '%(advertiser)s' and record_date='%(record_date)s'"
+DOMAINS_FILTER = "SELECT zipped FROM cache_domains_w_filter_id WHERE url_pattern = '%(url_pattern)s' and advertiser = '%(advertiser)s' and filter_id = '%(filter_id)s'"
+DATE_FALLBACK = "select distinct record_date from domains_cache where url_pattern='%(url_pattern)s' and advertiser='%(advertiser)s' order by record_date DESC"
 
 class ActionDashboardHandler(BaseHandler):
 
@@ -42,26 +43,31 @@ class ActionDashboardHandler(BaseHandler):
 
 
     def get_one_filter_id(self, url_pattern, advertiser, action_id):
-        zipped_data = self.crushercache.select_dataframe(DOMAINS_FILTER.format(url_pattern,advertiser, action_id))
+        query_dict = {"url_pattern":url_pattern, "advertiser":advertiser, "filter_id":action_id}
+        zipped_data = self.crushercache.select_dataframe(DOMAINS_FILTER % query_dict)
         decode_data = codecs.decode(zipped_data.ix[0]['zipped'], 'hex')
         final_data =zlib.decompress(decode_data)
         return final_data
 
     def queryCache(self, advertiser, url_pattern, number, filter_date=False):
-        results = self.crushercache.select_dataframe(DOMAINS_DATE.format(url_pattern, advertiser, filter_date))
+        query_dict = {"url_pattern":url_pattern, "advertiser":advertiser, "record_date":filter_date}
+        results = self.crushercache.select_dataframe(DOMAINS_DATE % query_dict)
         return results
 
     def getRecentDate(self, url_pattern, advertiser):
-        datefallback = self.crushercache.select_dataframe(DATE_FALLBACK.format(url_pattern, advertiser))
+        query_dict = {"url_pattern":url_pattern, "advertiser":advertiser}
+        datefallback = self.crushercache.select_dataframe(DATE_FALLBACK % query_dict)
         now_date = str(datefallback['record_date'][0])
         return now_date
 
     @decorators.deferred
     def defer_get_actions(self, advertiser, number, action_type, url_pattern, filter_date=False):
         now_date = filter_date
+        query_dict = {"url_pattern":url_pattern, "advertiser":advertiser, "record_date":filter_date}
         if not filter_date:
             now_date = self.now()
-        results = self.crushercache.select_dataframe(DOMAINS_DATE.format(url_pattern,advertiser, now_date))
+            query_dict["record_date"] = self.now()
+        results = self.crushercache.select_dataframe(DOMAINS_DATE % query_dict)
         if len(results) == 0 and not filter_date:
             now_date = self.getRecentDate(url_pattern, advertiser)
             results = self.queryCache(advertiser, url_pattern, number, now_date)        
