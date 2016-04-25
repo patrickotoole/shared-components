@@ -18,11 +18,12 @@ class CacheFullURL():
         self.zookeeper = connectors['zk']
 
     def run_local(self, advertiser, pattern, base_url):
-        import full_url_cache as cc
+        #import full_url_cache as cc
+        import domains_full_runner as cc
         cc.runner(advertiser,pattern,base_url,"test",connectors=self.connectors)
 
     def run_on_work_queue(self,advertiser, pattern, base_url):
-        import lib.caching.full_url_cache as furc
+        import lib.caching.domains_full_runner as furc
         yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
         _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
         work = pickle.dumps((

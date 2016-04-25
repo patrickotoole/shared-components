@@ -8,14 +8,15 @@ from cache_runner_base import BaseRunner
 
 INSERT_QUERY ="INSERT INTO full_domain_cache_test (advertiser, url, count, uniques, url_pattern) VALUES ('{}', '{}',{}, {}, '{}')"
 REPLACE_QUERY="REPLACE INTO full_domain_cache_test (advertiser, url, count, uniques, url_pattern) VALUES ('{}', '{}',{}, {}, '{}')"
-CASSQUERY=""
+
+current_datetime = datetime.datetime.now().strftime("%Y-%m-%d")
 
 class FullDomainRunner(BaseRunner):
 
     def insert(self, df, advertiser, segment_name):
         current_datetime = datetime.datetime.now()
         df_filtered = df.filter(['url', 'count', 'uniques'])
-        table_name ="full_domain_cache_test"
+        table_name ="domains_full_cache"
         keys = ['advertiser', 'url_pattern']
         batch_num = int(len(df_filtered) / 50)+1
         for batch in range(0, batch_num):
@@ -24,11 +25,13 @@ class FullDomainRunner(BaseRunner):
                 to_insert['ts'] = [current_datetime] * len(to_insert)
                 to_insert['url_pattern'] = [segment_name] * len(to_insert)
                 to_insert['advertiser'] = [advertiser] * len(to_insert)
+                to_insert['record_date'] = current_datetime
             else:
                 to_insert = df_filtered.ix[batch*50+1:(batch+1)*50]
                 to_insert['ts'] = [current_datetime] * len(to_insert)
                 to_insert['url_pattern'] = [segment_name] * len(to_insert)
                 to_insert['advertiser'] = [advertiser] * len(to_insert)
+                to_insert['record_date'] = current_datetime
             if len(to_insert)>0:
                 try:
                     to_insert['url'] = to_insert['url'].map(lambda x : x.encode('utf-8').replace("'",""))

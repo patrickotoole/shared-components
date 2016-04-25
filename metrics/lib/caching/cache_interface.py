@@ -49,7 +49,7 @@ class CacheInterface:
         logging.info("added to work queue %s for %s" %(segment["url_pattern"][0],advertiser))
 
     def add_db_to_work_queue(self, segment, advertiser, base_url):
-        import lib.caching.action_dashboard_runner as adc_runner
+        import lib.caching.domain_cache_runner as adc_runner
         yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
         _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
         work = pickle.dumps((
@@ -71,7 +71,7 @@ class CacheInterface:
         logging.info("added to keyword work queue %s for %s" %(segment["url_pattern"][0],advertiser))
 
     def add_full_url_to_work_queue(self, segment, advertiser, base_url):
-        import lib.caching.full_url_cache as adc_runner
+        import lib.caching.domains_full_runner as adc_runner
         yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
         _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
         work = pickle.dumps((
