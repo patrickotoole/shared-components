@@ -52,8 +52,9 @@ class VisitorBase(GenericSearchBase, BaseDomainHandler):
 
         NUM_DAYS = 2
         ALLOW_SAMPLE = True
+        NUM_USERS = 5000
         response = default_response(pattern_terms,"and")
-        args = [advertiser,pattern_terms[0][0],build_datelist(NUM_DAYS),NUM_DAYS,response,ALLOW_SAMPLE,filter_id,5000,datasets]
+        args = [advertiser,pattern_terms[0][0],build_datelist(NUM_DAYS),NUM_DAYS,response,ALLOW_SAMPLE,filter_id,NUM_USERS,datasets]
 
         now = time.time()
 
