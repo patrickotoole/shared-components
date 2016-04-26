@@ -13,6 +13,7 @@ from ...search.pattern.base_visitors import VisitorBase
 
 SQL_SELECT = "select zipped from generic_function_cache where udf='%s' and advertiser='%s' and url_pattern='%s' and filter_id=%s"
 SQL_SELECT_V2 = "select zipped from generic_function_cache_v2 where udf = '%s' and advertiser='%s' and url_pattern='%s' and action_id=%s"
+ACTION_QUERY = "select action_id from action_with_patterns where pixel_source_name='{}' and url_pattern='{}'"
 
 class VisitorTransformCacheHandler(VisitorBase):
 
@@ -21,13 +22,21 @@ class VisitorTransformCacheHandler(VisitorBase):
         self.db = db
         self.crushercache = crushercache
 
+    def get_action_id(self, advertiser, pattern):
+        action_id = self.db.select_dataframe(ACTION_QUERY.format(advertiser, pattern))
+        return action_id['action_id'][0]
+
     @decorators.deferred
     def get_from_db(self, api_type, advertiser, pattern, filter_id):
+        if not filter_id:
+            filter_id = self.get_action_id(advertiser, pattern)
+        
         versioning = self.request.uri
         if versioning.find('v2') >=0:
             QUERY = SQL_SELECT_V2 % (api_type, advertiser, pattern, filter_id)
         else: 
             QUERY = SQL_SELECT % (api_type, advertiser, pattern, filter_id)
+        
         logging.info("Making query")
         data = self.crushercache.select_dataframe(QUERY)
         hex_data = codecs.decode(data.ix[0]['zipped'], 'hex')
@@ -47,7 +56,7 @@ class VisitorTransformCacheHandler(VisitorBase):
     @decorators.error_handling
     def get(self, api_type):
         advertiser = self.current_advertiser_name
-        filter_id = self.get_argument("filter_id", 0)
+        filter_id = self.get_argument("filter_id", False)
         pattern = self.get_argument("url_pattern", False)
         filter_id = int(filter_id)
         self.first_step(api_type, advertiser, pattern, filter_id)

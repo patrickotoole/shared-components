@@ -3,13 +3,14 @@ from link import lnk
 from lib.pandas_sql import s as _sql
 import logging
 import uuid
+import datetime
 
 from cache_runner_base import BaseRunner
 
 #QUERY ="INSERT INTO keyword_crusher_cache (advertiser, url_pattern, keyword, count, uniques) VALUES ('{}', '{}','{}', {}, {})"
-QUERY ="INSERT INTO keyword_crusher_cache (advertiser, url_pattern, keyword, count) VALUES ('{}', '{}','{}',{})"
+QUERY ="INSERT INTO keyword_crusher_cache (advertiser, url_pattern, keyword, count, record_date) VALUES ('{}', '{}','{}',{}, '{}')"
 
-
+now_date = datetime.datetime.now().strftime("%Y-%m-%d")
 class KeywordRunner(BaseRunner):
 
     def make_request(self, advertiser,pattern, base_url):
@@ -18,7 +19,7 @@ class KeywordRunner(BaseRunner):
         crusher.password="admin"
         crusher.base_url = base_url
         crusher.authenticate()
-        urls = crusher.get('/crusher/v1/visitor/keywords?format=json&url_pattern={}'.format(pattern), timeout=91)
+        urls = crusher.get('/crusher/v1/visitor/keywords?format=json&url_pattern={}&nltk=True'.format(pattern), timeout=91)
         return urls.json
 
     def insert(self, df, advertiser, segment_name):
@@ -31,14 +32,16 @@ class KeywordRunner(BaseRunner):
                 to_insert = df_filtered.ix[0:50]
                 to_insert['url_pattern'] = [segment_name] * len(to_insert)
                 to_insert['advertiser'] = [advertiser] * len(to_insert)
+                to_insert['record_date'] = [now_date] * len(to_insert)
             else:
                 to_insert = df_filtered.ix[batch*50+1:(batch+1)*50]
                 to_insert['url_pattern'] = [segment_name] * len(to_insert)
                 to_insert['advertiser'] = [advertiser] * len(to_insert)
+                to_insert['record_date'] = [now_date] * len(to_insert)
             if len(to_insert)>0:
                 try:
                     to_insert['url'] = to_insert['url'].map(lambda x : x.encode('utf-8'))
-                    to_insert.columns = ['count', 'keyword', 'url_pattern', 'advertiser']
+                    to_insert.columns = ['count', 'keyword', 'url_pattern', 'advertiser', 'record_date']
                     _sql._write_mysql(to_insert, table_name, list(to_insert.columns), self.connectors['crushercache'].create_connection(), keys)
                     logging.info("inserted %s records for advertiser username (includes a_) %s" % (len(to_insert), advertiser))
                 except:

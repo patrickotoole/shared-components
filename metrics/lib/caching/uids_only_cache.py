@@ -8,9 +8,12 @@ from cache_runner_base import BaseRunner
 
 logger = logging.getLogger()
 
-SQL_QUERY1 = "insert into uids_only_visits_cache (advertiser, pattern, num_visits, visit_user_count) values ('{}', '{}', {}, {})"
-SQL_QUERY2 = "insert into uids_only_sessions_cache (advertiser, pattern, num_sessions, sessions_user_count) values ('{}', '{}', {}, {})"
+SQL_INSERT1 = "insert into uids_only_visits_cache (advertiser, pattern, num_visits, visit_user_count, date) values ('{}', '{}', {}, {}, '{}')"
+SQL_INSERT2 = "insert into uids_only_sessions_cache (advertiser, pattern, num_sessions, sessions_user_count, date) values ('{}', '{}', {}, {}, '{}')"
+SQL_REPLACE1= "replace into uids_only_visits_cache (advertiser, pattern, num_visits, visit_user_count, date) values ('{}', '{}', {}, {}, '{}')"
+SQL_REPLACE2= "replace into uids_only_sessions_cache (advertiser, pattern, num_sessions, sessions_user_count, date) values ('{}', '{}', {}, {}, '{}')"
 
+current_date = datetime.datetime.now().strftime("%Y-%m-%d")
 
 class OnsiteCacheRunner(BaseRunner):
 
@@ -46,15 +49,17 @@ class OnsiteCacheRunner(BaseRunner):
 
     def write_to_table_visits(self,advertiser, pattern, data,db):
         try:
-            db.execute(SQL_QUERY1.format(advertiser, pattern, data["visits"], data["users_count"]))
+            db.execute(SQL_INSERT1.format(advertiser, pattern, data["visits"], data["users_count"], current_date))
         except:
             logging.info("duplicate entry -- visits")
+            db.execute(SQL_REPLACE1.format(advertiser, pattern, data["visits"], data["users_count"], current_date))
 
     def write_to_table_sessions(self,advertiser, pattern, data,db):
         try:
-            db.execute(SQL_QUERY2.format(advertiser, pattern, data["sessions"], data["users_count"]))
+            db.execute(SQL_INSERT2.format(advertiser, pattern, data["sessions"], data["users_count"], current_date))
         except:
             logging.info("duplicate entry -- sessions")
+            db.execute(SQL_REPLACE2.format(advertiser, pattern, data["sessions"], data["users_count"], current_date))
 
 
 def runner(advertiser, pattern, base_url, cache_date, indentifiers="test", connectors=False):
@@ -67,8 +72,8 @@ def runner(advertiser, pattern, base_url, cache_date, indentifiers="test", conne
     data = OCR.make_request(advertiser, pattern, base_url)
     if data !={}:
         for i in range(0, len(data["visits"])):
-            OCR.write_to_table_visits(advertiser, pattern, data["visits"].ix[i], connectors['db'])
+            OCR.write_to_table_visits(advertiser, pattern, data["visits"].ix[i], connectors['crushercache'])
         for i in range(0, len(data["sessions"])):
-            OCR.write_to_table_sessions(advertiser, pattern, data["sessions"].ix[i], connectors['db'])
+            OCR.write_to_table_sessions(advertiser, pattern, data["sessions"].ix[i], connectors['crushercache'])
 
     OCR.accounting_entry_end(advertiser, pattern, "onsite_cache_runner", uuid_num)
