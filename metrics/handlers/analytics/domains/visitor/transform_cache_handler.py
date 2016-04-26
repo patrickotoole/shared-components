@@ -11,6 +11,7 @@ import ujson
 import lib.custom_defer as custom_defer
 from ...search.pattern.base_visitors import VisitorBase
 
+#SQL_SELECT = "select zipped from generic_function_cache where advertiser='%s' and url_pattern='%s' and filter_id=%s"
 SQL_SELECT = "select zipped from transform_%s_cache where advertiser='%s' and url_pattern='%s' and filter_id=%s"
 SQL_SELECT_V2 = "select zipped from generic_function_cache_v2 where udf = '%s' and advertiser='%s' and url_pattern='%s' and action_id=%s"
 
