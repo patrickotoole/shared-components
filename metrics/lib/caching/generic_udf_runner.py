@@ -15,8 +15,8 @@ now_date = datetime.datetime.now().strftime("%Y-%m-%d")
 
 URL ="/crusher/v1/visitor/{}?url_pattern={}"
 
-INSERT ="insert into udf_cache (advertiser, url_pattern, udf, zipped, date) values ('{}', '{}', '{}', '{}', '{}')"
-REPLACE="replace into udf_cache (advertiser, url_pattern, udf, zipped, date) values ('{}', '{}', '{}', '{}', '{}')"
+INSERT ="insert into generic_function_cache (advertiser, url_pattern, udf, zipped, date) values ('{}', '{}', '{}', '{}', '{}')"
+REPLACE="replace into generic_function_cache (advertiser, url_pattern, udf, zipped, date) values ('{}', '{}', '{}', '{}', '{}')"
 
 class UDFRunner(BaseRunner):
 
