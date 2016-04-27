@@ -18,7 +18,6 @@ from lib.cassandra_helpers.helpers import FutureHelpers
 from lib.cassandra_cache.helpers import *
 from ...search.cache.pattern_search_cache import PatternSearchCache
 
-QUERY = "select advertiser, url_pattern, uniques, count, url from full_domain_cache_test where advertiser = '{}' and url_pattern = '{}'"
 QUERY_DATE = "SELECT advertiser, url_pattern, uniques, count, url FROM domains_full_cache WHERE advertiser = '{}' and url_pattern = '{}' and record_date='{}'"
 QUERYFILTER = "select domain from filtered_out_domains where advertiser = '{}' or advertiser is NULL"
 QUERY2 = "select zipped from cache_domains_full_w_filter_id where filter_id={}"
