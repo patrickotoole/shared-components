@@ -94,13 +94,15 @@ if __name__ == '__main__':
     except ImportError:
         # Trollius >= 0.3 was renamed
         import trollius as asyncio
-
-    factory = WebSocketServerFactory(debug=False)
+    
+    print "kafka loaded..."
+    factory = WebSocketServerFactory()
     factory.protocol = MyServerProtocol
 
     loop = asyncio.get_event_loop()
     coro = loop.create_server(factory, '0.0.0.0', 9001)
     server = loop.run_until_complete(coro)
+    print "server loaded..."
 
     try:
         loop.run_forever()
