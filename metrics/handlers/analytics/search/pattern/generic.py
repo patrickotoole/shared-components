@@ -18,51 +18,198 @@ from lib.aho import AhoCorasick
 from ..search_helpers import SearchHelpers
 
 class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,PatternSearchHelpers, SearchHelpers):
+    
+    LEVELS = {
+                "l1":
+                    ["uid_urls", "domains_full"],
+                "l2":
+                    ["domains", "urls", "pixel"],
+                "l3":
+                    ["url_to_action", "idf"],
+                "l4":
+                    ["category_domains"]
+                }
+    DEPENDENTS = {
+                    "domains":["domains_full"],
+                    "urls":["uid_urls"],
+                    "url_to_action":["pixel", "uid_urls"],
+                    "category_domains":["domains", "idf"],
+                    "idf" : ["domains"],
+                    "pixel": [],
+                    "domains_full":[],
+                    "uid_urls": []
+                }
 
+
+    FUNCTION_MAP = {
+            "pixel": {
+                "func":"defer_get_pixel",
+                "args":[],
+            },
+            "uid_urls": { 
+                "func":"defer_get_uid_visits",
+                "args":["advertiser", "uids", "term"],
+            },
+            "url_to_action": {
+                "func":"defer_urls_to_actions",
+                "args":["pixel","uid_urls"],
+            },
+            "urls": {
+                "func":"defer_get_urls",
+                "args":["uid_urls"],
+            },
+            "domains": {
+                "func":"defer_get_domains",
+                "args":["domains_full"],
+            },
+            "category_domains": {
+                "func":"defer_domain_category",
+                "args":["domains", "idf"],
+            },
+            "idf": {
+                "func":"defer_get_idf",
+                "args":["domains"],
+            },
+            "domains_full": {
+                "func":"sample_offsite_domains",
+                "args":["advertiser", "term", "uids", "num_days", "ds"],
+            }
+        }
+
+
+    @decorators.deferred
+    def defer_get_domains(self, domains):
+        results = domains[['domain','uid','timestamp']]
+        return results
+
+    @decorators.deferred
+    def defer_get_urls(self, uid_urls):
+        results = uid_urls
+        return results
+
+    @decorators.deferred
+    def defer_get_pixel(self):
+        results = self.get_pixels()
+        return results
+
+    @decorators.deferred
+    def defer_domain_category(self, domains, idf):
+        domains_with_cat = domains.merge(idf,on="domain")
+        domains_with_cat['hour']=domains_with_cat.timestamp.map(lambda x: x.split(" ")[1].split(":")[0])
+        return domains_with_cat
+
+    @decorators.deferred
+    def defer_get_idf(self, domains_df):
+        dd = domains_df['domain']
+        results = self.get_idf(dd)
+        return results
+
+    @decorators.deferred
+    def defer_urls_to_actions(self, pixel, uid_urls):
+        urls = set(uid_urls.url)
+        results = self.urls_to_actions(pixel,urls)
+        return results
+    
+    def get_dependents(self, datasets):
+        dependents_nested = [self.DEPENDENTS[i] for i in datasets]
+        dependents = [item for sublist in dependents_nested for item in sublist]
+        needed = set(datasets)
+        needed_dfs = list(needed) + dependents
+        return needed_dfs
 
     @defer.inlineCallbacks
-    def build_arguments(self,advertiser,term,dates,num_days,response,allow_sample=True,filter_id=False,max_users=5000):
-        args = [advertiser,term,build_datelist(num_days),num_days,allow_sample,filter_id]
+    def run_init_level(self, needed_dfs, level_datasets, shared_dict):
+        l1_dfs = set(needed_dfs).intersection(level_datasets)
+        _dl_l1 = []
 
+        for fname in l1_dfs:
+            func_name = self.FUNCTION_MAP[fname]['func']
+            func = getattr(self, func_name)
+            cargs = [shared_dict[a] for a in self.FUNCTION_MAP[fname]["args"]]
+            _dl_l1.append(func(*cargs))
+
+        dl = defer.DeferredList(_dl_l1)
+        responses = yield dl
+        defer_responses = [r[1] for r in responses]
+
+        l1_dfs = dict(zip(l1_dfs, defer_responses))
+        if l1_dfs.get('domains_full', False):
+            shared_dict['domains_full'] = l1_dfs['domains_full'][0][1]
+        if l1_dfs.get('uid_urls', False):
+            shared_dict['uid_urls'] = l1_dfs['uid_urls'][0]
+
+        defer.returnValue(shared_dict)
+
+    @defer.inlineCallbacks
+    def run_level(self, needed_dfs, level_datasets,shared_dict):
+        l2_dfs = set(needed_dfs).intersection(level_datasets)
+        _dl_l2 = []
+
+        for fname in l2_dfs:
+            func_name = self.FUNCTION_MAP[fname]['func']
+            func = getattr(self, func_name)
+            cargs = [shared_dict[a] for a in self.FUNCTION_MAP[fname]["args"]]
+            _dl_l2.append(func(*cargs))
+
+        if _dl_l2 !=[]:
+            dl = defer.DeferredList(_dl_l2)
+            responses = yield dl
+            defer_responses = [r[1] for r in responses]
+
+            l2_dfs = dict(zip(l2_dfs, defer_responses))
+            for k in l2_dfs.keys():
+                shared_dict[k] = l2_dfs[k]
+
+        defer.returnValue(shared_dict)
+
+    @defer.inlineCallbacks
+    def build_arguments(self,advertiser,term,dates,num_days,response,allow_sample=True,filter_id=False,max_users=5000, datasets=['domains']):
+
+        shared_dict={
+                        "ds": "SELECT * FROM rockerbox.visitor_domains_full where uid = ?",
+                        "advertiser" : advertiser,
+                        "term": term,
+                        "dates":dates,
+                        "num_days":num_days,
+                        "response":response                    
+                    }
+
+        try:
+            needed_dfs = self.get_dependents(datasets)
+        except:
+            raise Exception("Not a valid dataset")
+
+        #LEVEL 0
+        args = [advertiser,term,build_datelist(num_days),num_days,allow_sample,filter_id]
         full_df, _, _, _ = yield self.get_sampled(*args)
         uids = list(set(full_df.uid.values))[:max_users]
+        
 
-        if len(uids) < 300:
-            args[4] = False
-            args[3] = 7
+        MIN_UIDS = 300
+        if len(uids) < MIN_UIDS:
+            ALLOWSAMPLEOVERRIDE = False
+            NUM_DAYS = 7
+            args[4] = ALLOWSAMPLEOVERRIDE
+            args[3] = NUM_DAYS
             full_df, _, _, _ = yield self.get_sampled(*args)
             uids = list(set(full_df.uid.values))[:max_users]
 
-        dom = yield self.sample_offsite_domains(advertiser, term, uids, num_days)
-        domains = dom[0][1]
+        shared_dict['uids'] = uids
 
-        _dl = [
-            self.defer_get_uid_visits(*[advertiser,uids,term]),
-            threads.deferToThread(self.get_idf,*[set(domains.domain)],**{}),
-            threads.deferToThread(self.get_pixels,*[],**{})
-        ]
- 
-        dl = defer.DeferredList(_dl)
-        responses = yield dl
+        shared_dict = yield self.run_init_level(needed_dfs, self.LEVELS["l1"], shared_dict)
+        
+        shared_dict = yield self.run_level(needed_dfs, self.LEVELS["l2"], shared_dict)
+        shared_dict = yield self.run_level(needed_dfs, self.LEVELS["l3"], shared_dict)
+        shared_dict = yield self.run_level(needed_dfs, self.LEVELS["l4"], shared_dict)
+            
+        returnDFs = {}
+        returnDFs['response']=shared_dict['response']
+        try:
+            shared_dict['uid_urls']['hour'] = shared_dict['uid_urls'].timestamp.map(lambda x: x.split(" ")[1].split(":")[0])
+        except:
+            shared_dict = shared_dict
+        for k in needed_dfs:
+            returnDFs[k] = shared_dict[k]
 
-        urls, uid_urls = responses[0][1]
-        idf = responses[1][1]
-        pixel_df = responses[2][1]
-
-
-        uid_urls['hour'] = uid_urls.timestamp.map(lambda x: x.split(" ")[1].split(":")[0])
-        domains_with_cat = domains.merge(idf,on="domain")
-        domains_with_cat['hour'] = domains_with_cat.timestamp.map(lambda x: x.split(" ")[1].split(":")[0])
-
-        url_to_action = yield threads.deferToThread(self.urls_to_actions,*[pixel_df,set(uid_urls.url)],**{})
-
-        defer.returnValue({
-            "idf": idf,
-            "urls": urls,
-            "uid_urls": uid_urls,
-            "domains": domains,
-            "category_domains": domains_with_cat,
-            "url_to_action": url_to_action,
-            "response": response
-        })
+        defer.returnValue(returnDFs)
 
