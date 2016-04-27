@@ -18,6 +18,64 @@ from lib.aho import AhoCorasick
 from ..search_helpers import SearchHelpers
 
 class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,PatternSearchHelpers, SearchHelpers):
+    
+    LEVELS = {
+                "l1":
+                    ["uid_urls", "domains_full"],
+                "l2":
+                    ["domains", "urls", "pixel"],
+                "l3":
+                    ["url_to_action", "idf"],
+                "l4":
+                    ["category_domains"]
+                }
+    DEPENDENTS = {
+                    "domains":["domains_full"],
+                    "urls":["uid_urls"],
+                    "url_to_action":["pixel", "uid_urls"],
+                    "category_domains":["domains", "idf"],
+                    "idf" : ["domains"],
+                    "pixel": [],
+                    "domains_full":[],
+                    "uid_urls": []
+                }
+
+
+    FUNCTION_MAP = {
+            "pixel": {
+                "func":"defer_get_pixel",
+                "args":[],
+            },
+            "uid_urls": { 
+                "func":"defer_get_uid_visits",
+                "args":["advertiser", "uids", "term"],
+            },
+            "url_to_action": {
+                "func":"defer_urls_to_actions",
+                "args":["pixel","uid_urls"],
+            },
+            "urls": {
+                "func":"defer_get_urls",
+                "args":["uid_urls"],
+            },
+            "domains": {
+                "func":"defer_get_domains",
+                "args":["domains_full"],
+            },
+            "category_domains": {
+                "func":"defer_domain_category",
+                "args":["domains", "idf"],
+            },
+            "idf": {
+                "func":"defer_get_idf",
+                "args":["domains"],
+            },
+            "domains_full": {
+                "func":"sample_offsite_domains",
+                "args":["advertiser", "term", "uids", "num_days", "ds"],
+            }
+        }
+
 
     @decorators.deferred
     def defer_get_domains(self, domains):
@@ -52,21 +110,22 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
         results = self.urls_to_actions(pixel,urls)
         return results
     
-    def get_dependents(self, datasets, dependent_datasets):
-        dependents_nested = [dependent_datasets[i] for i in datasets]
+    def get_dependents(self, datasets):
+        dependents_nested = [self.DEPENDENTS[i] for i in datasets]
         dependents = [item for sublist in dependents_nested for item in sublist]
         needed = set(datasets)
         needed_dfs = list(needed) + dependents
         return needed_dfs
 
     @defer.inlineCallbacks
-    def run_init_level(self, needed_dfs, level_datasets, FUNCTION_MAP, shared_dict):
+    def run_init_level(self, needed_dfs, level_datasets, shared_dict):
         l1_dfs = set(needed_dfs).intersection(level_datasets)
         _dl_l1 = []
 
         for fname in l1_dfs:
-            func = FUNCTION_MAP[fname]['func']
-            cargs = [shared_dict[a] for a in FUNCTION_MAP[fname]["args"]]
+            func_name = self.FUNCTION_MAP[fname]['func']
+            func = getattr(self, func_name)
+            cargs = [shared_dict[a] for a in self.FUNCTION_MAP[fname]["args"]]
             _dl_l1.append(func(*cargs))
 
         dl = defer.DeferredList(_dl_l1)
@@ -82,13 +141,14 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
         defer.returnValue(shared_dict)
 
     @defer.inlineCallbacks
-    def run_level(self, needed_dfs, level_datasets, FUNCTION_MAP, shared_dict):
+    def run_level(self, needed_dfs, level_datasets,shared_dict):
         l2_dfs = set(needed_dfs).intersection(level_datasets)
         _dl_l2 = []
 
         for fname in l2_dfs:
-            func = FUNCTION_MAP[fname]['func']
-            cargs = [shared_dict[a] for a in FUNCTION_MAP[fname]["args"]]
+            func_name = self.FUNCTION_MAP[fname]['func']
+            func = getattr(self, func_name)
+            cargs = [shared_dict[a] for a in self.FUNCTION_MAP[fname]["args"]]
             _dl_l2.append(func(*cargs))
 
         if _dl_l2 !=[]:
@@ -105,27 +165,6 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
     @defer.inlineCallbacks
     def build_arguments(self,advertiser,term,dates,num_days,response,allow_sample=True,filter_id=False,max_users=5000, datasets=['domains']):
 
-        LEVELS = {
-                    "l1":
-                        ["uid_urls", "domains_full"], 
-                    "l2":
-                        ["domains", "urls", "pixel"], 
-                    "l3": 
-                        ["url_to_action", "idf"], 
-                    "l4":
-                        ["category_domains"]
-                }
-        DEPENDENTS = {  
-                        "domains":["domains_full"],
-                        "urls":["uid_urls"],
-                        "url_to_action":["pixel", "uid_urls"],
-                        "category_domains":["domains", "idf"],
-                        "idf" : ["domains"],
-                        "pixel": [],
-                        "domains_full":[],
-                        "uid_urls": []
-                    }
-        
         shared_dict={
                         "ds": "SELECT * FROM rockerbox.visitor_domains_full where uid = ?",
                         "advertiser" : advertiser,
@@ -134,49 +173,9 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
                         "num_days":num_days,
                         "response":response                    
                     }
-        
-        FUNCTION_MAP = {
-            "pixel": {
-                "func":self.defer_get_pixel, 
-                "args":[], 
-            },
-            "uid_urls": { "func":self.defer_get_uid_visits, 
-                                "args":["advertiser", "uids", "term"],
-                            },
-                        "url_to_action":
-                            { 
-                                "func":self.defer_urls_to_actions,
-                                "args":["pixel","uid_urls"], 
-                            },
-                        "urls":
-                            {
-                                "func":self.defer_get_urls,
-                                "args":["uid_urls"],
-                            },
-                        "domains":
-                            {
-                                "func":self.defer_get_domains,
-                                "args":["domains_full"],
-                            },
-                        "category_domains":
-                            {
-                                "func":self.defer_domain_category,
-                                "args":["domains", "idf"],
-                            },
-                        "idf":
-                            {
-                                "func":self.defer_get_idf, 
-                                "args":["domains"],
-                            },
-                        "domains_full":
-                            {
-                                "func":self.sample_offsite_domains,
-                                "args":["advertiser", "term", "uids", "num_days", "ds"], 
-                            }
-                }
 
         try:
-            needed_dfs = self.get_dependents(datasets, DEPENDENTS)
+            needed_dfs = self.get_dependents(datasets)
         except:
             raise Exception("Not a valid dataset")
 
@@ -197,11 +196,11 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
 
         shared_dict['uids'] = uids
 
-        shared_dict = yield self.run_init_level(needed_dfs, LEVELS["l1"], FUNCTION_MAP, shared_dict)
+        shared_dict = yield self.run_init_level(needed_dfs, self.LEVELS["l1"], shared_dict)
         
-        shared_dict = yield self.run_level(needed_dfs, LEVELS["l2"], FUNCTION_MAP, shared_dict)
-        shared_dict = yield self.run_level(needed_dfs, LEVELS["l3"], FUNCTION_MAP, shared_dict)
-        shared_dict = yield self.run_level(needed_dfs, LEVELS["l4"], FUNCTION_MAP, shared_dict)
+        shared_dict = yield self.run_level(needed_dfs, self.LEVELS["l2"], shared_dict)
+        shared_dict = yield self.run_level(needed_dfs, self.LEVELS["l3"], shared_dict)
+        shared_dict = yield self.run_level(needed_dfs, self.LEVELS["l4"], shared_dict)
             
         returnDFs = {}
         returnDFs['response']=shared_dict['response']
