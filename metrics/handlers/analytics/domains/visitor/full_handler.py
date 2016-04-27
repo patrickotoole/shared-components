@@ -94,7 +94,7 @@ class VisitorDomainsFullHandler(VisitorBase):
         if filter_id:
             ALLOW_SAMPLE = False
             response = {}
-            args = [advertiser,pattern,build_datelist(NUM_DAYS),NUM_DAYS,response,ALLOW_SAMPLE,filter_id]
+            args = [advertiser,pattern,build_datelist(NUM_DAYS),NUM_DAYS,response,ALLOW_SAMPLE,filter_id,NUM_USERS, ['domains','domains_full','urls','idf','uid_urls', 'url_to_action', 'category_domains']]
             kwargs = yield self.build_arguments(*args)
             uids = list(set(kwargs['uid_urls'].uid))
             
