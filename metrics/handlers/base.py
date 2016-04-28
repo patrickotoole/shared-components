@@ -24,7 +24,10 @@ class BaseHandler(tornado.web.RequestHandler):
             if type(df[i][0]) == unicode or type(df[i][0]) == str:
                 sum_obj[i] = df[i].count()
             else:
-                sum_obj[i] = df[i].sum()
+                try:
+                    sum_obj[i] = df[i].sum()
+                except:
+                    sum_obj[i] = str(type(df[i]))
         return sum_obj
 
     def format_response(self,data, summary, details):
