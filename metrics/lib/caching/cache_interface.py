@@ -148,6 +148,10 @@ class CacheInterface:
             self.add_module_to_work_queue(seg, advertiser, base_url)
             self.add_udf_to_work_queue(seg, advertiser, base_url)
 
+def run_clean_up(crushercache):
+    import CacheCleanUp as CCU
+    CCU.runner(crushercache)
+
 def get_all_advertisers(db_con):
     ad_df = db_con.select_dataframe(SQL_QUERY)
     advertiser_list = []
@@ -168,10 +172,14 @@ def run_all(db, zk, cdb, base_url):
         advertiser_instance = CacheInterface(advert[0], crusher_api, db,cdb,zk)
         advertiser_segments=advertiser_instance.get_segments()
         advertiser_instance.seg_loop(advertiser_segments, advert[0], base_url)
+    #Remove old records
+    run_clean_up(cdb)
 
 def run_advertiser(ac, advertiser_name, base_url):
 	s = ac.get_segments()
 	ac.seg_loop(s,advertiser_name, base_url)
+        #Remove old records
+        run_clean_up(ac.crusherdb)
 
 def run_advertiser_segment(ac, advertiser, segment_name, base_url):
     segments = [segment_name]
