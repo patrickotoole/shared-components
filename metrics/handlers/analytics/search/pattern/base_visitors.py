@@ -68,4 +68,10 @@ class VisitorBase(GenericSearchBase, BaseDomainHandler):
         else:
             response = yield self.process_uids(**kwargs)
 
-        self.write_json(response)
+        #df = pandas.DataFrame(response)
+        versioning = self.request.uri
+        if versioning.find('v2') >=0:
+            #summary = self.summarize(df)
+            self.get_content_v2(response)
+        else:
+            self.get_content_v1(response)   

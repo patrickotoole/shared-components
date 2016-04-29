@@ -71,6 +71,9 @@ class BaseHandler(tornado.web.RequestHandler):
             self.set_status(400)
             self.write(ujson.dumps({"error":str(data)}))
             self.finish()
+        elif type(data) == dict:
+            self.write(ujson.dumps(data))
+            self.finish()
         else:
             yield default, (data,)
 
@@ -91,6 +94,10 @@ class BaseHandler(tornado.web.RequestHandler):
         elif summary:
             df = Convert.df_to_values(data)
             _resp = self.format_response(df, summary, details)
+            self.write(ujson.dumps(_resp))
+            self.finish()
+        elif not summary and type(data) == dict:
+            _resp = self.format_response(data, {}, details)
             self.write(ujson.dumps(_resp))
             self.finish()
         else:

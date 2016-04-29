@@ -49,8 +49,12 @@ class UidsCacheHandler(BaseHandler, AnalyticsBase, APIHelpers):
     @custom_defer.inlineCallbacks
     def get_cache_uids(self, advertiser, pattern):
         response_data = yield self.defer_get_uids_cache( advertiser, pattern)
-        self.write_response(response_data)
-        #self.get_content(response_data)
+        
+        versioning = self.request.uri
+        if versioning.find('v2') >=0:
+            self.get_content_v2(response_data)
+        else:
+            self.get_content_v1(response_data)        
     
     @tornado.web.authenticated
     @tornado.web.asynchronous

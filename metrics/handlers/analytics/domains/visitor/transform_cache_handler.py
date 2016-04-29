@@ -12,6 +12,7 @@ import lib.custom_defer as custom_defer
 from ...search.pattern.base_visitors import VisitorBase
 
 SQL_SELECT = "select zipped from transform_%s_cache where advertiser='%s' and url_pattern='%s' and filter_id=%s"
+SQL_SELECT_V2 = "select zipped from generic_function_cache_v2 where udf = '%s' and advertiser='%s' and url_pattern='%s' and action_id=%s"
 
 class VisitorTransformCacheHandler(VisitorBase):
 
@@ -22,7 +23,11 @@ class VisitorTransformCacheHandler(VisitorBase):
 
     @decorators.deferred
     def get_from_db(self, api_type, advertiser, pattern, filter_id):
-        QUERY = SQL_SELECT % (api_type, advertiser, pattern, filter_id)
+        versioning = self.request.uri
+        if versioning.find('v2') >=0:
+            QUERY = SQL_SELECT_V2 % (api_type, advertiser, pattern, filter_id)
+        else: 
+            QUERY = SQL_SELECT % (api_type, advertiser, pattern, filter_id)
         logging.info("Making query")
         data = self.crushercache.select_dataframe(QUERY)
         hex_data = codecs.decode(data.ix[0]['zipped'], 'hex')
