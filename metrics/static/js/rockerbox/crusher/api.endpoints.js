@@ -770,6 +770,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
   endpoints.actionTimeseriesOnly = api.helpers.genericQueuedAPIWithData(function(action, cb, deferred_cb) {
     console.log('list_items_data', action);
     var endpoint_url = '/crusher/pattern_search/timeseries_only?'
+    // debugger;
     if (action.has_filter) endpoint_url += "filter_id=" + action.action_id + "&"
     endpoint_url += 'search=' + action.url_pattern[0];
 

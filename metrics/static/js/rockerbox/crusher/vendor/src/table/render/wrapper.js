@@ -1,11 +1,11 @@
 export default function(target) {
 
-  var controls = d3_updateable(target, '.page-header-controls', 'div')
-    .classed('page-header-controls', true)
-    .text('View expanded')
-    .on('click', function(x) {
-      RB.crusher.controller.initializers.vendors(x,true)
-    }.bind(this) )
+  // var controls = d3_updateable(target, '.page-header-controls', 'div')
+  //   .classed('page-header-controls', true)
+  //   .text('View expanded')
+  //   .on('click', function(x) {
+  //     RB.crusher.controller.initializers.vendors(x,true)
+  //   }.bind(this) )
 
     var vendors_list_card = d3_updateable(target, '.vendors-list-table', 'section')
       .classed('vendors-list-table bar series col-md-12 show-loading', true)

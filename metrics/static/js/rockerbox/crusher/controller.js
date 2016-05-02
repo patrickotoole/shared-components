@@ -66,19 +66,19 @@ RB.crusher.controller = (function(controller) {
 
     funnelRow.exit().remove()
 
-    var heading = d3_updateable(funnelRow, 'page-header', 'header')
+    var heading = d3_updateable(funnelRow, '.page-header', 'header')
       .text(function(x) {
         return x.name;
       })
-      .attr('class', function(x) {
-        var classes = ['page-header'];
+      .classed('page-header', true)
 
-        if (!d3.select('body')[0][0].classList.contains('hide-select')) {
-          classes.push('with-sidebar')
-        }
-
-        return classes.join(' ')
-      })
+    heading.classed('with-sidebar', function(x) {
+      if (!d3.select('body')[0][0].classList.contains('hide-select')) {
+        return true;
+      } else {
+        return false;
+      }
+    });
 
     d3_updateable(funnelRow, '.pixel-description', 'div')
       .classed('pixel-description', true)
@@ -438,11 +438,43 @@ RB.crusher.controller = (function(controller) {
         var funnelRow = build_header({
           'id': 'vendors-expanded',
           'name': 'Vendor Analysis',
+          'view_type': action.view_type
         });
 
-        // var filter = action.filter || function(x) { return x.action_type == 'segment'; }
 
-        RB.crusher.ui.vendors.show(funnelRow, action);
+
+        var vendor_display_toggle = d3_updateable(funnelRow.select('header.page-header'), '.vendor-display-toggle', 'div')
+          .classed('vendor-display-toggle export pull-right btn btn-sm btn-default', true)
+          .style('margin', '11px')
+          .html(function(x) {
+            if(x.view_type === 'expanded' || typeof x.view_type === typeof undefined ) {
+              return 'View as table';
+            } else {
+              return 'View expanded';
+            }
+          })
+          .on('click', function(x) {
+            funnelRow.remove();
+            x.filter = action.filter;
+            x.has_filter = true;
+
+            if(x.view_type === 'expanded' || typeof x.view_type === typeof undefined ) {
+              x.view_type = 'table';
+            } else {
+              x.view_type = 'expanded';
+            }
+
+            RB.routes.navigation.forward(x)
+          })
+
+        if(action.view_type === 'expanded' || typeof action.view_type === typeof undefined) {
+          vendor_display_toggle.html('View as table');
+          RB.crusher.ui.vendors.show(funnelRow, action);
+        } else {
+          vendor_display_toggle.html('View expanded');
+          RB.crusher.ui.vendors.table(funnelRow, action);
+        }
+
 
 
         // existing dashboard...
