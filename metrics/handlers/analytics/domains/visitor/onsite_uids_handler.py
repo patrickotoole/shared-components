@@ -47,7 +47,14 @@ class UidsOnsiteHandler(BaseHandler, AnalyticsBase, APIHelpers, VisitEventBase, 
         response = self.default_response(pattern_terms,logic)
         response['results'] = results
 
-        self.write_json(response)
+        df = pandas.DataFrame(results)
+        versioning = self.request.uri
+        if versioning.find('v2') >=0:
+            summary = self.summarize(df)
+            self.get_content_v2(df, summary)
+        else:
+            self.get_content_v1(df)
+        #self.write_json(response)
 
     @tornado.web.authenticated
     @tornado.web.asynchronous

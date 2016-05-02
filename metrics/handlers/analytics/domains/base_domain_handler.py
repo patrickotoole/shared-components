@@ -308,8 +308,17 @@ class BaseDomainHandler(BaseHandler, AnalyticsBase, CassandraRangeQuery, VisitDo
 
         response = base_helpers.default_response(pattern_terms,logic,no_results=True)
         response = base_helpers.response_domains(response,domains)
-
+        self.version_2_response(response['domains'])
         #self.get_content(response)
-        self.write(response)
-        self.finish()
+        #self.write(response)
+        #self.finish()
+        
 
+    def version_2_response(self, current_response):
+        df = pandas.DataFrame(current_response)
+        versioning = self.request.uri
+        if versioning.find('v2') >=0:
+            summary = self.summarize(df)
+            self.get_content_v2(df, summary)
+        else:
+            self.get_content_v1(df)
