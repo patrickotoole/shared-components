@@ -241,58 +241,29 @@ RB.crusher.controller = (function(controller) {
     },
 
     "home": function() {
-      // Check if the getting started page needs to be shown
-      var pixel_count = {
-        allpages: 0,
-        conversion: 0
-      }
 
-      pubsub.subscriber("gettingstarted", ["pixel_status", "actions"])
-        .run(function(status_data, actions) {
-          console.log(actions.filter(function(x){ return x.featured }));
-
-          status_data.filter(function(x){ return x.segment_name }).forEach(function(pixel) {
-            if (pixel.segment_name.indexOf("All Pages") >= 0) {
-              pixel_count.allpages++;
-            } else if (pixel.segment_name.indexOf("Conversion") >= 0) {
-              pixel_count.conversion++;
-            }
-          });
-
-          var no_actions = false;
-          if (crusher.cache.actionData.length == 0) {
-            no_actions = true;
-          }
-
-          if (!pixel_count.allpages) {
-            RB.routes.navigation.forward(controller.states["/crusher/gettingstarted"])
-          } else if (no_actions) {
-            RB.routes.navigation.forward(controller.states["/crusher/gettingstarted/step2"])
-          }
-        })
-        .unpersist(false)
-        .trigger()
-
-      d3.select("body")
-        .classed("hide-select hide-top",true)
+      d3.select("body").classed("hide-select hide-top",true)
 
       var funnelRow = build_header({
         "id": "home",
         "name": "Welcome to Crusher"
       })
 
-      pubsub.subscriber("home", ["advertiser","an_uid"])
-        .run(function(advertiser,uid) {
+      pubsub.subscriber("home", ["advertiser","an_uid","pixel_status","actions"])
+        .run(function(advertiser,uid,status_data,actions) {
+
+          if (status_data.length && false) {
+            if (status_data.filter(function(x){return x.segment_name && x.segment_name.indexOf("All Pages") > -1}).length > 0) {
+
+              if (actions.filter(function(x){return x.featured}).length) {
+                return setTimeout(RB.routes.navigation.forward.bind(false,controller.states["/crusher/action/dashboard"]),1)
+              } else {
+                return setTimeout(RB.routes.navigation.forward.bind(false,controller.states["/crusher/action/existing"]),1)
+              }
+            }
+          }
 
           crusher.ui.home.main(funnelRow,advertiser,uid)
-
-          var wrapper = funnelRow.selectAll(".tutorial-description")
-          var subscription = crusher.ui.home.status.bind(false,wrapper)
-
-          pubsub.subscriber("home",["pixel_status","advertiser","actions"])
-            .run(subscription)
-            .unpersist(false)
-            .trigger()
         })
         .unpersist(true)
         .trigger()

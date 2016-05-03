@@ -15,13 +15,13 @@ RB.crusher.ui.home = (function(home, crusher) {
         }
       , {
             "center": "<img style='width:100%' src='/static/img/demos/before-crusher.png'></img>" 
-          , "left": "<div class='codepeek_text'>YO</div>"
-          , "right": "<div class='codepeek_text'>YO</div>"
+          , "left": "<div class='codepeek_text'>Rockerbox goes beyond direct referrer, providing insights on the articles, sites, and keywords that your visitors engaged with along their way to your site.</div>"
+          , "right": "<div class='codepeek_text'>With Rockerbox, you can finally visualize your visitor's entire journey.</div>"
         }
       , {
             "center": "<img style='width:100%' src='/static/img/demos/before-crusher.png'></img>" 
-          , "left": "<div class='codepeek_text'>YO</div>"
-          , "right": "<div class='codepeek_text'>YO</div>"
+          , "left": "<div class='codepeek_text'></div>"
+          , "right": "<div class='codepeek_text'></div>"
         }
     ]
 
@@ -171,6 +171,7 @@ RB.crusher.ui.home = (function(home, crusher) {
   }
 
   home.status = function(tutDesc,status_data,advertiser_data,actions) {
+
        var item1 = d3_updateable(tutDesc,".item-1","div")
           .classed("item-1",true)
           .style("margin-top","10px")

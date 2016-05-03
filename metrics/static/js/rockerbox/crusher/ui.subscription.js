@@ -87,7 +87,7 @@ RB.crusher.ui.settings.subscription = (function(subscription,crusher) {
       , {
             title: "Business"
           , html: "<strong>Expand your audience</strong><br>Unlock unique insights to<br>produce content that engages<br>your audience."
-          , price: "$499"
+          , price: "$3000"
           , button: "Get Started"
           , href: "#"
           , features: [
