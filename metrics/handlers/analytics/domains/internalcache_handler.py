@@ -37,7 +37,7 @@ class InternalCacheHandler(BaseDomainHandler):
         self.zookeeper = zookeeper
         self.fn = self.get_domains
 
-    def addToWorkQueue(self, fname, advertiser):
+    def addToWorkQueue(self, fname, advertiser, pattern, filter_id):
         modul = __import__("lib.caching")
         full_modul = getattr(modul.caching, self.PackageModule[fname])
         func_call = getattr(full_modul, "runner")
@@ -45,22 +45,21 @@ class InternalCacheHandler(BaseDomainHandler):
         _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
         
         #hard coded for testing
-        segment = "/"
         base_url="http://beta.crusher.getrockerbox.com"
 
         work = pickle.dumps((
                 func_call,
-                [advertiser,segment, base_url , _cache_yesterday,_cache_yesterday + "fullurlcache"]
+                [advertiser,pattern, False, base_url , _cache_yesterday,_cache_yesterday + "fullurlcache"]
                 ))
         work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,1)
-        logging.info("added to work queue %s for %s from HTTP request" %(segment,advertiser))
+        logging.info("added to work queue %s for %s from HTTP request" %(pattern,advertiser))
 
         import lib.caching.keyword_cache as adc_runner
         yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
         _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
         work = pickle.dumps((
                 adc_runner.runner,
-                [advertiser,segment, base_url, _cache_yesterday,_cache_yesterday + "keywordcache"]
+                [advertiser,pattern, base_url, _cache_yesterday,_cache_yesterday + "keywordcache"]
                 ))
         work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,40)
 
@@ -71,10 +70,13 @@ class InternalCacheHandler(BaseDomainHandler):
     def get(self):
         advertiser = self.current_advertiser_name
         terms = self.get_argument("url_pattern", False)
-        filter_id = self.get_argument("filter_id",False)
+        filter_id = self.get_argument("filter_id",0)
         endpoint = self.get_argument("function",False)
         date = self.get_argument("date", False)
 
-        self.addToWorkQueue(endpoint, advertiser)
+        if not filter_id:
+            raise Exception("Must include url_pattern parameter")
+
+        self.addToWorkQueue(endpoint, advertiser, terms[0], filter_id)
         self.write(ujson.dumps({"sample response": "Completed"}))
         self.finish()

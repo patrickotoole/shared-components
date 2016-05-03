@@ -21,19 +21,38 @@ class AdvertiserActionRunner(BaseRunner):
         import ipdb; ipdb.set_trace()
         url = "/crusher/v1/visitor/domains?format=json&url_pattern=%s" % pattern
         resp = crusher.get(url, timeout=91)
-        return resp.json
-        #return resp.json['domains']
+        try:
+            results = resp.json['domains']
+        except:
+            results = resp.json
+        return results
 
-    def validation(self, action_name, crusher):
+    def validation_name(self, crusher, name):
         valid = False
+        import ipdb; ipdb.set_trace()
         if not self.validation_data:
             url = "/crusher/funnel/action?format=json"
             resp = crusher.get(url)
             self.validation_data = resp.json['response']
         for segment in self.validation_data:
-            if action_name == segment["action_name"]:
+            if name == segment["action_name"]:
                 self.action_id = segment['action_id']
                 self.url_pattern = segment['url_pattern'][0]
+                valid = True
+        return valid
+
+    def validation_pattern(self, crusher, url_pattern):
+        valid = False
+        self.url_pattern=url_pattern
+        import ipdb; ipdb.set_trace()
+        if not self.validation_data:
+            url = "/crusher/funnel/action?format=json"
+            resp = crusher.get(url)
+            self.validation_data = resp.json['response']
+        for segment in self.validation_data:
+            if url_pattern == segment["url_pattern"][0]:
+                self.action_id = segment['action_id']
+                self.segment_name = segment['action_name']
                 valid = True
         return valid
 
@@ -67,15 +86,21 @@ class AdvertiserActionRunner(BaseRunner):
                 except:
                     logging.info("error with df for %s and %s" % (segment_name, advertiser))
 
-    def pre_process(self, advertiser, segment_name, base_url, url_pattern):
+    def pre_process(self, advertiser, base_url, url_pattern, segment_name):
         import ipdb; ipdb.set_trace()
         crusher = self.get_crusher_obj(advertiser, base_url)
-        valid= self.validation(segment_name, crusher)
-        data = self.make_request(crusher, url_pattern)
+        if segment_name:
+            valid= self.validation_name(crusher, segment_name)
+            data = self.make_request(crusher, self.url_pattern)
+        else:
+            vaid = self.validation_pattern(crusher, url_pattern)
+            data = self.make_request(crusher, url_pattern)
         df = pandas.DataFrame(data)
         return df
 
-    def execute(self, data, advertiser, segment_name, db):
+    def execute(self, data, advertiser, pattern, segment_name, db):
+        if not segment_name:
+            segment_name = self.segment_name
         self.insert(data, advertiser, segment_name, db)
         return True
 
@@ -86,7 +111,7 @@ class AdvertiserActionRunner(BaseRunner):
             logging.info("error with %s for %s" % (segment_name, advertiser))
 
 
-def runner(advertiser,pattern, base_url, cache_date="", indentifiers="test", connectors=False):
+def runner(advertiser,pattern, segment_name, base_url, cache_date="", indentifiers="test", connectors=False):
     import ipdb; ipdb.set_trace()
     connectors = connectors or AdvertiserActionRunner.get_connectors()
 
@@ -96,11 +121,11 @@ def runner(advertiser,pattern, base_url, cache_date="", indentifiers="test", con
 
     db = connectors['crushercache']
     zk = connectors['zk']
-    data = AAR.pre_process(advertiser, pattern, base_url, pattern)
+    data = AAR.pre_process(advertiser, base_url, pattern, segment_name)
 
     executed = False
     if len(data)>0:
-        executed = AAR.execute(data, advertiser, pattern, db)
+        executed = AAR.execute(data, advertiser, pattern, segment_name, db)
 
     AAR.post_validation(advertiser, pattern, executed)
     AAR.accounting_entry_end(advertiser, pattern, "action_dashboard_runner", uuid_num)
