@@ -18,9 +18,11 @@ class AdvertiserActionRunner(BaseRunner):
         self.sql_query = _sql._write_mysql
 
     def make_request(self,crusher, pattern):
+        import ipdb; ipdb.set_trace()
         url = "/crusher/v1/visitor/domains?format=json&url_pattern=%s" % pattern
         resp = crusher.get(url, timeout=91)
-        return resp.json['domains']
+        return resp.json
+        #return resp.json['domains']
 
     def validation(self, action_name, crusher):
         valid = False
@@ -65,10 +67,11 @@ class AdvertiserActionRunner(BaseRunner):
                 except:
                     logging.info("error with df for %s and %s" % (segment_name, advertiser))
 
-    def pre_process(self, advertiser, segment_name, base_url):
+    def pre_process(self, advertiser, segment_name, base_url, url_pattern):
+        import ipdb; ipdb.set_trace()
         crusher = self.get_crusher_obj(advertiser, base_url)
         valid= self.validation(segment_name, crusher)
-        data = self.make_request(crusher, self.url_pattern)
+        data = self.make_request(crusher, url_pattern)
         df = pandas.DataFrame(data)
         return df
 
@@ -84,6 +87,7 @@ class AdvertiserActionRunner(BaseRunner):
 
 
 def runner(advertiser,pattern, base_url, cache_date="", indentifiers="test", connectors=False):
+    import ipdb; ipdb.set_trace()
     connectors = connectors or AdvertiserActionRunner.get_connectors()
 
     uuid_num = str(uuid.uuid4())
@@ -92,7 +96,7 @@ def runner(advertiser,pattern, base_url, cache_date="", indentifiers="test", con
 
     db = connectors['crushercache']
     zk = connectors['zk']
-    data = AAR.pre_process(advertiser, pattern, base_url)
+    data = AAR.pre_process(advertiser, pattern, base_url, pattern)
 
     executed = False
     if len(data)>0:
