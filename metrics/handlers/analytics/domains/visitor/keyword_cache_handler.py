@@ -18,8 +18,9 @@ from lib.cassandra_cache.helpers import *
 from ...search.cache.pattern_search_cache import PatternSearchCache
 import lib.custom_defer as custom_defer
 
-#QUERY = "select advertiser, url_pattern, keyword, uniques, count from keyword_crusher_cache where advertiser = '{}' and url_pattern = '{}'"
-QUERY = "select advertiser, url_pattern, keyword, count from keyword_crusher_cache where advertiser = '{}' and url_pattern = '{}'"
+KEYWORD_DATE = "SELECT advertiser, url_pattern, keyword, count FROM keyword_crusher_cache WHERE url_pattern = '%(url_pattern)s' and advertiser = '%(advertiser)s' and record_date='%(record_date)s'"
+
+DATE_FALLBACK = "select distinct record_date from keyword_crusher_cache where url_pattern='%(url_pattern)s' and advertiser='%(advertiser)s' order by record_date DESC" 
 
 class KeywordCacheHandler(PatternSearchCache,VisitDomainsFullHandler):
 
@@ -27,19 +28,41 @@ class KeywordCacheHandler(PatternSearchCache,VisitDomainsFullHandler):
         self.db = db
         self.crushercache = crushercache
 
-    @decorators.deferred
-    def defer_get_onsite_cache(self, advertiser, pattern, top_count):
+    def getRecentDate(self, url_pattern, advertiser):
+        query_dict = {"url_pattern":url_pattern, "advertiser":advertiser}
+        datefallback = self.crushercache.select_dataframe(DATE_FALLBACK % query_dict)
+        now_date = str(datefallback['record_date'][0])
+        return now_date
 
-        results  = self.crushercache.select_dataframe(QUERY.format(advertiser, pattern))
+    def now(self):
+        from datetime import datetime
+        today = datetime.today()
+        return str(today).split(".")[0]
+
+    @decorators.deferred
+    def defer_get_onsite_cache(self, advertiser, pattern, top_count, filter_date):
+        now_date = filter_date
+        query_dict = {"url_pattern":pattern, "advertiser":advertiser, "record_date":filter_date}
+        if not filter_date:
+            now_date = self.now()
+            query_dict["record_date"] = now_date
+        QUERY = KEYWORD_DATE % query_dict
+        results  = self.crushercache.select_dataframe(QUERY)
+        if len(results) == 0 and not filter_date:
+            now_date = self.getRecentDate(pattern, advertiser)
+            query_dict["record_date"] = now_date
+            QUERY = KEYWORD_DATE % query_dict
+            results = self.crushercache.select_dataframe(QUERY)
+        
         sort_results = results.sort(["count"], ascending=False)
         results_no_NA = sort_results[sort_results["keyword"] != " "]
         df = pandas.DataFrame(results_no_NA.iloc[:int(top_count)])
         return df
 
     @custom_defer.inlineCallbacksErrors
-    def get_cache_domains(self, advertiser, pattern, top_count):
+    def get_cache_domains(self, advertiser, pattern, top_count, filter_date):
         logging.info(self.request)
-        response_data = yield self.defer_get_onsite_cache( advertiser, pattern, top_count)
+        response_data = yield self.defer_get_onsite_cache( advertiser, pattern, top_count, filter_date)
         if len(response_data)>0:
             versioning = self.request.uri
             if versioning.find('v1') >=0:
@@ -61,4 +84,6 @@ class KeywordCacheHandler(PatternSearchCache,VisitDomainsFullHandler):
         url_pattern = self.get_argument("url_pattern", "")
         user = self.current_advertiser_name
         top_count = self.get_argument("top", 50)
-        self.get_cache_domains( user, url_pattern, top_count)
+        filter_date = self.get_argument("date",False)
+
+        self.get_cache_domains( user, url_pattern, top_count, filter_date)

@@ -248,6 +248,7 @@ class decorators:
             try:
                 func(self, *args, **kwargs)
             except Exception as e:
+                self.set_status(400)
                 self.write(ujson.dumps({"error":str(e)}))
                 self.finish()
         return inner

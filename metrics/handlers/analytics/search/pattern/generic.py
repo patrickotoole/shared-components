@@ -100,8 +100,18 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
 
     @decorators.deferred
     def defer_get_idf(self, domains_df):
-        dd = domains_df['domain']
-        results = self.get_idf(dd)
+        domain_set = domains_df['domain']
+
+        QUERY = """
+            SELECT p.*, c.parent_category_name 
+            FROM pop_domain_with_category p 
+            JOIN category c using (category_name) 
+            WHERE domain in (%(domains)s)
+        """
+
+        domain_set = [i.encode("utf-8") for i in domain_set]
+        domains = "'" + "','".join(domain_set) + "'"
+        results = self.crushercache.select_dataframe(QUERY % {"domains":domains})
         return results
 
     @decorators.deferred
@@ -144,13 +154,12 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
     def run_level(self, needed_dfs, level_datasets,shared_dict):
         l2_dfs = set(needed_dfs).intersection(level_datasets)
         _dl_l2 = []
-
         for fname in l2_dfs:
             func_name = self.FUNCTION_MAP[fname]['func']
             func = getattr(self, func_name)
             cargs = [shared_dict[a] for a in self.FUNCTION_MAP[fname]["args"]]
             _dl_l2.append(func(*cargs))
-
+        
         if _dl_l2 !=[]:
             dl = defer.DeferredList(_dl_l2)
             responses = yield dl
@@ -181,6 +190,7 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
 
         #LEVEL 0
         args = [advertiser,term,build_datelist(num_days),num_days,allow_sample,filter_id]
+        #args = [advertiser,term,build_datelist(num_days),num_days,allow_sample,False]
         full_df, _, _, _ = yield self.get_sampled(*args)
         uids = list(set(full_df.uid.values))[:max_users]
         
@@ -195,7 +205,6 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
             uids = list(set(full_df.uid.values))[:max_users]
 
         shared_dict['uids'] = uids
-
         shared_dict = yield self.run_init_level(needed_dfs, self.LEVELS["l1"], shared_dict)
         
         shared_dict = yield self.run_level(needed_dfs, self.LEVELS["l2"], shared_dict)

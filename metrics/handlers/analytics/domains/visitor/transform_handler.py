@@ -5,6 +5,7 @@ import logging
 from ...search.pattern.base_visitors import VisitorBase
 from lib.helpers import decorators
 
+QUERYFIRST = "select body from user_defined_functions where udf ='{}' and advertiser='{}'"
 QUERYFUNCTIONS = "select body from user_defined_functions where udf = '{}'"
 
 def userDefinedFunction(code_string):
@@ -26,6 +27,23 @@ class VisitorTransformHandler(VisitorBase):
         self.crushercache = crushercache
         self.DOMAIN_SELECT = "SELECT uid, domain, timestamp FROM rockerbox.visitor_domains_full where uid = ?"
 
+    def getProcess(self, advertiser, url_pattern, api_type):
+        advertiser_overrides = self.crushercache.select_dataframe(QUERYFIRST.format(api_type, advertiser))
+        if len(advertiser_overrides)>0:
+            user_func = advertiser_overrides['body'][0]
+            user_env = userDefinedFunction(user_func)
+            process = [user_env[api_type]]
+        else:
+            names = [x.__name__ for x in self.DEFAULT_FUNCS]
+            api_name = "process_{}".format(api_type)
+            if api_name not in names:
+                user_defined = self.crushercache.select_dataframe(QUERYFUNCTIONS.format(api_type))
+                user_func = user_defined['body'][0]
+                user_env = userDefinedFunction(user_func)
+                process = [user_env[api_type]]
+            else:
+                process = filter(lambda x: ("process_" + api_type) in x.__name__, self.DEFAULT_FUNCS)
+        return process
 
 
     @tornado.web.authenticated
@@ -34,18 +52,11 @@ class VisitorTransformHandler(VisitorBase):
     def get(self, api_type):
         advertiser = self.current_advertiser_name
         terms = self.get_argument("url_pattern", False)
-        names = [x.__name__ for x in self.DEFAULT_FUNCS]
-        api_name = "process_{}".format(api_type)
-        if api_name not in names:
-            user_defined = self.crushercache.select_dataframe(QUERYFUNCTIONS.format(api_type))
-            if len(user_defined)==0:
-                process = None
-            else:
-                user_func = user_defined['body'][0]
-                user_env = userDefinedFunction(user_func)
-                process = [user_env[api_type]]
-        else:
-            process = filter(lambda x: ("process_" + api_type) in x.__name__, self.DEFAULT_FUNCS)
+        
+        try: 
+            process = self.getProcess(advertiser, terms, api_type)
+        except:
+            raise Exception("UDF does not exist")
 
         if process !=None:
             self.get_uids(advertiser,[[terms]],20,process=process)

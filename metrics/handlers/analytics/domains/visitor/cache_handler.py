@@ -12,7 +12,6 @@ from twisted.internet import defer
 from lib.helpers import decorators
 
 
-DOMAINS = "SELECT domain, count FROM action_dashboard_cache WHERE url_pattern = '%(url_pattern)s' and advertiser = '%(advertiser)s'"
 DOMAINS_DATE = "SELECT domain, count FROM domains_cache WHERE url_pattern = '%(url_pattern)s' and advertiser = '%(advertiser)s' and record_date='%(record_date)s'"
 DOMAINS_FILTER = "SELECT zipped FROM cache_domains_w_filter_id WHERE url_pattern = '%(url_pattern)s' and advertiser = '%(advertiser)s' and filter_id = '%(filter_id)s'"
 DATE_FALLBACK = "select distinct record_date from domains_cache where url_pattern='%(url_pattern)s' and advertiser='%(advertiser)s' order by record_date DESC"

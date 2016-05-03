@@ -11,19 +11,10 @@ import zlib
 import codecs
 import sys
 
-current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+now_date = datetime.datetime.now().strftime("%Y-%m-%d")
 
-SQL_INSERT1 = "INSERT INTO transform_before_and_after_cache (advertiser, url_pattern, filter_id, endpoint, zipped) values ('{}','{}',{},'{}','{}')"
-SQL_REPLACE1=" REPLACE transform_before_and_after_cache (advertiser, url_pattern, filter_id, endpoint, zipped) values ('{}','{}',{},'{}','{}')"
-
-SQL_INSERT2 = "INSERT INTO transform_hourly_cache (advertiser, url_pattern, filter_id, endpoint, zipped) values ('{}','{}',{},'{}','{}')"
-SQL_REPLACE2=" REPLACE transform_hourly_cache (advertiser, url_pattern, filter_id, endpoint, zipped) values ('{}','{}',{},'{}','{}')"
-
-SQL_INSERT3 = "INSERT INTO transform_sessions_cache (advertiser, url_pattern, filter_id, endpoint, zipped) values ('{}','{}',{},'{}','{}')"
-SQL_REPLACE3=" REPLACE transform_sessions_cache (advertiser, url_pattern, filter_id, endpoint, zipped) values ('{}','{}',{},'{}','{}')"
-
-SQL_INSERT4 = "INSERT INTO transform_model_cache (advertiser, url_pattern, filter_id, endpoint, zipped) values ('{}','{}',{},'{}','{}')"
-SQL_REPLACE4=" REPLACE transform_model_cache (advertiser, url_pattern, filter_id, endpoint, zipped) values ('{}','{}',{},'{}','{}')"
+SQL_INSERT = "INSERT INTO generic_function_cache (advertiser, url_pattern, action_id, udf, zipped, date) values ('{}','{}',{},'{}','{}', '{}')"
+SQL_REPLACE=" REPLACE generic_function_cache (advertiser, url_pattern, action_id, udf, zipped, date) values ('{}','{}',{},'{}','{}', '{}')"
 
 URL1 = "/crusher/v1/visitor/before_and_after?url_pattern={}"
 URL2 = "/crusher/v1/visitor/hourly?url_pattern={}"
@@ -34,7 +25,6 @@ class ModuleRunner(BaseRunner):
 
     def __init__(self, connectors):
         self.connectors =connectors
-        self.selection_dict = {"before_and_after":{"Insert":SQL_INSERT1, "Replace":SQL_REPLACE1}, "hourly":{"Insert":SQL_INSERT2, "Replace":SQL_REPLACE2}, "sessions": {"Insert":SQL_INSERT3, "Replace":SQL_REPLACE3}, "model":{"Insert":SQL_INSERT4, "Replace":SQL_REPLACE4}}
 
     def make_request(self,crusher, pattern, endpoint, filter_id):
         if endpoint == "before_and_after":
@@ -67,13 +57,11 @@ class ModuleRunner(BaseRunner):
 
     def insert(self, advertiser, pattern, endpoint,filter_id, compressed_data):
         try:
-            Q = self.selection_dict.get(endpoint, False)['Insert']
-            if Q:
-                self.connectors['crushercache'].execute(Q.format(advertiser, pattern, filter_id, endpoint, compressed_data))
+            Q= SQL_INSERT
+            self.connectors['crushercache'].execute(Q.format(advertiser, pattern, filter_id, endpoint, compressed_data, now_date))
         except:
-            Q = self.selection_dict.get(endpoint, False)['Replace']
-            if Q:
-                self.connectors['crushercache'].execute(Q.format(advertiser, pattern, filter_id, endpoint, compressed_data))
+            Q= SQL_REPLACE
+            self.connectors['crushercache'].execute(Q.format(advertiser, pattern, filter_id, endpoint, compressed_data, now_date))
 
 def runner(advertiser,pattern, endpoint, filter_id, base_url, cache_date="", indentifiers="test", connectors=False):
 

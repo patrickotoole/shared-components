@@ -290,7 +290,7 @@ class BaseDomainHandler(BaseHandler, AnalyticsBase, CassandraRangeQuery, VisitDo
         """
 
         domain_set = [i.encode("utf-8") for i in domain_set]
-        domains = domains = "'" + "','".join(domain_set) + "'"
+        domains = "'" + "','".join(domain_set) + "'"
 
         return self.db.select_dataframe(QUERY % {"domains":domains})
 
