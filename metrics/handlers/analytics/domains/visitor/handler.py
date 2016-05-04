@@ -40,6 +40,7 @@ class VisitorDomainsHandler(BaseDomainHandler):
         start_date = self.get_argument("start_date", "")
         end_date = self.get_argument("end_date", "")
         num_days = self.get_argument("num_days", 20)
+        preventsample = self.get_argument("prevent_sample",False)  
         filter_id = self.get_argument("filter_id",False)
 
         date = self.get_argument("date", "")
@@ -52,5 +53,5 @@ class VisitorDomainsHandler(BaseDomainHandler):
         if terms:
             pattern_terms = [p.split(",") for p in terms.split('|')]
 
-        self.fn(advertiser, pattern_terms, int(num_days), logic=logic, timeout=int(timeout))
+        self.fn(advertiser, pattern_terms, int(num_days), logic=logic, timeout=int(timeout), prevent_sample = preventsample)
  
