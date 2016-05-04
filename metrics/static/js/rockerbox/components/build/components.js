@@ -1014,10 +1014,48 @@
 	  return new Histogram(target);
 	}
 
-	function draw$4() {
-	  // Get data
+	function draw_pagination() {
 	  var data = this._dataFunc();
+	  var pagination = this._pagination;
 
+	  var pagination_wrapper = d3.select('.table_pagination');
+
+	  var pages_total = Math.ceil(this._dataFunc().body.length / this._pagination) + 1;
+	  var pagination_current = this._pagination_current;
+
+	  var all_pages = d3.range(1, pages_total);
+
+	  if(pagination_current <= 3) {
+	    var pagination_start = [1,2,3];
+	  } else {
+	    var pagination_start = all_pages.slice(pagination_current - 4, pagination_current);
+	  }
+	  var pagination_end = all_pages.slice(pagination_current, pagination_current + 3);
+
+	  var pagination_items = pagination_start.concat(pagination_end);
+
+	  var self = this;
+
+	  pagination_wrapper.datum(pagination_items)
+
+	  d3.selectAll('.pagination_button').remove();
+
+	  var pagination_items_element = d3_splat(pagination_wrapper, '.pagination_button', 'div', pagination_wrapper.datum(), function(x){ return x })
+	    .classed('pagination_button', true)
+	    .html(function(x, i) {
+	      if(x == pagination_current)
+	        return '<strong>' + x + '</strong>';
+	      else
+	        return '<span>' + x + '</span>';
+	    })
+	    .on('click', function(x) {
+	      self.changePage(x);
+	      self.draw();
+	    });
+	}
+
+	function draw$4() {
+	  var data = this._dataFunc();
 	  /*
 	    Draw head
 	  */
@@ -1060,8 +1098,6 @@
 	        .datum(function(x){
 	          return x;
 	        });
-	      // draw();
-	      // debugger;
 	    })
 
 	  /*
@@ -1071,7 +1107,17 @@
 	    .classed('table_body', true);
 
 	  // Loop through rows
-	  var table_body_rows = d3_splat(table_body_wrapper, '.table_body_row', 'tr', data['body'], function(x){ return x.key })
+	  if(this._pagination) {
+	    var data_slice_start = (this._pagination_current * this._pagination) - this._pagination;
+	    var data_slice_end = (this._pagination_current * this._pagination);
+	    var table_data = data['body'].slice(data_slice_start, data_slice_end);
+	  } else {
+	    var table_data = data['body'];
+	  }
+
+	  // d3.selectAll('.table_body_row').remove();
+
+	  var table_body_rows = d3_splat(table_body_wrapper, '.table_body_row', 'tr', table_data, function(x,i){ return i })
 	    .classed('table_body_row', true)
 	    .datum(function(x){
 	      return x;
@@ -1094,6 +1140,18 @@
 
 	      return column_value;
 	    });
+
+	  var pagination = this._pagination;
+	  var pagination_wrapper = d3_updateable(d3.select(this._base[0][0].parentNode), '.table_pagination', 'div')
+	    .classed('table_pagination no-select', true)
+	    .style('display', function() {
+	      if(pagination)
+	        return 'inline-block';
+	      else
+	        return 'none';
+	    })
+
+	  this.draw_pagination();
 	}
 
 	function base$4(target) {
@@ -1111,6 +1169,8 @@
 
 	  this._dataFunc = function(x) { return x }
 	  this._keyFunc = function(x) { return x }
+	  this._pagination;
+	  this._pagination_current = 1;
 	}
 
 	function table(target){
@@ -1124,10 +1184,23 @@
 	  return this;
 	}
 
+	function changePage(value) {
+	  this._pagination_current = value;
+	}
+
+	function pagination(value) {
+	  this._pagination = value;
+
+	  return this;
+	}
+
 	Table.prototype = {
 	  base: base$4,
 	  draw: draw$4,
-	  data: data$5
+	  data: data$5,
+	  pagination: pagination,
+	  draw_pagination: draw_pagination,
+	  changePage: changePage
 	}
 
 	function draw$5() {

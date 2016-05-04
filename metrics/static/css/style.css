@@ -28,6 +28,21 @@ body.hide-select > .container {
 body.hide-select > aside > .selectbar {
   display: none; }
 
+.no-select {
+  -webkit-touch-callout: none;
+  /* iOS Safari */
+  -webkit-user-select: none;
+  /* Chrome/Safari/Opera */
+  -khtml-user-select: none;
+  /* Konqueror */
+  -moz-user-select: none;
+  /* Firefox */
+  -ms-user-select: none;
+  /* Internet Explorer/Edge */
+  user-select: none;
+  /* Non-prefixed version, currently
+     not supported by any browser */ }
+
 .series {
   border-style: solid;
   border-width: 1px;
@@ -882,6 +897,23 @@ ul.vendors-list {
 
   .vendor-column-item:nth-child(n+16) {
     display: none !important; } }
+div.table_pagination {
+  display: inline-block;
+  border: solid 1px #ccc; }
+  div.table_pagination div.pagination_button {
+    display: inline-block;
+    padding: 0 20px;
+    min-width: 50px;
+    line-height: 50px;
+    text-align: center;
+    border-right: solid 1px #ccc;
+    cursor: pointer;
+    color: #777; }
+    div.table_pagination div.pagination_button strong {
+      color: #000; }
+  div.table_pagination div.pagination_button:last-child {
+    border-right: none; }
+
 .info-popup {
   position: fixed;
   margin-top: 25px;

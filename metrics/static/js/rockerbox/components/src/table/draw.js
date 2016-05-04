@@ -3,9 +3,7 @@ import d3_updateable from '../d3_updateable'
 import d3_splat from '../d3_splat'
 
 function draw() {
-  // Get data
   var data = this._dataFunc();
-
   /*
     Draw head
   */
@@ -48,8 +46,6 @@ function draw() {
         .datum(function(x){
           return x;
         });
-      // draw();
-      // debugger;
     })
 
   /*
@@ -59,7 +55,17 @@ function draw() {
     .classed('table_body', true);
 
   // Loop through rows
-  var table_body_rows = d3_splat(table_body_wrapper, '.table_body_row', 'tr', data['body'], function(x){ return x.key })
+  if(this._pagination) {
+    var data_slice_start = (this._pagination_current * this._pagination) - this._pagination;
+    var data_slice_end = (this._pagination_current * this._pagination);
+    var table_data = data['body'].slice(data_slice_start, data_slice_end);
+  } else {
+    var table_data = data['body'];
+  }
+
+  // d3.selectAll('.table_body_row').remove();
+
+  var table_body_rows = d3_splat(table_body_wrapper, '.table_body_row', 'tr', table_data, function(x,i){ return i })
     .classed('table_body_row', true)
     .datum(function(x){
       return x;
@@ -82,6 +88,18 @@ function draw() {
 
       return column_value;
     });
+
+  var pagination = this._pagination;
+  var pagination_wrapper = d3_updateable(d3.select(this._base[0][0].parentNode), '.table_pagination', 'div')
+    .classed('table_pagination no-select', true)
+    .style('display', function() {
+      if(pagination)
+        return 'inline-block';
+      else
+        return 'none';
+    })
+
+  this.draw_pagination();
 }
 
 export default draw
