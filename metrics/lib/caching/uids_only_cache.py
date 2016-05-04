@@ -22,7 +22,7 @@ class OnsiteCacheRunner(BaseRunner):
         crusher.base_url = base_url
         crusher.authenticate()
 
-        url = "/crusher/pattern_search/uids_only?search={}"
+        url = "/crusher/v1/visitor/onsite?url_pattern={}"
         try:
             response = crusher.get(url.format(pattern), timeout=300)
             d1 = response.json["results"]
@@ -67,8 +67,8 @@ def runner(advertiser, pattern, base_url, cache_date, indentifiers="test", conne
     data = OCR.make_request(advertiser, pattern, base_url)
     if data !={}:
         for i in range(0, len(data["visits"])):
-            OCR.write_to_table_visits(advertiser, pattern, data["visits"].ix[i], connectors['db'])
+            OCR.write_to_table_visits(advertiser, pattern, data["visits"].ix[i], connectors['crushercache'])
         for i in range(0, len(data["sessions"])):
-            OCR.write_to_table_sessions(advertiser, pattern, data["sessions"].ix[i], connectors['db'])
+            OCR.write_to_table_sessions(advertiser, pattern, data["sessions"].ix[i], connectors['crushercache'])
 
     OCR.accounting_entry_end(advertiser, pattern, "onsite_cache_runner", uuid_num)

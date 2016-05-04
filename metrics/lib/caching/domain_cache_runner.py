@@ -18,7 +18,6 @@ class AdvertiserActionRunner(BaseRunner):
         self.sql_query = _sql._write_mysql
 
     def make_request(self,crusher, pattern):
-        import ipdb; ipdb.set_trace()
         url = "/crusher/v1/visitor/domains?format=json&url_pattern=%s" % pattern
         resp = crusher.get(url, timeout=91)
         try:
@@ -29,7 +28,6 @@ class AdvertiserActionRunner(BaseRunner):
 
     def validation_name(self, crusher, name):
         valid = False
-        import ipdb; ipdb.set_trace()
         if not self.validation_data:
             url = "/crusher/funnel/action?format=json"
             resp = crusher.get(url)
@@ -44,7 +42,6 @@ class AdvertiserActionRunner(BaseRunner):
     def validation_pattern(self, crusher, url_pattern):
         valid = False
         self.url_pattern=url_pattern
-        import ipdb; ipdb.set_trace()
         if not self.validation_data:
             url = "/crusher/funnel/action?format=json"
             resp = crusher.get(url)
@@ -87,7 +84,6 @@ class AdvertiserActionRunner(BaseRunner):
                     logging.info("error with df for %s and %s" % (segment_name, advertiser))
 
     def pre_process(self, advertiser, base_url, url_pattern, segment_name):
-        import ipdb; ipdb.set_trace()
         crusher = self.get_crusher_obj(advertiser, base_url)
         if segment_name:
             valid= self.validation_name(crusher, segment_name)
@@ -112,7 +108,6 @@ class AdvertiserActionRunner(BaseRunner):
 
 
 def runner(advertiser,pattern, segment_name, base_url, cache_date="", indentifiers="test", connectors=False):
-    import ipdb; ipdb.set_trace()
     connectors = connectors or AdvertiserActionRunner.get_connectors()
 
     uuid_num = str(uuid.uuid4())

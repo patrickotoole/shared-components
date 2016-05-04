@@ -38,30 +38,34 @@ class InternalCacheHandler(BaseDomainHandler):
         self.fn = self.get_domains
 
     def addToWorkQueue(self, fname, advertiser, pattern, filter_id):
+        base_url="http://beta.crusher.getrockerbox.com"
+        yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
+        _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
+        ArgsModule ={
+                    "domains" : [advertiser,pattern, False, base_url , _cache_yesterday,_cache_yesterday + "domainsfromUser"],
+                    "domains_full": [advertiser,pattern, base_url, _cache_yesterday, _cache_yesterday+"full_urlUser"],
+                    "keyword":[advertiser,pattern,base_url, _cache_yesterday, _cache_yesterday+"keyworduser"],
+                    "before_and_after":[advertiser,pattern, "before_and_after", filter_id, base_url, _cache_yesterday,_cache_yesterday + "bnamoduleUser"],
+                    "hourly": [advertiser,pattern, "hourly", filter_id, base_url, _cache_yesterday,_cache_yesterday + "HourmodulecacheUser"],
+                    "sessions": [advertiser,pattern, "sessions", filter_id, base_url, _cache_yesterday,_cache_yesterday + "ModelmodulecacheUser"],
+                    "model": [advertiser,pattern, "model", filter_id, base_url, _cache_yesterday,_cache_yesterday + "OnsitemodulecacheUser"],
+                    "onsite": [advertiser,pattern, base_url, _cache_yesterday, _cache_yesterday + "uids_onlyUser"],
+                    "backfill": [],
+                    "recurring":[]
+                }
+
         modul = __import__("lib.caching")
         full_modul = getattr(modul.caching, self.PackageModule[fname])
         func_call = getattr(full_modul, "runner")
-        yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
-        _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
         
-        #hard coded for testing
-        base_url="http://beta.crusher.getrockerbox.com"
-
+        fargs = ArgsModule[fname]
+        
         work = pickle.dumps((
                 func_call,
-                [advertiser,pattern, False, base_url , _cache_yesterday,_cache_yesterday + "fullurlcache"]
+                fargs
                 ))
         work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,1)
         logging.info("added to work queue %s for %s from HTTP request" %(pattern,advertiser))
-
-        import lib.caching.keyword_cache as adc_runner
-        yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
-        _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
-        work = pickle.dumps((
-                adc_runner.runner,
-                [advertiser,pattern, base_url, _cache_yesterday,_cache_yesterday + "keywordcache"]
-                ))
-        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,40)
 
         
     @tornado.web.authenticated
@@ -74,9 +78,9 @@ class InternalCacheHandler(BaseDomainHandler):
         endpoint = self.get_argument("function",False)
         date = self.get_argument("date", False)
 
-        if not filter_id:
+        if not terms:
             raise Exception("Must include url_pattern parameter")
 
-        self.addToWorkQueue(endpoint, advertiser, terms[0], filter_id)
+        self.addToWorkQueue(endpoint, advertiser, terms, filter_id)
         self.write(ujson.dumps({"sample response": "Completed"}))
         self.finish()
