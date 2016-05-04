@@ -34,7 +34,6 @@ class VisitorKeywordsHandler(PatternSearchCache,VisitDomainsFullHandler):
 
     @decorators.deferred
     def defer_get_onsite_domains(self, date, advertiser, pattern):
-        #self.made()
         dates = build_datelist(7)
         args = [advertiser,pattern,dates]
         uids = self.get_uids_from_cache(*args)
@@ -105,7 +104,6 @@ class VisitorKeywordsHandler(PatternSearchCache,VisitDomainsFullHandler):
         
         #self.get_content(visitor_domains, summary, {})
         logging.info("Finished processing visitor domains...")
-
         
         
 

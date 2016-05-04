@@ -5,7 +5,10 @@ RB.crusher.metrics = (function(metrics) {
   metrics.init = function(advertiser_data, current_user) {
 
     setTimeout(function(){
-      var user_type = document.cookie.split("user_type=")[1].split(";")[0];
+      
+      var user_type = document.cookie.split("user_type=")[1]
+      if (user_type) user_type = user_type.split(";")[0];
+      
       switch (user_type) {
         case 'rockerbox':
           heap.identify({
@@ -109,9 +112,6 @@ RB.crusher.metrics = (function(metrics) {
           break;
       }
 
-      Intercom('trackEvent', 'Page Load', {
-        'url': window.location.href
-      });
     }, 2000)
   }
 

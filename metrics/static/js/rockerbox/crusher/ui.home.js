@@ -4,65 +4,177 @@ RB.crusher.ui = RB.crusher.ui || {}
 
 RB.crusher.ui.home = (function(home, crusher) {
 
-  home.main = function(funnelRow) {
-    var info = d3_updateable(funnelRow,".row","div")
+  home.validated = function(row,data) { }
 
-    info.attr("style","padding-bottom:15px;padding-top:5px")
-      .classed("row",true)
+  var stop = false;
+  var content = [
+        {
+            "left": "<div class='codepeek_text'>Rockerbox uses the pixel to build an audience of your users<br><br>You can explore behavioral differences in your audience based on different on-site activities.</div>"
+          , "right": "<div class='codepeek_text'>To see how your users differ based on on-site behavior, create a segment. <br><br>Need Help? Use our <a>Segment Creation</a> guide to get started.</div>" 
+          , "center": "<img style='width:100%' src='/static/img/demos/search-products-crusher.png'></img>"
+        }
+      , {
+            "center": "<img style='width:100%' src='/static/img/demos/before-crusher.png'></img>" 
+          , "left": "<div class='codepeek_text'>Rockerbox goes beyond direct referrer, providing insights on the articles, sites, and keywords that your visitors engaged with along their way to your site.</div>"
+          , "right": "<div class='codepeek_text'>With Rockerbox, you can finally visualize your visitor's entire journey.</div>"
+        }
+      , {
+            "center": "<img style='width:100%' src='/static/img/demos/clusters-demo.png'></img>" 
+          , "left": "<div class='codepeek_text'>Rockerbox automatically detects the similarities and differences between offsite user behavior. <br><br> Similarities and differences in an audience can help uncover and craft your message.</div>"
+          , "right": "<div class='codepeek_text'>Plan and optimize your marketing efforts by utilizing unbiased, real-time data to align your strategies to what different segments of your audience really care about.</div>"
+        }
+    ]
 
-    var descriptionWrap = d3_updateable(info,".crusher-about","div")
-      .classed("crusher-about col-md-6",true)
+  var validation = {
+      success: function(row,data,next) {
 
-    var description = d3_updateable(descriptionWrap,".ct-chart","div")
-      .classed("ct-chart",true)
-      .style("padding-bottom","15px")
+        var desc = "Your implementation appears to be successful. <br><br>We detected " + 
+          data.length + 
+          " recent page views to the following pages on your site by your web browser:"
 
-    d3_updateable(description,".about-heading","")
-      .classed("about-heading chart-title",true)
-      .text("What is Crusher?")
+        start.envelope(row)
+          .data(data)
+          .description(desc)
+          .title("congrats!")
+          .button("next")
+          .click(next)
+          .draw()
 
-    d3_updateable(description,".about-description","div")
-      .classed("about-description chart-description",true)
-      .html(
-        "<br>Crusher is a tool to help you understand the off-site interests and opportunities to advertise to users in your audience based on differences in on-site user activity." +
-        "<br><br>We built crusher because we believe that understanding what you audience does when they are not on your site is the is the best way to craft relevant, meaningful advertisements."
-      )
+        var to_hide = row.selectAll(".codepeek_content")
+          , h = -to_hide.node().clientHeight;
 
-    var descriptionWrap = d3_updateable(info,".crusher-how","div")
-      .classed("crusher-how col-md-6",true)
+        to_hide.transition()
+          .style("margin-top",(h+20) + "px")
+          .duration(500)
+      }
+    , failure: function(advertiser,all_pages) {
 
-    var description = d3_updateable(descriptionWrap,".ct-chart","div")
-      .classed("ct-chart",true)
-      .style("padding-bottom","15px")
+        var url = 'http://' + advertiser.client_sld
+          , dims = "status=1,width=50,height=50,right=50,bottom=50," + 
+              "titlebar=no,toolbar=no,menubar=no,location=no,directories=no,status=no"
+          , validation_popup = window.open(url, "validation_popup", dims);
+    
+        if (!stop) {
+          setTimeout(function(){
+            stop = true
+            all_pages.uuid = advertiser.uid;
+            pubsub.publishers.segment_pixel_status(all_pages)
+            validation_popup.close()
+          },8000)
+        } else {
+          validation_popup.close()
+        }
+    
+      }
+  }
 
-    d3_updateable(description,".about-heading","")
-      .classed("about-heading chart-title",true)
-      .text("How to use Crusher")
+  home.codepeek_click = function(row,advertiser,uid,next) {
 
-    d3_updateable(description,".about-description","div")
-      .classed("about-description chart-description",true)
-      .html(
-        "<br>Crusher data provides a better understanding of your audience which can be used to: <br><br>" +
-        "<ul><li>provide demographic insight about your audience</li><li>influence creative development</li><li>recommend topics for content marketing</li><li>highlight opportunities for direct advertising deals</li><li>make programmatic buys similar to your current audience</li></ul>"
-      )
+    advertiser.uid = uid
 
-    var descriptionWrap = d3_updateable(info,".crusher-tutorial","div")
-      .classed("crusher-tutorial col-md-12",true)
+    var click = function(x){
 
-    var description = d3_updateable(descriptionWrap,".ct-chart","div")
+      var all_pages = x.segments.filter(function(x){return x.segment_name.indexOf("All Pages") > -1})[0]
+        , stop = false;
 
-      .classed("crusher-tutorial ct-chart",true)
-      .style("padding-bottom","15px")
+      all_pages.uuid = uid+"sdf"
+      d3.select(this).property("value","validating...")
 
-    d3_updateable(description,".tutorial-heading","")
-      .classed("tutorial-heading chart-title",true)
-      .text("Getting started with Crusher")
+      pubsub.subscriber("validate", ["segment_pixel_status"])
+        .run(function(data){
+          if (!!data.length) validation.success(row,data,next)
+          else validation.failure(advertiser,all_pages)
+        })
+        .data(all_pages)
+        .unpersist(false)
+        .trigger()
+    }
 
-    var tutDesc = d3_updateable(description,".tutorial-description","div")
-      .classed("tutorial-description chart-description",true)
+    return click
+ 
+  }
+
+  home.main = function(funnelRow,advertiser,uid,has_pixel) {
+
+    var slides = [
+          function slide1(){
+            var d = d3.select(this)
+            var stage = start.stage(d)
+              .draw()
+
+            var cp_row = stage._stage
+            var click = home.codepeek_click(cp_row,advertiser,uid,slideshow.next.bind(slideshow))
+
+            start.codepeek(cp_row)
+              .data(advertiser)
+              .button("check")
+              .click(click)
+              .draw()
+          }
+        , function slide2(){
+            var d = d3.select(this)
+
+            var stage = start.stage(d)
+              .title("Getting Started")
+              .subtitle("Rockerbox helps you understand your audience by understanding off-site activity and behavior.")
+              .left("")
+              .right("")
+              .draw()
+
+            var wrap = d3_updateable(stage._stage,".img","div")
+              .classed("img pull-left",true)
+              .style("width","50%")
+              .style("border","10px solid white")
+              .html("")
+
+            var current = 0;
+            var next = function() {
+              stage
+                .left(content[current].left)
+                .right(content[current].right)
+                .draw()
+
+              wrap.html(content[current].center)
+              current += 1;
+
+              if (content[current] == undefined) {
+                RB.routes.navigation.forward(RB.crusher.controller.states["/crusher/action/existing"])
+              }
+            }
+
+            var bw = d3_updateable(d.selectAll(".codepeek_row"),".button-wrap","div")
+              .classed("button-wrap",true)
+              .style("width","50%")
+              .style("float","left")
+
+
+            start.button(bw)
+              .button("next")
+              .click(next)
+              .draw()
+
+            next()
+          }
+      ]
+
+    if (has_pixel) slides = slides.slice(1)
+
+    var slideshow = start.slideshow(funnelRow)
+      .data(slides)
+      .draw()
+
+    window._show = slideshow;
+
+    slideshow.slides().each(function(x,i){
+      return x.bind(this)(x,i)
+    })
+
+
+    return
   }
 
   home.status = function(tutDesc,status_data,advertiser_data,actions) {
+
        var item1 = d3_updateable(tutDesc,".item-1","div")
           .classed("item-1",true)
           .style("margin-top","10px")
@@ -116,78 +228,7 @@ RB.crusher.ui.home = (function(home, crusher) {
           })
   }
 
-  home.dashboard = function(funnelRow,data) {
-        var heading = d3_updateable(funnelRow,".heading","h5")
-        heading
-          .attr("style","margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-15px")
-          .text("On-page Analytics Overview")
-          .classed("heading",true)
-
-        var info = d3_updateable(funnelRow,".col-md-12","div")
-
-        info.attr("style","padding-bottom:15px;padding-top:5px")
-          .classed("col-md-12",true)
-          .text("High level stats about on-page activity")
-
-        var chart_options = [{
-            "title":"Views",
-            "field":"views",
-            "description":"Number of pageviews per day generated by visitors to your site",
-            "type":"line",
-            "summary":"total",
-            "format":false
-          },{
-            "title":"Engaged",
-            "field":"engaged",
-            "description":"Number of engaged users (visited 5 or more pages) on your site",
-            "type":"line",
-            "summary":"total",
-            "format":false
-          },{
-            "title":"Visitors",
-            "field":"visitors",
-            "description":"Number of distinct users visiting your site per day",
-            "type":"line",
-            "summary":"total",
-            "format":false
-          },{
-            "title":"Engagement",
-            "field":"engagement",
-            "description":"Ratio of visitors who are considered to be engaged users",
-            "type":"line",
-            "summary":"average",
-            "format":d3.format(".1%")
-          },{
-            "title":"Ad opportunities",
-            "field":"advertising_ops",
-            "description":"Number of advertising opportunities Rockerbox has seen for your users",
-            "type":"line",
-            "summary":"total",
-            "format":false
-          },{
-            "title":"Views per user",
-            "field":"views_per_user",
-            "description":"This is the average number of pageviews per visitor to your site",
-            "type":"line",
-            "summary":"average",
-            "format":d3.format(".3r")
-          }
-        ]
-
-        var chart_wrappers = d3_splat(funnelRow,".col-md-4","div",chart_options,function(x){return x.field})
-          .classed("col-md-4",true)
-
-        var charts = d3_updateable(chart_wrappers,".ct-chart","div")
-          .attr("id",function(x){return x.field})
-          .classed("ct-chart",true)
-
-        chart_wrappers.data().map(function(d) {
-          RB.rho.ui.buildChart(
-            ".ct-chart#" + d.field, data, "date", d.field, d.title, d.description, d.type, d.summary, d.format
-          )
-        })
-
-  }
+  
 
   return home
 })(RB.crusher.ui.home || {}, RB.crusher)

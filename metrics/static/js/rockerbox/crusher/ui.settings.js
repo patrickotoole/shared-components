@@ -32,7 +32,16 @@ RB.crusher.ui.settings = (function(settings,crusher) {
 
   }
 
-  settings.subscription = function(funnelRow) {
+  
+
+  settings.subscription_old = function(funnelRow) {
+
+      d3_updateable(funnelRow,".pixel-description","div")
+        .classed("pixel-description",true)
+        .style("margin-top","15px")
+        .style("margin-bottom","15px")
+        .html("Shown below is your current subscription plan")
+
       d3_updateable(funnelRow,".pixel-description","div")
         .classed("pixel-description",true)
         .style("margin-top","15px")

@@ -60,7 +60,7 @@ RB.crusher.controller = (function(controller) {
     var target = d3.selectAll('.container')
 
     var funnelRow = d3_splat(target, '.row', 'div', [obj], function(x) {
-        return x.id
+        return (x) ? x.id : false
       })
       .classed('row funnels', true)
 
@@ -127,7 +127,15 @@ RB.crusher.controller = (function(controller) {
         "id": "settings/subscription",
         "name": "Manage Subscription"
       })
-      crusher.ui.settings.subscription(funnelRow)
+
+      d3.select("body").classed("hide-select hide-top dark",true)
+
+      pubsub.subscriber("subscription_settings", ["advertiser","permissions","billing"])
+        .run(function(advertiser,permissions,billing) {
+          crusher.ui.settings.subscription.render(funnelRow,advertiser,permissions,billing)
+        })
+        .unpersist(true)
+        .trigger() 
 
     },
     "settings/pixel/setup": function() {
@@ -212,21 +220,20 @@ RB.crusher.controller = (function(controller) {
       var target = d3.selectAll(".container")
         .style("min-height", "100%")
 
-      var row = d3_splat(target, ".row", "div", [{
-          "id": "gettingstarted3"
-        }], function(x) {
-          return x.id
-        })
+      var row = d3_splat(target, ".row", "div", 
+          [{ "id": "gettingstarted3" }], 
+          function(x) { return x.id }
+        )
         .classed("row gettingstarted", true)
 
       row.exit().remove()
 
-      /* Header */
       var heading = d3_updateable(row, ".welcome-heading", "h5")
 
       heading.text("Welcome to Crusher, let's first set-up some things")
         .attr("style", "margin-top:-15px;padding-left:20px;height: 70px;line-height:70px;border-bottom:1px solid #f0f0f0;margin-left:-15px")
         .classed("welcome-heading heading", true)
+
       RB.crusher.ui.gettingstarted.step3(row, {
         goToAction: RB.routes.navigation.forward.bind(false, RB.crusher.controller.states["/crusher/action/existing"]),
         goToFunnel: RB.routes.navigation.forward.bind(false, RB.crusher.controller.states["/crusher/funnel/new"])
@@ -234,53 +241,35 @@ RB.crusher.controller = (function(controller) {
     },
 
     "home": function() {
-      // Check if the getting started page needs to be shown
-      var pixel_count = {
-        allpages: 0,
-        conversion: 0
-      }
 
-      pubsub.subscriber("gettingstarted", ["pixel_status", "actions"])
-        .run(function(status_data, actions) {
-          console.log(actions.filter(function(x){ return x.featured }));
-
-          status_data.filter(function(x){ return x.segment_name }).forEach(function(pixel) {
-            if (pixel.segment_name.indexOf("All Pages") >= 0) {
-              pixel_count.allpages++;
-            } else if (pixel.segment_name.indexOf("Conversion") >= 0) {
-              pixel_count.conversion++;
-            }
-          });
-
-          var no_actions = false;
-          if (crusher.cache.actionData.length == 0) {
-            no_actions = true;
-          }
-
-          if (!pixel_count.allpages) {
-            RB.routes.navigation.forward(controller.states["/crusher/gettingstarted"])
-          } else if (no_actions) {
-            RB.routes.navigation.forward(controller.states["/crusher/gettingstarted/step2"])
-          }
-        })
-        .unpersist(false)
-        .trigger()
-
-      d3.select("body").classed("hide-select", true)
+      d3.select("body").classed("hide-select hide-top",true)
 
       var funnelRow = build_header({
         "id": "home",
         "name": "Welcome to Crusher"
       })
 
-      crusher.ui.home.main(funnelRow)
+      var tutorial_finished = window.localStorage.getItem("tutorial_finished")
 
-      var wrapper = funnelRow.selectAll(".tutorial-description")
-      var subscription = crusher.ui.home.status.bind(false,wrapper)
+      if (d3.event) tutorial_finished = false;
 
-      pubsub.subscriber("home",["pixel_status","advertiser","actions"])
-        .run(subscription)
-        .unpersist(false)
+      pubsub.subscriber("home", ["advertiser","an_uid","pixel_status","actions"])
+        .run(function(advertiser,uid,status_data,actions) {
+
+          var has_pixel = status_data.length > 0,
+            has_pixel = status_data.filter(function(x){return x.segment_name && x.segment_name.indexOf("All Pages") > -1}).length > 0
+
+          var has_featured = actions.filter(function(x){return x.featured}).length
+
+          var show_dashboard = (has_pixel && has_featured && tutorial_finished)
+          var show_existing = (has_pixel && !has_featured && tutorial_finished)
+
+          if (show_dashboard) return setTimeout(RB.routes.navigation.forward.bind(false,controller.states["/crusher/action/dashboard"]),1)
+          if (show_existing) return setTimeout(RB.routes.navigation.forward.bind(false,controller.states["/crusher/action/existing"]),1)
+
+          crusher.ui.home.main(funnelRow,advertiser,uid,has_pixel)
+        })
+        .unpersist(true)
         .trigger()
     },
     "analytics": function() {
@@ -640,9 +629,9 @@ RB.crusher.controller = (function(controller) {
       }, {
         "name": "Advertiser Setup",
         "push_state": "/crusher/settings/advertiser",
-      }, {
-        "name": "Subscription",
-        "push_state": "/crusher/settings/subscription",
+      //}, {
+      //  "name": "Subscription",
+      //  "push_state": "/crusher/settings/subscription",
       }],
       "gettingstarted": [{
         "name": "Getting Started",
@@ -704,7 +693,8 @@ RB.crusher.controller = (function(controller) {
   }
 
   controller.states = {
-    "/crusher/action/dashboard":{name: "Dashboard", push_state: "/crusher/action/dashboard"}
+    "/crusher/action/dashboard":{name: "Dashboard", push_state: "/crusher/action/dashboard"},
+    "/crusher/settings/subscription":{name: "Dashboard", push_state: "/crusher/settings/subscription"}
   }
 
   Object.keys(controller.routes.apis).map(function(k) {

@@ -28,6 +28,17 @@ FROM user a JOIN user_permissions b on (a.id = b.user_id)
 WHERE a.username = '%s';
 """
 
+SUBSCRIPTION_QUERY = """
+SELECT
+    subscription_id, s.active, name
+FROM user a JOIN user_permissions b on (a.id = b.user_id)
+    JOIN permissions_subscription USING (permissions_id)
+    JOIN subscription s USING (subscription_id)
+WHERE a.username = '%s' and s.active = 1;
+"""
+
+
+
 
 
 USER_QUERY = """
@@ -183,6 +194,12 @@ class AccountPermissionsHandler(BaseHandler):
             df = df[cols]
             return Convert.df_to_values(df)
 
+    def get_user_subscription_permissions(self, username):
+        df = self.db.select_dataframe(SUBSCRIPTION_QUERY % username)
+        return Convert.df_to_values(df)
+
+
+
     def get_user_feature_permissions(self, username):
         df = self.db.select_dataframe(FEATURES_QUERY % username)
         return Convert.df_to_values(df)
@@ -196,6 +213,8 @@ class AccountPermissionsHandler(BaseHandler):
 
         advertiser_permissions = self.get_user_permissions(u)
         feature_permissions = self.get_user_feature_permissions(u)
+        subscription_permissions = self.get_user_subscription_permissions(u)
+
 
         for p in advertiser_permissions:
             if str(p["external_advertiser_id"]) == str(current_advertiser):
@@ -206,6 +225,7 @@ class AccountPermissionsHandler(BaseHandler):
         obj = {
             "results" : {
                 "advertisers": advertiser_permissions,
+                "subscriptions": subscription_permissions,
                 "feature_permissions": feature_permissions
             }
         }
