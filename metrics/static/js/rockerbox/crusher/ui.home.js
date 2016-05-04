@@ -19,9 +19,9 @@ RB.crusher.ui.home = (function(home, crusher) {
           , "right": "<div class='codepeek_text'>With Rockerbox, you can finally visualize your visitor's entire journey.</div>"
         }
       , {
-            "center": "<img style='width:100%' src='/static/img/demos/before-crusher.png'></img>" 
-          , "left": "<div class='codepeek_text'></div>"
-          , "right": "<div class='codepeek_text'></div>"
+            "center": "<img style='width:100%' src='/static/img/demos/clusters-demo.png'></img>" 
+          , "left": "<div class='codepeek_text'>Rockerbox automatically detects the similarities and differences between offsite user behavior. <br><br> Similarities and differences in an audience can help uncover and craft your message.</div>"
+          , "right": "<div class='codepeek_text'>Plan and optimize your marketing efforts by utilizing unbiased, real-time data to align your strategies to what different segments of your audience really care about.</div>"
         }
     ]
 
@@ -94,10 +94,9 @@ RB.crusher.ui.home = (function(home, crusher) {
  
   }
 
-  home.main = function(funnelRow,advertiser,uid) {
+  home.main = function(funnelRow,advertiser,uid,has_pixel) {
 
-    var slideshow = start.slideshow(funnelRow)
-      .data([
+    var slides = [
           function slide1(){
             var d = d3.select(this)
             var stage = start.stage(d)
@@ -138,7 +137,9 @@ RB.crusher.ui.home = (function(home, crusher) {
               wrap.html(content[current].center)
               current += 1;
 
-              if (content[current] == undefined) d.selectAll(".codepeek_row").selectAll(".button").classed("hidden",true)
+              if (content[current] == undefined) {
+                RB.routes.navigation.forward(RB.crusher.controller.states["/crusher/action/existing"])
+              }
             }
 
             var bw = d3_updateable(d.selectAll(".codepeek_row"),".button-wrap","div")
@@ -153,11 +154,13 @@ RB.crusher.ui.home = (function(home, crusher) {
               .draw()
 
             next()
-
-            
-
           }
-      ])
+      ]
+
+    if (has_pixel) slides = slides.slice(1)
+
+    var slideshow = start.slideshow(funnelRow)
+      .data(slides)
       .draw()
 
     window._show = slideshow;

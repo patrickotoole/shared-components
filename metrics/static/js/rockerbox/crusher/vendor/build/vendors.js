@@ -79,7 +79,6 @@
           })
           .filter(s._table_filter)
 
-        debugger
 
         target.html("")
         components.table(target)
