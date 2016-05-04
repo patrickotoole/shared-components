@@ -18,17 +18,17 @@ class ModuleCache:
     def __init__(self, connectors):
         self.connectors = connectors
 
-    def run_local(self, advertiser, segment, endpoint, filter_id, base_url, connectors):
+    def run_local(self, advertiser, segment, endpoint, filter_id, base_url, num_days, preventsample, connectors):
         import lib.caching.module_cache_runner as runner
-        runner.runner(advertiser,segment, endpoint, filter_id, base_url, connectors=connectors)
+        runner.runner(advertiser,segment, endpoint, filter_id, base_url, num_days, preventsample, connectors=connectors)
 
-    def add_db_to_work_queue(self, advertiser, segment, endpoint, filter_id, base_url):
+    def add_db_to_work_queue(self, advertiser, segment, endpoint, filter_id, base_url, num_days, preventsample):
         import lib.caching.module_cache_runner as runner
         yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
         _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
         work = pickle.dumps((
                 runner.runner,
-                [advertiser,segment, endpoint, fiter_id, base_url, _cache_yesterday,_cache_yesterday + "modulecache"]
+                [advertiser,segment, endpoint, fiter_id, base_url, num_days, preventsample, _cache_yesterday,_cache_yesterday + "modulecache"]
                 ))
         work_queue.SingleQueue(self.connectors['zk'],"python_queue").put(work,1)
         logging.info("added to MOdule work queue %s for %s" %(segment,advertiser)) 
@@ -47,6 +47,8 @@ if __name__ == "__main__":
     define("endpoint", default=False)
     define("filter_id", default=0)
     define("base_url", default="http://beta.crusher.getrockerbox.com")
+    define("preventsample", default=False)
+    define("num_days", default=2)
 
     basicConfig(options={})
 
@@ -57,11 +59,11 @@ if __name__ == "__main__":
     connectors = {'db': lnk.dbs.rockerbox, 'crushercache':lnk.dbs.crushercache, 'zk':zk, 'cassandra':''}
     MC = ModuleCache(connectors)
     if options.run_local and options.pattern:
-        MC.run_local(options.advertiser, options.pattern, options.endpoint, options.filter_id, options.base_url, connectors)
+        MC.run_local(options.advertiser, options.pattern, options.endpoint, options.filter_id, options.base_url, num_days, preventsample, connectors)
     elif options.run_local and not options.pattern:
         segments = connectors['db'].select_dataframe("select * from action_with_patterns where pixel_source_name = '{}'".format(options.advertiser))
         for i,s in segments.iterrows():
-            MC.run_local(options.advertiser, s['url_pattern'], options.endpoint, s['action_id'], options.base_url, connectors)
+            MC.run_local(options.advertiser, s['url_pattern'], options.endpoint, s['action_id'], options.base_url, num_days, preventsample, connectors)
     else:
-        MC.add_db_to_work_queue(options.advertiser, options.pattern, options.endpoint, options.filter_id, options.base_url)
+        MC.add_db_to_work_queue(options.advertiser, options.pattern, options.endpoint, options.filter_id, options.base_url, num_days, preventsample)
 
