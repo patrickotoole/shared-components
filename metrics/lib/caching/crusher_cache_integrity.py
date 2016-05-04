@@ -1,6 +1,6 @@
 from link import lnk
 import datetime, pandas
-from health_check_query import *
+from crusher_integrity_query import *
 
 INSERT_SQL = "insert into crusher_cache_integrity (advertiser, action_table_baseline, table_action_cache, table_full_domain_cache, uids_sessions_cache, uids_visits_cache, keyword_cache, backfill_action_count, cassandra_recurring_action, before_and_after_count, hourly_count, sessions_count, model_count) values ('{}', {}, {},{},{},{},{},{},{},{},{},{},{})"
 
