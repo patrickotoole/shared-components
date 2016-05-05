@@ -14,6 +14,7 @@ logger = logging.getLogger()
 SQL_QUERY = "select pixel_source_name from rockerbox.advertiser where crusher=1 and deleted=0"
 
 SQL_REMOVE_OLD = "DELETE FROM action_dashboard_cache where update_time < (UNIX_TIMESTAMP() - %s)"
+UDFQUERY = "select udf from user_defined_functions where advertiser ={} or advertiser is NULL"
 
 current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -97,7 +98,7 @@ class CacheInterface:
         import lib.caching.generic_udf_runner as gur
         yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
         _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
-        udfs = self.crusherdb.select_dataframe("select udf from user_defined_functions where advertiser='{}'".format(advertiser))
+        udfs = self.crusherdb.select_dataframe("select udf from user_defined_functions where advertiser='{}' or advertiser is NULL".format(advertiser))
         for uf in udfs.iterrows():
             work = pickle.dumps((
                     gur.runner,
