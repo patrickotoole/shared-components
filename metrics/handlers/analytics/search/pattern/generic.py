@@ -103,12 +103,12 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
         domain_set = domains_df['domain']
 
         QUERY = """
-            SELECT p.*, c.parent_category_name 
-            FROM pop_domain_with_category p 
-            JOIN category c using (category_name) 
+            SELECT p.domain, max(p.num_users) as num_users, p.idf, p.category_name, c.parent_category_name
+            FROM pop_domain_with_category p          
+            JOIN category c using (category_name)
             WHERE domain in (%(domains)s)
+            group by domain
         """
-
         domain_set = [i.encode("utf-8") for i in domain_set]
         domains = "'" + "','".join(domain_set) + "'"
         results = self.crushercache.select_dataframe(QUERY % {"domains":domains})
@@ -173,7 +173,6 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
 
     @defer.inlineCallbacks
     def build_arguments(self,advertiser,term,dates,num_days,response,allow_sample=True,filter_id=False,max_users=5000, datasets=['domains']):
-
         shared_dict={
                         "ds": "SELECT * FROM rockerbox.visitor_domains_full where uid = ?",
                         "advertiser" : advertiser,

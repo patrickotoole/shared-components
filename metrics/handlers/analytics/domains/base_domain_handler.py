@@ -76,7 +76,6 @@ class BaseDomainHandler(BaseHandler, AnalyticsBase, CassandraRangeQuery, VisitDo
         return self.build_statement(CACHE_QUERY,CACHE_WHAT,CACHE_WHERE)
 
     def run_cache(self,pattern,advertiser,dates,start=0,end=10,results=[]):
-
         data = self.data_plus_values([[advertiser,pattern[0]]],dates)
         cb_args = [advertiser,pattern,results]
         cb_kwargs = {"statement":self.cache_statement}
@@ -175,7 +174,7 @@ class BaseDomainHandler(BaseHandler, AnalyticsBase, CassandraRangeQuery, VisitDo
     #@custom_defer.inlineCallbacksErrors
     @defer.inlineCallbacks
     def sample_stats_onsite(self, term, params, advertiser, date_clause, numdays=20,allow_sample=True):
-
+        
         df = yield self.defer_execute(params, advertiser, [term], date_clause, "must", numdays=numdays,allow_sample=allow_sample)
         if len(df) > 0:
             stats_df, url_stats_df, full_df = self.raw_to_stats(df,date_clause)

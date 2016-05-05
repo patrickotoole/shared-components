@@ -9,7 +9,6 @@ QUERYFIRST = "select body from user_defined_functions where udf ='{}' and advert
 QUERYFUNCTIONS = "select body from user_defined_functions where udf = '{}'"
 
 def userDefinedFunction(code_string):
-    
     env = {}
     code_string = code_string.replace("import", "raise Exception('user defined function error')")
 

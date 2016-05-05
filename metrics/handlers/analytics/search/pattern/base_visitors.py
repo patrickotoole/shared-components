@@ -10,13 +10,15 @@ from transforms.timing import *
 from transforms.before_and_after import *
 from transforms.domain_intersection import *
 from transforms.raw import *
+from transforms.domains import *
+from transforms.domains_full import *
 from model import process_model
 from generic import GenericSearchBase
 import lib.custom_defer as custom_defer
 from ...domains.base_domain_handler import BaseDomainHandler
 from ...domains.base_helpers import *
 
-DEFAULT_FUNCS = [process_before_and_after, process_hourly, process_sessions, process_domain_intersection, process_model, process_raw]
+DEFAULT_FUNCS = [process_before_and_after, process_hourly, process_sessions, process_domain_intersection, process_model, process_raw, process_domains, process_domains_full]
 
 
 class VisitorBase(GenericSearchBase, BaseDomainHandler):
@@ -49,7 +51,6 @@ class VisitorBase(GenericSearchBase, BaseDomainHandler):
 
     @custom_defer.inlineCallbacksErrors
     def get_uids(self, advertiser, pattern_terms, num_days=20, process=False, datasets=DEFAULT_DATASETS, filter_id=False, *args, **kwargs):
-
         NUM_DAYS = 2
         ALLOW_SAMPLE = True
         NUM_USERS = 5000
