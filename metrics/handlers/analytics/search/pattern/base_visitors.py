@@ -24,7 +24,7 @@ DEFAULT_FUNCS = [process_before_and_after, process_hourly, process_sessions, pro
 class VisitorBase(GenericSearchBase, BaseDomainHandler):
 
     DEFAULT_FUNCS = DEFAULT_FUNCS
-    DEFAULT_DATASETS = ['domains','domains_full','urls','idf','uid_urls', 'url_to_action', 'category_domains']
+    DEFAULT_DATASETS = ['domains','domains_full','urls','idf','uid_urls', 'url_to_action', 'category_domains', "corpus"]
 
     @defer.inlineCallbacks
     def process_uids(self,funcs=DEFAULT_FUNCS,**kwargs):
