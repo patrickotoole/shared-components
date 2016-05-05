@@ -294,7 +294,7 @@ class BaseDomainHandler(BaseHandler, AnalyticsBase, CassandraRangeQuery, VisitDo
         return self.db.select_dataframe(QUERY % {"domains":domains})
 
     @defer.inlineCallbacks
-    def get_domains(self, advertiser, pattern_terms, num_days, logic="or",timeout=60,timeseries=False):
+    def get_domains(self, advertiser, pattern_terms, num_days, logic="or",timeout=60, prevent_sample=False, timeseries=False):
         dates = build_datelist(num_days)
         args = [advertiser,pattern_terms[0][0],dates,num_days]
 
@@ -308,10 +308,6 @@ class BaseDomainHandler(BaseHandler, AnalyticsBase, CassandraRangeQuery, VisitDo
         response = base_helpers.default_response(pattern_terms,logic,no_results=True)
         response = base_helpers.response_domains(response,domains)
         self.version_2_response(response['domains'])
-        #self.get_content(response)
-        #self.write(response)
-        #self.finish()
-        
 
     def version_2_response(self, current_response):
         df = pandas.DataFrame(current_response)

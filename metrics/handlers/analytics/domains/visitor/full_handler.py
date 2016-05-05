@@ -85,14 +85,12 @@ class VisitorDomainsFullHandler(VisitorBase):
 
 
     @custom_defer.inlineCallbacksErrors
-    def get_onsite_domains(self, date, kind, advertiser, pattern):
+    def get_onsite_domains(self, date, kind, advertiser, pattern,filter_id, num_days=2, prevent_sample=False):
 
-        filter_id = self.get_argument("filter_id",False)
-        NUM_DAYS = int(self.get_argument("num_days",2))
         NUM_USERS = int(self.get_argument("num_users",10000))
 
         if filter_id:
-            ALLOW_SAMPLE = False
+            ALLOW_SAMPLE = not prevent_sample
             response = {}
             args = [advertiser,pattern,build_datelist(NUM_DAYS),NUM_DAYS,response,ALLOW_SAMPLE,filter_id,NUM_USERS, ['domains','domains_full','urls','idf','uid_urls', 'url_to_action', 'category_domains']]
             kwargs = yield self.build_arguments(*args)
@@ -154,6 +152,9 @@ class VisitorDomainsFullHandler(VisitorBase):
         kind = self.get_argument("kind", "")
         url_pattern = self.get_argument("url_pattern", "")
         user = self.current_advertiser_name
+        num_days = self.get_argument("num_days", 2)
+        preventsample = self.get_argument("prevent_sample",False)
+        filter_id = self.get_argument("filter_id",False)
 
         date_clause = self.make_date_clause("date", date, start_date, end_date)
-        self.get_onsite_domains( date_clause, kind, user, url_pattern)
+        self.get_onsite_domains( date_clause, kind, user, url_pattern, filter_idi, num_days, preventsample)

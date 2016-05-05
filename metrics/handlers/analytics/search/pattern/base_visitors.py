@@ -50,9 +50,10 @@ class VisitorBase(GenericSearchBase, BaseDomainHandler):
 
 
     @custom_defer.inlineCallbacksErrors
-    def get_uids(self, advertiser, pattern_terms, num_days=20, process=False, datasets=DEFAULT_DATASETS, filter_id=False, *args, **kwargs):
-        NUM_DAYS = 2
-        ALLOW_SAMPLE = True
+    def get_uids(self, advertiser, pattern_terms, num_days=2, process=False, prevent_sample=False, datasets=DEFAULT_DATASETS, filter_id=False, *args, **kwargs):
+
+        NUM_DAYS = num_days
+        ALLOW_SAMPLE = not prevent_sample
         NUM_USERS = 5000
         response = default_response(pattern_terms,"and")
         args = [advertiser,pattern_terms[0][0],build_datelist(NUM_DAYS),NUM_DAYS,response,ALLOW_SAMPLE,filter_id,NUM_USERS,datasets]

@@ -16,17 +16,17 @@ now_date = datetime.datetime.now().strftime("%Y-%m-%d")
 SQL_INSERT = "INSERT INTO generic_function_cache (advertiser, url_pattern, action_id, udf, zipped, date) values ('{}','{}',{},'{}','{}', '{}')"
 SQL_REPLACE=" REPLACE generic_function_cache (advertiser, url_pattern, action_id, udf, zipped, date) values ('{}','{}',{},'{}','{}', '{}')"
 
-URL1 = "/crusher/v1/visitor/before_and_after?url_pattern={}"
-URL2 = "/crusher/v1/visitor/hourly?url_pattern={}"
-URL3 = "/crusher/v1/visitor/sessions?url_pattern={}"
-URL4 = "/crusher/v1/visitor/model?url_pattern={}"
+URL1 = "/crusher/v1/visitor/before_and_after?url_pattern={}&num_days={}&prevent_sample={}"
+URL2 = "/crusher/v1/visitor/hourly?url_pattern={}&num_days={}&prevent_sample={}"
+URL3 = "/crusher/v1/visitor/sessions?url_pattern={}&num_days={}&prevent_sample={}"
+URL4 = "/crusher/v1/visitor/model?url_pattern={}&num_days={}&prevent_sample={}"
 
 class ModuleRunner(BaseRunner):
 
     def __init__(self, connectors):
         self.connectors =connectors
 
-    def make_request(self,crusher, pattern, endpoint, filter_id):
+    def make_request(self,crusher, pattern, endpoint, filter_id, num_days, preventsample):
         if endpoint == "before_and_after":
             URL = URL1
         elif endpoint == "hourly":
@@ -40,9 +40,9 @@ class ModuleRunner(BaseRunner):
             sys.exit()
         if filter_id !=0:
             with_filter_id = "{}&filter_id={}"
-            url = URL.format(with_filter_id.format(pattern, filter_id))
+            url = URL.format(pattern, num_days,with_filter_id.format(preventsample,filter_id))
         else:
-            url = URL.format(pattern)
+            url = URL.format(pattern, num_days, preventsample)
         resp = crusher.get(url, timeout=300)
         try:
             return resp.json
@@ -63,7 +63,7 @@ class ModuleRunner(BaseRunner):
             Q= SQL_REPLACE
             self.connectors['crushercache'].execute(Q.format(advertiser, pattern, filter_id, endpoint, compressed_data, now_date))
 
-def runner(advertiser,pattern, endpoint, filter_id, base_url, cache_date="", indentifiers="test", connectors=False):
+def runner(advertiser,pattern, endpoint, filter_id, base_url, num_days, preventsample, cache_date="", indentifiers="test", connectors=False):
 
     connectors = connectors or MR.get_connectors()
 
@@ -75,7 +75,7 @@ def runner(advertiser,pattern, endpoint, filter_id, base_url, cache_date="", ind
 
     db = connectors['crushercache']
     zk = connectors['zk']
-    data = MR.make_request(crusher, pattern, endpoint, filter_id)
+    data = MR.make_request(crusher, pattern, endpoint, filter_id, num_days, preventsample)
 
     compress_data = MR.compress(ujson.dumps(data))
     try:
