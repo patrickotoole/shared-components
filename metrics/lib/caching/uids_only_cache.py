@@ -25,7 +25,7 @@ class OnsiteCacheRunner(BaseRunner):
         crusher.base_url = base_url
         crusher.authenticate()
 
-        url = "/crusher/pattern_search/uids_only?search={}"
+        url = "/crusher/v1/visitor/onsite?url_pattern={}"
         try:
             response = crusher.get(url.format(pattern), timeout=300)
             d1 = response.json["results"]

@@ -21,17 +21,17 @@ class ActionCache:
     def __init__(self, connectors):
         self.connectors = connectors
 
-    def run_local(self, advertiser, segment, base_url, connectors):
+    def run_local(self, advertiser, pattern, segment, base_url, connectors):
         import lib.caching.domain_cache_runner as adc_runner
-        adc_runner.runner(advertiser,segment, base_url, connectors=connectors)
+        adc_runner.runner(advertiser, pattern, segment, base_url, connectors=connectors)
 
-    def add_db_to_work_queue(self, advertiser, segment, base_url):
+    def add_db_to_work_queue(self, advertiser, pattern, segment, base_url):
         import lib.caching.domain_cache_runner as adc_runner
         yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
         _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
         work = pickle.dumps((
                 adc_runner.runner,
-                [advertiser,segment, base_url, _cache_yesterday,_cache_yesterday + "domaincache"]
+                [advertiser, pattern, segment, base_url, _cache_yesterday,_cache_yesterday + "domaincache"]
                 ))
         work_queue.SingleQueue(self.connectors['zk'],"python_queue").put(work,1)
         logging.info("added to DB work queue %s for %s" %(segment,advertiser)) 
@@ -45,7 +45,8 @@ if __name__ == "__main__":
     from lib.report.utils.options import parse_command_line
 
     define("advertiser",  default="")
-    define("segment", default="")
+    define("segment", default=False)
+    define("pattern", default=False)
     define("run_local", default=False)
     define("base_url", default="http://beta.crusher.getrockerbox.com")
     define("run_all", default=False)
@@ -68,7 +69,7 @@ if __name__ == "__main__":
                 except:
                     print "issues with actions {}".format(seg[1]['action_name'])
         else:
-            ckw.run_local(options.advertiser, options.segment,options.base_url, connectors)
+            ckw.run_local(options.advertiser, options.pattern, options.segment,options.base_url, connectors)
     else:
-        ckw.add_db_to_work_queue(options.advertiser, options.pattern, options.base_url)
+        ckw.add_db_to_work_queue(options.advertiser, options.pattern, options.segment, options.base_url)
 
