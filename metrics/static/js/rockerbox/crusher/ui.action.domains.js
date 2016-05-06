@@ -161,8 +161,8 @@ RB.crusher.ui.action = (function(action) {
     table_data.body = table_body;
 
     var table = components.table(domain_table)
-      .data(table_data)
       .pagination(10)
+      .data(table_data)
       .draw()
   }
 

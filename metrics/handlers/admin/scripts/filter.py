@@ -43,7 +43,7 @@ class FilterHandler(tornado.web.RequestHandler):
     
     
     def get_available(self, filter_type):
-        server = "_{}.filter._tcp.marathon.mesos".format(filter_type)
+        server = "_{}-0.4.0-filter-service.filter._tcp.marathon.mesos".format(filter_type)
         result = resolver.query(server,"SRV")
         host = list(result.__iter__())[0].target.to_text().strip(".")
         port = list(result.__iter__())[0].port

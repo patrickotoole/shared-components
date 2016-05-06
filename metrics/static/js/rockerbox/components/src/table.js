@@ -10,10 +10,18 @@ export function Table(target) {
   this._keyFunc = function(x) { return x }
   this._pagination;
   this._pagination_current = 1;
+  this._ascending = false
 }
 
 function table(target){
   return new Table(target)
+}
+
+function sort(value) {
+  if (value == undefined) return this._sort
+  if (value) this._sort = value
+  return this
+
 }
 
 function data(cb, key) {

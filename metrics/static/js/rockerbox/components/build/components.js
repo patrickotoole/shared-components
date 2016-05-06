@@ -1014,98 +1014,100 @@
 	  return new Histogram(target);
 	}
 
+	function pages(num_pages,current_page) {
+
+	  var all_pages = d3.range(1, num_pages);
+	  var min = Math.max(0,current_page - 3)
+	  var max = Math.min(current_page + 2,num_pages)
+
+	  var start = all_pages.slice(min, current_page);
+	  var end   = all_pages.slice(current_page, max);
+
+	  return start.concat(end);
+	  
+	}
+
 	function draw_pagination() {
 	  var data = this._dataFunc();
-	  var pagination = this._pagination;
 
-	  var pagination_wrapper = d3.select('.table_pagination');
+	  var pagination_wrapper = d3.select(this._base.node().parentNode).selectAll('.table_pagination');
 
 	  var pages_total = Math.ceil(this._dataFunc().body.length / this._pagination) + 1;
 	  var pagination_current = this._pagination_current;
 
-	  var all_pages = d3.range(1, pages_total);
-
-	  if(pagination_current <= 3) {
-	    var pagination_start = [1,2,3];
-	  } else {
-	    var pagination_start = all_pages.slice(pagination_current - 4, pagination_current);
-	  }
-	  var pagination_end = all_pages.slice(pagination_current, pagination_current + 3);
-
-	  var pagination_items = pagination_start.concat(pagination_end);
+	  var pagination_items = pages(pages_total,pagination_current)
 
 	  var self = this;
 
 	  pagination_wrapper.datum(pagination_items)
 
-	  d3.selectAll('.pagination_button').remove();
 
-	  var pagination_items_element = d3_splat(pagination_wrapper, '.pagination_button', 'div', pagination_wrapper.datum(), function(x){ return x })
+	  var pagination_items_element = d3_splat(pagination_wrapper, '.pagination_button', 'div',false, function(x){return x})
 	    .classed('pagination_button', true)
-	    .html(function(x, i) {
-	      if(x == pagination_current)
-	        return '<strong>' + x + '</strong>';
-	      else
-	        return '<span>' + x + '</span>';
-	    })
+	    .text(String)
+	    .style("font-weight",function(x) {return (x == pagination_current) ? "bold" : undefined})
 	    .on('click', function(x) {
 	      self.changePage(x);
 	      self.draw();
 	    });
+
+	  pagination_items_element.exit().remove()
+	  pagination_items_element.order(function(p,c){
+	    return c - p
+	  })
+	}
+
+	function head() {
+	  this._headers 
+
+	  var thead = d3_updateable(this._base, '.table_head', 'thead')
+	    .classed('table_head', true);
+
+	  var row = d3_updateable(thead, '.table_head_row', 'tr')
+	    .classed('table_head_row', true);
+
+	  var self = this;
+
+	  var th = d3_splat(row, '.table_head_column', 'th', this._headers, function(x){ return x.key })
+	    .classed('table_head_column', true)
+	    .text(function(x) { return x.title; })
+	    .style('cursor', 'pointer')
+	    .on('click', function(e) {
+
+	      self._pagination_current = 1
+
+	      this._ascending = !this._ascending
+
+	      var func = this._ascending ? d3.ascending : d3.descending
+	      var data = self._dataFunc()
+
+	      data.body = data.body.sort(function(p,c){ return func(p[e.key],c[e.key]) })
+
+	      self.draw()
+
+	    })
+	}
+
+	function get_page() {
+	  console.log(this._pagination)
+
 	}
 
 	function draw$4() {
+
 	  var data = this._dataFunc();
-	  /*
-	    Draw head
-	  */
-	  var table_head_wrapper = d3_updateable(this._base, '.table_head', 'thead')
-	    .classed('table_head', true);
-
-	  var table_head_row = d3_updateable(table_head_wrapper, '.table_head_row', 'tr')
-	    .classed('table_head_row', true);
-
-	  var table_head_columns = d3_splat(table_head_row, '.table_head_column', 'th', data['header'], function(x){ return x.key })
-	    .classed('table_head_column', true)
-	    .text(function(x) {
-	      return x.title;
-	    })
-	    .style('cursor', 'pointer')
-	    .on('click', function(e) {
-	      if (e.key == data.sortColumn) {
-	        data.sortDirection = !data.sortDirection;
-	      }
-
-	      data.sortColumn = e.key;
-
-	      table_body_rows
-	        .sort(function(x,y) {
-	          // debugger;
-	          if(typeof x[data.sortColumn] == typeof 0) {
-	            if(data.sortDirection) {
-	              return x[data.sortColumn] - y[data.sortColumn];
-	            } else {
-	              return y[data.sortColumn] - x[data.sortColumn];
-	            }
-	          } else {
-	            if(data.sortDirection) {
-	              return d3.ascending(y[data.sortColumn], x[data.sortColumn]);
-	            } else {
-	              return d3.descending(y[data.sortColumn], x[data.sortColumn]);
-	            }
-	          }
-	        })
-	        .datum(function(x){
-	          return x;
-	        });
-	    })
-
+	  this._headers = data.header
+	  
+	  head.bind(this)()
+	  
 	  /*
 	    Draw body
 	  */
 	  var table_body_wrapper = d3_updateable(this._base, '.table_body', 'tbody')
 	    .classed('table_body', true);
 
+	  this._body = data.body
+	  get_page.bind(this)()
 	  // Loop through rows
 	  if(this._pagination) {
 	    var data_slice_start = (this._pagination_current * this._pagination) - this._pagination;
@@ -1141,17 +1143,75 @@
 	      return column_value;
 	    });
 
-	  var pagination = this._pagination;
-	  var pagination_wrapper = d3_updateable(d3.select(this._base[0][0].parentNode), '.table_pagination', 'div')
-	    .classed('table_pagination no-select', true)
-	    .style('display', function() {
-	      if(pagination)
-	        return 'inline-block';
-	      else
-	        return 'none';
-	    })
+	  if (this._pagination) {
 
-	  this.draw_pagination();
+	    var pagination_current = this._pagination_current;
+	    var self = this
+
+	    var max = Math.ceil(self._dataFunc().body.length / self._pagination)
+
+	    var wrapper = d3_updateable(this._target, ".table_page_wrapper","div")
+	      .classed("table_page_wrapper",true)
+	      .style("text-align","center")
+
+	    var left = d3_updateable(wrapper, '.table_pagination_left', 'div',false,function(x,i){return i})
+	      .classed('table_pagination_left no-select', true)
+	      .style('display', "inline-block")
+
+	    d3_updateable(left, ".pagination_button_first","div")
+	      .classed("pagination_button_first pagination_button",true)
+	      .attr("style", "display: inline-block; padding: 0 20px; min-width: 50px; line-height: 50px; text-align: center; cursor: pointer; color: #777;")
+	      .on("click",function(x){
+	        self.changePage(1)
+	        self.draw()
+	      })
+	      .text("<<")
+
+	    d3_updateable(left, ".pagination_button_prev","div")
+	      .classed("pagination_button_prev pagination_button",true)
+	      .attr("style", "display: inline-block; padding: 0 20px; min-width: 50px; line-height: 50px; text-align: center; cursor: pointer; color: #777;")
+	      .on("click",function(x){
+	        self.changePage(Math.max(1,pagination_current-1))
+	        self.draw()
+	      })
+	      .text("<")
+
+
+
+
+
+
+
+	    var pagination_wrapper = d3_updateable(wrapper, '.table_pagination', 'div',false,function(x,i){return i})
+	      .classed('table_pagination no-select', true)
+	      .style('display', "inline-block")
+
+	    var right = d3_updateable(wrapper, '.table_pagination_right', 'div',false,function(x,i){return i})
+	      .classed('table_pagination_right no-select', true)
+	      .style('display', "inline-block")
+
+	    d3_updateable(right,".pagination_button_next","div")
+	      .classed("pagination_button_next pagination_button",true)
+	      .attr("style","display: inline-block; padding: 0 20px; min-width: 50px; line-height: 50px; text-align: center; cursor: pointer; color: #777;")
+	      .on("click",function(x){
+	        self.changePage(Math.min(max,pagination_current+1))
+	        self.draw()
+	      })
+	      .text(">")
+
+
+	    d3_updateable(right,".pagination_button_last","div")
+	      .classed("pagination_button_last pagination_button",true)
+	      .attr("style","display: inline-block; padding: 0 20px; min-width: 50px; line-height: 50px; text-align: center; cursor: pointer; color: #777;")
+	      .on("click",function(x){
+	        self.changePage(max)
+	        self.draw()
+	      })
+	      .text(">>")
+
+
+	    this.draw_pagination();
+	  } 
 	}
 
 	function base$4(target) {
@@ -1171,6 +1231,7 @@
 	  this._keyFunc = function(x) { return x }
 	  this._pagination;
 	  this._pagination_current = 1;
+	  this._ascending = false
 	}
 
 	function table(target){
