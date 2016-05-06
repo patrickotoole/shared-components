@@ -112,19 +112,58 @@ RB.crusher.ui.action = (function(action) {
 
   action.domain_table = function(targetRow,domainData) {
 
-    var domain_table = d3_updateable(targetRow,".domain-table","div",function(x){return x.domains})
-      .classed("domain-table col-md-8 col-sm-12",true)
+    var domain_table = d3_updateable(targetRow,'.domain-table','div',function(x){return x.domains})
+      .classed('domain-table col-md-8 col-sm-12',true)
 
-    d3_updateable(domain_table,".table-title","div")
-      .classed("table-title",true)
-      .text("Domains ranked by importance")
+    d3_updateable(domain_table,'.table-title','div')
+      .classed('table-title',true)
+      .text('Domains ranked by importance')
 
-    var title = "",
-      series = ["domain"],
-      formatting = "col-md-12"
+    var title = '',
+      series = ['domain'],
+      formatting = 'col-md-12'
 
-    RB.rho.ui.buildBarTable(domain_table, domainData, title, series, formatting, 15, action.category_colors)
+    // RB.rho.ui.buildBarTable(domain_table, domainData, title, series, formatting, 15, action.category_colors)
 
+    var table_body = domainData.sort(function(x, y) {
+      return y.num_users - x.num_users;
+    })
+    table_body.map(function(x, i) {
+      x.domain = x.domain;
+      x.key = i + 1;
+      x.category = x.parent_category_name;
+      x.uniques = x.num_users;
+      return x;
+    });
+    // debugger;
+    var table_data = {
+      header: [
+        {
+          key: 'key',
+          title: 'Rank'
+        },
+        {
+          key: 'domain',
+          title: 'Domain'
+        },
+        {
+          key: 'category',
+          title: 'Category'
+        },
+        {
+          key: 'uniques',
+          title: 'Uniques'
+        }
+      ],
+      body: []
+    };
+
+    table_data.body = table_body;
+
+    var table = components.table(domain_table)
+      .pagination(10)
+      .data(table_data)
+      .draw()
   }
 
   action.category_pie = function(targetRow,domainData,colors,formatter, hover) {
@@ -133,7 +172,7 @@ RB.crusher.ui.action = (function(action) {
 
     var target = d3_updateable(targetRow,".category-pie","div")
       .classed("category-pie ",true)
-      .classed(formatter || "col-md-4 col-sm-12 pull-right",true)
+      .classed(formatter || "col-md-4 col-sm-12",true)
 
     d3_updateable(target,".table-title","div")
       .classed("table-title",true)
@@ -160,11 +199,6 @@ RB.crusher.ui.action = (function(action) {
       pp._hover()
       pp.draw()
     })
-
-
-
-
-
 
   }
 

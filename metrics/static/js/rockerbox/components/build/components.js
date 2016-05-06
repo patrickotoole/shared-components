@@ -1014,64 +1014,112 @@
 	  return new Histogram(target);
 	}
 
-	function draw$4() {
-	  // Get data
+	function pages(num_pages,current_page) {
+
+	  var all_pages = d3.range(1, num_pages);
+	  var min = Math.max(0,current_page - 3)
+	  var max = Math.min(current_page + 2,num_pages)
+
+	  var start = all_pages.slice(min, current_page);
+	  var end   = all_pages.slice(current_page, max);
+
+	  return start.concat(end);
+	  
+	}
+
+	function draw_pagination() {
 	  var data = this._dataFunc();
 
-	  /*
-	    Draw head
-	  */
-	  var table_head_wrapper = d3_updateable(this._base, '.table_head', 'thead')
+	  var pagination_wrapper = d3.select(this._base.node().parentNode).selectAll('.table_pagination');
+
+	  var pages_total = Math.ceil(this._dataFunc().body.length / this._pagination) ;
+	  var pagination_current = this._pagination_current;
+
+	  var pagination_items = pages(pages_total,pagination_current)
+
+	  var self = this;
+
+	  pagination_wrapper.datum(pagination_items)
+
+
+	  var pagination_items_element = d3_splat(pagination_wrapper, '.pagination_button', 'div',false, function(x){return x})
+	    .classed('pagination_button', true)
+	    .text(String)
+	    .style("font-weight",function(x) {return (x == pagination_current) ? "bold" : undefined})
+	    .on('click', function(x) {
+	      self.changePage(x);
+	      self.draw();
+	    });
+
+	  pagination_items_element.exit().remove()
+	  pagination_items_element.order(function(p,c){
+	    return c - p
+	  })
+	}
+
+	function head() {
+	  this._headers 
+
+	  var thead = d3_updateable(this._base, '.table_head', 'thead')
 	    .classed('table_head', true);
 
-	  var table_head_row = d3_updateable(table_head_wrapper, '.table_head_row', 'tr')
+	  var row = d3_updateable(thead, '.table_head_row', 'tr')
 	    .classed('table_head_row', true);
 
-	  var table_head_columns = d3_splat(table_head_row, '.table_head_column', 'th', data['header'], function(x){ return x.key })
+	  var self = this;
+
+	  var th = d3_splat(row, '.table_head_column', 'th', this._headers, function(x){ return x.key })
 	    .classed('table_head_column', true)
-	    .text(function(x) {
-	      return x.title;
-	    })
+	    .text(function(x) { return x.title; })
 	    .style('cursor', 'pointer')
 	    .on('click', function(e) {
-	      if (e.key == data.sortColumn) {
-	        data.sortDirection = !data.sortDirection;
-	      }
 
-	      data.sortColumn = e.key;
+	      self._pagination_current = 1
 
-	      table_body_rows
-	        .sort(function(x,y) {
-	          // debugger;
-	          if(typeof x[data.sortColumn] == typeof 0) {
-	            if(data.sortDirection) {
-	              return x[data.sortColumn] - y[data.sortColumn];
-	            } else {
-	              return y[data.sortColumn] - x[data.sortColumn];
-	            }
-	          } else {
-	            if(data.sortDirection) {
-	              return d3.ascending(y[data.sortColumn], x[data.sortColumn]);
-	            } else {
-	              return d3.descending(y[data.sortColumn], x[data.sortColumn]);
-	            }
-	          }
-	        })
-	        .datum(function(x){
-	          return x;
-	        });
-	      // draw();
-	      // debugger;
+	      this._ascending = !this._ascending
+
+	      var func = this._ascending ? d3.ascending : d3.descending
+	      var data = self._dataFunc()
+
+	      data.body = data.body.sort(function(p,c){ return func(p[e.key],c[e.key]) })
+
+	      self.draw()
+
 	    })
+	}
 
+	function get_page() {
+	  console.log(this._pagination)
+
+	}
+
+	function draw$4() {
+
+	  var data = this._dataFunc();
+	  this._headers = data.header
+	  
+	  head.bind(this)()
+	  
 	  /*
 	    Draw body
 	  */
 	  var table_body_wrapper = d3_updateable(this._base, '.table_body', 'tbody')
 	    .classed('table_body', true);
 
+	  this._body = data.body
+	  get_page.bind(this)()
 	  // Loop through rows
-	  var table_body_rows = d3_splat(table_body_wrapper, '.table_body_row', 'tr', data['body'], function(x){ return x.key })
+	  if(this._pagination) {
+	    var data_slice_start = (this._pagination_current * this._pagination) - this._pagination;
+	    var data_slice_end = (this._pagination_current * this._pagination);
+	    var table_data = data['body'].slice(data_slice_start, data_slice_end);
+	  } else {
+	    var table_data = data['body'];
+	  }
+
+	  // d3.selectAll('.table_body_row').remove();
+
+	  var table_body_rows = d3_splat(table_body_wrapper, '.table_body_row', 'tr', table_data, function(x,i){ return i })
 	    .classed('table_body_row', true)
 	    .datum(function(x){
 	      return x;
@@ -1095,6 +1143,76 @@
 
 	      return column_value;
 	    });
+
+	  if (this._pagination) {
+
+	    var pagination_current = this._pagination_current;
+	    var self = this
+
+	    var max = Math.ceil(self._dataFunc().body.length / self._pagination)
+
+	    var wrapper = d3_updateable(this._target, ".table_page_wrapper","div")
+	      .classed("table_page_wrapper",true)
+	      .style("text-align","center")
+
+	    var left = d3_updateable(wrapper, '.table_pagination_left', 'div',false,function(x,i){return i})
+	      .classed('table_pagination_left no-select', true)
+	      .style('display', "inline-block")
+
+	    d3_updateable(left, ".pagination_button_first","div")
+	      .classed("pagination_button_first pagination_button",true)
+	      .attr("style", "display: inline-block; padding: 0 20px; min-width: 50px; line-height: 50px; text-align: center; cursor: pointer; color: #777;")
+	      .on("click",function(x){
+	        self.changePage(1)
+	        self.draw()
+	      })
+	      .text("<<")
+
+	    d3_updateable(left, ".pagination_button_prev","div")
+	      .classed("pagination_button_prev pagination_button",true)
+	      .attr("style", "display: inline-block; padding: 0 20px; min-width: 50px; line-height: 50px; text-align: center; cursor: pointer; color: #777;")
+	      .on("click",function(x){
+	        self.changePage(Math.max(1,pagination_current-1))
+	        self.draw()
+	      })
+	      .text("<")
+
+
+
+
+
+
+
+	    var pagination_wrapper = d3_updateable(wrapper, '.table_pagination', 'div',false,function(x,i){return i})
+	      .classed('table_pagination no-select', true)
+	      .style('display', "inline-block")
+
+	    var right = d3_updateable(wrapper, '.table_pagination_right', 'div',false,function(x,i){return i})
+	      .classed('table_pagination_right no-select', true)
+	      .style('display', "inline-block")
+
+	    d3_updateable(right,".pagination_button_next","div")
+	      .classed("pagination_button_next pagination_button",true)
+	      .attr("style","display: inline-block; padding: 0 20px; min-width: 50px; line-height: 50px; text-align: center; cursor: pointer; color: #777;")
+	      .on("click",function(x){
+	        self.changePage(Math.min(max,pagination_current+1))
+	        self.draw()
+	      })
+	      .text(">")
+
+
+	    d3_updateable(right,".pagination_button_last","div")
+	      .classed("pagination_button_last pagination_button",true)
+	      .attr("style","display: inline-block; padding: 0 20px; min-width: 50px; line-height: 50px; text-align: center; cursor: pointer; color: #777;")
+	      .on("click",function(x){
+	        self.changePage(max)
+	        self.draw()
+	      })
+	      .text(">>")
+
+
+	    this.draw_pagination();
+	  } 
 	}
 
 	function base$4(target) {
@@ -1112,6 +1230,9 @@
 
 	  this._dataFunc = function(x) { return x }
 	  this._keyFunc = function(x) { return x }
+	  this._pagination;
+	  this._pagination_current = 1;
+	  this._ascending = false
 	}
 
 	function table(target){
@@ -1125,10 +1246,23 @@
 	  return this;
 	}
 
+	function changePage(value) {
+	  this._pagination_current = value;
+	}
+
+	function pagination(value) {
+	  this._pagination = value;
+
+	  return this;
+	}
+
 	Table.prototype = {
 	  base: base$4,
 	  draw: draw$4,
-	  data: data$5
+	  data: data$5,
+	  pagination: pagination,
+	  draw_pagination: draw_pagination,
+	  changePage: changePage
 	}
 
 	function draw$5() {

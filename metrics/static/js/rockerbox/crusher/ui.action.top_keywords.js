@@ -22,7 +22,7 @@ RB.crusher.ui.action = (function(action) {
     pubsub.subscriber("visitor_keywords_cache",["visitor_keywords_cache"])
       .run(function(keywords){
         // debugger;
-
+        console.log('KEYWORDS 1', keywords);
         var keywords = keywords.filter(function(x) {
           if(x.keyword == '') {
             return false;
@@ -34,7 +34,7 @@ RB.crusher.ui.action = (function(action) {
           x.key = x.keyword;
           return x;
         })
-        console.log('KEYWORDS', keywords);
+
         var table_data = {
           header: [
             {
@@ -51,6 +51,7 @@ RB.crusher.ui.action = (function(action) {
         setTimeout(function() {
           var table = components.table(target)
             .data(table_data)
+            .pagination(15)
             .draw();
         }, 1);
       })
