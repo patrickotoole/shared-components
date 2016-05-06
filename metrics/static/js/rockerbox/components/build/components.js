@@ -1032,7 +1032,7 @@
 
 	  var pagination_wrapper = d3.select(this._base.node().parentNode).selectAll('.table_pagination');
 
-	  var pages_total = Math.ceil(this._dataFunc().body.length / this._pagination) + 1;
+	  var pages_total = Math.ceil(this._dataFunc().body.length / this._pagination) ;
 	  var pagination_current = this._pagination_current;
 
 	  var pagination_items = pages(pages_total,pagination_current)
