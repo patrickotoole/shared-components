@@ -6,10 +6,11 @@ from ...domains.base_domain_handler import BaseDomainHandler
 
 def get_idf(db,domain_set):
     QUERY = """
-        SELECT p.*, c.parent_category_name 
+        SELECT p.domain, max(p.num_users) as num_users, p.idf, p.category_name, c.parent_category_name 
         FROM reporting.pop_domain_with_category p 
         JOIN category c using (category_name) 
         WHERE domain in (%(domains)s)
+        group by domain    
     """
 
     domain_set = [i.encode("utf-8") for i in domain_set]
