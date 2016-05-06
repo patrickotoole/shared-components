@@ -25,7 +25,7 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
                 "l2":
                     ["domains", "urls", "pixel"],
                 "l3":
-                    ["url_to_action", "idf"],
+                    ["url_to_action", "idf", "corpus"],
                 "l4":
                     ["category_domains"]
                 }
@@ -37,7 +37,8 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
                     "idf" : ["domains"],
                     "pixel": [],
                     "domains_full":[],
-                    "uid_urls": []
+                    "uid_urls": [],
+                    "corpus": []
                 }
 
 
@@ -73,6 +74,10 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
             "domains_full": {
                 "func":"sample_offsite_domains",
                 "args":["advertiser", "term", "uids", "num_days", "ds"],
+            },
+            "corpus": {
+                "func": "defer_get_corpus",
+                "args":[]
             }
         }
 
@@ -112,6 +117,12 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
         domain_set = [i.encode("utf-8") for i in domain_set]
         domains = "'" + "','".join(domain_set) + "'"
         results = self.crushercache.select_dataframe(QUERY % {"domains":domains})
+        return results
+
+    @decorators.deferred
+    def defer_get_corpus(self):
+        QUERY = "select * from nltk_corpus"
+        results = self.crushercache.select_dataframe(QUERY)
         return results
 
     @decorators.deferred
