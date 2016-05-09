@@ -54,6 +54,7 @@ class VisitorTransformHandler(VisitorBase):
         num_days = self.get_argument("num_days", 2)
         preventsample = self.get_argument("prevent_sample",False)
         filter_id = self.get_argument("filter_id",False)
+        filter_date = self.get_argument("date", False)
         
         try: 
             process = self.getProcess(advertiser, terms, api_type)
@@ -61,8 +62,9 @@ class VisitorTransformHandler(VisitorBase):
             raise Exception("UDF does not exist")
 
         DEFAULT_DATASETS = ['domains','domains_full','urls','idf','uid_urls', 'url_to_action', 'category_domains']
+        url_arg = self.request.arguments
 
         if process !=None:
-            self.get_uids(advertiser,[[terms]],num_days,process=process)
+            self.get_uids(advertiser,[[terms]],20,process=process, url_args=url_arg)
         else:
             self.get_uids(advertiser,[[terms]],num_days,process=[],prevent_sample=preventsample, datasets=DEFAULT_DATASETS, filter_id=filter_id)
