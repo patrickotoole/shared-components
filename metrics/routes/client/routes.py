@@ -144,7 +144,6 @@ class AdvertiserRoutes(Routes):
             (r'/visitor/keywords/cache', visitor.keyword_cache_handler.KeywordCacheHandler, self.connectors),
             (r'/visitor/(.*?)/cache', visitor.transform_cache_handler.VisitorTransformCacheHandler, self.connectors),
             (r'/visitor/(.*?)', visitor.transform_handler.VisitorTransformHandler, self.connectors),
-
             (r'/internal/cache', analytics.domains.InternalCacheHandler, self.connectors),
 
         ]
