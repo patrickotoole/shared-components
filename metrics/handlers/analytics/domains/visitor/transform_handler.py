@@ -65,6 +65,6 @@ class VisitorTransformHandler(VisitorBase):
         url_arg = self.request.arguments
 
         if process !=None:
-            self.get_uids(advertiser,[[terms]],20,process=process, url_args=url_arg)
+            self.get_uids(advertiser,[[terms]],20,process=process, prevent_sample=preventsample, datasets=DEFAULT_DATASETS, filter_id=filter_id, date=filter_date, url_args=url_arg)
         else:
-            self.get_uids(advertiser,[[terms]],num_days,process=[],prevent_sample=preventsample, datasets=DEFAULT_DATASETS, filter_id=filter_id)
+            self.get_uids(advertiser,[[terms]],num_days,process=[])

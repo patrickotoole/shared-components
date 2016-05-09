@@ -58,7 +58,7 @@ class VisitorBase(GenericSearchBase, BaseDomainHandler):
         response = default_response(pattern_terms,"and")
         if date:
             import datetime
-            offset = (datetime.datetime.now() - date).days
+            offset = (datetime.datetime.now() - datetime.datetime.strptime(date, '%Y-%m-%d')).days
             datelist = build_datelist(NUM_DAYS, offset)
         else:
             datelist = build_datelist(NUM_DAYS)
