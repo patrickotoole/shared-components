@@ -73,7 +73,7 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
             },
             "domains_full": {
                 "func":"sample_offsite_domains",
-                "args":["advertiser", "term", "uids", "num_days", "ds"],
+                "args":["advertiser", "term", "uids", "dates", "ds"],
             },
             "corpus": {
                 "func": "defer_get_corpus",
@@ -199,7 +199,7 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
             raise Exception("Not a valid dataset")
 
         #LEVEL 0
-        args = [advertiser,term,build_datelist(num_days),num_days,allow_sample,filter_id]
+        args = [advertiser,term,dates,num_days,allow_sample,filter_id]
         #args = [advertiser,term,build_datelist(num_days),num_days,allow_sample,False]
         full_df, _, _, _ = yield self.get_sampled(*args)
         uids = list(set(full_df.uid.values))[:max_users]

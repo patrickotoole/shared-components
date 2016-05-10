@@ -26,7 +26,10 @@ class VisitDomainCassandra(object):
 
         DOMAIN_SELECT = CACHED
         statement = self.cassandra.prepare(DOMAIN_SELECT)
-        dates = build_datelist(14) 
+        if type(date_clause) == list:
+            dates = date_clause
+        else:
+            dates = build_datelist(14) 
         prepped = [[source,pattern,date] for date in dates]
 
         def execute(data):
