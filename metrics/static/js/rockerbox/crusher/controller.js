@@ -370,19 +370,43 @@ RB.crusher.controller = (function(controller) {
       
       action.filter = function(x) {return x.featured }
       action.selection = ["actions"]
-      action.subscriptions = ["cached_visitor_domains"]
-      action.items = ["bar","table"]
+      action.subscriptions = ["visitor_domains_time_minute"]
+      action.items = ["user_activity","offsite_hourly","three","bar","table"]
       action.click = function(x,self) {
         
-        d3.select(this.parentNode).selectAll(".bar").style("fill","grey")
-
-        if (!d3.select(this).classed("button")) {
-          d3.select(this).style("fill",undefined)
-          self._table_filter = function(y) {return y.parent_category_name == x.label}  
+        if (self._categories[x.label]) {
+          delete self._categories[x.label]
         } else {
-          d3.select(this.parentNode).selectAll(".bar").style("fill",undefined)
-          self._table_filter = function(y) {return true }
+          self._categories[x.label] = true
         }
+
+
+        d3.select(this.parentNode.parentNode)
+          .selectAll(".bar")
+          .style("fill","grey")
+
+
+        var cats = self._categories;
+
+        var check_categories = (Object.keys(cats).length) ? 
+          function(y) {return cats[y.parent_category_name] > -1 } :
+          function() {return true};
+
+        var check_time = self._timing ? 
+          function(y) {return self._timing == ((y.hour*60 + y.minute)/60) } :
+          function(){return true}
+
+        self._table_filter = function(y) {
+          return check_categories(y) && check_time(y)
+        } 
+
+        if (Object.keys(self._categories).length) {
+          d3.select(this).style("fill",undefined)
+        } else {
+          d3.select(this.parentNode.parentNode).selectAll(".bar").style("fill",undefined)
+        }
+
+        
         
         self.render_table(d3.select(self._wrapper.selectAll(".vendor-domains-table-column").node().parentNode))
       }

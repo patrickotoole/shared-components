@@ -1,9 +1,10 @@
 export default function(target) {
 
+  
   var s = this;
 
   var table_column = d3_updateable(target, '.vendor-domains-table-column', 'div')
-    .classed('vendor-domains-table-column col-lg-8 col-md-12', true)
+    .classed('vendor-domains-table-column col-lg-6 col-md-6', true)
 
   var vendor_domains_table_column = table_column.filter(function(x){return x.domains !== typeof undefined})
 
@@ -72,6 +73,18 @@ export default function(target) {
 
         })
         .filter(s._table_filter)
+        /*
+        .filter(function(x){
+          var keys = Object.keys(s._table_filter_dict);
+          if (keys.length > 0) return true;
+
+          var tf = keys.map(function(k){
+            return s._table_filter_dict[k](x)
+          })
+
+          return d3.sum(tf) == keys.length
+        })
+        */
 
 
       target.html("")

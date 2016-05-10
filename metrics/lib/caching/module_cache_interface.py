@@ -59,7 +59,7 @@ if __name__ == "__main__":
     connectors = {'db': lnk.dbs.rockerbox, 'crushercache':lnk.dbs.crushercache, 'zk':zk, 'cassandra':''}
     MC = ModuleCache(connectors)
     if options.run_local and options.pattern:
-        MC.run_local(options.advertiser, options.pattern, options.endpoint, options.filter_id, options.base_url, num_days, preventsample, connectors)
+        MC.run_local(options.advertiser, options.pattern, options.endpoint, options.filter_id, options.base_url, options.num_days, options.preventsample, connectors)
     elif options.run_local and not options.pattern:
         segments = connectors['db'].select_dataframe("select * from action_with_patterns where pixel_source_name = '{}'".format(options.advertiser))
         for i,s in segments.iterrows():
