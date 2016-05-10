@@ -65,7 +65,7 @@ class ModuleRunner(BaseRunner):
 
 def runner(advertiser,pattern, endpoint, filter_id, base_url, num_days, preventsample, cache_date="", indentifiers="test", connectors=False):
 
-    connectors = connectors or MR.get_connectors()
+    connectors = connectors or ModuleRunner.get_connectors()
 
     uuid_num = str(uuid.uuid4())
     MR = ModuleRunner(connectors)
