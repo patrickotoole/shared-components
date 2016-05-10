@@ -46,7 +46,7 @@ class ModuleRunner(BaseRunner):
             url = URL.format(pattern, num_days,with_filter_id.format(preventsample,filter_id))
         else:
             url = URL.format(pattern, num_days, preventsample)
-        resp = crusher.get(url, timeout=300)
+        resp = crusher.get(url, timeout=3000)
         try:
             return resp.json
         except:

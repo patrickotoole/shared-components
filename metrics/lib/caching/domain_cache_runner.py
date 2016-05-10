@@ -19,9 +19,9 @@ class AdvertiserActionRunner(BaseRunner):
 
     def make_request(self,crusher, pattern):
         url = "/crusher/v1/visitor/domains?format=json&url_pattern=%s" % pattern
-        resp = crusher.get(url, timeout=91)
+        resp = crusher.get(url, timeout=200)
         try:
-            results = resp.json['domains']
+            results = resp.json['response']
         except:
             results = resp.json
         return results
