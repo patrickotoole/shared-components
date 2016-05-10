@@ -145,9 +145,9 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
   })
   endpoints.visitor_domains_time_minute = api.helpers.genericQueuedAPIWithData(function(data, cb, deferred_cb) {
 
-    var URL = "/crusher/v1/visitor/domains_full_time_minute/cache?format=json&top=20000&url_pattern=" + data['url_pattern'][0]
+    var URL = "/crusher/v2/visitor/domains_full_time_minute/cache?format=json&top=20000&url_pattern=" + data['url_pattern'][0]
 
-    if (data.has_filter) URL += "&filter_id=" + data.action_id
+    URL += "&filter_id=" + data.action_id
 
     var process = function(dd) {
 
@@ -170,8 +170,8 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
     d3.json(URL, process)
       .on('error', function() {
-        var URL = "/crusher/v1/visitor/domains_full_time_minute?format=json&top=2000&url_pattern=" + data['url_pattern'][0]
-        if (data.has_filter) URL += "&filter_id=" + data.action_id
+        var URL = "/crusher/v2/visitor/domains_full_time_minute?format=json&top=2000&url_pattern=" + data['url_pattern'][0]
+        URL += "&filter_id=" + data.action_id
 
         d3.json(URL, process);
       })

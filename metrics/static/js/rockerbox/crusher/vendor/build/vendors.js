@@ -957,6 +957,17 @@
     render_hist: histogram,
     render_table: render_table,
     render_user_activity: function(target) {
+
+      var data = {
+        onsite: {
+          views: 0,
+          uniques: 0
+        },
+        offsite: {
+          views: this._data[0].domains_full ? d3.sum(this._data[0].domains_full,function(x){return x.count}) : 0,
+          uniques: this._data[0].domains_full ? d3.sum(this._data[0].domains_full,function(x){return x.uniques}) : 0
+        }
+      }
       var wrap = d3_updateable(target,".activity","div")
         .classed("activity col-md-3", true)
 
@@ -966,18 +977,84 @@
 
       d3_updateable(desc, "h3","h3")
         .text("User Vistis")
+        .style("margin-bottom","15px")
 
-      var onsite = d3_updateable(desc,".onsite","div")
-        .classed("onsite",true)
+      // var onsite = d3_updateable(desc,".onsite","div")
+      //   .classed("onsite",true)
+      //   .style("text-align","center")
 
-      d3_updateable(onsite,"div","div")
-        .text("On-site")
+      // var onviews = d3_updateable(onsite,".views","div")
+      //   .classed("views",true)
+      //   .style("width","45%")
+      //   .style("text-align","left")
+      //   .style("display","inline-block")
+
+      // d3_updateable(onviews,"div","div")
+      //   .text("On-site Views")
+
+      // d3_updateable(onviews,".number","div")
+      //   .classed("number",true)
+      //   .text(d3.format(",")(data.onsite.views))
+      //   .style("font-size","32px")
+      //   .style("font-weight","bold")
+
+      // var onuniques = d3_updateable(onsite,".uniques","div")
+      //   .classed("uniques",true)
+      //   .style("width","45%")
+      //   .style("text-align","left")
+      //   .style("display","inline-block")
+
+      // d3_updateable(onuniques,"div","div")
+      //   .text("On-site Uniques")
+
+      // d3_updateable(onuniques,".number","div")
+      //   .classed("number",true)
+      //   .text(d3.format(",")(data.onsite.uniques))
+      //   .style("font-size","32px")
+      //   .style("font-weight","bold")
+      //  
+
+      // d3_updateable(desc,".divider","div")
+      //   .classed("divider",true)
+      //   .style("margin","10px")
+      //   .style("border-bottom","1px solid #ccc")
 
       var offsite = d3_updateable(desc,".offsite","div")
         .classed("offsite",true)
+        .style("text-align","center")
 
-      d3_updateable(offsite,"div","div")
-        .text("Off-site")
+
+      var offviews = d3_updateable(offsite,".views","div")
+        .classed("views",true)
+        .style("width","45%")
+        .style("text-align","left")
+        .style("display","inline-block")
+
+      d3_updateable(offviews,"div","div")
+        .text("Off-site Views")
+
+      d3_updateable(offviews,".number","div")
+        .classed("number",true)
+        .text(d3.format(",")(data.offsite.views))
+        .style("font-size","32px")
+        .style("font-weight","bold")
+
+      var offuniques = d3_updateable(offsite,".uniques","div")
+        .classed("uniques",true)
+        .style("width","45%")
+        .style("text-align","left")
+        .style("display","inline-block")
+
+      d3_updateable(offuniques,"div","div")
+        .text("Off-site Uniques")
+
+      d3_updateable(offuniques,".number","div")
+        .classed("number",true)
+        .text(d3.format(",")(data.offsite.uniques))
+        .style("font-size","32px")
+        .style("font-weight","bold")
+
+      
 
 
         
