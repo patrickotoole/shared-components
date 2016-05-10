@@ -42,7 +42,7 @@ class VisitEventBase(object):
 
     @decorators.deferred
     def defer_get_uid_visits(self, source, uids, term):
-
+        import ipdb; ipdb.set_trace()
         xx = self.paginate_get_visits(uids, source)
         df = pandas.DataFrame(xx)
 

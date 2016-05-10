@@ -154,6 +154,7 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
         defer_responses = [r[1] for r in responses]
 
         l1_dfs = dict(zip(l1_dfs, defer_responses))
+        import ipdb; ipdb.set_trace()
         if l1_dfs.get('domains_full', False):
             shared_dict['domains_full'] = l1_dfs['domains_full'][0][1]
         if l1_dfs.get('uid_urls', False):
