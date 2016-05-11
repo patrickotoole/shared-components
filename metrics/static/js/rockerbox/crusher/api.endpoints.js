@@ -156,9 +156,18 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
       data.category_hour = dd.summary.cross_section
 
       var single_domains = d3.nest()
-        .key(function(x){return x.domain})
-        .rollup(function(x){ return x[0]})
-        .entries(dd.response).map(function(x){
+        .key(function(x){return x.url})
+        .rollup(function(x){ 
+          
+          return x.reduce(function(p,c){ 
+            p.count += c.count; 
+            p.uniques += c.uniques
+            return p
+          },{count:0,uniques:0,domain:x[0].domain, parent_category_name:x[0].parent_category_name, url: x[0].url}) 
+        })
+        .entries( 
+          dd.response.filter(function(x){ return x.uniques > 1 } ) 
+        ).map(function(x){
           return x.values
         }) 
 

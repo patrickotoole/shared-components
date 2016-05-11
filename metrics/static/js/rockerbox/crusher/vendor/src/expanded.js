@@ -120,8 +120,8 @@ Expanded.prototype = {
         uniques: 0
       },
       offsite: {
-        views: this._data[0].domains_full ? d3.sum(this._data[0].domains_full,function(x){return x.count}) : 0,
-        uniques: this._data[0].domains_full ? d3.sum(this._data[0].domains_full,function(x){return x.uniques}) : 0
+        views: this._data[0].domains_full ? d3.sum(this._data[0].domains_full.filter(this._table_filter),function(x){return x.count}) : 0,
+        uniques: this._data[0].domains_full ? d3.sum(this._data[0].domains_full.filter(this._table_filter),function(x){return x.uniques}) : 0
       }
     }
     var wrap = d3_updateable(target,".activity","div")
@@ -235,7 +235,7 @@ Expanded.prototype = {
       .style("min-height","300px")
 
     x.text(function(y){
-      return "timeofday: " + x.hour
+      //return "timeofday: " + x.hour
 
     })
     
