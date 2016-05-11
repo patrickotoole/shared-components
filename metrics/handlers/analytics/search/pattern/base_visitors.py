@@ -50,18 +50,24 @@ class VisitorBase(GenericSearchBase, BaseDomainHandler):
 
 
     @custom_defer.inlineCallbacksErrors
-    def get_uids(self, advertiser, pattern_terms, num_days=2, process=False, prevent_sample=False, datasets=DEFAULT_DATASETS, filter_id=False, *args, **kwargs):
+    def get_uids(self, advertiser, pattern_terms, num_days=20, process=False,  prevent_sample=False, datasets=DEFAULT_DATASETS, filter_id=False, date=False, url_args={}, *args, **kwargs):
 
         NUM_DAYS = num_days
         ALLOW_SAMPLE = not prevent_sample
         NUM_USERS = 5000
         response = default_response(pattern_terms,"and")
-        args = [advertiser,pattern_terms[0][0],build_datelist(NUM_DAYS),NUM_DAYS,response,ALLOW_SAMPLE,filter_id,NUM_USERS,datasets]
+        if date:
+            import datetime
+            offset = (datetime.datetime.now() - datetime.datetime.strptime(date, '%Y-%m-%d')).days
+            datelist = build_datelist(NUM_DAYS, offset)
+        else:
+            datelist = build_datelist(NUM_DAYS)
+        args = [advertiser,pattern_terms[0][0],datelist,NUM_DAYS,response,ALLOW_SAMPLE,filter_id,NUM_USERS,datasets]
 
         now = time.time()
 
         kwargs = yield self.build_arguments(*args)
-
+        kwargs['url_arguments'] = url_args
 
         if process:
             response = yield self.process_uids(funcs=process, **kwargs)
