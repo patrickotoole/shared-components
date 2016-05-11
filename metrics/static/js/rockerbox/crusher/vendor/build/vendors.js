@@ -6,10 +6,11 @@
 
   function render_table(target) {
 
+    
     var s = this;
 
     var table_column = d3_updateable(target, '.vendor-domains-table-column', 'div')
-      .classed('vendor-domains-table-column col-lg-8 col-md-12', true)
+      .classed('vendor-domains-table-column col-lg-6 col-md-6', true)
 
     var vendor_domains_table_column = table_column.filter(function(x){return x.domains !== typeof undefined})
 
@@ -78,6 +79,18 @@
 
           })
           .filter(s._table_filter)
+          /*
+          .filter(function(x){
+            var keys = Object.keys(s._table_filter_dict);
+            if (keys.length > 0) return true;
+
+            var tf = keys.map(function(k){
+              return s._table_filter_dict[k](x)
+            })
+
+            return d3.sum(tf) == keys.length
+          })
+          */
 
 
         target.html("")
@@ -89,6 +102,152 @@
 
 
     });
+  }
+
+  function histogram(target,title,frequency_func,times_func) {
+
+    var self = this;
+    var data = target.datum()
+    var _colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"]
+    var colors = _colors
+
+
+    data.map(function(x) {
+      x.timeunit = ( (parseInt(x.hour)  - 4) % 24 ) 
+      x.timeunit = x.timeunit < 0 ? 24 + x.timeunit : x.timeunit
+      x.timeunit += 1
+      x.timeunit = (x.timeunit*60 + x.minute)/60
+      x.frequency = frequency_func(x)
+    })
+
+    var times = data.map(times_func)
+    var maxWidth = 600
+
+    var margin = {top: 20, right: 10, bottom: 20, left: 10},
+        width = maxWidth - margin.left - margin.right,
+        height = 140 - margin.top - margin.bottom,
+        gridSize = Math.floor(width / 24 / 3);
+
+    var l = Array.apply(null, Array(Object.keys(times).length)).map(function (_, i) {return i+1;});
+    var x = d3.scale.ordinal().range(l);
+    var y = d3.scale.linear().range([height, 0]);
+
+    var colorScale = d3.scale.quantile()
+      .domain([0, d3.max(data, function (d) { return d.frequency; })])
+      .range(colors);
+
+    //colorScale = _colors || colorScale
+
+    var desc = d3_updateable(target,".vendor-domains-bar-desc","div")
+      .classed("vendor-domains-bar-desc",true)
+      .style("display","inherit")
+
+    d3_updateable(desc, "h3","h3")
+      .text(title)
+
+
+
+    var _base = target
+
+    var _svg = _base.selectAll(".bar-top").data([0],function(x){ return x })
+
+    _svg.enter().append("svg")
+      .attr("class","bar-top")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      
+
+    _svg.exit().remove()
+
+    var svg = _svg.selectAll("g.bar-top").data([data],function(x){ return JSON.stringify(x) })
+
+    svg.enter()
+        .append("g")
+        .attr("class","bar-top")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    svg.exit().remove()
+
+    _svg.on("click",function(){
+        d3.event.target
+        self._timing = undefined;
+        var cats = self._categories;
+
+        var check_categories = (Object.keys(cats).length) ? 
+          function(y) {return cats[y.parent_category_name] > -1 } :
+          function() {return true};
+
+        var check_time = self._timing ? 
+          function(y) {return self._timing == ((y.hour*60 + y.minute)/60) } :
+          function(){return true}
+
+        self._table_filter = function(y) {
+          return check_categories(y) && check_time(y)
+        } 
+        self._data
+        self.draw()      
+      })
+
+    
+
+    x.domain(data.map(function(d) { return d.timeunit }));
+    y.domain([0, d3.max(data, function(d) { return Math.sqrt(d.frequency); })]);
+
+    svg.selectAll(".timing-bar")
+        .data(data)
+      .enter().append("rect")
+        .attr("class", "timing-bar")
+        .attr("x", function(d) { return ((d.timeunit - 1) * gridSize * 3); })
+        .attr("width", gridSize)
+        .attr("y", function(d) { return y(Math.sqrt(d.frequency)); })
+        .attr("fill","#aaa")
+        .attr("fill",function(x) { return colorScale(x.frequency) } )
+        .attr("stroke","white")
+        .attr("stroke-width","1px")
+        .attr("height", function(d) { return height - y(Math.sqrt(d.frequency)); })
+        .style("opacity","1")
+        .on("click",function(x){
+          d3.event.stopPropagation()
+          var cats = self._categories;
+
+          self._timing = x.timeunit
+
+          var check_categories = (Object.keys(cats).length) ? 
+            function(y) {return cats[y.parent_category_name] > -1 } :
+            function() {return true};
+
+          var check_time = self._timing ? 
+            function(y) {return self._timing == ((y.hour*60 + y.minute)/60) } :
+            function(){return true}
+
+          self._table_filter = function(y) { return check_categories(y) && check_time(y) } 
+          self.draw()
+          var that = this
+
+          self._wrapper.selectAll(".timing-bar")
+            .style("opacity",".7")
+            .filter(function(d){ return d == x})
+            .attr("fill",function(x) { return colorScale(x.frequency) } )
+            .style("opacity","1")
+
+          return false
+        })
+
+    var z = d3.time.scale()
+      .range([0, width])
+      .nice(d3.time.hour,24)
+      
+
+    var xAxis = d3.svg.axis()
+      .scale(z)
+      .ticks(3)
+      .tickFormat(d3.time.format("%I %p"));
+
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis);
+
   }
 
   function autoSize(wrap,adjustWidth,adjustHeight) {
@@ -109,7 +268,7 @@
     w = adjustWidth(w)
     h = adjustHeight(h)
 
-    var margin = {top: 40, right: 10, bottom: 30, left: 10},
+    var margin = {top: 40, right: 10, bottom: 30, left: 0},
         width  = w - margin.left - margin.right,
         height = h - margin.top - margin.bottom;
 
@@ -120,32 +279,26 @@
     }
   }
 
-  function render_bar(vendor_data_columns) {
+  function drawDesc(wrap) {
 
-    var all_vendor_domains_bar_column = d3_updateable(vendor_data_columns, '.vendor-domains-bar-column', 'div')
-      .classed('vendor-domains-bar-column col-lg-3 col-md-6', true)
-
-    var vendor_domains_bar_column = all_vendor_domains_bar_column.filter(function(x){return x.domains !== typeof undefined})
-
-
-    var desc = d3_updateable(vendor_domains_bar_column,".vendor-domains-bar-desc","div")
-      .classed("vendor-domains-bar-desc",true)
+    var desc = d3_updateable(wrap,".desc","div")
+      .classed("desc",true)
       .style("display","inherit")
 
-    d3_updateable(desc, "h3","h3")
+    d3_updateable(desc,"h3","h3")
       .text("Categories")
 
     d3_updateable(desc, ".chart-description","p")
       .classed("chart-description",true)
       .text("A category breakdown for off-site activity.")
 
-    var vendor_domains_bar = d3_updateable(vendor_domains_bar_column, '.vendor-domains-bar', 'div')
-      .classed('col-md-12 row vendor-domains-bar', true)
-      .style('padding', '0px')
-      .style("text-align","center")
+    return desc
 
-    vendor_domains_bar.datum(function(x) {
+  }
 
+  function drawBar(target,self) {
+
+    target.datum(function(x){
       if (x.parentCategoryData == undefined && x.domains) {
 
         var category_data = x.domains.reduce(function(p,domain){
@@ -162,127 +315,138 @@
 
         x.parentCategoryData = parentCategoryData
 
+        var summed = d3.sum(x.parentCategoryData, function(x){ return x.value })
+        x.parentCategoryData.map(function(y){y.percent = y.value/summed})
+
       }
 
-      return x;
+      return x.parentCategoryData
+        .filter(function(y){return y.percent > .02})
+        .sort(function(p,c){
+          return c.percent - p.percent
+        })
     })
 
-    var self = this;
-
-    vendor_domains_bar.each(function(y){
-
-      var target = d3.select(this)
-        .datum(y.parentCategoryData)
+    var wrapper = d3.select(target.node().parentNode)
+    var data = target.datum();
 
 
-      if (target.datum()) {
-        var wrapper = d3.select(target.node().parentNode)
+    var _sizes = autoSize(wrapper,function(d){return d -50}, function(d){return 400}),
+      margin = _sizes.margin,
+      width = _sizes.width,
+      height = _sizes.height
+    
+    var x = d3.scale.linear()
+        .range([width/2, width-20]);
+    
+    var y = d3.scale.ordinal()
+        .rangeRoundBands([0, height], .2);
 
-        var summed = d3.sum(target.datum(),function(x){return x.value})
-        target.datum(function(x){
-          x.map(function(y){y.value = y.value/summed})
-          return x.filter(function(y){return y.value > .02})
+    var xAxis = d3.svg.axis()
+        .scale(x)
+        .orient("top");
+
+    var svg_wrap = d3_updateable(target,"svg","svg")
+      .attr("width", width + margin.left + margin.right) 
+      .attr("height", height + margin.top + margin.bottom)
+    
+    var svg = d3_updateable(svg_wrap,"g","g")
+      .attr("transform", "translate(" + margin.left + "," + 0 + ")");
+
+
+    var values = data.map(function(x){ return x.value })
+
+    x.domain(d3.extent([
+        d3.min(values)-.1,d3.max(values)+.1,-d3.min(values)+.1,-d3.max(values)-.1
+      ],
+      function(x) { return x}
+    )).nice();
+
+    y.domain(data.map(function(d) { return d.label; }));
+
+    var bar = d3_splat(svg,".bar","rect",false,function(x){return x.label})
+        .attr("class", function(d) { return d.value < 0 ? "bar negative" : "bar positive"; })
+        .attr("x",width/2 + 60)
+        .attr("y", function(d) { return y(d.label); })
+        .attr("width", function(d) { return Math.abs(x(d.value) - x(0)); })
+        .attr("height", y.rangeBand())
+        .style("cursor", "pointer")
+        .on("click", function(x) {
+          self._click.bind(this)(x,self)
         })
 
-
-        var data = target.datum();
-
-        var _sizes = autoSize(wrapper,function(d){return d -50}, function(d){return 500}),
-          margin = _sizes.margin,
-          width = _sizes.width,
-          height = _sizes.height
-    
-        var x = d3.scale.linear()
-            .range([0, width]);
-    
-        var y = d3.scale.ordinal()
-            .rangeRoundBands([0, height], .2);
-
-        var xAxis = d3.svg.axis()
-            .scale(x)
-            .orient("top");
-    
-        var svg = target.append("svg")
-            .attr("width", width + margin.left + margin.right)
-            .attr("height", height + margin.top + margin.bottom)
-          .append("g")
-            .attr("transform", "translate(" + margin.left + "," + 0 + ")");
+    bar.exit().remove()
 
 
+    var checks = d3_splat(svg,".check","foreignObject",false,function(x){return x.label})
+        .classed("check",true)
+        .attr("x",0)
+        .attr("y", function(d) { return y(d.label) ; })
+        .html("<xhtml:tree></xhtml:tree>")
 
-        var values = target.datum().map(function(x){ return x.value })
+      svg.selectAll("foreignobject").each(function(x){
+        var tree = d3.select(this.children[0])
 
-        x.domain(d3.extent([
-            d3.min(values)-.1,d3.max(values)+.1,-d3.min(values)+.1,-d3.max(values)-.1
-          ],
-          function(x) { return x}
-        )).nice();
-
-        y.domain(data.map(function(d) { return d.label; }));
-
-        svg.selectAll(".bar")
-            .data(function(x){return x})
-          .enter().append("rect")
-            .attr("class", function(d) { return d.value < 0 ? "bar negative" : "bar positive"; })
-            .attr("x", function(d) { return x(Math.min(0, d.value)); })
-            .attr("y", function(d) { return y(d.label); })
-            .attr("width", function(d) { return Math.abs(x(d.value) - x(0)); })
-            .attr("height", y.rangeBand())
-            .style("cursor", "pointer")
-            .on("click", function(x) {
-              self._click.bind(this)(x,self)
-            })
-
-        svg.selectAll(".label")
-            .data(function(x){return x})
-          .enter().append("text")
-            .attr("x", function(d) { return d.value < 0 ? x(0) + 6: x(0) -6; })
-            .attr("style", function(d) { 
-              return d.value < 0 ? 
-                "text-anchor:start;dominant-baseline: middle;" : 
-                "text-anchor:end;dominant-baseline: middle;"; 
-            })
-            .attr("y", function(d) { return y(d.label) + y.rangeBand()/2 + 1; })
-            .text(function(d) { return d.label; })
-
-        svg.selectAll(".label")
-            .data(function(x){return x})
-          .enter().append("text")
-            .attr("x", function(d) { return d.value < 0 ?
-              x(d.value) - 35:
-              x(d.value) + 35;
-            })
-            .attr("style", function(d) { 
-              return d.value < 0 ? 
-                "text-anchor:start;dominant-baseline: middle;font-size:.9em" : 
-                "text-anchor:end;dominant-baseline: middle;font-size:.9em"; 
-            })
-            .attr("y", function(d) { return y(d.label) + y.rangeBand()/2 + 1; })
-            .text(function(d) {
-              var v = d3.format("%")(d.value);
-              var x = (d.value > 0) ?  "↑" : "↓"
-              return "(" + v + x  + ")"
-            })
-
-        svg.append("g")
-            .attr("class", "y axis")
-          .append("line")
-            .attr("x1", x(0))
-            .attr("x2", x(0))
-            .attr("y2", height);
-
-        console.log("CAT",data)
-
-        var button = d3_updateable(target,".button","div")
-          .classed("button btn btn-success",true)
-          .text("All Categories")
-          .on("click",function(x) {
+        d3_updateable(tree,"input","input")
+          .attr("type","checkbox")
+          .property("checked",function(y){
+            return self._categories[x.label] ? "checked" : undefined
+          })
+          .on("click", function() {
             self._click.bind(this)(x,self)
           })
+      })
 
-      }
 
-    });
+
+    checks.exit().remove()
+
+
+    var label = d3_splat(svg,".name","text",false,function(x){return x.label})
+        .classed("name",true)
+        .attr("x",25)
+        .attr("style", "text-anchor:start;dominant-baseline: middle;")
+        .attr("y", function(d) { return y(d.label) + y.rangeBand()/2 + 1; })
+        .text(function(d) { return d.label; })
+
+    label.exit().remove()
+
+    var percent = d3_splat(svg,".percent","text",false,function(x){return x.label})
+        .classed("percent",true)
+        .attr("x",width/2 + 20)
+        .attr("style", "text-anchor:start;dominant-baseline: middle;font-size:.9em")
+        .attr("y", function(d) { return y(d.label) + y.rangeBand()/2 + 1; })
+        .text(function(d) {
+          var v = d3.format("%")(d.percent);
+          var x = (d.percent > 0) ?  "↑" : "↓"
+          return "(" + v + x  + ")"
+        })
+
+    svg.append("g")
+        .attr("class", "y axis")
+      .append("line")
+        .attr("x1", x(0))
+        .attr("x2", x(0))
+        .attr("y2", height);
+
+
+
+
+  }
+
+  function render_bar(target) {
+
+    var wrap = d3_updateable(target,".bar-wrapper","div",false,function(x,i){return i})
+      .classed("bar-wrapper col-lg-3 col-md-6",true) 
+
+    drawDesc(wrap)
+
+    var barWrap = d3_updateable(wrap,".bar-wrap","div",false,function(x,i){return i})
+      .classed("col-md-12 row bar-wrap",true)
+      .style("padding","0px")
+
+    if (target.datum().domains) drawBar(barWrap,this)
+
   }
 
   function render_onsite(vendor_data_columns) {
@@ -703,9 +867,11 @@
     this._target = target
     this._wrapper = this.render_wrapper(target)
     this._data = []
+    this._categories = {}
     this._on = {}
     this._render_items = ["visits","pie","onsite"] //["bar","table"]
     this._table_filter = function(e){return true}
+    this._table_filter_dict = {}
   }
 
   function datum(d) {
@@ -788,7 +954,136 @@
     render_visits: render_visits,
     render_onsite: render_onsite,
     render_bar: render_bar,
-    render_table: render_table
+    render_hist: histogram,
+    render_table: render_table,
+    render_user_activity: function(target) {
+
+      var data = {
+        onsite: {
+          views: 0,
+          uniques: 0
+        },
+        offsite: {
+          views: this._data[0].domains_full ? d3.sum(this._data[0].domains_full.filter(this._table_filter),function(x){return x.count}) : 0,
+          uniques: this._data[0].domains_full ? d3.sum(this._data[0].domains_full.filter(this._table_filter),function(x){return x.uniques}) : 0
+        }
+      }
+      var wrap = d3_updateable(target,".activity","div")
+        .classed("activity col-md-3", true)
+
+      var desc = d3_updateable(wrap,".vendor-domains-bar-desc","div")
+        .classed("vendor-domains-bar-desc",true)
+        .style("display","inherit")
+
+      d3_updateable(desc, "h3","h3")
+        .text("User Vistis")
+        .style("margin-bottom","15px")
+
+      // var onsite = d3_updateable(desc,".onsite","div")
+      //   .classed("onsite",true)
+      //   .style("text-align","center")
+
+      // var onviews = d3_updateable(onsite,".views","div")
+      //   .classed("views",true)
+      //   .style("width","45%")
+      //   .style("text-align","left")
+      //   .style("display","inline-block")
+
+      // d3_updateable(onviews,"div","div")
+      //   .text("On-site Views")
+
+      // d3_updateable(onviews,".number","div")
+      //   .classed("number",true)
+      //   .text(d3.format(",")(data.onsite.views))
+      //   .style("font-size","32px")
+      //   .style("font-weight","bold")
+
+      // var onuniques = d3_updateable(onsite,".uniques","div")
+      //   .classed("uniques",true)
+      //   .style("width","45%")
+      //   .style("text-align","left")
+      //   .style("display","inline-block")
+
+      // d3_updateable(onuniques,"div","div")
+      //   .text("On-site Uniques")
+
+      // d3_updateable(onuniques,".number","div")
+      //   .classed("number",true)
+      //   .text(d3.format(",")(data.onsite.uniques))
+      //   .style("font-size","32px")
+      //   .style("font-weight","bold")
+      //  
+
+      // d3_updateable(desc,".divider","div")
+      //   .classed("divider",true)
+      //   .style("margin","10px")
+      //   .style("border-bottom","1px solid #ccc")
+
+      var offsite = d3_updateable(desc,".offsite","div")
+        .classed("offsite",true)
+        .style("text-align","center")
+
+
+      var offviews = d3_updateable(offsite,".views","div")
+        .classed("views",true)
+        .style("width","45%")
+        .style("text-align","left")
+        .style("display","inline-block")
+
+      d3_updateable(offviews,"div","div")
+        .text("Off-site Views")
+
+      d3_updateable(offviews,".number","div")
+        .classed("number",true)
+        .text(d3.format(",")(data.offsite.views))
+        .style("font-size","32px")
+        .style("font-weight","bold")
+
+      var offuniques = d3_updateable(offsite,".uniques","div")
+        .classed("uniques",true)
+        .style("width","45%")
+        .style("text-align","left")
+        .style("display","inline-block")
+
+      d3_updateable(offuniques,"div","div")
+        .text("Off-site Uniques")
+
+      d3_updateable(offuniques,".number","div")
+        .classed("number",true)
+        .text(d3.format(",")(data.offsite.uniques))
+        .style("font-size","32px")
+        .style("font-weight","bold")
+
+      
+
+
+        
+
+    },
+    render_offsite_hourly: function(target) {
+
+
+      var x = d3_updateable(target,".offsite-hourly","div",false,function(x,i) {return i})
+        .classed("offsite-hourly col-md-6",true)
+        .style("min-height","200px")
+
+      if (this._data[0].current_hour) {
+        x.datum(function(x){ return x.current_hour })
+        this.render_hist(x,"Off-site User Activity",function(x){return x.count},function(x){return x.hour}) 
+
+      }
+      
+    },
+    render_three: function(target) {
+      var x = d3_updateable(target,".yo2","div").classed("yo2 col-md-3 pull-right",true)
+        .style("min-height","300px")
+
+      x.text(function(y){
+        //return "timeofday: " + x.hour
+
+      })
+      
+    }
 
   }
 

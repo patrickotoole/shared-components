@@ -20,6 +20,8 @@ URL1 = "/crusher/v1/visitor/before_and_after?url_pattern={}&num_days={}&prevent_
 URL2 = "/crusher/v1/visitor/hourly?url_pattern={}&num_days={}&prevent_sample={}"
 URL3 = "/crusher/v1/visitor/sessions?url_pattern={}&num_days={}&prevent_sample={}"
 URL4 = "/crusher/v1/visitor/model?url_pattern={}&num_days={}&prevent_sample={}"
+URL_GENERIC = "/crusher/v1/visitor/%s?url_pattern={}&num_days={}&prevent_sample={}"
+
 
 class ModuleRunner(BaseRunner):
 
@@ -36,8 +38,9 @@ class ModuleRunner(BaseRunner):
         elif endpoint == "model":
             URL = URL4
         else:
-            print "Not a vavlid endpoint"
-            sys.exit()
+            URL = URL_GENERIC % endpoint
+            print "Not a valid endpoint. using generic"
+            #sys.exit()
         if filter_id !=0:
             with_filter_id = "{}&filter_id={}"
             url = URL.format(pattern, num_days,with_filter_id.format(preventsample,filter_id))

@@ -52,8 +52,9 @@ class VisitorBase(GenericSearchBase, BaseDomainHandler):
     @custom_defer.inlineCallbacksErrors
     def get_uids(self, advertiser, pattern_terms, num_days=20, process=False,  prevent_sample=False, datasets=DEFAULT_DATASETS, filter_id=False, date=False, url_args={}, *args, **kwargs):
 
-        NUM_DAYS = num_days
+        NUM_DAYS = int(num_days)
         ALLOW_SAMPLE = not prevent_sample
+        logging.info("Days: %s, Sample: %s" % (NUM_DAYS,ALLOW_SAMPLE))
         NUM_USERS = 5000
         response = default_response(pattern_terms,"and")
         if date:

@@ -143,6 +143,82 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
       deferred_cb(null, cb.bind(false, dd))
     })
   })
+  endpoints.visitor_domains_time_minute = api.helpers.genericQueuedAPIWithData(function(data, cb, deferred_cb) {
+
+    var URL = "/crusher/v2/visitor/domains_full_time_minute/cache?format=json&top=20000&url_pattern=" + data['url_pattern'][0]
+
+    URL += "&filter_id=" + data.action_id
+
+    var process = function(dd) {
+
+      data.category = dd.summary.category
+      data.current_hour = dd.summary.hour
+      data.category_hour = dd.summary.cross_section
+
+      var single_domains = d3.nest()
+        .key(function(x){return x.url})
+        .rollup(function(x){ 
+          
+          return x.reduce(function(p,c){ 
+            p.count += c.count; 
+            p.uniques += c.uniques
+            return p
+          },{count:0,uniques:0,domain:x[0].domain, parent_category_name:x[0].parent_category_name, url: x[0].url}) 
+        })
+        .entries( 
+          dd.response.filter(function(x){ return x.uniques > 1 } ) 
+        ).map(function(x){
+          return x.values
+        }) 
+
+      data.domains_full = single_domains
+      deferred_cb(null, cb.bind(false, dd))
+    }
+
+    if (data.domains_full) deferred_cb(null, cb.bind(false, data.domains_full))
+
+    d3.json(URL, process)
+      .on('error', function() {
+        var URL = "/crusher/v2/visitor/domains_full_time_minute?format=json&top=2000&url_pattern=" + data['url_pattern'][0]
+        URL += "&filter_id=" + data.action_id
+
+        d3.json(URL, process);
+      })
+  })
+
+  endpoints.visitor_domains_time = api.helpers.genericQueuedAPIWithData(function(data, cb, deferred_cb) {
+
+    var URL = "/crusher/v1/visitor/domains_full_time/cache?format=json&top=20000&url_pattern=" + data['url_pattern'][0]
+
+    if (data.has_filter) URL += "&filter_id=" + data.action_id
+
+    var process = function(dd) {
+
+      data.category = dd.summary.category
+      data.current_hour = dd.summary.hour
+      data.category_hour = dd.summary.cross_section
+
+      var single_domains = d3.nest()
+        .key(function(x){return x.domain})
+        .rollup(function(x){ return x[0]})
+        .entries(dd.response).map(function(x){
+          return x.values
+        }) 
+
+      data.domains_full = single_domains
+      deferred_cb(null, cb.bind(false, dd))
+    }
+
+    if (data.domains_full) deferred_cb(null, cb.bind(false, data.domains_full))
+
+    d3.json(URL, process)
+      .on('error', function() {
+        var URL = "/crusher/v1/visitor/domains_full_time?format=json&top=2000&url_pattern=" + data['url_pattern'][0]
+        if (data.has_filter) URL += "&filter_id=" + data.action_id
+
+        d3.json(URL, process);
+      })
+  })
 
   endpoints.cached_visitor_domains = api.helpers.genericQueuedAPIWithData(function(data, cb, deferred_cb) {
 
@@ -152,7 +228,13 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
     if (data.has_filter) URL += "&filter_id=" + data.action_id
 
     var process = function(dd) {
-      data.domains_full = dd
+      var single_domains = d3.nest()
+        .key(function(x){return x.domain})
+        .rollup(function(x){ return x[0]})
+        .entries(dd).map(function(x){
+          return x.values
+        }) 
+      data.domains_full = single_domains
       deferred_cb(null, cb.bind(false, dd))
     }
 

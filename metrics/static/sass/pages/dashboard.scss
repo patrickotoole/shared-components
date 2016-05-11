@@ -7,3 +7,16 @@ body.hide-top .topbar, body.hide-top .page-header {
 body.hide-top {
   padding-top:0px
 }
+
+body.hide-top.hide-select {
+  .pixel-description, .vendor-name-column {
+    display:none
+  }
+  .container, .vendors-list-card{
+    padding:0px
+  }
+
+}
+.vendor-domains-table .table_head_row {
+  display:none
+}

@@ -192,6 +192,7 @@ class BaseDomainHandler(BaseHandler, AnalyticsBase, CassandraRangeQuery, VisitDo
 
     def get_filter_checker(self,filter_id):
         df = self.get_filter(filter_id)
+        if len(df) == 0 : return lambda x: True
         checker = AhoCorasick(list(df.filter_pattern)).has_match
 
         logging.info("constructed aho")

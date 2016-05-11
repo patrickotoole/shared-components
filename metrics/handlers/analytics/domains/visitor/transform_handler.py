@@ -52,7 +52,7 @@ class VisitorTransformHandler(VisitorBase):
         advertiser = self.current_advertiser_name
         terms = self.get_argument("url_pattern", False)
         num_days = self.get_argument("num_days", 2)
-        preventsample = self.get_argument("prevent_sample",False)
+        preventsample = self.get_argument("prevent_sample",False) == "true"
         filter_id = self.get_argument("filter_id",False)
         filter_date = self.get_argument("date", False)
         
@@ -64,7 +64,5 @@ class VisitorTransformHandler(VisitorBase):
         DEFAULT_DATASETS = ['domains','domains_full','urls','idf','uid_urls', 'url_to_action', 'category_domains']
         url_arg = self.request.arguments
 
-        if process !=None:
-            self.get_uids(advertiser,[[terms]],20,process=process, prevent_sample=preventsample, datasets=DEFAULT_DATASETS, filter_id=filter_id, date=filter_date, url_args=url_arg)
-        else:
-            self.get_uids(advertiser,[[terms]],num_days,process=[])
+        logging.info(preventsample)
+        self.get_uids(advertiser,[[terms]],int(num_days),process=process, prevent_sample=preventsample, datasets=DEFAULT_DATASETS, filter_id=filter_id, date=filter_date, url_args=url_arg)

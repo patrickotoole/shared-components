@@ -15,15 +15,19 @@ import render_onsite from './expanded/render/onsite'
 
 import render_bar from './expanded/render/bar'
 import render_table from './expanded/render/table'
+import render_hist from './expanded/render/hist'
+
 
 
 export function Expanded(target) {
   this._target = target
   this._wrapper = this.render_wrapper(target)
   this._data = []
+  this._categories = {}
   this._on = {}
   this._render_items = ["visits","pie","onsite"] //["bar","table"]
   this._table_filter = function(e){return true}
+  this._table_filter_dict = {}
 }
 
 function datum(d) {
@@ -106,7 +110,136 @@ Expanded.prototype = {
   render_visits: render_visits,
   render_onsite: render_onsite,
   render_bar: render_bar,
-  render_table: render_table
+  render_hist: render_hist,
+  render_table: render_table,
+  render_user_activity: function(target) {
+
+    var data = {
+      onsite: {
+        views: 0,
+        uniques: 0
+      },
+      offsite: {
+        views: this._data[0].domains_full ? d3.sum(this._data[0].domains_full.filter(this._table_filter),function(x){return x.count}) : 0,
+        uniques: this._data[0].domains_full ? d3.sum(this._data[0].domains_full.filter(this._table_filter),function(x){return x.uniques}) : 0
+      }
+    }
+    var wrap = d3_updateable(target,".activity","div")
+      .classed("activity col-md-3", true)
+
+    var desc = d3_updateable(wrap,".vendor-domains-bar-desc","div")
+      .classed("vendor-domains-bar-desc",true)
+      .style("display","inherit")
+
+    d3_updateable(desc, "h3","h3")
+      .text("User Vistis")
+      .style("margin-bottom","15px")
+
+    // var onsite = d3_updateable(desc,".onsite","div")
+    //   .classed("onsite",true)
+    //   .style("text-align","center")
+
+    // var onviews = d3_updateable(onsite,".views","div")
+    //   .classed("views",true)
+    //   .style("width","45%")
+    //   .style("text-align","left")
+    //   .style("display","inline-block")
+
+    // d3_updateable(onviews,"div","div")
+    //   .text("On-site Views")
+
+    // d3_updateable(onviews,".number","div")
+    //   .classed("number",true)
+    //   .text(d3.format(",")(data.onsite.views))
+    //   .style("font-size","32px")
+    //   .style("font-weight","bold")
+
+    // var onuniques = d3_updateable(onsite,".uniques","div")
+    //   .classed("uniques",true)
+    //   .style("width","45%")
+    //   .style("text-align","left")
+    //   .style("display","inline-block")
+
+    // d3_updateable(onuniques,"div","div")
+    //   .text("On-site Uniques")
+
+    // d3_updateable(onuniques,".number","div")
+    //   .classed("number",true)
+    //   .text(d3.format(",")(data.onsite.uniques))
+    //   .style("font-size","32px")
+    //   .style("font-weight","bold")
+    //  
+
+    // d3_updateable(desc,".divider","div")
+    //   .classed("divider",true)
+    //   .style("margin","10px")
+    //   .style("border-bottom","1px solid #ccc")
+
+    var offsite = d3_updateable(desc,".offsite","div")
+      .classed("offsite",true)
+      .style("text-align","center")
+
+
+    var offviews = d3_updateable(offsite,".views","div")
+      .classed("views",true)
+      .style("width","45%")
+      .style("text-align","left")
+      .style("display","inline-block")
+
+    d3_updateable(offviews,"div","div")
+      .text("Off-site Views")
+
+    d3_updateable(offviews,".number","div")
+      .classed("number",true)
+      .text(d3.format(",")(data.offsite.views))
+      .style("font-size","32px")
+      .style("font-weight","bold")
+
+    var offuniques = d3_updateable(offsite,".uniques","div")
+      .classed("uniques",true)
+      .style("width","45%")
+      .style("text-align","left")
+      .style("display","inline-block")
+
+    d3_updateable(offuniques,"div","div")
+      .text("Off-site Uniques")
+
+    d3_updateable(offuniques,".number","div")
+      .classed("number",true)
+      .text(d3.format(",")(data.offsite.uniques))
+      .style("font-size","32px")
+      .style("font-weight","bold")
+
+    
+
+
+      
+
+  },
+  render_offsite_hourly: function(target) {
+
+
+    var x = d3_updateable(target,".offsite-hourly","div",false,function(x,i) {return i})
+      .classed("offsite-hourly col-md-6",true)
+      .style("min-height","200px")
+
+    if (this._data[0].current_hour) {
+      x.datum(function(x){ return x.current_hour })
+      this.render_hist(x,"Off-site User Activity",function(x){return x.count},function(x){return x.hour}) 
+
+    }
+    
+  },
+  render_three: function(target) {
+    var x = d3_updateable(target,".yo2","div").classed("yo2 col-md-3 pull-right",true)
+      .style("min-height","300px")
+
+    x.text(function(y){
+      //return "timeofday: " + x.hour
+
+    })
+    
+  }
 
 }
 
