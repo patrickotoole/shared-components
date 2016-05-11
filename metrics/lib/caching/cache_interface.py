@@ -47,7 +47,7 @@ class CacheInterface:
                 cassandra_functions.run_recurring,
                 [advertiser,segment["url_pattern"][0],_cache_yesterday,_cache_yesterday + "recurring"]
                 ))
-        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,1)
+        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,5)
         logging.info("added to work queue %s for %s" %(segment["url_pattern"][0],advertiser))
 
     def add_db_to_work_queue(self, segment, advertiser, base_url):
@@ -56,7 +56,7 @@ class CacheInterface:
         _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
         work = pickle.dumps((
                 adc_runner.runner,
-                [advertiser,segment["url_pattern"][0], base_url, _cache_yesterday,_cache_yesterday + "domaincache"]
+                [advertiser,segment["url_pattern"][0], False, base_url, _cache_yesterday,_cache_yesterday + "domaincache"]
                 ))
         work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,20)
         logging.info("added to DB work queue %s for %s" %(segment["url_pattern"][0],advertiser)) 
@@ -150,7 +150,7 @@ class CacheInterface:
             self.add_udf_to_work_queue(seg, advertiser, base_url)
 
 def run_clean_up(crushercache):
-    import CacheCleanUp as CCU
+    import cache_date_remover_runner as CCU
     CCU.runner(crushercache)
 
 def get_all_advertisers(db_con):

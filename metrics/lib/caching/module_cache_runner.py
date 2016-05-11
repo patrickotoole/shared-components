@@ -65,7 +65,6 @@ def runner(advertiser,pattern, endpoint, filter_id, base_url, num_days, prevents
 
     compress_data = MR.compress(ujson.dumps(data))
     try:
-        import ipdb; ipdb.set_trace()
         MR.insert(advertiser, pattern, endpoint, filter_id, compress_data)
         logging.info("Data inserted")
         MR.accounting_entry_end(advertiser, pattern, script_name, uuid_num)

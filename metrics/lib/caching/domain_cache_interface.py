@@ -65,7 +65,7 @@ if __name__ == "__main__":
             segs = rockerbox_db.select_dataframe("select distinct action_name from action_with_patterns where pixel_source_name='{}'".format(options.advertiser))
             for seg in segs.iterrows():
                 try:
-                    ckw.run_local(options.advertiser, seg[1]['action_name'],options.base_url, connectors)
+                    ckw.run_local(options.advertiser, False, seg[1]['action_name'], options.base_url, connectors=connectors)
                 except:
                     print "issues with actions {}".format(seg[1]['action_name'])
         else:
