@@ -163,7 +163,9 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
             p.count += c.count; 
             p.uniques += c.uniques
             return p
-          },{count:0,uniques:0,domain:x[0].domain, parent_category_name:x[0].parent_category_name, url: x[0].url}) 
+          },{count:0,uniques:0,domain:x[0].domain, parent_category_name:x[0].parent_category_name, url: x[0].url, hour: x[0].hour, minute:x[0].minute}) 
+
+
         })
         .entries( 
           dd.response.filter(function(x){ return x.uniques > 1 } ) 
