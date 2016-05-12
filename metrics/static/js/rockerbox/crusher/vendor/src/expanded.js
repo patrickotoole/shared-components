@@ -132,7 +132,7 @@ Expanded.prototype = {
       .style("display","inherit")
 
     d3_updateable(desc, "h3","h3")
-      .text("User Vistis")
+      .text("User Visits")
       .style("margin-bottom","15px")
 
     // var onsite = d3_updateable(desc,".onsite","div")
