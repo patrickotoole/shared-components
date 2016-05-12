@@ -55,30 +55,42 @@ def runChecks(advertiser, version,pattern, local_url=False):
     results['prod'] = runURLCheck(advertiser, 'http://crusher.getrockerbox.com', version, pattern)
     return results
 
-def Validate(results):
+def Validate(results, size):
     if 'local' in results.keys():
-        validated_dict = checkResultsWithLocal(results)
+        validated_dict = checkResultsWithLocal(results, size)
     else:
-        validated_dict = checkResults(results)
+        validated_dict = checkResults(results, size)
     return validated_dict
 
-def checkResultsWithLocal(results):
+def checkResultsWithLocal(results, size):
     final = {'raw':{}, 'cache':{}}
     for keys in results['beta']['raw'].keys():
-        match = True if results['beta']['raw'][keys] == results['prod']['raw'][keys] == results['local']['raw'][keys] else False
+        if size:
+            match = True if results['beta']['raw'][keys] == results['prod']['raw'][keys] == results['local']['raw'][keys] else False
+        else:
+            match = True if results['beta']['raw'][keys][0] == results['prod']['raw'][keys][0] == results['local']['raw'][keys][0] else False
         final['raw'][keys]=match
     for keys in results['beta']['cache'].keys():
-        match = True if results['beta']['cache'][keys] == results['prod']['cache'][keys] == results['local']['cache'][keys] else False
+        if size:
+            match = True if results['beta']['cache'][keys] == results['prod']['cache'][keys] == results['local']['cache'][keys] else False
+        else:
+            match = True if results['beta']['cache'][keys][0] == results['prod']['cache'][keys][0] == results['local']['cache'][keys][0] else False
         final['cache'][keys]=match
     return final
 
-def checkResults(results):
+def checkResults(results, size):
     final = {'raw':{}, 'cache':{}}
     for keys in results['beta']['raw'].keys():
-        match = True if results['beta']['raw'][keys] == results['prod']['raw'][keys] else False
+        if size:
+            match = True if results['beta']['raw'][keys] == results['prod']['raw'][keys] else False
+        else:
+            match = True if results['beta']['raw'][keys][0] == results['prod']['raw'][keys][0] else False
         final['raw'][keys]=match
     for keys in results['beta']['cache'].keys():
-        match = True if results['beta']['cache'][keys] == results['prod']['cache'][keys] else False
+        if size:
+            match = True if results['beta']['cache'][keys] == results['prod']['cache'][keys] else False
+        else:
+            match = True if results['beta']['cache'][keys][0] == results['prod']['cache'][keys][0] else False
         final['cache'][keys]=match
     return final
 
@@ -93,11 +105,20 @@ if __name__ == "__main__":
     define("pattern", default="/")
     define("local_url", default=False)
     define("version", default="V1")
+    define("check_size", default=True)
 
     basicConfig(options={})
 
     parse_command_line()
 
     results = runChecks(options.advertiser, options.version, options.pattern, options.local_url)
-    print results
-    print Validate(results)
+    import pprint
+    pprint.pprint(results)
+    #print results
+    validation = Validate(results, options.check_size)
+    for k in validation['raw'].keys():
+        to_p = "{} ....{} .......{}"
+        print to_p.format('raw', k, validation['raw'][k])
+    for k in validation['cache'].keys():
+        to_p = "{} ....{} .......{}"
+        print to_p.format('cache', k, validation['cache'][k])
