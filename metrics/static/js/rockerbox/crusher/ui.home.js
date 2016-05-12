@@ -129,6 +129,12 @@ RB.crusher.ui.home = (function(home, crusher) {
 
             var current = 0;
             var next = function() {
+
+              if (content.length == current) {
+                window.localStorage.setItem("tutorial_finished",1)
+                RB.routes.navigation.forward(RB.crusher.controller.states["/crusher/action/dashboard"])
+              }
+
               stage
                 .left(content[current].left)
                 .right(content[current].right)
@@ -137,9 +143,7 @@ RB.crusher.ui.home = (function(home, crusher) {
               wrap.html(content[current].center)
               current += 1;
 
-              if (content[current] == undefined) {
-                RB.routes.navigation.forward(RB.crusher.controller.states["/crusher/action/existing"])
-              }
+
             }
 
             var bw = d3_updateable(d.selectAll(".codepeek_row"),".button-wrap","div")

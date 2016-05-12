@@ -17,7 +17,6 @@ export default function button(target) {
 
 Button.prototype = {
     draw: function() {
-      debugger
       this.render_button()
 
       return this
