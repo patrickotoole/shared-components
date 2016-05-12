@@ -251,7 +251,7 @@ RB.crusher.controller = (function(controller) {
 
       var tutorial_finished = window.localStorage.getItem("tutorial_finished")
 
-      if (d3.event) tutorial_finished = false;
+      //if (d3.event) tutorial_finished = false;
 
       pubsub.subscriber("home", ["advertiser","an_uid","pixel_status","actions"])
         .run(function(advertiser,uid,status_data,actions) {

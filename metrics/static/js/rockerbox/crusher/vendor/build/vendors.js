@@ -1069,7 +1069,7 @@
 
       if (this._data[0].current_hour) {
         x.datum(function(x){ return x.current_hour })
-        this.render_hist(x,"Off-site User Activity",function(x){return x.count},function(x){return x.hour}) 
+        this.render_hist(x,"Browsing behavior by time",function(x){return x.count},function(x){return x.hour}) 
 
       }
       
