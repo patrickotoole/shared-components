@@ -135,8 +135,7 @@ RB.crusher.controller = (function(controller) {
           crusher.ui.settings.subscription.render(funnelRow,advertiser,permissions,billing)
         })
         .unpersist(true)
-        .trigger() 
-
+        .trigger()
     },
     "settings/pixel/setup": function() {
 
@@ -220,8 +219,8 @@ RB.crusher.controller = (function(controller) {
       var target = d3.selectAll(".container")
         .style("min-height", "100%")
 
-      var row = d3_splat(target, ".row", "div", 
-          [{ "id": "gettingstarted3" }], 
+      var row = d3_splat(target, ".row", "div",
+          [{ "id": "gettingstarted3" }],
           function(x) { return x.id }
         )
         .classed("row gettingstarted", true)
@@ -367,13 +366,12 @@ RB.crusher.controller = (function(controller) {
         'name': 'Action Dashboard'
       });
 
-      
       action.filter = function(x) {return x.featured }
       action.selection = ["actions"]
       action.subscriptions = ["visitor_domains_time_minute"]
       action.items = ["user_activity","offsite_hourly","three","bar","table"]
       action.click = function(x,self) {
-        
+
         if (self._categories[x.label]) {
           delete self._categories[x.label]
         } else {
@@ -388,17 +386,17 @@ RB.crusher.controller = (function(controller) {
 
         var cats = self._categories;
 
-        var check_categories = (Object.keys(cats).length) ? 
+        var check_categories = (Object.keys(cats).length) ?
           function(y) {return cats[y.parent_category_name] > -1 } :
           function() {return true};
 
-        var check_time = self._timing ? 
+        var check_time = self._timing ?
           function(y) {return self._timing == ((y.hour*60 + y.minute)/60) } :
           function() {return true}
 
         self._table_filter = function(y) {
           return check_categories(y) && check_time(y)
-        } 
+        }
 
         if (Object.keys(self._categories).length) {
           d3.select(this).style("fill",undefined)
@@ -406,15 +404,12 @@ RB.crusher.controller = (function(controller) {
           d3.select(this.parentNode.parentNode).selectAll(".bar").style("fill",undefined)
         }
 
-        
-        
         self.render_table(d3.select(self._wrapper.selectAll(".vendor-domains-table-column").node().parentNode))
         self.render_user_activity(self._wrapper)
       }
 
 
       RB.crusher.ui.vendors.show(funnelRow, action);
-      
     },
     "action/existing": function(action) {
 
