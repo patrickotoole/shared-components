@@ -17,10 +17,11 @@ def isInDictionary(word, unigrams):
     except:
         return 0
     
-def addToSet(sentence, unigrams, numWords): 
+def addToSet(sentence, unigrams, numWords):
     sentence=sentence.lower()
     keywords=[]
     sentence = sentence.replace("/","")
+
     backpointer = [-1] * (len(sentence))
     values = [-1] * (len(sentence))
     valid = 0
