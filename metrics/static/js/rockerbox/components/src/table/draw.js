@@ -3,7 +3,7 @@ import d3_updateable from '../d3_updateable'
 import d3_splat from '../d3_splat'
 
 function head() {
-  this._headers 
+  this._headers
 
   var thead = d3_updateable(this._base, '.table_head', 'thead')
     .classed('table_head', true);
@@ -42,9 +42,9 @@ function draw() {
 
   var data = this._dataFunc();
   this._headers = data.header
-  
+
   head.bind(this)()
-  
+
   /*
     Draw body
   */
@@ -157,7 +157,9 @@ function draw() {
 
 
     this.draw_pagination();
-  } 
+  }
+
+  return this;
 }
 
 export default draw

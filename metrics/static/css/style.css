@@ -284,6 +284,21 @@ aside h5.heading {
   .selectbar a:hover {
     color: #007196; }
 
+.card {
+  overflow: auto; }
+  .card .bar-series {
+    overflow: auto; }
+  .card h3 {
+    margin: 0;
+    font-weight: bold;
+    font-size: 14px;
+    line-height: 22px;
+    text-transform: uppercase;
+    color: #888;
+    letter-spacing: .05em; }
+  .card div.description {
+    margin-bottom: 20px; }
+
 .ct-chart {
   /*width: 400px;
     height: 450px;*/
@@ -2109,9 +2124,9 @@ div.table_pagination {
   border: solid 1px #ccc; }
   div.table_pagination div.pagination_button {
     display: inline-block;
-    padding: 0 20px;
-    min-width: 50px;
-    line-height: 50px;
+    padding: 0 15px;
+    min-width: 40px;
+    line-height: 40px;
     text-align: center;
     border-right: solid 1px #ccc;
     cursor: pointer;

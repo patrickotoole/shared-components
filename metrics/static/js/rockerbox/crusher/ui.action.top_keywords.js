@@ -21,8 +21,6 @@ RB.crusher.ui.action = (function(action) {
 
     pubsub.subscriber("visitor_keywords_cache",["visitor_keywords_cache"])
       .run(function(keywords){
-        // debugger;
-        console.log('KEYWORDS 1', keywords);
         var keywords = keywords.filter(function(x) {
           if(x.keyword == '') {
             return false;
@@ -58,10 +56,6 @@ RB.crusher.ui.action = (function(action) {
       .data(segment)
       .unpersist(true)
       .trigger()
-      // })
-      // .data(segment)
-      // .unpersist(true)
-      // .trigger()
   }
 
   return action;

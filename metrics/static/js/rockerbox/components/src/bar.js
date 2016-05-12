@@ -49,7 +49,7 @@ Bar.prototype = {
   base: base,
   hover: hover,
   data: data,
-  margins: function(x) { 
+  margins: function(x) {
 
     var current = accessor.bind(this)("margin")
     if (x === undefined) return current;
@@ -59,7 +59,7 @@ Bar.prototype = {
       current[k] = x[k] || current[k]
     })
 
-    return accessor.bind(this)("margin",current) 
+    return accessor.bind(this)("margin",current)
   }
 }
 

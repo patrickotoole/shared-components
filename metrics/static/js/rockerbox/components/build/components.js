@@ -830,7 +830,7 @@
 	  base: base$2,
 	  hover: hover$3,
 	  data: data$3,
-	  margins: function(x) { 
+	  margins: function(x) {
 
 	    var current = accessor.bind(this)("margin")
 	    if (x === undefined) return current;
@@ -840,7 +840,7 @@
 	      current[k] = x[k] || current[k]
 	    })
 
-	    return accessor.bind(this)("margin",current) 
+	    return accessor.bind(this)("margin",current)
 	  }
 	}
 
@@ -1058,7 +1058,7 @@
 	}
 
 	function head() {
-	  this._headers 
+	  this._headers
 
 	  var thead = d3_updateable(this._base, '.table_head', 'thead')
 	    .classed('table_head', true);
@@ -1097,9 +1097,9 @@
 
 	  var data = this._dataFunc();
 	  this._headers = data.header
-	  
+
 	  head.bind(this)()
-	  
+
 	  /*
 	    Draw body
 	  */
@@ -1212,7 +1212,9 @@
 
 
 	    this.draw_pagination();
-	  } 
+	  }
+
+	  return this;
 	}
 
 	function base$4(target) {
