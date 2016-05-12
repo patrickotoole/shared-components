@@ -506,7 +506,7 @@ class AdvertiserHandler(tornado.web.RequestHandler,Advertiser):
 
         PX = """<!-- Rockerbox - Place on all pages -->
 <script type="text/javascript">
-(function(d,RB) {window.RB=RB;RB.queue=[];RB.track=RB.track||function(){RB.queue.push(Array.prototype.slice.call(arguments))};RB.initialize=function(s){RB.source=s};var a = d.createElement("script");  a.type="text/javascript"; a.async=!0; a.src="http://getrockerbox.com/assets/xyz.js"; f=d.getElementsByTagName("script")[0]; f.parentNode.insertBefore(a,f);})(document,window.RB || {});
+(function(d,RB) {window.RB=RB;RB.queue=[];RB.track=RB.track||function(){RB.queue.push(Array.prototype.slice.call(arguments))};RB.initialize=function(s){RB.source=s};var a = d.createElement("script");  a.type="text/javascript"; a.async=!0; a.src="https://getrockerbox.com/assets/xyz.js"; f=d.getElementsByTagName("script")[0]; f.parentNode.insertBefore(a,f);})(document,window.RB || {});
 RB.initialize("%s");
 </script>
 <!-- Rockerbox -->""" % pixel_string.encode("base64").replace("\n","")

@@ -114,7 +114,7 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
             WHERE domain in (%(domains)s)
             group by domain
         """
-        domain_set = [i.encode("utf-8") for i in domain_set]
+        domain_set = [self.crushercache.escape_string(i.encode("utf-8")) for i in domain_set ]
         domains = "'" + "','".join(domain_set) + "'"
         results = self.crushercache.select_dataframe(QUERY % {"domains":domains})
         return results
