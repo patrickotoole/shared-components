@@ -16,36 +16,19 @@ now_date = datetime.datetime.now().strftime("%Y-%m-%d")
 SQL_INSERT = "INSERT INTO generic_function_cache (advertiser, url_pattern, action_id, udf, zipped, date) values ('{}','{}',{},'{}','{}', '{}')"
 SQL_REPLACE=" REPLACE generic_function_cache (advertiser, url_pattern, action_id, udf, zipped, date) values ('{}','{}',{},'{}','{}', '{}')"
 
-URL1 = "/crusher/v1/visitor/before_and_after?url_pattern={}&num_days={}&prevent_sample={}"
-URL2 = "/crusher/v1/visitor/hourly?url_pattern={}&num_days={}&prevent_sample={}"
-URL3 = "/crusher/v1/visitor/sessions?url_pattern={}&num_days={}&prevent_sample={}"
-URL4 = "/crusher/v1/visitor/model?url_pattern={}&num_days={}&prevent_sample={}"
-URL_GENERIC = "/crusher/v1/visitor/%s?url_pattern={}&num_days={}&prevent_sample={}"
-
+URL = "/crusher/v1/visitor/{}?url_pattern={}&num_days={}&prevent_sample={}"
+URL2 =  "/crusher/v1/visitor/{}?url_pattern={}&filter_id={}&num_days={}&prevent_sample={}"
 
 class ModuleRunner(BaseRunner):
 
     def __init__(self, connectors):
         self.connectors =connectors
 
-    def make_request(self,crusher, pattern, endpoint, filter_id, num_days, preventsample):
-        if endpoint == "before_and_after":
-            URL = URL1
-        elif endpoint == "hourly":
-            URL = URL2
-        elif endpoint == "sessions":
-            URL = URL3
-        elif endpoint == "model":
-            URL = URL4
-        else:
-            URL = URL_GENERIC % endpoint
-            print "Not a valid endpoint. using generic"
-            #sys.exit()
+    def make_request(self,crusher, pattern, endpoint, filter_id, num_days, prevent_sample):
         if filter_id !=0:
-            with_filter_id = "{}&filter_id={}"
-            url = URL.format(pattern, num_days,with_filter_id.format(preventsample,filter_id))
+            url = URL2.format(endpoint, pattern,filter_id, num_days, prevent_sample)
         else:
-            url = URL.format(pattern, num_days, preventsample)
+            url = URL.format(endpoint, pattern, num_days, prevent_sample)
         resp = crusher.get(url, timeout=300)
         try:
             return resp.json

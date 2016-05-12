@@ -48,10 +48,15 @@ if __name__ == "__main__":
     define("udf", default=False)
     define("filter_id", default=0)
     define("base_url", default="http://beta.crusher.getrockerbox.com")
+    define("random", default=False)
 
     basicConfig(options={})
 
     parse_command_line()
+
+    if options.random:
+        import ast
+        additional_params = ast.eval_literal(options.random)
 
     zk = KazooClient(hosts="zk1:2181")
     zk.start()

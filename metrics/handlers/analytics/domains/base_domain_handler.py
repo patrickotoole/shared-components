@@ -203,7 +203,6 @@ class BaseDomainHandler(BaseHandler, AnalyticsBase, CassandraRangeQuery, VisitDo
         aho_filter = yield self.get_filter_checker(filter_id)
         urls = set(full_df.url)
         value = self.run_filter_url(aho_filter,urls)
-
         df = full_df[full_df.url.map(lambda x: value[x] )]
         to_return = self.raw_to_stats(df,dates)
 
@@ -216,7 +215,6 @@ class BaseDomainHandler(BaseHandler, AnalyticsBase, CassandraRangeQuery, VisitDo
         full_df, stats_df, url_stats_df, _ = yield self.sample_stats_onsite(*sample_args)
         if filter_id:
             stats_df, url_stats_df, full_df = yield self.filter_and_build(full_df,dates,filter_id)
-
 
         if (len(full_df.uid.unique()) == 1) or (stats_df.sum().sum() == 0) and allow_sample:
             logging.info("Didnt find anything in the sample! query all the data!")

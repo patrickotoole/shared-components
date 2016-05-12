@@ -77,6 +77,6 @@ def runner(advertiser_name, pattern, base_url, cache_date, indentifiers="test", 
     FDR.accounting_entry_start(advertiser_name, pattern, "full_url_cache_runner",  uuid_num)
     featured = FDR.featured_seg(advertiser_name, pattern)
     urls = FDR.make_request(advertiser_name, pattern, base_url, featured)
-    df = pandas.DataFrame(urls)
+    df = pandas.DataFrame(urls['response'])
     FDR.insert(df, advertiser_name, pattern)
     FDR.accounting_entry_end(advertiser_name, pattern, "full_url_cache_runner", uuid_num)

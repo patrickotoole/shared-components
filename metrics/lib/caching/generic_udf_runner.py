@@ -47,6 +47,8 @@ class UDFRunner(BaseRunner):
 
 def runner(advertiser,pattern, func_name, base_url, cache_date="", indentifiers="test", connectors=False):
 
+    #add other parameters options thhat can be added on to url request
+
     connectors = connectors or UDFRunner.get_connectors()
 
     uuid_num = str(uuid.uuid4())
