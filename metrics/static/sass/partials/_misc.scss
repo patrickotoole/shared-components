@@ -135,7 +135,7 @@ a {cursor:pointer}
 // .bar { fill: steelblue; }
 // .bar:hover { fill: brown; }
 .axis { font: 10px sans-serif; }
-.axis path, .axis line { fill: none; stroke: #000; shape-rendering: crispEdges; }
+.axis path, .axis line { fill: none; /*stroke: #000;*/ shape-rendering: crispEdges; }
 .x.axis path { display: none; }
 .container {background-color: $container-color;}
 .heading {background-color:white}
@@ -145,8 +145,7 @@ a {cursor:pointer}
 .action {margin-bottom:30px}
 
 
-.axis path,
-.axis line { fill: none; stroke: #000; shape-rendering: crispEdges; }
+.axis path, .axis line { fill: none; /*stroke: #000; */ shape-rendering: crispEdges; }
 .x.axis path { display: none; }
 .line { fill: none; stroke: steelblue; stroke-width: 1.5px; }
 .and {float: right; margin-right: -26px; font-size: 12px; line-height:30px}
