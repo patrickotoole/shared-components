@@ -9,7 +9,6 @@ def process_onsite(**kwargs):
 
     response = kwargs['response']
     uids = kwargs['uid_urls']
-    import ipdb; ipdb.set_trace()
     df = uids.groupby(['uid', 'date']).count()
     df = df.reset_index()
     

@@ -58,7 +58,6 @@ def process_keywords(**kwargs):
     mask3 = ~full_url_response['url'].str.contains(".org")
 
     filtered_df = full_url_response[mask1 & mask2 & mask3]
-    import ipdb; ipdb.set_trace() 
     response = kwargs['response']
     response['response'] = filtered_df.to_dict('records')
     return response
