@@ -21,17 +21,17 @@ class ActionCache:
     def __init__(self, connectors):
         self.connectors = connectors
 
-    def run_local(self, advertiser, pattern, segment, base_url, connectors):
+    def run_local(self, advertiser, pattern, segment, base_url, filter_id, connectors):
         import lib.caching.domain_cache_runner as adc_runner
-        adc_runner.runner(advertiser, pattern, segment, base_url, connectors=connectors)
+        adc_runner.runner(advertiser, pattern, segment, base_url, filter_id, connectors=connectors)
 
-    def add_db_to_work_queue(self, advertiser, pattern, segment, base_url):
+    def add_db_to_work_queue(self, advertiser, pattern, segment, filter_id, base_url):
         import lib.caching.domain_cache_runner as adc_runner
         yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
         _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
         work = pickle.dumps((
                 adc_runner.runner,
-                [advertiser, pattern, segment, base_url, _cache_yesterday,_cache_yesterday + "domaincache"]
+                [advertiser, pattern, segment, base_url, filter_id, _cache_yesterday,_cache_yesterday + "domaincache"]
                 ))
         work_queue.SingleQueue(self.connectors['zk'],"python_queue").put(work,1)
         logging.info("added to DB work queue %s for %s" %(segment,advertiser)) 
@@ -50,6 +50,7 @@ if __name__ == "__main__":
     define("run_local", default=False)
     define("base_url", default="http://beta.crusher.getrockerbox.com")
     define("run_all", default=False)
+    define("filter_id", default=False)
 
     basicConfig(options={})
 
@@ -65,11 +66,11 @@ if __name__ == "__main__":
             segs = rockerbox_db.select_dataframe("select distinct action_name from action_with_patterns where pixel_source_name='{}'".format(options.advertiser))
             for seg in segs.iterrows():
                 try:
-                    ckw.run_local(options.advertiser, False, seg[1]['action_name'], options.base_url, connectors=connectors)
+                    ckw.run_local(options.advertiser, False, seg[1]['action_name'], options.base_url, options.filter_id, connectors=connectors)
                 except:
                     print "issues with actions {}".format(seg[1]['action_name'])
         else:
-            ckw.run_local(options.advertiser, options.pattern, options.segment,options.base_url, connectors)
+            ckw.run_local(options.advertiser, options.pattern, options.segment,options.base_url, options.filter_id, connectors)
     else:
-        ckw.add_db_to_work_queue(options.advertiser, options.pattern, options.segment, options.base_url)
+        ckw.add_db_to_work_queue(options.advertiser, options.pattern, options.segment, options.filter_id, options.base_url)
 

@@ -36,6 +36,9 @@ class FullDomainRunner(BaseRunner):
                 try:
                     to_insert['url'] = to_insert['url'].map(lambda x : x.encode('utf-8').replace("'",""))
                     _sql._write_mysql(to_insert, table_name, list(to_insert.columns), self.connectors['crushercache'].create_connection(), keys)
+                    to_insert2 = to_insert
+                    to_insert2['action_id'] = [self.action_id] * len(to_insert)
+                    _sql._write_mysql(to_insert2, "domains_full_cache_id", list(to_insert.columns), self.connectors['crushercache'].create_connection(), keys)
                     logging.info("inserted %s records for advertiser username (includes a_) %s" % (len(to_insert), advertiser))
                 except:
                     logging.info("error with df for %s and %s" % (segment_name, advertiser))
@@ -47,9 +50,9 @@ class FullDomainRunner(BaseRunner):
         crusher.base_url = base_url
         crusher.authenticate()
         if int(featured) ==1:
-            urls = crusher.get('/crusher/v1/visitor/domains_full?format=json&num_users=30000&num_days=7&url_pattern={}'.format(pattern), timeout=91)
+            urls = crusher.get('/crusher/v1/visitor/domains_full?format=json&num_users=30000&num_days=7&url_pattern={}&filter_id={}'.format(pattern,self.action_id), timeout=91)
         else:
-            urls = crusher.get('/crusher/v1/visitor/domains_full?format=json&url_pattern={}&num_days=7'.format(pattern), timeout=91)
+            urls = crusher.get('/crusher/v1/visitor/domains_full?format=json&url_pattern={}&num_days=7&filter_id={}'.format(pattern, self.action_id), timeout=91)
         return urls.json
 
     def featured_seg(self, advertiser, segment):
@@ -62,21 +65,19 @@ class FullDomainRunner(BaseRunner):
             featured_value=0
         return featured_value
 
-    def add_to_table(self, advertiser_name, pattern, url, sql):
-        #self.cassandra.execute(CASSQUERY)
-        if int(url['uniques']) >1:
-            try:
-                sql.execute(INSERT_QUERY.format(advertiser_name, url["url"], url["count"],url["uniques"], pattern))
-            except:
-                sql.execute(REPLACE_QUERY.format(advertiser_name, url["url"], url["count"],url["uniques"], pattern))
-
-def runner(advertiser_name, pattern, base_url, cache_date, indentifiers="test", connectors=False):
+def runner(advertiser_name, pattern, base_url, filter_id, cache_date, indentifiers="test", connectors=False):
     connectors = connectors or FullDomainRunner.get_connectors()
     uuid_num = str(uuid.uuid4())
     FDR = FullDomainRunner(connectors)
-    FDR.accounting_entry_start(advertiser_name, pattern, "full_url_cache_runner",  uuid_num)
+    crusher = FDR.get_crusher_obj(advertiser_name, base_url)
+    if not filter_id:
+        FDR.getActionIDPattern(pattern, crusher)
+    else:
+        FDR.action_id = filter_id
+
+    FDR.accounting_entry_start(advertiser_name, pattern, "full_url_cache_runner",  uuid_num, FDR.action_id)
     featured = FDR.featured_seg(advertiser_name, pattern)
     urls = FDR.make_request(advertiser_name, pattern, base_url, featured)
     df = pandas.DataFrame(urls['response'])
     FDR.insert(df, advertiser_name, pattern)
-    FDR.accounting_entry_end(advertiser_name, pattern, "full_url_cache_runner", uuid_num)
+    FDR.accounting_entry_end(advertiser_name, pattern, "full_url_cache_runner", uuid_num, FDR.action_id)
