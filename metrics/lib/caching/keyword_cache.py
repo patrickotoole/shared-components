@@ -53,13 +53,19 @@ class KeywordRunner(BaseRunner):
             #sql.execute(QUERY.format(advertiser_name, pattern, url["keyword"], url["count"]))
             sql.execute(QUERY.format(advertiser_name, pattern, url["url"].replace("'","").replace("+","").encode('utf-8'), url["uniques"]))
 
-def runner(advertiser_name, pattern, base_url, cache_date, indentifiers="test", connectors=False):
+def runner(advertiser_name, pattern, base_url, filter_id, cache_date, indentifiers="test", connectors=False):
     connectors = connectors or KeywordRunner.get_connectors()
     
     uuid_num = str(uuid.uuid4())
     KR = KeywordRunner(connectors)
-    KR.accounting_entry_start(advertiser_name, pattern, "keyword_cache_runner", uuid_num)
+    if not filter_id:
+        crusher = KR.get_crusher_obj(advertiser_name, base_url)
+        KR.getActionIDPattern(pattern, crusher)
+    else:
+        KR.action_id = filter_id
+
+    KR.accounting_entry_start(advertiser_name, pattern, "keyword_cache_runner", uuid_num, KR.action_id)
     urls = KR.make_request(advertiser_name, pattern, base_url)
-    df = pandas.DataFrame(urls)
+    df = pandas.DataFrame(urls['response'])
     KR.insert(df, advertiser_name, pattern)
-    KR.accounting_entry_end(advertiser_name, pattern, "keyword_cache_runner", uuid_num)
+    KR.accounting_entry_end(advertiser_name, pattern, "keyword_cache_runner", uuid_num, KR.action_id)

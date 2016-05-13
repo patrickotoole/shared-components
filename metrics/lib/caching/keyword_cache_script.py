@@ -16,17 +16,17 @@ class CacheKeywords():
         self.connectors = connectors
         self.zookeeper = connectors['zk']
 
-    def run_local(self, advertiser, pattern, base_url):
+    def run_local(self, advertiser, pattern, base_url, filter_id):
         import keyword_cache as kc
-        kc.runner(advertiser,pattern,base_url,"test",connectors=self.connectors)
+        kc.runner(advertiser,pattern,base_url,filter_id,"test",connectors=self.connectors)
 
-    def run_on_work_queue(self,advertiser, pattern):
+    def run_on_work_queue(self,advertiser, pattern, base_url, filter_id):
         import lib.caching.keyword_cache as kc
         yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
         _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
         work = pickle.dumps((
                 kc.runner,
-                [advertiser,pattern, _cache_yesterday, _cache_yesterday+"full_url"]
+                [advertiser,pattern, base_url, filter_id, _cache_yesterday, _cache_yesterday+"full_url"]
                 ))
         work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,1)
         logging.info("added to work queue %s for %s" %(pattern,advertiser))
@@ -44,6 +44,7 @@ if __name__ == "__main__":
     define("base_url", "http://beta.crusher.getrockerbox.com")
     define("run_all", False)
     define("run_all_all", False)
+    define("filter_id", False)
 
     basicConfig(options={})
 
@@ -62,7 +63,7 @@ if __name__ == "__main__":
                 segs = rockerbox_db.select_dataframe(query)
                 for seg in segs.iterrows():
                     try:
-                        ckw.run_local(ad[1]['pixel_source_name'], seg[1]['url_pattern'],options.base_url)
+                        ckw.run_local(ad[1]['pixel_source_name'], seg[1]['url_pattern'],options.base_url, options.filter_id)
                     except:
                         print "error with {}".format(seg[1]['url_pattern'])
         elif options.run_all:
@@ -70,11 +71,11 @@ if __name__ == "__main__":
             segs = rockerbox_db.select_dataframe("select distinct url_pattern from action_with_patterns where pixel_source_name='{}'".format(options.advertiser))
             for seg in segs.iterrows():
                 try:
-                    ckw.run_local(options.advertiser, seg[1]['url_pattern'],options.base_url)
+                    ckw.run_local(options.advertiser, seg[1]['url_pattern'],options.base_url, options.filter_id)
                 except:
                     print "error with {}".format(seg[1]['url_pattern'])
         else:
-            ckw.run_local(options.advertiser, options.pattern,options.base_url)
+            ckw.run_local(options.advertiser, options.pattern,options.base_url, options.filter_id)
     else:
-        ckw.run_on_work_queue(options.advertiser, options.pattern, options.base_url)
+        ckw.run_on_work_queue(options.advertiser, options.pattern, options.base_url, options.filter_id)
 
