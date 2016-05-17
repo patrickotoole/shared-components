@@ -67,7 +67,7 @@ if __name__ == "__main__":
     elif options.run_local and not options.pattern:
         segments = connectors['db'].select_dataframe("select * from action_with_patterns where pixel_source_name = '{}'".format(options.advertiser))
         for i,s in segments.iterrows():
-            UC.run_local(options.advertiser, s['url_pattern'], options.udf, s['action_id'], options.base_url,options.filter_id, connectors)
+            UC.run_local(options.advertiser, s['url_pattern'], options.udf,  options.base_url,s['action_id'], connectors)
     else:
         #select all functions for advertiser
         advertiser_udfs = connectors['crushercache'].select_dataframe(GET_UDFS.format(options.advertiser))

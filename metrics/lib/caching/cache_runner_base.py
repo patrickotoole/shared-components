@@ -36,7 +36,7 @@ class BaseRunner():
         resp = crusher.get('/crusher/funnel/action?format=json')
         data = resp.json['response']
         for segment in data:
-            if pattern == segment["action_name"]:
+            if segment_name == segment["action_name"]:
                 self.action_id = segment['action_id']
 
     def generic_insert(self, data, advertiser, db):

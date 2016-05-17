@@ -20,7 +20,7 @@ from ...search.cache.pattern_search_cache import PatternSearchCache
 
 QUERY_DATE = "SELECT advertiser, url_pattern, uniques, count, url FROM domains_full_cache WHERE advertiser = '{}' and url_pattern = '{}' and record_date='{}'"
 QUERYFILTER = "select domain from filtered_out_domains where advertiser = '{}' or advertiser is NULL"
-QUERY2 = "select zipped from cache_domains_full_w_filter_id where filter_id={}"
+QUERY2 = "select advertiser, url_pattern, uniques, count, url FROM domains_full_cache_id WHERE advertiser = '{}' and url_pattern = '{}' and record_date='{}' and filter_id={}"
 DATE_FALLBACK = "select distinct record_date from domains_full_cache where url_pattern='{}' and advertiser='{}' order by record_date DESC"
 
 class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler):
@@ -87,7 +87,6 @@ class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler)
 
     @decorators.deferred
     def defer_get_onsite_cache_filter_id(self, advertiser, pattern, top_count, action_id):
-
         results  = self.crushercache.execute(QUERY2.format(action_id))
         compressed_results = codecs.decode(results.data[0][0], 'hex')
         df = zlib.decompress(compressed_results)
