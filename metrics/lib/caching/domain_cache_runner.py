@@ -9,7 +9,7 @@ import uuid
 
 current_datetime = datetime.datetime.now().strftime("%Y-%m-%d")
 
-class AdvertiserActionRunner(BaseRunner):
+class DomainRunner(BaseRunner):
 
     def __init__(self, connectors):
         self.connectors =connectors
@@ -107,10 +107,10 @@ class AdvertiserActionRunner(BaseRunner):
 
 
 def runner(advertiser,pattern, segment_name, base_url, filter_id, cache_date="", indentifiers="test", connectors=False):
-    connectors = connectors or AdvertiserActionRunner.get_connectors()
+    connectors = connectors or DomainRunner.get_connectors()
 
     uuid_num = str(uuid.uuid4())
-    AAR = AdvertiserActionRunner(connectors)
+    AAR = DomainRunner(connectors)
     crusher = AAR.get_crusher_obj(advertiser, base_url)
     if not filter_id:
         if pattern:
