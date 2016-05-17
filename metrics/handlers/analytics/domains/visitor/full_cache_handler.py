@@ -8,8 +8,7 @@ import re
 
 from link import lnk
 from ..user.full_handler import VisitDomainsFullHandler
-from handlers.base import BaseHandler
-from ...analytics_base import AnalyticsBase
+from ..base_domain_handler import BaseDomainHandler
 from twisted.internet import defer
 from lib.helpers import decorators
 from lib.helpers import *
@@ -23,7 +22,7 @@ QUERYFILTER = "select domain from filtered_out_domains where advertiser = '{}' o
 QUERY2 = "select advertiser, url_pattern, uniques, count, url FROM domains_full_cache_id WHERE advertiser = '{}' and url_pattern = '{}' and record_date='{}' and filter_id={}"
 DATE_FALLBACK = "select distinct record_date from domains_full_cache where url_pattern='{}' and advertiser='{}' order by record_date DESC"
 
-class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler):
+class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler,BaseDomainHandler):
 
     def initialize(self, db=None, crushercache=None, **kwargs):
         self.db = db
@@ -118,8 +117,9 @@ class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler)
                 if versioning.find('v1') >=0:
                     self.get_content_v1(response_data)
                 else:
+                    details = self.get_details(advertiser, pattern, 'action_dashboard_runner')
                     summary = self.summarize(response_data)
-                    self.get_content_v2(response_data, summary)
+                    self.get_content_v2(response_data, summary, details)
             else:
                 self.set_status(400)
                 self.write(ujson.dumps({"error":str(Exception("No Data"))}))

@@ -39,6 +39,7 @@ class BaseHandler(tornado.web.RequestHandler):
         if details:
             details['time'] = datetime.datetime.now() - self.time[str(self.__hash__)]
             details['time'] = details['time'].total_seconds()
+            details['remote_ip'] = self.request.remote_ip
             self.time.pop(str(self.__hash__),None)
         else:
             details = {}
@@ -80,8 +81,7 @@ class BaseHandler(tornado.web.RequestHandler):
 
     @decorators.formattable
     def get_content_v2(self, data, summary=False, details=False):
-        details = self.setDetails(details)
-
+        default_details = self.setDetails(details)
         def default(self, data):
             df = Convert.df_to_json(data)
             self.write(df)
@@ -93,7 +93,7 @@ class BaseHandler(tornado.web.RequestHandler):
             self.finish()
         elif summary:
             df = Convert.df_to_values(data)
-            _resp = self.format_response(df, summary, details)
+            _resp = self.format_response(df, summary, default_details)
             self.write(ujson.dumps(_resp))
             self.finish()
         elif not summary and type(data) == dict:
