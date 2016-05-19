@@ -76,7 +76,15 @@ class VisitorTransformCacheHandler(VisitorBase):
     @custom_defer.inlineCallbacksErrors
     def first_step(self, api_type, advertiser, pattern, filter_id, filter_date):
         data = yield self.get_from_db(api_type, advertiser, pattern, filter_id, filter_date)
-        self.write(ujson.loads(data))
+        details = self.get_details(advertiser, pattern, api_type)
+        _resp = ujson.loads(data)
+        if 'api_details' in _resp.keys():
+            if type(_resp['api_details']):
+                _resp['api_details']['cache_time_taken'] = details['time_to_cache']
+                _resp['api_details']['date_of_cache'] = details['date_of_cache']
+        else:
+            _resp['api_details'] = details
+        self.write(_resp)
         self.finish()
 
     @tornado.web.authenticated

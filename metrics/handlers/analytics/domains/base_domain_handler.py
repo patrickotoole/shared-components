@@ -24,6 +24,8 @@ from handlers.base import BaseHandler
 from handlers.analytics.analytics_base import AnalyticsBase
 from lib.cassandra_helpers.range_query import CassandraRangeQuery
 
+DETAILS_QUERY = "select max(ts) from crusher_cache_accounting where advertiser='{}' and pattern='{}' and script_name='{}' and start_or_end='{}'"
+
 class BaseDomainHandler(BaseHandler, AnalyticsBase, CassandraRangeQuery, VisitDomainBase):
     
     def initialize(self, db=None, cassandra=None, zookeeper=None, **kwargs):
@@ -34,6 +36,15 @@ class BaseDomainHandler(BaseHandler, AnalyticsBase, CassandraRangeQuery, VisitDo
         self.limit = None
         self.DOMAIN_SELECT = "SELECT uid, domain, timestamp FROM rockerbox.visitor_domains_full where uid = ?"
         self.fn = self.get_domains
+
+    def get_details(self, advertiser, pattern, api_type):
+        start_data = self.crushercache.select_dataframe(DETAILS_QUERY.format(advertiser, pattern, api_type, 'Start'))
+        end_data = self.crushercache.select_dataframe(DETAILS_QUERY.format(advertiser, pattern, api_type, 'End'))
+        start_time = start_data['max(ts)'][0]
+        end_time = end_data['max(ts)'][0]
+        date = start_data['max(ts)'][0].date().strftime('%m-%d-%Y')
+        time_taken = (end_time- start_time).seconds
+        return {"time_to_cache":time_taken,"date_of_cache":date}
 
     def get_filter(self,filter_id):
         Q = "SELECT * FROM action_filters WHERE action_id = %s and active = 1 and deleted = 0"

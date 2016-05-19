@@ -5,18 +5,17 @@ import logging
 import StringIO
 import zlib, codecs
 
-from handlers.base import BaseHandler
 import lib.custom_defer as custom_defer
 from lib.helpers import Convert
 from twisted.internet import defer
 from lib.helpers import decorators
-
+from ..base_domain_handler import BaseDomainHandler
 
 DOMAINS_DATE = "SELECT domain, count FROM domains_cache WHERE url_pattern = '%(url_pattern)s' and advertiser = '%(advertiser)s' and record_date='%(record_date)s'"
 DOMAINS_FILTER = "SELECT zipped FROM cache_domains_w_filter_id WHERE url_pattern = '%(url_pattern)s' and advertiser = '%(advertiser)s' and filter_id = '%(filter_id)s'"
 DATE_FALLBACK = "select distinct record_date from domains_cache where url_pattern='%(url_pattern)s' and advertiser='%(advertiser)s' order by record_date DESC"
 
-class ActionDashboardHandler(BaseHandler):
+class ActionDashboardHandler(BaseDomainHandler):
 
     def initialize(self, db=None, crushercache=None, **kwargs):
         self.db = db
@@ -100,9 +99,12 @@ class ActionDashboardHandler(BaseHandler):
                             self.get_content_v1(actions)
                     else:
                         summary = self.summarize(actions)
-                        self.get_content_v2(actions, summary)
-        except:
-            self.finish()
+                        details = self.get_details(advertiser, url_pattern, 'action_dashboard_runner')
+                        self.get_content_v2(actions, summary, details)
+        except Exception as e:
+            if type(e) != type(StopIteration()):
+                self.write(ujson.dumps({"error":str(e)}))
+                self.finish()
     
     @tornado.web.authenticated
     @tornado.web.asynchronous

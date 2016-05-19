@@ -14,9 +14,13 @@ import sys
 now_date = datetime.datetime.now().strftime("%Y-%m-%d")
 
 URL ="/crusher/v1/visitor/{}?url_pattern={}&filter_id={}"
+URL2 ="/crusher/v2/visitor/{}?url_pattern={}&filter_id={}"
 
 INSERT ="insert into generic_function_cache (advertiser, url_pattern, udf, zipped, date, action_id) values ('{}', '{}', '{}', '{}', '{}', {})"
 REPLACE="replace into generic_function_cache (advertiser, url_pattern, udf, zipped, date, action_id) values ('{}', '{}', '{}', '{}', '{}',{})"
+
+INSERT2 ="insert into generic_function_cache_v2 (advertiser, url_pattern, udf, zipped, date) values ('{}', '{}', '{}', '{}', '{}')"
+REPLACE2="replace into generic_function_cache_v2 (advertiser, url_pattern, udf, zipped, date) values ('{}', '{}', '{}', '{}', '{}')"
 
 class UDFRunner(BaseRunner):
 
@@ -25,6 +29,14 @@ class UDFRunner(BaseRunner):
 
     def make_request(self,crusher, pattern, func_name):
         url = URL.format(func_name, pattern, self.action_id)
+        resp = crusher.get(url, timeout=300)
+        try:
+            return resp.json
+        except:
+            return resp.text
+
+    def make_request_v2(self,crusher, pattern, func_name):
+        url = URL2.format(func_name, pattern)
         resp = crusher.get(url, timeout=300)
         try:
             return resp.json
@@ -45,7 +57,20 @@ class UDFRunner(BaseRunner):
             Q = REPLACE
             self.connectors['crushercache'].execute(Q.format(advertiser, pattern, func_name, compressed_data, now_date, self.action_id))
 
+<<<<<<< HEAD
 def runner(advertiser,pattern, func_name, base_url, filter_id, cache_date="", indentifiers="test", connectors=False):
+=======
+    def insert2(self, advertiser, pattern, func_name, compressed_data):
+        try:
+            Q = INSERT2
+            self.connectors['crushercache'].execute(Q.format(advertiser, pattern, func_name, compressed_data, now_date))
+        except:
+            Q = REPLACE2
+            self.connectors['crushercache'].execute(Q.format(advertiser, pattern, func_name, compressed_data, now_date))
+
+
+def runner(advertiser,pattern, func_name, base_url, cache_date="", indentifiers="test", connectors=False):
+>>>>>>> version 2 change handlers and generic caching runner
 
     #add other parameters options thhat can be added on to url request
 
@@ -67,10 +92,13 @@ def runner(advertiser,pattern, func_name, base_url, filter_id, cache_date="", in
     zk = connectors['zk']
     
     data = UR.make_request(crusher, pattern, func_name)
+    data2 = UR.make_request_v2(crusher, pattern, func_name)
 
     compress_data = UR.compress(ujson.dumps(data))
+    compress_data2 = UR.compress(ujson.dumps(data2))
     try:
         UR.insert(advertiser, pattern, func_name, compress_data)
+        UR.insert2(advertiser, pattern, func_name, compress_data2)
         logging.info("Data inserted")
         UR.accounting_entry_end(advertiser, pattern, func_name, uuid_num, UR.action_id)
     except:

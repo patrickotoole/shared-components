@@ -6,8 +6,8 @@ import datetime
 SQL = "INSERT INTO action_dashboard_cache (advertiser, count, domain) values ('{}', {}, '{}')" 
 current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-SQLENTRY="insert into crusher_cache_accounting (advertiser, pattern, ts, start_or_end, script_name, uuidi, filter_id) values ('{}', '{}', '{}', '{}', '{}', '{}',{})"
-SQLENTRYREPLACE = "replace into crusher_cache_accounting (advertiser, pattern, ts, start_or_end, script_name, uuid, filter_id) values ('{}', '{}', '{}', '{}', '{}', '{}',{})"
+SQLENTRY="insert into crusher_cache_accounting (advertiser, pattern, start_or_end, script_name, uuid, filter_id) values ('{}','{}', '{}', '{}', '{}',{})"
+SQLENTRYREPLACE = "replace into crusher_cache_accounting (advertiser, pattern, start_or_end, script_name, uuid, filter_id) values ('{}','{}', '{}', '{}', '{}',{})"
 
 class BaseRunner():
 
