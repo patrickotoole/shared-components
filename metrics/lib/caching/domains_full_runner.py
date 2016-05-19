@@ -65,9 +65,12 @@ class FullDomainRunner(BaseRunner):
             featured_value=0
         return featured_value
 
-def runner(advertiser_name, pattern, base_url, filter_id, cache_date, indentifiers="test", connectors=False):
+def runner(advertiser_name, pattern, base_url, cache_date, indentifiers="test", job_id=False, connectors=False):
     connectors = connectors or FullDomainRunner.get_connectors()
-    uuid_num = str(uuid.uuid4())
+    if not job_id:
+        uuid_num = str(uuid.uuid4())
+    else:
+        uuid_num = job_id
     FDR = FullDomainRunner(connectors)
     crusher = FDR.get_crusher_obj(advertiser_name, base_url)
     if not filter_id:

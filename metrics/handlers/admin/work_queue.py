@@ -67,13 +67,16 @@ class WorkQueueHandler(tornado.web.RequestHandler):
 
     def get_data(self):
         import pickle
-
+        import hashlib
         path_queue = [c for c in self.zookeeper.get_children("/python_queue") ]
         def parse(x):
             try:
                 values = pickle.loads(self.zookeeper.get("/python_queue/" + path)[0])
+                job_id = hashlib.md5(self.zookeeper.get("/python_queue/" + path)[0]).hexdigest()
                 print values
-                return values[1]
+                rvals = values[1]
+                rvals.append(job_id)
+                return rvals
             except:
                 print "Error parsing pickle job"
                 return False

@@ -106,20 +106,15 @@ class DomainRunner(BaseRunner):
             logging.info("error with %s for %s" % (segment_name, advertiser))
 
 
-def runner(advertiser,pattern, segment_name, base_url, filter_id, cache_date="", indentifiers="test", connectors=False):
-    connectors = connectors or DomainRunner.get_connectors()
+def runner(advertiser,pattern, segment_name, base_url, cache_date="", indentifiers="test", job_id=False, connectors=False):
+    connectors = connectors or AdvertiserActionRunner.get_connectors()
 
-    uuid_num = str(uuid.uuid4())
-    AAR = DomainRunner(connectors)
-    crusher = AAR.get_crusher_obj(advertiser, base_url)
-    if not filter_id:
-        if pattern:
-            AAR.getActionIDPattern(pattern, crusher)
-        else:
-            AAR.getActionIDName(segment_name, crusher)
+    if not job_id:
+        uuid_num = str(uuid.uuid4())
     else:
-        AAR.action_id = filter_id
-    AAR.accounting_entry_start(advertiser, pattern, "action_dashboard_runner", uuid_num, AAR.action_id)
+        uuid_num = job_id
+    AAR = AdvertiserActionRunner(connectors)
+    AAR.accounting_entry_start(advertiser, pattern, "action_dashboard_runner", uuid_num)
 
     db = connectors['crushercache']
     zk = connectors['zk']

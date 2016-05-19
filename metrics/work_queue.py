@@ -14,7 +14,7 @@ class SingleQueue(kazoo.recipe.queue.Queue):
                                 cls, *args, **kwargs)
         return cls._instance
 
-
+SQL_LOG = "insert into work_queue_log (box, job_id, event) values ('{}', '{}', '{}')"
 
 class WorkQueue(object):
 
@@ -25,21 +25,30 @@ class WorkQueue(object):
         self.exit_on_finish = exit_on_finish
 
     def __call__(self):
+        import hashlib
+        import socket
         while True:
             logging.debug("Asking for next queue item")
             data = self.queue.get()
+            job_id = hashlib.md5(data).hexdigest()
+            current_host = socket.gethostname()
+            self.connectors['crushercache'].execute(SQL_LOG.format(current_host, job_id, "DeQueue"))
+
             if data is not None:
                 logging.debug("Received next queue item")
-               
-                
                 try:
                     fn, args = pickle.loads(data)
+                    args.append(job_id)
                     args.append(self.connectors)
 
                     logging.info("starting queue %s %s" % (str(fn),str(args)))
                     fn(*args) 
+                    
+                    self.connectors['crushercache'].execute(SQL_LOG.format(current_host, job_id, "Ran"))
                     logging.info("finished queue %s %s" % (str(fn),str(args)))
                 except Exception as e:
+                    self.connectors['crushercache'].execute(SQL_LOG.format(current_host, job_id, "Fail"))
+                    self.connectors['crushercache'].execute(SQL_LOG2.format(box, job_idstr(e)))
                     logging.info("ERROR: queue %s " % e)
  
 
