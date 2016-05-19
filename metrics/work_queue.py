@@ -51,7 +51,6 @@ class WorkQueue(object):
                     self.connectors['crushercache'].execute(SQL_LOG2.format(box, job_idstr(e)))
                     logging.info("ERROR: queue %s " % e)
  
-
             else:
                 if self.exit_on_finish:
                     logging.debug("No data in queue")
