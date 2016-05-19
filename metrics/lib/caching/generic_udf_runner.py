@@ -57,20 +57,15 @@ class UDFRunner(BaseRunner):
             Q = REPLACE
             self.connectors['crushercache'].execute(Q.format(advertiser, pattern, func_name, compressed_data, now_date, self.action_id))
 
-<<<<<<< HEAD
-def runner(advertiser,pattern, func_name, base_url, filter_id, cache_date="", indentifiers="test", connectors=False):
-=======
     def insert2(self, advertiser, pattern, func_name, compressed_data):
         try:
             Q = INSERT2
-            self.connectors['crushercache'].execute(Q.format(advertiser, pattern, func_name, compressed_data, now_date))
+            self.connectors['crushercache'].execute(Q.format(advertiser, pattern, func_name, compressed_data, now_date, self.action_id))
         except:
             Q = REPLACE2
-            self.connectors['crushercache'].execute(Q.format(advertiser, pattern, func_name, compressed_data, now_date))
+            self.connectors['crushercache'].execute(Q.format(advertiser, pattern, func_name, compressed_data, now_date, self.action_id))
 
-
-def runner(advertiser,pattern, func_name, base_url, cache_date="", indentifiers="test", connectors=False):
->>>>>>> version 2 change handlers and generic caching runner
+def runner(advertiser,pattern, func_name, base_url, filter_id, cache_date="", indentifiers="test", connectors=False):
 
     #add other parameters options thhat can be added on to url request
 

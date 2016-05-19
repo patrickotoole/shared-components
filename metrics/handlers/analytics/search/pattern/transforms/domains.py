@@ -13,10 +13,18 @@ def process_domains(**kwargs):
     df2 = df.groupby(['domain']).count()
     df3 = df2['uid'].reset_index()
     df3.columns = ['domain', 'count']
-    df3 = df3.merge(idf, on='domain', how='left')
-    df3 = df3.sort(['count'], ascending=False)
-    df3 = df3.fillna('NA')
-    data = df3.to_dict('records')
+
+    dfA = df.groupby(['domain','uid'])
+    dfB = dfA.count().reset_index().groupby(['domain']).count()
+    dfC = dfB['uid'].reset_index()
+    dfC.columns = ['domain','uniques']
+
+    df4 = df3.merge(dfC, on='domain')
+
+    df5 = df4.merge(idf, on='domain', how='left')
+    df4 = df4.sort(['count'], ascending=False)
+    df4 = df4.fillna('NA')
+    data = df4.to_dict('records')
     response['response'] = data
 
     return response
