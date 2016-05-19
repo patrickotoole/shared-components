@@ -22,7 +22,7 @@ class ActionCacheTestCase(unittest.TestCase):
         mock_zk.start.side_effect = lambda : ""
         mock_db = mock.MagicMock()
         connectors_mock = {'db': mock_db, "zk":mock_zk}
-        self.instance = adr.AdvertiserActionRunner(connectors_mock)
+        self.instance = adr.DomainRunner(connectors_mock)
         self.instance.crusher = mock.MagicMock()
         self.instance.action_id = 0
         self.instance.url_pattern = "/"

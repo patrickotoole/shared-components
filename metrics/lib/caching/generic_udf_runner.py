@@ -13,10 +13,10 @@ import sys
 
 now_date = datetime.datetime.now().strftime("%Y-%m-%d")
 
-URL ="/crusher/v1/visitor/{}?url_pattern={}"
+URL ="/crusher/v1/visitor/{}?url_pattern={}&filter_id={}"
 
-INSERT ="insert into generic_function_cache (advertiser, url_pattern, udf, zipped, date) values ('{}', '{}', '{}', '{}', '{}')"
-REPLACE="replace into generic_function_cache (advertiser, url_pattern, udf, zipped, date) values ('{}', '{}', '{}', '{}', '{}')"
+INSERT ="insert into generic_function_cache (advertiser, url_pattern, udf, zipped, date, action_id) values ('{}', '{}', '{}', '{}', '{}', {})"
+REPLACE="replace into generic_function_cache (advertiser, url_pattern, udf, zipped, date, action_id) values ('{}', '{}', '{}', '{}', '{}',{})"
 
 class UDFRunner(BaseRunner):
 
@@ -24,7 +24,7 @@ class UDFRunner(BaseRunner):
         self.connectors =connectors
 
     def make_request(self,crusher, pattern, func_name):
-        url = URL.format(func_name, pattern)
+        url = URL.format(func_name, pattern, self.action_id)
         resp = crusher.get(url, timeout=300)
         try:
             return resp.json
@@ -40,12 +40,12 @@ class UDFRunner(BaseRunner):
     def insert(self, advertiser, pattern, func_name, compressed_data):
         try:
             Q = INSERT
-            self.connectors['crushercache'].execute(Q.format(advertiser, pattern, func_name, compressed_data, now_date))
+            self.connectors['crushercache'].execute(Q.format(advertiser, pattern, func_name, compressed_data, now_date, self.action_id))
         except:
             Q = REPLACE
-            self.connectors['crushercache'].execute(Q.format(advertiser, pattern, func_name, compressed_data, now_date))
+            self.connectors['crushercache'].execute(Q.format(advertiser, pattern, func_name, compressed_data, now_date, self.action_id))
 
-def runner(advertiser,pattern, func_name, base_url, cache_date="", indentifiers="test", connectors=False):
+def runner(advertiser,pattern, func_name, base_url, filter_id, cache_date="", indentifiers="test", connectors=False):
 
     #add other parameters options thhat can be added on to url request
 
@@ -54,7 +54,13 @@ def runner(advertiser,pattern, func_name, base_url, cache_date="", indentifiers=
     uuid_num = str(uuid.uuid4())
     UR = UDFRunner(connectors)
     script_name = func_name
-    UR.accounting_entry_start(advertiser, pattern, func_name, uuid_num)
+    crusher = UR.get_crusher_obj(advertiser, base_url)
+    if not filter_id:
+        UR.getActionIDPattern(pattern, crusher)
+    else:
+        UR.action_id = filter_id
+
+    UR.accounting_entry_start(advertiser, pattern, func_name, uuid_num, UR.action_id)
     crusher = UR.get_crusher_obj(advertiser, base_url)
 
     db = connectors['crushercache']
@@ -66,6 +72,6 @@ def runner(advertiser,pattern, func_name, base_url, cache_date="", indentifiers=
     try:
         UR.insert(advertiser, pattern, func_name, compress_data)
         logging.info("Data inserted")
-        UR.accounting_entry_end(advertiser, pattern, func_name, uuid_num)
+        UR.accounting_entry_end(advertiser, pattern, func_name, uuid_num, UR.action_id)
     except:
         logging.info("Data not inserted")

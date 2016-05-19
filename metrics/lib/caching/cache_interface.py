@@ -61,17 +61,6 @@ class CacheInterface:
         work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,20)
         logging.info("added to DB work queue %s for %s" %(segment["url_pattern"][0],advertiser)) 
 
-    def add_keyword_to_work_queue(self, segment, advertiser, base_url):
-        import lib.caching.keyword_cache as adc_runner
-        yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
-        _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
-        work = pickle.dumps((
-                adc_runner.runner,
-                [advertiser,segment["url_pattern"][0], base_url, _cache_yesterday,_cache_yesterday + "keywordcache"]
-                ))
-        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,40)
-        logging.info("added to keyword work queue %s for %s" %(segment["url_pattern"][0],advertiser))
-
     def add_full_url_to_work_queue(self, segment, advertiser, base_url):
         import lib.caching.domains_full_runner as adc_runner
         yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
@@ -144,7 +133,6 @@ class CacheInterface:
             self.add_db_to_work_queue(seg, advertiser, base_url)
             self.add_to_work_queue(seg, advertiser)
             self.add_full_url_to_work_queue(seg, advertiser, base_url)
-            self.add_keyword_to_work_queue(seg, advertiser, base_url)
             self.add_uids_to_work_queue(seg, advertiser, base_url)
             self.add_module_to_work_queue(seg, advertiser, base_url)
             self.add_udf_to_work_queue(seg, advertiser, base_url)

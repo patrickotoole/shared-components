@@ -9,7 +9,7 @@ import uuid
 
 current_datetime = datetime.datetime.now().strftime("%Y-%m-%d")
 
-class AdvertiserActionRunner(BaseRunner):
+class DomainRunner(BaseRunner):
 
     def __init__(self, connectors):
         self.connectors =connectors
@@ -17,8 +17,8 @@ class AdvertiserActionRunner(BaseRunner):
         self.validation_data = False
         self.sql_query = _sql._write_mysql
 
-    def make_request(self,crusher, pattern):
-        url = "/crusher/v1/visitor/domains?format=json&url_pattern=%s" % pattern
+    def make_request(self,crusher, pattern, filter_id):
+        url = "/crusher/v1/visitor/domains?format=json&url_pattern=%s&filter_id=%s" % (pattern, filter_id)
         resp = crusher.get(url, timeout=200)
         try:
             results = resp.json['response']
@@ -83,14 +83,13 @@ class AdvertiserActionRunner(BaseRunner):
                 except:
                     logging.info("error with df for %s and %s" % (segment_name, advertiser))
 
-    def pre_process(self, advertiser, base_url, url_pattern, segment_name):
-        crusher = self.get_crusher_obj(advertiser, base_url)
+    def pre_process(self, advertiser, base_url, url_pattern, segment_name, crusher):
         if segment_name:
             valid= self.validation_name(crusher, segment_name)
-            data = self.make_request(crusher, self.url_pattern)
+            data = self.make_request(crusher, self.url_pattern, self.action_id)
         else:
             vaid = self.validation_pattern(crusher, url_pattern)
-            data = self.make_request(crusher, url_pattern)
+            data = self.make_request(crusher, url_pattern, self.action_id)
         df = pandas.DataFrame(data)
         return df
 
@@ -107,20 +106,28 @@ class AdvertiserActionRunner(BaseRunner):
             logging.info("error with %s for %s" % (segment_name, advertiser))
 
 
-def runner(advertiser,pattern, segment_name, base_url, cache_date="", indentifiers="test", connectors=False):
-    connectors = connectors or AdvertiserActionRunner.get_connectors()
+def runner(advertiser,pattern, segment_name, base_url, filter_id, cache_date="", indentifiers="test", connectors=False):
+    connectors = connectors or DomainRunner.get_connectors()
 
     uuid_num = str(uuid.uuid4())
-    AAR = AdvertiserActionRunner(connectors)
-    AAR.accounting_entry_start(advertiser, pattern, "action_dashboard_runner", uuid_num)
+    AAR = DomainRunner(connectors)
+    crusher = AAR.get_crusher_obj(advertiser, base_url)
+    if not filter_id:
+        if pattern:
+            AAR.getActionIDPattern(pattern, crusher)
+        else:
+            AAR.getActionIDName(segment_name, crusher)
+    else:
+        AAR.action_id = filter_id
+    AAR.accounting_entry_start(advertiser, pattern, "action_dashboard_runner", uuid_num, AAR.action_id)
 
     db = connectors['crushercache']
     zk = connectors['zk']
-    data = AAR.pre_process(advertiser, base_url, pattern, segment_name)
+    data = AAR.pre_process(advertiser, base_url, pattern, segment_name, crusher)
 
     executed = False
     if len(data)>0:
         executed = AAR.execute(data, advertiser, pattern, segment_name, db)
 
     AAR.post_validation(advertiser, pattern, executed)
-    AAR.accounting_entry_end(advertiser, pattern, "action_dashboard_runner", uuid_num)
+    AAR.accounting_entry_end(advertiser, pattern, "action_dashboard_runner", uuid_num, AAR.action_id)
