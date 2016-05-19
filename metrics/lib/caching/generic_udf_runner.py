@@ -49,7 +49,7 @@ class UDFRunner(BaseRunner):
         compress_as_hex = hexify(compressed)
         return compress_as_hex[0]
 
-    def insert(self, advertiser, pattern, func_name, compressed_data, action_id):
+    def insert(self, advertiser, pattern, func_name, compressed_data):
         try:
             Q = INSERT
             self.connectors['crushercache'].execute(Q.format(advertiser, pattern, func_name, compressed_data, now_date, self.action_id))
