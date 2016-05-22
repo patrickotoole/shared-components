@@ -4,6 +4,7 @@ from kazoo.client import KazooClient
 from kazoo.client import KazooState
 import kazoo
 import pickle
+import socket
 
 class SingleQueue(kazoo.recipe.queue.Queue):
 
@@ -22,6 +23,9 @@ class WorkQueue(object):
         self.client = client
         self.queue = SingleQueue(client,"/python_queue")
         self.connectors = connectors
+        #log start
+        START_QUERY = "insert into work_queue_log (box, event) values ('{}', 'Box WQ up')"
+        self.connectors['crushercache'].execute(START_QUERY.format(socket.gethostname()))
         self.exit_on_finish = exit_on_finish
 
     def __call__(self):
@@ -30,11 +34,11 @@ class WorkQueue(object):
         while True:
             logging.debug("Asking for next queue item")
             data = self.queue.get()
-            job_id = hashlib.md5(data).hexdigest()
-            current_host = socket.gethostname()
-            self.connectors['crushercache'].execute(SQL_LOG.format(current_host, job_id, "DeQueue"))
 
             if data is not None:
+                job_id = hashlib.md5(data).hexdigest()
+                current_host = socket.gethostname()
+                self.connectors['crushercache'].execute(SQL_LOG.format(current_host, job_id, "DeQueue"))
                 logging.debug("Received next queue item")
                 try:
                     fn, args = pickle.loads(data)
@@ -60,3 +64,8 @@ class WorkQueue(object):
                     time.sleep(5)
                     logging.debug("No data in queue")
             logging.debug("Moving on to next queue item")
+
+    def __exit__(self):
+        END_QUERY = "insert into work_queue_log (box, event) values ('{}', 'Box WQ down')"
+        self.connectors['crushercache'].execute(END_QUERY.format(socket.gethostname()))
+        #log exit

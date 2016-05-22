@@ -21,7 +21,7 @@ class UDFCache:
 
     def run_local(self, advertiser, segment, udf, base_url, filter_id, connectors):
         import lib.caching.generic_udf_runner as runner
-        runner.runner(advertiser,segment, udf, base_url, filter_id, connectors=connectors)
+        runner.runner(advertiser,segment, udf, base_url, filter_id=filter_id, connectors=connectors)
 
     def add_db_to_work_queue(self, advertiser, segment, udf, base_url, filter_id):
         import lib.caching.generic_udf_runner as runner
@@ -29,7 +29,7 @@ class UDFCache:
         _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
         work = pickle.dumps((
                 runner.runner,
-                [advertiser,segment, endpoint, udf, base_url, filter_id, _cache_yesterday,_cache_yesterday + "modulecache"]
+                [advertiser,segment, endpoint, udf, base_url, _cache_yesterday,_cache_yesterday + "modulecache", filter_id]
                 ))
         work_queue.SingleQueue(self.connectors['zk'],"python_queue").put(work,1)
         logging.info("added to UDF work queue %s for %s" %(segment,advertiser)) 

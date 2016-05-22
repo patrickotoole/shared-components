@@ -23,15 +23,14 @@ class ActionCache:
 
     def run_local(self, advertiser, pattern, segment, base_url, filter_id, connectors):
         import lib.caching.domain_cache_runner as adc_runner
-        adc_runner.runner(advertiser, pattern, segment, base_url, filter_id, connectors=connectors)
+        adc_runner.runner(advertiser, pattern, segment, base_url, filter_id=filter_id, connectors=connectors)
 
     def add_db_to_work_queue(self, advertiser, pattern, segment, filter_id, base_url):
         import lib.caching.domain_cache_runner as adc_runner
-        yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
-        _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
+        _cache_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         work = pickle.dumps((
                 adc_runner.runner,
-                [advertiser, pattern, segment, base_url, filter_id, _cache_yesterday,_cache_yesterday + "domaincache"]
+                [advertiser, pattern, segment, base_url,_cache_time + "|"+"domaincache", filter_id]
                 ))
         work_queue.SingleQueue(self.connectors['zk'],"python_queue").put(work,1)
         logging.info("added to DB work queue %s for %s" %(segment,advertiser)) 
@@ -63,10 +62,10 @@ if __name__ == "__main__":
     if options.run_local:
         if options.run_all:
             rockerbox_db = lnk.dbs.rockerbox
-            segs = rockerbox_db.select_dataframe("select distinct action_name from action_with_patterns where pixel_source_name='{}'".format(options.advertiser))
+            segs = rockerbox_db.select_dataframe("select distinct url_pattern,action_id from action_with_patterns where pixel_source_name='{}'".format(options.advertiser))
             for seg in segs.iterrows():
                 try:
-                    ckw.run_local(options.advertiser, False, seg[1]['action_name'], options.base_url, options.filter_id, connectors=connectors)
+                    ckw.run_local(options.advertiser, seg[1]['url_pattern'], False, options.base_url, seg[1]['action_id'], connectors=connectors)
                 except:
                     print "issues with actions {}".format(seg[1]['action_name'])
         else:

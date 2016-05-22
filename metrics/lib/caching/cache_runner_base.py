@@ -44,18 +44,18 @@ class BaseRunner():
 
     def accounting_entry_start(self, advertiser, pattern, name, uuid, filter_id=0):
         try:
-            self.connectors['crushercache'].execute(SQLENTRY.format(advertiser,pattern, current_datetime, "Start", name, uuid, filter_id))
+            self.connectors['crushercache'].execute(SQLENTRY.format(advertiser,pattern,"Start", name, uuid, filter_id))
             logging.info("start entry")
         except:
-            self.connectors['crushercache'].execute(SQLENTRYREPLACE.format(advertiser,pattern, current_datetime, "Start", name, uuid, filter_id))
+            self.connectors['crushercache'].execute(SQLENTRYREPLACE.format(advertiser,pattern, "Start", name, uuid, filter_id))
             logging.info("start entry")
 
     def accounting_entry_end(self, advertiser, pattern, name, uuid, filter_id=0):
         try:
-            self.connectors['crushercache'].execute(SQLENTRY.format(advertiser,pattern, current_datetime, "End", name, uuid, filter_id))
+            self.connectors['crushercache'].execute(SQLENTRY.format(advertiser,pattern, "End", name, uuid, filter_id))
             logging.info("finish entry")
         except:
-            self.connectors['crushercache'].execute(SQLENTRYREPLACE.format(advertiser,pattern, current_datetime, "End", name, uuid, filter_id))
+            self.connectors['crushercache'].execute(SQLENTRYREPLACE.format(advertiser,pattern, "End", name, uuid, filter_id))
             logging.info("finish entry")
 
     def get_crusher_obj(self, advertiser, base_url):

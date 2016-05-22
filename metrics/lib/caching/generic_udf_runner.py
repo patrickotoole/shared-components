@@ -36,7 +36,7 @@ class UDFRunner(BaseRunner):
             return resp.text
 
     def make_request_v2(self,crusher, pattern, func_name):
-        url = URL2.format(func_name, pattern)
+        url = URL2.format(func_name, pattern, self.action_id)
         resp = crusher.get(url, timeout=300)
         try:
             return resp.json
@@ -65,7 +65,7 @@ class UDFRunner(BaseRunner):
             Q = REPLACE2
             self.connectors['crushercache'].execute(Q.format(advertiser, pattern, func_name, compressed_data, now_date, self.action_id))
 
-def runner(advertiser,pattern, func_name, base_url, cache_date="", indentifiers="test", filter_id=False, connectors=False):
+def runner(advertiser,pattern, func_name, base_url, indentifiers="test", filter_id=False, job_id=False, connectors=False):
 
     #add other parameters options thhat can be added on to url request
 
