@@ -38,12 +38,16 @@ class BaseDomainHandler(BaseHandler, AnalyticsBase, CassandraRangeQuery, VisitDo
         self.fn = self.get_domains
 
     def get_details(self, advertiser, pattern, api_type):
-        start_data = self.crushercache.select_dataframe(DETAILS_QUERY.format(advertiser, pattern, api_type, 'Start'))
-        end_data = self.crushercache.select_dataframe(DETAILS_QUERY.format(advertiser, pattern, api_type, 'End'))
+        start_data = self.crushercache.select_dataframe(DETAILS_QUERY.format(advertiser, pattern, "udf_{}".format(api_type), 'Start'))
+        end_data = self.crushercache.select_dataframe(DETAILS_QUERY.format(advertiser, pattern, "udf_{}".format(api_type), 'End'))
         start_time = start_data['max(ts)'][0]
         end_time = end_data['max(ts)'][0]
-        date = start_data['max(ts)'][0].date().strftime('%m-%d-%Y')
-        time_taken = (end_time- start_time).seconds
+        if start_time and end_time:
+            date = start_data['max(ts)'][0].date().strftime('%m-%d-%Y')
+            time_taken = (end_time- start_time).seconds
+        else:
+            date = 0
+            time_taken=0
         return {"time_to_cache":time_taken,"date_of_cache":date}
 
     def get_filter(self,filter_id):
