@@ -84,6 +84,17 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler):
             self.write(ujson.dumps({"number_in_queue": 0}))
             self.finish()
 
+    def getnum(self):
+        path_queue = [c for c in self.zookeeper.get_children("/python_queue")]
+        self.counter=0
+        def parse(x):
+            self.counter = self.counter+1
+        
+        in_queue= [parse(path) for path in path_queue]
+        
+        self.write(ujson.dumps({"number":self.counter}))
+        self.finish()
+
     def get_data(self):
         import pickle
         import hashlib
@@ -151,5 +162,5 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler):
             self.get_size()
         elif "TEST" in action:
             self.get_by_time()
-        elif "backfill/stalled" in action:
-            self.get_current("stalled")
+        elif "num" in action:
+            self.getnum()

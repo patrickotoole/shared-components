@@ -20,10 +20,12 @@ SQL_LOG2 = "insert into work_queue_error_log (box, error_string) values ('{}', '
 
 class WorkQueue(object):
 
-    def __init__(self,exit_on_finish, client,connectors):
+    def __init__(self,exit_on_finish, client,reactor,timer, connectors):
         self.client = client
         self.queue = SingleQueue(client,"/python_queue")
+        self.rec = reactor
         self.connectors = connectors
+        self.timer = timer
         #log start
         START_QUERY = "insert into work_queue_log (box, event) values ('{}', 'Box WQ up')"
         self.connectors['crushercache'].execute(START_QUERY.format(socket.gethostname()))
@@ -35,7 +37,7 @@ class WorkQueue(object):
         while True:
             logging.debug("Asking for next queue item")
             data = self.queue.get()
-
+            self.rec.getThreadPool().threads[0].setName("WQ")
             if data is not None:
                 job_id = hashlib.md5(data).hexdigest()
                 current_host = socket.gethostname()
@@ -47,9 +49,13 @@ class WorkQueue(object):
                     args.append(self.connectors)
 
                     logging.info("starting queue %s %s" % (str(fn),str(args)))
+                    logging.info(self.rec.getThreadPool().threads[0])
+                    logging.info(self.rec.getThreadPool().threads[0].is_alive())
+                    logging.info(self.rec.getThreadPool().threads[0].ident)
                     fn(*args) 
                     
                     self.connectors['crushercache'].execute(SQL_LOG.format(current_host, job_id, "Ran"))
+                    self.timer.resetTime()
                     logging.info("finished queue %s %s" % (str(fn),str(args)))
                 except Exception as e:
                     box = socket.gethostname()

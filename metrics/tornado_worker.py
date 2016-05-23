@@ -8,9 +8,11 @@ tornado.platform.twisted.install()
 from twisted.internet import reactor
 from tornado.options import define, options, parse_command_line
 
+from timekeeper import timeKeeper
 from routes import AllRoutes
 from connectors import ConnectorConfig
 from shutdown import sig_wrap
+from work_queue_metrics import Metrics
 
 import requests
 import signal
@@ -85,9 +87,11 @@ if __name__ == '__main__':
     import work_queue
     import sys
     connectors['sys_exit'] = exi.ext
-    
+  
+    tk = timeKeeper()
     for _ in range(0,1):
-        reactor.callInThread(work_queue.WorkQueue(options.exit_on_finish, connectors['zookeeper'],connectors))
+        reactor.callInThread(work_queue.WorkQueue(options.exit_on_finish, connectors['zookeeper'],reactor, tk, connectors))
+        reactor.callInThread(TimeMetric(reactor, tk))
     
     server = tornado.httpserver.HTTPServer(app)
     server.listen(options.port)

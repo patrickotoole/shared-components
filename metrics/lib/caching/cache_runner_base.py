@@ -55,7 +55,6 @@ class BaseRunner():
             self.connectors['crushercache'].execute(SQLENTRY.format(advertiser,pattern, "End", name, uuid, filter_id))
             logging.info("finish entry")
         except:
-            import ipdb; ipdb.set_trace()
             self.connectors['crushercache'].execute(SQLENTRYREPLACE.format(advertiser,pattern, "End", name, uuid, filter_id))
             logging.info("finish entry")
 
