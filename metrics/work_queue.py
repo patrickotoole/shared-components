@@ -16,6 +16,7 @@ class SingleQueue(kazoo.recipe.queue.Queue):
         return cls._instance
 
 SQL_LOG = "insert into work_queue_log (box, job_id, event) values ('{}', '{}', '{}')"
+SQL_LOG2 = "insert into work_queue_error_log (box, error_string) values ('{}', '{}')"
 
 class WorkQueue(object):
 
@@ -51,8 +52,9 @@ class WorkQueue(object):
                     self.connectors['crushercache'].execute(SQL_LOG.format(current_host, job_id, "Ran"))
                     logging.info("finished queue %s %s" % (str(fn),str(args)))
                 except Exception as e:
+                    box = socket.gethostname()
                     self.connectors['crushercache'].execute(SQL_LOG.format(current_host, job_id, "Fail"))
-                    self.connectors['crushercache'].execute(SQL_LOG2.format(box, job_idstr(e)))
+                    self.connectors['crushercache'].execute(SQL_LOG2.format(box, str(e)))
                     logging.info("ERROR: queue %s " % e)
  
             else:
