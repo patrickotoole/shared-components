@@ -25,11 +25,10 @@ class UDFCache:
 
     def add_db_to_work_queue(self, advertiser, segment, udf, base_url, filter_id):
         import lib.caching.generic_udf_runner as runner
-        yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
-        _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
+        _cache_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")    
         work = pickle.dumps((
                 runner.runner,
-                [advertiser,segment, endpoint, udf, base_url, _cache_yesterday,_cache_yesterday + "modulecache", filter_id]
+                [advertiser,segment, udf, base_url,  _cache_time+ "|"+"udf_{}_cache".format(udf) , filter_id]
                 ))
         work_queue.SingleQueue(self.connectors['zk'],"python_queue").put(work,1)
         logging.info("added to UDF work queue %s for %s" %(segment,advertiser)) 
@@ -57,7 +56,6 @@ if __name__ == "__main__":
     if options.random:
         import ast
         additional_params = ast.eval_literal(options.random)
-
     zk = KazooClient(hosts="zk1:2181")
     zk.start()
     connectors = {'db': lnk.dbs.rockerbox, 'crushercache':lnk.dbs.crushercache, 'zk':zk, 'cassandra':''}
@@ -68,6 +66,8 @@ if __name__ == "__main__":
         segments = connectors['db'].select_dataframe("select * from action_with_patterns where pixel_source_name = '{}'".format(options.advertiser))
         for i,s in segments.iterrows():
             UC.run_local(options.advertiser, s['url_pattern'], options.udf,  options.base_url,s['action_id'], connectors)
+    elif options.udf:
+        UC.add_db_to_work_queue(options.advertiser, options.pattern, options.udf, options.base_url, options.filter_id)
     else:
         #select all functions for advertiser
         advertiser_udfs = connectors['crushercache'].select_dataframe(GET_UDFS.format(options.advertiser))

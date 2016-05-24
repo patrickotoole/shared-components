@@ -13,6 +13,7 @@ from routes import AllRoutes
 from connectors import ConnectorConfig
 from shutdown import sig_wrap
 from work_queue_metrics import Metrics
+from work_queue_metrics import TimeMetric
 
 import requests
 import signal
@@ -88,10 +89,36 @@ if __name__ == '__main__':
     import sys
     connectors['sys_exit'] = exi.ext
   
+    class metricCounter:
+        def __init__(self):
+            self.success = 0
+            self.error = 0
+            self.dequeue = 0
+
+        def bumpSuccess(self):
+            self.success = self.success+1
+        
+        def bumpError(self):
+            self.error = self.error + 1
+
+        def bumpDequeue(self):
+            self.dequeue = self.dequeue+1
+
+        def getSuccess(self):
+            return self.success
+
+        def getError(self):
+            return self.error
+
+        def getDequeue(self):
+            return self.dequeue
+
+    mc = metricCounter()
     tk = timeKeeper()
     for _ in range(0,1):
-        reactor.callInThread(work_queue.WorkQueue(options.exit_on_finish, connectors['zookeeper'],reactor, tk, connectors))
+        reactor.callInThread(work_queue.WorkQueue(options.exit_on_finish, connectors['zookeeper'],reactor, tk, mc, connectors))
         reactor.callInThread(TimeMetric(reactor, tk))
+        reactor.callInThread(Metrics(reactor,tk, mc, connectors))
     
     server = tornado.httpserver.HTTPServer(app)
     server.listen(options.port)

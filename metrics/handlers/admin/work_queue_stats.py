@@ -13,7 +13,7 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler):
     def initialize(self, zookeeper=None, *args, **kwargs):
         self.zookeeper = zookeeper
 
-    def get_by_time(self):
+    def getBreakdown(self):
         import pickle
         import hashlib
         import datetime
@@ -34,7 +34,7 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler):
                 else:
                     time_string = rvals[len(rvals)-2]
                     script_name = time_string.split("|")[1]
-                
+               
                 time = datetime.datetime.strptime(time_string.split("|")[0], "%Y-%m-%d %H:%M:%S")
                 time_dict = {"advertiser": {index_counter: advertiser}, "script_type": {index_counter: script_name}, "date":{index_counter:""},"hour":{index_counter:""},"minute":{index_counter:""}}
                 time_dict['date'][index_counter] = time.strftime('%Y-%m-%d')
@@ -95,72 +95,39 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler):
         self.write(ujson.dumps({"number":self.counter}))
         self.finish()
 
+
     def get_data(self):
         import pickle
         import hashlib
         path_queue = [c for c in self.zookeeper.get_children("/python_queue") ]
-        script_type_dict={}
         def parse(x):
             try:
                 values = pickle.loads(self.zookeeper.get("/python_queue/" + path)[0])
                 job_id = hashlib.md5(self.zookeeper.get("/python_queue/" + path)[0]).hexdigest()
                 print values
                 rvals = values[1]
-                rvals_list = rvals.replace("[","").replace("]","").replace("'","").split(",")
-                advertiser = rvals_list[0]
-                if revals_list[len(rvals_list)-1] in script_type_dict.keys():
-                    scritp_type_dict[revals_list[len(rvals_list)-1]] = scritp_type_dict[revals_list[len(rvals_list)-1]]+1
-                else:
-                    scritp_type_dict[revals_list[len(rvals_list)-1]] = 1
-                #standardize args list across scripts
                 rvals.append(job_id)
                 return rvals
             except:
                 print "Error parsing pickle job"
                 return False
 
-        in_queue= [parse(path) for path in path_queue]
-
-        self.write(ujson.dumps(script_type_dict))
-        self.finish()
- 
-    def get_size(self):
-        path_queue = [c for c in self.zookeeper.get_children("/python_queue") ]
-        def parse(x):
-            try:
-                print x
-                return x
-            except:
-                print "Error parsing pickle job"
-                return False
-        
         in_queue = [parse(path) for path in path_queue]
         in_queue = [i for i in in_queue if i]
 
-        size = len(in_queue)
-        self.write(ujson.dumps({"Number_in_Queue":size}))
+        if len(in_queue) > 0:
+            df = pandas.DataFrame(in_queue)
+        else:
+            df = pandas.DataFrame({"items":[]})
+        self.write(ujson.dumps(df.to_dict('recrods')))
         self.finish()
-
-    def get_current(self,active=False):
-
-        in_queue = [c for c in self.zookeeper.get_children("/active_pattern_cache") ]
-        len_queue = [len(self.zookeeper.get_children("/active_pattern_cache/" + q)) for q in in_queue]
-        complete_queue = [self.get_complete(q) for q in in_queue]
-
-        df = pandas.DataFrame({"queue":in_queue,"active":len_queue,"complete":complete_queue})
-
-        if active is True:
-            df = df[df['active'] > 0]
-        elif active == "stalled":
-            df = df[(df['active'] == 0) & (df['complete'] == 0)]
-        self.get_content(df)
 
     @tornado.web.asynchronous
     def get(self, action=""):
         print action
-        if action == "":
-            self.get_size()
-        elif "TEST" in action:
-            self.get_by_time()
+        if action=="":
+            self.get_data()
+        elif "breakdown" in action:
+            self.getBreakdown()
         elif "num" in action:
             self.getnum()
