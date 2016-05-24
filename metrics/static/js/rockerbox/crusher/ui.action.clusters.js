@@ -366,10 +366,10 @@ RB.crusher.ui.action = (function(action) {
 
   action.show_clusters = function(wrapper) {
 
-    var title = "User Clusters",
+    var title = "Browsing Personas",
       series = ["clusters"],
       formatting = ".col-md-12.action-clusters",
-      description = "Top user clusters"
+      description = "Top Browsing Personas"
 
     console.log(wrapper.datum())
 

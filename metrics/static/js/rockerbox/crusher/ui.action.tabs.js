@@ -9,13 +9,13 @@ RB.crusher.ui.tabs = (function(tabs) {
   tabs.build = function(wrapper,data) {
 
     var data = [{
-      "name":"Opportunities",
+      "name":"Top Websites",
       "class":"advertiser-opportunities"
     },{
-      "name":"Before and After",
+      "name":"User Path",
       "class":"before-and-after"
     },{
-      "name":"Clusters",
+      "name":"Browsing Personas",
       "class":"clusters"
     },{
       "name":"Timing",
@@ -24,7 +24,7 @@ RB.crusher.ui.tabs = (function(tabs) {
       "name":"Top Articles",
       "class":"full_url"
     },{
-      "name":"Top Keywords",
+      "name":"Top Topics",
       "class":"top_keywords"
     }]
 

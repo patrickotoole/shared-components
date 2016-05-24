@@ -117,7 +117,7 @@ RB.crusher.ui.action = (function(action) {
 
     d3_updateable(domain_table,'.table-title','div')
       .classed('table-title',true)
-      .text('Domains ranked by importance')
+      .text('Important Sites')
 
     var title = '',
       series = ['domain'],
@@ -144,7 +144,7 @@ RB.crusher.ui.action = (function(action) {
         },
         {
           key: 'domain',
-          title: 'Domain'
+          title: 'Site'
         },
         {
           key: 'category',
@@ -176,7 +176,7 @@ RB.crusher.ui.action = (function(action) {
 
     d3_updateable(target,".table-title","div")
       .classed("table-title",true)
-      .text("Percentage of user visits by category")
+      .text("Top Website Categories ")
 
     var formatData = function(data){
       return data.map(function(d){

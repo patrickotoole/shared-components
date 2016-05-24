@@ -9,7 +9,7 @@ RB.crusher.ui.action = (function(action) {
     var title = "",
       series = ["full_url"],
       formatting = ".col-md-12.action-full_url.hidden.card",
-      description = "See below for the most popular articles for users within the " + segment.action_name + " segment."
+      description = "Here are the top relevant page and article engagements by users within the " + segment.action_name + " segment."
 
     var target = RB.rho.ui.buildSeriesWrapper(wrapper.selectAll(".action-body"), title, series, [wrapper.datum()], formatting, description)
 
@@ -101,7 +101,7 @@ RB.crusher.ui.action = (function(action) {
               title: 'Rank'
             }, {
               key: 'url',
-              title: 'URL',
+              title: 'Page/Article URL',
               href: true
             }, {
               key: 'category',

@@ -411,7 +411,7 @@ RB.crusher.ui.action = (function(action) {
 
     d3_updateable(wrapper,".title","div")
       .classed("title col-md-12",true)
-      .html("<br>During Intent Window")
+      .html("<br>Top Sites During Consideration Phase")
 
     d3_updateable(wrapper,".value","div")
       .classed("value col-md-12",true)
@@ -419,7 +419,7 @@ RB.crusher.ui.action = (function(action) {
     d3_updateable(wrapper,".description","div")
       .classed("description col-md-12",true)
       .style("margin-bottom","10px")
-      .text("Below we show what happens during the window of intent as it compares to before and after visiting")
+      .text("Top sites ranked by their correlation to visitation/conversion")
 
 
     /*
@@ -710,7 +710,7 @@ RB.crusher.ui.action = (function(action) {
 
     d3_updateable(wrapper,".title","div")
       .classed("title col-md-12",true)
-      .html("<br>During Intent Window")
+      .html("<br>Top Categories During Consideration Phase")
 
     d3_updateable(wrapper,".value","div")
       .classed("value col-md-12",true)
@@ -718,7 +718,7 @@ RB.crusher.ui.action = (function(action) {
     d3_updateable(wrapper,".description","div")
       .classed("description col-md-12",true)
       .style("margin-bottom","10px")
-      .text("Below we show what happens during the window of intent as it compares to before and after visiting")
+      .text("Top site categories ranked by their correlation to visitation/conversion")
 
 
     /*
@@ -878,13 +878,12 @@ RB.crusher.ui.action = (function(action) {
 
     title: function(d,i){
       var str = i ? "" : "<br>"
-      str += "Activity " + d.key.capitalize() + " Visiting"
+      str += d.key == "before" ? "Path to Visitation/Conversion" : "Post-Visit/Conversion Activity" //"Activity " + d.key.capitalize() + " Visiting" :
       return str
     },
     description: function(d){
-      var str = "Below shows the change in categories that a user visits "
-      str += d.key
-      str += " they take part in this action"
+      var str = d.key == "before" ? "The sites that a user is engages with on their way to visitation/conversion" :
+        "The sites that a user engages with after they have visited/converted"
 
       return str
     }
@@ -1073,7 +1072,7 @@ RB.crusher.ui.action = (function(action) {
           .attr("dy", ".35em")
           .style("text-anchor","middle")
           .text(function(d) {
-              return "Behavioral change"
+              return d.orientation == "left" ? "Awareness" : "Return to Standard Browsing"
           })
 
     inflectionLine.append("line")
@@ -1132,7 +1131,7 @@ RB.crusher.ui.action = (function(action) {
       .x(function(d) {return d.leftOffset })
       .classname("typical")
       .text(function(d){
-        return d.orientation == "left" ? "Typical behavior" : "Intent"
+        return d.orientation == "left" ? "Standard Browsing" : "Validation / Research"
       })()
 
 
@@ -1141,7 +1140,7 @@ RB.crusher.ui.action = (function(action) {
       .x(function(d) {return d.x(d.inflection.date) })
       .classname("intent")
       .text(function(d){
-        return d.orientation == "left" ? "Intent" : "Typical behavior"
+        return d.orientation == "left" ? "Consideration Stage" : "Standard Browsing"
       })()
 
 
