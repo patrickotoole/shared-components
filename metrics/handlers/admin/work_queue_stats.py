@@ -37,9 +37,9 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler):
                
                 time = datetime.datetime.strptime(time_string.split("|")[0], "%Y-%m-%d %H:%M:%S")
                 time_dict = {"advertiser": {index_counter: advertiser}, "script_type": {index_counter: script_name}, "date":{index_counter:""},"hour":{index_counter:""},"minute":{index_counter:""}}
-                time_dict['date'][index_counter] = time.strftime('%Y-%m-%d')
-                time_dict['hour'][index_counter] = str(time.hour)
-                time_dict['minute'][index_counter] = str(time.minute)
+                time_dict['date'][index_counter] = time.strftime('%Y-%m-%d %H:%M')
+                #time_dict['hour'][index_counter] = str(time.hour)
+                #time_dict['minute'][index_counter] = str(time.minute)
                 df = pandas.DataFrame(time_dict)
                 self.time_df = self.time_df.append(df)
                 
@@ -64,15 +64,17 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler):
             script_df.columns = ['count']
             script_df = script_df.reset_index()
 
-            hour_df = self.time_df.groupby(['hour']).count()
-            hour_df = hour_df.filter(['advertiser'])
-            hour_df.columns = ['count']
-            hour_df = hour_df.reset_index()
+            #hour_df = self.time_df.groupby(['hour']).count()
+            #hour_df = hour_df.filter(['advertiser'])
+            #hour_df.columns = ['count']
+            #hour_df = hour_df.reset_index()
 
-            minute_df = self.time_df.groupby(['minute']).count()
+            minute_df = self.time_df.groupby(['date']).count()
             minute_df = minute_df.filter(['advertiser'])
             minute_df.columns = ['count']
             minute_df = minute_df.reset_index()
+
+            #organize data into tree structure and write that
 
             self.write(ujson.dumps(self.time_df.to_dict('records')))
             self.write(ujson.dumps(hour_df.to_dict('records')))
