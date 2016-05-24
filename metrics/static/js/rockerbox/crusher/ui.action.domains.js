@@ -54,7 +54,7 @@ RB.crusher.ui.action = (function(action) {
 
   action.opportunities_header = function(newTs,domains) {
 
-    var title = "Advertising opportunities",
+    var title = "Top Websites",
       series = "domain",
       formatting = ".col-md-12.advertiser-opportunities",
       description = ""
