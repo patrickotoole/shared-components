@@ -22,7 +22,7 @@ DEQUEUE_QUERY="select count(*) from work_queue_log where hostname='{}' and event
 class Metrics():
     def __init__(self, reactor, timer, mc, connectors):
         self.reac = reactor
-        self.time = timer
+        self.tks = timer
         self.mc = mc
         self.crushercache = connectors['crushercache']
         self.zookeeper = connectors['zookeeper']
@@ -42,13 +42,16 @@ class Metrics():
         while True:
             time.sleep(10)
             #time.sleep(15)
-            gw.send("servers.{}.workqueue.tasktime".format(hostname), self.time.getTime())
             success = self.mc.getSuccess()
-            gw.send("servers.{}.workqueue.successes".format(hostname), success)
+            gw.send("workqueue.{}.successes".format(hostname), success)
             error = self.mc.getError()
-            gw.send("servers.{}.workqueue.errors".format(hostname), error)
+            gw.send("workqueue.{}.errors".format(hostname), error)
             dq = self.mc.getDequeue()
-            gw.send("servers.{}.workqueue.tasksdequeued".format(hostname), dq)
+            gw.send("workqueue.{}.tasksdequeued".format(hostname), dq)
             size = self.getQueueSize()
-            gw.send("servers.{}.workqueue.queuesize".format(hostname), size)
-            gw.send("servers.{}.workqueue.up".format(hostname),1)
+            gw.send("workqueue.{}.queuesize".format(hostname), size)
+            gw.send("workqueue.{}.up".format(hostname),1)
+            index = 0
+            for time_keeper in self.tks:
+                gw.send("workqueue.{}.tasks.task{}.time".format(hostname, index), time_keeper.getTime())
+                index = index +1

@@ -46,10 +46,10 @@ class EX():
         sys.exit("Queue Empty")
 
 if __name__ == '__main__':
-    
+
     exi = EX()
     from lib.report.utils.loggingutils import basicConfig
-
+    define("num_workers", default=1)
     define("exit_on_finish", default=False)
 
     basicConfig(options={})
@@ -114,12 +114,19 @@ if __name__ == '__main__':
             return self.dequeue
 
     mc = metricCounter()
-    tk = timeKeeper()
-    for _ in range(0,1):
-        reactor.callInThread(work_queue.WorkQueue(options.exit_on_finish, connectors['zookeeper'],reactor, tk, mc, connectors))
-        reactor.callInThread(TimeMetric(reactor, tk))
-        reactor.callInThread(Metrics(reactor,tk, mc, connectors))
-    
+    num_worker= options.num_workers
+    tks = []
+    for i in range(0, num_worker):
+        tk = timeKeeper()
+        tks.append(tk)    
+
+    for _ in range(0,num_worker):
+        
+        reactor.callInThread(work_queue.WorkQueue(options.exit_on_finish, connectors['zookeeper'],reactor, tks[_], mc, connectors))
+        reactor.callInThread(TimeMetric(reactor, tks[_]))
+
+    reactor.callInThread(Metrics(reactor,tks, mc,connectors))
+
     server = tornado.httpserver.HTTPServer(app)
     server.listen(options.port)
     

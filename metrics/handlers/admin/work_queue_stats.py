@@ -36,7 +36,7 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler):
                     script_name = time_string.split("|")[1]
                
                 time = datetime.datetime.strptime(time_string.split("|")[0], "%Y-%m-%d %H:%M:%S")
-                time_dict = {"advertiser": {index_counter: advertiser}, "script_type": {index_counter: script_name}, "date":{index_counter:""},"hour":{index_counter:""},"minute":{index_counter:""}}
+                time_dict = {"advertiser": {index_counter: advertiser}, "script_type": {index_counter: script_name}, "date":{index_counter:""}}
                 time_dict['date'][index_counter] = time.strftime('%Y-%m-%d %H:%M')
                 #time_dict['hour'][index_counter] = str(time.hour)
                 #time_dict['minute'][index_counter] = str(time.minute)
@@ -55,7 +55,7 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler):
         
         if len(self.time_df)> 0:
             adv_df = self.time_df.groupby(['advertiser']).count()
-            adv_df = adv_df.filter(['hour'])
+            adv_df = adv_df.filter(['script_type'])
             adv_df.columns = ['count']
             adv_df = adv_df.reset_index()
 
@@ -75,12 +75,14 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler):
             minute_df = minute_df.reset_index()
 
             #organize data into tree structure and write that
+            obj_to_write = {"time_count": minute_df.to_dict('records'), "advertiser_count":adv_df.to_dict('records'),"script_type_count": script_df.to_dict('records'), "total_list": self.time_df.to_dict('records')}
 
-            self.write(ujson.dumps(self.time_df.to_dict('records')))
-            self.write(ujson.dumps(hour_df.to_dict('records')))
-            self.write(ujson.dumps(adv_df.to_dict('records')))
-            self.write(ujson.dumps(script_df.to_dict('records')))
-            self.write(ujson.dumps(minute_df.to_dict('records')))
+            #self.write(ujson.dumps(self.time_df.to_dict('records')))
+            #self.write(ujson.dumps(hour_df.to_dict('records')))
+            #self.write(ujson.dumps(adv_df.to_dict('records')))
+            #self.write(ujson.dumps(script_df.to_dict('records')))
+            #self.write(ujson.dumps(minute_df.to_dict('records')))
+            self.write(ujson.dumps(obj_to_write, sort_keys=True))
             self.finish()
         else:
             self.write(ujson.dumps({"number_in_queue": 0}))
