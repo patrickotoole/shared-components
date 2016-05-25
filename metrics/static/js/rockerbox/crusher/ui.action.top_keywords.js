@@ -21,15 +21,15 @@ RB.crusher.ui.action = (function(action) {
 
     pubsub.subscriber("visitor_keywords_cache",["visitor_keywords_cache"])
       .run(function(keywords){
-        var keywords = keywords.filter(function(x) {
-          if(x.keyword == '') {
+        var keywords = keywords.response.filter(function(x) {
+          if(x.url == '') {
             return false;
           } else {
             return true;
           }
         })
         .map(function(x, i) {
-          x.key = x.keyword;
+          x.key = x.url;
           return x;
         })
 
@@ -40,7 +40,7 @@ RB.crusher.ui.action = (function(action) {
               title: 'Keyword'
             },
             {
-              key: 'count',
+              key: 'uniques',
               title: 'Unique Articles'
             }
           ],
