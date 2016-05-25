@@ -2,11 +2,11 @@ import sys
 import os
 import socket
 
-#CARBON_SERVER = 'graphite'
-#CARBON_PORT = 2003
+CARBON_SERVER = 'graphite'
+CARBON_PORT = 2003
 
-CARBON_SERVER = 'localhost'
-CARBON_PORT = 2323
+#CARBON_SERVER = 'localhost'
+#CARBON_PORT = 2323
 
 class graphiteWriter:
     def __init__(self,server=CARBON_SERVER, port=CARBON_PORT):
