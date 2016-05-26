@@ -1,6 +1,7 @@
 import sys
 import os
 import socket
+import logging
 
 CARBON_SERVER = 'graphite'
 CARBON_PORT = 2003
@@ -19,8 +20,5 @@ class graphiteWriter:
         
     def send(self,metric, value):
         message = metric + " " + str(value)+"\n"
-        print "sending message\n"
-        print '-' * 80
-        print message
-        print "\n"
+        logging.info("pushed message to graphite")
         self.sock.sendall(message)

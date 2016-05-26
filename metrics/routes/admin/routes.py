@@ -13,6 +13,18 @@ class AdminRoutes(
     CensusRoutes
 ):
 
+    @namespace("/work_queue")
+    @connectors("db","api","cassandra", "mongo", "zookeeper", "crushercache")
+    def work_queue_routes(self):
+        import handlers.analytics as analytics
+        import handlers.admin.work_queue as work_queue
+        import handlers.admin.work_queue_stats as work_queue_stats
+        return [
+            (r'/data/?(.*?)', work_queue_stats.WorkQueueStatsHandler, self.connectors),
+            (r'/work_queue/?(.*?)', work_queue.WorkQueueHandler, self.connectors),
+            (r'/internal/cache', analytics.domains.InternalCacheHandler, self.connectors)
+        ]
+
     @namespace("/admin")
     @connectors("db")
     def index(self):

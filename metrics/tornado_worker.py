@@ -27,27 +27,16 @@ dirname = os.path.dirname(os.path.realpath(__file__))
 route_options = ", ".join(AllRoutes.get_all()) 
 
 define("port", default=8080, help="run on the given port", type=int)
-
+define("routes",default="", help="list of routes to include: \n" + route_options,type=str)
 
 def build_routes(connectors,override=[]):
     routes = AllRoutes(**connectors)
     static = [(r'/static/(.*)', tornado.web.StaticFileHandler, {'path': "static"})]
     selected_routes = [route for route in routes.all if route in override]
-
     return routes(*(selected_routes or routes.all)) + static
-
-
-class EX():
-    def __init__(self):
-        self.errored = False
-    def ext(self):
-        self.errored = True
-        import sys
-        sys.exit("Queue Empty")
 
 if __name__ == '__main__':
 
-    exi = EX()
     from lib.report.utils.loggingutils import basicConfig
     define("num_workers", default=1)
     define("exit_on_finish", default=False)
@@ -67,7 +56,7 @@ if __name__ == '__main__':
         True,
         True,
         True, 
-        True,
+        False,
         True,
         False,
         True,
@@ -75,7 +64,9 @@ if __name__ == '__main__':
     ).connectors
 
     connectors['zk'] = connectors['zookeeper']
-    routes = ["work_queue_scripts"] 
+    #routes = ["work_queue_scripts"] 
+    #routes = []
+    routes = options.routes
 
     app = tornado.web.Application(
         build_routes(connectors,routes), 
@@ -87,7 +78,6 @@ if __name__ == '__main__':
 
     import work_queue
     import sys
-    connectors['sys_exit'] = exi.ext
   
     class metricCounter:
         def __init__(self):
@@ -116,10 +106,13 @@ if __name__ == '__main__':
     mc = metricCounter()
     num_worker= options.num_workers
     tks = []
+    if not connectors['cassandra']:
+        logging.info("connectors not received properly")
+        sys.exit(1)
+
     for i in range(0, num_worker):
         tk = timeKeeper()
         tks.append(tk)    
-
     for _ in range(0,num_worker):
         
         reactor.callInThread(work_queue.WorkQueue(options.exit_on_finish, connectors['zookeeper'],reactor, tks[_], mc, connectors))
@@ -135,15 +128,6 @@ if __name__ == '__main__':
     signal.signal(signal.SIGTERM, sig_handler)
     signal.signal(signal.SIGINT, sig_handler)
     
-    t = tornado.ioloop.IOLoop.instance()
-    from shutdown import shutdown_wrap
-    t.add_callback(shutdown_wrap(reactor,server))
-    t.start()
-    if reactor._stopped:
-        reactor.crash()
-        reactor._stopThreadPool()
-        reactor.callInThread(sys.exit(1))
-        t.add_callback(sys.exit)
-        t._run_callback(sys.exit)
-        t.make_current()
-        t.clear_instance()
+    tornado.ioloop.IOLoop.instance().start()
+    
+

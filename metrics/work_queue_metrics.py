@@ -12,7 +12,6 @@ class TimeMetric():
 
     def __call__(self):
         while True:
-            logging.info(self.time.getTime())
             time.sleep(0.1)
             self.time.bumpTime(1)
 
@@ -42,16 +41,19 @@ class Metrics():
         while True:
             time.sleep(10)
             #time.sleep(15)
-            success = self.mc.getSuccess()
-            gw.send("workqueue.{}.successes".format(hostname), success)
-            error = self.mc.getError()
-            gw.send("workqueue.{}.errors".format(hostname), error)
-            dq = self.mc.getDequeue()
-            gw.send("workqueue.{}.tasksdequeued".format(hostname), dq)
-            size = self.getQueueSize()
-            gw.send("workqueue.{}.queuesize".format(hostname), size)
-            gw.send("workqueue.{}.up".format(hostname),1)
-            index = 0
-            for time_keeper in self.tks:
-                gw.send("workqueue.{}.tasks.task{}.time".format(hostname, index), time_keeper.getTime())
-                index = index +1
+            try:
+                success = self.mc.getSuccess()
+                gw.send("workqueue.{}.successes".format(hostname), success)
+                error = self.mc.getError()
+                gw.send("workqueue.{}.errors".format(hostname), error)
+                dq = self.mc.getDequeue()
+                gw.send("workqueue.{}.tasksdequeued".format(hostname), dq)
+                size = self.getQueueSize()
+                gw.send("workqueue.{}.queuesize".format(hostname), size)
+                gw.send("workqueue.{}.up".format(hostname),1)
+                index = 0
+                for time_keeper in self.tks:
+                    gw.send("workqueue.{}.tasks.task{}.time".format(hostname, index), time_keeper.getTime())
+                    index = index +1
+            except:
+                logging.info("Error with graphite logging")

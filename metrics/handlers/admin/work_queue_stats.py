@@ -64,24 +64,14 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler):
             script_df.columns = ['count']
             script_df = script_df.reset_index()
 
-            #hour_df = self.time_df.groupby(['hour']).count()
-            #hour_df = hour_df.filter(['advertiser'])
-            #hour_df.columns = ['count']
-            #hour_df = hour_df.reset_index()
-
             minute_df = self.time_df.groupby(['date']).count()
             minute_df = minute_df.filter(['advertiser'])
             minute_df.columns = ['count']
             minute_df = minute_df.reset_index()
 
             #organize data into tree structure and write that
-            obj_to_write = {"time_count": minute_df.to_dict('records'), "advertiser_count":adv_df.to_dict('records'),"script_type_count": script_df.to_dict('records'), "total_list": self.time_df.to_dict('records')}
+            obj_to_write = {"summary":{"time": minute_df.to_dict('records'), "advertiser":adv_df.to_dict('records'),"scripts": script_df.to_dict('records')}, "jobs": self.time_df.to_dict('records')}
 
-            #self.write(ujson.dumps(self.time_df.to_dict('records')))
-            #self.write(ujson.dumps(hour_df.to_dict('records')))
-            #self.write(ujson.dumps(adv_df.to_dict('records')))
-            #self.write(ujson.dumps(script_df.to_dict('records')))
-            #self.write(ujson.dumps(minute_df.to_dict('records')))
             self.write(ujson.dumps(obj_to_write, sort_keys=True))
             self.finish()
         else:
