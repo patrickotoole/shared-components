@@ -27,7 +27,7 @@ dirname = os.path.dirname(os.path.realpath(__file__))
 route_options = ", ".join(AllRoutes.get_all()) 
 
 define("port", default=8080, help="run on the given port", type=int)
-define("routes",default="", help="list of routes to include: \n" + route_options,type=str)
+define("routes",default="work_queue_routes", help="list of routes to include: \n" + route_options,type=str)
 
 def build_routes(connectors,override=[]):
     routes = AllRoutes(**connectors)

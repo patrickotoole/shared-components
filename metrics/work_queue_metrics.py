@@ -13,7 +13,7 @@ class TimeMetric():
     def __call__(self):
         while True:
             time.sleep(0.1)
-            self.time.bumpTime(1)
+            self.time.bumpTime(0.1)
 
 SUCCESS_QUERY ="select count(*) from work_queue_log where hostname='{}' and event='Ran' and ts > (select max(ts) from work_queue_log where hostname='{}' and event='Box WQ up')"
 ERROR_QUERY = "select count(*) from work_queue_log where hostname='{}' and event='Fail' and ts > (select max(ts) from work_queue_log where hostname='{}' and event='Box WQ up')"
