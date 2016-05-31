@@ -2,75 +2,63 @@ import tornado.web
 import ujson
 import pandas
 import StringIO
-
+import logging
 import metrics.work_queue
+import logging
+import pickle
+import hashlib
 
 from twisted.internet import defer
 from lib.helpers import * 
+
+def parse(x, zk):
+    try:
+        values = pickle.loads(zk.get("/python_queue/" + x)[0])
+        job_id = hashlib.md5(zk.get("/python_queue/" + x)[0]).hexdigest()
+        logging.info(values)
+        rvals = values[1]
+        rvals.append(job_id)
+        return rvals
+    except:
+        logging.info("Error parsing pickle job")
+        return False
 
 class WorkQueueStatsHandler(tornado.web.RequestHandler):
 
     def initialize(self, zookeeper=None, *args, **kwargs):
         self.zookeeper = zookeeper
 
-    def getBreakdown(self):
-        import pickle
-        import hashlib
+    def get_summary(self):
         import datetime
         path_queue = [c for c in self.zookeeper.get_children("/python_queue") ]
-        index_counter = 0
-        def parse(x):
-            try:
-                values = pickle.loads(self.zookeeper.get("/python_queue/" + path)[0])
-                job_id = hashlib.md5(self.zookeeper.get("/python_queue/" + path)[0]).hexdigest()
-                print values
-                rvals = values[1]
-                advertiser = rvals[0]
-                last_item = rvals[len(rvals)-1]
-
-                if last_item == "recurring_cassandra_cache":
-                    time_string = rvals[len(rvals)-1]
-                    script_name = time_string.split("|")[1]
-                else:
-                    time_string = rvals[len(rvals)-2]
-                    script_name = time_string.split("|")[1]
-               
-                time = datetime.datetime.strptime(time_string.split("|")[0], "%Y-%m-%d %H:%M:%S")
-                time_dict = {"advertiser": {index_counter: advertiser}, "script_type": {index_counter: script_name}, "date":{index_counter:""}}
-                time_dict['date'][index_counter] = time.strftime('%Y-%m-%d %H:%M')
-                #time_dict['hour'][index_counter] = str(time.hour)
-                #time_dict['minute'][index_counter] = str(time.minute)
-                df = pandas.DataFrame(time_dict)
-                self.time_df = self.time_df.append(df)
-                
-                rvals.append(job_id)
-                return rvals
-            except:
-                print "Error parsing pickle job"
-                return False
         
         self.time_df = pandas.DataFrame()
-        in_queue = [parse(path) for path in path_queue]
+        in_queue = [parse(path, self.zookeeper) for path in path_queue]
+        df = pandas.DataFrame(in_queue)
+        
         in_queue = [i for i in in_queue if i]
         
-        if len(self.time_df)> 0:
-            adv_df = self.time_df.groupby(['advertiser']).count()
-            adv_df = adv_df.filter(['script_type'])
+        if len(df)> 0:
+            adv_df = df.groupby([0]).count()
+            adv_df = adv_df.filter([2])
             adv_df.columns = ['count']
             adv_df = adv_df.reset_index()
 
-            script_df = self.time_df.groupby(['script_type']).count()
-            script_df = script_df.filter(['advertiser'])
+            df['script_type'] = df[4].apply(lambda x : x.split('|')[1])
+            df['date'] = df[4].apply(lambda x : x.split('|')[0])
+
+            script_df = df.groupby(['script_type']).count()
+            script_df = script_df.filter([0])
             script_df.columns = ['count']
             script_df = script_df.reset_index()
 
-            minute_df = self.time_df.groupby(['date']).count()
-            minute_df = minute_df.filter(['advertiser'])
+            minute_df = df.groupby(['date']).count()
+            minute_df = minute_df.filter([0])
             minute_df.columns = ['count']
             minute_df = minute_df.reset_index()
 
             #organize data into tree structure and write that
-            obj_to_write = {"summary":{"time": minute_df.to_dict('records'), "advertiser":adv_df.to_dict('records'),"scripts": script_df.to_dict('records')}, "jobs": self.time_df.to_dict('records')}
+            obj_to_write = {"summary":{"time": minute_df.to_dict('records'), "advertiser":adv_df.to_dict('records'),"scripts": script_df.to_dict('records')}, "jobs": df.to_dict('records')}
 
             self.write(ujson.dumps(obj_to_write, sort_keys=True))
             self.finish()
@@ -78,7 +66,7 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler):
             self.write(ujson.dumps({"number_in_queue": 0}))
             self.finish()
 
-    def getnum(self):
+    def get_num(self):
         path_queue = [c for c in self.zookeeper.get_children("/python_queue")]
         self.counter=0
         def parse(x):
@@ -91,22 +79,9 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler):
 
 
     def get_data(self):
-        import pickle
-        import hashlib
         path_queue = [c for c in self.zookeeper.get_children("/python_queue") ]
-        def parse(x):
-            try:
-                values = pickle.loads(self.zookeeper.get("/python_queue/" + path)[0])
-                job_id = hashlib.md5(self.zookeeper.get("/python_queue/" + path)[0]).hexdigest()
-                print values
-                rvals = values[1]
-                rvals.append(job_id)
-                return rvals
-            except:
-                print "Error parsing pickle job"
-                return False
 
-        in_queue = [parse(path) for path in path_queue]
+        in_queue = [parse(path, self.zookeeper) for path in path_queue]
         in_queue = [i for i in in_queue if i]
 
         if len(in_queue) > 0:
@@ -121,7 +96,7 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler):
         print action
         if action=="":
             self.get_data()
-        elif "breakdown" in action:
-            self.getBreakdown()
+        elif "summary" in action:
+            self.get_summary()
         elif "num" in action:
-            self.getnum()
+            self.get_num()

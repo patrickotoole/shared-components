@@ -1,7 +1,7 @@
 import os
 import time
 import logging
-from graphitewriter import graphiteWriter
+from graphitewriter import GraphiteWriter
 import socket
 import datetime
 
@@ -15,9 +15,6 @@ class TimeMetric():
             time.sleep(0.1)
             self.time.bumpTime(0.1)
 
-SUCCESS_QUERY ="select count(*) from work_queue_log where hostname='{}' and event='Ran' and ts > (select max(ts) from work_queue_log where hostname='{}' and event='Box WQ up')"
-ERROR_QUERY = "select count(*) from work_queue_log where hostname='{}' and event='Fail' and ts > (select max(ts) from work_queue_log where hostname='{}' and event='Box WQ up')"
-DEQUEUE_QUERY="select count(*) from work_queue_log where hostname='{}' and event='DeQueue' and ts > (select max(ts) from work_queue_log where hostname='{}' and event='Box WQ up')"
 class Metrics():
     def __init__(self, reactor, timer, mc, connectors):
         self.reac = reactor
@@ -36,7 +33,7 @@ class Metrics():
         return self.counter 
 
     def __call__(self):
-        gw = graphiteWriter()
+        gw = GraphiteWriter()
         hostname =socket.gethostname()
         while True:
             time.sleep(10)

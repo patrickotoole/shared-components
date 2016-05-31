@@ -113,7 +113,7 @@ def runner(advertiser,pattern, segment_name, base_url,indentifiers="test", filte
     connectors = connectors or AdvertiserActionRunner.get_connectors()
 
     if not job_id:
-        uuid_num = str(uuid.uuid4())
+        uuid_num = "local_"+str(uuid.uuid4())
     else:
         uuid_num = job_id
     AAR = DomainRunner(connectors)

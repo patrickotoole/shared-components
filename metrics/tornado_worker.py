@@ -8,12 +8,13 @@ tornado.platform.twisted.install()
 from twisted.internet import reactor
 from tornado.options import define, options, parse_command_line
 
-from timekeeper import timeKeeper
+from lib.timekeeper import timeKeeper
 from routes import AllRoutes
 from connectors import ConnectorConfig
 from shutdown import sig_wrap
 from work_queue_metrics import Metrics
 from work_queue_metrics import TimeMetric
+from lib.metricCounter import MetricCounter
 
 import requests
 import signal
@@ -79,31 +80,7 @@ if __name__ == '__main__':
     import work_queue
     import sys
   
-    class metricCounter:
-        def __init__(self):
-            self.success = 0
-            self.error = 0
-            self.dequeue = 0
-
-        def bumpSuccess(self):
-            self.success = self.success+1
-        
-        def bumpError(self):
-            self.error = self.error + 1
-
-        def bumpDequeue(self):
-            self.dequeue = self.dequeue+1
-
-        def getSuccess(self):
-            return self.success
-
-        def getError(self):
-            return self.error
-
-        def getDequeue(self):
-            return self.dequeue
-
-    mc = metricCounter()
+    mc = MetricCounter()
     num_worker= options.num_workers
     tks = []
     if not connectors['cassandra']:

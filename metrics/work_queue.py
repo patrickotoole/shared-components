@@ -15,7 +15,7 @@ class SingleQueue(kazoo.recipe.queue.Queue):
                                 cls, *args, **kwargs)
         return cls._instance
 
-SQL_LOG = "insert into work_queue_log (hostname, job_id, event) values ('{}', '{}', '{}')"
+SQL_LOG = "insert into work_queue_log (hostname, job_id, event) values (%s, %s, %s)"
 SQL_LOG2 = "insert into work_queue_error_log (hostname, error_string, job_id) values (%s, %s, %s)"
 
 class WorkQueue(object):
@@ -27,8 +27,9 @@ class WorkQueue(object):
         self.connectors = connectors
         self.timer = timer
         self.mcounter = mcounter
-        START_QUERY = "insert into work_queue_log (hostname, event) values ('{}', 'Box WQ up')"
-        self.connectors['crushercache'].execute(START_QUERY.format(socket.gethostname()))
+        START_QUERY = "insert into work_queue_log (hostname, event) values (%s, %s)"
+        self.sock_id = socket.gethostname()
+        self.connectors['crushercache'].execute(START_QUERY, (self.sock_id, 'Box WQ up'))
         self.exit_on_finish = exit_on_finish
 
     def __call__(self):
@@ -42,7 +43,7 @@ class WorkQueue(object):
                 job_id = hashlib.md5(data).hexdigest()
                 current_host = socket.gethostname()
                 self.mcounter.bumpDequeue()
-                self.connectors['crushercache'].execute(SQL_LOG.format(current_host, job_id, "DeQueue"))
+                self.connectors['crushercache'].execute(SQL_LOG, (current_host, job_id, "DeQueue"))
                 logging.debug("Received next queue item")
                 try:
                     fn, args = pickle.loads(data)
@@ -55,13 +56,13 @@ class WorkQueue(object):
                     fn(*args, connectors=self.connectors) 
                     
                     self.mcounter.bumpSuccess()
-                    self.connectors['crushercache'].execute(SQL_LOG.format(current_host, job_id, "Ran"))
+                    self.connectors['crushercache'].execute(SQL_LOG, (current_host, job_id, "Ran"))
                     self.timer.resetTime()
                     logging.info("finished queue %s %s" % (str(fn),str(args)))
                 except Exception as e:
                     box = socket.gethostname()
                     self.mcounter.bumpError()
-                    self.connectors['crushercache'].execute(SQL_LOG.format(current_host, job_id, "Fail"))
+                    self.connectors['crushercache'].execute(SQL_LOG, (current_host, job_id, "Fail"))
                     self.connectors['crushercache'].execute(SQL_LOG2,(box, str(e), job_id))
                     logging.info("ERROR: queue %s " % e)
  
@@ -76,6 +77,6 @@ class WorkQueue(object):
             logging.debug("Moving on to next queue item")
 
     def __exit__(self):
-        END_QUERY = "insert into work_queue_log (hostname, event) values ('{}', 'Box WQ down')"
-        self.connectors['crushercache'].execute(END_QUERY.format(socket.gethostname()))
+        END_QUERY = "insert into work_queue_log (hostname, event) values (%s, %s)"
+        self.connectors['crushercache'].execute(END_QUERY, (self.sock_id, 'Box WQ down'))
         #log exit

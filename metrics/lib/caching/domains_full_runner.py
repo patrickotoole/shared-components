@@ -68,7 +68,7 @@ class FullDomainRunner(BaseRunner):
 def runner(advertiser_name, pattern, base_url, indentifiers="test", filter_id=False, job_id=False, connectors=False):
     connectors = connectors or FullDomainRunner.get_connectors()
     if not job_id:
-        uuid_num = str(uuid.uuid4())
+        uuid_num = "full_"+str(uuid.uuid4())
     else:
         uuid_num = job_id
     FDR = FullDomainRunner(connectors)

@@ -16,11 +16,11 @@ now_date = datetime.datetime.now().strftime("%Y-%m-%d")
 URL ="/crusher/v1/visitor/{}?url_pattern={}&filter_id={}"
 URL2 ="/crusher/v2/visitor/{}?url_pattern={}&filter_id={}"
 
-INSERT ="insert into generic_function_cache (advertiser, url_pattern, udf, zipped, date, action_id) values ('{}', '{}', '{}', '{}', '{}', {})"
-REPLACE="replace into generic_function_cache (advertiser, url_pattern, udf, zipped, date, action_id) values ('{}', '{}', '{}', '{}', '{}',{})"
+INSERT ="insert into generic_function_cache (advertiser, url_pattern, udf, zipped, date, action_id) values (%s, %s, %s, %s, %s, %s)"
+REPLACE="replace into generic_function_cache (advertiser, url_pattern, udf, zipped, date, action_id) values (%s, %s, %s, %s, %s, %s)"
 
-INSERT2 ="insert into generic_function_cache_v2 (advertiser, url_pattern, udf, zipped, date) values ('{}', '{}', '{}', '{}', '{}')"
-REPLACE2="replace into generic_function_cache_v2 (advertiser, url_pattern, udf, zipped, date) values ('{}', '{}', '{}', '{}', '{}')"
+INSERT2 ="insert into generic_function_cache_v2 (advertiser, url_pattern, udf, zipped, date) values (%s, %s, %s, %s, %s)"
+REPLACE2="replace into generic_function_cache_v2 (advertiser, url_pattern, udf, zipped, date) values (%s, %s, %s, %s, %s)"
 
 class UDFRunner(BaseRunner):
 
@@ -52,18 +52,18 @@ class UDFRunner(BaseRunner):
     def insert(self, advertiser, pattern, func_name, compressed_data):
         try:
             Q = INSERT
-            self.connectors['crushercache'].execute(Q.format(advertiser, pattern, func_name, compressed_data, now_date, self.action_id))
+            self.connectors['crushercache'].execute(Q, (advertiser, pattern, func_name, compressed_data, now_date, self.action_id))
         except:
             Q = REPLACE
-            self.connectors['crushercache'].execute(Q.format(advertiser, pattern, func_name, compressed_data, now_date, self.action_id))
+            self.connectors['crushercache'].execute(Q, (advertiser, pattern, func_name, compressed_data, now_date, self.action_id))
 
     def insert2(self, advertiser, pattern, func_name, compressed_data):
         try:
             Q = INSERT2
-            self.connectors['crushercache'].execute(Q.format(advertiser, pattern, func_name, compressed_data, now_date, self.action_id))
+            self.connectors['crushercache'].execute(Q, (advertiser, pattern, func_name, compressed_data, now_date, self.action_id))
         except:
             Q = REPLACE2
-            self.connectors['crushercache'].execute(Q.format(advertiser, pattern, func_name, compressed_data, now_date, self.action_id))
+            self.connectors['crushercache'].execute(Q, (advertiser, pattern, func_name, compressed_data, now_date, self.action_id))
 
 def runner(advertiser,pattern, func_name, base_url, indentifiers="test", filter_id=False, job_id=False, connectors=False):
 
@@ -71,7 +71,7 @@ def runner(advertiser,pattern, func_name, base_url, indentifiers="test", filter_
 
     connectors = connectors or UDFRunner.get_connectors()
     if not job_id:
-        uuid_num = str(uuid.uuid4())
+        uuid_num = "filter_"+str(uuid.uuid4())
     else:
         uuid_num = job_id
 

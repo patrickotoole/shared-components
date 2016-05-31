@@ -10,13 +10,13 @@ CARBON_PORT = 2003
 #CARBON_SERVER = 'localhost'
 #CARBON_PORT = 2323
 
-class graphiteWriter:
+class GraphiteWriter:
     def __init__(self,server=CARBON_SERVER, port=CARBON_PORT):
         self.sock = socket.socket()
         try:
             self.sock.connect( (server,port) )
         except:
-            print "Couldn't connect to %(server)s on port %(port)d, is carbon-agent.py running?" % { 'server':CARBON_SERVER, 'port':CARBON_PORT }
+            logging.info("Couldn't connect to %(server)s on port %(port)d, is carbon-agent.py running?" % { 'server':CARBON_SERVER, 'port':CARBON_PORT })
             #sys.exit(1)
         
     def send(self,metric, value):
