@@ -13,7 +13,6 @@ class AdminRoutes(
     CensusRoutes
 ):
 
-    @namespace("/")
     @connectors("db","api","cassandra", "zookeeper", "crushercache")
     def work_queue_routes(self):
         import handlers.analytics as analytics
