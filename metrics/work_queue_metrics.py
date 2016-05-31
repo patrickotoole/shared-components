@@ -53,7 +53,8 @@ class Metrics():
                 gw.send("workqueue.{}.up".format(hostname),1)
                 index = 0
                 for time_keeper in self.tks:
-                    gw.send("workqueue.{}.tasks.task{}.time".format(hostname, index), time_keeper.getTime())
+                    ticktime = time_keeper.getTime() if size >0 else 0
+                    gw.send("workqueue.{}.tasks.task{}.time".format(hostname, index), ticktime)
                     index = index +1
             except:
                 logging.info("Error with graphite logging")
