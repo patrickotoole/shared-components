@@ -13,17 +13,17 @@ class AdminRoutes(
     CensusRoutes
 ):
 
-    @namespace("/jobs")
+    @namespace("/")
     @connectors("db","api","cassandra", "zookeeper", "crushercache")
     def work_queue_routes(self):
         import handlers.analytics as analytics
         import handlers.admin.work_queue as work_queue
         import handlers.admin.work_queue_stats as work_queue_stats
         return [
-            
-            (r'/queue?(.*?)', work_queue.WorkQueueHandler, self.connectors),
-            (r'/add', analytics.domains.InternalCacheHandler, self.connectors),
-            (r'/?(.*?)', work_queue_stats.WorkQueueStatsHandler, self.connectors),
+
+            (r'/jobs/add', analytics.domains.InternalCacheHandler, self.connectors),
+            (r'/jobs/?(.*?)', work_queue_stats.WorkQueueStatsHandler, self.connectors),
+            (r'/?(.*?)', work_queue.WorkQueueHandler, self.connectors),
         ]
 
     @namespace("/admin")
@@ -51,7 +51,7 @@ class AdminRoutes(
             (r'/api.*', scripts.APIHandler, self.connectors)
         ]
          
-  
+ 
 #class OldRoutes(Routes):
     """
         old_handlers = [

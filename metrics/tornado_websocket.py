@@ -59,8 +59,9 @@ def build_routes(connectors,override=[]):
     routes = AllRoutes(**connectors)
     static = [(r'/static/(.*)', tornado.web.StaticFileHandler, {'path': "static"})]
     selected_routes = [route for route in routes.all if route in override]
-
-    return routes(*(selected_routes or routes.all)) + static
+    all_routes = routes.all
+    all_routes.remove('work_queue_routes')
+    return routes(*(selected_routes or all_routes)) + static
 
 
 if __name__ == '__main__':
