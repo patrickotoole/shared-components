@@ -22,9 +22,15 @@ def process_domains(**kwargs):
     df4 = df3.merge(dfC, on='domain')
 
     df5 = df4.merge(idf, on='domain', how='left')
-    df4 = df4.sort(['count'], ascending=False)
+    df4 = df4.sort(['uniques', 'count'], ascending=False)
     df4 = df4.fillna('NA')
-    data = df4.to_dict('records')
+    df5 = df4.reset_index()
+    df5 = df5.filter(['domain', 'count','uniques'])
+    df6 = df5.reset_index()
+    df6.columns = ['rank', 'domain','count','uniques']
+    df7 = df6.merge(idf, on='domain', how='left')
+    df7 = df7.fillna('NA')
+    data = df7.to_dict('records')
     response['response'] = data
 
     return response
