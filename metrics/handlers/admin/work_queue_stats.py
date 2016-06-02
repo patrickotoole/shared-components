@@ -15,7 +15,7 @@ def parse(x, zk):
     try:
         values = pickle.loads(zk.get("/python_queue/" + x)[0])
         job_id = hashlib.md5(zk.get("/python_queue/" + x)[0]).hexdigest()
-        logging.info(values)
+        #logging.info(values)
         rvals = values[1]
         rvals.append(job_id)
         return rvals
@@ -32,7 +32,6 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler):
         import datetime
         path_queue = [c for c in self.zookeeper.get_children("/python_queue") ]
         
-        self.time_df = pandas.DataFrame()
         in_queue = [parse(path, self.zookeeper) for path in path_queue]
         df = pandas.DataFrame(in_queue)
         
@@ -65,6 +64,21 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler):
         else:
             self.write(ujson.dumps({"number_in_queue": 0}))
             self.finish()
+
+    def get_id(self, job_id):
+        
+        path_queue = [c for c in self.zookeeper.get_children("/python_queue") ]
+        in_queue = [parse(path, self.zookeeper) for path in path_queue]
+        requested_job = []
+        import ipdb; ipdb.set_trace()
+        for job in in_queue:
+            if job:
+                if(job[len(job)-1] == job_id):
+                     requested_job = job
+        import ipdb; ipdb.set_trace()
+
+        self.write(ujson.dumps({}))
+        self.finish()
 
     def get_num(self):
         path_queue = [c for c in self.zookeeper.get_children("/python_queue")]
@@ -100,3 +114,5 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler):
             self.get_summary()
         elif "num" in action:
             self.get_num()
+        else:
+            self.get_id(action)
