@@ -2,6 +2,7 @@ from ..helpers import *
 from ..base import Routes
 
 class UserRoutes(Routes):
+
     @connectors("db")
     def user_login(self):
         import handlers.user as user
@@ -136,7 +137,7 @@ class AdvertiserRoutes(Routes):
             
             (r'/visitor/(.*?)/cache', visitor.transform_cache_handler.VisitorTransformCacheHandler, self.connectors),
             (r'/visitor/(.*?)', visitor.transform_handler.VisitorTransformHandler, self.connectors),
-            (r'/internal/cache', analytics.domains.InternalCacheHandler, self.connectors),
+            #(r'/internal/cache', analytics.domains.InternalCacheHandler, self.connectors),
 
         ]
 

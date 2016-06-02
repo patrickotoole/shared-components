@@ -83,14 +83,17 @@ class DomainRunner(BaseRunner):
                 except:
                     logging.info("error with df for %s and %s" % (segment_name, advertiser))
 
-    def pre_process(self, advertiser, base_url, url_pattern, segment_name, crusher):
+    def pre_process(self, advertiser, base_url, url_pattern, segment_name, crusher, action_id):
         if segment_name:
             valid= self.validation_name(crusher, segment_name)
-            data = self.make_request(crusher, self.url_pattern, self.action_id)
+            data = self.make_request(crusher, self.url_pattern, action_id)
         else:
             vaid = self.validation_pattern(crusher, url_pattern)
-            data = self.make_request(crusher, url_pattern, self.action_id)
-        df = pandas.DataFrame(data)
+            data = self.make_request(crusher, url_pattern, action_id)
+        try:
+            df = pandas.DataFrame(data)
+        except: 
+            df = pandas.DataFrame()
         return df
 
     def execute(self, data, advertiser, pattern, segment_name, db):
@@ -106,24 +109,26 @@ class DomainRunner(BaseRunner):
             logging.info("error with %s for %s" % (segment_name, advertiser))
 
 
-def runner(advertiser,pattern, segment_name, base_url, filter_id, cache_date="", indentifiers="test", connectors=False):
-    connectors = connectors or DomainRunner.get_connectors()
+def runner(advertiser,pattern, segment_name, base_url,indentifiers="test", filter_id=False, job_id=False, connectors=False):
+    connectors = connectors or AdvertiserActionRunner.get_connectors()
 
-    uuid_num = str(uuid.uuid4())
+    if not job_id:
+        uuid_num = "local_"+str(uuid.uuid4())
+    else:
+        uuid_num = job_id
     AAR = DomainRunner(connectors)
-    crusher = AAR.get_crusher_obj(advertiser, base_url)
+    crusher =AAR.get_crusher_obj(advertiser, base_url) 
+
     if not filter_id:
-        if pattern:
-            AAR.getActionIDPattern(pattern, crusher)
-        else:
-            AAR.getActionIDName(segment_name, crusher)
+        AAR.action_id = AAR.getActionIDPattern(pattern, crusher)
     else:
         AAR.action_id = filter_id
+
     AAR.accounting_entry_start(advertiser, pattern, "action_dashboard_runner", uuid_num, AAR.action_id)
 
     db = connectors['crushercache']
     zk = connectors['zk']
-    data = AAR.pre_process(advertiser, base_url, pattern, segment_name, crusher)
+    data = AAR.pre_process(advertiser, base_url, pattern, segment_name, crusher, AAR.action_id)
 
     executed = False
     if len(data)>0:

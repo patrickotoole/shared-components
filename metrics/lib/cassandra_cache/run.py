@@ -12,13 +12,14 @@ logging.basicConfig(level=logging.INFO, format=formatter)
 
 logger = logging.getLogger()
 
-
+SQL_LOG = "INSERT into crusher_cache_accounting (advertiser, pattern, start_or_end, script_name, uuid) values ('{}', '{}', '{}', '{}', '{}')"
 
 def get_connectors():
 
     from link import lnk
     return {
         "db": lnk.dbs.rockerbox,
+        "crushercache": lnk.dbs.crushercache,
         "zk": {},
         "cassandra": lnk.dbs.cassandra
     }
@@ -53,7 +54,7 @@ def get_recurring(cassandra,advertiser,pattern,cache_date):
  
 
 
-def run_backfill(advertiser,pattern,cache_date,identifier="test",connectors=False):
+def run_backfill(advertiser,pattern,cache_date,identifier="test",job_id=False,connectors=False):
     """
     This should be run when an action is created so that we cache the data in the action.
     It will prevent us from using sampled data
@@ -61,6 +62,9 @@ def run_backfill(advertiser,pattern,cache_date,identifier="test",connectors=Fals
 
     import time 
     connectors = connectors or get_connectors()
+    if not job_id:
+        job_id=0
+    connectors['crushercache'].execute(SQL_LOG.format(advertiser, pattern, 'Start', 'cassandra_backfill', job_id))
 
     db = connectors['db']
     zk = connectors['zk']
@@ -105,19 +109,18 @@ def run_backfill(advertiser,pattern,cache_date,identifier="test",connectors=Fals
             pattern_cache.cache_visits()
 
             elapsed = int(time.time() - start)
+            connectors['crushercache'].execute(SQL_LOG.format(advertiser, pattern, 'End', 'cassandra_backfill', job_id))
             db.execute(UPDATE_PATTERN_CACHE % (elapsed,pattern,advertiser,cache_date))
 
            
-
-
-def run_recurring(advertiser,pattern,cache_date,identifier="test",connectors=False):
+def run_recurring(advertiser,pattern,cache_date,identifier="test",job_id=False,connectors=False):
     """
     This should be run once a day for the previous day. It will cache data for 
     views, visits, uniques and domains to make the UI load more quickly.
     """
     import time 
     connectors = connectors or get_connectors()
-
+    connectors['crushercache'].execute(SQL_LOG.format(advertiser, pattern, 'Start', 'cassandra_recurring', job_id))
     db = connectors['db']
     zk = connectors['zk']
     cassandra = connectors['cassandra']
@@ -147,7 +150,7 @@ def run_recurring(advertiser,pattern,cache_date,identifier="test",connectors=Fal
         #pattern_cache.cache_hll_domains(cache_date)
 
         elapsed = int(time.time() - start)
-
+        connectors['crushercache'].execute(SQL_LOG.format(advertiser, pattern, 'End', 'cassandra_recurring', job_id))
         db.execute(UPDATE_PATTERN_CACHE % (elapsed,pattern,advertiser,cache_date))
 
 
@@ -166,6 +169,7 @@ if __name__ == "__main__":
     connectors = {
         "zk": zk,
         "db": lnk.dbs.rockerbox,
+        "crushercache": lnk.dbs.crushercache,
         "cassandra": lnk.dbs.cassandra 
     }
 

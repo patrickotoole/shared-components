@@ -60,8 +60,9 @@ class ServiceRoutes(
     @connectors("db","zookeeper")
     def work_queue_scripts(self):
         import handlers.admin.work_queue as work_queue 
-        
+        import handlers.admin.work_queue_stats as work_queue_stats
         return [
-            (r'/work_queue/?(.*?)', work_queue.WorkQueueHandler, self.connectors)
+            #(r'/work_queue/updates/?(.*?)', work_queue_stats.WorkQueueStatsHandler, self.connectors),
+            #(r'/work_queue/?(.*?)', work_queue.WorkQueueHandler, self.connectors),
         ]
  

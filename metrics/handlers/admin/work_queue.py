@@ -23,23 +23,23 @@ class WorkQueueHandler(tornado.web.RequestHandler):
             paths = """
             <div class="col-md-3">
               <h5>Work queue pages:</h5>
-              <a href="/admin/work_queue">View queue</a><br>
+              <a href="/work_queue">View queue</a><br>
             </div>
             <div class="col-md-3">
-              <a class="btn btn-danger btn-sm" href="/admin/work_queue/clear">Clear queue</a><br><br>
+              <a class="btn btn-danger btn-sm" href="/work_queue/clear">Clear queue</a><br><br>
             </div>
 
             <div class="col-md-3">
 
               <h5>Backfill pages:</h5>
-              <a href="/admin/work_queue/backfill">Backfill jobs</a><br>
-              <a href="/admin/work_queue/backfill/active">Backfill jobs active</a><br>
-              <a href="/admin/work_queue/backfill/stalled">Backfill jobs (stalled)</a><br>
-              <a href="/admin/work_queue/backfill/complete">Backfill jobs (complete)</a><br>
+              <a href="/work_queue/backfill">Backfill jobs</a><br>
+              <a href="/work_queue/backfill/active">Backfill jobs active</a><br>
+              <a href="/work_queue/backfill/stalled">Backfill jobs (stalled)</a><br>
+              <a href="/work_queue/backfill/complete">Backfill jobs (complete)</a><br>
 
             </div>
             <div class="col-md-3">
-              <a class="btn btn-danger btn-sm" href="/admin/work_queue/backfill/clear">Clear Backfill</a><br>
+              <a class="btn btn-danger btn-sm" href="/work_queue/backfill/clear">Clear Backfill</a><br>
             </div>
             <br><br>
             """
@@ -52,28 +52,31 @@ class WorkQueueHandler(tornado.web.RequestHandler):
     def clear_queue(self):
         self.zookeeper.delete("/python_queue",recursive=True)
         self.zookeeper.ensure_path("/python_queue")
-        self.redirect("/admin/work_queue")
+        self.redirect("/work_queue")
 
     def clear_active(self):
         self.zookeeper.delete("/active_pattern_cache",recursive=True)
         self.zookeeper.ensure_path("/active_pattern_cache")
-        self.redirect("/admin/work_queue/backfill")
+        self.redirect("/work_queue/backfill")
 
     def clear_complete(self):
         self.zookeeper.delete("/complete_pattern_cache",recursive=True)
         self.zookeeper.ensure_path("/complete_pattern_cache")
-        self.redirect("/admin/work_queue/backfill")
+        self.redirect("/work_queue/backfill")
 
 
     def get_data(self):
         import pickle
-
+        import hashlib
         path_queue = [c for c in self.zookeeper.get_children("/python_queue") ]
         def parse(x):
             try:
                 values = pickle.loads(self.zookeeper.get("/python_queue/" + path)[0])
+                job_id = hashlib.md5(self.zookeeper.get("/python_queue/" + path)[0]).hexdigest()
                 print values
-                return values[1]
+                rvals = values[1]
+                rvals.append(job_id)
+                return rvals
             except:
                 print "Error parsing pickle job"
                 return False

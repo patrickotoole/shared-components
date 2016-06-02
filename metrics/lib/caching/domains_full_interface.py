@@ -20,7 +20,7 @@ class CacheFullURL():
     def run_local(self, advertiser, pattern, base_url, filter_id):
         #import full_url_cache as cc
         import domains_full_runner as cc
-        cc.runner(advertiser,pattern,base_url,filter_id,"test",connectors=self.connectors)
+        cc.runner(advertiser,pattern,base_url,filter_id=filter_id, connectors=self.connectors)
 
     def run_on_work_queue(self,advertiser, pattern, base_url, filter_id):
         import lib.caching.domains_full_runner as furc
@@ -28,7 +28,7 @@ class CacheFullURL():
         _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
         work = pickle.dumps((
                 furc.runner,
-                [advertiser,pattern, base_url, filter_id, _cache_yesterday, _cache_yesterday+"full_url"]
+                [advertiser,pattern, base_url, _cache_yesterday, _cache_yesterday+"full_url", filter_id]
                 ))
         work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,1)
         logging.info("added to work queue %s for %s" %(pattern,advertiser))
@@ -58,10 +58,10 @@ if __name__ == "__main__":
     if options.run_local:
         if options.run_all:
             rockerbox_db = lnk.dbs.rockerbox
-            segs = rockerbox_db.select_dataframe("select distinct url_pattern from action_with_patterns where pixel_source_name='{}'".format(options.advertiser))
+            segs = rockerbox_db.select_dataframe("select distinct url_pattern, action_id from action_with_patterns where pixel_source_name='{}'".format(options.advertiser))
             for seg in segs.iterrows():
                 try:
-                    cfu.run_local(options.advertiser, seg[1]['url_pattern'],options.base_url, options.filter_id)
+                    cfu.run_local(options.advertiser, seg[1]['url_pattern'],options.base_url, seg[1]['action_id'])
                 except:
                     print "error with {}".format(seg[1]['url_pattern'])
         else:
@@ -74,7 +74,7 @@ if __name__ == "__main__":
             segs = rockerbox_db.select_dataframe(query)
             for seg in segs.iterrows():
                 try:
-                    cfu.run_on_work_queue(options.advertiser, seg[1]['url_pattern'], options.base_url, options.filter_id)
+                    cfu.run_on_work_queue(options.advertiser, seg[1]['url_pattern'], options.base_url, seg[1]['action_id'])
                 except:
                     print "error with {}".format(seg[1]['url_pattern'])
 
