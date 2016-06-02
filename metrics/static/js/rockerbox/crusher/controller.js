@@ -450,7 +450,6 @@ RB.crusher.controller = (function(controller) {
           'view_type': action.view_type
         });
 
-debugger
 
         var vendor_display_toggle = d3_updateable(funnelRow.select('header.page-header'), '.vendor-display-toggle', 'div')
           .classed('vendor-display-toggle export pull-right btn btn-sm btn-default', true)
@@ -476,7 +475,7 @@ debugger
             RB.routes.navigation.forward(x)
           })
 
-        action.subscriptions = action.subscriptions || ["actions"];
+        //action.subscriptions = action.subscriptions || ["actions"];
         action.filter = action.filter || function() {return true};
 
         if(action.view_type === 'expanded' || typeof action.view_type === typeof undefined) {
