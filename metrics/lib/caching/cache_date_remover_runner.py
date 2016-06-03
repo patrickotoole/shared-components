@@ -14,9 +14,9 @@ class CacheCleanUp(BaseRunner):
     def runQuery(self, table, colname):
         
         if table == "domains_full_cache":
-            QUERY= "delete from {} where UNIX_TIMESTAMP({}) < UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL {} DAY)) limit 50000"
+            QUERY= "delete from {} where UNIX_TIMESTAMP({}) < UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL {} DAY)) limit 500000"
         elif table == "domains_cache":
-            QUERY= "delete from {} where UNIX_TIMESTAMP({}) < UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL {} DAY)) limit 5000"
+            QUERY= "delete from {} where UNIX_TIMESTAMP({}) < UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL {} DAY)) limit 50000"
         elif table == "keyword_crusher_cache":
             QUERY= "delete from {} where UNIX_TIMESTAMP({}) < UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL {} DAY)) limit 5000"
         else:

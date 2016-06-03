@@ -13,14 +13,14 @@ import sys
 
 now_date = datetime.datetime.now().strftime("%Y-%m-%d")
 
-URL ="/crusher/v1/visitor/{}?url_pattern={}&filter_id={}"
+URL ="/crusher/v1/visitor/{}?url_pattern={}&filter_id={}&prevent_sample=true"
 URL2 ="/crusher/v2/visitor/{}?url_pattern={}&filter_id={}"
 
 INSERT ="insert into generic_function_cache (advertiser, url_pattern, udf, zipped, date, action_id) values (%s, %s, %s, %s, %s, %s)"
 REPLACE="replace into generic_function_cache (advertiser, url_pattern, udf, zipped, date, action_id) values (%s, %s, %s, %s, %s, %s)"
 
-INSERT2 ="insert into generic_function_cache_v2 (advertiser, url_pattern, udf, zipped, date) values (%s, %s, %s, %s, %s)"
-REPLACE2="replace into generic_function_cache_v2 (advertiser, url_pattern, udf, zipped, date) values (%s, %s, %s, %s, %s)"
+INSERT2 ="insert into generic_function_cache_v2 (advertiser, url_pattern, udf, zipped, date, action_id) values (%s, %s, %s, %s, %s, %s)"
+REPLACE2="replace into generic_function_cache_v2 (advertiser, url_pattern, udf, zipped, date, action_id) values (%s, %s, %s, %s, %s, %s)"
 
 QUERY = "select parameters from user_defined_functions where advertiser = '{}' and udf = '{}'"
 QUERY2 = "select parameters from user_defined_functions where advertiser is NULL and udf = '{}'"
