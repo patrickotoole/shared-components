@@ -71,7 +71,7 @@ class ActionDashboardHandler(BaseDomainHandler):
             now_date = self.getRecentDate(url_pattern, advertiser)
             results = self.queryCache(advertiser, url_pattern, number, now_date)        
         categories = self.get_idf(self.db, list(set(results.domain)))
-        joined = results.merge(categories,on="domain")
+        joined = results.merge(categories,on="domain", how='left')
         results = joined.fillna(0)
         return results
 
