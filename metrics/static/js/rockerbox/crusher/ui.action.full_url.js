@@ -4,27 +4,57 @@ RB.crusher.ui = RB.crusher.ui || {}
 
 var pubsub = RB.crusher.pubsub;
 
+
+var category_data = function(data) {
+  var total = 0;
+
+  var categories = data.reduce(function(p,c){
+    p[c.parent_category_name] = p[c.parent_category_name] || 0
+    p[c.parent_category_name] += c.count
+    total += c.count
+    return p
+  },{})
+
+  Object.keys(categories).map(function(k){
+    categories[k] = {
+      key: k,
+      count: categories[k],
+      percentage: Math.round(categories[k]/total * 100)/100,
+      value: categories[k]
+    }
+  })
+
+  var table_body = d3.entries(categories)
+    .map(function(x){return x.value})
+    .sort(function(x, y) {
+      return y.count - x.count
+    })
+
+  return table_body
+
+}
+
+
 RB.crusher.ui.action = (function(action) {
   action.show_full_url = function(wrapper, segment) {
-    var title = "",
+    var title = "Top Articles",
       series = ["full_url"],
-      formatting = ".col-md-12.action-full_url.hidden.card",
-      description = "Here are the top relevant page and article engagements by users within the " + segment.action_name + " segment."
+      formatting = ".col-md-12.action-full_url.card",
+      description = "<br>These are the top relevant page and article engagements by users within the " + segment.action_name + " segment."
 
     var target = RB.rho.ui.buildSeriesWrapper(wrapper.selectAll(".action-body"), title, series, [wrapper.datum()], formatting, description)
 
     var parentNode = wrapper.selectAll(".action-body").selectAll(".full_url")
+      .style("visibility","hidden")
+
 
     parentNode.selectAll(".loading-icon").remove()
 
     parentNode.selectAll('div.value').remove();
 
-    var chart_wrapper = d3_updateable(target, '.bar-chart-wrapper', 'div')
-      .classed('bar-chart-wrapper col-lg-4 col-md-12', true);
+    var chart_wrapper = d3_updateable(target, '.bar-wrapper', 'div')
+      .classed('bar-wrapper col-lg-4 col-md-12', true);
 
-    var chart_wrapper_title = d3_updateable(chart_wrapper, '.chart-wrapper-title', 'h3')
-      .classed('chart-wrapper-title', true)
-      .text('Categories');
 
     var table_wrapper = d3_updateable(target, '.table-wrapper', 'div')
       .classed('table-wrapper col-lg-8 col-md-12', true);
@@ -36,64 +66,32 @@ RB.crusher.ui.action = (function(action) {
     pubsub.subscriber("cached_visitor_domains", ["cached_visitor_domains"])
       .run(function(cached_visitor_domains) {
 
-        /*
-          Render Chart
-        */
-        var sum_count = 0;
+        var obj = {
+          _categories: [],
+          _click: function(x, i) {
+            var selected = d3.select(this.parentNode.parentNode.parentNode).selectAll("input")[0].map(function(x){
+              return {"category":x.parentNode.parentNode.__data__.label,"checked":x.checked}
+            })
 
-        var categories_raw = cached_visitor_domains.map(function(x) {
-          sum_count += x.count;
+            var categories = selected.filter(function(x){ return x.checked}).map(function(x){return x.category})
+            obj._categories = categories
 
-          return {
-            name: x.parent_category_name,
-            count: x.count,
-            uniques: x.uniques
-          };
-        });
-
-        var categories = [];
-        var table_body = [];
-
-        cached_visitor_domains.forEach(function(x) {
-          if (categories.indexOf(x.parent_category_name) == -1) {
-            categories.push(x.parent_category_name);
-
-            table_body.push({
-              key: x.parent_category_name || 'N/A',
-              count: x.count
+            var data = cached_visitor_domains.filter(function(x) {
+              if (categories.length == 0) return true
+              return categories.indexOf(x.parent_category_name) > -1
             });
-          } else {
-            table_body[categories.indexOf(x.parent_category_name)].count += x.count;
+
+            draw_table(data);
           }
+        }
+        
 
-          var percentage = (100 / sum_count) * table_body[categories.indexOf(x.parent_category_name)].count
-          percentage = Math.round(percentage * 100) / 100;
-          table_body[categories.indexOf(x.parent_category_name)].percentage = percentage
-        });
+        vendors.category_bar.bind(obj)(target.datum({"domains":cached_visitor_domains}))
+        parentNode
+          .style("visibility",undefined)
+          .classed("hidden",true)
 
-        table_body.sort(function(x, y) {
-          return y.count - x.count
-        })
 
-        var table_data = {
-          header: [{
-            key: 'key',
-            title: 'Category'
-          }, {
-            key: 'percentage',
-            title: 'Percentage'
-          }],
-          body: table_body
-        };
-
-        var category_table = components.table(chart_wrapper)
-          .data(table_data)
-          .pagination(5)
-          .draw();
-
-        /*
-          Render Table
-        */
         var draw_table = function(data) {
           var table_data = {
             header: [{
@@ -106,12 +104,6 @@ RB.crusher.ui.action = (function(action) {
             }, {
               key: 'category',
               title: 'Category'
-            }, {
-              key: 'uniques',
-              title: 'Uniques'
-            }, {
-              key: 'count',
-              title: 'Count'
             }],
             body: []
           };
@@ -177,26 +169,6 @@ RB.crusher.ui.action = (function(action) {
 
         draw_table(cached_visitor_domains);
 
-        var category_filter = null;
-        chart_wrapper.selectAll('tbody tr td:first-child')
-          .style('cursor', 'pointer')
-          .on('click', function(x, i) {
-            if(category_filter === this.innerText) {
-              category_filter = null;
-              draw_table(cached_visitor_domains);
-            } else {
-              category_filter = this.innerText;
-
-              var new_table_body = cached_visitor_domains.filter(function(x) {
-                if (x.parent_category_name == category_filter)
-                  return true;
-                else
-                  return false;
-              });
-
-              draw_table(new_table_body);
-            }
-          });
       })
       .data(segment)
       .unpersist(true)

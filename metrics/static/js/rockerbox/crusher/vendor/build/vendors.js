@@ -298,20 +298,23 @@
 
   function drawBar(target,self) {
 
-    target.datum(function(x){
+      target.datum(function(x){
       if (x.parentCategoryData == undefined && x.domains) {
 
         var category_data = x.domains.reduce(function(p,domain){
-          var category = domain.parent_category_name
 
-          p[category] = p[category] || 0
-          p[category] += domain.count
+          if (domain.parent_category_name != 0) {
+            var category = domain.parent_category_name
 
+            p[category] = p[category] || 0
+            p[category] += domain.count
+          }
           return p
         },{})
 
         var parentCategoryData = d3.entries(category_data)
           .map(function(c) { return { label: c.key, value: c.value } })
+
 
         x.parentCategoryData = parentCategoryData
 
@@ -320,8 +323,9 @@
 
       }
 
+
       return x.parentCategoryData
-        .filter(function(y){return y.percent > .02})
+        .filter(function(y){return y.percent > .01})
         .sort(function(p,c){
           return c.percent - p.percent
         })
@@ -334,7 +338,9 @@
     var _sizes = autoSize(wrapper,function(d){return d -50}, function(d){return 400}),
       margin = _sizes.margin,
       width = _sizes.width,
-      height = _sizes.height
+      height = _sizes.height;
+
+    height = data.length * 26
     
     var x = d3.scale.linear()
         .range([width/2, width-20]);
@@ -381,7 +387,7 @@
     var checks = d3_splat(svg,".check","foreignObject",false,function(x){return x.label})
         .classed("check",true)
         .attr("x",0)
-        .attr("y", function(d) { return y(d.label) ; })
+        .attr("y", function(d) { return y(d.label) })
         .html("<xhtml:tree></xhtml:tree>")
 
       svg.selectAll("foreignobject").each(function(x){
@@ -437,7 +443,10 @@
   function render_bar(target) {
 
     var wrap = d3_updateable(target,".bar-wrapper","div",false,function(x,i){return i})
-      .classed("bar-wrapper col-lg-3 col-md-6",true) 
+      .classed("bar-wrapper",true) 
+
+    wrap
+      .classed("col-lg-3 col-md-6",!wrap.classed("col-lg-4"))
 
     drawDesc(wrap)
 
@@ -1430,5 +1439,6 @@
   exports.version = version;
   exports.vendor_expanded = vendor_expanded;
   exports.vendor_table = vendor_table;
+  exports.category_bar = render_bar;
 
 }));
