@@ -10,12 +10,14 @@ from lib.helpers import Convert
 from twisted.internet import defer
 from lib.helpers import decorators
 from ..base_domain_handler import BaseDomainHandler
+from transform_cache_handler import VisitorTransformCacheHandler
 
 DOMAINS_DATE = "SELECT domain, count FROM domains_cache WHERE url_pattern = '%(url_pattern)s' and advertiser = '%(advertiser)s' and record_date='%(record_date)s'"
 DOMAINS_FILTER = "SELECT zipped FROM cache_domains_w_filter_id WHERE url_pattern = '%(url_pattern)s' and advertiser = '%(advertiser)s' and filter_id = '%(filter_id)s'"
 DATE_FALLBACK = "select distinct record_date from domains_cache where url_pattern='%(url_pattern)s' and advertiser='%(advertiser)s' order by record_date DESC"
+CHECK_UDF = "select body from user_defined_functions where udf ='domains' and advertiser='{}'"
 
-class ActionDashboardHandler(BaseDomainHandler):
+class ActionDashboardHandler(VisitorTransformCacheHandler):
 
     def initialize(self, db=None, crushercache=None, **kwargs):
         self.db = db
@@ -78,6 +80,9 @@ class ActionDashboardHandler(BaseDomainHandler):
     @custom_defer.inlineCallbacksErrors
     def get_actions(self, advertiser, number, action_type, url_pattern, action_id=False, filter_date=False):
         try:
+            domains_udf = self.crushercache.select_dataframe(CHECK_UDF.format(advertiser))
+            if len(domains_udf) > 0:
+                self.first_step("domains", advertiser, url_pattern, action_id, filter_date)
             if action_id:
                 seg_data = self.get_one_filter_id(url_pattern, advertiser, action_id)
                 self.write(seg_data)

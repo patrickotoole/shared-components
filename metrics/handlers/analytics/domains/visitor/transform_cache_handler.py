@@ -27,7 +27,7 @@ class VisitorTransformCacheHandler(VisitorBase):
         action_id = self.db.select_dataframe(ACTION_QUERY.format(advertiser, pattern))
         return action_id['action_id'][0]
 
-    def getRecentDate(self, advertiser, url_pattern, action_id, udf):
+    def getRecentData(self, advertiser, url_pattern, action_id, udf):
         query_dict = {"url_pattern":url_pattern, "advertiser":advertiser, "action_id": action_id, "udf": udf}
         datefallback = self.crushercache.select_dataframe(DATE_FALLBACK % query_dict)
         now_date = str(datefallback['date'][0])
@@ -56,7 +56,7 @@ class VisitorTransformCacheHandler(VisitorBase):
 
         data = self.crushercache.select_dataframe(QUERY)
         if len(data) ==0 and not filter_date:
-            now_date = self.getRecentDate(advertiser, pattern, filter_id, api_type)
+            now_date = self.getRecentData(advertiser, pattern, filter_id, api_type)
             QUERY = SQL_SELECT % (api_type, advertiser, pattern, filter_id, now_date)
             data = self.crushercache.select_dataframe(QUERY)
 
