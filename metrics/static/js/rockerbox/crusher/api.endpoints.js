@@ -258,8 +258,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
     if (data.has_filter) URL += "&filter_id=" + data.action_id
 
     var process = function(dd) {
-      data.domains = dd.domains
-
+      data.domains = dd.domains || dd.response
       deferred_cb(null, cb.bind(false, dd))
     }
 

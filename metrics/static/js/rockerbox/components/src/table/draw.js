@@ -76,7 +76,7 @@ function draw() {
     .html(function(x, i) {
       var row_data = d3.select(this.parentElement).data()[0];
       var column_value = row_data[x.key];
-
+      
       if(typeof x.href !== typeof undefined && x.href == true) {
 
         var text = (row_data[x.key].length > 100) ? column_value.slice(0,100) : column_value;
@@ -87,7 +87,25 @@ function draw() {
       }
 
       return column_value;
-    });
+    })
+    .each(function(x) {
+      var row_data = d3.select(this.parentElement).data()[0];
+      var column_value = row_data[x.key];
+
+      if (x.type == "rank") {
+
+        d3.select(this).html("")
+        var range = d3.range(1,column_value).map(function(x){return {pos: x} })
+        d3_splat(d3.select(this),".ticks","div",range,function(x){return x.pos})
+          .classed("ticks",true)
+          .style("width","3px")
+          .style("height","10px")
+          .style("background-color","steelblue")
+          .style("margin-right","2px")
+          .style("display","inline-block")
+
+      }
+    })
 
   if (this._pagination) {
 

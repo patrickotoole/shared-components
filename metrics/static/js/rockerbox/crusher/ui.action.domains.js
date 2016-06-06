@@ -128,19 +128,36 @@ RB.crusher.ui.action = (function(action) {
     var table_body = domainData.sort(function(x, y) {
       return y.num_users - x.num_users;
     })
-    table_body.map(function(x, i) {
-      x.domain = x.domain;
-      x.key = i + 1;
-      x.category = x.parent_category_name;
-      x.uniques = x.num_users;
-      return x;
-    });
-    // debugger;
+
+
+    table_body = table_body.map(function(x){
+        x.rank = x.Importance || x.rank || x.Importance || Math.sqrt(x.num_users); 
+        return x
+      })
+      .map(function(x, i) {
+        x.domain = x.domain;
+        x.key = i + 1;
+        x.rank = x.rank || x.key;
+        x.category = x.parent_category_name;
+        x.uniques = x.num_users;
+        return x;
+      })
+      .sort(function(p,c){return c.rank - p.rank})
+
+    var scale = d3.scale.linear()
+      .domain([d3.min(table_body,function(x){return x.rank}),d3.max(table_body,function(x){return x.rank}) ])
+      .range([1,10])
+
+    table_body.map(function(x){
+      x.key = scale(x.rank)
+    })
+
     var table_data = {
       header: [
         {
           key: 'key',
-          title: 'Rank'
+          title: 'Importance',
+          type: "rank"
         },
         {
           key: 'domain',
@@ -149,10 +166,6 @@ RB.crusher.ui.action = (function(action) {
         {
           key: 'category',
           title: 'Category'
-        },
-        {
-          key: 'uniques',
-          title: 'Uniques'
         }
       ],
       body: []
@@ -161,7 +174,7 @@ RB.crusher.ui.action = (function(action) {
     table_data.body = table_body;
 
     var table = components.table(domain_table)
-      .pagination(10)
+      .pagination(15)
       .data(table_data)
       .draw()
   }
