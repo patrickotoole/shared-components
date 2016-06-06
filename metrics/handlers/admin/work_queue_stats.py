@@ -72,6 +72,7 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler):
         requested_job = []
         import ipdb; ipdb.set_trace()
         for job in in_queue:
+            import ipdb; ipdb.set_trace()
             if job:
                 if(job[len(job)-1] == job_id):
                      requested_job = job
