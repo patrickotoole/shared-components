@@ -108,11 +108,9 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
         domain_set = domains_df['domain']
 
         QUERY = """
-            SELECT p.domain, max(p.num_users) as num_users, p.idf, p.category_name, c.parent_category_name
-            FROM pop_domain_with_category p          
-            JOIN category c using (category_name)
-            WHERE domain in (%(domains)s)
-            group by domain
+            SELECT domain, total_users as num_users, idf, category_name, parent_category_name 
+            FROM domain_idf
+            WHERE domain in (%(domains)s) and category_name != ""
         """
         domain_set = [self.crushercache.escape_string(i.encode("utf-8")) for i in domain_set ]
         domains = "'" + "','".join(domain_set) + "'"

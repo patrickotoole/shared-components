@@ -3,12 +3,7 @@ import ast
 from collections import Counter
 import logging
 
-POP_QUERY = '''
-SELECT
-    domains,
-    num_imps
-FROM pop_uid_domains
-'''
+POP_QUERY = ''' SELECT domains, num_imps FROM pop_uid_domains '''
 
 def to_domain_count(data):
     c = Counter()
@@ -46,14 +41,14 @@ def transform(df):
     return transformed
 
 def write_to_sql(db,df):
-    from appnexus_reporting.load import DataLoader
+    from lib.appnexus_reporting.load import DataLoader
 
     loader = DataLoader(db)
     key = "domain"
     columns = df.columns
     loader.insert_df(df,"domain_idf",["domain"],columns)
 
-def run(hive,db):
+def run(hive,db,console):
     
     df = extract(hive)
     logging.info("data extracted with %d rows" %len(df))
@@ -65,8 +60,24 @@ def run(hive,db):
     df = transform(df)
     logging.info("aggregated to %d domains" %len(df))
 
+    from appnexus_category import AppnexusCategory
+    ac = AppnexusCategory(console)
+    categories = ac.get_domain_category_name(df.head(100).domain.tolist())
+
+    import time
+    for i,_df in df.groupby(pd.np.arange(len(df))//100):
+        logging.info("getting categories for batch %s" %i)
+        if i:
+            _cats = ac.get_domain_category_name([i for i in _df.domain.tolist() if len(i) < 30 and not i.startswith(".")])
+            categories = pd.concat([categories,_cats])
+            time.sleep(2)
+
+    logging.info("got categories for %d domains" %len(df))   
+   
+    merged = df.merge(categories,on="domain",how="left").fillna("")
+
     logging.info("writing to sql")
-    write_to_sql(db,df)
+    write_to_sql(db,merged)
 
 if __name__ == "__main__":
 
@@ -84,6 +95,7 @@ if __name__ == "__main__":
 
 
     hive = lnk.dbs.hive
+    console = lnk.api.console
     crushercache = lnk.dbs.crushercache
 
-    run(hive,crushercache)
+    run(hive,crushercache,console)

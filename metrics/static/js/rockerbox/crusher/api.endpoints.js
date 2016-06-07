@@ -254,7 +254,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
   endpoints.cached_visitor_domains_only = api.helpers.genericQueuedAPIWithData(function(data, cb, deferred_cb) {
     if (!!data.domains) deferred_cb(null, cb.bind(false, data))
 
-    var URL = "/crusher/v1/visitor/domains/cache?format=json&url_pattern=" + data['url_pattern'][0]
+    var URL = "/crusher/v1/visitor/domainsss/cache?format=json&url_pattern=" + data['url_pattern'][0]
     if (data.has_filter) URL += "&filter_id=" + data.action_id
 
     var process = function(dd) {
