@@ -30,11 +30,9 @@ class ActionDashboardHandler(VisitorTransformCacheHandler):
 
     def get_idf(self,db,domain_set):
         QUERY = """
-            SELECT p.domain, max(p.num_users) as num_users, p.idf, p.category_name, c.parent_category_name 
-            FROM reporting.pop_domain_with_category p 
-            JOIN category c using (category_name) 
-            WHERE domain in (%(domains)s)
-            group by domain
+            SELECT domain, total_users as num_users, idf, category_name, parent_category_name 
+            FROM domain_idf
+            WHERE domain in (%(domains)s)  and category_name != ""
         """
 
         domain_set = [i.encode("utf-8") for i in domain_set]
@@ -72,7 +70,7 @@ class ActionDashboardHandler(VisitorTransformCacheHandler):
         if len(results) == 0 and not filter_date:
             now_date = self.getRecentDate(url_pattern, advertiser)
             results = self.queryCache(advertiser, url_pattern, number, now_date)        
-        categories = self.get_idf(self.db, list(set(results.domain)))
+        categories = self.get_idf(self.crushercache, list(set(results.domain)))
         joined = results.merge(categories,on="domain")
         results = joined.fillna(0)
         return results

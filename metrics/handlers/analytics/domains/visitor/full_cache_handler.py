@@ -47,17 +47,15 @@ class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler,
      
     def get_idf(self,domain_set):
         QUERY = """
-            SELECT p.domain, max(p.num_users) as num_users, p.idf, p.category_name, c.parent_category_name 
-            FROM reporting.pop_domain_with_category p 
-            JOIN category c using (category_name) 
-            WHERE domain in (%(domains)s)
-            group by domain
+            SELECT domain, total_users as num_users, idf, category_name, parent_category_name 
+            FROM domain_idf
+            WHERE domain in (%(domains)s) and category_name != ""
         """
         escape = self.db.escape_string  
         domain_set = [escape(i) for i in domain_set][:10000]
         domains = domains = "'" + "','".join(domain_set) + "'"
 
-        return self.db.select_dataframe(QUERY % {"domains":domains})
+        return self.crushercache.select_dataframe(QUERY % {"domains":domains})
 
 
     def queryCache(self, advertiser, pattern, top_count, filter_date=False):
