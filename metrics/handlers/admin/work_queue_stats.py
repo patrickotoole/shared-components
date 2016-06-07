@@ -23,6 +23,19 @@ def parse(x, zk):
         logging.info("Error parsing pickle job")
         return False
 
+
+def parse_get_id(x, zk, job_id):
+    try:
+        values = pickle.loads(zk.get("/python_queue/" + x)[0])
+        job_id = hashlib.md5(zk.get("/python_queue/" + x)[0]).hexdigest()
+        if job_id == job_id:
+            #logging.info(values)
+            rvals = values[1]
+            rvals.append(job_id)
+            return rvals
+    except:
+        logging.info("Error parsing pickle job")
+
 class WorkQueueStatsHandler(tornado.web.RequestHandler):
 
     def initialize(self, zookeeper=None, *args, **kwargs):
@@ -68,8 +81,7 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler):
     def get_id(self, job_id):
         
         path_queue = [c for c in self.zookeeper.get_children("/python_queue") ]
-        in_queue = [parse(path, self.zookeeper) for path in path_queue]
-        requested_job = []
+        requested_job = [parse_get_id(path, self.zookeeper, job_id) for path in path_queue]
         import ipdb; ipdb.set_trace()
         for job in in_queue:
             import ipdb; ipdb.set_trace()
@@ -109,6 +121,7 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self, action=""):
         print action
+        import ipdb; ipdb.set_trace()
         if action=="":
             self.get_data()
         elif "summary" in action:
