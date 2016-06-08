@@ -81,7 +81,7 @@ class ActionDashboardHandler(VisitorTransformCacheHandler):
             domains_udf = self.crushercache.select_dataframe(CHECK_UDF.format(advertiser))
             if len(domains_udf) > 0:
                 self.first_step("domains", advertiser, url_pattern, action_id, filter_date)
-            if action_id:
+            elif action_id:
                 seg_data = self.get_one_filter_id(url_pattern, advertiser, action_id)
                 self.write(seg_data)
                 self.finish()
