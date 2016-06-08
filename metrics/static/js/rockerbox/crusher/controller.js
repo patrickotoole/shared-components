@@ -369,7 +369,7 @@ RB.crusher.controller = (function(controller) {
       action.filter = function(x) {return x.featured }
       action.selection = ["actions"]
       action.subscriptions = ["visitor_domains_time_minute"]
-      action.items = ["user_activity","offsite_hourly","three","bar","table"]
+      action.items = ["user_activity","offsite_hourly","three","bar","table_hist"]
       action.click = function(x,self) {
 
         if (self._categories[x.label]) {
@@ -393,6 +393,9 @@ RB.crusher.controller = (function(controller) {
         var check_time = self._timing ?
           function(y) {return self._timing == ((y.hour*60 + y.minute)/60) } :
           function() {return true}
+
+        self._has_time = !!self._timing
+        self._has_category = !!Object.keys(cats).length
 
         self._table_filter = function(y) {
           return check_categories(y) && check_time(y)

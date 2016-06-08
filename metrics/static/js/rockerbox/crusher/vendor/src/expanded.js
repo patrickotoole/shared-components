@@ -16,6 +16,8 @@ import render_onsite from './expanded/render/onsite'
 import render_bar from './expanded/render/bar'
 import render_table from './expanded/render/table'
 import render_hist from './expanded/render/hist'
+import render_table_hist from './expanded/render/table_hist'
+
 
 
 
@@ -112,6 +114,8 @@ Expanded.prototype = {
   render_bar: render_bar,
   render_hist: render_hist,
   render_table: render_table,
+  render_table_hist: render_table_hist,
+
   render_user_activity: function(target) {
 
     var data = {

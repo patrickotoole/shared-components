@@ -111,8 +111,12 @@ export default function histogram(target,title,frequency_func,times_func) {
           function() {return true};
 
         var check_time = self._timing ? 
-          function(y) {debugger; return self._timing == ((y.hour*60 + y.minute)/60) } :
-          function(){return true}
+          function(y) {return self._timing == ((y.hour*60 + y.minute)/60) } :
+          function() {return true}
+
+        self._has_time = !!self._timing
+        self._has_category = !!Object.keys(cats).length
+
 
         self._table_filter = function(y) { return check_categories(y) && check_time(y) } 
         self.draw()
