@@ -15,6 +15,20 @@ GET_UDFS = "select udf from user_defined_functions where advertiser = '{}'"
 
 current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+def put2(self, value, priority):
+    """Put an item into the queue.
+
+        :param value: Byte string to put into the queue.
+        :param priority:
+        An optional priority as an integer with at most 3 digits.
+        Lower values signify higher priority.
+    """
+    self._check_put_arguments(value, priority)
+    self._ensure_paths()
+    path = '{path}/{prefix}{priority:03d}-'.format(
+    path=self.path, prefix=self.prefix, priority=priority)
+    return self.client.create(path, value, sequence=True)
+
 class UDFCache:
     def __init__(self, connectors):
         self.connectors = connectors
@@ -30,7 +44,8 @@ class UDFCache:
                 runner.runner,
                 [advertiser,segment, udf, base_url,  _cache_time+ "|"+"udf_{}_cache".format(udf) , filter_id]
                 ))
-        work_queue.SingleQueue(self.connectors['zk'],"python_queue").put(work,1)
+        work_queue.SingleQueue.put = put2
+        test = work_queue.SingleQueue(self.connectors['zk'],"python_queue").put(work,1)
         logging.info("added to UDF work queue %s for %s" %(segment,advertiser)) 
 
 

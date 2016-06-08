@@ -15,7 +15,7 @@ def parse(x, zk):
     try:
         values = pickle.loads(zk.get("/python_queue/" + x)[0])
         job_id = hashlib.md5(zk.get("/python_queue/" + x)[0]).hexdigest()
-        #logging.info(values)
+        logging.info(values)
         rvals = values[1]
         rvals.append(job_id)
         return rvals
@@ -23,23 +23,30 @@ def parse(x, zk):
         logging.info("Error parsing pickle job")
         return False
 
-
-def parse_get_id(x, zk, job_id):
+def parse_get_id(x, zk, needed_job_id):
     try:
         values = pickle.loads(zk.get("/python_queue/" + x)[0])
-        job_id = hashlib.md5(zk.get("/python_queue/" + x)[0]).hexdigest()
-        if job_id == job_id:
-            #logging.info(values)
+        job_id= hashlib.md5(zk.get("/python_queue/" + x)[0]).hexdigest()
+        logging.info(values)
+        if values and str(needed_job_id) == job_id:
+            logging.info(values)
             rvals = values[1]
             rvals.append(job_id)
             return rvals
+        else:
+            return False
     except:
         logging.info("Error parsing pickle job")
+
+def parse_hash(x, zk):
+        job_id= hashlib.md5(zk.get("/python_queue/" + x)[0]).hexdigest()
+        return job_id
 
 class WorkQueueStatsHandler(tornado.web.RequestHandler):
 
     def initialize(self, zookeeper=None, *args, **kwargs):
         self.zookeeper = zookeeper
+        self.job = 0
 
     def get_summary(self):
         import datetime
@@ -79,18 +86,13 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler):
             self.finish()
 
     def get_id(self, job_id):
-        
         path_queue = [c for c in self.zookeeper.get_children("/python_queue") ]
-        requested_job = [parse_get_id(path, self.zookeeper, job_id) for path in path_queue]
-        import ipdb; ipdb.set_trace()
+        in_queue = [parse_get_id(path, self.zookeeper, job_id) for path in path_queue]
         for job in in_queue:
-            import ipdb; ipdb.set_trace()
             if job:
-                if(job[len(job)-1] == job_id):
-                     requested_job = job
-        import ipdb; ipdb.set_trace()
-
-        self.write(ujson.dumps({}))
+                needed=job
+        return_dict = {"seconds_in_queue":(datetime.datetime.now()-datetime.datetime.strptime(needed[4].split('|')[0], '%Y-%m-%d %H:%M:%S')).seconds, "job":needed}
+        self.write(ujson.dumps(return_dict))
         self.finish()
 
     def get_num(self):
@@ -121,7 +123,6 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self, action=""):
         print action
-        import ipdb; ipdb.set_trace()
         if action=="":
             self.get_data()
         elif "summary" in action:
