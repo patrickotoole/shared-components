@@ -30,6 +30,7 @@ class UDFRunner(BaseRunner):
     def make_request(self,crusher, pattern, func_name):
         url = URL.format(func_name, pattern, self.action_id)
         resp = crusher.get(url, timeout=300)
+        resp.raise_for_status()
         try:
             return resp.json
         except:
@@ -38,6 +39,7 @@ class UDFRunner(BaseRunner):
     def make_request_v2(self,crusher, pattern, func_name):
         url = URL2.format(func_name, pattern, self.action_id)
         resp = crusher.get(url, timeout=300)
+        resp.raise_for_status()
         try:
             return resp.json
         except:
