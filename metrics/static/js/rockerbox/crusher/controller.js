@@ -409,6 +409,7 @@ RB.crusher.controller = (function(controller) {
 
         self.render_table(d3.select(self._wrapper.selectAll(".vendor-domains-table-column").node().parentNode))
         self.render_user_activity(self._wrapper)
+        self.draw()
       }
 
 

@@ -60,12 +60,13 @@
 
       if (data.url_only) {
 
-        var dataset = (!!s._has_time  && !!s._has_category) ? 
+        var dataset = !(!!s._has_time  && !!s._has_category) ? 
           data.url_only : s._has_time ?
           data.hourly_urls : s._has_category ?
           data.category_urls : data.full_urls
 
-        var data = dataset.map(function(x,i){return x})
+
+        var d = dataset.map(function(x,i){return x})
           .filter(function(x) {
             var l = document.createElement("a");
             if(x.url.slice(0, 7) !== 'http://' && x.url.slice(0, 7) !== 'https:/') {
@@ -79,12 +80,15 @@
 
           })
           .filter(s._table_filter)
-          .slice(0,100)
 
+
+        var dd = d3.nest()
+          .key(function(x){ return x.domain})
+          .entries(d)
 
         target.html("")
-        components.table(target)
-          .data({"body":data,"header":header})
+        components.histogram_table(target)
+          .data(dd)
           .draw()
 
       }
@@ -260,6 +264,8 @@
     _svg.on("click",function(){
         d3.event.target
         self._timing = undefined;
+        self._has_time = !!self._timing
+
         var cats = self._categories;
 
         var check_categories = (Object.keys(cats).length) ? 
@@ -1068,8 +1074,8 @@
           uniques: 0
         },
         offsite: {
-          views: this._data[0].domains_full ? d3.sum(this._data[0].domains_full.filter(this._table_filter),function(x){return x.count}) : 0,
-          uniques: this._data[0].domains_full ? d3.sum(this._data[0].domains_full.filter(this._table_filter),function(x){return x.uniques}) : 0
+          views: this._data[0].full_urls ? d3.sum(this._data[0].domains_full.filter(this._table_filter),function(x){return x.count}) : 0,
+          uniques: this._data[0].full_urls ? d3.sum(this._data[0].domains_full.filter(this._table_filter),function(x){return x.uniques}) : 0
         }
       }
       var wrap = d3_updateable(target,".activity","div")

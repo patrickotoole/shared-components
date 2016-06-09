@@ -235,7 +235,6 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
         .entries(data.full_urls)
         .map(function(x){ return x.values }) 
 
-      debugger
 
       deferred_cb(null, cb.bind(false, dd))
     }

@@ -54,12 +54,13 @@ export default function(target) {
 
     if (data.url_only) {
 
-      var dataset = (!!s._has_time  && !!s._has_category) ? 
+      var dataset = !(!!s._has_time  && !!s._has_category) ? 
         data.url_only : s._has_time ?
         data.hourly_urls : s._has_category ?
         data.category_urls : data.full_urls
 
-      var data = dataset.map(function(x,i){return x})
+
+      var d = dataset.map(function(x,i){return x})
         .filter(function(x) {
           var l = document.createElement("a");
           if(x.url.slice(0, 7) !== 'http://' && x.url.slice(0, 7) !== 'https:/') {
@@ -73,12 +74,15 @@ export default function(target) {
 
         })
         .filter(s._table_filter)
-        .slice(0,100)
 
+
+      var dd = d3.nest()
+        .key(function(x){ return x.domain})
+        .entries(d)
 
       target.html("")
-      components.table(target)
-        .data({"body":data,"header":header})
+      components.histogram_table(target)
+        .data(dd)
         .draw()
 
     }

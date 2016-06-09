@@ -1014,183 +1014,220 @@
 	  return new Histogram(target);
 	}
 
-	function head() {
-	  this._headers
-
-	  var thead = d3_updateable(this._base, '.table_head', 'thead')
-	    .classed('table_head', true);
-
-	  var row = d3_updateable(thead, '.table_head_row', 'tr')
-	    .classed('table_head_row', true);
-
-	  var self = this;
-
-	  var th = d3_splat(row, '.table_head_column', 'th', this._headers, function(x){ return x.key })
-	    .classed('table_head_column', true)
-	    .text(function(x) { return x.title; })
-	    .style('cursor', 'pointer')
-	    .on('click', function(e) {
-
-	      self._pagination_current = 1
-
-	      this._ascending = !this._ascending
-
-	      var func = this._ascending ? d3.ascending : d3.descending
-	      var data = self._dataFunc()
-
-	      data.body = data.body.sort(function(p,c){ return func(p[e.key],c[e.key]) })
-
-	      self.draw()
-
-	    })
-	}
-
-	function get_page() {
-	  console.log(this._pagination)
-
-	}
-
 	function draw$4() {
 
-	  var data = this._dataFunc();
-	  this._headers = data.header
+	  var data = this._data || this._target.data()
 
-	  head.bind(this)()
+	  data = data.sort(function(p,c){
+	    return c.values.length - p.values.length
+	  }).slice(0,1000)
 
-	  /*
-	    Draw body
-	  */
-	  var table_body_wrapper = d3_updateable(this._base, '.table_body', 'tbody')
-	    .classed('table_body', true);
+	  var wrap = d3_updateable(this._target,".histogram-table","div",data)
+	    .classed("histogram-table",true)
+	    .style("position","relative")
 
-	  this._body = data.body
-	  get_page.bind(this)()
-	  // Loop through rows
-	  if(this._pagination) {
-	    var data_slice_start = (this._pagination_current * this._pagination) - this._pagination;
-	    var data_slice_end = (this._pagination_current * this._pagination);
-	    var table_data = data['body'].slice(data_slice_start, data_slice_end);
-	  } else {
-	    var table_data = data['body'];
-	  }
+	  var header = d3_updateable(wrap,".hist-headers","div")
+	    .classed("hist-headers",true)
+	    .style("text-transform"," uppercase")
+	    .style("font-weight"," 600")
+	    .style("margin-bottom"," 15px")
+	    .style("color"," #444")
 
-	  // d3.selectAll('.table_body_row').remove();
+	  d3_updateable(header,".domain","div")
+	    .classed("domain",true)
+	    .style("width","150px")
+	    .style("display","inline-block")
+	    .text("Domain")
 
-	  var table_body_rows = d3_splat(table_body_wrapper, '.table_body_row', 'tr', table_data, function(x,i){ return i })
-	    .classed('table_body_row', true)
-	    .datum(function(x){
-	      return x;
-	    });
+	  d3_updateable(header,".pages","div")
+	    .classed("pages",true)
+	    .style("display","inline-block")
 
-	  // Loop through columns
-	  var table_body_columns = d3_splat(table_body_rows, '.table_body_column', 'td', data['header'], function(x){ return x.key })
-	    .classed('table_body_column', true)
-	    .html(function(x, i) {
-	      var row_data = d3.select(this.parentElement).data()[0];
-	      var column_value = row_data[x.key];
+	    .text("Pages")
+
+	  var body = d3_updateable(wrap,".hist-body","div")
+	    .classed("hist-body",true)
+
+	  var row = d3_splat(body,".hist-row","div",function(x){return x },function(x){return x.key})
+	    .classed("hist-row",true)
+
+	    .each(function(x){
+	      x.range = d3.scale.sqrt()
+	       .range([.2,1])
+	       .domain(
+	         x.values.reduce(function(p,c) {
+	           p[0] = p[0] > c.count ? c.count : p[0]
+	           p[1] = p[1] < c.count ? c.count : p[1]
+
+	           return p
+	         }, [100000,0])
+	       )
+	    })
+
+	  var label = d3_updateable(row,".hist-label","div")
+	    .classed("hist-label",true)
+	    .style("width","150px")
+	    .style("display","inline-block")
+	    .style("line-height","15px")
+	    .style("vertical-align","top")
+	    .text(function(x){return x.key})
+
+	  var item_wrapper = d3_updateable(row,".hist-item-wrapper","div")
+	    .classed("hist-item-wrapper",true)
+	    .style("width","450px")
+	    .style("display","inline-block")
+	    .style("max-height","45px")
+
+	 
+	  var rhs = d3_updateable(d3.select("body"),".rhs","div")
+	    .classed("rhs site-details col-md-3",true)
+
+
+	  var values = d3_splat(item_wrapper,".hist-item","div",function(x) {return x.values }, function(x){return x.url})
+	    .classed("hist-item",true)
+	    .style("opacity",function(x){
+	      return this.parentNode.__data__.range(x.count)
+	    })
+	    .on("mouseover",function(x){
+
+	      var parent_data = this.parentNode.__data__
+
+	      var site_visits = d3.sum(this.parentNode.__data__.values,function(x){return x.count})
+	      var unique_sites = this.parentNode.__data__.values.length
+
+	      d3_updateable(rhs,"h3","h3")
+	        .text("Site Details")
+	        .style("margin-bottom","10px")
+
+	      d3_updateable(rhs,".domain","div")
+	        .classed("domain item",true)
+	        .html("<span>Domain </span><a href='http://" + x.domain + "'>" + x.domain + "</a>")
+
+	      d3_updateable(rhs,".category","div")
+	        .classed("category item",true)
+	        .html("<span>Category </span>" + x.parent_category_name)
+
+	      d3_updateable(rhs,".site-count","div")
+	        .classed("site-count item",true)
+	        .html("<span>Site Visits </span>" + site_visits)
+
+	      d3_updateable(rhs,".site-unique-pages","div")
+	        .classed("site-unique-pages item",true)
+	        .html("<span>Unique Pages </span>" + unique_sites)
+
+
+
+
+
+	      d3_updateable(rhs,"h3.details","h3")
+	        .classed("details",true)
+	        .text("Page Details")
+	        .style("margin-top","50px")
+	        .style("margin-bottom","10px")
+
+	      d3_updateable(rhs,".url","div")
+	        .classed("url item",true)
+	        .html("<span>Page URL </span><a href='" + x.url + "'>" + x.url + "</a>")
 	      
-	      if(typeof x.href !== typeof undefined && x.href == true) {
+	      d3_updateable(rhs,".count","div")
+	        .classed("count item",true)
+	        .html("<span>Page Visits </span>" + x.count)
 
-	        var text = (row_data[x.key].length > 100) ? column_value.slice(0,100) : column_value;
-	        if (row_data.title) {
-	          text = row_data.title;
-	        }
-	        column_value = '<a href="' + column_value + '" target="_blank">' + text + '</a>';
-	      }
-
-	      return column_value;
+	      
 	    })
-	    .each(function(x) {
-	      var row_data = d3.select(this.parentElement).data()[0];
-	      var column_value = row_data[x.key];
+	    //.call(
+	    //  d3.helper.tooltip()
+	    //    .text(function(d, i){return d.url;})
+	    //);
 
-	      if (x.type == "rank") {
+	  
+	  
 
-	        d3.select(this).html("")
-	        var range = d3.range(1,column_value).map(function(x){return {pos: x} })
-	        d3_splat(d3.select(this),".ticks","div",range,function(x){return x.pos})
-	          .classed("ticks",true)
-	          .style("width","3px")
-	          .style("height","10px")
-	          .style("background-color","steelblue")
-	          .style("margin-right","2px")
-	          .style("display","inline-block")
-
-	      }
-	    })
-
-	  if (this._pagination) {
-
-	    var pagination_current = this._pagination_current;
-	    var self = this
-
-	    var max = Math.ceil(self._dataFunc().body.length / self._pagination)
-
-	    var wrapper = d3_updateable(this._target, ".table_page_wrapper","div")
-	      .classed("table_page_wrapper",true)
-	      .style("text-align","center")
-
-	    var left = d3_updateable(wrapper, '.table_pagination_left', 'div',false,function(x,i){return i})
-	      .classed('table_pagination_left no-select', true)
-	      .style('display', "inline-block")
-
-	    d3_updateable(left, ".pagination_button_first","div")
-	      .classed("pagination_button_first pagination_button",true)
-	      .attr("style", "display: inline-block; padding: 0 20px; min-width: 50px; line-height: 50px; text-align: center; cursor: pointer; color: #777;")
-	      .on("click",function(x){
-	        self.changePage(1)
-	        self.draw()
-	      })
-	      .text("<<")
-
-	    d3_updateable(left, ".pagination_button_prev","div")
-	      .classed("pagination_button_prev pagination_button",true)
-	      .attr("style", "display: inline-block; padding: 0 20px; min-width: 50px; line-height: 50px; text-align: center; cursor: pointer; color: #777;")
-	      .on("click",function(x){
-	        self.changePage(Math.max(1,pagination_current-1))
-	        self.draw()
-	      })
-	      .text("<")
+	  
 
 
-
-
-
-
-
-	    var pagination_wrapper = d3_updateable(wrapper, '.table_pagination', 'div',false,function(x,i){return i})
-	      .classed('table_pagination no-select', true)
-	      .style('display', "inline-block")
-
-	    var right = d3_updateable(wrapper, '.table_pagination_right', 'div',false,function(x,i){return i})
-	      .classed('table_pagination_right no-select', true)
-	      .style('display', "inline-block")
-
-	    d3_updateable(right,".pagination_button_next","div")
-	      .classed("pagination_button_next pagination_button",true)
-	      .attr("style","display: inline-block; padding: 0 20px; min-width: 50px; line-height: 50px; text-align: center; cursor: pointer; color: #777;")
-	      .on("click",function(x){
-	        self.changePage(Math.min(max,pagination_current+1))
-	        self.draw()
-	      })
-	      .text(">")
-
-
-	    d3_updateable(right,".pagination_button_last","div")
-	      .classed("pagination_button_last pagination_button",true)
-	      .attr("style","display: inline-block; padding: 0 20px; min-width: 50px; line-height: 50px; text-align: center; cursor: pointer; color: #777;")
-	      .on("click",function(x){
-	        self.changePage(max)
-	        self.draw()
-	      })
-	      .text(">>")
-
-
-	    this.draw_pagination();
-	  }
-
-	  return this;
+	  return this
 	}
+
+	d3.helper = {};
+
+	d3.helper.tooltip = function(){
+	    var tooltipDiv;
+	    var bodyNode = d3.select('body').node();    
+	    var attrs = [];
+	    var text = "";
+	    var styles = [];
+
+	    function tooltip(selection) {
+
+	        selection.on("mouseover", function(d, i){
+	            var name, value;
+	            // Clean up lost tooltips
+	            d3.select('body').selectAll('div.tooltip').remove();
+	            // Append tooltip
+	            tooltipDiv = d3.select('body').append('div');
+	            for (var i in attrs) {
+	                var name = attrs[i][0];
+	                if (typeof attrs[i][1] === "function") {
+	                    value = attrs[i][1](d, i);
+	                } else value = attrs[i][1];
+	                if (name === "class") value += " tooltip";
+	                tooltipDiv.attr(name, value);
+	            }
+	            for (var i in styles) {
+	                name = styles[i][0];
+	                if (typeof attrs[i][1] === "function") {
+	                    value = styles[i][1](d, i);
+	                } else value = styles[i][1];
+	                tooltipDiv.style(name, value);
+	            }
+	            var absoluteMousePos = d3.mouse(bodyNode);
+	            tooltipDiv.style('left', (absoluteMousePos[0] + 10)+'px')
+	                .style('top', (absoluteMousePos[1] - 15)+'px')
+	                .style('position', 'absolute') 
+	                .style('z-index', 1001);
+	            // Add text using the accessor function
+	            var tooltipText = '';
+	            if (typeof text === "function") tooltipText = text(d, i);
+	            else if (typeof text != "undefined" || typeof text != null) tooltipText = text;
+	            // Crop text arbitrarily
+	            tooltipDiv.style('width', function(d, i){return (tooltipText.length > 80) ? '300px' : null;})
+	                .html(tooltipText);
+	        })
+	        .on('mousemove', function(d, i) {
+	            // Move tooltip
+	            var absoluteMousePos = d3.mouse(bodyNode);
+	            tooltipDiv.style('left', (absoluteMousePos[0] + 10)+'px')
+	                .style('top', (absoluteMousePos[1] - 15)+'px');
+	            var tooltipText = '';
+	            if (typeof text === "string") tooltipText = text;
+	            if (typeof text === "function") tooltipText = text(d, i);
+	            tooltipDiv.html(tooltipText);
+	        })
+	        .on("mouseout", function(d, i){
+	            // Remove tooltip
+	            tooltipDiv.remove();
+	        });
+
+	    }
+
+	    tooltip.attr = function(name, value) {
+	        attrs.push(arguments);
+	        return this;
+	    }
+
+	    tooltip.text = function(value) {
+	        text = value;
+	        return this;
+	    }
+
+	    tooltip.style = function(name, value) {
+	        styles.push(arguments);
+	        return this;
+	    }
+
+	    return tooltip;
+	};
 
 	function base$4(target) {
 	  var table = d3_updateable(target, '.table', 'table')
@@ -1205,8 +1242,6 @@
 	  this._target = target
 	  this._base = this.base(target)
 
-	  this._dataFunc = function(x) { return x }
-	  this._keyFunc = function(x) { return x }
 	  this._pagination;
 	  this._pagination_current = 1;
 	  this._ascending = false
@@ -1216,16 +1251,23 @@
 	  return new HistogramTable(target)
 	}
 
-	function data$5(cb, key) {
-	  this._dataFunc = (typeof(cb) == "function") ? cb : function() {return cb};
-	  this._keyFunc = key ? key : function(x) {return x}
-
+	function headers(headers) {
+	  if (headers == undefined) return this._headers
+	  this._headers = headers
 	  return this;
 	}
+
+	function data$5(data) {
+	  if (data == undefined) return this._data
+	  this._data = data
+	  return this;
+	}
+
 
 	HistogramTable.prototype = {
 	  base: base$4,
 	  draw: draw$4,
+	  headers: headers,
 	  data: data$5
 	}
 
@@ -1272,7 +1314,7 @@
 	  })
 	}
 
-	function head$1() {
+	function head() {
 	  this._headers
 
 	  var thead = d3_updateable(this._base, '.table_head', 'thead')
@@ -1303,7 +1345,7 @@
 	    })
 	}
 
-	function get_page$1() {
+	function get_page() {
 	  console.log(this._pagination)
 
 	}
@@ -1313,7 +1355,7 @@
 	  var data = this._dataFunc();
 	  this._headers = data.header
 
-	  head$1.bind(this)()
+	  head.bind(this)()
 
 	  /*
 	    Draw body
@@ -1322,7 +1364,7 @@
 	    .classed('table_body', true);
 
 	  this._body = data.body
-	  get_page$1.bind(this)()
+	  get_page.bind(this)()
 	  // Loop through rows
 	  if(this._pagination) {
 	    var data_slice_start = (this._pagination_current * this._pagination) - this._pagination;
@@ -1481,11 +1523,11 @@
 	  return this;
 	}
 
-	function changePage$1(value) {
+	function changePage(value) {
 	  this._pagination_current = value;
 	}
 
-	function pagination$1(value) {
+	function pagination(value) {
 	  this._pagination = value;
 
 	  return this;
@@ -1495,9 +1537,9 @@
 	  base: base$5,
 	  draw: draw$5,
 	  data: data$6,
-	  pagination: pagination$1,
+	  pagination: pagination,
 	  draw_pagination: draw_pagination,
-	  changePage: changePage$1
+	  changePage: changePage
 	}
 
 	function draw$6() {

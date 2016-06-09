@@ -65,6 +65,8 @@ export default function histogram(target,title,frequency_func,times_func) {
   _svg.on("click",function(){
       d3.event.target
       self._timing = undefined;
+      self._has_time = !!self._timing
+
       var cats = self._categories;
 
       var check_categories = (Object.keys(cats).length) ? 

@@ -5,8 +5,6 @@ export function HistogramTable(target) {
   this._target = target
   this._base = this.base(target)
 
-  this._dataFunc = function(x) { return x }
-  this._keyFunc = function(x) { return x }
   this._pagination;
   this._pagination_current = 1;
   this._ascending = false
@@ -23,26 +21,23 @@ function sort(value) {
 
 }
 
-function data(cb, key) {
-  this._dataFunc = (typeof(cb) == "function") ? cb : function() {return cb};
-  this._keyFunc = key ? key : function(x) {return x}
-
+function headers(headers) {
+  if (headers == undefined) return this._headers
+  this._headers = headers
   return this;
 }
 
-function changePage(value) {
-  this._pagination_current = value;
-}
-
-function pagination(value) {
-  this._pagination = value;
-
+function data(data) {
+  if (data == undefined) return this._data
+  this._data = data
   return this;
 }
+
 
 HistogramTable.prototype = {
   base: base,
   draw: draw,
+  headers: headers,
   data: data
 }
 
