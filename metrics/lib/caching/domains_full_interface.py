@@ -1,4 +1,5 @@
-import requests, json, logging, pandas, pickle, work_queue
+import requests, json, logging, pandas, pickle
+from lib.zookeeper import CustomQueue
 from link import lnk
 import datetime
 from kazoo.client import KazooClient
@@ -28,9 +29,9 @@ class CacheFullURL():
         _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
         work = pickle.dumps((
                 furc.runner,
-                [advertiser,pattern, base_url, _cache_yesterday, _cache_yesterday+"full_url", filter_id]
+                [advertiser,pattern, base_url, "domains_full", filter_id]
                 ))
-        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,1)
+        CustomQueue.CustomQueue(self.zookeeper,"python_queue").put(work,1)
         logging.info("added to work queue %s for %s" %(pattern,advertiser))
         
 
@@ -70,7 +71,7 @@ if __name__ == "__main__":
         rockerbox_db = lnk.dbs.rockerbox
         adverts = rockerbox_db.select_dataframe("select distinct pixel_source_name from action_with_patterns")
         for ad in adverts.iterrows():
-            query = "select distinct url_pattern from action_with_patterns where pixel_source_name='{}'".format(ad[1]['pixel_source_name'])
+            query = "select distinct action_id, url_pattern from action_with_patterns where pixel_source_name='{}'".format(ad[1]['pixel_source_name'])
             segs = rockerbox_db.select_dataframe(query)
             for seg in segs.iterrows():
                 try:

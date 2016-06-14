@@ -23,8 +23,22 @@ def parse(x, zk):
         logging.info("Error parsing pickle job")
         return False
 
+def parse2(x, zk):
+    try:
+        time = zk.get("/python_queue/" + x)[1][2]
+        values = pickle.loads(zk.get("/python_queue/" + x)[0])
+        job_id = hashlib.md5(zk.get("/python_queue/" + x)[0]).hexdigest()
+        logging.info(values)
+        rvals = values[1]
+        rvals.append(job_id)
+        return {"parameters":rvals, "time":time}
+    except:
+        logging.info("Error parsing pickle job")
+        return False
+
 def parse_get_id(x, zk, needed_job_id):
     try:
+        zk.get(wq)
         values = pickle.loads(zk.get("/python_queue/" + x)[0])
         job_id= hashlib.md5(zk.get("/python_queue/" + x)[0]).hexdigest()
         logging.info(values)
@@ -40,6 +54,7 @@ def parse_get_id(x, zk, needed_job_id):
 
 def parse_hash(x, zk):
         job_id= hashlib.md5(zk.get("/python_queue/" + x)[0]).hexdigest()
+        logging.info(job_id)
         return job_id
 
 class WorkQueueStatsHandler(tornado.web.RequestHandler):
@@ -86,13 +101,17 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler):
             self.finish()
 
     def get_id(self, job_id):
-        path_queue = [c for c in self.zookeeper.get_children("/python_queue") ]
-        in_queue = [parse_get_id(path, self.zookeeper, job_id) for path in path_queue]
-        for job in in_queue:
-            if job:
-                needed=job
-        return_dict = {"seconds_in_queue":(datetime.datetime.now()-datetime.datetime.strptime(needed[4].split('|')[0], '%Y-%m-%d %H:%M:%S')).seconds, "job":needed}
-        self.write(ujson.dumps(return_dict))
+        needed_path = "workqueue/v0616/{}".format(job_id)
+        entry_ids = self.zookeeper.get_children(needed_path)
+        time = []
+        for entry in entry_ids:
+            d1= parse2(entry, self.zookeeper)
+            df=pandas.DataFrame(d1['parameters'])
+            time.append(d1["time"])
+
+        self.write(ujson.dumps(df.to_dict('records')))
+        self.write(ujson.dumps(entry_ids))
+        self.write(ujson.dumps(time))
         self.finish()
 
     def get_num(self):
@@ -106,6 +125,20 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler):
         self.write(ujson.dumps({"number":self.counter}))
         self.finish()
 
+
+    def get_test(self):
+        path_queue = [c for c in self.zookeeper.get_children("/python_queue") ]
+        in_queue = [parse_hash(path, self.zookeeper) for path in path_queue]
+        self.write(ujson.dumps(in_queue))
+        self.finish()
+
+    def set_priority(self, priority):
+        needed_path = "workqueue/v0616/{}".format(job_id)
+        entry_ids = self.zookeeper.get_children(needed_path)
+        values = pickle.loads(zk.get("/python_queue/" + entry_ids[0])[0])
+        cq = CustomQueue.CustomQueue(self.connectors['zk'],"python_queue")
+        cq.put(values,1)
+        cq.delete(entry_ids)
 
     def get_data(self):
         path_queue = [c for c in self.zookeeper.get_children("/python_queue") ]
@@ -129,5 +162,10 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler):
             self.get_summary()
         elif "num" in action:
             self.get_num()
-        else:
+        elif "test" in action:
+            self.get_test()
+        elif "priority" in action:
+            job_id = action.split("/")[1]
+            self.priority(job_id)
+        else: 
             self.get_id(action)

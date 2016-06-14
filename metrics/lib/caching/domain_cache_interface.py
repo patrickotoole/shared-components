@@ -1,5 +1,5 @@
-import requests, json, logging, pandas, pickle, work_queue
-
+import requests, json, logging, pandas, pickle
+from lib.workqueue import CustomQueue
 from link import lnk
 from lib.pandas_sql import s as _sql
 import datetime
@@ -30,9 +30,9 @@ class ActionCache:
         _cache_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         work = pickle.dumps((
                 adc_runner.runner,
-                [advertiser, pattern, segment, base_url,_cache_time + "|"+"domaincache", filter_id]
+                [advertiser, pattern, segment, base_url,"domains", filter_id]
                 ))
-        work_queue.SingleQueue(self.connectors['zk'],"python_queue").put(work,1)
+        CustomQueue(self.connectors['zk'],"python_queue").put(work,1)
         logging.info("added to DB work queue %s for %s" %(segment,advertiser)) 
 
 
