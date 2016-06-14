@@ -32,7 +32,7 @@ class ActionCache:
                 adc_runner.runner,
                 [advertiser, pattern, segment, base_url,"domains", filter_id]
                 ))
-        CustomQueue(self.connectors['zk'],"python_queue").put(work,1)
+        CustomQueue.CustomQueue(self.connectors['zk'],"python_queue").put(work,1)
         logging.info("added to DB work queue %s for %s" %(segment,advertiser)) 
 
 
