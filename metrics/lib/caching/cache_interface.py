@@ -66,7 +66,7 @@ class CacheInterface:
         _cache_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         work = pickle.dumps((
                 adc_runner.runner,
-                [advertiser,segment["url_pattern"][0], base_url , "domains_full_cache", segment['action_id']]
+                [advertiser,segment["url_pattern"][0], False, base_url , "domains_full_cache", segment['action_id']]
                 ))
         CustomQueue.CustomQueue(self.zookeeper,"python_queue").put(work,30)
         logging.info("added to full domain work queue %s for %s" %(segment["url_pattern"][0],advertiser))

@@ -33,6 +33,15 @@ class CustomQueue(SingleQueue):
         new_path = "workqueue/{}/{}/{}".format(sub_location, job_id, str(entry_location.split("/")[2]))
         self.client.create(new_path, "", makepath=True)
 
+    def delete(self, entry):
+        import ipdb; ipdb.set_trace()
+        if type(entry) == list:
+            for entr in entry:
+                current_entry = "/python_queue/{}".format(entr)
+                self.client.delete(current_entry)
+        else:
+            self.client.delete("/python_queue/{}".format(entry))
+
     def get(self):
         """
         Get item data and remove an item from the queue.

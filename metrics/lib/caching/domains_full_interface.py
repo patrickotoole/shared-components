@@ -21,7 +21,7 @@ class CacheFullURL():
     def run_local(self, advertiser, pattern, base_url, filter_id):
         #import full_url_cache as cc
         import domains_full_runner as cc
-        cc.runner(advertiser,pattern,base_url,filter_id=filter_id, connectors=self.connectors)
+        cc.runner(advertiser,pattern,False, base_url,filter_id=filter_id, connectors=self.connectors)
 
     def run_on_work_queue(self,advertiser, pattern, base_url, filter_id):
         import lib.caching.domains_full_runner as furc
@@ -29,7 +29,7 @@ class CacheFullURL():
         _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
         work = pickle.dumps((
                 furc.runner,
-                [advertiser,pattern, base_url, "domains_full", filter_id]
+                [advertiser,pattern, False, base_url, "domains_full", filter_id]
                 ))
         CustomQueue.CustomQueue(self.zookeeper,"python_queue").put(work,1)
         logging.info("added to work queue %s for %s" %(pattern,advertiser))

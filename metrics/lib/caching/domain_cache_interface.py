@@ -1,5 +1,5 @@
 import requests, json, logging, pandas, pickle
-from lib.workqueue import CustomQueue
+from lib.zookeeper import CustomQueue
 from link import lnk
 from lib.pandas_sql import s as _sql
 import datetime

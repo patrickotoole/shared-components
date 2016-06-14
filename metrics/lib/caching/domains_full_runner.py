@@ -65,7 +65,7 @@ class FullDomainRunner(BaseRunner):
             featured_value=0
         return featured_value
 
-def runner(advertiser_name, pattern, base_url, indentifiers="test", filter_id=False, job_id=False, connectors=False):
+def runner(advertiser_name, pattern, False, base_url, indentifiers="test", filter_id=False, job_id=False, connectors=False):
     connectors = connectors or FullDomainRunner.get_connectors()
     if not job_id:
         uuid_num = "local_"+str(uuid.uuid4())
