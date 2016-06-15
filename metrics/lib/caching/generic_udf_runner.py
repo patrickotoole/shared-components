@@ -22,12 +22,21 @@ REPLACE="replace into generic_function_cache (advertiser, url_pattern, udf, zipp
 INSERT2 ="insert into generic_function_cache_v2 (advertiser, url_pattern, udf, zipped, date) values (%s, %s, %s, %s, %s)"
 REPLACE2="replace into generic_function_cache_v2 (advertiser, url_pattern, udf, zipped, date) values (%s, %s, %s, %s, %s)"
 
+QUERY = "select parameters from user_defined_functions where advertiser = '{}' and udf = '{}'"
+QUERY2 = "select parameters from user_defined_functions where advertiser is NULL and udf = '{}'"
+
 class UDFRunner(BaseRunner):
 
     def __init__(self, connectors):
         self.connectors =connectors
 
-    def make_request(self,crusher, pattern, func_name):
+    def get_parameters(self, db, advertiser, udf):
+        params = db.select_dataframe(QUERY.format(advertiser, udf))
+        if len(params)==0:
+            params = db.select_dataframe(QUERY2.format(advertiser, udf))
+        return params5
+
+    def make_request(self,crusher, pattern, func_name, parameters):
         url = URL.format(func_name, pattern, self.action_id)
         resp = crusher.get(url, timeout=300)
         resp.raise_for_status()
@@ -36,7 +45,7 @@ class UDFRunner(BaseRunner):
         except:
             return resp.text
 
-    def make_request_v2(self,crusher, pattern, func_name):
+    def make_request_v2(self,crusher, pattern, func_name, parameters):
         url = URL2.format(func_name, pattern, self.action_id)
         resp = crusher.get(url, timeout=300)
         resp.raise_for_status()
@@ -91,8 +100,10 @@ def runner(advertiser,pattern, func_name, base_url, indentifiers="test", filter_
     db = connectors['crushercache']
     zk = connectors['zk']
     
-    data = UR.make_request(crusher, pattern, func_name)
-    data2 = UR.make_request_v2(crusher, pattern, func_name)
+    parameters = UR.get_parameters(db, advertiser, func_name)
+
+    data = UR.make_request(crusher, pattern, func_name, parameters)
+    data2 = UR.make_request_v2(crusher, pattern, func_name, parameters)
 
     compress_data = UR.compress(ujson.dumps(data))
     compress_data2 = UR.compress(ujson.dumps(data2))
