@@ -39,16 +39,17 @@ class UDFRunner(BaseRunner):
     def make_request(self,crusher, pattern, func_name, params):
         new_URL = False
         if len(params)>0:
+            new_URL = URL
             try:
                 parameters_dict = ujson.loads(params['parameters'][0])
-                for key in parameters_dict.keys():
-                    new_URL = URL+"&"+str(key)+"="+str(parameters_dict[key])
+                for key,value in parameters_dict.items():
+                    base = "%s&%s=%s"
+                    new_URL = base % (new_URL, str(key), str(value))
             except:
                 logging.info("could not read parameters")
-        if new_URL:
-            url = new_URL.format(func_name, pattern, self.action_id)
-        else:
-            url = URL.format(func_name, pattern, self.action_id)
+
+        _url = new_URL or URL
+        url = _url.format(func_name, pattern, self.action_id)
         resp = crusher.get(url, timeout=300)
         resp.raise_for_status()
         try:
