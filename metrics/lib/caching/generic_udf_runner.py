@@ -33,11 +33,22 @@ class UDFRunner(BaseRunner):
     def get_parameters(self, db, advertiser, udf):
         params = db.select_dataframe(QUERY.format(advertiser, udf))
         if len(params)==0:
-            params = db.select_dataframe(QUERY2.format(advertiser, udf))
-        return params5
+            params = db.select_dataframe(QUERY2.format(udf))
+        return params
 
-    def make_request(self,crusher, pattern, func_name, parameters):
-        url = URL.format(func_name, pattern, self.action_id)
+    def make_request(self,crusher, pattern, func_name, params):
+        new_URL = False
+        if len(params)>0:
+            try:
+                parameters_dict = ujson.loads(params['parameters'][0])
+                for key in parameters_dict.keys():
+                    new_URL = URL+"&"+str(key)+"="+str(parameters_dict[key])
+            except:
+                logging.info("could not read parameters")
+        if new_URL:
+            url = new_URL.format(func_name, pattern, self.action_id)
+        else:
+            url = URL.format(func_name, pattern, self.action_id)
         resp = crusher.get(url, timeout=300)
         resp.raise_for_status()
         try:
@@ -102,15 +113,16 @@ def runner(advertiser,pattern, func_name, base_url, indentifiers="test", filter_
     
     parameters = UR.get_parameters(db, advertiser, func_name)
 
-    data = UR.make_request(crusher, pattern, func_name, parameters)
-    data2 = UR.make_request_v2(crusher, pattern, func_name, parameters)
-
-    compress_data = UR.compress(ujson.dumps(data))
-    compress_data2 = UR.compress(ujson.dumps(data2))
     try:
+        data = UR.make_request(crusher, pattern, func_name, parameters)
+        #data2 = UR.make_request_v2(crusher, pattern, func_name, parameters)
+
+        compress_data = UR.compress(ujson.dumps(data))
+        #compress_data2 = UR.compress(ujson.dumps(data2))
         UR.insert(advertiser, pattern, func_name, compress_data)
-        UR.insert2(advertiser, pattern, func_name, compress_data2)
+        #UR.insert2(advertiser, pattern, func_name, compress_data2)
         logging.info("Data inserted")
         UR.accounting_entry_end(advertiser, pattern, func_name, uuid_num, UR.action_id)
-    except:
+    except Exception as e:
+        logging.info(e)
         logging.info("Data not inserted")
