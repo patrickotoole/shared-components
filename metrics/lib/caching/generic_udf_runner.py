@@ -43,8 +43,8 @@ class UDFRunner(BaseRunner):
             try:
                 parameters_dict = ujson.loads(params['parameters'][0])
                 for key,value in parameters_dict.items():
-                    base = "%s&%s=%s"
-                    new_URL = base % (new_URL, str(key), str(value))
+                    stem = "&%s=%s"
+                    new_URL += stem % (str(key), str(value))
             except:
                 logging.info("could not read parameters")
 
