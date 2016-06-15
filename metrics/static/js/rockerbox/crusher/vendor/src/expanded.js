@@ -16,6 +16,8 @@ import render_onsite from './expanded/render/onsite'
 import render_bar from './expanded/render/bar'
 import render_table from './expanded/render/table'
 import render_hist from './expanded/render/hist'
+import render_table_hist from './expanded/render/table_hist'
+
 
 
 
@@ -112,6 +114,8 @@ Expanded.prototype = {
   render_bar: render_bar,
   render_hist: render_hist,
   render_table: render_table,
+  render_table_hist: render_table_hist,
+
   render_user_activity: function(target) {
 
     var data = {
@@ -120,8 +124,8 @@ Expanded.prototype = {
         uniques: 0
       },
       offsite: {
-        views: this._data[0].domains_full ? d3.sum(this._data[0].domains_full.filter(this._table_filter),function(x){return x.count}) : 0,
-        uniques: this._data[0].domains_full ? d3.sum(this._data[0].domains_full.filter(this._table_filter),function(x){return x.uniques}) : 0
+        views: this._data[0].full_urls ? d3.sum(this._data[0].full_urls.filter(this._table_filter),function(x){return x.count}) : 0,
+        uniques: this._data[0].full_urls ? d3.sum(this._data[0].full_urls.filter(this._table_filter),function(x){return x.uniques}) : 0
       }
     }
     var wrap = d3_updateable(target,".activity","div")
