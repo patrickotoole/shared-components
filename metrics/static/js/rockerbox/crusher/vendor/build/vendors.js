@@ -1074,8 +1074,8 @@
           uniques: 0
         },
         offsite: {
-          views: this._data[0].full_urls ? d3.sum(this._data[0].domains_full.filter(this._table_filter),function(x){return x.count}) : 0,
-          uniques: this._data[0].full_urls ? d3.sum(this._data[0].domains_full.filter(this._table_filter),function(x){return x.uniques}) : 0
+          views: this._data[0].full_urls ? d3.sum(this._data[0].full_urls.filter(this._table_filter),function(x){return x.count}) : 0,
+          uniques: this._data[0].full_urls ? d3.sum(this._data[0].full_urls.filter(this._table_filter),function(x){return x.uniques}) : 0
         }
       }
       var wrap = d3_updateable(target,".activity","div")
