@@ -103,6 +103,16 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
         domains_with_cat['hour']=domains_with_cat.timestamp.map(lambda x: x.split(" ")[1].split(":")[0])
         return domains_with_cat
 
+    def remove_hex(self, domains):
+        fixed = []
+        for d in domains:
+            try:
+                dom = d.encode('latin')
+                fixed.append(dom)
+            except:
+                logging.info("can't encode")
+        return fixed
+
     @decorators.deferred
     def defer_get_idf(self, domains_df):
         domain_set = domains_df['domain']
@@ -113,6 +123,7 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
             WHERE domain in (%(domains)s) and category_name != ""
         """
         domain_set = [self.crushercache.escape_string(i.encode("utf-8")) for i in domain_set ]
+        domain_set = self.remove_hex(set(domain_set))
         domains = "'" + "','".join(domain_set) + "'"
         results = self.crushercache.select_dataframe(QUERY % {"domains":domains})
         return results
