@@ -114,9 +114,10 @@ def runner(advertiser,pattern, func_name, base_url, indentifiers="test", filter_
     
     parameters = UR.get_parameters(db, advertiser, func_name)
 
+    data = UR.make_request(crusher, pattern, func_name, parameters)
+    #data2 = UR.make_request_v2(crusher, pattern, func_name, parameters)
+
     try:
-        data = UR.make_request(crusher, pattern, func_name, parameters)
-        #data2 = UR.make_request_v2(crusher, pattern, func_name, parameters)
 
         compress_data = UR.compress(ujson.dumps(data))
         #compress_data2 = UR.compress(ujson.dumps(data2))
