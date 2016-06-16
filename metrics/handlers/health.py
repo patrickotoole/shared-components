@@ -54,9 +54,12 @@ class HealthHandler(BaseHandler):
     def check_cassandra(self):
         if self.cassandra is mocks.cassandra.CASSANDRA: self.write('0')
         else:
-            df = self.cassandra.select_dataframe("SELECT * FROM rockerbox.visitor_domains_full limit 1")
-            if len(df) == 1:
-                self.write('1')
+            try:
+                df = self.cassandra.select_dataframe("SELECT * FROM rockerbox.visitor_domains_full limit 1")
+                if len(df) == 1:
+                    self.write('1')
+            except:
+                self.write('0')
         self.finish()
         
     @tornado.web.asynchronous
