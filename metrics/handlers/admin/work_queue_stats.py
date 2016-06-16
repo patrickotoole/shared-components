@@ -101,19 +101,24 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler):
             self.finish()
 
     def get_id(self, job_id):
-        needed_path = "workqueue/v0616/{}".format(job_id)
-        entry_ids = self.zookeeper.get_children(needed_path)
-        df_entry={}
-        for entry in entry_ids:
-            d1= parse2(entry, self.zookeeper)
-            df_entry[entry] = {}
-            df_entry[entry]['parameters'] = d1['parameters']
-            timestamp = d1['time']
-            df_entry[entry]['parameters'].append(timestamp)
+        try:
+            needed_path = "workqueue/v0616/{}".format(job_id)
+            entry_ids = self.zookeeper.get_children(needed_path)
+            df_entry={}
+            for entry in entry_ids:
+                d1= parse2(entry, self.zookeeper)
+                df_entry[entry] = {}
+                df_entry[entry]['parameters'] = d1['parameters']
+                timestamp = d1['time']
+                df_entry[entry]['parameters'].append(timestamp)
 
-        df = pandas.DataFrame(df_entry)
-        self.write(ujson.dumps(df.to_dict('records')[0]))
-        self.finish()
+            df = pandas.DataFrame(df_entry)
+            self.write(ujson.dumps(df.to_dict('records')[0]))
+            self.finish()
+        except Exception as e:
+            self.set_status_code(400)
+            self.write(ujson.dumps({"Error":str(e)}))
+            self.finish()
 
     def get_num(self):
         path_queue = [c for c in self.zookeeper.get_children("/python_queue")]
@@ -133,15 +138,21 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler):
         self.write(ujson.dumps(in_queue))
         self.finish()
 
-    def set_priority(self, job_id):
-        needed_path = "workqueue/v0616/{}".format(job_id)
-        entry_ids = self.zookeeper.get_children(needed_path)
-        values = self.zookeeper.get("/python_queue/" + entry_ids[0])[0]
-        cq = CustomQueue.CustomQueue(self.zookeeper,"python_queue")
-        cq.put(values,1)
-        cq.delete(entry_ids)
-        self.write("Success")
-        self.finish()
+    def set_priority(self, job_idi, priority_value):
+        try:
+            #change to a more dynamic or parameter driven path
+            needed_path = "workqueue/v0616/{}".format(job_id)
+            entry_ids = self.zookeeper.get_children(needed_path)
+            values = self.zookeeper.get("/python_queue/" + entry_ids[0])[0]
+            cq = CustomQueue.CustomQueue(self.zookeeper,"python_queue")
+            entry_id = cq.put(values,priority_value)
+            cq.delete(entry_ids)
+            self.write(ujson.dumps({"result":"Success", "entry_id":entry_id}))
+            self.finish()
+        except Exception as e:
+            self.set_status_code(400)
+            self.write(ujson.dumps({"Error":str(e)}))
+            self.finish()
 
     def get_data(self):
         path_queue = [c for c in self.zookeeper.get_children("/python_queue") ]
@@ -167,8 +178,14 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler):
             self.get_num()
         elif "test" in action:
             self.get_test()
-        elif "priority" in action:
-            job_id = action.split("/")[1]
-            self.set_priority(job_id)
         else: 
+            self.get_id(action)
+
+    def post(self, action=""):
+        priority_value = self.get_argument("priority", False)
+        print action
+        job_id = action
+        if priority_value:
+            self.set_priority(job_id, priority_value)
+        else:
             self.get_id(action)
