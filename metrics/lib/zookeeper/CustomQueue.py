@@ -15,7 +15,16 @@ class SingleQueue(Queue):
 
 class CustomQueue(SingleQueue):
 
-    def put(self, value, priority):
+    def __init__(self, cliet, path, secondary_path, volume):
+        self.client = client
+        self.path = path
+        self._entries_path = path
+        self.structure_paths = (self.path, )
+        self.ensured_path = False
+        self.seconardy_path = secondary_path
+        self.volume = volume
+
+    def put(self, value, priority, _job_id=False):
         """Put an item into the queue.
 
             :param value: Byte string to put into the queue.
@@ -28,13 +37,14 @@ class CustomQueue(SingleQueue):
         path = '{path}/{prefix}{priority:03d}-'.format(
         path=self.path, prefix=self.prefix, priority=priority)
         entry_location = self.client.create(path, value, sequence=True)
-        sub_location = "v0616"
-        job_id=hashlib.md5(value).hexdigest()
-        new_path = "workqueue/{}/{}/{}".format(sub_location, job_id, str(entry_location.split("/")[2]))
-        self.client.create(new_path, "", makepath=True)
+        if not _job_id:
+            _job_id = hashlib.md5(value).hexdigest()
+        secondary_path = '{path}-{secondardy_path}/{volume}/{job_id}/{new_entry}'.format(
+        path=self.path, secondary_path=self.secondary_path, volume=self.volume, job_id=_job_id, new_entry=entry_location)
+        
+        self.client.create(secondary_path, "", makepath=True)
 
     def delete(self, entry):
-        import ipdb; ipdb.set_trace()
         if type(entry) == list:
             for entr in entry:
                 current_entry = "/python_queue/{}".format(entr)
@@ -42,7 +52,7 @@ class CustomQueue(SingleQueue):
         else:
             self.client.delete("/python_queue/{}".format(entry))
 
-    def get(self):
+    def get_w_name(self):
         """
         Get item data and remove an item from the queue.
 
@@ -50,9 +60,9 @@ class CustomQueue(SingleQueue):
         :rtype: bytes
         """
         self._ensure_paths()
-        return self.client.retry(self._inner_get)
+        return self.client.retry(self._inner_get_w_name)
 
-    def _inner_get(self):
+    def _inner_get_w_name(self):
         if not self._children:
             self._children = self.client.retry(
                 self.client.get_children, self.path)

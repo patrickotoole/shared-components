@@ -31,7 +31,8 @@ class CacheFullURL():
                 furc.runner,
                 [advertiser,pattern, False, base_url, "domains_full", filter_id]
                 ))
-        CustomQueue.CustomQueue(self.zookeeper,"python_queue").put(work,1)
+        volume = "v{}".format(datetime.datetime.now().strftime('%m%y'))
+        CustomQueue.CustomQueue(self.zookeeper,"python_queue", "log", volume).put(work,1)
         logging.info("added to work queue %s for %s" %(pattern,advertiser))
         
 

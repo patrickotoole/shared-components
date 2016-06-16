@@ -17,6 +17,7 @@ SQL_REMOVE_OLD = "DELETE FROM action_dashboard_cache where update_time < (UNIX_T
 UDFQUERY = "select udf from user_defined_functions where advertiser ={} or advertiser is NULL"
 
 current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+volume = "v{}".format(datetime.datetime.now().strftime('%m%y'))
 
 class CacheInterface:
     def __init__(self, advertiser, crusher, db, crusherdb, zookeeper=None):
@@ -48,7 +49,7 @@ class CacheInterface:
                 cassandra_functions.run_recurring,
                 [advertiser,segment["url_pattern"][0],_cache_yesterday,"recurring_cassandra_cache"]
                 ))
-        CustomQueue.CustomQueue(self.zookeeper,"python_queue").put(work,5)
+        CustomQueue.CustomQueue(self.zookeeper,"python_queue", "log", volume).put(work,5)
         logging.info("added to work queue %s for %s" %(segment["url_pattern"][0],advertiser))
 
     def add_db_to_work_queue(self, segment, advertiser, base_url):
@@ -58,7 +59,7 @@ class CacheInterface:
                 adc_runner.runner,
                 [advertiser,segment["url_pattern"][0], False, base_url,"domains_cache", segment['action_id']]
                 ))
-        CustomQueue.CustomQueue(self.zookeeper,"python_queue").put(work,20)
+        CustomQueue.CustomQueue(self.zookeeper,"python_queue", "log", volume).put(work,20)
         logging.info("added to DB work queue %s for %s" %(segment["url_pattern"][0],advertiser)) 
 
     def add_full_url_to_work_queue(self, segment, advertiser, base_url):
@@ -68,7 +69,7 @@ class CacheInterface:
                 adc_runner.runner,
                 [advertiser,segment["url_pattern"][0], False, base_url , "domains_full_cache", segment['action_id']]
                 ))
-        CustomQueue.CustomQueue(self.zookeeper,"python_queue").put(work,30)
+        CustomQueue.CustomQueue(self.zookeeper,"python_queue", "log", volume).put(work,30)
         logging.info("added to full domain work queue %s for %s" %(segment["url_pattern"][0],advertiser))
 
     def add_udf_to_work_queue(self, segment, advertiser, base_url):
@@ -80,42 +81,42 @@ class CacheInterface:
                 gur.runner,
                 [advertiser, segment["url_pattern"][0], "keywords", base_url, cache_name.format("keywords"), segment['action_id']]
                 ))
-        CustomQueue.CustomQueue(self.zookeeper,"python_queue").put(work,31)
+        CustomQueue.CustomQueue(self.zookeeper,"python_queue", "log", volume).put(work,31)
         logging.info("added udf to work queue for %s %s" %(segment,advertiser))
 
         work = pickle.dumps((
                 gur.runner,
                 [advertiser, segment["url_pattern"][0], "onsite", base_url, cache_name.format("onsite"), segment['action_id']]
                 ))
-        CustomQueue.CustomQueue(self.zookeeper,"python_queue").put(work,39)
+        CustomQueue.CustomQueue(self.zookeeper,"python_queue", "log", volume).put(work,39)
         logging.info("added udf to work queue for %s %s" %(segment,advertiser))
         
         work = pickle.dumps((
                 gur.runner,
                 [advertiser, segment["url_pattern"][0], "before_and_after", base_url, cache_name.format("before_and_after"), segment['action_id']]
                 ))
-        CustomQueue.CustomQueue(self.zookeeper,"python_queue").put(work,35)
+        CustomQueue.CustomQueue(self.zookeeper,"python_queue", "log", volume).put(work,35)
         logging.info("added udf to work queue for %s %s" %(segment,advertiser))
 
         work = pickle.dumps((
                 gur.runner,
                 [advertiser, segment["url_pattern"][0], "hourly", base_url, cache_name.format("hourly"), segment['action_id']]
                 ))
-        CustomQueue.CustomQueue(self.zookeeper,"python_queue").put(work,35)
+        CustomQueue.CustomQueue(self.zookeeper,"python_queue", "log", volume).put(work,35)
         logging.info("added udf to work queue for %s %s" %(segment,advertiser))
 
         work = pickle.dumps((
                 gur.runner,
                 [advertiser, segment["url_pattern"][0], "sessions", base_url, cache_name.format("sessions"), segment['action_id']]
                 ))
-        CustomQueue.CustomQueue(self.zookeeper,"python_queue").put(work,35)
+        CustomQueue.CustomQueue(self.zookeeper,"python_queue", "log", volume).put(work,35)
         logging.info("added udf to work queue for %s %s" %(segment,advertiser))
 
         work = pickle.dumps((
                 gur.runner,
                 [advertiser, segment["url_pattern"][0], "model", base_url, cache_name.format("model"), segment['action_id']]
                 ))
-        CustomQueue.CustomQueue(self.zookeeper,"python_queue").put(work,35)
+        CustomQueue.CustomQueue(self.zookeeper,"python_queue", "log", volume).put(work,35)
         logging.info("added udf to work queue for %s %s" %(segment,advertiser))
 
         udfs = self.crusherdb.select_dataframe("select udf from user_defined_functions where advertiser='{}' or advertiser is NULL".format(advertiser))
@@ -124,7 +125,7 @@ class CacheInterface:
                     gur.runner,
                     [advertiser, segment["url_pattern"][0], uf[1]['udf'], base_url, cache_name.format(uf[1]['udf']), segment['action_id']]
                     ))
-            CustomQueue.CustomQueue(self.zookeeper,"python_queue").put(work,40)
+            CustomQueue.CustomQueue(self.zookeeper,"python_queue", "log", volume).put(work,40)
             logging.info("added udf to work queue for %s %s" %(segment,advertiser))
 
     def seg_loop(self, segments, advertiser, base_url):

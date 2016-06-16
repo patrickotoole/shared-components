@@ -7,15 +7,6 @@ import kazoo
 import pickle
 import socket
 
-#class SingleQueue(kazoo.recipe.queue.Queue):
-#
-#    _instance = None
-#    def __new__(cls, *args, **kwargs):
-#        if not cls._instance:
-#            cls._instance = super(SingleQueue, cls).__new__(
-#                                cls, *args, **kwargs)
-#        return cls._instance
-
 SQL_LOG = "insert into work_queue_log (hostname, job_id, event) values (%s, %s, %s)"
 SQL_LOG2 = "insert into work_queue_error_log (hostname, error_string, job_id) values (%s, %s, %s)"
 
@@ -23,7 +14,8 @@ class WorkQueue(object):
 
     def __init__(self,exit_on_finish, client,reactor,timer, mcounter, connectors):
         self.client = client
-        self.queue = CustomQueue.CustomQueue(client,"/python_queue")
+        volume = datetime.datetime.now().strftime('%m%y')
+        self.queue = CustomQueue.CustomQueue(client,"/python_queue", "log",volume)
         self.rec = reactor
         self.connectors = connectors
         self.timer = timer
@@ -38,9 +30,7 @@ class WorkQueue(object):
         import socket
         while True:
             logging.debug("Asking for next queue item")
-            total_data = self.queue.get()
-            data = total_data[1]
-            name = total_data[0]
+            name,data = self.queue.get_w_name()
             self.rec.getThreadPool().threads[0].setName("WQ")
             if data is not None:
                 job_id = hashlib.md5(data).hexdigest()

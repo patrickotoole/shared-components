@@ -138,13 +138,21 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler):
         self.write(ujson.dumps(in_queue))
         self.finish()
 
-    def set_priority(self, job_idi, priority_value):
+    def set_priority(self, job_id, priority_value, _version):
+        import datetime
         try:
-            #change to a more dynamic or parameter driven path
-            needed_path = "workqueue/v0616/{}".format(job_id)
+            if _version:
+                second_path = _version
+            else:
+                date = datetime.datetime.now().strftime("%m%y")
+                second_path = "v{}".format(date)
+            
+            cq = CustomQueue.CustomQueue(self.zookeeper,"python_queue", "log", _version)
+             
+            needed_path = str(cq.get_secondary_path) + "/{}".format(job_id)
             entry_ids = self.zookeeper.get_children(needed_path)
             values = self.zookeeper.get("/python_queue/" + entry_ids[0])[0]
-            cq = CustomQueue.CustomQueue(self.zookeeper,"python_queue")
+            
             entry_id = cq.put(values,priority_value)
             cq.delete(entry_ids)
             self.write(ujson.dumps({"result":"Success", "entry_id":entry_id}))
@@ -183,9 +191,10 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler):
 
     def post(self, action=""):
         priority_value = self.get_argument("priority", False)
+        _version = self.get_argument("version", False)
         print action
         job_id = action
         if priority_value:
-            self.set_priority(job_id, priority_value)
+            self.set_priority(job_id, priority_value, _version)
         else:
             self.get_id(action)

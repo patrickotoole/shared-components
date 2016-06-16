@@ -31,7 +31,8 @@ class UDFCache:
                 runner.runner,
                 [advertiser,segment, udf, base_url, "udf_{}_cache".format(udf) , filter_id]
                 ))
-        CustomQueue.CustomQueue(self.connectors['zk'],"python_queue").put(work,1)
+        volume = "v{}".format(datetime.datetime.now().strftime('%m%y'))
+        CustomQueue.CustomQueue(self.connectors['zk'],"python_queue", "log", volume).put(work,1)
         logging.info("added to UDF work queue %s for %s" %(segment,advertiser)) 
 
 
