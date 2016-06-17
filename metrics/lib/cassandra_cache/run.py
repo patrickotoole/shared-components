@@ -72,7 +72,7 @@ def run_backfill(advertiser,pattern,cache_date,identifier="test",job_id=False,co
 
     start = time.time()
 
-    cache = zk_helpers.ZKCacheHelpers(zk,advertiser,pattern,identifier)
+    cache = zk_helpers.ZKCacheHelpers(zk,advertiser,pattern.replace("/","|"),identifier)
 
     zk_lock = ZKPool(zk=zk)
     with zk_lock.get_lock() as udf:
@@ -127,7 +127,7 @@ def run_recurring(advertiser,pattern,cache_date,identifier="test",job_id=False,c
 
     start = time.time()
 
-    cache = zk_helpers.ZKCacheHelpers(zk,advertiser,pattern,identifier)
+    cache = zk_helpers.ZKCacheHelpers(zk,advertiser,pattern.replace("/","|"),identifier)
 
     with cache:
 
