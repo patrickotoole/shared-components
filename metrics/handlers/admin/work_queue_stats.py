@@ -100,9 +100,13 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler):
             self.write(ujson.dumps({"number_in_queue": 0}))
             self.finish()
 
-    def get_id(self, job_id):
+    def get_id(self, _job_id):
         try:
-            needed_path = "workqueue/v0616/{}".format(job_id)
+            date = datetime.datetime.now().strftime("%m%y")
+            volume = "v{}".format(date)
+            needed_path = secondary_path = '{path}-{secondary_path}/{volume}/{job_id}'.format(
+            path="python_queue", secondary_path="log", volume=volume, job_id=_job_id)
+            
             entry_ids = self.zookeeper.get_children(needed_path)
             df_entry={}
             for entry in entry_ids:
@@ -132,12 +136,6 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler):
         self.finish()
 
 
-    def get_test(self):
-        path_queue = [c for c in self.zookeeper.get_children("/python_queue") ]
-        in_queue = [parse_hash(path, self.zookeeper) for path in path_queue]
-        self.write(ujson.dumps(in_queue))
-        self.finish()
-
     def set_priority(self, job_id, priority_value, _version):
         import datetime
         try:
@@ -153,6 +151,9 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler):
             entry_ids = self.zookeeper.get_children(needed_path)
             values = self.zookeeper.get("/python_queue/" + entry_ids[0])[0]
             
+            if not priority_value:
+                priority_value = 1
+            priority_value = int(priority_value)
             entry_id = cq.put(values,priority_value)
             cq.delete(entry_ids)
             self.write(ujson.dumps({"result":"Success", "entry_id":entry_id}))
@@ -172,7 +173,7 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler):
             df = pandas.DataFrame(in_queue)
         else:
             df = pandas.DataFrame({"items":[]})
-        self.write(ujson.dumps(df.to_dict('recrods')))
+        self.write(ujson.dumps(df.to_dict('records')))
         self.finish()
 
     @tornado.web.asynchronous
@@ -184,8 +185,6 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler):
             self.get_summary()
         elif "num" in action:
             self.get_num()
-        elif "test" in action:
-            self.get_test()
         else: 
             self.get_id(action)
 

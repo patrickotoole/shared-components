@@ -13,7 +13,7 @@ import sys
 
 now_date = datetime.datetime.now().strftime("%Y-%m-%d")
 
-URL ="/crusher/v1/visitor/{}?url_pattern={}&filter_id={}"
+URL ="/crusher/v1/visitor/{}?url_pattern={}&filter_id={}&prevent_sample=true"
 URL2 ="/crusher/v2/visitor/{}?url_pattern={}&filter_id={}"
 
 INSERT ="insert into generic_function_cache (advertiser, url_pattern, udf, zipped, date, action_id) values (%s, %s, %s, %s, %s, %s)"
