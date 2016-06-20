@@ -7,6 +7,7 @@ import metrics.work_queue
 import logging
 import pickle
 import hashlib
+from RPCQueue import RPCQueue
 
 from lib.zookeeper import CustomQueue
 from twisted.internet import defer
@@ -60,7 +61,7 @@ def parse_hash(x, zk):
         logging.info(job_id)
         return job_id
 
-class WorkQueueStatsHandler(tornado.web.RequestHandler):
+class WorkQueueStatsHandler(tornado.web.RequestHandler, RPCQueue):
 
     def initialize(self, zookeeper=None, *args, **kwargs):
         self.zookeeper = zookeeper
@@ -188,12 +189,20 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler):
         else: 
             self.get_id(action)
 
+    @tornado.web.asynchronous
     def post(self, action=""):
         priority_value = self.get_argument("priority", False)
         _version = self.get_argument("version", False)
         print action
-        job_id = action
-        if priority_value:
-            self.set_priority(job_id, priority_value, _version)
+        if action != "":
+            job_id = action
+            if priority_value:
+                self.set_priority(job_id, priority_value, _version)
+            else:
+                self.get_id(action)
         else:
-            self.get_id(action)
+            try:
+                data = self.add_to_work_queue(self.request.body, self.zookeeper)
+                self.write_response(data)
+            except Exception, e:
+                self.write_response(str(e),e)

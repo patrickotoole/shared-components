@@ -3,9 +3,10 @@ import ujson
 import pandas
 import StringIO
 import logging
-import pickle, work_queue
+import pickle
 import re
 
+from lib.zookeeper import CustomQueue
 from link import lnk
 from handlers.base import BaseHandler
 from twisted.internet import defer
@@ -64,7 +65,7 @@ class InternalCacheHandler(BaseDomainHandler):
                 func_call,
                 fargs
                 ))
-        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,1)
+        CustomQueue.CustomQueue(self.zookeeper,"python_queue").put(work,1)
         logging.info("added to work queue %s for %s from HTTP request" %(pattern,advertiser))
 
         

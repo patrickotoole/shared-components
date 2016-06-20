@@ -159,7 +159,7 @@ class ActionDatabase(object):
         action['action_id'] = action_id
 
     def _insert_work_queue(self, action, zookeeper):
-        import work_queue
+        from lib.zookeeper import CustomQueue
         import lib.cassandra_cache.run as cache
         import pickle
         import datetime
@@ -183,7 +183,7 @@ class ActionDatabase(object):
                         cache.run_backfill,
                         [action["advertiser"],pattern[0],_cache_date,_cache_date + " backfill"]
                         ))
-                work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,i)
+                CustomQueue.CustomQueue(self.zookeeper,"python_queue").put(work,i)
 
 
     @decorators.multi_commit_cursor

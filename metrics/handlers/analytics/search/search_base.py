@@ -96,7 +96,7 @@ class SearchCassandra(BaseDomainHandler,SearchHelpers):
     def run_uniques(self, advertiser, pattern, dates):
         import datetime
         import pickle
-        import work_queue
+        from lib.zookeeper import CustomQueue
 
         import lib.cassandra_cache.run_uniques as unique_cache
 
@@ -109,7 +109,7 @@ class SearchCassandra(BaseDomainHandler,SearchHelpers):
                 [advertiser,pattern,1,delta.days -1,True,_cache_date + " unique_cache"]
             ))
 
-            work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,0)
+            CustomQueue.CustomQueue(self.zookeeper,"python_queue").put(work,0)
     
 
 class SearchBase(SearchCassandra):
