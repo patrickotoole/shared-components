@@ -1,5 +1,9 @@
+import datetime
 import ujson
 from lib.zookeeper import CustomQueue
+import pickle
+import logging
+import hashlib
 
 class RPCQueue():
 
@@ -7,12 +11,11 @@ class RPCQueue():
         self.zookeeper = zookeeper
 
     
-    #def add_to_work_queue(self, fname, advertiser, pattern, filter_id):
     def add_to_work_queue(self, rpc_object):
         rpc_data = ujson.loads(rpc_object)
 
         if 'advertiser' in rpc_data.keys():
-            pattern = rpc_data['advertiser']
+            advertiser = rpc_data['advertiser']
         else:
             raise Exception('Pattern advertiser required')
         if 'udf' in rpc_data.keys():
@@ -41,12 +44,39 @@ class RPCQueue():
         else:
             parameters = {}
 
-        if udf != 'recurring':
+        volume = "v{}".format(datetime.datetime.now().strftime('%m%y'))
+        if udf != ('recurring' or 'backfill'):
             import lib.caching.generic_udf_runner as runner
             work = pickle.dumps((
                 runner.runner,
-                [advertiser,segment, udf, base_url,  "udf_{}_cache".format(udf) , filter_id]
+                [advertiser,pattern, udf, base_url,  "udf_{}_cache".format(udf) , filter_id]
                 ))
-        CustomQueue.CustomQueue(self.connectors['zk'],"python_queue").put(work,2)
-        logging.info("added to UDF work queue %s for %s" %(segment,advertiser))
+            entry_id = CustomQueue.CustomQueue(self.zookeeper,"python_queue", "log",volume).put(work,2)
+            logging.info("added to UDF work queue %s for %s" %(segment,advertiser))
+            job_id = hashlib.md5(work).hexdigest()
+            return entry_id, job_id
+        elif udf=='recurring':
+            import lib.cassandra_cache.run as cassandra_functions
+            yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
+            _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
+            work = pickle.dumps((
+                cassandra_functions.run_recurring,
+                [advertiser,pattern,_cache_yesterday,"recurring_cassandra_cache"]
+                ))
+            entry_id = CustomQueue.CustomQueue(self.zookeeper,"python_queue","log",volume).put(work,2)
+            logging.info("added to Cassandra work queue %s for %s" %(segment,advertiser))
+            job_id = hashlib.md5(work).hexdigest()
+            return entry_id, job_id
+        else:
+            import lib.cassandra_cache.run as cassandra_functions
+            yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
+            _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
+            work = pickle.dumps((
+                cassandra_functions.run_backfill,
+                [advertiser,pattern,_cache_yesterday,"recurring_cassandra_cache"]
+                ))
+            entry_id = CustomQueue.CustomQueue(self.zookeeper,"python_queue","log",volume).put(work,2)
+            logging.info("added to Cassandra work queue %s for %s" %(segment,advertiser))
+            job_id = hashlib.md5(work).hexdigest()
+            return entry_id, job_id
 

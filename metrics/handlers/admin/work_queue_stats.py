@@ -112,16 +112,21 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler, RPCQueue):
             df_entry={}
             for entry in entry_ids:
                 d1= parse2(entry, self.zookeeper)
-                df_entry[entry] = {}
-                df_entry[entry]['parameters'] = d1['parameters']
-                timestamp = d1['time']
-                df_entry[entry]['parameters'].append(timestamp)
+                if d1:
+                    df_entry[entry] = {}
+                    df_entry[entry]['parameters'] = d1['parameters']
+                    timestamp = d1['time']
+                    df_entry[entry]['parameters'].append(timestamp)
 
             df = pandas.DataFrame(df_entry)
-            self.write(ujson.dumps(df.to_dict('records')[0]))
+            df.fillna("N/A")
+            if len(df)>0:
+                self.write(ujson.dumps(df.to_dict('records')[0]))
+            else:
+                self.write(ujson.dumps(df.to_dict('records')))
             self.finish()
         except Exception as e:
-            self.set_status_code(400)
+            self.set_status(400)
             self.write(ujson.dumps({"Error":str(e)}))
             self.finish()
 
@@ -160,7 +165,7 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler, RPCQueue):
             self.write(ujson.dumps({"result":"Success", "entry_id":entry_id}))
             self.finish()
         except Exception as e:
-            self.set_status_code(400)
+            self.set_status(400)
             self.write(ujson.dumps({"Error":str(e)}))
             self.finish()
 
@@ -194,15 +199,17 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler, RPCQueue):
         priority_value = self.get_argument("priority", False)
         _version = self.get_argument("version", False)
         print action
-        if action != "":
-            job_id = action
+        if 'priority' in action:
+            job_id = action.splti("/")[1]
             if priority_value:
                 self.set_priority(job_id, priority_value, _version)
             else:
                 self.get_id(action)
         else:
             try:
-                data = self.add_to_work_queue(self.request.body, self.zookeeper)
-                self.write_response(data)
+                entry, job_id = self.add_to_work_queue(self.request.body)
+                self.get_id(job_id)
             except Exception, e:
-                self.write_response(str(e),e)
+                self.set_status(400)
+                self.write(ujson.dumps({"error":str(e)}))
+                self.finish()

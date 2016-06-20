@@ -6,6 +6,7 @@ from kazoo.client import KazooState
 import kazoo
 import pickle
 import socket
+import datetime
 
 SQL_LOG = "insert into work_queue_log (hostname, job_id, event) values (%s, %s, %s)"
 SQL_LOG2 = "insert into work_queue_error_log (hostname, error_string, job_id) values (%s, %s, %s)"

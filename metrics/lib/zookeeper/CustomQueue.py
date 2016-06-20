@@ -23,6 +23,7 @@ class CustomQueue(SingleQueue):
         self.ensured_path = False
         self.secondary_path = secondary_path
         self.volume = volume
+        super(CustomQueue, self).__init__(client, path)
 
     def put(self, value, priority, _job_id=False):
         """Put an item into the queue.
@@ -40,9 +41,10 @@ class CustomQueue(SingleQueue):
         if not _job_id:
             _job_id = hashlib.md5(value).hexdigest()
         secondary_path = '{path}-{secondary_path}/{volume}/{job_id}/{new_entry}'.format(
-        path=self.path, secondary_path=self.secondary_path, volume=self.volume, job_id=_job_id, new_entry=entry_location)
+        path=self.path, secondary_path=self.secondary_path, volume=self.volume, job_id=_job_id, new_entry=str(entry_location).split("/")[2])
         
         self.client.create(secondary_path, "", makepath=True)
+        return entry_location
 
     def delete(self, entry):
         if type(entry) == list:
