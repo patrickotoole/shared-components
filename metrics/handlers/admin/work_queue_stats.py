@@ -101,7 +101,7 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler, RPCQueue):
             self.write(ujson.dumps({"number_in_queue": 0}))
             self.finish()
 
-    def get_id(self, _job_id):
+    def get_id(self, _job_id, entry_id=False):
         try:
             date = datetime.datetime.now().strftime("%m%y")
             volume = "v{}".format(date)
@@ -110,20 +110,25 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler, RPCQueue):
             
             entry_ids = self.zookeeper.get_children(needed_path)
             df_entry={}
+            df_entry['job_id']= _job_id
+            if entry_id:
+                df_entry['entry_id'] = str(entry_id).split("/")[2]
+            df_entry['entries'] = []
             for entry in entry_ids:
                 d1= parse2(entry, self.zookeeper)
                 if d1:
-                    df_entry[entry] = {}
-                    df_entry[entry]['parameters'] = d1['parameters']
+                    sub_obj = {}
+                    sub_obj['entry']= entry
+                    sub_obj['advertiser'] = d1['parameters'][0]
+                    sub_obj['pattern']= d1['parameters'][1]
+                    sub_obj['udf'] = d1['parameters'][2]
+                    sub_obj['base_url'] = d1['parameters'][3]
+                    sub_obj['identifier'] = d1['parameters'][4]
+                    sub_obj['filter_id'] = d1['parameters'][5]
                     timestamp = d1['time']
-                    df_entry[entry]['parameters'].append(timestamp)
-
-            df = pandas.DataFrame(df_entry)
-            df.fillna("N/A")
-            if len(df)>0:
-                self.write(ujson.dumps(df.to_dict('records')[0]))
-            else:
-                self.write(ujson.dumps(df.to_dict('records')))
+                    sub_obj['time'] = timestamp
+                    df_entry['entries'].append(sub_obj)
+            self.write(ujson.dumps(df_entry))
             self.finish()
         except Exception as e:
             self.set_status(400)
@@ -208,7 +213,7 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler, RPCQueue):
         else:
             try:
                 entry, job_id = self.add_to_work_queue(self.request.body)
-                self.get_id(job_id)
+                self.get_id(job_id, entry)
             except Exception, e:
                 self.set_status(400)
                 self.write(ujson.dumps({"error":str(e)}))
