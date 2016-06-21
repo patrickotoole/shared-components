@@ -118,13 +118,20 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler, RPCQueue):
                 d1= parse2(entry, self.zookeeper)
                 if d1:
                     sub_obj = {}
-                    sub_obj['entry']= entry
-                    sub_obj['advertiser'] = d1['parameters'][0]
-                    sub_obj['pattern']= d1['parameters'][1]
-                    sub_obj['udf'] = d1['parameters'][2]
-                    sub_obj['base_url'] = d1['parameters'][3]
-                    sub_obj['identifier'] = d1['parameters'][4]
-                    sub_obj['filter_id'] = d1['parameters'][5]
+                    if len(d1['parameters'])>5:
+                        sub_obj['entry']= entry
+                        sub_obj['advertiser'] = d1['parameters'][0]
+                        sub_obj['pattern']= d1['parameters'][1]
+                        sub_obj['udf'] = d1['parameters'][2]
+                        sub_obj['base_url'] = d1['parameters'][3]
+                        sub_obj['identifier'] = d1['parameters'][4]
+                        sub_obj['filter_id'] = d1['parameters'][5]
+                    else:
+                        sub_obj['entry']= entry
+                        sub_obj['advertiser'] = d1['parameters'][0]
+                        sub_obj['pattern']= d1['parameters'][1]
+                        sub_obj['udf'] = d1['parameters'][3]
+                        sub_obj['identifier'] = d1['parameters'][3]
                     timestamp = d1['time']
                     sub_obj['time'] = timestamp
                     df_entry['entries'].append(sub_obj)

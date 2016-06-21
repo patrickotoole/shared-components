@@ -75,7 +75,7 @@ class CustomQueue(SingleQueue):
                 self.client.get_children, self.path)
             self._children = sorted(self._children)
         if not self._children:
-            return None
+            return (None,None)
         name = self._children[0]
         try:
             data, stat = self.client.get(self.path + "/" + name)
