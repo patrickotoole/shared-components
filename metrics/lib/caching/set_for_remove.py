@@ -3,9 +3,9 @@ from kazoo.client import KazooClient
 import logging
 from cache_runner_base import BaseRunner
 
-QUERY = "select advertiser, pattern from batch_job_errors_today group by advertiser, pattern"
-QUERY1 = "select advertiser, pattern from batch_job_errors_today group by advertiser, pattern having advertiser='{}'"
-SETQUERY = "update action set ToDelete='yes' where pixel_source_name='%s' and filter_id='%s'"
+QUERY = "select advertiser, pattern, filter_id from batch_job_errors_today group by advertiser, pattern"
+QUERY1 = "select advertiser, pattern, filter_id from batch_job_errors_today group by advertiser, pattern having advertiser='{}'"
+SETQUERY = "update action set ToDelete='yes' where pixel_source_name=%s and action_id=%s"
 
 class Remover(BaseRunner):
 
@@ -17,8 +17,6 @@ class Remover(BaseRunner):
         return df
 
     def set_to_del(self, crusher, pattern):
-        #df['advertiser'][0]
-        import ipdb; ipdb.set_trace()
         _resp = crusher.get('/crusher/pattern_search/timeseries_only?search={}'.format(pattern))
         data = _resp.json
         data_list = data['results']
@@ -30,21 +28,18 @@ class Remover(BaseRunner):
                 break
         return has_data
 
-    def set_pattern_to_delete(self,pattern):
-        import ipdb; ipdb.set_trace()
-        #self.connectors['crushercache'].execute(SETQUERY, ())
+    def set_pattern_to_delete(self,advertiser, filter_id):
+        self.connectors['db'].execute(SETQUERY, (advertiser, int(filter_id)))
         return True
 
     def runner(self):
-        import ipdb; ipdb.set_trace()
         df = self.get_segs()
         for row in df.iterrows():
-            import ipdb; ipdb.set_trace()
             crusher = self.get_crusher_obj(row[1]['advertiser'], "http://192.168.99.100:8888")
             has_data  = self.set_to_del(crusher, row[1]['pattern'])
             if not has_data:
-                    self.set_pattern_to_delete(row[1]['pattern'])
-                    logging.info("deleted %s" % row[1]['pattern'])
+                    self.set_pattern_to_delete(row[1]['advertiser'], row[1]['filter_id'])
+                    logging.info("deleted %s from %s" % (row[1]['pattern'], row[1]['advertiser']))
 
 if __name__ == "__main__":
     zk = KazooClient(hosts="zk1:2181")
