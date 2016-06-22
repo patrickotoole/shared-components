@@ -47,40 +47,6 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler, RPCQueue):
         self.zookeeper = zookeeper
         self.job = 0
 
-    def get_summary(self):
-        import datetime
-        path_queue = [c for c in self.zookeeper.get_children("/python_queue") ]
-        
-        in_queue = [parse(path, self.zookeeper) for path in path_queue]
-        df = pandas.DataFrame(in_queue)
-        #needs to be fixed 
-        if len(df)> 0:
-            df.columns = ['advertiser', 'pattern', 'udf', 'base_url', 'identifier', 'job_id', 'time', 'item']
-
-            adv_df = df.groupby(['advertiser']).count()
-            adv_df = adv_df.filter(['udf'])
-            adv_df.columns = ['count']
-            adv_df = adv_df.reset_index()
-
-            script_df = df.groupby(['identifier']).count()
-            script_df = script_df.filter(['advertiser'])
-            script_df.columns = ['count']
-            script_df = script_df.reset_index()
-
-            minute_df = df.groupby(['time']).count()
-            minute_df = minute_df.filter(['advertiser'])
-            minute_df.columns = ['count']
-            minute_df = minute_df.reset_index()
-
-            #organize data into tree structure and write that
-            obj_to_write = {"summary":{"time": minute_df.to_dict('records'), "advertiser":adv_df.to_dict('records'),"scripts": script_df.to_dict('records')}, "jobs": df.to_dict('records')}
-
-            self.write(ujson.dumps(obj_to_write, sort_keys=True))
-            self.finish()
-        else:
-            self.write(ujson.dumps({"number_in_queue": 0}))
-            self.finish()
-
     def get_id(self, _job_id, entry_id=False):
         try:
             date = datetime.datetime.now().strftime("%m%y")
@@ -168,8 +134,6 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler, RPCQueue):
         print action
         if action=="":
             self.get_data()
-        elif "summary" in action:
-            self.get_summary()
         elif "num" in action:
             self.get_num()
         else: 
