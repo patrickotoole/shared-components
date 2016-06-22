@@ -99,10 +99,9 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler, RPCQueue):
 
     def set_priority(self, job_id, priority_value, _version):
         try:
-            
             cq = CustomQueue.CustomQueue(self.zookeeper,"python_queue", "log", _version)
              
-            needed_path = str(cq.get_secondary_path) + "/{}".format(job_id)
+            needed_path = str(cq.get_secondary_path()) + "/{}".format(job_id)
             entry_ids = self.zookeeper.get_children(needed_path)
             values = self.zookeeper.get("/python_queue/" + entry_ids[0])[0]
             
@@ -145,7 +144,7 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler, RPCQueue):
         _version = self.get_argument("version", "v{}".format(datetime.datetime.now().strftime("%m%y")))
         print action
         if 'priority' in action:
-            job_id = action.splti("/")[1]
+            job_id = str(action).split("/")[1]
             if priority_value:
                 self.set_priority(job_id, priority_value, _version)
             else:
