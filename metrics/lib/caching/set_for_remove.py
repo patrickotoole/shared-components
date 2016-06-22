@@ -1,12 +1,13 @@
 from link import lnk
 from kazoo.client import KazooClient
 import logging
+from cache_runner_base import BaseRunner
 
 QUERY = "select advertiser, pattern from batch_job_errors_today group by advertiser, pattern"
 QUERY1 = "select advertiser, pattern from batch_job_errors_today group by advertiser, pattern having advertiser='{}'"
-SETQUERY = "update action set ToDelete='yes' where advertiser='%s' and pattern='%s' and filter_id='%s'"
+SETQUERY = "update action set ToDelete='yes' where pixel_source_name='%s' and filter_id='%s'"
 
-class Remover():
+class Remover(BaseRunner):
 
     def __init__(self, connectors):
         self.connectors = connectors
@@ -19,30 +20,31 @@ class Remover():
         #df['advertiser'][0]
         import ipdb; ipdb.set_trace()
         _resp = crusher.get('/crusher/pattern_search/timeseries_only?search={}'.format(pattern))
-        data = _resp.json()
-        data_dict = dict(data['results'][0])
+        data = _resp.json
+        data_list = data['results']
         has_data = False
-        for key, val in data_dict.items():
-            if key == 'views':
-                if value >0:
-                    has_data = True
+        for item in data_list:
+            if item['views'] >0:
+                has_data = True
             if has_data:
                 break
         return has_data
 
     def set_pattern_to_delete(self,pattern):
+        import ipdb; ipdb.set_trace()
         #self.connectors['crushercache'].execute(SETQUERY, ())
         return True
 
     def runner(self):
+        import ipdb; ipdb.set_trace()
         df = self.get_segs()
         for row in df.iterrows():
             import ipdb; ipdb.set_trace()
-            crusher = self.get_crusher_obj(row['advertiser'])
-            to_delete  = self.set_to_del(crusher, row['pattern'])
-                if to_delete:
-                    self.set_pattern_to_delete(row['pattern'])
-                    logging.info("deleted %s" % row['pattern'])
+            crusher = self.get_crusher_obj(row[1]['advertiser'], "http://192.168.99.100:8888")
+            has_data  = self.set_to_del(crusher, row[1]['pattern'])
+            if not has_data:
+                    self.set_pattern_to_delete(row[1]['pattern'])
+                    logging.info("deleted %s" % row[1]['pattern'])
 
 if __name__ == "__main__":
     zk = KazooClient(hosts="zk1:2181")
@@ -50,4 +52,4 @@ if __name__ == "__main__":
 
     connectors = {'db': lnk.dbs.rockerbox, 'crushercache':lnk.dbs.crushercache}#, 'zk':zk, 'cassandra':''}
     rem = Remover(connectors)
-    import ipdb; ipdb.set_trace()
+    rem.runner()
