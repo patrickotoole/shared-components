@@ -10,4 +10,3 @@ from visitor.keyword_cache_handler import *
 from visitor.onsite_uids_cache_handler import *
 from visitor.onsite_uids_handler import *
 from visitor.transform_cache_handler import *
-from internalcache_handler import *

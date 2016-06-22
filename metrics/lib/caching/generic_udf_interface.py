@@ -1,5 +1,6 @@
-import requests, json, logging, pandas, pickle, work_queue
+import requests, json, logging, pandas, pickle
 
+from lib.zookeeper import CustomQueue 
 from link import lnk
 from lib.pandas_sql import s as _sql
 import datetime
@@ -28,9 +29,10 @@ class UDFCache:
         _cache_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")    
         work = pickle.dumps((
                 runner.runner,
-                [advertiser,segment, udf, base_url,  _cache_time+ "|"+"udf_{}_cache".format(udf) , filter_id]
+                [advertiser,segment, udf, base_url, "udf_{}_cache".format(udf) , filter_id]
                 ))
-        work_queue.SingleQueue(self.connectors['zk'],"python_queue").put(work,1)
+        volume = "v{}".format(datetime.datetime.now().strftime('%m%y'))
+        CustomQueue.CustomQueue(self.connectors['zk'],"python_queue", "log", volume).put(work,1)
         logging.info("added to UDF work queue %s for %s" %(segment,advertiser)) 
 
 

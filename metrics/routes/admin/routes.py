@@ -20,7 +20,6 @@ class AdminRoutes(
         import handlers.admin.work_queue_stats as work_queue_stats
         return [
 
-            (r'/jobs/add', analytics.domains.InternalCacheHandler, self.connectors),
             (r'/jobs/?(.*?)', work_queue_stats.WorkQueueStatsHandler, self.connectors),
             (r'/', work_queue.WorkQueueHandler, self.connectors),
             (r'/work_queue/?(.*?)', work_queue.WorkQueueHandler, self.connectors),

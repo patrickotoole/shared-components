@@ -1,4 +1,5 @@
-import requests, json, logging, pandas, pickle, work_queue
+import requests, json, logging, pandas, pickle
+from lib.zookeeper import CustomQueue
 from link import lnk
 import datetime
 from kazoo.client import KazooClient
@@ -20,7 +21,7 @@ class CacheFullURL():
     def run_local(self, advertiser, pattern, base_url, filter_id):
         #import full_url_cache as cc
         import domains_full_runner as cc
-        cc.runner(advertiser,pattern,base_url,filter_id=filter_id, connectors=self.connectors)
+        cc.runner(advertiser,pattern,False, base_url,filter_id=filter_id, connectors=self.connectors)
 
     def run_on_work_queue(self,advertiser, pattern, base_url, filter_id):
         import lib.caching.domains_full_runner as furc
@@ -28,9 +29,10 @@ class CacheFullURL():
         _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
         work = pickle.dumps((
                 furc.runner,
-                [advertiser,pattern, base_url, _cache_yesterday, _cache_yesterday+"full_url", filter_id]
+                [advertiser,pattern, False, base_url, "domains_full", filter_id]
                 ))
-        work_queue.SingleQueue(self.zookeeper,"python_queue").put(work,1)
+        volume = "v{}".format(datetime.datetime.now().strftime('%m%y'))
+        CustomQueue.CustomQueue(self.zookeeper,"python_queue", "log", volume).put(work,1)
         logging.info("added to work queue %s for %s" %(pattern,advertiser))
         
 
@@ -70,7 +72,7 @@ if __name__ == "__main__":
         rockerbox_db = lnk.dbs.rockerbox
         adverts = rockerbox_db.select_dataframe("select distinct pixel_source_name from action_with_patterns")
         for ad in adverts.iterrows():
-            query = "select distinct url_pattern from action_with_patterns where pixel_source_name='{}'".format(ad[1]['pixel_source_name'])
+            query = "select distinct action_id, url_pattern from action_with_patterns where pixel_source_name='{}'".format(ad[1]['pixel_source_name'])
             segs = rockerbox_db.select_dataframe(query)
             for seg in segs.iterrows():
                 try:

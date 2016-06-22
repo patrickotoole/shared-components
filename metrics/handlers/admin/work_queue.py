@@ -76,6 +76,7 @@ class WorkQueueHandler(tornado.web.RequestHandler):
                 print values
                 rvals = values[1]
                 rvals.append(job_id)
+                rvals.append(path)
                 return rvals
             except:
                 print "Error parsing pickle job"
