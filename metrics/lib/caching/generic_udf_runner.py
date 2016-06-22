@@ -50,6 +50,7 @@ class UDFRunner(BaseRunner):
 
         _url = new_URL or URL
         url = _url.format(func_name, pattern, self.action_id)
+        logging.info(url)
         resp = crusher.get(url, timeout=300)
         resp.raise_for_status()
         try:
