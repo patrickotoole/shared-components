@@ -79,15 +79,13 @@ class CustomQueue(SingleQueue):
         name = self._children[0]
         try:
             data, stat = self.client.get(self.path + "/" + name)
-        except:
-            #except NoNodeError:  # pragma: nocover
+        except NoNodeError:
             # the first node has vanished in the meantime, try to
             # get another one
             raise ForceRetryError()
         try:
             self.client.delete(self.path + "/" + name)
-        except: 
-            #except NoNodeError:  # pragma: nocover
+        except NoNodeError:
             # we were able to get the data but someone else has removed
             # the node in the meantime. consider the item as processed
             # by the other process
