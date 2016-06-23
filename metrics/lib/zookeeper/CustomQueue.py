@@ -3,6 +3,10 @@ import hashlib
 import datetime
 from kazoo.recipe.queue import Queue
 
+from kazoo.exceptions import NoNodeError, NodeExistsError
+from kazoo.retry import ForceRetryError
+from kazoo.protocol.states import EventType
+
 class SingleQueue(Queue):
 
     _instance = None
