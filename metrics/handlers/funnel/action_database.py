@@ -38,7 +38,7 @@ DELETE FROM action_patterns where action_id = %(action_id)s and url_pattern = "%
 """
 
 DELETE_ACTION = """
-DELETE FROM action where action_id = %(action_id)s
+UPDATE action set deleted=1 where action_id = %(action_id)s
 """
 
 DELETE_ACTION_PATTERN = """
@@ -70,7 +70,8 @@ class ActionDatabase(object):
 
     def get_all(self):
         # this is no longer a thing...
-        where = "1=1"
+        #where = "1=1"
+        where ="deleted=0"
         result = self.db.select_dataframe(GET % {"where":where})
         patterns = self.get_patterns(result.action_id.tolist())
         filters = self.has_filter(result.action_id.tolist())
@@ -255,8 +256,6 @@ class ActionDatabase(object):
         if len(advertiser_ids)==1:
             zk.remove_advertiser_children_pattern(advertiser, urls, zk.tree)
             zk.set_tree()
-        
-        cursor.execute(DELETE_ACTION % action)
         cursor.execute(DELETE_ACTION_PATTERN % action)
 
         return action
