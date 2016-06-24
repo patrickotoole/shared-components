@@ -34,7 +34,7 @@ WHERE action_id = %(action_id)s
 """
 
 DELETE_ACTION_PATTERNS = """
-DELETE FROM action_patterns where action_id = %(action_id)s and url_pattern = "%(url_pattern)s"
+UPDATE action_patterns set deleted=1 where action_id = %(action_id)s and url_pattern = "%(url_pattern)s"
 """
 
 DELETE_ACTION = """
@@ -42,7 +42,7 @@ DELETE FROM action where action_id = %(action_id)s
 """
 
 DELETE_ACTION_PATTERN = """
-DELETE FROM action_patterns where action_id = %(action_id)s
+UPDATE action_patterns set deleted=1 where action_id = %(action_id)s
 """
 
 GET_MAX_ACTION_PLUS_1 = "select max(action_id)+1 from action"
@@ -256,7 +256,6 @@ class ActionDatabase(object):
             zk.remove_advertiser_children_pattern(advertiser, urls, zk.tree)
             zk.set_tree()
         
-        cursor.execute(DELETE_ACTION % action)
         cursor.execute(DELETE_ACTION_PATTERN % action)
 
         return action
