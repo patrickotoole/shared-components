@@ -19,7 +19,8 @@ from ...search.cache.pattern_search_cache import PatternSearchCache
 
 QUERY_DATE = "SELECT advertiser, url_pattern, uniques, count, url FROM domains_full_cache WHERE advertiser = '{}' and url_pattern = '{}' and record_date='{}'"
 QUERYFILTER = "select domain from filtered_out_domains where advertiser = '{}' or advertiser is NULL"
-QUERY2 = "select advertiser, url_pattern, uniques, count, url FROM domains_full_cache_id WHERE advertiser = '{}' and url_pattern = '{}' and record_date='{}' and filter_id={}"
+QUERY2 = "select zipped from generic_function_cache where udf='domains_full' and advertiser='%s' and url_pattern='%s' and date='%s' and action_id='%s'"
+DATE_FALLBACK2 = "select distinct date from generic_function_cache where advertiser='%(advertiser)s' and url_pattern='%(url_pattern)s' and action_id=%(action_id)s and udf='%(udf)s' order by date DESC"
 DATE_FALLBACK = "select distinct record_date from domains_full_cache where url_pattern='{}' and advertiser='{}' order by record_date DESC"
 
 class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler,BaseDomainHandler):
@@ -82,11 +83,23 @@ class VisitorDomainsFullCacheHandler(PatternSearchCache,VisitDomainsFullHandler,
         df = pandas.DataFrame(results_no_NA.iloc[:int(top_count)])
         return df
 
+    def getRecentDate2(self, advertiser, url_pattern, action_id, udf):
+        query_dict = {"url_pattern":url_pattern, "advertiser":advertiser, "action_id": action_id, "udf": udf}
+        datefallback = self.crushercache.select_dataframe(DATE_FALLBACK2 % query_dict)
+        now_date = str(datefallback['date'][0])
+        return now_date
+
     @decorators.deferred
     def defer_get_onsite_cache_filter_id(self, advertiser, pattern, top_count, action_id):
-        results  = self.crushercache.execute(QUERY2.format(action_id))
-        compressed_results = codecs.decode(results.data[0][0], 'hex')
-        df = zlib.decompress(compressed_results)
+        now_date = self.now()
+        now_date = now_date.split(" ")[0]
+        results  = self.crushercache.select_dataframe(QUERY2 % (advertiser, pattern, now_date, action_id))
+        if len(results)==0:
+            now_date = self.getRecentDate2(pattern, advertiser, action_id, 'domains_full')
+            results = self.crushercache.select_dataframe(QUERY2 % (advertiser, pattern,now_date, action_id))
+        hex_data = codecs.decode(results.ix[0]['zipped'], 'hex')
+        logging.info("Decoded")
+        df = zlib.decompress(hex_data)
         return df
 
     @custom_defer.inlineCallbacksErrors

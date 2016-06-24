@@ -292,10 +292,12 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
     if (data.has_filter) URL += "&filter_id=" + data.action_id
 
     var process = function(dd) {
+      var dd = dd.response;
       var single_domains = d3.nest()
         .key(function(x){return x.domain})
         .rollup(function(x){ return x[0]})
         .entries(dd).map(function(x){
+         
           return x.values
         }) 
       data.domains_full = single_domains

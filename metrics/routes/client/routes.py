@@ -102,10 +102,10 @@ class AdvertiserRoutes(Routes):
             (r'/user/keyword', user.KeywordUserHandler, self.connectors),
 
             #(r'/visitor/domains', visitor.handler.VisitorDomainsHandler, self.connectors),
-            (r'/visitor/domains/cache', visitor.cache_handler.ActionDashboardHandler, self.connectors),
+            #(r'/visitor/domains/cache', visitor.cache_handler.ActionDashboardHandler, self.connectors),
 
             #(r'/visitor/domains_full', visitor.full_handler.VisitorDomainsFullHandler, self.connectors),
-            (r'/visitor/domains_full/cache',visitor.full_cache_handler.VisitorDomainsFullCacheHandler,self.connectors),
+            #(r'/visitor/domains_full/cache',visitor.full_cache_handler.VisitorDomainsFullCacheHandler,self.connectors),
             
             (r'/visitor/(.*?)/cache', visitor.transform_cache_handler.VisitorTransformCacheHandler, self.connectors),
             (r'/visitor/(.*?)', visitor.transform_handler.VisitorTransformHandler, self.connectors),
@@ -130,10 +130,10 @@ class AdvertiserRoutes(Routes):
             (r'/user/keyword', user.KeywordUserHandler, self.connectors),
 
             #(r'/visitor/domains', visitor.handler.VisitorDomainsHandler, self.connectors),
-            (r'/visitor/domains/cache', visitor.cache_handler.ActionDashboardHandler, self.connectors),
+            #(r'/visitor/domains/cache', visitor.cache_handler.ActionDashboardHandler, self.connectors),
 
             #(r'/visitor/domains_full', visitor.full_handler.VisitorDomainsFullHandler, self.connectors),
-            (r'/visitor/domains_full/cache',visitor.full_cache_handler.VisitorDomainsFullCacheHandler,self.connectors),
+            #(r'/visitor/domains_full/cache',visitor.full_cache_handler.VisitorDomainsFullCacheHandler,self.connectors),
             
             (r'/visitor/(.*?)/cache', visitor.transform_cache_handler.VisitorTransformCacheHandler, self.connectors),
             (r'/visitor/(.*?)', visitor.transform_handler.VisitorTransformHandler, self.connectors),
