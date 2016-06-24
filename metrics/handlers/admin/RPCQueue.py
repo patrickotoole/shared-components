@@ -21,6 +21,7 @@ class RPCQueue():
         segment = rpc_data.get("action_name", False)
         filter_id = rpc_data.get("filter_id", False)
         parameters = rpc_data.get("parameters", {})
+        priority = rpc_data.get("priority", 2)
         
         volume = "v{}".format(datetime.datetime.now().strftime('%m%y'))
         if udf in ('recurring','backfill'):
@@ -39,7 +40,8 @@ class RPCQueue():
                 runner.runner,
                 [advertiser,pattern, udf, base_url,  "udf_{}_cache".format(udf) , filter_id]
                 ))
-        entry_id = CustomQueue.CustomQueue(self.zookeeper,"python_queue","log",volume).put(work,2)
+        priority = int(priority)
+        entry_id = CustomQueue.CustomQueue(self.zookeeper,"python_queue","log",volume).put(work,priority)
         logging.info("added to Cassandra work queue %s for %s" %(segment,advertiser))
         job_id = hashlib.md5(work).hexdigest()
         return entry_id, job_id
