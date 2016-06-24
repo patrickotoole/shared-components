@@ -20,6 +20,7 @@ class GraphiteWriter:
             #sys.exit(1)
         
     def send(self,metric, value):
+        self.sock.connect( (server,port) )
         now = int( time.time() )
         message ="%s %s %s\n"
         message = message % (metric, value, now)

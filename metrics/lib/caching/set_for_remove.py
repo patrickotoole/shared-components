@@ -7,7 +7,7 @@ QUERY = "select advertiser, pattern, filter_id from batch_job_errors_today group
 QUERY1 = "select advertiser, pattern, filter_id from batch_job_errors_today group by advertiser, pattern having advertiser='{}'"
 SETQUERY = "update action set ToDelete='yes' where pixel_source_name=%s and action_id=%s"
 
-class Remover(BaseRunner):
+class SetToRemove(BaseRunner):
 
     def __init__(self, connectors):
         self.connectors = connectors
@@ -46,5 +46,5 @@ if __name__ == "__main__":
     zk.start()
 
     connectors = {'db': lnk.dbs.rockerbox, 'crushercache':lnk.dbs.crushercache}#, 'zk':zk, 'cassandra':''}
-    rem = Remover(connectors)
+    rem = SetToRemove(connectors)
     rem.runner()
