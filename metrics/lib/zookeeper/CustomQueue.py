@@ -46,8 +46,10 @@ class CustomQueue(SingleQueue):
             _job_id = hashlib.md5(value).hexdigest()
         secondary_path = '{path}-{secondary_path}/{volume}/{job_id}/{new_entry}'.format(
         path=self.path, secondary_path=self.secondary_path, volume=self.volume, job_id=_job_id, new_entry=str(entry_location).split("/")[2])
-        
-        self.client.create(secondary_path, "", makepath=True)
+        try:
+            self.client.create(secondary_path, "", makepath=True)
+        except NodeExistsError:
+            logging.info("Log Entry node exists")
         return entry_location
 
     def delete(self, entry):

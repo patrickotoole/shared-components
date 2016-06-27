@@ -12,6 +12,8 @@ CARBON_PORT = 2003
 
 class GraphiteWriter:
     def __init__(self,server=CARBON_SERVER, port=CARBON_PORT):
+        self.server = server
+        self.port=port
         self.sock = socket.socket()
         try:
             self.sock.connect( (server,port) )
@@ -20,7 +22,7 @@ class GraphiteWriter:
             #sys.exit(1)
         
     def send(self,metric, value):
-        self.sock.connect( (server,port) )
+        self.sock.connect( (self.server,self.port) )
         now = int( time.time() )
         message ="%s %s %s\n"
         message = message % (metric, value, now)
