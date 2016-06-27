@@ -39,6 +39,7 @@ class Metrics():
             time.sleep(10)
             #time.sleep(15)
             try:
+                gw.connect()
                 success = self.mc.getSuccess()
                 gw.send("workqueue.{}.successes".format(hostname), success)
                 error = self.mc.getError()
@@ -53,5 +54,6 @@ class Metrics():
                     ticktime = time_keeper.getTime() if size >0 else 0
                     gw.send("workqueue.{}.tasks.task{}.time".format(hostname, index), ticktime)
                     index = index +1
+                gw.disconnect()
             except:
                 logging.info("Error with graphite logging")

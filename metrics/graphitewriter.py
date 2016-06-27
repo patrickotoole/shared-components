@@ -15,16 +15,20 @@ class GraphiteWriter:
         self.server = server
         self.port=port
         self.sock = socket.socket()
-        
-    def send(self,metric, value):
+
+    def connect(self):
         try:
             self.sock.connect( (self.server,self.port) )
         except:
             logging.info("Couldn't connect to Graphite")
+        
+    def send(self,metric, value):
 
         now = int( time.time() )
         message ="%s %s %s\n"
         message = message % (metric, value, now)
         logging.info("pushed message to graphite")
         self.sock.sendall(message)
+
+    def disconnect(self):
         self.sock.close()
