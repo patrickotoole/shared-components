@@ -89,18 +89,23 @@ class UDFRunner(BaseRunner):
             Q = REPLACE2
             self.connectors['crushercache'].execute(Q, (advertiser, pattern, func_name, compressed_data, now_date, self.action_id))
 
-def runner(advertiser,pattern, func_name, base_url, indentifiers="test", filter_id=False, job_id=False, connectors=False):
+def runner(**kwargs):
 
-    #add other parameters options thhat can be added on to url request
+    #add other parameters options that can be added on to url request
 
-    connectors = connectors or UDFRunner.get_connectors()
-    if not job_id:
+    kwargs['connectors'] = connectors or UDFRunner.get_connectors()
+    if not kwargs.get(['job_id'],False):
         uuid_num = "local_"+str(uuid.uuid4())
     else:
         uuid_num = job_id
 
     UR = UDFRunner(connectors)
-    script_name = func_name
+    script_name = kwargs['func_name']
+    advertiser = kwargs['advertiser']
+    pattern = kwargs['pattern']
+    base_url = kwargs['base_url', "test")
+    identifiers=kwargs.get('identifiers']
+    filter_id = kwargs.get('filter_id',False)
     crusher = UR.get_crusher_obj(advertiser, base_url)
     if not filter_id:
         UR.getActionIDPattern(pattern, crusher)
