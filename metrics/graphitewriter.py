@@ -15,16 +15,16 @@ class GraphiteWriter:
         self.server = server
         self.port=port
         self.sock = socket.socket()
-        try:
-            self.sock.connect( (server,port) )
-        except:
-            logging.info("Couldn't connect to %(server)s on port %(port)d, is carbon-agent.py running?" % { 'server':CARBON_SERVER, 'port':CARBON_PORT })
-            #sys.exit(1)
         
     def send(self,metric, value):
-        self.sock.connect( (self.server,self.port) )
+        try:
+            self.sock.connect( (self.server,self.port) )
+        except:
+            logging.info("Couldn't connect to Graphite")
+
         now = int( time.time() )
         message ="%s %s %s\n"
         message = message % (metric, value, now)
         logging.info("pushed message to graphite")
         self.sock.sendall(message)
+        self.sock.close()
