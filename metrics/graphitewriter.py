@@ -14,21 +14,23 @@ class GraphiteWriter:
     def __init__(self,server=CARBON_SERVER, port=CARBON_PORT):
         self.server = server
         self.port=port
-        self.sock = socket.socket()
 
-    def connect(self):
+    def __enter__(self):
         try:
+            self.sock = socket.socket()
             self.sock.connect( (self.server,self.port) )
-        except:
+            logging.info("connected to Graphite")
+        except Exception as e:
+            logging.info(str(e))
             logging.info("Couldn't connect to Graphite")
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.sock.close()
+        logging.info("connection closed")
         
     def send(self,metric, value):
-
         now = int( time.time() )
         message ="%s %s %s\n"
         message = message % (metric, value, now)
         logging.info("pushed message to graphite")
         self.sock.sendall(message)
-
-    def disconnect(self):
-        self.sock.close()

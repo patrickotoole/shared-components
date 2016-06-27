@@ -39,21 +39,20 @@ class Metrics():
             time.sleep(10)
             #time.sleep(15)
             try:
-                gw.connect()
-                success = self.mc.getSuccess()
-                gw.send("workqueue.{}.successes".format(hostname), success)
-                error = self.mc.getError()
-                gw.send("workqueue.{}.errors".format(hostname), error)
-                dq = self.mc.getDequeue()
-                gw.send("workqueue.{}.tasksdequeued".format(hostname), dq)
-                size = self.getQueueSize()
-                gw.send("workqueue.{}.queuesize".format(hostname), size)
-                gw.send("workqueue.{}.up".format(hostname),1)
-                index = 0
-                for time_keeper in self.tks:
-                    ticktime = time_keeper.getTime() if size >0 else 0
-                    gw.send("workqueue.{}.tasks.task{}.time".format(hostname, index), ticktime)
-                    index = index +1
-                gw.disconnect()
+                with gw:
+                    success = self.mc.getSuccess()
+                    gw.send("workqueue.{}.successes".format(hostname), success)
+                    error = self.mc.getError()
+                    gw.send("workqueue.{}.errors".format(hostname), error)
+                    dq = self.mc.getDequeue()
+                    gw.send("workqueue.{}.tasksdequeued".format(hostname), dq)
+                    size = self.getQueueSize()
+                    gw.send("workqueue.{}.queuesize".format(hostname), size)
+                    gw.send("workqueue.{}.up".format(hostname),1)
+                    index = 0
+                    for time_keeper in self.tks:
+                        ticktime = time_keeper.getTime() if size >0 else 0
+                        gw.send("workqueue.{}.tasks.task{}.time".format(hostname, index), ticktime)
+                        index = index +1
             except:
                 logging.info("Error with graphite logging")
