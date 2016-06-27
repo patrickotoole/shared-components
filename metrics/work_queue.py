@@ -41,14 +41,14 @@ class WorkQueue(object):
                 self.connectors['crushercache'].execute(SQL_LOG, (current_host, job_id, "DeQueue"))
                 logging.debug("Received next queue item")
                 try:
-                    fn, args = pickle.loads(data)
-                    args.append(job_id)
+                    fn, kwargs = pickle.loads(data)
+                    kwargs['job_id'] = job_id
 
                     logging.info("starting queue %s %s" % (str(fn),str(args)))
                     logging.info(self.rec.getThreadPool().threads[0])
                     logging.info(self.rec.getThreadPool().threads[0].is_alive())
                     logging.info(self.rec.getThreadPool().threads[0].ident)
-                    fn(*args, connectors=self.connectors) 
+                    fn(**kwargs, connectors=self.connectors) 
                     
                     self.mcounter.bumpSuccess()
                     self.connectors['crushercache'].execute(SQL_LOG, (current_host, job_id, "Ran"))
