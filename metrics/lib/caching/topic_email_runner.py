@@ -6,14 +6,14 @@ import uuid
 
 from topic.run_email import main
 
-def runner(advertiser=None, pattern=None, email=None, title=None, **kwargs):
+def runner(advertiser=None, pattern=None, email=None, title=None, limit=5, **kwargs):
 
     if None in [advertiser, pattern, email, title]:
         raise Exception("missing required params")
 
     job_name = kwargs.get("job_id", "local_"+str(uuid.uuid4()))
     
-    main(advertiser, pattern, email, title)
+    main(advertiser, pattern, email, title, limit)
 
 if __name__ == "__main__":
 
@@ -26,8 +26,10 @@ if __name__ == "__main__":
     define("pattern", default="/")
     define("title", default=" Your ")
     define("email", default="rick@rockerbox.com")
+    define("limit", default=10)
+
 
     basicConfig(options={})
     parse_command_line()
 
-    main(options.advertiser, options.pattern, options.email, options.title)
+    main(options.advertiser, options.pattern, options.email, options.title, options.limit)

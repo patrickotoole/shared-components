@@ -7,6 +7,7 @@ if __name__ == "__main__":
 
     define("advertiser",  default="")
     define("pattern", default="/")
+    define("limit", default=10)
     #define("run_local", default=True)
     #define("filter_id", default=0)
     #define("base_url", default="http://beta.crusher.getrockerbox.com")
@@ -27,8 +28,8 @@ from (select topic, max(score) max_value, count(*) topic_num, (max(score)-.9)*lo
 inner join action_topics b on a.topic = b.topic and a.max_value = b.score
 where b.advertiser = "%(advertiser)s" and b.pattern = "%(pattern)s" and a.topic_rank is not null
 order by 4
-limit 10
-    ''' % {"advertiser":options.advertiser,"pattern":options.pattern} )
+limit %(limit)s
+    ''' % {"advertiser":options.advertiser,"pattern":options.pattern, "limit":options.limit} )
 
     xxx = []
     import requests
