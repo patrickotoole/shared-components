@@ -29,9 +29,11 @@ class RPCQueue():
         filtering_scripts = dir(custom_scripts)
         if udf in filtering_scripts:
             script = getattr(custom_scripts, udf)
+            kwargs = {"advertiser":advertiser, "pattern":pattern, "func_name":udf, "base_url":base_url, "identifiers":"udf_{}_cache".format(udf), "filter_id":filter_id}
+            added_kwargs = dict(kwargs.items()+parameters.items())
             work = pickle.dumps((
                 script.runner,
-                {"advertiser":advertiser, "pattern":pattern, "func_name":udf, "base_url":base_url, "identifiers":"udf_{}_cache".format(udf), "filter_id":filter_id}
+                added_kwargs
                 ))
         if udf in ('recurring','backfill'):
             filtering_scripts.append('recurring')
