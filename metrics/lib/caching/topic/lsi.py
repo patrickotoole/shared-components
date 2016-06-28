@@ -37,11 +37,11 @@ class LSIComparision(object):
         return sims
         
     
-    def compare(self,similarity_string):
+    def compare(self,similarity_string,threshold=0.9):
         SIMILAR_TO = similarity_string
         vec_bow = self.dictionary.doc2bow(SIMILAR_TO.split())
         vec_lsi = self.model[vec_bow]
         
         sims = self.similarity[vec_lsi]
         sims = sorted(enumerate(sims), key=lambda item: -item[1])
-        return [(" ".join(self.data[i[0]]),i[1]) for i in sims]
+        return [(" ".join(self.data[i[0]]),i[1]) for i in sims if i[1] > threshold]

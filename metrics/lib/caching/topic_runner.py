@@ -56,16 +56,30 @@ class TopicRunner(BaseRunner):
 
         from topic.cluster import cluster, common_words, freq_words, word_importance
 
-        prepped = prep_data(data)
+        prepped, freq = prep_data(data)#.head(10000))
+        docs = len(prepped)
+        idf = { i:docs/j for i,j in freq.items()}
+        logging.info("finished word prep")
         words = prepped.words.tolist()
-        #comp = Word2VecComparision([i for i in words if len(i) > 2])
+        comp2 = Word2VecComparision([i for i in words if len(i) > 2])
         comp = LSIComparision([i for i in words if len(i) > 2])
+
 
         
         
         import numpy as np
+        import math
         
+        #norm = np.vectorize(lambda x: (x/math.sqrt(2))**2 )
+        #_sqrt = np.vectorize(lambda x: math.sqrt(x) )
+        #s1 = norm(comp.similarity)
+        #s2 = norm(np.array(comp2.similarity))
+
+        #similarity = _sqrt(np.add(s1,s2))
+
+        #similarity = (0.3)*comp.similarity + (0.7)*np.array(comp2.similarity)
         similarity = np.array(comp.similarity)
+
         
         upper_triangle = np.triu_indices(len(similarity),1)
         upper = similarity[upper_triangle]
@@ -90,47 +104,114 @@ class TopicRunner(BaseRunner):
         clustered_df = pandas.DataFrame( zip(comp.joined_data, clusters) )
         clustered_df.columns = ["title","group"]
 
+        logging.info("finished")
+
         groups = clustered_df.groupby("group").count()
         group_ids = groups.sort_index(by="title").tail(5).index
 
-        # unique words
-        recs = clustered_df.groupby("group").apply(common_words)
-        freqs = clustered_df.groupby("group").apply(freq_words)
+        ddd = clustered_df.groupby("group").apply(lambda x: pandas.Series({"count":len(x),"articles":list(x.title)}) ).sort_index(by="count")
 
-        unique_words = word_importance(recs[recs > 1], recs.unstack(1).count())
-        group_common_words = word_importance(freqs, 1)
+        def _word_counts(sentence_list):
+            from collections import Counter
+            c = Counter()
+            map(c.update,[list(set(i.split(" "))) for i in sentence_list])
+            return dict([(i,j)for i,j in c.most_common(2) if j > 1])
 
-        
-        # end unique words
+        #ddd['word_counts'] = ddd.articles.map(_word_counts)
+        from collections import Counter
+        ddd['topics'] = ddd.articles.map(" ".join).map(lambda x: x.split()).map(Counter).map(lambda x: { i:j for i,j in x.most_common(4) if j > 1}.keys() )
+        logging.info("topics")
+        LIMIT_COMPS = 10
 
-        
-        joined = groups.join(unique_words.T).join(group_common_words.T,rsuffix="_group").sort_index(by="title").fillna("")
-        full_join = clustered_df.set_index("group").join(joined,lsuffix="_count")
-        group_obj = full_join[full_join.keywords.map(len) > 0].reset_index().groupby("group")
-        group_matches = group_obj.apply(lambda x: x.title_count.map(lambda y: len(set(y.split(" ")).intersection(set(x.iloc[0].keywords)))  ).sum() )
-        
-        joined['matches'] = group_matches
-        
-        indices = joined.fillna(0).sort_index(by="matches").index
-        recs = clustered_df.set_index("group").ix[indices]        
+        ddd['comps'] = ddd[ddd.topics.map(len) > 1].topics.map(" ".join).map(comp.compare)#.map(lambda x: x[:LIMIT_COMPS])
+        logging.info("comps")
 
-        title_groups = recs.title.map(lambda x: "-".join(x.split(" ")) ).reset_index().set_index("title")
-        data_title = data.set_index("word_index")
-        data_title['groups'] = title_groups
+        groups_with_comps = ddd[ddd.comps.fillna("").map(len) > 1]
+        actual_comps = groups_with_comps.apply(lambda xxx: pandas.Series({
+            "comps":[i[0] for i in xxx.comps if len( set(i[0].split()).intersection(set(xxx.topics)) ) > 0],
+            "score":[i[1] for i in xxx.comps if len( set(i[0].split()).intersection(set(xxx.topics)) ) > 0]
 
+        }) ,axis=1)
+        ddd['actual_comps'] = actual_comps.comps
+        ddd['comp_score'] = actual_comps.score
+        import ipdb; ipdb.set_trace()
+
+
+        #sub_select = ddd[ddd.actual_comps.fillna("").map(len) > 0][["actual_comps","topics"]]
+        sub_select = ddd[ddd.actual_comps.fillna("").map(len) > 0][["actual_comps","topics","comp_score"]]
+
+        articles_with_groups = sub_select.groupby(level=0).apply(lambda x: pandas.DataFrame([{"score":score, "topic":" ".join(x.topics.iloc[0])} for score in x.comp_score.iloc[0]],index=x.actual_comps.iloc[0]) ).reset_index()
+
+
+        #articles_with_groups = sub_select.groupby(level=0).apply(lambda x: pandas.DataFrame([{"topic":" ".join(x.topics.iloc[0])}]*len(x.actual_comps.iloc[0]),index=x.actual_comps.iloc[0]) ).reset_index()
+        articles_with_groups['word_index'] = articles_with_groups.level_1.map(lambda x: "-".join(x.split(" ")))
+
+        recs = prepped[prepped.word_index.fillna("").map(len) > 0].merge(articles_with_groups,on="word_index",how="right").fillna("")
+        group_matches = articles_with_groups.drop_duplicates("word_index").groupby("group")['word_index'].count()
         group_matches.name = "matches"
+        group_matches = group_matches.reset_index()
+        import ipdb; ipdb.set_trace()
+        
+        recs = recs.merge(group_matches,on="group")
+        del recs['level_1']
+        recs = recs.groupby("group").apply(lambda x: x.sort_index(by="score").tail(LIMIT_COMPS) )
+        del recs['group']
+        recs = recs.reset_index()
+        recs['idf'] = recs.topic.map(lambda x: sum([idf[i]for i in x.split()]) )
+        return recs
 
-        data_title = data_title.reset_index().merge(group_matches.reset_index(),left_on="groups",right_on="group",how="left")
+
+        #ddd['similar_1'] = ddd.word_counts.map(lambda x:  comp.compare( " ".join(x.keys()) )[:20] )
+        #ddd['similar_2'] = ddd.word_counts.map(lambda x: comp2.compare( " ".join(x.keys()) )[:20] if len(x.keys()) else [] )
+
+        #ddd['set_1'] = ddd['similar_1'].map(lambda x: set([i for i,j in x]) )
+        #ddd['set_2'] = ddd['similar_2'].map(lambda x: set([i for i,j in x]) )
+
+
+        #import ipdb; ipdb.set_trace()
+
+        #ddd['intersection'] = ddd.apply(lambda x: set(x.articles).intersection(x.set_1.intersection(x.set_2)) ,axis=1)
+        #ddd['intersection_size'] = ddd['intersection'].map(len)
+
+
+        ## unique words
+        #recs = clustered_df.groupby("group").apply(common_words)
+        #freqs = clustered_df.groupby("group").apply(freq_words)
+
+        #unique_words = word_importance(recs[recs > 1], recs.unstack(1).count())
+        #group_common_words = word_importance(freqs, 1)
+
+        #
+        ## end unique words
+
+        #
+        #joined = groups.join(unique_words.T).join(group_common_words.T,rsuffix="_group").sort_index(by="title").fillna("")
+        #full_join = clustered_df.set_index("group").join(joined,lsuffix="_count")
+        #group_obj = full_join[full_join.keywords.map(len) > 0].reset_index().groupby("group")
+        #group_matches = group_obj.apply(lambda x: x.title_count.map(lambda y: len(set(y.split(" ")).intersection(set(x.iloc[0].keywords)))  ).sum() )
+        #
+        #joined['matches'] = group_matches
+        #
+        #indices = joined.fillna(0).sort_index(by="matches").index
+        #recs = clustered_df.set_index("group").ix[indices]        
+
+        #title_groups = recs.title.map(lambda x: "-".join(x.split(" ")) ).reset_index().set_index("title")
+        #data_title = data.set_index("word_index")
+        #data_title['groups'] = title_groups
+
+        #group_matches.name = "matches"
+
+        #data_title = data_title.reset_index().merge(group_matches.reset_index(),left_on="groups",right_on="group",how="left")
       
-        #tops = self.compute_top_clusters(groups)
-        #recs = self.compute_recs(tops,groups)
+        ##tops = self.compute_top_clusters(groups)
+        ##recs = self.compute_recs(tops,groups)
 
 
-        data_title_to_insert = data_title.dropna()
-        return data_title_to_insert
+        #data_title_to_insert = data_title.dropna()
+        #return data_title_to_insert
 
     def load(self, data):
-        to_insert = data.reset_index()[["domain","url","parent_category_name","word_index","group","count","uniques","matches"]]
+        to_insert = data.reset_index()[["domain","url","parent_category_name","word_index","group","count","uniques","matches","topic","score","idf"]]
         to_insert["advertiser"] = self.advertiser
         to_insert["pattern"] = self.pattern
         to_insert["filter_id"] = self.filter_id
@@ -160,7 +241,9 @@ class TopicRunner(BaseRunner):
 
 
 
-def runner(advertiser, pattern, func_name, base_url, indentifiers, filter_id=False, **kwargs):
+def runner(advertiser=None, pattern=None, func_name=None, base_url=None, indentifiers=None, filter_id=False, **kwargs):
+    if None in [advertiser, pattern, func_name, base_url, indentifiers]:
+        assert(False, "missing required params")
 
     job_name = kwargs.get("job_id", "local_"+str(uuid.uuid4()))
     connectors = kwargs.get("connectors")

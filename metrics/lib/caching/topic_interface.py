@@ -64,12 +64,11 @@ if __name__ == "__main__":
     func = TC.run_local 
     env_params = [connectors]
 
-    import ipdb; ipdb.set_trace()
     if not options.run_local:
         func = TC.add_db_to_work_queue
         env_params = []
    
-    for i,s in segments.iterrows():
+    for s in pattern_actions:
         args = [options.advertiser, s['url_pattern'], "topic", options.base_url, s['action_id']] + env_params
         print args
         func(*args)

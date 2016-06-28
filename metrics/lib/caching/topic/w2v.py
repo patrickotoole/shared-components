@@ -18,8 +18,12 @@ class Word2VecComparision(object):
         assert(len(words) > 0)
         count = 1
         words = filter(lambda x: x in self.dictionary_set,words)
-        
-        vec = self.model[words[0]]
+        if len(words) == 0:
+            vec = self.model[list(self.dictionary_set)[0]]
+            vec = vec*0
+        else:
+            vec = self.model[words[0]]
+
         for word in words[1:]:
             vec = np.add(vec,self.model[word])
             count += 1
@@ -44,7 +48,7 @@ class Word2VecComparision(object):
         from numpy import dot
         return dot(matutils.unitvec(v1), matutils.unitvec(v2))
 
-    def compare(self,sentence):
+    def compare(self,sentence,threshold=0.9):
         words = sentence.split()
         sentenceVec = self.sentenceToVec(words)
-        return sorted(zip(self.joined_data,[self.sentenceDot(vec,sentenceVec) for vec in self.sentenceVectors]),key=lambda x: x[1],reverse=True)
+        return [(x,y) for x,y in sorted(zip(self.joined_data,[self.sentenceDot(vec,sentenceVec) for vec in self.sentenceVectors]),key=lambda x: x[1],reverse=True) if y > threshold]

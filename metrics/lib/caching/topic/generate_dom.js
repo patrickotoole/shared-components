@@ -8,7 +8,7 @@ function read(f) {
 function include(f) {
   eval.apply(global, [read(f)]);
 }
-include('funcs.js');
+include(__dirname + '/funcs.js');
 
 var advertiser = process.argv.slice(2).join(" ");
 

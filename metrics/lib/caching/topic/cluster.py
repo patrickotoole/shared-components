@@ -1,9 +1,11 @@
-def cluster(data, depth=6, cluster_depth=5):
+def cluster(data, depth=4, cluster_depth=3):
     import scipy.cluster
     Z = scipy.cluster.hierarchy.linkage(data, method='single')
     R = scipy.cluster.hierarchy.inconsistent(Z, d=depth)
 
-    clusters = scipy.cluster.hierarchy.fcluster(Z, 1.1, criterion='inconsistent', depth=cluster_depth, R=None,monocrit=None)
+    # clusters = scipy.cluster.hierarchy.fcluster(Z, 1.1, criterion='inconsistent', depth=cluster_depth, R=None,monocrit=None)
+    clusters = scipy.cluster.hierarchy.fcluster(Z, 1, criterion='inconsistent', depth=cluster_depth, R=None,monocrit=None)
+
     return clusters
 
 def common_words(df):
@@ -33,19 +35,29 @@ def freq_words(df):
     return word_freq/len(df)
 
 def word_importance(grouped_words,denom=1):
+    import ipdb; ipdb.set_trace()
     recs = grouped_words
     word_ownership = recs.unstack(1)/denom
     word_cluster_score = word_ownership.unstack(1)
     
-    tiles = word_cluster_score.describe()
+    tiles = word_cluster_score.dropna().describe()
     cluster_words = word_cluster_score[(word_cluster_score > tiles['25%'])]
-    cluster_extras = word_cluster_score[(word_cluster_score < tiles['25%'])]
     
     cluster_key_words = cluster_words.groupby(level=1).apply(lambda x: [i for i,j in x.index] )
     cluster_key_words.name = "keywords"
 
-    cluster_non_key_words = cluster_extras.groupby(level=1).apply(lambda x: [i for i,j in x.index] )
-    cluster_non_key_words.name = "non_keywords"
 
     import pandas
-    return pandas.DataFrame([cluster_key_words,cluster_non_key_words])
+    return pandas.DataFrame([cluster_key_words])
+    #tiles = word_cluster_score.dropna().describe()
+    #cluster_words = word_cluster_score[(word_cluster_score > tiles['25%'])]
+    #cluster_extras = word_cluster_score[(word_cluster_score < tiles['25%'])]
+    #
+    #cluster_key_words = cluster_words.groupby(level=1).apply(lambda x: [i for i,j in x.index] )
+    #cluster_key_words.name = "keywords"
+
+    #cluster_non_key_words = cluster_extras.groupby(level=1).apply(lambda x: [i for i,j in x.index] )
+    #cluster_non_key_words.name = "non_keywords"
+
+    #import pandas
+    #return pandas.DataFrame([cluster_key_words,cluster_non_key_words])
