@@ -32,5 +32,5 @@ class GraphiteWriter:
         now = int( time.time() )
         message ="%s %s %s\n"
         message = message % (metric, value, now)
-        logging.info("pushed message to graphite")
+        #logging.info("pushed message to graphite")
         self.sock.sendall(message)
