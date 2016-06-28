@@ -1,3 +1,22 @@
+def main(advertiser, pattern, email, title):
+
+    import os
+    import subprocess
+
+    _dir = os.path.dirname(os.path.realpath(__file__))
+
+    
+    process = subprocess.Popen(['python','%s/run.py' % _dir,'--advertiser=%s' % advertiser,'--pattern=%s' % pattern], stdout=subprocess.PIPE)
+    json = process.stdout.read()
+    
+    process2 = subprocess.Popen(['node','%s/generate_dom.js' % _dir,' %s ' % title], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+    dom = process2.communicate(input=json)[0]
+    
+    process3 = subprocess.Popen(['python','%s/send.py' % _dir,'--email=%s' % email], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+    final = process3.communicate(input=dom)[0]
+ 
+    
+
 if __name__ == "__main__":
 
     from lib.report.utils.loggingutils import basicConfig
@@ -13,20 +32,6 @@ if __name__ == "__main__":
     basicConfig(options={})
     parse_command_line()
 
-    import os
-    _dir = os.path.dirname(os.path.realpath(__file__))
-
-    import ipdb; ipdb.set_trace()
-
-    import subprocess
-    
-    process = subprocess.Popen(['python', '%s/run.py' % _dir, '--advertiser=%s' % options.advertiser, '--pattern=%s' % options.pattern], stdout=subprocess.PIPE)
-    json = process.stdout.read()
-    
-    process2 = subprocess.Popen(['node', '%s/generate_dom.js' % _dir, ' %s ' % options.title], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
-    dom = process2.communicate(input=json)[0]
-    
-    process3 = subprocess.Popen(['python', '%s/send.py' % _dir, '--email=%s' % options.email], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
-    final = process3.communicate(input=dom)[0]
-    
+    main(options.advertiser, options.pattern, options.email, options.title)
+   
     
