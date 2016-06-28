@@ -134,7 +134,6 @@ class TopicRunner(BaseRunner):
         }) ,axis=1)
         ddd['actual_comps'] = actual_comps.comps
         ddd['comp_score'] = actual_comps.score
-        import ipdb; ipdb.set_trace()
 
 
         #sub_select = ddd[ddd.actual_comps.fillna("").map(len) > 0][["actual_comps","topics"]]
@@ -150,7 +149,6 @@ class TopicRunner(BaseRunner):
         group_matches = articles_with_groups.drop_duplicates("word_index").groupby("group")['word_index'].count()
         group_matches.name = "matches"
         group_matches = group_matches.reset_index()
-        import ipdb; ipdb.set_trace()
         
         recs = recs.merge(group_matches,on="group")
         del recs['level_1']

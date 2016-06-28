@@ -35,7 +35,6 @@ def freq_words(df):
     return word_freq/len(df)
 
 def word_importance(grouped_words,denom=1):
-    import ipdb; ipdb.set_trace()
     recs = grouped_words
     word_ownership = recs.unstack(1)/denom
     word_cluster_score = word_ownership.unstack(1)
