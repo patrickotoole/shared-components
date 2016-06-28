@@ -12,6 +12,8 @@ class RPCQueue():
 
     
     def add_to_work_queue(self, rpc_object):
+        import lib.caching as custom_scripts
+
         rpc_data = ujson.loads(rpc_object)
 
         advertiser = rpc_data.get("advertiser")
@@ -24,7 +26,16 @@ class RPCQueue():
         priority = rpc_data.get("priority", 2)
         
         volume = "v{}".format(datetime.datetime.now().strftime('%m%y'))
+        filtering_scripts = dir(custom_scripts)
+        if udf in filtering_scripts:
+            script = getattr(custom_scripts, udf)
+            work = pickle.dumps((
+                script.runner,
+                {"advertiser":advertiser, "pattern":pattern, "func_name":udf, "base_url":base_url, "identifiers":"udf_{}_cache".format(udf), "filter_id":filter_id}
+                ))
         if udf in ('recurring','backfill'):
+            filtering_scripts.append('recurring')
+            filtering_scripts.append('backfill')
             import lib.cassandra_cache.run as cassandra_functions
             yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
             _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
@@ -36,7 +47,7 @@ class RPCQueue():
                 fn,
                 kwargs
                 ))
-        else:
+        if udf not in filtering_scripts:
             import lib.caching.generic_udf_runner as runner
             work = pickle.dumps((
                 runner.runner,
