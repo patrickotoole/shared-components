@@ -16,4 +16,18 @@ def runner(advertiser=None, pattern=None, email=None, title=None, **kwargs):
     main(advertiser, pattern, email, title)
 
 if __name__ == "__main__":
-    runner("fsastore","Baby","rick@rockerbox.com", " Baby ")
+
+    from lib.report.utils.loggingutils import basicConfig
+    from lib.report.utils.options import define
+    from lib.report.utils.options import options
+    from lib.report.utils.options import parse_command_line
+
+    define("advertiser",  default="")
+    define("pattern", default="/")
+    define("title", default=" Your ")
+    define("email", default="rick@rockerbox.com")
+
+    basicConfig(options={})
+    parse_command_line()
+
+    main(options.advertiser, options.pattern, options.email, options.title)
