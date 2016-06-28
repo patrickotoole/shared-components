@@ -9,6 +9,7 @@ import pickle
 import hashlib
 import datetime
 from RPCQueue import RPCQueue
+from kazoo.exceptions import NoNodeError
 
 from lib.zookeeper import CustomQueue
 from twisted.internet import defer
@@ -36,10 +37,11 @@ def parse_for_id(x, zk):
         rvals = values[1]
         rvals['job_id']=job_id
         return {"parameters":rvals, "time":time}
+    except NoNodeError:
+        logging.info("job already dequeued")
     except:
         logging.info("Error parsing pickle job")
         return False
-
 
 class WorkQueueStatsHandler(tornado.web.RequestHandler, RPCQueue):
 
