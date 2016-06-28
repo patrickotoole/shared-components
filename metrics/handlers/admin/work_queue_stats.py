@@ -28,7 +28,7 @@ def parse(x, zk):
     except:
         logging.info("Error parsing pickle job")
 
-def parse_for_id(x, zk):
+def parse_for_id(x, zk, dq):
     try:
         time = zk.get("/python_queue/" + x)[1][2]
         values = pickle.loads(zk.get("/python_queue/" + x)[0])
@@ -36,9 +36,9 @@ def parse_for_id(x, zk):
         logging.info(values)
         rvals = values[1]
         rvals['job_id']=job_id
-        return {"parameters":rvals, "time":time}
+        return {"parameters":rvals, "time":time}, dq
     except NoNodeError:
-        logging.info("job already dequeued")
+        return False, dq+1
     except:
         logging.info("Error parsing pickle job")
         return False
@@ -62,8 +62,10 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler, RPCQueue):
             if entry_id:
                 df_entry['entry_id'] = str(entry_id).split("/")[2]
             df_entry['entries'] = []
+            df_entry['finished'] = 0
+            dq = 0
             for entry in entry_ids:
-                d1= parse_for_id(entry, self.zookeeper)
+                d1, dq = parse_for_id(entry, self.zookeeper, dq)
                 if d1:
                     sub_obj = {}
                     values = d1['parameters']
@@ -72,6 +74,8 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler, RPCQueue):
                     timestamp = d1['time']
                     sub_obj['time'] = timestamp
                     df_entry['entries'].append(sub_obj)
+                    d1['dequeued'] = dq
+            df_entry['finished'] = dq
             self.write(ujson.dumps(df_entry))
             self.finish()
         except Exception as e:
