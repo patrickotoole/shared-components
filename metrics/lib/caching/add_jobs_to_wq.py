@@ -120,7 +120,7 @@ class CacheInterface:
 
     def seg_loop(self, segments, advertiser, base_url):
         for seg in segments:
-            self.add_recurring(seg, advertiser, base_url)
+            self.add_recurring(seg, advertiser)
             self.add_full_url_to_work_queue(seg, advertiser, base_url)
             self.add_udf_to_work_queue(seg, advertiser, base_url)
 

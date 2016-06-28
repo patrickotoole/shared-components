@@ -92,19 +92,18 @@ class UDFRunner(BaseRunner):
 def runner(**kwargs):
 
     #add other parameters options that can be added on to url request
-
-    kwargs['connectors'] = connectors or UDFRunner.get_connectors()
-    if not kwargs.get(['job_id'],False):
+    connectors = kwargs['connectors']
+    if not kwargs.get('job_id',False):
         uuid_num = "local_"+str(uuid.uuid4())
     else:
-        uuid_num = job_id
+        uuid_num = kwargs['job_id']
 
     UR = UDFRunner(connectors)
-    script_name = kwargs['func_name']
+    func_name = kwargs['func_name']
     advertiser = kwargs['advertiser']
     pattern = kwargs['pattern']
-    base_url = kwargs['base_url', "test")
-    identifiers=kwargs.get('identifiers']
+    base_url = kwargs.get('base_url', "http://beta.crusher.getrockerbox.com")
+    identifiers=kwargs.get('identifiers',"test")
     filter_id = kwargs.get('filter_id',False)
     crusher = UR.get_crusher_obj(advertiser, base_url)
     if not filter_id:

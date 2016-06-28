@@ -43,17 +43,17 @@ class WorkQueue(object):
                 try:
                     fn, kwargs = pickle.loads(data)
                     kwargs['job_id'] = job_id
-
-                    logging.info("starting queue %s %s" % (str(fn),str(args)))
+                    logging.info("starting queue %s %s" % (str(fn),str(kwargs)))
                     logging.info(self.rec.getThreadPool().threads[0])
                     logging.info(self.rec.getThreadPool().threads[0].is_alive())
                     logging.info(self.rec.getThreadPool().threads[0].ident)
-                    fn(**kwargs, connectors=self.connectors) 
+                    kwargs['connectors']=self.connectors
+                    fn(**kwargs) 
                     
                     self.mcounter.bumpSuccess()
                     self.connectors['crushercache'].execute(SQL_LOG, (current_host, job_id, "Ran"))
                     self.timer.resetTime()
-                    logging.info("finished queue %s %s" % (str(fn),str(args)))
+                    logging.info("finished queue %s %s" % (str(fn),str(kwargs)))
                 except Exception as e:
                     box = socket.gethostname()
                     self.mcounter.bumpError()

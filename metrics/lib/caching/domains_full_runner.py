@@ -36,9 +36,9 @@ class FullDomainRunner(BaseRunner):
                 try:
                     to_insert['url'] = to_insert['url'].map(lambda x : x.encode('utf-8').replace("'",""))
                     _sql._write_mysql(to_insert, table_name, list(to_insert.columns), self.connectors['crushercache'].create_connection(), keys)
-                    to_insert2 = to_insert
-                    to_insert2['action_id'] = [self.action_id] * len(to_insert)
-                    _sql._write_mysql(to_insert2, "domains_full_cache_id", list(to_insert.columns), self.connectors['crushercache'].create_connection(), keys)
+                    #to_insert2 = to_insert
+                    #to_insert2['action_id'] = [self.action_id] * len(to_insert)
+                    #_sql._write_mysql(to_insert2, "domains_full_cache_id", list(to_insert.columns), self.connectors['crushercache'].create_connection(), keys)
                     logging.info("inserted %s records for advertiser username (includes a_) %s" % (len(to_insert), advertiser))
                 except:
                     logging.info("error with df for %s and %s" % (segment_name, advertiser))
@@ -65,22 +65,28 @@ class FullDomainRunner(BaseRunner):
             featured_value=0
         return featured_value
 
-def runner(advertiser_name, pattern, False, base_url, indentifiers="test", filter_id=False, job_id=False, connectors=False):
-    connectors = connectors or FullDomainRunner.get_connectors()
-    if not job_id:
+def runner(**kwargs):
+    connectors = kwargs['connectors']
+    if not kwargs.get('job_id',False):
         uuid_num = "local_"+str(uuid.uuid4())
     else:
-        uuid_num = job_id
+        uuid_num = kwargs['job_id']
+    advertiser = kwargs['advertiser']
+    pattern = kwargs['pattern']
+    base_url=kwargs['base_url']
+    identifiers = kwargs.get('identifiers', "test")
+    filter_id = kwargs.get("filter_id", False)
+
     FDR = FullDomainRunner(connectors)
-    crusher = FDR.get_crusher_obj(advertiser_name, base_url)
+    crusher = FDR.get_crusher_obj(advertiser, base_url)
     if not filter_id:
         FDR.getActionIDPattern(pattern, crusher)
     else:
         FDR.action_id = filter_id
 
-    FDR.accounting_entry_start(advertiser_name, pattern, "full_url_cache_runner",  uuid_num, FDR.action_id)
-    featured = FDR.featured_seg(advertiser_name, pattern)
-    urls = FDR.make_request(advertiser_name, pattern, base_url, featured)
+    FDR.accounting_entry_start(advertiser, pattern, "full_url_cache_runner",  uuid_num, FDR.action_id)
+    featured = FDR.featured_seg(advertiser, pattern)
+    urls = FDR.make_request(advertiser, pattern, base_url, featured)
     df = pandas.DataFrame(urls['response'])
-    FDR.insert(df, advertiser_name, pattern)
-    FDR.accounting_entry_end(advertiser_name, pattern, "full_url_cache_runner", uuid_num, FDR.action_id)
+    FDR.insert(df, advertiser, pattern)
+    FDR.accounting_entry_end(advertiser, pattern, "full_url_cache_runner", uuid_num, FDR.action_id)

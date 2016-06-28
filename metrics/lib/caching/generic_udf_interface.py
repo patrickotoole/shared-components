@@ -22,14 +22,16 @@ class UDFCache:
 
     def run_local(self, advertiser, segment, udf, base_url, filter_id, connectors):
         import lib.caching.generic_udf_runner as runner
-        runner.runner(advertiser,segment, udf, base_url, filter_id=filter_id, connectors=connectors)
+        kwargs = {"advertiser":advertiser, "pattern":segment, "func_name":udf, "base_url":base_url, "filter_id":filter_id, "connectors":connectors}
+        runner.runner(**kwargs)
 
     def add_db_to_work_queue(self, advertiser, segment, udf, base_url, filter_id):
         import lib.caching.generic_udf_runner as runner
-        _cache_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")    
+        _cache_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        kwargs = {"advertiser":advertiser, "pattern":segment, "func_name":udf, "base_url":base_url, "identifiers":"udf_{}_cache".format(udf), "filter_id":filter_id}
         work = pickle.dumps((
                 runner.runner,
-                [advertiser,segment, udf, base_url, "udf_{}_cache".format(udf) , filter_id]
+                kwargs
                 ))
         volume = "v{}".format(datetime.datetime.now().strftime('%m%y'))
         CustomQueue.CustomQueue(self.connectors['zk'],"python_queue", "log", volume).put(work,1)
