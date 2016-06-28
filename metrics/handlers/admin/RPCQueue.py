@@ -53,7 +53,7 @@ class RPCQueue():
             import lib.caching.generic_udf_runner as runner
             work = pickle.dumps((
                 runner.runner,
-                {"advertiser":advertiser, "pattern":pattern, "func_name":udf, "base_url":base_url, "identifiers":"udf_{}_cache".format(udf), "filter_id":filter_id}
+                {"advertiser":advertiser, "pattern":pattern, "func_name":udf, "base_url":base_url, "identifiers":"udf_{}_cache".format(udf), "filter_id":filter_id, "parameters":parameters}
                 ))
         priority = int(priority)
         entry_id = CustomQueue.CustomQueue(self.zookeeper,"python_queue","log",volume).put(work,priority)

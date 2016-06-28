@@ -34,15 +34,14 @@ class UDFRunner(BaseRunner):
         params = db.select_dataframe(QUERY.format(advertiser, udf))
         if len(params)==0:
             params = db.select_dataframe(QUERY2.format(udf))
-        return params
+        return ujson.loads(params['parameters'][0])
 
     def make_request(self,crusher, pattern, func_name, params):
         new_URL = False
         if len(params)>0:
             new_URL = URL
             try:
-                parameters_dict = ujson.loads(params['parameters'][0])
-                for key,value in parameters_dict.items():
+                for key,value in params.items():
                     stem = "&%s=%s"
                     new_URL += stem % (str(key), str(value))
             except:
@@ -116,8 +115,13 @@ def runner(**kwargs):
 
     db = connectors['crushercache']
     zk = connectors['zk']
-    
-    parameters = UR.get_parameters(db, advertiser, func_name)
+   
+    parameters = kwargs.get("parameters",False)
+    if parameters:
+        import ast
+        parameters = ast.literal_eval(parameters)
+    else:
+        parameters = UR.get_parameters(db, advertiser, func_name)
 
     try:
         data = UR.make_request(crusher, pattern, func_name, parameters)

@@ -20,9 +20,9 @@ class UDFCache:
     def __init__(self, connectors):
         self.connectors = connectors
 
-    def run_local(self, advertiser, segment, udf, base_url, filter_id, connectors):
+    def run_local(self, advertiser, segment, udf, base_url, filter_id, params, connectors):
         import lib.caching.generic_udf_runner as runner
-        kwargs = {"advertiser":advertiser, "pattern":segment, "func_name":udf, "base_url":base_url, "filter_id":filter_id, "connectors":connectors}
+        kwargs = {"advertiser":advertiser, "pattern":segment, "func_name":udf, "base_url":base_url, "filter_id":filter_id, "parameters": params, "connectors":connectors}
         runner.runner(**kwargs)
 
     def add_db_to_work_queue(self, advertiser, segment, udf, base_url, filter_id):
@@ -52,6 +52,7 @@ if __name__ == "__main__":
     define("filter_id", default=False)
     define("base_url", default="http://beta.crusher.getrockerbox.com")
     define("random", default=False)
+    define("parameters", default={})
 
     basicConfig(options={})
 
@@ -69,7 +70,7 @@ if __name__ == "__main__":
     elif options.run_local and not options.pattern:
         segments = connectors['db'].select_dataframe("select * from action_with_patterns where pixel_source_name = '{}'".format(options.advertiser))
         for i,s in segments.iterrows():
-            UC.run_local(options.advertiser, s['url_pattern'], options.udf,  options.base_url,s['action_id'], connectors)
+            UC.run_local(options.advertiser, s['url_pattern'], options.udf,  options.base_url,s['action_id'], options.parameters, connectors)
     elif options.udf:
         UC.add_db_to_work_queue(options.advertiser, options.pattern, options.udf, options.base_url, options.filter_id)
     else:
