@@ -54,7 +54,7 @@ def get_recurring(cassandra,advertiser,pattern,cache_date):
  
 
 
-def run_backfill(advertiser,pattern,cache_date,identifier="test",job_id=False,connectors=False):
+def run_backfill(advertiser="",pattern="",cache_date="",identifier="test",job_id=False,connectors=False):
     """
     This should be run when an action is created so that we cache the data in the action.
     It will prevent us from using sampled data
@@ -113,7 +113,7 @@ def run_backfill(advertiser,pattern,cache_date,identifier="test",job_id=False,co
             db.execute(UPDATE_PATTERN_CACHE % (elapsed,pattern,advertiser,cache_date))
 
            
-def run_recurring(advertiser,pattern,cache_date,identifier="test",job_id=False,connectors=False):
+def run_recurring(advertiser="",pattern="",cache_date="",identifier="test",job_id=False,connectors=False):
     """
     This should be run once a day for the previous day. It will cache data for 
     views, visits, uniques and domains to make the UI load more quickly.

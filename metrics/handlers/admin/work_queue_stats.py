@@ -21,8 +21,8 @@ def parse(x, zk):
         job_id = hashlib.md5(zk.get("/python_queue/" + x)[0]).hexdigest()
         logging.info(values)
         rvals = values[1]
-        rvals.append(job_id)
-        rvals.append(time)
+        rvals['job_id']=job_id
+        rvals['time'] = time
         return rvals
     except:
         logging.info("Error parsing pickle job")
@@ -34,7 +34,7 @@ def parse_for_id(x, zk):
         job_id = hashlib.md5(zk.get("/python_queue/" + x)[0]).hexdigest()
         logging.info(values)
         rvals = values[1]
-        rvals.append(job_id)
+        rvals['job_id']=job_id
         return {"parameters":rvals, "time":time}
     except:
         logging.info("Error parsing pickle job")
@@ -64,17 +64,9 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler, RPCQueue):
                 d1= parse_for_id(entry, self.zookeeper)
                 if d1:
                     sub_obj = {}
-                    if len(d1['parameters'])>5:
-                        keys = ['advertiser', 'pattern', 'udf', 'base_url', 'identifier', 'filter_id']
-                        values = d1['parameters'][:len(keys)]
-                        sub_obj = dict(zip(keys,values))
-                        sub_obj['entry']= entry
-                    else:
-                        sub_obj['entry']= entry
-                        sub_obj['advertiser'] = d1['parameters'][0]
-                        sub_obj['pattern']= d1['parameters'][1]
-                        sub_obj['udf'] = d1['parameters'][3]
-                        sub_obj['identifier'] = d1['parameters'][3]
+                    values = d1['parameters']
+                    sub_obj = values
+                    sub_obj['entry']= entry
                     timestamp = d1['time']
                     sub_obj['time'] = timestamp
                     df_entry['entries'].append(sub_obj)
@@ -125,6 +117,7 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler, RPCQueue):
             df = pandas.DataFrame(in_queue)
         else:
             df = pandas.DataFrame({"items":[]})
+        df = df.fillna("N/A")
         self.write(ujson.dumps(df.to_dict('records')))
         self.finish()
 

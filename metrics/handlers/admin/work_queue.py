@@ -75,8 +75,8 @@ class WorkQueueHandler(tornado.web.RequestHandler):
                 job_id = hashlib.md5(self.zookeeper.get("/python_queue/" + path)[0]).hexdigest()
                 print values
                 rvals = values[1]
-                rvals.append(job_id)
-                rvals.append(path)
+                rvals['job_id'] = job_id
+                rvals['path'] = path
                 return rvals
             except:
                 print "Error parsing pickle job"
@@ -84,7 +84,7 @@ class WorkQueueHandler(tornado.web.RequestHandler):
 
         in_queue = [parse(path) for path in path_queue]
         in_queue = [i for i in in_queue if i]
-
+        
         if len(in_queue) > 0:
             df = pandas.DataFrame(in_queue)
         else:
