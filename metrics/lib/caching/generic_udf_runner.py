@@ -34,7 +34,11 @@ class UDFRunner(BaseRunner):
         params = db.select_dataframe(QUERY.format(advertiser, udf))
         if len(params)==0:
             params = db.select_dataframe(QUERY2.format(udf))
-        return ujson.loads(params['parameters'][0])
+        if len(params)>0 and params['parameters'][0] is not None:
+            rp = ujson.loads(params['parameters'][0])
+        else:
+            rp = {}
+        return rp
 
     def make_request(self,crusher, pattern, func_name, params):
         new_URL = False
@@ -118,8 +122,7 @@ def runner(**kwargs):
    
     parameters = kwargs.get("parameters",False)
     if parameters:
-        import ast
-        parameters = ast.literal_eval(parameters)
+        parameters = ujson.loads(parameters)
     else:
         parameters = UR.get_parameters(db, advertiser, func_name)
 
