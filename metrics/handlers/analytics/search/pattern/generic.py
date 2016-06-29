@@ -118,7 +118,7 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
         domain_set = domains_df['domain']
 
         QUERY = """
-            SELECT domain, total_users as num_users, idf, category_name, parent_category_name 
+            SELECT domain, total_users as num_users, idf, category_name, case when parent_category_name = "" then category_name else parent_category_name end as parent_category_name
             FROM domain_idf
             WHERE domain in (%(domains)s) and category_name != ""
         """
