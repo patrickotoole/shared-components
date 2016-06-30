@@ -97,7 +97,7 @@ var parent_17 = parent_12
 var parent_18 = parent_17
   .append('div')
 
-parent_18.text('What articles are ' + advertiser +  'customers reading?')
+parent_18.text('What articles are ' + advertiser +  ' reading?')
 
 
 

@@ -13,7 +13,7 @@ def send(html, to="rick@rockerbox.com", subject="Hindsight Daily Digest"):
     
     msg = MIMEMultipart('alternative')
     msg['Subject'] = subject
-    msg['From'] = "hello@rockerbox.com"
+    msg['From'] = "\"Rockerbox Digest\" <hello@rockerbox.com>";
     msg['To'] = to
     
     part1 = MIMEText("What are your customers reading?", 'plain')
