@@ -35,6 +35,10 @@ class RPCQueue():
             kwargs = recur_kwargs if udf == 'recurring' else backfill_kwargs
         else:
             kwargs = {"advertiser":advertiser, "pattern":pattern, "func_name":udf, "base_url":base_url, "identifiers":"udf_{}_cache".format(udf), "filter_id":filter_id, "parameters":parameters}
+
+        filtering_scripts = dir(custom_scripts) 
+        if udf in filtering_scripts:
+            kwargs = dict(kwargs.items()+parameters.items())
         FS = FunctionSelector()
         fn = FS.select_function(udf)
         work = pickle.dumps((
