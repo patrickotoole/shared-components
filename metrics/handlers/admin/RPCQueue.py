@@ -4,6 +4,7 @@ from lib.zookeeper import CustomQueue
 import pickle
 import logging
 import hashlib
+from lib.functionselector import FunctionSelector
 
 class RPCQueue():
 
@@ -26,35 +27,20 @@ class RPCQueue():
         priority = rpc_data.get("priority", 2)
         
         volume = "v{}".format(datetime.datetime.now().strftime('%m%y'))
-        filtering_scripts = dir(custom_scripts)
-        if udf in filtering_scripts:
-            script = getattr(custom_scripts, udf)
-            kwargs = {"advertiser":advertiser, "pattern":pattern, "func_name":udf, "base_url":base_url, "identifiers":"udf_{}_cache".format(udf), "filter_id":filter_id}
-            added_kwargs = dict(kwargs.items()+parameters.items())
-            work = pickle.dumps((
-                script.runner,
-                added_kwargs
-                ))
         if udf in ('recurring','backfill'):
-            filtering_scripts.append('recurring')
-            filtering_scripts.append('backfill')
-            import lib.cassandra_cache.run as cassandra_functions
             yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
             _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
-            fn = cassandra_functions.run_recurring if udf == 'recurring' else cassandra_functions.run_backfill
             recur_kwargs = {"advertiser":advertiser, "pattern":pattern, "cache_date":_cache_yesterday, "indentifier":"recurring_cassandra_cache"}
             backfill_kwargs = {"advertiser":advertiser, "pattern":pattern, "cache_date":_cache_yesterday, "indentifier":"backfill_cassandra"}
             kwargs = recur_kwargs if udf == 'recurring' else backfill_kwargs
-            work = pickle.dumps((
-                fn,
-                kwargs
-                ))
-        if udf not in filtering_scripts:
-            import lib.caching.generic_udf_runner as runner
-            work = pickle.dumps((
-                runner.runner,
-                {"advertiser":advertiser, "pattern":pattern, "func_name":udf, "base_url":base_url, "identifiers":"udf_{}_cache".format(udf), "filter_id":filter_id}
-                ))
+        else:
+            kwargs = {"advertiser":advertiser, "pattern":pattern, "func_name":udf, "base_url":base_url, "identifiers":"udf_{}_cache".format(udf), "filter_id":filter_id, "parameters":parameters}
+        FS = FunctionSelector()
+        fn = FS.select_function(udf)
+        work = pickle.dumps((
+            fn,
+            kwargs
+            ))
         priority = int(priority)
         entry_id = CustomQueue.CustomQueue(self.zookeeper,"python_queue","log",volume).put(work,priority)
         logging.info("added to Cassandra work queue %s for %s" %(segment,advertiser))

@@ -5,6 +5,7 @@ from lib.pandas_sql import s as _sql
 import datetime
 import lib.cassandra_cache.run as cassandra_functions
 from kazoo.client import KazooClient
+from lib.functionselector import FunctionSelector
 
 formatter = '%(asctime)s:%(levelname)s - %(message)s'
 logging.basicConfig(level=logging.INFO, format=formatter)
@@ -15,9 +16,13 @@ SQL_QUERY = "select pixel_source_name from rockerbox.advertiser where crusher=1 
 
 SQL_REMOVE_OLD = "DELETE FROM action_dashboard_cache where update_time < (UNIX_TIMESTAMP() - %s)"
 UDFQUERY = "select udf from user_defined_functions where advertiser ={} or advertiser is NULL"
+UDFQUERY2 = "select name from rpc_function_details where is_recurring = 1 and active=1 and deleted=0"
+
 
 current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 volume = "v{}".format(datetime.datetime.now().strftime('%m%y'))
+
+FS = FunctionSelector()
 
 class CacheInterface:
     def __init__(self, advertiser, crusher, db, crusherdb, zookeeper=None):
@@ -52,81 +57,27 @@ class CacheInterface:
         CustomQueue.CustomQueue(self.zookeeper,"python_queue", "log", volume).put(work,5)
         logging.info("added to work queue %s for %s" %(segment["url_pattern"][0],advertiser))
 
-    def add_full_url_to_work_queue(self, segment, advertiser, base_url):
-        import lib.caching.domains_full_runner as adc_runner
-        _cache_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        work = pickle.dumps((
-                adc_runner.runner,
-                {"advertiser":advertiser, "pattern":segment["url_pattern"][0], "segment_name":False, "base_url":base_url, "indentifiers":"domains_full_cache", "filter_id":segment['action_id']}
-                ))
-        CustomQueue.CustomQueue(self.zookeeper,"python_queue", "log", volume).put(work,30)
-        logging.info("added to full domain work queue %s for %s" %(segment["url_pattern"][0],advertiser))
-
-    def add_udf_to_work_queue(self, segment, advertiser, base_url):
-        import lib.caching.generic_udf_runner as gur
-        _cache_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    def add_udf_to_work_queue(self, segment, advertiser, base_url, udf):
+        fn = FS.select_function(udf)
         cache_name = "udf_{}_cache"
 
         work = pickle.dumps((
-                gur.runner,
-                {"advertiser":advertiser, "pattern":segment["url_pattern"][0], "func_name":"keywords", "base_url":base_url, "indentifiers":cache_name.format("keywords"), "filter_id":segment['action_id']}
-                ))
-        CustomQueue.CustomQueue(self.zookeeper,"python_queue", "log", volume).put(work,31)
-        logging.info("added udf to work queue for %s %s" %(segment,advertiser))
-
-        work = pickle.dumps((
-                gur.runner,
-                {"advertiser":advertiser, "pattern":segment["url_pattern"][0], "func_name":"onsite", "base_url":base_url, "indentifiers":cache_name.format("onsite"), "filter_id":segment['action_id']}
-                ))
-        CustomQueue.CustomQueue(self.zookeeper,"python_queue", "log", volume).put(work,39)
-        logging.info("added udf to work queue for %s %s" %(segment,advertiser))
-        
-        work = pickle.dumps((
-                gur.runner,
-                {"advertiser":advertiser, "pattern":segment["url_pattern"][0], "func_name":"before_and_after", "base_url":base_url, "indentifiers":cache_name.format("before_and_after"), "filter_id":segment['action_id']}
+                fn,
+                {"advertiser":advertiser, "pattern":segment["url_pattern"][0], "func_name":udf, "base_url":base_url, "indentifiers":cache_name.format(udf), "filter_id":segment['action_id']}
                 ))
         CustomQueue.CustomQueue(self.zookeeper,"python_queue", "log", volume).put(work,35)
         logging.info("added udf to work queue for %s %s" %(segment,advertiser))
 
-        work = pickle.dumps((
-                gur.runner,
-                {"advertiser":advertiser, "pattern":segment["url_pattern"][0], "func_name":"hourly", "base_url":base_url, "indentifiers":cache_name.format("hourly"), "filter_id":segment['action_id']}
-                ))
-        CustomQueue.CustomQueue(self.zookeeper,"python_queue", "log", volume).put(work,35)
-        logging.info("added udf to work queue for %s %s" %(segment,advertiser))
-
-        work = pickle.dumps((
-                gur.runner,
-                {"advertiser":advertiser, "pattern":segment["url_pattern"][0], "func_name":"sessions", "base_url":base_url, "indentifiers":cache_name.format("sessions"), "filter_id":segment['action_id']}
-                ))
-        CustomQueue.CustomQueue(self.zookeeper,"python_queue", "log", volume).put(work,35)
-        logging.info("added udf to work queue for %s %s" %(segment,advertiser))
-
-        work = pickle.dumps((
-                gur.runner,
-                {"advertiser":advertiser, "pattern":segment["url_pattern"][0], "func_name":"model", "base_url":base_url, "indentifiers":cache_name.format("model"), "filter_id":segment['action_id']}
-                ))
-        CustomQueue.CustomQueue(self.zookeeper,"python_queue", "log", volume).put(work,35)
-        logging.info("added udf to work queue for %s %s" %(segment,advertiser))
-
-        udfs = self.crusherdb.select_dataframe("select udf from user_defined_functions where advertiser='{}' or advertiser is NULL".format(advertiser))
-        for uf in udfs.iterrows():
-            work = pickle.dumps((
-                    gur.runner,
-                    {"advertiser":advertiser, "pattern":segment["url_pattern"][0], "func_name":uf[1]['udf'], "base_url":base_url, "indentifiers":cache_name.format(uf[1]['udf']), "filter_id":segment['action_id']}
-                    ))
-            CustomQueue.CustomQueue(self.zookeeper,"python_queue", "log", volume).put(work,40)
-            logging.info("added udf to work queue for %s %s" %(segment,advertiser))
+    def get_udf_list(self):
+        udf_df = self.crusherdb.select_dataframe(UDFQUERY2)
+        return udf_df
 
     def seg_loop(self, segments, advertiser, base_url):
         for seg in segments:
             self.add_recurring(seg, advertiser)
-            self.add_full_url_to_work_queue(seg, advertiser, base_url)
-            self.add_udf_to_work_queue(seg, advertiser, base_url)
-
-def run_clean_up(crushercache):
-    import cache_date_remover_runner as CCU
-    CCU.runner(crushercache)
+            udf_df = self.get_udf_list()
+            for udf in udf_df.iterrows():
+                self.add_udf_to_work_queue(seg, advertiser, base_url, udf[1]['name'])
 
 def get_all_advertisers(db_con):
     ad_df = db_con.select_dataframe(SQL_QUERY)
@@ -148,14 +99,10 @@ def run_all(db, zk, cdb, base_url):
         advertiser_instance = CacheInterface(advert[0], crusher_api, db,cdb,zk)
         advertiser_segments=advertiser_instance.get_segments()
         advertiser_instance.seg_loop(advertiser_segments, advert[0], base_url)
-    #Remove old records
-    run_clean_up(cdb)
 
 def run_advertiser(ac, advertiser_name, base_url):
 	s = ac.get_segments()
 	ac.seg_loop(s,advertiser_name, base_url)
-        #Remove old records
-        run_clean_up(ac.crusherdb)
 
 def run_advertiser_segment(ac, advertiser, segment_name, base_url):
     segments = [segment_name]
@@ -167,10 +114,7 @@ if __name__ == "__main__":
     from lib.report.utils.options import options
     from lib.report.utils.options import parse_command_line
 
-    define("chronos",default=True)
-    define("remove_old", default=False)
-    define("remove_seconds", default="17280")
-    define("username",  default="")
+    define("advertiser",  default=False)
     define("password", default="")
     define("segment", default=False)
     define("base_url", default="http://beta.crusher.getrockerbox.com")
@@ -179,23 +123,12 @@ if __name__ == "__main__":
     
     parse_command_line()
 
-    
-    if options.chronos ==True:
+    if not options.advertiser:
         zookeeper =KazooClient(hosts="zk1:2181")
         zookeeper.start()
         run_all(lnk.dbs.rockerbox, zookeeper, lnk.dbs.crushercache, options.base_url)
     else:
-        if not options.segment:
-            zookeeper =KazooClient(hosts="zk1:2181")
-            zookeeper.start()
-            crusher = lnk.api.crusher
-            crusher.user = "a_{}".format(options.username)
-            crusher.password="admin"
-            crusher.base_url = options.base_url
-            crusher.authenticate()
-            ac = CacheInterface(options.username, crusher, lnk.dbs.rockerbox, lnk.dbs.crushercache, zookeeper)
-            run_advertiser(ac, options.username, options.base_url)
-        else:
+        if options.segment:
             zookeeper =KazooClient(hosts="zk1:2181")
             zookeeper.start()
             crusher = lnk.api.crusher
@@ -205,7 +138,15 @@ if __name__ == "__main__":
             crusher.authenticate()
             ac = CacheInterface(options.username, crusher, lnk.dbs.rockerbox, lnk.dbs.crushercache,zookeeper)
             run_advertiser_segment(ac, options.username, options.segment, options.base_url)
-    
-    if options.remove_old == True:
-        lnk.dbs.rockerbox.excute(SQL_REMOVE_OLD % options.remove_seconds)
+        else:
+            zookeeper =KazooClient(hosts="zk1:2181")
+            zookeeper.start()
+            crusher = lnk.api.crusher
+            crusher.user = "a_{}".format(options.username)
+            crusher.password="admin"
+            crusher.base_url = options.base_url
+            crusher.authenticate()
+            ac = CacheInterface(options.username, crusher, lnk.dbs.rockerbox, lnk.dbs.crushercache, zookeeper)
+            run_advertiser(ac, options.username, options.base_url)
+
 
