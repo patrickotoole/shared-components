@@ -24,7 +24,6 @@ class WorkQueue(object):
         START_QUERY = "insert into work_queue_log (hostname, event) values (%s, %s)"
         self.sock_id = socket.gethostname()
         self.connectors['crushercache'].execute(START_QUERY, (self.sock_id, 'Box WQ up'))
-        self.exit_on_finish = exit_on_finish
 
     def __call__(self):
         import hashlib
@@ -62,16 +61,6 @@ class WorkQueue(object):
                     logging.info("ERROR: queue %s " % e)
  
             else:
-                if self.exit_on_finish:
-                    logging.debug("No data in queue")
-                    self.connectors['sys_exit']()
-                else:
-                    import time
-                    time.sleep(5)
-                    logging.debug("No data in queue")
-            logging.debug("Moving on to next queue item")
-
-    def __exit__(self):
-        END_QUERY = "insert into work_queue_log (hostname, event) values (%s, %s)"
-        self.connectors['crushercache'].execute(END_QUERY, (self.sock_id, 'Box WQ down'))
-        #log exit
+                import time
+                time.sleep(10)
+                logging.debug("No data in queue")
