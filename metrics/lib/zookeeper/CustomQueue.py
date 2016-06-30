@@ -29,6 +29,10 @@ class CustomQueue(SingleQueue):
         self.volume = volume
         super(CustomQueue, self).__init__(client, path)
 
+    @property
+    def secondary_path_base(self):
+        return '{path}-{secondary_path}/{volume}'.format(path=self.path, secondary_path=self.secondary_path, volume=self.volume)
+
     def put(self, value, priority, _job_id=False):
         """Put an item into the queue.
 
@@ -44,8 +48,8 @@ class CustomQueue(SingleQueue):
         entry_location = self.client.create(path, value, sequence=True)
         if not _job_id:
             _job_id = hashlib.md5(value).hexdigest()
-        secondary_path = '{path}-{secondary_path}/{volume}/{job_id}/{new_entry}'.format(
-        path=self.path, secondary_path=self.secondary_path, volume=self.volume, job_id=_job_id, new_entry=str(entry_location).split("/")[2])
+        entry_id = str(entry_location).split("/")[2]
+        secondary_path = self.secondary_path_base + '/{job_id}/{new_entry}'.format(job_id=_job_id, new_entry=entry_id)
         try:
             self.client.create(secondary_path, "", makepath=True)
         except NodeExistsError:

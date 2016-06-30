@@ -16,7 +16,7 @@ class WorkQueue(object):
     def __init__(self,exit_on_finish, client,reactor,timer, mcounter, connectors):
         self.client = client
         volume = datetime.datetime.now().strftime('%m%y')
-        self.queue = CustomQueue.CustomQueue(client,"/python_queue", "log",volume)
+        self.queue = CustomQueue.CustomQueue(client,"/python_queue", "log", "v" + volume)
         self.rec = reactor
         self.connectors = connectors
         self.timer = timer
@@ -30,17 +30,19 @@ class WorkQueue(object):
         import socket
         while True:
             logging.debug("Asking for next queue item")
-            name,data = self.queue.get_w_name()
+            entry_id, data = self.queue.get_w_name()
             self.rec.getThreadPool().threads[0].setName("WQ")
             if data is not None:
                 job_id = hashlib.md5(data).hexdigest()
-                job_id = name + "_"+job_id
+                job_id = entry_id + "_" + job_id
                 current_host = socket.gethostname()
                 self.mcounter.bumpDequeue()
                 self.connectors['crushercache'].execute(SQL_LOG, (current_host, job_id, "DeQueue"))
                 logging.debug("Received next queue item")
                 try:
                     fn, kwargs = pickle.loads(data)
+
+                    self.queue.client.set(self.queue.secondary_path_base + "/%s/%s" % (job_id.split(entry_id)[1][1:], entry_id), '1' ) # running
                     kwargs['job_id'] = job_id
                     logging.info("starting queue %s %s" % (str(fn),str(kwargs)))
                     logging.info(self.rec.getThreadPool().threads[0])
@@ -51,6 +53,7 @@ class WorkQueue(object):
                     
                     self.mcounter.bumpSuccess()
                     self.connectors['crushercache'].execute(SQL_LOG, (current_host, job_id, "Ran"))
+
                     self.timer.resetTime()
                     logging.info("finished queue %s %s" % (str(fn),str(kwargs)))
                 except Exception as e:
@@ -59,6 +62,8 @@ class WorkQueue(object):
                     self.connectors['crushercache'].execute(SQL_LOG, (current_host, job_id, "Fail"))
                     self.connectors['crushercache'].execute(SQL_LOG2,(box, str(e), job_id))
                     logging.info("ERROR: queue %s " % e)
+                finally:
+                    self.queue.client.set(self.queue.secondary_path_base + "/%s/%s" % (job_id, entry_id), '' ) # finished
  
             else:
                 import time

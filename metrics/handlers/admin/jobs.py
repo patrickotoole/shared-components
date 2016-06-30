@@ -43,7 +43,7 @@ def parse_for_id(x, zk, dq):
         logging.info("Error parsing pickle job")
         return False
 
-class WorkQueueStatsHandler(tornado.web.RequestHandler, RPCQueue):
+class JobsHandler(tornado.web.RequestHandler, RPCQueue):
 
     def initialize(self, zookeeper=None, *args, **kwargs):
         self.zookeeper = zookeeper
@@ -57,6 +57,8 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler, RPCQueue):
             path="python_queue", secondary_path="log", volume=volume, job_id=_job_id)
             
             entry_ids = self.zookeeper.get_children(needed_path)
+            running_entries = [entry for entry in entry_ids if self.zookeeper.get(needed_path + "/" + entry)[0]]
+
             df_entry={}
             df_entry['job_id']= _job_id
             if entry_id:
@@ -76,6 +78,7 @@ class WorkQueueStatsHandler(tornado.web.RequestHandler, RPCQueue):
                     df_entry['entries'].append(sub_obj)
                     d1['dequeued'] = dq
             df_entry['finished'] = dq
+            df_entry['running'] = running_entries
             self.write(ujson.dumps(df_entry))
             self.finish()
         except Exception as e:

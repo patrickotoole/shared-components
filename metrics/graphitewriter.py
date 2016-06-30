@@ -19,14 +19,14 @@ class GraphiteWriter:
         try:
             self.sock = socket.socket()
             self.sock.connect( (self.server,self.port) )
-            logging.info("connected to Graphite")
+            #logging.info("connected to Graphite")
         except Exception as e:
-            logging.info(str(e))
-            logging.info("Couldn't connect to Graphite")
+            logging.error(str(e))
+            logging.error("Couldn't connect to Graphite")
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.sock.close()
-        logging.info("connection closed")
+        #logging.info("connection closed")
         
     def send(self,metric, value):
         now = int( time.time() )
