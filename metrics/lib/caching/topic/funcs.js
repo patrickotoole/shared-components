@@ -364,7 +364,7 @@ var parent_22 = parent_21
   .append('div')
   .attr('style','width:500px;display:inline-block;font-size:14px;font-family:helvetica neue;font-weight:700!important;;line-height:24px;text-transform:uppercase;letter-spacing:1px')
 
-parent_22.text(' ' + advertiser + 'Customers ')
+parent_22.text(' ' + advertiser + ' ')
 
 
 
@@ -984,7 +984,7 @@ var parent_60 = parent_59
   .append('span')
   .attr('style','color:#808285;text-decoration:underline')
 
-parent_60.text('203.710.7425')
+parent_60.text('(201) 455-7665')
 
 
 
