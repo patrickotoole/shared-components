@@ -63,7 +63,7 @@ class WorkQueue(object):
                     self.connectors['crushercache'].execute(SQL_LOG2,(box, str(e), job_id))
                     logging.info("ERROR: queue %s " % e)
                 finally:
-                    self.queue.client.set(self.queue.secondary_path_base + "/%s/%s" % (job_id, entry_id), '' ) # finished
+                    self.queue.client.set(self.queue.secondary_path_base + "/%s/%s" % (job_id.split(entry_id)[1][1:], entry_id), '' ) # running
  
             else:
                 import time

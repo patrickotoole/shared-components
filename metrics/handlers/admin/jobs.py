@@ -77,7 +77,7 @@ class JobsHandler(tornado.web.RequestHandler, RPCQueue):
                     sub_obj['time'] = timestamp
                     df_entry['entries'].append(sub_obj)
                     d1['dequeued'] = dq
-            df_entry['finished'] = dq
+            df_entry['finished'] = dq - len(running_entries)
             df_entry['running'] = running_entries
             self.write(ujson.dumps(df_entry))
             self.finish()
