@@ -1,25 +1,6 @@
-if __name__ == "__main__":
+def send(html, to="rick@rockerbox.com", subject="Hindsight Daily Digest"):
 
-    from lib.report.utils.loggingutils import basicConfig
-    from lib.report.utils.options import define
-    from lib.report.utils.options import options
-    from lib.report.utils.options import parse_command_line
-
-    define("email",  default="rick@rockerbox.com")
-
-    basicConfig(options={})
-    parse_command_line()
-
-
-    import sys
-    buf = ""
-    for line in sys.stdin:
-        buf += line
-    
-    html = buf.split("<body>")[1].split("</body>")[0]
-    
     import smtplib
-    
     
     username = 'rick@rockerbox.com'
     password = 'inwcwqcfehmkjsqb'
@@ -31,9 +12,9 @@ if __name__ == "__main__":
     from email.mime.text import MIMEText
     
     msg = MIMEMultipart('alternative')
-    msg['Subject'] = "Hindsight Daily Digest"
-    msg['From'] = "rick@rockerbox.com"
-    msg['To'] = options.email
+    msg['Subject'] = subject
+    msg['From'] = "hello@rockerbox.com"
+    msg['To'] = to
     
     part1 = MIMEText("What are your customers reading?", 'plain')
     part2 = MIMEText(html, 'html')
@@ -43,3 +24,24 @@ if __name__ == "__main__":
     
     server.sendmail(msg['From'], msg['To'], msg.as_string())
 
+    
+if __name__ == "__main__":
+
+    from lib.report.utils.loggingutils import basicConfig
+    from lib.report.utils.options import define
+    from lib.report.utils.options import options
+    from lib.report.utils.options import parse_command_line
+
+    define("email", default="rick@rockerbox.com")
+    define("subject", default="Hindsight Daily Digest")
+
+    basicConfig(options={})
+    parse_command_line()
+
+    import sys
+    buf = ""
+    for line in sys.stdin:
+        buf += line
+    
+    html = buf.split("<body>")[1].split("</body>")[0]
+    send(html, options.email, options.subject)
