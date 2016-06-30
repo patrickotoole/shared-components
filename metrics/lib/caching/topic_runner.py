@@ -78,7 +78,7 @@ class TopicRunner(BaseRunner):
         #similarity = _sqrt(np.add(s1,s2))
 
         #similarity = (0.3)*comp.similarity + (0.7)*np.array(comp2.similarity)
-        similarity = np.array(comp.similarity)
+        similarity = np.array([i for i in comp.similarity])
 
         
         upper_triangle = np.triu_indices(len(similarity),1)
@@ -232,6 +232,8 @@ class TopicRunner(BaseRunner):
 
         if exc_type:
             logging.info(traceback)
+            logging.error("Logging an uncaught exception",
+                 exc_info=(exc_type, exc_value, traceback))
             logging.info("Data not inserted")
         else:
             self.accounting_entry_end(self.advertiser, self.pattern, self.func_name, self.job_name, self.action_id)

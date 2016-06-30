@@ -19,7 +19,8 @@ class LSIComparision(object):
         self.corpus = [self.dictionary.doc2bow(text) for text in self.data]
         self.model = LsiModel(self.corpus,onepass=False,power_iters=5,id2word=self.dictionary)
         print "finished model"
-        self.similarity = similarities.MatrixSimilarity(self.model[self.corpus])
+        corp = self.model[self.corpus]
+        self.similarity = similarities.MatrixSimilarity(corp)
         self.similarityVectors = np.array([self.sentenceToVec(l) for l in self.data])
         #self.similarityVectors = np.array([self.normalize(vec) for vec in self.similarityVectors])
         #self.similarityMatrix = np.dot(self.similarityVectors,self.similarityVectors.T)

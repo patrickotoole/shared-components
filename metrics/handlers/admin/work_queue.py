@@ -105,6 +105,8 @@ submit_target.append("button")
 
     params_target.selectAll(".param").each(function(y){
       obj[y.key] = d3.select(this).selectAll("input").node().value;
+
+      if (y.type == "object") obj[y.key] = JSON.parse(obj[y.key])
     })
 
     d3.xhr("/jobs")
