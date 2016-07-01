@@ -86,6 +86,6 @@ class AppnexusReport(object):
         self.params['report_num_rows'] = resp.count("\r\n")
         log_retreived(self.db, self.params)
 
-        return io.StringIO(unicode(resp))
+        return io.StringIO(unicode(resp,errors='ignore'))
 
 
