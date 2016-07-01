@@ -26,7 +26,7 @@ class RPCQueue():
         parameters = rpc_data.get("parameters", {})
         priority = rpc_data.get("priority", 2)
         for key, val in rpc_data.items():
-            if key not in ['advertiser','udf','pattern','base_url','action_name','filter_id','priority','parameters']
+            if key not in ['advertiser','udf','pattern','base_url','action_name','filter_id','priority','parameters']:
                 parameters[key] = val
         
         volume = "v{}".format(datetime.datetime.now().strftime('%m%y'))
