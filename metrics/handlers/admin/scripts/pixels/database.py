@@ -1,7 +1,46 @@
 from helpers import * 
+from pandas import DataFrame
+
 import ujson
 
 GET_PIXEL_STRING = """select group_concat(pixel_source_name SEPARATOR '|') pixel_string from ( select pixel_source_name from advertiser where external_advertiser_id=%(advertiser_id)s union select external_segment_id from advertiser_segment where external_advertiser_id=%(advertiser_id)s and segment_name like '%%All Pages%%' union select concat(s.external_segment_id,":",ap.pixel_id) from advertiser_segment s join advertiser_pixel ap on s.external_advertiser_id=ap.external_Advertiser_id where s.external_advertiser_id=%(advertiser_id)s and segment_name like '%%Purchase%%' and ap.pixel_display_name='Purchase' union select concat(s.external_segment_id,":",ap.pixel_id) from advertiser_segment s join advertiser_pixel ap on s.external_advertiser_id=ap.external_Advertiser_id where s.external_advertiser_id=%(advertiser_id)s and segment_name like '%%Signup%%' and ap.pixel_display_name='Signup' union select external_segment_id from advertiser_segment where external_advertiser_id=%(advertiser_id)s and segment_name like '%%Logged%%') a;"""
+
+INSERT_PIXEL = """
+INSERT INTO advertiser_pixel (
+    external_advertiser_id,
+    pixel_id,
+    pixel_display_name,
+    pixel_name,
+    pc_window_hours,
+    pv_window_hours
+)
+VALUES (
+    '%(external_advertiser_id)s',
+    '%(pixel_id)s',
+    '%(pixel_display_name)s',
+    '%(pixel_name)s' ,
+    '%(pc_window_hours)s',
+    '%(pv_window_hours)s'
+)
+"""
+
+INSERT_SEGMENT = """
+INSERT INTO advertiser_segment (
+    external_advertiser_id,
+    external_member_id,
+    external_segment_id,
+    segment_name,
+    segment_implemented
+)
+VALUES (
+    '%(external_advertiser_id)s',
+    '%(external_member_id)s',
+    '%(external_segment_id)s',
+    '%(segment_name)s',
+    X'%(segment_implemented)s'
+)
+"""
+
 
 class AdvertiserDatabase:
 
@@ -24,18 +63,17 @@ class AdvertiserDatabase:
         return (advertiser_id, pixel_source_name, pixel_hash)
 
 
-class PixelDatabase:
+class PixelDatabase(AdvertiserDatabase):
     
     def __init__(self,*args,**kwargs):
         self.db = kwargs.get("db",None)
-
 
     def get_pixel_hash(self,advertiser_id):
 
         Q = GET_PIXEL_STRING % {"advertiser_id": advertiser_id}
         return self.db.select_dataframe(Q).ix[0,'pixel_string']
 
-    def get_templates(self,template_type, implementation):
+    def get_templates(self,template_type="script", implementation="media"):
 
         Q = "SELECT * FROM templates WHERE type = '%s' and implementation = '%s'"
         templates = self.db.select_dataframe(Q % (template_type,implementation)).set_index("name") 
@@ -79,3 +117,52 @@ class PixelDatabase:
         }
 
         return pixels
+
+    def insert_pixel(self,pixel,pixel_source_name, advertiser_id):
+
+        is_conversion = pixel.get("conversion",False)
+
+        templates = self.get_templates()
+        template = templates.ix['segment_pixel']
+        if is_conversion: template = templates.ix['conversion_pixel']
+
+        data = {
+            "segment_name": pixel['segment']['segment_name'],
+            "pixel_source_name": pixel_source_name,
+            "external_segment_id": pixel['segment']['segment_id'],
+            "pixel_id": pixel.get("conversion",{}).get("pixel_id",0),
+            "advertiser_id": advertiser_id
+        }
+
+        data['rendered'] = compile(template, DataFrame([data]), True)
+
+        if is_conversion: 
+            conv_data = {
+                "external_advertiser_id": data['advertiser_id'],
+                "pixel_id": data['pixel_id'],
+                "pixel_display_name": data['segment_name'],
+                "pixel_name": data['segment_name'],
+                "pc_window_hours":720*60,
+                "pv_window_hours": 720*60
+            }
+            query = INSERT_PIXEL % conv_data
+            self.db.execute(query)
+
+
+        params = {
+            "external_advertiser_id": data['advertiser_id'],
+            "external_segment_id": data['external_segment_id'],
+            "segment_name": data['segment_name'],
+            "advertiser_id": data['advertiser_id'],
+            "external_member_id": 2024,
+            "segment_implemented": data['rendered'][0]['compiled'].encode("hex")
+        }
+        query = INSERT_SEGMENT % params
+        self.db.execute(query)
+
+        return 
+
+
+
+
+
