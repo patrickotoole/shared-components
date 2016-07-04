@@ -18,6 +18,7 @@ from editable_base import EditableBaseHandler
 from pixel_status import PixelStatusHandler
 from pixel_lookup import PixelLookupHandler
 from pixel_alerts import PixelAlertsHandler
+from pixel_handler import AdvertiserPixelHandler
 import appnexus
 import bidder
 import opt
