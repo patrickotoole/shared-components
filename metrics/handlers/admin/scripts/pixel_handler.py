@@ -38,8 +38,8 @@ class AdvertiserPixelHandler(tornado.web.RequestHandler,PixelDatabase,PixelAPI):
         advertiser_id, pixel_source_name, _ = self.get_advertiser(advertiser_id)
 
         pixels = self.create_pixel(advertiser_id, pixel_source_name, body["segment_name"], body["segment_type"])
-        self.insert_pixel(pixels, pixel_source_name, advertiser_id)
+        resp = self.insert_pixel(pixels, pixel_source_name, advertiser_id)
 
         self.set_header('Content-Type','application/javascript')
-        self.write(ujson.dumps(body))
+        self.write(ujson.dumps(resp))
         self.finish()

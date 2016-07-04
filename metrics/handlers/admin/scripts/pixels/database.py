@@ -160,9 +160,4 @@ class PixelDatabase(AdvertiserDatabase):
         query = INSERT_SEGMENT % params
         self.db.execute(query)
 
-        return 
-
-
-
-
-
+        return data['rendered'][0]
