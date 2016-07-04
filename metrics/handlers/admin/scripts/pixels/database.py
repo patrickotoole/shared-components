@@ -96,7 +96,7 @@ class PixelDatabase(AdvertiserDatabase):
         return segment_pixels
 
 
-    def get_pixel(self, advertiser_id, template_type="script", implementation="media", with_comment=False):
+    def get_pixel(self, advertiser_id, template_type="script", implementation="media", with_comment=False, skip_compile=False):
 
         advertiser_id, pixel_source_name, pixel_hash  = self.get_advertiser(advertiser_id)
         
@@ -107,9 +107,9 @@ class PixelDatabase(AdvertiserDatabase):
         segs  = segment_pixels[segment_pixels.pixel_id.isnull() & (segment_pixels.event_name != "view")]
         convs = segment_pixels[segment_pixels.pixel_id.notnull()]
 
-        views_px = compile(templates.ix['all_pages_pixel'],views,with_comment)
-        segs_px  = compile(templates.ix['segment_pixel'],segs,with_comment)
-        convs_px = compile(templates.ix['conversion_pixel'],convs,with_comment)
+        views_px = compile(templates.ix['all_pages_pixel'],views,with_comment,skip_compile)
+        segs_px  = compile(templates.ix['segment_pixel'],segs,with_comment,skip_compile)
+        convs_px = compile(templates.ix['conversion_pixel'],convs,with_comment,skip_compile)
 
         pixels = {
             "segment_pixels": views_px + segs_px ,

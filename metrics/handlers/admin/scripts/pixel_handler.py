@@ -14,10 +14,12 @@ class AdvertiserPixelHandler(tornado.web.RequestHandler,PixelDatabase,PixelAPI):
     def get(self,advertiser_id):
 
         with_comment = self.get_argument("include_comment",False)
+        skip_compile = self.get_argument("skip_compile",False)
+
         template_type = self.get_argument("type","script")
         implementation = self.get_argument("implementation","media")
 
-        pixels = self.get_pixel(advertiser_id, template_type, implementation, with_comment)
+        pixels = self.get_pixel(advertiser_id, template_type, implementation, with_comment, skip_compile)
 
         self.set_header('Content-Type','application/javascript')
         self.write(ujson.dumps(pixels))

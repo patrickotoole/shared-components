@@ -12,7 +12,7 @@ def parse_event_name(pixel_name):
     except:
         return pixel_name.lower().replace(" ","_")
 
-def compile(template,data,with_comment=False):
+def compile(template,data,with_comment=False, skip_compile=False):
     fields = template.fields
     _template = template.template
 
@@ -22,7 +22,10 @@ def compile(template,data,with_comment=False):
     assert(len(set(fields).intersection(set(data.columns))) == len(fields),"missing fields %s" % (str(fields)) )
 
     compiled = [
-        dict(j[fields].to_dict().items() + [("compiled",_template % j.to_dict())])
+        dict(
+            j[fields].to_dict().items() + 
+            ([("compiled",_template % j.to_dict())] if not skip_compile else [])
+        )
         for i,j in data.iterrows()
     ]
     return compiled
