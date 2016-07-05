@@ -29,12 +29,12 @@ class AdvertiserDatabase:
 
         return (advertiser_id, pixel_source_name)
 
-    def insert_advertiser(self, advertiser_id, advertiser_name, pixel_source_name, **body):
+    def insert_advertiser(self, advertiser_id=None, advertiser_name=None, pixel_source_name=None, **body):
 
-        fields = self.db.select_dataframe("SHOW columns FROM advertiser")['Field'].tolist()
+        fields = self.db.select_dataframe("SHOW columns FROM advertiser")['field'].tolist()
 
         valid = {i:j for i,j in body.items() if i in fields}
-        valid['external_advertiser_id'] = advertiser_id
+        valid['advertiser_id'] = advertiser_id
         valid['advertiser_name'] = advertiser_name
         valid['pixel_source_name'] = pixel_source_name
 

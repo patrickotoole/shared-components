@@ -28,7 +28,7 @@ class AdvertiserHandler2(tornado.web.RequestHandler, AdvertiserDatabase, Adverti
         try:
 
             advertiser_id = self.create_advertiser(advertiser_name)
-            internal_id   = self.insert_advertiser(advertiser_id, advertiser_name, pixel_source_name, **body)
+            internal_id   = self.insert_advertiser(advertiser_id, **body)
             self.write(ujson.dumps({"id":internal_id,"external_advertiser_id":advertiser_id}))
             self.finish()
         except Exception as e:
