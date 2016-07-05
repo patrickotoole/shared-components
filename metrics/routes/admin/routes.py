@@ -45,6 +45,8 @@ class AdminRoutes(
 
         return [
             (r'/pixel_implementation/?(.*?)', scripts.AdvertiserPixelHandler, self.connectors),
+            (r'/advertiser_implementation/?(.*?)', scripts.AdvertiserHandler2, self.connectors),
+
             (r'/optimization/domain/?', optimization.DomainListHandler, self.connectors),
             (r'/intraweek.*', scripts.IntraWeekHandler, self.connectors),
             (r'/api/v2.*', scripts.APIHandlerV2, self.connectors),
