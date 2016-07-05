@@ -2,7 +2,6 @@ from target import TargetingHandler
 from money import MoneyHandler
 from profile import ProfileHandler
 from advertiser_old import AdvertiserHandler
-from advertiser_handler import AdvertiserHandler2
 
 from api import APIHandler
 from api_v2 import APIHandlerV2

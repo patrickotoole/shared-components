@@ -3,10 +3,21 @@ from ..base import Routes
 
 class UserRoutes(Routes):
 
+    @connectors("db","api")
+    def user_apie_login(self):
+        import handlers.advertiser.handler as advertiser
+
+        return [
+            (r'/advertiser', advertiser.AdvertiserHandler2, self.connectors),
+        ]
+
+
     @connectors("db")
     def user_login(self):
-        import handlers.user as user
+        import handlers.user_handlers as user
         import handlers.subscription as subscription
+
+        import handlers.advertiser.handler as advertiser
 
         return [
             (r'/', user.LoginHandler, self.connectors),
@@ -14,7 +25,7 @@ class UserRoutes(Routes):
             (r'/login.*', user.LoginHandler, self.connectors),
             (r'/signup*', user.SignupHandler, self.connectors),
             (r'/account/permissions*', user.AccountPermissionsHandler, self.connectors),
-            (r'/subscription', subscription.SubscriptionHandler, self.connectors)
+            (r'/subscription', subscription.SubscriptionHandler, self.connectors),
         ]
 
 class AdvertiserRoutes(Routes):
@@ -22,7 +33,6 @@ class AdvertiserRoutes(Routes):
     @connectors("db")
     def user_advertiser_routes(self):
         import handlers.reporting as reporting
-        import handlers.advertiser as advertiser
         import handlers.campaign as campaign
         import handlers.seller as seller
 #        import handlers.api as api
@@ -38,7 +48,6 @@ class AdvertiserRoutes(Routes):
 
             (r'/intraweek.*',reporting.InsertionOrderHandler, self.connectors),
             (r'/api.*', reporting.APIHandler, self.connectors),
-            (r'/advertiser', advertiser.AdvertiserHandler, self.connectors),
 
             (r'/sellers', seller.SellerHandler, self.connectors),
 

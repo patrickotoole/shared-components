@@ -3,16 +3,16 @@ import ujson
 import pandas
 
 from lib.helpers import *
-from advertiser.database import AdvertiserDatabase
-from advertiser.api import AdvertiserAPI
+from database import AdvertiserDatabase
+from api import AdvertiserAPI
+from ..base import BaseHandler
 
+class AdvertiserHandler2(BaseHandler, AdvertiserDatabase, AdvertiserAPI):
+    def initialize(self, **kwargs):
+        self.db = kwargs.get("db",False)
+        self.api = kwargs.get("api",False)
 
-class AdvertiserHandler2(tornado.web.RequestHandler, AdvertiserDatabase, AdvertiserAPI):
-    def initialize(self, db, api):
-        self.db = db
-        self.api = api
-
-    def post(self,arg=False):
+    def post(self):
 
         body = ujson.loads(self.request.body)
 
@@ -38,7 +38,8 @@ class AdvertiserHandler2(tornado.web.RequestHandler, AdvertiserDatabase, Adverti
 
 
     @tornado.web.asynchronous
-    def get(self,advertiser):
-        d = dict(zip(("external_advertiser_id", "pixel_source_name"),self.get_advertiser(advertiser)))
+    def get(self):
+        advertiser_id = self.current_advertiser
+        d = self.get_advertiser(advertiser_id)
         self.write(ujson.dumps(d))
         self.finish()
