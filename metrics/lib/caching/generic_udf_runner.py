@@ -93,7 +93,6 @@ class UDFRunner(BaseRunner):
             self.connectors['crushercache'].execute(Q, (advertiser, pattern, func_name, compressed_data, now_date, self.action_id))
 
 def runner(**kwargs):
-
     #add other parameters options that can be added on to url request
     connectors = kwargs['connectors']
     if not kwargs.get('job_id',False):
@@ -122,7 +121,7 @@ def runner(**kwargs):
    
     parameters = kwargs.get("parameters",False)
     if parameters:
-        parameters = ujson.loads(parameters)
+        parameters = parameters
     else:
         parameters = UR.get_parameters(db, advertiser, func_name)
 

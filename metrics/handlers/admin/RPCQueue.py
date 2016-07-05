@@ -42,6 +42,8 @@ class RPCQueue():
         filtering_scripts = dir(custom_scripts) 
         if udf in filtering_scripts:
             kwargs = dict(kwargs.items()+parameters.items())
+            kwargs.pop('parameters')
+            #need better documentation and clarity on script and udf input for RPC
         FS = FunctionSelector()
         fn = FS.select_function(udf)
         work = pickle.dumps((
