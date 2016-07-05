@@ -31,7 +31,10 @@ class RPCQueue():
         
         volume = "v{}".format(datetime.datetime.now().strftime('%m%y'))
         if udf in ('recurring','backfill'):
-            yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
+            days_ago = 1
+            if 'days_ago' in paramters.keys():
+                days_ago = int(paramters['days_ago'])
+            yesterday = datetime.datetime.now() - datetime.timedelta(days=days_ago)
             _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
             recur_kwargs = {"advertiser":advertiser, "pattern":pattern, "cache_date":_cache_yesterday, "indentifier":"recurring_cassandra_cache"}
             backfill_kwargs = {"advertiser":advertiser, "pattern":pattern, "cache_date":_cache_yesterday, "indentifier":"backfill_cassandra"}
