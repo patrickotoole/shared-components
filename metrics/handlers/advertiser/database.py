@@ -5,8 +5,8 @@ from pandas import DataFrame
 import ujson
 
 INSERT_ADVERTISER = """
-INSERT INTO advertiser ( external_advertiser_id, advertiser_name, pixel_source_name)
-VALUES ( %(advertiser_id)s, '%(advertiser_name)s' , '%(pixel_source_name)s')
+INSERT INTO advertiser ( external_advertiser_id, advertiser_name, pixel_source_name, client_sld)
+VALUES ( %(advertiser_id)s, '%(advertiser_name)s' , '%(pixel_source_name)s', '%(client_sld)s')
 """
 
 API_QUERY = "select * from advertiser where %s "
@@ -58,4 +58,11 @@ class AdvertiserDatabase:
         df = self.db.select_dataframe(Q % advertiser_id)
         return df["id"][0]
 
- 
+    def associate_advertiser(self, advertiser_id=None, username=None):
+
+        query = """UPDATE user set advertiser_id = %s where username = '%s'""" % (advertiser_id, username)
+        self.db.execute(query)
+
+        return 1
+
+

@@ -36,6 +36,7 @@ class UserDatabase:
 
     def update(self,user_object):
 
+        user_object['password'] = pw_hash.hash_password(user_object["password"])
         obj = self.get_by_nonce(user_object['nonce'])
         self.db.execute(UPDATE_QUERY % user_object)
         return obj['username']

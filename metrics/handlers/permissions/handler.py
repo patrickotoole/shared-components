@@ -14,7 +14,7 @@ class AccountPermissionsHandler(BaseHandler,PermissionsDatabase):
         advertiser = self.get_argument("advertiser_id", False)
         u = self.get_current_user()
 
-        current_advertiser = self.current_advertiser
+        current_advertiser = self.get_secure_cookie("advertiser")
 
         advertiser_permissions = self.get_user_permissions(u)
         feature_permissions = self.get_user_feature_permissions(u)
@@ -36,6 +36,7 @@ class AccountPermissionsHandler(BaseHandler,PermissionsDatabase):
         }
 
         self.write(ujson.dumps(obj))
+        self.finish()
 
     @tornado.web.authenticated
     def post(self):

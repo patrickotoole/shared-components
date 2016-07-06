@@ -29,6 +29,10 @@ class AdvertiserHandler2(BaseHandler, AdvertiserDatabase, AdvertiserAPI):
 
             advertiser_id = self.create_advertiser(advertiser_name)
             internal_id   = self.insert_advertiser(advertiser_id, **body)
+            username = self.get_current_user()
+            self.associate_advertiser(advertiser_id, username)
+            self.set_secure_cookie("advertiser", advertiser_id)
+
             self.write(ujson.dumps({"id":internal_id,"external_advertiser_id":advertiser_id}))
             self.finish()
         except Exception as e:

@@ -1,5 +1,17 @@
 from lib.helpers import *
 
+USER_QUERY = """
+SELECT DISTINCT
+    user.id as id,
+    username,
+    advertiser_id as external_advertiser_id,
+    password,
+    advertiser_name,
+    pixel_source_name
+FROM user
+    LEFT JOIN advertiser ON (user.advertiser_id = advertiser.external_advertiser_id)
+WHERE username = '%s'"""
+
 PERMISSIONS_QUERY = """
 SELECT
     pixel_source_name,

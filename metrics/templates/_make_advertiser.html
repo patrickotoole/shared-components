@@ -52,245 +52,254 @@
 
 <script>
 
-if (window.location.search.indexOf("nonce") == -1 ) {
+d3.json("/account/permissions")
+  .get(function(err,x){
 
-  var content = [
-        {
-            "left": ""
-          , "right": "<div class='codepeek_text'>We will also use your domain to help check the pixel is implemented correctly.</div>" 
+      var s = window.location.search;
+      var nonce = (s.indexOf("nonce") > -1 ) ?
+        s.split("nonce=")[1].split("&")[0] : 
+        "";
+
+      var slide_position = !!nonce ? 
+        3 : (!!err) ? 
+        0 : (x.results.advertisers[0].external_advertiser_id == 0) ?
+        1 : 2;
+          
+    
+      var funcs = [
+          function(x,pane) {
+            var email = pane.selectAll(".envelope_description input").node().value
+            var split = email.split("@")
+            
+            if ( !((split.length > 1) && (split[0].length > 0) && (split[1].length > 3)) ) return pane.selectAll(".message").text("Email address is not valid.")
+            
+            var obj = { "username": email, "email": email }
+            console.log(obj)
+            d3.xhr("/signup")
+              .post(JSON.stringify(obj),function(err,x) {
+                if (!err) slideshow.next()
+                return pane.selectAll(".message").text("Error: " + JSON.parse(err.response).error)
+              })
+    
+          }
+        , function(x,pane) {
+    
+            var domain = pane.selectAll(".envelope_description input").node().value
+            domain = domain.replace("http://","").replace("https://","").replace("www.","")
+            var split = domain.split(".")
+            var pixel_source_name = split.slice(0,-1).join("")
+            
+            if ( !((split.length > 1) && (split[0].length > 2) && (split[1].length > 1)) ) return pane.selectAll(".message").text("Domain name is not valid.")
+    
+            // get the advertiser and create advertiser / pixels
+            var obj = { "client_sld": domain, "pixel_source_name": pixel_source_name, "advertiser_name": pixel_source_name }
+            console.log(obj)
+            d3.xhr("/advertiser")
+              .post(JSON.stringify(obj),function(err,x) {
+                var advertiser_obj = JSON.parse(x.response)
+                
+                
+
+                if (false) slideshow.next()
+              })
+    
+          }
+        , function(x,pane) {
+            slideshow.next()
+          }
+        , function(x,pane) {
+            var password = pane.selectAll(".envelope_description input").node().value
+            if ( !(password.length > 5) ) return pane.selectAll(".message").text("Password length is too short.")
+           
+            var obj = { "password": password, "nonce":nonce}
+            d3.xhr("/signup")
+              .send("PUT", JSON.stringify(obj), function(err,x){
+                if (!err) document.location = "/crusher"
+                pane.selectAll(".message").text(JSON.parse(err.response).error)
+    
+              })
+    
+          }
+      ]
+    
+      var slides = [
+        function slide1(){
+          var d = d3.select(this)                                                                                    
+    
+          var stage = start.stage(d)
+            .title("Getting Started")                                                                                
+            .subtitle("Setup is easy and takes less than two minutes. Enter your email to get started. ")
+            .left("")
+            .right("")                                                                                               
+            .draw()                                                                                                  
+          
+          var cp_row = stage._stage                                                                                  
+          
+          var env = start.envelope(cp_row)
+            .data([])
+            .title("What's your email?")
+            .description("")
+            .button("next")
+            .click(funcs[0])
+            .draw()
+    
+          var row = d3_updateable(env._desc_wrapper,".row","div")
+            .classed("row",true)
+    
+          d3_updateable(row,"input","input")
+            .attr("placeholder","email")
+            .style("width","300px")
+    
+          d3_updateable(row,".message","div")
+            .classed("message",true)
+    
+    
+          cp_row.selectAll(".envelope")
+            .style("margin-bottom","0px")
+    
+          cp_row.selectAll("h3")
+            .style("margin-bottom","0px")
+    
+          cp_row.selectAll(".envelope_description")
+            .style("margin-bottom","-20px")
+    
+    
+    
         } 
-    ]
-
-  var funcs = [
-      function(x,pane) {
-        var email = pane.selectAll(".envelope_description input").node().value
-        var split = email.split("@")
-        
-        if ( !((split.length > 1) && (split[0].length > 0) && (split[1].length > 3)) ) return pane.selectAll(".message").text("Email address is not valid.")
-        // get the email and create account
-        var obj = { "username": email, "email": email }
-        console.log(obj)
-        d3.xhr("/signup")
-          .post(JSON.stringify(obj),function(err,x) {
-            if (!err) slideshow.next()
-            return pane.selectAll(".message").text("Error: " + JSON.parse(err.response).error)
-          })
-
-      }
-    , function(x,pane) {
-
-        var domain = pane.selectAll(".envelope_description input").node().value
-        domain = domain.replace("http://","").replace("https://","").replace("www.","")
-        var split = domain.split(".")
-        var pixel_source_name = split.slice(0,-1).join("")
-        
-        if ( !((split.length > 1) && (split[0].length > 2) && (split[1].length > 1)) ) return pane.selectAll(".message").text("Domain name is not valid.")
-
-        // get the advertiser and create advertiser / pixels
-        var obj = { "domain": domain, "pixel_source_name": pixel_source_name }
-        console.log(obj)
-
-        slideshow.next()
-      }
-    , function(x,pane) {
-        slideshow.next()
-      }
-  ]
-
-  var slides = [
-    function slide1(){
-      var d = d3.select(this)                                                                                    
-
-      var stage = start.stage(d)
-        .title("Getting Started")                                                                                
-        .subtitle("Setup is easy and takes less than two minutes. Enter your email to get started. ")
-        .left("")
-        .right("")                                                                                               
-        .draw()                                                                                                  
-      
-      var cp_row = stage._stage                                                                                  
-      
-      var env = start.envelope(cp_row)
-        .data([])
-        .title("What's your email?")
-        .description("")
-        .button("next")
-        .click(funcs[0])
-        .draw()
-
-      var row = d3_updateable(env._desc_wrapper,".row","div")
-        .classed("row",true)
-
-      d3_updateable(row,"input","input")
-        .attr("placeholder","email")
-        .style("width","300px")
-
-      d3_updateable(row,".message","div")
-        .classed("message",true)
-
-
-      cp_row.selectAll(".envelope")
-        .style("margin-bottom","0px")
-
-      cp_row.selectAll("h3")
-        .style("margin-bottom","0px")
-
-      cp_row.selectAll(".envelope_description")
-        .style("margin-bottom","-20px")
-
-
-
-    } 
-  , function slide2(){
-      var d = d3.select(this)
-        
-      var stage = start.stage(d)
-        .title("Let's get started!")                                                                                
-        .subtitle("To get started, tell us on what domain will we be implementing pixels?")
-        .left("")
-        .right("")                                                                                               
-        .draw()                                                                                                  
-      
-      var current = 0;
-
-      stage
-        .left("<div class='codepeek_text'>Knowing the domain for the website will help us setup your account.</div>")
-        .right("<div class='codepeek_text'>We will also use your domain to help check the pixel is implemented correctly.</div>")                                                                         
-        .draw()                                                                                                
-
-      var env = start.envelope(stage._stage)
-        .data([])
-        .title("What's your domain?")
-        .description("")
-        .button("next")
-        .click(funcs[1])
-        .draw()
-      
-      var row = d3_updateable(env._desc_wrapper,".row","div")
-        .classed("row",true)
-
-      d3_updateable(row,"input","input")
-        .attr("placeholder","example.com")
-        .style("width","300px")
-
-      stage._stage.selectAll(".envelope")
-        .style("margin-bottom","0px")
-
-      stage._stage.selectAll("h3")
-        .style("margin-bottom","0px")
-
-      stage._stage.selectAll(".envelope_description")
-        .style("margin-bottom","-20px")
-
-
-
-      
-    }                                                                                                            
-  , function slide3(){
-      
-      var d = d3.select(this)
-      var stage = start.stage(d)
-        .title("Almost there!")                                                                                
-        .subtitle("Paste the code below before the </head> tag on every page of your site.")
-        .left("<div class='codepeek_text'>This pixel allows us to collect a pool of data about the users in your audience. <br><br> </div>")
-        .right("<div class='codepeek_text'>After the pixel is implemented, you will receive the Hindsight Daily Digest. <br><br> It will show content you should engage with and recommend stories that matches your audience.</div>")
-        .draw()
+      , function slide2(){
+          var d = d3.select(this)
+            
+          var stage = start.stage(d)
+            .title("Let's get started!")                                                                                
+            .subtitle("To get started, tell us on what domain will we be implementing pixels?")
+            .left("")
+            .right("")                                                                                               
+            .draw()                                                                                                  
+          
+          var current = 0;
     
-      var cp_row = stage._stage
-      var click = function(){}//home.codepeek_click(cp_row,advertiser,uid,slideshow.next.bind(slideshow))
+          stage
+            .left("<div class='codepeek_text'>Knowing the domain for the website will help us setup your account.</div>")
+            .right("<div class='codepeek_text'>We will also use your domain to help check the pixel is implemented correctly.</div>")                                                                         
+            .draw()                                                                                                
     
-      var advertiser = {"segments":[{"segment_name":"All Pages"}]}
+          var env = start.envelope(stage._stage)
+            .data([])
+            .title("What's your domain?")
+            .description("")
+            .button("next")
+            .click(funcs[1])
+            .draw()
+          
+          var row = d3_updateable(env._desc_wrapper,".row","div")
+            .classed("row",true)
+    
+          d3_updateable(row,"input","input")
+            .attr("placeholder","example.com")
+            .style("width","300px")
+    
+          stage._stage.selectAll(".envelope")
+            .style("margin-bottom","0px")
+    
+          stage._stage.selectAll("h3")
+            .style("margin-bottom","0px")
+    
+          stage._stage.selectAll(".envelope_description")
+            .style("margin-bottom","-20px")
+    
+    
+    
+          
+        }                                                                                                            
+      , function slide3(){
+          
+          var d = d3.select(this)
+          var stage = start.stage(d)
+            .title("Almost there!")                                                                                
+            .subtitle("Paste the code below before the </head> tag on every page of your site.")
+            .left("<div class='codepeek_text'>This pixel allows us to collect a pool of data about the users in your audience. <br><br> </div>")
+            .right("<div class='codepeek_text'>After the pixel is implemented, you will receive the Hindsight Daily Digest. <br><br> It will show content you should engage with and recommend stories that matches your audience.</div>")
+            .draw()
+        
+          var cp_row = stage._stage
+          var click = function(){}//home.codepeek_click(cp_row,advertiser,uid,slideshow.next.bind(slideshow))
+        
+          var advertiser = {"segments":[{"segment_name":"All Pages"}]}
+    
+          start.codepeek(cp_row)
+            .data(advertiser)
+            .button("check")
+            .click(click)
+            .draw()
+    
+    
+        }
+      , function slide4(){
+          var d = d3.select(this)                                                                                    
+    
+          var stage = start.stage(d)
+            .title("Activate Account")                                                                                
+            .subtitle("Choose a password to complete account activation.")
+            .left("")
+            .right("")                                                                                               
+            .draw()                                                                                                  
+          
+          var cp_row = stage._stage                                                                                  
+          
+          var env = start.envelope(cp_row)
+            .data([])
+            .title("Choose a password")
+            .description("")
+            .button("activate")
+            .click(funcs[3])
+            .draw()
+    
+          var row = d3_updateable(env._desc_wrapper,".row","div")
+            .classed("row",true)
+    
+          d3_updateable(row,"input","input")
+            .attr("type","password")
+            .attr("placeholder","password")
+            .style("width","300px")
+    
+          d3_updateable(row,".message","div")
+            .classed("message",true)
+    
+    
+          cp_row.selectAll(".envelope")
+            .style("margin-bottom","0px")
+    
+          cp_row.selectAll("h3")
+            .style("margin-bottom","0px")
+    
+          cp_row.selectAll(".envelope_description")
+            .style("margin-bottom","-20px")
+    
+    
+    
+        }
+      ]                                                                                                                
 
-      start.codepeek(cp_row)
-        .data(advertiser)
-        .button("check")
-        .click(click)
-        .draw()
-
-
-    }
-  ]                                                                                                                
-                                                                 
-
-} else {
-
-  var nonce = document.location.search.split("nonce=")[1].split("&")[0];
-
-  var funcs = [
-    function(x,pane) {
-      var password = pane.selectAll(".envelope_description input").node().value
-      if ( !(password.length > 5) ) return pane.selectAll(".message").text("Password length is too short.")
+      slides = slides.slice(slide_position)
+                                                                     
+    
      
-      var obj = { "password": password, "nonce":nonce}
-      d3.xhr("/signup")
-        .send("PUT", JSON.stringify(obj), function(err,x){
-          if (!err) document.location = "/crusher"
-          pane.selectAll(".message").text(JSON.parse(err.response).error)
-
-        })
-
-    }
-  ]
-
-
-  var slides = [
-    function slide1(){
-      var d = d3.select(this)                                                                                    
-
-      var stage = start.stage(d)
-        .title("Activate Account")                                                                                
-        .subtitle("Choose a password to complete account activation.")
-        .left("")
-        .right("")                                                                                               
-        .draw()                                                                                                  
-      
-      var cp_row = stage._stage                                                                                  
-      
-      var env = start.envelope(cp_row)
-        .data([])
-        .title("Choose a password")
-        .description("")
-        .button("activate")
-        .click(funcs[0])
-        .draw()
-
-      var row = d3_updateable(env._desc_wrapper,".row","div")
-        .classed("row",true)
-
-      d3_updateable(row,"input","input")
-        .attr("type","password")
-        .attr("placeholder","password")
-        .style("width","300px")
-
-      d3_updateable(row,".message","div")
-        .classed("message",true)
-
-
-      cp_row.selectAll(".envelope")
-        .style("margin-bottom","0px")
-
-      cp_row.selectAll("h3")
-        .style("margin-bottom","0px")
-
-      cp_row.selectAll(".envelope_description")
-        .style("margin-bottom","-20px")
+    
+    var slideshow = start.slideshow(d3.select(".funnels"))
+      .data(slides)
+      .draw()
+    
+    slideshow
+      .slides()
+      .each(function(x,i){
+        return x.bind(this)(x,i)
+      })
 
 
 
-    }
-  ]
+})
 
-}
 
-  var slideshow = start.slideshow(d3.select(".funnels"))
-    .data(slides)
-    .draw()
-
-  slideshow
-    .slides()
-    .each(function(x,i){
-      return x.bind(this)(x,i)
-    })
 
 
 

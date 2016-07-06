@@ -10,12 +10,11 @@ class UserHandler(tornado.web.RequestHandler,UserDatabase):
 
     def get(self):
         nonce = self.get_argument("nonce",False) 
-        _dicts = []
-        if nonce and len(nonce) > 10:
-            _dicts = self.get_by_nonce(nonce)
 
-        if len(_dicts) == 0:
-            self.redirect("/login")
+        try: _dicts = self.get_by_nonce(nonce)
+        except: _dicts = []
+
+        if len(_dicts) == 0: self.redirect("/login")
 
         self.render("_make_advertiser.html")
         return
