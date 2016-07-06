@@ -26,18 +26,30 @@ Slideshow.prototype = {
         .classed("slideshow",true)
 
       var self = this;
+      var data = this._data.slice(0,self._viscount + 1);
+      self._viscount -= 1;
+      self._viscount = d3.max([0,self._viscount]);
 
-      this._slides = d3_splat(this._wrapper,".slide","div",this._data,function(x,i){ return i })
+      this._slides = d3_splat(this._wrapper,".slide","div",data,function(x,i){ return i })
         .attr("class",function(x,i) {
           return (i == self._viscount) ? undefined : "hidden"
         })
         .classed("slide",true)
+
+      this._slides
+        .each(function(x,i){
+          return x.bind(this)(x,i)
+        })
 
       return this
     }
   , next: function() {
 
       var self = this;
+      self._viscount += 1;
+      this.draw()
+      
+
 
       var current = this._slides.filter(function(x){return !d3.select(this).classed("hidden")})
       var h = -current.node().clientHeight
@@ -54,8 +66,7 @@ Slideshow.prototype = {
           d3.select(this).classed("hidden",true)
         })
 
-
-      self._viscount += 1;
+      self._viscount += 1
       this._slides
         .attr("class",function(x,i) { 
           return (i == self._viscount) || ((i+1) == self._viscount) ? "slide" : "hidden slide" 

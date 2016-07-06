@@ -13,7 +13,7 @@ def parse_event_name(pixel_name):
         return pixel_name.lower().replace(" ","_")
 
 def compile(template,data,with_comment=False, skip_compile=False):
-    fields = template.fields
+    fields = template.fields + ["external_segment_id"]
     _template = template.template
 
     if with_comment:
