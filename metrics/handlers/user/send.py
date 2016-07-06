@@ -1,5 +1,5 @@
 import logging
-from helpers import *
+from helpers import _create_signature_v2
 
 def send(to="rick@rockerbox.com", subject="Welcome to Hindsight",base_url="http://crusher.getrockerbox.com/signup?nonce="):
 

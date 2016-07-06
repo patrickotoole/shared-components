@@ -2,6 +2,7 @@ import tornado.web
 import ujson
 
 from database import UserDatabase
+import send as email
 
 class UserHandler(tornado.web.RequestHandler,UserDatabase):
 
@@ -43,6 +44,7 @@ class UserHandler(tornado.web.RequestHandler,UserDatabase):
             body = ujson.loads(self.request.body)
             username = self.create(body)
             self.login(username)
+            email.send(username)
             self.write("""{"username":"%s"}""" % username)
             self.finish()
         except Exception as e:

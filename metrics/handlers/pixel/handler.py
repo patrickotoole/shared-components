@@ -14,7 +14,7 @@ class PixelHandler(BaseHandler,PixelDatabase,PixelAPI):
 
     def get(self):
 
-        advertiser_id = self.current_advertiser
+        advertiser_id = self.get_secure_cookie("advertiser")
 
         with_comment = self.get_argument("include_comment",False)
         skip_compile = self.get_argument("skip_compile",False)
