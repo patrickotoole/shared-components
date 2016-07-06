@@ -6,8 +6,10 @@ class UserRoutes(Routes):
     @connectors("db","api")
     def user_apie_login(self):
         import handlers.advertiser.handler as advertiser
+        import handlers.pixel.handler as pixel
 
         return [
+            (r'/pixel', pixel.PixelHandler, self.connectors),
             (r'/advertiser', advertiser.AdvertiserHandler2, self.connectors),
             (r'/beta', advertiser.AdvertiserHandler2, self.connectors),
         ]
@@ -208,11 +210,11 @@ class AdvertiserRoutes(Routes):
 
     @connectors("reporting_db","api")
     def client_pixel_routes(self):
-        import handlers.pixel as pixel
+        #import handlers.pixel as pixel
         import handlers.campaign_conversion as campaign_conversion
 
         return [
-            (r'/pixel', pixel.PixelReportingHandler, self.connectors),
+            
             (r'/campaign_conversion', campaign_conversion.CampaignConversionReportingHandler, self.connectors)
         ]
 

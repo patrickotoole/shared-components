@@ -31,7 +31,8 @@ class AdvertiserHandler2(BaseHandler, AdvertiserDatabase, AdvertiserAPI):
             internal_id   = self.insert_advertiser(advertiser_id, **body)
             username = self.get_current_user()
             self.associate_advertiser(advertiser_id, username)
-            self.set_secure_cookie("advertiser", advertiser_id)
+            
+            self.set_secure_cookie("advertiser", str(advertiser_id))
 
             self.write(ujson.dumps({"id":internal_id,"external_advertiser_id":advertiser_id}))
             self.finish()
@@ -45,7 +46,7 @@ class AdvertiserHandler2(BaseHandler, AdvertiserDatabase, AdvertiserAPI):
     def get(self):
         advertiser_id = self.get_secure_cookie("advertiser")
         if advertiser_id == "0":
-            self.render("_make_advertiser.html")
+            self.redirect("/signup")
         else:
             d = self.get_advertiser(advertiser_id)
             self.write(ujson.dumps(d))

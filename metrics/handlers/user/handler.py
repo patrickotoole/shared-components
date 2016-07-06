@@ -14,7 +14,7 @@ class UserHandler(tornado.web.RequestHandler,UserDatabase):
         try: _dicts = self.get_by_nonce(nonce)
         except: _dicts = []
 
-        if len(_dicts) == 0: self.redirect("/login")
+        #if len(_dicts) == 0: self.redirect("/login")
 
         self.render("_make_advertiser.html")
         return

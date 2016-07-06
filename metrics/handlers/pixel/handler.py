@@ -1,17 +1,20 @@
 import tornado.web
 import ujson
 
-from ...pixel.database import PixelDatabase
-from ...pixel.api import PixelAPI
+from database import PixelDatabase
+from api import PixelAPI
+from ..base import BaseHandler
 
 
-class AdvertiserPixelHandler(tornado.web.RequestHandler,PixelDatabase,PixelAPI):
+class PixelHandler(BaseHandler,PixelDatabase,PixelAPI):
 
     def initialize(self, db=None, api=None):
         self.db = db
         self.api = api
 
-    def get(self,advertiser_id):
+    def get(self):
+
+        advertiser_id = self.current_advertiser
 
         with_comment = self.get_argument("include_comment",False)
         skip_compile = self.get_argument("skip_compile",False)
@@ -25,7 +28,9 @@ class AdvertiserPixelHandler(tornado.web.RequestHandler,PixelDatabase,PixelAPI):
         self.write(ujson.dumps(pixels))
         self.finish()
 
-    def post(self,advertiser_id):
+    def post(self):
+
+        advertiser_id = self.current_advertiser
 
         body = ujson.loads(self.request.body)
 

@@ -21,6 +21,7 @@
   .hidden {display:none}
   body {padding-top:0px}
   body > .container {margin-left:0px}
+  .window_content {text-align: left}
 </style>
 
 <script type="text/javascript" src="/static/js/d3.js" charset="utf-8"></script>
@@ -77,7 +78,7 @@ d3.json("/account/permissions")
             console.log(obj)
             d3.xhr("/signup")
               .post(JSON.stringify(obj),function(err,x) {
-                if (!err) slideshow.next()
+                if (!err) return slideshow.next()
                 return pane.selectAll(".message").text("Error: " + JSON.parse(err.response).error)
               })
     
@@ -94,9 +95,35 @@ d3.json("/account/permissions")
             // get the advertiser and create advertiser / pixels
             var obj = { "client_sld": domain, "pixel_source_name": pixel_source_name, "advertiser_name": pixel_source_name }
             console.log(obj)
+            pane.selectAll(".message").text("Advertiser being created...")
+
             d3.xhr("/advertiser")
               .post(JSON.stringify(obj),function(err,x) {
                 var advertiser_obj = JSON.parse(x.response)
+                
+                pane.selectAll(".message").text("Pixels being created...")
+                d3.xhr("/pixel")
+                  .post(JSON.stringify({"segment_name": "All Pages", "segment_type":"segment"}), function(err,x){
+pane.selectAll(".message").text("Pixels being created.")
+
+                    d3.xhr("/pixel")
+                      .post(JSON.stringify({"segment_name": "Signup", "segment_type":"conversion"}), function(err,x){
+pane.selectAll(".message").text("Pixels being created..")
+
+                        d3.xhr("/pixel")
+                          .post(JSON.stringify({"segment_name": "Purchase", "segment_type":"conversion"}), function(err,x){
+pane.selectAll(".message").text("Pixels being created...")
+
+                            d3.xhr("/pixel")
+                              .post(JSON.stringify({"segment_name": "Logged In", "segment_type":"segment"}), function(err,x){
+pane.selectAll(".message").text("Success!")
+
+                                slideshow.next()
+                              })
+                          })
+                      })
+                  })
+
                 
                 
 
@@ -222,15 +249,20 @@ d3.json("/account/permissions")
             .draw()
         
           var cp_row = stage._stage
-          var click = function(){}//home.codepeek_click(cp_row,advertiser,uid,slideshow.next.bind(slideshow))
+          d3.json("/pixel?implementation=hindsight")
+            .get(function(err,j){
+              var click = function(){}//home.codepeek_click(cp_row,advertiser,uid,slideshow.next.bind(slideshow))
+            
+              var advertiser = { "segments":j.segment_pixels.map(function(s){ s.segment_implemented = s.compiled; return s}) }
         
-          var advertiser = {"segments":[{"segment_name":"All Pages"}]}
-    
-          start.codepeek(cp_row)
-            .data(advertiser)
-            .button("check")
-            .click(click)
-            .draw()
+              start.codepeek(cp_row)
+                .data(advertiser)
+                .button("check")
+                .click(click)
+                .draw()
+
+            })
+
     
     
         }
