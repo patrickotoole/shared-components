@@ -14,7 +14,7 @@ function render_row() {
   this._left_wrapper = d3_updateable(cp_row,".left","div")
     .classed("codepeek_aside left pull-left",true)
     .style("width","25%")
-    .style("min-height","600px")
+    .style("min-height","500px")
     .style("padding","25px")
     .html(this._left)
 

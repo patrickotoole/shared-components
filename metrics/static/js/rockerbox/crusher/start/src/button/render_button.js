@@ -27,7 +27,10 @@ function render_button() {
   var env = make_envelope(this._pane)
     , button = make_button(env,this._button || "validate")
 
-  button.on("click",this._click)
+  var click = this._click,
+    pane = this._target;
+
+  button.on("click",function(x){return click.bind(this)(x,pane) })
 
 
 }

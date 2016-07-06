@@ -56,7 +56,10 @@
     var env = make_envelope(this._pane)
       , button = make_button(env,this._button || "validate")
 
-    button.on("click",this._click)
+    var click = this._click,
+      pane = this._target;
+
+    button.on("click",function(x){return click.bind(this)(x,pane) })
 
 
   }
@@ -184,7 +187,7 @@
 
   function render_description() {
 
-    d3_updateable$1(this._wrapper,".envelope_description","div")
+    this._desc_wrapper = d3_updateable$1(this._wrapper,".envelope_description","div")
       .classed("envelope_description",true)
       .style("margin-bottom","30px")
       .html(this._description)
@@ -224,12 +227,15 @@
     var data = this.data()
 
     this._wrapper = make_wrap$1(row,data)
-    var outer = d3_updateable$1(this._target,".btn-outer-wrap","div") // for the button
+    var outer = d3_updateable$1(this._target,".btn-wrap","div") // for the button
       .classed("btn-wrap",true)
       .style("width","50%")
       .style("text-align","center")
-      .style("float","left")
       .style("margin-top","-50px")
+      .style("margin-left","auto")
+      .style("margin-right","auto")
+
+
 
 
     this._pane = d3_updateable$1(outer,".btn-wrap","div")
@@ -293,7 +299,7 @@
     this._left_wrapper = d3_updateable$1(cp_row,".left","div")
       .classed("codepeek_aside left pull-left",true)
       .style("width","25%")
-      .style("min-height","600px")
+      .style("min-height","500px")
       .style("padding","25px")
       .html(this._left)
 

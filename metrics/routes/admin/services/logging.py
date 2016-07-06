@@ -6,12 +6,10 @@ class LoggingRoutes(Routes):
     @namespace("/admin")
     @connectors("reporting_db","api","db")
     def logging(self):
-        from handlers.adminreport import AdminReportHandler
         from lib.report.handlers import ReportingLogHandler
         import handlers.admin.scripts as scripts 
 
         return [
-            (r'/report/(.*?)/.*', AdminReportHandler, {}),
             (r'/reportinglog/(.*?)', ReportingLogHandler, {}),
             (r'/event_log', scripts.EventLogHandler, self.connectors),
             (r'/event_log/(.*?)', scripts.EventLogHandler, self.connectors),

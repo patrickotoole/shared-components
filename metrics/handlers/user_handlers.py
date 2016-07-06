@@ -2,19 +2,15 @@ import tornado.web
 import logging
 import sys
 import ujson
+
 from lib.helpers import *
 from base import BaseHandler
-import lib.password_hash as password_hash
-
 from login.handler import LoginHandler
 from permissions.handler import AccountPermissionsHandler
 from user.handler import UserHandler
 
 SignupHandler = UserHandler
 
-pw_hash = password_hash.PasswordHash()
-
-from base import BaseHandler
 
 class LoginAdvertiserHandler(BaseHandler):
 

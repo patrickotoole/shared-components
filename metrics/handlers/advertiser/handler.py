@@ -39,7 +39,10 @@ class AdvertiserHandler2(BaseHandler, AdvertiserDatabase, AdvertiserAPI):
 
     @tornado.web.asynchronous
     def get(self):
-        advertiser_id = self.current_advertiser
-        d = self.get_advertiser(advertiser_id)
-        self.write(ujson.dumps(d))
-        self.finish()
+        advertiser_id = self.get_secure_cookie("advertiser")
+        if advertiser_id == "0":
+            self.render("_make_advertiser.html")
+        else:
+            d = self.get_advertiser(advertiser_id)
+            self.write(ujson.dumps(d))
+            self.finish()
