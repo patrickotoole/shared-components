@@ -7,8 +7,17 @@ class LoginHandler(tornado.web.RequestHandler,LoginDatabase):
     def initialize(self,db=None):
         self.db = db
 
+    def logout(self):
+
+        self.clear_cookie("user")
+        self.clear_cookie("advertiser")
+
+        return self.redirect("/login")
+
+
     def get(self):
 
+        if "logout" in self.request.uri: return self.logout()
         user = self.get_secure_cookie("user")
 
         if not user: 
@@ -38,7 +47,8 @@ class LoginHandler(tornado.web.RequestHandler,LoginDatabase):
 
         else:
             user = self.get_user(username)
-            self.set_secure_cookie("advertiser",str(user["advertiser_id"]) )
+            
+            self.set_secure_cookie("advertiser",str(user["advertiser_id"] or 0) )
             self.set_secure_cookie("user",user["username"])
             self.write("1")
             self.finish()

@@ -43,7 +43,7 @@ class UserDatabase:
         df = self.db.select_dataframe("SELECT advertiser_id from user where username = '%s'" % obj['username'])
         advertiser_id = df.ix[0,'advertiser_id']
 
-        return (obj['username'], advertiser_id)
+        return (obj['username'], advertiser_id or 0)
         
     def create(self,user_object):
         username = user_object.get("username") 
