@@ -41,8 +41,10 @@ class WorkQueue(object):
                 logging.debug("Received next queue item")
                 try:
                     fn, kwargs = pickle.loads(data)
-
+                    
+                    self.queue.client.ensure_path(self.queue.secondary_path_base + "/%s/%s" % (job_id.split(entry_id)[1][1:]))
                     self.queue.client.set(self.queue.secondary_path_base + "/%s/%s" % (job_id.split(entry_id)[1][1:], entry_id), '1' ) # running
+                    
                     kwargs['job_id'] = job_id
                     logging.info("starting queue %s %s" % (str(fn),str(kwargs)))
                     logging.info(self.rec.getThreadPool().threads[0])
