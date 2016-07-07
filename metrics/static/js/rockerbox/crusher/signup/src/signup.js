@@ -1,6 +1,8 @@
 import accessor from './helpers'
 import email from './step/email'
 import domain from './step/domain'
+import pixel from './step/pixel'
+
 
 
 export function Signup(target) {
@@ -18,7 +20,7 @@ Signup.prototype = {
 
       var shared_data = this._data;
 
-      var e = domain(this._target)
+      var e = pixel(this._target)
         .data(shared_data)
         .draw()
 

@@ -68,12 +68,7 @@ d3.json("/account/permissions")
 
           
     
-      var funcs = [
-          0
-        , 1
-        , function(x,pane) {
-            slideshow.next()
-          }
+      var funcs = [ 0 , 1 , 2
         , function(x,pane) {
             var password = pane.selectAll(".envelope_description input").node().value
             if ( !(password.length > 5) ) return pane.selectAll(".message").text("Password length is too short.")
@@ -107,38 +102,12 @@ d3.json("/account/permissions")
           
         }                                                                                                            
       , function slide3(){
-          
+
           var d = d3.select(this)
-          var stage = start.stage(d)
-            .title("Almost there!")                                                                                
-            .subtitle("Paste the code below before the </head> tag on every page of your site.")
-            .left("<div class='codepeek_text'>This pixel allows us to collect a pool of data about the users in your audience. <br><br> </div>")
-            .right("<div class='codepeek_text'>After the pixel is implemented, you will receive the Hindsight Daily Digest. <br><br> It will show content you should engage with and recommend stories that matches your audience.</div>")
-            .draw()
-        
-          var cp_row = stage._stage
-          d3.json("/advertiser")
-            .get(function(err,a){
-              d3.json("/pixel?implementation=hindsight")
-                .get(function(err,j){
-                
-                  var advertiser = { 
-                    "segments": j.segment_pixels.map(function(s){ s.segment_implemented = s.compiled; return s}) ,
-                    "client_sld": a[0].client_sld
-                  }
-
-                  var click = codepeek_click(cp_row,advertiser,uid,slideshow.next.bind(slideshow))
-        
-                  start.codepeek(cp_row)
-                    .data(advertiser)
-                    .button("check")
-                    .click(click)
-                    .draw()
-
-                })
-            })
-
-    
+          
+          signup.pixel(d)
+            .on("success",function(){slideshow.next()})
+            .draw();
     
         }
       , function slide4(){
@@ -196,91 +165,6 @@ d3.json("/account/permissions")
       .data(slides)
       .draw()
     
-    //slideshow
-    //  .slides()
-    //  .each(function(x,i){
-    //    return x.bind(this)(x,i)
-    //  })
-
-    var stop = false;
-
-    var validation = {
-      success: function(row,data,next) {
-
-        var desc = "Your implementation appears to be successful. <br><br>We detected " + 
-          data.length + 
-          " recent page views to the following pages on your site by your web browser:"
-
-        start.envelope(row)
-          .data(data)
-          .description(desc)
-          .title("congrats!")
-          .button("next")
-          .click(next)
-          .draw()
-
-        var to_hide = row.selectAll(".codepeek_content")
-          , h = -to_hide.node().clientHeight;
-
-        to_hide.transition()
-          .style("margin-top",(h+20) + "px")
-          .duration(500)
-      }
-    , failure: function(advertiser,all_pages) {
-
-        var url = 'http://' + advertiser.client_sld
-          , dims = "status=1,width=50,height=50,right=50,bottom=50," + 
-              "titlebar=no,toolbar=no,menubar=no,location=no,directories=no,status=no"
-          , validation_popup = window.open(url, "validation_popup", dims);
-    
-        if (!stop) {
-          setTimeout(function(){
-            stop = true
-            all_pages.uuid = advertiser.uid;
-            validation_popup.close()
-          },8000)
-        } else {
-          validation_popup.close()
-        }
-    
-      }
-  }
-
-  var pixel_check = function(segment,uid,run) {
-
-    var path = "/crusher/pixel/status/lookup?format=json&segment="
-    d3.json(path + segment.external_segment_id + "&uid=" + segment.uuid, run)
-
-  }
-
-  var uid = 0
-  var codepeek_click = function(row,advertiser,uid,next) {
-
-    advertiser.uid = uid
-
-    var click = function(x){
-
-      var all_pages = x.segments.filter(function(x){return x.segment_name.indexOf("All Pages") > -1})[0]
-        , stop = false;
-
-      var uuid = document.cookie.split("an_uuid=")[1].split(";")[0]
-
-      all_pages.uuid = uuid;
-      d3.select(this).property("value","validating...")
-
-      pixel_check(all_pages,uid,function(data){
-          if (!!data.length) validation.success(row,data,next)
-          else validation.failure(advertiser,all_pages)
-        }
-      )
-
-    }
-
-    return click
- 
-  }
-
-
 })
 
 

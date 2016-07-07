@@ -39,7 +39,11 @@ class UserDatabase:
         user_object['password'] = pw_hash.hash_password(user_object["password"])
         obj = self.get_by_nonce(user_object['nonce'])
         self.db.execute(UPDATE_QUERY % user_object)
-        return obj['username']
+
+        df = self.db.select_dataframe("SELECT advertiser_id from user where username = '%s'" % obj['username'])
+        advertiser_id = df.ix[0,'advertiser_id']
+
+        return (obj['username'], advertiser_id)
         
     def create(self,user_object):
         username = user_object.get("username") 

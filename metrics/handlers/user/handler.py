@@ -20,15 +20,16 @@ class UserHandler(tornado.web.RequestHandler,UserDatabase):
         self.render("_make_advertiser.html")
         return
 
-    def login(self,username):
+    def login(self,username, advertiser="0"):
         self.set_secure_cookie("user",username)
-        self.set_secure_cookie("advertiser","0")
+        self.set_secure_cookie("advertiser",str(advertiser))
 
     def put(self):
         try:
             body = ujson.loads(self.request.body)
-            username = self.update(body)
-            self.login(username)
+            username, advertiser_id = self.update(body)
+      
+            self.login(username, advertiser_id)
             self.write("""{"username":"%s"}""" % username)
             self.finish()
         except Exception as e:

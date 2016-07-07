@@ -12,7 +12,7 @@ Message.prototype = {
     draw: function() {
       this._target
 
-      d3_updateable(this._target,".message","div")
+      this._message = d3_updateable(this._target,".message","div")
         .classed("message",true)
         .text(this._text)
 
