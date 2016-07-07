@@ -42,7 +42,7 @@ for(g=0;g<i.length;g++)f(c,i[g]);b._i.push([a,e,d])};b.__SV=1.2;a=f.createElemen
         <input name="password" type="password" placeholder="Password" required><br />
         <input type="submit" value="sign in"><br />
         <br/>
-        <span style="color:white;font-family:helvetica neue;opacity:.7"> Don't have an account? </span><a style="font-family:helvetica neue;color:white;opacity:1" href="#" id="show-signup">Signup &rarr;</a>
+        <span style="color:white;font-family:helvetica neue;opacity:.7"> Don't have an account? </span><a style="font-family:helvetica neue;color:white;opacity:1" href="/signup" id="show-signup">Sign up &rarr;</a>
       </form>
 
       <form id="signup" class="hidden" style="margin-top:-194px" onsubmit="d3.select('#signup input[type=\'submit\'\]').on('click')()">
@@ -66,10 +66,10 @@ for(g=0;g<i.length;g++)f(c,i[g]);b._i.push([a,e,d])};b.__SV=1.2;a=f.createElemen
       <script src="http://ib.adnxs.com/seg?add=1478777&t=1" type="text/javascript"></script>
       <script>
 
-      d3.select('#show-signup').on('click',function(e){
-        d3.select('form#signin').classed("hidden",true)
-        d3.select('form#signup').classed("hidden",false)
-      })
+      //d3.select('#show-signup').on('click',function(e){
+      //  d3.select('form#signin').classed("hidden",true)
+      //  d3.select('form#signup').classed("hidden",false)
+      //})
 
       d3.select('#show-signin').on('click',function(e){
         d3.select('form#signup').classed("hidden",true)
