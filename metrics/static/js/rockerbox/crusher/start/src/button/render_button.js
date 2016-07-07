@@ -3,7 +3,7 @@ import d3_splat from '../d3_splat'
 
 function make_envelope(tab) {
   
-  return d3_updateable(tab,".envelope.btn-evn","div")
+  return d3_updateable(tab,".envelope.btn-env","div")
     .classed("envelope btn-env",true)
     .style("width","inherit")
     .style("margin","none")
