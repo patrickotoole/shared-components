@@ -14,11 +14,11 @@ VALUES ('%(username)s', '%(password)s', '%(email)s', '%(nonce)s')
 """
 
 UPDATE_QUERY = """
-UPDATE user set password = '%(password)s', nonce ='NULL' where nonce = '%(nonce)s'
+UPDATE user set password = '%(password)s', nonce = NULL where nonce = '%(nonce)s'
 """
 
 CLEAR_NONCE_QUERY = """
-UPDATE user set nonce = 'NULL' where nonce = '%(nonce)s'
+UPDATE user set nonce = NULL where nonce = '%(nonce)s'
 """
 
 GET_BY_NONCE = """

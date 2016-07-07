@@ -2,6 +2,8 @@ import accessor from './helpers'
 import email from './step/email'
 import domain from './step/domain'
 import pixel from './step/pixel'
+import password from './step/password'
+
 
 
 

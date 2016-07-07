@@ -106,50 +106,19 @@ d3.json("/account/permissions")
           var d = d3.select(this)
           
           signup.pixel(d)
-            .on("success",function(){slideshow.next()})
+            .on("success",function(){document.location = "/crusher"})
             .draw();
     
         }
       , function slide4(){
-          var d = d3.select(this)                                                                                    
     
-          var stage = start.stage(d)
-            .title("Activate Account")                                                                                
-            .subtitle("Choose a password to complete account activation.")
-            .left("")
-            .right("")                                                                                               
-            .draw()                                                                                                  
+          var d = d3.select(this)
           
-          var cp_row = stage._stage                                                                                  
-          
-          var env = start.envelope(cp_row)
-            .data([])
-            .title("Choose a password")
-            .description("")
-            .button("activate")
-            .click(funcs[3])
-            .draw()
-    
-          var row = d3_updateable(env._desc_wrapper,".row","div")
-            .classed("row",true)
-    
-          d3_updateable(row,"input","input")
-            .attr("type","password")
-            .attr("placeholder","password")
-            .style("width","300px")
-    
-          d3_updateable(row,".message","div")
-            .classed("message",true)
-    
-    
-          cp_row.selectAll(".envelope")
-            .style("margin-bottom","0px")
-    
-          cp_row.selectAll("h3")
-            .style("margin-bottom","0px")
-    
-          cp_row.selectAll(".envelope_description")
-            .style("margin-bottom","-20px")
+          signup.password(d)
+            .data({"nonce":nonce})
+            .on("success",function(){document.location = "/crusher"})
+            .draw();
+
     
     
     
