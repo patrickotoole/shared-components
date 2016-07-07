@@ -1,5 +1,6 @@
 import Queue
 from lib.zookeeper import CustomQueue
+import traceback
 import logging
 from kazoo.client import KazooClient
 from kazoo.client import KazooState
@@ -9,7 +10,7 @@ import socket
 import datetime
 
 SQL_LOG = "insert into work_queue_log (hostname, job_id, event) values (%s, %s, %s)"
-SQL_LOG2 = "insert into work_queue_error_log (hostname, error_string, job_id) values (%s, %s, %s)"
+SQL_LOG2 = "insert into work_queue_error_log (hostname, error_string, job_id, stacktrace) values (%s, %s, %s, %s)"
 
 class WorkQueue(object):
 
@@ -42,7 +43,6 @@ class WorkQueue(object):
                 try:
                     fn, kwargs = pickle.loads(data)
                     
-                    self.queue.client.ensure_path(self.queue.secondary_path_base + "/%s/%s" % (job_id.split(entry_id)[1][1:]))
                     self.queue.client.set(self.queue.secondary_path_base + "/%s/%s" % (job_id.split(entry_id)[1][1:], entry_id), '1' ) # running
                     
                     kwargs['job_id'] = job_id
@@ -61,10 +61,12 @@ class WorkQueue(object):
                 except Exception as e:
                     box = socket.gethostname()
                     self.mcounter.bumpError()
+                    trace_error = str(traceback.format_exc())
                     self.connectors['crushercache'].execute(SQL_LOG, (current_host, job_id, "Fail"))
-                    self.connectors['crushercache'].execute(SQL_LOG2,(box, str(e), job_id))
+                    self.connectors['crushercache'].execute(SQL_LOG2,(box, str(e), job_id, trace_error))
                     logging.info("ERROR: queue %s " % e)
                 finally:
+                    self.queue.client.ensure_path(self.queue.secondary_path_base + "/%s/%s" % (job_id.split(entry_id)[1][1:],  entry_id))
                     self.queue.client.set(self.queue.secondary_path_base + "/%s/%s" % (job_id.split(entry_id)[1][1:], entry_id), '' ) # running
  
             else:
