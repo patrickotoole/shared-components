@@ -64,10 +64,7 @@ Email.prototype = {
     }
   , run: function(_obj,stop) {
       var self = this;
-
       self._message.update("Validating pixel placement..")
-
-      
 
       checkPixel(_obj,function(err,data) {
 

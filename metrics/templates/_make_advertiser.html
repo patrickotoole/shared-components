@@ -29,8 +29,6 @@
 <script type="text/javascript" src="/static/js/rockerbox/crusher/signup/build/signup.js"></script>
 <script type="text/javascript" src="/static/js/queue.js"></script>
 
-
-
 <script type="text/javascript" src="/static/js/analytics.js"></script>
 
 <script type="text/javascript">
@@ -48,97 +46,20 @@
 </body>
 
 <script>
-//signup.signup(d3.select(".funnels"))
-//  .data({})
-//  .draw()
-//
-//if (false) 
+
 d3.json("/account/permissions")
   .get(function(err,x){
-
-      var s = window.location.search;
-      var nonce = (s.indexOf("nonce") > -1 ) ?
-        s.split("nonce=")[1].split("&")[0] : 
-        "";
-
-      var slide_position = !!nonce ? 
-        3 : (!!err) ? 
-        0 : (x.results.advertisers[0].external_advertiser_id == 0) ?
-        1 : 2;
-
-          
-    
-      var funcs = [ 0 , 1 , 2
-        , function(x,pane) {
-            var password = pane.selectAll(".envelope_description input").node().value
-            if ( !(password.length > 5) ) return pane.selectAll(".message").text("Password length is too short.")
-           
-            var obj = { "password": password, "nonce":nonce}
-            d3.xhr("/signup")
-              .send("PUT", JSON.stringify(obj), function(err,x){
-                if (!err) document.location = "/crusher"
-                pane.selectAll(".message").text(JSON.parse(err.response).error)
-    
-              })
-    
-          }
-      ]
-    
-      var slides = [
-        function slide1(){
-          var d = d3.select(this)                                                                                    
-    
-          signup.email(d)
-            .on("success",function(){slideshow.next()})
-            .draw()
-    
+      var data = {};
+      if (!err) data = {
+            advertiser_id: x.results.advertisers[0].external_advertiser_id
+          , permissions: x
         } 
-      , function slide2(){
-          var d = d3.select(this)
-            
-          signup.domain(d)
-            .on("success",function(){slideshow.next()})
-            .draw()
-          
-        }                                                                                                            
-      , function slide3(){
 
-          var d = d3.select(this)
-          
-          signup.pixel(d)
-            .on("success",function(){document.location = "/crusher"})
-            .draw();
+      signup.signup(d3.select(".funnels"))
+        .data(data)
+        .draw()
     
-        }
-      , function slide4(){
-    
-          var d = d3.select(this)
-          
-          signup.password(d)
-            .data({"nonce":nonce})
-            .on("success",function(){document.location = "/crusher"})
-            .draw();
-
-    
-    
-    
-        }
-      ]                                                                                                                
-
-      slides = slides.slice(slide_position)
-                                                                     
-    
-     
-    
-    var slideshow = start.slideshow(d3.select(".funnels"))
-      .data(slides)
-      .draw()
-    
-})
-
-
-
-
+  })
 
 </script>
 

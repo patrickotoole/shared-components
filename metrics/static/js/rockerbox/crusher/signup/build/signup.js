@@ -332,10 +332,7 @@
       }
     , run: function(_obj,stop) {
         var self = this;
-
         self._message.update("Validating pixel placement..")
-
-        
 
         checkPixel(_obj,function(err,data) {
 
@@ -524,9 +521,21 @@
       }
   }
 
+  function getNonce() {
+    var s = window.location.search;
+    return (s.indexOf("nonce") > -1 ) ?  s.split("nonce=")[1].split("&")[0] : "";
+  }
+
+  function getUID() {
+    document.cookie.split("an_uuid=")[1].split(";")[0];
+  }
+
+
   function Signup(target) {
     this._target = target;
     this._wrapper = this._target;
+    this._uid = getUID()
+    this._nonce = getNonce()
   }
 
   function signup(target) {
@@ -537,14 +546,61 @@
       draw: function() {
         this._target
 
-        var shared_data = this._data;
+        this._data.nonce = this._nonce
+        this._data.uid = this._uid
 
-        var e = email$1(this._target)
-          .data(shared_data)
+
+        this._slides = !!this._data.nonce ?
+          ["password"]                 : !this._data.permissions ?
+          ["email", "domain", "pixel"] : this._data.advertiser_id == 0 ?
+          ["domain", "pixel"]          : ["pixel"];
+
+        var self = this;
+        this._slideshow = start.slideshow(this._target)
+          .data(this._slides.map(function(s) { 
+            return function() {
+                return self["render_" + s].bind(self)(this)
+              }
+           }))
           .draw()
 
         return this
       }
+    , render_password: function(t) {
+        var self = this;
+        password(d3.select(t))
+          .data(this._data)
+          .on("success",function(){ document.location = "/crusher" })
+          .draw()
+          
+          
+      }
+    , render_email: function(t) {
+        var self = this;
+        email(d3.select(t))
+          .data(this._data)
+          .on("success",function(){ self._slideshow.next() })
+          .draw()
+
+      }
+    , render_domain: function(t) {
+        var self = this;
+        domain(d3.select(t))
+          .data(this._data)
+          .on("success",function(){ self._slideshow.next() })
+          .draw()
+
+      }
+    , render_pixel: function(t) {
+        var self = this;
+        email$1(d3.select(t))
+          .data(this._data)
+          .on("success",function(){ document.location = "/crusher" })
+          .draw()
+      }
+
+
+
     , data: function(val) { return accessor.bind(this)("data",val) }
   }
 
