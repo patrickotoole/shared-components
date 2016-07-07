@@ -10,7 +10,7 @@ select
 	a.topic, a.max_value, a.topic_num, a.topic_rank,
 	b.url, b.count, b.uniques
 from (select topic, max(score) max_value, count(*) topic_num, (max(score)-.9)*log(idf)/log(count(*)*count(*)) topic_rank from action_topics where advertiser = "%(advertiser)s" and pattern = "%(pattern)s" group by 1) a 
-inner join (select * from action_topics order by RAND()) b on a.topic = b.topic and a.max_value = b.score
+inner join (select * from action_topics order by mod(mid(score, 4, 4),109)) b on a.topic = b.topic and a.max_value = b.score
 where b.advertiser = "%(advertiser)s" and b.pattern = "%(pattern)s" and a.topic_rank is not null
 order by 4
 limit %(limit)s
