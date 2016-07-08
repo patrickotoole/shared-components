@@ -12,7 +12,12 @@ import slack_auth
 import urllib,urllib2
 import MySQLdb, MySQLdb.cursors
 
-db = MySQLdb.connect(user='will_test', passwd='will_test', host='162.243.1.73', db='slack_integration', cursorclass=MySQLdb.cursors.DictCursor)
+with open('secrets.json') as data_file:
+    SETTINGS = json.load(data_file)
+
+# print(SETTINGS['db'])
+
+db = MySQLdb.connect(user=SETTINGS['db']['user'], passwd=SETTINGS['db']['password'], host=SETTINGS['db']['host'], db=SETTINGS['db']['name'], cursorclass=MySQLdb.cursors.DictCursor)
 cur = db.cursor()
 
 def getUser(user_id):
@@ -42,7 +47,7 @@ class AuthenticationCallbackHandler(web.RequestHandler):
         user = getUser(user_id)
 
         # Get token
-        url = 'https://slack.com/api/oauth.access?client_id=2171079607.55132364375&client_secret=0e20a11476346eed760868156c215214&redirect_uri=http://192.168.99.100:8888/authenticate/callback&code=' + code
+        url = '%s?client_id=%s&client_secret=%s&redirect_uri=%s&code=%s' % (SETTINGS['slack']['token_uri'], SETTINGS['slack']['client_id'], SETTINGS['slack']['client_secret'], SETTINGS['slack']['redirect_uri'], code)
         req = urllib2.Request(url)
         res = urllib2.urlopen(req)
         data = json.loads(res.read())
@@ -71,12 +76,11 @@ class AuthenticationCallbackHandler(web.RequestHandler):
                     "bot_id": bot_id
                 })
                 db.commit()
-                self.write('Redirect to success page here')
+                self.redirect(SETTINGS['redirect']['success'])
             except(e):
-                self.write('Redirect to error page here (DB error)')
-                self.write(e)
+                self.redirect(SETTINGS['redirect']['error'])
         else:
-            self.write('Redirect to error page here (Slack error)')
+            self.redirect(SETTINGS['redirect']['error'])
 
         self.finish()
 
@@ -94,7 +98,7 @@ class SlackChannelsHandler(web.RequestHandler):
                 'message': 'User does not exist or does not have Slack integration.'
             })
         else:
-            url = 'https://slack.com/api/channels.list?token=' + user['bot_access_token']
+            url = 'https://slack.com/api/channels.list?token=%s' % (user['bot_access_token'])
             req = urllib2.Request(url)
             res = urllib2.urlopen(req)
             response = json.loads(res.read())
@@ -107,7 +111,8 @@ class SlackMessageHandler(web.RequestHandler):
     def post(self):
         self.set_header('Content-Type', 'application/json; charset=UTF-8')
 
-        user_id = self.get_argument('user_id','')
+        post_data = json.loads(self.request.body)
+        user_id = post_data['user_id']
         user = getUser(user_id)
 
         if not user:
@@ -117,7 +122,7 @@ class SlackMessageHandler(web.RequestHandler):
             })
         else:
             articles = []
-            for article in json.loads(self.get_argument('articles','')):
+            for article in post_data['articles']:
                 i = len(articles) + 1
 
                 articles.append({
