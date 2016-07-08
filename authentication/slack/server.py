@@ -2,20 +2,16 @@ import tornado.ioloop
 from tornado import httpserver
 from tornado import web
 
-import oauth2client
 import json
 import time
 import logging
 import os
 
-import slack_auth
 import urllib,urllib2
 import MySQLdb, MySQLdb.cursors
 
 with open('secrets.json') as data_file:
     SETTINGS = json.load(data_file)
-
-# print(SETTINGS['db'])
 
 db = MySQLdb.connect(user=SETTINGS['db']['user'], passwd=SETTINGS['db']['password'], host=SETTINGS['db']['host'], db=SETTINGS['db']['name'], cursorclass=MySQLdb.cursors.DictCursor)
 cur = db.cursor()
@@ -33,7 +29,11 @@ def getUser(user_id):
     return response
 
 def apivalidation(x):
-    return x
+    def fn(self):
+        self.set_header('Content-Type', 'application/json; charset=UTF-8')
+
+        return x(self)
+    return fn
 
 class IndexHandler(web.RequestHandler):
     def get(self):
@@ -87,8 +87,6 @@ class AuthenticationCallbackHandler(web.RequestHandler):
 class SlackChannelsHandler(web.RequestHandler):
     @apivalidation
     def get(self):
-        self.set_header('Content-Type', 'application/json; charset=UTF-8')
-
         user_id = self.get_argument('user_id', '')
         user = getUser(user_id)
 
@@ -109,8 +107,6 @@ class SlackChannelsHandler(web.RequestHandler):
 class SlackMessageHandler(web.RequestHandler):
     @apivalidation
     def post(self):
-        self.set_header('Content-Type', 'application/json; charset=UTF-8')
-
         post_data = json.loads(self.request.body)
         user_id = post_data['user_id']
         user = getUser(user_id)
