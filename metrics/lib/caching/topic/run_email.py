@@ -1,3 +1,19 @@
+def build_track(to,link,title):
+    import ujson
+    j = {
+        "event": "link clicked", 
+        "properties": {
+            "distinct_id": to, 
+            "token": "a48368904183cf405deb90881e154bd8", 
+            "link": link,
+            "title": title,
+            "campaign": "testing"
+        }
+    }
+    _j = ujson.dumps(j).encode("base64").replace("\n","")[:-1]
+    src = "http://api.mixpanel.com/track/?data=%s&redirect=%s&ip=1" % (_j,link)
+    return src
+
 def main(db, advertiser, pattern, email, title, subject="Hindsight Daily Digest", limit=10):
 
     import os
@@ -13,6 +29,13 @@ def main(db, advertiser, pattern, email, title, subject="Hindsight Daily Digest"
     
     logging.info("Started email for (%s)" % joined)
     _json = run(db, advertiser, pattern, limit)
+
+    import ujson
+    js = ujson.loads(_json)
+    for obj in js:
+        obj['url'] = build_track(email,obj['url'],obj['title'])
+
+    _json = ujson.dumps(js)
 
     logging.info("building email...")
     process2 = subprocess.Popen(['node','%s/generate_dom.js' % _dir,' %s ' % title], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
@@ -34,7 +57,7 @@ if __name__ == "__main__":
     define("advertiser",  default="")
     define("pattern", default="/")
     define("title", default=" Your ")
-    define("email", default="rick@rockerbox.com")
+    define("email", default="rick+hindsight@rockerbox.com")
     define("limit", default=10)
     define("subject", default="Hindsight Daily Digest")
 

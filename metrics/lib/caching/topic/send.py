@@ -1,3 +1,18 @@
+def build_track(to):
+    import ujson
+    j = {
+        "event": "e-mail opened", 
+        "properties": {
+            "distinct_id": to, 
+            "token": "a48368904183cf405deb90881e154bd8", 
+            "campaign": "testing"
+        }
+    }
+    _j = ujson.dumps(j).encode("base64").replace("\n","")[:-1]
+    src = "http://api.mixpanel.com/track/?data=%s&ip=1&img=1" % _j
+    return '<img src="%s" />' % src
+    
+
 def send(html, to="rick@rockerbox.com", subject="Hindsight Daily Digest"):
 
     import smtplib
@@ -10,6 +25,8 @@ def send(html, to="rick@rockerbox.com", subject="Hindsight Daily Digest"):
     
     from email.mime.multipart import MIMEMultipart
     from email.mime.text import MIMEText
+
+    track = build_track(to)
     
     msg = MIMEMultipart('alternative')
     msg['Subject'] = subject
@@ -17,7 +34,7 @@ def send(html, to="rick@rockerbox.com", subject="Hindsight Daily Digest"):
     msg['To'] = to
     
     part1 = MIMEText("What are your customers reading?", 'plain')
-    part2 = MIMEText(html, 'html')
+    part2 = MIMEText(html + track, 'html')
     
     msg.attach(part1)
     msg.attach(part2)
