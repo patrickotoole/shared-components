@@ -34,6 +34,10 @@
 <script type="text/javascript">
   window.analytics.google()
   window.analytics.mixpanel()
+  window.analytics.drift()
+  window.analytics.facebook()
+  window.analytics.hindsight()
+
 </script>
 
 
@@ -49,6 +53,9 @@
 
 d3.json("/account/permissions")
   .get(function(err,x){
+
+      window.analytics.events.page_load();
+
       var data = {};
       if (!err) data = {
             advertiser_id: x.results.advertisers[0].external_advertiser_id
@@ -56,6 +63,28 @@ d3.json("/account/permissions")
         } 
 
       signup.signup(d3.select(".funnels"))
+        .on("email",function() { 
+          var obj = JSON.parse(arguments[0][0].response);
+          window.analytics.events.email_submitted(obj.username);
+        })
+        .on("password",function() {
+          window.analytics.events.account_activated();
+
+        })
+        .on("domain",function(x,y) {
+          
+          var domain = x[0].client_sld,
+            advertiser = x[0].pixel_source_name;
+
+          window.analytics.events.domain_submitted(domain,advertiser)
+        })
+        .on("pixel_fail",function() {
+          window.analytics.events.implementation_error()
+        })
+
+        .on("pixel",function() {
+          window.analytics.events.pixel_implemented()
+        })
         .data(data)
         .draw()
     

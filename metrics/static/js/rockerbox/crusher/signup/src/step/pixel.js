@@ -31,7 +31,8 @@ export function Email(target) {
   var self = this;
   this._on = {
       "success": function(x) { /* should override with success event (next) */ }
-    , "fail" : function(err) { self._message.update("Error: " + err)}
+    , "fail" : function(err) { self._message.update("Error: " + err); self._on.pixel_fail() }
+    , "pixel_fail": function(x) { /* should override with success event (next) */ }
   }
 }
 
@@ -69,7 +70,7 @@ Email.prototype = {
       checkPixel(_obj,function(err,data) {
 
         if (!stop && !err && data.length == 0) return self.detect(_obj)
-        if (stop || !!err) return self.on("fail")("Issue with pixe beingl detected. Navigate to your site, make sure the rockerbox pixel is firing and try again.")
+        if (stop || !!err) return self.on("fail")("Issue with pixel being detected. Navigate to your site, make sure the rockerbox pixel is firing and try again.")
 
         return self.render_congrats(data)
 
@@ -101,7 +102,7 @@ Email.prototype = {
 
         start.codepeek(self._stage._stage)
           .data(advertiser)
-          .button("check")
+          .button("verify this setup")
           .click(self.run.bind(self,advertiser,false)) // overbinding but need it to trigger validation
           .draw()
 

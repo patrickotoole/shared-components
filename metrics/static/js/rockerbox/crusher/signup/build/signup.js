@@ -299,7 +299,8 @@
     var self = this;
     this._on = {
         "success": function(x) { /* should override with success event (next) */ }
-      , "fail" : function(err) { self._message.update("Error: " + err)}
+      , "fail" : function(err) { self._message.update("Error: " + err); self._on.pixel_fail() }
+      , "pixel_fail": function(x) { /* should override with success event (next) */ }
     }
   }
 
@@ -337,7 +338,7 @@
         checkPixel(_obj,function(err,data) {
 
           if (!stop && !err && data.length == 0) return self.detect(_obj)
-          if (stop || !!err) return self.on("fail")("Issue with pixe beingl detected. Navigate to your site, make sure the rockerbox pixel is firing and try again.")
+          if (stop || !!err) return self.on("fail")("Issue with pixel being detected. Navigate to your site, make sure the rockerbox pixel is firing and try again.")
 
           return self.render_congrats(data)
 
@@ -369,7 +370,7 @@
 
           start.codepeek(self._stage._stage)
             .data(advertiser)
-            .button("check")
+            .button("verify this setup")
             .click(self.run.bind(self,advertiser,false)) // overbinding but need it to trigger validation
             .draw()
 
@@ -532,6 +533,13 @@
 
 
   function Signup(target) {
+    var _null_fn = function() {}
+    this._on = {
+        email: _null_fn
+      , password: _null_fn
+      , domain: _null_fn
+      , pixel: _null_fn
+    }
     this._target = target;
     this._wrapper = this._target;
     this._uid = getUID()
@@ -570,7 +578,7 @@
         var self = this;
         password(d3.select(t))
           .data(this._data)
-          .on("success",function(){ document.location = "/crusher" })
+          .on("success",function(){ self.on("password")(arguments); document.location = "/crusher" })
           .draw()
           
           
@@ -579,7 +587,7 @@
         var self = this;
         email(d3.select(t))
           .data(this._data)
-          .on("success",function(){ self._slideshow.next() })
+          .on("success",function(){ self.on("email")(arguments); self._slideshow.next() })
           .draw()
 
       }
@@ -587,7 +595,7 @@
         var self = this;
         domain(d3.select(t))
           .data(this._data)
-          .on("success",function(){ self._slideshow.next() })
+          .on("success",function(){ self.on("domain")(arguments); self._slideshow.next() })
           .draw()
 
       }
@@ -595,13 +603,20 @@
         var self = this;
         email$1(d3.select(t))
           .data(this._data)
-          .on("success",function(){ document.location = "/crusher" })
+          .on("success",function(){ self.on("pixel")(arguments); setTimeout(function(){document.location = "/crusher"},500) })
+          .on("pixel_fail",function(){ self.on("pixel_fail")(arguments); })
           .draw()
       }
 
 
 
     , data: function(val) { return accessor.bind(this)("data",val) }
+    , on: function(action, fn) {
+        if (fn === undefined) return this._on[action];
+        this._on[action] = fn;
+        return this
+      }
+
   }
 
   var version = "0.0.1";

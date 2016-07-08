@@ -17,6 +17,13 @@ function getUID() {
 
 
 export function Signup(target) {
+  var _null_fn = function() {}
+  this._on = {
+      email: _null_fn
+    , password: _null_fn
+    , domain: _null_fn
+    , pixel: _null_fn
+  }
   this._target = target;
   this._wrapper = this._target;
   this._uid = getUID()
@@ -55,7 +62,7 @@ Signup.prototype = {
       var self = this;
       password(d3.select(t))
         .data(this._data)
-        .on("success",function(){ document.location = "/crusher" })
+        .on("success",function(){ self.on("password")(arguments); document.location = "/crusher" })
         .draw()
         
         
@@ -64,7 +71,7 @@ Signup.prototype = {
       var self = this;
       email(d3.select(t))
         .data(this._data)
-        .on("success",function(){ self._slideshow.next() })
+        .on("success",function(){ self.on("email")(arguments); self._slideshow.next() })
         .draw()
 
     }
@@ -72,7 +79,7 @@ Signup.prototype = {
       var self = this;
       domain(d3.select(t))
         .data(this._data)
-        .on("success",function(){ self._slideshow.next() })
+        .on("success",function(){ self.on("domain")(arguments); self._slideshow.next() })
         .draw()
 
     }
@@ -80,11 +87,18 @@ Signup.prototype = {
       var self = this;
       pixel(d3.select(t))
         .data(this._data)
-        .on("success",function(){ document.location = "/crusher" })
+        .on("success",function(){ self.on("pixel")(arguments); setTimeout(function(){document.location = "/crusher"},500) })
+        .on("pixel_fail",function(){ self.on("pixel_fail")(arguments); })
         .draw()
     }
 
 
 
   , data: function(val) { return accessor.bind(this)("data",val) }
+  , on: function(action, fn) {
+      if (fn === undefined) return this._on[action];
+      this._on[action] = fn;
+      return this
+    }
+
 }
