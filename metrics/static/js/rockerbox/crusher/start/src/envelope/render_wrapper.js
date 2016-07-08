@@ -26,12 +26,15 @@ function render_wrapper() {
   var data = this.data()
 
   this._wrapper = make_wrap(row,data)
-  var outer = d3_updateable(this._target,".btn-outer-wrap","div") // for the button
+  var outer = d3_updateable(this._target,".btn-wrap","div") // for the button
     .classed("btn-wrap",true)
     .style("width","50%")
     .style("text-align","center")
-    .style("float","left")
     .style("margin-top","-50px")
+    .style("margin-left","auto")
+    .style("margin-right","auto")
+
+
 
 
   this._pane = d3_updateable(outer,".btn-wrap","div")

@@ -32,7 +32,7 @@
 
   function make_envelope(tab) {
     
-    return d3_updateable$1(tab,".envelope.btn-evn","div")
+    return d3_updateable$1(tab,".envelope.btn-env","div")
       .classed("envelope btn-env",true)
       .style("width","inherit")
       .style("margin","none")
@@ -56,7 +56,10 @@
     var env = make_envelope(this._pane)
       , button = make_button(env,this._button || "validate")
 
-    button.on("click",this._click)
+    var click = this._click,
+      pane = this._target;
+
+    button.on("click",function(x){return click.bind(this)(x,pane) })
 
 
   }
@@ -184,7 +187,7 @@
 
   function render_description() {
 
-    d3_updateable$1(this._wrapper,".envelope_description","div")
+    this._desc_wrapper = d3_updateable$1(this._wrapper,".envelope_description","div")
       .classed("envelope_description",true)
       .style("margin-bottom","30px")
       .html(this._description)
@@ -224,12 +227,15 @@
     var data = this.data()
 
     this._wrapper = make_wrap$1(row,data)
-    var outer = d3_updateable$1(this._target,".btn-outer-wrap","div") // for the button
+    var outer = d3_updateable$1(this._target,".btn-wrap","div") // for the button
       .classed("btn-wrap",true)
       .style("width","50%")
       .style("text-align","center")
-      .style("float","left")
       .style("margin-top","-50px")
+      .style("margin-left","auto")
+      .style("margin-right","auto")
+
+
 
 
     this._pane = d3_updateable$1(outer,".btn-wrap","div")
@@ -293,7 +299,7 @@
     this._left_wrapper = d3_updateable$1(cp_row,".left","div")
       .classed("codepeek_aside left pull-left",true)
       .style("width","25%")
-      .style("min-height","600px")
+      .style("min-height","500px")
       .style("padding","25px")
       .html(this._left)
 
@@ -426,18 +432,30 @@
           .classed("slideshow",true)
 
         var self = this;
+        var data = this._data.slice(0,self._viscount + 1);
+        self._viscount -= 1;
+        self._viscount = d3.max([0,self._viscount]);
 
-        this._slides = d3_splat(this._wrapper,".slide","div",this._data,function(x,i){ return i })
+        this._slides = d3_splat(this._wrapper,".slide","div",data,function(x,i){ return i })
           .attr("class",function(x,i) {
             return (i == self._viscount) ? undefined : "hidden"
           })
           .classed("slide",true)
+
+        this._slides
+          .each(function(x,i){
+            return x.bind(this)(x,i)
+          })
 
         return this
       }
     , next: function() {
 
         var self = this;
+        self._viscount += 1;
+        this.draw()
+        
+
 
         var current = this._slides.filter(function(x){return !d3.select(this).classed("hidden")})
         var h = -current.node().clientHeight
@@ -454,8 +472,7 @@
             d3.select(this).classed("hidden",true)
           })
 
-
-        self._viscount += 1;
+        self._viscount += 1
         this._slides
           .attr("class",function(x,i) { 
             return (i == self._viscount) || ((i+1) == self._viscount) ? "slide" : "hidden slide" 

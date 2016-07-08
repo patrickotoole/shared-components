@@ -1,3 +1,4 @@
+ 
 def run(db, advertiser, pattern, limit=10):
 
     import requests
@@ -31,10 +32,11 @@ limit %(limit)s
             title = _j['result']['title'].split("|")[0].replace('\n', ' ').replace('\r', '').encode("latin","ignore")
             desc = _j['result'].get('description','').encode("latin","ignore")
 
+            url = unicode(url, errors='ignore')
+
             if len(title) > 0 and len(desc) > 0:
                 xxx.append({
-                    "url": unicode(url, errors='ignore'),
-
+                    "url": url,
                     "title": unicode(title, errors='ignore'),
                     "description": unicode(desc, errors='ignore'),
                     "image": _j['result'].get('image',''),

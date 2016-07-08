@@ -24,9 +24,13 @@ class PixelLookupHandler(AnalyticsBase, BaseHandler):
 
     @defer.inlineCallbacks
     def get_segments(self, advertiser, segment, uid):
-        df = yield self.defer_execute(advertiser, segment, uid)
-        response = self.format_response(df)
-        self.write_json(response)
+        try:
+            df = yield self.defer_execute(advertiser, segment, uid)
+            response = self.format_response(df)
+            self.write_json(response)
+        except:
+            self.write("{}")
+            self.finish()
 
     def format_response(self, df):
         if len(df) == 0:

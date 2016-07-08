@@ -96,6 +96,7 @@ RB.crusher.ui.home = (function(home, crusher) {
 
   home.main = function(funnelRow,advertiser,uid,has_pixel) {
 
+    var slideshow;
     var slides = [
           function slide1(){
             var d = d3.select(this)
@@ -103,7 +104,7 @@ RB.crusher.ui.home = (function(home, crusher) {
               .draw()
 
             var cp_row = stage._stage
-            var click = home.codepeek_click(cp_row,advertiser,uid,slideshow.next.bind(slideshow))
+            var click = home.codepeek_click(cp_row,advertiser,uid,function(x) { return slideshow.next.bind(slideshow)(x) } )
 
             start.codepeek(cp_row)
               .data(advertiser)
@@ -161,7 +162,7 @@ RB.crusher.ui.home = (function(home, crusher) {
           }
       ]
 
-    if (has_pixel) slides = slides.slice(1)
+    if (true) slides = slides.slice(1)
 
     var slideshow = start.slideshow(funnelRow)
       .data(slides)

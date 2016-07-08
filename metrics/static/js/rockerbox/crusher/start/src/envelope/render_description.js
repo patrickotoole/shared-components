@@ -3,7 +3,7 @@ import d3_splat from '../d3_splat'
 
 function render_description() {
 
-  d3_updateable(this._wrapper,".envelope_description","div")
+  this._desc_wrapper = d3_updateable(this._wrapper,".envelope_description","div")
     .classed("envelope_description",true)
     .style("margin-bottom","30px")
     .html(this._description)
