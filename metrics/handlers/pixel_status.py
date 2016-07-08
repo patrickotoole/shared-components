@@ -47,9 +47,9 @@ class LookupHandler(PixelLookupHandler):
 
 class CookieHandler(PixelLookupHandler):
 
-    @tornado.web.authenticated
     def get(self):
         uid = self.get_argument("uid", False)
 
         self.set_cookie("an_uuid",uid)
+        self.write("1")
         self.finish()

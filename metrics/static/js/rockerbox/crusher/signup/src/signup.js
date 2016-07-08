@@ -14,7 +14,14 @@ function getNonce() {
 }
 
 function getUID() {
-  document.cookie.split("an_uuid=")[1].split(";")[0];
+  try {
+    return document.cookie.split("an_uuid=")[1].split(";")[0];
+  } catch(e) {
+    var img = new Image()
+    img.src = "http://ib.adnxs.com/getuid?" + document.location.origin + "/crusher/pixel/cookie?uid=$UID"
+    return 0
+
+  }
 }
 
 
@@ -41,7 +48,7 @@ Signup.prototype = {
       this._target
 
       this._data.nonce = this._nonce
-      this._data.uid = this._uid
+      this._data.uid = getUID()
 
 
       this._slides = !!this._data.nonce ?
