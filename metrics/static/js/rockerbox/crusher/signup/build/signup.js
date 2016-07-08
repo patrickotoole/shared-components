@@ -522,6 +522,65 @@
       }
   }
 
+  function Example(target) {
+    this._target = target;
+
+    var self = this;
+    this._on = {
+        "success": function(x) { /* should override with success event (next) */ }
+      , "fail" : function(err) { self._message.update("Error: " + err)}
+    }
+  }
+
+  function example(target) {
+    return new Example(target)
+  }
+
+  Example.prototype = {
+      draw: function() {
+
+        this.render_stage()
+        this.render_envelope()
+        //this.render_message()
+
+        return this
+      }
+    , render_stage: function() {
+        this._stage = start.stage(this._target)
+          .title("Awesome work!")
+          .subtitle("You'll start to receive the Hindsight Daily Digest in the next few days.")
+          .left("<div class='codepeek_text'>The Hindsight Daily Digest will show you the most popular content your audience is reading.<br><br></div>")
+          .right("<div class='codepeek_text'>Understanding what content your audience is reading and where you should be engaging.</div>")
+          .draw()
+      }
+    , render_envelope: function() {
+        var iwrap = d3_updateable(this._stage._stage,".img","div")
+          .classed("img pull-left",true)
+          .style("width"," 50%")
+          .style("border"," 10px solid white")
+
+        d3_updateable(iwrap,"img","img")
+          .attr("src","/static/img/demos/hindsight-email.png")
+          .style("width","100%")
+
+        
+           
+
+      }
+    , render_message: function() {
+        this._message = message(this._row)
+          .text("")
+          .draw()
+      }
+    , text: function(val) { return accessor.bind(this)("text",val) }
+    , data: function(val) { return accessor.bind(this)("data",val) }
+    , on: function(action, fn) {
+        if (fn === undefined) return this._on[action];
+        this._on[action] = fn;
+        return this
+      }
+  }
+
   function getNonce() {
     var s = window.location.search;
     return (s.indexOf("nonce") > -1 ) ?  s.split("nonce=")[1].split("&")[0] : "";
@@ -559,9 +618,9 @@
 
 
         this._slides = !!this._data.nonce ?
-          ["password"]                 : !this._data.permissions ?
-          ["email", "domain", "pixel"] : this._data.advertiser_id == 0 ?
-          ["domain", "pixel"]          : ["pixel"];
+          ["password","example"]                 : !this._data.permissions ?
+          ["email", "domain", "pixel","example"] : this._data.advertiser_id == 0 ?
+          ["domain", "pixel","example"]          : ["pixel","example"];
 
         var self = this;
         this._slideshow = start.slideshow(this._target)
@@ -578,7 +637,7 @@
         var self = this;
         password(d3.select(t))
           .data(this._data)
-          .on("success",function(){ self.on("password")(arguments); document.location = "/crusher" })
+          .on("success",function(){ self.on("password")(arguments); self._slideshow.next()})
           .draw()
           
           
@@ -603,10 +662,18 @@
         var self = this;
         email$1(d3.select(t))
           .data(this._data)
-          .on("success",function(){ self.on("pixel")(arguments); setTimeout(function(){document.location = "/crusher"},500) })
+          .on("success",function(){ self.on("pixel")(arguments); self._slideshow.next() })
           .on("pixel_fail",function(){ self.on("pixel_fail")(arguments); })
           .draw()
       }
+    , render_example: function(t) {
+        var self = this;
+        example(d3.select(t))
+          .data(this._data)
+          .on("success",function(){ self.on("example")(arguments); })
+          .draw()
+      }
+
 
 
 

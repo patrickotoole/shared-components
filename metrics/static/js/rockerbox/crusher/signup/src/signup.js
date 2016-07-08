@@ -3,6 +3,8 @@ import email from './step/email'
 import domain from './step/domain'
 import pixel from './step/pixel'
 import password from './step/password'
+import example from './step/example'
+
 
 function getPermissions() {}
 
@@ -43,9 +45,9 @@ Signup.prototype = {
 
 
       this._slides = !!this._data.nonce ?
-        ["password"]                 : !this._data.permissions ?
-        ["email", "domain", "pixel"] : this._data.advertiser_id == 0 ?
-        ["domain", "pixel"]          : ["pixel"];
+        ["password","example"]                 : !this._data.permissions ?
+        ["email", "domain", "pixel","example"] : this._data.advertiser_id == 0 ?
+        ["domain", "pixel","example"]          : ["pixel","example"];
 
       var self = this;
       this._slideshow = start.slideshow(this._target)
@@ -62,7 +64,7 @@ Signup.prototype = {
       var self = this;
       password(d3.select(t))
         .data(this._data)
-        .on("success",function(){ self.on("password")(arguments); document.location = "/crusher" })
+        .on("success",function(){ self.on("password")(arguments); self._slideshow.next()})
         .draw()
         
         
@@ -87,10 +89,18 @@ Signup.prototype = {
       var self = this;
       pixel(d3.select(t))
         .data(this._data)
-        .on("success",function(){ self.on("pixel")(arguments); setTimeout(function(){document.location = "/crusher"},500) })
+        .on("success",function(){ self.on("pixel")(arguments); self._slideshow.next() })
         .on("pixel_fail",function(){ self.on("pixel_fail")(arguments); })
         .draw()
     }
+  , render_example: function(t) {
+      var self = this;
+      example(d3.select(t))
+        .data(this._data)
+        .on("success",function(){ self.on("example")(arguments); })
+        .draw()
+    }
+
 
 
 
