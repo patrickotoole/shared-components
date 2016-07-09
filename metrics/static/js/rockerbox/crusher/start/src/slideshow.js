@@ -20,58 +20,56 @@ export default function slideshow(target) {
 
 Slideshow.prototype = {
     draw: function() {
-      this._target
+
+      var self = this;
+
+      // trying to make this function stateless
+      // Q: how do we do this so that we maintain the transitions?
+
 
       this._wrapper = d3_updateable(this._target,".slideshow","div")
         .classed("slideshow",true)
 
-      var self = this;
-      var data = this._data.slice(0,self._viscount + 1);
-      self._viscount -= 1;
-      self._viscount = d3.max([0,self._viscount]);
+      var data = this._data.slice(0,self._viscount + 1); // this is fine...
 
       this._slides = d3_splat(this._wrapper,".slide","div",data,function(x,i){ return i })
-        .attr("class",function(x,i) {
-          return (i == self._viscount) ? undefined : "hidden"
-        })
         .classed("slide",true)
-
+        .classed("hidden", function(x,i){ return (i < self._viscount - 1) || (i > self._viscount) })
+        
       this._slides
         .each(function(x,i){
           return x.bind(this)(x,i)
         })
 
-      return this
-    }
-  , next: function() {
+      //var current = this._slides
+      var current = this._slides
+        .filter(function(x,i){return i < self._viscount })
 
-      var self = this;
-      self._viscount += 1;
-      this.draw()
-      
+      if (!current.size()) return this
+      var last_node = current[0].slice(-1)[0]
 
-
-      var current = this._slides.filter(function(x){return !d3.select(this).classed("hidden")})
-      var h = -current.node().clientHeight
+      var h = -last_node.clientHeight
 
       var t0 = current.transition()
-        .duration(500)
+        .duration(1000)
 
-      t0.style("margin-top",(h-15) + "px")
+      t0.style("margin-top",(h) + "px")
+        .style("opacity",0)
         .transition()
         .duration(500)
-
         .each("end",function(){
           current.style("margin-top",undefined)
           d3.select(this).classed("hidden",true)
         })
 
-      self._viscount += 1
-      this._slides
-        .attr("class",function(x,i) { 
-          return (i == self._viscount) || ((i+1) == self._viscount) ? "slide" : "hidden slide" 
-        })
-        .classed("slide",true)
+
+
+      return this
+    }
+  , next: function() {
+
+      this._viscount += 1;
+      this.draw()
       
     }
   , previous: function() {
@@ -105,6 +103,7 @@ Slideshow.prototype = {
 
       
     }
+  , show_slide: function(val) { return accessor.bind(this)("viscount",val) }
   , data: function(val) { return accessor.bind(this)("data",val) }
   , title: function(val) { return accessor.bind(this)("title",val) }
   , slides: function(val) { return accessor.bind(this)("slides",val) }
