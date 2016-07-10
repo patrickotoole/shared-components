@@ -1,17 +1,18 @@
 def build_track(to,link,title):
     import ujson
+    import urllib
     j = {
-        "event": "link clicked", 
+        "event": "email - digest (article clicked)", 
         "properties": {
             "distinct_id": to, 
             "token": "a48368904183cf405deb90881e154bd8", 
             "link": link,
             "title": title,
-            "campaign": "testing"
+            "campaign": "digest"
         }
     }
-    _j = ujson.dumps(j).encode("base64").replace("\n","")[:-1]
-    src = "http://api.mixpanel.com/track/?data=%s&redirect=%s&ip=1" % (_j,link)
+    _j = ujson.dumps(j).encode("base64").replace("\n","")
+    src = "http://api.mixpanel.com/track/?data=%s&redirect=%s&ip=1" % (_j,urllib.quote_plus(link))
     return src
 
 def main(db, advertiser, pattern, email, title, subject="Hindsight Daily Digest", limit=10):

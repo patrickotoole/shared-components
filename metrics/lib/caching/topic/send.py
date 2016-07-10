@@ -1,14 +1,14 @@
 def build_track(to):
     import ujson
     j = {
-        "event": "e-mail opened", 
+        "event": "e-mail - digest (opened)", 
         "properties": {
             "distinct_id": to, 
             "token": "a48368904183cf405deb90881e154bd8", 
-            "campaign": "testing"
+            "campaign": "digest"
         }
     }
-    _j = ujson.dumps(j).encode("base64").replace("\n","")[:-1]
+    _j = ujson.dumps(j).encode("base64").replace("\n","")
     src = "http://api.mixpanel.com/track/?data=%s&ip=1&img=1" % _j
     return '<img src="%s" />' % src
     

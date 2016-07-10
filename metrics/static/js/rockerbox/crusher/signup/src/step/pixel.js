@@ -82,7 +82,7 @@ Email.prototype = {
       this._stage = start.stage(this._target)
         .title("Almost there!")
         .subtitle("Paste the code below before the </head> tag on every page of your site.")
-        .left("<div class='codepeek_text'>This pixel allows us to collect a pool of data about the users in your audience. <br><br> </div>")
+        .left("<div class='codepeek_text'>This pixel allows us to collect a pool of data about the users in your audience. <br><br> Need a teammate to help install Hindsight? <a>Send them an invite</a></div>")
         .right("<div class='codepeek_text'>After the pixel is implemented, you will receive the Hindsight Daily Digest. <br><br> It will show content you should engage with and recommend stories that matches your audience.</div>")
         .draw()
     }

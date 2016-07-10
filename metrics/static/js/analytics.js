@@ -66,7 +66,7 @@ AN = {
 
 w.events = {
     "page_load": function(email) {
-      mixpanel.track("page_load");
+      mixpanel.track("signup - page_load");
       fbq('track', "PageView");
     }
 
@@ -77,7 +77,7 @@ w.events = {
         , "uuid": document.cookie.split("an_uuid=")[1].split(";")[0]
       })
 
-      mixpanel.track("email_submitted");
+      mixpanel.track("signup - email_submitted");
       fbq('track', 'InitiateCheckout');
       RB.track("email_submitted", {"an_seg": 5893842, "type": "imp" })
       AN.signup()
@@ -88,26 +88,32 @@ w.events = {
           "domain": domain
         , "advertiser": advertiser
       })
-      mixpanel.track("domain_submitted");
+      mixpanel.track("signup - domain_submitted");
       RB.track("domain_submitted", {"an_seg": 5893842, "type": "imp"})
     }
 
   , "implementation_error": function() {
-      mixpanel.track("implementation_error");
+      mixpanel.track("signup - implementation_error");
       RB.track("implementation_error", {"an_seg": 5893842, "type": "imp" })
     }
 
   , "pixel_implemented": function() {
-      mixpanel.track("pixel_implemented");
+      mixpanel.track("signup - pixel_implemented");
       fbq('track', 'CompleteRegistration');
       RB.track("pixel_implemented", {"an_seg": 5893842, "type": "imp" })
       AN.conversion()
     }
 
   , "account_activated": function() {
-      mixpanel.track("account_activated");
+      mixpanel.track("signup - account_activated");
       RB.track("account_activated", {"an_seg": 5893842, "type": "imp" })
     }
+  , "error": function(err) {
+      mixpanel.track("signup - error", {"error": err});
+      RB.track("error", {"an_seg": 5893842, "type": "imp" })
+    }
+
+
 
 }
 
