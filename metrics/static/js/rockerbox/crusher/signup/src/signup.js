@@ -77,13 +77,21 @@ Signup.prototype = {
       this._slideshow
         .draw()
 
-      this._progress = progress(this._target)
-        .draw()
+      if (document.location.pathname.indexOf("digest") == -1) 
+        this._progress = progress(this._target)
+          .data(this._slides)
+          .selected(this._slide)
+          .on("click",this.show.bind(this))
+          .draw()
 
       return this
     }
   , next: function() {
       this._slide += 1
+      this.draw()
+    }
+  , show: function(i) {
+      if (this._slide > i) this._slide = i
       this.draw()
     }
   , render_password: function(t) {
