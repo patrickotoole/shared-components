@@ -278,6 +278,60 @@
       }
   }
 
+  function Takeover(target) {
+    this._target = target;
+  }
+
+  function takeover(target) {
+    return new Takeover(target)
+  }
+
+  Takeover.prototype = {
+      draw: function() {
+        this._target = d3.select("body")
+        var self = this;
+
+        this._wrapper = d3_updateable(this._target,".takeover-grey","div")
+          .classed("takeover-grey",true)
+          .style("top","0px")
+          .style("z-index","1000")
+          .style("width","100%")
+          .style("height","100%")
+          .style("background-color","rgba(0,0,0,.5)")
+          .style("position","fixed")
+          .style("display", "block")
+          .on("click",function() {
+            d3.event.preventDefault()
+            self._wrapper.remove()
+          })
+
+        this._takeover = d3_updateable(this._wrapper,".takeover","div")
+          .classed("takeover",true)
+          .style("width","40%")
+          .style("min-width","300px")
+          .style("min-height","300px")
+          .style("margin-right","auto")
+          .style("margin-left","auto")
+          .style("display","block")
+          .style("background-color","white")
+          .style("margin-top","12.5%")
+          .on("click",function() {
+            d3.event.stopPropagation()
+            d3.event.preventDefault()
+          })
+
+        return this
+      }
+    , text: function(val) { return accessor.bind(this)("text",val) }
+    , update: function(val) {
+        this.text(val)
+        this.draw()
+      }
+    , remove: function() {
+        this._wrapper.remove()
+      }
+  }
+
   function getData(callback) {
     queue()
       .defer(d3.json,"/advertiser")
@@ -295,7 +349,22 @@
     
   }
 
-  function Email$1(target) {
+  function sendInvite(advertiser,to,callback) {
+
+    var obj = {
+        "advertiser_id": advertiser
+      , "username": to
+      , "email": to
+      , "invite": true
+    }
+
+    d3.xhr("/signup")
+      .post(JSON.stringify(obj),callback)
+    
+  }
+
+
+  function Pixel(target) {
     this._target = target;
 
     var self = this;
@@ -306,11 +375,11 @@
     }
   }
 
-  function email$1(target) {
-    return new Email$1(target)
+  function pixel(target) {
+    return new Pixel(target)
   }
 
-  Email$1.prototype = {
+  Pixel.prototype = {
       draw: function() {
 
         this.render_stage()
@@ -352,13 +421,53 @@
         this._stage = start.stage(this._target)
           .title("Almost there!")
           .subtitle("Paste the code below before the </head> tag on every page of your site.")
-          .left("<div class='codepeek_text'>This pixel allows us to collect a pool of data about the users in your audience. <br><br> Need a teammate to help install Hindsight? <a>Send them an invite</a></div>")
+          .left("<div class='codepeek_text'>This pixel allows us to collect a pool of data about the users in your audience. <br><br> Need a teammate to help install Hindsight? <a id='invite'>Send them an invite</a></div>")
           .right("<div class='codepeek_text'>After the pixel is implemented, you will receive the Hindsight Daily Digest. <br><br> It will show content you should engage with and recommend stories that matches your audience.</div>")
           .draw()
+
+        var self = this;
+        this._stage._stage.selectAll("#invite")
+          .on("click",function(){
+            var taken = takeover("").draw()
+
+            var _take = taken
+              ._takeover
+              .classed("envelope",true)
+
+            var wrapped = d3_updateable(_take, ".w-form envelope_form","div")
+              .classed("w-form envelope_form",true)
+            
+            d3_updateable(wrapped,".envelope_title","div")
+              .classed("envelope_title",true)
+              .text("Who do you want to invite?")
+
+            var desc = d3_updateable(wrapped,".envelope_description","div")
+              .classed("envelope_description",true)
+
+            var input = d3_updateable(desc,"input","input")
+              .attr("placeholder","email")
+              .style("width","300px")
+
+            d3_updateable(wrapped,"button","button")
+              .style("margin-top","30px")
+              .classed("w-button button button-blue", true)
+              .text("Send invite")
+              .on("click",function() {
+                var email = input.node().value
+                var advertiser = self._advertiser_id
+                sendInvite(self._advertiser_id,email,function() {
+                  taken.remove()
+                  self.on("pixel_skip")()
+                })
+              })
+
+            
+          })
       }
     , render_codepeek: function() {
 
         var self = this;
+        
 
         getData(function(err,a,j) {
 
@@ -366,6 +475,8 @@
               "segments": j.segment_pixels.map(function(s){ s.segment_implemented = s.compiled; return s})
             , "client_sld": a[0].client_sld
           }
+
+          self._advertiser_id = a[0].external_advertiser_id
 
           advertiser.all_pages = advertiser.segments.filter(function(x){return x.segment_name.indexOf("All Pages") > -1})[0]
           advertiser.uuid = document.cookie.split("an_uuid=")[1].split(";")[0];
@@ -944,6 +1055,8 @@
 
   Signup.prototype = {
       draw: function() {
+
+
         this._target
 
         this._data.nonce = this._nonce
@@ -1030,9 +1143,10 @@
       }
     , render_pixel: function(t) {
         var self = this;
-        email$1(d3.select(t))
+        pixel(d3.select(t))
           .data(this._data)
           .on("success",function(){ self.on("pixel")(arguments); self.next() })
+          .on("pixel_skip",function(){ self.on("pixel_skip")(arguments); self.next() })
           .on("pixel_fail",function(){ self.on("pixel_fail")(arguments); })
           .on("error",function(err){ self.on("error")(err); })
 
@@ -1066,7 +1180,7 @@
   exports.signup = signup;
   exports.domain = domain;
   exports.email = email;
-  exports.pixel = email$1;
+  exports.pixel = pixel;
   exports.password = password;
 
 }));

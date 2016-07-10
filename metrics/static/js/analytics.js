@@ -103,11 +103,17 @@ w.events = {
       RB.track("pixel_implemented", {"an_seg": 5893842, "type": "imp" })
       AN.conversion()
     }
+  , "skip_implementation": function() {
+      mixpanel.track("signup - skip_implemented");
+      RB.track("skip_implemented", {"an_seg": 5893842, "type": "imp" })
+    }
+
 
   , "account_activated": function() {
       mixpanel.track("signup - account_activated");
       RB.track("account_activated", {"an_seg": 5893842, "type": "imp" })
     }
+
   , "error": function(err) {
       mixpanel.track("signup - error", {"error": err});
       RB.track("error", {"an_seg": 5893842, "type": "imp" })

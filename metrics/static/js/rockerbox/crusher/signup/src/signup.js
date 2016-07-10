@@ -9,6 +9,7 @@ import progress from './progress'
 
 
 
+
 function getPermissions() {}
 
 function getNonce() {
@@ -73,6 +74,8 @@ export default function signup(target) {
 
 Signup.prototype = {
     draw: function() {
+
+
       this._target
 
       this._data.nonce = this._nonce
@@ -162,6 +165,7 @@ Signup.prototype = {
       pixel(d3.select(t))
         .data(this._data)
         .on("success",function(){ self.on("pixel")(arguments); self.next() })
+        .on("pixel_skip",function(){ self.on("pixel_skip")(arguments); self.next() })
         .on("pixel_fail",function(){ self.on("pixel_fail")(arguments); })
         .on("error",function(err){ self.on("error")(err); })
 

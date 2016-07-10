@@ -3,6 +3,8 @@ import 'start'
 import 'queue'
 import accessor from '../helpers'
 import message from '../message'
+import takeover from '../takeover'
+
 
 function validate(pixel) {
 
@@ -25,7 +27,22 @@ function checkPixel(obj,callback) {
   
 }
 
-export function Email(target) {
+function sendInvite(advertiser,to,callback) {
+
+  var obj = {
+      "advertiser_id": advertiser
+    , "username": to
+    , "email": to
+    , "invite": true
+  }
+
+  d3.xhr("/signup")
+    .post(JSON.stringify(obj),callback)
+  
+}
+
+
+export function Pixel(target) {
   this._target = target;
 
   var self = this;
@@ -36,11 +53,11 @@ export function Email(target) {
   }
 }
 
-export default function email(target) {
-  return new Email(target)
+export default function pixel(target) {
+  return new Pixel(target)
 }
 
-Email.prototype = {
+Pixel.prototype = {
     draw: function() {
 
       this.render_stage()
@@ -82,13 +99,53 @@ Email.prototype = {
       this._stage = start.stage(this._target)
         .title("Almost there!")
         .subtitle("Paste the code below before the </head> tag on every page of your site.")
-        .left("<div class='codepeek_text'>This pixel allows us to collect a pool of data about the users in your audience. <br><br> Need a teammate to help install Hindsight? <a>Send them an invite</a></div>")
+        .left("<div class='codepeek_text'>This pixel allows us to collect a pool of data about the users in your audience. <br><br> Need a teammate to help install Hindsight? <a id='invite'>Send them an invite</a></div>")
         .right("<div class='codepeek_text'>After the pixel is implemented, you will receive the Hindsight Daily Digest. <br><br> It will show content you should engage with and recommend stories that matches your audience.</div>")
         .draw()
+
+      var self = this;
+      this._stage._stage.selectAll("#invite")
+        .on("click",function(){
+          var taken = takeover("").draw()
+
+          var _take = taken
+            ._takeover
+            .classed("envelope",true)
+
+          var wrapped = d3_updateable(_take, ".w-form envelope_form","div")
+            .classed("w-form envelope_form",true)
+          
+          d3_updateable(wrapped,".envelope_title","div")
+            .classed("envelope_title",true)
+            .text("Who do you want to invite?")
+
+          var desc = d3_updateable(wrapped,".envelope_description","div")
+            .classed("envelope_description",true)
+
+          var input = d3_updateable(desc,"input","input")
+            .attr("placeholder","email")
+            .style("width","300px")
+
+          d3_updateable(wrapped,"button","button")
+            .style("margin-top","30px")
+            .classed("w-button button button-blue", true)
+            .text("Send invite")
+            .on("click",function() {
+              var email = input.node().value
+              var advertiser = self._advertiser_id
+              sendInvite(self._advertiser_id,email,function() {
+                taken.remove()
+                self.on("pixel_skip")()
+              })
+            })
+
+          
+        })
     }
   , render_codepeek: function() {
 
       var self = this;
+      
 
       getData(function(err,a,j) {
 
@@ -96,6 +153,8 @@ Email.prototype = {
             "segments": j.segment_pixels.map(function(s){ s.segment_implemented = s.compiled; return s})
           , "client_sld": a[0].client_sld
         }
+
+        self._advertiser_id = a[0].external_advertiser_id
 
         advertiser.all_pages = advertiser.segments.filter(function(x){return x.segment_name.indexOf("All Pages") > -1})[0]
         advertiser.uuid = document.cookie.split("an_uuid=")[1].split(";")[0];

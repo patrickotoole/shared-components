@@ -87,6 +87,8 @@ d3.json("/account/permissions")
         .on("email",function() { window.analytics.events.email_submitted(JSON.parse(arguments[0][0].response).username); })
         .on("password",function() { window.analytics.events.account_activated(); })
         .on("pixel_fail",function() { window.analytics.events.implementation_error() }) 
+        .on("pixel_skip",function() { window.analytics.events.skip_implementation() }) 
+
         .on("pixel",function() { window.analytics.events.pixel_implemented() })
         .on("error",function(err) { window.analytics.events.error(err) })
 
