@@ -127,8 +127,6 @@ Progress.prototype = {
             .replace("#666","white")
         )
 
-      this._target = d3.select("#rhs-wrap")
-
       this._progress = d3_updateable(this._target,".arrow-steps","div")
         .classed("arrow-steps",true)
         .style("padding-top","29px")

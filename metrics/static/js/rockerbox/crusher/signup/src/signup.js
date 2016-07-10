@@ -78,7 +78,7 @@ Signup.prototype = {
         .draw()
 
       if (document.location.pathname.indexOf("digest") == -1) 
-        this._progress = progress(this._target)
+        this._progress = progress(this._progress_target)
           .data(this._slides)
           .selected(this._slide)
           .on("click",this.show.bind(this))
@@ -86,6 +86,7 @@ Signup.prototype = {
 
       return this
     }
+  , progress_target: function(val) { return accessor.bind(this)("progress_target",val) }
   , next: function() {
       this._slide += 1
       this.draw()

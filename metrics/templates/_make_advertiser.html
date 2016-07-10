@@ -75,6 +75,7 @@ d3.json("/account/permissions")
         } 
 
       window._ss = signup.signup(d3.select(".funnels"))
+        .progress_target(d3.select("#rhs-wrap"))
         .on("email",function() { 
           var obj = JSON.parse(arguments[0][0].response);
           window.analytics.events.email_submitted(obj.username);
