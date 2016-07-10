@@ -11,8 +11,9 @@ export function Splash(target) {
 
   var self = this;
   this._on = {
-      "success": function(x) { /* should override with success event (next) */ }
-    , "fail" : function(err) { self._message.update("Error: " + err)}
+      "error": function(x) { /* should override with success event (next) */ }
+    , "success": function(x) { /* should override with success event (next) */ }
+    , "fail" : function(err) { self._message.update("Error: " + err); self.on("error")(err) }
   }
 }
 
@@ -103,6 +104,11 @@ Splash.prototype = {
         .style("border","1px solid #d0d0d0")
         .style("border-left","0px")
         .on("click",this.run.bind(this))
+
+      this._message = message(row)
+        .text("")
+        .draw()
+
 
       d3_updateable(splash,"img","img")
         .style("width","100px")

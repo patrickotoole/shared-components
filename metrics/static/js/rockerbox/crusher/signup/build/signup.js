@@ -56,8 +56,9 @@
 
     var self = this;
     this._on = {
-        "success": function(x) { /* should override with success event (next) */ }
-      , "fail" : function(err) { self._message.update("Error: " + err)}
+        "error": function(x) { /* should override with success event (next) */ }
+      , "success": function(x) { /* should override with success event (next) */ }
+      , "fail" : function(err) { self._message.update("Error: " + err); self.on("error")(err) }
     }
   }
 
@@ -173,8 +174,9 @@
 
     var self = this;
     this._on = {
-        "success": function(x) { /* should override with success event (next) */ }
-      , "fail" : function(err) { self._message.update("Error: " + err)}
+        "error": function(x) { /* should override with success event (next) */ }
+      , "success": function(x) { /* should override with success event (next) */ }
+      , "fail" : function(err) { self._message.update("Error: " + err); self.on("error")(err) }
     }
   }
 
@@ -222,7 +224,7 @@
               })
               
           } else {
-            self._message.update("Issue creating advertiser #923012. Please contact support with this number")
+            self._on["fail"]("Issue creating advertiser #923012. Please contact support with this number")
           }
         })
         
@@ -587,8 +589,9 @@
 
     var self = this;
     this._on = {
-        "success": function(x) { /* should override with success event (next) */ }
-      , "fail" : function(err) { self._message.update("Error: " + err)}
+        "error": function(x) { /* should override with success event (next) */ }
+      , "success": function(x) { /* should override with success event (next) */ }
+      , "fail" : function(err) { self._message.update("Error: " + err); self.on("error")(err) }
     }
   }
 
@@ -679,6 +682,11 @@
           .style("border","1px solid #d0d0d0")
           .style("border-left","0px")
           .on("click",this.run.bind(this))
+
+        this._message = message(row)
+          .text("")
+          .draw()
+
 
         d3_updateable(splash,"img","img")
           .style("width","100px")
@@ -922,7 +930,7 @@
       return slides.reverse()
     }
 
-    if (data.advertiser_id == 0) slides.push("domain")
+    if (!data.advertiser_id || data.advertiser_id == 0) slides.push("domain")
     if (!data.permissions) slides.push("email")
 
     return slides.reverse()

@@ -59,7 +59,7 @@ function chooseSlides(data) {
     return slides.reverse()
   }
 
-  if (data.advertiser_id == 0) slides.push("domain")
+  if (!data.advertiser_id || data.advertiser_id == 0) slides.push("domain")
   if (!data.permissions) slides.push("email")
 
   return slides.reverse()

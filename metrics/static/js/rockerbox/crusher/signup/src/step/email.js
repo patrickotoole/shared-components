@@ -24,8 +24,9 @@ export function Email(target) {
 
   var self = this;
   this._on = {
-      "success": function(x) { /* should override with success event (next) */ }
-    , "fail" : function(err) { self._message.update("Error: " + err)}
+      "error": function(x) { /* should override with success event (next) */ }
+    , "success": function(x) { /* should override with success event (next) */ }
+    , "fail" : function(err) { self._message.update("Error: " + err); self.on("error")(err) }
   }
 }
 
