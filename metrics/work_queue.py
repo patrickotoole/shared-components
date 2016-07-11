@@ -57,8 +57,9 @@ class WorkQueue(object):
                     self.connectors['crushercache'].execute(SQL_LOG, (current_host, job_id, "Ran"))
 
                     self.timer.resetTime()
-                    logging.info("finished queue %s %s" % (str(fn),str(kwargs)))
+                    logging.info("finished item in queue %s %s" % (str(fn),str(kwargs)))
                 except Exception as e:
+                    logging.info("data not inserted")
                     box = socket.gethostname()
                     self.mcounter.bumpError()
                     trace_error = str(traceback.format_exc())
