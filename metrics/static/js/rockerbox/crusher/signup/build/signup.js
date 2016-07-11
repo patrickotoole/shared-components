@@ -332,6 +332,18 @@
       }
   }
 
+  function getUID$1(force) {
+    try {
+      if (force) throw "yo"
+      return document.cookie.split("an_uuid=")[1].split(";")[0];
+    } catch(e) {
+      var img = new Image()
+      img.src = "http://ib.adnxs.com/getuid?" + document.location.origin + "/crusher/pixel/cookie?uid=$UID"
+      return 0
+
+    }
+  }
+
   function getData(callback) {
     queue()
       .defer(d3.json,"/advertiser")
@@ -467,8 +479,9 @@
     , render_codepeek: function() {
 
         var self = this;
-        
+        getUID$1(true);
 
+        
         getData(function(err,a,j) {
 
           var advertiser = {
@@ -479,7 +492,7 @@
           self._advertiser_id = a[0].external_advertiser_id
 
           advertiser.all_pages = advertiser.segments.filter(function(x){return x.segment_name.indexOf("All Pages") > -1})[0]
-          advertiser.uuid = document.cookie.split("an_uuid=")[1].split(";")[0];
+          advertiser.uuid = getUID$1();
 
           start.codepeek(self._stage._stage)
             .data(advertiser)
