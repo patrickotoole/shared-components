@@ -84,11 +84,11 @@ Domain.prototype = {
             .defer(postPixel, {"segment_name": "Logged In", "segment_type":"segment"})
             .await(function(error,_1,_2,_3,_4) {
               if (!error) self.on("success")(obj)
-              else self._on["fail"]("Issue creating account #923011. Please contact support with this number.")
+              else self._on["fail"]("Issue creating account #923011. Please contact support@rockerbox.com with this number.")
             })
             
         } else {
-          self._on["fail"]("Issue creating advertiser #923012. Please contact support with this number")
+          self._on["fail"]("Issue creating advertiser #923012. Please contact support@rockerbox.com  with this number")
         }
       })
       
