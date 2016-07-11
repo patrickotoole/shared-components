@@ -125,16 +125,12 @@ def runner(**kwargs):
     else:
         parameters = UR.get_parameters(db, advertiser, func_name)
 
-    try:
-        data = UR.make_request(crusher, pattern, func_name, parameters)
-        #data2 = UR.make_request_v2(crusher, pattern, func_name, parameters)
+    data = UR.make_request(crusher, pattern, func_name, parameters)
+    #data2 = UR.make_request_v2(crusher, pattern, func_name, parameters)
 
-        compress_data = UR.compress(ujson.dumps(data))
-        #compress_data2 = UR.compress(ujson.dumps(data2))
-        UR.insert(advertiser, pattern, func_name, compress_data)
-        #UR.insert2(advertiser, pattern, func_name, compress_data2)
-        logging.info("Data inserted")
-        UR.accounting_entry_end(advertiser, pattern, func_name, uuid_num, UR.action_id)
-    except Exception as e:
-        logging.info(e)
-        logging.info("Data not inserted")
+    compress_data = UR.compress(ujson.dumps(data))
+    #compress_data2 = UR.compress(ujson.dumps(data2))
+    UR.insert(advertiser, pattern, func_name, compress_data)
+    #UR.insert2(advertiser, pattern, func_name, compress_data2)
+    logging.info("Data inserted")
+    UR.accounting_entry_end(advertiser, pattern, func_name, uuid_num, UR.action_id)
