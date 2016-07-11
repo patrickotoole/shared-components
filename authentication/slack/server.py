@@ -6,18 +6,36 @@ import json
 import time
 import logging
 import os
-
 import urllib,urllib2
+
+from link import lnk
+db = lnk.dbs.rockerbox
+
 import MySQLdb, MySQLdb.cursors
 
 with open('secrets.json') as data_file:
     SETTINGS = json.load(data_file)
 
-db = MySQLdb.connect(user=SETTINGS['db']['user'], passwd=SETTINGS['db']['password'], host=SETTINGS['db']['host'], db=SETTINGS['db']['name'], cursorclass=MySQLdb.cursors.DictCursor)
-cur = db.cursor()
+cur = db.cursor(cursorclass=MySQLdb.cursors.DictCursor)
+
+def build_link_track(to,link,event="slack - digest (click)"):
+    import ujson
+    import urllib
+    j = {
+        "event": event,
+        "properties": {
+            "distinct_id": to,
+            "token": "a48368904183cf405deb90881e154bd8",
+            "link": link,
+            "campaign": "digest"
+        }
+    }
+    _j = ujson.dumps(j).encode("base64").replace("\n","")
+    src = "http://api.mixpanel.com/track/?data=%s&redirect=%s&ip=1" % (_j,urllib.quote_plus(link))
+    return src
 
 def getUser(advertiser_id):
-    sql = "SELECT advertiser_id, global_access_token, bot_access_token, team_id, channel_id, bot_id FROM users WHERE advertiser_id = %(advertiser_id)s"
+    sql = 'SELECT advertiser_id, global_access_token, bot_access_token, team_id, channel_id, bot_id FROM advertiser_slack WHERE advertiser_id = %(advertiser_id)s'
     cur.execute(sql, { 'advertiser_id': advertiser_id })
     result = cur.fetchall()
 
@@ -28,10 +46,14 @@ def getUser(advertiser_id):
 
     return response
 
+def getAdvertiserEmail(advertiser_id):
+    sql = 'SELECT * FROM user WHERE advertiser_id = %d LIMIT 0,1' % (advertiser_id)
+    df = db.select_dataframe(sql)
+    return df.ix[0]['email']
+
 def apivalidation(x):
     def fn(self):
         self.set_header('Content-Type', 'application/json; charset=UTF-8')
-
         return x(self)
     return fn
 
@@ -61,10 +83,10 @@ class AuthenticationCallbackHandler(web.RequestHandler):
 
             if not user:
                 # New user
-                sql = "INSERT INTO `users` (`advertiser_id`, `global_access_token`, `bot_access_token`, `team_id`, `channel_id`, `bot_id`, `ts_created`) VALUES (%(advertiser_id)s, %(global_access_token)s, %(bot_access_token)s, %(team_id)s, %(channel_id)s, %(bot_id)s, NOW())"
+                sql = "INSERT INTO `advertiser_slack` (`advertiser_id`, `global_access_token`, `bot_access_token`, `team_id`, `channel_id`, `bot_id`, `ts_created`) VALUES (%(advertiser_id)s, %(global_access_token)s, %(bot_access_token)s, %(team_id)s, %(channel_id)s, %(bot_id)s, NOW())"
             else:
                 # Existing user
-                sql = "UPDATE `users` SET `global_access_token` = %(global_access_token)s, `bot_access_token` = %(bot_access_token)s, `team_id` = %(team_id)s, `channel_id` = %(channel_id)s, `bot_id` = %(bot_id)s WHERE `advertiser_id` = %(advertiser_id)s"
+                sql = "UPDATE `advertiser_slack` SET `global_access_token` = %(global_access_token)s, `bot_access_token` = %(bot_access_token)s, `team_id` = %(team_id)s, `channel_id` = %(channel_id)s, `bot_id` = %(bot_id)s WHERE `advertiser_id` = %(advertiser_id)s"
 
             try:
                 cur.execute(sql, {
@@ -96,7 +118,7 @@ class SlackChannelsHandler(web.RequestHandler):
                 'message': 'Advertiser does not exist or does not have Slack integration.'
             })
         else:
-            url = 'https://slack.com/api/channels.list?token=%s' % (user['bot_access_token'])
+            url = 'https://slack.com/api/channels.list?token=%s' %  user['bot_access_token']
             req = urllib2.Request(url)
             res = urllib2.urlopen(req)
             response = json.loads(res.read())
@@ -110,6 +132,7 @@ class SlackMessageHandler(web.RequestHandler):
         post_data = json.loads(self.request.body)
         advertiser_id = post_data['advertiser_id']
         user = getUser(advertiser_id)
+        advertiser_email = getAdvertiserEmail(advertiser_id)
 
         if not user:
             response = json.dumps({
@@ -123,7 +146,7 @@ class SlackMessageHandler(web.RequestHandler):
 
                 articles.append({
                     "title": "",
-                    "value": "<%s|%d. %s>" % (article['url'], i, article['title']),
+                    "value": "<%s|%d. %s>" % (build_link_track(advertiser_email, article['url']), i, article['title']),
                     "short": False
                 })
 
@@ -131,18 +154,18 @@ class SlackMessageHandler(web.RequestHandler):
                 'channel': user['channel_id'],
                 'token': user['bot_access_token'],
                 'text': '',
-                "attachments": json.dumps([{
-                    "fallback": "Top articles for today.",
-                    "color": "#3195c6",
-                    "pretext": "These are your top articles for today. Sign into Hindsight for more articles!",
-                    "author_name": "Hindsight by Rockerbox",
-                    "author_link": "http://rockerbox.com/hindsight/",
-                    "author_icon": "http://flickr.com/icons/bobby.jpg",
-                    "text": "",
-                    "fields": articles,
-                    "footer": "Hindsight by Rockerbox",
-                    "footer_icon": "https://platform.slack-edge.com/img/default_application_icon.png",
-                    "ts": time.time()
+                'attachments': json.dumps([{
+                    'fallback': 'Top articles for today.',
+                    'color': '#3195c6',
+                    'pretext': 'These are your top articles for today. Sign into Hindsight for more articles!',
+                    'author_name': 'Hindsight by Rockerbox',
+                    'author_link': 'http://rockerbox.com/hindsight/',
+                    'author_icon': 'http://flickr.com/icons/bobby.jpg',
+                    'text': '',
+                    'fields': articles,
+                    'footer': 'Hindsight by Rockerbox',
+                    'footer_icon': 'https://platform.slack-edge.com/img/default_application_icon.png',
+                    'ts': time.time()
                 }])
             })
             url = 'https://slack.com/api/chat.postMessage'
@@ -159,10 +182,10 @@ class WebApp(web.Application):
 
     def __init__(self):
         handlers = [
-            (r"/authenticate/callback", AuthenticationCallbackHandler),
-            (r"/channels", SlackChannelsHandler),
-            (r"/message", SlackMessageHandler),
-            (r"/", IndexHandler),
+            (r'/authenticate/callback', AuthenticationCallbackHandler),
+            (r'/channels', SlackChannelsHandler),
+            (r'/message', SlackMessageHandler),
+            (r'/', IndexHandler),
         ]
 
         settings = dict(
