@@ -16,9 +16,9 @@ with open('secrets.json') as data_file:
 db = MySQLdb.connect(user=SETTINGS['db']['user'], passwd=SETTINGS['db']['password'], host=SETTINGS['db']['host'], db=SETTINGS['db']['name'], cursorclass=MySQLdb.cursors.DictCursor)
 cur = db.cursor()
 
-def getUser(user_id):
-    sql = "SELECT user_id, global_access_token, bot_access_token, team_id, channel_id, bot_id FROM users WHERE user_id = %(user_id)s"
-    cur.execute(sql, { 'user_id': user_id })
+def getUser(advertiser_id):
+    sql = "SELECT advertiser_id, global_access_token, bot_access_token, team_id, channel_id, bot_id FROM users WHERE advertiser_id = %(advertiser_id)s"
+    cur.execute(sql, { 'advertiser_id': advertiser_id })
     result = cur.fetchall()
 
     if not result:
@@ -43,8 +43,8 @@ class IndexHandler(web.RequestHandler):
 class AuthenticationCallbackHandler(web.RequestHandler):
     def get(self):
         code = self.get_argument('code','')
-        user_id = self.get_secure_cookie('advertiser')
-        user = getUser(user_id)
+        advertiser_id = self.get_secure_cookie('advertiser')
+        user = getUser(advertiser_id)
 
         # Get token
         url = '%s?client_id=%s&client_secret=%s&redirect_uri=%s&code=%s' % (SETTINGS['slack']['token_uri'], SETTINGS['slack']['client_id'], SETTINGS['slack']['client_secret'], SETTINGS['slack']['redirect_uri'], code)
@@ -61,14 +61,14 @@ class AuthenticationCallbackHandler(web.RequestHandler):
 
             if not user:
                 # New user
-                sql = "INSERT INTO `users` (`user_id`, `global_access_token`, `bot_access_token`, `team_id`, `channel_id`, `bot_id`, `ts_created`) VALUES (%(user_id)s, %(global_access_token)s, %(bot_access_token)s, %(team_id)s, %(channel_id)s, %(bot_id)s, NOW())"
+                sql = "INSERT INTO `users` (`advertiser_id`, `global_access_token`, `bot_access_token`, `team_id`, `channel_id`, `bot_id`, `ts_created`) VALUES (%(advertiser_id)s, %(global_access_token)s, %(bot_access_token)s, %(team_id)s, %(channel_id)s, %(bot_id)s, NOW())"
             else:
                 # Existing user
-                sql = "UPDATE `users` SET `global_access_token` = %(global_access_token)s, `bot_access_token` = %(bot_access_token)s, `team_id` = %(team_id)s, `channel_id` = %(channel_id)s, `bot_id` = %(bot_id)s WHERE `user_id` = %(user_id)s"
+                sql = "UPDATE `users` SET `global_access_token` = %(global_access_token)s, `bot_access_token` = %(bot_access_token)s, `team_id` = %(team_id)s, `channel_id` = %(channel_id)s, `bot_id` = %(bot_id)s WHERE `advertiser_id` = %(advertiser_id)s"
 
             try:
                 cur.execute(sql, {
-                    "user_id": user_id,
+                    "advertiser_id": advertiser_id,
                     "global_access_token": global_access_token,
                     "bot_access_token": bot_access_token,
                     "team_id": team_id,
@@ -87,13 +87,13 @@ class AuthenticationCallbackHandler(web.RequestHandler):
 class SlackChannelsHandler(web.RequestHandler):
     @apivalidation
     def get(self):
-        user_id = self.get_argument('user_id', '')
-        user = getUser(user_id)
+        advertiser_id = self.get_argument('advertiser_id', '')
+        user = getUser(advertiser_id)
 
         if not user:
             response = json.dumps({
                 'ok': False,
-                'message': 'User does not exist or does not have Slack integration.'
+                'message': 'Advertiser does not exist or does not have Slack integration.'
             })
         else:
             url = 'https://slack.com/api/channels.list?token=%s' % (user['bot_access_token'])
@@ -108,13 +108,13 @@ class SlackMessageHandler(web.RequestHandler):
     @apivalidation
     def post(self):
         post_data = json.loads(self.request.body)
-        user_id = post_data['user_id']
-        user = getUser(user_id)
+        advertiser_id = post_data['advertiser_id']
+        user = getUser(advertiser_id)
 
         if not user:
             response = json.dumps({
                 'ok': False,
-                'message': 'User does not exist or does not have Slack integration.'
+                'message': 'Advertiser does not exist or does not have Slack integration.'
             })
         else:
             articles = []
@@ -140,8 +140,6 @@ class SlackMessageHandler(web.RequestHandler):
                     "author_icon": "http://flickr.com/icons/bobby.jpg",
                     "text": "",
                     "fields": articles,
-                    "image_url": "http://my-website.com/path/to/image.jpg",
-                    "thumb_url": "http://example.com/path/to/thumb.png",
                     "footer": "Hindsight by Rockerbox",
                     "footer_icon": "https://platform.slack-edge.com/img/default_application_icon.png",
                     "ts": time.time()
@@ -162,8 +160,8 @@ class WebApp(web.Application):
     def __init__(self):
         handlers = [
             (r"/authenticate/callback", AuthenticationCallbackHandler),
-            (r"/slack/channels", SlackChannelsHandler),
-            (r"/slack/message", SlackMessageHandler),
+            (r"/channels", SlackChannelsHandler),
+            (r"/message", SlackMessageHandler),
             (r"/", IndexHandler),
         ]
 
