@@ -233,8 +233,8 @@
         this._stage = start.stage(this._target)
           .title("Let's get started!")
           .subtitle("To get started, tell us on what domain will we be implementing pixels?")
-          .left("<div class='codepeek_text'>Knowing the domain for the website will help us setup your account.</div>")
-          .right("<div class='codepeek_text'>We will also use your domain to help check the pixel is implemented correctly.</div>")
+          .left("")
+          .right("")
           .draw()
       }
     , render_envelope: function() {
