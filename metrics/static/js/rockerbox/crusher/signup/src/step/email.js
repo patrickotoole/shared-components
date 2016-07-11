@@ -3,7 +3,7 @@ import 'start'
 import accessor from '../helpers'
 import message from '../message'
 
-function validate(email) {
+export function validate(email) {
   var split = email.split("@"),
     has_at = split.length > 1,
     has_to = split[0].length > 0,
@@ -12,7 +12,7 @@ function validate(email) {
   return has_at && has_to && has_domain
 }
 
-function postEmail(obj,callback) {
+export function postEmail(obj,callback) {
 
   d3.xhr("/signup")
     .post(JSON.stringify(obj), callback)
@@ -24,8 +24,9 @@ export function Email(target) {
 
   var self = this;
   this._on = {
-      "success": function(x) { /* should override with success event (next) */ }
-    , "fail" : function(err) { self._message.update("Error: " + err)}
+      "error": function(x) { /* should override with success event (next) */ }
+    , "success": function(x) { /* should override with success event (next) */ }
+    , "fail" : function(err) { self._message.update("Error: " + err); self.on("error")(err) }
   }
 }
 

@@ -1,92 +1,12 @@
-body.create {
-  .shift {
-    position: absolute;
-    top: 50%;
-    margin-top: -244px;
-    height: 288px;
-    left: 50%;
-    margin-left: -325px;
-    width: 600px;
-  }
-  
-  .shift {
-    position: relative;
-    z-index: 2;
-    display: block;
-    overflow-x: hidden;
-    overflow-y: hidden;
-    width: 650px;
-    padding-bottom: 40px;
-    border-radius: 4px;
-    background-color: white;
-    box-shadow: rgba(0, 0, 0, 0.2) 0px 1px 3px 0px;
-    margin-top: -420px;
-    height:500px;
-  }
-  
-  .shift h3 {
-    margin-top: 70px;
-    margin-bottom: 30px;
-    font-family: Ubuntu, Helvetica, sans-serif;
-    color: #464646;
-    font-weight: 400;
-    text-align: center;
-    font-size:38px
-  }
-  
-  .shift h5 {
-    display: block;
-    width: 450px;
-    margin-right: auto;
-    margin-bottom: 40px;
-    margin-left: auto;
-    font-family:'open sans';
-    /*color: rgba(255, 255, 255, 0.65);*/
-    font-size: 17px;
-    line-height: 29px;
-    font-weight: 300;
-    text-align: center;
-  }
-  input {
-    font-family: "Source Sans Pro",sans-serif;
-    font-weight: 300;
-    font-size: 18px;
-    padding: 10px 20px;
-    background: rgba(255,255,255,.3);
-    border: none;
-    width: 180px;
-    margin-top: 10px;
-    margin-bottom: 10px;
-    border:1px solid #d0d0d0;
-    border-radius:3px;
-    text-align:center;
-  }
-  input:placeholder { color:black }
-  input::-webkit-input-placeholder { color:grey }
-  
-  input[type=submit] {
-    padding: 9px 25px 8px;
-    border-radius: 4px;
-    background-color: #2e2e2e;
-    box-shadow: rgba(0, 0, 0, 0.2) 0px 1px 3px 0px;
-    font-family: 'Open Sans', sans-serif;
-    color: white;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    text-decoration: none;
-    text-transform: uppercase;
-    background-color: #52a4de;
-    -webkit-transition: background-color 200ms ease;
-    transition: background-color 200ms ease;
-  }
-}
+import accessor from './helpers'
+
+function UglyAssCssTemplate() {
 /*
 .arrow-steps .step {
 	font-size: 12px;
         line-height: 12px;
 	text-align: center;
-	color: #666;
+	color: white;
 	cursor: default;
 	margin: 0 3px;
 	padding: 3px 15px 3px 23px;
@@ -105,12 +25,17 @@ body.create {
 
 }
 
+.arrow-steps .step.selected {
+  font-weight:bold;
+  color: #fff;
+}
+
 .arrow-steps .step:after,
 .arrow-steps .step:before {
 	content: " ";
 	position: absolute;
 	top: 0;
-	right: -7px;
+	right: -8px;
 	width: 0;
 	height: 0;
 	border-top: 10px solid transparent;
@@ -178,4 +103,59 @@ body.create {
 .arrow-steps .step.current:after {
 	border-left: 7px solid #23468c;	
 }
-*/
+/**/
+}
+
+export function Progress(target) {
+  this._target = target;
+  this._on = {}
+}
+
+export default function progress(target) {
+  return new Progress(target)
+}
+
+Progress.prototype = {
+    draw: function() {
+      d3_updateable(d3.select("head"),"style#arrows","style")
+        .attr("id","arrows")
+        .text(
+          String(UglyAssCssTemplate)
+            .split("/*")[1]
+            .replace(/#d9e3f7/g,"#38abdd")
+            .replace(/white/g,"rgba(208,208,208,.7)")
+            .replace("#666","white")
+        )
+
+      this._progress = d3_updateable(this._target,".arrow-steps","div")
+        .classed("arrow-steps",true)
+        .style("padding-top","29px")
+        .style("padding-right","30px")
+
+      var self = this;
+
+      this._arrows = d3_splat(this._progress,".step","div",this._data,function(x,i){return i})
+        .classed("step",true)
+        .classed("selected",function(x,i) { return i == self._selected})
+        .style("width","30px")
+        .text(function(x,i){ return i + 1 })
+        .on("click", function(x,i) {
+          return self._on["click"](i)
+        })
+
+
+      return this
+    }
+  , text: function(val) { return accessor.bind(this)("text",val) }
+  , data: function(val) { return accessor.bind(this)("data",val) }
+  , selected: function(val) { return accessor.bind(this)("selected",val) }
+  , update: function(val) {
+      this.text(val)
+      this.draw()
+    }
+  , on: function(action, fn) {
+      if (fn === undefined) return this._on[action];
+      this._on[action] = fn;
+      return this
+    }
+}

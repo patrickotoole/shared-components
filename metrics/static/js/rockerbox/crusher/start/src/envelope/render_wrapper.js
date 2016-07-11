@@ -37,7 +37,8 @@ function render_wrapper() {
 
 
 
-  this._pane = d3_updateable(outer,".btn-wrap","div")
+  this._pane = d3_updateable(outer,".btn-wrap-2","div")
+    .classed("btn-wrap-2",true)
     .style("width","100%")
   
 }

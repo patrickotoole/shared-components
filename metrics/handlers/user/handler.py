@@ -3,6 +3,7 @@ import ujson
 
 from database import UserDatabase
 import send as email
+import send_invite as invite
 
 class UserHandler(tornado.web.RequestHandler,UserDatabase):
 
@@ -43,9 +44,13 @@ class UserHandler(tornado.web.RequestHandler,UserDatabase):
     def post(self):
         try:
             body = ujson.loads(self.request.body)
-            username = self.create(body)
-            self.login(username)
-            email.send(username)
+            if body.get("advertiser_id"):
+                username = self.create_with_advertiser(body)
+                if body.get("invite"): invite.send(username)
+            else:
+                username = self.create(body)
+                self.login(username)
+                email.send(username)
             self.write("""{"username":"%s"}""" % username)
             self.finish()
         except Exception as e:

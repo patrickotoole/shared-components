@@ -4,6 +4,10 @@ import domain from './step/domain'
 import pixel from './step/pixel'
 import password from './step/password'
 import example from './step/example'
+import splash from './step/splash'
+import progress from './progress'
+
+
 
 
 function getPermissions() {}
@@ -11,6 +15,11 @@ function getPermissions() {}
 function getNonce() {
   var s = window.location.search;
   return (s.indexOf("nonce") > -1 ) ?  s.split("nonce=")[1].split("&")[0] : "";
+}
+
+function getNeedsSetup() {
+  var s = window.location.search;
+  return (s.indexOf("setup") > -1 ) 
 }
 
 function getUID() {
@@ -37,6 +46,26 @@ export function Signup(target) {
   this._wrapper = this._target;
   this._uid = getUID()
   this._nonce = getNonce()
+  this._pixel_setup = getNeedsSetup()
+
+  this._slide = 0
+}
+
+function chooseSlides(data) {
+  var slides = ["example","pixel"]
+
+  if (!!data.nonce) {
+    if (!data.pixel_setup) slides.pop()
+    slides.push("password")
+    return slides.reverse()
+  }
+
+  if (!data.advertiser_id || data.advertiser_id == 0) slides.push("domain")
+  if (!data.permissions) slides.push("email")
+
+  return slides.reverse()
+
+  
 }
 
 export default function signup(target) {
@@ -45,16 +74,20 @@ export default function signup(target) {
 
 Signup.prototype = {
     draw: function() {
+
+
       this._target
 
       this._data.nonce = this._nonce
       this._data.uid = getUID()
+      this._data.pixel_setup = this._pixel_setup
+
+      this._slides = chooseSlides(this._data)
 
 
-      this._slides = !!this._data.nonce ?
-        ["password","example"]                 : !this._data.permissions ?
-        ["email", "domain", "pixel","example"] : this._data.advertiser_id == 0 ?
-        ["domain", "pixel","example"]          : ["pixel","example"];
+      if (document.location.pathname.indexOf("digest") > -1) {
+        this._slides = this._slides.map(function(s) { return s == "email" ? "splash" : s })
+      }
 
       var self = this;
       this._slideshow = start.slideshow(this._target)
@@ -62,25 +95,58 @@ Signup.prototype = {
           return function() {
               return self["render_" + s].bind(self)(this)
             }
-         }))
+        }))
+        .show_slide(this._slide)
+
+
+      this._slideshow
         .draw()
 
+      if (document.location.pathname.indexOf("digest") == -1) 
+        this._progress = progress(this._progress_target)
+          .data(this._slides)
+          .selected(this._slide)
+          .on("click",this.show.bind(this))
+          .draw()
+
       return this
+    }
+  , progress_target: function(val) { return accessor.bind(this)("progress_target",val) }
+  , next: function() {
+      this._slide += 1
+      this.draw()
+    }
+  , show: function(i) {
+      if (this._slide > i) this._slide = i
+      this.draw()
     }
   , render_password: function(t) {
       var self = this;
       password(d3.select(t))
         .data(this._data)
-        .on("success",function(){ self.on("password")(arguments); self._slideshow.next()})
+        .on("success",function(){ self.on("password")(arguments); self.next()})
+        .on("error",function(err){ self.on("error")(err); })
         .draw()
         
         
+    }
+  , render_splash: function(t) {
+      var self = this;
+      splash(d3.select(t))
+        .data(this._data)
+        .on("success",function(){ self.on("email")(arguments); document.location.reload()})
+        .on("error",function(err){ self.on("error")(err); })
+
+        .draw()
+
     }
   , render_email: function(t) {
       var self = this;
       email(d3.select(t))
         .data(this._data)
-        .on("success",function(){ self.on("email")(arguments); self._slideshow.next() })
+        .on("success",function(){ self.on("email")(arguments); self.next() })
+        .on("error",function(err){ self.on("error")(err); })
+
         .draw()
 
     }
@@ -88,7 +154,9 @@ Signup.prototype = {
       var self = this;
       domain(d3.select(t))
         .data(this._data)
-        .on("success",function(){ self.on("domain")(arguments); self._slideshow.next() })
+        .on("success",function(){ self.on("domain")(arguments); self.next() })
+        .on("error",function(err){ self.on("error")(err); })
+
         .draw()
 
     }
@@ -96,8 +164,11 @@ Signup.prototype = {
       var self = this;
       pixel(d3.select(t))
         .data(this._data)
-        .on("success",function(){ self.on("pixel")(arguments); self._slideshow.next() })
+        .on("success",function(){ self.on("pixel")(arguments); self.next() })
+        .on("pixel_skip",function(){ self.on("pixel_skip")(arguments); self.next() })
         .on("pixel_fail",function(){ self.on("pixel_fail")(arguments); })
+        .on("error",function(err){ self.on("error")(err); })
+
         .draw()
     }
   , render_example: function(t) {
@@ -105,6 +176,8 @@ Signup.prototype = {
       example(d3.select(t))
         .data(this._data)
         .on("success",function(){ self.on("example")(arguments); })
+        .on("error",function(err){ self.on("error")(err); })
+
         .draw()
     }
 

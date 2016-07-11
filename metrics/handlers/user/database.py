@@ -13,6 +13,12 @@ INSERT INTO user (username, password, email, nonce)
 VALUES ('%(username)s', '%(password)s', '%(email)s', '%(nonce)s')
 """
 
+INSERT_WITH_ADVERTISER_QUERY = """
+INSERT INTO user (advertiser_id, username, password, email, nonce) 
+VALUES ('%(advertiser_id)s', '%(username)s', '%(password)s', '%(email)s', '%(nonce)s')
+"""
+
+
 UPDATE_QUERY = """
 UPDATE user set password = '%(password)s', nonce = NULL where nonce = '%(nonce)s'
 """
@@ -58,5 +64,15 @@ class UserDatabase:
 
         return user_object["username"]
             
+    def create_with_advertiser(self,user_object):
+        username = user_object.get("username") 
+        user_object["nonce"] = _create_signature_v2( SECRET, username)
 
+        if user_object.get("password",False) is False:
+            user_object["password"] = 'NULL'
+        else:
+            user_object["password"] = pw_hash.hash_password(user_object["password"])
+        
+        self.db.execute(INSERT_WITH_ADVERTISER_QUERY % user_object)
 
+        return user_object["username"]

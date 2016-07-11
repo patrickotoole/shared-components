@@ -5,7 +5,7 @@
 <head>
 
 <script type="text/javascript" src="/static/js/rockerbox/helper.js"></script>
-<title>Rockerbox - Create Advertiser</title>
+<title>Hindsight - Create Account</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
@@ -15,6 +15,7 @@
 
 <link type="text/css" rel="stylesheet" href="/static/css/bootstrap.min.css"/>
 <link type="text/css" rel="stylesheet" href="/static/css/style.css"/>
+<link type="text/css" rel="stylesheet" href="/static/css/font-awesome.min.css">
 
 <style>
   .hidden {display:none}
@@ -42,11 +43,23 @@
 
 
 </head>
-<body class="create" style="background:#40495c">
-  <img src="/static/img/general/hindsight.png" style="padding:10px;height:50px;margin-left:10px;display:block;margin-bottom:-5px" />
-  <div class="container" style="width:inherit">
+<body class="create" style="background:#40495c;height:auto">
+  <header style="display:flex">
+    <div id="logo-wrap" style="display:flex;">
+      <div style="width:100%">
+        <img id="logo" src="/static/img/general/hindsight-with-border.png" style="padding:5px;height:50px;margin-left:10px;display:inline-block;margin-top:15px; margin-left:30px; margin-bottom:15px" />
+      </div>
+    </div>
+    <div id="header-middle" style="display:flex;flex:1"> </div>
+    <div id="rhs-wrap" style="display:flex;">
+
+    </div>
+
+
+  </header>
+  <section class="container" style="width:inherit">
     <div class="row funnels"></div>
-  </div>
+  </section>
 </body>
 
 <script>
@@ -62,15 +75,8 @@ d3.json("/account/permissions")
           , permissions: x
         } 
 
-      signup.signup(d3.select(".funnels"))
-        .on("email",function() { 
-          var obj = JSON.parse(arguments[0][0].response);
-          window.analytics.events.email_submitted(obj.username);
-        })
-        .on("password",function() {
-          window.analytics.events.account_activated();
-
-        })
+      window._ss = signup.signup(d3.select(".funnels"))
+        .progress_target(d3.select("#rhs-wrap"))
         .on("domain",function(x,y) {
           
           var domain = x[0].client_sld,
@@ -78,13 +84,14 @@ d3.json("/account/permissions")
 
           window.analytics.events.domain_submitted(domain,advertiser)
         })
-        .on("pixel_fail",function() {
-          window.analytics.events.implementation_error()
-        })
+        .on("email",function() { window.analytics.events.email_submitted(JSON.parse(arguments[0][0].response).username); })
+        .on("password",function(email) { window.analytics.events.account_activated(email[0]); })
+        .on("pixel_fail",function() { window.analytics.events.implementation_error() }) 
+        .on("pixel_skip",function() { window.analytics.events.skip_implementation() }) 
 
-        .on("pixel",function() {
-          window.analytics.events.pixel_implemented()
-        })
+        .on("pixel",function() { window.analytics.events.pixel_implemented() })
+        .on("error",function(err) { window.analytics.events.error(err) })
+
         .data(data)
         .draw()
     

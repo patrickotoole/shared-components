@@ -39,7 +39,7 @@ class AdvertiserDatabase:
               if len(idf) > 0:
                   df[include] = idf.groupby("external_advertiser_id").apply(Convert.df_to_values) 
 
-        return df.to_dict('records')
+        return df.reset_index().to_dict('records')
 
 
     def insert_advertiser(self, advertiser_id=None, advertiser_name=None, pixel_source_name=None, **body):
