@@ -102,7 +102,9 @@ Signup.prototype = {
       this._slideshow
         .draw()
 
-      if (document.location.pathname.indexOf("digest") == -1) 
+      var current = this._slides[this._slide]
+
+      if ((["email","splash"].indexOf(current) == -1) || (document.location.pathname.indexOf("digest") == -1))
         this._progress = progress(this._progress_target)
           .data(this._slides)
           .selected(this._slide)
