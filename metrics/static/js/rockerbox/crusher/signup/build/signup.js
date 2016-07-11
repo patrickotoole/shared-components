@@ -220,11 +220,11 @@
               .defer(postPixel, {"segment_name": "Logged In", "segment_type":"segment"})
               .await(function(error,_1,_2,_3,_4) {
                 if (!error) self.on("success")(obj)
-                else self._on["fail"]("Issue creating account #923011. Please contact support with this number.")
+                else self._on["fail"]("Issue creating account #923011. Please contact support@rockerbox.com with this number.")
               })
               
           } else {
-            self._on["fail"]("Issue creating advertiser #923012. Please contact support with this number")
+            self._on["fail"]("Issue creating advertiser #923012. Please contact support@rockerbox.com  with this number")
           }
         })
         
@@ -233,8 +233,8 @@
         this._stage = start.stage(this._target)
           .title("Let's get started!")
           .subtitle("To get started, tell us on what domain will we be implementing pixels?")
-          .left("<div class='codepeek_text'>Knowing the domain for the website will help us setup your account.</div>")
-          .right("<div class='codepeek_text'>We will also use your domain to help check the pixel is implemented correctly.</div>")
+          .left("")
+          .right("")
           .draw()
       }
     , render_envelope: function() {
@@ -330,6 +330,18 @@
     , remove: function() {
         this._wrapper.remove()
       }
+  }
+
+  function getUID$1(force) {
+    try {
+      if (force) throw "yo"
+      return document.cookie.split("an_uuid=")[1].split(";")[0];
+    } catch(e) {
+      var img = new Image()
+      img.src = "http://ib.adnxs.com/getuid?" + document.location.origin + "/crusher/pixel/cookie?uid=$UID"
+      return 0
+
+    }
   }
 
   function getData(callback) {
@@ -467,8 +479,9 @@
     , render_codepeek: function() {
 
         var self = this;
-        
+        getUID$1(true);
 
+        
         getData(function(err,a,j) {
 
           var advertiser = {
@@ -479,7 +492,7 @@
           self._advertiser_id = a[0].external_advertiser_id
 
           advertiser.all_pages = advertiser.segments.filter(function(x){return x.segment_name.indexOf("All Pages") > -1})[0]
-          advertiser.uuid = document.cookie.split("an_uuid=")[1].split(";")[0];
+          advertiser.uuid = getUID$1();
 
           start.codepeek(self._stage._stage)
             .data(advertiser)
@@ -756,7 +769,7 @@
           .style("margin-bottom","27px")
 
         d3_updateable(splash,"h5","h5")
-          .text("Hindsight tracks the content your audience is reading and tells you where you should engage to find more users.")
+          .text("Hindsight analyzes the content your audience is reading and tells you where you should engage to find more users.")
           .style("line-height","27px")
           .style("font-size","17px")
           .style("margin","auto")
@@ -792,6 +805,7 @@
           .style("border-radius","3px")
           .style("border","1px solid #d0d0d0")
           .style("border-left","0px")
+          .style("cursor","pointer")
           .on("click",this.run.bind(this))
 
         this._message = message(row)
@@ -806,20 +820,32 @@
           .style("border","5px solid #ddd")
           .style("margin-top","90px")
           .style("float","left")
-          .attr("src","https://driftt.imgix.net/https%3A%2F%2Fs3.amazonaws.com%2Fcustomer-api-avatars-prod%2F920%2Fe7a670c9a9468784cdc4becdf0d406d8?h=200&fit=max&w=200&fmt=png&s=6478731856dbc7ccea8bdfeaa267bfa8")
+          .attr("src","http://rockerbox.com/assets/img/team/noah.jpg")
 
         d3_updateable(splash,"h5.testamonial","h5")
           .classed("testamonial",true)
-          .text("\"The Hindsight Daily Digest is an indispensible part of our content marketing. Hindsight goes beyond direct referrer to help us uncover and write for personas that truly reflect our audience's interests.\"")
+          .text("\"The Hindsight Daily Digest reduces the amount of time we spend thinking about what our audience cares about as it provides the answers for us. Our audience is telling us exactly how we can help them!\"")
           .style("text-align","left")
           .style("line-height","27px")
           .style("font-size","17px")
           .style("margin","auto")
-          .style("margin-bottom","60px")
           .style("padding-left","150px")
           .style("font-weight","bold")
           .style("font-style","italic")
           .style("margin-top","100px")
+
+        d3_updateable(splash,"h5.test-name","h5")
+          .classed("test-name",true)
+          .html("<b>Noah Klausman</b> &#8212; Co-Founder/Head of Business Development at DeepLink")
+          .style("text-align","left")
+          .style("line-height","27px")
+          .style("font-size","14px")
+          .style("margin","auto")
+          .style("margin-left","5px")
+          .style("margin-top","15px")
+
+          .style("padding-left","150px")
+
 
 
 
@@ -1083,11 +1109,13 @@
         this._slideshow
           .draw()
 
-        if (document.location.pathname.indexOf("digest") == -1) 
+        var current = this._slides[this._slide]
+
+        if ((["email","splash"].indexOf(current) == -1) || (document.location.pathname.indexOf("digest") == -1))
           this._progress = progress(this._progress_target)
             .data(this._slides)
             .selected(this._slide)
-            .on("click",this.show.bind(this))
+            //.on("click",this.show.bind(this))
             .draw()
 
         return this
@@ -1108,6 +1136,8 @@
           .on("success",function(){ self.on("password")(arguments); self.next()})
           .on("error",function(err){ self.on("error")(err); })
           .draw()
+
+        d3.select(t).selectAll("input").node().focus()
           
           
       }
@@ -1117,8 +1147,10 @@
           .data(this._data)
           .on("success",function(){ self.on("email")(arguments); document.location.reload()})
           .on("error",function(err){ self.on("error")(err); })
-
           .draw()
+
+        d3.select(t).selectAll("input").node().focus()
+
 
       }
     , render_email: function(t) {
@@ -1127,8 +1159,10 @@
           .data(this._data)
           .on("success",function(){ self.on("email")(arguments); self.next() })
           .on("error",function(err){ self.on("error")(err); })
-
           .draw()
+
+        d3.select(t).selectAll("input").node().focus()
+
 
       }
     , render_domain: function(t) {
@@ -1137,8 +1171,10 @@
           .data(this._data)
           .on("success",function(){ self.on("domain")(arguments); self.next() })
           .on("error",function(err){ self.on("error")(err); })
-
           .draw()
+
+        d3.select(t).selectAll("input").node().focus()
+
 
       }
     , render_pixel: function(t) {
@@ -1149,8 +1185,9 @@
           .on("pixel_skip",function(){ self.on("pixel_skip")(arguments); self.next() })
           .on("pixel_fail",function(){ self.on("pixel_fail")(arguments); })
           .on("error",function(err){ self.on("error")(err); })
-
           .draw()
+
+
       }
     , render_example: function(t) {
         var self = this;
@@ -1158,9 +1195,11 @@
           .data(this._data)
           .on("success",function(){ self.on("example")(arguments); })
           .on("error",function(err){ self.on("error")(err); })
-
           .draw()
+
+
       }
+
 
 
 

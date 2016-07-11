@@ -84,11 +84,11 @@ Domain.prototype = {
             .defer(postPixel, {"segment_name": "Logged In", "segment_type":"segment"})
             .await(function(error,_1,_2,_3,_4) {
               if (!error) self.on("success")(obj)
-              else self._on["fail"]("Issue creating account #923011. Please contact support with this number.")
+              else self._on["fail"]("Issue creating account #923011. Please contact support@rockerbox.com with this number.")
             })
             
         } else {
-          self._on["fail"]("Issue creating advertiser #923012. Please contact support with this number")
+          self._on["fail"]("Issue creating advertiser #923012. Please contact support@rockerbox.com  with this number")
         }
       })
       
@@ -97,8 +97,8 @@ Domain.prototype = {
       this._stage = start.stage(this._target)
         .title("Let's get started!")
         .subtitle("To get started, tell us on what domain will we be implementing pixels?")
-        .left("<div class='codepeek_text'>Knowing the domain for the website will help us setup your account.</div>")
-        .right("<div class='codepeek_text'>We will also use your domain to help check the pixel is implemented correctly.</div>")
+        .left("")
+        .right("")
         .draw()
     }
   , render_envelope: function() {

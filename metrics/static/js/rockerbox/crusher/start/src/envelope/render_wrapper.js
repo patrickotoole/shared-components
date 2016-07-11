@@ -5,7 +5,6 @@ function make_wrap(row,data) {
   
   var e = d3_updateable(row,".validated.envelope","div",data)
     .classed("pull-left envelope validated",true)
-    .style("width","50%")
     .style("margin-bottom","50px")
     .style("margin-left","auto")
     .style("margin-right","auto")
@@ -28,7 +27,6 @@ function render_wrapper() {
   this._wrapper = make_wrap(row,data)
   var outer = d3_updateable(this._target,".btn-wrap","div") // for the button
     .classed("btn-wrap",true)
-    .style("width","50%")
     .style("text-align","center")
     .style("margin-top","-50px")
     .style("margin-left","auto")

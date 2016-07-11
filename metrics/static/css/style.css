@@ -1105,10 +1105,37 @@ polyline {
   display: block;
   overflow: hidden; }
 
-.codepeek_content {
-  width: 50%;
-  float: left; }
+.codepeek_content, .envelope {
+  float: left;
+  width: 100%; }
 
+.btn-wrap {
+  width: 100%; }
+
+.codepeek_aside.left, .codepeek_aside.right {
+  width: 100%; }
+
+.codepeek_row .envelope {
+  width: 100%; }
+
+.codepeek_row .envelope .envelope_form {
+  margin-left: 10px !important;
+  margin-right: 10px !important; }
+
+@media screen and (min-width: 900px) {
+  .codepeek_aside.left, .codepeek_aside.right {
+    width: 25%;
+    min-height: 500px; }
+
+  .envelope .envelope_form {
+    margin-left: 100px;
+    margin-right: 100px; }
+
+  .codepeek_row > .envelope {
+    width: 50% !important; }
+
+  .codepeek_content, .envelope, .btn-wrap {
+    width: 50%; } }
 .window {
   display: block;
   border-radius: 4px; }

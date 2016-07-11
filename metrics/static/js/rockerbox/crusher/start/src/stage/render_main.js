@@ -13,14 +13,11 @@ function render_row() {
 
   this._left_wrapper = d3_updateable(cp_row,".left","div")
     .classed("codepeek_aside left pull-left",true)
-    .style("width","25%")
-    .style("min-height","500px")
     .style("padding","25px")
     .html(this._left)
 
   this._right_wrapper = d3_updateable(cp_row,".right","div")
     .classed("codepeek_aside right pull-right",true)
-    .style("width","25%")
     .style("padding","25px")
     .html(this._right)
 

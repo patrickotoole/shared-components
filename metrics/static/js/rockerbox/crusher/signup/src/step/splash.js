@@ -67,7 +67,7 @@ Splash.prototype = {
         .style("margin-bottom","27px")
 
       d3_updateable(splash,"h5","h5")
-        .text("Hindsight tracks the content your audience is reading and tells you where you should engage to find more users.")
+        .text("Hindsight analyzes the content your audience is reading and tells you where you should engage to find more users.")
         .style("line-height","27px")
         .style("font-size","17px")
         .style("margin","auto")
@@ -103,6 +103,7 @@ Splash.prototype = {
         .style("border-radius","3px")
         .style("border","1px solid #d0d0d0")
         .style("border-left","0px")
+        .style("cursor","pointer")
         .on("click",this.run.bind(this))
 
       this._message = message(row)
@@ -117,20 +118,32 @@ Splash.prototype = {
         .style("border","5px solid #ddd")
         .style("margin-top","90px")
         .style("float","left")
-        .attr("src","https://driftt.imgix.net/https%3A%2F%2Fs3.amazonaws.com%2Fcustomer-api-avatars-prod%2F920%2Fe7a670c9a9468784cdc4becdf0d406d8?h=200&fit=max&w=200&fmt=png&s=6478731856dbc7ccea8bdfeaa267bfa8")
+        .attr("src","http://rockerbox.com/assets/img/team/noah.jpg")
 
       d3_updateable(splash,"h5.testamonial","h5")
         .classed("testamonial",true)
-        .text("\"The Hindsight Daily Digest is an indispensible part of our content marketing. Hindsight goes beyond direct referrer to help us uncover and write for personas that truly reflect our audience's interests.\"")
+        .text("\"The Hindsight Daily Digest reduces the amount of time we spend thinking about what our audience cares about as it provides the answers for us. Our audience is telling us exactly how we can help them!\"")
         .style("text-align","left")
         .style("line-height","27px")
         .style("font-size","17px")
         .style("margin","auto")
-        .style("margin-bottom","60px")
         .style("padding-left","150px")
         .style("font-weight","bold")
         .style("font-style","italic")
         .style("margin-top","100px")
+
+      d3_updateable(splash,"h5.test-name","h5")
+        .classed("test-name",true)
+        .html("<b>Noah Klausman</b> &#8212; Co-Founder/Head of Business Development at DeepLink")
+        .style("text-align","left")
+        .style("line-height","27px")
+        .style("font-size","14px")
+        .style("margin","auto")
+        .style("margin-left","5px")
+        .style("margin-top","15px")
+
+        .style("padding-left","150px")
+
 
 
 

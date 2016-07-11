@@ -35,7 +35,7 @@ w.drift = function() {
     });
   }();
   drift.SNIPPET_VERSION = '0.2.0'
-  //drift.load('fcx9bk8wvznu')
+  drift.load('fcx9bk8wvznu')
 }
 
 w.facebook = function() {
