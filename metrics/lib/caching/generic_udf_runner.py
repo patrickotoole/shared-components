@@ -52,10 +52,9 @@ class UDFRunner(BaseRunner):
                 logging.info("could not read parameters")
 
         _url = new_URL or URL
-        url = "/fake"+_url.format(func_name, pattern, self.action_id)
+        url = _url.format(func_name, pattern, self.action_id)
         logging.info(url)
         resp = crusher.get(url, timeout=300)
-        import ipdb; ipdb.set_trace()
         resp.raise_for_status()
         try:
             return resp.json
