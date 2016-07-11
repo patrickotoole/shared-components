@@ -51,7 +51,7 @@ Password.prototype = {
       if (!is_valid) return self._on["fail"]("Invalid password")
 
       postPassword(obj, function(err,x) {
-        if (!err) return self._on["success"](x)
+        if (!err) return self._on["success"](JSON.parse(x.response).username)
         return self._on["fail"](JSON.parse(err.response).error)
       })
       

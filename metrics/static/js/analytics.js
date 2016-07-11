@@ -109,7 +109,13 @@ w.events = {
     }
 
 
-  , "account_activated": function() {
+  , "account_activated": function(email) {
+      mixpanel.identify(email);
+      mixpanel.people.set({
+          "$email": email
+        , "uuid": document.cookie.split("an_uuid=")[1].split(";")[0]
+      })
+
       mixpanel.track("signup - account_activated");
       RB.track("account_activated", {"an_seg": 5893842, "type": "imp" })
     }
