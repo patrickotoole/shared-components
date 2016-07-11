@@ -206,7 +206,6 @@
     
     var e = d3_updateable$1(row,".validated.envelope","div",data)
       .classed("pull-left envelope validated",true)
-      .style("width","50%")
       .style("margin-bottom","50px")
       .style("margin-left","auto")
       .style("margin-right","auto")
@@ -229,7 +228,6 @@
     this._wrapper = make_wrap$1(row,data)
     var outer = d3_updateable$1(this._target,".btn-wrap","div") // for the button
       .classed("btn-wrap",true)
-      .style("width","50%")
       .style("text-align","center")
       .style("margin-top","-50px")
       .style("margin-left","auto")
@@ -299,14 +297,11 @@
 
     this._left_wrapper = d3_updateable$1(cp_row,".left","div")
       .classed("codepeek_aside left pull-left",true)
-      .style("width","25%")
-      .style("min-height","500px")
       .style("padding","25px")
       .html(this._left)
 
     this._right_wrapper = d3_updateable$1(cp_row,".right","div")
       .classed("codepeek_aside right pull-right",true)
-      .style("width","25%")
       .style("padding","25px")
       .html(this._right)
 
