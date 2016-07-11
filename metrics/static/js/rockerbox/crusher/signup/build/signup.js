@@ -1100,7 +1100,7 @@
           this._progress = progress(this._progress_target)
             .data(this._slides)
             .selected(this._slide)
-            .on("click",this.show.bind(this))
+            //.on("click",this.show.bind(this))
             .draw()
 
         return this
