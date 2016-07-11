@@ -9,16 +9,11 @@ import os
 import urllib,urllib2
 
 from link import lnk
-db = lnk.dbs.rockerbox
-
-import MySQLdb, MySQLdb.cursors
 
 with open('secrets.json') as data_file:
     SETTINGS = json.load(data_file)
 
-cur = db.cursor(cursorclass=MySQLdb.cursors.DictCursor)
-
-def build_link_track(to,link,event="slack - digest (click)"):
+def build_link_track(to, link, event="slack - digest (click)"):
     import ujson
     import urllib
     j = {
@@ -34,22 +29,23 @@ def build_link_track(to,link,event="slack - digest (click)"):
     src = "http://api.mixpanel.com/track/?data=%s&redirect=%s&ip=1" % (_j,urllib.quote_plus(link))
     return src
 
-def getUser(advertiser_id):
-    sql = 'SELECT advertiser_id, global_access_token, bot_access_token, team_id, channel_id, bot_id FROM advertiser_slack WHERE advertiser_id = %(advertiser_id)s'
-    cur.execute(sql, { 'advertiser_id': advertiser_id })
-    result = cur.fetchall()
+class DBQuery:
+    def getUser(self, advertiser_id):
+        sql = "SELECT advertiser_id, global_access_token, bot_access_token, team_id, channel_id, bot_id FROM advertiser_slack WHERE advertiser_id = %d" % (int(advertiser_id))
+        df = self.db.select_dataframe(sql)
+        result = df.ix[0]
 
-    if not result:
-        response = False
-    else:
-        response = result[0]
+        if result.empty:
+            response = False
+        else:
+            response = result
 
-    return response
+        return response
 
-def getAdvertiserEmail(advertiser_id):
-    sql = 'SELECT * FROM user WHERE advertiser_id = %d LIMIT 0,1' % (advertiser_id)
-    df = db.select_dataframe(sql)
-    return df.ix[0]['email']
+    def getAdvertiserEmail(self, advertiser_id):
+        sql = 'SELECT * FROM user WHERE advertiser_id = %d LIMIT 0,1' % int((advertiser_id))
+        df = self.db.select_dataframe(sql)
+        return df.ix[0]['email']
 
 def apivalidation(x):
     def fn(self):
@@ -62,11 +58,14 @@ class IndexHandler(web.RequestHandler):
         self.write('<a href="https://slack.com/oauth/authorize?scope=incoming-webhook,commands,bot&client_id=2171079607.55132364375"><img alt="Add to Slack" height="40" width="139" src="https://platform.slack-edge.com/img/add_to_slack.png" srcset="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x" /></a>')
         self.finish()
 
-class AuthenticationCallbackHandler(web.RequestHandler):
+class AuthenticationCallbackHandler(web.RequestHandler, DBQuery):
+    def initialize(self, db):
+        self.db = db
+
     def get(self):
         code = self.get_argument('code','')
         advertiser_id = self.get_secure_cookie('advertiser')
-        user = getUser(advertiser_id)
+        user = DBQuery.getUser(self, advertiser_id)
 
         # Get token
         url = '%s?client_id=%s&client_secret=%s&redirect_uri=%s&code=%s' % (SETTINGS['slack']['token_uri'], SETTINGS['slack']['client_id'], SETTINGS['slack']['client_secret'], SETTINGS['slack']['redirect_uri'], code)
@@ -81,23 +80,16 @@ class AuthenticationCallbackHandler(web.RequestHandler):
             global_access_token = data['access_token']
             team_id = data['team_id']
 
-            if not user:
+            if user.empty:
                 # New user
-                sql = "INSERT INTO `advertiser_slack` (`advertiser_id`, `global_access_token`, `bot_access_token`, `team_id`, `channel_id`, `bot_id`, `ts_created`) VALUES (%(advertiser_id)s, %(global_access_token)s, %(bot_access_token)s, %(team_id)s, %(channel_id)s, %(bot_id)s, NOW())"
+                sql = "INSERT INTO `advertiser_slack` (`advertiser_id`, `global_access_token`, `bot_access_token`, `team_id`, `channel_id`, `bot_id`, `ts_created`) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', NOW())" % (advertiser_id, global_access_token, bot_access_token, team_id, channel_id, bot_id)
             else:
                 # Existing user
-                sql = "UPDATE `advertiser_slack` SET `global_access_token` = %(global_access_token)s, `bot_access_token` = %(bot_access_token)s, `team_id` = %(team_id)s, `channel_id` = %(channel_id)s, `bot_id` = %(bot_id)s WHERE `advertiser_id` = %(advertiser_id)s"
-
+                sql = "UPDATE `advertiser_slack` SET `global_access_token` = '%s', `bot_access_token` = '%s', `team_id` = '%s', `channel_id` = '%s', `bot_id` = '%s' WHERE `advertiser_id` = '%s'" % (global_access_token, bot_access_token, team_id, channel_id, bot_id, advertiser_id)
+            self.write(sql)
             try:
-                cur.execute(sql, {
-                    "advertiser_id": advertiser_id,
-                    "global_access_token": global_access_token,
-                    "bot_access_token": bot_access_token,
-                    "team_id": team_id,
-                    "channel_id": channel_id,
-                    "bot_id": bot_id
-                })
-                db.commit()
+                df = self.db.execute(sql)
+
                 self.redirect(SETTINGS['redirect']['success'])
             except(e):
                 self.redirect(SETTINGS['redirect']['error'])
@@ -106,13 +98,16 @@ class AuthenticationCallbackHandler(web.RequestHandler):
 
         self.finish()
 
-class SlackChannelsHandler(web.RequestHandler):
+class SlackChannelsHandler(web.RequestHandler, DBQuery):
+    def initialize(self, db):
+        self.db = db
+
     @apivalidation
     def get(self):
         advertiser_id = self.get_argument('advertiser_id', '')
-        user = getUser(advertiser_id)
+        user = DBQuery.getUser(self, advertiser_id)
 
-        if not user:
+        if user.empty:
             response = json.dumps({
                 'ok': False,
                 'message': 'Advertiser does not exist or does not have Slack integration.'
@@ -126,15 +121,18 @@ class SlackChannelsHandler(web.RequestHandler):
         self.write(response)
         self.finish()
 
-class SlackMessageHandler(web.RequestHandler):
+class SlackMessageHandler(web.RequestHandler, DBQuery):
+    def initialize(self, db):
+        self.db = db
+
     @apivalidation
     def post(self):
         post_data = json.loads(self.request.body)
         advertiser_id = post_data['advertiser_id']
-        user = getUser(advertiser_id)
-        advertiser_email = getAdvertiserEmail(advertiser_id)
+        user = DBQuery.getUser(self, advertiser_id)
+        advertiser_email = DBQuery.getAdvertiserEmail(self, advertiser_id)
 
-        if not user:
+        if user.empty:
             response = json.dumps({
                 'ok': False,
                 'message': 'Advertiser does not exist or does not have Slack integration.'
@@ -181,10 +179,13 @@ class SlackMessageHandler(web.RequestHandler):
 class WebApp(web.Application):
 
     def __init__(self):
+        db = lnk.dbs.rockerbox
+        connectors = {"db": db}
+
         handlers = [
-            (r'/authenticate/callback', AuthenticationCallbackHandler),
-            (r'/channels', SlackChannelsHandler),
-            (r'/message', SlackMessageHandler),
+            (r'/authenticate/callback', AuthenticationCallbackHandler, connectors),
+            (r'/channels', SlackChannelsHandler, connectors),
+            (r'/message', SlackMessageHandler, connectors),
             (r'/', IndexHandler),
         ]
 
@@ -197,7 +198,6 @@ class WebApp(web.Application):
         super(WebApp, self).__init__(handlers, **settings)
 
 def main():
-
     logging.basicConfig(level=logging.INFO)
     app = WebApp()
     server = httpserver.HTTPServer(app)
