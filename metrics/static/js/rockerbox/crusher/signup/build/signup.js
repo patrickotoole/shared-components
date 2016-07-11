@@ -769,7 +769,7 @@
           .style("margin-bottom","27px")
 
         d3_updateable(splash,"h5","h5")
-          .text("Hindsight tracks the content your audience is reading and tells you where you should engage to find more users.")
+          .text("Hindsight analyzes the content your audience is reading and tells you where you should engage to find more users.")
           .style("line-height","27px")
           .style("font-size","17px")
           .style("margin","auto")
@@ -824,7 +824,7 @@
 
         d3_updateable(splash,"h5.testamonial","h5")
           .classed("testamonial",true)
-          .text("\"The Hindsight Daily Digest is an indispensible part of our content marketing. Hindsight goes beyond direct referrer to help us uncover and write for personas that truly reflect our audience's interests.\"")
+          .text("\"The Hindsight Daily Digest reduces the amount of time we spend thinking about what our audience cares about as it provides the answers for us. Our audience is telling us exactly how we can help them!\"")
           .style("text-align","left")
           .style("line-height","27px")
           .style("font-size","17px")
@@ -1134,6 +1134,8 @@
           .on("success",function(){ self.on("password")(arguments); self.next()})
           .on("error",function(err){ self.on("error")(err); })
           .draw()
+
+        d3.select(t).selectAll("input").node().focus()
           
           
       }
@@ -1143,8 +1145,10 @@
           .data(this._data)
           .on("success",function(){ self.on("email")(arguments); document.location.reload()})
           .on("error",function(err){ self.on("error")(err); })
-
           .draw()
+
+        d3.select(t).selectAll("input").node().focus()
+
 
       }
     , render_email: function(t) {
@@ -1153,8 +1157,10 @@
           .data(this._data)
           .on("success",function(){ self.on("email")(arguments); self.next() })
           .on("error",function(err){ self.on("error")(err); })
-
           .draw()
+
+        d3.select(t).selectAll("input").node().focus()
+
 
       }
     , render_domain: function(t) {
@@ -1163,8 +1169,10 @@
           .data(this._data)
           .on("success",function(){ self.on("domain")(arguments); self.next() })
           .on("error",function(err){ self.on("error")(err); })
-
           .draw()
+
+        d3.select(t).selectAll("input").node().focus()
+
 
       }
     , render_pixel: function(t) {
@@ -1175,8 +1183,9 @@
           .on("pixel_skip",function(){ self.on("pixel_skip")(arguments); self.next() })
           .on("pixel_fail",function(){ self.on("pixel_fail")(arguments); })
           .on("error",function(err){ self.on("error")(err); })
-
           .draw()
+
+
       }
     , render_example: function(t) {
         var self = this;
@@ -1184,9 +1193,11 @@
           .data(this._data)
           .on("success",function(){ self.on("example")(arguments); })
           .on("error",function(err){ self.on("error")(err); })
-
           .draw()
+
+
       }
+
 
 
 

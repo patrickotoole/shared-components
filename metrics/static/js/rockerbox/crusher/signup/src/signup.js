@@ -127,6 +127,8 @@ Signup.prototype = {
         .on("success",function(){ self.on("password")(arguments); self.next()})
         .on("error",function(err){ self.on("error")(err); })
         .draw()
+
+      d3.select(t).selectAll("input").node().focus()
         
         
     }
@@ -136,8 +138,10 @@ Signup.prototype = {
         .data(this._data)
         .on("success",function(){ self.on("email")(arguments); document.location.reload()})
         .on("error",function(err){ self.on("error")(err); })
-
         .draw()
+
+      d3.select(t).selectAll("input").node().focus()
+
 
     }
   , render_email: function(t) {
@@ -146,8 +150,10 @@ Signup.prototype = {
         .data(this._data)
         .on("success",function(){ self.on("email")(arguments); self.next() })
         .on("error",function(err){ self.on("error")(err); })
-
         .draw()
+
+      d3.select(t).selectAll("input").node().focus()
+
 
     }
   , render_domain: function(t) {
@@ -156,8 +162,10 @@ Signup.prototype = {
         .data(this._data)
         .on("success",function(){ self.on("domain")(arguments); self.next() })
         .on("error",function(err){ self.on("error")(err); })
-
         .draw()
+
+      d3.select(t).selectAll("input").node().focus()
+
 
     }
   , render_pixel: function(t) {
@@ -168,8 +176,9 @@ Signup.prototype = {
         .on("pixel_skip",function(){ self.on("pixel_skip")(arguments); self.next() })
         .on("pixel_fail",function(){ self.on("pixel_fail")(arguments); })
         .on("error",function(err){ self.on("error")(err); })
-
         .draw()
+
+
     }
   , render_example: function(t) {
       var self = this;
@@ -177,9 +186,11 @@ Signup.prototype = {
         .data(this._data)
         .on("success",function(){ self.on("example")(arguments); })
         .on("error",function(err){ self.on("error")(err); })
-
         .draw()
+
+
     }
+
 
 
 

@@ -67,7 +67,7 @@ Splash.prototype = {
         .style("margin-bottom","27px")
 
       d3_updateable(splash,"h5","h5")
-        .text("Hindsight tracks the content your audience is reading and tells you where you should engage to find more users.")
+        .text("Hindsight analyzes the content your audience is reading and tells you where you should engage to find more users.")
         .style("line-height","27px")
         .style("font-size","17px")
         .style("margin","auto")
@@ -122,7 +122,7 @@ Splash.prototype = {
 
       d3_updateable(splash,"h5.testamonial","h5")
         .classed("testamonial",true)
-        .text("\"The Hindsight Daily Digest is an indispensible part of our content marketing. Hindsight goes beyond direct referrer to help us uncover and write for personas that truly reflect our audience's interests.\"")
+        .text("\"The Hindsight Daily Digest reduces the amount of time we spend thinking about what our audience cares about as it provides the answers for us. Our audience is telling us exactly how we can help them!\"")
         .style("text-align","left")
         .style("line-height","27px")
         .style("font-size","17px")
