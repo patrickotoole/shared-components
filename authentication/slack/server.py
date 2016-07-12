@@ -86,7 +86,7 @@ class AuthenticationCallbackHandler(web.RequestHandler, DBQuery):
             else:
                 # Existing user
                 sql = "UPDATE `advertiser_slack` SET `global_access_token` = '%s', `bot_access_token` = '%s', `team_id` = '%s', `channel_id` = '%s', `bot_id` = '%s' WHERE `advertiser_id` = '%s'" % (global_access_token, bot_access_token, team_id, channel_id, bot_id, advertiser_id)
-            self.write(sql)
+
             try:
                 df = self.db.execute(sql)
 
