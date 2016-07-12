@@ -412,7 +412,7 @@
         setTimeout(function(){
           validation_popup.close()
           self.run(_obj,true)
-        },8000)
+        },15000)
       }
     , run: function(_obj,stop) {
         var self = this;
