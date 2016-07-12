@@ -34,7 +34,6 @@
     
     return d3_updateable$1(tab,".envelope.btn-env","div")
       .classed("envelope btn-env",true)
-      .style("width","inherit")
       .style("margin","none")
       .style("background","none")
       .style("text-align","center")
