@@ -1,7 +1,6 @@
 import pandas as pd
 from collections import Counter
 import logging
-from handlers.analytics.domains import cassandra
 import pandas
 
 POP_QUERY = ''' SELECT domains, num_imps FROM pop_uid_domains '''
@@ -26,9 +25,9 @@ def request_data(crusher, uids):
     _url = "http://beta.crusher.getrockerbox.com/crusher/visit_domains?uid=%s&format=json"
     all_users_domains = []
     aud = []
-    for chunk in chunks(uids,10):
+    for chunk in chunks(uids,100):
         ll = [_url%ui for ui in chunk ]
-        genr = (grequests.get(l,cookies=crusher._token) for l in ll)
+        genr = (grequests.get(l,cookies=crusher._token,timeout=0.01) for l in ll)
         r = grequests.map(genr)
         for user in r:
             try:
@@ -57,7 +56,7 @@ def extract(hive, cassandra):
 
     data = request_data(crusher, uids)
     total_df = pandas.DataFrame(data)
-    
+ 
     return total_df
 
 def transform(df):
@@ -95,7 +94,7 @@ def run(hive,db,console):
     
     df = extract(hive)
     logging.info("data extracted with %d rows" %len(df))
-
+    
     if len(df) == 0:
         logging.info("no data")
         return
