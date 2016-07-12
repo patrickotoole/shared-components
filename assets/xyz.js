@@ -12,7 +12,8 @@
 
   var base64 = {};
   base64.PADCHAR = '=';
-  base64.ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  base64.ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+  base64.makeDOMException = function() { return "base64.decode issue" }
 
   base64.decode = function(s) {
     s = '' + s;
@@ -24,6 +25,11 @@
       return idx;
     };
     var pads, i, b10;
+
+    if (s.length % 4 !== 0) {
+      s = s + Array((4 - (s.length % 4)) + 1).join("=")
+    }
+
     var imax = s.length
     if (imax === 0) {
       return s;
