@@ -1,89 +1,64 @@
 import pandas as pd
-import ast
 from collections import Counter
 import logging
+from handlers.analytics.domains import cassandra
+import pandas
 
 POP_QUERY = ''' SELECT domains, num_imps FROM pop_uid_domains '''
 
+def chunks(l, n):
+    """Yield successive n-sized chunks from l."""
+    for i in range(0, len(l), n):
+        logging.info(i)
+        yield l[i:i+n]    
+
 def to_domain_count(data):
-    c = Counter()
-    for d in data['domains']:
-        c.update(d)
-    domain_count =  pd.DataFrame.from_dict(c, orient='index').reset_index()
+    co = Counter()
+    for Q in data['domains']:
+        co.update(Q)
+    domain_count =  pd.DataFrame.from_dict(co, orient='index').reset_index()
     domain_count.columns = ['domain','count']
     return domain_count
 
+def request_data(crusher, uids):
+    uids = list(set(uids))
+    import grequests
+    _url = "http://beta.crusher.getrockerbox.com/crusher/visit_domains?uid=%s&format=json"
+    all_users_domains = []
+    aud = []
+    for chunk in chunks(uids,10):
+        ll = [_url%ui for ui in chunk ]
+        genr = (grequests.get(l,cookies=crusher._token) for l in ll)
+        r = grequests.map(genr)
+        for user in r:
+            try:
+                temp_dict = {}
+                all_users_domains.extend(user.json())
+                temp_uid = user.json()[0]['uid']
+                temp_dict['uid']=temp_uid 
+                temp_dict['domains'] = [u['domain'] for u in user.json()]
+                aud.append(temp_dict)
+            except:
+                all_users_domains.extend({})
+    return aud
+
+
 def extract(hive, cassandra):
     #cassandra = lnk.dbs.cassandra
-    ds = "select uid from rockerbox.visitor_domains_full limit 100000"
+    ds = "select distinct uid from rockerbox.visitor_domains_full limit 100000"
     statement = cassandra.prepare(ds)
     uids_dict = cassandra.execute(statement)
     uids = [u['uid'] for u in uids_dict]
-    vdc.cassandra = cassandra
-    vdc.DOMAIN_SELECT = "select domain from rockerbox.visitor_domains_full where uid = ?"
-    d1 = uids[0:10000]
-    d2 = uids[10000:20000]
-    d3 = uids[20000:30000]
-    d4 = uids[30000:40000]
-    d5 = uids[40000:50000]
-    d6 = uids[50000:60000]
-    d7 = uids[60000:70000]
-    d8 = uids[70000:80000]
-    d9 = uids[80000:90000]
-    d10 = uids[90000:len(uids)-1]
-
-    domains1 = vdc.get_domains_use_futures(d1, "")
-    import ipdb; ipdb.set_trace()
-    df = pandas.DataFrame(domains1)
-    del(domains1)
-    del(uids_dict)
-    del(d1)
-    del(uids)
-    domains2 = vdc.get_domains_use_futures(d2, "")
-    df2 = pandas.DataFrame(domains2)
-    del(domains2)
-    df = df.append(df2)
-    del(df2)
-    domains3 = vdc.get_domains_use_futures(d3, "")
-    df3 = pandas.DataFrame(domains3)
-    del(domains3)
-    df = df.append(df3)
     
-    domains4 = vdc.get_domains_use_futures(d4, "")
-    df4 = pandas.DataFrame(domains4)
-    del(domains4)
-    df = df.append(df4)
-    domains5 = vdc.get_domains_use_futures(d5, "")
-    df5 = pandas.DataFrame(domains5)
-    del(domains5)
-    df = df.append(df5)
-    domains6 = vdc.get_domains_use_futures(d6, "")
-    df6 = pandas.DataFrame(domains6)
-    del(domains6)
-    df = df.append(df6)
+    crusher = lnk.api.crusher
+    crusher.user = "a_rockerbox"
+    crusher.password="admin"
+    crusher.authenticate()   
 
-    domains7 = vdc.get_domains_use_futures(d7, "")
-    df7 = pandas.DataFrame(domains7)
-    del(domains7)
-    df = df.append(df7)
-    domains8 = vdc.get_domains_use_futures(d8, "")
-    df8 = pandas.DataFrame(domains8)
-    del(domains8)
-    df = df.append(df8)
-    domains9 = vdc.get_domains_use_futures(d9, "")
-    df9 = pandas.DataFrame(domains9)
-    del(domains9)
-    df = df.append(df9)
-    domains10 = vdc.get_domains_use_futures(d10, "")
-    df10 = pandas.DataFrame(domains10)
-    del(domains10)
-    df = df.append(df10)
-    import ipdb; ipdb.set_trace()
+    data = request_data(crusher, uids)
+    total_df = pandas.DataFrame(data)
     
-    #df = hive.select_dataframe(POP_QUERY)
-    df.columns = ['domains']
->>>>>>> d5b1499... idf run change
-    return df
+    return total_df
 
 def transform(df):
 
@@ -95,7 +70,7 @@ def transform(df):
     transformed['total_users'] = len(df)
     transformed['pct_users'] = transformed['count']/ float(len(df))
     transformed['idf'] = 1./ transformed['pct_users']
-
+    transformed = transformed[transformed['count']>=10]
     cols = transformed.columns
 
     assert len(transformed) > 0
@@ -149,7 +124,6 @@ def run(hive,db,console):
 
 if __name__ == "__main__":
 
-    from link import lnk
     from lib.report.utils.options import define
     from lib.report.utils.options import options
     from lib.report.utils.options import parse_command_line
@@ -160,8 +134,8 @@ if __name__ == "__main__":
 
     parse_command_line()
     basicConfig(options=options)
-
-
+    
+    from link import lnk
     hive = lnk.dbs.hive
     console = lnk.api.console
     crushercache = lnk.dbs.crushercache
