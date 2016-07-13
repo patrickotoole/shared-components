@@ -12,6 +12,16 @@ import datetime
 SQL_LOG = "insert into work_queue_log (hostname, job_id, event) values (%s, %s, %s)"
 SQL_LOG2 = "insert into work_queue_error_log (hostname, error_string, job_id, stacktrace) values (%s, %s, %s, %s)"
 
+def get_crusher_obj(self, advertiser, base_url):
+    from link import lnk
+    crusher = lnk.api.crusher
+    crusher.user = "a_{}".format(advertiser)
+    crusher.password= "admin"
+    crusher.base_url = base_url
+    crusher.authenticate()
+    logging.info(crusher._token)
+    return crusher
+
 class WorkQueue(object):
 
     def __init__(self,exit_on_finish, client,reactor,timer, mcounter, connectors):
@@ -25,6 +35,7 @@ class WorkQueue(object):
         START_QUERY = "insert into work_queue_log (hostname, event) values (%s, %s)"
         self.sock_id = socket.gethostname()
         self.connectors['crushercache'].execute(START_QUERY, (self.sock_id, 'Box WQ up'))
+        self.crusher_wrapper = get_crusher_obj("rockerbox","http://beta.crusher.getrockerbox.com")
 
     def __call__(self):
         import hashlib
@@ -46,6 +57,8 @@ class WorkQueue(object):
                     self.queue.client.set(self.queue.secondary_path_base + "/%s/%s" % (job_id.split(entry_id)[1][1:], entry_id), '1' ) # running
                     
                     kwargs['job_id'] = job_id
+                    kwargs['crusher_wrapper'] = self.crusher_wrapper
+
                     logging.info("starting queue %s %s" % (str(fn),str(kwargs)))
                     logging.info(self.rec.getThreadPool().threads[0])
                     logging.info(self.rec.getThreadPool().threads[0].is_alive())
