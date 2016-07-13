@@ -19,6 +19,7 @@ CREATE TABLE `action` (
   `action_name` varchar(100) DEFAULT NULL,
   `action_type` enum('segment','vendor') DEFAULT 'segment',
   `active` tinyint(1) DEFAULT '1',
+  `deleted` tinyint(1) DEFAULT '0',
   `featured` tinyint(1) DEFAULT '1',
   PRIMARY KEY (`action_id`)
 )
@@ -96,6 +97,7 @@ class ActionTest(AsyncHTTPTestCase):
           "action_name" : "yo homie",
           "url_pattern": ["a","b","c"],
           "operator": "and",
+          "deleted":"0",
           "action_type":"segment"
         }"""
 
@@ -121,6 +123,7 @@ class ActionTest(AsyncHTTPTestCase):
                 "operator":"and",
                 "url_pattern":["http://www.baublebar.com/necklaces.html","http://www.baublebar.com/checkout/cart"],
                 "advertiser":"baublebar",
+                "deleted":"0",
                 "action_type":"segment"
             }
         """
