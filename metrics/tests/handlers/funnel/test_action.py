@@ -97,7 +97,7 @@ class ActionTest(AsyncHTTPTestCase):
           "action_name" : "yo homie",
           "url_pattern": ["a","b","c"],
           "operator": "and",
-          "deleted":'0',
+          "deleted":"0",
           "action_type":"segment"
         }"""
 
@@ -123,7 +123,7 @@ class ActionTest(AsyncHTTPTestCase):
                 "operator":"and",
                 "url_pattern":["http://www.baublebar.com/necklaces.html","http://www.baublebar.com/checkout/cart"],
                 "advertiser":"baublebar",
-                "deleted":'0',
+                "deleted":"0",
                 "action_type":"segment"
             }
         """
