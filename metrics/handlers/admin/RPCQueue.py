@@ -36,8 +36,8 @@ class RPCQueue():
                 days_ago = int(parameters['days_ago'])
             yesterday = datetime.datetime.now() - datetime.timedelta(days=days_ago)
             _cache_yesterday = datetime.datetime.strftime(yesterday, "%Y-%m-%d")
-            recur_kwargs = {"advertiser":advertiser, "pattern":pattern, "cache_date":_cache_yesterday, "indentifier":"recurring_cassandra_cache"}
-            backfill_kwargs = {"advertiser":advertiser, "pattern":pattern, "cache_date":_cache_yesterday, "indentifier":"backfill_cassandra"}
+            recur_kwargs = {"advertiser":advertiser, "pattern":pattern, "cache_date":_cache_yesterday, "identifier":"recurring_cassandra_cache"}
+            backfill_kwargs = {"advertiser":advertiser, "pattern":pattern, "cache_date":_cache_yesterday, "identifier":"backfill_cassandra"}
             kwargs = recur_kwargs if udf == 'recurring' else backfill_kwargs
         else:
             kwargs = {"advertiser":advertiser, "pattern":pattern, "func_name":udf, "base_url":base_url, "identifiers":"udf_{}_cache".format(udf), "filter_id":filter_id, "parameters":parameters}
