@@ -25,9 +25,9 @@ def request_data(crusher, uids):
     _url = "http://beta.crusher.getrockerbox.com/crusher/visit_domains?uid=%s&format=json"
     all_users_domains = []
     aud = []
-    for chunk in chunks(uids,100):
+    for chunk in chunks(uids,300):
         ll = [_url%ui for ui in chunk ]
-        genr = (grequests.get(l,cookies=crusher._token,timeout=0.01) for l in ll)
+        genr = (grequests.get(l,cookies=crusher._token,timeout=1) for l in ll)
         r = grequests.map(genr)
         for user in r:
             try:
@@ -42,14 +42,17 @@ def request_data(crusher, uids):
     return aud
 
 
-def extract(hive, cassandra):
+def extract(hive, cassandra, crusher):
     #cassandra = lnk.dbs.cassandra
     ds = "select distinct uid from rockerbox.visitor_domains_full limit 100000"
     statement = cassandra.prepare(ds)
     uids_dict = cassandra.execute(statement)
     uids = [u['uid'] for u in uids_dict]
-    
-    crusher = lnk.api.crusher
+    cassandra._wrapped.shutdown() 
+    cassandra._wrapped.cluster.shutdown() 
+
+    crusher.base_url = "http://beta.crusher.getrockerbox.com"
+
     crusher.user = "a_rockerbox"
     crusher.password="admin"
     crusher.authenticate()   
@@ -90,9 +93,9 @@ def write_to_sql(db,df):
     columns = df.columns
     loader.insert_df(df,"domain_idf",["domain"],columns)
 
-def run(hive,db,console):
+def run(hive,db,console,cass,crusher):
     
-    df = extract(hive)
+    df = extract(hive,cass,crusher)
     logging.info("data extracted with %d rows" %len(df))
     
     if len(df) == 0:
@@ -139,4 +142,6 @@ if __name__ == "__main__":
     console = lnk.api.console
     crushercache = lnk.dbs.crushercache
 
-    run(hive,crushercache,console)
+    crusher = lnk.api.crusher
+
+    run(hive,crushercache,console, cass, crusher)
