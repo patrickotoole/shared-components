@@ -107,11 +107,7 @@ def runner(**kwargs):
     base_url = kwargs.get('base_url', "http://beta.crusher.getrockerbox.com")
     identifiers=kwargs.get('identifiers',"test")
     filter_id = kwargs.get('filter_id',False)
-
     crusher = kwargs.get('crusher_wrapper',False) or UR.get_crusher_obj(advertiser, base_url)
-
-    if crusher.user != "a_{}".format(advertiser):
-        crusher = crusher.switch_user(advertiser)
 
     if not filter_id:
         UR.getActionIDPattern(pattern, crusher)

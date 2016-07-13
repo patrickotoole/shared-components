@@ -12,7 +12,7 @@ import datetime
 SQL_LOG = "insert into work_queue_log (hostname, job_id, event) values (%s, %s, %s)"
 SQL_LOG2 = "insert into work_queue_error_log (hostname, error_string, job_id, stacktrace) values (%s, %s, %s, %s)"
 
-def get_crusher_obj(self, advertiser, base_url):
+def get_crusher_obj(advertiser, base_url):
     from link import lnk
     crusher = lnk.api.crusher
     crusher.user = "a_{}".format(advertiser)
@@ -57,8 +57,10 @@ class WorkQueue(object):
                     self.queue.client.set(self.queue.secondary_path_base + "/%s/%s" % (job_id.split(entry_id)[1][1:], entry_id), '1' ) # running
                     
                     kwargs['job_id'] = job_id
-                    kwargs['crusher_wrapper'] = self.crusher_wrapper
+                    if self.crusher_wrapper.user != "a_{}".format(kwargs['advertiser']):
+                        self.crusher_wrapper = get_crusher_obj(kwargs['advertiser'],"http://beta.crusher.getrockerbox.com")
 
+                    kwargs['crusher_wrapper'] = self.crusher_wrapper
                     logging.info("starting queue %s %s" % (str(fn),str(kwargs)))
                     logging.info(self.rec.getThreadPool().threads[0])
                     logging.info(self.rec.getThreadPool().threads[0].is_alive())
