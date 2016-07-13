@@ -3,8 +3,6 @@ from collections import Counter
 import logging
 import pandas
 
-POP_QUERY = ''' SELECT domains, num_imps FROM pop_uid_domains '''
-
 def chunks(l, n):
     """Yield successive n-sized chunks from l."""
     for i in range(0, len(l), n):
@@ -140,6 +138,7 @@ if __name__ == "__main__":
     from link import lnk
     hive = lnk.dbs.hive
     console = lnk.api.console
+    cass = lnk.dbs.cassandra
     crushercache = lnk.dbs.crushercache
 
     crusher = lnk.api.crusher
