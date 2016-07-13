@@ -9,6 +9,7 @@ class FunctionSelector():
     
     def select_function(self, udf):
         import lib.caching as custom_scripts
+        from lib.cassandra_cache import run as cassandra_functions
 
         filtering_scripts = dir(custom_scripts)
         if udf in filtering_scripts:
