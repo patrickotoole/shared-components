@@ -107,14 +107,14 @@ def runner(**kwargs):
     base_url = kwargs.get('base_url', "http://beta.crusher.getrockerbox.com")
     identifiers=kwargs.get('identifiers',"test")
     filter_id = kwargs.get('filter_id',False)
-    crusher = UR.get_crusher_obj(advertiser, base_url)
+    crusher = kwargs.get('crusher_wrapper',False) or UR.get_crusher_obj(advertiser, base_url)
+
     if not filter_id:
         UR.getActionIDPattern(pattern, crusher)
     else:
         UR.action_id = filter_id
 
     UR.accounting_entry_start(advertiser, pattern, func_name, uuid_num, UR.action_id)
-    crusher = UR.get_crusher_obj(advertiser, base_url)
 
     db = connectors['crushercache']
     zk = connectors['zk']
