@@ -57,16 +57,15 @@ class WorkQueue(object):
                     self.queue.client.set(self.queue.secondary_path_base + "/%s/%s" % (job_id.split(entry_id)[1][1:], entry_id), '1' ) # running
                     
                     kwargs['job_id'] = job_id
-                    if kwargs['func_name'] not in ['recurring', 'backfill']:
-                        if self.crusher_wrapper.user != "a_{}".format(kwargs['advertiser']):
-                            self.crusher_wrapper = get_crusher_obj(kwargs['advertiser'],"http://beta.crusher.getrockerbox.com")
-                        kwargs['crusher_wrapper'] = self.crusher_wrapper
+                    if self.crusher_wrapper.user != "a_{}".format(kwargs['advertiser']):
+                        self.crusher_wrapper = get_crusher_obj(kwargs['advertiser'],"http://beta.crusher.getrockerbox.com")
                     
                     logging.info("starting queue %s %s" % (str(fn),str(kwargs)))
                     logging.info(self.rec.getThreadPool().threads[0])
                     logging.info(self.rec.getThreadPool().threads[0].is_alive())
                     logging.info(self.rec.getThreadPool().threads[0].ident)
                     kwargs['connectors']=self.connectors
+                    kwargs['connectors']['crusher_wrapper'] = self.crusher_wrapper
                     fn(**kwargs) 
                     
                     self.mcounter.bumpSuccess()
