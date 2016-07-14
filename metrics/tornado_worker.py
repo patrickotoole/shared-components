@@ -40,6 +40,7 @@ if __name__ == '__main__':
 
     from lib.report.utils.loggingutils import basicConfig
     define("num_workers", default=1)
+    define("debug", default=False)
     define("exit_on_finish", default=False)
 
     basicConfig(options={})
@@ -92,7 +93,7 @@ if __name__ == '__main__':
         tks.append(tk)    
     for _ in range(0,num_worker):
         
-        reactor.callInThread(work_queue.WorkQueue(options.exit_on_finish, connectors['zookeeper'],reactor, tks[_], mc, connectors))
+        reactor.callInThread(work_queue.WorkQueue(options.exit_on_finish, connectors['zookeeper'],reactor, tks[_], mc, connectors, debug=options.debug))
         reactor.callInThread(TimeMetric(reactor, tks[_]))
 
     reactor.callInThread(Metrics(reactor,tks, mc,connectors))

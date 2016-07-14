@@ -33,7 +33,7 @@ class CustomQueue(SingleQueue):
     def secondary_path_base(self):
         return '{path}-{secondary_path}/{volume}'.format(path=self.path, secondary_path=self.secondary_path, volume=self.volume)
 
-    def put(self, value, priority, _job_id=False):
+    def put(self, value, priority, _job_id=False, debug=False):
         """Put an item into the queue.
 
             :param value: Byte string to put into the queue.
@@ -43,9 +43,14 @@ class CustomQueue(SingleQueue):
         """
         self._check_put_arguments(value, priority)
         self._ensure_paths()
+        if debug:
+            self.path = self.path +"_debug"
         path = '{path}/{prefix}{priority:03d}-'.format(
         path=self.path, prefix=self.prefix, priority=priority)
-        entry_location = self.client.create(path, value, sequence=True)
+        if debug:
+            entry_location = self.client.create(path, value, sequence=True, makepath=True)
+        else:
+            entry_location = self.client.create(path, value, sequence=True)
         if not _job_id:
             _job_id = hashlib.md5(value).hexdigest()
         entry_id = str(entry_location).split("/")[2]
@@ -80,6 +85,7 @@ class CustomQueue(SingleQueue):
         return self.client.retry(self._inner_get_w_name)
 
     def _inner_get_w_name(self):
+        self.client.ensure_path(self.path)
         if not self._children:
             self._children = self.client.retry(
                 self.client.get_children, self.path)

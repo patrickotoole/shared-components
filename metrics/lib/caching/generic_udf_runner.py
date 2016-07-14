@@ -111,7 +111,7 @@ def runner(**kwargs):
     filter_id = kwargs.get('filter_id',False)
 
     if not filter_id:
-        UR.getActionIDPattern(pattern, crusher)
+        UR.getActionIDPattern(pattern, UR.crusher)
     else:
         UR.action_id = filter_id
 
@@ -122,7 +122,7 @@ def runner(**kwargs):
    
     parameters = kwargs.get("parameters",False)
     if parameters:
-        parameters = parameters
+        parameters = ujson.loads(parameters)
     else:
         parameters = UR.get_parameters(db, func_name)
 
