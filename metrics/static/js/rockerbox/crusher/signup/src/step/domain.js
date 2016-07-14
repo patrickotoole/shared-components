@@ -72,11 +72,13 @@ Domain.prototype = {
 
       if (!is_valid) return self._on["fail"]("Invalid domain")
 
-      self._message.update("Creating Advertiser.")
+      self._message.update("<img src='/static/img/general/logo-small.gif' style='width:16px;margin-right:10px'/>Creating Account.")
 
       postAdvertiser(obj, function(err,x) {
         if (!err) {
-          self._message.update("Creating Pixels.")
+          self._message.update("<img src='/static/img/general/logo-small.gif' style='width:16px;margin-right:10px'/>Creating Account..")
+          setTimeout(function(){self._message.update("<img src='/static/img/general/logo-small.gif' style='width:16px'/>Creating Account...") } ,500)
+
           queue()
             .defer(postPixel, {"segment_name": "All Pages", "segment_type":"segment"})
             .defer(postPixel, {"segment_name": "Signup", "segment_type":"conversion"})
@@ -95,8 +97,8 @@ Domain.prototype = {
     }
   , render_stage: function() {
       this._stage = start.stage(this._target)
-        .title("Let's get started!")
-        .subtitle("To get started, tell us on what domain will we be implementing pixels?")
+        .title("Let's get Hindsight Setup")
+        .subtitle("To begin, tell us the domain will you be implementing Hindsight on?")
         .left("")
         .right("")
         .draw()

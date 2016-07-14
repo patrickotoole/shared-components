@@ -67,7 +67,7 @@ Splash.prototype = {
         .style("margin-bottom","27px")
 
       d3_updateable(splash,"h5","h5")
-        .text("Hindsight analyzes the content your audience is reading and tells you where you should engage to find more users.")
+        .html("Hindsight analyzes the content your audience is reading and tells you where you should engage to find more users. Get started today for <b><u>FREE</u></b>!")
         .style("line-height","27px")
         .style("font-size","17px")
         .style("margin","auto")

@@ -24,7 +24,7 @@
 
         this._message = d3_updateable(this._target,".message","div")
           .classed("message",true)
-          .text(this._text)
+          .html(this._text)
 
         return this
       }
@@ -84,6 +84,8 @@
         var self = this;
 
         if (!is_valid) return self._on["fail"]("Invalid email")
+
+        self._message.update("<img src='/static/img/general/logo-small.gif' style='width:16px;margin-right:10px'/>Registering...")
 
         postEmail(obj, function(err,x) {
           if (!err) return self._on["success"](x)
@@ -208,11 +210,13 @@
 
         if (!is_valid) return self._on["fail"]("Invalid domain")
 
-        self._message.update("Creating Advertiser.")
+        self._message.update("<img src='/static/img/general/logo-small.gif' style='width:16px;margin-right:10px'/>Creating Account.")
 
         postAdvertiser(obj, function(err,x) {
           if (!err) {
-            self._message.update("Creating Pixels.")
+            self._message.update("<img src='/static/img/general/logo-small.gif' style='width:16px;margin-right:10px'/>Creating Account..")
+            setTimeout(function(){self._message.update("<img src='/static/img/general/logo-small.gif' style='width:16px'/>Creating Account...") } ,500)
+
             queue()
               .defer(postPixel, {"segment_name": "All Pages", "segment_type":"segment"})
               .defer(postPixel, {"segment_name": "Signup", "segment_type":"conversion"})
@@ -231,8 +235,8 @@
       }
     , render_stage: function() {
         this._stage = start.stage(this._target)
-          .title("Let's get started!")
-          .subtitle("To get started, tell us on what domain will we be implementing pixels?")
+          .title("Let's get Hindsight Setup")
+          .subtitle("To begin, tell us the domain will you be implementing Hindsight on?")
           .left("")
           .right("")
           .draw()
@@ -399,6 +403,7 @@
         this.render_message()
 
 
+
         return this
       }
     , detect: function(_obj) {
@@ -431,14 +436,23 @@
       }
     , render_stage: function() {
         this._stage = start.stage(this._target)
-          .title("Almost there!")
-          .subtitle("Paste the code below before the </head> tag on every page of your site.")
-          .left("<div class='codepeek_text'>This pixel allows us to collect a pool of data about the users in your audience. <br><br> Need a teammate to help install Hindsight? <a id='invite'>Send them an invite</a></div>")
-          .right("<div class='codepeek_text'>After the pixel is implemented, you will receive the Hindsight Daily Digest. <br><br> It will show content you should engage with and recommend stories that matches your audience.</div>")
+          .title("Install Hindsight on your Site")
+          .subtitle("Paste the code below before the </head> tag on every page of your site. ")
+          .left("")
+          .right("")
           .draw()
 
         var self = this;
-        this._stage._stage.selectAll("#invite")
+
+        var friend = d3_updateable(this._stage._subtitle_wrapper,".send-to-friend","div")
+          .classed("send-to-friend",true)
+          .style("font-size","12px")
+          .style("margin-top","12px")
+          .html("Need a teammate to help install Hindsight? &nbsp; ")
+
+        d3_updateable(friend,"#invite","a")
+          .attr("id","invite")
+          .text("Send them an invite")
           .on("click",function(){
             var taken = takeover("").draw()
 
@@ -472,6 +486,7 @@
                   self.on("pixel_skip")()
                 })
               })
+            
 
             
           })
@@ -509,7 +524,7 @@
       }
     , render_message: function() {
         this._message = message(this._stage._stage.selectAll(".codepeek_content"))
-          .text("")
+          .text("Your website will open in a new window to verify the installation.")
           .draw()
       }
     , render_congrats: function(data) {
@@ -674,7 +689,7 @@
       }
     , render_stage: function() {
         this._stage = start.stage(this._target)
-          .title("Awesome work!")
+          .title("Congrats!")
           .subtitle("You'll start to receive the Hindsight Daily Digest in the next few days.")
           .left("<div class='codepeek_text'>The Hindsight Daily Digest will show you the most popular content your audience is reading.<br><br></div>")
           .right("<div class='codepeek_text'>Understanding what content your audience is reading and where you should be engaging.</div>")
@@ -769,7 +784,7 @@
           .style("margin-bottom","27px")
 
         d3_updateable(splash,"h5","h5")
-          .text("Hindsight analyzes the content your audience is reading and tells you where you should engage to find more users.")
+          .html("Hindsight analyzes the content your audience is reading and tells you where you should engage to find more users. Get started today for <b><u>FREE</u></b>!")
           .style("line-height","27px")
           .style("font-size","17px")
           .style("margin","auto")
@@ -1110,6 +1125,12 @@
           .draw()
 
         var current = this._slides[this._slide]
+
+        var path_joiner = document.location.search.indexOf("?") > -1 ? "&" : "?"
+
+        var path = document.location.pathname + document.location.search 
+        if (document.location.search.indexOf("step=" + current) == -1) path += path_joiner + "step=" + current
+        history.replaceState({}, "", path);
 
         if ((["email","splash"].indexOf(current) == -1) || (document.location.pathname.indexOf("digest") == -1))
           this._progress = progress(this._progress_target)

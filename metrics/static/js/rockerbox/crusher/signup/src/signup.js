@@ -104,6 +104,12 @@ Signup.prototype = {
 
       var current = this._slides[this._slide]
 
+      var path_joiner = document.location.search.indexOf("?") > -1 ? "&" : "?"
+
+      var path = document.location.pathname + document.location.search 
+      if (document.location.search.indexOf("step=" + current) == -1) path += path_joiner + "step=" + current
+      history.replaceState({}, "", path);
+
       if ((["email","splash"].indexOf(current) == -1) || (document.location.pathname.indexOf("digest") == -1))
         this._progress = progress(this._progress_target)
           .data(this._slides)

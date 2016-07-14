@@ -77,6 +77,7 @@ Pixel.prototype = {
       this.render_message()
 
 
+
       return this
     }
   , detect: function(_obj) {
@@ -109,14 +110,23 @@ Pixel.prototype = {
     }
   , render_stage: function() {
       this._stage = start.stage(this._target)
-        .title("Almost there!")
-        .subtitle("Paste the code below before the </head> tag on every page of your site.")
-        .left("<div class='codepeek_text'>This pixel allows us to collect a pool of data about the users in your audience. <br><br> Need a teammate to help install Hindsight? <a id='invite'>Send them an invite</a></div>")
-        .right("<div class='codepeek_text'>After the pixel is implemented, you will receive the Hindsight Daily Digest. <br><br> It will show content you should engage with and recommend stories that matches your audience.</div>")
+        .title("Install Hindsight on your Site")
+        .subtitle("Paste the code below before the </head> tag on every page of your site. ")
+        .left("")
+        .right("")
         .draw()
 
       var self = this;
-      this._stage._stage.selectAll("#invite")
+
+      var friend = d3_updateable(this._stage._subtitle_wrapper,".send-to-friend","div")
+        .classed("send-to-friend",true)
+        .style("font-size","12px")
+        .style("margin-top","12px")
+        .html("Need a teammate to help install Hindsight? &nbsp; ")
+
+      d3_updateable(friend,"#invite","a")
+        .attr("id","invite")
+        .text("Send them an invite")
         .on("click",function(){
           var taken = takeover("").draw()
 
@@ -150,6 +160,7 @@ Pixel.prototype = {
                 self.on("pixel_skip")()
               })
             })
+          
 
           
         })
@@ -187,7 +198,7 @@ Pixel.prototype = {
     }
   , render_message: function() {
       this._message = message(this._stage._stage.selectAll(".codepeek_content"))
-        .text("")
+        .text("Your website will open in a new window to verify the installation.")
         .draw()
     }
   , render_congrats: function(data) {

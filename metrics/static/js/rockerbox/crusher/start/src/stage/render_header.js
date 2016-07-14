@@ -10,7 +10,7 @@ function render_header() {
   d3_updateable(this._wrapper,".section_sep","div")
     .classed("section_sep",true)
 
-  d3_updateable(this._wrapper,".section_subtitle","div")
+  this._subtitle_wrapper = d3_updateable(this._wrapper,".section_subtitle","div")
     .classed("section_subtitle",true)
     .text(this._subtitle)
 

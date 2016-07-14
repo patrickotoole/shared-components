@@ -14,7 +14,7 @@ Message.prototype = {
 
       this._message = d3_updateable(this._target,".message","div")
         .classed("message",true)
-        .text(this._text)
+        .html(this._text)
 
       return this
     }

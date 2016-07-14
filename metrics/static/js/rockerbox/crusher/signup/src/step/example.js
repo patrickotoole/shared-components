@@ -29,7 +29,7 @@ Example.prototype = {
     }
   , render_stage: function() {
       this._stage = start.stage(this._target)
-        .title("Awesome work!")
+        .title("Congrats!")
         .subtitle("You'll start to receive the Hindsight Daily Digest in the next few days.")
         .left("<div class='codepeek_text'>The Hindsight Daily Digest will show you the most popular content your audience is reading.<br><br></div>")
         .right("<div class='codepeek_text'>Understanding what content your audience is reading and where you should be engaging.</div>")

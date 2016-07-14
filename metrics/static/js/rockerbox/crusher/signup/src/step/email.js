@@ -53,6 +53,8 @@ Email.prototype = {
 
       if (!is_valid) return self._on["fail"]("Invalid email")
 
+      self._message.update("<img src='/static/img/general/logo-small.gif' style='width:16px;margin-right:10px'/>Registering...")
+
       postEmail(obj, function(err,x) {
         if (!err) return self._on["success"](x)
         return self._on["fail"](JSON.parse(err.response).error)
