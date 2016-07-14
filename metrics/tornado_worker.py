@@ -84,6 +84,10 @@ if __name__ == '__main__':
     mc = MetricCounter()
     num_worker= options.num_workers
     tks = []
+    zookeeper_path = "/python_queue"
+    if options.debug:
+        zookeeper_path = "/python_queue_debug"
+
     if not connectors['cassandra']:
         logging.info("connectors not received properly")
         sys.exit(1)
@@ -93,7 +97,7 @@ if __name__ == '__main__':
         tks.append(tk)    
     for _ in range(0,num_worker):
         
-        reactor.callInThread(work_queue.WorkQueue(options.exit_on_finish, connectors['zookeeper'],reactor, tks[_], mc, connectors, debug=options.debug))
+        reactor.callInThread(work_queue.WorkQueue(options.exit_on_finish, connectors['zookeeper'],reactor, tks[_], mc, zookeeper_path, connectors))
         reactor.callInThread(TimeMetric(reactor, tks[_]))
 
     reactor.callInThread(Metrics(reactor,tks, mc,connectors))

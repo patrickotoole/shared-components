@@ -22,19 +22,12 @@ def get_crusher_obj(advertiser, base_url):
     logging.info(crusher._token)
     return crusher
 
-def set_path_queue(debug,client, volume):
-    if debug:
-        queue = CustomQueue.CustomQueue(client,"/python_queue_debug", "log", "v" + volume)
-    else:
-        queue = CustomQueue.CustomQueue(client,"/python_queue", "log", "v" + volume)
-    return queue
-
 class WorkQueue(object):
 
-    def __init__(self,exit_on_finish, client,reactor,timer, mcounter, connectors, debug=False):
+    def __init__(self,exit_on_finish, client,reactor,timer, mcounter, zk_path, connectors):
         self.client = client
         volume = datetime.datetime.now().strftime('%m%y')
-        self.queue = set_path_queue(debug, client, volume)
+        self.queue = CustomQueue.CustomQueue(client,zk_path, "log", "v" + volume)
         self.rec = reactor
         self.connectors = connectors
         self.timer = timer
