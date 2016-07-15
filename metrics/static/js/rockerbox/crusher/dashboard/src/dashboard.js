@@ -5,6 +5,8 @@ import summary_box from './summary_box'
 
 import bar_selector from './bar_selector'
 import time_selector from './time_selector'
+import table from './table'
+
 
 
 
@@ -57,8 +59,10 @@ Dashboard.prototype = {
        time_selector(_top)
          .draw()
 
-      remainingSection(current)
-        .text("Yo")
+      var _lower = remainingSection(current)
+
+      table(_lower)
+        .draw()
 
     }
   , render_right: function() {
