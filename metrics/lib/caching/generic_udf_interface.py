@@ -25,7 +25,7 @@ class UDFCache:
         kwargs = {"advertiser":advertiser, "pattern":segment, "func_name":udf, "base_url":base_url, "filter_id":filter_id, "parameters": params, "connectors":connectors}
         runner.runner(**kwargs)
 
-    def add_db_to_work_queue(self, advertiser, segment, udf, base_url, filter_id, params):
+    def add_db_to_work_queue(self, advertiser, segment, udf, base_url, filter_id, params, debug_bool):
         import lib.caching.generic_udf_runner as runner
         _cache_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         kwargs = {"advertiser":advertiser, "pattern":segment, "func_name":udf, "base_url":base_url, "identifiers":"udf_{}_cache".format(udf), "filter_id":filter_id, "parameters":params}
@@ -34,7 +34,7 @@ class UDFCache:
                 kwargs
                 ))
         volume = "v{}".format(datetime.datetime.now().strftime('%m%y'))
-        CustomQueue.CustomQueue(self.connectors['zk'],"python_queue", "log", volume).put(work,1)
+        CustomQueue.CustomQueue(self.connectors['zk'],"python_queue", "log", volume).put(work,1, debug=debug_bool)
         logging.info("added to UDF work queue %s for %s" %(segment,advertiser)) 
 
 
@@ -53,14 +53,13 @@ if __name__ == "__main__":
     define("base_url", default="http://beta.crusher.getrockerbox.com")
     define("random", default=False)
     define("parameters", default={})
+    define("debug", default=False)
 
     basicConfig(options={})
 
     parse_command_line()
 
-    if options.random:
-        import ast
-        additional_params = ast.eval_literal(options.random)
+    
     zk = KazooClient(hosts="zk1:2181")
     zk.start()
     connectors = {'db': lnk.dbs.rockerbox, 'crushercache':lnk.dbs.crushercache, 'zk':zk, 'cassandra':''}
@@ -72,10 +71,10 @@ if __name__ == "__main__":
         for i,s in segments.iterrows():
             UC.run_local(options.advertiser, s['url_pattern'], options.udf,  options.base_url,s['action_id'], options.parameters, connectors)
     elif options.udf:
-        UC.add_db_to_work_queue(options.advertiser, options.pattern, options.udf, options.base_url, options.filter_id, options.parameters)
+        UC.add_db_to_work_queue(options.advertiser, options.pattern, options.udf, options.base_url, options.filter_id, options.parameters, options.debug)
     else:
         #select all functions for advertiser
         advertiser_udfs = connectors['crushercache'].select_dataframe(GET_UDFS.format(options.advertiser))
         for udfs in advertiser_udfs.iterrows():
-            UC.add_db_to_work_queue(options.advertiser, options.pattern, udfs[1]['udf'], options.base_url, options.filter_id, options.parameters)
+            UC.add_db_to_work_queue(options.advertiser, options.pattern, udfs[1]['udf'], options.base_url, options.filter_id, options.parameters, options.debug)
 

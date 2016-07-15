@@ -25,8 +25,9 @@ class RPCQueue():
         filter_id = rpc_data.get("filter_id", False)
         parameters = rpc_data.get("parameters", {})
         priority = rpc_data.get("priority", 2)
+        debug_bool = rpc_data.get("debug",False)
         for key, val in rpc_data.items():
-            if key not in ['advertiser','udf','pattern','base_url','action_name','filter_id','priority','parameters']:
+            if key not in ['advertiser','udf','pattern','base_url','action_name','filter_id','priority','parameters', 'debug']:
                 parameters[key] = val
         
         volume = "v{}".format(datetime.datetime.now().strftime('%m%y'))
@@ -54,7 +55,7 @@ class RPCQueue():
             kwargs
             ))
         priority = int(priority)
-        entry_id = CustomQueue.CustomQueue(self.zookeeper,"python_queue","log",volume).put(work,priority)
+        entry_id = CustomQueue.CustomQueue(self.zookeeper,"python_queue","log",volume).put(work,priority,debug=debug_bool)
         logging.info("added to Cassandra work queue %s for %s" %(segment,advertiser))
         job_id = hashlib.md5(work).hexdigest()
         return entry_id, job_id

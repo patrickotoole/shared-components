@@ -24,10 +24,10 @@ def get_crusher_obj(advertiser, base_url):
 
 class WorkQueue(object):
 
-    def __init__(self,exit_on_finish, client,reactor,timer, mcounter, connectors):
+    def __init__(self,exit_on_finish, client,reactor,timer, mcounter, zk_path, connectors):
         self.client = client
         volume = datetime.datetime.now().strftime('%m%y')
-        self.queue = CustomQueue.CustomQueue(client,"/python_queue", "log", "v" + volume)
+        self.queue = CustomQueue.CustomQueue(client,zk_path, "log", "v" + volume)
         self.rec = reactor
         self.connectors = connectors
         self.timer = timer
@@ -59,13 +59,13 @@ class WorkQueue(object):
                     kwargs['job_id'] = job_id
                     if self.crusher_wrapper.user != "a_{}".format(kwargs['advertiser']):
                         self.crusher_wrapper = get_crusher_obj(kwargs['advertiser'],"http://beta.crusher.getrockerbox.com")
-
-                    kwargs['crusher_wrapper'] = self.crusher_wrapper
+                    
                     logging.info("starting queue %s %s" % (str(fn),str(kwargs)))
                     logging.info(self.rec.getThreadPool().threads[0])
                     logging.info(self.rec.getThreadPool().threads[0].is_alive())
                     logging.info(self.rec.getThreadPool().threads[0].ident)
                     kwargs['connectors']=self.connectors
+                    kwargs['connectors']['crusher_wrapper'] = self.crusher_wrapper
                     fn(**kwargs) 
                     
                     self.mcounter.bumpSuccess()
@@ -87,5 +87,5 @@ class WorkQueue(object):
  
             else:
                 import time
-                time.sleep(10)
+                time.sleep(5)
                 logging.debug("No data in queue")
