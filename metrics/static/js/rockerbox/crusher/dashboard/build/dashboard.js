@@ -4,7 +4,7 @@
   factory((global.dashboard = {}));
 }(this, function (exports) { 'use strict';
 
-  function accessor$1(attr, val) {
+  function accessor(attr, val) {
     if (val === undefined) return this["_" + attr]
     this["_" + attr] = val
     return this
@@ -102,8 +102,8 @@
 
   SummaryBox.prototype = {
 
-      data: function(val) { return accessor$1.bind(this)("data",val) }
-    , title: function(val) { return accessor$1.bind(this)("title",val) }
+      data: function(val) { return accessor.bind(this)("data",val) }
+    , title: function(val) { return accessor.bind(this)("title",val) }
     , draw: function() {
         var wrap = this._target
         var desc = d3_updateable(wrap,".vendor-domains-bar-desc","div")
@@ -342,8 +342,8 @@
 
   TimeSelector.prototype = {
 
-      data: function(val) { return accessor$1.bind(this)("data",val) }
-    , title: function(val) { return accessor$1.bind(this)("title",val) }
+      data: function(val) { return accessor.bind(this)("data",val) }
+    , title: function(val) { return accessor.bind(this)("title",val) }
     , draw: function() {
         var wrap = this._target
         var desc = d3_updateable(wrap,".vendor-domains-bar-desc","div")
@@ -504,9 +504,9 @@
 
   Table.prototype = {
 
-      data: function(val) { return accessor$1.bind(this)("data",val) }
-    , title: function(val) { return accessor$1.bind(this)("title",val) }
-    , row: function(val) { return accessor$1.bind(this)("row",val) }
+      data: function(val) { return accessor.bind(this)("data",val) }
+    , title: function(val) { return accessor.bind(this)("title",val) }
+    , row: function(val) { return accessor.bind(this)("row",val) }
     
     , draw: function() {
         var wrap = this._target
@@ -557,7 +557,7 @@
   }
 
   Dashboard.prototype = {
-      data: function(val) { return accessor$1.bind(this)("data",val) }
+      data: function(val) { return accessor.bind(this)("data",val) }
     , draw: function() {
         this._target
         this.render_lhs()
@@ -574,6 +574,7 @@
         var _top = topSection(current)
 
         summary_box(_top)
+          .data({"key":"Off Site Visits","values":[]})
           .draw()
 
         var _lower = remainingSection(current)
@@ -605,11 +606,17 @@
 
         var current = this._right
 
-        topSection(current)
-          .text("Yo")
+        var _top = topSection(current)
 
-        remainingSection(current)
-          .text("Yo")
+        summary_box(_top)
+          .data({"key":"On Site Visits","values":[]})
+          .draw()
+
+        var _lower = remainingSection(current)
+
+        bar_selector(_lower)
+          .data({"key":"Segments","values":[]})
+          .draw()
 
       }
 

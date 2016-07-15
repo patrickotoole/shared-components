@@ -1,3 +1,4 @@
+import accessor from './helpers'
 import {autoSize as autoSize} from './helpers'
 import {autoScales as autoScales} from './helpers'
 

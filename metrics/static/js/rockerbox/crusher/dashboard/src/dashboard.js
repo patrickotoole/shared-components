@@ -40,6 +40,7 @@ Dashboard.prototype = {
       var _top = topSection(current)
 
       summary_box(_top)
+        .data({"key":"Off Site Visits","values":[]})
         .draw()
 
       var _lower = remainingSection(current)
@@ -71,11 +72,17 @@ Dashboard.prototype = {
 
       var current = this._right
 
-      topSection(current)
-        .text("Yo")
+      var _top = topSection(current)
 
-      remainingSection(current)
-        .text("Yo")
+      summary_box(_top)
+        .data({"key":"On Site Visits","values":[]})
+        .draw()
+
+      var _lower = remainingSection(current)
+
+      bar_selector(_lower)
+        .data({"key":"Segments","values":[]})
+        .draw()
 
     }
 
