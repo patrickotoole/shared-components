@@ -202,7 +202,7 @@ def main():
     logging.basicConfig(level=logging.INFO)
     app = WebApp()
     server = httpserver.HTTPServer(app)
-    server.listen(9001, '0.0.0.0')
+    server.listen(8888, '0.0.0.0')
     logging.info("Serving at http://0.0.0.0:8888")
     try:
         tornado.ioloop.IOLoop.instance().start()
