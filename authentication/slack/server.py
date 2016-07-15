@@ -10,7 +10,7 @@ import urllib,urllib2
 
 from link import lnk
 
-secrets_path = os.path.abspath('secrets.json');
+secrets_path = os.path.abspath('../authentication/slack/secrets.json');
 with open(secrets_path) as data_file:
     SETTINGS = json.load(data_file)
 
