@@ -412,8 +412,10 @@ RB.crusher.controller = (function(controller) {
         self.draw()
       }
 
+      dashboard.dashboard(funnelRow, action)
+        .draw()
 
-      RB.crusher.ui.vendors.show(funnelRow, action);
+      //RB.crusher.ui.vendors.show(funnelRow, action);
     },
     "action/existing": function(action) {
 
