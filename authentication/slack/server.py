@@ -10,7 +10,8 @@ import urllib,urllib2
 
 from link import lnk
 
-with open('secrets.json') as data_file:
+secrets_path = os.path.abspath('secrets.json');
+with open(secrets_path) as data_file:
     SETTINGS = json.load(data_file)
 
 def build_link_track(to, link, event="slack - digest (click)"):
