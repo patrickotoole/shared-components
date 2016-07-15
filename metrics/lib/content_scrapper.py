@@ -2,6 +2,7 @@ import requests
 import logging
 from lib.kafka_queue import KafkaQueue
 from link import lnk
+from twisted.internet import threads
 
 URL="http://scrapper.crusher.getrockerbox.com?url=%s"
 
@@ -19,14 +20,20 @@ def run(consumer, count):
     def get(url):
         _resp = requests.get((URL % url), auth=('rockerbox', 'rockerbox'))
         data = _resp.json()
-        title = data['result']['title']
-        return title
+        try:
+            title = data['result']['title']
+        except:
+            print "could not get title"
+            title = None
+        return (title, url)
 
-    def send(title, producer):
-        msg = {"url":url.encode('ascii',  errors='ignore'), "title": title.encode('ascii', errors='ignore')}
-        print str(msg)
-        producer.send_message(json.dumps(msg))
-        print "Sent"
+    def send(result,  producer):
+        title, url = result
+        if title is not None:
+            msg = {"url":url.encode('ascii',  errors='ignore'), "title": title.encode('ascii', errors='ignore')}
+            print str(msg)
+            producer.send_message(json.dumps(msg))
+            print "Sent"
 
     for message in consumer:
         if message is not None:
@@ -37,8 +44,8 @@ def run(consumer, count):
                 count.bump(url)
                 if limit ==25:
                     print url
-                    title = get(url)
-                    send(title, producer)
+                    defr = threads.deferToThread(get, url)
+                    defr.addCallback(send, producer)
             except Exception as e:
                 print str(e)
 
@@ -64,7 +71,6 @@ if __name__ == '__main__':
 
     parse_command_line()
 
-
     producer = kafka_stream.KafkaStream(
             options.topic,
             options.kafka_hosts,
@@ -78,16 +84,11 @@ if __name__ == '__main__':
 
     client = KafkaClient(hosts="10.128.248.211:2181/v0_8_1")
     topic = client.topics['raw_imps']
-    consumerA = topic.get_simple_consumer()
-    consumerB = topic.get_simple_consumer()
-    consumerC = topic.get_simple_consumer()
-    consumerD = topic.get_simple_consumer()
-    consumers = [consumerA, consumerB, consumerC, consumerD]
+    consumer = topic.get_simple_consumer()
     connectors = {"crushercache":lnk.dbs.crushercache}
     
     count = counter()    
-    from twisted.internet import threads, reactor
+    from twisted.internet import reactor
     
-    for consum in consumers:
-        reactor.callInThread(run, consum, count)
+    reactor.callInThread(run, consumer, count)
     reactor.run()
