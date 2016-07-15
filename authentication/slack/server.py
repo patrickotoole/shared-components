@@ -184,7 +184,7 @@ class WebApp(web.Application):
         connectors = {"db": db}
 
         handlers = [
-            (r'/authenticate/callback', AuthenticationCallbackHandler, connectors),
+            (r'/callback', AuthenticationCallbackHandler, connectors),
             (r'/channels', SlackChannelsHandler, connectors),
             (r'/message', SlackMessageHandler, connectors),
             (r'/', IndexHandler),
