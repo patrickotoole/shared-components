@@ -2,6 +2,8 @@ import accessor from './helpers'
 import {topSection as topSection} from './helpers'
 import {remainingSection as remainingSection} from './helpers'
 import summary_box from './summary_box'
+import bar_selector from './bar_selector'
+
 
 export function Dashboard(target) {
   this._target = target
@@ -35,8 +37,10 @@ Dashboard.prototype = {
       summary_box(_top)
         .draw()
 
-      remainingSection(current)
-        .text("Yo")
+      var _lower = remainingSection(current)
+
+      bar_selector(_lower)
+        .draw()
 
     }
   , render_center: function() {

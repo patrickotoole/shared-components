@@ -1,0 +1,151 @@
+import {autoSize as autoSize} from './helpers'
+import {autoScales as autoScales} from './helpers'
+
+
+var EXAMPLE_DATA = {
+    "key": "Categories"
+  , "values": [
+      {  
+          "key":"Off-site Views"
+        , "value": 12344
+      }
+    , {
+          "key":"Off-site Uniques"
+        , "value": 12344
+      }
+  ] 
+}
+
+export function BarSelector(target) {
+  this._target = target;
+  this._data = EXAMPLE_DATA
+}
+
+export default function bar_selector(target) {
+  return new BarSelector(target)
+}
+
+BarSelector.prototype = {
+
+    data: function(val) { return accessor.bind(this)("data",val) }
+  , title: function(val) { return accessor.bind(this)("title",val) }
+  , draw: function() {
+      var wrap = this._target
+      var data = this._data
+      var desc = d3_updateable(wrap,".vendor-domains-bar-desc","div")
+        .classed("vendor-domains-bar-desc",true)
+        .style("display","inherit")
+        .datum(this._data)
+
+      var wrapper = d3_updateable(desc,".w","div")
+        .classed("w",true)
+  
+      d3_updateable(wrapper, "h3","h3")
+        .text(function(x){return x.key})
+        .style("margin-bottom","15px")
+
+      var _sizes = autoSize(wrapper,function(d){return d -50}, function(d){return 400})
+      var len = data.length
+
+      var scales = autoScales(_sizes,len),
+        x = scales.x,
+        y = scales.y,
+        xAxis = scales.xAxis;
+        
+      var svg_wrap = d3_updateable(wrapper,"svg","svg")
+        .attr("width", _sizes.width + _sizes.margin.left + _sizes.margin.right) 
+        .attr("height", _sizes.height + _sizes.margin.top + _sizes.margin.bottom)
+      
+      var svg = d3_updateable(svg_wrap,"g","g")
+        .attr("transform", "translate(" + _sizes.margin.left + "," + 0 + ")");
+    
+      var valueAccessor = function(x){ return x.value }
+        , labelAccessor = function(x) {return x.label }
+
+      var values = data.map(value_accessor)
+    
+      x.domain(
+        d3.extent(
+          [
+               d3.min(values)-.1,d3.max(values)+.1
+            , -d3.min(values)+.1,-d3.max(values)-.1
+          ],
+          function(x) { return x}
+        )
+      ).nice();
+    
+      y.domain(data.map(labelAccessor));
+    
+      var bar = d3_splat(svg,".bar","rect",false,labelAccessor)
+          .attr("class", function(d) { return valueAccessor(d) < 0 ? "bar negative" : "bar positive"; })
+          .attr("x",width/2 + 60)
+          .attr("y", function(d) { return y(labelAccessor(d)); })
+          .attr("width", function(d) { return Math.abs(x(valueAccessor(d)) - x(0)); })
+          .attr("height", y.rangeBand())
+          .style("cursor", "pointer")
+          .on("click", function(x) {
+            self._click.bind(this)(x,self)
+          })
+    
+      bar.exit().remove()
+    
+    
+      var checks = d3_splat(svg,".check","foreignObject",false,labelAccessor)
+          .classed("check",true)
+          .attr("x",0)
+          .attr("y", function(d) { return y(labelAccessor(d)) })
+          .html("<xhtml:tree></xhtml:tree>")
+    
+        svg.selectAll("foreignobject").each(function(x){
+          var tree = d3.select(this.children[0])
+    
+          d3_updateable(tree,"input","input")
+            .attr("type","checkbox")
+            .property("checked",function(y){
+              return self._categories[x.label] ? "checked" : undefined
+            })
+            .on("click", function() {
+              self._click.bind(this)(x,self)
+            })
+        })
+    
+    
+    
+      checks.exit().remove()
+    
+    
+      var label = d3_splat(svg,".name","text",false,labelAccessor)
+          .classed("name",true)
+          .attr("x",25)
+          .attr("style", "text-anchor:start;dominant-baseline: middle;")
+          .attr("y", function(d) { return y(labelAccessor(d)) + y.rangeBand()/2 + 1; })
+          .text(labelAccessor)
+    
+      label.exit().remove()
+    
+      var percent = d3_splat(svg,".percent","text",false,labelAccessor)
+          .classed("percent",true)
+          .attr("x",width/2 + 20)
+          .attr("style", "text-anchor:start;dominant-baseline: middle;font-size:.9em")
+          .attr("y", function(d) { return y(labelAccessor(d)) + y.rangeBand()/2 + 1; })
+          .text(function(d) {
+            var v = d3.format("%")(d.percent);
+            var x = (d.percent > 0) ?  "↑" : "↓"
+            return "(" + v + x  + ")"
+          })
+    
+      svg.append("g")
+          .attr("class", "y axis")
+        .append("line")
+          .attr("x1", x(0))
+          .attr("x2", x(0))
+          .attr("y2", height);
+
+
+
+  
+  
+
+
+    }
+}

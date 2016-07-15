@@ -58,9 +58,6 @@ SummaryBox.prototype = {
         .text(function(x){ return d3.format(",")(x.value)})
         .style("font-size","32px")
         .style("font-weight","bold")
-  
-  
-
 
     }
 }
