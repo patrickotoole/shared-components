@@ -33,6 +33,7 @@ export function autoSize(wrap,adjustWidth,adjustHeight) {
   w = adjustWidth(w)
   h = adjustHeight(h)
 
+
   var margin = {top: 40, right: 10, bottom: 30, left: 0},
       width  = w - margin.left - margin.right,
       height = h - margin.top - margin.bottom;

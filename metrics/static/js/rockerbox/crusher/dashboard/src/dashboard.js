@@ -2,7 +2,10 @@ import accessor from './helpers'
 import {topSection as topSection} from './helpers'
 import {remainingSection as remainingSection} from './helpers'
 import summary_box from './summary_box'
+
 import bar_selector from './bar_selector'
+import time_selector from './time_selector'
+
 
 
 export function Dashboard(target) {
@@ -49,8 +52,10 @@ Dashboard.prototype = {
 
        var current =  this._center
 
-       topSection(current)
-        .text("Yo")
+       var _top = topSection(current)
+
+       time_selector(_top)
+         .draw()
 
       remainingSection(current)
         .text("Yo")

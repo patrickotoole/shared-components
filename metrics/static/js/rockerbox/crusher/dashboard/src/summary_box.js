@@ -1,3 +1,4 @@
+import accessor from './helpers'
 var EXAMPLE_DATA = {
     "key": "User Visits"
   , "values": [
