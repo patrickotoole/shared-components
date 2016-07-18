@@ -132,7 +132,7 @@ Signup.prototype = {
       var self = this;
       password(d3.select(t))
         .data(this._data)
-        .on("success",function(){ self.on("password")(arguments); self.next()})
+        .on("success",function(){ self.on("password")(arguments); document.location = document.location.pathname })
         .on("error",function(err){ self.on("error")(err); })
         .draw()
 
