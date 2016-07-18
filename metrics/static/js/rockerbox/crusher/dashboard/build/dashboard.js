@@ -544,6 +544,37 @@
       }
   }
 
+  function buildCategories(data) {
+    var values = data.category
+          .map(function(x){ return {"key": x.parent_category_name, "value": x.count } })
+          .sort(function(p,c) {return c.value - p.value }).slice(0,10)
+      , total = values.reduce(function(p, x) {return p + x.value }, 0)
+
+    return {
+        key: "Categories"
+      , values: values.map(function(x) { x.percent = x.value/total; return x})
+    }
+  }
+
+  function buildTimes(data) {
+    var values = data.current_hour
+      .map(function(x) { return {"key": parseFloat(x.hour) + 1 + x.minute/60, "value": x.count } })
+
+    return {
+        key: "Browsing behavior by time"
+      , values: values
+    }
+  }
+
+  function buildUrls(data) {
+    var values = data.url_only.map(function(x) { return {"key":x.url,"value":x.count} })
+    
+    return {
+        key: "Top Articles"
+      , values: values
+    }
+  }
+
   function Dashboard(target) {
     this._target = target
       .append("ul")
@@ -580,23 +611,26 @@
         var _lower = remainingSection(current)
 
         bar_selector(_lower)
+          .data(buildCategories(this._data))
           .draw()
 
       }
     , render_center: function() {
-         this._center = d3_updateable(this._target,".center","div")
-           .classed("center col-md-6",true)
+        this._center = d3_updateable(this._target,".center","div")
+          .classed("center col-md-6",true)
 
-         var current =  this._center
+        var current =  this._center
 
-         var _top = topSection(current)
+        var _top = topSection(current)
 
-         time_selector(_top)
-           .draw()
+        time_selector(_top)
+          .data(buildTimes(this._data))
+          .draw()
 
         var _lower = remainingSection(current)
 
         table(_lower)
+          .data(buildUrls(this._data))
           .draw()
 
       }
