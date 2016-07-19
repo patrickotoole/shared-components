@@ -22,9 +22,13 @@ var EXAMPLE_DATA = {
 }
 
 export function BarSelector(target) {
+  var nullfunc = function() {}
   this._target = target;
   this._data = EXAMPLE_DATA
   this._categories = {}
+  this._on = {
+      click: nullfunc
+  }
 }
 
 export default function bar_selector(target) {
@@ -34,6 +38,11 @@ export default function bar_selector(target) {
 BarSelector.prototype = {
 
     data: function(val) { return accessor.bind(this)("data",val) }
+  , on: function(action, fn) {
+      if (fn === undefined) return this._on[action];
+      this._on[action] = fn;
+      return this
+    }
   , title: function(val) { return accessor.bind(this)("title",val) }
   , draw: function() {
 
@@ -68,12 +77,11 @@ BarSelector.prototype = {
             .attr("width", _sizes.width + _sizes.margin.left + _sizes.margin.right) 
             .attr("height", _sizes.height + _sizes.margin.top + _sizes.margin.bottom)
           
-          var svg = d3_updateable(svg_wrap,"g","g")
+          var svg = d3_splat(svg_wrap,"g","g",function(x) { return [x.values]},function(x,i) {return i })
             .attr("transform", "translate(" + _sizes.margin.left + "," + 0 + ")")
-            .datum(function(x) { return x.values })
         
           var valueAccessor = function(x){ return x.value }
-            , labelAccessor = function(x) {return x.key }
+            , labelAccessor = function(x) { return x.key }
     
           var values = data.map(valueAccessor)
         
@@ -110,16 +118,16 @@ BarSelector.prototype = {
               .attr("y", function(d) { return y(labelAccessor(d)) })
               .html("<xhtml:tree></xhtml:tree>")
         
-            svg.selectAll("foreignobject").each(function(x){
+            svg.selectAll("foreignobject").each(function(z){
               var tree = d3.select(this.children[0])
-        
+              var z = z
               d3_updateable(tree,"input","input")
                 .attr("type","checkbox")
                 .property("checked",function(y){
-                  return self._categories[labelAccessor(x)] ? "checked" : undefined
+                  return z.selected ? "checked" : undefined
                 })
-                .on("click", function() {
-                  self._click.bind(this)(x,self)
+                .on("click", function(x) {
+                  self._on.click.bind(this)(z,self)
                 })
             })
         

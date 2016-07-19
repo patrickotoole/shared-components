@@ -2,42 +2,14 @@ import accessor from './helpers'
 import {topSection as topSection} from './helpers'
 import {remainingSection as remainingSection} from './helpers'
 import summary_box from './summary_box'
+import * as transform from './data_helpers'
 
 import bar_selector from './bar_selector'
 import time_selector from './time_selector'
 import table from './table'
 
 
-function buildCategories(data) {
-  var values = data.category
-        .map(function(x){ return {"key": x.parent_category_name, "value": x.count } })
-        .sort(function(p,c) {return c.value - p.value }).slice(0,10)
-    , total = values.reduce(function(p, x) {return p + x.value }, 0)
 
-  return {
-      key: "Categories"
-    , values: values.map(function(x) { x.percent = x.value/total; return x})
-  }
-}
-
-function buildTimes(data) {
-  var values = data.current_hour
-    .map(function(x) { return {"key": parseFloat(x.hour) + 1 + x.minute/60, "value": x.count } })
-
-  return {
-      key: "Browsing behavior by time"
-    , values: values
-  }
-}
-
-function buildUrls(data) {
-  var values = data.url_only.map(function(x) { return {"key":x.url,"value":x.count} })
-  
-  return {
-      key: "Top Articles"
-    , values: values
-  }
-}
 
 export function Dashboard(target) {
   this._target = target
@@ -55,6 +27,7 @@ Dashboard.prototype = {
     data: function(val) { return accessor.bind(this)("data",val) }
   , draw: function() {
       this._target
+      this._categories = {}
       this.render_lhs()
       this.render_center()
       this.render_right()
@@ -69,13 +42,36 @@ Dashboard.prototype = {
       var _top = topSection(current)
 
       summary_box(_top)
-        .data({"key":"Off Site Visits","values":[]})
+        .data({
+             "key":""
+           , "values": [
+/*
+                {  
+                    "key":"Off-site Views"
+                  , "value": 12344
+                }
+              , {
+                    "key":"Off-site Uniques"
+                  , "value": 12344
+                }
+*/
+              ]
+         })
         .draw()
 
       var _lower = remainingSection(current)
+      var self = this
+
+      this._data.display_categories = this._data.display_categories || transform.buildCategories(this._data)
 
       bar_selector(_lower)
-        .data(buildCategories(this._data))
+        .data(this._data.display_categories)
+        .on("click",function(x) {
+          console.log(x)
+          x.selected = !x.selected
+          console.log(x)
+          self.draw() 
+        })
         .draw()
 
     }
@@ -88,13 +84,13 @@ Dashboard.prototype = {
       var _top = topSection(current)
 
       time_selector(_top)
-        .data(buildTimes(this._data))
+        .data(transform.buildTimes(this._data))
         .draw()
 
       var _lower = remainingSection(current)
 
       table(_lower)
-        .data(buildUrls(this._data))
+        .data(transform.buildUrls(this._data))
         .draw()
 
     }
@@ -107,7 +103,7 @@ Dashboard.prototype = {
       var _top = topSection(current)
 
       summary_box(_top)
-        .data({"key":"On Site Visits","values":[]})
+        .data({"key":"","values":[]})//{"key":"On-Site Visits","values":[]})
         .draw()
 
       var _lower = remainingSection(current)

@@ -94,17 +94,16 @@ TimeSelector.prototype = {
           .attr("width", _sizes.width + _sizes.margin.left + _sizes.margin.right)
           .attr("height", _sizes.height + _sizes.margin.top + _sizes.margin.bottom)
 
-        var svg = d3_updateable(svg_wrap,"g","g")
+        var svg = d3_splat(svg_wrap,"g","g",function(x) {return [x.values]},function(_,i) {return i})
           .attr("transform", "translate(" + _sizes.margin.left + "," + 0 + ")")
-          .datum(function(x) { return x.values })
 
         x.domain(data.map(function(d) { return keyAccessor(d) }));
         y.domain([0, d3.max(data, function(d) { return Math.sqrt(valueAccessor(d)); })]);
 
-        svg.selectAll(".timing-bar")
-          .data(data)
-        .enter().append("rect")
+        var bars = d3_splat(svg, ".timing-bar", "rect", data, keyAccessor)
           .attr("class", "timing-bar")
+         
+        bars
           .attr("x", function(d) { return ((keyAccessor(d) - 1) * gridSize * 3); })
           .attr("width", gridSize - 2)
           .attr("y", function(d) { return y(Math.sqrt( valueAccessor(d) )); })

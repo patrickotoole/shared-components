@@ -141,6 +141,88 @@
       }
   }
 
+  function buildCategories(data) {
+    var values = data.category
+          .map(function(x){ return {"key": x.parent_category_name, "value": x.count } })
+          .sort(function(p,c) {return c.value - p.value }).slice(0,10)
+      , total = values.reduce(function(p, x) {return p + x.value }, 0)
+
+    return {
+        key: "Categories"
+      , values: values.map(function(x) { x.percent = x.value/total; return x})
+    }
+  }
+
+  function buildTimes(data) {
+
+    var hour = data.current_hour
+
+    var categories = data.display_categories.values
+      .filter(function(a) { return a.selected })
+      .map(function(a) { return a.key })
+
+    if (categories.length > 0) {
+      hour = data.category_hour.filter(function(x) {return categories.indexOf(x.parent_category_name) > -1})
+      hour = d3.nest()
+        .key(function(x) { return x.hour })
+        .key(function(x) { return x.minute })
+        .rollup(function(v) {
+          return v.reduce(function(p,c) { 
+            p.uniques = (p.uniques || 0) + c.uniques; 
+            p.count = (p.count || 0) + c.count;  
+            return p },{})
+        })
+        .entries(hour)
+        .map(function(x) { 
+          console.log(x.values); 
+          return x.values.reduce(function(p,k){ 
+            p['minute'] = parseInt(k.key); 
+            p['count'] = k.values.count; 
+            p['uniques'] = k.values.uniques; 
+            return p 
+        }, {"hour":x.key}) } )
+    }
+
+    var values = hour
+      .map(function(x) { return {"key": parseFloat(x.hour) + 1 + x.minute/60, "value": x.count } })
+
+    return {
+        key: "Browsing behavior by time"
+      , values: values
+    }
+  }
+
+  function buildUrls(data) {
+
+    var categories = data.display_categories.values
+      .filter(function(a) { return a.selected })
+      .map(function(a) { return a.key })
+
+    var values = data.url_only
+      .map(function(x) { return {"key":x.url,"value":x.count, "parent_category_name": x.parent_category_name} })
+
+    if (categories.length > 0)
+      values = values.filter(function(x) {return categories.indexOf(x.parent_category_name) > -1 })
+
+    values = values.filter(function(x) {
+      try {
+        return x.key
+          .replace("http://","")
+          .replace("https://","")
+          .replace("www.","").split(".").slice(1).join(".").split("/")[1].length > 5
+      } catch(e) {
+        return false
+      }
+    }).sort(function(p,c) { return c.value - p.value })
+
+
+    
+    return {
+        key: "Top Articles"
+      , values: values.slice(0,100)
+    }
+  }
+
   var EXAMPLE_DATA$1 = {
       "key": "Categories"
     , "values": [
@@ -160,9 +242,13 @@
   }
 
   function BarSelector(target) {
+    var nullfunc = function() {}
     this._target = target;
     this._data = EXAMPLE_DATA$1
     this._categories = {}
+    this._on = {
+        click: nullfunc
+    }
   }
 
   function bar_selector(target) {
@@ -172,6 +258,11 @@
   BarSelector.prototype = {
 
       data: function(val) { return accessor.bind(this)("data",val) }
+    , on: function(action, fn) {
+        if (fn === undefined) return this._on[action];
+        this._on[action] = fn;
+        return this
+      }
     , title: function(val) { return accessor.bind(this)("title",val) }
     , draw: function() {
 
@@ -206,12 +297,11 @@
               .attr("width", _sizes.width + _sizes.margin.left + _sizes.margin.right) 
               .attr("height", _sizes.height + _sizes.margin.top + _sizes.margin.bottom)
             
-            var svg = d3_updateable(svg_wrap,"g","g")
+            var svg = d3_splat(svg_wrap,"g","g",function(x) { return [x.values]},function(x,i) {return i })
               .attr("transform", "translate(" + _sizes.margin.left + "," + 0 + ")")
-              .datum(function(x) { return x.values })
           
             var valueAccessor = function(x){ return x.value }
-              , labelAccessor = function(x) {return x.key }
+              , labelAccessor = function(x) { return x.key }
       
             var values = data.map(valueAccessor)
           
@@ -248,16 +338,16 @@
                 .attr("y", function(d) { return y(labelAccessor(d)) })
                 .html("<xhtml:tree></xhtml:tree>")
           
-              svg.selectAll("foreignobject").each(function(x){
+              svg.selectAll("foreignobject").each(function(z){
                 var tree = d3.select(this.children[0])
-          
+                var z = z
                 d3_updateable(tree,"input","input")
                   .attr("type","checkbox")
                   .property("checked",function(y){
-                    return self._categories[labelAccessor(x)] ? "checked" : undefined
+                    return z.selected ? "checked" : undefined
                   })
-                  .on("click", function() {
-                    self._click.bind(this)(x,self)
+                  .on("click", function(x) {
+                    self._on.click.bind(this)(z,self)
                   })
               })
           
@@ -390,17 +480,16 @@
             .attr("width", _sizes.width + _sizes.margin.left + _sizes.margin.right)
             .attr("height", _sizes.height + _sizes.margin.top + _sizes.margin.bottom)
 
-          var svg = d3_updateable(svg_wrap,"g","g")
+          var svg = d3_splat(svg_wrap,"g","g",function(x) {return [x.values]},function(_,i) {return i})
             .attr("transform", "translate(" + _sizes.margin.left + "," + 0 + ")")
-            .datum(function(x) { return x.values })
 
           x.domain(data.map(function(d) { return keyAccessor(d) }));
           y.domain([0, d3.max(data, function(d) { return Math.sqrt(valueAccessor(d)); })]);
 
-          svg.selectAll(".timing-bar")
-            .data(data)
-          .enter().append("rect")
+          var bars = d3_splat(svg, ".timing-bar", "rect", data, keyAccessor)
             .attr("class", "timing-bar")
+           
+          bars
             .attr("x", function(d) { return ((keyAccessor(d) - 1) * gridSize * 3); })
             .attr("width", gridSize - 2)
             .attr("y", function(d) { return y(Math.sqrt( valueAccessor(d) )); })
@@ -529,12 +618,16 @@
             .style("margin-bottom","15px")
 
           self._render_header(wrap)
-          d3_splat(wrap,".row","div",function(x) {return x.values}, function(x) {return x.key})
+          var row = d3_splat(wrap,".row","div",function(x) {return x.values}, function(x) {return x.key})
             .classed("row",true)
             .style("line-height","24px")
             .each(function() {
               self._render_row(d3.select(this))
             })
+
+          row.exit().remove()
+
+          row.sort(function(p,c) {return c.value - p.value})
 
 
 
@@ -542,37 +635,6 @@
     
 
       }
-  }
-
-  function buildCategories(data) {
-    var values = data.category
-          .map(function(x){ return {"key": x.parent_category_name, "value": x.count } })
-          .sort(function(p,c) {return c.value - p.value }).slice(0,10)
-      , total = values.reduce(function(p, x) {return p + x.value }, 0)
-
-    return {
-        key: "Categories"
-      , values: values.map(function(x) { x.percent = x.value/total; return x})
-    }
-  }
-
-  function buildTimes(data) {
-    var values = data.current_hour
-      .map(function(x) { return {"key": parseFloat(x.hour) + 1 + x.minute/60, "value": x.count } })
-
-    return {
-        key: "Browsing behavior by time"
-      , values: values
-    }
-  }
-
-  function buildUrls(data) {
-    var values = data.url_only.map(function(x) { return {"key":x.url,"value":x.count} })
-    
-    return {
-        key: "Top Articles"
-      , values: values
-    }
   }
 
   function Dashboard(target) {
@@ -591,6 +653,7 @@
       data: function(val) { return accessor.bind(this)("data",val) }
     , draw: function() {
         this._target
+        this._categories = {}
         this.render_lhs()
         this.render_center()
         this.render_right()
@@ -605,13 +668,36 @@
         var _top = topSection(current)
 
         summary_box(_top)
-          .data({"key":"Off Site Visits","values":[]})
+          .data({
+               "key":""
+             , "values": [
+  /*
+                  {  
+                      "key":"Off-site Views"
+                    , "value": 12344
+                  }
+                , {
+                      "key":"Off-site Uniques"
+                    , "value": 12344
+                  }
+  */
+                ]
+           })
           .draw()
 
         var _lower = remainingSection(current)
+        var self = this
+
+        this._data.display_categories = this._data.display_categories || buildCategories(this._data)
 
         bar_selector(_lower)
-          .data(buildCategories(this._data))
+          .data(this._data.display_categories)
+          .on("click",function(x) {
+            console.log(x)
+            x.selected = !x.selected
+            console.log(x)
+            self.draw() 
+          })
           .draw()
 
       }
@@ -643,7 +729,7 @@
         var _top = topSection(current)
 
         summary_box(_top)
-          .data({"key":"On Site Visits","values":[]})
+          .data({"key":"","values":[]})//{"key":"On-Site Visits","values":[]})
           .draw()
 
         var _lower = remainingSection(current)

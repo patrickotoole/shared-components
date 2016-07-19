@@ -92,12 +92,16 @@ Table.prototype = {
           .style("margin-bottom","15px")
 
         self._render_header(wrap)
-        d3_splat(wrap,".row","div",function(x) {return x.values}, function(x) {return x.key})
+        var row = d3_splat(wrap,".row","div",function(x) {return x.values}, function(x) {return x.key})
           .classed("row",true)
           .style("line-height","24px")
           .each(function() {
             self._render_row(d3.select(this))
           })
+
+        row.exit().remove()
+
+        row.sort(function(p,c) {return c.value - p.value})
 
 
 

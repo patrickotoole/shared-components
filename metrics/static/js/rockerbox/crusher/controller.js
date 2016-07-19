@@ -419,7 +419,6 @@ RB.crusher.controller = (function(controller) {
           pubsub.subscriber("home2",["visitor_domains_time_minute"])
             .run(function(data){
 
-debugger
               dashboard.dashboard(funnelRow)
                 .data(action)
                 .draw()
