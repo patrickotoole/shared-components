@@ -86,6 +86,8 @@ class CustomQueue(SingleQueue):
 
     def _inner_get_w_name(self):
         self.client.ensure_path(self.path)
+        if self._children:
+            self._children = sorted(self._children)
         if not self._children:
             self._children = self.client.retry(
                 self.client.get_children, self.path)
