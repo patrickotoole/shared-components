@@ -151,7 +151,6 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
     var process = function(dd) {
 
-
       data.category = dd.summary.category
       data.current_hour = dd.summary.hour
       data.category_hour = dd.summary.cross_section
@@ -243,7 +242,7 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
     d3.json(URL, process)
       .on('error', function() {
-        var URL = "/crusher/v2/visitor/domains_full_time_minute?format=json&top=2000&url_pattern=" + data['url_pattern'][0]
+        var URL = "/crusher/v1/visitor/domains_full_time_minute?format=json&top=2000&url_pattern=" + data['url_pattern'][0]
         URL += "&filter_id=" + data.action_id
 
         d3.json(URL, process);

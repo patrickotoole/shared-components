@@ -412,8 +412,27 @@ RB.crusher.controller = (function(controller) {
         self.draw()
       }
 
+      pubsub.subscriber("home", ["actions"])
+        .run(function(actions) {
+          var action = actions.filter(function(x){return x.featured})[0]
 
-      RB.crusher.ui.vendors.show(funnelRow, action);
+          pubsub.subscriber("home2",["visitor_domains_time_minute"])
+            .run(function(data){
+
+              dashboard.dashboard(funnelRow)
+                .data(action)
+                .draw()
+            })
+            .unpersist(true)
+            .data(action)
+            .trigger()
+
+        })
+        .unpersist(true)
+        .trigger()
+     
+
+      //RB.crusher.ui.vendors.show(funnelRow, action);
     },
     "action/existing": function(action) {
 
