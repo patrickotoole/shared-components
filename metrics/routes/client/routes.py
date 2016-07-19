@@ -166,7 +166,6 @@ class AdvertiserRoutes(Routes):
 
         return [
             (r'/zk_endpoint', funnel.ZKHandler, self.connectors),
-            (r'/dashboard_cached', analytics.ActionDashboardHandler, self.connectors),
             (r'/domain/idf.*', analytics.DomainIDFHandler, self.connectors),
             (r'/visit_urls', analytics.VisitUrlsHandler, self.connectors),
             (r'/visit_uids', analytics.VisitUidsHandler, self.connectors),
