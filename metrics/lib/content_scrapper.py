@@ -16,7 +16,26 @@ class counter():
     def get(self, url):
         return self.counter_dict.get(url,0)
 
+class countSend():
+    #add metrics to graphite
+    #and log num deffers, num finished, num pulled, etc.
+    def __init__(self):
+        self.sent = 0
+        self.pulled=0
+
+    def pull(self):
+        self.pulled=self.pulled+1
+    def send(self):
+        self.sent = self.sent+1
+    def getpull(self):
+        return self.pulled
+    def getsent(self):
+        return self.sent
+
 def run(consumer, count):
+    CS = countSend()
+    import datetime
+    in_5 = datetime.datetime.now() + datetime.timedelta(minutes = 0.5)
     def get(url):
         _resp = requests.get((URL % url), auth=('rockerbox', 'rockerbox'))
         data = _resp.json()
@@ -27,16 +46,23 @@ def run(consumer, count):
             title = None
         return (title, url)
 
-    def send(result,  producer):
+    def send(result,  producer, CS):
         title, url = result
         if title is not None:
             msg = {"url":url.encode('ascii',  errors='ignore'), "title": title.encode('ascii', errors='ignore')}
             print str(msg)
             producer.send_message(json.dumps(msg))
+            CS.send()
             print "Sent"
 
     for message in consumer:
         if message is not None:
+            CS.pull()
+            if datetime.datetime.now() > in_5:
+                print "Pulled: "+ str(CS.getpull())
+                print "Sent: "+ str(CS.getsent())
+                break
+                raise Exception
             message_object = json.loads(message.value)
             try:
                 url = message_object['bid_request']['bid_info']['url']
@@ -45,7 +71,7 @@ def run(consumer, count):
                 if limit ==25:
                     print url
                     defr = threads.deferToThread(get, url)
-                    defr.addCallback(send, producer)
+                    defr.addCallback(send, producer,CS)
             except Exception as e:
                 print str(e)
 
