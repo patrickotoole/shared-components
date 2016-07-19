@@ -24,7 +24,6 @@ class RPCQueue():
         segment = rpc_data.get("action_name", False)
         filter_id = rpc_data.get("filter_id", False)
         parameters = rpc_data.get("parameters", {})
-        parameters = ujson.dumps(parameters)
         priority = rpc_data.get("priority", 2)
         debug_bool = rpc_data.get("debug",False)
         for key, val in rpc_data.items():

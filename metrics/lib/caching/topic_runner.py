@@ -9,7 +9,7 @@ URL ="/crusher/v2/visitor/domains_full_time_minute/cache?format=json&top=20000&u
 def make_qs(params):
     import ujson
     qs = ""
-    parameters_dict = ujson.loads(params)
+    parameters_dict = params
     for key,value in parameters_dict.items():
         qs += "&%s=%s" % (str(key), str(value))
 
@@ -247,7 +247,7 @@ def runner(advertiser=None, pattern=None, func_name=None, base_url=None, indenti
 
     job_name = kwargs.get("job_id", "local_"+str(uuid.uuid4()))
     connectors = kwargs.get("connectors")
-    parameters = kwargs.get("parameters","{}")
+    parameters = kwargs.get("parameters",{})
     
     atr = TopicRunner(connectors, advertiser, pattern, filter_id, func_name, job_name, base_url )
 

@@ -1,5 +1,5 @@
 import requests, json, logging, pandas, pickle
-
+import ujson
 from lib.zookeeper import CustomQueue 
 from link import lnk
 from lib.pandas_sql import s as _sql
@@ -59,22 +59,24 @@ if __name__ == "__main__":
 
     parse_command_line()
 
-    
+    if options.parameters:
+        func_parameters = ujson.loads(options.parameters)
+
     zk = KazooClient(hosts="zk1:2181")
     zk.start()
     connectors = {'db': lnk.dbs.rockerbox, 'crushercache':lnk.dbs.crushercache, 'zk':zk, 'cassandra':''}
     UC = UDFCache(connectors)
     if options.run_local and options.pattern:
-        UC.run_local(options.advertiser, options.pattern, options.udf, options.base_url, options.filter_id, options.parameters, connectors)
+        UC.run_local(options.advertiser, options.pattern, options.udf, options.base_url, options.filter_id, func_parameters, connectors)
     elif options.run_local and not options.pattern:
         segments = connectors['db'].select_dataframe("select * from action_with_patterns where pixel_source_name = '{}'".format(options.advertiser))
         for i,s in segments.iterrows():
-            UC.run_local(options.advertiser, s['url_pattern'], options.udf,  options.base_url,s['action_id'], options.parameters, connectors)
+            UC.run_local(options.advertiser, s['url_pattern'], options.udf,  options.base_url,s['action_id'], func_parameters, connectors)
     elif options.udf:
-        UC.add_db_to_work_queue(options.advertiser, options.pattern, options.udf, options.base_url, options.filter_id, options.parameters, options.debug)
+        UC.add_db_to_work_queue(options.advertiser, options.pattern, options.udf, options.base_url, options.filter_id, func_parameters, options.debug)
     else:
         #select all functions for advertiser
         advertiser_udfs = connectors['crushercache'].select_dataframe(GET_UDFS.format(options.advertiser))
         for udfs in advertiser_udfs.iterrows():
-            UC.add_db_to_work_queue(options.advertiser, options.pattern, udfs[1]['udf'], options.base_url, options.filter_id, options.parameters, options.debug)
+            UC.add_db_to_work_queue(options.advertiser, options.pattern, udfs[1]['udf'], options.base_url, options.filter_id, func_parameters, options.debug)
 

@@ -122,7 +122,7 @@ def runner(**kwargs):
    
     parameters = kwargs.get("parameters",False)
     if parameters:
-        parameters = ujson.loads(parameters)
+        parameters = dict(parameters)
     else:
         parameters = UR.get_parameters(db, func_name)
 
