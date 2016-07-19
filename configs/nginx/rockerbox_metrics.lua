@@ -131,6 +131,9 @@ function set_seg (args)
     if args["adnxs_uid"] == nil then
       say_or_redirect_with_debug(args["debug"], url)
     end
+  else
+    set_content_type(args)
+    send_pixel_response()
   end
 
 end
