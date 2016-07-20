@@ -42,7 +42,7 @@ class TopicRunner(BaseRunner):
     def extract(self, params):
 
         _url = URL + make_qs(params)
-        url = _url.format(self.pattern, self.action_id)
+        url = _url.format(self.pattern, self.filter_id)
 
         resp = self.crusher.get(url, timeout=300)
         resp.raise_for_status()
