@@ -225,7 +225,7 @@ class TopicRunner(BaseRunner):
 
 
     def __enter__(self):
-        self.accounting_entry_start(self.advertiser, self.pattern, self.func_name, self.job_name, self.action_id)
+        self.accounting_entry_start(self.advertiser, self.pattern, self.func_name, self.job_name, self.filter_id)
         
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -236,7 +236,7 @@ class TopicRunner(BaseRunner):
                  exc_info=(exc_type, exc_value, traceback))
             logging.info("Data not inserted")
         else:
-            self.accounting_entry_end(self.advertiser, self.pattern, self.func_name, self.job_name, self.action_id)
+            self.accounting_entry_end(self.advertiser, self.pattern, self.func_name, self.job_name, self.filter_id)
 
 
 
