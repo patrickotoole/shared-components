@@ -6,7 +6,7 @@ w.google = function() {
   (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
   m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
   })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-  ga('create', 'UA-50457693-1', 'rockerbox.com');
+  ga('create', 'UA-50457693-3', 'rockerbox.com');
   ga('require', 'displayfeatures');
   ga('send', 'pageview');
 }
@@ -81,6 +81,7 @@ w.events = {
       fbq('track', 'InitiateCheckout');
       RB.track("email_submitted", {"an_seg": 5893842, "type": "imp" })
       AN.signup()
+      ga('send', 'event', 'Registration', 'email_submitted');
     }
 
   , "domain_submitted": function(domain,advertiser) {
@@ -90,11 +91,13 @@ w.events = {
       })
       mixpanel.track("signup - domain_submitted");
       RB.track("domain_submitted", {"an_seg": 5893842, "type": "imp"})
+      ga('send', 'event', 'Registration', 'domain_submitted');
     }
 
   , "implementation_error": function() {
       mixpanel.track("signup - implementation_error");
       RB.track("implementation_error", {"an_seg": 5893842, "type": "imp" })
+      ga('send', 'event', 'Registration', 'implementation_error');
     }
 
   , "pixel_implemented": function() {
@@ -102,10 +105,12 @@ w.events = {
       fbq('track', 'CompleteRegistration');
       RB.track("pixel_implemented", {"an_seg": 5893842, "type": "imp" })
       AN.conversion()
+      ga('send', 'event', 'Registration', 'pixel_implemented');
     }
   , "skip_implementation": function() {
       mixpanel.track("signup - skip_implemented");
       RB.track("skip_implemented", {"an_seg": 5893842, "type": "imp" })
+      ga('send', 'event', 'Registration', 'skip_implemented');
     }
 
 
@@ -118,11 +123,13 @@ w.events = {
 
       mixpanel.track("signup - account_activated");
       RB.track("account_activated", {"an_seg": 5893842, "type": "imp" })
+      ga('send', 'event', 'Registration', 'account_activated');
     }
 
   , "error": function(err) {
       mixpanel.track("signup - error", {"error": err});
       RB.track("error", {"an_seg": 5893842, "type": "imp" })
+      ga('send', 'event', 'Registration', 'signup_error');
     }
 
 
