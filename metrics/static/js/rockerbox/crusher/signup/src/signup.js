@@ -6,6 +6,10 @@ import password from './step/password'
 import example from './step/example'
 import splash from './step/splash'
 import progress from './progress'
+import integrations from './step/integrations'
+import integrations_example from './step/integrations_example'
+
+
 
 
 
@@ -49,6 +53,7 @@ export function Signup(target) {
   this._pixel_setup = getNeedsSetup()
 
   this._slide = 0
+  this._forced_slides = []
 }
 
 function chooseSlides(data) {
@@ -82,7 +87,7 @@ Signup.prototype = {
       this._data.uid = getUID()
       this._data.pixel_setup = this._pixel_setup
 
-      this._slides = chooseSlides(this._data)
+      this._slides = this._forced_slides.length ? this._forced_slides : chooseSlides(this._data)
 
 
       if (document.location.pathname.indexOf("digest") > -1) {
@@ -196,14 +201,29 @@ Signup.prototype = {
         .on("error",function(err){ self.on("error")(err); })
         .draw()
 
+    }
+  , render_integrations_example: function(t) {
+      var self = this;
+      integrations_example(d3.select(t))
+        .data(this._data)
+        .on("success",function(){ self.on("example")(arguments); })
+        .on("error",function(err){ self.on("error")(err); })
+        .draw()
+
+    }
+  , render_integrations: function(t) {
+      var self = this;
+      integrations(d3.select(t))
+        .data(this._data)
+        .on("success",function(){ self.on("example")(arguments); })
+        .on("error",function(err){ self.on("error")(err); })
+        .draw()
 
     }
 
 
-
-
-
   , data: function(val) { return accessor.bind(this)("data",val) }
+  , forced_slides: function(val) { return accessor.bind(this)("forced_slides",val) }
   , on: function(action, fn) {
       if (fn === undefined) return this._on[action];
       this._on[action] = fn;

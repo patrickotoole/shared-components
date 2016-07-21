@@ -324,7 +324,7 @@
 
     this._subtitle_wrapper = d3_updateable$1(this._wrapper,".section_subtitle","div")
       .classed("section_subtitle",true)
-      .text(this._subtitle)
+      .html(this._subtitle)
 
     
   }

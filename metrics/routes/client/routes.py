@@ -18,6 +18,7 @@ class UserRoutes(Routes):
     @connectors("db")
     def user_login(self):
         import handlers.user_handlers as user
+        import handlers.integrations.handler as integrations
         import handlers.subscription as subscription
 
         import handlers.advertiser.handler as advertiser
@@ -27,6 +28,7 @@ class UserRoutes(Routes):
             (r'/login.*', user.LoginHandler, self.connectors),
             (r'/logout', user.LoginHandler, self.connectors),
             (r'/signup.*', user.SignupHandler, self.connectors),
+            (r'/integrations', integrations.IntegrationHandler, self.connectors),
             (r'/account/permissions*', user.AccountPermissionsHandler, self.connectors),
             (r'/subscription', subscription.SubscriptionHandler, self.connectors),
         ]
