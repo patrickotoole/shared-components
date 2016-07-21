@@ -7,6 +7,7 @@ FROM
 (
     SELECT campaign_id, domain
     FROM rockerbox.yoshi_campaign_domains
+    WHERE domain != ""
     GROUP BY 1
 ) y
 JOIN
@@ -45,6 +46,8 @@ def extract(db, N = 30):
     for a in advertisers:
         df = lnk.dbs.reporting.select_dataframe(CONV_RATES%{'advertiser':a, 'ndays':N})
         data = pd.concat([data,df])
+
+    data['num_days'] = N
     return data
 
 
