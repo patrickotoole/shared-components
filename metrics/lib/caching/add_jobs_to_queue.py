@@ -72,9 +72,12 @@ class CacheInterface:
         udf_df = self.crusherdb.select_dataframe(UDFQUERY2)
         return udf_df
 
-    def seg_loop(self, segments, advertiser, base_url):
+    def seg_loop_recurring(self, segments, advertiser):
         for seg in segments:
             self.add_recurring(seg, advertiser)
+
+    def seg_loop_udf(self, segments, advertiser, base_url):
+        for seg in segments:
             udf_df = self.get_udf_list()
             for udf in udf_df.iterrows():
                 self.add_udf_to_work_queue(seg, advertiser, base_url, udf[1]['name'])
@@ -90,15 +93,25 @@ def get_all_advertisers(db_con):
 
 def run_all(db, zk, cdb, base_url):
     advertiser_list = get_all_advertisers(db)
+    advertiser_seg_dict = {}
     for advert in advertiser_list:
+        advertiser_seg_dict[advert[0]]['segments'] = []
         crusher_api = lnk.api.crusher
         crusher_api.user = "a_%s" % advert[0]
         crusher_api.password = "admin"
         crusher_api.authenticate()
         logging.info("received token for advertiser %s, token is %s" % (advert[0], crusher_api._token))
         advertiser_instance = CacheInterface(advert[0], crusher_api, db,cdb,zk)
+        advertiser_seg_dict[advert[0]]['instance'] = advertiser_instance 
         advertiser_segments=advertiser_instance.get_segments()
-        advertiser_instance.seg_loop(advertiser_segments, advert[0], base_url)
+        advertiser_seg_dict[advert[0]]['segments'] = advertiser_segments
+
+    for advertiser in advertiser_seg_dict.keys():
+        ai = advertiser_seg_dict[advertiser]['instance']
+        ai.seg_loop_recurring(advertiser_seg_dict[advertiser]['segments'], advertiser)
+    for advertiser in advertiser_seg_dict.keys():
+        ai = advertiser_seg_dict[advertiser]['instance']
+        ai.seg_loop_udf(advertiser_seg_dict[advertiser]['segments'], advertiser, base_url)
 
 def run_advertiser(ac, advertiser_name, base_url):
 	s = ac.get_segments()
