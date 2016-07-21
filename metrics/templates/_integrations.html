@@ -1,0 +1,107 @@
+{% autoescape None %}
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<script type="text/javascript" src="/static/js/rockerbox/helper.js"></script>
+<title>Hindsight - Integrations</title>
+<meta name="description" content="Uncover the sites and articles influencing your audience" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<link rel="icon" type="image/png" href="https://s3.amazonaws.com/getrockerbox.com/Fav_icon.png">
+
+<link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic,700,700italic,800,800italic%7CUbuntu:300,300italic,400,400italic,500,500italic,700,700italic%7CInconsolata:400,400italic,700,700italic%7CLato:100,100italic,300,300italic,400,400italic,700,700italic,900,900italic">
+
+<link type="text/css" rel="stylesheet" href="/static/css/bootstrap.min.css"/>
+<link type="text/css" rel="stylesheet" href="/static/css/style.css"/>
+<link type="text/css" rel="stylesheet" href="/static/css/font-awesome.min.css">
+
+<style>
+  .hidden {display:none}
+  body {padding-top:0px}
+  body > .container {margin-left:0px}
+  .window_content {text-align: left}
+</style>
+
+<script type="text/javascript" src="/static/js/d3.js" charset="utf-8"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/highlight.min.js"></script>
+<script type="text/javascript" src="/static/js/rockerbox/crusher/start/build/start.js"></script>
+<script type="text/javascript" src="/static/js/rockerbox/crusher/signup/build/signup.js"></script>
+<script type="text/javascript" src="/static/js/queue.js"></script>
+
+<script type="text/javascript" src="/static/js/analytics.js"></script>
+
+<script type="text/javascript">
+  window.analytics.google()
+  window.analytics.mixpanel()
+  window.analytics.drift()
+  window.analytics.facebook()
+  window.analytics.hindsight()
+
+</script>
+
+
+</head>
+<body class="create" style="background:#40495c;height:auto">
+  <header style="display:flex">
+    <div id="logo-wrap" style="display:flex;">
+      <div style="width:100%">
+        <img id="logo" src="/static/img/general/hindsight-with-border.png" style="padding:5px;height:50px;margin-left:10px;display:inline-block;margin-top:15px; margin-left:30px; margin-bottom:15px" />
+      </div>
+    </div>
+    <div id="header-middle" style="display:flex;flex:1"> </div>
+    <div id="rhs-wrap" style="display:flex;">
+
+    </div>
+
+
+  </header>
+  <section class="container" style="width:inherit">
+    <div class="row funnels"></div>
+  </section>
+</body>
+
+<script>
+
+var slide = {{has_advertiser}} ? "integrations_example" : "integrations"
+
+
+d3.json("/account/permissions")
+  .get(function(err,x){
+
+      window.analytics.events.page_load();
+
+      var data = {};
+      if (!err) data = {
+            advertiser_id: x.results.advertisers[0].external_advertiser_id
+          , permissions: x
+        } 
+
+      window._ss = signup.signup(d3.select(".funnels"))
+        .forced_slides([slide])
+        .progress_target(d3.select("#rhs-wrap"))
+        .on("domain",function(x,y) {
+          
+          var domain = x[0].client_sld,
+            advertiser = x[0].pixel_source_name;
+
+          window.analytics.events.domain_submitted(domain,advertiser)
+        })
+        .on("email",function() { window.analytics.events.email_submitted(JSON.parse(arguments[0][0].response).username); })
+        .on("password",function(email) { window.analytics.events.account_activated(email[0]); })
+        .on("pixel_fail",function() { window.analytics.events.implementation_error() }) 
+        .on("pixel_skip",function() { window.analytics.events.skip_implementation() }) 
+
+        .on("pixel",function() { window.analytics.events.pixel_implemented() })
+        .on("error",function(err) { window.analytics.events.error(err) })
+
+        .data(data)
+        .draw()
+    
+  })
+
+</script>
+
+</html>
