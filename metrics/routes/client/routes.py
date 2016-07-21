@@ -166,7 +166,6 @@ class AdvertiserRoutes(Routes):
 
         return [
             (r'/zk_endpoint', funnel.ZKHandler, self.connectors),
-            (r'/dashboard_cached', analytics.ActionDashboardHandler, self.connectors),
             (r'/domain/idf.*', analytics.DomainIDFHandler, self.connectors),
             (r'/visit_urls', analytics.VisitUrlsHandler, self.connectors),
             (r'/visit_uids', analytics.VisitUidsHandler, self.connectors),
@@ -176,15 +175,10 @@ class AdvertiserRoutes(Routes):
             (r'/visit_domains', user.handler.VisitDomainsHandler, self.connectors),
             (r'/visit_events', analytics.VisitEventsHandler, self.connectors),
             (r'/served_events', analytics.ServedEventsHandler, self.connectors),
-            (r'/visit_domains_full', visitor.full_handler.VisitDomainsFullHandler, self.connectors),
-            (r'/domains_visitor_full', visitor.full_handler.VisitorDomainsFullHandler, self.connectors),
-            (r'/cached_visitor_domains', visitor.full_cache_handler.VisitorDomainsFullCacheHandler, self.connectors),
-            (r'/search_visitor_domains', visitor.keyword_handler.VisitorKeywordsHandler, self.connectors),
             (r'/uids_only_cache', analytics.UidsCacheHandler, self.connectors),
 
 
             (r'/visit_avails', analytics.VisitAvailsHandler, self.connectors),
-            (r'/stats/?', analytics.OnSiteStatsHandler, self.connectors),
             (r'/stats/+(meta|help)?/?(.*?)', analytics.OnSiteStatsHandler, self.connectors),
             (r'/funnel/action/recommended', funnel.RecommendedActionHandler, self.connectors),
             (r'/funnel/campaign', funnel.FunnelCampaignHandler, self.connectors),
