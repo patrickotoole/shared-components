@@ -73,6 +73,7 @@ class CacheInterface:
         return udf_df
 
     def seg_loop_recurring(self, segments, advertiser):
+        import ipdb; ipdb.set_trace()
         for seg in segments:
             self.add_recurring(seg, advertiser)
 
@@ -95,6 +96,7 @@ def run_all(db, zk, cdb, base_url):
     advertiser_list = get_all_advertisers(db)
     advertiser_seg_dict = {}
     for advert in advertiser_list:
+        advertiser_seg_dict[advert[0]] = {}
         advertiser_seg_dict[advert[0]]['segments'] = []
         crusher_api = lnk.api.crusher
         crusher_api.user = "a_%s" % advert[0]
@@ -105,7 +107,6 @@ def run_all(db, zk, cdb, base_url):
         advertiser_seg_dict[advert[0]]['instance'] = advertiser_instance 
         advertiser_segments=advertiser_instance.get_segments()
         advertiser_seg_dict[advert[0]]['segments'] = advertiser_segments
-
     for advertiser in advertiser_seg_dict.keys():
         ai = advertiser_seg_dict[advertiser]['instance']
         ai.seg_loop_recurring(advertiser_seg_dict[advertiser]['segments'], advertiser)

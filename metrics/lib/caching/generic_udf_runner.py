@@ -59,9 +59,25 @@ class UDFRunner(BaseRunner):
         resp = self.crusher.get(url, timeout=300)
         resp.raise_for_status()
         try:
+            if 'similarity' in resp.json.keys():
+                if len(resp.json['similarity']) <1:
+                    raise Exception("Empty response from Beta, not caching data. Check response for %s" % url)
+            if 'hourly_visits' in resp.json.keys():
+                if len(resp.json['hourly_visits']) <1:
+                    raise Exception("Empty response from Beta, not caching data. Check response for %s" % url)
+            if 'hourly_domains' in resp.json.keys():
+                if len(resp.jsonp['hourly_domains'])<1:
+                    raise Exception("Empty response from Beta, not caching data. Check response for %s" % url)
+            if 'before_categories' in resp.json.keys():
+                if len(resp.json['before_categories']) <1:
+                    raise Exception("Empty response from Beta, not caching data. Check response for %s" % url)
+            if 'response' in resp.json.keys():
+                if len(resp.json['response']) <1:
+                    raise Exception("Empty response from Beta, not caching data. Check response for %s" % url)
             return resp.json
-        except:
-            return resp.text
+        except Exception as e:
+            logging.info(e)
+            raise Exception(e)
 
     def make_request_v2(self,crusher, pattern, func_name, parameters):
         url = URL2.format(func_name, pattern, self.action_id)
