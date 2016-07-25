@@ -115,11 +115,11 @@ def process_session_buckets(sessions,merged,domains_with_cat):
 
         subset = merged[merged.uid.isin(uids)]
         actions_by_hour = category_action_by_hour(subset)
-
         _d = category_session_stats(bucket_sessions)
         _d['actions'] = [{"key":i,"values":j} for i,j in actions_by_hour.T.reset_index().to_dict().items() if i != "index"]
-
-        return [_d]
+        
+        #_d = [_d]
+        return _d.items()
 
 
     #ll = list(domains_with_cat.groupby(["parent_category_name","hour"])['uid'])
@@ -135,9 +135,7 @@ def process_session_buckets(sessions,merged,domains_with_cat):
         "on_site": uid_summary
     })
 
-
-    xx['on_site'] = xx['on_site'].map(lambda x: x[0])
-
+    
     return xx
     
 
