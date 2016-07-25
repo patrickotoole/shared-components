@@ -1,7 +1,7 @@
 export function buildCategories(data) {
   var values = data.category
         .map(function(x){ return {"key": x.parent_category_name, "value": x.count } })
-        .sort(function(p,c) {return c.value - p.value }).slice(0,10)
+        .sort(function(p,c) {return c.value - p.value }).slice(0,15)
     , total = values.reduce(function(p, x) {return p + x.value }, 0)
 
   return {
@@ -81,13 +81,36 @@ export function buildUrls(data) {
 }
 
 export function buildOnsiteSummary(data) {
-  return {"key":"","values":[]}
+  var yesterday = data.timeseries_data[0]
+  var values = [
+        {
+            "key": "Page Views"
+          , "value": yesterday.views
+        }
+      , {
+            "key": "Unique Visitors"
+          , "value": yesterday.uniques
+
+        }
+    ]
+  return {"key":"On-site Activity","values":values}
 }
 
 export function buildOffsiteSummary(data) {
-  return {"key":"","values":[]}
+  var values = [  
+        {
+            "key": "Off-site Views"
+          , "value": data.url_only.reduce(function(p,c) {return p + c.uniques},0)
+        }
+      , {
+            "key": "Unique pages"
+          , "value": Object.keys(data.url_only.reduce(function(p,c) {p[c.url] = 0; return p },{})).length
+        }
+    ]
+  return {"key":"Off-site Activity","values":values}
 }
 
 export function buildActions(data) {
-  return {"key":"Segments","values": data.actions.map(function(x){ return {"key":x.action_name, "value":0} })}
+  
+  return {"key":"Segments","values": data.actions.map(function(x){ return {"key":x.action_name, "value":0, "selected": data.action_name == x.action_name } })}
 }

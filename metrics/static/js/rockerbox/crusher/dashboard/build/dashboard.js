@@ -144,7 +144,7 @@
   function buildCategories(data) {
     var values = data.category
           .map(function(x){ return {"key": x.parent_category_name, "value": x.count } })
-          .sort(function(p,c) {return c.value - p.value }).slice(0,10)
+          .sort(function(p,c) {return c.value - p.value }).slice(0,15)
       , total = values.reduce(function(p, x) {return p + x.value }, 0)
 
     return {
@@ -224,15 +224,38 @@
   }
 
   function buildOnsiteSummary(data) {
-    return {"key":"","values":[]}
+    var yesterday = data.timeseries_data[0]
+    var values = [
+          {
+              "key": "Page Views"
+            , "value": yesterday.views
+          }
+        , {
+              "key": "Unique Visitors"
+            , "value": yesterday.uniques
+
+          }
+      ]
+    return {"key":"On-site Activity","values":values}
   }
 
   function buildOffsiteSummary(data) {
-    return {"key":"","values":[]}
+    var values = [  
+          {
+              "key": "Off-site Views"
+            , "value": data.url_only.reduce(function(p,c) {return p + c.uniques},0)
+          }
+        , {
+              "key": "Unique pages"
+            , "value": Object.keys(data.url_only.reduce(function(p,c) {p[c.url] = 0; return p },{})).length
+          }
+      ]
+    return {"key":"Off-site Activity","values":values}
   }
 
   function buildActions(data) {
-    return {"key":"Segments","values": data.actions.map(function(x){ return {"key":x.action_name, "value":0} })}
+    
+    return {"key":"Segments","values": data.actions.map(function(x){ return {"key":x.action_name, "value":0, "selected": data.action_name == x.action_name } })}
   }
 
   var EXAMPLE_DATA$1 = {
@@ -348,7 +371,7 @@
           
             var checks = d3_splat(svg,".check","foreignObject",false,labelAccessor)
                 .classed("check",true)
-                .attr("x",0)
+                .attr("x",2)
                 .attr("y", function(d) { return y(labelAccessor(d)) })
                 .html("<xhtml:tree></xhtml:tree>")
           
@@ -384,6 +407,7 @@
                 .attr("x",_sizes.width/2 + 20)
                 .attr("style", "text-anchor:start;dominant-baseline: middle;font-size:.9em")
                 .attr("y", function(d) { return y(labelAccessor(d)) + y.rangeBand()/2 + 1; })
+                .classed("hidden",function(d) {return d.percent === undefined })
                 .text(function(d) {
                   var v = d3.format("%")(d.percent);
                   var x = (d.percent > 0) ?  "↑" : "↓"
@@ -673,8 +697,9 @@
         this.render_wrappers()
         this._target.selectAll(".loading").remove()
         this.render_lhs()
-        this.render_center()
         this.render_right()
+
+        this.render_center()
 
       }
     , on: function(action, fn) {
@@ -711,16 +736,30 @@
           , _lower = remainingSection(current)
 
         summary_box(_top)
-          .data(buildOffsiteSummary(this._data))
+          .data(buildOnsiteSummary(this._data))
           .draw()
 
-        this._data.display_categories = this._data.display_categories || buildCategories(this._data)
+        this._data.display_actions = this._data.display_actions || buildActions(this._data)
 
         bar_selector(_lower)
-          .data(this._data.display_categories)
+          .type("radio")
+          .data(this._data.display_actions)
           .on("click",function(x) {
-            x.selected = !x.selected
-            self.draw() 
+            var t = this;
+
+            _lower.selectAll("input")
+              .attr("checked",function() {
+                this.checked = (t == this)
+                return undefined
+              })
+
+            //self._data.display_actions.values.map(function(v) {
+            //  v.selected = 0
+            //  if (v == x) v.selected = 1
+            //})
+            self.draw_loading()
+
+            self.on("select")(x)
           })
           .draw()
 
@@ -768,24 +807,19 @@
           , _lower = remainingSection(current)
 
         summary_box(_top)
-          .data(buildOnsiteSummary(this._data))
+          .data(buildOffsiteSummary(this._data))
           .draw()
 
-        this._data.display_actions = this._data.display_actions || buildActions(this._data)
+        this._data.display_categories = this._data.display_categories || buildCategories(this._data)
 
         bar_selector(_lower)
-          .type("radio")
-          .data(this._data.display_actions)
+          .data(this._data.display_categories)
           .on("click",function(x) {
-            self._data.display_actions.values.map(function(v) {
-              v.selected = 0
-              if (v == x) v.selected = 1
-            })
-            self.draw_loading()
-            self.on("select")(x)
-            //self.draw()
+            x.selected = !x.selected
+            self.draw() 
           })
           .draw()
+        
 
       }
 

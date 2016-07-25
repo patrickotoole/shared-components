@@ -33,8 +33,9 @@ Dashboard.prototype = {
       this.render_wrappers()
       this._target.selectAll(".loading").remove()
       this.render_lhs()
-      this.render_center()
       this.render_right()
+
+      this.render_center()
 
     }
   , on: function(action, fn) {
@@ -71,16 +72,30 @@ Dashboard.prototype = {
         , _lower = ui_helper.remainingSection(current)
 
       summary_box(_top)
-        .data(transform.buildOffsiteSummary(this._data))
+        .data(transform.buildOnsiteSummary(this._data))
         .draw()
 
-      this._data.display_categories = this._data.display_categories || transform.buildCategories(this._data)
+      this._data.display_actions = this._data.display_actions || transform.buildActions(this._data)
 
       bar_selector(_lower)
-        .data(this._data.display_categories)
+        .type("radio")
+        .data(this._data.display_actions)
         .on("click",function(x) {
-          x.selected = !x.selected
-          self.draw() 
+          var t = this;
+
+          _lower.selectAll("input")
+            .attr("checked",function() {
+              this.checked = (t == this)
+              return undefined
+            })
+
+          //self._data.display_actions.values.map(function(v) {
+          //  v.selected = 0
+          //  if (v == x) v.selected = 1
+          //})
+          self.draw_loading()
+
+          self.on("select")(x)
         })
         .draw()
 
@@ -128,24 +143,19 @@ Dashboard.prototype = {
         , _lower = ui_helper.remainingSection(current)
 
       summary_box(_top)
-        .data(transform.buildOnsiteSummary(this._data))
+        .data(transform.buildOffsiteSummary(this._data))
         .draw()
 
-      this._data.display_actions = this._data.display_actions || transform.buildActions(this._data)
+      this._data.display_categories = this._data.display_categories || transform.buildCategories(this._data)
 
       bar_selector(_lower)
-        .type("radio")
-        .data(this._data.display_actions)
+        .data(this._data.display_categories)
         .on("click",function(x) {
-          self._data.display_actions.values.map(function(v) {
-            v.selected = 0
-            if (v == x) v.selected = 1
-          })
-          self.draw_loading()
-          self.on("select")(x)
-          //self.draw()
+          x.selected = !x.selected
+          self.draw() 
         })
         .draw()
+      
 
     }
 

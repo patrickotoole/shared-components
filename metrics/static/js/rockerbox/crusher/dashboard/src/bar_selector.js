@@ -116,7 +116,7 @@ BarSelector.prototype = {
         
           var checks = d3_splat(svg,".check","foreignObject",false,labelAccessor)
               .classed("check",true)
-              .attr("x",0)
+              .attr("x",2)
               .attr("y", function(d) { return y(labelAccessor(d)) })
               .html("<xhtml:tree></xhtml:tree>")
         
@@ -152,6 +152,7 @@ BarSelector.prototype = {
               .attr("x",_sizes.width/2 + 20)
               .attr("style", "text-anchor:start;dominant-baseline: middle;font-size:.9em")
               .attr("y", function(d) { return y(labelAccessor(d)) + y.rangeBand()/2 + 1; })
+              .classed("hidden",function(d) {return d.percent === undefined })
               .text(function(d) {
                 var v = d3.format("%")(d.percent);
                 var x = (d.percent > 0) ?  "↑" : "↓"

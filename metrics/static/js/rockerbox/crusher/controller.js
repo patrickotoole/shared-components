@@ -423,7 +423,7 @@ RB.crusher.controller = (function(controller) {
 
         var action = actions.filter(_filter || filter)[0]
 
-        window.pubsub.subscriber("home2",["visitor_domains_time_minute"])
+        window.pubsub.subscriber("home2",["visitor_domains_time_minute","actionTimeseriesOnly"])
           .run(function(data){
             action.actions = actions
             dash

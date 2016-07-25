@@ -161,6 +161,9 @@ class Convert:
 
 class Render:
 
+    def compress(self, buf):
+        return Render.compressWrite(self, buf)
+
     @staticmethod
     def compressWrite(self, buf):
         if self.request.headers.get("Accept-Encoding","").find("gzip") != "-1":

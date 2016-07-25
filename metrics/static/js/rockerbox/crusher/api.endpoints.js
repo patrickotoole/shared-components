@@ -149,6 +149,9 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
     URL += "&filter_id=" + data.action_id
 
+    if (data.current_hour && data.current_hour.length > 0) return deferred_cb(null, cb.bind(false, {}))
+
+
     var process = function(dd) {
 
       data.category = dd.summary.category
