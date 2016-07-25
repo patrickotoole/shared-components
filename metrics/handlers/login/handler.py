@@ -31,7 +31,9 @@ class LoginHandler(tornado.web.RequestHandler,LoginDatabase):
             self.finish()
         else:
             _next = "/reporting"
-            if "crusher.apps.marathon.mesos" in self.request.host: _next = "/crusher"
+            if "crusher" in self.request.host: _next = "/crusher"
+            if "hindsight" in self.request.host: _next = "/crusher"
+
             
             self.redirect(self.get_argument("next", _next, True))
         
