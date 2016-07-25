@@ -81,11 +81,13 @@ class WorkQueue(object):
                     self.connectors['crushercache'].execute(SQL_LOG, (current_host, job_id, "Fail"))
                     self.connectors['crushercache'].execute(SQL_LOG2,(box, str(e), job_id, trace_error))
                     logging.info("ERROR: queue %s " % e)
+                    import time
+                    time.sleep(5)
                 finally:
                     self.queue.client.ensure_path(self.queue.secondary_path_base + "/%s/%s" % (job_id.split(entry_id)[1][1:],  entry_id))
                     self.queue.client.set(self.queue.secondary_path_base + "/%s/%s" % (job_id.split(entry_id)[1][1:], entry_id), '' ) # running
  
             else:
                 import time
-                time.sleep(5)
+                time.sleep(1)
                 logging.debug("No data in queue")

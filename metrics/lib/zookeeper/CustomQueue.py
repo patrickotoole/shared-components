@@ -27,6 +27,7 @@ class CustomQueue(SingleQueue):
         self.ensured_path = False
         self.secondary_path = secondary_path
         self.volume = volume
+        self.zk_counter = 0
         super(CustomQueue, self).__init__(client, path)
 
     @property
@@ -84,8 +85,16 @@ class CustomQueue(SingleQueue):
         self._ensure_paths()
         return self.client.retry(self._inner_get_w_name)
 
+    def check_queue_status(self):
+        self.zk_counter+=1
+        logging.info("Counter %s reset queue order at 10" % self.zk_counter)
+        if self.zk_counter%10 ==0:
+            self._children = []
+            self.zk_counter=0
+
     def _inner_get_w_name(self):
         self.client.ensure_path(self.path)
+        self.check_queue_status()
         if not self._children:
             self._children = self.client.retry(
                 self.client.get_children, self.path)
