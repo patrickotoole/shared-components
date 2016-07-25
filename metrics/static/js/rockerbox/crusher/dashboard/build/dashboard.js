@@ -652,6 +652,7 @@
   }
 
   function Dashboard(target) {
+    this._on = {}
     this._target = target
       .append("ul")
       .classed("vendors-list",true)
@@ -670,14 +671,21 @@
         this._target
         this._categories = {}
         this.render_wrappers()
+        this._target.selectAll(".loading").remove()
         this.render_lhs()
         this.render_center()
         this.render_right()
 
       }
+    , on: function(action, fn) {
+        if (fn === undefined) return this._on[action];
+        this._on[action] = fn;
+        return this
+      }
     , draw_loading: function() {
         this.render_wrappers()
         this.render_center_loading()
+        return this
       }
     , render_wrappers: function() {
 
@@ -738,7 +746,13 @@
         this._center = d3_updateable(this._target,".center","div")
           .classed("center col-md-6",true)
 
-        this._center.html("<center>Loading...</center>")
+        this._center.html("")
+
+        d3_updateable(this._center,"center","center")
+          .style("text-align","center")
+          .style("display","block")
+          .classed("loading",true)
+          .text("Loading...")
 
 
       }
@@ -767,7 +781,8 @@
               v.selected = 0
               if (v == x) v.selected = 1
             })
-            self.render_center_loading()
+            self.draw_loading()
+            self.on("select")(x)
             //self.draw()
           })
           .draw()

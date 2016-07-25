@@ -415,22 +415,34 @@ RB.crusher.controller = (function(controller) {
       var dash = dashboard.dashboard(funnelRow)
         .draw_loading()
 
+      var filter = function(x) { return x.featured }
+
+      var pubsub = window.pubsub;
+
+      var runAction = function(actions,_filter) {
+
+        var action = actions.filter(_filter || filter)[0]
+
+        window.pubsub.subscriber("home2",["visitor_domains_time_minute"])
+          .run(function(data){
+            action.actions = actions
+            dash
+              .on("select",function(x) {
+                filter = function(action) { return action.action_name == x.key }
+                runAction(actions,filter)
+              })
+              .data(action)
+              .draw()
+          })
+          .unpersist(true)
+          .data(action)
+          .trigger(action)
+
+      }
+
+
       pubsub.subscriber("home", ["actions"])
-        .run(function(actions) {
-          var action = actions.filter(function(x){return x.featured})[0]
-
-          pubsub.subscriber("home2",["visitor_domains_time_minute"])
-            .run(function(data){
-              action.actions = actions
-              dash
-                .data(action)
-                .draw()
-            })
-            .unpersist(true)
-            .data(action)
-            .trigger()
-
-        })
+        .run(runAction)
         .unpersist(true)
         .trigger()
      
