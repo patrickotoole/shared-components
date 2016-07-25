@@ -61,6 +61,8 @@ if __name__ == "__main__":
 
     if options.parameters:
         func_parameters = ujson.loads(options.parameters)
+    else:
+        func_parameters = {}
 
     zk = KazooClient(hosts="zk1:2181")
     zk.start()
