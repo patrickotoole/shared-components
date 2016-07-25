@@ -79,3 +79,15 @@ export function buildUrls(data) {
     , values: values.slice(0,100)
   }
 }
+
+export function buildOnsiteSummary(data) {
+  return {"key":"","values":[]}
+}
+
+export function buildOffsiteSummary(data) {
+  return {"key":"","values":[]}
+}
+
+export function buildActions(data) {
+  return {"key":"Segments","values": data.actions.map(function(x){ return {"key":x.action_name, "value":0} })}
+}

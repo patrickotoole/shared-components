@@ -223,6 +223,18 @@
     }
   }
 
+  function buildOnsiteSummary(data) {
+    return {"key":"","values":[]}
+  }
+
+  function buildOffsiteSummary(data) {
+    return {"key":"","values":[]}
+  }
+
+  function buildActions(data) {
+    return {"key":"Segments","values": data.actions.map(function(x){ return {"key":x.action_name, "value":0} })}
+  }
+
   var EXAMPLE_DATA$1 = {
       "key": "Categories"
     , "values": [
@@ -657,48 +669,49 @@
     , draw: function() {
         this._target
         this._categories = {}
+        this.render_wrappers()
         this.render_lhs()
         this.render_center()
         this.render_right()
 
       }
+    , draw_loading: function() {
+        this.render_wrappers()
+        this.render_center_loading()
+      }
+    , render_wrappers: function() {
+
+        this._lhs = d3_updateable(this._target,".lhs","div")
+          .classed("lhs col-md-3",true)
+
+        this._center = d3_updateable(this._target,".center","div")
+          .classed("center col-md-6",true)
+
+        this._right = d3_updateable(this._target,".right","div")
+          .classed("right col-md-3",true)
+
+      }
     , render_lhs: function() {
+
+        var self = this
+
         this._lhs = d3_updateable(this._target,".lhs","div")
           .classed("lhs col-md-3",true)
 
         var current = this._lhs
-
-        var _top = topSection(current)
+          , _top = topSection(current)
+          , _lower = remainingSection(current)
 
         summary_box(_top)
-          .data({
-               "key":""
-             , "values": [
-  /*
-                  {  
-                      "key":"Off-site Views"
-                    , "value": 12344
-                  }
-                , {
-                      "key":"Off-site Uniques"
-                    , "value": 12344
-                  }
-  */
-                ]
-           })
+          .data(buildOffsiteSummary(this._data))
           .draw()
-
-        var _lower = remainingSection(current)
-        var self = this
 
         this._data.display_categories = this._data.display_categories || buildCategories(this._data)
 
         bar_selector(_lower)
           .data(this._data.display_categories)
           .on("click",function(x) {
-            console.log(x)
             x.selected = !x.selected
-            console.log(x)
             self.draw() 
           })
           .draw()
@@ -709,36 +722,42 @@
           .classed("center col-md-6",true)
 
         var current =  this._center
-
-        var _top = topSection(current)
+          , _top = topSection(current)
+          , _lower = remainingSection(current)
 
         time_selector(_top)
           .data(buildTimes(this._data))
           .draw()
-
-        var _lower = remainingSection(current)
 
         table(_lower)
           .data(buildUrls(this._data))
           .draw()
 
       }
+    , render_center_loading: function() {
+        this._center = d3_updateable(this._target,".center","div")
+          .classed("center col-md-6",true)
+
+        this._center.html("<center>Loading...</center>")
+
+
+      }
     , render_right: function() {
+
+        var self = this
+
         this._right = d3_updateable(this._target,".right","div")
           .classed("right col-md-3",true)
 
         var current = this._right
-
-        var _top = topSection(current)
+          , _top = topSection(current)
+          , _lower = remainingSection(current)
 
         summary_box(_top)
-          .data({"key":"","values":[]})//{"key":"On-Site Visits","values":[]})
+          .data(buildOnsiteSummary(this._data))
           .draw()
 
-        var _lower = remainingSection(current)
-
-        var self = this;
-        this._data.display_actions = this._data.display_actions || {"key":"Segments","values":this._data.actions.map(function(x){ return {"key":x.action_name, "value":0} })}
+        this._data.display_actions = this._data.display_actions || buildActions(this._data)
 
         bar_selector(_lower)
           .type("radio")
@@ -748,8 +767,8 @@
               v.selected = 0
               if (v == x) v.selected = 1
             })
-            console.log(x)
-            self.draw()
+            self.render_center_loading()
+            //self.draw()
           })
           .draw()
 

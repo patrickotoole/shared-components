@@ -412,6 +412,9 @@ RB.crusher.controller = (function(controller) {
         self.draw()
       }
 
+      var dash = dashboard.dashboard(funnelRow)
+        .draw_loading()
+
       pubsub.subscriber("home", ["actions"])
         .run(function(actions) {
           var action = actions.filter(function(x){return x.featured})[0]
@@ -419,7 +422,7 @@ RB.crusher.controller = (function(controller) {
           pubsub.subscriber("home2",["visitor_domains_time_minute"])
             .run(function(data){
               action.actions = actions
-              dashboard.dashboard(funnelRow)
+              dash
                 .data(action)
                 .draw()
             })
