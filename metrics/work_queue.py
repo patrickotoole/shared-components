@@ -58,6 +58,8 @@ class WorkQueue(object):
                     
                     kwargs['job_id'] = job_id
                     if self.crusher_wrapper.user != "a_{}".format(kwargs['advertiser']):
+                        logging.info("creating crusher object")
+                        logging.info("crusher user is %s and current user is %s" % (self.crusher_wrapper.user, "a_{}".format(kwargs['advertiser'])))
                         self.crusher_wrapper = get_crusher_obj(kwargs['advertiser'],"http://beta.crusher.getrockerbox.com")
                     
                     logging.info("starting queue %s %s" % (str(fn),str(kwargs)))
@@ -66,8 +68,11 @@ class WorkQueue(object):
                     logging.info(self.rec.getThreadPool().threads[0].ident)
                     kwargs['connectors']=self.connectors
                     kwargs['connectors']['crusher_wrapper'] = self.crusher_wrapper
+                    timer = datetime.datetime.now()
                     fn(**kwargs) 
-                    
+                    if timer + datetime.timedelta(seconds=1) < datetime.datetime.now():
+                        import time
+                        time.sleep(0.5) 
                     self.mcounter.bumpSuccess()
                     self.connectors['crushercache'].execute(SQL_LOG, (current_host, job_id, "Ran"))
 
