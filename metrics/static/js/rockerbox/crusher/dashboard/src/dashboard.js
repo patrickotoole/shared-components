@@ -25,6 +25,7 @@ export default function dashboard(target) {
 
 Dashboard.prototype = {
     data: function(val) { return accessor.bind(this)("data",val) }
+  , actions: function(val) { return accessor.bind(this)("actions",val) }
   , draw: function() {
       this._target
       this._categories = {}
@@ -108,8 +109,20 @@ Dashboard.prototype = {
 
       var _lower = remainingSection(current)
 
+      var self = this;
+      this._data.display_actions = this._data.display_actions || {"key":"Segments","values":this._data.actions.map(function(x){ return {"key":x.action_name, "value":0} })}
+
       bar_selector(_lower)
-        .data({"key":"Segments","values":[]})
+        .type("radio")
+        .data(this._data.display_actions)
+        .on("click",function(x) {
+          self._data.display_actions.values.map(function(v) {
+            v.selected = 0
+            if (v == x) v.selected = 1
+          })
+          console.log(x)
+          self.draw()
+        })
         .draw()
 
     }

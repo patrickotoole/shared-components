@@ -29,6 +29,7 @@ export function BarSelector(target) {
   this._on = {
       click: nullfunc
   }
+  this._type = "checkbox"
 }
 
 export default function bar_selector(target) {
@@ -43,6 +44,7 @@ BarSelector.prototype = {
       this._on[action] = fn;
       return this
     }
+  , type: function(val) { return accessor.bind(this)("type",val) }
   , title: function(val) { return accessor.bind(this)("title",val) }
   , draw: function() {
 
@@ -122,7 +124,7 @@ BarSelector.prototype = {
               var tree = d3.select(this.children[0])
               var z = z
               d3_updateable(tree,"input","input")
-                .attr("type","checkbox")
+                .attr("type",self._type)
                 .property("checked",function(y){
                   return z.selected ? "checked" : undefined
                 })
