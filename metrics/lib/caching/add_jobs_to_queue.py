@@ -108,10 +108,16 @@ def run_all(db, zk, cdb, base_url):
         advertiser_seg_dict[advert[0]]['segments'] = advertiser_segments
     for advertiser in advertiser_seg_dict.keys():
         ai = advertiser_seg_dict[advertiser]['instance']
-        ai.seg_loop_recurring(advertiser_seg_dict[advertiser]['segments'], advertiser)
+        try:
+            ai.seg_loop_recurring(advertiser_seg_dict[advertiser]['segments'], advertiser)
+        except Exception as e:
+            logging.info(str(e))
     for advertiser in advertiser_seg_dict.keys():
         ai = advertiser_seg_dict[advertiser]['instance']
-        ai.seg_loop_udf(advertiser_seg_dict[advertiser]['segments'], advertiser, base_url)
+        try:
+            ai.seg_loop_udf(advertiser_seg_dict[advertiser]['segments'], advertiser, base_url)
+        except Exception as e:
+            logging.info(str(e))
 
 def run_advertiser(ac, advertiser_name, base_url):
 	s = ac.get_segments()
