@@ -81,6 +81,7 @@ class WorkQueue(object):
                     self.connectors['crushercache'].execute(SQL_LOG, (current_host, job_id, "Fail"))
                     self.connectors['crushercache'].execute(SQL_LOG2,(box, str(e), job_id, trace_error))
                     logging.info("ERROR: queue %s " % e)
+                    logging.info(trace_error)
                     import time
                     time.sleep(5)
                 finally:

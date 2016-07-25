@@ -87,7 +87,6 @@ class CustomQueue(SingleQueue):
 
     def check_queue_status(self):
         self.zk_counter+=1
-        logging.info("Counter %s reset queue order at 10" % self.zk_counter)
         if self.zk_counter%10 ==0:
             self._children = []
             self.zk_counter=0
