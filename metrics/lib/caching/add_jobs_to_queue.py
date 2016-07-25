@@ -73,7 +73,6 @@ class CacheInterface:
         return udf_df
 
     def seg_loop_recurring(self, segments, advertiser):
-        import ipdb; ipdb.set_trace()
         for seg in segments:
             self.add_recurring(seg, advertiser)
 
