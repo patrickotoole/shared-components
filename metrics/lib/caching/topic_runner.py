@@ -61,6 +61,7 @@ class TopicRunner(BaseRunner):
         idf = { i:docs/j for i,j in freq.items()}
         logging.info("finished word prep")
         words = prepped.words.tolist()
+        words=words[:10000]
         comp2 = Word2VecComparision([i for i in words if len(i) > 2])
         comp = LSIComparision([i for i in words if len(i) > 2])
 
