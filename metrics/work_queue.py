@@ -12,9 +12,10 @@ import datetime
 SQL_LOG = "insert into work_queue_log (hostname, job_id, event) values (%s, %s, %s)"
 SQL_LOG2 = "insert into work_queue_error_log (hostname, error_string, job_id, stacktrace) values (%s, %s, %s, %s)"
 
-def get_crusher_obj(advertiser, base_url):
-    from link import lnk
-    crusher = lnk.api.crusher
+def get_crusher_obj(advertiser, base_url, crusher=False):
+    if not crusher:
+        from link import lnk
+        crusher = lnk.api.crusher
     crusher.user = "a_{}".format(advertiser)
     crusher.password= "admin"
     crusher.base_url = base_url
