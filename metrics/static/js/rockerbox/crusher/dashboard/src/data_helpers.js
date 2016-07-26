@@ -49,6 +49,30 @@ export function buildTimes(data) {
   }
 }
 
+export function buildDomains(data) {
+
+  var categories = data.display_categories.values
+    .filter(function(a) { return a.selected })
+    .map(function(a) { return a.key })
+
+  var values = data.url_only
+    .map(function(x) { return {"key":x.domain,"value":x.count, "parent_category_name": x.parent_category_name} })
+
+  values = d3.nest().key(function(x){ return x.key}).rollup(function(x) { return {"parent_category_name":x[0].parent_category_name,"key":x[0].key,"value":x.reduce(function(p,c) { return p + c.value},0), } } ).entries(values).map(function(x){ return x.values })
+
+  if (categories.length > 0)
+    values = values.filter(function(x) {return categories.indexOf(x.parent_category_name) > -1 })
+
+  values = values.sort(function(p,c) { return c.value - p.value })
+
+
+  
+  return {
+      key: "Top Domains"
+    , values: values.slice(0,100)
+  }
+}
+
 export function buildUrls(data) {
 
   var categories = data.display_categories.values

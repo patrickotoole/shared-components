@@ -57,7 +57,6 @@ export function Table(target) {
         .style("display","inline-block")
         .text(function(x){return x.value})
 
-
   }
 }
 
@@ -87,9 +86,9 @@ Table.prototype = {
 
         var wrap = d3.select(this)
 
-        d3_updateable(wrap, "h3","h3")
-          .text(function(x){return x.key})
-          .style("margin-bottom","15px")
+        //d3_updateable(wrap, "h3","h3")
+        //  .text(function(x){return x.key})
+        //  .style("margin-bottom","15px")
 
         self._render_header(wrap)
         var row = d3_splat(wrap,".row","div",function(x) {return x.values}, function(x) {return x.key})
@@ -103,10 +102,6 @@ Table.prototype = {
 
         row.sort(function(p,c) {return c.value - p.value})
 
-
-
       })
-  
-
     }
 }

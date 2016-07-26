@@ -192,6 +192,30 @@
     }
   }
 
+  function buildDomains(data) {
+
+    var categories = data.display_categories.values
+      .filter(function(a) { return a.selected })
+      .map(function(a) { return a.key })
+
+    var values = data.url_only
+      .map(function(x) { return {"key":x.domain,"value":x.count, "parent_category_name": x.parent_category_name} })
+
+    values = d3.nest().key(function(x){ return x.key}).rollup(function(x) { return {"parent_category_name":x[0].parent_category_name,"key":x[0].key,"value":x.reduce(function(p,c) { return p + c.value},0), } } ).entries(values).map(function(x){ return x.values })
+
+    if (categories.length > 0)
+      values = values.filter(function(x) {return categories.indexOf(x.parent_category_name) > -1 })
+
+    values = values.sort(function(p,c) { return c.value - p.value })
+
+
+    
+    return {
+        key: "Top Domains"
+      , values: values.slice(0,100)
+    }
+  }
+
   function buildUrls(data) {
 
     var categories = data.display_categories.values
@@ -621,7 +645,6 @@
           .style("display","inline-block")
           .text(function(x){return x.value})
 
-
     }
   }
 
@@ -651,9 +674,9 @@
 
           var wrap = d3.select(this)
 
-          d3_updateable(wrap, "h3","h3")
-            .text(function(x){return x.key})
-            .style("margin-bottom","15px")
+          //d3_updateable(wrap, "h3","h3")
+          //  .text(function(x){return x.key})
+          //  .style("margin-bottom","15px")
 
           self._render_header(wrap)
           var row = d3_splat(wrap,".row","div",function(x) {return x.values}, function(x) {return x.key})
@@ -667,11 +690,7 @@
 
           row.sort(function(p,c) {return c.value - p.value})
 
-
-
         })
-    
-
       }
   }
 
@@ -776,9 +795,50 @@
           .data(buildTimes(this._data))
           .draw()
 
-        table(_lower)
-          .data(buildUrls(this._data))
-          .draw()
+        var head = d3_updateable(_lower, "h3","h3")
+          .style("margin-bottom","15px")
+          .style("margin-top","-5px")
+
+
+        var tabs = [
+            buildDomains(this._data)
+          , buildUrls(this._data)
+        ]
+        tabs[0].selected = 1
+
+        d3_updateable(head,"span","span")
+          .text(tabs.filter(function(x){ return x.selected})[0].key)
+
+        var select = d3_updateable(head,"select","select")
+          .style("width","19px")
+          .style("margin-left","12px")
+          .on("change", function(x) {
+            tabs.map(function(y) { y.selected = 0 })
+
+            this.selectedOptions[0].__data__.selected = 1
+            draw()
+          })
+        
+        d3_splat(select,"option","option",tabs,function(x) {return x.key})
+          .text(function(x){ return x.key })
+          .style("color","#888")
+          .style("min-width","100px")
+          .style("text-align","center")
+          .style("display","inline-block")
+          .style("padding","5px")
+          .style("border",function(x) {return x.selected ? "1px solid #888" : undefined})
+          .style("opacity",function(x){ return x.selected ? 1 : .5})
+
+        function draw() {
+          d3_updateable(head,"span","span")
+            .text(tabs.filter(function(x){ return x.selected})[0].key)
+
+          table(_lower)
+            .data(tabs.filter(function(x){ return x.selected})[0])
+            .draw()
+        }
+
+        draw()
 
       }
     , render_center_loading: function() {
