@@ -68,11 +68,9 @@ class WorkQueue(object):
                     logging.info(self.rec.getThreadPool().threads[0].ident)
                     kwargs['connectors']=self.connectors
                     kwargs['connectors']['crusher_wrapper'] = self.crusher_wrapper
-                    timer = datetime.datetime.now()
+                    
                     fn(**kwargs) 
-                    if timer + datetime.timedelta(seconds=1) < datetime.datetime.now():
-                        import time
-                        time.sleep(0.5) 
+                    
                     self.mcounter.bumpSuccess()
                     self.connectors['crushercache'].execute(SQL_LOG, (current_host, job_id, "Ran"))
 
