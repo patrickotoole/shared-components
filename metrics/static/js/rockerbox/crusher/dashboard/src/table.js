@@ -27,6 +27,9 @@ export function Table(target) {
         .style("border-bottom","1px solid #ccc")
         .style("margin-bottom","10px")
 
+      headers.html("")
+
+
       d3_updateable(headers,".url","div")
         .classed("url",true)
         .style("width","75%")
@@ -57,7 +60,6 @@ export function Table(target) {
         .style("display","inline-block")
         .text(function(x){return x.value})
 
-
   }
 }
 
@@ -69,7 +71,9 @@ Table.prototype = {
 
     data: function(val) { return accessor.bind(this)("data",val) }
   , title: function(val) { return accessor.bind(this)("title",val) }
-  , row: function(val) { return accessor.bind(this)("row",val) }
+  , row: function(val) { return accessor.bind(this)("render_row",val) }
+  , header: function(val) { return accessor.bind(this)("render_header",val) }
+
   
   , draw: function() {
       var wrap = this._target
@@ -87,9 +91,9 @@ Table.prototype = {
 
         var wrap = d3.select(this)
 
-        d3_updateable(wrap, "h3","h3")
-          .text(function(x){return x.key})
-          .style("margin-bottom","15px")
+        //d3_updateable(wrap, "h3","h3")
+        //  .text(function(x){return x.key})
+        //  .style("margin-bottom","15px")
 
         self._render_header(wrap)
         var row = d3_splat(wrap,".row","div",function(x) {return x.values}, function(x) {return x.key})
@@ -103,10 +107,6 @@ Table.prototype = {
 
         row.sort(function(p,c) {return c.value - p.value})
 
-
-
       })
-  
-
     }
 }

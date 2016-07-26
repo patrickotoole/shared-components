@@ -144,7 +144,7 @@
   function buildCategories(data) {
     var values = data.category
           .map(function(x){ return {"key": x.parent_category_name, "value": x.count } })
-          .sort(function(p,c) {return c.value - p.value }).slice(0,10)
+          .sort(function(p,c) {return c.value - p.value }).slice(0,15)
       , total = values.reduce(function(p, x) {return p + x.value }, 0)
 
     return {
@@ -192,6 +192,75 @@
     }
   }
 
+  function buildDomains(data) {
+
+    var categories = data.display_categories.values
+      .filter(function(a) { return a.selected })
+      .map(function(a) { return a.key })
+
+    var idf = d3.nest()
+      .key(function(x) {return x.domain })
+      .rollup(function(x) {return x[0].idf })
+      .map(data.full_urls)
+
+    var getIDF = function(x) {
+      return idf[x] == "NA" ? 0 : idf[x]
+    }
+
+    var values = data.url_only
+      .map(function(x) { 
+        return {
+            "key":x.domain
+          , "value":x.count
+          , "parent_category_name": x.parent_category_name
+          , "uniques": x.uniques 
+        } 
+      })
+
+
+    values = d3.nest()
+      .key(function(x){ return x.key})
+      .rollup(function(x) { 
+         return {
+             "parent_category_name": x[0].parent_category_name
+           , "key": x[0].key
+           , "value": x.reduce(function(p,c) { return p + c.value},0)
+           , "percent_unique": x.reduce(function(p,c) { return p + c.uniques/c.value},0)/x.length
+
+         } 
+      })
+      .entries(values).map(function(x){ return x.values })
+
+    if (categories.length > 0)
+      values = values.filter(function(x) {return categories.indexOf(x.parent_category_name) > -1 })
+
+    values = values.sort(function(p,c) { return getIDF(c.key) * (c.value) - getIDF(p.key) * (p.value) })
+
+    var total = d3.sum(values,function(x) { return x.value*x.percent_unique})
+
+    values.map(function(x) { 
+      x.pop_percent = 1/getIDF(x.key)
+      x.percent = x.value*x.percent_unique/total*100
+    })
+
+    //var norm = d3.scale.linear()
+    //  .range([0, d3.max(values,function(x){ return x.pop_percent}])
+    //  .domain([0, d3.max(values,function(x){return x.percent})])
+
+    values.map(function(x) {
+      //x.percent_norm = norm(x.percent)
+      x.percent_norm = x.percent
+    })
+
+
+
+    
+    return {
+        key: "Top Domains"
+      , values: values.slice(0,100)
+    }
+  }
+
   function buildUrls(data) {
 
     var categories = data.display_categories.values
@@ -223,6 +292,41 @@
     }
   }
 
+  function buildOnsiteSummary(data) {
+    var yesterday = data.timeseries_data[0]
+    var values = [
+          {
+              "key": "Page Views"
+            , "value": yesterday.views
+          }
+        , {
+              "key": "Unique Visitors"
+            , "value": yesterday.uniques
+
+          }
+      ]
+    return {"key":"On-site Activity","values":values}
+  }
+
+  function buildOffsiteSummary(data) {
+    var values = [  
+          {
+              "key": "Off-site Views"
+            , "value": data.url_only.reduce(function(p,c) {return p + c.uniques},0)
+          }
+        , {
+              "key": "Unique pages"
+            , "value": Object.keys(data.url_only.reduce(function(p,c) {p[c.url] = 0; return p },{})).length
+          }
+      ]
+    return {"key":"Off-site Activity","values":values}
+  }
+
+  function buildActions(data) {
+    
+    return {"key":"Segments","values": data.actions.map(function(x){ return {"key":x.action_name, "value":0, "selected": data.action_name == x.action_name } })}
+  }
+
   var EXAMPLE_DATA$1 = {
       "key": "Categories"
     , "values": [
@@ -249,6 +353,7 @@
     this._on = {
         click: nullfunc
     }
+    this._type = "checkbox"
   }
 
   function bar_selector(target) {
@@ -263,6 +368,7 @@
         this._on[action] = fn;
         return this
       }
+    , type: function(val) { return accessor.bind(this)("type",val) }
     , title: function(val) { return accessor.bind(this)("title",val) }
     , draw: function() {
 
@@ -334,7 +440,7 @@
           
             var checks = d3_splat(svg,".check","foreignObject",false,labelAccessor)
                 .classed("check",true)
-                .attr("x",0)
+                .attr("x",2)
                 .attr("y", function(d) { return y(labelAccessor(d)) })
                 .html("<xhtml:tree></xhtml:tree>")
           
@@ -342,7 +448,7 @@
                 var tree = d3.select(this.children[0])
                 var z = z
                 d3_updateable(tree,"input","input")
-                  .attr("type","checkbox")
+                  .attr("type",self._type)
                   .property("checked",function(y){
                     return z.selected ? "checked" : undefined
                   })
@@ -370,6 +476,7 @@
                 .attr("x",_sizes.width/2 + 20)
                 .attr("style", "text-anchor:start;dominant-baseline: middle;font-size:.9em")
                 .attr("y", function(d) { return y(labelAccessor(d)) + y.rangeBand()/2 + 1; })
+                .classed("hidden",function(d) {return d.percent === undefined })
                 .text(function(d) {
                   var v = d3.format("%")(d.percent);
                   var x = (d.percent > 0) ?  "↑" : "↓"
@@ -553,6 +660,9 @@
           .style("border-bottom","1px solid #ccc")
           .style("margin-bottom","10px")
 
+        headers.html("")
+
+
         d3_updateable(headers,".url","div")
           .classed("url",true)
           .style("width","75%")
@@ -583,7 +693,6 @@
           .style("display","inline-block")
           .text(function(x){return x.value})
 
-
     }
   }
 
@@ -595,7 +704,9 @@
 
       data: function(val) { return accessor.bind(this)("data",val) }
     , title: function(val) { return accessor.bind(this)("title",val) }
-    , row: function(val) { return accessor.bind(this)("row",val) }
+    , row: function(val) { return accessor.bind(this)("render_row",val) }
+    , header: function(val) { return accessor.bind(this)("render_header",val) }
+
     
     , draw: function() {
         var wrap = this._target
@@ -613,9 +724,9 @@
 
           var wrap = d3.select(this)
 
-          d3_updateable(wrap, "h3","h3")
-            .text(function(x){return x.key})
-            .style("margin-bottom","15px")
+          //d3_updateable(wrap, "h3","h3")
+          //  .text(function(x){return x.key})
+          //  .style("margin-bottom","15px")
 
           self._render_header(wrap)
           var row = d3_splat(wrap,".row","div",function(x) {return x.values}, function(x) {return x.key})
@@ -629,15 +740,12 @@
 
           row.sort(function(p,c) {return c.value - p.value})
 
-
-
         })
-    
-
       }
   }
 
   function Dashboard(target) {
+    this._on = {}
     this._target = target
       .append("ul")
       .classed("vendors-list",true)
@@ -651,52 +759,76 @@
 
   Dashboard.prototype = {
       data: function(val) { return accessor.bind(this)("data",val) }
+    , actions: function(val) { return accessor.bind(this)("actions",val) }
     , draw: function() {
         this._target
         this._categories = {}
+        this.render_wrappers()
+        this._target.selectAll(".loading").remove()
         this.render_lhs()
-        this.render_center()
         this.render_right()
+
+        this.render_center()
+
+      }
+    , on: function(action, fn) {
+        if (fn === undefined) return this._on[action];
+        this._on[action] = fn;
+        return this
+      }
+    , draw_loading: function() {
+        this.render_wrappers()
+        this.render_center_loading()
+        return this
+      }
+    , render_wrappers: function() {
+
+        this._lhs = d3_updateable(this._target,".lhs","div")
+          .classed("lhs col-md-3",true)
+
+        this._center = d3_updateable(this._target,".center","div")
+          .classed("center col-md-6",true)
+
+        this._right = d3_updateable(this._target,".right","div")
+          .classed("right col-md-3",true)
 
       }
     , render_lhs: function() {
+
+        var self = this
+
         this._lhs = d3_updateable(this._target,".lhs","div")
           .classed("lhs col-md-3",true)
 
         var current = this._lhs
-
-        var _top = topSection(current)
+          , _top = topSection(current)
+          , _lower = remainingSection(current)
 
         summary_box(_top)
-          .data({
-               "key":""
-             , "values": [
-  /*
-                  {  
-                      "key":"Off-site Views"
-                    , "value": 12344
-                  }
-                , {
-                      "key":"Off-site Uniques"
-                    , "value": 12344
-                  }
-  */
-                ]
-           })
+          .data(buildOnsiteSummary(this._data))
           .draw()
 
-        var _lower = remainingSection(current)
-        var self = this
-
-        this._data.display_categories = this._data.display_categories || buildCategories(this._data)
+        this._data.display_actions = this._data.display_actions || buildActions(this._data)
 
         bar_selector(_lower)
-          .data(this._data.display_categories)
+          .type("radio")
+          .data(this._data.display_actions)
           .on("click",function(x) {
-            console.log(x)
-            x.selected = !x.selected
-            console.log(x)
-            self.draw() 
+            var t = this;
+
+            _lower.selectAll("input")
+              .attr("checked",function() {
+                this.checked = (t == this)
+                return undefined
+              })
+
+            //self._data.display_actions.values.map(function(v) {
+            //  v.selected = 0
+            //  if (v == x) v.selected = 1
+            //})
+            self.draw_loading()
+
+            self.on("select")(x)
           })
           .draw()
 
@@ -706,37 +838,190 @@
           .classed("center col-md-6",true)
 
         var current =  this._center
-
-        var _top = topSection(current)
+          , _top = topSection(current)
+          , _lower = remainingSection(current)
 
         time_selector(_top)
           .data(buildTimes(this._data))
           .draw()
 
-        var _lower = remainingSection(current)
+        var head = d3_updateable(_lower, "h3","h3")
+          .style("margin-bottom","15px")
+          .style("margin-top","-5px")
 
-        table(_lower)
-          .data(buildUrls(this._data))
-          .draw()
+
+        var tabs = [
+            buildDomains(this._data)
+          , buildUrls(this._data)
+        ]
+        tabs[0].selected = 1
+
+        d3_updateable(head,"span","span")
+          .text(tabs.filter(function(x){ return x.selected})[0].key)
+
+        var select = d3_updateable(head,"select","select")
+          .style("width","19px")
+          .style("margin-left","12px")
+          .on("change", function(x) {
+            tabs.map(function(y) { y.selected = 0 })
+
+            this.selectedOptions[0].__data__.selected = 1
+            draw()
+          })
+        
+        d3_splat(select,"option","option",tabs,function(x) {return x.key})
+          .text(function(x){ return x.key })
+          .style("color","#888")
+          .style("min-width","100px")
+          .style("text-align","center")
+          .style("display","inline-block")
+          .style("padding","5px")
+          .style("border",function(x) {return x.selected ? "1px solid #888" : undefined})
+          .style("opacity",function(x){ return x.selected ? 1 : .5})
+
+        function draw() {
+          var selected = tabs.filter(function(x){ return x.selected})[0]
+
+          d3_updateable(head,"span","span")
+            .text(selected.key)
+
+          var t = table(_lower)
+            .data(selected)
+
+          if (selected.key == "Top Domains") {
+            var samp_max = d3.max(selected.values,function(x){return x.percent})
+              , pop_max = d3.max(selected.values,function(x){return x.pop_percent})
+              , max = Math.max(samp_max,pop_max);
+
+            var width = _lower.style("width").split(".")[0].replace("px","")/2 - 10
+              , height = 20
+
+            var x = d3.scale.linear()
+              .range([0, width])
+              .domain([0, max])
+
+            t.header(function(wrap) {
+              var headers = d3_updateable(wrap,".headers","div")
+                .classed("headers",true)
+                .style("text-transform","uppercase")
+                .style("font-weight","bold")
+                .style("line-height","24px")
+                .style("border-bottom","1px solid #ccc")
+                .style("margin-bottom","10px")
+
+              headers.html("")
+
+              d3_updateable(headers,".url","div")
+                .classed("url",true)
+                .style("width","30%")
+                .style("display","inline-block")
+                .text("Domain")
+
+              d3_updateable(headers,".bullet","div")
+                .classed("bullet",true)
+                .style("width","50%")
+                .style("display","inline-block")
+                .text("Likelihood Versus Population")
+
+              d3_updateable(headers,".percent","div")
+                .classed("percent",true)
+                .style("width","20%")
+                .style("display","inline-block")
+                .text("Percent Diff")
+
+
+
+            })
+
+            t.row(function(row) {
+              d3_updateable(row,".url","div")
+                .classed("url",true)
+                .style("width","30%")
+                .style("display","inline-block")
+                .style("vertical-align","top")
+                .text(function(x) {return x.key})
+
+              var bullet = d3_updateable(row,".bullet","div")
+                .classed("bullet",true)
+                .style("width","50%")
+                .style("display","inline-block")
+
+              var diff = d3_updateable(row,".diff","div")
+                .classed("diff",true)
+                .style("width","20%")
+                .style("display","inline-block")
+                .style("vertical-align","top")
+                .text(function(x) {return d3.format("%")((x.percent-x.pop_percent)/x.pop_percent) })
+
+
+
+              var svg = d3_updateable(bullet,"svg","svg")
+                .attr("width",width)
+                .attr("height",height)
+
+   
+              d3_updateable(svg,".bar","rect")
+                .attr("x",0)
+                .attr("width", function(d) {return x(d.pop_percent) })
+                .attr("height", height)
+                .attr("fill","#888")
+
+              d3_updateable(svg,".bar","rect")
+                .attr("x",0)
+                .attr("y",height/4)
+                .attr("width", function(d) {return x(d.percent_norm) })
+                .attr("height", height/2)
+                .attr("fill","rgb(8, 29, 88)")
+
+
+            })
+          }
+
+          t.draw()
+        }
+
+        draw()
+
+      }
+    , render_center_loading: function() {
+        this._center = d3_updateable(this._target,".center","div")
+          .classed("center col-md-6",true)
+
+        this._center.html("")
+
+        d3_updateable(this._center,"center","center")
+          .style("text-align","center")
+          .style("display","block")
+          .classed("loading",true)
+          .text("Loading...")
+
 
       }
     , render_right: function() {
+
+        var self = this
+
         this._right = d3_updateable(this._target,".right","div")
           .classed("right col-md-3",true)
 
         var current = this._right
-
-        var _top = topSection(current)
+          , _top = topSection(current)
+          , _lower = remainingSection(current)
 
         summary_box(_top)
-          .data({"key":"","values":[]})//{"key":"On-Site Visits","values":[]})
+          .data(buildOffsiteSummary(this._data))
           .draw()
 
-        var _lower = remainingSection(current)
+        this._data.display_categories = this._data.display_categories || buildCategories(this._data)
 
         bar_selector(_lower)
-          .data({"key":"Segments","values":[]})
+          .data(this._data.display_categories)
+          .on("click",function(x) {
+            x.selected = !x.selected
+            self.draw() 
+          })
           .draw()
+        
 
       }
 

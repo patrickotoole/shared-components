@@ -29,6 +29,7 @@ export function BarSelector(target) {
   this._on = {
       click: nullfunc
   }
+  this._type = "checkbox"
 }
 
 export default function bar_selector(target) {
@@ -43,6 +44,7 @@ BarSelector.prototype = {
       this._on[action] = fn;
       return this
     }
+  , type: function(val) { return accessor.bind(this)("type",val) }
   , title: function(val) { return accessor.bind(this)("title",val) }
   , draw: function() {
 
@@ -114,7 +116,7 @@ BarSelector.prototype = {
         
           var checks = d3_splat(svg,".check","foreignObject",false,labelAccessor)
               .classed("check",true)
-              .attr("x",0)
+              .attr("x",2)
               .attr("y", function(d) { return y(labelAccessor(d)) })
               .html("<xhtml:tree></xhtml:tree>")
         
@@ -122,7 +124,7 @@ BarSelector.prototype = {
               var tree = d3.select(this.children[0])
               var z = z
               d3_updateable(tree,"input","input")
-                .attr("type","checkbox")
+                .attr("type",self._type)
                 .property("checked",function(y){
                   return z.selected ? "checked" : undefined
                 })
@@ -150,6 +152,7 @@ BarSelector.prototype = {
               .attr("x",_sizes.width/2 + 20)
               .attr("style", "text-anchor:start;dominant-baseline: middle;font-size:.9em")
               .attr("y", function(d) { return y(labelAccessor(d)) + y.rangeBand()/2 + 1; })
+              .classed("hidden",function(d) {return d.percent === undefined })
               .text(function(d) {
                 var v = d3.format("%")(d.percent);
                 var x = (d.percent > 0) ?  "↑" : "↓"

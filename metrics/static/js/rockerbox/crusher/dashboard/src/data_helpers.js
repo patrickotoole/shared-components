@@ -1,7 +1,7 @@
 export function buildCategories(data) {
   var values = data.category
         .map(function(x){ return {"key": x.parent_category_name, "value": x.count } })
-        .sort(function(p,c) {return c.value - p.value }).slice(0,10)
+        .sort(function(p,c) {return c.value - p.value }).slice(0,15)
     , total = values.reduce(function(p, x) {return p + x.value }, 0)
 
   return {
@@ -49,6 +49,75 @@ export function buildTimes(data) {
   }
 }
 
+export function buildDomains(data) {
+
+  var categories = data.display_categories.values
+    .filter(function(a) { return a.selected })
+    .map(function(a) { return a.key })
+
+  var idf = d3.nest()
+    .key(function(x) {return x.domain })
+    .rollup(function(x) {return x[0].idf })
+    .map(data.full_urls)
+
+  var getIDF = function(x) {
+    return idf[x] == "NA" ? 0 : idf[x]
+  }
+
+  var values = data.url_only
+    .map(function(x) { 
+      return {
+          "key":x.domain
+        , "value":x.count
+        , "parent_category_name": x.parent_category_name
+        , "uniques": x.uniques 
+      } 
+    })
+
+
+  values = d3.nest()
+    .key(function(x){ return x.key})
+    .rollup(function(x) { 
+       return {
+           "parent_category_name": x[0].parent_category_name
+         , "key": x[0].key
+         , "value": x.reduce(function(p,c) { return p + c.value},0)
+         , "percent_unique": x.reduce(function(p,c) { return p + c.uniques/c.value},0)/x.length
+
+       } 
+    })
+    .entries(values).map(function(x){ return x.values })
+
+  if (categories.length > 0)
+    values = values.filter(function(x) {return categories.indexOf(x.parent_category_name) > -1 })
+
+  values = values.sort(function(p,c) { return getIDF(c.key) * (c.value) - getIDF(p.key) * (p.value) })
+
+  var total = d3.sum(values,function(x) { return x.value*x.percent_unique})
+
+  values.map(function(x) { 
+    x.pop_percent = 1/getIDF(x.key)
+    x.percent = x.value*x.percent_unique/total*100
+  })
+
+  //var norm = d3.scale.linear()
+  //  .range([0, d3.max(values,function(x){ return x.pop_percent}])
+  //  .domain([0, d3.max(values,function(x){return x.percent})])
+
+  values.map(function(x) {
+    //x.percent_norm = norm(x.percent)
+    x.percent_norm = x.percent
+  })
+
+
+
+  
+  return {
+      key: "Top Domains"
+    , values: values.slice(0,100)
+  }
+}
+
 export function buildUrls(data) {
 
   var categories = data.display_categories.values
@@ -78,4 +147,39 @@ export function buildUrls(data) {
       key: "Top Articles"
     , values: values.slice(0,100)
   }
+}
+
+export function buildOnsiteSummary(data) {
+  var yesterday = data.timeseries_data[0]
+  var values = [
+        {
+            "key": "Page Views"
+          , "value": yesterday.views
+        }
+      , {
+            "key": "Unique Visitors"
+          , "value": yesterday.uniques
+
+        }
+    ]
+  return {"key":"On-site Activity","values":values}
+}
+
+export function buildOffsiteSummary(data) {
+  var values = [  
+        {
+            "key": "Off-site Views"
+          , "value": data.url_only.reduce(function(p,c) {return p + c.uniques},0)
+        }
+      , {
+            "key": "Unique pages"
+          , "value": Object.keys(data.url_only.reduce(function(p,c) {p[c.url] = 0; return p },{})).length
+        }
+    ]
+  return {"key":"Off-site Activity","values":values}
+}
+
+export function buildActions(data) {
+  
+  return {"key":"Segments","values": data.actions.map(function(x){ return {"key":x.action_name, "value":0, "selected": data.action_name == x.action_name } })}
 }

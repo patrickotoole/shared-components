@@ -4,7 +4,7 @@ import tornado.web
 import pandas
 import logging
 from twisted.internet import defer
-from lib.helpers import decorators
+from lib.helpers import decorators, Render
 import codecs
 import zlib
 import ujson
@@ -16,7 +16,7 @@ SQL_SELECT = "select zipped from generic_function_cache where udf='%s' and adver
 ACTION_QUERY = "select action_id from action_with_patterns where pixel_source_name='{}' and url_pattern='{}'"
 DATE_FALLBACK = "select distinct date from generic_function_cache where advertiser='%(advertiser)s' and url_pattern='%(url_pattern)s' and action_id=%(action_id)s and udf='%(udf)s' order by date DESC"
 
-class VisitorTransformCacheHandler(VisitorBase):
+class VisitorTransformCacheHandler(VisitorBase,Render):
 
     def initialize(self, db=None, crushercache=None, **kwargs):
         self.logging = logging
@@ -84,8 +84,7 @@ class VisitorTransformCacheHandler(VisitorBase):
                 _resp['api_details']['date_of_cache'] = details['date_of_cache']
         else:
             _resp['api_details'] = details
-        self.write(_resp)
-        self.finish()
+        self.compress(ujson.dumps(_resp))
 
     @tornado.web.authenticated
     @tornado.web.asynchronous
