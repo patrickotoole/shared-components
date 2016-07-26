@@ -135,7 +135,8 @@ def process_session_buckets(sessions,merged,domains_with_cat):
         "on_site": uid_summary
     })
 
-    
+    xx['on_site'] = xx['on_site'].map(lambda x: x[0])
+    #xx['on_site'] = xx['on_site'].map(lambda x: dict((x, y) for x, y in x[0].items()))
     return xx
     
 
