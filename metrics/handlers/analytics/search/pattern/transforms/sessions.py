@@ -96,7 +96,7 @@ def category_session_stats(bucket_sessions):
     session_visits.index.name = "visit_bucket"
 
     return {
-        "session_starts": start_hours.reset_index().to_dict("records"),
+        "session_starts": start_hours.reset_index().to_dict("records") + [{"sessions":0,"visits":0,"start_hour":0}],
         "session_length": session_length.reset_index().to_dict("records"),
         "session_visits": session_visits.to_dict("records")
     }
@@ -108,7 +108,7 @@ def process_session_buckets(sessions,merged,domains_with_cat):
 
     def uid_summary(x):
         uids = list(set(x))
-
+         
         bucket_sessions = sessions.ix[uids]
         if len(bucket_sessions[~bucket_sessions.visits.isnull()]) == 0:
             return [{}]
@@ -117,9 +117,7 @@ def process_session_buckets(sessions,merged,domains_with_cat):
         actions_by_hour = category_action_by_hour(subset)
         _d = category_session_stats(bucket_sessions)
         _d['actions'] = [{"key":i,"values":j} for i,j in actions_by_hour.T.reset_index().to_dict().items() if i != "index"]
-        
-        #_d = [_d]
-        return _d.items()
+        return [_d,0]
 
 
     #ll = list(domains_with_cat.groupby(["parent_category_name","hour"])['uid'])
@@ -135,8 +133,8 @@ def process_session_buckets(sessions,merged,domains_with_cat):
         "on_site": uid_summary
     })
 
-    xx['on_site'] = xx['on_site'].map(lambda x: x[0])
-    #xx['on_site'] = xx['on_site'].map(lambda x: dict((x, y) for x, y in x[0].items()))
+
+    xx['on_site'] = xx['on_site'].map(lambda x: list(x)[0])
     return xx
     
 
