@@ -147,12 +147,104 @@ Dashboard.prototype = {
         .style("opacity",function(x){ return x.selected ? 1 : .5})
 
       function draw() {
-        d3_updateable(head,"span","span")
-          .text(tabs.filter(function(x){ return x.selected})[0].key)
+        var selected = tabs.filter(function(x){ return x.selected})[0]
 
-        table(_lower)
-          .data(tabs.filter(function(x){ return x.selected})[0])
-          .draw()
+        d3_updateable(head,"span","span")
+          .text(selected.key)
+
+        var t = table(_lower)
+          .data(selected)
+
+        if (selected.key == "Top Domains") {
+          var samp_max = d3.max(selected.values,function(x){return x.percent})
+            , pop_max = d3.max(selected.values,function(x){return x.pop_percent})
+            , max = Math.max(samp_max,pop_max);
+
+          var width = _lower.style("width").split(".")[0].replace("px","")/2 - 10
+            , height = 20
+
+          var x = d3.scale.linear()
+            .range([0, width])
+            .domain([0, max])
+
+          t.header(function(wrap) {
+            var headers = d3_updateable(wrap,".headers","div")
+              .classed("headers",true)
+              .style("text-transform","uppercase")
+              .style("font-weight","bold")
+              .style("line-height","24px")
+              .style("border-bottom","1px solid #ccc")
+              .style("margin-bottom","10px")
+
+            headers.html("")
+
+            d3_updateable(headers,".url","div")
+              .classed("url",true)
+              .style("width","30%")
+              .style("display","inline-block")
+              .text("Domain")
+
+            d3_updateable(headers,".bullet","div")
+              .classed("bullet",true)
+              .style("width","50%")
+              .style("display","inline-block")
+              .text("Likelihood Versus Population")
+
+            d3_updateable(headers,".percent","div")
+              .classed("percent",true)
+              .style("width","20%")
+              .style("display","inline-block")
+              .text("Percent Diff")
+
+
+
+          })
+
+          t.row(function(row) {
+            d3_updateable(row,".url","div")
+              .classed("url",true)
+              .style("width","30%")
+              .style("display","inline-block")
+              .style("vertical-align","top")
+              .text(function(x) {return x.key})
+
+            var bullet = d3_updateable(row,".bullet","div")
+              .classed("bullet",true)
+              .style("width","50%")
+              .style("display","inline-block")
+
+            var diff = d3_updateable(row,".diff","div")
+              .classed("diff",true)
+              .style("width","20%")
+              .style("display","inline-block")
+              .style("vertical-align","top")
+              .text(function(x) {return d3.format("%")((x.percent-x.pop_percent)/x.pop_percent) })
+
+
+
+            var svg = d3_updateable(bullet,"svg","svg")
+              .attr("width",width)
+              .attr("height",height)
+
+ 
+            d3_updateable(svg,".bar","rect")
+              .attr("x",0)
+              .attr("width", function(d) {return x(d.pop_percent) })
+              .attr("height", height)
+              .attr("fill","#888")
+
+            d3_updateable(svg,".bar","rect")
+              .attr("x",0)
+              .attr("y",height/4)
+              .attr("width", function(d) {return x(d.percent_norm) })
+              .attr("height", height/2)
+              .attr("fill","rgb(8, 29, 88)")
+
+
+          })
+        }
+
+        t.draw()
       }
 
       draw()

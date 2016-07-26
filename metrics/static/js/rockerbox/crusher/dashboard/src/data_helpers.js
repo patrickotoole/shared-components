@@ -55,15 +55,60 @@ export function buildDomains(data) {
     .filter(function(a) { return a.selected })
     .map(function(a) { return a.key })
 
-  var values = data.url_only
-    .map(function(x) { return {"key":x.domain,"value":x.count, "parent_category_name": x.parent_category_name} })
+  var idf = d3.nest()
+    .key(function(x) {return x.domain })
+    .rollup(function(x) {return x[0].idf })
+    .map(data.full_urls)
 
-  values = d3.nest().key(function(x){ return x.key}).rollup(function(x) { return {"parent_category_name":x[0].parent_category_name,"key":x[0].key,"value":x.reduce(function(p,c) { return p + c.value},0), } } ).entries(values).map(function(x){ return x.values })
+  var getIDF = function(x) {
+    return idf[x] == "NA" ? 0 : idf[x]
+  }
+
+  var values = data.url_only
+    .map(function(x) { 
+      return {
+          "key":x.domain
+        , "value":x.count
+        , "parent_category_name": x.parent_category_name
+        , "uniques": x.uniques 
+      } 
+    })
+
+
+  values = d3.nest()
+    .key(function(x){ return x.key})
+    .rollup(function(x) { 
+       return {
+           "parent_category_name": x[0].parent_category_name
+         , "key": x[0].key
+         , "value": x.reduce(function(p,c) { return p + c.value},0)
+         , "percent_unique": x.reduce(function(p,c) { return p + c.uniques/c.value},0)/x.length
+
+       } 
+    })
+    .entries(values).map(function(x){ return x.values })
 
   if (categories.length > 0)
     values = values.filter(function(x) {return categories.indexOf(x.parent_category_name) > -1 })
 
-  values = values.sort(function(p,c) { return c.value - p.value })
+  values = values.sort(function(p,c) { return getIDF(c.key) * (c.value) - getIDF(p.key) * (p.value) })
+
+  var total = d3.sum(values,function(x) { return x.value*x.percent_unique})
+
+  values.map(function(x) { 
+    x.pop_percent = 1/getIDF(x.key)
+    x.percent = x.value*x.percent_unique/total*100
+  })
+
+  //var norm = d3.scale.linear()
+  //  .range([0, d3.max(values,function(x){ return x.pop_percent}])
+  //  .domain([0, d3.max(values,function(x){return x.percent})])
+
+  values.map(function(x) {
+    //x.percent_norm = norm(x.percent)
+    x.percent_norm = x.percent
+  })
+
 
 
   

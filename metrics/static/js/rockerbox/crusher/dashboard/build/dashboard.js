@@ -198,15 +198,60 @@
       .filter(function(a) { return a.selected })
       .map(function(a) { return a.key })
 
-    var values = data.url_only
-      .map(function(x) { return {"key":x.domain,"value":x.count, "parent_category_name": x.parent_category_name} })
+    var idf = d3.nest()
+      .key(function(x) {return x.domain })
+      .rollup(function(x) {return x[0].idf })
+      .map(data.full_urls)
 
-    values = d3.nest().key(function(x){ return x.key}).rollup(function(x) { return {"parent_category_name":x[0].parent_category_name,"key":x[0].key,"value":x.reduce(function(p,c) { return p + c.value},0), } } ).entries(values).map(function(x){ return x.values })
+    var getIDF = function(x) {
+      return idf[x] == "NA" ? 0 : idf[x]
+    }
+
+    var values = data.url_only
+      .map(function(x) { 
+        return {
+            "key":x.domain
+          , "value":x.count
+          , "parent_category_name": x.parent_category_name
+          , "uniques": x.uniques 
+        } 
+      })
+
+
+    values = d3.nest()
+      .key(function(x){ return x.key})
+      .rollup(function(x) { 
+         return {
+             "parent_category_name": x[0].parent_category_name
+           , "key": x[0].key
+           , "value": x.reduce(function(p,c) { return p + c.value},0)
+           , "percent_unique": x.reduce(function(p,c) { return p + c.uniques/c.value},0)/x.length
+
+         } 
+      })
+      .entries(values).map(function(x){ return x.values })
 
     if (categories.length > 0)
       values = values.filter(function(x) {return categories.indexOf(x.parent_category_name) > -1 })
 
-    values = values.sort(function(p,c) { return c.value - p.value })
+    values = values.sort(function(p,c) { return getIDF(c.key) * (c.value) - getIDF(p.key) * (p.value) })
+
+    var total = d3.sum(values,function(x) { return x.value*x.percent_unique})
+
+    values.map(function(x) { 
+      x.pop_percent = 1/getIDF(x.key)
+      x.percent = x.value*x.percent_unique/total*100
+    })
+
+    //var norm = d3.scale.linear()
+    //  .range([0, d3.max(values,function(x){ return x.pop_percent}])
+    //  .domain([0, d3.max(values,function(x){return x.percent})])
+
+    values.map(function(x) {
+      //x.percent_norm = norm(x.percent)
+      x.percent_norm = x.percent
+    })
+
 
 
     
@@ -615,6 +660,9 @@
           .style("border-bottom","1px solid #ccc")
           .style("margin-bottom","10px")
 
+        headers.html("")
+
+
         d3_updateable(headers,".url","div")
           .classed("url",true)
           .style("width","75%")
@@ -656,7 +704,9 @@
 
       data: function(val) { return accessor.bind(this)("data",val) }
     , title: function(val) { return accessor.bind(this)("title",val) }
-    , row: function(val) { return accessor.bind(this)("row",val) }
+    , row: function(val) { return accessor.bind(this)("render_row",val) }
+    , header: function(val) { return accessor.bind(this)("render_header",val) }
+
     
     , draw: function() {
         var wrap = this._target
@@ -830,12 +880,104 @@
           .style("opacity",function(x){ return x.selected ? 1 : .5})
 
         function draw() {
-          d3_updateable(head,"span","span")
-            .text(tabs.filter(function(x){ return x.selected})[0].key)
+          var selected = tabs.filter(function(x){ return x.selected})[0]
 
-          table(_lower)
-            .data(tabs.filter(function(x){ return x.selected})[0])
-            .draw()
+          d3_updateable(head,"span","span")
+            .text(selected.key)
+
+          var t = table(_lower)
+            .data(selected)
+
+          if (selected.key == "Top Domains") {
+            var samp_max = d3.max(selected.values,function(x){return x.percent})
+              , pop_max = d3.max(selected.values,function(x){return x.pop_percent})
+              , max = Math.max(samp_max,pop_max);
+
+            var width = _lower.style("width").split(".")[0].replace("px","")/2 - 10
+              , height = 20
+
+            var x = d3.scale.linear()
+              .range([0, width])
+              .domain([0, max])
+
+            t.header(function(wrap) {
+              var headers = d3_updateable(wrap,".headers","div")
+                .classed("headers",true)
+                .style("text-transform","uppercase")
+                .style("font-weight","bold")
+                .style("line-height","24px")
+                .style("border-bottom","1px solid #ccc")
+                .style("margin-bottom","10px")
+
+              headers.html("")
+
+              d3_updateable(headers,".url","div")
+                .classed("url",true)
+                .style("width","30%")
+                .style("display","inline-block")
+                .text("Domain")
+
+              d3_updateable(headers,".bullet","div")
+                .classed("bullet",true)
+                .style("width","50%")
+                .style("display","inline-block")
+                .text("Likelihood Versus Population")
+
+              d3_updateable(headers,".percent","div")
+                .classed("percent",true)
+                .style("width","20%")
+                .style("display","inline-block")
+                .text("Percent Diff")
+
+
+
+            })
+
+            t.row(function(row) {
+              d3_updateable(row,".url","div")
+                .classed("url",true)
+                .style("width","30%")
+                .style("display","inline-block")
+                .style("vertical-align","top")
+                .text(function(x) {return x.key})
+
+              var bullet = d3_updateable(row,".bullet","div")
+                .classed("bullet",true)
+                .style("width","50%")
+                .style("display","inline-block")
+
+              var diff = d3_updateable(row,".diff","div")
+                .classed("diff",true)
+                .style("width","20%")
+                .style("display","inline-block")
+                .style("vertical-align","top")
+                .text(function(x) {return d3.format("%")((x.percent-x.pop_percent)/x.pop_percent) })
+
+
+
+              var svg = d3_updateable(bullet,"svg","svg")
+                .attr("width",width)
+                .attr("height",height)
+
+   
+              d3_updateable(svg,".bar","rect")
+                .attr("x",0)
+                .attr("width", function(d) {return x(d.pop_percent) })
+                .attr("height", height)
+                .attr("fill","#888")
+
+              d3_updateable(svg,".bar","rect")
+                .attr("x",0)
+                .attr("y",height/4)
+                .attr("width", function(d) {return x(d.percent_norm) })
+                .attr("height", height/2)
+                .attr("fill","rgb(8, 29, 88)")
+
+
+            })
+          }
+
+          t.draw()
         }
 
         draw()

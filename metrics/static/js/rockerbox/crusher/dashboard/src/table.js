@@ -27,6 +27,9 @@ export function Table(target) {
         .style("border-bottom","1px solid #ccc")
         .style("margin-bottom","10px")
 
+      headers.html("")
+
+
       d3_updateable(headers,".url","div")
         .classed("url",true)
         .style("width","75%")
@@ -68,7 +71,9 @@ Table.prototype = {
 
     data: function(val) { return accessor.bind(this)("data",val) }
   , title: function(val) { return accessor.bind(this)("title",val) }
-  , row: function(val) { return accessor.bind(this)("row",val) }
+  , row: function(val) { return accessor.bind(this)("render_row",val) }
+  , header: function(val) { return accessor.bind(this)("render_header",val) }
+
   
   , draw: function() {
       var wrap = this._target
