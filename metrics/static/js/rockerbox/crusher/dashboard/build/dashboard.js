@@ -239,17 +239,20 @@
     var total = d3.sum(values,function(x) { return x.value*x.percent_unique})
 
     values.map(function(x) { 
-      x.pop_percent = 1/getIDF(x.key)
+      x.pop_percent = 1/getIDF(x.key)*100
+      x.pop_percent = x.pop_percent == Infinity ? 0 : x.pop_percent
+
       x.percent = x.value*x.percent_unique/total*100
     })
 
-    //var norm = d3.scale.linear()
-    //  .range([0, d3.max(values,function(x){ return x.pop_percent}])
-    //  .domain([0, d3.max(values,function(x){return x.percent})])
+    var norm = d3.scale.linear()
+      .range([0, d3.max(values,function(x){ return x.pop_percent})])
+      .domain([0, d3.max(values,function(x){return x.percent})])
+      .nice()
 
     values.map(function(x) {
-      //x.percent_norm = norm(x.percent)
-      x.percent_norm = x.percent
+      x.percent_norm = norm(x.percent)
+      //x.percent_norm = x.percent
     })
 
 
@@ -889,7 +892,7 @@
             .data(selected)
 
           if (selected.key == "Top Domains") {
-            var samp_max = d3.max(selected.values,function(x){return x.percent})
+            var samp_max = d3.max(selected.values,function(x){return x.percent_norm})
               , pop_max = d3.max(selected.values,function(x){return x.pop_percent})
               , max = Math.max(samp_max,pop_max);
 
@@ -951,7 +954,7 @@
                 .style("width","20%")
                 .style("display","inline-block")
                 .style("vertical-align","top")
-                .text(function(x) {return d3.format("%")((x.percent-x.pop_percent)/x.pop_percent) })
+                .text(function(x) {return d3.format("%")((x.percent_norm-x.pop_percent)/x.pop_percent) })
 
 
 
