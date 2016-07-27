@@ -96,7 +96,7 @@ def category_session_stats(bucket_sessions):
     session_visits.index.name = "visit_bucket"
 
     return {
-        "session_starts": start_hours.reset_index().to_dict("records") + [{"sessions":0,"visits":0,"start_hour":0}],
+        "session_starts": start_hours.reset_index().to_dict("records"),
         "session_length": session_length.reset_index().to_dict("records"),
         "session_visits": session_visits.to_dict("records")
     }
