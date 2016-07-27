@@ -52,17 +52,14 @@ if __name__ == "__main__":
     define("filter_id", default=False)
     define("base_url", default="http://beta.crusher.getrockerbox.com")
     define("random", default=False)
-    define("parameters", default={})
+    define("parameters", default='{}')
     define("debug", default=False)
 
     basicConfig(options={})
 
     parse_command_line()
 
-    if options.parameters:
-        func_parameters = ujson.loads(options.parameters)
-    else:
-        func_parameters = {}
+    func_parameters = ujson.loads(options.parameters)
 
     zk = KazooClient(hosts="zk1:2181")
     zk.start()
