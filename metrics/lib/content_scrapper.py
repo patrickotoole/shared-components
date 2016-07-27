@@ -56,7 +56,7 @@ class GraphiteCounter():
 
 def run(consumer, count, CS):
     import datetime
-    in_5 = datetime.datetime.now() + datetime.timedelta(minutes = 5)
+    #in_5 = datetime.datetime.now() + datetime.timedelta(minutes = 5)
     def get(url, CS):
         try:
             _resp = requests.get((URL % url), auth=('rockerbox', 'rockerbox'))
@@ -82,9 +82,6 @@ def run(consumer, count, CS):
     for message in consumer:
         if message is not None:
             CS.bump_pulled()
-            if datetime.datetime.now() > in_5:
-                sys.exit(0)
-                raise Exception
             message_object = json.loads(message.value)
             try:
                 url = message_object['bid_request']['bid_info']['url']
