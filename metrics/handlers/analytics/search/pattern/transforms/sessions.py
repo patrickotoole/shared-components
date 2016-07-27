@@ -101,6 +101,12 @@ def category_session_stats(bucket_sessions):
         "session_visits": session_visits.to_dict("records")
     }
 
+class NotAList():
+    def __init__(self, x):
+        self.item = x
+    def get(self):
+        return self.item
+
 @decorators.time_log
 def process_session_buckets(sessions,merged,domains_with_cat):
 
@@ -111,13 +117,14 @@ def process_session_buckets(sessions,merged,domains_with_cat):
          
         bucket_sessions = sessions.ix[uids]
         if len(bucket_sessions[~bucket_sessions.visits.isnull()]) == 0:
-            return [{}]
+            return NotAList({})
 
         subset = merged[merged.uid.isin(uids)]
         actions_by_hour = category_action_by_hour(subset)
         _d = category_session_stats(bucket_sessions)
         _d['actions'] = [{"key":i,"values":j} for i,j in actions_by_hour.T.reset_index().to_dict().items() if i != "index"]
-        return [_d,0]
+
+        return NotAList(_d)
 
 
     #ll = list(domains_with_cat.groupby(["parent_category_name","hour"])['uid'])
@@ -132,9 +139,8 @@ def process_session_buckets(sessions,merged,domains_with_cat):
         "uniques": lambda x: len(set(x)),
         "on_site": uid_summary
     })
-
-
-    xx['on_site'] = xx['on_site'].map(lambda x: list(x)[0])
+    
+    xx['on_site'] = xx['on_site'].map(lambda x: x.get())
     return xx
     
 
