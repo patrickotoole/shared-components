@@ -5,18 +5,10 @@ from link import lnk
 from twisted.internet import threads
 import graphitewriter as gw
 import sys
+from collections import Counter
 
 URL="http://scrapper.crusher.getrockerbox.com?url=%s"
 
-class counter():
-    def __init__(self):
-        self.counter_dict = {}
-    
-    def bump(self, url):
-        self.counter_dict[url] = self.counter_dict.get(url,0) + 1
-
-    def get(self, url):
-        return self.counter_dict.get(url,0)
 
 class GraphiteSender():
     import datetime
@@ -34,9 +26,9 @@ class GraphiteSender():
                     self.GW.send("scrapper.content_loop.metrics.pulled_from_kafka", self.cs.get_num_pulled())
                     self.GW.send("scrapper.content_loop.metrics.num_deferred_created", self.cs.get_num_defer())
                     self.GW.send("scrapper.content_loop.metrics.responses_from_scrapper", self.cs.get_num_responses())
-                    self.GW.send("scrapper.content_loop.metrics.num_cotent_added_to_kafka", self.cs.get_num_added())
+                    self.GW.send("scrapper.content_loop.metrics.num_content_added_to_kafka", self.cs.get_num_added())
 
-class countSend():
+class GraphiteCounter():
     def __init__(self):
         self.removed_from_kafka = 0
         self.defered_created = 0
@@ -97,7 +89,7 @@ def run(consumer, count, CS):
             try:
                 url = message_object['bid_request']['bid_info']['url']
                 limit = count.get(url)
-                count.bump(url)
+                count.update({url})
                 if limit ==25:
                     print url
                     defr = threads.deferToThread(get, url, CS)
@@ -144,8 +136,8 @@ if __name__ == '__main__':
     consumer = topic.get_simple_consumer()
     connectors = {"crushercache":lnk.dbs.crushercache}
     
-    count = counter()
-    CS = countSend()
+    count = Counter()
+    CS = GraphiteCounter()
     GS = GraphiteSender(CS)
     from twisted.internet import reactor
     reactor.callInThread(run, consumer, count, CS)
