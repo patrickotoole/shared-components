@@ -56,7 +56,7 @@ def request_data(crusher, uids):
 
 def extract(cassandra, crusher):
     #cassandra = lnk.dbs.cassandra
-    ds = "select distinct uid from rockerbox.visitor_domains_full limit 200000"
+    ds = "select distinct uid from rockerbox.visitor_domains_full limit 1000"
     statement = cassandra.prepare(ds)
     futures_result = cassandra.select_async(statement)
     import time
@@ -66,8 +66,13 @@ def extract(cassandra, crusher):
     
 
     reader = Reader(cassandra)
-    data = reader.get_domain_uids(uids,"select * from rockerbox.visitor_domains_full where uid = ?")
+    from collections import Counter
+    from lib.cassandra_cache.helpers import key_counter
+    Q = "select * from rockerbox.visitor_domains_full where uid = ?"
+    counter = Counter()
+    data = reader.get_domain_uids(uids,Q,fn=key_counter('domain'),obj=counter)
     
+    import ipdb; ipdb.set_trace()
     cassandra._wrapped.shutdown() 
     cassandra._wrapped.cluster.shutdown() 
  
