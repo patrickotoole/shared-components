@@ -5,6 +5,7 @@ import pandas
 import time
 
 from lib.cassandra_cache.pattern_cache import CacheBase
+USERS = 200000
 
 class Reader(CacheBase):
 
@@ -56,7 +57,7 @@ def request_data(crusher, uids):
 
 def extract(cassandra, crusher):
     #cassandra = lnk.dbs.cassandra
-    ds = "select distinct uid from rockerbox.visitor_domains_full limit 1000"
+    ds = "select distinct uid from rockerbox.visitor_domains_full limit %s" % USERS
     statement = cassandra.prepare(ds)
     futures_result = cassandra.select_async(statement)
     import time
@@ -71,12 +72,13 @@ def extract(cassandra, crusher):
     Q = "select * from rockerbox.visitor_domains_full where uid = ?"
     counter = Counter()
     data = reader.get_domain_uids(uids,Q,fn=key_counter('domain'),obj=counter)
+    df = pandas.DataFrame({"count":data}).reset_index()
+    df.columns = ["domain","count"]
     
-    import ipdb; ipdb.set_trace()
     cassandra._wrapped.shutdown() 
     cassandra._wrapped.cluster.shutdown() 
  
-    return data
+    return df
 
 def transform(df):
 
@@ -84,11 +86,9 @@ def transform(df):
     assert len(df) > 0
 
 
-    user_count = df.groupby("domain")['uid'].agg(lambda x: len(set(x)))
-    user_count.name = "count"
-    transformed = user_count.reset_index()
+    transformed = df
 
-    transformed['total_users'] = len(df.uid.unique())
+    transformed['total_users'] = USERS
     transformed['pct_users'] = transformed['count']/ float(len(df))
     transformed['idf'] = 1./ transformed['pct_users']
     

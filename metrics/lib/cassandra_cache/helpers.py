@@ -24,7 +24,8 @@ def simple_append(result,results,*args):
 def key_counter(key):
 
     def count(result,results,*args):
-        keys = set([k for k,_ in result.items() if k == key])
+        keys = set([k[key] for k in result ])
+        
         results.update(list(keys))
 
     return count

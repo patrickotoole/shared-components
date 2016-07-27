@@ -165,7 +165,7 @@ class CacheBase(PreparedCassandraRangeQuery):
         results = FutureHelpers.future_queue(uids,to_bind,fn,self.num_futures,obj)
         results = results[0]
 
-        return pandas.DataFrame(results)
+        return results
 
     def get_domains_from_uids(self,uid_inserts,select):
         import pandas
