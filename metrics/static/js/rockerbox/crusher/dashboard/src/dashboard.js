@@ -156,7 +156,7 @@ Dashboard.prototype = {
           .data(selected)
 
         if (selected.key == "Top Domains") {
-          var samp_max = d3.max(selected.values,function(x){return x.percent})
+          var samp_max = d3.max(selected.values,function(x){return x.percent_norm})
             , pop_max = d3.max(selected.values,function(x){return x.pop_percent})
             , max = Math.max(samp_max,pop_max);
 
@@ -218,7 +218,7 @@ Dashboard.prototype = {
               .style("width","20%")
               .style("display","inline-block")
               .style("vertical-align","top")
-              .text(function(x) {return d3.format("%")((x.percent-x.pop_percent)/x.pop_percent) })
+              .text(function(x) {return d3.format("%")((x.percent_norm-x.pop_percent)/x.pop_percent) })
 
 
 
