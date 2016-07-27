@@ -35,6 +35,5 @@ if __name__ == "__main__":
     console = lnk.api.console
     db = lnk.dbs.crushercache
     df = db.select_dataframe(QUERY)
-    import ipdb; ipdb.set_trace()
 
     run(df, console)

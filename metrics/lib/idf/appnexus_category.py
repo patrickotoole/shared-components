@@ -40,15 +40,17 @@ class AppnexusCategory(object):
         logging.info("Pulling domains: %s" % domains)
         domain_df = self.get_domain_category(domains)
         
-
+        domain_df = domain_df.dropna()
         if len(domain_df) == 0:
             return pandas.DataFrame([[0,0,0]],columns=COLUMNS).ix[100:]
 
         category_ids = domain_df.category.dropna().map(int).map(str).tolist()
 
-        import ipdb; ipdb.set_trace()
         logging.info("Pulling categories: %s" % category_ids)
         category_df = self.get_categories(category_ids)
+
+        if len(category_df) ==0:
+            return pandas.DataFrame([[0,0,0]],columns=COLUMNS).ix[100:]
 
         merged = domain_df.merge(category_df,left_on="category",right_on="id")
         merged['category_name'] = merged['name'] 
