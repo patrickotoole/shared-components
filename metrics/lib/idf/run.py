@@ -2,6 +2,15 @@ import pandas as pd
 from collections import Counter
 import logging
 import pandas
+import time
+
+from lib.cassandra_cache.pattern_cache import CacheBase
+USERS = 200000
+
+class Reader(CacheBase):
+
+    def __init__(self,cassandra):
+        self.cassandra = cassandra
 
 def chunks(l, n):
     """Yield successive n-sized chunks from l."""
@@ -23,55 +32,69 @@ def request_data(crusher, uids):
     _url = "http://beta.crusher.getrockerbox.com/crusher/visit_domains?uid=%s&format=json"
     all_users_domains = []
     aud = []
-    for chunk in chunks(uids,300):
+    for chunk in chunks(uids,90):
         ll = [_url%ui for ui in chunk ]
-        genr = (grequests.get(l,cookies=crusher._token,timeout=1) for l in ll)
+        genr = (grequests.get(l,cookies=crusher._token,timeout=5) for l in ll)
         r = grequests.map(genr)
         for user in r:
             try:
                 temp_dict = {}
-                all_users_domains.extend(user.json())
-                temp_uid = user.json()[0]['uid']
-                temp_dict['uid']=temp_uid 
-                temp_dict['domains'] = [u['domain'] for u in user.json()]
-                aud.append(temp_dict)
+                _j = user.json()
+                if len(_j) > 0:
+                    print len(_j)
+                    all_users_domains.extend(_j)
+                    temp_uid = _j[0]['uid']
+                    temp_dict['uid'] = temp_uid 
+                    temp_dict['domains'] = [u['domain'] for u in _j]
+                    aud.append(temp_dict)
             except:
+                logging.info("issue ")
+                if user is not None: logging.info(user.content)
                 all_users_domains.extend({})
+                time.sleep(.1)
     return aud
 
 
-def extract(hive, cassandra, crusher):
+def extract(cassandra, crusher):
     #cassandra = lnk.dbs.cassandra
-    ds = "select distinct uid from rockerbox.visitor_domains_full limit 100000"
+    ds = "select distinct uid from rockerbox.visitor_domains_full limit %s" % USERS
     statement = cassandra.prepare(ds)
-    uids_dict = cassandra.execute(statement)
+    futures_result = cassandra.select_async(statement)
+    import time
+    time.sleep(5)
+    uids_dict = futures_result.result()
     uids = [u['uid'] for u in uids_dict]
+    
+
+    reader = Reader(cassandra)
+    from collections import Counter
+    from lib.cassandra_cache.helpers import key_counter
+    Q = "select * from rockerbox.visitor_domains_full where uid = ?"
+    counter = Counter()
+    data = reader.get_domain_uids(uids,Q,fn=key_counter('domain'),obj=counter)
+    df = pandas.DataFrame({"count":data}).reset_index()
+    df.columns = ["domain","count"]
+    
     cassandra._wrapped.shutdown() 
     cassandra._wrapped.cluster.shutdown() 
-
-    crusher.base_url = "http://beta.crusher.getrockerbox.com"
-
-    crusher.user = "a_rockerbox"
-    crusher.password="admin"
-    crusher.authenticate()   
-
-    data = request_data(crusher, uids)
-    total_df = pandas.DataFrame(data)
  
-    return total_df
+    return df
 
 def transform(df):
 
-    assert "domains" in df.columns
+    assert "domain" in df.columns
     assert len(df) > 0
 
-    df['domains'] = df['domains'].apply(ast.literal_eval)
-    transformed = to_domain_count(df)
-    transformed['total_users'] = len(df)
+
+    transformed = df
+
+    transformed['total_users'] = USERS
     transformed['pct_users'] = transformed['count']/ float(len(df))
     transformed['idf'] = 1./ transformed['pct_users']
-    transformed = transformed[transformed['count']>=10]
+    
     cols = transformed.columns
+
+    transformed = transformed[transformed['count']>=2]
 
     assert len(transformed) > 0
     assert "domain" in cols
@@ -83,17 +106,18 @@ def transform(df):
 
     return transformed
 
-def write_to_sql(db,df):
+
+def write_to_sql_idf(db,df):
     from lib.appnexus_reporting.load import DataLoader
 
     loader = DataLoader(db)
     key = "domain"
     columns = df.columns
-    loader.insert_df(df,"domain_idf",["domain"],columns)
+    loader.insert_df(df.reset_index(),"domain_idf_only",["domain"],columns)
 
-def run(hive,db,console,cass,crusher):
+def run(console,cass,crusher,db):
     
-    df = extract(hive,cass,crusher)
+    df = extract(cass,crusher)
     logging.info("data extracted with %d rows" %len(df))
     
     if len(df) == 0:
@@ -103,24 +127,8 @@ def run(hive,db,console,cass,crusher):
     df = transform(df)
     logging.info("aggregated to %d domains" %len(df))
 
-    from appnexus_category import AppnexusCategory
-    ac = AppnexusCategory(console)
-    categories = ac.get_domain_category_name(df.head(100).domain.tolist())
+    write_to_sql_idf(db, df)
 
-    import time
-    for i,_df in df.groupby(pd.np.arange(len(df))//100):
-        logging.info("getting categories for batch %s" %i)
-        if i:
-            _cats = ac.get_domain_category_name([i for i in _df.domain.tolist() if len(i) < 30 and not i.startswith(".")])
-            categories = pd.concat([categories,_cats])
-            time.sleep(2)
-
-    logging.info("got categories for %d domains" %len(df))   
-   
-    merged = df.merge(categories,on="domain",how="left").fillna("")
-
-    logging.info("writing to sql")
-    write_to_sql(db,merged)
 
 if __name__ == "__main__":
 
@@ -136,11 +144,11 @@ if __name__ == "__main__":
     basicConfig(options=options)
     
     from link import lnk
-    hive = lnk.dbs.hive
+    
     console = lnk.api.console
     cass = lnk.dbs.cassandra
     crushercache = lnk.dbs.crushercache
 
     crusher = lnk.api.crusher
 
-    run(hive,crushercache,console, cass, crusher)
+    run(console, cass, crusher, crushercache)

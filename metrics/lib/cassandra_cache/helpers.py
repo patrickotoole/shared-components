@@ -21,6 +21,15 @@ def sorted_append(index):
 def simple_append(result,results,*args):
     results += result
 
+def key_counter(key):
+
+    def count(result,results,*args):
+        keys = set([k[key] for k in result ])
+        
+        results.update(list(keys))
+
+    return count
+
 def wrapped_select_callback(field):
 
     def select_callback(result,*args):
