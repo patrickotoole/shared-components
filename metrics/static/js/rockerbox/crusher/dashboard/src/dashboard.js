@@ -215,10 +215,63 @@ Dashboard.prototype = {
 
             var diff = d3_updateable(row,".diff","div")
               .classed("diff",true)
-              .style("width","20%")
+              .style("width","15%")
               .style("display","inline-block")
               .style("vertical-align","top")
               .text(function(x) {return d3.format("%")((x.percent_norm-x.pop_percent)/x.pop_percent) })
+
+            var plus = d3_updateable(row,".plus","a")
+              .classed("plus",true)
+              .style("width","5%")
+              .style("display","inline-block")
+              .style("font-weight","bold")
+              .style("vertical-align","top")
+              .text("+")
+              .on("click",function(x) {
+
+                var d3_this = d3.select(this)
+                var d3_parent = d3.select(this.parentNode)
+                var target = d3_parent.selectAll(".expanded")
+
+                if (target.classed("hidden")) {
+                  d3_this.html("&ndash;")
+                  target.classed("hidden", false)
+
+                  d3_splat(target,".row","div",x.urls.filter(function(x){
+                      var sp = x.replace("http://","")
+                        .replace("https://","")
+                        .replace("www.","")
+                        .split("/");
+
+                      if ((sp.length > 1) && (sp.slice(1).join("/").length > 7)) return true
+
+
+                      return false
+                    }).slice(0,10))
+                    .classed("row",true)
+                    .style("overflow","hidden")
+                    .style("height","30px")
+                    .style("line-height","30px")
+                    .text(String)
+
+                  return x
+                }
+                d3_this.html("+")
+                target.classed("hidden",true).html("")
+              })
+               
+
+            var expanded = d3_updateable(row,".expanded","div")
+              .classed("expanded hidden",true)
+              .style("width","100%")
+              .style("vertical-align","top")
+              .style("padding-right","30px")
+              .style("padding-left","10px")
+              .style("margin-left","10px")
+              .style("margin-bottom","30px")
+              .style("border-left","1px solid grey")
+
+
 
 
 

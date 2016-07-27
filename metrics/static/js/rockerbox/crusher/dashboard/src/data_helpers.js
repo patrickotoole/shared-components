@@ -58,10 +58,10 @@ export function buildDomains(data) {
   var idf = d3.nest()
     .key(function(x) {return x.domain })
     .rollup(function(x) {return x[0].idf })
-    .map(data.full_urls)
+    .map(data.full_urls.filter(function(x){ return x.parent_category_name != "Internet & Telecom"}) )
 
   var getIDF = function(x) {
-    return idf[x] == "NA" ? 0 : idf[x]
+    return (idf[x] == "NA") || (idf[x] > 8686) ? 0 : idf[x]
   }
 
   var values = data.url_only
@@ -71,8 +71,10 @@ export function buildDomains(data) {
         , "value":x.count
         , "parent_category_name": x.parent_category_name
         , "uniques": x.uniques 
+        , "url": x.url
       } 
     })
+
 
 
   values = d3.nest()
@@ -83,6 +85,7 @@ export function buildDomains(data) {
          , "key": x[0].key
          , "value": x.reduce(function(p,c) { return p + c.value},0)
          , "percent_unique": x.reduce(function(p,c) { return p + c.uniques/c.value},0)/x.length
+         , "urls": x.reduce(function(p,c) { p.indexOf(c.url) == -1 ? p.push(c.url) : p; return p },[])
 
        } 
     })
@@ -91,15 +94,21 @@ export function buildDomains(data) {
   if (categories.length > 0)
     values = values.filter(function(x) {return categories.indexOf(x.parent_category_name) > -1 })
 
-  values = values.sort(function(p,c) { return getIDF(c.key) * (c.value) - getIDF(p.key) * (p.value) })
+  values.map(function(x) {
+    x.tf_idf = getIDF(x.key) * (x.value*x.percent_unique) * (x.value*x.percent_unique) 
+    x.count = x.value
+    x.value = Math.log(x.tf_idf)
+  })
+  values = values.sort(function(p,c) { return c.tf_idf - p.tf_idf })
 
-  var total = d3.sum(values,function(x) { return x.value*x.percent_unique})
+
+  var total = d3.sum(values,function(x) { return x.count*x.percent_unique})
 
   values.map(function(x) { 
-    x.pop_percent = 1/getIDF(x.key)*100
+    x.pop_percent = 1.02/getIDF(x.key)*100
     x.pop_percent = x.pop_percent == Infinity ? 0 : x.pop_percent
 
-    x.percent = x.value*x.percent_unique/total*100
+    x.percent = x.count*x.percent_unique/total*100
   })
 
   var norm = d3.scale.linear()

@@ -214,7 +214,26 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
 
       data.url_only  = d3.nest()
-        .key(function(x){return x.url})
+        .key(function(x){
+          var k = x.url.replace("http://","")
+            .replace("https://","")
+            .replace("www.","")
+            .replace(".com","")
+            .replace(".net","")
+            .replace(".org","")
+            .split("?")[0]
+
+          var arr = []
+
+          k.split("/").map(function(t){ 
+            t.split("-").map(function(w) {
+              if (w.length > 3) arr.push(w)
+            })
+          })
+
+
+          return arr.join("-") + x.domain
+        })
         .rollup(function(x){ 
           
           return x.reduce(function(p,c){ 
