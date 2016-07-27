@@ -51,6 +51,9 @@ export function Table(target) {
       d3_updateable(row,".url","div")
         .classed("url",true)
         .style("width","75%")
+        .style("line-height","30px")
+        .style("height","30px")
+        .style("overflow","hidden")
         .style("display","inline-block")
         .text(function(x) {return x.key})
 
