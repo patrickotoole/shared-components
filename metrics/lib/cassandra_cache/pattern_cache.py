@@ -153,6 +153,18 @@ class CacheBase(PreparedCassandraRangeQuery):
         return df
 
 
+    def get_domain_uids(self,uids,select):
+        import pandas
+
+        statement = self.cassandra.prepare(select)
+        to_bind = self.bind_and_execute(statement)
+        uids = [[u] for u in uids]
+
+        logging.info("Unique user ids :%s" % len(uids))
+        results = FutureHelpers.future_queue(uids,to_bind,simple_append,self.num_futures,[])
+        results = results[0]
+
+        return pandas.DataFrame(results)
 
     def get_domains_from_uids(self,uid_inserts,select):
         import pandas
