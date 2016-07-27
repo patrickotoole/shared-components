@@ -10,7 +10,6 @@ def write_to_sql_category(db,df):
     loader = DataLoader(db)
     key = "domain"
     columns = df.columns
-    import ipdb; ipdb.set_trace()
     #df = df[['domain', 'category_name', 'parent_category_name']]
     loader.insert_df(df,"domain_category_only",["domain"],columns)
 
