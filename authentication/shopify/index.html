@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Hindsight integration</title>
+  <link rel="stylesheet" type="text/css" href="/static/seaff.css">
+  <script src="https://cdn.shopify.com/s/assets/external/app.js"></script>
+  <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s=" crossorigin="anonymous"></script>
+  <script src="https://cdn.shopify.com/s/assets/external/app.js"></script>
+  <script type="text/javascript">
+    ShopifyApp.init({
+      apiKey: '433dd6b72f14d432cc645959ea124f07',
+      shopOrigin: 'https://hindsight-test-shop.myshopify.com'
+    });
+  </script>
+</head>
+
+<body>
+  <div class="section">
+    <div class="section-summary">
+      <h1>Pixel code</h1>
+      <p>Copy your pixel code from the <a href="http://hindsight.getrockerbox.com/crusher/settings/pixel/setup" target="_blank">pixel setup page in Hindsight</a></p>
+    </div>
+    <div class="section-content">
+      <form class="section-row" id="pixel-code" action="/" method="GET" enctype="application/x-www-form-urlencoded">
+        <div class="section-cell">
+          Paste your pixel code here
+          <textarea rows="16" cols="40"></textarea>
+          <input type="hidden" name="pixel_uuid" value=""></input>
+          <input type="hidden" name="shop" value=""></input>
+          <input type="submit" class="btn primary" value="Save changes">
+        </div>
+      </form>
+    </div>
+  </div>
+  <script type="text/javascript">
+    $(function() {
+      function GetURLParameter(sParam) {
+        var sPageURL = window.location.search.substring(1);
+        var sURLVariables = sPageURL.split('&');
+        for (var i = 0; i < sURLVariables.length; i++) {
+          var sParameterName = sURLVariables[i].split('=');
+          if (sParameterName[0] == sParam) {
+            return sParameterName[1];
+          }
+        }
+      }
+
+      $('form#pixel-code').on('submit', function(e) {
+        var pixel = $(this).find('textarea').val();
+        var code = pixel.split('RB.initialize("')[1].split('");')[0];
+        var shop = GetURLParameter('shop');
+
+        $.ajax({
+          url: '/',
+          method: 'POST',
+          async: false,
+          data: {
+            'pixel_uuid': code,
+            'shop': shop
+          },
+          success: function(result) {
+            console.log(result);
+            alert('SUCCESS!');
+          },
+          error: function() {
+            alert('ERROR!');
+          }
+        });
+        e.preventDefault();
+      });
+    })
+  </script>
+</body>
+
+</html>
