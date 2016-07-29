@@ -24,7 +24,10 @@ class DBQuery:
         return data['shop']['id']
 
     def getShop(self, shop_domain):
-        sql = "SELECT * FROM advertiser_shopify WHERE `shop_domain` = '%s'" % (shop_domain)
+        sql = "SELECT * FROM %(db_table)s WHERE `shop_domain` = '%(shop_domain)s'" % {
+            "db_table": SETTINGS['db_table'],
+            "shop_domain": shop_domain
+        }
         df = self.db.select_dataframe(sql)
 
         if(len(df) == 0):
@@ -132,7 +135,8 @@ class IndexHandler(web.RequestHandler, DBQuery):
 
         # Save script ID in our db
         new_script_id = data['script_tag']['id']
-        sql = 'UPDATE advertiser_shopify SET script_id=%(new_script_id)s WHERE shop_id = %(shop_id)d' % {
+        sql = 'UPDATE %(db_table)s SET script_id=%(new_script_id)s WHERE shop_id = %(shop_id)d' % {
+            'db_table': SETTINGS['db_table'],
             'new_script_id': new_script_id,
             'shop_id': int(shop['shop_id'])
         }
@@ -152,7 +156,8 @@ class AuthenticationCallbackHandler(web.RequestHandler, DBQuery):
         access_token = DBQuery.generateShopifyAccessToken(self, code, shop_domain)
         shop_id = DBQuery.getShopifyID(self, shop_domain, access_token)
 
-        sql = "INSERT INTO `advertiser_shopify` (`shop_id`, `shop_domain`, `advertiser_id`, `script_id`, `access_token`, `ts_created`) VALUES ('%(shop_id)s', '%(shop_domain)s', '%(advertiser_id)s', NULL, '%(access_token)s', NOW()) ON DUPLICATE KEY UPDATE shop_domain='%(shop_domain)s', access_token='%(access_token)s'" % {
+        sql = "INSERT INTO `%(db_table)s` (`shop_id`, `shop_domain`, `advertiser_id`, `script_id`, `access_token`, `ts_created`) VALUES ('%(shop_id)s', '%(shop_domain)s', '%(advertiser_id)s', NULL, '%(access_token)s', NOW()) ON DUPLICATE KEY UPDATE shop_domain='%(shop_domain)s', access_token='%(access_token)s'" % {
+            'db_table': SETTINGS['db_table'],
             'shop_id': shop_id,
             'shop_domain': shop_domain,
             'advertiser_id': advertiser_id,
