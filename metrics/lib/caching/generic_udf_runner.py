@@ -66,7 +66,7 @@ class UDFRunner(BaseRunner):
                 if len(resp.json['hourly_visits']) <1:
                     raise Exception("Empty response from Beta, not caching data. Check response for %s" % url)
             if 'hourly_domains' in resp.json.keys():
-                if len(resp.jsonp['hourly_domains'])<1:
+                if len(resp.json['hourly_domains'])<1:
                     raise Exception("Empty response from Beta, not caching data. Check response for %s" % url)
             if 'before_categories' in resp.json.keys():
                 if len(resp.json['before_categories']) <1:
