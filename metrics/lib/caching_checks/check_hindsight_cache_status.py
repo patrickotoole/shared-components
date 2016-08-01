@@ -1,3 +1,4 @@
+from check_helper import *
 from link import lnk
 import logging
 
@@ -7,8 +8,12 @@ URL2 = "/crusher/v1/visitor/{}/cache?url_pattern={}&filter_id={}"
 
 def check_cache_endpoint(crusher, pattern, udf):
     url = URL.format(udf, pattern['url_pattern'][0])
-    _resp=crusher.get(url)
-    data = _resp.json
+    try:
+        _resp=crusher.get(url)
+        data = _resp.json
+    except Exception as e:
+        print str(e)
+        data ={}
     return data
 
 def get_segments(crusher, advertiser):
@@ -25,9 +30,6 @@ def get_segments(crusher, advertiser):
         logging.error("error getting cookie for advertise with username: %s" % advertiser)
     return segments
 
-def check_response(data):
-    good_or_bad = True if len(data.get('response', {}))>1 else False
-    return good_or_bad
 
 if __name__ == "__main__":
 
@@ -46,7 +48,7 @@ if __name__ == "__main__":
             for udf in udf_list:
                 data = check_cache_endpoint(crusher, segment, udf)
                 if check_response(data):
-                    print "Pass"
+                    print "Pass for advertiser %s and pattern %s and udf %s" % (advertiser, segment, udf)
                 else:
                     print "Fail"
                     print "Failed for advertiser %s and pattern %s and udf %s" % (advertiser, segment, udf)
