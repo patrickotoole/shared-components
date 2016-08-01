@@ -15,8 +15,10 @@ def process_before_and_after(idf=None,urls=None,domains=None,response=None,**kwa
     merged = before_grouped.merge(idf,on="domain")
     before_domains = time_bucket_domains(merged)
     before_categories = category_time_buckets(merged).to_dict()
-
     before_categories = [{"key":k,"values":v} for k,v in before_categories.items()]
+    for cats in before_categories:
+        for item in cats['values']:
+            item['time_bucket'] = int(item['time_bucket'])
 
     # after
     after_grouped = groupby_timedifference(after)
