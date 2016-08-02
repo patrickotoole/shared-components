@@ -57,7 +57,8 @@ class UDFRunner(BaseRunner):
         url = _url.format(func_name, pattern, self.action_id)
         logging.info(url)
         resp = self.crusher.get(url, timeout=300)
-        resp.raise_for_status()
+        if resp.status_code != 200:
+            raise Exception("Response is not 200, response is %s" % resp.status_code)         
         try:
             if 'similarity' in resp.json.keys():
                 if len(resp.json['similarity']) <1:
