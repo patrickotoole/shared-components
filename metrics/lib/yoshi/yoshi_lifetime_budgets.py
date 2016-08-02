@@ -21,7 +21,7 @@ AND last_modified = (
 ADVERTISERS = '''
 SELECT DISTINCT external_advertiser_id
 FROM rockerbox.advertiser
-WHERE active = 1 AND running = 1
+WHERE active = 1 AND running = 1 AND media_trader_slack_name is not null
 '''
 
 
@@ -64,7 +64,6 @@ class LBudget_Exponential():
             })
             self.imps = self.data['posterior'].quantile(self.quantile)
 
-
         else:
             self.imps = 50000
 
@@ -74,7 +73,6 @@ def extract(db):
     advertisers = db.select_dataframe(ADVERTISERS)['external_advertiser_id'].tolist()
     assert len(advertisers) > 0
     for a in advertisers:
-        # print a
         L = LBudget_Exponential(a, db)
         L.run()
 
@@ -89,6 +87,7 @@ def extract(db):
 def transform(data):
 
     data['lifetime_budget_imps'] = data['lifetime_budget_imps'].apply(lambda x: round(x/10000.)*10000)
+    data['lifetime_budget_imps'] = data['lifetime_budget_imps'].apply(lambda x: min(x, 100000))
     data['lifetime_budget_imps'] = data['lifetime_budget_imps'].astype(int)
     data['last_modified'] = datetime.now()
 
