@@ -44,7 +44,7 @@ define("skip_cassandra", default=False,type=bool)
 define("skip_mongo", default=False,type=bool)      
 define("skip_marathon", default=False,type=bool)      
 define("skip_zookeeper", default=False,type=bool)      
-
+define("work_queue", default=False, type=bool)
 
 
 
@@ -83,7 +83,8 @@ if __name__ == '__main__':
         options.no_internet or options.skip_cassandra,
         options.no_internet or options.skip_mongo,
         options.no_internet or options.skip_marathon,
-        options.no_internet or options.skip_zookeeper
+        options.no_internet or options.skip_zookeeper,
+        options.work_queue
 
     ).connectors
 

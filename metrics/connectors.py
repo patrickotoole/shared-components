@@ -24,6 +24,7 @@ class ConnectorConfig(object):
         self.connectors["db"] = lnk.dbs.rockerbox if not skip_db else mocks.mysql.DB
         self.connectors['crushercache'] = lnk.dbs.crushercache if not skip_db else mocks.mysql.DB
         self.connectors["reporting_db"] = lnk.dbs.reporting if not skip_reporting_db else None
+        self.connectors["crusher_wrapper"] = lnk.api.crushercache if work_queue else None
 
         self.connectors["api"] = lnk.api.console if not skip_console_api else mocks.yoshi.API
         self.connectors["bidder"] = lnk.api.bidder if not skip_bidder_api else None
