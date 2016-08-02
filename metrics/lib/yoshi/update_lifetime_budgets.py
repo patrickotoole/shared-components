@@ -77,8 +77,7 @@ def get_lifetime_budget(rockerbox, external_advertiser_id):
 def load(console_api, rockerbox):
     data = pd.DataFrame()
     advertisers = rockerbox.select_dataframe(ADVERTISERS)['external_advertiser_id'].tolist()
-    advertisers = [456836, 503245, 1069648]
-
+    
     assert len(advertisers) > 0
     for a in advertisers:
 
