@@ -74,7 +74,7 @@ class WorkQueue(object):
                     logging.info(self.rec.getThreadPool().threads[0].is_alive())
                     logging.info(self.rec.getThreadPool().threads[0].ident)
                     kwargs['connectors']=self.connectors
-                    if self.logged_in=True:
+                    if self.logged_in:
                         fn(**kwargs)
                     else:
                         raise Exception("Crusher wrapper is not logged in. Issue with connector, validation, or authentication of crusher wrapper") 
