@@ -18,9 +18,9 @@ SELECT distinct action_id, 1 has_filter from action_filters where %(where)s
 
 INSERT_ACTION = """
 INSERT INTO action
-    (start_date, end_date, operator, pixel_source_name, action_name, action_type)
+    (start_date, end_date, operator, pixel_source_name, action_name, action_type, featured)
 VALUES
-    ("%(start_date)s", "%(end_date)s", "%(operator)s", "%(advertiser)s", "%(action_name)s", "%(action_type)s")
+    ("%(start_date)s", "%(end_date)s", "%(operator)s", "%(advertiser)s", "%(action_name)s", "%(action_type)s", "%(featured)d")
 """
 
 INSERT_ACTION_PATTERNS = """
@@ -103,7 +103,7 @@ class ActionDatabase(object):
                 pass
 
 
-            
+
             return joined.reset_index()
         except:
             return pandas.DataFrame()
@@ -262,7 +262,7 @@ class ActionDatabase(object):
 
     @decorators.multi_commit_cursor
     def perform_insert(self, body, zookeeper,cursor=None):
-        
+
         action = ujson.loads(body)
         action = dict(action.items() + [("start_date","0"),("end_date","0")])
         if action.get("operator") is None:
@@ -283,7 +283,7 @@ class ActionDatabase(object):
 
             if zookeeper:
                 self._insert_work_queue(action,zookeeper)
-            
+
             return action
         except Exception as e:
             next_auto = cursor.execute(GET_MAX_ACTION_PLUS_1)
