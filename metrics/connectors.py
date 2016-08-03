@@ -35,7 +35,7 @@ class ConnectorConfig(object):
         except:
             print "Cassandra not connected"
             logging.error("Cassandra not connected")
-            self.connectors["cassandra"] = None
+            raise Exception("Cassandra not connected")
 
         self.connectors["hive"] = h.Hive().hive if include_hive is not False else None
         self.connectors["spark_sql"] = lnk.dbs.hive if not skip_spark_sql else None
