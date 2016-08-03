@@ -108,6 +108,7 @@ class AdvertiserRoutes(Routes):
         import handlers.pixel_status as pixel_status
         import handlers.analytics.domains.user as user
         import handlers.analytics.domains.visitor as visitor
+        import handlers.t300 as test
 
 
         return [
@@ -120,7 +121,8 @@ class AdvertiserRoutes(Routes):
 
             #(r'/visitor/domains_full', visitor.full_handler.VisitorDomainsFullHandler, self.connectors),
             #(r'/visitor/domains_full/cache',visitor.full_cache_handler.VisitorDomainsFullCacheHandler,self.connectors),
-            
+            (r'/visitor/300', test.RedirectHandler, self.connectors),
+            (r'/visitor/300/(.*?)', test.RedirectHandler, self.connectors),        
             (r'/visitor/(.*?)/cache', visitor.transform_cache_handler.VisitorTransformCacheHandler, self.connectors),
             (r'/visitor/(.*?)', visitor.transform_handler.VisitorTransformHandler, self.connectors),
 
