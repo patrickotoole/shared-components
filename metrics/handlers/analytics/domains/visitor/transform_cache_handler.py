@@ -79,7 +79,7 @@ class VisitorTransformCacheHandler(VisitorBase,Render):
         details = self.get_details(advertiser, pattern, api_type)
         _resp = ujson.loads(data)
         if 'api_details' in _resp.keys():
-            if type(_resp['api_details']):
+            if _resp['api_details']:
                 _resp['api_details']['cache_time_taken'] = details['time_to_cache']
                 _resp['api_details']['date_of_cache'] = details['date_of_cache']
         else:
