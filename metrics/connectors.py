@@ -17,13 +17,14 @@ class ConnectorConfig(object):
             skip_bidder_api=False, skip_buffers=False, skip_redis=False, include_hive=False,
             skip_filtered_imps=False, skip_conversion_imps=False, skip_conversion_events=False,
             skip_visit_events=False, skip_spark_sql=False, skip_cassandra=False, skip_mongo=False,
-            skip_marathon=False, skip_zookeeper=False):
+            skip_marathon=False, skip_zookeeper=False, include_crusher_api=False):
 
         self.connectors = {}
 
         self.connectors["db"] = lnk.dbs.rockerbox if not skip_db else mocks.mysql.DB
         self.connectors['crushercache'] = lnk.dbs.crushercache if not skip_db else mocks.mysql.DB
         self.connectors["reporting_db"] = lnk.dbs.reporting if not skip_reporting_db else None
+        self.connectors["crusher_wrapper"] = lnk.api.crusher if include_crusher_api is not False else None
 
         self.connectors["api"] = lnk.api.console if not skip_console_api else mocks.yoshi.API
         self.connectors["bidder"] = lnk.api.bidder if not skip_bidder_api else None

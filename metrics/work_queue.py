@@ -12,15 +12,21 @@ import datetime
 SQL_LOG = "insert into work_queue_log (hostname, job_id, event) values (%s, %s, %s)"
 SQL_LOG2 = "insert into work_queue_error_log (hostname, error_string, job_id, stacktrace) values (%s, %s, %s, %s)"
 
-def get_crusher_obj(advertiser, base_url):
-    from link import lnk
-    crusher = lnk.api.crusher
+def get_crusher_obj(advertiser, base_url, crusher):
     crusher.user = "a_{}".format(advertiser)
     crusher.password= "admin"
     crusher.base_url = base_url
     crusher.authenticate()
     logging.info(crusher._token)
     return crusher
+
+def validate_crusher(crusher, advertiser):
+    valid = False
+    _resp = crusher.get('/account/permissions')
+    logged_in_as = _resp.json['results']['advertisers'][0]['pixel_source_name']
+    if advertiser == logged_in_as:
+        valid = True
+    return valid
 
 class WorkQueue(object):
 
@@ -35,7 +41,7 @@ class WorkQueue(object):
         START_QUERY = "insert into work_queue_log (hostname, event) values (%s, %s)"
         self.sock_id = socket.gethostname()
         self.connectors['crushercache'].execute(START_QUERY, (self.sock_id, 'Box WQ up'))
-        self.crusher_wrapper = get_crusher_obj("rockerbox","http://beta.crusher.getrockerbox.com")
+        self.logged_in=False
 
     def __call__(self):
         import hashlib
@@ -57,26 +63,28 @@ class WorkQueue(object):
                     self.queue.client.set(self.queue.secondary_path_base + "/%s/%s" % (job_id.split(entry_id)[1][1:], entry_id), '1' ) # running
                     
                     kwargs['job_id'] = job_id
-                    if self.crusher_wrapper.user != "a_{}".format(kwargs['advertiser']):
+                    if self.connectors['crusher_wrapper'].user != "a_{}".format(kwargs['advertiser']):
                         logging.info("creating crusher object")
-                        logging.info("crusher user is %s and current user is %s" % (self.crusher_wrapper.user, "a_{}".format(kwargs['advertiser'])))
-                        self.crusher_wrapper = get_crusher_obj(kwargs['advertiser'],"http://beta.crusher.getrockerbox.com")
+                        logging.info("crusher user is %s and current user is %s" % (self.connectors['crusher_wrapper'].user, "a_{}".format(kwargs['advertiser'])))
+                        self.connectors['crusher_wrapper'] = get_crusher_obj(kwargs['advertiser'],"http://beta.crusher.getrockerbox.com", self.connectors['crusher_wrapper'])
+                        self.logged_in = validate_crusher(self.connectors['crusher_wrapper'], kwargs['advertiser']) if self.connectors['crusher_wrapper']._token else False
                     
                     logging.info("starting queue %s %s" % (str(fn),str(kwargs)))
                     logging.info(self.rec.getThreadPool().threads[0])
                     logging.info(self.rec.getThreadPool().threads[0].is_alive())
                     logging.info(self.rec.getThreadPool().threads[0].ident)
                     kwargs['connectors']=self.connectors
-                    kwargs['connectors']['crusher_wrapper'] = self.crusher_wrapper
-                    
-                    fn(**kwargs) 
-                    
+                    if self.logged_in:
+                        fn(**kwargs)
+                    else:
+                        raise Exception("Crusher wrapper is not logged in. Issue with connector, validation, or authentication of crusher wrapper") 
                     self.mcounter.bumpSuccess()
                     self.connectors['crushercache'].execute(SQL_LOG, (current_host, job_id, "Ran"))
 
                     self.timer.resetTime()
                     logging.info("finished item in queue %s %s" % (str(fn),str(kwargs)))
                 except Exception as e:
+                    self.connectors['crusher_wrapper'].user = ""
                     logging.info("data not inserted")
                     box = socket.gethostname()
                     self.mcounter.bumpError()

@@ -56,8 +56,9 @@ class UDFRunner(BaseRunner):
         _url = new_URL or URL
         url = _url.format(func_name, pattern, self.action_id)
         logging.info(url)
-        resp = self.crusher.get(url, timeout=300)
-        resp.raise_for_status()
+        resp = self.crusher.get(url, timeout=300, allow_redirects=False)
+        if resp.status_code != 200:
+            raise Exception("Response is not 200, response is %s" % resp.status_code)         
         try:
             if 'similarity' in resp.json.keys():
                 if len(resp.json['similarity']) <1:
@@ -81,7 +82,7 @@ class UDFRunner(BaseRunner):
 
     def make_request_v2(self,crusher, pattern, func_name, parameters):
         url = URL2.format(func_name, pattern, self.action_id)
-        resp = self.crusher.get(url, timeout=300)
+        resp = self.crusher.get(url, timeout=300, allow_redirects=False)
         resp.raise_for_status()
         try:
             return resp.json

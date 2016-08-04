@@ -62,10 +62,11 @@ if __name__ == '__main__':
         True,
         False,
         True,
+        True,
+        False,
         True
     ).connectors
 
-    connectors['zk'] = connectors['zookeeper']
     #routes = ["work_queue_scripts"] 
     #routes = []
     routes = options.routes
@@ -88,6 +89,7 @@ if __name__ == '__main__':
     if options.debug:
         zookeeper_path = "/python_queue_debug"
 
+    connectors['zk'] = connectors['zookeeper']
     if not connectors['cassandra']:
         logging.info("connectors not received properly")
         sys.exit(1)
@@ -96,7 +98,6 @@ if __name__ == '__main__':
         tk = timeKeeper()
         tks.append(tk)    
     for _ in range(0,num_worker):
-        
         reactor.callInThread(work_queue.WorkQueue(options.exit_on_finish, connectors['zookeeper'],reactor, tks[_], mc, zookeeper_path, connectors))
         reactor.callInThread(TimeMetric(reactor, tks[_]))
 
