@@ -3,7 +3,7 @@ import logging
 import time
 
 import itertools
-
+import ujson
 from twisted.internet import defer, threads
 from lib.helpers import decorators
 from lib.helpers import *
@@ -21,7 +21,7 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
     
     LEVELS = {
                 "l1":
-                    ["uid_urls", "domains_full"],
+                    ["uid_urls", "domains_full", "artifacts"],
                 "l2":
                     ["domains", "urls", "pixel"],
                 "l3":
@@ -38,7 +38,8 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
                     "pixel": [],
                     "domains_full":[],
                     "uid_urls": [],
-                    "corpus": []
+                    "corpus": [],
+                    "artifacts":[]
                 }
 
 
@@ -78,9 +79,28 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
             "corpus": {
                 "func": "defer_get_corpus",
                 "args":[]
+            },
+            "artifacts":{
+                "func": "defer_get_artifacts",
+                "args":["advertiser"]
             }
         }
 
+    @decorators.deferred
+    def defer_get_artifacts(self, advertiser):
+        Q1 = "select json from artifacts where advertiser = '%s'"
+        QUERY = "select domain, url from filtered_out_domains where approved=1 and (advertiser = '%s' or advertiser is NULL)"
+        json = self.crushercache.select_dataframe(Q1 % advertiser)
+        results = ujson.loads(json['json'][0])
+        exclude = self.crushercache.select_dataframe(QUERY % advertiser)
+        domains = []
+        urls = []
+        for item in exclude.iterrows():
+            urls.append(item[1]['url'])
+            domains.append(item[1]['domain'])
+        results['exclude_domains'] = domains
+        results['exclude_urls'] = urls
+        return results
 
     @decorators.deferred
     def defer_get_domains(self, domains):
@@ -151,7 +171,6 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
     def run_init_level(self, needed_dfs, level_datasets, shared_dict):
         l1_dfs = set(needed_dfs).intersection(level_datasets)
         _dl_l1 = []
-
         for fname in l1_dfs:
             func_name = self.FUNCTION_MAP[fname]['func']
             func = getattr(self, func_name)
@@ -167,6 +186,8 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
             shared_dict['domains_full'] = l1_dfs['domains_full'][0][1]
         if l1_dfs.get('uid_urls', False):
             shared_dict['uid_urls'] = l1_dfs['uid_urls'][0]
+        if l1_dfs.get('artifacts', False):
+            shared_dict['artifacts'] = l1_dfs['artifacts']
 
         defer.returnValue(shared_dict)
 
