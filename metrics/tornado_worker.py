@@ -89,6 +89,7 @@ if __name__ == '__main__':
     if options.debug:
         zookeeper_path = "/python_queue_debug"
 
+    connectors['zk'] = connectors['zookeeper']
     if not connectors['cassandra']:
         logging.info("connectors not received properly")
         sys.exit(1)
