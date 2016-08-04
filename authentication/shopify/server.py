@@ -166,7 +166,6 @@ class AuthenticationCallbackHandler(web.RequestHandler, DBQuery):
 
         df = self.db.execute(sql)
         self.redirect('/')
-        self.finish()
 
 
 class WebApp(web.Application):
