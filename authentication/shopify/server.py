@@ -10,8 +10,7 @@ import urllib,urllib2,requests
 
 from link import lnk
 
-# secrets_path = os.path.abspath('../shopify/secrets.json');
-secrets_path = os.path.abspath('secrets.json');
+secrets_path = os.path.abspath('../shopify/secrets.json');
 with open(secrets_path) as data_file:
     SETTINGS = json.load(data_file)
 
@@ -194,7 +193,7 @@ def main():
         "certfile": SETTINGS['ssl']['certfile'],
         "keyfile": SETTINGS['ssl']['keyfile'],
     })
-    server.listen(9001, '0.0.0.0')
+    server.listen(8888, '0.0.0.0')
     logging.info("Serving at http://0.0.0.0:8888")
     try:
         tornado.ioloop.IOLoop.instance().start()
