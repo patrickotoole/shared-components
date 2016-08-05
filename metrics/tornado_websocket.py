@@ -2,7 +2,7 @@ import tornado.ioloop
 import tornado.web
 import tornado.httpserver
 
-from lib.caching_checks.check_logger import *
+from lib.logging.check_logger import *
 
 import tornado.platform.twisted
 tornado.platform.twisted.install()
@@ -97,16 +97,18 @@ if __name__ == '__main__':
         producer = kafka_stream.KafkaStream('hindsight_log',"slave17:9092",True,False,False,10,1,False)
 
         log_object = logging.getLogger()
-        log_object.setLevel(logging.DEBUG)
+        log_object.setLevel(logging.INFO)
 
         requests_log = logging.getLogger("kafka")
         requests_log.setLevel(logging.WARNING)
 
         ch = logging.StreamHandler(sys.stderr)
-        ch.setLevel(logging.DEBUG)
+        ch.setLevel(logging.INFO)
 
         ch2 = KafkaHandler(producer)
-        ch2.setLevel(logging.DEBUG)
+        formater = logging.Formatter('%(asctime)s |%(name)s.%(funcName)s:%(lineno)d| %(message)s')
+        ch2.setFormatter(formater)
+        ch2.setLevel(logging.INFO)
 
         log_object.addHandler(ch2)
 
