@@ -10,7 +10,7 @@ import urllib,urllib2,requests
 
 from link import lnk
 
-secrets_path = os.path.abspath('../shopify/secrets.json');
+secrets_path = os.path.abspath('../authentication/shopify/secrets.json');
 with open(secrets_path) as data_file:
     SETTINGS = json.load(data_file)
 
@@ -99,7 +99,7 @@ class IndexHandler(web.RequestHandler, DBQuery):
         existing_pixel = DBQuery.getPixel(self, pixel_uuid, shop)
 
         # Prepare payload for Shopify API
-        pixel_src = "%(pixel_url)s?uuid=%(pixel_uuid)s" % {
+        pixel_src = "%(pixel_url)s?uuid=%(pixel_uuid)s|" % {
             'pixel_url': SETTINGS['pixel_url'],
             'pixel_uuid': pixel_uuid
         }
@@ -174,7 +174,7 @@ class WebApp(web.Application):
         connectors = {"db": db}
 
         handlers = [
-            (r'/authenticate', AuthenticationCallbackHandler, connectors),
+            (r'/callback', AuthenticationCallbackHandler, connectors),
             (r'/', IndexHandler, connectors),
         ]
 
@@ -189,10 +189,12 @@ class WebApp(web.Application):
 def main():
     logging.basicConfig(level=logging.INFO)
     app = WebApp()
-    server = httpserver.HTTPServer(app, ssl_options={
-        "certfile": SETTINGS['ssl']['certfile'],
-        "keyfile": SETTINGS['ssl']['keyfile'],
-    })
+    # Needed for dev
+    # server = httpserver.HTTPServer(app, ssl_options={
+    #     "certfile": SETTINGS['ssl']['certfile'],
+    #     "keyfile": SETTINGS['ssl']['keyfile'],
+    # })
+    server = httpserver.HTTPServer(app)
     server.listen(8888, '0.0.0.0')
     logging.info("Serving at http://0.0.0.0:8888")
     try:
