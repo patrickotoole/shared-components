@@ -20,6 +20,10 @@
       }
     }
 
+    if(typeof GetURLParameter('shop') === typeof undefined) {
+      window.location.href = 'https://www.shopify.com/login';
+    }
+
     ShopifyApp.init({
       apiKey: '433dd6b72f14d432cc645959ea124f07',
       shopOrigin: 'https://' + GetURLParameter('shop')
