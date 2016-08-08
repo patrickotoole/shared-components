@@ -2,9 +2,7 @@ import logging
 from lib.kafka_stream import kafka_stream
 import ujson
 import datetime
-from itertools import takewhile, count
 import sys
-#from sys import stdin, stderr, stdout
 
 class KafkaHandler(logging.StreamHandler):
     def __init__(self,producer):
@@ -13,7 +11,8 @@ class KafkaHandler(logging.StreamHandler):
 
     def emit(self, record):
         try:
-            msg = {"log_message":record.message}
+            time = datetime.datetime.fromtimestamp(record.created).strftime('%Y-%m-%d %H:%M:%S')
+            msg = {"log_message":record.getMessage(), "timestamp":time, "location":record.name+"-"+record.pathname+":"+str(record.lineno)}
             self.kafka.send_message(ujson.dumps(msg))
         except (KeyboardInterrupt, SystemExit):
             raise
@@ -34,9 +33,12 @@ if __name__=='__main__':
     ch = logging.StreamHandler(sys.stdout)
     ch.setLevel(logging.DEBUG)
 
+    #ch2 = KafkaHandler(producer)
+    #ch2.setLevel(logging.DEBUG)
+
     ch2 = KafkaHandler(producer)
-    ch2.setLevel(logging.DEBUG)
-    
+    ch2.setLevel(logging.INFO)
+ 
     log_object.addHandler(ch2)
    
     logging.debug("check it out")

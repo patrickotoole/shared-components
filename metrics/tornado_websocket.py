@@ -2,7 +2,7 @@ import tornado.ioloop
 import tornado.web
 import tornado.httpserver
 
-from lib.logging.check_logger import *
+from lib.custom_logging.check_logger import KafkaHandler
 
 import tornado.platform.twisted
 tornado.platform.twisted.install()
