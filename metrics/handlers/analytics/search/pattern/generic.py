@@ -89,10 +89,14 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
     @decorators.deferred
     def defer_get_artifacts(self, advertiser):
         Q1 = "select key_name, json from artifacts where advertiser = '%s' and active=1 and deleted=0"
+        Q2 = "select key_name, json from artifacts where advertiser is null and active=1 and deleted=0"
         json = self.crushercache.select_dataframe(Q1 % advertiser)
+        generic_json = self.crushercache.select_dataframe(Q2)
         results = {}
         for js in json.iterrows():
             results[js[1]['key_name']] = ujson.loads(js[1]['json'])
+        for gjs in generic_json.iterrows():
+            results[gjs[1]['key_name']] = ujson.loads(gjs[1]['json'])
         return results
 
     @decorators.deferred
