@@ -3,7 +3,7 @@ import json
 import time
 from pprint import pprint
 import logging
-
+import sys
 
 ADVERTISERS = '''
 SELECT DISTINCT external_advertiser_id
@@ -71,14 +71,11 @@ def get_lifetime_budget(rockerbox, external_advertiser_id):
     
     lifetime_budget = rockerbox.select_dataframe(LIFETIME_BUDGET%{'external_advertiser_id':external_advertiser_id})
     assert len(lifetime_budget) > 0
-    return lifetime_budget['lifetime_budget_imps'].iloc[0]
+    return min(lifetime_budget['lifetime_budget_imps'].iloc[0], lifetime_budget['max_lifetime_budget_imps'].iloc[0])
 
 
-def load(console_api, rockerbox):
+def load(console_api, rockerbox, advertisers):
     data = pd.DataFrame()
-    advertisers = rockerbox.select_dataframe(ADVERTISERS)['external_advertiser_id'].tolist()
-    
-    assert len(advertisers) > 0
     for a in advertisers:
 
         lifetime_budget = get_lifetime_budget(rockerbox, a)
@@ -88,8 +85,15 @@ def load(console_api, rockerbox):
         logging.info("extracted with  %d rows " %len(campaigns))
         time.sleep(3)
 
-        yoshi_testing = campaigns[(campaigns['campaign_name'].apply(lambda x: 'yoshi' in x.lower())) &
-                                    (campaigns['convs']==0) & (campaigns['lifetime_budget_imps']!= lifetime_budget)]
+        yoshi_testing = campaigns[  (campaigns['campaign_name'].apply(lambda x: 'yoshi' in x.lower())) &
+                                    (campaigns['convs']==0) & 
+                                    (campaigns['lifetime_budget_imps']!= lifetime_budget) & 
+                                    (campaigns['lifetime_budget_imps']!= 0) & 
+                                    (campaigns['lifetime_budget_imps'].apply(lambda x: x is not None))
+                        ]
+
+
+
         logging.info("filtered to %d rows " %len(yoshi_testing))
         yoshi_testing['new_lifetime_budget_imps'] = lifetime_budget
         yoshi_testing['external_advertiser_id'] = a
@@ -107,9 +111,8 @@ def load(console_api, rockerbox):
 
 def push(rbox_api,  campaign_id, old_budget, new_budget, rule_group_id):
 
-    while True:
-
-        log = {
+    attempts = 0
+    log = {
             "rule_group_id": rule_group_id,
             "object_modified": 'campaign',
             "campaign_id": campaign_id,
@@ -119,6 +122,12 @@ def push(rbox_api,  campaign_id, old_budget, new_budget, rule_group_id):
             "metric_values": {}
         }
 
+    while True:
+
+        if attempts >= 5:
+            logging.info("5 attempts unsuccessful for %s, skipping" %campaign_id)
+            return
+
         r = rbox_api.post("/opt_log", data = json.dumps(log))
         logging.info(r.json)
         if r.json['status'] == "ok":
@@ -127,11 +136,12 @@ def push(rbox_api,  campaign_id, old_budget, new_budget, rule_group_id):
         else:
             logging.info("sleeping 60 secs")
             time.sleep(60)
+            attempts += 1
     
 
-def run(rockerbox, rbox_api, console_api):
+def run(rockerbox, rbox_api, console_api, advertisers):
 
-    data = load(console_api, rockerbox)
+    data = load(console_api, rockerbox, advertisers)
 
     rule_group_id = rockerbox.select_dataframe(RULE_GROUP_ID)['rule_group_id'].iloc[0]
 
@@ -163,7 +173,13 @@ if __name__ == "__main__":
     rbox_api = lnk.api.rockerbox
     console_api = lnk.api.console
     
-    run(rockerbox, rbox_api, console_api)
+    if len(sys.argv) > 1:
+        advertisers = sys.argv[1].split(",")
+    else:
+        advertisers = rockerbox.select_dataframe(ADVERTISERS)['external_advertiser_id'].tolist()
+    
+    assert len(advertisers) > 0
+    run(rockerbox, rbox_api, console_api,advertisers)
 
 
 
