@@ -3,6 +3,8 @@ import tornado.web
 import tornado.httpserver
 
 from lib.custom_logging.check_logger import KafkaHandler
+from lib.kafka_stream import kafka_stream
+import sys
 
 import tornado.platform.twisted
 tornado.platform.twisted.install()
