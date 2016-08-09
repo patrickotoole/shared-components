@@ -34,7 +34,7 @@ WHERE action_id = %(action_id)s
 """
 
 DELETE_ACTION_PATTERNS = """
-UPDATE action set deleted=1 where action_id = %(action_id)s and url_pattern = "%(url_pattern)s"
+DELETE FROM action_patterns where action_id = %(action_id)s and url_pattern = "%(url_pattern)s"
 """
 
 DELETE_ACTION = """
