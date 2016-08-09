@@ -41,10 +41,6 @@ DELETE_ACTION = """
 UPDATE action set deleted=1 where action_id = %(action_id)s
 """
 
-DELETE_ACTION_PATTERN = """
-UPDATE action set deleted = 1 where action_id = %(action_id)s
-"""
-
 GET_MAX_ACTION_PLUS_1 = "select max(action_id)+1 from action"
 
 RESET_AUTO_INCR_ACTION = "alter table action auto_increment = %s"
@@ -255,7 +251,7 @@ class ActionDatabase(object):
         if len(advertiser_ids)==1:
             zk.remove_advertiser_children_pattern(advertiser, urls, zk.tree)
             zk.set_tree()
-        cursor.execute(DELETE_ACTION_PATTERN % action)
+        cursor.execute(DELETE_ACTION % action)
 
         return action
 
