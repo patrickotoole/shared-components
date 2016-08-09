@@ -3,16 +3,18 @@ from lib.kafka_stream import kafka_stream
 import ujson
 import datetime
 import sys
+import socket
 
 class KafkaHandler(logging.StreamHandler):
-    def __init__(self,producer):
+    def __init__(self,producer, app_name=""):
         self.kafka = producer
+        self.app_name = app_name
         super(KafkaHandler, self).__init__()
 
     def emit(self, record):
         try:
             time = datetime.datetime.fromtimestamp(record.created).strftime('%Y-%m-%d %H:%M:%S')
-            msg = {"log_message":record.getMessage(), "timestamp":time, "location":record.name+"-"+record.pathname+":"+str(record.lineno)}
+            msg = {"log_message":record.getMessage(), "timestamp":time, "app_name":self.app_name+"."+socket.gethostname(),"location":record.name+"-"+record.pathname+":"+str(record.lineno)}
             self.kafka.send_message(ujson.dumps(msg))
         except (KeyboardInterrupt, SystemExit):
             raise

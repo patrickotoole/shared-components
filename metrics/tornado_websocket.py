@@ -50,7 +50,7 @@ define("skip_marathon", default=False,type=bool)
 define("skip_zookeeper", default=False,type=bool)      
 define("include_crusher_api", default=False, type=bool)
 define("log_kafka", default=False, type=bool)
-
+define("app_name", default="")
 
 
 
@@ -107,7 +107,7 @@ if __name__ == '__main__':
         ch = logging.StreamHandler(sys.stderr)
         ch.setLevel(logging.INFO)
 
-        ch2 = KafkaHandler(producer)
+        ch2 = KafkaHandler(producer, options.app_name)
         formater = logging.Formatter('%(asctime)s |%(name)s.%(funcName)s:%(lineno)d| %(message)s')
         ch2.setFormatter(formater)
         ch2.setLevel(logging.INFO)

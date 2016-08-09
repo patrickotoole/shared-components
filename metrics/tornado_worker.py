@@ -8,6 +8,10 @@ tornado.platform.twisted.install()
 from twisted.internet import reactor
 from tornado.options import define, options, parse_command_line
 
+from lib.custom_logging.check_logger import KafkaHandler
+from lib.kafka_stream import kafka_stream
+import sys
+
 from lib.timekeeper import timeKeeper
 from routes import AllRoutes
 from connectors import ConnectorConfig
@@ -42,6 +46,8 @@ if __name__ == '__main__':
     define("num_workers", default=1)
     define("debug", default=False)
     define("exit_on_finish", default=False)
+    define("log_kafka", default=False)
+    define("app_name", default="")
 
     basicConfig(options={})
 
@@ -70,6 +76,25 @@ if __name__ == '__main__':
     #routes = ["work_queue_scripts"] 
     #routes = []
     routes = options.routes
+
+    if options.log_kafka:
+        producer = kafka_stream.KafkaStream('hindsight_log',"slave17:9092",True,False,False,10,1,False)
+
+        log_object = logging.getLogger()
+        log_object.setLevel(logging.INFO)
+
+        requests_log = logging.getLogger("kafka")
+        requests_log.setLevel(logging.WARNING)
+
+        ch = logging.StreamHandler(sys.stderr)
+        ch.setLevel(logging.INFO)
+
+        ch2 = KafkaHandler(producer, options.app_name)
+        formater = logging.Formatter('%(asctime)s |%(name)s.%(funcName)s:%(lineno)d| %(message)s')
+        ch2.setFormatter(formater)
+        ch2.setLevel(logging.INFO)
+
+        log_object.addHandler(ch2)        
 
     app = tornado.web.Application(
         build_routes(connectors,routes), 
