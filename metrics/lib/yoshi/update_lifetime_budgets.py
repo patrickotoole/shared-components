@@ -85,13 +85,16 @@ def load(console_api, rockerbox, advertisers):
         logging.info("extracted with  %d rows " %len(campaigns))
         time.sleep(3)
 
+        
+
         yoshi_testing = campaigns[  (campaigns['campaign_name'].apply(lambda x: 'yoshi' in x.lower())) &
                                     (campaigns['convs']==0) & 
                                     (campaigns['lifetime_budget_imps']!= lifetime_budget) & 
                                     (campaigns['lifetime_budget_imps']!= 0) & 
-                                    (campaigns['lifetime_budget_imps'].apply(lambda x: x is not None))
+                                    (campaigns['lifetime_budget_imps'].apply(lambda x: not pd.isnull(x)))
                         ]
-
+        import ipdb
+        ipdb.set_trace()
 
 
         logging.info("filtered to %d rows " %len(yoshi_testing))
