@@ -2,6 +2,10 @@ import tornado.ioloop
 import tornado.web
 import tornado.httpserver
 
+from lib.custom_logging.check_logger import KafkaHandler
+from lib.kafka_stream import kafka_stream
+import sys
+
 import tornado.platform.twisted
 tornado.platform.twisted.install()
 
@@ -45,6 +49,7 @@ define("skip_mongo", default=False,type=bool)
 define("skip_marathon", default=False,type=bool)      
 define("skip_zookeeper", default=False,type=bool)      
 define("include_crusher_api", default=False, type=bool)
+define("log_kafka", default=False, type=bool)
 
 
 
@@ -90,6 +95,24 @@ if __name__ == '__main__':
 
     routes = [r for r in options.routes.split(",") if len(r)]
 
+    if options.log_kafka:
+        producer = kafka_stream.KafkaStream('hindsight_log',"slave17:9092",True,False,False,10,1,False)
+
+        log_object = logging.getLogger()
+        log_object.setLevel(logging.INFO)
+
+        requests_log = logging.getLogger("kafka")
+        requests_log.setLevel(logging.WARNING)
+
+        ch = logging.StreamHandler(sys.stderr)
+        ch.setLevel(logging.INFO)
+
+        ch2 = KafkaHandler(producer)
+        formater = logging.Formatter('%(asctime)s |%(name)s.%(funcName)s:%(lineno)d| %(message)s')
+        ch2.setFormatter(formater)
+        ch2.setLevel(logging.INFO)
+
+        log_object.addHandler(ch2)
 
     if options.show_routes:
         AllRoutes().__mock_all__(routes)
