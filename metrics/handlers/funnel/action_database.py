@@ -34,7 +34,7 @@ WHERE action_id = %(action_id)s
 """
 
 DELETE_ACTION_PATTERNS = """
-DELETE FROM action_patterns where action_id = %(action_id)s and url_pattern = "%(url_pattern)s"
+UPDATE action set deleted=1 where action_id = %(action_id)s and url_pattern = "%(url_pattern)s"
 """
 
 DELETE_ACTION = """
@@ -42,7 +42,7 @@ UPDATE action set deleted=1 where action_id = %(action_id)s
 """
 
 DELETE_ACTION_PATTERN = """
-DELETE FROM action_patterns where action_id = %(action_id)s
+UPDATE action set deleted = 1 where action_id = %(action_id)s
 """
 
 GET_MAX_ACTION_PLUS_1 = "select max(action_id)+1 from action"
@@ -238,7 +238,6 @@ class ActionDatabase(object):
     @decorators.multi_commit_cursor
     def perform_delete(self,zookeeper,cursor=None):
         self.assert_required_params(["id"])
-
         action_id = self.get_argument("id")
         action = {"action_id":action_id}
         #action["zookeeper_tree"] = self.get_argument("zookeeper_tree","for_play")
