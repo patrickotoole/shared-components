@@ -93,10 +93,10 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
         json = self.crushercache.select_dataframe(Q1 % advertiser)
         generic_json = self.crushercache.select_dataframe(Q2)
         results = {}
-        for js in json.iterrows():
-            results[js[1]['key_name']] = ujson.loads(js[1]['json'])
         for gjs in generic_json.iterrows():
             results[gjs[1]['key_name']] = ujson.loads(gjs[1]['json'])
+        for js in json.iterrows():
+            results[js[1]['key_name']] = ujson.loads(js[1]['json'])
         return results
 
     @decorators.deferred
