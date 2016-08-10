@@ -9,6 +9,7 @@ class IntegrationHandler(BaseHandler):
     def initialize(self,db=None):
         self.db = db
 
+    @tornado.web.authenticated
     def get(self):
         advertiser = self.current_advertiser
         if advertiser != None:
