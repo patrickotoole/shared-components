@@ -26,6 +26,7 @@ class UserRoutes(Routes):
         return [
             (r'/', user.LoginHandler, self.connectors),
             (r'/login.*', user.LoginHandler, self.connectors),
+            (r'/nonce', user.NonceHandler, self.connectors),
             (r'/logout', user.LoginHandler, self.connectors),
             (r'/signup.*', user.SignupHandler, self.connectors),
             (r'/integrations', integrations.IntegrationHandler, self.connectors),

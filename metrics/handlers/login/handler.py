@@ -1,5 +1,6 @@
 import tornado.web
 import ujson
+import logging
 from database import LoginDatabase
 
 class LoginHandler(tornado.web.RequestHandler,LoginDatabase):
@@ -52,6 +53,7 @@ class LoginHandler(tornado.web.RequestHandler,LoginDatabase):
             
             self.set_secure_cookie("advertiser",str(user["advertiser_id"] or 0) )
             self.set_secure_cookie("user",user["username"])
+            logging.info("Logged in: %s" % user["username"])
             self.write("1")
             self.finish()
 

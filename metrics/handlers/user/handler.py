@@ -1,5 +1,6 @@
 import tornado.web
 import ujson
+import logging
 
 from database import UserDatabase
 import send as email
@@ -49,6 +50,7 @@ class UserHandler(tornado.web.RequestHandler,UserDatabase):
                 if body.get("invite"): invite.send(username)
             else:
                 username = self.create(body)
+                logging.info("Created advertiser: %s" % username)
                 self.login(username)
                 email.send(username)
             self.write("""{"username":"%s"}""" % username)

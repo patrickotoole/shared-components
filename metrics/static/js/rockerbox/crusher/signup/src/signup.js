@@ -21,6 +21,14 @@ function getNonce() {
   return (s.indexOf("nonce") > -1 ) ?  s.split("nonce=")[1].split("&")[0] : "";
 }
 
+function checkNonce(nonce) {
+  if (nonce == undefined || nonce.length == 0) return 
+  d3.xhr("/nonce?nonce=" + nonce)
+    .get(function(x) {
+      if (arguments[1].response == "0") document.location = "/"
+    })
+}
+
 function getNeedsSetup() {
   var s = window.location.search;
   return (s.indexOf("setup") > -1 ) 
@@ -50,6 +58,7 @@ export function Signup(target) {
   this._wrapper = this._target;
   this._uid = getUID()
   this._nonce = getNonce()
+  checkNonce(this._nonce)
   this._pixel_setup = getNeedsSetup()
 
   this._slide = 0
