@@ -1,7 +1,9 @@
 import kafka
 from pykafka import KafkaClient
+from pykafka.simpleconsumer import OwnedPartition, OffsetType
 from link import lnk
 import ujson
+import re
 
 QUERY = "select * from kafka_regex"
 
@@ -29,24 +31,23 @@ def get_regex(db):
     regex_channel = {}
     data = db.select_dataframe(QUERY)
     for item in data.iterrows():
-        regex_channel[item[1]['pattern']] = {"channel":item[1]['channel'], "app_name":item[1]['app_name'], "send_message":item[1]['send_message']}
+        regex_channel[item[1]['pattern']] = {"channel":item[1]['channel'], "send_message":item[1]['send_message']}
 
     return regex_channel
 
 if __name__ == '__main__':
     client = KafkaClient(hosts="10.128.248.211:2181/v0_8_1")
     topic = client.topics['hindsight_log']
-    consumer = topic.get_simple_consumer()
+    consumer = topic.get_simple_consumer(reset_offset_on_start=True, auto_offset_reset=OffsetType.LATEST)
     crushercache = lnk.dbs.crushercache
     regex_channel= get_regex(crushercache)
     for message in consumer:
         if message is not None:
-            msg = ujson.loads(message.value)
-            matches = [x if x in msg['log_message'] else False for x in regex_channel.keys()]
-            if any(matches):
-                for pattern in matches:
-                    if pattern and regex_channel[pattern]['app_name'] in msg['app_name']:
-                        channel = regex_channel[pattern]['channel']
-                        send_msg = {"channel":channel, "message":regex_channel[pattern]['send_message']}
-                        slack().__call__(send_msg)
+            msg = message.value
+            result = msg
+            for pattern in regex_channel.keys():
+                if re.match(pattern,msg) is not None: 
+                    result = re.sub(pattern, regex_channel[pattern]['send_message'], msg)
+                    send_msg = {"channel":regex_channel[pattern]['channel'], "message":result}
+                    slack().__call__(send_msg)
             print message.value
