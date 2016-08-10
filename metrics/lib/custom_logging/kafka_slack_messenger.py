@@ -3,9 +3,10 @@ from pykafka import KafkaClient
 from pykafka.simpleconsumer import OwnedPartition, OffsetType
 from link import lnk
 import ujson
+import datetime
 import re
 
-QUERY = "select * from kafka_regex where active=1 and deleted=0"
+QUERY = "select * from slack_log_match where active=1 and deleted=0"
 
 def slack():
 
@@ -31,7 +32,7 @@ def get_regex(db):
     regex_channel = {}
     data = db.select_dataframe(QUERY)
     for item in data.iterrows():
-        regex_channel[item[1]['pattern']] = {"channel":item[1]['channel'], "send_message":item[1]['send_message']}
+        regex_channel[item[1]['regex']] = {"channel":item[1]['channel'], "send_message":item[1]['message']}
 
     return regex_channel
 
@@ -41,7 +42,11 @@ if __name__ == '__main__':
     consumer = topic.get_simple_consumer(reset_offset_on_start=True, auto_offset_reset=OffsetType.LATEST)
     crushercache = lnk.dbs.crushercache
     regex_channel= get_regex(crushercache)
+    timer = datetime.datetime.now() + datetime.timedelta(seconds=20)
     for message in consumer:
+        current_timer = datetime.datetime.now()
+        if current_timer > timer:
+            regex_channel= get_regex(crushercache)
         if message is not None:
             msg = message.value
             result = msg
