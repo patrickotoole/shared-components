@@ -5,7 +5,7 @@ from link import lnk
 import ujson
 import re
 
-QUERY = "select * from kafka_regex"
+QUERY = "select * from kafka_regex where active=1 and deleted=0"
 
 def slack():
 
