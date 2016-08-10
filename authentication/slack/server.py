@@ -72,7 +72,8 @@ class AuthenticationCallbackHandler(web.RequestHandler, DBQuery):
 
     def get(self):
         if self.get_secure_cookie('advertiser') is None:
-            self.redirect('//' + self.request.host)
+            host = '//' + self.request.headers.get('X-Real-Host',self.request.host)
+            self.redirect(host)
             return
 
         code = self.get_argument('code','')
