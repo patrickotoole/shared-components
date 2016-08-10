@@ -51,7 +51,8 @@ if __name__ == '__main__':
             msg = message.value
             result = msg
             for pattern in regex_channel.keys():
-                if re.match(pattern,msg) is not None: 
-                    result = re.sub(pattern, regex_channel[pattern]['send_message'], msg)
+                if re.match(pattern,msg) is not None:
+                    send_message =  regex_channel[pattern]['send_message'] if not None else "" 
+                    result = re.sub(pattern, send_message, msg)
                     send_msg = {"channel":regex_channel[pattern]['channel'], "message":result}
                     slack().__call__(send_msg)
