@@ -93,8 +93,6 @@ def load(console_api, rockerbox, advertisers):
                                     (campaigns['lifetime_budget_imps']!= 0) & 
                                     (campaigns['lifetime_budget_imps'].apply(lambda x: not pd.isnull(x)))
                         ]
-        import ipdb
-        ipdb.set_trace()
 
 
         logging.info("filtered to %d rows " %len(yoshi_testing))
