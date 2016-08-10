@@ -8,6 +8,8 @@ from base import BaseHandler
 from login.handler import LoginHandler
 from permissions.handler import AccountPermissionsHandler
 from user.handler import UserHandler
+from user.nonce_handler import NonceHandler
+
 
 SignupHandler = UserHandler
 
