@@ -55,4 +55,3 @@ if __name__ == '__main__':
                     result = re.sub(pattern, regex_channel[pattern]['send_message'], msg)
                     send_msg = {"channel":regex_channel[pattern]['channel'], "message":result}
                     slack().__call__(send_msg)
-            print message.value
