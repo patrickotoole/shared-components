@@ -23,7 +23,7 @@ def slack():
                 
         def __init__(self):
             from slackclient import SlackClient
-            TOKEN = "xoxp-2171079607-3074847889-26638050530-c10bb6093c"
+            TOKEN = "xoxp-2171079607-2171842034-68524602183-09d52162c2"
             self.slackclient = SlackClient(TOKEN)
 
     return Slack()
