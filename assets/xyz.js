@@ -143,7 +143,8 @@
       if (v.type == "conv") trackConv(v);
 
     }
-    RB.track("view")
+
+    if (!RB.disablePushState) RB.track("view")
     RB.queue.map(function(args){ RB.track(args[0],args[1]) })
     RB.queue = []
 
