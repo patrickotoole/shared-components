@@ -158,7 +158,7 @@ class SlackMessageHandler(web.RequestHandler, DBQuery):
 
             data = urllib.urlencode({
                 'channel': user['channel_id'],
-                'token': user['bot_access_token'],
+                'token': user['global_access_token'],
                 'text': '',
                 'attachments': json.dumps([{
                     'fallback': 'Top articles for today.',
