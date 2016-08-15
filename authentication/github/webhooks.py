@@ -63,7 +63,8 @@ class GithubServer(web.RequestHandler):
         logging.info("about to make request")
         try:
             self.marathon.headers['content-type']='application/json'
-            _resp = marathon.post('/v2/apps' ,data=jsonFile)
+            _resp = self.marathon.post('/v2/apps' ,data=jsonFile)
+            self.marathon.headers['content-type']=''
             logging.info(_resp)
             logging.info(_resp.text)
         except:
