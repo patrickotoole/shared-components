@@ -4,6 +4,7 @@ from tornado import httpserver
 from tornado import web
 import logging
 from link import lnk
+import requests
 
 class DevServer(web.RequestHandler):
     
@@ -34,7 +35,7 @@ class DevServer(web.RequestHandler):
         worked=False
         logging.info("about to delete branch")
         try:    
-            url = '/v2/apps/crusher-%s' % branch_name.replace("_","-")
+            url = '/v2/apps/apps/crusher-%s' % branch_name.replace("_","-")
             _resp = marathon.delete(url)
             logging.info(_resp)
             logging.info(_resp.text)
@@ -66,7 +67,6 @@ class DevServer(web.RequestHandler):
             _resp = marathon.post('/v2/apps' ,data=jsonFile)
             logging.info(_resp)
             logging.info(_resp.text)
-            self.send_notification(branch_name)
         except:
             self.set_status(400)
         return True
