@@ -34,7 +34,7 @@ class DevServer(web.RequestHandler):
         worked=False
         logging.info("about to delete branch")
         try:    
-            url = '/v2/apps/%s' % branch_name
+            url = '/v2/apps/crusher-%s' % branch_name
             _resp = marathon.delete(url)
             logging.info(_resp)
             logging.info(_resp.text)
