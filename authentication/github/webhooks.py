@@ -72,9 +72,9 @@ class GithubServer(web.RequestHandler):
 
 class WebApp(web.Application):
 
-    def __init__(self,db):
+    def __init__(self,db, marathon):
         handlers = [
-            (r"/webhook", GithubServer, {"db":db}),
+            (r"/webhook", GithubServer, {"db":db, "marathon":marathon}),
         ]
 
         settings = dict(
