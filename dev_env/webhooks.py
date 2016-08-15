@@ -34,10 +34,11 @@ class DevServer(web.RequestHandler):
         worked=False
         logging.info("about to delete branch")
         try:    
-            url = '/v2/apps/crusher-%s' % branch_name
+            url = '/v2/apps/crusher-%s' % branch_name.replace("_","-")
             _resp = marathon.delete(url)
             logging.info(_resp)
             logging.info(_resp.text)
+            self.send_notification(branch_name)
             worked=True
         except:
             self.set_status(400)
