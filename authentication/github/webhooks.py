@@ -64,7 +64,7 @@ class GithubServer(web.RequestHandler):
         try:
             self.marathon.headers['content-type']='application/json'
             _resp = self.marathon.post('/v2/apps' ,data=jsonFile)
-            self.marathon.headers['content-type']=''
+            self.marathon.headers.pop('content-type')
             logging.info(_resp)
             logging.info(_resp.text)
         except:
