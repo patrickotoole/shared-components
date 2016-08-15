@@ -6,10 +6,11 @@ import logging
 from link import lnk
 import requests
 
-class DevServer(web.RequestHandler):
+class GithubServer(web.RequestHandler):
     
-    def initialize(self,db):
+    def initialize(self,db, marathon):
         self.db = db
+        self.marathon = marathon
         
     def post(self):
         try:
@@ -31,19 +32,18 @@ class DevServer(web.RequestHandler):
             self.write(ujson.dumps({"success":False}))
 
     def deleteBranch(self,branch_name):
-        marathon = lnk.api.marathon
         worked=False
         logging.info("about to delete branch")
         try:    
             url = '/v2/apps/apps/crusher-%s' % branch_name.replace("_","-")
-            _resp = marathon.delete(url)
+            _resp = self.marathon.delete(url)
             logging.info(_resp)
             logging.info(_resp.text)
             self.send_notification(branch_name)
             worked=True
         except:
             self.set_status(400)
-        return True
+        return worked
 
     def readAppFile(self, branch_name):
         f = open("newapp.json")
@@ -60,10 +60,9 @@ class DevServer(web.RequestHandler):
         requests.post(url, data=ujson.dumps({"text":text}))
 
     def sendToMarathon(self, jsonFile, branch_name):
-        marathon = lnk.api.marathon
         logging.info("about to make request")
         try:
-            marathon.headers['content-type']='application/json'
+            self.marathon.headers['content-type']='application/json'
             _resp = marathon.post('/v2/apps' ,data=jsonFile)
             logging.info(_resp)
             logging.info(_resp.text)
@@ -75,7 +74,7 @@ class WebApp(web.Application):
 
     def __init__(self,db):
         handlers = [
-            (r"/webhook", DevServer, {"db":db}),
+            (r"/webhook", GithubServer, {"db":db}),
         ]
 
         settings = dict(
@@ -92,7 +91,7 @@ def main():
 
     from link import lnk
 
-    app = WebApp(lnk.dbs.rockerbox)
+    app = WebApp(lnk.dbs.rockerbox, lnk.api.marathon)
     server = httpserver.HTTPServer(app)
     server.listen(9001, '0.0.0.0')
     logging.info("Serving at http://0.0.0.0:9001")
