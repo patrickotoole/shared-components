@@ -13,15 +13,35 @@ class DevServer(web.RequestHandler):
     def post(self):
         try:
             g_data = ujson.loads(self.request.body)
+            #if closed
             logging.info(self.request.body)
-            marathon_file = self.readAppFile(g_data['pull_request']['head']['ref'])
-            success = self.sendToMarathon(marathon_file, g_data['pull_request']['head']['ref'])
+            if g_data['action'] =='closed':
+                branch_name = g_data['pull_request']['head']['ref']
+                success = self.deleteBranch(branch_name)
+            else:
+                marathon_file = self.readAppFile(g_data['pull_request']['head']['ref'])
+                success = self.sendToMarathon(marathon_file, g_data['pull_request']['head']['ref'])
+            #check if it was sucessful
             if success:
                 self.write(ujson.dumps({"success":True}))
             else:
                 self.write(ujson.dumps({"success":False}))
         except:
             self.write(ujson.dumps({"success":False}))
+
+    def deleteBranch(self,branch_name):
+        marathon = lnk.api.marathon
+        worked=False
+        logging.info("about to delete branch")
+        try:    
+            url = '/v2/apps/%s' % branch_name
+            _resp = marathon.delete(url)
+            logging.info(_resp)
+            logging.info(_resp.text)
+            worked=True
+        except:
+            self.set_status(400)
+        return True
 
     def readAppFile(self, branch_name):
         f = open("newapp.json")
@@ -31,7 +51,12 @@ class DevServer(web.RequestHandler):
         currentFile['cmd'] = currentFile['cmd'] % {'branch_name': branch_name}
         logging.info(ujson.dumps(currentFile))
         return ujson.dumps(currentFile)
-    
+
+    def send_notification(self, branch_name):
+        url= "https://hooks.slack.com/services/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"
+        text = "@channel: Confirm that branch %s has either been deleted or tested & deployed" % branch_name
+        requests.post(url, data=ujson.dumps({"text":text}))
+
     def sendToMarathon(self, jsonFile, branch_name):
         marathon = lnk.api.marathon
         logging.info("about to make request")
@@ -40,6 +65,7 @@ class DevServer(web.RequestHandler):
             _resp = marathon.post('/v2/apps' ,data=jsonFile)
             logging.info(_resp)
             logging.info(_resp.text)
+            self.send_notification(branch_name)
         except:
             self.set_status(400)
         return True
