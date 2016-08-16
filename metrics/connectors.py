@@ -83,7 +83,7 @@ class ConnectorConfig(object):
                     mock_connect=skip_visit_events,topic="served_imps_tree",transform=ujson.loads
                 )
                 self.connectors["hindsight_log"] =  KafkaQueue(
-                    topic="hindsight_log",transform=ujson.loads
+                    mock_connect=False, topic="hindsight_log",transform=ujson.loads
                 )
 
 
