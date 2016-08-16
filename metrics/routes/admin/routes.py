@@ -26,6 +26,15 @@ class AdminRoutes(
 
         ]
 
+    @connectors()
+    def work_queue_logging_routes(self):
+        import handlers.admin.workqueuelog as log
+        return [
+
+            (r'/logging/?(.*?)', log.WQLog, self.connectors),
+
+        ]
+
     @namespace("/admin")
     @connectors("db")
     def index(self):
