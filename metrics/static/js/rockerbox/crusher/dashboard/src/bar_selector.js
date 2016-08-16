@@ -46,6 +46,8 @@ BarSelector.prototype = {
     }
   , type: function(val) { return accessor.bind(this)("type",val) }
   , title: function(val) { return accessor.bind(this)("title",val) }
+  , skip_check: function(val) { return accessor.bind(this)("skip_check",val) }
+
   , draw: function() {
 
       var self = this
@@ -112,13 +114,13 @@ BarSelector.prototype = {
               })
         
           bar.exit().remove()
-        
-        
-          var checks = d3_splat(svg,".check","foreignObject",false,labelAccessor)
-              .classed("check",true)
-              .attr("x",2)
-              .attr("y", function(d) { return y(labelAccessor(d)) })
-              .html("<xhtml:tree></xhtml:tree>")
+
+          if (!self._skip_check) { 
+            var checks = d3_splat(svg,".check","foreignObject",false,labelAccessor)
+                .classed("check",true)
+                .attr("x",2)
+                .attr("y", function(d) { return y(labelAccessor(d)) })
+                .html("<xhtml:tree></xhtml:tree>")
         
             svg.selectAll("foreignobject").each(function(z){
               var tree = d3.select(this.children[0])
@@ -133,14 +135,13 @@ BarSelector.prototype = {
                 })
             })
         
-        
-        
-          checks.exit().remove()
+            checks.exit().remove()
+          }
         
         
           var label = d3_splat(svg,".name","text",false,labelAccessor)
               .classed("name",true)
-              .attr("x",25)
+              .attr("x", self._skip_check ? 5 : 25 )
               .attr("style", "text-anchor:start;dominant-baseline: middle;")
               .attr("y", function(d) { return y(labelAccessor(d)) + y.rangeBand()/2 + 1; })
               .text(labelAccessor)
@@ -158,6 +159,8 @@ BarSelector.prototype = {
                 var x = (d.percent > 0) ?  "↑" : "↓"
                 return "(" + v + x  + ")"
               })
+
+          percent.exit().remove()
         
           svg.append("g")
               .attr("class", "y axis")

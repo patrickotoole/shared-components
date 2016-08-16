@@ -8,6 +8,8 @@ import bar_selector from './bar_selector'
 import time_selector from './time_selector'
 import table from './table'
 
+import filter from 'filter'
+
 
 
 
@@ -100,26 +102,15 @@ Dashboard.prototype = {
         .draw()
 
     }
-  , render_center: function() {
-      this._center = d3_updateable(this._target,".center","div")
-        .classed("center col-md-6",true)
-
-      var current =  this._center
-        , _top = ui_helper.topSection(current)
-        , _lower = ui_helper.remainingSection(current)
-
-      time_selector(_top)
-        .data(transform.buildTimes(this._data))
-        .draw()
+  , render_view: function(_lower,data) {
 
       var head = d3_updateable(_lower, "h3","h3")
         .style("margin-bottom","15px")
         .style("margin-top","-5px")
 
-
       var tabs = [
-          transform.buildDomains(this._data)
-        , transform.buildUrls(this._data)
+          transform.buildDomains(data)
+        , transform.buildUrls(data)
       ]
       tabs[0].selected = 1
 
@@ -152,8 +143,11 @@ Dashboard.prototype = {
         d3_updateable(head,"span","span")
           .text(selected.key)
 
+        _lower.selectAll(".vendor-domains-bar-desc").remove()
+
         var t = table(_lower)
           .data(selected)
+
 
         if (selected.key == "Top Domains") {
           var samp_max = d3.max(selected.values,function(x){return x.percent_norm})
@@ -300,7 +294,100 @@ Dashboard.prototype = {
         t.draw()
       }
 
-      draw()
+      draw()      
+    }
+  , render_center: function() {
+      this._center = d3_updateable(this._target,".center","div")
+        .classed("center col-md-6",true)
+
+      var current =  this._center
+        , _top = ui_helper.topSection(current)
+        , _lower = ui_helper.remainingSection(current)
+
+      var head = d3_updateable(_top, "h3","h3")
+        .style("margin-bottom","15px")
+        .style("margin-top","-5px")
+        .text("Filter off-site activity")
+
+      d3_updateable(_top, ".subtitle-filter","div")
+        .classed("subtitle-filter",true)
+        .attr("style","padding-left:10px; text-transform: uppercase; font-weight: bold; line-height: 24px; margin-bottom: 10px;")
+        .text("Users matching All of the following:")
+
+
+
+
+
+      //time_selector(_top)
+      //  .data(transform.buildTimes(this._data))
+      //  .draw()
+
+      var self = this
+        , data = self._data;
+
+      filter.filter(_top)
+        .fields(["category","title","time"])
+        .ops([
+            [{"key": "equals"}]
+          , [{"key":"contains"},{"key":"starts with"},{"key":"ends with"}]
+          , [{"key":"equals"}, {"key":"between"}]
+        ])
+        .data([{}])
+        .on("update",function(x){
+
+          var mapping = {
+              "category": "parent_category_name"
+            , "title": "url"
+            , "time": "something"
+          }
+
+          var y = x.map(function(z) {
+            return { 
+                "field": mapping[z.field]
+              , "op": z.op
+              , "value": z.value
+            }
+          })
+
+          
+          if (y.length > 0 && y[0].value) {
+            var data = {
+                "full_urls": filter.filter_data(self._data.full_urls).logic("and").by(y)
+              , "url_only": filter.filter_data(self._data.url_only).logic("and").by(y)
+            }
+
+            var categories = d3.nest()
+              .key(function(x){ return x.parent_category_name})
+              .rollup(function(v) {
+                return v.reduce(function(p,c) { return p + c.uniques },0)
+              })
+              .entries(data.url_only)
+
+            var total = categories.reduce(function(p,c) { return p + c.values },0)
+
+            categories.map(function(x) {
+              x.value = x.values
+              x.percent = x.value / total
+            })
+
+            data["display_categories"] = {
+                "key":"Categories"
+              , "values": categories.filter(function(x) { return x.key != "NA" })
+            }
+
+            self._data.display_categories = data.display_categories
+
+            self.render_right(data)
+            self.render_view(_lower,data)
+          } else {
+            self.render_right(data)
+            self.render_view(_lower,self._data)
+          }
+        })
+        .draw()
+        ._target.selectAll(".filters-wrapper").style("padding-left","10px")
+
+      this.render_view(_lower,this._data)
 
     }
   , render_center_loading: function() {
@@ -317,9 +404,10 @@ Dashboard.prototype = {
 
 
     }
-  , render_right: function() {
+  , render_right: function(data) {
 
       var self = this
+        , data = data || this._data
 
       this._right = d3_updateable(this._target,".right","div")
         .classed("right col-md-3",true)
@@ -329,13 +417,14 @@ Dashboard.prototype = {
         , _lower = ui_helper.remainingSection(current)
 
       summary_box(_top)
-        .data(transform.buildOffsiteSummary(this._data))
+        .data(transform.buildOffsiteSummary(data))
         .draw()
 
-      this._data.display_categories = this._data.display_categories || transform.buildCategories(this._data)
+      this._data.display_categories = data.display_categories || transform.buildCategories(data)
 
       bar_selector(_lower)
-        .data(this._data.display_categories)
+        .skip_check(true)
+        .data(data.display_categories)
         .on("click",function(x) {
           x.selected = !x.selected
           self.draw() 

@@ -1,8 +1,10 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
-  typeof define === 'function' && define.amd ? define('dashboard', ['exports'], factory) :
-  factory((global.dashboard = {}));
-}(this, function (exports) { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('filter')) :
+  typeof define === 'function' && define.amd ? define('dashboard', ['exports', 'filter'], factory) :
+  factory((global.dashboard = {}),global.filter);
+}(this, function (exports,filter) { 'use strict';
+
+  filter = 'default' in filter ? filter['default'] : filter;
 
   function accessor(attr, val) {
     if (val === undefined) return this["_" + attr]
@@ -150,45 +152,6 @@
     return {
         key: "Categories"
       , values: values.map(function(x) { x.percent = x.value/total; return x})
-    }
-  }
-
-  function buildTimes(data) {
-
-    var hour = data.current_hour
-
-    var categories = data.display_categories.values
-      .filter(function(a) { return a.selected })
-      .map(function(a) { return a.key })
-
-    if (categories.length > 0) {
-      hour = data.category_hour.filter(function(x) {return categories.indexOf(x.parent_category_name) > -1})
-      hour = d3.nest()
-        .key(function(x) { return x.hour })
-        .key(function(x) { return x.minute })
-        .rollup(function(v) {
-          return v.reduce(function(p,c) { 
-            p.uniques = (p.uniques || 0) + c.uniques; 
-            p.count = (p.count || 0) + c.count;  
-            return p },{})
-        })
-        .entries(hour)
-        .map(function(x) { 
-          console.log(x.values); 
-          return x.values.reduce(function(p,k){ 
-            p['minute'] = parseInt(k.key); 
-            p['count'] = k.values.count; 
-            p['uniques'] = k.values.uniques; 
-            return p 
-        }, {"hour":x.key}) } )
-    }
-
-    var values = hour
-      .map(function(x) { return {"key": parseFloat(x.hour) + 1 + x.minute/60, "value": x.count } })
-
-    return {
-        key: "Browsing behavior by time"
-      , values: values
     }
   }
 
@@ -382,6 +345,8 @@
       }
     , type: function(val) { return accessor.bind(this)("type",val) }
     , title: function(val) { return accessor.bind(this)("title",val) }
+    , skip_check: function(val) { return accessor.bind(this)("skip_check",val) }
+
     , draw: function() {
 
         var self = this
@@ -448,13 +413,13 @@
                 })
           
             bar.exit().remove()
-          
-          
-            var checks = d3_splat(svg,".check","foreignObject",false,labelAccessor)
-                .classed("check",true)
-                .attr("x",2)
-                .attr("y", function(d) { return y(labelAccessor(d)) })
-                .html("<xhtml:tree></xhtml:tree>")
+
+            if (!self._skip_check) { 
+              var checks = d3_splat(svg,".check","foreignObject",false,labelAccessor)
+                  .classed("check",true)
+                  .attr("x",2)
+                  .attr("y", function(d) { return y(labelAccessor(d)) })
+                  .html("<xhtml:tree></xhtml:tree>")
           
               svg.selectAll("foreignobject").each(function(z){
                 var tree = d3.select(this.children[0])
@@ -469,14 +434,13 @@
                   })
               })
           
-          
-          
-            checks.exit().remove()
+              checks.exit().remove()
+            }
           
           
             var label = d3_splat(svg,".name","text",false,labelAccessor)
                 .classed("name",true)
-                .attr("x",25)
+                .attr("x", self._skip_check ? 5 : 25 )
                 .attr("style", "text-anchor:start;dominant-baseline: middle;")
                 .attr("y", function(d) { return y(labelAccessor(d)) + y.rangeBand()/2 + 1; })
                 .text(labelAccessor)
@@ -494,6 +458,8 @@
                   var x = (d.percent > 0) ?  "↑" : "↓"
                   return "(" + v + x  + ")"
                 })
+
+            percent.exit().remove()
           
             svg.append("g")
                 .attr("class", "y axis")
@@ -503,143 +469,6 @@
                 .attr("y2", _sizes.height);
 
         })
-
-      }
-  }
-
-  var EXAMPLE_DATA$2 = {
-      "key": "Browsing behavior by time"
-    , "values": [
-        {  
-            "key": 1
-          , "value": 12344
-        }
-      , {
-            "key": 2
-          , "value": 12344
-        }
-      , {
-            "key": 2.25
-          , "value": 12344
-        }
-      , {
-            "key": 2.5
-          , "value": 12344
-        }
-      , {
-            "key": 3
-          , "value": 1234
-        }
-
-      , {
-            "key": 4
-          , "value": 12344
-        }
-
-
-    ] 
-  }
-
-  function TimeSelector(target) {
-    this._target = target;
-    this._data = EXAMPLE_DATA$2
-  }
-
-  function time_selector(target) {
-    return new TimeSelector(target)
-  }
-
-  TimeSelector.prototype = {
-
-      data: function(val) { return accessor.bind(this)("data",val) }
-    , title: function(val) { return accessor.bind(this)("title",val) }
-    , draw: function() {
-        var wrap = this._target
-        var desc = d3_updateable(wrap,".vendor-domains-bar-desc","div")
-          .classed("vendor-domains-bar-desc",true)
-          .style("display","inherit")
-          .style("height","100%")
-          .datum(this._data)
-
-        var wrapper = d3_updateable(desc,".w","div")
-          .classed("w",true)
-          .style("height","100%")
-
-    
-        
-
-        wrapper.each(function(row){
-
-          var data = row.values
-            , count = data.length;
-
-          d3_updateable(wrapper, "h3","h3")
-            .text(function(x){return x.key})
-            .style("margin-bottom","15px")
-
-          var _sizes = autoSize(wrapper,function(d){return d -50}, function(d){return d - 40}),
-            gridSize = Math.floor(_sizes.width / 24 / 3);
-
-          var valueAccessor = function(x) { return x.value }
-            , keyAccessor = function(x) { return x.key }
-
-          var steps = Array.apply(null, Array(count)).map(function (_, i) {return i+1;})
-
-          var _colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"]
-          var colors = _colors
-
-          var x = d3.scale.ordinal().range(steps)
-            , y = d3.scale.linear().range([_sizes.height, 0 ]);
-
-          var colorScale = d3.scale.quantile()
-            .domain([0, d3.max(data, function (d) { return d.frequency; })])
-            .range(colors);
-
-          var svg_wrap = d3_updateable(wrapper,"svg","svg")
-            .attr("width", _sizes.width + _sizes.margin.left + _sizes.margin.right)
-            .attr("height", _sizes.height + _sizes.margin.top + _sizes.margin.bottom)
-
-          var svg = d3_splat(svg_wrap,"g","g",function(x) {return [x.values]},function(_,i) {return i})
-            .attr("transform", "translate(" + _sizes.margin.left + "," + 0 + ")")
-
-          x.domain(data.map(function(d) { return keyAccessor(d) }));
-          y.domain([0, d3.max(data, function(d) { return Math.sqrt(valueAccessor(d)); })]);
-
-          var bars = d3_splat(svg, ".timing-bar", "rect", data, keyAccessor)
-            .attr("class", "timing-bar")
-           
-          bars
-            .attr("x", function(d) { return ((keyAccessor(d) - 1) * gridSize * 3); })
-            .attr("width", gridSize - 2)
-            .attr("y", function(d) { return y(Math.sqrt( valueAccessor(d) )); })
-            .attr("fill","#aaa")
-            .attr("fill",function(x) { return colorScale( valueAccessor(x) ) } )
-            .attr("stroke","white")
-            .attr("stroke-width","1px")
-            .attr("height", function(d) { return _sizes.height - y(Math.sqrt( valueAccessor(d) )); })
-            .style("opacity","1")
-            .on("click",function(x){ return false })
-      
-        var z = d3.time.scale()
-          .range([0, _sizes.width])
-          .nice(d3.time.hour,24)
-          
-      
-        var xAxis = d3.svg.axis()
-          .scale(z)
-          .ticks(3)
-          .tickFormat(d3.time.format("%I %p"));
-      
-        svg.append("g")
-            .attr("class", "x axis")
-            .attr("transform", "translate(0," + _sizes.height + ")")
-            .call(xAxis);
-
-
-
-          
-        })
-
 
       }
   }
@@ -848,26 +677,15 @@
           .draw()
 
       }
-    , render_center: function() {
-        this._center = d3_updateable(this._target,".center","div")
-          .classed("center col-md-6",true)
-
-        var current =  this._center
-          , _top = topSection(current)
-          , _lower = remainingSection(current)
-
-        time_selector(_top)
-          .data(buildTimes(this._data))
-          .draw()
+    , render_view: function(_lower,data) {
 
         var head = d3_updateable(_lower, "h3","h3")
           .style("margin-bottom","15px")
           .style("margin-top","-5px")
 
-
         var tabs = [
-            buildDomains(this._data)
-          , buildUrls(this._data)
+            buildDomains(data)
+          , buildUrls(data)
         ]
         tabs[0].selected = 1
 
@@ -900,8 +718,11 @@
           d3_updateable(head,"span","span")
             .text(selected.key)
 
+          _lower.selectAll(".vendor-domains-bar-desc").remove()
+
           var t = table(_lower)
             .data(selected)
+
 
           if (selected.key == "Top Domains") {
             var samp_max = d3.max(selected.values,function(x){return x.percent_norm})
@@ -1048,7 +869,100 @@
           t.draw()
         }
 
-        draw()
+        draw()      
+      }
+    , render_center: function() {
+        this._center = d3_updateable(this._target,".center","div")
+          .classed("center col-md-6",true)
+
+        var current =  this._center
+          , _top = topSection(current)
+          , _lower = remainingSection(current)
+
+        var head = d3_updateable(_top, "h3","h3")
+          .style("margin-bottom","15px")
+          .style("margin-top","-5px")
+          .text("Filter off-site activity")
+
+        d3_updateable(_top, ".subtitle-filter","div")
+          .classed("subtitle-filter",true)
+          .attr("style","padding-left:10px; text-transform: uppercase; font-weight: bold; line-height: 24px; margin-bottom: 10px;")
+          .text("Users matching All of the following:")
+
+
+
+
+
+        //time_selector(_top)
+        //  .data(transform.buildTimes(this._data))
+        //  .draw()
+
+        var self = this
+          , data = self._data;
+
+        filter.filter(_top)
+          .fields(["category","title","time"])
+          .ops([
+              [{"key": "equals"}]
+            , [{"key":"contains"},{"key":"starts with"},{"key":"ends with"}]
+            , [{"key":"equals"}, {"key":"between"}]
+          ])
+          .data([{}])
+          .on("update",function(x){
+
+            var mapping = {
+                "category": "parent_category_name"
+              , "title": "url"
+              , "time": "something"
+            }
+
+            var y = x.map(function(z) {
+              return { 
+                  "field": mapping[z.field]
+                , "op": z.op
+                , "value": z.value
+              }
+            })
+
+            
+            if (y.length > 0 && y[0].value) {
+              var data = {
+                  "full_urls": filter.filter_data(self._data.full_urls).logic("and").by(y)
+                , "url_only": filter.filter_data(self._data.url_only).logic("and").by(y)
+              }
+
+              var categories = d3.nest()
+                .key(function(x){ return x.parent_category_name})
+                .rollup(function(v) {
+                  return v.reduce(function(p,c) { return p + c.uniques },0)
+                })
+                .entries(data.url_only)
+
+              var total = categories.reduce(function(p,c) { return p + c.values },0)
+
+              categories.map(function(x) {
+                x.value = x.values
+                x.percent = x.value / total
+              })
+
+              data["display_categories"] = {
+                  "key":"Categories"
+                , "values": categories.filter(function(x) { return x.key != "NA" })
+              }
+
+              self._data.display_categories = data.display_categories
+
+              self.render_right(data)
+              self.render_view(_lower,data)
+            } else {
+              self.render_right(data)
+              self.render_view(_lower,self._data)
+            }
+          })
+          .draw()
+          ._target.selectAll(".filters-wrapper").style("padding-left","10px")
+
+        this.render_view(_lower,this._data)
 
       }
     , render_center_loading: function() {
@@ -1065,9 +979,10 @@
 
 
       }
-    , render_right: function() {
+    , render_right: function(data) {
 
         var self = this
+          , data = data || this._data
 
         this._right = d3_updateable(this._target,".right","div")
           .classed("right col-md-3",true)
@@ -1077,13 +992,14 @@
           , _lower = remainingSection(current)
 
         summary_box(_top)
-          .data(buildOffsiteSummary(this._data))
+          .data(buildOffsiteSummary(data))
           .draw()
 
-        this._data.display_categories = this._data.display_categories || buildCategories(this._data)
+        this._data.display_categories = data.display_categories || buildCategories(data)
 
         bar_selector(_lower)
-          .data(this._data.display_categories)
+          .skip_check(true)
+          .data(data.display_categories)
           .on("click",function(x) {
             x.selected = !x.selected
             self.draw() 
