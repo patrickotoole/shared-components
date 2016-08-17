@@ -4,7 +4,7 @@ import logging
 
 URL = "/crusher/v1/visitor/{}/cache?url_pattern={}"
 URL2 = "/crusher/v1/visitor/{}/cache?url_pattern={}&filter_id={}"
-
+TS_URL = "/crusher/pattern_search/timeseries_only?search={}"
 
 def check_cache_endpoint(crusher, pattern, udf):
     url = URL.format(udf, pattern['url_pattern'][0])
@@ -15,6 +15,20 @@ def check_cache_endpoint(crusher, pattern, udf):
         print str(e)
         data ={}
     return data
+
+def check_cassandra_cache(crusher, pattern):
+    url = TS_URL.format(pattern)
+    allcached = True
+    try:
+        _resp=crusher.get(url)
+        data = _resp.json
+        for day in data['results']:
+            if day['uniques']==0 or day['visits']==0 or day['views']==0:
+                raise Exception("missing backfill or recurring")
+    except Exception as e:
+        print str(e)
+        allcached=False
+    return allcached
 
 def get_segments(crusher, advertiser):
     url = "/crusher/funnel/action?format=json"
@@ -52,3 +66,9 @@ if __name__ == "__main__":
                 else:
                     print "Fail"
                     print "Failed for advertiser %s and pattern %s and udf %s" % (advertiser, segment, udf)
+            cached = check_cassandra_cache(crusher, segment)
+            if cached:
+                print "Pass for advertiser %s and pattern %s and udf %s" % (advertiser, segment, udf)
+            else:
+                print "Fail"
+                print "Failed for advertiser %s and pattern %s and udf %s" % (advertiser, segment, 'Cassandra cache')
