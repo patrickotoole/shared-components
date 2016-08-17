@@ -180,6 +180,7 @@ data.map(function(item){
 
 
 </script>
+<a href="/logging" target="_blank">LOG</a>
             """
 
             self.render("admin/datatable.html", data="", paths=js)
