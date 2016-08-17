@@ -22,10 +22,13 @@ class SetToRemove(BaseRunner):
         data_list = data['results']
         has_data = False
         for item in data_list:
-            if item['views'] >0:
+            if item['views'] >10:
                 has_data = True
-            if has_data:
                 break
+        views_list = [x['views'] for x in data_list]
+        avg_views = sum(views_list) / len(views_list)
+        if avg_views <=5:
+            has_data = False
         return has_data
 
     def set_pattern_to_delete(self,advertiser, filter_id):
