@@ -2,7 +2,7 @@ import logging
 from report import Report
 
 def get_advertisers(db):
-    df = db.select_dataframe("select * from advertiser where active=1 and deleted=0 and running=1")
+    df = db.select_dataframe("select * from advertiser where active=1 and deleted=0 and running=1 and media=1")
     return set(df.external_advertiser_id)
 
 def run(db, console, rockerbox, ids, report_types):
