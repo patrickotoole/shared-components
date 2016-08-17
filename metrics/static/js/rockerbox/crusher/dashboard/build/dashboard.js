@@ -62,7 +62,7 @@
       .render_op("between",function(filter,value) {
         var self = this
 
-        value.value = value.value || [0,24]
+        value.value = typeof(value.value) == "object" ? value.value : [0,24]
 
         d3_updateable(filter,"input.value.low","input")
           .classed("value low",true)

@@ -324,6 +324,16 @@
               return String(x[field]).indexOf(String(value)) > -1
             }
           }
+        , "starts with" : function(field,value) {
+            return function(x) {
+              return String(x[field]).indexOf(String(value)) == 0
+            }
+          }
+        , "ends with" : function(field,value) {
+            return function(x) {
+              return (String(x[field]).length - String(value).length) == String(x[field]).indexOf(String(value))
+            }
+          }
         , "does not equal" : function(field,value) {
             return function(x) {
               return String(x[field]) != String(value)
