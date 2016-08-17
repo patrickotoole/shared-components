@@ -51,8 +51,8 @@ export function Table(target) {
       d3_updateable(row,".url","div")
         .classed("url",true)
         .style("width","75%")
-        .style("line-height","30px")
-        .style("height","30px")
+        .style("line-height","24px")
+        .style("height","24px")
         .style("overflow","hidden")
         .style("display","inline-block")
         .text(function(x) {return x.key})
@@ -61,6 +61,7 @@ export function Table(target) {
         .classed("count",true)
         .style("width","25%")
         .style("display","inline-block")
+        .style("vertical-align","top")
         .text(function(x){return x.value})
 
   }
@@ -83,6 +84,7 @@ Table.prototype = {
       var desc = d3_updateable(wrap,".vendor-domains-bar-desc","div")
         .classed("vendor-domains-bar-desc",true)
         .style("display","inherit")
+        .style("padding-left","10px")
         .datum(this._data)
 
       var wrapper = d3_updateable(desc,".w","div")

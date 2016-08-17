@@ -45,6 +45,7 @@ export function Filter(target) {
   this._target = target
   this._data = false
   this._on = {}
+  this._render_op = {}
 }
 
 export default function filter(target) {
@@ -57,6 +58,7 @@ Filter.prototype = {
       var wrap = d3_updateable(this._target,".filters-wrapper","div")
         .classed("filters-wrapper",true)
         .style("padding-left", "10px")
+        .style("padding-right", "20px")
 
       wrap.exit().remove()
       
@@ -99,6 +101,12 @@ Filter.prototype = {
       this._fn = fn
       return this
     }
+  , render_op: function(op,fn) {
+      if (fn === undefined) return this._render_op[op] || function() {};
+      this._render_op[op] = fn;
+      return this
+    }
+
   , on: function(action,fn) {
       if (fn === undefined) return this._on[action] || function() {};
       this._on[action] = fn;
@@ -147,7 +155,7 @@ Filter.prototype = {
 
           //value.fn = self.buildOp(value)
           self.on("update")(self.data())
-          self.drawFields(filter, ops[pos], value, pos)
+          self.drawOps(filter, ops[pos], value, pos)
         })
       
       d3_updateable(select,"option","option")
@@ -162,12 +170,12 @@ Filter.prototype = {
 
       if (value.op && value.field && value.value) {
         var pos = fields.indexOf(value.field)
-        self.drawFields(filter, ops[pos], value, pos)
+        self.drawOps(filter, ops[pos], value, pos)
       }
 
 
     }
-  , drawFields: function(filter, ops, value) {
+  , drawOps: function(filter, ops, value) {
 
       var self = this;
 
@@ -180,8 +188,8 @@ Filter.prototype = {
           value.op = this.selectedOptions[0].__data__.key
           //value.fn = self.buildOp(value)
           self.on("update")(self.data())
+          self.drawInput(filter, value, value.op)
         })
-
 
       //var dflt = [{"key":"Select Operation...","disabled":true,"hidden":true}]
 
@@ -189,14 +197,21 @@ Filter.prototype = {
 
       value.op = value.op || new_ops[0].key
 
-    
       var ops = d3_splat(select,"option","option",new_ops,function(x){return x.key})
         .text(function(x) { return x.key }) 
         .attr("selected", function(x) { return x.key == value.op ? "selected" : undefined })
 
       ops.exit().remove()
-    
-      
+      self.drawInput(filter, value, value.op)
+
+    }
+  , drawInput: function(filter, value, op) {
+      debugger
+
+      var r = this._render_op[op]
+
+      if (r) return r(filter,value)
+
       d3_updateable(filter,"input.value","input")
         .classed("value",true)
         .style("margin-bottom","10px")
@@ -217,6 +232,7 @@ Filter.prototype = {
   , filterFooter: function(wrap) {
       var footer = d3_updateable(wrap,".filter-footer","div")
         .classed("filter-footer",true)
+        .style("margin-bottom","20px")
 
       var self = this
       

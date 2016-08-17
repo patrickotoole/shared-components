@@ -6,6 +6,112 @@
 
   filter = 'default' in filter ? filter['default'] : filter;
 
+  function render_filter(_top,_lower) {
+    var self = this
+      , data = self._data;
+
+    var subtitle = d3_updateable(_top, ".subtitle-filter","div")
+      .classed("subtitle-filter",true)
+      .attr("style","padding-left:10px; text-transform: uppercase; font-weight: bold; line-height: 24px; margin-bottom: 10px;")
+
+    d3_updateable(subtitle,"span.first","span")
+      .text("Users matching " )
+      .classed("first",true)
+
+    var filter_type  = d3_updateable(subtitle,"span.middle","span")
+      .classed("middle",true)
+
+
+    var select = d3_updateable(filter_type,"select","select")
+      .style("font-size","10")
+      .style("width","45px")
+      .on("change",function() {
+        var d = this.selectedOptions[0].__data__
+        s.text(d + " ")
+      })
+
+    d3_splat(select,"option","option",["All","Any"])
+      .text(String)
+    
+
+
+    d3_updateable(subtitle,"span.last","span")
+      .text(" of the following:")
+      .classed("last",true)
+
+    var mapping = {
+        "Category": "parent_category_name"
+      , "Title": "url"
+      , "Time": "hour"
+    }
+
+    var hours = d3.range(0,24).map(function(x) { return x < 10 ? "0" + String(x) : String(x) })
+      , minutes = d3.range(0,40,20).map(String);
+
+
+    var hourSelected = function() {}
+
+    filter.filter(_top)
+      .fields(Object.keys(mapping))
+      .ops([
+          [{"key": "equals"}]
+        , [{"key":"contains"},{"key":"starts with"},{"key":"ends with"}]
+        , [{"key":"equals"}, {"key":"between","input":2}]
+      ])
+      .data([{}])
+      .render_op("between",function() {
+        debugger
+      })
+      .on("update",function(x){
+
+        var y = x.map(function(z) {
+          return { 
+              "field": mapping[z.field]
+            , "op": z.op
+            , "value": z.value
+          }
+        })
+
+        
+        if (y.length > 0 && y[0].value) {
+          
+          var data = {
+              "full_urls": filter.filter_data(self._data.full_urls).logic("and").by(y)
+            , "url_only": filter.filter_data(self._data.url_only).logic("and").by(y)
+          }
+
+          var categories = d3.nest()
+            .key(function(x){ return x.parent_category_name})
+            .rollup(function(v) {
+              return v.reduce(function(p,c) { return p + c.uniques },0)
+            })
+            .entries(data.url_only)
+
+          var total = categories.reduce(function(p,c) { return p + c.values },0)
+
+          categories.map(function(x) {
+            x.value = x.values
+            x.percent = x.value / total
+          })
+
+          data["display_categories"] = {
+              "key":"Categories"
+            , "values": categories.filter(function(x) { return x.key != "NA" })
+          }
+
+          self._data.display_categories = data.display_categories
+
+          self.render_right(data)
+          self.render_view(_lower,data)
+        } else {
+          self.render_right(data)
+          self.render_view(_lower,self._data)
+        }
+      })
+      .draw()
+      ._target.selectAll(".filters-wrapper").style("padding-left","10px")
+  }
+
   function accessor(attr, val) {
     if (val === undefined) return this["_" + attr]
     this["_" + attr] = val
@@ -15,7 +121,7 @@
   function topSection(section) {
     return d3_updateable(section,".top-section","div")
       .classed("top-section",true)
-      .style("height","200px")
+      .style("min-height","160px")
   }
 
   function remainingSection(section) {
@@ -525,8 +631,8 @@
         d3_updateable(row,".url","div")
           .classed("url",true)
           .style("width","75%")
-          .style("line-height","30px")
-          .style("height","30px")
+          .style("line-height","24px")
+          .style("height","24px")
           .style("overflow","hidden")
           .style("display","inline-block")
           .text(function(x) {return x.key})
@@ -535,6 +641,7 @@
           .classed("count",true)
           .style("width","25%")
           .style("display","inline-block")
+          .style("vertical-align","top")
           .text(function(x){return x.value})
 
     }
@@ -557,6 +664,7 @@
         var desc = d3_updateable(wrap,".vendor-domains-bar-desc","div")
           .classed("vendor-domains-bar-desc",true)
           .style("display","inherit")
+          .style("padding-left","10px")
           .datum(this._data)
 
         var wrapper = d3_updateable(desc,".w","div")
@@ -884,12 +992,7 @@
           .style("margin-top","-5px")
           .text("Filter off-site activity")
 
-        d3_updateable(_top, ".subtitle-filter","div")
-          .classed("subtitle-filter",true)
-          .attr("style","padding-left:10px; text-transform: uppercase; font-weight: bold; line-height: 24px; margin-bottom: 10px;")
-          .text("Users matching All of the following:")
-
-
+        
 
 
 
@@ -900,71 +1003,11 @@
         var self = this
           , data = self._data;
 
-        filter.filter(_top)
-          .fields(["category","title","time"])
-          .ops([
-              [{"key": "equals"}]
-            , [{"key":"contains"},{"key":"starts with"},{"key":"ends with"}]
-            , [{"key":"equals"}, {"key":"between"}]
-          ])
-          .data([{}])
-          .on("update",function(x){
-
-            var mapping = {
-                "category": "parent_category_name"
-              , "title": "url"
-              , "time": "something"
-            }
-
-            var y = x.map(function(z) {
-              return { 
-                  "field": mapping[z.field]
-                , "op": z.op
-                , "value": z.value
-              }
-            })
-
-            
-            if (y.length > 0 && y[0].value) {
-              var data = {
-                  "full_urls": filter.filter_data(self._data.full_urls).logic("and").by(y)
-                , "url_only": filter.filter_data(self._data.url_only).logic("and").by(y)
-              }
-
-              var categories = d3.nest()
-                .key(function(x){ return x.parent_category_name})
-                .rollup(function(v) {
-                  return v.reduce(function(p,c) { return p + c.uniques },0)
-                })
-                .entries(data.url_only)
-
-              var total = categories.reduce(function(p,c) { return p + c.values },0)
-
-              categories.map(function(x) {
-                x.value = x.values
-                x.percent = x.value / total
-              })
-
-              data["display_categories"] = {
-                  "key":"Categories"
-                , "values": categories.filter(function(x) { return x.key != "NA" })
-              }
-
-              self._data.display_categories = data.display_categories
-
-              self.render_right(data)
-              self.render_view(_lower,data)
-            } else {
-              self.render_right(data)
-              self.render_view(_lower,self._data)
-            }
-          })
-          .draw()
-          ._target.selectAll(".filters-wrapper").style("padding-left","10px")
-
+        this.render_filter(_top,_lower)
         this.render_view(_lower,this._data)
 
       }
+    , render_filter: render_filter
     , render_center_loading: function() {
         this._center = d3_updateable(this._target,".center","div")
           .classed("center col-md-6",true)
@@ -1011,9 +1054,397 @@
 
   }
 
+  function FilterDashboard(target) {
+    this._on = {}
+    this._target = target
+      .append("ul")
+      .classed("vendors-list",true)
+        .append("li")
+        .classed("vendors-list-item",true);
+  }
+
+  function filter_dashboard(target) {
+    return new FilterDashboard(target)
+  }
+
+  FilterDashboard.prototype = {
+      data: function(val) { return accessor.bind(this)("data",val) }
+    , actions: function(val) { return accessor.bind(this)("actions",val) }
+    , draw: function() {
+        this._target
+        this._categories = {}
+        this.render_wrappers()
+        this._target.selectAll(".loading").remove()
+        this.render_lhs()
+        this.render_right()
+
+        this.render_center()
+
+      }
+    , on: function(action, fn) {
+        if (fn === undefined) return this._on[action];
+        this._on[action] = fn;
+        return this
+      }
+    , draw_loading: function() {
+        this.render_wrappers()
+        this.render_center_loading()
+        return this
+      }
+    , render_wrappers: function() {
+
+        this._lhs = d3_updateable(this._target,".lhs","div")
+          .classed("lhs col-md-2",true)
+
+        this._center = d3_updateable(this._target,".center","div")
+          .classed("center col-md-7",true)
+
+        this._right = d3_updateable(this._target,".right","div")
+          .classed("right col-md-3",true)
+
+      }
+    , render_lhs: function() {
+
+        var self = this
+
+        this._lhs = d3_updateable(this._target,".lhs","div")
+          .classed("lhs col-md-2",true)
+          .style("border-right","1px solid #ccc")
+
+        var current = this._lhs
+          //, _top = ui_helper.topSection(current)
+          , _lower = remainingSection(current)
+
+        //summary_box(_top)
+        //  .data(transform.buildOnsiteSummary(this._data))
+        //  .draw()
+
+        this._data.display_actions = this._data.display_actions || buildActions(this._data)
+        _lower.classed("affix",true)
+          .style("min-width","200px")
+
+        bar_selector(_lower)
+          .type("radio")
+          .data(this._data.display_actions)
+          .on("click",function(x) {
+            var t = this;
+
+            _lower.selectAll("input")
+              .attr("checked",function() {
+                this.checked = (t == this)
+                return undefined
+              })
+
+            //self._data.display_actions.values.map(function(v) {
+            //  v.selected = 0
+            //  if (v == x) v.selected = 1
+            //})
+            self.draw_loading()
+
+            self.on("select")(x)
+          })
+          .draw()
+
+      }
+    , render_view: function(_lower,data) {
+
+        var head = d3_updateable(_lower, "h3","h3")
+          .style("margin-bottom","15px")
+          .style("margin-top","-5px")
+
+        var tabs = [
+            buildDomains(data)
+          , buildUrls(data)
+        ]
+        tabs[0].selected = 1
+
+        d3_updateable(head,"span","span")
+          .text(tabs.filter(function(x){ return x.selected})[0].key)
+
+        var select = d3_updateable(head,"select","select")
+          .style("width","19px")
+          .style("margin-left","12px")
+          .on("change", function(x) {
+            tabs.map(function(y) { y.selected = 0 })
+
+            this.selectedOptions[0].__data__.selected = 1
+            draw()
+          })
+        
+        d3_splat(select,"option","option",tabs,function(x) {return x.key})
+          .text(function(x){ return x.key })
+          .style("color","#888")
+          .style("min-width","100px")
+          .style("text-align","center")
+          .style("display","inline-block")
+          .style("padding","5px")
+          .style("border",function(x) {return x.selected ? "1px solid #888" : undefined})
+          .style("opacity",function(x){ return x.selected ? 1 : .5})
+
+        function draw() {
+          var selected = tabs.filter(function(x){ return x.selected})[0]
+
+          d3_updateable(head,"span","span")
+            .text(selected.key)
+
+          _lower.selectAll(".vendor-domains-bar-desc").remove()
+
+          var t = table(_lower)
+            .data(selected)
+
+
+          if (selected.key == "Top Domains") {
+            var samp_max = d3.max(selected.values,function(x){return x.percent_norm})
+              , pop_max = d3.max(selected.values,function(x){return x.pop_percent})
+              , max = Math.max(samp_max,pop_max);
+
+            var width = _lower.style("width").split(".")[0].replace("px","")/2 - 10
+              , height = 20
+
+            var x = d3.scale.linear()
+              .range([0, width])
+              .domain([0, max])
+
+            t.header(function(wrap) {
+              var headers = d3_updateable(wrap,".headers","div")
+                .classed("headers",true)
+                .style("text-transform","uppercase")
+                .style("font-weight","bold")
+                .style("line-height","24px")
+                .style("border-bottom","1px solid #ccc")
+                .style("margin-bottom","10px")
+
+              headers.html("")
+
+              d3_updateable(headers,".url","div")
+                .classed("url",true)
+                .style("width","30%")
+                .style("display","inline-block")
+                .text("Domain")
+
+              d3_updateable(headers,".bullet","div")
+                .classed("bullet",true)
+                .style("width","50%")
+                .style("display","inline-block")
+                .text("Likelihood Versus Population")
+
+              d3_updateable(headers,".percent","div")
+                .classed("percent",true)
+                .style("width","20%")
+                .style("display","inline-block")
+                .text("Percent Diff")
+
+
+
+            })
+
+            t.row(function(row) {
+              d3_updateable(row,".url","div")
+                .classed("url",true)
+                .style("width","30%")
+                .style("display","inline-block")
+                .style("vertical-align","top")
+                .text(function(x) {return x.key})
+
+              var bullet = d3_updateable(row,".bullet","div")
+                .classed("bullet",true)
+                .style("width","50%")
+                .style("display","inline-block")
+
+              var diff = d3_updateable(row,".diff","div")
+                .classed("diff",true)
+                .style("width","15%")
+                .style("display","inline-block")
+                .style("vertical-align","top")
+                .text(function(x) {return d3.format("%")((x.percent_norm-x.pop_percent)/x.pop_percent) })
+
+              var plus = d3_updateable(row,".plus","a")
+                .classed("plus",true)
+                .style("width","5%")
+                .style("display","inline-block")
+                .style("font-weight","bold")
+                .style("vertical-align","top")
+                .text("+")
+                .on("click",function(x) {
+
+                  var d3_this = d3.select(this)
+                  var d3_parent = d3.select(this.parentNode)
+                  var target = d3_parent.selectAll(".expanded")
+
+                  if (target.classed("hidden")) {
+                    d3_this.html("&ndash;")
+                    target.classed("hidden", false)
+
+                    d3_splat(target,".row","div",x.urls.filter(function(x){
+                        var sp = x.replace("http://","")
+                          .replace("https://","")
+                          .replace("www.","")
+                          .split("/");
+
+                        if ((sp.length > 1) && (sp.slice(1).join("/").length > 7)) return true
+
+
+                        return false
+                      }).slice(0,10))
+                      .classed("row",true)
+                      .style("overflow","hidden")
+                      .style("height","30px")
+                      .style("line-height","30px")
+                      .text(String)
+
+                    return x
+                  }
+                  d3_this.html("+")
+                  target.classed("hidden",true).html("")
+                })
+                 
+
+              var expanded = d3_updateable(row,".expanded","div")
+                .classed("expanded hidden",true)
+                .style("width","100%")
+                .style("vertical-align","top")
+                .style("padding-right","30px")
+                .style("padding-left","10px")
+                .style("margin-left","10px")
+                .style("margin-bottom","30px")
+                .style("border-left","1px solid grey")
+
+
+
+
+
+              var svg = d3_updateable(bullet,"svg","svg")
+                .attr("width",width)
+                .attr("height",height)
+
+   
+              d3_updateable(svg,".bar","rect")
+                .attr("x",0)
+                .attr("width", function(d) {return x(d.pop_percent) })
+                .attr("height", height)
+                .attr("fill","#888")
+
+              d3_updateable(svg,".bar","rect")
+                .attr("x",0)
+                .attr("y",height/4)
+                .attr("width", function(d) {return x(d.percent_norm) })
+                .attr("height", height/2)
+                .attr("fill","rgb(8, 29, 88)")
+
+
+            })
+          }
+
+          t.draw()
+        }
+
+        draw()      
+      }
+    , render_center: function() {
+        this._center = d3_updateable(this._target,".center","div")
+          .classed("center col-md-7",true)
+
+        var current =  this._center
+          , _top = topSection(current)
+          , _lower = remainingSection(current)
+
+        var head = d3_updateable(_top, "h3","h3")
+          .style("margin-bottom","15px")
+          .style("margin-top","-5px")
+          .text("Filter activity")
+
+        
+
+
+
+        //time_selector(_top)
+        //  .data(transform.buildTimes(this._data))
+        //  .draw()
+
+
+        this.render_filter(_top,_lower)
+        this.render_view(_lower,this._data)
+
+      }
+    , render_filter: render_filter
+    , render_center_loading: function() {
+        this._center = d3_updateable(this._target,".center","div")
+          .classed("center col-md-7",true)
+
+        this._center.html("")
+
+        d3_updateable(this._center,"center","center")
+          .style("text-align","center")
+          .style("display","block")
+          .classed("loading",true)
+          .text("Loading...")
+
+
+      }
+    , render_right: function(data) {
+
+        var self = this
+          , data = data || this._data
+
+        this._right = d3_updateable(this._target,".right","div")
+          .classed("right col-md-3",true)
+
+        var current = this._right
+          , _top = topSection(current)
+          , _lower = remainingSection(current)
+
+        var head = d3_updateable(_top, "h3","h3")
+          .style("margin-bottom","15px")
+          .style("margin-top","-5px")
+          .text("")
+
+        _top.classed("affix",true)
+          .style("right","0px")
+          .style("width","inherit")
+
+
+        d3_splat(_top, ".subtitle-filter","div",["Share Results", "Schedule Report", "Generate Brief" ])
+          .classed("subtitle-filter",true)
+          .style("text-transform","uppercase")
+          .style("font-weight","bold")
+          .style("line-height", "24px")
+          .style("padding","16px")
+          .style("width"," 160px")
+          .style("text-align"," center")
+          .style("border-radius"," 10px")
+          .style("border"," 1px solid #ccc")
+          .style("padding"," 10px")
+          .style("margin"," auto")
+          .style("margin-bottom","10px")
+          .style("cursor","pointer")
+          .text(String)
+
+
+
+        //summary_box(_top)
+        //  .data(transform.buildOffsiteSummary(data))
+        //  .draw()
+
+        this._data.display_categories = data.display_categories || buildCategories(data)
+
+        // bar_selector(_lower)
+        //   .skip_check(true)
+        //   .data(data.display_categories)
+        //   .on("click",function(x) {
+        //     x.selected = !x.selected
+        //     self.draw() 
+        //   })
+        //   .draw()
+        
+
+      }
+
+  }
+
   var version = "0.0.1";
 
   exports.version = version;
   exports.dashboard = dashboard;
+  exports.filter_dashboard = filter_dashboard;
 
 }));

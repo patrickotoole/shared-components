@@ -412,7 +412,7 @@ RB.crusher.controller = (function(controller) {
         self.draw()
       }
 
-      var dash = dashboard.dashboard(funnelRow)
+      var dash = dashboard.filter_dashboard(funnelRow)
         .draw_loading()
 
       var filter = function(x) { return x.featured }

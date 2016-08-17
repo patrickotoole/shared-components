@@ -7,7 +7,7 @@ export default function accessor(attr, val) {
 export function topSection(section) {
   return d3_updateable(section,".top-section","div")
     .classed("top-section",true)
-    .style("height","200px")
+    .style("min-height","160px")
 }
 
 export function remainingSection(section) {
