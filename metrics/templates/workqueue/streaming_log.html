@@ -22,19 +22,13 @@ new function() {
     var sendButton;
 
     var open = function() {
-        //var url = serverUrl.val();
-        //var url = 'ws://streaming.getrockerbox.com'
-        var url = 'ws://192.168.99.100:8888/admin/websocket?id=154'
+        //var url = 'ws://192.168.99.100:8888/admin/websocket?id=154'
+        var url = 'ws://portal.getrockerbox.com/admin/websocket?id=1776';
         ws = new WebSocket(url);
         ws.onopen = onOpen;
         ws.onclose = onClose;
         ws.onmessage = onMessage;
         ws.onerror = onError;
-
-        //connectionStatus.text('OPENING ...');
-        //serverUrl.attr('disabled', 'disabled');
-        //connectButton.hide();
-        //disconnectButton.show();
     }
     
     var close = function() {
@@ -43,13 +37,6 @@ new function() {
             ws.close();
         }
         connected = false;
-        //connectionStatus.text('CLOSED');
-
-        //serverUrl.removeAttr('disabled');
-        //connectButton.show();
-        //disconnectButton.hide();
-        //sendMessage.attr('disabled', 'disabled');
-        //sendButton.attr('disabled', 'disabled');
     }
     
     var clearLog = function() {
@@ -57,12 +44,17 @@ new function() {
     }
     
     var onOpen = function() {
-        //console.log('OPENED: ' + serverUrl.val());
         console.log('OPENDD')
         connected = true;
-        //connectionStatus.text('OPENED');
-        //sendMessage.removeAttr('disabled');
-        //sendButton.removeAttr('disabled');
+        var msg = 'initialize';
+        addMessage(msg, 'SENT');
+        ws.send(msg);
+        var msg = 'start';
+        addMessage(msg, 'SENT');
+        ws.send(msg);
+        var msg = '{"streams":["hindsight_log"]}'
+        addMessage(msg, 'SENT');
+        ws.send(msg)
     };
     
     var onClose = function() {
@@ -72,7 +64,7 @@ new function() {
     
     var onMessage = function(event) {
         var data = event.data;
-        if (data.incudes('workqueue'){
+        if (String(data).indexOf('workqueue') !== -1){
             addMessage(data);
         }
     };
@@ -98,62 +90,9 @@ new function() {
 
     WebSocketClient = {
         init: function() {
-            //serverUrl = $('#serverUrl');
-            //connectionStatus = $('#connectionStatus');
-            //sendMessage = $('#sendMessage');
-            
-            //connectButton = $('#connectButton');
-            //disconnectButton = $('#disconnectButton'); 
-            //sendButton = $('#sendButton');
             close();
-            //open();    
-            //onOpen();
-            var url = 'ws://192.168.99.100:8888/admin/websocket?id=154'
-            ws = new WebSocket(url);
-            ws.onclose = onClose;
-            ws.onmessage = onMessage;
-            ws.onerror = onError;
-            ws.onopen = onOpen;
-            ws.onopen();
-            var msg = 'initialize';
-            //addMessage(msg, 'SENT');
-            ws.send(msg);
-            var msg = 'start';
-            //addMessage(msg, 'SENT');
-            ws.send(msg);
-            var msg = '{"streams":["hindsight_log"]}'
-            //addMessage(msg, 'SENT');
-            ws.send(msg)
+            open();
 
-            //connectButton.click(function(e) {
-            //    close();
-            //    open();
-            //});
-        
-            //disconnectButton.click(function(e) {
-            //    close();
-            //});
-            
-           // sendButton.click(function(e) {
-           //     var msg = $('#sendMessage').val();
-           //     addMessage(msg, 'SENT');
-           //     ws.send(msg);
-           // });
-            
-            //$('#clearMessage').click(function(e) {
-            //    clearLog();
-            //});
-            
-            //var isCtrl;
-            //sendMessage.keyup(function (e) {
-            //    if(e.which == 17) isCtrl=false;
-            //}).keydown(function (e) {
-            //    if(e.which == 17) isCtrl=true;
-            //    if(e.which == 13 && isCtrl == true) {
-            //        sendButton.click();
-            //        return false;
-            //    }
-            //});
         }
     };
 }
