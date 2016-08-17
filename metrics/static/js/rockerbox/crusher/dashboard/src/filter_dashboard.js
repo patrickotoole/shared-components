@@ -13,7 +13,7 @@ import render_filter from './render_filter'
 
 
 
-export function Dashboard(target) {
+export function FilterDashboard(target) {
   this._on = {}
   this._target = target
     .append("ul")
@@ -22,11 +22,11 @@ export function Dashboard(target) {
       .classed("vendors-list-item",true);
 }
 
-export default function dashboard(target) {
-  return new Dashboard(target)
+export default function filter_dashboard(target) {
+  return new FilterDashboard(target)
 }
 
-Dashboard.prototype = {
+FilterDashboard.prototype = {
     data: function(val) { return accessor.bind(this)("data",val) }
   , actions: function(val) { return accessor.bind(this)("actions",val) }
   , draw: function() {
@@ -53,10 +53,10 @@ Dashboard.prototype = {
   , render_wrappers: function() {
 
       this._lhs = d3_updateable(this._target,".lhs","div")
-        .classed("lhs col-md-3",true)
+        .classed("lhs col-md-2",true)
 
       this._center = d3_updateable(this._target,".center","div")
-        .classed("center col-md-6",true)
+        .classed("center col-md-7",true)
 
       this._right = d3_updateable(this._target,".right","div")
         .classed("right col-md-3",true)
@@ -67,17 +67,20 @@ Dashboard.prototype = {
       var self = this
 
       this._lhs = d3_updateable(this._target,".lhs","div")
-        .classed("lhs col-md-3",true)
+        .classed("lhs col-md-2",true)
+        .style("border-right","1px solid #ccc")
 
       var current = this._lhs
-        , _top = ui_helper.topSection(current)
+        //, _top = ui_helper.topSection(current)
         , _lower = ui_helper.remainingSection(current)
 
-      summary_box(_top)
-        .data(transform.buildOnsiteSummary(this._data))
-        .draw()
+      //summary_box(_top)
+      //  .data(transform.buildOnsiteSummary(this._data))
+      //  .draw()
 
       this._data.display_actions = this._data.display_actions || transform.buildActions(this._data)
+      _lower.classed("affix",true)
+        .style("min-width","200px")
 
       bar_selector(_lower)
         .type("radio")
@@ -298,7 +301,7 @@ Dashboard.prototype = {
     }
   , render_center: function() {
       this._center = d3_updateable(this._target,".center","div")
-        .classed("center col-md-6",true)
+        .classed("center col-md-7",true)
 
       var current =  this._center
         , _top = ui_helper.topSection(current)
@@ -307,7 +310,7 @@ Dashboard.prototype = {
       var head = d3_updateable(_top, "h3","h3")
         .style("margin-bottom","15px")
         .style("margin-top","-5px")
-        .text("Filter off-site activity")
+        .text("Filter activity")
 
       
 
@@ -317,8 +320,6 @@ Dashboard.prototype = {
       //  .data(transform.buildTimes(this._data))
       //  .draw()
 
-      var self = this
-        , data = self._data;
 
       this.render_filter(_top,_lower)
       this.render_view(_lower,this._data)
@@ -327,7 +328,7 @@ Dashboard.prototype = {
   , render_filter: render_filter
   , render_center_loading: function() {
       this._center = d3_updateable(this._target,".center","div")
-        .classed("center col-md-6",true)
+        .classed("center col-md-7",true)
 
       this._center.html("")
 
@@ -351,20 +352,48 @@ Dashboard.prototype = {
         , _top = ui_helper.topSection(current)
         , _lower = ui_helper.remainingSection(current)
 
-      summary_box(_top)
-        .data(transform.buildOffsiteSummary(data))
-        .draw()
+      var head = d3_updateable(_top, "h3","h3")
+        .style("margin-bottom","15px")
+        .style("margin-top","-5px")
+        .text("")
+
+      _top.classed("affix",true)
+        .style("right","0px")
+        .style("width","inherit")
+
+
+      d3_splat(_top, ".subtitle-filter","div",["Share Results", "Schedule Report", "Generate Brief" ])
+        .classed("subtitle-filter",true)
+        .style("text-transform","uppercase")
+        .style("font-weight","bold")
+        .style("line-height", "24px")
+        .style("padding","16px")
+        .style("width"," 160px")
+        .style("text-align"," center")
+        .style("border-radius"," 10px")
+        .style("border"," 1px solid #ccc")
+        .style("padding"," 10px")
+        .style("margin"," auto")
+        .style("margin-bottom","10px")
+        .style("cursor","pointer")
+        .text(String)
+
+
+
+      //summary_box(_top)
+      //  .data(transform.buildOffsiteSummary(data))
+      //  .draw()
 
       this._data.display_categories = data.display_categories || transform.buildCategories(data)
 
-      bar_selector(_lower)
-        .skip_check(true)
-        .data(data.display_categories)
-        .on("click",function(x) {
-          x.selected = !x.selected
-          self.draw() 
-        })
-        .draw()
+      // bar_selector(_lower)
+      //   .skip_check(true)
+      //   .data(data.display_categories)
+      //   .on("click",function(x) {
+      //     x.selected = !x.selected
+      //     self.draw() 
+      //   })
+      //   .draw()
       
 
     }
