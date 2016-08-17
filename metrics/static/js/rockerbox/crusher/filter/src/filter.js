@@ -206,11 +206,15 @@ Filter.prototype = {
 
     }
   , drawInput: function(filter, value, op) {
-      debugger
 
+      var self = this
+
+      filter.selectAll(".value").remove()
       var r = this._render_op[op]
 
-      if (r) return r(filter,value)
+      if (r) {
+        return r.bind(this)(filter,value)
+      }
 
       d3_updateable(filter,"input.value","input")
         .classed("value",true)
@@ -254,7 +258,6 @@ Filter.prototype = {
           self.draw()
             
         })
-      
-
     }
+  , typewatch: typewatch
 }

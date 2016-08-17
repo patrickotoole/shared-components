@@ -53,8 +53,48 @@ export default function render_filter(_top,_lower) {
       , [{"key":"equals"}, {"key":"between","input":2}]
     ])
     .data([{}])
-    .render_op("between",function() {
-      debugger
+    .render_op("between",function(filter,value) {
+      var self = this
+
+      value.value = value.value || [0,24]
+
+      d3_updateable(filter,"input.value.low","input")
+        .classed("value low",true)
+        .style("margin-bottom","10px")
+        .style("padding-left","10px")
+        .style("width","90px")
+        .attr("value", value.value[0])
+        .on("keyup", function(x){
+          var t = this
+        
+          self.typewatch(function() {
+            value.value[0] = t.value
+            //value.fn = self.buildOp(value)
+            self.on("update")(self.data())
+          },1000)
+        })
+
+      d3_updateable(filter,"span.value-and","span")
+        .classed("value-and",true)
+        .text(" and ")
+
+      d3_updateable(filter,"input.value.high","input")
+        .classed("value high",true)
+        .style("margin-bottom","10px")
+        .style("padding-left","10px")
+        .style("width","90px")
+        .attr("value", value.value[1])
+        .on("keyup", function(x){
+          var t = this
+        
+          self.typewatch(function() {
+            value.value[1] = t.value
+            //value.fn = self.buildOp(value)
+            self.on("update")(self.data())
+          },1000)
+        })
+
+
     })
     .on("update",function(x){
 
@@ -66,7 +106,6 @@ export default function render_filter(_top,_lower) {
         }
       })
 
-      
       if (y.length > 0 && y[0].value) {
         
         var data = {

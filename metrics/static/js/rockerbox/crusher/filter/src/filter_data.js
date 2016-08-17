@@ -75,5 +75,10 @@ FilterData.prototype = {
             return x[field] == undefined
           }
         }
+      , "between" : function(field,value) {
+          return function(x) {
+            return parseInt(x[field]) >= value[0] && parseInt(x[field]) <= value[1]
+          }
+        }
     }
 }

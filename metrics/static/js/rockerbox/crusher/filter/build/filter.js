@@ -206,11 +206,15 @@
 
       }
     , drawInput: function(filter, value, op) {
-        debugger
 
+        var self = this
+
+        filter.selectAll(".value").remove()
         var r = this._render_op[op]
 
-        if (r) return r(filter,value)
+        if (r) {
+          return r.bind(this)(filter,value)
+        }
 
         d3_updateable(filter,"input.value","input")
           .classed("value",true)
@@ -254,9 +258,8 @@
             self.draw()
               
           })
-        
-
       }
+    , typewatch: typewatch
   }
 
   function accessor$1(attr, val) {
@@ -334,6 +337,11 @@
         , "is not set" : function(field,value) {
             return function(x) {
               return x[field] == undefined
+            }
+          }
+        , "between" : function(field,value) {
+            return function(x) {
+              return parseInt(x[field]) >= value[0] && parseInt(x[field]) <= value[1]
             }
           }
       }
