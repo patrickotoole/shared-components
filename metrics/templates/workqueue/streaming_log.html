@@ -23,7 +23,10 @@ new function() {
 
     var open = function() {
         //var url = 'ws://192.168.99.100:8888/admin/websocket?id=154'
-        var url = 'ws://portal.getrockerbox.com/admin/websocket?id=1776';
+        //var url = 'ws://portal.getrockerbox.com/admin/websocket?id=1776';
+        random_id = Math.round(Math.random() * 1000);
+        URL = 'ws://portal.getrockerbox.com/admin/websocket?id=' + String(random_id)
+        var url = URL
         ws = new WebSocket(url);
         ws.onopen = onOpen;
         ws.onclose = onClose;
