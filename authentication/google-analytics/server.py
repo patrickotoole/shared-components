@@ -215,7 +215,7 @@ class DataHandler(web.RequestHandler, DBQuery):
                 'message': 'You need to specify both a DATE as well as URL'
             }
             self.write(json.dumps(error))
-            self.finish()
+            return
 
         try:
             response = DBQuery.getAnalytics(self, advertiser, date, url)
