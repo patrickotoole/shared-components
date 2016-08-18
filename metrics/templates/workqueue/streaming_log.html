@@ -87,7 +87,7 @@ new function() {
             msg.addClass('sent');
         }
         var messages = $('#messages');
-        messages.append(msg);
+        messages.prepend(msg);
         
         var msgBox = messages.get(0);
         while (msgBox.childNodes.length > 1000) {
