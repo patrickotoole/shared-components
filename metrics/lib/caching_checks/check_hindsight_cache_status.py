@@ -1,6 +1,7 @@
 from check_helper import *
 from link import lnk
 import logging
+import pandas
 
 URL = "/crusher/v1/visitor/{}/cache?url_pattern={}"
 URL2 = "/crusher/v1/visitor/{}/cache?url_pattern={}&filter_id={}"
@@ -45,12 +46,17 @@ def get_segments(crusher, advertiser):
     return segments
 
 
-def send_to_slack(self, message):
+def send_to_slack(message):
     import requests
     import ujson
     url= "https://hooks.slack.com/services/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"
-    requests.post(url, data=ujson.dumps({"text":_message}))
+    requests.post(url, data=ujson.dumps({"text":message}))
 
+def send_to_me_slack(message):
+    import requests
+    import ujson
+    url = 'https://hooks.slack.com/services/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'
+    requests.post(url, data=ujson.dumps({"text":message}))
 
 if __name__ == "__main__":
 
@@ -59,7 +65,7 @@ if __name__ == "__main__":
     crusher = lnk.api.crusher
    
     udf_list = ['domains', 'domains_full', 'before_and_after', 'model', 'hourly', 'sessions', 'keywords']
- 
+    report = pandas.DataFrame()
     for adv in df.iterrows():
         advertiser = adv[1]['advertiser']
         crusher.user = "a_{}".format(advertiser)
@@ -99,6 +105,9 @@ if __name__ == "__main__":
         print "For advertiser: %s There are %s segments of which %s passed tests" % (advertiser, total, passed)
         msg1 = "For advertiser: %s There are %s segments of which %s passed tests" % (advertiser, total, passed)
         print "these failed %s" % failed
-        msg2 = "these failed %s" % failed
-        send_to_slack(msg1)
-        send_to_slack(msg2)
+        msg2 = "these failed %s for %s" % (failed, advertiser)
+        #send_to_slack(msg1)
+        report = report.append(pandas.DataFrame([{"advertiser":advertiser, "Passed":passed, "Total":total}]))
+        send_to_me_slack(msg2)
+
+    send_to_slack("```"+report.to_string()+"```")
