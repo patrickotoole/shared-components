@@ -45,12 +45,13 @@ export default function render_filter(_top,_lower) {
 
   var hourSelected = function() {}
 
-  var filters = [{}]
+  var filters = this._state.filters
 
   if (document.location.search.indexOf("filter") > -1) {
   
     filters = document.location.search.split("filter=")[1]
     filters = JSON.parse(decodeURIComponent(filters.split("&")[0]))
+    this._state.filters
   }
 
   function pushFilterState(loc,x) {

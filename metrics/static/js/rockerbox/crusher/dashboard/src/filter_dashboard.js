@@ -15,6 +15,9 @@ import render_filter from './render_filter'
 
 export function FilterDashboard(target) {
   this._on = {}
+  this._state = {
+      filters: [{}]
+  }
   this._target = target
     .append("ul")
     .classed("vendors-list",true)
@@ -111,11 +114,18 @@ FilterDashboard.prototype = {
         .style("margin-bottom","15px")
         .style("margin-top","-5px")
 
+      var self = this
+
       var tabs = [
           transform.buildDomains(data)
         , transform.buildUrls(data)
       ]
-      tabs[0].selected = 1
+
+      this._state.tabs = this._state.tabs || tabs.map(function(x) { return x.selected || 0 })
+
+      if (d3.sum(this._state.tabs) == 0) this._state.tabs[0] = 1 // default
+
+      this._state.tabs.map(function(x,i) { tabs[i].selected = x })
 
       d3_updateable(head,"span","span")
         .text(tabs.filter(function(x){ return x.selected})[0].key)
@@ -127,6 +137,7 @@ FilterDashboard.prototype = {
           tabs.map(function(y) { y.selected = 0 })
 
           this.selectedOptions[0].__data__.selected = 1
+          self._state.tabs = tabs.map(function(y) {return y.selected })
           draw()
         })
       
@@ -362,7 +373,7 @@ FilterDashboard.prototype = {
         .style("width","inherit")
 
 
-      d3_splat(_top,".subtitle-filter","a",["Share Results","Schedule Report","Build Content Brief","Build Media Plan" ])
+      d3_splat(_top,".subtitle-filter","a",["Bookmark Results","Share Results","Schedule Report","Build Content Brief","Build Media Plan" ])
         .classed("subtitle-filter",true)
         .style("text-transform","uppercase")
         .style("font-weight","bold")
