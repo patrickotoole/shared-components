@@ -362,13 +362,13 @@ FilterDashboard.prototype = {
         .style("width","inherit")
 
 
-      d3_splat(_top, ".subtitle-filter","div",["Share Results", "Schedule Report", "Generate Brief" ])
+      d3_splat(_top,".subtitle-filter","a",["Share Results","Schedule Report","Build Content Brief","Build Media Plan" ])
         .classed("subtitle-filter",true)
         .style("text-transform","uppercase")
         .style("font-weight","bold")
         .style("line-height", "24px")
         .style("padding","16px")
-        .style("width"," 160px")
+        .style("width"," 180px")
         .style("text-align"," center")
         .style("border-radius"," 10px")
         .style("border"," 1px solid #ccc")
@@ -376,25 +376,11 @@ FilterDashboard.prototype = {
         .style("margin"," auto")
         .style("margin-bottom","10px")
         .style("cursor","pointer")
+        .style("display","block")
         .text(String)
-
-
-
-      //summary_box(_top)
-      //  .data(transform.buildOffsiteSummary(data))
-      //  .draw()
 
       this._data.display_categories = data.display_categories || transform.buildCategories(data)
 
-      // bar_selector(_lower)
-      //   .skip_check(true)
-      //   .data(data.display_categories)
-      //   .on("click",function(x) {
-      //     x.selected = !x.selected
-      //     self.draw() 
-      //   })
-      //   .draw()
-      
 
     }
 

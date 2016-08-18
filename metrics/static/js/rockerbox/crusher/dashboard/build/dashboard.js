@@ -51,6 +51,27 @@
 
     var hourSelected = function() {}
 
+    var filters = [{}]
+
+    if (document.location.search.indexOf("filter") > -1) {
+    
+      filters = document.location.search.split("filter=")[1]
+      filters = JSON.parse(decodeURIComponent(filters.split("&")[0]))
+    }
+
+    function pushFilterState(loc,x) {
+
+      var s = "";
+      if (loc.search.indexOf("filter") > -1 ) {
+        try {s += loc.search.split("filter=")[0] } catch(e) {}
+        try {s += loc.search.split("filter=")[1].split("&")[1].join("&") } catch(e) {}
+        if (s.length > 1) s += "&"
+        s += "filter="
+      }
+
+      history.pushState({}, "", loc.pathname + ( loc.search.indexOf("?") > -1 ? s : "?filter=" ) +  JSON.stringify(x) )
+    }
+
     filter.filter(_top)
       .fields(Object.keys(mapping))
       .ops([
@@ -58,7 +79,7 @@
         , [{"key":"contains"},{"key":"starts with"},{"key":"ends with"}]
         , [{"key":"equals"}, {"key":"between","input":2}]
       ])
-      .data([{}])
+      .data(filters)
       .render_op("between",function(filter,value) {
         var self = this
 
@@ -103,6 +124,8 @@
 
       })
       .on("update",function(x){
+
+        pushFilterState(document.location,x)
 
         var y = x.map(function(z) {
           return { 
@@ -1442,13 +1465,13 @@
           .style("width","inherit")
 
 
-        d3_splat(_top, ".subtitle-filter","div",["Share Results", "Schedule Report", "Generate Brief" ])
+        d3_splat(_top,".subtitle-filter","a",["Share Results","Schedule Report","Build Content Brief","Build Media Plan" ])
           .classed("subtitle-filter",true)
           .style("text-transform","uppercase")
           .style("font-weight","bold")
           .style("line-height", "24px")
           .style("padding","16px")
-          .style("width"," 160px")
+          .style("width"," 180px")
           .style("text-align"," center")
           .style("border-radius"," 10px")
           .style("border"," 1px solid #ccc")
@@ -1456,25 +1479,11 @@
           .style("margin"," auto")
           .style("margin-bottom","10px")
           .style("cursor","pointer")
+          .style("display","block")
           .text(String)
-
-
-
-        //summary_box(_top)
-        //  .data(transform.buildOffsiteSummary(data))
-        //  .draw()
 
         this._data.display_categories = data.display_categories || buildCategories(data)
 
-        // bar_selector(_lower)
-        //   .skip_check(true)
-        //   .data(data.display_categories)
-        //   .on("click",function(x) {
-        //     x.selected = !x.selected
-        //     self.draw() 
-        //   })
-        //   .draw()
-        
 
       }
 

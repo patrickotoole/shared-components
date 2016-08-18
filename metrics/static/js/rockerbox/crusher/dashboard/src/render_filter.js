@@ -45,6 +45,27 @@ export default function render_filter(_top,_lower) {
 
   var hourSelected = function() {}
 
+  var filters = [{}]
+
+  if (document.location.search.indexOf("filter") > -1) {
+  
+    filters = document.location.search.split("filter=")[1]
+    filters = JSON.parse(decodeURIComponent(filters.split("&")[0]))
+  }
+
+  function pushFilterState(loc,x) {
+
+    var s = "";
+    if (loc.search.indexOf("filter") > -1 ) {
+      try {s += loc.search.split("filter=")[0] } catch(e) {}
+      try {s += loc.search.split("filter=")[1].split("&")[1].join("&") } catch(e) {}
+      if (s.length > 1) s += "&"
+      s += "filter="
+    }
+
+    history.pushState({}, "", loc.pathname + ( loc.search.indexOf("?") > -1 ? s : "?filter=" ) +  JSON.stringify(x) )
+  }
+
   filter.filter(_top)
     .fields(Object.keys(mapping))
     .ops([
@@ -52,7 +73,7 @@ export default function render_filter(_top,_lower) {
       , [{"key":"contains"},{"key":"starts with"},{"key":"ends with"}]
       , [{"key":"equals"}, {"key":"between","input":2}]
     ])
-    .data([{}])
+    .data(filters)
     .render_op("between",function(filter,value) {
       var self = this
 
@@ -97,6 +118,8 @@ export default function render_filter(_top,_lower) {
 
     })
     .on("update",function(x){
+
+      pushFilterState(document.location,x)
 
       var y = x.map(function(z) {
         return { 

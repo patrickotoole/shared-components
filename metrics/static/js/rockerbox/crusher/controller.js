@@ -18,8 +18,8 @@ RB.crusher.controller = (function(controller) {
     var id = type.split("id=")[1]
     if (id && id.length) { id = decodeURI(id) }
 
-    var type = type.split("?")[0]
-    var state = controller.states[type] || controller.states["/crusher/home"]
+    var stype = type.split("?")[0]
+    var state = controller.states[stype] || controller.states["/crusher/home"]
     if (id) state.skipRender = true
 
     var callback = id ? function(data, x) {
@@ -30,6 +30,9 @@ RB.crusher.controller = (function(controller) {
       RB.routes.navigation.forward(xx[0])
     } : false
 
+    if (type != stype && type.indexOf("dashboard") > -1 ) callback = function() {
+      history.pushState({},"",type)
+    }
 
     RB.routes.navigation.forward(state, callback)
 
@@ -412,8 +415,8 @@ RB.crusher.controller = (function(controller) {
         self.draw()
       }
 
-      //var dash = dashboard.filter_dashboard(funnelRow)
-      var dash = dashboard.dashboard(funnelRow)
+      var dash = dashboard.filter_dashboard(funnelRow)
+      //var dash = dashboard.dashboard(funnelRow)
         .draw_loading()
 
       var filter = function(x) { return x.featured }
