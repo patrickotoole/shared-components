@@ -6,43 +6,6 @@
 
   filter = 'default' in filter ? filter['default'] : filter;
 
-  function State() {
-  }
-
-  function state() {
-    return new State()
-  }
-
-  State.prototype = {
-
-      get: function(key,_default) { 
-        var loc = document.location.search
-          , _default = _default || false;
-
-        if (loc.indexOf(key) == -1) return _default
-
-        var f = loc.split(key + "=")[1];
-        f = f.split("&")[0]
-        return JSON.parse(decodeURIComponent(f))
-      }
-    , set: function(key,val) {
-        var loc = document.location.search
-
-        var s = "";
-        if (loc.indexOf(key) > -1 ) {
-          try {s += loc.split(key + "=")[0] } catch(e) {}
-          try {s += loc.split(key + "=")[1].split("&")[1].join("&") } catch(e) {}
-          if (s.length > 1) s += "&"
-          s += key + "="
-        } 
-
-        var search = loc.indexOf("?") > -1 ? s : "?" + key + "="
-
-        history.pushState({}, "", loc.pathname + search +  JSON.stringify(val) )
-
-      }
-  }
-
   function render_filter(_top,_lower) {
     var self = this
       , data = self._data;
@@ -88,7 +51,7 @@
 
     var hourSelected = function() {}
 
-    var filters = state().get("filter",[{}])
+    var filters = self._state.get("filter",[{}])
 
     //if (document.location.search.indexOf("filter") > -1) {
     //
@@ -150,7 +113,7 @@
       })
       .on("update",function(x){
 
-        state()
+        self._state
           .set("filter",x)
 
 
@@ -1143,11 +1106,59 @@
 
   }
 
+  // TODO: unit tests
+
+  function State() {
+  }
+
+  function state() {
+    return new State()
+  }
+
+  State.prototype = {
+
+      get: function(key,_default) { 
+        var loc = document.location.search
+          , _default = _default || false;
+
+        if (loc.indexOf(key) == -1) return _default
+
+        var f = loc.split(key + "=")[1];
+        f = f.split("&")[0]
+        return JSON.parse(decodeURIComponent(f))
+      }
+    , set: function(key,val) {
+        var loc = document.location.search
+
+        var s = "";
+        if (loc.indexOf(key) > -1 ) {
+          try {
+            s += loc.split(key + "=")[0] 
+            if (s.slice(-1)[0] == "&") s = s.slice(0,-1)
+          } catch(e) {}
+
+          try {
+            s += loc.split(key + "=")[1].split("&").slice(1).filter(function(x) { return x.length}).join("&") } catch(e) {}
+        } else {
+          s = loc
+        }
+
+        s += "&" + key + "="
+
+
+        var search = (s.indexOf("?") == 0) ? 
+          s : "?" + s.slice(1)
+          
+        
+        history.pushState({}, "", document.location.pathname + search +  JSON.stringify(val) )
+
+      }
+  }
+
   function FilterDashboard(target) {
     this._on = {}
-    this._state = {
-        filters: [{}]
-    }
+    this._state = state()
+
     this._target = target
       .append("ul")
       .classed("vendors-list",true)
@@ -1251,11 +1262,9 @@
           , buildUrls(data)
         ]
 
-        this._state.tabs = this._state.tabs || tabs.map(function(x) { return x.selected || 0 })
+        if ((tabs[0].selected == undefined) && (!this._state.get("tabs")))  this._state.set("tabs",[1,0]) 
 
-        if (d3.sum(this._state.tabs) == 0) this._state.tabs[0] = 1 // default
-
-        this._state.tabs.map(function(x,i) { tabs[i].selected = x })
+        this._state.get("tabs").map(function(x,i) { tabs[i].selected = x })
 
         d3_updateable(head,"span","span")
           .text(tabs.filter(function(x){ return x.selected})[0].key)
@@ -1267,7 +1276,7 @@
             tabs.map(function(y) { y.selected = 0 })
 
             this.selectedOptions[0].__data__.selected = 1
-            self._state.tabs = tabs.map(function(y) {return y.selected })
+            self._state.set("tabs", tabs.map(function(y) {return y.selected }) )
             draw()
           })
         

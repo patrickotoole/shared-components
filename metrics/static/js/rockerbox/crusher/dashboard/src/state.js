@@ -1,3 +1,5 @@
+// TODO: unit tests
+
 export function State() {
 }
 
@@ -22,15 +24,25 @@ State.prototype = {
 
       var s = "";
       if (loc.indexOf(key) > -1 ) {
-        try {s += loc.split(key + "=")[0] } catch(e) {}
-        try {s += loc.split(key + "=")[1].split("&")[1].join("&") } catch(e) {}
-        if (s.length > 1) s += "&"
-        s += key + "="
-      } 
+        try {
+          s += loc.split(key + "=")[0] 
+          if (s.slice(-1)[0] == "&") s = s.slice(0,-1)
+        } catch(e) {}
 
-      var search = loc.indexOf("?") > -1 ? s : "?" + key + "="
+        try {
+          s += loc.split(key + "=")[1].split("&").slice(1).filter(function(x) { return x.length}).join("&") } catch(e) {}
+      } else {
+        s = loc
+      }
 
-      history.pushState({}, "", loc.pathname + search +  JSON.stringify(val) )
+      s += "&" + key + "="
+
+
+      var search = (s.indexOf("?") == 0) ? 
+        s : "?" + s.slice(1)
+        
+      
+      history.pushState({}, "", document.location.pathname + search +  JSON.stringify(val) )
 
     }
 }

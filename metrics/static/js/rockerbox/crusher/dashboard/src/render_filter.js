@@ -1,5 +1,4 @@
 import filter from 'filter'
-import state from './state'
 
 export default function render_filter(_top,_lower) {
   var self = this
@@ -46,7 +45,7 @@ export default function render_filter(_top,_lower) {
 
   var hourSelected = function() {}
 
-  var filters = state().get("filter",[{}])
+  var filters = self._state.get("filter",[{}])
 
   //if (document.location.search.indexOf("filter") > -1) {
   //
@@ -108,7 +107,7 @@ export default function render_filter(_top,_lower) {
     })
     .on("update",function(x){
 
-      state()
+      self._state
         .set("filter",x)
 
 

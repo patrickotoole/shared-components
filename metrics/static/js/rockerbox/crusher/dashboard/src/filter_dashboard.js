@@ -9,15 +9,15 @@ import time_selector from './time_selector'
 import table from './table'
 
 import render_filter from './render_filter'
+import state from './state'
 
 
 
 
 export function FilterDashboard(target) {
   this._on = {}
-  this._state = {
-      filters: [{}]
-  }
+  this._state = state()
+
   this._target = target
     .append("ul")
     .classed("vendors-list",true)
@@ -121,11 +121,9 @@ FilterDashboard.prototype = {
         , transform.buildUrls(data)
       ]
 
-      this._state.tabs = this._state.tabs || tabs.map(function(x) { return x.selected || 0 })
+      if ((tabs[0].selected == undefined) && (!this._state.get("tabs")))  this._state.set("tabs",[1,0]) 
 
-      if (d3.sum(this._state.tabs) == 0) this._state.tabs[0] = 1 // default
-
-      this._state.tabs.map(function(x,i) { tabs[i].selected = x })
+      this._state.get("tabs").map(function(x,i) { tabs[i].selected = x })
 
       d3_updateable(head,"span","span")
         .text(tabs.filter(function(x){ return x.selected})[0].key)
@@ -137,7 +135,7 @@ FilterDashboard.prototype = {
           tabs.map(function(y) { y.selected = 0 })
 
           this.selectedOptions[0].__data__.selected = 1
-          self._state.tabs = tabs.map(function(y) {return y.selected })
+          self._state.set("tabs", tabs.map(function(y) {return y.selected }) )
           draw()
         })
       
