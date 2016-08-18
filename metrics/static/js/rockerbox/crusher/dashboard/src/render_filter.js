@@ -1,4 +1,5 @@
 import filter from 'filter'
+import state from './state'
 
 export default function render_filter(_top,_lower) {
   var self = this
@@ -45,27 +46,14 @@ export default function render_filter(_top,_lower) {
 
   var hourSelected = function() {}
 
-  var filters = this._state.filters
+  var filters = state().get("filter",[{}])
 
-  if (document.location.search.indexOf("filter") > -1) {
-  
-    filters = document.location.search.split("filter=")[1]
-    filters = JSON.parse(decodeURIComponent(filters.split("&")[0]))
-    this._state.filters
-  }
-
-  function pushFilterState(loc,x) {
-
-    var s = "";
-    if (loc.search.indexOf("filter") > -1 ) {
-      try {s += loc.search.split("filter=")[0] } catch(e) {}
-      try {s += loc.search.split("filter=")[1].split("&")[1].join("&") } catch(e) {}
-      if (s.length > 1) s += "&"
-      s += "filter="
-    }
-
-    history.pushState({}, "", loc.pathname + ( loc.search.indexOf("?") > -1 ? s : "?filter=" ) +  JSON.stringify(x) )
-  }
+  //if (document.location.search.indexOf("filter") > -1) {
+  //
+  //  filters = document.location.search.split("filter=")[1]
+  //  filters = JSON.parse(decodeURIComponent(filters.split("&")[0]))
+  //  this._state.filters
+  //}
 
   filter.filter(_top)
     .fields(Object.keys(mapping))
@@ -120,7 +108,9 @@ export default function render_filter(_top,_lower) {
     })
     .on("update",function(x){
 
-      pushFilterState(document.location,x)
+      state()
+        .set("filter",x)
+
 
       var y = x.map(function(z) {
         return { 
