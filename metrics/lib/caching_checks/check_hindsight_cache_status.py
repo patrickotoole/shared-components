@@ -17,7 +17,7 @@ def check_cache_endpoint(crusher, pattern, udf):
     return data
 
 def check_cassandra_cache(crusher, pattern):
-    url = TS_URL.format(pattern)
+    url = TS_URL.format(pattern['url_pattern'][0])
     allcached = True
     try:
         _resp=crusher.get(url)
@@ -45,6 +45,13 @@ def get_segments(crusher, advertiser):
     return segments
 
 
+def send_to_slack(self, message):
+    import requests
+    import ujson
+    url= "https://hooks.slack.com/services/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"
+    requests.post(url, data=ujson.dumps({"text":_message}))
+
+
 if __name__ == "__main__":
 
     db = lnk.dbs.crushercache
@@ -58,17 +65,40 @@ if __name__ == "__main__":
         crusher.user = "a_{}".format(advertiser)
         crusher.authenticate()
         segments = get_segments(crusher, advertiser)
+        total =0
+        passed = 0
+        passedOne=False
+        passedTwo = False
+        failed=[]
         for segment in segments:
+            total+=1
             for udf in udf_list:
                 data = check_cache_endpoint(crusher, segment, udf)
                 if check_response(data):
                     print "Pass for advertiser %s and pattern %s and udf %s" % (advertiser, segment, udf)
+                    passedOne=True
                 else:
                     print "Fail"
                     print "Failed for advertiser %s and pattern %s and udf %s" % (advertiser, segment, udf)
             cached = check_cassandra_cache(crusher, segment)
             if cached:
-                print "Pass for advertiser %s and pattern %s and udf %s" % (advertiser, segment, udf)
+                print "Pass for advertiser %s and pattern %s and udf %s" % (advertiser, segment, 'Cassandra cache')
+                passedTwo = True
             else:
                 print "Fail"
                 print "Failed for advertiser %s and pattern %s and udf %s" % (advertiser, segment, 'Cassandra cache')
+            
+            #increment
+            if passedOne and passedTwo:
+                passed+=1
+            else:
+                failed.append(segment['url_pattern'][0])
+            #reset
+            passedOne=False
+            passedTwo = False
+        print "For advertiser: %s There are %s segments of which %s passed tests" % (advertiser, total, passed)
+        msg1 = "For advertiser: %s There are %s segments of which %s passed tests" % (advertiser, total, passed)
+        print "these failed %s" % failed
+        msg2 = "these failed %s" % failed
+        send_to_slack(msg1)
+        send_to_slack(msg2)
