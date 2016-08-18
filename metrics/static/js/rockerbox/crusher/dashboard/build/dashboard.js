@@ -129,7 +129,7 @@
           
           var data = {
               "full_urls": filter.filter_data(self._data.full_urls).logic("and").by(y)
-            , "url_only": filter.filter_data(self._data.url_only).logic("and").by(y)
+            //, "url_only": filter.filter_data(self._data.url_only).logic("and").by(y)
           }
 
           var categories = d3.nest()
@@ -328,7 +328,7 @@
       return (idf[x] == "NA") || (idf[x] > 8686) ? 0 : idf[x]
     }
 
-    var values = data.url_only
+    var values = data.full_urls
       .map(function(x) { 
         return {
             "key":x.domain
@@ -400,7 +400,7 @@
       .filter(function(a) { return a.selected })
       .map(function(a) { return a.key })
 
-    var values = data.url_only
+    var values = data.full_urls
       .map(function(x) { return {"key":x.url,"value":x.count, "parent_category_name": x.parent_category_name} })
 
     if (categories.length > 0)

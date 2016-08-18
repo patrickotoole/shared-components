@@ -123,7 +123,7 @@ export default function render_filter(_top,_lower) {
         
         var data = {
             "full_urls": filter.filter_data(self._data.full_urls).logic("and").by(y)
-          , "url_only": filter.filter_data(self._data.url_only).logic("and").by(y)
+          //, "url_only": filter.filter_data(self._data.url_only).logic("and").by(y)
         }
 
         var categories = d3.nest()

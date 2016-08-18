@@ -213,48 +213,48 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
       //  .reduce(function(p,c){return p.concat(c)},[])
 
 
-      data.url_only  = d3.nest()
-        .key(function(x){
-          var k = x.url.replace("http://","")
-            .replace("https://","")
-            .replace("www.","")
-            .replace(".com","")
-            .replace(".net","")
-            .replace(".org","")
-            .split("?")[0]
+      //data.url_only  = d3.nest()
+      //  .key(function(x){
+      //    var k = x.url.replace("http://","")
+      //      .replace("https://","")
+      //      .replace("www.","")
+      //      .replace(".com","")
+      //      .replace(".net","")
+      //      .replace(".org","")
+      //      .split("?")[0]
 
-          var arr = []
+      //    var arr = []
 
-          k.split("/").map(function(t){ 
-            t.split("-").map(function(w) {
-              if (w.length > 3) arr.push(w)
-            })
-          })
+      //    k.split("/").map(function(t){ 
+      //      t.split("-").map(function(w) {
+      //        if (w.length > 3) arr.push(w)
+      //      })
+      //    })
 
 
-          return arr.join("-") + x.domain
-        })
-        .rollup(function(x){ 
-          
-          return x.reduce(function(p,c){ 
-              p.count += c.count; 
-              p.uniques += c.uniques
-              return p
-            },
-            {
-              count: 0,
-              uniques: 0, 
-              domain: x[0].domain, 
-              parent_category_name: x[0].parent_category_name, 
-              url: x[0].url, 
-              hour: x[0].hour, 
-              minute: x[0].minute
-            }
-          ) 
+      //    return arr.join("-") + x.domain
+      //  })
+      //  .rollup(function(x){ 
+      //    
+      //    return x.reduce(function(p,c){ 
+      //        p.count += c.count; 
+      //        p.uniques += c.uniques
+      //        return p
+      //      },
+      //      {
+      //        count: 0,
+      //        uniques: 0, 
+      //        domain: x[0].domain, 
+      //        parent_category_name: x[0].parent_category_name, 
+      //        url: x[0].url, 
+      //        hour: x[0].hour, 
+      //        minute: x[0].minute
+      //      }
+      //    ) 
 
-        })
-        .entries(data.full_urls)
-        .map(function(x){ return x.values }) 
+      //  })
+      //  .entries(data.full_urls)
+      //  .map(function(x){ return x.values }) 
 
 
       deferred_cb(null, cb.bind(false, dd))

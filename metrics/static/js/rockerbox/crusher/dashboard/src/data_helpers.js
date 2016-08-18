@@ -64,7 +64,7 @@ export function buildDomains(data) {
     return (idf[x] == "NA") || (idf[x] > 8686) ? 0 : idf[x]
   }
 
-  var values = data.url_only
+  var values = data.full_urls
     .map(function(x) { 
       return {
           "key":x.domain
@@ -136,7 +136,7 @@ export function buildUrls(data) {
     .filter(function(a) { return a.selected })
     .map(function(a) { return a.key })
 
-  var values = data.url_only
+  var values = data.full_urls
     .map(function(x) { return {"key":x.url,"value":x.count, "parent_category_name": x.parent_category_name} })
 
   if (categories.length > 0)
