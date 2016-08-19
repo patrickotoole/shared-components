@@ -62,6 +62,11 @@ class wqBackfill():
             cache_date = date.split(" ")[0]
             run_backfill(advertiser, segment, cache_date, connectors=self.connectors)
 
+def runner(**kwargs):
+    wqb = wqBackfill(kwargs['connectors'])
+    wqb.run_advertisers(advertisers)
+    
+
 if __name__ == "__main__":
     from kazoo.client import KazooClient
 

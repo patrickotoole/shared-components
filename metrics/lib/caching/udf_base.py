@@ -42,11 +42,17 @@ class UDFCache:
     def run_advertiser(self,**kwargs):
         segments = kwargs['connectors']['db'].select_dataframe(QUERY.format(kwargs['advertiser']))
         for i,s in segments.iterrows():
+            kwargs['pattern'] = s['url_pattern'][0]
+            kwargs['filter_id'] = s['action_id']
             self.run_udfs(**kwargs)
 
     def run_segment(self, **kwargs):
         self.run_udfs(**kwargs)
 
+
+def runner(**kwargs)
+    UC = UDFCache(kwargs['connectors'])
+    UC.run_advertiser(**kwargs)
 
 if __name__ == "__main__":
 
@@ -61,7 +67,6 @@ if __name__ == "__main__":
     define("udf", default=False)
     define("filter_id", default=False)
     define("base_url", default="http://beta.crusher.getrockerbox.com")
-    define("random", default=False)
     define("parameters", default='{}')
     define("debug", default=False)
 
