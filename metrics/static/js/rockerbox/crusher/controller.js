@@ -419,8 +419,8 @@ RB.crusher.controller = (function(controller) {
         self.draw()
       }
 
-      var dash = dashboard.filter_dashboard(funnelRow)
-      //var dash = dashboard.dashboard(funnelRow)
+      //var dash = dashboard.filter_dashboard(funnelRow)
+      var dash = dashboard.dashboard(funnelRow)
         .draw_loading()
 
       var action_name = dashboard.state(action.values.search).get("action_name")
