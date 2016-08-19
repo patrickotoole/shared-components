@@ -181,11 +181,11 @@ export function buildOffsiteSummary(data) {
   var values = [  
         {
             "key": "Off-site Views"
-          , "value": data.url_only.reduce(function(p,c) {return p + c.uniques},0)
+          , "value": data.full_urls.reduce(function(p,c) {return p + c.uniques},0)
         }
       , {
             "key": "Unique pages"
-          , "value": Object.keys(data.url_only.reduce(function(p,c) {p[c.url] = 0; return p },{})).length
+          , "value": Object.keys(data.full_urls.reduce(function(p,c) {p[c.url] = 0; return p },{})).length
         }
     ]
   return {"key":"Off-site Activity","values":values}

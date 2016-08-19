@@ -131,7 +131,7 @@ export default function render_filter(_top,_lower) {
           .rollup(function(v) {
             return v.reduce(function(p,c) { return p + c.uniques },0)
           })
-          .entries(data.url_only)
+          .entries(data.full_urls)
 
         var total = categories.reduce(function(p,c) { return p + c.values },0)
 
@@ -155,5 +155,6 @@ export default function render_filter(_top,_lower) {
       }
     })
     .draw()
-    ._target.selectAll(".filters-wrapper").style("padding-left","10px")
+    .on("update")(filters)
+    //._target.selectAll(".filters-wrapper").style("padding-left","10px")
 }

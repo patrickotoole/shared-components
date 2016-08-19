@@ -331,7 +331,7 @@ FilterDashboard.prototype = {
 
 
       this.render_filter(_top,_lower)
-      this.render_view(_lower,this._data)
+      //this.render_view(_lower,this._data)
 
     }
   , render_filter: render_filter

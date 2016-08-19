@@ -2,6 +2,15 @@
 
 export function State(loc) {
   this._loc = loc
+  this._parse = function parseQuery(qstr) {
+        var query = {};
+        var a = qstr.substr(1).split('&');
+        for (var i = 0; i < a.length; i++) {
+            var b = a[i].split('=');
+            query[decodeURIComponent(b[0])] = decodeURIComponent(b[1] || '');
+        }
+        return query;
+    }
 }
 
 export default function state(loc) {
@@ -16,42 +25,29 @@ State.prototype = {
 
       if (loc.indexOf(key) == -1) return _default
 
-      var f = loc.split(key + "=")[1];
-      f = f.split("&")[0]
+
+      var f = this._parse(loc)[key]
+
       try {
-        return JSON.parse(decodeURIComponent(f))
+        return JSON.parse(f)
       } catch(e) {
-        return decodeURIComponent(f)
+        return f
       }
     }
   , set: function(key,val) {
       var loc = this._loc || document.location.search
 
-      var s = "";
-      if (loc.indexOf(key) > -1 ) {
-        try {
-          s += loc.split(key + "=")[0] 
-          if (s.slice(-1)[0] == "&") s = s.slice(0,-1)
-        } catch(e) {}
+      var parsed = this._parse(loc)
 
-        try {
-          s += loc.split(key + "=")[1].split("&").slice(1).filter(function(x) { return x.length}).join("&") } catch(e) {}
-      } else {
-        s = loc
-      }
+      parsed[key] = val
 
-      s += "&" + key + "="
-
-
-      var search = (s.indexOf("?") == 0) ? 
-        s : "?" + s.slice(1)
-
-      var v = val
-
-      if (typeof(val) == "object") v = JSON.stringify(val)
-        
+      var s = "?"
+      Object.keys(parsed).map(function(k) {
+        if (typeof(parsed[k]) == "object") s += k + "=" + JSON.stringify(parsed[k]) + "&"
+        else s += k + "=" + parsed[k] + "&"
+      })
       
-      history.pushState({}, "", document.location.pathname + search + v )
+      history.pushState({}, "", document.location.pathname + s.slice(0,-1))
 
     }
 }
