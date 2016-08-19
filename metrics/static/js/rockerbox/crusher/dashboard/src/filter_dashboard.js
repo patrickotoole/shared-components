@@ -9,12 +9,15 @@ import time_selector from './time_selector'
 import table from './table'
 
 import render_filter from './render_filter'
+import state from './state'
 
 
 
 
 export function FilterDashboard(target) {
   this._on = {}
+  this._state = state()
+
   this._target = target
     .append("ul")
     .classed("vendors-list",true)
@@ -87,7 +90,7 @@ FilterDashboard.prototype = {
         .data(this._data.display_actions)
         .on("click",function(x) {
           var t = this;
-
+          self._state.set("action_name",x.key)
           _lower.selectAll("input")
             .attr("checked",function() {
               this.checked = (t == this)
@@ -111,11 +114,16 @@ FilterDashboard.prototype = {
         .style("margin-bottom","15px")
         .style("margin-top","-5px")
 
+      var self = this
+
       var tabs = [
           transform.buildDomains(data)
         , transform.buildUrls(data)
       ]
-      tabs[0].selected = 1
+
+      if ((tabs[0].selected == undefined) && (!this._state.get("tabs")))  this._state.set("tabs",[1,0]) 
+
+      this._state.get("tabs").map(function(x,i) { tabs[i].selected = x })
 
       d3_updateable(head,"span","span")
         .text(tabs.filter(function(x){ return x.selected})[0].key)
@@ -127,6 +135,7 @@ FilterDashboard.prototype = {
           tabs.map(function(y) { y.selected = 0 })
 
           this.selectedOptions[0].__data__.selected = 1
+          self._state.set("tabs", tabs.map(function(y) {return y.selected }) )
           draw()
         })
       
@@ -322,7 +331,7 @@ FilterDashboard.prototype = {
 
 
       this.render_filter(_top,_lower)
-      this.render_view(_lower,this._data)
+      //this.render_view(_lower,this._data)
 
     }
   , render_filter: render_filter
@@ -362,13 +371,13 @@ FilterDashboard.prototype = {
         .style("width","inherit")
 
 
-      d3_splat(_top, ".subtitle-filter","div",["Share Results", "Schedule Report", "Generate Brief" ])
+      d3_splat(_top,".subtitle-filter","a",["Bookmark Results","Share Results","Schedule Report","Build Content Brief","Build Media Plan" ])
         .classed("subtitle-filter",true)
         .style("text-transform","uppercase")
         .style("font-weight","bold")
         .style("line-height", "24px")
         .style("padding","16px")
-        .style("width"," 160px")
+        .style("width"," 180px")
         .style("text-align"," center")
         .style("border-radius"," 10px")
         .style("border"," 1px solid #ccc")
@@ -376,25 +385,11 @@ FilterDashboard.prototype = {
         .style("margin"," auto")
         .style("margin-bottom","10px")
         .style("cursor","pointer")
+        .style("display","block")
         .text(String)
-
-
-
-      //summary_box(_top)
-      //  .data(transform.buildOffsiteSummary(data))
-      //  .draw()
 
       this._data.display_categories = data.display_categories || transform.buildCategories(data)
 
-      // bar_selector(_lower)
-      //   .skip_check(true)
-      //   .data(data.display_categories)
-      //   .on("click",function(x) {
-      //     x.selected = !x.selected
-      //     self.draw() 
-      //   })
-      //   .draw()
-      
 
     }
 

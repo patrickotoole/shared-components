@@ -51,6 +51,15 @@
 
     var hourSelected = function() {}
 
+    var filters = self._state.get("filter",[{}])
+
+    //if (document.location.search.indexOf("filter") > -1) {
+    //
+    //  filters = document.location.search.split("filter=")[1]
+    //  filters = JSON.parse(decodeURIComponent(filters.split("&")[0]))
+    //  this._state.filters
+    //}
+
     filter.filter(_top)
       .fields(Object.keys(mapping))
       .ops([
@@ -58,7 +67,7 @@
         , [{"key":"contains"},{"key":"starts with"},{"key":"ends with"}]
         , [{"key":"equals"}, {"key":"between","input":2}]
       ])
-      .data([{}])
+      .data(filters)
       .render_op("between",function(filter,value) {
         var self = this
 
@@ -104,6 +113,10 @@
       })
       .on("update",function(x){
 
+        self._state
+          .set("filter",x)
+
+
         var y = x.map(function(z) {
           return { 
               "field": mapping[z.field]
@@ -116,7 +129,7 @@
           
           var data = {
               "full_urls": filter.filter_data(self._data.full_urls).logic("and").by(y)
-            , "url_only": filter.filter_data(self._data.url_only).logic("and").by(y)
+            //, "url_only": filter.filter_data(self._data.url_only).logic("and").by(y)
           }
 
           var categories = d3.nest()
@@ -124,7 +137,7 @@
             .rollup(function(v) {
               return v.reduce(function(p,c) { return p + c.uniques },0)
             })
-            .entries(data.url_only)
+            .entries(data.full_urls)
 
           var total = categories.reduce(function(p,c) { return p + c.values },0)
 
@@ -148,7 +161,8 @@
         }
       })
       .draw()
-      ._target.selectAll(".filters-wrapper").style("padding-left","10px")
+      .on("update")(filters)
+      //._target.selectAll(".filters-wrapper").style("padding-left","10px")
   }
 
   function accessor(attr, val) {
@@ -315,7 +329,7 @@
       return (idf[x] == "NA") || (idf[x] > 8686) ? 0 : idf[x]
     }
 
-    var values = data.url_only
+    var values = data.full_urls
       .map(function(x) { 
         return {
             "key":x.domain
@@ -387,7 +401,7 @@
       .filter(function(a) { return a.selected })
       .map(function(a) { return a.key })
 
-    var values = data.url_only
+    var values = data.full_urls
       .map(function(x) { return {"key":x.url,"value":x.count, "parent_category_name": x.parent_category_name} })
 
     if (categories.length > 0)
@@ -432,11 +446,11 @@
     var values = [  
           {
               "key": "Off-site Views"
-            , "value": data.url_only.reduce(function(p,c) {return p + c.uniques},0)
+            , "value": data.full_urls.reduce(function(p,c) {return p + c.uniques},0)
           }
         , {
               "key": "Unique pages"
-            , "value": Object.keys(data.url_only.reduce(function(p,c) {p[c.url] = 0; return p },{})).length
+            , "value": Object.keys(data.full_urls.reduce(function(p,c) {p[c.url] = 0; return p },{})).length
           }
       ]
     return {"key":"Off-site Activity","values":values}
@@ -735,8 +749,63 @@
       }
   }
 
+  // TODO: unit tests
+
+  function State(loc) {
+    this._loc = loc
+    this._parse = function parseQuery(qstr) {
+          var query = {};
+          var a = qstr.substr(1).split('&');
+          for (var i = 0; i < a.length; i++) {
+              var b = a[i].split('=');
+              query[decodeURIComponent(b[0])] = decodeURIComponent(b[1] || '');
+          }
+          return query;
+      }
+  }
+
+  function state(loc) {
+    return new State(loc)
+  }
+
+  State.prototype = {
+
+      get: function(key,_default) { 
+        var loc = this._loc || document.location.search
+          , _default = _default || false;
+
+        if (loc.indexOf(key) == -1) return _default
+
+
+        var f = this._parse(loc)[key]
+
+        try {
+          return JSON.parse(f)
+        } catch(e) {
+          return f
+        }
+      }
+    , set: function(key,val) {
+        var loc = this._loc || document.location.search
+
+        var parsed = this._parse(loc)
+
+        parsed[key] = val
+
+        var s = "?"
+        Object.keys(parsed).map(function(k) {
+          if (typeof(parsed[k]) == "object") s += k + "=" + JSON.stringify(parsed[k]) + "&"
+          else s += k + "=" + parsed[k] + "&"
+        })
+        
+        history.pushState({}, "", document.location.pathname + s.slice(0,-1))
+
+      }
+  }
+
   function Dashboard(target) {
     this._on = {}
+    this._state = state()
     this._target = target
       .append("ul")
       .classed("vendors-list",true)
@@ -1095,6 +1164,8 @@
 
   function FilterDashboard(target) {
     this._on = {}
+    this._state = state()
+
     this._target = target
       .append("ul")
       .classed("vendors-list",true)
@@ -1167,7 +1238,7 @@
           .data(this._data.display_actions)
           .on("click",function(x) {
             var t = this;
-
+            self._state.set("action_name",x.key)
             _lower.selectAll("input")
               .attr("checked",function() {
                 this.checked = (t == this)
@@ -1191,11 +1262,16 @@
           .style("margin-bottom","15px")
           .style("margin-top","-5px")
 
+        var self = this
+
         var tabs = [
             buildDomains(data)
           , buildUrls(data)
         ]
-        tabs[0].selected = 1
+
+        if ((tabs[0].selected == undefined) && (!this._state.get("tabs")))  this._state.set("tabs",[1,0]) 
+
+        this._state.get("tabs").map(function(x,i) { tabs[i].selected = x })
 
         d3_updateable(head,"span","span")
           .text(tabs.filter(function(x){ return x.selected})[0].key)
@@ -1207,6 +1283,7 @@
             tabs.map(function(y) { y.selected = 0 })
 
             this.selectedOptions[0].__data__.selected = 1
+            self._state.set("tabs", tabs.map(function(y) {return y.selected }) )
             draw()
           })
         
@@ -1402,7 +1479,7 @@
 
 
         this.render_filter(_top,_lower)
-        this.render_view(_lower,this._data)
+        //this.render_view(_lower,this._data)
 
       }
     , render_filter: render_filter
@@ -1442,13 +1519,13 @@
           .style("width","inherit")
 
 
-        d3_splat(_top, ".subtitle-filter","div",["Share Results", "Schedule Report", "Generate Brief" ])
+        d3_splat(_top,".subtitle-filter","a",["Bookmark Results","Share Results","Schedule Report","Build Content Brief","Build Media Plan" ])
           .classed("subtitle-filter",true)
           .style("text-transform","uppercase")
           .style("font-weight","bold")
           .style("line-height", "24px")
           .style("padding","16px")
-          .style("width"," 160px")
+          .style("width"," 180px")
           .style("text-align"," center")
           .style("border-radius"," 10px")
           .style("border"," 1px solid #ccc")
@@ -1456,25 +1533,11 @@
           .style("margin"," auto")
           .style("margin-bottom","10px")
           .style("cursor","pointer")
+          .style("display","block")
           .text(String)
-
-
-
-        //summary_box(_top)
-        //  .data(transform.buildOffsiteSummary(data))
-        //  .draw()
 
         this._data.display_categories = data.display_categories || buildCategories(data)
 
-        // bar_selector(_lower)
-        //   .skip_check(true)
-        //   .data(data.display_categories)
-        //   .on("click",function(x) {
-        //     x.selected = !x.selected
-        //     self.draw() 
-        //   })
-        //   .draw()
-        
 
       }
 
@@ -1485,5 +1548,6 @@
   exports.version = version;
   exports.dashboard = dashboard;
   exports.filter_dashboard = filter_dashboard;
+  exports.state = state;
 
 }));

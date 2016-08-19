@@ -45,6 +45,15 @@ export default function render_filter(_top,_lower) {
 
   var hourSelected = function() {}
 
+  var filters = self._state.get("filter",[{}])
+
+  //if (document.location.search.indexOf("filter") > -1) {
+  //
+  //  filters = document.location.search.split("filter=")[1]
+  //  filters = JSON.parse(decodeURIComponent(filters.split("&")[0]))
+  //  this._state.filters
+  //}
+
   filter.filter(_top)
     .fields(Object.keys(mapping))
     .ops([
@@ -52,7 +61,7 @@ export default function render_filter(_top,_lower) {
       , [{"key":"contains"},{"key":"starts with"},{"key":"ends with"}]
       , [{"key":"equals"}, {"key":"between","input":2}]
     ])
-    .data([{}])
+    .data(filters)
     .render_op("between",function(filter,value) {
       var self = this
 
@@ -98,6 +107,10 @@ export default function render_filter(_top,_lower) {
     })
     .on("update",function(x){
 
+      self._state
+        .set("filter",x)
+
+
       var y = x.map(function(z) {
         return { 
             "field": mapping[z.field]
@@ -110,7 +123,7 @@ export default function render_filter(_top,_lower) {
         
         var data = {
             "full_urls": filter.filter_data(self._data.full_urls).logic("and").by(y)
-          , "url_only": filter.filter_data(self._data.url_only).logic("and").by(y)
+          //, "url_only": filter.filter_data(self._data.url_only).logic("and").by(y)
         }
 
         var categories = d3.nest()
@@ -118,7 +131,7 @@ export default function render_filter(_top,_lower) {
           .rollup(function(v) {
             return v.reduce(function(p,c) { return p + c.uniques },0)
           })
-          .entries(data.url_only)
+          .entries(data.full_urls)
 
         var total = categories.reduce(function(p,c) { return p + c.values },0)
 
@@ -142,5 +155,6 @@ export default function render_filter(_top,_lower) {
       }
     })
     .draw()
-    ._target.selectAll(".filters-wrapper").style("padding-left","10px")
+    .on("update")(filters)
+    //._target.selectAll(".filters-wrapper").style("padding-left","10px")
 }

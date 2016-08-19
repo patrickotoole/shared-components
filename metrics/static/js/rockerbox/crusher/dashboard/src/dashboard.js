@@ -9,12 +9,15 @@ import time_selector from './time_selector'
 import table from './table'
 
 import render_filter from './render_filter'
+import state from './state'
+
 
 
 
 
 export function Dashboard(target) {
   this._on = {}
+  this._state = state()
   this._target = target
     .append("ul")
     .classed("vendors-list",true)
