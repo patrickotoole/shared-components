@@ -30,8 +30,12 @@ RB.crusher.controller = (function(controller) {
       RB.routes.navigation.forward(xx[0])
     } : false
 
-    if (type != stype && type.indexOf("dashboard") > -1 ) callback = function() {
-      history.pushState({},"",type)
+    if (type != stype && type.indexOf("dashboard") > -1 ) {
+
+      state.values = {"name": "Loading", "search":document.location.search}
+      callback = function() {
+        history.pushState({},"",type)
+      }
     }
 
     RB.routes.navigation.forward(state, callback)
@@ -419,13 +423,14 @@ RB.crusher.controller = (function(controller) {
       //var dash = dashboard.dashboard(funnelRow)
         .draw_loading()
 
-      var filter = function(x) { return x.featured }
+      var action_name = dashboard.state(action.values.search).get("action_name")
+      var default_filter = function(x) { return action_name ? x.action_name == action_name : x.featured }
 
       var pubsub = window.pubsub;
 
       var runAction = function(actions,_filter) {
-
-        var action = actions.filter(_filter || filter)[0]
+        
+        var action = actions.filter(_filter || default_filter)[0]
 
         window.pubsub.subscriber("home2",["visitor_domains_time_minute","actionTimeseriesOnly"])
           .run(function(data){

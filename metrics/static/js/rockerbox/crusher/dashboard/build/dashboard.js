@@ -1108,27 +1108,32 @@
 
   // TODO: unit tests
 
-  function State() {
+  function State(loc) {
+    this._loc = loc
   }
 
-  function state() {
-    return new State()
+  function state(loc) {
+    return new State(loc)
   }
 
   State.prototype = {
 
       get: function(key,_default) { 
-        var loc = document.location.search
+        var loc = this._loc || document.location.search
           , _default = _default || false;
 
         if (loc.indexOf(key) == -1) return _default
 
         var f = loc.split(key + "=")[1];
         f = f.split("&")[0]
-        return JSON.parse(decodeURIComponent(f))
+        try {
+          return JSON.parse(decodeURIComponent(f))
+        } catch(e) {
+          return decodeURIComponent(f)
+        }
       }
     , set: function(key,val) {
-        var loc = document.location.search
+        var loc = this._loc || document.location.search
 
         var s = "";
         if (loc.indexOf(key) > -1 ) {
@@ -1148,9 +1153,13 @@
 
         var search = (s.indexOf("?") == 0) ? 
           s : "?" + s.slice(1)
+
+        var v = val
+
+        if (typeof(val) == "object") v = JSON.stringify(val)
           
         
-        history.pushState({}, "", document.location.pathname + search +  JSON.stringify(val) )
+        history.pushState({}, "", document.location.pathname + search + v )
 
       }
   }
@@ -1231,7 +1240,7 @@
           .data(this._data.display_actions)
           .on("click",function(x) {
             var t = this;
-
+            self._state.set("action_name",x.key)
             _lower.selectAll("input")
               .attr("checked",function() {
                 this.checked = (t == this)
@@ -1541,5 +1550,6 @@
   exports.version = version;
   exports.dashboard = dashboard;
   exports.filter_dashboard = filter_dashboard;
+  exports.state = state;
 
 }));

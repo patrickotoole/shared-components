@@ -90,7 +90,7 @@ FilterDashboard.prototype = {
         .data(this._data.display_actions)
         .on("click",function(x) {
           var t = this;
-
+          self._state.set("action_name",x.key)
           _lower.selectAll("input")
             .attr("checked",function() {
               this.checked = (t == this)
