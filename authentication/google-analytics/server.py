@@ -133,7 +133,7 @@ class PropertiesHandler(web.RequestHandler, DBQuery):
         self.db = db
 
     def get(self):
-        advertiser_id = self.get_argument('advertiser')
+        advertiser_id = self.get_secure_cookie('advertiser')
         advertiser = DBQuery.getAdvertiser(self, advertiser_id)
 
         credentials = advertiser['token']
@@ -203,7 +203,7 @@ class DataHandler(web.RequestHandler, DBQuery):
         self.db = db
 
     def get(self):
-        advertiser_id = self.get_argument('advertiser')
+        advertiser_id = self.get_secure_cookie('advertiser')
         advertiser = DBQuery.getAdvertiser(self, advertiser_id)
 
         date = self.get_argument('date', False)
