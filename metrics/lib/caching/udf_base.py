@@ -43,10 +43,6 @@ class UDFCache:
         segments = kwargs['connectors']['db'].select_dataframe(QUERY.format(kwargs['advertiser']))
         for i,s in segments.iterrows():
             self.run_udfs(**kwargs)
-        if kwargs['onqueue']:
-            self.run_advertiser_wq(**kwargs)
-        else:
-            self.run_advertiser_local(**kwargs)
 
     def run_segment(self, **kwargs):
         self.run_udfs(**kwargs)
