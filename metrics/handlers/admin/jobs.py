@@ -156,8 +156,11 @@ class JobsHandler(tornado.web.RequestHandler, RPCQueue):
                 self.get_id(action)
         else:
             try:
-                entry, job_id = self.add_to_work_queue(self.request.body)
-                self.get_id(job_id, entry)
+                if "runall" in ujson.loads(self.request.body).keys():
+                    entry, job_id = self.add_advertiser_to_wq(self.request.body)
+                else:
+                    entry, job_id = self.add_to_work_queue(self.request.body)
+                    self.get_id(job_id, entry)
             except Exception, e:
                 self.set_status(400)
                 self.write(ujson.dumps({"error":str(e)}))

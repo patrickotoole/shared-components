@@ -117,18 +117,35 @@ submit_target.append("button")
 
           resp_target.html("Job Submitted: <br><pre>" + x.response + "</pre><br>")
          
-
           resp_target.append("a")
             .attr("href","/jobs/" + j.job_id)
             .attr("target","_blank")
-            .text("View job status")
-          
+            .text("View job status") 
         }
       )
-
   })
 
+submit_target.append("button")
+    .text("Run All for Advertiser")
+    .style("width", "200px")
+    .style("margin-left","100px")
+    .on("click",function(x){
 
+    d3.xhr("/jobs")
+      .post(
+        JSON.stringify({"advertiser":"X","runall":true),
+        function(err,x) {
+          var j = JSON.parse(x.response)
+
+          resp_target.html("Job Submitted: <br><pre>" + x.response + "</pre><br>")
+         
+          resp_target.append("a")
+            .attr("href","/jobs/" + j.job_id)
+            .attr("target","_blank")
+            .text("View job status") 
+        }
+      )
+})
 
 
 

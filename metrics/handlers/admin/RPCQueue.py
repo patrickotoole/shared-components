@@ -11,6 +11,42 @@ class RPCQueue():
     def __init__(self, zookeeper=None, **kwargs):
         self.zookeeper = zookeeper
 
+    def add_advertiser_to_wq(self, rpc_object):
+        import lib.caching as custom_scripts
+        import lib.caching.cassandra_runner as cr
+
+        rpc_data = ujson.loads(rpc_object)
+        advertiser = rpc_data.get("advertiser")
+        fn1 = custom_scripts.base_udf
+        fn2 = cr.runner
+        
+        kwarsg1 = {}
+        kwargs1["advertiser"]=advertiser
+        kwargs1["pattern"]=False
+        kwargs1["udf"] = []
+        kwargs2 = {}
+        kwargs2['advertiser'] = advertiser
+        
+        
+        work1 = pickle.dumps((
+            fn1,
+            kwargs1
+            ))
+
+        work2 = pickle.dumps((
+            fn2,
+            kwargs2
+            ))
+
+        entry_id = CustomQueue.CustomQueue(self.zookeeper,"python_queue","log",volume).put(work1,2,debug=False)
+        logging.info("added to Cassandra work queue for %s" %(advertiser))
+        job_id = hashlib.md5(work).hexdigest()
+
+        entry_id = CustomQueue.CustomQueue(self.zookeeper,"python_queue","log",volume).put(work2,2,debug=False)
+        logging.info("added to Cassandra work queue for %s" %(advertiser))
+        job_id = hashlib.md5(work).hexdigest()
+
+        return entry_id, job_id
     
     def add_to_work_queue(self, rpc_object):
         import lib.caching as custom_scripts
