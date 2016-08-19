@@ -17,14 +17,12 @@ class UDFCache:
         import lib.caching.generic_udf_runner as runner
         kwargs['func_name']= kwargs['udf']
         kwargs['connectors'] = self.connectors
-        #kwargs = {"advertiser":advertiser, "pattern":segment, "func_name":udf, "base_url":base_url, "filter_id":filter_id, "parameters": params, "connectors":connectors}
         runner.runner(**kwargs)
 
     def add_db_to_work_queue(self, **kwargs):
         import lib.caching.generic_udf_runner as runner
         kwargs['identifiers'] = "udf_{}_cache".format(kwargs['udf'])
         kwargs['func_name'] = kwargs['udf']
-        #kwargs = {"advertiser":advertiser, "pattern":segment, "func_name":udf, "base_url":base_url, "identifiers":"udf_{}_cache".format(udf), "filter_id":filter_id, "parameters":params}
         work = pickle.dumps((
                 runner.runner,
                 kwargs
@@ -40,7 +38,6 @@ class UDFCache:
                 self.add_db_to_work_queue(**kwargs)
             else:
                 self.run_local(**kwargs)
-                #self.run_local(kwargs['advertiser'], kwargs['pattern'], udf,  kwargs['base_url'], kwargs['action_id'], kwargs['parameters'], kwargs['connectors'])
 
     def run_advertiser(self,**kwargs):
         segments = kwargs['connectors']['db'].select_dataframe(QUERY.format(kwargs['advertiser']))
