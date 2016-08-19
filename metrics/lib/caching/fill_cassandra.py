@@ -8,7 +8,7 @@ class wqBackfill():
 
     def __init__(self, connectors):
         self.connectors = connectors
-        self.crusher = self.connectors['crusher']
+        self.crusher = self.connectors['crusher_wrapper']
 
     def get_segments(self,advertiser):
         url = "/crusher/funnel/action?format=json"
@@ -64,6 +64,7 @@ class wqBackfill():
 
 def runner(**kwargs):
     wqb = wqBackfill(kwargs['connectors'])
+    advertisers = wqb.get_advertisers()
     wqb.run_advertisers(advertisers)
     
 
@@ -82,7 +83,7 @@ if __name__ == "__main__":
     connectors['db'] = db
     connectors['cassandra'] = cassandra
     connectors['zk'] = zk
-    connectors['crusher'] = crusher
+    connectors['crusher_wrapper'] = crusher
 
     wqb = wqBackfill(connectors)
     advertisers = wqb.get_advertisers()

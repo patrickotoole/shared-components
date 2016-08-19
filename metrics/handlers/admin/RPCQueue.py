@@ -13,19 +13,18 @@ class RPCQueue():
 
     def add_advertiser_to_wq(self, rpc_object):
         import lib.caching.fill_cassandra as fc
-        import lib.caching.udf_base ad ub
+        import lib.caching.udf_base as ub
 
-        import ipdb; ipdb.set_trace()
         rpc_data = ujson.loads(rpc_object)
         advertiser = rpc_data.get("advertiser")
-        fn1 = gcr.runner
+        fn1 = ub.runner
         fn2 = fc.runner
         
-        kwarsg1 = {}
+        kwargs1 = {}
         kwargs1["advertiser"]=advertiser
         kwargs1["pattern"]=False
         kwargs1["onqueue"]=True
-        kwargs1['udf'] =['domains', 'domains_full', 'before_and_after', 'model', 'hourly','sessions']
+        kwargs1['udfs'] =['domains', 'domains_full', 'before_and_after', 'model', 'hourly','sessions']
         kwargs1['base_url'] = "http://beta.crusher.getrockerbox.com"
         kwargs1['parameters'] = {}
         kwargs1['debug']=False
@@ -43,13 +42,14 @@ class RPCQueue():
             kwargs2
             ))
 
-        entry_id = CustomQueue.CustomQueue(self.zookeeper,"python_queue","log",volume).put(work1,2,debug=True)
-        logging.info("added to Cassandra work queue for %s" %(advertiser))
-        job_id = hashlib.md5(work).hexdigest()
+        volume = "v{}".format(datetime.datetime.now().strftime('%m%y'))
+        entry_id = CustomQueue.CustomQueue(self.zookeeper,"python_queue","log",volume).put(work1,2,debug=False)
+        logging.info("added udf base runner to work queue for %s" %(advertiser))
+        job_id = hashlib.md5(work1).hexdigest()
 
-        entry_id = CustomQueue.CustomQueue(self.zookeeper,"python_queue","log",volume).put(work2,2,debug=True)
-        logging.info("added to Cassandra work queue for %s" %(advertiser))
-        job_id = hashlib.md5(work).hexdigest()
+        entry_id = CustomQueue.CustomQueue(self.zookeeper,"python_queue","log",volume).put(work2,2,debug=False)
+        logging.info("added fill cassandra to  work queue for %s" %(advertiser))
+        job_id = hashlib.md5(work2).hexdigest()
 
         return entry_id, job_id
     

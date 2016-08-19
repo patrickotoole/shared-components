@@ -88,8 +88,18 @@ var params_target = content.append("div").classed("params",true)
 
 var submit_target = content.append("div").classed("submit",true)
 
+var params_target2 = content.append("div").classed("params2",true)
+params_target2.append("input")
+    .classed("paraminput2",true)
+    .style("width","200px")
+    .style("margin-top", "50px")
+    .style("margin-left", "100px")
+
+var submit_target2 = content.append("div").classed("run_all",true)
+
 var resp_target = content.append("div").classed("response",true)
 
+var resp_target2 = content.append("div").classed("response2",true)
 
 submit_target.append("button")
   .text("submit")
@@ -125,19 +135,25 @@ submit_target.append("button")
       )
   })
 
-submit_target.append("button")
+
+submit_target2.append("button")
     .text("Run All for Advertiser")
     .style("width", "200px")
     .style("margin-left","100px")
     .on("click",function(x){
 
+    var data_sample = {"runall":"true"}
+    var input_index = d3.selectAll("input")[0].length-1
+    data_sample["advertiser"] = d3.selectAll("input")[0][input_index].value
+
+
     d3.xhr("/jobs")
       .post(
-        JSON.stringify({"advertiser":"X","runall":true),
+        JSON.stringify(data_sample),
         function(err,x) {
           var j = JSON.parse(x.response)
 
-          resp_target.html("Job Submitted: <br><pre>" + x.response + "</pre><br>")
+          resp_target2.html("Job Submitted: <br><pre>" + x.response + "</pre><br>")
          
           resp_target.append("a")
             .attr("href","/jobs/" + j.job_id)
