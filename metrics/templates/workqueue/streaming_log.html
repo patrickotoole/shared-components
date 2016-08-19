@@ -23,7 +23,10 @@ new function() {
 
     var open = function() {
         //var url = 'ws://192.168.99.100:8888/admin/websocket?id=154'
-        var url = 'ws://portal.getrockerbox.com/admin/websocket?id=1776';
+        //var url = 'ws://portal.getrockerbox.com/admin/websocket?id=1776';
+        random_id = Math.round(Math.random() * 1000);
+        URL = 'ws://portal.getrockerbox.com/admin/websocket?id=' + String(random_id)
+        var url = URL
         ws = new WebSocket(url);
         ws.onopen = onOpen;
         ws.onclose = onClose;
@@ -65,7 +68,12 @@ new function() {
     var onMessage = function(event) {
         var data = event.data;
         if (String(data).indexOf('workqueue') !== -1){
-            addMessage(data);
+            var parsed_data  = JSON.parse(data);
+            for(var i=0; i<parsed_data['hindsight_log'].length; i++){
+                var parsed_msg = parsed_data['hindsight_log'][i]['timestamp'] + " "+parsed_data['hindsight_log'][i]['log_message']
+                addMessage(parsed_msg);
+            }
+            //addMessage(data);
         }
     };
     
@@ -79,7 +87,7 @@ new function() {
             msg.addClass('sent');
         }
         var messages = $('#messages');
-        messages.append(msg);
+        messages.prepend(msg);
         
         var msgBox = messages.get(0);
         while (msgBox.childNodes.length > 1000) {
