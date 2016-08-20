@@ -383,16 +383,21 @@ FilterDashboard.prototype = {
         .classed("hidden",function() { return !d3.select(this).classed("hidden") })
         .style("padding-left","10px")
 
-      var saved_searches = [
-          {
-              "key": "Saved 1"
-            , "values": [{"field":"Time","op":"equals","value":"01"}]
-          }
-        , {
-              "key": "Saved 2"
-            , "values": [{"field":"Time","op":"equals","value":"02"}]
-          }
-      ]
+      var saved_searches = JSON.parse(localStorage.getItem("search.saved")) || []
+
+      //var saved_searches = [
+      //    {
+      //        "key": "Saved 1"
+      //      , "values": [{"field":"Time","op":"equals","value":"01"}]
+      //    }
+      //  , {
+      //        "key": "Saved 2"
+      //      , "values": [{"field":"Time","op":"equals","value":"02"}]
+      //    }
+      //]
+
+      //localStorage.setItem("search.saved",JSON.stringify(saved_searches))
+
 
       var saved_items = d3_splat(saved,".item","a",saved_searches,function(x) { return x.key })
         .style("display","block")

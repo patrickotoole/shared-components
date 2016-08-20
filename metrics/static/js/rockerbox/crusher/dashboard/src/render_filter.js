@@ -37,6 +37,17 @@ export default function render_filter(_top,_lower) {
     .text("Save")
     .on("click", function(x) {
       var value = save_input.property("value")
+
+      var filters = self._state.get("filter")
+      var saved_searches = JSON.parse(localStorage.getItem("search.saved")) || []
+
+      saved_searches.push({
+          "key": value
+        , "values": filters
+      })
+
+      localStorage.setItem("search.saved",JSON.stringify(saved_searches))
+
       save.classed("hidden",true)
     })
 
