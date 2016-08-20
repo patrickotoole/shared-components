@@ -10,6 +10,47 @@
     var self = this
       , data = self._data;
 
+    var _top = d3_updateable(_top,".filter-wrapper","div")
+      .classed("filter-wrapper",true)
+      .classed("hidden",false)
+
+    var save = d3_updateable(_top, ".save-subtitle-filter","div")
+      .classed("save-subtitle-filter",true)
+      .classed("hidden",true)
+      .attr("style","padding-left:10px; text-transform: uppercase; font-weight: bold; line-height: 24px; margin-bottom: 10px;")
+      .style("text-align","right")
+
+
+    d3_updateable(save,"span","span")
+      .text("Save filter as:")
+
+    var save_input = d3_updateable(save,"input","input")
+      .style("margin-left","10px")
+      .style("padding-left","8px")
+      .style("font-weight","normal")
+      .style("line-height","12px")
+      .attr("placeholder","Filter name...")
+
+    d3_updateable(save,"br","br")
+
+
+    d3_updateable(save,"button","button")
+      .style("margin-left","10px")
+      .style("padding-left","8px")
+      .style("font-weight","normal")
+      .style("height","20px")
+      .style("line-height","12px")
+      .text("Save")
+      .on("click", function(x) {
+        var value = save_input.property("value")
+        save.classed("hidden",true)
+      })
+
+
+
+
+
+
     var subtitle = d3_updateable(_top, ".subtitle-filter","div")
       .classed("subtitle-filter",true)
       .attr("style","padding-left:10px; text-transform: uppercase; font-weight: bold; line-height: 24px; margin-bottom: 10px;")
@@ -1457,6 +1498,9 @@
         draw()      
       }
     , render_center: function() {
+
+        var self = this;
+
         this._center = d3_updateable(this._target,".center","div")
           .classed("center col-md-7",true)
 
@@ -1469,17 +1513,89 @@
           .style("margin-top","-5px")
           .text("Filter activity")
 
-        
+        var right_pull = d3_updateable(head,".pull-right","a")
+          .classed("pull-right fa-bookmark fa", true)
+          .style("margin-right","17px")
+          .style("line-height","22px")
+          .style("text-decoration","none !important")
+
+        d3_updateable(right_pull,".saved-search","a")
+          .classed("saved-search",true)
+          .style("vertical-align","middle")
+          .style("font-size","12px")
+          .style("font-family","ProximaNova, sans-serif")
+          .style("font-weight","bold")
+          .style("border-right","1px solid #ccc")
+          .style("padding-right","10px")
+          .style("display","inline-block")
+          .style("line-height","22px")
+          .style("text-decoration","none")
+          .html("&nbsp; Saved Searches")
+          .on("click",function() {
+            self.render_saved(_top,_lower)
+            var w = _top.selectAll(".filter-wrapper")
+            //w.classed("hidden",function(x) { return !w.classed("hidden") })
+
+          })
+
+        d3_updateable(right_pull,".new-saved-search","a")
+          .classed("new-saved-search",true)
+          .style("font-size","14px")
+          .style("font-family","ProximaNova, sans-serif")
+          .style("font-weight","bold")
+          .style("padding-left","10px")
+          .style("display","inline-block")
+          .style("line-height","22px")
+          .style("text-decoration","none")
+          .html("&#65291;")
+          .on("click",function() {
+            //self.render_saved(_top,_lower)
+            var w = _top.selectAll(".save-subtitle-filter")
+            w.classed("hidden",function(x) { return !w.classed("hidden") })
+            
+          })
 
 
 
-        //time_selector(_top)
-        //  .data(transform.buildTimes(this._data))
-        //  .draw()
-
-
+        this.render_saved(_top,_lower)
         this.render_filter(_top,_lower)
+
         //this.render_view(_lower,this._data)
+
+      }
+    , render_saved: function(_top,_lower) {
+
+        var self = this;
+
+        var saved = d3_updateable(_top,".saved","div")
+          .classed("saved",true)
+          .classed("hidden",function() { return !d3.select(this).classed("hidden") })
+          .style("padding-left","10px")
+
+        var saved_searches = [
+            {
+                "key": "Saved 1"
+              , "values": [{"field":"Time","op":"equals","value":"01"}]
+            }
+          , {
+                "key": "Saved 2"
+              , "values": [{"field":"Time","op":"equals","value":"02"}]
+            }
+        ]
+
+        var saved_items = d3_splat(saved,".item","a",saved_searches,function(x) { return x.key })
+          .style("display","block")
+          .style("font-weight","bold")
+          .style("margin-left","auto")
+          .style("width","240px")
+          .classed("item",true)
+          .style("line-height","24px")
+          .text(function(x) {return x.key})
+          .on("click", function(x) {
+            self._state.set("filter",x.values)
+            self.render_saved(_top,_lower)
+            self.render_filter(_top,_lower)
+          })
 
       }
     , render_filter: render_filter
@@ -1519,7 +1635,20 @@
           .style("width","inherit")
 
 
-        d3_splat(_top,".subtitle-filter","a",["Bookmark Results","Share Results","Schedule Report","Build Content Brief","Build Media Plan" ])
+        
+
+        var funcs = {
+            "Save Results": function(x) {
+            }
+          , "Share Results": function(x) {
+            }
+          , "Schedule Report": function(x) {
+            }
+        }
+
+        //var f = d3_splat(_top,".subtitle-filter","a",["Save Results","Share Results","Schedule Results","Build Content Brief","Build Media Plan" ])
+
+        var f = d3_splat(_top,".subtitle-filter","a",["Share Search","Schedule Report"])
           .classed("subtitle-filter",true)
           .style("text-transform","uppercase")
           .style("font-weight","bold")
@@ -1535,6 +1664,12 @@
           .style("cursor","pointer")
           .style("display","block")
           .text(String)
+          .on("click", function(x) {
+            funcs[x]()
+
+          })
+
+       
 
         this._data.display_categories = data.display_categories || buildCategories(data)
 
