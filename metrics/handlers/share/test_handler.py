@@ -11,8 +11,19 @@ from link import lnk
 
 class ShareHandlerTest(AsyncHTTPTestCase):
 
+    def check_queries(self,query):
+
+        self.assertTrue("action_dashboard_share" in query)
+        self.assertTrue(len(query.split(",")) == 5)
+        self.NONCE = query.split(",")[4][1:-3]
+
+        return "yo"
+
+
     def get_app(self):
-        db = lnk.dbs.test
+        self.NONCE = ""
+        db = mock.MagicMock()
+        db.execute = self.check_queries
 
         self.app = Application([('/', handler.ShareHandler, dict(db=db))],
             cookie_secret="rickotoole",
@@ -41,16 +52,32 @@ class ShareHandlerTest(AsyncHTTPTestCase):
         
 
     def test_create_share(self):
-        with mock.patch.object(handler.ShareHandler, "make_share") as m:
-            m.side_effect = self.check_share
-            with mock.patch.object(handler.ShareHandler, "get_secure_cookie") as a:
-                a.side_effect = lambda x: True if x == "user" else ADVERTISER_ID
-                response = self.fetch('/',method="POST",body="{}")
+        with mock.patch.object(handler.ShareHandler, "get_advertiser_if_nonce") as m:
+            m.return_value = True
+            with mock.patch.object(handler.ShareHandler, "make_share") as m:
+                m.side_effect = self.check_share
+                with mock.patch.object(handler.ShareHandler, "get_secure_cookie") as a:
+                    a.side_effect = lambda x: True if x == "user" else ADVERTISER_ID
+                    response = self.fetch('/',method="POST",body="{}")
         self.assertEqual("GOOD", response.body)
 
+    def test_create_share_statements(self):
+
+        with mock.patch.object(handler.ShareHandler, "get_advertiser_if_nonce") as m:
+            m.return_value = True
+            with mock.patch.object(handler.ShareHandler, "get_secure_cookie") as a:
+                a.side_effect = lambda x: True if x == "user" else ADVERTISER_ID
+
+                response = self.fetch('/',method="POST",body='{"urls":["a","b"]}')
+        self.assertEqual(str(self.NONCE), response.body)
+
+
+
     def test_create_share_fail(self):
-        with mock.patch.object(handler.ShareHandler, "get_secure_cookie") as a:
-            a.side_effect = lambda x: True if x == "user" else "0"
-            response = self.fetch('/?nonce=iamafailednonce',method="POST",body="")
-        self.assertEqual(404, response.code)
+        with mock.patch.object(handler.ShareHandler, "get_advertiser_if_nonce") as m:
+            m.return_value = False
+            with mock.patch.object(handler.ShareHandler, "get_secure_cookie") as a:
+                a.side_effect = lambda x: True if x == "user" else "0"
+                response = self.fetch('/?nonce=iamafailednonce',method="POST",body="")
+        self.assertEqual(403, response.code)
 
