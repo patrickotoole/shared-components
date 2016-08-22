@@ -93,4 +93,3 @@ if __name__ == "__main__":
     wqb = wqBackfill(connectors)
     advertisers = wqb.get_advertisers()
     wqb.run_advertisers(advertisers)
-    wqb.check_cassandra_cache()
