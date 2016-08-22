@@ -8,8 +8,10 @@ import json
 import logging
 from link import lnk
 
+secrets_path = os.path.abspath('../authentication/google-analytics/secrets.json');
+
 flow = client.flow_from_clientsecrets(
-    'secrets.json',
+    secrets_path,
     scope='https://www.googleapis.com/auth/analytics.readonly',
     redirect_uri='http://ga-dev.rockerbox.com:8888/callback')
 flow.params['access_type'] = 'offline'
