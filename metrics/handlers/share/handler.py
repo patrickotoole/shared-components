@@ -1,6 +1,7 @@
 import tornado.web
 import ujson
 import logging
+
 from database import ShareDatabase
 from ..base import BaseHandler
 

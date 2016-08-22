@@ -20,6 +20,7 @@ class UserRoutes(Routes):
         import handlers.user_handlers as user
         import handlers.integrations.handler as integrations
         import handlers.subscription as subscription
+        import handlers.share.handler as share
 
         import handlers.advertiser.handler as advertiser
 
@@ -27,6 +28,7 @@ class UserRoutes(Routes):
             (r'/', user.LoginHandler, self.connectors),
             (r'/login.*', user.LoginHandler, self.connectors),
             (r'/nonce', user.NonceHandler, self.connectors),
+            (r'/share', share.ShareHandler, self.connectors),
             (r'/logout', user.LoginHandler, self.connectors),
             (r'/signup.*', user.SignupHandler, self.connectors),
             (r'/integrations', integrations.IntegrationHandler, self.connectors),
