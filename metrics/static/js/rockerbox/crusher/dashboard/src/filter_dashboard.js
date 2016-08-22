@@ -459,6 +459,7 @@ FilterDashboard.prototype = {
           "Save Results": function(x) {
           }
         , "Share Search": function(x) {
+            var x = x
             share(d3.select("body"))
               .draw()
               .inner(function(target) {
@@ -491,7 +492,7 @@ FilterDashboard.prototype = {
                   .style("text-align","left")
                   .text("To:")
 
-                d3_updateable(to,"input","input")
+                var to_input = d3_updateable(to,"input","input")
                   .style("width","300px")
                   .attr("placeholder","elonmusk@example.com")
 
@@ -509,7 +510,7 @@ FilterDashboard.prototype = {
                   .style("text-align","left")
                   .text("Message:")
 
-                d3_updateable(message,"textarea","textarea")
+                var message_input = d3_updateable(message,"textarea","textarea")
                   .style("width","300px")
                   .style("height","100px")
                   .style("border","1px solid #ccc")
@@ -520,10 +521,33 @@ FilterDashboard.prototype = {
                   .classed("send",true)
                   .style("text-align","center")
 
+                var data = x;
+
                 d3_updateable(send,"button","button")
                   .style("line-height","16px")
                   .style("margin-top","10px")
                   .text("Send")
+                  .on("click",function(x) {
+                    console.log(message_input.value, to_input.value)
+                    var msg = message_input.property("value")
+                      , email = to_input.property("value")
+
+                    console.log(data);
+                    var URLS = [
+                        "/crusher/funnel/action?format=json" 
+                      , "/crusher/v2/visitor/domains_full_time_minute/cache?format=json&top=20000&url_pattern=" + data.url_pattern[0] + "&filter_id=" + data.action_id
+                      , "/crusher/pattern_search/timeseries_only?search=" + data.url_pattern[0] 
+                      , location.pathname + decodeURIComponent(location.search)
+                    ]
+
+                    d3.xhr("/share")
+                      .post(JSON.stringify({
+                            "email": email
+                          , "msg": msg
+                          , "urls": URLS
+                        })
+                      )
+                  })
 
 
            
@@ -594,7 +618,7 @@ FilterDashboard.prototype = {
         .style("display","block")
         .text(String)
         .on("click", function(x) {
-          funcs[x]()
+          funcs[x].bind(self)(self._data)
 
         })
 
