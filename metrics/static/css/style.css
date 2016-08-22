@@ -1805,6 +1805,16 @@ body.create input[type=submit] {
 	border-left: 7px solid #23468c;	
 }
 */
+body.hide-aside div.container {
+  margin-left: 0px; }
+body.hide-aside aside {
+  display: none; }
+body.hide-aside .vendors-list-item .lhs, body.hide-aside .vendors-list-item .center .top-section, body.hide-aside .vendors-list-item .right {
+  display: none; }
+body.hide-aside .vendors-list-item .center {
+  margin: auto;
+  float: none; }
+
 .hist-row {
   line-height: 0px;
   max-height: 45px;

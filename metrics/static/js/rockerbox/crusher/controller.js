@@ -10,10 +10,14 @@ RB.crusher.controller = (function(controller) {
   var pubsub = crusher.pubsub
 
   controller.init = function(type, data) {
-    pubsub.subscriber("advertiser-name-email", ["advertiser", "current_user"])
-      .run(RB.crusher.metrics.init)
-      .unpersist(true)
-      .trigger()
+    if (type.indexOf("nonce") == -1) {
+      pubsub.subscriber("advertiser-name-email", ["advertiser", "current_user"])
+        .run(RB.crusher.metrics.init)
+        .unpersist(true)
+        .trigger()
+    } else {
+      
+    }
 
     var id = type.split("id=")[1]
     if (id && id.length) { id = decodeURI(id) }
@@ -363,6 +367,8 @@ RB.crusher.controller = (function(controller) {
     "action/dashboard": function(action) {
 
       d3.select("body").classed("hide-top hide-select",true)
+
+      if (action.values.search && action.values.search.indexOf("nonce") > -1) d3.select("body").classed("hide-aside",true)
 
       RB.component.export(RB.crusher.ui.funnel.show, RB.crusher.ui.funnel)
       RB.component.export(RB.crusher.ui.action.show, RB.crusher.ui.action)
