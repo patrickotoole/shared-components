@@ -63,7 +63,8 @@ def apivalidation(x):
 
 class IndexHandler(web.RequestHandler):
     def get(self):
-        self.write('<a href="https://slack.com/oauth/authorize?scope=incoming-webhook,commands,bot&client_id=2171079607.55132364375"><img alt="Add to Slack" height="40" width="139" src="https://platform.slack-edge.com/img/add_to_slack.png" srcset="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x" /></a>')
+        self.write(json.dumps(self.get_secure_cookie('advertiser')))
+        self.write('<a href="https://slack.com/oauth/authorize?scope=incoming-webhook,commands,bot,channels:read,channels:write,groups:read,groups:write,chat:write:user&client_id=2171079607.70828999184"><img alt="Add to Slack" height="40" width="139" src="https://platform.slack-edge.com/img/add_to_slack.png" srcset="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x" /></a>')
         self.finish()
 
 class AuthenticationCallbackHandler(web.RequestHandler, DBQuery):
@@ -121,7 +122,30 @@ class SlackChannelsHandler(web.RequestHandler, DBQuery):
         user = DBQuery.getUser(self, advertiser_id)
 
         if user['empty'] == False:
-            url = 'https://slack.com/api/channels.list?token=%s' %  user['bot_access_token']
+            url = 'https://slack.com/api/channels.list?token=%s' %  user['global_access_token']
+            req = urllib2.Request(url)
+            res = urllib2.urlopen(req)
+            response = json.loads(res.read())
+        else:
+            response = json.dumps({
+                'ok': False,
+                'message': 'Advertiser does not exist or does not have Slack integration.'
+            })
+
+        self.write(response)
+        self.finish()
+
+class SlackGroupsHandler(web.RequestHandler, DBQuery):
+    def initialize(self, db):
+        self.db = db
+
+    @apivalidation
+    def get(self):
+        advertiser_id = self.get_argument('advertiser_id', '')
+        user = DBQuery.getUser(self, advertiser_id)
+
+        if user['empty'] == False:
+            url = 'https://slack.com/api/groups.list?token=%s' %  user['global_access_token']
             req = urllib2.Request(url)
             res = urllib2.urlopen(req)
             response = json.loads(res.read())
@@ -198,6 +222,7 @@ class WebApp(web.Application):
         handlers = [
             (r'/callback', AuthenticationCallbackHandler, connectors),
             (r'/channels', SlackChannelsHandler, connectors),
+            (r'/groups', SlackGroupsHandler, connectors),
             (r'/message', SlackMessageHandler, connectors),
             (r'/', IndexHandler),
         ]
