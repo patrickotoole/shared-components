@@ -12,7 +12,7 @@ class wqBackfill():
 
     def get_segments(self,advertiser):
         url = "/crusher/funnel/action?format=json"
-        results = crusher.get(url)
+        results = self.crusher.get(url)
         segments = []
         try:
             raw_results = results.json['response']
@@ -32,7 +32,7 @@ class wqBackfill():
         url = TS_URL.format(pattern)
         missing = []
         try:
-            _resp=crusher.get(url)
+            _resp=self.crusher.get(url)
             data = _resp.json
             for day in data['results']:
                 if day['uniques']==0 or day['visits']==0 or day['views']==0:
@@ -64,8 +64,13 @@ class wqBackfill():
 
 def runner(**kwargs):
     wqb = wqBackfill(kwargs['connectors'])
-    advertisers = wqb.get_advertisers()
-    wqb.run_advertisers(advertisers)
+    if kwargs['advertiser']:
+        segments = wqb.get_segments(kwargs['advertiser'])
+        for segment in segments:
+            wqb.run_segment(kwargs['advertiser'], segment['url_pattern'][0])
+    else:
+        advertisers = wqb.get_advertisers()
+        wqb.run_advertisers(advertisers)
     
 
 if __name__ == "__main__":

@@ -43,9 +43,9 @@ class UDFCache:
         segments = kwargs['connectors']['db'].select_dataframe(QUERY.format(kwargs['advertiser']))
         if kwargs.get('connectors',False):
             kwargs.pop('connectors')
-        for i,s in segments.iterrows():
-            kwargs['pattern'] = s['url_pattern'][0]
-            kwargs['filter_id'] = s['action_id']
+        for i,seg in segments.iterrows():
+            kwargs['pattern'] = seg['url_pattern']
+            kwargs['filter_id'] = seg['action_id']
             self.run_udfs(**kwargs)
 
     def run_segment(self, **kwargs):
@@ -54,7 +54,6 @@ class UDFCache:
 
 def runner(**kwargs):
     UC = UDFCache(kwargs['connectors'])
-    kwargs['debug']=False
     UC.run_advertiser(**kwargs)
 
 if __name__ == "__main__":

@@ -89,11 +89,21 @@ var params_target = content.append("div").classed("params",true)
 var submit_target = content.append("div").classed("submit",true)
 
 var params_target2 = content.append("div").classed("params2",true)
+
+params_target2.append("div").classed("label script",true).text("Debug")
 params_target2.append("input")
     .classed("paraminput2",true)
     .style("width","200px")
     .style("margin-top", "50px")
-    .style("margin-left", "100px")
+    .style("margin-left", "1px")
+params_target2.append("div").classed("break",true).html("<br/>")
+params_target2.append("div").classed("label script2",true).text("Advertiser")
+params_target2.append("input")
+    .classed("paraminput3",true)
+    .text("advertiser")
+    .style("width","200px")
+    .style("margin-top", "-10px")
+    .style("margin-left", "1px")
 
 var submit_target2 = content.append("div").classed("run_all",true)
 
@@ -146,6 +156,9 @@ submit_target2.append("button")
     var input_index = d3.selectAll("input")[0].length-1
     data_sample["advertiser"] = d3.selectAll("input")[0][input_index].value
 
+    var debug_index = d3.selectAll("input")[0].length-2
+    debug_value = d3.selectAll("input")[0][debug_index].value
+    data_sample['debug'] = debug_value
 
     d3.xhr("/jobs")
       .post(

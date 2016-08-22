@@ -14,9 +14,14 @@ class RPCQueue():
     def add_advertiser_to_wq(self, rpc_object):
         import lib.caching.fill_cassandra as fc
         import lib.caching.udf_base as ub
-
+        
         rpc_data = ujson.loads(rpc_object)
         advertiser = rpc_data.get("advertiser")
+        if rpc_data.get("debug",""):
+            if rpc_data.get("debug","") == "true" or rpc_data.get("debug","") =="True":
+                set_debug=True
+        else:
+            set_debug = False
         fn1 = ub.runner
         fn2 = fc.runner
         
@@ -27,7 +32,7 @@ class RPCQueue():
         kwargs1['udfs'] =['domains', 'domains_full', 'before_and_after', 'model', 'hourly','sessions']
         kwargs1['base_url'] = "http://beta.crusher.getrockerbox.com"
         kwargs1['parameters'] = {}
-        kwargs1['debug']=False
+        kwargs1['debug']=set_debug
 
         kwargs2 = {}
         kwargs2['advertiser'] = advertiser
@@ -43,11 +48,11 @@ class RPCQueue():
             ))
 
         volume = "v{}".format(datetime.datetime.now().strftime('%m%y'))
-        entry_id = CustomQueue.CustomQueue(self.zookeeper,"python_queue","log",volume).put(work1,2,debug=False)
+        entry_id = CustomQueue.CustomQueue(self.zookeeper,"python_queue","log",volume).put(work1,2,debug=set_debug)
         logging.info("added udf base runner to work queue for %s" %(advertiser))
         job_id = hashlib.md5(work1).hexdigest()
 
-        entry_id = CustomQueue.CustomQueue(self.zookeeper,"python_queue","log",volume).put(work2,2,debug=False)
+        entry_id = CustomQueue.CustomQueue(self.zookeeper,"python_queue","log",volume).put(work2,2,debug=set_debug)
         logging.info("added fill cassandra to  work queue for %s" %(advertiser))
         job_id = hashlib.md5(work2).hexdigest()
 
