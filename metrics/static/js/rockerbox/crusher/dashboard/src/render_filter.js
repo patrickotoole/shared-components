@@ -4,7 +4,7 @@ export default function render_filter(_top,_lower) {
   var self = this
     , data = self._data;
 
-  var _top = d3_updateable(_top,".filter-wrapper","div")
+  var _top = d3_updateable(_top,".filter-wrapper","div",false, function(x) { return 1})
     .classed("filter-wrapper",true)
     .classed("hidden",false)
 

@@ -10,6 +10,8 @@ import table from './table'
 
 import render_filter from './render_filter'
 import state from './state'
+import share from './share'
+
 
 
 
@@ -456,7 +458,118 @@ FilterDashboard.prototype = {
       var funcs = {
           "Save Results": function(x) {
           }
-        , "Share Results": function(x) {
+        , "Share Search": function(x) {
+            share(d3.select("body"))
+              .draw()
+              .inner(function(target) {
+
+                var header = d3_updateable(target,".header","h4")
+                  .classed("header",true)
+                  .style("text-align","center")
+                  .style("text-transform","uppercase")
+                  .style("font-family","ProximaNova, sans-serif")
+                  .style("font-size","12px")
+                  .style("font-weight","bold")
+                  .style("padding-top","30px")
+                  .style("padding-bottom","30px")
+                  .text("Share search results via:")
+
+                var email_form = d3_updateable(target,".email-share-form","div")
+                  .classed("email-share-form hidden",true)
+                  .style("text-align","center")
+
+                var to = d3_updateable(email_form, ".to", "div")
+                  .classed("to",true)
+                
+                d3_updateable(to,".label","div")
+                  .style("width","100px")
+                  .style("display","inline-block")
+                  .style("text-transform","uppercase")
+                  .style("font-family","ProximaNova, sans-serif")
+                  .style("font-size","12px")
+                  .style("font-weight","bold")
+                  .style("text-align","left")
+                  .text("To:")
+
+                d3_updateable(to,"input","input")
+                  .style("width","300px")
+                  .attr("placeholder","elonmusk@example.com")
+
+
+                var message = d3_updateable(email_form, ".message", "div")
+                  .classed("message",true)
+                
+                d3_updateable(message,".label","div")
+                  .style("display","inline-block")
+                  .style("width","100px")
+                  .style("text-transform","uppercase")
+                  .style("font-family","ProximaNova, sans-serif")
+                  .style("font-size","12px")
+                  .style("font-weight","bold")
+                  .style("text-align","left")
+                  .text("Message:")
+
+                d3_updateable(message,"textarea","textarea")
+                  .style("width","300px")
+                  .style("height","100px")
+                  .style("border","1px solid #ccc")
+                  .attr("placeholder","Hey Elon - Thought you might be interested in this...")
+
+
+                var send = d3_updateable(email_form, ".send", "div")
+                  .classed("send",true)
+                  .style("text-align","center")
+
+                d3_updateable(send,"button","button")
+                  .style("line-height","16px")
+                  .style("margin-top","10px")
+                  .text("Send")
+
+
+           
+                
+
+                var slack_form = d3_updateable(target,".slack-share-form","div")
+                  .classed("slack-share-form hidden",true)
+                  .style("text-align","center")
+                  .text("Slack integration coming soon...")
+
+
+                var email = d3_updateable(target,".email-wrap","div")
+                  .classed("btn-wrap email-wrap col-md-6",true)
+                  .style("text-align","center")
+
+                d3_updateable(email,"a","a")
+                  .attr("style","text-transform: uppercase; font-weight: bold; line-height: 24px; padding: 10px; width: 180px; text-align: center; border-radius: 10px; border: 1px solid rgb(204, 204, 204); margin: auto auto 10px; cursor: pointer; display: block;")
+                  .text("email")
+                  .on("click",function() {
+                    header.text("Share results via email")
+                    target.selectAll(".btn-wrap").classed("hidden",true)
+                    email_form.classed("hidden",false)
+
+                  })
+
+
+                var slack = d3_updateable(target,".slack-wrap","div")
+                  .classed("btn-wrap slack-wrap col-md-6",true)
+                  .style("text-align","center")
+
+                d3_updateable(slack,"a","a")
+                  .attr("style","text-transform: uppercase; font-weight: bold; line-height: 24px; padding: 10px; width: 180px; text-align: center; border-radius: 10px; border: 1px solid rgb(204, 204, 204); margin: auto auto 10px; cursor: pointer; display: block;")
+                  .text("slack")
+                  .on("click",function() {
+                    target.selectAll(".btn-wrap").classed("hidden",true)
+                    slack_form.classed("hidden",false)
+
+                  })
+
+
+
+
+
+
+
+              })
           }
         , "Schedule Report": function(x) {
           }
