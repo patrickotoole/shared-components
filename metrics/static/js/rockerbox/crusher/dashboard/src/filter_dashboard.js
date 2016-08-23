@@ -496,6 +496,27 @@ FilterDashboard.prototype = {
                   .style("width","300px")
                   .attr("placeholder","elonmusk@example.com")
 
+                var name = d3_updateable(email_form, ".name", "div")
+                  .classed("name",true)
+                
+                d3_updateable(name,".label","div")
+                  .style("width","100px")
+                  .style("display","inline-block")
+                  .style("text-transform","uppercase")
+                  .style("font-family","ProximaNova, sans-serif")
+                  .style("font-size","12px")
+                  .style("font-weight","bold")
+                  .style("text-align","left")
+                  .text("Report Name:")
+
+                var name_input = d3_updateable(name,"input","input")
+                  .style("width","300px")
+                  .attr("placeholder","My awesome search")
+
+
+
+                
+
 
                 var message = d3_updateable(email_form, ".message", "div")
                   .classed("message",true)
@@ -531,6 +552,8 @@ FilterDashboard.prototype = {
                     console.log(message_input.value, to_input.value)
                     var msg = message_input.property("value")
                       , email = to_input.property("value")
+                      , name = name_input.property("value")
+
 
                     console.log(data);
                     var URLS = [
@@ -544,6 +567,7 @@ FilterDashboard.prototype = {
                       .post(JSON.stringify({
                             "email": email
                           , "msg": msg
+                          , "title": title
                           , "urls": URLS
                         })
                       )

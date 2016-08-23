@@ -37,7 +37,9 @@ class ShareHandler(BaseHandler,ShareDatabase):
                url = host + urllib.unquote(obj['urls'][-1]) + "&nonce=" + nonce
                to = obj['email']
                msg = obj['msg']
-               send(to=to,base_url = url, _msg = msg)
+               title = obj.get('name'," a search ")
+               subject = "Someone shared a Hindsight search with you..."
+               send(to=to,base_url = url, _msg = msg, subject = subject, title = title)
                
             self.write(nonce)
 
