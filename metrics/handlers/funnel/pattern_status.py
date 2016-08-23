@@ -63,7 +63,9 @@ class PatternStatusHandler(BaseHandler,APIHelpers,PatternDatabase):
     def run_domains(self,advertiser,pattern,cache_date):
         # this runs the domains and uniques
         # this is what should be automatically run each day
-        import lib.caching.cache_interface as ci
+        #deprecated
+        #import lib.caching.cache_interface as ci
+        
         from link import lnk
 
         zookeeper =KazooClient(hosts="zk1:2181")
@@ -74,9 +76,6 @@ class PatternStatusHandler(BaseHandler,APIHelpers,PatternDatabase):
         crusher.user = username
         crusher.password="admin"
         crusher.authenticate()
-        ac = ActionCache(advertiser, crusher, lnk.dbs.rockerbox, zookeeper)
-        
-        ci.run_advertiser(ac, advertiser_name)
 
 
         df = pandas.DataFrame([])
