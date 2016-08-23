@@ -141,7 +141,7 @@ class AdvertiserRoutes(Routes):
         import handlers.pixel_status as pixel_status
         import handlers.analytics.domains.user as user
         import handlers.analytics.domains.visitor as visitor
-
+        import handlers.analytics.domains.artifacts as artifacts
 
         return [
             (r'/user/domains', user.handler.VisitDomainsHandler, self.connectors),
@@ -153,7 +153,8 @@ class AdvertiserRoutes(Routes):
 
             #(r'/visitor/domains_full', visitor.full_handler.VisitorDomainsFullHandler, self.connectors),
             #(r'/visitor/domains_full/cache',visitor.full_cache_handler.VisitorDomainsFullCacheHandler,self.connectors),
-            
+            (r'/artifacts', artifacts.ArtifactsHandler, self.connectors),            
+
             (r'/visitor/(.*?)/cache', visitor.transform_cache_handler.VisitorTransformCacheHandler, self.connectors),
             (r'/visitor/(.*?)', visitor.transform_handler.VisitorTransformHandler, self.connectors),
 
