@@ -45,8 +45,9 @@ def parse_for_id(x, zk, dq):
 
 class JobsHandler(tornado.web.RequestHandler, RPCQueue):
 
-    def initialize(self, zookeeper=None, *args, **kwargs):
+    def initialize(self, zookeeper=None, crushercache=None, *args, **kwargs):
         self.zookeeper = zookeeper
+        self.crushercache = crushercache
         self.job = 0
 
     def get_id(self, _job_id, entry_id=False):
@@ -156,8 +157,12 @@ class JobsHandler(tornado.web.RequestHandler, RPCQueue):
                 self.get_id(action)
         else:
             try:
-                entry, job_id = self.add_to_work_queue(self.request.body)
-                self.get_id(job_id, entry)
+                if "runall" in ujson.loads(self.request.body).keys():
+                    entry, job_id = self.add_advertiser_to_wq(self.request.body)
+                    self.get_id(job_id, entry)
+                else:
+                    entry, job_id = self.add_to_work_queue(self.request.body)
+                    self.get_id(job_id, entry)
             except Exception, e:
                 self.set_status(400)
                 self.write(ujson.dumps({"error":str(e)}))
