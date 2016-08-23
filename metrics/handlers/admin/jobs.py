@@ -45,8 +45,9 @@ def parse_for_id(x, zk, dq):
 
 class JobsHandler(tornado.web.RequestHandler, RPCQueue):
 
-    def initialize(self, zookeeper=None, *args, **kwargs):
+    def initialize(self, zookeeper=None, crushercache=None, *args, **kwargs):
         self.zookeeper = zookeeper
+        self.crushercache = crushercache
         self.job = 0
 
     def get_id(self, _job_id, entry_id=False):

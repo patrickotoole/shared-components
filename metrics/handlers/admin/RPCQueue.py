@@ -6,9 +6,12 @@ import logging
 import hashlib
 from lib.functionselector import FunctionSelector
 
+SELECT_UDFS = "select name from rpc_function_details where is_recurring=1"
+
 class RPCQueue():
 
-    def __init__(self, zookeeper=None, **kwargs):
+    def __init__(self, zookeeper=None, crushercache=None, **kwargs):
+        self.crushercache = crushercache
         self.zookeeper = zookeeper
 
     def add_advertiser_to_wq(self, rpc_object):
@@ -25,11 +28,16 @@ class RPCQueue():
         fn1 = ub.runner
         fn2 = fc.runner
         
+        udfs_from_db = self.crushercache.select_dataframe(SELECT_UDFS)
+        udfs = []
+        for udf in udfs_from_db.iterrows():
+            udfs.append(udf[1]['name'])
+
         kwargs1 = {}
         kwargs1["advertiser"]=advertiser
         kwargs1["pattern"]=False
         kwargs1["onqueue"]=True
-        kwargs1['udfs'] =['domains', 'domains_full', 'before_and_after', 'model', 'hourly','sessions']
+        kwargs1['udfs'] = udfs
         kwargs1['base_url'] = "http://beta.crusher.getrockerbox.com"
         kwargs1['parameters'] = {}
         kwargs1['debug']=set_debug
