@@ -1877,6 +1877,31 @@
                 })
             }
           , "Schedule Report": function(x) {
+
+              var ss = share(d3.select("body"))
+                .draw()
+
+              ss.inner(function(target) {
+
+                var self = this;
+
+                  var header = d3_updateable(target,".header","h4")
+                    .classed("header",true)
+                    .style("text-align","center")
+                    .style("text-transform","uppercase")
+                    .style("font-family","ProximaNova, sans-serif")
+                    .style("font-size","12px")
+                    .style("font-weight","bold")
+                    .style("padding-top","30px")
+                    .style("padding-bottom","30px")
+                    .text("Schedule search results:")
+
+                  var email_form = d3_updateable(target,"div","div")
+                    .style("text-align","center")
+                    .text("Scheduled reports coming soon...")
+              })
+
+
             }
         }
 
