@@ -23,6 +23,8 @@ Share.prototype = {
           overlay.remove()
         })
 
+      this._overlay = overlay;
+
       var center = d3_updateable(overlay,".popup","div")
         .classed("popup col-md-5 col-sm-8",true)
         .style("margin-left","auto")
@@ -41,7 +43,12 @@ Share.prototype = {
       return this
     }
   , inner: function(fn) {
-    this._inner = fn
-    this.draw()
-  }
+      this._inner = fn.bind(this)
+      this.draw()
+      return this
+    }
+  , hide: function() {
+      this._overlay.remove()
+      return this 
+    }
 }

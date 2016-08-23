@@ -460,9 +460,12 @@ FilterDashboard.prototype = {
           }
         , "Share Search": function(x) {
             var x = x
-            share(d3.select("body"))
+            var ss = share(d3.select("body"))
               .draw()
-              .inner(function(target) {
+
+            ss.inner(function(target) {
+
+              var self = this;
 
                 var header = d3_updateable(target,".header","h4")
                   .classed("header",true)
@@ -555,7 +558,6 @@ FilterDashboard.prototype = {
                       , name = name_input.property("value")
 
 
-                    console.log(data);
                     var URLS = [
                         "/crusher/funnel/action?format=json" 
                       , "/crusher/v2/visitor/domains_full_time_minute/cache?format=json&top=20000&url_pattern=" + data.url_pattern[0] + "&filter_id=" + data.action_id
@@ -567,10 +569,13 @@ FilterDashboard.prototype = {
                       .post(JSON.stringify({
                             "email": email
                           , "msg": msg
-                          , "title": title
+                          , "name": name
                           , "urls": URLS
                         })
                       )
+
+                    self.hide()
+
                   })
 
 

@@ -1238,6 +1238,8 @@
             overlay.remove()
           })
 
+        this._overlay = overlay;
+
         var center = d3_updateable(overlay,".popup","div")
           .classed("popup col-md-5 col-sm-8",true)
           .style("margin-left","auto")
@@ -1256,9 +1258,14 @@
         return this
       }
     , inner: function(fn) {
-      this._inner = fn
-      this.draw()
-    }
+        this._inner = fn.bind(this)
+        this.draw()
+        return this
+      }
+    , hide: function() {
+        this._overlay.remove()
+        return this 
+      }
   }
 
   function FilterDashboard(target) {
@@ -1705,9 +1712,12 @@
             }
           , "Share Search": function(x) {
               var x = x
-              share(d3.select("body"))
+              var ss = share(d3.select("body"))
                 .draw()
-                .inner(function(target) {
+
+              ss.inner(function(target) {
+
+                var self = this;
 
                   var header = d3_updateable(target,".header","h4")
                     .classed("header",true)
@@ -1800,7 +1810,6 @@
                         , name = name_input.property("value")
 
 
-                      console.log(data);
                       var URLS = [
                           "/crusher/funnel/action?format=json" 
                         , "/crusher/v2/visitor/domains_full_time_minute/cache?format=json&top=20000&url_pattern=" + data.url_pattern[0] + "&filter_id=" + data.action_id
@@ -1812,10 +1821,13 @@
                         .post(JSON.stringify({
                               "email": email
                             , "msg": msg
-                            , "title": title
+                            , "name": name
                             , "urls": URLS
                           })
                         )
+
+                      self.hide()
+
                     })
 
 
