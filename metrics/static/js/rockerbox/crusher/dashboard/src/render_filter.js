@@ -4,6 +4,58 @@ export default function render_filter(_top,_lower) {
   var self = this
     , data = self._data;
 
+  var _top = d3_updateable(_top,".filter-wrapper","div",false, function(x) { return 1})
+    .classed("filter-wrapper",true)
+    .classed("hidden",false)
+
+  var save = d3_updateable(_top, ".save-subtitle-filter","div")
+    .classed("save-subtitle-filter",true)
+    .classed("hidden",true)
+    .attr("style","padding-left:10px; text-transform: uppercase; font-weight: bold; line-height: 24px; margin-bottom: 10px;")
+    .style("text-align","right")
+
+
+  d3_updateable(save,"span","span")
+    .text("Save filter as:")
+
+  var save_input = d3_updateable(save,"input","input")
+    .style("margin-left","10px")
+    .style("padding-left","8px")
+    .style("font-weight","normal")
+    .style("line-height","12px")
+    .attr("placeholder","Filter name...")
+
+  d3_updateable(save,"br","br")
+
+
+  d3_updateable(save,"button","button")
+    .style("margin-left","10px")
+    .style("padding-left","8px")
+    .style("font-weight","normal")
+    .style("height","20px")
+    .style("line-height","12px")
+    .text("Save")
+    .on("click", function(x) {
+      var value = save_input.property("value")
+
+      var filters = self._state.get("filter")
+      var saved_searches = JSON.parse(localStorage.getItem("search.saved")) || []
+
+      saved_searches.push({
+          "key": value
+        , "values": filters
+      })
+
+      localStorage.setItem("search.saved",JSON.stringify(saved_searches))
+
+      save.classed("hidden",true)
+    })
+
+
+
+
+
+
   var subtitle = d3_updateable(_top, ".subtitle-filter","div")
     .classed("subtitle-filter",true)
     .attr("style","padding-left:10px; text-transform: uppercase; font-weight: bold; line-height: 24px; margin-bottom: 10px;")

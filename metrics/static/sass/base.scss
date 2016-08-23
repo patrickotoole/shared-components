@@ -3,6 +3,20 @@
 @import 'partials/pricing';
 @import 'partials/create';
 
+body.hide-aside {
+  div.container {
+    margin-left:0px
+  }
+  aside {
+    display:none
+  }
+  .vendors-list-item {
+    .lhs, .center .top-section, .right {display:none}
+    .center { margin:auto; float:none }
+
+  }
+}
+
 .hist-row {
     line-height: 0px;
     max-height: 45px;

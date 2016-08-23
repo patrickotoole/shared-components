@@ -151,6 +151,8 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
 
     if (data.current_hour && data.current_hour.length > 0) return deferred_cb(null, cb.bind(false, {}))
 
+    URL += api.URL.nonce
+
 
     var process = function(dd) {
 
@@ -949,6 +951,8 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
     // debugger;
     if (action.has_filter) endpoint_url += "filter_id=" + action.action_id + "&"
     endpoint_url += 'search=' + action.url_pattern[0];
+
+    endpoint_url += api.URL.nonce
 
     if (action.visits_data) {
       deferred_cb(null, cb.bind(false, action))

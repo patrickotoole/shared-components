@@ -6,14 +6,37 @@ from lib.helpers import decorators
 import ujson
 from lib.helpers import Convert
 #from ..lib.hive import Hive
+from tornado.escape import url_unescape
 
 class BaseHandler(tornado.web.RequestHandler):
 
+    def get_advertiser_if_nonce(self,nonce):
+        uri = url_unescape(self.request.uri.split("&nonce")[0])
+
+        df = self.db.select_dataframe("SELECT * FROM action_dashboard_share where nonce = '%s' and endpoint_allowed = '%s' " % (nonce,uri) )
+
+        if len(df): return df.ix[0,'advertiser_id']
+        return False
+        
+
     def get_current_user(self):
+
+        nonce = self.get_argument("nonce",False)
+        if nonce: return self.get_advertiser_if_nonce(nonce)
+
         return self.get_secure_cookie("user")
 
+    def get_share_advertiser(self,nonce):
+
+        
+        return self.get_advertiser_if_nonce(nonce)
+        
+
     def get_current_advertiser(self):
-        advertiser = self.get_secure_cookie("advertiser")
+        nonce = self.get_argument("nonce",False)
+        if nonce: advertiser = self.get_share_advertiser(nonce)
+        else: advertiser = self.get_secure_cookie("advertiser")
+
         if advertiser == "0": self.redirect("/advertiser")
 
         return advertiser

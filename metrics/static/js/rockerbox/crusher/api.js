@@ -16,13 +16,18 @@ RB.crusher.api = (function(api, crusher) {
 
   var source = ""
 
+  var nonce = ""
+  try {
+    nonce = "&" + location.search.slice(location.search.indexOf("nonce")).split("&")[0]
+  } finally {}
 
 
   api.URL = {
     //source: qs.advertiser,
+    nonce: nonce,
     advertiser: "/advertiser",
     userPermissions: "/account/permissions",
-    actionURL: "/crusher/funnel/action?format=json",
+    actionURL: "/crusher/funnel/action?format=json" + nonce,
     actionUIDs: "/crusher/pattern_search/uids?search=",
     actionTimeseries: "/crusher/pattern_search/timeseries?search=",
     actionClusters: "/crusher/pattern_search/uid_domains?search=",

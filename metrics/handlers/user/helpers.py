@@ -16,7 +16,7 @@ def build_track(to,event="e-mail - activate (opened)"):
         }
     }
     _j = ujson.dumps(j).encode("base64").replace("\n","")
-    src = "http://api.mixpanel.com/track/?data=%s&ip=1&img=1" % _j
+    src = "http://api.mixpanel.com/track/?data=%s&ip=0&img=1" % _j
     return '<img src="%s" />' % src
  
 def build_link_track(to,link,event="e-mail - activate (click)"):
