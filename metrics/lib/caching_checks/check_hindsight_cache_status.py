@@ -8,7 +8,7 @@ URL2 = "/crusher/v1/visitor/{}/cache?url_pattern={}&filter_id={}"
 TS_URL = "/crusher/pattern_search/timeseries_only?search={}"
 
 def check_cache_endpoint(crusher, pattern, udf):
-    url = URL.format(udf, pattern['url_pattern'][0])
+    url = URL2.format(udf, pattern['url_pattern'][0], pattern['action_id'])
     try:
         _resp=crusher.get(url)
         data = _resp.json
