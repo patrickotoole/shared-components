@@ -122,7 +122,7 @@ class SlackChannelsHandler(web.RequestHandler, DBQuery):
         user = DBQuery.getUser(self, advertiser_id)
 
         if user['empty'] == False:
-            url = 'https://slack.com/api/channels.list?token=%s' %  user['global_access_token']
+            url = 'https://slack.com/api/channels.list?token=%s' %  user['bot_access_token']
             req = urllib2.Request(url)
             res = urllib2.urlopen(req)
             response = json.loads(res.read())
@@ -145,7 +145,7 @@ class SlackGroupsHandler(web.RequestHandler, DBQuery):
         user = DBQuery.getUser(self, advertiser_id)
 
         if user['empty'] == False:
-            url = 'https://slack.com/api/groups.list?token=%s' %  user['global_access_token']
+            url = 'https://slack.com/api/groups.list?token=%s' %  user['bot_access_token']
             req = urllib2.Request(url)
             res = urllib2.urlopen(req)
             response = json.loads(res.read())
@@ -182,7 +182,7 @@ class SlackMessageHandler(web.RequestHandler, DBQuery):
 
             data = urllib.urlencode({
                 'channel': user['channel_id'],
-                'token': user['global_access_token'],
+                'token': user['bot_access_token'],
                 'text': '',
                 'attachments': json.dumps([{
                     'fallback': 'Top articles for today.',
