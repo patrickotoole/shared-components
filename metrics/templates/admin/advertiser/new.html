@@ -343,25 +343,25 @@
 
           $("#spinny_wheel").css('visibility', 'visible');
 
-          var admin_username = "a_" + $("#advertiser_name").val().split(" ")[0].replace(/\W/g, "").toLowerCase();
-          $.ajax({
-            type: "POST",
-            url: '/signup',
-            data: JSON.stringify({
-              username: admin_username,
-              password: "admin",
-              show_reporting: 0,
-              advertiser: response,
-              first_name: advertiser.user.first_name,
-              last_name: advertiser.user.last_name,
-              email: advertiser.user.email
-            }),
-            success: function(data) {
-              $("#spinny_wheel").css('visibility', 'hidden');
-              alert('Admin Login for Advertiser Added')
-            },
-            cache: false
-          });
+          // var admin_username = "a_" + $("#advertiser_name").val().split(" ")[0].replace(/\W/g, "").toLowerCase();
+          // $.ajax({
+          //   type: "POST",
+          //   url: '/signup',
+          //   data: JSON.stringify({
+          //     username: admin_username,
+          //     password: "admin",
+          //     show_reporting: 0,
+          //     advertiser: response,
+          //     first_name: advertiser.user.first_name,
+          //     last_name: advertiser.user.last_name,
+          //     email: advertiser.user.email
+          //   }),
+          //   success: function(data) {
+          //     $("#spinny_wheel").css('visibility', 'hidden');
+          //     alert('Admin Login for Advertiser Added')
+          //   },
+          //   cache: false
+          // });
         }
       });
 
