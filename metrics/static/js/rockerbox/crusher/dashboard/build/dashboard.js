@@ -1898,7 +1898,124 @@
 
                   var email_form = d3_updateable(target,"div","div")
                     .style("text-align","center")
-                    .text("Scheduled reports coming soon...")
+
+                  var to = d3_updateable(email_form, ".to", "div")
+                    .classed("to",true)
+                  
+                  d3_updateable(to,".label","div")
+                    .style("width","100px")
+                    .style("display","inline-block")
+                    .style("text-transform","uppercase")
+                    .style("font-family","ProximaNova, sans-serif")
+                    .style("font-size","12px")
+                    .style("font-weight","bold")
+                    .style("text-align","left")
+                    .text("To:")
+
+                  var to_input = d3_updateable(to,"input","input")
+                    .style("width","300px")
+                    .attr("placeholder","elonmusk@example.com")
+
+                  var name = d3_updateable(email_form, ".name", "div")
+                    .classed("name",true)
+                  
+                  d3_updateable(name,".label","div")
+                    .style("width","100px")
+                    .style("display","inline-block")
+                    .style("text-transform","uppercase")
+                    .style("font-family","ProximaNova, sans-serif")
+                    .style("font-size","12px")
+                    .style("font-weight","bold")
+                    .style("text-align","left")
+                    .text("Report Name:")
+
+                  var name_input = d3_updateable(name,"input","input")
+                    .style("width","300px")
+                    .attr("placeholder","My awesome search")
+
+
+                  var schedule = d3_updateable(email_form, ".schedule", "div")
+                    .classed("schedule",true)
+
+
+                  d3_updateable(schedule,".label","div")
+                    .style("width","100px")
+                    .style("display","inline-block")
+                    .style("text-transform","uppercase")
+                    .style("font-family","ProximaNova, sans-serif")
+                    .style("font-size","12px")
+                    .style("font-weight","bold")
+                    .style("text-align","left")
+                    .text("Schedule:")
+
+                  var schedule_input = d3_updateable(schedule,"select","select",["Mon","Tues","Wed","Thurs","Fri","Sat","Sun"])
+                    .style("width","300px")
+                    .attr("multiple",true)
+
+                  d3_splat(schedule_input,"option","option")
+                    .text(String)
+
+                  var time = d3_updateable(email_form, ".time", "div")
+                    .classed("time",true)
+
+
+                  d3_updateable(time,".label","div")
+                    .style("width","100px")
+                    .style("display","inline-block")
+                    .style("text-transform","uppercase")
+                    .style("font-family","ProximaNova, sans-serif")
+                    .style("font-size","12px")
+                    .style("font-weight","bold")
+                    .style("text-align","left")
+                    .text("Time:")
+
+                  var time_input = d3_updateable(time,"select","select",d3.range(0,23).map(function(x) { return (x%12 + 1) + (x +1 > 11 ? " pm" : " am") }) )
+                    .style("width","300px")
+
+                  d3_splat(time_input,"option","option")
+                    .attr("selected",function(x) { return x == "12 pm" ? "selected" : undefined })
+                    .text(String)
+
+
+                  var send = d3_updateable(email_form, ".send", "div")
+                    .classed("send",true)
+                    .style("text-align","center")
+
+                  var data = x;
+
+                  d3_updateable(send,"button","button")
+                    .style("line-height","16px")
+                    .style("margin-top","10px")
+                    .text("Send")
+                    .on("click",function(x) {
+                      var email = to_input.property("value")
+                        , name = " the recurring " + name_input.property("value") + " report "
+                        , time = time_input.property("value")
+                        , days = d3.selectAll(schedule_input.node().selectedOptions).data().join(",")
+
+                      var URLS = [
+                          "/crusher/funnel/action?format=json" 
+                        , "/crusher/v2/visitor/domains_full_time_minute/cache?format=json&top=20000&url_pattern=" + data.url_pattern[0] + "&filter_id=" + data.action_id
+                        , "/crusher/pattern_search/timeseries_only?search=" + data.url_pattern[0] 
+                        , location.pathname + decodeURIComponent(location.search)
+                      ]
+
+                      d3.xhr("/share")
+                        .post(JSON.stringify({
+                              "email": email
+                            , "name": name
+                            , "days": days
+                            , "time": time
+                            , "urls": URLS
+                          })
+                        )
+
+                      self.hide()
+
+                    })
+                    .text("Schedule")
+
+
               })
 
 
