@@ -18,7 +18,7 @@ def send(to="rick@rockerbox.com", subject="Someone has shared a Hindsight search
     
     msg = MIMEMultipart('alternative')
     msg['Subject'] = subject
-    msg['From'] = "\"Hindsight\" <hello@rockerbox.com>";
+    msg['From'] = "\"Hindsight\" <hindsight@rockerbox.com>";
     msg['To'] = to
 
 

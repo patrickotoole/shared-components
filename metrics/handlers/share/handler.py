@@ -49,7 +49,7 @@ class ShareHandler(BaseHandler,ShareDatabase,ScheduleDatabase):
                 msg = obj['msg']
                 title = obj.get('name'," a search ")
                 subject = "Someone shared a Hindsight search with you..."
-                send(to=to,base_url = url, _msg = msg, subject = subject, title = title, title_override = obj["title_override"])
+                send(to=to,base_url = url, _msg = msg, subject = subject, title = title, title_override = obj.get("title_override",False))
                
             self.write(nonce)
 
