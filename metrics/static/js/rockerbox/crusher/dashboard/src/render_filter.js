@@ -106,14 +106,36 @@ export default function render_filter(_top,_lower) {
   //  this._state.filters
   //}
 
+  //debugger
+  var categories = this._data.category.map(function(x) {x.key = x.parent_category_name; return x})
+
   filter.filter(_top)
     .fields(Object.keys(mapping))
     .ops([
-        [{"key": "equals"}]
+        [{"key": "equals.category"}]
       , [{"key":"contains"},{"key":"starts with"},{"key":"ends with"}]
       , [{"key":"equals"}, {"key":"between","input":2}]
     ])
     .data(filters)
+    .render_op("equals.category",function(filter,value) {
+      var self = this;
+
+      var select = d3_updateable(filter,"select.value","select")
+        .classed("value",true)
+        .style("margin-bottom","10px")
+        .style("padding-left","10px")
+        .style("width","150px")
+        .attr("value", value.value)
+        .on("change", function(x){
+          value.value = this.value
+          self.on("update")(self.data())
+        })
+
+      d3_splat(select,"option","option",categories,function(x) { return x.key })
+        .attr("selected",function(x) { return x.key == value.value ? "selected" : undefined })
+        .text(function(x) { return x.key })
+
+    })
     .render_op("between",function(filter,value) {
       var self = this
 
@@ -159,8 +181,7 @@ export default function render_filter(_top,_lower) {
     })
     .on("update",function(x){
 
-      self._state
-        .set("filter",x)
+      self._state.set("filter",x)
 
 
       var y = x.map(function(z) {

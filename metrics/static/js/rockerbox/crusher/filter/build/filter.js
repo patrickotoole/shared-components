@@ -205,7 +205,7 @@
         value.op = value.op || new_ops[0].key
 
         var ops = d3_splat(select,"option","option",new_ops,function(x){return x.key})
-          .text(function(x) { return x.key }) 
+          .text(function(x) { return x.key.split(".")[0] }) 
           .attr("selected", function(x) { return x.key == value.op ? "selected" : undefined })
 
         ops.exit().remove()

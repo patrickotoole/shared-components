@@ -112,14 +112,36 @@
     //  this._state.filters
     //}
 
+    //debugger
+    var categories = this._data.category.map(function(x) {x.key = x.parent_category_name; return x})
+
     filter.filter(_top)
       .fields(Object.keys(mapping))
       .ops([
-          [{"key": "equals"}]
+          [{"key": "equals.category"}]
         , [{"key":"contains"},{"key":"starts with"},{"key":"ends with"}]
         , [{"key":"equals"}, {"key":"between","input":2}]
       ])
       .data(filters)
+      .render_op("equals.category",function(filter,value) {
+        var self = this;
+
+        var select = d3_updateable(filter,"select.value","select")
+          .classed("value",true)
+          .style("margin-bottom","10px")
+          .style("padding-left","10px")
+          .style("width","150px")
+          .attr("value", value.value)
+          .on("change", function(x){
+            value.value = this.value
+            self.on("update")(self.data())
+          })
+
+        d3_splat(select,"option","option",categories,function(x) { return x.key })
+          .attr("selected",function(x) { return x.key == value.value ? "selected" : undefined })
+          .text(function(x) { return x.key })
+
+      })
       .render_op("between",function(filter,value) {
         var self = this
 
@@ -165,8 +187,7 @@
       })
       .on("update",function(x){
 
-        self._state
-          .set("filter",x)
+        self._state.set("filter",x)
 
 
         var y = x.map(function(z) {
@@ -846,7 +867,26 @@
 
         var s = "?"
         Object.keys(parsed).map(function(k) {
-          if (typeof(parsed[k]) == "object") s += k + "=" + JSON.stringify(parsed[k]) + "&"
+          if (typeof(parsed[k]) == "object") {
+
+            var o = parsed[k]
+            if (o.length == undefined) {
+              var o2 = {}
+    
+              Object.keys(o).map(function(x) { o2[x] = encodeURIComponent(o[x]) })
+              s += k + "=" + JSON.stringify(o2) + "&"
+            } else {
+              var o1 = []
+    
+              o.map(function(i) {
+                var o2 = {}
+                Object.keys(i).map(function(x) { o2[x] = encodeURIComponent(i[x]) })
+                o1.push(o2)
+              })
+    
+              s += k + "=" + JSON.stringify(o1) + "&"
+            }
+          }
           else s += k + "=" + parsed[k] + "&"
         })
         
