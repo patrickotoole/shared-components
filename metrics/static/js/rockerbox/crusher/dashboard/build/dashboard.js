@@ -879,6 +879,9 @@
               var o1 = []
     
               o.map(function(i) {
+                if (typeof(i) == "number") return o1.push(i)
+                if (typeof(i) == "string") return o1.push(encodeURIComponent(i))
+
                 var o2 = {}
                 Object.keys(i).map(function(x) { o2[x] = encodeURIComponent(i[x]) })
                 o1.push(o2)
