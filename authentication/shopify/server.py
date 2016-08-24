@@ -18,9 +18,18 @@ class DBQuery:
     def getShopifyID(self, shop, access_token):
         url = 'https://%s/admin/shop.json?access_token=%s' % (shop, access_token)
         req = urllib2.Request(url)
-        res = urllib2.urlopen(req)
-        data = json.loads(res.read())
-        return data['shop']['id']
+        try:
+            res = urllib2.urlopen(req)
+            data = json.loads(res.read())
+            response = data['shop']['id']
+        except urllib2.HTTPError as err:
+            response = {
+                'status': 'error',
+                'message': 'HTTP Error',
+                'code': err.code
+            }
+
+        return response
 
     def getShop(self, shop_domain):
         sql = "SELECT * FROM %(db_table)s WHERE `shop_domain` = '%(shop_domain)s'" % {
@@ -164,7 +173,37 @@ class AuthenticationCallbackHandler(web.RequestHandler, DBQuery):
         }
 
         df = self.db.execute(sql)
-        self.redirect('/')
+        self.redirect('/?shop=%s' % (shop_domain))
+
+class AuthenticationHandler(web.RequestHandler, DBQuery):
+    def initialize(self, db):
+        self.db = db
+
+    def get(self):
+        shop_domain = self.get_argument('shop', '')
+        shop = DBQuery.getShop(self, shop_domain)
+        authorized = False
+
+        # Check if shop exists in our DB
+        if shop['empty'] == False:
+            authorized = True
+
+        # Check if we still have access with the token we have
+        if authorized == True:
+            shop_id = DBQuery.getShopifyID(self, shop_domain, shop['access_token'])
+
+            if(isinstance(shop_id, int) == False):
+                if shop_id['code'] == 401:
+                    authorized = False
+
+        if authorized == True:
+            self.redirect('/?shop=%s' % (shop_domain))
+        else:
+            self.write('<script type="text/javascript">window.top.location = "https://%(shop_domain)s/admin/oauth/authorize?client_id=%(client_id)s&scope=write_script_tags&redirect_uri=%(redirect_uri)s";</script>' % {
+                'shop_domain': shop_domain,
+                'client_id': SETTINGS['shopify']['client_id'],
+                'redirect_uri': SETTINGS['shopify']['redirect_uri']
+            })
 
 
 class WebApp(web.Application):
@@ -175,6 +214,7 @@ class WebApp(web.Application):
 
         handlers = [
             (r'/callback', AuthenticationCallbackHandler, connectors),
+            (r'/authenticate', AuthenticationHandler, connectors),
             (r'/', IndexHandler, connectors),
         ]
 
