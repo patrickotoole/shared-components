@@ -155,6 +155,7 @@ class Advertiser(object):
         #self.db.commit()
 
     def insert_emails(self,advertiser_id):
+
         params = {
             "external_advertiser_id": advertiser_id,
             "contact_name": self.get_argument('contact_name'),
@@ -187,7 +188,7 @@ class Advertiser(object):
         data = {"segment":{ "member_id":2024, "short_name":advertiser_name + " - " + segment_name} }
         URL = "/segment?advertiser_id=%s" % advertiser_id
         response = self.api.post(URL,data=ujson.dumps(data)).json
-
+        logging.info(response)
         params = {
             "pixel_source_name":self.get_argument("pixel_source_name"),
             "segment_id": response["response"]["segment"]["id"],
@@ -246,12 +247,16 @@ class Advertiser(object):
     def create_publisher(self,advertiser_name):
         data = {
             "publisher": {
-                "name": advertiser_name
+                "name": advertiser_name,
+                "inventory_relationship":'indirect_multiple_publishers'
             }
         }
         URL = "/publisher"
         response_pub = self.api.post(URL,data=ujson.dumps(data)).json
+        logging.info(response_pub)
         publisher_id = response_pub["response"]["publisher"]["id"]
+        logging.info(response_pub)
+
         #Making base payment rule
         data = {
                 "payment-rule":{
@@ -263,6 +268,7 @@ class Advertiser(object):
             }
         URL = "/payment-rule?publisher_id=%s" % publisher_id
         response_payment = self.api.post(URL,data=ujson.dumps(data)).json
+        logging.info(response_payment)
         payment_id = response_payment["response"]["payment-rule"]["id"]
         #Adding base payment rule to publisher
         data = {
@@ -296,7 +302,7 @@ class Advertiser(object):
         }
         URL = "/line-item?advertiser_id=%s" % advertiser_id
         response = self.api.post(URL,data=ujson.dumps(data)).json
-        print response
+        # print response
         return response["response"]["line-item"]["id"]
 
     def create_managed_campaign(self,advertiser_id,line_item_id):
@@ -312,7 +318,7 @@ class Advertiser(object):
 
         URL = "/campaign?advertiser_id=%s&line_item=%s" % (advertiser_id,line_item_id)
         response = self.api.post(URL,data=ujson.dumps(data)).json
-        print response
+        # print response
         return response["response"]["campaign"]["id"]
 
     def set_managed_target(self,advertiser_id,campaign_id,placement_id):
@@ -327,7 +333,7 @@ class Advertiser(object):
 
         URL = "/profile?advertiser_id=%s&campaign_id=%s" % (advertiser_id,campaign_id)
         response = self.api.post(URL,data=ujson.dumps(data)).json
-        print response
+        logging.info(response)
         return response["response"]["profile"]["id"]
 
     def create_live_line_item(self,pixel_dict,advertiser_id):
@@ -342,7 +348,7 @@ class Advertiser(object):
 
         URL = "/line-item?advertiser_id=%s" % advertiser_id
         response = self.api.post(URL,data=ujson.dumps(data)).json
-        print response
+        logging.info(response)
         return response["response"]["line-item"]["id"]
 
     def create_live_campaign(self,advertiser_id,line_item_id):
@@ -360,7 +366,7 @@ class Advertiser(object):
         }
         URL = "/campaign?advertiser_id=%s&line_item=%s" % (advertiser_id,line_item_id)
         response = self.api.post(URL,data=ujson.dumps(data)).json
-        print response
+        logging.info(response)
         return response["response"]["campaign"]["id"]
 
     def set_live_target(self,advertiser_id,campaign_id,segment_id):
@@ -371,7 +377,7 @@ class Advertiser(object):
         }
         URL = "/profile?advertiser_id=%s&campaign_id=%s" % (advertiser_id,campaign_id)
         response = self.api.post(URL,data=ujson.dumps(data)).json
-        print response
+        # print response
         return response["response"]["profile"]["id"]
 
     def set_live_target_placement(self,advertiser_id,campaign_id,segment_id,placement_id,domain):
@@ -416,7 +422,8 @@ class Advertiser(object):
         }
         URL = "/profile?advertiser_id=%s&campaign_id=%s" % (advertiser_id,campaign_id)
         response = self.api.post(URL,data=ujson.dumps(data)).json
-        print response
+        logging.info(response)
+        # print response
 
     def set_campaign_profile_id(self,advertiser_id,campaign_id,profile_id):
         data = {
@@ -428,7 +435,7 @@ class Advertiser(object):
 
         URL = "/campaign?id=%s&advertiser_id=%s" % (campaign_id,advertiser_id)
         response = self.api.put(URL,data=ujson.dumps(data)).json
-
+        logging.info(response)
         return response
 
 
@@ -436,6 +443,7 @@ class Advertiser(object):
     def get_default_placement(self,publisher_id,count=0):
         URL = "/placement?publisher_id=%s" % publisher_id
         response = self.api.get(URL).json
+        logging.info(response)
         if count==10:
             raise Exception("Fucked")
         try:
@@ -512,13 +520,9 @@ RB.initialize("%s");
 <!-- Rockerbox -->""" % pixel_string.encode("base64").replace("\n","")
         
         self.db.execute(UPDATE_PIXEL % {"implementation": PX, "segment_id": segment_id})
-        
-        
-        
-        
-
 
     def post(self,arg="new"):
+        
         advertiser_name = self.get_argument('advertiser_name')
         advertiser_id = self.create_advertiser(advertiser_name)
         internal_id = self.insert_advertiser(advertiser_id,advertiser_name)
@@ -542,7 +546,6 @@ RB.initialize("%s");
         profile_id = self.set_managed_target(advertiser_id, campaign_id, placement_id)
         self.set_campaign_profile_id(advertiser_id,campaign_id,profile_id)
 
-
         # Live test
         line_item_id = self.create_live_line_item(pixel_dict,advertiser_id)
         campaign_id = self.create_live_campaign(advertiser_id, line_item_id)
@@ -551,7 +554,9 @@ RB.initialize("%s");
         segment_id = segment_dict["Test Segment"]
         profile_id = self.set_live_target(advertiser_id, campaign_id, segment_id)
         self.set_campaign_profile_id(advertiser_id,campaign_id,profile_id)
+
         self.write(ujson.dumps(advertiser_id))
+
 
     @decorators.formattable
     def get_content(self,data,advertiser_id):
