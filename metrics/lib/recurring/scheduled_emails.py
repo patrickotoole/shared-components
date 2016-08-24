@@ -7,7 +7,9 @@ if __name__ == "__main__":
     
     _time = time.localtime()
     _time.tm_hour
-    df = lnk.dbs.rockerbox.select_dataframe("SELECT * FROM action_dashboard_schedule")
+
+    DOW = time.strftime("%a",_time)
+    df = lnk.dbs.rockerbox.select_dataframe("SELECT * FROM action_dashboard_schedule where days like '%%%s%%'" % DOW)
     xx = df.time.map( lambda x: int(x.split(" pm")[0]) +12 if "pm" in x else int(x.split(" am")[0]) ) == _time.tm_hour
 
     current = df[xx]
@@ -16,7 +18,6 @@ if __name__ == "__main__":
 
     joined = current.set_index("advertiser_id").join(lookup.set_index("external_advertiser_id"))
 
-    import ipdb; ipdb.set_trace()
 
     crusher = lnk.api.crusher
 

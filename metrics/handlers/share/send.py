@@ -1,7 +1,7 @@
 import logging
 from handlers.user.helpers import build_track, build_link_track
 
-def send(to="rick@rockerbox.com", subject="Someone has shared a Hindsight search with you...",base_url="",_msg="Check it out.",title=" a search "):
+def send(to="rick@rockerbox.com", subject="Someone has shared a Hindsight search with you...",base_url="",_msg="Check it out.",title=" a search ", title_override = False):
 
     track = build_track(to,"e-mail - share (opened)")
 
@@ -28,7 +28,7 @@ def send(to="rick@rockerbox.com", subject="Someone has shared a Hindsight search
 <tr>
 <td align="center">
 <div style="padding:25px;text-align:center;font-family:helvetica neue;;width:500px;font-family:Trebuchet MS,Tahoma,Helvetica,Arial,sans-serif;color:black">
-<div style="font-size:32px;color:black;padding-top:40px">A team member has shared {2} with you.</div>
+<div style="font-size:32px;color:black;padding-top:40px">{2}</div>
 <div style="font-size:14px;line-height:22px;padding-top:40px;padding-bottom:60px">{1}</div>
 <a href="{0}" style="color:#5084b2;padding:15px;text-decoration:none;text-align:center;font-size:20px;text-transform:uppercase;background-color:#fee778;color:black;font-weight:bold;margin-bottom:60px" target="_blank">
   See the Search
@@ -44,6 +44,9 @@ def send(to="rick@rockerbox.com", subject="Someone has shared a Hindsight search
 
     logging.info("sending email to" )
     part1 = MIMEText("Someone has shared a Hindsight insight with you...", 'plain')
+
+    if not title_override: _msg = "A team member has shared " + title + " with you."
+
     part2 = MIMEText(html.format(link,_msg,title) + track, 'html')
     
     msg.attach(part1)

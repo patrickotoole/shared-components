@@ -737,7 +737,7 @@ FilterDashboard.prototype = {
                   .text("Send")
                   .on("click",function(x) {
                     var email = to_input.property("value")
-                      , name = " the recurring " + name_input.property("value") + " report "
+                      , name = name_input.property("value") 
                       , time = time_input.property("value")
                       , days = d3.selectAll(schedule_input.node().selectedOptions).data().join(",")
 

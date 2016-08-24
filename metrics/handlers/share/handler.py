@@ -34,7 +34,10 @@ class ShareHandler(BaseHandler,ShareDatabase,ScheduleDatabase):
             obj = ujson.loads(self.request.body)
             nonce = self.make_share(advertiser_id,obj)
             if "days" in obj:
-                obj["msg"] = "Your automated search is ready."
+                obj["msg"] = ""
+                obj["name"] = "A scheduled search for " + obj["name"] + " is ready."
+                obj["title_override"] = True
+
                 self.make_scheduled(advertiser_id,obj)
 
             elif "email" in obj:
@@ -45,7 +48,7 @@ class ShareHandler(BaseHandler,ShareDatabase,ScheduleDatabase):
                 msg = obj['msg']
                 title = obj.get('name'," a search ")
                 subject = "Someone shared a Hindsight search with you..."
-                send(to=to,base_url = url, _msg = msg, subject = subject, title = title)
+                send(to=to,base_url = url, _msg = msg, subject = subject, title = title, title_override = obj["title_override"])
                
             self.write(nonce)
 
