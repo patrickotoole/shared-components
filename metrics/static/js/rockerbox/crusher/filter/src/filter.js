@@ -153,8 +153,13 @@ Filter.prototype = {
             if (x == value.field) pos = i
           })
 
+          var selected = ops[pos].filter(function(x) { return x.key == value.op })
+          if (selected.length == 0) value.op = ops[pos][0].key
           //value.fn = self.buildOp(value)
           self.on("update")(self.data())
+
+          
+          
           self.drawOps(filter, ops[pos], value, pos)
         })
       
@@ -177,6 +182,8 @@ Filter.prototype = {
     }
   , drawOps: function(filter, ops, value) {
 
+      
+
       var self = this;
 
       var select = d3_updateable(filter,"select.op","select",false, function(x) {return 1})
@@ -198,7 +205,7 @@ Filter.prototype = {
       value.op = value.op || new_ops[0].key
 
       var ops = d3_splat(select,"option","option",new_ops,function(x){return x.key})
-        .text(function(x) { return x.key }) 
+        .text(function(x) { return x.key.split(".")[0] }) 
         .attr("selected", function(x) { return x.key == value.op ? "selected" : undefined })
 
       ops.exit().remove()

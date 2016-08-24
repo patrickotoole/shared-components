@@ -43,7 +43,26 @@ State.prototype = {
 
       var s = "?"
       Object.keys(parsed).map(function(k) {
-        if (typeof(parsed[k]) == "object") s += k + "=" + JSON.stringify(parsed[k]) + "&"
+        if (typeof(parsed[k]) == "object") {
+
+          var o = parsed[k]
+          if (o.length == undefined) {
+            var o2 = {}
+  
+            Object.keys(o).map(function(x) { o2[x] = encodeURIComponent(o[x]) })
+            s += k + "=" + JSON.stringify(o2) + "&"
+          } else {
+            var o1 = []
+  
+            o.map(function(i) {
+              var o2 = {}
+              Object.keys(i).map(function(x) { o2[x] = encodeURIComponent(i[x]) })
+              o1.push(o2)
+            })
+  
+            s += k + "=" + JSON.stringify(o1) + "&"
+          }
+        }
         else s += k + "=" + parsed[k] + "&"
       })
       

@@ -112,14 +112,36 @@
     //  this._state.filters
     //}
 
+    //debugger
+    var categories = this._data.category.map(function(x) {x.key = x.parent_category_name; return x})
+
     filter.filter(_top)
       .fields(Object.keys(mapping))
       .ops([
-          [{"key": "equals"}]
+          [{"key": "equals.category"}]
         , [{"key":"contains"},{"key":"starts with"},{"key":"ends with"}]
         , [{"key":"equals"}, {"key":"between","input":2}]
       ])
       .data(filters)
+      .render_op("equals.category",function(filter,value) {
+        var self = this;
+
+        var select = d3_updateable(filter,"select.value","select")
+          .classed("value",true)
+          .style("margin-bottom","10px")
+          .style("padding-left","10px")
+          .style("width","150px")
+          .attr("value", value.value)
+          .on("change", function(x){
+            value.value = this.value
+            self.on("update")(self.data())
+          })
+
+        d3_splat(select,"option","option",categories,function(x) { return x.key })
+          .attr("selected",function(x) { return x.key == value.value ? "selected" : undefined })
+          .text(function(x) { return x.key })
+
+      })
       .render_op("between",function(filter,value) {
         var self = this
 
@@ -165,8 +187,7 @@
       })
       .on("update",function(x){
 
-        self._state
-          .set("filter",x)
+        self._state.set("filter",x)
 
 
         var y = x.map(function(z) {
@@ -846,7 +867,26 @@
 
         var s = "?"
         Object.keys(parsed).map(function(k) {
-          if (typeof(parsed[k]) == "object") s += k + "=" + JSON.stringify(parsed[k]) + "&"
+          if (typeof(parsed[k]) == "object") {
+
+            var o = parsed[k]
+            if (o.length == undefined) {
+              var o2 = {}
+    
+              Object.keys(o).map(function(x) { o2[x] = encodeURIComponent(o[x]) })
+              s += k + "=" + JSON.stringify(o2) + "&"
+            } else {
+              var o1 = []
+    
+              o.map(function(i) {
+                var o2 = {}
+                Object.keys(i).map(function(x) { o2[x] = encodeURIComponent(i[x]) })
+                o1.push(o2)
+              })
+    
+              s += k + "=" + JSON.stringify(o1) + "&"
+            }
+          }
           else s += k + "=" + parsed[k] + "&"
         })
         
@@ -1898,7 +1938,124 @@
 
                   var email_form = d3_updateable(target,"div","div")
                     .style("text-align","center")
-                    .text("Scheduled reports coming soon...")
+
+                  var to = d3_updateable(email_form, ".to", "div")
+                    .classed("to",true)
+                  
+                  d3_updateable(to,".label","div")
+                    .style("width","100px")
+                    .style("display","inline-block")
+                    .style("text-transform","uppercase")
+                    .style("font-family","ProximaNova, sans-serif")
+                    .style("font-size","12px")
+                    .style("font-weight","bold")
+                    .style("text-align","left")
+                    .text("To:")
+
+                  var to_input = d3_updateable(to,"input","input")
+                    .style("width","300px")
+                    .attr("placeholder","elonmusk@example.com")
+
+                  var name = d3_updateable(email_form, ".name", "div")
+                    .classed("name",true)
+                  
+                  d3_updateable(name,".label","div")
+                    .style("width","100px")
+                    .style("display","inline-block")
+                    .style("text-transform","uppercase")
+                    .style("font-family","ProximaNova, sans-serif")
+                    .style("font-size","12px")
+                    .style("font-weight","bold")
+                    .style("text-align","left")
+                    .text("Report Name:")
+
+                  var name_input = d3_updateable(name,"input","input")
+                    .style("width","300px")
+                    .attr("placeholder","My awesome search")
+
+
+                  var schedule = d3_updateable(email_form, ".schedule", "div")
+                    .classed("schedule",true)
+
+
+                  d3_updateable(schedule,".label","div")
+                    .style("width","100px")
+                    .style("display","inline-block")
+                    .style("text-transform","uppercase")
+                    .style("font-family","ProximaNova, sans-serif")
+                    .style("font-size","12px")
+                    .style("font-weight","bold")
+                    .style("text-align","left")
+                    .text("Schedule:")
+
+                  var schedule_input = d3_updateable(schedule,"select","select",["Mon","Tues","Wed","Thurs","Fri","Sat","Sun"])
+                    .style("width","300px")
+                    .attr("multiple",true)
+
+                  d3_splat(schedule_input,"option","option")
+                    .text(String)
+
+                  var time = d3_updateable(email_form, ".time", "div")
+                    .classed("time",true)
+
+
+                  d3_updateable(time,".label","div")
+                    .style("width","100px")
+                    .style("display","inline-block")
+                    .style("text-transform","uppercase")
+                    .style("font-family","ProximaNova, sans-serif")
+                    .style("font-size","12px")
+                    .style("font-weight","bold")
+                    .style("text-align","left")
+                    .text("Time:")
+
+                  var time_input = d3_updateable(time,"select","select",d3.range(0,23).map(function(x) { return (x%12 + 1) + (x +1 > 11 ? " pm" : " am") }) )
+                    .style("width","300px")
+
+                  d3_splat(time_input,"option","option")
+                    .attr("selected",function(x) { return x == "12 pm" ? "selected" : undefined })
+                    .text(String)
+
+
+                  var send = d3_updateable(email_form, ".send", "div")
+                    .classed("send",true)
+                    .style("text-align","center")
+
+                  var data = x;
+
+                  d3_updateable(send,"button","button")
+                    .style("line-height","16px")
+                    .style("margin-top","10px")
+                    .text("Send")
+                    .on("click",function(x) {
+                      var email = to_input.property("value")
+                        , name = name_input.property("value") 
+                        , time = time_input.property("value")
+                        , days = d3.selectAll(schedule_input.node().selectedOptions).data().join(",")
+
+                      var URLS = [
+                          "/crusher/funnel/action?format=json" 
+                        , "/crusher/v2/visitor/domains_full_time_minute/cache?format=json&top=20000&url_pattern=" + data.url_pattern[0] + "&filter_id=" + data.action_id
+                        , "/crusher/pattern_search/timeseries_only?search=" + data.url_pattern[0] 
+                        , location.pathname + decodeURIComponent(location.search)
+                      ]
+
+                      d3.xhr("/share")
+                        .post(JSON.stringify({
+                              "email": email
+                            , "name": name
+                            , "days": days
+                            , "time": time
+                            , "urls": URLS
+                          })
+                        )
+
+                      self.hide()
+
+                    })
+                    .text("Schedule")
+
+
               })
 
 
