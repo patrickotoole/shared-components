@@ -153,8 +153,13 @@
               if (x == value.field) pos = i
             })
 
+            var selected = ops[pos].filter(function(x) { return x.key == value.op })
+            if (selected.length == 0) value.op = ops[pos][0].key
             //value.fn = self.buildOp(value)
             self.on("update")(self.data())
+
+            
+            
             self.drawOps(filter, ops[pos], value, pos)
           })
         
@@ -176,6 +181,8 @@
 
       }
     , drawOps: function(filter, ops, value) {
+
+        
 
         var self = this;
 
