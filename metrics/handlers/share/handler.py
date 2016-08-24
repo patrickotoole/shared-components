@@ -39,6 +39,7 @@ class ShareHandler(BaseHandler,ShareDatabase,ScheduleDatabase):
                 obj["title_override"] = True
 
                 self.make_scheduled(advertiser_id,obj)
+                logging.info("New event scheduled for %s: %s" % (advertiser_id,json.dumps(obj)) )
 
             elif "email" in obj:
                 host = "http://" + self.request.headers.get('X-Real-Host',self.request.host)
