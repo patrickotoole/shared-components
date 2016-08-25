@@ -5,12 +5,22 @@ from tornado import web
 import json
 import time
 import logging
+import sys
 import os
 import urllib,urllib2,requests
 
 from link import lnk
 
-secrets_path = os.path.abspath('../authentication/shopify/secrets.json');
+if '--dev' in sys.argv:
+    DEV_MODE = True
+    secrets_path = os.path.abspath('../authentication/shopify/secrets_dev.json');
+    PORT = 9001
+else:
+    DEV_MODE = False
+    secrets_path = os.path.abspath('../authentication/shopify/secrets.json');
+    PORT = 8888
+
+
 with open(secrets_path) as data_file:
     SETTINGS = json.load(data_file)
 
@@ -94,7 +104,7 @@ class IndexHandler(web.RequestHandler, DBQuery):
 
     def get(self):
         if(len(self.get_argument('pixel_uuid', '')) == 0 ):
-            self.render("index.html")
+            self.render("index.html", client_id=SETTINGS['shopify']['client_id'])
         else:
             shop_domain = self.get_argument('shop')
             shop = DBQuery.getShop(self, shop_domain)
@@ -229,14 +239,14 @@ class WebApp(web.Application):
 def main():
     logging.basicConfig(level=logging.INFO)
     app = WebApp()
-    # Needed for dev
+    # Needed for development with SSL
     # server = httpserver.HTTPServer(app, ssl_options={
     #     "certfile": SETTINGS['ssl']['certfile'],
     #     "keyfile": SETTINGS['ssl']['keyfile'],
     # })
     server = httpserver.HTTPServer(app)
-    server.listen(8888, '0.0.0.0')
-    logging.info("Serving at http://0.0.0.0:8888")
+    server.listen(PORT, '0.0.0.0')
+    logging.info("Serving at http://0.0.0.0:%d" % (PORT))
     try:
         tornado.ioloop.IOLoop.instance().start()
     except KeyboardInterrupt:
