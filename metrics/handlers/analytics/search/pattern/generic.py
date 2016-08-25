@@ -25,7 +25,7 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
                 "l2":
                     ["domains", "urls", "pixel"],
                 "l3":
-                    ["url_to_action", "idf", "corpus"],
+                    ["url_to_action", "idf", "corpus", "idf_hour"],
                 "l4":
                     ["category_domains"]
                 }
@@ -35,6 +35,7 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
                     "url_to_action":["pixel", "uid_urls"],
                     "category_domains":["domains", "idf"],
                     "idf" : ["domains"],
+                    "idf_hour" : ["domains"],
                     "pixel": [],
                     "domains_full":[],
                     "uid_urls": [],
@@ -72,6 +73,10 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
                 "func":"defer_get_idf",
                 "args":["domains"],
             },
+            "idf_hour": {
+                "func":"defer_get_idf_hour",
+                "args":["domains"],
+            },
             "domains_full": {
                 "func":"sample_offsite_domains",
                 "args":["advertiser", "term", "uids", "dates", "ds"],
@@ -91,6 +96,10 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
         Q1 = "select key_name, json from artifacts where advertiser = '%s' and active=1 and deleted=0"
         Q2 = "select key_name, json from artifacts where advertiser is null and active=1 and deleted=0"
         Q3 = "select url, word_index, topic from action_topics where advertiser = '%s'"
+        Q4 = "select category, idf, pct_users from category_idf"
+        Q5 = "select category, hour, idf, pct_users from category_idf_hour"
+        
+        #Advertiser specific artifacts and general artifacts
         json = self.crushercache.select_dataframe(Q1 % advertiser)
         generic_json = self.crushercache.select_dataframe(Q2)
         results = {}
@@ -98,11 +107,27 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
             results[gjs[1]['key_name']] = ujson.loads(gjs[1]['json'])
         for js in json.iterrows():
             results[js[1]['key_name']] = ujson.loads(js[1]['json'])
+        #Topic Artifacts
         topics_from_db = self.crushercache.select_dataframe(Q3 % advertiser)
         topic_js = {}
         for topic_item in topics_from_db.iterrows():
             topic_js[topic_item[1]['url']] = {'topic': topic_item[1]['topic'], 'word_index': topic_item[1]['word_index']}
         results['topics'] = topic_js
+        #category artifacts
+        category_idf = self.crushercache.select_dataframe(Q4)
+        category_idf_js = {}
+        for cat in category_idf.iterrows():
+            category_idf_js[cat[1]['category']] = {"idf":cat[1]['idf'], "pct_users":cat[1]["pct_users"]}
+        results['category_idf'] = category_idf_js
+        #category_hour artifacts
+        category_hour = self.crushercache.select_dataframe(Q5)
+        category_hour_js = {}
+        for cat_hour in category_hour.iterrows():
+            if cat_hour[1]['category'] in category_hour_js.keys():
+                category_hour_js[cat_hour[1]['category']][cat_hour[1]['hour']] ={"pct_users":cat_hour[1]["pct_users"], "idf": cat_hour[1]["idf"]}
+            else:
+                category_hour_js[cat_hour[1]['category']] = {cat_hour[1]['hour']: {"pct_users":cat_hour[1]["pct_users"], "idf": cat_hour[1]["idf"]}}
+        results['category_hour'] = category_hour_js
         return results
 
     @decorators.deferred
@@ -149,7 +174,25 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
         domain_set = self.remove_hex(set(domain_set))
         domains = "'" + "','".join(domain_set) + "'"
         results = self.crushercache.select_dataframe(QUERY % {"domains":domains})
+        
         return results
+
+    @decorators.deferred
+    def defer_get_idf_hour(self, domains_df):
+        domain_set = domains_df['domain']
+
+        QUERY2 = """
+            SELECT domain, hour, total_users as num_users, idf
+            FROM domain_idf_hour
+            WHERE domain in (%(domains)s)
+        """
+        domain_set = [self.crushercache.escape_string(i.encode("utf-8")) for i in domain_set ]
+        domain_set = self.remove_hex(set(domain_set))
+        domains = "'" + "','".join(domain_set) + "'"
+        results = self.crushercache.select_dataframe(QUERY2 % {"domains":domains})
+
+        return results
+
 
     @decorators.deferred
     def defer_get_corpus(self):
@@ -253,7 +296,6 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
         shared_dict = yield self.run_level(needed_dfs, self.LEVELS["l2"], shared_dict)
         shared_dict = yield self.run_level(needed_dfs, self.LEVELS["l3"], shared_dict)
         shared_dict = yield self.run_level(needed_dfs, self.LEVELS["l4"], shared_dict)
-            
         returnDFs = {}
         returnDFs['response']=shared_dict['response']
         try:

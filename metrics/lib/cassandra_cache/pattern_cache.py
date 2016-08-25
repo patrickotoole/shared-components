@@ -141,7 +141,6 @@ class CacheBase(PreparedCassandraRangeQuery):
         print df.groupby("uid").count()['domain'].describe()
         df['date'] = df.timestamp.map(lambda x: x.split(" ")[0] + " 00:00:00")
 
-        #domain_date = df.groupby(["domain","date"])["uid"].count()
         domain_date = df.groupby(["domain","date"])["uid"].agg({"count":lambda x: len(set(x)), "hll":build_hll})
 
         df = domain_date.reset_index()
@@ -153,16 +152,19 @@ class CacheBase(PreparedCassandraRangeQuery):
         return df
 
 
-    def get_domain_uids(self,uids,select,fn=simple_append,obj=[]):
-        # fn = key_counter('domain'), obj=collections.Counter
+    def get_domain_uids(self,uids,select,fn=simple_append,obj=[],include_cat=False, categories={}):
         import pandas
+
 
         statement = self.cassandra.prepare(select)
         to_bind = self.bind_and_execute(statement)
         uids = [[u] for u in uids]
 
         logging.info("Unique user ids :%s" % len(uids))
-        results = FutureHelpers.future_queue(uids,to_bind,fn,self.num_futures,obj)
+        if include_cat:
+            results = FutureHelpers.future_queue_update(uids,to_bind,fn,categories,self.num_futures,obj)
+        else:
+            results = FutureHelpers.future_queue(uids,to_bind,fn,self.num_futures,obj)
         results = results[0]
 
         return results
