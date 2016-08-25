@@ -1751,7 +1751,8 @@
         
 
         var funcs = {
-            "Save Results": function(x) {
+            "Build Media Plan": function(x) {
+              document.location = "/crusher/media_plan"
             }
           , "Share Search": function(x) {
               var x = x
@@ -2067,7 +2068,7 @@
 
         //var f = d3_splat(_top,".subtitle-filter","a",["Save Results","Share Results","Schedule Results","Build Content Brief","Build Media Plan" ])
 
-        var f = d3_splat(_top,".subtitle-filter","a",["Share Search","Schedule Report"])
+        var f = d3_splat(_top,".subtitle-filter","a",["Share Search","Schedule Report", "", "Build Media Plan"])
           .classed("subtitle-filter",true)
           .style("text-transform","uppercase")
           .style("font-weight","bold")
@@ -2076,7 +2077,7 @@
           .style("width"," 180px")
           .style("text-align"," center")
           .style("border-radius"," 10px")
-          .style("border"," 1px solid #ccc")
+          .style("border",function(x) { return x == "" ? "none" : "1px solid #ccc" } )
           .style("padding"," 10px")
           .style("margin"," auto")
           .style("margin-bottom","10px")

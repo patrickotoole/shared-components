@@ -34,7 +34,7 @@ RB.crusher.controller = (function(controller) {
       RB.routes.navigation.forward(xx[0])
     } : false
 
-    if (type != stype && type.indexOf("dashboard") > -1 ) {
+    if (type != stype && (type.indexOf("dashboard") > -1 ) || (type.indexOf("media_plan") > -1) ) { 
 
       state.values = {"name": "Loading", "search":document.location.search}
       callback = function() {
@@ -363,6 +363,56 @@ RB.crusher.controller = (function(controller) {
 
       //crusher.subscribe.add_subscriber(["recommended_actions","actions"],subscription ,"actionDashboard",true,true)
 
+    },
+    "media_plan": function(action) {
+
+      d3.select("body").classed("hide-top hide-select",true)
+
+      if (action.values.search && action.values.search.indexOf("nonce") > -1) d3.select("body").classed("hide-aside",true)
+
+      var funnelRow = build_header({
+        'id': 'action-media-plan',
+        'name': 'Action Media Plan'
+      });
+
+
+      var dash = media_plan.media_plan(funnelRow)
+        .draw()
+
+      var action_name = dashboard.state(action.values.search).get("action_name")
+      var default_filter = function(x) { return action_name ? x.action_name == action_name : x.featured }
+
+      var pubsub = window.pubsub;
+
+      var runAction = function(actions,_filter) {
+        
+        var action = actions.filter(_filter || default_filter)[0]
+
+        window.pubsub.subscriber("home2",["visitor_domains_time_minute","actionTimeseriesOnly"])
+          .run(function(data){
+            action.actions = actions
+            dash
+              .on("select",function(x) {
+                filter = function(action) { return action.action_name == x.key }
+                runAction(actions,filter)
+              })
+              .data(action)
+              .draw()
+          })
+          .unpersist(true)
+          .data(action)
+          .trigger(action)
+
+      }
+
+
+      pubsub.subscriber("home", ["actions"])
+        .run(runAction)
+        .unpersist(true)
+        .trigger()
+     
+
+      //RB.crusher.ui.vendors.show(funnelRow, action);
     },
     "action/dashboard": function(action) {
 
@@ -769,6 +819,8 @@ RB.crusher.controller = (function(controller) {
 
   controller.states = {
     "/crusher/action/dashboard":{name: "Dashboard", push_state: "/crusher/action/dashboard"},
+    "/crusher/media_plan":{name: "Dashboard", push_state: "/crusher/media_plan"},
+
     "/crusher/settings/subscription":{name: "Dashboard", push_state: "/crusher/settings/subscription"}
   }
 
