@@ -52,7 +52,7 @@ class UserHandler(tornado.web.RequestHandler,UserDatabase):
                 username = self.create(body)
                 logging.info("Created advertiser: %s" % username)
                 self.login(username)
-                email.send(username)
+                if not body.get("skip_email",False): email.send(username)
             self.write("""{"username":"%s"}""" % username)
             self.finish()
         except Exception as e:
