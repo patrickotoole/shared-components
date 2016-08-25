@@ -11,6 +11,6 @@ def process_raw(**kwargs):
     for k in kwargs.keys():
         if type(kwargs[k]) == type(pandas.DataFrame()):
             response[k] = kwargs[k].to_dict()
-    
+    response['artifacts'] = kwargs['artifacts'] 
     return response
 
