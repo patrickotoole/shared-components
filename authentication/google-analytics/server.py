@@ -69,6 +69,14 @@ class DBQuery:
 
         analytics = build('analytics', 'v4', http=http, discoveryServiceUrl='https://analyticsreporting.googleapis.com/$discovery/rest')
 
+        if '/' in date:
+            date = date.split('/')
+            start_date = date[0]
+            end_date = date[1]
+        else:
+            start_date = date
+            end_date = date
+
         data = analytics.reports().batchGet(
             body = {
                 'reportRequests': [
@@ -76,17 +84,18 @@ class DBQuery:
                         'viewId': str(view_id),
                         'dateRanges': [
                             {
-                                'startDate': date,
-                                'endDate': date
+                                'startDate': start_date,
+                                'endDate': end_date
                             }
                         ],
-                        'dimensions': [{'name': 'ga:segment'}],
+                        'dimensions': [{'name': 'ga:segment'}, {'name': 'ga:pagePath'}],
                         'metrics': [{'expression': 'ga:users'}, {'expression': 'ga:sessions'}, {'expression': 'ga:hits'}],
+                        'orderBys': [{'fieldName': 'ga:users', 'sortOrder': 'DESCENDING'}],
                         'segments': [
                             {
                             'dynamicSegment':
                                 {
-                                    'name': 'Visitors',
+                                    'name': 'Users / Sessions / Hits',
                                     'userSegment': {
                                         'segmentFilters': [{
                                             'simpleSegment': {
@@ -110,16 +119,7 @@ class DBQuery:
             }
         ).execute()
 
-        clean = []
-        i = 0
-        for metric in data['reports'][0]['columnHeader']['metricHeader']['metricHeaderEntries']:
-            clean.append({
-                'name': metric['name'],
-                'value': data['reports'][0]['data']['totals'][0]['values'][i]
-            })
-            i = i + 1
-
-        return clean
+        return data
 
 
 class IndexHandler(web.RequestHandler, DBQuery):
@@ -212,10 +212,13 @@ class DataHandler(web.RequestHandler, DBQuery):
         date = self.get_argument('date', False)
         url = self.get_argument('url', False)
 
-        if date == False or url == False:
+        if url == False:
+            url = '/'
+
+        if date == False:
             error = {
                 'status': 'error',
-                'message': 'You need to specify both a DATE as well as URL'
+                'message': 'You need to specify a date (2016-08-15) or date range (2016-08-01/2016-08-15).'
             }
             self.write(json.dumps(error))
             return
@@ -228,7 +231,7 @@ class DataHandler(web.RequestHandler, DBQuery):
                 'message': 'Something unexpected went wrong.'
             }
 
-        self.write(json.dumps(response))
+        self.write(response)
         self.finish()
 
 
@@ -258,7 +261,7 @@ def main():
     logging.basicConfig(level=logging.INFO)
     app = WebApp()
     server = httpserver.HTTPServer(app)
-    server.listen(8888, '0.0.0.0')
+    server.listen(9001, '0.0.0.0')
     logging.info('Serving at http://0.0.0.0:8888')
     try:
         tornado.ioloop.IOLoop.instance().start()
