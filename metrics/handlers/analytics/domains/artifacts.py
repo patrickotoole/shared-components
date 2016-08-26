@@ -37,7 +37,7 @@ class ArtifactsHandler(VisitorBase):
         self.finish()
 
     @decorators.deferred
-    def post_from_db(self, advertiser, artifact,default json):
+    def post_from_db(self, advertiser, artifact,default, json):
         if default == "true" or default == "true" or default == "TRUE":
             default_bool = True
         else:
