@@ -61,7 +61,7 @@ class VisitorTransformHandler(VisitorBase):
         except:
             raise Exception("UDF does not exist")
 
-        DEFAULT_DATASETS = ['domains','domains_full','urls','idf','uid_urls', 'url_to_action', 'category_domains', 'corpus', 'artifacts']
+        DEFAULT_DATASETS = ['domains','domains_full','urls','idf','uid_urls', 'url_to_action', 'category_domains', 'corpus', 'artifacts', 'idf_hour']
         url_arg = self.request.arguments
 
         logging.info(preventsample)
