@@ -22,47 +22,13 @@ def simple_append(result,results,*args):
     results += result
 
 def key_counter(key):
-    
+
     def count(result,results,*args):
-        import collections
         keys = set([k[key] for k in result ])
-        if type(results.get('domains', False)) == collections.Counter:
-            results['domains'].update(list(keys))
-        else:
-            results.update(list(keys))
-    
-    return count
-
-
-def cat_counter(key):
-
-    def count_cat(categories, result, results, *args):
-        keys = set([ categories.get(k[key],"") for k in result ])
-        results['categories'].update(list(keys))
-
-    return count_cat
-
-def key_counter_hour(key):
-
-    def count(result,results,*args):
-        def get_domain_hour(x):
-            hour = x['timestamp'].split(" ")[1].split(":")[0]
-            return (hour, x[key])
-        keys = set([ get_domain_hour(k) for k in result ])
-        results['domains_hour'].update(list(keys))
+        
+        results.update(list(keys))
 
     return count
-
-def cat_counter_hour(key):
-
-    def count_cat(categories, result, results, *args):
-        def get_cat_hour(x):
-            hour = x['timestamp'].split(" ")[1].split(":")[0]
-            return (hour, categories.get(x[key],""))
-        keys = set([ get_cat_hour(k) for k in result ])
-        results['category_hour'].update(list(keys))
-
-    return count_cat
 
 def wrapped_select_callback(field):
 
