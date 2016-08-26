@@ -1,9 +1,10 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('filter')) :
-  typeof define === 'function' && define.amd ? define('dashboard', ['exports', 'filter'], factory) :
-  factory((global.dashboard = {}),global.filter);
-}(this, function (exports,filter) { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('table'), require('filter')) :
+  typeof define === 'function' && define.amd ? define('dashboard', ['exports', 'table', 'filter'], factory) :
+  factory((global.dashboard = {}),global.table,global.filter);
+}(this, function (exports,table,filter) { 'use strict';
 
+  table = 'default' in table ? table['default'] : table;
   filter = 'default' in filter ? filter['default'] : filter;
 
   function render_filter(_top,_lower) {
@@ -773,7 +774,7 @@
     }
   }
 
-  function table(target) {
+  function table$1(target) {
     return new Table(target)
   }
 
@@ -1031,7 +1032,7 @@
 
           _lower.selectAll(".vendor-domains-bar-desc").remove()
 
-          var t = table(_lower)
+          var t = table$1(_lower)
             .data(selected)
 
 
@@ -1454,11 +1455,15 @@
 
           _lower.selectAll(".vendor-domains-bar-desc").remove()
 
-          var t = table(_lower)
+          var t = table.table(_lower)
             .data(selected)
 
 
           if (selected.key == "Top Domains") {
+            t.headers([
+                {key:"key",value:"Domain"}
+              , {key:"pop_percent",value:"Percent of pop"}
+            ])
             var samp_max = d3.max(selected.values,function(x){return x.percent_norm})
               , pop_max = d3.max(selected.values,function(x){return x.pop_percent})
               , max = Math.max(samp_max,pop_max);

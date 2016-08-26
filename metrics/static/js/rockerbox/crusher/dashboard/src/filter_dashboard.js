@@ -6,7 +6,9 @@ import * as ui_helper from './helpers'
 
 import bar_selector from './bar_selector'
 import time_selector from './time_selector'
-import table from './table'
+//import table from './table'
+import table from 'table'
+
 
 import render_filter from './render_filter'
 import state from './state'
@@ -159,11 +161,15 @@ FilterDashboard.prototype = {
 
         _lower.selectAll(".vendor-domains-bar-desc").remove()
 
-        var t = table(_lower)
+        var t = table.table(_lower)
           .data(selected)
 
 
         if (selected.key == "Top Domains") {
+          t.headers([
+              {key:"key",value:"Domain"}
+            , {key:"pop_percent",value:"Percent of pop"}
+          ])
           var samp_max = d3.max(selected.values,function(x){return x.percent_norm})
             , pop_max = d3.max(selected.values,function(x){return x.pop_percent})
             , max = Math.max(samp_max,pop_max);
