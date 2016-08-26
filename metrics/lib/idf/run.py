@@ -65,21 +65,55 @@ def extract(cassandra, crusher, categories):
     uids = [u['uid'] for u in uids_dict]
     
 
+    def cat_counter(key):
+        def count_cat(result, results, *args):
+            keys = set([ categories.get(k[key],"") for k in result ])
+            results.update(list(keys))
+
+        return count_cat
+
+    def key_counter_hour(key):
+        def count(result,results,*args):
+            def get_domain_hour(x):
+                hour = x['timestamp'].split(" ")[1].split(":")[0]
+                return (hour, x[key])
+            keys = set([ get_domain_hour(k) for k in result ])
+            results.update(list(keys))
+
+        return count
+
+    def cat_counter_hour(key):
+        def count_cat(result, results, *args):
+            def get_cat_hour(x):
+                hour = x['timestamp'].split(" ")[1].split(":")[0]
+                return (hour, categories.get(x[key],""))
+            keys = set([ get_cat_hour(k) for k in result ])
+            results.update(list(keys))
+
+        return count_cat
+
+    from lib.cassandra_cache.helpers import key_counter
+    
+    def run_all(result,results,*args):
+        fn1 = key_counter('domain')
+        fn2 = cat_counter('domain')
+        fn3 = key_counter_hour('domain')
+        fn4 = cat_counter_hour('domain')
+        fn1(result, results['domains'], *args)
+        fn2(result, results['categories'], *args)
+        fn3(result, results['domains_hour'], *args)
+        fn4(result, results['category_hour'], *args)
+        
     reader = Reader(cassandra)
     from collections import Counter
-    from lib.cassandra_cache.helpers import key_counter
-    from lib.cassandra_cache.helpers import cat_counter
-    from lib.cassandra_cache.helpers import key_counter_hour
-    from lib.cassandra_cache.helpers import cat_counter_hour
     Q = "select * from rockerbox.visitor_domains_full where uid = ?"
     counter = Counter()
     counter2 = Counter()
     counter3 = Counter()
     counter4 = Counter()
     count_obj = {"domains":counter, "categories":counter2, "domains_hour":counter3, "category_hour":counter4}
-    fns = {"domains":key_counter('domain'), "categories":cat_counter('domain'), "domains_hour":key_counter_hour('domain'), "category_hour":cat_counter_hour('domain') }
     
-    data = reader.get_domain_uids(uids,Q,fn=fns, obj=count_obj,include_cat=True, categories=categories)
+    data = reader.get_domain_uids(uids,Q,fn=run_all, obj=count_obj)
     
     df_domain = pandas.DataFrame({"count":data['domains']}).reset_index()
     df_domain.columns = ["domain","count"]
