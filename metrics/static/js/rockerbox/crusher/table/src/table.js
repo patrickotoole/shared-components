@@ -142,9 +142,11 @@ Table.prototype = {
       this._table_main = table
 
       var thead = d3_updateable(table,"thead","thead")
+      d3_updateable(table,"tbody","tbody")
+
 
       var table_fixed = d3_updateable(wrapper,"table.fixed","table")
-        .classed("hidden", function() { return this.classList.length == 0})
+        .classed("hidden", true) // TODO: make this visible when main is not in view
         .classed("fixed",true)
         .style("width","100%")
         .style("top","0px")
@@ -176,7 +178,7 @@ Table.prototype = {
       var headers_thead = d3_updateable(thead,"tr","tr",this.headers(),function(x){ return 1})
 
       var th = d3_splat(headers_thead,"th","th",false,function(x) {return x.key})
-        .text(function(x) { return x.value})
+        .text(function(x) { return x.value })
 
       th.exit().remove()
 
@@ -216,6 +218,22 @@ Table.prototype = {
 
      this._options_header = this._target.selectAll(".table-options")
     }
+  , render_rows: function(table) {
+
+      var tbody = table.selectAll("tbody")
+      if (this.headers() == undefined) return
+
+      var rows = d3_splat(tbody,"tr","tr",this._data.values,function(x){ return JSON.stringify(x) })
+
+      var th = d3_splat(rows,"td","td",this.headers(),function(x) {return x.key})
+        .text(function(x) { 
+          var pd = this.parentNode.__data__
+          return pd[x.key]
+        })
+
+      th.exit().remove()
+
+    }
   , draw: function() {
       var self = this
       var wrapper = this.render_wrapper()
@@ -224,6 +242,9 @@ Table.prototype = {
         .each(function(x) { 
           self.render_header(d3.select(this)) 
         })
+
+      this.render_rows(this._table_main)
+
 
       //d3.select("body").on("scroll", function(){
       //  self._table_main
