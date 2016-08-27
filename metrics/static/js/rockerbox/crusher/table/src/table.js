@@ -48,7 +48,7 @@ var EXAMPLE_DATA = {
 
 export function Table(target) {
   this._target = target;
-  this._data = EXAMPLE_DATA
+  this._data = {}//EXAMPLE_DATA
   this._render_header = function(wrap) {
 
     wrap.each(function(data) {
@@ -120,7 +120,11 @@ Table.prototype = {
   , headers: function(val) { return accessor.bind(this)("headers",val) }
   , all_headers: function() {
       var headers = this.headers().reduce(function(p,c) { p[c.key] = c.value; return p},{});
-      return Object.keys(this._data.values[0]).map(function(x) { return {key:x,value:headers[x] || x, selected: !!headers[x]} })
+      if (this._data.values) 
+        return Object.keys(this._data.values[0]).map(function(x) { 
+          return {key:x,value:headers[x] || x, selected: !!headers[x]} 
+        })
+      else return this.headers()
     }
 
   , render_wrapper: function() {
@@ -169,7 +173,7 @@ Table.prototype = {
       var thead = table.selectAll("thead")
       if (this.headers() == undefined) return
 
-      var headers_thead = d3_updateable(thead,"tr","tr",this.headers())
+      var headers_thead = d3_updateable(thead,"tr","tr",this.headers(),function(x){ return 1})
 
       var th = d3_splat(headers_thead,"th","th",false,function(x) {return x.key})
         .text(function(x) { return x.value})
