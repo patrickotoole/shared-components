@@ -60,7 +60,6 @@ test('test UI - header options expose', function (t) {
 });
 
 test('test UI - with data', function (t) {
-
   t.plan(3)
 
   var document = jsdom.jsdom('<div id="canvas"></div>'),
@@ -83,7 +82,6 @@ test('test UI - with data', function (t) {
 
 
 test('test UI - select headers', function (t) {
-
   t.plan(6)
 
   var document = jsdom.jsdom('<div id="canvas"></div>'),
@@ -114,3 +112,73 @@ test('test UI - select headers', function (t) {
   t.equal(f._target.selectAll(".fixed tr:first-of-type th").data().length, f.headers().length, "headers displaying")
 
 });
+
+test('test UI - render rows', function (t) {
+  t.plan(8)
+
+  var document = jsdom.jsdom('<div id="canvas"></div>'),
+    canvas = document.querySelector("#canvas"),
+    selection = d3.selectAll([canvas]);
+
+  var f = table(selection)
+    .data({"key":"title","values":[{"x1":4,"x2":2,"c3":1}]})
+    .headers([{"key":"x1","value":"CUSTOM"}])
+    .draw()
+
+  t.equal(selection.selectAll("tbody").size(),1)
+  t.equal(selection.selectAll("tbody tr").size(),1)
+  t.equal(selection.selectAll("tbody tr td").size(),1)
+  t.equal(selection.selectAll("tbody tr td").text(),"4")
+
+  f.headers([
+        {"key":"x2","value":"CUSTOM2"}
+      , {"key":"x1","value":"CUSTOM"}
+    ])
+    .draw()
+
+  t.equal(selection.selectAll("tbody tr td").size(),2)
+  t.equal(selection.selectAll("tbody tr td").text(),"2")
+
+  f.data({"key":"title","values":[
+        {"x1":4,"x2":2,"c3":1}
+      , {"x1":4,"x2":2,"c3":1}
+      , {"x1":4,"x2":2,"c3":1}
+    ]})
+    .draw()
+
+  t.equal(selection.selectAll("tbody tr").size(),3)
+  t.equal(selection.selectAll("tbody tr td").size(),6)
+
+});
+
+test('test UI - custom column width', function (t) {
+  t.plan(4)
+
+  var document = jsdom.jsdom('<div id="canvas"></div>'),
+    canvas = document.querySelector("#canvas"),
+    selection = d3.selectAll([canvas]);
+
+  var f = table(selection)
+    .data({"key":"title","values":[{"x1":4,"x2":2,"c3":1}]})
+    .headers([
+          {"key":"x1","value":"CUSTOM", "width":"100px"}
+        , {"key":"x2","value":"CUSTOM2"}
+
+    ])
+    .draw()
+
+  t.equal(selection.selectAll(".main thead tr th:first-of-type").style("width"),"100px")
+  t.equal(selection.selectAll(".fixed thead tr th:first-of-type").style("width"),"100px")
+
+  f.headers([
+          {"key":"x1","value":"CUSTOM", "width":"100px"}
+        , {"key":"x2","value":"CUSTOM2"}
+    ])
+    .draw()
+
+  t.equal(selection.selectAll(".main thead tr th:nth-of-type(2)").style("width"),"100px")
+  t.equal(selection.selectAll(".fixed thead tr th:nth-of-type(2)").style("width"),"100px")
+
+
+});
+

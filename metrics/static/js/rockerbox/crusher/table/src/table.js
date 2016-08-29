@@ -177,8 +177,9 @@ Table.prototype = {
 
       var headers_thead = d3_updateable(thead,"tr","tr",this.headers(),function(x){ return 1})
 
-      var th = d3_splat(headers_thead,"th","th",false,function(x) {return x.key})
+      var th = d3_splat(headers_thead,"th","th",false,function(x,i) {return x.key + i })
         .text(function(x) { return x.value })
+        .style("width",function(x) { return x.width })
 
       th.exit().remove()
 
@@ -221,17 +222,19 @@ Table.prototype = {
   , render_rows: function(table) {
 
       var tbody = table.selectAll("tbody")
+
       if (this.headers() == undefined) return
+      if (!(this._data && this._data.values && this._data.values.length)) return
 
-      var rows = d3_splat(tbody,"tr","tr",this._data.values,function(x){ return JSON.stringify(x) })
+      var rows = d3_splat(tbody,"tr","tr",this._data.values,function(x,i){ return i })
 
-      var th = d3_splat(rows,"td","td",this.headers(),function(x) {return x.key})
+      var td = d3_splat(rows,"td","td",this.headers(),function(x,i) {return x.key + i })
         .text(function(x) { 
           var pd = this.parentNode.__data__
           return pd[x.key]
         })
 
-      th.exit().remove()
+      td.exit().remove()
 
     }
   , draw: function() {
@@ -244,11 +247,6 @@ Table.prototype = {
         })
 
       this.render_rows(this._table_main)
-
-
-      //d3.select("body").on("scroll", function(){
-      //  self._table_main
-      //})
 
       return this
 
