@@ -49,6 +49,7 @@ var EXAMPLE_DATA = {
 export function Table(target) {
   this._target = target;
   this._data = {}//EXAMPLE_DATA
+  this._sort = {}
   this._render_header = function(wrap) {
 
     wrap.each(function(data) {
@@ -126,6 +127,14 @@ Table.prototype = {
         })
       else return this.headers()
     }
+  , sort: function(key,ascending) {
+      if (!key) return this._sort
+      this._sort = {
+          key: key
+        , value: !!ascending
+      }
+      return this
+    }
 
   , render_wrapper: function() {
       var wrap = this._target
@@ -166,6 +175,7 @@ Table.prototype = {
         .text("+ OPTIONS")
         .on("click",function(x) {
           this._options_header.classed("hidden",!this._options_header.classed("hidden"))
+          this._show_options = !this._options_header.classed("hidden")
         }.bind(this))
 
       return wrapper
@@ -175,25 +185,50 @@ Table.prototype = {
       var thead = table.selectAll("thead")
       if (this.headers() == undefined) return
 
-      var headers_thead = d3_updateable(thead,"tr","tr",this.headers(),function(x){ return 1})
+      var options_thead = d3_updateable(thead,"tr.table-options","tr",this.all_headers(),function(x){ return 1})
+        .classed("hidden", !this._show_options)
+        .classed("table-options",true)
+
+      var headers_thead = d3_updateable(thead,"tr.table-headers","tr",this.headers(),function(x){ return 1})
+        .classed("table-headers",true)
+
 
       var th = d3_splat(headers_thead,"th","th",false,function(x,i) {return x.key + i })
-        .text(function(x) { return x.value })
         .style("width",function(x) { return x.width })
+        .on("click",function(x) {
+          if (x.sort === false) x.sort = undefined
+          else x.sort = !x.sort
+
+          this.sort(x.key,x.sort)
+          this.draw()
+        }.bind(this))
+
+      d3_updateable(th,"span","span")
+        .style("cursor","pointer")
+        .text(function(x) { return x.value })
+
+      d3_updateable(th,"i","i")
+        .style("padding-left","5px")
+        .classed("fa",true)
+        .classed("fa-sort-asc", function(x) { return (x.key == this._sort.key) ? this._sort.value === true : undefined }.bind(this))
+        .classed("fa-sort-desc", function(x) { return (x.key == this._sort.key) ? this._sort.value === false : undefined }.bind(this))
+
 
       th.exit().remove()
 
-      var options_thead = d3_updateable(thead,"tr.table-options","tr",this.all_headers())
-        .classed("hidden", function() { return this.classList.length == 0})
-        .classed("table-options",true)
 
-      var options = d3_updateable(options_thead,"th","th")
+
+
+      var options = d3_updateable(options_thead,"th","th",false,function() { return 1})
         .attr("colspan",this.headers().length)
-        
+                
       var option = d3_splat(options,".option","div",false,function(x) { return x.key })
         .classed("option",true)
         .style("width","240px")
         .style("float","right")
+
+
+      option.exit().remove()
 
       var self = this
 
@@ -207,7 +242,9 @@ Table.prototype = {
             self.headers()
             return self.draw()
           }
-          var index = self.headers().indexOf(x)
+          var indices = self.headers().map(function(z,i) { return z.key == x.key ? i : undefined  }) 
+            , index = indices.filter(function(z) { return z }) || 0;
+
           self.headers().splice(index,1)
           self.draw()
 
@@ -226,7 +263,20 @@ Table.prototype = {
       if (this.headers() == undefined) return
       if (!(this._data && this._data.values && this._data.values.length)) return
 
-      var rows = d3_splat(tbody,"tr","tr",this._data.values,function(x,i){ return i })
+      var data = this._data.values
+        , sortby = this._sort || {};
+
+      data = data.sort(function(p,c) {
+        var a = p[sortby.key]
+          , b = c[sortby.key]
+
+        return sortby.value ? d3.ascending(a,b) : d3.descending(a,b)
+      })
+
+      var rows = d3_splat(tbody,"tr","tr",data,function(x,i){ return String(sortby.key + x[sortby.key]) + i })
+        .order()
+
+      rows.exit().remove()
 
       var td = d3_splat(rows,"td","td",this.headers(),function(x,i) {return x.key + i })
         .text(function(x) { 

@@ -76,7 +76,7 @@ test('test UI - with data', function (t) {
     .draw()
 
   t.equal(f.headers().length,1,"only one header visible")
-  t.equal(f.headers()[0].value,f._target.selectAll("th").text(),"first header matches")
+  t.equal(f.headers()[0].value,f._target.selectAll(".table-headers th").text(),"first header matches")
 
 });
 
@@ -94,7 +94,7 @@ test('test UI - select headers', function (t) {
     .draw()
 
   t.equal(f.headers().length,1,"only one header visible")
-  t.equal(f.headers()[0].value,f._target.selectAll("th").text(),"first header matches")
+  t.equal(f.headers()[0].value,f._target.selectAll(".table-headers th").text(),"first header matches")
   selection.selectAll(".main").selectAll("input").each(function(x) { 
     this.checked = false
     d3.select(this).on("click").bind(this)(x)
@@ -108,8 +108,8 @@ test('test UI - select headers', function (t) {
   })
 
   t.equal(f.headers().length,3,"all headers selected")
-  t.equal(f._target.selectAll(".main tr:first-of-type th").data().length, f.headers().length, "headers displaying")
-  t.equal(f._target.selectAll(".fixed tr:first-of-type th").data().length, f.headers().length, "headers displaying")
+  t.equal(f._target.selectAll(".main .table-headers th").data().length, f.headers().length, "headers displaying")
+  t.equal(f._target.selectAll(".fixed .table-headers th").data().length, f.headers().length, "headers displaying")
 
 });
 
