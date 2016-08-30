@@ -47,10 +47,41 @@ var EXAMPLE_DATA = {
 }
 
 export function Table(target) {
+  var CSS_STRING = String(function() {/*
+.table-wrapper tr { height:33px}
+.table-wrapper tr th { border-right:1px dotted #ccc } 
+.table-wrapper tr th:last-of-type { border-right:none } 
+
+.table-wrapper tr { border-bottom:1px solid #ddd }
+.table-wrapper tr th, .table-wrapper tr td { 
+  padding-left:10px;
+  max-width:200px
+}
+
+.table-wrapper thead tr { 
+  background-color:#e3ebf0;
+}
+.table-wrapper thead tr th .title { 
+  text-transform:uppercase
+}
+.table-wrapper tbody tr { 
+}
+.table-wrapper tbody tr:hover { 
+  background-color:white;
+  background-color:#f9f9fb
+}
+  */})
+
+  d3_updateable(d3.select("head"),"style#table-css","style")
+    .attr("id","table-css")
+    .text(CSS_STRING.replace("function () {/*","").replace("*/}",""))
+
   this._target = target;
   this._data = {}//EXAMPLE_DATA
   this._sort = {}
+  this._renderers = {}
   this._render_header = function(wrap) {
+  this._hidden_fields = []
 
     wrap.each(function(data) {
       var headers = d3_updateable(d3.select(this),".headers","div")
@@ -119,12 +150,29 @@ Table.prototype = {
   , row: function(val) { return accessor.bind(this)("render_row",val) }
   , header: function(val) { return accessor.bind(this)("render_header",val) }
   , headers: function(val) { return accessor.bind(this)("headers",val) }
+  , hidden_fields: function(val) { return accessor.bind(this)("hidden_fields",val) }
   , all_headers: function() {
-      var headers = this.headers().reduce(function(p,c) { p[c.key] = c.value; return p},{});
-      if (this._data.values) 
-        return Object.keys(this._data.values[0]).map(function(x) { 
-          return {key:x,value:headers[x] || x, selected: !!headers[x]} 
-        })
+      var headers = this.headers().reduce(function(p,c) { p[c.key] = c.value; return p},{})
+        , is_locked = this.headers().filter(function(x) { return !!x.locked }).map(function(x) { return x.key })
+
+      if (this._data.values) {
+        
+        var all_heads = Object.keys(this._data.values[0]).map(function(x) { 
+          if (this._hidden_fields.indexOf(x) > -1) return false
+          return {
+              key:x
+            , value:headers[x] || x
+            , selected: !!headers[x]
+            , locked: (is_locked.indexOf(x) > -1 ? true : undefined) 
+          } 
+        }.bind(this)).filter(function(x) { return x })
+        var getIndex = function(k) {
+          return is_locked.indexOf(k) > -1 ? is_locked.indexOf(k) + 10 : 0
+        }
+
+        all_heads = all_heads.sort(function(p,c) { return getIndex(c.key) - getIndex(p.key) })
+        return all_heads
+      }
       else return this.headers()
     }
   , sort: function(key,ascending) {
@@ -166,13 +214,16 @@ Table.prototype = {
 
       var thead = d3_updateable(table_fixed,"thead","thead")
 
-      var table_button = d3_updateable(wrapper,".table-option","div")
+      var table_button = d3_updateable(wrapper,".table-option","a")
         .classed("table-option",true)
         .style("position","absolute")
         .style("top","-1px")
         .style("right","0px")
         .style("cursor","pointer")
-        .text("+ OPTIONS")
+        .style("line-height","36px")
+        .style("font-weight","bold")
+        .style("padding-right","8px")
+        .text("OPTIONS")
         .on("click",function(x) {
           this._options_header.classed("hidden",!this._options_header.classed("hidden"))
           this._show_options = !this._options_header.classed("hidden")
@@ -183,29 +234,39 @@ Table.prototype = {
   , render_header: function(table) {
 
       var thead = table.selectAll("thead")
+        , tbody = table.selectAll("tbody")
       if (this.headers() == undefined) return
 
       var options_thead = d3_updateable(thead,"tr.table-options","tr",this.all_headers(),function(x){ return 1})
         .classed("hidden", !this._show_options)
         .classed("table-options",true)
 
-      var headers_thead = d3_updateable(thead,"tr.table-headers","tr",this.headers(),function(x){ return 1})
+      var headers_thead = d3_updateable(thead,"tr.table-headers","tr",this.headers().concat([{width:"70px"}]),function(x){ return 1})
         .classed("table-headers",true)
 
 
       var th = d3_splat(headers_thead,"th","th",false,function(x,i) {return x.key + i })
         .style("width",function(x) { return x.width })
-        .on("click",function(x) {
-          if (x.sort === false) x.sort = undefined
-          else x.sort = !x.sort
+        .style("position","relative")
+        .order()
 
-          this.sort(x.key,x.sort)
-          this.draw()
-        }.bind(this))
 
       d3_updateable(th,"span","span")
+        .classed("title",true)
         .style("cursor","pointer")
         .text(function(x) { return x.value })
+        .on("click",function(x) {
+          if (x.sort === false) {
+            delete x['sort']
+            this._sort = {}
+            this.draw()
+          } else {
+            x.sort = !x.sort
+
+            this.sort(x.key,x.sort)
+            this.draw()
+          }
+        }.bind(this))
 
       d3_updateable(th,"i","i")
         .style("padding-left","5px")
@@ -213,19 +274,65 @@ Table.prototype = {
         .classed("fa-sort-asc", function(x) { return (x.key == this._sort.key) ? this._sort.value === true : undefined }.bind(this))
         .classed("fa-sort-desc", function(x) { return (x.key == this._sort.key) ? this._sort.value === false : undefined }.bind(this))
 
+      var self = this;
+      var can_redraw = true
+
+      var drag = d3.behavior.drag()
+        .on("drag", function(d,i) {
+            var x = d3.event.dx
+            var w = parseInt(d3.select(this.parentNode).style("width").replace("px"))
+            this.parentNode.__data__.width = (w+x)+"px"
+            d3.select(this.parentNode).style("width", (w+x)+"px")
+
+            var index = Array.prototype.slice.call(this.parentNode.parentNode.children,0).indexOf(this.parentNode) + 1
+            d3.select(this.parentNode.parentNode.children[index]).style("width",undefined)
+
+            if (can_redraw) {
+              can_redraw = false
+              window.requestAnimationFrame(function() {
+                can_redraw = true
+                tbody.selectAll("tr").selectAll("td:nth-of-type(" + index + ")").each(function(x) {
+                  var render = self._renderers[x.key]
+                  if (render) render.bind(this)(x)
+    
+                })
+                
+
+              })
+            }
+            
+        });
+
+      var draggable = d3_updateable(th,"b","b")
+        .style("cursor", "ew-resize")
+        .style("font-size", "100%")
+        .style("height", "100%")
+        .style("position", "absolute")
+        .style("right", "-8px")
+        .style("top", "0")
+        .style("width", "10px")
+        .style("z-index", 1)
+        .on("mouseover",function(){
+           var index = Array.prototype.slice.call(this.parentNode.parentNode.children,0).indexOf(this.parentNode) + 1
+           tbody.selectAll("tr").selectAll("td:nth-of-type(" + index + ")").style("border-right","1px dotted #ccc")
+        })
+        .on("mouseout",function(){
+           var index = Array.prototype.slice.call(this.parentNode.parentNode.children,0).indexOf(this.parentNode) + 1
+           tbody.selectAll("tr").selectAll("td:nth-of-type(" + index + ")").style("border-right",undefined)
+        })
+        .call(drag)
 
       th.exit().remove()
 
-
-
-
       var options = d3_updateable(options_thead,"th","th",false,function() { return 1})
-        .attr("colspan",this.headers().length)
+        .attr("colspan",this.headers().length+1)
+        .style("padding-top","10px")
+        .style("padding-bottom","10px")
                 
       var option = d3_splat(options,".option","div",false,function(x) { return x.key })
         .classed("option",true)
         .style("width","240px")
-        .style("float","right")
+        .style("display","inline-block")
 
 
       option.exit().remove()
@@ -235,6 +342,7 @@ Table.prototype = {
       d3_updateable(option,"input","input")
         .attr("type","checkbox")
         .attr("checked",function(x) { return x.selected ? "checked" : undefined })
+        .attr("disabled",function(x) { return x.locked })
         .on("click", function(x) {
           x.selected = this.checked
           if (x.selected) {
@@ -258,6 +366,7 @@ Table.prototype = {
     }
   , render_rows: function(table) {
 
+      var self = this;
       var tbody = table.selectAll("tbody")
 
       if (this.headers() == undefined) return
@@ -279,13 +388,39 @@ Table.prototype = {
       rows.exit().remove()
 
       var td = d3_splat(rows,"td","td",this.headers(),function(x,i) {return x.key + i })
-        .text(function(x) { 
-          var pd = this.parentNode.__data__
-          return pd[x.key]
+        .each(function(x) {
+          var dthis = d3.select(this)
+
+          var renderer = self._renderers[x.key]
+          if (!renderer) {
+            if (x.key.indexOf("percent") > -1) return dthis.text(function(x) { 
+                var pd = this.parentNode.__data__
+                return d3.format(".2%")(pd[x.key]/100)
+              })
+           
+            return dthis.text(function(x) { 
+              var pd = this.parentNode.__data__
+              return pd[x.key] > 0 ? d3.format(",.2")(pd[x.key]) : pd[x.key]
+            })
+          }
+
+          return renderer.bind(this)(x)
         })
+        
 
       td.exit().remove()
 
+      d3_updateable(rows,"td.option-header","td",false,function() { return 1})
+        .classed("option-header",true)
+        .style("width","70px")
+
+
+
+    }
+  , render: function(k,fn) {
+      if (fn == undefined) return this._renderers[k] || false
+      this._renderers[k] = fn
+      return this
     }
   , draw: function() {
       var self = this
@@ -300,40 +435,6 @@ Table.prototype = {
 
       return this
 
-      var wrap = this._target
-
-      var desc = d3_updateable(wrap,".vendor-domains-bar-desc","div")
-        .classed("vendor-domains-bar-desc",true)
-        .style("display","inherit")
-        .style("padding-left","10px")
-        .datum(this._data)
-
-      var wrapper = d3_updateable(desc,".w","div")
-        .classed("w",true)
-        
-      var self = this
-
-      wrapper.each(function(row) {
-
-        var wrap = d3.select(this)
-
-        //d3_updateable(wrap, "h3","h3")
-        //  .text(function(x){return x.key})
-        //  .style("margin-bottom","15px")
-
-        self._render_header(wrap)
-        var row = d3_splat(wrap,".row","div",function(x) {return x.values}, function(x) {return x.key})
-          .classed("row",true)
-          .style("line-height","24px")
-          .each(function() {
-            self._render_row(d3.select(this))
-          })
-
-        row.exit().remove()
-
-        row.sort(function(p,c) {return c.value - p.value})
-
-      })
     }
   , d3: d3
 }

@@ -97,7 +97,7 @@ export function buildDomains(data) {
   values.map(function(x) {
     x.tf_idf = getIDF(x.key) * (x.value*x.percent_unique) * (x.value*x.percent_unique) 
     x.count = x.value
-    x.value = Math.log(x.tf_idf)
+    x.importance = Math.log(x.tf_idf)
   })
   values = values.sort(function(p,c) { return c.tf_idf - p.tf_idf })
 
@@ -108,16 +108,16 @@ export function buildDomains(data) {
     x.pop_percent = 1.02/getIDF(x.key)*100
     x.pop_percent = x.pop_percent == Infinity ? 0 : x.pop_percent
 
-    x.percent = x.count*x.percent_unique/total*100
+    x.sample_percent = x.count*x.percent_unique/total*100
   })
 
   var norm = d3.scale.linear()
     .range([0, d3.max(values,function(x){ return x.pop_percent})])
-    .domain([0, d3.max(values,function(x){return x.percent})])
+    .domain([0, d3.max(values,function(x){return x.sample_percent})])
     .nice()
 
   values.map(function(x) {
-    x.percent_norm = norm(x.percent)
+    x.sample_percent_norm = norm(x.sample_percent)
     //x.percent_norm = x.percent
   })
 
