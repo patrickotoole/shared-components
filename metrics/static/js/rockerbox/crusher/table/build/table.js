@@ -151,7 +151,7 @@
         if (this._data.values && this._data.values.length) {
           
           var all_heads = Object.keys(this._data.values[0]).map(function(x) { 
-            if (this._hidden_fields.indexOf(x) > -1) return false
+            if (this._hidden_fields && this._hidden_fields.indexOf(x) > -1) return false
             return {
                 key:x
               , value:headers[x] || x
