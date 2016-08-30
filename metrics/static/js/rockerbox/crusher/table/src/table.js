@@ -48,6 +48,7 @@ var EXAMPLE_DATA = {
 
 export function Table(target) {
   var CSS_STRING = String(function() {/*
+.table-wrapper { }
 .table-wrapper tr { height:33px}
 .table-wrapper tr th { border-right:1px dotted #ccc } 
 .table-wrapper tr th:last-of-type { border-right:none } 
@@ -205,9 +206,35 @@ Table.prototype = {
       var table_fixed = d3_updateable(wrapper,"table.fixed","table")
         .classed("hidden", true) // TODO: make this visible when main is not in view
         .classed("fixed",true)
-        .style("width","100%")
+        .style("width",wrapper.style("width"))
         .style("top","0px")
-        .style("position","absolute")
+        .style("position","fixed")
+
+      document.body.onscroll = function() {
+        console.log(table.node().getBoundingClientRect())
+
+        if (table.node().getBoundingClientRect().top < 0) table_fixed.classed("hidden",false)
+        else table_fixed.classed("hidden",true)
+
+        var widths = []
+
+        table
+          .selectAll(".table-headers")
+          .selectAll("th")
+          .each(function(x,i) {
+            widths.push(this.offsetWidth)
+          })
+
+        table_fixed
+          .selectAll(".table-headers")
+          .selectAll("th")
+          .each(function(x,i) {
+            d3.select(this).style("width",widths[i] + "px")
+          })
+
+        
+      }
+       
 
       this._table_fixed = table_fixed
 
@@ -220,10 +247,12 @@ Table.prototype = {
         .style("top","-1px")
         .style("right","0px")
         .style("cursor","pointer")
-        .style("line-height","36px")
+        .style("line-height","33px")
         .style("font-weight","bold")
         .style("padding-right","8px")
+        .style("padding-left","8px")
         .text("OPTIONS")
+        .style("background","#e3ebf0")
         .on("click",function(x) {
           this._options_header.classed("hidden",!this._options_header.classed("hidden"))
           this._show_options = !this._options_header.classed("hidden")
@@ -241,7 +270,7 @@ Table.prototype = {
         .classed("hidden", !this._show_options)
         .classed("table-options",true)
 
-      var headers_thead = d3_updateable(thead,"tr.table-headers","tr",this.headers().concat([{width:"70px"}]),function(x){ return 1})
+      var headers_thead = d3_updateable(thead,"tr.table-headers","tr",this.headers().concat([{key:"spacer", width:"70px"}]),function(x){ return 1})
         .classed("table-headers",true)
 
 
@@ -289,7 +318,7 @@ Table.prototype = {
 
             if (can_redraw) {
               can_redraw = false
-              window.requestAnimationFrame(function() {
+              setTimeout(function() {
                 can_redraw = true
                 tbody.selectAll("tr").selectAll("td:nth-of-type(" + index + ")").each(function(x) {
                   var render = self._renderers[x.key]
@@ -298,7 +327,7 @@ Table.prototype = {
                 })
                 
 
-              })
+              },100)
             }
             
         });
@@ -400,7 +429,7 @@ Table.prototype = {
            
             return dthis.text(function(x) { 
               var pd = this.parentNode.__data__
-              return pd[x.key] > 0 ? d3.format(",.2")(pd[x.key]) : pd[x.key]
+              return pd[x.key] > 0 ? d3.format(",.2f")(pd[x.key]).replace(".00","") : pd[x.key]
             })
           }
 

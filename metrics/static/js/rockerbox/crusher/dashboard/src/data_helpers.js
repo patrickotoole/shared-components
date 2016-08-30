@@ -126,7 +126,7 @@ export function buildDomains(data) {
   
   return {
       key: "Top Domains"
-    , values: values.slice(0,100)
+    , values: values.slice(0,300)
   }
 }
 
