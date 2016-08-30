@@ -6,7 +6,9 @@ import * as ui_helper from './helpers'
 
 import bar_selector from './bar_selector'
 import time_selector from './time_selector'
-import table from './table'
+//import table from './table'
+import table from 'table'
+
 
 import render_filter from './render_filter'
 import state from './state'
@@ -159,150 +161,60 @@ FilterDashboard.prototype = {
 
         _lower.selectAll(".vendor-domains-bar-desc").remove()
 
-        var t = table(_lower)
+
+
+        var t = table.table(_lower)
           .data(selected)
 
 
         if (selected.key == "Top Domains") {
-          var samp_max = d3.max(selected.values,function(x){return x.percent_norm})
+
+          var samp_max = d3.max(selected.values,function(x){return x.sample_percent_norm})
             , pop_max = d3.max(selected.values,function(x){return x.pop_percent})
             , max = Math.max(samp_max,pop_max);
 
-          var width = _lower.style("width").split(".")[0].replace("px","")/2 - 10
-            , height = 20
+          t.headers([
+                {key:"key",value:"Domain",locked:true,width:"100px"}
+              , {key:"value",value:"Sample versus Pop",locked:true}
+              , {key:"count",value:"Views",selected:false}
 
-          var x = d3.scale.linear()
-            .range([0, width])
-            .domain([0, max])
+            ])
+            .hidden_fields(["urls","percent_unique","sample_percent_norm"])
+            .render("value",function(d) {
+              var width = (d3.select(this).style("width").replace("px","") || this.offsetWidth) - 50
+                , height = 28;
 
-          t.header(function(wrap) {
-            var headers = d3_updateable(wrap,".headers","div")
-              .classed("headers",true)
-              .style("text-transform","uppercase")
-              .style("font-weight","bold")
-              .style("line-height","24px")
-              .style("border-bottom","1px solid #ccc")
-              .style("margin-bottom","10px")
+              var x = d3.scale.linear()
+                .range([0, width])
+                .domain([0, max])
 
-            headers.html("")
+              var bullet = d3_updateable(d3.select(this),".bullet","div",this.parentNode.__data__,function(x) { return 1 })
+                .classed("bullet",true)
+                .style("margin-top","3px")
 
-            d3_updateable(headers,".url","div")
-              .classed("url",true)
-              .style("width","30%")
-              .style("display","inline-block")
-              .text("Domain")
+              bullet.exit().remove()
 
-            d3_updateable(headers,".bullet","div")
-              .classed("bullet",true)
-              .style("width","50%")
-              .style("display","inline-block")
-              .text("Likelihood Versus Population")
-
-            d3_updateable(headers,".percent","div")
-              .classed("percent",true)
-              .style("width","20%")
-              .style("display","inline-block")
-              .text("Percent Diff")
-
-
-
-          })
-
-          t.row(function(row) {
-            d3_updateable(row,".url","div")
-              .classed("url",true)
-              .style("width","30%")
-              .style("display","inline-block")
-              .style("vertical-align","top")
-              .text(function(x) {return x.key})
-
-            var bullet = d3_updateable(row,".bullet","div")
-              .classed("bullet",true)
-              .style("width","50%")
-              .style("display","inline-block")
-
-            var diff = d3_updateable(row,".diff","div")
-              .classed("diff",true)
-              .style("width","15%")
-              .style("display","inline-block")
-              .style("vertical-align","top")
-              .text(function(x) {return d3.format("%")((x.percent_norm-x.pop_percent)/x.pop_percent) })
-
-            var plus = d3_updateable(row,".plus","a")
-              .classed("plus",true)
-              .style("width","5%")
-              .style("display","inline-block")
-              .style("font-weight","bold")
-              .style("vertical-align","top")
-              .text("+")
-              .on("click",function(x) {
-
-                var d3_this = d3.select(this)
-                var d3_parent = d3.select(this.parentNode)
-                var target = d3_parent.selectAll(".expanded")
-
-                if (target.classed("hidden")) {
-                  d3_this.html("&ndash;")
-                  target.classed("hidden", false)
-
-                  d3_splat(target,".row","div",x.urls.filter(function(x){
-                      var sp = x.replace("http://","")
-                        .replace("https://","")
-                        .replace("www.","")
-                        .split("/");
-
-                      if ((sp.length > 1) && (sp.slice(1).join("/").length > 7)) return true
+              var svg = d3_updateable(bullet,"svg","svg",false,function(x) { return 1})
+                .attr("width",width)
+                .attr("height",height)
+  
+   
+              d3_updateable(svg,".bar","rect",false,function(x) { return 1})
+                .attr("x",0)
+                .attr("width", function(d) {return x(d.pop_percent) })
+                .attr("height", height)
+                .attr("fill","#888")
+  
+              d3_updateable(svg,".bar","rect",false,function(x) { return 1})
+                .attr("x",0)
+                .attr("y",height/4)
+                .attr("width", function(d) {return x(d.sample_percent_norm) })
+                .attr("height", height/2)
+                .attr("fill","rgb(8, 29, 88)")
 
 
-                      return false
-                    }).slice(0,10))
-                    .classed("row",true)
-                    .style("overflow","hidden")
-                    .style("height","30px")
-                    .style("line-height","30px")
-                    .text(String)
-
-                  return x
-                }
-                d3_this.html("+")
-                target.classed("hidden",true).html("")
-              })
-               
-
-            var expanded = d3_updateable(row,".expanded","div")
-              .classed("expanded hidden",true)
-              .style("width","100%")
-              .style("vertical-align","top")
-              .style("padding-right","30px")
-              .style("padding-left","10px")
-              .style("margin-left","10px")
-              .style("margin-bottom","30px")
-              .style("border-left","1px solid grey")
-
-
-
-
-
-            var svg = d3_updateable(bullet,"svg","svg")
-              .attr("width",width)
-              .attr("height",height)
-
- 
-            d3_updateable(svg,".bar","rect")
-              .attr("x",0)
-              .attr("width", function(d) {return x(d.pop_percent) })
-              .attr("height", height)
-              .attr("fill","#888")
-
-            d3_updateable(svg,".bar","rect")
-              .attr("x",0)
-              .attr("y",height/4)
-              .attr("width", function(d) {return x(d.percent_norm) })
-              .attr("height", height/2)
-              .attr("fill","rgb(8, 29, 88)")
-
-
-          })
+            })
+          
         }
 
         t.draw()
