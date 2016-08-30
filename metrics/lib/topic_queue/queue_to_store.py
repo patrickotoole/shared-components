@@ -5,26 +5,30 @@ from link import lnk
 import ujson
 import queue_helpers as helpers
 
-QUERY = "INSERT INTO %(table_name)s (%(columns)s) values ( %(values)s )"
+QUERY = """INSERT INTO %(table_name)s (%(columns)s) values ( %(values)s )"""
 
 class QueueInsert():
-    def __init__(self, table_name, col_list):
+    def __init__(self, table_name, col_list, crushercache):
         self.table_name = table_name
         self.columns_list = col_list
+        self.crushercache = crushercache
 
-    def set_values(self, data):
-        values = helpers.value_builder(data, self.col_list)
-        return values
+    def get_values(self, data):
+        columns = list(self.columns_list)
+        str_list, values = helpers.value_builder(data, columns)
+        return str_list, values
 
-    def generic_insert(self, values):
+    def generic_insert(self, values_to_replace, values_dict):
+        cr = self.crushercache.create_connection()
         query_params = {}
         query_params['table_name'] = self.table_name
-        query_params['columns'] = self.col_list
-        query_params['values'] = values
-
-        cr = crushercache.create_connection()
-        qp = cr.escapte_string(query_params)
-        crushercache.execute(QUERY % query_params)
+        query_params['columns'] = helpers.column_builder(self.columns_list)
+        query_params['columns'] = cr.escape_string(query_params['columns'])
+        query_params['values'] = values_to_replace
+        for key,val in values_dict.items():
+            values_dict[key] = cr.escape_string(val)
+        query_params['values'] = query_params['values'] % values_dict
+        self.crushercache.execute(QUERY % query_params)
 
 
 if __name__ == '__main__':
@@ -46,10 +50,7 @@ if __name__ == '__main__':
     assert(type(columns_as_list)==list)
 
     crushercache = lnk.dbs.crushercache
-
-    query_params = {}
-    query_params['table_name'] = options.table_name
-    query_params['columns'] = helpers.column_builder(columns_as_list)
+    QI = QueueInsert(options.table_name, columns_as_list, crushercache)
 
     client = KafkaClient(hosts="10.128.248.211:2181/v0_8_1")
     topic = client.topics['topic_titles']
@@ -57,7 +58,12 @@ if __name__ == '__main__':
     for message in consumer:
         if message is not None:
             data = ujson.loads(message.value)
-            assert(all(col in data.keys() for col in columns_as_list))
-
-            query_params['values'] = helpers.value_builder(data, columns_as_list)
+            try:
+                assert(all(col in data.keys() for col in columns_as_list))
+                str_values, values = QI.get_values(data)
+                QI.generic_insert(str_values, values)
+                import time
+                time.sleep(2)
+            except Exception as e:
+                print str(e)
 

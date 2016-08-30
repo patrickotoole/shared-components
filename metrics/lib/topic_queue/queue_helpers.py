@@ -9,7 +9,11 @@ def column_builder2(col_list):
 
 def value_builder(data_dict, col_list):
     insert_list = col_list
+    insert_dict ={}
+    insert_list = []
     for col in col_list:
-        insert_list[col_list.index(col)] = data_dict[col]
-    insert_data_as_str = "'" +  "','".join(insert_list) + "'"
-    return insert_data_as_str
+        insert_dict[col] = data_dict[col]
+        string_item = "%({})s".format(col)
+        insert_list.append(string_item)
+    insert_str = "\"" +  "\",\"".join(insert_list) + "\""
+    return (insert_str, insert_dict)
