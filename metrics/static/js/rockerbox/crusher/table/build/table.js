@@ -148,7 +148,7 @@
         var headers = this.headers().reduce(function(p,c) { p[c.key] = c.value; return p},{})
           , is_locked = this.headers().filter(function(x) { return !!x.locked }).map(function(x) { return x.key })
 
-        if (this._data.values) {
+        if (this._data.values && this._data.values.length) {
           
           var all_heads = Object.keys(this._data.values[0]).map(function(x) { 
             if (this._hidden_fields.indexOf(x) > -1) return false
@@ -203,7 +203,6 @@
           .style("position","fixed")
 
         document.body.onscroll = function() {
-          console.log(table.node().getBoundingClientRect())
 
           if (table.node().getBoundingClientRect().top < 0) table_fixed.classed("hidden",false)
           else table_fixed.classed("hidden",true)

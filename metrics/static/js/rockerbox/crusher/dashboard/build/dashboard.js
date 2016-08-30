@@ -77,13 +77,17 @@
 
     var select = d3_updateable(filter_type,"select","select")
       .style("font-size","10")
-      .style("width","45px")
+      .style("width","50px")
       .on("change",function() {
         var d = this.selectedOptions[0].__data__
-        s.text(d + " ")
+        self._state.set("logic", (d == "Any") ? "or" : "and")
+        self._logic_filter.on("update")(self._state.get("filters"))
       })
 
     d3_splat(select,"option","option",["All","Any"])
+      .attr("selected",function(x) {
+        return self._state.get("logic","and") == "or" ? x == "Any" : undefined
+      })
       .text(String)
     
 
@@ -116,7 +120,7 @@
     //debugger
     var categories = this._data.category.map(function(x) {x.key = x.parent_category_name; return x})
 
-    filter.filter(_top)
+    self._logic_filter = filter.filter(_top)
       .fields(Object.keys(mapping))
       .ops([
           [{"key": "equals.category"}]
@@ -200,9 +204,9 @@
         })
 
         if (y.length > 0 && y[0].value) {
-          
+          var logic = self._state.get("logic","and")
           var data = {
-              "full_urls": filter.filter_data(self._data.full_urls).logic("and").by(y)
+              "full_urls": filter.filter_data(self._data.full_urls).logic(logic).by(y)
             //, "url_only": filter.filter_data(self._data.url_only).logic("and").by(y)
           }
 
@@ -235,6 +239,8 @@
         }
       })
       .draw()
+
+    self._logic_filter
       .on("update")(filters)
       //._target.selectAll(".filters-wrapper").style("padding-left","10px")
   }
