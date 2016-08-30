@@ -183,7 +183,8 @@ class AuthenticationCallbackHandler(web.RequestHandler, DBQuery):
         }
 
         df = self.db.execute(sql)
-        self.redirect('/?shop=%s' % (shop_domain))
+        host = '//%s/?shop=%s' % (self.request.headers.get('X-Real-Host',self.request.host), shop_domain)
+        self.redirect(host)
 
 class AuthenticationHandler(web.RequestHandler, DBQuery):
     def initialize(self, db):
@@ -207,7 +208,8 @@ class AuthenticationHandler(web.RequestHandler, DBQuery):
                     authorized = False
 
         if authorized == True:
-            self.redirect('/?shop=%s' % (shop_domain))
+            host = '//%s/?shop=%s' % (self.request.headers.get('X-Real-Host',self.request.host), shop_domain)
+            self.redirect(host)
         else:
             self.write('<script type="text/javascript">window.top.location = "https://%(shop_domain)s/admin/oauth/authorize?client_id=%(client_id)s&scope=write_script_tags&redirect_uri=%(redirect_uri)s";</script>' % {
                 'shop_domain': shop_domain,
