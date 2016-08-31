@@ -12,6 +12,22 @@ import datetime
 SQL_LOG = "insert into work_queue_log (hostname, job_id, event) values (%s, %s, %s)"
 SQL_LOG2 = "insert into work_queue_error_log (hostname, error_string, job_id, stacktrace) values (%s, %s, %s, %s)"
 
+CACHEQUERY ="select count(*) from generic_function_cache where advertiser='%(advertiser)s' and url_pattern='%(url_pattern)s' and action_id='%(action_id)s' and udf='%(udf)s'"
+CLEARQUERY ="delete from generic_function_cache where advertiser=%(advertiser)s and url_pattern=%(url_pattern)s and action_id=%(action_id)s and udf=%(udf)s and date=%(date)s"
+DATEQUERY = "select date from generic_function_cache where advertiser='%(advertiser)s' and url_pattern='%(url_pattern)s' and action_id='%(action_id)s' and udf='%(udf)s' order by date limit 1"
+
+def clear_old_cache(**kwargs):
+    query_args = {}
+    query_args['advertiser'] = kwargs['advertiser']
+    query_args['action_id'] = kwargs['filter_id']
+    query_args['url_pattern'] = kwargs['pattern']
+    query_args['udf'] = kwargs['udf']
+    count_of_cache = kwargs['connectors']['crushercache'].select_dataframe(CACHEQUERY % query_args)
+    if count_of_cache['count(*)'][0] > 1:
+        date = kwargs['connectors']['crushercache'].select_dataframe(DATEQUERY % query_args)['date'][0] 
+        query_args['date'] = date.strftime('%Y-%m-%d')
+        kwargs['connectors']['crushercache'].execute(CLEARQUERY, query_args)
+
 def get_crusher_obj(advertiser, base_url, crusher):
     crusher.user = "a_{}".format(advertiser)
     crusher.password= "admin"
@@ -80,7 +96,9 @@ class WorkQueue(object):
                         raise Exception("Crusher wrapper is not logged in. Issue with connector, validation, or authentication of crusher wrapper") 
                     self.mcounter.bumpSuccess()
                     self.connectors['crushercache'].execute(SQL_LOG, (current_host, job_id, "Ran"))
-
+                    
+                    clear_old_cache(**kwargs)
+                    
                     self.timer.resetTime()
                     logging.info("finished item in queue %s %s" % (str(fn),str(kwargs)))
                 except Exception as e:
