@@ -81,7 +81,7 @@
       .on("change",function() {
         var d = this.selectedOptions[0].__data__
         self._state.set("logic", (d == "Any") ? "or" : "and")
-        self._logic_filter.on("update")(self._state.get("filters"))
+        self._logic_filter.on("update")(self._state.get("filter"))
       })
 
     d3_splat(select,"option","option",["All","Any"])
@@ -1479,6 +1479,27 @@
                 , {key:"count",value:"Views",selected:false}
 
               ])
+              .option_text("&#65291;")
+              .on("expand",function(d) {
+
+                d3.select(this.parentNode).selectAll(".expanded").remove()
+                var t = document.createElement('tr');
+                this.parentNode.insertBefore(t, this.nextSibling);  
+
+                var tr = d3.select(t).classed("expanded",true).datum({})
+                var td = d3_updateable(tr,"td","td")
+                  .attr("colspan",this.children.length)
+                  .style("background","#f9f9fb")
+                  .style("padding-top","10px")
+                  .style("padding-bottom","10px")
+
+
+
+                d3_splat(td,"div","div",d.urls.slice(0,10))
+                  .text(String)
+                  
+                  
+              })
               .hidden_fields(["urls","percent_unique","sample_percent_norm"])
               .render("value",function(d) {
                 var width = (d3.select(this).style("width").replace("px","") || this.offsetWidth) - 50
@@ -1487,6 +1508,8 @@
                 var x = d3.scale.linear()
                   .range([0, width])
                   .domain([0, max])
+
+                if (d3.select(this).text()) d3.select(this).text("")
 
                 var bullet = d3_updateable(d3.select(this),".bullet","div",this.parentNode.__data__,function(x) { return 1 })
                   .classed("bullet",true)

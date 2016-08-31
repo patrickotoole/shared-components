@@ -74,7 +74,7 @@ export default function render_filter(_top,_lower) {
     .on("change",function() {
       var d = this.selectedOptions[0].__data__
       self._state.set("logic", (d == "Any") ? "or" : "and")
-      self._logic_filter.on("update")(self._state.get("filters"))
+      self._logic_filter.on("update")(self._state.get("filter"))
     })
 
   d3_splat(select,"option","option",["All","Any"])
