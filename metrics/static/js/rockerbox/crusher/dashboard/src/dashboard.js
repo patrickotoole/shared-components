@@ -8,7 +8,7 @@ import bar_selector from './bar_selector'
 import time_selector from './time_selector'
 import table from './table'
 
-import render_filter from './render_filter'
+import render_filter from './render/filter'
 import state from './state'
 
 
