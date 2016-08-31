@@ -65,7 +65,8 @@
 
     var subtitle = d3_updateable(_top, ".subtitle-filter","div")
       .classed("subtitle-filter",true)
-      .attr("style","padding-left:10px; text-transform: uppercase; font-weight: bold; line-height: 24px; margin-bottom: 10px;")
+      .attr("style","padding-left:10px; text-transform: uppercase; font-weight: bold; line-height: 33px; background: #e3ebf0; margin-bottom:10px")
+      
 
     d3_updateable(subtitle,"span.first","span")
       .text("Users matching " )
@@ -81,7 +82,7 @@
       .on("change",function() {
         var d = this.selectedOptions[0].__data__
         self._state.set("logic", (d == "Any") ? "or" : "and")
-        self._logic_filter.on("update")(self._state.get("filters"))
+        self._logic_filter.on("update")(self._state.get("filter"))
       })
 
     d3_splat(select,"option","option",["All","Any"])
@@ -195,6 +196,7 @@
         self._state.set("filter",x)
 
 
+
         var y = x.map(function(z) {
           return { 
               "field": mapping[z.field]
@@ -242,7 +244,8 @@
 
     self._logic_filter
       .on("update")(filters)
-      //._target.selectAll(".filters-wrapper").style("padding-left","10px")
+
+    
   }
 
   function accessor(attr, val) {
@@ -265,7 +268,9 @@
   function autoSize(wrap,adjustWidth,adjustHeight) {
 
     function elementToWidth(elem) {
-      var num = wrap.style("width").split(".")[0].replace("px","")
+
+      var _w = wrap.node().offsetWidth || wrap.node().parentNode.offsetWidth || wrap.node().parentNode.parentNode.offsetWidth
+      var num = _w || wrap.style("width").split(".")[0].replace("px","") 
       return parseInt(num)
     }
 
@@ -281,7 +286,7 @@
     h = adjustHeight(h)
 
 
-    var margin = {top: 40, right: 10, bottom: 30, left: 0},
+    var margin = {top: 10, right: 15, bottom: 10, left: 15},
         width  = w - margin.left - margin.right,
         height = h - margin.top - margin.bottom;
 
@@ -1318,6 +1323,155 @@
       }
   }
 
+  var EXAMPLE_DATA$4 = {
+      "key": "Browsing behavior by time"
+    , "values": [
+        {  
+            "key": 1
+          , "value": 12344
+        }
+      , {
+            "key": 2
+          , "value": 12344
+        }
+      , {
+            "key": 2.25
+          , "value": 12344
+        }
+      , {
+            "key": 2.5
+          , "value": 12344
+        }
+      , {
+            "key": 3
+          , "value": 1234
+        }
+
+      , {
+            "key": 4
+          , "value": 12344
+        }
+
+
+    ] 
+  }
+
+  function TimeSeries(target) {
+    this._target = target;
+    this._data = EXAMPLE_DATA$4
+    this._on = {}
+  }
+
+  function time_series(target) {
+    return new TimeSeries(target)
+  }
+
+  TimeSeries.prototype = {
+
+      data: function(val) { return accessor.bind(this)("data",val) }
+    , on: function(action,fn) {
+        if (fn === undefined) return this._on[action] || function() {};
+        this._on[action] = fn;
+        return this
+      }
+    , title: function(val) { return accessor.bind(this)("title",val) }
+    , draw: function() {
+        var wrap = this._target
+        var desc = d3_updateable(wrap,".vendor-domains-bar-desc","div")
+          .classed("vendor-domains-bar-desc",true)
+          .style("display","inherit")
+          .style("height","100%")
+          .datum(this._data)
+
+        var wrapper = d3_updateable(desc,".w","div")
+          .classed("w",true)
+          .style("height","100%")
+
+        var self = this;
+    
+        
+
+        wrapper.each(function(row){
+
+          var data = row.values.sort(function(p,c) { return c.key - p.key})
+            , count = data.length;
+
+
+          var _sizes = autoSize(wrapper,function(d){return d -10}, function(d){return 60}),
+            gridSize = Math.floor(_sizes.width / 24 / 3);
+
+          var valueAccessor = function(x) { return x.value }
+            , keyAccessor = function(x) { return x.key }
+
+          var steps = Array.apply(null, Array(count)).map(function (_, i) {return i+1;})
+
+          var _colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"]
+          var colors = _colors
+
+          var x = d3.scale.ordinal().range(steps)
+            , y = d3.scale.linear().range([_sizes.height, 0 ]);
+
+          var colorScale = d3.scale.quantile()
+            .domain([0, d3.max(data, function (d) { return d.frequency; })])
+            .range(colors);
+
+          var svg_wrap = d3_updateable(wrapper,"svg","svg")
+            .attr("width", _sizes.width + _sizes.margin.left + _sizes.margin.right)
+            .attr("height", _sizes.height + _sizes.margin.top + _sizes.margin.bottom)
+
+          var svg = d3_splat(svg_wrap,"g","g",function(x) {return [x.values]},function(_,i) {return i})
+            .attr("transform", "translate(" + _sizes.margin.left + "," + 0 + ")")
+
+          x.domain([0,72]);
+          y.domain([0, d3.max(data, function(d) { return Math.sqrt(valueAccessor(d)); })]);
+
+          var bars = d3_splat(svg, ".timing-bar", "rect", data, keyAccessor)
+            .attr("class", "timing-bar")
+
+   
+           
+          bars
+            .attr("x", function(d) { return ((keyAccessor(d) - 1) * gridSize ); })
+            .attr("width", gridSize - 1)
+            .attr("y", function(d) { 
+              return y(Math.sqrt( valueAccessor(d) )); 
+            })
+            .attr("fill","#aaa")
+            .attr("fill",function(x) { return colorScale( valueAccessor(x) ) } )
+            .attr("stroke","white")
+            .attr("stroke-width","1px")
+            .attr("height", function(d) { return _sizes.height - y(Math.sqrt( valueAccessor(d) )); })
+            .style("opacity","1")
+            .on("mouseover",function(x){ 
+              self.on("hover").bind(this)(x)
+            })
+
+        
+      
+        var z = d3.time.scale()
+          .range([0, gridSize*24*3])
+          .nice(d3.time.hour,24)
+          
+      
+        var xAxis = d3.svg.axis()
+          .scale(z)
+          .ticks(3)
+          .tickFormat(d3.time.format("%I %p"));
+      
+        svg.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + _sizes.height + ")")
+            .call(xAxis);
+
+
+
+          
+        })
+
+
+      }
+  }
+
   function FilterDashboard(target) {
     this._on = {}
     this._state = state()
@@ -1461,7 +1615,7 @@
 
           _lower.selectAll(".vendor-domains-bar-desc").remove()
 
-
+          _lower.datum(data)
 
           var t = table.table(_lower)
             .data(selected)
@@ -1479,6 +1633,151 @@
                 , {key:"count",value:"Views",selected:false}
 
               ])
+              .option_text("&#65291;")
+              .on("expand",function(d) {
+
+                d3.select(this.parentNode).selectAll(".expanded").remove()
+                var t = document.createElement('tr');
+                this.parentNode.insertBefore(t, this.nextSibling);  
+
+                var tr = d3.select(t).classed("expanded",true).datum({})
+                var td = d3_updateable(tr,"td","td")
+                  .attr("colspan",this.children.length)
+                  .style("background","#f9f9fb")
+                  .style("padding-top","10px")
+                  .style("padding-bottom","10px")
+
+                var dd = this.parentElement.__data__.full_urls.filter(function(x) { return x.domain == d.key})
+
+
+                var p = []
+                d3.range(0,24).map(function(t) {
+                  ["0","20","40"].map(function(m) {
+                    if (t < 10) p.push("0" + String(t)+String(m))
+                    else p.push(String(t)+String(m))
+
+                  })
+                })
+
+                var rolled = d3.nest()
+                  .key(function(k) { return k.hour + k.minute })
+                  .rollup(function(v) {
+                    return v.reduce(function(p,c) {
+                      p.articles[c.url] = true
+                      p.views += c.count
+                      p.sessions += c.uniques
+                      return p
+                    },{ articles: {}, views: 0, sessions: 0})
+                  })
+                  .entries(dd)
+                  .map(function(x) {
+                    Object.keys(x.values).map(function(y) {
+                      x[y] = x.values[y]
+                    })
+                    x.article_count = Object.keys(x.articles).length
+                    x.hour = x.key.slice(0,2)
+                    x.minute = x.key.slice(2)
+                    x.value = x.article_count
+                    x.key = p.indexOf(x.key)
+                    //delete x['articles']
+                    return x
+                  })
+
+                  
+
+                var timing = d3_updateable(td,"div.timing","div",rolled)
+                  .classed("timing",true)
+                  .style("height","60px")
+                  .style("width","60%")
+                  .style("text-transform","uppercase")
+                  .style("font-weight","bold")
+                  .style("font-size",".9em")
+                  .style("margin-bottom","45px")
+                  .style("line-height","35px")
+                  .style("display","inline-block")
+                  .text("Articles Accessed")
+
+                var details = d3_updateable(td,"div.details","div")
+                  .classed("details",true)
+                  .style("width","40%")
+                  .style("display","inline-block")
+                  .style("vertical-align","top")
+
+
+
+
+                d3_updateable(details,"span","span")
+                  .style("text-transform","uppercase")
+                  .style("font-weight","bold")
+                  .style("font-size",".9em")
+                  .style("margin-bottom","10px")
+                  .style("line-height","35px")
+                  .text("Details")
+
+
+                var articles = d3_updateable(td,"div.articles","div")
+                  .classed("articles",true)
+
+                d3_updateable(articles,"span","span")
+                  .style("text-transform","uppercase")
+                  .style("font-weight","bold")
+                  .style("font-size",".9em")
+                  .style("margin-bottom","10px")
+                  .style("line-height","35px")
+                  .text("Top articles")
+                  
+                var drawArticles = function(urls) {
+
+                  var a = d3_splat(articles,"div","div",urls)
+                    .text(String)
+                    .exit().remove()
+
+                }
+
+                var drawDetails = function(x) {
+
+                  var time = d3_updateable(details,".time","div",x)
+                    .classed("time",true)
+                    .text("Time: " + x.hour + ":" + (x.minute.length == 1 ? "0" + x.minute : x.minute ) )
+
+
+                  var button = d3_updateable(details,".button","a",false,function() { return 1})
+                    .classed("button",true)
+                    .style("padding","5px")
+                    .style("border-radius","5px")
+                    .style("border","1px solid #ccc")
+                    .style("margin","auto")
+                    .style("margin-top","10px")
+                    .style("display","block")
+                    .style("width","50px")
+                    .style("text-align","center")
+
+                    .text("Reset")
+                    .on("click",reset)
+
+                }
+
+                var reset = function() {
+                  details.selectAll(".time").remove()
+                  details.selectAll(".button").remove()
+
+                  drawArticles(d.urls.slice(0,10))
+                }
+                reset() 
+
+                time_series(timing)
+                  .data({"key":"y","values":timing.data()[0]})
+                  .on("hover",function(x) {
+                    drawArticles(Object.keys(x.articles).slice(0,10))
+                    drawDetails(x)
+
+                  })
+                  .draw()
+
+                 
+                 
+                  
+              })
               .hidden_fields(["urls","percent_unique","sample_percent_norm"])
               .render("value",function(d) {
                 var width = (d3.select(this).style("width").replace("px","") || this.offsetWidth) - 50
@@ -1487,6 +1786,8 @@
                 var x = d3.scale.linear()
                   .range([0, width])
                   .domain([0, max])
+
+                if (d3.select(this).text()) d3.select(this).text("")
 
                 var bullet = d3_updateable(d3.select(this),".bullet","div",this.parentNode.__data__,function(x) { return 1 })
                   .classed("bullet",true)

@@ -58,7 +58,8 @@ export default function render_filter(_top,_lower) {
 
   var subtitle = d3_updateable(_top, ".subtitle-filter","div")
     .classed("subtitle-filter",true)
-    .attr("style","padding-left:10px; text-transform: uppercase; font-weight: bold; line-height: 24px; margin-bottom: 10px;")
+    .attr("style","padding-left:10px; text-transform: uppercase; font-weight: bold; line-height: 33px; background: #e3ebf0; margin-bottom:10px")
+    
 
   d3_updateable(subtitle,"span.first","span")
     .text("Users matching " )
@@ -74,7 +75,7 @@ export default function render_filter(_top,_lower) {
     .on("change",function() {
       var d = this.selectedOptions[0].__data__
       self._state.set("logic", (d == "Any") ? "or" : "and")
-      self._logic_filter.on("update")(self._state.get("filters"))
+      self._logic_filter.on("update")(self._state.get("filter"))
     })
 
   d3_splat(select,"option","option",["All","Any"])
@@ -188,6 +189,7 @@ export default function render_filter(_top,_lower) {
       self._state.set("filter",x)
 
 
+
       var y = x.map(function(z) {
         return { 
             "field": mapping[z.field]
@@ -235,5 +237,6 @@ export default function render_filter(_top,_lower) {
 
   self._logic_filter
     .on("update")(filters)
-    //._target.selectAll(".filters-wrapper").style("padding-left","10px")
+
+  
 }

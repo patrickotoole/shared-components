@@ -18,7 +18,9 @@ export function remainingSection(section) {
 export function autoSize(wrap,adjustWidth,adjustHeight) {
 
   function elementToWidth(elem) {
-    var num = wrap.style("width").split(".")[0].replace("px","")
+
+    var _w = wrap.node().offsetWidth || wrap.node().parentNode.offsetWidth || wrap.node().parentNode.parentNode.offsetWidth
+    var num = _w || wrap.style("width").split(".")[0].replace("px","") 
     return parseInt(num)
   }
 
@@ -34,7 +36,7 @@ export function autoSize(wrap,adjustWidth,adjustHeight) {
   h = adjustHeight(h)
 
 
-  var margin = {top: 40, right: 10, bottom: 30, left: 0},
+  var margin = {top: 10, right: 15, bottom: 10, left: 15},
       width  = w - margin.left - margin.right,
       height = h - margin.top - margin.bottom;
 

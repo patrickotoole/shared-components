@@ -81,8 +81,11 @@ export function Table(target) {
   this._data = {}//EXAMPLE_DATA
   this._sort = {}
   this._renderers = {}
-  this._render_header = function(wrap) {
+
   this._hidden_fields = []
+  this._on = {}
+  this._render_header = function(wrap) {
+
 
     wrap.each(function(data) {
       var headers = d3_updateable(d3.select(this),".headers","div")
@@ -210,29 +213,27 @@ Table.prototype = {
         .style("top","0px")
         .style("position","fixed")
 
-      document.body.onscroll = function() {
-
+      d3.select(window).on('scroll', function() {
         if (table.node().getBoundingClientRect().top < 0) table_fixed.classed("hidden",false)
         else table_fixed.classed("hidden",true)
 
         var widths = []
 
-        table
+        wrap.selectAll(".main")
           .selectAll(".table-headers")
           .selectAll("th")
           .each(function(x,i) {
             widths.push(this.offsetWidth)
           })
 
-        table_fixed
+        wrap.selectAll(".fixed")
           .selectAll(".table-headers")
           .selectAll("th")
           .each(function(x,i) {
             d3.select(this).style("width",widths[i] + "px")
           })
-
         
-      }
+      })
        
 
       this._table_fixed = table_fixed
@@ -263,6 +264,7 @@ Table.prototype = {
 
       var thead = table.selectAll("thead")
         , tbody = table.selectAll("tbody")
+
       if (this.headers() == undefined) return
 
       var options_thead = d3_updateable(thead,"tr.table-options","tr",this.all_headers(),function(x){ return 1})
@@ -369,13 +371,15 @@ Table.prototype = {
 
       d3_updateable(option,"input","input")
         .attr("type","checkbox")
-        .attr("checked",function(x) { return x.selected ? "checked" : undefined })
+        .property("checked",function(x) { 
+          this.checked = x.selected
+          return x.selected ? "checked" : undefined 
+        })
         .attr("disabled",function(x) { return x.locked })
         .on("click", function(x) {
           x.selected = this.checked
           if (x.selected) {
             self.headers().push(x)
-            self.headers()
             return self.draw()
           }
           var indices = self.headers().map(function(z,i) { return z.key == x.key ? i : undefined  }) 
@@ -438,13 +442,23 @@ Table.prototype = {
 
       td.exit().remove()
 
-      d3_updateable(rows,"td.option-header","td",false,function() { return 1})
+      var o = d3_updateable(rows,"td.option-header","td",false,function() { return 1})
         .classed("option-header",true)
         .style("width","70px")
+        .style("text-align","center")
+
+
+      d3_updateable(o,"a","a")
+        .style("font-weight","bold")
+        .html(self.option_text())
+        .on("click",function(x) {
+          self.on("expand").bind(this.parentNode.parentNode)(this.parentNode.parentNode.__data__)
+        })
 
 
 
     }
+  , option_text: function(val) { return accessor.bind(this)("option_text",val) }
   , render: function(k,fn) {
       if (fn == undefined) return this._renderers[k] || false
       this._renderers[k] = fn
@@ -463,6 +477,11 @@ Table.prototype = {
 
       return this
 
+    }
+  , on: function(action, fn) {
+      if (fn === undefined) return this._on[action] || function() {};
+      this._on[action] = fn;
+      return this
     }
   , d3: d3
 }
