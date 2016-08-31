@@ -28,7 +28,7 @@ class QueueInsert():
     def column_list_to_string(self, db_connection):
         cols = list(self.columns_list)
         cols_str = ",".join(cols)
-        cols_str = db_connection.escape_string(query_params['columns'])
+        cols_str = db_connection.escape_string(cols_str)
         return cols_str
 
     def build_subquery_w_values(self,values, db_connection):
@@ -41,13 +41,13 @@ class QueueInsert():
         db_connection = self.crushercache.create_connection()
         query_params = {}
         query_params['table_name'] = self.table_name
-        query_params['columns'] = self.columns_list_to_string(cr)
+        query_params['columns'] = self.column_list_to_string(db_connection)
         query_params['subquery'] = self.build_subquery_w_values(values_dict, db_connection)
         return query_params
 
     def process_message(self, data):
         assert(all(col in data.keys() for col in columns_as_list))
-        query_params = self.create_db_dict(values)
+        query_params = self.create_db_dict(data)
         self.crushercache.execute(QUERY % query_params)
 
 if __name__ == '__main__':
