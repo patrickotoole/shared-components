@@ -408,6 +408,9 @@
 
         var rows = d3_splat(tbody,"tr","tr",data,function(x,i){ return String(sortby.key + x[sortby.key]) + i })
           .order()
+          .on("click",function(x) {
+            self.on("expand").bind(this)(x)
+          })
 
         rows.exit().remove()
 
@@ -430,6 +433,7 @@
 
             return renderer.bind(this)(x)
           })
+
           
 
         td.exit().remove()
@@ -443,9 +447,7 @@
         d3_updateable(o,"a","a")
           .style("font-weight","bold")
           .html(self.option_text())
-          .on("click",function(x) {
-            self.on("expand").bind(this.parentNode.parentNode)(this.parentNode.parentNode.__data__)
-          })
+          
 
 
 
