@@ -13,6 +13,7 @@ import table from 'table'
 import render_filter from './render_filter'
 import state from './state'
 import share from './share'
+import time_series from './timeseries'
 
 
 
@@ -161,7 +162,7 @@ FilterDashboard.prototype = {
 
         _lower.selectAll(".vendor-domains-bar-desc").remove()
 
-
+        _lower.datum(data)
 
         var t = table.table(_lower)
           .data(selected)
@@ -193,11 +194,135 @@ FilterDashboard.prototype = {
                 .style("padding-top","10px")
                 .style("padding-bottom","10px")
 
+              var dd = this.parentElement.__data__.full_urls.filter(function(x) { return x.domain == d.key})
 
 
-              d3_splat(td,"div","div",d.urls.slice(0,10))
-                .text(String)
+              var p = []
+              d3.range(0,24).map(function(t) {
+                ["0","20","40"].map(function(m) {
+                  if (t < 10) p.push("0" + String(t)+String(m))
+                  else p.push(String(t)+String(m))
+
+                })
+              })
+
+              var rolled = d3.nest()
+                .key(function(k) { return k.hour + k.minute })
+                .rollup(function(v) {
+                  return v.reduce(function(p,c) {
+                    p.articles[c.url] = true
+                    p.views += c.count
+                    p.sessions += c.uniques
+                    return p
+                  },{ articles: {}, views: 0, sessions: 0})
+                })
+                .entries(dd)
+                .map(function(x) {
+                  Object.keys(x.values).map(function(y) {
+                    x[y] = x.values[y]
+                  })
+                  x.article_count = Object.keys(x.articles).length
+                  x.hour = x.key.slice(0,2)
+                  x.minute = x.key.slice(2)
+                  x.value = x.article_count
+                  x.key = p.indexOf(x.key)
+                  //delete x['articles']
+                  return x
+                })
+
                 
+
+              var timing = d3_updateable(td,"div.timing","div",rolled)
+                .classed("timing",true)
+                .style("height","60px")
+                .style("width","60%")
+                .style("text-transform","uppercase")
+                .style("font-weight","bold")
+                .style("font-size",".9em")
+                .style("margin-bottom","45px")
+                .style("line-height","35px")
+                .style("display","inline-block")
+                .text("Articles Accessed")
+
+              var details = d3_updateable(td,"div.details","div")
+                .classed("details",true)
+                .style("width","40%")
+                .style("display","inline-block")
+                .style("vertical-align","top")
+
+
+
+
+              d3_updateable(details,"span","span")
+                .style("text-transform","uppercase")
+                .style("font-weight","bold")
+                .style("font-size",".9em")
+                .style("margin-bottom","10px")
+                .style("line-height","35px")
+                .text("Details")
+
+
+              var articles = d3_updateable(td,"div.articles","div")
+                .classed("articles",true)
+
+              d3_updateable(articles,"span","span")
+                .style("text-transform","uppercase")
+                .style("font-weight","bold")
+                .style("font-size",".9em")
+                .style("margin-bottom","10px")
+                .style("line-height","35px")
+                .text("Top articles")
+                
+              var drawArticles = function(urls) {
+
+                var a = d3_splat(articles,"div","div",urls)
+                  .text(String)
+                  .exit().remove()
+
+              }
+
+              var drawDetails = function(x) {
+
+                var time = d3_updateable(details,".time","div",x)
+                  .classed("time",true)
+                  .text("Time: " + x.hour + ":" + (x.minute.length == 1 ? "0" + x.minute : x.minute ) )
+
+
+                var button = d3_updateable(details,".button","a",false,function() { return 1})
+                  .classed("button",true)
+                  .style("padding","5px")
+                  .style("border-radius","5px")
+                  .style("border","1px solid #ccc")
+                  .style("margin","auto")
+                  .style("margin-top","10px")
+                  .style("display","block")
+                  .style("width","50px")
+                  .style("text-align","center")
+
+                  .text("Reset")
+                  .on("click",reset)
+
+              }
+
+              var reset = function() {
+                details.selectAll(".time").remove()
+                details.selectAll(".button").remove()
+
+                drawArticles(d.urls.slice(0,10))
+              }
+              reset() 
+
+              time_series(timing)
+                .data({"key":"y","values":timing.data()[0]})
+                .on("hover",function(x) {
+                  drawArticles(Object.keys(x.articles).slice(0,10))
+                  drawDetails(x)
+
+                })
+                .draw()
+
+               
+               
                 
             })
             .hidden_fields(["urls","percent_unique","sample_percent_norm"])
