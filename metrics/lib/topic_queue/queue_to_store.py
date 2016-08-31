@@ -3,7 +3,6 @@ from pykafka import KafkaClient
 from pykafka.simpleconsumer import OwnedPartition, OffsetType
 from link import lnk
 import ujson
-import queue_helpers as helpers
 
 QUERY = """INSERT INTO %(table_name)s (%(columns)s) %(subquery)s"""
 SUB_QUERY = "values ( %s )"
@@ -46,7 +45,7 @@ class QueueInsert():
         return query_params
 
     def process_message(self, data):
-        assert(all(col in data.keys() for col in columns_as_list))
+        assert(all(col in data.keys() for col in self.columns_list))
         query_params = self.create_db_dict(data)
         self.crushercache.execute(QUERY % query_params)
 
