@@ -67,6 +67,7 @@ Filter.prototype = {
       
       var filter = d3_splat(filters,".filter","div",false,function(x) { return JSON.stringify(x) })
         .classed("filter",true)
+        .style("line-height","33px")
       
       filter.exit().remove()
       
@@ -144,7 +145,6 @@ Filter.prototype = {
       var select = d3_updateable(filter,"select.field","select",fields)
         .classed("field",true)
         .style("width","165px")
-        .style("margin-bottom","10px")
         .on("change", function(x,i) {
           value.field = this.selectedOptions[0].__data__
           
@@ -225,9 +225,10 @@ Filter.prototype = {
 
       d3_updateable(filter,"input.value","input")
         .classed("value",true)
-        .style("margin-bottom","10px")
         .style("padding-left","10px")
         .style("width","150px")
+        .style("line-height","1em")
+
         .attr("value", value.value)
         .on("keyup", function(x){
           var t = this
@@ -243,11 +244,13 @@ Filter.prototype = {
   , filterFooter: function(wrap) {
       var footer = d3_updateable(wrap,".filter-footer","div")
         .classed("filter-footer",true)
-        .style("margin-bottom","20px")
+        .style("margin-bottom","35px")
+        .style("margin-top","10px")
+
 
       var self = this
       
-      d3_updateable(footer,".add","div")
+      d3_updateable(footer,".add","a")
         .classed("add",true)
         .style("font-weight","bold")
         .html("&#65291;")
@@ -256,7 +259,10 @@ Filter.prototype = {
         .style("line-height","24px")
         .style("text-align","center")
         .style("border-radius","15px")
-        .style("border","1px solid grey")
+        .style("border","1.5px solid #428BCC")
+        .style("cursor","pointer")
+        .style("display","inline-block")
+
         .on("click",function(x) {
         
           var d = self._target.datum()

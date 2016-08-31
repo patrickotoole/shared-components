@@ -65,7 +65,8 @@
 
     var subtitle = d3_updateable(_top, ".subtitle-filter","div")
       .classed("subtitle-filter",true)
-      .attr("style","padding-left:10px; text-transform: uppercase; font-weight: bold; line-height: 24px; margin-bottom: 10px;")
+      .attr("style","padding-left:10px; text-transform: uppercase; font-weight: bold; line-height: 33px; background: #e3ebf0; margin-bottom:10px")
+      
 
     d3_updateable(subtitle,"span.first","span")
       .text("Users matching " )
@@ -195,6 +196,7 @@
         self._state.set("filter",x)
 
 
+
         var y = x.map(function(z) {
           return { 
               "field": mapping[z.field]
@@ -242,7 +244,8 @@
 
     self._logic_filter
       .on("update")(filters)
-      //._target.selectAll(".filters-wrapper").style("padding-left","10px")
+
+    
   }
 
   function accessor(attr, val) {
