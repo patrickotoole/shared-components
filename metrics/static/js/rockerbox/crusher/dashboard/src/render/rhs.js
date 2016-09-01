@@ -1,5 +1,6 @@
 import * as transform from '../data_helpers'
 import * as ui_helper from '../helpers'
+import share from '../share'
 
 export default function render_rhs(data) {
 
