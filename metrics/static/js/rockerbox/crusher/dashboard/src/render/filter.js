@@ -4,11 +4,24 @@ export default function render_filter(_top,_lower) {
   var self = this
     , data = self._data;
 
-  var _top = d3_updateable(_top,".filter-wrapper","div",false, function(x) { return 1})
+  var wrapper = d3_updateable(_top,".filter-wrapper","div",false, function(x) { return 1})
     .classed("filter-wrapper",true)
     .classed("hidden",false)
 
-  var save = d3_updateable(_top, ".save-subtitle-filter","div")
+  d3_updateable(_top, "h3.summary-head","h3")
+    .classed("summary-head",true)
+    .style("margin-bottom","15px")
+    .style("margin-top","-5px")
+    .text("Search Summary")
+
+  var summary = d3_updateable(_top,".search-summary","div",false, function(x) { return 1})
+    .classed("search-summary",true)
+    .style("min-height","60px")
+
+  //var _top = wrapper
+
+
+  var save = d3_updateable(wrapper, ".save-subtitle-filter","div")
     .classed("save-subtitle-filter",true)
     .classed("hidden",true)
     .attr("style","padding-left:10px; text-transform: uppercase; font-weight: bold; line-height: 24px; margin-bottom: 10px;")
@@ -56,7 +69,7 @@ export default function render_filter(_top,_lower) {
 
 
 
-  var subtitle = d3_updateable(_top, ".subtitle-filter","div")
+  var subtitle = d3_updateable(wrapper, ".subtitle-filter","div")
     .classed("subtitle-filter",true)
     .attr("style","padding-left:10px; text-transform: uppercase; font-weight: bold; line-height: 33px; background: #e3ebf0; margin-bottom:10px")
     
@@ -114,7 +127,7 @@ export default function render_filter(_top,_lower) {
   //debugger
   var categories = this._data.category.map(function(x) {x.key = x.parent_category_name; return x})
 
-  self._logic_filter = filter.filter(_top)
+  self._logic_filter = filter.filter(wrapper)
     .fields(Object.keys(mapping))
     .ops([
         [{"key": "equals.category"}]
@@ -188,8 +201,6 @@ export default function render_filter(_top,_lower) {
 
       self._state.set("filter",x)
 
-
-
       var y = x.map(function(z) {
         return { 
             "field": mapping[z.field]
@@ -227,9 +238,12 @@ export default function render_filter(_top,_lower) {
         self._data.display_categories = data.display_categories
 
         self.render_right(data)
+        self.render_summary(_top,data)
         self.render_view(_lower,data)
       } else {
         self.render_right(data)
+        self.render_summary(_top,self._data)
+
         self.render_view(_lower,self._data)
       }
     })

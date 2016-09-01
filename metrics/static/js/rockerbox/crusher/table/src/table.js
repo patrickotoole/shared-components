@@ -48,7 +48,7 @@ var EXAMPLE_DATA = {
 
 export function Table(target) {
   var CSS_STRING = String(function() {/*
-.table-wrapper { }
+.table-wrapper { margin-bottom:40px }
 .table-wrapper tr { height:33px}
 .table-wrapper tr th { border-right:1px dotted #ccc } 
 .table-wrapper tr th:last-of-type { border-right:none } 
@@ -150,6 +150,8 @@ Table.prototype = {
       }
       return value
     }
+  , skip_option: function(val) { return accessor.bind(this)("skip_option",val) }
+
   , title: function(val) { return accessor.bind(this)("title",val) }
   , row: function(val) { return accessor.bind(this)("render_row",val) }
   , header: function(val) { return accessor.bind(this)("render_header",val) }
@@ -241,6 +243,7 @@ Table.prototype = {
 
       var thead = d3_updateable(table_fixed,"thead","thead")
 
+      if (!this._skip_option)
       var table_button = d3_updateable(wrapper,".table-option","a")
         .classed("table-option",true)
         .style("position","absolute")
@@ -271,7 +274,8 @@ Table.prototype = {
         .classed("hidden", !this._show_options)
         .classed("table-options",true)
 
-      var headers_thead = d3_updateable(thead,"tr.table-headers","tr",this.headers().concat([{key:"spacer", width:"70px"}]),function(x){ return 1})
+      var h = this._skip_option ? this.headers() : this.headers().concat([{key:"spacer", width:"70px"}])
+      var headers_thead = d3_updateable(thead,"tr.table-headers","tr",h,function(x){ return 1})
         .classed("table-headers",true)
 
 
@@ -450,6 +454,8 @@ Table.prototype = {
         .classed("option-header",true)
         .style("width","70px")
         .style("text-align","center")
+ 
+      if (this._skip_option) o.classed("hidden",true) 
 
 
       d3_updateable(o,"a","a")
