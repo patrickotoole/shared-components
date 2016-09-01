@@ -4,7 +4,7 @@ from link import lnk
 QUERY = "select advertiser from topic_runner_segments"
 TS_URL = "/crusher/pattern_search/timeseries_only?search={}"
 
-class wqBackfill():
+class WQBackfill():
 
     def __init__(self, connectors):
         self.connectors = connectors
@@ -62,8 +62,13 @@ class wqBackfill():
             cache_date = date.split(" ")[0]
             run_backfill(advertiser, segment, cache_date, connectors=self.connectors)
 
+def runner_segment(advertiser, segment, connectors):
+    import ipdb; ipdb.set_trace()
+    wqb = WQBackfill(connectors)
+    wqb.run_segment(advertiser, segment)
+
 def runner(**kwargs):
-    wqb = wqBackfill(kwargs['connectors'])
+    wqb = WQBackfill(kwargs['connectors'])
     if kwargs['advertiser']:
         segments = wqb.get_segments(kwargs['advertiser'])
         for segment in segments:
@@ -90,6 +95,6 @@ if __name__ == "__main__":
     connectors['zk'] = zk
     connectors['crusher_wrapper'] = crusher
 
-    wqb = wqBackfill(connectors)
+    wqb = WQBackfill(connectors)
     advertisers = wqb.get_advertisers()
     wqb.run_advertisers(advertisers)

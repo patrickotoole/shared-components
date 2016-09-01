@@ -2,10 +2,12 @@ from check_helper import *
 from link import lnk
 import logging
 import pandas
+import lib.caching.fill_cassandra as fc
+from kazoo.client import KazooClient
 
 URL = "/crusher/v1/visitor/{}/cache?url_pattern={}"
 URL2 = "/crusher/v1/visitor/{}/cache?url_pattern={}&filter_id={}"
-TS_URL = "/crusher/pattern_search/timeseries_only?search={}"
+TS_URL = "/crusher/pattern_search/timeseries_only?search={}&filter_id={}"
 
 def check_cache_endpoint(crusher, pattern, udf):
     url = URL2.format(udf, pattern['url_pattern'][0], pattern['action_id'])
@@ -17,9 +19,28 @@ def check_cache_endpoint(crusher, pattern, udf):
         data ={}
     return data
 
+def is_low_volume(crusher, pattern):
+    import ipdb; ipdb.set_trace()
+    low_volume = False
+    total_visits=0
+    count_of_zero = 0
+    try:
+        url = TS_URL.format(pattern['url_pattern'][0], pattern['action_id'])
+        _resp=crusher.get(url)
+        data = _resp.json
+        for day in data['results']:
+            total_visits += day['visits']
+            if day['visits']==0:
+                count_of_zero+=1
+        if total_visits<50 or count_of_zero > 14:
+            low_volume = True
+    except Exception as e:
+        print str(e)
+    return low_volume
+
 def check_cassandra_cache(crusher, pattern, max_date):
     import datetime
-    url = TS_URL.format(pattern['url_pattern'][0])
+    url = TS_URL.format(pattern['url_pattern'][0], pattern['action_id'])
     allcached = True
     try:
         _resp=crusher.get(url)
@@ -39,14 +60,14 @@ def check_cassandra_cache(crusher, pattern, max_date):
 
 def get_max_cassandra_date(crusher, pattern):
     import datetime
-    url = TS_URL.format(pattern['url_pattern'][0])
+    url = TS_URL.format(pattern['url_pattern'][0], pattern['action_id'])
     max_date=False
     try:
         _resp=crusher.get(url)
         data = _resp.json
         data2 = data['results']
-        for x in data2:
-            x['date']=datetime.datetime.strptime(x['date'], '%Y-%m-%d %H:%M:%S')
+        #for x in data2:
+        #    x['date']=datetime.datetime.strptime(x['date'], '%Y-%m-%d %H:%M:%S')
         data_sorted = sorted(data2, key=lambda x : x['date'], reverse=True)
         for day in data_sorted:
             if day['views'] ==0 and not max_date:
@@ -90,58 +111,97 @@ def send_to_me_slack(message):
     url = 'https://hooks.slack.com/services/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'
     requests.post(url, data=ujson.dumps({"text":message}))
 
+
+class CheckRunner():
+    def __init__(self, advertiser, connectors):
+        self.connectors = connectors
+        self.advertiser = advertiser
+        self.crusher = connectors['crusher_wrapper']
+        self.crusher.user = "a_{}".format(advertiser)
+        self.crusher.authenticate()
+        self.segments = get_segments(crusher, advertiser)
+        self.total =0
+        self.passed = 0
+        self.passedOne=False
+        self.passedTwo = False
+        self.failed=[]
+        self.low_volume_segments=[]
+        self.udf_list = ['domains', 'domains_full', 'before_and_after', 'model', 'hourly', 'sessions', 'keywords']
+    
+
+    def check_segments(self):
+        max_date = get_max_cassandra_date(crusher, self.segments['featured']) 
+        for segment in self.segments['all']:
+            self.total+=1
+            for udf in self.udf_list:
+                data = check_cache_endpoint(crusher, segment, udf)
+                if check_response(data):
+                    print "Pass for advertiser %s and pattern %s and udf %s" % (advertiser, segment, udf)
+                    self.passedOne=True
+                else:
+                    print "Fail"
+                    print "Failed for advertiser %s and pattern %s and udf %s" % (advertiser, segment, udf)
+                    self.passedOne=False
+                    break
+            cached = check_cassandra_cache(crusher, segment, max_date)
+            if cached:
+                print "Pass for advertiser %s and pattern %s and udf %s" % (advertiser, segment, 'Cassandra cache')
+                self.passedTwo = True
+            else:
+                import ipdb; ipdb.set_trace()
+                fc.runner_segment(advertiser, segment['url_pattern'][0], self.connectors)
+                low_volume = is_low_volume(crusher, segment)
+                if low_volume:
+                    print "low volume segment"
+                    print "Decrement number of segments as this has too low of volume to count"
+                    print "Low VOLUME for advertiser %s and pattern %s and udf %s" % (advertiser, segment, 'Cassandra cache')
+                    self.low_volume_segments.append(segment['url_pattern'][0])
+                    self.total-=1
+                else:
+                    print "Fail"
+                    print "Failed for advertiser %s and pattern %s and udf %s" % (advertiser, segment, 'Cassandra cache')
+
+            #increment
+            if self.passedOne and self.passedTwo:
+                self.passed+=1
+            else:
+                if segment['url_pattern'][0] not in self.low_volume_segments:
+                    self.failed.append(segment['url_pattern'][0])
+            #reset
+            self.passedOne=False
+            self.passedTwo = False
+
+        return total,passed
+
+
 if __name__ == "__main__":
 
     db = lnk.dbs.crushercache
     df = db.select_dataframe("select advertiser from topic_runner_segments")
     crusher = lnk.api.crusher
-   
-    udf_list = ['domains', 'domains_full', 'before_and_after', 'model', 'hourly', 'sessions', 'keywords']
+  
+    zk = KazooClient(hosts="zk1:2181")
+    zk.start()
+    connectors={}
+    db2 = lnk.dbs.rockerbox
+    cassandra = lnk.dbs.cassandra
+    connectors['crushercache'] = db
+    connectors['db'] = db2
+    connectors['cassandra'] = cassandra
+    connectors['zk'] = zk
+    connectors['crusher_wrapper'] = crusher
+ 
     report = pandas.DataFrame()
     for adv in df.iterrows():
         advertiser = adv[1]['advertiser']
-        crusher.user = "a_{}".format(advertiser)
-        crusher.authenticate()
-        segments = get_segments(crusher, advertiser)
-        total =0
-        passed = 0
-        passedOne=False
-        passedTwo = False
-        failed=[]
+        Crunner = CheckRunner(advertiser,connectors)
+        total, passed = Crunner.check_segments()
         #run featured cassandra date max
-        max_date = get_max_cassandra_date(crusher, segments['featured'])
-        for segment in segments['all']:
-            total+=1
-            for udf in udf_list:
-                data = check_cache_endpoint(crusher, segment, udf)
-                if check_response(data):
-                    print "Pass for advertiser %s and pattern %s and udf %s" % (advertiser, segment, udf)
-                    passedOne=True
-                else:
-                    print "Fail"
-                    print "Failed for advertiser %s and pattern %s and udf %s" % (advertiser, segment, udf)
-            cached = check_cassandra_cache(crusher, segment, max_date)
-            if cached:
-                print "Pass for advertiser %s and pattern %s and udf %s" % (advertiser, segment, 'Cassandra cache')
-                passedTwo = True
-            else:
-                print "Fail"
-                print "Failed for advertiser %s and pattern %s and udf %s" % (advertiser, segment, 'Cassandra cache')
-            
-            #increment
-            if passedOne and passedTwo:
-                passed+=1
-            else:
-                failed.append(segment['url_pattern'][0])
-            #reset
-            passedOne=False
-            passedTwo = False
         print "For advertiser: %s There are %s segments of which %s passed tests" % (advertiser, total, passed)
         msg1 = "For advertiser: %s There are %s segments of which %s passed tests" % (advertiser, total, passed)
         print "these failed %s" % failed
         msg2 = "these failed %s for %s" % (failed, advertiser)
-        #send_to_slack(msg1)
         report = report.append(pandas.DataFrame([{"advertiser":advertiser, "Passed":passed, "Total":total}]))
         send_to_me_slack(msg2)
-    
+    import ipdb; ipdb.set_trace() 
     send_to_slack("```"+report.to_string()+"```")
