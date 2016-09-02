@@ -2130,7 +2130,7 @@
            .classed("title",true)
            .style("text-transform","uppercase")
            .style("padding-left","3px")
-           .text("population")
+           .text("all")
 
 
          
@@ -2150,7 +2150,7 @@
            .classed("title",true)
            .style("text-transform","uppercase")
            .style("padding-left","3px")
-           .text("sample")
+           .text("filtered")
 
 
          var details = d3_updateable(q,".deets","div")
@@ -2590,8 +2590,6 @@
            .style("float","none")
            .style("margin","auto")
 
-
-
          this._right = d3_updateable(this._target,".right","div")
            .classed("right col-md-3",true)
            .style("display","none")
@@ -2620,10 +2618,35 @@
            , _top = topSection(current)
            , _lower = remainingSection(current)
 
-         var head = d3_updateable(_top, "h3","h3")
+
+         var head = d3_updateable(_top, "h3.buttons","h3")
+           .classed("buttons",true)
+           .style("margin-bottom","15px")
+           .style("margin-top","-5px")
+
+         var title = d3_updateable(head,"span.title","span")
+           .classed("title",true)
+
+         var body = d3_updateable(head,"div.body","div")
+           .style("font-size","13px")
+           .style("text-transform","none")
+           .style("color","#333")
+           .style("font-weight","normal")
+           .style("margin-left","175px")
+           .style("padding","25px")
+           .style("margin-bottom","25px")
+           .style("margin-right","175px")
+           .style("background-color","white")
+           .classed("body hidden",true)
+
+
+
+         d3_updateable(_top, "h3.filter","h3")
+           .classed("filter",true)
            .style("margin-bottom","15px")
            .style("margin-top","-5px")
            .text("Filter activity")
+
 
          var right_pull = d3_updateable(head,".pull-right","span")
            .classed("pull-right header-buttons", true)
@@ -2696,6 +2719,41 @@
            .style("text-decoration","none")
            .html("<span class='fa-calendar fa'></span><span class='hover-show'>Schedule</span>")
            .on("click",schedule_report)
+
+         d3_updateable(right_pull,".help","a")
+           .datum(this._data)
+           .classed("help",true)
+           .style("font-size","12px")
+           .style("font-weight","bold")
+           .style("padding-left","10px")
+           .style("padding-right","10px")
+           .style("display","inline-block")
+           .style("line-height","22px")
+           .style("text-decoration","none")
+           .html("<span class='fa-question-circle fa'></span><span class='hover-show'>Help</span>")
+           .on("click",function() {
+             //title.text("What is Hindsight?")
+             body.classed("hidden",false).html(
+               "<h3 style='text-align:center;margin-bottom:15px;color:#333'>What is Hindsight?</h3>" +
+               "Hindsight lets you see what <b>your users</b> are doing when they are not on your website. Hindsight lets you build custom audience segmentation using this offsite activity to inform how you can:<br><br><ul>" + 
+               "<li> build a <b>media plan</b> that matches the behavior of your audience</li>" +
+               "<li> generate a <b>content brief</b> to inform your content marketing</li>" +
+               "<li> <b>optimize your site</b> so that it matches the behavior and interests of your audience</li>" + 
+               "</ul>"
+             )
+             
+             var confirm_row = d3_updateable(body,".confirm-row","div")
+               .classed("confirm-row",true)
+               .style("text-align","center")
+               .style("margin-top","25px")
+
+             d3_updateable(confirm_row,"a","a")
+               .attr("style","font-size:11px;text-transform:uppercase;font-weight:bold;text-align:center;padding:15px;padding-top:10px;padding-bottom:10px;border-radius:10px;border:1px solid #ccc")
+               .text("Got it!")
+               .on("click",function() { body.classed("hidden",true) })
+
+           })
+
 
 
 

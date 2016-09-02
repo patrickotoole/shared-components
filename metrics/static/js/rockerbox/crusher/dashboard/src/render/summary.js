@@ -214,7 +214,7 @@ export default function(_top,data) {
         .classed("title",true)
         .style("text-transform","uppercase")
         .style("padding-left","3px")
-        .text("population")
+        .text("all")
 
 
       
@@ -234,7 +234,7 @@ export default function(_top,data) {
         .classed("title",true)
         .style("text-transform","uppercase")
         .style("padding-left","3px")
-        .text("sample")
+        .text("filtered")
 
 
       var details = d3_updateable(q,".deets","div")
