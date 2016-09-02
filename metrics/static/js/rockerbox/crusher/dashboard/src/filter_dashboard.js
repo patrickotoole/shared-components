@@ -155,6 +155,7 @@ FilterDashboard.prototype = {
         })
 
       d3_updateable(right_pull,".share","a")
+        .datum(this._data)
         .classed("share",true)
         .style("font-size","12px")
         .style("font-weight","bold")
@@ -169,6 +170,7 @@ FilterDashboard.prototype = {
 
 
       d3_updateable(right_pull,".schedule","a")
+        .datum(this._data)
         .classed("schedule",true)
         .style("font-size","12px")
         .style("font-weight","bold")
