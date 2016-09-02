@@ -18,15 +18,19 @@ DATEQUERY = "select date from generic_function_cache where advertiser='%(adverti
 
 def clear_old_cache(**kwargs):
     query_args = {}
-    query_args['advertiser'] = kwargs['advertiser']
-    query_args['action_id'] = kwargs['filter_id']
-    query_args['url_pattern'] = kwargs['pattern']
-    query_args['udf'] = kwargs['udf']
-    count_of_cache = kwargs['connectors']['crushercache'].select_dataframe(CACHEQUERY % query_args)
-    if count_of_cache['count(*)'][0] > 1:
-        date = kwargs['connectors']['crushercache'].select_dataframe(DATEQUERY % query_args)['date'][0] 
-        query_args['date'] = date.strftime('%Y-%m-%d')
-        kwargs['connectors']['crushercache'].execute(CLEARQUERY, query_args)
+    try:
+        query_args['advertiser'] = kwargs['advertiser']
+        query_args['action_id'] = kwargs['filter_id']
+        query_args['url_pattern'] = kwargs['pattern']
+        query_args['udf'] = kwargs['func_name']
+        count_of_cache = kwargs['connectors']['crushercache'].select_dataframe(CACHEQUERY % query_args)
+        if count_of_cache['count(*)'][0] > 1:
+            date = kwargs['connectors']['crushercache'].select_dataframe(DATEQUERY % query_args)['date'][0] 
+            query_args['date'] = date.strftime('%Y-%m-%d')
+            kwargs['connectors']['crushercache'].execute(CLEARQUERY, query_args)
+    except Exception as e:
+        logging.info("Issue with deleting previous item in cache"
+        logging.info(str(e))
 
 def get_crusher_obj(advertiser, base_url, crusher):
     crusher.user = "a_{}".format(advertiser)
