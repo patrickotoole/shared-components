@@ -207,13 +207,15 @@ export default function render_data_view(_lower,data) {
                 .attr("height",height)
   
    
-              d3_updateable(svg,".bar","rect",false,function(x) { return 1})
+              d3_updateable(svg,".bar-1","rect",false,function(x) { return 1})
+                .classed("bar-1",true)
                 .attr("x",0)
                 .attr("width", function(d) {return x(d.pop_percent) })
                 .attr("height", height)
                 .attr("fill","#888")
   
-              d3_updateable(svg,".bar","rect",false,function(x) { return 1})
+              d3_updateable(svg,".bar-2","rect",false,function(x) { return 1})
+                .classed("bar-2",true)
                 .attr("x",0)
                 .attr("y",height/4)
                 .attr("width", function(d) {return x(d.sample_percent_norm) })

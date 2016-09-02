@@ -48,7 +48,6 @@ var EXAMPLE_DATA = {
 
 export function Table(target) {
   var CSS_STRING = String(function() {/*
-.table-wrapper { margin-bottom:40px }
 .table-wrapper tr { height:33px}
 .table-wrapper tr th { border-right:1px dotted #ccc } 
 .table-wrapper tr th:last-of-type { border-right:none } 

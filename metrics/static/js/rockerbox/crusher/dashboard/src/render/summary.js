@@ -136,10 +136,12 @@ export default function(_top,data) {
 
   var summary = d3_updateable(_top,".search-summary","div",false, function(x) { return 1})
     .classed("search-summary",true)
-    .style("min-height","90px")
+    .style("min-height","145px")
 
   var reduced = buildSummaryData(data)
   this._reduced = this._reduced ? this._reduced : buildSummaryData(this._data)
+  this._timeseries = this._timeseries ? this._timeseries : timeseries.prepData(this._data.full_urls)
+
 
   var data_summary = buildSummaryAggregation(reduced,this._reduced)
 
@@ -162,18 +164,142 @@ export default function(_top,data) {
 
   }
 
+  var ts = this._timeseries
 
   var tabs = [
       {"key":"Summary", "values": data_summary, "draw":draw_summary}
-    , {"key": "Timeseries", "values":[], "draw":function(d) {
+    , {"key": "Timing Overview", "values":[], "draw":function(d) {
       var prepped = timeseries.prepData(d.full_urls)
 
       summary.html("")
-      var w = d3_updateable(summary,"div","div")
-        .style("width","50%")
+
+
+
+      var w = d3_updateable(summary,"div.timeseries","div")
+        .classed("timeseries",true)
+        .style("width","60%")
+        .style("display","inline-block")
+        .style("background-color", "#e3ebf0")
+        .style("padding-left", "10px")
+        .style("height","127px")
+
+
+
+      var q = d3_updateable(summary,"div.timeseries-details","div")
+        .classed("timeseries-details",true)
+        .style("width","40%")
+        .style("display","inline-block")
+        .style("vertical-align","top")
+        .style("padding","15px")
+        .style("padding-left","57px")
+        .style("background-color", "#e3ebf0")
+        .style("height","127px")
+
+        
+
+
+
+      var pop = d3_updateable(q,".pop","div")
+        .classed("pop",true)
+
+      d3_updateable(pop,".ex","span")
+        .classed("ex",true)
+        .style("width","20px")
+        .style("height","10px")
+        .style("background-color","grey")
+        .style("display","inline-block")
+
+
+      d3_updateable(pop,".title","span")
+        .classed("title",true)
+        .style("text-transform","uppercase")
+        .style("padding-left","3px")
+        .text("population")
+
+
+      
+      var samp = d3_updateable(q,".samp","div")
+        .classed("samp",true)
+
+      d3_updateable(samp,".ex","span")
+        .classed("ex",true)
+        .style("width","20px")
+        .style("height","10px")
+        .style("background-color","#081d58")
+        .style("display","inline-block")
+
+
+
+      d3_updateable(samp,".title","span")
+        .classed("title",true)
+        .style("text-transform","uppercase")
+        .style("padding-left","3px")
+        .text("sample")
+
+
+      var details = d3_updateable(q,".deets","div")
+        .classed("deets",true)
+      
+
+
+
+      d3_updateable(w,"h3","h3")
+        .text("Filtered versus All Views")
+        .style("font-size","12px")
+        .style("color","#333")
+        .style("line-height","33px")
+        .style("background-color","#e3ebf0")
+        .style("margin-left","-10px")
+        .style("margin-bottom","10px")
+        .style("padding-left","10px")
+
+
+
+      var mappedts = prepped.reduce(function(p,c) { p[c.key] = c; return p}, {})
+
+      var prepped = ts.map(function(x) {
+        return {
+            key: x.key
+          , hour: x.hour
+          , minute: x.minute
+          , value2: x.value
+          , value: mappedts[x.key] ?  mappedts[x.key].value : 0
+        }
+      })
+
+
+
 
       timeseries['default'](w)
         .data({"key":"y","values":prepped})
+        .height(80)
+        .on("hover",function(x) {
+          var xx = {}
+          xx[x.key] = {sample: x.value, population: x.value2 }
+          details.datum(xx)
+
+          d3_updateable(details,".text","div")
+            .classed("text",true)
+            .text("@ " + x.hour + ":" + (x.minute.length > 1 ? x.minute : "0" + x.minute) )
+            .style("display","inline-block")
+            .style("line-height","49px")
+            .style("padding-top","15px")
+            .style("padding-right","15px")
+            .style("font-size","22px")
+            .style("font-weight","bold")
+            .style("width","110px")
+            .style("vertical-align","top")
+            .style("text-align","center")
+
+
+
+
+          d3_updateable(details,".pie","div")
+            .classed("pie",true)
+            .style("display","inline-block")
+            .style("padding-top","15px")
+            .each(function(z) { buildSummaryBlock.bind(this)(function() { return 35 }, x) })
+        })
         .draw()
 
 

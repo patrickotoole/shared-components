@@ -88,6 +88,8 @@ TimeSeries.prototype = {
       return this
     }
   , title: function(val) { return accessor.bind(this)("title",val) }
+  , height: function(val) { return accessor.bind(this)("height",val) }
+
   , draw: function() {
       var wrap = this._target
       var desc = d3_updateable(wrap,".vendor-domains-bar-desc","div")
@@ -110,10 +112,11 @@ TimeSeries.prototype = {
           , count = data.length;
 
 
-        var _sizes = autoSize(wrapper,function(d){return d -10}, function(d){return 60}),
+        var _sizes = autoSize(wrapper,function(d){return d -10}, function(d){return self._height || 60 }),
           gridSize = Math.floor(_sizes.width / 24 / 3);
 
         var valueAccessor = function(x) { return x.value }
+          , valueAccessor2 = function(x) { return x.value2 }
           , keyAccessor = function(x) { return x.key }
 
         var steps = Array.apply(null, Array(count)).map(function (_, i) {return i+1;})
@@ -122,7 +125,8 @@ TimeSeries.prototype = {
         var colors = _colors
 
         var x = d3.scale.ordinal().range(steps)
-          , y = d3.scale.linear().range([_sizes.height, 0 ]);
+          , y = d3.scale.linear().range([_sizes.height, 0 ])
+
 
         var colorScale = d3.scale.quantile()
           .domain([0, d3.max(data, function (d) { return d.frequency; })])
@@ -138,27 +142,38 @@ TimeSeries.prototype = {
         x.domain([0,72]);
         y.domain([0, d3.max(data, function(d) { return Math.sqrt(valueAccessor(d)); })]);
 
-        var bars = d3_splat(svg, ".timing-bar", "rect", data, keyAccessor)
-          .attr("class", "timing-bar")
+        var buildBars = function(data,keyAccessor,valueAccessor,y,c) {
 
- 
-         
-        bars
-          .attr("x", function(d) { return ((keyAccessor(d) - 1) * gridSize ); })
-          .attr("width", gridSize - 1)
-          .attr("y", function(d) { 
-            return y(Math.sqrt( valueAccessor(d) )); 
-          })
-          .attr("fill","#aaa")
-          .attr("fill",function(x) { return colorScale( valueAccessor(x) ) } )
-          .attr("stroke","white")
-          .attr("stroke-width","1px")
-          .attr("height", function(d) { return _sizes.height - y(Math.sqrt( valueAccessor(d) )); })
-          .style("opacity","1")
-          .on("mouseover",function(x){ 
-            self.on("hover").bind(this)(x)
-          })
+          var bars = d3_splat(svg, ".timing-bar" + c, "rect", data, keyAccessor)
+            .attr("class", "timing-bar" + c)
+           
+          bars
+            .attr("x", function(d) { return ((keyAccessor(d) - 1) * gridSize ); })
+            .attr("width", gridSize - 1)
+            .attr("y", function(d) { 
+              return y(Math.sqrt( valueAccessor(d) )); 
+            })
+            .attr("fill","#aaa")
+            .attr("fill",function(x) { return colorScale( keyAccessor(x) + c ) || "grey" } )
+            //.attr("stroke","white")
+            //.attr("stroke-width","1px")
+            .attr("height", function(d) { return _sizes.height - y(Math.sqrt( valueAccessor(d) )); })
+            .style("opacity","1")
+            .on("mouseover",function(x){ 
+              self.on("hover").bind(this)(x)
+            })
 
+        }
+        
+
+        if (data[0].value2) {
+          var  y2 = d3.scale.linear().range([_sizes.height, 0 ])
+          y2.domain([0, d3.max(data, function(d) { return Math.sqrt(valueAccessor2(d)); })]);
+          buildBars(data,keyAccessor,valueAccessor2,y2,"-2")
+        }
+
+
+        buildBars(data,keyAccessor,valueAccessor,y,"")
       
     
       var z = d3.time.scale()
