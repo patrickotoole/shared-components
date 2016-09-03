@@ -6,7 +6,65 @@ import * as timeseries from '../timeseries'
 
 export default function render_data_view(_lower,data) {
 
-      var head = d3_updateable(_lower, "h3","h3")
+      var options = d3_updateable(_lower,".options-view","div")
+        .classed("options-view",true)
+        .style("margin-bottom","35px")
+
+      var _lower = d3_updateable(_lower,".data-view","div")
+        .classed("data-view hidden",true)
+
+      var CSS_STRING = String(function() {/*
+    .options-view { text-align:center }
+    .show-button {
+    width: 190px;
+    text-align: center;
+    line-height: 50px;
+    border-radius: 15px;
+    border: 1px solid #ccc;
+    font-size: 12px;
+    text-transform: uppercase;
+    font-weight: bold;
+    display:inline-block;
+    margin-right:30px;
+      }
+      */})
+    
+      d3_updateable(d3.select("head"),"style#show-css","style")
+        .attr("id","header-css")
+        .text(CSS_STRING.replace("function () {/*","").replace("*/}",""))
+
+      d3_updateable(options, "h3.option-header","h3")
+        .classed("option-header",true)
+        .style("margin-bottom","15px")
+        .style("margin-top","0px")
+        .style("text-align","left")
+        .text("Choose Option")
+
+
+      d3_updateable(options,".show-data-view","a")
+        .classed("show-data-view show-button",true)
+        .text("Explore data")
+        .on("click",function() { _lower.classed("hidden",false) })
+
+      d3_updateable(options,".media-plan-view","a")
+        .classed("media-plan-view show-button",true)
+        .text("Create Media Plan")
+        .on("click",function() { _lower.classed("hidden",false) })
+
+      d3_updateable(options,".generate-content-view","a")
+        .classed("generate-content-view show-button",true)
+        .text("Build Content Brief")
+        .on("click",function() { _lower.classed("hidden",false) })
+
+
+
+
+
+
+
+
+      var head = d3_updateable(_lower, "h3.data-header","h3")
+        .classed("data-header",true)
         .style("margin-bottom","15px")
         .style("margin-top","-5px")
 
