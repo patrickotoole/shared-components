@@ -71,6 +71,7 @@ if __name__ == "__main__":
     define("base_url", default="http://beta.crusher.getrockerbox.com")
     define("parameters", default='{}')
     define("debug", default=False)
+    define("url", default=False)
 
     basicConfig(options={})
 
@@ -90,8 +91,9 @@ if __name__ == "__main__":
     kwargs['base_url'] = options.base_url
     kwargs['debug'] = options.debug
     kwargs['udfs'] = [options.udf] if options.udf else ['domains', 'domains_full', 'before_and_after', 'model', 'hourly','sessions']
+    kwargs['url'] =options.url
     
-    if kwargs['pattern']:
+    if kwargs['pattern'] or kwargs['url']:
         UC.run_segment(**kwargs)
     else:
         UC.run_advertiser(**kwargs)

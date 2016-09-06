@@ -111,6 +111,25 @@ class UDFRunner(BaseRunner):
             Q = REPLACE2
             self.connectors['crushercache'].execute(Q, (self.advertiser, pattern, func_name, compressed_data, now_date, self.action_id))
 
+    def exclude_domain(self, advertiser, url):
+        ARTIFACT1 = "select json from artifacts where advertiser = '%s' and key_name ='exclude_domains'"
+        ARTIFACT2 = "select json from artifacts where advertiser is null and key_name ='exclude_domains'"
+        ARTIFACT11 = "update artifacts set json='%s' where advertiser = '%s' and key_name ='exclude_domains'"
+        ARTIFACT12 = "insert into artifacts (json, advertiser, key_name) values ('%s' , '%s' , 'exclude_domains')"
+        db_connection = self.connectors['crushercache'].create_connection()
+        url = db_connection.escape_string(url)
+        json_obj = self.connectors['crushercache'].select_dataframe(ARTIFACT1 % advertiser)
+        if len(json_obj) >0:
+            urls = json_obj['json'][0]
+            urls = urls[:-1] + ",\"" + url + "\"]"
+            self.connectors['crushercache'].execute(ARTIFACT11 % (urls, advertiser))
+        else:
+            json_obj = self.connectors['crushercache'].select_dataframe(ARTIFACT2)
+            urls = json_obj['json'][0]
+            urls = urls[:-1] + ",\"" +url + "\"]"
+            self.connectors['crushercache'].execute(ARTIFACT12 % (urls, advertiser))
+            
+
 def runner(**kwargs):
     #add other parameters options that can be added on to url request
     connectors = kwargs['connectors']
@@ -126,6 +145,11 @@ def runner(**kwargs):
     pattern = kwargs['pattern']
     identifiers=kwargs.get('identifiers',"test")
     filter_id = kwargs.get('filter_id',False)
+
+    if func_name == 'exclude_domain':
+        UR.exclude_domain(kwargs['advertiser'], kwargs['url'])
+        import sys
+        sys.exit(0)
 
     if not filter_id:
         UR.getActionIDPattern(pattern, UR.crusher)

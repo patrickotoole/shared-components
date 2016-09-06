@@ -9,10 +9,10 @@ from ..search.pattern.base_visitors import VisitorBase
 
 GET = "select json from artifacts where advertiser = '%s' and key_name='%s'"
 GETDEFAULT = "select json from artifacts where key_name='%s' and advertiser is null"
-POST = "insert into artifacts (advertiser, key_name, json) values ('%s', '%s', '%s')"
-POSTDEFAULT = "insert into artifacts (key_name, json) values ('%s', '%s')"
-PUT = "update artifacts set json = '%s' where advertiser = '%s' and key_name = '%s'"
-DELETE = "update artifacts set deleted=1 where advertiser='%s' and key_name = '%s'"
+POST = "insert into artifacts (advertiser, key_name, json) values (%s,%s, %s)"
+POSTDEFAULT = "insert into artifacts (key_name, json) values (%s, %s)"
+PUT = "update artifacts set json = %s where advertiser = %s and key_name = %s"
+DELETE = "update artifacts set deleted=1 where advertiser=%s and key_name = %s"
 
 class ArtifactsHandler(VisitorBase):
 
@@ -38,12 +38,12 @@ class ArtifactsHandler(VisitorBase):
 
     @decorators.deferred
     def post_from_db(self, advertiser, artifact,default, json):
-        if default == "true" or default == "true" or default == "TRUE":
+        if default == "true" or default == "True" or default == "TRUE":
             default_bool = True
         else:
             default_bool = False
         try:
-            if default:
+            if default_bool:
                 json = self.crushercache.execute(POST, (advertiser, artifact, json))
             else:
                 json = self.crushercache.execute(POSTDEFAULT, (artifact, json))
@@ -60,22 +60,6 @@ class ArtifactsHandler(VisitorBase):
         self.write(ujson.dumps(data))
         self.finish()
 
-    @decorators.deferred
-    def put_from_db(self, advertiser, artifact, json):
-        try:
-            data = self.crushercache.execute(PUT, (json, advertiser, artifact))
-            result = {"success":"True"}
-        except:
-            result = {"success":"False"}
-        return result
-
-    @custom_defer.inlineCallbacksErrors
-    def put_db(self, advertiser, artifact, json):
-        data = yield self.put_from_db(advertiser, artifact)
-        if data['success']=="False":
-            self.set_status(400)
-        self.write(ujson.dumps(data))
-        self.finish()
 
     @decorators.deferred
     def delete_from_db(self, advertiser, artifact):
@@ -98,6 +82,7 @@ class ArtifactsHandler(VisitorBase):
     @tornado.web.asynchronous
     @decorators.error_handling
     def get(self):
+        import ipdb;ipdb.set_trace()
         advertiser = self.current_advertiser_name
         artifact = self.get_argument("artifact", False)
         include_defaults = self.get_argument("default",False)
@@ -115,16 +100,6 @@ class ArtifactsHandler(VisitorBase):
         default = data['artifact']['default']
         json = data['artifact']['json']
         self.post_db(advertiser, artifact, default, json)
-
-    @tornado.web.authenticated
-    @tornado.web.asynchronous
-    @decorators.error_handling
-    def put(self):
-        data = ujson.loads(self.request.body)
-        advertiser = self.current_advertiser_name
-        artifact = data['artifact']['key_name']
-        json = data['artifact']['json']
-        self.put_db(advertiser, artifact, json)
 
     @tornado.web.authenticated
     @tornado.web.asynchronous
