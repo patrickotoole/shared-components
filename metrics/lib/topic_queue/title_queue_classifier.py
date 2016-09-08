@@ -6,6 +6,7 @@ from link import lnk
 import ujson
 from classify import Classifier
 import time
+import logging
 
 if __name__ == '__main__':
     client = KafkaClient(hosts="10.128.248.211:2181/v0_8_1")
@@ -19,4 +20,4 @@ if __name__ == '__main__':
             current_topic = classifier.classify(data['title'])
             data['topic'] = current_topic
             producer.send_message(ujson.dumps(data))
-            print data
+            logging.info(data)
