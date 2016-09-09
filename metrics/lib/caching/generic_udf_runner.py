@@ -147,9 +147,9 @@ def runner(**kwargs):
     filter_id = kwargs.get('filter_id',False)
 
     if func_name == 'exclude_domain':
-        UR.exclude_domain(kwargs['advertiser'], kwargs['url'])
-        import sys
-        sys.exit(0)
+        exclude_url = kwargs.get('url',False) or kwargs['parameters']['url']
+        UR.exclude_domain(kwargs['advertiser'], exclude_url)
+        raise Exception("Successful exit from domain exclusion")
 
     if not filter_id:
         UR.getActionIDPattern(pattern, UR.crusher)
