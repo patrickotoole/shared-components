@@ -1,6 +1,8 @@
 ## Delorean Streaming Application
 
-This application provides a streaming endpoint for what is submitted to appnexus as part of the batch segment log. 
+This application provides live insight into the number of users that are being added to each segment, per second. 
+
+Note: although this shows up the the second information, users are actually added approximately every 5 minutes as part of a batch flush. Users are deduplicated at that time so actual volume of users added per minute will be lower.
 
 ### Usage
 
@@ -8,6 +10,12 @@ The application has an HTML and a websocket route. The websocket route provides 
 
 ### TODO
 
-- Add segment value to the grouping rather than just grouping by segment
-- Pull information from MYSQL table and join this information on so we can search by domain / placement id rather than segment name
+- Add unit tests to functions in helpers.py
 
+- Add "segment value" to the grouping rather than just grouping by segment
+- Expand UI to include "segment value"
+
+- Add "appnexus name" from mysql (rockerbox.delorean_segments) to segment + value
+- Expand UI to include "appnexus name"
+
+- Make ui filtering work off of "appnexus name" rather than segment_id

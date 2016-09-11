@@ -53,6 +53,7 @@ margin-top:-1px;
 .panel .custom-alert {
   color:red
 }
+.segments div { display:inline-block }
 </style>
 
 
@@ -65,6 +66,12 @@ margin-top:-1px;
   <br>
   <hr>
   <br>
+  <div class="segments">
+    <div style="width:100px">segment_id</div>
+    <div style="width:630px">timeseries</div>
+    <div style="width:150px">users per minute</div>
+
+  </div>
   <div id="advertiser-content"> </div>
 </div>
 
@@ -127,7 +134,11 @@ function drawBuffers(buffers) {
 
   row.exit().remove()
 
-  d3_updateable(row,"span","span")
+  d3_updateable(row,"div.segment_id","div")
+    .classed("segment_id",true)
+    .style("width","100px")
+    .style("display","inline-block")
+
     .text(function(x) {return x.key })
 
   var values = d3_updateable(row,".values","svg")
@@ -140,7 +151,8 @@ function drawBuffers(buffers) {
 
   var sums = d3_updateable(row,".sum","div")
     .classed('sum',true)
-    .style('margin-left',"15px")
+    .style("width","100px")
+    .style('margin-left',"20px")
     .style("display","inline-block")
     .text(function(x) { return d3.sum(x.value,function(z) { return z.count }) })
 
