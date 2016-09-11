@@ -95,14 +95,16 @@ class StreamingHandler(StreamingBase,tornado.websocket.WebSocketHandler):
                      dicts[key] = self.mask_select_convert(df,masks,key)
 
             try:
-                dicts["served_imps"] = [ 
-                    dict(imp.items() + lookup.get(imp['ip_address']).items()) 
-                    for imp in dicts["served_imps"]
-                ]
-            except:
-                print lookup
-                print reader
-                print "EXCEPT"
+                if dicts.get("served_imps",False):
+                    dicts["served_imps"] = [ 
+                        dict(imp.items() + lookup.get(imp['ip_address']).items()) 
+                        for imp in dicts.get("served_imps",[])
+                    ]
+            except Exception as e:
+                #print lookup
+                #print reader
+                #print "EXCEPT"
+                logging.info(e)
                 pass
              
             
