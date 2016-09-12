@@ -13,12 +13,18 @@ class ArtifactsDatabase():
 
     def get_advertiser_artifact(self,advertiser, artifact):
         df = self.connectors['crushercache'].select_dataframe(GET % (advertiser, artifact))
-        data = df['json'][0]
+        try:
+            data = df['json'][0]
+        except:
+            raise Exception("Artifact does not exist")
         return data
 
     def get_default_artifact(self,artifact):
         df = self.connectors['crushercache'].select_dataframe(GETDEFAULT % (artifact))
-        data = df['json'][0]
+        try:
+            data = df['json'][0]
+        except:
+            raise Exception("Artifact does not exist")
         return data
 
     def get_from_db(self,advertiser,artifact):
