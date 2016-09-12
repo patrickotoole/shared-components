@@ -2,7 +2,7 @@ pyhs2
 gensim
 scipy
 scikit-learn
-paramiko
+paramiko==1.16.0
 tornado
 mock==1.0.1
 vincent
