@@ -1,4 +1,4 @@
-
+import topic_runner_stream as trs
 
 class BaseClassifier():
     
@@ -11,8 +11,10 @@ class BaseClassifier():
 
 class LSIClassifier(BaseClassifier):
 
-    def __init__(self):
-        self.use_default = True
+    def __init__(self,csv_location, lsi_location):
+        self.topic_streamer=trs.TopicStreamer(csv_location=csv_location,pickle_location=lsi_location)
+        comp_obj, df = self.topic_streamer.load()
+        self.topic_streamer.create_topic_vectors(comp_obj, df)
 
     def default_classifier(self,topic):
         return "No topic"

@@ -18,6 +18,12 @@ def process_message(message, producer, classifier):
 
 
 if __name__ == '__main__':
+    from lib.report.utils.options import define, options, parse_command_line
+    from lib.report.utils.loggingutils import basicConfig
+    define("csv_location",  default="")
+    define("lsi_location",  default="")
+    basicConfig(options={}) 
+    parse_command_line()
     client = KafkaClient(hosts="10.128.248.211:2181/v0_8_1")
     topic = client.topics['domain_titles']
     producer = kafka_stream.KafkaStream('topic_titles',"slave17:9092",True,False,False,10,1,False)
