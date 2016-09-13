@@ -1,6 +1,15 @@
 
 
-class Classifier():
+class BaseClassifier():
+    
+    def __init__(self, connectors={}):
+        self.connectors = connectors
+
+    def classify(self, url, title):
+        return "No Topic"
+
+
+class LSIClassifier(BaseClassifier):
 
     def __init__(self):
         self.use_default = True
@@ -11,10 +20,7 @@ class Classifier():
     def classifier(self,topic):
         return ""
 
-    def classify(self, topic):
-        if self.use_default:
-            topic = self.default_classifier(topic)
-        else:
-            topic = self.classifier(topic)
+    def classify(self, url, title):
+        topic = self.topic_streamer.classify(url, title)
         return topic
             

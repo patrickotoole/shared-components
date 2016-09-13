@@ -7,8 +7,6 @@ import numpy as np
 import logging
 import sys
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-
 class TopicStreamer(BaseRunner):
 
     def __init__(self, csv_location="rec_df.csv", pickle_location='LSImodelobject.p', connectors={}):
@@ -87,7 +85,6 @@ class TopicStreamer(BaseRunner):
                     vectr = self.topic_vectors[i]
         topic = self.lookup(vectr)
         return topic
-
 
 
 
