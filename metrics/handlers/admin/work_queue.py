@@ -18,7 +18,7 @@ class WorkQueueHandler(tornado.web.RequestHandler):
     def get_content(self,data):
         
         def default(self,data):
-            o = json.dumps([{"class":"script","type":"select","key":"script","values":data}])
+            o = json.dumps([{"class":"script","type":"select","key":"script","values":data,"adv":["bluecore","moz"]}])
 
             paths = """
             <div class="col-md-3">
@@ -83,6 +83,8 @@ var draw_parameters = function(target,params) {
 }
 
 var select_target = content.append("div").classed("selector",true)
+
+var select_target_adv = content.append("div").classed("selector_adv",true)
 
 var params_target = content.append("div").classed("params",true)
 
@@ -209,6 +211,27 @@ data.map(function(item){
     .append("option")
     .text(function(x){
       return x.key
+    })
+
+  var labeladv = select_target_adv.selectAll("div.label." + cls)
+    .data([item])
+    .enter()
+    .append("div")
+    .classed("label adv",true)
+    .style("color","black")
+    .text(function(x){return x.key })
+
+  var input_adv = select_target_adv.selectAll(type + "." + cls)
+    .data([item])
+    .enter()
+    .append(type)
+    .classed(cls,true)
+    .style("width","160px")
+
+  var option = input_adv.selectAll("option").data(function(x){return x.adv}).enter()
+    .append("option")
+    .text(function(x){
+      return x
     })
 
   var desc = select_target.selectAll("div.desc." + cls)
