@@ -1,0 +1,213 @@
+{% autoescape None %}
+<link rel="stylesheet" type="text/css" href="http://getbootstrap.com/dist/css/bootstrap.min.css">
+<script type="text/javascript" src="/static/js/d3.js"></script>
+<script type="text/javascript" src="/static/js/d3_helpers.js"></script>     
+<script type="text/javascript" src="/static/js/rockerbox/dataobjects.js"></script>       
+<style>
+.min-height {font-size:0px}
+.axis path,
+.axis line {
+    fill: none;
+    stroke: #ccc;
+    shape-rendering: crispEdges;
+}
+
+.axis text {
+    font-family: sans-serif;
+    font-size: 6px;
+}
+.mg-chart-title {
+  font-size:16px;
+  padding-top:14px;
+  margin-top:0px;
+  text-align:left;
+  margin-bottom:15px
+}
+.table {
+  font-size:13px
+}
+.chart-table-wrapper tr {
+  cursor:pointer
+}
+.legend {
+  text-align: right;
+  font-size: 11px;
+  margin-top: 35px;
+  padding: 0px;
+  height: 0px;
+  position: absolute;
+  right: 20px;
+}
+.panel.limited {margin:0px; border-radius:0px}
+.panel.limited  .panel-heading {
+transform: rotate(90deg);
+transform-origin: left top 0;
+width: 162px;
+position:absolute;
+margin-top:-1px;
+}
+.panel.limited .panel-body {
+  padding-bottom: 15px;
+}
+
+.panel .custom-alert {
+  color:red
+}
+.segments div { display:inline-block }
+</style>
+
+
+
+ 
+<div class='container'> 
+
+  <h4> Delorean Segment Volume</h4>
+  Filter by segment id: <input id='filter'></input>
+  <br>
+  <hr>
+  <br>
+  <div class="segments">
+    <div style="width:100px">segment_id</div>
+    <div style="width:630px">timeseries</div>
+    <div style="width:150px">users per minute</div>
+
+  </div>
+  <div id="advertiser-content"> </div>
+</div>
+
+<script>
+
+var d3_updateable = function(target,selector,type,data,joiner) {
+  var type = type || "div"
+  var updateable = target.selectAll(selector).data(
+    function(x){return data ? [data] : [x]},
+    joiner || function(x){return [x]}
+  )
+
+  updateable.enter()
+    .append(type)
+
+  return updateable
+}
+
+var d3_splat = function(target,selector,type,data,joiner) {
+  var type = type || "div"
+  var updateable = target.selectAll(selector).data(
+    data || function(x){return x},
+    joiner || function(x){return x}
+  )
+
+  updateable.enter()
+    .append(type)
+
+  return updateable
+}
+
+var filter = {
+  filter: function() { return true }
+}
+
+d3.select("#filter").on("change", function() {
+  var v = this.value
+  if (v.length == 0) filter.filter = function() { return true }
+  filter.filter = function(x) { 
+    return x.key.indexOf(v) > -1 
+  }
+})
+
+function buildBuffer(starting) {
+  return d3.range(60).map(function(t){
+    return {"time": t + starting, "count":0 }
+  })
+}
+
+function drawBuffers(buffers) {
+
+  var entries = d3.entries(buffers)
+    .sort(function(p,c) { return d3.descending(p.key|0, c.key|0) })
+    .filter(filter.filter)
+
+
+  var row = d3_splat(d3.select("#advertiser-content"),".buffer-row","div",entries,function(x) { return x.key })
+    .classed("buffer-row",true)
+    .order()
+
+  row.exit().remove()
+
+  d3_updateable(row,"div.segment_id","div")
+    .classed("segment_id",true)
+    .style("width","100px")
+    .style("display","inline-block")
+
+    .text(function(x) {return x.key })
+
+  var values = d3_updateable(row,".values","svg")
+    .classed('values',true)
+    .style('margin-left',"15px")
+    .style('display',"inline-block")
+    .attr("width","600px")
+    .attr("height","30px")
+    
+
+  var sums = d3_updateable(row,".sum","div")
+    .classed('sum',true)
+    .style("width","100px")
+    .style('margin-left',"20px")
+    .style("display","inline-block")
+    .text(function(x) { return d3.sum(x.value,function(z) { return z.count }) })
+
+
+
+
+  var value = d3_splat(values,".value","rect",function(x) { 
+        x.scale = d3.scale.linear().domain([0,d3.max(x.value,function(x) { return x.count })]).range([50,0])
+        return x.value 
+      }, function(x) { return x.time })
+    .classed("value",true)
+    .attr("x", function(x,i) { return i*10 })
+    .attr("width", function(x,i) { return 10 })
+    .attr("y", function(x) { return this.parentNode.__data__.scale(x.count) }) 
+    .attr("height", function(d) { return 50 - this.parentNode.__data__.scale(d.count); })
+    .text(function(x) {return x.count})
+
+  value.exit().remove()
+
+
+
+}
+
+!(function(){
+  var t = 60
+    , segments = {}
+
+  var ws = new WebSocket("ws://" + location.host + "/websocket?id=" + parseInt(Math.random()*100000));
+  ws.onopen = function() {
+    ws.send("initialize");
+    ws.send("start");
+  };
+  ws.onmessage = function(data) {
+    var j = JSON.parse(data.data)
+    var updates = {}
+
+    j.segment_log.map(function(seg) {
+      segments[seg.segment] = segments[seg.segment] || buildBuffer(t-60)
+      updates[seg.segment] = {"time":t+1,"count":seg.uid}
+    })
+
+    Object.keys(segments).map(function(k) {
+      segments[k].shift()
+      segments[k].push(updates[k] || {"time":t+1,"count":0})
+    })
+
+
+    drawBuffers(segments)
+    t++;
+  }
+  ws.onclose = function() {
+    console.log("disconnected");
+  }
+  
+})()
+
+</script>
+
