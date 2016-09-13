@@ -30,7 +30,6 @@ class GraphiteSender():
 class GraphiteCounter():
     def __init__(self):
         self.counter_dict = {"kafka_remove":0, "kafka_send":0, "defer_create":0, "response":0}
-
     def bump(self, what_to_bump):
         self.counter_dict[what_to_bump]+=1
     def deck(self, what_to_dek):
