@@ -23,7 +23,7 @@ define("log_kafka", default=False, type=bool)
 define("app_name", default="")
 
 
-logging.getLogger("kafka.consumer").setLevel(logging.WARNING)
+#logging.getLogger("kafka.consumer").setLevel(logging.WARNING)
 
 from helpers import *
 from streaming_handler import *
