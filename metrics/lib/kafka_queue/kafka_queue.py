@@ -57,7 +57,7 @@ class KafkaQueue(object):
             logging.info("Kafka connecting: %s for %s" % (hosts_str,topic))
             
             client = KafkaClient(hosts_str,timeout=10)
-            consumer = SimpleConsumer(client, group, topic, max_buffer_size=4096*1024*10)
+            consumer = SimpleConsumer(client, group, topic, max_buffer_size=4096*1024*10, auto_commit_every_n=15000, auto_commit_every_t=15000)
             return consumer
         except Exception as e:
             import time
