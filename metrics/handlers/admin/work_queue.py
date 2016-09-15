@@ -16,9 +16,12 @@ class WorkQueueHandler(tornado.web.RequestHandler):
 
     @decorators.formattable
     def get_content(self,data):
-        
+              
         def default(self,data):
-            o = json.dumps([{"class":"script","type":"select","key":"script","values":data,"adv":["bluecore","moz"]}])
+            if type(data)==tuple:
+                advertiser = data[1]
+                data = data[0]
+            o = json.dumps([{"class":"script","type":"select","key":"script","values":data,"adv":advertiser}])
 
             paths = """
             <div class="col-md-3">
@@ -120,9 +123,12 @@ submit_target.append("button")
   .on("click",function(x){
 
    var d = params_target.datum()
-
+   var adv_div = select_target_adv[0][0].children[1]
+    console.log(adv_div.options[adv_div.selectedIndex].value)
+    
     var obj = {
-      "udf": d.key
+      "udf": d.key,
+      "advertiser":adv_div.options[adv_div.selectedIndex].value
     }
 
     params_target.selectAll(".param").each(function(y){
@@ -213,15 +219,15 @@ data.map(function(item){
       return x.key
     })
 
-  var labeladv = select_target_adv.selectAll("div.label." + cls)
+  var labeladv = select_target_adv.selectAll("div.label."+"adv")
     .data([item])
     .enter()
     .append("div")
     .classed("label adv",true)
     .style("color","black")
-    .text(function(x){return x.key })
+    .text("advertiser")
 
-  var input_adv = select_target_adv.selectAll(type + "." + cls)
+  var input_adv = select_target_adv.selectAll(type + ".adv")
     .data([item])
     .enter()
     .append(type)
@@ -234,7 +240,7 @@ data.map(function(item){
       return x
     })
 
-  var desc = select_target.selectAll("div.desc." + cls)
+  var desc = select_target.selectAll("div.desc.adv" )
     .data([item])
     .enter()
     .append("div")
@@ -278,9 +284,11 @@ data.map(function(item){
         import hashlib
 
         df = self.db.select_dataframe("select name `key`, parameters, description from rpc_function_details where active = 1 and deleted = 0")
+        df_adv = self.db.select_dataframe("select advertiser from topic_runner_segments")
         df['parameters'] = df['parameters'].map(ujson.loads)
-        
-        self.get_content(df.to_dict("records"))
+        advertisers = df_adv.to_dict("record")
+        advertisers = [x['advertiser'] for x in advertisers]
+        self.get_content((df.to_dict("records"),advertisers))
          
     def get_complete(self,q):
         try:
