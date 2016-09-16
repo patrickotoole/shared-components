@@ -22,7 +22,7 @@ if __name__ == "__main__":
     crusher = lnk.api.crusher
 
     for i,row in joined.iterrows():
-        crusher.base_url = "http://slave7:8888"
+        crusher.base_url = "http://hindsight.getrockerbox.com"
         crusher.user = "a_" + row['pixel_source_name']
         crusher.authenticate()
         crusher.post("/share",row.json)
