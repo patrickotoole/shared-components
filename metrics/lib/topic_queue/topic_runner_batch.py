@@ -11,14 +11,14 @@ class TopicBatch(BaseRunner):
         self.connectors = connectors
 
 
-    def transform_and_save(self, data):
+    def transform_and_save(self, data, use_title):
         from topic.prep_data import prep_data
         from topic.lsi import LSIComparision
         from topic.w2v import Word2VecComparision
 
         from topic.cluster import cluster, common_words, freq_words, word_importance
         
-        prepped, freq = prep_data(data)#.head(10000))
+        prepped, freq = prep_data(data, use_title)#.head(10000))
         docs = len(prepped)
         idf = { i:docs/j for i,j in freq.items()}
         logging.info("finished word prep")
@@ -127,10 +127,20 @@ def runner( **kwargs):
     atr = TopicBatch(connectors)
 
     data = connectors['crushercache'].select_dataframe("select url, title from url_title")
-    atr.transform_and_save(data)
+    atr.transform_and_save(data, kwargs.get("use_title",True))
 
 if __name__ == "__main__":
+    from lib.report.utils.loggingutils import basicConfig
+    from lib.report.utils.options import define
+    from lib.report.utils.options import options
+    from lib.report.utils.options import parse_command_line
+
+    define("use_title", type=bool, default=True)
+
+    basicConfig(options={})
+
+    parse_command_line()
     connectors = TopicBatch.get_connectors()
-    runner(connectors=connectors)
+    runner(use_title=options.use_title,connectors=connectors)
 
 

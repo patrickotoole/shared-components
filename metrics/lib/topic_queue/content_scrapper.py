@@ -47,15 +47,20 @@ class ScrapperMessage():
     def get(self,url):
         try:
             _resp = requests.get((URL % url), auth=('rockerbox', 'rockerbox'))
-            CS.bump("response")
+            self.CS.bump("response")
             data = _resp.json()
             title = data['result']['title']
         except Exception as e:
             logging.info(str(e))
             logging.info("could not get title")
             title = None
-        CS.deck("defer_create")
+        self.CS.deck("defer_create")
         return (title, url)
+
+    def get_without_scrapper(self,url):
+        self.CS.bump("response")
+        self.CS.deck("defer_create")
+        return ("No title", url)
 
     def send(self,result):
         title, url = result
@@ -66,8 +71,8 @@ class ScrapperMessage():
             self.CS.bump("kafka_send")
             logging.info("Sent")
 
-    def proccess_message(self, message):
-        CS.bump("kafka_remove")
+    def proccess_message(self, message, use_scrapper):
+        self.CS.bump("kafka_remove")
         message_object = json.loads(message.value)
         try:
             url = message_object['bid_request']['bid_info']['url']
@@ -75,17 +80,20 @@ class ScrapperMessage():
             count.update({url})
             if limit ==25:
                 logging.info(url)
-                defr = threads.deferToThread(self.get, url)
-                CS.bump("defer_create")
+                if use_scrapper:
+                    defr = threads.deferToThread(self.get, url)
+                else:
+                    defr = threads.deferToThread(self.get_without_scrapper, url)
+                self.CS.bump("defer_create")
                 defr.addCallback(self.send)
         except Exception as e:
             logging.info(str(e))
 
-def run(consumer, count, CS, producer):
+def run(consumer, count, CS, producer, use_scrapper):
     SM = ScrapperMessage(count, CS, producer)
     for message in consumer:
         if message is not None:
-            SM.proccess_message(message)
+            SM.proccess_message(message, use_scrapper)
 
 if __name__ == '__main__':
 
@@ -108,6 +116,7 @@ if __name__ == '__main__':
     define("batch_time",type=int, default=1)
     define("use_parse",type=bool, default=False)
     define("test", type=bool, default=False)
+    define("use_scrapper", type=bool, default=True)
 
     parse_command_line()
 
@@ -127,10 +136,11 @@ if __name__ == '__main__':
     consumer = topic.get_simple_consumer()
     connectors = {"crushercache":lnk.dbs.crushercache}
     
+    use_scrapper = options.use_scrapper
     count = Counter()
     CS = GraphiteCounter()
     GS = GraphiteSender(CS)
     from twisted.internet import reactor
-    reactor.callInThread(run, consumer, count, CS, producer)
+    reactor.callInThread(run, consumer, count, CS, producer, use_scrapper)
     reactor.callInThread(GS.start)
     reactor.run()
