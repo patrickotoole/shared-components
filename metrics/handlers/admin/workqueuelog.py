@@ -14,4 +14,7 @@ class WQLog(tornado.web.RequestHandler):
 
     @tornado.web.asynchronous
     def get(self, rest_of_url):
-        self.render("workqueue/streaming_log.html")
+        if "apps/all" in str(rest_of_url):
+            self.render("workqueue/streaming_all_log.html")
+        else:
+            self.render("workqueue/streaming_log.html")

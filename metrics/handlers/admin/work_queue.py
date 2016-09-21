@@ -16,9 +16,12 @@ class WorkQueueHandler(tornado.web.RequestHandler):
 
     @decorators.formattable
     def get_content(self,data):
-        
+              
         def default(self,data):
-            o = json.dumps([{"class":"script","type":"select","key":"script","values":data}])
+            if type(data)==tuple:
+                advertiser = data[1]
+                data = data[0]
+            o = json.dumps([{"class":"script","type":"select","key":"script","values":data,"adv":advertiser}])
 
             paths = """
             <div class="col-md-3">
@@ -84,6 +87,8 @@ var draw_parameters = function(target,params) {
 
 var select_target = content.append("div").classed("selector",true)
 
+var select_target_adv = content.append("div").classed("selector_adv",true)
+
 var params_target = content.append("div").classed("params",true)
 
 var submit_target = content.append("div").classed("submit",true)
@@ -118,9 +123,12 @@ submit_target.append("button")
   .on("click",function(x){
 
    var d = params_target.datum()
-
+   var adv_div = select_target_adv[0][0].children[1]
+    console.log(adv_div.options[adv_div.selectedIndex].value)
+    
     var obj = {
-      "udf": d.key
+      "udf": d.key,
+      "advertiser":adv_div.options[adv_div.selectedIndex].value
     }
 
     params_target.selectAll(".param").each(function(y){
@@ -211,7 +219,28 @@ data.map(function(item){
       return x.key
     })
 
-  var desc = select_target.selectAll("div.desc." + cls)
+  var labeladv = select_target_adv.selectAll("div.label."+"adv")
+    .data([item])
+    .enter()
+    .append("div")
+    .classed("label adv",true)
+    .style("color","black")
+    .text("advertiser")
+
+  var input_adv = select_target_adv.selectAll(type + ".adv")
+    .data([item])
+    .enter()
+    .append(type)
+    .classed(cls,true)
+    .style("width","160px")
+
+  var option = input_adv.selectAll("option").data(function(x){return x.adv}).enter()
+    .append("option")
+    .text(function(x){
+      return x
+    })
+
+  var desc = select_target.selectAll("div.desc.adv" )
     .data([item])
     .enter()
     .append("div")
@@ -255,9 +284,11 @@ data.map(function(item){
         import hashlib
 
         df = self.db.select_dataframe("select name `key`, parameters, description from rpc_function_details where active = 1 and deleted = 0")
+        df_adv = self.db.select_dataframe("select advertiser from topic_runner_segments")
         df['parameters'] = df['parameters'].map(ujson.loads)
-        
-        self.get_content(df.to_dict("records"))
+        advertisers = df_adv.to_dict("record")
+        advertisers = [x['advertiser'] for x in advertisers]
+        self.get_content((df.to_dict("records"),advertisers))
          
     def get_complete(self,q):
         try:
