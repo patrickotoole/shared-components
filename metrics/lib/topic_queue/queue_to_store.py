@@ -79,7 +79,7 @@ if __name__ == '__main__':
             try:
                 QI.process_message(data)
                 import time
-                time.sleep(1)
+                time.sleep(0.1)
             except Exception as e:
                 print str(e)
 

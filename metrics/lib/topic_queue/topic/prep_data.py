@@ -108,14 +108,16 @@ def noun_bigrams_factory(bigrams):
 
 
 
-def prep_data(df):
+def prep_data(df, use_title):
     from collections import Counter
 
     assert("url" in df.columns)
 
     co = Counter()
-    #df['words'] = df.url.map(parse_words)
-    df['words'] = df.title.map(parse_words)
+    if use_title:
+        df['words'] = df.title.map(parse_words)
+    else:
+        df['words'] = df.url.map(parse_words)
 
     bigrams = df.words.map(ngrams)
     bi = Counter()
