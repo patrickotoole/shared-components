@@ -29,6 +29,7 @@ from helpers import *
 from streaming_handler import *
 from index_handler import *
 from handlers import streaming
+from link import lnk
 
 from lib.kafka_queue import KafkaQueue
 
@@ -38,11 +39,16 @@ if __name__ == '__main__':
 
     parse_command_line()
 
+    db = lnk.dbs.rockerbox
+    appnexus_names = db.select_dataframe("SELECT appnexus_segment_id as segment, appnexus_name from delorean_segment_view").drop_duplicates().reset_index(drop=True)
+    appnexus_names['segment'] = appnexus_names['segment'].apply(str)
+
     connectors = {
         "segment_log": KafkaQueue(mock_connect=False, topic="segment_log",transform=parse_segment_log),
         "buffers": {
             "segment_log": streaming.segment_log_buffer
-        }
+        },
+        "appnexus_names": appnexus_names
     }
 
     routes = [

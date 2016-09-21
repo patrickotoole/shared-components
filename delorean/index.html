@@ -62,15 +62,18 @@ margin-top:-1px;
 <div class='container'> 
 
   <h4> Delorean Segment Volume</h4>
-  Filter by segment id: <input id='filter'></input>
+  Filter by appnexus name: <input id='filter'></input>
+  <input id='prev_page' type="button" value="Prev Page"></input>
+  <input id='next_page' type="button" value="Next Page"></input>
   <br>
   <hr>
   <br>
   <div class="segments">
-    <div style="width:100px">segment_id</div>
-    <div style="width:630px">timeseries</div>
-    <div style="width:150px">users per minute</div>
-
+    <div style="width:80px">seg id</div>
+    <div style="width:50px">seg val</div>
+    <div style="width:500px">timeseries</div>
+    <div style="width:80px">users / min</div>
+    <div style="width:400px">appnexus name</div>
   </div>
   <div id="advertiser-content"> </div>
 </div>
@@ -109,10 +112,19 @@ var filter = {
 
 d3.select("#filter").on("change", function() {
   var v = this.value
+  cur_page = 1
   if (v.length == 0) filter.filter = function() { return true }
   filter.filter = function(x) { 
-    return x.key.indexOf(v) > -1 
+    return x.value.appnexus_name.indexOf(v) > -1;
   }
+})
+
+d3.select("#prev_page").on("click", function() {
+  cur_page = (cur_page - 1 < 1) ? 1 : cur_page - 1
+})
+
+d3.select("#next_page").on("click", function() {
+  cur_page = (cur_page + 1 >= num_pages) ? num_pages : cur_page + 1
 })
 
 function buildBuffer(starting) {
@@ -121,59 +133,90 @@ function buildBuffer(starting) {
   })
 }
 
+var num_pages = 1
+var cur_page = 1
+var rows_per_page = 40
+
 function drawBuffers(buffers) {
 
   var entries = d3.entries(buffers)
-    .sort(function(p,c) { return d3.descending(p.key|0, c.key|0) })
+    .sort(function(p,c) { return d3.descending(p.key.split(':')[0]|0, c.key.split(':')[0]|0) })
     .filter(filter.filter)
 
+  var num_rows = Object.keys(entries).length
+  num_pages = Math.ceil(num_rows / rows_per_page)
+  var row_min = ((cur_page - 1) * rows_per_page < 0) ? 0 : (cur_page - 1) * rows_per_page
+  var row_max = (cur_page * rows_per_page > num_rows) ? num_rows : cur_page * rows_per_page
+
+  entries = entries.filter(function(d, i) {
+      return (i >= row_min && i < row_max)
+  })
+
+  pageBuffer(entries)
+}
+
+function pageBuffer(entries) {
+  var entries = d3.nest().key(function(x) { return x.value.segment }).entries(entries)
 
   var row = d3_splat(d3.select("#advertiser-content"),".buffer-row","div",entries,function(x) { return x.key })
     .classed("buffer-row",true)
+    .style("width","1140px")
+    .style("display","inline-block")
     .order()
 
   row.exit().remove()
 
-  d3_updateable(row,"div.segment_id","div")
+  d3_updateable(row,".segment_id","div")
     .classed("segment_id",true)
-    .style("width","100px")
+    .style("width","80px")
     .style("display","inline-block")
+    .style("padding-top","15px")
+    .text(function(x) {return x.key.split(':')[0] })
 
-    .text(function(x) {return x.key })
+  var segment_value_container = d3_splat(row,".segment_value_container","div",function(x) { return x.values },function(x) { return x.key })
+    .classed('segment_value_container',true)
+    .style("width","1040px")
+    .style("display","inline-block")
+    .style("float","right")
 
-  var values = d3_updateable(row,".values","svg")
+  d3_updateable(segment_value_container,".segment_values","div")
+    .classed('segment_values',true)
+    .style("width","50px")
+    .style("display","inline-block")
+    .text(function(x) {return x.value.segment_value })
+
+  var values = d3_updateable(segment_value_container,".values","svg")
     .classed('values',true)
     .style('margin-left',"15px")
     .style('display',"inline-block")
-    .attr("width","600px")
+    .attr("width","480px")
     .attr("height","30px")
     
-
-  var sums = d3_updateable(row,".sum","div")
+  d3_updateable(segment_value_container,".sum","div")
     .classed('sum',true)
-    .style("width","100px")
+    .style("width","80px")
     .style('margin-left',"20px")
     .style("display","inline-block")
-    .text(function(x) { return d3.sum(x.value,function(z) { return z.count }) })
-
-
-
+    .text(function(x) { return d3.sum(x.value.updates,function(z) { return z.count }) })
 
   var value = d3_splat(values,".value","rect",function(x) { 
-        x.scale = d3.scale.linear().domain([0,d3.max(x.value,function(x) { return x.count })]).range([50,0])
-        return x.value 
+        x.scale = d3.scale.linear().domain([0,d3.max(x.value.updates,function(x) { return x.count })]).range([50,0])
+        return x.value.updates 
       }, function(x) { return x.time })
     .classed("value",true)
-    .attr("x", function(x,i) { return i*10 })
-    .attr("width", function(x,i) { return 10 })
+    .attr("x", function(x,i) { return i*8 }) 
+    .attr("width", function(x,i) { return 8 })
     .attr("y", function(x) { return this.parentNode.__data__.scale(x.count) }) 
     .attr("height", function(d) { return 50 - this.parentNode.__data__.scale(d.count); })
     .text(function(x) {return x.count})
 
   value.exit().remove()
 
-
-
+  d3_updateable(segment_value_container,".appnexus_name","div")
+    .classed('appnexus_name',true)
+    .style("width","380px")
+    .style("display","inline-block")
+    .text(function(x) {return x.value.appnexus_name})
 }
 
 !(function(){
@@ -190,15 +233,19 @@ function drawBuffers(buffers) {
     var updates = {}
 
     j.segment_log.map(function(seg) {
-      segments[seg.segment] = segments[seg.segment] || buildBuffer(t-60)
-      updates[seg.segment] = {"time":t+1,"count":seg.uid}
+      var seg_ID_Value = seg.segment + ":" + seg.segment_value
+      segments[seg_ID_Value] = segments[seg_ID_Value] || {"segment":0,"segment_value":0,"appnexus_name":"","updates":[{}]}
+      segments[seg_ID_Value].segment = seg.segment || ""
+      segments[seg_ID_Value].segment_value = seg.segment_value || ""
+      segments[seg_ID_Value].appnexus_name = seg.appnexus_name || ""
+      segments[seg_ID_Value].updates = (segments[seg_ID_Value].updates.length < 60) ? buildBuffer(t-60) : segments[seg_ID_Value].updates
+      updates[seg_ID_Value] = updates[seg_ID_Value] || {"time": t+1,"count":seg.uid}
     })
 
     Object.keys(segments).map(function(k) {
-      segments[k].shift()
-      segments[k].push(updates[k] || {"time":t+1,"count":0})
+      segments[k].updates.shift()
+      segments[k].updates.push(updates[k] || {"time":t+1,"count":0})
     })
-
 
     drawBuffers(segments)
     t++;
