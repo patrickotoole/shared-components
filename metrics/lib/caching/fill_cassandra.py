@@ -1,10 +1,14 @@
 from lib.cassandra_cache.run import *
 from link import lnk
+import logging
+import sys
+
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 QUERY = "select advertiser from topic_runner_segments"
 TS_URL = "/crusher/pattern_search/timeseries_only?search={}"
 
-class wqBackfill():
+class WQBackfill():
 
     def __init__(self, connectors):
         self.connectors = connectors
@@ -38,7 +42,7 @@ class wqBackfill():
                 if day['uniques']==0 or day['visits']==0 or day['views']==0:
                     missing.append(day['date'])
         except Exception as e:
-            print str(e)
+            logging.info(str(e))
         return missing
 
     def run_advertisers(self,advertisers):
@@ -57,13 +61,17 @@ class wqBackfill():
     def run_segment(self, advertiser, segment):
         missing = self.check_cassandra_cache(segment)
         if not missing:
-            print "Segment %s is fully cached" % segment
+            logging.info("Segment %s is fully cached" % segment)
         for date in missing:
             cache_date = date.split(" ")[0]
             run_backfill(advertiser, segment, cache_date, connectors=self.connectors)
 
+def runner_segment(advertiser, segment, connectors):
+    wqb = WQBackfill(connectors)
+    wqb.run_segment(advertiser, segment)
+
 def runner(**kwargs):
-    wqb = wqBackfill(kwargs['connectors'])
+    wqb = WQBackfill(kwargs['connectors'])
     if kwargs['advertiser']:
         segments = wqb.get_segments(kwargs['advertiser'])
         for segment in segments:
@@ -90,6 +98,6 @@ if __name__ == "__main__":
     connectors['zk'] = zk
     connectors['crusher_wrapper'] = crusher
 
-    wqb = wqBackfill(connectors)
+    wqb = WQBackfill(connectors)
     advertisers = wqb.get_advertisers()
     wqb.run_advertisers(advertisers)

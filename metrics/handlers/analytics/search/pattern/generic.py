@@ -21,9 +21,9 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
     
     LEVELS = {
                 "l1":
-                    ["uid_urls", "domains_full", "artifacts"],
+                    ["uid_urls", "domains_full"],
                 "l2":
-                    ["domains", "urls", "pixel"],
+                    ["domains", "urls", "pixel", "artifacts"],
                 "l3":
                     ["url_to_action", "idf", "corpus", "idf_hour"],
                 "l4":
@@ -87,15 +87,17 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
             },
             "artifacts":{
                 "func": "defer_get_artifacts",
-                "args":["advertiser"]
+                "args":["domains_full", "advertiser"]
             }
         }
 
     @decorators.deferred
-    def defer_get_artifacts(self, advertiser):
+    def defer_get_artifacts(self, domains_full_df, advertiser):
         Q1 = "select key_name, json from artifacts where advertiser = '%s' and active=1 and deleted=0"
         Q2 = "select key_name, json from artifacts where advertiser is null and active=1 and deleted=0"
-        Q3 = "select url, word_index, topic from action_topics where advertiser = '%s'"
+        
+        Q3 = "select url, topic from url_title WHERE url in (%(urls)s)"
+        
         Q4 = "select category, idf, pct_users from category_idf"
         Q5 = "select category, hour, idf, pct_users from category_idf_hour"
         
@@ -108,10 +110,14 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
         for js in json.iterrows():
             results[js[1]['key_name']] = ujson.loads(js[1]['json'])
         #Topic Artifacts
-        topics_from_db = self.crushercache.select_dataframe(Q3 % advertiser)
+        url_set = domains_full_df['url']
+        url_set = [self.crushercache.escape_string(i.encode("utf-8")) for i in url_set ]
+        url_set = self.remove_hex(set(url_set))
+        urls = "'" + "','".join(url_set) + "'"
+        topics_from_db = self.crushercache.select_dataframe(Q3 % {"urls":urls})
         topic_js = {}
-        for topic_item in topics_from_db.iterrows():
-            topic_js[topic_item[1]['url']] = {'topic': topic_item[1]['topic'], 'word_index': topic_item[1]['word_index']}
+        for top in topics_from_db.iterrows():
+            topic_js[top[1]['url']] = {"topic":top[1]['topic']}
         results['topics'] = topic_js
         #category artifacts
         category_idf = self.crushercache.select_dataframe(Q4)
