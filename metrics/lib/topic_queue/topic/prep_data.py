@@ -32,11 +32,32 @@ def parse_words(d):
     last = dd.split("/")[-1]
         
     words = [k for j in last.split("-") for k in j.split("_")]
-    words = [wrd for wrd in last.split(" ")]
     words = [w.split(".")[0] for w in words if not w.isdigit()]
     words = [w for w in words if len(w) > 2 and len(w) < 14]
     #words = [w for w in words if w not in STOP_WORDS]
     
+    return words
+
+def parse_words_title(d):
+    d = d.lower()
+    dd = d.replace("http://","")
+    dd = dd.split(".com")
+    dd = dd[1] if len(dd) > 1 else dd[0]
+    dd = dd.split(".net")
+    dd = dd[1] if len(dd) > 1 else dd[0]
+
+    dd = dd.split("?")[0]
+    dd = dd[1:] if dd.startswith("/") else dd
+    dd = dd[:-1] if dd.endswith("/") else dd
+
+    last = dd.split("/")[-1]
+
+    words = [k for j in last.split("-") for k in j.split("_")]
+    words = [wrd for wrd in last.split(" ")]
+    words = [w.split(".")[0] for w in words if not w.isdigit()]
+    words = [w for w in words if len(w) > 2 and len(w) < 14]
+    #words = [w for w in words if w not in STOP_WORDS]
+
     return words
 
 def ngrams(words,n=2,pad=False):
@@ -115,7 +136,7 @@ def prep_data(df, use_title):
 
     co = Counter()
     if use_title:
-        df['words'] = df.title.map(parse_words)
+        df['words'] = df.title.map(parse_words_title)
     else:
         df['words'] = df.url.map(parse_words)
 

@@ -25,4 +25,4 @@ if __name__ == "__main__":
             time.sleep(1)
         except:
             import time
-            time.sleep(20)
+            time.sleep(2)
