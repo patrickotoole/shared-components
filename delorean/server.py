@@ -29,10 +29,9 @@ from helpers import *
 from streaming_handler import *
 from index_handler import *
 from handlers import streaming
+from link import lnk
 
 from lib.kafka_queue import KafkaQueue
-
-
 
 if __name__ == '__main__':
 
@@ -42,7 +41,8 @@ if __name__ == '__main__':
         "segment_log": KafkaQueue(mock_connect=False, topic="segment_log",transform=parse_segment_log),
         "buffers": {
             "segment_log": streaming.segment_log_buffer
-        }
+        },
+        "db": lnk.dbs.rockerbox
     }
 
     routes = [
