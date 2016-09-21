@@ -1,3 +1,8 @@
+def get_appnexus_name(db):
+        appnexus_names = db.select_dataframe("SELECT appnexus_segment_id as segment, appnexus_name from delorean_segment_view").drop_duplicates().reset_index(drop=True)
+        appnexus_names['segment'] = appnexus_names['segment'].apply(str)
+        return appnexus_names
+
 def parse_segment_log(s):
     # schema: "uid,segment:value:expiration"
     _split = s.split(",")

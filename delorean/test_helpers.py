@@ -16,6 +16,9 @@ class HelperTestCase(unittest.TestCase):
     def test_group_by_segment_bad_data(self):
         with self.assertRaises(Exception): grouped = helpers.group_by_segment([{"segment_value":3,"seg":2,"uid":1},{"segment_value":2,"seg":1,"uid":0}],pandas.DataFrame([{"segment":1,"appnexus_name":"testname1"},{"segment":2,"appnexus_name":"testname2"}]))
 
+    def test_group_by_segment_missing_appnexus_name(self):
+        with self.assertRaises(Exception): grouped = helpers.group_by_segment([{"segment_value":3,"segment":2,"uid":1},{"segment_value":2,"segment":1,"uid":0}],None)
+
     def test_group_by_segment_merge(self):
         grouped = helpers.group_by_segment([{"segment_value":3,"segment":3,"uid":1},{"segment_value":2,"segment":1,"uid":0}],
             pandas.DataFrame([{"segment":1,"appnexus_name":"testname1"},{"segment":2,"appnexus_name":"testname2"}]))

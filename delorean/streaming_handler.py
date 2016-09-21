@@ -8,14 +8,14 @@ class DeloreanStreamingHandler(StreamingHandler):
 
     def initialize(self,db=None,buffers={},**kwargs):
         self.time_interval = 1
-        self.appnexus_names = kwargs.get("appnexus_names",False)
+        self.db = db
         super(DeloreanStreamingHandler,self).initialize(db=db,buffers=buffers)
 
     def build_df(self,key):
         # values: [{"segment":1,"uid":1},{"segment":1,"uid":1}]
         values = self.reset(key)
 
-        if values: return helpers.group_by_segment(values, self.appnexus_names)
+        if values: return helpers.group_by_segment(values, helpers.get_appnexus_name(self.db))
             
         return values
 
