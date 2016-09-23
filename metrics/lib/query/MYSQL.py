@@ -278,6 +278,7 @@ WHERE
 ADMIN_LOGINS= """
 SELECT
     a.advertiser_name,
+    a.pixel_source_name,
     u.username,'admin' as password,
     external_advertiser_id as advertiser_id
 FROM rockerbox.advertiser a LEFT JOIN rockerbox.user u ON a.external_advertiser_id=u.advertiser_id 
