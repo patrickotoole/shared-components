@@ -17,7 +17,7 @@ STOP_WORDS = ["has","top","she","most","their","had","his","get",
 ]
 
 
-def parse_words(d):
+def parse_words_title(d):
     d = d.lower()
     dd = d.replace("http://","")
     dd = dd.split(".com")
@@ -32,13 +32,14 @@ def parse_words(d):
     last = dd.split("/")[-1]
         
     words = [k for j in last.split("-") for k in j.split("_")]
+    words = [wrd for wrd in last.split(" ")]
     words = [w.split(".")[0] for w in words if not w.isdigit()]
     words = [w for w in words if len(w) > 2 and len(w) < 14]
     #words = [w for w in words if w not in STOP_WORDS]
     
     return words
 
-def parse_words_title(d):
+def parse_words_url(d):
     d = d.lower()
     dd = d.replace("http://","")
     dd = dd.split(".com")
@@ -53,7 +54,6 @@ def parse_words_title(d):
     last = dd.split("/")[-1]
 
     words = [k for j in last.split("-") for k in j.split("_")]
-    words = [wrd for wrd in last.split(" ")]
     words = [w.split(".")[0] for w in words if not w.isdigit()]
     words = [w for w in words if len(w) > 2 and len(w) < 14]
     #words = [w for w in words if w not in STOP_WORDS]
@@ -133,12 +133,11 @@ def prep_data(df, use_title):
     from collections import Counter
 
     assert("url" in df.columns)
-
     co = Counter()
     if use_title:
         df['words'] = df.title.map(parse_words_title)
     else:
-        df['words'] = df.url.map(parse_words)
+        df['words'] = df.url.map(parse_words_url)
 
     bigrams = df.words.map(ngrams)
     bi = Counter()

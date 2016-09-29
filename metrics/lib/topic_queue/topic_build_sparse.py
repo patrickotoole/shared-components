@@ -10,48 +10,54 @@ class TopicBatch(BaseRunner):
 
         self.connectors = connectors
 
-
     def transform_and_save(self, data, use_title):
         from topic.prep_data import prep_data
-        from topic.lsi import LSIComparision
+        from topic.lsi_sparse import LSIComparision
         from topic.w2v import Word2VecComparision
 
         from topic.cluster import cluster, common_words, freq_words, word_importance
         
         prepped, freq = prep_data(data, use_title)#.head(10000))
         docs = len(prepped)
-        idf = { i:docs/j for i,j in freq.items()}
+        #idf = { i:docs/j for i,j in freq.items()}
         logging.info("finished word prep")
         words = prepped.words.tolist()
-        #words=words[:10000]
-        #comp2 = Word2VecComparision([i for i in words if len(i) > 2])
+        words = [i for i in words if len(i) > 2]
+        import ipdb; ipdb.set_trace()
+        del(freq)
+        import os
+        _proc_status = '/proc/%d/status' % os.getpid()
+        t = open(_proc_status)
+        v = t.read()
+        t.close()
+        print v[200:220]
         comp = LSIComparision([i for i in words if len(i) > 2])
-        import pickle
-        pickle.dump(comp, open("LSImodelobject.p","wb"))
-        
+        import ipdb; ipdb.set_trace()
         import numpy as np
-        import math
-        
-        similarity = np.array([i for i in comp.similarity])
+        comp.similarityMatrix = comp.similarityVectors.dot(comp.similarityVectors.T)
+        #similarity = np.array([i for i in comp.similarity])
+        #similarity = comp.similarity.index
 
-        
-        upper_triangle = np.triu_indices(len(similarity),1)
-        upper = similarity[upper_triangle]
+        import ipdb; ipdb.set_trace()
+        del(words) 
+        #upper_triangle = np.triu_indices(len(similarity),1)
+        from scipy import sparse
+        #upper = sparse.dok_matrix(comp.similarityVectors.shape)
 
-        mask = (similarity > np.percentile(upper,25)) & (similarity < np.percentile(upper,75))
-        smask = np.ma.array(similarity,mask=mask,fill_value=0)
-        masked = smask.filled()
-        
-        distance = 1-masked
-        pdist = distance[upper_triangle]
+        #mask = (comp.similarity.index > np.percentile(upper,25)) & (comp.similarity.index < np.percentile(upper,75))
+        #smask = np.ma.array(comp.similarity.index,fill_value=0)
+        #masked = smask.filled()
 
+        #distance = 1-masked
+        #pdist = distance[upper]
+        #pdist = distance[upper.values()]
 
         import scipy.spatial.distance
-        
-        square = scipy.spatial.distance.squareform(pdist)
+        import ipdb; ipdb.set_trace()
+        square = scipy.spatial.distance.squareform(comp.similarityMatrix.data)
         y = scipy.spatial.distance.squareform(square)
         comp.similarityMatrix = np.abs(y)
-        
+
         clusters = cluster(comp.similarityMatrix)
 
         comp.joined_data = map(lambda x: " ".join(x),comp.data)
@@ -69,8 +75,7 @@ class TopicBatch(BaseRunner):
             c = Counter()
             map(c.update,[list(set(i.split(" "))) for i in sentence_list])
             return dict([(i,j)for i,j in c.most_common(2) if j > 1])
-
-        #ddd['word_counts'] = ddd.articles.map(_word_counts)
+        
         from collections import Counter
         ddd['topics'] = ddd.articles.map(" ".join).map(lambda x: x.split()).map(Counter).map(lambda x: { i:j for i,j in x.most_common(4) if j > 1}.keys() )
         logging.info("topics")
@@ -102,30 +107,24 @@ class TopicBatch(BaseRunner):
         group_matches = articles_with_groups.drop_duplicates("word_index").groupby("group")['word_index'].count()
         group_matches.name = "matches"
         group_matches = group_matches.reset_index()
-        
+
         recs = recs.merge(group_matches,on="group")
         del recs['level_1']
         recs = recs.groupby("group").apply(lambda x: x.sort_index(by="score").tail(LIMIT_COMPS) )
         del recs['group']
         recs = recs.reset_index()
         #recs['idf'] = recs.topic.map(lambda x: sum([idf[i]for i in x.split()]) )
-        
+
         f = open("rec_df.csv","w")
         f.write(recs.to_csv())
         f.close()
-
-
-
-
 
 def runner( **kwargs):
 
     job_name = kwargs.get("job_id", "local_"+str(uuid.uuid4()))
     connectors = kwargs.get("connectors")
     parameters = kwargs.get("parameters",{})
-    
     atr = TopicBatch(connectors)
-
     data = connectors['crushercache'].select_dataframe("select url, title from url_title")
     atr.transform_and_save(data, kwargs.get("use_title",True))
 
@@ -135,7 +134,7 @@ if __name__ == "__main__":
     from lib.report.utils.options import options
     from lib.report.utils.options import parse_command_line
 
-    define("use_title", type=bool, default=True)
+    define("use_title", type=bool, default=False)
 
     basicConfig(options={})
 

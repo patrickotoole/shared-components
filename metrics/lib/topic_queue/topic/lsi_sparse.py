@@ -44,25 +44,23 @@ class LSIComparision(object):
         print "finished model"
         corp = self.model[self.corpus]
         self.similarity = similarities.MatrixSimilarity(corp)
+        from scipy import sparse
+        sparse_mat = sparse.dok_matrix((len(self.data),len(self.data)))
         del(self.data)
         for i in range(0,self.subsize):
             print i
             temp = np.array([self.sentenceToVec(l) for l in self.data_dict[i]])
-            from scipy import sparse
-            sparse_mat = sparse.dok_matrix((temp.shape[0],temp.shape[1]))
             for x in range(0,temp.shape[0]):
-                if np.square(temp[x,:]).sum()>350:
+                if np.square(temp[x,:]).sum()>950:
                     for y in range(0,temp.shape[1]):
                         sparse_mat[x,y] = temp[x,y]
             del(self.data_dict[i])
-            name_file ="g%s" % i
-            import ipdb; ipdb.set_trace()
-            sparse_mat = sparse_mat.tocsr()
-            np.savez(name_file, data=sparse_mat.data,indices=sparse_mat.indices,indptr=sparse_mat.indptr,shape=sparse_mat.shape)
-            #np.savez(name_file,sparse_mat)
             del(temp)
-            del(sparse_mat)
 
+        self.similarityVectors = sparse_mat
+        import ipdb; ipdb.set_trace()
+        del(sparse_mat)
+        import ipdb; ipdb.set_trace()
         #self.similarityVectors1 = np.array([self.sentenceToVec(l) for l in d2])
         #sv1 = self.compress(self.similarityVectors1)
         #import ipdb; ipdb.set_trace()
