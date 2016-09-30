@@ -130,7 +130,7 @@ class BaseDomainHandler(BaseHandler, AnalyticsBase, CassandraRangeQuery, VisitDo
 
     @decorators.deferred
     def defer_execute(self, selects, advertiser, pattern, date_clause, logic,
-                      allow_sample=True, should_cache=False, timeout=60, numdays=20, force_cache=True):
+                      allow_sample=True, should_cache=False, timeout=60, numdays=20, force_cache=True, force_sample=False):
 
         dates = build_datelist(numdays)
         inserts, results = [], []
@@ -144,7 +144,7 @@ class BaseDomainHandler(BaseHandler, AnalyticsBase, CassandraRangeQuery, VisitDo
         URL = "select * from pattern_cache where pixel_source_name = '%s' and url_pattern = '%s'"
         df = lnk.dbs.rockerbox.select_dataframe(URL % (advertiser,pattern[0]))
 
-        if force_cache or (len(df[df.num_days > 5]) > 0):
+        if not force_sample and (force_cache or (len(df[df.num_days > 5]) > 0)):
             results = self.run_cache(pattern,advertiser,dates,sample[0],sample[1],results)
             logging.info("Results in cache: %s" % len(results))
 
@@ -188,9 +188,9 @@ class BaseDomainHandler(BaseHandler, AnalyticsBase, CassandraRangeQuery, VisitDo
     
     #@custom_defer.inlineCallbacksErrors
     @defer.inlineCallbacks
-    def sample_stats_onsite(self, term, params, advertiser, date_clause, numdays=20,allow_sample=True):
+    def sample_stats_onsite(self, term, params, advertiser, date_clause, numdays=20,allow_sample=True,force_sample=False):
         
-        df = yield self.defer_execute(params, advertiser, [term], date_clause, "must", numdays=numdays,allow_sample=allow_sample)
+        df = yield self.defer_execute(params, advertiser, [term], date_clause, "must", numdays=numdays,allow_sample=allow_sample,force_sample=force_sample)
         if len(df) > 0:
             stats_df, url_stats_df, full_df = self.raw_to_stats(df,date_clause)
 
@@ -225,7 +225,7 @@ class BaseDomainHandler(BaseHandler, AnalyticsBase, CassandraRangeQuery, VisitDo
 
     @defer.inlineCallbacks
     def get_sampled(self,advertiser,term,dates,num_days,allow_sample=True,filter_id=False):
-        sample_args = [term,"",advertiser,dates,num_days,allow_sample]
+        sample_args = [term,"",advertiser,dates,num_days,allow_sample,bool(filter_id)]
 
         full_df, stats_df, url_stats_df, _ = yield self.sample_stats_onsite(*sample_args)
         if filter_id:
