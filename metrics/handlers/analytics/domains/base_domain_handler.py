@@ -144,12 +144,12 @@ class BaseDomainHandler(BaseHandler, AnalyticsBase, CassandraRangeQuery, VisitDo
         URL = "select * from pattern_cache where pixel_source_name = '%s' and url_pattern = '%s'"
         df = lnk.dbs.rockerbox.select_dataframe(URL % (advertiser,pattern[0]))
 
+        results = self.run_uncache(pattern,advertiser,dates,results)
+        force_sample = True if len(results) >4000 else False
+
         if not force_sample and (force_cache or (len(df[df.num_days > 5]) > 0)):
             results = self.run_cache(pattern,advertiser,dates,sample[0],sample[1],results)
             logging.info("Results in cache: %s" % len(results))
-
-        if len(results) == 0:
-            results = self.run_uncache(pattern,advertiser,dates,results)
 
         df = pandas.DataFrame(results)
 
