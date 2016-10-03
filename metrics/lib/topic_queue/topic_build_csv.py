@@ -11,7 +11,7 @@ class TopicBatch(BaseRunner):
         self.connectors = connectors
 
 
-    def transform_and_save(self, data, use_title):
+    def transform_and_save(self, data, use_title,number_files):
         from topic.prep_data import prep_data
         from topic.lsi import LSIComparision
         from topic.w2v import Word2VecComparision
@@ -19,15 +19,35 @@ class TopicBatch(BaseRunner):
         from topic.cluster import cluster, common_words, freq_words, word_importance
         import pickle 
         comp = pickle.load(open('LSImodelobject.p', 'rb'))
+        from tempfile import mkdtemp
+        import os.path as path
+        filename = path.join(mkdtemp(), 'newfile.dat')
+        map_to_disk =None
+        y1 = None
+        import numpy as np
+        for i in range(0,number_files):
+            #fname = "%smatrix%s.npy" % (file_local, i)
+            fname = "%smatrix%s.npy" % ("", i)
+            print i
+            tempdata = np.load(fname)
+            if map_to_disk is None:
+                map_to_disk = np.memmap(filename, mode='w+', dtype='float32',shape=(tempdata.shape[1],tempdata.shape[1]))
+            if y1 is None:
+                y1=0
+            y2 = tempdata.shape[0]+y1
+            map_to_disk[y1:y2,] = tempdata
+            y1=y2
+            del(tempdata)
         prepped, freq = prep_data(data, use_title)
         import ipdb; ipdb.set_trace()
-        import numpy as np
         similarity = np.array([i for i in comp.similarity])
+        del(comp.similarity)
+        comp.similarityVectors = map_to_disk
         #similarity = comp.similarity.index
         
         import ipdb; ipdb.set_trace() 
-        upper_triangle = np.triu_indices(len(similarity),1)
-        upper = similarity[upper_triangle]
+        #upper_triangle = np.triu_indices(len(similarity),1)
+        #upper = similarity[len(similarity)]
 
         mask = (similarity > np.percentile(upper,25)) & (similarity < np.percentile(upper,75))
         smask = np.ma.array(similarity,mask=mask,fill_value=0)
@@ -117,7 +137,7 @@ def runner( **kwargs):
     atr = TopicBatch(connectors)
         
     data = connectors['crushercache'].select_dataframe("select url, title from url_title")
-    atr.transform_and_save(data, kwargs.get("use_title",True))
+    atr.transform_and_save(data, kwargs.get("use_title",True), kwargs.get("num_files"))
 
 if __name__ == "__main__":
     from lib.report.utils.loggingutils import basicConfig
@@ -126,11 +146,11 @@ if __name__ == "__main__":
     from lib.report.utils.options import parse_command_line
 
     define("use_title", type=bool, default=True)
-
+    define("num_files", default=50)
     basicConfig(options={})
 
     parse_command_line()
     connectors = TopicBatch.get_connectors()
-    runner(use_title=options.use_title,connectors=connectors)
+    runner(use_title=options.use_title,num_files=options.num_files,connectors=connectors)
 
 

@@ -46,7 +46,6 @@ class LSIComparision(object):
         self.similarity = similarities.MatrixSimilarity(corp)
         from scipy import sparse
         sparse_mat = sparse.dok_matrix((len(self.data),len(self.data)))
-        del(self.data)
         for i in range(0,self.subsize):
             print i
             temp = np.array([self.sentenceToVec(l) for l in self.data_dict[i]])

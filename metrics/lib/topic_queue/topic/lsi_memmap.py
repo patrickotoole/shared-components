@@ -44,7 +44,6 @@ class LSIComparision(object):
         print "finished model"
         corp = self.model[self.corpus]
         self.similarity = similarities.MatrixSimilarity(corp)
-        del(self.data)
         for i in range(0,self.subsize):
             print i
             temp = np.array([self.sentenceToVec(l) for l in self.data_dict[i]])

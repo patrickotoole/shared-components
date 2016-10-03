@@ -12,7 +12,7 @@ class TopicBatch(BaseRunner):
 
     def transform_and_save(self, data, use_title):
         from topic.prep_data import prep_data
-        from topic.lsi import LSIComparision
+        from topic.lsi_memmap import LSIComparision
         from topic.w2v import Word2VecComparision
 
         from topic.cluster import cluster, common_words, freq_words, word_importance

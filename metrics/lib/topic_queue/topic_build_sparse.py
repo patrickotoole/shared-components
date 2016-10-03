@@ -10,7 +10,7 @@ class TopicBatch(BaseRunner):
 
         self.connectors = connectors
 
-    def transform_and_save(self, data, use_title):
+    def transform_and_save(self, data, use_title, num_topics):
         from topic.prep_data import prep_data
         from topic.lsi_sparse import LSIComparision
         from topic.w2v import Word2VecComparision
@@ -32,33 +32,30 @@ class TopicBatch(BaseRunner):
         t.close()
         print v[200:220]
         comp = LSIComparision([i for i in words if len(i) > 2])
-        import ipdb; ipdb.set_trace()
         import numpy as np
         comp.similarityMatrix = comp.similarityVectors.dot(comp.similarityVectors.T)
+        import pickle
+        pickle.dump(comp, open("LSImodelobject.p","wb"))
         #similarity = np.array([i for i in comp.similarity])
-        #similarity = comp.similarity.index
 
-        import ipdb; ipdb.set_trace()
         del(words) 
         #upper_triangle = np.triu_indices(len(similarity),1)
         from scipy import sparse
-        #upper = sparse.dok_matrix(comp.similarityVectors.shape)
-
         #mask = (comp.similarity.index > np.percentile(upper,25)) & (comp.similarity.index < np.percentile(upper,75))
         #smask = np.ma.array(comp.similarity.index,fill_value=0)
         #masked = smask.filled()
-
         #distance = 1-masked
         #pdist = distance[upper]
         #pdist = distance[upper.values()]
 
         import scipy.spatial.distance
-        import ipdb; ipdb.set_trace()
-        square = scipy.spatial.distance.squareform(comp.similarityMatrix.data)
-        y = scipy.spatial.distance.squareform(square)
-        comp.similarityMatrix = np.abs(y)
-
-        clusters = cluster(comp.similarityMatrix)
+        #square = scipy.spatial.distance.squareform(comp.similarityMatrix.data)
+        #y = scipy.spatial.distance.squareform(square)
+        #comp.similarityMatrix = np.abs(y)
+        from sklearn import cluster
+        clusters = cluster.SpectralClustering(num_topics,affinity='precomputed').fit(comp.similarityMatrix).fit_predict(comp.similarityMatrix)
+        #cluster.AgglomerativeClustering(comp.similarityMatrix)
+        #clusters = cluster(comp)
 
         comp.joined_data = map(lambda x: " ".join(x),comp.data)
         clustered_df = pandas.DataFrame( zip(comp.joined_data, clusters) )
@@ -126,7 +123,7 @@ def runner( **kwargs):
     parameters = kwargs.get("parameters",{})
     atr = TopicBatch(connectors)
     data = connectors['crushercache'].select_dataframe("select url, title from url_title")
-    atr.transform_and_save(data, kwargs.get("use_title",True))
+    atr.transform_and_save(data, kwargs.get("use_title"), kwargs.get("num_topics"))
 
 if __name__ == "__main__":
     from lib.report.utils.loggingutils import basicConfig
@@ -135,11 +132,12 @@ if __name__ == "__main__":
     from lib.report.utils.options import parse_command_line
 
     define("use_title", type=bool, default=False)
+    define("num_topics", default=30)
 
     basicConfig(options={})
 
     parse_command_line()
     connectors = TopicBatch.get_connectors()
-    runner(use_title=options.use_title,connectors=connectors)
+    runner(use_title=options.use_title,num_topics=options.num_topics,connectors=connectors)
 
 
