@@ -12,7 +12,7 @@ class TopicBatch(BaseRunner):
 
     def transform_and_save(self, data, use_title, num_topics):
         from topic.prep_data import prep_data
-        from topic.lsi_sparse import LSIComparision
+        from topic.lda import LSIComparision
         from topic.w2v import Word2VecComparision
 
         from topic.cluster import cluster, common_words, freq_words, word_importance
@@ -26,6 +26,19 @@ class TopicBatch(BaseRunner):
         comp = LSIComparision([i for i in words if len(i) > 2], build=True)
         import numpy as np
         import ipdb; ipdb.set_trace()
+        topics = {}
+        best_topics = {}
+        for top in comp.topics.keys():
+            topic_as_string = comp.lda_model.print_topic(comp.topics[top][0])
+            topics_list = topic_as_string.split("+")
+            topic_numbers = [int(x.split("*")[1]) for x in topics_list]
+            topics_string_list = [comp.dictionary.get(y) for y in topic_numbers]
+            topics[top] = ("-".join(topics_string_list), comp.topics[top][1])
+            if comp.topics[top][1] > 0.7:
+                best_topics[top] = ("-".join(topics_string_list), comp.topics[top][1])
+            
+        import ipdb; ipdb.set_trace()
+
         from sklearn import cluster
         import ipdb; ipdb.set_trace()
         #for ww in words:

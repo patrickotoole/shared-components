@@ -39,37 +39,35 @@ class LSIComparision(object):
     def build(self):
         #FILTER STEP
         import numpy as np
+        import ipdb; ipdb.set_trace()
         self.dictionary = corpora.Dictionary(self.data)
         self.dictionary.filter_extremes()
         self.corpus = [self.dictionary.doc2bow(text) for text in self.data]
+        from collections import Counter
+        count = Counter()
+        for i in self.data:
+            if "&utm" not in i:
+                count.update(i)
+        corpus = count
+        #self.model = LsiModel(self.corpus,onepass=False,power_iters=5,id2word=self.dictionary)
+        #corp = self.model[self.corpus]
 
-        #import ipdb; ipdb.set_trace()
-        self.model = LsiModel(self.corpus,onepass=False,power_iters=5,id2word=self.dictionary)
-        print "finished model"
-        corp = self.model[self.corpus]
-        self.similarity = similarities.MatrixSimilarity(corp)
-        #from scipy import sparse
-        #sparse_mat = sparse.dok_matrix((len(self.data),len(self.data)))
-        del(self.data_dict)
-        self.data = [self.sentenceToVecLimit(l) for l in self.data]
-        self.data = [x for x in self.data if x is not None]
-
-        #BUILD STEP
-        self.dictionary = corpora.Dictionary(self.data)
-        self.corpus = [self.dictionary.doc2bow(text) for text in self.data]
-        self.model = LsiModel(self.corpus,onepass=False,power_iters=5,id2word=self.dictionary)
-        corp = self.model[self.corpus]
-        self.similarity = similarities.MatrixSimilarity(corp)
-        print len(self.data)
-        self.similarityVectors = np.array([self.sentenceToVec(l) for l in self.data])
         import ipdb; ipdb.set_trace()
-        #for i in range(0,self.subsize):
-        #    print i
-        #    temp = np.array([self.sentenceToVec(l) for l in self.data_dict[i]])
-        #    for x in range(0,temp.shape[0]):
-        #        if np.square(temp[x,:]).sum()>950:
-        #            for y in range(0,temp.shape[1]):
-        #                sparse_mat[x,y] = temp[x,y]
+        import gensim.models.ldamodel as lda
+        self.lda_model = lda.LdaModel(self.corpus, num_topics=1000)
+
+        self.topics = {}
+        for item in self.data:
+            try:
+                result = self.lda_model[self.dictionary.doc2bow(item)]
+                result.sort()
+                if len(result)>0:
+                    self.topics["-".join(item)] = result[0]
+            except:
+                import ipdb; ipdb.set_trace()
+            
+            
+
         #    del(self.data_dict[i])
         #    del(temp)
 
