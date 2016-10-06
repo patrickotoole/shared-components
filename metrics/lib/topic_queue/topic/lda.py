@@ -54,7 +54,7 @@ class LSIComparision(object):
 
         import ipdb; ipdb.set_trace()
         import gensim.models.ldamodel as lda
-        self.lda_model = lda.LdaModel(self.corpus, num_topics=1000)
+        self.lda_model = lda.LdaModel(self.corpus, num_topics=500)
 
         self.topics = {}
         for item in self.data:
@@ -102,8 +102,9 @@ class LSIComparision(object):
     def compare(self,similarity_string,threshold=0.9):
         SIMILAR_TO = similarity_string
         vec_bow = self.dictionary.doc2bow(SIMILAR_TO.split())
-        vec_lsi = self.model[vec_bow]
+        vec_lda = self.lda_model[vec_bow]
         
-        sims = self.similarity[vec_lsi]
-        sims = sorted(enumerate(sims), key=lambda item: -item[1])
+        #sims = self.similarity[vec_lda]
+        sims = vec_lda
+        #sims = sorted(enumerate(sims), key=lambda item: -item[1])
         return [(" ".join(self.data[i[0]]),i[1]) for i in sims if i[1] > threshold]
