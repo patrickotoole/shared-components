@@ -62,7 +62,7 @@ class LSIComparision(object):
         self.similarity = similarities.MatrixSimilarity(corp)
         print len(self.data)
         self.similarityVectors = np.array([self.sentenceToVec(l) for l in self.data])
-        import ipdb; ipdb.set_trace()
+        #import ipdb; ipdb.set_trace()
         #for i in range(0,self.subsize):
         #    print i
         #    temp = np.array([self.sentenceToVec(l) for l in self.data_dict[i]])

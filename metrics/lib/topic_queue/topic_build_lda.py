@@ -24,8 +24,12 @@ class TopicBatch(BaseRunner):
         words = prepped.words.tolist()
         words = [i for i in words if len(i) > 2]
         comp = LSIComparision([i for i in words if len(i) > 2], build=True)
-        import numpy as np
-        import ipdb; ipdb.set_trace()
+           
+        import pickle
+        pickle.dump(comp, open("LDAmodelobject.p","wb"))
+
+
+    def classify_all(self, comp):
         topics = {}
         best_topics = {}
         for top in comp.topics.keys():
@@ -39,9 +43,6 @@ class TopicBatch(BaseRunner):
                 if topic_num_weight[y] > 0.05:
                     topic_string_list.append(comp.dictionary.get(y))
             topics[top] = ("-".join(topic_string_list), comp.topics[top][1])
-            
-        import pickle
-        pickle.dump(comp, open("LDAmodelobject.p","wb"))
 
 def runner( **kwargs):
 

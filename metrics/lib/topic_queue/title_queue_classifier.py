@@ -5,6 +5,7 @@ from lib.kafka_stream import kafka_stream
 from link import lnk
 import ujson
 from classify import LSIClassifier
+from classify import LDAClassifier
 from classify import BaseClassifier
 import time
 import logging
@@ -13,10 +14,7 @@ import logging
 def process_message(message, producer, classifier, use_default):
     data = ujson.loads(message.value)
     current_topic = classifier.classify(data['url'], data['title'])
-    if use_default:
-        data['topic'] = current_topic
-    else:
-        data['topic'] = "-".join(current_topic)
+    data['topic'] = current_topic
     producer.send_message(ujson.dumps(data))
     logging.info(data)
 
@@ -25,7 +23,7 @@ if __name__ == '__main__':
     from lib.report.utils.options import define, options, parse_command_line
     from lib.report.utils.loggingutils import basicConfig
     define("csv_location",  default="")
-    define("lsi_location",  default="")
+    define("lda_location",  default="")
     define("use_default", type=bool,default=False)
     basicConfig(options={}) 
     parse_command_line()
@@ -36,7 +34,7 @@ if __name__ == '__main__':
     if options.use_default:
         classifier = BaseClassifier()
     else:
-        classifier = LSIClassifier(options.csv_location, options.lsi_location)
+        classifier = LDAClassifier( options.lda_location)
     for message in consumer:
         if message is not None:
             process_message(message, producer, classifier, options.use_default)

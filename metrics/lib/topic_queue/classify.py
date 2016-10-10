@@ -1,4 +1,5 @@
 import topic_runner_stream as trs
+import topic_runner_Stream_lda as lda
 
 class BaseClassifier():
     
@@ -25,4 +26,19 @@ class LSIClassifier(BaseClassifier):
     def classify(self, url, title):
         topic = self.topic_streamer.classify(url, title)
         return topic
-            
+
+class LDAClassifier(BaseClassifier):
+
+    def __init__(self,lda_location):
+        self.topic_streamer=lda.TopicStreamerLDA(pickle_location=lda_location)
+        comp_obj = self.topic_streamer.load()
+
+    def default_classifier(self,topic):
+        return "No topic"
+
+    def classifier(self,topic):
+        return ""
+
+    def classify(self, url, title):
+        topic = self.topic_streamer.classify(url, title)
+        return topic            

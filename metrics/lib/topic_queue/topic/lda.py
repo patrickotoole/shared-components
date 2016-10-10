@@ -39,7 +39,6 @@ class LSIComparision(object):
     def build(self):
         #FILTER STEP
         import numpy as np
-        import ipdb; ipdb.set_trace()
         self.dictionary = corpora.Dictionary(self.data)
         self.dictionary.filter_extremes()
         self.corpus = [self.dictionary.doc2bow(text) for text in self.data]
@@ -52,7 +51,6 @@ class LSIComparision(object):
         #self.model = LsiModel(self.corpus,onepass=False,power_iters=5,id2word=self.dictionary)
         #corp = self.model[self.corpus]
 
-        import ipdb; ipdb.set_trace()
         import gensim.models.ldamodel as lda
         self.lda_model = lda.LdaModel(self.corpus, num_topics=500)
 
@@ -63,9 +61,8 @@ class LSIComparision(object):
                 result.sort()
                 if len(result)>0:
                     self.topics["-".join(item)] = result[0]
-            except:
-                import ipdb; ipdb.set_trace()
-            
+            except Exception as e:
+                 print str(e)
             
 
         #    del(self.data_dict[i])
