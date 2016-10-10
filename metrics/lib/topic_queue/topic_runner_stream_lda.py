@@ -46,10 +46,30 @@ class TopicStreamer(BaseRunner):
         return "-".join(topic_word_list)
 
     def classify(self,url, title):
-        title_list = title.split(" ")
-        as_doc = self.title_to_doc(title_list)
-        topic = self.process_lda(as_doc)
-        
+        if title != 'No title' and title != "No Title" and title != "no title":
+            title_list = title.split(" ")
+            as_doc = self.title_to_doc(title_list)
+            topic = self.process_lda(as_doc)
+        else:
+            url_to_title = url.lower()
+            url_without = url_to_title.replace("http://","")
+            dd = url_without.split(".com")
+            dd = dd[1] if len(dd) > 1 else dd[0]
+            dd = dd.split(".net")
+            dd = dd[1] if len(dd) > 1 else dd[0]
+            dd = dd.split("?")[0]
+            dd = dd[1:] if dd.startswith("/") else dd
+            dd = dd[:-1] if dd.endswith("/") else dd
+            last = dd.split("/")[-1]
+            title_list = [k for j in last.split("-") for k in j.split("_")]
+            if title_list != [] and title_list != ['']:
+                as_doc = self.title_to_doc(title_list)
+                try:
+                    topic = self.process_lda(as_doc)
+                except:
+                    topic= "No topic"
+            else:
+                topic = "No topic"
         return topic
 
 
