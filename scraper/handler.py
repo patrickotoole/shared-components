@@ -12,11 +12,16 @@ class ScrapperGooseHandler(tornado.web.RequestHandler):
     def get(self, uri):
         url = self.get_argument("url",False)
         title = "No title"
+        descript = "No description"
+        article_text="NO article"
         if url:
-            article = self.goose.extract(url=url)
-            title = article.title
-            descript = article.meta_description
-            article_text = article.cleaned_text[:1000]
+            try:
+                article = self.goose.extract(url=url)
+                title = article.title
+                descript = article.meta_description
+                article_text = article.cleaned_text[:1000]
+            except Exception as e:
+                logging.info(str(e))
         response = {'url':url,'result':{'title':title,'description':descript, "article":article_text}}
         self.write(ujson.dumps(response))
 
