@@ -1,5 +1,5 @@
 import topic_runner_stream as trs
-import topic_runner_Stream_lda as lda
+import topic_runner_stream_lda as lda
 
 class BaseClassifier():
     
