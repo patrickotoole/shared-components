@@ -3,6 +3,8 @@ import os
 import pycurl
 from goose import Goose
 import ujson
+import logging
+
 class ScrapperGooseHandler(tornado.web.RequestHandler):
 
     def initialize(self,**kwargs):
