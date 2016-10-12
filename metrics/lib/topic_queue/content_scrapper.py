@@ -78,7 +78,7 @@ class ScrapperMessage():
             url = message_object['bid_request']['bid_info']['url']
             limit = count.get(url)
             count.update({url})
-            if limit ==25:
+            if limit ==5:
                 logging.info(url)
                 if use_scrapper:
                     defr = threads.deferToThread(self.get, url)
