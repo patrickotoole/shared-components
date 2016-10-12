@@ -142,8 +142,12 @@ class AdvertiserRoutes(Routes):
         import handlers.analytics.domains.user as user
         import handlers.analytics.domains.visitor as visitor
         import handlers.artifacts.handler as artifacts
+        import handlers.topics.handler as topics
 
         return [
+
+            (r'/topics', topics.TopicsHandler, self.connectors),
+
             (r'/user/domains', user.handler.VisitDomainsHandler, self.connectors),
             (r'/user/domains_full', user.full_handler.VisitDomainsFullHandler, self.connectors),
             (r'/user/keyword', user.KeywordUserHandler, self.connectors),
@@ -170,7 +174,6 @@ class AdvertiserRoutes(Routes):
         import handlers.pixel_status as pixel_status
         import handlers.analytics.domains.user as user
         import handlers.analytics.domains.visitor as visitor
-
 
         return [
             (r'/zk_endpoint', funnel.ZKHandler, self.connectors),
@@ -202,7 +205,6 @@ class AdvertiserRoutes(Routes):
             (r'/pixel/cookie', pixel_status.CookieHandler, self.connectors),
             (r'/pixel/status', pixel_status.PixelHandler, self.connectors),
             (r'/pixel/status/lookup', pixel_status.LookupHandler, self.connectors),
-
 
             (r'/funnel', funnel.FunnelHandler, self.connectors),
             (r'/?', funnel.FunnelHandler, self.connectors),
