@@ -6,6 +6,7 @@ from twisted.internet import threads
 import graphitewriter as gw
 import sys
 from collections import Counter
+import socket
 
 URL="http://scrapper.crusher.getrockerbox.com?url=%s"
 
@@ -16,16 +17,17 @@ class GraphiteSender():
         self.GW = gw.GraphiteWriter()
         self.sent_time = datetime.datetime.now() + datetime.timedelta(seconds=10)
         self.cs = cs
+        self.hostname = socket.gethostname()
 
     def start(self):
         while True:
             if datetime.datetime.now() > self.sent_time:
                 self.sent_time = datetime.datetime.now() + datetime.timedelta(seconds=10)
                 with self.GW:
-                    self.GW.send("scrapper.content_loop.metrics.pulled_from_kafka", self.cs.get("kafka_remove"))
-                    self.GW.send("scrapper.content_loop.metrics.num_deferred_created", self.cs.get("defer_create"))
-                    self.GW.send("scrapper.content_loop.metrics.responses_from_scrapper", self.cs.get("response"))
-                    self.GW.send("scrapper.content_loop.metrics.num_content_added_to_kafka", self.cs.get("kafka_send"))
+                    self.GW.send("imps_to_title.{}.metrics.pulled_from_kafka".format(self.hostname), self.cs.get("kafka_remove"))
+                    self.GW.send("imps_to_title.{}.metrics.num_deferred_created".format(self.hostname), self.cs.get("defer_create"))
+                    self.GW.send("imps_to_title.{}.metrics.responses_from_scrapper".format(self.hostname), self.cs.get("response"))
+                    self.GW.send("imps_to_title.{}.metrics.num_content_added_to_kafka".format(self.hostname), self.cs.get("kafka_send"))
 
 class GraphiteCounter():
     def __init__(self):
