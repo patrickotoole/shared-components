@@ -154,7 +154,6 @@ class CheckRunner():
                 logging.info("Pass for advertiser %s and pattern %s and udf %s" % (advertiser, segment, 'Cassandra cache'))
                 self.passedCassandra = True
             else:
-                fill_cassandra.runner_segment(advertiser, segment['url_pattern'][0], self.connectors)
                 low_volume = self.is_low_volume(crusher, segment)
                 if low_volume:
                     logging.info("low volume segment")
