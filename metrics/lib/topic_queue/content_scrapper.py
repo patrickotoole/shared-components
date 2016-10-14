@@ -8,6 +8,7 @@ import sys
 from collections import Counter
 import socket
 import numpy as np
+import pycurl
 
 URL="http://scrapper.crusher.getrockerbox.com?url=%s"
 
@@ -65,7 +66,9 @@ class ScrapperMessage():
     def get(self,url):
         try:
             URL = self.get_host() + "/?url=%s"
-            _resp = requests.get(URL % url)
+            logging.info(URL % url)
+            url_with_param = URL % url
+            _resp = requests.get(url_with_param)
             self.CS.bump("response")
             data = _resp.json()
             title = data['result']['title']
@@ -75,7 +78,7 @@ class ScrapperMessage():
             title = None
         self.CS.deck("defer_create")
         self.count_box_query+=1
-        if self.count_box_query>=500:
+        if self.count_box_query>=100:
             self.scrapper_boxes=self.get_scrapper_boxes()
             self.count_box_query =0
         return (title, url)
