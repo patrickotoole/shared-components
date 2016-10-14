@@ -68,7 +68,7 @@ class ScrapperMessage():
             URL = self.get_host() + "/?url=%s"
             logging.info(URL % url)
             url_with_param = URL % url
-            _resp = requests.get(url_with_param)
+            _resp = requests.get(url_with_param, timeout=3)
             self.CS.bump("response")
             data = _resp.json()
             title = data['result']['title']
