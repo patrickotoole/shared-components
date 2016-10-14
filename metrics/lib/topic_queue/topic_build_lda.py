@@ -23,7 +23,7 @@ class TopicBatch(BaseRunner):
         logging.info("finished word prep")
         words = prepped.words.tolist()
         words = [i for i in words if len(i) > 2]
-        comp = LSIComparision([i for i in words if len(i) > 2], build=True)
+        comp = LSIComparision([i for i in words if len(i) > 2], build=True, num_topics=num_topics)
            
         import pickle
         pickle.dump(comp, open("LDAmodelobject.p","wb"))

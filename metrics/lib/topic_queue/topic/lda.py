@@ -6,13 +6,14 @@ import numpy
 
 class LSIComparision(object):
 
-    def __init__(self,data, build=True):
+    def __init__(self,data, build=True, num_topics=500):
         if build: 
             assert(type(data) == list)
             assert(len(data) > 0)
             assert(type(data[0]) == list)
             assert(len(data[0]) > 0)
             self.data = data
+            self.num_topics = num_topics
             self.data_dict = {}
             self.subsize = (len(data) / 1000) + 1
             self.divide_data(data)
@@ -52,7 +53,7 @@ class LSIComparision(object):
         #corp = self.model[self.corpus]
 
         import gensim.models.ldamodel as lda
-        self.lda_model = lda.LdaModel(self.corpus, num_topics=500)
+        self.lda_model = lda.LdaModel(self.corpus, num_topics=self.num_topics)
 
         self.topics = {}
         for item in self.data:

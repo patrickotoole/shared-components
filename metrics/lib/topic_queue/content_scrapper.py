@@ -28,10 +28,11 @@ class GraphiteSender():
                     self.GW.send("imps_to_title.{}.metrics.num_deferred_created".format(self.hostname), self.cs.get("defer_create"))
                     self.GW.send("imps_to_title.{}.metrics.responses_from_scrapper".format(self.hostname), self.cs.get("response"))
                     self.GW.send("imps_to_title.{}.metrics.num_content_added_to_kafka".format(self.hostname), self.cs.get("kafka_send"))
+                    self.GW.send("imps_to_title.{}.metrics.num_urls_reach_limit".format(self.hostname), self.cs.get("url_limit_reached"))
 
 class GraphiteCounter():
     def __init__(self):
-        self.counter_dict = {"kafka_remove":0, "kafka_send":0, "defer_create":0, "response":0}
+        self.counter_dict = {"kafka_remove":0, "kafka_send":0, "defer_create":0, "response":0,"url_limit_reached":0}
     def bump(self, what_to_bump):
         self.counter_dict[what_to_bump]+=1
     def deck(self, what_to_dek):
@@ -82,6 +83,7 @@ class ScrapperMessage():
             count.update({url})
             if limit ==5:
                 logging.info(url)
+                self.CS.bump("url_limit_reached")
                 if use_scrapper:
                     defr = threads.deferToThread(self.get, url)
                 else:
