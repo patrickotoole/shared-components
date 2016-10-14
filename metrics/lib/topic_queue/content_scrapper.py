@@ -7,6 +7,7 @@ import graphitewriter as gw
 import sys
 from collections import Counter
 import socket
+import numpy as np
 
 URL="http://scrapper.crusher.getrockerbox.com?url=%s"
 
@@ -46,10 +47,25 @@ class ScrapperMessage():
         self.count = counter_obj
         self.CS = graphite_counter
         self.producer = producer
+        self.scrapper_boxes = self.get_scrapper_boxes()
+        self.count_box_query = 0
+
+    def get_scrapper_boxes(self):
+        list_of_servers = []
+        _resp = requests.get('http://master2:8080/v2/apps/apps/scrapper/tasks')
+        data = _resp.json()['tasks']
+        for item in data:
+            temp = "http://{}:{}".format(str(item['host']),str(item['ports'][0]))
+            list_of_servers.append(temp) 
+        return list_of_servers
+
+    def get_host(self):
+        return np.random.choice(self.scrapper_boxes,1)[0]
 
     def get(self,url):
         try:
-            _resp = requests.get((URL % url), auth=('rockerbox', 'rockerbox'))
+            URL = self.get_host() + "/?url=%s"
+            _resp = requests.get(URL % url)
             self.CS.bump("response")
             data = _resp.json()
             title = data['result']['title']
@@ -58,6 +74,10 @@ class ScrapperMessage():
             logging.info("could not get title")
             title = None
         self.CS.deck("defer_create")
+        self.count_box_query+=1
+        if self.count_box_query>=500:
+            self.scrapper_boxes=self.get_scrapper_boxes()
+            self.count_box_query =0
         return (title, url)
 
     def get_without_scrapper(self,url):
