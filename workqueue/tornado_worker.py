@@ -12,13 +12,16 @@ from lib.custom_logging.check_logger import KafkaHandler
 from lib.kafka_stream import kafka_stream
 import sys
 
-from lib.timekeeper import timeKeeper
+from timekeeper import timeKeeper
 from routes import AllRoutes
 from connectors import ConnectorConfig
 from shutdown import sig_wrap
 from work_queue_metrics import Metrics
 from work_queue_metrics import TimeMetric
-from lib.metricCounter import MetricCounter
+from metricCounter import MetricCounter
+from handler import *
+from jobs import *
+from scripts import *
 
 import requests
 import signal
@@ -29,16 +32,20 @@ requests_log = logging.getLogger("requests")
 requests_log.setLevel(logging.WARNING)
 
 dirname = os.path.dirname(os.path.realpath(__file__))
-route_options = ", ".join(AllRoutes.get_all()) 
+template_dir = "/".join(dirname.split("/")[:-1]) +"/metrics/templates"
+static_dir = "/".join(dirname.split("/")[:-1]) +"/metrics/static"
 
 define("port", default=8080, help="run on the given port", type=int)
-define("routes",default="work_queue_routes", help="list of routes to include: \n" + route_options,type=str)
 
 def build_routes(connectors,override=[]):
-    routes = AllRoutes(**connectors)
-    static = [(r'/static/(.*)', tornado.web.StaticFileHandler, {'path': "static"})]
-    selected_routes = [route for route in routes.all if route in override]
-    return routes(*(selected_routes or routes.all)) + static
+    routes = [
+        (r'/jobs/?(.*?)', JobsHandler, connectors),
+        (r'/scripts/?(.*?)', ScriptsHandler, connectors),
+        (r'/', WorkQueueHandler, connectors),
+        (r'/work_queue/?(.*?)',WorkQueueHandler, connectors),
+    ]
+    static = [(r'/static/(.*)', tornado.web.StaticFileHandler, {'path': static_dir})]
+    return routes + static
 
 if __name__ == '__main__':
 
@@ -73,9 +80,6 @@ if __name__ == '__main__':
         True
     ).connectors
 
-    #routes = ["work_queue_scripts"] 
-    #routes = []
-    routes = options.routes
 
     if options.log_kafka:
         producer = kafka_stream.KafkaStream('hindsight_log',"slave17:9092",True,False,False,10,1,False)
@@ -94,11 +98,12 @@ if __name__ == '__main__':
         ch2.setFormatter(formater)
         ch2.setLevel(logging.INFO)
 
-        log_object.addHandler(ch2)        
+        log_object.addHandler(ch2)
+
 
     app = tornado.web.Application(
-        build_routes(connectors,routes), 
-        template_path= dirname + "/templates",
+        build_routes(connectors),
+        template_path= template_dir,
         debug=True,
         cookie_secret="rickotoole",
         login_url="/login"
