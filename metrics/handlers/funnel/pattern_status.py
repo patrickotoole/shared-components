@@ -7,9 +7,14 @@ from handlers.base import BaseHandler
 from lib.helpers import Convert
 from lib.helpers import APIHelpers
 
+import os
+import sys
+dirname = os.path.dirname(os.path.realpath(__file__))
+import_dir = "/".join(dirname.split("/")[:-1])+"/workqueue"
+sys.path.insert(0,import_dir) 
 import work_queue
-import lib.cassandra_cache.run as cache
 
+import lib.cassandra_cache.run as cache
 import lib.cassandra_cache.zk_helpers as zk_helpers
 
 import pickle
