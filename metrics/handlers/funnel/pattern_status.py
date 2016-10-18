@@ -7,13 +7,6 @@ from handlers.base import BaseHandler
 from lib.helpers import Convert
 from lib.helpers import APIHelpers
 
-import os
-import sys
-dirname = os.path.dirname(os.path.realpath(__file__))
-import_dir = "/".join(dirname.split("/")[:-1])+"/workqueue"
-sys.path.insert(0,import_dir) 
-import work_queue
-
 import lib.cassandra_cache.run as cache
 import lib.cassandra_cache.zk_helpers as zk_helpers
 
@@ -86,38 +79,6 @@ class PatternStatusHandler(BaseHandler,APIHelpers,PatternDatabase):
         df = pandas.DataFrame([])
         self.write_response(Convert.df_to_values(df))
 
-    def run_uniques(self,advertiser,pattern,cache_date):
-        # this is the same as run domains
-        
-        delta = datetime.datetime.now() - cache_date
-        _cache_date = datetime.datetime.strftime(cache_date,"%Y-%m-%d")
-
-        work = pickle.dumps((
-            cache.run_recurring,
-            [advertiser,pattern,_cache_date, _cache_date + " domain_cache"]
-
-        ))
-
-        work_queue.SingleQueue(self.zookeeper,self.queue).put(work,0)
-        df = pandas.DataFrame([])
-        self.write_response(Convert.df_to_values(df))
-
-
-    
-    def run_pattern(self,advertiser,pattern,cache_date):
-        
-        delta = datetime.datetime.now() - cache_date
-        _cache_date = datetime.datetime.strftime(cache_date,"%Y-%m-%d")
-
-        work = pickle.dumps((
-            cache.run_backfill,
-            [advertiser,pattern,_cache_date,_cache_date + " backfill"]
-        ))
-
-        work_queue.SingleQueue(self.zookeeper,self.queue).put(work,0)
-        df = pandas.DataFrame([])
-        self.write_response(Convert.df_to_values(df))
-        
     def remove_queue(self,advertiser,pattern,cache_date):
 
         # TODO: This is wrong and needs to search through the queued items and find it based 
@@ -150,12 +111,8 @@ class PatternStatusHandler(BaseHandler,APIHelpers,PatternDatabase):
 
         if argument == "status":
             self.get_stats(advertiser,pattern)
-        elif argument == "run":
-            self.run_pattern(advertiser,pattern,cache_date)
         elif argument == "run_domains":
             self.run_domains(advertiser,pattern,cache_date)
-        elif argument == "run_uniques":
-            self.run_uniques(advertiser,pattern,cache_date)
         elif argument == "delete":
             self.delete_cache(advertiser,pattern,cache_date)
         elif argument == "delete/all":
