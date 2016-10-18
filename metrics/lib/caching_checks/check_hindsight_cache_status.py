@@ -3,7 +3,6 @@ from link import lnk
 import logging
 import pandas
 import sys
-import lib.caching.fill_cassandra as fill_cassandra
 from kazoo.client import KazooClient
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
@@ -188,10 +187,8 @@ if __name__ == "__main__":
     zk.start()
     connectors={}
     db2 = lnk.dbs.rockerbox
-    cassandra = lnk.dbs.cassandra
     connectors['crushercache'] = db
     connectors['db'] = db2
-    connectors['cassandra'] = cassandra
     connectors['zk'] = zk
     connectors['crusher_wrapper'] = crusher
  
