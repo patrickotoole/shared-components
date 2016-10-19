@@ -1,5 +1,5 @@
 import Queue
-from lib.zookeeper import CustomQueue
+import CustomQueue
 import traceback
 import logging
 from kazoo.client import KazooClient
