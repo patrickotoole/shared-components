@@ -22,6 +22,7 @@ from metricCounter import MetricCounter
 from handler import *
 from jobs import *
 from scripts import *
+from workqueuelog import *
 
 import requests
 import signal
@@ -43,6 +44,7 @@ def build_routes(connectors,override=[]):
         (r'/scripts/?(.*?)', ScriptsHandler, connectors),
         (r'/', WorkQueueHandler, connectors),
         (r'/work_queue/?(.*?)',WorkQueueHandler, connectors),
+        (r'/logging/?(.*?)',WQLog, connectors),
     ]
     static = [(r'/static/(.*)', tornado.web.StaticFileHandler, {'path': static_dir})]
     return routes + static

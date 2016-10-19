@@ -19,5 +19,4 @@ if __name__ == "__main__":
         name = item[1]['name']
         post_obj = {'udf':name}
         _resp = requests.post('http://workqueue.crusher.getrockerbox.com/jobs', data=ujson.dumps(post_obj), auth=('rockerbox','rockerbox'))
-
-    print _resp.status_code
+        print _resp.status_code

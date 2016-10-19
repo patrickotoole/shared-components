@@ -349,12 +349,73 @@ submit_target.append("button")
             self.render("admin/datatable.html", data="", paths=js)
         yield default, (data,)
 
+    @decorators.formattable
+    def get_content_test(self,data):
+        def default(self,data):
+            if type(data)==tuple:
+                data = data[0]
+            o = json.dumps([{"class":"script","type":"select","key":"script","values":data}])
+
+            js = """
+<style>
+.content .label {
+  min-width:100px;color:black;display:inline-block
+}
+</style>
+<script>
+var content = d3.select(".content");
+
+var data = """ + o + """
+
+var select_target = content.append("div").classed("selector",true)
+
+var submit_target = content.append("div").classed("submit",true)
+
+
+var resp_target = content.append("div").classed("response",true)
+
+for (i = 0; i < data[0].values.length; i++){
+        tmp_data=data[0].values[i]
+submit_target.append("button")
+  .text(tmp_data.name)
+  .style("width","160px")
+  .style("margin-left","10px")
+  .on("click",function(x){
+var obj = {
+"udf":tmp_data.name
+}
+console.log(obj)
+
+    d3.xhr("/jobs")
+      .post(
+        JSON.stringify(obj),
+        function(err,x) {
+          var j = JSON.parse(x.response)
+
+          resp_target.html("Job Submitted: <br><pre>" + x.response + "</pre><br>")
+         
+        }
+      )
+  })
+submit_target.append("div").classed("break",true).html("<br/>")
+}
+</script>
+<a href="/logging" target="_blank">LOG</a>
+            """
+            self.render("admin/datatable.html", data="", paths=js)
+        yield default, (data,)    
+
+
     def get_data_schedule(self):
         import pickle
         import hashlib
 
         df = self.db.select_dataframe("select name from recurring_scripts where active = 1 and deleted = 0")
         self.get_content_schedule((df.to_dict("records")))
+
+    def get_data_test(self):
+        df = self.db.select_dataframe("select name from recurring_scripts where active = 1 and deleted = 0")
+        self.get_content_test((df.to_dict("records")))
 
     def clear_queue(self):
         self.zookeeper.delete("/python_queue",recursive=True)
@@ -444,7 +505,8 @@ submit_target.append("button")
             self.get_data()
         elif action == "schedule":
             self.get_data_schedule()
-            #self.get_data()
+        elif action == "test":
+            self.get_data_test()
         elif action == "clear":
             self.clear_queue()
         elif "backfill/active" in action:
