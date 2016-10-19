@@ -3,7 +3,7 @@ import ujson
 import pandas
 import StringIO
 import logging
-import metrics.work_queue
+import work_queue
 import logging
 import pickle
 import hashlib
@@ -11,7 +11,7 @@ import datetime
 from RPCQueue import RPCQueue
 from kazoo.exceptions import NoNodeError
 
-from lib.zookeeper import CustomQueue
+import CustomQueue
 from twisted.internet import defer
 from lib.helpers import * 
 
