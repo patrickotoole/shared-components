@@ -65,7 +65,6 @@ def build_routes(connectors,override=[]):
     static = [(r'/static/(.*)', tornado.web.StaticFileHandler, {'path': "static"})]
     selected_routes = [route for route in routes.all if route in override]
     all_routes = routes.all
-    all_routes.remove('work_queue_routes')
     return routes(*(selected_routes or all_routes)) + static
 
 
@@ -132,11 +131,6 @@ if __name__ == '__main__':
         # startup the buffers
         for queue,buf in connectors["buffers"].items():
             reactor.callInThread(connectors[queue],buf,streaming.BufferControl())
-
-    import work_queue
-
-    #for _ in range(0,2):
-    #    reactor.callInThread(work_queue.WorkQueue(connectors['zookeeper']))
 
     server = tornado.httpserver.HTTPServer(app)
     server.listen(options.port)

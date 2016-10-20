@@ -156,10 +156,10 @@ class ActionDatabase(object):
         action['action_id'] = action_id
 
     def _insert_work_queue(self, action, zookeeper):
-        from lib.zookeeper import CustomQueue
         import lib.cassandra_cache.run as cache
         import pickle
         import datetime
+        import CustomQueue
 
         #added to previous code from pattern search end point search_base
         pattern = action["url_pattern"]
