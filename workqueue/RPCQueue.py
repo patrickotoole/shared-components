@@ -1,6 +1,6 @@
 import datetime
 import ujson
-import CustomQueue
+from lib.zookeeper import CustomQueue
 import pickle
 import logging
 import hashlib

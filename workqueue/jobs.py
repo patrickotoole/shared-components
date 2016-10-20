@@ -11,7 +11,7 @@ import datetime
 from RPCQueue import RPCQueue
 from kazoo.exceptions import NoNodeError
 
-import CustomQueue
+from lib.zookeeper import CustomQueue
 from twisted.internet import defer
 from lib.helpers import * 
 
