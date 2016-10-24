@@ -9,6 +9,7 @@ from collections import Counter
 import socket
 import numpy as np
 import pycurl
+import urllib
 
 URL="http://scrapper.crusher.getrockerbox.com?url=%s"
 
@@ -66,7 +67,7 @@ class ScrapperMessage():
     def get(self,url):
         try:
             URL = self.get_host() + "/?url=%s"
-            logging.info(URL % url)
+            logging.info(URL % urllib.quote(url,safe=''))
             url_with_param = URL % url
             _resp = requests.get(url_with_param, timeout=3)
             self.CS.bump("response")
@@ -104,7 +105,7 @@ class ScrapperMessage():
             url = message_object['bid_request']['bid_info']['url']
             limit = count.get(url)
             count.update({url})
-            if limit ==5:
+            if limit ==5 and len("/".join(url.replace("http://","").replace("https://","").replace("www.","").split("/")[1:])) > 10:
                 logging.info(url)
                 self.CS.bump("url_limit_reached")
                 if use_scrapper:
