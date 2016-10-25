@@ -26,7 +26,8 @@ class TopicStreamerLDA(BaseRunner):
         
 
     def title_to_doc(self,title):
-        as_doc = self.comp.dictionary.doc2bow(title)
+        title_lower = [x.lower() for x in title]
+        as_doc = self.comp.dictionary.doc2bow(title_lower)
         return as_doc
 
     def process_lda(self,doc):
@@ -42,7 +43,7 @@ class TopicStreamerLDA(BaseRunner):
             word_prob = word.split("*")
             word_weight = float(word_prob[0])
             word_num = int(word_prob[1])
-            if word_weight > 0.1:
+            if word_weight > 0.2:
                 word_from_num = self.comp.dictionary.get(word_num)
                 topic_word_list.append(word_from_num)
         return "-".join(topic_word_list)

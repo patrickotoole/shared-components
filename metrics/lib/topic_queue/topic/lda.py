@@ -13,7 +13,7 @@ class LSIComparision(object):
             assert(type(data[0]) == list)
             assert(len(data[0]) > 0)
             self.data = data
-            self.num_topics = num_topics
+            self.num_topics = int(num_topics)
             self.data_dict = {}
             self.subsize = (len(data) / 1000) + 1
             self.divide_data(data)
