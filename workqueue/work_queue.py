@@ -98,7 +98,11 @@ class WorkQueue(object):
                     self.mcounter.bumpSuccess()
                     self.connectors['crushercache'].execute(SQL_LOG, (current_host, job_id, "Ran"))
                     
-                    clear_old_cache(**kwargs)
+                    try:
+                        clear_old_cache(**kwargs)
+                    except Exception as e:
+                        logging.info("could not clear previous cached data")
+                        logging.info(str(e))
                     
                     self.timer.resetTime()
                     logging.info("finished item in queue %s %s" % (str(fn),str(kwargs)))
