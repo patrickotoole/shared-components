@@ -6,7 +6,7 @@ from ...search.pattern.base_visitors import VisitorBase
 from lib.helpers import decorators
 
 QUERYFIRST = "select body from user_defined_functions where udf ='{}' and advertiser='{}'"
-QUERYFUNCTIONS = "select body from user_defined_functions where udf = '{}'"
+QUERYFUNCTIONS = "select body from user_defined_functions where udf = '{}' and advertiser is NULL"
 
 def userDefinedFunction(code_string):
     env = {}
