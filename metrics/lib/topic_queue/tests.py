@@ -51,9 +51,34 @@ for url in url_titles:
     classify_data[ur].append(ti)
     print ur
     print ti
+
+del(classNew)
+classNew = cl.LDAClassifier("LDAmodelobj10282000.p")
+for url in url_titles:
+    ur = url['url']
+    ti = classNew.classify(url['url'],url['title'])
+    classify_data[ur].append(ti)
+    print ur
+    print ti
+del(classNew)
+classNew = cl.LDAClassifier("LDAmodelobj10283000.p")
+for url in url_titles:
+    ur = url['url']
+    ti = classNew.classify(url['url'],url['title'])
+    classify_data[ur].append(ti)
+    print ur
+    print ti
+del(classNew)
+classNew = cl.LDAClassifier("LDAmodelobj10281000.p")
+for url in url_titles:
+    ur = url['url']
+    ti = classNew.classify(url['url'],url['title'])
+    classify_data[ur].append(ti)
+    print ur
+    print ti
 import csv
 del(classNew)
-with open("check_class3.csv", 'w') as f:
+with open("check_class5.csv", 'w') as f:
     wr = csv.writer(f, delimiter=',')
     for key, val in classify_data.iteritems():
         temp=[]

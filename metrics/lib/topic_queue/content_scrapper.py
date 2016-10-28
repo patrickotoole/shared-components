@@ -11,7 +11,7 @@ import numpy as np
 import pycurl
 import urllib
 
-URL="http://scrapper.crusher.getrockerbox.com?url=%s"
+URL="http://scrapper.crusher.getrockerbox.com"
 
 class GraphiteSender():
     import datetime
@@ -66,10 +66,10 @@ class ScrapperMessage():
 
     def get(self,url):
         try:
-            URL = self.get_host() + "/?url=%s"
-            logging.info(URL % urllib.quote(url,safe=''))
-            url_with_param = URL % url
-            _resp = requests.get(url_with_param, timeout=3)
+            URL = self.get_host()
+            url_with_param = URL + "/?url=%s" % url.replace("=","%3D")
+            logging.info(url_with_param)
+            _resp = requests.get(url_with_param, timeout=5)
             self.CS.bump("response")
             data = _resp.json()
             title = data['result']['title']
