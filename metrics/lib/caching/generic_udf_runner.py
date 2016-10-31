@@ -44,6 +44,11 @@ class UDFRunner(BaseRunner):
 
     def make_request(self, pattern, func_name, params):
         new_URL = False
+        #set default parameters of unsampled and 2 days for requests run on wq
+        if "prevent_sample" not in params.keys():
+            params['prevent_sample'] = 'true'
+        if "num_days" not in params.keys():
+            params['num_days'] = 2
         if len(params)>0:
             new_URL = URL
             try:
@@ -57,6 +62,10 @@ class UDFRunner(BaseRunner):
         url = _url.format(func_name, pattern, self.action_id)
         logging.info(url)
         resp = self.crusher.get(url, timeout=300, allow_redirects=False)
+        #fall back if initial set of parameters fails try sampled url without parameters
+        if resp.status_code != 200:
+            resp = self.crusher.get(URL.format(func_name, pattern, self.action_id), timeout=300, allow_redirects=False)
+
         if resp.status_code != 200:
             raise Exception("Response is not 200, response is %s" % resp.status_code)         
         try:
