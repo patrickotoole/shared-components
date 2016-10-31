@@ -2,8 +2,11 @@ import tornado
 import os
 import pycurl
 from goose import Goose
+import readability
 import ujson
 import logging
+import requests
+from readability import Document
 
 class ScrapperGooseHandler(tornado.web.RequestHandler):
 
@@ -27,27 +30,15 @@ class ScrapperGooseHandler(tornado.web.RequestHandler):
         response = {'url':url,'result':{'title':title,'description':descript, "article":article_text}}
         self.write(ujson.dumps(response))
 
-class ScrapperRegexHandler(tornado.web.RequestHandler):
+class ScrapperReadabilityHandler(tornado.web.RequestHandler):
 
     def initialize(self,**kwargs):
         self.data = {}
 
     def get(self, uri):
         url = self.get_argument("url",False)
-        if url:
-            from io import BytesIO
-
-            buffer = BytesIO()
-            c = pycurl.Curl()
-            c.setopt(c.URL, url)
-            c.setopt(c.WRITEDATA, buffer)
-            c.perform()
-            c.close()
-
-            body = buffer.getvalue()
-            import ipdb; ipdb.set_trace()
-            # Body is a byte string.
-            # We have to know the encoding in order to print it to a text file
-            # such as standard output.
-            res = body.decode('iso-8859-1')
-        self.write(res)
+        _resp = requests.get(url)
+        doc = Document(_resp.text)
+        current_title = doc.title()
+        res = {'url':url,'result':{'title':current_title,'description':"", "article":""}}
+        self.write(ujson.dumps(res))

@@ -32,8 +32,8 @@ if __name__ == '__main__':
     }
 
     routes = [
+        (r'/read(.*?)', ScrapperReadabilityHandler, connectors),
         (r'/(.*?)', ScrapperGooseHandler, connectors)
-        #(r'/regex/(.*?)', ScrapperRegexHandler, connectors),
     ]
 
     app = tornado.web.Application(
