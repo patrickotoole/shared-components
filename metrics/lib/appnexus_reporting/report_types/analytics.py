@@ -26,7 +26,8 @@ ANALYTICS_FORM = """
             "advertiser_id",
             "campaign_id",
             "creative_id",
-            "seller_member",
+            "seller_member_id",
+            "seller_member_name",
             "line_item_id"
         ],
         "row_per": [
@@ -86,6 +87,9 @@ def transform(df,report_params):
 def run(api, db, table, advertiser_id, start_date, end_date):
 
     df, report_params = get_report(db,api,advertiser_id,start_date,end_date)
+    series =  df['seller_member_name'] + " (" + df['seller_member_id'].map(str) + ")"
+
+    df['seller_member'] = series
     if len(df) == 0: 
         report_params['processed_at'] = now()
         log_processed(db,report_params)

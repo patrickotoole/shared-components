@@ -50,7 +50,6 @@ class AppnexusReport(object):
         if error: logging.info(error)
 
         report_id = response.get("report_id",False)
-
         self.params['report_id'] = report_id
         log_report_id(self.db, self.params)
 
