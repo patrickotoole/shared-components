@@ -485,6 +485,11 @@
 
             d3.select(".summary").html("Total rows: " + data.length + "<br>" + " Rows remaining after filter: " + window.filtered_data.length + "<br><br>")
 
+            if (window.filtered_data.length == 0) {
+              d3.selectAll(".outer-table-wrapper").html("")
+            }
+            
+
           })
       
       buildTable(data)
