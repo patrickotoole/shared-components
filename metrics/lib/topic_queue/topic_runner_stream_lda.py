@@ -9,9 +9,10 @@ import sys
 
 class TopicStreamerLDA(BaseRunner):
 
-    def __init__(self, csv_location="rec_df.csv", pickle_location='LSImodelobject.p', connectors={}):
+    def __init__(self, csv_location="rec_df.csv", pickle_location='LSImodelobject.p', weight_cutoff=0.2, connectors={}):
         self.csv_location = csv_location
         self.pickle_location = pickle_location
+        self.cutoff = weight_cutoff
         self.connectors = connectors
         self.topic_vectors = []
         self.list_to_vector = False
@@ -43,7 +44,7 @@ class TopicStreamerLDA(BaseRunner):
             word_prob = word.split("*")
             word_weight = float(word_prob[0])
             word_num = int(word_prob[1])
-            if word_weight > 0.2:
+            if word_weight > self.cutoff:
                 word_from_num = self.comp.dictionary.get(word_num)
                 topic_word_list.append(word_from_num)
         return "-".join(topic_word_list)

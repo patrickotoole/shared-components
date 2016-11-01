@@ -29,8 +29,8 @@ class LSIClassifier(BaseClassifier):
 
 class LDAClassifier(BaseClassifier):
 
-    def __init__(self,lda_location):
-        self.topic_streamer=lda.TopicStreamerLDA(pickle_location=lda_location)
+    def __init__(self,lda_location, weight_cut):
+        self.topic_streamer=lda.TopicStreamerLDA(pickle_location=lda_location, weight_cutoff=weight_cut)
         comp_obj = self.topic_streamer.load()
 
     def default_classifier(self,topic):

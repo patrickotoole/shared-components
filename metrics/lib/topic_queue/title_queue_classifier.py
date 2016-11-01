@@ -25,6 +25,7 @@ if __name__ == '__main__':
     define("csv_location",  default="")
     define("lda_location",  default="")
     define("use_default", type=bool,default=False)
+    define("weight_cutoff", default=0.2)
     basicConfig(options={}) 
     parse_command_line()
     client = KafkaClient(hosts="10.128.248.211:2181/v0_8_1")
@@ -34,7 +35,7 @@ if __name__ == '__main__':
     if options.use_default:
         classifier = BaseClassifier()
     else:
-        classifier = LDAClassifier( options.lda_location)
+        classifier = LDAClassifier(options.lda_location, options.weight_cutoff)
     for message in consumer:
         if message is not None:
             process_message(message, producer, classifier, options.use_default)
