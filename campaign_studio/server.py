@@ -124,7 +124,9 @@ class ReportHandler(tornado.web.RequestHandler):
     def post(self):
         dd = json.loads(self.request.body)
 
-        advertiser_id = 416901
+        advertiser_id = dd['report_advertiser']
+        dd = { "report":dd["report"] }
+
         start_date = '2016-10-01 00:00:00'
         end_date = '2016-11-02 00:00:00'
 

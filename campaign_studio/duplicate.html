@@ -35,12 +35,29 @@
             , settings = values.settings
             , report = values.report;
 
+          settings.map(function(row) {
+ 
+              var selected = d3.selectAll("#" + row.key)
+              if (selected.size() > 0) {
+                if (selected.node().type == "select-one") {
+                  selected.selectAll("option").property("selected",function(x) { return this.value == row.value ? "selected" : undefined})
+                } else if (selected.node().type == "text") {
+                  selected.property("value", row.value)
+                } else if (selected.node().tagName == "DIV") {
+                  
+                  selected.selectAll("input")
+                    .filter(function(x) { return x == row.value})
+                    .property("checked",function(x) { return x == row.value ? "checked" : undefined})
+                }
+              }
+            })
+
           if (report) {
 
-            d3.select("#report").text(JSON.stringify({"report":report},null,2))
+            d3.select("#report").text(JSON.stringify({"report":report,"report_advertiser":d3.select("#report_advertiser").node().value},null,2))
 
             d3.xhr("/reporting")
-              .post( JSON.stringify({"report":report}), function(err, data){
+              .post(d3.select("#report").text(), function(err, data){
                 var jj = JSON.parse(data.response)
                 runBuild(jj,Object.keys(jj[0]))
 
@@ -98,7 +115,7 @@
                     .property("checked",function(x) { return x == row.value ? "checked" : undefined})
                 }
               }
-            })
+            })  
 
           }
 
@@ -111,8 +128,16 @@
     <div class="row"> 
       Upload a file: <input id="upload" type="file" /> 
       <b>OR</b>
-      <span style="width:100px;display:inline-block"></span>
-      Use Appnexus Report: <textarea id="report" type="file" style="width:200px"></textarea> 
+      <span style="display:inline-block">
+        <span style="width:100px;display:inline-block"></span>
+        <span style="width:200px;display:inline-block">Use Appnexus Report:</span> 
+        <textarea id="report" type="file" style="width:200px"></textarea> 
+        <br>
+        <span style="width:100px;display:inline-block"></span>
+        <span style="width:200px;display:inline-block">Report Advertiser ID:</span>
+        <select id='report_advertiser'></select>
+      </span>
+
 
       <button id="report-action">Get</button>
     </div>
@@ -225,7 +250,7 @@
       <select id='advertiser' style="width:200px"></select> 
     </div>
     <div class="row">
-      <div style="width:300px;display:inline-block">Line Item ID: </div>
+      <div style="width:300px;display:inline-block">Line Item ID (if not modify): </div>
       <input id="line_item_id" style="width:200px"></input> 
     </div>
 
@@ -314,6 +339,8 @@
 
 
         summary.push({"key":"advertiser","value":d3.select("#advertiser").node().value})
+        summary.push({"key":"report_advertiser","value":d3.select("#report_advertiser").node().value})
+
 
         return summary
 
@@ -369,6 +396,7 @@
         .render("placement_id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
         .render("venue_id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
         .render("campaign_id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
+        .render("line_item_id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
         .render("publisher_id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
         .render("sellers",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
         .draw()
@@ -534,6 +562,15 @@
             .append("option")
             .text(function(x) { return x.pixel_source_name })
             .attr("value",function(x){ return x.external_advertiser_id })
+
+        var select_advertiser = d3.selectAll("#report_advertiser").data([advertisers])
+        select_advertiser.selectAll("option").data(function(x) { return x } )
+          .enter()
+            .append("option")
+            .text(function(x) { return x.pixel_source_name })
+            .attr("value",function(x){ return x.external_advertiser_id })
+
+
 
         var select = d3.selectAll("#templates").data([templates])
 
