@@ -115,6 +115,43 @@ class DuplicateHandler(tornado.web.RequestHandler):
         copy.runner(dparams,LINE_ITEM_ID,ADVERTISER,data,"blank",self.api)
 
 
+class ReportHandler(tornado.web.RequestHandler):
+
+    def initialize(self,**kwargs):
+        self.db = kwargs.get("reporting",False) 
+        self.api = kwargs.get("api",False) 
+
+    def post(self):
+        dd = json.loads(self.request.body)
+
+        advertiser_id = 416901
+        start_date = '2016-10-01 00:00:00'
+        end_date = '2016-11-02 00:00:00'
+
+        from lib.appnexus_reporting.appnexus import AppnexusReport
+
+        import hashlib
+        m = hashlib.md5()
+        m.update(json.dumps(dd))
+
+        digest = str(m.hexdigest())
+
+        report_wrapper = AppnexusReport(self.api, self.db, advertiser_id, start_date, end_date, "custom-" + digest)
+        report_id = report_wrapper.request_report(advertiser_id,json.dumps(dd) % {"start_date":start_date,"end_date":end_date})
+        report_url = report_wrapper.get_report(report_id)
+        report_IO = report_wrapper.download_report(report_url)
+        
+        import pandas
+        df = pandas.read_csv(report_IO)
+        if "venue" in df.columns:
+            df['venue_id'] = df['venue'].map(lambda x: x.split(" ")[1])
+
+        self.write(json.dumps(df.to_dict('records')))
+        self.finish()
+
+
+
+
         
 
 
@@ -124,12 +161,16 @@ if __name__ == '__main__':
 
     connectors = {
         "db": lnk.dbs.rockerbox,
+        "reporting": lnk.dbs.reporting,
+
         "api": lnk.api.console
     }
 
     routes = [
         (r'/', IndexHandler, connectors),
         (r'/duplicate', DuplicateHandler, connectors),
+        (r'/reporting', ReportHandler, connectors),
+
 
         (r'/static/(.*)', tornado.web.StaticFileHandler, {"path":"static"}),
     ]

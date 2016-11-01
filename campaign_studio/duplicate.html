@@ -16,10 +16,13 @@
 <body style="width:1200px;margin-left:auto;margin-right:auto">
   <h3 style="margin-bottom:0px">Duplicate Campaigns (With Modifications) from Reporting</h3>
 
-  <h4>Setup</h4>
+  <h4>Setup Data</h4>
 
   <div>
-    <div class="row"> Upload a file: <input id="upload" type="file" /> </div>
+    
+
+
+
     <div class="row"> Load saved state: 
       <textarea style="width:300px; height:20px" id="preload"></textarea> 
       <button id="preload-action">Load</button>
@@ -29,39 +32,108 @@
           var values = JSON.parse(d3.select("#preload").node().value)
 
           var filters = values.filters
-            , settings = values.settings;
+            , settings = values.settings
+            , report = values.report;
 
-          if (filters.length && window.data_filter) {
-            window.data_filter
-              .data(filters)
-              .draw()
+          if (report) {
 
-            window.data_filter
-              .on("update")(filters)
+            d3.select("#report").text(JSON.stringify({"report":report},null,2))
+
+            d3.xhr("/reporting")
+              .post( JSON.stringify({"report":report}), function(err, data){
+                var jj = JSON.parse(data.response)
+                runBuild(jj,Object.keys(jj[0]))
+
+
+                settings.map(function(row) {
+ 
+                  var selected = d3.selectAll("#" + row.key)
+                  if (selected.size() > 0) {
+                    if (selected.node().type == "select-one") {
+                      selected.selectAll("option").property("selected",function(x) { return this.value == row.value ? "selected" : undefined})
+                    } else if (selected.node().type == "text") {
+                      selected.property("value", row.value)
+                    } else if (selected.node().tagName == "DIV") {
+                      
+                      selected.selectAll("input")
+                        .filter(function(x) { return x == row.value})
+                        .property("checked",function(x) { return x == row.value ? "checked" : undefined})
+                    }
+                  }
+                })
+
+            if (filters.length && window.data_filter) {
+              window.data_filter
+                .data(filters)
+                .draw()
+
+              window.data_filter
+                .on("update")(filters)
+            }
+
+              })
+            
+          } else {
+            if (filters.length && window.data_filter) {
+              window.data_filter
+                .data(filters)
+                .draw()
+
+              window.data_filter
+                .on("update")(filters)
+            }
+
+            settings.map(function(row) {
+ 
+              var selected = d3.selectAll("#" + row.key)
+              if (selected.size() > 0) {
+                if (selected.node().type == "select-one") {
+                  selected.selectAll("option").property("selected",function(x) { return this.value == row.value ? "selected" : undefined})
+                } else if (selected.node().type == "text") {
+                  selected.property("value", row.value)
+                } else if (selected.node().tagName == "DIV") {
+                  
+                  selected.selectAll("input")
+                    .filter(function(x) { return x == row.value})
+                    .property("checked",function(x) { return x == row.value ? "checked" : undefined})
+                }
+              }
+            })
+
           }
 
 
-          settings.map(function(row) {
- 
-            var selected = d3.selectAll("#" + row.key)
-            if (selected.size() > 0) {
-              if (selected.node().type == "select-one") {
-                selected.selectAll("option").property("selected",function(x) { return this.value == row.value ? "selected" : undefined})
-              } else if (selected.node().type == "text") {
-                selected.property("value", row.value)
-              } else if (selected.node().tagName == "DIV") {
-                
-                selected.selectAll("input")
-                  .filter(function(x) { return x == row.value})
-                  .property("checked",function(x) { return x == row.value ? "checked" : undefined})
-              }
-            }
-          })
+          
           
         })
       </script>
-  </div>
 
+    <div class="row"> 
+      Upload a file: <input id="upload" type="file" /> 
+      <b>OR</b>
+      <span style="width:100px;display:inline-block"></span>
+      Use Appnexus Report: <textarea id="report" type="file" style="width:200px"></textarea> 
+
+      <button id="report-action">Get</button>
+    </div>
+    <script>
+      d3.select("#report-action").on("click",function(){
+          var values = JSON.parse(d3.select("#report").node().value)
+          
+          d3.xhr("/reporting")
+            .post( JSON.stringify(values), function(err, data){
+              var jj = JSON.parse(data.response)
+
+              runBuild(jj,Object.keys(jj[0]))
+            } )
+
+          
+        })
+
+    </script>
+  </div>
+  <br>
+  <hr>
 
   <h4>Analyze</h4>
 
@@ -161,30 +233,29 @@
 
     <div>
       <div style="display:inline-block;width:300px">Duplicate/replace/modify/create: </div>
-      <select id="duplicate" >
-        <option>Duplicate</option>
-        <option>Replace</option>
-        <option>Modify</option>
-        <option>Create</option>
-      </select>
-    </div>
+      <div style="display:inline-block;width:250px">
+        <select id="duplicate" >
+          <option>Duplicate</option>
+          <option>Replace</option>
+          <option>Modify</option>
+          <option>Create</option>
+        </select>
+      </div>
 
-    <div class="row">
-      <div style="width:300px;display:inline-block">Template Campaign (if create): </div>
+      <div style="width:250px;display:inline-block">Template Campaign (if create): </div>
       <input id="template_campaign" style="width:200px"></input> 
     </div>
 
     <div>
       <div style="display:inline-block;width:300px">Group or Breakout: </div>
-      <select id="breakout" >
-        <option>Group</option>
-        <option>Breakout</option>
+      <div style="display:inline-block;width:250px">
+        <select id="breakout" >
+          <option>Group</option>
+          <option>Breakout</option>
+        </select>
+      </div>
 
-      </select>
-    </div>
-
-    <div class="row">
-      <div style="width:300px;display:inline-block">Group by (if create):</div>
+      <div style="width:250px;display:inline-block">Group by (if create):</div>
       <input id="create_group" style="width:200px"></input> 
     </div>
 
@@ -254,6 +325,7 @@
 
 
         var data = {
+          "report": JSON.parse(d3.select("#report").text()).report,
           "settings": summary,
           "filters": window.data_filter.data()
         }
@@ -310,6 +382,11 @@
 
         headers = process.headers()
         var data = process.data()
+
+        runBuild(data,headers)
+      })
+
+      function runBuild(data,headers) {
         window.filtered_data = data;
 
         var header_mappings = {
@@ -383,7 +460,7 @@
       return data
 
 
-    })
+    }
 
     
 
