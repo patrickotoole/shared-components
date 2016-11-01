@@ -127,8 +127,14 @@ class ReportHandler(tornado.web.RequestHandler):
         advertiser_id = dd['report_advertiser']
         dd = { "report":dd["report"] }
 
-        start_date = '2016-10-01 00:00:00'
-        end_date = '2016-11-02 00:00:00'
+        import datetime
+
+        start_date = datetime.datetime.now() + datetime.timedelta(-30)
+        end_date = datetime.datetime.now() + datetime.timedelta(1)
+
+        start_date = start_date.date().isoformat()
+        end_date = end_date.date().isoformat()
+
 
         from lib.appnexus_reporting.appnexus import AppnexusReport
 
