@@ -14,7 +14,7 @@
 </head>
 
 <body style="width:1200px;margin-left:auto;margin-right:auto">
-  <h3 style="margin-bottom:0px">Duplicate Campaigns (With Modifications) from Reporting</h3>
+  <h3 style="margin-bottom:0px">Optimize from Reporting</h3>
 
   <h4>Setup Data</h4>
 
@@ -224,6 +224,8 @@
                   self.on("update")(self.data())
                 },1000)
               })
+              d3.select(".summary").text(window.data_filter.length)
+
 
           })
           .draw()
@@ -393,6 +395,7 @@
 
       table.table(tt)
         .data({"key":"Data","values":data}) 
+        .render("ctr",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(d3.format(".3%")(t)) })
         .render("placement_id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
         .render("venue_id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
         .render("campaign_id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })

@@ -181,9 +181,12 @@ def runner(params,LINE_ITEM,ADVERTISER,data,fields,_c):
             new_campaign = modify_exisiting_campaign(original_campaign,LINE_ITEM)
             new_campaign['name'] = original_campaign['name']
 
+
+            if params.get('platform_placement_targets',False) == 'include':
+                new_campaign['name'] += " - include platform_placement_targets: %s" % final_profile['platform_placement_targets'][0]['id']
+
             if params.get('venue_targets',False) == 'include':
                 new_campaign['name'] += " - include venue: %s" % final_profile['venue_targets'][0]
-
 
             if params.get('domain_targets',False) == 'include':
                 new_campaign['name'] += " - include domain: %s" % final_profile['domain_targets'][0]['domain']

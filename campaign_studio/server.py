@@ -61,7 +61,7 @@ class IndexHandler(tornado.web.RequestHandler):
         runner.runner(CAMPAIGN_TYPE,LINE_ITEM,ADVERTISER,data,fields)
 
 
-class DuplicateHandler(tornado.web.RequestHandler):
+class OptimizeHandler(tornado.web.RequestHandler):
 
     def initialize(self,**kwargs):
         self.db = kwargs.get("db",False) 
@@ -78,7 +78,7 @@ class DuplicateHandler(tornado.web.RequestHandler):
         advertisers = self.db.select_dataframe("select pixel_source_name, external_advertiser_id from advertiser where active = 1 and deleted = 0 and media_trader_slack_name is not null")
         ad = advertisers.to_dict('records')
 
-        self.render("duplicate.html",campaign_templates=dd,profile_templates=pd,advertisers=ad)
+        self.render("optimize.html",campaign_templates=dd,profile_templates=pd,advertisers=ad)
 
     def post(self):
         dd = json.loads(self.request.body)
@@ -170,7 +170,7 @@ if __name__ == '__main__':
 
     routes = [
         (r'/', IndexHandler, connectors),
-        (r'/duplicate', DuplicateHandler, connectors),
+        (r'/optimize', OptimizeHandler, connectors),
         (r'/reporting', ReportHandler, connectors),
 
 
