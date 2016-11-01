@@ -1,0 +1,511 @@
+
+{% autoescape None %}
+<head>
+  <style>
+    .hidden { display:none }
+  </style>
+  <script data-require="d3@3.5.3" data-semver="3.5.3" src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.3/d3.js"></script>
+  <script src="http://hindsight.getrockerbox.com/static/js/rockerbox/crusher/filter/build/filter.js"></script>
+  <script src="http://hindsight.getrockerbox.com/static/js/rockerbox/crusher/table/build/table.js"></script>
+
+  <script src="/static/utils.js"></script>
+
+  
+</head>
+
+<body style="width:1200px;margin-left:auto;margin-right:auto">
+  <h3 style="margin-bottom:0px">Duplicate Campaigns (With Modifications) from Reporting</h3>
+
+  <h4>Setup</h4>
+
+  <div>
+    <div class="row"> Upload a file: <input id="upload" type="file" /> </div>
+    <div class="row"> Load saved state: 
+      <textarea style="width:300px; height:20px" id="preload"></textarea> 
+      <button id="preload-action">Load</button>
+    </div>
+    <script>
+        d3.select("#preload-action").on("click",function(){
+          var values = JSON.parse(d3.select("#preload").node().value)
+
+          var filters = values.filters
+            , settings = values.settings;
+
+          if (filters.length && window.data_filter) {
+            window.data_filter
+              .data(filters)
+              .draw()
+
+            window.data_filter
+              .on("update")(filters)
+          }
+
+
+          settings.map(function(row) {
+ 
+            var selected = d3.selectAll("#" + row.key)
+            if (selected.size() > 0) {
+              if (selected.node().type == "select-one") {
+                selected.selectAll("option").property("selected",function(x) { return this.value == row.value ? "selected" : undefined})
+              } else if (selected.node().type == "text") {
+                selected.property("value", row.value)
+              } else if (selected.node().tagName == "DIV") {
+                
+                selected.selectAll("input")
+                  .filter(function(x) { return x == row.value})
+                  .property("checked",function(x) { return x == row.value ? "checked" : undefined})
+              }
+            }
+          })
+          
+        })
+      </script>
+  </div>
+
+
+  <h4>Analyze</h4>
+
+  <div>
+    <div class="row"> Filter: </div>
+  </div>
+
+
+
+
+  <div class="row">
+
+    <div class="filter-row"> </div>
+    <script>
+
+      function buildFilters(headers) { 
+
+        var ops = headers.map(function(x) {
+          return [{"key": "equals"}, {"key":"does not contain"}, {"key":"does not equal"}, {"key": "between"},{"key": "greater than"},{"key": "less than"}]
+        })
+
+        window.data_filter = filter.filter(d3.selectAll(".filter-row"))
+          .fields(headers)
+          .ops(ops)
+          .data([])
+          .render_op("between",function(filter,value) {
+            var self = this
+
+            value.value = typeof(value.value) == "object" ? value.value : [0,24]
+
+            d3_updateable(filter,"input.value.low","input")
+              .classed("value low",true)
+              .style("margin-bottom","10px")
+              .style("padding-left","10px")
+              .style("width","90px")
+              .attr("value", value.value[0])
+              .on("keyup", function(x){
+                var t = this
+              
+                self.typewatch(function() {
+                  value.value[0] = parseFloat(t.value)
+                  //value.fn = self.buildOp(value)
+                  self.on("update")(self.data())
+                },1000)
+              })
+
+            d3_updateable(filter,"span.value-and","span")
+              .classed("value-and",true)
+              .text(" and ")
+
+            d3_updateable(filter,"input.value.high","input")
+              .classed("value high",true)
+              .style("margin-bottom","10px")
+              .style("padding-left","10px")
+              .style("width","90px")
+              .attr("value", value.value[1])
+              .on("keyup", function(x){
+                var t = this
+              
+                self.typewatch(function() {
+                  value.value[1] = parseFloat(t.value)
+                  //value.fn = self.buildOp(value)
+                  self.on("update")(self.data())
+                },1000)
+              })
+
+          })
+          .draw()
+
+        return window.data_filter
+
+      }
+    </script>
+  </div>
+
+
+  <div class="summary"></div>
+  <div style="height:250px;overflow:scroll;position:relative" class="outer-table-wrapper"></div>
+
+  <br><hr>
+
+  <div class="setup" style="display:inline-block">
+
+    <h4>Setup</h4>
+
+
+    <div class="row">
+      <div style="width:300px;display:inline-block">Advertiser ID: </div>
+      <select id='advertiser' style="width:200px"></select> 
+    </div>
+    <div class="row">
+      <div style="width:300px;display:inline-block">Line Item ID: </div>
+      <input id="line_item_id" style="width:200px"></input> 
+    </div>
+
+
+
+    <div>
+      <div style="display:inline-block;width:300px">Duplicate/replace/modify/create: </div>
+      <select id="duplicate" >
+        <option>Duplicate</option>
+        <option>Replace</option>
+        <option>Modify</option>
+        <option>Create</option>
+      </select>
+    </div>
+
+    <div class="row">
+      <div style="width:300px;display:inline-block">Template Campaign (if create): </div>
+      <input id="template_campaign" style="width:200px"></input> 
+    </div>
+
+    <div>
+      <div style="display:inline-block;width:300px">Group or Breakout: </div>
+      <select id="breakout" >
+        <option>Group</option>
+        <option>Breakout</option>
+
+      </select>
+    </div>
+
+    <div class="row">
+      <div style="width:300px;display:inline-block">Group by (if create):</div>
+      <input id="create_group" style="width:200px"></input> 
+    </div>
+
+
+    <div>
+      <div style="display:inline-block;width:300px">Override or Append fields: </div>
+      <select id="append" >
+
+        <option>Override</option>
+        <option>Append</option>
+
+      </select>
+    </div>
+
+
+    <br>
+
+    <div>
+      Fields to add: 
+      <div id='template-fields'></div>
+
+      <script src="/static/create/build/campaign_analysis.js"></script>
+      <script>
+
+
+      </script>
+    </div>
+    <br>
+
+
+  </div>
+
+
+
+  <br><br>
+  <hr>
+
+
+
+  <div style="text-align:center" class="build">
+    <button id="save" >Save State</button>
+    <button id="create" >Create Campaigns</button>
+    <br><br>
+    <pre style="text-align:left;margin:auto;width:600px" id="obj"></pre>
+    <script>
+
+    var buildSummary = function() {
+        var summary = template_fields.summarize()
+        summary.push({"key":"append","value":d3.select("#append").node().selectedOptions[0].value })
+        summary.push({"key":"duplicate","value":d3.select("#duplicate").node().selectedOptions[0].value })
+        summary.push({"key":"breakout","value":d3.select("#breakout").node().selectedOptions[0].value })
+
+        summary.push({"key":"line_item_id","value":d3.select("#line_item_id").node().value})
+        summary.push({"key":"template_campaign","value":d3.select("#template_campaign").node().value})
+        summary.push({"key":"create_group","value":d3.select("#create_group").node().value})
+
+
+        summary.push({"key":"advertiser","value":d3.select("#advertiser").node().value})
+
+        return summary
+
+    }
+
+    d3.select("#save").on("click",function(x){
+
+        var summary = buildSummary()
+
+
+        var data = {
+          "settings": summary,
+          "filters": window.data_filter.data()
+        }
+
+        d3.select("#obj").text(JSON.stringify(data,null,2))
+
+      })
+
+      d3.select("#create").on("click",function(x){
+        var summary = buildSummary()
+
+        var dd = window.filtered_data
+
+
+        var data = {
+          "data": dd,
+          "params": summary
+          //"fields": fields.map(function(x) { return x.name }),
+          //"line_item": line_item,
+          //"advertiser": advertiser,  
+          //"template": template
+        }
+
+        d3.xhr("/duplicate")
+          .post( JSON.stringify(data) )
+      })
+    </script>
+    </br>
+  </div>
+
+
+  <script>
+
+    function buildTable(data) {
+      
+      var tt = d3.selectAll(".outer-table-wrapper")
+
+
+      table.table(tt)
+        .data({"key":"Data","values":data}) 
+        .render("placement_id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
+        .render("venue_id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
+        .render("campaign_id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
+        .render("publisher_id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
+        .render("sellers",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
+        .draw()
+
+    }
+    
+    campaign_analysis.upload(d3.select("#upload"))
+      .on("load", function parseFile(result){
+
+        var process = campaign_analysis.parse(result)
+
+        headers = process.headers()
+        var data = process.data()
+        window.filtered_data = data;
+
+        var header_mappings = {
+            "seller_id": "member_targets"
+          , "segment_id" : "segment_group_targets"
+          , "venue_id" : "venue_targets"
+          , "placement_id": "platform_placement_targets"
+          , "site_domain": "domain_targets"
+        }
+
+        var values = headers.map(function(f) {
+          return header_mappings[f]
+        }).filter(function(x) { return x} )
+
+        window.template_fields = campaign_analysis.fields(d3.selectAll("#template-fields"))
+          .fields(values)
+          .draw()
+
+
+
+
+        var filters = buildFilters(headers)
+          .on("update",function(x) {
+            var y = x.map(function(z) {
+
+              return { 
+                  "field": z.field
+                , "op": z.op
+                , "value": z.value
+              }
+            }).filter(function(x) { return x.value !== undefined } )
+
+            var mod_filter = filter.filter_data(data)
+            mod_filter._ops['between'] = function(field,value) {
+              return function(x) {
+                return parseFloat(x[field]) >= value[0] && parseFloat(x[field]) <= value[1]
+              }
+            }  
+            mod_filter._ops['does not equal'] = function(field,value) {
+              return function(x) {
+                return String(x[field]) != String(value)
+              }
+            }
+            mod_filter._ops['does not contain'] = function(field,value) {
+              return function(x) {
+                return String(x[field]).indexOf(String(value)) == -1
+              }
+            }
+            mod_filter._ops['greater than'] = function(field,value) {
+              return function(x) {
+                return parseFloat(x[field]) > parseFloat(value)
+              }
+            }
+            mod_filter._ops['less than'] = function(field,value) {
+              return function(x) {
+                return parseFloat(x[field]) < parseFloat(value)
+              }
+            }
+
+            window.filtered_data = mod_filter
+              .logic("and")
+              .by(y) 
+
+            buildTable(window.filtered_data)
+
+          })
+      
+      buildTable(data)
+
+      d3.select(".summary").text(data.length)
+      return data
+
+
+    })
+
+    
+
+
+  </script>
+
+
+      <script>
+
+        var campaignPreview = function(template) {
+          var campaign_entries = d3.entries(
+            JSON.parse(
+              template.replace(/\%\(.*?\)s/g,"'MACRO'").replace(/:'MACRO',/g,':"MACRO",')
+            )
+          ).filter(function(xx) { return xx.value })
+           .sort(function(p,q) { return d3.ascending(p.key,q.key) })
+
+          var items = d3.select(".campaign").selectAll(".items").data(campaign_entries,function(x){ return JSON.stringify(x) })
+          var new_items = items
+            .enter()
+            .append("div").classed("items",true)
+            .style("font-size","14px")
+
+          new_items.append("div").text(function(x) { return x.key }).style("width","50%").style("display","inline-block")
+          new_items.append("div").text(function(x) { return x.value }).style("width","49%").style("display","inline-block")
+
+          items.exit().remove()
+
+          items.order()
+
+        }
+
+        var profilePreview = function(templates) {
+
+          var obj = {}
+
+          templates.map(function(x) {
+            var template = x.template.replace(/\%\(.*?\)s/g,"'MACRO'").replace(/"'MACRO'"/g,'"MACRO"').replace(/'MACRO'/g,'"MACRO"')
+
+
+            obj[x.name] = JSON.parse(template)
+
+            return x
+          })
+
+          var profile_entries = d3.entries(obj).filter(function(xx) { return xx.value })
+            .sort(function(p,q) { return d3.ascending(p.key,q.key) })
+
+          var items = d3.select(".profile").selectAll(".items").data(profile_entries)
+          var new_items = items
+            .enter()
+            .append("div").classed("items",true)
+            .style("font-size","14px")
+
+          new_items.append("div").text(function(x) { return x.key }).style("width","50%").style("display","inline-block")
+          new_items.append("div").text(function(x) { return JSON.stringify(x.value) }).style("width","49%").style("display","inline-block")
+
+          items.exit().remove()
+
+          items.order()
+
+        }
+        
+        var advertisers = {{advertisers}},
+          templates = {{campaign_templates}},
+          profile_templates = {{profile_templates}};
+
+        var select_advertiser = d3.selectAll("#advertiser").data([advertisers])
+        select_advertiser.selectAll("option").data(function(x) { return x } )
+          .enter()
+            .append("option")
+            .text(function(x) { return x.pixel_source_name })
+            .attr("value",function(x){ return x.external_advertiser_id })
+
+        var select = d3.selectAll("#templates").data([templates])
+
+        select.on("change",function(x) {
+          var dd = this.selectedOptions[0].__data__
+
+          campaignPreview(dd.template)
+          
+          var xx = profile_templates.filter(function(z) { return z.type == dd.name })
+
+          var required_fields = []
+          xx.map(function(f) {
+            if (f.required_columns) required_fields.push.apply(required_fields,f.required_columns.split(","))
+          })
+
+          console.log(required_fields)
+
+          profilePreview(xx)
+
+          var field = d3.selectAll("#template-fields")
+            .data([xx])
+
+          field.enter()
+            .append("div")
+            .attr("id","template-fields")
+
+          var spans = field.selectAll("span.yo").data(function(x) {return x},function(x) { return x.name })
+
+          spans
+            .enter().append("span")
+            .classed("yo",true)
+            .attr("style","padding: 0px 10px; display: inline-block; width: 250px; height: 20px; overflow: hidden")
+
+          spans.exit().remove()
+
+          spans.selectAll("input").data(function(x) { return [x]}).enter().append("input")
+            .attr("type","checkbox")
+            .attr("checked","checked")
+            .classed("template-field",true)
+
+          spans.selectAll("span").data(function(x) { return [x]}).enter().append("span")
+            .text(function(x) { return x.name })
+
+          console.log(xx)
+
+        })
+
+        select.selectAll("option").data(function(x) { return x })
+          .enter()
+          .append("option").text(function(x) { return x.name })
+      </script>
+</body>
