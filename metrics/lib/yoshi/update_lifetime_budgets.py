@@ -17,31 +17,31 @@ LIFETIME_BUDGET = '''
 SELECT * FROM rockerbox.yoshi_lifetime_budgets WHERE external_advertiser_id = %(external_advertiser_id)s
 '''
 
-YOSHI_CONVS = '''
-SELECT DISTINCT campaign_id FROM reporting.v2_conversion_reporting
-WHERE external_advertiser_id = %(external_advertiser_id)s
-AND conversion_time >= "2016-01-01" AND active = 1 AND is_valid = 1 AND deleted = 0
-'''
 
 RULE_GROUP_ID = '''
 SELECT * FROM reporting.opt_rules WHERE rule_group_name = "yoshi_testing_imps_threshold" AND active = 1 
 '''
 
-
-CAMPAIGNS = '''
-SELECT a.campaign_id, max(a.campaign_name) as campaign_name, max(a.lifetime_budget_imps) as lifetime_budget_imps, SUM(v2.is_valid) as convs
-FROM rockerbox.advertiser_campaign a
-LEFT JOIN reporting.v2_conversion_reporting v2
-ON (v2.campaign_id = a.campaign_id)
-WHERE v2.external_advertiser_id = %(external_advertiser_id)s
-AND v2.active = 1 AND v2.deleted = 0 AND v2.is_valid = 1
-AND a.external_advertiser_id = %(external_advertiser_id)s
-AND v2.conversion_time >= "2015-06-01"
+CAMPAIGN_CONV = '''
+SELECT campaign_id, COUNT(*) as convs
+FROM reporting.v2_conversion_reporting
+WHERE external_advertiser_id = %s
+AND active = 1 AND deleted = 0
+AND is_valid = 1
+AND conversion_time >= "2015-01-01"
 GROUP BY 1
 '''
 
+def get_campaign_convs(rockerbox, external_advertiser_id):
+
+    df = rockerbox.select_dataframe(CAMPAIGN_CONV%external_advertiser_id)
+    assert 'campaign_id' in df.columns
+    assert 'convs' in df.columns
+    df['campaign_id'] = df['campaign_id'].astype(int)
+    return df
+
 def get_campaigns(console_api, external_advertiser_id):
-    request_url = "/campaign?all_stats=true&advertiser_id=%s&state=active&start_element=%s&num_elements=100"
+    request_url = "/campaign?advertiser_id=%s&state=active&start_element=%s&num_elements=100"
     campaign_data = []
     campaign_cols = ['id','name','lifetime_budget_imps']
 
@@ -56,16 +56,8 @@ def get_campaigns(console_api, external_advertiser_id):
         elif len(r.json['response']['campaigns']) == 0:
             break
         else:   
-            for campaign in r.json['response']['campaigns']:
-                
-                c = {k: campaign.get(k, None) for k in campaign_cols}
-                try:
-                    c['convs'] = campaign['all_stats']['lifetime'].get('total_convs', None)
-                except Exception:
-                    c['convs'] = 0 
-            
-                campaign_data.append(c)
-
+            for campaign in r.json['response']['campaigns']:            
+                campaign_data.append(campaign)
             s += 100
 
     assert len(campaign_data) > 0
@@ -74,11 +66,13 @@ def get_campaigns(console_api, external_advertiser_id):
     assert 'id' in campaign_data.columns
     assert 'name' in campaign_data.columns
     assert 'lifetime_budget_imps' in campaign_data.columns
-    assert 'convs' in campaign_data.columns
 
     campaign_data.rename(columns={'id': 'campaign_id', 'name': 'campaign_name'}, inplace=True)
     campaign_data['campaign_id'] = campaign_data['campaign_id'].astype(int)
     return campaign_data.fillna(0)
+
+
+
 
 
 def get_lifetime_budget(rockerbox, external_advertiser_id):
@@ -96,6 +90,9 @@ def load(console_api, rockerbox, advertisers):
 
         logging.info("extracting data for %s" %a)
         campaigns = get_campaigns(console_api, a)
+        convs = get_campaign_convs(rockerbox, a)
+        campaigns = pd.merge(campaigns, convs, left_on = 'campaign_id', right_on = 'campaign_id', how = 'left').fillna(0)
+
         logging.info("extracted with  %d rows " %len(campaigns))
         
         yoshi_testing = campaigns[  (campaigns['campaign_name'].apply(lambda x: 'yoshi' in x.lower())) &
@@ -104,6 +101,7 @@ def load(console_api, rockerbox, advertisers):
                                     (campaigns['lifetime_budget_imps']!= 0) & 
                                     (campaigns['lifetime_budget_imps'].apply(lambda x: not pd.isnull(x)))
                         ]
+
 
         logging.info("filtered to %d rows " %len(yoshi_testing))
         yoshi_testing['new_lifetime_budget_imps'] = lifetime_budget
@@ -118,7 +116,6 @@ def load(console_api, rockerbox, advertisers):
     assert 'lifetime_budget_imps' in data.columns
     assert 'campaign_id' in data.columns
     return data
-
 
 
 def push(rbox_api,  campaign_id, old_budget, new_budget, rule_group_id):
