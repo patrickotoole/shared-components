@@ -111,7 +111,6 @@ class OptimizeHandler(tornado.web.RequestHandler):
 
 
         import src.copy  as copy
-        import ipdb; ipdb.set_trace()
         copy.runner(dparams,LINE_ITEM_ID,ADVERTISER,data,"blank",self.api)
 
 

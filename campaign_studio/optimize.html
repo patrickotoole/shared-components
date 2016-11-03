@@ -57,7 +57,7 @@
             d3.select("#report").text(JSON.stringify({"report":report,"report_advertiser":d3.select("#report_advertiser").node().value},null,2))
 
             d3.xhr("/reporting")
-              .post(d3.select("#report").text(), function(err, data){
+              .post(d3.select("#report").node().value, function(err, data){
                 var jj = JSON.parse(data.response)
                 runBuild(jj,Object.keys(jj[0]))
 
@@ -144,7 +144,8 @@
     <script>
       d3.select("#report-action").on("click",function(){
           var values = JSON.parse(d3.select("#report").node().value)
-          
+          values['report_advertiser'] = d3.select("#report_advertiser").node().value
+
           d3.xhr("/reporting")
             .post( JSON.stringify(values), function(err, data){
               var jj = JSON.parse(data.response)
@@ -265,7 +266,7 @@
           <option>Duplicate</option>
           <option>Replace</option>
           <option>Modify</option>
-          <option>Create</option>
+          <option disabled=disabled>Create</option>
         </select>
       </div>
 
@@ -289,12 +290,23 @@
 
     <div>
       <div style="display:inline-block;width:300px">Override or Append fields: </div>
-      <select id="append" >
+      <div style="display:inline-block;width:250px">
+        <select id="append" >
+          <option>Override</option>
+          <option>Append</option>
+        </select>
+      </div>
 
-        <option>Override</option>
-        <option>Append</option>
+      <div style="width:250px;display:inline-block">Imp Budget Override:</div>
+      <input id="imp_budget" style="width:200px"></input> 
 
-      </select>
+      <div style="width:300px;height:15px;display:inline-block"></div>
+      <div style="width:250px;height:15px;display:inline-block"></div>
+
+      <div style="width:250px;display:inline-block">Spend Budget Override:</div>
+      <input id="spend_budget" style="width:200px"></input> 
+
+
     </div>
 
 
@@ -342,6 +354,10 @@
 
         summary.push({"key":"advertiser","value":d3.select("#advertiser").node().value})
         summary.push({"key":"report_advertiser","value":d3.select("#report_advertiser").node().value})
+        summary.push({"key":"imp_budget","value":d3.select("#imp_budget").node().value})
+        summary.push({"key":"spend_budget","value":d3.select("#spend_budget").node().value})
+
+
 
 
         return summary
@@ -354,7 +370,7 @@
 
 
         var data = {
-          "report": JSON.parse(d3.select("#report").text()).report,
+          "report": JSON.parse(d3.select("#report").node().value).report,
           "settings": summary,
           "filters": window.data_filter.data()
         }

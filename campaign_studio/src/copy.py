@@ -182,6 +182,7 @@ def runner(params,LINE_ITEM,ADVERTISER,data,fields,_c):
             new_campaign['name'] = original_campaign['name']
 
 
+
             if params.get('platform_placement_targets',False) == 'include':
                 new_campaign['name'] += " - include platform_placement_targets: %s" % final_profile['platform_placement_targets'][0]['id']
 
@@ -190,6 +191,12 @@ def runner(params,LINE_ITEM,ADVERTISER,data,fields,_c):
 
             if params.get('domain_targets',False) == 'include':
                 new_campaign['name'] += " - include domain: %s" % final_profile['domain_targets'][0]['domain']
+
+            if params.get('imp_budget','').isdigit() and new_campaign['daily_budget_imps'] is not None:
+                new_campaign['daily_budget_imps'] = int(params['imp_budget'])
+
+            if params.get('spend_budget','').isdigit() and new_campaign['daily_budget'] is not None:
+                new_campaign['daily_budget'] = int(params['spend_budget'])
 
             #new_campaign['name'] += " - exclude: " + str(len(final_profile['platform_placement_targets'])) + " placements" 
 
