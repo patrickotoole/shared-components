@@ -146,7 +146,7 @@ class AdvertiserRoutes(Routes):
 
         return [
 
-            (r'/topics', topics.TopicsHandler, self.connectors),
+            (r'/topics(.*?)', topics.TopicsHandler, self.connectors),
 
             (r'/user/domains', user.handler.VisitDomainsHandler, self.connectors),
             (r'/user/domains_full', user.full_handler.VisitDomainsFullHandler, self.connectors),
