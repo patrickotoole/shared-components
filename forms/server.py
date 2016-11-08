@@ -16,7 +16,7 @@ from tornado.options import define, options, parse_command_line
 
 dirname = os.path.dirname(os.path.realpath(__file__))
 
-define("port", default=9003, help="run on the given port", type=int)
+define("port", default=8888, help="run on the given port", type=int)
 
 from link import lnk
 

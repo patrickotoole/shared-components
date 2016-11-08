@@ -79,6 +79,13 @@ Forms.prototype = {
         } catch(e) {}
 
         try {
+          var xx = d3.select(arg).selectAll("textarea").node().value
+          if (xx) return {"key":r.name,"value":xx}
+        } catch(e) {}
+
+
+
+        try {
           var xx = d3.select(arg).selectAll("select").node().selectedOptions[0].value
           if (xx) return {"key":r.name,"value":xx}
         } catch(e) {}
