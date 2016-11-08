@@ -38,7 +38,7 @@ def get_regex(db):
 
 if __name__ == '__main__':
     client = KafkaClient(hosts="10.128.248.211:2181/v0_8_1")
-    topic = client.topics['hindsight_log']
+    topic = client.topics['application_log']
     consumer = topic.get_simple_consumer(reset_offset_on_start=True, auto_offset_reset=OffsetType.LATEST)
     crushercache = lnk.dbs.crushercache
     regex_channel= get_regex(crushercache)

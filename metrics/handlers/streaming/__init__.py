@@ -31,7 +31,7 @@ raw_imps_tree_2_buffer = []
 conversion_events_tree_buffer = []
 visit_events_tree_buffer = []
 served_imps_tree_buffer = []
-hindsight_log_buffer = []
+application_log_buffer = []
 segment_log_buffer = []
 
 

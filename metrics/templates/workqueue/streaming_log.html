@@ -55,7 +55,7 @@ new function() {
         var msg = 'start';
         addMessage(msg, 'SENT');
         ws.send(msg);
-        var msg = '{"streams":["hindsight_log"]}'
+        var msg = '{"streams":["application_log"]}'
         addMessage(msg, 'SENT');
         ws.send(msg)
     };
@@ -69,8 +69,8 @@ new function() {
         var data = event.data;
         if (String(data).indexOf('workqueue') !== -1){
             var parsed_data  = JSON.parse(data);
-            for(var i=0; i<parsed_data['hindsight_log'].length; i++){
-                var parsed_msg = parsed_data['hindsight_log'][i]['timestamp'] + " "+parsed_data['hindsight_log'][i]['log_message']
+            for(var i=0; i<parsed_data['application_log'].length; i++){
+                var parsed_msg = parsed_data['application_log'][i]['timestamp'] + " "+parsed_data['application_log'][i]['log_message']
                 addMessage(parsed_msg);
             }
             //addMessage(data);

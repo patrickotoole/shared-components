@@ -82,8 +82,8 @@ class ConnectorConfig(object):
                 self.connectors["served_imps_tree"] = KafkaQueue(
                     mock_connect=skip_visit_events,topic="served_imps_tree",transform=ujson.loads
                 )
-                self.connectors["hindsight_log"] =  KafkaQueue(
-                    mock_connect=False, topic="hindsight_log",transform=ujson.loads
+                self.connectors["application_log"] =  KafkaQueue(
+                    mock_connect=False, topic="application_log",transform=ujson.loads
                 )
 
 
@@ -102,7 +102,7 @@ class ConnectorConfig(object):
                     "conversion_events_tree": streaming.conversion_events_tree_buffer,
                     "visit_events_tree": streaming.visit_events_tree_buffer,
                     "served_imps_tree": streaming.visit_events_tree_buffer,
-                    "hindsight_log": streaming.hindsight_log_buffer
+                    "application_log": streaming.application_log_buffer
                 }
             except Exception as e:
                 logging.error("One or more buffers not connected", e)

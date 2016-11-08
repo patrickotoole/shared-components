@@ -95,7 +95,7 @@ if __name__ == '__main__':
     routes = [r for r in options.routes.split(",") if len(r)]
 
     if options.log_kafka:
-        producer = kafka_stream.KafkaStream('hindsight_log',"slave17:9092",True,False,False,10,1,False)
+        producer = kafka_stream.KafkaStream('application_log',"slave17:9092",True,False,False,10,1,False)
 
         log_object = logging.getLogger()
         log_object.setLevel(logging.INFO)
