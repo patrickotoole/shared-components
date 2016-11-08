@@ -25,6 +25,8 @@ class IndexHandler(tornado.web.RequestHandler):
 
     def initialize(self,**kwargs):
         self.db = kwargs.get("db",False) 
+        self.rb = kwargs.get("rb",False) 
+
         pass
 
     def get(self):
@@ -32,6 +34,15 @@ class IndexHandler(tornado.web.RequestHandler):
         forms = self.db.select_dataframe("select * from forms where active = 1 and deleted = 0")
         form_fields = self.db.select_dataframe("select * from form_fields where active = 1 and deleted = 0")
         form_fields['last_activity'] = forms['last_activity'].map(lambda x: x.isoformat())
+        form_fields['values'] = form_fields['values'].map(lambda x: eval(x) if x and len(x) > 0 else x )
+
+        for i,row in form_fields.iterrows():
+            if (row.sql):
+                df = self.rb.select_dataframe(row.sql)
+                values = df.to_dict('records')
+                form_fields.ix[i,'values'] = {"values":values}
+
+        form_fields['values'] = form_fields['values'].map(lambda x: x['values'] if x else x)
 
         forms = forms.set_index("id")
         forms['last_activity'] = forms['last_activity'].map(lambda x: x.isoformat())
@@ -70,8 +81,6 @@ class IndexHandler(tornado.web.RequestHandler):
 
             self.db.execute("INSERT INTO form_fields (form_id, name, type, `values`, `sql`) VALUES (%s, %s, %s, %s, %s)",  (row['form_id'], row['name'], row['type'], row.get("values",""), row.get("sql","")) )
 
-        
-        pass
 
 class SubmitHandler(tornado.web.RequestHandler):
 
@@ -80,7 +89,15 @@ class SubmitHandler(tornado.web.RequestHandler):
 
     def post(self):
         data = json.loads(self.request.body)
-        import ipdb; ipdb.set_trace()
+        import requests
+
+        dd = { "udf": data['script'], "priority":1 }
+        for d in data['data']:
+            dd[d['key']] = d['value']
+
+        from link import lnk
+        wq = lnk.api.workqueue
+        wq.post("/jobs",data=json.dumps(dd))
 
         
 
@@ -91,6 +108,8 @@ if __name__ == '__main__':
 
     connectors = {
         "db": lnk.dbs.crushercache,
+        "rb": lnk.dbs.rockerbox,
+
         "api": lnk.api.console
     }
 

@@ -6,8 +6,10 @@ export function Forms(target) {
   this._renderers = {
       select: function(row) {
         var select = d3_updateable(row,"select","select")
-        d3_splat(select,"option","option",function(x) { return x.values })
-          .text(String)
+        d3_splat(select,"option","option",function(x) { return x.values },function(x) { return typeof(x) == "object" ? x.key : x})
+          .text(function(x) { return typeof(x) == "object" ?  x.key : x })
+          .attr("value",function(x) { return typeof(x) == "object" ?  x.value : x })
+
       }
     , input: function(row) {
         var select = d3_updateable(row,"input","input")

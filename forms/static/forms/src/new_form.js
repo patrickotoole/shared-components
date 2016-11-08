@@ -29,8 +29,10 @@ NewForm.prototype = {
       var form = d3_updateable(this._target,".build-form","div", this.data() )
         .classed("build-form",true)
 
-      var name_row = d3_updateable(form,".form-name-row","span")
-        .classed("form-name-row",true)
+      var name_row = d3_updateable(form,".form-name-row","div")
+        .classed("form-name-row row",true)
+
+      d3_updateable(name_row,"span","span")
         .text("Form name: ")
 
       d3_updateable(name_row,"input","input")
@@ -38,6 +40,20 @@ NewForm.prototype = {
         .on("change",function(x) {
           x.name = this.value
         })
+
+      var script_row = d3_updateable(form,".script-name-row","div")
+        .classed("script-name-row row",true)
+
+      d3_updateable(script_row,"span","span")
+        .text("Script name: ")
+
+      d3_updateable(script_row,"input","input")
+        .attr("value",function(x) { return x.name })
+        .on("change",function(x) {
+          x.script = this.value
+        })
+
+
 
 
 
