@@ -44,7 +44,7 @@ class TitleQueue():
             logging.info(data)
         client = KafkaClient(hosts="10.128.248.211:2181/v0_8_1")
         topic = client.topics['domain_titles']
-        producer = kafka_stream.KafkaStream('topic_titles',"slave17:9092",True,False,False,10,1,False)
+        producer = kafka_stream.KafkaStream('topic_titles',"slave17:9092,slave16:9092,slave40:9092",True,False,False,10,1,False)
         consumer = topic.get_simple_consumer()
         for message in consumer:
             if message is not None:

@@ -22,7 +22,7 @@ class KafkaHandler(logging.StreamHandler):
             self.handleError(record)
 
 if __name__=='__main__':
-    producer = kafka_stream.KafkaStream('application_log',"slave17:9092",True,False,False,10,1,False)
+    producer = kafka_stream.KafkaStream('application_log',"slave17:9092,slave40:9092,slave16:9092",True,False,False,10,1,False)
 
     log_object = logging.getLogger()
     log_object.setLevel(logging.DEBUG)

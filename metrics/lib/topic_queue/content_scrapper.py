@@ -135,7 +135,7 @@ if __name__ == '__main__':
     from sys import stdin, stderr, stdout
     from lib.report.utils.options import define, options, parse_command_line
 
-    define("kafka_hosts",type=str,help="",metavar="IP:PORT,...,IP:PORT",default="slave17:9092")
+    define("kafka_hosts",type=str,help="",metavar="IP:PORT,...,IP:PORT",default="slave17:9092,slave16:9092,slave40:9092")
     define("use_marathon",type=bool, default=True)
     define("topic",type=str, default='domain_titles')
     define("async",type=bool, default=True)

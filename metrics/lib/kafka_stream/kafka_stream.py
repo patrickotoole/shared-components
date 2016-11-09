@@ -107,7 +107,7 @@ if __name__ == "__main__":
     from sys import stdin, stderr, stdout
     from options import define, options, parse_command_line
 
-    define("kafka_hosts",type=str,help="",metavar="IP:PORT,...,IP:PORT",default="slave17:9092")
+    define("kafka_hosts",type=str,help="",metavar="IP:PORT,...,IP:PORT",default="slave17:9092,slave16:9092,slave40:9092")
     define("use_marathon",type=bool)
     define("topic",type=str)
     define("async",type=bool)
