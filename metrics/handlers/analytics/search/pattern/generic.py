@@ -265,7 +265,7 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
         defer.returnValue(shared_dict)
 
     @defer.inlineCallbacks
-    def build_arguments(self,advertiser,term,dates,num_days,response,allow_sample=True,filter_id=False,max_users=5000, datasets=['domains']):
+    def build_arguments(self,advertiser,term,dates,num_days,response,allow_sample=None,filter_id=False,num_users=20000, datasets=['domains']):
         shared_dict={
                         "ds": "SELECT * FROM rockerbox.visitor_domains_full where uid = ?",
                         "advertiser" : advertiser,
@@ -284,7 +284,7 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
         args = [advertiser,term,dates,num_days,allow_sample,filter_id]
         #args = [advertiser,term,build_datelist(num_days),num_days,allow_sample,False]
         full_df, _, _, _ = yield self.get_sampled(*args)
-        uids = list(set(full_df.uid.values))[:max_users]
+        uids = list(set(full_df.uid.values))[:num_users]
         
 
         MIN_UIDS = 300
@@ -294,7 +294,7 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
             args[4] = ALLOWSAMPLEOVERRIDE
             args[3] = NUM_DAYS
             full_df, _, _, _ = yield self.get_sampled(*args)
-            uids = list(set(full_df.uid.values))[:max_users]
+            uids = list(set(full_df.uid.values))[:num_users]
 
         shared_dict['uids'] = uids
         shared_dict = yield self.run_init_level(needed_dfs, self.LEVELS["l1"], shared_dict)
