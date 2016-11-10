@@ -280,6 +280,8 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
         except:
             raise Exception("Not a valid dataset")
 
+
+        num_users = int(num_users)
         #LEVEL 0
         args = [advertiser,term,dates,num_days,allow_sample,filter_id]
         #args = [advertiser,term,build_datelist(num_days),num_days,allow_sample,False]
