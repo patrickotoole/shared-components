@@ -474,7 +474,6 @@ submit_target.append("div").classed("break",true).html("<br/>")
         complete_queue = [self.get_complete(q) for q in in_queue]
 
         df = pandas.DataFrame({"queue":in_queue,"active":len_queue,"complete":complete_queue})
-
         if active is True:
             df = df[df['active'] > 0]
         elif active == "stalled":
@@ -497,7 +496,6 @@ submit_target.append("div").classed("break",true).html("<br/>")
         self.get_content(df)
      
      
-
     @tornado.web.asynchronous
     def get(self,action=""):
         print action

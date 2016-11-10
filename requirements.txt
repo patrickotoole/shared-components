@@ -39,3 +39,7 @@ oauth2client
 bs4
 readability-lxml
 stripe
+pyOpenSSL
+ndg-httpsclient
+pyasn1
+googleads==4.5.1

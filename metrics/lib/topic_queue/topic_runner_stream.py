@@ -6,6 +6,7 @@ import numpy as np
 import logging
 import sys
 
+
 class TopicStreamer(BaseRunner):
 
     def __init__(self, csv_location="rec_df.csv", pickle_location='LSImodelobject.p', connectors={}):

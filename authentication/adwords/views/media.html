@@ -1,0 +1,12 @@
+<form action="/media" method="POST" enctype="multipart/form-data">
+	<h1>Upload media</h1>
+	<input type="file" name="media"/>
+	<input type="submit" value="Upload">
+</form>
+
+<hr/>
+<ul>
+	{% for media_row in media_rows %}
+	<li>{{ media_row['media_id'] }}</li>
+	{% end %}
+</ul>

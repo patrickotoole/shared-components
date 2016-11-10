@@ -30,7 +30,6 @@ class PatternStatusHandler(BaseHandler,APIHelpers,PatternDatabase):
         self.required_cols = ["advertiser", "action_name", "operator"]
         self.queue = "python_queue"
     
-
     def get_stats(self,advertiser,pattern):
 
         results = self.get_pattern_cache(advertiser,pattern)

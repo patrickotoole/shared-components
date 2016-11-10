@@ -9,7 +9,6 @@ from twisted.protocols import basic
 
 from handlers.streaming.streaming import StreamingHandler, clients
 
-
 class WQLog(tornado.web.RequestHandler):
 
     def initialize(self, **kwargs):
