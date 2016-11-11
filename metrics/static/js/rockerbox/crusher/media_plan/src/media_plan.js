@@ -210,7 +210,7 @@ MediaPlan.prototype = {
   , render_right: function(d,row_data) {
 
       var wrapper = d3_updateable(this._target,".rhs","div")
-        .classed("rhs col-md-5",true)
+        .classed("rhs col-md-4",true)
 
       var head = d3_updateable(wrapper, "h3","h3")
         .style("margin-bottom","15px")
@@ -383,7 +383,7 @@ MediaPlan.prototype = {
 
 
       var wrapper = d3_updateable(this._target,".lhs","div",scaled)
-        .classed("lhs col-md-7",true)
+        .classed("lhs col-md-8",true)
 
       var head = d3_updateable(wrapper, "h3","h3")
         .style("margin-bottom","15px")
@@ -405,10 +405,10 @@ MediaPlan.prototype = {
         .style("line-height","20px")
         .style("vertical-align","top")
 
-       d3_splat(head,".hour","div",d3.range(1,25))
-        .classed("sq",true)
+       d3_splat(head,".hour","div",d3.range(1,25),function(x) { return x })
+        .classed("sq hour",true)
         .style("display","inline-block")
-        .style("width","20px")
+        .style("width","18px")
         .style("height","20px")
         .style("font-size",".85em")
         .style("text-align","center")
@@ -457,7 +457,7 @@ MediaPlan.prototype = {
       var square = d3_splat(row,".sq","div",function(x) { return x.values }, function(x,i) { return i }) 
         .classed("sq",true)
         .style("display","inline-block")
-        .style("width","20px")
+        .style("width","18px")
         .style("height","20px")
         .style("background",function(x,i) { 
           var pd = this.parentNode.__data__; 

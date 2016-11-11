@@ -6,12 +6,25 @@ import * as timeseries from '../timeseries'
 
 export default function render_data_view(_lower,data) {
 
+      var _olower = _lower
+
       var options = d3_updateable(_lower,".options-view","div")
         .classed("options-view",true)
         .style("margin-bottom","35px")
 
+      var _media = d3_updateable(_lower,".media-view","div")
+        .classed("view-option media-view hidden",true)
+        .style("margin-left","-15px")
+        .style("margin-right","-15px")
+
+      var _content = d3_updateable(_lower,".content-view","div")
+        .classed("view-option content-view hidden",true)
+
+
       var _lower = d3_updateable(_lower,".data-view","div")
-        .classed("data-view hidden",true)
+        .classed("view-option data-view hidden",true)
+
+      
 
       var CSS_STRING = String(function() {/*
     .options-view { text-align:center }
@@ -44,21 +57,48 @@ export default function render_data_view(_lower,data) {
       d3_updateable(options,".show-data-view","a")
         .classed("show-data-view show-button",true)
         .text("Explore data")
-        .on("click",function() { _lower.classed("hidden",false) })
+        .on("click",function() { 
+          _olower.selectAll(".view-option").classed("hidden",true) 
+
+          _lower.classed("hidden",false) 
+        })
 
       d3_updateable(options,".media-plan-view","a")
         .classed("media-plan-view show-button",true)
         .text("Create Media Plan")
-        .on("click",function() { _lower.classed("hidden",false) })
+        .on("click",function() { 
+          _olower.selectAll(".view-option").classed("hidden",true) 
+
+          _media.classed("hidden",false) 
+          media_plan.media_plan(_media)
+            .data(data)
+            .draw()
+
+
+        })
 
       d3_updateable(options,".generate-content-view","a")
         .classed("generate-content-view show-button",true)
         .text("Build Content Brief")
-        .on("click",function() { _lower.classed("hidden",false) })
+        .on("click",function() { 
+          _olower.selectAll(".view-option").classed("hidden",true) 
+
+          _content.classed("hidden",false) 
+        })
 
 
 
 
+
+
+      var chead = d3_updateable(_content, "h3.data-header","h3")
+        .classed("data-header",true)
+        .style("margin-bottom","15px")
+        .style("margin-top","-5px")
+
+
+      d3_updateable(chead,"span","span")
+        .text("Content Brief (Coming soon)")
 
 
 
@@ -73,6 +113,8 @@ export default function render_data_view(_lower,data) {
       var tabs = [
           transform.buildDomains(data)
         , transform.buildUrls(data)
+        , transform.buildTopics(data)
+
       ]
 
       if ((tabs[0].selected == undefined) && (!this._state.get("tabs")))  this._state.set("tabs",[1,0]) 
@@ -117,7 +159,7 @@ export default function render_data_view(_lower,data) {
           .data(selected)
 
 
-        if (selected.key == "Top Domains") {
+        if ((selected.key == "Top Topics") || (selected.key == "Top Domains")) {
 
           var samp_max = d3.max(selected.values,function(x){return x.sample_percent_norm})
             , pop_max = d3.max(selected.values,function(x){return x.pop_percent})

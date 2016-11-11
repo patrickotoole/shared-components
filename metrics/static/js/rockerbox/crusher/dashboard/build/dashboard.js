@@ -413,6 +413,87 @@
      }
    }
 
+   function buildTopics(data) {
+
+     var categories = data.display_categories.values
+       .filter(function(a) { return a.selected })
+       .map(function(a) { return a.key })
+
+
+     var idf = d3.nest()
+       .key(function(x) {return x.topic})
+       .rollup(function(x) {return x[0].idf })
+       .map(data.full_urls.filter(function(x){ return x.parent_category_name != "Internet & Telecom"}) )
+
+     var getIDF = function(x) {
+       return (idf[x] == "NA") || (idf[x] > 8686) ? 0 : idf[x]
+     }
+
+     var values = data.full_urls
+       .filter(function(x) { return x.topic.toLowerCase() != "no topic" })
+       .map(function(x) { 
+         return {
+             "key":x.topic
+           , "value":x.count
+           , "uniques": x.uniques 
+           , "url": x.url
+         } 
+       })
+
+
+
+     values = d3.nest()
+       .key(function(x){ return x.key})
+       .rollup(function(x) { 
+          return {
+              "key": x[0].key
+            , "value": x.reduce(function(p,c) { return p + c.value},0)
+            , "percent_unique": x.reduce(function(p,c) { return p + c.uniques/c.value},0)/x.length
+            , "urls": x.reduce(function(p,c) { p.indexOf(c.url) == -1 ? p.push(c.url) : p; return p },[])
+
+          } 
+       })
+       .entries(values).map(function(x){ return x.values })
+
+     if (categories.length > 0)
+       values = values.filter(function(x) {return categories.indexOf(x.parent_category_name) > -1 })
+
+     values.map(function(x) {
+       x.tf_idf = getIDF(x.key) * (x.value*x.percent_unique) * (x.value*x.percent_unique) 
+       x.count = x.value
+       x.importance = Math.log(x.tf_idf)
+     })
+     values = values.sort(function(p,c) { return c.tf_idf - p.tf_idf })
+
+
+     var total = d3.sum(values,function(x) { return x.count*x.percent_unique})
+
+     values.map(function(x) { 
+       x.pop_percent = 1.02/getIDF(x.key)*100
+       x.pop_percent = x.pop_percent == Infinity ? 0 : x.pop_percent
+
+       x.sample_percent = x.count*x.percent_unique/total*100
+     })
+
+     var norm = d3.scale.linear()
+       .range([0, d3.max(values,function(x){ return x.pop_percent})])
+       .domain([0, d3.max(values,function(x){return x.sample_percent})])
+       .nice()
+
+     values.map(function(x) {
+       x.sample_percent_norm = norm(x.sample_percent)
+       //x.percent_norm = x.percent
+     })
+
+
+
+     
+     return {
+         key: "Top Topics"
+       , values: values.slice(0,300)
+     }
+   }
+
    function buildDomains(data) {
 
      var categories = data.display_categories.values
@@ -2269,12 +2350,25 @@
 
    function render_data_view(_lower,data) {
 
+         var _olower = _lower
+
          var options = d3_updateable(_lower,".options-view","div")
            .classed("options-view",true)
            .style("margin-bottom","35px")
 
+         var _media = d3_updateable(_lower,".media-view","div")
+           .classed("view-option media-view hidden",true)
+           .style("margin-left","-15px")
+           .style("margin-right","-15px")
+
+         var _content = d3_updateable(_lower,".content-view","div")
+           .classed("view-option content-view hidden",true)
+
+
          var _lower = d3_updateable(_lower,".data-view","div")
-           .classed("data-view hidden",true)
+           .classed("view-option data-view hidden",true)
+
+         
 
          var CSS_STRING = String(function() {/*
        .options-view { text-align:center }
@@ -2307,21 +2401,48 @@
          d3_updateable(options,".show-data-view","a")
            .classed("show-data-view show-button",true)
            .text("Explore data")
-           .on("click",function() { _lower.classed("hidden",false) })
+           .on("click",function() { 
+             _olower.selectAll(".view-option").classed("hidden",true) 
+
+             _lower.classed("hidden",false) 
+           })
 
          d3_updateable(options,".media-plan-view","a")
            .classed("media-plan-view show-button",true)
            .text("Create Media Plan")
-           .on("click",function() { _lower.classed("hidden",false) })
+           .on("click",function() { 
+             _olower.selectAll(".view-option").classed("hidden",true) 
+
+             _media.classed("hidden",false) 
+             media_plan.media_plan(_media)
+               .data(data)
+               .draw()
+
+
+           })
 
          d3_updateable(options,".generate-content-view","a")
            .classed("generate-content-view show-button",true)
            .text("Build Content Brief")
-           .on("click",function() { _lower.classed("hidden",false) })
+           .on("click",function() { 
+             _olower.selectAll(".view-option").classed("hidden",true) 
+
+             _content.classed("hidden",false) 
+           })
 
 
 
 
+
+
+         var chead = d3_updateable(_content, "h3.data-header","h3")
+           .classed("data-header",true)
+           .style("margin-bottom","15px")
+           .style("margin-top","-5px")
+
+
+         d3_updateable(chead,"span","span")
+           .text("Content Brief (Coming soon)")
 
 
 
@@ -2336,6 +2457,8 @@
          var tabs = [
              buildDomains(data)
            , buildUrls(data)
+           , buildTopics(data)
+
          ]
 
          if ((tabs[0].selected == undefined) && (!this._state.get("tabs")))  this._state.set("tabs",[1,0]) 
@@ -2380,7 +2503,7 @@
              .data(selected)
 
 
-           if (selected.key == "Top Domains") {
+           if ((selected.key == "Top Topics") || (selected.key == "Top Domains")) {
 
              var samp_max = d3.max(selected.values,function(x){return x.sample_percent_norm})
                , pop_max = d3.max(selected.values,function(x){return x.pop_percent})
