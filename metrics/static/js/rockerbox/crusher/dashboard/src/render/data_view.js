@@ -110,6 +110,7 @@ export default function render_data_view(_lower,data) {
 
       var self = this
 
+
       var tabs = [
           transform.buildDomains(data)
         , transform.buildUrls(data)

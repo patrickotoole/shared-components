@@ -235,6 +235,26 @@ export default function render_filter(_top,_lower) {
           , "values": categories.filter(function(x) { return x.key != "NA" })
         }
 
+        var category_hour = d3.nest()
+          .key(function(x){ return x.parent_category_name + x.hour + x.minute})
+          .rollup(function(v) {
+            return {
+                "parent_category_name": v[0].parent_category_name
+              , "hour": v[0].hour
+              , "minute": v[0].minute 
+              , "count":v.reduce(function(p,c) { return p + c.count },0)
+            }
+          })
+          .entries(data.full_urls)
+          .map(function(x) { return x.values })
+
+        data["category_hour"] = category_hour
+
+        
+
+
+
+
         self._data.display_categories = data.display_categories
 
         self.render_right(data)

@@ -228,6 +228,8 @@ MediaPlan.prototype = {
         .style("line-height","20px")
         .style("min-height","100px")
 
+      plan_target.exit().remove()
+
 
       if (row_data.length > 1) {
         var remainders = row_data.map(function(r) {
@@ -244,7 +246,7 @@ MediaPlan.prototype = {
         var total = d3.sum(remainders,function(x){ return x.total }) 
         var percent = cut/total
 
-        var head = d3_updateable(plan_target, "h3.summary","h3")
+        var head = d3_updateable(plan_target, "h3.summary","h3",function(x) { return [x]} , function(x) { return 1})
           .classed("summary",true)
           .style("margin-bottom","15px")
           .style("margin-top","20px")
@@ -252,19 +254,19 @@ MediaPlan.prototype = {
 
 
 
-        d3_updateable(plan_target,".what","div")
+        d3_updateable(plan_target,".what","div",function(x) { return [x]} , function(x) { return 1})
           .classed("what",true)
           .html(function(x) {
             return "<div style='font-weight:bold;width:200px;padding-left:10px;text-transform:uppercase;display:inline-block'>Potential Ads Served:</div>" + d3.format(",")(total)
           })
 
-        d3_updateable(plan_target,".amount","div")
+        d3_updateable(plan_target,".amount","div",function(x) { return [x]} , function(x) { return 1})
           .classed("amount",true)
           .html(function(x) {
             return "<div style='font-weight:bold;width:200px;padding-left:10px;text-transform:uppercase;display:inline-block'>Optimized Ad Serving:</div>" + d3.format(",")(cut) + " (" + d3.format("%")(percent) + ")"
           })
 
-        d3_updateable(plan_target,".cpa","div")
+        d3_updateable(plan_target,".cpa","div",function(x) { return [x]} , function(x) { return 1})
           .classed("cpa",true)
           .html(function(x) {
             return "<div style='font-weight:bold;width:200px;padding-left:10px;text-transform:uppercase;display:inline-block'>Estimated CPA reduction:</div>" + d3.format("%")(1-percent)
@@ -384,6 +386,8 @@ MediaPlan.prototype = {
 
       var wrapper = d3_updateable(this._target,".lhs","div",scaled)
         .classed("lhs col-md-8",true)
+
+      wrapper.exit().remove()
 
       var head = d3_updateable(wrapper, "h3","h3")
         .style("margin-bottom","15px")
