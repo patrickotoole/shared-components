@@ -42,7 +42,7 @@ class IndexHandler(tornado.web.RequestHandler):
                 values = df.to_dict('records')
                 form_fields.ix[i,'values'] = {"values":values}
 
-        form_fields['values'] = form_fields['values'].map(lambda x: x['values'] if x else x)
+        form_fields['values'] = form_fields['values'].map(lambda x: x['values'] if type(x) == dict else x)
 
         forms = forms.set_index("id")
         forms['last_activity'] = forms['last_activity'].map(lambda x: x.isoformat())
