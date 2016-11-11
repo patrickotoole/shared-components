@@ -450,7 +450,7 @@
      }
 
      var values = data.full_urls
-       .filter(function(x) { return x.topic.toLowerCase() != "no topic" })
+       .filter(function(x) { return x.topic ? x.topic.toLowerCase() != "no topic" : true })
        .map(function(x) { 
          return {
              "key":x.topic
@@ -2376,17 +2376,33 @@
            .classed("options-view",true)
            .style("margin-bottom","35px")
 
+         var view = this._state.get("view",false)
+
+
          var _media = d3_updateable(_lower,".media-view","div")
-           .classed("view-option media-view hidden",true)
+           .classed("view-option media-view",true)
+           .classed("hidden",function() { return !(view == "media-view") })
            .style("margin-left","-15px")
            .style("margin-right","-15px")
 
          var _content = d3_updateable(_lower,".content-view","div")
-           .classed("view-option content-view hidden",true)
+           .classed("view-option content-view",true)
+           .classed("hidden",function() { return !(view == "content-view") })
+
 
 
          var _lower = d3_updateable(_lower,".data-view","div")
-           .classed("view-option data-view hidden",true)
+           .classed("view-option data-view",true)
+           .classed("hidden",function() { return !(view == "data-view") })
+
+
+         if (view == "media-view") {
+           media_plan.media_plan(_media)
+             .data(data)
+             .draw()
+         }
+
+
 
          
 
@@ -2417,13 +2433,14 @@
            .style("text-align","left")
            .text("Choose Option")
 
+         var set_state = function(x) { this._state.set("view",x) }.bind(this)
 
          d3_updateable(options,".show-data-view","a")
            .classed("show-data-view show-button",true)
            .text("Explore data")
            .on("click",function() { 
              _olower.selectAll(".view-option").classed("hidden",true) 
-
+             set_state("data-view")
              _lower.classed("hidden",false) 
            })
 
@@ -2432,6 +2449,7 @@
            .text("Create Media Plan")
            .on("click",function() { 
              _olower.selectAll(".view-option").classed("hidden",true) 
+             set_state("media-view")
 
              _media.classed("hidden",false) 
              media_plan.media_plan(_media)
@@ -2446,6 +2464,8 @@
            .text("Build Content Brief")
            .on("click",function() { 
              _olower.selectAll(".view-option").classed("hidden",true) 
+             set_state("content-view")
+
 
              _content.classed("hidden",false) 
            })

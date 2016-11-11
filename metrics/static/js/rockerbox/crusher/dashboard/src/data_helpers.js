@@ -66,7 +66,7 @@ export function buildTopics(data) {
   }
 
   var values = data.full_urls
-    .filter(function(x) { return x.topic.toLowerCase() != "no topic" })
+    .filter(function(x) { return x.topic ? x.topic.toLowerCase() != "no topic" : true })
     .map(function(x) { 
       return {
           "key":x.topic

@@ -581,7 +581,7 @@ RB.crusher.controller = (function(controller) {
         //action.subscriptions = action.subscriptions || ["actions"];
         action.filter = action.filter || function() {return true};
 
-        if(action.view_type === 'expanded' || typeof action.view_type === typeof undefined) {
+        if ((false) && (action.view_type === 'expanded' || typeof action.view_type === typeof undefined)) {
           vendor_display_toggle.html('View as table');
           RB.crusher.ui.vendors.show(funnelRow, action);
         } else {

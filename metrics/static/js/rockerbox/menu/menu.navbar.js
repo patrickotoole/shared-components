@@ -29,6 +29,8 @@ RB.menu.navbar = (function(navbar) {
     logo: function(target,selectbar) {
       var logo_wrapper = d3_updateable(target,".logo","a")
         .classed("logo",true)
+        .attr("href","#")
+
         .datum({"push_state":"/crusher/home","name":"Home"})
 
       d3_updateable(logo_wrapper,".logo-float","div")
