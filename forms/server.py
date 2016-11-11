@@ -60,9 +60,8 @@ class IndexHandler(tornado.web.RequestHandler):
         assert(data['name'])
 
         assert(len(data['fields']) > 0)
-        
 
-        result = self.db.execute("INSERT INTO forms (name, script) VALUES (%s, %s)", (data['name'],data.get("script",None) ) )
+        result = self.db.execute("INSERT INTO forms (name, script, description) VALUES (%s, %s, %s)", (data['name'],data.get("script",None),data.get("description",None) ) )
         form_id = int(result)
 
 
@@ -79,7 +78,7 @@ class IndexHandler(tornado.web.RequestHandler):
             if row['default_type'] == "sql":
                 row['sql'] = row.get('default_value',"")
 
-            self.db.execute("INSERT INTO form_fields (form_id, name, type, `values`, `sql`) VALUES (%s, %s, %s, %s, %s)",  (row['form_id'], row['name'], row['type'], row.get("values",""), row.get("sql","")) )
+            self.db.execute("INSERT INTO form_fields (form_id, name, type, `values`, `sql`, description) VALUES (%s, %s, %s, %s, %s, %s)",  (row['form_id'], row['name'], row['type'], row.get("values",""), row.get("sql",""), row.get("description","")) )
 
 
 class SubmitHandler(tornado.web.RequestHandler):

@@ -43,10 +43,17 @@
       }
     , draw: function() {
 
-        var form = d3_updateable(this._target,".build-form","div",this.fields())
+        var form = d3_updateable(this._target,".build-form","div",this.data())
           .classed("build-form",true)
 
-        var rows = d3_splat(form,".row","div",function(x) { return x}, function(x) { return x.name })
+        d3_updateable(form,".form-description","div")
+          .classed("form-description",true)
+          .text(function(x) { return x.description })
+          
+        
+
+
+        var rows = d3_splat(form,".row","div",function(x) { return x.fields}, function(x) { return x.name })
           .classed("row",true)
         
         d3_updateable(rows,".label","div")
@@ -165,6 +172,22 @@
           })
 
 
+        var description_row = d3_updateable(form,".form-description-row","div")
+          .classed("form-description-row row",true)
+
+        d3_updateable(description_row,"span","span")
+          .text("Form description: ")
+
+        d3_updateable(description_row,"textarea","textarea")
+          .attr("value",function(x) { return x.description })
+          .on("change",function(x) {
+            x.description = this.value
+          })
+
+        d3_updateable(form,"hr","hr")
+
+
+
 
 
 
@@ -222,6 +245,19 @@
             x.default_value = this.value
           })
 
+        var field_defaults = d3_updateable(rows,".field-description","span")
+          .classed("field-description",true)
+          .text("Description: ")
+
+        d3_updateable(field_defaults,"textarea","textarea")
+          .attr("rows",1)
+          .text(function(x) { return x.value })
+          .on("change",function(x) { 
+            x.description = this.value
+          })
+
+
+
 
 
 
@@ -272,10 +308,8 @@
     this._target = target
     this._on = {
         "click": function(x) {
-
           self.render_back(x.name)
           self.render_form.bind(self)(this,x)
-
         }
       , "new": function(x) {
           self.render_back("New")
@@ -283,8 +317,8 @@
         }
       , "create": function(x) { }
       , "submit": function(x) { }
-
     }
+
   }
 
   FormIndex.prototype = {
@@ -297,14 +331,11 @@
         this._target.selectAll(".new-row")
           .classed("hidden",true)
 
-
         forms(target)
           .fields(x.fields)
           .data(x)
           .on("submit", this.on("submit"))
           .draw()
-
-        
 
       }
     , render_new: function(x) {
@@ -392,10 +423,89 @@
 
   form_index.prototype = FormIndex.prototype
 
+  function State(target) {
+
+    var self = this;
+
+    this._target = target
+    this._state = {}
+    this._subscription = {}
+
+    
+
+  }
+
+  State.prototype = {
+      publish: function(name,v) {
+
+         var subscriber = this.get_subscribers_fn(name) || function() {}
+           , all = this.get_subscribers_fn("*") || function() {};
+
+         var cb = function(error,value) {
+           if (error) return cb(error,null)
+           
+           this.set(name, value)
+           subscriber(false,this._state[name],state)
+           all(false,this._state)
+
+         }.bind(this)
+
+         if (typeof v === "function") v(cb)
+         else cb(false,v)
+
+         return this
+      }
+    , subscribe: function(id,fn) {
+        var id = id, to = "*", fn = fn;
+
+        if (arguments.length == 3) {
+          id = arguments[0]
+          to = arguments[1]
+          fn = arguments[2]
+        }
+
+        var subscriptions = this.get_subscribers_obj(to)
+
+        if (fn === undefined) return subscriptions[id] || function() {};
+
+        subscriptions[id] = fn;
+
+        if (to == "*") subscriptions[id](false,this._state)
+        else if (this._state[to]) subscriptions[id](false,this._state[to],this._state)
+
+        return this
+       
+      }
+    , set: function(k,v) {
+        if (k != undefined && v != undefined) this._state[k] = v
+        return this
+      }
+    , get_subscribers_obj: function(k) {
+        this._subscription[k] = this._subscription[k] || {}
+        return this._subscription[k]
+      }
+    , get_subscribers_fn: function(k) {
+        var fns = this.get_subscribers_obj(k)
+          , funcs = Object.keys(fns).map(function(x) { return fns[x] })
+          , fn = function(error,value,state) {
+              return funcs.map(function(g) { return g(error,value,state) })
+            }
+
+        return fn
+      }
+  }
+
+  function state(target) {
+    return new State(target)
+  }
+
+  state.prototype = State.prototype
+
   var version = "0.0.1";
 
   exports.version = version;
   exports.forms = forms;
   exports.form_index = form_index;
+  exports.state = state;
 
 }));

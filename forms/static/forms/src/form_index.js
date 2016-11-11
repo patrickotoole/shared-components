@@ -8,10 +8,8 @@ export function FormIndex(target) {
   this._target = target
   this._on = {
       "click": function(x) {
-
         self.render_back(x.name)
         self.render_form.bind(self)(this,x)
-
       }
     , "new": function(x) {
         self.render_back("New")
@@ -19,8 +17,8 @@ export function FormIndex(target) {
       }
     , "create": function(x) { }
     , "submit": function(x) { }
-
   }
+
 }
 
 FormIndex.prototype = {
@@ -33,14 +31,11 @@ FormIndex.prototype = {
       this._target.selectAll(".new-row")
         .classed("hidden",true)
 
-
       forms(target)
         .fields(x.fields)
         .data(x)
         .on("submit", this.on("submit"))
         .draw()
-
-      
 
     }
   , render_new: function(x) {

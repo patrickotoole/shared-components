@@ -37,10 +37,17 @@ Forms.prototype = {
     }
   , draw: function() {
 
-      var form = d3_updateable(this._target,".build-form","div",this.fields())
+      var form = d3_updateable(this._target,".build-form","div",this.data())
         .classed("build-form",true)
 
-      var rows = d3_splat(form,".row","div",function(x) { return x}, function(x) { return x.name })
+      d3_updateable(form,".form-description","div")
+        .classed("form-description",true)
+        .text(function(x) { return x.description })
+        
+      
+
+
+      var rows = d3_splat(form,".row","div",function(x) { return x.fields}, function(x) { return x.name })
         .classed("row",true)
       
       d3_updateable(rows,".label","div")

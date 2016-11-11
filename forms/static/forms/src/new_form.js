@@ -54,6 +54,22 @@ NewForm.prototype = {
         })
 
 
+      var description_row = d3_updateable(form,".form-description-row","div")
+        .classed("form-description-row row",true)
+
+      d3_updateable(description_row,"span","span")
+        .text("Form description: ")
+
+      d3_updateable(description_row,"textarea","textarea")
+        .attr("value",function(x) { return x.description })
+        .on("change",function(x) {
+          x.description = this.value
+        })
+
+      d3_updateable(form,"hr","hr")
+
+
+
 
 
 
@@ -110,6 +126,19 @@ NewForm.prototype = {
         .on("change",function(x) { 
           x.default_value = this.value
         })
+
+      var field_defaults = d3_updateable(rows,".field-description","span")
+        .classed("field-description",true)
+        .text("Description: ")
+
+      d3_updateable(field_defaults,"textarea","textarea")
+        .attr("rows",1)
+        .text(function(x) { return x.value })
+        .on("change",function(x) { 
+          x.description = this.value
+        })
+
+
 
 
 
