@@ -1,6 +1,8 @@
 import json
 import time
+import logging
 from link.wrappers import ConsoleAPIRequestWrapper
+
 
 MAX_TRIES = 20
 
@@ -59,7 +61,7 @@ class ReportAPIRequestWrapper(ConsoleAPIRequestWrapper):
             return "/%s" % report_url
         elif _tries < MAX_TRIES:
             time.sleep(5*_tries)
-            print report_id, _tries
+            logging.info("%s, %s" % (report_id, _tries) )
             return self.check_reporting(report_id,_tries+1)
 
 
@@ -71,7 +73,7 @@ class ReportAPIRequestWrapper(ConsoleAPIRequestWrapper):
         try:
             got = self.request('get',report_url)
         except Exception, e:
-            print str(e)[:300]
+            logging.info(str(e)[:300])
         
         return got.content
 
