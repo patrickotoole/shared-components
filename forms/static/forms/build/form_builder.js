@@ -69,6 +69,12 @@
             fn(d3.select(this))
           })
 
+        var field = d3_updateable(rows,".description","div")
+          .classed("description",true)
+          .html(function(x) { return x.description })
+
+
+
         var submit = d3_updateable(this._target,"button","button")
           .text("Submit")
           .on("click", function() {
@@ -240,7 +246,7 @@
 
         d3_updateable(field_defaults,"textarea","textarea")
           .attr("rows",1)
-          .text(function(x) { return x.value })
+          .text(function(x) { return x.default_value })
           .on("change",function(x) { 
             x.default_value = this.value
           })
@@ -251,7 +257,7 @@
 
         d3_updateable(field_defaults,"textarea","textarea")
           .attr("rows",1)
-          .text(function(x) { return x.value })
+          .text(function(x) { return x.description })
           .on("change",function(x) { 
             x.description = this.value
           })
@@ -425,13 +431,10 @@
 
   function State(target) {
 
-    var self = this;
-
     this._target = target
     this._state = {}
     this._subscription = {}
-
-    
+    this._step = 0
 
   }
 
@@ -441,8 +444,8 @@
          var subscriber = this.get_subscribers_fn(name) || function() {}
            , all = this.get_subscribers_fn("*") || function() {};
 
-         var cb = function(error,value) {
-           if (error) return cb(error,null)
+         var push = function(error,value) {
+           if (error) return subscriber(error,null)
            
            this.set(name, value)
            subscriber(false,this._state[name],state)
@@ -450,8 +453,8 @@
 
          }.bind(this)
 
-         if (typeof v === "function") v(cb)
-         else cb(false,v)
+         if (typeof v === "function") v(push)
+         else push(false,v)
 
          return this
       }
@@ -464,14 +467,17 @@
           fn = arguments[2]
         }
 
-        var subscriptions = this.get_subscribers_obj(to)
-
         if (fn === undefined) return subscriptions[id] || function() {};
+
+
+        var subscriptions = this.get_subscribers_obj(to)
+          , to_state = this._state[to]
+          , state = this._state;
 
         subscriptions[id] = fn;
 
-        if (to == "*") subscriptions[id](false,this._state)
-        else if (this._state[to]) subscriptions[id](false,this._state[to],this._state)
+        if (to == "*") fn(false,state)
+        else if (to_state) fn(false,to_state,state)
 
         return this
        

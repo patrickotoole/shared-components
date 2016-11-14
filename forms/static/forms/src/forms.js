@@ -63,6 +63,12 @@ Forms.prototype = {
           fn(d3.select(this))
         })
 
+      var field = d3_updateable(rows,".description","div")
+        .classed("description",true)
+        .html(function(x) { return x.description })
+
+
+
       var submit = d3_updateable(this._target,"button","button")
         .text("Submit")
         .on("click", function() {

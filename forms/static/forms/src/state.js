@@ -36,11 +36,12 @@ State.prototype = {
         fn = arguments[2]
       }
 
+      if (fn === undefined) return subscriptions[id] || function() {};
+
+
       var subscriptions = this.get_subscribers_obj(to)
         , to_state = this._state[to]
         , state = this._state;
-
-      if (fn === undefined) return subscriptions[id] || function() {};
 
       subscriptions[id] = fn;
 

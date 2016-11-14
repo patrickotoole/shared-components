@@ -122,7 +122,7 @@ NewForm.prototype = {
 
       d3_updateable(field_defaults,"textarea","textarea")
         .attr("rows",1)
-        .text(function(x) { return x.value })
+        .text(function(x) { return x.default_value })
         .on("change",function(x) { 
           x.default_value = this.value
         })
@@ -133,7 +133,7 @@ NewForm.prototype = {
 
       d3_updateable(field_defaults,"textarea","textarea")
         .attr("rows",1)
-        .text(function(x) { return x.value })
+        .text(function(x) { return x.description })
         .on("change",function(x) { 
           x.description = this.value
         })
