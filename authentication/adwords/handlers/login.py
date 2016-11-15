@@ -30,10 +30,7 @@ class LoginHandler(tornado.web.RequestHandler,LoginDatabase):
             self.write(ujson.dumps(user_obj))
             self.finish()
         else:
-            _next = "/"
-            if "crusher" in self.request.host: _next = "/crusher"
-            if "hindsight" in self.request.host: _next = "/crusher"
-
+            _next = "/index"
             
             self.redirect(self.get_argument("next", _next, True))
         

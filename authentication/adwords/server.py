@@ -24,6 +24,7 @@ if __name__ == "__main__":
 
     routes = [
             (r'/', IndexHandler, connectors),
+            (r'/index', IndexHandler, connectors),
             (r'/authorize', AuthorizeHandler, connectors),
             (r'/callback', CallbackHandler, connectors),
             (r'/campaign', CampaignHandler, connectors),
