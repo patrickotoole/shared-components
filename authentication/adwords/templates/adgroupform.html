@@ -1,0 +1,69 @@
+{% extends clean_base.html %}
+
+{% block content %}
+<link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/dc.css">
+<script type="text/javascript" src="http://rockerbox.com/js/d3.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/crossfilter.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/dc.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/colorbrewer.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/reporting.js"></script>
+<script src="http://getbootstrap.com/dist/js/bootstrap.min.js"></script>
+<link href="http://rockerbox.com/css/bootstrap.css" rel="stylesheet">
+
+<!-- DataTables CSS -->
+<!--<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.0/css/jquery.dataTables.css">-->
+
+<!-- jQuery -->
+<script type="text/javascript" charset="utf8" src="//code.jquery.com/jquery-1.10.2.min.js"></script>
+
+<!-- DataTables -->
+<!--<script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.0/js/jquery.dataTables.js"></script>-->
+
+</script>
+<style>
+.content{
+   width:1000px;
+   margin:auto;
+}
+.header{
+   float:left;
+   width:100%;
+}
+.header h1{
+   text-align:center;
+}
+.body{
+   width:100%;
+   float:left;
+   padding-top:20px;
+   margin:auto;
+}
+</style>
+
+
+<div class="content">
+
+<h2> Create Ad Group </h2>
+
+<form name="adgroupform" action="/adgroup" method="post">
+  <label for="name">Ad Group Name:</label>
+  <input type="text" name="name" id="name"/>
+  <br>
+  <label for="campid">Campaign ID:</label>
+  <input type="text" name="campid" id="campid" value={% raw data['campid'] %} />
+  <br>
+  <label for="bidamount">Bid Amount:</label>
+  <input type="text" name="bidamount" id="bidamount" />
+  <br>
+  <button>Create</button>
+</form>
+
+<script>
+var button = document.querySelector('form[name="campaignform"] > button');
+button.addEventListener(function() {
+  document.querySelector("form[name="campaignform"]").submit();
+});
+</script>
+
+</div>
+{% end %}

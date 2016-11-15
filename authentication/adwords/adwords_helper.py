@@ -19,7 +19,7 @@ CREATECAMPAIGN = [{
                              # datetime.timedelta(1)).strftime('%Y%m%d'),
                             "",
                 'budget': {'name':'testbudgetname',
-                            'budgetId': '971848957'
+                            'budgetId': ''
                 },
                 'settings': [{
                     'xsi_type': 'GeoTargetTypeSetting',
@@ -81,11 +81,13 @@ ADGROUP =[{
         }]
 
 
-def create_campaign(a, b, c):
+def create_campaign(a, b, c, d):
     camp_obj = CREATECAMPAIGN
     camp_obj[0]['operand']['name'] = a
     camp_obj[0]['operand']['endDate'] = b
     camp_obj[0]['operand']['startDate'] = c
+    camp_obj[0]['operand']['budget']['budgetId'] = d
+    #971848957
     return camp_obj
 
 def get_selector():

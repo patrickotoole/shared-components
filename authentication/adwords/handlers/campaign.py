@@ -4,6 +4,8 @@ from tornado import web
 from adwords import AdWords
 import json
 
+QUERY = "insert into advertiser_adwords_campaign (campaign_id, advertiser_id, budget) values (%s, %s, %s)"
+
 class CampaignHandler(web.RequestHandler):
     def initialize(self, **kwarg):
         self.db = kwarg.get('db',None)
@@ -13,20 +15,41 @@ class CampaignHandler(web.RequestHandler):
     def get(self):
         advertiser_id = int(self.get_secure_cookie('advertiser'))
         response = self.adwords.read_campaign(advertiser_id)
-
-        self.write(response)
+        self.render("templates/campaign.html", data=response)
 
     # Create
     def post(self):
-        post_data = json.loads(self.request.body)
-        advertiser_id = post_data['advertiser_id']
+        #import ipdb; ipdb.set_trace()
+        name = self.get_argument('campname',False)
+        advertiser_id = int(self.get_secure_cookie('advertiser'))
+        budget_amount_str = self.get_argument('budget',False)
+
+        import random
+        budget_name = "budget_amount_%s_%s" % (str(budget_amount_str), str(random.randint(0,100)))
+        try:
+            budget_amount = float(budget_amount_str) * 1000000
+        except:
+            raise Exception("Not a valid budget amount")
+        budget_input = {'name':budget_name, "amount": int(budget_amount)}
+        budget_response = self.adwords.create_budget(advertiser_id=advertiser_id, budget_input=budget_input)
+        budget_id = int(budget_response['budget_id'])
+
+        if not name:
+            advertiser_id = post_data['advertiser_id']
+            post_data = json.loads(self.request.body)
+            name = post_data['name']
+            budget_id = post_data['budget_id']
+
         response = self.adwords.create_campaign(advertiser_id=advertiser_id, arg={
-            'budget_id': str(post_data['budget_id']),
-            'name': '%s #%s' % (post_data['name'], uuid.uuid4()),
-            'impressions': str(post_data['impressions'])
+            'name': name,
+            'budget_id': budget_id
         })
 
-        self.write(response)
+        response = self.adwords.read_campaign(advertiser_id)
+        for camp in response:
+            self.db.execute(QUERY, (camp['id'],advertiser_id, budget_amount))
+
+        self.render("templates/campaign.html", data=response)
 
     # Update
     # id: campaign_id

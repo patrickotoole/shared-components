@@ -1,0 +1,135 @@
+{% autoescape None %}
+
+<!-- COPYRIGHT ROCKERBOX INC. 2014 -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Rockerbox / Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <meta name="description" content="" />
+    <meta name="keywords" content="" />
+    <link rel="icon" type="image/png" href="https://s3.amazonaws.com/getrockerbox.com/Fav_icon.png">
+    <link href='http://rockerbox.com/styles/fonts.css' type='text/css' rel='stylesheet' media="screen">
+    <link href="http://rockerbox.com/styles/login-style.css" type="text/css" rel="stylesheet" media="screen">
+    <script type="text/javascript" src="/static/js/d3.js" charset="utf-8"></script>
+
+    <script>
+            (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+            })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+            ga('create', 'UA-50457693-1', 'rockerbox.com');
+            ga('require', 'displayfeatures');
+            ga('send', 'pageview');
+        </script>
+        <!-- start Mixpanel --><script type="text/javascript">(function(f,b){if(!b.__SV){var a,e,i,g;window.mixpanel=b;b._i=[];b.init=function(a,e,d){function f(b,h){var a=h.split(".");2==a.length&&(b=b[a[0]],h=a[1]);b[h]=function(){b.push([h].concat(Array.prototype.slice.call(arguments,0)))}}var c=b;"undefined"!==typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var a="mixpanel";"mixpanel"!==d&&(a+="."+d);b||(a+=" (stub)");return a};c.people.toString=function(){return c.toString(1)+".people (stub)"};i="disable track track_pageview track_links track_forms register register_once alias unregister identify name_tag set_config people.set people.set_once people.increment people.append people.track_charge people.clear_charges people.delete_user".split(" ");
+for(g=0;g<i.length;g++)f(c,i[g]);b._i.push([a,e,d])};b.__SV=1.2;a=f.createElement("script");a.type="text/javascript";a.async=!0;a.src="//cdn.mxpnl.com/libs/mixpanel-2-latest.min.js";e=f.getElementsByTagName("script")[0];e.parentNode.insertBefore(a,e)}})(document,window.mixpanel||[]);
+        mixpanel.init("aa0178efc52a2d246ee37d8d1df5e31c");</script><!-- end Mixpanel -->
+
+    <style>
+    .hidden {display:none}
+    </style>
+    </head>
+    <body>
+      <form id="signin" onsubmit="d3.select('#signin input[type=\'submit\']').on('click')()">
+        <a href="http://rockerbox.com">
+          <img src="http://rockerbox.com/assets/img/general/logo-white.png" alt="Rockerbox logo" />
+        </a>
+        <br />
+        <input name="username" type="text" placeholder="Username" required autofocus><br />
+        <input name="password" type="password" placeholder="Password" required><br />
+        <input type="submit" value="sign in"><br />
+        <br/>
+        <span style="color:white;font-family:helvetica neue;opacity:.7"> Don't have an account? </span><a style="font-family:helvetica neue;color:white;opacity:1" href="/signup" id="show-signup">Sign up &rarr;</a>
+      </form>
+
+      <form id="signup" class="hidden" style="margin-top:-194px" onsubmit="d3.select('#signup input[type=\'submit\'\]').on('click')()">
+        <a href="http://rockerbox.com">
+          <img src="http://rockerbox.com/assets/img/general/logo-white.png" alt="Rockerbox logo" />
+        </a>
+        <br />
+        <input name="firstname" type="text" placeholder="First name" required autofocus><br />
+        <input name="lastname" type="text" placeholder="Last name" required autofocus><br />
+
+        <hr style="margin:20px">
+
+        <input name="email" type="text" placeholder="Email" required autofocus><br />
+        <input name="password" type="password" placeholder="Password" required><br />
+        <input type="submit" value="sign up"><br />
+        <br/>
+        <span style="color:white;font-family:helvetica neue;opacity:.7"> Already have an account? </span><a style="font-family:helvetica neue;color:white;opacity:1" href="#" id="show-signin">Signin &rarr;</a>
+
+      </form>
+      
+      <script src="http://ib.adnxs.com/seg?add=1478777&t=1" type="text/javascript"></script>
+      <script>
+
+      //d3.select('#show-signup').on('click',function(e){
+      //  d3.select('form#signin').classed("hidden",true)
+      //  d3.select('form#signup').classed("hidden",false)
+      //})
+
+      d3.select('#show-signin').on('click',function(e){
+        d3.select('form#signup').classed("hidden",true)
+        d3.select('form#signin').classed("hidden",false)
+      })
+
+
+
+      d3.select('#signup input[type="submit"]').on('click',function(e){
+        d3.event.preventDefault()
+        var obj = {
+          "username":d3.select("#signup > input[name='email']").property('value'),
+          "email":d3.select("#signup > input[name='email']").property('value'),
+          "show_reporting":1,
+
+          "password":d3.select("#signup > input[name='password']").property('value'),
+          "first_name":d3.select("#signup > input[name='firstname']").property('value'),
+          "last_name":d3.select("#signup > input[name='lastname']").property('value'),
+          "advertiser":0
+
+
+        }
+
+        d3.xhr("/signup").post(JSON.stringify(obj),function(e,d){
+          if (e) return
+
+          if(obj.username.substring(0,2) == "a_") {
+            document.cookie = "user_type=rockerbox";
+          } else {
+            document.cookie = "user_type=client";
+          }
+          location.reload()
+          return
+        })
+       
+        return false;
+      })
+
+      d3.select('#signin input[type="submit"]').on('click',function(e){
+        d3.event.preventDefault()
+
+        var obj = {
+          "username":d3.select("#signin > input[name='username']").property('value'),
+          "password":d3.select("#signin > input[name='password']").property('value')
+        }
+
+        d3.xhr("/login").post(JSON.stringify(obj),function(e,d){
+          if (e) return
+
+          if(obj.username.substring(0,2) == "a_") {
+            document.cookie = "user_type=rockerbox";
+          } else {
+            document.cookie = "user_type=client";
+          }
+          location.reload()
+          return
+        })
+       
+        return false;
+      })
+      </script>
+    </body>
+</html>

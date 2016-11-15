@@ -1,3 +1,4 @@
+import logging
 import ujson
 from tornado import web
 from adwords import AdWords
@@ -13,7 +14,23 @@ class AdHandler(web.RequestHandler):
         adgroup_id = self.get_argument('adgroup_id', '')
 
         response = self.adwords.get_ads(advertiser_id, adgroup_id)
-        self.write(response)
+        tempdata={}
+        tempdata['data'] = []
+        try:
+            for ad in ujson.loads(response['ads'])[2][1]:
+                temp={}
+                tempdata['adgroup_id'] = ad[0][1]
+                temp['name'] = ad[1][1][5][1]
+                temp['id'] = ad[1][1][0][1]
+                temp['url'] = ad[1][1][1][1]
+                temp['status'] = ad[2][1]
+                temp['approval'] =ad[3][1]
+                temp['img'] = ad[1][1][4][1][3][1][1][1][1]
+                tempdata['data'].append(temp)
+        except:
+            logging.info("no ads in ad group")
+
+        self.render('templates/ads.html', data=tempdata)
 
     def post(self): 
         post_data = ujson.loads(self.request.body)

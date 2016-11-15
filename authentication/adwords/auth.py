@@ -28,7 +28,7 @@ class AdWordsAuth():
             expired = datetime.datetime.strptime(creds['token_expiry'],'%Y-%m-%dT%H:%M:%SZ')
             clientID = item[1]['clientid']
             adwords_client = self.adwordsClient(creds,advertiser_id)
-            self.adwords_object[advertiser_id] = {'expire': expired, 'client':adwords_client, 'token':creds, 'ID':clientID}
+            self.adwords_object[advertiser_id] = {'expires': expired, 'client':adwords_client, 'token':creds, 'ID':clientID}
 
     def adwordsClient(self, token, advertiser_id):
         refresh_token = token['refresh_token']
@@ -47,7 +47,7 @@ class AdWordsAuth():
     def get_adwords_client(self,advertiser_id):
         try:
             adwords_client = self.adwords_object.get(advertiser_id,{"client":{}}).get('client',{})
-            expires = self.adwords_object.get(advertiser_id,{"expire":{}}).get('expire', datetime.datetime.now())
+            expires = self.adwords_object.get(advertiser_id,{"expires":{}}).get('expires', datetime.datetime.now())
             if adwords_client == {} or datetime.datetime.now() > expires:
                 self.adwords_object[advertiser_id]['client'] = self.adwordsClient(self.adwords_object[advertiser_id]['token'], advertiser_id)
                 self.adwords_object[advertiser_id]['expires'] = datetime.datetime.now() + datetime.timedelta(hours=1)

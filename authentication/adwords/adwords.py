@@ -25,15 +25,15 @@ class AdWords(AdWordsAuth):
         campaign = kwargs.get("arg",None)
         advertiser_id = kwargs.get("advertiser_id",None)
         print('Creating campaign (%s)...' % campaign['name'])
-        budget_id = str(campaign['budget_id'])
         name = '%s #%s' % (campaign['name'], uuid.uuid4())
-        impressions = str(campaign['impressions'])
+        budget_id = campaign['budget_id']
 
         client = self.get_adwords_client(advertiser_id)
         campaign_service = client.GetService('CampaignService', version='v201607')
 
         timestamp = (datetime.datetime.now()+datetime.timedelta(365)).strftime('%Y%m%d')
-        campaign_obj = adwords_helper.create_campaign(name, timestamp,timestamp) 
+        
+        campaign_obj = adwords_helper.create_campaign(name, timestamp,timestamp, budget_id) 
 
         logging.info(campaign_obj)
 
@@ -58,7 +58,8 @@ class AdWords(AdWordsAuth):
         raw_data = campaign_service.get(selector)
 
         if 'entries' in raw_data:
-            campaigns = adwords_helper.process_campaigns(raw_data)
+            response = adwords_helper.process_campaigns(raw_data)
+        else:    
             response = {
                 'success': False,
                 'message': 'Something went wrong when fetching campaigns.'
@@ -395,13 +396,6 @@ class AdWords(AdWordsAuth):
         return 'List of placements'
 
     
-    def create_vertical(self):
-        return 'Create vertical'
-
-    def read_vertical(self):
-        return 'List of verticals'
-
-
     def get_customer(self,advertiser_id):
         client = self.get_adwords_client(advertiser_id)
         customer_service = client.GetService('CustomerService', version='v201607')

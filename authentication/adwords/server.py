@@ -7,6 +7,8 @@ from adwords import AdWords
 from tornado.options import define, options, parse_command_line
 
 dirname = os.path.dirname(os.path.realpath(__file__))
+static_dir = os.path.dirname(os.path.realpath(__file__))
+
 
 if __name__ == "__main__":
     define("port", default=9001, help="run on the given port", type=int)
@@ -25,18 +27,22 @@ if __name__ == "__main__":
             (r'/authorize', AuthorizeHandler, connectors),
             (r'/callback', CallbackHandler, connectors),
             (r'/campaign', CampaignHandler, connectors),
+            (r'/campaign/form', CampaignFormHandler, connectors),
             (r'/campaign/([0-9]+)/schedule', ScheduleHandler, connectors),
             (r'/report', ReportHandler, connectors),
             (r'/account', AccountHandler, connectors),
             (r'/adgroup', AdGroupHandler, connectors),
+            (r'/adgroup/form', AdGroupFormHandler, connectors),
             (r'/adgroup/([0-9]+)/keyword', KeywordHandler, connectors),
-            (r'/adgroup/([0-9]+)/placement', PlacementHandler, connectors),
-            (r'/adgroup/([0-9]+)/vertical', VerticalHandler, connectors),
+            (r'/placement', PlacementHandler, connectors),
+            (r'/placement/form', PlacementFormHandler, connectors),
             (r'/manage', ManageHandler, connectors),
             (r'/customer', CustomerHandler, connectors),
             (r'/media', MediaHandler, connectors),
             (r'/ads', AdHandler, connectors),
-            (r'/budget', BudgetHandler, connectors)
+            (r'/budget', BudgetHandler, connectors),
+            (r'/login', LoginHandler, connectors),
+            (r'/static/(.*)', tornado.web.StaticFileHandler, {'path': static_dir+"/static"})
     ]
 
     app = tornado.web.Application(

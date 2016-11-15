@@ -1,0 +1,57 @@
+{% extends clean_base.html %}
+
+{% block content %}
+<link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/dc.css">
+<script type="text/javascript" src="http://rockerbox.com/js/d3.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/crossfilter.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/dc.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/colorbrewer.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/reporting.js"></script>
+<script src="http://getbootstrap.com/dist/js/bootstrap.min.js"></script>
+<link href="http://rockerbox.com/css/bootstrap.css" rel="stylesheet">
+
+<!-- DataTables CSS -->
+<!--<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.0/css/jquery.dataTables.css">-->
+
+<!-- jQuery -->
+<script type="text/javascript" charset="utf8" src="//code.jquery.com/jquery-1.10.2.min.js"></script>
+
+<!-- DataTables -->
+<!--<script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.0/js/jquery.dataTables.js"></script>-->
+
+</script>
+<style>
+.content{
+   width:1000px;
+   margin:auto;
+}
+.header{
+   float:left;
+   width:100%;
+}
+.header h1{
+   text-align:center;
+}
+.body{
+   width:100%;
+   float:left;
+   padding-top:20px;
+   margin:auto;
+}
+</style>
+
+
+<div class="content">
+
+<h2> Ads</h2>
+<ul>
+{% for ad in data['data'] %}
+    <li><b>Name</b> {% raw ad['name'] %} <b>Status</b> {% raw ad['status'] %}  <b>Approval Status</b> {% raw ad['approval'] %} <b>ID</b> {% raw ad['id'] %} <b>Display URL</b> {% raw ad['url'] %} </li>
+    <img src={% raw ad['img'] %}>
+    <br>
+{% end %}
+</ul>
+<br>
+<br>
+</div>
+{% end %}
