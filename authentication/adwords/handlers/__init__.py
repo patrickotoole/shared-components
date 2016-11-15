@@ -13,7 +13,6 @@ from report import *
 from schedule import *
 from media import *
 from ad import *
-from vertical import *
 from campaign_form import *
 from adgroup_form import *
 from placement_form import *
