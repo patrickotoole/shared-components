@@ -34,8 +34,8 @@ class AdHandler(web.RequestHandler):
 
     def post(self): 
         post_data = ujson.loads(self.request.body)
-        
-        advertiser_id = int(post_data['advertiser_id'])
+
+        advertiser_id = int(self.get_secure_cookie('advertiser'))
         ad_type = post_data['type']
         mediaID = post_data['media_id']
         name = post_data['name']

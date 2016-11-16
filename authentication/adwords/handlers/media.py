@@ -38,7 +38,6 @@ class MediaHandler(web.RequestHandler):
 
     # Create
     def post(self):
-        import ipdb; ipdb.set_trace()
         #post_data = json.loads(self.request.body)
 
         image_data = self.request.files['image']

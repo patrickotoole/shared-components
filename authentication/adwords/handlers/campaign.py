@@ -35,7 +35,6 @@ class CampaignHandler(web.RequestHandler):
         budget_id = int(budget_response['budget_id'])
 
         if not name:
-            advertiser_id = post_data['advertiser_id']
             post_data = json.loads(self.request.body)
             name = post_data['name']
             budget_id = post_data['budget_id']

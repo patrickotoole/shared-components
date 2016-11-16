@@ -30,14 +30,13 @@ class AdGroupHandler(web.RequestHandler):
     # Create
     def post(self):
         camp_id = self.get_argument('campid',False)
-        advertiser_id = self.get_secure_cookie('advertiser')
+        advertiser_id = int(self.get_secure_cookie('advertiser'))
         name = self.get_argument('name',False)
         bid_amount_str = self.get_argument('bidamount',False)
         #import ipdb; ipdb.set_trace()        
         bid_amount = float(bid_amount_str) * 1000000
         bid_amount = int(bid_amount)
         if not camp_id:
-            advertiser_id = post_data['advertiser_id'] 
             post_data = ujson.loads(self.request.body)
             camp_id = post_data['campaign_id']
             name = post_data['name']

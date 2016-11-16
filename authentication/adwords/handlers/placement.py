@@ -63,13 +63,12 @@ class PlacementHandler(web.RequestHandler):
 
     # Create
     def post(self):
-        advertiser_id = self.get_secure_cookie('advertiser')
+        advertiser_id = int(self.get_secure_cookie('advertiser'))
         placement_url = self.get_argument('url', False)
         adgroup_id = self.get_argument('adgroup_id', False)
 
         if not placement_url:
             post_data = json.loads(self.request.body)
-            advertiser_id = int(post_data['advertiser_id'])
             placement_url = str(post_data['placement_url'])
             adgroup_id = post_data['adgroup_id']
 
