@@ -41,7 +41,7 @@ class MediaHandler(web.RequestHandler):
         #post_data = json.loads(self.request.body)
 
         image_data = self.request.files['image']
-        image_data = base64.encodestring(image_data[0]['body'])\
+        image_data = base64.encodestring(image_data[0]['body'])
         advertiser_id = self.get_secure_cookie('advertiser')
         #advertiser_id = int(post_data['advertiser_id'])
         #image_url = post_data['url']
