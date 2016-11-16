@@ -30,7 +30,10 @@ class AdHandler(web.RequestHandler):
         except:
             logging.info("no ads in ad group")
 
-        self.render('templates/ads.html', data=tempdata)
+        if 'json' in self.request.headers.get('Accept').split(',')[0]:
+            self.write(ujson.dumps(tempdata))
+        else:
+            self.render('templates/ads.html', data=tempdata)
 
     def post(self): 
         post_data = ujson.loads(self.request.body)

@@ -15,7 +15,10 @@ class CampaignHandler(web.RequestHandler):
     def get(self):
         advertiser_id = int(self.get_secure_cookie('advertiser'))
         response = self.adwords.read_campaign(advertiser_id)
-        self.render("templates/campaign.html", data=response)
+        if 'json' in self.request.headers.get('Accept').split(',')[0]:
+            self.write(ujson.dumps(response))
+        else:
+            self.render("templates/campaign.html", data=response)
 
     # Create
     def post(self):
@@ -48,7 +51,10 @@ class CampaignHandler(web.RequestHandler):
         for camp in response:
             self.db.execute(QUERY, (camp['id'],advertiser_id, budget_amount))
 
-        self.render("templates/campaign.html", data=response)
+        if 'json' in self.request.headers.get('Accept').split(',')[0]:
+            self.write(ujson.dumps(response))
+        else:
+            self.render("templates/campaign.html", data=response)
 
     # Update
     # id: campaign_id

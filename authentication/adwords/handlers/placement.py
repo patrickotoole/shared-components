@@ -53,7 +53,10 @@ class PlacementHandler(web.RequestHandler):
                     temp['url'] = place[2]['url']
                     temp['id'] = place[2]['id']
                     tempdata['data'].append(temp)
-            self.render('templates/placement.html', data=tempdata)
+            if 'json' in self.request.headers.get('Accept').split(',')[0]:
+                self.write(ujson.dumps(tempdata))
+            else:
+                self.render('templates/placement.html', data=tempdata)
         except:
             response = {
                 'success': False,
@@ -127,7 +130,10 @@ class PlacementHandler(web.RequestHandler):
                     temp['url'] = place[2]['url']
                     temp['id'] = place[2]['id']
                     tempdata['data'].append(temp)
-            self.render('templates/placement.html', data=tempdata)
+            if 'json' in self.request.headers.get('Accept').split(',')[0]:
+                self.write(ujson.dumps(tempdata))
+            else:
+                self.render('templates/placement.html', data=tempdata)
         except:
             response = {
                 'success': False,

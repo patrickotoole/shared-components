@@ -24,8 +24,10 @@ class AdGroupHandler(web.RequestHandler):
                 tempdata['data'].append({'id':i[0],'name':i[1],'status':i[2]})
         else:
             tempdata={'data':[],'campid':campaign_id}
-        self.render("templates/adgroup.html",data=tempdata)
-        #self.write(response)
+        if 'json' in self.request.headers.get('Accept').split(',')[0]:
+            self.write(ujson.dumps(tempdata))
+        else:
+            self.render("templates/adgroup.html",data=tempdata)
 
     # Create
     def post(self):
