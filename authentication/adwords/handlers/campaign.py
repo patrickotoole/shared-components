@@ -27,15 +27,21 @@ class CampaignHandler(web.RequestHandler):
         advertiser_id = int(self.get_secure_cookie('advertiser'))
         budget_amount_str = self.get_argument('budget',False)
 
-        import random
-        budget_name = "budget_amount_%s_%s" % (str(budget_amount_str), str(random.randint(0,100)))
-        try:
-            budget_amount = float(budget_amount_str) * 1000000
-        except:
-            raise Exception("Not a valid budget amount")
-        budget_input = {'name':budget_name, "amount": int(budget_amount)}
-        budget_response = self.adwords.create_budget(advertiser_id=advertiser_id, budget_input=budget_input)
-        budget_id = int(budget_response['budget_id'])
+
+        if not name:
+            post_data = json.loads(self.request.body)
+            name = post_data['name']
+            budget_id = int(post_data['budget_id'])
+        else:
+            import random
+            budget_name = "budget_amount_%s_%s" % (str(budget_amount_str), str(random.randint(0,100)))
+            try:
+                budget_amount = float(budget_amount_str) * 1000000
+            except:
+                raise Exception("Not a valid budget amount")
+            budget_input = {'name':budget_name, "amount": int(budget_amount)}
+            budget_response = self.adwords.create_budget(advertiser_id=advertiser_id, budget_input=budget_input)
+            budget_id = int(budget_response['budget_id'])
 
         if not name:
             post_data = json.loads(self.request.body)
