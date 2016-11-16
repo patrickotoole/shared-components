@@ -55,7 +55,7 @@ class CampaignHandler(web.RequestHandler):
 
         response = self.adwords.read_campaign(advertiser_id)
         for camp in response:
-            self.db.execute(QUERY, (camp['id'],advertiser_id, budget_amount))
+            self.db.execute(QUERY, (camp['id'],advertiser_id, budget_id))
 
         if 'json' in self.request.headers.get('Accept').split(',')[0]:
             self.write(ujson.dumps(response))
