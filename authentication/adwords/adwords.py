@@ -276,7 +276,8 @@ class AdWords(AdWordsAuth):
         return response
 
     def set_schedule(self, **kwargs):
-        arg = kwargs.get('schedule',None)
+        #arg = kwargs.get('schedule',None)
+        campaign_id = kwargs.get('campaign_id',None)
         advertiser_id = kwargs.get('advertiser_id',None)
 
         client = self.get_adwords_client(advertiser_id)
@@ -284,24 +285,27 @@ class AdWords(AdWordsAuth):
 
         operations = []
 
-        for item in arg['mediaplan']:
-            if(item['parent_category_name'] == arg['category']):
-                # Get start hour
-                start_hour = item['hour']
+        #for item in arg['mediaplan']:
+        #    if(item['parent_category_name'] == arg['category']):
+        #        # Get start hour
+        #        start_hour = item['hour']
+        #        # Get end hour
+        #        if(start_hour == '23'):
+        #            end_hour = '00'
+        #        else:
+        #            end_hour = int(start_hour) + 1
 
-                # Get end hour
-                if(start_hour == '23'):
-                    end_hour = '00'
-                else:
-                    end_hour = int(start_hour) + 1
+        start_hour = 10
+        end_hour = 11
+        operations.append(adwords_helper.add_operation_schedule('MONDAY',start_hour,end_hour,campaign_id))
                 
-                operations.append(adwords_helper.add_operation_schedule('MONDAY',start_hour,end_hour,arg['campaign_id']))
-                operations.append(adwords_helper.add_operation_schedule('TUESDAY',start_hour,end_hour,arg['campaign_id']))
-                operations.append(adwords_helper.add_operation_schedule('WEDNESDAY',start_hour,end_hour,arg['campaign_id']))
-                operations.append(adwords_helper.add_operation_schedule('THURSDAY',start_hour,end_hour,arg['campaign_id']))
-                operations.append(adwords_helper.add_operation_schedule('FRIDAY',start_hour,end_hour,arg['campaign_id']))
-                operations.append(adwords_helper.add_operation_schedule('SATURDAY',start_hour,end_hour,arg['campaign_id']))
-                operations.append(adwords_helper.add_operation_schedule('SUNDAY',start_hour,end_hour,arg['campaign_id']))
+        #        operations.append(adwords_helper.add_operation_schedule('MONDAY',start_hour,end_hour,arg['campaign_id']))
+        #        operations.append(adwords_helper.add_operation_schedule('TUESDAY',start_hour,end_hour,arg['campaign_id']))
+        #        operations.append(adwords_helper.add_operation_schedule('WEDNESDAY',start_hour,end_hour,arg['campaign_id']))
+        #        operations.append(adwords_helper.add_operation_schedule('THURSDAY',start_hour,end_hour,arg['campaign_id']))
+        #        operations.append(adwords_helper.add_operation_schedule('FRIDAY',start_hour,end_hour,arg['campaign_id']))
+        #        operations.append(adwords_helper.add_operation_schedule('SATURDAY',start_hour,end_hour,arg['campaign_id']))
+        #        operations.append(adwords_helper.add_operation_schedule('SUNDAY',start_hour,end_hour,arg['campaign_id']))
                 
 
         try:
@@ -327,7 +331,7 @@ class AdWords(AdWordsAuth):
 
         # 'fields': ['DayOfWeek', 'StartHour', 'StartMinute', 'EndHour', 'EndMinute'],
         
-        selector = adwords_helper.get_schedule_selector(camp_id) 
+        selector = adwords_helper.get_schedule_selector(campaign_id) 
         try:
             raw_data = ad_group_criterion_service.get(selector)
 
@@ -353,12 +357,6 @@ class AdWords(AdWordsAuth):
 
         return response
 
-
-    def create_keyword(self):
-        return 'Create keyword'
-
-    def read_keyword(self):
-        return 'List of keywords'
 
     def set_placement(self, **kwargs):
         arg = kwargs.get('arg',None)

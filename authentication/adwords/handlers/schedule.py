@@ -9,22 +9,23 @@ class ScheduleHandler(web.RequestHandler):
         self.adwords = kwargs.get('adwords',None)
 
     # List
-    def get(self, campaign_id):
-        advertiser_id = self.get_secure_cookie('advertiser')
+    def get(self):
+        advertiser_id = int(self.get_secure_cookie('advertiser'))
+        campaign_id = self.get_argument('campaign_id', False)
         response = self.adwords.read_schedule(campaign_id=campaign_id,advertiser_id=advertiser_id)
-
         self.write(response)
 
     # Create
-    def post(self, campaign_id):
+    def post(self):
         post_data = json.loads(self.request.body)
-        advertiser_id = post_data['advertiser_id']
+        #advertiser_id = int(self.get_secure_cookie('advertiser'))
+        advertiser_id = int(post_data['advertiser_id'])
         schedule = {
-            'campaign_id': campaign_id
+            'campaign_id': post_data['campaign_id']
         }
 
         #Not in adwords
-        #response = self.adwords.create_schedule('schedule'=schedule,'advertiser_id'=advertiser_id)
+        response = self.adwords.set_schedule(camopaign_id=post_data['campaign_id'],advertiser_id=advertiser_id)
 
         self.write(response)
 

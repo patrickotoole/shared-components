@@ -12,4 +12,4 @@ class CustomerHandler(web.RequestHandler):
         advertiser_id = self.get_secure_cookie('advertiser')
         response = self.adwords.get_customer(int(advertiser_id))
 
-        self.write(response)
+        self.write(ujson.dumps(response))
