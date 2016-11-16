@@ -19,7 +19,7 @@ class BudgetHandler(web.RequestHandler):
         post_data = json.loads(self.request.body)
         advertiser_id = int(self.get_secure_cookie('advertiser'))
         budget_input = {
-            'name': '%s #%s' % (post_data['name'], uuid.uuid4()),
+            'name': post_data['name'],
             'amount': str(post_data['amount'])
         }
         response = self.adwords.create_budget(budget_input=budget_input, advertiser_id=advertiser_id)

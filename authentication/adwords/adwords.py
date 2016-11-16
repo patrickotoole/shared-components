@@ -25,7 +25,7 @@ class AdWords(AdWordsAuth):
         campaign = kwargs.get("arg",None)
         advertiser_id = kwargs.get("advertiser_id",None)
         print('Creating campaign (%s)...' % campaign['name'])
-        name = '%s #%s' % (campaign['name'], uuid.uuid4())
+        name = campaign['name']
         budget_id = campaign['budget_id']
 
         client = self.get_adwords_client(advertiser_id)
@@ -79,7 +79,7 @@ class AdWords(AdWordsAuth):
         client = self.get_adwords_client(advertiser_id)
         ad_group_service = client.GetService('AdGroupService', version='v201607')
 
-        operations = adwords_helper.create_adgroup(arg['campaign_id'],'%s #%s' % (arg['adgroup_name'], uuid.uuid4()), arg['bid_amount'])
+        operations = adwords_helper.create_adgroup(arg['campaign_id'],arg['adgroup_name'], arg['bid_amount'])
 
         # try:
         ad_groups = ad_group_service.mutate(operations)
