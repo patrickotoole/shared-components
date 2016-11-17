@@ -1,10 +1,11 @@
+import logging
 import uuid
 import ujson
 from tornado import web
 from adwords import AdWords
 import json
 
-QUERY = "insert into advertiser_adwords_campaign (campaign_id, advertiser_id, budget) values (%s, %s, %s)"
+QUERY = "insert into advertiser_adwords_campaign (campaign_id, advertiser_id, budgetID) values (%s, %s, %s)"
 
 class CampaignHandler(web.RequestHandler):
     def initialize(self, **kwarg):
@@ -55,7 +56,11 @@ class CampaignHandler(web.RequestHandler):
 
         response = self.adwords.read_campaign(advertiser_id)
         for camp in response:
-            self.db.execute(QUERY, (camp['id'],advertiser_id, budget_id))
+            try:
+                self.db.execute(QUERY, (camp['id'],advertiser_id, budget_id))
+            except:
+                logging.info("campaign already in db")
+                logging.info(cmap['id'])
 
         if 'json' in self.request.headers.get('Accept').split(',')[0]:
             self.write(ujson.dumps(response))
