@@ -6,6 +6,7 @@ from adwords import AdWords
 import json
 
 QUERY = "insert into advertiser_adwords_campaign (campaign_id, advertiser_id, budgetID) values (%s, %s, %s)"
+SELECT = "select campaign_id from advertiser_adwords_campaign where advertiser_id = '%s'"
 
 class CampaignHandler(web.RequestHandler):
     def initialize(self, **kwarg):
@@ -23,7 +24,6 @@ class CampaignHandler(web.RequestHandler):
 
     # Create
     def post(self):
-        #import ipdb; ipdb.set_trace()
         name = self.get_argument('campname',False)
         advertiser_id = int(self.get_secure_cookie('advertiser'))
         budget_amount_str = self.get_argument('budget',False)
@@ -55,15 +55,21 @@ class CampaignHandler(web.RequestHandler):
         })
 
         response = self.adwords.read_campaign(advertiser_id)
+        prior_camps = self.db.select_dataframe(SELECT % advertiser_id)
+        prior_camp_list = prior_camps.campaign_id.tolist()
+        resp = {}
         for camp in response:
             try:
-                self.db.execute(QUERY, (camp['id'],advertiser_id, budget_id))
+                if str(camp['id']) not in prior_camp_list:
+                    self.db.execute(QUERY, (camp['id'],advertiser_id, budget_id))
+                    resp['id'] = camp['id']
+                    resp['name'] = camp['name']
             except:
                 logging.info("campaign already in db")
-                logging.info(cmap['id'])
+                logging.info(camp['id'])
 
         if 'json' in self.request.headers.get('Accept').split(',')[0]:
-            self.write(ujson.dumps(response))
+            self.write(ujson.dumps(resp))
         else:
             self.render("templates/campaign.html", data=response)
 
