@@ -44,6 +44,7 @@ if __name__ == "__main__":
             (r'/ads', AdHandler, connectors),
             (r'/budget', BudgetHandler, connectors),
             (r'/login', LoginHandler, connectors),
+            (r'/logout', LoginHandler, connectors),
             (r'/static/(.*)', tornado.web.StaticFileHandler, {'path': static_dir+"/static"})
     ]
 
