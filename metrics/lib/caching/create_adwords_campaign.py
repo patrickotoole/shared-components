@@ -12,15 +12,14 @@ class AdwordsCreator():
 
     def create_budget(self,name, amount):
         post_data = {'name':name, 'amount':amount}
-        import ipdb; ipdb.set_trace()
         resp = self.adwords_wrapper.post('/budget', data=ujson.dumps(post_data))
         budget_id = resp.json['budget_id']
         return budget_id
 
     def create_campaign(self, name, budget_id):
-        import ipdb; ipdb.set_trace()
         post_data = {'name':name, 'budget_id':budget_id}
-        resp = self.adwords_wrapper.post('/campaign', data=ujson.dumps(post_data))
+        header = {'Accept':'text/json'}
+        resp = self.adwords_wrapper.post('/campaign', data=ujson.dumps(post_data), headers=header)
         camp_id = resp['campaign_id']
         return camp_id
 
@@ -34,13 +33,14 @@ class AdwordsCreator():
         return data
 
     def create_adgroup(self, name, camp_id, bid_amount):
-        post_data = {'name': name, 'campaign_id': camp_id, 'bid_amount': bid_amount}
-        resp = self.adwords_wrapper.post('/adgroup', data = ujson.dumps(post_data))
-        adgroup_id = resp.json['adgroup_id']
+        post_data = {'name': name, 'campaign_id': camp_id, 'bid_amount': str(bid_amount)}
+        header = {'Accept':'text/json'}
+        resp = self.adwords_wrapper.post('/adgroup', data = ujson.dumps(post_data), headers=header)
+        adgroup_id = resp.json['id']
         return adgroup_id
 
     def create_placement(self, url, adgroup_id):
-        post_data = {"placement_ul":url, "adgroup_id":adgroup_id}
+        post_data = {"placement_url":url, "adgroup_id":adgroup_id}
         resp = self.adwords_wrapper.post('/placement', data = ujson.dumps(post_data))
         return None
 
@@ -57,19 +57,20 @@ class AdwordsCreator():
 if __name__ =="__main__":
 
     hindsight = lnk.api.crusher
-    hindsight.user='test_rick'
+    hindsight.user='a_rockerbox'
     hindsight.authenticate()
     adwords_wrapper = lnk.api.adwords
     import ipdb; ipdb.set_trace()
     adcreator =AdwordsCreator(hindsight, adwords_wrapper)
-    #budget_id = adcreator.create_budget('sample_budget2', 100000) #options.amount)
-    budget_id = 976422954 
+    budget_id = adcreator.create_budget('test_budget3', 100000) #options.amount)
+    #budget_id = 976422954 
     camp_id = adcreator.create_campaign('sample_campaign', budget_id)
+    #camp_id = 700720973
 
     mediaplan = adcreator.get_hindsight_mediaplan()
     processed_plan = adcreator.process_plan(mediaplan)
-    for category in process_plan.keys():
-        adgroup_id = self.create_adgroup(category, camp_id, 0.01)
-        for domain in process_plan[category]:
-            self.create_placement(domain, adgroup_id)
+    for category in processed_plan.keys():
+        adgroup_id = adcreator.create_adgroup(category, camp_id, 10000)
+        for domain in processed_plan[category]:
+            adcreator.create_placement(domain, adgroup_id)
 
