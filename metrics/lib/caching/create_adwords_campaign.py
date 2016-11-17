@@ -1,3 +1,4 @@
+import logging
 import requests
 from link import lnk
 import ujson
@@ -7,8 +8,6 @@ class AdwordsCreator():
     def __init__(self,hindsight,adw):
         self.hindsight = hindsight
         self.adwords_wrapper = adw
-        self.adwords_wrapper.user='test_rick'
-        self.adwords_wrapper.authenticate()
 
     def create_budget(self,name, amount):
         post_data = {'name':name, 'amount':amount}
@@ -20,7 +19,7 @@ class AdwordsCreator():
         post_data = {'name':name, 'budget_id':budget_id}
         header = {'Accept':'text/json'}
         resp = self.adwords_wrapper.post('/campaign', data=ujson.dumps(post_data), headers=header)
-        camp_id = resp['campaign_id']
+        camp_id = resp.json['id']
         return camp_id
 
     def make_category_campaign(self, categories_budget):
@@ -55,22 +54,56 @@ class AdwordsCreator():
         return final
 
 if __name__ =="__main__":
+    from lib.report.utils.loggingutils import basicConfig
+    from lib.report.utils.options import define
+    from lib.report.utils.options import options
+    from lib.report.utils.options import parse_command_line
+
+    define("campaign_name",  default="unnamedCampaign")
+    define("budget", default=0.01)
+    define("bid", default=0.01)
+    define("override", default=False)
+    define("adwords_advertiser", default='test_rick')
+    define("hindsight_advertiser", default='rockerbox')
+    basicConfig(options={})
+
+    parse_command_line()
+
+    name = options.campaign_name
+    budget = int(float(options.budget) * 1000000)
+    bid = int(float(options.bid) * 1000000)
+
+    logging.info(name)
+    logging.info(budget)
+    logging.info(bid)
+    logging.info(options.adwords_advertiser)
+    logging.info(options.hindsight_advertiser)
+ 
+    if not options.override:
+        if budget > 10000000000:
+            raise Exception("budget over 10,000 set override to true and rerun if correct")
+        if bid > 10000000:
+            raise Exception("bid over 10 set override to true and rerun if correct")
 
     hindsight = lnk.api.crusher
-    hindsight.user='a_rockerbox'
+    hindsight.user="a_%s" % options.hindsight_advertiser
     hindsight.authenticate()
     adwords_wrapper = lnk.api.adwords
+    if options.adwords_advertiser != 'test_rick':
+        adwords_wrapper.user="a_%s" % options.adwords_advertiser
+    adwords_wrapper.authenticate()
+
     import ipdb; ipdb.set_trace()
     adcreator =AdwordsCreator(hindsight, adwords_wrapper)
-    budget_id = adcreator.create_budget('test_budget3', 100000) #options.amount)
+    budget_id = adcreator.create_budget('RBbudget', budget) #options.amount)
     #budget_id = 976422954 
-    camp_id = adcreator.create_campaign('sample_campaign', budget_id)
+    camp_id = adcreator.create_campaign(name, budget_id)
     #camp_id = 700720973
 
     mediaplan = adcreator.get_hindsight_mediaplan()
     processed_plan = adcreator.process_plan(mediaplan)
     for category in processed_plan.keys():
-        adgroup_id = adcreator.create_adgroup(category, camp_id, 10000)
+        adgroup_id = adcreator.create_adgroup(category, camp_id, bid)
         for domain in processed_plan[category]:
             adcreator.create_placement(domain, adgroup_id)
 
