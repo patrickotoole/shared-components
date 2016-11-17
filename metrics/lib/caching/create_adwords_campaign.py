@@ -65,6 +65,7 @@ if __name__ =="__main__":
     define("override", default=False)
     define("adwords_advertiser", default='test_rick')
     define("hindsight_advertiser", default='rockerbox')
+    define("password", default = "admin")
     basicConfig(options={})
 
     parse_command_line()
@@ -89,8 +90,8 @@ if __name__ =="__main__":
     hindsight.user="a_%s" % options.hindsight_advertiser
     hindsight.authenticate()
     adwords_wrapper = lnk.api.adwords
-    if options.adwords_advertiser != 'test_rick':
-        adwords_wrapper.user="a_%s" % options.adwords_advertiser
+    adwords_wrapper.user=options.adwords_advertiser
+    adwords_wrapper.password=options.password
     adwords_wrapper.authenticate()
 
     import ipdb; ipdb.set_trace()
