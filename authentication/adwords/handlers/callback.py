@@ -26,7 +26,7 @@ class CallbackHandler(web.RequestHandler):
 
         #valid_account = 0
         #try:
-        #    account = self.adwords.read_campaign(advertiser_id)
+        #    account = self.adwords.read_campaign(advertiser_id, [])
         #    import ipdb; ipdb.set_trace()
         #    account = self.adwords.create_account(advertiser_id=advertiser_id, arg={
         #        'name': 'Rockerbox AI Trader',

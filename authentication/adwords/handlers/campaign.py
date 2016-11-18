@@ -57,7 +57,7 @@ class CampaignHandler(web.RequestHandler):
             'budget_id': budget_id
         })
 
-        response = self.adwords.read_campaign(advertiser_id)
+        response = self.adwords.read_campaign(advertiser_id, [])
         prior_camps = self.db.select_dataframe(SELECT % advertiser_id)
         prior_camp_list = prior_camps.campaign_id.tolist()
         resp = {}
