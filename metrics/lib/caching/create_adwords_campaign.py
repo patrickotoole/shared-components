@@ -96,7 +96,7 @@ if __name__ =="__main__":
 
     import ipdb; ipdb.set_trace()
     adcreator =AdwordsCreator(hindsight, adwords_wrapper)
-    budget_id = adcreator.create_budget('RBbudget', budget) #options.amount)
+    budget_id = adcreator.create_budget('RBDisplaybudget', budget)
     #budget_id = 976422954 
     camp_id = adcreator.create_campaign(name, budget_id)
     #camp_id = 700720973
