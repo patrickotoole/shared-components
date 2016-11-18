@@ -66,6 +66,7 @@ if __name__ =="__main__":
     define("adwords_advertiser", default='test_rick')
     define("hindsight_advertiser", default='rockerbox')
     define("password", default = "admin")
+    define("budget_name", default='RBDisplaybudget')
     basicConfig(options={})
 
     parse_command_line()
@@ -94,9 +95,8 @@ if __name__ =="__main__":
     adwords_wrapper.password=options.password
     adwords_wrapper.authenticate()
 
-    import ipdb; ipdb.set_trace()
     adcreator =AdwordsCreator(hindsight, adwords_wrapper)
-    budget_id = adcreator.create_budget('RBDisplaybudget', budget)
+    budget_id = adcreator.create_budget(options.budget_name, budget)
     #budget_id = 976422954 
     camp_id = adcreator.create_campaign(name, budget_id)
     #camp_id = 700720973
