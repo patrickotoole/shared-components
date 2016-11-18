@@ -101,12 +101,12 @@ ADGROUP =[{
         }]
 
 
-def create_campaign(a, b, c, d):
+def create_campaign(name, start, end, budgetid):
     camp_obj = CREATECAMPAIGN
-    camp_obj[0]['operand']['name'] = a
-    camp_obj[0]['operand']['endDate'] = b
-    camp_obj[0]['operand']['startDate'] = c
-    camp_obj[0]['operand']['budget']['budgetId'] = d
+    camp_obj[0]['operand']['name'] = name
+    camp_obj[0]['operand']['startDate'] = start
+    camp_obj[0]['operand']['endDate'] = end
+    camp_obj[0]['operand']['budget']['budgetId'] = budgetid
     #971848957
     return camp_obj
 
