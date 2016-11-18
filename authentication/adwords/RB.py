@@ -6,7 +6,7 @@ class RB():
     def __init__(self):
         self.client_id = '453433133828-9gvcn3vqs6gsb787sisb7vbl062lhggb.apps.googleusercontent.com'
         self.client_secret = 'kklHsCFiRv06CDPFDe93lyEL'
-        self.redirect_uri = 'http://adwords.dev:8888/callback'
+        self.redirect_uri = 'http://adwords.crusher.getrockerbox.com/callback'
         self.developer_token = 'l7GkOHpSh0XJoQZtZ5fRxg'
         self.flow = client.OAuth2WebServerFlow(
             client_id = self.client_id,

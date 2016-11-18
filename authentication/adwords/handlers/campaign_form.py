@@ -12,7 +12,7 @@ class CampaignFormHandler(web.RequestHandler):
     # List
     def get(self):
         advertiser_id = int(self.get_secure_cookie('advertiser'))
-        response = self.adwords.read_campaign(advertiser_id)
+        response = self.adwords.read_campaign(advertiser_id,[])
 
         self.render("templates/campaignform.html")
 

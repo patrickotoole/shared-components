@@ -31,9 +31,10 @@ class AdWords(AdWordsAuth):
         client = self.get_adwords_client(advertiser_id)
         campaign_service = client.GetService('CampaignService', version='v201607')
 
-        timestamp = (datetime.datetime.now()+datetime.timedelta(365)).strftime('%Y%m%d')
+        timestamp_start = (datetime.datetime.now()).strftime('%Y%m%d')
+        timestamp_end = (datetime.datetime.now()+datetime.timedelta(1)).strftime('%Y%m%d')
         
-        campaign_obj = adwords_helper.create_campaign(name, timestamp,timestamp, budget_id) 
+        campaign_obj = adwords_helper.create_campaign(name, timestamp_start,timestamp_end, budget_id) 
 
         logging.info(campaign_obj)
 
@@ -49,14 +50,13 @@ class AdWords(AdWordsAuth):
         print('Finished creating campaign.')
         return response
 
-    def read_campaign(self,advertiser_id):
+    def read_campaign(self,advertiser_id, fields):
         client = self.get_adwords_client(advertiser_id)
         campaign_service = client.GetService('CampaignService', version='v201607')
 
-        selector = adwords_helper.get_selector()
+        selector = adwords_helper.get_selector(fields)
         # try:
         raw_data = campaign_service.get(selector)
-
         if 'entries' in raw_data:
             response = adwords_helper.process_campaigns(raw_data)
         else:    
@@ -202,7 +202,7 @@ class AdWords(AdWordsAuth):
         }] 
          
         # try:
-        import ipdb; ipdb.set_trace()
+        #import ipdb; ipdb.set_trace()
         ad = ad_group_ad_service.mutate(operations)
         #response = {
         #    'success': True,
@@ -254,7 +254,7 @@ class AdWords(AdWordsAuth):
         #'name':name
         #}       
         #}]
-        import ipdb; ipdb.set_trace()
+        #import ipdb; ipdb.set_trace()
         media = media_service.upload(media)
 
         if media:
@@ -419,7 +419,7 @@ class AdWords(AdWordsAuth):
         today = datetime.datetime.today().strftime('%Y%m%d %H:%M:%S')
         
         operations = adwords_helper.account_object(arg)
-        import ipdb; ipdb.set_trace()
+        #import ipdb; ipdb.set_trace()
         accounts = managed_customer_service.mutateLink([{'operator': 'ADD', 'operand': {'linkStatus': 'PENDING', 'managerCustomerId': 5484792131, 'clientCustomerId':self.adwords_object[advertiser_id]['ID'], 'pendingDescriptiveName': 'Rockerbox Hindisght', 'isHidden':False}}])
         #accounts = managed_customer_service.mutate(operations)
 

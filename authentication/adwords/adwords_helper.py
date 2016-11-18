@@ -2,13 +2,33 @@ import ujson
 
 PAGE_SIZE = 10000
 
+SETCAMPAIGN = [{
+            'operator':'SET',
+            'operand': {
+                'biddingStrategyConfiguration': {
+                    'biddingStrategyType': 'MANUAL_CPC',
+                },
+                'id': "", #campaignid,
+                #'startDate': "" 
+                #'endDate': ""
+                'budget': {
+                            'budgetId': ''
+                },
+                'settings': [{
+                    'xsi_type': 'GeoTargetTypeSetting',
+                    'positiveGeoTargetType': 'DONT_CARE',
+                    'negativeGeoTargetType': 'DONT_CARE'
+                }]
+            } 
+    }]
+
 CREATECAMPAIGN = [{
             'operator': 'ADD',
             'operand': {
                 'name': "", #name,
-                'advertisingChannelType': 'SEARCH',
+                'advertisingChannelType': 'DISPLAY',
                 'biddingStrategyConfiguration': {
-                    'biddingStrategyType': 'MANUAL_CPC',
+                    'biddingStrategyType': 'MANUAL_CPM',
                 },
                 'endDate': #(datetime.datetime.now() +
                             #datetime.timedelta(365)).strftime('%Y%m%d'),
@@ -90,8 +110,11 @@ def create_campaign(a, b, c, d):
     #971848957
     return camp_obj
 
-def get_selector():
+def get_selector(fields):
+    if not fields:
+        fields = ['Id', 'Name', 'Status']
     selec = SELECTOR
+    selec['fields'] = fields
     selec['paging']['numberResults'] = str(PAGE_SIZE) 
     return selec
 

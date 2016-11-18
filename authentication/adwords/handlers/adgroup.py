@@ -53,3 +53,29 @@ class AdGroupHandler(web.RequestHandler):
         self.db.execute(QUERY, (advertiser_id, camp_id, response['id'], bid_amount))
         self.write(response)
 
+
+    def put(self):
+        advertiser_id = int(self.get_secure_cookie('advertiser'))
+        post_data = ujson.loads(self.request.body)
+        adgroup_id = post_data['adgroup_id']
+        post_data.pop('adgroup_id')
+        operations = [{
+                    'operator': 'SET',
+                    'operand': {
+                        'id': adgroup_id,
+                    }
+                }]
+        for key in post_data.keys():
+            operations[0]['operand'][key] = post_data[key]
+       
+        client = self.adwords.get_adwords_client(advertiser_id)
+        #import ipdb; ipdb.set_trace()
+        ad_group_service = client.GetService('AdGroupService', version='v201607')
+
+        try:
+            resp = ad_group_service.mutate(operations)
+
+            response = {"success":True, "AdGroupObject": ujson.dumps(resp)}
+        except:
+            response = {"success":"False", "Message": "Error when changing adgroup"}
+        self.write(ujson.dumps(response))         

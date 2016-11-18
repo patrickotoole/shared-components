@@ -16,7 +16,10 @@ class CampaignHandler(web.RequestHandler):
     # List
     def get(self):
         advertiser_id = int(self.get_secure_cookie('advertiser'))
-        response = self.adwords.read_campaign(advertiser_id)
+        fields = self.get_argument('fields', [])
+        if fields:
+            fields = fields.split(",")
+        response = self.adwords.read_campaign(advertiser_id, fields)
         if 'json' in self.request.headers.get('Accept').split(',')[0]:
             self.write(ujson.dumps(response))
         else:
@@ -78,28 +81,31 @@ class CampaignHandler(web.RequestHandler):
     # status: ENABLED, PAUSED
     def put(self):
         post_data = json.loads(self.request.body)
-        advertiser_id = post_data['advertiser_id']
+        advertiser_id = int(self.get_secure_cookie('advertiser'))
         adwords_client = self.adwords.get_adwords_client(advertiser_id)
 
         campaign_service = adwords_client.GetService('CampaignService', version='v201607')
 
-        campaign_id = str(post_data['id'])
-        status = str(post_data['status'])
+        campaign_id = str(post_data['campaign_id'])
+        post_data.pop('campaign_id')
+
 
         operations = [{
             'operator': 'SET',
             'operand': {
                 'id': campaign_id,
-                'status': status
             }
         }]
 
+        for key in post_data.keys():
+            operations[0]['operand'][key] = post_data[key]
         try:
-            campaigns = campaign_service.mutate(operations)
+            campaign = campaign_service.mutate(operations)
 
             response = {
                 'success': True,
-                'message': 'Campaign successfully updated.'
+                'message': 'Campaign successfully updated.',
+                'CampaignObject': ujson.dumps(campaign)
             }
         except:
             response = {
