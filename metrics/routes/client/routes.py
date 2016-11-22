@@ -167,15 +167,17 @@ class AdvertiserRoutes(Routes):
 
 
     @namespace("/crusher")
-    @connectors("db","api","cassandra", "mongo", "zookeeper")
+    @connectors("db","api","cassandra", "mongo", "zookeeper", "crushercache")
     def crusher_routes(self):
         import handlers.analytics as analytics
         import handlers.funnel as funnel
         import handlers.pixel_status as pixel_status
         import handlers.analytics.domains.user as user
         import handlers.analytics.domains.visitor as visitor
+        import handlers.adwords_database as adwords
 
         return [
+            (r'/adwords_database', adwords.AdwordsHandler, self.connectors),
             (r'/zk_endpoint', funnel.ZKHandler, self.connectors),
             (r'/domain/idf.*', analytics.DomainIDFHandler, self.connectors),
             (r'/visit_urls', analytics.VisitUrlsHandler, self.connectors),
