@@ -40,7 +40,7 @@ class CallbackHandler(web.RequestHandler):
 
         #if valid_account == 1:
         df = self.db.execute(QUERY, {'advertiser_id': str(advertiser_id),'clientID':str(customer_id),'token': credentials.to_json(), "status":"PrePending"})
-        self.set_cookie("AdwordsAuthenticated", 1)
+        self.set_cookie("AdwordsAuthenticated", '1')
         self.redirect(redirect)
         #self.render("templates/core.html",data={'adid':advertiser_id})
         #self.write(ujson.dumps({"Status":"PrePending","Actions":"Check email to authorize Rockerbox Manager"}))
