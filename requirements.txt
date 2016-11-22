@@ -39,5 +39,4 @@ oauth2client
 bs4
 readability-lxml
 stripe
-pyOpenSSL
-googleads==4.5.1
+googleads
