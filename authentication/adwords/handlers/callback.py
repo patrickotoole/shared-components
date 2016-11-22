@@ -13,6 +13,7 @@ class CallbackHandler(web.RequestHandler):
         auth_code = self.get_argument('code')
         credentials = self.adwords.RB.flow.step2_exchange(auth_code)
         advertiser_id = self.get_secure_cookie('advertiser')
+        redirect = self.get_argument('redirect_home', "/")
 
         import datetime
         self.adwords.adwords_object[advertiser_id]={}
@@ -39,5 +40,7 @@ class CallbackHandler(web.RequestHandler):
 
         #if valid_account == 1:
         df = self.db.execute(QUERY, {'advertiser_id': str(advertiser_id),'clientID':str(customer_id),'token': credentials.to_json(), "status":"PrePending"})
-        self.render("templates/core.html",data={'adid':advertiser_id})
+        self.set_cookie("AdwordsAuthenticated", 1)
+        self.redirect(redirect)
+        #self.render("templates/core.html",data={'adid':advertiser_id})
         #self.write(ujson.dumps({"Status":"PrePending","Actions":"Check email to authorize Rockerbox Manager"}))
