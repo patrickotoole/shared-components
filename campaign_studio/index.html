@@ -1,365 +1,77 @@
-
 {% autoescape None %}
-<head>
-  <style>
-    .hidden { display:none }
-  </style>
-  <script data-require="d3@3.5.3" data-semver="3.5.3" src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.3/d3.js"></script>
-  <script src="http://hindsight.getrockerbox.com/static/js/rockerbox/crusher/filter/build/filter.js"></script>
-  <script src="http://hindsight.getrockerbox.com/static/js/rockerbox/crusher/table/build/table.js"></script>
-
-  <script src="/static/create/build/campaign_analysis.js"></script>
-  <script>
-
+<style>
+.hidden { display:none }
+.build-form .row { padding:1px; padding-left:5px; }
+.form-description { padding-bottom: 20px }
+.label { display:inline-block; width:175px; vertical-align:top }
+.field { display:inline-block; width:200px; vertical-align:top }
+.field select, .field input { width: 180px }
+.description{ display:inline-block; width:500px; vertical-align:top }
+.row span { min-width:250px; display:inline-block }
+</style>
+<script data-require="d3@3.5.3" data-semver="3.5.3" src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.3/d3.js"></script>
+<script src="http://forms.crusher.getrockerbox.com/static/forms/build/form_builder.js"></script>
+<script>
 var d3_updateable = function(target,selector,type,data,joiner) {
-  var type = type || "div"
-  var updateable = target.selectAll(selector).data(
-    function(x){return data ? [data] : [x]},
-    joiner || function(x){return [x]}
-  )
-
-  updateable.enter()
-    .append(type)
-
-  return updateable
+var type = type || "div"
+var updateable = target.selectAll(selector).data(
+function(x){return data ? [data] : [x]},
+joiner || function(x){return [x]}
+)
+updateable.enter()
+.append(type)
+return updateable
 }
-
 var d3_splat = function(target,selector,type,data,joiner) {
-  var type = type || "div"
-  var updateable = target.selectAll(selector).data(
-    data || function(x){return x},
-    joiner || function(x){return x}
-  )
-
-  updateable.enter()
-    .append(type)
-
-  return updateable
+var type = type || "div"
+var updateable = target.selectAll(selector).data(
+data || function(x){return x},
+joiner || function(x){return x}
+)
+updateable.enter()
+.append(type)
+return updateable
 }
-  
 
-  </script>
-  
-</head>
-
-<body style="width:1200px;margin-left:auto;margin-right:auto">
-  <h3 style="margin-bottom:0px">Build Campaigns from Reporting</h3>
-
-
-  <h4>Analyze</h4>
-
-  <div>
-
-
-  <div class="row"> Upload a file: <input id="upload" type="file" /> </div>
-  <div class="row"> Filter: </div>
-  
-  </div>
-
-
-
-
-  <div class="row">
-
-    <div class="filter-row"> </div>
-    <script>
-
-      function buildFilters(headers) { 
-
-        var ops = headers.map(function(x) {
-          return [{"key": "equals"}, {"key": "between"}]
-        })
-
-        window.data_filter = filter.filter(d3.selectAll(".filter-row"))
-          .fields(headers)
-          .ops(ops)
-          .data([])
-          .render_op("between",function(filter,value) {
-            var self = this
-
-            value.value = typeof(value.value) == "object" ? value.value : [0,24]
-
-            d3_updateable(filter,"input.value.low","input")
-              .classed("value low",true)
-              .style("margin-bottom","10px")
-              .style("padding-left","10px")
-              .style("width","90px")
-              .attr("value", value.value[0])
-              .on("keyup", function(x){
-                var t = this
-              
-                self.typewatch(function() {
-                  value.value[0] = t.value
-                  //value.fn = self.buildOp(value)
-                  self.on("update")(self.data())
-                },1000)
-              })
-
-            d3_updateable(filter,"span.value-and","span")
-              .classed("value-and",true)
-              .text(" and ")
-
-            d3_updateable(filter,"input.value.high","input")
-              .classed("value high",true)
-              .style("margin-bottom","10px")
-              .style("padding-left","10px")
-              .style("width","90px")
-              .attr("value", value.value[1])
-              .on("keyup", function(x){
-                var t = this
-              
-                self.typewatch(function() {
-                  value.value[1] = t.value
-                  //value.fn = self.buildOp(value)
-                  self.on("update")(self.data())
-                },1000)
-              })
-
-          })
-          .draw()
-
-        return window.data_filter
-
-      }
-    </script>
-  </div>
-
-
-  <div class="summary"></div>
-  <div style="height:250px;overflow:scroll;position:relative" class="outer-table-wrapper"></div>
-
-  <br><hr>
-
-  <div class="setup" style="width:30%;display:inline-block">
-
-    <h4>Setup</h4>
-
-    <div class="row">
-      <div style="width:150px;display:inline-block">Advertiser ID: </div>
-      <select id='advertiser' style="width:200px"></select> 
-    </div>
-    <div class="row">
-      <div style="width:150px;display:inline-block">Line Item ID: </div>
-      <input id="line-item" style="width:200px"></input> 
-    </div>
-
-    <div>
-      <div style="width:150px;display:inline-block">Select Template: </div>
-      <select id="templates"></select> 
-    </div>
-    <div>
-      Fields: <div id='template-fields'></div>
-    </div>
-
-  </div>
-
-
-  <div class="setup" style="width:69%;display:inline-block;vertical-align:top;height:300px;overflow:scroll">
-    <h4>Preview</h4>
-    <div style="width:40%;display:inline-block;vertical-align:top" class="campaign"><h5 style="margin-top:0px">Campaign</h5></div>
-    <div style="width:59%;display:inline-block;vertical-align:top" class="profile"><h5 style="margin-top:0px">Profile</h5></div>
-
-  </div>
-
-  <br><br>
-  <hr>
-
-
-
-  <div style="text-align:center" class="build">
-    <button id="create" >Create Campaigns</button>
-    <script>
-      d3.select("#create").on("click",function(x){
-        var template  = d3.selectAll("#templates")[0][0].selectedOptions[0].__data__.name
-        var dd = window.filtered_data
-
-        var fields = d3.selectAll(".template-field")[0].filter(function(x) { return x.checked }).map(function(x) { return x.__data__ })
-        var line_item = d3.select("#line-item").node().value
-        var advertiser = d3.select("#advertiser").node().value
-
-        var data = {
-          "data": dd,
-          "fields": fields.map(function(x) { return x.name }),
-          "line_item": line_item,
-          "advertiser": advertiser,  
-          "template": template
-        }
-
-        d3.xhr("/")
-          .post( JSON.stringify(data) )
-      })
-    </script>
-    </br>
-  </div>
-
-
-  <script>
-
-    function buildTable(data) {
-      
-      var tt = d3.selectAll(".outer-table-wrapper")
-
-      table.table(tt)
-        .data({"key":"Data","values":data}) 
-        .draw()
-
-    }
-    
-    campaign_analysis.upload(d3.select("#upload"))
-      .on("load", function parseFile(result){
-
-        var process = campaign_analysis.parse(result)
-
-        headers = process.headers()
-        var data = process.data()
-        window.filtered_data = data;
-
-
-        var filters = buildFilters(headers)
-          .on("update",function(x) {
-            var y = x.map(function(z) {
-
-              return { 
-                  "field": z.field
-                , "op": z.op
-                , "value": z.value
-              }
-            }).filter(function(x) { return x.value !== undefined } )
-
-            window.filtered_data = filter.filter_data(data).logic("and").by(y) 
-            buildTable(window.filtered_data)
-
-          })
-      
-      buildTable(data)
-
-      d3.select(".summary").text(data.length)
-      return data
-
-
-    })
-
-    
-
-
-  </script>
-
-
-      <script>
-
-        var campaignPreview = function(template) {
-          var campaign_entries = d3.entries(
-            JSON.parse(
-              template.replace(/\%\(.*?\)s/g,"'MACRO'").replace(/:'MACRO',/g,':"MACRO",')
-            )
-          ).filter(function(xx) { return xx.value })
-           .sort(function(p,q) { return d3.ascending(p.key,q.key) })
-
-          var items = d3.select(".campaign").selectAll(".items").data(campaign_entries,function(x){ return JSON.stringify(x) })
-          var new_items = items
-            .enter()
-            .append("div").classed("items",true)
-            .style("font-size","14px")
-
-          new_items.append("div").text(function(x) { return x.key }).style("width","50%").style("display","inline-block")
-          new_items.append("div").text(function(x) { return x.value }).style("width","49%").style("display","inline-block")
-
-          items.exit().remove()
-
-          items.order()
-
-        }
-
-        var profilePreview = function(templates) {
-
-          var obj = {}
-
-          templates.map(function(x) {
-            var template = x.template.replace(/\%\(.*?\)s/g,"'MACRO'").replace(/"'MACRO'"/g,'"MACRO"').replace(/'MACRO'/g,'"MACRO"')
-
-
-            obj[x.name] = JSON.parse(template)
-
-            return x
-          })
-
-          var profile_entries = d3.entries(obj).filter(function(xx) { return xx.value })
-            .sort(function(p,q) { return d3.ascending(p.key,q.key) })
-
-          var items = d3.select(".profile").selectAll(".items").data(profile_entries)
-          var new_items = items
-            .enter()
-            .append("div").classed("items",true)
-            .style("font-size","14px")
-
-          new_items.append("div").text(function(x) { return x.key }).style("width","50%").style("display","inline-block")
-          new_items.append("div").text(function(x) { return JSON.stringify(x.value) }).style("width","49%").style("display","inline-block")
-
-          items.exit().remove()
-
-          items.order()
-
-        }
-        
-        var advertisers = {{advertisers}},
-          templates = {{campaign_templates}},
-          profile_templates = {{profile_templates}};
-
-        var select_advertiser = d3.selectAll("#advertiser").data([advertisers])
-        select_advertiser.selectAll("option").data(function(x) { return x } )
-          .enter()
-            .append("option")
-            .text(function(x) { return x.pixel_source_name })
-            .attr("value",function(x){ return x.external_advertiser_id })
-
-        var select = d3.selectAll("#templates").data([templates])
-
-        select.on("change",function(x) {
-          var dd = this.selectedOptions[0].__data__
-
-          campaignPreview(dd.template)
+</script>
+<h3>Saved Optimizations</h3>
+{{saved_html}}
+<br>
+<button onclick=" window.location.pathname = '/optimize' ">New Optimization</button>
+
+<h3>Scheduled Optimizations</h3>
+{{scheduled_html}}
+
+<h3>Schedule a Saved Optimization</h3>
+<div id="new"></div>
+<script>
+var fields = {{saved}}
+
+fields.map(function(x) {
+  x.value = x.id
+  x.key = x.name + " - " + x.advertiser_id 
+})
+
+var form = {
+  "description": null, "script": "build_python_marathon_app", "deleted": 0, "fields": [
+      {"name":"optimization", "values": fields, "type":"select"}
+    , {"name":"day", "values": "Mon,Tues,Wed,Thurs,Fri,Sat,Sun".split(","), "type":"select"}
+    , {"name":"time", "values": d3.range(24).map(function(x) { return x + 1 }), "type":"select"}
+  ]
+}
+
+      form_builder.forms(d3.select("#new"))
+        .fields([
           
-          var xx = profile_templates.filter(function(z) { return z.type == dd.name })
-
-          var required_fields = []
-          xx.map(function(f) {
-            if (f.required_columns) required_fields.push.apply(required_fields,f.required_columns.split(","))
-          })
-
-          console.log(required_fields)
-
-          profilePreview(xx)
-
-          var field = d3.selectAll("#template-fields")
-            .data([xx])
-
-          field.enter()
-            .append("div")
-            .attr("id","template-fields")
-
-          var spans = field.selectAll("span.yo").data(function(x) {return x},function(x) { return x.name })
-
-          spans
-            .enter().append("span")
-            .classed("yo",true)
-            .attr("style","padding: 0px 10px; display: inline-block; width: 250px; height: 20px; overflow: hidden")
-
-          spans.exit().remove()
-
-          spans.selectAll("input").data(function(x) { return [x]}).enter().append("input")
-            .attr("type","checkbox")
-            .attr("checked","checked")
-            .classed("template-field",true)
-
-          spans.selectAll("span").data(function(x) { return [x]}).enter().append("span")
-            .text(function(x) { return x.name })
-
-          console.log(xx)
-
+        ])
+        .data(form)
+        .on("submit", function(_data) { 
+          var d = _data.data.reduce(function(p,c) { p[c.key] = c.value; return p} , {})
+          d3.xhr("/schedule").post(JSON.stringify(d))
         })
+        .draw()
+</script>
 
-        select.selectAll("option").data(function(x) { return x })
-          .enter()
-          .append("option").text(function(x) { return x.name })
-      </script>
-</body>
+
+
+

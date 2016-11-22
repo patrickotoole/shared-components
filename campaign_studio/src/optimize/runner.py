@@ -1,6 +1,6 @@
-from extract import *
-from transform import *
-from load import *
+#from extract import *
+#from transform import *
+from ..create.load import push_campaigns, update_profiles
 from helper import *
 
 import ujson
@@ -93,7 +93,12 @@ def modify_exisiting_campaign(original_campaign,LINE_ITEM):
     return original_campaign
     
 
-def runner(params,LINE_ITEM,ADVERTISER,data,fields,_c):
+def runner(params,data,_c):
+
+    import ipdb; ipdb.set_trace()
+
+    LINE_ITEM = params['line_item_id']
+    ADVERTISER = params['advertiser']
 
     from link import lnk
     db = lnk.dbs.rockerbox
@@ -106,7 +111,6 @@ def runner(params,LINE_ITEM,ADVERTISER,data,fields,_c):
     import pandas
 
     df = pandas.DataFrame(data)
-    df = filter(filters,df)
     df = df[df.isnull().T.sum() < 5]
 
 

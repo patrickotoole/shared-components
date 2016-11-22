@@ -75,6 +75,7 @@ def deactivate_campaigns(campaigns,_c):
 
 
 def push_campaigns(df,advertiser,line_item):
+    import ipdb; ipdb.set_trace()
     # PUSH to appnexus
     import ujson
 
@@ -104,6 +105,7 @@ def push_campaigns(df,advertiser,line_item):
             print "FAILED" 
 
 def update_profiles(df,advertiser):
+    import ipdb; ipdb.set_trace()
     # PUSH to appnexus
     import ujson
 
