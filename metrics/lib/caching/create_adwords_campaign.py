@@ -26,8 +26,11 @@ class AdwordsCreator():
         for category in categories_budget:
             self.create_campaign(category['category_name'],category['budget_id']) 
 
-    def get_hindsight_mediaplan(self):
-        resp = self.hindsight.get('/crusher/v1/visitor/mediaplan?format=json&url_pattern=/')
+    def get_hindsight_mediaplan(self, endpoint):
+        if endpoint:
+            resp = self.hindsight.get(endpoint)
+        else:
+            resp = self.hindsight.get('/crusher/v1/visitor/mediaplan?format=json&url_pattern=/')
         data = resp.json['mediaplan']
         return data
 
@@ -67,6 +70,17 @@ if __name__ =="__main__":
     define("hindsight_advertiser", default='rockerbox')
     define("password", default = "admin")
     define("budget_name", default='RBDisplaybudget')
+    
+    crushercache = lnk.dbs.crushercache
+    db = lnk.dbs.rockerbox
+    data = db.select_dataframe("SELECT advertiser_id from user where username = '%s'" % ("a_%s" % options.hindsight_advertiser))
+    advertiser_id = data['advertiser_id'][0]
+    endpoint_data = crushercache.select_dataframe("SELECT endpoint from adwords_campaign_endpoint where advertiser_id = %s" % advertiser_id)
+    if len(endpoint_data)>0:
+        endpoint = endpoint_data['endpoint'][0]
+    else:
+        endpoint = None
+
     basicConfig(options={})
 
     parse_command_line()
