@@ -174,10 +174,10 @@ class AdvertiserRoutes(Routes):
         import handlers.pixel_status as pixel_status
         import handlers.analytics.domains.user as user
         import handlers.analytics.domains.visitor as visitor
-        import handlers.adwords_database as adwords
+        import handlers.adwords_mediaplan as adwords
 
         return [
-            (r'/adwords_database', adwords.AdwordsHandler, self.connectors),
+            (r'/adwords_mediaplan', adwords.AdwordsHandler, self.connectors),
             (r'/zk_endpoint', funnel.ZKHandler, self.connectors),
             (r'/domain/idf.*', analytics.DomainIDFHandler, self.connectors),
             (r'/visit_urls', analytics.VisitUrlsHandler, self.connectors),
