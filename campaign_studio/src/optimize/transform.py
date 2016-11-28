@@ -38,7 +38,7 @@ def format(_type,values,action):
 
     return dict(fields.items() + additional_fields.items())
 
-def build_new_profile(items,params):
+def build_profile_overrides(items,params):
 
     profile = [{}]
 
@@ -77,3 +77,24 @@ def modify_exisiting_campaign(original_campaign,LINE_ITEM):
 
     return original_campaign
  
+def build_campaign_name(new_campaign,final_profile,params):
+    #new_campaign['name'] = original_campaign['name']
+
+    if params.get('platform_placement_targets',False) == 'include':
+        new_campaign['name'] += " - include platform_placement_targets: %s" % final_profile['platform_placement_targets'][0]['id']
+
+    if params.get('venue_targets',False) == 'include':
+        new_campaign['name'] += " - include venue: %s" % final_profile['venue_targets'][0]
+
+    if params.get('domain_targets',False) == 'include':
+        new_campaign['name'] += " - include domain: %s" % final_profile['domain_targets'][0]['domain']
+
+    return new_campaign
+
+def set_campaign_budget(new_campaign,params):
+    if params.get('imp_budget','').isdigit() and new_campaign['daily_budget_imps'] is not None:
+        new_campaign['daily_budget_imps'] = int(params['imp_budget'])
+
+    if params.get('spend_budget','').isdigit() and new_campaign['daily_budget'] is not None:
+        new_campaign['daily_budget'] = int(params['spend_budget'])
+
