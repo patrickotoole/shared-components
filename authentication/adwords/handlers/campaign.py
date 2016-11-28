@@ -87,27 +87,37 @@ class CampaignHandler(web.RequestHandler):
         campaign_service = adwords_client.GetService('CampaignService', version='v201607')
 
         campaign_id = str(post_data['campaign_id'])
+        camp_list = campaign_id.split(",")
         post_data.pop('campaign_id')
+        
+        def alter_camp(campaign_id, post_data):
+            operations = [{
+                'operator': 'SET',
+                'operand': {
+                    'id': campaign_id,
+                }
+            }]
+            for key in post_data.keys():
+                operations[0]['operand'][key] = post_data[key]
+                try:
+                    campaign = campaign_service.mutate(operations)
+                    success=True
+                except:
+                    success=False
+        
+        if len(camp_list)> 1:
+            for campaign in camp_list:
+                alter_camp(campaign, post_data)
+        else:
+            alter_camp(campaign_id, post_data)
 
-
-        operations = [{
-            'operator': 'SET',
-            'operand': {
-                'id': campaign_id,
-            }
-        }]
-
-        for key in post_data.keys():
-            operations[0]['operand'][key] = post_data[key]
-        try:
-            campaign = campaign_service.mutate(operations)
-
+        if success:
             response = {
                 'success': True,
                 'message': 'Campaign successfully updated.',
                 'CampaignObject': ujson.dumps(campaign)
             }
-        except:
+        else:
             response = {
                 'success': False,
                 'message': 'Something went wrong while trying to update the campaign.'
