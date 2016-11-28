@@ -57,25 +57,42 @@ class AdGroupHandler(web.RequestHandler):
     def put(self):
         advertiser_id = int(self.get_secure_cookie('advertiser'))
         post_data = ujson.loads(self.request.body)
-        adgroup_id = post_data['adgroup_id']
+
+        adgroup_id = str(post_data['adgroup_id'])
+        ad_list = adgroup_id.split(",")
         post_data.pop('adgroup_id')
-        operations = [{
-                    'operator': 'SET',
-                    'operand': {
-                        'id': adgroup_id,
-                    }
-                }]
-        for key in post_data.keys():
-            operations[0]['operand'][key] = post_data[key]
-       
+
         client = self.adwords.get_adwords_client(advertiser_id)
-        #import ipdb; ipdb.set_trace()
         ad_group_service = client.GetService('AdGroupService', version='v201607')
+        
+        def alter_adgroup(adgroup_id, post_data):
+            operations = [{
+                'operator': 'SET',
+                'operand': {
+                    'id': adgroup_id,
+                }
+            }]
+            for key in post_data.keys():
+                operations[0]['operand'][key] = post_data[key]
+                try:
+                    resp = ad_group_service.mutate(operations)
+                    success=True
+                except:
+                    success=False
+            return success,resp
 
-        try:
-            resp = ad_group_service.mutate(operations)
+        if len(ad_list)> 1:
+            adgroup_list = [int(long(str(x).replace('[','').replace(']',''))) for x in ad_list]
+            success = True
+            for adgroup in adgroup_list:
+                success_one,resp = alter_adgroup(adgroup, post_data)
+                success = success and success_one
+        else:
+            success,resp = alter_adgroup(adgroup_id, post_data)
 
+        if success: 
             response = {"success":True, "AdGroupObject": ujson.dumps(resp)}
-        except:
+        else:
             response = {"success":"False", "Message": "Error when changing adgroup"}
-        self.write(ujson.dumps(response))         
+
+        self.write(ujson.dumps(response))  

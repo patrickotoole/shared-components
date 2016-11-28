@@ -104,12 +104,16 @@ class CampaignHandler(web.RequestHandler):
                     success=True
                 except:
                     success=False
+            return success,campaign
         
         if len(camp_list)> 1:
-            for campaign in camp_list:
-                alter_camp(campaign, post_data)
+            campaign_list = ujson.loads(campaign_id)
+            success = True
+            for campaign in campaign_list:
+                success_one,campaign = alter_camp(campaign, post_data)
+                success = success and success_one
         else:
-            alter_camp(campaign_id, post_data)
+            success,campaign = alter_camp(campaign_id, post_data)
 
         if success:
             response = {
