@@ -1,5 +1,7 @@
 def parse(dd):
-    data = dd['data']
+
+    assert "params" in dd
+
     params = dd['params']
 
     dparams = { i['key'] : i.get('value',0) for i in params }

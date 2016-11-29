@@ -105,9 +105,9 @@ def run_agg(df,groupby,aggs):
     df = df[cols].set_index(groupby)
 
     if len(aggs) > 0:
-        grouped = df.reset_index().groupby(groupby).agg(aggs)
+        df = df.reset_index().groupby(groupby).agg(aggs)
 
-    grouped = grouped.reset_index()
-    return grouped
+    df = df.reset_index()
+    return df
 
  

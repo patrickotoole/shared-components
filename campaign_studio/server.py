@@ -20,7 +20,7 @@ define("port", default=9003, help="run on the given port", type=int)
 
 from link import lnk
 
-#from src.runner import *
+#from campaign_lib.runner import *
 
 class IndexHandler(tornado.web.RequestHandler):
 
@@ -108,7 +108,7 @@ class CreateHandler(tornado.web.RequestHandler):
         assert len(data) > 0 
 
 
-        import src.create.runner as runner
+        import campaign_lib.create.runner as runner
         runner.runner(CAMPAIGN_TYPE,LINE_ITEM,ADVERTISER,data,fields)
 
 
@@ -134,10 +134,10 @@ class OptimizeHandler(tornado.web.RequestHandler):
     def post(self):
         dd = json.loads(self.request.body)
 
-        import src.optimize.parse as parse
+        import campaign_lib.optimize.parse as parse
         dparams = parse.parse(dd)
 
-        import src.optimize.runner as runner
+        import campaign_lib.optimize.runner as runner
         runner.runner(dparams,dd['data'],self.api)
 
 
@@ -153,7 +153,7 @@ class ReportHandler(tornado.web.RequestHandler):
         advertiser_id = dd['report_advertiser']
         dd = { "report":dd["report"] }
 
-        import src.report_helper as report_helper
+        import campaign_lib.report_helper as report_helper
 
         df = report_helper.get_report(advertiser_id, dd, self.api, self.db)
         if "venue" in df.columns:

@@ -4,7 +4,7 @@ import json
 import extract 
 import transform
 from transform import *
-from ..create.load import push_campaigns, update_profiles
+from campaign_lib.create.load import push_campaigns, update_profiles, deactivate_campaigns
 from helper import *
 
 def extract_and_group(df,GROUPBY,params,_c):
@@ -40,6 +40,13 @@ def extract_and_group(df,GROUPBY,params,_c):
     return grouped
 
 def build_objects(grouped,ADVERTISER,LINE_ITEM,params):
+
+    assert len(grouped) > 0
+    assert len(ADVERTISER) > 0
+    assert len(LINE_ITEM) > 0
+    assert len(params.items()) > 0
+
+
   
     for campaign, row in grouped.iterrows():
 
@@ -62,7 +69,7 @@ def build_objects(grouped,ADVERTISER,LINE_ITEM,params):
 
     return grouped
 
-def push_changes(grouped,ADVERTISER,params):
+def push_changes(grouped,ADVERTISER,params,_c):
     assert len(params.items()) > 0
     assert len(grouped) > 0
     assert str(int(ADVERTISER)) == ADVERTISER
@@ -103,5 +110,6 @@ def runner(params,data,_c):
     df['line_item'] = LINE_ITEM
     
     grouped = extract_and_group(df,GROUPBY,params,_c)
-    grouped = build_objects(grouped,ADVERTISER,LINE_ITEM,params)
-    push_changes(grouped,ADVERTISER,params)
+    if not params['deactivate']: 
+        grouped = build_objects(grouped,ADVERTISER,LINE_ITEM,params)
+    push_changes(grouped,ADVERTISER,params,_c)
