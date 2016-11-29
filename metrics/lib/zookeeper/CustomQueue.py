@@ -19,7 +19,7 @@ class SingleQueue(Queue):
 
 class CustomQueue(SingleQueue):
 
-    def __init__(self, client, path, secondary_path, volume):
+    def __init__(self, client, path, secondary_path, volume, cutoff):
         self.client = client
         self.path = path
         self._entries_path = path
@@ -28,6 +28,7 @@ class CustomQueue(SingleQueue):
         self.secondary_path = secondary_path
         self.volume = volume
         self.zk_counter = 0
+        self.cutoff=cutoff
         super(CustomQueue, self).__init__(client, path)
 
     @property
@@ -101,6 +102,11 @@ class CustomQueue(SingleQueue):
         if not self._children:
             return (None,None)
         name = self._children[0]
+        import ipdb; ipdb.set_trace()
+        if self.cutoff >0:
+            check_cut = int(name.split("-")[1])
+            if check_cut > self.cutoff:
+                return (None,None)
         try:
             data, stat = self.client.get(self.path + "/" + name)
         except NoNodeError:

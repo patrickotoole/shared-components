@@ -57,6 +57,7 @@ if __name__ == '__main__':
     define("exit_on_finish", default=False)
     define("log_kafka", default=False)
     define("app_name", default="")
+    define("priority", default=0)
 
     basicConfig(options={})
 
@@ -126,11 +127,12 @@ if __name__ == '__main__':
         logging.info("connectors not received properly")
         sys.exit(1)
 
+    priority_cutoff = int(options.priority)
     for i in range(0, num_worker):
         tk = timeKeeper()
         tks.append(tk)    
     for _ in range(0,num_worker):
-        reactor.callInThread(work_queue.WorkQueue(options.exit_on_finish, connectors['zookeeper'],reactor, tks[_], mc, zookeeper_path, connectors))
+        reactor.callInThread(work_queue.WorkQueue(options.exit_on_finish, connectors['zookeeper'],reactor, tks[_], mc, zookeeper_path, connectors, priority_cutoff))
         reactor.callInThread(TimeMetric(reactor, tks[_]))
 
     reactor.callInThread(Metrics(reactor,tks, mc,connectors))

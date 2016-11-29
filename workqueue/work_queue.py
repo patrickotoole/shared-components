@@ -47,10 +47,10 @@ def validate_crusher(crusher, advertiser):
 
 class WorkQueue(object):
 
-    def __init__(self,exit_on_finish, client,reactor,timer, mcounter, zk_path, connectors):
+    def __init__(self,exit_on_finish, client,reactor,timer, mcounter, zk_path, connectors, cutoff):
         self.client = client
         volume = datetime.datetime.now().strftime('%m%y')
-        self.queue = CustomQueue.CustomQueue(client,zk_path, "log", "v" + volume)
+        self.queue = CustomQueue.CustomQueue(client,zk_path, "log", "v" + volume, cutoff)
         self.rec = reactor
         self.connectors = connectors
         self.timer = timer
