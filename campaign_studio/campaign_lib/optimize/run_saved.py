@@ -1,12 +1,9 @@
-import sys
-import os.path
-sys.path.append(
-    os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
-
-from report_helper import get_report
+import json
+import os
+from campaign_lib.report_helper import get_report
 
 
-def run(df,opt_json):
+def run_filter(df,opt_json):
     
     import subprocess
     import json
@@ -17,8 +14,7 @@ def run(df,opt_json):
     import pandas 
     return json.loads(data)
 
-if __name__ == "__main__":
-    import json
+def run():
     from link import lnk
 
     db = lnk.dbs.crushercache
@@ -27,10 +23,14 @@ if __name__ == "__main__":
 
     df = db.select_dataframe("SELECT * FROM recurring_optimizations where days = DATE_FORMAT(NOW(),'%a') and time = DATE_FORMAT(NOW(),'%k')")
 
+    if len(df) == 0:
+        print "No scheduled jobs found"
+        return
+
     _json = json.loads(df.iloc[0].state)
 
     raw_data = get_report(_json['advertiser'],_json,api,reporting)
-    filter_data = run(raw_data,_json)
+    filter_data = run_filter(raw_data,_json)
 
 
 
@@ -40,3 +40,7 @@ if __name__ == "__main__":
     dparams = parse.parse({"params":_json['settings']})
 
     runner.runner(dparams,filter_data,api)
+
+
+if __name__ == "__main__":
+    run()
