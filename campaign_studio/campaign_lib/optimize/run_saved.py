@@ -25,7 +25,7 @@ if __name__ == "__main__":
     reporting = lnk.dbs.reporting
     api = lnk.api.console
 
-    df = db.select_dataframe("SELECT * FROM recurring_optimizations where days = DATE_FORMAT(NOW(),'%a') and time = 10")
+    df = db.select_dataframe("SELECT * FROM recurring_optimizations where days = DATE_FORMAT(NOW(),'%a') and time = DATE_FORMAT(NOW(),'%k')")
 
     _json = json.loads(df.iloc[0].state)
 

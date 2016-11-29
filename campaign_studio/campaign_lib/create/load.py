@@ -75,7 +75,6 @@ def deactivate_campaigns(campaigns,_c):
 
 
 def push_campaigns(df,advertiser,line_item):
-    import ipdb; ipdb.set_trace()
     # PUSH to appnexus
     import ujson
 
