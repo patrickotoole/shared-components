@@ -9,6 +9,7 @@ from helper import *
 
 def extract_and_group(df,GROUPBY,params,_c):
 
+
     assert len(GROUPBY) > 0
     assert GROUPBY in df.columns
     assert len(params.items()) > 0
@@ -30,7 +31,7 @@ def extract_and_group(df,GROUPBY,params,_c):
         for c in cols:
             grouped[c] = grouped[c].map(lambda x: [x])
 
-    if params['create']:
+    if params['create'] or params['deactivate']:
         grouped = grouped.reset_index()
 
     assert len(grouped.columns) > 0
@@ -66,7 +67,9 @@ def push_changes(grouped,ADVERTISER,params):
     assert len(grouped) > 0
     assert str(int(ADVERTISER)) == ADVERTISER
 
-    if params['modify']:
+    if params['deactivate']:
+        deactivate_campaigns(grouped.index,_c)
+    elif params['modify']:
         update_profiles(grouped,ADVERTISER)
     else:
         # Remove duplicates by name
@@ -101,4 +104,4 @@ def runner(params,data,_c):
     
     grouped = extract_and_group(df,GROUPBY,params,_c)
     grouped = build_objects(grouped,ADVERTISER,LINE_ITEM,params)
-    #push_changes(grouped,ADVERTISER,params)
+    push_changes(grouped,ADVERTISER,params)

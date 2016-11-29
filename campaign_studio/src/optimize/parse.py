@@ -11,6 +11,7 @@ def parse(dd):
     ADVERTISER = dparams['advertiser']
 
     duplicate = (dparams['duplicate'] == "Duplicate")
+    dparams['deactivate'] = (dparams['duplicate'] == "Deactivate")
     dparams['modify'] = (dparams['duplicate'] == "Modify")
     dparams['create'] = (dparams['duplicate'] == "Create")
 
