@@ -58,10 +58,6 @@ class AdGroupHandler(web.RequestHandler):
         advertiser_id = int(self.get_secure_cookie('advertiser'))
         post_data = ujson.loads(self.request.body)
 
-        adgroup_id = str(post_data['adgroup_id'])
-        ad_list = adgroup_id.split(",")
-        post_data.pop('adgroup_id')
-
         client = self.adwords.get_adwords_client(advertiser_id)
         ad_group_service = client.GetService('AdGroupService', version='v201607')
         
@@ -81,14 +77,27 @@ class AdGroupHandler(web.RequestHandler):
                     success=False
             return success,resp
 
-        if len(ad_list)> 1:
-            adgroup_list = [int(long(str(x).replace('[','').replace(']',''))) for x in ad_list]
-            success = True
-            for adgroup in adgroup_list:
-                success_one,resp = alter_adgroup(adgroup, post_data)
+        success = False
+        if post_data.get('adgroups', False):
+            for adgroup in post_data['adgroups']:
+                adgroup_id = adgroup['adgroup_id']
+                adgroup.pop('adgroup_id')
+                success = True
+                success_one,resp = alter_adgroup(adgroup_id, adgroup)
                 success = success and success_one
         else:
-            success,resp = alter_adgroup(adgroup_id, post_data)
+            adgroup_id = str(post_data['adgroup_id'])
+            ad_list = adgroup_id.split(",")
+            post_data.pop('adgroup_id')
+
+            if len(ad_list)> 1:
+                adgroup_list = [int(long(str(x).replace('[','').replace(']',''))) for x in ad_list]
+                success = True
+                for adgroup in adgroup_list:
+                    success_one,resp = alter_adgroup(adgroup, post_data)
+                    success = success and success_one
+            else:
+                success,resp = alter_adgroup(adgroup_id, post_data)
 
         if success: 
             response = {"success":True, "AdGroupObject": ujson.dumps(resp)}
