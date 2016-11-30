@@ -97,10 +97,14 @@ def push_changes(grouped,ADVERTISER,params,_c):
 
 def runner(params,data,_c):
 
+    import logging
+
     LINE_ITEM = params['line_item_id']
     ADVERTISER = params['advertiser']
     TEMPLATE_CAMPAIGN = params['template_campaign']
     GROUPBY = params["create_group"] if params["create_group"] and params["create_group"] != "" else "campaign_id"
+
+    logging.info("running opt for %s %s %s" % (ADVERTISER,LINE_ITEM,GROUPBY) )
 
     df = pandas.DataFrame(data)
 
@@ -108,8 +112,13 @@ def runner(params,data,_c):
         return # skip building
 
     df['line_item'] = LINE_ITEM
-    
+
     grouped = extract_and_group(df,GROUPBY,params,_c)
+    logging.info(" - grouped and pulled objects.")
+    
     if not params['deactivate']: 
         grouped = build_objects(grouped,ADVERTISER,LINE_ITEM,params)
+        logging.info(" - built new objects for updates.")
+
     push_changes(grouped,ADVERTISER,params,_c)
+    logging.info("finished opt for %s %s %s" % (ADVERTISER,LINE_ITEM,GROUPBY) )
