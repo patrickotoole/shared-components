@@ -102,10 +102,10 @@ class CustomQueue(SingleQueue):
         if not self._children:
             return (None,None)
         name = self._children[0]
-        if self.cutoff >0:
-            check_cut = int(name.split("-")[1])
-            if check_cut > self.cutoff:
-                return (None,None)
+        #allow for custom priority cutoff
+        check_cut = int(name.split("-")[1])
+        if self.cutoff != 0 and check_cut > self.cutoff:
+            return (None,None)
         try:
             data, stat = self.client.get(self.path + "/" + name)
         except NoNodeError:
