@@ -86,10 +86,6 @@ class CampaignHandler(web.RequestHandler):
 
         campaign_service = adwords_client.GetService('CampaignService', version='v201607')
 
-        campaign_id = str(post_data['campaign_id'])
-        camp_list = campaign_id.split(",")
-        post_data.pop('campaign_id')
-        
         def alter_camp(campaign_id, post_data):
             operations = [{
                 'operator': 'SET',
@@ -105,15 +101,28 @@ class CampaignHandler(web.RequestHandler):
                 except:
                     success=False
             return success,campaign
-        
-        if len(camp_list)> 1:
-            campaign_list = ujson.loads(campaign_id)
-            success = True
-            for campaign in campaign_list:
-                success_one,campaign = alter_camp(campaign, post_data)
+       
+        success = False
+        if post_data.get('campaigns',False):
+            for campaign in post_data['campaigns']:
+                success = True
+                campaign_id = str(campaign['campaign_id'])
+                campaign.pop('campaign_id')
+                success_one, campaign = alter_camp(campaign_id, campaign)
                 success = success and success_one
         else:
-            success,campaign = alter_camp(campaign_id, post_data)
+            campaign_id = str(post_data['campaign_id'])
+            camp_list = campaign_id.split(",")
+            post_data.pop('campaign_id')
+
+            if len(camp_list)> 1:
+                campaign_list = ujson.loads(campaign_id)
+                success = True
+                for campaign in campaign_list:
+                    success_one,campaign = alter_camp(campaign, post_data)
+                    success = success and success_one
+            else:
+                success,campaign = alter_camp(campaign_id, post_data)
 
         if success:
             response = {
