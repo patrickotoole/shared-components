@@ -69,7 +69,7 @@ def build_objects(grouped,ADVERTISER,LINE_ITEM,params):
 
     return grouped
 
-def push_changes(grouped,ADVERTISER,params,_c):
+def push_changes(grouped,ADVERTISER,LINE_ITEM,params,_c):
     assert len(params.items()) > 0
     assert len(grouped) > 0
     assert str(int(ADVERTISER)) == ADVERTISER
@@ -120,5 +120,5 @@ def runner(params,data,_c):
         grouped = build_objects(grouped,ADVERTISER,LINE_ITEM,params)
         logging.info(" - built new objects for updates.")
 
-    push_changes(grouped,ADVERTISER,params,_c)
+    push_changes(grouped,ADVERTISER,LINE_ITEM,params,_c)
     logging.info("finished opt for %s %s %s" % (ADVERTISER,LINE_ITEM,GROUPBY) )
