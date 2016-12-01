@@ -6,6 +6,7 @@ export function Forms(target) {
   this._renderers = {
       multi_select: function(row) {
         var select = d3_updateable(row,"select","select")
+          .attr("multiple","true")
 
         d3_splat(select,"option","option",function(x) { return x.values },function(x) { return typeof(x) == "object" ? x.key : x})
           .text(function(x) { return typeof(x) == "object" ?  x.key : x })
