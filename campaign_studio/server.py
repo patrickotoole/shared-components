@@ -67,7 +67,7 @@ class ScheduleHandler(tornado.web.RequestHandler):
         days = body['day']
         time = body['time']
            
-        self.db.execute("INSERT INTO optimization_schedule (optimization_id,days,time) VALUES (%s,%s,%s)", (optimization_id,days,time) )
+        self.db.execute("INSERT INTO optimization_schedule (optimization_id,days,time) VALUES (%s,%s,%s)", ( optimization_id,",".join(days),",".join(time) ) )
 
         self.write(body)
         self.finish()
