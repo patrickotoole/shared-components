@@ -4,7 +4,15 @@ export function Forms(target) {
       submit: function(x) {}
   }
   this._renderers = {
-      select: function(row) {
+      multi_select: function(row) {
+        var select = d3_updateable(row,"select","select")
+
+        d3_splat(select,"option","option",function(x) { return x.values },function(x) { return typeof(x) == "object" ? x.key : x})
+          .text(function(x) { return typeof(x) == "object" ?  x.key : x })
+          .attr("value",function(x) { return typeof(x) == "object" ?  x.value : x })
+
+      }
+    , select: function(row) {
         var select = d3_updateable(row,"select","select")
         d3_splat(select,"option","option",function(x) { return x.values },function(x) { return typeof(x) == "object" ? x.key : x})
           .text(function(x) { return typeof(x) == "object" ?  x.key : x })
@@ -96,12 +104,18 @@ Forms.prototype = {
           if (xx) return {"key":r.name,"value":xx}
         } catch(e) {}
 
-
+        
 
         try {
           var xx = d3.select(arg).selectAll("select").node().selectedOptions[0].value
           if (xx) return {"key":r.name,"value":xx}
         } catch(e) {}
+
+        try {
+          var xx = Array.apply([],d3.select("select[multiple=true]").node().selectedOptions).map(function(q) { return q.value } )
+          if (xx) return {"key":r.name,"value":xx}
+        } catch(e) {}
+
 
         return {"key":r.name,"value":undefined}
       })

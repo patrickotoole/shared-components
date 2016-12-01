@@ -23,36 +23,40 @@ def run():
     api = lnk.api.console
     logging.info("opt - initialized connectors")
 
-    df = db.select_dataframe("SELECT * FROM recurring_optimizations where days = DATE_FORMAT(NOW(),'%a') and time = DATE_FORMAT(NOW(),'%k')")
+    df = db.select_dataframe("SELECT * FROM recurring_optimizations where days like concat('%',DATE_FORMAT(NOW(),'%a'),'%')  and time like concat('%',DATE_FORMAT(NOW(),'%H'),'%') ")
 
     logging.info("opt - found scheduled jobs: %s" % len(df))
 
 
     if len(df) == 0:
-        print "No scheduled jobs found"
+        logging.info("No scheduled jobs found")
         return
 
-    _json = json.loads(df.iloc[0].state)
+    for i, row in df.iterrows():
+        logging.info("opt - starting job: %s" % i)
+        _json = json.loads(row.state)
 
-    logging.info("opt - running job: " + json.dumps(_json))
+        logging.info("opt - running job: " + json.dumps(_json))
 
-    raw_data = get_report(_json['advertiser'],_json,api,reporting)
-    filter_data = run_filter(raw_data,_json)
+        raw_data = get_report(_json['advertiser'],_json,api,reporting)
+        filter_data = run_filter(raw_data,_json)
 
-    logging.info("opt - filtered data.")
+        logging.info("opt - filtered data.")
 
 
 
-    import runner
-    import parse
+        import runner
+        import parse
 
-    dparams = parse.parse({"params":_json['settings']})
+        dparams = parse.parse({"params":_json['settings']})
 
-    logging.info("opt - starting updates.")
+        logging.info("opt - starting updates.")
 
-    runner.runner(dparams,filter_data,api)
+        runner.runner(dparams,filter_data,api)
 
-    logging.info("opt - finished updates.")
+        logging.info("opt - finished updates.")
+        logging.info("opt - finished job: %s" % i)
+
 
 
 

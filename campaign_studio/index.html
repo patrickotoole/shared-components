@@ -55,8 +55,8 @@ fields.map(function(x) {
 var form = {
   "description": null, "script": "build_python_marathon_app", "deleted": 0, "fields": [
       {"name":"optimization", "values": fields, "type":"select"}
-    , {"name":"day", "values": "Mon,Tues,Wed,Thurs,Fri,Sat,Sun".split(","), "type":"select"}
-    , {"name":"time", "values": d3.range(24).map(function(x) { return x + 1 }), "type":"select"}
+    , {"name":"day", "values": "Mon,Tues,Wed,Thurs,Fri,Sat,Sun".split(","), "type":"multi_select"}
+    , {"name":"time", "values": d3.range(24).map(function(x) { return x < 10 ? "0" + x : x }), "type":"multi_select"}
   ]
 }
 
