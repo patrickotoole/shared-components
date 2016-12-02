@@ -105,18 +105,18 @@ Forms.prototype = {
           if (xx) return {"key":r.name,"value":xx}
         } catch(e) {}
 
-        
+        try {
+          var xx = Array.apply([],d3.select("select[multiple=true]").node().selectedOptions).map(function(q) { return q.value } )
+          if (xx) return {"key":r.name,"value":xx}
+        } catch(e) {}
+
 
         try {
           var xx = d3.select(arg).selectAll("select").node().selectedOptions[0].value
           if (xx) return {"key":r.name,"value":xx}
         } catch(e) {}
 
-        try {
-          var xx = Array.apply([],d3.select("select[multiple=true]").node().selectedOptions).map(function(q) { return q.value } )
-          if (xx) return {"key":r.name,"value":xx}
-        } catch(e) {}
-
+        
 
         return {"key":r.name,"value":undefined}
       })
