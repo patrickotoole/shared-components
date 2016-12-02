@@ -112,7 +112,7 @@
           } catch(e) {}
 
           try {
-            var xx = Array.apply([],d3.select("select[multiple=true]").node().selectedOptions).map(function(q) { return q.value } )
+            var xx = Array.apply([],d3.select(arg).select("select[multiple=true]").node().selectedOptions).map(function(q) { return q.value } )
             if (xx) return {"key":r.name,"value":xx}
           } catch(e) {}
 
