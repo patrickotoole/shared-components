@@ -51,6 +51,7 @@ class WorkQueue(object):
         self.client = client
         volume = datetime.datetime.now().strftime('%m%y')
         self.queue = CustomQueue.CustomQueue(client,zk_path, "log", "v" + volume, cutoff)
+        self.queue = connectors['CustomQueue']
         self.rec = reactor
         self.connectors = connectors
         self.timer = timer

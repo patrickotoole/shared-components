@@ -103,15 +103,6 @@ if __name__ == '__main__':
 
         log_object.addHandler(ch2)
 
-
-    app = tornado.web.Application(
-        build_routes(connectors),
-        template_path= template_dir,
-        debug=True,
-        cookie_secret="rickotoole",
-        login_url="/login"
-    )
-
     import work_queue
     import sys
   
@@ -128,6 +119,17 @@ if __name__ == '__main__':
         sys.exit(1)
 
     priority_cutoff = int(options.priority)
+    volume = datetime.datetime.now().strftime('%m%y')
+    connectors['CustomQueue'] = CustomQueue.CustomQueue(connectors['zookeeper'],zookeeper_path, "log", "v" + volume, priority_cutoff)
+
+    app = tornado.web.Application(
+        build_routes(connectors),
+        template_path= template_dir,
+        debug=True,
+        cookie_secret="rickotoole",
+        login_url="/login"
+    )
+
     for i in range(0, num_worker):
         tk = timeKeeper()
         tks.append(tk)    
