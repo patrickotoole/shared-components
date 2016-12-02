@@ -48,6 +48,7 @@ class JobsHandler(tornado.web.RequestHandler, RPCQueue):
     def initialize(self, zookeeper=None, crushercache=None, *args, **kwargs):
         self.zookeeper = zookeeper
         self.crushercache = crushercache
+        self.CustomQueue = kwargs.get('CustomQueue',False)
         self.job = 0
 
     def get_id(self, _job_id, entry_id=False):
@@ -104,14 +105,12 @@ class JobsHandler(tornado.web.RequestHandler, RPCQueue):
 
     def set_priority(self, job_id, priority_value, _version):
         try:
-            cq = CustomQueue.CustomQueue(self.zookeeper,"python_queue", "log", _version)
-             
             needed_path = str(cq.get_secondary_path()) + "/{}".format(job_id)
             entry_ids = self.zookeeper.get_children(needed_path)
             values = self.zookeeper.get("/python_queue/" + entry_ids[0])[0]
             
             priority_value = int(priority_value)
-            entry_id = cq.put(values,priority_value)
+            entry_id = self.CustomQueue.put(values,priority_value)
             cq.delete(entry_ids)
             self.write(ujson.dumps({"result":"Success", "entry_id":entry_id}))
             self.finish()
