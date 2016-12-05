@@ -63,9 +63,11 @@ define("show_routes",default=False, help="will print a list of the available rou
 def build_routes(connectors,override=[]):
     routes = AllRoutes(**connectors)
     static = [(r'/static/(.*)', tornado.web.StaticFileHandler, {'path': "static"})]
+    shared = [(r'/js/(.*)', tornado.web.StaticFileHandler, {'path': "../shared/js"})]
+
     selected_routes = [route for route in routes.all if route in override]
     all_routes = routes.all
-    return routes(*(selected_routes or all_routes)) + static
+    return routes(*(selected_routes or all_routes)) + static + shared
 
 
 if __name__ == '__main__':
