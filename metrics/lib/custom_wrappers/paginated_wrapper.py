@@ -1,7 +1,6 @@
-from link.wrappers import ConsoleAPIRequestWrapper
-from link.wrappers import ConsoleAPIResponseWrapper
+from link.wrappers import APIRequestWrapper
 
-class PaginatedConsoleAPIRequestWrapper(ConsoleAPIRequestWrapper):
+class PaginatedConsoleAPIRequestWrapper(APIRequestWrapper):
     def __init__(self, wrap_name=None, base_url=None, user=None, password=None):
         self._token = None
         super(PaginatedConsoleAPIRequestWrapper, self).__init__(wrap_name = wrap_name, 

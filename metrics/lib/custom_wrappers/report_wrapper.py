@@ -1,7 +1,7 @@
 import json
 import time
 import logging
-from link.wrappers import ConsoleAPIRequestWrapper
+from link.wrappers import APIRequestWrapper
 
 
 MAX_TRIES = 20
@@ -28,7 +28,7 @@ def formattable(default=False):
 
     return build_formattable
 
-class ReportAPIRequestWrapper(ConsoleAPIRequestWrapper):
+class ReportAPIRequestWrapper(APIRequestWrapper):
     def __init__(self, wrap_name=None, base_url=None, user=None, password=None):
         self._token = None
         super(ReportAPIRequestWrapper, self).__init__(wrap_name = wrap_name, 
