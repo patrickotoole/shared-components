@@ -54,7 +54,7 @@ class CacheInterface:
                 cassandra_functions.run_recurring,
                 {"advertiser":advertiser,"pattern":segment["url_pattern"][0], "cache_date":_cache_yesterday, "identifier":"recurring_cassandra_cache"}
                 ))
-        CustomQueue.CustomQueue(self.zookeeper,"python_queue", "log", volume).put(work,5)
+        CustomQueue.CustomQueue(self.zookeeper,"python_queue", "log", volume, 0).put(work,5)
         logging.info("added to work queue %s for %s" %(segment["url_pattern"][0],advertiser))
 
     def add_udf_to_work_queue(self, segment, advertiser, base_url, udf):
@@ -65,7 +65,7 @@ class CacheInterface:
                 fn,
                 {"advertiser":advertiser, "pattern":segment["url_pattern"][0], "func_name":udf, "base_url":base_url, "indentifiers":cache_name.format(udf), "filter_id":segment['action_id']}
                 ))
-        CustomQueue.CustomQueue(self.zookeeper,"python_queue", "log", volume).put(work,35)
+        CustomQueue.CustomQueue(self.zookeeper,"python_queue", "log", volume,0).put(work,35)
         logging.info("added udf to work queue for %s %s" %(segment,advertiser))
 
     def get_udf_list(self):
