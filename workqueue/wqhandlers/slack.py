@@ -11,7 +11,7 @@ import datetime
 
 from twisted.internet import defer
 
-INSERT = "insert into recurring_scripts (name, script, days, time) values (%(name)s, %(code)s, %(days)s, %(time)s)"
+INSERT = "insert into slack_log_match (regex, channel, message) values (%(regex)s, %(channel)s, %(message)s)"
 
 class SlackHandler(tornado.web.RequestHandler):
 
@@ -21,7 +21,7 @@ class SlackHandler(tornado.web.RequestHandler):
 
     def add_to_db(self, request_body):
         data = ujson.loads(request_body)
-        #self.crushercache.execute(INSERT, data)
+        self.crushercache.execute(INSERT, data)
 
     @tornado.web.asynchronous
     def get(self):
@@ -30,15 +30,14 @@ class SlackHandler(tornado.web.RequestHandler):
             data = {'values':[]}
             for item in df.iterrows():
                 data['values'].append({"channel":item[1]['channel'], "message":item[1]["message"], "regex":item[1]["regex"],"active":item[1]['active'], "deleted":item[1]['deleted']})
-            self.render("datatable.html", data=data, paths="")
+            self.render("slackdatatable.html", data=data, paths="")
         except Exception, e:
             self.set_status(400)
             self.write(ujson.dumps({"error":str(e)}))
             self.finish()
 
     @tornado.web.asynchronous
-    def post(self, action=""):
-        print action
+    def post(self):
         try:
             self.add_to_db(self.request.body)
             self.write(ujson.dumps({"success":"True"}))
@@ -107,7 +106,7 @@ submit_target.append("button")
     var obj = {
     "message": d3.selectAll("input")[0][0].value,
     "channel":d3.selectAll("input")[0][1].value,
-    "Regex":d3.selectAll("input")[0][2].value
+    "regex":d3.selectAll("input")[0][2].value
     }
     console.log(obj)
     

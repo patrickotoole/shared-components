@@ -10,6 +10,7 @@ from tornado.options import define, options, parse_command_line
 
 from lib.custom_logging.check_logger import KafkaHandler
 from lib.kafka_stream import kafka_stream
+from lib.zookeeper import CustomQueue
 import sys
 
 from timekeeper import timeKeeper
@@ -22,11 +23,11 @@ from metricCounter import MetricCounter
 from wqhandlers.handler import *
 from wqhandlers.jobs import *
 from wqhandlers.oldjobs import *
+from wqhandlers.previoushandler import *
 from wqhandlers.slack import *
 from wqhandlers.schedule import *
 from wqhandlers.workqueuelog import *
 from wqhandlers.cache import *
-from wqhandlers.oldcache import *
 
 import requests
 import signal
@@ -57,7 +58,7 @@ def build_routes(connectors,override=[]):
 
         (r'/scripts/?(.*?)', OldJobsHandler, connectors),
         (r'/', WorkQueueHandler, connectors),
-        (r'/work_queue/?(.*?)',WorkQueueHandler, connectors),
+        (r'/work_queue/?(.*?)',OldCacheHandler, connectors),
     ]
     static = [(r'/static/(.*)', tornado.web.StaticFileHandler, {'path': static_dir})]
     return routes + static

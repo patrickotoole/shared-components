@@ -11,7 +11,9 @@ import datetime
 
 from twisted.internet import defer
 
-INSERT = "insert into recurring_scripts (name, script, days, time) values (%(name)s, %(code)s, %(days)s, %(time)s)"
+INSERT = "insert into workqueue_scripts_schedule (workqueue_script_id, days, time) values (%(id)s, %(days)s, %(time)s)"
+GETID = "select id from workqueue_scripts where name = '%s'"
+DELETE = "delete from workqueue_scripts_schedule where workqueue_script_id = %(name)s and day=%(day)s and time=%(time)s"
 
 class ScheduleHandler(tornado.web.RequestHandler):
 
@@ -21,6 +23,11 @@ class ScheduleHandler(tornado.web.RequestHandler):
 
     def add_to_db(self, request_body):
         data = ujson.loads(request_body)
+        if data.get("type",False):
+            if data['type'] =="delete":
+                self.crushercache.execute(DELETE,data)
+        jobid = self.crushercache.select_dataframe(GETID % data['name'])
+        data['id'] = jobid['id'][0]
         self.crushercache.execute(INSERT, data)
 
     @tornado.web.asynchronous
@@ -29,16 +36,15 @@ class ScheduleHandler(tornado.web.RequestHandler):
             df = self.crushercache.select_dataframe("select * from workqueue_scripts_schedule")
             data = {'values':[]}
             for item in df.iterrows():
-                data['values'].append({"days":item[1]['days'], "time":item[1]["time"], "run everytime":item[1]["run_everytime"],"active":item[1]['active'], "deleted":item[1]['deleted'], "last_activty":str(item[1]['last_activity']), "id":item[1]['workqueue_script_id']})
-            self.render("datatable.html", data=data, paths="")
+                data['values'].append({"days":item[1]['days'], "time":item[1]["time"], "active": item[1]['active'],"run everytime":item[1]["run_everytime"],"deleted":item[1]['deleted'], "last_activty":str(item[1]['last_activity']), "id":item[1]['workqueue_script_id'], "remove":""})
+            self.render("scheduledatatable.html", data=data, paths="")
         except Exception, e:
             self.set_status(400)
             self.write(ujson.dumps({"error":str(e)}))
             self.finish()
 
     @tornado.web.asynchronous
-    def post(self, action=""):
-        print action
+    def post(self):
         try:
             self.add_to_db(self.request.body)
             self.write(ujson.dumps({"success":"True"}))
@@ -106,12 +112,12 @@ submit_target.append("button")
 
     var obj = {
     "name": d3.selectAll("input")[0][0].value,
-    "time":d3.selectAll("input")[0][1].value,
-    "days":d3.selectAll("input")[0][2].value
+    "days":d3.selectAll("input")[0][1].value,
+    "time":d3.selectAll("input")[0][2].value
     }
     console.log(obj)
     
-    d3.xhr("/scripts")
+    d3.xhr("/schedule")
       .post(
         JSON.stringify(obj),
         function(err,x) {

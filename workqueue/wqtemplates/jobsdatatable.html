@@ -43,6 +43,7 @@ margin-left:10%;
 margin-right: 10%;
 }
 div.content {
+margin-left:-12%;
 }
 </style>
 <div class="paths content row">
@@ -79,18 +80,75 @@ var d3_splat = function(target,selector,type,data,joiner) {
 }
 
 
-    //function buildTable(data) {
+    function buildTable(data) {
       
-    //  var tt = d3.selectAll(".outer-table-wrapper")
+      var tt = d3.selectAll(".outer-table-wrapper")
 
-    //  table.table(tt)
+      table.table(tt)
         //.data({"key":"Data","values":data}) 
-    //    .data({"key":"Data","values":data['values']})
-    //    .draw()
+        .data({"key":"Data","values":data['values']})
+        .draw()
 
-    //}
-    //buildTable({% raw data %})
+    }
+    buildTable({% raw data %})
 
+
+
+var table_select = d3.select(".main")
+var table_rows = table_select.selectAll("tr")
+
+for (i = 0; i < table_rows[0].length; i++) {
+    if(i>=2){
+        var row_name = table_rows[0][i].getElementsByTagName("td")[1].innerHTML
+        var buttonindex = table_rows[0][i].getElementsByTagName("td").length - 2
+        table_rows[0][i].getElementsByTagName("td")[buttonindex].innerHTML='<button onclick="PostButton(\''+row_name+'\')">run</button>'    
+    } 
+    console.log(i);
+}
+for (i = 0; i < table_rows[0].length; i++) {
+    if(i>=2){
+        var row_name = table_rows[0][i].getElementsByTagName("td")[1].innerHTML
+        var buttonindex = table_rows[0][i].getElementsByTagName("td").length - 3
+        table_rows[0][i].getElementsByTagName("td")[buttonindex].innerHTML='<button onclick="DeleteButton(\''+row_name+'\')">delete</button>'    
+    } 
+    console.log(i);
+}
+
+function PostButton(X) {
+    var obj = {
+        "name": X,
+        "debug": "True"
+        }
+        console.log(obj)
+    
+    d3.xhr("/jobs")
+      .post(
+        JSON.stringify(obj),
+        function(err,x) {
+          var j = JSON.parse(x.response)
+          console.log(x.response)
+          alert("add to queue")
+          resp_target.html("Job Submitted: <br><pre>" + x.response + "</pre><br>")
+            })
+    }
+
+function DeleteButton(X) {
+    var obj = {
+        "name": X,
+        "debug": "True",
+        "type":"delete"
+        }
+        console.log(obj)
+    
+    d3.xhr("/jobs")
+      .post(
+        JSON.stringify(obj),
+        function(err,x) {
+          var j = JSON.parse(x.response)
+          console.log(x.response)
+          resp_target.html("Job Submitted: <br><pre>" + x.response + "</pre><br>")
+            })
+    }
          
 </script>
 

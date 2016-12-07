@@ -8,29 +8,65 @@ import logging
 import pickle
 import hashlib
 import datetime
+from RPCQueue import RPCQueue
 
 from twisted.internet import defer
 
-INSERT = "insert into recurring_scripts (name, script, days, time) values (%(name)s, %(code)s, %(days)s, %(time)s)"
+INSERT = "insert into workqueue_scripts (name, script) values (%(name)s, %(script)s)"
+DELETE = "Delete from workqueue_scripts where name = %(name)s"
 
-class JobsHandler(tornado.web.RequestHandler):
+class JobsHandler(tornado.web.RequestHandler, RPCQueue):
 
-    def initialize(self, zookeeper=None, crushercache=None, *args, **kwargs):
+    def initialize(self, zookeeper=None, crushercache=None, CustomQueue=None, *args, **kwargs):
         self.zookeeper = zookeeper
         self.crushercache = crushercache
+        self.CustomQueue = CustomQueue
+
+    def execute_post(self, request_body):
+        data = ujson.loads(request_body)
+        if data['name'].isdigit():
+            name = self.crushercache.select_dataframe("select name from workqueue_scripts where id = %s" % data['name'])
+            data['name'] = name['name'][0]
+        if data.get("type",False):
+            if data['type'] =="delete":
+                self.crushercache.execute(DELETE, data)
+                self.write(ujson.dumps({"Status":"Success"}))
+                self.finish()
+            if data['type'] == "add":
+                self.crushercache.execute(INSERT, data)
+                self.write(ujson.dumps({"Status":"Success"}))
+                self.finish()
+        else:
+            #priority_value = self.get_argument("priority", 2)
+            priority_value = 2
+            #_version = self.get_argument("version", "v{}".format(datetime.datetime.now().strftime("%m%y")))
+            _version = "v{}".format(datetime.datetime.now().strftime("%m%y"))
+            try:
+                entry, job_id = self.add_to_work_queue(self.request.body)
+                self.write(ujson.dumps({"Status":"Success", "Job ID":job_id}))
+                self.finish()
+            except Exception, e:
+                self.set_status(400)
+                self.write(ujson.dumps({"error":str(e)}))
+                self.finish()
 
     @tornado.web.asynchronous
     def get(self):
+
         try:
             df = self.crushercache.select_dataframe("select * from workqueue_scripts")
             data = {'values':[]}
             for item in df.iterrows():
-                data['values'].append({"name":item[1]['name'], "active":item[1]['active'], "deleted":item[1]['deleted'], "last_activty":str(item[1]['last_activity']), "id":item[1]['id'], "button":""})
-            self.render("datatable.html", data=data, paths="")
+                data['values'].append({"name":item[1]['name'], "active":item[1]['active'], "deleted":item[1]['deleted'], "last_activty":str(item[1]['last_activity']), "Job ID":item[1]['id'], "Run Button":"", " Delete Button": ""})
+            self.render("jobsdatatable.html", data=data, paths="")
         except Exception, e:
             self.set_status(400)
             self.write(ujson.dumps({"error":str(e)}))
             self.finish()
+
+    @tornado.web.asynchronous
+    def post(self):
+        self.execute_post(self.request.body)
 
 
 class JobsNewHandler(tornado.web.RequestHandler):
@@ -84,11 +120,12 @@ submit_target.append("button")
 
     var obj = {
     "name": d3.selectAll("input")[0][0].value,
-    "code":d3.selectAll("textarea")[0][0].value
+    "script":d3.selectAll("textarea")[0][0].value,
+    "type":"add"
     }
     console.log(obj)
     
-    d3.xhr("/scripts")
+    d3.xhr("/jobs")
       .post(
         JSON.stringify(obj),
         function(err,x) {
