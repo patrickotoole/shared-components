@@ -8,7 +8,7 @@ import work_queue
 from twisted.internet import defer
 from lib.helpers import * 
 
-class WorkQueueHandler(tornado.web.RequestHandler):
+class OldCacheHandler(tornado.web.RequestHandler):
 
     def initialize(self, zookeeper=None, *args, **kwargs):
         self.db = kwargs.get("crushercache",None)
@@ -256,7 +256,7 @@ data.map(function(item){
 <a href="/logging" target="_blank">LOG</a>
             """
 
-            self.render("admin/datatable.html", data="", paths=js)
+            self.render("datatable.html", data="", paths=js)
             
         yield default, (data,)
 
@@ -346,7 +346,7 @@ submit_target.append("button")
   })
 </script>
             """
-            self.render("admin/datatable.html", data="", paths=js)
+            self.render("datatable.html", data="", paths=js)
         yield default, (data,)
 
     @decorators.formattable
@@ -402,7 +402,7 @@ submit_target.append("div").classed("break",true).html("<br/>")
 </script>
 <a href="/logging" target="_blank">LOG</a>
             """
-            self.render("admin/datatable.html", data="", paths=js)
+            self.render("datatable.html", data="", paths=js)
         yield default, (data,)    
 
 

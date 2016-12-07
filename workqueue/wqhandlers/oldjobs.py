@@ -43,7 +43,7 @@ def parse_for_id(x, zk, dq):
         logging.info("Error parsing pickle job")
         return False
 
-class JobsHandler(tornado.web.RequestHandler, RPCQueue):
+class OldJobsHandler(tornado.web.RequestHandler, RPCQueue):
 
     def initialize(self, zookeeper=None, crushercache=None, *args, **kwargs):
         self.zookeeper = zookeeper
@@ -105,7 +105,7 @@ class JobsHandler(tornado.web.RequestHandler, RPCQueue):
 
     def set_priority(self, job_id, priority_value, _version):
         try:
-            needed_path = str(cq.get_secondary_path()) + "/{}".format(job_id)
+            needed_path = str(self.CustomQueue.get_secondary_path()) + "/{}".format(job_id)
             entry_ids = self.zookeeper.get_children(needed_path)
             values = self.zookeeper.get("/python_queue/" + entry_ids[0])[0]
             
@@ -134,14 +134,15 @@ class JobsHandler(tornado.web.RequestHandler, RPCQueue):
         self.finish()
 
     @tornado.web.asynchronous
-    def get(self, action=""):
-        print action
-        if action=="":
-            self.get_data()
-        elif "num" in action:
-            self.get_num()
-        else: 
-            self.get_id(action)
+    def get(self):
+        self.get_data()
+        #print action
+        #if action=="":
+        #    self.get_data()
+        #elif "num" in action:
+        #    self.get_num()
+        #else: 
+        #    self.get_id(action)
 
     @tornado.web.asynchronous
     def post(self, action=""):

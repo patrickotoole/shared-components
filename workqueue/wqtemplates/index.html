@@ -1,0 +1,46 @@
+{% extends clean_base.html %}
+
+{% block content %}
+
+<style>
+a {
+font-size: 150%;
+margin-left: 15%;
+}
+h2 {
+margin-left: 10%;
+}
+</style>
+
+<h2> Welcome to the Rockerbox WorkQueue Application </h2>
+
+<a href="/jobs">View Named Jobs</a>
+<br>
+<a href="/jobs/new">Create Named Jobs</a>
+<br>
+<br>
+
+<a href="/schedule">View Schedule for Jobs</a>
+<br>
+<a href="/schedule/new">Create New Schedule Jobs</a>
+<br>
+<br>
+
+<div>
+<a href="/cache"> Re-cache/Cache Hindsight Data</a>
+<a href="" >(Help)</a>
+</div>
+<br>
+
+<a href="/slack"> View Slack Notification Patterns</a>
+<br>
+<a href="/slack/new"> Create Slack Notification </a>
+<br>
+<br>
+
+<a href="/logging">View Logs</a>
+<br>
+<br>
+<a href="/"> Help/Documentation </a>
+
+{% end %}

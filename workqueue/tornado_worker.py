@@ -19,10 +19,14 @@ from shutdown import sig_wrap
 from work_queue_metrics import Metrics
 from work_queue_metrics import TimeMetric
 from metricCounter import MetricCounter
-from handler import *
-from jobs import *
-from scripts import *
-from workqueuelog import *
+from wqhandlers.handler import *
+from wqhandlers.jobs import *
+from wqhandlers.oldjobs import *
+from wqhandlers.slack import *
+from wqhandlers.schedule import *
+from wqhandlers.workqueuelog import *
+from wqhandlers.cache import *
+from wqhandlers.oldcache import *
 
 import requests
 import signal
@@ -33,18 +37,27 @@ requests_log = logging.getLogger("requests")
 requests_log.setLevel(logging.WARNING)
 
 dirname = os.path.dirname(os.path.realpath(__file__))
-template_dir = "/".join(dirname.split("/")[:-1]) +"/metrics/templates"
-static_dir = "/".join(dirname.split("/")[:-1]) +"/metrics/static"
+template_dir = "/".join(dirname.split("/")[:-1]) +"/workqueue/wqtemplates"
+static_dir = "/".join(dirname.split("/")[:-1]) +"/workqueue/wqstatic"
 
 define("port", default=8080, help="run on the given port", type=int)
 
 def build_routes(connectors,override=[]):
     routes = [
-        (r'/jobs/?(.*?)', JobsHandler, connectors),
-        (r'/scripts/?(.*?)', ScriptsHandler, connectors),
+        (r'/jobs', JobsHandler, connectors),
+        (r'/jobs/new', JobsNewHandler, connectors),
+        #(r'/jobs/?(.*?)', JobsHandler, connectors),
+        (r'/schedule', ScheduleHandler, connectors),
+        (r'/schedule/new', ScheduleNewHandler, connectors),
+        (r'/slack', SlackHandler, connectors),
+        (r'/slack/new', SlackNewHandler, connectors),
+        (r'/cache', OldCacheHandler, connectors),
+        #(r'/cachehind', CacheHandler, connectors),
+        (r'/logging/?(.*?)',WQLog, connectors),
+
+        (r'/scripts/?(.*?)', OldJobsHandler, connectors),
         (r'/', WorkQueueHandler, connectors),
         (r'/work_queue/?(.*?)',WorkQueueHandler, connectors),
-        (r'/logging/?(.*?)',WQLog, connectors),
     ]
     static = [(r'/static/(.*)', tornado.web.StaticFileHandler, {'path': static_dir})]
     return routes + static
