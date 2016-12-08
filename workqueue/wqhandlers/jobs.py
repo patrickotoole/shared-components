@@ -42,7 +42,8 @@ class JobsHandler(tornado.web.RequestHandler, RPCQueue):
             #_version = self.get_argument("version", "v{}".format(datetime.datetime.now().strftime("%m%y")))
             _version = "v{}".format(datetime.datetime.now().strftime("%m%y"))
             try:
-                entry, job_id = self.add_to_work_queue(self.request.body)
+                data['udf'] = data['name']
+                entry, job_id = self.add_to_work_queue(ujson.dumps(data))
                 self.write(ujson.dumps({"Status":"Success", "Job ID":job_id}))
                 self.finish()
             except Exception, e:
