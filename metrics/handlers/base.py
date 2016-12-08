@@ -7,8 +7,32 @@ import ujson
 from lib.helpers import Convert
 #from ..lib.hive import Hive
 from tornado.escape import url_unescape
+from tornado.log import access_log, app_log, gen_log
 
 class BaseHandler(tornado.web.RequestHandler):
+
+    def _log(self):
+        """Writes a completed HTTP request to the logs.
+
+        By default writes to the python root logger.  To change
+        this behavior either subclass Application and override this method,
+        or pass a function in the application settings dictionary as
+        ``log_function``.
+        """
+        if "log_function" in self.application.settings:
+            self.application.settings["log_function"](handler)
+            return
+        if self.get_status() < 400:
+            log_method = access_log.info
+        elif self.get_status() < 500:
+            log_method = access_log.warning
+        else:
+            log_method = access_log.error
+        request_time = 1000.0 * self.request.request_time()
+        log_method("%d %s %.2fms %s", self.get_status(),
+                   self._request_summary(), request_time, self.current_user)
+
+
 
     def get_advertiser_if_nonce(self,nonce):
         uri = url_unescape(self.request.uri.split("&nonce")[0])
