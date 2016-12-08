@@ -13,7 +13,7 @@ from twisted.internet import defer
 
 INSERT = "insert into workqueue_scripts_schedule (workqueue_script_id, days, time) values (%(id)s, %(days)s, %(time)s)"
 GETID = "select id from workqueue_scripts where name = '%s'"
-DELETE = "delete from workqueue_scripts_schedule where workqueue_script_id = %(name)s and day=%(day)s and time=%(time)s"
+DELETE = "delete from workqueue_scripts_schedule where workqueue_script_id = %(name)s and days=%(day)s and time=%(time)s"
 
 class ScheduleHandler(tornado.web.RequestHandler):
 
@@ -26,9 +26,10 @@ class ScheduleHandler(tornado.web.RequestHandler):
         if data.get("type",False):
             if data['type'] =="delete":
                 self.crushercache.execute(DELETE,data)
-        jobid = self.crushercache.select_dataframe(GETID % data['name'])
-        data['id'] = jobid['id'][0]
-        self.crushercache.execute(INSERT, data)
+        else:
+            jobid = self.crushercache.select_dataframe(GETID % data['name'])
+            data['id'] = jobid['id'][0]
+            self.crushercache.execute(INSERT, data)
 
     @tornado.web.asynchronous
     def get(self):

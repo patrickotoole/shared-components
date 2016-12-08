@@ -106,9 +106,9 @@ var table_rows = table_select.selectAll("tr")
 //}
 for (i = 0; i < table_rows[0].length; i++) {
     if(i>=2){
-        var day = table_rows[0][i].getElementsByTagName("td")[4].innerHTML
-        var time = table_rows[0][i].getElementsByTagName("td")[4].innerHTML
-        var row_name = table_rows[0][i].getElementsByTagName("td")[4].innerHTML
+        var day = table_rows[0][i].getElementsByTagName("td")[5].innerHTML
+        var time = table_rows[0][i].getElementsByTagName("td")[2].innerHTML
+        var row_name = table_rows[0][i].getElementsByTagName("td")[7].innerHTML
         var buttonindex = table_rows[0][i].getElementsByTagName("td").length - 3
         table_rows[0][i].getElementsByTagName("td")[buttonindex].innerHTML='<button onclick="DeleteButton(\''+row_name+"\',\'"+day+"\',\'"+time+'\')">delete</button>'    
     } 
@@ -134,9 +134,11 @@ function PostButton(name,day,time) {
             })
     }
 
-function DeleteButton(X) {
+function DeleteButton(name,day,time) {
     var obj = {
-        "name": X,
+        "name": name,
+        "day":day,
+        "time":time,
         "debug": "True",
         "type":"delete"
         }
@@ -148,6 +150,7 @@ function DeleteButton(X) {
         function(err,x) {
           var j = JSON.parse(x.response)
           console.log(x.response)
+          alert("timing removed")
           resp_target.html("Job Submitted: <br><pre>" + x.response + "</pre><br>")
             })
     }

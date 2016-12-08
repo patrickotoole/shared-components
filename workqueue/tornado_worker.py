@@ -20,6 +20,7 @@ from shutdown import sig_wrap
 from work_queue_metrics import Metrics
 from work_queue_metrics import TimeMetric
 from metricCounter import MetricCounter
+
 from wqhandlers.handler import *
 from wqhandlers.jobs import *
 from wqhandlers.oldjobs import *
@@ -47,17 +48,17 @@ def build_routes(connectors,override=[]):
     routes = [
         (r'/jobs', JobsHandler, connectors),
         (r'/jobs/new', JobsNewHandler, connectors),
-        #(r'/jobs/?(.*?)', JobsHandler, connectors),
         (r'/schedule', ScheduleHandler, connectors),
         (r'/schedule/new', ScheduleNewHandler, connectors),
         (r'/slack', SlackHandler, connectors),
         (r'/slack/new', SlackNewHandler, connectors),
-        (r'/cache', OldCacheHandler, connectors),
-        #(r'/cachehind', CacheHandler, connectors),
+        (r'/cache', CacheHandler, connectors),
         (r'/logging/?(.*?)',WQLog, connectors),
-
-        (r'/scripts/?(.*?)', OldJobsHandler, connectors),
         (r'/', WorkQueueHandler, connectors),
+
+
+        #Old Handler for legacy purposes
+        (r'/scripts/?(.*?)', OldJobsHandler, connectors),
         (r'/work_queue/?(.*?)',OldCacheHandler, connectors),
     ]
     static = [(r'/static/(.*)', tornado.web.StaticFileHandler, {'path': static_dir})]

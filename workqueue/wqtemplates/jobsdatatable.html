@@ -146,6 +146,7 @@ function DeleteButton(X) {
         function(err,x) {
           var j = JSON.parse(x.response)
           console.log(x.response)
+          alert("removed item")
           resp_target.html("Job Submitted: <br><pre>" + x.response + "</pre><br>")
             })
     }
