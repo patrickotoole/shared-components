@@ -11,6 +11,10 @@
 </style>
 <script data-require="d3@3.5.3" data-semver="3.5.3" src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.3/d3.js"></script>
 <script src="js/forms/build/form_builder.js"></script>
+<script src="js/state/build/state.js"></script>
+<script src="js/table/build/table.js"></script>
+
+
 <script>
 var d3_updateable = function(target,selector,type,data,joiner) {
 var type = type || "div"
@@ -35,7 +39,35 @@ return updateable
 
 </script>
 <h3>Saved Optimizations</h3>
-{{saved_html}}
+<div id="saved" style="width:800px">
+  <!--{{saved_html}}-->
+</div>
+
+<script>
+  var xx = {{saved}}
+
+  xx.map(function(row) {
+    row.link = "/optimize" + state.qs().to(JSON.parse(row.state))
+  })
+
+  var t = table.table(d3.select("#saved"))
+    .headers(["name","advertiser_id","active"].map(function(x) { return {key: x, value: x} }))
+    .render("advertiser_id",function(x) { 
+      var dthis = d3.select(this)
+        .text(this.parentNode.__data__[x.key])
+    })
+    .render("name",function(x) { 
+      var dthis = d3.select(this)
+        .append("a")
+        .text(this.parentNode.__data__[x.key])
+        .attr("href","/optimize" + state.qs().to(JSON.parse(this.parentNode.__data__["state"])))
+    })
+    .data({"values":xx})
+    .draw()
+
+  
+  
+</script>
 <br>
 <button onclick=" window.location.pathname = '/optimize' ">New Optimization</button>
 

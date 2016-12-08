@@ -14,7 +14,9 @@
   </style>
   <script data-require="d3@3.5.3" data-semver="3.5.3" src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.3/d3.js"></script>
 
-  <script src="/static/forms/build/form_builder.js"></script>
+  <script src="/js/forms/build/form_builder.js"></script>
+  <script src="/js/state/build/state.js"></script>
+
   <script>
 
     var d3_updateable = function(target,selector,type,data,joiner) {
@@ -61,8 +63,16 @@
 
     forms = {{forms}}
 
+    var obj = state.qs().from(document.location.search)
+
+
     var index = form_builder.form_index(content)
       .forms(forms)
+      .on("click", function(x) {
+        history.pushState({},"", "/" + state.qs().to(x))
+        index.render_back(x.name)
+        index.render_form.bind(index)(index._show,x)
+      })
       .on("submit", function(x) {
         d3.xhr("/submit").post(JSON.stringify(x), function(){
           debugger
@@ -74,6 +84,10 @@
         })
       })
       .draw()
+
+
+    var new_obj = forms.filter(function(x) { return x.name == obj.name})[0]
+    if (obj.name) index.on("click").bind(index)(new_obj)
 
   </script>
 </body>

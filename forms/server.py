@@ -116,6 +116,8 @@ if __name__ == '__main__':
         (r'/', IndexHandler, connectors),
         (r'/submit', SubmitHandler, connectors),
         (r'/static/(.*)', tornado.web.StaticFileHandler, {"path":"static"}),
+        (r'/js/(.*)', tornado.web.StaticFileHandler, {"path":"../shared/js"}),
+
     ]
 
     app = tornado.web.Application(

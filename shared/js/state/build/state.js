@@ -28,9 +28,9 @@
   }
 
   State.prototype = {
-      publish: function(name,v) {
+      publish: function(name,cb) {
 
-         var push = function(error,value) {
+         var push_cb = function(error,value) {
            if (error) return subscriber(error,null)
            
            this.update(name, value)
@@ -38,8 +38,8 @@
 
          }.bind(this)
 
-         if (typeof v === "function") v(push)
-         else push(false,v)
+         if (typeof cb === "function") cb(push_cb)
+         else push_cb(false,v)
 
          return this
       }
@@ -47,15 +47,42 @@
         this.publish(false,state)
         return this
       }
+    , subscribe: function() {
+
+        // three options for the arguments:
+        // (fn) 
+        // (id,fn)
+        // (id.target,fn)
+
+
+        if (typeof arguments[0] === "function") return this._global_subscribe(arguments[0])
+        if (arguments[0].indexOf(".") == -1) return this._named_subscribe(arguments[0], arguments[1])
+        if (arguments[0].indexOf(".") > -1) return this._targetted_subscribe(arguments[0].split(".")[0], arguments[0].split(".")[1], arguments[1])
+
+      }
     , unsubscribe: function(id) {
         this.subscribe(id,undefined)
         return this
       }
-    , subscribe: function(id,fn) {
-        var split = id.split(".")
-          , id = split[0]
-          , to = (split.length > 1) ? split[1]: "*"
-          , fn = fn;
+
+    , _global_subscribe: function(fn) {
+        var id = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+            return v.toString(16);
+          })
+        , to = "*";
+       
+        this._targetted_subscribe(id,to,fn)
+
+        return this
+      }
+    , _named_subscribe: function(id,fn) {
+        var to = "*"
+        this._targetted_subscribe(id,to,fn)
+
+        return this
+      }
+    , _targetted_subscribe: function(id,to,fn) {
 
         var subscriptions = this.get_subscribers_obj(to)
           , to_state = this._state[to]
@@ -68,11 +95,9 @@
         }
         subscriptions[id] = fn;
 
-        //if (to == "*") fn(false,state)
-        //else if (to_state) fn(false,to_state,state)
-
-        return this
+        return this      
       }
+    
     , get_subscribers_obj: function(k) {
         this._subscription[k] = this._subscription[k] || {}
         return this._subscription[k]
@@ -127,7 +152,6 @@
 
         return this
       }
-
     , _pastPush: function(v) {
         this._past.push(v)
       }
@@ -166,9 +190,65 @@
 
   state.prototype = State.prototype
 
+  function QS(state) {
+    //this.state = state
+    var self = this;
+
+    this._encodeObject = function(o) {
+      return JSON.stringify(o)
+    }
+
+    this._encodeArray = function(o) {
+      return JSON.stringify(o)
+    }
+  }
+
+  QS.prototype = {
+      to: function(state) {
+        var self = this
+
+        var params = Object.keys(state).map(function(k) {
+
+          var value = state[k]
+            , o = value;
+
+          if (value && (typeof(value) == "object") && (value.length > 0)) {
+            o = self._encodeArray(value)
+          } else if (typeof(value) == "object") {
+            o = self._encodeObject(value)
+          } 
+
+          return k + "=" + encodeURIComponent(o) 
+
+        })
+
+        return "?" + params.join("&");
+        
+      }
+    , from: function(qs) {
+        var query = {};
+        var a = qs.substr(1).split('&');
+        for (var i = 0; i < a.length; i++) {
+            var b = a[i].split('=');
+            
+            query[decodeURIComponent(b[0])] = (decodeURIComponent(b[1] || ''));
+            var _char = query[decodeURIComponent(b[0])][0] 
+            if ((_char == "{") || (_char == "[")) query[decodeURIComponent(b[0])] = JSON.parse(query[decodeURIComponent(b[0])])
+        }
+        return query;
+      }
+  }
+
+  function qs(state) {
+    return new QS(state)
+  }
+
+  qs.prototype = QS.prototype
+
   var version = "0.0.1";
 
   exports.version = version;
   exports.state = state;
+  exports.qs = qs;
 
 }));

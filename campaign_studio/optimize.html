@@ -5,6 +5,8 @@
     .hidden { display:none }
   </style>
   <script data-require="d3@3.5.3" data-semver="3.5.3" src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.3/d3.js"></script>
+
+  <script src="js/state/build/state.js"></script>
   <script src="js/filter/build/filter.js"></script>
   <script src="js/table/build/table.js"></script>
 
@@ -25,6 +27,11 @@
       <button id="preload-action">Load</button>
     </div>
     <script>
+
+        var state = state.qs().from(document.location.search)
+        d3.select("#preload").text(JSON.stringify(state))
+
+
         d3.select("#preload-action").on("click",function(){
           var values = JSON.parse(d3.select("#preload").node().value)
 
