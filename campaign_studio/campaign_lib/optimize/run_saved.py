@@ -9,7 +9,9 @@ def run_filter(df,opt_json):
     import subprocess
     import json
 
-    process2 = subprocess.Popen(['node',os.path.dirname(__file__) + '/run_filter.js',json.dumps(opt_json['filters'])], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+    print os.path.dirname(__file__) + '/../../../shared/js/run_filter.js'
+
+    process2 = subprocess.Popen(['node',os.path.dirname(__file__) + '/../../../shared/js/run_filter.js',json.dumps(opt_json['filters'])], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
     data = process2.communicate(input=json.dumps(df.to_dict('records')) )[0]
 
     import pandas 
@@ -51,7 +53,7 @@ def run():
         dparams = parse.parse({"params":_json['settings']})
 
         logging.info("opt - starting updates.")
-
+        
         runner.runner(dparams,filter_data,api)
 
         logging.info("opt - finished updates.")
