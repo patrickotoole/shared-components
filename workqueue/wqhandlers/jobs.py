@@ -24,7 +24,7 @@ class JobsHandler(tornado.web.RequestHandler, RPCQueue):
 
     def execute_post(self, request_body):
         data = ujson.loads(request_body)
-        if data['name'].isdigit():
+        if data.get('name',"").isdigit():
             name = self.crushercache.select_dataframe("select name from workqueue_scripts where id = %s" % data['name'])
             data['name'] = name['name'][0]
         if data.get("type",False):
@@ -42,7 +42,8 @@ class JobsHandler(tornado.web.RequestHandler, RPCQueue):
             #_version = self.get_argument("version", "v{}".format(datetime.datetime.now().strftime("%m%y")))
             _version = "v{}".format(datetime.datetime.now().strftime("%m%y"))
             try:
-                data['udf'] = data['name']
+                if data.get('name', False) and 'udf' not in data.keys():
+                    data['udf'] = data['name']
                 entry, job_id = self.add_to_work_queue(ujson.dumps(data))
                 self.write(ujson.dumps({"Status":"Success", "Job ID":job_id}))
                 self.finish()
