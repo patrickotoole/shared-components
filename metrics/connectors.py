@@ -1,7 +1,9 @@
 from link import lnk
-from handlers import streaming
-from lib.kafka_queue import KafkaQueue
-import lib.hive as h
+import sys
+sys.path.append("../")
+from metrics.handlers import streaming
+from metrics.lib.kafka_queue import KafkaQueue
+import metrics.lib.hive as h
 import logging
 from kazoo.client import KazooClient
 

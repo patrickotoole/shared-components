@@ -21,14 +21,14 @@ from work_queue_metrics import Metrics
 from work_queue_metrics import TimeMetric
 from metricCounter import MetricCounter
 
-from wqhandlers.handler import *
-from wqhandlers.jobs import *
-from wqhandlers.oldjobs import *
-from wqhandlers.previoushandler import *
-from wqhandlers.slack import *
-from wqhandlers.schedule import *
-from wqhandlers.workqueuelog import *
-from wqhandlers.cache import *
+from handlers.handler import *
+from handlers.jobs import *
+from handlers.oldjobs import *
+from handlers.previoushandler import *
+from handlers.slack import *
+from handlers.schedule import *
+from handlers.workqueuelog import *
+from handlers.cache import *
 
 import requests
 import signal
