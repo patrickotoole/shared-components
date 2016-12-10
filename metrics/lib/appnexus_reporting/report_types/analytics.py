@@ -89,6 +89,8 @@ def run(api, db, table, advertiser_id, start_date, end_date):
     df, report_params = get_report(db,api,advertiser_id,start_date,end_date)
     series =  df['seller_member_name'] + " (" + df['seller_member_id'].map(str) + ")"
 
+    import ipdb; ipdb.set_trace()
+
     df['seller_member'] = series
     if len(df) == 0: 
         report_params['processed_at'] = now()

@@ -4,21 +4,24 @@ from lib.zookeeper import CustomQueue
 import pickle
 import logging
 import hashlib
+import lib.execution.build
 from lib.functionselector import FunctionSelector
 
 SELECT_UDFS = "select name from rpc_function_details where is_recurring=1"
 SELECT_SCRIPTS = "select script from workqueue_scripts where name = '%s' and active = 1 and deleted=0"
 
 def custom_script(**kwargs):
-    result = False
-    code_string = kwargs.get('code', Exception("no code arguement passed to custom script"))
-    code = compile(code_string, '<string>','exec')
+    # i think this is going to change to use my execution environment
+    connectors = kwargs.get("connectors")
+    cc = connectors['crushercache']
+    udf = kwargs['udf']
+
+    env = lib.execution.build.build_execution_env_from_db(cc)
+
     try:
-        exec code in {"params":kwargs['params']}
-        result = True
-    except:
-        result = False
-    return result
+        env.run(udf,kwargs.get("params",{}))
+        return True
+    except: return False
 
 class RPCQueue():
 
@@ -132,7 +135,8 @@ class RPCQueue():
             fn =  custom_script
             kwargs={}
             kwargs['advertiser']='rockerbox'
-            kwargs['code'] = code_string
+            #kwargs['code'] = code_string
+            kwargs['udf'] = udf
             kwargs['params'] = parameters
             work = pickle.dumps((fn, kwargs))
             priority = 1
