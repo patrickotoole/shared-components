@@ -85,35 +85,15 @@ var d3_splat = function(target,selector,type,data,joiner) {
       var tt = d3.selectAll(".outer-table-wrapper")
 
       table.table(tt)
-        //.data({"key":"Data","values":data}) 
+        .render("remove", function(x) {
+            var rowdata = this.parentNode.__data__ 
+            d3.select(this).append("button").on("click",function() {DeleteButton(rowdata['name'])}).text("delete") 
+        }) 
         .data({"key":"Data","values":data['values']})
         .draw()
 
     }
     buildTable({% raw data %})
-
-
-
-var table_select = d3.select(".main")
-var table_rows = table_select.selectAll("tr")
-
-//for (i = 0; i < table_rows[0].length; i++) {
-//    if(i>=2){
-//        var buttonindex = table_rows[0][i].getElementsByTagName("td").length - 2
-//        table_rows[0][i].getElementsByTagName("td")[buttonindex].innerHTML='<button onclick="PostButton(\''+row_name+'\')">run</button>'    
-//    } 
-//    console.log(i);
-//}
-for (i = 0; i < table_rows[0].length; i++) {
-    if(i>=2){
-        var day = table_rows[0][i].getElementsByTagName("td")[5].innerHTML
-        var time = table_rows[0][i].getElementsByTagName("td")[2].innerHTML
-        var row_name = table_rows[0][i].getElementsByTagName("td")[7].innerHTML
-        var buttonindex = table_rows[0][i].getElementsByTagName("td").length - 3
-        table_rows[0][i].getElementsByTagName("td")[buttonindex].innerHTML='<button onclick="DeleteButton(\''+row_name+"\',\'"+day+"\',\'"+time+'\')">delete</button>'    
-    } 
-    console.log(i);
-}
 
 function PostButton(name,day,time) {
     var obj = {
