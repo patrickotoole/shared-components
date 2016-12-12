@@ -39,8 +39,8 @@ requests_log = logging.getLogger("requests")
 requests_log.setLevel(logging.WARNING)
 
 dirname = os.path.dirname(os.path.realpath(__file__))
-template_dir = "/".join(dirname.split("/")[:-1]) +"/workqueue/wqtemplates"
-static_dir = "/".join(dirname.split("/")[:-1]) +"/workqueue/wqstatic"
+template_dir = "/".join(dirname.split("/")[:-1]) +"/workqueue/templates"
+static_dir = "/".join(dirname.split("/")[:-1]) +"/workqueue/static"
 
 define("port", default=8080, help="run on the given port", type=int)
 

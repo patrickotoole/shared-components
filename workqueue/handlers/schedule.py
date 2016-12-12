@@ -63,75 +63,8 @@ class ScheduleNewHandler(tornado.web.RequestHandler):
         self.crushercache = crushercache
 
     def get_content_schedule(self,data):
-        js = """
-<style>
-.content .label {
-  min-width:100px;color:black;display:inline-block
-}
-</style>
-<script>
-var content = d3.select(".content");
 
-
-var select_target = content.append("div").classed("selector",true)
-
-var select_target_name = content.append("div").classed("selector_name",true).text("Script name")
-
-var select_target_days = content.append("div").classed("selector_code",true).text("Days")
-
-var select_target_time = content.append("div").classed("selector_code",true).text("Time")
-
-var submit_target = content.append("div").classed("submit",true)
-
-
-var resp_target = content.append("div").classed("response",true)
-
-select_target_name.append("input")
-    .classed("paraminput3",true)
-    .style("width","200px")
-    .style("margin-top", "10px")
-    .style("margin-left", "8%")
-
-select_target_days.append("input")
-    .classed("paraminput3",true)
-    .style("width","200px")
-    .style("margin-top", "10px")
-    .style("margin-left", "8%")
-
-select_target_time.append("input")
-    .classed("paraminput3",true)
-    .style("width","200px")
-    .style("margin-top", "10px")
-    .style("margin-left", "8%")
-
-
-submit_target.append("button")
-  .text("submit")
-  .style("width","160px")
-  .style("margin-left","100px")
-  .on("click",function(x){
-
-    var obj = {
-    "name": d3.selectAll("input")[0][0].value,
-    "days":d3.selectAll("input")[0][1].value,
-    "time":d3.selectAll("input")[0][2].value
-    }
-    console.log(obj)
-    
-    d3.xhr("/schedule")
-      .post(
-        JSON.stringify(obj),
-        function(err,x) {
-          var j = JSON.parse(x.response)
-
-          resp_target.html("Job Submitted: <br><pre>" + x.response + "</pre><br>")
-         
-        }
-      )
-  })
-</script>
-            """
-        self.render("datatable.html", data="", paths=js)
+        self.render("newscheduledatatable.html", data="", paths="")
 
 
     def get_data_schedule(self):

@@ -22,39 +22,32 @@ class JobsHandler(tornado.web.RequestHandler, RPCQueue):
         self.crushercache = crushercache
         self.CustomQueue = CustomQueue
 
-    def execute_post(self, request_body):
-        data = ujson.loads(request_body)
-        if data.get('name',"").isdigit():
-            name = self.crushercache.select_dataframe("select name from workqueue_scripts where id = %s" % data['name'])
-            data['name'] = name['name'][0]
-        if data.get("type",False):
-            if data['type'] =="delete":
-                self.crushercache.execute(DELETE, data)
-                self.write(ujson.dumps({"Status":"Success"}))
-                self.finish()
-            if data['type'] == "add":
-                self.crushercache.execute(INSERT, data)
-                self.write(ujson.dumps({"Status":"Success"}))
-                self.finish()
-        else:
-            #priority_value = self.get_argument("priority", 2)
-            priority_value = 2
-            #_version = self.get_argument("version", "v{}".format(datetime.datetime.now().strftime("%m%y")))
-            _version = "v{}".format(datetime.datetime.now().strftime("%m%y"))
-            try:
-                if data.get('name', False) and 'udf' not in data.keys():
-                    data['udf'] = data['name']
-                entry, job_id = self.add_to_work_queue(ujson.dumps(data))
-                self.write(ujson.dumps({"Status":"Success", "Job ID":job_id}))
-                self.finish()
-            except Exception, e:
-                self.set_status(400)
-                self.write(ujson.dumps({"error":str(e)}))
-                self.finish()
+    def add_to_db(self,data):
+        self.crushercache.execute(INSERT, data)
+        result = {"Status":"Success"}
+        return result
+
+    def delete_from_db(self,data):
+        self.crushercache.execute(DELETE, data)
+        result = {"Status":"Success"}
+        return result
+
+    def add_to_queue(self,data):
+        priority_value = 2
+        _version = "v{}".format(datetime.datetime.now().strftime("%m%y"))
+        try:
+            if data.get('name', False) and 'udf' not in data.keys():
+                data['udf'] = data['name']
+            entry, job_id = self.add_to_work_queue(ujson.dumps(data))
+            result = {"Status":"Success", "Job ID":job_id}
+        except Exception, e:
+            self.set_status(400)
+            result = {"error":str(e)}
+        return result
+
 
     @tornado.web.asynchronous
     def get(self):
-
         try:
             df = self.crushercache.select_dataframe("select * from workqueue_scripts")
             data = {'values':[]}
@@ -68,7 +61,16 @@ class JobsHandler(tornado.web.RequestHandler, RPCQueue):
 
     @tornado.web.asynchronous
     def post(self):
-        self.execute_post(self.request.body)
+        import ipdb; ipdb.set_trace()
+        data = ujson.loads(self.request.body)
+        if data.get('name',"").isdigit():
+            name = self.crushercache.select_dataframe("select name from workqueue_scripts where id = %s" % data['name'])
+            data['name'] = name['name'][0]
+        funcs = {"add":self.add_to_db, "delete":self.delete_from_db, "other":self.add_to_queue}
+        func = funcs[data.get("type","other")]
+        result = func(data)
+        self.write(ujson.dumps(result))
+        self.finish()
 
 
 class JobsNewHandler(tornado.web.RequestHandler):
@@ -78,69 +80,8 @@ class JobsNewHandler(tornado.web.RequestHandler):
         self.crushercache = crushercache
 
     def get_content_schedule(self,data):
-        js = """
-<style>
-.content .label {
-  min-width:100px;color:black;display:inline-block
-}
-</style>
-<script>
-var content = d3.select(".content");
 
-
-var select_target = content.append("div").classed("selector",true)
-
-var select_target_name = content.append("div").classed("selector_name",true).text("Script name")
-
-
-var select_target_code = content.append("div").classed("selector_code",true).text("Code")
-
-var submit_target = content.append("div").classed("submit",true)
-
-
-var resp_target = content.append("div").classed("response",true)
-
-select_target_name.append("input")
-    .classed("paraminput3",true)
-    .style("width","200px")
-    .style("margin-top", "10px")
-    .style("margin-left", "8%")
-
-select_target_code.append("textarea")
-    .classed("paraminput3",true)
-    .attr("rows","10")
-    .style("width","400px")
-    .style("margin-top", "10px")
-    .style("margin-left", "8%")
-    .style("margin-bottom", "10px")
-
-submit_target.append("button")
-  .text("submit")
-  .style("width","160px")
-  .style("margin-left","100px")
-  .on("click",function(x){
-
-    var obj = {
-    "name": d3.selectAll("input")[0][0].value,
-    "script":d3.selectAll("textarea")[0][0].value,
-    "type":"add"
-    }
-    console.log(obj)
-    
-    d3.xhr("/jobs")
-      .post(
-        JSON.stringify(obj),
-        function(err,x) {
-          var j = JSON.parse(x.response)
-
-          resp_target.html("Job Submitted: <br><pre>" + x.response + "</pre><br>")
-         
-        }
-      )
-  })
-</script>
-            """
-        self.render("datatable.html", data="", paths=js)
+        self.render("newjobsdatatable.html", data="", paths="")
 
 
     def get_data_schedule(self):

@@ -44,6 +44,9 @@ def parse_for_id(x, zk, dq):
         return False
 
 class OldJobsHandler(tornado.web.RequestHandler, RPCQueue):
+    #This is DEPRECATED
+    #THIS CODE is still here to support old endpoints all current ones should go through the new endpoints
+    #DEPRECATED!!!!!!!
 
     def initialize(self, zookeeper=None, crushercache=None, *args, **kwargs):
         self.zookeeper = zookeeper
@@ -136,13 +139,6 @@ class OldJobsHandler(tornado.web.RequestHandler, RPCQueue):
     @tornado.web.asynchronous
     def get(self):
         self.get_data()
-        #print action
-        #if action=="":
-        #    self.get_data()
-        #elif "num" in action:
-        #    self.get_num()
-        #else: 
-        #    self.get_id(action)
 
     @tornado.web.asynchronous
     def post(self, action=""):

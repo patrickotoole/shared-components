@@ -1,0 +1,167 @@
+{% extends clean_base.html %}
+
+{% block content %}
+<link rel="stylesheet" type="text/css" href="http://rockerbox.com/css/dc.css">
+<script type="text/javascript" src="http://rockerbox.com/js/d3.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/crossfilter.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/dc.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/colorbrewer.js"></script>
+<script type="text/javascript" src="http://rockerbox.com/js/reporting.js"></script>
+<script src="/static/table.js"></script>
+<script src="http://getbootstrap.com/dist/js/bootstrap.min.js"></script>
+<link href="http://rockerbox.com/css/bootstrap.css" rel="stylesheet">
+
+<!-- DataTables CSS -->
+<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.0/css/jquery.dataTables.css">
+
+<!-- jQuery -->
+<script type="text/javascript" charset="utf8" src="//code.jquery.com/jquery-1.10.2.min.js"></script>
+
+<!-- DataTables -->
+<script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.0/js/jquery.dataTables.js"></script>
+
+<style>
+.content{
+   width:1000px;
+   margin:auto;
+}
+.header{
+   float:left;
+   width:100%;
+}
+.header h1{
+   text-align:center;
+}
+.body{
+   width:100%;
+   float:left;
+   padding-top:20px;
+   margin:auto;
+}
+div {
+margin-left:10%;
+margin-right: 10%;
+}
+</style>
+<div class="paths content row">
+{% raw paths%}
+</div>
+
+<div style="height:450px;overflow:scroll;position:relative" class="outer-table-wrapper"></div>
+  <script>
+
+var d3_updateable = function(target,selector,type,data,joiner) {
+  var type = type || "div"
+  var updateable = target.selectAll(selector).data(
+    function(x){return data ? [data] : [x]},
+    joiner || function(x){return [x]}
+  )
+
+  updateable.enter()
+    .append(type)
+
+  return updateable
+}
+
+var d3_splat = function(target,selector,type,data,joiner) {
+  var type = type || "div"
+  var updateable = target.selectAll(selector).data(
+    data || function(x){return x},
+    joiner || function(x){return x}
+  )
+
+  updateable.enter()
+    .append(type)
+
+  return updateable
+}
+
+
+    function buildTable(data) {
+      
+      var tt = d3.selectAll(".outer-table-wrapper")
+
+      table.table(tt)
+        //.data({"key":"Data","values":data}) 
+        .data({"key":"Data","values":data['values']})
+        .draw()
+
+    }
+
+         
+</script>
+
+<!--add-->
+<style>
+.content .label {
+  min-width:100px;color:black;display:inline-block
+}
+</style>
+<script>
+var content = d3.select(".content");
+
+
+var select_target = content.append("div").classed("selector",true)
+
+var select_target_name = content.append("div").classed("selector_name",true).text("Message")
+
+var select_target_days = content.append("div").classed("selector_code",true).text("Channel")
+
+var select_target_time = content.append("div").classed("selector_code",true).text("Regex")
+
+var submit_target = content.append("div").classed("submit",true)
+
+
+var resp_target = content.append("div").classed("response",true)
+
+select_target_name.append("input")
+    .classed("paraminput3",true)
+    .style("width","200px")
+    .style("margin-top", "10px")
+    .style("margin-left", "8%")
+
+select_target_days.append("input")
+    .classed("paraminput3",true)
+    .style("width","200px")
+    .style("margin-top", "10px")
+    .style("margin-left", "8%")
+
+select_target_time.append("input")
+    .classed("paraminput3",true)
+    .style("width","200px")
+    .style("margin-top", "10px")
+    .style("margin-left", "8%")
+
+
+submit_target.append("button")
+  .text("submit")
+  .style("width","160px")
+  .style("margin-left","100px")
+  .on("click",function(x){
+
+    var obj = {
+    "message": d3.selectAll("input")[0][0].value,
+    "channel":d3.selectAll("input")[0][1].value,
+    "regex":d3.selectAll("input")[0][2].value
+    }
+    console.log(obj)
+    
+    d3.xhr("/slack")
+      .post(
+        JSON.stringify(obj),
+        function(err,x) {
+          var j = JSON.parse(x.response)
+
+          resp_target.html("Job Submitted: <br><pre>" + x.response + "</pre><br>")
+         
+        }
+      )
+  })
+</script>
+
+
+
+<div class="content">
+</div>
+
+{% end %}

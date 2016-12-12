@@ -9,6 +9,10 @@ from twisted.internet import defer
 from lib.helpers import * 
 
 class OldCacheHandler(tornado.web.RequestHandler):
+    #DEPRECATED
+    #!!!!!
+    #USE new endpoints for all work
+    #This is DEPRECATED but maintained for previous endpoints
 
     def initialize(self, zookeeper=None, *args, **kwargs):
         self.db = kwargs.get("crushercache",None)
