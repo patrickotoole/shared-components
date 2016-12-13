@@ -8,8 +8,8 @@ from lib.helpers import decorators
 QUERYFIRST = "select body from user_defined_functions where udf ='{}' and advertiser='{}'"
 QUERYFUNCTIONS = "select body from user_defined_functions where udf = '{}' and advertiser is NULL"
 
-def userDefinedFunction(code_string):
-    env = {}
+def userDefinedFunction(code_string,cc):
+    env = lib.execution.build.build_execution_env_from_db(cc)
     code_string = code_string.replace("import", "raise Exception('user defined function error')")
 
     code = compile(code_string, '<string>','exec')
@@ -30,7 +30,7 @@ class VisitorTransformHandler(VisitorBase):
         advertiser_overrides = self.crushercache.select_dataframe(QUERYFIRST.format(api_type, advertiser))
         if len(advertiser_overrides)>0:
             user_func = advertiser_overrides['body'][0]
-            user_env = userDefinedFunction(user_func)
+            user_env = userDefinedFunction(user_func,self.crushercache)
             process = [user_env[api_type]]
         else:
             names = [x.__name__ for x in self.DEFAULT_FUNCS]
@@ -38,7 +38,7 @@ class VisitorTransformHandler(VisitorBase):
             if api_name not in names:
                 user_defined = self.crushercache.select_dataframe(QUERYFUNCTIONS.format(api_type))
                 user_func = user_defined['body'][0]
-                user_env = userDefinedFunction(user_func)
+                user_env = userDefinedFunction(user_func,self.crushercache)
                 process = [user_env[api_type]]
             else:
                 process = filter(lambda x: ("process_" + api_type) in x.__name__, self.DEFAULT_FUNCS)

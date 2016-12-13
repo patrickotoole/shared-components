@@ -3,8 +3,8 @@ import environment
 
 DEFAULT = "SELECT * FROM workqueue_scripts where active = 1 and deleted = 0"
 
-def build_execution_env_from_db(db):
-    df = db.select_dataframe(DEFAULT)
+def build_execution_env_from_db(db,query=DEFAULT):
+    df = db.select_dataframe(query)
     assert "name" in df.columns
     assert "script" in df.columns
 
