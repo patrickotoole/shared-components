@@ -61,7 +61,6 @@ class JobsHandler(tornado.web.RequestHandler, RPCQueue):
 
     @tornado.web.asynchronous
     def post(self):
-        import ipdb; ipdb.set_trace()
         data = ujson.loads(self.request.body)
         if data.get('name',"").isdigit():
             name = self.crushercache.select_dataframe("select name from workqueue_scripts where id = %s" % data['name'])
