@@ -12,25 +12,33 @@ URL2 = "/crusher/v1/visitor/{}/cache?url_pattern={}&filter_id={}"
 TS_URL = "/crusher/pattern_search/timeseries_only?search={}"
 TS_URL2 = "/crusher/pattern_search/timeseries_only?search={}&filter_id={}"
 
+
+sections = {"hourly":"Timing", "sessions":"Timing", "before_and_after":"User Paths", "model":"Personas", "domains":"Top Sites", "domains_full":"Top Articles"}
+
+def construct_all(result, fulldict):
+    if result['has_filter']>0:
+        single_seg = {"url_pattern": result['url_pattern'], "action_name":result['action_name'], "action_id":result['action_id']}
+    else:
+        single_seg = {"url_pattern": result['url_pattern'], "action_name":result['action_name']}
+    fulldict['all'].append(single_seg)
+    return fulldict
+
+def construct_featured(result, fulldict):
+    fulldict['featured'] = {"url_pattern": result['url_pattern'], "action_name":result['action_name'], "action_id":result['action_id']}
+    return fulldict
+
 def get_segments(crusher, advertiser):
     url = "/crusher/funnel/action?format=json"
-    results = crusher.get(url)
+    results = crusher.get(url, timeout=1000)
     segments ={}
     segments['featured']=''
     segments['all']=[]
-    try:
-        raw_results = results.json['response']
-        for result in raw_results:
-            if result['featured'] ==1:
-                segments['featured'] = {"url_pattern": result['url_pattern'], "action_name":result['action_name'], "action_id":result['action_id']}
-            if result['has_filter']>0:
-                single_seg = {"url_pattern": result['url_pattern'], "action_name":result['action_name'], "action_id":result['action_id']}
-            else:
-                single_seg = {"url_pattern": result['url_pattern'], "action_name":result['action_name']}
-            segments['all'].append(single_seg)
-        logging.info("returned %s segments for advertiser %s" % (len(segments), advertiser))
-    except:
-        logging.error("error getting cookie for advertise with username: %s" % advertiser)
+    raw_results = results.json['response']
+    for result in raw_results:
+        if result['featured'] ==1:
+            segments = construct_featured(result, segments)
+        segments = construct_all(result,segments)
+    logging.info("returned %s segments for advertiser %s" % (len(segments), advertiser))
     return segments
 
 def send_to_slack(message):
@@ -54,12 +62,6 @@ class CheckRunner():
         self.crusher.user = "a_{}".format(advertiser)
         self.crusher.authenticate()
         self.segments = get_segments(crusher, advertiser)
-        self.total =0
-        self.passed = 0
-        self.passedCache=False
-        self.passedCassandra = False
-        self.failed=[]
-        self.low_volume_segments=[]
         self.udf_list = ['domains', 'domains_full', 'before_and_after', 'model', 'hourly', 'sessions', 'keywords']
     
     def check_segment_udf(self, crusher, segment, udf):
@@ -67,13 +69,9 @@ class CheckRunner():
         passed = False
         if check_response(data):
             logging.info("Pass for advertiser %s and pattern %s and udf %s" % (advertiser, segment, udf))
-            self.passedCache=True
             passed = True
         else:
-            logging.info("Fail")
             logging.info("Failed for advertiser %s and pattern %s and udf %s" % (advertiser, segment, udf))
-            self.passedCache=False
-            passed = False
         return passed
 
     def check_cache_endpoint(self,crusher, pattern, udf):
@@ -82,7 +80,7 @@ class CheckRunner():
         else:
             url = URL.format(udf, pattern['url_pattern'][0])
         try:
-            _resp=crusher.get(url)
+            _resp=crusher.get(url, timeout=300)
             data = _resp.json
         except Exception as e:
             logging.info(str(e))
@@ -96,34 +94,21 @@ class CheckRunner():
         else:
             url = TS_URL.format(pattern['url_pattern'][0])
         allcached = True
+        enough = True
         try:
-            _resp=crusher.get(url)
+            _resp=crusher.get(url,timeout=500)
             data = _resp.json
-            for day in data['results']:
-                if day['uniques']==0 or day['visits']==0 or day['views']==0:
-                    raise Exception("missing backfill or recurring")
-        except Exception as e:
-            logging.info(str(e))
-            allcached=False
-        return allcached
-
-    def is_low_volume(self,crusher, pattern):
-        low_volume = False
-        total_visits=0
-        count_of_zero = 0
-        try:
-            url = TS_URL.format(pattern['url_pattern'][0], pattern['action_id'])
-            _resp=crusher.get(url)
-            data = _resp.json
-            for day in data['results']:
-                total_visits += day['visits']
-                if day['visits']==0:
-                    count_of_zero+=1
-            if total_visits<50 or count_of_zero > 14:
-                low_volume = True
-        except Exception as e:
-            logging.info(str(e))
-        return low_volume
+        except:
+            logging.info("timeout error Cassandra")
+            data = {"results":""}
+        for day in data['results']:
+            if day['uniques']!=0 and day['uniques']<25:
+                enough = False
+            if day['uniques']==0 or day['visits']==0 or day['views']==0:
+                allcached=False
+        if not allcached:
+            logging.info("Failed for advertiser %s and pattern %s and udf %s" % (advertiser, pattern, 'Cassandra cache'))
+        return allcached, enough
 
     def check_cache_dashboard(self,pattern):
         result = self.check_cache_endpoint(self.crusher, pattern,'domains_full_time_minute')
@@ -131,43 +116,39 @@ class CheckRunner():
             dash = 1
         else:
             dash = 0
+            send_to_me_slack("Failed for advertiser %s and pattern %s and udf %s" % (advertiser, segment, "DASHBOARD!!"))
         return dash
 
-    def check_segments(self):
-        for segment in self.segments['all']:
-            self.total+=1
-            cached = self.check_cassandra_cache(crusher, segment)
-            if cached:
-                logging.info("Pass for advertiser %s and pattern %s and udf %s" % (advertiser, segment, 'Cassandra cache'))
-                self.passedCassandra = True
-            else:
-                low_volume = self.is_low_volume(crusher, segment)
-                if low_volume:
-                    logging.info("low volume segment")
-                    logging.info("Low VOLUME for advertiser %s and pattern %s and udf %s" % (advertiser, segment, 'Cassandra cache'))
-                    self.low_volume_segments.append(segment['action_id'])
-                    self.total-=1
-                else:
-                    self.passedCassandra = False
-                    logging.info("Fail")
-                    logging.info("Failed for advertiser %s and pattern %s and udf %s" % (advertiser, segment, 'Cassandra cache'))
-            if cached:
-                for udf in self.udf_list:
-                    passed = self.check_segment_udf(crusher,segment,udf)
-                    if not passed:
-                        break
-            dashboard = self.check_cache_dashboard(segment)
-            #increment
-            if self.passedCache and self.passedCassandra:
-                self.passed+=1
-            else:
-                if segment['action_id'] not in self.low_volume_segments:
-                    self.failed.append(str(segment['url_pattern'][0] + str(segment['action_id'])))
-            #reset
-            self.passedCache=False
-            self.passedCassandra = False
+    def segment_udf_wrapper(self,crusher, segment, udf):
+        passed_udf = self.check_segment_udf(crusher,segment,udf)
+        if not passed_udf:
+            send_to_me_slack("Failed for advertiser %s and pattern %s and udf %s" % (advertiser, segment, udf))
+            send_to_me_slack("The section %s is not cached for segment %s and advertiser %s go to http://workqueue.getrockerbox.com to cache" % (sections[udf], segment['action_name'], advertiser))
+        return passed_udf
 
-        return self.total,self.passed, self.failed, dashboard
+    def check_segments(self):
+        passed = 0
+        total = 0
+        dashboard = 0
+        for segment in self.segments['all']:
+            pattern = segment['url_pattern'][0]
+            total+=1
+            cached, enough = self.check_cassandra_cache(crusher, segment)
+            if pattern in self.segments['featured']:
+                dashboard = self.check_cache_dashboard(segment)
+            if enough:
+                pass_all_udf = True
+                for udf in self.udf_list:
+                    try:
+                        pass_all_udf = pass_all_udf and self.segment_udf_wrapper(crusher, segment, udf)
+                    except Exception as e:
+                        print str(e)
+                if pass_all_udf:
+                    passed+=1
+            else:
+                logging.info("Not Enough data for advertiser %s and pattern %s" % (advertiser, segment))
+                total-=1
+        return total, passed, dashboard
 
 
 if __name__ == "__main__":
@@ -189,13 +170,6 @@ if __name__ == "__main__":
     for adv in df.iterrows():
         advertiser = adv[1]['advertiser']
         Crunner = CheckRunner(advertiser,connectors)
-        total, passed, failed, dashboard = Crunner.check_segments()
-        #run featured cassandra date max
-        logging.info("For advertiser: %s There are %s segments of which %s passed tests" % (advertiser, total, passed))
-        msg1 = "For advertiser: %s There are %s segments of which %s passed tests" % (advertiser, total, passed)
-        logging.info("these failed %s" % failed)
-        msg2 = "these failed %s for %s" % (failed, advertiser)
-        logging.info("dashboard yes (1) or no (0) %s" % dashboard)
+        total, passed, dashboard = Crunner.check_segments()
         report = report.append(pandas.DataFrame([{"advertiser":advertiser, "Passed":passed, "Total":total, "Dashbaord":dashboard}]))
-        send_to_me_slack(msg2)
     send_to_slack("```"+report.to_string()+"```")
