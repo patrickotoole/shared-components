@@ -126,6 +126,15 @@ class CheckRunner():
             send_to_me_slack("The section %s is not cached for segment %s and advertiser %s go to http://workqueue.getrockerbox.com to cache" % (sections[udf], segment['action_name'], advertiser))
         return passed_udf
 
+    def run_if_enough(self, crusher, segment):
+        pass_all_udf = True
+        for udf in self.udf_list:
+            try:
+                pass_all_udf = pass_all_udf and self.segment_udf_wrapper(crusher, segment, udf)
+            except Exception as e:
+                print str(e)
+        return pass_all_udf
+
     def check_segments(self):
         passed = 0
         total = 0
@@ -137,17 +146,13 @@ class CheckRunner():
             if pattern in self.segments['featured']:
                 dashboard = self.check_cache_dashboard(segment)
             if enough:
-                pass_all_udf = True
-                for udf in self.udf_list:
-                    try:
-                        pass_all_udf = pass_all_udf and self.segment_udf_wrapper(crusher, segment, udf)
-                    except Exception as e:
-                        print str(e)
-                if pass_all_udf:
-                    passed+=1
+                pass_all = self.run_if_enough(crusher, segment)
             else:
                 logging.info("Not Enough data for advertiser %s and pattern %s" % (advertiser, segment))
                 total-=1
+                pass_all=False
+            if pass_all:
+                passed+=1
         return total, passed, dashboard
 
 
