@@ -62,7 +62,7 @@ class CheckRunner():
         self.crusher.user = "a_{}".format(advertiser)
         self.crusher.authenticate()
         self.segments = get_segments(crusher, advertiser)
-        self.udf_list = ['domains', 'domains_full', 'before_and_after', 'model', 'hourly', 'sessions', 'keywords']
+        self.udf_list = ['domains', 'domains_full', 'before_and_after', 'model', 'hourly', 'sessions']
     
     def check_segment_udf(self, crusher, segment, udf):
         data = self.check_cache_endpoint(crusher, segment, udf)
@@ -123,7 +123,7 @@ class CheckRunner():
         passed_udf = self.check_segment_udf(crusher,segment,udf)
         if not passed_udf:
             send_to_me_slack("Failed for advertiser %s and pattern %s and udf %s" % (advertiser, segment, udf))
-            send_to_me_slack("The section %s is not cached for segment %s and advertiser %s go to http://workqueue.getrockerbox.com to cache" % (sections[udf], segment['action_name'], advertiser))
+            send_to_slack("The section %s is not cached for segment %s and advertiser %s go to http://workqueue.getrockerbox.com to cache" % (sections[udf], segment['action_name'], advertiser))
         return passed_udf
 
     def run_if_enough(self, crusher, segment):
