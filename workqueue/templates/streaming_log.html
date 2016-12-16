@@ -8,6 +8,12 @@
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
 
+<div>
+Enter Appname or word filter
+<input id="wordfilter"></input>
+<button onclick=WebSocketClient.init()>Start</button>
+</div>
+
 <script>
 new function() {
     var ws = null;
@@ -67,7 +73,9 @@ new function() {
     
     var onMessage = function(event) {
         var data = event.data;
-        if (String(data).indexOf('workqueue') !== -1){
+        var filter_word = $( "#wordfilter" ).val();
+        console.log(filter_word);
+        if (String(data).indexOf(filter_word) !== -1){
             var parsed_data  = JSON.parse(data);
             for(var i=0; i<parsed_data['application_log'].length; i++){
                 var parsed_msg = parsed_data['application_log'][i]['timestamp'] + " "+parsed_data['application_log'][i]['log_message']
@@ -105,8 +113,8 @@ new function() {
     };
 }
 
-$(function() {
-    WebSocketClient.init();
-});
+//$(function() {
+//    WebSocketClient.init();
+//});
 </script>
 
