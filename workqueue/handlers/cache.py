@@ -24,19 +24,13 @@ def parse(x, zk):
         logging.info("Error parsing pickle job")
 
 def parse_for_id(x, zk, dq):
-    try:
-        time = zk.get("/python_queue/" + x)[1][2]
-        values = pickle.loads(zk.get("/python_queue/" + x)[0])
-        job_id = hashlib.md5(zk.get("/python_queue/" + x)[0]).hexdigest()
-        logging.info(values)
-        rvals = values[1]
-        rvals['job_id']=job_id
-        return {"parameters":rvals, "time":time}, dq
-    except NoNodeError:
-        return False, dq+1
-    except:
-        logging.info("Error parsing pickle job")
-        return False
+    time = zk.get("/python_queue/" + x)[1][2]
+    values = pickle.loads(zk.get("/python_queue/" + x)[0])
+    job_id = hashlib.md5(zk.get("/python_queue/" + x)[0]).hexdigest()
+    logging.info(values)
+    rvals = values[1]
+    rvals['job_id']=job_id
+    return {"parameters":rvals, "time":time}, dq
 
 
 class CacheHandler(tornado.web.RequestHandler, RPCQueue):
@@ -78,6 +72,7 @@ class CacheHandler(tornado.web.RequestHandler, RPCQueue):
             path=zk_path, secondary_path="log", volume=volume, job_id=_job_id)
 
             entry_ids = self.zookeeper.get_children(needed_path)
+            logging.info(len(entry_ids))
             running_entries = [entry for entry in entry_ids if self.zookeeper.get(needed_path + "/" + entry)[0]]
             df_entry={}
             df_entry['job_id']= _job_id
@@ -87,7 +82,10 @@ class CacheHandler(tornado.web.RequestHandler, RPCQueue):
             df_entry['finished'] = 0
             dq = 0
             for entry in entry_ids:
-                d1, dq = parse_for_id(entry, self.zookeeper, dq)
+                try:
+                    d1, dq = parse_for_id(entry, self.zookeeper, dq)
+                except:
+                    d1 = []
                 if d1:
                     sub_obj = {}
                     values = d1['parameters']
