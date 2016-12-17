@@ -21,11 +21,11 @@ class Metrics():
         self.tks = timer
         self.mc = mc
         self.crushercache = connectors['crushercache']
-        self.zookeeper = connectors['zookeeper']
         self.hostname = socket.gethostname()
+        self.zk_wrapper = connectors['zk_wrapper']
 
     def getQueueSize(self):
-        path_queue = [c for c in self.zookeeper.get_children("/python_queue")]
+        path_queue = [c for c in self.zk_wrapper.zk.get_children("/python_queue")]
         self.counter=0
         def parse(x):
             self.counter = self.counter+1

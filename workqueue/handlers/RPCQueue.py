@@ -1,6 +1,5 @@
 import datetime
 import ujson
-from lib.zookeeper import CustomQueue
 import pickle
 import logging
 import hashlib
@@ -25,10 +24,9 @@ def custom_script(**kwargs):
 
 class RPCQueue():
 
-    def __init__(self, zookeeper=None, crushercache=None, **kwargs):
+    def __init__(self, crushercache=None, zk_wrapper=None, **kwargs):
         self.crushercache = crushercache
-        self.zookeeper = zookeeper
-        self.CustomQueue = kwargs.get('CustomQueue', False)
+        self.zk_wrapper = zk_wrapper
 
     def add_advertiser_to_wq(self, rpc_object):
         import lib.caching.fill_cassandra as fc
@@ -72,11 +70,11 @@ class RPCQueue():
             ))
 
         volume = "v{}".format(datetime.datetime.now().strftime('%m%y'))
-        entry_id = self.CustomQueue.put(work1,2,debug=set_debug)
+        entry_id = self.zk_wrapper.write(work1,2,set_debug)
         logging.info("added udf base runner to work queue for %s" %(advertiser))
         job_id = hashlib.md5(work1).hexdigest()
 
-        entry_id = self.CustomQueue.put(work2,2,debug=set_debug)
+        entry_id = self.zk_wrapper.writet(work2,2,set_debug)
         logging.info("added fill cassandra to  work queue for %s" %(advertiser))
         job_id = hashlib.md5(work2).hexdigest()
 
@@ -84,7 +82,6 @@ class RPCQueue():
     
     def add_to_work_queue(self, rpc_object):
         import lib.caching as custom_scripts
-
         rpc_data = ujson.loads(rpc_object)
 
         advertiser = rpc_data.get("advertiser")
@@ -142,7 +139,7 @@ class RPCQueue():
             priority = 1
             debug_bool=True
 
-        entry_id = self.CustomQueue.put(work,priority,debug=debug_bool)
+        entry_id = self.zk_wrapper.write(work,priority,debug_bool)
         logging.info("added to Cassandra work queue %s for %s" %(segment,advertiser))
         job_id = hashlib.md5(work).hexdigest()
         return entry_id, job_id

@@ -12,7 +12,6 @@ class WorkQueueHandler(tornado.web.RequestHandler):
 
     def initialize(self, zookeeper=None, *args, **kwargs):
         self.db = kwargs.get("crushercache",None)
-        self.zookeeper = zookeeper
 
  
     @tornado.web.asynchronous

@@ -17,10 +17,9 @@ DELETE = "Delete from workqueue_scripts where name = %(name)s"
 
 class JobsHandler(tornado.web.RequestHandler, RPCQueue):
 
-    def initialize(self, zookeeper=None, crushercache=None, CustomQueue=None, *args, **kwargs):
-        self.zookeeper = zookeeper
+    def initialize(self, crushercache=None, zk_wrapper=None, *args, **kwargs):
         self.crushercache = crushercache
-        self.CustomQueue = CustomQueue
+        self.zk_wrapper = zk_wrapper
 
     def add_to_db(self,data):
         self.crushercache.execute(INSERT, data)
@@ -74,8 +73,7 @@ class JobsHandler(tornado.web.RequestHandler, RPCQueue):
 
 class JobsNewHandler(tornado.web.RequestHandler):
 
-    def initialize(self, zookeeper=None, crushercache=None, *args, **kwargs):
-        self.zookeeper = zookeeper
+    def initialize(self, crushercache=None, *args, **kwargs):
         self.crushercache = crushercache
 
     def get_content_schedule(self,data):

@@ -10,7 +10,6 @@ from tornado.options import define, options, parse_command_line
 
 from lib.custom_logging.check_logger import KafkaHandler
 from lib.kafka_stream import kafka_stream
-from lib.zookeeper import CustomQueue
 import sys
 
 from timekeeper import timeKeeper
@@ -20,6 +19,7 @@ from shutdown import sig_wrap
 from work_queue_metrics import Metrics
 from work_queue_metrics import TimeMetric
 from metricCounter import MetricCounter
+from zookeeper_interface import *
 
 from handlers.handler import *
 from handlers.jobs import *
@@ -128,14 +128,14 @@ if __name__ == '__main__':
     if options.debug:
         zookeeper_path = "/python_queue_debug"
 
-    connectors['zk'] = connectors['zookeeper']
     if not connectors['cassandra']:
         logging.info("connectors not received properly")
         sys.exit(1)
 
     priority_cutoff = int(options.priority)
-    volume = datetime.datetime.now().strftime('%m%y')
-    connectors['CustomQueue'] = CustomQueue.CustomQueue(connectors['zookeeper'],zookeeper_path, "log", "v" + volume, priority_cutoff)
+    connectors['zk_wrapper'] = ZKApi(connectors['zookeeper'], zookeeper_path, priority_cutoff)
+    #volume = datetime.datetime.now().strftime('%m%y')
+    #connectors['CustomQueue'] = CustomQueue.CustomQueue(connectors['zookeeper'],zookeeper_path, "log", "v" + volume, priority_cutoff)
 
     app = tornado.web.Application(
         build_routes(connectors),
@@ -149,7 +149,7 @@ if __name__ == '__main__':
         tk = timeKeeper()
         tks.append(tk)    
     for _ in range(0,num_worker):
-        reactor.callInThread(work_queue.WorkQueue(options.exit_on_finish, connectors['zookeeper'],reactor, tks[_], mc, zookeeper_path, connectors))
+        reactor.callInThread(work_queue.WorkQueue(options.exit_on_finish, connectors['zk_wrapper'],reactor, tks[_], mc, connectors))
         reactor.callInThread(TimeMetric(reactor, tks[_]))
 
     reactor.callInThread(Metrics(reactor,tks, mc,connectors))

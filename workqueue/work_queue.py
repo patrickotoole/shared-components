@@ -1,5 +1,4 @@
 import Queue
-from lib.zookeeper import CustomQueue
 import traceback
 import logging
 from kazoo.client import KazooClient
@@ -47,9 +46,8 @@ def validate_crusher(crusher, advertiser):
 
 class WorkQueue(object):
 
-    def __init__(self,exit_on_finish, client,reactor,timer, mcounter, zk_path, connectors):
-        self.client = client
-        self.queue = connectors['CustomQueue']
+    def __init__(self,exit_on_finish, zkwrapper,reactor,timer, mcounter, connectors):
+        self.zk_wrapper = zkwrapper
         self.rec = reactor
         self.connectors = connectors
         self.timer = timer
@@ -64,7 +62,7 @@ class WorkQueue(object):
         import socket
         while True:
             logging.debug("Asking for next queue item")
-            entry_id, data = self.queue.get_w_name()
+            entry_id, data = self.zk_wrapper.get()
             self.rec.getThreadPool().threads[0].setName("WQ")
             if data is not None:
                 job_id = hashlib.md5(data).hexdigest()
@@ -76,8 +74,9 @@ class WorkQueue(object):
                 try:
                     fn, kwargs = pickle.loads(data)
                     
-                    self.queue.client.set(self.queue.secondary_path_base + "/%s/%s" % (job_id.split(entry_id)[1][1:], entry_id), '1' ) # running
-                    
+                    #self.queue.client.set(self.queue.secondary_path_base + "/%s/%s" % (job_id.split(entry_id)[1][1:], entry_id), '1' ) # running
+                    self.zk_wrapper.sets(job_id, entry_id)                   
+ 
                     kwargs['job_id'] = job_id
                     if self.connectors['crusher_wrapper'].user != "a_{}".format(kwargs['advertiser']):
                         logging.info("creating crusher object")
@@ -118,8 +117,7 @@ class WorkQueue(object):
                     import time
                     time.sleep(5)
                 finally:
-                    self.queue.client.ensure_path(self.queue.secondary_path_base + "/%s/%s" % (job_id.split(entry_id)[1][1:],  entry_id))
-                    self.queue.client.set(self.queue.secondary_path_base + "/%s/%s" % (job_id.split(entry_id)[1][1:], entry_id), '' ) # running 
+                    self.zk_wrapper.finish(job_id, entry_id)
             else:
                 import time
                 time.sleep(1)

@@ -17,8 +17,7 @@ DELETE = "delete from workqueue_scripts_schedule where workqueue_script_id = %(n
 
 class ScheduleHandler(tornado.web.RequestHandler):
 
-    def initialize(self, zookeeper=None, crushercache=None, *args, **kwargs):
-        self.zookeeper = zookeeper
+    def initialize(self, crushercache=None, *args, **kwargs):
         self.crushercache = crushercache
 
     def add_to_db(self, request_body):
@@ -58,8 +57,7 @@ class ScheduleHandler(tornado.web.RequestHandler):
 
 class ScheduleNewHandler(tornado.web.RequestHandler):
 
-    def initialize(self, zookeeper=None, crushercache=None, *args, **kwargs):
-        self.zookeeper = zookeeper
+    def initialize(self, crushercache=None, *args, **kwargs):
         self.crushercache = crushercache
 
     def get_content_schedule(self,data):

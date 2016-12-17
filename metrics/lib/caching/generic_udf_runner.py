@@ -170,7 +170,6 @@ def runner(**kwargs):
     UR.accounting_entry_start(UR.advertiser, pattern, func_name, uuid_num, UR.action_id)
 
     db = connectors['crushercache']
-    zk = connectors['zk']
    
     parameters = kwargs.get("parameters",False)
     if parameters:

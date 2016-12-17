@@ -15,8 +15,7 @@ INSERT = "insert into slack_log_match (regex, channel, message) values (%(regex)
 
 class SlackHandler(tornado.web.RequestHandler):
 
-    def initialize(self, zookeeper=None, crushercache=None, *args, **kwargs):
-        self.zookeeper = zookeeper
+    def initialize(self, crushercache=None, *args, **kwargs):
         self.crushercache = crushercache
 
     def add_to_db(self, request_body):
@@ -50,8 +49,7 @@ class SlackHandler(tornado.web.RequestHandler):
 
 class SlackNewHandler(tornado.web.RequestHandler):
 
-    def initialize(self, zookeeper=None, crushercache=None, *args, **kwargs):
-        self.zookeeper = zookeeper
+    def initialize(self, crushercache=None, *args, **kwargs):
         self.crushercache = crushercache
 
     def get_content_schedule(self,data):

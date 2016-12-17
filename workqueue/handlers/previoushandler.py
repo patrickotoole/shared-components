@@ -14,9 +14,9 @@ class OldCacheHandler(tornado.web.RequestHandler):
     #USE new endpoints for all work
     #This is DEPRECATED but maintained for previous endpoints
 
-    def initialize(self, zookeeper=None, *args, **kwargs):
+    def initialize(self, *args, **kwargs):
         self.db = kwargs.get("crushercache",None)
-        self.zookeeper = zookeeper
+        self.zk_wrapper = kwargs.get("zk_wrapper", None)
 
     @decorators.formattable
     def get_content(self,data):
@@ -422,18 +422,18 @@ submit_target.append("div").classed("break",true).html("<br/>")
         self.get_content_test((df.to_dict("records")))
 
     def clear_queue(self):
-        self.zookeeper.delete("/python_queue",recursive=True)
-        self.zookeeper.ensure_path("/python_queue")
+        self.zk_wrapper.zk.delete("/python_queue",recursive=True)
+        self.zk_wrapper.zk.ensure_path("/python_queue")
         self.redirect("/work_queue")
 
     def clear_active(self):
-        self.zookeeper.delete("/active_pattern_cache",recursive=True)
-        self.zookeeper.ensure_path("/active_pattern_cache")
+        self.zk_wrapper.zk.delete("/active_pattern_cache",recursive=True)
+        self.zk_wrapper.zk.ensure_path("/active_pattern_cache")
         self.redirect("/work_queue/backfill")
 
     def clear_complete(self):
-        self.zookeeper.delete("/complete_pattern_cache",recursive=True)
-        self.zookeeper.ensure_path("/complete_pattern_cache")
+        self.zk_wrapper.zk.delete("/complete_pattern_cache",recursive=True)
+        self.zk_wrapper.zk.ensure_path("/complete_pattern_cache")
         self.redirect("/work_queue/backfill")
 
 
@@ -450,20 +450,20 @@ submit_target.append("div").classed("break",true).html("<br/>")
          
     def get_complete(self,q):
         try:
-            return len(self.zookeeper.get_children("/complete_pattern_cache/" + q))
+            return len(self.zk_wrapper.zk.get_children("/complete_pattern_cache/" + q))
         except:
             return 0
 
     def get_active(self,q):
         try:
-            return len(self.zookeeper.get_children("/active_pattern_cache/" + q))
+            return len(self.zk_wrapper.zk.get_children("/active_pattern_cache/" + q))
         except:
             return 0
 
     def get_all_complete(self):
 
-        in_queue = [c for c in self.zookeeper.get_children("/complete_pattern_cache") ]
-        complete_queue = [len(self.zookeeper.get_children("/complete_pattern_cache/" + q)) for q in in_queue]
+        in_queue = [c for c in self.zk_wrapper.zk.get_children("/complete_pattern_cache") ]
+        complete_queue = [len(self.zk_wrapper.zk.get_children("/complete_pattern_cache/" + q)) for q in in_queue]
         active_queue = [self.get_active(q) for q in in_queue]
 
         df = pandas.DataFrame({"queue":in_queue,"active":active_queue,"complete":complete_queue})
@@ -473,8 +473,8 @@ submit_target.append("div").classed("break",true).html("<br/>")
 
     def get_current(self,active=False):
 
-        in_queue = [c for c in self.zookeeper.get_children("/active_pattern_cache") ]
-        len_queue = [len(self.zookeeper.get_children("/active_pattern_cache/" + q)) for q in in_queue]
+        in_queue = [c for c in self.zk_wrapper.zk.get_children("/active_pattern_cache") ]
+        len_queue = [len(self.zk_wrapper.zk.get_children("/active_pattern_cache/" + q)) for q in in_queue]
         complete_queue = [self.get_complete(q) for q in in_queue]
 
         df = pandas.DataFrame({"queue":in_queue,"active":len_queue,"complete":complete_queue})
@@ -487,8 +487,8 @@ submit_target.append("div").classed("break",true).html("<br/>")
     def clear_current(self):
         import pickle
 
-        in_queue = [c for c in self.zookeeper.get_children("/active_pattern_cache") ]
-        len_queue = [len(self.zookeeper.get_children("/active_pattern_cache/" + q)) for q in in_queue]
+        in_queue = [c for c in self.zk_wrapper.zk.get_children("/active_pattern_cache") ]
+        len_queue = [len(self.zk_wrapper.zk.get_children("/active_pattern_cache/" + q)) for q in in_queue]
         complete_queue = [self.get_complete(q) for q in in_queue]
 
         df = pandas.DataFrame({"queue":in_queue,"active":len_queue,"complete":complete_queue})

@@ -11,7 +11,6 @@ import datetime
 from RPCQueue import RPCQueue
 from kazoo.exceptions import NoNodeError
 
-from lib.zookeeper import CustomQueue
 from twisted.internet import defer
 from lib.helpers import * 
 
@@ -48,10 +47,9 @@ class OldJobsHandler(tornado.web.RequestHandler, RPCQueue):
     #THIS CODE is still here to support old endpoints all current ones should go through the new endpoints
     #DEPRECATED!!!!!!!
 
-    def initialize(self, zookeeper=None, crushercache=None, *args, **kwargs):
-        self.zookeeper = zookeeper
+    def initialize(self, crushercache=None, *args, **kwargs):
         self.crushercache = crushercache
-        self.CustomQueue = kwargs.get('CustomQueue',False)
+        self.zk_wrapper = kwargs.get('zk_wrapper',False)
         self.job = 0
 
     def get_id(self, _job_id, entry_id=False):
@@ -64,8 +62,8 @@ class OldJobsHandler(tornado.web.RequestHandler, RPCQueue):
             needed_path = secondary_path = '{path}-{secondary_path}/{volume}/{job_id}'.format(
             path=zk_path, secondary_path="log", volume=volume, job_id=_job_id)
             
-            entry_ids = self.zookeeper.get_children(needed_path)
-            running_entries = [entry for entry in entry_ids if self.zookeeper.get(needed_path + "/" + entry)[0]]
+            entry_ids = self.zk_wrapper.zk.get_children(needed_path)
+            running_entries = [entry for entry in entry_ids if self.zk_wrapper.zk.get(needed_path + "/" + entry)[0]]
 
             df_entry={}
             df_entry['job_id']= _job_id
@@ -75,7 +73,7 @@ class OldJobsHandler(tornado.web.RequestHandler, RPCQueue):
             df_entry['finished'] = 0
             dq = 0
             for entry in entry_ids:
-                d1, dq = parse_for_id(entry, self.zookeeper, dq)
+                d1, dq = parse_for_id(entry, self.zk_wrapper.zk, dq)
                 if d1:
                     sub_obj = {}
                     values = d1['parameters']
@@ -95,7 +93,7 @@ class OldJobsHandler(tornado.web.RequestHandler, RPCQueue):
             self.finish()
 
     def get_num(self):
-        path_queue = [c for c in self.zookeeper.get_children("/python_queue")]
+        path_queue = [c for c in self.zk_wrapper.zk.get_children("/python_queue")]
         self.counter=0
         def parse(x):
             self.counter = self.counter+1
@@ -108,13 +106,13 @@ class OldJobsHandler(tornado.web.RequestHandler, RPCQueue):
 
     def set_priority(self, job_id, priority_value, _version):
         try:
-            needed_path = str(self.CustomQueue.get_secondary_path()) + "/{}".format(job_id)
-            entry_ids = self.zookeeper.get_children(needed_path)
-            values = self.zookeeper.get("/python_queue/" + entry_ids[0])[0]
+            needed_path = str(self.zk_wrapper.CustomQueue.get_secondary_path()) + "/{}".format(job_id)
+            entry_ids = self.zk_wrapper.zk.get_children(needed_path)
+            values = self.zk_wrapper.zk.get("/python_queue/" + entry_ids[0])[0]
             
             priority_value = int(priority_value)
-            entry_id = self.CustomQueue.put(values,priority_value)
-            cq.delete(entry_ids)
+            entry_id = self.zk_wrapper.CustomQueue.put(values,priority_value)
+            self.zk_wrapper.CustomQueue.delete(entry_ids)
             self.write(ujson.dumps({"result":"Success", "entry_id":entry_id}))
             self.finish()
         except Exception as e:
@@ -123,9 +121,9 @@ class OldJobsHandler(tornado.web.RequestHandler, RPCQueue):
             self.finish()
 
     def get_data(self):
-        path_queue = [c for c in self.zookeeper.get_children("/python_queue") ]
+        path_queue = [c for c in self.zk_wrapper.zk.get_children("/python_queue") ]
 
-        in_queue = [parse(path, self.zookeeper) for path in path_queue]
+        in_queue = [parse(path, self.zk_wrapper.zk) for path in path_queue]
         in_queue = [i for i in in_queue if i]
 
         if len(in_queue) > 0:
