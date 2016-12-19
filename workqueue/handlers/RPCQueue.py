@@ -74,7 +74,7 @@ class RPCQueue():
         logging.info("added udf base runner to work queue for %s" %(advertiser))
         job_id = hashlib.md5(work1).hexdigest()
 
-        entry_id = self.zk_wrapper.writet(work2,2,set_debug)
+        entry_id = self.zk_wrapper.write(work2,2,set_debug)
         logging.info("added fill cassandra to  work queue for %s" %(advertiser))
         job_id = hashlib.md5(work2).hexdigest()
 

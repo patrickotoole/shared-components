@@ -62,7 +62,6 @@ class CacheHandler(tornado.web.RequestHandler, RPCQueue):
 
     def get_id(self, _job_id, entry_id=False):
         try:
-            import ipdb; ipdb.set_trace()
             date = datetime.datetime.now().strftime("%m%y")
             volume = "v{}".format(date)
             zk_path = "python_queue"
@@ -147,7 +146,6 @@ class CacheHandler(tornado.web.RequestHandler, RPCQueue):
                 entry, job_id = self.add_advertiser_to_wq(self.request.body)
                 self.get_id(job_id, entry)
             else:
-                import ipdb; ipdb.set_trace()
                 entry, job_id = self.add_to_work_queue(self.request.body)
                 self.get_id(job_id, entry)
         except Exception, e:
