@@ -1,6 +1,6 @@
-from link.wrappers import APIRequestWrapper
+from link.wrappers import JsonClient
 
-class PaginatedConsoleAPIRequestWrapper(APIRequestWrapper):
+class PaginatedConsoleAPIRequestWrapper(JsonClient):
     def __init__(self, wrap_name=None, base_url=None, user=None, password=None):
         self._token = None
         super(PaginatedConsoleAPIRequestWrapper, self).__init__(wrap_name = wrap_name, 
