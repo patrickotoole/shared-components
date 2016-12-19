@@ -123,7 +123,8 @@ def get_pixel_data(db, advertiser_id):
     return pixel_data
 
     
-def check_is_valid(db, df, advertiser_id):
+def check_is_valid(df, pixel_data):
+
     assert len(pixel_data) > 0
     assert 'pixel_id' in pixel_data.columns
     assert 'pc_window_hours' in pixel_data.columns
@@ -155,7 +156,7 @@ def run(api, db, table, advertiser_id, start_date, end_date):
         return df
 
     grouped_df = transform(df, report_params)
-
-    grouped_df = check_is_valid(db, grouped_df, advertiser_id)
+    pixel_data = get_pixel_data(db, advertiser_id)
+    grouped_df = check_is_valid(grouped_df, pixel_data)
     insert_report(db, table, grouped_df.reset_index(), report_params)
 
