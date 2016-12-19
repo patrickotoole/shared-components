@@ -81,11 +81,12 @@ class Tabular {
   }
 
   renderHeaders(target: ID3Selection) : ID3Selection {
-    var head_wrap = d3_with_class(target,this.HEADER_WRAP_CLASS)
-      .datum(this._headers)
+    var head_wrap = d3_updateable(target,"." + this.HEADER_WRAP_CLASS,"div",this._headers,function(x) { return 1 })
+      .classed(this.HEADER_WRAP_CLASS,true)
 
     var item = d3_splat(head_wrap,".item","div")
       .classed("item",true)
+      .order()
       .each(this._render_header)
 
     return head_wrap
@@ -94,11 +95,12 @@ class Tabular {
   renderRows(target: ID3Selection) : ID3Selection {
     var body_wrap = d3_with_class(target,this.BODY_WRAP_CLASS)
 
-    var rows = d3_splat(body_wrap,".row","div",row => [row.value], row => row.key)
+    var rows = d3_splat(body_wrap,".row","div",row => row, row => row.key)
       .classed("row",true)
 
-    var item = d3_splat(rows,".item","div", values => values.sort((p,q) => this._headers.indexOf(p.key) - this._headers.indexOf(q.key) ), x => x.key )
+    var item = d3_splat(rows,".item","div", values => values.value.sort((p,q) => this._headers.indexOf(p.key) - this._headers.indexOf(q.key) ), x => x.key )
       .classed("item", true)
+      .order()
 
     item.each(this._render_item)
     
@@ -110,7 +112,7 @@ class Tabular {
     if (!d) return this._data
 
     this._headers = this._headers || computeHeaders(d)
-    this._target.data(d)
+    this._target.datum(d)
     this._data = d
     return this
   }

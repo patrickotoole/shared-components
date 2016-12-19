@@ -11,12 +11,16 @@ test('test creation', function (t) {
     selection = d3.selectAll([canvas]);
 
   var f = tabular.tabular(selection)
-    .data([{"key":1,"value":[{"key":"yo"},{"key":"hey"}] }])
+    .data([
+        {"key":1,"value":[{"key":"yo"},{"key":"hey"}] }
+      , {"key":2,"value":[{"key":"yo"},{"key":"hey"}] }
+
+    ])
     .draw()
 
   t.equal(f.headers().length,2)
-  t.equal(f._target.selectAll(".row").size(),1)
-  t.equal(f._target.selectAll(".item").size(),4)
+  t.equal(f._target.selectAll(".row").size(),2)
+  t.equal(f._target.selectAll(".item").size(),6)
 
   console.log(selection.node().outerHTML)
 

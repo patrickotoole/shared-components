@@ -48,20 +48,22 @@
             return d3_with_class(target, this.WRAPPER_CLASS);
         };
         Tabular.prototype.renderHeaders = function (target) {
-            var head_wrap = d3_with_class(target, this.HEADER_WRAP_CLASS)
-                .datum(this._headers);
+            var head_wrap = d3_updateable(target, "." + this.HEADER_WRAP_CLASS, "div", this._headers, function (x) { return 1; })
+                .classed(this.HEADER_WRAP_CLASS, true);
             var item = d3_splat(head_wrap, ".item", "div")
                 .classed("item", true)
+                .order()
                 .each(this._render_header);
             return head_wrap;
         };
         Tabular.prototype.renderRows = function (target) {
             var _this = this;
             var body_wrap = d3_with_class(target, this.BODY_WRAP_CLASS);
-            var rows = d3_splat(body_wrap, ".row", "div", function (row) { return [row.value]; }, function (row) { return row.key; })
+            var rows = d3_splat(body_wrap, ".row", "div", function (row) { return row; }, function (row) { return row.key; })
                 .classed("row", true);
-            var item = d3_splat(rows, ".item", "div", function (values) { return values.sort(function (p, q) { return _this._headers.indexOf(p.key) - _this._headers.indexOf(q.key); }); }, function (x) { return x.key; })
-                .classed("item", true);
+            var item = d3_splat(rows, ".item", "div", function (values) { return values.value.sort(function (p, q) { return _this._headers.indexOf(p.key) - _this._headers.indexOf(q.key); }); }, function (x) { return x.key; })
+                .classed("item", true)
+                .order();
             item.each(this._render_item);
             return body_wrap;
         };
@@ -69,7 +71,7 @@
             if (!d)
                 return this._data;
             this._headers = this._headers || computeHeaders(d);
-            this._target.data(d);
+            this._target.datum(d);
             this._data = d;
             return this;
         };

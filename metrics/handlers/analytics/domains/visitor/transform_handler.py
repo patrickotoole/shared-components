@@ -47,7 +47,6 @@ class VisitorTransformHandler(VisitorBase):
             user_env = userDefinedFunction(user_func,env)
             return [user_env[api_type]]
 
-        is_default = filter(lambda x: ("process_" + api_type) in x.__name__, self.DEFAULT_FUNCS) 
         return is_default
 
 

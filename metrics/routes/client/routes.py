@@ -209,7 +209,9 @@ class AdvertiserRoutes(Routes):
             (r'/pixel/status/lookup', pixel_status.LookupHandler, self.connectors),
 
             (r'/funnel', funnel.FunnelHandler, self.connectors),
+            (r'/comparison?', analytics.ComparisonHandler, self.connectors),
             (r'/?', funnel.FunnelHandler, self.connectors),
+
             (r'/.*?', funnel.FunnelHandler, self.connectors),
             (r'/funnel/(.*?)', funnel.FunnelHandler, self.connectors),
 

@@ -34,19 +34,28 @@ RB.menu = (function(menu) {
     }
   }
   
-  menu.render = function(target) {
+  menu.render = function(target,aside_only) {
+
+    var skip_not_aside = (aside_only != true)
+    if (aside_only) {
+      target.classed("hide-top hide-select",true)
+      RB.menu.navbar.methods.pushState = function(sb,x) {
+        document.location.href = x.push_state
+      }
+    }
+    
 
     var aside = d3_splat(target,"aside","aside",[menu.routes.roots])
 
     // Rendering the topbar here is a bit of a hack... should be better organized in the future
-    menu.topbar.render(target)
-    menu.bound_topbar = menu.topbar.render.bind(this,target)
+    if (skip_not_aside) menu.topbar.render(target)
+    if (skip_not_aside) menu.bound_topbar = menu.topbar.render.bind(this,target)
 
     var navbar_selectors = menu.navbar.render(aside)
-    var bound_selectbar = menu.selectbar.render(aside,{"name":"","values":[]})
+    if (skip_not_aside) var bound_selectbar = menu.selectbar.render(aside,{"name":"","values":[]})
 
 
-    navbar_selectors(bound_selectbar) 
+    if (skip_not_aside) navbar_selectors(bound_selectbar) 
 
   }
 

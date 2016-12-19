@@ -33,7 +33,7 @@ State.prototype = {
        }.bind(this)
 
        if (typeof cb === "function") cb(push_cb)
-       else push_cb(false,v)
+       else push_cb(false,cb)
 
        return this
     }

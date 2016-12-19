@@ -134,7 +134,7 @@ RB.menu.navbar = (function(navbar) {
 
 
 
-      $.getJSON("/account/permissions", function(perm) {
+      d3.json("/account/permissions",function(err,perm) {
 
 
 	var permissions = perm["results"]['advertisers']
