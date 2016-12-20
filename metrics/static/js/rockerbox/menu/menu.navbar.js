@@ -168,6 +168,9 @@ RB.menu.navbar = (function(navbar) {
 
         d3_updateable(button,".icon","span")
           .classed("icon glyphicon glyphicon-user",true)
+          .on("click",function(){
+            d3.select(this.parentNode.parentNode).classed("open",!d3.select(this.parentNode.parentNode).classed("open"))
+          })
 
         d3_updateable(button,".advertiser","span")
           .classed("advertiser",true)
@@ -186,13 +189,14 @@ RB.menu.navbar = (function(navbar) {
 	  .append("a")
 	  .text(function(x){return x["advertiser_name"]})
 	  .attr("value", function(x){return x["external_advertiser_id"]})
-	  .on("click", function() {
-	    var id = $(this).attr("value")
+	  .on("click", function(d) {
+	    var id = d;
 	    var payload = "{\"advertiser_id\":" + id + "}"
-	    $.post("/account/permissions", payload, function() {
-	      location.reload();
-	      console.log(id);
-	    })
+	    d3.xhr("/account/permissions")
+              .post(payload, function() {
+	        location.reload();
+	        console.log(id);
+	      })
 	  })
 
 	d3_updateable(ul, ".divider", "li")
@@ -218,6 +222,7 @@ RB.menu.navbar = (function(navbar) {
 
     var wrapper = navbar.components.wrapper(target)
     //var selectbar = menu.selectbar.render(target)
+
     navbar.components.advertiser_switch(wrapper)
     //navbar.components.logout(wrapper)
     navbar.components.logo(wrapper,menu.selectbar.render.bind(false,target))
