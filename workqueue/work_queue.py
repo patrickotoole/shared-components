@@ -14,6 +14,7 @@ SQL_LOG2 = "insert into work_queue_error_log (hostname, error_string, job_id, st
 CACHEQUERY ="select count(*) from generic_function_cache where advertiser='%(advertiser)s' and url_pattern='%(url_pattern)s' and action_id='%(action_id)s' and udf='%(udf)s'"
 CLEARQUERY ="delete from generic_function_cache where advertiser=%(advertiser)s and url_pattern=%(url_pattern)s and action_id=%(action_id)s and udf=%(udf)s and date=%(date)s"
 DATEQUERY = "select date from generic_function_cache where advertiser='%(advertiser)s' and url_pattern='%(url_pattern)s' and action_id='%(action_id)s' and udf='%(udf)s' order by date limit 1"
+START_QUERY = "insert into work_queue_log (hostname, event) values (%s, %s)"
 
 def clear_old_cache(**kwargs):
     query_args = {}
@@ -52,73 +53,85 @@ class WorkQueue(object):
         self.connectors = connectors
         self.timer = timer
         self.mcounter = mcounter
-        START_QUERY = "insert into work_queue_log (hostname, event) values (%s, %s)"
-        self.sock_id = socket.gethostname()
-        self.connectors['crushercache'].execute(START_QUERY, (self.sock_id, 'Box WQ up'))
-        self.logged_in=False
+        self.current_host = socket.gethostname()
+        self.connectors['crushercache'].execute(START_QUERY, (self.current_host, 'Box WQ up'))
+
+    def remove_old_item(self, **kwargs):
+        try:
+            clear_old_cache(**kwargs)
+        except Exception as e:
+            logging.info("could not clear previous cached data")
+            logging.info(str(e))
+
+    def handle_error(self, e, job_id):
+        self.connectors['crusher_wrapper'].user = ""
+        logging.info("data not inserted")
+        box = socket.gethostname()
+        self.mcounter.bumpError()
+        trace_error = str(traceback.format_exc())
+        self.connectors['crushercache'].execute(SQL_LOG, (self.current_host, job_id, "Fail"))
+        self.connectors['crushercache'].execute(SQL_LOG2,(box, str(e), job_id, trace_error))
+        logging.info("ERROR: queue %s " % e)
+        logging.info(trace_error)
+        import time
+        time.sleep(1)
+
+    def set_api_wrapper(self, kwargs):
+        if self.connectors['crusher_wrapper'].user != "a_{}".format(kwargs['advertiser']):
+            logging.info("crusher object not set to current user, setting now current user is %s % kwargs['advertiser']")
+            self.connectors['crusher_wrapper'] = get_crusher_obj(kwargs['advertiser'],"http://beta.crusher.getrockerbox.com", self.connectors['crusher_wrapper'])
+            valid = validate_crusher(self.connectors['crusher_wrapper'], kwargs['advertiser']) if self.connectors['crusher_wrapper']._token else False
+        else:
+            valid = True
+        return valid
+             
+
+    def run_job(self, data, job_id, entry_id):
+        fn, kwargs = pickle.loads(data)
+        self.zk_wrapper.sets(job_id, entry_id)
+        kwargs['job_id'] = job_id
+        valid = self.set_api_wrapper(kwargs)
+        logging.info("crusher object is valid: %s"  % valid)
+        logging.info("starting queue %s %s" % (str(fn),str(kwargs)))
+        kwargs['connectors']=self.connectors
+        fn(**kwargs)
+        self.mcounter.bumpSuccess()
+        self.connectors['crushercache'].execute(SQL_LOG, (self.current_host, job_id, "Ran"))
+        self.remove_old_item(**kwargs)
+        self.timer.resetTime()
+        logging.info("finished item in queue %s %s" % (str(fn),str(kwargs)))
+
+    def process_job(self, entry_id, data):
+        import hashlib
+        job_id = hashlib.md5(data).hexdigest()
+        job_id = entry_id + "_" + job_id
+        self.mcounter.bumpDequeue()
+        self.connectors['crushercache'].execute(SQL_LOG, (self.current_host, job_id, "DeQueue"))
+        logging.debug("Received next queue item")
+        try:
+            self.run_job(data, job_id, entry_id)
+        except Exception as e:
+            self.handle_error(e, job_id)
+        finally:
+            logging.info("finished item in queue")
+            self.zk_wrapper.finish(job_id, entry_id)
+
+    def run_queue(self):
+        logging.info("Asking for next queue item")
+        logging.debug("Asking for next queue item")
+        entry_id, data = self.zk_wrapper.get()
+        self.rec.getThreadPool().threads[0].setName("WQ")
+        if data is not None:
+            logging.info("Data not none")
+            self.process_job(entry_id, data)
+            logging.info("finished process job")
+        else:
+            import time
+            time.sleep(5)
+            self.zk_wrapper.reset_queue()
+            logging.debug("No data in queue")
 
     def __call__(self):
-        import hashlib
-        import socket
         while True:
-            logging.debug("Asking for next queue item")
-            entry_id, data = self.zk_wrapper.get()
-            self.rec.getThreadPool().threads[0].setName("WQ")
-            if data is not None:
-                job_id = hashlib.md5(data).hexdigest()
-                job_id = entry_id + "_" + job_id
-                current_host = socket.gethostname()
-                self.mcounter.bumpDequeue()
-                self.connectors['crushercache'].execute(SQL_LOG, (current_host, job_id, "DeQueue"))
-                logging.debug("Received next queue item")
-                try:
-                    fn, kwargs = pickle.loads(data)
-                    
-                    #self.queue.client.set(self.queue.secondary_path_base + "/%s/%s" % (job_id.split(entry_id)[1][1:], entry_id), '1' ) # running
-                    self.zk_wrapper.sets(job_id, entry_id)                   
- 
-                    kwargs['job_id'] = job_id
-                    if self.connectors['crusher_wrapper'].user != "a_{}".format(kwargs['advertiser']):
-                        logging.info("creating crusher object")
-                        logging.info("crusher user is %s and current user is %s" % (self.connectors['crusher_wrapper'].user, "a_{}".format(kwargs['advertiser'])))
-                        self.connectors['crusher_wrapper'] = get_crusher_obj(kwargs['advertiser'],"http://beta.crusher.getrockerbox.com", self.connectors['crusher_wrapper'])
-                        self.logged_in = validate_crusher(self.connectors['crusher_wrapper'], kwargs['advertiser']) if self.connectors['crusher_wrapper']._token else False
-                    
-                    logging.info("starting queue %s %s" % (str(fn),str(kwargs)))
-                    logging.info(self.rec.getThreadPool().threads[0])
-                    logging.info(self.rec.getThreadPool().threads[0].is_alive())
-                    logging.info(self.rec.getThreadPool().threads[0].ident)
-                    kwargs['connectors']=self.connectors
-                    if self.logged_in:
-                        fn(**kwargs)
-                    else:
-                        raise Exception("Crusher wrapper is not logged in. Issue with connector, validation, or authentication of crusher wrapper") 
-                    self.mcounter.bumpSuccess()
-                    self.connectors['crushercache'].execute(SQL_LOG, (current_host, job_id, "Ran"))
-                    
-                    try:
-                        clear_old_cache(**kwargs)
-                    except Exception as e:
-                        logging.info("could not clear previous cached data")
-                        logging.info(str(e))
-                    
-                    self.timer.resetTime()
-                    logging.info("finished item in queue %s %s" % (str(fn),str(kwargs)))
-                except Exception as e:
-                    self.connectors['crusher_wrapper'].user = ""
-                    logging.info("data not inserted")
-                    box = socket.gethostname()
-                    self.mcounter.bumpError()
-                    trace_error = str(traceback.format_exc())
-                    self.connectors['crushercache'].execute(SQL_LOG, (current_host, job_id, "Fail"))
-                    self.connectors['crushercache'].execute(SQL_LOG2,(box, str(e), job_id, trace_error))
-                    logging.info("ERROR: queue %s " % e)
-                    logging.info(trace_error)
-                    import time
-                    time.sleep(5)
-                finally:
-                    self.zk_wrapper.finish(job_id, entry_id)
-            else:
-                import time
-                time.sleep(1)
-                logging.debug("No data in queue")
+            self.run_queue()
+            logging.info("finished run queue")

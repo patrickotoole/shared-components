@@ -5,7 +5,9 @@ class ZKApi():
 
     def __init__(self, zk, zk_path, cutoff):
         self.zk = zk
-        volume = datetime.datetime.now().strftime('%m%y') 
+        volume = datetime.datetime.now().strftime('%m%y')
+        self.zk_path = zk_path
+        self.cutoff = cutoff
         self.CustomQueue = CustomQueue.CustomQueue(zk,zk_path, "log", "v" + volume, cutoff)
 
     def get(self):
@@ -21,4 +23,8 @@ class ZKApi():
 
     def finish(self, job_id, entry_id):
         self.CustomQueue.client.ensure_path(self.CustomQueue.secondary_path_base + "/%s/%s" % (job_id.split(entry_id)[1][1:],  entry_id))
-        self.CustomQueue.client.set(self.CustomQueue.secondary_path_base + "/%s/%s" % (job_id.split(entry_id)[1][1:], entry_id), '' ) # running 
+        self.CustomQueue.client.set(self.CustomQueue.secondary_path_base + "/%s/%s" % (job_id.split(entry_id)[1][1:], entry_id), '' ) # running
+
+    def reset_queue(self):
+        volume = datetime.datetime.now().strftime('%m%y')
+        self.CustomQueue = CustomQueue.CustomQueue(self.zk,self.zk_path, "log", "v" + volume, self.cutoff) 
