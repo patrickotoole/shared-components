@@ -71,7 +71,8 @@
 <style>
 
   .head-wrap {
-    height: 150px
+    height: 150px;
+    border-bottom:1px solid #ddd
   }
   .body-wrap {
     overflow:hidden
@@ -80,7 +81,8 @@
     display:table-cell;
     width:50px;
     height:50px;
-    position:relative
+    position:relative;
+    vertical-align:top
   }
 
   .head-wrap .item {
@@ -122,7 +124,7 @@
 
   }
 
-  .versus.selected {
+  .versus.selected, .square.selected {
     background-color:white
   }
 </style>
@@ -155,17 +157,94 @@
     .style("margin-left","auto")
     .style("margin-right","auto")
 
-  var versus = d3_splat(centered,".versus","a",["Percentage of Time Spent","Difference Versus Population"])
+  var buttons = d3_updateable(centered,"div.button-row","div")
+    .classed("button-row",true)
+
+  var description = d3_updateable(centered,"div.description-row","div")
+    .classed("description-row",true)
+    .style("padding-top","20px")
+    .style("font-size","16px")
+    .style("max-width","600px")
+    .style("display","block")
+
+
+  var action = d3_updateable(centered,"div.action-row","div")
+    .classed("action-row",true)
+    .style("padding-top","20px")
+    .style("font-size","12px")
+    .style("max-width","600px")
+    .style("display","block")
+
+
+
+
+  var PERCENT_TEXT = "<h4 style='font-weight:bold'>Percentage of Time Spent Off-site</h4>This view summarizes how a user spends time when they are not on your site. <br><br> Each row represents the likelihood that a user will be on a particular type of site, given that that have viewed a specific page on your site. <br><br> A row for the population is included to compare against a generic internet user's behavior."
+
+  var DIFFERENCE_TEXT = "<h4 style='font-weight:bold'>Time Spent Off-site Compared to Population</h4>This view shows how your user's activity compares to a standard web browser.<br><br>Each row represents the increase (or decrease) in likelihood that a user will be on a particular type of site, given that that have viewed a specific page on your site. <br><br> For example, a positive percentage means that a user is more likely to be on that type of site than a typical web browser."
+
+  var CALC_TEXT = "<h4 style='font-weight:bold'>Time Spent Off-site Compared to a Segment</h4>This view shows how your user's activity compares to a selected segment of users from your site.<br><br>Each row represents the difference in off-site behavior given they have viewed one page versus another.<br><br> For example, if you compare a segment that generates revenue to all of the users on your site, you can see the off-site attributes that help predict that a user will convert."
+
+
+  var comparisons = [
+      {
+          "field": "percent"
+        , "title": "Percentage of Time Spent"
+        , "text": PERCENT_TEXT
+      }
+    , {
+          "field": "index"
+        , "title": "Difference Versus Population"
+        , "text": DIFFERENCE_TEXT
+      }
+    , {
+          "field": "calc"
+        , "title": "Difference Versus Segment"
+        , "text": CALC_TEXT
+        , "callback": function(data) {
+
+            d3_updateable(action,"h4","h4",data.data)
+              .style("font-weight","bold")
+              .text("Compare to Segment:")
+
+    
+            var select = d3_updateable(action,"select","select",data.data)
+              .on("change",function() { 
+                var data = s._state.formatted_data
+                var x = this.selectedOptions[0].__data__
+                data.calc_row = x.key
+                s.publish("formatted_data",data)
+              })
+            d3_splat(select,"option","option",function(x) { return x}, function(x) { return x.key })
+              .text(function(x) { return x.key })
+              
+            
+          }
+      }
+  ]
+  
+
+
+  var versus = d3_splat(buttons,".versus","a",comparisons, function(x) { return x.title } )
     .classed("versus",true)
-    .text(String)
+    .text(function(x) { return x.title })
     .on("click",function(x){
       versus.classed("selected",false);
       d3.select(this).classed("selected",true)
-      var field = (x == "Percentage of Time Spent") ?  "percent": "index"
+
+      var field = x.field
+      description.html(x.text)
       var data = s._state.formatted_data
       data.field = field
+      data.calc_row = "population"
+
+      action.html("")
+
+      x.callback && x.callback(data)
       s.publish("formatted_data",data)
+  
     })
+
+
 
   d3.select(versus.node()).classed("selected",true)
 
@@ -242,6 +321,8 @@
 
   }
 
+  var NAME_WIDTH = 200
+
   var s = state.state()
     .subscribe("table.formatted_data", function(error,d) {
 
@@ -259,11 +340,37 @@
 
       var formatter = {
           "percent": function(x) { return "rgba(70, 130, 180, " + linear(x.value) + " )" }
-        , "index": function(x) { return convertHex(ryg(x.index ),60) }
+        , "index": function(x) { return ryg(x.index) != "#ffffff" ? convertHex(ryg(x.index ),60) : convertHex(ryg(x.index ),1) }
+        , "calc": function(x) { try{ return ryg(x.calc) != "#ffffff" ? convertHex(ryg(x.calc),60) : convertHex(ryg(x.calc),1) }  catch(e) { debugger}  }
+
       }
+
+      if (field == "calc") {
+        var calc_row = d.calc_row || "population"
+        var values = data.filter(function(row) { return row.key == calc_row })[0].value
+
+        var order = values.reduce(function(p,c) {p[c.key] = c.value; return p},{})
+
+        data.map(function(row) {
+          row.value.map(function(item) {
+
+            if (item.key == "name") return ;
+
+            var value = order[item.key]
+            item.calc = 0
+            if (item.value > 0) item.calc = -(value - item.value)/value 
+            if (item.calc == Infinity) item.calc = -0
+            if (item.calc == NaN) item.calc = -0
+
+          })
+        })
+      }
+
 
       var table = tabular.tabular(centered)
         .data(data)
+
+      table._target.selectAll(".row").classed("hidden",function(row) { return (["index","calc"].indexOf(field) > -1) ? row.key == d.calc_row : false }) 
 
       var order = d.data
         .filter(function(x) { return x.key == sortby})[0].value
@@ -283,11 +390,12 @@
           if (d == "name") {
             var h = d3_updateable(d3.select(this),"div","div")
               .style("height","50px")
-              .style("width","150px")
-              .style("padding-top","100px")
+              .style("width",NAME_WIDTH + "px")
+              .style("margin-top","100px")
               .style("padding-left","20px")
               .style("line-height","50px")
               .style("text-transform", "uppercase")
+              //.style("border-right","1px solid #ddd")
               .text(d)
 
             return
@@ -303,7 +411,7 @@
           var width = table._target
             .style("width").replace("px","")
 
-          var value = 100 + (i)*50
+          var value = NAME_WIDTH + (i)*50
 
           h.style("display",value > 900 ? "none" : undefined)
 
@@ -316,25 +424,61 @@
             .style("line-height","50px")
             .style("text-align","center")
             .style("overflow","hidden")
-            .style("border-bottom"," 1px solid #fbfbfb")
-            .style("border-right"," 1px solid #fbfbfb")
+            .style("border-bottom"," 1px solid #eee")
+            .style("border-right"," 1px solid #eee")
 
           if (d.key != "name") sq.text(function(x) { return x[field] == -0 ? " - " : d3.format("%")(x[field]) })
             .style("background-color", formatter[field])
 
 
-          if (d.key == "name") sq.style("width","150px").text(function(x) { return x.value })
-            .on("click",function(d) {
-              var data = s._state.formatted_data
+          if (d.key == "name") {
 
-              if ((data.row_direction == "forward") && (data.sort_row == d.value)) data.row_direction = "reverse"
-              else data.row_direction = "forward"
+           
 
-              data.sort_row = d.value
-              s.publish("formatted_data",data)
-            })
-            .style("font-weight","bold")
-            .style("cursor","pointer")
+            sq.style("width",NAME_WIDTH + "px")
+              .style("text-align","left")
+              .style("border-bottom"," 1px solid #ddd")
+              .style("border-right"," 1px solid #ddd")
+              .classed("selected",function(d) { return s._state.formatted_data.sort_row == d.value})
+
+
+            d3_updateable(sq,"span.text","span")
+              .classed("text",true)
+              .style("width",(NAME_WIDTH - 25) + "px")
+              .text(function(x) { return x.value })
+              .on("click",function(d) {
+                var data = s._state.formatted_data
+
+                if ((data.row_direction == "forward") && (data.sort_row == d.value)) data.row_direction = "reverse"
+                else data.row_direction = "forward"
+
+                data.sort_row = d.value
+                s.publish("formatted_data",data)
+              })
+              .style("display","inline-block")
+              .style("padding-left","10px")
+              .style("margin-right","5px")
+              .style("height","50px")
+              .style("overflow","hidden")
+              .style("font-weight","bold")
+              .style("cursor","pointer")
+
+            if (d.value != "population") d3_updateable(sq,"a.link","a")
+              .classed("link fa fa-external-link",true)
+              .style("display","inline-block")
+              .style("width","19px")
+              .style("line-height","50px")
+              .style("height","50px")
+              .style("vertical-align","top")
+              .style("text-align","center")
+              .style("font-size","10px")
+
+
+              
+
+          }
+
+
 
         })
         .draw()
