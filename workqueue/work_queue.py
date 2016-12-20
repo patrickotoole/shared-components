@@ -128,6 +128,7 @@ class WorkQueue(object):
         else:
             import time
             time.sleep(5)
+            logging.info("RESET queue")
             self.zk_wrapper.reset_queue()
             logging.debug("No data in queue")
 
