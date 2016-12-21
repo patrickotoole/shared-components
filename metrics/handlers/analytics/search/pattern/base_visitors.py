@@ -80,6 +80,11 @@ class VisitorBase(GenericSearchBase, BaseDomainHandler):
             response = yield self.process_uids(**kwargs)
 
         #df = pandas.DataFrame(response)
+        if len(response) <=4 and len(response['results']) ==0 and len(response.get('response',[])) ==0:
+            self.set_status(400)
+            self.write({"error":"Response failed or was empty"})
+            self.finish()
+            defer.returnValue(None)
         versioning = self.request.uri
         if versioning.find('v2') >=0:
             #summary = self.summarize(df)
