@@ -73,7 +73,7 @@ CONVERSIONS_FORM = """
 }
 """
 
-COLS = ["external_advertiser_id","pixel_id","pixel_name","line_item_id","line_item_name","campaign_id","campaign_name", "pc", "order_id", "user_id", "auction_id", "imp_time", "conversion_time","creative_id","creative_name"]
+COLS = ["external_advertiser_id","pixel_id","pixel_name","line_item_id","line_item_name","campaign_id","campaign_name", "pc", "order_id", "user_id", "auction_id", "imp_time", "conversion_time","creative_id","creative_name", "is_valid"]
 KEYS = ["pixel_id","line_item_id","campaign_id","creative_id","order_id","user_id","auction_id","conversion_time"]
 
 VALUES = [ v for v in COLS if v not in KEYS]
@@ -122,7 +122,7 @@ def get_pixel_data(db, advertiser_id):
     pixel_data = db.select_dataframe(ADVERTISER_PIXEL%advertiser_id)
     return pixel_data
 
-    
+
 def check_is_valid(df, pixel_data):
 
     assert len(pixel_data) > 0
