@@ -31,6 +31,11 @@ class CrusherAPIRequestWrapper(APIRequestWrapper):
             self._token= self.authenticate().token
         return self._token
 
+    def logout_user(self):
+        if self._token:
+            self._token ={}
+        self.user = ""
+
     def switch_user(self, username):
         user_perms = self.get("/account/permissions", cookies = self._token, auth=None)
         users = user_perms.json["results"]["advertisers"]
