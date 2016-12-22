@@ -21,7 +21,7 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
     
     LEVELS = {
                 "l1":
-                    ["uid_urls", "domains_full"],
+                    ["uid_urls", "domains_full", "actions"],
                 "l2":
                     ["domains", "urls", "pixel", "artifacts"],
                 "l3":
@@ -32,7 +32,7 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
     DEPENDENTS = {
                     "domains":["domains_full"],
                     "urls":["uid_urls"],
-                    "url_to_action":["pixel", "uid_urls"],
+                    "url_to_action":["pixel", "uid_urls", "actions"],
                     "category_domains":["domains", "idf"],
                     "idf" : ["domains"],
                     "idf_hour" : ["domains"],
@@ -40,11 +40,16 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
                     "domains_full":[],
                     "uid_urls": [],
                     "corpus": [],
-                    "artifacts":[]
+                    "artifacts":[],
+                    "actions":[],
                 }
 
 
     FUNCTION_MAP = {
+            "actions": {
+                "func":"defer_get_actions",
+                "args":["advertiser"],
+            },
             "pixel": {
                 "func":"defer_get_pixel",
                 "args":[],
@@ -55,7 +60,7 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
             },
             "url_to_action": {
                 "func":"defer_urls_to_actions",
-                "args":["pixel","uid_urls"],
+                "args":["pixel","uid_urls", "actions"],
             },
             "urls": {
                 "func":"defer_get_urls",
@@ -137,6 +142,12 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
         return results
 
     @decorators.deferred
+    def defer_get_actions(self, advertiser):
+        ACTIONSQUERY = "SELECT action_id, action_name from action_with_patterns where pixel_source_name ='%s'"
+        results = self.db.select_dataframe(ACTIONSQUERY % advertiser)
+        return results.to_dict('records')
+
+    @decorators.deferred
     def defer_get_domains(self, domains):
         results = domains[['domain','uid','timestamp']]
         return results
@@ -207,9 +218,9 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
         return results
 
     @decorators.deferred
-    def defer_urls_to_actions(self, pixel, uid_urls):
+    def defer_urls_to_actions(self, pixel, uid_urls, actions):
         urls = set(uid_urls.url)
-        results = self.urls_to_actions(pixel,urls)
+        results = self.urls_to_actions(pixel,urls, actions, AhoCorasick)
         return results
     
     def get_dependents(self, datasets):
@@ -240,7 +251,8 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
             shared_dict['uid_urls'] = l1_dfs['uid_urls'][0]
         if l1_dfs.get('artifacts', False):
             shared_dict['artifacts'] = l1_dfs['artifacts']
-
+        if l1_dfs.get('actions', False):
+            shared_dict['actions'] = l1_dfs['actions']
         defer.returnValue(shared_dict)
 
     @defer.inlineCallbacks
@@ -300,7 +312,6 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
 
         shared_dict['uids'] = uids
         shared_dict = yield self.run_init_level(needed_dfs, self.LEVELS["l1"], shared_dict)
-        
         shared_dict = yield self.run_level(needed_dfs, self.LEVELS["l2"], shared_dict)
         shared_dict = yield self.run_level(needed_dfs, self.LEVELS["l3"], shared_dict)
         shared_dict = yield self.run_level(needed_dfs, self.LEVELS["l4"], shared_dict)
