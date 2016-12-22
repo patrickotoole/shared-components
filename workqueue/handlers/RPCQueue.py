@@ -83,7 +83,7 @@ class RPCQueue():
     def add_to_work_queue(self, rpc_object):
         import lib.caching as custom_scripts
         rpc_data = ujson.loads(rpc_object)
-
+        logging.info("Adding to work queue %s" % rpc_data)
         advertiser = rpc_data.get("advertiser")
         udf = rpc_data.get("udf")
         pattern = rpc_data.get("pattern")
