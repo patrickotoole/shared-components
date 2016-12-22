@@ -109,15 +109,25 @@ class PatternSearchHelpers(BaseDomainHandler):
         return df
 
 
-    def urls_to_actions(self,patterns,urls):
+    def urls_to_actions(self,patterns,urls, actions, AhoCor):
 
         def check(url):
             def _run(x):
                 return x in url
             return _run
 
-        p = patterns.url_pattern
-        exist = { url: list(p[p.map(check(url))]) for url in urls }
+        def get_names(url):
+            results = []
+            for key, val in filter_dict:
+                if val(url):
+                    results.append(key)
+            return results
+
+        #p = patterns.url_pattern
+        filter_dict ={}
+        for items in actions:
+            filter_dict[items['action_name']] = self.get_filter_checker(items['action_id'])
+        exist = { url: get_names(url) for url in urls }
 
         url_to_action = pandas.DataFrame(pandas.Series(exist),columns=["actions"])
         url_to_action.index.name = "url"
