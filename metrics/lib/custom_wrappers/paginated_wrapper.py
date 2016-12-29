@@ -16,16 +16,32 @@ class PaginatedConsoleAPIRequestWrapper(JsonClient):
 
 
     def get_all_pages(self, url_params = '', key= '', **kwargs):
+        import time
         if '?' in url_params:
             delimiter = '&'
         else:
             delimiter = '?'
         response = self.get(url_params, **kwargs).json['response']
+
+        error = response.get('error')
+        if "exceeded your request limit" in str(error):
+            time.sleep(60)
+            response = self.get(url_params, **kwargs).json['response']
+        else:
+            time.sleep(1)
+
         items = response[key]
         total = response['count']
         num = response['start_element'] + response['num_elements']
         while num < total:
             response = self.get(url_params + delimiter + "start_element=%s" % num, **kwargs).json['response']
+            error = response.get('error')
+            if "exceeded your request limit" in str(error):
+                time.sleep(60)
+                response = self.get(url_params, **kwargs).json['response']
+            else:
+                time.sleep(1)
+
             items += response[key]
             num = response['start_element'] + response['num_elements']
         return items
