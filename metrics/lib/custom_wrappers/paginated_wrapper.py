@@ -1,5 +1,7 @@
 from link.wrappers import JsonClient
 
+
+
 class PaginatedConsoleAPIRequestWrapper(JsonClient):
     def __init__(self, wrap_name=None, base_url=None, user=None, password=None):
         self._token = None
@@ -14,34 +16,31 @@ class PaginatedConsoleAPIRequestWrapper(JsonClient):
 
         return self.get("/profile?id=%s" % items['profile_id'])
 
+    def get_and_retry(self, url_params, **kwargs):
+        import time
+        response = self.get(url_params, **kwargs)
+        error = response.json['response'].get('error')
+        if "exceeded your request limit" in str(error):
+            time.sleep(60)
+            response = self.get(url_params, **kwargs)
+        else:
+            time.sleep(1)
+        return response
+
 
     def get_all_pages(self, url_params = '', key= '', **kwargs):
-        import time
+        
         if '?' in url_params:
             delimiter = '&'
         else:
             delimiter = '?'
-        response = self.get(url_params, **kwargs).json['response']
-
-        error = response.get('error')
-        if "exceeded your request limit" in str(error):
-            time.sleep(60)
-            response = self.get(url_params, **kwargs).json['response']
-        else:
-            time.sleep(1)
+        response = self.get_and_retry(url_params, **kwargs).json['response']
 
         items = response[key]
         total = response['count']
         num = response['start_element'] + response['num_elements']
         while num < total:
-            response = self.get(url_params + delimiter + "start_element=%s" % num, **kwargs).json['response']
-            error = response.get('error')
-            if "exceeded your request limit" in str(error):
-                time.sleep(60)
-                response = self.get(url_params, **kwargs).json['response']
-            else:
-                time.sleep(1)
-
+            response = self.get_and_retry(url_params + delimiter + "start_element=%s" % num, **kwargs).json['response']
             items += response[key]
             num = response['start_element'] + response['num_elements']
         return items
