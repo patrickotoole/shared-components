@@ -31,7 +31,7 @@ def extract_and_group(df,GROUPBY,params,_c):
         for c in cols:
             grouped[c] = grouped[c].map(lambda x: [x])
 
-    if params['create'] or params['deactivate']:
+    if params['create'] or params['deactivate'] or params['modify']:
         grouped = grouped.reset_index()
 
     assert len(grouped.columns) > 0
