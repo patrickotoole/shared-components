@@ -210,6 +210,8 @@ class AdvertiserRoutes(Routes):
 
             (r'/funnel', funnel.FunnelHandler, self.connectors),
             (r'/comparison?', analytics.ComparisonHandler, self.connectors),
+            (r'/dashboard?', analytics.DashboardHandler, self.connectors),
+
             (r'/?', funnel.FunnelHandler, self.connectors),
 
             (r'/.*?', funnel.FunnelHandler, self.connectors),

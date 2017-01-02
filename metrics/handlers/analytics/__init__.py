@@ -13,3 +13,4 @@ from domain_idf import DomainIDFHandler
 from onsite_stats import OnSiteStatsHandler
 from yoshi import YoshiHandler
 from comparison import ComparisonHandler
+from dashboard import DashboardHandler
