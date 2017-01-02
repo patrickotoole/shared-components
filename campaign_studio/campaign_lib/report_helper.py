@@ -1,6 +1,24 @@
 def get_sql(advertiser_id, dd, db):
 
-    df = db.select_dataframe(dd['sql'])
+    import datetime
+    import json
+
+    start_date = datetime.datetime.now() + datetime.timedelta(-30)
+    end_date = datetime.datetime.now() + datetime.timedelta(1)
+
+    start_date = start_date.date().isoformat()
+    end_date = end_date.date().isoformat()
+
+    params = {
+        "start_date": start_date,
+        "end_date": end_date,
+        "advertiser_id": advertiser_id
+    }
+
+    sql = dd['sql'] % params
+
+
+    df = db.select_dataframe(sql)
     datetime_columns = df.dtypes[df.dtypes.map(lambda x: x == "datetime64[ns]")].index
 
     for col in datetime_columns:

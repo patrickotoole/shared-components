@@ -190,10 +190,14 @@
 
         <div class="showable sql hidden">
           <textarea id="sql" style="width:200px"></textarea>
+          <select id='sql_advertiser'></select>
+
           <button id="sql-action">Get</button>
           <script>
             d3.select("#sql-action").on("click",function(){
                 var values = {"sql":d3.select("#sql").node().value}
+                values['sql_advertiser'] = d3.select("#sql_advertiser").node().value
+
       
                 d3.xhr("/run-sql")
                   .post( JSON.stringify(values), function(err, data){
@@ -426,6 +430,7 @@
           "advertiser":advertiser,
           "type": "optimization",
           "report": JSON.parse(d3.select("#report").node().value).report,
+          "sql": d3.select("#sql").node().value,
           "settings": summary,
           "filters": window.data_filter.data()
         }
@@ -624,6 +629,15 @@
             .append("option")
             .text(function(x) { return x.pixel_source_name })
             .attr("value",function(x){ return x.external_advertiser_id })
+
+        var select_advertiser = d3.selectAll("#sql_advertiser").data([advertisers])
+        select_advertiser.selectAll("option").data(function(x) { return x } )
+          .enter()
+            .append("option")
+            .text(function(x) { return x.pixel_source_name })
+            .attr("value",function(x){ return x.external_advertiser_id })
+
+
 
 
 

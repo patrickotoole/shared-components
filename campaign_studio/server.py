@@ -170,6 +170,7 @@ class SQLHandler(tornado.web.RequestHandler):
 
     def post(self):
         dd = json.loads(self.request.body)
+        advertiser_id = dd['sql_advertiser']
 
         import campaign_lib.report_helper as report_helper
         df = report_helper.get_sql(advertiser_id, dd, self.db)
