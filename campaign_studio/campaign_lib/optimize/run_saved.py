@@ -3,6 +3,16 @@ import os
 import logging
 from campaign_lib.report_helper import get_report
 
+def get_data(_json,api,reporting):
+
+    if _json.get("report",False):
+        raw_data = get_report(_json['advertiser'],_json,api,reporting)
+
+    if _json.get("sql",False):
+        pass
+
+    return raw_data
+    
 
 def run_filter(df,opt_json):
     
@@ -40,8 +50,8 @@ def run():
 
         logging.info("opt - running job: " + json.dumps(_json))
 
-        raw_data = get_report(_json['advertiser'],_json,api,reporting)
-        filter_data = run_filter(raw_data,_json)
+        raw_data = get_data(_json, api, reporting)
+        filter_data = run_filter(raw_data, _json)
 
         logging.info("opt - filtered data.")
 

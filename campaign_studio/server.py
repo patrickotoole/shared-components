@@ -162,6 +162,27 @@ class ReportHandler(tornado.web.RequestHandler):
         self.write(json.dumps(df.to_dict('records')))
         self.finish()
 
+class SQLHandler(tornado.web.RequestHandler):
+
+    def initialize(self,**kwargs):
+        self.db = kwargs.get("reporting",False) 
+        self.api = kwargs.get("api",False) 
+
+    def post(self):
+        dd = json.loads(self.request.body)
+
+        df = self.db.select_dataframe(dd['sql'])
+
+        datetime_columns = df.dtypes[df.dtypes.map(lambda x: x == "datetime64[ns]")].index
+
+        for col in datetime_columns:
+            df[col] = df[col].map(str)
+
+        self.write(json.dumps(df.to_dict('records')))
+        self.finish()
+
+
+
 
 
 
@@ -187,6 +208,8 @@ if __name__ == '__main__':
         (r'/create', CreateHandler, connectors),
         (r'/optimize', OptimizeHandler, connectors),
         (r'/reporting', ReportHandler, connectors),
+        (r'/run-sql', SQLHandler, connectors),
+
 
 
         (r'/static/(.*)', tornado.web.StaticFileHandler, {"path":"static"}),
