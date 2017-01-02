@@ -171,12 +171,8 @@ class SQLHandler(tornado.web.RequestHandler):
     def post(self):
         dd = json.loads(self.request.body)
 
-        df = self.db.select_dataframe(dd['sql'])
-
-        datetime_columns = df.dtypes[df.dtypes.map(lambda x: x == "datetime64[ns]")].index
-
-        for col in datetime_columns:
-            df[col] = df[col].map(str)
+        import campaign_lib.report_helper as report_helper
+        df = report_helper.get_sql(advertiser_id, dd, self.db)
 
         self.write(json.dumps(df.to_dict('records')))
         self.finish()

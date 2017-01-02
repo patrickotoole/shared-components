@@ -1,7 +1,7 @@
 import json
 import os
 import logging
-from campaign_lib.report_helper import get_report
+from campaign_lib.report_helper import get_report, get_sql
 
 def get_data(_json,api,reporting):
 
@@ -9,7 +9,7 @@ def get_data(_json,api,reporting):
         raw_data = get_report(_json['advertiser'],_json,api,reporting)
 
     if _json.get("sql",False):
-        pass
+        raw_data = get_sql(_json['advertiser'],_json, reporting)
 
     return raw_data
     
