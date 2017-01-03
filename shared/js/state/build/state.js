@@ -152,6 +152,13 @@
 
         return this
       }
+    , publishStatic: function(k,v) {
+      if (k != undefined && v != undefined) this._static[k] = v
+      this._buildState()
+      this.trigger(k, this._state[k], this._state)
+
+      return this
+    }
     , _pastPush: function(v) {
         this._past.push(v)
       }
@@ -280,7 +287,6 @@
       }
     , from: function(qs) {
         var query = {};
-  debugger
         if (qs.indexOf("?encoded=") == 0) qs = lzw_decode(unescape(atob(qs.split("?encoded=")[1])))
         var a = qs.substr(1).split('&');
         for (var i = 0; i < a.length; i++) {

@@ -88,7 +88,6 @@ QS.prototype = {
     }
   , from: function(qs) {
       var query = {};
-debugger
       if (qs.indexOf("?encoded=") == 0) qs = lzw_decode(unescape(atob(qs.split("?encoded=")[1])))
       var a = qs.substr(1).split('&');
       for (var i = 0; i < a.length; i++) {

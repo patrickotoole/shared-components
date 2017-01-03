@@ -146,6 +146,13 @@ State.prototype = {
 
       return this
     }
+  , publishStatic: function(k,v) {
+      if (k != undefined && v != undefined) this._static[k] = v
+      this._buildState()
+      this.trigger(k, this._state[k], this._state)
+
+      return this
+    }
   , _pastPush: function(v) {
       this._past.push(v)
     }

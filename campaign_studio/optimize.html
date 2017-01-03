@@ -18,8 +18,56 @@
   <script>
     var qs_state = state.qs().from(document.location.search)
     var _state = state.state(qs_state)
+      .subscribe("sql",function(err,values) {
+        var sql = values.sql;
 
-      debugger
+        d3.select("#sql").text(sql)
+        if (sql) showOptimization("sql")
+      })
+      .subscribe("report",function(err,values) {
+        var report = values.report
+
+        d3.select("#report").text(JSON.stringify({"report":report,"report_advertiser":d3.select("#report_advertiser").node().value},null,2))
+        if (report) showOptimization("report")
+      })
+      .subscribe("transforms",function(err,values) {
+        var transforms = values.transforms
+      })
+      .subscribe("filters",function(err,values) {
+        var filters = values.filters
+      })
+      .subscribe("settings", function(err,values) {
+        var settings = values.settings
+
+        settings.map(function(row) {
+          var selected = d3.selectAll("#" + row.key)
+          if (selected.size() == 0) return
+
+          if (selected.node().type == "select-one")
+            return selected.selectAll("option").property("selected",function(x) { return this.value == row.value ? "selected" : undefined})
+
+          if (selected.node().type == "text") return selected.property("value", row.value)
+          
+          if (selected.node().tagName == "DIV") {
+            return selected.selectAll("input")
+              .filter(function(x) { return x == row.value})
+              .property("checked",function(x) { return x == row.value ? "checked" : undefined})
+          }
+          
+        })
+      })
+      .subscribe("data.data", function(err,data,values) {
+        var headers = values.headers;
+
+        runBuild(data, headers)
+
+      })
+    setTimeout(function() {
+      _state.publish(qs_state)
+
+      d3.select("#sql-action").on("click")()
+    },10)
+
       
   </script>
   
@@ -48,65 +96,21 @@
             , report = values.report
             , sql = values.sql;
 
-          settings.map(function(row) {
- 
-              var selected = d3.selectAll("#" + row.key)
-              if (selected.size() > 0) {
-                if (selected.node().type == "select-one") {
-                  selected.selectAll("option").property("selected",function(x) { return this.value == row.value ? "selected" : undefined})
-                } else if (selected.node().type == "text") {
-                  selected.property("value", row.value)
-                } else if (selected.node().tagName == "DIV") {
-                  
-                  selected.selectAll("input")
-                    .filter(function(x) { return x == row.value})
-                    .property("checked",function(x) { return x == row.value ? "checked" : undefined})
-                }
-              }
-            })
-
-          if (sql) {
-            d3.select("#sql").text(sql)
-            d3.select("#sql-action").on("click")()
-            showOptimization("sql")
-          }
-
           if (report) {
-
-            d3.select("#report").text(JSON.stringify({"report":report,"report_advertiser":d3.select("#report_advertiser").node().value},null,2))
 
             d3.xhr("/reporting")
               .post(d3.select("#report").node().value, function(err, data){
                 var jj = JSON.parse(data.response)
                 runBuild(jj,Object.keys(jj[0]))
 
+                if (filters.length && window.data_filter) {
+                  window.data_filter
+                    .data(filters)
+                    .draw()
 
-                settings.map(function(row) {
- 
-                  var selected = d3.selectAll("#" + row.key)
-                  if (selected.size() > 0) {
-                    if (selected.node().type == "select-one") {
-                      selected.selectAll("option").property("selected",function(x) { return this.value == row.value ? "selected" : undefined})
-                    } else if (selected.node().type == "text") {
-                      selected.property("value", row.value)
-                    } else if (selected.node().tagName == "DIV") {
-                      
-                      selected.selectAll("input")
-                        .filter(function(x) { return x == row.value})
-                        .property("checked",function(x) { return x == row.value ? "checked" : undefined})
-                    }
-                  }
-                })
-
-            if (filters.length && window.data_filter) {
-              window.data_filter
-                .data(filters)
-                .draw()
-
-              window.data_filter
-                .on("update")(filters)
-            }
-
+                  window.data_filter
+                    .on("update")(filters)
+                }
               })
             
           } else {
@@ -119,27 +123,7 @@
                 .on("update")(filters)
             }
 
-            settings.map(function(row) {
- 
-              var selected = d3.selectAll("#" + row.key)
-              if (selected.size() > 0) {
-                if (selected.node().type == "select-one") {
-                  selected.selectAll("option").property("selected",function(x) { return this.value == row.value ? "selected" : undefined})
-                } else if (selected.node().type == "text") {
-                  selected.property("value", row.value)
-                } else if (selected.node().tagName == "DIV") {
-                  
-                  selected.selectAll("input")
-                    .filter(function(x) { return x == row.value})
-                    .property("checked",function(x) { return x == row.value ? "checked" : undefined})
-                }
-              }
-            })  
-
           }
-
-
-          
           
         })
       </script>
@@ -159,6 +143,18 @@
       <script>
 
         function showOptimization(selected) {
+
+          var show_type = d3.select("#show-type")
+
+          show_type
+            .selectAll("option").filter(function() { return this.value.toLowerCase() == selected })
+            .property("selected","selected")
+
+          show_type.on("change",function(x) {
+            var selected = this.selectedOptions[0].value.toLowerCase()
+            showOptimization(selected)
+          })
+
           var showable = d3.selectAll("#show-display")
 
           showable
@@ -168,10 +164,7 @@
             .selectAll("." + selected).classed("hidden",false)
         }
 
-        d3.select("#show-type").on("change",function(x) {
-          var selected = this.selectedOptions[0].value.toLowerCase()
-          showOptimization(selected)
-        })
+        
 
       </script>
 
@@ -222,7 +215,11 @@
                 d3.xhr("/run-sql")
                   .post( JSON.stringify(values), function(err, data){
                     var jj = JSON.parse(data.response)
-                    runBuild(jj,Object.keys(jj[0]))
+
+                    _state.publishStatic("headers",Object.keys(jj[0]))
+                    _state.publishStatic("data",jj)
+
+                    
                   })
               })
           </script>
