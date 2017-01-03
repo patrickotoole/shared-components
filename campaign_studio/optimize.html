@@ -4,7 +4,7 @@
   <style>
     .hidden { display:none }
     .debug { display:none }
-    .show-debug .debug { display:inhert }
+    .show-debug .debug { display:inherit }
   </style>
   <script data-require="d3@3.5.3" data-semver="3.5.3" src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.3/d3.js"></script>
 
@@ -15,13 +15,19 @@
   <script src="/static/utils.js"></script>
   <script src="/static/custom_filter.js"></script>
 
+  <script>
+    var qs_state = state.qs().from(document.location.search)
+    var _state = state.state(qs_state)
 
+      debugger
+      
+  </script>
   
 </head>
 
-<body style="width:1200px;margin-left:auto;margin-right:auto">
+<body class="show-debug" style="width:1200px;margin-left:auto;margin-right:auto">
   <h3 style="margin-bottom:0px">Optimize from Reporting</h3>
-  <h4>Setup Data</h4>
+  <h4>Load Save</h4>
   <div>
 
     <div class="row debug"> Load saved state: 
@@ -30,8 +36,8 @@
     </div>
     <script>
 
-        var state = state.qs().from(document.location.search)
-        d3.select("#preload").text(JSON.stringify(state))
+        
+        d3.select("#preload").text(JSON.stringify(qs_state))
 
 
         d3.select("#preload-action").on("click",function(){
@@ -39,7 +45,8 @@
 
           var filters = values.filters
             , settings = values.settings
-            , report = values.report;
+            , report = values.report
+            , sql = values.sql;
 
           settings.map(function(row) {
  
@@ -57,6 +64,12 @@
                 }
               }
             })
+
+          if (sql) {
+            d3.select("#sql").text(sql)
+            d3.select("#sql-action").on("click")()
+            showOptimization("sql")
+          }
 
           if (report) {
 
@@ -130,19 +143,22 @@
           
         })
       </script>
+    </div>
+    <br><hr>
+    <h4>Extract Data</h4>
+
 
     <div class="row"> 
 
-      <select id="show-type">
+      Select Data Source: <select id="show-type">
         <option>CSV</option>
         <option>Report</option>
         <option>SQL</option>
       </select>
 
       <script>
-        d3.select("#show-type").on("change",function(x) {
-          var selected = this.selectedOptions[0].value.toLowerCase()
 
+        function showOptimization(selected) {
           var showable = d3.selectAll("#show-display")
 
           showable
@@ -150,10 +166,13 @@
 
           showable
             .selectAll("." + selected).classed("hidden",false)
+        }
 
-
-
+        d3.select("#show-type").on("change",function(x) {
+          var selected = this.selectedOptions[0].value.toLowerCase()
+          showOptimization(selected)
         })
+
       </script>
 
       <div id="show-display">
@@ -189,8 +208,9 @@
         </div>
 
         <div class="showable sql hidden">
-          <textarea id="sql" style="width:200px"></textarea>
-          <select id='sql_advertiser'></select>
+          Enter SQL: <textarea id="sql" style="width:200px"></textarea>
+          <br>
+          Choose Advertiser: <select id='sql_advertiser'></select>
 
           <button id="sql-action">Get</button>
           <script>
@@ -209,29 +229,84 @@
         </div>
       </div>
     </div>
-    
-  </div>
-  <br>
-  <hr>
+
+  <br> <hr> 
 
   <h4>Analyze</h4>
+    
+  <div class="row"> Transform: </div>
 
-  <div>
-    <div class="row"> Filter: </div>
+  <div class="row">
+
+    <div class="transform-row"> </div>
+    <button id="new-transform">Add Transform</button>
+    <script>
+
+      var drawTransforms = function(tt) {
+
+        var transform = d3_splat(d3.selectAll(".transform-row"),".transform","div",tt,function(x) { return x.name })
+          .classed("transform",true)
+          .style("margin-left","10px")
+
+        transform.exit().remove()
+
+
+        var name_wrap = d3_updateable(transform,".name-wrap","div")
+          .classed("name-wrap",true)
+          .style("display","inline-block")
+
+        d3_updateable(name_wrap,"span","span").text("New Column Name:")
+        d3_updateable(name_wrap,"input","input").text(function(x){ return x.name })
+          .attr("placeholder","e.g., CPM")
+          .on("change",function(x) {
+            x.name = this.value
+          })
+
+        var eval_wrap = d3_updateable(transform,".eval-wrap","div")
+          .classed("eval-wrap",true)
+          .style("display","inline-block")
+
+        d3_updateable(eval_wrap,"span","span").text("Expression:")
+        d3_updateable(eval_wrap,"input","input").text(function(x){ return x.eval })
+          .attr("placeholder","e.g., row['imps']/row['cost']")
+        
+      }
+
+      var transforms = []
+
+      d3.select("#new-transform").on("click",function() { 
+        if (transforms.filter(function(x) { return x.name == "" }).length == 0) {
+          transforms.push({"name":"","eval":""})
+        }
+        console.log(transforms.length, transforms)
+        drawTransforms(transforms)
+        return 
+      })
+    </script>
   </div>
 
+  </div>
+  <br>
 
 
+  <div class="row"> Filter: </div>
 
   <div class="row">
 
     <div class="filter-row"> </div>
     <script>
 
-      function buildFilters(headers) { 
+      function buildUIFilters(headers) { 
 
         var ops = headers.map(function(x) {
-          return [{"key": "equals"}, {"key":"does not contain"}, {"key":"does not equal"}, {"key": "between"},{"key": "greater than"},{"key": "less than"}]
+          return [
+              {"key": "equals"}
+            , {"key":"does not contain"}
+            , {"key":"does not equal"}
+            , {"key": "between"}
+            , {"key": "greater than"}
+            , {"key": "less than"}
+          ]
         })
 
         window.data_filter = filter.filter(d3.selectAll(".filter-row"))
@@ -290,8 +365,14 @@
     </script>
   </div>
 
+  <br> <hr> <br>
+  
 
+  <div class="row"> Summary: </div>
   <div class="summary"></div>
+
+  <div class="row"> Results: </div>
+
   <div style="height:250px;overflow:scroll;position:relative" class="outer-table-wrapper"></div>
 
   <br><hr>
@@ -409,6 +490,8 @@
 
         summary.push({"key":"advertiser","value":d3.select("#advertiser").node().value})
         summary.push({"key":"report_advertiser","value":d3.select("#report_advertiser").node().value})
+        summary.push({"key":"sql_advertiser","value":d3.select("#sql_advertiser").node().value})
+
         summary.push({"key":"imp_budget","value":d3.select("#imp_budget").node().value})
         summary.push({"key":"spend_budget","value":d3.select("#spend_budget").node().value})
 
@@ -417,6 +500,14 @@
 
         return summary
 
+    }
+
+    function getReportJSON() {
+      try { 
+        return JSON.parse(d3.select("#report").node().value).report
+      } catch(e) {
+        return undefined
+      }
     }
 
     d3.select("#save").on("click",function(x){
@@ -429,7 +520,7 @@
           "name": d3.select("#name").node().value,
           "advertiser":advertiser,
           "type": "optimization",
-          "report": JSON.parse(d3.select("#report").node().value).report,
+          "report": getReportJSON(),
           "sql": d3.select("#sql").node().value,
           "settings": summary,
           "filters": window.data_filter.data()
@@ -479,6 +570,14 @@
         .render("venue_id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
         .render("campaign_id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
         .render("line_item_id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
+        .render("pixel_id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
+        .render("user_id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
+        .render("auction_id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
+        .render("id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
+
+
+
+
         .render("publisher_id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
         .render("sellers",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
         .draw()
@@ -518,7 +617,7 @@
 
 
 
-        var filters = buildFilters(headers)
+        var filters = buildUIFilters(headers)
           .on("update",function(x) {
             var y = x.map(function(z) {
 
