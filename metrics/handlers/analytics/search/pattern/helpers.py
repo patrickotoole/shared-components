@@ -117,17 +117,15 @@ class PatternSearchHelpers(BaseDomainHandler):
             return _run
 
         #p = patterns.url_pattern
-        filter_dict ={}
-        result = {}
-        for items in actions[0:1]:
+        results = dict(zip(urls, [[] for x in urls]))
+        for items in actions:
             filter_dict = self.run_filter_url(self.get_filter_checker(items['action_id']), urls)
-            for key, val in filter_dict:
-                if val:
-                    result.get(key,[]).append(items['action_name'])
+            for key in filter_dict.keys():
+                if filter_dict[key]:
+                    results[key].append(items['action_name'])
+            
         logging.info("finished dict")
-
-        logging.info(result)
-        url_to_action = pandas.DataFrame(pandas.Series(result),columns=["actions"])
+        url_to_action = pandas.DataFrame(pandas.Series(results),columns=["actions"])
         url_to_action.index.name = "url"
 
         return url_to_action
