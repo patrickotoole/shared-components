@@ -34,6 +34,7 @@
         var transforms = values.transforms
 
         drawTransforms(transforms || [])
+        if (transforms) runTransforms(transforms,values)
       })
       .subscribe("filters",function(err,values) {
         var filters = values.filters
@@ -64,7 +65,7 @@
       .subscribe("data.filtered_data", function(err,data,values) {
         var headers = values.headers;
 
-        runBuild(values.data, headers, values.filters)
+        buildUIFilters(headers, values.data, values.filters)
         buildTable(data)
 
       })
@@ -178,19 +179,19 @@
         <button id="sql-action">Get</button>
         <script>
           d3.select("#sql-action").on("click",function(){
-              var values = {"sql":d3.select("#sql").node().value}
-              values['sql_advertiser'] = d3.select("#sql_advertiser").node().value
+            var values = {"sql":d3.select("#sql").node().value}
+            values['sql_advertiser'] = d3.select("#sql_advertiser").node().value
 
     
-              d3.xhr("/run-sql")
-                .post( JSON.stringify(values), function(err, data){
-                  var jj = JSON.parse(data.response)
+            d3.xhr("/run-sql")
+              .post( JSON.stringify(values), function(err, data){
+                var jj = JSON.parse(data.response)
 
-                  _state.publishStatic("headers",Object.keys(jj[0]))
-                  _state.publishStatic("data",jj)
-                  
-                })
-            })
+                _state.publishStatic("headers",Object.keys(jj[0]))
+                _state.publishStatic("data",jj)
+                
+              })
+          })
         </script>
       </div>
     </div>
@@ -205,6 +206,23 @@
     <div class="transform-row"> </div>
     <button id="new-transform">Add Transform</button>
     <script>
+
+      var runTransforms = function(transforms,values) {
+
+        var transform_funcs = transforms.reduce(function(p,c) { p[c.name] = eval("[function(row) { row['" + c.name + "'] = " + c.eval + "}][0]"); return p },{})
+
+        if (values.data) {
+          var first_row = values.data[0]
+
+          if (Object.keys(transform_funcs).filter(function(k) { return first_row[k] !== undefined }).length > 0) return
+
+          values.data.map(function(row) {
+            Object.keys(transform_funcs).map(function(k) { transform_funcs[k](row) })
+          })
+
+          _state.publishStatic("data",values.data)
+        }
+      }
 
       var drawTransforms = function(tt) {
 
@@ -223,7 +241,7 @@
 
         var trow = d3.selectAll(".transform-row").data([tt])
 
-        var transform = d3_splat(trow,".transform","div",function(x) { return x }, function(x,i) { return i })
+        var transform = d3_splat(trow,".transform","div",function(x) { return x }, function(x,i) { return x.name })
           .classed("transform",true)
           .style("margin-left","10px")
 
@@ -235,7 +253,7 @@
           .style("display","inline-block")
 
         d3_updateable(name_wrap,"span","span").text("New Column Name:")
-        d3_updateable(name_wrap,"input","input").text(function(x){ return x.name })
+        d3_updateable(name_wrap,"input","input").attr("value",function(x){ return x.name })
           .attr("placeholder","e.g., CPM")
           .on("change",function(x) {
             //x.name = this.value // This is bad
@@ -252,7 +270,7 @@
           .style("display","inline-block")
 
         d3_updateable(eval_wrap,"span","span").text("Expression:")
-        d3_updateable(eval_wrap,"input","input").text(function(x){ return x.eval })
+        d3_updateable(eval_wrap,"input","input").attr("value",function(x){ return x.eval })
           .attr("placeholder","e.g., row['imps']/row['cost']")
         
       }
@@ -271,7 +289,7 @@
     <div class="filter-row"> </div>
     <script>
 
-      function buildUIFilters(headers,ff) { 
+      function buildUIFilters(headers,data,ff) { 
 
         var ops = headers.map(function(x) {
           return [
@@ -331,6 +349,27 @@
 
 
           })
+          .on("update",function(x) {
+            var filters = x.map(function(z) {
+              return { 
+                  "field": z.field
+                , "op": z.op
+                , "value": z.value
+              }
+            }).filter(function(x) { return x.value !== undefined } )
+  
+            var filtered_data = buildModifiedFilter(data,filters)
+  
+            if (filters.length == x.length) {
+              _state.publish("filters",filters)
+              _state.publishStatic("filtered_data",filtered_data)
+            }
+  
+            d3.select(".summary").html("Total rows: " + data.length + "<br>" + " Rows remaining after filter: " + filtered_data.length + "<br><br>")
+  
+            if (filtered_data.length == 0) d3.selectAll(".outer-table-wrapper").html("")
+  
+          })
           .draw()
 
       }
@@ -363,10 +402,6 @@
         .render("user_id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
         .render("auction_id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
         .render("id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
-
-
-
-
         .render("publisher_id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
         .render("sellers",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
         .draw()
@@ -477,24 +512,24 @@
     <script>
 
     var buildSummary = function() {
-        var summary = []
-        summary.push({"key":"append","value":d3.select("#append").node().selectedOptions[0].value })
-        summary.push({"key":"duplicate","value":d3.select("#duplicate").node().selectedOptions[0].value })
-        summary.push({"key":"breakout","value":d3.select("#breakout").node().selectedOptions[0].value })
+      var summary = []
+      summary.push({"key":"append","value":d3.select("#append").node().selectedOptions[0].value })
+      summary.push({"key":"duplicate","value":d3.select("#duplicate").node().selectedOptions[0].value })
+      summary.push({"key":"breakout","value":d3.select("#breakout").node().selectedOptions[0].value })
 
-        summary.push({"key":"line_item_id","value":d3.select("#line_item_id").node().value})
-        summary.push({"key":"template_campaign","value":d3.select("#template_campaign").node().value})
-        summary.push({"key":"create_group","value":d3.select("#create_group").node().value})
+      summary.push({"key":"line_item_id","value":d3.select("#line_item_id").node().value})
+      summary.push({"key":"template_campaign","value":d3.select("#template_campaign").node().value})
+      summary.push({"key":"create_group","value":d3.select("#create_group").node().value})
 
 
-        summary.push({"key":"advertiser","value":d3.select("#advertiser").node().value})
-        summary.push({"key":"report_advertiser","value":d3.select("#report_advertiser").node().value})
-        summary.push({"key":"sql_advertiser","value":d3.select("#sql_advertiser").node().value})
+      summary.push({"key":"advertiser","value":d3.select("#advertiser").node().value})
+      summary.push({"key":"report_advertiser","value":d3.select("#report_advertiser").node().value})
+      summary.push({"key":"sql_advertiser","value":d3.select("#sql_advertiser").node().value})
 
-        summary.push({"key":"imp_budget","value":d3.select("#imp_budget").node().value})
-        summary.push({"key":"spend_budget","value":d3.select("#spend_budget").node().value})
+      summary.push({"key":"imp_budget","value":d3.select("#imp_budget").node().value})
+      summary.push({"key":"spend_budget","value":d3.select("#spend_budget").node().value})
 
-        return summary
+      return summary
     }
 
     function getReportJSON() {
@@ -518,6 +553,7 @@
           "report": getReportJSON(),
           "sql": d3.select("#sql").node().value,
           "settings": summary,
+          "transforms": _state._state.transforms,
           "filters": _state._state.filters
         }
 
@@ -562,31 +598,6 @@
 
     })
 
-  function runBuild(data,headers,ff) {
-    
-    buildUIFilters(headers,ff)
-      .on("update",function(x) {
-        var filters = x.map(function(z) {
-          return { 
-              "field": z.field
-            , "op": z.op
-            , "value": z.value
-          }
-        }).filter(function(x) { return x.value !== undefined } )
-  
-        var filtered_data = buildModifiedFilter(data,filters)
-  
-        if (filters.length == x.length) {
-          _state.publish("filters",filters)
-          _state.publishStatic("filtered_data",filtered_data)
-        }
-  
-        d3.select(".summary").html("Total rows: " + data.length + "<br>" + " Rows remaining after filter: " + filtered_data.length + "<br><br>")
-  
-        if (filtered_data.length == 0) d3.selectAll(".outer-table-wrapper").html("")
-  
-      })
-  }
 
 
   </script>
