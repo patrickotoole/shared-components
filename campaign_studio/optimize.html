@@ -32,6 +32,8 @@
       })
       .subscribe("transforms",function(err,values) {
         var transforms = values.transforms
+
+        drawTransforms(transforms || [])
       })
       .subscribe("filters",function(err,values) {
         var filters = values.filters
@@ -56,10 +58,14 @@
           
         })
       })
-      .subscribe("data.data", function(err,data,values) {
+      .subscribe("new_data.data", function(err,data,values) {
+        _state.publishStatic("filtered_data",data)
+      })
+      .subscribe("data.filtered_data", function(err,data,values) {
         var headers = values.headers;
 
-        runBuild(data, headers)
+        runBuild(values.data, headers, values.filters)
+        buildTable(data)
 
       })
     setTimeout(function() {
@@ -75,164 +81,125 @@
 
 <body class="show-debug" style="width:1200px;margin-left:auto;margin-right:auto">
   <h3 style="margin-bottom:0px">Optimize from Reporting</h3>
-  <h4>Load Save</h4>
-  <div>
 
+  <h4>Load Save</h4>
+  <div class="row">
     <div class="row debug"> Load saved state: 
       <textarea style="width:300px; height:20px" id="preload"></textarea> 
       <button id="preload-action">Load</button>
     </div>
     <script>
+      d3.select("#preload").text(JSON.stringify(qs_state))
+      d3.select("#preload-action").on("click",function(){
+        var values = JSON.parse(d3.select("#preload").node().value)
+        _state.push(values)
+      })
+    </script>
+  </div>
 
-        
-        d3.select("#preload").text(JSON.stringify(qs_state))
+  <br><hr>
+  <h4>Extract Data</h4>
 
+  <div class="row"> 
 
-        d3.select("#preload-action").on("click",function(){
-          var values = JSON.parse(d3.select("#preload").node().value)
+    Select Data Source: <select id="show-type">
+      <option>CSV</option>
+      <option>Report</option>
+      <option>SQL</option>
+    </select>
 
-          var filters = values.filters
-            , settings = values.settings
-            , report = values.report
-            , sql = values.sql;
+    <script>
 
-          if (report) {
+      function showOptimization(selected) {
 
-            d3.xhr("/reporting")
-              .post(d3.select("#report").node().value, function(err, data){
-                var jj = JSON.parse(data.response)
-                runBuild(jj,Object.keys(jj[0]))
+        var show_type = d3.select("#show-type")
 
-                if (filters.length && window.data_filter) {
-                  window.data_filter
-                    .data(filters)
-                    .draw()
+        show_type
+          .selectAll("option").filter(function() { return this.value.toLowerCase() == selected })
+          .property("selected","selected")
 
-                  window.data_filter
-                    .on("update")(filters)
-                }
-              })
-            
-          } else {
-            if (filters.length && window.data_filter) {
-              window.data_filter
-                .data(filters)
-                .draw()
-
-              window.data_filter
-                .on("update")(filters)
-            }
-
-          }
-          
+        show_type.on("change",function(x) {
+          var selected = this.selectedOptions[0].value.toLowerCase()
+          showOptimization(selected)
         })
-      </script>
-    </div>
-    <br><hr>
-    <h4>Extract Data</h4>
 
+        var showable = d3.selectAll("#show-display")
 
-    <div class="row"> 
+        showable
+          .selectAll(".showable").classed("hidden",true)
 
-      Select Data Source: <select id="show-type">
-        <option>CSV</option>
-        <option>Report</option>
-        <option>SQL</option>
-      </select>
+        showable
+          .selectAll("." + selected).classed("hidden",false)
+      }
 
-      <script>
-
-        function showOptimization(selected) {
-
-          var show_type = d3.select("#show-type")
-
-          show_type
-            .selectAll("option").filter(function() { return this.value.toLowerCase() == selected })
-            .property("selected","selected")
-
-          show_type.on("change",function(x) {
-            var selected = this.selectedOptions[0].value.toLowerCase()
-            showOptimization(selected)
-          })
-
-          var showable = d3.selectAll("#show-display")
-
-          showable
-            .selectAll(".showable").classed("hidden",true)
-
-          showable
-            .selectAll("." + selected).classed("hidden",false)
-        }
-
-        
-
-      </script>
-
-      <div id="show-display">
-        <div class="showable csv hidden">
-          Upload a file: <input id="upload" type="file" /> 
-        </div>
-        <div class="showable report hidden">
-          <span style="display:inline-block">
-            <span style="width:100px;display:inline-block"></span>
-            <span style="width:200px;display:inline-block">Use Appnexus Report:</span> 
-            <textarea id="report" type="file" style="width:200px"></textarea> 
-            <br>
-            <span style="width:100px;display:inline-block"></span>
-            <span style="width:200px;display:inline-block">Report Advertiser ID:</span>
-            <select id='report_advertiser'></select>
-          </span>
-
-
-          <button id="report-action">Get</button>
-          <script>
-            d3.select("#report-action").on("click",function(){
-                var values = JSON.parse(d3.select("#report").node().value)
-                values['report_advertiser'] = d3.select("#report_advertiser").node().value
       
-                d3.xhr("/reporting")
-                  .post( JSON.stringify(values), function(err, data){
-                    var jj = JSON.parse(data.response)
-      
-                    runBuild(jj,Object.keys(jj[0]))
-                  } )
-              })
-          </script>
-        </div>
 
-        <div class="showable sql hidden">
-          Enter SQL: <textarea id="sql" style="width:200px"></textarea>
+    </script>
+
+    <div id="show-display">
+      <div class="showable csv hidden">
+        Upload a file: <input id="upload" type="file" /> 
+      </div>
+      <div class="showable report hidden">
+        <span style="display:inline-block">
+          <span style="width:100px;display:inline-block"></span>
+          <span style="width:200px;display:inline-block">Use Appnexus Report:</span> 
+          <textarea id="report" type="file" style="width:200px"></textarea> 
           <br>
-          Choose Advertiser: <select id='sql_advertiser'></select>
+          <span style="width:100px;display:inline-block"></span>
+          <span style="width:200px;display:inline-block">Report Advertiser ID:</span>
+          <select id='report_advertiser'></select>
+        </span>
 
-          <button id="sql-action">Get</button>
-          <script>
-            d3.select("#sql-action").on("click",function(){
-                var values = {"sql":d3.select("#sql").node().value}
-                values['sql_advertiser'] = d3.select("#sql_advertiser").node().value
 
-      
-                d3.xhr("/run-sql")
-                  .post( JSON.stringify(values), function(err, data){
-                    var jj = JSON.parse(data.response)
+        <button id="report-action">Get</button>
+        <script>
+          d3.select("#report-action").on("click",function(){
+              var values = JSON.parse(d3.select("#report").node().value)
+              values['report_advertiser'] = d3.select("#report_advertiser").node().value
+    
+              d3.xhr("/reporting")
+                .post( JSON.stringify(values), function(err, data){
+                  var jj = JSON.parse(data.response)
+    
+                  _state.publishStatic("headers",Object.keys(jj[0]))
+                  _state.publishStatic("data",jj)
 
-                    _state.publishStatic("headers",Object.keys(jj[0]))
-                    _state.publishStatic("data",jj)
+                })
+            })
+        </script>
+      </div>
 
-                    
-                  })
-              })
-          </script>
-        </div>
+      <div class="showable sql hidden">
+        Enter SQL: <textarea id="sql" style="width:200px"></textarea>
+        <br>
+        Choose Advertiser: <select id='sql_advertiser'></select>
+
+        <button id="sql-action">Get</button>
+        <script>
+          d3.select("#sql-action").on("click",function(){
+              var values = {"sql":d3.select("#sql").node().value}
+              values['sql_advertiser'] = d3.select("#sql_advertiser").node().value
+
+    
+              d3.xhr("/run-sql")
+                .post( JSON.stringify(values), function(err, data){
+                  var jj = JSON.parse(data.response)
+
+                  _state.publishStatic("headers",Object.keys(jj[0]))
+                  _state.publishStatic("data",jj)
+                  
+                })
+            })
+        </script>
       </div>
     </div>
+  </div>
 
   <br> <hr> 
-
   <h4>Analyze</h4>
     
-  <div class="row"> Transform: </div>
-
+  <div class="row">Transform:</div>
   <div class="row">
 
     <div class="transform-row"> </div>
@@ -241,7 +208,22 @@
 
       var drawTransforms = function(tt) {
 
-        var transform = d3_splat(d3.selectAll(".transform-row"),".transform","div",tt,function(x) { return x.name })
+        d3.select("#new-transform").on("click",function() { 
+          var p = JSON.parse(JSON.stringify(_state._state.transforms || []))
+          
+          var transforms = p
+
+          if (transforms.filter(function(x) { return x.name == "" }).length == 0) {
+            transforms.push({"name":"","eval":""})
+          }
+
+          _state.publish("transforms",transforms)
+          return 
+        })
+
+        var trow = d3.selectAll(".transform-row").data([tt])
+
+        var transform = d3_splat(trow,".transform","div",function(x) { return x }, function(x,i) { return i })
           .classed("transform",true)
           .style("margin-left","10px")
 
@@ -256,7 +238,13 @@
         d3_updateable(name_wrap,"input","input").text(function(x){ return x.name })
           .attr("placeholder","e.g., CPM")
           .on("change",function(x) {
-            x.name = this.value
+            //x.name = this.value // This is bad
+            var _j = JSON.parse(JSON.stringify(tt))
+            var matched = _j.filter(function(z) { return z.name == x.name })[0]
+
+            matched.name = this.value
+
+            _state.publish("transforms",_j)
           })
 
         var eval_wrap = d3_updateable(transform,".eval-wrap","div")
@@ -269,31 +257,21 @@
         
       }
 
-      var transforms = []
 
-      d3.select("#new-transform").on("click",function() { 
-        if (transforms.filter(function(x) { return x.name == "" }).length == 0) {
-          transforms.push({"name":"","eval":""})
-        }
-        console.log(transforms.length, transforms)
-        drawTransforms(transforms)
-        return 
-      })
+      
     </script>
   </div>
 
   </div>
   <br>
 
-
   <div class="row"> Filter: </div>
-
   <div class="row">
 
     <div class="filter-row"> </div>
     <script>
 
-      function buildUIFilters(headers) { 
+      function buildUIFilters(headers,ff) { 
 
         var ops = headers.map(function(x) {
           return [
@@ -306,10 +284,10 @@
           ]
         })
 
-        window.data_filter = filter.filter(d3.selectAll(".filter-row"))
+        filter.filter(d3.selectAll(".filter-row"))
           .fields(headers)
           .ops(ops)
-          .data([])
+          .data(ff)
           .render_op("between",function(filter,value) {
             var self = this
 
@@ -350,13 +328,10 @@
                   self.on("update")(self.data())
                 },1000)
               })
-              d3.select(".summary").text(window.data_filter.length)
 
 
           })
           .draw()
-
-        return window.data_filter
 
       }
     </script>
@@ -371,6 +346,33 @@
   <div class="row"> Results: </div>
 
   <div style="height:250px;overflow:scroll;position:relative" class="outer-table-wrapper"></div>
+  <script>
+    function buildTable(data) {
+      
+      var tt = d3.selectAll(".outer-table-wrapper")
+
+
+      table.table(tt)
+        .data({"key":"Data","values":data}) 
+        .render("ctr",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(d3.format(".3%")(t)) })
+        .render("placement_id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
+        .render("venue_id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
+        .render("campaign_id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
+        .render("line_item_id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
+        .render("pixel_id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
+        .render("user_id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
+        .render("auction_id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
+        .render("id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
+
+
+
+
+        .render("publisher_id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
+        .render("sellers",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
+        .draw()
+
+    }
+  </script>
 
   <br><hr>
 
@@ -475,7 +477,7 @@
     <script>
 
     var buildSummary = function() {
-        var summary = template_fields.summarize()
+        var summary = []
         summary.push({"key":"append","value":d3.select("#append").node().selectedOptions[0].value })
         summary.push({"key":"duplicate","value":d3.select("#duplicate").node().selectedOptions[0].value })
         summary.push({"key":"breakout","value":d3.select("#breakout").node().selectedOptions[0].value })
@@ -492,11 +494,7 @@
         summary.push({"key":"imp_budget","value":d3.select("#imp_budget").node().value})
         summary.push({"key":"spend_budget","value":d3.select("#spend_budget").node().value})
 
-
-
-
         return summary
-
     }
 
     function getReportJSON() {
@@ -507,7 +505,7 @@
       }
     }
 
-    d3.select("#save").on("click",function(x){
+      d3.select("#save").on("click",function(x){
 
         var summary = buildSummary()
 
@@ -520,7 +518,7 @@
           "report": getReportJSON(),
           "sql": d3.select("#sql").node().value,
           "settings": summary,
-          "filters": window.data_filter.data()
+          "filters": _state._state.filters
         }
 
         d3.select("#obj").text(JSON.stringify(data,null,2))
@@ -539,10 +537,6 @@
         var data = {
           "data": dd,
           "params": summary
-          //"fields": fields.map(function(x) { return x.name }),
-          //"line_item": line_item,
-          //"advertiser": advertiser,  
-          //"template": template
         }
 
         d3.xhr("/optimize")
@@ -554,237 +548,76 @@
 
 
   <script>
-
-    function buildTable(data) {
-      
-      var tt = d3.selectAll(".outer-table-wrapper")
-
-
-      table.table(tt)
-        .data({"key":"Data","values":data}) 
-        .render("ctr",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(d3.format(".3%")(t)) })
-        .render("placement_id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
-        .render("venue_id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
-        .render("campaign_id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
-        .render("line_item_id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
-        .render("pixel_id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
-        .render("user_id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
-        .render("auction_id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
-        .render("id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
-
-
-
-
-        .render("publisher_id",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
-        .render("sellers",function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) })
-        .draw()
-
-    }
     
-    campaign_analysis.upload(d3.select("#upload"))
-      .on("load", function parseFile(result){
+  campaign_analysis.upload(d3.select("#upload"))
+    .on("load", function parseFile(result){
 
-        var process = campaign_analysis.parse(result)
+      var process = campaign_analysis.parse(result)
 
-        headers = process.headers()
-        var data = process.data()
+      var headers = process.headers()
+      var data = process.data()
 
-        runBuild(data,headers)
-      })
+      _state.publishStatic("headers",headers)
+      _state.publishStatic("data",data)
 
-      function runBuild(data,headers) {
-        window.filtered_data = data;
+    })
 
-        var header_mappings = {
-            "seller_id": "member_targets"
-          , "segment_id" : "segment_group_targets"
-          , "venue_id" : "venue_targets"
-          , "placement_id": "platform_placement_targets"
-          , "site_domain": "domain_targets"
+  function runBuild(data,headers,ff) {
+    
+    buildUIFilters(headers,ff)
+      .on("update",function(x) {
+        var filters = x.map(function(z) {
+          return { 
+              "field": z.field
+            , "op": z.op
+            , "value": z.value
+          }
+        }).filter(function(x) { return x.value !== undefined } )
+  
+        var filtered_data = buildModifiedFilter(data,filters)
+  
+        if (filters.length == x.length) {
+          _state.publish("filters",filters)
+          _state.publishStatic("filtered_data",filtered_data)
         }
-
-        var values = headers.map(function(f) {
-          return header_mappings[f]
-        }).filter(function(x) { return x} )
-
-        window.template_fields = campaign_analysis.fields(d3.selectAll("#template-fields"))
-          .fields(values)
-          .draw()
-
-
-
-
-        var filters = buildUIFilters(headers)
-          .on("update",function(x) {
-            var y = x.map(function(z) {
-
-              return { 
-                  "field": z.field
-                , "op": z.op
-                , "value": z.value
-              }
-            }).filter(function(x) { return x.value !== undefined } )
-
-            var filters = y
-
-            window.filtered_data = buildModifiedFilter(data,filters)
-            buildTable(window.filtered_data)
-
-            d3.select(".summary").html("Total rows: " + data.length + "<br>" + " Rows remaining after filter: " + window.filtered_data.length + "<br><br>")
-
-            if (window.filtered_data.length == 0) {
-              d3.selectAll(".outer-table-wrapper").html("")
-            }
-            
-
-          })
-      
-      buildTable(data)
-
-      return data
-
-
-    }
-
-    
+  
+        d3.select(".summary").html("Total rows: " + data.length + "<br>" + " Rows remaining after filter: " + filtered_data.length + "<br><br>")
+  
+        if (filtered_data.length == 0) d3.selectAll(".outer-table-wrapper").html("")
+  
+      })
+  }
 
 
   </script>
 
 
-      <script>
+  <script>
+    
+    var advertisers = {{advertisers}},
+      templates = {{campaign_templates}},
+      profile_templates = {{profile_templates}};
 
-        var campaignPreview = function(template) {
-          var campaign_entries = d3.entries(
-            JSON.parse(
-              template.replace(/\%\(.*?\)s/g,"'MACRO'").replace(/:'MACRO',/g,':"MACRO",')
-            )
-          ).filter(function(xx) { return xx.value })
-           .sort(function(p,q) { return d3.ascending(p.key,q.key) })
+    var select_advertiser = d3.selectAll("#advertiser").data([advertisers])
+    select_advertiser.selectAll("option").data(function(x) { return x } )
+      .enter()
+        .append("option")
+        .text(function(x) { return x.pixel_source_name })
+        .attr("value",function(x){ return x.external_advertiser_id })
 
-          var items = d3.select(".campaign").selectAll(".items").data(campaign_entries,function(x){ return JSON.stringify(x) })
-          var new_items = items
-            .enter()
-            .append("div").classed("items",true)
-            .style("font-size","14px")
+    var select_advertiser = d3.selectAll("#report_advertiser").data([advertisers])
+    select_advertiser.selectAll("option").data(function(x) { return x } )
+      .enter()
+        .append("option")
+        .text(function(x) { return x.pixel_source_name })
+        .attr("value",function(x){ return x.external_advertiser_id })
 
-          new_items.append("div").text(function(x) { return x.key }).style("width","50%").style("display","inline-block")
-          new_items.append("div").text(function(x) { return x.value }).style("width","49%").style("display","inline-block")
+    var select_advertiser = d3.selectAll("#sql_advertiser").data([advertisers])
+    select_advertiser.selectAll("option").data(function(x) { return x } )
+      .enter()
+        .append("option")
+        .text(function(x) { return x.pixel_source_name })
+        .attr("value",function(x){ return x.external_advertiser_id })
 
-          items.exit().remove()
-
-          items.order()
-
-        }
-
-        var profilePreview = function(templates) {
-
-          var obj = {}
-
-          templates.map(function(x) {
-            var template = x.template.replace(/\%\(.*?\)s/g,"'MACRO'").replace(/"'MACRO'"/g,'"MACRO"').replace(/'MACRO'/g,'"MACRO"')
-
-
-            obj[x.name] = JSON.parse(template)
-
-            return x
-          })
-
-          var profile_entries = d3.entries(obj).filter(function(xx) { return xx.value })
-            .sort(function(p,q) { return d3.ascending(p.key,q.key) })
-
-          var items = d3.select(".profile").selectAll(".items").data(profile_entries)
-          var new_items = items
-            .enter()
-            .append("div").classed("items",true)
-            .style("font-size","14px")
-
-          new_items.append("div").text(function(x) { return x.key }).style("width","50%").style("display","inline-block")
-          new_items.append("div").text(function(x) { return JSON.stringify(x.value) }).style("width","49%").style("display","inline-block")
-
-          items.exit().remove()
-
-          items.order()
-
-        }
-        
-        var advertisers = {{advertisers}},
-          templates = {{campaign_templates}},
-          profile_templates = {{profile_templates}};
-
-        var select_advertiser = d3.selectAll("#advertiser").data([advertisers])
-        select_advertiser.selectAll("option").data(function(x) { return x } )
-          .enter()
-            .append("option")
-            .text(function(x) { return x.pixel_source_name })
-            .attr("value",function(x){ return x.external_advertiser_id })
-
-        var select_advertiser = d3.selectAll("#report_advertiser").data([advertisers])
-        select_advertiser.selectAll("option").data(function(x) { return x } )
-          .enter()
-            .append("option")
-            .text(function(x) { return x.pixel_source_name })
-            .attr("value",function(x){ return x.external_advertiser_id })
-
-        var select_advertiser = d3.selectAll("#sql_advertiser").data([advertisers])
-        select_advertiser.selectAll("option").data(function(x) { return x } )
-          .enter()
-            .append("option")
-            .text(function(x) { return x.pixel_source_name })
-            .attr("value",function(x){ return x.external_advertiser_id })
-
-
-
-
-
-        var select = d3.selectAll("#templates").data([templates])
-
-        select.on("change",function(x) {
-          var dd = this.selectedOptions[0].__data__
-
-          campaignPreview(dd.template)
-          
-          var xx = profile_templates.filter(function(z) { return z.type == dd.name })
-
-          var required_fields = []
-          xx.map(function(f) {
-            if (f.required_columns) required_fields.push.apply(required_fields,f.required_columns.split(","))
-          })
-
-          console.log(required_fields)
-
-          profilePreview(xx)
-
-          var field = d3.selectAll("#template-fields")
-            .data([xx])
-
-          field.enter()
-            .append("div")
-            .attr("id","template-fields")
-
-          var spans = field.selectAll("span.yo").data(function(x) {return x},function(x) { return x.name })
-
-          spans
-            .enter().append("span")
-            .classed("yo",true)
-            .attr("style","padding: 0px 10px; display: inline-block; width: 250px; height: 20px; overflow: hidden")
-
-          spans.exit().remove()
-
-          spans.selectAll("input").data(function(x) { return [x]}).enter().append("input")
-            .attr("type","checkbox")
-            .attr("checked","checked")
-            .classed("template-field",true)
-
-          spans.selectAll("span").data(function(x) { return [x]}).enter().append("span")
-            .text(function(x) { return x.name })
-
-          console.log(xx)
-
-        })
-
-        select.selectAll("option").data(function(x) { return x })
-          .enter()
-          .append("option").text(function(x) { return x.name })
-      </script>
+  </script>
 </body>
