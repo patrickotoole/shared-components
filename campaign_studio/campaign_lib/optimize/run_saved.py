@@ -5,14 +5,35 @@ from campaign_lib.report_helper import get_report, get_sql
 
 def get_data(_json,api,reporting):
 
+    try:
+        _json['report_advertiser'] = [i for i in _json['settings'] if i['key'] == "report_advertiser"][0]['value']
+        _json['sql_advertiser'] = [i for i in _json['settings'] if i['key'] == "sql_advertiser"][0]['value']
+    except:
+        pass
+
+
     if _json.get("report",False):
-        raw_data = get_report(_json['advertiser'],_json,api,reporting)
+        raw_data = get_report(_json['report_advertiser'],_json,api,reporting)
 
     if _json.get("sql",False):
-        raw_data = get_sql(_json['advertiser'],_json, reporting)
+        raw_data = get_sql(_json['sql_advertiser'],_json, reporting)
 
     return raw_data
     
+def run_transform(_json):
+    
+    import subprocess
+    import json
+
+    print os.path.dirname(__file__) + '/../../../shared/js/run_transform.js'
+
+    process2 = subprocess.Popen(['node',os.path.dirname(__file__) + '/../../../shared/js/run_transform.js'], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+    data = process2.communicate(input=json.dumps(_json) )[0]
+
+    import pandas 
+    return pandas.DataFrame(json.loads(data)['data'])
+
+
 
 def run_filter(df,opt_json):
     
@@ -27,7 +48,7 @@ def run_filter(df,opt_json):
     import pandas 
     return json.loads(data)
 
-def run():
+def run(name=False):
     from link import lnk
 
     db = lnk.dbs.crushercache
@@ -35,7 +56,11 @@ def run():
     api = lnk.api.console
     logging.info("opt - initialized connectors")
 
-    df = db.select_dataframe("SELECT * FROM recurring_optimizations where days like concat('%',DATE_FORMAT(NOW(),'%a'),'%')  and time like concat('%',DATE_FORMAT(NOW(),'%H'),'%') ")
+    if not name:
+        df = db.select_dataframe("SELECT * FROM recurring_optimizations where days like concat('%',DATE_FORMAT(NOW(),'%a'),'%')  and time like concat('%',DATE_FORMAT(NOW(),'%H'),'%') ")
+    else:
+        df = db.select_dataframe("SELECT * FROM optimization where name = '%s' and active = 1 and deleted = 0" % name)
+
 
     logging.info("opt - found scheduled jobs: %s" % len(df))
 
@@ -51,9 +76,15 @@ def run():
         logging.info("opt - running job: " + json.dumps(_json))
 
         raw_data = get_data(_json, api, reporting)
-        filter_data = run_filter(raw_data, _json)
+        _json['data'] = raw_data.to_dict('records')
 
-        logging.info("opt - filtered data.")
+        logging.info("opt - transforming: " + json.dumps(_json['transforms']) )
+        data = run_transform(_json)
+
+        logging.info("opt - filtering: " + json.dumps(_json['filters']) )
+        filter_data = run_filter(data, _json)
+
+        logging.info("opt - filtered data: %s to %s" % (len(data) , len(filter_data)) )
 
 
 
@@ -64,7 +95,7 @@ def run():
 
         logging.info("opt - starting updates.")
         
-        runner.runner(dparams,filter_data,api)
+        #runner.runner(dparams,filter_data,api)
 
         logging.info("opt - finished updates.")
         logging.info("opt - finished job: %s" % i)
@@ -73,4 +104,16 @@ def run():
 
 
 if __name__ == "__main__":
+    from link import lnk
+
+    from lib.report.utils.options import define
+    from lib.report.utils.options import options
+    from lib.report.utils.options import parse_command_line
+    from lib.report.utils.loggingutils import basicConfig
+
+    define('console', default=True)
+
+    parse_command_line()
+    basicConfig(options=options)
+
     run()

@@ -14,66 +14,15 @@
 
   <script src="/static/utils.js"></script>
   <script src="/static/custom_filter.js"></script>
+  <script src="/static/custom_transform.js"></script>
+
+
+  <script src="/static/create/build/campaign_analysis.js"></script>
 
   <script>
+
     var qs_state = state.qs().from(document.location.search)
     var _state = state.state(qs_state)
-      .subscribe("sql",function(err,values) {
-        var sql = values.sql;
-
-        d3.select("#sql").text(sql)
-        if (sql) showOptimization("sql")
-      })
-      .subscribe("report",function(err,values) {
-        var report = values.report
-
-        d3.select("#report").text(JSON.stringify({"report":report,"report_advertiser":d3.select("#report_advertiser").node().value},null,2))
-        if (report) showOptimization("report")
-      })
-      .subscribe("transforms",function(err,values) {
-        var transforms = values.transforms
-
-        drawTransforms(transforms || [])
-        if (transforms) runTransforms(transforms,values)
-      })
-      .subscribe("filters",function(err,values) {
-        var filters = values.filters
-      })
-      .subscribe("settings", function(err,values) {
-        var settings = values.settings
-
-        settings.map(function(row) {
-          var selected = d3.selectAll("#" + row.key)
-          if (selected.size() == 0) return
-
-          if (selected.node().type == "select-one")
-            return selected.selectAll("option").property("selected",function(x) { return this.value == row.value ? "selected" : undefined})
-
-          if (selected.node().type == "text") return selected.property("value", row.value)
-          
-          if (selected.node().tagName == "DIV") {
-            return selected.selectAll("input")
-              .filter(function(x) { return x == row.value})
-              .property("checked",function(x) { return x == row.value ? "checked" : undefined})
-          }
-          
-        })
-      })
-      .subscribe("new_data.data", function(err,data,values) {
-        _state.publishStatic("filtered_data",data)
-      })
-      .subscribe("data.filtered_data", function(err,data,values) {
-        var headers = values.headers;
-
-        buildUIFilters(headers, values.data, values.filters)
-        buildTable(data)
-
-      })
-    setTimeout(function() {
-      _state.publish(qs_state)
-
-      d3.select("#sql-action").on("click")()
-    },10)
 
       
   </script>
@@ -140,7 +89,26 @@
     <div id="show-display">
       <div class="showable csv hidden">
         Upload a file: <input id="upload" type="file" /> 
+        <script>
+          
+          campaign_analysis.upload(d3.select("#upload"))
+            .on("load", function parseFile(result){
+      
+              var process = campaign_analysis.parse(result)
+      
+              var headers = process.headers()
+              var data = process.data()
+      
+              _state.publishStatic("headers",headers)
+              _state.publishStatic("data",data)
+      
+            })
+      
+        </script>
+
       </div>
+
+
       <div class="showable report hidden">
         <span style="display:inline-block">
           <span style="width:100px;display:inline-block"></span>
@@ -207,22 +175,6 @@
     <button id="new-transform">Add Transform</button>
     <script>
 
-      var runTransforms = function(transforms,values) {
-
-        var transform_funcs = transforms.reduce(function(p,c) { p[c.name] = eval("[function(row) { row['" + c.name + "'] = " + c.eval + "}][0]"); return p },{})
-
-        if (values.data) {
-          var first_row = values.data[0]
-
-          if (Object.keys(transform_funcs).filter(function(k) { return first_row[k] !== undefined }).length > 0) return
-
-          values.data.map(function(row) {
-            Object.keys(transform_funcs).map(function(k) { transform_funcs[k](row) })
-          })
-
-          _state.publishStatic("data",values.data)
-        }
-      }
 
       var drawTransforms = function(tt) {
 
@@ -272,6 +224,15 @@
         d3_updateable(eval_wrap,"span","span").text("Expression:")
         d3_updateable(eval_wrap,"input","input").attr("value",function(x){ return x.eval })
           .attr("placeholder","e.g., row['imps']/row['cost']")
+          .on("change",function(x) {
+         
+            var _j = JSON.parse(JSON.stringify(tt))
+            var matched = _j.filter(function(z) { return z.name == x.name })[0]
+
+            matched.eval = this.value
+
+            _state.publish("transforms",_j)
+          })
         
       }
 
@@ -415,7 +376,6 @@
 
     <h4>Setup</h4>
 
-
     <div class="row">
       <div style="width:300px;display:inline-block">Advertiser ID: </div>
       <select id='advertiser' style="width:200px"></select> 
@@ -424,8 +384,6 @@
       <div style="width:300px;display:inline-block">Line Item ID (if not modify): </div>
       <input id="line_item_id" style="width:200px"></input> 
     </div>
-
-
 
     <div>
       <div style="display:inline-block;width:300px">Duplicate/replace/modify/create: </div>
@@ -474,26 +432,7 @@
 
       <div style="width:250px;display:inline-block">Spend Budget Override:</div>
       <input id="spend_budget" style="width:200px"></input> 
-
-
     </div>
-
-
-    <br>
-
-    <div>
-      Fields to add: 
-      <div id='template-fields'></div>
-
-      <script src="/static/create/build/campaign_analysis.js"></script>
-      <script>
-
-
-      </script>
-    </div>
-    <br>
-
-
   </div>
 
 
@@ -583,24 +522,6 @@
   </div>
 
 
-  <script>
-    
-  campaign_analysis.upload(d3.select("#upload"))
-    .on("load", function parseFile(result){
-
-      var process = campaign_analysis.parse(result)
-
-      var headers = process.headers()
-      var data = process.data()
-
-      _state.publishStatic("headers",headers)
-      _state.publishStatic("data",data)
-
-    })
-
-
-
-  </script>
 
 
   <script>
@@ -629,6 +550,66 @@
         .append("option")
         .text(function(x) { return x.pixel_source_name })
         .attr("value",function(x){ return x.external_advertiser_id })
+
+
+    _state
+      .subscribe("sql",function(err,values) {
+        var sql = values.sql;
+
+        d3.select("#sql").text(sql)
+        if (sql) showOptimization("sql")
+      })
+      .subscribe("report",function(err,values) {
+        var report = values.report
+
+        d3.select("#report").text(JSON.stringify({"report":report,"report_advertiser":d3.select("#report_advertiser").node().value},null,2))
+        if (report) showOptimization("report")
+      })
+      .subscribe("transforms",function(err,values) {
+        var transforms = values.transforms
+
+        drawTransforms(transforms || [])
+        if (transforms) runTransforms(transforms,values, function(values) {
+          _state.setStatic("headers",Object.keys(values.data[0]))
+          _state.publishStatic("data",values.data)
+        })
+      })
+      .subscribe("filters",function(err,values) {
+        var filters = values.filters
+      })
+      .subscribe("settings", function(err,values) {
+        var settings = values.settings
+
+        settings.map(function(row) {
+          var selected = d3.selectAll("#" + row.key)
+          if (selected.size() == 0) return
+
+          if (selected.node().type == "select-one")
+            return selected.selectAll("option").property("selected",function(x) { return this.value == row.value ? "selected" : undefined})
+
+          if (selected.node().type == "text") return selected.property("value", row.value)
+          
+          if (selected.node().tagName == "DIV") {
+            return selected.selectAll("input")
+              .filter(function(x) { return x == row.value})
+              .property("checked",function(x) { return x == row.value ? "checked" : undefined})
+          }
+          
+        })
+      })
+      .subscribe("new_data.data", function(err,data,values) {
+        _state.publishStatic("filtered_data",data)
+      })
+      .subscribe("data.filtered_data", function(err,data,values) {
+        var headers = values.headers;
+
+        buildUIFilters(headers, values.data, values.filters)
+        buildTable(data)
+
+      })
+
+    _state.publish(qs_state)
+    d3.select("#sql-action").on("click")()
 
   </script>
 </body>
