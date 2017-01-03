@@ -52,7 +52,9 @@
 
   <div class="row"> 
 
-    Select Data Source: <select id="show-type">
+    Select Data Source: 
+    <select id="show-type">
+      <option value="" disabled selected>Select your option</option>
       <option>CSV</option>
       <option>Report</option>
       <option>SQL</option>
@@ -87,6 +89,7 @@
     </script>
 
     <div id="show-display">
+      <br>
       <div class="showable csv hidden">
         Upload a file: <input id="upload" type="file" /> 
         <script>
@@ -111,11 +114,9 @@
 
       <div class="showable report hidden">
         <span style="display:inline-block">
-          <span style="width:100px;display:inline-block"></span>
           <span style="width:200px;display:inline-block">Use Appnexus Report:</span> 
           <textarea id="report" type="file" style="width:200px"></textarea> 
           <br>
-          <span style="width:100px;display:inline-block"></span>
           <span style="width:200px;display:inline-block">Report Advertiser ID:</span>
           <select id='report_advertiser'></select>
         </span>
@@ -140,9 +141,11 @@
       </div>
 
       <div class="showable sql hidden">
-        Enter SQL: <textarea id="sql" style="width:200px"></textarea>
+        <span style="width:200px;display:inline-block">Enter SQL:</span> 
+        <textarea id="sql" style="width:200px"></textarea>
         <br>
-        Choose Advertiser: <select id='sql_advertiser'></select>
+        <span style="width:200px;display:inline-block">Choose Advertiser: </span>
+        <select id='sql_advertiser'></select>
 
         <button id="sql-action">Get</button>
         <script>
@@ -150,6 +153,7 @@
             var values = {"sql":d3.select("#sql").node().value}
             values['sql_advertiser'] = d3.select("#sql_advertiser").node().value
 
+            if (!values.sql) return false;
     
             d3.xhr("/run-sql")
               .post( JSON.stringify(values), function(err, data){
@@ -376,32 +380,49 @@
 
     <h4>Setup</h4>
 
+
     <div class="row">
       <div style="width:300px;display:inline-block">Advertiser ID: </div>
       <select id='advertiser' style="width:200px"></select> 
     </div>
-    <div class="row">
-      <div style="width:300px;display:inline-block">Line Item ID (if not modify): </div>
-      <input id="line_item_id" style="width:200px"></input> 
-    </div>
 
-    <div>
-      <div style="display:inline-block;width:300px">Duplicate/replace/modify/create: </div>
+    <div class="row">
+      <div style="display:inline-block;width:300px">Optimization Type: </div>
       <div style="display:inline-block;width:250px">
         <select id="duplicate" >
+          <option value="" disabled selected>Select your optimization</option>
           <option>Duplicate</option>
           <option>Replace</option>
           <option>Modify</option>
           <option>Deactivate</option>
           <option disabled=disabled>Create</option>
         </select>
-      </div>
+        <script>
+          d3.select("#duplicate").on("change",function() {
+            var value = this.selectedOptions[0].value.toLowerCase()
 
+            var options = d3.selectAll(".setup .row.optional").classed("hidden",true)
+            d3.selectAll(".setup .optional.row." + value).classed("hidden",false)
+          })
+        </script>
+      </div>
+    </div>
+
+    
+
+    
+
+    <div class="row create hidden optional">
       <div style="width:250px;display:inline-block">Template Campaign (if create): </div>
       <input id="template_campaign" style="width:200px"></input> 
     </div>
 
-    <div>
+    <div class="row duplicate replace hidden optional">
+      <div style="width:300px;display:inline-block">Line Item ID (if not modify): </div>
+      <input id="line_item_id" style="width:200px"></input> 
+    </div>
+
+    <div class="row duplicate replace modify hidden optional">
       <div style="display:inline-block;width:300px">Group or Breakout: </div>
       <div style="display:inline-block;width:250px">
         <select id="breakout" >
@@ -409,13 +430,15 @@
           <option>Breakout</option>
         </select>
       </div>
+    </div>
 
+    <div class="row create hidden optional">
       <div style="width:250px;display:inline-block">Group by (if create):</div>
       <input id="create_group" style="width:200px"></input> 
     </div>
 
 
-    <div>
+    <div class="row duplicate replace modify hidden optional">
       <div style="display:inline-block;width:300px">Override or Append fields: </div>
       <div style="display:inline-block;width:250px">
         <select id="append" >
@@ -423,15 +446,41 @@
           <option>Append</option>
         </select>
       </div>
+    </div>
+
+    <br>
+    <a id="show-override" href="#overrides">Show Overrides (+)</a>
+    <script>
+      d3.select("#show-override").on("click",function() {
+        var or = d3.selectAll(".overrides")
+        d3.select("#show-override").text(!or.classed("hidden") ? "Show Overrides (+)" : "Hide Overrides (-)")
+        or.classed("hidden",!or.classed("hidden"))
+        
+      })
+    </script>
+
+    <div id="overrides" class="row overrides hidden">
+
+      <br>
 
       <div style="width:250px;display:inline-block">Imp Budget Override:</div>
       <input id="imp_budget" style="width:200px"></input> 
-
-      <div style="width:300px;height:15px;display:inline-block"></div>
-      <div style="width:250px;height:15px;display:inline-block"></div>
-
       <div style="width:250px;display:inline-block">Spend Budget Override:</div>
       <input id="spend_budget" style="width:200px"></input> 
+      <br>
+
+      <div style="width:250px;display:inline-block">Imp Bid Override:</div>
+      <input id="imp_bid" style="width:200px"></input> 
+      <div style="width:250px;display:inline-block">Spend Bid Override:</div>
+      <input id="spend_bid" style="width:200px"></input> 
+      <br>
+      <div style="width:250px;display:inline-block">Imp Lifetime Budget Override:</div>
+      <input id="lifetime_imp_budget" style="width:200px"></input> 
+      <div style="width:250px;display:inline-block">Spend Lifetime Budget Override:</div>
+      <input id="lifetime_spend_budget" style="width:200px"></input> 
+
+
+
     </div>
   </div>
 
@@ -551,6 +600,7 @@
         .text(function(x) { return x.pixel_source_name })
         .attr("value",function(x){ return x.external_advertiser_id })
 
+    showOptimization()
 
     _state
       .subscribe("sql",function(err,values) {
@@ -578,7 +628,7 @@
         var filters = values.filters
       })
       .subscribe("settings", function(err,values) {
-        var settings = values.settings
+        var settings = values.settings || []
 
         settings.map(function(row) {
           var selected = d3.selectAll("#" + row.key)
@@ -603,7 +653,7 @@
       .subscribe("data.filtered_data", function(err,data,values) {
         var headers = values.headers;
 
-        buildUIFilters(headers, values.data, values.filters)
+        buildUIFilters(headers, values.data, values.filters || [])
         buildTable(data)
 
       })
