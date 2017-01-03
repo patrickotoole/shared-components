@@ -116,10 +116,13 @@ class PatternSearchHelpers(BaseDomainHandler):
                 return x in url
             return _run
 
-        #p = patterns.url_pattern
+        p = patterns.url_pattern
+        exist = { url: list(p[p.map(check(url))]) for url in urls }
+        
         results = dict(zip(urls, [[] for x in urls]))
         for items in actions:
-            filter_dict = self.run_filter_url(self.get_filter_checker(items['action_id']), urls)
+            import ipdb; ipdb.set_trace()
+            filter_dict = self.run_filter_url(self.get_filter_checker(items['action_id']), set([x for x in exist.items() if items['url_pattern'] in x[1]]))
             for key in filter_dict.keys():
                 if filter_dict[key]:
                     results[key].append(items['action_name'])
