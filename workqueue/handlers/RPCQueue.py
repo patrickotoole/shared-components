@@ -110,7 +110,6 @@ class RPCQueue():
             kwargs = recur_kwargs if udf == 'recurring' else backfill_kwargs
         else:
             kwargs = {"advertiser":advertiser, "pattern":pattern, "func_name":udf, "base_url":base_url, "identifiers":"udf_{}_cache".format(udf), "filter_id":filter_id, "parameters":parameters}
-
         filtering_scripts = dir(custom_scripts) 
         if udf in filtering_scripts:
             kwargs = dict(kwargs.items()+parameters.items())
@@ -137,7 +136,6 @@ class RPCQueue():
             kwargs['params'] = parameters
             work = pickle.dumps((fn, kwargs))
             priority = 1
-            debug_bool=True
 
         entry_id = self.zk_wrapper.write(work,priority,debug_bool)
         logging.info("added to Cassandra work queue %s for %s" %(segment,advertiser))

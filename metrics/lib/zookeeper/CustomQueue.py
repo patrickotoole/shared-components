@@ -46,9 +46,11 @@ class CustomQueue(SingleQueue):
         self._check_put_arguments(value, priority)
         self._ensure_paths()
         if debug:
-            self.path = self.path +"_debug"
-        path = '{path}/{prefix}{priority:03d}-'.format(
-        path=self.path, prefix=self.prefix, priority=priority)
+            path = '{path}/{prefix}{priority:03d}-'.format(
+            path=self.path+"_debug", prefix=self.prefix, priority=priority)
+        else:
+            path = '{path}/{prefix}{priority:03d}-'.format(
+            path=self.path, prefix=self.prefix, priority=priority)
         if debug:
             entry_location = self.client.create(path, value, sequence=True, makepath=True)
         else:
