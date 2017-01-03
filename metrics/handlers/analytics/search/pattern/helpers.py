@@ -116,20 +116,18 @@ class PatternSearchHelpers(BaseDomainHandler):
                 return x in url
             return _run
 
-        def get_names(url):
-            results = []
-            for key, val in filter_dict:
-                if val(url):
-                    results.append(key)
-            return results
-
         #p = patterns.url_pattern
         filter_dict ={}
-        for items in actions:
-            filter_dict[items['action_name']] = self.get_filter_checker(items['action_id'])
-        exist = { url: get_names(url) for url in urls }
+        result = {}
+        for items in actions[0:1]:
+            filter_dict = self.run_filter_url(self.get_filter_checker(items['action_id']), urls)
+            for key, val in filter_dict:
+                if val:
+                    result.get(key,[]).append(items['action_name'])
+        logging.info("finished dict")
 
-        url_to_action = pandas.DataFrame(pandas.Series(exist),columns=["actions"])
+        logging.info(result)
+        url_to_action = pandas.DataFrame(pandas.Series(result),columns=["actions"])
         url_to_action.index.name = "url"
 
         return url_to_action
