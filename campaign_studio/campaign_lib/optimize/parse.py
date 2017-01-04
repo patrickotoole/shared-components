@@ -12,12 +12,12 @@ def parse(dd):
     LINE_ITEM_ID = dparams['line_item_id']
     ADVERTISER = dparams['advertiser']
 
-    duplicate = (dparams['duplicate'] == "Duplicate")
-    dparams['deactivate'] = (dparams['duplicate'] == "Deactivate")
-    dparams['modify'] = (dparams['duplicate'] == "Modify")
-    dparams['create'] = (dparams['duplicate'] == "Create")
+    dparams['duplicate'] = (dparams['opt_type'] == "Duplicate")
+    dparams['deactivate'] = (dparams['opt_type'] == "Deactivate")
+    dparams['modify'] = (dparams['opt_type'] == "Modify")
+    dparams['create'] = (dparams['opt_type'] == "Create")
+    dparams['replace'] = (dparams['opt_type'] == "Replace")
 
-    dparams['duplicate'] = True if dparams['create'] else duplicate
     
     breakout = (dparams['breakout'] == "Breakout")
     dparams['breakout'] = breakout

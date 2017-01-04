@@ -37,14 +37,14 @@ def push(request_type, url, data, console):
         attempts += 1
     print "Finished 1 attempts"
 
-def create_campaign(advertiser,line_item,data,console):
-    url = "/campaign?line_item=%s&advertiser_id=%s" % (line_item,advertiser)
+def create_campaign(advertiser,line_item,data,console,name=""):
+    url = "/campaign?line_item=%s&advertiser_id=%s&logFilter=%s" % (line_item,advertiser,name)
     campaign = push("POST", url, data, console)
 
     return campaign.json['response']['campaign']['id']
 
-def create_profile(advertiser_id,data,console):
-    url = "/profile?advertiser_id=%s" % (advertiser_id)
+def create_profile(advertiser_id,data,console,name=""):
+    url = "/profile?advertiser_id=%s&logFilter=%s" % (advertiser_id,name)
 
     profile = push("POST", url, data, console)
 
@@ -53,8 +53,20 @@ def create_profile(advertiser_id,data,console):
     except:
         raise Exception("missing profile_id ")
 
-def update_profile(advertiser_id,profile_id,data,console):
-    url = "/profile?advertiser_id=%s&id=%s" % (advertiser_id,profile_id)
+def update_campaign(advertiser_id,campaign_id,data,console,name=""):
+    url = "/campaign?advertiser_id=%s&id=%s&logFilter=%s" % (advertiser_id,campaign_id,name)
+
+    campaign = push("PUT", url, data, console)
+
+    try:
+        return campaign.json['response']['campaign']['id']
+    except:
+        raise Exception("missing profile_id ")
+
+
+
+def update_profile(advertiser_id,profile_id,data,console,name=""):
+    url = "/profile?advertiser_id=%s&id=%s&logFilter=%s" % (advertiser_id,profile_id,name)
 
     profile = push("PUT", url, data, console)
 
@@ -65,16 +77,16 @@ def update_profile(advertiser_id,profile_id,data,console):
 
 
 
-def deactivate_campaigns(campaigns,_c):
+def deactivate_campaigns(campaigns,_c,name=""):
 
     import ujson
 
     for camp in campaigns:
-        _c.put("/campaign?id=%s" % camp, data=ujson.dumps({"campaign":{"state":"inactive"}}))
+        _c.put("/campaign?id=%s&logFilter=%s" % (camp,name), data=ujson.dumps({"campaign":{"state":"inactive"}}))
      
 
 
-def push_campaigns(df,advertiser,line_item):
+def push_campaigns(df,advertiser,line_item,name=""):
     # PUSH to appnexus
     import ujson
 
@@ -87,13 +99,13 @@ def push_campaigns(df,advertiser,line_item):
         print advertiser, line_item
         try:
             profile = {"profile":ujson.loads(row['profile']) }
-            profile_id = create_profile(advertiser,profile,console)
+            profile_id = create_profile(advertiser,profile,console,name)
             print " - profile: %s" % profile_id
 
             campaign = {"campaign": ujson.loads(row['campaign']) }
             campaign['campaign']['profile_id'] = profile_id
             campaign['campaign']['advertiser_id'] = advertiser
-            campaign_id = create_campaign(advertiser,line_item,campaign,console)
+            campaign_id = create_campaign(advertiser,line_item,campaign,console,name)
             print " - campaign: %s" % campaign_id
             time.sleep(1)
 
@@ -103,8 +115,7 @@ def push_campaigns(df,advertiser,line_item):
             time.sleep(10)
             print "FAILED" 
 
-def update_profiles(df,advertiser):
-    import ipdb; ipdb.set_trace()
+def update_campaigns(df,advertiser,name=""):
     # PUSH to appnexus
     import ujson
 
@@ -116,16 +127,21 @@ def update_profiles(df,advertiser):
 
         print advertiser
         try:
-            
-            campaign = ujson.loads(row['original_campaign'])
+
+            campaign_original = ujson.loads(row['original_campaign'])
+            campaign_id = campaign_original['id']
+            profile_id = campaign_original['profile_id']
+
+            campaign = ujson.loads(row['campaign'])
+            del campaign['line_item_id']
             data = {"profile":ujson.loads(row['profile']) }
-            campaign_id = campaign['id']
-            profile_id = campaign['profile_id']
 
             print " - campaign: %s" % campaign_id
             print " - profile: %s" % profile_id
             
-            update_profile(advertiser,profile_id,data,console)
+            update_profile(advertiser,profile_id,data,console,name)
+            update_campaign(advertiser,campaign_id,{"campaign":campaign},console,name)
+
 
 
             time.sleep(1)

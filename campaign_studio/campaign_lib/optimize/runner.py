@@ -1,10 +1,11 @@
 import pandas
 import json
+import logging
 
 import extract 
 import transform
 from transform import *
-from campaign_lib.create.load import push_campaigns, update_profiles, deactivate_campaigns
+from campaign_lib.create.load import push_campaigns, update_campaigns, deactivate_campaigns
 from helper import *
 
 def extract_and_group(df,GROUPBY,params,_c):
@@ -31,7 +32,7 @@ def extract_and_group(df,GROUPBY,params,_c):
         for c in cols:
             grouped[c] = grouped[c].map(lambda x: [x])
 
-    if params['create'] or params['deactivate'] or params['modify']:
+    if params['create'] or params['deactivate'] or params['modify'] or params['duplicate'] or params['replace']:
         grouped = grouped.reset_index()
 
     assert len(grouped.columns) > 0
@@ -43,7 +44,6 @@ def build_objects(grouped,ADVERTISER,LINE_ITEM,params):
 
     assert len(grouped) > 0
     assert len(ADVERTISER) > 0
-    assert len(LINE_ITEM) > 0
     assert len(params.items()) > 0
 
 
@@ -60,7 +60,8 @@ def build_objects(grouped,ADVERTISER,LINE_ITEM,params):
         new_campaign = json.loads(grouped.ix[campaign,'original_campaign']) 
         transform.modify_exisiting_campaign(new_campaign,LINE_ITEM)
         transform.build_campaign_name(new_campaign,new_profile,params)
-        transform.set_campaign_budget(new_campaign,params)
+        transform.set_campaign_budget(new_campaign,dict(items))
+        transform.set_campaign_budget_overrides(new_campaign,params)
 
         # set object to df
         grouped.ix[campaign,'profile'] = json.dumps(new_profile) 
@@ -69,42 +70,52 @@ def build_objects(grouped,ADVERTISER,LINE_ITEM,params):
 
     return grouped
 
-def push_changes(grouped,ADVERTISER,LINE_ITEM,params,_c):
+def remove_duplicates(grouped,LINE_ITEM,_c):
+    assert "campaign_name" in grouped.columns
+    assert str(int(LINE_ITEM)) == LINE_ITEM
+
+    resp = _c.get("/line-item?id=%s" % LINE_ITEM).json['response']['line-item']['campaigns']
+    campaigns = pandas.DataFrame(resp)
+    if len(campaigns) > 0:
+        new_grouped = grouped.merge(campaigns,left_on="campaign_name",right_on="name",how="left")
+        new_grouped = new_grouped[new_grouped.state.isnull()]
+    else:
+        new_grouped = grouped
+
+    return new_grouped
+    
+
+def push_changes(grouped,ADVERTISER,LINE_ITEM,params,_c,name=""):
     assert len(params.items()) > 0
     assert len(grouped) > 0
     assert str(int(ADVERTISER)) == ADVERTISER
 
-    if params['deactivate']:
+    if params['modify']:
+        update_campaigns(grouped,ADVERTISER,name)
+        logging.info("Opt: %s updated %s new campaigns" % (name,len(grouped)) )
+        return
+
+    if params['create'] or params['duplicate'] or params['replace']:
+
+        assert str(int(LINE_ITEM)) == LINE_ITEM
+        deduped = remove_duplicates(grouped,LINE_ITEM,_c)
+        push_campaigns(deduped,ADVERTISER,LINE_ITEM,name)
+        logging.info("Opt: %s created %s new campaigns in %s" % (name,len(deduped),LINE_ITEM) )
+
+    if params['replace']:
         deactivate_campaigns(grouped.index,_c)
-    elif params['modify']:
-        update_profiles(grouped,ADVERTISER)
-    else:
-        # Remove duplicates by name
-        campaigns = pandas.DataFrame(_c.get("/line-item?id=%s" % LINE_ITEM).json['response']['line-item']['campaigns'])
-        if len(campaigns) > 0:
-            new_grouped = grouped.merge(campaigns,left_on="campaign_name",right_on="name",how="left")
-            new_grouped = new_grouped[new_grouped.state.isnull()]
-        else:
-            new_grouped = grouped
-
-        push_campaigns(new_grouped,ADVERTISER,LINE_ITEM)
-
-        if not params['duplicate']:
-            deactivate_campaigns(grouped.index,_c)
 
     
 
 
-def runner(params,data,_c):
+def runner(params,data,_c,name=""):
 
-    import logging
 
     LINE_ITEM = params['line_item_id']
     ADVERTISER = params['advertiser']
-    TEMPLATE_CAMPAIGN = params['template_campaign']
     GROUPBY = params["create_group"] if params["create_group"] and params["create_group"] != "" else "campaign_id"
 
-    logging.info("running opt for %s %s %s" % (ADVERTISER,LINE_ITEM,GROUPBY) )
+    logging.info("running opt %s for %s %s %s" % (name, ADVERTISER,LINE_ITEM,GROUPBY) )
 
     df = pandas.DataFrame(data)
 
@@ -115,10 +126,18 @@ def runner(params,data,_c):
 
     grouped = extract_and_group(df,GROUPBY,params,_c)
     logging.info(" - grouped and pulled objects.")
-    
-    if not params['deactivate']: 
-        grouped = build_objects(grouped,ADVERTISER,LINE_ITEM,params)
-        logging.info(" - built new objects for updates.")
 
-    push_changes(grouped,ADVERTISER,LINE_ITEM,params,_c)
-    logging.info("finished opt for %s %s %s" % (ADVERTISER,LINE_ITEM,GROUPBY) )
+    if params['deactivate']:
+        deactivate_campaigns(grouped.campaign_id,_c,name)
+        logging.info("%s - deactivation complete." % name)
+        return 
+
+    budget_items = df.set_index("campaign_id")[[c for c in df.columns if c in CAMPAIGN_FIELDS]]
+    if len(budget_items.columns) > 0:
+        grouped = grouped.merge(budget_items.reset_index(),left_on="campaign_id",right_on="campaign_id",how="left")
+
+    grouped = build_objects(grouped,ADVERTISER,LINE_ITEM,params)
+    logging.info(" - built new objects for updates.")
+
+    push_changes(grouped,ADVERTISER,LINE_ITEM,params,_c,name)
+    logging.info("finished opt %s for %s %s %s" % (name,ADVERTISER,LINE_ITEM,GROUPBY) )

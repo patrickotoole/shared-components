@@ -29,11 +29,11 @@ class IndexHandler(tornado.web.RequestHandler):
         pass
 
     def get(self):
-        saved = self.db.select_dataframe("select * from optimization")
+        saved = self.db.select_dataframe("select * from optimization where deleted = 0")
         saved['last_activity'] = saved['last_activity'].map(lambda x: str(x)) 
         saved_json = saved.to_dict('records')
 
-        scheduled = self.db.select_dataframe("select o.*, os.days, os.time from optimization_schedule os left join optimization o on o.id = os.optimization_id order by o.name, o.type")
+        scheduled = self.db.select_dataframe("select o.*, os.days, os.time from optimization_schedule os left join optimization o on o.id = os.optimization_id where o.deleted = 0 order by o.name, o.type")
         scheduled['last_activity'] = scheduled['last_activity'].map(lambda x: str(x)) 
         scheduled_json = scheduled.to_dict('records')
 
@@ -138,7 +138,7 @@ class OptimizeHandler(tornado.web.RequestHandler):
         dparams = parse.parse(dd)
 
         import campaign_lib.optimize.runner as runner
-        runner.runner(dparams,dd['data'],self.api)
+        runner.runner(dparams,dd['data'],self.api,dd['name'])
 
 
 class ReportHandler(tornado.web.RequestHandler):

@@ -95,7 +95,7 @@ def run(name=False):
 
         logging.info("opt - starting updates.")
         
-        #runner.runner(dparams,filter_data,api)
+        runner.runner(dparams,filter_data,api,row.name)
 
         logging.info("opt - finished updates.")
         logging.info("opt - finished job: %s" % i)

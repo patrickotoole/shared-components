@@ -1,3 +1,12 @@
+CAMPAIGN_FIELDS = [
+    "daily_budget", 
+    "daily_budget_imps", 
+    "lifetime_budget", 
+    "lifetime_budget_imps", 
+    "base_bid", 
+    "max_bid" 
+]
+
 FORMATTERS = {
     "segment_id": lambda x, action: { "id":x, "action": action },
     "placement_id": lambda x, action: { "id":x, "action": action },
@@ -92,6 +101,22 @@ def build_campaign_name(new_campaign,final_profile,params):
     return new_campaign
 
 def set_campaign_budget(new_campaign,params):
+
+    def check_and_set(field):
+        val = params.get(field,'')
+
+        if type(val) is str and not val.isdigit(): return
+
+        if new_campaign[field] is not None:
+            new_campaign[field] = int(params[field])
+
+    items = CAMPAIGN_FIELDS
+
+    [check_and_set(i) for i in items]
+        
+
+
+def set_campaign_budget_overrides(new_campaign,params):
     if params.get('imp_budget','').isdigit() and new_campaign['daily_budget_imps'] is not None:
         new_campaign['daily_budget_imps'] = int(params['imp_budget'])
 

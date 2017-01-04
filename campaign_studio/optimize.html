@@ -502,7 +502,7 @@
     var buildSummary = function() {
       var summary = []
       summary.push({"key":"append","value":d3.select("#append").node().selectedOptions[0].value })
-      summary.push({"key":"duplicate","value":d3.select("#duplicate").node().selectedOptions[0].value })
+      summary.push({"key":"opt_type","value":d3.select("#duplicate").node().selectedOptions[0].value })
       summary.push({"key":"breakout","value":d3.select("#breakout").node().selectedOptions[0].value })
 
       summary.push({"key":"line_item_id","value":d3.select("#line_item_id").node().value})
@@ -555,10 +555,11 @@
       d3.select("#create").on("click",function(x){
         var summary = buildSummary()
 
-        var dd = window.filtered_data
+        var dd = _state._state.filtered_data
 
 
         var data = {
+          "name": d3.select("#name").node().value,
           "data": dd,
           "params": summary
         }
