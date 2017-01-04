@@ -18,7 +18,7 @@ def get_sql(advertiser_id, dd, db):
     sql = dd['sql'] % params
 
 
-    df = db.select_dataframe(sql)
+    df = db.select_dataframe(sql).fillna(0)
     datetime_columns = df.dtypes[df.dtypes.map(lambda x: x == "datetime64[ns]")].index
 
     for col in datetime_columns:
