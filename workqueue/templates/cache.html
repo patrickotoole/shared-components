@@ -204,13 +204,6 @@ data.map(function(item){
     .append(type)
     .classed(cls,true)
     .style("width","160px")
-    //.on("change",function(x){
-    //  var value = this.value
-    //  var filtered = x.values.filter(function(y){ return y.key == value });
-    //  if (filtered.length > 0) draw_parameters(params_target.datum(filtered[0]),filtered[0].parameters);
-    //  select_target.selectAll("div.desc").text(filtered[0].description)
-    //  return 
-    //0})
 
   var option = input.selectAll("option").data(function(x){return x.values}).enter()
     .append("option")
