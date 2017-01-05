@@ -84,6 +84,10 @@ def parse_url(msg):
             else:
                 storage['referrer'] = quote_split[1]
 
+            if "fls.doubleclick.net" in storage['referrer']:
+                storage['request_referrer'] = storage['referrer']
+		storage['referrer'] = storage['pageReferrer']
+		
             if "action" in storage:
                 storage['referrer'] = storage['referrer'] + "&action=" + storage["action"]
             storage['user_agent'] = " ".join(quote_split[-1].split(" ")[:-1])
