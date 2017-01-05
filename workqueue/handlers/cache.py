@@ -38,17 +38,15 @@ class CacheHandler(tornado.web.RequestHandler, RPCQueue):
     def initialize(self, zookeeper=None, *args, **kwargs):
         self.crushercache = kwargs.get("crushercache",None)
         self.zk_wrapper = kwargs.get("zk_wrapper",None)
+	self.db = kwargs.get("db", None)
 
-    def get_content(self,data):
-        def default(data):
-            if type(data)==tuple:
-                advertiser = data[1]
-                data = data[0]
-            o = json.dumps([{"class":"script","type":"select","key":"script","values":data,"adv":advertiser}])
+    def get_content(self,data, adv, patterns):
+        def default(data, adv, patterns):
+            o = json.dumps([{"class":"script","type":"select","key":"script","values":data,"adv":adv, "patterns": patterns}])
 
             self.render("cache.html", data=o, paths="")
 
-        default(data)
+        default(data, adv, patterns)
 
 
     def get_data(self):
@@ -57,7 +55,15 @@ class CacheHandler(tornado.web.RequestHandler, RPCQueue):
         df['parameters'] = df['parameters'].map(ujson.loads)
         advertisers = df_adv.to_dict("record")
         advertisers = [x['advertiser'] for x in advertisers]
-        self.get_content((df.to_dict("records"),advertisers))
+
+	adv_patterns = self.db.select_dataframe("select * from action_with_patterns where pixel_source_name in %s" % str(advertisers).replace("[","(").replace("]",")"))
+        advertiser_patterns={}
+        for items in adv_patterns.iterrows():
+               intermed = advertiser_patterns.get(items[1]['pixel_source_name'],{})
+               intermed[items[1]['action_name']] = (items[1]['url_pattern'], items[1]['action_id'])
+               advertiser_patterns[items[1]['pixel_source_name']] = intermed
+
+        self.get_content(df.to_dict("records"),advertisers,advertiser_patterns)
 
 
     def get_id(self, _job_id, entry_id=False):
