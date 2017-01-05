@@ -81,7 +81,7 @@ def modify_exisiting_profile(original_profile,new_profile,advertiser,append=Fals
 def modify_exisiting_campaign(original_campaign,LINE_ITEM):
     
     del original_campaign['id']
-    original_campaign['state'] = 'inactive'
+    original_campaign['state'] = 'inactive' 
     original_campaign['line_item_id'] = LINE_ITEM
 
     return original_campaign
@@ -108,7 +108,7 @@ def set_campaign_budget(new_campaign,params):
         if type(val) is str and not val.isdigit(): return
 
         if new_campaign[field] is not None:
-            new_campaign[field] = int(params[field])
+            new_campaign[field] = float(params[field])
 
     items = CAMPAIGN_FIELDS
 

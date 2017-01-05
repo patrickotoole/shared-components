@@ -58,7 +58,8 @@ def build_objects(grouped,ADVERTISER,LINE_ITEM,params):
 
         # make campaign
         new_campaign = json.loads(grouped.ix[campaign,'original_campaign']) 
-        transform.modify_exisiting_campaign(new_campaign,LINE_ITEM)
+        if not params['modify']: 
+            transform.modify_exisiting_campaign(new_campaign,LINE_ITEM)
         transform.build_campaign_name(new_campaign,new_profile,params)
         transform.set_campaign_budget(new_campaign,dict(items))
         transform.set_campaign_budget_overrides(new_campaign,params)

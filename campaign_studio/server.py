@@ -169,6 +169,7 @@ class SQLHandler(tornado.web.RequestHandler):
         self.api = kwargs.get("api",False) 
 
     def post(self):
+        logging.info("starting query")
         dd = json.loads(self.request.body)
         advertiser_id = dd['sql_advertiser']
 
