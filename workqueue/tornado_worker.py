@@ -98,7 +98,7 @@ if __name__ == '__main__':
         True
     ).connectors
 
-
+    connectors['zk'] = connectors['zookeeper']
     if options.log_kafka:
         producer = kafka_stream.KafkaStream('application_log',"slave17:9092,slave16:9092,slave40:9092",True,False,False,10,1,False)
 
