@@ -121,7 +121,9 @@ class PatternSearchHelpers(BaseDomainHandler):
         
         results = dict(zip(urls, [[] for x in urls]))
         for items in actions:
-            filter_dict = self.run_filter_url(self.get_filter_checker(items['action_id']), set([x[0] for x in exist.items() if items['url_pattern'] in x[1]]))
+            current_aho_filter=self.get_filter_checker(items['action_id'])
+            current_urls = set([x[0] for x in exist.items() if items['url_pattern'] in x[1]])
+            filter_dict = self.run_filter_url(current_aho_filter, current_urls)
             for key in filter_dict.keys():
                 if filter_dict[key]:
                     results[key].append(items['action_name'])
