@@ -38,7 +38,7 @@ class CacheHandler(tornado.web.RequestHandler, RPCQueue):
     def initialize(self, zookeeper=None, *args, **kwargs):
         self.crushercache = kwargs.get("crushercache",None)
         self.zk_wrapper = kwargs.get("zk_wrapper",None)
-	self.db = kwargs.get("db", None)
+        self.db = kwargs.get("db", None)
 
     def get_content(self,data, adv, patterns):
         def default(data, adv, patterns):
