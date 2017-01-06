@@ -56,7 +56,7 @@ class CacheHandler(tornado.web.RequestHandler, RPCQueue):
         advertisers = df_adv.to_dict("record")
         advertisers = [x['advertiser'] for x in advertisers]
 
-	adv_patterns = self.db.select_dataframe("select * from action_with_patterns where pixel_source_name in %s" % str(advertisers).replace("[","(").replace("]",")"))
+        adv_patterns = self.db.select_dataframe("select * from action_with_patterns where pixel_source_name in %s" % str(advertisers).replace("[","(").replace("]",")"))
         advertiser_patterns={}
         for items in adv_patterns.iterrows():
                intermed = advertiser_patterns.get(items[1]['pixel_source_name'],{})
