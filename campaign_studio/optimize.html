@@ -391,15 +391,15 @@
       <div style="display:inline-block;width:250px">
         <select id="duplicate" >
           <option value="" disabled selected>Select your optimization</option>
-          <option>Duplicate</option>
+          <option>Duplicate (profile includes)</option>
           <option>Replace</option>
-          <option>Modify</option>
+          <option>Modify (profile excludes)</option>
           <option>Deactivate</option>
           <option disabled=disabled>Create</option>
         </select>
         <script>
           d3.select("#duplicate").on("change",function() {
-            var value = this.selectedOptions[0].value.toLowerCase()
+            var value = this.selectedOptions[0].value.toLowerCase().split(" ")[0]
 
             var options = d3.selectAll(".setup .row.optional").classed("hidden",true)
             d3.selectAll(".setup .optional.row." + value).classed("hidden",false)
@@ -502,7 +502,7 @@
     var buildSummary = function() {
       var summary = []
       summary.push({"key":"append","value":d3.select("#append").node().selectedOptions[0].value })
-      summary.push({"key":"opt_type","value":d3.select("#duplicate").node().selectedOptions[0].value })
+      summary.push({"key":"opt_type","value":d3.select("#duplicate").node().selectedOptions[0].value.split(" ")[0] })
       summary.push({"key":"breakout","value":d3.select("#breakout").node().selectedOptions[0].value })
 
       summary.push({"key":"line_item_id","value":d3.select("#line_item_id").node().value})

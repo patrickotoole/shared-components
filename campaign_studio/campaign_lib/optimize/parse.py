@@ -21,5 +21,6 @@ def parse(dd):
     
     breakout = (dparams['breakout'] == "Breakout")
     dparams['breakout'] = breakout
+    dparams['action'] = "include" if dparams['duplicate'] or dparams['replace'] else "exclude"
 
     return dparams

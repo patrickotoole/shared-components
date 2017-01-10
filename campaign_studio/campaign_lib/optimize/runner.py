@@ -10,7 +10,6 @@ from helper import *
 
 def extract_and_group(df,GROUPBY,params,_c):
 
-
     assert len(GROUPBY) > 0
     assert GROUPBY in df.columns
     assert len(params.items()) > 0
@@ -137,8 +136,10 @@ def runner(params,data,_c,name=""):
     if len(budget_items.columns) > 0:
         grouped = grouped.merge(budget_items.reset_index(),left_on="campaign_id",right_on="campaign_id",how="left")
 
+    for k,v in transform.FIELD_NAMES.items():
+        if k in grouped.columns: params[v] = params['action']
+
     grouped = build_objects(grouped,ADVERTISER,LINE_ITEM,params)
     logging.info(" - built new objects for updates.")
-
     push_changes(grouped,ADVERTISER,LINE_ITEM,params,_c,name)
     logging.info("finished opt %s for %s %s %s" % (name,ADVERTISER,LINE_ITEM,GROUPBY) )

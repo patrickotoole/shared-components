@@ -65,7 +65,7 @@ def modify_exisiting_profile(original_profile,new_profile,advertiser,append=Fals
     original_profile['advertiser_id'] = advertiser
     for k,v in new_profile.items():
         if append:
-            original_profile[k] = v + original_profile[k]
+            original_profile[k] = v + (original_profile[k] or [])
             _set = {}
             _list = []
             for i in original_profile[k]:
@@ -88,6 +88,7 @@ def modify_exisiting_campaign(original_campaign,LINE_ITEM):
  
 def build_campaign_name(new_campaign,final_profile,params):
     #new_campaign['name'] = original_campaign['name']
+
 
     if params.get('platform_placement_targets',False) == 'include':
         new_campaign['name'] += " - include platform_placement_targets: %s" % final_profile['platform_placement_targets'][0]['id']
