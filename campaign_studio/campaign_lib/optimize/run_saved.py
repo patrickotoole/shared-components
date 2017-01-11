@@ -29,7 +29,6 @@ def run_transform(_json):
 
     process2 = subprocess.Popen(['node',os.path.dirname(__file__) + '/../../../shared/js/run_transform.js'], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
     data = process2.communicate(input=json.dumps(_json) )[0]
-
     import pandas 
     return pandas.DataFrame(json.loads(data)['data'])
 
@@ -78,6 +77,9 @@ def run(name=False):
         raw_data = get_data(_json, api, reporting)
         _json['data'] = raw_data.to_dict('records')
 
+        
+        if 'transforms' not in _json.keys():
+            _json['transforms'] = [{'name':"null", 'eval':"1"}]
         logging.info("opt - transforming: " + json.dumps(_json['transforms']) )
         data = run_transform(_json)
 
@@ -85,7 +87,6 @@ def run(name=False):
         filter_data = run_filter(data, _json)
 
         logging.info("opt - filtered data: %s to %s" % (len(data) , len(filter_data)) )
-
 
 
         import runner
