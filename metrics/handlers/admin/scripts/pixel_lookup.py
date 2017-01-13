@@ -58,6 +58,7 @@ class PixelLookupHandler(AnalyticsBase, BaseHandler):
             where = " WHERE " + ' and '.join(where)
             q = QUERY + where
 
+        q = q + " LIMIT 5000"
         self.logging.info(q)
         data = self.cassandra.execute(q)
         return pandas.DataFrame(data)
