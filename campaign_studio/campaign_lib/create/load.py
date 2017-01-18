@@ -80,7 +80,6 @@ def update_profile(advertiser_id,profile_id,data,console,name=""):
 def deactivate_campaigns(campaigns,_c,name=""):
 
     import ujson
-
     for camp in campaigns:
         _c.put("/campaign?id=%s&logFilter=%s" % (camp,name), data=ujson.dumps({"campaign":{"state":"inactive"}}))
      

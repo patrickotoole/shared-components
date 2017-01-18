@@ -103,7 +103,7 @@ def push_changes(grouped,ADVERTISER,LINE_ITEM,params,_c,name=""):
         logging.info("Opt: %s created %s new campaigns in %s" % (name,len(deduped),LINE_ITEM) )
 
     if params['replace']:
-        deactivate_campaigns(grouped.index,_c)
+        deactivate_campaigns(grouped['campaign_id'].tolist(),_c, name)
 
     
 

@@ -51,7 +51,7 @@ class SaveHandler(tornado.web.RequestHandler):
         _type = body['type']
         advertiser = body['advertiser']
            
-        self.db.execute("INSERT INTO optimization (advertiser_id,name,type,state) VALUES (%s,%s,%s,%s)", (advertiser,name,_type,self.request.body) )
+        self.db.execute("INSERT INTO optimization (advertiser_id,name,type,state) VALUES (%s,%s,%s,%s) ON DUPLICATE KEY UPDATE state = %s", (advertiser,name,_type,self.request.body, self.request.body) )
 
         self.redirect("/")
 

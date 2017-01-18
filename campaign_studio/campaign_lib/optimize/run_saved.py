@@ -68,6 +68,7 @@ def run(name=False):
         logging.info("No scheduled jobs found")
         return
 
+
     for i, row in df.iterrows():
         logging.info("opt - starting job: %s" % i)
         _json = json.loads(row.state)
@@ -95,8 +96,7 @@ def run(name=False):
         dparams = parse.parse({"params":_json['settings']})
 
         logging.info("opt - starting updates.")
-        
-        runner.runner(dparams,filter_data,api,row.name)
+        runner.runner(dparams,filter_data,api,row['name'])
 
         logging.info("opt - finished updates.")
         logging.info("opt - finished job: %s" % i)
