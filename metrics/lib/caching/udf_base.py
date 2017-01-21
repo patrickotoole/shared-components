@@ -28,7 +28,7 @@ class UDFCache:
                 kwargs
                 ))
         volume = "v{}".format(datetime.datetime.now().strftime('%m%y'))
-        CustomQueue.CustomQueue(self.connectors['zk'],"python_queue", "log", volume).put(work,1, debug=kwargs['debug'])
+        CustomQueue.CustomQueue(self.connectors['zk'],"python_queue", "log", volume, 0).put(work,1, debug=kwargs['debug'])
         logging.info("added to UDF work queue %s for %s" %(kwargs['pattern'],kwargs['advertiser'])) 
 
     def run_udfs(self, **kwargs):
@@ -83,6 +83,7 @@ if __name__ == "__main__":
     connectors = {'db': lnk.dbs.rockerbox, 'crushercache':lnk.dbs.crushercache, 'zk':zk, 'cassandra':''}
     UC = UDFCache(connectors)
     kwargs={}
+    kwargs['connectors'] = connectors
     kwargs['advertiser']=options.advertiser
     kwargs['pattern'] = options.pattern
     kwargs['onqueue'] = not options.run_local
