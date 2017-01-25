@@ -15,6 +15,8 @@
   <script src="/static/utils.js"></script>
   <script src="/static/custom_filter.js"></script>
   <script src="/static/custom_transform.js"></script>
+  <script src="/static/optimize/build/optimize.js"></script>
+
 
 
   <script src="/static/create/build/campaign_analysis.js"></script>
@@ -32,20 +34,24 @@
 <body class="show-debug" style="width:1200px;margin-left:auto;margin-right:auto">
   <h3 style="margin-bottom:0px">Optimize from Reporting</h3>
 
-  <h4>Load Save</h4>
-  <div class="row">
-    <div class="row debug"> Load saved state: 
-      <textarea style="width:300px; height:20px" id="preload"></textarea> 
-      <button id="preload-action">Load</button>
-    </div>
-    <script>
-      d3.select("#preload").text(JSON.stringify(qs_state))
-      d3.select("#preload-action").on("click",function(){
-        var values = JSON.parse(d3.select("#preload").node().value)
-        _state.push(values)
-      })
-    </script>
-  </div>
+  <div id="load-target"></div>
+  <div id="extract-target"></div>
+
+
+  <script>
+
+  optimize.load(d3.select("#load-target"))
+    .data(JSON.stringify(qs_state))
+    .on("click",function(){
+      var values = JSON.parse(d3.select("#preload").node().value)
+      _state.push(values)
+    })
+    .draw()
+
+  
+
+  </script>
+
 
   <br><hr>
   <h4>Extract Data</h4>
@@ -580,6 +586,10 @@
       templates = {{campaign_templates}},
       profile_templates = {{profile_templates}};
 
+    var a2 = advertisers.map(function(x) { return {key: x.pixel_source_name, value: x.external_advertiser_id} })
+
+    _state.publishStatic("advertisers", a2)
+
     var select_advertiser = d3.selectAll("#advertiser").data([advertisers])
     select_advertiser.selectAll("option").data(function(x) { return x } )
       .enter()
@@ -604,6 +614,53 @@
     showOptimization()
 
     _state
+      .subscribe("extract",function(err,values) {
+
+        optimize.extract(d3.select("#extract-target"))
+          .data(values)
+          .on("select",function(selected_option){
+            _state.publish("extract_type",selected_option.value)
+          })
+          .on("upload",function(result){
+            var process = campaign_analysis.parse(result)
+     
+            var headers = process.headers()
+            var data = process.data()
+     
+            _state.publishStatic("headers",headers)
+            _state.publishStatic("data",data)
+     
+          })
+          .on("report",function(v) {
+            try {
+              var values = JSON.parse(v.report)
+            } catch(e) { return }
+
+            values['report_advertiser'] = v.report_advertiser
+
+            _state.publish("report",JSON.parse(v.report))
+
+            var settings = JSON.parse(JSON.stringify(_state._state.settings || []))
+              .filter(function(x) { return x.key !== "report_advertiser" })
+
+            settings
+              .push({"key":"report_advertiser","value":v.report_advertiser})
+
+
+            _state.publish("settings",settings)
+    
+            d3.xhr("/reporting")
+              .post( JSON.stringify(values), function(err, data){
+                var jj = JSON.parse(data.response)
+    
+                _state.publishStatic("headers",Object.keys(jj[0]))
+                _state.publishStatic("data",jj)
+
+              })
+          })
+          .draw()
+
+      })
       .subscribe("sql",function(err,values) {
         var sql = values.sql;
 
