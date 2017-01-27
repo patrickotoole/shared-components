@@ -1,9 +1,13 @@
-import accessor from '../../helpers'
-import header from '../../header'
+import accessor from '../helpers'
+import header from '../generic/header'
 
 import table from 'table'
 import domain_expanded from './domain_expanded'
 import domain_bullet from './domain_bullet'
+
+function noop() {}
+function identity(x) { return x }
+function key(x) { return x.key }
 
 
 export function DomainView(target) {
@@ -13,8 +17,6 @@ export function DomainView(target) {
   this.target = target
 }
 
-function identity(x) { return x }
-function key(x) { return x.key }
 
 
 export default function domain_view(target) {
@@ -32,15 +34,16 @@ DomainView.prototype = {
       var _explore = this.target
         , tabs = this.options()
         , data = this.data()
+        , filtered = tabs.filter(function(x){ return x.selected})
+        , selected = filtered.length ? filtered[0] : tabs[0]
 
       header(_explore)
-        .text(tabs.filter(function(x){ return x.selected})[0].key)
+        .text(selected.key )
         .options(tabs)
         .on("select", function(x) { this.on("select")(x) }.bind(this))
         .draw()
 
       
-      var selected = tabs.filter(function(x){ return x.selected})[0]
 
       _explore.selectAll(".vendor-domains-bar-desc").remove()
       _explore.datum(data)

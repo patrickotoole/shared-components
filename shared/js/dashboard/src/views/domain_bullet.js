@@ -1,4 +1,4 @@
-import accessor from '../../helpers'
+import accessor from '../helpers'
 
 export function DomainBullet(target) {
   this._on = {}

@@ -16,7 +16,7 @@ import render_lhs from './render/lhs'
 import render_summary from './render/summary'
 import render_data_view from './render/data_view'
 import * as overlay from './render/overlay'
-import * as header from './header'
+import * as header from './generic/header'
 
 import state from './state'
 import share from './share'
@@ -279,9 +279,7 @@ FilterDashboard.prototype = {
         .classed("loading",true)
         .text("Loading...")
 
-
     }
-
   , render_lhs: render_lhs
   , render_view: render_data_view
   , render_summary: render_summary

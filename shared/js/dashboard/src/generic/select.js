@@ -1,4 +1,4 @@
-import accessor from './helpers'
+import accessor from '../helpers'
 
 export function Select(target) {
   this._on = {}

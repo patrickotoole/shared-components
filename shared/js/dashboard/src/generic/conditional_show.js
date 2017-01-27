@@ -1,5 +1,5 @@
 import accessor from '../helpers'
-import header from '../header'
+import header from './header'
 
 function noop() {}
 function identity(x) { return x }

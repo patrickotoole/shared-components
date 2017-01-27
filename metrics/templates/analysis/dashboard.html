@@ -162,7 +162,7 @@
   var s = state.state()
     .subscribe("filter.formatted_data", function(error,value) {
 
-      dashboard.filter_dashboard(centered)
+      dashboard.new_dashboard(centered)
         .data(value)
         .draw()
 

@@ -1,11 +1,9 @@
 import * as transform from '../data_helpers'
-import table from 'table'
-import time_series from '../timeseries'
-import * as timeseries from '../timeseries'
-import header from '../header'
-import button_radio from './button_radio'
-import conditional_show from './conditional_show'
-import domain_view from './views/domain_view'
+
+import header from '../generic/header'
+import button_radio from '../generic/button_radio'
+import conditional_show from '../generic/conditional_show'
+import domain_view from '../views/domain_view'
 
 
 
@@ -77,9 +75,9 @@ export default function render_data_view(_lower,data) {
 
       var conditional = show()
 
-      var _explore;
       conditional.each(function(x) {
         if (x.value == "data-view") {
+
           var dv = domain_view(d3.select(this))
             .options(x.data)
             .data(data)
@@ -93,9 +91,6 @@ export default function render_data_view(_lower,data) {
               dv.draw()
             })
             .draw()
-
-          
-
          
         }
 

@@ -2373,9 +2373,9 @@
      this.target = target
    }
 
-   function noop$4() {}
-   function identity$4(x) { return x }
-   function key$4(x) { return x.key }
+   function noop$6() {}
+   function identity$6(x) { return x }
+   function key$6(x) { return x.key }
 
 
    function select(target) {
@@ -2395,19 +2395,19 @@
          this._select
            .on("change",function(x) { bound(this.selectedOptions[0].__data__) })
 
-         this._options = d3_splat(this._select,"option","option",identity$4,key$4)
-           .text(key$4)
+         this._options = d3_splat(this._select,"option","option",identity$6,key$6)
+           .text(key$6)
 
          return this
        }
      , on: function(action, fn) {
-         if (fn === undefined) return this._on[action] || noop$4;
+         if (fn === undefined) return this._on[action] || noop$6;
          this._on[action] = fn;
          return this
        }
    }
 
-   function noop$1() {}
+   function noop() {}
    function buttonWrap(wrap) {
      var head = d3_updateable(wrap, "h3.buttons","h3")
        .classed("buttons",true)
@@ -2510,15 +2510,15 @@
          return this
        }
      , on: function(action, fn) {
-         if (fn === undefined) return this._on[action] || noop$1;
+         if (fn === undefined) return this._on[action] || noop;
          this._on[action] = fn;
          return this
        }
    }
 
-   function noop$2() {}
-   function identity$1(x) { return x }
-   function key$1(x) { return x.key }
+   function noop$5() {}
+   function identity$5(x) { return x }
+   function key$5(x) { return x.key }
 
    function ButtonRadio(target) {
      this._on = {}
@@ -2534,7 +2534,7 @@
          return accessor.bind(this)("data",val) 
        }
      , on: function(action, fn) {
-         if (fn === undefined) return this._on[action] || noop$2;
+         if (fn === undefined) return this._on[action] || noop$5;
          this._on[action] = fn;
          return this
        }
@@ -2573,9 +2573,9 @@
 
        var bound = this.on("click").bind(this)
      
-       d3_splat(button_row,".show-button","a",identity$1, key$1)
+       d3_splat(button_row,".show-button","a",identity$5, key$5)
          .classed("show-button",true)
-         .text(key$1)
+         .text(key$5)
          .on("click", function(x) { bound(x) })
 
        return this
@@ -2584,8 +2584,8 @@
      
    }
 
-   function noop$3() {}
-   function identity$2(x) { return x }
+   function noop$4() {}
+   function identity$4(x) { return x }
    function ConditionalShow(target) {
      this._on = {}
      this._classes = {}
@@ -2608,7 +2608,7 @@
          return this
        }  
      , on: function(action, fn) {
-         if (fn === undefined) return this._on[action] || noop$3;
+         if (fn === undefined) return this._on[action] || noop$4;
          this._on[action] = fn;
          return this
        }
@@ -2619,7 +2619,7 @@
          var wrap = d3_updateable(this.target,".conditional-wrap","div",this.data())
            .classed("conditional-wrap",true)
 
-         var objects = d3_splat(wrap,".conditional","div",identity$2, function(x,i) { return i })
+         var objects = d3_splat(wrap,".conditional","div",identity$4, function(x,i) { return i })
            .attr("class", function(x) { return x.value })
            .classed("conditional",true)
            .classed("hidden", function(x) { return !x.selected })
@@ -2642,7 +2642,7 @@
        }
    }
 
-   function noop$5() {}
+   function noop$7() {}
 
 
    function DomainExpanded(target) {
@@ -2750,7 +2750,7 @@
          return this
        }
      , on: function(action, fn) {
-         if (fn === undefined) return this._on[action] || noop$5;
+         if (fn === undefined) return this._on[action] || noop$7;
          this._on[action] = fn;
          return this
        }
@@ -2761,7 +2761,7 @@
      this.target = target
    }
 
-   function noop$6() {}
+   function noop$8() {}
    function domain_bullet(target) {
      return new DomainBullet(target)
    }
@@ -2813,16 +2813,21 @@
          return this
        }
      , on: function(action, fn) {
-         if (fn === undefined) return this._on[action] || noop$6;
+         if (fn === undefined) return this._on[action] || noop$8;
          this._on[action] = fn;
          return this
        }
    }
 
+   function noop$3() {}
    function DomainView(target) {
-     this._on = {}
+     this._on = {
+       select: noop$3
+     }
      this.target = target
    }
+
+
 
    function domain_view(target) {
      return new DomainView(target)
@@ -2839,20 +2844,16 @@
          var _explore = this.target
            , tabs = this.options()
            , data = this.data()
+           , filtered = tabs.filter(function(x){ return x.selected})
+           , selected = filtered.length ? filtered[0] : tabs[0]
 
          header(_explore)
-           .text(tabs.filter(function(x){ return x.selected})[0].key)
+           .text(selected.key )
            .options(tabs)
-           .on("select", function(x) {
-             console.log("is this working")
-             debugger
-             this.on("select")(x)
-             //draw()
-           }.bind(this))
+           .on("select", function(x) { this.on("select")(x) }.bind(this))
            .draw()
 
          
-         var selected = tabs.filter(function(x){ return x.selected})[0]
 
          _explore.selectAll(".vendor-domains-bar-desc").remove()
          _explore.datum(data)
@@ -2860,66 +2861,63 @@
          var t = table.table(_explore)
            .data(selected)
 
-         if ((selected.key == "Top Topics") || (selected.key == "Top Domains")) {
 
-           var samp_max = d3.max(selected.values,function(x){return x.sample_percent_norm})
-             , pop_max = d3.max(selected.values,function(x){return x.pop_percent})
-             , max = Math.max(samp_max,pop_max);
+         var samp_max = d3.max(selected.values,function(x){return x.sample_percent_norm})
+           , pop_max = d3.max(selected.values,function(x){return x.pop_percent})
+           , max = Math.max(samp_max,pop_max);
 
-           t.headers([
-                 {key:"key",value:"Domain",locked:true,width:"100px"}
-               , {key:"value",value:"Sample versus Pop",locked:true}
-               , {key:"count",value:"Views",selected:false}
+         t.headers([
+               {key:"key",value:"Domain",locked:true,width:"100px"}
+             , {key:"value",value:"Sample versus Pop",locked:true}
+             , {key:"count",value:"Views",selected:false}
 
-             ])
-             .option_text("&#65291;")
-             .on("expand",function(d) {
+           ])
+           .option_text("&#65291;")
+           .on("expand",function(d) {
 
-               d3.select(this).selectAll("td.option-header").html("&ndash;")
-               if (d3.select(this.nextSibling).classed("expanded") == true) {
-                 d3.select(this).selectAll("td.option-header").html("&#65291;")
-                 return d3.select(this.parentNode).selectAll(".expanded").remove()
-               }
+             d3.select(this).selectAll("td.option-header").html("&ndash;")
+             if (d3.select(this.nextSibling).classed("expanded") == true) {
+               d3.select(this).selectAll("td.option-header").html("&#65291;")
+               return d3.select(this.parentNode).selectAll(".expanded").remove()
+             }
 
-               d3.select(this.parentNode).selectAll(".expanded").remove()
-               var t = document.createElement('tr');
-               this.parentNode.insertBefore(t, this.nextSibling);  
+             d3.select(this.parentNode).selectAll(".expanded").remove()
+             var t = document.createElement('tr');
+             this.parentNode.insertBefore(t, this.nextSibling);  
 
-               var tr = d3.select(t).classed("expanded",true).datum({})
-               var td = d3_updateable(tr,"td","td")
-                 .attr("colspan",this.children.length)
-                 .style("background","#f9f9fb")
-                 .style("padding-top","10px")
-                 .style("padding-bottom","10px")
+             var tr = d3.select(t).classed("expanded",true).datum({})
+             var td = d3_updateable(tr,"td","td")
+               .attr("colspan",this.children.length)
+               .style("background","#f9f9fb")
+               .style("padding-top","10px")
+               .style("padding-bottom","10px")
 
-               var dd = this.parentElement.__data__.full_urls.filter(function(x) { return x.domain == d.key})
-               var rolled = timeseries.prepData(dd)
-               
-               domain_expanded(td)
-                 .data(rolled)
-                 .urls(d.urls)
-                 .draw()
+             var dd = this.parentElement.__data__.full_urls.filter(function(x) { return x.domain == d.key})
+             var rolled = timeseries.prepData(dd)
+             
+             domain_expanded(td)
+               .data(rolled)
+               .urls(d.urls)
+               .draw()
 
-             })
-             .hidden_fields(["urls","percent_unique","sample_percent_norm"])
-             .render("value",function(d) {
+           })
+           .hidden_fields(["urls","percent_unique","sample_percent_norm"])
+           .render("value",function(d) {
 
-               domain_bullet(d3.select(this))
-                 .max(max)
-                 .data(this.parentNode.__data__)
-                 .draw()
+             domain_bullet(d3.select(this))
+               .max(max)
+               .data(this.parentNode.__data__)
+               .draw()
 
-             })
+           })
            
-         }
-
          t.draw()
         
 
          return this
        }
      , on: function(action, fn) {
-         if (fn === undefined) return this._on[action] || noop;
+         if (fn === undefined) return this._on[action] || noop$3;
          this._on[action] = fn;
          return this
        }
@@ -2991,9 +2989,9 @@
 
          var conditional = show()
 
-         var _explore;
          conditional.each(function(x) {
            if (x.value == "data-view") {
+
              var dv = domain_view(d3.select(this))
                .options(x.data)
                .data(data)
@@ -3007,9 +3005,6 @@
                  dv.draw()
                })
                .draw()
-
-             
-
             
            }
 
@@ -3322,9 +3317,7 @@
            .classed("loading",true)
            .text("Loading...")
 
-
        }
-
      , render_lhs: render_lhs
      , render_view: render_data_view
      , render_summary: render_summary
@@ -3332,11 +3325,230 @@
      , render_right: render_rhs
    }
 
+   function noop$1() {}
+   function FilterView(target) {
+     this._on = {
+       select: noop$1
+     }
+     this.target = target
+   }
+
+
+
+   function filter_view(target) {
+     return new FilterView(target)
+   }
+
+   FilterView.prototype = {
+       data: function(val) {
+         return accessor.bind(this)("data",val) 
+       }
+     , options: function(val) {
+         return accessor.bind(this)("options",val) 
+       }
+     , draw: function() {
+         
+         header(this.target)
+           .text("Filter")
+           .draw()
+
+         return this
+       }
+     , on: function(action, fn) {
+         if (fn === undefined) return this._on[action] || noop$1;
+         this._on[action] = fn;
+         return this
+       }
+   }
+
+   function noop$2() {}
+   function OptionView(target) {
+     this._on = {
+       select: noop$2
+     }
+     this.target = target
+   }
+
+
+
+   function option_view(target) {
+     return new OptionView(target)
+   }
+
+   OptionView.prototype = {
+       data: function(val) {
+         return accessor.bind(this)("data",val) 
+       }
+     , options: function(val) {
+         return accessor.bind(this)("options",val) 
+       }
+     , draw: function() {
+
+         button_radio(this.target)
+           .on("click", this.on("select") )
+           .data(this.data())
+           .draw()
+
+         return this
+       }
+     , on: function(action, fn) {
+         if (fn === undefined) return this._on[action] || noop$2;
+         this._on[action] = fn;
+         return this
+       }
+   }
+
+   function NewDashboard(target) {
+     this.target = target
+   }
+
+   function new_dashboard(target) {
+     return new NewDashboard(target)
+   }
+
+   NewDashboard.prototype = {
+       data: function(val) {
+         return accessor.bind(this)("data",val) 
+       }
+     , draw: function() {
+
+         var data = this.data()
+
+           var categories = d3.nest()
+             .key(function(x){ return x.parent_category_name})
+             .rollup(function(v) {
+               return v.reduce(function(p,c) { return p + c.uniques },0)
+             })
+             .entries(data.full_urls)
+
+           var total = categories.reduce(function(p,c) { return p + c.values },0)
+
+           categories.map(function(x) {
+             x.value = x.values
+             x.percent = x.value / total
+           })
+
+           data["display_categories"] = {
+               "key":"Categories"
+             , "values": categories.filter(function(x) { return x.key != "NA" })
+           }
+
+           var category_hour = d3.nest()
+             .key(function(x){ return x.parent_category_name + x.hour + x.minute})
+             .rollup(function(v) {
+               return {
+                   "parent_category_name": v[0].parent_category_name
+                 , "hour": v[0].hour
+                 , "minute": v[0].minute 
+                 , "count":v.reduce(function(p,c) { return p + c.count },0)
+               }
+             })
+             .entries(data.full_urls)
+             .map(function(x) { return x.values })
+
+           data["category_hour"] = category_hour
+
+
+         // ----- BEGIN STATE STUFF ----- //
+
+         var SELECTION_STATES = [
+               {"key":"Explore data","value":"data-view"}
+             , {"key":"Create Media Plan", "value":"media-view"}
+             , {"key":"Build Content Brief", "value":"content-view"}
+           ]
+
+         var view = "data-view" //this._state.get("view",false)
+
+         var set_state = function(x) { 
+           // this._state.set("view",x) 
+           SELECTION_STATES.map(function(d) { 
+             d.selected = (x == d.value)
+           })
+         }.bind(this)
+
+         var self = this
+
+         SELECTION_STATES.map(function(x) { 
+           x.selected = (x.value == view)
+
+           if (x.value == "data-view") {
+             x.data = [
+                 buildDomains(data)
+               , buildUrls(data)
+               , buildTopics(data)
+             ]
+
+             var tabs = x.data
+             //self._state.get("tabs",[]).map(function(x,i) { tabs[i].selected = x })
+
+             //if ((tabs[0].selected == undefined) && (!self._state.get("tabs")))  self._state.set("tabs",[1,0]) 
+           }
+
+           if (x.value == "media-view") {
+             x.data = data
+           }
+
+         })
+
+         var selectViewOption = function(x) {
+             set_state(x.value)
+   debugger
+             show()
+           }
+
+         // ----- END STATE STUFF ----- //
+
+         var target = this.target
+
+         filter_view(target)
+           .draw()
+
+         option_view(target)
+           .data(SELECTION_STATES)
+           .on("select", selectViewOption)
+           .draw()
+
+         conditional_show(target)
+           .data(SELECTION_STATES)
+           .classed("view-option",true)
+           .draw()
+           .each(function(x) {
+             if (x.value == "data-view") {
+
+               var dv = domain_view(d3.select(this))
+                 .options(x.data)
+                 .data(data)
+                 .on("select", function(d) {
+
+                   x.data.map(function(q) { 
+                     if (q.key == d.key) return q.selected = 1
+                     q.selected = 0 
+                   })
+
+                   dv.draw()
+                 })
+                 .draw()
+              
+             }
+
+             if (x.value == "media-view") {
+               media_plan.media_plan(d3.select(this))
+                .data(data)
+                .draw()
+             }
+           })
+
+         return this
+
+       }
+   }
+
    var version = "0.0.1";
 
    exports.version = version;
    exports.dashboard = dashboard;
    exports.filter_dashboard = filter_dashboard;
+   exports.new_dashboard = new_dashboard;
    exports.state = state;
 
 }));
