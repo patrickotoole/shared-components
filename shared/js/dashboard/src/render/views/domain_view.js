@@ -1,0 +1,112 @@
+import accessor from '../../helpers'
+import header from '../../header'
+
+import table from 'table'
+import domain_expanded from './domain_expanded'
+import domain_bullet from './domain_bullet'
+
+
+export function DomainView(target) {
+  this._on = {
+    select: noop
+  }
+  this.target = target
+}
+
+function identity(x) { return x }
+function key(x) { return x.key }
+
+
+export default function domain_view(target) {
+  return new DomainView(target)
+}
+
+DomainView.prototype = {
+    data: function(val) {
+      return accessor.bind(this)("data",val) 
+    }
+  , options: function(val) {
+      return accessor.bind(this)("options",val) 
+    }
+  , draw: function() {
+      var _explore = this.target
+        , tabs = this.options()
+        , data = this.data()
+
+      header(_explore)
+        .text(tabs.filter(function(x){ return x.selected})[0].key)
+        .options(tabs)
+        .on("select", function(x) { this.on("select")(x) }.bind(this))
+        .draw()
+
+      
+      var selected = tabs.filter(function(x){ return x.selected})[0]
+
+      _explore.selectAll(".vendor-domains-bar-desc").remove()
+      _explore.datum(data)
+
+      var t = table.table(_explore)
+        .data(selected)
+
+
+      var samp_max = d3.max(selected.values,function(x){return x.sample_percent_norm})
+        , pop_max = d3.max(selected.values,function(x){return x.pop_percent})
+        , max = Math.max(samp_max,pop_max);
+
+      t.headers([
+            {key:"key",value:"Domain",locked:true,width:"100px"}
+          , {key:"value",value:"Sample versus Pop",locked:true}
+          , {key:"count",value:"Views",selected:false}
+
+        ])
+        .option_text("&#65291;")
+        .on("expand",function(d) {
+
+          d3.select(this).selectAll("td.option-header").html("&ndash;")
+          if (d3.select(this.nextSibling).classed("expanded") == true) {
+            d3.select(this).selectAll("td.option-header").html("&#65291;")
+            return d3.select(this.parentNode).selectAll(".expanded").remove()
+          }
+
+          d3.select(this.parentNode).selectAll(".expanded").remove()
+          var t = document.createElement('tr');
+          this.parentNode.insertBefore(t, this.nextSibling);  
+
+          var tr = d3.select(t).classed("expanded",true).datum({})
+          var td = d3_updateable(tr,"td","td")
+            .attr("colspan",this.children.length)
+            .style("background","#f9f9fb")
+            .style("padding-top","10px")
+            .style("padding-bottom","10px")
+
+          var dd = this.parentElement.__data__.full_urls.filter(function(x) { return x.domain == d.key})
+          var rolled = timeseries.prepData(dd)
+          
+          domain_expanded(td)
+            .data(rolled)
+            .urls(d.urls)
+            .draw()
+
+        })
+        .hidden_fields(["urls","percent_unique","sample_percent_norm"])
+        .render("value",function(d) {
+
+          domain_bullet(d3.select(this))
+            .max(max)
+            .data(this.parentNode.__data__)
+            .draw()
+
+        })
+        
+      t.draw()
+     
+
+      return this
+    }
+  , on: function(action, fn) {
+      if (fn === undefined) return this._on[action] || noop;
+      this._on[action] = fn;
+      return this
+    }
+}
+export default domain_view;

@@ -2012,7 +2012,7 @@
    }
 
 
-   var timeseries = Object.freeze({
+   var timeseries$1 = Object.freeze({
      prepData: prepData,
      TimeSeries: TimeSeries,
      default: time_series
@@ -2287,7 +2287,7 @@
 
 
 
-         timeseries['default'](w)
+         timeseries$1['default'](w)
            .data({"key":"y","values":prepped})
            .height(80)
            .on("hover",function(x) {
@@ -2368,354 +2368,658 @@
 
    }
 
+   function Select(target) {
+     this._on = {}
+     this.target = target
+   }
+
+   function noop$4() {}
+   function identity$4(x) { return x }
+   function key$4(x) { return x.key }
+
+
+   function select(target) {
+     return new Select(target)
+   }
+
+   Select.prototype = {
+       options: function(val) {
+         return accessor.bind(this)("options",val) 
+       }
+     , draw: function() {
+
+         this._select = d3_updateable(this.target,"select","select",this._options)
+
+         var bound = this.on("select").bind(this)
+
+         this._select
+           .on("change",function(x) { bound(this.selectedOptions[0].__data__) })
+
+         this._options = d3_splat(this._select,"option","option",identity$4,key$4)
+           .text(key$4)
+
+         return this
+       }
+     , on: function(action, fn) {
+         if (fn === undefined) return this._on[action] || noop$4;
+         this._on[action] = fn;
+         return this
+       }
+   }
+
+   function noop$1() {}
+   function buttonWrap(wrap) {
+     var head = d3_updateable(wrap, "h3.buttons","h3")
+       .classed("buttons",true)
+       .style("margin-bottom","15px")
+       .style("margin-top","-5px")
+
+     var right_pull = d3_updateable(head,".pull-right","span")
+       .classed("pull-right header-buttons", true)
+       .style("margin-right","17px")
+       .style("line-height","22px")
+       .style("text-decoration","none !important")
+
+     return right_pull
+   }
+
+   function expansionWrap(wrap) {
+     return d3_updateable(wrap,"div.header-body","div")
+       .style("font-size","13px")
+       .style("text-transform","none")
+       .style("color","#333")
+       .style("font-weight","normal")
+       .style("margin-left","175px")
+       .style("padding","25px")
+       .style("margin-bottom","25px")
+       .style("margin-right","175px")
+       .style("background-color","white")
+       .classed("header-body hidden",true)
+   }
+
+   function headWrap(wrap) {
+     return d3_updateable(wrap, "h3.data-header","h3")
+       .classed("data-header",true)
+       .style("margin-bottom","15px")
+       .style("margin-top","-5px")
+
+   }
+
+
+   function Header(target) {
+     this._on = {}
+     this.target = target
+
+     var CSS_STRING = String(function() {/*
+       .header-buttons a span.hover-show { display:none }
+       .header-buttons a:hover span.hover-show { display:inline; padding-left:3px }
+     */})
+     
+   }
+
+   function header(target) {
+     return new Header(target)
+   }
+
+   Header.prototype = {
+       text: function(val) {
+         return accessor.bind(this)("text",val) 
+       }
+     , options: function(val) {
+         return accessor.bind(this)("options",val) 
+       }
+     , buttons: function(val) {
+         return accessor.bind(this)("buttons",val) 
+       }
+     , expansion: function(val) {
+         return accessor.bind(this)("expansion",val) 
+       }
+     , draw: function() {
+         var wrap = d3_updateable(this.target, ".header-wrap","div")
+           .classed("header-wrap",true)
+
+         var expand_wrap = expansionWrap(wrap)
+           , button_wrap = buttonWrap(wrap)
+           , head_wrap = headWrap(wrap)
+
+         d3_updateable(head_wrap,"span.title","span")
+           .classed("title",true)
+           .text(this._text)
+
+         if (this._options) {
+
+           var bound = this.on("select").bind(this)
+
+           var selectBox = select(head_wrap)
+             .options(this._options)
+             .on("select",function(x) { bound(x) })
+             .draw()
+
+           selectBox._select
+             .style("width","19px")
+             .style("margin-left","12px")
+             
+           selectBox._options
+             .style("color","#888")
+             .style("min-width","100px")
+             .style("text-align","center")
+             .style("display","inline-block")
+             .style("padding","5px")
+         }
+
+         return this
+       }
+     , on: function(action, fn) {
+         if (fn === undefined) return this._on[action] || noop$1;
+         this._on[action] = fn;
+         return this
+       }
+   }
+
+   function noop$2() {}
+   function identity$1(x) { return x }
+   function key$1(x) { return x.key }
+
+   function ButtonRadio(target) {
+     this._on = {}
+     this.target = target
+   }
+
+   function button_radio(target) {
+     return new ButtonRadio(target)
+   }
+
+   ButtonRadio.prototype = {
+       data: function(val) {
+         return accessor.bind(this)("data",val) 
+       }
+     , on: function(action, fn) {
+         if (fn === undefined) return this._on[action] || noop$2;
+         this._on[action] = fn;
+         return this
+       }
+     , draw: function () {
+     
+       var CSS_STRING = String(function() {/*
+         .options-view { text-align:center }
+         .show-button {
+         width: 190px;
+         text-align: center;
+         line-height: 50px;
+         border-radius: 15px;
+         border: 1px solid #ccc;
+         font-size: 12px;
+         text-transform: uppercase;
+         font-weight: bold;
+         display:inline-block;
+         margin-right:30px;
+           }
+       */})
+     
+       d3_updateable(d3.select("head"),"style#show-css","style")
+         .attr("id","header-css")
+         .text(CSS_STRING.replace("function () {/*","").replace("*/}",""))
+     
+       var options = d3_updateable(this.target,".button-radio-row","div")
+         .classed("button-radio-row",true)
+         .style("margin-bottom","35px")
+     
+       header(options)
+         .text("Choose Option")
+         .draw()
+     
+       var button_row = d3_updateable(options,".options-view","div",this.data())
+         .classed("options-view",true)
+
+       var bound = this.on("click").bind(this)
+     
+       d3_splat(button_row,".show-button","a",identity$1, key$1)
+         .classed("show-button",true)
+         .text(key$1)
+         .on("click", function(x) { bound(x) })
+
+       return this
+     
+       }
+     
+   }
+
+   function noop$3() {}
+   function identity$2(x) { return x }
+   function ConditionalShow(target) {
+     this._on = {}
+     this._classes = {}
+     this._objects = {}
+     this.target = target
+   }
+
+   function conditional_show(target) {
+     return new ConditionalShow(target)
+   }
+
+   ConditionalShow.prototype = {
+       data: function(val) {
+         return accessor.bind(this)("data",val) 
+       }
+     , classed: function(k, v) {
+         if (k === undefined) return this._classes
+         if (v === undefined) return this._classes[k] 
+         this._classes[k] = v;
+         return this
+       }  
+     , on: function(action, fn) {
+         if (fn === undefined) return this._on[action] || noop$3;
+         this._on[action] = fn;
+         return this
+       }
+     , draw: function () {
+
+         var classes = this.classed()
+
+         var wrap = d3_updateable(this.target,".conditional-wrap","div",this.data())
+           .classed("conditional-wrap",true)
+
+         var objects = d3_splat(wrap,".conditional","div",identity$2, function(x,i) { return i })
+           .attr("class", function(x) { return x.value })
+           .classed("conditional",true)
+           .classed("hidden", function(x) { return !x.selected })
+
+
+         Object.keys(classes).map(function(k) { 
+           objects.classed(k,classes[k])
+         })
+
+         this._objects = objects
+
+
+         return this
+     
+       }
+     , each: function(fn) {
+         this.draw()
+         this._objects.each(fn)
+         
+       }
+   }
+
+   function noop$5() {}
+
+
+   function DomainExpanded(target) {
+     this._on = {}
+     this.target = target
+   }
+
+   function domain_expanded(target) {
+     return new DomainExpanded(target)
+   }
+
+   DomainExpanded.prototype = {
+       data: function(val) {
+         return accessor.bind(this)("data",val) 
+       }
+     , urls: function(val) {
+         return accessor.bind(this)("urls",val) 
+       }
+     , draw: function() {
+
+         var timing = d3_updateable(this.target,"div.timing","div",this.data())
+           .classed("timing",true)
+           .style("height","60px")
+           .style("width","60%")
+           .style("text-transform","uppercase")
+           .style("font-weight","bold")
+           .style("font-size",".9em")
+           .style("margin-bottom","45px")
+           .style("line-height","35px")
+           .style("display","inline-block")
+           .text("Articles Accessed")
+
+         var details = d3_updateable(this.target,"div.details","div")
+           .classed("details",true)
+           .style("width","40%")
+           .style("display","inline-block")
+           .style("vertical-align","top")
+
+         d3_updateable(details,"span","span")
+           .style("text-transform","uppercase")
+           .style("font-weight","bold")
+           .style("font-size",".9em")
+           .style("margin-bottom","10px")
+           .style("line-height","35px")
+           .text("Details")
+
+         var articles = d3_updateable(this.target,"div.articles","div")
+           .classed("articles",true)
+
+         d3_updateable(articles,"span","span")
+           .style("text-transform","uppercase")
+           .style("font-weight","bold")
+           .style("font-size",".9em")
+           .style("margin-bottom","10px")
+           .style("line-height","35px")
+           .text("Top articles")
+           
+         var drawArticles = function(urls) {
+
+           var a = d3_splat(articles,"div","div",urls)
+             .text(String)
+             .exit().remove()
+
+         }
+
+         var drawDetails = function(x) {
+
+           var time = d3_updateable(details,".time","div",x)
+             .classed("time",true)
+             .text("Time: " + x.hour + ":" + (x.minute.length == 1 ? "0" + x.minute : x.minute ) )
+
+           var button = d3_updateable(details,".button","a",false,function() { return 1})
+             .classed("button",true)
+             .style("padding","5px")
+             .style("border-radius","5px")
+             .style("border","1px solid #ccc")
+             .style("margin","auto")
+             .style("margin-top","10px")
+             .style("display","block")
+             .style("width","50px")
+             .style("text-align","center")
+             .text("Reset")
+             .on("click",reset)
+
+         }
+
+         var reset = function() {
+           details.selectAll(".time").remove()
+           details.selectAll(".button").remove()
+
+           drawArticles(this._urls.slice(0,10))
+         }.bind(this)
+
+         reset() 
+
+         time_series(timing)
+           .data({"key":"y","values":timing.data()[0]})
+           .on("hover",function(x) {
+             drawArticles(Object.keys(x.articles).slice(0,10))
+             drawDetails(x)
+
+           })
+           .draw()
+
+         return this
+       }
+     , on: function(action, fn) {
+         if (fn === undefined) return this._on[action] || noop$5;
+         this._on[action] = fn;
+         return this
+       }
+   }
+
+   function DomainBullet(target) {
+     this._on = {}
+     this.target = target
+   }
+
+   function noop$6() {}
+   function domain_bullet(target) {
+     return new DomainBullet(target)
+   }
+
+   DomainBullet.prototype = {
+       data: function(val) {
+         return accessor.bind(this)("data",val) 
+       }
+     , max: function(val) {
+         return accessor.bind(this)("max",val) 
+       }
+     , draw: function() {
+
+         var width = (this.target.style("width").replace("px","") || this.offsetWidth) - 50
+           , height = 28;
+
+         var x = d3.scale.linear()
+           .range([0, width])
+           .domain([0, this.max()])
+
+         if (this.target.text()) this.target.text("")
+
+         var bullet = d3_updateable(this.target,".bullet","div",this.data(),function(x) { return 1 })
+           .classed("bullet",true)
+           .style("margin-top","3px")
+
+         bullet.exit().remove()
+
+         var svg = d3_updateable(bullet,"svg","svg",false,function(x) { return 1})
+           .attr("width",width)
+           .attr("height",height)
+     
+      
+         d3_updateable(svg,".bar-1","rect",false,function(x) { return 1})
+           .classed("bar-1",true)
+           .attr("x",0)
+           .attr("width", function(d) {return x(d.pop_percent) })
+           .attr("height", height)
+           .attr("fill","#888")
+     
+         d3_updateable(svg,".bar-2","rect",false,function(x) { return 1})
+           .classed("bar-2",true)
+           .attr("x",0)
+           .attr("y",height/4)
+           .attr("width", function(d) {return x(d.sample_percent_norm) })
+           .attr("height", height/2)
+           .attr("fill","rgb(8, 29, 88)")
+
+         return this
+       }
+     , on: function(action, fn) {
+         if (fn === undefined) return this._on[action] || noop$6;
+         this._on[action] = fn;
+         return this
+       }
+   }
+
+   function DomainView(target) {
+     this._on = {}
+     this.target = target
+   }
+
+   function domain_view(target) {
+     return new DomainView(target)
+   }
+
+   DomainView.prototype = {
+       data: function(val) {
+         return accessor.bind(this)("data",val) 
+       }
+     , options: function(val) {
+         return accessor.bind(this)("options",val) 
+       }
+     , draw: function() {
+         var _explore = this.target
+           , tabs = this.options()
+           , data = this.data()
+
+         header(_explore)
+           .text(tabs.filter(function(x){ return x.selected})[0].key)
+           .options(tabs)
+           .on("select", function(x) {
+             console.log("is this working")
+             debugger
+             this.on("select")(x)
+             //draw()
+           }.bind(this))
+           .draw()
+
+         
+         var selected = tabs.filter(function(x){ return x.selected})[0]
+
+         _explore.selectAll(".vendor-domains-bar-desc").remove()
+         _explore.datum(data)
+
+         var t = table.table(_explore)
+           .data(selected)
+
+         if ((selected.key == "Top Topics") || (selected.key == "Top Domains")) {
+
+           var samp_max = d3.max(selected.values,function(x){return x.sample_percent_norm})
+             , pop_max = d3.max(selected.values,function(x){return x.pop_percent})
+             , max = Math.max(samp_max,pop_max);
+
+           t.headers([
+                 {key:"key",value:"Domain",locked:true,width:"100px"}
+               , {key:"value",value:"Sample versus Pop",locked:true}
+               , {key:"count",value:"Views",selected:false}
+
+             ])
+             .option_text("&#65291;")
+             .on("expand",function(d) {
+
+               d3.select(this).selectAll("td.option-header").html("&ndash;")
+               if (d3.select(this.nextSibling).classed("expanded") == true) {
+                 d3.select(this).selectAll("td.option-header").html("&#65291;")
+                 return d3.select(this.parentNode).selectAll(".expanded").remove()
+               }
+
+               d3.select(this.parentNode).selectAll(".expanded").remove()
+               var t = document.createElement('tr');
+               this.parentNode.insertBefore(t, this.nextSibling);  
+
+               var tr = d3.select(t).classed("expanded",true).datum({})
+               var td = d3_updateable(tr,"td","td")
+                 .attr("colspan",this.children.length)
+                 .style("background","#f9f9fb")
+                 .style("padding-top","10px")
+                 .style("padding-bottom","10px")
+
+               var dd = this.parentElement.__data__.full_urls.filter(function(x) { return x.domain == d.key})
+               var rolled = timeseries.prepData(dd)
+               
+               domain_expanded(td)
+                 .data(rolled)
+                 .urls(d.urls)
+                 .draw()
+
+             })
+             .hidden_fields(["urls","percent_unique","sample_percent_norm"])
+             .render("value",function(d) {
+
+               domain_bullet(d3.select(this))
+                 .max(max)
+                 .data(this.parentNode.__data__)
+                 .draw()
+
+             })
+           
+         }
+
+         t.draw()
+        
+
+         return this
+       }
+     , on: function(action, fn) {
+         if (fn === undefined) return this._on[action] || noop;
+         this._on[action] = fn;
+         return this
+       }
+   }
+
    function render_data_view(_lower,data) {
 
-         var _olower = _lower
+         // ----- BEGIN STATE STUFF ----- //
 
-         var options = d3_updateable(_lower,".options-view","div")
-           .classed("options-view",true)
-           .style("margin-bottom","35px")
+         var SELECTION_STATES = [
+               {"key":"Explore data","value":"data-view"}
+             , {"key":"Create Media Plan", "value":"media-view"}
+             , {"key":"Build Content Brief", "value":"content-view"}
+           ]
 
          var view = this._state.get("view",false)
 
-
-         var _media = d3_updateable(_lower,".media-view","div")
-           .classed("view-option media-view",true)
-           .classed("hidden",function() { return !(view == "media-view") })
-           .style("margin-left","-15px")
-           .style("margin-right","-15px")
-
-         var _content = d3_updateable(_lower,".content-view","div")
-           .classed("view-option content-view",true)
-           .classed("hidden",function() { return !(view == "content-view") })
-
-
-
-         var _lower = d3_updateable(_lower,".data-view","div")
-           .classed("view-option data-view",true)
-           .classed("hidden",function() { return !(view == "data-view") })
-
-
-         if (view == "media-view") {
-           media_plan.media_plan(_media)
-             .data(data)
-             .draw()
-         }
-
-
-
-         
-
-         var CSS_STRING = String(function() {/*
-       .options-view { text-align:center }
-       .show-button {
-       width: 190px;
-       text-align: center;
-       line-height: 50px;
-       border-radius: 15px;
-       border: 1px solid #ccc;
-       font-size: 12px;
-       text-transform: uppercase;
-       font-weight: bold;
-       display:inline-block;
-       margin-right:30px;
-         }
-         */})
-       
-         d3_updateable(d3.select("head"),"style#show-css","style")
-           .attr("id","header-css")
-           .text(CSS_STRING.replace("function () {/*","").replace("*/}",""))
-
-         d3_updateable(options, "h3.option-header","h3")
-           .classed("option-header",true)
-           .style("margin-bottom","15px")
-           .style("margin-top","0px")
-           .style("text-align","left")
-           .text("Choose Option")
-
-         var set_state = function(x) { this._state.set("view",x) }.bind(this)
-
-         d3_updateable(options,".show-data-view","a")
-           .classed("show-data-view show-button",true)
-           .text("Explore data")
-           .on("click",function() { 
-             _olower.selectAll(".view-option").classed("hidden",true) 
-             set_state("data-view")
-             _lower.classed("hidden",false) 
+         var set_state = function(x) { 
+           this._state.set("view",x) 
+           SELECTION_STATES.map(function(d) { 
+             d.selected = (x == d.value)
            })
-
-         d3_updateable(options,".media-plan-view","a")
-           .classed("media-plan-view show-button",true)
-           .text("Create Media Plan")
-           .on("click",function() { 
-             _olower.selectAll(".view-option").classed("hidden",true) 
-             set_state("media-view")
-
-             _media.classed("hidden",false) 
-             media_plan.media_plan(_media)
-               .data(data)
-               .draw()
-
-
-           })
-
-         d3_updateable(options,".generate-content-view","a")
-           .classed("generate-content-view show-button",true)
-           .text("Build Content Brief")
-           .on("click",function() { 
-             _olower.selectAll(".view-option").classed("hidden",true) 
-             set_state("content-view")
-
-
-             _content.classed("hidden",false) 
-           })
-
-
-
-
-
-
-         var chead = d3_updateable(_content, "h3.data-header","h3")
-           .classed("data-header",true)
-           .style("margin-bottom","15px")
-           .style("margin-top","-5px")
-
-
-         d3_updateable(chead,"span","span")
-           .text("Content Brief (Coming soon)")
-
-
-
-
-         var head = d3_updateable(_lower, "h3.data-header","h3")
-           .classed("data-header",true)
-           .style("margin-bottom","15px")
-           .style("margin-top","-5px")
+         }.bind(this)
 
          var self = this
 
+         SELECTION_STATES.map(function(x) { 
+           x.selected = (x.value == view)
 
-         var tabs = [
-             buildDomains(data)
-           , buildUrls(data)
-           , buildTopics(data)
+           if (x.value == "data-view") {
+             x.data = [
+                 buildDomains(data)
+               , buildUrls(data)
+               , buildTopics(data)
+             ]
 
-         ]
+             var tabs = x.data
+             self._state.get("tabs",[]).map(function(x,i) { tabs[i].selected = x })
 
-         if ((tabs[0].selected == undefined) && (!this._state.get("tabs")))  this._state.set("tabs",[1,0]) 
-
-         this._state.get("tabs").map(function(x,i) { tabs[i].selected = x })
-
-         d3_updateable(head,"span","span")
-           .text(tabs.filter(function(x){ return x.selected})[0].key)
-
-         var select = d3_updateable(head,"select","select")
-           .style("width","19px")
-           .style("margin-left","12px")
-           .on("change", function(x) {
-             tabs.map(function(y) { y.selected = 0 })
-
-             this.selectedOptions[0].__data__.selected = 1
-             self._state.set("tabs", tabs.map(function(y) {return y.selected }) )
-             draw()
-           })
-         
-         d3_splat(select,"option","option",tabs,function(x) {return x.key})
-           .text(function(x){ return x.key })
-           .style("color","#888")
-           .style("min-width","100px")
-           .style("text-align","center")
-           .style("display","inline-block")
-           .style("padding","5px")
-           .style("border",function(x) {return x.selected ? "1px solid #888" : undefined})
-           .style("opacity",function(x){ return x.selected ? 1 : .5})
-
-         function draw() {
-           var selected = tabs.filter(function(x){ return x.selected})[0]
-
-           d3_updateable(head,"span","span")
-             .text(selected.key)
-
-           _lower.selectAll(".vendor-domains-bar-desc").remove()
-
-           _lower.datum(data)
-
-           var t = table.table(_lower)
-             .data(selected)
-
-
-           if ((selected.key == "Top Topics") || (selected.key == "Top Domains")) {
-
-             var samp_max = d3.max(selected.values,function(x){return x.sample_percent_norm})
-               , pop_max = d3.max(selected.values,function(x){return x.pop_percent})
-               , max = Math.max(samp_max,pop_max);
-
-             t.headers([
-                   {key:"key",value:"Domain",locked:true,width:"100px"}
-                 , {key:"value",value:"Sample versus Pop",locked:true}
-                 , {key:"count",value:"Views",selected:false}
-
-               ])
-               .option_text("&#65291;")
-               .on("expand",function(d) {
-
-                 d3.select(this).selectAll("td.option-header").html("&ndash;")
-                 if (d3.select(this.nextSibling).classed("expanded") == true) {
-                   d3.select(this).selectAll("td.option-header").html("&#65291;")
-                   return d3.select(this.parentNode).selectAll(".expanded").remove()
-                 }
-
-                 d3.select(this.parentNode).selectAll(".expanded").remove()
-                 var t = document.createElement('tr');
-                 this.parentNode.insertBefore(t, this.nextSibling);  
-
-                 var tr = d3.select(t).classed("expanded",true).datum({})
-                 var td = d3_updateable(tr,"td","td")
-                   .attr("colspan",this.children.length)
-                   .style("background","#f9f9fb")
-                   .style("padding-top","10px")
-                   .style("padding-bottom","10px")
-
-                 var dd = this.parentElement.__data__.full_urls.filter(function(x) { return x.domain == d.key})
-
-
-                 
-
-                 var rolled = prepData(dd)
-
-                 var timing = d3_updateable(td,"div.timing","div",rolled)
-                   .classed("timing",true)
-                   .style("height","60px")
-                   .style("width","60%")
-                   .style("text-transform","uppercase")
-                   .style("font-weight","bold")
-                   .style("font-size",".9em")
-                   .style("margin-bottom","45px")
-                   .style("line-height","35px")
-                   .style("display","inline-block")
-                   .text("Articles Accessed")
-
-                 var details = d3_updateable(td,"div.details","div")
-                   .classed("details",true)
-                   .style("width","40%")
-                   .style("display","inline-block")
-                   .style("vertical-align","top")
-
-                 d3_updateable(details,"span","span")
-                   .style("text-transform","uppercase")
-                   .style("font-weight","bold")
-                   .style("font-size",".9em")
-                   .style("margin-bottom","10px")
-                   .style("line-height","35px")
-                   .text("Details")
-
-                 var articles = d3_updateable(td,"div.articles","div")
-                   .classed("articles",true)
-
-                 d3_updateable(articles,"span","span")
-                   .style("text-transform","uppercase")
-                   .style("font-weight","bold")
-                   .style("font-size",".9em")
-                   .style("margin-bottom","10px")
-                   .style("line-height","35px")
-                   .text("Top articles")
-                   
-                 var drawArticles = function(urls) {
-
-                   var a = d3_splat(articles,"div","div",urls)
-                     .text(String)
-                     .exit().remove()
-
-                 }
-
-                 var drawDetails = function(x) {
-
-                   var time = d3_updateable(details,".time","div",x)
-                     .classed("time",true)
-                     .text("Time: " + x.hour + ":" + (x.minute.length == 1 ? "0" + x.minute : x.minute ) )
-
-                   var button = d3_updateable(details,".button","a",false,function() { return 1})
-                     .classed("button",true)
-                     .style("padding","5px")
-                     .style("border-radius","5px")
-                     .style("border","1px solid #ccc")
-                     .style("margin","auto")
-                     .style("margin-top","10px")
-                     .style("display","block")
-                     .style("width","50px")
-                     .style("text-align","center")
-                     .text("Reset")
-                     .on("click",reset)
-
-                 }
-
-                 var reset = function() {
-                   details.selectAll(".time").remove()
-                   details.selectAll(".button").remove()
-
-                   drawArticles(d.urls.slice(0,10))
-                 }
-                 reset() 
-
-                 time_series(timing)
-                   .data({"key":"y","values":timing.data()[0]})
-                   .on("hover",function(x) {
-                     drawArticles(Object.keys(x.articles).slice(0,10))
-                     drawDetails(x)
-
-                   })
-                   .draw()
-
-                  
-                  
-                   
-               })
-               .hidden_fields(["urls","percent_unique","sample_percent_norm"])
-               .render("value",function(d) {
-                 var width = (d3.select(this).style("width").replace("px","") || this.offsetWidth) - 50
-                   , height = 28;
-
-                 var x = d3.scale.linear()
-                   .range([0, width])
-                   .domain([0, max])
-
-                 if (d3.select(this).text()) d3.select(this).text("")
-
-                 var bullet = d3_updateable(d3.select(this),".bullet","div",this.parentNode.__data__,function(x) { return 1 })
-                   .classed("bullet",true)
-                   .style("margin-top","3px")
-
-                 bullet.exit().remove()
-
-                 var svg = d3_updateable(bullet,"svg","svg",false,function(x) { return 1})
-                   .attr("width",width)
-                   .attr("height",height)
-     
-      
-                 d3_updateable(svg,".bar-1","rect",false,function(x) { return 1})
-                   .classed("bar-1",true)
-                   .attr("x",0)
-                   .attr("width", function(d) {return x(d.pop_percent) })
-                   .attr("height", height)
-                   .attr("fill","#888")
-     
-                 d3_updateable(svg,".bar-2","rect",false,function(x) { return 1})
-                   .classed("bar-2",true)
-                   .attr("x",0)
-                   .attr("y",height/4)
-                   .attr("width", function(d) {return x(d.sample_percent_norm) })
-                   .attr("height", height/2)
-                   .attr("fill","rgb(8, 29, 88)")
-
-
-               })
-             
+             if ((tabs[0].selected == undefined) && (!self._state.get("tabs")))  self._state.set("tabs",[1,0]) 
            }
 
-           t.draw()
+           if (x.value == "media-view") {
+             x.data = data
+           }
+
+         })
+
+         // ----- END STATE STUFF ----- //
+
+         button_radio(_lower)
+           .on("click", function(x) {
+             set_state(x.value)
+             
+             show()
+           })
+           .data(SELECTION_STATES)
+           .draw()
+
+
+
+         var show = function() {
+
+           return conditional_show(_lower)
+             .data(SELECTION_STATES)
+             .classed("view-option",true)
+             .draw()
          }
 
-         draw()      
+         var conditional = show()
+
+         var _explore;
+         conditional.each(function(x) {
+           if (x.value == "data-view") {
+             var dv = domain_view(d3.select(this))
+               .options(x.data)
+               .data(data)
+               .on("select", function(d) {
+
+                 x.data.map(function(q) { 
+                   if (q.key == d.key) return q.selected = 1
+                   q.selected = 0 
+                 })
+
+                 dv.draw()
+               })
+               .draw()
+
+             
+
+            
+           }
+
+           if (x.value == "media-view") {
+             media_plan.media_plan(d3.select(this))
+              .data(data)
+              .draw()
+           }
+         })
+         
        }
 
    function render_lhs() {
@@ -2803,19 +3107,10 @@
        }
      , render_wrappers: function() {
 
-         this._lhs = d3_updateable(this._target,".lhs","div")
-           .classed("lhs col-md-2",true)
-           .style("display","none")
-
          this._center = d3_updateable(this._target,".center","div")
-           .classed("center col-md-9",true)
+           .classed("center",true)
            .style("float","none")
            .style("margin","auto")
-
-         this._right = d3_updateable(this._target,".right","div")
-           .classed("right col-md-3",true)
-           .style("display","none")
-
 
        }
      , render_center: function() {
@@ -2834,7 +3129,7 @@
 
 
          this._center = d3_updateable(this._target,".center","div")
-           .classed("center col-md-9",true)
+           .classed("center",true)
 
          var current =  this._center
            , _top = topSection(current)

@@ -16,14 +16,11 @@ import render_lhs from './render/lhs'
 import render_summary from './render/summary'
 import render_data_view from './render/data_view'
 import * as overlay from './render/overlay'
-
+import * as header from './header'
 
 import state from './state'
 import share from './share'
 import time_series from './timeseries'
-
-
-
 
 
 export function FilterDashboard(target) {
@@ -67,19 +64,10 @@ FilterDashboard.prototype = {
     }
   , render_wrappers: function() {
 
-      this._lhs = d3_updateable(this._target,".lhs","div")
-        .classed("lhs col-md-2",true)
-        .style("display","none")
-
       this._center = d3_updateable(this._target,".center","div")
-        .classed("center col-md-9",true)
+        .classed("center",true)
         .style("float","none")
         .style("margin","auto")
-
-      this._right = d3_updateable(this._target,".right","div")
-        .classed("right col-md-3",true)
-        .style("display","none")
-
 
     }
   , render_center: function() {
@@ -98,7 +86,7 @@ FilterDashboard.prototype = {
 
 
       this._center = d3_updateable(this._target,".center","div")
-        .classed("center col-md-9",true)
+        .classed("center",true)
 
       var current =  this._center
         , _top = ui_helper.topSection(current)

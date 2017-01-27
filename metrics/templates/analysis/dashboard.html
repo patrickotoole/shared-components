@@ -131,6 +131,7 @@
 <script>
 (function() {
 
+
   RB.menu.routes.roots = [
       {
         "name": "Filter",
@@ -159,14 +160,24 @@
 
 
   var s = state.state()
-    .subscribe("filter.formatted_data", function(error,d) {
+    .subscribe("filter.formatted_data", function(error,value) {
 
-    })
-    .subscribe("filter.filter_data",function(error,value) {
-      debugger
       dashboard.filter_dashboard(centered)
         .data(value)
         .draw()
+
+    })
+    .subscribe("filter.data",function(error,value) {
+
+      value.actions = []
+      value.category = value.summary.category
+      value.current_hour = value.summary.hour
+      value.category_hour = value.summary.cross_section
+
+      value.full_urls = value.response
+
+      s.publishStatic("formatted_data",value)
+
     })
 
   var asyncPub = function(cb){
@@ -174,7 +185,7 @@
   }
 
 
-  s.publish("filter_data",asyncPub)
+  s.publishStatic("data",asyncPub)
 
   window.s = s
 
