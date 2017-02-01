@@ -2516,6 +2516,12 @@
        .classed("data-header",true)
        .style("margin-bottom","15px")
        .style("margin-top","-5px")
+       .style("font-weight"," bold")
+       .style("font-size"," 14px")
+       .style("line-height"," 22px")
+       .style("text-transform"," uppercase")
+       .style("color"," #888")
+       .style("letter-spacing"," .05em")
 
    }
 
@@ -2615,19 +2621,24 @@
      , draw: function () {
      
        var CSS_STRING = String(function() {/*
-         .options-view { text-align:center }
+         .options-view { text-align:right }
          .show-button {
-         width: 190px;
+         width: 150px;
          text-align: center;
-         line-height: 50px;
+         line-height: 40px;
          border-radius: 15px;
          border: 1px solid #ccc;
          font-size: 12px;
          text-transform: uppercase;
          font-weight: bold;
          display:inline-block;
-         margin-right:30px;
+         margin-right:15px;
            }
+         .show-button:hover { text-decoration:none; color:#555 }
+         .show-button.selected {
+           background: #e3ebf0;
+           color: #555;
+         }
        */})
      
        d3_updateable(d3.select("head"),"style#show-css","style")
@@ -2646,6 +2657,7 @@
      
        d3_splat(button_row,".show-button","a",identity$7, key$7)
          .classed("show-button",true)
+         .classed("selected", function(x) { return x.selected })
          .text(key$7)
          .on("click", function(x) { bound(x) })
 
@@ -3649,9 +3661,9 @@
          var wrap = d3_updateable(this.target,".option-wrap","div")
            .classed("option-wrap",true)
 
-         header(wrap)
-           .text("Choose View")
-           .draw()
+         //header(wrap)
+         //  .text("Choose View")
+         //  .draw()
 
          button_radio(wrap)
            .on("click", this.on("select") )
@@ -3825,6 +3837,213 @@
 
    }
 
+   function drawCategory(target,data) {
+
+     var w = d3_updateable(target,"div.category","div",false,function() { return 1})
+       .classed("category",true)
+       .style("width","50%")
+       .style("display","inline-block")
+       .style("background-color", "#e3ebf0")
+       .style("padding-left", "10px")
+       .style("min-height","325px")
+
+
+     d3_updateable(w,"h3","h3")
+       .text("Categories visited for filtered versus all views")
+       .style("font-size","12px")
+       .style("color","#333")
+       .style("line-height","33px")
+       .style("background-color","#e3ebf0")
+       .style("margin-left","-10px")
+       .style("margin-bottom","10px")
+       .style("padding-left","10px")
+       .style("margin-top","0px")
+       .style("font-weight","bold")
+       .style("text-transform","uppercase")
+
+     var wrap = d3_updateable(w,".svg-wrap","div",data,function(x) { return 1 })
+       .classed("svg-wrap",true)
+
+     var categories = data.map(function(x) { return x.key })
+
+     var max = d3.max(data,function(x) { return x.pop })
+
+
+     var xscale = d3.scale.linear()
+       .domain([0,max])
+       .range([0,300]);
+
+     var height = 20
+
+     var yscale = d3.scale.linear()
+       .domain([0,categories.length])
+       .range([0,categories.length*height]);
+
+     var canvas = d3_updateable(wrap,"svg","svg",false,function() { return 1})
+       .attr({'width':450,'height':categories.length*height + 30});
+
+     var xAxis = d3.svg.axis();
+     xAxis
+       .orient('bottom')
+       .scale(xscale)
+
+     //  .tickValues(tickVals);
+
+     var yAxis = d3.svg.axis();
+     yAxis
+       .orient('left')
+       .scale(yscale)
+       .tickSize(2)
+       .tickFormat(function(d,i){ return categories[i]; })
+       .tickValues(d3.range(categories.length));
+
+     var y_xis = d3_updateable(canvas,'g.y','g')
+       .attr("class","y axis")
+       .attr("transform", "translate(150,15)")
+       .attr('id','yaxis')
+       .call(yAxis);
+
+     var x_xis = d3_updateable(canvas,'g.x','g')
+       .attr("class","x axis")
+       .attr("transform", "translate(150," + categories.length*height+ ")")
+       .attr('id','xaxis')
+       .call(xAxis);
+
+     var chart = d3_updateable(canvas,'g.chart','g')
+       .attr("class","chart")
+       .attr("transform", "translate(150,0)")
+       .attr('id','bars')
+     
+     var bars = d3_splat(chart,".pop-bar","rect",function(x) { return x}, function(x) { return x.key })
+       .attr("class","pop-bar")
+       .attr('height',height-2)
+       .attr({'x':0,'y':function(d,i){ return yscale(i) + 7.5; }})
+       .style('fill','gray')
+       .attr("width",function(x) { return xscale(x.pop) })
+
+     var sampbars = d3_splat(chart,".samp-bar","rect",function(x) { return x}, function(x) { return x.key })
+       .attr("class","samp-bar")
+       .attr('height',height-2)
+       .attr({'x':0,'y':function(d,i){ return yscale(i) + 7.5; }})
+       .style('fill','#081d58')
+       .attr("width",function(x) { return xscale(x.samp) })
+
+     y_xis.exit().remove()
+     x_xis.exit().remove()
+     bars.exit().remove()
+     sampbars.exit().remove()
+
+
+
+
+
+
+   }
+
+   function drawKeywords(target,data) {
+
+     var w = d3_updateable(target,"div.keyword","div",false,function() { return 1})
+       .classed("keyword",true)
+       .style("width","50%")
+       .style("display","inline-block")
+       .style("background-color", "#e3ebf0")
+       .style("padding-left", "10px")
+       .style("min-height","325px")
+       .style("vertical-align","top")
+
+
+
+     d3_updateable(w,"h3","h3")
+       .text("Keywords visited for filtered versus all views")
+       .style("font-size","12px")
+       .style("color","#333")
+       .style("line-height","33px")
+       .style("background-color","#e3ebf0")
+       .style("margin-left","-10px")
+       .style("margin-bottom","10px")
+       .style("padding-left","10px")
+       .style("margin-top","0px")
+       .style("font-weight","bold")
+       .style("text-transform","uppercase")
+
+     var wrap = d3_updateable(w,".svg-wrap","div",data,function(x) { return 1 })
+       .classed("svg-wrap",true)
+
+     var categories = data.map(function(x) { return x.key })
+
+     var max = d3.max(data,function(x) { return x.pop })
+
+
+     var xscale = d3.scale.linear()
+       .domain([0,max])
+       .range([0,300]);
+
+     var height = 20
+
+     var yscale = d3.scale.linear()
+       .domain([0,categories.length])
+       .range([0,categories.length*height]);
+
+     var canvas = d3_updateable(wrap,"svg","svg")
+       .attr({'width':450,'height':categories.length*height + 30});
+
+     var xAxis = d3.svg.axis();
+     xAxis
+       .orient('bottom')
+       .scale(xscale)
+
+     //  .tickValues(tickVals);
+
+     var yAxis = d3.svg.axis();
+     yAxis
+       .orient('left')
+       .scale(yscale)
+       .tickSize(2)
+       .tickFormat(function(d,i){ return categories[i]; })
+       .tickValues(d3.range(categories.length));
+
+     var y_xis = d3_updateable(canvas,'g.y','g')
+       .attr("class","y axis")
+       .attr("transform", "translate(150,15)")
+       .attr('id','yaxis')
+       .call(yAxis);
+
+     var x_xis = d3_updateable(canvas,'g.x','g')
+       .attr("class","x axis")
+       .attr("transform", "translate(150," + categories.length*height+ ")")
+       .attr('id','xaxis')
+       .call(xAxis);
+
+     var chart = d3_updateable(canvas,'g.chart','g')
+       .attr("class","chart")
+       .attr("transform", "translate(150,0)")
+       .attr('id','bars')
+     
+     var bars = d3_splat(chart,".pop-bar","rect",function(x) { return x}, function(x) { return x.key })
+       .attr("class","pop-bar")
+       .attr('height',height-2)
+       .attr({'x':0,'y':function(d,i){ return yscale(i) + 7.5; }})
+       .style('fill','gray')
+       .attr("width",function(x) { return xscale(x.pop) })
+
+     var sampbars = d3_splat(chart,".samp-bar","rect",function(x) { return x}, function(x) { return x.key })
+       .attr("class","samp-bar")
+       .attr('height',height-2)
+       .attr({'x':0,'y':function(d,i){ return yscale(i) + 7.5; }})
+       .style('fill','#081d58')
+       .attr("width",function(x) { return xscale(x.samp) })
+
+     y_xis.exit().remove()
+     x_xis.exit().remove()
+     bars.exit().remove()
+     sampbars.exit().remove()
+
+
+
+
+
+   }
+
    function drawTimeseries(target,data,radius_scale) {
      var w = d3_updateable(target,"div.timeseries","div")
        .classed("timeseries",true)
@@ -3905,6 +4124,8 @@
        .style("padding-left","10px")
        .style("margin-top","0px")
        .style("font-weight","bold")
+       .style("text-transform","uppercase")
+
 
 
 
@@ -3945,9 +4166,9 @@
        })
        .draw()
 
-
-
    }
+
+
 
 
 
@@ -3962,6 +4183,14 @@
      , timing: function(val) {
          return accessor.bind(this)("timing",val) 
        }
+     , category: function(val) {
+         return accessor.bind(this)("category",val) 
+       }
+     , keywords: function(val) {
+         return accessor.bind(this)("keywords",val) 
+       }
+
+
      , draw: function() {
 
 
@@ -3991,9 +4220,16 @@
 
          var tswrap = d3_updateable(wrap,".ts-row","div")
            .classed("ts-row",true)
+           .style("padding-bottom","10px")
 
          var piewrap = d3_updateable(wrap,".pie-row","div")
            .classed("pie-row",true)
+           .style("padding-bottom","10px")
+
+         var catwrap = d3_updateable(wrap,".cat-row","div")
+           .classed("cat-row",true)
+           .style("padding-bottom","10px")
+
 
 
 
@@ -4028,6 +4264,10 @@
 
          
          drawTimeseries(tswrap,this._timing,radius_scale)     
+         drawCategory(catwrap,this._category)     
+         drawKeywords(catwrap,this._keywords)     
+
+
          return this
        }
      , on: function(action, fn) {
@@ -4073,6 +4313,14 @@
      , time_summary: function(val) {
          return accessor.bind(this)("time_summary",val) || []
        }
+     , category_summary: function(val) {
+         return accessor.bind(this)("category_summary",val) || []
+       }
+     , keyword_summary: function(val) {
+         return accessor.bind(this)("keyword_summary",val) || []
+       }
+
+
      , filters: function(val) {
          return accessor.bind(this)("filters",val) 
        }
@@ -4141,6 +4389,8 @@
                summary_view(dthis)
                 .data(self.summary())
                 .timing(self.time_summary())
+                .category(self.category_summary())
+                .keywords(self.keyword_summary())
                 .draw()
              }
 

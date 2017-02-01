@@ -48,6 +48,14 @@ NewDashboard.prototype = {
   , time_summary: function(val) {
       return accessor.bind(this)("time_summary",val) || []
     }
+  , category_summary: function(val) {
+      return accessor.bind(this)("category_summary",val) || []
+    }
+  , keyword_summary: function(val) {
+      return accessor.bind(this)("keyword_summary",val) || []
+    }
+
+
   , filters: function(val) {
       return accessor.bind(this)("filters",val) 
     }
@@ -116,6 +124,8 @@ NewDashboard.prototype = {
             summary_view(dthis)
              .data(self.summary())
              .timing(self.time_summary())
+             .category(self.category_summary())
+             .keywords(self.keyword_summary())
              .draw()
           }
 

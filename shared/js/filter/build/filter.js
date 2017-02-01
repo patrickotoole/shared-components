@@ -242,7 +242,7 @@
     , filterFooter: function(wrap) {
         var footer = d3_updateable(wrap,".filter-footer","div",false,function(x) { return 1})
           .classed("filter-footer",true)
-          .style("margin-bottom","35px")
+          .style("margin-bottom","15px")
           .style("margin-top","10px")
 
 

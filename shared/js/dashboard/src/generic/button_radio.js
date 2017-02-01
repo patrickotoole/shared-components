@@ -26,19 +26,24 @@ ButtonRadio.prototype = {
   , draw: function () {
   
     var CSS_STRING = String(function() {/*
-      .options-view { text-align:center }
+      .options-view { text-align:right }
       .show-button {
-      width: 190px;
+      width: 150px;
       text-align: center;
-      line-height: 50px;
+      line-height: 40px;
       border-radius: 15px;
       border: 1px solid #ccc;
       font-size: 12px;
       text-transform: uppercase;
       font-weight: bold;
       display:inline-block;
-      margin-right:30px;
+      margin-right:15px;
         }
+      .show-button:hover { text-decoration:none; color:#555 }
+      .show-button.selected {
+        background: #e3ebf0;
+        color: #555;
+      }
     */})
   
     d3_updateable(d3.select("head"),"style#show-css","style")
@@ -57,6 +62,7 @@ ButtonRadio.prototype = {
   
     d3_splat(button_row,".show-button","a",identity, key)
       .classed("show-button",true)
+      .classed("selected", function(x) { return x.selected })
       .text(key)
       .on("click", function(x) { bound(x) })
 

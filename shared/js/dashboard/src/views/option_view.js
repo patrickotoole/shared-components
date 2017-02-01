@@ -34,9 +34,9 @@ OptionView.prototype = {
       var wrap = d3_updateable(this.target,".option-wrap","div")
         .classed("option-wrap",true)
 
-      header(wrap)
-        .text("Choose View")
-        .draw()
+      //header(wrap)
+      //  .text("Choose View")
+      //  .draw()
 
       button_radio(wrap)
         .on("click", this.on("select") )

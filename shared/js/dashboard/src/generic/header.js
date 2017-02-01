@@ -45,6 +45,12 @@ function headWrap(wrap) {
     .classed("data-header",true)
     .style("margin-bottom","15px")
     .style("margin-top","-5px")
+    .style("font-weight"," bold")
+    .style("font-size"," 14px")
+    .style("line-height"," 22px")
+    .style("text-transform"," uppercase")
+    .style("color"," #888")
+    .style("letter-spacing"," .05em")
 
 }
 
