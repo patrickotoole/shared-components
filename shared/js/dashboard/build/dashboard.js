@@ -421,6 +421,74 @@
        }
    }
 
+   function p(dd) {
+     var p = []
+     d3.range(0,24).map(function(t) {
+       ["0","20","40"].map(function(m) {
+         if (t < 10) p.push("0" + String(t)+String(m))
+         else p.push(String(t)+String(m))
+
+       })
+     })
+     var rolled = d3.nest()
+       .key(function(k) { return k.hour + k.minute })
+       .rollup(function(v) {
+         return v.reduce(function(p,c) {
+           p.articles[c.url] = true
+           p.views += c.count
+           p.sessions += c.uniques
+           return p
+         },{ articles: {}, views: 0, sessions: 0})
+       })
+       .entries(dd)
+       .map(function(x) {
+         Object.keys(x.values).map(function(y) {
+           x[y] = x.values[y]
+         })
+         x.article_count = Object.keys(x.articles).length
+         x.hour = x.key.slice(0,2)
+         x.minute = x.key.slice(2)
+         x.value = x.article_count
+         x.key = p.indexOf(x.key)
+         //delete x['articles']
+         return x
+       })
+     return rolled
+   }
+   function buildSummaryData(data) {
+         var reduced = data.reduce(function(p,c) {
+             p.domains[c.domain] = true
+             p.articles[c.url] = true
+             p.views += c.count
+             p.sessions += c.uniques
+
+             return p
+           },{
+               domains: {}
+             , articles: {}
+             , sessions: 0
+             , views: 0
+           })
+
+         reduced.domains = Object.keys(reduced.domains).length
+         reduced.articles = Object.keys(reduced.articles).length
+
+         return reduced
+
+   }
+
+   function buildSummaryAggregation(samp,pop) {
+         var data_summary = {}
+         Object.keys(samp).map(function(k) {
+           data_summary[k] = {
+               sample: samp[k]
+             , population: pop[k]
+           }
+         })
+
+         return data_summary
+     
+   }
    function buildCategories(data) {
      var values = data.category
            .map(function(x){ return {"key": x.parent_category_name, "value": x.count } })
@@ -1851,40 +1919,9 @@
 
        }
 
-   function prepData(dd) {
-     var p = []
-     d3.range(0,24).map(function(t) {
-       ["0","20","40"].map(function(m) {
-         if (t < 10) p.push("0" + String(t)+String(m))
-         else p.push(String(t)+String(m))
-
-       })
-     })
-     var rolled = d3.nest()
-       .key(function(k) { return k.hour + k.minute })
-       .rollup(function(v) {
-         return v.reduce(function(p,c) {
-           p.articles[c.url] = true
-           p.views += c.count
-           p.sessions += c.uniques
-           return p
-         },{ articles: {}, views: 0, sessions: 0})
-       })
-       .entries(dd)
-       .map(function(x) {
-         Object.keys(x.values).map(function(y) {
-           x[y] = x.values[y]
-         })
-         x.article_count = Object.keys(x.articles).length
-         x.hour = x.key.slice(0,2)
-         x.minute = x.key.slice(2)
-         x.value = x.article_count
-         x.key = p.indexOf(x.key)
-         //delete x['articles']
-         return x
-       })
-     return rolled
-   }
+   function prepData() {
+     return p.apply(this, arguments)
+   };
 
    var EXAMPLE_DATA$4 = {
        "key": "Browsing behavior by time"
@@ -2057,7 +2094,7 @@
      default: time_series
    });
 
-   function buildSummaryData(data) {
+   function buildSummaryData$1(data) {
          var reduced = data.full_urls.reduce(function(p,c) {
              p.domains[c.domain] = true
              p.articles[c.url] = true
@@ -2079,7 +2116,7 @@
 
    }
 
-   function buildSummaryAggregation(samp,pop) {
+   function buildSummaryAggregation$1(samp,pop) {
          var data_summary = {}
          Object.keys(samp).map(function(k) {
            data_summary[k] = {
@@ -2161,8 +2198,6 @@
      d3_updateable(fw,".population","span").text(d3.format(",")(data.population))
        .classed("population",true)
 
-
-
    }
 
 
@@ -2194,12 +2229,12 @@
        .classed("search-summary",true)
        .style("min-height","145px")
 
-     var reduced = buildSummaryData(data)
-     this._reduced = this._reduced ? this._reduced : buildSummaryData(this._data)
+     var reduced = buildSummaryData$1(data)
+     this._reduced = this._reduced ? this._reduced : buildSummaryData$1(this._data)
      this._timeseries = this._timeseries ? this._timeseries : prepData(this._data.full_urls)
 
 
-     var data_summary = buildSummaryAggregation(reduced,this._reduced)
+     var data_summary = buildSummaryAggregation$1(reduced,this._reduced)
 
      var draw_summary = function() {
 
@@ -2412,7 +2447,7 @@
      this.target = target
    }
 
-   function noop$9() {}
+   function noop$10() {}
    function identity$8(x) { return x }
    function key$8(x) { return x.key }
 
@@ -2440,13 +2475,13 @@
          return this
        }
      , on: function(action, fn) {
-         if (fn === undefined) return this._on[action] || noop$9;
+         if (fn === undefined) return this._on[action] || noop$10;
          this._on[action] = fn;
          return this
        }
    }
 
-   function noop$1() {}
+   function noop$2() {}
    function buttonWrap(wrap) {
      var head = d3_updateable(wrap, "h3.buttons","h3")
        .classed("buttons",true)
@@ -2549,13 +2584,13 @@
          return this
        }
      , on: function(action, fn) {
-         if (fn === undefined) return this._on[action] || noop$1;
+         if (fn === undefined) return this._on[action] || noop$2;
          this._on[action] = fn;
          return this
        }
    }
 
-   function noop$8() {}
+   function noop$9() {}
    function identity$7(x) { return x }
    function key$7(x) { return x.key }
 
@@ -2573,7 +2608,7 @@
          return accessor.bind(this)("data",val) 
        }
      , on: function(action, fn) {
-         if (fn === undefined) return this._on[action] || noop$8;
+         if (fn === undefined) return this._on[action] || noop$9;
          this._on[action] = fn;
          return this
        }
@@ -2620,7 +2655,7 @@
      
    }
 
-   function noop$7() {}
+   function noop$8() {}
    function identity$6(x) { return x }
    function ConditionalShow(target) {
      this._on = {}
@@ -2644,7 +2679,7 @@
          return this
        }  
      , on: function(action, fn) {
-         if (fn === undefined) return this._on[action] || noop$7;
+         if (fn === undefined) return this._on[action] || noop$8;
          this._on[action] = fn;
          return this
        }
@@ -2678,7 +2713,7 @@
        }
    }
 
-   function noop$10() {}
+   function noop$11() {}
 
 
    function DomainExpanded(target) {
@@ -2786,7 +2821,7 @@
          return this
        }
      , on: function(action, fn) {
-         if (fn === undefined) return this._on[action] || noop$10;
+         if (fn === undefined) return this._on[action] || noop$11;
          this._on[action] = fn;
          return this
        }
@@ -2797,7 +2832,7 @@
      this.target = target
    }
 
-   function noop$11() {}
+   function noop$12() {}
    function domain_bullet(target) {
      return new DomainBullet(target)
    }
@@ -2847,16 +2882,16 @@
          return this
        }
      , on: function(action, fn) {
-         if (fn === undefined) return this._on[action] || noop$11;
+         if (fn === undefined) return this._on[action] || noop$12;
          this._on[action] = fn;
          return this
        }
    }
 
-   function noop$4() {}
+   function noop$5() {}
    function DomainView(target) {
      this._on = {
-       select: noop$4
+       select: noop$5
      }
      this.target = target
    }
@@ -2951,7 +2986,7 @@
          return this
        }
      , on: function(action, fn) {
-         if (fn === undefined) return this._on[action] || noop$4;
+         if (fn === undefined) return this._on[action] || noop$5;
          this._on[action] = fn;
          return this
        }
@@ -3359,10 +3394,10 @@
      , render_right: render_rhs
    }
 
-   function noop$2() {}
+   function noop$3() {}
    function FilterView(target) {
      this._on = {
-       select: noop$2
+       select: noop$3
      }
 
      this.target = target
@@ -3581,16 +3616,16 @@
          return this
        }
      , on: function(action, fn) {
-         if (fn === undefined) return this._on[action] || noop$2;
+         if (fn === undefined) return this._on[action] || noop$3;
          this._on[action] = fn;
          return this
        }
    }
 
-   function noop$3() {}
+   function noop$4() {}
    function OptionView(target) {
      this._on = {
-       select: noop$3
+       select: noop$4
      }
      this.target = target
    }
@@ -3626,16 +3661,16 @@
          return this
        }
      , on: function(action, fn) {
-         if (fn === undefined) return this._on[action] || noop$3;
+         if (fn === undefined) return this._on[action] || noop$4;
          this._on[action] = fn;
          return this
        }
    }
 
-   function noop$5() {}
+   function noop$6() {}
    function SegmentView(target) {
      this._on = {
-       select: noop$5
+       select: noop$6
      }
      this.target = target
    }
@@ -3679,18 +3714,239 @@
          return this
        }
      , on: function(action, fn) {
-         if (fn === undefined) return this._on[action] || noop$5;
+         if (fn === undefined) return this._on[action] || noop$6;
          this._on[action] = fn;
          return this
        }
    }
 
-   function noop$6() {}
+   function Pie(target) {
+     this.target = target
+   }
+
+   Pie.prototype = {
+       radius: function(val) {
+         return accessor.bind(this)("radius",val)
+       }
+     , data: function(val) {
+         return accessor.bind(this)("data",val) 
+       }
+     , on: function(action, fn) {
+         if (fn === undefined) return this._on[action] || noop;
+         this._on[action] = fn;
+         return this
+       }
+     , draw: function() {
+     
+       var d = d3.entries({
+           sample: this._data.sample
+         , population: this._data.population - this._data.sample
+       })
+       
+       var color = d3.scale.ordinal()
+           .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
+       
+       var arc = d3.svg.arc()
+           .outerRadius(this._radius - 10)
+           .innerRadius(0);
+       
+       var pie = d3.layout.pie()
+           .sort(null)
+           .value(function(d) { return d.value; });
+       
+       var svg = d3_updateable(this.target,"svg","svg",false,function(x){return 1})
+           .attr("width", 50)
+           .attr("height", 52)
+     
+       svg = d3_updateable(svg,"g","g")
+           .attr("transform", "translate(" + 25 + "," + 26 + ")");
+       
+       var g = d3_splat(svg,".arc","g",pie(d),function(x){ return x.data.key })
+         .classed("arc",true)
+     
+       d3_updateable(g,"path","path")
+         .attr("d", arc)
+         .style("fill", function(d) { return color(d.data.key) });
+     }
+   }
+
+   function pie(target) {
+     return new Pie(target)
+   }
+
+   function noop$7() {}
    function SummaryView(target) {
      this._on = {
-       select: noop$6
+       select: noop$7
      }
      this.target = target
+   }
+
+
+
+   function buildSummaryBlock$1(data, target, radius_scale, x) {
+     var data = data
+       , dthis = d3.select(target)
+
+     pie(dthis)
+       .data(data)
+       .radius(radius_scale(data.population))
+       .draw()
+
+     var fw = d3_updateable(dthis,".fw","div",false,function() { return 1 })
+       .classed("fw",true)
+       .style("width","50px")
+       .style("display","inline-block")
+       .style("vertical-align","top")
+       .style("padding-top","3px")
+       .style("text-align","center")
+       .style("line-height","16px")
+
+     var fw2 = d3_updateable(dthis,".fw2","div",false,function() { return 1 })
+       .classed("fw2",true)
+       .style("width","60px")
+       .style("display","inline-block")
+       .style("vertical-align","top")
+       .style("padding-top","3px")
+       .style("text-align","center")
+       .style("font-size","22px")
+       .style("font-weight","bold")
+       .style("line-height","40px")
+       .text(d3.format("%")(data.sample/data.population))
+
+
+
+     d3_updateable(fw,".sample","span").text(d3.format(",")(data.sample))
+       .classed("sample",true)
+     d3_updateable(fw,".vs","span").html("<br> out of <br>").style("font-size",".88em")
+       .classed("vs",true)
+     d3_updateable(fw,".population","span").text(d3.format(",")(data.population))
+       .classed("population",true)
+
+   }
+
+   function drawTimeseries(target,data,radius_scale) {
+     var w = d3_updateable(target,"div.timeseries","div")
+       .classed("timeseries",true)
+       .style("width","60%")
+       .style("display","inline-block")
+       .style("background-color", "#e3ebf0")
+       .style("padding-left", "10px")
+       .style("height","127px")
+
+
+
+     var q = d3_updateable(target,"div.timeseries-details","div")
+       .classed("timeseries-details",true)
+       .style("width","40%")
+       .style("display","inline-block")
+       .style("vertical-align","top")
+       .style("padding","15px")
+       .style("padding-left","57px")
+       .style("background-color", "#e3ebf0")
+       .style("height","127px")
+
+       
+
+
+
+     var pop = d3_updateable(q,".pop","div")
+       .classed("pop",true)
+
+     d3_updateable(pop,".ex","span")
+       .classed("ex",true)
+       .style("width","20px")
+       .style("height","10px")
+       .style("background-color","grey")
+       .style("display","inline-block")
+
+
+     d3_updateable(pop,".title","span")
+       .classed("title",true)
+       .style("text-transform","uppercase")
+       .style("padding-left","3px")
+       .text("all")
+
+
+     
+     var samp = d3_updateable(q,".samp","div")
+       .classed("samp",true)
+
+     d3_updateable(samp,".ex","span")
+       .classed("ex",true)
+       .style("width","20px")
+       .style("height","10px")
+       .style("background-color","#081d58")
+       .style("display","inline-block")
+
+
+
+     d3_updateable(samp,".title","span")
+       .classed("title",true)
+       .style("text-transform","uppercase")
+       .style("padding-left","3px")
+       .text("filtered")
+
+
+     var details = d3_updateable(q,".deets","div")
+       .classed("deets",true)
+     
+
+
+
+     d3_updateable(w,"h3","h3")
+       .text("Filtered versus All Views")
+       .style("font-size","12px")
+       .style("color","#333")
+       .style("line-height","33px")
+       .style("background-color","#e3ebf0")
+       .style("margin-left","-10px")
+       .style("margin-bottom","10px")
+       .style("padding-left","10px")
+       .style("margin-top","0px")
+       .style("font-weight","bold")
+
+
+
+
+
+     timeseries['default'](w)
+       .data({"key":"y","values":data})
+       .height(80)
+       .on("hover",function(x) {
+         var xx = {}
+         xx[x.key] = {sample: x.value, population: x.value2 }
+         details.datum(xx)
+
+         d3_updateable(details,".text","div")
+           .classed("text",true)
+           .text("@ " + x.hour + ":" + (x.minute.length > 1 ? x.minute : "0" + x.minute) )
+           .style("display","inline-block")
+           .style("line-height","49px")
+           .style("padding-top","15px")
+           .style("padding-right","15px")
+           .style("font-size","22px")
+           .style("font-weight","bold")
+           .style("width","110px")
+           .style("vertical-align","top")
+           .style("text-align","center")
+
+
+
+
+         d3_updateable(details,".pie","div")
+           .classed("pie",true)
+           .style("display","inline-block")
+           .style("padding-top","15px")
+           .each(function(x) { 
+             var data = Object.keys(x).map(function(k) { return x[k] })[0]
+             buildSummaryBlock$1(data,this,radius_scale,x) 
+           })
+       })
+       .draw()
+
+
+
    }
 
 
@@ -3703,10 +3959,26 @@
        data: function(val) {
          return accessor.bind(this)("data",val) 
        }
-     , summarys: function(val) {
-         return accessor.bind(this)("summarys",val) 
+     , timing: function(val) {
+         return accessor.bind(this)("timing",val) 
        }
      , draw: function() {
+
+
+     var CSS_STRING = String(function() {/*
+   .summary-wrap .table-wrapper { background:#e3ebf0; padding-top:5px; padding-bottom:10px }
+   .summary-wrap .table-wrapper tr { border-bottom:none }
+   .summary-wrap .table-wrapper thead tr { background:none }
+   .summary-wrap .table-wrapper tbody tr:hover { background:none }
+   .summary-wrap .table-wrapper tr td { border-right:1px dotted #ccc;text-align:center } 
+   .summary-wrap .table-wrapper tr td:last-of-type { border-right:none } 
+     */})
+
+     d3_updateable(d3.select("head"),"style#custom-table-css","style")
+       .attr("id","custom-table-css")
+       .text(CSS_STRING.replace("function () {/*","").replace("*/}",""))
+
+
 
 
          var wrap = d3_updateable(this.target,".summary-wrap","div")
@@ -3716,21 +3988,56 @@
            .text("Summary")
            .draw()
 
-         button_radio(wrap)
-           .on("click", this.on("select") )
-           .data(this.data())
+
+         var tswrap = d3_updateable(wrap,".ts-row","div")
+           .classed("ts-row",true)
+
+         var piewrap = d3_updateable(wrap,".pie-row","div")
+           .classed("pie-row",true)
+
+
+
+
+         var radius_scale = d3.scale.linear()
+           .domain([this._data.domains.population,this._data.views.population])
+           .range([20,35])
+
+         
+
+         table.table(piewrap)
+           .data({"key":"T","values":[this.data()]})
+           .skip_option(true)
+           .render("domains",function(x) { 
+             var data = d3.select(this.parentNode).datum()[x.key]; 
+             buildSummaryBlock$1(data,this,radius_scale,x) 
+           })
+           .render("articles",function(x) { 
+             var data = d3.select(this.parentNode).datum()[x.key]; 
+             buildSummaryBlock$1(data,this,radius_scale,x) 
+           })
+
+           .render("sessions",function(x) { 
+             var data = d3.select(this.parentNode).datum()[x.key]; 
+             buildSummaryBlock$1(data,this,radius_scale,x) 
+           })
+           .render("views",function(x) { 
+             var data = d3.select(this.parentNode).datum()[x.key]; 
+             buildSummaryBlock$1(data,this,radius_scale,x) 
+           })
            .draw()
 
+         
+         drawTimeseries(tswrap,this._timing,radius_scale)     
          return this
        }
      , on: function(action, fn) {
-         if (fn === undefined) return this._on[action] || noop$6;
+         if (fn === undefined) return this._on[action] || noop$7;
          this._on[action] = fn;
          return this
        }
    }
 
-   function noop() {}
+   function noop$1() {}
 
    function NewDashboard(target) {
      this.target = target
@@ -3759,6 +4066,12 @@
        }
      , actions: function(val) {
          return accessor.bind(this)("actions",val) || []
+       }
+     , summary: function(val) {
+         return accessor.bind(this)("summary",val) || []
+       }
+     , time_summary: function(val) {
+         return accessor.bind(this)("time_summary",val) || []
        }
      , filters: function(val) {
          return accessor.bind(this)("filters",val) 
@@ -3826,7 +4139,8 @@
 
              if (x.value == "summary-view") {
                summary_view(dthis)
-                .data(data)
+                .data(self.summary())
+                .timing(self.time_summary())
                 .draw()
              }
 
@@ -3836,7 +4150,7 @@
 
        }
      , on: function(action, fn) {
-         if (fn === undefined) return this._on[action] || noop;
+         if (fn === undefined) return this._on[action] || noop$1;
          this._on[action] = fn;
          return this
        }
@@ -3850,6 +4164,9 @@
    exports.filter_dashboard = filter_dashboard;
    exports.new_dashboard = new_dashboard;
    exports.state = state;
+   exports.prepData = p;
+   exports.buildSummaryData = buildSummaryData;
+   exports.buildSummaryAggregation = buildSummaryAggregation;
    exports.buildCategories = buildCategories;
    exports.buildTimes = buildTimes;
    exports.buildTopics = buildTopics;

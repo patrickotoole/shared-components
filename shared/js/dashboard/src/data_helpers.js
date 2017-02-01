@@ -1,3 +1,71 @@
+export function prepData(dd) {
+  var p = []
+  d3.range(0,24).map(function(t) {
+    ["0","20","40"].map(function(m) {
+      if (t < 10) p.push("0" + String(t)+String(m))
+      else p.push(String(t)+String(m))
+
+    })
+  })
+  var rolled = d3.nest()
+    .key(function(k) { return k.hour + k.minute })
+    .rollup(function(v) {
+      return v.reduce(function(p,c) {
+        p.articles[c.url] = true
+        p.views += c.count
+        p.sessions += c.uniques
+        return p
+      },{ articles: {}, views: 0, sessions: 0})
+    })
+    .entries(dd)
+    .map(function(x) {
+      Object.keys(x.values).map(function(y) {
+        x[y] = x.values[y]
+      })
+      x.article_count = Object.keys(x.articles).length
+      x.hour = x.key.slice(0,2)
+      x.minute = x.key.slice(2)
+      x.value = x.article_count
+      x.key = p.indexOf(x.key)
+      //delete x['articles']
+      return x
+    })
+  return rolled
+}
+export function buildSummaryData(data) {
+      var reduced = data.reduce(function(p,c) {
+          p.domains[c.domain] = true
+          p.articles[c.url] = true
+          p.views += c.count
+          p.sessions += c.uniques
+
+          return p
+        },{
+            domains: {}
+          , articles: {}
+          , sessions: 0
+          , views: 0
+        })
+
+      reduced.domains = Object.keys(reduced.domains).length
+      reduced.articles = Object.keys(reduced.articles).length
+
+      return reduced
+
+}
+
+export function buildSummaryAggregation(samp,pop) {
+      var data_summary = {}
+      Object.keys(samp).map(function(k) {
+        data_summary[k] = {
+            sample: samp[k]
+          , population: pop[k]
+        }
+      })
+
+      return data_summary
+  
+}
 export function buildCategories(data) {
   var values = data.category
         .map(function(x){ return {"key": x.parent_category_name, "value": x.count } })

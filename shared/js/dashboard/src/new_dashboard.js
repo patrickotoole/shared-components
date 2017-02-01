@@ -42,6 +42,12 @@ NewDashboard.prototype = {
   , actions: function(val) {
       return accessor.bind(this)("actions",val) || []
     }
+  , summary: function(val) {
+      return accessor.bind(this)("summary",val) || []
+    }
+  , time_summary: function(val) {
+      return accessor.bind(this)("time_summary",val) || []
+    }
   , filters: function(val) {
       return accessor.bind(this)("filters",val) 
     }
@@ -108,7 +114,8 @@ NewDashboard.prototype = {
 
           if (x.value == "summary-view") {
             summary_view(dthis)
-             .data(data)
+             .data(self.summary())
+             .timing(self.time_summary())
              .draw()
           }
 

@@ -1,40 +1,10 @@
 import accessor from './helpers'
 import {autoSize as autoSize} from './helpers'
+import {prepData as p} from './data_helpers';
 
-export function prepData(dd) {
-  var p = []
-  d3.range(0,24).map(function(t) {
-    ["0","20","40"].map(function(m) {
-      if (t < 10) p.push("0" + String(t)+String(m))
-      else p.push(String(t)+String(m))
-
-    })
-  })
-  var rolled = d3.nest()
-    .key(function(k) { return k.hour + k.minute })
-    .rollup(function(v) {
-      return v.reduce(function(p,c) {
-        p.articles[c.url] = true
-        p.views += c.count
-        p.sessions += c.uniques
-        return p
-      },{ articles: {}, views: 0, sessions: 0})
-    })
-    .entries(dd)
-    .map(function(x) {
-      Object.keys(x.values).map(function(y) {
-        x[y] = x.values[y]
-      })
-      x.article_count = Object.keys(x.articles).length
-      x.hour = x.key.slice(0,2)
-      x.minute = x.key.slice(2)
-      x.value = x.article_count
-      x.key = p.indexOf(x.key)
-      //delete x['articles']
-      return x
-    })
-  return rolled
-}
+export function prepData() {
+  return p.apply(this, arguments)
+};
 
 var EXAMPLE_DATA = {
     "key": "Browsing behavior by time"

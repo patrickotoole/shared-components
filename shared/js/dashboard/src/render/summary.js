@@ -105,8 +105,6 @@ var buildSummaryBlock = function(radius_scale,x) {
   d3_updateable(fw,".population","span").text(d3.format(",")(data.population))
     .classed("population",true)
 
-
-
 }
 
 

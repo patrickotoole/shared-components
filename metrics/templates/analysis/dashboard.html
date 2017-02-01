@@ -306,6 +306,28 @@
         , dashboard.buildTopics(value)
       ]
 
+      var summary_data = dashboard.buildSummaryData(value.full_urls)
+        , pop_summary_data = dashboard.buildSummaryData(value.original_urls)
+
+      var summary = dashboard.buildSummaryAggregation(summary_data,pop_summary_data)
+
+      var ts = dashboard.prepData(value.full_urls)
+        , pop_ts = dashboard.prepData(value.original_urls)
+
+      var mappedts = ts.reduce(function(p,c) { p[c.key] = c; return p}, {})
+
+      var prepped = pop_ts.map(function(x) {
+        return {
+            key: x.key
+          , hour: x.hour
+          , minute: x.minute
+          , value2: x.value
+          , value: mappedts[x.key] ?  mappedts[x.key].value : 0
+        }
+      })
+      
+      s.publishStatic("time_summary", prepped)
+      s.publishStatic("summary",summary)
       s.publishStatic("tabs",tabs)
       s.publishStatic("formatted_data",value)
       
@@ -316,6 +338,8 @@
       if (value.formatted_data) dashboard.new_dashboard(centered)
         .data(value.formatted_data)
         .actions(value.actions)
+        .summary(value.summary)
+        .time_summary(value.time_summary)
         .logic_options(value.logic_options)
         .logic_categories(value.logic_categories)
         .filters(value.filters)
@@ -393,9 +417,9 @@
   s.publishStatic("actions",actionPub)
   //s.publishStatic("data",asyncPub)
   var SELECTION_STATES = [
-        {"key":"Data summary","value":"summary-view","selected":0}
+        {"key":"Data summary","value":"summary-view","selected":1}
       , {"key":"Explore data","value":"data-view","selected":0}
-      , {"key":"Create Media Plan", "value":"media-view","selected":1}
+      , {"key":"Create Media Plan", "value":"media-view","selected":0}
       //, {"key":"Build Content Brief", "value":"content-view"}
     ]
 
