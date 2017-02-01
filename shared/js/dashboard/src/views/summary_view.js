@@ -8,7 +8,7 @@ function identity(x) { return x }
 function key(x) { return x.key }
 
 
-export function OptionView(target) {
+export function SummaryView(target) {
   this._on = {
     select: noop
   }
@@ -17,25 +17,25 @@ export function OptionView(target) {
 
 
 
-export default function option_view(target) {
-  return new OptionView(target)
+export default function summary_view(target) {
+  return new SummaryView(target)
 }
 
-OptionView.prototype = {
+SummaryView.prototype = {
     data: function(val) {
       return accessor.bind(this)("data",val) 
     }
-  , options: function(val) {
-      return accessor.bind(this)("options",val) 
+  , summarys: function(val) {
+      return accessor.bind(this)("summarys",val) 
     }
   , draw: function() {
 
 
-      var wrap = d3_updateable(this.target,".option-wrap","div")
-        .classed("option-wrap",true)
+      var wrap = d3_updateable(this.target,".summary-wrap","div")
+        .classed("summary-wrap",true)
 
       header(wrap)
-        .text("Choose View")
+        .text("Summary")
         .draw()
 
       button_radio(wrap)

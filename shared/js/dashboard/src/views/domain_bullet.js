@@ -36,8 +36,6 @@ DomainBullet.prototype = {
         .classed("bullet",true)
         .style("margin-top","3px")
 
-      bullet.exit().remove()
-
       var svg = d3_updateable(bullet,"svg","svg",false,function(x) { return 1})
         .attr("width",width)
         .attr("height",height)

@@ -55,17 +55,15 @@ export default function filter(target) {
 Filter.prototype = {
     draw: function() {
 
-      var wrap = d3_updateable(this._target,".filters-wrapper","div")
+      var wrap = d3_updateable(this._target,".filters-wrapper","div",this.data(),function() { return 1})
         .classed("filters-wrapper",true)
         .style("padding-left", "10px")
         .style("padding-right", "20px")
 
-      wrap.exit().remove()
-      
-      var filters = d3_updateable(wrap,".filters","div")
+      var filters = d3_updateable(wrap,".filters","div",false,function(x) { return 1})
         .classed("filters",true)
       
-      var filter = d3_splat(filters,".filter","div",false,function(x) { return JSON.stringify(x) })
+      var filter = d3_splat(filters,".filter","div",function(x) { return x },function(x,i) { return i })
         .classed("filter",true)
         .style("line-height","33px")
       
@@ -93,8 +91,8 @@ Filter.prototype = {
       return this
   	}
   , data: function(d) {
-      if (d === undefined) return this._target.datum()
-      this._target.datum(d)
+      if (d === undefined) return this._data
+      this._data = d
       return this
   	}
   , text: function(fn) {
@@ -242,7 +240,7 @@ Filter.prototype = {
     
     }
   , filterFooter: function(wrap) {
-      var footer = d3_updateable(wrap,".filter-footer","div")
+      var footer = d3_updateable(wrap,".filter-footer","div",false,function(x) { return 1})
         .classed("filter-footer",true)
         .style("margin-bottom","35px")
         .style("margin-top","10px")
@@ -250,7 +248,7 @@ Filter.prototype = {
 
       var self = this
       
-      d3_updateable(footer,".add","a")
+      d3_updateable(footer,".add","a",false,function(x) { return 1})
         .classed("add",true)
         .style("font-weight","bold")
         .html("&#65291;")
@@ -265,9 +263,8 @@ Filter.prototype = {
 
         .on("click",function(x) {
         
-          var d = self._target.datum()
+          var d = self._data
           if (d.length == 0 || Object.keys(d.slice(-1)).length > 0) d.push({})
-          self._target.datum(d)
           self.draw()
             
         })

@@ -433,6 +433,45 @@
      }
    }
 
+   function buildTimes(data) {
+
+     var hour = data.current_hour
+
+     var categories = data.display_categories.values
+       .filter(function(a) { return a.selected })
+       .map(function(a) { return a.key })
+
+     if (categories.length > 0) {
+       hour = data.category_hour.filter(function(x) {return categories.indexOf(x.parent_category_name) > -1})
+       hour = d3.nest()
+         .key(function(x) { return x.hour })
+         .key(function(x) { return x.minute })
+         .rollup(function(v) {
+           return v.reduce(function(p,c) { 
+             p.uniques = (p.uniques || 0) + c.uniques; 
+             p.count = (p.count || 0) + c.count;  
+             return p },{})
+         })
+         .entries(hour)
+         .map(function(x) { 
+           console.log(x.values); 
+           return x.values.reduce(function(p,k){ 
+             p['minute'] = parseInt(k.key); 
+             p['count'] = k.values.count; 
+             p['uniques'] = k.values.uniques; 
+             return p 
+         }, {"hour":x.key}) } )
+     }
+
+     var values = hour
+       .map(function(x) { return {"key": parseFloat(x.hour) + 1 + x.minute/60, "value": x.count } })
+
+     return {
+         key: "Browsing behavior by time"
+       , values: values
+     }
+   }
+
    function buildTopics(data) {
 
      var categories = data.display_categories.values
@@ -1977,7 +2016,7 @@
            }
            
 
-           if (data[0].value2) {
+           if (data && data.length && data[0].value2) {
              var  y2 = d3.scale.linear().range([_sizes.height, 0 ])
              y2.domain([0, d3.max(data, function(d) { return Math.sqrt(valueAccessor2(d)); })]);
              buildBars(data,keyAccessor,valueAccessor2,y2,"-2")
@@ -2012,7 +2051,7 @@
    }
 
 
-   var timeseries$1 = Object.freeze({
+   var timeseries = Object.freeze({
      prepData: prepData,
      TimeSeries: TimeSeries,
      default: time_series
@@ -2287,7 +2326,7 @@
 
 
 
-         timeseries$1['default'](w)
+         timeseries['default'](w)
            .data({"key":"y","values":prepped})
            .height(80)
            .on("hover",function(x) {
@@ -2373,9 +2412,9 @@
      this.target = target
    }
 
-   function noop$6() {}
-   function identity$6(x) { return x }
-   function key$6(x) { return x.key }
+   function noop$9() {}
+   function identity$8(x) { return x }
+   function key$8(x) { return x.key }
 
 
    function select(target) {
@@ -2395,19 +2434,19 @@
          this._select
            .on("change",function(x) { bound(this.selectedOptions[0].__data__) })
 
-         this._options = d3_splat(this._select,"option","option",identity$6,key$6)
-           .text(key$6)
+         this._options = d3_splat(this._select,"option","option",identity$8,key$8)
+           .text(key$8)
 
          return this
        }
      , on: function(action, fn) {
-         if (fn === undefined) return this._on[action] || noop$6;
+         if (fn === undefined) return this._on[action] || noop$9;
          this._on[action] = fn;
          return this
        }
    }
 
-   function noop() {}
+   function noop$1() {}
    function buttonWrap(wrap) {
      var head = d3_updateable(wrap, "h3.buttons","h3")
        .classed("buttons",true)
@@ -2510,15 +2549,15 @@
          return this
        }
      , on: function(action, fn) {
-         if (fn === undefined) return this._on[action] || noop;
+         if (fn === undefined) return this._on[action] || noop$1;
          this._on[action] = fn;
          return this
        }
    }
 
-   function noop$5() {}
-   function identity$5(x) { return x }
-   function key$5(x) { return x.key }
+   function noop$8() {}
+   function identity$7(x) { return x }
+   function key$7(x) { return x.key }
 
    function ButtonRadio(target) {
      this._on = {}
@@ -2534,7 +2573,7 @@
          return accessor.bind(this)("data",val) 
        }
      , on: function(action, fn) {
-         if (fn === undefined) return this._on[action] || noop$5;
+         if (fn === undefined) return this._on[action] || noop$8;
          this._on[action] = fn;
          return this
        }
@@ -2564,18 +2603,15 @@
          .classed("button-radio-row",true)
          .style("margin-bottom","35px")
      
-       header(options)
-         .text("Choose Option")
-         .draw()
      
        var button_row = d3_updateable(options,".options-view","div",this.data())
          .classed("options-view",true)
 
        var bound = this.on("click").bind(this)
      
-       d3_splat(button_row,".show-button","a",identity$5, key$5)
+       d3_splat(button_row,".show-button","a",identity$7, key$7)
          .classed("show-button",true)
-         .text(key$5)
+         .text(key$7)
          .on("click", function(x) { bound(x) })
 
        return this
@@ -2584,8 +2620,8 @@
      
    }
 
-   function noop$4() {}
-   function identity$4(x) { return x }
+   function noop$7() {}
+   function identity$6(x) { return x }
    function ConditionalShow(target) {
      this._on = {}
      this._classes = {}
@@ -2608,7 +2644,7 @@
          return this
        }  
      , on: function(action, fn) {
-         if (fn === undefined) return this._on[action] || noop$4;
+         if (fn === undefined) return this._on[action] || noop$7;
          this._on[action] = fn;
          return this
        }
@@ -2619,7 +2655,7 @@
          var wrap = d3_updateable(this.target,".conditional-wrap","div",this.data())
            .classed("conditional-wrap",true)
 
-         var objects = d3_splat(wrap,".conditional","div",identity$4, function(x,i) { return i })
+         var objects = d3_splat(wrap,".conditional","div",identity$6, function(x,i) { return i })
            .attr("class", function(x) { return x.value })
            .classed("conditional",true)
            .classed("hidden", function(x) { return !x.selected })
@@ -2642,7 +2678,7 @@
        }
    }
 
-   function noop$7() {}
+   function noop$10() {}
 
 
    function DomainExpanded(target) {
@@ -2750,7 +2786,7 @@
          return this
        }
      , on: function(action, fn) {
-         if (fn === undefined) return this._on[action] || noop$7;
+         if (fn === undefined) return this._on[action] || noop$10;
          this._on[action] = fn;
          return this
        }
@@ -2761,7 +2797,7 @@
      this.target = target
    }
 
-   function noop$8() {}
+   function noop$11() {}
    function domain_bullet(target) {
      return new DomainBullet(target)
    }
@@ -2788,8 +2824,6 @@
            .classed("bullet",true)
            .style("margin-top","3px")
 
-         bullet.exit().remove()
-
          var svg = d3_updateable(bullet,"svg","svg",false,function(x) { return 1})
            .attr("width",width)
            .attr("height",height)
@@ -2813,16 +2847,16 @@
          return this
        }
      , on: function(action, fn) {
-         if (fn === undefined) return this._on[action] || noop$8;
+         if (fn === undefined) return this._on[action] || noop$11;
          this._on[action] = fn;
          return this
        }
    }
 
-   function noop$3() {}
+   function noop$4() {}
    function DomainView(target) {
      this._on = {
-       select: noop$3
+       select: noop$4
      }
      this.target = target
    }
@@ -2893,7 +2927,7 @@
                .style("padding-bottom","10px")
 
              var dd = this.parentElement.__data__.full_urls.filter(function(x) { return x.domain == d.key})
-             var rolled = timeseries.prepData(dd)
+             var rolled = prepData(dd)
              
              domain_expanded(td)
                .data(rolled)
@@ -2917,7 +2951,7 @@
          return this
        }
      , on: function(action, fn) {
-         if (fn === undefined) return this._on[action] || noop$3;
+         if (fn === undefined) return this._on[action] || noop$4;
          this._on[action] = fn;
          return this
        }
@@ -3325,15 +3359,19 @@
      , render_right: render_rhs
    }
 
-   function noop$1() {}
+   function noop$2() {}
    function FilterView(target) {
      this._on = {
-       select: noop$1
+       select: noop$2
      }
+
      this.target = target
+     this._filter_options = {
+         "Category": "parent_category_name"
+       , "Title": "url"
+       , "Time": "hour"
+     }
    }
-
-
 
    function filter_view(target) {
      return new FilterView(target)
@@ -3343,28 +3381,216 @@
        data: function(val) {
          return accessor.bind(this)("data",val) 
        }
-     , options: function(val) {
-         return accessor.bind(this)("options",val) 
+     , logic: function(val) {
+         return accessor.bind(this)("logic",val) 
+       }
+     , categories: function(val) {
+         return accessor.bind(this)("categories",val) 
+       }
+     , filters: function(val) {
+         return accessor.bind(this)("filters",val) 
        }
      , draw: function() {
          
-         header(this.target)
+         var wrapper = d3_updateable(this.target,".filter-wrap","div",false,function(){ return 1})
+           .classed("filter-wrap",true)
+
+         header(wrapper)
            .text("Filter")
+           .draw()
+
+         var subtitle = d3_updateable(wrapper, ".subtitle-filter","div")
+           .classed("subtitle-filter",true)
+           .style("padding-left","10px")
+           .style("text-transform"," uppercase")
+           .style("font-weight"," bold")
+           .style("line-height"," 33px")
+           .style("background"," #e3ebf0")
+           .style("margin-bottom","10px")
+       
+         d3_updateable(subtitle,"span.first","span")
+           .text("Users matching " )
+           .classed("first",true)
+       
+         var filter_type  = d3_updateable(subtitle,"span.middle","span")
+           .classed("middle",true)
+       
+         select(filter_type)
+           .options(this.logic())
+           .on("select", function(x) {
+             this.logic().map(function(y) { 
+               y.selected = (y.key == x.key)
+             })
+             this.on("logic.change")(this.logic())
+           }.bind(this))
+           .draw()
+         
+         d3_updateable(subtitle,"span.last","span")
+           .text(" of the following:")
+           .classed("last",true)
+
+
+         // -------- CATEGORIES --------- //
+
+         var categories = this.categories()
+         var filter_change = this.on("filter.change").bind(this)
+
+         function selectizeInput(filter,value) {
+           var self = this;
+           
+           var select = d3_updateable(filter,"input","input")
+             .style("width","200px")
+             .property("value",value.value)
+
+           filter.selectAll(".selectize-control")
+             .each(function(x) {
+               var destroy = d3.select(this).on("destroy")
+               if (destroy) destroy()
+             })
+
+
+           var s = $(select.node()).selectize({
+             persist: false,
+             create: function(x){
+               value.value = (value.value ? value.value + "," : "") + x
+               self.on("update")(self.data())
+               return {
+                 value: x, text: x
+               }
+             },
+             onDelete: function(x){
+               value.value = value.value.split(",").filter(function(z) { return z != x[0]}).join(",")
+               self.on("update")(self.data())
+               return {
+                 value: x, text: x
+               }
+             }
+           })
+
+           filter.selectAll(".selectize-control")
+             .on("destroy",function() {
+               s[0].selectize.destroy()
+             })
+
+         }
+
+         function selectizeSelect(filter,value) {
+           var self = this;
+
+           filter.selectAll(".selectize-control").remove()
+
+           filter.selectAll(".selectize-control")
+             .each(function(x) {
+               var destroy = d3.select(this).on("destroy")
+               if (destroy) destroy()
+             })
+
+
+
+       
+           var select = d3_updateable(filter,"select.value","select")
+             .classed("value",true)
+             .style("margin-bottom","10px")
+             .style("padding-left","10px")
+             .style("min-width","200px")
+             .style("max-width","500px")
+             .attr("multiple",true)
+             .on("change", function(x){
+               value.value = this.value
+               self.on("update")(self.data())
+             })
+       
+           d3_splat(select,"option","option",categories,function(x) { return x.key })
+             .attr("selected",function(x) { return value.value && value.value.indexOf(x.key) > -1 ? "selected" : undefined })
+             .text(function(x) { return x.key })
+
+           var s = $(select.node()).selectize({
+             persist: false,
+             onChange: function(x) {
+               value.value = x.join(",")
+               self.on("update")(self.data())
+             }
+           })
+
+           filter.selectAll(".selectize-control")
+             .on("destroy",function() {
+               s[0].selectize.destroy()
+             })
+
+
+
+       
+         }
+       
+         this._logic_filter = filter.filter(wrapper)
+           .fields(Object.keys(this._filter_options))
+           .ops([
+               [{"key": "is in.category"},{"key": "is not in.category"}]
+             , [{"key": "contains.selectize"}, {"key":"does not contain.selectize"}]
+             , [{"key": "equals"}, {"key":"between","input":2}]
+           ])
+           .data(this.filters())
+           .render_op("contains.selectize",selectizeInput)
+           .render_op("does not contain.selectize",selectizeInput)
+           .render_op("is in.category",selectizeSelect)
+           .render_op("is not in.category",selectizeSelect)
+           .render_op("between",function(filter,value) {
+             var self = this
+       
+             value.value = typeof(value.value) == "object" ? value.value : [0,24]
+       
+             d3_updateable(filter,"input.value.low","input")
+               .classed("value low",true)
+               .style("margin-bottom","10px")
+               .style("padding-left","10px")
+               .style("width","90px")
+               .attr("value", value.value[0])
+               .on("keyup", function(x){
+                 var t = this
+               
+                 self.typewatch(function() {
+                   value.value[0] = t.value
+                   self.on("update")(self.data())
+                 },1000)
+               })
+       
+             d3_updateable(filter,"span.value-and","span")
+               .classed("value-and",true)
+               .text(" and ")
+       
+             d3_updateable(filter,"input.value.high","input")
+               .classed("value high",true)
+               .style("margin-bottom","10px")
+               .style("padding-left","10px")
+               .style("width","90px")
+               .attr("value", value.value[1])
+               .on("keyup", function(x){
+                 var t = this
+               
+                 self.typewatch(function() {
+                   value.value[1] = t.value
+                   self.on("update")(self.data())
+                 },1000)
+               })
+           })
+           .on("update",function(filters){
+             filter_change(filters)
+           })
            .draw()
 
          return this
        }
      , on: function(action, fn) {
-         if (fn === undefined) return this._on[action] || noop$1;
+         if (fn === undefined) return this._on[action] || noop$2;
          this._on[action] = fn;
          return this
        }
    }
 
-   function noop$2() {}
+   function noop$3() {}
    function OptionView(target) {
      this._on = {
-       select: noop$2
+       select: noop$3
      }
      this.target = target
    }
@@ -3384,7 +3610,15 @@
        }
      , draw: function() {
 
-         button_radio(this.target)
+
+         var wrap = d3_updateable(this.target,".option-wrap","div")
+           .classed("option-wrap",true)
+
+         header(wrap)
+           .text("Choose View")
+           .draw()
+
+         button_radio(wrap)
            .on("click", this.on("select") )
            .data(this.data())
            .draw()
@@ -3392,14 +3626,115 @@
          return this
        }
      , on: function(action, fn) {
-         if (fn === undefined) return this._on[action] || noop$2;
+         if (fn === undefined) return this._on[action] || noop$3;
          this._on[action] = fn;
          return this
        }
    }
 
+   function noop$5() {}
+   function SegmentView(target) {
+     this._on = {
+       select: noop$5
+     }
+     this.target = target
+   }
+
+
+
+   function segment_view(target) {
+     return new SegmentView(target)
+   }
+
+   SegmentView.prototype = {
+       data: function(val) {
+         return accessor.bind(this)("data",val) 
+       }
+     , segments: function(val) {
+         return accessor.bind(this)("segments",val) 
+       }
+     , draw: function() {
+
+         var wrap = d3_updateable(this.target,".segment-wrap","div")
+           .classed("segment-wrap",true)
+
+         header(wrap)
+           .text("Choose Segment")
+           .draw()
+
+         var body = d3_updateable(wrap,".body","div")
+           .classed("body",true)
+           .style("padding-left","10px")
+           .style("padding-bottom","20px")
+
+
+         var inner = d3_updateable(body,".inner","div")
+           .classed("inner",true)
+
+         select(inner)
+           .options(this._segments)
+           .on("select", this.on("change") )
+           .draw()
+
+         return this
+       }
+     , on: function(action, fn) {
+         if (fn === undefined) return this._on[action] || noop$5;
+         this._on[action] = fn;
+         return this
+       }
+   }
+
+   function noop$6() {}
+   function SummaryView(target) {
+     this._on = {
+       select: noop$6
+     }
+     this.target = target
+   }
+
+
+
+   function summary_view(target) {
+     return new SummaryView(target)
+   }
+
+   SummaryView.prototype = {
+       data: function(val) {
+         return accessor.bind(this)("data",val) 
+       }
+     , summarys: function(val) {
+         return accessor.bind(this)("summarys",val) 
+       }
+     , draw: function() {
+
+
+         var wrap = d3_updateable(this.target,".summary-wrap","div")
+           .classed("summary-wrap",true)
+
+         header(wrap)
+           .text("Summary")
+           .draw()
+
+         button_radio(wrap)
+           .on("click", this.on("select") )
+           .data(this.data())
+           .draw()
+
+         return this
+       }
+     , on: function(action, fn) {
+         if (fn === undefined) return this._on[action] || noop$6;
+         this._on[action] = fn;
+         return this
+       }
+   }
+
+   function noop() {}
+
    function NewDashboard(target) {
      this.target = target
+     this._on = {}
    }
 
    function new_dashboard(target) {
@@ -3410,137 +3745,102 @@
        data: function(val) {
          return accessor.bind(this)("data",val) 
        }
+     , view_options: function(val) {
+         return accessor.bind(this)("view_options",val) 
+       }
+     , logic_options: function(val) {
+         return accessor.bind(this)("logic_options",val) 
+       }
+     , explore_tabs: function(val) {
+         return accessor.bind(this)("explore_tabs",val) 
+       }
+     , logic_categories: function(val) {
+         return accessor.bind(this)("logic_categories",val) 
+       }
+     , actions: function(val) {
+         return accessor.bind(this)("actions",val) || []
+       }
+     , filters: function(val) {
+         return accessor.bind(this)("filters",val) 
+       }
+
      , draw: function() {
 
          var data = this.data()
 
-           var categories = d3.nest()
-             .key(function(x){ return x.parent_category_name})
-             .rollup(function(v) {
-               return v.reduce(function(p,c) { return p + c.uniques },0)
-             })
-             .entries(data.full_urls)
-
-           var total = categories.reduce(function(p,c) { return p + c.values },0)
-
-           categories.map(function(x) {
-             x.value = x.values
-             x.percent = x.value / total
-           })
-
-           data["display_categories"] = {
-               "key":"Categories"
-             , "values": categories.filter(function(x) { return x.key != "NA" })
-           }
-
-           var category_hour = d3.nest()
-             .key(function(x){ return x.parent_category_name + x.hour + x.minute})
-             .rollup(function(v) {
-               return {
-                   "parent_category_name": v[0].parent_category_name
-                 , "hour": v[0].hour
-                 , "minute": v[0].minute 
-                 , "count":v.reduce(function(p,c) { return p + c.count },0)
-               }
-             })
-             .entries(data.full_urls)
-             .map(function(x) { return x.values })
-
-           data["category_hour"] = category_hour
+         var options = JSON.parse(JSON.stringify(this.view_options()))
+         var tabs = JSON.parse(JSON.stringify(this.explore_tabs()))
 
 
-         // ----- BEGIN STATE STUFF ----- //
+         var logic = JSON.parse(JSON.stringify(this.logic_options()))
+           , categories = this.logic_categories()
+           , filters = JSON.parse(JSON.stringify(this.filters()))
+           , actions = JSON.parse(JSON.stringify(this.actions()))
 
-         var SELECTION_STATES = [
-               {"key":"Explore data","value":"data-view"}
-             , {"key":"Create Media Plan", "value":"media-view"}
-             , {"key":"Build Content Brief", "value":"content-view"}
-           ]
-
-         var view = "data-view" //this._state.get("view",false)
-
-         var set_state = function(x) { 
-           // this._state.set("view",x) 
-           SELECTION_STATES.map(function(d) { 
-             d.selected = (x == d.value)
-           })
-         }.bind(this)
-
-         var self = this
-
-         SELECTION_STATES.map(function(x) { 
-           x.selected = (x.value == view)
-
-           if (x.value == "data-view") {
-             x.data = [
-                 buildDomains(data)
-               , buildUrls(data)
-               , buildTopics(data)
-             ]
-
-             var tabs = x.data
-             //self._state.get("tabs",[]).map(function(x,i) { tabs[i].selected = x })
-
-             //if ((tabs[0].selected == undefined) && (!self._state.get("tabs")))  self._state.set("tabs",[1,0]) 
-           }
-
-           if (x.value == "media-view") {
-             x.data = data
-           }
-
-         })
-
-         var selectViewOption = function(x) {
-             set_state(x.value)
-   debugger
-             show()
-           }
-
-         // ----- END STATE STUFF ----- //
 
          var target = this.target
+         var self = this
+
+         segment_view(target)
+           .segments(actions)
+           .on("change", this.on("action.change"))
+           .draw()
 
          filter_view(target)
+           .logic(logic)
+           .categories(categories)
+           .filters(filters)
+           .data(data)
+           .on("logic.change", this.on("logic.change"))
+           .on("filter.change", this.on("filter.change"))
            .draw()
 
          option_view(target)
-           .data(SELECTION_STATES)
-           .on("select", selectViewOption)
+           .data(options)
+           .on("select", this.on("view.change") )
            .draw()
 
          conditional_show(target)
-           .data(SELECTION_STATES)
+           .data(options)
            .classed("view-option",true)
            .draw()
            .each(function(x) {
+
+             if (!x.selected) return
+
+             var dthis = d3.select(this)
+
              if (x.value == "data-view") {
-
-               var dv = domain_view(d3.select(this))
-                 .options(x.data)
+               var dv = domain_view(dthis)
+                 .options(tabs)
                  .data(data)
-                 .on("select", function(d) {
-
-                   x.data.map(function(q) { 
-                     if (q.key == d.key) return q.selected = 1
-                     q.selected = 0 
-                   })
-
-                   dv.draw()
-                 })
+                 .on("select", self.on("tab.change") )
                  .draw()
-              
              }
 
              if (x.value == "media-view") {
-               media_plan.media_plan(d3.select(this))
+               media_plan.media_plan(dthis.style("margin-left","-15px").style("margin-right","-15px"))
                 .data(data)
                 .draw()
              }
+
+             if (x.value == "summary-view") {
+               summary_view(dthis)
+                .data(data)
+                .draw()
+             }
+
            })
 
          return this
 
        }
+     , on: function(action, fn) {
+         if (fn === undefined) return this._on[action] || noop;
+         this._on[action] = fn;
+         return this
+       }
+
    }
 
    var version = "0.0.1";
@@ -3550,5 +3850,13 @@
    exports.filter_dashboard = filter_dashboard;
    exports.new_dashboard = new_dashboard;
    exports.state = state;
+   exports.buildCategories = buildCategories;
+   exports.buildTimes = buildTimes;
+   exports.buildTopics = buildTopics;
+   exports.buildDomains = buildDomains;
+   exports.buildUrls = buildUrls;
+   exports.buildOnsiteSummary = buildOnsiteSummary;
+   exports.buildOffsiteSummary = buildOffsiteSummary;
+   exports.buildActions = buildActions;
 
 }));

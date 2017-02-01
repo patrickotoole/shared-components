@@ -28,6 +28,10 @@
 <script type="text/javascript" src="/js/state/build/state.js"></script>
 <script type="text/javascript" src="/js/tabular/build/tabular.js"></script>
 
+<script type="text/javascript" src="/js/selectize.js/dist/js/standalone/selectize.js"></script>
+<link type="text/css" rel="stylesheet" href="/js/selectize.js/dist/css/selectize.css"/>
+
+
 
 <script type="text/javascript" src="/static/js/rockerbox/crusher/sidebar.js"></script>
 
@@ -68,6 +72,19 @@
   </div>
 </div>
 <div class="container" style="width:inherit"></div>
+<style>
+.inner > select, .inner > input {
+  height: 36px;
+  vertical-align:top
+}
+.selectize-control.multi {
+  display: inline-block
+}
+.selectize-dropdown.multi {
+  padding:5px;
+}
+</style>
+
 <style>
 
   .head-wrap {
@@ -154,38 +171,243 @@
   RB.menu.render(d3.select("body"),true)
 
   var centered = d3_updateable(d3.select(".container"),"div","div")
-    .style("width","900px")
+    .style("width","1000px")
     .style("margin-left","auto")
     .style("margin-right","auto")
 
+  var deepcopy = function(x) {
+    return JSON.parse(JSON.stringify(x))
+  } 
+
+  function buildCategories(value) {
+    var categories = d3.nest()
+      .key(function(x){ return x.parent_category_name})
+      .rollup(function(v) {
+        return v.reduce(function(p,c) { return p + c.uniques },0)
+      })
+      .entries(value.full_urls)
+
+    var total = categories.reduce(function(p,c) { return p + c.values },0)
+
+    categories.map(function(x) {
+      x.value = x.values
+      x.percent = x.value / total
+    })
+
+    value["display_categories"] = {
+        "key":"Categories"
+      , "values": categories.filter(function(x) { return x.key != "NA" })
+    }
+  }
+
+  function buildCategoryHour(value) {
+    var category_hour = d3.nest()
+      .key(function(x){ return x.parent_category_name + x.hour + x.minute})
+      .rollup(function(v) {
+        return {
+            "parent_category_name": v[0].parent_category_name
+          , "hour": v[0].hour
+          , "minute": v[0].minute 
+          , "count":v.reduce(function(p,c) { return p + c.count },0)
+        }
+      })
+      .entries(value.full_urls)
+      .map(function(x) { return x.values })
+
+    value["category_hour"] = category_hour
+   
+  }
+
+  function prepareFilters(filters) {
+
+    var mapping = {
+        "Category": "parent_category_name"
+      , "Title": "url"
+      , "Time": "hour"
+    }
+
+    var filters = filters.filter(function(x) { return Object.keys(x).length && x.value }).map(function(z) {
+      return { 
+          "field": mapping[z.field]
+        , "op": z.op
+        , "value": z.value
+      }
+    })
+
+    return filters
+
+  }
 
   var s = state.state()
-    .subscribe("filter.formatted_data", function(error,value) {
+    .subscribe("filter.dashboard_options", function(error,dbo,state) {
+      s.publishStatic("formatted_data",state.data)
+    })
+    .subscribe("filter.logic_options", function(error,filters,state) {
+      s.publish("filters",state.filters)
+    })
+    .subscribe("filter.filters", function(error,filters,state) {
 
-      dashboard.new_dashboard(centered)
-        .data(value)
+      var value = state.data
+      if (value == undefined) return
+
+      var filters = prepareFilters(filters)
+
+      var logic = state.logic_options.filter(function(x) { return x.selected })
+      logic = logic.length > 0 ? logic[0] : state.logic_options[0]
+
+      var full_urls = filter
+        .filter_data(value.original_urls)
+        .op("is in", function(field,value) {
+          return function(x) {
+            var values = value.split(",")
+            return values.reduce(function(p,value) { return p + String(x[field]).indexOf(String(value)) > -1 }, 0) > 0
+          } 
+        })
+        .op("is not in", function(field,value) {
+          return function(x) {
+            var values = value.split(",")
+            return values.reduce(function(p,value) { return p + String(x[field]).indexOf(String(value)) > -1 }, 0) == 0
+          } 
+        })
+        .op("does not contain", function(field,value) {
+          return function(x) {
+            var values = value.split(",")
+            return values.reduce(function(p,value) { return p + String(x[field]).indexOf(String(value)) > -1 }, 0) == 0
+          } 
+        })
+        .op("contains", function(field,value) {
+          return function(x) {
+            var values = value.split(",")
+            return values.reduce(function(p,value) { return p + String(x[field]).indexOf(String(value)) > -1 }, 0) > 0
+          } 
+        })
+        .logic(logic.value)
+        .by(filters)
+
+      if (value.full_urls) console.log(full_urls.length,value.full_urls.length) 
+
+      if ( (value.full_urls) && (value.full_urls.length == full_urls.length)) return
+
+        
+      value.full_urls = full_urls
+
+      // all this logic should be move to the respective views...
+
+      // ----- START : FOR MEDIA PLAN ----- //
+
+      buildCategories(value)
+      buildCategoryHour(value)
+
+      // ----- END : FOR MEDIA PLAN ----- //
+
+      var tabs = [
+          dashboard.buildDomains(value)
+        , dashboard.buildUrls(value)
+        , dashboard.buildTopics(value)
+      ]
+
+      s.publishStatic("tabs",tabs)
+      s.publishStatic("formatted_data",value)
+      
+    })
+    .subscribe("filter.formatted_data", function(error,formatted_data,value) {
+
+
+      if (value.formatted_data) dashboard.new_dashboard(centered)
+        .data(value.formatted_data)
+        .actions(value.actions)
+        .logic_options(value.logic_options)
+        .logic_categories(value.logic_categories)
+        .filters(value.filters)
+        .view_options(value.dashboard_options)
+        .explore_tabs(value.tabs)
+        .on("action.change", function(action) {
+          s.publish("selected_action",action)
+        })
+        .on("logic.change", function(logic) {
+          s.publish("logic_options",logic)
+        })
+        .on("filter.change", function(filters) {
+          s.publish("filters",filters)
+        })
+        .on("view.change", function(x) {
+          var CP = deepcopy(value.dashboard_options)
+          CP.map(function(d) {
+            if (x.value == d.value) return d.selected = 1
+            d.selected = 0
+          })
+          s.publish("dashboard_options",CP)
+        })
+        .on("tab.change", function(x) {
+          value.tabs.map(function(t) {
+            if (t.key == x.key) return t.selected = 1
+            t.selected = 0
+          })
+          s.publishStatic("tabs",value.tabs)
+        })
         .draw()
 
     })
-    .subscribe("filter.data",function(error,value) {
+    .subscribe("raw.data",function(error,value,state) {
 
-      value.actions = []
+      value.actions = state.actions
+      s.publishStatic("logic_categories",value.categories)
+      s.publish("filters",state.filters)
+
+    })
+    .subscribe("raw.actions",function(error,value,state) {
+
+      value.map(function(x) { x.key = x.action_name; x.value = x.action_id })
+      s.publish("selected_action",value[0])
+    })
+    .subscribe("raw.selected_action",function(error,value) {
+      s.publishStatic("data",asyncPub.bind(false,value))
+    })
+
+  var asyncPub = function(action,cb){
+    var URL = "/crusher/v2/visitor/domains_full_time_minute/cache?url_pattern=" + action.url_pattern[0] + "&filter_id=" + action.action_id
+
+
+    d3.json(URL,function(value) {
+
+      var categories = value.summary.category.map(function(x) {x.key = x.parent_category_name; return x})
+      value.categories = categories
       value.category = value.summary.category
       value.current_hour = value.summary.hour
       value.category_hour = value.summary.cross_section
 
-      value.full_urls = value.response
+      value.original_urls = value.response
+      //value.full_urls = value.response
 
-      s.publishStatic("formatted_data",value)
 
+      cb(false,value)
     })
-
-  var asyncPub = function(cb){
-    d3.json("/crusher/v2/visitor/domains_full_time_minute/cache?url_pattern=/",cb)
   }
 
+  var actionPub = function(cb) {
+    d3.json("/crusher/funnel/action?format=json",function(value) {
+      cb(false,value.response)
+    })
+  }
 
-  s.publishStatic("data",asyncPub)
+  s.publishStatic("actions",actionPub)
+  //s.publishStatic("data",asyncPub)
+  var SELECTION_STATES = [
+        {"key":"Data summary","value":"summary-view","selected":0}
+      , {"key":"Explore data","value":"data-view","selected":0}
+      , {"key":"Create Media Plan", "value":"media-view","selected":1}
+      //, {"key":"Build Content Brief", "value":"content-view"}
+    ]
+
+
+  var logic = [{"key":"All","value":"and"},{"key":"Any","value":"or"}]
+  var categories = []
+  var filters = [{}]
+
+  s.publish("logic_options",logic)
+  s.publish("logic_categories",categories)
+  s.publish("filters",filters)
+  s.publish("dashboard_options",SELECTION_STATES)
 
   window.s = s
 

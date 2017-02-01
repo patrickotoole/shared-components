@@ -49,9 +49,6 @@ ButtonRadio.prototype = {
       .classed("button-radio-row",true)
       .style("margin-bottom","35px")
   
-    header(options)
-      .text("Choose Option")
-      .draw()
   
     var button_row = d3_updateable(options,".options-view","div",this.data())
       .classed("options-view",true)

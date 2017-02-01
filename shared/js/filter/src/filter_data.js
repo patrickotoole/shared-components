@@ -20,8 +20,11 @@ FilterData.prototype = {
       this._l = (l == "and") ? "and" : "or"
       return this
     }
-  , op: function(o) {
-      return this._ops[o] || this._ops["equals"]
+  , op: function(op, fn) {
+      if (fn === undefined) return this._ops[op] || this._ops["equals"];
+      this._ops[op] = fn;
+      return this
+
     }
   , by: function(b) {
       
@@ -33,8 +36,9 @@ FilterData.prototype = {
               
               var split = z.field.split("."), field = split.slice(-1)[0]
                 , obj = split.slice(0,-1).reduce(function(p,c) { return p[c] },x)
+                , osplit = z.op.split("."), op = osplit[0]
               
-              return self.op(z.op)(field,z.value)(obj)
+              return self.op(op)(field,z.value)(obj)
             }).filter(function(x){ return x })
             
             if (self._l == "and") return mask.length == b.length

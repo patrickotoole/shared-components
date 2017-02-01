@@ -1,5 +1,6 @@
 import accessor from '../helpers'
 import header from '../generic/header'
+import * as timeseries from '../timeseries'
 
 import table from 'table'
 import domain_expanded from './domain_expanded'

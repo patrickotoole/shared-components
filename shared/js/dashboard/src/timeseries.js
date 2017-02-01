@@ -166,7 +166,7 @@ TimeSeries.prototype = {
         }
         
 
-        if (data[0].value2) {
+        if (data && data.length && data[0].value2) {
           var  y2 = d3.scale.linear().range([_sizes.height, 0 ])
           y2.domain([0, d3.max(data, function(d) { return Math.sqrt(valueAccessor2(d)); })]);
           buildBars(data,keyAccessor,valueAccessor2,y2,"-2")
