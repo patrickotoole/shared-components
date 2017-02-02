@@ -30,6 +30,10 @@ class FunnelHandler(BaseHandler, FunnelDatabase, FunnelAuth, APIHelpers):
         if not advertiser:
             advertiser = self.current_advertiser_name
 
+        if "action/dashboard" in self.request.uri:
+            params = self.request.uri.split("?")[1]
+            self.redirect("/crusher/dashboard?" + params)
+
         if format == "json":
             if _id:
                 results = self.get_funnel(_id)

@@ -133,17 +133,17 @@
 
   RB.menu.routes.roots = [
       {
-        "name": "Segments",
-        "push_state": "/crusher/action/existing",
-        "class": "fa fa-users",
-        "selection": "All Segments",
-        "values_key": "action_name"
+        "name": "Filter",
+        "push_state": "/crusher/dashboard",
+        "class": "glyphicon glyphicon-filter",
+      }, {
+        "name": "Compare",
+        "push_state": "/crusher/comparison",
+        "class": "glyphicon glyphicon-th",
       }, {
         "name": "Create Segment",
         "push_state": "/crusher/action/recommended",
         "class": "glyphicon glyphicon-plus",
-        "values_key": "action_name",
-        "hide_href": true
       }, {
         "name": "Settings",
         "push_state": "/crusher/settings",

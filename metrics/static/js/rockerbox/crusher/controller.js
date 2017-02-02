@@ -10,6 +10,8 @@ RB.crusher.controller = (function(controller) {
   var pubsub = crusher.pubsub
 
   controller.init = function(type, data) {
+
+
     if (type.indexOf("nonce") == -1) {
       pubsub.subscriber("advertiser-name-email", ["advertiser", "current_user"])
         .run(RB.crusher.metrics.init)
@@ -415,6 +417,8 @@ RB.crusher.controller = (function(controller) {
       //RB.crusher.ui.vendors.show(funnelRow, action);
     },
     "action/dashboard": function(action) {
+
+      window.location.pathname = "/crusher/dashboard"
 
       d3.select("body").classed("hide-top hide-select",true)
 
