@@ -87,6 +87,8 @@
 
 <style>
 
+  .inner .header-wrap, .inner select { flex: 1}
+
   .head-wrap {
     height: 150px;
     border-bottom:1px solid #ddd
@@ -239,6 +241,9 @@
   }
 
   var s = state.state()
+    .subscribe("filter.tabs", function(error,dbo,state) {
+      s.publishStatic("formatted_data",state.data)
+    })
     .subscribe("filter.dashboard_options", function(error,dbo,state) {
       s.publishStatic("formatted_data",state.data)
     })
@@ -284,12 +289,20 @@
         .logic(logic.value)
         .by(filters)
 
-      if (value.full_urls) console.log(full_urls.length,value.full_urls.length) 
 
-      if ( (value.full_urls) && (value.full_urls.length == full_urls.length)) return
 
-        
+      // should not filter if...
+debugger
+
+      if ( (value.full_urls) && 
+           (value.full_urls.length == full_urls.length) && 
+           (state.selected_comparison && (state.comparison_data == value.comparison))) return
+
       value.full_urls = full_urls
+
+      var compareTo = state.comparison_data ? state.comparison_data.original_urls : value.original_urls;
+
+      value.comparison = compareTo
 
       // all this logic should be move to the respective views...
 
@@ -307,12 +320,12 @@
       ]
 
       var summary_data = dashboard.buildSummaryData(value.full_urls)
-        , pop_summary_data = dashboard.buildSummaryData(value.original_urls)
+        , pop_summary_data = dashboard.buildSummaryData(compareTo)
 
       var summary = dashboard.buildSummaryAggregation(summary_data,pop_summary_data)
 
       var ts = dashboard.prepData(value.full_urls)
-        , pop_ts = dashboard.prepData(value.original_urls)
+        , pop_ts = dashboard.prepData(compareTo)
 
       var mappedts = ts.reduce(function(p,c) { p[c.key] = c; return p}, {})
 
@@ -346,7 +359,7 @@
             return p
           },{ articles: {}, views: 0, sessions: 0})
         })
-        .entries(value.original_urls)
+        .entries(compareTo)
 
       var mapped_cat_roll = cat_roll.reduce(function(p,c) { p[c.key] = c; return p}, {})
 
@@ -372,7 +385,7 @@
         return p
       }
 
-      var pop_counts = value.original_urls.reduce(parseWords,{})
+      var pop_counts = compareTo.reduce(parseWords,{})
       var samp_counts = value.full_urls.reduce(parseWords,{})
 
 
@@ -416,6 +429,10 @@
         .on("action.change", function(action) {
           s.publish("selected_action",action)
         })
+        .on("comparison.change", function(action) {
+          s.publish("selected_comparison",action)
+        })
+
         .on("logic.change", function(logic) {
           s.publish("logic_options",logic)
         })
@@ -447,6 +464,11 @@
       s.publish("filters",state.filters)
 
     })
+    .subscribe("raw.comparison_data",function(error,value,state) {
+
+      s.publish("filters",state.filters)
+
+    })
     .subscribe("raw.actions",function(error,value,state) {
 
       value.map(function(x) { x.key = x.action_name; x.value = x.action_id })
@@ -454,6 +476,9 @@
     })
     .subscribe("raw.selected_action",function(error,value) {
       s.publishStatic("data",asyncPub.bind(false,value))
+    })
+    .subscribe("raw.selected_comparison",function(error,value) {
+      s.publishStatic("comparison_data",asyncPub.bind(false,value))
     })
 
   var asyncPub = function(action,cb){

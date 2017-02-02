@@ -92,6 +92,13 @@ function drawCategory(target,data) {
   var categories = data.map(function(x) { return x.key })
 
   var max = d3.max(data,function(x) { return x.pop })
+  var sampmax = d3.max(data,function(x) { return x.samp })
+
+
+  var xsampscale = d3.scale.linear()
+    .domain([0,sampmax])
+    .range([0,300]);
+
 
 
   var xscale = d3.scale.linear()
@@ -148,13 +155,15 @@ function drawCategory(target,data) {
 
   var sampbars = d3_splat(chart,".samp-bar","rect",function(x) { return x}, function(x) { return x.key })
     .attr("class","samp-bar")
-    .attr('height',height-2)
-    .attr({'x':0,'y':function(d,i){ return yscale(i) + 7.5; }})
+    .attr('height',height-10)
+    .attr({'x':0,'y':function(d,i){ return yscale(i) + 11.5; }})
     .style('fill','#081d58')
-    .attr("width",function(x) { return xscale(x.samp) })
+    .attr("width",function(x) { return xsampscale(x.samp || 0) })
 
   y_xis.exit().remove()
   x_xis.exit().remove()
+  chart.exit().remove()
+
   bars.exit().remove()
   sampbars.exit().remove()
 
@@ -197,7 +206,11 @@ function drawKeywords(target,data) {
   var categories = data.map(function(x) { return x.key })
 
   var max = d3.max(data,function(x) { return x.pop })
+  var sampmax = d3.max(data,function(x) { return x.samp })
 
+  var xsampscale = d3.scale.linear()
+    .domain([0,sampmax])
+    .range([0,300]);
 
   var xscale = d3.scale.linear()
     .domain([0,max])
@@ -253,13 +266,15 @@ function drawKeywords(target,data) {
 
   var sampbars = d3_splat(chart,".samp-bar","rect",function(x) { return x}, function(x) { return x.key })
     .attr("class","samp-bar")
-    .attr('height',height-2)
-    .attr({'x':0,'y':function(d,i){ return yscale(i) + 7.5; }})
+    .attr('height',height-10)
+    .attr({'x':0,'y':function(d,i){ return yscale(i) + 11.5; }})
     .style('fill','#081d58')
-    .attr("width",function(x) { return xscale(x.samp) })
+    .attr("width",function(x) { return xsampscale(x.samp || 0) })
 
   y_xis.exit().remove()
   x_xis.exit().remove()
+  chart.exit().remove()
+
   bars.exit().remove()
   sampbars.exit().remove()
 

@@ -80,6 +80,7 @@ NewDashboard.prototype = {
       segment_view(target)
         .segments(actions)
         .on("change", this.on("action.change"))
+        .on("comparison.change", this.on("comparison.change"))
         .draw()
 
       filter_view(target)
