@@ -292,7 +292,7 @@
 
 
       // should not filter if...
-debugger
+//debugger
 
       if ( (value.full_urls) && 
            (value.full_urls.length == full_urls.length) && 
@@ -397,6 +397,38 @@ debugger
         })
         .sort(function(a,b) { return b.pop - a.pop})
         .slice(0,25)
+
+
+      var modifyWithComparisons = function(ds) {
+
+        var aggs = ds.reduce(function(p,c) {
+          p.pop_max = (p.pop_max || 0) < c.pop ? c.pop : p.pop_max
+          p.pop_total = (p.pop_total || 0) + c.pop
+
+          if (c.samp) {
+            p.samp_max = (p.samp_max || 0) > c.samp ? p.samp_max : c.samp
+            p.samp_total = (p.samp_total || 0) + c.samp
+          }
+
+          return p
+        },{})
+
+        console.log(aggs)
+
+        ds.map(function(o) {
+          o.normalized_pop = o.pop / aggs.pop_max
+          o.percent_pop = o.pop / aggs.pop_total
+
+          o.normalized_samp = o.samp / aggs.samp_max
+          o.percent_samp = o.samp / aggs.samp_total
+
+          o.normalized_diff = (o.normalized_samp - o.normalized_pop)/o.normalized_pop
+          o.percent_diff = (o.percent_samp - o.percent_pop)/o.percent_pop
+        })
+      }
+
+      modifyWithComparisons(cat_summary)
+      modifyWithComparisons(entries)
 
       
 

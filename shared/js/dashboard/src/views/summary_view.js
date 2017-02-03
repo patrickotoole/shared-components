@@ -62,6 +62,112 @@ function buildSummaryBlock(data, target, radius_scale, x) {
 
 }
 
+function drawCategoryDiff(target,data) {
+
+  var w = d3_updateable(target,"div.category-diff","div",false,function() { return 1})
+    .classed("category-diff",true)
+    .style("width","50%")
+    .style("display","inline-block")
+    .style("background-color", "#e3ebf0")
+    .style("padding-left", "10px")
+    .style("min-height","580px")
+
+
+  d3_updateable(w,"h3","h3")
+    .text("Category indexing versus comp")
+    .style("font-size","12px")
+    .style("color","#333")
+    .style("line-height","33px")
+    .style("background-color","#e3ebf0")
+    .style("margin-left","-10px")
+    .style("margin-bottom","10px")
+    .style("padding-left","10px")
+    .style("margin-top","0px")
+    .style("font-weight","bold")
+    .style("text-transform","uppercase")
+
+  var wrap = d3_updateable(w,".svg-wrap","div",data,function(x) { return 1 })
+    .classed("svg-wrap",true)
+
+  var categories = data.map(function(x) { return x.key })
+
+  var max = d3.max(data,function(x) { return x.normalized_diff })
+  var sampmax = d3.max(data,function(x) { return -x.normalized_diff})
+
+  var xsampscale = d3.scale.linear()
+    .domain([0,sampmax])
+    .range([0,150]);
+
+  var xscale = d3.scale.linear()
+    .domain([0,max])
+    .range([0,150]);
+
+  var height = 20
+
+  var yscale = d3.scale.linear()
+    .domain([0,categories.length])
+    .range([0,categories.length*height]);
+
+  var canvas = d3_updateable(wrap,"svg","svg",false,function() { return 1})
+    .attr({'width':450,'height':categories.length*height + 30});
+
+  var xAxis = d3.svg.axis();
+  xAxis
+    .orient('bottom')
+    .scale(xscale)
+
+  var yAxis = d3.svg.axis();
+  yAxis
+    .orient('left')
+    .scale(yscale)
+    .tickSize(2)
+    .tickFormat(function(d,i){ return categories[i]; })
+    .tickValues(d3.range(categories.length));
+
+  var y_xis = d3_updateable(canvas,'g.y','g')
+    .attr("class","y axis")
+    .attr("transform", "translate(225,15)")
+    .attr('id','yaxis')
+    .call(yAxis);
+
+  y_xis.selectAll("text")
+    .attr("style","text-anchor: middle;")
+
+
+  var chart = d3_updateable(canvas,'g.chart','g')
+    .attr("class","chart")
+    .attr("transform", "translate(300,0)")
+    .attr('id','bars')
+  
+  var bars = d3_splat(chart,".pop-bar","rect",function(x) { return x}, function(x) { return x.key })
+    .attr("class","pop-bar")
+    .attr('height',height-4)
+    .attr({'x':0,'y':function(d,i){ return yscale(i) + 8.5; }})
+    .style('fill','#388e3c')
+    .attr("width",function(x) { return xscale(x.normalized_diff) })
+
+  var chart2 = d3_updateable(canvas,'g.chart2','g')
+    .attr("class","chart2")
+    .attr("transform", "translate(0,0)")
+    .attr('id','bars')
+
+
+  var sampbars = d3_splat(chart2,".samp-bar","rect",function(x) { return x}, function(x) { return x.key })
+    .attr("class","samp-bar")
+    .attr('height',height-4)
+    .attr({'x':function(x) { return 150 - xsampscale(-x.normalized_diff)},'y':function(d,i){ return yscale(i) + 8.5; }})
+    .style('fill','#d32f2f')
+    .attr("width",function(x) { return xsampscale(-x.normalized_diff) })
+
+  y_xis.exit().remove()
+
+  chart.exit().remove()
+
+  bars.exit().remove()
+  sampbars.exit().remove()
+
+}
+
 function drawCategory(target,data) {
 
   var w = d3_updateable(target,"div.category","div",false,function() { return 1})
@@ -70,7 +176,7 @@ function drawCategory(target,data) {
     .style("display","inline-block")
     .style("background-color", "#e3ebf0")
     .style("padding-left", "10px")
-    .style("min-height","325px")
+    .style("min-height","580px")
 
 
   d3_updateable(w,"h3","h3")
@@ -167,11 +273,6 @@ function drawCategory(target,data) {
   bars.exit().remove()
   sampbars.exit().remove()
 
-
-
-
-
-
 }
 
 function drawKeywords(target,data) {
@@ -182,7 +283,7 @@ function drawKeywords(target,data) {
     .style("display","inline-block")
     .style("background-color", "#e3ebf0")
     .style("padding-left", "10px")
-    .style("min-height","325px")
+    .style("min-height","580px")
     .style("vertical-align","top")
 
 
@@ -281,6 +382,113 @@ function drawKeywords(target,data) {
 
 
 
+
+}
+
+function drawKeywordDiff(target,data) {
+
+  var w = d3_updateable(target,"div.keyword-diff","div",false,function() { return 1})
+    .classed("keyword-diff",true)
+    .style("width","50%")
+    .style("display","inline-block")
+    .style("background-color", "#e3ebf0")
+    .style("padding-left", "10px")
+    .style("min-height","580px")
+
+
+  d3_updateable(w,"h3","h3")
+    .text("Category indexing versus comp")
+    .style("font-size","12px")
+    .style("color","#333")
+    .style("line-height","33px")
+    .style("background-color","#e3ebf0")
+    .style("margin-left","-10px")
+    .style("margin-bottom","10px")
+    .style("padding-left","10px")
+    .style("margin-top","0px")
+    .style("font-weight","bold")
+    .style("text-transform","uppercase")
+
+  var wrap = d3_updateable(w,".svg-wrap","div",data,function(x) { return 1 })
+    .classed("svg-wrap",true)
+
+  var categories = data.map(function(x) { return x.key })
+
+  var max = d3.max(data,function(x) { return x.normalized_diff })
+  var sampmax = d3.max(data,function(x) { return -x.normalized_diff})
+
+
+  var xsampscale = d3.scale.linear()
+    .domain([0,sampmax])
+    .range([0,150]);
+
+  var xscale = d3.scale.linear()
+    .domain([0,max])
+    .range([0,150]);
+
+  var height = 20
+
+  var yscale = d3.scale.linear()
+    .domain([0,categories.length])
+    .range([0,categories.length*height]);
+
+  var canvas = d3_updateable(wrap,"svg","svg",false,function() { return 1})
+    .attr({'width':450,'height':categories.length*height + 30});
+
+  var xAxis = d3.svg.axis();
+  xAxis
+    .orient('bottom')
+    .scale(xscale)
+
+  var yAxis = d3.svg.axis();
+  yAxis
+    .orient('left')
+    .scale(yscale)
+    .tickSize(2)
+    .tickFormat(function(d,i){ return categories[i]; })
+    .tickValues(d3.range(categories.length));
+
+  var y_xis = d3_updateable(canvas,'g.y','g')
+    .attr("class","y axis")
+    .attr("transform", "translate(225,15)")
+    .attr('id','yaxis')
+    .call(yAxis);
+
+  y_xis.selectAll("text")
+    .attr("style","text-anchor: middle;")
+
+
+  var chart = d3_updateable(canvas,'g.chart','g')
+    .attr("class","chart")
+    .attr("transform", "translate(300,0)")
+    .attr('id','bars')
+  
+  var bars = d3_splat(chart,".pop-bar","rect",function(x) { return x}, function(x) { return x.key })
+    .attr("class","pop-bar")
+    .attr('height',height-4)
+    .attr({'x':0,'y':function(d,i){ return yscale(i) + 8.5; }})
+    .style('fill','#388e3c')
+    .attr("width",function(x) { return xscale(x.normalized_diff) })
+
+  var chart2 = d3_updateable(canvas,'g.chart2','g')
+    .attr("class","chart2")
+    .attr("transform", "translate(0,0)")
+    .attr('id','bars')
+
+
+  var sampbars = d3_splat(chart2,".samp-bar","rect",function(x) { return x}, function(x) { return x.key })
+    .attr("class","samp-bar")
+    .attr('height',height-4)
+    .attr({'x':function(x) { return 150 - xsampscale(-x.normalized_diff)},'y':function(d,i){ return yscale(i) + 8.5; }})
+    .style('fill','#d32f2f')
+    .attr("width",function(x) { return xsampscale(-x.normalized_diff) })
+
+  y_xis.exit().remove()
+
+  chart.exit().remove()
+
+  bars.exit().remove()
+  sampbars.exit().remove()
 
 }
 
@@ -470,6 +678,12 @@ SummaryView.prototype = {
         .classed("cat-row",true)
         .style("padding-bottom","10px")
 
+      var keywrap = d3_updateable(wrap,".key-row","div")
+        .classed("key-row",true)
+        .style("padding-bottom","10px")
+
+
+
 
 
 
@@ -505,7 +719,11 @@ SummaryView.prototype = {
       
       drawTimeseries(tswrap,this._timing,radius_scale)     
       drawCategory(catwrap,this._category)     
-      drawKeywords(catwrap,this._keywords)     
+      drawCategoryDiff(catwrap,this._category)     
+
+      drawKeywords(keywrap,this._keywords)     
+      drawKeywordDiff(keywrap,this._keywords)     
+
 
 
       return this

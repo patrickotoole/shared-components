@@ -66,11 +66,14 @@ TimeSeries.prototype = {
         .classed("vendor-domains-bar-desc",true)
         .style("display","inherit")
         .style("height","100%")
+        .style("width","100%")
         .datum(this._data)
 
       var wrapper = d3_updateable(desc,".w","div")
         .classed("w",true)
         .style("height","100%")
+        .style("width","100%")
+
 
       var self = this;
   
