@@ -1,3 +1,4 @@
+import logging
 def get_campaign_profile_objects(df,_c,params):
     if params['create']:
         return get_campaigns_and_profiles_from_template(params['template_campaign'],df,_c)
@@ -53,7 +54,7 @@ def get_mobile_targets(df,_c):
     return df
 
 def get_campaigns_and_profiles(df,_c):
-
+    logging.info("opt - getting campaigns and profiles")
     assert "campaign_id" in df.columns
 
     import ujson
@@ -67,13 +68,17 @@ def get_campaigns_and_profiles(df,_c):
             df.ix[i,'original_campaign'] = ujson.dumps(campaign)
             df.ix[i,'original_profile'] = ujson.dumps(profile)
             print "got: %s" % row.campaign_id
+            # logging.info("opt - got: %s" % row.campaign_id)
             time.sleep(1.5)
         except:
 
             print "failed: %s" % row.campaign_id
+            logging.info("opt - failed: %s" % row.campaign_id)
             print "sleeping 30"
+            logging.info("opt - get_campaigns_and_profiles sleeping 30")
             time.sleep(30)
             print "slept"
+            logging.info("opt - get_campaigns_and_profiles slept")
 
             try:
                 campaign = _c.get("/campaign?id=%s" % row.campaign_id).json['response']['campaign']
@@ -83,6 +88,7 @@ def get_campaigns_and_profiles(df,_c):
             except:
 
                 print "failed: %s" % row.campaign_id
+                logging.info("failed: %s" % row.campaign_id)
                 pass
 
     return df

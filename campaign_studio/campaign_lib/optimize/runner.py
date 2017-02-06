@@ -92,7 +92,7 @@ def push_changes(grouped,ADVERTISER,LINE_ITEM,params,_c,name=""):
 
     if params['modify']:
         update_campaigns(grouped,ADVERTISER,name)
-        logging.info("Opt: %s updated %s new campaigns" % (name,len(grouped)) )
+        logging.info("opt - %s updated %s new campaigns" % (name,len(grouped)) )
         return
 
     if params['create'] or params['duplicate'] or params['replace']:
@@ -100,7 +100,7 @@ def push_changes(grouped,ADVERTISER,LINE_ITEM,params,_c,name=""):
         assert str(int(LINE_ITEM)) == LINE_ITEM
         deduped = remove_duplicates(grouped,LINE_ITEM,_c)
         push_campaigns(deduped,ADVERTISER,LINE_ITEM,name)
-        logging.info("Opt: %s created %s new campaigns in %s" % (name,len(deduped),LINE_ITEM) )
+        logging.info("opt - %s created %s new campaigns in %s" % (name,len(deduped),LINE_ITEM) )
 
     if params['replace']:
         deactivate_campaigns(grouped['campaign_id'].tolist(),_c, name)
@@ -115,7 +115,7 @@ def runner(params,data,_c,name=""):
     ADVERTISER = params['advertiser']
     GROUPBY = params["create_group"] if params["create_group"] and params["create_group"] != "" else "campaign_id"
 
-    logging.info("running opt %s for %s %s %s" % (name, ADVERTISER,LINE_ITEM,GROUPBY) )
+    logging.info("opt - running %s for %s %s %s" % (name, ADVERTISER,LINE_ITEM,GROUPBY) )
 
     df = pandas.DataFrame(data)
 
@@ -125,11 +125,11 @@ def runner(params,data,_c,name=""):
     df['line_item'] = LINE_ITEM
 
     grouped = extract_and_group(df,GROUPBY,params,_c)
-    logging.info(" - grouped and pulled objects.")
+    logging.info("opt - grouped and pulled objects.")
 
     if params['deactivate']:
         deactivate_campaigns(grouped.campaign_id,_c,name)
-        logging.info("%s - deactivation complete." % name)
+        logging.info("opt - %s - deactivation complete." % name)
         return 
 
     budget_items = df.set_index("campaign_id")[[c for c in df.columns if c in CAMPAIGN_FIELDS]]
@@ -140,6 +140,6 @@ def runner(params,data,_c,name=""):
         if k in grouped.columns: params[v] = params['action']
 
     grouped = build_objects(grouped,ADVERTISER,LINE_ITEM,params)
-    logging.info(" - built new objects for updates.")
+    logging.info("opt - built new objects for updates.")
     push_changes(grouped,ADVERTISER,LINE_ITEM,params,_c,name)
-    logging.info("finished opt %s for %s %s %s" % (name,ADVERTISER,LINE_ITEM,GROUPBY) )
+    logging.info("opt - finished %s for %s %s %s" % (name,ADVERTISER,LINE_ITEM,GROUPBY) )
