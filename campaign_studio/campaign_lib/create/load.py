@@ -10,6 +10,7 @@ def push(request_type, url, data, console):
             r = console.post(url,data=ujson.dumps(data))
             if r.json['response'].get("error",False):
                 print r.json['response']['error']
+                logging.info("opt")
             elif 'error_code' in r.json['response']:
                 if r.json['response']['error_code'] == 'RATE_EXCEEDED':
                     print "rate exceeded, sleeping 60 seconds"
