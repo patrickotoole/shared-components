@@ -1,6 +1,8 @@
 import accessor from '../helpers'
 import header from '../generic/header'
 import button_radio from '../generic/button_radio'
+import select from '../generic/select'
+
 import pie from '../generic/pie'
 import * as timeseries from '../timeseries'
 
@@ -764,6 +766,10 @@ SummaryView.prototype = {
 
       function buildData(data,buckets,pop_categories) {
 
+       
+
+
+
         var times = d3.nest()
           .key(function(x) { return x.time_diff_bucket })
           .map(data.filter(function(x){ return x.parent_category_name != "" }) )
@@ -820,7 +826,7 @@ SummaryView.prototype = {
             q.norm_time = time_normalize_scales[q.key](q.percent)
 
             q.score = 2*q.norm_cat/3 + q.norm_time/3
-            //q.score = q.norm_cat
+            q.score = q.norm_time
 
             var percent_pop = pop_categories[cat] ? pop_categories[cat].percent_pop : 0
 
@@ -832,11 +838,46 @@ SummaryView.prototype = {
         return [categories,time_normalize_scales,cat_normalize_scales]
       }
 
-      function beforeBlocks(wrap,all_data) {
+      function beforeBlocks(wrap,all_data,sortby) {
 
+        var inner = d3_updateable(wrap,".inner","div")
+          .classed("inner",true)
+          .style("position","absolute")
+
+        d3_updateable(inner,"h3","h3")
+          .text("Sort By")
+          .style("margin","0px")
+          .style("line-height","32px")
+          .style("color","inherit")
+          .style("font-size","inherit")
+          .style("font-weight","bold")
+          .style("text-transform","uppercase")
+          .style("background","#e3ebf0")
+          .style("padding-left","10px")
+          .style("margin-right","10px")
+          .style("margin-top","2px")
+          .style("margin-bottom","2px")
+          .style("display","inline-block")
+          .style("width","140px")
+
+        select(inner)
+          .options([
+              {"key":"Importance","value":"percent_diff"}
+            , {"key":"Activity","value":"score"}
+            , {"key":"Population","value":"pop"}
+
+          ])
+          .on("select", function(x){
+            beforeBlocks(wrap,all_data,x.value)
+          })
+          .draw()
+
+        inner.selectAll("select")
+          .style("min-width","140px")
+        
         var before = all_data.before
          , after = all_data.after
-
+         , cats = all_data.category.map(function(p) { return p.key })
          , pop_categories = all_data.category.reduce(function(p,c) { p[c.key] = c; return p }, {})
 
         var buckets = [10,30,60,120,180,360,720,1440,2880,5760,10080].map(function(x) { return x*60 })
@@ -853,19 +894,34 @@ SummaryView.prototype = {
           , after_time_normalize_scales = arr[1]
 
 
-        before_categories = before_categories.sort(function(a,b) { 
-          var p = -1, q = -1;
-          try { p = b.values.filter(function(x){ return x.key == "600" })[0].percent_diff } catch(e) {}
-          try { q = a.values.filter(function(x){ return x.key == "600" })[0].percent_diff } catch(e) {}
-          return d3.ascending(p, q)
-        })
+        if (sortby == "score") {
 
-        //before_categories = before_categories.sort(function(a,b) { 
-        //  var p = 0, q = 0;
-        //  try { p = b.values.filter(function(x){ return x.key == "600" })[0].score } catch(e) {}
-        //  try { q = a.values.filter(function(x){ return x.key == "600" })[0].score } catch(e) {}
-        //  return d3.ascending(p, q)
-        //})
+          before_categories = before_categories.sort(function(a,b) { 
+            var p = -1, q = -1;
+            try { p = b.values.filter(function(x){ return x.key == "600" })[0].score } catch(e) {}
+            try { q = a.values.filter(function(x){ return x.key == "600" })[0].score } catch(e) {}
+            return d3.ascending(p, q)
+          })
+          
+        } else if (sortby == "pop") {
+
+          before_categories = before_categories.sort(function(a,b) { 
+            var p = cats.indexOf(a.key)
+              , q = cats.indexOf(b.key)
+            return d3.ascending(p > -1 ? p : 10000, q > -1 ? q : 10000)
+          })
+
+        } else {
+
+          before_categories = before_categories.sort(function(a,b) { 
+            var p = -1, q = -1;
+            try { p = b.values.filter(function(x){ return x.key == "600" })[0].percent_diff } catch(e) {}
+            try { q = a.values.filter(function(x){ return x.key == "600" })[0].percent_diff } catch(e) {}
+            return d3.ascending(p, q)
+          })
+
+          
+        }
 
         var order = before_categories.map(function(x) { return x.key })
 
@@ -877,7 +933,7 @@ SummaryView.prototype = {
 
         
         var height = 20 
-        var space = 4 
+        var space = 14 
         var middle = 180
 
         var yscale = d3.scale.linear()
@@ -886,7 +942,9 @@ SummaryView.prototype = {
       
         var svg = d3_updateable(wrap,"svg","svg",false,function() { return 1})
           .style("margin-left","10px")
-          .attr({'width':buckets.length*(height+space)*2+middle,'height':before_categories.length*height + 165});
+          .style("margin-top","-5px")
+          .attr({'width':buckets.length*(height+space)*2+middle,'height':before_categories.length*height + 165})
+          .attr("xmlns", "http://www.w3.org/2000/svg")
 
         var canvas = d3_updateable(svg,".canvas","g")
           .attr("class","canvas")
@@ -915,6 +973,16 @@ SummaryView.prototype = {
           //.range(['#d73027','#f46d43','#fdae61','#ffffbf','#d9ef8b','#91cf60','#1a9850'])
 
         var legendtw = 80
+
+
+        var sort = d3_updateable(canvas,'g.sort','g')
+          .attr("class","sort")
+          .attr("transform","translate(0,-130)")
+
+
+
+        
+ 
 
 
         var legend = d3_updateable(canvas,'g.legend','g')
@@ -947,7 +1015,7 @@ SummaryView.prototype = {
 
         d3_updateable(size,"text.less","text")
           .attr("class","less axis")
-          .attr("x",(height+space)*5+legendtw)
+          .attr("x",(height+4)*5+legendtw)
           .style("text-anchor","end")
           .html("less activity")
           .style("text-transform","uppercase").style("font-size",".6em").style("font-weight","bold")
@@ -956,7 +1024,7 @@ SummaryView.prototype = {
 
         d3_updateable(size,"text.less-arrow","text")
           .attr("class","less-arrow axis")
-          .attr("x",(height+space)*5+legendtw+10)
+          .attr("x",(height+4)*5+legendtw+10)
           .html("&#9654;")
           .style("text-anchor","end")
           .style("text-transform","uppercase").style("font-size",".6em").style("font-weight","bold")
@@ -965,9 +1033,9 @@ SummaryView.prototype = {
           .attr("dominant-baseline", "central")
 
 
-        d3_splat(size,"circle","circle",[1,.8,.5,.2,0])
-          .attr("r",function(x) { return height/2*rscale(x) })
-          .attr('cx', function(d,i) { return (height+space)*i+height/2})
+        d3_splat(size,"circle","circle",[1,.6,.3,.1,0])
+          .attr("r",function(x) { return (height-2)/2*rscale(x) })
+          .attr('cx', function(d,i) { return (height+4)*i+height/2})
           .attr('stroke', 'grey')
           .attr('fill', 'none')
 
@@ -999,7 +1067,7 @@ SummaryView.prototype = {
 
         d3_updateable(size,"text.less","text")
           .attr("class","less axis")
-          .attr("x",(height+space)*5+legendtw)
+          .attr("x",(height+4)*5+legendtw)
           .style("text-anchor","end")
           .html("less important")
           .style("text-transform","uppercase").style("font-size",".6em").style("font-weight","bold")
@@ -1007,7 +1075,7 @@ SummaryView.prototype = {
 
         d3_updateable(size,"text.less-arrow","text")
           .attr("class","less-arrow axis")
-          .attr("x",(height+space)*5+legendtw+10)
+          .attr("x",(height+4)*5+legendtw+10)
           .html("&#9654;")
           .style("text-anchor","end")
           .style("text-transform","uppercase").style("font-size",".6em").style("font-weight","bold")
@@ -1019,7 +1087,7 @@ SummaryView.prototype = {
           .attr("r",height/2-2)
           .attr("fill",function(x) { return oscale(x) })
           .attr("opacity",function(x) { return rscale(x/2 + .2) })
-          .attr('cx', function(d,i) { return (height+space)*i+height/2 })
+          .attr('cx', function(d,i) { return (height+4)*i+height/2 })
         
 
 
@@ -1043,14 +1111,14 @@ SummaryView.prototype = {
 
         var x_xis = d3_updateable(canvas,'g.x.before','g')
           .attr("class","x axis before")
-          .attr("transform", "translate(22,-4)")
+          .attr("transform", "translate(" + (height + space)+ ",-4)")
           .attr('id','xaxis')
           .call(xAxis);
 
               
         x_xis.selectAll("text")
-          .attr("y", -9)
-          .attr("x", -9)
+          .attr("y", -8)
+          .attr("x", -8)
           .attr("dy", ".35em")
           .attr("transform", "rotate(45)")
           .style("text-anchor", "end")
@@ -1142,11 +1210,24 @@ SummaryView.prototype = {
           .call(yAxis);
 
         y_xis.selectAll("line")
+          .attr("x2",18)
+          .attr("x1",22)
+          .style("stroke-dasharray","0")
           .remove()
+
+
+        y_xis.selectAll("path")
+          .attr("x2",18)
+          .attr("transform","translate(18,0)") 
+          //.style("stroke","black")
+
+
+
+          //.remove()
 
       
         y_xis.selectAll("text")
-          .attr("style","text-anchor: middle;")
+          .attr("style","text-anchor: middle; font-weight:bold; fill: #333")
           .attr("x",middle/2)
 
 
@@ -1185,7 +1266,7 @@ SummaryView.prototype = {
             //console.log(norm_cat + norm_time)
             //return (height-2)/2 * rscale(norm_cat/3 + 2*norm_time/3)
 
-            return (height-2)/2 * rscale(norm_time)
+            return (height)/2 * rscale(norm_time)
           })
 
           .style("fill",function(x) { 
