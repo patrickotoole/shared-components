@@ -87,6 +87,7 @@
 
 <style>
 
+
   .inner .header-wrap, .inner select { flex: 1}
 
   .head-wrap {
@@ -146,6 +147,8 @@
   .versus.selected, .square.selected {
     background-color:white
   }
+
+  .axis { opacity:.7 }
 </style>
 <script>
 (function() {
@@ -240,6 +243,33 @@
 
   }
 
+  var ops = {
+      "is in": function(field,value) {
+          return function(x) {
+            var values = value.split(",")
+            return values.reduce(function(p,value) { return p + String(x[field]).indexOf(String(value)) > -1 }, 0) > 0
+          } 
+        }
+    , "is not in": function(field,value) {
+          return function(x) {
+            var values = value.split(",")
+            return values.reduce(function(p,value) { return p + String(x[field]).indexOf(String(value)) > -1 }, 0) == 0
+          } 
+        }
+     , "does not contain": function(field,value) {
+          return function(x) {
+            var values = value.split(",")
+            return values.reduce(function(p,value) { return p + String(x[field]).indexOf(String(value)) > -1 }, 0) == 0
+          } 
+        }
+      , "contains": function(field,value) {
+          return function(x) {
+            var values = value.split(",")
+            return values.reduce(function(p,value) { return p + String(x[field]).indexOf(String(value)) > -1 }, 0) > 0
+          } 
+        }
+  }
+
   var s = state.state()
     .subscribe("filter.tabs", function(error,dbo,state) {
       s.publishStatic("formatted_data",state.data)
@@ -262,32 +292,19 @@
 
       var full_urls = filter
         .filter_data(value.original_urls)
-        .op("is in", function(field,value) {
-          return function(x) {
-            var values = value.split(",")
-            return values.reduce(function(p,value) { return p + String(x[field]).indexOf(String(value)) > -1 }, 0) > 0
-          } 
-        })
-        .op("is not in", function(field,value) {
-          return function(x) {
-            var values = value.split(",")
-            return values.reduce(function(p,value) { return p + String(x[field]).indexOf(String(value)) > -1 }, 0) == 0
-          } 
-        })
-        .op("does not contain", function(field,value) {
-          return function(x) {
-            var values = value.split(",")
-            return values.reduce(function(p,value) { return p + String(x[field]).indexOf(String(value)) > -1 }, 0) == 0
-          } 
-        })
-        .op("contains", function(field,value) {
-          return function(x) {
-            var values = value.split(",")
-            return values.reduce(function(p,value) { return p + String(x[field]).indexOf(String(value)) > -1 }, 0) > 0
-          } 
-        })
+        .op("is in", ops["is in"])
+        .op("is not in", ops["is not in"])
+        .op("does not contain", ops["does not contain"])
+        .op("contains", ops["contains"])
         .logic(logic.value)
         .by(filters)
+
+
+      
+
+
+
+
 
 
 
@@ -430,6 +447,44 @@
       modifyWithComparisons(cat_summary)
       modifyWithComparisons(entries)
 
+
+      if (value.before) {
+        var before_urls = filter
+          .filter_data(value.before)
+          .op("is in", ops["is in"])
+          .op("is not in", ops["is not in"])
+          .op("does not contain", ops["does not contain"])
+          .op("contains", ops["contains"])
+          .logic(logic.value)
+          .by(filters)
+
+        var after_urls = filter
+          .filter_data(value.after)
+          .op("is in", ops["is in"])
+          .op("is not in", ops["is not in"])
+          .op("does not contain", ops["does not contain"])
+          .op("contains", ops["contains"])
+          .logic(logic.value)
+          .by(filters)
+
+
+        var bu = d3.nest()
+          .key(function(x) { return x.parent_category_name })
+          .key(function(x) { return x.time_diff_bucket })
+          .entries(before_urls)
+
+        var au = d3.nest()
+          .key(function(x) { return x.parent_category_name })
+          .key(function(x) { return x.time_diff_bucket })
+          .entries(after_urls)
+
+
+        s.publishStatic("before_urls",{"after":after_urls,"before":before_urls,"category":cat_summary}) 
+        s.publishStatic("after_urls", after_urls)
+
+
+      }
+
       
 
       s.publishStatic("keyword_summary", entries) 
@@ -451,7 +506,8 @@
         .time_summary(value.time_summary)
         .category_summary(value.category_summary)
         .keyword_summary(value.keyword_summary)
-
+        .before(value.before_urls || [])
+        .after(value.after_urls || [])
 
         .logic_options(value.logic_options)
         .logic_categories(value.logic_categories)
@@ -513,6 +569,9 @@
       s.publishStatic("comparison_data",asyncPub.bind(false,value))
     })
 
+
+
+
   var asyncPub = function(action,cb){
     var URL = "/crusher/v2/visitor/domains_full_time_minute/cache?url_pattern=" + action.url_pattern[0] + "&filter_id=" + action.action_id
 
@@ -528,6 +587,7 @@
       value.original_urls = value.response
       //value.full_urls = value.response
 
+debugger
 
       cb(false,value)
     })

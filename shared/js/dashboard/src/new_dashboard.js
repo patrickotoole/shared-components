@@ -54,7 +54,12 @@ NewDashboard.prototype = {
   , keyword_summary: function(val) {
       return accessor.bind(this)("keyword_summary",val) || []
     }
-
+  , before: function(val) {
+      return accessor.bind(this)("before",val) || []
+    }
+  , after: function(val) {
+      return accessor.bind(this)("after",val) || []
+    }
 
   , filters: function(val) {
       return accessor.bind(this)("filters",val) 
@@ -126,6 +131,8 @@ NewDashboard.prototype = {
              .data(self.summary())
              .timing(self.time_summary())
              .category(self.category_summary())
+             .before(self.before())
+             .after(self.after())
              .keywords(self.keyword_summary())
              .draw()
           }
