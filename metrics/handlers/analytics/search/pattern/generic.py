@@ -115,15 +115,15 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
         for js in json.iterrows():
             results[js[1]['key_name']] = ujson.loads(js[1]['json'])
         #Topic Artifacts
-        url_set = domains_full_df['url']
-        url_set = [self.crushercache.escape_string(i.encode("utf-8")) for i in url_set ]
-        url_set = self.remove_hex(set(url_set))
-        urls = "'" + "','".join(url_set) + "'"
-        topics_from_db = self.crushercache.select_dataframe(Q3 % {"urls":urls})
-        topic_js = {}
-        for top in topics_from_db.iterrows():
-            topic_js[top[1]['url']] = {"topic":top[1]['topic']}
-        results['topics'] = topic_js
+        #url_set = domains_full_df['url']
+        #url_set = [self.crushercache.escape_string(i.encode("utf-8")) for i in url_set ]
+        #url_set = self.remove_hex(set(url_set))
+        #urls = "'" + "','".join(url_set) + "'"
+        #topics_from_db = self.crushercache.select_dataframe(Q3 % {"urls":urls})
+        #topic_js = {}
+        #for top in topics_from_db.iterrows():
+        #    topic_js[top[1]['url']] = {"topic":top[1]['topic']}
+        #results['topics'] = topic_js
         #category artifacts
         category_idf = self.crushercache.select_dataframe(Q4)
         category_idf_js = {}
