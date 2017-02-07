@@ -1,7 +1,6 @@
 from lib.appnexus_reporting import load
 import logging
 import pandas as pd
-import time
 
 REQUEST_URL = "/campaign?advertiser_id=%s"
 
