@@ -77,7 +77,7 @@ class RPCQueue():
         entry_id = self.zk_wrapper.write(work2,2,set_debug)
         logging.info("added fill cassandra to  work queue for %s" %(advertiser))
         job_id = hashlib.md5(work2).hexdigest()
-
+        logging.info("Added job id %s to wq, running recache for entire advertiser" % job_id)
         return entry_id, job_id
     
     def add_to_work_queue(self, rpc_object):
@@ -140,5 +140,6 @@ class RPCQueue():
         entry_id = self.zk_wrapper.write(work,priority,debug_bool)
         logging.info("added to Cassandra work queue %s for %s" %(segment,advertiser))
         job_id = hashlib.md5(work).hexdigest()
+        logging.info("Added job id %s to wq with priority %s" % (job_id, priority))
         return entry_id, job_id
 
