@@ -94,9 +94,15 @@ class SubmitHandler(tornado.web.RequestHandler):
         for d in data['data']:
             dd[d['key']] = d['value']
 
+
+        logging.info("Sending job to workqueue: ")
+        logging.info(dd)
         from link import lnk
         wq = lnk.api.workqueue
-        wq.post("/jobs",data=json.dumps(dd))
+        resp = wq.post("/jobs",data=json.dumps(dd))
+
+        logging.info("Workqueue resposne: ")
+        logging.info(resp.json)
 
         
 
