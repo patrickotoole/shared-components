@@ -52,6 +52,7 @@
 <body style="width:1200px;margin-left:auto;margin-right:auto">
   <h4 id="page-title">Forms</h4>
   <div class="content"></div>
+  <div class="completed"></div>
   <script>
 
     var content = d3.select(".content")
@@ -63,6 +64,8 @@
 
     forms = {{forms}}
 
+  </script>
+  <script>
     var obj = state.qs().from(document.location.search)
 
 
@@ -74,8 +77,10 @@
         index.render_form.bind(index)(index._show,x)
       })
       .on("submit", function(x) {
-        d3.xhr("/submit").post(JSON.stringify(x), function(){
-          debugger
+        d3.xhr("/submit").post(JSON.stringify(x), function(err,resp){
+          var target = d3.select(".completed")
+          if (err) return target.text("error")
+          return target.text(resp.response)
         })
       })
       .on("create", function(x) {

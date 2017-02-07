@@ -104,6 +104,9 @@ class SubmitHandler(tornado.web.RequestHandler):
         logging.info("Workqueue resposne: ")
         logging.info(resp.json)
 
+        self.write(resp.json)
+        self.finish()
+
         
 
 
