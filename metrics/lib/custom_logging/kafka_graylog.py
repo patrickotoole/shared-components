@@ -27,5 +27,5 @@ if __name__ == '__main__':
     for message in consumer:
         if message is not None:
             msg = ujson.loads(message.value)['log_message']
-            new_msg = '{"version":"1.1", "host":"kafka", "Application":"'+ujson.loads(message.value)['app_name'] + '", "short_message":"' +msg.replace('"',"|").replace("{","|").replace("\\","|").replace(",","").replace("}","")[:250] + '"}\x00'
+            new_msg = '{"version":"1.1", "host":"'+ujson.loads(message.value)['app_name']+'", "Application":"'+ujson.loads(message.value)['app_name'].split(".")[0] + '", "short_message":"' +msg.replace('"',"|").replace("{","|").replace("\\","|").replace(",","").replace("}","")[:250] + '"}\x00'
             s.sendall(new_msg)
