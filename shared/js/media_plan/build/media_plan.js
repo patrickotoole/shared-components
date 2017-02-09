@@ -135,6 +135,8 @@
 
   function transformData(data) {
 
+    var ch = data.category_hour.filter(function(x) { return x.parent_category_name != "NA" })
+
     var category_hour = d3.nest()
       .key(function(x) { return x.parent_category_name + "," + x.hour })
       .rollup(function(v) {
@@ -145,7 +147,7 @@
           return p
         },{})
       })
-      .entries(data.category_hour)
+      .entries(ch)
       .map(function(x) {
         return {
             "category": x.key.split(",")[0]
@@ -166,7 +168,7 @@
            .range([0,100])
          
          var hours = d3.range(0,24)
-         hours = hours.slice(3).concat(hours.slice(0,3))
+         hours = hours.slice(-4,24).concat(hours.slice(0,20))//.slice(3).concat(hours.slice(0,3))
 
          return {
              "normed": hours.map(function(i) { return v[i] ? scale(v[i].count) : 0 })
