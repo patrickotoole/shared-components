@@ -77,8 +77,9 @@
         .forms(_s.forms)
         .select(_s.selected || {})
         .on("click", function(x,prev) {
-          _state.publish("selected",{"name":x.name})
-          history.pushState(x,"","/" + state.qs().to(x) )
+          var to_push = {"name":x.name}
+          _state.publish("selected",to_push)
+          history.pushState(x,"","/" + state.qs().to(to_push) )
           d3.event.preventDefault()
           return false
         })
