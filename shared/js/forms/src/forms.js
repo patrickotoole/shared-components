@@ -53,9 +53,6 @@ Forms.prototype = {
         .classed("form-description",true)
         .text(function(x) { return x.description })
         
-      
-
-
       var rows = d3_splat(form,".row","div",function(x) { return x.fields}, function(x) { return x.name })
         .classed("row",true)
       

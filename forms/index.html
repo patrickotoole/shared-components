@@ -68,31 +68,59 @@
   <script>
     var obj = state.qs().from(document.location.search)
 
+    var _state = state.state()
+    history.SKIP = 0
 
-    var index = form_builder.form_index(content)
-      .forms(forms)
-      .on("click", function(x) {
-        history.pushState({},"", "/" + state.qs().to(x))
-        index.render_back(x.name)
-        index.render_form.bind(index)(index._show,x)
-      })
-      .on("submit", function(x) {
-        d3.xhr("/submit").post(JSON.stringify(x), function(err,resp){
-          var target = d3.select(".completed")
-          if (err) return target.text("error")
-          return target.text(resp.response)
+    _state.subscribe("update",function(err,_s){
+
+      form_builder.form_index(content)
+        .forms(_s.forms)
+        .select(_s.selected || {})
+        .on("click", function(x,prev) {
+          _state.publish("selected",{"name":x.name})
+          history.pushState(x,"","/" + state.qs().to(x) )
+          d3.event.preventDefault()
+          return false
         })
-      })
-      .on("create", function(x) {
-        d3.xhr("/").post(JSON.stringify(x), function(){
-          debugger
+        .on("back", function(x) {
+          history.back()
         })
-      })
-      .draw()
+        .on("submit", function(x) {
+          d3.xhr("/submit").post(JSON.stringify(x), function(err,resp){
+            var target = d3.select(".completed")
+            if (err) return target.text("error")
+            return target.text(resp.response)
+          })
+        })
+        .on("create", function(x) {
+          d3.xhr("/").post(JSON.stringify(x), function(){
+            debugger
+          })
+        })
+        .draw()
+
+    })
 
 
+    _state.publish("forms",forms)
+
+    _state.on("back", function(current,future,past) {
+
+      
+    })
+
+    window.onpopstate = function(h) {
+
+      _state.publish("selected",h.state)
+    }
+
+    
+    history.replaceState({},"","/")
     var new_obj = forms.filter(function(x) { return x.name == obj.name})[0]
-    if (obj.name) index.on("click").bind(index)(new_obj)
+    if (obj.name) {
+      history.pushState(new_obj,"",state.qs().to(new_obj))
+      _state.publish("selected",new_obj)
+    }
 
   </script>
 </body>

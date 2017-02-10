@@ -65,7 +65,7 @@ function lzw_decode(s) {
 }
 
 QS.prototype = {
-    to: function(state) {
+    to: function(state,encode) {
       var self = this
 
       var params = Object.keys(state).map(function(k) {
@@ -83,7 +83,8 @@ QS.prototype = {
 
       })
 
-      return "?" + "encoded=" + btoa(escape(lzw_encode(params.join("&"))));
+      if (encode) return "?" + "encoded=" + btoa(escape(lzw_encode(params.join("&"))));
+      return "?" + params.join("&")
       
     }
   , from: function(qs) {

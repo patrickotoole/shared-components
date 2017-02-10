@@ -27,6 +27,22 @@ FormIndex.prototype = {
       this._forms = d
       return this
     }
+  , select: function(d) {
+      if (d === undefined) return this._selected
+      this._selected = d
+      return this
+    }
+  , render_selected: function() {
+      var self = this
+
+      var d = self._forms.filter(function(f) { return f.name == self._selected.name })
+
+      if (d.length) d = d[0]
+
+      self.render_back(d.name)
+      self.render_form.bind(self)(self._show,d)
+
+    }
   , render_form: function(target,x) {
       this._target.selectAll(".new-row")
         .classed("hidden",true)
@@ -68,7 +84,7 @@ FormIndex.prototype = {
       d3_updateable(back,"a","a")
         .attr("href","#")
         .text("back")
-        .on("click", function() { self.draw() })
+        .on("click", function() { self.on("back")(self._selected) })
 
       d3_updateable(self._title,".title","span")
         .classed("title",true)
@@ -91,13 +107,26 @@ FormIndex.prototype = {
 
       this._show = show
 
-      var rows = d3_splat(index,".row","div",this._forms,function(x) { return x.name })
+      var groups = d3.nest()
+        .key(function(x) { return x.header || "Other" })
+        .entries(this._forms)
+
+      var groups = d3_splat(index,".group","div",groups,function(x) { return x.key})
+        .classed("group",true)
+
+      d3_updateable(groups,"h3","h3")
+        .text(function(x) { return x.key })
+
+
+      var rows = d3_splat(groups,".row","div",function(x) { return x.values },function(x) { return x.name })
         .classed("row",true)
+
+      var self = this
 
       d3_updateable(rows,"a","a")
         .attr("href","#")
         .text(function(x) { return x.name })
-        .on("click",this.on("click").bind(show))
+        .on("click", function(x) { self.on("click").bind(show)(x,self._selected) })
 
       var new_row = d3_updateable(this._target,".new-row","div")
         .classed("new-row",true)
@@ -107,6 +136,8 @@ FormIndex.prototype = {
       d3_updateable(new_row,"button","button")
         .text("New")
         .on("click",this.on("new").bind(show))
+
+      if (Object.keys(this._selected).length > 0) this.render_selected()
 
       return this
     }
