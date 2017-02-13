@@ -71,6 +71,7 @@ SegmentView.prototype = {
 
       header(wrap).text("Segment").draw()      
 
+
       var body = d3_updateable(wrap,".body","div")
         .classed("body",true)
         .style("display","flex")
@@ -142,10 +143,16 @@ d3_updateable(inner,"div.color","div")
 
 
 
+      var self = this
 
       select(inner)
         .options(this._segments)
-        .on("select", this.on("change") )
+        .on("select", function(x){
+          wrap.selectAll(".header-body").classed("hidden",false).style("text-align","center").style("margin-bottom","-40px").style("padding-top","10px").style("height","0px").style("background","none").text("loading")
+            .html("<img src='/static/img/general/logo-small.gif' style='height:15px'/> loading...")
+
+          self.on("change").bind(this)(x)
+        })
         .draw()
 
 
