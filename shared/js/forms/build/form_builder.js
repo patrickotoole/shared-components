@@ -10,33 +10,45 @@
         submit: function(x) {}
     }
     this._renderers = {
-        multi_select: function(row) {
+        multi_select: function(row,_default) {
           var select = d3_updateable(row,"select","select")
             .attr("multiple","true")
 
           d3_splat(select,"option","option",function(x) { return x.values },function(x) { return typeof(x) == "object" ? x.key : x})
             .text(function(x) { return typeof(x) == "object" ?  x.key : x })
             .attr("value",function(x) { return typeof(x) == "object" ?  x.value : x })
+            .attr("selected", function(x) { return x.value == _default ? "selected" : undefined })
+
 
         }
-      , select: function(row) {
+      , select: function(row,_default) {
           var select = d3_updateable(row,"select","select")
           d3_splat(select,"option","option",function(x) { return x.values },function(x) { return typeof(x) == "object" ? x.key : x})
             .text(function(x) { return typeof(x) == "object" ?  x.key : x })
             .attr("value",function(x) { return typeof(x) == "object" ?  x.value : x })
+            .attr("selected", function(x) { return x.value == _default ? "selected" : undefined })
 
         }
-      , input: function(row) {
+      , input: function(row,_default) {
           var select = d3_updateable(row,"input","input")
+            .attr("value",_default)
+
         }
-      , textarea: function(row) {
+      , textarea: function(row,_default) {
           var textarea = d3_updateable(row,"textarea","textarea")
+            .text(_default)
         }
     }
   }
 
   Forms.prototype = {
-      fields: function(d) {
+      defaults: function(d) {
+        if (d === undefined) return this._defaults
+        this._defaults = d
+        return this
+
+      }
+    , fields: function(d) {
         if (d === undefined) return this._fields
         this._fields = d
         return this
@@ -72,7 +84,8 @@
           .classed("field",true)
           .each(function(x) {
             var fn = self.renderer(x.type)
-            fn(d3.select(this))
+            var _default = self._defaults && self._defaults[x.name]
+            fn(d3.select(this),_default)
           })
 
         var field = d3_updateable(rows,".description","div")
@@ -357,7 +370,12 @@
 
         if (d.length) d = d[0]
 
+        self._selected_item = d
+
         self.render_back(d.name)
+
+        if (self._selected.options) self.render_edit([{"key":"--- Choose to edit ---"}].concat(self._selected.options) )
+
         self.render_form.bind(self)(self._show,d)
 
       }
@@ -365,11 +383,14 @@
         this._target.selectAll(".new-row")
           .classed("hidden",true)
 
-        forms(target)
+        var f = forms(target)
           .fields(x.fields)
           .data(x)
           .on("submit", this.on("submit"))
-          .draw()
+
+        if (this._selected.data) f.defaults(this._selected.data)
+
+        f.draw()
 
       }
     , render_new: function(x) {
@@ -387,6 +408,25 @@
 
         
       }
+    , render_edit: function(x) {
+        var self = this
+        var s = d3_updateable(self._title,".edit-select","div")
+          .classed("edit-select",true)
+
+        var select = d3_updateable(s,"select","select",x)
+          .on("change",function(x) {
+            self.on("edit")(self._selected_item, this.selectedOptions[0].__data__)
+          })
+
+        d3_splat(select,"option","option",function(x) { return x}, function(x) { return x.key })
+          .text(function(x) { return x.key })
+          .attr("value",function(x) { return x.value })
+          .attr("disabled",function(x) { return x.key.indexOf("Choose to edit") > -1 ? "disabled" : undefined })
+
+
+
+      }
+
     , render_back: function(x) {
         var self = this
 

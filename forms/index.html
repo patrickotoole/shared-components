@@ -71,15 +71,59 @@
     var _state = state.state()
     history.SKIP = 0
 
+    function getEditIndex(obj,cb) {
+      d3.json("/api/" +obj.api_script,function(err,json) {
+
+        if (err) return
+
+        var options = json.response.map(function(x) { return { "key":x.key,"value":x.value } })
+
+        var to_push = {"name": obj.name, "options":options}
+        cb(to_push) 
+        
+      })
+
+    }
+
+    function getEdit(obj,s,cb) {
+      d3.json("/api/" +obj.api_script + "?id=" + s.value, function(err,json) {
+
+        if (err) return
+
+        var to_push = {"name": obj.name, "data": json.response[0] }
+        cb(to_push) 
+        
+      })
+
+    }
+
     _state.subscribe("update",function(err,_s){
 
       form_builder.form_index(content)
         .forms(_s.forms)
         .select(_s.selected || {})
+        .on("edit", function(obj,selection) {
+
+          var cb = function(to_push) {
+            _state.publish("selected",to_push)
+            history.pushState(to_push,"","/" + state.qs().to(to_push) )
+          }
+
+          getEdit(obj,selection,cb)
+          
+        })
         .on("click", function(x,prev) {
-          var to_push = {"name":x.name}
-          _state.publish("selected",to_push)
-          history.pushState(x,"","/" + state.qs().to(to_push) )
+          var cb = function(to_push) {
+            _state.publish("selected",to_push)
+            history.pushState(to_push,"","/" + state.qs().to(to_push) )
+          }
+
+
+          var tmp = {"name":x.name}
+
+          if (x.edit) getEditIndex(x,cb)
+          else cb(tmp)
+
           d3.event.preventDefault()
           return false
         })

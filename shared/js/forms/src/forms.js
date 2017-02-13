@@ -4,33 +4,45 @@ export function Forms(target) {
       submit: function(x) {}
   }
   this._renderers = {
-      multi_select: function(row) {
+      multi_select: function(row,_default) {
         var select = d3_updateable(row,"select","select")
           .attr("multiple","true")
 
         d3_splat(select,"option","option",function(x) { return x.values },function(x) { return typeof(x) == "object" ? x.key : x})
           .text(function(x) { return typeof(x) == "object" ?  x.key : x })
           .attr("value",function(x) { return typeof(x) == "object" ?  x.value : x })
+          .attr("selected", function(x) { return x.value == _default ? "selected" : undefined })
+
 
       }
-    , select: function(row) {
+    , select: function(row,_default) {
         var select = d3_updateable(row,"select","select")
         d3_splat(select,"option","option",function(x) { return x.values },function(x) { return typeof(x) == "object" ? x.key : x})
           .text(function(x) { return typeof(x) == "object" ?  x.key : x })
           .attr("value",function(x) { return typeof(x) == "object" ?  x.value : x })
+          .attr("selected", function(x) { return x.value == _default ? "selected" : undefined })
 
       }
-    , input: function(row) {
+    , input: function(row,_default) {
         var select = d3_updateable(row,"input","input")
+          .attr("value",_default)
+
       }
-    , textarea: function(row) {
+    , textarea: function(row,_default) {
         var textarea = d3_updateable(row,"textarea","textarea")
+          .text(_default)
       }
   }
 }
 
 Forms.prototype = {
-    fields: function(d) {
+    defaults: function(d) {
+      if (d === undefined) return this._defaults
+      this._defaults = d
+      return this
+
+    }
+  , fields: function(d) {
       if (d === undefined) return this._fields
       this._fields = d
       return this
@@ -66,7 +78,8 @@ Forms.prototype = {
         .classed("field",true)
         .each(function(x) {
           var fn = self.renderer(x.type)
-          fn(d3.select(this))
+          var _default = self._defaults && self._defaults[x.name]
+          fn(d3.select(this),_default)
         })
 
       var field = d3_updateable(rows,".description","div")
