@@ -323,7 +323,12 @@ d3_updateable(inner2,"div.color","div")
 
       select(inner2)
         .options([{"key":"Current Segment (without filters)","value":false}].concat(this._segments) )
-        .on("select", this.on("comparison.change") )
+        .on("select", function(x){
+          wrap.selectAll(".header-body").classed("hidden",false).style("text-align","center").style("margin-bottom","-40px").style("padding-top","10px").style("height","0px").style("background","none").text("loading")
+            .html("<img src='/static/img/general/logo-small.gif' style='height:15px'/> loading...")
+
+          self.on("comparison.change").bind(this)(x)
+        })
         .draw()
 
 
