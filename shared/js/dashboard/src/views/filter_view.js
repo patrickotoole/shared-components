@@ -227,6 +227,16 @@ FilterView.prototype = {
         })
         .draw()
 
+      //d3_updateable(this.target,".filter-wrap-spacer","div")
+      //  .classed("filter-wrap-spacer",true)
+      //  .style("height",wrapper.style("height"))
+
+      //wrapper
+      //  .style("width",this.target.style("width"))
+      //  .style("position","fixed")
+      //  .style("z-index","300")
+      //  .style("background","#f0f4f7")
+
       return this
     }
   , on: function(action, fn) {

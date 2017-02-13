@@ -518,6 +518,7 @@
           s.publish("selected_action",action)
         })
         .on("comparison.change", function(action) {
+          if (action.value == false) return s.publish("selected_comparison",false)
           s.publish("selected_comparison",action)
         })
 
@@ -566,6 +567,7 @@
       s.publishStatic("data",asyncPub.bind(false,value))
     })
     .subscribe("raw.selected_comparison",function(error,value) {
+      if (value == false) return s.publishStatic("comparison_data",false)
       s.publishStatic("comparison_data",asyncPub.bind(false,value))
     })
 
