@@ -55,4 +55,4 @@ def run(external_advertiser_id, api, db):
 
     advertiser_line_item = get_advertiser_line_item(external_advertiser_id, db)
     df = process_deleted(df, advertiser_line_item)
-    insert(df, "advertiser_line_item_test", db)
+    insert(df, "advertiser_line_item", db)
