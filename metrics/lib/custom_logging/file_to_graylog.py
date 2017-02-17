@@ -23,7 +23,10 @@ if __name__ == "__main__":
     for i in input_stream:
         logging.info(i.replace('\n',""))
         mesos_msg = ujson.loads(i.replace('\n',""))
-        msg = {"source":mesos_msg['marathon_data'][3]['MESOS_TASK_ID'], "app_name":mesos_msg['marathon_data'][6]['MARATHON_APP_ID'], "location":mesos_msg['marathon_data'][1]['HOST'], "log_message":mesos_msg['short_message']}
+        mesos_source = (item for item in mesos_msg['marathon_data'] if "MESOS_TASK_ID" in item.keys()).next()
+        mesos_app = (item for item in mesos_msg['marathon_data'] if "MARATHON_APP_ID" in item.keys()).next()
+        mesos_location= (item for item in mesos_msg['marathon_data']  if "HOST" in item.keys()).next()
+        msg = {"source":mesos_source or "", "app_name":mesos_app or "", "location":mesos_location or "", "log_message":mesos_msg['short_message'] or ""}
         try:
             producer.send_messages('application_log',ujson.dumps(msg))
             print "sent"
