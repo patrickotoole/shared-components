@@ -26,7 +26,7 @@ if __name__ == "__main__":
         mesos_source = (item for item in mesos_msg['marathon_data'] if "MESOS_TASK_ID" in item.keys()).next()
         mesos_app = (item for item in mesos_msg['marathon_data'] if "MARATHON_APP_ID" in item.keys()).next()
         mesos_location= (item for item in mesos_msg['marathon_data']  if "HOST" in item.keys()).next()
-        msg = {"source":mesos_source or "", "app_name":mesos_app or "", "location":mesos_location or "", "log_message":mesos_msg['short_message'] or ""}
+        msg = {"source":mesos_source or "", "app_name":mesos_app or "", "host":mesos_location or "", "short_message":mesos_msg['short_message'] or ""}
         try:
             producer.send_messages('application_log',ujson.dumps(msg))
             print "sent"
