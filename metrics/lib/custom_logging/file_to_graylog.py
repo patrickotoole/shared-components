@@ -7,10 +7,6 @@ if __name__ == "__main__":
     import kafka
     import datetime
 
-    logging.basicConfig(
-    format='%(asctime)s.%(msecs)s:%(name)s:%(thread)d:%(levelname)s:%(process)d:%(message)s',
-    level=logging.DEBUG
-    )    
     client = kafka.KafkaClient("slave67:9092")
     producer = kafka.SimpleProducer(client, async=False, batch_send=False)
     producer.client.load_metadata_for_topics('application_log')
@@ -26,7 +22,7 @@ if __name__ == "__main__":
         mesos_source = (item for item in mesos_msg['marathon_data'] if "MESOS_TASK_ID" in item.keys()).next()
         mesos_app = (item for item in mesos_msg['marathon_data'] if "MARATHON_APP_ID" in item.keys()).next()
         mesos_location= (item for item in mesos_msg['marathon_data']  if "HOST" in item.keys()).next()
-        msg = {"source":mesos_source or "", "app_name":mesos_app or "", "host":mesos_location or "", "short_message":mesos_msg['short_message'] or "", "version":"1.1"}
+        msg = {"source":mesos_location['HOST'] or "", "app_name":mesos_app['MARATHON_APP_ID'] or "", "application" : mesos_source['MESOS_TASK_ID'], "host":mesos_location['HOST'] or "", "short_message":mesos_msg['short_message'] or "", "version":"1.1"}
         try:
             producer.send_messages('application_log',ujson.dumps(msg))
             print "sent"
