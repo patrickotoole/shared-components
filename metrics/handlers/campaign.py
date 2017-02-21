@@ -124,7 +124,6 @@ class AdminCampaignHandler(CampaignHandler):
 
     @decorators.deferred
     def create_admin_profile(self,advertiser_id,campaign_id,profile):
-        #import ipdb; ipdb.set_trace()
         profile = {k:v for k,v in profile.items() if "targets" not in k or ("targets" in k and v != 0)} 
 
         URL = "/profile?advertiser_id=%s&campaign_id=%s" % (advertiser_id,campaign_id) 
@@ -230,7 +229,6 @@ class UserCampaignHandler(CampaignHandler):
     @defer.inlineCallbacks 
     def create(self, name, line_item_id, advertiser_id, price, campaign, profile):
 
-        #import ipdb; ipdb.set_trace()
         campaign = yield self.create_campaign(line_item_id,advertiser_id,name,campaign.get("base_bid",1),campaign.get("creatives",[]),campaign)
         profile = yield self.create_profile(advertiser_id,campaign['id'],profile)
         campaign_with_profile = yield self.set_campaign_profile_id(advertiser_id,campaign['id'],profile['id'])
@@ -262,8 +260,7 @@ class YoshiCampaignHandler(AdminCampaignHandler,UserCampaignHandler):
         name = make_name(profile['domain_targets'], details['sizes'])
         is_admin = details.get('username','').startswith("a_")
 
-        line_item_id = yield self.get_line_item_id(advertiser_id) 
-
+        line_item_id = campaign.get('line_item_id', self.get_line_item_id(advertiser_id) )
         create_func = self.admin_create if is_admin else self.create
         create_func(name, line_item_id, advertiser_id, price, campaign, profile)
 
@@ -307,7 +304,6 @@ class YoshiCampaignHandler(AdminCampaignHandler,UserCampaignHandler):
         details = obj.get('details',{})
         campaign = obj.get('campaign',{})
 
-        #import ipdb; ipdb.set_trace()
         if advertiser_id and profile is not False:
             self.make_campaign(advertiser_id,profile,details,campaign)
         else:
