@@ -260,7 +260,8 @@ class YoshiCampaignHandler(AdminCampaignHandler,UserCampaignHandler):
         name = make_name(profile['domain_targets'], details['sizes'])
         is_admin = details.get('username','').startswith("a_")
 
-        line_item_id = campaign.get('line_item_id', self.get_line_item_id(advertiser_id) )
+        line_item_id = yield campaign.get('line_item_id', self.get_line_item_id(advertiser_id) )
+
         create_func = self.admin_create if is_admin else self.create
         create_func(name, line_item_id, advertiser_id, price, campaign, profile)
 
