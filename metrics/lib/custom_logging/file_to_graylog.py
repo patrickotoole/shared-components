@@ -25,7 +25,5 @@ if __name__ == "__main__":
         msg = {"source":mesos_location['HOST'] or "", "app_name":mesos_app['MARATHON_APP_ID'] or "", "application" : mesos_source['MESOS_TASK_ID'], "host":mesos_location['HOST'] or "", "short_message":mesos_msg['short_message'] or "", "version":"1.1"}
         try:
             producer.send_messages('application_log',ujson.dumps(msg))
-            print "sent"
-            logging.info("SENT")
         except:
             logging.info("Didnt send")
