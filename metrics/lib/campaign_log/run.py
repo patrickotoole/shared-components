@@ -62,7 +62,6 @@ def run(db):
     advertisers = db.select_dataframe(ADVERTISERS)
     for advertiser_id in advertisers['external_advertiser_id']:
         logging.info("running advertiser %s" %advertiser_id)
-        print advertiser_id
         df = extract(db, advertiser_id)
         if len(df) > 0:
             df = transform(df)
