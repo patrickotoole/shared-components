@@ -56,23 +56,179 @@
 
   load.prototype = Load.prototype
 
-  function select(target,selected) {
+  function select$1(target,selected,option_key) {
     // {key: String, values: [{key: String, value: ?}...] }
+
+    var option_key = option_key || "values"
 
     d3_updateable(target,"span","span").text(function(x) { return x.key })
 
     var select = d3_updateable(target,"select","select")
 
-    d3_splat(select,"option","option",function(x){ return x.values }, function(x) { return x.key})
+    d3_splat(select,"option","option",function(x){ return x[option_key] }, function(x) { return x.key})
       .text(function(x) { return x.key })
       .attr("value",function(x) { return x.value })
       .property("selected", function(x) { return x.value == selected })
 
-    select.__proto__.getState = function() { 
-      return this.selectedOptions[0].__data__
+    select.summarize = function() { 
+      return select.property("value")
     }
 
     return select
+  }
+
+  function Input(target) {
+    this._target = target
+    this._on = {}
+  }
+
+  Input.prototype = {
+      draw: function() {
+
+        var target = this._target
+
+        try {
+          var selectedAdvertiser = target.datum().settings.filter(function(x) { return x.key == "report_advertiser" }).value
+        } catch (e) {}
+
+        var report_row = d3_class(target,"report-row") 
+        d3_class(report_row,"report-label","span").text("Upload a file: ")
+
+        var text = d3_updateable(report_row,"textarea","textarea").attr("type","file")
+
+        var report_advertiser_row = d3_class(target,"report-advertiser-row")
+
+        d3_class(report_advertiser_row,"report-advertiser-label","span")
+          .text("Report Advertiser: ")    
+
+        d3_select(
+          report_advertiser_row, 
+          function(x) { return x.advertisers }, 
+          function(x) { return x.key }, 
+          function(x) { return x.value == selectedAdvertiser ? "selected" : false }
+        )
+
+        var properties = this;
+
+        d3_updateable(target,"button","button")
+          .text("Get")
+          .on("click", function() {
+            var json = text.property("value")
+            var selected = select.node().selectedOptions
+
+            if (selected.length) var advertiser = selected[0].__data__.value
+            properties.on("click").bind(this)({"report":json, "report_advertiser": advertiser})
+          })
+
+        return this
+
+      }
+    , data: function(d) {
+        if (d === undefined) return this._data
+        this._data = d
+        return this
+      }
+    , on: function(action,fn) {
+        if (fn === undefined) return this._on[action] || function() {};
+        this._on[action] = fn;
+        return this
+      }
+  }
+
+  function input$1(target) {
+    return new Input(target)
+  }
+
+  function Upload(target) {
+    this._target = target
+    this._on = {}
+  }
+
+  Upload.prototype = {
+      draw: function() {
+
+        var target = this._target;
+
+        d3_updateable(target,"span","span").text("Upload a file: ")
+      
+        var input = d3_updateable(target,"input","input")
+          .attr("type","file")
+      
+        campaign_analysis.upload(input)
+        return this
+      }
+    , on: function(action,fn) {
+        if (fn === undefined) return this._on[action] || function() {};
+        this._on[action] = fn;
+        return this
+      }
+
+  }
+
+  function upload(target) {
+    return new Upload(target)
+  }
+
+  function Input$1(target) {
+    this._target = target
+    this._on = {}
+  }
+
+  Input$1.prototype = {
+      draw: function() {
+
+        var target = this._target
+
+        try {
+          var selectedAdvertiser = target.datum().settings.filter(function(x) { return x.key == "report_advertiser" }).value
+        } catch (e) {}
+
+        var report_row = d3_class(target,"report-row") 
+        d3_class(report_row,"report-label","span").text("Enter SQL: ")
+
+        var text = d3_updateable(report_row,"textarea","textarea").attr("type","file")
+
+        var report_advertiser_row = d3_class(target,"report-advertiser-row")
+
+        d3_class(report_advertiser_row,"report-advertiser-label","span")
+          .text("Choose Advertiser: ")    
+
+        d3_select(
+          report_advertiser_row, 
+          function(x) { return x.advertisers }, 
+          function(x) { return x.key }, 
+          function(x) { return x.value == selectedAdvertiser ? "selected" : false }
+        )
+
+        var properties = this;
+
+        d3_updateable(target,"button","button")
+          .text("Get")
+          .on("click", function() {
+            var json = text.property("value")
+            var selected = select.node().selectedOptions
+
+            if (selected.length) var advertiser = selected[0].__data__.value
+            properties.on("click").bind(this)({"report":json, "report_advertiser": advertiser})
+          })
+
+        return this
+
+      }
+    , data: function(d) {
+        if (d === undefined) return this._data
+        this._data = d
+        return this
+      }
+    , on: function(action,fn) {
+        if (fn === undefined) return this._on[action] || function() {};
+        this._on[action] = fn;
+        return this
+      }
+  }
+
+  function input$2(target) {
+    return new Input$1(target)
   }
 
   function Extract(target) {
@@ -94,7 +250,7 @@
 
     var row = d3_updateable(target,".row","div",data).classed("row",true)
 
-    return select(row,selected)
+    return select$1(row,selected)
 
   }
 
@@ -106,64 +262,9 @@
       .classed("hidden",function(d) { return !(d[option] == key) })
   }
 
-  function uploadFile(target) {
-    d3_updateable(target,"span","span").text("Upload a file: ")
-
-    var input = d3_updateable(target,"input","input")
-      .attr("type","file")
-
-    return campaign_analysis.upload(input)
-  }
-
-  function inputReport(target) {
-
-    try {
-      var selectedAdvertiser = target.datum().settings.filter(function(x) { return x.key == "report_advertiser" }).value
-    } catch (e) {}
-
-    var report_row = d3_updateable(target,".report-row","div").classed("report-row",true)
-
-    d3_updateable(report_row,".report-label","span").classed("report-label",true).text("Upload a file: ")
-    var text = d3_updateable(report_row,"textarea","textarea").attr("type","file")
-      // need to fill this in with data from JSON object
-
-    var report_advertiser_row = d3_updateable(target,".report-advertiser-row","div").classed("report-advertiser-row",true)
 
 
-    d3_updateable(report_advertiser_row,".report-advertiser-label","span")
-      .classed("report-advertiser-label",true)
-      .text("Report Advertiser: ")
 
-
-    var select = d3_updateable(report_advertiser_row,"select","select")
-
-    d3_splat(select,"option","option",function(x) { return x.advertisers }, function(x) { return x.key })
-      .text(function(x) { return x.key })
-      .property("selected",function(x) { return x.value == selectedAdvertiser ? "selected" : false })
-
-    var _on = {}
-
-    var properties = {
-      "on": function(action,fn) {
-        if (fn === undefined) return _on[action] || function() {};
-        _on[action] = fn
-        return properties
-      } 
-    }
-
-    d3_updateable(target,"button","button")
-      .text("Get")
-      .on("click", function() {
-        var json = text.property("value")
-        var selected = select.node().selectedOptions
-
-        if (selected.length) var advertiser = selected[0].__data__.value
-        properties.on("click").bind(this)({"report":json, "report_advertiser": advertiser})
-      })
-
-    return properties
-
-  }
 
   Extract.prototype = {
       draw: function() {
@@ -172,9 +273,9 @@
 
         var self = this;
 
-        selectSource(row)
+        var ss = selectSource(row)
           .on("change",function() { 
-            self.on('select').bind(this)(this.selectedOptions[0].__data__) 
+            self.on('select')({"value":ss.summarize()}) 
           })
 
         var options = d3_updateable(row,".options","div")
@@ -184,11 +285,19 @@
           , csv = showableSection(options,"csv")
           , report = showableSection(options,"report")
 
-        uploadFile(csv)
+        upload(csv)
+          .draw()
           .on("load", this.on("upload"))
 
-        inputReport(report)
-          .on("click", this.on("report"))
+        input$1(report)
+          .on("click", self.on("report"))
+          .draw()
+
+        input$2(sql)
+          .draw()
+          .on("click", self.on("sql"))
+
+
 
       }
     , data: function(d) {

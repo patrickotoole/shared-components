@@ -6,6 +6,25 @@
     .debug { display:none }
     .show-debug .debug { display:inherit }
   </style>
+  <script>
+
+    function d3_class(target,cls,type) {
+      return d3_updateable(target,"." + cls, type || "div")
+        .classed(cls,true)
+    }
+
+    function d3_select(target, data, key, is_selected) {
+      var select = d3_updateable(target,"select","select")
+
+      d3_splat(select,"option","option",data, key)
+        .text(key)
+        .property("selected",is_selected)
+
+      return select
+
+    }
+
+  </script>
   <script data-require="d3@3.5.3" data-semver="3.5.3" src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.3/d3.js"></script>
 
   <script src="js/state/build/state.js"></script>
@@ -34,8 +53,8 @@
 <body class="show-debug" style="width:1200px;margin-left:auto;margin-right:auto">
   <h3 style="margin-bottom:0px">Optimize from Reporting</h3>
 
-  <div id="load-target"></div>
   <div id="extract-target"></div>
+  <!--<div id="load-target"></div>
 
 
   <script>
@@ -54,6 +73,7 @@
 
 
   <br><hr>
+  -->
   <h4>Extract Data</h4>
 
   <div class="row"> 
