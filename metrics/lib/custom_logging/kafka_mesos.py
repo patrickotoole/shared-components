@@ -25,7 +25,6 @@ if __name__ == '__main__':
     consumer = topic.get_simple_consumer(reset_offset_on_start=True, auto_offset_reset=OffsetType.LATEST)
     for message in consumer:
         if message is not None:
-            print message.value
             if not ujson.loads(message.value).get('timestamp',False):
                 new_msg = message.value.replace('\\n',"") + '\x00'
                 s.sendall(new_msg)
