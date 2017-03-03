@@ -24,6 +24,8 @@
 
     }
 
+    function showOptimization() {}
+
   </script>
   <script data-require="d3@3.5.3" data-semver="3.5.3" src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.3/d3.js"></script>
 
@@ -54,146 +56,6 @@
   <h3 style="margin-bottom:0px">Optimize from Reporting</h3>
 
   <div id="extract-target"></div>
-  <!--<div id="load-target"></div>
-
-
-  <script>
-
-  optimize.load(d3.select("#load-target"))
-    .data(JSON.stringify(qs_state))
-    .on("click",function(){
-      var values = JSON.parse(d3.select("#preload").node().value)
-      _state.push(values)
-    })
-    .draw()
-
-  
-
-  </script>
-
-
-  <br><hr>
-  -->
-  <h4>Extract Data</h4>
-
-  <div class="row"> 
-
-    Select Data Source: 
-    <select id="show-type">
-      <option value="" disabled selected>Select your option</option>
-      <option>CSV</option>
-      <option>Report</option>
-      <option>SQL</option>
-    </select>
-
-    <script>
-
-      function showOptimization(selected) {
-
-        var show_type = d3.select("#show-type")
-
-        show_type
-          .selectAll("option").filter(function() { return this.value.toLowerCase() == selected })
-          .property("selected","selected")
-
-        show_type.on("change",function(x) {
-          var selected = this.selectedOptions[0].value.toLowerCase()
-          showOptimization(selected)
-        })
-
-        var showable = d3.selectAll("#show-display")
-
-        showable
-          .selectAll(".showable").classed("hidden",true)
-
-        showable
-          .selectAll("." + selected).classed("hidden",false)
-      }
-
-      
-
-    </script>
-
-    <div id="show-display">
-      <br>
-      <div class="showable csv hidden">
-        Upload a file: <input id="upload" type="file" /> 
-        <script>
-          
-          campaign_analysis.upload(d3.select("#upload"))
-            .on("load", function parseFile(result){
-      
-              var process = campaign_analysis.parse(result)
-      
-              var headers = process.headers()
-              var data = process.data()
-      
-              _state.publishStatic("headers",headers)
-              _state.publishStatic("data",data)
-      
-            })
-      
-        </script>
-
-      </div>
-
-
-      <div class="showable report hidden">
-        <span style="display:inline-block">
-          <span style="width:200px;display:inline-block">Use Appnexus Report:</span> 
-          <textarea id="report" type="file" style="width:200px"></textarea> 
-          <br>
-          <span style="width:200px;display:inline-block">Report Advertiser ID:</span>
-          <select id='report_advertiser'></select>
-        </span>
-
-
-        <button id="report-action">Get</button>
-        <script>
-          d3.select("#report-action").on("click",function(){
-              var values = JSON.parse(d3.select("#report").node().value)
-              values['report_advertiser'] = d3.select("#report_advertiser").node().value
-    
-              d3.xhr("/reporting")
-                .post( JSON.stringify(values), function(err, data){
-                  var jj = JSON.parse(data.response)
-    
-                  _state.publishStatic("headers",Object.keys(jj[0]))
-                  _state.publishStatic("data",jj)
-
-                })
-            })
-        </script>
-      </div>
-
-      <div class="showable sql hidden">
-        <span style="width:200px;display:inline-block">Enter SQL:</span> 
-        <textarea id="sql" style="width:200px"></textarea>
-        <br>
-        <span style="width:200px;display:inline-block">Choose Advertiser: </span>
-        <select id='sql_advertiser'></select>
-
-        <button id="sql-action">Get</button>
-        <script>
-          d3.select("#sql-action").on("click",function(){
-            var values = {"sql":d3.select("#sql").node().value}
-            values['sql_advertiser'] = d3.select("#sql_advertiser").node().value
-
-            if (!values.sql) return false;
-    
-            d3.xhr("/run-sql")
-              .post( JSON.stringify(values), function(err, data){
-                var jj = JSON.parse(data.response)
-
-                _state.publishStatic("headers",Object.keys(jj[0]))
-                _state.publishStatic("data",jj)
-                
-              })
-          })
-        </script>
-      </div>
-    </div>
-  </div>
 
   <br> <hr> 
   <h4>Analyze</h4>
@@ -651,6 +513,20 @@
             _state.publishStatic("data",data)
      
           })
+          .on("sql",function(values) {
+            
+            if (!values.sql) return false;
+    
+            d3.xhr("/run-sql")
+              .post( JSON.stringify(values), function(err, data){
+                var jj = JSON.parse(data.response)
+
+                _state.publishStatic("headers",Object.keys(jj[0]))
+                _state.publishStatic("data",jj)
+                
+              })
+
+          })
           .on("report",function(v) {
             try {
               var values = JSON.parse(v.report)
@@ -683,15 +559,13 @@
       })
       .subscribe("sql",function(err,values) {
         var sql = values.sql;
-
-        d3.select("#sql").text(sql)
-        if (sql) showOptimization("sql")
+        //d3.select("#sql").text(sql)
+        //if (sql) showOptimization("sql")
       })
       .subscribe("report",function(err,values) {
         var report = values.report
-
-        d3.select("#report").text(JSON.stringify({"report":report,"report_advertiser":d3.select("#report_advertiser").node().value},null,2))
-        if (report) showOptimization("report")
+        //d3.select("#report").text(JSON.stringify({"report":report,"report_advertiser":d3.select("#report_advertiser").node().value},null,2))
+        //if (report) showOptimization("report")
       })
       .subscribe("transforms",function(err,values) {
         var transforms = values.transforms
@@ -737,7 +611,7 @@
       })
 
     _state.publish(qs_state)
-    d3.select("#sql-action").on("click")()
+    //d3.select("#sql-action").on("click")()
 
   </script>
 </body>

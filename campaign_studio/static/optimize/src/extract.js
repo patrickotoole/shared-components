@@ -61,6 +61,8 @@ Extract.prototype = {
         , csv = showableSection(options,"csv")
         , report = showableSection(options,"report")
 
+      if (this._data.sql) sql.classed("hidden",false)
+
       _file.upload(csv)
         .draw()
         .on("load", this.on("upload"))
