@@ -21,10 +21,9 @@
         .property("selected",is_selected)
 
       return select
-
     }
 
-    function showOptimization() {}
+
 
   </script>
   <script data-require="d3@3.5.3" data-semver="3.5.3" src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.3/d3.js"></script>
@@ -59,79 +58,7 @@
 
   <br> <hr> 
   <h4>Analyze</h4>
-    
-  <div class="row">Transform:</div>
-  <div class="row">
-
-    <div class="transform-row"> </div>
-    <button id="new-transform">Add Transform</button>
-    <script>
-
-
-      var drawTransforms = function(tt) {
-
-        d3.select("#new-transform").on("click",function() { 
-          var p = JSON.parse(JSON.stringify(_state._state.transforms || []))
-          
-          var transforms = p
-
-          if (transforms.filter(function(x) { return x.name == "" }).length == 0) {
-            transforms.push({"name":"","eval":""})
-          }
-
-          _state.publish("transforms",transforms)
-          return 
-        })
-
-        var trow = d3.selectAll(".transform-row").data([tt])
-
-        var transform = d3_splat(trow,".transform","div",function(x) { return x }, function(x,i) { return x.name })
-          .classed("transform",true)
-          .style("margin-left","10px")
-
-        transform.exit().remove()
-
-
-        var name_wrap = d3_updateable(transform,".name-wrap","div")
-          .classed("name-wrap",true)
-          .style("display","inline-block")
-
-        d3_updateable(name_wrap,"span","span").text("New Column Name:")
-        d3_updateable(name_wrap,"input","input").attr("value",function(x){ return x.name })
-          .attr("placeholder","e.g., CPM")
-          .on("change",function(x) {
-            //x.name = this.value // This is bad
-            var _j = JSON.parse(JSON.stringify(tt))
-            var matched = _j.filter(function(z) { return z.name == x.name })[0]
-
-            matched.name = this.value
-
-            _state.publish("transforms",_j)
-          })
-
-        var eval_wrap = d3_updateable(transform,".eval-wrap","div")
-          .classed("eval-wrap",true)
-          .style("display","inline-block")
-
-        d3_updateable(eval_wrap,"span","span").text("Expression:")
-        d3_updateable(eval_wrap,"input","input").attr("value",function(x){ return x.eval })
-          .attr("placeholder","e.g., row['imps']/row['cost']")
-          .on("change",function(x) {
-         
-            var _j = JSON.parse(JSON.stringify(tt))
-            var matched = _j.filter(function(z) { return z.name == x.name })[0]
-
-            matched.eval = this.value
-
-            _state.publish("transforms",_j)
-          })
-        
-      }
-
-
-      
-    </script>
-  </div>
+  <div class="row transform-row"> </div>
 
   </div>
   <br>
@@ -493,7 +420,6 @@
         .text(function(x) { return x.pixel_source_name })
         .attr("value",function(x){ return x.external_advertiser_id })
 
-    showOptimization()
 
     _state
       .subscribe("extract",function(err,values) {
@@ -560,17 +486,31 @@
       .subscribe("sql",function(err,values) {
         var sql = values.sql;
         //d3.select("#sql").text(sql)
-        //if (sql) showOptimization("sql")
       })
       .subscribe("report",function(err,values) {
         var report = values.report
         //d3.select("#report").text(JSON.stringify({"report":report,"report_advertiser":d3.select("#report_advertiser").node().value},null,2))
-        //if (report) showOptimization("report")
       })
       .subscribe("transforms",function(err,values) {
         var transforms = values.transforms
 
-        drawTransforms(transforms || [])
+        optimize.transform(d3.selectAll(".transform-row"))
+          .data(transforms || [])
+          .on("change",function(values) {
+            _state.publish("transforms",values)
+          })
+          .on("new",function() {
+            var transforms = JSON.parse(JSON.stringify(_state._state.transforms || []))
+            
+            if (transforms.filter(function(x) { return x.name == "" }).length == 0) {
+              transforms.push({"name":"","eval":""})
+            }
+
+            _state.publish("transforms",transforms)
+            return 
+          })
+          .draw()
+
         if (transforms) runTransforms(transforms,values, function(values) {
           _state.setStatic("headers",Object.keys(values.data[0]))
           _state.publishStatic("data",values.data)
