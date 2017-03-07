@@ -8,7 +8,8 @@ tornado.platform.twisted.install()
 from twisted.internet import reactor
 from tornado.options import define, options, parse_command_line
 
-from lib.custom_logging.check_logger import KafkaHandler
+#from lib.custom_logging.check_logger import KafkaHandler
+from wqloghandler import *
 from lib.kafka_stream import kafka_stream
 import sys
 
@@ -29,6 +30,7 @@ from handlers.slack import *
 from handlers.schedule import *
 from handlers.workqueuelog import *
 from handlers.cache import *
+from handlers.checkshandler import *
 
 import requests
 import signal
@@ -54,6 +56,7 @@ def build_routes(connectors,override=[]):
         (r'/slack/new', SlackNewHandler, connectors),
         (r'/cache', CacheHandler, connectors),
         (r'/logging/?(.*?)',WQLog, connectors),
+        (r'/checks',ChecksHandler, connectors),
         (r'/', WorkQueueHandler, connectors),
 
 
@@ -99,24 +102,14 @@ if __name__ == '__main__':
     ).connectors
 
     connectors['zk'] = connectors['zookeeper']
-    if options.log_kafka:
-        producer = kafka_stream.KafkaStream('application_log',"slave17:9092,slave16:9092,slave40:9092",True,False,False,10,1,False)
 
-        log_object = logging.getLogger()
-        log_object.setLevel(logging.INFO)
+    log_object = logging.getLogger()
+    log_object.setLevel(logging.INFO)
 
-        requests_log = logging.getLogger("kafka")
-        requests_log.setLevel(logging.WARNING)
+    myhandler = CustomLogHandler(sys.stderr)
 
-        ch = logging.StreamHandler(sys.stderr)
-        ch.setLevel(logging.INFO)
-
-        ch2 = KafkaHandler(producer, options.app_name)
-        formater = logging.Formatter('%(asctime)s |%(name)s.%(funcName)s:%(lineno)d| %(message)s')
-        ch2.setFormatter(formater)
-        ch2.setLevel(logging.INFO)
-
-        log_object.addHandler(ch2)
+    log_object.addHandler(myhandler)
+    log_object.handlers = [log_object.handlers[1]] 
 
     import work_queue
     import sys

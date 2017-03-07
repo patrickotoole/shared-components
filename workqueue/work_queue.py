@@ -114,6 +114,7 @@ class WorkQueue(object):
         import hashlib
         import time
         job_id = hashlib.md5(data).hexdigest()
+        logging.getLogger().handlers[0].job_id = job_id
         job_id = entry_id + "_" + job_id
         self.log_process(job_id)
         try:
