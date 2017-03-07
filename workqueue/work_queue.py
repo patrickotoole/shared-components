@@ -125,6 +125,7 @@ class WorkQueue(object):
             self.log_error(e, job_id)
         finally:
             logging.info("finished item in queue")
+            logging.getLogger().handlers[0].job_id = "000000"
             self.zk_wrapper.finish(job_id, entry_id)
 
     def run_queue(self):
