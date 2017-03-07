@@ -16,13 +16,13 @@ class CustomLogHandler(StreamHandler):
         if stream is None:
             stream = sys.stderr
         self.stream = stream
-        self.job_id = "0001111"   
+        self.job_id = ""   
 
     def customformat(self,record):
         """
         @rarcher2011 use custom formating fucntion instead of default format function
         """
-        template = '%(asctime)s |%(name)s.%(funcName)s:%(lineno)d| %(job_id)s | %(message)s'
+        template = '%(asctime)s  %(name)s.%(funcName)s:%(lineno)d  %(job_id)s> %(message)s'
         msg = template % {"asctime":datetime.datetime.fromtimestamp(record.created ).strftime('%Y-%m-%d %H:%M:%S'), "name":record.name, "funcName":record.filename, "lineno":record.lineno, "job_id":self.job_id, "message":record.msg}
         return msg
 
