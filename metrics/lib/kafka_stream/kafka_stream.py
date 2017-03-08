@@ -91,6 +91,10 @@ def parse_url(msg):
                 else:
                     storage['request_referrer'] = storage['referrer']
                     storage['referrer'] = storage['pageReferrer']
+			
+            if "adobedtm.com" in storage['referrer']:
+                storage['request_referrer'] = storage['referrer']
+                storage['referrer'] = storage['pageReferrer']
 		
             if "action" in storage:
                 storage['referrer'] = storage['referrer'] + "&action=" + storage["action"]
