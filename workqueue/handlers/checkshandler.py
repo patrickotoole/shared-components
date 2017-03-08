@@ -2,7 +2,7 @@ import tornado
 import ujson
 import tornado.web
 
-ADVERTISER_QUERY ="select a.pixel_source_name, a.action_name, a.action_id from  action a join advertiser b on a.pixel_source_name = b.pixel_source_name where a.active=1 and a.deleted=0 and b.active=1 and b.deleted=0 and b.crusher=1"
+ADVERTISER_QUERY ="select a.pixel_source_name, a.action_name, a.action_id from  action a join advertiser b on a.pixel_source_name = b.pixel_source_name where b.crusher=1"
 #CACHEQUERY = "select currenttime from generic_function_cache where advertiser = '%s' and udf='domains_full_time_minute' and action_id='%s'"
 CACHEQUERY = "select count(*) from generic_function_cache where advertiser = '%s' and udf='domains_full_time_minute' and action_id='%s'"
 
