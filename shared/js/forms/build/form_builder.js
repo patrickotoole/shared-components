@@ -17,7 +17,7 @@
           d3_splat(select,"option","option",function(x) { return x.values },function(x) { return typeof(x) == "object" ? x.key : x})
             .text(function(x) { return typeof(x) == "object" ?  x.key : x })
             .attr("value",function(x) { return typeof(x) == "object" ?  x.value : x })
-            .attr("selected", function(x) { return x.value == _default ? "selected" : undefined })
+            .attr("selected", function(x) { return (x.value || x) == _default ? "selected" : undefined })
 
 
         }
@@ -26,7 +26,7 @@
           d3_splat(select,"option","option",function(x) { return x.values },function(x) { return typeof(x) == "object" ? x.key : x})
             .text(function(x) { return typeof(x) == "object" ?  x.key : x })
             .attr("value",function(x) { return typeof(x) == "object" ?  x.value : x })
-            .attr("selected", function(x) { return x.value == _default ? "selected" : undefined })
+            .attr("selected", function(x) { return (x.value || x) == _default ? "selected" : undefined })
 
         }
       , input: function(row,_default) {
@@ -85,6 +85,7 @@
           .each(function(x) {
             var fn = self.renderer(x.type)
             var _default = self._defaults && self._defaults[x.name]
+  debugger
             fn(d3.select(this),_default)
           })
 
