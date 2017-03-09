@@ -62,7 +62,7 @@ class UDFRunner(BaseRunner):
         url = _url.format(func_name, pattern, self.action_id)
         logging.info(url)
         try:
-            resp = self.crusher.get(url, timeout=420, allow_redirects=False)
+            resp = self.crusher.get(url, timeout=600, allow_redirects=False)
         except:
             logging.info("failed unsampled")
             #fall back if initial set of parameters fails try sampled url without parameters
