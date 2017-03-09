@@ -8,7 +8,6 @@ export function Transform(target) {
 Transform.prototype = {
     draw: function() {
       var transform_wrap = d3_wrapper_with_title(this._target,"Transform","transform",this._data)
-      var filter_wrap = d3_wrapper_with_title(this._target,"Filter","filter",this._data)
 
 
       var transform = d3_splat(transform_wrap,".transform-item","div",function(x) { return x }, function(x,i) { return x.name })
