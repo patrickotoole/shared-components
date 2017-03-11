@@ -74,97 +74,10 @@
 
   <div class="row setup"></div>
 
-
-
-
   <br><br>
   <hr>
 
   <div class="row save"></div>
-
-
-
-  <div style="text-align:center" class="build">
-    <input id="name"></input>
-    <button id="save" >Save State</button>
-    <button id="create" >Create Campaigns</button>
-    <br><br>
-    <pre style="text-align:left;margin:auto;width:600px" id="obj"></pre>
-    <script>
-
-    var buildSummary = function() {
-      var summary = []
-      summary.push({"key":"append","value":d3.select("#append").node().selectedOptions[0].value })
-      summary.push({"key":"opt_type","value":d3.select("#duplicate").node().selectedOptions[0].value.split(" ")[0] })
-      summary.push({"key":"breakout","value":d3.select("#breakout").node().selectedOptions[0].value })
-
-      summary.push({"key":"line_item_id","value":d3.select("#line_item_id").node().value})
-      summary.push({"key":"template_campaign","value":d3.select("#template_campaign").node().value})
-      summary.push({"key":"create_group","value":d3.select("#create_group").node().value})
-
-
-      summary.push({"key":"advertiser","value":d3.select("#advertiser").node().value})
-      summary.push({"key":"report_advertiser","value":d3.select("#report_advertiser").node().value})
-      summary.push({"key":"sql_advertiser","value":d3.select("#sql_advertiser").node().value})
-
-      summary.push({"key":"imp_budget","value":d3.select("#imp_budget").node().value})
-      summary.push({"key":"spend_budget","value":d3.select("#spend_budget").node().value})
-
-      return summary
-    }
-
-    function getReportJSON() {
-      try { 
-        return JSON.parse(d3.select("#report").node().value).report
-      } catch(e) {
-        return undefined
-      }
-    }
-
-      d3.select("#save").on("click",function(x){
-
-        var summary = buildSummary()
-
-        var advertiser = summary.filter(function(x) { return x.key == "advertiser" })[0].value
-
-        var data = {
-          "name": d3.select("#name").node().value,
-          "advertiser":advertiser,
-          "type": "optimization",
-          "report": getReportJSON(),
-          "sql": d3.select("#sql").node().value,
-          "settings": summary,
-          "transforms": _state._state.transforms,
-          "filters": _state._state.filters
-        }
-
-        d3.select("#obj").text(JSON.stringify(data,null,2))
-
-        //d3.xhr("/save")
-        //  .post( JSON.stringify(data) )
-
-      })
-
-      //d3.select("#create").on("click",function(x){
-      //  var summary = buildSummary()
-
-      //  var dd = _state._state.filtered_data
-
-
-      //  var data = {
-      //    "name": d3.select("#name").node().value,
-      //    "data": dd,
-      //    "params": summary
-      //  }
-
-      //  d3.xhr("/optimize")
-      //    .post( JSON.stringify(data) )
-      //})
-    </script>
-    </br>
-  </div>
-
-
 
 
   <script>
@@ -175,28 +88,13 @@
 
     var a2 = advertisers.map(function(x) { return {key: x.pixel_source_name, value: x.external_advertiser_id} })
 
+
+var formatAsText = function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) }
+var formatAsPercent = function(x) {var dthis = d3.select(this);var t = this.parentNode.__data__[x.key];return dthis.text(d3.format(".3%")(t))}
+
+
     _state.publishStatic("advertisers", a2)
 
-    var select_advertiser = d3.selectAll("#advertiser").data([advertisers])
-    select_advertiser.selectAll("option").data(function(x) { return x } )
-      .enter()
-        .append("option")
-        .text(function(x) { return x.pixel_source_name })
-        .attr("value",function(x){ return x.external_advertiser_id })
-
-    var select_advertiser = d3.selectAll("#report_advertiser").data([advertisers])
-    select_advertiser.selectAll("option").data(function(x) { return x } )
-      .enter()
-        .append("option")
-        .text(function(x) { return x.pixel_source_name })
-        .attr("value",function(x){ return x.external_advertiser_id })
-
-    var select_advertiser = d3.selectAll("#sql_advertiser").data([advertisers])
-    select_advertiser.selectAll("option").data(function(x) { return x } )
-      .enter()
-        .append("option")
-        .text(function(x) { return x.pixel_source_name })
-        .attr("value",function(x){ return x.external_advertiser_id })
 
 
     _state
@@ -260,14 +158,6 @@
           })
           .draw()
 
-      })
-      .subscribe("sql",function(err,values) {
-        var sql = values.sql;
-        //d3.select("#sql").text(sql)
-      })
-      .subscribe("report",function(err,values) {
-        var report = values.report
-        //d3.select("#report").text(JSON.stringify({"report":report,"report_advertiser":d3.select("#report_advertiser").node().value},null,2))
       })
       .subscribe("transforms",function(err,values) {
         var transforms = values.transforms
@@ -351,17 +241,30 @@
           .draw()
 
         optimize.save(d3.select(".row.save"))
-          .on("update",function(){ 
-debugger
+          .on("update",function(x){ 
+            _state.publish("name",x)
             return 
           })
           .on("save",function(){ 
-            _state._state.settings
-debugger
+
+            var data = {
+              "name": _state._state.name,
+              "advertiser": _state._state.advertiser,
+              "type": _state._state.type || "optimization",
+              "report": _state._state.report,
+              "sql": _state._state.sql,
+              "settings": _state._state.settings,
+              "transforms": _state._state.transforms,
+              "filters": _state._state.filters
+            }
+
+            d3.xhr("/save")
+              .post( JSON.stringify(data) )
+
+
             return 
           })
           .on("run",function(){ 
-debugger
             return 
           })
 
@@ -452,7 +355,6 @@ debugger
               _state.publishStatic("filtered_data",filtered_data)
             }
   
-            d3.select(".summary").html("Total rows: " + data.length + "<br>" + " Rows remaining after filter: " + filtered_data.length + "<br><br>")
   
             if (filtered_data.length == 0) d3.selectAll(".outer-table-wrapper").html("")
   
@@ -462,8 +364,6 @@ debugger
 
         var tt = d3.selectAll(".outer-table-wrapper")
 
-        var formatAsText = function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(t) }
-        var formatAsPercent = function(x) { var dthis = d3.select(this); var t = this.parentNode.__data__[x.key]; return dthis.text(d3.format(".3%")(t)) }
 
         table.table(tt)
           .data({"key":"Data","values":data}) 

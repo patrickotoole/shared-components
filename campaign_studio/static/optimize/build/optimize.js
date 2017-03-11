@@ -489,7 +489,6 @@
         var setup_wrap = d3_wrapper_with_title(this._target,"Setup","setup",this._data)
 
         var advertiser_wrap = d3_class(setup_wrap,"advertiser")
-
         d3_updateable(advertiser_wrap,"span","span").text("Advertiser ID:")
         d3_select(advertiser_wrap,this._data.advertisers,(x) => x.key, x => { return x.value == this._data.advertiser })
           .on("change",function(x){
@@ -586,15 +585,18 @@
 
   Save.prototype = {
       draw: function() {
+
+        var self = this;
+
         d3_updateable(this._target,"span","span").text("Name:")
         var input = d3_updateable(this._target,"input","input")
-          .on("update",this.on("update"))
+          .on("change",function(x) { self.on("update").bind(this)(this.value) })
 
         var save = d3_updateable(this._target,".save","button").classed("save",true)
           .text("Save")
           .on("click",this.on("save"))
 
-        var create = d3_updateable(this._target,".create","button").classed("create",true)
+        var create = d3_updateable(this._target,".create","button").classed("create hidden",true)
           .text("Run")
           .on("click",this.on("run"))
 

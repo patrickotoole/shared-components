@@ -15,15 +15,18 @@ function showableSection(target,key,option) {
 
 Save.prototype = {
     draw: function() {
+
+      var self = this;
+
       d3_updateable(this._target,"span","span").text("Name:")
       var input = d3_updateable(this._target,"input","input")
-        .on("update",this.on("update"))
+        .on("change",function(x) { self.on("update").bind(this)(this.value) })
 
       var save = d3_updateable(this._target,".save","button").classed("save",true)
         .text("Save")
         .on("click",this.on("save"))
 
-      var create = d3_updateable(this._target,".create","button").classed("create",true)
+      var create = d3_updateable(this._target,".create","button").classed("create hidden",true)
         .text("Run")
         .on("click",this.on("run"))
 
