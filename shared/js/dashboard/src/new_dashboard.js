@@ -60,11 +60,9 @@ NewDashboard.prototype = {
   , after: function(val) {
       return accessor.bind(this)("after",val) || []
     }
-
   , filters: function(val) {
       return accessor.bind(this)("filters",val) 
     }
-
   , draw: function() {
 
       var data = this.data()
@@ -135,6 +133,7 @@ NewDashboard.prototype = {
              .before(self.before())
              .after(self.after())
              .keywords(self.keyword_summary())
+             .on("ba.sort",self.on("ba.sort"))
              .draw()
           }
 

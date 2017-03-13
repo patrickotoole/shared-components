@@ -29,8 +29,12 @@ Select.prototype = {
 
       this._options = d3_splat(this._select,"option","option",identity,key)
         .text(key)
+        .attr("selected", (x) => x.value == this._selected ? "selected" : null)
 
       return this
+    }
+  , selected: function(val) {
+      return accessor.bind(this)("selected",val)
     }
   , on: function(action, fn) {
       if (fn === undefined) return this._on[action] || noop;

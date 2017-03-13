@@ -243,6 +243,77 @@
 
   }
 
+  function buildData(data,buckets,pop_categories) {
+
+
+        var times = d3.nest()
+          .key(function(x) { return x.time_diff_bucket })
+          .map(data.filter(function(x){ return x.parent_category_name != "" }) )
+
+        var cats = d3.nest()
+          .key(function(x) { return x.parent_category_name })
+          .map(data.filter(function(x){ return x.parent_category_name != "" }) )
+
+
+
+
+        var time_categories = buckets.reduce(function(p,c) { p[c] = {}; return p }, {})
+        var category_times = Object.keys(cats).reduce(function(p,c) { p[c] = {}; return p }, {})
+
+
+        var categories = d3.nest()
+          .key(function(x) { return x.parent_category_name })
+          .key(function(x) { return x.time_diff_bucket })
+          .entries(data.filter(function(x){ return x.parent_category_name != "" }) )
+          .map(function(row) {
+            row.values.map(function(t) {
+              t.percent = d3.sum(t.values,function(d){ return d.uniques})/ d3.sum(times[t.key],function(d) {return d.uniques}) 
+              time_categories[t.key][row.key] = t.percent
+              category_times[row.key][t.key] = t.percent
+
+            })
+            return row
+          })
+          .sort(function(a,b) { return ((pop_categories[b.key] || {}).normalized_pop || 0)- ((pop_categories[a.key] || {}).normalized_pop || 0) })
+
+
+        var time_normalize_scales = {}
+
+        d3.entries(time_categories).map(function(trow) {
+          var values = d3.entries(trow.value).map(function(x) { return x.value })
+          time_normalize_scales[trow.key] = d3.scale.linear()
+            .domain([d3.min(values),d3.max(values)])
+            .range([0,1])
+        })
+
+        var cat_normalize_scales = {}
+
+        d3.entries(category_times).map(function(trow) {
+          var values = d3.entries(trow.value).map(function(x) { return x.value })
+          cat_normalize_scales[trow.key] = d3.scale.linear()
+            .domain([d3.min(values),d3.max(values)])
+            .range([0,1])
+        })
+
+        categories.map(function(p) {
+          var cat = p.key
+          p.values.map(function(q) {
+            q.norm_cat = cat_normalize_scales[cat](q.percent)
+            q.norm_time = time_normalize_scales[q.key](q.percent)
+
+            q.score = 2*q.norm_cat/3 + q.norm_time/3
+            q.score = q.norm_time
+
+            var percent_pop = pop_categories[cat] ? pop_categories[cat].percent_pop : 0
+
+            q.percent_diff = (q.percent - percent_pop)/percent_pop
+
+          })
+        })
+
+        return categories
+      }
+
   var ops = {
       "is in": function(field,value) {
           return function(x) {
@@ -309,7 +380,7 @@
 
 
       // should not filter if...
-//debugger
+      //debugger
 
       if ( (value.full_urls) && 
            (value.full_urls.length == full_urls.length) && 
@@ -478,9 +549,56 @@
           .key(function(x) { return x.time_diff_bucket })
           .entries(after_urls)
 
+        var buckets = [10,30,60,120,180,360,720,1440,2880,5760,10080].map(function(x) { return x*60 })
+          , pop_categories = cat_summary.reduce(function(p,c) { p[c.key] = c; return p }, {})
+          , cats = cat_summary.map(function(p) { return p.key })
 
-        s.publishStatic("before_urls",{"after":after_urls,"before":before_urls,"category":cat_summary}) 
+        var before_categories = buildData(before_urls,buckets,pop_categories)
+          , after_categories = buildData(after_urls,buckets,pop_categories)
+
+        var sortby = state.sortby
+
+        if (sortby == "score") {
+
+          before_categories = before_categories.sort(function(a,b) { 
+            var p = -1, q = -1;
+            try { p = b.values.filter(function(x){ return x.key == "600" })[0].score } catch(e) {}
+            try { q = a.values.filter(function(x){ return x.key == "600" })[0].score } catch(e) {}
+            return d3.ascending(p, q)
+          })
+          
+        } else if (sortby == "pop") {
+
+          before_categories = before_categories.sort(function(a,b) { 
+            var p = cats.indexOf(a.key)
+              , q = cats.indexOf(b.key)
+            return d3.ascending(p > -1 ? p : 10000, q > -1 ? q : 10000)
+          })
+
+        } else {
+
+          before_categories = before_categories.sort(function(a,b) { 
+            var p = -1, q = -1;
+            try { p = b.values.filter(function(x){ return x.key == "600" })[0].percent_diff } catch(e) {}
+            try { q = a.values.filter(function(x){ return x.key == "600" })[0].percent_diff } catch(e) {}
+            return d3.ascending(p, q)
+          })
+
+          
+        }
+
+
+        var order = before_categories.map(function(x) { return x.key })
+
+        after_categories = after_categories.filter(function(x) { return order.indexOf(x.key) > -1 }).sort(function(a,b) {
+          return order.indexOf(a.key) - order.indexOf(b.key)
+        })
+debugger
+
+        s.publishStatic("before_urls",{"after":after_urls,"before":before_urls,"category":cat_summary,"before_categories":before_categories,"after_categories":after_categories,"sortby":value.sortby}) 
         s.publishStatic("after_urls", after_urls)
+
+        
 
 
       }
@@ -542,6 +660,11 @@
             t.selected = 0
           })
           s.publishStatic("tabs",value.tabs)
+        })
+        .on("ba.sort", function(x) {
+          s.publish("sortby",x.value)
+          s.publish("filters",value.filters)
+   
         })
         .draw()
 
