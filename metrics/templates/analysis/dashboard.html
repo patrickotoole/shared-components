@@ -593,7 +593,7 @@
         after_categories = after_categories.filter(function(x) { return order.indexOf(x.key) > -1 }).sort(function(a,b) {
           return order.indexOf(a.key) - order.indexOf(b.key)
         })
-debugger
+//debugger
 
         s.publishStatic("before_urls",{"after":after_urls,"before":before_urls,"category":cat_summary,"before_categories":before_categories,"after_categories":after_categories,"sortby":value.sortby}) 
         s.publishStatic("after_urls", after_urls)
@@ -712,7 +712,7 @@ debugger
       value.original_urls = value.response
       //value.full_urls = value.response
 
-debugger
+//debugger
 
       cb(false,value)
     })
