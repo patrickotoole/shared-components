@@ -16,7 +16,7 @@
   base64.makeDOMException = function() { return "base64.decode issue" }
 
   base64.decode = function(s) {
-    s = '' + s;
+    var s = '' + s;
     var getbyte64 = function(s,i) {
       var idx = base64.ALPHA.indexOf(s.charAt(i));
       if (idx === -1) {
