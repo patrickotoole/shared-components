@@ -117,9 +117,33 @@ function drawStream(target,before,after) {
   var data = streamData(before,after,buckets)
     , before_stacked = data.before_stacked
     , after_stacked = data.after_stacked
+
+  var before = d3_updateable(target,".before-stream","div",data,function() { return 1})
+    .classed("before-stream",true)
+    .style("padding","10px")
+    .style("padding-top","0px")
+
+    .style("background-color","rgb(227, 235, 240)")
+
+  d3_updateable(before,"h3","h3")
+    .text("Consideration and Research Phase Identification")
+    .style("font-size","12px")
+    .style("color","#333")
+    .style("line-height","33px")
+    .style("background-color","#e3ebf0")
+    .style("margin-left","-10px")
+    .style("margin-bottom","10px")
+    .style("padding-left","10px")
+    .style("margin-top","0px")
+    .style("font-weight","bold")
+    .style("text-transform","uppercase")
+
+  var inner = d3_updateable(before,".inner","div")
+    .classed("inner",true)
+
   
 
-  var stream = stream_plot(target)
+  var stream = stream_plot(inner)
     .data(data)
     .on("category.hover",function(x,time) { 
       console.log(time)
@@ -331,6 +355,11 @@ function drawBeforeAndAfter(target,data) {
     .rows(data.before_categories)
     .after(data.after_categories)
     .draw()
+
+  cb._svg.style("display","block")
+    .style("margin-left","auto")
+    .style("margin-right","auto")
+
 
   return inner
 
@@ -568,11 +597,11 @@ SummaryView.prototype = {
         .style("padding-bottom","10px")
 
       var catwrap = d3_updateable(wrap,".cat-row","div")
-        .classed("cat-row",true)
+        .classed("cat-row dash-row",true)
         .style("padding-bottom","10px")
 
       var keywrap = d3_updateable(wrap,".key-row","div")
-        .classed("key-row",true)
+        .classed("key-row dash-row",true)
         .style("padding-bottom","10px")
 
       var bawrap = d3_updateable(wrap,".ba-row","div",false,function() { return 1})
@@ -624,11 +653,11 @@ SummaryView.prototype = {
       drawTimeseries(tswrap,this._timing,radius_scale)     
 
 
-      //drawCategory(catwrap,this._category)     
-      //drawCategoryDiff(catwrap,this._category)     
+      drawCategory(catwrap,this._category)     
+      drawCategoryDiff(catwrap,this._category)     
 
-      //drawKeywords(keywrap,this._keywords)     
-      //drawKeywordDiff(keywrap,this._keywords)     
+      drawKeywords(keywrap,this._keywords)     
+      drawKeywordDiff(keywrap,this._keywords)     
 
       var inner = drawBeforeAndAfter(bawrap,this._before)
 

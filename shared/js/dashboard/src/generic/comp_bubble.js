@@ -333,6 +333,8 @@ class CompBubble {
       .attr({'width':buckets.length*(height+space)*2+middle,'height':rows.length*height + 165})
       .attr("xmlns", "http://www.w3.org/2000/svg")
 
+    this._svg = svg
+
     this._canvas = d3_updateable(svg,".canvas","g")
       .attr("class","canvas")
       .attr("transform", "translate(0,140)")

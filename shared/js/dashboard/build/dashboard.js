@@ -4083,6 +4083,246 @@
      return new Pie(target)
    }
 
+   function diff_bar(target) {
+     return new DiffBar(target)
+   }
+
+   // data format: [{key, normalized_diff}, ... ]
+
+   class DiffBar {
+     constructor(target) {
+       this._target = target
+
+       this._key_accessor = "key"
+       this._value_accessor = "value"
+       this._bar_height = 20
+       this._bar_width = 150
+     } 
+
+     key_accessor(val) { return accessor.bind(this)("key_accessor",val) }
+     value_accessor(val) { return accessor.bind(this)("value_accessor",val) }
+     bar_height(val) { return accessor.bind(this)("bar_height",val) }
+     bar_width(val) { return accessor.bind(this)("bar_width",val) }
+
+
+
+     data(val) { return accessor.bind(this)("data",val) } 
+     title(val) { return accessor.bind(this)("title",val) } 
+
+
+     draw() {
+
+       var w = d3_updateable(this._target,".diff-wrap","div",false,function() {return 1})
+         .classed("diff-wrap",true)
+
+       d3_updateable(w,"h3","h3").text(this._title)
+
+       var wrap = d3_updateable(w,".svg-wrap","div",this._data,function(x) { return 1 })
+         .classed("svg-wrap",true)
+
+       var k = this.key_accessor()
+         , v = this.value_accessor()
+         , height = this.bar_height()
+         , bar_width = this.bar_width()
+
+       var keys = this._data.map(function(x) { return x[k] })
+         , max = d3.max(this._data,function(x) { return x[v] })
+         , sampmax = d3.max(this._data,function(x) { return -x[v] })
+
+       var xsampscale = d3.scale.linear()
+             .domain([0,sampmax])
+             .range([0,bar_width])
+         , xscale = d3.scale.linear()
+             .domain([0,max])
+             .range([0,bar_width])
+         , yscale = d3.scale.linear()
+             .domain([0,keys.length])
+             .range([0,keys.length*height]);
+
+       var canvas = d3_updateable(wrap,"svg","svg",false,function() { return 1})
+         .attr({"width":bar_width*3, "height": keys.length*height + 10});
+
+       var xAxis = d3.svg.axis();
+       xAxis
+         .orient('bottom')
+         .scale(xscale)
+
+       var yAxis = d3.svg.axis();
+       yAxis
+         .orient('left')
+         .scale(yscale)
+         .tickSize(2)
+         .tickFormat(function(d,i){ return keys[i]; })
+         .tickValues(d3.range(keys.length));
+
+       var y_xis = d3_updateable(canvas,'g.y','g')
+         .attr("class","y axis")
+         .attr("transform", "translate(" + (bar_width + bar_width/2) + ",15)")
+         .attr('id','yaxis')
+         .call(yAxis);
+
+       y_xis.selectAll("text")
+         .attr("style","text-anchor: middle;")
+
+       
+       var chart = d3_updateable(canvas,'g.chart','g')
+         .attr("class","chart")
+         .attr("transform", "translate(" + (bar_width*2) + ",0)")
+         .attr('id','bars')
+       
+       var bars = d3_splat(chart,".pop-bar","rect",function(x) { return x}, function(x) { return x.key })
+         .attr("class","pop-bar")
+         .attr('height',height-4)
+         .attr({'x':0,'y':function(d,i){ return yscale(i) + 8.5; }})
+         .style('fill','#388e3c')
+         .attr("width",function(x) { return xscale(x[v]) })
+
+       var chart2 = d3_updateable(canvas,'g.chart2','g')
+         .attr("class","chart2")
+         .attr("transform", "translate(0,0)")
+         .attr('id','bars')
+
+
+       var sampbars = d3_splat(chart2,".samp-bar","rect",function(x) { return x}, function(x) { return x.key })
+         .attr("class","samp-bar")
+         .attr('height',height-4)
+         .attr({'x':function(x) { return bar_width - xsampscale(-x[v])},'y':function(d,i){ return yscale(i) + 8.5; }})
+         .style('fill','#d32f2f')
+         .attr("width",function(x) { return xsampscale(-x[v]) })
+
+       y_xis.exit().remove()
+
+       chart.exit().remove()
+       chart2.exit().remove()
+
+       bars.exit().remove()
+       sampbars.exit().remove()
+
+
+       
+
+
+       return this
+     }
+   }
+
+   function comp_bar(target) {
+     return new CompBar(target)
+   }
+
+   // data format: [{key, normalized_diff}, ... ]
+
+   class CompBar {
+     constructor(target) {
+       this._target = target
+
+       this._key_accessor = "key"
+       this._pop_value_accessor = "value"
+       this._samp_value_accessor = "value"
+
+       this._bar_height = 20
+       this._bar_width = 300
+     } 
+
+     key_accessor(val) { return accessor.bind(this)("key_accessor",val) }
+     pop_value_accessor(val) { return accessor.bind(this)("pop_value_accessor",val) }
+     samp_value_accessor(val) { return accessor.bind(this)("samp_value_accessor",val) }
+
+     bar_height(val) { return accessor.bind(this)("bar_height",val) }
+     bar_width(val) { return accessor.bind(this)("bar_width",val) }
+
+
+
+     data(val) { return accessor.bind(this)("data",val) } 
+     title(val) { return accessor.bind(this)("title",val) } 
+
+
+     draw() {
+
+       var w = d3_updateable(this._target,".comp-wrap","div",false,function() {return 1})
+         .classed("comp-wrap",true)
+
+       d3_updateable(w,"h3","h3").text(this._title)
+
+       var wrap = d3_updateable(w,".svg-wrap","div",this._data,function(x) { return 1 })
+         .classed("svg-wrap",true)
+
+       var k = this.key_accessor()
+         , p = this.pop_value_accessor()
+         , s = this.samp_value_accessor()
+         , height = this.bar_height()
+         , bar_width = this.bar_width()
+
+       var keys = this._data.map(function(x) { return x[k] })
+         , max = d3.max(this._data,function(x) { return x[p] })
+         , sampmax = d3.max(this._data,function(x) { return x[s] })
+
+       var xsampscale = d3.scale.linear()
+             .domain([0,sampmax])
+             .range([0,bar_width])
+         , xscale = d3.scale.linear()
+             .domain([0,max])
+             .range([0,bar_width])
+         , yscale = d3.scale.linear()
+             .domain([0,keys.length])
+             .range([0,keys.length*height]);
+
+       var canvas = d3_updateable(wrap,"svg","svg",false,function() { return 1})
+         .attr({"width":bar_width+bar_width/2, "height": keys.length*height + 10});
+
+       var xAxis = d3.svg.axis();
+       xAxis
+         .orient('bottom')
+         .scale(xscale)
+
+       var yAxis = d3.svg.axis();
+       yAxis
+         .orient('left')
+         .scale(yscale)
+         .tickSize(2)
+         .tickFormat(function(d,i){ return keys[i]; })
+         .tickValues(d3.range(keys.length));
+
+       var y_xis = d3_updateable(canvas,'g.y','g')
+         .attr("class","y axis")
+         .attr("transform", "translate(" + (bar_width/2) + ",15)")
+         .attr('id','yaxis')
+         .call(yAxis);
+
+       y_xis.selectAll("text")
+
+       
+       var chart = d3_updateable(canvas,'g.chart','g')
+         .attr("class","chart")
+         .attr("transform", "translate(" + (bar_width/2) + ",0)")
+         .attr('id','bars')
+       
+       var bars = d3_splat(chart,".pop-bar","rect",function(x) { return x}, function(x) { return x.key })
+         .attr("class","pop-bar")
+         .attr('height',height-2)
+         .attr({'x':0,'y':function(d,i){ return yscale(i) + 7.5; }})
+         .style('fill','gray')
+         .attr("width",function(x) { return xscale(x[p]) })
+
+
+       var sampbars = d3_splat(chart,".samp-bar","rect",function(x) { return x}, function(x) { return x.key })
+         .attr("class","samp-bar")
+         .attr('height',height-10)
+         .attr({'x':0,'y':function(d,i){ return yscale(i) + 11.5; }})
+         .style('fill','#081d58')
+         .attr("width",function(x) { return xsampscale(x[s] || 0) })
+
+       y_xis.exit().remove()
+
+       chart.exit().remove()
+
+       bars.exit().remove()
+       sampbars.exit().remove()
+
+       return this
+     }
+   }
+
    function comp_bubble(target) {
      return new CompBubble(target)
    }
@@ -4415,6 +4655,8 @@
          .style("margin-top","-5px")
          .attr({'width':buckets.length*(height+space)*2+middle,'height':rows.length*height + 165})
          .attr("xmlns", "http://www.w3.org/2000/svg")
+
+       this._svg = svg
 
        this._canvas = d3_updateable(svg,".canvas","g")
          .attr("class","canvas")
@@ -4804,9 +5046,33 @@
      var data = streamData(before,after,buckets)
        , before_stacked = data.before_stacked
        , after_stacked = data.after_stacked
+
+     var before = d3_updateable(target,".before-stream","div",data,function() { return 1})
+       .classed("before-stream",true)
+       .style("padding","10px")
+       .style("padding-top","0px")
+
+       .style("background-color","rgb(227, 235, 240)")
+
+     d3_updateable(before,"h3","h3")
+       .text("Consideration and Research Phase Identification")
+       .style("font-size","12px")
+       .style("color","#333")
+       .style("line-height","33px")
+       .style("background-color","#e3ebf0")
+       .style("margin-left","-10px")
+       .style("margin-bottom","10px")
+       .style("padding-left","10px")
+       .style("margin-top","0px")
+       .style("font-weight","bold")
+       .style("text-transform","uppercase")
+
+     var inner = d3_updateable(before,".inner","div")
+       .classed("inner",true)
+
      
 
-     var stream = stream_plot(target)
+     var stream = stream_plot(inner)
        .data(data)
        .on("category.hover",function(x,time) { 
          console.log(time)
@@ -5019,7 +5285,55 @@
        .after(data.after_categories)
        .draw()
 
+     cb._svg.style("display","block")
+       .style("margin-left","auto")
+       .style("margin-right","auto")
+
+
      return inner
+
+   }
+
+   function drawCategoryDiff(target,data) {
+
+     diff_bar(target)
+       .data(data)
+       .title("Category indexing versus comp")
+       .value_accessor("normalized_diff")
+       .draw()
+
+   }
+
+   function drawCategory(target,data) {
+
+     comp_bar(target)
+       .data(data)
+       .title("Categories visited for filtered versus all views")
+       .pop_value_accessor("pop")
+       .samp_value_accessor("samp")
+       .draw()
+
+   }
+
+   function drawKeywords(target,data) {
+
+     comp_bar(target)
+       .data(data)
+       .title("Keywords visited for filtered versus all views")
+       .pop_value_accessor("pop")
+       .samp_value_accessor("samp")
+       .draw()
+
+
+   }
+
+   function drawKeywordDiff(target,data) {
+
+     diff_bar(target)
+       .data(data)
+       .title("Keyword indexing versus comp")
+       .value_accessor("normalized_diff")
+       .draw()
 
    }
 
@@ -5212,11 +5526,11 @@
            .style("padding-bottom","10px")
 
          var catwrap = d3_updateable(wrap,".cat-row","div")
-           .classed("cat-row",true)
+           .classed("cat-row dash-row",true)
            .style("padding-bottom","10px")
 
          var keywrap = d3_updateable(wrap,".key-row","div")
-           .classed("key-row",true)
+           .classed("key-row dash-row",true)
            .style("padding-bottom","10px")
 
          var bawrap = d3_updateable(wrap,".ba-row","div",false,function() { return 1})
@@ -5268,11 +5582,11 @@
          drawTimeseries(tswrap,this._timing,radius_scale)     
 
 
-         //drawCategory(catwrap,this._category)     
-         //drawCategoryDiff(catwrap,this._category)     
+         drawCategory(catwrap,this._category)     
+         drawCategoryDiff(catwrap,this._category)     
 
-         //drawKeywords(keywrap,this._keywords)     
-         //drawKeywordDiff(keywrap,this._keywords)     
+         drawKeywords(keywrap,this._keywords)     
+         drawKeywordDiff(keywrap,this._keywords)     
 
          var inner = drawBeforeAndAfter(bawrap,this._before)
 
