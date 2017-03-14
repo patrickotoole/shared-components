@@ -30,7 +30,7 @@ class LoginHandler(tornado.web.RequestHandler,LoginDatabase):
             self.write(ujson.dumps(user_obj))
             self.finish()
         else:
-            _next = "/crusher"
+            _next = "/crusher/dashboard"
             
             self.redirect(self.get_argument("next", _next, True))
         
