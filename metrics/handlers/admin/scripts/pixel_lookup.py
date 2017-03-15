@@ -4,13 +4,15 @@ import pandas
 import StringIO
 import logging
 
+from lib.cassandra_helpers.future_statement import *
 from handlers.base import BaseHandler
 from handlers.analytics.analytics_base import AnalyticsBase
 from twisted.internet import defer
 from lib.helpers import decorators
 from lib.helpers import *
+from lib.cassandra_helpers.helpers import FutureHelpers
 
-QUERY = "SELECT * FROM rockerbox.pixel_fires"
+QUERY = "SELECT * FROM rockerbox.pixel_fires_v2"
 
 class PixelLookupHandler(AnalyticsBase, BaseHandler):
     def initialize(self, db=None, cassandra=None, **kwargs):
@@ -22,10 +24,32 @@ class PixelLookupHandler(AnalyticsBase, BaseHandler):
         self.write(ujson.dumps(data))
         self.finish()
 
+    PREPPED = {}
+
+    def prepare_query(self,query):
+
+        prepped_executor = self.PREPPED.get(query,False)
+
+        if prepped_executor:
+            return prepped_executor
+
+        statement = self.cassandra.prepare(query)
+
+        def execute(data):
+            bound = statement.bind(data)
+            return self.cassandra.execute_async(bound)
+
+        self.PREPPED[query] = execute
+
+        return execute
+
     @defer.inlineCallbacks
     def get_segments(self, advertiser, segment, uid):
         try:
-            df = yield self.defer_execute(advertiser, segment, uid)
+            if uid:
+                df = yield self.defer_execute(advertiser, segment, uid)
+            else:
+                df = yield self.get_from_v2(advertiser,segment)
             response = self.format_response(df)
             self.write_json(response)
         except:
@@ -62,6 +86,16 @@ class PixelLookupHandler(AnalyticsBase, BaseHandler):
         self.logging.info(q)
         data = self.cassandra.execute(q)
         return pandas.DataFrame(data)
+
+    def get_from_v2(self,source,segment):
+        query = QUERY + " where source = ? and segment = ? and u2 = ?"
+        execute = self.prepare_query(query)
+        if segment:
+            prepped = [[source, str(segment)] + [str(u2)] for u2 in range(0,100)]
+            data, _ = FutureHelpers.future_queue(prepped,execute,simple_append,60,[],None)
+        else:
+            data = []
+        return data 
 
     @tornado.web.asynchronous
     def get(self):
