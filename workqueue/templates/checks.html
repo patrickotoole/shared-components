@@ -51,6 +51,10 @@ margin-left:-12%;
 </div>
 
 <!--<div style="height:450px;overflow:scroll;position:relative" class="outer-table-wrapper"></div>-->
+<div id="changetable">
+<button onclick=buildTable2()>Show All Segments</button>
+
+</div>
 <div style="overflow:scroll;position:relative" class="outer-table-wrapper"></div>
   <script>
 var d3_updateable = function(target,selector,type,data,joiner) {
@@ -73,11 +77,25 @@ var d3_splat = function(target,selector,type,data,joiner) {
     .append(type)
   return updateable
 }
-    function buildTable(data) {
-      
+
+function filterFunc(x) {
+   return x['Count of Dashboard Agg'] < 1
+}
+
+function buildTable2() {
+      var data = {% raw data %}
       var tt = d3.selectAll(".outer-table-wrapper")
       table.table(tt)
         .data({"key":"Data","values":data['values']})
+        .draw()
+}
+
+    function buildTable(data) {
+      var data2 = data['values'].filter(filterFunc)
+      var tt = d3.selectAll(".outer-table-wrapper")
+      table.table(tt)
+        .data({"key":"Data","values":data2})
+        //.data({"key":"Data","values":data['values']})
         .draw()
     }
     buildTable({% raw data %})

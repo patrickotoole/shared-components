@@ -7,7 +7,7 @@ import datetime
 from kazoo.client import KazooClient
 
 GET_UDFS = "select udf from user_defined_functions where advertiser = '{}'"
-QUERY = "select * from action_with_patterns where pixel_source_name = '{}'"
+QUERY = "select a.url_pattern, a.action_id, a.action_name from action_with_patterns a join action b on a.action_id = b.action_id where a.pixel_source_name = '{}' and b.deleted=0 and b.active=1"
 
 class UDFCache:
     def __init__(self, connectors):
