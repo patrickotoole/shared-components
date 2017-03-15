@@ -609,6 +609,8 @@
 
      values.map(function(x) {
        x.sample_percent_norm = norm(x.sample_percent)
+
+       x.ratio = x.sample_percent/x.pop_percent
        //x.percent_norm = x.percent
      })
 
@@ -688,9 +690,13 @@
        .domain([0, d3.max(values,function(x){return x.sample_percent})])
        .nice()
 
+     var tt = d3.sum(values,function(x) { return x.pop_percent })
+
      values.map(function(x) {
        x.sample_percent_norm = norm(x.sample_percent)
-       //x.percent_norm = x.percent
+       x.real_pop_percent = x.pop_percent/tt*100
+       x.ratio = x.sample_percent/x.real_pop_percent
+
      })
 
 
@@ -698,7 +704,7 @@
      
      return {
          key: "Top Domains"
-       , values: values.slice(0,300)
+       , values: values.slice(0,500)
      }
    }
 
@@ -2956,10 +2962,13 @@
 
          t.headers([
                {key:"key",value:"Domain",locked:true,width:"100px"}
-             , {key:"value",value:"Sample versus Pop",locked:true}
-             , {key:"count",value:"Views",selected:false}
-
+             , {key:"sample_percent",value:"Segment",selected:false}
+             , {key:"real_pop_percent",value:"Baseline",selected:false}
+             , {key:"ratio",value:"Ratio",selected:false}
+             , {key:"importance",value:"Importance",selected:false}
+             , {key:"value",value:"Segment versus Baseline",locked:true}
            ])
+           .sort("importance")
            .option_text("&#65291;")
            .on("expand",function(d) {
 
@@ -2989,7 +2998,10 @@
                .draw()
 
            })
-           .hidden_fields(["urls","percent_unique","sample_percent_norm"])
+           .hidden_fields(["urls","percent_unique","sample_percent_norm","pop_percent","tf_idf","parent_category_name"])
+           .render("ratio",function(d) {
+             this.innerText = Math.trunc(this.parentNode.__data__.ratio*100)/100 + "x"
+           })
            .render("value",function(d) {
 
              domain_bullet(d3.select(this))
@@ -4786,7 +4798,7 @@
        this._height = 250
        this._color = d3.scale.ordinal()
          .range(
-   ['#999','#aaa','#bbb','#ccc','#ddd','#eee','#deebf7','#c6dbef','#9ecae1','#6baed6','#4292c6','#2171b5','rgba(33, 113, 181,.9)','rgba(8, 81, 156,.91)','#08519c','rgba(8, 48, 107,.9)','#08306b'].reverse())
+   ['#999','#aaa','#bbb','#ccc','#ddd','#deebf7','#c6dbef','#9ecae1','#6baed6','#4292c6','#2171b5','rgba(33, 113, 181,.9)','rgba(8, 81, 156,.91)','#08519c','rgba(8, 48, 107,.9)','#08306b'].reverse())
 
      } 
 
@@ -5123,25 +5135,24 @@
      var before_agg = before_stacked.reduce((o,x) => { return x.reduce((p,c) => { p[c.x] = (p[c.x] || 0) + c.y; return p},o) },{})
        , after_agg = after_stacked.reduce((o,x) => { return x.reduce((p,c) => { p[c.x] = (p[c.x] || 0) + c.y; return p},o) },{})
 
+
      var local_before = Object.keys(before_agg).reduce((minarr,c) => { 
-         if (minarr[0] > before_agg[c]) {
-           return [before_agg[c],c]
-         }
+         if (minarr[0] >= before_agg[c]) return [before_agg[c],c];
+         if (minarr.length > 1) minarr[0] = -1;
          return minarr 
        },[Infinity]
      )[1]
 
      var local_after = Object.keys(after_agg).reduce((minarr,c) => { 
-         if (minarr[0] > after_agg[c]) {
-           return [after_agg[c],c]
-         }
+         if (minarr[0] >= after_agg[c]) return [after_agg[c],c];
+         if (minarr.length > 1) minarr[0] = -1;
          return minarr 
        },[Infinity]
      )[1]
 
      
-     var before_line = buckets[buckets.indexOf(parseInt(local_before)) -1]
-       , after_line = buckets[buckets.indexOf(parseInt(local_after)) + 1]
+     var before_line = buckets[buckets.indexOf(parseInt(local_before))]
+       , after_line = buckets[buckets.indexOf(parseInt(local_after))]
 
      var svg = stream
        ._svg.style("margin","auto").style("display","block")
@@ -5161,7 +5172,7 @@
 
      d3_updateable(bline,"text","text")
        .attr("y", stream._height+20)
-       .attr("x", stream._before_scale(after_line) + 10)
+       .attr("x", stream._before_scale(before_line) + 10)
        .style("text-anchor","start")
        .text("Consideration Stage")
 
@@ -5311,28 +5322,6 @@
        .title("Categories visited for filtered versus all views")
        .pop_value_accessor("pop")
        .samp_value_accessor("samp")
-       .draw()
-
-   }
-
-   function drawKeywords(target,data) {
-
-     comp_bar(target)
-       .data(data)
-       .title("Keywords visited for filtered versus all views")
-       .pop_value_accessor("pop")
-       .samp_value_accessor("samp")
-       .draw()
-
-
-   }
-
-   function drawKeywordDiff(target,data) {
-
-     diff_bar(target)
-       .data(data)
-       .title("Keyword indexing versus comp")
-       .value_accessor("normalized_diff")
        .draw()
 
    }
@@ -5582,11 +5571,13 @@
          drawTimeseries(tswrap,this._timing,radius_scale)     
 
 
+         try {
          drawCategory(catwrap,this._category)     
          drawCategoryDiff(catwrap,this._category)     
+         } catch(e) {}
 
-         drawKeywords(keywrap,this._keywords)     
-         drawKeywordDiff(keywrap,this._keywords)     
+         //drawKeywords(keywrap,this._keywords)     
+         //drawKeywordDiff(keywrap,this._keywords)     
 
          var inner = drawBeforeAndAfter(bawrap,this._before)
 

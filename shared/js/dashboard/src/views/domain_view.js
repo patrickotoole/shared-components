@@ -59,10 +59,13 @@ DomainView.prototype = {
 
       t.headers([
             {key:"key",value:"Domain",locked:true,width:"100px"}
-          , {key:"value",value:"Sample versus Pop",locked:true}
-          , {key:"count",value:"Views",selected:false}
-
+          , {key:"sample_percent",value:"Segment",selected:false}
+          , {key:"real_pop_percent",value:"Baseline",selected:false}
+          , {key:"ratio",value:"Ratio",selected:false}
+          , {key:"importance",value:"Importance",selected:false}
+          , {key:"value",value:"Segment versus Baseline",locked:true}
         ])
+        .sort("importance")
         .option_text("&#65291;")
         .on("expand",function(d) {
 
@@ -92,7 +95,10 @@ DomainView.prototype = {
             .draw()
 
         })
-        .hidden_fields(["urls","percent_unique","sample_percent_norm"])
+        .hidden_fields(["urls","percent_unique","sample_percent_norm","pop_percent","tf_idf","parent_category_name"])
+        .render("ratio",function(d) {
+          this.innerText = Math.trunc(this.parentNode.__data__.ratio*100)/100 + "x"
+        })
         .render("value",function(d) {
 
           domain_bullet(d3.select(this))

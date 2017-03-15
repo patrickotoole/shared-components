@@ -194,25 +194,24 @@ function drawStream(target,before,after) {
   var before_agg = before_stacked.reduce((o,x) => { return x.reduce((p,c) => { p[c.x] = (p[c.x] || 0) + c.y; return p},o) },{})
     , after_agg = after_stacked.reduce((o,x) => { return x.reduce((p,c) => { p[c.x] = (p[c.x] || 0) + c.y; return p},o) },{})
 
+
   var local_before = Object.keys(before_agg).reduce((minarr,c) => { 
-      if (minarr[0] > before_agg[c]) {
-        return [before_agg[c],c]
-      }
+      if (minarr[0] >= before_agg[c]) return [before_agg[c],c];
+      if (minarr.length > 1) minarr[0] = -1;
       return minarr 
     },[Infinity]
   )[1]
 
   var local_after = Object.keys(after_agg).reduce((minarr,c) => { 
-      if (minarr[0] > after_agg[c]) {
-        return [after_agg[c],c]
-      }
+      if (minarr[0] >= after_agg[c]) return [after_agg[c],c];
+      if (minarr.length > 1) minarr[0] = -1;
       return minarr 
     },[Infinity]
   )[1]
 
   
-  var before_line = buckets[buckets.indexOf(parseInt(local_before)) -1]
-    , after_line = buckets[buckets.indexOf(parseInt(local_after)) + 1]
+  var before_line = buckets[buckets.indexOf(parseInt(local_before))]
+    , after_line = buckets[buckets.indexOf(parseInt(local_after))]
 
   var svg = stream
     ._svg.style("margin","auto").style("display","block")
@@ -232,7 +231,7 @@ function drawStream(target,before,after) {
 
   d3_updateable(bline,"text","text")
     .attr("y", stream._height+20)
-    .attr("x", stream._before_scale(after_line) + 10)
+    .attr("x", stream._before_scale(before_line) + 10)
     .style("text-anchor","start")
     .text("Consideration Stage")
 
@@ -653,11 +652,13 @@ SummaryView.prototype = {
       drawTimeseries(tswrap,this._timing,radius_scale)     
 
 
+      try {
       drawCategory(catwrap,this._category)     
       drawCategoryDiff(catwrap,this._category)     
+      } catch(e) {}
 
-      drawKeywords(keywrap,this._keywords)     
-      drawKeywordDiff(keywrap,this._keywords)     
+      //drawKeywords(keywrap,this._keywords)     
+      //drawKeywordDiff(keywrap,this._keywords)     
 
       var inner = drawBeforeAndAfter(bawrap,this._before)
 

@@ -186,6 +186,8 @@ export function buildTopics(data) {
 
   values.map(function(x) {
     x.sample_percent_norm = norm(x.sample_percent)
+
+    x.ratio = x.sample_percent/x.pop_percent
     //x.percent_norm = x.percent
   })
 
@@ -265,9 +267,13 @@ export function buildDomains(data) {
     .domain([0, d3.max(values,function(x){return x.sample_percent})])
     .nice()
 
+  var tt = d3.sum(values,function(x) { return x.pop_percent })
+
   values.map(function(x) {
     x.sample_percent_norm = norm(x.sample_percent)
-    //x.percent_norm = x.percent
+    x.real_pop_percent = x.pop_percent/tt*100
+    x.ratio = x.sample_percent/x.real_pop_percent
+
   })
 
 
@@ -275,7 +281,7 @@ export function buildDomains(data) {
   
   return {
       key: "Top Domains"
-    , values: values.slice(0,300)
+    , values: values.slice(0,500)
   }
 }
 
