@@ -154,7 +154,7 @@ class StreamPlot {
   
     var b = d3_updateable(before,"g","g")
 
-    var bpaths = d3_splat(b,"path","path", before_stacked,function(x,i) { return i})
+    var bpaths = d3_splat(b,"path","path", before_stacked,function(x,i) { return x[0].key})
       .attr("d", barea)
       .attr("class", function(x) { return x[0].key})
       .style("fill", function(x,i) { return color(x[0].key); })
@@ -168,6 +168,8 @@ class StreamPlot {
         apaths.style("opacity",undefined)
         bpaths.style("opacity",undefined)
       })
+
+    bpaths.exit().remove()
 
     var brect = d3_splat(b,"rect","rect",buckets.slice().reverse(),(x,i) => i)
       .attr("x",z => xreverse(z))
@@ -193,7 +195,7 @@ class StreamPlot {
     var a = d3_updateable(after,"g","g")
 
   
-    var apaths = d3_splat(a,"path","path",after_stacked,function(x,i) { return i})
+    var apaths = d3_splat(a,"path","path",after_stacked,function(x,i) { return x[0].key})
       .attr("d", aarea)
       .attr("class", function(x) { return x[0].key})
       .style("fill", function(x,i) { return color(x[0].key); })
@@ -204,6 +206,8 @@ class StreamPlot {
         apaths.style("opacity",undefined)
         bpaths.style("opacity",undefined)
       })
+
+    apaths.exit().remove()
 
     var _x_xis = drawAxis(before,xreverse,"before arriving",width)
 
