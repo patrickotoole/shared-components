@@ -50,7 +50,7 @@ class PixelLookupHandler(AnalyticsBase, BaseHandler):
                 df = yield self.defer_execute(advertiser, segment, uid)
             else:
                 df = yield self.get_from_v2(advertiser,segment)
-            response = self.format_response(df)
+            response = self.format_response(pandas.DataFrame(df))
             self.write_json(response)
         except:
             self.write("{}")
@@ -91,7 +91,10 @@ class PixelLookupHandler(AnalyticsBase, BaseHandler):
         query = QUERY + " where source = ? and segment = ? and u2 = ?"
         execute = self.prepare_query(query)
         if segment:
+            
             prepped = [[source, str(segment)] + [str(u2)] for u2 in range(0,100)]
+            for x in range(0,10):
+                prepped[x][2] = '0'+ prepped[x][2]
             data, _ = FutureHelpers.future_queue(prepped,execute,simple_append,60,[],None)
         else:
             data = []
