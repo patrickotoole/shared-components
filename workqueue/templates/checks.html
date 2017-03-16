@@ -45,6 +45,9 @@ margin-right: 10%;
 div.content {
 margin-left:-12%;
 }
+button {
+margin-bottom: 1%;
+}
 </style>
 <div class="paths content row">
 {% raw paths%}
@@ -52,8 +55,10 @@ margin-left:-12%;
 
 <!--<div style="height:450px;overflow:scroll;position:relative" class="outer-table-wrapper"></div>-->
 <div id="changetable">
-<button onclick=buildTable2()>Show All Segments</button>
-
+<div id=buttons>
+<button type="button" class="btn btn-primary" onclick=buildTable2()>Show All Segments</button>
+<button onclick=buildTable3() type="button" class="btn btn-primary"> Show Missing Segments </button>
+</div>
 </div>
 <div style="overflow:scroll;position:relative" class="outer-table-wrapper"></div>
   <script>
@@ -81,24 +86,31 @@ var d3_splat = function(target,selector,type,data,joiner) {
 function filterFunc(x) {
    return x['Count of Dashboard Agg'] < 1
 }
+var data = {% raw data %};
+var altdata = data['values'].filter(filterFunc);
 
 function buildTable2() {
-      var data = {% raw data %}
       var tt = d3.selectAll(".outer-table-wrapper")
       table.table(tt)
         .data({"key":"Data","values":data['values']})
         .draw()
 }
 
-    function buildTable(data) {
-      var data2 = data['values'].filter(filterFunc)
+function buildTable3() {
       var tt = d3.selectAll(".outer-table-wrapper")
       table.table(tt)
-        .data({"key":"Data","values":data2})
+        .data({"key":"Data","values":altdata})
+        .draw()
+}
+
+    function buildTable(data) {
+      var tt = d3.selectAll(".outer-table-wrapper")
+      table.table(tt)
+        .data({"key":"Data","values":data})
         //.data({"key":"Data","values":data['values']})
         .draw()
     }
-    buildTable({% raw data %})
+    buildTable(altdata)
          
 </script>
 
