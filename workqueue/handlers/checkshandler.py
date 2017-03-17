@@ -18,5 +18,4 @@ class ChecksHandler(tornado.web.RequestHandler):
         for x in advertisers_segments.iterrows():
             data2 = self.crushercache.select_dataframe(CACHEQUERY % (x[1]['pixel_source_name'], x[1]['action_id']))
             data['values'].append({"Advertiser":x[1]['pixel_source_name'], "Segment Name": x[1]["action_name"], "Count of Dashboard Agg":data2['count(*)'][0]}) 
-        #final_data = data2.to_dict("records")
         self.render("checks.html", data=data, paths="")
