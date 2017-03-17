@@ -207,6 +207,7 @@ class AdvertiserRoutes(Routes):
             (r'/pixel/cookie', pixel_status.CookieHandler, self.connectors),
             (r'/pixel/status', pixel_status.PixelHandler, self.connectors),
             (r'/pixel/status/lookup', pixel_status.LookupHandler, self.connectors),
+            (r'/user/metadata', analytics.UserMetaHandler, self.connectors),
 
             (r'/funnel', funnel.FunnelHandler, self.connectors),
             (r'/comparison?', analytics.ComparisonHandler, self.connectors),
