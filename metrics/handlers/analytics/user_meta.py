@@ -96,5 +96,5 @@ class UserMetaHandler(AnalyticsBase, BaseHandler):
         advertiser = self.get_argument("advertiser", False)
         uid = self.get_argument("uid", False)
         u2 = self.get_argument("u2", False)
-	uids = uid.split(",") if uid else []
+        uids = uid.split(",") if uid else []
         self.get_meta_data(advertiser, u2, uids)
