@@ -143,7 +143,7 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
 
     @decorators.deferred
     def defer_get_actions(self, advertiser):
-        ACTIONSQUERY = "SELECT action_id, action_name, url_pattern from action_with_patterns where pixel_source_name ='%s'"
+        ACTIONSQUERY = "select a.action_id, a.action_name, a.url_pattern from action_with_patterns a join action b on a.action_id = b.action_id where a.pixel_source_name = '%s' and b.deleted=0 and b.active=1"
         results = self.db.select_dataframe(ACTIONSQUERY % advertiser)
         return results.to_dict('records')
 
