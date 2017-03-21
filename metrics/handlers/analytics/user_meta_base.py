@@ -12,7 +12,7 @@ from lib.helpers import decorators
 from lib.helpers import *
 from lib.cassandra_helpers.helpers import FutureHelpers
 
-QUERY = "SELECT uid, ip, source, u2, user_agent FROM rockerbox.visit_events_uid_meta"
+QUERY = "SELECT uid, source, u2, browser, os, city, state FROM rockerbox.visit_events_uid_meta"
 
 class UserMetaBaseHandler(object):
 
