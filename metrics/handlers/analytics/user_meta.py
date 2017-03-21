@@ -10,11 +10,12 @@ from handlers.analytics.analytics_base import AnalyticsBase
 from twisted.internet import defer
 from lib.helpers import decorators
 from lib.helpers import *
+from user_meta_base import *
 from lib.cassandra_helpers.helpers import FutureHelpers
 
 QUERY = "SELECT * FROM rockerbox.visit_events_uid_meta"
 
-class UserMetaHandler(AnalyticsBase, BaseHandler):
+class UserMetaHandler(AnalyticsBase, BaseHandler, UserMetaBaseHandler):
 
     def initialize(self, db=None, cassandra=None, **kwargs):
         self.db = db
@@ -69,16 +70,7 @@ class UserMetaHandler(AnalyticsBase, BaseHandler):
 
     @decorators.deferred
     def get_from_meta(self,source, u2_uid):
-        query = QUERY
-        if source and u2_uid:
-            query = query + " where source = ? and u2 = ? and uid in ?"
-            execute = self.prepare_query(query)
-            prepped = [[source] + [x, u2_uid[x]] for x in u2_uid.keys()]
-        if not source:
-            query = query + " where u2 = ? and uid in ?"
-            execute = self.prepare_query(query)
-            prepped = [[x, u2_uid[x]] for x in u2_uid.keys()]
-        data, _ = FutureHelpers.future_queue(prepped,execute,simple_append,60,[],None)
+        data = self.pull_from_meta(source, u2_uid)
         df=pandas.DataFrame(data)
         return df 
 

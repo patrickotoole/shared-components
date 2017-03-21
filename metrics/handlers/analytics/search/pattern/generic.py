@@ -15,12 +15,13 @@ from ...visit_events import VisitEventBase
 from helpers import PatternSearchHelpers
 from lib.aho import AhoCorasick
 from ..search_helpers import SearchHelpers
+from handlers.analytics.user_meta_base import UserMetaBaseHandler
 
-class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,PatternSearchHelpers, SearchHelpers):
+class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,PatternSearchHelpers, SearchHelpers, UserMetaBaseHandler):
     
     LEVELS = {
                 "l1":
-                    ["uid_urls", "domains_full", "actions"],
+                    ["uid_urls", "domains_full", "actions", "user_info"],
                 "l2":
                     ["domains", "urls", "pixel", "artifacts"],
                 "l3":
@@ -35,6 +36,7 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
                     "category_domains":["domains", "idf"],
                     "idf" : ["domains"],
                     "idf_hour" : ["domains"],
+                    "user_info": [],
                     "pixel": [],
                     "domains_full":[],
                     "uid_urls": [],
@@ -52,6 +54,10 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
             "pixel": {
                 "func":"defer_get_pixel",
                 "args":[],
+            },
+            "user_info": {
+                "func":"defer_get_user_info",
+                "args":["advertiser", "uids"],
             },
             "uid_urls": { 
                 "func":"defer_get_uid_visits",
@@ -94,6 +100,12 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
                 "args":["domains_full", "advertiser"]
             }
         }
+
+    @decorators.deferred
+    def defer_get_user_info(self,advertiser, uids):
+        uid_u2 = self.process_u2_uid(False, uids)
+        user_info_df = self.pull_from_meta(advertiser,uid_u2)
+        return user_info_df
 
     @decorators.deferred
     def defer_get_artifacts(self, domains_full_df, advertiser):
@@ -253,6 +265,8 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
             shared_dict['artifacts'] = l1_dfs['artifacts']
         if l1_dfs.get('actions', False):
             shared_dict['actions'] = l1_dfs['actions']
+        if l1_dfs.get('user_info', False):
+            shared_dict['user_info'] = l1_dfs['user_info']
         defer.returnValue(shared_dict)
 
     @defer.inlineCallbacks

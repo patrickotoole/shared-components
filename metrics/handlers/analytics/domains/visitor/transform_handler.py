@@ -74,7 +74,6 @@ class VisitorTransformHandler(VisitorBase):
 
         datasets = [d for d in DEFAULT_DATASETS if d not in skip_datasets]
 
-        
         url_arg = self.request.arguments
 
 
