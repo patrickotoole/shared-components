@@ -10,11 +10,6 @@ DATE_FALLBACK = "select distinct date from generic_function_cache where advertis
 
 class CacheDatabase(object):
 
-    def now(self):
-        from datetime import datetime
-        today = datetime.today()
-        return str(today).split(".")[0]
-
     def get_recent_data(self, advertiser, url_pattern, action_id, udf):
         query_dict = {"url_pattern":url_pattern, "advertiser":advertiser, "action_id": action_id, "udf": udf}
         datefallback = self.crushercache.select_dataframe(DATE_FALLBACK % query_dict)
@@ -24,17 +19,6 @@ class CacheDatabase(object):
     def get_action_id(self, advertiser, pattern):
         action_id = self.db.select_dataframe(ACTION_QUERY.format(advertiser, pattern))
         return action_id['action_id'][0]    
-
-    def get_version_query(self,advertiser, udf, pattern, action_id, now_date):
-        QUERY = SQL_SELECT % (udf, advertiser, pattern, action_id, now_date)
-        return QUERY
-
-    def check_data(self, data, advertiser, pattern, action_id, udf, filter_date):
-        if len(data) ==0 and not filter_date:
-            now_date = self.get_recent_data(advertiser, pattern, action_id, udf)
-            QUERY = self.get_version_query(advertiser, udf, pattern, action_id, now_date)
-            data = self.crushercache.select_dataframe(QUERY) 
-        return data
 
     def decode_data(self, data):
         try:
@@ -50,13 +34,14 @@ class CacheDatabase(object):
     @decorators.deferred
     def get_from_db(self, udf, advertiser, pattern, action_id, filter_date):
         now_date=filter_date
-        if not filter_date:
-            now_date = self.get_recent_data(advertiser, pattern, action_id, udf)
-
         if not action_id:
             action_id = self.get_action_id(advertiser, pattern)
 
-        QUERY = self.get_version_query(advertiser, udf, pattern, action_id, now_date)
+        if not filter_date:
+            now_date = self.get_recent_data(advertiser, pattern, action_id, udf)
+
+
+        QUERY = SQL_SELECT % (udf, advertiser, pattern, action_id, now_date)
         logging.info("Making query")
         data = self.crushercache.select_dataframe(QUERY)
 
