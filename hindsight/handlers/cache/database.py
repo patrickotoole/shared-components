@@ -3,7 +3,6 @@ import logging
 import codecs 
 import zlib
 
-
 SQL_SELECT_V2 = "select zipped from generic_function_cache_v2 where udf = '%s' and advertiser='%s' and url_pattern='%s' and action_id=%s"
 SQL_SELECT = "select zipped from generic_function_cache where udf='%s' and advertiser='%s' and url_pattern='%s' and action_id=%s and date='%s'"
 ACTION_QUERY = "select action_id from action_with_patterns where pixel_source_name='{}' and url_pattern='{}'"

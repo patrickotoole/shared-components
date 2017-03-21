@@ -19,13 +19,12 @@ define("port", default=8888, help="run on the given port", type=int)
 
 from link import lnk
 
-from handlers.login import *
-from handlers.index import *
+from handlers.action import *
 from handlers.dashboard import *
-from handlers.cachehandler import * 
+from handlers.cache import * 
 from handlers.advertiser import *
 from handlers.permissions import *
-from handlers.action import *
+from handlers.login import *
 
 if __name__ == '__main__':
 
