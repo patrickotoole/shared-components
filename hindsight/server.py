@@ -25,6 +25,7 @@ from handlers.cache import *
 from handlers.advertiser import *
 from handlers.permissions import *
 from handlers.login import *
+from handlers.comparison import *
 
 if __name__ == '__main__':
 
@@ -52,6 +53,7 @@ if __name__ == '__main__':
         (r'/crusher/dashboard?', DashboardHandler, connectors),
         (r'/advertiser', AdvertiserHandler, connectors),
         (r'/crusher/v2/visitor/(.*?)/cache', CacheHandler,connectors),
+        (r'/crusher/comparison', ComparisonHandler, connectors),
         (r'/static/(.*)', tornado.web.StaticFileHandler, {'path': static_dir}),
         (r'/js/(.*)', tornado.web.StaticFileHandler, {'path': shared_dir}),
     ]
