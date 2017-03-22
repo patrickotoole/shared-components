@@ -21,13 +21,13 @@
 <script type="text/javascript" src="/static/js/d3.js" charset="utf-8"></script>
 
 <script type="text/javascript" src="/js/api/build/api.js"></script>
+<script type="text/javascript" src="/js/state/build/state.js"></script>
 
 <script type="text/javascript" src="/js/start/build/start.js"></script>
 <script type="text/javascript" src="/js/filter/build/filter.js"></script>
 <script type="text/javascript" src="/js/table/build/table.js"></script>
 <script type="text/javascript" src="/js/media_plan/build/media_plan.js"></script>
 <script type="text/javascript" src="/js/dashboard/build/dashboard.js"></script>
-<script type="text/javascript" src="/js/state/build/state.js"></script>
 <script type="text/javascript" src="/js/tabular/build/tabular.js"></script>
 
 <script type="text/javascript" src="/js/selectize.js/dist/js/standalone/selectize.js"></script>
@@ -733,10 +733,15 @@ debugger
       s.publish("filters",state.filters)
 
     })
-    .subscribe("raw.actions",function(error,value,state) {
+    .subscribe("raw.actions",function(error,value,_state) {
+      var qs_state = state.qs({}).from(window.location.search)
+      s.update("selected_action",value[0])
 
-      value.map(function(x) { x.key = x.action_name; x.value = x.action_id })
-      s.publish("selected_action",value[0])
+      if (Object.keys(qs_state).length) {
+        var updates = dashboard.state.compare(qs_state,_state)
+        return publishQSUpdates(updates,qs_state)
+      }
+
     })
     .subscribe("raw.selected_action",function(error,value) {
       s.publishStatic("data",api.action.getData(value))
@@ -771,70 +776,11 @@ debugger
 
     })
 
-
-  function processStateComparison(s,state,qs_state) {
-
-    var updates = {}
-
-    state_module.comp_eval(qs_state,state,updates)
-      .accessor(
-          "selected_action"
-        , (x,y) => y.actions.filter(z => z.action_id == x.selected_action)[0]
-        , (x,y) => y.selected_action
-      )
-      .failure("selected_action", (_new,_old,obj) => { 
-        Object.assign(obj,{
-            "loading": true
-          , "selected_action": _new
-        })
-      })
-      .accessor(
-          "selected_view"
-        , (x,y) => x.selected_view
-        , (_,y) => y.dashboard_options.filter(x => x.selected)[0].value 
-      )
-      .failure("selected_view", (_new,_old,obj) => {
-        // this should be redone so its not different like this
-        Object.assign(obj, {
-            "loading": true
-          , "dashboard_options": JSON.parse(JSON.stringify(state.dashboard_options)).map(x => { 
-              x.selected = (x.value == _new); 
-              return x 
-            })
-        })
-      })
-      .accessor(
-          "selected_comparison"
-        , (x,y) => y.actions.filter(z => z.action_id == x.selected_comparison)[0]
-        , (x,y) => y.selected_comparison
-      )
-      .failure("selected_comparison", (_new,_old,obj) => { 
-        Object.assign(obj,{
-            "loading": true
-          , "selected_comparison": _new
-        })
-      })
-      .equal("filters", (x,y) => JSON.stringify(x) == JSON.stringify(y) )
-      .failure("filters", (_new,_old,obj) => { 
-        Object.assign(obj,{
-            "loading": true
-          , "filters": _new
-        })
-      })
-      .evaluate()
-
-
-    var current = state_module.qs({}).to(state.qs_state)
-      , pop = state_module.qs({}).to(qs_state)
-
-
-    if (Objects.keys(updates).length && current != pop) {
+  function publishQSUpdates(updates,qs_state) {
+    if (Object.keys(updates).length) {
       updates["qs_state"] = qs_state
       s.publishBatch(updates)
-      //
     }
-
-    
   }
 
   window.onpopstate = function(i) {
@@ -842,11 +788,10 @@ debugger
     var state = s._state
       , qs_state = i.state
 
-    processStateComparison(s,state,qs_state)
-    
+    var updates = dashboard.state.compare(qs_state,state)
 
+    publishQSUpdates(updates,qs_state)
   }
-
 
 
 
@@ -865,6 +810,7 @@ debugger
   }
 
   s.update(false,DEFAULTS)
+
 
   window.s = s
 

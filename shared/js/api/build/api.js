@@ -26,6 +26,7 @@
   }
   function getAll(cb) {
     d3.json("/crusher/funnel/action?format=json",function(value) {
+      value.response.map(function(x) { x.key = x.action_name; x.value = x.action_id })
       cb(false,value.response)
     })
 
