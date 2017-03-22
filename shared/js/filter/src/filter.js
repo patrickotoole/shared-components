@@ -63,10 +63,10 @@ Filter.prototype = {
       var filters = d3_updateable(wrap,".filters","div",false,function(x) { return 1})
         .classed("filters",true)
       
-      var filter = d3_splat(filters,".filter","div",function(x) { return x },function(x,i) { return i })
+      var filter = d3_splat(filters,".filter","div",function(x) { return x },function(x,i) { return i + x.field })
         .classed("filter",true)
         .style("line-height","33px")
-      
+
       filter.exit().remove()
       
       var self = this;

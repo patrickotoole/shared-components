@@ -22,13 +22,16 @@ export function State(_current, _static) {
 }
 
 State.prototype = {
-    publish: function(name,cb) {
+    state: function() {
+      return this._state
+    }
+  , publish: function(name,cb) {
 
        var push_cb = function(error,value) {
          if (error) return subscriber(error,null)
          
          this.update(name, value)
-         this.trigger(name, this._state[name], this._state)
+         this.trigger(name, this.state()[name], this.state())
 
        }.bind(this)
 
@@ -36,6 +39,13 @@ State.prototype = {
        else push_cb(false,cb)
 
        return this
+    }
+  , publishBatch: function(obj) {
+      Object.keys(obj).map(function(x) {
+        this.update(x,obj[x])
+      }.bind(this))
+
+      this.triggerBatch(obj,this.state())
     }
   , push: function(state) {
       this.publish(false,state)
@@ -114,7 +124,17 @@ State.prototype = {
       subscriber(false,_value,_state)
       all(false,_state)
     }
+  , triggerBatch: function(obj, _state) {
 
+      var all = this.get_subscribers_fn("*") || function() {}
+        , fns = Object.keys(obj).map(function(k) { 
+            var fn = this.get_subscribers_fn || function() {}
+            return fn.bind(this)(k)(false,obj[k],_state)  
+          }.bind(this))
+      
+      all(false,_state)
+
+    }
   , _buildState: function() {
       this._state = Object.assign({},this._current)
 
@@ -153,7 +173,7 @@ State.prototype = {
         
         this._static[name] = value
         this._buildState()
-        this.trigger(name, this._state[name], this._state)
+        this.trigger(name, this.state()[name], this.state())
 
       }.bind(this)
 

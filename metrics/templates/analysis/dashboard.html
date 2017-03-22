@@ -20,6 +20,8 @@
 
 <script type="text/javascript" src="/static/js/d3.js" charset="utf-8"></script>
 
+<script type="text/javascript" src="/js/api/build/api.js"></script>
+
 <script type="text/javascript" src="/js/start/build/start.js"></script>
 <script type="text/javascript" src="/js/filter/build/filter.js"></script>
 <script type="text/javascript" src="/js/table/build/table.js"></script>
@@ -35,11 +37,13 @@
 
 <script type="text/javascript" src="/static/js/rockerbox/crusher/sidebar.js"></script>
 
+<!--
 <script type="text/javascript" src="/static/js/rockerbox/routes/routes.js"></script>
 <script type="text/javascript" src="/static/js/rockerbox/routes/routes.navigation.js"></script>
 <script type="text/javascript" src="/static/js/rockerbox/menu/menu.js"></script>
 <script type="text/javascript" src="/static/js/rockerbox/menu/menu.navbar.js"></script>
 <script type="text/javascript" src="/static/js/rockerbox/menu/menu.selectbar.js"></script>
+-->
 
 <script type="text/javascript" src="/static/js/rockerbox/helper.js"></script>
 
@@ -113,6 +117,12 @@
     height: 150px;
     border-bottom:1px solid #ddd
   }
+  body {
+    padding-top:0px;
+  }
+  body > .container {
+    margin-left: 0px;
+  }
   .body-wrap {
     overflow:hidden
   }
@@ -173,26 +183,26 @@
 (function() {
 
 
-  RB.menu.routes.roots = [
-      {
-        "name": "Filter",
-        "push_state": "/crusher/dashboard",
-        "class": "glyphicon glyphicon-filter",
-      }, {
-        "name": "Compare",
-        "push_state": "/crusher/comparison",
-        "class": "glyphicon glyphicon-th",
-      }, {
-        "name": "Create Segment",
-        "push_state": "/crusher/action/recommended",
-        "class": "glyphicon glyphicon-plus",
-      }, {
-        "name": "Settings",
-        "push_state": "/crusher/settings",
-        "class": "glyphicon glyphicon-cog"
-      }
-    ]
-  RB.menu.render(d3.select("body"),true)
+  //RB.menu.routes.roots = [
+  //    {
+  //      "name": "Filter",
+  //      "push_state": "/crusher/dashboard",
+  //      "class": "glyphicon glyphicon-filter",
+  //    }, {
+  //      "name": "Compare",
+  //      "push_state": "/crusher/comparison",
+  //      "class": "glyphicon glyphicon-th",
+  //    }, {
+  //      "name": "Create Segment",
+  //      "push_state": "/crusher/action/recommended",
+  //      "class": "glyphicon glyphicon-plus",
+  //    }, {
+  //      "name": "Settings",
+  //      "push_state": "/crusher/settings",
+  //      "class": "glyphicon glyphicon-cog"
+  //    }
+  //  ]
+  //RB.menu.render(d3.select("body"),true)
 
   var centered = d3_updateable(d3.select(".container"),"div","div")
     .style("width","1000px")
@@ -360,6 +370,70 @@
         }
   }
 
+  function buildDashboard(value) {
+      var db = dashboard.new_dashboard(centered)
+          .data(value.formatted_data)
+          .actions(value.actions)
+          .selected_action(value.selected_action || {})
+          .selected_comparison(value.selected_comparison || {})
+          .loading(value.loading || false)
+          .summary(value.summary)
+          .time_summary(value.time_summary)
+          .category_summary(value.category_summary)
+          .keyword_summary(value.keyword_summary)
+          .before(value.before_urls || [])
+          .after(value.after_urls || [])
+          .logic_options(value.logic_options)
+          .logic_categories(value.logic_categories)
+          .filters(value.filters)
+          .view_options(value.dashboard_options)
+          .explore_tabs(value.tabs)
+          .on("action.change", function(action) {
+            s.publish("selected_action",action)
+          })
+          .on("comparison.change", function(action) {
+
+            if (action.value == false) return s.publish("selected_comparison",false)
+            s.publish("selected_comparison",action)
+          })
+          .on("logic.change", function(logic) {
+            s.publish("logic_options",logic)
+          })
+          .on("filter.change", function(filters) {
+
+            s.publishBatch({
+                "filters":filters
+            })
+          })
+          .on("view.change", function(x) {
+            db.loading(true)
+            var CP = deepcopy(value.dashboard_options)
+            CP.map(function(d) {
+              if (x.value == d.value) return d.selected = 1
+              d.selected = 0
+            })
+            s.publish("dashboard_options",CP)
+          })
+          .on("tab.change", function(x) {
+            db.loading(true)
+            value.tabs.map(function(t) {
+              if (t.key == x.key) return t.selected = 1
+              t.selected = 0
+            })
+            s.publishStatic("tabs",value.tabs)
+          })
+          .on("ba.sort", function(x) {
+            s.publish("sortby",x.value)
+            s.publish("filters",value.filters)
+   
+          })
+          .draw()
+
+
+  }
+
+  var state_module = state
+
   var s = state.state()
     .subscribe("filter.tabs", function(error,dbo,state) {
       s.publishStatic("formatted_data",state.data)
@@ -374,6 +448,8 @@
 
       var value = state.data
       if (value == undefined) return
+
+      if (filters.filter(x => x.field != undefined && x.value == undefined).length) return
 
       var filters = prepareFilters(filters)
 
@@ -614,8 +690,8 @@
         })
 //debugger
 
-        s.publishStatic("before_urls",{"after":after_urls,"before":before_urls,"category":cat_summary,"before_categories":before_categories,"after_categories":after_categories,"sortby":value.sortby}) 
-        s.publishStatic("after_urls", after_urls)
+        s.setStatic("before_urls",{"after":after_urls,"before":before_urls,"category":cat_summary,"before_categories":before_categories,"after_categories":after_categories,"sortby":value.sortby}) 
+        s.setStatic("after_urls", after_urls)
 
         
 
@@ -624,69 +700,26 @@
 
       
 
-      s.publishStatic("keyword_summary", entries) 
-      s.publishStatic("time_summary", prepped)
-      s.publishStatic("category_summary", cat_summary)
+      s.setStatic("keyword_summary", entries) 
+      s.setStatic("time_summary", prepped)
+      s.setStatic("category_summary", cat_summary)
 
-      s.publishStatic("summary",summary)
-      s.publishStatic("tabs",tabs)
+      s.setStatic("summary",summary)
+      s.setStatic("tabs",tabs)
       s.publishStatic("formatted_data",value)
+      
+    })
+    .subscribe("filter.loading", function(error,loading,value) {
+debugger
+      if (value.formatted_data) buildDashboard(value)
       
     })
     .subscribe("filter.formatted_data", function(error,formatted_data,value) {
 
+      value.loading = false
+      s.update("loading",false)
 
-      if (value.formatted_data) dashboard.new_dashboard(centered)
-        .data(value.formatted_data)
-        .actions(value.actions)
-        .summary(value.summary)
-        .time_summary(value.time_summary)
-        .category_summary(value.category_summary)
-        .keyword_summary(value.keyword_summary)
-        .before(value.before_urls || [])
-        .after(value.after_urls || [])
-
-        .logic_options(value.logic_options)
-        .logic_categories(value.logic_categories)
-        .filters(value.filters)
-        .view_options(value.dashboard_options)
-        .explore_tabs(value.tabs)
-        .on("action.change", function(action) {
-          s.publish("selected_action",action)
-        })
-        .on("comparison.change", function(action) {
-          if (action.value == false) return s.publish("selected_comparison",false)
-          s.publish("selected_comparison",action)
-        })
-
-        .on("logic.change", function(logic) {
-          s.publish("logic_options",logic)
-        })
-        .on("filter.change", function(filters) {
-          s.publish("filters",filters)
-        })
-        .on("view.change", function(x) {
-          var CP = deepcopy(value.dashboard_options)
-          CP.map(function(d) {
-            if (x.value == d.value) return d.selected = 1
-            d.selected = 0
-          })
-          s.publish("dashboard_options",CP)
-        })
-        .on("tab.change", function(x) {
-          value.tabs.map(function(t) {
-            if (t.key == x.key) return t.selected = 1
-            t.selected = 0
-          })
-          s.publishStatic("tabs",value.tabs)
-        })
-        .on("ba.sort", function(x) {
-          s.publish("sortby",x.value)
-          s.publish("filters",value.filters)
-   
-        })
-        .draw()
-
+      if (value.formatted_data) buildDashboard(value)
     })
     .subscribe("raw.data",function(error,value,state) {
 
@@ -706,63 +739,135 @@
       s.publish("selected_action",value[0])
     })
     .subscribe("raw.selected_action",function(error,value) {
-      s.publishStatic("data",asyncPub.bind(false,value))
+      s.publishStatic("data",api.action.getData(value))
     })
     .subscribe("raw.selected_comparison",function(error,value) {
-      if (value == false) return s.publishStatic("comparison_data",false)
-      s.publishStatic("comparison_data",asyncPub.bind(false,value))
+      if (!value) return s.publishStatic("comparison_data",false)
+      s.publishStatic("comparison_data",api.action.getData(value))
+    })
+    .subscribe("history",function(error,state) {
+      console.log("current: " + JSON.stringify(state.qs_state), JSON.stringify(state.filters), state.dashboard_options )
+      var for_state = ["filters"]
+
+      var qs_state = for_state.reduce((p,c) => {
+        if (state[c]) p[c] = state[c]
+        return p
+      },{})
+
+      if (state.selected_action) qs_state['selected_action'] = state.selected_action.action_id
+      if (state.selected_comparison) qs_state['selected_comparison'] = state.selected_comparison.action_id
+      if (state.dashboard_options) qs_state['selected_view'] = state.dashboard_options.filter(x => x.selected)[0].value
+
+      if (state.selected_action && state_module.qs(qs_state).to(qs_state) != window.location.search) {
+        s.publish("qs_state",qs_state)
+      }
+    })
+    .subscribe("history.qs_state", function(error,qs_state,state) {
+
+      if (JSON.stringify(history.state) == JSON.stringify(qs_state)) return
+
+      if (window.location.search == "") history.replaceState(qs_state,"",state_module.qs(qs_state).to(qs_state))
+      else history.pushState(qs_state,"",state_module.qs(qs_state).to(qs_state))
+
     })
 
 
+  function processStateComparison(s,state,qs_state) {
+
+    var updates = {}
+
+    state_module.comp_eval(qs_state,state,updates)
+      .accessor(
+          "selected_action"
+        , (x,y) => y.actions.filter(z => z.action_id == x.selected_action)[0]
+        , (x,y) => y.selected_action
+      )
+      .failure("selected_action", (_new,_old,obj) => { 
+        Object.assign(obj,{
+            "loading": true
+          , "selected_action": _new
+        })
+      })
+      .accessor(
+          "selected_view"
+        , (x,y) => x.selected_view
+        , (_,y) => y.dashboard_options.filter(x => x.selected)[0].value 
+      )
+      .failure("selected_view", (_new,_old,obj) => {
+        // this should be redone so its not different like this
+        Object.assign(obj, {
+            "loading": true
+          , "dashboard_options": JSON.parse(JSON.stringify(state.dashboard_options)).map(x => { 
+              x.selected = (x.value == _new); 
+              return x 
+            })
+        })
+      })
+      .accessor(
+          "selected_comparison"
+        , (x,y) => y.actions.filter(z => z.action_id == x.selected_comparison)[0]
+        , (x,y) => y.selected_comparison
+      )
+      .failure("selected_comparison", (_new,_old,obj) => { 
+        Object.assign(obj,{
+            "loading": true
+          , "selected_comparison": _new
+        })
+      })
+      .equal("filters", (x,y) => JSON.stringify(x) == JSON.stringify(y) )
+      .failure("filters", (_new,_old,obj) => { 
+        Object.assign(obj,{
+            "loading": true
+          , "filters": _new
+        })
+      })
+      .evaluate()
 
 
-  var asyncPub = function(action,cb){
-    var URL = "/crusher/v2/visitor/domains_full_time_minute/cache?url_pattern=" + action.url_pattern[0] + "&filter_id=" + action.action_id
+    var current = state_module.qs({}).to(state.qs_state)
+      , pop = state_module.qs({}).to(qs_state)
 
 
-    d3.json(URL,function(value) {
+    if (Objects.keys(updates).length && current != pop) {
+      updates["qs_state"] = qs_state
+      s.publishBatch(updates)
+      //
+    }
 
-      var categories = value.summary.category.map(function(x) {x.key = x.parent_category_name; return x})
-      value.categories = categories
-      value.category = value.summary.category
-      value.current_hour = value.summary.hour
-      value.category_hour = value.summary.cross_section
-
-      value.original_urls = value.response
-      //value.full_urls = value.response
-
-//debugger
-
-      cb(false,value)
-    })
+    
   }
 
-  var actionPub = function(cb) {
-    d3.json("/crusher/funnel/action?format=json",function(value) {
-      cb(false,value.response)
-    })
+  window.onpopstate = function(i) {
+
+    var state = s._state
+      , qs_state = i.state
+
+    processStateComparison(s,state,qs_state)
+    
+
   }
 
-  s.publishStatic("actions",actionPub)
-  //s.publishStatic("data",asyncPub)
-  var SELECTION_STATES = [
-        {"key":"Data summary","value":"summary-view","selected":1}
-      , {"key":"Explore data","value":"data-view","selected":0}
-      , {"key":"Media Plan", "value":"media-view","selected":0}
-      //, {"key":"Build Content Brief", "value":"content-view"}
-    ]
 
 
-  var logic = [{"key":"All","value":"and"},{"key":"Any","value":"or"}]
-  var categories = []
-  var filters = [{}]
 
-  s.publish("logic_options",logic)
-  s.publish("logic_categories",categories)
-  s.publish("filters",filters)
-  s.publish("dashboard_options",SELECTION_STATES)
+  s.publishStatic("actions",api.action.getAll)
+
+
+  var DEFAULTS = {
+      logic_options: [{"key":"All","value":"and"},{"key":"Any","value":"or"}]
+    , logic_categories: []
+    , filters: [{}] 
+    , dashboard_options: [
+          {"key":"Data summary","value":"summary-view","selected":1}
+        , {"key":"Explore data","value":"data-view","selected":0}
+        , {"key":"Media Plan", "value":"media-view","selected":0}
+      ]
+  }
+
+  s.update(false,DEFAULTS)
 
   window.s = s
+
 
 
 })();

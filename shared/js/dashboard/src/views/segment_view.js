@@ -98,7 +98,7 @@ SegmentView.prototype = {
         .style("flex","1")
         .style("display","flex")
         .style("padding","10px")
-.style("padding-bottom","0px")
+        .style("padding-bottom","0px")
 
         .style("margin-bottom","0px")
 
@@ -106,7 +106,7 @@ SegmentView.prototype = {
         .classed("inner-desc action",true)
         .style("flex","1")
         .style("padding","10px")
-.style("padding-bottom","0px")
+        .style("padding-bottom","0px")
 
         .style("display","flex")
         .style("margin-bottom","0px")
@@ -114,33 +114,40 @@ SegmentView.prototype = {
 
       d3_updateable(inner,"h3","h3")
         .text("Choose Segment")
-.style("margin","0px")
+        .style("margin","0px")
         .style("line-height","32px")
         .style("color","inherit")
         .style("font-size","inherit")
         .style("font-weight","bold")
         .style("text-transform","uppercase")
         .style("flex","1")
-.style("background","#e3ebf0")
-.style("padding-left","10px")
-.style("margin-right","10px")
-.style("margin-top","2px")
-.style("margin-bottom","2px")
-.style("height","100%")
+        .style("background","#e3ebf0")
+        .style("padding-left","10px")
+        .style("margin-right","10px")
+        .style("margin-top","2px")
+        .style("margin-bottom","2px")
+        .style("height","100%")
 
 
 
-d3_updateable(inner,"div.color","div")
-  .classed("color",true)
-  .style("background-color","#081d58")
-  .style("width","10px")
-  .style("height","32px")
-  .style("margin-top","2px")
-  .style("margin-right","10px")
-  .style("margin-left","-10px")
+        d3_updateable(inner,"div.color","div")
+          .classed("color",true)
+          .style("background-color","#081d58")
+          .style("width","10px")
+          .style("height","32px")
+          .style("margin-top","2px")
+          .style("margin-right","10px")
+          .style("margin-left","-10px")
 
 
-
+      wrap.selectAll(".header-body")
+        .classed("hidden",!this._is_loading)
+        .style("text-align","center")
+        .style("margin-bottom","-40px")
+        .style("padding-top","10px")
+        .style("height","0px")
+        .style("background","none")
+        .html("<img src='/static/img/general/logo-small.gif' style='height:15px'/> loading...")
 
 
       var self = this
@@ -148,11 +155,11 @@ d3_updateable(inner,"div.color","div")
       select(inner)
         .options(this._segments)
         .on("select", function(x){
-          wrap.selectAll(".header-body").classed("hidden",false).style("text-align","center").style("margin-bottom","-40px").style("padding-top","10px").style("height","0px").style("background","none").text("loading")
-            .html("<img src='/static/img/general/logo-small.gif' style='height:15px'/> loading...")
+          
 
           self.on("change").bind(this)(x)
         })
+        .selected(this._action.value || 0)
         .draw()
 
 
@@ -160,7 +167,7 @@ d3_updateable(inner,"div.color","div")
         .classed("inner comparison",true)
         .style("flex","1")
         .style("padding","10px")
-.style("padding-bottom","0px")
+        .style("padding-bottom","0px")
 
         .style("display","flex")
 
@@ -168,7 +175,7 @@ d3_updateable(inner,"div.color","div")
         .classed("inner comparison-desc",true)
         .style("flex","1")
         .style("padding","10px")
-.style("padding-bottom","0px")
+        .style("padding-bottom","0px")
 
         .style("display","flex")
 
@@ -183,36 +190,36 @@ d3_updateable(inner,"div.color","div")
 
       d3_updateable(inner_desc,".bar-wrap-title","h3").classed("bar-wrap-title",true)
         .style("flex","1 1 0%")
-.style("margin","0px")
+        .style("margin","0px")
         .style("line-height","32px")
         .style("color","inherit")
         .style("font-size","inherit")
         .style("font-weight","bold")
         .style("text-transform","uppercase")
-.style("padding-left","10px")
-.style("margin-right","10px")
-.style("margin-top","2px")
-.style("margin-bottom","2px")
-.style("height","100%")
-.style("text-align","right")
+        .style("padding-left","10px")
+        .style("margin-right","10px")
+        .style("margin-top","2px")
+        .style("margin-bottom","2px")
+        .style("height","100%")
+        .style("text-align","right")
 
 
         .text("views")
 
       d3_updateable(inner_desc2,".bar-wrap-title","h3").classed("bar-wrap-title",true)
         .style("flex","1 1 0%")
-.style("margin","0px")
+        .style("margin","0px")
         .style("line-height","32px")
         .style("color","inherit")
         .style("font-size","inherit")
         .style("font-weight","bold")
         .style("text-transform","uppercase")
-.style("padding-left","10px")
-.style("margin-right","10px")
-.style("margin-top","2px")
-.style("margin-bottom","2px")
-.style("height","100%")
-.style("text-align","right")
+        .style("padding-left","10px")
+        .style("margin-right","10px")
+        .style("margin-top","2px")
+        .style("margin-bottom","2px")
+        .style("height","100%")
+        .style("text-align","right")
 
 
 
@@ -262,14 +269,14 @@ d3_updateable(inner,"div.color","div")
 
       d3_updateable(inner_desc2,".bar-wrap-opt","div").classed("bar-wrap-opt",true)
         .style("flex","4 1 0%")
-.style("margin","0px")
+        .style("margin","0px")
         .style("line-height","32px")
         .style("color","inherit")
         .style("font-size","inherit")
         .style("font-weight","bold")
         .style("text-transform","uppercase")
-.style("height","100%")
-.style("text-align","right")
+        .style("height","100%")
+        .style("text-align","right")
         .html("apply filters? <input type='checkbox'></input>")
 
 
@@ -296,23 +303,23 @@ d3_updateable(inner,"div.color","div")
         .style("font-weight","bold")
         .style("flex","1")
         .style("text-transform","uppercase")
-.style("background","#e3ebf0")
-.style("padding-left","10px")
-.style("margin-right","10px")
-.style("margin-top","2px")
-.style("margin-bottom","2px")
-.style("height","100%")
+        .style("background","#e3ebf0")
+        .style("padding-left","10px")
+        .style("margin-right","10px")
+        .style("margin-top","2px")
+        .style("margin-bottom","2px")
+        .style("height","100%")
 
 
 
-d3_updateable(inner2,"div.color","div")
-  .classed("color",true)
-  .style("background-color","grey")
-  .style("width","10px")
-  .style("height","32px")
-  .style("margin-top","2px")
-  .style("margin-right","10px")
-  .style("margin-left","-10px")
+      d3_updateable(inner2,"div.color","div")
+        .classed("color",true)
+        .style("background-color","grey")
+        .style("width","10px")
+        .style("height","32px")
+        .style("margin-top","2px")
+        .style("margin-right","10px")
+        .style("margin-left","-10px")
 
 
 
@@ -324,16 +331,25 @@ d3_updateable(inner2,"div.color","div")
       select(inner2)
         .options([{"key":"Current Segment (without filters)","value":false}].concat(this._segments) )
         .on("select", function(x){
-          wrap.selectAll(".header-body").classed("hidden",false).style("text-align","center").style("margin-bottom","-40px").style("padding-top","10px").style("height","0px").style("background","none").text("loading")
-            .html("<img src='/static/img/general/logo-small.gif' style='height:15px'/> loading...")
 
           self.on("comparison.change").bind(this)(x)
         })
+        .selected(this._comparison.value || 0)
         .draw()
 
 
       return this
     }
+  , action: function(val) {
+      return accessor.bind(this)("action",val)
+    }
+  , comparison: function(val) {
+      return accessor.bind(this)("comparison",val)
+    }
+  , is_loading: function(val) {
+      return accessor.bind(this)("is_loading",val)
+    }
+
   , on: function(action, fn) {
       if (fn === undefined) return this._on[action] || noop;
       this._on[action] = fn;

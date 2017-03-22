@@ -27,6 +27,12 @@ NewDashboard.prototype = {
     data: function(val) {
       return accessor.bind(this)("data",val) 
     }
+  , selected_action: function(val) {
+      return accessor.bind(this)("selected_action",val) 
+    }
+  , selected_comparison: function(val) {
+      return accessor.bind(this)("selected_comparison",val) 
+    }
   , view_options: function(val) {
       return accessor.bind(this)("view_options",val) 
     }
@@ -63,6 +69,10 @@ NewDashboard.prototype = {
   , filters: function(val) {
       return accessor.bind(this)("filters",val) 
     }
+  , loading: function(val) {
+      if (val !== undefined) this._segment_view && this._segment_view.is_loading(val).draw()
+      return accessor.bind(this)("loading",val)
+    }
   , draw: function() {
 
       var data = this.data()
@@ -80,9 +90,12 @@ NewDashboard.prototype = {
       var target = this.target
       var self = this
 
-      segment_view(target)
+      this._segment_view = segment_view(target)
+        .is_loading(self.loading() || false)
         .segments(actions)
         .data(self.summary())
+        .action(self.selected_action() || {})
+        .comparison(self.selected_comparison() || {})
         .on("change", this.on("action.change"))
         .on("comparison.change", this.on("comparison.change"))
         .draw()
