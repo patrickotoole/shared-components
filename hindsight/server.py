@@ -26,6 +26,7 @@ from handlers.advertiser import *
 from handlers.permissions import *
 from handlers.login import *
 from handlers.comparison import *
+from handlers.adwords_mediaplan import *
 
 if __name__ == '__main__':
 
@@ -51,6 +52,8 @@ if __name__ == '__main__':
         (r'/account/permissions', AccountPermissionsHandler, connectors),
         (r'/crusher/funnel/action', ActionHandler, connectors),
         (r'/crusher/dashboard?', DashboardHandler, connectors),
+        (r'/crusher/saved_dashboard?', AdwordsHandler, connectors),
+
         (r'/advertiser', AdvertiserHandler, connectors),
         (r'/crusher/v2/visitor/(.*?)/cache', CacheHandler,connectors),
         (r'/crusher/comparison', ComparisonHandler, connectors),
