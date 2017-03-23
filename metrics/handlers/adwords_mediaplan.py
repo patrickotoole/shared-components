@@ -21,7 +21,7 @@ class AdwordsHandler(BaseHandler):
     def get(self):
         advertiser_id = self.current_advertiser
         data = self.crushercache.select_dataframe(SELECT % advertiser_id)
-        self.write(data.to_json())
+        self.write( ujson.dumps({"response":data.to_dict('records')}) )
 
     def post(self):
         advertiser_id = self.current_advertiser

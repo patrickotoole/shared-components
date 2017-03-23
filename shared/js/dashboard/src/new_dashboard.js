@@ -1,3 +1,4 @@
+import * as state from 'state'
 import filter_view from './views/filter_view'
 import option_view from './views/option_view'
 import domain_view from './views/domain_view'
@@ -8,7 +9,7 @@ import summary_view from './views/summary_view'
 
 import conditional_show from './generic/conditional_show'
 
-
+import share from './generic/share'
 import accessor from './helpers'
 import * as transform from './data_helpers'
 
@@ -26,6 +27,9 @@ export default function new_dashboard(target) {
 NewDashboard.prototype = {
     data: function(val) {
       return accessor.bind(this)("data",val) 
+    }
+  , saved: function(val) {
+      return accessor.bind(this)("saved",val) 
     }
   , selected_action: function(val) {
       return accessor.bind(this)("selected_action",val) 
@@ -98,6 +102,114 @@ NewDashboard.prototype = {
         .comparison(self.selected_comparison() || {})
         .on("change", this.on("action.change"))
         .on("comparison.change", this.on("comparison.change"))
+        .on("saved-search.click", function() {  
+          var ss = share(d3.select("body")).draw()
+          ss.inner(function(target) {
+
+            var header = d3_updateable(target,".header","h4")
+              .classed("header",true)
+              .style("text-align","center")
+              .style("text-transform","uppercase")
+              .style("font-family","ProximaNova, sans-serif")
+              .style("font-size","12px")
+              .style("font-weight","bold")
+              .style("padding-top","30px")
+              .style("padding-bottom","30px")
+              .text("Open a saved dashboard")
+
+            var form = d3_updateable(target,"div","div",self.saved())
+              .style("text-align","left")
+              .style("padding-left","25%")
+
+            if (!self.saved() || self.saved().length == 0) {
+              d3_updateable(form,"span","span")
+                .text("You currently have no saved dashboards")
+            } else {
+              d3_splat(form,".row","a",function(x) { return x },function(x) { return x.name })
+                .classed("row",true)
+                //.attr("href", x => x.endpoint)
+                .text(x => x.name)
+                .on("click", function(x) {
+                  // HACK: THIS is hacky...
+                  var _state = state.qs({}).from("?" + x.endpoint.split("?")[1])
+
+                  window.onpopstate({state: _state})
+                  ss.hide()
+                  d3.event.preventDefault()
+                  return false
+                })
+
+            }
+
+          })
+
+        })
+        .on("new-saved-search.click", function() { 
+          var ss = share(d3.select("body")).draw()
+          ss.inner(function(target) {
+
+            var header = d3_updateable(target,".header","h4")
+              .classed("header",true)
+              .style("text-align","center")
+              .style("text-transform","uppercase")
+              .style("font-family","ProximaNova, sans-serif")
+              .style("font-size","12px")
+              .style("font-weight","bold")
+              .style("padding-top","30px")
+              .style("padding-bottom","30px")
+              .text("Save this dashboard:")
+
+            var form = d3_updateable(target,"div","div")
+              .style("text-align","center")
+
+            var name = d3_updateable(form, ".name", "div")
+              .classed("name",true)
+            
+            d3_updateable(name,".label","div")
+              .style("width","100px")
+              .style("display","inline-block")
+              .style("text-transform","uppercase")
+              .style("font-family","ProximaNova, sans-serif")
+              .style("font-size","12px")
+              .style("font-weight","bold")
+              .style("text-align","left")
+              .text("Dashboard Name:")
+
+            var name_input = d3_updateable(name,"input","input")
+              .style("width","300px")
+              .attr("placeholder","My awesome search")
+
+
+            var send = d3_updateable(form, ".send", "div")
+              .classed("send",true)
+              .style("text-align","center")
+
+
+            d3_updateable(send,"button","button")
+              .style("line-height","16px")
+              .style("margin-top","10px")
+              .text("Send")
+              .on("click",function(x) {
+                var name = name_input.property("value") 
+
+                d3.xhr("/crusher/saved_dashboard")
+                  .post(JSON.stringify({
+                        "name": name
+                      , "endpoint": window.location.pathname + window.location.search
+                    })
+                  )
+
+                ss.hide()
+
+              })
+              .text("Save")
+
+
+
+          })
+
+
+        })
         .draw()
 
       filter_view(target)

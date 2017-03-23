@@ -178,6 +178,8 @@ class AdvertiserRoutes(Routes):
 
         return [
             (r'/adwords_mediaplan', adwords.AdwordsHandler, self.connectors),
+            (r'/saved_dashboard', adwords.AdwordsHandler, self.connectors),
+
             (r'/zk_endpoint', funnel.ZKHandler, self.connectors),
             (r'/domain/idf.*', analytics.DomainIDFHandler, self.connectors),
             (r'/visit_urls', analytics.VisitUrlsHandler, self.connectors),

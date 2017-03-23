@@ -69,7 +69,14 @@ SegmentView.prototype = {
         .style("height",wrap.style("height"))
 
 
-      header(wrap).text("Segment").draw()      
+      header(wrap)
+        .buttons([
+            {class: "saved-search", icon: "fa-folder-open-o fa", text: "Open Saved"}
+          , {class: "new-saved-search", icon: "fa-bookmark fa", text: "Save"}
+        ])
+        .on("saved-search.click", this.on("saved-search.click"))
+        .on("new-saved-search.click", this.on("new-saved-search.click"))
+        .text("Segment").draw()      
 
 
       var body = d3_updateable(wrap,".body","div")

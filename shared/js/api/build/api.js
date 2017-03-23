@@ -39,10 +39,18 @@
   });
 
   let action = a;
+  let dashboard = {
+      getAll: function(cb) {
+        d3.json("/crusher/saved_dashboard",function(value) {
+          cb(false,value.response)
+        })
+      }
+  }
 
   var version = "0.0.1";
 
   exports.version = version;
   exports.action = action;
+  exports.dashboard = dashboard;
 
 }));

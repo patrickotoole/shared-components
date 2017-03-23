@@ -116,6 +116,27 @@ Header.prototype = {
           .style("padding","5px")
       }
 
+      if (this._buttons) {
+
+        var self = this;
+
+        var a = d3_splat(button_wrap,"a","a",this._buttons, function(x) { return x.text })
+          .style("vertical-align","middle")
+          .style("font-size","12px")
+          .style("font-weight","bold")
+          .style("border-right","1px solid #ccc")
+          .style("padding-right","10px")
+          .style("padding-left","10px")
+          .style("display","inline-block")
+          .style("line-height","22px")
+          .style("text-decoration","none")
+          .html(x => "<span class='" + x.icon + "'></span><span style='padding-left:3px'>" + x.text + "</span>")
+          .attr("class",x => x.class)
+          .on("click",x => this.on(x.class + ".click")(x))
+
+
+      }
+
       return this
     }
   , on: function(action, fn) {

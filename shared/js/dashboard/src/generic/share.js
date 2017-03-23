@@ -19,6 +19,7 @@ Share.prototype = {
         .style("position","fixed")
         .style("top","0px")
         .style("background","rgba(0,0,0,.5)")
+        .style("z-index","301")
         .on("click",function() {
           overlay.remove()
         })

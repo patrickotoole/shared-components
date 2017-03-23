@@ -75,7 +75,7 @@
     <a href="/crusher/funnel?source=baublebar">Funnel</a>
   </div>
 </div>
-<div class="container" style="width:inherit"></div>
+<div class="container" style="width:inherit;padding-top:0px"></div>
 <style>
 .inner > select, .inner > input {
   height: 36px;
@@ -372,6 +372,7 @@
 
   function buildDashboard(value) {
       var db = dashboard.new_dashboard(centered)
+          .saved(value.saved || [])
           .data(value.formatted_data)
           .actions(value.actions)
           .selected_action(value.selected_action || {})
@@ -790,12 +791,16 @@ debugger
 
     var updates = dashboard.state.compare(qs_state,state)
 
+    debugger
+
     publishQSUpdates(updates,qs_state)
   }
 
 
 
   s.publishStatic("actions",api.action.getAll)
+  s.publishStatic("saved",api.dashboard.getAll)
+
 
 
   var DEFAULTS = {
@@ -806,6 +811,7 @@ debugger
           {"key":"Data summary","value":"summary-view","selected":1}
         , {"key":"Explore data","value":"data-view","selected":0}
         , {"key":"Media Plan", "value":"media-view","selected":0}
+
       ]
   }
 
