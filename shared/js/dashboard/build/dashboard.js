@@ -3550,8 +3550,8 @@
                     // HACK: THIS is hacky...
                     var _state = state.qs({}).from("?" + x.endpoint.split("?")[1])
 
-                    window.onpopstate({state: _state})
                     ss.hide()
+                    window.onpopstate({state: _state})
                     d3.event.preventDefault()
                     return false
                   })

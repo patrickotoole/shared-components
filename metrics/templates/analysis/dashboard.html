@@ -736,11 +736,15 @@ debugger
     })
     .subscribe("raw.actions",function(error,value,_state) {
       var qs_state = state.qs({}).from(window.location.search)
-      s.update("selected_action",value[0])
+      //s.update("selected_action",value[0])
 
-      if (Object.keys(qs_state).length) {
+      // TODO: Bugfix this... the from object should be empty and the updates should also be empty
+
+      if (window.location.search.length && Object.keys(qs_state).length) {
         var updates = dashboard.state.compare(qs_state,_state)
         return publishQSUpdates(updates,qs_state)
+      } else {
+       s.publish("selected_action",value[0])
       }
 
     })
