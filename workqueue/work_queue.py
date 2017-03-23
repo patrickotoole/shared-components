@@ -7,9 +7,10 @@ import kazoo
 import pickle
 import socket
 import datetime
+import ujson
 
 SQL_LOG = "insert into work_queue_log (hostname, job_id, event) values (%s, %s, %s)"
-SQL_LOG2 = "insert into work_queue_error_log (hostname, error_string, job_id, stacktrace) values (%s, %s, %s, %s)"
+SQL_LOG2 = "insert into work_queue_error_log (hostname, error_string, job_id, stacktrace, parameters) values (%s, %s, %s, %s,%s)"
 
 CACHEQUERY ="select count(*) from generic_function_cache where advertiser='%(advertiser)s' and url_pattern='%(url_pattern)s' and action_id='%(action_id)s' and udf='%(udf)s'"
 CLEARQUERY ="delete from generic_function_cache where advertiser=%(advertiser)s and url_pattern=%(url_pattern)s and action_id=%(action_id)s and udf=%(udf)s and date=%(date)s"
@@ -63,13 +64,13 @@ class WorkQueue(object):
         if len(data) > 0:
             clear_old_cache(**kwargs)
 
-    def log_error(self, e, job_id):
+    def log_error(self, e, job_id, parameters):
         logging.info("data not inserted")
         box = socket.gethostname()
         self.mcounter.bumpError()
         trace_error = str(traceback.format_exc())
         self.connectors['crushercache'].execute(SQL_LOG, (self.current_host, job_id, "Fail"))
-        self.connectors['crushercache'].execute(SQL_LOG2,(box, str(e), job_id, trace_error))
+        self.connectors['crushercache'].execute(SQL_LOG2,(box, str(e), job_id, trace_error, ujson.dumps(parameters)))
         logging.info("ERROR: queue %s " % e)
         logging.info(trace_error)
 
@@ -120,9 +121,10 @@ class WorkQueue(object):
         try:
             self.run_job(data, job_id, entry_id)
         except Exception as e:
+            fn, parameters = pickle.loads(data)
             self.connectors['crusher_wrapper'].logout_user()
             time.sleep(1)
-            self.log_error(e, job_id)
+            self.log_error(e, job_id, parameters)
         finally:
             logging.info("finished item in queue")
             logging.getLogger().handlers[0].job_id = "000000"
