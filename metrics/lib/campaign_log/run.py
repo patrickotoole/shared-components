@@ -3,23 +3,18 @@ import pandas as pd
 import logging
 from lib.appnexus_reporting import load
 
-ADVERTISERS = '''
-SELECT * FROM rockerbox.advertiser
-WHERE active = 1 AND deleted = 0 AND running = 1 AND media = 1
-'''
 
 QUERY = '''
 SELECT * FROM appnexus_proxy_logs WHERE object_type = "campaign" 
 AND created_at >= date_add(NOW(),interval -100 day)
-AND advertiser_id = %s
 ORDER BY appnexus_id, created_at ASC
 '''
 
 COLS = ['old','new', 'field', 'updated_at', 'log_id', 'campaign_id']
 KEYS = ['log_id','campaign_id','field']
 
-def extract(db, advertiser_id):
-    df = db.select_dataframe(QUERY%advertiser_id)
+def extract(db):
+    df = db.select_dataframe(QUERY)
     assert 'id' in df.columns
     assert 'data' in df.columns
     assert 'created_at' in df.columns
@@ -59,13 +54,9 @@ def insert(df, table, db):
 
 def run(db):
     
-    advertisers = db.select_dataframe(ADVERTISERS)
-    for advertiser_id in advertisers['external_advertiser_id']:
-        logging.info("running advertiser %s" %advertiser_id)
-        df = extract(db, advertiser_id)
-        if len(df) > 0:
-            df = transform(df)
-            insert(df, "campaign_change_log", db)
+    df = extract(db)
+    df = transform(df)
+    insert(df, "campaign_change_log", db)
 
 
 if __name__ == "__main__":
@@ -80,4 +71,3 @@ if __name__ == "__main__":
 
     db = lnk.dbs.reporting
     run(db)
-
