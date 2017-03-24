@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.INFO, format=formatter)
 
 logger = logging.getLogger()
 
-SQL_QUERY = "select pixel_source_name from rockerbox.advertiser where crusher=1 and deleted=0"
+SQL_QUERY = "select pixel_source_name from rockerbox.advertiser_caching where valid_pixel_fires_yesterday=1 and cache=1"
 
 SQL_REMOVE_OLD = "DELETE FROM action_dashboard_cache where update_time < (UNIX_TIMESTAMP() - %s)"
 UDFQUERY = "select udf from user_defined_functions where advertiser ={} or advertiser is NULL"
