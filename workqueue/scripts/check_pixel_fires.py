@@ -19,7 +19,7 @@ class SetCacheList():
         self.advertisers = self.get_current_advertisers()
         logging.info(self.advertisers)
         self.api_wrapper = crusher_wrapper
-        self.api_wrapper.base_url="http://192.168.99.100:8888"
+        self.api_wrapper.base_url="http://portal.getrockerbox.com"
 
     def query_advertisers(self, QUERY):
         df = self.db.select_dataframe(QUERY)
