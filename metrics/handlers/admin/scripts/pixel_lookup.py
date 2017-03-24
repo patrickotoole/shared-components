@@ -44,12 +44,12 @@ class PixelLookupHandler(AnalyticsBase, BaseHandler):
         return execute
 
     @defer.inlineCallbacks
-    def get_segments(self, advertiser, segment, uid):
+    def get_segments(self, advertiser, segment, uid, sampled):
         try:
             if uid:
                 df = yield self.defer_execute(advertiser, segment, uid)
             else:
-                df = yield self.get_from_v2(advertiser,segment)
+                df = yield self.get_from_v2(advertiser,segment, sampled)
             response = self.format_response(pandas.DataFrame(df))
             self.write_json(response)
         except:
@@ -87,13 +87,17 @@ class PixelLookupHandler(AnalyticsBase, BaseHandler):
         data = self.cassandra.execute(q)
         return pandas.DataFrame(data)
 
-    def get_from_v2(self,source,segment):
+    def get_from_v2(self,source,segment, sampled):
+        if sampled > 50:
+            testdf = self.cassandra.select_dataframe("select * from rockerbox.pixel_fires_v2 where source = '%s' and segment ='%s' and u2='00'" % (source, segment))
+            sampled = sampled if len(testdf) < 500 else 10
         query = QUERY + " where source = ? and segment = ? and u2 = ?"
         execute = self.prepare_query(query)
         if segment:
             
-            prepped = [[source, str(segment)] + [str(u2)] for u2 in range(0,100)]
-            for x in range(0,10):
+            prepped = [[source, str(segment)] + [str(u2)] for u2 in range(0,sampled)]
+            prep_range = 10 if sampled>=10 else sampled
+            for x in range(0,prep_range):
                 prepped[x][2] = '0'+ prepped[x][2]
             data, _ = FutureHelpers.future_queue(prepped,execute,simple_append,60,[],None)
         else:
@@ -106,5 +110,8 @@ class PixelLookupHandler(AnalyticsBase, BaseHandler):
         advertiser = self.get_argument("advertiser", False)
         segment = self.get_argument("segment", False)
         uid = self.get_argument("uid", False)
+        sample = self.get_argument("sample",100)
 
-        self.get_segments(advertiser, segment, uid)
+        sampled = int(sample) if int(sample) < 100 else 100
+
+        self.get_segments(advertiser, segment, uid, sampled)
