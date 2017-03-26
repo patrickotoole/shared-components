@@ -138,6 +138,8 @@ submit_target.append("button")
        obj[ukey] = user_parameters[ukey]
     }
 
+    obj['submitted_by'] = "workqueue_ui"
+
    console.log(obj)
 
     d3.xhr("/cache")

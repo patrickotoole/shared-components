@@ -154,6 +154,9 @@ class CacheHandler(tornado.web.RequestHandler, RPCQueue):
             else:
                 entry, job_id = self.add_to_work_queue(self.request.body)
                 self.get_id(job_id, entry)
+
+            if (data.get('udf',False)):
+                self.crushercache.execute("INSERT INTO cache_udf_submit (job_id,advertiser,udf,filter_id,pattern,submitted_by) VALUES (%s,%s,%s,%s,%s,%s)", (entry.split("/")[-1] + "_" + job_id,data['advertiser'],data['udf'],data['filter_id'],data['pattern'],data['submitted_by']))
         except Exception, e:
             self.set_status(400)
             self.write(ujson.dumps({"error":str(e)}))

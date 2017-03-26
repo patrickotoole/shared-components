@@ -3,6 +3,7 @@ import traceback
 import logging
 from kazoo.client import KazooClient
 from kazoo.client import KazooState
+import json
 import kazoo
 import pickle
 import socket
@@ -17,6 +18,9 @@ CLEARQUERY ="delete from generic_function_cache where advertiser=%(advertiser)s 
 DATEQUERY = "select date from generic_function_cache where advertiser='%(advertiser)s' and url_pattern='%(url_pattern)s' and action_id='%(action_id)s' and udf='%(udf)s' order by date limit 1"
 START_QUERY = "insert into work_queue_log (hostname, event) values (%s, %s)"
 SELECTOLDCACHE = "select zipped from generic_function_cache where advertiser = %s and action_id = %s and udf = %s"
+
+START_UDF = "INSERT INTO cache_udf_start (job_id,advertiser,filter_id,pattern,udf,params) VALUES (%s,%s,%s,%s,%s,%s)"
+FINISH_UDF = "INSERT INTO cache_udf_finish (job_id,finish_type) VALUES (%s,%s)"
 
 
 def clear_old_cache(**kwargs):
@@ -73,11 +77,13 @@ class WorkQueue(object):
         self.connectors['crushercache'].execute(SQL_LOG2,(box, str(e), job_id, trace_error, ujson.dumps(parameters)))
         logging.info("ERROR: queue %s " % e)
         logging.info(trace_error)
+        self.connectors['crushercache'].execute(FINISH_UDF, (job_id,"error"))
+
 
     def set_api_wrapper(self, kwargs):
         if self.connectors['crusher_wrapper'].user != "a_{}".format(kwargs['advertiser']):
             logging.info("crusher object not set to current user, setting now current user is %s % kwargs['advertiser']")
-            self.connectors['crusher_wrapper'] = get_crusher_obj(kwargs['advertiser'],"http://beta.crusher.getrockerbox.com", self.connectors['crusher_wrapper'])
+            self.connectors['crusher_wrapper'] = get_crusher_obj(kwargs['advertiser'],kwargs.get("base_url","http://beta.crusher.getrockerbox.com"), self.connectors['crusher_wrapper'])
             valid = validate_crusher(self.connectors['crusher_wrapper'], kwargs['advertiser']) if self.connectors['crusher_wrapper']._token else False
         else:
             valid = True
@@ -89,11 +95,18 @@ class WorkQueue(object):
         self.connectors['crushercache'].execute(SQL_LOG, (self.current_host, job_id, "Ran"))
         self.timer.resetTime()
         logging.info("finished item in queue %s %s" % (str(fn),str(kwargs)))
+        if (kwargs.get("pattern",False) and kwargs.get("filter_id",False)): self.connectors['crushercache'].execute(FINISH_UDF, (job_id, "success"))
+
 
     def log_before_job(self, job_id, entry_id, valid, fn, kwargs):
         self.zk_wrapper.sets(job_id, entry_id)
         logging.info("crusher object is valid: %s"  % valid)
         logging.info("starting queue %s %s" % (str(fn),str(kwargs)))
+
+        obj = {i:j for i,j in kwargs.items() if i != "connectors"}
+
+
+        if (kwargs.get("pattern",False) and kwargs.get("filter_id",False)): self.connectors['crushercache'].execute(START_UDF, (job_id, kwargs['advertiser'], kwargs['filter_id'], kwargs['pattern'], kwargs['func_name'], json.dumps(obj) ))
 
     def run_job(self, data, job_id, entry_id):
         fn, kwargs = pickle.loads(data)
