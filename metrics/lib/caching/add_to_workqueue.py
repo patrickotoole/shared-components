@@ -20,7 +20,7 @@ def setup(rb,crushercache):
     return _setup
     
 
-def build_post(udf,advertiser,params):
+def build_post(udf,advertiser,params,base_url):
 
     def _build(filter_id,pattern):
         to_post = {
@@ -32,7 +32,8 @@ def build_post(udf,advertiser,params):
             "num_days": 2,
             "prevent_sample": "true",
             "num_users": 25000,
-            "priority":2
+            "priority":2,
+            "base_url":base_url
         }
         
         TO_POST = {i:j for i,j in to_post.items() + params.items()}
@@ -50,21 +51,23 @@ if __name__ == "__main__":
 
     env = setup(rb,crushercache)
 
-    advertiser = "fsastore"
     udf = "domains_full_time_minute"
-    url = "http://localhost:9001/cache" #"http://workqueue.crusher.getrockerbox.com/cache"
+    wq_url = "http://localhost:9001/cache" #"http://workqueue.crusher.getrockerbox.com/cache"
+    base_url = "http://localhost:8888"
 
-    variables = env(advertiser,udf)
+    for advertiser in rb.select_dataframe("select pixel_source_name from rockerbox.advertiser where crusher=1 and deleted=0 and pixel_source_name != 'fsastore'").pixel_source_name:
 
-    builder = build_post(udf,advertiser,variables["params"])
-    built = variables["actions"].T.apply(lambda x: [builder(x.action_id,x.url_pattern)] )
-    
-    import requests
-    import json
+        variables = env(advertiser,udf)
 
-    for i in built.tolist()[:1]:
-        obj = i[0]
-        requests.post(url,data=json.dumps(obj))
+        builder = build_post(udf,advertiser,variables["params"],base_url)
+        built = variables["actions"].T.apply(lambda x: [builder(x.action_id,x.url_pattern)] )
+        
+        import requests
+        import json
+
+        for i in built.tolist():
+            obj = i[0]
+            requests.post(wq_url,data=json.dumps(obj))
 
 
     

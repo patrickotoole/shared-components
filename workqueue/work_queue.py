@@ -81,6 +81,8 @@ class WorkQueue(object):
 
 
     def set_api_wrapper(self, kwargs):
+        self.connectors['crusher_wrapper'].base_url = kwargs.get("base_url","http://beta.crusher.getrockerbox.com")
+
         if self.connectors['crusher_wrapper'].user != "a_{}".format(kwargs['advertiser']):
             logging.info("crusher object not set to current user, setting now current user is %s % kwargs['advertiser']")
             self.connectors['crusher_wrapper'] = get_crusher_obj(kwargs['advertiser'],kwargs.get("base_url","http://beta.crusher.getrockerbox.com"), self.connectors['crusher_wrapper'])

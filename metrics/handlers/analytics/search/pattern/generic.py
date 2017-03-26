@@ -248,7 +248,7 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
         if l1_dfs.get('domains_full', False):
             shared_dict['domains_full'] = l1_dfs['domains_full'][0][1]
         if l1_dfs.get('uid_urls', False):
-            shared_dict['uid_urls'] = l1_dfs['uid_urls'][0]
+            shared_dict['uid_urls'] = l1_dfs['uid_urls'][0] if l1_dfs['uid_urls'] is tuple else pandas.DataFrame()
         if l1_dfs.get('artifacts', False):
             shared_dict['artifacts'] = l1_dfs['artifacts']
         if l1_dfs.get('actions', False):
