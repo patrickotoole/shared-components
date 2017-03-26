@@ -37,6 +37,13 @@ NewDashboard.prototype = {
   , selected_comparison: function(val) {
       return accessor.bind(this)("selected_comparison",val) 
     }
+  , action_date: function(val) {
+      return accessor.bind(this)("action_date",val) 
+    }
+  , comparison_date: function(val) {
+      return accessor.bind(this)("comparison_date",val) 
+    }
+
   , view_options: function(val) {
       return accessor.bind(this)("view_options",val) 
     }
@@ -99,9 +106,14 @@ NewDashboard.prototype = {
         .segments(actions)
         .data(self.summary())
         .action(self.selected_action() || {})
+        .action_date(self.action_date())
+        .comparison_date(self.comparison_date())
+
         .comparison(self.selected_comparison() || {})
         .on("change", this.on("action.change"))
+        .on("action_date.change", this.on("action_date.change"))
         .on("comparison.change", this.on("comparison.change"))
+        .on("comparison_date.change", this.on("comparison_date.change"))
         .on("saved-search.click", function() {  
           var ss = share(d3.select("body")).draw()
           ss.inner(function(target) {

@@ -1467,6 +1467,7 @@
 
         var body = d3_updateable(wrap,".body","div")
           .classed("body",true)
+          .style("clear","both")
           .style("display","flex")
           .style("flex-direction","column")
           .style("margin-top","-15px")
@@ -1523,14 +1524,14 @@
 
 
 
-          d3_updateable(inner,"div.color","div")
-            .classed("color",true)
-            .style("background-color","#081d58")
-            .style("width","10px")
-            .style("height","32px")
-            .style("margin-top","2px")
-            .style("margin-right","10px")
-            .style("margin-left","-10px")
+        d3_updateable(inner,"div.color","div")
+          .classed("color",true)
+          .style("background-color","#081d58")
+          .style("width","10px")
+          .style("height","32px")
+          .style("margin-top","2px")
+          .style("margin-right","10px")
+          .style("margin-left","-10px")
 
 
         wrap.selectAll(".header-body")
@@ -1548,13 +1549,44 @@
         select(inner)
           .options(this._segments)
           .on("select", function(x){
-            
-
             self.on("change").bind(this)(x)
           })
           .selected(this._action.value || 0)
           .draw()
 
+        
+
+
+
+        var cal = d3_updateable(inner,"a.fa-calendar","a")
+          .style("line-height","34px")
+          .style("width","36px")
+          .style("border","1px solid #ccc")
+          .style("border-radius","5px")
+          .classed("fa fa-calendar",true)
+          .style("text-align","center")
+          .style("margin-left","5px")
+          .on("click", function(x) {
+            calsel.node()
+          })
+
+        
+        var calsel = select(cal)
+          .options([{"key":"Today","value":0},{"key":"Yesterday","value":1},{"key":"7 days ago","value":7}])
+          .on("select", function(x){
+            self.on("action_date.change").bind(this)(x.value)
+          })
+          .selected(this._action_date || 0)
+          .draw()
+          ._select
+          .style("width","18px")
+          .style("margin-left","-18px")
+          .style("height","34px")
+          .style("opacity",".01")
+          .style("flex","none")
+          .style("border","none")
+
+        
 
         var inner2 = d3_updateable(row2,".comparison.inner","div")
           .classed("inner comparison",true)
@@ -1625,18 +1657,18 @@
 
         var bar_samp = d3_updateable(inner_desc,"div.bar-wrap","div")
           .classed("bar-wrap",true)
-          .style("flex","3 1 0%")
+          .style("flex","2 1 0%")
           .style("margin-top","8px")
 
         d3_updateable(inner_desc,".bar-wrap-space","div").classed("bar-wrap-space",true)
-          .style("flex","2 1 0%")
+          .style("flex","1 1 0%")
           .style("line-height","36px")
           .style("padding-left","10px")
           .text(d3.format(",")(this._data.views.sample))
 
 
         d3_updateable(inner_desc,".bar-wrap-opt","div").classed("bar-wrap-opt",true)
-          .style("flex","4 1 0%")
+          .style("flex","2 1 0%")
           .style("line-height","36px")
           //.text("apply filters?")
 
@@ -1649,19 +1681,19 @@
 
         var bar_pop = d3_updateable(inner_desc2,"div.bar-wrap","div")
           .classed("bar-wrap",true)
-          .style("flex","3 1 0%")
+          .style("flex","2 1 0%")
           .style("margin-top","8px")
 
 
         d3_updateable(inner_desc2,".bar-wrap-space","div").classed("bar-wrap-space",true)
-          .style("flex","2 1 0%")
+          .style("flex","1 1 0%")
           .style("line-height","36px")
           .style("padding-left","10px")
           .text(d3.format(",")(this._data.views.population))
 
 
         d3_updateable(inner_desc2,".bar-wrap-opt","div").classed("bar-wrap-opt",true)
-          .style("flex","4 1 0%")
+          .style("flex","2 1 0%")
           .style("margin","0px")
           .style("line-height","32px")
           .style("color","inherit")
@@ -1730,12 +1762,48 @@
           .selected(this._comparison.value || 0)
           .draw()
 
+        var cal2 = d3_updateable(inner2,"a.fa-calendar","a")
+          .style("line-height","34px")
+          .style("width","36px")
+          .style("border","1px solid #ccc")
+          .style("border-radius","5px")
+          .classed("fa fa-calendar",true)
+          .style("text-align","center")
+          .style("margin-left","5px")
+          .on("click", function(x) {
+            calsel2.node()
+          })
+
+        
+        var calsel2 = select(cal2)
+          .options([{"key":"Today","value":0},{"key":"Yesterday","value":1},{"key":"7 days ago","value":7}])
+          .on("select", function(x){
+            self.on("comparison_date.change").bind(this)(x.value)
+          })
+          .selected(this._comparison_date || 0)
+          .draw()
+          ._select
+          .style("width","18px")
+          .style("margin-left","-18px")
+          .style("height","34px")
+          .style("opacity",".01")
+          .style("flex","none")
+          .style("border","none")
+
+
 
         return this
+      }
+    , action_date: function(val) {
+        return accessor.bind(this)("action_date",val)
       }
     , action: function(val) {
         return accessor.bind(this)("action",val)
       }
+    , comparison_date: function(val) {
+        return accessor.bind(this)("comparison_date",val)
+      }
+
     , comparison: function(val) {
         return accessor.bind(this)("comparison",val)
       }
@@ -3454,6 +3522,13 @@
     , selected_comparison: function(val) {
         return accessor.bind(this)("selected_comparison",val) 
       }
+    , action_date: function(val) {
+        return accessor.bind(this)("action_date",val) 
+      }
+    , comparison_date: function(val) {
+        return accessor.bind(this)("comparison_date",val) 
+      }
+
     , view_options: function(val) {
         return accessor.bind(this)("view_options",val) 
       }
@@ -3516,9 +3591,14 @@
           .segments(actions)
           .data(self.summary())
           .action(self.selected_action() || {})
+          .action_date(self.action_date())
+          .comparison_date(self.comparison_date())
+
           .comparison(self.selected_comparison() || {})
           .on("change", this.on("action.change"))
+          .on("action_date.change", this.on("action_date.change"))
           .on("comparison.change", this.on("comparison.change"))
+          .on("comparison_date.change", this.on("comparison_date.change"))
           .on("saved-search.click", function() {  
             var ss = share(d3.select("body")).draw()
             ss.inner(function(target) {
@@ -3742,6 +3822,13 @@
           , "filters": _new
         })
       })
+      .failure("action_date", (_new,_old,obj) => { 
+        Object.assign(obj,{ loading: true, "action_date": _new })
+      })
+      .failure("comparison_date", (_new,_old,obj) => { 
+        Object.assign(obj,{ loading: true, "comparison_date": _new })
+      })
+
       .evaluate()
 
     var current = state.qs({}).to(_state.qs_state || {})

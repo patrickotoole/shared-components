@@ -50,6 +50,13 @@ export function compare(qs_state,_state) {
         , "filters": _new
       })
     })
+    .failure("action_date", (_new,_old,obj) => { 
+      Object.assign(obj,{ loading: true, "action_date": _new })
+    })
+    .failure("comparison_date", (_new,_old,obj) => { 
+      Object.assign(obj,{ loading: true, "comparison_date": _new })
+    })
+
     .evaluate()
 
   var current = state.qs({}).to(_state.qs_state || {})

@@ -377,6 +377,8 @@
           .actions(value.actions)
           .selected_action(value.selected_action || {})
           .selected_comparison(value.selected_comparison || {})
+          .action_date(value.action_date || 0)
+          .comparison_date(value.comparison_date || 0)
           .loading(value.loading || false)
           .summary(value.summary)
           .time_summary(value.time_summary)
@@ -389,11 +391,10 @@
           .filters(value.filters)
           .view_options(value.dashboard_options)
           .explore_tabs(value.tabs)
-          .on("action.change", function(action) {
-            s.publish("selected_action",action)
-          })
-          .on("comparison.change", function(action) {
-
+          .on("action.change", function(action) { s.publish("selected_action",action) })
+          .on("action_date.change", function(date) { s.publish("action_date",date) })
+          .on("comparison_date.change", function(date) { s.publish("comparison_date",date) })
+          .on("comparison.change", function(action) { 
             if (action.value == false) return s.publish("selected_comparison",false)
             s.publish("selected_comparison",action)
           })
@@ -748,12 +749,19 @@ debugger
       }
 
     })
-    .subscribe("raw.selected_action",function(error,value) {
-      s.publishStatic("data",api.action.getData(value))
+    .subscribe("raw.action_date",function(error,value,state) {
+      s.publishStatic("data",api.action.getData(state.selected_action,state.action_date))
     })
-    .subscribe("raw.selected_comparison",function(error,value) {
+    .subscribe("raw.comparison_date",function(error,value,state) {
       if (!value) return s.publishStatic("comparison_data",false)
-      s.publishStatic("comparison_data",api.action.getData(value))
+      s.publishStatic("comparison_data",api.action.getData(state.selected_comparison,state.comparison_date))
+    })
+    .subscribe("raw.selected_action",function(error,value,state) {
+      s.publishStatic("data",api.action.getData(value,state.action_date))
+    })
+    .subscribe("raw.selected_comparison",function(error,value,state) {
+      if (!value) return s.publishStatic("comparison_data",false)
+      s.publishStatic("comparison_data",api.action.getData(value,state.comparison_date))
     })
     .subscribe("history",function(error,state) {
       console.log("current: " + JSON.stringify(state.qs_state), JSON.stringify(state.filters), state.dashboard_options )
@@ -767,6 +775,9 @@ debugger
       if (state.selected_action) qs_state['selected_action'] = state.selected_action.action_id
       if (state.selected_comparison) qs_state['selected_comparison'] = state.selected_comparison.action_id
       if (state.dashboard_options) qs_state['selected_view'] = state.dashboard_options.filter(x => x.selected)[0].value
+      if (state.action_date) qs_state['action_date'] = state.action_date
+      if (state.comparison_date) qs_state['comparison_date'] = state.comparison_date
+
 
       if (state.selected_action && state_module.qs(qs_state).to(qs_state) != window.location.search) {
         s.publish("qs_state",qs_state)
