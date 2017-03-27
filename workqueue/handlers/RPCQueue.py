@@ -34,11 +34,7 @@ class RPCQueue():
         
         rpc_data = ujson.loads(rpc_object)
         advertiser = rpc_data.get("advertiser")
-        if rpc_data.get("debug",""):
-            if rpc_data.get("debug","") == "true" or rpc_data.get("debug","") =="True":
-                set_debug=True
-        else:
-            set_debug = False
+        set_debug = rpc_data.get("debug",None)
         fn1 = ub.runner
         fn2 = fc.runner
         
@@ -92,7 +88,7 @@ class RPCQueue():
         filter_id = rpc_data.get("filter_id", False)
         parameters = rpc_data.get("parameters", {})
         priority = rpc_data.get("priority", 2)
-        debug_bool = rpc_data.get("debug",False)
+        debug_bool = rpc_data.get("debug",None)
         for key, val in rpc_data.items():
             if key not in ['advertiser','udf','pattern','base_url','action_name','filter_id','priority','parameters', 'debug']:
                 parameters[key] = val
