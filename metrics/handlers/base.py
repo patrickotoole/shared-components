@@ -104,7 +104,10 @@ class BaseHandler(tornado.web.RequestHandler):
             self.finish()
         if type(data) == type(Exception()):
             self.set_status(400)
-            self.write(ujson.dumps({"error":str(data)}))
+            if "No users in segment" in data.message:
+                self.write(ujson.dumps({"error":"No users in segment"}))
+            else:
+                self.write(ujson.dumps({"error":str(data)}))
             self.finish()
         else:
             yield default, (data,)
@@ -117,7 +120,10 @@ class BaseHandler(tornado.web.RequestHandler):
             self.finish()
         if type(data) == type(Exception()):
             self.set_status(400)
-            self.write(ujson.dumps({"error":str(data)}))
+            if "No users in segment" in data.message:
+                self.write(ujson.dumps({"error":"No users in segment"}))
+            else:
+                self.write(ujson.dumps({"error":str(data)}))
             self.finish()
         elif type(data) == dict:
             self.write(ujson.dumps(data))
@@ -136,7 +142,10 @@ class BaseHandler(tornado.web.RequestHandler):
 
         if type(data) == type(Exception()):
             self.set_status(400)
-            self.write(ujson.dumps({"error":str(data)}))
+            if "No users in segment" in data.message:
+                self.write(ujson.dumps({"error":"No users in segment"}))
+            else:
+                self.write(ujson.dumps({"error":str(data)}))
             self.finish()
         elif summary:
             df = Convert.df_to_values(data)

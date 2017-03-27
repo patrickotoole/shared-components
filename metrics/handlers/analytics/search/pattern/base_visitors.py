@@ -35,8 +35,7 @@ class VisitorBase(GenericSearchBase, BaseDomainHandler):
         _dl = [threads.deferToThread(fn,*[],**kwargs) for fn in funcs]
         dl = defer.DeferredList(_dl)
         responses = yield dl
-        if responses[0][1].__class__ is twisted.python.failure.Failure:
-            raise Exception(str(responses[0][1]))
+        check_defer_list(responses)
         logging.info("Finished process_uids.")
 
         logging.info("Started transform...")
@@ -70,7 +69,6 @@ class VisitorBase(GenericSearchBase, BaseDomainHandler):
         args = [advertiser,pattern_terms[0][0],datelist,NUM_DAYS,response,ALLOW_SAMPLE,filter_id,NUM_USERS,datasets]
 
         now = time.time()
-
         kwargs = yield self.build_arguments(*args)
         kwargs['url_arguments'] = url_args
 

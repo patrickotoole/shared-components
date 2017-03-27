@@ -13,6 +13,13 @@ import traceback
 
 import gzip
 import cStringIO
+import twisted
+
+def check_defer_list(defer_list):
+    for r in defer_list:
+        if r.__class__ is twisted.python.failure.Failure:
+            raise Exception(str(r))
+
 
 class Cast:
     @staticmethod
@@ -252,7 +259,10 @@ class decorators:
                 func(self, *args, **kwargs)
             except Exception as e:
                 self.set_status(400)
-                self.write(ujson.dumps({"error":str(e)}))
+                if "No users in segment" in e.message:
+                    self.write(ujson.dumps({"error":"No users in segment"}))
+                else:
+                    self.write(ujson.dumps({"error":str(e)}))
                 self.finish()
         return inner
 

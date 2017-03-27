@@ -1,7 +1,6 @@
 import pandas
 import logging
 import time
-import twisted
 import itertools
 import ujson
 from twisted.internet import defer, threads
@@ -243,9 +242,7 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
         dl = defer.DeferredList(_dl_l1)
         responses = yield dl
         defer_responses = [r[1] for r in responses]
-        for r in defer_responses:
-            if r.__class__ is twisted.python.failure.Failure:
-                raise Exception(str(r))
+        check_defer_list(defer_responses)
         
         l1_dfs = dict(zip(l1_dfs, defer_responses))
         if l1_dfs.get('domains_full', False):
@@ -272,9 +269,7 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
             dl = defer.DeferredList(_dl_l2)
             responses = yield dl
             defer_responses = [r[1] for r in responses]
-            for r in defer_responses:
-                if r.__class__ is twisted.python.failure.Failure:
-                    raise Exception(str(r))
+            check_defer_list(defer_responses)
             l2_dfs = dict(zip(l2_dfs, defer_responses))
             for k in l2_dfs.keys():
                 shared_dict[k] = l2_dfs[k]
@@ -316,19 +311,20 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
             uids = list(set(full_df.uid.values))[:num_users]
 
         shared_dict['uids'] = uids
+        returnDFs = {}
         if len(uids) > 0:
             shared_dict = yield self.run_init_level(needed_dfs, self.LEVELS["l1"], shared_dict)
             shared_dict = yield self.run_level(needed_dfs, self.LEVELS["l2"], shared_dict)
             shared_dict = yield self.run_level(needed_dfs, self.LEVELS["l3"], shared_dict)
             shared_dict = yield self.run_level(needed_dfs, self.LEVELS["l4"], shared_dict)
-        returnDFs = {}
-        returnDFs['response']=shared_dict['response']
-        try:
-            shared_dict['uid_urls']['hour'] = shared_dict['uid_urls'].timestamp.map(lambda x: x.split(" ")[1].split(":")[0])
-        except:
-            shared_dict = shared_dict
-        for k in needed_dfs:
-            returnDFs[k] = shared_dict[k]
-
+            returnDFs['response']=shared_dict['response']
+            try:
+                shared_dict['uid_urls']['hour'] = shared_dict['uid_urls'].timestamp.map(lambda x: x.split(" ")[1].split(":")[0])
+            except:
+                shared_dict = shared_dict
+            for k in needed_dfs:
+                returnDFs[k] = shared_dict[k]
+        else:
+            raise Exception("No users in segment")
         defer.returnValue(returnDFs)
 
