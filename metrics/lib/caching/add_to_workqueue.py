@@ -32,7 +32,7 @@ def build_post(udf,advertiser,params,base_url):
             "num_days": 2,
             "prevent_sample": "true",
             "num_users": 25000,
-            "priority":2,
+            "priority": 5,
             "base_url":base_url
         }
         
@@ -53,21 +53,23 @@ if __name__ == "__main__":
 
     udf = "domains_full_time_minute"
     wq_url = "http://localhost:9001/cache" #"http://workqueue.crusher.getrockerbox.com/cache"
-    base_url = "http://localhost:8888"
+    base_url = "http://localhost:8888" #"http://beta.crusher.getrockerbox.com"
 
-    for advertiser in rb.select_dataframe("select pixel_source_name from rockerbox.advertiser where crusher=1 and deleted=0 and pixel_source_name != 'fsastore'").pixel_source_name:
+    for advertiser in rb.select_dataframe("select pixel_source_name from rockerbox.advertiser where crusher=1 and deleted=0 ").pixel_source_name:
 
         variables = env(advertiser,udf)
 
         builder = build_post(udf,advertiser,variables["params"],base_url)
         built = variables["actions"].T.apply(lambda x: [builder(x.action_id,x.url_pattern)] )
         
-        import requests
-        import json
+        if len(built.T):
+            import requests
+            import json
 
-        for i in built.tolist():
-            obj = i[0]
-            requests.post(wq_url,data=json.dumps(obj))
+            import ipdb; ipdb.set_trace()
+            for i in built.tolist():
+                obj = i[0]
+                requests.post(wq_url,data=json.dumps(obj))
 
 
     

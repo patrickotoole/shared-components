@@ -219,7 +219,7 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
 
     @decorators.deferred
     def defer_urls_to_actions(self, pixel, uid_urls, actions):
-        urls = set(uid_urls.url)
+        urls = set(uid_urls.url) 
         results = self.urls_to_actions(pixel,urls, actions, AhoCorasick)
         return results
     
@@ -248,7 +248,7 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
         if l1_dfs.get('domains_full', False):
             shared_dict['domains_full'] = l1_dfs['domains_full'][0][1]
         if l1_dfs.get('uid_urls', False):
-            shared_dict['uid_urls'] = l1_dfs['uid_urls'][0] if l1_dfs['uid_urls'] is tuple else pandas.DataFrame()
+            shared_dict['uid_urls'] = l1_dfs['uid_urls'][0] if type(l1_dfs['uid_urls']) is tuple else pandas.DataFrame()
         if l1_dfs.get('artifacts', False):
             shared_dict['artifacts'] = l1_dfs['artifacts']
         if l1_dfs.get('actions', False):
@@ -311,10 +311,11 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
             uids = list(set(full_df.uid.values))[:num_users]
 
         shared_dict['uids'] = uids
-        shared_dict = yield self.run_init_level(needed_dfs, self.LEVELS["l1"], shared_dict)
-        shared_dict = yield self.run_level(needed_dfs, self.LEVELS["l2"], shared_dict)
-        shared_dict = yield self.run_level(needed_dfs, self.LEVELS["l3"], shared_dict)
-        shared_dict = yield self.run_level(needed_dfs, self.LEVELS["l4"], shared_dict)
+        if len(uids) > 0:
+            shared_dict = yield self.run_init_level(needed_dfs, self.LEVELS["l1"], shared_dict)
+            shared_dict = yield self.run_level(needed_dfs, self.LEVELS["l2"], shared_dict)
+            shared_dict = yield self.run_level(needed_dfs, self.LEVELS["l3"], shared_dict)
+            shared_dict = yield self.run_level(needed_dfs, self.LEVELS["l4"], shared_dict)
         returnDFs = {}
         returnDFs['response']=shared_dict['response']
         try:

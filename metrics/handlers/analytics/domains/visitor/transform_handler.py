@@ -36,6 +36,8 @@ class VisitorTransformHandler(VisitorBase):
         is_default = filter(lambda x: ("process_" + api_type) in x.__name__, self.DEFAULT_FUNCS)
 
         env = self.buildEnvironment().env()
+        exec "import logging" in env
+
 
         if len(advertiser_overrides) > 0:
             user_func = advertiser_overrides['body'][0]
@@ -61,16 +63,22 @@ class VisitorTransformHandler(VisitorBase):
         filter_id = self.get_argument("filter_id",False)
         filter_date = self.get_argument("date", False)
         num_users = self.get_argument("num_users",20000)
-        
+        skip_datasets = self.get_argument("skip_datasets","").split(",")
+
         try: 
             process = self.getProcess(advertiser, terms, api_type)
         except:
             raise Exception("UDF does not exist")
 
         DEFAULT_DATASETS = ['domains','domains_full','urls','idf','uid_urls', 'url_to_action', 'category_domains', 'corpus', 'artifacts', 'idf_hour', 'actions']
+
+        datasets = [d for d in DEFAULT_DATASETS if d not in skip_datasets]
+
+        
         url_arg = self.request.arguments
+
 
         if preventsample is not None:
             preventsample = preventsample == 'true'
         logging.info(preventsample)
-        self.get_uids(advertiser,[[terms]],int(num_days),process=process, prevent_sample=preventsample, num_users=num_users, datasets=DEFAULT_DATASETS, filter_id=filter_id, date=filter_date, url_args=url_arg)
+        self.get_uids(advertiser,[[terms]],int(num_days),process=process, prevent_sample=preventsample, num_users=num_users, datasets=datasets, filter_id=filter_id, date=filter_date, url_args=url_arg)

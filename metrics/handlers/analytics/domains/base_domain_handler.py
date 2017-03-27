@@ -235,7 +235,7 @@ class BaseDomainHandler(BaseHandler, AnalyticsBase, CassandraRangeQuery, VisitDo
         sample_args = [term,"",advertiser,dates,num_days,allow_sample,bool(filter_id)]
 
         full_df, stats_df, url_stats_df, _ = yield self.sample_stats_onsite(*sample_args)
-        if filter_id:
+        if len(full_df) > 0 and filter_id:
             stats_df, url_stats_df, full_df = yield self.filter_and_build(full_df,dates,filter_id)
 
         if (len(full_df.uid.unique()) == 1) or (stats_df.sum().sum() == 0) and allow_sample:

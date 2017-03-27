@@ -42,6 +42,7 @@ class VisitEventBase(object):
 
     @decorators.deferred
     def defer_get_uid_visits(self, source, uids, term):
+
         xx = self.paginate_get_visits(uids, source)
         df = pandas.DataFrame(xx)
 
