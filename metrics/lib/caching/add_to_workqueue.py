@@ -32,19 +32,18 @@ def build_post(udf,advertiser,params,base_url):
             "num_days": 2,
             "prevent_sample": "true",
             "num_users": 25000,
-            "priority": 5,
+            "priority": 35,
             "base_url":base_url
         }
         
         TO_POST = {i:j for i,j in to_post.items() + params.items()}
-        print TO_POST
         return TO_POST
 
     return _build
 
 if __name__ == "__main__":
 
-    
+    import time
     from link import lnk
     rb = lnk.dbs.rockerbox
     crushercache = lnk.dbs.crushercache
@@ -52,8 +51,12 @@ if __name__ == "__main__":
     env = setup(rb,crushercache)
 
     udf = "domains_full_time_minute"
-    wq_url = "http://localhost:9001/cache" #"http://workqueue.crusher.getrockerbox.com/cache"
-    base_url = "http://localhost:8888" #"http://beta.crusher.getrockerbox.com"
+    wq_url = "http://localhost:8888/cache" 
+    #wq_url = "http://localhost:9001/cache" 
+    #wq_url = "http://workqueue.crusher.getrockerbox.com/cache"
+    base_url = "http://localhost:9001" 
+    #base_url = "http://localhost:8888" 
+    #base_url = "http://beta.crusher.getrockerbox.com"
 
     for advertiser in rb.select_dataframe("select pixel_source_name from rockerbox.advertiser where crusher=1 and deleted=0 ").pixel_source_name:
 
@@ -66,10 +69,11 @@ if __name__ == "__main__":
             import requests
             import json
 
-            import ipdb; ipdb.set_trace()
             for i in built.tolist():
                 obj = i[0]
-                requests.post(wq_url,data=json.dumps(obj))
+                print obj
+                print requests.post(wq_url,data=json.dumps(obj),auth=("rockerbox","RBOXX2017")).content
+                import ipdb; ipdb.set_trace()
 
 
     
