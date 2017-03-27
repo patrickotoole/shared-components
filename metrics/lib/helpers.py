@@ -387,23 +387,6 @@ class decorators:
         return wrap
 
     @staticmethod
-    def deferred_w_status(fn):
-        from twisted.internet import threads
-
-        def raiseError(failure,args=[]):
-            print args[0]
-            args[0].set_status(400)
-            raise failure
-
-        def deferred_fn(*args,**kwargs):
-            d = threads.deferToThread(fn,*args,**kwargs)
-            d.addErrback(raiseError, args=args)
-            return d
-
-        return deferred_fn
-
-
-    @staticmethod
     def deferred(fn):
         from twisted.internet import threads
 

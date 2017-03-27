@@ -1,5 +1,6 @@
 import time
 
+import twisted
 from twisted.internet import defer, threads
 
 from lib.cassandra_cache.helpers import build_datelist
@@ -34,7 +35,8 @@ class VisitorBase(GenericSearchBase, BaseDomainHandler):
         _dl = [threads.deferToThread(fn,*[],**kwargs) for fn in funcs]
         dl = defer.DeferredList(_dl)
         responses = yield dl
-
+        if responses[0][1].__class__ is twisted.python.failure.Failure:
+            raise Exception(str(responses[0][1]))
         logging.info("Finished process_uids.")
 
         logging.info("Started transform...")

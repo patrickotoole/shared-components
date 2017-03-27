@@ -1,7 +1,7 @@
 import pandas
 import logging
 import time
-
+import twisted
 import itertools
 import ujson
 from twisted.internet import defer, threads
@@ -96,7 +96,7 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
             }
         }
 
-    @decorators.deferred_w_status
+    @decorators.deferred
     def defer_get_artifacts(self, domains_full_df, advertiser):
         Q1 = "select key_name, json from artifacts where advertiser = '%s' and active=1 and deleted=0"
         Q2 = "select key_name, json from artifacts where advertiser is null and active=1 and deleted=0"
@@ -141,28 +141,28 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
         results['category_hour'] = category_hour_js
         return results
 
-    @decorators.deferred_w_status
+    @decorators.deferred
     def defer_get_actions(self, advertiser):
         ACTIONSQUERY = "select a.action_id, a.action_name, a.url_pattern from action_with_patterns a join action b on a.action_id = b.action_id where a.pixel_source_name = '%s' and b.deleted=0 and b.active=1"
         results = self.db.select_dataframe(ACTIONSQUERY % advertiser)
         return results.to_dict('records')
 
-    @decorators.deferred_w_status
+    @decorators.deferred
     def defer_get_domains(self, domains):
         results = domains[['domain','uid','timestamp']]
         return results
 
-    @decorators.deferred_w_status
+    @decorators.deferred
     def defer_get_urls(self, uid_urls):
         results = uid_urls
         return results
 
-    @decorators.deferred_w_status
+    @decorators.deferred
     def defer_get_pixel(self):
         results = self.get_pixels()
         return results
 
-    @decorators.deferred_w_status
+    @decorators.deferred
     def defer_domain_category(self, domains, idf):
         domains_with_cat = domains.merge(idf,on="domain")
         domains_with_cat['hour']=domains_with_cat.timestamp.map(lambda x: x.split(" ")[1].split(":")[0])
@@ -178,7 +178,7 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
                 logging.info("can't encode")
         return fixed
 
-    @decorators.deferred_w_status
+    @decorators.deferred
     def defer_get_idf(self, domains_df):
         domain_set = domains_df['domain']
 
@@ -194,7 +194,7 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
         
         return results
 
-    @decorators.deferred_w_status
+    @decorators.deferred
     def defer_get_idf_hour(self, domains_df):
         domain_set = domains_df['domain']
 
@@ -211,13 +211,13 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
         return results
 
 
-    @decorators.deferred_w_status
+    @decorators.deferred
     def defer_get_corpus(self):
         QUERY = "select * from nltk_corpus"
         results = self.crushercache.select_dataframe(QUERY)
         return results
 
-    @decorators.deferred_w_status
+    @decorators.deferred
     def defer_urls_to_actions(self, pixel, uid_urls, actions):
         urls = set(uid_urls.url) 
         results = self.urls_to_actions(pixel,urls, actions, AhoCorasick)
@@ -243,7 +243,10 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
         dl = defer.DeferredList(_dl_l1)
         responses = yield dl
         defer_responses = [r[1] for r in responses]
-
+        for r in defer_responses:
+            if r.__class__ is twisted.python.failure.Failure:
+                raise Exception(str(r))
+        
         l1_dfs = dict(zip(l1_dfs, defer_responses))
         if l1_dfs.get('domains_full', False):
             shared_dict['domains_full'] = l1_dfs['domains_full'][0][1]
@@ -269,7 +272,9 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
             dl = defer.DeferredList(_dl_l2)
             responses = yield dl
             defer_responses = [r[1] for r in responses]
-
+            for r in defer_responses:
+                if r.__class__ is twisted.python.failure.Failure:
+                    raise Exception(str(r))
             l2_dfs = dict(zip(l2_dfs, defer_responses))
             for k in l2_dfs.keys():
                 shared_dict[k] = l2_dfs[k]
