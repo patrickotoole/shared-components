@@ -70,6 +70,12 @@ class UDFRunner(BaseRunner):
 
         if resp.status_code != 200:
             raise Exception("Response is not 200, response is %s with error %s" % (resp.status_code, resp.text))         
+
+        if resp.status_code == 502:
+            import time
+            time.sleep(30)
+            raise Exception("Response is not 200, response is %s so sleeping for 30 seconds to minimize error contagion") 
+
         try:
             if 'similarity' in resp.json.keys():
                 if len(resp.json['similarity']) <1:

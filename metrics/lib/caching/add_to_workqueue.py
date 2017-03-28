@@ -33,7 +33,8 @@ def build_post(udf,advertiser,params,base_url):
             "prevent_sample": "true",
             "num_users": 25000,
             "priority": 35,
-            "base_url":base_url
+            "base_url":base_url,
+            "skip_datasets":"uid_urls,url_to_action,corpus,domains"
         }
         
         TO_POST = {i:j for i,j in to_post.items() + params.items()}
@@ -51,12 +52,12 @@ if __name__ == "__main__":
     env = setup(rb,crushercache)
 
     udf = "domains_full_time_minute"
-    wq_url = "http://localhost:8888/cache" 
+    #wq_url = "http://localhost:8888/cache" 
     #wq_url = "http://localhost:9001/cache" 
-    #wq_url = "http://workqueue.crusher.getrockerbox.com/cache"
-    base_url = "http://localhost:9001" 
+    wq_url = "http://workqueue.crusher.getrockerbox.com/cache"
+    #base_url = "http://localhost:9001" 
     #base_url = "http://localhost:8888" 
-    #base_url = "http://beta.crusher.getrockerbox.com"
+    base_url = "http://beta.crusher.getrockerbox.com"
 
     for advertiser in rb.select_dataframe("select pixel_source_name from rockerbox.advertiser where crusher=1 and deleted=0 ").pixel_source_name:
 
