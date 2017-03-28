@@ -1,7 +1,6 @@
 import tornado.web
 import json
 import pandas as pd
-import random
 import logging
 from database import *
 
@@ -9,13 +8,12 @@ class SetupHandler(tornado.web.RequestHandler, SetupDatabase):
 
     def initialize(self, **kwargs):
         self.db = kwargs.get("db",False) 
-        self.crushercache = kwargs.get("crushercache",False) 
-    
+        self.crushercache = kwargs.get("crushercache",False)  
 
     def get(self):
         advertiser_id = self.get_query_argument("advertiser")
-        df = self.get_setup(advertiser_id)
-        j = json.dumps(df.to_dict("records"))
+        setups = self.get_setup(advertiser_id)
+        j = json.dumps(setups.to_dict("records"))
         self.write(j)
         self.finish()
 

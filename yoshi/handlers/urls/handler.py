@@ -13,7 +13,7 @@ class URLHandler(tornado.web.RequestHandler, UrlDatabase):
     def get(self):
         domains = self.get_query_argument("domains")
         df = self.get_domain_links(domains)        
-        self.write(json.dumps(df[['domain','url']].to_dict('records')))
+        self.write(json.dumps(df.to_dict('records')))
         self.finish()
             
     def post(self):

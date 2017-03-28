@@ -1,7 +1,6 @@
 import tornado.web
 import json
 import pandas as pd
-import random
 import logging
 from database import *
 

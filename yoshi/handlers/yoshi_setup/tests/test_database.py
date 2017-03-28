@@ -23,7 +23,8 @@ CREATE TABLE `yoshi_setup` (
 
 
 SETUP_VALUES = [
-    {'external_advertiser_id': 430556 , "mediaplan": "mediaplan", "num_domains":5, "line_item_name":"Yoshi Testing" }
+    {'external_advertiser_id': 430556 , "mediaplan": "mediaplan", "num_domains":5, "line_item_name":"Yoshi Testing" },
+    {'external_advertiser_id': 1 , "mediaplan": "mediaplan", "num_domains":5, "line_item_name":"Yoshi Testing" }
 ]
 
 CREATE_ADWORD_ENDPOINTS = '''
@@ -74,7 +75,7 @@ class DataBaseTest(unittest.TestCase):
 
     def test_get_yoshi_setup(self):
         cols = ["mediaplan", "num_domains", "line_item_name"]
-        true = pd.DataFrame(SETUP_VALUES).sort(['mediaplan']).reset_index(drop = True)[cols]
+        true = pd.DataFrame([x for x in SETUP_VALUES if x['external_advertiser_id']==430556]).sort(['mediaplan']).reset_index(drop = True)[cols]
         actual = self.Database.get_yoshi_setup(430556).sort(['mediaplan']).reset_index(drop = True)[cols]
         assert true.equals(actual)
 
@@ -99,4 +100,7 @@ class DataBaseTest(unittest.TestCase):
 
         df = self.Database.db.select_dataframe(query)
         assert len(df) > 0
-
+        
+    def test_empty_setup(self):
+        test  = self.Database.get_setup(111)
+        assert len(test) == 0
