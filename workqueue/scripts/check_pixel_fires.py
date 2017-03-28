@@ -47,7 +47,7 @@ class SetCacheList():
     def get_from_portal(self, advertiser,segment, sample_size):
          try:
              _resp = self.api_wrapper.get("/admin/pixel/lookup?advertiser=%s&segment=%s&sample=%s" % (advertiser, segment,sample_size), auth=('rockerbox','RBOXX2017'))
-             time.sleep(2)
+             time.sleep(5)
              resp = _resp.json
          except:
              resp = {}
@@ -55,10 +55,10 @@ class SetCacheList():
 
     def check_pixel_fires(self, advertiser, segment):
         logging.info("requesting advertiser % segment %s" % (advertiser, segment))
-        sample_list = [5,25,50,75,100]
+        sample_list = [1,5,25,50,75,100]
         resp ={}
         index = 0
-        while len(resp)==0 and index <=4:
+        while len(resp)==0 and index <=5:
             resp = self.get_from_portal(advertiser,segment, sample_list[index])
             index+=1
         if len(resp) > 5:
