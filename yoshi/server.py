@@ -14,9 +14,12 @@ from twisted.internet import reactor
 from shutdown import sig_wrap
 from tornado.options import define, options, parse_command_line
 
+from handlers import * 
+
+
 dirname = os.path.dirname(os.path.realpath(__file__))
 
-define("port", default=8888, help="run on the given port", type=int)
+define("port", default=9001, help="run on the given port", type=int)
 
 from link import lnk
 
@@ -29,7 +32,9 @@ if __name__ == '__main__':
 
     connectors = {
         "db": lnk.dbs.rockerbox,
-        "api": lnk.api.console
+        "api": lnk.api.console,
+        "crusher": lnk.api.crusher,
+        "crushercache": lnk.dbs.crushercache
     }
 
     routes = [
