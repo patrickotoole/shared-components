@@ -69,7 +69,16 @@ class VisitorBase(GenericSearchBase, BaseDomainHandler):
         args = [advertiser,pattern_terms[0][0],datelist,NUM_DAYS,response,ALLOW_SAMPLE,filter_id,NUM_USERS,datasets]
 
         now = time.time()
-        kwargs = yield self.build_arguments(*args)
+        try:
+            kwargs = yield self.build_arguments(*args)
+        except:
+            logging.info("Issue with building datasets")
+            self.set_status(400)
+            self.write({"error":"Failed to build base datasets"})
+            self.finish()
+            defer.returnValue(None)
+            return 
+
         kwargs['url_arguments'] = url_args
 
         if process:
