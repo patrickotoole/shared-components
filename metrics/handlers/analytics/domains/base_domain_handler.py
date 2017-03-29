@@ -145,7 +145,6 @@ class BaseDomainHandler(BaseHandler, AnalyticsBase, CassandraRangeQuery, VisitDo
         URL = "select * from pattern_cache where pixel_source_name = '%s' and url_pattern = '%s'"
         df = lnk.dbs.rockerbox.select_dataframe(URL % (advertiser,pattern[0]))
         results = self.run_cache(pattern,advertiser,dates,0,5,results) 
-        import ipdb; ipdb.set_trace()
         if len(results)>1000000:
             return pandas.DataFrame(results)
         if allow_sample is None:
