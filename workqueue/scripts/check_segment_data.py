@@ -41,17 +41,13 @@ class CheckSegmentData():
     def check_timeseries_endpoint(self, pattern, action_id):
         try:
             _resp = self.hindsight.get('/crusher/pattern_search/timeseries_only?filter_id=%s&search=%s' % (action_id, pattern))
-        except:
-            import logging
-            logging.info("Bad request")
-        if 'results' in _resp.json.keys() and len(_resp.json['results']) >0 and 'date' in _resp.json['results'][0]:
-            try:
+            if 'results' in _resp.json.keys() and len(_resp.json['results']) >0 and 'date' in _resp.json['results'][0]:
                 last_two_days = sorted(_resp.json['results'], key=lambda x : x['date'],reverse=True)[:2]
-            except:
-                import ipdb; ipdb.set_trace()
-            checks = sum([x['uniques'] for x in last_two_days])
-            has_data = True if checks>20 else False
-        else:
+                checks = sum([x['uniques'] for x in last_two_days])
+                has_data = True if checks>20 else False
+            else:
+                has_data =False
+        except:
             has_data=False
         return has_data
 
