@@ -1,10 +1,21 @@
 import logging
+import random
 from statement import CassandraStatement
 from helpers import FutureHelpers
 
 class CassandraRangeQuery(CassandraStatement):
     
     SAMPLE_SIZES = [(0,1),(1,5),(5,20),(20,50),(50,100)]
+
+    def run_random_range(self,data,start,end,callback,*args,**kwargs):
+        statement = kwargs.get("statement", None) or self.default_statement
+        execute = self.bind_and_execute(statement)
+
+        data_prime = [d + [i] for d in data for i in random.sample(range(0,100),end)]
+        
+        response = FutureHelpers.future_queue(data_prime,execute,callback,300,*args)
+        return response
+
 
     def run_range(self,data,start,end,callback,*args,**kwargs):
         statement = kwargs.get("statement", None) or self.default_statement

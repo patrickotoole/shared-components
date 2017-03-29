@@ -55,14 +55,14 @@ if __name__ == "__main__":
     wq_url = "http://localhost:8888/cache" 
     base_url = "http://localhost:9001" 
 
-    wq_url = "http://workqueue.crusher.getrockerbox.com/cache"
-    base_url = "http://beta.crusher.getrockerbox.com"
+    #wq_url = "http://workqueue.crusher.getrockerbox.com/cache"
+    #base_url = "http://beta.crusher.getrockerbox.com"
 
     #wq_url = "http://localhost:9001/cache" 
     #base_url = "http://localhost:8888" 
 
     #for advertiser in rb.select_dataframe("select pixel_source_name from rockerbox.advertiser where crusher=1 and deleted=0 ").pixel_source_name:
-    for advertiser in rb.select_dataframe("select pixel_source_name from rockerbox.advertiser where crusher=1 and deleted=0 and pixel_source_name='windstream' ").pixel_source_name:
+    for advertiser in rb.select_dataframe("select pixel_source_name from rockerbox.advertiser where crusher=1 and deleted=0 ").pixel_source_name:
 
 
         variables = env(advertiser,udf)
@@ -78,5 +78,6 @@ if __name__ == "__main__":
                 obj = i[0]
                 print obj
                 print requests.post(wq_url,data=json.dumps(obj),auth=("rockerbox","RBOXX2017")).content
+                import ipdb ; ipdb.set_trace()
 
     

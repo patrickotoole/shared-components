@@ -25,6 +25,6 @@ class CassandraStatement(object):
 
         def execute(data):
             bound = statement.bind(data)
-            return self.cassandra.execute_async(bound)
+            return self.cassandra.execute_async(bound,parameters={"timeout":30})
 
         return execute

@@ -56,7 +56,7 @@ class BaseDomainHandler(BaseHandler, AnalyticsBase, CassandraRangeQuery, VisitDo
 
     def run_filter_url(self,aho_filter,urls):
         truth_dict = { i: aho_filter(i) for i in urls }
-        logging.info("ran aho filter on %s domains" % len(urls))
+        logging.info("ran aho filter on %s onsite urls" % len(urls))
         return truth_dict
 
     def get_udf(self,lock):
@@ -89,6 +89,21 @@ class BaseDomainHandler(BaseHandler, AnalyticsBase, CassandraRangeQuery, VisitDo
         CACHE_WHERE = """source=? and action=? and date=? and u2=? """
 
         return self.build_statement(CACHE_QUERY,CACHE_WHAT,CACHE_WHERE)
+
+    def run_sample_cache(self,pattern,advertiser,dates,start=0,end=10,results=[]):
+        data = self.data_plus_values([[advertiser,pattern[0]]],dates)
+        cb_args = [advertiser,pattern,results]
+        cb_kwargs = {"statement":self.cache_statement}
+
+        is_suffice = helpers.sufficient_limit()
+
+        response, sample = self.run_sample(data,helpers.cache_callback,helpers.sufficient_limit(200000),*cb_args,**cb_kwargs)
+        self.sample_used = end
+
+        _,_, results = response
+
+        return [r for r in results if len(r['uid']) > 3]
+
 
     def run_cache(self,pattern,advertiser,dates,start=0,end=10,results=[]):
         data = self.data_plus_values([[advertiser,pattern[0]]],dates)
@@ -144,8 +159,8 @@ class BaseDomainHandler(BaseHandler, AnalyticsBase, CassandraRangeQuery, VisitDo
         from link import lnk
         URL = "select * from pattern_cache where pixel_source_name = '%s' and url_pattern = '%s'"
         df = lnk.dbs.rockerbox.select_dataframe(URL % (advertiser,pattern[0]))
-        results = self.run_cache(pattern,advertiser,dates,0,5,results) 
-        if len(results)>1000000:
+        results = self.run_sample_cache(pattern,advertiser,dates,0,5,results) 
+        if len(results)>0:
             return pandas.DataFrame(results)
         if allow_sample is None:
             results = self.run_uncache(pattern,advertiser,dates,results)
