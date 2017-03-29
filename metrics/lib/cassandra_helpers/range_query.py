@@ -5,7 +5,7 @@ from helpers import FutureHelpers
 
 class CassandraRangeQuery(CassandraStatement):
     
-    SAMPLE_SIZES = [(0,1),(1,5),(5,20),(20,50),(50,100)]
+    SAMPLE_SIZES = [(1,2),(2,6),(5,21),(21,51),(51,100),(0,1)]
 
     def run_random_range(self,data,start,end,callback,*args,**kwargs):
         statement = kwargs.get("statement", None) or self.default_statement
