@@ -62,11 +62,9 @@ class UDFRunner(BaseRunner):
         url = _url.format(func_name, pattern, self.action_id)
         logging.info(url)
         try:
-            resp = self.crusher.get(url, timeout=600, allow_redirects=False)
+            resp = self.crusher.get(url, timeout=1200, allow_redirects=False)
         except:
-            logging.info("failed unsampled")
-            #fall back if initial set of parameters fails try sampled url without parameters
-            resp = self.crusher.get(URL.format(func_name, pattern, self.action_id), timeout=300, allow_redirects=False)
+            raise Exception("Failed call to UDF endpoint")
 
         if resp.status_code != 200:
             raise Exception("Response is not 200, response is %s with error %s" % (resp.status_code, resp.text))         
