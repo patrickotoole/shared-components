@@ -37,7 +37,7 @@ class CassandraDB(NoSqlConnectionWrapper):
 
         # Return in dictionary format for easy parsing to DataFrame
         session.row_factory = dict_factory
-
+        session.default_timeout = 30.0
         return session
 
     def select_dataframe(self, query):
