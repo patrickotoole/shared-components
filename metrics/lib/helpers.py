@@ -16,9 +16,11 @@ import cStringIO
 import twisted
 
 def check_defer_list(defer_list):
-    for r in defer_list:
-        if r.__class__ is twisted.python.failure.Failure:
-            raise Exception(str(r))
+    for res in defer_list:
+        if type(res) ==tuple:
+            res = res[1]
+        if res.__class__ is twisted.python.failure.Failure:
+            raise Exception(str(res))
 
 
 class Cast:

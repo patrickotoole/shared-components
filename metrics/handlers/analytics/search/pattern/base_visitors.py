@@ -35,7 +35,12 @@ class VisitorBase(GenericSearchBase, BaseDomainHandler):
         _dl = [threads.deferToThread(fn,*[],**kwargs) for fn in funcs]
         dl = defer.DeferredList(_dl)
         responses = yield dl
-        check_defer_list(responses)
+        try:
+            check_defer_list(responses)
+        except:
+            logging.info("Issue with building datasets")
+            self.set_status(400)
+            self.write({"error":"Failed to build base datasets"})    
         logging.info("Finished process_uids.")
 
         logging.info("Started transform...")
