@@ -114,7 +114,7 @@ class WorkQueue(object):
         fn, kwargs = pickle.loads(data)
         kwargs['job_id'] = job_id
         kwargs['connectors']=self.connectors
-        self.log_before_job(job_id, entry_id, valid, fn, kwargs)
+        self.log_before_job(job_id, entry_id, False, fn, kwargs)
         valid = self.set_api_wrapper(kwargs)
         fn(**kwargs)
         self.log_job_success(job_id, fn, kwargs)
