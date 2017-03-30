@@ -17,8 +17,6 @@ import twisted
 
 def check_defer_list(defer_list):
     for res in defer_list:
-        if type(res) ==tuple:
-            res = res[1]
         if res.__class__ is twisted.python.failure.Failure:
             raise Exception(str(res))
 

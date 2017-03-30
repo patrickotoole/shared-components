@@ -36,7 +36,8 @@ class VisitorBase(GenericSearchBase, BaseDomainHandler):
         dl = defer.DeferredList(_dl)
         responses = yield dl
         try:
-            check_defer_list(responses)
+            check_responses = [x[1] for x in responses]
+            check_defer_list(check_responses)
         except:
             logging.info("Issue with building datasets")
             self.set_status(400)
