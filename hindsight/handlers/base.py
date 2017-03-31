@@ -44,7 +44,12 @@ class BaseHandler(tornado.web.RequestHandler):
         
 
     def get_current_user(self):
-
+        deleted = self.db.select_dataframe("select deleted from user where username = '%s'" % self.get_secure_cookie("user"))['deleted'][0] if self.get_secure_cookie("user") else 0
+        if deleted == 1:
+            self.set_secure_cookie("advertiser","")
+            self.set_secure_cookie("user","")
+            self.redirect("/login")
+            return "" 
         nonce = self.get_argument("nonce",False)
         if nonce: return self.get_advertiser_if_nonce(nonce)
 
