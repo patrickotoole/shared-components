@@ -1,11 +1,14 @@
 def setup(rb,crushercache):
-
+    
     Q = "SELECT a.action_id, url_pattern FROM action_patterns ap JOIN action a ON a.action_id = ap.action_id where a.pixel_source_name = '%s' and a.active = 1 and a.deleted = 0"
 
     UDFQ = "SELECT parameters FROM user_defined_functions where udf = '%s' and advertiser = '%s'"
 
-    def _setup(advertiser,udf):
-        action = rb.select_dataframe(Q % advertiser)
+    def _setup(advertiser,segments,udf):
+        import pandas
+        if segments['has_data']==1:
+            action = pandas.DataFrame([[x['pattern'],x['filter_id']] for x in segments['segments'] if x['data_populated'] ==1])
+        action.columns=['url_pattern', 'action_id']
         udf_params = crushercache.select_dataframe(UDFQ % (udf,advertiser) )
         params = {}
         if len(udf_params):
@@ -45,6 +48,8 @@ def build_post(udf,advertiser,params,base_url):
 if __name__ == "__main__":
 
     import time
+    import requests
+    import ujson 
     from link import lnk
     rb = lnk.dbs.rockerbox
     crushercache = lnk.dbs.crushercache
@@ -52,20 +57,18 @@ if __name__ == "__main__":
     env = setup(rb,crushercache)
 
     udf = "domains_full_time_minute"
-    wq_url = "http://localhost:8888/cache" 
-    base_url = "http://localhost:9001" 
 
-    #wq_url = "http://workqueue.crusher.getrockerbox.com/cache"
-    #base_url = "http://beta.crusher.getrockerbox.com"
+    wq_url = "http://workqueue.crusher.getrockerbox.com/cache"
+    base_url = "http://beta.crusher.getrockerbox.com"
 
     #wq_url = "http://localhost:9001/cache" 
     #base_url = "http://localhost:8888" 
 
-    #for advertiser in rb.select_dataframe("select pixel_source_name from rockerbox.advertiser where crusher=1 and deleted=0 ").pixel_source_name:
-    for advertiser in rb.select_dataframe("select pixel_source_name from rockerbox.advertiser where crusher=1 and deleted=0 ").pixel_source_name:
+    #data = requests.get("http://portal.getrockerbox.com/admin/pixel/advertiser_data",auth=("rockerbox","RBOXX2017"))
+    data = requests.get("http://192.168.99.100:8888/admin/pixel/advertiser_data",auth=("rockerbox","RBOXX2017"))
+    for advertiser,segments in data.json().items():
 
-
-        variables = env(advertiser,udf)
+        variables = env(advertiser,segments,udf)
 
         builder = build_post(udf,advertiser,variables["params"],base_url)
         built = variables["actions"].T.apply(lambda x: [builder(x.action_id,x.url_pattern)] )
@@ -74,10 +77,9 @@ if __name__ == "__main__":
             import requests
             import json
 
-            for i in built.tolist()[:1]:
+            for i in built.tolist():
                 obj = i[0]
                 print obj
                 print requests.post(wq_url,data=json.dumps(obj),auth=("rockerbox","RBOXX2017")).content
-                import ipdb ; ipdb.set_trace()
 
     
