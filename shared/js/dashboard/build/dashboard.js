@@ -3483,6 +3483,7 @@
       }
 
       var table_obj = table.table(bawrap)
+        .top(140)
         .headers(
           [{"key":"domain", "value":"Domain"}].concat(
             buckets.map(x => { return {"key":x, "value":formatName(x), "selected":true} })

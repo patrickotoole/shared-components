@@ -72,6 +72,7 @@
     this._data = {}//EXAMPLE_DATA
     this._sort = {}
     this._renderers = {}
+    this._top = 0
 
     this._default_renderer = function (x) {
       if (x.key.indexOf("percent") > -1) return d3.select(this).text(function(x) { 
@@ -158,6 +159,7 @@
     , title: function(val) { return accessor.bind(this)("title",val) }
     , row: function(val) { return accessor.bind(this)("render_row",val) }
     , default_renderer: function(val) { return accessor.bind(this)("default_renderer",val) }
+    , top: function(val) { return accessor.bind(this)("top",val) }
 
     , header: function(val) { return accessor.bind(this)("render_header",val) }
     , headers: function(val) { return accessor.bind(this)("headers",val) }
@@ -217,11 +219,13 @@
           .classed("hidden", true) // TODO: make this visible when main is not in view
           .classed("fixed",true)
           .style("width",wrapper.style("width"))
-          .style("top","0px")
+          .style("top",this._top + "px")
           .style("position","fixed")
 
+        var self = this
         d3.select(window).on('scroll', function() {
-          if (table.node().getBoundingClientRect().top < 0) table_fixed.classed("hidden",false)
+          console.log(table.node().getBoundingClientRect().top, self._top)
+          if (table.node().getBoundingClientRect().top < self._top) table_fixed.classed("hidden",false)
           else table_fixed.classed("hidden",true)
 
           var widths = []
