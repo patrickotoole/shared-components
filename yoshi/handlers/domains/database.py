@@ -24,15 +24,16 @@ class DomainsDatabase(SetupDatabase):
         resp = self.crusher.get(endpoint)
         return resp.json.get('mediaplan')
 
-    def hindsight_authenticate(self, advertiser_id):
+    def crusher_authenticate(self, advertiser_id, base_url = 'http://beta.crusher.getrockerbox.com'):
         pixel_source_name = self.get_pixel_source_name(advertiser_id)        
         self.crusher.user = "a_%s" %pixel_source_name
+        self.crusher.base_url = base_url
         self.crusher.authenticate()
     
     def get_domains_queue(self, advertiser_id):
         cols = ['domain','line_item_name','mediaplan']
 
-        self.hindsight_authenticate(advertiser_id)
+        self.crusher_authenticate(advertiser_id)
         setups = self.get_setup(advertiser_id)
 
         if len(setups) > 0 :

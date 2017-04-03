@@ -20,7 +20,6 @@ class SetupHandler(tornado.web.RequestHandler, SetupDatabase):
     def post(self):
         advertiser_id = self.get_query_argument("advertiser")
         data = json.loads(self.request.body).get('data')
-
         for x in data:
             x['external_advertiser_id'] = advertiser_id
         data = pd.DataFrame(data)

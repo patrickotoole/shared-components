@@ -41,6 +41,7 @@ if __name__ == '__main__':
         (r'/setup', SetupHandler, connectors),
         (r'/domains', DomainsHandler, connectors),
         (r'/urls', URLHandler, connectors),
+        (r'/create', CampaignHandler, connectors)
     ]
 
     app = tornado.web.Application(
