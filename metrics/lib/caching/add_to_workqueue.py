@@ -64,8 +64,7 @@ if __name__ == "__main__":
     #wq_url = "http://localhost:9001/cache" 
     #base_url = "http://localhost:8888" 
 
-    #data = requests.get("http://portal.getrockerbox.com/admin/pixel/advertiser_data",auth=("rockerbox","RBOXX2017"))
-    data = requests.get("http://192.168.99.100:8888/admin/pixel/advertiser_data",auth=("rockerbox","RBOXX2017"))
+    data = requests.get("http://portal.getrockerbox.com/admin/pixel/advertiser_data",auth=("rockerbox","RBOXX2017"))
     for advertiser,segments in data.json().items():
 
         variables = env(advertiser,segments,udf)
