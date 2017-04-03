@@ -4,6 +4,8 @@ import option_view from './views/option_view'
 import domain_view from './views/domain_view'
 import segment_view from './views/segment_view'
 import summary_view from './views/summary_view'
+import relative_view from './views/relative_timing_view'
+
 
 
 
@@ -259,6 +261,13 @@ NewDashboard.prototype = {
           if (x.value == "media-view") {
             media_plan.media_plan(dthis.style("margin-left","-15px").style("margin-right","-15px"))
              .data(data)
+             .draw()
+          }
+
+          if (x.value == "ba-view") {
+            relative_view(dthis)
+             .data(self.before())
+             .on("add-filter",self.on("add-filter"))
              .draw()
           }
 

@@ -81,6 +81,18 @@ export function Table(target) {
   this._sort = {}
   this._renderers = {}
 
+  this._default_renderer = function (x) {
+    if (x.key.indexOf("percent") > -1) return d3.select(this).text(function(x) { 
+        var pd = this.parentNode.__data__
+        return d3.format(".2%")(pd[x.key]/100)
+      })
+   
+    return d3.select(this).text(function(x) { 
+      var pd = this.parentNode.__data__
+      return pd[x.key] > 0 ? d3.format(",.2f")(pd[x.key]).replace(".00","") : pd[x.key]
+    })
+  }
+
   this._hidden_fields = []
   this._on = {}
   this._render_header = function(wrap) {
@@ -153,6 +165,8 @@ Table.prototype = {
 
   , title: function(val) { return accessor.bind(this)("title",val) }
   , row: function(val) { return accessor.bind(this)("render_row",val) }
+  , default_renderer: function(val) { return accessor.bind(this)("default_renderer",val) }
+
   , header: function(val) { return accessor.bind(this)("render_header",val) }
   , headers: function(val) { return accessor.bind(this)("headers",val) }
   , hidden_fields: function(val) { return accessor.bind(this)("hidden_fields",val) }
@@ -175,7 +189,7 @@ Table.prototype = {
           return is_locked.indexOf(k) > -1 ? is_locked.indexOf(k) + 10 : 0
         }
 
-        all_heads = all_heads.sort(function(p,c) { return getIndex(c.key) - getIndex(p.key) })
+        all_heads = all_heads.sort(function(p,c) { return getIndex(c.key || -Infinity) - getIndex(p.key || -Infinity) })
         return all_heads
       }
       else return this.headers()
@@ -399,6 +413,7 @@ Table.prototype = {
 
      this._options_header = this._target.selectAll(".table-options")
     }
+  
   , render_rows: function(table) {
 
       var self = this;
@@ -411,8 +426,8 @@ Table.prototype = {
         , sortby = this._sort || {};
 
       data = data.sort(function(p,c) {
-        var a = p[sortby.key]
-          , b = c[sortby.key]
+        var a = p[sortby.key] || -Infinity
+          , b = c[sortby.key] || -Infinity
 
         return sortby.value ? d3.ascending(a,b) : d3.descending(a,b)
       })
@@ -430,19 +445,14 @@ Table.prototype = {
           var dthis = d3.select(this)
 
           var renderer = self._renderers[x.key]
-          if (!renderer) {
-            if (x.key.indexOf("percent") > -1) return dthis.text(function(x) { 
-                var pd = this.parentNode.__data__
-                return d3.format(".2%")(pd[x.key]/100)
-              })
-           
-            return dthis.text(function(x) { 
-              var pd = this.parentNode.__data__
-              return pd[x.key] > 0 ? d3.format(",.2f")(pd[x.key]).replace(".00","") : pd[x.key]
-            })
+
+          if (!renderer) { 
+            renderer = self._default_renderer.bind(this)(x) 
+          } else {
+            return renderer.bind(this)(x)
           }
 
-          return renderer.bind(this)(x)
+
         })
 
         

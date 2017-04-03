@@ -23,7 +23,7 @@ export function State(_current, _static) {
 
 State.prototype = {
     state: function() {
-      return this._state
+      return Object.assign({},this._state)
     }
   , publish: function(name,cb) {
 

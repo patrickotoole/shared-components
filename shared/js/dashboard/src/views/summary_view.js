@@ -80,9 +80,9 @@ function streamData(before,after,buckets) {
 
 }
 
-function simpleTimeseries(target,data) {
-  var width = 120
-    , height = 30
+export function simpleTimeseries(target,data,w,h) {
+  var width = w || 120
+    , height = h || 30
 
   var x = d3.scale.ordinal().domain(d3.range(0,data.length)).range(d3.range(0,120,120/data.length))
   var y = d3.scale.linear().range([0,height]).domain([d3.min(data),d3.max(data)])
@@ -99,6 +99,10 @@ function simpleTimeseries(target,data) {
   
 }
 
+
+
+export function drawStream(target,before,after) {
+
 function extractData(b,a,buckets,accessor) {
   var bvolume = {}, avolume = {}
 
@@ -109,8 +113,6 @@ function extractData(b,a,buckets,accessor) {
 
   return volume
 }
-
-function drawStream(target,before,after) {
 
   var buckets = [0,10,30,60,120,180,360,720,1440,2880,5760,10080].map(function(x) { return x*60 })
 

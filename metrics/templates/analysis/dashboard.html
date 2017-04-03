@@ -77,6 +77,16 @@
 </div>
 <div class="container" style="width:inherit;padding-top:0px"></div>
 <style>
+.scrollbox {
+  /*border-top:1px solid #ccc;*/
+  padding-top:12px;
+  padding-left:5px;
+}
+
+.scrollbox:first-of-type {
+  /*border-right:1px solid #ccc;*/
+}
+
 .inner > select, .inner > input {
   height: 36px;
   vertical-align:top
@@ -90,6 +100,16 @@
 </style>
 
 <style>
+
+  .ba-row .table-wrapper tr th, .ba-row .table-wrapper tr td  {
+    width:31px;
+    max-width:31px
+  }
+
+  
+  .ba-row .table-wrapper tr th:first-of-type, .ba-row .table-wrapper tr td:first-of-type {
+    width:300px;
+  }
 
   .dash-row > div {
     display: inline-block;
@@ -391,6 +411,8 @@
           .filters(value.filters)
           .view_options(value.dashboard_options)
           .explore_tabs(value.tabs)
+          .on("add-filter", function(filter) { s.publish("filters",s.state().filters.concat(filter)) })
+
           .on("action.change", function(action) { s.publish("selected_action",action) })
           .on("action_date.change", function(date) { s.publish("action_date",date) })
           .on("comparison_date.change", function(date) { s.publish("comparison_date",date) })
@@ -825,6 +847,7 @@ debugger
     , dashboard_options: [
           {"key":"Data summary","value":"summary-view","selected":1}
         , {"key":"Explore data","value":"data-view","selected":0}
+        , {"key":"Before & After","value":"ba-view","selected":0}
         , {"key":"Media Plan", "value":"media-view","selected":0}
 
       ]
