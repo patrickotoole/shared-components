@@ -57,12 +57,12 @@ class CustomQueue(SingleQueue):
             entry_location = self.client.create(path, value, sequence=True)
         if not _job_id:
             _job_id = hashlib.md5(value).hexdigest()
-        entry_id = str(entry_location).split("/")[2]
-        secondary_path = self.secondary_path_base + '/{job_id}/{new_entry}'.format(job_id=_job_id, new_entry=entry_id)
-        try:
-            self.client.create(secondary_path, "", makepath=True)
-        except NodeExistsError:
-            logging.info("Log Entry node exists")
+        #entry_id = str(entry_location).split("/")[2]
+        #secondary_path = self.secondary_path_base + '/{job_id}/{new_entry}'.format(job_id=_job_id, new_entry=entry_id)
+        #try:
+        #    self.client.create(secondary_path, "", makepath=True)
+        #except NodeExistsError:
+        #    logging.info("Log Entry node exists")
         return entry_location
 
     def delete(self, entry):

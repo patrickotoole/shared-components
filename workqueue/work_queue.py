@@ -101,7 +101,7 @@ class WorkQueue(object):
 
 
     def log_before_job(self, job_id, entry_id, valid, fn, kwargs):
-        self.zk_wrapper.sets(job_id, entry_id)
+        #self.zk_wrapper.sets(job_id, entry_id)
         logging.info("crusher object is valid: %s"  % valid)
         logging.info("starting queue %s %s" % (str(fn),str(kwargs)))
 
@@ -143,7 +143,7 @@ class WorkQueue(object):
         finally:
             logging.info("finished item in queue")
             logging.getLogger().handlers[0].job_id = "000000"
-            self.zk_wrapper.finish(job_id, entry_id)
+            #self.zk_wrapper.finish(job_id, entry_id)
 
     def run_queue(self):
         logging.info("Asking for next queue item")

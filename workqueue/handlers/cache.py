@@ -73,9 +73,9 @@ class CacheHandler(tornado.web.RequestHandler, RPCQueue):
             zk_path = "python_queue"
             if entry_id and entry_id.find("debug")>=0:
                 zk_path = "python_queue_debug"
-            needed_path = secondary_path = '{path}-{secondary_path}/{volume}/{job_id}'.format(
-            path=zk_path, secondary_path="log", volume=volume, job_id=_job_id)
-
+            #needed_path = secondary_path = '{path}-{secondary_path}/{volume}/{job_id}'.format(
+            #path=zk_path, secondary_path="log", volume=volume, job_id=_job_id)
+            needed_path = "/python_queue/" + volume 
             entry_ids = self.zk_wrapper.zk.get_children(needed_path)
             logging.info(len(entry_ids))
             running_entries = [entry for entry in entry_ids if self.zk_wrapper.zk.get(needed_path + "/" + entry)[0]]
