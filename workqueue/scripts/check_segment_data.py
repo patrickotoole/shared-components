@@ -36,7 +36,7 @@ class CheckSegmentData():
         return segments
 
     def fill_missing_segment(self, advertiser, pattern, filter_id, action_name):
-        self.rockerbox.execute(FILL_IN_DB, (advertiser, filter_id, pattern, action_name))
+        self.rockerbox.execute(FILL_IN_DB, (advertiser, filter_id, action_name, pattern))
 
     def check_timeseries_endpoint(self, pattern, action_id):
         try:
