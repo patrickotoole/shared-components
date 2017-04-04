@@ -3566,7 +3566,7 @@
 
     c.key.toLowerCase().split(d.domain)[1].split("/").reverse()[0].replace("_","-").split("-").map(x => {
       var values = ["that","this","what","best","most","from","your","have","first","will","than","says","like","into","after","with"]
-      if (values.indexOf(x) == -1 && x.indexOf(",") == -1 && x.indexOf("?") == -1 && x.indexOf(".") == -1 && x.indexOf(":") == -1 && parseInt(x) != x && x.length > 3) {
+      if (x.match(/\d+/g) == null && values.indexOf(x) == -1 && x.indexOf(",") == -1 && x.indexOf("?") == -1 && x.indexOf(".") == -1 && x.indexOf(":") == -1 && parseInt(x) != x && x.length > 3) {
         p[x] = p[x] || {}
         p[x].key = x
         Object.keys(c.value).map(q => {
@@ -3577,6 +3577,7 @@
     })
     return p
   },{})
+
 
   kw_to_draw = Object.keys(kw_to_draw).map(function(k) { return kw_to_draw[k] }).map(function(x){
     x.total = d3.sum(buckets.map(function(b) { return x[b] || 0 }))
@@ -3745,12 +3746,12 @@
             d3_class(urls_summary,"median")
               .style("line-height","24px")
               .style("padding-left","4px")
-              .text("Median Views: " + to_draw[parseInt(to_draw.length/2)].total )
+              .text("Median Views: " + (to_draw[parseInt(to_draw.length/2)] || {}).total )
 
             d3_class(kws_summary,"median")
               .style("line-height","24px")
               .style("padding-left","4px")
-              .text("Median Views: " + kw_to_draw[parseInt(kw_to_draw.length/2)].total )
+              .text("Median Views: " + (kw_to_draw[parseInt(kw_to_draw.length/2)] || {}).total )
 
 
 
