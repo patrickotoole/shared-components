@@ -55,7 +55,7 @@ if __name__ == "__main__":
 
     env = setup(rb,crushercache)
 
-    udf = "domains_full_time_minute"
+    udf = "testing_category"
 
     wq_url = "http://workqueue.crusher.getrockerbox.com/cache"
     base_url = "http://beta.crusher.getrockerbox.com"
@@ -76,7 +76,7 @@ if __name__ == "__main__":
             import requests
             import json
 
-            for i in built.tolist():
+            for i in built.tolist()[:1]:
                 obj = i[0]
                 print obj
                 print requests.post(wq_url,data=json.dumps(obj),auth=("rockerbox","RBOXX2017")).content
