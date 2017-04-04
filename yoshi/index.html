@@ -1,49 +1,142 @@
 {% autoescape None %}
 
 <script data-require="d3@3.5.3" data-semver="3.5.3" src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.3/d3.js"></script>
+<style>
+.button {
+    background-color: #4CAF50;
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+}
+</style>
+
+<div id="domains"></div>
+
 <script>
 
-    var openWindows = function(href,pos,id) {
+    function openWindows(href,pos,id) {
       return window.open(href,"_BLANK"+pos)
     }
-    var closeWindows = function(windows) {
+    function closeWindows(windows) {
       windows.map(function(w){
         w.close()
       })
     }
 
-    var run = function(domains){
+
+    var columns = [
+    {
+        'name': 'domain',
+        accessor: function(x){return x['key']}
+    },
+    {
+        'name': 'line_items',
+        accessor: function(x){
+            return Array.from(new Set(x['values'].map(function(d){return d['line_item_name']}))).toString()
+        }
+    },
+    {
+        'name': 'urls',
+        accessor: function(x){
+            return Array.from(new Set(x['values'].map(function(d){return d['url']}))).slice(0,5).toString()
+        }
+    }]
+
+    function make_table(selection, columns, data){
+
+        var table = selection.append('table').classed('table',true)
+        var thead = table.append('thead')
+        thead.append('tr')
+            .selectAll('th')
+            .data(columns).enter()
+            .append('th')
+            .text(function(x){return x['name']});
+
+        var tbody = table.append('tbody')
+
+        var trows = tbody.selectAll('tr').data(data).enter().append('tr')
+        
+        trows.selectAll('td')
+            .data(function(row, i){
+                return columns.map(function(c){
+                    var cell = {}
+                    d3.keys(c).forEach(function(k) {
+                        cell[k] = typeof c[k] == 'function' ? c[k](row,i) : c[k];
+                    });
+                    return cell
+                })
+            })
+            .enter().append('td')
+            .text(function(x){
+                return x['accessor']
+            })
+
+    }
+
+    function removeDuplicates(arr, prop) {
+        var new_arr = [];
+        var lookup  = {};
+ 
+     for (var i in arr) {
+         lookup[arr[i][prop]] = arr[i];
+     }
+ 
+     for (i in lookup) {
+         new_arr.push(lookup[i]);
+     }
+ 
+     return new_arr;
+    }
+
+    function run(domains){
         if (domains.length > 0){
             var domain = domains[0]
             console.log(domain['key'])
             var urls = Array.from(new Set(domain['values'].map(function(d){return d['url']})))
-            var windows = urls.map(function(d,i) {
+            var windows = urls.slice(0,6).map(function(d,i) {
                 console.log(d)
                 return openWindows(d,i)
             }).filter(function(x){return x != null })
 
             window.focus()
             setTimeout(closeWindows, 26000, windows)
-
-            var advertiser_id = domain['values'][0]['advertiser_id']
-
-            d3.xhr("/create?advertiser="+ advertiser_id).post(JSON.stringify(domain))
-            setTimeout(run ,40000, domains.slice(1))
+            setTimeout(function(){
+                var advertiser_id = domain['values'][0]['advertiser_id']
+                d3.xhr("/create?advertiser="+ advertiser_id).post(JSON.stringify(removeDuplicates(domain['values'],"line_item_id")))
+            }, 26001)            
+            setTimeout(run ,27000, domains.slice(1))
+        } else{
+            console.log("FINISHED")
         }
     }
-
-
+    var wrapper = d3.select("#domains")
     var dd = {{domains}}
 
-    dd = dd.filter(function(d){
-        return d['line_item_id'] != 0
+
+    var dd_filtered = dd.filter(function(d){
+        return ( d['line_item_id'] != 0 && d['url'] != 0 ) 
     })
-    dd = dd.filter(function(d){
-        return d['url'] != 0
-    })
+
+
+
+    var domains_filtered = d3.nest().key(function(d){return d['domain']}).entries(dd_filtered)
+    var runBtn = wrapper.selectAll('button').data([domains_filtered]).enter().append('button')
+    runBtn.classed('button',true)
+    runBtn.text("Run Yoshi Creation")
 
     var domains = d3.nest().key(function(d){return d['domain']}).entries(dd)
-
-    run(domains)
+    make_table(wrapper, columns, domains)
+    
+    
+    runBtn.on("click", function(d){
+        run(d)
+    })
+    
 
 </script>

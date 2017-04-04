@@ -17,6 +17,9 @@ WHERE advertiser_id = %s
 AND active = 1 AND deleted = 0
 '''
 
+def process_endpoint(endpoint):
+    return endpoint.replace('/crusher/dashboard','/crusher/v1/visitor/yoshi_mediaplan').replace('selected_action','filter_id') + '&prevent_sample=true&num_days=2'
+
 COLUMNS =  ['external_advertiser_id','mediaplan', 'num_domains', 'line_item_name']
 
 class SetupDatabase(object):
@@ -35,7 +38,9 @@ class SetupDatabase(object):
         return df
 
     def get_media_plans(self, advertiser_id):
-        return self.crushercache.select_dataframe(MEDIAPLANS%advertiser_id)
+        df = self.crushercache.select_dataframe(MEDIAPLANS%advertiser_id)
+        df['endpoint'] = df['endpoint'].apply(process_endpoint)
+        return df
 
 
     def get_setup(self, advertiser_id):

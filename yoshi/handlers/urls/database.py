@@ -29,6 +29,10 @@ class UrlDatabase(object):
         for c in COLUMNS:
             assert c in df.columns
 
-        df['url'] = df['url'].apply(lambda x: MySQLdb.escape_string(x.decode('utf-8').encode('utf-8')))
+        # df['url'] = df['url'].apply(lambda x: MySQLdb.escape_string(x.decode('utf-8').encode('utf-8')))
+        df['url'] = df['url'].apply(lambda x: x.encode('utf-8'))
         dl = load.DataLoader(self.db)
-        dl.insert_df(df, "yoshi_domain_links",[], COLUMNS)
+        try:
+            dl.insert_df(df, "yoshi_domain_links",[], COLUMNS)
+        except UnicodeDecodeError:
+            import ipdb; ipdb.set_trace()
