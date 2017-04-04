@@ -94,8 +94,9 @@ class PixelLookupHandler(AnalyticsBase, BaseHandler):
         query = QUERY + " where source = ? and segment = ? and u2 = ?"
         execute = self.prepare_query(query)
         if segment:
-            
-            prepped = [[source, str(segment)] + [str(u2)] for u2 in range(0,sampled)]
+            sampled = sampled if sampled != 100 else 99
+            prepped = [[source, str(segment)] + [str(u2)] for u2 in range(1,sampled+1)]
+            prepped = prepped if sampled != 100 else prepped + [source, str(segment),'00']
             prep_range = 10 if sampled>=10 else sampled
             for x in range(0,prep_range):
                 prepped[x][2] = '0'+ prepped[x][2]
