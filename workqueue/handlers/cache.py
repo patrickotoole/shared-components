@@ -44,11 +44,12 @@ class CacheHandler(tornado.web.RequestHandler, RPCQueue):
         self.get_content(df.to_dict("records"),advertisers,advertiser_patterns)
 
 
-    def get_id(self, _job_id, entry_id=False):
+    def get_id(self, _job_id):
         try:
-            log_key = "%s_%s"
-            data = self.crushercache.select_dataframe("select submitted_at, started_at, finished_at from cached_udf_tracking where job_id = '%s'" % (log_key % (entry_id.split("/")[-1], _job_id)))
-            self.write(ujson.dumps(data.to_dict('records')))
+            data = self.crushercache.select_dataframe("select updated_at as submitted_at,job_id from cache_submit where job_id = '%s' order by updated_at desc limit 1" %  _job_id)
+            data_dict = data.to_dict('records')
+            data_dict[0]['submitted_at'] = str(data_dict[0]['submitted_at'])
+            self.write(ujson.dumps(data_dict))
             self.finish()
         except Exception as e:
             self.set_status(400)
@@ -67,24 +68,8 @@ class CacheHandler(tornado.web.RequestHandler, RPCQueue):
         self.finish()
 
 
-    def set_priority(self, job_id, priority_value, _version):
-        try:
-            needed_path = str(self.zk_wrapper.CustomQueue.get_secondary_path()) + "/{}".format(job_id)
-            entry_ids = self.zk_wrapper.zk.get_children(needed_path)
-            values = self.zk_wrapper.zk.get("/python_queue/" + entry_ids[0])[0]
-
-            priority_value = int(priority_value)
-            entry_id = self.zk_wrapper.write(values,priority_value, False)
-            self.zk_wrapper.CustomQueue.delete(entry_ids)
-            self.write(ujson.dumps({"result":"Success", "entry_id":entry_id}))
-            self.finish()
-        except Exception as e:
-            self.set_status(400)
-            self.write(ujson.dumps({"Error":str(e)}))
-            self.finish()
-
-    def submit_log(self):
-        return None
+    def submit_log(self,entry, job_id, data):
+        self.crushercache.execute("insert into cache_submit (id,job_id,udf,submitted_by,parameters) values ('%s', '%s', '%s', '%s', '%s')"  % (entry, job_id, data['udf'], "RPC", ujson.dumps(data)))
 
     @tornado.web.asynchronous
     def get(self):
@@ -98,7 +83,8 @@ class CacheHandler(tornado.web.RequestHandler, RPCQueue):
         _version = data.get("version", "v{}".format(datetime.datetime.now().strftime("%m%y")))
         try:
             entry, job_id = self.add_to_work_queue(self.request.body)
-            self.get_id(job_id, entry)
+            self.submit_log(entry, job_id, data)
+            self.get_id(job_id)
             self.sumit_log()
             if (data.get('udf',False)):
                 self.crushercache.execute("INSERT INTO cache_udf_submit (job_id,advertiser,udf,filter_id,pattern,submitted_by,parameters) VALUES (%s,%s,%s,%s,%s,%s,%s)", (entry.split("/")[-1] + "_" + job_id,data['advertiser'],data['udf'],data['filter_id'],data['pattern'],data['submitted_by'],ujson.dumps(data)))

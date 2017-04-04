@@ -31,6 +31,7 @@ from handlers.schedule import *
 from handlers.workqueuelog import *
 from handlers.cache import *
 from handlers.checkshandler import *
+from handlers.job_status import *
 
 import requests
 import signal
@@ -55,6 +56,7 @@ def build_routes(connectors,override=[]):
         (r'/slack', SlackHandler, connectors),
         (r'/slack/new', SlackNewHandler, connectors),
         (r'/cache', CacheHandler, connectors),
+        (r'/job_status', StatusHandler, connectors),
         (r'/logging/?(.*?)',WQLog, connectors),
         (r'/checks',ChecksHandler, connectors),
         (r'/', WorkQueueHandler, connectors),
