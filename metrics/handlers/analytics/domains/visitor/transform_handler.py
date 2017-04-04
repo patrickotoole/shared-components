@@ -3,6 +3,8 @@ import pandas
 import logging
 
 import lib.execution.build
+import lib.custom_defer as custom_defer
+from lib.helpers import decorators
 
 from ...search.pattern.base_visitors import VisitorBase
 from lib.helpers import decorators
@@ -29,8 +31,8 @@ class VisitorTransformHandler(VisitorBase):
     def buildEnvironment(self):
         return lib.execution.build.build_execution_env_from_db(self.crushercache)
  
-
-    def getProcess(self, advertiser, url_pattern, api_type):
+    @decorators.deferred
+    def get_process(self, advertiser, url_pattern, api_type):
         advertiser_overrides = self.crushercache.select_dataframe(QUERYFIRST.format(api_type, advertiser))
         user_defined = self.crushercache.select_dataframe(QUERYFUNCTIONS.format(api_type))
         is_default = filter(lambda x: ("process_" + api_type) in x.__name__, self.DEFAULT_FUNCS)
@@ -51,11 +53,8 @@ class VisitorTransformHandler(VisitorBase):
 
         return is_default
 
-
-    @tornado.web.authenticated
-    @tornado.web.asynchronous
-    @decorators.error_handling
-    def get(self, api_type):
+    @custom_defer.inlineCallbacksErrors
+    def run_udf(self,api_type):
         advertiser = self.current_advertiser_name
         terms = self.get_argument("url_pattern", False)
         num_days = self.get_argument("num_days", 2)
@@ -65,16 +64,12 @@ class VisitorTransformHandler(VisitorBase):
         num_users = self.get_argument("num_users",20000)
         skip_datasets = self.get_argument("skip_datasets","").split(",")
 
-        try: 
-            process = self.getProcess(advertiser, terms, api_type)
-        except:
-            raise Exception("UDF does not exist")
-
+        process = yield self.get_process(advertiser, terms, api_type)
         DEFAULT_DATASETS = ['domains','domains_full','urls','idf','uid_urls', 'url_to_action', 'category_domains', 'corpus', 'artifacts', 'idf_hour', 'actions']
 
         datasets = [d for d in DEFAULT_DATASETS if d not in skip_datasets]
 
-        
+
         url_arg = self.request.arguments
 
 
@@ -82,3 +77,11 @@ class VisitorTransformHandler(VisitorBase):
             preventsample = preventsample == 'true'
         logging.info(preventsample)
         self.get_uids(advertiser,[[terms]],int(num_days),process=process, prevent_sample=preventsample, num_users=num_users, datasets=datasets, filter_id=filter_id, date=filter_date, url_args=url_arg)
+
+    @tornado.web.authenticated
+    @tornado.web.asynchronous
+    @decorators.error_handling
+    def get(self, api_type):
+
+        self.run_udf(api_type)
+

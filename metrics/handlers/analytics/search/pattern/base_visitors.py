@@ -56,10 +56,15 @@ class VisitorBase(GenericSearchBase, BaseDomainHandler):
 
         defer.returnValue(response)
         
+    def get_pattern(self,filter_id):
+        pattern = self.db.select_dataframe("select url_pattern from action_patterns where action_id = %s" % int(filter_id))
+        return [pattern['url_pattern'][0]]
 
-
-    @custom_defer.inlineCallbacksErrors
+    @defer.inlineCallbacks
     def get_uids(self, advertiser, pattern_terms, num_days=20, process=False,  prevent_sample=None, num_users=20000, datasets=DEFAULT_DATASETS, filter_id=False, date=False, url_args={}, *args, **kwargs):
+        
+        if filter_id:
+            pattern_terms = [self.get_pattern(filter_id)]
 
         NUM_DAYS = int(num_days)
         ALLOW_SAMPLE = not prevent_sample if prevent_sample is not None else None
