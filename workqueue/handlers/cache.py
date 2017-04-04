@@ -10,28 +10,6 @@ from RPCQueue import RPCQueue
 from twisted.internet import defer
 from lib.helpers import *
 
-def parse(x, zk):
-    try:
-        time = zk.get("/python_queue/" + x)[1][2]
-        values = pickle.loads(zk.get("/python_queue/" + x)[0])
-        job_id = hashlib.md5(zk.get("/python_queue/" + x)[0]).hexdigest()
-        logging.info(values)
-        rvals = values[1]
-        rvals['job_id']=job_id
-        rvals['time'] = time
-        return rvals
-    except:
-        logging.info("Error parsing pickle job")
-
-def parse_for_id(x, zk, dq):
-    time = zk.get("/python_queue/" + x)[1][2]
-    values = pickle.loads(zk.get("/python_queue/" + x)[0])
-    job_id = hashlib.md5(zk.get("/python_queue/" + x)[0]).hexdigest()
-    logging.info(values)
-    rvals = values[1]
-    rvals['job_id']=job_id
-    return {"parameters":rvals, "time":time}, dq
-
 
 class CacheHandler(tornado.web.RequestHandler, RPCQueue):
 
@@ -105,6 +83,9 @@ class CacheHandler(tornado.web.RequestHandler, RPCQueue):
             self.write(ujson.dumps({"Error":str(e)}))
             self.finish()
 
+    def submit_log(self):
+        return None
+
     @tornado.web.asynchronous
     def get(self):
         self.get_data()
@@ -116,12 +97,9 @@ class CacheHandler(tornado.web.RequestHandler, RPCQueue):
         priority_value = data.get("priority", 2)
         _version = data.get("version", "v{}".format(datetime.datetime.now().strftime("%m%y")))
         try:
-            if "runall" in data.keys():
-                entry, job_id = self.add_advertiser_to_wq(self.request.body)
-                self.get_id(job_id, entry)
-            else:
-                entry, job_id = self.add_to_work_queue(self.request.body)
-                self.get_id(job_id, entry)
+            entry, job_id = self.add_to_work_queue(self.request.body)
+            self.get_id(job_id, entry)
+            self.sumit_log()
             if (data.get('udf',False)):
                 self.crushercache.execute("INSERT INTO cache_udf_submit (job_id,advertiser,udf,filter_id,pattern,submitted_by,parameters) VALUES (%s,%s,%s,%s,%s,%s,%s)", (entry.split("/")[-1] + "_" + job_id,data['advertiser'],data['udf'],data['filter_id'],data['pattern'],data['submitted_by'],ujson.dumps(data)))
         except Exception, e:
