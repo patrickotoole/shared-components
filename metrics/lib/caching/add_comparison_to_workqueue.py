@@ -64,7 +64,7 @@ if __name__ == "__main__":
     #base_url = "http://localhost:8888" 
 
     data = requests.get("http://portal.getrockerbox.com/admin/pixel/advertiser_data",auth=("rockerbox","RBOXX2017"))
-    valid_advertisers = {x:y for x,y in data.json().items() if y['has_data'] and len(y['segments']) >0 }
+    valid_advertisers = {x:y for x,y in data.json().items() if y['has_data'] and len([z for z in y['segments'] if z['data_populated']==1]) >0 }
     for advertiser, segments in valid_advertisers.items():
 
         variables = env(advertiser,segments,udf)
