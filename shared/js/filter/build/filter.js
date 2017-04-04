@@ -333,11 +333,11 @@
               return String(x[field]) == String(value)
             }
           }
-        , "contains" : function(field,value) {
-            return function(x) {
-              return String(x[field]).indexOf(String(value)) > -1
-            }
-          }
+  //      , "contains" : function(field,value) {
+  //          return function(x) {
+  //            return String(x[field]).indexOf(String(value)) > -1
+  //          }
+  //        }
         , "starts with" : function(field,value) {
             return function(x) {
               return String(x[field]).indexOf(String(value)) == 0
@@ -367,6 +367,30 @@
             return function(x) {
               return parseInt(x[field]) >= value[0] && parseInt(x[field]) <= value[1]
             }
+          }
+        , "is in": function(field,value) {
+            return function(x) {
+              var values = value.split(",")
+              return values.reduce(function(p,value) { return p + String(x[field]).indexOf(String(value)) > -1 }, 0) > 0
+            } 
+          }
+        , "is not in": function(field,value) {
+            return function(x) {
+              var values = value.split(",")
+              return values.reduce(function(p,value) { return p + String(x[field]).indexOf(String(value)) > -1 }, 0) == 0
+            } 
+          }
+        , "does not contain": function(field,value) {
+            return function(x) {
+              var values = value.split(",")
+              return values.reduce(function(p,value) { return p + String(x[field]).indexOf(String(value)) > -1 }, 0) == 0
+            } 
+          }
+        , "contains": function(field,value) {
+            return function(x) {
+              var values = value.split(",")
+              return values.reduce(function(p,value) { return p + String(x[field]).indexOf(String(value)) > -1 }, 0) > 0
+            } 
           }
       }
   }
