@@ -68,41 +68,9 @@ class CacheHandler(tornado.web.RequestHandler, RPCQueue):
 
     def get_id(self, _job_id, entry_id=False):
         try:
-            date = datetime.datetime.now().strftime("%m%y")
-            volume = "v{}".format(date)
-            zk_path = "python_queue"
-            if entry_id and entry_id.find("debug")>=0:
-                zk_path = "python_queue_debug"
-            #needed_path = secondary_path = '{path}-{secondary_path}/{volume}/{job_id}'.format(
-            #path=zk_path, secondary_path="log", volume=volume, job_id=_job_id)
-            needed_path = "/python_queue/" + volume 
-            entry_ids = self.zk_wrapper.zk.get_children(needed_path)
-            logging.info(len(entry_ids))
-            running_entries = [entry for entry in entry_ids if self.zk_wrapper.zk.get(needed_path + "/" + entry)[0]]
-            df_entry={}
-            df_entry['job_id']= _job_id
-            if entry_id:
-                df_entry['entry_id'] = str(entry_id).split("/")[2]
-            df_entry['entries'] = []
-            df_entry['finished'] = 0
-            dq = 0
-            for entry in entry_ids:
-                try:
-                    d1, dq = parse_for_id(entry, self.zk_wrapper.zk, dq)
-                except:
-                    d1 = []
-                if d1:
-                    sub_obj = {}
-                    values = d1['parameters']
-                    sub_obj = values
-                    sub_obj['entry']= entry
-                    timestamp = d1['time']
-                    sub_obj['time'] = timestamp
-                    df_entry['entries'].append(sub_obj)
-                    d1['dequeued'] = dq
-            df_entry['finished'] = dq - len(running_entries)
-            df_entry['running'] = running_entries
-            self.write(ujson.dumps(df_entry))
+            log_key = "%s_%s"
+            data = self.crushercache.select_dataframe("select submitted_at, started_at, finished_at from cached_udf_tracking where job_id = '%s'" % (log_key % (entry_id.split("/")[-1], _job_id)))
+            self.write(ujson.dumps(data.to_dict('records')))
             self.finish()
         except Exception as e:
             self.set_status(400)
