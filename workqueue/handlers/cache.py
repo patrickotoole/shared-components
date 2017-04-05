@@ -69,7 +69,7 @@ class CacheHandler(tornado.web.RequestHandler, RPCQueue):
 
 
     def submit_log(self,entry, job_id, data):
-        self.crushercache.execute("insert into cache_submit (id,job_id,udf,submitted_by,parameters) values ('%s', '%s', '%s', '%s', '%s')"  % (entry, job_id, data['udf'], "RPC", ujson.dumps(data)))
+        self.crushercache.execute("insert into cache_submit (job_id,udf,submitted_by,parameters) values ('%s', '%s', '%s', '%s')"  % (job_id, data['udf'], "RPC", ujson.dumps(data)))
 
     @tornado.web.asynchronous
     def get(self):
@@ -85,7 +85,6 @@ class CacheHandler(tornado.web.RequestHandler, RPCQueue):
             entry, job_id = self.add_to_work_queue(self.request.body)
             self.submit_log(entry, job_id, data)
             self.get_id(job_id)
-            self.sumit_log()
             if (data.get('udf',False)):
                 self.crushercache.execute("INSERT INTO cache_udf_submit (job_id,advertiser,udf,filter_id,pattern,submitted_by,parameters) VALUES (%s,%s,%s,%s,%s,%s,%s)", (entry.split("/")[-1] + "_" + job_id,data['advertiser'],data['udf'],data['filter_id'],data['pattern'],data['submitted_by'],ujson.dumps(data)))
         except Exception, e:

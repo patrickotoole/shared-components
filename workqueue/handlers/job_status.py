@@ -20,8 +20,22 @@ class StatusHandler(tornado.web.RequestHandler, RPCQueue):
 
     def get_id(self, job_id):
         try:
-            submitted = self.crushercache.select_dataframe("select a.updated_at as submitted_at, b.updated_at as added_at, c.updated_at as started_at, a.job_id from cache_submit a left join cache_add b on a.job_id = b.job_id left join cache_started c on a.job_id=c.job_id where a.job_id='%s'" %  _job_id)
-            self.write(ujson.dumps(data.to_dict('records')))
+            submitted = self.crushercache.select_dataframe("select a.updated_at as submitted_at, b.updated_at as added_at, c.updated_at as started_at, d.finish_type, d.updated_at as finished_at, a.job_id from cache_submit a left join cache_add b on a.job_id = b.job_id left join cache_start c on a.job_id=c.job_id left join cache_finish d on a.job_id = d.job_id where a.job_id='%s' order by submitted_at desc limit 1" %  job_id)
+            data = submitted.to_dict('records')
+            processed_data = [{'submitted':str(x['submitted_at']), "added":str(x['added_at']), "started":str(x['started_at']), "finished":str(x["finished_at"]), "finish status":x["finish_type"], "job_id":x["job_id"]} for x in data]
+            self.write(ujson.dumps(processed_data))
+            self.finish()
+        except Exception as e:
+            self.set_status(400)
+            self.write(ujson.dumps({"Error":str(e)}))
+            self.finish()
+
+    def get_advertiser(self, advertiser):
+        try:
+            submitted = self.crushercache.select_dataframe("select a.updated_at as submitted_at, b.updated_at as added_at, c.updated_at as started_at, d.finish_type, d.updated_at as finished_at, a.job_id from cache_submit a left join cache_add b on a.job_id = b.job_id left join cache_start c on a.job_id=c.job_id left join cache_finish d on a.job_id = d.job_id where b.params like '%{}%' order by submitted_at".format(advertiser))
+            data = submitted.to_dict('records')
+            processed_data = [{'submitted':str(x['submitted_at']), "added":str(x['added_at']), "started":str(x['started_at']), "finished":str(x["finished_at"]), "finish status":x["finish_type"], "job_id":x["job_id"]} for x in data]
+            self.write(ujson.dumps(processed_data))
             self.finish()
         except Exception as e:
             self.set_status(400)
@@ -42,8 +56,13 @@ class StatusHandler(tornado.web.RequestHandler, RPCQueue):
 
     @tornado.web.asynchronous
     def get(self):
-        job_id = self.get_arguments("job_id",False)
-        if not job_id:
+        job_id = self.get_argument("job_id",False)
+        advertiser = self.get_argument("advertiser",False)
+        if not job_id and not advertiser:
             self.get_num()
-        else:
+        if job_id and advertiser:
+            self.write(json.dumps({"Status":"Error","Reason":"does not accept job id and advertser"}))
+        if job_id:
             self.get_id(job_id)
+        if advertiser:
+            self.get_advertiser(advertiser)

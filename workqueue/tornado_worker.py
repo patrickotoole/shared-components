@@ -32,6 +32,8 @@ from handlers.workqueuelog import *
 from handlers.cache import *
 from handlers.checkshandler import *
 from handlers.job_status import *
+from handlers.clear_queue import *
+from handlers.remove import *
 
 import requests
 import signal
@@ -57,14 +59,12 @@ def build_routes(connectors,override=[]):
         (r'/slack/new', SlackNewHandler, connectors),
         (r'/cache', CacheHandler, connectors),
         (r'/job_status', StatusHandler, connectors),
+        (r'/clear', ClearHandler, connectors),
+        (r'/remove', RemoveHandler, connectors),
         (r'/logging/?(.*?)',WQLog, connectors),
         (r'/checks',ChecksHandler, connectors),
         (r'/', WorkQueueHandler, connectors),
 
-
-        #Old Handler for legacy purposes
-        (r'/scripts/?(.*?)', OldJobsHandler, connectors),
-        (r'/work_queue/?(.*?)',OldCacheHandler, connectors),
     ]
     static = [(r'/static/(.*)', tornado.web.StaticFileHandler, {'path': static_dir})]
     return routes + static
@@ -105,13 +105,23 @@ if __name__ == '__main__':
 
     connectors['zk'] = connectors['zookeeper']
 
-    log_object = logging.getLogger()
-    log_object.setLevel(logging.INFO)
+    #log_object = logging.getLogger()
+    #log_object.setLevel(logging.INFO)
 
-    myhandler = CustomLogHandler(sys.stderr)
+    #myhandler = CustomLogHandler(sys.stderr)
 
-    log_object.addHandler(myhandler)
-    log_object.handlers = [log_object.handlers[1]] 
+    #log_object.addHandler(myhandler)
+    #log_object.handlers = [log_object.handlers[1]]
+
+    def create_log_object():
+        log_object = logging.getLogger()
+        log_object.setLevel(logging.INFO)
+
+        myhandler = CustomLogHandler(sys.stderr)
+
+        log_object.addHandler(myhandler)
+        log_object.handlers = [log_object.handlers[1]] 
+        return log_object
 
     import work_queue
     import sys
@@ -122,7 +132,6 @@ if __name__ == '__main__':
     zookeeper_path = "/python_queue"
     if options.debug:
         zookeeper_path = "/python_queue_debug"
-
     if not connectors['cassandra']:
         logging.info("connectors not received properly")
         sys.exit(1)
@@ -144,7 +153,7 @@ if __name__ == '__main__':
         tk = timeKeeper()
         tks.append(tk)    
     for _ in range(0,num_worker):
-        reactor.callInThread(work_queue.WorkQueue(options.exit_on_finish, connectors['zk_wrapper'],reactor, tks[_], mc, connectors))
+        reactor.callInThread(work_queue.WorkQueue(options.exit_on_finish, connectors['zk_wrapper'],reactor, tks[_], mc, connectors, create_log_object()))
         reactor.callInThread(TimeMetric(reactor, tks[_]))
 
     reactor.callInThread(Metrics(reactor,tks, mc,connectors))
