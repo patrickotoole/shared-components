@@ -13,7 +13,7 @@ QUERYFIRST = "select body from user_defined_functions where udf ='{}' and advert
 QUERYFUNCTIONS = "select body from user_defined_functions where udf = '{}' and advertiser is NULL"
 
 def userDefinedFunction(code_string,env):
-    code_string = code_string.replace("import", "raise Exception('user defined function error')")
+    code_string = code_string.replace("import ", "raise Exception('user defined function error')")
     code = compile(code_string, '<string>','exec')
     exec code in env
     return env 
