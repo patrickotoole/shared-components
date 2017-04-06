@@ -113,8 +113,8 @@ class WorkQueue(object):
         obj = {i:j for i,j in kwargs.items() if i != "connectors"}
 
         if (kwargs.get("pattern",False) and kwargs.get("filter_id",False)): self.connectors['crushercache'].execute(START_UDF, (job_id, kwargs['advertiser'], kwargs['filter_id'], kwargs['pattern'], kwargs['func_name'], json.dumps(obj) ))
-
-        self.connectors['crushercache'].execute(START_LOG, (job_id.split("_")[1], kwargs['func_name'], json.dumps(obj)))
+        name = kwargs.get('func_name',False) or kwargs.get('udf','NA')
+        self.connectors['crushercache'].execute(START_LOG, (job_id.split("_")[1], name, json.dumps(obj)))
 
     def run_job(self, data, job_id, entry_id):
         fn, kwargs = pickle.loads(data)

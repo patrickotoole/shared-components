@@ -22,13 +22,26 @@ class ScheduleHandler(tornado.web.RequestHandler):
 
     def add_to_db(self, request_body):
         data = ujson.loads(request_body)
-        if data.get("type",False):
-            if data['type'] =="delete":
+        if data.get("type",False) and data['type'] == "delete":
+            try:
                 self.crushercache.execute(DELETE,data)
+                self.write(ujson.dumps({"Status":"Success"}))
+                self.finish()
+            except:
+                self.set_status(400)
+                self.write(ujson.dumps({"Status":"Error", "Reason":"Script not in datbase could not delete"}))
+                self.finish() 
         else:
-            jobid = self.crushercache.select_dataframe(GETID % data['name'])
-            data['id'] = jobid['id'][0]
-            self.crushercache.execute(INSERT, data)
+            try:
+                jobid = self.crushercache.select_dataframe(GETID % data['name'])
+                data['id'] = jobid['id'][0]
+                self.crushercache.execute(INSERT, data)
+                self.write(ujson.dumps({"Status":"Success"}))
+                self.finish()
+            except:
+                self.set_status(400)
+                self.write(ujson.dumps({"Status":"Error", "Reason":"Script name in datbase"}))
+                self.finish()
 
     @tornado.web.asynchronous
     def get(self):
@@ -40,19 +53,12 @@ class ScheduleHandler(tornado.web.RequestHandler):
             self.render("scheduledatatable.html", data=data, paths="")
         except Exception, e:
             self.set_status(400)
-            self.write(ujson.dumps({"error":str(e)}))
+            self.write(ujson.dumps({"Error":str(e)}))
             self.finish()
 
     @tornado.web.asynchronous
     def post(self):
-        try:
-            self.add_to_db(self.request.body)
-            self.write(ujson.dumps({"success":"True"}))
-            self.finish()
-        except Exception, e:
-            self.set_status(400)
-            self.write(ujson.dumps({"error":str(e)}))
-            self.finish()
+        self.add_to_db(self.request.body)
 
 
 class ScheduleNewHandler(tornado.web.RequestHandler):
