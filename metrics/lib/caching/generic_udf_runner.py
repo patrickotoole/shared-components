@@ -177,12 +177,15 @@ def runner(**kwargs):
     db = connectors['crushercache']
    
     parameters = kwargs.get("parameters",False)
+    url_parameters = {}
     if parameters:
-        parameters = dict(parameters)
-    else:
-        parameters = UR.get_parameters(db, func_name)
+        for k,v in dict(parameters).items():
+            if k in ['skip_datasets', 'num_days', 'num_users', 'prevent_sample','date']:
+                url_parameters[k] = v
+    if not url_parameters:
+        url_parameters = UR.get_parameters(db, func_name)
 
-    data = UR.make_request(pattern, func_name, parameters)
+    data = UR.make_request(pattern, func_name, url_parameters)
     #data2 = UR.make_request_v2(crusher, pattern, func_name, parameters)
 
     compress_data = UR.compress(ujson.dumps(data))

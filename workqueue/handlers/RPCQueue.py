@@ -86,12 +86,9 @@ class RPCQueue():
         base_url = rpc_data.get("base_url", "http://beta.crusher.getrockerbox.com")
         segment = rpc_data.get("action_name", False)
         filter_id = rpc_data.get("filter_id", False)
-        parameters = rpc_data.get("parameters", {})
+        parameters = ujson.loads(rpc_object)
         priority = rpc_data.get("priority", 2)
         debug_bool = rpc_data.get("debug",None)
-        for key, val in rpc_data.items():
-            if key not in ['advertiser','udf','pattern','base_url','action_name','filter_id','priority','parameters', 'debug']:
-                parameters[key] = val
         
         volume = "v{}".format(datetime.datetime.now().strftime('%m%y'))
 
