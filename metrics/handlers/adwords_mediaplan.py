@@ -9,7 +9,7 @@ from base import BaseHandler
 from twisted.internet import defer
 from lib.helpers import *
 
-SELECT = "select * from adwords_campaign_endpoint where advertiser_id = '%s'"
+SELECT = "select * from adwords_campaign_endpoint where active=1 and deleted = 0 and advertiser_id = '%s'"
 INSERT = "insert into adwords_campaign_endpoint (advertiser_id, name, endpoint) values (%s, %s, %s)"
 
 class AdwordsHandler(BaseHandler):
