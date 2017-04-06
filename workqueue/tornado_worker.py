@@ -26,7 +26,6 @@ from handlers.handler import *
 from handlers.jobs import *
 from handlers.oldjobs import *
 from handlers.previoushandler import *
-from handlers.slack import *
 from handlers.schedule import *
 from handlers.workqueuelog import *
 from handlers.cache import *
@@ -55,8 +54,6 @@ def build_routes(connectors,override=[]):
         (r'/jobs/new', JobsNewHandler, connectors),
         (r'/schedule', ScheduleHandler, connectors),
         (r'/schedule/new', ScheduleNewHandler, connectors),
-        (r'/slack', SlackHandler, connectors),
-        (r'/slack/new', SlackNewHandler, connectors),
         (r'/cache', CacheHandler, connectors),
         (r'/job_status', StatusHandler, connectors),
         (r'/clear', ClearHandler, connectors),
