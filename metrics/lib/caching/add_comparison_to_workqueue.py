@@ -36,7 +36,7 @@ def build_post(udf,advertiser,params,base_url):
             "num_users": 25000,
             "priority": 35,
             "base_url":base_url,
-            "skip_datasets":"uid_urls,url_to_action,corpus,domains"
+            "skip_datasets":"corpus"
         }
         
         TO_POST = {i:j for i,j in to_post.items() + params.items()}
