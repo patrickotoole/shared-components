@@ -1,4 +1,5 @@
 import log
+import logging
 
 FN_STR = "def %(name)s(params={}):\n"
 
@@ -14,9 +15,13 @@ class ExecutionEnvironment(object):
 
     def __init__(self,functions):
 
-        self._env = {"logging":log.logging, "logging_info":log.logging_info} 
-        code = compile("\n\n".join(functions), '<string>', 'exec')
-        exec code in self._env
+        self._env = {"logging":log.logging, "logging_info":log.logging_info}
+        for function in functions:
+            try:
+                code = compile(function, '<string>', 'exec')
+                exec code in self._env
+            except:
+                logging.info("error compiling code for %s" % function.split("\n")[0].replace("def","").replace(":",""))
 
     def env(self):
         return self._env
@@ -31,8 +36,9 @@ def wrap_py(name, code):
     if not code.startswith("def %s" % name):
         
         FN = FN_STR % {"name":name}
-
+        
         lines = ["    " + line for line in code.split("\n")]
+
         code = FN + "\n".join(lines)
 
     func = log.add_logging_to_python(name,code)
