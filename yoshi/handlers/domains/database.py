@@ -52,7 +52,7 @@ class DomainsDatabase(SetupDatabase):
 
     
     def get_domains_queue(self, advertiser_id):
-        cols = ['domain','line_item_name','mediaplan']
+        cols = ['domain','line_item_name','mediaplan','url']
 
         self.crusher_authenticate(advertiser_id)
         logging.info("Loading Setup Params")

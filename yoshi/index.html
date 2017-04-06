@@ -98,7 +98,10 @@
         if (domains.length > 0){
             var domain = domains[0]
             console.log(domain['key'])
-            var urls = Array.from(new Set(domain['values'].map(function(d){return d['url']})))
+
+            var urls = domain['values'][0]['url']
+
+            // var urls = Array.from(new Set(domain['values'].map(function(d){return d['url']})))
             var windows = urls.slice(0,6).map(function(d,i) {
                 console.log(d)
                 return openWindows(d,i)
@@ -133,7 +136,7 @@
     var domains = d3.nest().key(function(d){return d['domain']}).entries(dd)
     make_table(wrapper, columns, domains)
     
-    
+    debugger
     runBtn.on("click", function(d){
         run(d)
     })
