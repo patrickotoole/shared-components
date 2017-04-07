@@ -60,22 +60,3 @@ class ScheduleHandler(tornado.web.RequestHandler):
     def post(self):
         self.add_to_db(self.request.body)
 
-
-class ScheduleNewHandler(tornado.web.RequestHandler):
-
-    def initialize(self, crushercache=None, *args, **kwargs):
-        self.crushercache = crushercache
-
-    def get_content_schedule(self,data):
-
-        self.render("newscheduledatatable.html", data="", paths="")
-
-
-    def get_data_schedule(self):
-        import pandas
-        df = self.crushercache.select_dataframe("select name from recurring_scripts where active = 1 and deleted = 0")
-        self.get_content_schedule(df.to_dict("records"))
-
-    @tornado.web.asynchronous
-    def get(self):
-        self.get_data_schedule()

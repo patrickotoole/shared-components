@@ -51,7 +51,6 @@ def build_routes(connectors,override=[]):
         (r'/jobs', JobsHandler, connectors),
         (r'/jobs/new', JobsNewHandler, connectors),
         (r'/schedule', ScheduleHandler, connectors),
-        (r'/schedule/new', ScheduleNewHandler, connectors),
         (r'/cache', CacheHandler, connectors),
         (r'/job_status', StatusHandler, connectors),
         (r'/clear', ClearHandler, connectors),

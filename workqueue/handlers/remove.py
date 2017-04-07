@@ -22,7 +22,7 @@ class RemoveHandler(tornado.web.RequestHandler, RPCQueue):
         self.crushercache.execute(QUERY % job_id)
 
     def clear_item(self, job_id):
-        import hashib
+        import hashlib
         path = self.zk_wrapper.zk_path
         job_ids = self.zk_wrapper.zk.get_children(path)
         job_exists = False
