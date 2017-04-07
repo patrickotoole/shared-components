@@ -17,10 +17,3 @@ class DomainsHandler(tornado.web.RequestHandler, DomainsDatabase):
         self.write(json.dumps(queue.to_dict('records')))
         self.finish()
     
-    def post(self):
-
-        advertiser_id = self.get_query_argument("advertiser")
-        data = json.loads(self.request.body).get('data')
-        data = pd.DataFrame(data)
-        data['external_advertiser_id'] = advertiser_id
-        self.write_queue(data)

@@ -75,10 +75,3 @@ class DomainsDatabase(SetupDatabase):
 
         return queue
 
-    def write_queue(self, data, table = "yoshi_domain_log"):
-        for c in DOMAIN_QUEUE_COLUMNS:
-            assert c in data.columns
-
-        dl = load.DataLoader(self.db)
-        dl.insert_df(data, table,[], DOMAIN_QUEUE_COLUMNS)
-

@@ -103,11 +103,8 @@ class CampaignDatabase(DomainsDatabase, UrlDatabase):
 
         domains_queue = self.get_domains_queue(advertiser_id)
         domains_queue = domains_queue.drop_duplicates(subset=['domain','line_item_name'])
-        # urls = self.get_domain_links(",".join(domains_queue['domain'].unique().tolist()))
         line_items = self.get_line_items(advertiser_id)
-        # df = pd.merge(domains_queue, urls, on = 'domain', how = 'left')
         df = pd.merge(domains_queue, line_items, on = 'line_item_name', how = 'left')
-        # import ipdb; ipdb.set_trace()
         df['advertiser_id'] = advertiser_id
         return df.fillna(0)
 
