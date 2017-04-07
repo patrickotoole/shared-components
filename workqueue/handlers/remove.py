@@ -30,7 +30,7 @@ class RemoveHandler(tornado.web.RequestHandler, RPCQueue):
             data = self.zk_wrapper.zk.get(path+"/"+job)
             if hashlib.md5(data[0]).hexdigest():
                 self.zk_wrapper.zk.delete(path+"/"+job)
-                job_exists = data[0]
+                job_exists = hashlib.md5(data[0]).hexdigest()
                 self.finish_log(job_exists)
         if job_exists:
             self.write(json.dumps({"Status":"Success"}))

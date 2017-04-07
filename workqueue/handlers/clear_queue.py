@@ -34,7 +34,8 @@ class ClearHandler(tornado.web.RequestHandler, RPCQueue):
     def clear_queue(self, debug):
         path = "/python_queue_debug" if debug else self.zk_wrapper.zk_path
         job_ids = self.zk_wrapper.zk.get_children(path)
-        self.finish_log(job_ids)
+        if job_ids:
+            self.finish_log(job_ids)
         self.zk_wrapper.zk.delete(path,recursive=True)
         self.zk_wrapper.zk.ensure_path(path)
         self.redirect("/")
