@@ -9,6 +9,7 @@ def run(db, advertiser, pattern, limit=10):
     import json
     import urllib
     import logging
+    import math
 
     cr = lnk.api.crusher
     cr.base_url = "http://localhost:9001"
@@ -17,18 +18,23 @@ def run(db, advertiser, pattern, limit=10):
     cr.authenticate()
 
     saved = cr.get("/crusher/saved_dashboard").json
-    endpoint = saved['response'][1]['endpoint']
-    media_plan_endpoint = process_endpoint(endpoint)
 
-    print media_plan_endpoint
+    boards = []
 
-    #data = cr.get(media_plan_endpoint).json
-    data = []
+    for dashboards in saved['response']:
 
-    
+        name = dashboards['name']
+        endpoint = dashboards['endpoint']
+        media_plan_endpoint = process_endpoint(endpoint)
+
+        data = cr.get(media_plan_endpoint).json['domains'][:10]
+        for d in data:
+            d['importance'] = round(math.log(d['importance']),2)
+      
+        boards += [{"title":name,"value":data,"url":"http://hindsight.ai" + endpoint}]
 
         
-    return json.dumps(data).encode('latin', 'ignore')
+    return json.dumps(boards).encode('latin', 'ignore')
     
 if __name__ == "__main__":
 

@@ -1,5 +1,4 @@
 
-
 function build_email_top_small(parent_0,data,advertiser) {
 
 
@@ -223,7 +222,7 @@ var parent_16 = parent_15
 var parent_17 = parent_16
   .append('img')
   .attr('src','http://hindsight.ai/assets/img/logo.png')
-  .attr('style','padding-top:20px;padding-bottom:20px;height:40px')
+  .attr('style','padding-top:20px;height:40px')
 
 
 
@@ -388,42 +387,13 @@ var parent_23 = parent_18
 
 }
 
-function build_email_main_content(parent_0,data) {
+function build_email_main_content(parent_0,data,advertiser,table,d3) {
 
-  parent_0.append("div")
-    .text("ASDF")
-
-  parent_0.append("svg")
-    .append("circle")
-    .attr("cx",10)
-    .attr("cy",10)
-    .attr("r",5)
-    .attr("fill","black")
-
-
-  return {};
-
-if (!data) {
-  var data = [{
-    'articles': 19, 
-    'description': "He's part owner of the Cavs but was happy to greet Steph Curry after GSW's win.", 
-    'title': 'Usher went to the Warriors locker room to celebrate after being left hanging by LeBron', 
-    'url': 'http://www.sbnation.com/lookit/2016/6/11/11908022/lebron-james-usher-stephen-curry-game-4-nba-finals', 
-    'image': 'https://cdn2.vox-cdn.com/thumbor/HYweRKTLeU9xChvuTQ3M5mbnOms=/75x0:1020x532/1600x900/cdn0.vox-cdn.com/uploads/chorus_image/image/49826257/Usher.0.0.jpg', 
-    'views': 46, 
-    'phrase': 'game nba finals'
-}]
-
-}
-
-  
   var email_main_content_0 = parent_0.selectAll(".email_main_content")
     .data(data)
     .enter()
       .append('div')
       .attr('class','email_main_content')
-
-
 
 
 
@@ -439,13 +409,13 @@ var parent_3 = parent_2
   .append('tbody')
 
 
-var parent_4 = parent_3
-  .append('tr')
-
-
-var parent_5 = parent_4
-  .append('td')
-  .attr('style','height:20px')
+//var parent_4 = parent_3
+//  .append('tr')
+//
+//
+//var parent_5 = parent_4
+//  .append('td')
+//  .attr('style','height:20px')
 
 
 
@@ -478,27 +448,61 @@ var parent_11 = parent_9
   .attr('style','width:550px;line-height:86px;display:inline-block;font-size:30px;font-family:arial black; text-align: left!important;font-family: Charter,Georgia,Cambria,Times New Roman,Times,serif;font-size: 22px;font-weight: 300;line-height: 26px;padding-bottom:20px;border-bottom: 1px solid #e5e5e5;')
 
 var parent_12 = parent_11
+  .append('div')
+
+
+
+
+
+var parent_14 = parent_12
   .append('a')
   .attr('href',function(x){return x.url})
   .attr('style','display:block;color:#000000;text-decoration:none;')
   .attr('target','_blank')
+  .style("background-color","rgb(247, 247, 247)")
+  .style("padding","20px")
+  .style("margin-top","20px")
+
+  .style("text-align","center")
 
 
-var parent_12_img = parent_12
-  .append('div')
-  .attr('style','margin-left:7px;float:right;display:inline-block;width:140px;height:120px;overflow:hidden')
-  .attr('target','_blank')
-
-var parent_13 = parent_12_img
-  .append('img')
-  .attr('src',function(x){return x.image })
-  .attr('style','width:140px;background-color:#f7f7f7;opacity:1')
-
-
-var parent_14 = parent_12
-  .append('span')
 
 parent_14.text(function(x){return x.title})
+
+
+parent_12.each(function(x,i) {
+
+
+  var t = table.table(d3.select(this))
+    .headers([
+        {"key":"domain","value":"Domain"}
+      , {"key":"parent_category_name","value":"Category"}
+      , {"key":"importance","value":"Importance"}
+    ])
+    .skip_option(true)
+    .data({"key":"yo","values":x.value})
+    .draw()
+
+  t._target.selectAll(".table-wrapper")
+    .style("font-size","14px")
+
+
+  t._target.selectAll("th")
+    .style("text-align","left")
+    .style("width","33%")
+
+  t._target.selectAll("td")
+    .style("text-align","left")
+    .style("width","33%")
+    .filter(function(x) { return x.key == "domain"})
+    .style("width","45%")
+
+
+
+})
+
+return
+
 
 
 

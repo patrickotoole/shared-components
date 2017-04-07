@@ -31,6 +31,7 @@ def main(db, advertiser, pattern, email, title, subject="Hindsight Daily Digest"
     logging.info("Started email for (%s)" % joined)
     _json = run(db, advertiser, pattern, limit)
 
+
     import ujson
     js = ujson.loads(_json)
     for obj in js:
@@ -60,7 +61,7 @@ if __name__ == "__main__":
     define("title", default=" Your ")
     define("email", default="rick+hindsight@rockerbox.com")
     define("limit", default=10)
-    define("subject", default="Hindsight Daily Digest")
+    define("subject", default="Hindsight Top Sites")
 
     basicConfig(options={})
     parse_command_line()

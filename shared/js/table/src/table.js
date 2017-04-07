@@ -72,9 +72,12 @@ export function Table(target) {
 }
   */})
 
-  d3_updateable(d3.select("head"),"style#table-css","style")
-    .attr("id","table-css")
-    .text(CSS_STRING.replace("function () {/*","").replace("*/}",""))
+  try {
+    d3_updateable(d3.select("head"),"style#table-css","style")
+      .attr("id","table-css")
+      .text(CSS_STRING.replace("function () {/*","").replace("*/}",""))
+  } catch(e) {
+  }
 
   this._target = target;
   this._data = {}//EXAMPLE_DATA
@@ -223,6 +226,8 @@ Table.prototype = {
       d3_updateable(table,"tbody","tbody")
 
 
+
+      if (!this._skip_option) {
       var table_fixed = d3_updateable(wrapper,"table.fixed","table")
         .classed("hidden", true) // TODO: make this visible when main is not in view
         .classed("fixed",true)
@@ -231,6 +236,7 @@ Table.prototype = {
         .style("position","fixed")
 
       var self = this
+      try {
       d3.select(window).on('scroll', function() {
         console.log(table.node().getBoundingClientRect().top, self._top)
         if (table.node().getBoundingClientRect().top < self._top) table_fixed.classed("hidden",false)
@@ -253,6 +259,7 @@ Table.prototype = {
           })
         
       })
+      } catch(e) {}
        
 
       this._table_fixed = table_fixed
@@ -260,7 +267,6 @@ Table.prototype = {
 
       var thead = d3_updateable(table_fixed,"thead","thead")
 
-      if (!this._skip_option)
       var table_button = d3_updateable(wrapper,".table-option","a")
         .classed("table-option",true)
         .style("position","absolute")
@@ -277,6 +283,7 @@ Table.prototype = {
           this._options_header.classed("hidden",!this._options_header.classed("hidden"))
           this._show_options = !this._options_header.classed("hidden")
         }.bind(this))
+      }
 
       return wrapper
     }  
@@ -375,6 +382,7 @@ Table.prototype = {
 
       th.exit().remove()
 
+      if (!this._skip_option) {
       var options = d3_updateable(options_thead,"th","th",false,function() { return 1})
         .attr("colspan",this.headers().length+1)
         .style("padding-top","10px")
@@ -414,6 +422,8 @@ Table.prototype = {
       d3_updateable(option,"span","span")
         .text(function(x) { return " " + x.value })
 
+     }
+
 
      this._options_header = this._target.selectAll(".table-options")
     }
@@ -428,6 +438,8 @@ Table.prototype = {
 
       var data = this._data.values
         , sortby = this._sort || {};
+
+      console.error(data)
 
       data = data.sort(function(p,c) {
         var a = p[sortby.key] || -Infinity
