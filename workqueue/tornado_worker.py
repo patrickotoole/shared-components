@@ -24,8 +24,6 @@ from zookeeper_interface import *
 
 from handlers.handler import *
 from handlers.jobs import *
-from handlers.oldjobs import *
-from handlers.previoushandler import *
 from handlers.schedule import *
 from handlers.workqueuelog import *
 from handlers.cache import *
