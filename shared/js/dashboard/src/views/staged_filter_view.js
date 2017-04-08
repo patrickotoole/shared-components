@@ -101,7 +101,7 @@ class StagedFilter {
     buildFilterInput()
 
     var self = this
-    d3_class(wrap,"button-submit","button")
+    d3_class(wrap,"include-submit","button")
       .style("float","right")
       .style("min-width","120px")
       .style("border-radius","5px")
@@ -111,11 +111,28 @@ class StagedFilter {
       .style("border-radius","5px")
       .style("vertical-align","top")
       .attr("type","submit")
-      .text("Add filter")
+      .text("Modify Filters")
+      .on("click",function() {
+        var value = footer_row.selectAll("input").property("value")
+        self.on("modify")({"field":"Title","op":"contains","value":value})
+      })
+
+    d3_class(wrap,"exclude-submit","button")
+      .style("float","right")
+      .style("min-width","120px")
+      .style("border-radius","5px")
+      .style("line-height","29px")
+      .style("background","#f9f9fb")
+      .style("border","1px solid #ccc")
+      .style("border-radius","5px")
+      .style("vertical-align","top")
+      .attr("type","submit")
+      .text("New Filter")
       .on("click",function() {
         var value = footer_row.selectAll("input").property("value")
         self.on("add")({"field":"Title","op":"contains","value":value})
       })
+
 
   }
 }

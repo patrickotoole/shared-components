@@ -424,8 +424,27 @@
           .filters(value.filters)
           .view_options(value.dashboard_options)
           .explore_tabs(value.tabs)
-          .on("add-filter", function(filter) { s.publish("filters",s.state().filters.concat(filter)) })
-          .on("staged-filter.change", function(str) { console.log("YOOOO: " + str); s.publish("staged_filter",str ) })
+          .on("add-filter", function(filter) { s.publish("filters",s.state().filters.concat(filter).filter(x => x.value) ) })
+          .on("modify-filter", function(filter) { 
+            var filters = s.state().filters
+
+            var has_exisiting = filters.filter(x => (x.field + x.op) == (filter.field + filter.op) )
+            
+            if (has_exisiting.length) {
+              var new_filters = filters.reverse().map(function(x) {
+                if ((x.field == filter.field) && (x.op == filter.op)) {
+                  x.value += "," + filter.value
+                }
+                return x
+              })
+              s.publish("filters",new_filters.filter(x => x.value))
+            } else {
+              s.publish("filters",s.state().filters.concat(filter).filter(x => x.value))
+            }
+
+          })
+
+          .on("staged-filter.change", function(str) { s.publish("staged_filter",str ) })
           .on("action.change", function(action) { s.publish("selected_action",action) })
           .on("action_date.change", function(date) { s.publish("action_date",date) })
           .on("comparison_date.change", function(date) { s.publish("comparison_date",date) })

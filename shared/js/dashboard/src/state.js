@@ -47,7 +47,7 @@ export function compare(qs_state,_state) {
     .failure("filters", (_new,_old,obj) => { 
       Object.assign(obj,{
           "loading": true
-        , "filters": _new
+        , "filters": _new || [{}]
       })
     })
     .failure("action_date", (_new,_old,obj) => { 

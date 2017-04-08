@@ -308,6 +308,11 @@ NewDashboard.prototype = {
           .on("update",function(x) {
             self.on("staged-filter.change")(x)
           })
+          .on("modify",function(x) {
+            self.on("staged-filter.change")("")
+            self.on("modify-filter")(x)
+          })
+
           .on("add",function(x) {
             self.on("staged-filter.change")("")
             self.on("add-filter")(x)
