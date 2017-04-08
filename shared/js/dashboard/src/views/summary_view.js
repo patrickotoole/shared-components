@@ -620,8 +620,6 @@ SummaryView.prototype = {
 
 
 
-
-
       var radius_scale = d3.scale.linear()
         .domain([this._data.domains.population,this._data.views.population])
         .range([20,35])

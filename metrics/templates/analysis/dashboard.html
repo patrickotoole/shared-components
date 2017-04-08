@@ -394,6 +394,14 @@
         }
   }
 
+  function buildDashboardLoading(value) {
+      var db = dashboard.new_dashboard(centered)
+          .loading(value.loading || false)
+          .draw()
+
+
+  }
+
   function buildDashboard(value) {
       var db = dashboard.new_dashboard(centered)
           .saved(value.saved || [])
@@ -740,6 +748,7 @@
     .subscribe("filter.loading", function(error,loading,value) {
 debugger
       if (value.formatted_data) buildDashboard(value)
+      else buildDashboardLoading(value)
       
     })
     .subscribe("filter.formatted_data", function(error,formatted_data,value) {

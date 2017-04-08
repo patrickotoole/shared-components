@@ -5,6 +5,8 @@ import domain_view from './views/domain_view'
 import segment_view from './views/segment_view'
 import summary_view from './views/summary_view'
 import relative_view from './views/relative_timing_view'
+import staged_filter_view from './views/staged_filter_view'
+
 
 
 
@@ -30,6 +32,9 @@ NewDashboard.prototype = {
     data: function(val) {
       return accessor.bind(this)("data",val) 
     }
+  , staged_filters: function(val) {
+      return accessor.bind(this)("staged_filters",val) || []
+    }
   , saved: function(val) {
       return accessor.bind(this)("saved",val) 
     }
@@ -47,16 +52,16 @@ NewDashboard.prototype = {
     }
 
   , view_options: function(val) {
-      return accessor.bind(this)("view_options",val) 
+      return accessor.bind(this)("view_options",val) || []
     }
   , logic_options: function(val) {
-      return accessor.bind(this)("logic_options",val) 
+      return accessor.bind(this)("logic_options",val) || []
     }
   , explore_tabs: function(val) {
-      return accessor.bind(this)("explore_tabs",val) 
+      return accessor.bind(this)("explore_tabs",val) || []
     }
   , logic_categories: function(val) {
-      return accessor.bind(this)("logic_categories",val) 
+      return accessor.bind(this)("logic_categories",val) || []
     }
   , actions: function(val) {
       return accessor.bind(this)("actions",val) || []
@@ -80,7 +85,7 @@ NewDashboard.prototype = {
       return accessor.bind(this)("after",val) || []
     }
   , filters: function(val) {
-      return accessor.bind(this)("filters",val) 
+      return accessor.bind(this)("filters",val) || []
     }
   , loading: function(val) {
       if (val !== undefined) this._segment_view && this._segment_view.is_loading(val).draw()
@@ -98,6 +103,8 @@ NewDashboard.prototype = {
         , categories = this.logic_categories()
         , filters = JSON.parse(JSON.stringify(this.filters()))
         , actions = JSON.parse(JSON.stringify(this.actions()))
+        , staged_filters = JSON.parse(JSON.stringify(this.staged_filters()))
+
 
 
       var target = this.target
@@ -108,8 +115,8 @@ NewDashboard.prototype = {
         .segments(actions)
         .data(self.summary())
         .action(self.selected_action() || {})
-        .action_date(self.action_date())
-        .comparison_date(self.comparison_date())
+        .action_date(self.action_date() || "")
+        .comparison_date(self.comparison_date() || "")
 
         .comparison(self.selected_comparison() || {})
         .on("change", this.on("action.change"))
@@ -226,6 +233,8 @@ NewDashboard.prototype = {
         })
         .draw()
 
+      if (this.summary() == false) return false
+
       filter_view(target)
         .logic(logic)
         .categories(categories)
@@ -284,6 +293,10 @@ NewDashboard.prototype = {
           }
 
         })
+
+      staged_filter_view(target)
+        .data(staged_filters)
+        .draw()
 
       return this
 

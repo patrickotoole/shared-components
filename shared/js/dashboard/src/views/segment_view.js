@@ -79,6 +79,18 @@ SegmentView.prototype = {
         .text("Segment").draw()      
 
 
+      wrap.selectAll(".header-body")
+        .classed("hidden",!this._is_loading)
+        .style("text-align","center")
+        .style("margin-bottom","-40px")
+        .style("padding-top","10px")
+        .style("height","0px")
+        .style("background","none")
+        .html("<img src='/static/img/general/logo-small.gif' style='height:15px'/> loading...")
+
+
+      if (this._data == false) return
+
       var body = d3_updateable(wrap,".body","div")
         .classed("body",true)
         .style("clear","both")
@@ -147,15 +159,6 @@ SegmentView.prototype = {
         .style("margin-right","10px")
         .style("margin-left","-10px")
 
-
-      wrap.selectAll(".header-body")
-        .classed("hidden",!this._is_loading)
-        .style("text-align","center")
-        .style("margin-bottom","-40px")
-        .style("padding-top","10px")
-        .style("height","0px")
-        .style("background","none")
-        .html("<img src='/static/img/general/logo-small.gif' style='height:15px'/> loading...")
 
 
       var self = this
@@ -263,9 +266,6 @@ SegmentView.prototype = {
 
 
         .text("views")
-
-
-
 
 
 

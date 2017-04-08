@@ -1465,6 +1465,18 @@
           .text("Segment").draw()      
 
 
+        wrap.selectAll(".header-body")
+          .classed("hidden",!this._is_loading)
+          .style("text-align","center")
+          .style("margin-bottom","-40px")
+          .style("padding-top","10px")
+          .style("height","0px")
+          .style("background","none")
+          .html("<img src='/static/img/general/logo-small.gif' style='height:15px'/> loading...")
+
+
+        if (this._data == false) return
+
         var body = d3_updateable(wrap,".body","div")
           .classed("body",true)
           .style("clear","both")
@@ -1533,15 +1545,6 @@
           .style("margin-right","10px")
           .style("margin-left","-10px")
 
-
-        wrap.selectAll(".header-body")
-          .classed("hidden",!this._is_loading)
-          .style("text-align","center")
-          .style("margin-bottom","-40px")
-          .style("padding-top","10px")
-          .style("height","0px")
-          .style("background","none")
-          .html("<img src='/static/img/general/logo-small.gif' style='height:15px'/> loading...")
 
 
         var self = this
@@ -1649,9 +1652,6 @@
 
 
           .text("views")
-
-
-
 
 
 
@@ -3320,8 +3320,6 @@
 
 
 
-
-
         var radius_scale = d3.scale.linear()
           .domain([this._data.domains.population,this._data.views.population])
           .range([20,35])
@@ -4067,6 +4065,40 @@
     }
   }
 
+  function d3_class$1(target,cls,type) {
+    return d3_updateable(target,"." + cls, type || "div")
+      .classed(cls,true)
+  }
+
+  function staged_filter(target) {
+    return new StagedFilter(target)
+  }
+
+  class StagedFilter {
+    constructor(target) {
+      this._target = target
+      this._on = {}
+    }
+
+    data(val) { return accessor.bind(this)("data",val) } 
+
+    on(action, fn) {
+      if (fn === undefined) return this._on[action] || noop;
+      this._on[action] = fn;
+      return this
+    }
+
+
+    draw() {
+      var wrap = d3_class$1(this._target,"footer-wrap")
+        .style("height","60px")
+        .style("bottom","0px")
+        .style("position","fixed")
+
+      wrap.text("FOOTER WRAP")
+    }
+  }
+
   function noop$7() {}
   function identity$5(x) { return x }
   function ConditionalShow(target) {
@@ -4195,6 +4227,9 @@
       data: function(val) {
         return accessor.bind(this)("data",val) 
       }
+    , staged_filters: function(val) {
+        return accessor.bind(this)("staged_filters",val) || []
+      }
     , saved: function(val) {
         return accessor.bind(this)("saved",val) 
       }
@@ -4212,16 +4247,16 @@
       }
 
     , view_options: function(val) {
-        return accessor.bind(this)("view_options",val) 
+        return accessor.bind(this)("view_options",val) || []
       }
     , logic_options: function(val) {
-        return accessor.bind(this)("logic_options",val) 
+        return accessor.bind(this)("logic_options",val) || []
       }
     , explore_tabs: function(val) {
-        return accessor.bind(this)("explore_tabs",val) 
+        return accessor.bind(this)("explore_tabs",val) || []
       }
     , logic_categories: function(val) {
-        return accessor.bind(this)("logic_categories",val) 
+        return accessor.bind(this)("logic_categories",val) || []
       }
     , actions: function(val) {
         return accessor.bind(this)("actions",val) || []
@@ -4245,7 +4280,7 @@
         return accessor.bind(this)("after",val) || []
       }
     , filters: function(val) {
-        return accessor.bind(this)("filters",val) 
+        return accessor.bind(this)("filters",val) || []
       }
     , loading: function(val) {
         if (val !== undefined) this._segment_view && this._segment_view.is_loading(val).draw()
@@ -4263,6 +4298,8 @@
           , categories = this.logic_categories()
           , filters = JSON.parse(JSON.stringify(this.filters()))
           , actions = JSON.parse(JSON.stringify(this.actions()))
+          , staged_filters = JSON.parse(JSON.stringify(this.staged_filters()))
+
 
 
         var target = this.target
@@ -4273,8 +4310,8 @@
           .segments(actions)
           .data(self.summary())
           .action(self.selected_action() || {})
-          .action_date(self.action_date())
-          .comparison_date(self.comparison_date())
+          .action_date(self.action_date() || "")
+          .comparison_date(self.comparison_date() || "")
 
           .comparison(self.selected_comparison() || {})
           .on("change", this.on("action.change"))
@@ -4391,6 +4428,8 @@
           })
           .draw()
 
+        if (this.summary() == false) return false
+
         filter_view(target)
           .logic(logic)
           .categories(categories)
@@ -4449,6 +4488,10 @@
             }
 
           })
+
+        staged_filter(target)
+          .data(staged_filters)
+          .draw()
 
         return this
 
