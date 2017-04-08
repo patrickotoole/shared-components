@@ -404,6 +404,7 @@
 
   function buildDashboard(value) {
       var db = dashboard.new_dashboard(centered)
+          .staged_filters(value.staged_filter || "")
           .saved(value.saved || [])
           .data(value.formatted_data)
           .actions(value.actions)
@@ -424,7 +425,7 @@
           .view_options(value.dashboard_options)
           .explore_tabs(value.tabs)
           .on("add-filter", function(filter) { s.publish("filters",s.state().filters.concat(filter)) })
-
+          .on("staged-filter.change", function(str) { console.log("YOOOO: " + str); s.publish("staged_filter",str ) })
           .on("action.change", function(action) { s.publish("selected_action",action) })
           .on("action_date.change", function(date) { s.publish("action_date",date) })
           .on("comparison_date.change", function(date) { s.publish("comparison_date",date) })

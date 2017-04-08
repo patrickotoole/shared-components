@@ -50,7 +50,7 @@
     this.target = target
   }
 
-  function noop$9() {}
+  function noop$10() {}
   function identity$7(x) { return x }
   function key$7(x) { return x.key }
 
@@ -82,13 +82,13 @@
         return accessor.bind(this)("selected",val)
       }
     , on: function(action, fn) {
-        if (fn === undefined) return this._on[action] || noop$9;
+        if (fn === undefined) return this._on[action] || noop$10;
         this._on[action] = fn;
         return this
       }
   }
 
-  function noop$8() {}
+  function noop$9() {}
   function buttonWrap(wrap) {
     var head = d3_updateable(wrap, "h3.buttons","h3")
       .classed("buttons",true)
@@ -218,7 +218,7 @@
         return this
       }
     , on: function(action, fn) {
-        if (fn === undefined) return this._on[action] || noop$8;
+        if (fn === undefined) return this._on[action] || noop$9;
         this._on[action] = fn;
         return this
       }
@@ -462,7 +462,7 @@
       }
   }
 
-  function noop$10() {}
+  function noop$11() {}
   function identity$8(x) { return x }
   function key$8(x) { return x.key }
 
@@ -480,7 +480,7 @@
         return accessor.bind(this)("data",val) 
       }
     , on: function(action, fn) {
-        if (fn === undefined) return this._on[action] || noop$10;
+        if (fn === undefined) return this._on[action] || noop$11;
         this._on[action] = fn;
         return this
       }
@@ -1109,7 +1109,7 @@
     default: time_series
   });
 
-  function noop$11() {}
+  function noop$12() {}
 
 
   function DomainExpanded(target) {
@@ -1217,7 +1217,7 @@
         return this
       }
     , on: function(action, fn) {
-        if (fn === undefined) return this._on[action] || noop$11;
+        if (fn === undefined) return this._on[action] || noop$12;
         this._on[action] = fn;
         return this
       }
@@ -1228,7 +1228,7 @@
     this.target = target
   }
 
-  function noop$12() {}
+  function noop$13() {}
   function domain_bullet(target) {
     return new DomainBullet(target)
   }
@@ -1278,7 +1278,7 @@
         return this
       }
     , on: function(action, fn) {
-        if (fn === undefined) return this._on[action] || noop$12;
+        if (fn === undefined) return this._on[action] || noop$13;
         this._on[action] = fn;
         return this
       }
@@ -3385,6 +3385,8 @@
       }
   }
 
+  function noop$7(){}
+
   function d3_class(target,cls,type) {
     return d3_updateable(target,"." + cls, type || "div")
       .classed(cls,true)
@@ -3404,7 +3406,7 @@
     data(val) { return accessor.bind(this)("data",val) } 
 
     on(action, fn) {
-      if (fn === undefined) return this._on[action] || noop;
+      if (fn === undefined) return this._on[action] || noop$7;
       this._on[action] = fn;
       return this
     }
@@ -3425,7 +3427,12 @@
           .classed("ba-row",true)
           .style("padding-bottom","10px")
 
-      drawStream(bawrap,this._data.before_categories,this._data.after_categories)
+      try {
+        drawStream(bawrap,this._data.before_categories,this._data.after_categories)
+      } catch(e) {
+        bawrap.html("")
+        return
+      }
 
       var values = this._data.before_categories[0].values
 
@@ -3590,9 +3597,12 @@
             var summary_row = d3_class(td,"summary-row").style("margin-bottom","15px")
             var title_row = d3_class(td,"title-row")
             var expansion_row = d3_class(td,"expansion-row")
-            var footer_row = d3_class(td,"footer-row").style("min-height","90px").style("margin-top","15px")
+            var footer_row = d3_class(td,"footer-row").style("min-height","10px").style("margin-top","15px")
             
-
+            function buildFilterInput(x) {
+                this.on("something")(x)
+                //select_value.value += (select_value.value ? "," : "") + x.key
+            }
 
             d3_class(summary_row,"title")
               .style("font-size","16px")
@@ -3625,78 +3635,6 @@
               .style("text-align","center")
               .style("margin-bottom","20px")
               .text("Select domains and keywords to build and refine your global filter")
-
-            d3_class(footer_row,"title")
-              .style("font-size","14px")
-              .style("font-weight","bold")
-              .style("line-height","40px")
-              .text("Build Filter")
-
-
-
-            var select_value = {"value":""}
-
-            function buildFilterInput() {
-
-              var select = d3_updateable(footer_row,"input","input")
-                .style("min-width","200px")
-                .attr("value",select_value.value)
-                .property("value",select_value.value)
-
-
-
-          footer_row.selectAll(".selectize-control")
-            .each(function(x) {
-              var destroy = d3.select(this).on("destroy")
-              if (destroy) destroy()
-            })
-
-
-
-              var s = $(select.node()).selectize({
-                persist: false,
-                create: function(x){
-                  select_value.value = (select_value.value.length ? select_value.value + "," : "") + x
-                  //self.on("update")(self.data())
-                  return {
-                    value: x, text: x
-                  }
-                },
-                onDelete: function(x){
-                  select_value.value = select_value.value.split(",").filter(function(z) { return z != x[0]}).join(",")
-                  //self.on("update")(self.data())
-                  return {
-                    value: x, text: x
-                  }
-                }
-              })
-
-         footer_row.selectAll(".selectize-control")
-            .on("destroy",function() {
-              s[0].selectize.destroy()
-            })
-
-            }
-
-            buildFilterInput()
-
-
-            var button = d3_updateable(footer_row,"button","button")
-              .style("min-width","120px")
-              .style("border-radius","5px")
-              .style("line-height","29px")
-              .style("background","#f9f9fb")
-              .style("border","1px solid #ccc")
-              .style("border-radius","5px")
-              .style("vertical-align","top")
-              .attr("type","submit")
-              .text("Add filter")
-              .on("click",function() {
-                self.on("add-filter")({"field":"Title","op":"contains","value":select_value.value})
-              })
-
-
-
 
 
 
@@ -3899,9 +3837,7 @@
               .style("vertical-align","top")
               .attr("type","checkbox")
               .on("click", function(x) {
-                select_value.value += (select_value.value ? "," : "") + x.url
-
-                buildFilterInput()
+                self.on("stage-filter")(x)
               })
 
             d3_class(url_name,"url")
@@ -3972,8 +3908,7 @@
               .style("margin-right","10px")
               .attr("type","checkbox")
               .on("click", function(x) {
-                select_value.value += (select_value.value ? "," : "") + x.key
-                buildFilterInput()
+                self.on("stage-filter")(x)
               })
 
             d3_class(kw_name,"url")
@@ -4090,16 +4025,100 @@
 
 
     draw() {
-      var wrap = d3_class$1(this._target,"footer-wrap")
-        .style("height","60px")
+      var owrap = d3_class$1(this._target,"footer-wrap")
+        .style("padding-top","5px")
+        .style("min-height","60px")
         .style("bottom","0px")
         .style("position","fixed")
+        .style("width","1000px")
+        .style("background","#F0F4F7")
 
-      wrap.text("FOOTER WRAP")
+      var wrap = d3_class$1(owrap,"inner-wrap")
+        .style("border-top","1px solid #ccc")
+        .style("padding-top","5px")
+
+      d3_class$1(wrap,"header-label")
+        .style("line-height","35px")
+        .style("text-transform","uppercase")
+        .style("font-weight","bold")
+        .style("display","inline-block")
+        .style("font-size","14px")
+        .style("color","#888888")
+        .style("width","200px")
+        .style("vertical-align","top")
+        .text("Build Filters")
+
+      var footer_row = d3_class$1(wrap,"footer-row")
+        .style("display","inline-block")
+
+
+      var select_value = this.data()
+
+      function buildFilterInput() {
+
+        footer_row.selectAll(".selectize-control")
+          .each(function(x) {
+            var destroy = d3.select(this).on("destroy")
+            if (destroy) destroy()
+          })
+
+
+        var select = d3_updateable(footer_row,"input","input")
+          .style("min-width","200px")
+          .attr("value",select_value)
+          .property("value",select_value)
+
+        
+
+
+        var s = $(select.node()).selectize({
+          persist: false,
+          create: function(x){
+            select_value = (select_value.length ? select_value + "," : "") + x
+            self.on("update")(select_value)
+            return {
+              value: x, text: x
+            }
+          },
+          onDelete: function(x){
+            select_value = select_value.split(",").filter(function(z) { return z != x[0]}).join(",")
+            self.on("update")(select_value)
+            return {
+              value: x, text: x
+            }
+          }
+        })
+
+        footer_row.selectAll(".selectize-control")
+          .on("destroy",function() {
+            s[0].selectize.destroy()
+          })
+
+      }
+
+      buildFilterInput()
+
+      var self = this
+      d3_class$1(wrap,"button-submit","button")
+        .style("float","right")
+        .style("min-width","120px")
+        .style("border-radius","5px")
+        .style("line-height","29px")
+        .style("background","#f9f9fb")
+        .style("border","1px solid #ccc")
+        .style("border-radius","5px")
+        .style("vertical-align","top")
+        .attr("type","submit")
+        .text("Add filter")
+        .on("click",function() {
+          var value = footer_row.selectAll("input").property("value")
+          self.on("add")({"field":"Title","op":"contains","value":value})
+        })
+
     }
   }
 
-  function noop$7() {}
+  function noop$8() {}
   function identity$5(x) { return x }
   function ConditionalShow(target) {
     this._on = {}
@@ -4123,7 +4142,7 @@
         return this
       }  
     , on: function(action, fn) {
-        if (fn === undefined) return this._on[action] || noop$7;
+        if (fn === undefined) return this._on[action] || noop$8;
         this._on[action] = fn;
         return this
       }
@@ -4228,7 +4247,7 @@
         return accessor.bind(this)("data",val) 
       }
     , staged_filters: function(val) {
-        return accessor.bind(this)("staged_filters",val) || []
+        return accessor.bind(this)("staged_filters",val) || ""
       }
     , saved: function(val) {
         return accessor.bind(this)("saved",val) 
@@ -4471,7 +4490,14 @@
             if (x.value == "ba-view") {
               relative_timing(dthis)
                .data(self.before())
-               .on("add-filter",self.on("add-filter"))
+               .on("stage-filter",function(x) {
+
+                 staged_filters = staged_filters.split(",").concat(x.key).filter(x => x.length).join(",")
+                 self.on("staged-filter.change")(staged_filters)
+                 HACKbuildStagedFilter(staged_filters)
+
+      
+               })
                .draw()
             }
 
@@ -4489,9 +4515,20 @@
 
           })
 
-        staged_filter(target)
-          .data(staged_filters)
-          .draw()
+        function HACKbuildStagedFilter(staged) {
+
+          staged_filter(target)
+            .data(staged)
+            .on("update",function(x) {
+              self.on("staged-filter.change")(x)
+            })
+            .on("add",function(x) {
+              self.on("staged-filter.change")("")
+              self.on("add-filter")(x)
+            })
+            .draw()
+        }
+        HACKbuildStagedFilter(staged_filters)
 
         return this
 

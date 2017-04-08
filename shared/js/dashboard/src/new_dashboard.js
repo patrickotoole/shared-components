@@ -33,7 +33,7 @@ NewDashboard.prototype = {
       return accessor.bind(this)("data",val) 
     }
   , staged_filters: function(val) {
-      return accessor.bind(this)("staged_filters",val) || []
+      return accessor.bind(this)("staged_filters",val) || ""
     }
   , saved: function(val) {
       return accessor.bind(this)("saved",val) 
@@ -276,7 +276,14 @@ NewDashboard.prototype = {
           if (x.value == "ba-view") {
             relative_view(dthis)
              .data(self.before())
-             .on("add-filter",self.on("add-filter"))
+             .on("stage-filter",function(x) {
+
+               staged_filters = staged_filters.split(",").concat(x.key).filter(x => x.length).join(",")
+               self.on("staged-filter.change")(staged_filters)
+               HACKbuildStagedFilter(staged_filters)
+
+    
+             })
              .draw()
           }
 
@@ -294,9 +301,20 @@ NewDashboard.prototype = {
 
         })
 
-      staged_filter_view(target)
-        .data(staged_filters)
-        .draw()
+      function HACKbuildStagedFilter(staged) {
+
+        staged_filter_view(target)
+          .data(staged)
+          .on("update",function(x) {
+            self.on("staged-filter.change")(x)
+          })
+          .on("add",function(x) {
+            self.on("staged-filter.change")("")
+            self.on("add-filter")(x)
+          })
+          .draw()
+      }
+      HACKbuildStagedFilter(staged_filters)
 
       return this
 

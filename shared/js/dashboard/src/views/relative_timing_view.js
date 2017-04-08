@@ -5,6 +5,7 @@ import table from 'table'
 import {drawStream} from './summary_view'
 import {simpleTimeseries} from './summary_view'
 
+function noop(){}
 
 function d3_class(target,cls,type) {
   return d3_updateable(target,"." + cls, type || "div")
@@ -46,7 +47,12 @@ class RelativeTiming {
         .classed("ba-row",true)
         .style("padding-bottom","10px")
 
-    drawStream(bawrap,this._data.before_categories,this._data.after_categories)
+    try {
+      drawStream(bawrap,this._data.before_categories,this._data.after_categories)
+    } catch(e) {
+      bawrap.html("")
+      return
+    }
 
     var values = this._data.before_categories[0].values
 
@@ -211,9 +217,12 @@ kw_to_draw = Object.keys(kw_to_draw).map(function(k) { return kw_to_draw[k] }).m
           var summary_row = d3_class(td,"summary-row").style("margin-bottom","15px")
           var title_row = d3_class(td,"title-row")
           var expansion_row = d3_class(td,"expansion-row")
-          var footer_row = d3_class(td,"footer-row").style("min-height","90px").style("margin-top","15px")
+          var footer_row = d3_class(td,"footer-row").style("min-height","10px").style("margin-top","15px")
           
-
+          function buildFilterInput(x) {
+              this.on("something")(x)
+              //select_value.value += (select_value.value ? "," : "") + x.key
+          }
 
           d3_class(summary_row,"title")
             .style("font-size","16px")
@@ -246,78 +255,6 @@ kw_to_draw = Object.keys(kw_to_draw).map(function(k) { return kw_to_draw[k] }).m
             .style("text-align","center")
             .style("margin-bottom","20px")
             .text("Select domains and keywords to build and refine your global filter")
-
-          d3_class(footer_row,"title")
-            .style("font-size","14px")
-            .style("font-weight","bold")
-            .style("line-height","40px")
-            .text("Build Filter")
-
-
-
-          var select_value = {"value":""}
-
-          function buildFilterInput() {
-
-            var select = d3_updateable(footer_row,"input","input")
-              .style("min-width","200px")
-              .attr("value",select_value.value)
-              .property("value",select_value.value)
-
-
-
-        footer_row.selectAll(".selectize-control")
-          .each(function(x) {
-            var destroy = d3.select(this).on("destroy")
-            if (destroy) destroy()
-          })
-
-
-
-            var s = $(select.node()).selectize({
-              persist: false,
-              create: function(x){
-                select_value.value = (select_value.value.length ? select_value.value + "," : "") + x
-                //self.on("update")(self.data())
-                return {
-                  value: x, text: x
-                }
-              },
-              onDelete: function(x){
-                select_value.value = select_value.value.split(",").filter(function(z) { return z != x[0]}).join(",")
-                //self.on("update")(self.data())
-                return {
-                  value: x, text: x
-                }
-              }
-            })
-
-       footer_row.selectAll(".selectize-control")
-          .on("destroy",function() {
-            s[0].selectize.destroy()
-          })
-
-          }
-
-          buildFilterInput()
-
-
-          var button = d3_updateable(footer_row,"button","button")
-            .style("min-width","120px")
-            .style("border-radius","5px")
-            .style("line-height","29px")
-            .style("background","#f9f9fb")
-            .style("border","1px solid #ccc")
-            .style("border-radius","5px")
-            .style("vertical-align","top")
-            .attr("type","submit")
-            .text("Add filter")
-            .on("click",function() {
-              self.on("add-filter")({"field":"Title","op":"contains","value":select_value.value})
-            })
-
-
-
 
 
 
@@ -520,9 +457,7 @@ kw_to_draw = Object.keys(kw_to_draw).map(function(k) { return kw_to_draw[k] }).m
             .style("vertical-align","top")
             .attr("type","checkbox")
             .on("click", function(x) {
-              select_value.value += (select_value.value ? "," : "") + x.url
-
-              buildFilterInput()
+              self.on("stage-filter")(x)
             })
 
           d3_class(url_name,"url")
@@ -593,8 +528,7 @@ kw_to_draw = Object.keys(kw_to_draw).map(function(k) { return kw_to_draw[k] }).m
             .style("margin-right","10px")
             .attr("type","checkbox")
             .on("click", function(x) {
-              select_value.value += (select_value.value ? "," : "") + x.key
-              buildFilterInput()
+              self.on("stage-filter")(x)
             })
 
           d3_class(kw_name,"url")
