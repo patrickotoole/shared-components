@@ -1344,7 +1344,7 @@
           .on("expand",function(d) {
 
             d3.select(this).selectAll("td.option-header").html("&ndash;")
-            if (d3.select(this.nextSibling).classed("expanded") == true) {
+            if (this.nextSibling && d3.select(this.nextSibling).classed("expanded") == true) {
               d3.select(this).selectAll("td.option-header").html("&#65291;")
               return d3.select(this.parentNode).selectAll(".expanded").remove()
             }
@@ -3425,7 +3425,7 @@
 
       var bawrap = d3_updateable(wrap,".ba-row","div",false,function() { return 1})
           .classed("ba-row",true)
-          .style("padding-bottom","10px")
+          .style("padding-bottom","60px")
 
       try {
         drawStream(bawrap,this._data.before_categories,this._data.after_categories)
@@ -3498,7 +3498,7 @@
         .on("expand",function(d) {
 
             d3.select(this).selectAll("td.option-header").html("&ndash;")
-            if (d3.select(this.nextSibling).classed("expanded") == true) {
+            if (this.nextSibling && d3.select(this.nextSibling).classed("expanded") == true) {
               d3.select(this).selectAll("td.option-header").html("&#65291;")
               return d3.select(this.parentNode).selectAll(".expanded").remove()
             }
@@ -4112,7 +4112,7 @@
         .text("Modify Filters")
         .on("click",function() {
           var value = footer_row.selectAll("input").property("value")
-          self.on("modify")({"field":"Title","op":"contains","value":value})
+          self.on("modify")({"field":"Title","op":"contains.selectize","value":value})
         })
 
       d3_class$1(wrap,"exclude-submit","button")
@@ -4128,7 +4128,7 @@
         .text("New Filter")
         .on("click",function() {
           var value = footer_row.selectAll("input").property("value")
-          self.on("add")({"field":"Title","op":"contains","value":value})
+          self.on("add")({"field":"Title","op":"contains.selectize","value":value})
         })
 
 

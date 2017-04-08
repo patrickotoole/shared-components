@@ -114,7 +114,7 @@ class StagedFilter {
       .text("Modify Filters")
       .on("click",function() {
         var value = footer_row.selectAll("input").property("value")
-        self.on("modify")({"field":"Title","op":"contains","value":value})
+        self.on("modify")({"field":"Title","op":"contains.selectize","value":value})
       })
 
     d3_class(wrap,"exclude-submit","button")
@@ -130,7 +130,7 @@ class StagedFilter {
       .text("New Filter")
       .on("click",function() {
         var value = footer_row.selectAll("input").property("value")
-        self.on("add")({"field":"Title","op":"contains","value":value})
+        self.on("add")({"field":"Title","op":"contains.selectize","value":value})
       })
 
 

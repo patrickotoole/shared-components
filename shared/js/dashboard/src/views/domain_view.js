@@ -70,7 +70,7 @@ DomainView.prototype = {
         .on("expand",function(d) {
 
           d3.select(this).selectAll("td.option-header").html("&ndash;")
-          if (d3.select(this.nextSibling).classed("expanded") == true) {
+          if (this.nextSibling && d3.select(this.nextSibling).classed("expanded") == true) {
             d3.select(this).selectAll("td.option-header").html("&#65291;")
             return d3.select(this.parentNode).selectAll(".expanded").remove()
           }
