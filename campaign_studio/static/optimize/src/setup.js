@@ -52,7 +52,7 @@ Setup.prototype = {
 
       var opts = this._opts
 
-      var opt_type = this._data.settings.filter(x => x.key =="opt_type")[0].value
+      var opt_type = this._data.settings.filter(x => x.key =="opt_type").concat([{"value":"false"}])[0].value
 
 
       d3_select(opt_wrap,opts,(x) => x.key, (x) => { return x.value == opt_type })

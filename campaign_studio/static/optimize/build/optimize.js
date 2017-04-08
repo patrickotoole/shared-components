@@ -179,6 +179,7 @@
   Input$1.prototype = {
       draw: function() {
 
+        var self = this;
         var target = this._target
         var selectedAdvertiser;
         try {
@@ -202,8 +203,11 @@
           function(x) { return x.key }, 
           function(x) { return x.value == selectedAdvertiser ? "selected" : false }
         )
+        .on("change",function(x) {
 
-        var self = this;
+          self.on("sql_advertiser.change")(this.selectedOptions[0].__data__)
+
+        })
 
         d3_updateable(target,"button","button")
           .text("Get")
@@ -296,11 +300,14 @@
 
         input$1(report)
           .on("click", self.on("report"))
+
           .draw()
 
         input$2(sql)
           .draw()
           .on("click", self.on("sql"))
+          .on("sql_advertiser.change", self.on("select.sql_advertiser"))
+
 
 
 
@@ -501,7 +508,7 @@
 
         var opts = this._opts
 
-        var opt_type = this._data.settings.filter(x => x.key =="opt_type")[0].value
+        var opt_type = this._data.settings.filter(x => x.key =="opt_type").concat([{"value":"false"}])[0].value
 
 
         d3_select(opt_wrap,opts,(x) => x.key, (x) => { return x.value == opt_type })

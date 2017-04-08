@@ -6,6 +6,7 @@ export function Input(target) {
 Input.prototype = {
     draw: function() {
 
+      var self = this;
       var target = this._target
       var selectedAdvertiser;
       try {
@@ -29,8 +30,11 @@ Input.prototype = {
         function(x) { return x.key }, 
         function(x) { return x.value == selectedAdvertiser ? "selected" : false }
       )
+      .on("change",function(x) {
 
-      var self = this;
+        self.on("sql_advertiser.change")(this.selectedOptions[0].__data__)
+
+      })
 
       d3_updateable(target,"button","button")
         .text("Get")

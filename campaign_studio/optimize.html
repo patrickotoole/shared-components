@@ -44,6 +44,7 @@
   <script>
 
     var qs_state = state.qs().from(document.location.search)
+    qs_state.settings = qs_state.settings || []
     var _state = state.state(qs_state)
 
       
@@ -102,6 +103,18 @@ var formatAsPercent = function(x) {var dthis = d3.select(this);var t = this.pare
 
         optimize.extract(d3.select("#extract-target"))
           .data(values)
+          .on("select.sql_advertiser",function(v){
+            var settings = JSON.parse(JSON.stringify(_state._state.settings || []))
+              .filter(function(x) { return x.key !== "sql_advertiser" })
+
+            settings
+              .push({"key":"sql_advertiser","value":v.value})
+
+            _state.publish("settings",settings)
+
+
+          })
+
           .on("select",function(selected_option){
             _state.publish("extract_type",selected_option.value)
           })

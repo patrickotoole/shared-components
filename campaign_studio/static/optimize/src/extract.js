@@ -69,11 +69,14 @@ Extract.prototype = {
 
       _report.input(report)
         .on("click", self.on("report"))
+
         .draw()
 
       _sql.input(sql)
         .draw()
         .on("click", self.on("sql"))
+        .on("sql_advertiser.change", self.on("select.sql_advertiser"))
+
 
 
 
