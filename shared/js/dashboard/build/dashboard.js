@@ -4048,6 +4048,30 @@
         .style("vertical-align","top")
         .text("Build Filters")
 
+      d3_class$1(wrap,"text-label")
+        .style("line-height","35px")
+        .style("text-transform","uppercase")
+        .style("font-weight","bold")
+        .style("display","inline-block")
+        .style("font-size","12px")
+        .style("width","60px")
+        .style("vertical-align","top")
+        .style("display","none")
+        .text("Title")
+
+      var select_box = select(wrap)
+        .options([
+            {"key":"contains","value":"contains"}
+          , {"key":"does not contain","value":"does not contain"}
+        ])
+        .draw()
+        ._select
+        .style("height","36px")
+        .style("vertical-align","top")
+
+
+
+
       var footer_row = d3_class$1(wrap,"footer-row")
         .style("display","inline-block")
 
@@ -4064,6 +4088,7 @@
 
 
         var select = d3_updateable(footer_row,"input","input")
+          .style("margin-left","10px")
           .style("min-width","200px")
           .attr("value",select_value)
           .property("value",select_value)
@@ -4112,7 +4137,9 @@
         .text("Modify Filters")
         .on("click",function() {
           var value = footer_row.selectAll("input").property("value")
-          self.on("modify")({"field":"Title","op":"contains.selectize","value":value})
+          var op =  select_box.node().selectedOptions[0].__data__.key + ".selectize"
+          
+          self.on("modify")({"field":"Title","op":op,"value":value})
         })
 
       d3_class$1(wrap,"exclude-submit","button")
@@ -4128,7 +4155,9 @@
         .text("New Filter")
         .on("click",function() {
           var value = footer_row.selectAll("input").property("value")
-          self.on("add")({"field":"Title","op":"contains.selectize","value":value})
+          var op =  select_box.node().selectedOptions[0].__data__.key + ".selectize"
+
+          self.on("add")({"field":"Title","op":op,"value":value})
         })
 
 
