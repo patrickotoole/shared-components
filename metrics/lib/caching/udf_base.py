@@ -74,13 +74,9 @@ if __name__ == "__main__":
     define("url", default=False)
 
     basicConfig(options={})
-
     parse_command_line()
-
     func_parameters = ujson.loads(options.parameters)
-    zk = KazooClient(hosts="zk1:2181")
-    zk.start()
-    connectors = {'db': lnk.dbs.rockerbox, 'crushercache':lnk.dbs.crushercache, 'zk':zk, 'cassandra':''}
+    connectors = {'db': lnk.dbs.rockerbox, 'crushercache':lnk.dbs.crushercache, 'zk':'', 'cassandra':''}
     UC = UDFCache(connectors)
     kwargs={}
     kwargs['connectors'] = connectors

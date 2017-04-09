@@ -11,8 +11,6 @@ import zlib
 import codecs
 import sys
 
-now_date = datetime.datetime.now().strftime("%Y-%m-%d")
-
 URL ="/crusher/v1/visitor/{}?url_pattern={}&filter_id={}"
 URL2 ="/crusher/v2/visitor/{}?url_pattern={}&filter_id={}"
 
@@ -96,22 +94,13 @@ class UDFRunner(BaseRunner):
             logging.info(e)
             raise Exception(e)
 
-    def make_request_v2(self,crusher, pattern, func_name, parameters):
-        url = URL2.format(func_name, pattern, self.action_id)
-        resp = self.crusher.get(url, timeout=300, allow_redirects=False)
-        resp.raise_for_status()
-        try:
-            return resp.json
-        except:
-            return resp.text
-
     def compress(self, data):
         compressed = zlib.compress(data)
         hexify = codecs.getencoder('hex')
         compress_as_hex = hexify(compressed)
         return compress_as_hex[0]
 
-    def insert(self, pattern, func_name, compressed_data):
+    def insert(self, pattern, func_name, compressed_data, now_date):
         try:
             Q = INSERT
             self.connectors['crushercache'].execute(Q, (self.advertiser, pattern, func_name, compressed_data, now_date, self.action_id))
@@ -119,13 +108,6 @@ class UDFRunner(BaseRunner):
             Q = REPLACE
             self.connectors['crushercache'].execute(Q, (self.advertiser, pattern, func_name, compressed_data, now_date, self.action_id))
 
-    def insert2(self, advertiser, pattern, func_name, compressed_data):
-        try:
-            Q = INSERT2
-            self.connectors['crushercache'].execute(Q, (self.advertiser, pattern, func_name, compressed_data, now_date, self.action_id))
-        except:
-            Q = REPLACE2
-            self.connectors['crushercache'].execute(Q, (self.advertiser, pattern, func_name, compressed_data, now_date, self.action_id))
 
     def exclude_domain(self, advertiser, url):
         ARTIFACT1 = "select json from artifacts where advertiser = '%s' and key_name ='exclude_domains'"
@@ -149,6 +131,9 @@ class UDFRunner(BaseRunner):
 def runner(**kwargs):
     #add other parameters options that can be added on to url request
     connectors = kwargs['connectors']
+   
+    now_date = datetime.datetime.now().strftime("%Y-%m-%d")
+    
     if not kwargs.get('job_id',False):
         uuid_num = "local_"+str(uuid.uuid4())
     else:
@@ -186,11 +171,8 @@ def runner(**kwargs):
         url_parameters = UR.get_parameters(db, func_name)
 
     data = UR.make_request(pattern, func_name, url_parameters)
-    #data2 = UR.make_request_v2(crusher, pattern, func_name, parameters)
-
     compress_data = UR.compress(ujson.dumps(data))
-    #compress_data2 = UR.compress(ujson.dumps(data2))
-    UR.insert( pattern, func_name, compress_data)
-    #UR.insert2(advertiser, pattern, func_name, compress_data2)
-    logging.info("Data inserted")
+    
+    UR.insert( pattern, func_name, compress_data, now_date)
+    logging.info("Data inserted params advertiser: %s udf: %s filter id: %s date: %s pattern: %s" % (UR.advertiser, func_name, UR.action_id, now_date, pattern))
     UR.accounting_entry_end(UR.advertiser, pattern, func_name, uuid_num, UR.action_id)

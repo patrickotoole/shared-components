@@ -32,7 +32,7 @@ def clear_old_cache(**kwargs):
     query_args['url_pattern'] = kwargs['pattern']
     query_args['udf'] = kwargs['func_name']
     count_of_cache = kwargs['connectors']['crushercache'].select_dataframe(CACHEQUERY % query_args)
-    if count_of_cache['count(*)'][0] > 9:
+    if count_of_cache['count(*)'][0] > 30:
         date = kwargs['connectors']['crushercache'].select_dataframe(DATEQUERY % query_args)['date'][0] 
         query_args['date'] = date.strftime('%Y-%m-%d')
         kwargs['connectors']['crushercache'].execute(CLEARQUERY, query_args)
