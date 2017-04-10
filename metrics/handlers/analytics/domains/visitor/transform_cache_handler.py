@@ -43,22 +43,18 @@ class VisitorTransformCacheHandler(VisitorBase,Render):
         now_date=filter_date
         if not filter_date:
             now_date = self.now()
+            now_date = self.getRecentData(advertiser, pattern, filter_id, api_type)
         if not filter_id:
             filter_id = self.get_action_id(advertiser, pattern)
-        
-        versioning = self.request.uri
-        if versioning.find('v2') >=0:
-            QUERY = SQL_SELECT_V2 % (api_type, advertiser, pattern, filter_id)
-        else: 
-            QUERY = SQL_SELECT % (api_type, advertiser, pattern, filter_id, now_date)
+
+    
+        QUERY = SQL_SELECT % (api_type, advertiser, pattern, filter_id, now_date)
         
         logging.info("Making query")
 
         data = self.crushercache.select_dataframe(QUERY)
-        if len(data) ==0 and not filter_date:
-            now_date = self.getRecentData(advertiser, pattern, filter_id, api_type)
-            QUERY = SQL_SELECT % (api_type, advertiser, pattern, filter_id, now_date)
-            data = self.crushercache.select_dataframe(QUERY)
+            #QUERY = SQL_SELECT % (api_type, advertiser, pattern, filter_id, now_date)
+            #data = self.crushercache.select_dataframe(QUERY)
 
         try:
             hex_data = codecs.decode(data.ix[0]['zipped'], 'hex')

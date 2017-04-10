@@ -84,8 +84,8 @@ export function simpleTimeseries(target,data,w,h) {
   var width = w || 120
     , height = h || 30
 
-  var x = d3.scale.ordinal().domain(d3.range(0,data.length)).range(d3.range(0,120,120/data.length))
-  var y = d3.scale.linear().range([0,height]).domain([d3.min(data),d3.max(data)])
+  var x = d3.scale.ordinal().domain(d3.range(0,data.length)).range(d3.range(0,width,width/data.length))
+  var y = d3.scale.linear().range([4,height]).domain([d3.min(data),d3.max(data)])
 
   var wrap = d3_updateable(target,"g","g",data,function(x,i) { return 1})
 
@@ -93,7 +93,7 @@ export function simpleTimeseries(target,data,w,h) {
     .attr("x",(z,i) => x(i))
     .attr("width", width/data.length -1.2)
     .attr("y", z => height - y(z) )
-    .attr("height", z => y(z))
+    .attr("height", z => z ? y(z) : 0)
 
   return wrap
   
@@ -258,7 +258,10 @@ function extractData(b,a,buckets,accessor) {
    
     
 
-
+  return {
+    "consideration": "" + before_line,
+    "validation": "-" + after_line
+  }
 }
 
 

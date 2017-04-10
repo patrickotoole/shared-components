@@ -2806,8 +2806,8 @@
     var width = w || 120
       , height = h || 30
 
-    var x = d3.scale.ordinal().domain(d3.range(0,data.length)).range(d3.range(0,120,120/data.length))
-    var y = d3.scale.linear().range([0,height]).domain([d3.min(data),d3.max(data)])
+    var x = d3.scale.ordinal().domain(d3.range(0,data.length)).range(d3.range(0,width,width/data.length))
+    var y = d3.scale.linear().range([4,height]).domain([d3.min(data),d3.max(data)])
 
     var wrap = d3_updateable(target,"g","g",data,function(x,i) { return 1})
 
@@ -2815,7 +2815,7 @@
       .attr("x",(z,i) => x(i))
       .attr("width", width/data.length -1.2)
       .attr("y", z => height - y(z) )
-      .attr("height", z => y(z))
+      .attr("height", z => z ? y(z) : 0)
 
     return wrap
     
@@ -2980,7 +2980,10 @@
      
       
 
-
+    return {
+      "consideration": "" + before_line,
+      "validation": "-" + after_line
+    }
   }
 
 
@@ -3387,8 +3390,8 @@
 
   function noop$7(){}
 
-  function d3_class(target,cls,type) {
-    return d3_updateable(target,"." + cls, type || "div")
+  function d3_class(target,cls,type,data) {
+    return d3_updateable(target,"." + cls, type || "div",data)
       .classed(cls,true)
   }
 
@@ -3428,7 +3431,7 @@
           .style("padding-bottom","60px")
 
       try {
-        drawStream(bawrap,this._data.before_categories,this._data.after_categories)
+        var stages = drawStream(bawrap,this._data.before_categories,this._data.after_categories)
       } catch(e) {
         bawrap.html("")
         return
@@ -3486,6 +3489,8 @@
 
         return x/3600 + " hrs"
       }
+
+      bawrap.selectAll(".table-wrapper").html("")
 
       var table_obj = table.table(bawrap)
         .top(140)
@@ -3595,7 +3600,10 @@
 
 
             var summary_row = d3_class(td,"summary-row").style("margin-bottom","15px")
+              .style("position","relative")
+            d3_class(td,"action-header").style("text-align","center").style("font-size","16px").style("font-weight","bold").text("Explore and Refine").style("padding","10px")
             var title_row = d3_class(td,"title-row")
+
             var expansion_row = d3_class(td,"expansion-row")
             var footer_row = d3_class(td,"footer-row").style("min-height","10px").style("margin-top","15px")
             
@@ -3615,25 +3623,158 @@
             var options = [
                 {"key":"All","value":"all", "selected":1}
               , {"key":"Consideration","value":"consideration", "selected":0}
-              , {"key":"Validation","value":"all", "selected":0}
+              , {"key":"Validation","value":"validation", "selected":0}
             ]
 
-            var opts = d3_class(summary_row,"options")
+            var tsw = 250;
+
+            var timeseries = d3_class(summary_row,"timeseries","svg")
+              .style("display","block")
+              .style("margin","auto")
+              .style("margin-bottom","30px")
+              .attr("width",tsw + "px")
+              .attr("height","70px")
+
+   
+
+            var before_rollup = d3.nest()
+              .key(function(x) { return x.time_diff_bucket})
+              .rollup(function(x) { return d3.sum(x,y => y.visits) })
+              .map(before_urls)
+            
+            var after_rollup = d3.nest()
+              .key(function(x) { return "-" + x.time_diff_bucket})
+              .rollup(function(x) { return d3.sum(x,y => y.visits) })
+              .map(after_urls)
+
+            var overall_rollup = buckets.map(x => before_rollup[x] || after_rollup[x] || 0)
+
+
+
+            simpleTimeseries(timeseries,overall_rollup,tsw)
+            d3_class(timeseries,"middle","line")
+                  .style("stroke-dasharray", "1,5")
+                  .attr("stroke-width",1)
+                  .attr("stroke","black")
+                  .attr("y1", 0)
+                  .attr("y2", 55)
+                  .attr("x1", tsw/2)
+                  .attr("x2", tsw/2)
+
+            d3_class(timeseries,"middle-text","text")
+              .attr("x", tsw/2)
+              .attr("y", 67)
+              .style("text-anchor","middle")
+              .text("On-site")
+
+            
+            var before_pos, after_pos;
+
+            buckets.map(function(x,i) {
+               if (stages.consideration == x) before_pos = i
+               if (stages.validation == x) after_pos = i
+
+            })
+
+            var unit_size = tsw/buckets.length
+
+            d3_class(timeseries,"before","line")
+              .style("stroke-dasharray", "1,5")
+              .attr("stroke-width",1)
+              .attr("stroke","black")
+              .attr("y1", 39)
+              .attr("y2", 45)
+              .attr("x1", unit_size*before_pos)
+              .attr("x2", unit_size*before_pos)
+
+            d3_class(timeseries,"before-text","text")
+              .attr("x", unit_size*before_pos - 8)
+              .attr("y", 48)
+
+              .style("text-anchor","end")
+              .text("Consideration")
+
+            d3_class(timeseries,"window","line")
+              .style("stroke-dasharray", "1,5")
+              .attr("stroke-width",1)
+              .attr("stroke","black")
+              .attr("y1", 45)
+              .attr("y2", 45)
+              .attr("x1", unit_size*(before_pos))
+              .attr("x2", unit_size*(after_pos+1)+1)
+
+
+            d3_class(timeseries,"after","line")
+              .style("stroke-dasharray", "1,5")
+              .attr("stroke-width",1)
+              .attr("stroke","black")
+              .attr("y1", 39)
+              .attr("y2", 45)
+              .attr("x1", unit_size*(after_pos+1))
+              .attr("x2", unit_size*(after_pos+1))
+
+            d3_class(timeseries,"after-text","text")
+              .attr("x", unit_size*(after_pos+1) + 8)
+              .attr("y", 48)
+              .style("text-anchor","start")
+              .text("Validation")
+
+
+
+            function selectOptionRect(options) {
+
+              var subset = td.selectAll("svg").selectAll("rect")
+                .attr("fill",undefined).filter((x,i) => {
+                  var value = options.filter(x => x.selected)[0].value
+                  if (value == "all") return false
+                  if (value == "consideration") return (i < before_pos) || (i > buckets.length/2 - 1 )
+                  if (value == "validation") return (i < buckets.length/2 ) || (i > after_pos)
+                })
+
+
+              subset.attr("fill","grey")
+            }
+
+            
+
+            selectOptionRect(options)
+
+            var opts = d3_class(summary_row,"options","div",options)
               .style("text-align","center")
-              .style("display","none")
+              .style("position","absolute")
+              .style("width","120px")
+              .style("top","35px")
+              .style("left","200px")
 
-            d3_splat(opts,".show-button","a",options,x => x.key)
-              .classed("show-button",true)
-              .classed("selected",x => x.selected)
-              .style("line-height","36px")
-              .style("margin-bottom","20px")
-              .text(x => x.key)
 
+            function buildOptions(options) {
+              
+
+              d3_splat(opts,".show-button","a",options,x => x.key)
+                .classed("show-button",true)
+                .classed("selected",x => x.selected)
+                .style("line-height","18px")
+                .style("width","100px")
+                .style("font-size","10px")
+                .style("margin-bottom","5px")
+                .text(x => x.key)
+                .on("click",function(x) {
+                  this.parentNode.__data__.map(z => z.selected = 0)
+                  x.selected = 1
+                  buildOptions(this.parentNode.__data__)
+                  selectOptionRect(this.parentNode.__data__)
+                })
+
+            }
+
+            buildOptions(options)
 
             d3_class(summary_row,"description")
               .style("font-size","12px")
-              .style("text-align","center")
-              .style("margin-bottom","20px")
+              .style("position","absolute")
+              .style("width","120px")
+              .style("top","35px")
+              .style("right","200px")
               .text("Select domains and keywords to build and refine your global filter")
 
 
@@ -3643,11 +3784,14 @@
             var urls_summary = d3_class(summary_row,"urls-summary")
               .style("display","inline-block")
               .style("width","50%")
+              .style("vertical-align","top")
 
             var kws_summary = d3_class(summary_row,"kws-summary")
               .style("display","inline-block")
               .style("width","50%")
+              .style("vertical-align","top")
 
+              
 
             d3_class(urls_summary,"title")
               .style("font-weight","bold")
@@ -3659,38 +3803,71 @@
               .style("font-size","14px")
               .text("Keyword Summary")
 
-            d3_class(urls_summary,"count")
-              .style("line-height","24px")
-              .style("padding-left","4px")
-              .text("Distinct URLs: " + to_draw.length)
-
-            d3_class(kws_summary,"count")
-              .style("line-height","24px")
-              .style("padding-left","4px")
-              .text("Distinct Keywords: " + kw_to_draw.length)
-
-            d3_class(urls_summary,"views")
-              .style("line-height","24px")
-              .style("padding-left","4px")
-              .text("Average Views: " + parseInt(to_draw.reduce((p,c) => p + c.total,0)/to_draw.length) )
-
-            d3_class(kws_summary,"views")
-              .style("line-height","24px")
-              .style("padding-left","4px")
-              .text("Average Views: " + parseInt(kw_to_draw.reduce((p,c) => p + c.total,0)/kw_to_draw.length) )
-
-            d3_class(urls_summary,"median")
-              .style("line-height","24px")
-              .style("padding-left","4px")
-              .text("Median Views: " + (to_draw[parseInt(to_draw.length/2)] || {}).total )
-
-            d3_class(kws_summary,"median")
-              .style("line-height","24px")
-              .style("padding-left","4px")
-              .text("Median Views: " + (kw_to_draw[parseInt(kw_to_draw.length/2)] || {}).total )
 
 
+            var consideration_buckets = buckets.filter((x,i) => !((i < before_pos) || (i > buckets.length/2 - 1 )) )
+              , validation_buckets = buckets.filter((x,i) => !((i < buckets.length/2 ) || (i > after_pos)) )
 
+            var consideration_to_draw = to_draw.filter(x => consideration_buckets.reduce((p,c) => { p += x[c] || 0; return p},0) )
+              , validation_to_draw = to_draw.filter(x => validation_buckets.reduce((p,c) => { p += x[c] || 0; return p},0) )
+
+            function avgViews(to_draw) {
+              return parseInt(to_draw.reduce((p,c) => p + c.total,0)/to_draw.length)
+            }
+            function medianViews(to_draw) {
+              return (to_draw[parseInt(to_draw.length/2)] || {}).total || 0
+            }
+
+
+            var url_summary_data = [
+                {"name":"Distinct URLs", "all": to_draw.length, "consideration": consideration_to_draw.length, "validation": validation_to_draw.length }
+              , {"name":"Average Views", "all": avgViews(to_draw), "consideration": avgViews(consideration_to_draw), "validation": avgViews(validation_to_draw)  }
+              , {"name":"Median Views", "all": medianViews(to_draw), "consideration": medianViews(consideration_to_draw), "validation": medianViews(validation_to_draw)  }
+            ]
+
+            var uwrap = d3_class(urls_summary,"wrap").style("width","90%")
+
+
+            table.table(uwrap)
+              .data({"values":url_summary_data})
+              .skip_option(true)
+              .headers([
+                  {"key":"name","value":""}
+                , {"key":"all","value":"All"}
+                , {"key":"consideration","value":"Consideration"}
+                , {"key":"validation","value":"Validation"}
+              ])
+              .draw()
+              ._target.selectAll(".table-wrapper")
+              .classed("table-wrapper",false)
+
+
+            var consideration_kw_to_draw = kw_to_draw.filter(x => consideration_buckets.reduce((p,c) => { p += x[c] || 0; return p},0) )
+              , validation_kw_to_draw = kw_to_draw.filter(x => validation_buckets.reduce((p,c) => { p += x[c] || 0; return p},0) )
+
+
+           debugger 
+
+            var kws_summary_data = [
+                {"name":"Distinct Keywords", "all": kw_to_draw.length, "consideration": consideration_kw_to_draw.length, "validation": validation_kw_to_draw.length }
+              , {"name":"Average Views", "all": avgViews(kw_to_draw), "consideration": avgViews(consideration_kw_to_draw), "validation": avgViews(validation_kw_to_draw)  }
+              , {"name":"Median Views", "all": medianViews(kw_to_draw), "consideration": medianViews(consideration_kw_to_draw), "validation": medianViews(validation_kw_to_draw)  }
+            ]
+
+            var kwrap = d3_class(kws_summary,"wrap").style("width","90%")
+
+            table.table(kwrap)
+              .data({"values":kws_summary_data})
+              .skip_option(true)
+              .headers([
+                  {"key":"name","value":""}
+                , {"key":"all","value":"All"}
+                , {"key":"consideration","value":"Consideration"}
+                , {"key":"validation","value":"Validation"}
+              ])
+              .draw()
+              ._target.selectAll(".table-wrapper")
+              .classed("table-wrapper",false)
 
 
 
@@ -3817,7 +3994,7 @@
               .style("vertical-align","top")
 
 
-              .style("max-height","300px")
+              .style("max-height","250px")
               .style("overflow","scroll")
 
             var url_row = d3_splat(expansion,".url-row","div",to_draw,function(x) { return x.url })
@@ -3887,7 +4064,7 @@
               .style("display","inline-block")
               .style("vertical-align","top")
 
-              .style("max-height","300px")
+              .style("max-height","250px")
               .style("overflow","scroll")
 
             var url_row = d3_splat(expansion,".url-row","div",kw_to_draw,function(x) { return x.key })
@@ -3951,15 +4128,6 @@
               })
 
             
-            //table.table(td)
-            //  .headers(
-            //    [{"key":"url", "value":"Url"}].concat(
-            //      buckets.map(x => { return {"key":x, "value":formatName(x), "selected":true} })
-            //    )
-            //  )
-            //  .skip_option("true")
-            //  .data({"values":to_draw})
-            //  .draw()
           
 
 
@@ -3984,6 +4152,29 @@
 
       table_obj._target.selectAll(".table-option")
         .style("display","none")
+
+
+      var max = sorted_tabular.reduce((p,c) => {
+        Object.keys(c).filter(z => z != "domain" && z != "weighted").map(function(x) {
+          p = c[x] > p ? c[x] : p
+        })
+      
+        return p
+      },0)
+
+      var oscale = d3.scale.linear().range([0,.8]).domain([0,Math.log(max)])
+
+      table_obj._target.selectAll("tr").selectAll("td:not(:first-child)")
+        .style("border-right","1px solid white")
+        .style("padding-left","0px")
+        .style("text-align","center")
+        .style("background-color",function(x) {
+          var value = this.parentNode.__data__[x['key']] || 0
+          return "rgba(70, 130, 180," + oscale(Math.log(value+1)) + ")"
+        })
+
+
+
 
 
 
@@ -4538,7 +4729,7 @@
                .data(self.before())
                .on("stage-filter",function(x) {
 
-                 staged_filters = staged_filters.split(",").concat(x.key).filter(x => x.length).join(",")
+                 staged_filters = staged_filters.split(",").concat(x.key || x.url).filter(x => x.length).join(",")
                  self.on("staged-filter.change")(staged_filters)
                  HACKbuildStagedFilter(staged_filters)
 

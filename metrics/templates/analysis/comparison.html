@@ -499,7 +499,10 @@
     })
 
   var asyncPub = function(cb){
-    d3.json("/crusher/v2/visitor/testing_category/cache?url_pattern=/",cb)
+    d3.json("/crusher/funnel/action?format=json",function(resp) {
+      var featured = resp.response.filter(x => x.featured)[0]
+      d3.json("/crusher/v2/visitor/testing_category/cache?url_pattern=" + featured.url_pattern + "&filter_id=" + featured.action_id,cb)
+    })
   }
 
 
