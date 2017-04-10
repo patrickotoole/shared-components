@@ -1,5 +1,6 @@
 import logging
 from link import lnk
+import datetime
 
 ADVERTISERS = "select pixel_source_name from advertiser_caching where valid_pixel_fires_yesterday=1"
 SEGMENTS = "select a.action_id, a.action_name, a.url_pattern from action_with_patterns a join action b on a.action_id = b.action_id where a.pixel_source_name = '%s' and b.deleted=0 and b.active=1"
@@ -7,11 +8,14 @@ CURRENT_SEGMENTS = "select filter_id from advertiser_caching_segment where pixel
 FILL_IN_DB = "insert into advertiser_caching_segment (pixel_source_name, filter_id, action_name, pattern) values (%s, %s, %s, %s)"
 UPDATE_DB="update advertiser_caching_segment set data_populated=%s where pixel_source_name = %s and filter_id = %s"
 
+SEGMENT_LOG = "insert into advertiser_segment_check (pixel_source_name, url_pattern, filter_id, pixel_fires, date) values ('%s', '%s', '%s', '%s', '%s')"
+
 class CheckSegmentData():
 
-    def __init__(self,rockerbox, hindsight):
+    def __init__(self,rockerbox, hindsight, crushercache):
         self.rockerbox = rockerbox
         self.hindsight = hindsight
+        self.crushercache = crushercache
         self.advertisers = self.get_advertisers()
         self.segment_dict = {}
         self.build_segment_dict()
@@ -57,17 +61,21 @@ class CheckSegmentData():
             self.hindsight.authenticate()
             for seg in self.segment_dict[advertiser].iterrows():
                 has_data = self.check_timeseries_endpoint(seg[1]['url_pattern'], seg[1]['action_id'])
-                self.update_db(has_data, advertiser, seg[1]['action_id'])
+                self.update_db(has_data, advertiser, seg[1]['action_id'], seg[1]['url_pattern'])
 
-    def update_db(self,has_data, advertiser, filter_id):
+    def update_db(self,has_data, advertiser, filter_id, pattern):
+        now = datetime.datetime.now().strftime("%Y-%m-%d")
         if has_data:
             self.rockerbox.execute(UPDATE_DB, (1, advertiser, filter_id))
+            self.crushercache.execute(SEGMENT_LOG % (advertiser,pattern, filter_id,1,now))
         else:
             self.rockerbox.execute(UPDATE_DB, (0, advertiser, filter_id))
+            self.crushercache.execute(SEGMENT_LOG % (advertiser,pattern, filter_id,0,now))
 
 if __name__ =="__main__":
     from link import lnk
     rockerbox = lnk.dbs.rockerbox
     crusher = lnk.api.crusher
-    csd = CheckSegmentData(rockerbox, crusher)
+    crushercache = lnk.dbs.crushercache
+    csd = CheckSegmentData(rockerbox, crusher, crushercache)
     csd.iter_segments()

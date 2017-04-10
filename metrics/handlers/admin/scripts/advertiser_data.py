@@ -32,7 +32,7 @@ class AdvertiserDataHandler(AnalyticsBase, BaseHandler):
 
 
     @custom_defer.inlineCallbacksErrors
-    def pull_and_aggregate(self, advertiser):
+    def pull_and_aggregate(self):
         data = yield self.get_from_db()
         self.write(ujson.dumps(data))
         self.finish()
@@ -40,6 +40,4 @@ class AdvertiserDataHandler(AnalyticsBase, BaseHandler):
     @tornado.web.asynchronous
     @decorators.error_handling
     def get(self):
-        advertiser = self.get_argument("advertiser", False)
-
-        self.pull_and_aggregate(advertiser)
+        self.pull_and_aggregate()
