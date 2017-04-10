@@ -23,7 +23,7 @@ define("port", default=9001, help="run on the given port", type=int)
 
 from link import lnk
 
-from handlers.index import *
+# from handlers.index import *
 
 
 if __name__ == '__main__':
