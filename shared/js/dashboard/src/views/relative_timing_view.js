@@ -381,6 +381,17 @@ kw_to_draw = Object.keys(kw_to_draw).map(function(k) { return kw_to_draw[k] }).m
                 this.parentNode.__data__.map(z => z.selected = 0)
                 x.selected = 1
                 buildOptions(this.parentNode.__data__)
+                if (x.value == "consideration") {
+                  buildUrlSelection(consideration_to_draw)
+                  buildKeywordSelection(consideration_kw_to_draw)
+                } else if (x.value == "validation") {
+                  buildUrlSelection(validation_to_draw)
+                  buildKeywordSelection(validation_kw_to_draw)
+                } else {
+                  buildUrlSelection(to_draw)
+                  buildKeywordSelection(kw_to_draw)
+                }
+
                 selectOptionRect(this.parentNode.__data__)
               })
 
@@ -603,149 +614,156 @@ kw_to_draw = Object.keys(kw_to_draw).map(function(k) { return kw_to_draw[k] }).m
 
 
 
-
-          var expansion = d3_class(expansion_row,"expansion-urls")
-            .classed("scrollbox",true)
-            .style("width","50%")
-            .style("display","inline-block")
-            .style("vertical-align","top")
-
-
-            .style("max-height","250px")
-            .style("overflow","scroll")
-
-          var url_row = d3_splat(expansion,".url-row","div",to_draw,function(x) { return x.url })
-            .classed("url-row",true)
-
-          var url_name = d3_updateable(url_row,".name","div").classed("name",true)
-            .style("width","260px")
-            .style("overflow","hidden")
-            .style("line-height","20px")
-            .style("height","20px")
-
-            .style("display","inline-block")
-
-          d3_updateable(url_name,"input","input")
-            .style("margin-right","10px")
-            .style("display","inline-block")
-            .style("vertical-align","top")
-            .attr("type","checkbox")
-            .on("click", function(x) {
-              self.on("stage-filter")(x)
-            })
-
-          d3_class(url_name,"url")
-            .style("display","inline-block")
-            .style("text-overflow","ellipsis")
-            .style("width","235px")
-            .text(x => x.url.split(d.domain)[1] || x.url )
-
-          d3_updateable(url_row,".number","div").classed("number",true)
-            .style("width","50px")
-            .style("height","20px")
-            .style("line-height","20px")
-            .style("vertical-align","top")
-            .style("text-align","center")
-            .style("font-size","13px")
-            .style("font-weight","bold")
-            .style("margin-left","20px")
-            .style("margin-right","20px")
-            .style("display","inline-block")
-            .text(function(x) { return d3.sum(buckets.map(function(b) { return x[b] || 0 })) })
+          function buildUrlSelection(to_draw) {
+            var expansion = d3_class(expansion_row,"expansion-urls")
+              .classed("scrollbox",true)
+              .style("width","50%")
+              .style("display","inline-block")
+              .style("vertical-align","top")
 
 
-          d3_updateable(url_row,".plot","svg").classed("plot",true)
-            .style("width","120px")
-            .style("height","20px")
-            .style("display","inline-block")
-            .each(function(x) {
-              var dthis = d3.select(this)
-              var values = buckets.map(function(b) { return x[b] || 0 })
-              simpleTimeseries(dthis,values,120,20)
-              d3_updateable(dthis,"line","line")
-                .style("stroke-dasharray", "1,5")
-                .attr("stroke-width",1)
-                .attr("stroke","black")
-                .attr("y1", 0)
-                .attr("y2", 20)
-                .attr("x1", 60)
-                .attr("x2", 60)
+              .style("max-height","250px")
+              .style("overflow","scroll")
 
-            })
+            expansion.html("")
 
-          after_url_ts
+            var url_row = d3_splat(expansion,".url-row","div",to_draw.slice(0,500),function(x) { return x.url })
+              .classed("url-row",true)
 
-          var expansion = d3_class(expansion_row,"expansion-keywords")
-            .classed("scrollbox",true)
-            .style("width","50%")
-            .style("display","inline-block")
-            .style("vertical-align","top")
+            var url_name = d3_updateable(url_row,".name","div").classed("name",true)
+              .style("width","260px")
+              .style("overflow","hidden")
+              .style("line-height","20px")
+              .style("height","20px")
 
-            .style("max-height","250px")
-            .style("overflow","scroll")
+              .style("display","inline-block")
 
-          var url_row = d3_splat(expansion,".url-row","div",kw_to_draw,function(x) { return x.key })
-            .classed("url-row",true)
+            d3_updateable(url_name,"input","input")
+              .style("margin-right","10px")
+              .style("display","inline-block")
+              .style("vertical-align","top")
+              .attr("type","checkbox")
+              .on("click", function(x) {
+                self.on("stage-filter")(x)
+              })
 
-          var kw_name = d3_updateable(url_row,".name","div").classed("name",true)
-            .style("width","260px")
-            .style("overflow","hidden")
-            .style("line-height","20px")
-            .style("height","20px")
+            d3_class(url_name,"url")
+              .style("display","inline-block")
+              .style("text-overflow","ellipsis")
+              .style("width","235px")
+              .text(x => x.url.split(d.domain)[1] || x.url )
 
-            .style("display","inline-block")
-
-          d3_updateable(kw_name,"input","input")
-            .style("display","inline-block")
-            .style("vertical-align","top")
-
-            .style("margin-right","10px")
-            .attr("type","checkbox")
-            .on("click", function(x) {
-              self.on("stage-filter")(x)
-            })
-
-          d3_class(kw_name,"url")
-            .style("text-overflow","ellipsis")
-            .style("display","inline-block")
-            .style("width","235px")
-            .text(x => x.key )
-
-          d3_updateable(url_row,".number","div").classed("number",true)
-            .style("width","50px")
-            .style("height","20px")
-            .style("line-height","20px")
-            .style("vertical-align","top")
-            .style("text-align","center")
-            .style("font-size","13px")
-            .style("font-weight","bold")
-            .style("margin-left","20px")
-            .style("margin-right","20px")
-            .style("display","inline-block")
-            .text(function(x) { return d3.sum(buckets.map(function(b) { return x[b] || 0 })) })
+            d3_updateable(url_row,".number","div").classed("number",true)
+              .style("width","50px")
+              .style("height","20px")
+              .style("line-height","20px")
+              .style("vertical-align","top")
+              .style("text-align","center")
+              .style("font-size","13px")
+              .style("font-weight","bold")
+              .style("margin-left","20px")
+              .style("margin-right","20px")
+              .style("display","inline-block")
+              .text(function(x) { return d3.sum(buckets.map(function(b) { return x[b] || 0 })) })
 
 
-          d3_updateable(url_row,".plot","svg").classed("plot",true)
-            .style("width","120px")
-            .style("height","20px")
-            .style("display","inline-block")
-            .each(function(x) {
-              var dthis = d3.select(this)
-              var values = buckets.map(function(b) { return x[b] || 0 })
-              simpleTimeseries(dthis,values,120,20)
-              d3_updateable(dthis,"line","line")
-                .style("stroke-dasharray", "1,5")
-                .attr("stroke-width",1)
-                .attr("stroke","black")
-                .attr("y1", 0)
-                .attr("y2", 20)
-                .attr("x1", 60)
-                .attr("x2", 60)
+            d3_updateable(url_row,".plot","svg").classed("plot",true)
+              .style("width","120px")
+              .style("height","20px")
+              .style("display","inline-block")
+              .each(function(x) {
+                var dthis = d3.select(this)
+                var values = buckets.map(function(b) { return x[b] || 0 })
+                simpleTimeseries(dthis,values,120,20)
+                d3_updateable(dthis,"line","line")
+                  .style("stroke-dasharray", "1,5")
+                  .attr("stroke-width",1)
+                  .attr("stroke","black")
+                  .attr("y1", 0)
+                  .attr("y2", 20)
+                  .attr("x1", 60)
+                  .attr("x2", 60)
 
-            })
+              })
+          }
 
+
+          function buildKeywordSelection(kw_to_draw) {
+            var expansion = d3_class(expansion_row,"expansion-keywords")
+              .classed("scrollbox",true)
+              .style("width","50%")
+              .style("display","inline-block")
+              .style("vertical-align","top")
+
+              .style("max-height","250px")
+              .style("overflow","scroll")
+
+            expansion.html("")
+
+            var url_row = d3_splat(expansion,".url-row","div",kw_to_draw.slice(0,500),function(x) { return x.key })
+              .classed("url-row",true)
+
+            var kw_name = d3_updateable(url_row,".name","div").classed("name",true)
+              .style("width","260px")
+              .style("overflow","hidden")
+              .style("line-height","20px")
+              .style("height","20px")
+
+              .style("display","inline-block")
+
+            d3_updateable(kw_name,"input","input")
+              .style("display","inline-block")
+              .style("vertical-align","top")
+
+              .style("margin-right","10px")
+              .attr("type","checkbox")
+              .on("click", function(x) {
+                self.on("stage-filter")(x)
+              })
+
+            d3_class(kw_name,"url")
+              .style("text-overflow","ellipsis")
+              .style("display","inline-block")
+              .style("width","235px")
+              .text(x => x.key )
+
+            d3_updateable(url_row,".number","div").classed("number",true)
+              .style("width","50px")
+              .style("height","20px")
+              .style("line-height","20px")
+              .style("vertical-align","top")
+              .style("text-align","center")
+              .style("font-size","13px")
+              .style("font-weight","bold")
+              .style("margin-left","20px")
+              .style("margin-right","20px")
+              .style("display","inline-block")
+              .text(function(x) { return d3.sum(buckets.map(function(b) { return x[b] || 0 })) })
+
+
+            d3_updateable(url_row,".plot","svg").classed("plot",true)
+              .style("width","120px")
+              .style("height","20px")
+              .style("display","inline-block")
+              .each(function(x) {
+                var dthis = d3.select(this)
+                var values = buckets.map(function(b) { return x[b] || 0 })
+                simpleTimeseries(dthis,values,120,20)
+                d3_updateable(dthis,"line","line")
+                  .style("stroke-dasharray", "1,5")
+                  .attr("stroke-width",1)
+                  .attr("stroke","black")
+                  .attr("y1", 0)
+                  .attr("y2", 20)
+                  .attr("x1", 60)
+                  .attr("x2", 60)
+
+              })
+          }
           
-        
+          buildUrlSelection(to_draw)
+          buildKeywordSelection(kw_to_draw)
+
 
 
 
