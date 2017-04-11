@@ -77,6 +77,9 @@ def parse_url(msg):
 	try:
             # If we are explicitly being passed a referrer, use that and save
             # the other in request_referrer
+            if "seg" in storage:
+                storage['an_seg'] = storage['seg']
+
             if "an_seg" not in storage:
             	storage['an_seg'] = storage.get("action", 0)
             if "referrer" in storage:
