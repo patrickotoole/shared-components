@@ -67,6 +67,7 @@ def parse_url(msg):
         import urlparse
         import urllib
         import json
+        import socket
         space_split = msg.split(" ") 
         quote_split = msg.split("\"")
         url = space_split[1]
@@ -109,6 +110,7 @@ def parse_url(msg):
         if "." in storage['ip'] == False:
             raise Exception("IP parse: " + storage['ip'])
 
+        storage['metrics_hostname'] = socket.gethostname()
         return json.dumps(storage)
     except Exception as e:
         logging.error("Issue parsing: " + str(e.message))
