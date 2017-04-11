@@ -236,7 +236,7 @@ function advertiser_box(x) {
     var nested = {}
     try {
     var nested = d3.nest()
-      .key( x => x.source )
+      .key( x => x.source || x.advertiser_id )
       .map(j[key])
     } catch(e) {}
 
