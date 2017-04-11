@@ -15,7 +15,7 @@ HIVE_QUERY = "select segment, sum(num_imps) from agg_domain_imps LATERAL VIEW ex
 
 
 class ProfileHandler(tornado.web.RequestHandler):
-    def initialize(self, bidder=None):
+    def initialize(self, bidder=None,**kwargs):
         self.bidder = bidder 
 
     def get_profile(self,profile_id=PROFILE_ID):

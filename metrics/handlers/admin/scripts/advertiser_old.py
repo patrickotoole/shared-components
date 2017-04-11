@@ -570,15 +570,22 @@ RB.initialize("%s");
 
         yield default, (data,)
 
-    def get_data(self,advertiser_id=False):
+    def get_data(self,advertiser_id=False,hindsight=False):
 
         where = "deleted = 0"
         if advertiser_id:
             where = ("external_advertiser_id in (%s)" % advertiser_id)
 
-        print API_QUERY % where
+        if hindsight:
+            where = (" active = 1 and deleted = 0 and crusher = 1")
+
+
+        logging.info(API_QUERY % where)
         df = self.db.select_dataframe(API_QUERY % where).set_index("external_advertiser_id")
-        includes = self.get_argument("include","domain_lists,segments,pixels,insertion_orders,campaigns,hourly_served_estimate")
+        includes = "" 
+        if not hindsight:
+            includes = self.get_argument("include","domain_lists,segments,pixels,insertion_orders,campaigns,hourly_served_estimate")
+      
 
 
         include_list = includes.split(",")
@@ -596,10 +603,14 @@ RB.initialize("%s");
     @tornado.web.asynchronous
     def get(self,arg=False):
 
-        print arg
+        logging.info(arg)
 
         if arg == "new":
             self.render("../templates/admin/advertiser/new.html")
+        elif "hindsight_streaming" in arg:
+            self.page = "streaming"
+            self.get_data(False,True)
+
         elif "streaming" in arg:
             a = arg.replace("streaming","").replace("/","")
             self.page = "streaming"

@@ -1,0 +1,257 @@
+{% autoescape None %}
+{% block scripts_top %}
+<script type="text/javascript" src="https://js.stripe.com/v2/"></script>
+<link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic,700,700italic,800,800italic%7CUbuntu:300,300italic,400,400italic,500,500italic,700,700italic%7CInconsolata:400,400italic,700,700italic%7CLato:100,100italic,300,300italic,400,400italic,700,700italic,900,900italic">
+<link type="text/css" rel="stylesheet" href="/static/js/chosen/chosen.min.css"/>
+<link type="text/css" rel="stylesheet" href="/static/css/bootstrap.css"/>
+<link type="text/css" rel="stylesheet" href="/static/css/bootstrap.min.css"/>
+<link type="text/css" rel="stylesheet" href="/static/css/fonts.css"/>
+<link type="text/css" rel="stylesheet" href="/static/css/bootstrap-switch.css"/>
+<link type="text/css" rel="stylesheet" href="/static/css/bootstrap-select.css"/>
+
+<link type="text/css" rel="stylesheet" href="/static/css/style.css"/>
+<link type="text/css" rel="stylesheet" href="/static/css/font-awesome.min.css"/>
+
+<script src="http://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/highlight.min.js"></script>
+<script type="text/javascript" src="/static/js/jquery.min.js"></script>
+
+<script type="text/javascript" src="/static/js/bootstrap-select.js"></script>
+
+
+<script type="text/javascript" src="/static/js/d3.js" charset="utf-8"></script>
+
+<script type="text/javascript" src="/js/api/build/api.js"></script>
+<script type="text/javascript" src="/js/state/build/state.js"></script>
+
+<script type="text/javascript" src="/js/start/build/start.js"></script>
+<script type="text/javascript" src="/js/filter/build/filter.js"></script>
+<script type="text/javascript" src="/js/table/build/table.js"></script>
+<script type="text/javascript" src="/js/media_plan/build/media_plan.js"></script>
+<script type="text/javascript" src="/js/dashboard/build/dashboard.js"></script>
+<script type="text/javascript" src="/js/tabular/build/tabular.js"></script>
+
+<script type="text/javascript" src="/js/selectize.js/dist/js/standalone/selectize.js"></script>
+<link type="text/css" rel="stylesheet" href="/js/selectize.js/dist/css/selectize.css"/>
+
+
+<script type="text/javascript" src="/static/js/rockerbox/helper.js"></script>
+
+<style> 
+body {padding-top:0px}
+.advertiser {
+  display:inline-block;
+}
+.advertiser-wrap {
+  width:150px;
+  height:150px;
+}
+.advertiser-wrap .title {
+  font-size:14px;
+  font-weight:bold;
+  line-height:30px;
+}
+.advertiser-wrap .total {
+  font-size:48px;
+  font-weight:bold;
+  line-height:48px;
+  text-align:center;
+}
+h4 {
+  text-align:center;
+  font-weight:bold;
+  font-size:32px;
+  line-height:48px
+}
+</style>
+
+<script>
+
+function accessor(attr, val) {
+  if (val === undefined) return this["_" + attr]
+  this["_" + attr] = val
+  return this
+}
+
+function d3_class(target,cls,type,data) {
+  return d3_updateable(target,"." + cls, type || "div",data)
+    .classed(cls,true)
+}
+
+function simpleTimeseries(target,data,w,h) {
+  var width = w || 120
+    , height = h || 30
+
+  var x = d3.scale.ordinal().domain(d3.range(0,data.length)).range(d3.range(0,width,width/data.length))
+  var y = d3.scale.linear().range([4,height]).domain([0,d3.max(data)])
+
+  var wrap = d3_updateable(target,"g","g",data,function(x,i) { return 1})
+
+  d3_splat(wrap,"rect","rect",x => x, (x,i) => i)
+    .attr("x",(z,i) => x(i))
+    .attr("width", width/data.length -1)
+    .attr("y", z => height - y(z) )
+    .attr("height", z => z ? y(z) : 0)
+
+  return wrap
+  
+}
+
+class AdvertiserBox {
+  constructor(target) {
+    this._target = target
+  }
+
+  advertiser(val) { return accessor.bind(this)("advertiser",val) } 
+  timeseries(val) { return accessor.bind(this)("timeseries",val) } 
+  total(val) { return accessor.bind(this)("total",val) } 
+
+
+  data(val) { return accessor.bind(this)("data",val) } 
+
+  draw() {
+
+    var wrap = d3_class(this._target,"advertiser-wrap")
+
+    d3_class(wrap,"title").text(this.advertiser()).style("text-align","center")
+
+
+    d3_class(wrap,"total").text(this.total())
+    simpleTimeseries(d3_class(wrap,"timeseries","svg").attr("width","140px").attr("height","30px").style("margin-left","5px"),this.timeseries(),140,30)
+
+
+    
+    return this
+  }
+}
+
+function advertiser_box(x) {
+  var target = d3.select(this)
+  return new AdvertiserBox(target)
+    .advertiser(target.datum().advertiser_name)
+    .timeseries(target.datum().timeseries || [])
+    .total(d3.sum(target.datum().timeseries || []))
+    .data(target.datum())
+    .draw()
+}
+</script>
+
+
+{% end %}
+{% block scripts_bottom %}{% end %}
+{% block content %}
+<div class="main" style="width:inherit;padding-top:0px"></div>
+<script>
+(function() {
+
+  var s = state.state()
+    .subscribe("load.subscriptions", function(error,sub,state) {
+
+      ADVERTISERS.map(x => {
+        x.timeseries = d3.range(0,60).map(_ => 0)
+      })
+      s.publish("advertisers",ADVERTISERS)
+
+      ws.send(JSON.stringify({"streams":sub.filter(x => x.selected).map(x => x.key),"source":ADVERTISERS.map(x => x.pixel_source_name), "advertiser_id": ADVERTISERS.map(x => x.external_advertiser_id) }))
+
+
+      d3.select(".main").selectAll(".advertiser").remove()
+
+      var subscriptions = d3_updateable(d3.select(".main"),".subscriptions","div",state.subscriptions,x => 1)
+        .classed("subscriptions",true)
+
+      d3_splat(subscriptions,".opt","div", x => x, x => x.key)
+        .classed("opt",true)
+        .style("background",x => x.selected ? "grey": "none")
+        .text(x => x.key)
+        .on("click", function(x) {
+          var subscriptions = JSON.parse(JSON.stringify(state.subscriptions))
+          subscriptions.map( x => { x.selected = 0; return x}).filter( y => y.key == x.key)[0].selected = 0
+          s.publish("subscriptions",subscriptions)
+        })
+    })
+
+    .subscribe("load", function(error,state) {
+
+      var haves = state.advertisers.filter(x => d3.sum(x.timeseries))
+      var have_nots = state.advertisers.filter(x => !d3.sum(x.timeseries))
+
+      var subscriptions = d3_updateable(d3.select(".main"),".subscriptions","div",state.subscriptions,x => 1)
+        .classed("subscriptions",true)
+
+      d3_splat(subscriptions,".opt","div", x => x, x => x.key)
+        .classed("opt",true)
+        .style("background",x => x.selected ? "grey": "none")
+        .text(x => x.key)
+        .on("click", function(x) {
+          var subscriptions = JSON.parse(JSON.stringify(state.subscriptions))
+          subscriptions.map( x => { x.selected = 0; return x}).filter( y => y.key == x.key)[0].selected = 1
+          s.publish("subscriptions",subscriptions)
+        })
+        
+
+      var have = d3_class(d3.select(".main"),"have")
+      var have_not = d3_class(d3.select(".main"),"have_not")
+
+      d3_updateable(have,"h4","h4").text("Saw pixel fires")
+
+      var advertiser = d3_splat(have,".advertiser","div",haves, x => x.external_advertiser_id)
+        .classed("advertiser",true)
+
+      advertiser.each(advertiser_box)
+
+      d3_updateable(have_not,"h4","h4").text("No fires seen")
+
+      var advertiser = d3_splat(have_not,".advertiser","div",have_nots, x => x.external_advertiser_id)
+        .classed("advertiser",true)
+
+      advertiser.each(advertiser_box)
+
+      advertiser.exit().remove()
+
+
+      
+
+    })
+
+  var ADVERTISERS = {{data}}
+
+  ADVERTISERS.map(x => {
+    x.timeseries = d3.range(0,60).map(_ => 0)
+  })
+
+  s.update(false,{"advertisers":ADVERTISERS,"subscriptions":[{"key":"visit_events","selected":1},{"key":"conversion_events"},{"key":"served_imps"}] })
+  s.publish("yo",1)
+
+  var ws = new WebSocket("ws://" + location.host + "/websocket?id=" + parseInt(Math.random()*100000));
+  ws.onopen = function() {
+    ws.send("initialize");
+    ws.send("start");
+    ws.send(JSON.stringify({"streams":["visit_events"],"source":ADVERTISERS.map(x => x.pixel_source_name), "advertiser_id": ADVERTISERS.map(x => x.external_advertiser_id) }))
+  };
+  ws.onmessage = function(data) {
+
+    var key = s.state().subscriptions.filter(x => x.selected)[0].key
+
+    var j = JSON.parse(data.data)
+    var nested = {}
+    try {
+    var nested = d3.nest()
+      .key( x => x.source )
+      .map(j[key])
+    } catch(e) {}
+
+    ADVERTISERS.map( x => {
+      x.timeseries = x.timeseries.slice(1).concat((nested[x.pixel_source_name] || []).length)
+    })
+
+    s.publish("advertisers",ADVERTISERS)
+  }
+
+
+  window.s = s
+
+})();
+</script>
+
+
+{% end %}

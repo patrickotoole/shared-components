@@ -17,6 +17,7 @@ class StreamingRoutes(Routes):
     def streaming(self):
         import handlers.admin.streaming as streaming
 
+
         return [
             (r'/streaming',streaming.IndexHandler, {}),
             (r'/websocket', streaming.AdminStreamingHandler, self.connectors)
