@@ -83,8 +83,6 @@ def extract_sld(domain):
 
 class CampaignDatabase(DomainsDatabase, UrlDatabase):
 
-    def get_line_items(self, advertiser_id):
-        return self.db.select_dataframe(LINE_ITEMS%{'advertiser_id':advertiser_id})
 
     def get_domains(self, advertiser_id):
 

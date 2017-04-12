@@ -4,10 +4,9 @@ from lib.appnexus_reporting import load
 
 
 YOSHI_SETUP = '''
-SELECT mediaplan, num_domains, line_item_name
+SELECT mediaplan, num_domains, line_item_name, active
 FROM yoshi_setup
 WHERE external_advertiser_id = %s
-AND active = 1
 '''
 
 MEDIAPLANS = '''
@@ -49,7 +48,7 @@ GROUP BY 1
 def process_endpoint(endpoint):
     return endpoint.replace('/crusher/dashboard','/crusher/v1/visitor/yoshi_mediaplan').replace('selected_action','filter_id') + '&prevent_sample=true&num_days=2'
 
-COLUMNS =  ['external_advertiser_id','mediaplan', 'num_domains', 'line_item_name']
+COLUMNS =  ['external_advertiser_id','mediaplan', 'num_domains', 'line_item_name', 'active']
 
 class SetupDatabase(object):
 

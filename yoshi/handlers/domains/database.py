@@ -57,6 +57,7 @@ class DomainsDatabase(SetupDatabase):
         self.crusher_authenticate(advertiser_id)
         logging.info("Loading Setup Params")
         setups = self.get_setup(advertiser_id)
+        setups = setups[setups['active']==1]
         logging.info("Loading Hindsight Media Plans")
         media_plans = {}
         if len(setups) > 0:

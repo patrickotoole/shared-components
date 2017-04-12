@@ -13,14 +13,20 @@ class SetupHandler(tornado.web.RequestHandler, SetupDatabase):
     def get(self):
         advertiser_id = self.get_query_argument("advertiser")
         setups = self.get_setup(advertiser_id)
-        # j = json.dumps(setups.to_dict("records"))
-        self.render("setup.html", data = json.dumps(setups.to_dict('records')))
-        # self.write(j)
+        line_items = self.get_line_items(advertiser_id)
+        media_plans = self.get_media_plans(advertiser_id)
+        data = {
+            'setup': setups.to_dict('records'),
+            'line_items': line_items['line_item_name'].tolist(),
+            'media_plans': media_plans['name'].tolist()
+
+        }
+        self.render("setup.html", data = json.dumps(data))
         # self.finish()
 
     def post(self):
         advertiser_id = self.get_query_argument("advertiser")
-        data = json.loads(self.request.body).get('data')
+        data = json.loads(self.request.body)
         for x in data:
             x['external_advertiser_id'] = advertiser_id
         data = pd.DataFrame(data)
