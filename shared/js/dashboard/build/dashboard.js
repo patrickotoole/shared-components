@@ -1109,715 +1109,6 @@
     default: time_series
   });
 
-  function noop$12() {}
-
-
-  function DomainExpanded(target) {
-    this._on = {}
-    this.target = target
-  }
-
-  function domain_expanded(target) {
-    return new DomainExpanded(target)
-  }
-
-  DomainExpanded.prototype = {
-      data: function(val) {
-        return accessor.bind(this)("data",val) 
-      }
-    , urls: function(val) {
-        return accessor.bind(this)("urls",val) 
-      }
-    , draw: function() {
-
-        var timing = d3_updateable(this.target,"div.timing","div",this.data())
-          .classed("timing",true)
-          .style("height","60px")
-          .style("width","60%")
-          .style("text-transform","uppercase")
-          .style("font-weight","bold")
-          .style("font-size",".9em")
-          .style("margin-bottom","45px")
-          .style("line-height","35px")
-          .style("display","inline-block")
-          .text("Articles Accessed")
-
-        var details = d3_updateable(this.target,"div.details","div")
-          .classed("details",true)
-          .style("width","40%")
-          .style("display","inline-block")
-          .style("vertical-align","top")
-
-        d3_updateable(details,"span","span")
-          .style("text-transform","uppercase")
-          .style("font-weight","bold")
-          .style("font-size",".9em")
-          .style("margin-bottom","10px")
-          .style("line-height","35px")
-          .text("Details")
-
-        var articles = d3_updateable(this.target,"div.articles","div")
-          .classed("articles",true)
-
-        d3_updateable(articles,"span","span")
-          .style("text-transform","uppercase")
-          .style("font-weight","bold")
-          .style("font-size",".9em")
-          .style("margin-bottom","10px")
-          .style("line-height","35px")
-          .text("Top articles")
-          
-        var drawArticles = function(urls) {
-
-          var a = d3_splat(articles,"div","div",urls)
-            .text(String)
-            .exit().remove()
-
-        }
-
-        var drawDetails = function(x) {
-
-          var time = d3_updateable(details,".time","div",x)
-            .classed("time",true)
-            .text("Time: " + x.hour + ":" + (x.minute.length == 1 ? "0" + x.minute : x.minute ) )
-
-          var button = d3_updateable(details,".button","a",false,function() { return 1})
-            .classed("button",true)
-            .style("padding","5px")
-            .style("border-radius","5px")
-            .style("border","1px solid #ccc")
-            .style("margin","auto")
-            .style("margin-top","10px")
-            .style("display","block")
-            .style("width","50px")
-            .style("text-align","center")
-            .text("Reset")
-            .on("click",reset)
-
-        }
-
-        var reset = function() {
-          details.selectAll(".time").remove()
-          details.selectAll(".button").remove()
-
-          drawArticles(this._urls.slice(0,10))
-        }.bind(this)
-
-        reset() 
-
-        time_series(timing)
-          .data({"key":"y","values":timing.data()[0]})
-          .on("hover",function(x) {
-            drawArticles(Object.keys(x.articles).slice(0,10))
-            drawDetails(x)
-
-          })
-          .draw()
-
-        return this
-      }
-    , on: function(action, fn) {
-        if (fn === undefined) return this._on[action] || noop$12;
-        this._on[action] = fn;
-        return this
-      }
-  }
-
-  function DomainBullet(target) {
-    this._on = {}
-    this.target = target
-  }
-
-  function noop$13() {}
-  function domain_bullet(target) {
-    return new DomainBullet(target)
-  }
-
-  DomainBullet.prototype = {
-      data: function(val) {
-        return accessor.bind(this)("data",val) 
-      }
-    , max: function(val) {
-        return accessor.bind(this)("max",val) 
-      }
-    , draw: function() {
-
-        var width = (this.target.style("width").replace("px","") || this.offsetWidth) - 50
-          , height = 28;
-
-        var x = d3.scale.linear()
-          .range([0, width])
-          .domain([0, this.max()])
-
-        if (this.target.text()) this.target.text("")
-
-        var bullet = d3_updateable(this.target,".bullet","div",this.data(),function(x) { return 1 })
-          .classed("bullet",true)
-          .style("margin-top","3px")
-
-        var svg = d3_updateable(bullet,"svg","svg",false,function(x) { return 1})
-          .attr("width",width)
-          .attr("height",height)
-    
-     
-        d3_updateable(svg,".bar-1","rect",false,function(x) { return 1})
-          .classed("bar-1",true)
-          .attr("x",0)
-          .attr("width", function(d) {return x(d.pop_percent) })
-          .attr("height", height)
-          .attr("fill","#888")
-    
-        d3_updateable(svg,".bar-2","rect",false,function(x) { return 1})
-          .classed("bar-2",true)
-          .attr("x",0)
-          .attr("y",height/4)
-          .attr("width", function(d) {return x(d.sample_percent_norm) })
-          .attr("height", height/2)
-          .attr("fill","rgb(8, 29, 88)")
-
-        return this
-      }
-    , on: function(action, fn) {
-        if (fn === undefined) return this._on[action] || noop$13;
-        this._on[action] = fn;
-        return this
-      }
-  }
-
-  function noop$4() {}
-  function DomainView(target) {
-    this._on = {
-      select: noop$4
-    }
-    this.target = target
-  }
-
-
-
-  function domain_view(target) {
-    return new DomainView(target)
-  }
-
-  DomainView.prototype = {
-      data: function(val) {
-        return accessor.bind(this)("data",val) 
-      }
-    , options: function(val) {
-        return accessor.bind(this)("options",val) 
-      }
-    , draw: function() {
-        var _explore = this.target
-          , tabs = this.options()
-          , data = this.data()
-          , filtered = tabs.filter(function(x){ return x.selected})
-          , selected = filtered.length ? filtered[0] : tabs[0]
-
-        header(_explore)
-          .text(selected.key )
-          .options(tabs)
-          .on("select", function(x) { this.on("select")(x) }.bind(this))
-          .draw()
-
-        
-
-        _explore.selectAll(".vendor-domains-bar-desc").remove()
-        _explore.datum(data)
-
-        var t = table.table(_explore)
-          .data(selected)
-
-
-        var samp_max = d3.max(selected.values,function(x){return x.sample_percent_norm})
-          , pop_max = d3.max(selected.values,function(x){return x.pop_percent})
-          , max = Math.max(samp_max,pop_max);
-
-        t.headers([
-              {key:"key",value:"Domain",locked:true,width:"100px"}
-            , {key:"sample_percent",value:"Segment",selected:false}
-            , {key:"real_pop_percent",value:"Baseline",selected:false}
-            , {key:"ratio",value:"Ratio",selected:false}
-            , {key:"importance",value:"Importance",selected:false}
-            , {key:"value",value:"Segment versus Baseline",locked:true}
-          ])
-          .sort("importance")
-          .option_text("&#65291;")
-          .on("expand",function(d) {
-
-            d3.select(this).selectAll("td.option-header").html("&ndash;")
-            if (this.nextSibling && d3.select(this.nextSibling).classed("expanded") == true) {
-              d3.select(this).selectAll("td.option-header").html("&#65291;")
-              return d3.select(this.parentNode).selectAll(".expanded").remove()
-            }
-
-            d3.select(this.parentNode).selectAll(".expanded").remove()
-            var t = document.createElement('tr');
-            this.parentNode.insertBefore(t, this.nextSibling);  
-
-            var tr = d3.select(t).classed("expanded",true).datum({})
-            var td = d3_updateable(tr,"td","td")
-              .attr("colspan",this.children.length)
-              .style("background","#f9f9fb")
-              .style("padding-top","10px")
-              .style("padding-bottom","10px")
-
-            var dd = this.parentElement.__data__.full_urls.filter(function(x) { return x.domain == d.key})
-            var rolled = prepData(dd)
-            
-            domain_expanded(td)
-              .data(rolled)
-              .urls(d.urls)
-              .draw()
-
-          })
-          .hidden_fields(["urls","percent_unique","sample_percent_norm","pop_percent","tf_idf","parent_category_name"])
-          .render("ratio",function(d) {
-            this.innerText = Math.trunc(this.parentNode.__data__.ratio*100)/100 + "x"
-          })
-          .render("value",function(d) {
-
-            domain_bullet(d3.select(this))
-              .max(max)
-              .data(this.parentNode.__data__)
-              .draw()
-
-          })
-          
-        t.draw()
-       
-
-        return this
-      }
-    , on: function(action, fn) {
-        if (fn === undefined) return this._on[action] || noop$4;
-        this._on[action] = fn;
-        return this
-      }
-  }
-
-  function noop$5() {}
-  function simpleBar(wrap,value,scale,color) {
-
-    var height = 20
-      , width = wrap.style("width").replace("px","")
-
-    var canvas = d3_updateable(wrap,"svg","svg",[value],function() { return 1})
-      .style("width",width+"px")
-      .style("height",height+"px")
-
-
-    var chart = d3_updateable(canvas,'g.chart','g',false,function() { return 1 })
-      .attr("class","chart")
-    
-    var bars = d3_splat(chart,".pop-bar","rect",function(x) { return x}, function(x,i) { return i })
-      .attr("class","pop-bar")
-      .attr('height',height-4)
-      .attr({'x':0,'y':0})
-      .style('fill',color)
-      .attr("width",function(x) { return scale(x) })
-
-
-  }
-
-
-  function SegmentView(target) {
-    this._on = {
-      select: noop$5
-    }
-    this.target = target
-  }
-
-
-
-  function segment_view(target) {
-    return new SegmentView(target)
-  }
-
-  SegmentView.prototype = {
-      data: function(val) {
-        return accessor.bind(this)("data",val) 
-      }
-    , segments: function(val) {
-        return accessor.bind(this)("segments",val) 
-      }
-    , draw: function() {
-
-        var wrap = d3_updateable(this.target,".segment-wrap","div")
-          .classed("segment-wrap",true)
-          .style("height","140px")
-          .style("width",this.target.style("width"))
-          .style("position","fixed")
-          .style("z-index","300")
-          .style("background","#f0f4f7")
-
-
-        d3_updateable(this.target,".segment-wrap-spacer","div")
-          .classed("segment-wrap-spacer",true)
-          .style("height",wrap.style("height"))
-
-
-        header(wrap)
-          .buttons([
-              {class: "saved-search", icon: "fa-folder-open-o fa", text: "Open Saved"}
-            , {class: "new-saved-search", icon: "fa-bookmark fa", text: "Save"}
-          ])
-          .on("saved-search.click", this.on("saved-search.click"))
-          .on("new-saved-search.click", this.on("new-saved-search.click"))
-          .text("Segment").draw()      
-
-
-        wrap.selectAll(".header-body")
-          .classed("hidden",!this._is_loading)
-          .style("text-align","center")
-          .style("margin-bottom","-40px")
-          .style("padding-top","10px")
-          .style("height","0px")
-          .style("background","none")
-          .html("<img src='/static/img/general/logo-small.gif' style='height:15px'/> loading...")
-
-
-        if (this._data == false) return
-
-        var body = d3_updateable(wrap,".body","div")
-          .classed("body",true)
-          .style("clear","both")
-          .style("display","flex")
-          .style("flex-direction","column")
-          .style("margin-top","-15px")
-          .style("margin-bottom","30px")
-          
-
-        var row1 = d3_updateable(body,".row-1","div")
-          .classed("row-1",true)
-          .style("flex",1)
-          .style("display","flex")
-          .style("flex-direction","row")
-
-        var row2 = d3_updateable(body,".row-2","div")
-          .classed("row-2",true)
-          .style("flex",1)
-          .style("display","flex")
-          .style("flex-direction","row")
-
-
-        var inner = d3_updateable(row1,".action.inner","div")
-          .classed("inner action",true)
-          .style("flex","1")
-          .style("display","flex")
-          .style("padding","10px")
-          .style("padding-bottom","0px")
-
-          .style("margin-bottom","0px")
-
-        var inner_desc = d3_updateable(row1,".action.inner-desc","div")
-          .classed("inner-desc action",true)
-          .style("flex","1")
-          .style("padding","10px")
-          .style("padding-bottom","0px")
-
-          .style("display","flex")
-          .style("margin-bottom","0px")
-
-
-        d3_updateable(inner,"h3","h3")
-          .text("Choose Segment")
-          .style("margin","0px")
-          .style("line-height","32px")
-          .style("color","inherit")
-          .style("font-size","inherit")
-          .style("font-weight","bold")
-          .style("text-transform","uppercase")
-          .style("flex","1")
-          .style("background","#e3ebf0")
-          .style("padding-left","10px")
-          .style("margin-right","10px")
-          .style("margin-top","2px")
-          .style("margin-bottom","2px")
-          .style("height","100%")
-
-
-
-        d3_updateable(inner,"div.color","div")
-          .classed("color",true)
-          .style("background-color","#081d58")
-          .style("width","10px")
-          .style("height","32px")
-          .style("margin-top","2px")
-          .style("margin-right","10px")
-          .style("margin-left","-10px")
-
-
-
-        var self = this
-
-        select(inner)
-          .options(this._segments)
-          .on("select", function(x){
-            self.on("change").bind(this)(x)
-          })
-          .selected(this._action.value || 0)
-          .draw()
-
-        
-
-
-
-        var cal = d3_updateable(inner,"a.fa-calendar","a")
-          .style("line-height","34px")
-          .style("width","36px")
-          .style("border","1px solid #ccc")
-          .style("border-radius","5px")
-          .classed("fa fa-calendar",true)
-          .style("text-align","center")
-          .style("margin-left","5px")
-          .on("click", function(x) {
-            calsel.node()
-          })
-
-        
-        var calsel = select(cal)
-          .options([{"key":"Today","value":0},{"key":"Yesterday","value":1},{"key":"7 days ago","value":7}])
-          .on("select", function(x){
-            self.on("action_date.change").bind(this)(x.value)
-          })
-          .selected(this._action_date || 0)
-          .draw()
-          ._select
-          .style("width","18px")
-          .style("margin-left","-18px")
-          .style("height","34px")
-          .style("opacity",".01")
-          .style("flex","none")
-          .style("border","none")
-
-        
-
-        var inner2 = d3_updateable(row2,".comparison.inner","div")
-          .classed("inner comparison",true)
-          .style("flex","1")
-          .style("padding","10px")
-          .style("padding-bottom","0px")
-
-          .style("display","flex")
-
-        var inner_desc2 = d3_updateable(row2,".comparison-desc.inner","div")
-          .classed("inner comparison-desc",true)
-          .style("flex","1")
-          .style("padding","10px")
-          .style("padding-bottom","0px")
-
-          .style("display","flex")
-
-        //d3_updateable(inner_desc,"h3","h3")
-        //  .text("(Filters applied to this segment)")
-        //  .style("margin","10px")
-        //  .style("color","inherit")
-        //  .style("font-size","inherit")
-        //  .style("font-weight","bold")
-        //  .style("text-transform","uppercase")
-        //  .style("flex","1")
-
-        d3_updateable(inner_desc,".bar-wrap-title","h3").classed("bar-wrap-title",true)
-          .style("flex","1 1 0%")
-          .style("margin","0px")
-          .style("line-height","32px")
-          .style("color","inherit")
-          .style("font-size","inherit")
-          .style("font-weight","bold")
-          .style("text-transform","uppercase")
-          .style("padding-left","10px")
-          .style("margin-right","10px")
-          .style("margin-top","2px")
-          .style("margin-bottom","2px")
-          .style("height","100%")
-          .style("text-align","right")
-
-
-          .text("views")
-
-        d3_updateable(inner_desc2,".bar-wrap-title","h3").classed("bar-wrap-title",true)
-          .style("flex","1 1 0%")
-          .style("margin","0px")
-          .style("line-height","32px")
-          .style("color","inherit")
-          .style("font-size","inherit")
-          .style("font-weight","bold")
-          .style("text-transform","uppercase")
-          .style("padding-left","10px")
-          .style("margin-right","10px")
-          .style("margin-top","2px")
-          .style("margin-bottom","2px")
-          .style("height","100%")
-          .style("text-align","right")
-
-
-
-          .text("views")
-
-
-
-        var bar_samp = d3_updateable(inner_desc,"div.bar-wrap","div")
-          .classed("bar-wrap",true)
-          .style("flex","2 1 0%")
-          .style("margin-top","8px")
-
-        d3_updateable(inner_desc,".bar-wrap-space","div").classed("bar-wrap-space",true)
-          .style("flex","1 1 0%")
-          .style("line-height","36px")
-          .style("padding-left","10px")
-          .text(d3.format(",")(this._data.views.sample))
-
-
-        d3_updateable(inner_desc,".bar-wrap-opt","div").classed("bar-wrap-opt",true)
-          .style("flex","2 1 0%")
-          .style("line-height","36px")
-          //.text("apply filters?")
-
-
-
-        var xscale = d3.scale.linear()
-          .domain([0,Math.max(this._data.views.sample, this._data.views.population)])
-          .range([0,bar_samp.style("width")])
-
-
-        var bar_pop = d3_updateable(inner_desc2,"div.bar-wrap","div")
-          .classed("bar-wrap",true)
-          .style("flex","2 1 0%")
-          .style("margin-top","8px")
-
-
-        d3_updateable(inner_desc2,".bar-wrap-space","div").classed("bar-wrap-space",true)
-          .style("flex","1 1 0%")
-          .style("line-height","36px")
-          .style("padding-left","10px")
-          .text(d3.format(",")(this._data.views.population))
-
-
-        d3_updateable(inner_desc2,".bar-wrap-opt","div").classed("bar-wrap-opt",true)
-          .style("flex","2 1 0%")
-          .style("margin","0px")
-          .style("line-height","32px")
-          .style("color","inherit")
-          .style("font-size","inherit")
-          .style("font-weight","bold")
-          .style("text-transform","uppercase")
-          .style("height","100%")
-          .style("text-align","right")
-          .html("apply filters? <input type='checkbox'></input>")
-
-
-
-        simpleBar(bar_samp,this._data.views.sample,xscale,"#081d58")
-        simpleBar(bar_pop,this._data.views.population,xscale,"grey")
-
-
-
-
-
-
-
-
-
-
-
-        d3_updateable(inner2,"h3","h3")
-          .text("Compare Against")
-          .style("line-height","32px")
-          .style("margin","0px")
-          .style("color","inherit")
-          .style("font-size","inherit")
-          .style("font-weight","bold")
-          .style("flex","1")
-          .style("text-transform","uppercase")
-          .style("background","#e3ebf0")
-          .style("padding-left","10px")
-          .style("margin-right","10px")
-          .style("margin-top","2px")
-          .style("margin-bottom","2px")
-          .style("height","100%")
-
-
-
-        d3_updateable(inner2,"div.color","div")
-          .classed("color",true)
-          .style("background-color","grey")
-          .style("width","10px")
-          .style("height","32px")
-          .style("margin-top","2px")
-          .style("margin-right","10px")
-          .style("margin-left","-10px")
-
-
-
-
-
-
-
-
-        select(inner2)
-          .options([{"key":"Current Segment (without filters)","value":false}].concat(this._segments) )
-          .on("select", function(x){
-
-            self.on("comparison.change").bind(this)(x)
-          })
-          .selected(this._comparison.value || 0)
-          .draw()
-
-        var cal2 = d3_updateable(inner2,"a.fa-calendar","a")
-          .style("line-height","34px")
-          .style("width","36px")
-          .style("border","1px solid #ccc")
-          .style("border-radius","5px")
-          .classed("fa fa-calendar",true)
-          .style("text-align","center")
-          .style("margin-left","5px")
-          .on("click", function(x) {
-            calsel2.node()
-          })
-
-        
-        var calsel2 = select(cal2)
-          .options([{"key":"Today","value":0},{"key":"Yesterday","value":1},{"key":"7 days ago","value":7}])
-          .on("select", function(x){
-            self.on("comparison_date.change").bind(this)(x.value)
-          })
-          .selected(this._comparison_date || 0)
-          .draw()
-          ._select
-          .style("width","18px")
-          .style("margin-left","-18px")
-          .style("height","34px")
-          .style("opacity",".01")
-          .style("flex","none")
-          .style("border","none")
-
-
-
-        return this
-      }
-    , action_date: function(val) {
-        return accessor.bind(this)("action_date",val)
-      }
-    , action: function(val) {
-        return accessor.bind(this)("action",val)
-      }
-    , comparison_date: function(val) {
-        return accessor.bind(this)("comparison_date",val)
-      }
-
-    , comparison: function(val) {
-        return accessor.bind(this)("comparison",val)
-      }
-    , is_loading: function(val) {
-        return accessor.bind(this)("is_loading",val)
-      }
-
-    , on: function(action, fn) {
-        if (fn === undefined) return this._on[action] || noop$5;
-        this._on[action] = fn;
-        return this
-      }
-  }
-
   function Pie(target) {
     this.target = target
   }
@@ -3388,6 +2679,1592 @@
       }
   }
 
+  function d3_class$2(target,cls,type,data) {
+    return d3_updateable(target,"." + cls, type || "div",data)
+      .classed(cls,true)
+  }
+
+  function noop$12() {}
+
+
+  function DomainExpanded(target) {
+    this._on = {}
+    this.target = target
+  }
+
+  function domain_expanded(target) {
+    return new DomainExpanded(target)
+  }
+
+  var allbuckets = []
+  var hourbuckets = d3.range(0,24)
+
+  var hours = [0,20,40]
+  var buckets = d3.range(0,24).reduce((p,c) => {
+    hours.map(x => {
+      p[c + ":" + x] = 0
+    })
+    allbuckets = allbuckets.concat(hours.map(z => c + ":" + z))
+    return p
+  },{})
+
+  DomainExpanded.prototype = {
+      data: function(val) {
+        return accessor.bind(this)("data",val) 
+      }
+    , raw: function(val) {
+        return accessor.bind(this)("raw",val) 
+      }
+    , urls: function(val) {
+        return accessor.bind(this)("urls",val) 
+      }
+    , draw: function() {
+
+        var self = this
+
+        var data = this._raw
+        var d = { domain: data[0].domain }
+
+        //var articles = data.reduce((p,c) => {
+        //  p[c.url] = p[c.url] || Object.assign({},buckets)
+        //  p[c.url][c.hour + ":" + c.minute] = c.count
+        //  return p
+        //},{})
+
+        //Object.keys(articles).map(k => {
+        //  articles[k] = allbuckets.map(b => articles[k][b])
+        //})
+
+        var articles = data.reduce((p,c) => {
+          p[c.url] = p[c.url] || Object.assign({},buckets)
+          p[c.url][c.hour] = (p[c.url][c.hour] || 0) + c.count
+          return p
+        },{})
+
+        Object.keys(articles).map(k => {
+          articles[k] = hourbuckets.map(b => articles[k][b])
+        })
+
+        var to_draw = d3.entries(articles)
+          .map(function(x){
+            x.domain = d.domain
+            x.url = x.key
+            x.total = d3.sum(x.value)
+            return x
+          })
+
+        var kw_to_draw = to_draw
+          .reduce(function(p,c){
+            c.key.toLowerCase().split(d.domain)[1].split("/").reverse()[0].replace("_","-").split("-").map(x => {
+              var values = ["that","this","what","best","most","from","your","have","first","will","than","says","like","into","after","with"]
+              if (x.match(/\d+/g) == null && values.indexOf(x) == -1 && x.indexOf(",") == -1 && x.indexOf("?") == -1 && x.indexOf(".") == -1 && x.indexOf(":") == -1 && parseInt(x) != x && x.length > 3) {
+                p[x] = p[x] || {}
+                Object.keys(c.value).map(q => {
+                  p[x][q] = (p[x][q] || 0) + (c.value[q] || 0)
+                })
+              }
+            })
+
+            return p
+          },{})
+
+        kw_to_draw = d3.entries(kw_to_draw)
+          .map(x => {
+            x.values = hourbuckets.map(z => x.value[z] )
+            x.total = d3.sum(x.values)
+            return x
+          })
+
+
+        var td = this.target
+
+        d3_class$2(td,"action-header")
+          .style("text-align","center")
+          .style("font-size","16px")
+          .style("font-weight","bold")
+          .style("padding","10px")
+          .text("Explore and Refine")
+
+        var title_row = d3_class$2(td,"title-row")
+        var expansion_row = d3_class$2(td,"expansion-row")
+
+
+
+        var euh = d3_class$2(title_row,"expansion-urls-title")
+          .style("width","50%")
+          .style("height","36px")
+          .style("line-height","36px")
+          .style("display","inline-block")
+          .style("vertical-align","top")
+   
+        d3_class$2(euh,"title")
+          .style("width","265px")
+          .style("font-weight","bold")
+          .style("display","inline-block")
+          .style("vertical-align","top")
+          .text("URL")
+
+        d3_class$2(euh,"view")
+          .style("width","50px")
+          .style("margin-left","20px")
+          .style("margin-right","20px")
+          .style("font-weight","bold")
+          .style("display","inline-block")
+          .style("vertical-align","top")
+          .text("Views")
+
+        var ekh = d3_class$2(title_row,"expansion-kws-title")
+          .style("width","50%")
+          .style("height","36px")
+          .style("line-height","36px")
+          .style("display","inline-block")
+          .style("vertical-align","top")
+
+        d3_class$2(ekh,"title")
+          .style("width","265px")
+          .style("font-weight","bold")
+          .style("display","inline-block")
+          .text("Keywords")
+
+        d3_class$2(ekh,"view")
+          .style("width","50px")
+          .style("margin-left","20px")
+          .style("margin-right","20px")
+          .style("font-weight","bold")
+          .style("display","inline-block")
+          .text("Views")
+
+
+
+
+        var expansion = d3_class$2(expansion_row,"expansion-urls")
+          .classed("scrollbox",true)
+          .style("width","50%")
+          .style("display","inline-block")
+          .style("vertical-align","top")
+
+
+          .style("max-height","250px")
+          .style("overflow","scroll")
+
+        expansion.html("")
+
+        var url_row = d3_splat(expansion,".url-row","div",to_draw.slice(0,500),function(x) { return x.url })
+          .classed("url-row",true)
+
+        var url_name = d3_updateable(url_row,".name","div").classed("name",true)
+          .style("width","260px")
+          .style("overflow","hidden")
+          .style("line-height","20px")
+          .style("height","20px")
+
+          .style("display","inline-block")
+
+        d3_updateable(url_name,"input","input")
+          .style("margin-right","10px")
+          .style("display","inline-block")
+          .style("vertical-align","top")
+          .attr("type","checkbox")
+          .on("click", function(x) {
+            self.on("stage-filter")(x)
+          })
+
+        d3_class$2(url_name,"url")
+          .style("display","inline-block")
+          .style("text-overflow","ellipsis")
+          .style("width","205px")
+          .text(x => {
+            return x.url.split(d.domain)[1] || x.url 
+          })
+
+        d3_updateable(url_row,".number","div").classed("number",true)
+          .style("width","40px")
+          .style("height","20px")
+          .style("line-height","20px")
+          .style("vertical-align","top")
+          .style("text-align","center")
+          .style("font-size","13px")
+          .style("font-weight","bold")
+          .style("margin-left","20px")
+          .style("margin-right","20px")
+          .style("display","inline-block")
+          .text(function(x) { return x.total })
+
+
+        d3_updateable(url_row,".plot","svg").classed("plot",true)
+          .style("width","144px")
+          .style("height","20px")
+          .style("display","inline-block")
+          .each(function(x) {
+            var dthis = d3.select(this)
+            var values = x.value
+            simpleTimeseries(dthis,values,144,20)
+
+          })
+
+
+        var expansion = d3_class$2(expansion_row,"expansion-kws")
+          .classed("scrollbox",true)
+          .style("width","50%")
+          .style("display","inline-block")
+          .style("vertical-align","top")
+
+
+          .style("max-height","250px")
+          .style("overflow","scroll")
+
+        expansion.html("")
+
+
+        var url_row = d3_splat(expansion,".url-row","div",kw_to_draw.slice(0,500),function(x) { return x.key })
+          .classed("url-row",true)
+
+        var url_name = d3_updateable(url_row,".name","div").classed("name",true)
+          .style("width","260px")
+          .style("overflow","hidden")
+          .style("line-height","20px")
+          .style("height","20px")
+
+          .style("display","inline-block")
+
+        d3_updateable(url_name,"input","input")
+          .style("margin-right","10px")
+          .style("display","inline-block")
+          .style("vertical-align","top")
+          .attr("type","checkbox")
+          .on("click", function(x) {
+            self.on("stage-filter")(x)
+          })
+
+        d3_class$2(url_name,"url")
+          .style("display","inline-block")
+          .style("text-overflow","ellipsis")
+          .style("width","205px")
+          .text(x => {
+            return x.key
+          })
+
+        d3_updateable(url_row,".number","div").classed("number",true)
+          .style("width","40px")
+          .style("height","20px")
+          .style("line-height","20px")
+          .style("vertical-align","top")
+          .style("text-align","center")
+          .style("font-size","13px")
+          .style("font-weight","bold")
+          .style("margin-left","20px")
+          .style("margin-right","20px")
+          .style("display","inline-block")
+          .text(function(x) { return x.total })
+
+
+        d3_updateable(url_row,".plot","svg").classed("plot",true)
+          .style("width","144px")
+          .style("height","20px")
+          .style("display","inline-block")
+          .each(function(x) {
+            var dthis = d3.select(this)
+            var values = x.values
+            simpleTimeseries(dthis,values,144,20)
+
+          })
+
+
+        return this
+      }
+    , on: function(action, fn) {
+        if (fn === undefined) return this._on[action] || noop$12;
+        this._on[action] = fn;
+        return this
+      }
+  }
+
+  function DomainBullet(target) {
+    this._on = {}
+    this.target = target
+  }
+
+  function noop$13() {}
+  function domain_bullet(target) {
+    return new DomainBullet(target)
+  }
+
+  DomainBullet.prototype = {
+      data: function(val) {
+        return accessor.bind(this)("data",val) 
+      }
+    , max: function(val) {
+        return accessor.bind(this)("max",val) 
+      }
+    , draw: function() {
+
+        var width = (this.target.style("width").replace("px","") || this.offsetWidth) - 50
+          , height = 28;
+
+        var x = d3.scale.linear()
+          .range([0, width])
+          .domain([0, this.max()])
+
+        if (this.target.text()) this.target.text("")
+
+        var bullet = d3_updateable(this.target,".bullet","div",this.data(),function(x) { return 1 })
+          .classed("bullet",true)
+          .style("margin-top","3px")
+
+        var svg = d3_updateable(bullet,"svg","svg",false,function(x) { return 1})
+          .attr("width",width)
+          .attr("height",height)
+    
+     
+        d3_updateable(svg,".bar-1","rect",false,function(x) { return 1})
+          .classed("bar-1",true)
+          .attr("x",0)
+          .attr("width", function(d) {return x(d.pop_percent) })
+          .attr("height", height)
+          .attr("fill","#888")
+    
+        d3_updateable(svg,".bar-2","rect",false,function(x) { return 1})
+          .classed("bar-2",true)
+          .attr("x",0)
+          .attr("y",height/4)
+          .attr("width", function(d) {return x(d.sample_percent_norm) })
+          .attr("height", height/2)
+          .attr("fill","rgb(8, 29, 88)")
+
+        return this
+      }
+    , on: function(action, fn) {
+        if (fn === undefined) return this._on[action] || noop$13;
+        this._on[action] = fn;
+        return this
+      }
+  }
+
+  function noop$4() {}
+  function DomainView(target) {
+    this._on = {
+      select: noop$4
+    }
+    this.target = target
+  }
+
+
+
+  function domain_view(target) {
+    return new DomainView(target)
+  }
+
+  DomainView.prototype = {
+      data: function(val) {
+        return accessor.bind(this)("data",val) 
+      }
+    , options: function(val) {
+        return accessor.bind(this)("options",val) 
+      }
+    , draw: function() {
+
+        var self = this
+
+        var _explore = this.target
+          , tabs = this.options()
+          , data = this.data()
+          , filtered = tabs.filter(function(x){ return x.selected})
+          , selected = filtered.length ? filtered[0] : tabs[0]
+
+        header(_explore)
+          .text(selected.key )
+          .options(tabs)
+          .on("select", function(x) { this.on("select")(x) }.bind(this))
+          .draw()
+
+        
+
+        _explore.selectAll(".vendor-domains-bar-desc").remove()
+        _explore.datum(data)
+
+        var t = table.table(_explore)
+          .data(selected)
+
+
+        var samp_max = d3.max(selected.values,function(x){return x.sample_percent_norm})
+          , pop_max = d3.max(selected.values,function(x){return x.pop_percent})
+          , max = Math.max(samp_max,pop_max);
+
+        t.headers([
+              {key:"key",value:"Domain",locked:true,width:"100px"}
+            , {key:"sample_percent",value:"Segment",selected:false}
+            , {key:"real_pop_percent",value:"Baseline",selected:false}
+            , {key:"ratio",value:"Ratio",selected:false}
+            , {key:"importance",value:"Importance",selected:false}
+            , {key:"value",value:"Segment versus Baseline",locked:true}
+          ])
+          .sort("importance")
+          .option_text("&#65291;")
+          .on("expand",function(d) {
+
+            d3.select(this).selectAll("td.option-header").html("&ndash;")
+            if (this.nextSibling && d3.select(this.nextSibling).classed("expanded") == true) {
+              d3.select(this).selectAll("td.option-header").html("&#65291;")
+              return d3.select(this.parentNode).selectAll(".expanded").remove()
+            }
+
+            d3.select(this.parentNode).selectAll(".expanded").remove()
+            var t = document.createElement('tr');
+            this.parentNode.insertBefore(t, this.nextSibling);  
+
+            var tr = d3.select(t).classed("expanded",true).datum({})
+            var td = d3_updateable(tr,"td","td")
+              .attr("colspan",this.children.length)
+              .style("background","#f9f9fb")
+              .style("padding-top","10px")
+              .style("padding-bottom","10px")
+
+            var dd = this.parentElement.__data__.full_urls.filter(function(x) { return x.domain == d.key})
+            var rolled = prepData(dd)
+            
+            domain_expanded(td)
+              .raw(dd)
+              .data(rolled)
+              .urls(d.urls)
+              .on("stage-filter", function(x) {
+                self.on("stage-filter")(x)
+              })
+              .draw()
+
+          })
+          .hidden_fields(["urls","percent_unique","sample_percent_norm","pop_percent","tf_idf","parent_category_name"])
+          .render("ratio",function(d) {
+            this.innerText = Math.trunc(this.parentNode.__data__.ratio*100)/100 + "x"
+          })
+          .render("value",function(d) {
+
+            domain_bullet(d3.select(this))
+              .max(max)
+              .data(this.parentNode.__data__)
+              .draw()
+
+          })
+          
+        t.draw()
+       
+
+        return this
+      }
+    , on: function(action, fn) {
+        if (fn === undefined) return this._on[action] || noop$4;
+        this._on[action] = fn;
+        return this
+      }
+  }
+
+  function noop$5() {}
+  function simpleBar(wrap,value,scale,color) {
+
+    var height = 20
+      , width = wrap.style("width").replace("px","")
+
+    var canvas = d3_updateable(wrap,"svg","svg",[value],function() { return 1})
+      .style("width",width+"px")
+      .style("height",height+"px")
+
+
+    var chart = d3_updateable(canvas,'g.chart','g',false,function() { return 1 })
+      .attr("class","chart")
+    
+    var bars = d3_splat(chart,".pop-bar","rect",function(x) { return x}, function(x,i) { return i })
+      .attr("class","pop-bar")
+      .attr('height',height-4)
+      .attr({'x':0,'y':0})
+      .style('fill',color)
+      .attr("width",function(x) { return scale(x) })
+
+
+  }
+
+
+  function SegmentView(target) {
+    this._on = {
+      select: noop$5
+    }
+    this.target = target
+  }
+
+
+
+  function segment_view(target) {
+    return new SegmentView(target)
+  }
+
+  SegmentView.prototype = {
+      data: function(val) {
+        return accessor.bind(this)("data",val) 
+      }
+    , segments: function(val) {
+        return accessor.bind(this)("segments",val) 
+      }
+    , draw: function() {
+
+        var wrap = d3_updateable(this.target,".segment-wrap","div")
+          .classed("segment-wrap",true)
+          .style("height","140px")
+          .style("width",this.target.style("width"))
+          .style("position","fixed")
+          .style("z-index","300")
+          .style("background","#f0f4f7")
+
+
+        d3_updateable(this.target,".segment-wrap-spacer","div")
+          .classed("segment-wrap-spacer",true)
+          .style("height",wrap.style("height"))
+
+
+        header(wrap)
+          .buttons([
+              {class: "saved-search", icon: "fa-folder-open-o fa", text: "Open Saved"}
+            , {class: "new-saved-search", icon: "fa-bookmark fa", text: "Save"}
+          ])
+          .on("saved-search.click", this.on("saved-search.click"))
+          .on("new-saved-search.click", this.on("new-saved-search.click"))
+          .text("Segment").draw()      
+
+
+        wrap.selectAll(".header-body")
+          .classed("hidden",!this._is_loading)
+          .style("text-align","center")
+          .style("margin-bottom","-40px")
+          .style("padding-top","10px")
+          .style("height","0px")
+          .style("background","none")
+          .html("<img src='/static/img/general/logo-small.gif' style='height:15px'/> loading...")
+
+
+        if (this._data == false) return
+
+        var body = d3_updateable(wrap,".body","div")
+          .classed("body",true)
+          .style("clear","both")
+          .style("display","flex")
+          .style("flex-direction","column")
+          .style("margin-top","-15px")
+          .style("margin-bottom","30px")
+          
+
+        var row1 = d3_updateable(body,".row-1","div")
+          .classed("row-1",true)
+          .style("flex",1)
+          .style("display","flex")
+          .style("flex-direction","row")
+
+        var row2 = d3_updateable(body,".row-2","div")
+          .classed("row-2",true)
+          .style("flex",1)
+          .style("display","flex")
+          .style("flex-direction","row")
+
+
+        var inner = d3_updateable(row1,".action.inner","div")
+          .classed("inner action",true)
+          .style("flex","1")
+          .style("display","flex")
+          .style("padding","10px")
+          .style("padding-bottom","0px")
+
+          .style("margin-bottom","0px")
+
+        var inner_desc = d3_updateable(row1,".action.inner-desc","div")
+          .classed("inner-desc action",true)
+          .style("flex","1")
+          .style("padding","10px")
+          .style("padding-bottom","0px")
+
+          .style("display","flex")
+          .style("margin-bottom","0px")
+
+
+        d3_updateable(inner,"h3","h3")
+          .text("Choose Segment")
+          .style("margin","0px")
+          .style("line-height","32px")
+          .style("color","inherit")
+          .style("font-size","inherit")
+          .style("font-weight","bold")
+          .style("text-transform","uppercase")
+          .style("flex","1")
+          .style("background","#e3ebf0")
+          .style("padding-left","10px")
+          .style("margin-right","10px")
+          .style("margin-top","2px")
+          .style("margin-bottom","2px")
+          .style("height","100%")
+
+
+
+        d3_updateable(inner,"div.color","div")
+          .classed("color",true)
+          .style("background-color","#081d58")
+          .style("width","10px")
+          .style("height","32px")
+          .style("margin-top","2px")
+          .style("margin-right","10px")
+          .style("margin-left","-10px")
+
+
+
+        var self = this
+
+        select(inner)
+          .options(this._segments)
+          .on("select", function(x){
+            self.on("change").bind(this)(x)
+          })
+          .selected(this._action.value || 0)
+          .draw()
+
+        
+
+
+
+        var cal = d3_updateable(inner,"a.fa-calendar","a")
+          .style("line-height","34px")
+          .style("width","36px")
+          .style("border","1px solid #ccc")
+          .style("border-radius","5px")
+          .classed("fa fa-calendar",true)
+          .style("text-align","center")
+          .style("margin-left","5px")
+          .on("click", function(x) {
+            calsel.node()
+          })
+
+        
+        var calsel = select(cal)
+          .options([{"key":"Today","value":0},{"key":"Yesterday","value":1},{"key":"7 days ago","value":7}])
+          .on("select", function(x){
+            self.on("action_date.change").bind(this)(x.value)
+          })
+          .selected(this._action_date || 0)
+          .draw()
+          ._select
+          .style("width","18px")
+          .style("margin-left","-18px")
+          .style("height","34px")
+          .style("opacity",".01")
+          .style("flex","none")
+          .style("border","none")
+
+        
+
+        var inner2 = d3_updateable(row2,".comparison.inner","div")
+          .classed("inner comparison",true)
+          .style("flex","1")
+          .style("padding","10px")
+          .style("padding-bottom","0px")
+
+          .style("display","flex")
+
+        var inner_desc2 = d3_updateable(row2,".comparison-desc.inner","div")
+          .classed("inner comparison-desc",true)
+          .style("flex","1")
+          .style("padding","10px")
+          .style("padding-bottom","0px")
+
+          .style("display","flex")
+
+        //d3_updateable(inner_desc,"h3","h3")
+        //  .text("(Filters applied to this segment)")
+        //  .style("margin","10px")
+        //  .style("color","inherit")
+        //  .style("font-size","inherit")
+        //  .style("font-weight","bold")
+        //  .style("text-transform","uppercase")
+        //  .style("flex","1")
+
+        d3_updateable(inner_desc,".bar-wrap-title","h3").classed("bar-wrap-title",true)
+          .style("flex","1 1 0%")
+          .style("margin","0px")
+          .style("line-height","32px")
+          .style("color","inherit")
+          .style("font-size","inherit")
+          .style("font-weight","bold")
+          .style("text-transform","uppercase")
+          .style("padding-left","10px")
+          .style("margin-right","10px")
+          .style("margin-top","2px")
+          .style("margin-bottom","2px")
+          .style("height","100%")
+          .style("text-align","right")
+
+
+          .text("views")
+
+        d3_updateable(inner_desc2,".bar-wrap-title","h3").classed("bar-wrap-title",true)
+          .style("flex","1 1 0%")
+          .style("margin","0px")
+          .style("line-height","32px")
+          .style("color","inherit")
+          .style("font-size","inherit")
+          .style("font-weight","bold")
+          .style("text-transform","uppercase")
+          .style("padding-left","10px")
+          .style("margin-right","10px")
+          .style("margin-top","2px")
+          .style("margin-bottom","2px")
+          .style("height","100%")
+          .style("text-align","right")
+
+
+
+          .text("views")
+
+
+
+        var bar_samp = d3_updateable(inner_desc,"div.bar-wrap","div")
+          .classed("bar-wrap",true)
+          .style("flex","2 1 0%")
+          .style("margin-top","8px")
+
+        d3_updateable(inner_desc,".bar-wrap-space","div").classed("bar-wrap-space",true)
+          .style("flex","1 1 0%")
+          .style("line-height","36px")
+          .style("padding-left","10px")
+          .text(d3.format(",")(this._data.views.sample))
+
+
+        d3_updateable(inner_desc,".bar-wrap-opt","div").classed("bar-wrap-opt",true)
+          .style("flex","2 1 0%")
+          .style("line-height","36px")
+          //.text("apply filters?")
+
+
+
+        var xscale = d3.scale.linear()
+          .domain([0,Math.max(this._data.views.sample, this._data.views.population)])
+          .range([0,bar_samp.style("width")])
+
+
+        var bar_pop = d3_updateable(inner_desc2,"div.bar-wrap","div")
+          .classed("bar-wrap",true)
+          .style("flex","2 1 0%")
+          .style("margin-top","8px")
+
+
+        d3_updateable(inner_desc2,".bar-wrap-space","div").classed("bar-wrap-space",true)
+          .style("flex","1 1 0%")
+          .style("line-height","36px")
+          .style("padding-left","10px")
+          .text(d3.format(",")(this._data.views.population))
+
+
+        d3_updateable(inner_desc2,".bar-wrap-opt","div").classed("bar-wrap-opt",true)
+          .style("flex","2 1 0%")
+          .style("margin","0px")
+          .style("line-height","32px")
+          .style("color","inherit")
+          .style("font-size","inherit")
+          .style("font-weight","bold")
+          .style("text-transform","uppercase")
+          .style("height","100%")
+          .style("text-align","right")
+          .html("apply filters? <input type='checkbox'></input>")
+
+
+
+        simpleBar(bar_samp,this._data.views.sample,xscale,"#081d58")
+        simpleBar(bar_pop,this._data.views.population,xscale,"grey")
+
+
+
+
+
+
+
+
+
+
+
+        d3_updateable(inner2,"h3","h3")
+          .text("Compare Against")
+          .style("line-height","32px")
+          .style("margin","0px")
+          .style("color","inherit")
+          .style("font-size","inherit")
+          .style("font-weight","bold")
+          .style("flex","1")
+          .style("text-transform","uppercase")
+          .style("background","#e3ebf0")
+          .style("padding-left","10px")
+          .style("margin-right","10px")
+          .style("margin-top","2px")
+          .style("margin-bottom","2px")
+          .style("height","100%")
+
+
+
+        d3_updateable(inner2,"div.color","div")
+          .classed("color",true)
+          .style("background-color","grey")
+          .style("width","10px")
+          .style("height","32px")
+          .style("margin-top","2px")
+          .style("margin-right","10px")
+          .style("margin-left","-10px")
+
+
+
+
+
+
+
+
+        select(inner2)
+          .options([{"key":"Current Segment (without filters)","value":false}].concat(this._segments) )
+          .on("select", function(x){
+
+            self.on("comparison.change").bind(this)(x)
+          })
+          .selected(this._comparison.value || 0)
+          .draw()
+
+        var cal2 = d3_updateable(inner2,"a.fa-calendar","a")
+          .style("line-height","34px")
+          .style("width","36px")
+          .style("border","1px solid #ccc")
+          .style("border-radius","5px")
+          .classed("fa fa-calendar",true)
+          .style("text-align","center")
+          .style("margin-left","5px")
+          .on("click", function(x) {
+            calsel2.node()
+          })
+
+        
+        var calsel2 = select(cal2)
+          .options([{"key":"Today","value":0},{"key":"Yesterday","value":1},{"key":"7 days ago","value":7}])
+          .on("select", function(x){
+            self.on("comparison_date.change").bind(this)(x.value)
+          })
+          .selected(this._comparison_date || 0)
+          .draw()
+          ._select
+          .style("width","18px")
+          .style("margin-left","-18px")
+          .style("height","34px")
+          .style("opacity",".01")
+          .style("flex","none")
+          .style("border","none")
+
+
+
+        return this
+      }
+    , action_date: function(val) {
+        return accessor.bind(this)("action_date",val)
+      }
+    , action: function(val) {
+        return accessor.bind(this)("action",val)
+      }
+    , comparison_date: function(val) {
+        return accessor.bind(this)("comparison_date",val)
+      }
+
+    , comparison: function(val) {
+        return accessor.bind(this)("comparison",val)
+      }
+    , is_loading: function(val) {
+        return accessor.bind(this)("is_loading",val)
+      }
+
+    , on: function(action, fn) {
+        if (fn === undefined) return this._on[action] || noop$5;
+        this._on[action] = fn;
+        return this
+      }
+  }
+
+  var buckets$1 = [10,30,60,120,180,360,720,1440,2880,5760,10080].reverse().map(function(x) { return String(x*60) })
+  buckets$1 = buckets$1.concat([10,30,60,120,180,360,720,1440,2880,5760,10080].map(function(x) { return String(-x*60) }))
+
+
+  function noop$14(){}
+
+  function d3_class$3(target,cls,type,data) {
+    return d3_updateable(target,"." + cls, type || "div",data)
+      .classed(cls,true)
+  }
+
+  function calcCategory(before_urls,after_urls) {
+    var url_category = before_urls.reduce((p,c) => {
+      p[c.url] = c.parent_category_name
+      return p
+    },{})
+
+    url_category = after_urls.reduce((p,c) => {
+      p[c.url] = c.parent_category_name
+      return p
+    },url_category)
+
+    return url_category
+  }
+
+
+  function refine(target) {
+    return new Refine(target)
+  }
+
+  class Refine {
+    constructor(target) {
+      this._target = target
+      this._on = {}
+    }
+
+    data(val) { return accessor.bind(this)("data",val) } 
+    stages(val) { return accessor.bind(this)("stages",val) } 
+
+    before_urls(val) { return accessor.bind(this)("before_urls",val) } 
+    after_urls(val) { return accessor.bind(this)("after_urls",val) } 
+
+
+
+    on(action, fn) {
+      if (fn === undefined) return this._on[action] || noop$14;
+      this._on[action] = fn;
+      return this
+    }
+
+    draw() {
+
+      var self = this
+
+      var td = this._target
+      var before_urls = this._before_urls
+        , after_urls = this._after_urls
+        , d = this._data
+        , stages = this._stages
+
+
+      var url_category = calcCategory(before_urls,after_urls)
+
+
+            var url_volume = before_urls.reduce((p,c) => {
+              p[c.url] = (p[c.url] || 0) + c.visits
+              return p
+            },{})
+
+            url_volume = after_urls.reduce((p,c) => {
+              p[c.url] = (p[c.url] || 0) + c.visits
+              return p
+            },url_volume)
+
+      
+            
+            var sorted_urls = d3.entries(url_volume).sort((p,c) => { 
+              return d3.descending(p.value,c.value) 
+            })
+
+
+            var before_url_ts = before_urls.reduce((p,c) => {
+              p[c.url] = p[c.url] || {}
+              p[c.url]["url"] = c.url
+
+              p[c.url][c.time_diff_bucket] = c.visits
+              return p
+            },{})
+
+            var after_url_ts = after_urls.reduce((p,c) => {
+              p[c.url] = p[c.url] || {}
+              p[c.url]["url"] = c.url
+
+              p[c.url]["-" + c.time_diff_bucket] = c.visits
+              return p
+            },before_url_ts)
+
+
+
+            var to_draw = sorted_urls.slice(0,1000).map(x => after_url_ts[x.key])
+  .map(function(x){
+    x.total = d3.sum(buckets$1.map(function(b) { return x[b] || 0 }))
+    return x
+  })
+
+  var kw_to_draw = d3.entries(after_url_ts).reduce(function(p,c) {
+
+    c.key.toLowerCase().split(d.domain)[1].split("/").reverse()[0].replace("_","-").split("-").map(x => {
+      var values = ["that","this","what","best","most","from","your","have","first","will","than","says","like","into","after","with"]
+      if (x.match(/\d+/g) == null && values.indexOf(x) == -1 && x.indexOf(",") == -1 && x.indexOf("?") == -1 && x.indexOf(".") == -1 && x.indexOf(":") == -1 && parseInt(x) != x && x.length > 3) {
+        p[x] = p[x] || {}
+        p[x].key = x
+        Object.keys(c.value).map(q => {
+          p[x][q] = (p[x][q] || 0) + c.value[q]
+        })
+      }
+      return p
+    })
+    return p
+  },{})
+
+
+  kw_to_draw = Object.keys(kw_to_draw).map(function(k) { return kw_to_draw[k] }).map(function(x){
+    x.total = d3.sum(buckets$1.map(function(b) { return x[b] || 0 }))
+    return x
+  }).sort((p,c) => {
+    return c.total - p.total
+  })
+
+
+
+
+            var summary_row = d3_class$3(td,"summary-row").style("margin-bottom","15px")
+              .style("position","relative")
+            d3_class$3(td,"action-header").style("text-align","center").style("font-size","16px").style("font-weight","bold").text("Explore and Refine").style("padding","10px")
+            var title_row = d3_class$3(td,"title-row")
+
+            var expansion_row = d3_class$3(td,"expansion-row")
+            var footer_row = d3_class$3(td,"footer-row").style("min-height","10px").style("margin-top","15px")
+            
+            function buildFilterInput(x) {
+                this.on("something")(x)
+                //select_value.value += (select_value.value ? "," : "") + x.key
+            }
+
+            d3_class$3(summary_row,"title")
+              .style("font-size","16px")
+              .style("font-weight","bold")
+              .style("text-align","center")
+              .style("line-height","40px")
+              .style("margin-bottom","5px")
+              .text("Before and After: " + d.domain)
+
+            var options = [
+                {"key":"All","value":"all", "selected":1}
+              , {"key":"Consideration","value":"consideration", "selected":0}
+              , {"key":"Validation","value":"validation", "selected":0}
+            ]
+
+            var tsw = 250;
+
+            var timeseries = d3_class$3(summary_row,"timeseries","svg")
+              .style("display","block")
+              .style("margin","auto")
+              .style("margin-bottom","30px")
+              .attr("width",tsw + "px")
+              .attr("height","70px")
+
+   
+
+            var before_rollup = d3.nest()
+              .key(function(x) { return x.time_diff_bucket})
+              .rollup(function(x) { return d3.sum(x,y => y.visits) })
+              .map(before_urls)
+            
+            var after_rollup = d3.nest()
+              .key(function(x) { return "-" + x.time_diff_bucket})
+              .rollup(function(x) { return d3.sum(x,y => y.visits) })
+              .map(after_urls)
+
+            var overall_rollup = buckets$1.map(x => before_rollup[x] || after_rollup[x] || 0)
+
+
+
+            simpleTimeseries(timeseries,overall_rollup,tsw)
+            d3_class$3(timeseries,"middle","line")
+                  .style("stroke-dasharray", "1,5")
+                  .attr("stroke-width",1)
+                  .attr("stroke","black")
+                  .attr("y1", 0)
+                  .attr("y2", 55)
+                  .attr("x1", tsw/2)
+                  .attr("x2", tsw/2)
+
+            d3_class$3(timeseries,"middle-text","text")
+              .attr("x", tsw/2)
+              .attr("y", 67)
+              .style("text-anchor","middle")
+              .text("On-site")
+
+            
+            var before_pos, after_pos;
+
+            buckets$1.map(function(x,i) {
+               if (stages.consideration == x) before_pos = i
+               if (stages.validation == x) after_pos = i
+
+            })
+
+            var unit_size = tsw/buckets$1.length
+
+            d3_class$3(timeseries,"before","line")
+              .style("stroke-dasharray", "1,5")
+              .attr("stroke-width",1)
+              .attr("stroke","black")
+              .attr("y1", 39)
+              .attr("y2", 45)
+              .attr("x1", unit_size*before_pos)
+              .attr("x2", unit_size*before_pos)
+
+            d3_class$3(timeseries,"before-text","text")
+              .attr("x", unit_size*before_pos - 8)
+              .attr("y", 48)
+
+              .style("text-anchor","end")
+              .text("Consideration")
+
+            d3_class$3(timeseries,"window","line")
+              .style("stroke-dasharray", "1,5")
+              .attr("stroke-width",1)
+              .attr("stroke","black")
+              .attr("y1", 45)
+              .attr("y2", 45)
+              .attr("x1", unit_size*(before_pos))
+              .attr("x2", unit_size*(after_pos+1)+1)
+
+
+            d3_class$3(timeseries,"after","line")
+              .style("stroke-dasharray", "1,5")
+              .attr("stroke-width",1)
+              .attr("stroke","black")
+              .attr("y1", 39)
+              .attr("y2", 45)
+              .attr("x1", unit_size*(after_pos+1))
+              .attr("x2", unit_size*(after_pos+1))
+
+            d3_class$3(timeseries,"after-text","text")
+              .attr("x", unit_size*(after_pos+1) + 8)
+              .attr("y", 48)
+              .style("text-anchor","start")
+              .text("Validation")
+
+
+
+            function selectOptionRect(options) {
+
+              var subset = td.selectAll("svg").selectAll("rect")
+                .attr("fill",undefined).filter((x,i) => {
+                  var value = options.filter(x => x.selected)[0].value
+                  if (value == "all") return false
+                  if (value == "consideration") return (i < before_pos) || (i > buckets$1.length/2 - 1 )
+                  if (value == "validation") return (i < buckets$1.length/2 ) || (i > after_pos)
+                })
+
+
+              subset.attr("fill","grey")
+            }
+
+            
+
+            selectOptionRect(options)
+
+            var opts = d3_class$3(summary_row,"options","div",options)
+              .style("text-align","center")
+              .style("position","absolute")
+              .style("width","120px")
+              .style("top","35px")
+              .style("left","200px")
+
+
+            function buildOptions(options) {
+              
+
+              d3_splat(opts,".show-button","a",options,x => x.key)
+                .classed("show-button",true)
+                .classed("selected",x => x.selected)
+                .style("line-height","18px")
+                .style("width","100px")
+                .style("font-size","10px")
+                .style("margin-bottom","5px")
+                .text(x => x.key)
+                .on("click",function(x) {
+                  this.parentNode.__data__.map(z => z.selected = 0)
+                  x.selected = 1
+                  buildOptions(this.parentNode.__data__)
+                  if (x.value == "consideration") {
+                    buildUrlSelection(consideration_to_draw)
+                    buildKeywordSelection(consideration_kw_to_draw)
+                  } else if (x.value == "validation") {
+                    buildUrlSelection(validation_to_draw)
+                    buildKeywordSelection(validation_kw_to_draw)
+                  } else {
+                    buildUrlSelection(to_draw)
+                    buildKeywordSelection(kw_to_draw)
+                  }
+
+                  selectOptionRect(this.parentNode.__data__)
+                })
+
+            }
+
+            buildOptions(options)
+
+            d3_class$3(summary_row,"description")
+              .style("font-size","12px")
+              .style("position","absolute")
+              .style("width","120px")
+              .style("top","35px")
+              .style("right","200px")
+              .text("Select domains and keywords to build and refine your global filter")
+
+
+
+
+
+            var urls_summary = d3_class$3(summary_row,"urls-summary")
+              .style("display","inline-block")
+              .style("width","50%")
+              .style("vertical-align","top")
+
+            var kws_summary = d3_class$3(summary_row,"kws-summary")
+              .style("display","inline-block")
+              .style("width","50%")
+              .style("vertical-align","top")
+
+              
+
+            d3_class$3(urls_summary,"title")
+              .style("font-weight","bold")
+              .style("font-size","14px")
+              .text("URL Summary")
+
+            d3_class$3(kws_summary,"title")
+              .style("font-weight","bold")
+              .style("font-size","14px")
+              .text("Keyword Summary")
+
+
+
+            var consideration_buckets = buckets$1.filter((x,i) => !((i < before_pos) || (i > buckets$1.length/2 - 1 )) )
+              , validation_buckets = buckets$1.filter((x,i) => !((i < buckets$1.length/2 ) || (i > after_pos)) )
+
+            var consideration_to_draw = to_draw.filter(x => consideration_buckets.reduce((p,c) => { p += x[c] || 0; return p},0) )
+              , validation_to_draw = to_draw.filter(x => validation_buckets.reduce((p,c) => { p += x[c] || 0; return p},0) )
+
+            function avgViews(to_draw) {
+              return parseInt(to_draw.reduce((p,c) => p + c.total,0)/to_draw.length)
+            }
+            function medianViews(to_draw) {
+              return (to_draw[parseInt(to_draw.length/2)] || {}).total || 0
+            }
+
+
+            var url_summary_data = [
+                {"name":"Distinct URLs", "all": to_draw.length, "consideration": consideration_to_draw.length, "validation": validation_to_draw.length }
+              , {"name":"Average Views", "all": avgViews(to_draw), "consideration": avgViews(consideration_to_draw), "validation": avgViews(validation_to_draw)  }
+              , {"name":"Median Views", "all": medianViews(to_draw), "consideration": medianViews(consideration_to_draw), "validation": medianViews(validation_to_draw)  }
+            ]
+
+            var uwrap = d3_class$3(urls_summary,"wrap").style("width","90%")
+
+
+            table.table(uwrap)
+              .data({"values":url_summary_data})
+              .skip_option(true)
+              .headers([
+                  {"key":"name","value":""}
+                , {"key":"all","value":"All"}
+                , {"key":"consideration","value":"Consideration"}
+                , {"key":"validation","value":"Validation"}
+              ])
+              .draw()
+              ._target.selectAll(".table-wrapper")
+              .classed("table-wrapper",false)
+
+
+            var consideration_kw_to_draw = kw_to_draw.filter(x => consideration_buckets.reduce((p,c) => { p += x[c] || 0; return p},0) )
+              , validation_kw_to_draw = kw_to_draw.filter(x => validation_buckets.reduce((p,c) => { p += x[c] || 0; return p},0) )
+
+
+            var kws_summary_data = [
+                {"name":"Distinct Keywords", "all": kw_to_draw.length, "consideration": consideration_kw_to_draw.length, "validation": validation_kw_to_draw.length }
+              , {"name":"Average Views", "all": avgViews(kw_to_draw), "consideration": avgViews(consideration_kw_to_draw), "validation": avgViews(validation_kw_to_draw)  }
+              , {"name":"Median Views", "all": medianViews(kw_to_draw), "consideration": medianViews(consideration_kw_to_draw), "validation": medianViews(validation_kw_to_draw)  }
+            ]
+
+            var kwrap = d3_class$3(kws_summary,"wrap").style("width","90%")
+
+            table.table(kwrap)
+              .data({"values":kws_summary_data})
+              .skip_option(true)
+              .headers([
+                  {"key":"name","value":""}
+                , {"key":"all","value":"All"}
+                , {"key":"consideration","value":"Consideration"}
+                , {"key":"validation","value":"Validation"}
+              ])
+              .draw()
+              ._target.selectAll(".table-wrapper")
+              .classed("table-wrapper",false)
+
+
+
+
+
+            var euh = d3_class$3(title_row,"expansion-urls-title")
+              .style("width","50%")
+              .style("height","36px")
+              .style("line-height","36px")
+              .style("display","inline-block")
+              .style("vertical-align","top")
+   
+            d3_class$3(euh,"title")
+              .style("width","265px")
+              .style("font-weight","bold")
+              .style("display","inline-block")
+              .style("vertical-align","top")
+
+              .text("URL")
+
+            d3_class$3(euh,"view")
+              .style("width","50px")
+              .style("margin-left","20px")
+              .style("margin-right","20px")
+              .style("font-weight","bold")
+              .style("display","inline-block")
+              .style("vertical-align","top")
+
+              .text("Views")
+
+            var svg_legend = d3_class$3(euh,"legend","svg")
+              .style("width","120px")
+              .style("height","36px")
+              .style("vertical-align","top")
+
+
+
+            d3_updateable(svg_legend,".before","text")
+              .attr("x","30")
+              .attr("y","20")
+              .style("text-anchor","middle")
+              .text("Before")
+
+            d3_updateable(svg_legend,".after","text")
+              .attr("x","90")
+              .attr("y","20")
+              .style("text-anchor","middle")
+              .text("After")
+
+            d3_updateable(svg_legend,"line","line")
+                  .style("stroke-dasharray", "1,5")
+                  .attr("stroke-width",1)
+                  .attr("stroke","black")
+                  .attr("y1", 0)
+                  .attr("y2", 36)
+                  .attr("x1", 60)
+                  .attr("x2", 60)
+
+
+
+
+            var ekh = d3_class$3(title_row,"expansion-kws-title")
+              .style("width","50%")
+              .style("height","36px")
+              .style("line-height","36px")
+              .style("display","inline-block")
+              .style("vertical-align","top")
+
+            d3_class$3(ekh,"title")
+              .style("width","265px")
+              .style("font-weight","bold")
+              .style("display","inline-block")
+              .text("Keywords")
+
+            d3_class$3(ekh,"view")
+              .style("width","50px")
+              .style("margin-left","20px")
+              .style("margin-right","20px")
+              .style("font-weight","bold")
+              .style("display","inline-block")
+              .text("Views")
+
+            var svg_legend = d3_class$3(ekh,"legend","svg")
+              .style("width","120px")
+              .style("height","36px")
+  .style("vertical-align","top")
+
+
+
+            d3_updateable(svg_legend,".before","text")
+              .attr("x","30")
+              .attr("y","20")
+              .style("text-anchor","middle")
+              .text("Before")
+
+            d3_updateable(svg_legend,".after","text")
+              .attr("x","90")
+              .attr("y","20")
+              .style("text-anchor","middle")
+              .text("After")
+
+            d3_updateable(svg_legend,"line","line")
+                  .style("stroke-dasharray", "1,5")
+                  .attr("stroke-width",1)
+                  .attr("stroke","black")
+                  .attr("y1", 0)
+                  .attr("y2", 36)
+                  .attr("x1", 60)
+                  .attr("x2", 60)
+
+
+
+
+
+
+
+            function buildUrlSelection(to_draw) {
+              var expansion = d3_class$3(expansion_row,"expansion-urls")
+                .classed("scrollbox",true)
+                .style("width","50%")
+                .style("display","inline-block")
+                .style("vertical-align","top")
+
+
+                .style("max-height","250px")
+                .style("overflow","scroll")
+
+              expansion.html("")
+
+              var url_row = d3_splat(expansion,".url-row","div",to_draw.slice(0,500),function(x) { return x.url })
+                .classed("url-row",true)
+
+              var url_name = d3_updateable(url_row,".name","div").classed("name",true)
+                .style("width","260px")
+                .style("overflow","hidden")
+                .style("line-height","20px")
+                .style("height","20px")
+
+                .style("display","inline-block")
+
+              d3_updateable(url_name,"input","input")
+                .style("margin-right","10px")
+                .style("display","inline-block")
+                .style("vertical-align","top")
+                .attr("type","checkbox")
+                .on("click", function(x) {
+                  self.on("stage-filter")(x)
+                })
+
+              d3_class$3(url_name,"url")
+                .style("display","inline-block")
+                .style("text-overflow","ellipsis")
+                .style("width","235px")
+                .text(x => x.url.split(d.domain)[1] || x.url )
+
+              d3_updateable(url_row,".number","div").classed("number",true)
+                .style("width","50px")
+                .style("height","20px")
+                .style("line-height","20px")
+                .style("vertical-align","top")
+                .style("text-align","center")
+                .style("font-size","13px")
+                .style("font-weight","bold")
+                .style("margin-left","20px")
+                .style("margin-right","20px")
+                .style("display","inline-block")
+                .text(function(x) { return d3.sum(buckets$1.map(function(b) { return x[b] || 0 })) })
+
+
+              d3_updateable(url_row,".plot","svg").classed("plot",true)
+                .style("width","120px")
+                .style("height","20px")
+                .style("display","inline-block")
+                .each(function(x) {
+                  var dthis = d3.select(this)
+                  var values = buckets$1.map(function(b) { return x[b] || 0 })
+                  simpleTimeseries(dthis,values,120,20)
+                  d3_updateable(dthis,"line","line")
+                    .style("stroke-dasharray", "1,5")
+                    .attr("stroke-width",1)
+                    .attr("stroke","black")
+                    .attr("y1", 0)
+                    .attr("y2", 20)
+                    .attr("x1", 60)
+                    .attr("x2", 60)
+
+                })
+            }
+
+
+            function buildKeywordSelection(kw_to_draw) {
+              var expansion = d3_class$3(expansion_row,"expansion-keywords")
+                .classed("scrollbox",true)
+                .style("width","50%")
+                .style("display","inline-block")
+                .style("vertical-align","top")
+
+                .style("max-height","250px")
+                .style("overflow","scroll")
+
+              expansion.html("")
+
+              var url_row = d3_splat(expansion,".url-row","div",kw_to_draw.slice(0,500),function(x) { return x.key })
+                .classed("url-row",true)
+
+              var kw_name = d3_updateable(url_row,".name","div").classed("name",true)
+                .style("width","260px")
+                .style("overflow","hidden")
+                .style("line-height","20px")
+                .style("height","20px")
+
+                .style("display","inline-block")
+
+              d3_updateable(kw_name,"input","input")
+                .style("display","inline-block")
+                .style("vertical-align","top")
+
+                .style("margin-right","10px")
+                .attr("type","checkbox")
+                .on("click", function(x) {
+                  self.on("stage-filter")(x)
+                })
+
+              d3_class$3(kw_name,"url")
+                .style("text-overflow","ellipsis")
+                .style("display","inline-block")
+                .style("width","235px")
+                .text(x => x.key )
+
+              d3_updateable(url_row,".number","div").classed("number",true)
+                .style("width","50px")
+                .style("height","20px")
+                .style("line-height","20px")
+                .style("vertical-align","top")
+                .style("text-align","center")
+                .style("font-size","13px")
+                .style("font-weight","bold")
+                .style("margin-left","20px")
+                .style("margin-right","20px")
+                .style("display","inline-block")
+                .text(function(x) { return d3.sum(buckets$1.map(function(b) { return x[b] || 0 })) })
+
+
+              d3_updateable(url_row,".plot","svg").classed("plot",true)
+                .style("width","120px")
+                .style("height","20px")
+                .style("display","inline-block")
+                .each(function(x) {
+                  var dthis = d3.select(this)
+                  var values = buckets$1.map(function(b) { return x[b] || 0 })
+                  simpleTimeseries(dthis,values,120,20)
+                  d3_updateable(dthis,"line","line")
+                    .style("stroke-dasharray", "1,5")
+                    .attr("stroke-width",1)
+                    .attr("stroke","black")
+                    .attr("y1", 0)
+                    .attr("y2", 20)
+                    .attr("x1", 60)
+                    .attr("x2", 60)
+
+                })
+            }
+            
+            buildUrlSelection(to_draw)
+            buildKeywordSelection(kw_to_draw)
+
+
+
+
+
+    }
+
+  }
+
   function noop$7(){}
 
   function d3_class(target,cls,type,data) {
@@ -3432,6 +4309,7 @@
 
       try {
         var stages = drawStream(bawrap,this._data.before_categories,this._data.after_categories)
+        bawrap.selectAll(".before-stream").remove() // HACK
       } catch(e) {
         bawrap.html("")
         return
@@ -3512,6 +4390,7 @@
             var t = document.createElement('tr');
             this.parentNode.insertBefore(t, this.nextSibling);  
 
+
             var tr = d3.select(t).classed("expanded",true).datum({})
             var td = d3_updateable(tr,"td","td")
               .attr("colspan",this.children.length)
@@ -3522,631 +4401,13 @@
             var before_urls = data.before.filter(y => y.domain == d.domain)
             var after_urls = data.after.filter(y => y.domain == d.domain)
 
-            var url_category = before_urls.reduce((p,c) => {
-              p[c.url] = c.parent_category_name
-              return p
-            },{})
-            url_category = after_urls.reduce((p,c) => {
-              p[c.url] = c.parent_category_name
-              return p
-            },url_category)
-
-
-            var url_volume = before_urls.reduce((p,c) => {
-              p[c.url] = (p[c.url] || 0) + c.visits
-              return p
-            },{})
-            url_volume = after_urls.reduce((p,c) => {
-              p[c.url] = (p[c.url] || 0) + c.visits
-              return p
-            },url_volume)
-
-      
-            
-            var sorted_urls = d3.entries(url_volume).sort((p,c) => { 
-              return d3.descending(p.value,c.value) 
-            })
-
-
-            var before_url_ts = before_urls.reduce((p,c) => {
-              p[c.url] = p[c.url] || {}
-              p[c.url]["url"] = c.url
-
-              p[c.url][c.time_diff_bucket] = c.visits
-              return p
-            },{})
-
-            var after_url_ts = after_urls.reduce((p,c) => {
-              p[c.url] = p[c.url] || {}
-              p[c.url]["url"] = c.url
-
-              p[c.url]["-" + c.time_diff_bucket] = c.visits
-              return p
-            },before_url_ts)
-
-
-
-            var to_draw = sorted_urls.slice(0,1000).map(x => after_url_ts[x.key])
-  .map(function(x){
-    x.total = d3.sum(buckets.map(function(b) { return x[b] || 0 }))
-    return x
-  })
-
-  var kw_to_draw = d3.entries(after_url_ts).reduce(function(p,c) {
-
-    c.key.toLowerCase().split(d.domain)[1].split("/").reverse()[0].replace("_","-").split("-").map(x => {
-      var values = ["that","this","what","best","most","from","your","have","first","will","than","says","like","into","after","with"]
-      if (x.match(/\d+/g) == null && values.indexOf(x) == -1 && x.indexOf(",") == -1 && x.indexOf("?") == -1 && x.indexOf(".") == -1 && x.indexOf(":") == -1 && parseInt(x) != x && x.length > 3) {
-        p[x] = p[x] || {}
-        p[x].key = x
-        Object.keys(c.value).map(q => {
-          p[x][q] = (p[x][q] || 0) + c.value[q]
-        })
-      }
-      return p
-    })
-    return p
-  },{})
-
-
-  kw_to_draw = Object.keys(kw_to_draw).map(function(k) { return kw_to_draw[k] }).map(function(x){
-    x.total = d3.sum(buckets.map(function(b) { return x[b] || 0 }))
-    return x
-  }).sort((p,c) => {
-    return c.total - p.total
-  })
-
-
-
-
-            var summary_row = d3_class(td,"summary-row").style("margin-bottom","15px")
-              .style("position","relative")
-            d3_class(td,"action-header").style("text-align","center").style("font-size","16px").style("font-weight","bold").text("Explore and Refine").style("padding","10px")
-            var title_row = d3_class(td,"title-row")
-
-            var expansion_row = d3_class(td,"expansion-row")
-            var footer_row = d3_class(td,"footer-row").style("min-height","10px").style("margin-top","15px")
-            
-            function buildFilterInput(x) {
-                this.on("something")(x)
-                //select_value.value += (select_value.value ? "," : "") + x.key
-            }
-
-            d3_class(summary_row,"title")
-              .style("font-size","16px")
-              .style("font-weight","bold")
-              .style("text-align","center")
-              .style("line-height","40px")
-              .style("margin-bottom","5px")
-              .text("Before and After: " + d.domain)
-
-            var options = [
-                {"key":"All","value":"all", "selected":1}
-              , {"key":"Consideration","value":"consideration", "selected":0}
-              , {"key":"Validation","value":"validation", "selected":0}
-            ]
-
-            var tsw = 250;
-
-            var timeseries = d3_class(summary_row,"timeseries","svg")
-              .style("display","block")
-              .style("margin","auto")
-              .style("margin-bottom","30px")
-              .attr("width",tsw + "px")
-              .attr("height","70px")
-
-   
-
-            var before_rollup = d3.nest()
-              .key(function(x) { return x.time_diff_bucket})
-              .rollup(function(x) { return d3.sum(x,y => y.visits) })
-              .map(before_urls)
-            
-            var after_rollup = d3.nest()
-              .key(function(x) { return "-" + x.time_diff_bucket})
-              .rollup(function(x) { return d3.sum(x,y => y.visits) })
-              .map(after_urls)
-
-            var overall_rollup = buckets.map(x => before_rollup[x] || after_rollup[x] || 0)
-
-
-
-            simpleTimeseries(timeseries,overall_rollup,tsw)
-            d3_class(timeseries,"middle","line")
-                  .style("stroke-dasharray", "1,5")
-                  .attr("stroke-width",1)
-                  .attr("stroke","black")
-                  .attr("y1", 0)
-                  .attr("y2", 55)
-                  .attr("x1", tsw/2)
-                  .attr("x2", tsw/2)
-
-            d3_class(timeseries,"middle-text","text")
-              .attr("x", tsw/2)
-              .attr("y", 67)
-              .style("text-anchor","middle")
-              .text("On-site")
-
-            
-            var before_pos, after_pos;
-
-            buckets.map(function(x,i) {
-               if (stages.consideration == x) before_pos = i
-               if (stages.validation == x) after_pos = i
-
-            })
-
-            var unit_size = tsw/buckets.length
-
-            d3_class(timeseries,"before","line")
-              .style("stroke-dasharray", "1,5")
-              .attr("stroke-width",1)
-              .attr("stroke","black")
-              .attr("y1", 39)
-              .attr("y2", 45)
-              .attr("x1", unit_size*before_pos)
-              .attr("x2", unit_size*before_pos)
-
-            d3_class(timeseries,"before-text","text")
-              .attr("x", unit_size*before_pos - 8)
-              .attr("y", 48)
-
-              .style("text-anchor","end")
-              .text("Consideration")
-
-            d3_class(timeseries,"window","line")
-              .style("stroke-dasharray", "1,5")
-              .attr("stroke-width",1)
-              .attr("stroke","black")
-              .attr("y1", 45)
-              .attr("y2", 45)
-              .attr("x1", unit_size*(before_pos))
-              .attr("x2", unit_size*(after_pos+1)+1)
-
-
-            d3_class(timeseries,"after","line")
-              .style("stroke-dasharray", "1,5")
-              .attr("stroke-width",1)
-              .attr("stroke","black")
-              .attr("y1", 39)
-              .attr("y2", 45)
-              .attr("x1", unit_size*(after_pos+1))
-              .attr("x2", unit_size*(after_pos+1))
-
-            d3_class(timeseries,"after-text","text")
-              .attr("x", unit_size*(after_pos+1) + 8)
-              .attr("y", 48)
-              .style("text-anchor","start")
-              .text("Validation")
-
-
-
-            function selectOptionRect(options) {
-
-              var subset = td.selectAll("svg").selectAll("rect")
-                .attr("fill",undefined).filter((x,i) => {
-                  var value = options.filter(x => x.selected)[0].value
-                  if (value == "all") return false
-                  if (value == "consideration") return (i < before_pos) || (i > buckets.length/2 - 1 )
-                  if (value == "validation") return (i < buckets.length/2 ) || (i > after_pos)
-                })
-
-
-              subset.attr("fill","grey")
-            }
-
-            
-
-            selectOptionRect(options)
-
-            var opts = d3_class(summary_row,"options","div",options)
-              .style("text-align","center")
-              .style("position","absolute")
-              .style("width","120px")
-              .style("top","35px")
-              .style("left","200px")
-
-
-            function buildOptions(options) {
-              
-
-              d3_splat(opts,".show-button","a",options,x => x.key)
-                .classed("show-button",true)
-                .classed("selected",x => x.selected)
-                .style("line-height","18px")
-                .style("width","100px")
-                .style("font-size","10px")
-                .style("margin-bottom","5px")
-                .text(x => x.key)
-                .on("click",function(x) {
-                  this.parentNode.__data__.map(z => z.selected = 0)
-                  x.selected = 1
-                  buildOptions(this.parentNode.__data__)
-                  if (x.value == "consideration") {
-                    buildUrlSelection(consideration_to_draw)
-                    buildKeywordSelection(consideration_kw_to_draw)
-                  } else if (x.value == "validation") {
-                    buildUrlSelection(validation_to_draw)
-                    buildKeywordSelection(validation_kw_to_draw)
-                  } else {
-                    buildUrlSelection(to_draw)
-                    buildKeywordSelection(kw_to_draw)
-                  }
-
-                  selectOptionRect(this.parentNode.__data__)
-                })
-
-            }
-
-            buildOptions(options)
-
-            d3_class(summary_row,"description")
-              .style("font-size","12px")
-              .style("position","absolute")
-              .style("width","120px")
-              .style("top","35px")
-              .style("right","200px")
-              .text("Select domains and keywords to build and refine your global filter")
-
-
-
-
-
-            var urls_summary = d3_class(summary_row,"urls-summary")
-              .style("display","inline-block")
-              .style("width","50%")
-              .style("vertical-align","top")
-
-            var kws_summary = d3_class(summary_row,"kws-summary")
-              .style("display","inline-block")
-              .style("width","50%")
-              .style("vertical-align","top")
-
-              
-
-            d3_class(urls_summary,"title")
-              .style("font-weight","bold")
-              .style("font-size","14px")
-              .text("URL Summary")
-
-            d3_class(kws_summary,"title")
-              .style("font-weight","bold")
-              .style("font-size","14px")
-              .text("Keyword Summary")
-
-
-
-            var consideration_buckets = buckets.filter((x,i) => !((i < before_pos) || (i > buckets.length/2 - 1 )) )
-              , validation_buckets = buckets.filter((x,i) => !((i < buckets.length/2 ) || (i > after_pos)) )
-
-            var consideration_to_draw = to_draw.filter(x => consideration_buckets.reduce((p,c) => { p += x[c] || 0; return p},0) )
-              , validation_to_draw = to_draw.filter(x => validation_buckets.reduce((p,c) => { p += x[c] || 0; return p},0) )
-
-            function avgViews(to_draw) {
-              return parseInt(to_draw.reduce((p,c) => p + c.total,0)/to_draw.length)
-            }
-            function medianViews(to_draw) {
-              return (to_draw[parseInt(to_draw.length/2)] || {}).total || 0
-            }
-
-
-            var url_summary_data = [
-                {"name":"Distinct URLs", "all": to_draw.length, "consideration": consideration_to_draw.length, "validation": validation_to_draw.length }
-              , {"name":"Average Views", "all": avgViews(to_draw), "consideration": avgViews(consideration_to_draw), "validation": avgViews(validation_to_draw)  }
-              , {"name":"Median Views", "all": medianViews(to_draw), "consideration": medianViews(consideration_to_draw), "validation": medianViews(validation_to_draw)  }
-            ]
-
-            var uwrap = d3_class(urls_summary,"wrap").style("width","90%")
-
-
-            table.table(uwrap)
-              .data({"values":url_summary_data})
-              .skip_option(true)
-              .headers([
-                  {"key":"name","value":""}
-                , {"key":"all","value":"All"}
-                , {"key":"consideration","value":"Consideration"}
-                , {"key":"validation","value":"Validation"}
-              ])
+            refine(td)
+              .data(d)
+              .stages(stages)
+              .before_urls(before_urls)
+              .after_urls(after_urls)
+              .on("stage-filter",self.on("stage-filter"))
               .draw()
-              ._target.selectAll(".table-wrapper")
-              .classed("table-wrapper",false)
-
-
-            var consideration_kw_to_draw = kw_to_draw.filter(x => consideration_buckets.reduce((p,c) => { p += x[c] || 0; return p},0) )
-              , validation_kw_to_draw = kw_to_draw.filter(x => validation_buckets.reduce((p,c) => { p += x[c] || 0; return p},0) )
-
-
-            var kws_summary_data = [
-                {"name":"Distinct Keywords", "all": kw_to_draw.length, "consideration": consideration_kw_to_draw.length, "validation": validation_kw_to_draw.length }
-              , {"name":"Average Views", "all": avgViews(kw_to_draw), "consideration": avgViews(consideration_kw_to_draw), "validation": avgViews(validation_kw_to_draw)  }
-              , {"name":"Median Views", "all": medianViews(kw_to_draw), "consideration": medianViews(consideration_kw_to_draw), "validation": medianViews(validation_kw_to_draw)  }
-            ]
-
-            var kwrap = d3_class(kws_summary,"wrap").style("width","90%")
-
-            table.table(kwrap)
-              .data({"values":kws_summary_data})
-              .skip_option(true)
-              .headers([
-                  {"key":"name","value":""}
-                , {"key":"all","value":"All"}
-                , {"key":"consideration","value":"Consideration"}
-                , {"key":"validation","value":"Validation"}
-              ])
-              .draw()
-              ._target.selectAll(".table-wrapper")
-              .classed("table-wrapper",false)
-
-
-
-
-
-            var euh = d3_class(title_row,"expansion-urls-title")
-              .style("width","50%")
-              .style("height","36px")
-              .style("line-height","36px")
-              .style("display","inline-block")
-              .style("vertical-align","top")
-   
-            d3_class(euh,"title")
-              .style("width","265px")
-              .style("font-weight","bold")
-              .style("display","inline-block")
-  .style("vertical-align","top")
-
-              .text("URL")
-
-            d3_class(euh,"view")
-              .style("width","50px")
-              .style("margin-left","20px")
-              .style("margin-right","20px")
-              .style("font-weight","bold")
-              .style("display","inline-block")
-  .style("vertical-align","top")
-
-              .text("Views")
-
-            var svg_legend = d3_class(euh,"legend","svg")
-              .style("width","120px")
-              .style("height","36px")
-  .style("vertical-align","top")
-
-
-
-            d3_updateable(svg_legend,".before","text")
-              .attr("x","30")
-              .attr("y","20")
-              .style("text-anchor","middle")
-              .text("Before")
-
-            d3_updateable(svg_legend,".after","text")
-              .attr("x","90")
-              .attr("y","20")
-              .style("text-anchor","middle")
-              .text("After")
-
-            d3_updateable(svg_legend,"line","line")
-                  .style("stroke-dasharray", "1,5")
-                  .attr("stroke-width",1)
-                  .attr("stroke","black")
-                  .attr("y1", 0)
-                  .attr("y2", 36)
-                  .attr("x1", 60)
-                  .attr("x2", 60)
-
-
-
-
-            var ekh = d3_class(title_row,"expansion-kws-title")
-              .style("width","50%")
-              .style("height","36px")
-              .style("line-height","36px")
-              .style("display","inline-block")
-              .style("vertical-align","top")
-
-            d3_class(ekh,"title")
-              .style("width","265px")
-              .style("font-weight","bold")
-              .style("display","inline-block")
-
-              .text("Keywords")
-
-            d3_class(ekh,"view")
-              .style("width","50px")
-              .style("margin-left","20px")
-              .style("margin-right","20px")
-              .style("font-weight","bold")
-              .style("display","inline-block")
-
-              .text("Views")
-
-            var svg_legend = d3_class(ekh,"legend","svg")
-              .style("width","120px")
-              .style("height","36px")
-  .style("vertical-align","top")
-
-
-
-            d3_updateable(svg_legend,".before","text")
-              .attr("x","30")
-              .attr("y","20")
-              .style("text-anchor","middle")
-              .text("Before")
-
-            d3_updateable(svg_legend,".after","text")
-              .attr("x","90")
-              .attr("y","20")
-              .style("text-anchor","middle")
-              .text("After")
-
-            d3_updateable(svg_legend,"line","line")
-                  .style("stroke-dasharray", "1,5")
-                  .attr("stroke-width",1)
-                  .attr("stroke","black")
-                  .attr("y1", 0)
-                  .attr("y2", 36)
-                  .attr("x1", 60)
-                  .attr("x2", 60)
-
-
-
-
-
-
-
-            function buildUrlSelection(to_draw) {
-              var expansion = d3_class(expansion_row,"expansion-urls")
-                .classed("scrollbox",true)
-                .style("width","50%")
-                .style("display","inline-block")
-                .style("vertical-align","top")
-
-
-                .style("max-height","250px")
-                .style("overflow","scroll")
-
-              expansion.html("")
-
-              var url_row = d3_splat(expansion,".url-row","div",to_draw.slice(0,500),function(x) { return x.url })
-                .classed("url-row",true)
-
-              var url_name = d3_updateable(url_row,".name","div").classed("name",true)
-                .style("width","260px")
-                .style("overflow","hidden")
-                .style("line-height","20px")
-                .style("height","20px")
-
-                .style("display","inline-block")
-
-              d3_updateable(url_name,"input","input")
-                .style("margin-right","10px")
-                .style("display","inline-block")
-                .style("vertical-align","top")
-                .attr("type","checkbox")
-                .on("click", function(x) {
-                  self.on("stage-filter")(x)
-                })
-
-              d3_class(url_name,"url")
-                .style("display","inline-block")
-                .style("text-overflow","ellipsis")
-                .style("width","235px")
-                .text(x => x.url.split(d.domain)[1] || x.url )
-
-              d3_updateable(url_row,".number","div").classed("number",true)
-                .style("width","50px")
-                .style("height","20px")
-                .style("line-height","20px")
-                .style("vertical-align","top")
-                .style("text-align","center")
-                .style("font-size","13px")
-                .style("font-weight","bold")
-                .style("margin-left","20px")
-                .style("margin-right","20px")
-                .style("display","inline-block")
-                .text(function(x) { return d3.sum(buckets.map(function(b) { return x[b] || 0 })) })
-
-
-              d3_updateable(url_row,".plot","svg").classed("plot",true)
-                .style("width","120px")
-                .style("height","20px")
-                .style("display","inline-block")
-                .each(function(x) {
-                  var dthis = d3.select(this)
-                  var values = buckets.map(function(b) { return x[b] || 0 })
-                  simpleTimeseries(dthis,values,120,20)
-                  d3_updateable(dthis,"line","line")
-                    .style("stroke-dasharray", "1,5")
-                    .attr("stroke-width",1)
-                    .attr("stroke","black")
-                    .attr("y1", 0)
-                    .attr("y2", 20)
-                    .attr("x1", 60)
-                    .attr("x2", 60)
-
-                })
-            }
-
-
-            function buildKeywordSelection(kw_to_draw) {
-              var expansion = d3_class(expansion_row,"expansion-keywords")
-                .classed("scrollbox",true)
-                .style("width","50%")
-                .style("display","inline-block")
-                .style("vertical-align","top")
-
-                .style("max-height","250px")
-                .style("overflow","scroll")
-
-              expansion.html("")
-
-              var url_row = d3_splat(expansion,".url-row","div",kw_to_draw.slice(0,500),function(x) { return x.key })
-                .classed("url-row",true)
-
-              var kw_name = d3_updateable(url_row,".name","div").classed("name",true)
-                .style("width","260px")
-                .style("overflow","hidden")
-                .style("line-height","20px")
-                .style("height","20px")
-
-                .style("display","inline-block")
-
-              d3_updateable(kw_name,"input","input")
-                .style("display","inline-block")
-                .style("vertical-align","top")
-
-                .style("margin-right","10px")
-                .attr("type","checkbox")
-                .on("click", function(x) {
-                  self.on("stage-filter")(x)
-                })
-
-              d3_class(kw_name,"url")
-                .style("text-overflow","ellipsis")
-                .style("display","inline-block")
-                .style("width","235px")
-                .text(x => x.key )
-
-              d3_updateable(url_row,".number","div").classed("number",true)
-                .style("width","50px")
-                .style("height","20px")
-                .style("line-height","20px")
-                .style("vertical-align","top")
-                .style("text-align","center")
-                .style("font-size","13px")
-                .style("font-weight","bold")
-                .style("margin-left","20px")
-                .style("margin-right","20px")
-                .style("display","inline-block")
-                .text(function(x) { return d3.sum(buckets.map(function(b) { return x[b] || 0 })) })
-
-
-              d3_updateable(url_row,".plot","svg").classed("plot",true)
-                .style("width","120px")
-                .style("height","20px")
-                .style("display","inline-block")
-                .each(function(x) {
-                  var dthis = d3.select(this)
-                  var values = buckets.map(function(b) { return x[b] || 0 })
-                  simpleTimeseries(dthis,values,120,20)
-                  d3_updateable(dthis,"line","line")
-                    .style("stroke-dasharray", "1,5")
-                    .attr("stroke-width",1)
-                    .attr("stroke","black")
-                    .attr("y1", 0)
-                    .attr("y2", 20)
-                    .attr("x1", 60)
-                    .attr("x2", 60)
-
-                })
-            }
-            
-            buildUrlSelection(to_draw)
-            buildKeywordSelection(kw_to_draw)
-
-
-
 
           })
         .option_text("<div style='width:40px;text-align:center'>&#65291;</div>")
@@ -4731,6 +4992,15 @@
                 .options(tabs)
                 .data(data)
                 .on("select", self.on("tab.change") )
+                .on("stage-filter",function(x) {
+
+                 staged_filters = staged_filters.split(",").concat(x.key || x.url).filter(x => x.length).join(",")
+                 self.on("staged-filter.change")(staged_filters)
+                 HACKbuildStagedFilter(staged_filters)
+
+      
+               })
+
                 .draw()
             }
 

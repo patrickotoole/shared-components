@@ -32,6 +32,9 @@ DomainView.prototype = {
       return accessor.bind(this)("options",val) 
     }
   , draw: function() {
+
+      var self = this
+
       var _explore = this.target
         , tabs = this.options()
         , data = this.data()
@@ -90,8 +93,12 @@ DomainView.prototype = {
           var rolled = timeseries.prepData(dd)
           
           domain_expanded(td)
+            .raw(dd)
             .data(rolled)
             .urls(d.urls)
+            .on("stage-filter", function(x) {
+              self.on("stage-filter")(x)
+            })
             .draw()
 
         })

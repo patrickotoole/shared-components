@@ -264,6 +264,15 @@ NewDashboard.prototype = {
               .options(tabs)
               .data(data)
               .on("select", self.on("tab.change") )
+              .on("stage-filter",function(x) {
+
+               staged_filters = staged_filters.split(",").concat(x.key || x.url).filter(x => x.length).join(",")
+               self.on("staged-filter.change")(staged_filters)
+               HACKbuildStagedFilter(staged_filters)
+
+    
+             })
+
               .draw()
           }
 
