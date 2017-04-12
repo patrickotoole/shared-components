@@ -13,9 +13,10 @@ class SetupHandler(tornado.web.RequestHandler, SetupDatabase):
     def get(self):
         advertiser_id = self.get_query_argument("advertiser")
         setups = self.get_setup(advertiser_id)
-        j = json.dumps(setups.to_dict("records"))
-        self.write(j)
-        self.finish()
+        # j = json.dumps(setups.to_dict("records"))
+        self.render("setup.html", data = json.dumps(setups.to_dict('records')))
+        # self.write(j)
+        # self.finish()
 
     def post(self):
         advertiser_id = self.get_query_argument("advertiser")

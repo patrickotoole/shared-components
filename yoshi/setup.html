@@ -1,0 +1,108 @@
+{% autoescape None %}
+
+<script data-require="d3@3.5.3" data-semver="3.5.3" src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.3/d3.js"></script>
+<style>
+.button {
+    background-color: #4CAF50;
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+}
+</style>
+
+<div id="setup"></div>
+
+
+
+<script>
+
+    var make_table_text = function(selection, columns, data){
+
+        var table = selection.append('table').classed('table',true)
+      
+        thead = table.append('thead')
+
+        thead.append('tr')
+            .selectAll('th')
+            .data(columns).enter()
+            .append('th')
+            .text(function(x){return x['name']});
+                
+            tbody = table.append('tbody')
+
+            var trows = tbody
+                .selectAll('tr')
+                .data(data).enter()
+                .append('tr')
+          
+          
+            trows.selectAll('td')
+                .data(function(row) {
+                    return columns.map(function(c){
+                  
+                        var cell = {}
+                        cell['name'] = c['name']
+                        cell['value'] = row[c['name']]
+                        cell['type'] = c['type']
+                        cell['text'] = c['text']
+                        cell['class'] = c['class']
+                    
+                    return cell 
+                })
+            })
+            .enter()
+            .append('td')
+            .attr('class',function(x){
+                return x['class']
+            })
+            .text(function(x){
+                var k = x['text']!= null ? x['text'] : x['value']
+                return k
+          })
+
+          trows.selectAll('td').append(function(d){
+                return document.createElement(d['type'])
+          })
+    }
+
+    var columns = [
+    {
+        'name': 'line_item_name',
+        'class' : 'line_item_name'
+    },
+    {
+        'name': 'mediaplan',
+        'class': 'mediaplan'
+    },
+    {
+        'name': 'num_domains',
+        'type': 'input'
+    }]
+  
+
+
+    var yoshi = {{data}}
+
+    var wrapper = d3.select("#setup")
+    make_table_text(wrapper, columns, yoshi)
+
+
+    var add = wrapper.selectAll('.add').data(['add'])
+                    .enter()
+                    .append('a')
+                    .classed('add', true)
+                    .text("Add")
+                    .style({'font-weight':'bold', 'width':'50px', 'height': '50', "line-height": "24px","border-radius": "15px"})
+
+
+
+
+    
+
+</script>

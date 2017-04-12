@@ -38,6 +38,7 @@ if __name__ == '__main__':
     }
 
     routes = [
+        (r'/', SetupHandler, connectors),
         (r'/setup', SetupHandler, connectors),
         (r'/domains', DomainsHandler, connectors),
         (r'/urls', URLHandler, connectors),

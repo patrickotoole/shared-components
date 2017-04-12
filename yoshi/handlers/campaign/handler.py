@@ -17,7 +17,7 @@ class CampaignHandler(tornado.web.RequestHandler, CampaignDatabase):
     def get(self):
         advertiser_id = self.get_query_argument("advertiser")
         domains = self.get_domains(advertiser_id)
-        self.render("index.html", domains = json.dumps(domains.to_dict('records')))
+        self.render("create.html", domains = json.dumps(domains.to_dict('records')))
 
 
     def post(self):

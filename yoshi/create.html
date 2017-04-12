@@ -126,8 +126,6 @@
         return ( d['line_item_id'] != 0 ) 
     })
 
-
-
     var domains_filtered = d3.nest().key(function(d){return d['domain']}).entries(dd_filtered)
     var runBtn = wrapper.selectAll('button').data([domains_filtered]).enter().append('button')
     runBtn.classed('button',true)
@@ -136,10 +134,21 @@
     var domains = d3.nest().key(function(d){return d['domain']}).entries(dd)
     make_table(wrapper, columns, domains)
     
-    debugger
     runBtn.on("click", function(d){
+        if (window.location.search.indexOf("force_run") == -1){
+            window.history.pushState({},"",window.location.href + "&force_run=true") 
+        } 
         run(d)
     })
+
+    if (window.location.search.indexOf("force_run") > -1){
+        run(domains_filtered)
+    }
+
+
+
+
+
     
 
 </script>

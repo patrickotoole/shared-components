@@ -11,20 +11,7 @@ import logging
 import pprint
 import requests
 
-LINE_ITEMS = '''
-SELECT line_item_name, MAX(line_item_id) as line_item_id, num_campaigns
-FROM
-(
-    SELECT a.line_item_id, max(a.line_item_name) as line_item_name, COUNT(DISTINCT campaign_id)  as num_campaigns
-    FROM advertiser_line_item a
-    LEFT JOIN advertiser_campaign b
-    ON (a.line_item_id = b.line_item_id)
-    WHERE a.external_advertiser_id = %(advertiser_id)s 
-    GROUP BY 1
-    HAVING num_campaigns < 500
-) l
-GROUP BY 1
-'''
+
 
 YOSHI_BASE = '''
 {
