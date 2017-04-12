@@ -31,6 +31,8 @@ from handlers.checkshandler import *
 from handlers.job_status import *
 from handlers.clear_queue import *
 from handlers.remove import *
+from handlers.checksegment import *
+from handlers.checkfires import *
 
 import requests
 import signal
@@ -56,7 +58,9 @@ def build_routes(connectors,override=[]):
         (r'/clear', ClearHandler, connectors),
         (r'/remove', RemoveHandler, connectors),
         (r'/logging/?(.*?)',WQLog, connectors),
-        (r'/checks',ChecksHandler, connectors),
+        (r'/check/cache',ChecksHandler, connectors),
+        (r'/check/segment',CheckSegmentHandler, connectors),
+        (r'/check/pixel',CheckFiresHandler, connectors),
         (r'/', WorkQueueHandler, connectors),
 
     ]

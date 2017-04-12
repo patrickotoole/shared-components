@@ -60,7 +60,7 @@ margin-bottom: 1%;
 <button onclick=buildTable3() type="button" class="btn btn-primary"> Show Missing Segments </button>-->
 </div>
 </div>
-<div style="overflow:scroll;position:relative;margin-left:-5%" class="outer-table-wrapper"></div>
+<div style="overflow:scroll;position:relative;margin-left:-2%" class="outer-table-wrapper"></div>
   <script>
 var d3_updateable = function(target,selector,type,data,joiner) {
   var type = type || "div"
@@ -99,6 +99,7 @@ var data = {% raw data %};
         //.data({"key":"Data","values":data})
         .data({"key":"Data","values":data['values']})
         .headers(data['headers'])
+        .skip_option(true)
         .draw()
     }
     buildTable(data)
