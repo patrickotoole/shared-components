@@ -23,6 +23,7 @@ from link import lnk
 from handlers.index import *
 from handlers.submit import *
 from handlers.api import *
+from handlers.webhook import *
 
 
 if __name__ == '__main__':
@@ -32,7 +33,7 @@ if __name__ == '__main__':
     connectors = {
         "db": lnk.dbs.crushercache,
         "rb": lnk.dbs.rockerbox,
-
+        "crushercache":lnk.dbs.crushercache,
         "api": lnk.api.console
     }
 
@@ -42,6 +43,7 @@ if __name__ == '__main__':
         (r'/api/?(.*)', APIHandler, connectors),
         (r'/static/(.*)', tornado.web.StaticFileHandler, {"path":"static"}),
         (r'/js/(.*)', tornado.web.StaticFileHandler, {"path":"../shared/js"}),
+        (r'/webhook/(.*?)', WebhookHandler, connectors),
 
     ]
 
