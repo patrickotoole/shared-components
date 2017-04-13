@@ -2697,7 +2697,7 @@
   }
 
   var allbuckets = []
-  var hourbuckets = d3.range(0,24)
+  var hourbuckets = d3.range(0,24).map(x => String(x).length > 1 ? String(x) : "0" + x)
 
   var hours = [0,20,40]
   var buckets = d3.range(0,24).reduce((p,c) => {
@@ -2740,6 +2740,7 @@
           p[c.url][c.hour] = (p[c.url][c.hour] || 0) + c.count
           return p
         },{})
+
 
         Object.keys(articles).map(k => {
           articles[k] = hourbuckets.map(b => articles[k][b])
@@ -2805,13 +2806,71 @@
           .text("URL")
 
         d3_class$2(euh,"view")
-          .style("width","50px")
+          .style("width","40px")
           .style("margin-left","20px")
           .style("margin-right","20px")
           .style("font-weight","bold")
           .style("display","inline-block")
           .style("vertical-align","top")
           .text("Views")
+
+            var svg_legend = d3_class$2(euh,"legend","svg")
+              .style("width","144px")
+              .style("height","36px")
+              .style("vertical-align","top")
+
+
+
+            d3_updateable(svg_legend,"text.one","text")
+              .attr("x","0")
+              .attr("y","20")
+              .style("text-anchor","start")
+              .text("12 am")
+
+            d3_updateable(svg_legend,"text.two","text")
+              .attr("x","72")
+              .attr("y","20")
+              .style("text-anchor","middle")
+              .text("12 pm")
+
+            d3_updateable(svg_legend,"text.three","text")
+              .attr("x","144")
+              .attr("y","20")
+              .style("text-anchor","end")
+              .text("12 am")
+
+            d3_updateable(svg_legend,"line.one","line")
+                  .classed("one",true)
+                  .style("stroke-dasharray", "1,5")
+                  .attr("stroke-width",1)
+                  .attr("stroke","black")
+                  .attr("y1", 25)
+                  .attr("y2", 35)
+                  .attr("x1", 0)
+                  .attr("x2", 0)
+
+  d3_updateable(svg_legend,"line.two","line")
+                  .classed("two",true)
+                  .style("stroke-dasharray", "1,5")
+                  .attr("stroke-width",1)
+                  .attr("stroke","black")
+                  .attr("y1", 25)
+                  .attr("y2", 35)
+                  .attr("x1", 72)
+                  .attr("x2", 72)
+
+
+  d3_updateable(svg_legend,"line.three","line")
+                  .classed("three",true)
+                  .style("stroke-dasharray", "1,5")
+                  .attr("stroke-width",1)
+                  .attr("stroke","black")
+                  .attr("y1", 25)
+                  .attr("y2", 35)
+                  .attr("x1", 144)
+                  .attr("x2", 144)
+
+
 
         var ekh = d3_class$2(title_row,"expansion-kws-title")
           .style("width","50%")
@@ -2827,12 +2886,70 @@
           .text("Keywords")
 
         d3_class$2(ekh,"view")
-          .style("width","50px")
+          .style("width","40px")
           .style("margin-left","20px")
           .style("margin-right","20px")
           .style("font-weight","bold")
           .style("display","inline-block")
           .text("Views")
+
+          var svg_legend = d3_class$2(ekh,"legend","svg")
+              .style("width","144px")
+              .style("height","36px")
+              .style("vertical-align","top")
+
+
+
+            d3_updateable(svg_legend,"text.one","text")
+              .attr("x","0")
+              .attr("y","20")
+              .style("text-anchor","start")
+              .text("12 am")
+
+            d3_updateable(svg_legend,"text.two","text")
+              .attr("x","72")
+              .attr("y","20")
+              .style("text-anchor","middle")
+              .text("12 pm")
+
+            d3_updateable(svg_legend,"text.three","text")
+              .attr("x","144")
+              .attr("y","20")
+              .style("text-anchor","end")
+              .text("12 am")
+
+            d3_updateable(svg_legend,"line.one","line")
+                  .classed("one",true)
+                  .style("stroke-dasharray", "1,5")
+                  .attr("stroke-width",1)
+                  .attr("stroke","black")
+                  .attr("y1", 25)
+                  .attr("y2", 35)
+                  .attr("x1", 0)
+                  .attr("x2", 0)
+
+  d3_updateable(svg_legend,"line.two","line")
+                  .classed("two",true)
+                  .style("stroke-dasharray", "1,5")
+                  .attr("stroke-width",1)
+                  .attr("stroke","black")
+                  .attr("y1", 25)
+                  .attr("y2", 35)
+                  .attr("x1", 72)
+                  .attr("x2", 72)
+
+
+  d3_updateable(svg_legend,"line.three","line")
+                  .classed("three",true)
+                  .style("stroke-dasharray", "1,5")
+                  .attr("stroke-width",1)
+                  .attr("stroke","black")
+                  .attr("y1", 25)
+                  .attr("y2", 35)
+                  .attr("x1", 144)
+                  .attr("x2", 144)
+
+
 
 
 
