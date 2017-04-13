@@ -108,7 +108,7 @@
   .ba-row .table-wrapper tr.expanded th {
     padding-top:0px
   }
-  .ba-row .table-wrapper tr.expanded th, .ba-row .table-wrapper tr.expanded td  {
+  .timing-row .table-wrapper tr.expanded th, .ba-row .table-wrapper tr.expanded th, .ba-row .table-wrapper tr.expanded td  {
     width:31px;
     max-width:200px
   }
@@ -120,13 +120,13 @@
 
   .expanded .table-wrapper tr { height:28px }
 
-  .ba-row .table-wrapper tr th, .ba-row .table-wrapper tr td  {
+  .timing-row .table-wrapper tr th, .timing-row .table-wrapper tr td, .ba-row .table-wrapper tr th, .ba-row .table-wrapper tr td  {
     width:31px;
     max-width:31px
   }
 
   
-  .ba-row .table-wrapper tr th:first-of-type, .ba-row .table-wrapper tr td:first-of-type {
+  .timing-row .table-wrapper tr th:first-of-type, .ba-row .table-wrapper tr th:first-of-type, .ba-row .table-wrapper tr td:first-of-type {
     width:300px;
   }
 
@@ -896,7 +896,9 @@ debugger
           {"key":"Data summary","value":"summary-view","selected":1}
         , {"key":"Explore data","value":"data-view","selected":0}
         , {"key":"Before & After","value":"ba-view","selected":0}
-        , {"key":"Media Plan", "value":"media-view","selected":0}
+        , {"key":"Timing","value":"timing-view","selected":0}
+
+        //, {"key":"Media Plan", "value":"media-view","selected":0}
 
       ]
   }

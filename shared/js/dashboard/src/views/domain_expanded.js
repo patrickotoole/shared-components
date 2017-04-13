@@ -71,7 +71,7 @@ DomainExpanded.prototype = {
 
 
       Object.keys(articles).map(k => {
-        articles[k] = hourbuckets.map(b => articles[k][b])
+        articles[k] = hourbuckets.map(b => articles[k][b] || 0)
       })
 
       var to_draw = d3.entries(articles)
@@ -99,7 +99,7 @@ DomainExpanded.prototype = {
 
       kw_to_draw = d3.entries(kw_to_draw)
         .map(x => {
-          x.values = Object.keys(x.value).map(z => x.value[z])
+          x.values = Object.keys(x.value).map(z => x.value[z] || 0)
           x.total = d3.sum(x.values)
           return x
         })
@@ -257,26 +257,26 @@ d3_updateable(svg_legend,"line.three","line")
                 .attr("x1", 0)
                 .attr("x2", 0)
 
-d3_updateable(svg_legend,"line.two","line")
-                .classed("two",true)
-                .style("stroke-dasharray", "1,5")
-                .attr("stroke-width",1)
-                .attr("stroke","black")
-                .attr("y1", 25)
-                .attr("y2", 35)
-                .attr("x1", 72)
-                .attr("x2", 72)
+         d3_updateable(svg_legend,"line.two","line")
+           .classed("two",true)
+           .style("stroke-dasharray", "1,5")
+           .attr("stroke-width",1)
+           .attr("stroke","black")
+           .attr("y1", 25)
+           .attr("y2", 35)
+           .attr("x1", 72)
+           .attr("x2", 72)
 
 
-d3_updateable(svg_legend,"line.three","line")
-                .classed("three",true)
-                .style("stroke-dasharray", "1,5")
-                .attr("stroke-width",1)
-                .attr("stroke","black")
-                .attr("y1", 25)
-                .attr("y2", 35)
-                .attr("x1", 144)
-                .attr("x2", 144)
+         d3_updateable(svg_legend,"line.three","line")
+           .classed("three",true)
+           .style("stroke-dasharray", "1,5")
+           .attr("stroke-width",1)
+           .attr("stroke","black")
+           .attr("y1", 25)
+           .attr("y2", 35)
+           .attr("x1", 144)
+           .attr("x2", 144)
 
 
 

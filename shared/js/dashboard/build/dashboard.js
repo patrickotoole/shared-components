@@ -50,7 +50,7 @@
     this.target = target
   }
 
-  function noop$10() {}
+  function noop$11() {}
   function identity$7(x) { return x }
   function key$7(x) { return x.key }
 
@@ -82,13 +82,13 @@
         return accessor.bind(this)("selected",val)
       }
     , on: function(action, fn) {
-        if (fn === undefined) return this._on[action] || noop$10;
+        if (fn === undefined) return this._on[action] || noop$11;
         this._on[action] = fn;
         return this
       }
   }
 
-  function noop$9() {}
+  function noop$10() {}
   function buttonWrap(wrap) {
     var head = d3_updateable(wrap, "h3.buttons","h3")
       .classed("buttons",true)
@@ -218,7 +218,7 @@
         return this
       }
     , on: function(action, fn) {
-        if (fn === undefined) return this._on[action] || noop$9;
+        if (fn === undefined) return this._on[action] || noop$10;
         this._on[action] = fn;
         return this
       }
@@ -462,7 +462,7 @@
       }
   }
 
-  function noop$11() {}
+  function noop$12() {}
   function identity$8(x) { return x }
   function key$8(x) { return x.key }
 
@@ -480,7 +480,7 @@
         return accessor.bind(this)("data",val) 
       }
     , on: function(action, fn) {
-        if (fn === undefined) return this._on[action] || noop$11;
+        if (fn === undefined) return this._on[action] || noop$12;
         this._on[action] = fn;
         return this
       }
@@ -2679,12 +2679,12 @@
       }
   }
 
-  function d3_class$2(target,cls,type,data) {
+  function d3_class$3(target,cls,type,data) {
     return d3_updateable(target,"." + cls, type || "div",data)
       .classed(cls,true)
   }
 
-  function noop$12() {}
+  function noop$13() {}
 
 
   function DomainExpanded(target) {
@@ -2743,7 +2743,7 @@
 
 
         Object.keys(articles).map(k => {
-          articles[k] = hourbuckets.map(b => articles[k][b])
+          articles[k] = hourbuckets.map(b => articles[k][b] || 0)
         })
 
         var to_draw = d3.entries(articles)
@@ -2771,7 +2771,7 @@
 
         kw_to_draw = d3.entries(kw_to_draw)
           .map(x => {
-            x.values = Object.keys(x.value).map(z => x.value[z])
+            x.values = Object.keys(x.value).map(z => x.value[z] || 0)
             x.total = d3.sum(x.values)
             return x
           })
@@ -2780,33 +2780,33 @@
 
         var td = this.target
 
-        d3_class$2(td,"action-header")
+        d3_class$3(td,"action-header")
           .style("text-align","center")
           .style("font-size","16px")
           .style("font-weight","bold")
           .style("padding","10px")
           .text("Explore and Refine")
 
-        var title_row = d3_class$2(td,"title-row")
-        var expansion_row = d3_class$2(td,"expansion-row")
+        var title_row = d3_class$3(td,"title-row")
+        var expansion_row = d3_class$3(td,"expansion-row")
 
 
 
-        var euh = d3_class$2(title_row,"expansion-urls-title")
+        var euh = d3_class$3(title_row,"expansion-urls-title")
           .style("width","50%")
           .style("height","36px")
           .style("line-height","36px")
           .style("display","inline-block")
           .style("vertical-align","top")
    
-        d3_class$2(euh,"title")
+        d3_class$3(euh,"title")
           .style("width","265px")
           .style("font-weight","bold")
           .style("display","inline-block")
           .style("vertical-align","top")
           .text("URL")
 
-        d3_class$2(euh,"view")
+        d3_class$3(euh,"view")
           .style("width","40px")
           .style("margin-left","20px")
           .style("margin-right","20px")
@@ -2815,7 +2815,7 @@
           .style("vertical-align","top")
           .text("Views")
 
-            var svg_legend = d3_class$2(euh,"legend","svg")
+            var svg_legend = d3_class$3(euh,"legend","svg")
               .style("width","144px")
               .style("height","36px")
               .style("vertical-align","top")
@@ -2873,20 +2873,20 @@
 
 
 
-        var ekh = d3_class$2(title_row,"expansion-kws-title")
+        var ekh = d3_class$3(title_row,"expansion-kws-title")
           .style("width","50%")
           .style("height","36px")
           .style("line-height","36px")
           .style("display","inline-block")
           .style("vertical-align","top")
 
-        d3_class$2(ekh,"title")
+        d3_class$3(ekh,"title")
           .style("width","265px")
           .style("font-weight","bold")
           .style("display","inline-block")
           .text("Keywords")
 
-        d3_class$2(ekh,"view")
+        d3_class$3(ekh,"view")
           .style("width","40px")
           .style("margin-left","20px")
           .style("margin-right","20px")
@@ -2894,7 +2894,7 @@
           .style("display","inline-block")
           .text("Views")
 
-          var svg_legend = d3_class$2(ekh,"legend","svg")
+          var svg_legend = d3_class$3(ekh,"legend","svg")
               .style("width","144px")
               .style("height","36px")
               .style("vertical-align","top")
@@ -2929,33 +2929,33 @@
                   .attr("x1", 0)
                   .attr("x2", 0)
 
-  d3_updateable(svg_legend,"line.two","line")
-                  .classed("two",true)
-                  .style("stroke-dasharray", "1,5")
-                  .attr("stroke-width",1)
-                  .attr("stroke","black")
-                  .attr("y1", 25)
-                  .attr("y2", 35)
-                  .attr("x1", 72)
-                  .attr("x2", 72)
+           d3_updateable(svg_legend,"line.two","line")
+             .classed("two",true)
+             .style("stroke-dasharray", "1,5")
+             .attr("stroke-width",1)
+             .attr("stroke","black")
+             .attr("y1", 25)
+             .attr("y2", 35)
+             .attr("x1", 72)
+             .attr("x2", 72)
 
 
-  d3_updateable(svg_legend,"line.three","line")
-                  .classed("three",true)
-                  .style("stroke-dasharray", "1,5")
-                  .attr("stroke-width",1)
-                  .attr("stroke","black")
-                  .attr("y1", 25)
-                  .attr("y2", 35)
-                  .attr("x1", 144)
-                  .attr("x2", 144)
-
-
-
+           d3_updateable(svg_legend,"line.three","line")
+             .classed("three",true)
+             .style("stroke-dasharray", "1,5")
+             .attr("stroke-width",1)
+             .attr("stroke","black")
+             .attr("y1", 25)
+             .attr("y2", 35)
+             .attr("x1", 144)
+             .attr("x2", 144)
 
 
 
-        var expansion = d3_class$2(expansion_row,"expansion-urls")
+
+
+
+        var expansion = d3_class$3(expansion_row,"expansion-urls")
           .classed("scrollbox",true)
           .style("width","50%")
           .style("display","inline-block")
@@ -2987,7 +2987,7 @@
             self.on("stage-filter")(x)
           })
 
-        d3_class$2(url_name,"url")
+        d3_class$3(url_name,"url")
           .style("display","inline-block")
           .style("text-overflow","ellipsis")
           .style("width","205px")
@@ -3021,7 +3021,7 @@
           })
 
 
-        var expansion = d3_class$2(expansion_row,"expansion-kws")
+        var expansion = d3_class$3(expansion_row,"expansion-kws")
           .classed("scrollbox",true)
           .style("width","50%")
           .style("display","inline-block")
@@ -3054,7 +3054,7 @@
             self.on("stage-filter")(x)
           })
 
-        d3_class$2(url_name,"url")
+        d3_class$3(url_name,"url")
           .style("display","inline-block")
           .style("text-overflow","ellipsis")
           .style("width","205px")
@@ -3091,7 +3091,7 @@
         return this
       }
     , on: function(action, fn) {
-        if (fn === undefined) return this._on[action] || noop$12;
+        if (fn === undefined) return this._on[action] || noop$13;
         this._on[action] = fn;
         return this
       }
@@ -3102,7 +3102,7 @@
     this.target = target
   }
 
-  function noop$13() {}
+  function noop$14() {}
   function domain_bullet(target) {
     return new DomainBullet(target)
   }
@@ -3152,7 +3152,7 @@
         return this
       }
     , on: function(action, fn) {
-        if (fn === undefined) return this._on[action] || noop$13;
+        if (fn === undefined) return this._on[action] || noop$14;
         this._on[action] = fn;
         return this
       }
@@ -3703,9 +3703,9 @@
   buckets$1 = buckets$1.concat([10,30,60,120,180,360,720,1440,2880,5760,10080].map(function(x) { return String(-x*60) }))
 
 
-  function noop$14(){}
+  function noop$15(){}
 
-  function d3_class$3(target,cls,type,data) {
+  function d3_class$4(target,cls,type,data) {
     return d3_updateable(target,"." + cls, type || "div",data)
       .classed(cls,true)
   }
@@ -3744,7 +3744,7 @@
 
 
     on(action, fn) {
-      if (fn === undefined) return this._on[action] || noop$14;
+      if (fn === undefined) return this._on[action] || noop$15;
       this._on[action] = fn;
       return this
     }
@@ -3831,20 +3831,20 @@
 
 
 
-            var summary_row = d3_class$3(td,"summary-row").style("margin-bottom","15px")
+            var summary_row = d3_class$4(td,"summary-row").style("margin-bottom","15px")
               .style("position","relative")
-            d3_class$3(td,"action-header").style("text-align","center").style("font-size","16px").style("font-weight","bold").text("Explore and Refine").style("padding","10px")
-            var title_row = d3_class$3(td,"title-row")
+            d3_class$4(td,"action-header").style("text-align","center").style("font-size","16px").style("font-weight","bold").text("Explore and Refine").style("padding","10px")
+            var title_row = d3_class$4(td,"title-row")
 
-            var expansion_row = d3_class$3(td,"expansion-row")
-            var footer_row = d3_class$3(td,"footer-row").style("min-height","10px").style("margin-top","15px")
+            var expansion_row = d3_class$4(td,"expansion-row")
+            var footer_row = d3_class$4(td,"footer-row").style("min-height","10px").style("margin-top","15px")
             
             function buildFilterInput(x) {
                 this.on("something")(x)
                 //select_value.value += (select_value.value ? "," : "") + x.key
             }
 
-            d3_class$3(summary_row,"title")
+            d3_class$4(summary_row,"title")
               .style("font-size","16px")
               .style("font-weight","bold")
               .style("text-align","center")
@@ -3860,7 +3860,7 @@
 
             var tsw = 250;
 
-            var timeseries = d3_class$3(summary_row,"timeseries","svg")
+            var timeseries = d3_class$4(summary_row,"timeseries","svg")
               .style("display","block")
               .style("margin","auto")
               .style("margin-bottom","30px")
@@ -3884,7 +3884,7 @@
 
 
             simpleTimeseries(timeseries,overall_rollup,tsw)
-            d3_class$3(timeseries,"middle","line")
+            d3_class$4(timeseries,"middle","line")
                   .style("stroke-dasharray", "1,5")
                   .attr("stroke-width",1)
                   .attr("stroke","black")
@@ -3893,7 +3893,7 @@
                   .attr("x1", tsw/2)
                   .attr("x2", tsw/2)
 
-            d3_class$3(timeseries,"middle-text","text")
+            d3_class$4(timeseries,"middle-text","text")
               .attr("x", tsw/2)
               .attr("y", 67)
               .style("text-anchor","middle")
@@ -3910,7 +3910,7 @@
 
             var unit_size = tsw/buckets$1.length
 
-            d3_class$3(timeseries,"before","line")
+            d3_class$4(timeseries,"before","line")
               .style("stroke-dasharray", "1,5")
               .attr("stroke-width",1)
               .attr("stroke","black")
@@ -3919,14 +3919,14 @@
               .attr("x1", unit_size*before_pos)
               .attr("x2", unit_size*before_pos)
 
-            d3_class$3(timeseries,"before-text","text")
+            d3_class$4(timeseries,"before-text","text")
               .attr("x", unit_size*before_pos - 8)
               .attr("y", 48)
 
               .style("text-anchor","end")
               .text("Consideration")
 
-            d3_class$3(timeseries,"window","line")
+            d3_class$4(timeseries,"window","line")
               .style("stroke-dasharray", "1,5")
               .attr("stroke-width",1)
               .attr("stroke","black")
@@ -3936,7 +3936,7 @@
               .attr("x2", unit_size*(after_pos+1)+1)
 
 
-            d3_class$3(timeseries,"after","line")
+            d3_class$4(timeseries,"after","line")
               .style("stroke-dasharray", "1,5")
               .attr("stroke-width",1)
               .attr("stroke","black")
@@ -3945,7 +3945,7 @@
               .attr("x1", unit_size*(after_pos+1))
               .attr("x2", unit_size*(after_pos+1))
 
-            d3_class$3(timeseries,"after-text","text")
+            d3_class$4(timeseries,"after-text","text")
               .attr("x", unit_size*(after_pos+1) + 8)
               .attr("y", 48)
               .style("text-anchor","start")
@@ -3971,7 +3971,7 @@
 
             selectOptionRect(options)
 
-            var opts = d3_class$3(summary_row,"options","div",options)
+            var opts = d3_class$4(summary_row,"options","div",options)
               .style("text-align","center")
               .style("position","absolute")
               .style("width","120px")
@@ -4012,7 +4012,7 @@
 
             buildOptions(options)
 
-            d3_class$3(summary_row,"description")
+            d3_class$4(summary_row,"description")
               .style("font-size","12px")
               .style("position","absolute")
               .style("width","120px")
@@ -4024,24 +4024,24 @@
 
 
 
-            var urls_summary = d3_class$3(summary_row,"urls-summary")
+            var urls_summary = d3_class$4(summary_row,"urls-summary")
               .style("display","inline-block")
               .style("width","50%")
               .style("vertical-align","top")
 
-            var kws_summary = d3_class$3(summary_row,"kws-summary")
+            var kws_summary = d3_class$4(summary_row,"kws-summary")
               .style("display","inline-block")
               .style("width","50%")
               .style("vertical-align","top")
 
               
 
-            d3_class$3(urls_summary,"title")
+            d3_class$4(urls_summary,"title")
               .style("font-weight","bold")
               .style("font-size","14px")
               .text("URL Summary")
 
-            d3_class$3(kws_summary,"title")
+            d3_class$4(kws_summary,"title")
               .style("font-weight","bold")
               .style("font-size","14px")
               .text("Keyword Summary")
@@ -4068,7 +4068,7 @@
               , {"name":"Median Views", "all": medianViews(to_draw), "consideration": medianViews(consideration_to_draw), "validation": medianViews(validation_to_draw)  }
             ]
 
-            var uwrap = d3_class$3(urls_summary,"wrap").style("width","90%")
+            var uwrap = d3_class$4(urls_summary,"wrap").style("width","90%")
 
 
             table.table(uwrap)
@@ -4095,7 +4095,7 @@
               , {"name":"Median Views", "all": medianViews(kw_to_draw), "consideration": medianViews(consideration_kw_to_draw), "validation": medianViews(validation_kw_to_draw)  }
             ]
 
-            var kwrap = d3_class$3(kws_summary,"wrap").style("width","90%")
+            var kwrap = d3_class$4(kws_summary,"wrap").style("width","90%")
 
             table.table(kwrap)
               .data({"values":kws_summary_data})
@@ -4114,14 +4114,14 @@
 
 
 
-            var euh = d3_class$3(title_row,"expansion-urls-title")
+            var euh = d3_class$4(title_row,"expansion-urls-title")
               .style("width","50%")
               .style("height","36px")
               .style("line-height","36px")
               .style("display","inline-block")
               .style("vertical-align","top")
    
-            d3_class$3(euh,"title")
+            d3_class$4(euh,"title")
               .style("width","265px")
               .style("font-weight","bold")
               .style("display","inline-block")
@@ -4129,7 +4129,7 @@
 
               .text("URL")
 
-            d3_class$3(euh,"view")
+            d3_class$4(euh,"view")
               .style("width","50px")
               .style("margin-left","20px")
               .style("margin-right","20px")
@@ -4139,7 +4139,7 @@
 
               .text("Views")
 
-            var svg_legend = d3_class$3(euh,"legend","svg")
+            var svg_legend = d3_class$4(euh,"legend","svg")
               .style("width","120px")
               .style("height","36px")
               .style("vertical-align","top")
@@ -4170,20 +4170,20 @@
 
 
 
-            var ekh = d3_class$3(title_row,"expansion-kws-title")
+            var ekh = d3_class$4(title_row,"expansion-kws-title")
               .style("width","50%")
               .style("height","36px")
               .style("line-height","36px")
               .style("display","inline-block")
               .style("vertical-align","top")
 
-            d3_class$3(ekh,"title")
+            d3_class$4(ekh,"title")
               .style("width","265px")
               .style("font-weight","bold")
               .style("display","inline-block")
               .text("Keywords")
 
-            d3_class$3(ekh,"view")
+            d3_class$4(ekh,"view")
               .style("width","50px")
               .style("margin-left","20px")
               .style("margin-right","20px")
@@ -4191,7 +4191,7 @@
               .style("display","inline-block")
               .text("Views")
 
-            var svg_legend = d3_class$3(ekh,"legend","svg")
+            var svg_legend = d3_class$4(ekh,"legend","svg")
               .style("width","120px")
               .style("height","36px")
   .style("vertical-align","top")
@@ -4226,7 +4226,7 @@
 
 
             function buildUrlSelection(to_draw) {
-              var expansion = d3_class$3(expansion_row,"expansion-urls")
+              var expansion = d3_class$4(expansion_row,"expansion-urls")
                 .classed("scrollbox",true)
                 .style("width","50%")
                 .style("display","inline-block")
@@ -4258,7 +4258,7 @@
                   self.on("stage-filter")(x)
                 })
 
-              d3_class$3(url_name,"url")
+              d3_class$4(url_name,"url")
                 .style("display","inline-block")
                 .style("text-overflow","ellipsis")
                 .style("width","235px")
@@ -4300,7 +4300,7 @@
 
 
             function buildKeywordSelection(kw_to_draw) {
-              var expansion = d3_class$3(expansion_row,"expansion-keywords")
+              var expansion = d3_class$4(expansion_row,"expansion-keywords")
                 .classed("scrollbox",true)
                 .style("width","50%")
                 .style("display","inline-block")
@@ -4332,7 +4332,7 @@
                   self.on("stage-filter")(x)
                 })
 
-              d3_class$3(kw_name,"url")
+              d3_class$4(kw_name,"url")
                 .style("text-overflow","ellipsis")
                 .style("display","inline-block")
                 .style("width","235px")
@@ -4586,7 +4586,160 @@
     }
   }
 
-  function d3_class$1(target,cls,type) {
+  function noop$8(){}
+
+  function d3_class$1(target,cls,type,data) {
+    return d3_updateable(target,"." + cls, type || "div",data)
+      .classed(cls,true)
+  }
+
+  function formatHour(h) {
+    if (h == 0) return "12 am"
+    if (h == 12) return "12 pm"
+    if (h > 12) return (h-12) + " pm"
+    return (h < 10 ? h[1] : h) + " am"
+  }
+
+
+  function timing(target) {
+    return new Timing(target)
+  }
+
+  class Timing {
+    constructor(target) {
+      this._target = target
+      this._on = {}
+    }
+
+    data(val) { return accessor.bind(this)("data",val) } 
+
+    on(action, fn) {
+      if (fn === undefined) return this._on[action] || noop$8;
+      this._on[action] = fn;
+      return this
+    }
+
+
+    draw() {
+
+
+      var self = this
+      var data = this._data
+      var wrap = d3_class$1(this._target,"timing-wrap")
+
+      header(wrap)
+        .text("Timing")
+        .draw()
+
+      var timingwrap = d3_updateable(wrap,".timing-row","div",false,function() { return 1})
+          .classed("timing-row",true)
+          .style("padding-bottom","60px")
+
+      // DATA
+      var hourbuckets = d3.range(0,24).map(x => String(x).length > 1 ? String(x) : "0" + x)
+
+
+      var d = d3.nest()
+        .key(x => x.domain)
+        .key(x => x.hour)
+        .entries(data.full_urls)
+
+      var max = 0
+
+      d.map(x => {
+        var obj = x.values.reduce((p,c) => {
+          p[c.key] = c.values
+          return p
+        },{})
+
+        x.buckets = hourbuckets.map(z => {
+         
+          var o = {
+            values: obj[z],
+            key: formatHour(z)
+          }
+          o.views = d3.sum(obj[z] || [], q => q.uniques)
+
+          max = max > o.views ? max : o.views
+          return o
+        })
+
+        x.tabular = x.buckets.reduce((p,c) => {
+          p[c.key] = c.views || undefined
+          return p
+        },{})
+
+        x.tabular["domain"] = x.key
+        x.tabular["total"] = d3.sum(x.buckets,x => x.views)
+
+        
+        x.values
+      })
+
+      var headers = [
+        {key:"domain",value:"Domain"}
+      ]
+
+      headers = headers.concat(hourbuckets.map(formatHour).map(x => { return {key: x, value: x} }) )
+      
+      var oscale = d3.scale.linear().range([0,.8]).domain([0,Math.log(max)])
+
+
+      var table_obj = table.table(timingwrap)
+        .headers(headers)
+        .data({"key":"", "values":d.map(x => x.tabular) })
+        .sort("total")
+        .skip_option(true)
+        .on("expand",function(d) {
+
+            d3.select(this).selectAll("td.option-header").html("&ndash;")
+            if (this.nextSibling && d3.select(this.nextSibling).classed("expanded") == true) {
+              d3.select(this).selectAll("td.option-header").html("&#65291;")
+              return d3.select(this.parentNode).selectAll(".expanded").remove()
+            }
+
+            d3.select(this.parentNode).selectAll(".expanded").remove()
+            var t = document.createElement('tr');
+            this.parentNode.insertBefore(t, this.nextSibling);  
+
+            var tr = d3.select(t).classed("expanded",true).datum({})
+            var td = d3_updateable(tr,"td","td")
+              .attr("colspan",this.children.length)
+              .style("background","#f9f9fb")
+              .style("padding-top","10px")
+              .style("padding-bottom","10px")
+
+            var dd = data.full_urls.filter(function(x) { return x.domain == d.domain })
+            var rolled = prepData(dd)
+            
+            domain_expanded(td)
+              .raw(dd)
+              .data(rolled)
+              .on("stage-filter", function(x) {
+                self.on("stage-filter")(x)
+              })
+              .draw()
+
+          })
+        .draw()
+
+      table_obj._target.selectAll("tr").selectAll("td:not(:first-child)")
+        .style("border-right","1px solid white")
+        .style("padding-left","0px")
+        .style("text-align","center")
+        .style("background-color",function(x) {
+          var value = this.parentNode.__data__[x['key']] || 0
+          return "rgba(70, 130, 180," + oscale(Math.log(value+1)) + ")"
+        })
+
+
+
+
+      
+    }
+  }
+
+  function d3_class$2(target,cls,type) {
     return d3_updateable(target,"." + cls, type || "div")
       .classed(cls,true)
   }
@@ -4611,7 +4764,7 @@
 
 
     draw() {
-      var owrap = d3_class$1(this._target,"footer-wrap")
+      var owrap = d3_class$2(this._target,"footer-wrap")
         .style("padding-top","5px")
         .style("min-height","60px")
         .style("bottom","0px")
@@ -4619,11 +4772,11 @@
         .style("width","1000px")
         .style("background","#F0F4F7")
 
-      var wrap = d3_class$1(owrap,"inner-wrap")
+      var wrap = d3_class$2(owrap,"inner-wrap")
         .style("border-top","1px solid #ccc")
         .style("padding-top","5px")
 
-      d3_class$1(wrap,"header-label")
+      d3_class$2(wrap,"header-label")
         .style("line-height","35px")
         .style("text-transform","uppercase")
         .style("font-weight","bold")
@@ -4634,7 +4787,7 @@
         .style("vertical-align","top")
         .text("Build Filters")
 
-      d3_class$1(wrap,"text-label")
+      d3_class$2(wrap,"text-label")
         .style("line-height","35px")
         .style("text-transform","uppercase")
         .style("font-weight","bold")
@@ -4658,7 +4811,7 @@
 
 
 
-      var footer_row = d3_class$1(wrap,"footer-row")
+      var footer_row = d3_class$2(wrap,"footer-row")
         .style("display","inline-block")
 
 
@@ -4710,7 +4863,7 @@
       buildFilterInput()
 
       var self = this
-      d3_class$1(wrap,"include-submit","button")
+      d3_class$2(wrap,"include-submit","button")
         .style("float","right")
         .style("min-width","120px")
         .style("border-radius","5px")
@@ -4728,7 +4881,7 @@
           self.on("modify")({"field":"Title","op":op,"value":value})
         })
 
-      d3_class$1(wrap,"exclude-submit","button")
+      d3_class$2(wrap,"exclude-submit","button")
         .style("float","right")
         .style("min-width","120px")
         .style("border-radius","5px")
@@ -4750,7 +4903,7 @@
     }
   }
 
-  function noop$8() {}
+  function noop$9() {}
   function identity$5(x) { return x }
   function ConditionalShow(target) {
     this._on = {}
@@ -4774,7 +4927,7 @@
         return this
       }  
     , on: function(action, fn) {
-        if (fn === undefined) return this._on[action] || noop$8;
+        if (fn === undefined) return this._on[action] || noop$9;
         this._on[action] = fn;
         return this
       }
@@ -5151,6 +5304,20 @@
                .after(self.after())
                .keywords(self.keyword_summary())
                .on("ba.sort",self.on("ba.sort"))
+               .draw()
+            }
+
+            if (x.value == "timing-view") {
+              timing(dthis)
+               .data(self.data())
+               .on("stage-filter",function(x) {
+
+                 staged_filters = staged_filters.split(",").concat(x.key || x.url).filter(x => x.length).join(",")
+                 self.on("staged-filter.change")(staged_filters)
+                 HACKbuildStagedFilter(staged_filters)
+
+      
+               })
                .draw()
             }
 
