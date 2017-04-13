@@ -18,7 +18,7 @@ class ExecutionEnvironment(object):
         self._env = {"logging":log.logging, "logging_info":log.logging_info}
         for function in functions:
             try:
-                code = compile("import math\n\n" + "\n\n".join(functions), '<string>', 'exec')
+                code = compile("import math\n\n" + function, '<string>', 'exec')
                 exec code in self._env
             except:
                 logging.info("error compiling code for %s" % function.split("\n")[0].replace("def","").replace(":",""))
