@@ -99,10 +99,11 @@ DomainExpanded.prototype = {
 
       kw_to_draw = d3.entries(kw_to_draw)
         .map(x => {
-          x.values = hourbuckets.map(z => x.value[z] )
+          x.values = Object.keys(x.value).map(z => x.value[z])
           x.total = d3.sum(x.values)
           return x
         })
+
 
 
       var td = this.target
