@@ -50,9 +50,9 @@
     this.target = target
   }
 
-  function noop$11() {}
-  function identity$7(x) { return x }
-  function key$7(x) { return x.key }
+  function noop$10() {}
+  function identity$6(x) { return x }
+  function key$6(x) { return x.key }
 
 
   function select(target) {
@@ -72,8 +72,8 @@
         this._select
           .on("change",function(x) { bound(this.selectedOptions[0].__data__) })
 
-        this._options = d3_splat(this._select,"option","option",identity$7,key$7)
-          .text(key$7)
+        this._options = d3_splat(this._select,"option","option",identity$6,key$6)
+          .text(key$6)
           .property("selected", (x) => x.value == this._selected ? "selected" : null)
 
         return this
@@ -82,13 +82,13 @@
         return accessor.bind(this)("selected",val)
       }
     , on: function(action, fn) {
-        if (fn === undefined) return this._on[action] || noop$11;
+        if (fn === undefined) return this._on[action] || noop$10;
         this._on[action] = fn;
         return this
       }
   }
 
-  function noop$10() {}
+  function noop$11() {}
   function buttonWrap(wrap) {
     var head = d3_updateable(wrap, "h3.buttons","h3")
       .classed("buttons",true)
@@ -218,7 +218,7 @@
         return this
       }
     , on: function(action, fn) {
-        if (fn === undefined) return this._on[action] || noop$10;
+        if (fn === undefined) return this._on[action] || noop$11;
         this._on[action] = fn;
         return this
       }
@@ -5041,6 +5041,9 @@
     , saved: function(val) {
         return accessor.bind(this)("saved",val) 
       }
+    , line_items: function(val) {
+        return accessor.bind(this)("line_items",val) || []
+      }
     , selected_action: function(val) {
         return accessor.bind(this)("selected_action",val) 
       }
@@ -5190,7 +5193,7 @@
                 .classed("name",true)
               
               d3_updateable(name,".label","div")
-                .style("width","100px")
+                .style("width","130px")
                 .style("display","inline-block")
                 .style("text-transform","uppercase")
                 .style("font-family","ProximaNova, sans-serif")
@@ -5200,8 +5203,34 @@
                 .text("Dashboard Name:")
 
               var name_input = d3_updateable(name,"input","input")
-                .style("width","300px")
+                .style("width","270px")
                 .attr("placeholder","My awesome search")
+
+              var advanced = d3_updateable(form, ".advanced", "details")
+                .classed("advanced",true)
+                .style("width","400px")
+                .style("text-align","left")
+                .style("margin","auto")
+
+
+              
+              d3_updateable(advanced,".label","div")
+                .style("width","130px")
+                .style("display","inline-block")
+                .style("text-transform","uppercase")
+                .style("font-family","ProximaNova, sans-serif")
+                .style("font-size","12px")
+                .style("font-weight","bold")
+                .style("text-align","left")
+                .text("Line Item:")
+
+              var select_box = select(advanced)
+                .options(self.line_items().map(x => { return {key:x.line_item_name, value: x.line_item_id} }) )
+                .draw()
+                ._select
+                .style("width","270px")
+
+
 
 
               var send = d3_updateable(form, ".send", "div")
@@ -5215,11 +5244,13 @@
                 .text("Send")
                 .on("click",function(x) {
                   var name = name_input.property("value") 
+                  var line_item = select_box.node().selectedOptions.length ? select_box.node().selectedOptions[0].__data__.key : false
 
                   d3.xhr("/crusher/saved_dashboard")
                     .post(JSON.stringify({
                           "name": name
                         , "endpoint": window.location.pathname + window.location.search
+                        , "line_item": line_item
                       })
                     )
 

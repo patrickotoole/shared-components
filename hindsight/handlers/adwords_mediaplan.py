@@ -11,6 +11,8 @@ from lib.helpers import *
 
 SELECT = "select * from adwords_campaign_endpoint where active = 1 and deleted = 0 and advertiser_id = '%s'"
 INSERT = "insert into adwords_campaign_endpoint (advertiser_id, name, endpoint) values (%s, %s, %s)"
+INSERT2 = "insert into yoshi_setup (external_advertiser_id, mediaplan, line_item_name, num_domains) values (%s, %s, %s, 20)"
+
 
 class AdwordsHandler(BaseHandler):
 
@@ -27,5 +29,8 @@ class AdwordsHandler(BaseHandler):
         advertiser_id = self.current_advertiser
         post_data = ujson.loads(self.request.body)
         self.crushercache.execute(INSERT, (advertiser_id, post_data['name'], post_data['endpoint']))
+        if post_data.get('line_item',False): 
+            self.db.execute(INSERT2, (advertiser_id, post_data['name'], post_data['line_item']))
+
         self.write(ujson.dumps({"status":"Success"}))
 

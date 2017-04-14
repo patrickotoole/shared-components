@@ -428,6 +428,7 @@
           .action_date(value.action_date || 0)
           .comparison_date(value.comparison_date || 0)
           .loading(value.loading || false)
+          .line_items(value.line_items || false)
           .summary(value.summary)
           .time_summary(value.time_summary)
           .category_summary(value.category_summary)
@@ -885,6 +886,8 @@ debugger
 
   s.publishStatic("actions",api.action.getAll)
   s.publishStatic("saved",api.dashboard.getAll)
+  s.publishStatic("line_items",api.line_item.getAll)
+
 
 
 

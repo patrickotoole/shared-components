@@ -63,11 +63,19 @@
         })
       }
   }
+  let line_item = {
+      getAll: function(cb) {
+        d3.json("/line_item",function(value) {
+          cb(false,value.response)
+        })
+      }
+  }
 
   var version = "0.0.1";
 
   exports.version = version;
   exports.action = action;
   exports.dashboard = dashboard;
+  exports.line_item = line_item;
 
 }));

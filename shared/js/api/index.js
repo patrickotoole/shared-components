@@ -8,3 +8,10 @@ export let dashboard = {
       })
     }
 }
+export let line_item = {
+    getAll: function(cb) {
+      d3.json("/line_item",function(value) {
+        cb(false,value.response)
+      })
+    }
+}

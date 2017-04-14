@@ -16,6 +16,8 @@ import staged_filter_view from './views/staged_filter_view'
 import conditional_show from './generic/conditional_show'
 
 import share from './generic/share'
+import select from './generic/select'
+
 import accessor from './helpers'
 import * as transform from './data_helpers'
 
@@ -39,6 +41,9 @@ NewDashboard.prototype = {
     }
   , saved: function(val) {
       return accessor.bind(this)("saved",val) 
+    }
+  , line_items: function(val) {
+      return accessor.bind(this)("line_items",val) || []
     }
   , selected_action: function(val) {
       return accessor.bind(this)("selected_action",val) 
@@ -189,7 +194,7 @@ NewDashboard.prototype = {
               .classed("name",true)
             
             d3_updateable(name,".label","div")
-              .style("width","100px")
+              .style("width","130px")
               .style("display","inline-block")
               .style("text-transform","uppercase")
               .style("font-family","ProximaNova, sans-serif")
@@ -199,8 +204,34 @@ NewDashboard.prototype = {
               .text("Dashboard Name:")
 
             var name_input = d3_updateable(name,"input","input")
-              .style("width","300px")
+              .style("width","270px")
               .attr("placeholder","My awesome search")
+
+            var advanced = d3_updateable(form, ".advanced", "details")
+              .classed("advanced",true)
+              .style("width","400px")
+              .style("text-align","left")
+              .style("margin","auto")
+
+
+            
+            d3_updateable(advanced,".label","div")
+              .style("width","130px")
+              .style("display","inline-block")
+              .style("text-transform","uppercase")
+              .style("font-family","ProximaNova, sans-serif")
+              .style("font-size","12px")
+              .style("font-weight","bold")
+              .style("text-align","left")
+              .text("Line Item:")
+
+            var select_box = select(advanced)
+              .options(self.line_items().map(x => { return {key:x.line_item_name, value: x.line_item_id} }) )
+              .draw()
+              ._select
+              .style("width","270px")
+
+
 
 
             var send = d3_updateable(form, ".send", "div")
@@ -214,11 +245,13 @@ NewDashboard.prototype = {
               .text("Send")
               .on("click",function(x) {
                 var name = name_input.property("value") 
+                var line_item = select_box.node().selectedOptions.length ? select_box.node().selectedOptions[0].__data__.key : false
 
                 d3.xhr("/crusher/saved_dashboard")
                   .post(JSON.stringify({
                         "name": name
                       , "endpoint": window.location.pathname + window.location.search
+                      , "line_item": line_item
                     })
                   )
 

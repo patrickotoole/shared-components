@@ -21,6 +21,7 @@ define("port", default=8888, help="run on the given port", type=int)
 
 from link import lnk
 
+from handlers.line_item import *
 from handlers.action import *
 from handlers.dashboard import *
 from handlers.cache import * 
@@ -55,6 +56,8 @@ if __name__ == '__main__':
         (r'/login', LoginHandler, connectors),
         (r'/logout', LoginHandler, connectors),
         (r'/segments', ActionIndexHandler, connectors),
+        (r'/line_item', LineItemHandler, connectors),
+
 
         (r'/account/permissions', AccountPermissionsHandler, connectors),
         (r'/crusher/funnel/action', ActionHandler, connectors),
