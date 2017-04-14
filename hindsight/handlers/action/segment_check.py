@@ -8,8 +8,8 @@ from twisted.internet import defer
 from lib.helpers import decorators
 import lib.custom_defer as custom_defer
 
-QUERY_ADVERTISER = "select pixel_source_name, valid_pixel_fires_yesterday from advertiser_caching"
-QUERY_ADVERTISER_skip = "select pixel_source_name, valid_pixel_fires_yesterday from advertiser_caching where skip=0"
+QUERY_ADVERTISER = "select pixel_source_name, valid_pixel_fires_yesterday from advertiser_caching where pixel_source_name= '%s'"
+QUERY_ADVERTISER_skip = "select pixel_source_name, valid_pixel_fires_yesterday from advertiser_caching where skip=0 and pixel_source_name = '%s'"
 QUERY_SEGMENT = "select filter_id, pattern, data_populated from advertiser_caching_segment where pixel_source_name = '%s'"
 QUERY_SEGMENT_skip = "select filter_id, pattern, data_populated from advertiser_caching_segment where pixel_source_name = '%s' and skip=0"
 
@@ -29,18 +29,18 @@ class SegmentCheckHandler(BaseHandler):
         return resp
 
     @decorators.deferred
-    def get_from_db(self,skip):
+    def get_from_db(self,skip, advertiser):
         if skip:
-            df = self.db.select_dataframe(QUERY_ADVERTISER_skip)
+            df = self.db.select_dataframe(QUERY_ADVERTISER_skip % advertiser)
         else:
-            df = self.db.select_dataframe(QUERY_ADVERTISER)
+            df = self.db.select_dataframe(QUERY_ADVERTISER % advertiser)
         res=self.build_response(df,skip)
         return res
 
 
     @custom_defer.inlineCallbacksErrors
-    def pull_and_aggregate(self,skip):
-        data = yield self.get_from_db(skip)
+    def pull_and_aggregate(self,skip,advertiser):
+        data = yield self.get_from_db(skip,advertiser)
         self.write(ujson.dumps(data))
         self.finish()
 
@@ -48,5 +48,6 @@ class SegmentCheckHandler(BaseHandler):
     @decorators.error_handling
     def get(self):
         skip = self.get_argument("skip",False)
+        advertiser = self.current_advertiser_name
         skip = True if skip else False
-        self.pull_and_aggregate(skip)
+        self.pull_and_aggregate(skip,advertiser)
