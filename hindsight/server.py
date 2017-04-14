@@ -56,6 +56,8 @@ if __name__ == '__main__':
         (r'/login', LoginHandler, connectors),
         (r'/logout', LoginHandler, connectors),
         (r'/segments', ActionIndexHandler, connectors),
+        (r'/segments/check', SegmentCheckHandler, connectors),
+        (r'/segments/timeseries', SegmentTimeseriesHandler, connectors),
         (r'/line_item', LineItemHandler, connectors),
 
 
