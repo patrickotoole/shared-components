@@ -21,12 +21,11 @@ class AdvertiserDataHandler(AnalyticsBase, BaseHandler):
 
     def build_response(self,df,skip):
         resp ={}
-        for advertiser in df.iterrows():
-            resp[advertiser[1]['pixel_source_name']]={"has_data":advertiser[1]['valid_pixel_fires_yesterday']}
-            if skip:
-                resp[advertiser[1]['pixel_source_name']]['segments'] =self.db.select_dataframe(QUERY_SEGMENT_skip % advertiser[1]['pixel_source_name']).to_dict('records')
-            else:
-                resp[advertiser[1]['pixel_source_name']]['segments'] =self.db.select_dataframe(QUERY_SEGMENT % advertiser[1]['pixel_source_name']).to_dict('records')
+        for i,advertiser in df.iterrows():
+            Q = QUERY_SEGMENT_skip if skip else QUERY_SEGMENT
+            pixel_name = advertiser['pixel_source_name']
+            resp[pixel_name]={"has_data":advertiser['valid_pixel_fires_yesterday']}
+            resp[pixel_name]['segment'] = self.db.select_dataframe(Q % pixel_name).to_dict('records')
         return resp
 
     @decorators.deferred

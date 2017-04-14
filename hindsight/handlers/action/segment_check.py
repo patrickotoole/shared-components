@@ -18,23 +18,18 @@ class SegmentCheckHandler(BaseHandler):
         self.db = db
 
 
-    def build_response(self,df,skip):
+    def build_response(self,advertiser,skip,df):
         resp ={}
-        for advertiser in df.iterrows():
-            resp[advertiser[1]['pixel_source_name']]={"has_data":advertiser[1]['valid_pixel_fires_yesterday']}
-            if skip:
-                resp[advertiser[1]['pixel_source_name']]['segments'] =self.db.select_dataframe(QUERY_SEGMENT_skip % advertiser[1]['pixel_source_name']).to_dict('records')
-            else:
-                resp[advertiser[1]['pixel_source_name']]['segments'] =self.db.select_dataframe(QUERY_SEGMENT % advertiser[1]['pixel_source_name']).to_dict('records')
+        resp[advertiser] = {"has_data":df['valid_pixel_fires_yesterday'][0]}
+        Q = QUERY_SEGMENT_skip if skip else QUERY_SEGMENT
+        resp[advertiser]['segments'] = self.db.select_dataframe(Q % advertiser).to_dict('records')
         return resp
 
     @decorators.deferred
     def get_from_db(self,skip, advertiser):
-        if skip:
-            df = self.db.select_dataframe(QUERY_ADVERTISER_skip % advertiser)
-        else:
-            df = self.db.select_dataframe(QUERY_ADVERTISER % advertiser)
-        res=self.build_response(df,skip)
+        Q = QUERY_ADVERTISER_skip if skip else QUERY_ADVERTISER
+        df = self.db.select_dataframe(Q % advertiser)
+        res=self.build_response(advertiser,skip,df)
         return res
 
 

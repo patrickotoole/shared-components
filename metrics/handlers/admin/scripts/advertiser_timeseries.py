@@ -19,11 +19,12 @@ class AdvertiserDataTimeseriesHandler(AnalyticsBase, BaseHandler):
 
     def build_response(self,df):
         resp ={}
-        for advertiser in df.iterrows():
-            resp[advertiser[1]['pixel_source_name']]={"has_data":advertiser[1]['pixel_fires']}
-            adv_df = self.crushercache.select_dataframe(QUERY_SEGMENT % advertiser[1]['pixel_source_name'])
+        for i,advertiser in df.iterrows():
+            pixel_name = advertiser['pixel_source_name']
+            resp[pixel_name]={"has_data":advertiser['pixel_fires']}
+            adv_df = self.crushercache.select_dataframe(QUERY_SEGMENT % pixel_name)
             adv_df['date'] = adv_df.date.apply(lambda x : str(x))
-            resp[advertiser[1]['pixel_source_name']]['segments'] =adv_df.to_dict('records')
+            resp[pixel_name]['segments'] =adv_df.to_dict('records')
         return resp
 
     @decorators.deferred
