@@ -73,8 +73,12 @@ SegmentView.prototype = {
         .buttons([
             {class: "saved-search", icon: "fa-folder-open-o fa", text: "Open Saved"}
           , {class: "new-saved-search", icon: "fa-bookmark fa", text: "Save"}
+          , {class: "create", icon: "fa-plus-circle fa", text: "New Segment"}
+          , {class: "logout", icon: "fa-sign-out fa", text: "Logout"}
         ])
         .on("saved-search.click", this.on("saved-search.click"))
+        .on("logout.click", function() { window.location = "/logout" })
+        .on("create.click", function() { window.location = "/segments" })
         .on("new-saved-search.click", this.on("new-saved-search.click"))
         .text("Segment").draw()      
 

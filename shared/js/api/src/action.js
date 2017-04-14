@@ -25,6 +25,15 @@ export function getData(action,days_ago) {
   }
 
 }
+export function create(data,cb) {
+  d3.xhr("/crusher/funnel/action?format=json")
+    .header("Content-Type", "application/json")
+    .post(JSON.stringify(data),function(err,data) {
+      cb(err,JSON.parse(data.response).response)
+    })
+
+}
+
 export function getAll(cb) {
   d3.json("/crusher/funnel/action?format=json",function(value) {
     value.response.map(function(x) { x.key = x.action_name; x.value = x.action_id })

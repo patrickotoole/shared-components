@@ -276,9 +276,6 @@ class ActionDatabase(object):
             self._insert_zookeeper_tree(zookeeper, action)
             self._insert_database(action, cursor)
 
-            if zookeeper:
-                self._insert_work_queue(action,zookeeper)
-
             return action
         except Exception as e:
             next_auto = cursor.execute(GET_MAX_ACTION_PLUS_1)

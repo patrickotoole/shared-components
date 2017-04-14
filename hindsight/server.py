@@ -13,6 +13,8 @@ tornado.platform.twisted.install()
 from twisted.internet import reactor
 from shutdown import sig_wrap
 from tornado.options import define, options, parse_command_line
+from kazoo.client import KazooClient
+
 
 dirname = os.path.dirname(os.path.realpath(__file__))
 define("port", default=8888, help="run on the given port", type=int)
@@ -35,7 +37,10 @@ if __name__ == '__main__':
     connectors = {
         "db": lnk.dbs.rockerbox,
         "crushercache": lnk.dbs.crushercache,
+        "zookeeper": KazooClient(hosts="zk1:2181")
     }
+
+    connectors['zookeeper'].start()
 
 
     #template_dir = dirname + "/templates"
@@ -49,6 +54,8 @@ if __name__ == '__main__':
         (r'/', LoginHandler, connectors),
         (r'/login', LoginHandler, connectors),
         (r'/logout', LoginHandler, connectors),
+        (r'/segments', ActionIndexHandler, connectors),
+
         (r'/account/permissions', AccountPermissionsHandler, connectors),
         (r'/crusher/funnel/action', ActionHandler, connectors),
         (r'/crusher/dashboard?', DashboardHandler, connectors),

@@ -31,6 +31,15 @@
     }
 
   }
+  function create(data,cb) {
+    d3.xhr("/crusher/funnel/action?format=json")
+      .header("Content-Type", "application/json")
+      .post(JSON.stringify(data),function(err,data) {
+        cb(err,JSON.parse(data.response).response)
+      })
+
+  }
+
   function getAll(cb) {
     d3.json("/crusher/funnel/action?format=json",function(value) {
       value.response.map(function(x) { x.key = x.action_name; x.value = x.action_id })
@@ -42,6 +51,7 @@
 
   var a = Object.freeze({
     getData: getData,
+    create: create,
     getAll: getAll
   });
 
