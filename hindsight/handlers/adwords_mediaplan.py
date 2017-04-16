@@ -12,7 +12,7 @@ from lib.helpers import *
 SELECT = '''
 SELECT a.* FROM
 (
-    SELECT name, endpoint, last_activity
+    SELECT *
     FROM adwords_campaign_endpoint
     WHERE advertiser_id = %(advertiser_id)s
     AND active = 1 AND deleted = 0
