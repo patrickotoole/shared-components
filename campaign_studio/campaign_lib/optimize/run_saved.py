@@ -75,31 +75,34 @@ def run(name=False):
 
         logging.info("opt - running job: " + json.dumps(_json))
 
-        raw_data = get_data(_json, api, reporting)
-        _json['data'] = raw_data.to_dict('records')
+        try:
+            raw_data = get_data(_json, api, reporting)
+            _json['data'] = raw_data.to_dict('records')
 
-        
-        if 'transforms' not in _json.keys():
-            _json['transforms'] = [{'name':"null", 'eval':"1"}]
-        logging.info("opt - transforming: " + json.dumps(_json['transforms']) )
-        data = run_transform(_json)
+            
+            if 'transforms' not in _json.keys():
+                _json['transforms'] = [{'name':"null", 'eval':"1"}]
+            logging.info("opt - transforming: " + json.dumps(_json['transforms']) )
+            data = run_transform(_json)
 
-        logging.info("opt - filtering: " + json.dumps(_json['filters']) )
-        filter_data = run_filter(data, _json)
+            logging.info("opt - filtering: " + json.dumps(_json['filters']) )
+            filter_data = run_filter(data, _json)
 
-        logging.info("opt - filtered data: %s to %s" % (len(data) , len(filter_data)) )
+            logging.info("opt - filtered data: %s to %s" % (len(data) , len(filter_data)) )
 
+            import runner
+            import parse
 
-        import runner
-        import parse
+            dparams = parse.parse({"params":_json['settings']})
 
-        dparams = parse.parse({"params":_json['settings']})
+            logging.info("opt - starting updates.")
+            runner.runner(dparams,filter_data,api,row['name'])
 
-        logging.info("opt - starting updates.")
-        runner.runner(dparams,filter_data,api,row['name'])
+            logging.info("opt - finished updates.")
+            logging.info("opt - finished job: %s" % i)
 
-        logging.info("opt - finished updates.")
-        logging.info("opt - finished job: %s" % i)
+        except Exception as e:
+            logging.info("opt - encountered error %s" %e)
 
 
 
