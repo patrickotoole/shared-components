@@ -121,6 +121,8 @@ class WorkQueue(object):
         kwargs['job_id'] = job_id
         kwargs['connectors']=self.connectors
         self.log_before_job(job_id, entry_id, False, fn, kwargs)
+        properkey = 'params' if 'params' in kwargs.keys() else 'parameters'
+        kwargs[properkey]['log_object'] = self.logging
         valid = self.set_api_wrapper(kwargs)
         fn(**kwargs)
         self.log_job_success(job_id, fn, kwargs)
@@ -148,7 +150,7 @@ class WorkQueue(object):
             self.log_error(e, job_id, parameters)
         finally:
             self.logging.info("finished item in queue")
-            self.logging.handlers[0].job_id = "000000"
+            self.logging.handlers[0].job_id = " "
             #self.zk_wrapper.finish(job_id, entry_id)
 
     def run_queue(self):

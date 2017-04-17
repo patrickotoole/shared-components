@@ -12,6 +12,8 @@ from tornado.options import define, options, parse_command_line
 from wqloghandler import *
 from lib.kafka_stream import kafka_stream
 import sys
+from logging import Handler
+from logging import StreamHandler
 
 from timekeeper import timeKeeper
 from routes import AllRoutes
@@ -111,14 +113,14 @@ if __name__ == '__main__':
     #log_object.addHandler(myhandler)
     #log_object.handlers = [log_object.handlers[1]]
 
-    def create_log_object():
-        log_object = logging.getLogger()
+    def create_log_object(logname):
+        log_object = logging.getLogger(logname)
         log_object.setLevel(logging.INFO)
-
+        
         myhandler = CustomLogHandler(sys.stderr)
 
         log_object.addHandler(myhandler)
-        log_object.handlers = [log_object.handlers[1]] 
+        log_object.propagate = 0
         return log_object
 
     import work_queue
@@ -151,7 +153,8 @@ if __name__ == '__main__':
         tk = timeKeeper()
         tks.append(tk)    
     for _ in range(0,num_worker):
-        reactor.callInThread(work_queue.WorkQueue(options.exit_on_finish, connectors['zk_wrapper'],reactor, tks[_], mc, connectors, create_log_object()))
+        loggername = "log_object_%s" % _
+        reactor.callInThread(work_queue.WorkQueue(options.exit_on_finish, connectors['zk_wrapper'],reactor, tks[_], mc, connectors, create_log_object(loggername)))
         reactor.callInThread(TimeMetric(reactor, tks[_]))
 
     reactor.callInThread(Metrics(reactor,tks, mc,connectors))

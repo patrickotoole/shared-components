@@ -25,10 +25,11 @@ QUERY2 = "select parameters from user_defined_functions where advertiser is NULL
 
 class UDFRunner(BaseRunner):
 
-    def __init__(self, connectors, advertiser, base_url):
+    def __init__(self, connectors, advertiser, base_url, log_object=False):
         self.connectors =connectors
         self.advertiser = advertiser
         self.crusher = connectors.get('crusher_wrapper',False) or self.get_crusher_obj(advertiser, base_url)
+        self.logging = log_object if log_object else logging
 
     def get_parameters(self, db, udf):
         params = db.select_dataframe(QUERY.format(self.advertiser, udf))
@@ -54,11 +55,11 @@ class UDFRunner(BaseRunner):
                     stem = "&%s=%s"
                     new_URL += stem % (str(key), str(value))
             except:
-                logging.info("could not read parameters")
+                self.logging.info("could not read parameters")
 
         _url = new_URL or URL
         url = _url.format(func_name, pattern, self.action_id)
-        logging.info(url)
+        self.logging.info(url)
         try:
             resp = self.crusher.get(url, timeout=1200, allow_redirects=False)
         except:
@@ -91,7 +92,7 @@ class UDFRunner(BaseRunner):
                     raise Exception("Empty response from Beta, not caching data. Check response for %s" % url)
             return resp.json
         except Exception as e:
-            logging.info(e)
+            self.logging.info(e)
             raise Exception(e)
 
     def compress(self, data):
@@ -140,7 +141,7 @@ def runner(**kwargs):
         uuid_num = kwargs['job_id']
 
     base_url = kwargs.get('base_url', "http://beta.crusher.getrockerbox.com")
-    UR = UDFRunner(connectors, kwargs['advertiser'], base_url)
+    UR = UDFRunner(connectors, kwargs['advertiser'], base_url, kwargs['parameters']['log_object'])
     
     func_name = kwargs['func_name']
     pattern = kwargs['pattern']
@@ -174,5 +175,5 @@ def runner(**kwargs):
     compress_data = UR.compress(ujson.dumps(data))
     
     UR.insert( pattern, func_name, compress_data, now_date)
-    logging.info("Data inserted params advertiser: %s udf: %s filter id: %s date: %s pattern: %s" % (UR.advertiser, func_name, UR.action_id, now_date, pattern))
+    UR.logging.info("Data inserted params advertiser: %s udf: %s filter id: %s date: %s pattern: %s" % (UR.advertiser, func_name, UR.action_id, now_date, pattern))
     UR.accounting_entry_end(UR.advertiser, pattern, func_name, uuid_num, UR.action_id)
