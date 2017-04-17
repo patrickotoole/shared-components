@@ -5,7 +5,6 @@ import pandas
 import time
 
 from lib.cassandra_cache.pattern_cache import CacheBase
-#USERS = 100000
 USERS = 1000000
 
 class Reader(CacheBase):
@@ -58,16 +57,11 @@ def request_data(crusher, uids):
 
 def extract(cassandra, crusher, categories):
     ds = "select distinct uid from rockerbox.visitor_domains_full limit %s" % USERS
-    #statement = cassandra.prepare(ds)
     from cassandra.query import SimpleStatement
     statement = SimpleStatement(ds, fetch_size=1000)
     users = []
     for row_user in cassandra.execute(statement):
         users.append(row_user)
-    #futures_result = cassandra.select_async(statement)
-    #import time
-    #time.sleep(5)
-    #uids_dict = futures_result.result()
     uids = [u['uid'] for u in users]
     
 
@@ -232,7 +226,6 @@ def transform_category_hourly(df):
 
 def write_to_sql_idf(db,df,key,tbl_name):
     from lib.appnexus_reporting.load import DataLoader
-    #import ipdb; ipdb.set_trace()
     loader = DataLoader(db)
     #key = "domain"
     columns = df.columns
@@ -286,10 +279,8 @@ if __name__ == "__main__":
     
     console = lnk.api.console
     cass = lnk.dbs.cassandra
-    #crushercache = lnk.dbs.crushercache
     rbidf = lnk.dbs.rockerboxidf
 
     crusher = lnk.api.crusher
 
-    #run(console, cass, crusher, crushercache)
     run(console, cass, crusher, rbidf)
