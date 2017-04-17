@@ -15,6 +15,9 @@ import gzip
 import cStringIO
 import twisted
 
+
+CACHE_URL_PARAMETERS = ['skip_datasets', 'num_days', 'num_users', 'prevent_sample','date']
+
 def check_defer_list(defer_list):
     for res in defer_list:
         if res.__class__ is twisted.python.failure.Failure:
