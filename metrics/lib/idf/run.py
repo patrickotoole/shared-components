@@ -224,11 +224,11 @@ def transform_category_hourly(df):
 
     return transformed
 
-def write_to_sql_idf(db,df,key,tbl_name):
+def write_to_sql_idf(db,df,key,tbl_name, write_columns=False):
     from lib.appnexus_reporting.load import DataLoader
     loader = DataLoader(db)
     #key = "domain"
-    columns = df.columns
+    columns = df.columns if not write_columns else write_columns
     loader.insert_df(df.reset_index(),tbl_name,[key],columns)
 
 def run(console,cass,crusher,db):
@@ -256,7 +256,10 @@ def run(console,cass,crusher,db):
 
     logging.info("aggregated to %d domains" %len(df_domain))
 
-    write_to_sql_idf(db,df_domain, "domain","new_domain_idf")
+    import datetime
+    df_domain['date'] = datetime.datetime.now().strftime("%y-%m-%d")
+    write_to_sql_idf(db,df_domain, "domain","domain_idf_log")
+    write_to_sql_idf(db,df_domain, "domain","new_domain_idf", write_columns = ['domain', 'idf', 'count', 'total_users', 'pct_users'])
     write_to_sql_idf(db,df_category, "category","category_idf")
     write_to_sql_idf(db,df_domain_hourly, "domain","domain_idf_hour")
     write_to_sql_idf(db,df_category_hourly, "category","category_idf_hour")
