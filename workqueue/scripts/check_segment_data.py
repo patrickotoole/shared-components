@@ -8,7 +8,7 @@ CURRENT_SEGMENTS = "select filter_id from advertiser_caching_segment where pixel
 FILL_IN_DB = "insert into advertiser_caching_segment (pixel_source_name, filter_id, action_name, pattern) values (%s, %s, %s, %s)"
 UPDATE_DB="update advertiser_caching_segment set data_populated=%s where pixel_source_name = %s and filter_id = %s"
 
-SEGMENT_LOG = "insert into advertiser_segment_check (pixel_source_name, url_pattern, filter_id, pixel_fires, date) values ('%s', '%s', '%s', '%s', '%s')"
+SEGMENT_LOG = "insert into advertiser_segment_check (pixel_source_name, url_pattern, filter_id, pixel_fires, date, skip_at_log) values ('%s', '%s', '%s', '%s', '%s', %s)"
 
 class CheckSegmentData():
 
@@ -65,12 +65,13 @@ class CheckSegmentData():
 
     def update_db(self,has_data, advertiser, filter_id, pattern):
         now = datetime.datetime.now().strftime("%Y-%m-%d")
+        set_to_skip = self.rockerbox.select_dataframe("select skip from advertiser_caching_segment where filter_id = %s" % filter_id)['skip'][0] 
         if has_data:
             self.rockerbox.execute(UPDATE_DB, (1, advertiser, filter_id))
-            self.crushercache.execute(SEGMENT_LOG % (advertiser,pattern, filter_id,1,now))
+            self.crushercache.execute(SEGMENT_LOG % (advertiser,pattern, filter_id,1,now, set_to_skip))
         else:
             self.rockerbox.execute(UPDATE_DB, (0, advertiser, filter_id))
-            self.crushercache.execute(SEGMENT_LOG % (advertiser,pattern, filter_id,0,now))
+            self.crushercache.execute(SEGMENT_LOG % (advertiser,pattern, filter_id,0,now,set_to_skip))
 
 if __name__ =="__main__":
     from link import lnk
