@@ -67,9 +67,9 @@ class VisitorTransformHandler(VisitorBase):
 
         process = yield self.get_process(advertiser, terms, api_type)
         DEFAULT_DATASETS = ['domains','domains_full','urls','idf','uid_urls', 'url_to_action', 'category_domains', 'corpus', 'artifacts', 'idf_hour', 'actions']
-        DEFAULT_DATASETS = DEFAULT_DATASETS + include_datasets
+        all_datasets = DEFAULT_DATASETS + include_datasets
 
-        datasets = [d for d in DEFAULT_DATASETS if d not in skip_datasets]
+        datasets = [d for d in all_datasets if d not in skip_datasets]
 
 
         url_arg = self.request.arguments
