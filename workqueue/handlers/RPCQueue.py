@@ -134,7 +134,7 @@ class RPCQueue():
         logging.info("added to Cassandra work queue %s for %s" %(segment,advertiser))
         job_id = hashlib.md5(work).hexdigest()
         function_name = kwargs.get('func_name', False) or kwargs.get('udf', 'NA')
-        self.crushercache.execute("insert into cache_add (job_id, function, params) values ('%s', '%s', '%s')" % (job_id, function_name, ujson.dumps(kwargs)))
+        self.crushercache.execute("insert into cache_add (job_id, function, params) values (%s, %s, %s)" , (job_id, function_name, ujson.dumps(kwargs)))
         logging.info("Added job id %s to wq with priority %s" % (job_id, priority))
         return entry_id, job_id
 
