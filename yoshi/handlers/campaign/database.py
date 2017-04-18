@@ -71,6 +71,8 @@ YOSHI_BASE = '''
 
 YOSHI_IMPS = "/yoshi?domain=%s"
 
+
+
 def extract_sld(domain):
     extracted = tldextract.extract(domain)
     if extracted[0] == "" or extracted[0] == "www":

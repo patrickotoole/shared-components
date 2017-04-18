@@ -110,16 +110,23 @@
             window.focus()
             setTimeout(closeWindows, 26000, windows)
             setTimeout(function(){
-                var advertiser_id = domain['values'][0]['advertiser_id']
-                d3.xhr("/create?advertiser="+ advertiser_id).post(JSON.stringify(removeDuplicates(domain['values'],"line_item_id")))
+                // var advertiser_id = domain['values'][0]['advertiser_id']
+                d3.xhr("/create?advertiser="+ ADVERTISER).post(JSON.stringify(removeDuplicates(domain['values'],"line_item_id")))
             }, 26001)            
             setTimeout(run ,27000, domains.slice(1))
         } else{
             console.log("FINISHED")
+
+            if (window.location.search.indexOf("run_all") > -1){
+                window.location.href = "/autorun?advertiser="+ ADVERTISER
+            }
+
         }
     }
     var wrapper = d3.select("#domains")
     var dd = {{domains}}
+
+    var ADVERTISER = dd[0]['advertiser_id']
 
 
     var dd_filtered = dd.filter(function(d){
