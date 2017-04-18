@@ -9,6 +9,7 @@ FILL_IN_DB = "insert into advertiser_caching_segment (pixel_source_name, filter_
 UPDATE_DB="update advertiser_caching_segment set data_populated=%s, job_id=%s where pixel_source_name = %s and filter_id = %s"
 
 SEGMENT_LOG = "insert into advertiser_segment_check (pixel_source_name, url_pattern, filter_id, pixel_fires, date, skip_at_log, job_id) values (%s, %s, %s, %s, %s, %s, %s)"
+QUERY_YESTERDAY = "select pixel_fires from advertiser_segment_check where filter_id = %s and date = '%s'"
 
 class CheckSegmentData():
 
@@ -66,9 +67,16 @@ class CheckSegmentData():
                 has_data = self.check_timeseries_endpoint(seg[1]['url_pattern'], seg[1]['action_id'])
                 self.update_db(has_data, advertiser, seg[1]['action_id'], seg[1]['url_pattern'], job_id)
 
+    def check_yesterday(self, filter_id,check):
+        yesterday_date = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+        has_data_yesterday = self.crushercache.select_dataframe(QUERY_YESTERDAY % (filter_id,yesterday_date))['pixel_fires'][0]
+        if str(has_data_yesterday) != str(check):
+            logging.info("changed expectation: segment %s changed from %s to %s" % (filter_id, has_data_yesterday, check))
+
     def update_db(self,has_data, advertiser, filter_id, pattern, job_id):
         now = datetime.datetime.now().strftime("%Y-%m-%d")
-        set_to_skip = self.rockerbox.select_dataframe("select skip from advertiser_caching_segment where filter_id = %s" % filter_id)['skip'][0] 
+        self.check_yesterday(filter_id, has_data)
+        set_to_skip = self.rockerbox.select_dataframe("select skip from advertiser_caching_segment where filter_id = %s" % filter_id)['skip'][0]
         if has_data:
             self.rockerbox.execute(UPDATE_DB, (1, job_id, advertiser, filter_id))
             self.crushercache.execute(SEGMENT_LOG, (advertiser,pattern, filter_id,1,now, set_to_skip, job_id))

@@ -2,6 +2,7 @@ from link import lnk
 import time
 import logging
 import datetime
+import ujson
 
 NEW_QUERY = "select a.pixel_source_name from advertiser a left join advertiser_caching b on a.pixel_source_name = b.pixel_source_name where b.pixel_source_name is null and a.crusher =1 and deleted=0"
 INSERT_CACHE = "insert into advertiser_caching (pixel_source_name) values (%s)" 
@@ -13,6 +14,7 @@ select external_segment_id from advertiser_segment a join advertiser b on a.exte
 """
 
 PIXEL_LOG = "insert into advertiser_pixel_fires (pixel_source_name, pixel_fires, date, skip_at_log, job_id) values (%s, %s, %s, %s, %s)"
+QUERY_YESTERDAY = "select pixel_fires from advertiser_pixel_fires where pixel_source_name = '%s' and date = '%s'"
 
 class SetCacheList():
 
@@ -65,12 +67,19 @@ class SetCacheList():
         else: 
             return False
 
+    def check_yesterday(self, advertiser,check):
+        yesterday_date = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+        has_data_yesterday = self.crushercache.select_dataframe(QUERY_YESTERDAY % (advertiser,yesterday_date))['pixel_fires'][0]
+        if str(has_data_yesterday) != str(check):
+            logging.info("changed expectation: advertiser %s changed from %s to %s" % (advertiser, has_data_yesterday, check))
+
     def populate_advertiser_table(self, job_id):
         for advertiser in self.advertisers:
            all_pages_segment = self.get_segment_id(advertiser)
            check = self.check_pixel_fires(advertiser, all_pages_segment)
            now = datetime.datetime.now().strftime("%Y-%m-%d")
            set_to_skip = self.db.select_dataframe("select skip from advertiser_caching where pixel_source_name = '%s'" % advertiser)['skip'][0]
+           self.check_yesterday(advertiser,check)
            if check:
                self.db.execute(UPDATE_CACHE_1, (job_id, advertiser))
                self.crushercache.execute(PIXEL_LOG, (advertiser,1,now,set_to_skip, job_id))
