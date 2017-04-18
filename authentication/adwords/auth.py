@@ -12,7 +12,7 @@ import uuid
 import datetime
 import StringIO
 from RB import RB
-QUERY = "Select advertiser_id, token, clientID from advertiser_adwords"
+QUERY = "Select advertiser_id, token, clientID from advertiser_adwords where deleted=0 and active=1"
 
 class AdWordsAuth():
     def __init__(self,connectors):
