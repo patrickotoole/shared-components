@@ -56,15 +56,21 @@ class VisitorBase(GenericSearchBase, BaseDomainHandler):
 
         defer.returnValue(response)
         
-    def get_pattern(self,filter_id):
-        pattern = self.db.select_dataframe("select url_pattern from action_patterns where action_id = %s" % int(filter_id))
-        return [pattern['url_pattern'][0]]
+    def get_pattern(self,filter_id, advertiser):
+        pattern = self.db.select_dataframe("select url_pattern from action_with_patterns where action_id = %s and pixel_source_name = '%s'" % (int(filter_id),advertiser))
+        url_pattern = [] if len(pattern) == 0 else [pattern['url_pattern'][0]]
+        return url_pattern
 
     @defer.inlineCallbacks
     def get_uids(self, advertiser, pattern_terms, num_days=20, process=False,  prevent_sample=None, num_users=20000, datasets=DEFAULT_DATASETS, filter_id=False, date=False, url_args={}, *args, **kwargs):
         
         if filter_id:
-            pattern_terms = [self.get_pattern(filter_id)]
+            pattern_terms = [self.get_pattern(filter_id, advertiser)]
+        if len(pattern_terms[0]) ==0:
+            self.set_status(400)
+            self.write(ujson.dumps({"error":"filter id is not available for advertiser"}))
+            self.finish()
+            return
 
         NUM_DAYS = int(num_days)
         ALLOW_SAMPLE = not prevent_sample if prevent_sample is not None else None
