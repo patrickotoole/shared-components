@@ -21,8 +21,10 @@ REPLACE="replace into generic_function_cache (advertiser, url_pattern, udf, zipp
 INSERT2 ="insert into generic_function_cache_v2 (advertiser, url_pattern, udf, zipped, date, action_id) values (%s, %s, %s, %s, %s, %s)"
 REPLACE2="replace into generic_function_cache_v2 (advertiser, url_pattern, udf, zipped, date, action_id) values (%s, %s, %s, %s, %s, %s)"
 
-QUERY = "select parameters from user_defined_functions where advertiser = '{}' and udf = '{}'"
-QUERY2 = "select parameters from user_defined_functions where advertiser is NULL and udf = '{}'"
+PARAMETERS_FIRST = "select parameters from advertiser_udf_parameter where advertiser = '%s' and filter_id=%s and udf='%s'"
+PARAMETERS_SECOND = "select parameters from advertiser_udf_parameter where advertiser = '%s' and filter_id = %s"
+PARAMETERS_THIRD = "select parameters from advertiser_udf_parameter where advertiser = '%s'"
+
 
 class UDFRunner(BaseRunner):
 
@@ -31,16 +33,6 @@ class UDFRunner(BaseRunner):
         self.advertiser = advertiser
         self.crusher = connectors.get('crusher_wrapper',False) or self.get_crusher_obj(advertiser, base_url)
         self.logging = log_object if log_object else logging
-
-    def get_parameters(self, db, udf):
-        params = db.select_dataframe(QUERY.format(self.advertiser, udf))
-        if len(params)==0:
-            params = db.select_dataframe(QUERY2.format(udf))
-        if len(params)>0 and params['parameters'][0] is not None:
-            rp = ujson.loads(params['parameters'][0])
-        else:
-            rp = {}
-        return rp
 
     def make_request(self, pattern, func_name, params):
         new_URL = False
@@ -129,6 +121,32 @@ class UDFRunner(BaseRunner):
             urls = urls[:-1] + ",\"" +url + "\"]"
             self.connectors['crushercache'].execute(ARTIFACT12 % (urls, advertiser))
             
+def pull_override_parameters(db, advertiser, filter_id, udf):
+    round_one = db.select_dataframe(PARAMETERS_FIRST % (advertiser, filter_id, udf))
+    if len(round_one)>0:
+        result = round_one['parameters'][0]
+        return ujson.loads(result)
+    round_two = db.select_dataframe(PARAMETERS_SECOND % (advertiser, filter_id))
+    if len(round_two)>0:
+        result = round_two['parameters'][0]
+        return ujson.loads(result)
+    round_three = db.select_dataframe(PARAMETERS_THIRD % (advertiser))
+    if len(round_three)>0:
+        result = round_three['parameters'][0]
+        return ujson.loads(result)
+    return {}
+
+def process_parameters(override_parameters, url_parameters):
+    combined_dict = override_parameters
+    for k,v in url_parameters.items():
+        if k not in combined_dict.keys():
+            combined_dict[k] = v
+    
+    default = {"num_days":2}
+    for k,v in default.items():
+        if k not in combined_dict.keys():
+            combined_dict[k] = v
+    return combined_dict
 
 def runner(**kwargs):
     #add other parameters options that can be added on to url request
@@ -163,16 +181,19 @@ def runner(**kwargs):
 
     db = connectors['crushercache']
    
+    override_parameters = pull_override_parameters(db, kwargs['advertiser'], filter_id, func_name)
+    override_parameters = {} if len(override_parameters) ==0 else override_parameters
+
     parameters = kwargs.get("parameters",False)
     url_parameters = {}
     if parameters:
         for k,v in dict(parameters).items():
             if k not in UDF_EXCLUDES:
                 url_parameters[k] = v
-    if not url_parameters:
-        url_parameters = UR.get_parameters(db, func_name)
 
-    data = UR.make_request(pattern, func_name, url_parameters)
+    final_url_parameters = process_parameters(override_parameters, url_parameters)
+
+    data = UR.make_request(pattern, func_name, final_url_parameters)
     compress_data = UR.compress(ujson.dumps(data))
     
     UR.insert( pattern, func_name, compress_data, now_date)
