@@ -2,18 +2,12 @@ def setup(rb,crushercache):
     
     Q = "SELECT a.action_id, url_pattern FROM action_patterns ap JOIN action a ON a.action_id = ap.action_id where a.pixel_source_name = '%s' and a.active = 1 and a.deleted = 0"
 
-    UDFQ = "SELECT parameters FROM user_defined_functions where udf = '%s' and advertiser = '%s'"
-
     def _setup(advertiser,segments,udf):
         import pandas
         action = pandas.DataFrame([[x['pattern'],x['filter_id']] for x in segments['segments'] if x['data_populated'] ==1])
         action.columns=['url_pattern', 'action_id']
-        udf_params = crushercache.select_dataframe(UDFQ % (udf,advertiser) )
         params = {}
-        if len(udf_params):
-            import json
-            params = json.loads(udf_params.ix[0,"parameters"])
-
+        
         return {"params":params, "actions":action}
 
         
