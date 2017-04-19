@@ -63,7 +63,7 @@ class VisitorTransformHandler(VisitorBase):
         filter_date = self.get_argument("date", False)
         num_users = self.get_argument("num_users",20000)
         skip_datasets = self.get_argument("skip_datasets","").split(",")
-        include_datasets = self.get_argument("include_datasets","").split(",")
+        include_datasets = [x for x in self.get_argument("include_datasets","").split(",") if len(x)>1]
 
         process = yield self.get_process(advertiser, terms, api_type)
         DEFAULT_DATASETS = ['domains','domains_full','urls','idf','uid_urls', 'url_to_action', 'category_domains', 'corpus', 'artifacts', 'idf_hour', 'actions']
