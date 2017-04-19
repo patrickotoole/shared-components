@@ -167,7 +167,7 @@ def runner(**kwargs):
     url_parameters = {}
     if parameters:
         for k,v in dict(parameters).items():
-            if k in CACHE_URL_PARAMETERS:
+            if k not in CACHE_URL_PARAMETERS:
                 url_parameters[k] = v
     if not url_parameters:
         url_parameters = UR.get_parameters(db, func_name)

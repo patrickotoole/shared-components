@@ -16,7 +16,7 @@ import cStringIO
 import twisted
 
 
-CACHE_URL_PARAMETERS = ['skip_datasets', 'num_days', 'num_users', 'prevent_sample','date']
+CACHE_URL_PARAMETERS = ['submitted_by', 'base_url', 'advertiser', 'job_id', 'identifiers', 'func_name', 'udf', 'filter_id', 'pattern', 'priority']
 
 def check_defer_list(defer_list):
     for res in defer_list:
