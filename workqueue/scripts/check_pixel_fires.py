@@ -78,7 +78,7 @@ class SetCacheList():
            now = datetime.datetime.now().strftime("%Y-%m-%d")
            set_to_skip = self.db.select_dataframe("select skip from advertiser_caching where pixel_source_name = '%s'" % advertiser)['skip'][0]
            if check:
-               self.db.execute(UPDATE_CACHE_1, advertiser)
+               self.db.execute(UPDATE_CACHE_1, [advertiser])
                self.crushercache.execute(PIXEL_LOG, (advertiser,1,now,set_to_skip))
            else:
                self.crushercache.execute(PIXEL_LOG, (advertiser,0,now, set_to_skip))
