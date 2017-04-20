@@ -21,9 +21,9 @@ REPLACE="replace into generic_function_cache (advertiser, url_pattern, udf, zipp
 INSERT2 ="insert into generic_function_cache_v2 (advertiser, url_pattern, udf, zipped, date, action_id) values (%s, %s, %s, %s, %s, %s)"
 REPLACE2="replace into generic_function_cache_v2 (advertiser, url_pattern, udf, zipped, date, action_id) values (%s, %s, %s, %s, %s, %s)"
 
-PARAMETERS_FIRST = "select parameters from advertiser_udf_parameter where advertiser = '%s' and filter_id=%s and udf='%s'"
-PARAMETERS_SECOND = "select parameters from advertiser_udf_parameter where advertiser = '%s' and filter_id = %s"
-PARAMETERS_THIRD = "select parameters from advertiser_udf_parameter where advertiser = '%s'"
+PARAMETERS_FIRST = "select parameters from advertiser_udf_parameter where advertiser = '%(advertiser)s' and filter_id=%(filter_id)s and udf='%(udf)s'"
+PARAMETERS_SECOND = "select parameters from advertiser_udf_parameter where advertiser = '%(advertiser)s' and filter_id = %(filter_id)s"
+PARAMETERS_THIRD = "select parameters from advertiser_udf_parameter where advertiser = '%(advertiser)s'"
 
 
 class UDFRunner(BaseRunner):
@@ -120,20 +120,17 @@ class UDFRunner(BaseRunner):
             urls = json_obj['json'][0]
             urls = urls[:-1] + ",\"" +url + "\"]"
             self.connectors['crushercache'].execute(ARTIFACT12 % (urls, advertiser))
+
+def query_overrides(db, query, advertiser, filter_id, udf):
+    params = {"advertiser":advertiser, "filter_id":filter_id, "udf":udf}
+    result = db.select_dataframe(query % params)
+    return result
             
 def pull_override_parameters(db, advertiser, filter_id, udf):
-    round_one = db.select_dataframe(PARAMETERS_FIRST % (advertiser, filter_id, udf))
-    if len(round_one)>0:
-        result = round_one['parameters'][0]
-        return ujson.loads(result)
-    round_two = db.select_dataframe(PARAMETERS_SECOND % (advertiser, filter_id))
-    if len(round_two)>0:
-        result = round_two['parameters'][0]
-        return ujson.loads(result)
-    round_three = db.select_dataframe(PARAMETERS_THIRD % (advertiser))
-    if len(round_three)>0:
-        result = round_three['parameters'][0]
-        return ujson.loads(result)
+    for Q in [PARAMETERS_FIRST , PARAMETERS_SECOND , PARAMETERS_THIRD]:
+        override = query_overrides(db, Q, advertiser, filter_id, udf)
+        if len(override)>0:
+            return override
     return {}
 
 def process_parameters(override_parameters, url_parameters):
