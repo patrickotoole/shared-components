@@ -23,6 +23,7 @@ from work_queue_metrics import Metrics
 from work_queue_metrics import TimeMetric
 from metricCounter import MetricCounter
 from zookeeper_interface import *
+from work_containers import *
 
 from handlers.handler import *
 from handlers.jobs import *
@@ -151,10 +152,15 @@ if __name__ == '__main__':
 
     for i in range(0, num_worker):
         tk = timeKeeper()
-        tks.append(tk)    
+        tks.append(tk)
+
+    work_containers = tuple({"entry_id":None, "data":None} for x in range(0,num_worker))
+    reactor.callInThread(WorkContainers(work_containers, connectors['zk_wrapper']))
+
+    #create thread create objects for number of workers, in thread populate each object with one item of work    
     for _ in range(0,num_worker):
         loggername = "log_object_%s" % _
-        reactor.callInThread(work_queue.WorkQueue(options.exit_on_finish, connectors['zk_wrapper'],reactor, tks[_], mc, connectors, create_log_object(loggername)))
+        reactor.callInThread(work_queue.WorkQueue(options.exit_on_finish, work_containers[_],reactor, tks[_], mc, connectors, create_log_object(loggername)))
         reactor.callInThread(TimeMetric(reactor, tks[_]))
 
     reactor.callInThread(Metrics(reactor,tks, mc,connectors))
@@ -167,5 +173,4 @@ if __name__ == '__main__':
     signal.signal(signal.SIGTERM, sig_handler)
     signal.signal(signal.SIGINT, sig_handler)
     
-    tornado.ioloop.IOLoop.instance().start()
-    
+    tornado.ioloop.IOLoop.instance().start()  

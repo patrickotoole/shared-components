@@ -56,8 +56,8 @@ def validate_crusher(crusher, advertiser):
 
 class WorkQueue(object):
 
-    def __init__(self,exit_on_finish, zkwrapper,reactor,timer, mcounter, connectors, log_object):
-        self.zk_wrapper = zkwrapper
+    def __init__(self,exit_on_finish, work_container,reactor,timer, mcounter, connectors, log_object):
+        self.work_container = work_container
         self.rec = reactor
         self.connectors = connectors
         self.timer = timer
@@ -152,19 +152,19 @@ class WorkQueue(object):
             self.logging.handlers[0].job_id = " "
             #self.zk_wrapper.finish(job_id, entry_id)
 
+    def pull_work(self):
+        entry_id = self.work_container["entry_id"]
+        data = self.work_container["data"]
+        self.work_container["entry_id"] = None
+        self.work_container["data"]=None
+        return entry_id, data
+
     def run_queue(self):
-        self.logging.info("Asking for next queue item")
-        entry_id, data = self.zk_wrapper.get()
+        entry_id, data = self.pull_work()
         self.rec.getThreadPool().threads[0].setName("WQ")
         if data is not None:
             self.process_job(entry_id, data)
-        else:
-            import time
-            time.sleep(5)
-            self.logging.info("RESET queue")
-            self.zk_wrapper.reset_queue()
 
     def __call__(self):
         while True:
             self.run_queue()
-            self.logging.info("finished run queue")
