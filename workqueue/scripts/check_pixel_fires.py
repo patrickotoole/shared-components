@@ -6,6 +6,7 @@ import datetime
 NEW_QUERY = "select a.pixel_source_name from advertiser a left join advertiser_caching b on a.pixel_source_name = b.pixel_source_name where b.pixel_source_name is null and a.crusher =1 and deleted=0"
 INSERT_CACHE = "insert into advertiser_caching (pixel_source_name) values (%s)" 
 CURRENT_QUERY = "select pixel_source_name from advertiser_caching"
+RESET_CACHE = "update advertiser_caching set valid_pixel_fires_yesterday = 0"
 UPDATE_CACHE_0 = "update advertiser_caching set valid_pixel_fires_yesterday = 0 where pixel_source_name = %s"
 UPDATE_CACHE_1 = "update advertiser_caching set valid_pixel_fires_yesterday = 1 where pixel_source_name = %s"
 SEGMENT_QUERY = """
@@ -39,7 +40,7 @@ class SetCacheList():
 
 
     def reset_cache_list(self):
-        [self.db.execute(UPDATE_CACHE_0, x) for x in self.advertisers]
+        self.db.execute(RESET_CACHE)
         logging.info("Reset")
         return True
 
