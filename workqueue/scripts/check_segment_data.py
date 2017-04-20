@@ -44,7 +44,7 @@ class CheckSegmentData():
 
     def check_timeseries_endpoint(self, pattern, action_id):
         try:
-            _resp = self.hindsight.get('/crusher/pattern_search/timeseries_only?filter_id=%s&search=%s' % (action_id, pattern))
+            _resp = self.hindsight.get('/crusher/pattern_search/timeseries_only?filter_id=%s&search=%s' % (action_id, pattern), timeout=300)
             if 'results' in _resp.json.keys() and len(_resp.json['results']) >0 and 'date' in _resp.json['results'][0]:
                 last_two_days = sorted(_resp.json['results'], key=lambda x : x['date'],reverse=True)[:2]
                 checks = sum([x['uniques'] for x in last_two_days])
