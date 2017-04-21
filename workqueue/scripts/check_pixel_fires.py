@@ -6,8 +6,8 @@ import datetime
 NEW_QUERY = "select a.pixel_source_name from advertiser a left join advertiser_caching b on a.pixel_source_name = b.pixel_source_name where b.pixel_source_name is null and a.crusher =1 and deleted=0"
 INSERT_CACHE = "insert into advertiser_caching (pixel_source_name) values (%s)" 
 CURRENT_QUERY = "select pixel_source_name from advertiser_caching"
-UPDATE_CACHE_0 = "update advertiser_caching set valid_pixel_fires_yesterday = 0, updated_at = %s where pixel_source_name = %s"
-UPDATE_CACHE_1 = "update advertiser_caching set valid_pixel_fires_yesterday = 1, updated_at = %s where pixel_source_name = %s"
+UPDATE_CACHE_0 = "update advertiser_caching set valid_pixel_fires_yesterday = 0 where pixel_source_name = %s"
+UPDATE_CACHE_1 = "update advertiser_caching set valid_pixel_fires_yesterday = 1 where pixel_source_name = %s"
 SEGMENT_QUERY = """
 select external_segment_id from advertiser_segment a join advertiser b on a.external_advertiser_id = b.external_advertiser_id where b.pixel_source_name = '{}' and b.deleted=0 and a.segment_name like "%%all pages%%"
 """
@@ -71,12 +71,11 @@ class SetCacheList():
            check = self.check_pixel_fires(advertiser, all_pages_segment)
            now = datetime.datetime.now().strftime("%Y-%m-%d")
            set_to_skip = self.db.select_dataframe("select skip from advertiser_caching where pixel_source_name = '%s'" % advertiser)['skip'][0]
-           timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
            if check:
-               self.db.execute(UPDATE_CACHE_1, (timestamp, advertiser))
+               self.db.execute(UPDATE_CACHE_1, [advertiser])
                self.crushercache.execute(PIXEL_LOG, (advertiser,1,now,set_to_skip))
            else:
-               self.db.execute(UPDATE_CACHE_0, (timestamp, advertiser))
+               self.db.execute(UPDATE_CACHE_0, [advertiser])
                self.crushercache.execute(PIXEL_LOG, (advertiser,0,now, set_to_skip))
 
 
