@@ -51,6 +51,9 @@ class CheckSegmentData():
                 has_data = True if checks>20 else False
             else:
                 has_data =False
+            if _resp.status_code==502:
+                import time
+                time.sleep(10)
         except:
             has_data=False
         return has_data
