@@ -6,7 +6,7 @@ ADVERTISERS = "select pixel_source_name from advertiser_caching where valid_pixe
 SEGMENTS = "select a.action_id, a.action_name, a.url_pattern from action_with_patterns a join action b on a.action_id = b.action_id where a.pixel_source_name = '%s' and b.deleted=0 and b.active=1"
 CURRENT_SEGMENTS = "select filter_id from advertiser_caching_segment where pixel_source_name = '%s'"
 FILL_IN_DB = "insert into advertiser_caching_segment (pixel_source_name, filter_id, action_name, pattern) values (%s, %s, %s, %s)"
-UPDATE_DB="update advertiser_caching_segment set data_populated=%s and updated_at = %s where pixel_source_name = %s and filter_id = %s"
+UPDATE_DB="update advertiser_caching_segment set data_populated=%s, updated_at = %s where pixel_source_name = %s and filter_id = %s"
 
 SEGMENT_LOG = "insert into advertiser_segment_check (pixel_source_name, url_pattern, filter_id, pixel_fires, date, skip_at_log) values (%s, %s, %s, %s, %s, %s)"
 
