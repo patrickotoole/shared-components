@@ -12,7 +12,7 @@ SEGMENT_QUERY = """
 select external_segment_id from advertiser_segment a join advertiser b on a.external_advertiser_id = b.external_advertiser_id where b.pixel_source_name = '{}' and b.deleted=0 and a.segment_name like "%%all pages%%"
 """
 
-PIXEL_LOG = "insert into advertiser_pixel_fires (pixel_source_name, pixel_fires, date, skip_at_log) values (%s, %s, %s, %s)"
+PIXEL_LOG = "insert into advertiser_pixel_fires (pixel_source_name, pixel_fires, date, skip_at_log, job_id) values (%s, %s, %s, %s, %s)"
 
 class SetCacheList():
 
@@ -73,10 +73,10 @@ class SetCacheList():
            set_to_skip = self.db.select_dataframe("select skip from advertiser_caching where pixel_source_name = '%s'" % advertiser)['skip'][0]
            if check:
                self.db.execute(UPDATE_CACHE_1, (job_id, advertiser))
-               self.crushercache.execute(PIXEL_LOG, (advertiser,1,now,set_to_skip))
+               self.crushercache.execute(PIXEL_LOG, (advertiser,1,now,set_to_skip, job_id))
            else:
                self.db.execute(UPDATE_CACHE_0, (job_id, advertiser))
-               self.crushercache.execute(PIXEL_LOG, (advertiser,0,now, set_to_skip))
+               self.crushercache.execute(PIXEL_LOG, (advertiser,0,now, set_to_skip, job_id))
 
 
 if __name__ == "__main__":
