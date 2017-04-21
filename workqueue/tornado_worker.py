@@ -106,14 +106,6 @@ if __name__ == '__main__':
 
     connectors['zk'] = connectors['zookeeper']
 
-    #log_object = logging.getLogger()
-    #log_object.setLevel(logging.INFO)
-
-    #myhandler = CustomLogHandler(sys.stderr)
-
-    #log_object.addHandler(myhandler)
-    #log_object.handlers = [log_object.handlers[1]]
-
     def create_log_object(logname):
         log_object = logging.getLogger(logname)
         log_object.setLevel(logging.INFO)
@@ -127,9 +119,12 @@ if __name__ == '__main__':
     import work_queue
     import sys
   
-    mc = MetricCounter()
     num_worker= options.num_workers
+
     tks = []
+    mc = MetricCounter()
+    work_containers=[]
+
     zookeeper_path = "/python_queue"
     if options.debug:
         zookeeper_path = "/python_queue_debug"
@@ -139,8 +134,21 @@ if __name__ == '__main__':
 
     priority_cutoff = int(options.priority)
     connectors['zk_wrapper'] = ZKApi(connectors['zookeeper'], zookeeper_path, priority_cutoff)
-    #volume = datetime.datetime.now().strftime('%m%y')
-    #connectors['CustomQueue'] = CustomQueue.CustomQueue(connectors['zookeeper'],zookeeper_path, "log", "v" + volume, priority_cutoff)
+
+    #create thread create objects for number of workers, in thread populate each object with one item of work 
+    #work_containers = tuple({"entry_id":None, "data":None} for x in range(0,num_worker))
+
+    for i in range(0, num_worker):
+        tk = timeKeeper()
+        loggername = "log_object_%s" % i
+        work_containers.append({"entry_id":None, "data":None})
+        tks.append(tk)
+        reactor.callInThread(work_queue.WorkQueue(options.exit_on_finish, work_containers[i],reactor, tks[i], mc, connectors, create_log_object(loggername)))
+        reactor.callInThread(TimeMetric(reactor, tks[i]))
+
+    reactor.callInThread(WorkContainers(work_containers, connectors['zk_wrapper']))
+    reactor.callInThread(Metrics(reactor,tks, mc,connectors))   
+
 
     app = tornado.web.Application(
         build_routes(connectors),
@@ -150,20 +158,6 @@ if __name__ == '__main__':
         login_url="/login"
     )
 
-    for i in range(0, num_worker):
-        tk = timeKeeper()
-        tks.append(tk)
-
-    work_containers = tuple({"entry_id":None, "data":None} for x in range(0,num_worker))
-    reactor.callInThread(WorkContainers(work_containers, connectors['zk_wrapper']))
-
-    #create thread create objects for number of workers, in thread populate each object with one item of work    
-    for _ in range(0,num_worker):
-        loggername = "log_object_%s" % _
-        reactor.callInThread(work_queue.WorkQueue(options.exit_on_finish, work_containers[_],reactor, tks[_], mc, connectors, create_log_object(loggername)))
-        reactor.callInThread(TimeMetric(reactor, tks[_]))
-
-    reactor.callInThread(Metrics(reactor,tks, mc,connectors))
 
     server = tornado.httpserver.HTTPServer(app)
     server.listen(options.port)

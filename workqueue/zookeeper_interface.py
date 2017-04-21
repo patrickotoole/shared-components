@@ -28,5 +28,4 @@ class ZKApi():
         #self.CustomQueue.client.set(self.CustomQueue.secondary_path_base + "/%s/%s" % (job_id.split(entry_id)[1][1:], entry_id), '' ) # running
 
     def reset_queue(self):
-        volume = datetime.datetime.now().strftime('%m%y')
-        self.CustomQueue = CustomQueue.CustomQueue(self.zk,self.zk_path, "log", "v" + volume, self.cutoff) 
+        self.CustomQueue = CustomQueue.CustomQueue(self.zk,self.zk_path, "log", "v01", self.cutoff) 

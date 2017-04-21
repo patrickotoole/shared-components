@@ -1,4 +1,4 @@
-
+import time
 
 class WorkContainers():
 
@@ -7,8 +7,6 @@ class WorkContainers():
         self.zkwrapper = zkwrapper
 
     def reset_queue(self):
-        import time
-        time.sleep(5)
         self.zkwrapper.reset_queue()
 
     def populate_container(self, container):
@@ -22,3 +20,4 @@ class WorkContainers():
     def __call__(self):
         while True:
             [self.populate_container(x) for x in self.containers if x['entry_id'] is None]
+            time.sleep(5)
