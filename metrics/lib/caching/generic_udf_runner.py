@@ -10,7 +10,7 @@ import uuid
 import zlib
 import codecs
 import sys
-from lib.helpers import CACHE_URL_PARAMETERS
+from lib.helpers import UDF_EXCLUDES
 
 URL ="/crusher/v1/visitor/{}?url_pattern={}&filter_id={}"
 URL2 ="/crusher/v2/visitor/{}?url_pattern={}&filter_id={}"
@@ -167,7 +167,7 @@ def runner(**kwargs):
     url_parameters = {}
     if parameters:
         for k,v in dict(parameters).items():
-            if k not in CACHE_URL_PARAMETERS:
+            if k not in UDF_EXCLUDES:
                 url_parameters[k] = v
     if not url_parameters:
         url_parameters = UR.get_parameters(db, func_name)
