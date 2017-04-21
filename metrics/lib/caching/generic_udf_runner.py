@@ -22,8 +22,8 @@ INSERT2 ="insert into generic_function_cache_v2 (advertiser, url_pattern, udf, z
 REPLACE2="replace into generic_function_cache_v2 (advertiser, url_pattern, udf, zipped, date, action_id) values (%s, %s, %s, %s, %s, %s)"
 
 PARAMETERS_FIRST = "select parameters from advertiser_udf_parameter where advertiser = '%(advertiser)s' and filter_id=%(filter_id)s and udf='%(udf)s'"
-PARAMETERS_SECOND = "select parameters from advertiser_udf_parameter where advertiser = '%(advertiser)s' and filter_id = %(filter_id)s"
-PARAMETERS_THIRD = "select parameters from advertiser_udf_parameter where advertiser = '%(advertiser)s'"
+PARAMETERS_SECOND = "select parameters from advertiser_udf_parameter where advertiser = '%(advertiser)s' and filter_id = %(filter_id)s and udf is NULL"
+PARAMETERS_THIRD = "select parameters from advertiser_udf_parameter where advertiser = '%(advertiser)s' and filter_id is NULL"
 
 
 class UDFRunner(BaseRunner):
@@ -157,7 +157,8 @@ def runner(**kwargs):
         uuid_num = kwargs['job_id']
 
     base_url = kwargs.get('base_url', "http://beta.crusher.getrockerbox.com")
-    UR = UDFRunner(connectors, kwargs['advertiser'], base_url, kwargs['parameters']['log_object'])
+    log_obj = kwargs.get('parameters',{}).get('log_object',False) or logging
+    UR = UDFRunner(connectors, kwargs['advertiser'], base_url, log_obj)
     
     func_name = kwargs['func_name']
     pattern = kwargs['pattern']
@@ -179,7 +180,7 @@ def runner(**kwargs):
     db = connectors['crushercache']
    
     override_parameters = pull_override_parameters(db, kwargs['advertiser'], filter_id, func_name)
-    override_parameters = {} if len(override_parameters) ==0 else override_parameters
+    override_parameters = {} if len(override_parameters) ==0 else ujson.loads(override_parameters['parameters'][0])
 
     parameters = kwargs.get("parameters",False)
     url_parameters = {}
