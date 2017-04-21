@@ -36,11 +36,6 @@ class UDFRunner(BaseRunner):
 
     def make_request(self, pattern, func_name, params):
         new_URL = False
-        #set default parameters of unsampled and 2 days for requests run on wq
-        if "prevent_sample" not in params.keys():
-            params['prevent_sample'] = 'true'
-        if "num_days" not in params.keys():
-            params['num_days'] = 2
         if len(params)>0:
             new_URL = URL
             try:
@@ -148,7 +143,7 @@ def process_parameters(override_parameters, url_parameters):
 def runner(**kwargs):
     #add other parameters options that can be added on to url request
     connectors = kwargs['connectors']
-   
+    
     now_date = datetime.datetime.now().strftime("%Y-%m-%d")
     
     if not kwargs.get('job_id',False):
@@ -181,14 +176,13 @@ def runner(**kwargs):
    
     override_parameters = pull_override_parameters(db, kwargs['advertiser'], filter_id, func_name)
     override_parameters = {} if len(override_parameters) ==0 else ujson.loads(override_parameters['parameters'][0])
-
     parameters = kwargs.get("parameters",False)
+    parameters = parameters if not parameters.get("parameters",False) else parameters["parameters"]
     url_parameters = {}
     if parameters:
         for k,v in dict(parameters).items():
             if k not in UDF_EXCLUDES:
                 url_parameters[k] = v
-
     final_url_parameters = process_parameters(override_parameters, url_parameters)
 
     data = UR.make_request(pattern, func_name, final_url_parameters)
